@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import type { vec3, quat, mat4, ReadonlyMat4 } from "gl-matrix";
+import { vec3, quat, mat4, ReadonlyMat4 } from "gl-matrix";
 
 // ts-prune-ignore-next
 export type Point = {
@@ -27,6 +27,14 @@ export type Pose = {
 // ts-prune-ignore-next
 export function makePose(): Pose {
   return { position: { x: 0, y: 0, z: 0 }, orientation: { x: 0, y: 0, z: 0, w: 1 } };
+}
+
+export function xyzrpyToPose(xyz: vec3, rpy: vec3): Pose {
+  const o = quat.fromEuler([0, 0, 0, 1], rpy[0], rpy[1], rpy[2]);
+  return {
+    position: { x: xyz[0], y: xyz[1], z: xyz[2] },
+    orientation: { x: o[0], y: o[1], z: o[2], w: o[3] },
+  };
 }
 
 // Helper functions for constructing geometry primitives that can be used with
@@ -118,6 +126,27 @@ export function mat4Clone(m: mat4): mat4 {
  */
 export function approxEq(v1: number, v2: number, epsilon = 0.00001): boolean {
   return Math.abs(v1 - v2) <= epsilon;
+}
+
+/**
+ * Test if two quaternions are approximately equal.
+ */
+export function quatAproxEq(q1: Orientation, q2: Orientation): boolean {
+  return (
+    approxEq(q1.x, q2.x) && approxEq(q1.y, q2.y) && approxEq(q1.z, q2.z) && approxEq(q1.w, q2.w)
+  );
+}
+
+/**
+ * Test if two poses are approximately equal.
+ */
+export function poseApproxEq(p1: Pose, p2: Pose): boolean {
+  return (
+    approxEq(p1.position.x, p2.position.x) &&
+    approxEq(p1.position.y, p2.position.y) &&
+    approxEq(p1.position.z, p2.position.z) &&
+    quatAproxEq(p1.orientation, p2.orientation)
+  );
 }
 
 /**

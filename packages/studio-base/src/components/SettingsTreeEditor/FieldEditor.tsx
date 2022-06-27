@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import ClearIcon from "@mui/icons-material/Clear";
+import ErrorIcon from "@mui/icons-material/Error";
 import {
   Autocomplete,
   ToggleButton,
@@ -12,17 +13,21 @@ import {
   List,
   MenuItem,
   Select,
+  Tooltip,
   TextField,
   ListProps,
-  useTheme,
 } from "@mui/material";
 import { DeepReadonly } from "ts-essentials";
+import { v4 as uuid } from "uuid";
 
+import { SettingsTreeAction, SettingsTreeField } from "@foxglove/studio";
 import MessagePathInput from "@foxglove/studio-base/components/MessagePathSyntax/MessagePathInput";
 import Stack from "@foxglove/studio-base/components/Stack";
 
-import { ColorPickerInput, ColorGradientInput, NumberInput, Vec3Input } from "./inputs";
-import { SettingsTreeAction, SettingsTreeField } from "./types";
+import { ColorPickerInput, ColorGradientInput, NumberInput, Vec3Input, Vec2Input } from "./inputs";
+
+// Used to both undefined and empty string in select inputs.
+const UNDEFINED_SENTINEL_VALUE = uuid();
 
 const StyledToggleButtonGroup = muiStyled(ToggleButtonGroup)(({ theme }) => ({
   backgroundColor: theme.palette.action.hover,
@@ -79,6 +84,28 @@ const PsuedoInputWrapper = muiStyled(Stack)(({ theme }) => {
   };
 });
 
+const MultiLabelWrapper = muiStyled("div")(({ theme }) => ({
+  display: "grid",
+  gridTemplateColumns: "1fr auto",
+  columnGap: theme.spacing(0.5),
+  height: "100%",
+  width: "100%",
+  alignItems: "center",
+}));
+
+const FieldWrapper = muiStyled("div", {
+  shouldForwardProp: (prop) => prop !== "error",
+})<{ error: boolean }>(({ error, theme }) => ({
+  marginRight: theme.spacing(1.25),
+
+  ...(error && {
+    ".MuiInputBase-root": {
+      outline: `1px ${theme.palette.error.main} solid`,
+      outlineOffset: -1,
+    },
+  }),
+}));
+
 function FieldInput({
   actionHandler,
   field,
@@ -95,6 +122,8 @@ function FieldInput({
           size="small"
           freeSolo={true}
           value={field.value}
+          disabled={field.disabled}
+          readOnly={field.readonly}
           ListboxComponent={List}
           ListboxProps={{ dense: true } as Partial<ListProps>}
           renderOption={(props, option, { selected }) => (
@@ -123,10 +152,13 @@ function FieldInput({
           size="small"
           variant="filled"
           value={field.value}
+          disabled={field.disabled}
+          readOnly={field.readonly}
           placeholder={field.placeholder}
           fullWidth
           max={field.max}
           min={field.min}
+          precision={field.precision}
           step={field.step}
           onChange={(value) =>
             actionHandler({ action: "update", payload: { path, input: "number", value } })
@@ -139,10 +171,13 @@ function FieldInput({
           fullWidth
           value={field.value}
           exclusive
+          disabled={field.disabled}
           size="small"
-          onChange={(_event, value) =>
-            actionHandler({ action: "update", payload: { path, input: "toggle", value } })
-          }
+          onChange={(_event, value) => {
+            if (field.readonly !== true) {
+              actionHandler({ action: "update", payload: { path, input: "toggle", value } });
+            }
+          }}
         >
           {field.options.map((opt) => (
             <ToggleButton key={opt} value={opt}>
@@ -157,8 +192,12 @@ function FieldInput({
           variant="filled"
           size="small"
           fullWidth
-          value={field.value}
+          disabled={field.disabled}
+          value={field.value ?? ""}
           placeholder={field.placeholder}
+          InputProps={{
+            readOnly: field.readonly,
+          }}
           onChange={(event) =>
             actionHandler({
               action: "update",
@@ -171,11 +210,12 @@ function FieldInput({
       return (
         <StyledToggleButtonGroup
           fullWidth
-          value={field.value}
+          value={field.value ?? false}
           exclusive
+          disabled={field.disabled}
           size="small"
           onChange={(_event, value) => {
-            if (value != undefined) {
+            if (value != undefined && field.readonly !== true) {
               actionHandler({
                 action: "update",
                 payload: { path, input: "boolean", value },
@@ -191,6 +231,8 @@ function FieldInput({
       return (
         <ColorPickerInput
           alphaType="none"
+          disabled={field.disabled}
+          readOnly={field.readonly}
           placeholder={field.placeholder}
           value={field.value?.toString()}
           onChange={(value) =>
@@ -205,6 +247,8 @@ function FieldInput({
       return (
         <ColorPickerInput
           alphaType="alpha"
+          disabled={field.disabled}
+          readOnly={field.readonly}
           placeholder={field.placeholder}
           value={field.value?.toString()}
           onChange={(value) =>
@@ -220,6 +264,8 @@ function FieldInput({
         <PsuedoInputWrapper direction="row">
           <MessagePathInput
             path={field.value ?? ""}
+            disabled={field.disabled}
+            readOnly={field.readonly}
             onChange={(value) =>
               actionHandler({
                 action: "update",
@@ -236,17 +282,26 @@ function FieldInput({
           size="small"
           displayEmpty
           fullWidth
+          disabled={field.disabled}
+          readOnly={field.readonly}
           variant="filled"
-          value={field.value}
+          value={field.value ?? UNDEFINED_SENTINEL_VALUE}
           onChange={(event) =>
             actionHandler({
               action: "update",
-              payload: { path, input: "select", value: event.target.value },
+              payload: {
+                path,
+                input: "select",
+                value:
+                  event.target.value === UNDEFINED_SENTINEL_VALUE
+                    ? undefined
+                    : (event.target.value as undefined | string | string[]),
+              },
             })
           }
           MenuProps={{ MenuListProps: { dense: true } }}
         >
-          {field.options.map(({ label, value }) => (
+          {field.options.map(({ label, value = UNDEFINED_SENTINEL_VALUE }) => (
             <MenuItem key={value} value={value}>
               {label}
             </MenuItem>
@@ -257,6 +312,8 @@ function FieldInput({
       return (
         <ColorGradientInput
           colors={field.value}
+          disabled={field.disabled}
+          readOnly={field.readonly}
           onChange={(value) =>
             actionHandler({ action: "update", payload: { path, input: "gradient", value } })
           }
@@ -267,8 +324,24 @@ function FieldInput({
         <Vec3Input
           step={field.step}
           value={field.value}
+          precision={field.precision}
+          disabled={field.disabled}
+          readOnly={field.readonly}
           onChange={(value) =>
             actionHandler({ action: "update", payload: { path, input: "vec3", value } })
+          }
+        />
+      );
+    case "vec2":
+      return (
+        <Vec2Input
+          step={field.step}
+          value={field.value}
+          precision={field.precision}
+          disabled={field.disabled}
+          readOnly={field.readonly}
+          onChange={(value) =>
+            actionHandler({ action: "update", payload: { path, input: "vec2", value } })
           }
         />
       );
@@ -276,22 +349,11 @@ function FieldInput({
 }
 
 function FieldLabel({ field }: { field: DeepReadonly<SettingsTreeField> }): JSX.Element {
-  const theme = useTheme();
-
-  if (field.input === "vec3") {
-    const labels = field.labels ?? ["X", "Y", "Z"];
+  if (field.input === "vec2") {
+    const labels = field.labels ?? ["X", "Y"];
     return (
       <>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr auto",
-            columnGap: theme.spacing(0.5),
-            height: "100%",
-            width: "100%",
-            alignItems: "center",
-          }}
-        >
+        <MultiLabelWrapper>
           <Typography
             title={field.label}
             variant="subtitle2"
@@ -314,7 +376,37 @@ function FieldLabel({ field }: { field: DeepReadonly<SettingsTreeField> }): JSX.
               {label}
             </Typography>
           ))}
-        </div>
+        </MultiLabelWrapper>
+      </>
+    );
+  } else if (field.input === "vec3") {
+    const labels = field.labels ?? ["X", "Y", "Z"];
+    return (
+      <>
+        <MultiLabelWrapper>
+          <Typography
+            title={field.label}
+            variant="subtitle2"
+            color="text.secondary"
+            noWrap
+            flex="auto"
+          >
+            {field.label}
+          </Typography>
+          {labels.map((label, index) => (
+            <Typography
+              key={label}
+              title={field.label}
+              variant="subtitle2"
+              color="text.secondary"
+              noWrap
+              style={{ gridColumn: index === 0 ? "span 1" : "2 / span 1" }}
+              flex="auto"
+            >
+              {label}
+            </Typography>
+          ))}
+        </MultiLabelWrapper>
       </>
     );
   } else {
@@ -343,18 +435,27 @@ function FieldEditorComponent({
   field: DeepReadonly<SettingsTreeField>;
   path: readonly string[];
 }): JSX.Element {
-  const theme = useTheme();
   const indent = Math.min(path.length, 4);
-  const paddingLeft = theme.spacing(2 + 2 * Math.max(0, indent - 1));
+  const paddingLeft = 0.75 + 2 * (indent - 1);
 
   return (
     <>
-      <Stack direction="row" alignItems="center" style={{ paddingLeft }} fullHeight>
+      <Stack direction="row" alignItems="center" paddingLeft={paddingLeft} fullHeight>
         <FieldLabel field={field} />
+        {field.error && (
+          <Tooltip
+            arrow
+            placement="top"
+            title={<Typography variant="subtitle2">{field.error}</Typography>}
+          >
+            <ErrorIcon color="error" fontSize="small" />
+          </Tooltip>
+        )}
       </Stack>
-      <div style={{ paddingRight: theme.spacing(2) }}>
+      <FieldWrapper error={field.error != undefined}>
         <FieldInput actionHandler={actionHandler} field={field} path={path} />
-      </div>
+      </FieldWrapper>
+      <Stack paddingBottom={0.25} style={{ gridColumn: "span 2" }} />
     </>
   );
 }

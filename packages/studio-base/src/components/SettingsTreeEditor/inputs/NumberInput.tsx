@@ -5,7 +5,7 @@
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { IconButton, TextFieldProps, TextField, styled as muiStyled } from "@mui/material";
-import { clamp } from "lodash";
+import { clamp, isFinite } from "lodash";
 import { ReactNode, useCallback } from "react";
 import { useKeyPress } from "react-use";
 
@@ -48,51 +48,78 @@ const StyledIconButton = muiStyled(IconButton)(({ theme }) => ({
   },
 }));
 
+function limitPrecision(x: number, digits: number): number {
+  const factor = Math.pow(10, digits);
+  return Math.round(x * factor) / factor;
+}
+
 export function NumberInput(
   props: {
     iconUp?: ReactNode;
     iconDown?: ReactNode;
     max?: number;
     min?: number;
+    precision?: number;
+    readOnly?: boolean;
     step?: number;
     value?: number;
     onChange: (value: undefined | number) => void;
   } & Omit<TextFieldProps, "onChange">,
 ): JSX.Element {
-  const { value, iconDown, iconUp, step = 1, onChange } = props;
+  const { value, iconDown, iconUp, step = 1, onChange, disabled, readOnly } = props;
 
   const [shiftPressed] = useKeyPress("Shift");
 
   const stepAmount = shiftPressed ? step * 10 : step;
 
+  const placeHolderValue = isFinite(Number(props.placeholder))
+    ? Number(props.placeholder)
+    : undefined;
+
   const updateValue = useCallback(
-    (newValue: number) => {
-      onChange(
-        clamp(
-          newValue,
-          props.min ?? Number.NEGATIVE_INFINITY,
-          props.max ?? Number.POSITIVE_INFINITY,
-        ),
-      );
+    (newValue: undefined | number) => {
+      if (disabled === true || readOnly === true) {
+        return;
+      }
+
+      const clampedValue =
+        newValue == undefined
+          ? undefined
+          : clamp(
+              newValue,
+              props.min ?? Number.NEGATIVE_INFINITY,
+              props.max ?? Number.POSITIVE_INFINITY,
+            );
+      const newLimitedValue =
+        props.precision != undefined && clampedValue != undefined
+          ? limitPrecision(clampedValue, props.precision)
+          : clampedValue;
+      onChange(newLimitedValue);
     },
-    [onChange, props.max, props.min],
+    [disabled, readOnly, props.min, props.max, props.precision, onChange],
   );
+
+  const limitedValue =
+    props.precision != undefined && value != undefined
+      ? limitPrecision(value, props.precision)
+      : value;
 
   return (
     <StyledTextField
       {...props}
-      value={value}
+      value={limitedValue ?? ""}
       onChange={(event) =>
-        event.target.value.length > 0 ? updateValue(Number(event.target.value)) : undefined
+        updateValue(event.target.value.length > 0 ? Number(event.target.value) : undefined)
       }
       type="number"
       inputProps={{ max: props.max, min: props.min, step: stepAmount }}
       InputProps={{
+        readOnly,
         startAdornment: (
           <StyledIconButton
             size="small"
             edge="start"
-            onClick={() => updateValue((value ?? 0) - stepAmount)}
+            onClick={() => updateValue((value ?? placeHolderValue ?? 0) - stepAmount)}
           >
             {iconDown ?? <ChevronLeftIcon fontSize="small" />}
           </StyledIconButton>
@@ -101,7 +128,7 @@ export function NumberInput(
           <StyledIconButton
             size="small"
             edge="end"
-            onClick={() => updateValue((value ?? 0) + stepAmount)}
+            onClick={() => updateValue((value ?? placeHolderValue ?? 0) + stepAmount)}
           >
             {iconUp ?? <ChevronRightIcon fontSize="small" />}
           </StyledIconButton>

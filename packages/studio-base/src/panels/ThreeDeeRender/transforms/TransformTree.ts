@@ -21,16 +21,23 @@ export class TransformTree {
     this._maxStorageTime = maxStorageTime;
   }
 
-  addTransform(frameId: string, parentFrameId: string, time: Time, transform: Transform): void {
+  addTransform(frameId: string, parentFrameId: string, time: Time, transform: Transform): boolean {
     const frame = this.getOrCreateFrame(frameId);
     const curParentFrame = frame.parent();
+    let updated = false;
     if (curParentFrame == undefined || curParentFrame.id !== parentFrameId) {
       // This frame was previously unparented but now we know its parent, or we
       // are reparenting this frame
       frame.setParent(this.getOrCreateFrame(parentFrameId));
+      updated = true;
     }
 
     frame.addTransform(time, transform);
+    return updated;
+  }
+
+  clear(): void {
+    this._frames.clear();
   }
 
   hasFrame(id: string): boolean {
@@ -72,6 +79,53 @@ export class TransformTree {
     const rootFrame =
       (rootFrameId != undefined ? this.frame(rootFrameId) : frame.root()) ?? frame.root();
     return frame.apply(output, input, rootFrame, srcFrame, dstTime, srcTime, maxDelta);
+  }
+
+  frameList(): { label: string; value: string }[] {
+    type FrameEntry = { id: string; children: FrameEntry[] };
+
+    const frames = Array.from(this._frames.values());
+    const frameMap = new Map<string, FrameEntry>(
+      frames.map((frame) => [frame.id, { id: frame.id, children: [] }]),
+    );
+
+    // Create a hierarchy of coordinate frames
+    const rootFrames: FrameEntry[] = [];
+    for (const frame of frames) {
+      const frameEntry = frameMap.get(frame.id)!;
+      const parentId = frame.parent()?.id;
+      if (parentId == undefined) {
+        rootFrames.push(frameEntry);
+      } else {
+        const parent = frameMap.get(parentId);
+        if (parent == undefined) {
+          continue;
+        }
+        parent.children.push(frameEntry);
+      }
+    }
+
+    // Convert the `rootFrames` hierarchy into a flat list of coordinate frames with depth
+    const output: { label: string; value: string }[] = [];
+
+    function addFrame(frame: FrameEntry, depth: number) {
+      const displayName = CoordinateFrame.DisplayName(frame.id);
+      output.push({
+        value: frame.id,
+        label: `${"\u00A0\u00A0".repeat(depth)}${displayName}`,
+      });
+      frame.children.sort((a, b) => a.id.localeCompare(b.id));
+      for (const child of frame.children) {
+        addFrame(child, depth + 1);
+      }
+    }
+
+    rootFrames.sort((a, b) => a.id.localeCompare(b.id));
+    for (const entry of rootFrames) {
+      addFrame(entry, 0);
+    }
+
+    return output;
   }
 
   static Clone(tree: TransformTree): TransformTree {

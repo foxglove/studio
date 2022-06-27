@@ -332,8 +332,6 @@ const paths: PlotConfig["paths"] = [
 
 const exampleConfig: PlotConfig = {
   paths,
-  minYValue: "",
-  maxYValue: "",
   xAxisVal: "timestamp",
   showLegend: true,
   isSynced: true,
@@ -346,6 +344,7 @@ const exampleConfig: PlotConfig = {
 
 function PlotWrapper(props: {
   style?: { [key: string]: string | number };
+  includeSettings?: boolean;
   fixture?: Fixture;
   pauseFrame: (_arg: string) => () => void;
   config: PlotConfig;
@@ -354,6 +353,7 @@ function PlotWrapper(props: {
     <PanelSetup
       fixture={props.fixture ?? fixture}
       pauseFrame={props.pauseFrame}
+      includeSettings={props.includeSettings}
       style={{ ...props.style }}
     >
       <Plot overrideConfig={props.config} />
@@ -376,6 +376,32 @@ export function LineGraph(): JSX.Element {
   return <PlotWrapper pauseFrame={pauseFrame} config={exampleConfig} />;
 }
 LineGraph.parameters = {
+  useReadySignal: true,
+};
+
+LineGraphWithNoTitle.storyName = "line graph with no title";
+export function LineGraphWithNoTitle(): JSX.Element {
+  const readySignal = useReadySignal({ count: 3 });
+  const pauseFrame = useCallback(() => readySignal, [readySignal]);
+  return <PlotWrapper pauseFrame={pauseFrame} config={{ ...exampleConfig, title: undefined }} />;
+}
+LineGraphWithNoTitle.parameters = {
+  useReadySignal: true,
+};
+
+LineGraphWithSettings.storyName = "line graph with settings";
+export function LineGraphWithSettings(): JSX.Element {
+  const readySignal = useReadySignal({ count: 3 });
+  const pauseFrame = useCallback(() => readySignal, [readySignal]);
+  return (
+    <PlotWrapper
+      pauseFrame={pauseFrame}
+      config={{ ...exampleConfig, minYValue: 1, maxYValue: -1 }}
+      includeSettings
+    />
+  );
+}
+LineGraphWithSettings.parameters = {
   useReadySignal: true,
 };
 

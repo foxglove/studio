@@ -12,20 +12,15 @@
 //   You may not use this file except in compliance with the License.
 
 import { ContextualMenu, IContextualMenuItem, useTheme } from "@fluentui/react";
-import CogIcon from "@mdi/svg/svg/cog.svg";
-import { makeStyles } from "@mui/styles";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { useCallback, useContext, useMemo, useRef } from "react";
 import { MosaicContext, MosaicNode, MosaicWindowContext } from "react-mosaic-component";
 
-import Icon from "@foxglove/studio-base/components/Icon";
 import PanelContext from "@foxglove/studio-base/components/PanelContext";
 import PanelList, { PanelSelection } from "@foxglove/studio-base/components/PanelList";
+import ToolbarIconButton from "@foxglove/studio-base/components/PanelToolbar/ToolbarIconButton";
 import { getPanelTypeFromMosaic } from "@foxglove/studio-base/components/PanelToolbar/utils";
-import {
-  useCurrentLayoutActions,
-  useSelectedPanels,
-} from "@foxglove/studio-base/context/CurrentLayoutContext";
-import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
+import { useCurrentLayoutActions } from "@foxglove/studio-base/context/CurrentLayoutContext";
 
 type Props = {
   isOpen: boolean;
@@ -34,15 +29,7 @@ type Props = {
   isUnknownPanel: boolean;
 };
 
-const useStyles = makeStyles({
-  icon: {
-    fontSize: 14,
-    margin: "0 0.2em",
-  },
-});
-
 export function PanelActionsDropdown({ isOpen, setIsOpen, isUnknownPanel }: Props): JSX.Element {
-  const styles = useStyles();
   const panelContext = useContext(PanelContext);
   const tabId = panelContext?.tabId;
   const { mosaicActions } = useContext(MosaicContext);
@@ -53,8 +40,6 @@ export function PanelActionsDropdown({ isOpen, setIsOpen, isUnknownPanel }: Prop
     splitPanel,
     swapPanel,
   } = useCurrentLayoutActions();
-  const { setSelectedPanelIds } = useSelectedPanels();
-
   const getPanelType = useCallback(
     () => getPanelTypeFromMosaic(mosaicWindowActions, mosaicActions),
     [mosaicActions, mosaicWindowActions],
@@ -110,28 +95,14 @@ export function PanelActionsDropdown({ isOpen, setIsOpen, isUnknownPanel }: Prop
     [mosaicActions, mosaicWindowActions, panelContext?.type, setIsOpen, swapPanel, tabId],
   );
 
-  const { openPanelSettings } = useWorkspace();
-  const openSettings = useCallback(() => {
-    if (panelContext?.id != undefined) {
-      setSelectedPanelIds([panelContext.id]);
-      openPanelSettings();
-    }
-  }, [setSelectedPanelIds, openPanelSettings, panelContext?.id]);
-
   const theme = useTheme();
 
   const menuItems: IContextualMenuItem[] = useMemo(() => {
     const items: IContextualMenuItem[] = [
       {
-        key: "settings",
-        text: "Panel settings",
-        onClick: openSettings,
-        iconProps: { iconName: "SingleColumnEdit" },
-      },
-      {
         key: "change-panel",
         text: "Change panel",
-        onClick: openSettings,
+        onClick: () => undefined,
         iconProps: {
           iconName: "ShapeSubtract",
           styles: { root: { height: 24, marginLeft: 2, marginRight: 6 } },
@@ -181,6 +152,20 @@ export function PanelActionsDropdown({ isOpen, setIsOpen, isUnknownPanel }: Prop
         },
       );
     }
+
+    if (panelContext?.isFullscreen !== true) {
+      items.push({
+        key: "enter-fullscreen",
+        text: "Fullscreen",
+        onClick: panelContext?.enterFullscreen,
+        iconProps: {
+          iconName: "FullScreenMaximize",
+          styles: { root: { height: 24, marginLeft: 2, marginRight: 6 } },
+        },
+        "data-test": "panel-menu-fullscreen",
+      });
+    }
+
     items.push({
       key: "remove",
       text: "Remove panel",
@@ -188,8 +173,19 @@ export function PanelActionsDropdown({ isOpen, setIsOpen, isUnknownPanel }: Prop
       iconProps: { iconName: "Delete" },
       "data-test": "panel-menu-remove",
     });
+
     return items;
-  }, [close, isUnknownPanel, openSettings, panelContext, split, swap, theme]);
+  }, [
+    close,
+    isUnknownPanel,
+    panelContext?.enterFullscreen,
+    panelContext?.id,
+    panelContext?.isFullscreen,
+    panelContext?.title,
+    split,
+    swap,
+    theme.semanticColors.menuBackground,
+  ]);
 
   const buttonRef = useRef<HTMLDivElement>(ReactNull);
 
@@ -206,9 +202,9 @@ export function PanelActionsDropdown({ isOpen, setIsOpen, isUnknownPanel }: Prop
         target={buttonRef}
         onDismiss={() => setIsOpen(false)}
       />
-      <Icon fade tooltip="More" dataTest="panel-menu" onClick={() => setIsOpen(!isOpen)}>
-        <CogIcon className={styles.icon} />
-      </Icon>
+      <ToolbarIconButton title="More" data-test="panel-menu" onClick={() => setIsOpen(!isOpen)}>
+        <MoreVertIcon />
+      </ToolbarIconButton>
     </div>
   );
 }

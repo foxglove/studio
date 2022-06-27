@@ -3,24 +3,25 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { DefaultButton, Dialog, DialogFooter, getColorFromString } from "@fluentui/react";
-import { MenuItem, Select, Stack, styled as muiStyled, Typography } from "@mui/material";
+import { MenuItem, Select, styled as muiStyled, Typography } from "@mui/material";
 import { useCallback } from "react";
 
 import ColorPicker from "@foxglove/studio-base/components/ColorPicker";
+import Stack from "@foxglove/studio-base/components/Stack";
 import { useDialogHostId } from "@foxglove/studio-base/context/DialogHostIdContext";
 import { colorObjToIColor, getColorFromIRGB } from "@foxglove/studio-base/util/colorUtils";
 import { getLineColor } from "@foxglove/studio-base/util/plotColors";
 import { TimestampMethod } from "@foxglove/studio-base/util/time";
 
 import { isReferenceLinePlotPathType, PlotPath } from "./internalTypes";
-import { PlotConfig, PlotXAxisVal } from "./types";
+import { PlotXAxisVal } from "./types";
 
 type PathSettingsModalProps = {
   xAxisVal: PlotXAxisVal;
   path: PlotPath;
   paths: PlotPath[];
   index: number;
-  saveConfig: (arg0: Partial<PlotConfig>) => void;
+  savePaths: (paths: PlotPath[]) => void;
   onDismiss: () => void;
 };
 
@@ -34,7 +35,7 @@ export default function PathSettingsModal({
   path,
   paths,
   index,
-  saveConfig,
+  savePaths,
   onDismiss,
 }: PathSettingsModalProps): JSX.Element {
   const hostId = useDialogHostId();
@@ -46,9 +47,9 @@ export default function PathSettingsModal({
       if (newPath) {
         newPaths[index] = { ...newPath, ...newConfig };
       }
-      saveConfig({ paths: newPaths });
+      savePaths(newPaths);
     },
-    [paths, index, saveConfig],
+    [paths, index, savePaths],
   );
 
   const resetToDefaults = useCallback(() => {
@@ -72,7 +73,7 @@ export default function PathSettingsModal({
       maxWidth={480}
       minWidth={480}
     >
-      <Stack alignItems="flex-start" spacing={1}>
+      <Stack alignItems="flex-start" gap={1}>
         <div>
           <TextLabel>Color</TextLabel>
           <ColorPicker

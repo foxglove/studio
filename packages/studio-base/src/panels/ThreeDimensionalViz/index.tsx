@@ -13,18 +13,18 @@
 
 import produce from "immer";
 import { uniq, omit, debounce, set, takeRight, round } from "lodash";
-import React, { useCallback, useMemo, useState, useRef, useEffect, useLayoutEffect } from "react";
+import { useCallback, useMemo, useState, useRef, useEffect, useLayoutEffect } from "react";
 import { useLatest } from "react-use";
 
 import { CameraState } from "@foxglove/regl-worldview";
+import { SettingsTreeAction } from "@foxglove/studio";
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
 import {
   MessagePipelineContext,
   useMessagePipeline,
 } from "@foxglove/studio-base/components/MessagePipeline";
 import Panel from "@foxglove/studio-base/components/Panel";
-import PanelContext, { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
-import { SettingsTreeAction } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
+import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import useCallbackWithToast from "@foxglove/studio-base/hooks/useCallbackWithToast";
 import Layout from "@foxglove/studio-base/panels/ThreeDimensionalViz/Layout";
 import UrdfBuilder from "@foxglove/studio-base/panels/ThreeDimensionalViz/UrdfBuilder";
@@ -116,7 +116,7 @@ function BaseRenderer(props: Props): JSX.Element {
 
   const { autoSyncCameraState = false, followMode = "follow", followTf } = config;
 
-  const { updatePanelConfigs } = React.useContext(PanelContext) ?? {};
+  const { updatePanelConfigs } = usePanelContext();
 
   const { topics } = useDataSourceInfo();
 
@@ -341,7 +341,7 @@ function BaseRenderer(props: Props): JSX.Element {
 
       // If autoSyncCameraState is enabled, we can't wait for the debounce and need to call updatePanelConfig right away
       if (autoSyncCameraState) {
-        updatePanelConfigs?.("3D Panel", (oldConfig) => ({
+        updatePanelConfigs("3D Panel", (oldConfig) => ({
           ...oldConfig,
           cameraState: newCurrentCameraState,
         }));
@@ -364,11 +364,14 @@ function BaseRenderer(props: Props): JSX.Element {
     };
   }, [urdfBuilder]);
 
-  const { id: panelId } = usePanelContext();
   const updatePanelSettingsTree = usePanelSettingsTreeUpdate();
 
   const actionHandler = useCallback(
     (action: SettingsTreeAction) => {
+      if (action.action !== "update") {
+        return;
+      }
+
       const { path, value } = action.payload;
       saveConfig(
         produce(config, (draft) => {
@@ -382,11 +385,11 @@ function BaseRenderer(props: Props): JSX.Element {
   );
 
   useEffect(() => {
-    updatePanelSettingsTree(panelId, {
+    updatePanelSettingsTree({
       actionHandler,
-      settings: buildSettingsTree(config),
+      nodes: buildSettingsTree(config),
     });
-  }, [actionHandler, config, panelId, updatePanelSettingsTree]);
+  }, [actionHandler, config, updatePanelSettingsTree]);
 
   return (
     <Layout

@@ -4,14 +4,16 @@
 
 import ClearIcon from "@mui/icons-material/Clear";
 import SearchIcon from "@mui/icons-material/Search";
-import { AppBar, IconButton, TextField, styled as muiStyled, List } from "@mui/material";
-import { useState } from "react";
+import { AppBar, IconButton, TextField, styled as muiStyled } from "@mui/material";
+import memoizeWeak from "memoize-weak";
+import { useMemo, useState } from "react";
 import { DeepReadonly } from "ts-essentials";
 
+import { SettingsTree } from "@foxglove/studio";
 import Stack from "@foxglove/studio-base/components/Stack";
 
 import { NodeEditor } from "./NodeEditor";
-import { SettingsTree } from "./types";
+import { prepareSettingsNodes } from "./utils";
 
 const StyledAppBar = muiStyled(AppBar, { skipSx: true })(({ theme }) => ({
   top: -1,
@@ -20,7 +22,13 @@ const StyledAppBar = muiStyled(AppBar, { skipSx: true })(({ theme }) => ({
   padding: theme.spacing(1),
 }));
 
-const ROOT_PATH: readonly string[] = [];
+const FieldGrid = muiStyled("div", { skipSx: true })(({ theme }) => ({
+  display: "grid",
+  gridTemplateColumns: "minmax(4rem, 1fr) minmax(4rem, 12rem)",
+  columnGap: theme.spacing(1),
+}));
+
+const makeStablePath = memoizeWeak((key: string) => [key]);
 
 export default function SettingsTreeEditor({
   settings,
@@ -29,6 +37,8 @@ export default function SettingsTreeEditor({
 }): JSX.Element {
   const { actionHandler } = settings;
   const [filterText, setFilterText] = useState<string>("");
+
+  const definedNodes = useMemo(() => prepareSettingsNodes(settings.nodes), [settings.nodes]);
 
   return (
     <Stack fullHeight>
@@ -56,9 +66,17 @@ export default function SettingsTreeEditor({
           />
         </StyledAppBar>
       )}
-      <List dense disablePadding>
-        <NodeEditor path={ROOT_PATH} settings={settings.settings} actionHandler={actionHandler} />
-      </List>
+      <FieldGrid>
+        {definedNodes.map(([key, root]) => (
+          <NodeEditor
+            key={key}
+            path={makeStablePath(key)}
+            settings={root}
+            defaultOpen={root.defaultExpansionState === "collapsed" ? false : true}
+            actionHandler={actionHandler}
+          />
+        ))}
+      </FieldGrid>
     </Stack>
   );
 }

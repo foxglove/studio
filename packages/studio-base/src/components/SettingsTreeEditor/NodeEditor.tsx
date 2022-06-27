@@ -4,72 +4,127 @@
 
 import ArrowDownIcon from "@mui/icons-material/ArrowDropDown";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
-import LayerIcon from "@mui/icons-material/Layers";
-import SettingsIcon from "@mui/icons-material/Settings";
-import { Collapse, Divider, ListItemProps, styled as muiStyled, Typography } from "@mui/material";
-import { useMemo, useState } from "react";
+import CheckIcon from "@mui/icons-material/Check";
+import EditIcon from "@mui/icons-material/Edit";
+import ErrorIcon from "@mui/icons-material/Error";
+import {
+  Divider,
+  IconButton,
+  InputBase,
+  styled as muiStyled,
+  Tooltip,
+  Typography,
+  useTheme,
+} from "@mui/material";
+import memoizeWeak from "memoize-weak";
+import { ChangeEvent, useCallback } from "react";
 import { DeepReadonly } from "ts-essentials";
+import { useImmer } from "use-immer";
+
+import { filterMap } from "@foxglove/den/collection";
+import { SettingsTreeAction, SettingsTreeNode } from "@foxglove/studio";
+import Stack from "@foxglove/studio-base/components/Stack";
 
 import { FieldEditor } from "./FieldEditor";
+import { NodeActionsMenu } from "./NodeActionsMenu";
 import { VisibilityToggle } from "./VisibilityToggle";
-import { SettingsTreeAction, SettingsTreeNode } from "./types";
+import { icons } from "./icons";
+import { prepareSettingsNodes } from "./utils";
 
 export type NodeEditorProps = {
   actionHandler: (action: SettingsTreeAction) => void;
   defaultOpen?: boolean;
-  disableIcon?: boolean;
-  divider?: ListItemProps["divider"];
-  group?: string;
-  icon?: JSX.Element;
   path: readonly string[];
   settings?: DeepReadonly<SettingsTreeNode>;
-  updateSettings?: (path: readonly string[], value: unknown) => void;
 };
 
-const LayerOptions = muiStyled("div", {
-  shouldForwardProp: (prop) => prop !== "visible" && prop !== "indent",
-})<{
-  visible: boolean;
-}>(({ theme, visible }) => ({
-  display: "grid",
-  gridTemplateColumns: "minmax(0, 1fr)  minmax(0, 1.2fr)",
-  padding: theme.spacing(1, 0, 1, 0),
-  columnGap: theme.spacing(1),
-  rowGap: theme.spacing(0.25),
-  alignItems: "center",
-  opacity: visible ? 1 : 0.6,
+export const NODE_HEADER_MIN_HEIGHT = 35;
+
+const FieldPadding = muiStyled("div", { skipSx: true })(({ theme }) => ({
+  gridColumn: "span 2",
+  height: theme.spacing(0.5),
 }));
 
-const NodeHeader = muiStyled("div")<{
-  indent: number;
-}>(({ theme, indent }) => {
+const EditButton = muiStyled(IconButton)(({ theme }) => ({
+  padding: theme.spacing(0.5),
+}));
+
+const NodeHeader = muiStyled("div")(({ theme }) => {
   return {
     display: "flex",
-    "&:hover": {
-      outline: `1px solid ${theme.palette.primary.main}`,
-      outlineOffset: -1,
+    gridColumn: "span 2",
+    paddingRight: theme.spacing(0.5),
+    minHeight: NODE_HEADER_MIN_HEIGHT,
+
+    "@media (pointer: fine)": {
+      ".MuiCheckbox-root": {
+        visibility: "hidden",
+      },
+
+      "[data-node-function=edit-label]": {
+        visibility: "hidden",
+      },
+
+      "&:hover": {
+        outline: `1px solid ${theme.palette.primary.main}`,
+        outlineOffset: -1,
+
+        ".MuiCheckbox-root": {
+          visibility: "visible",
+        },
+
+        "[data-node-function=edit-label]": {
+          visibility: "visible",
+        },
+      },
     },
-    paddingBottom: indent === 1 ? theme.spacing(0.5) : 0,
-    paddingTop: indent === 1 ? theme.spacing(0.5) : 0,
-    paddingRight: theme.spacing(2.25),
   };
 });
 
-const NodeHeaderToggle = muiStyled("div")<{ indent: number }>(({ theme, indent }) => {
-  return {
-    display: "flex",
-    alignItems: "center",
-    cursor: "pointer",
-    paddingLeft: theme.spacing(1.25 + 2 * Math.max(0, indent - 1)),
-    userSelect: "none",
-    width: "100%",
-  };
+const NodeHeaderToggle = muiStyled("div", {
+  shouldForwardProp: (prop) => prop !== "hasProperties" && prop !== "indent" && prop !== "visible",
+})<{ hasProperties: boolean; indent: number; visible: boolean }>(
+  ({ hasProperties, theme, indent, visible }) => {
+    return {
+      display: "grid",
+      alignItems: "center",
+      cursor: hasProperties ? "pointer" : "auto",
+      gridTemplateColumns: "auto 1fr auto",
+      marginLeft: theme.spacing(0.75 + 2 * indent),
+      opacity: visible ? 1 : 0.6,
+      position: "relative",
+      userSelect: "none",
+      width: "100%",
+    };
+  },
+);
+
+const IconWrapper = muiStyled("div")({
+  position: "absolute",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  top: "50%",
+  left: 0,
+  transform: "translate(-97.5%, -50%)",
 });
+
+function ExpansionArrow({ expanded }: { expanded: boolean }): JSX.Element {
+  const Component = expanded ? ArrowDownIcon : ArrowRightIcon;
+  return (
+    <IconWrapper>
+      <Component />
+    </IconWrapper>
+  );
+}
+
+const makeStablePath = memoizeWeak((path: readonly string[], key: string) => [...path, key]);
 
 function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
-  const { actionHandler, defaultOpen = true, disableIcon = false, icon, settings = {} } = props;
-  const [open, setOpen] = useState(defaultOpen);
+  const { actionHandler, defaultOpen = true, settings = {} } = props;
+  const [state, setState] = useImmer({ open: defaultOpen, editing: false });
 
+  const theme = useTheme();
   const indent = props.path.length;
   const allowVisibilityToggle = props.settings?.visible != undefined;
   const visible = props.settings?.visible !== false;
@@ -81,78 +136,162 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
     });
   };
 
+  const handleNodeAction = (actionId: string) => {
+    actionHandler({ action: "perform-node-action", payload: { id: actionId, path: props.path } });
+  };
+
   const { fields, children } = settings;
   const hasProperties = fields != undefined || children != undefined;
 
-  // Provide stable subpaths so that memoization works.
-  const stablePaths = useMemo<Record<string, readonly string[]>>(
-    () => ({ "": props.path }),
-    [props.path],
-  );
-
-  const fieldEditors = Object.entries(fields ?? {}).map(([key, field]) => {
-    const stablePath = (stablePaths[key] ??= [...props.path, key]);
-    return <FieldEditor key={key} field={field} path={stablePath} actionHandler={actionHandler} />;
+  const fieldEditors = filterMap(Object.entries(fields ?? {}), ([key, field]) => {
+    return field ? (
+      <FieldEditor
+        key={key}
+        field={field}
+        path={makeStablePath(props.path, key)}
+        actionHandler={actionHandler}
+      />
+    ) : undefined;
   });
 
-  const childNodes = Object.entries(children ?? {}).map(([key, child]) => {
-    const stablePath = (stablePaths[key] ??= [...props.path, key]);
+  const childNodes = prepareSettingsNodes(children ?? {}).map(([key, child]) => {
     return (
       <NodeEditor
         actionHandler={actionHandler}
         defaultOpen={child.defaultExpansionState === "collapsed" ? false : true}
-        disableIcon={true}
         key={key}
         settings={child}
-        path={stablePath}
+        path={makeStablePath(props.path, key)}
       />
     );
   });
 
+  const IconComponent = settings.icon ? icons[settings.icon] : undefined;
+
+  const onEditLabel = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      if (settings.renamable === true) {
+        actionHandler({
+          action: "update",
+          payload: { path: [...props.path, "label"], input: "string", value: event.target.value },
+        });
+      }
+    },
+    [actionHandler, props.path, settings.renamable],
+  );
+
+  const toggleEditing = useCallback(() => {
+    setState((draft) => {
+      draft.editing = !draft.editing;
+    });
+  }, [setState]);
+
+  const toggleOpen = useCallback(() => {
+    setState((draft) => {
+      if (!draft.editing) {
+        draft.open = !draft.open;
+      }
+    });
+  }, [setState]);
+
+  const onLabelKeyDown = useCallback(
+    (event: React.KeyboardEvent) => {
+      if (event.key === "Enter" || event.key === "Escape") {
+        toggleEditing();
+      }
+    },
+    [toggleEditing],
+  );
+
   return (
     <>
-      {indent > 0 && (
-        <NodeHeader indent={indent}>
-          <NodeHeaderToggle indent={indent} onClick={() => setOpen(!open)}>
-            <div
+      <NodeHeader>
+        <NodeHeaderToggle
+          hasProperties={hasProperties}
+          indent={indent}
+          onClick={toggleOpen}
+          visible={visible}
+        >
+          {hasProperties && <ExpansionArrow expanded={state.open} />}
+          {IconComponent && (
+            <IconComponent
+              fontSize="small"
+              color="inherit"
               style={{
-                display: "inline-flex",
-                opacity: visible ? 0.6 : 0.3,
-                marginRight: "0.25rem",
+                marginRight: theme.spacing(0.5),
+                opacity: 0.8,
               }}
-            >
-              {hasProperties && <>{open ? <ArrowDownIcon /> : <ArrowRightIcon />}</>}
-              {!disableIcon &&
-                (icon != undefined ? icon : indent > 0 ? <LayerIcon /> : <SettingsIcon />)}
-            </div>
+            />
+          )}
+          {state.editing ? (
+            <InputBase
+              autoFocus
+              fullWidth
+              onChange={onEditLabel}
+              value={settings.label}
+              onKeyDown={onLabelKeyDown}
+              onFocus={(event) => event.target.select()}
+              style={{ font: "inherit" }}
+            />
+          ) : (
             <Typography
               noWrap={true}
+              flex="auto"
               variant="subtitle2"
+              fontWeight={indent < 2 ? 600 : 400}
               color={visible ? "text.primary" : "text.disabled"}
             >
-              {settings.label ?? "Settings"}
+              {settings.label ?? "General"}
             </Typography>
-          </NodeHeaderToggle>
-          <VisibilityToggle
-            edge="end"
-            size="small"
-            checked={visible}
-            onChange={toggleVisibility}
-            style={{ opacity: allowVisibilityToggle ? 1 : 0 }}
-            disabled={!allowVisibilityToggle}
-          />
-        </NodeHeader>
+          )}
+        </NodeHeaderToggle>
+        <Stack alignItems="center" direction="row">
+          {settings.renamable === true && (
+            <EditButton
+              title="Rename"
+              data-node-function="edit-label"
+              color="primary"
+              onClick={(event) => {
+                event.stopPropagation();
+                toggleEditing();
+              }}
+            >
+              {state.editing ? <CheckIcon fontSize="small" /> : <EditIcon fontSize="small" />}
+            </EditButton>
+          )}
+          {settings.visible != undefined && (
+            <VisibilityToggle
+              size="small"
+              checked={visible}
+              onChange={toggleVisibility}
+              style={{ opacity: allowVisibilityToggle ? 1 : 0 }}
+              disabled={!allowVisibilityToggle}
+            />
+          )}
+          {settings.actions && (
+            <NodeActionsMenu actions={settings.actions} onSelectAction={handleNodeAction} />
+          )}
+          {props.settings?.error && (
+            <Tooltip
+              arrow
+              title={<Typography variant="subtitle2">{props.settings.error}</Typography>}
+            >
+              <IconButton size="small" color="error">
+                <ErrorIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
+        </Stack>
+      </NodeHeader>
+      {state.open && fieldEditors.length > 0 && (
+        <>
+          <FieldPadding />
+          {fieldEditors}
+          <FieldPadding />
+        </>
       )}
-      <Collapse in={open}>
-        {fieldEditors.length > 0 && (
-          <>
-            <LayerOptions visible={visible}>{fieldEditors}</LayerOptions>
-            {indent === 0 && <Divider />}
-          </>
-        )}
-        {childNodes}
-      </Collapse>
-      {indent === 1 && <Divider />}
+      {state.open && childNodes}
+      {indent === 1 && <Divider style={{ gridColumn: "span 2" }} />}
     </>
   );
 }

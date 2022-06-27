@@ -50,7 +50,7 @@ import {
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import { UserNode, UserNodes } from "@foxglove/studio-base/types/panels";
 import Rpc from "@foxglove/studio-base/util/Rpc";
-import { basicDatatypes, foxgloveDatatypes } from "@foxglove/studio-base/util/datatypes";
+import { basicDatatypes } from "@foxglove/studio-base/util/basicDatatypes";
 
 const log = Log.getLogger(__filename);
 
@@ -67,6 +67,12 @@ type UserNodeActions = {
   addUserNodeLogs: (nodeId: string, logs: readonly UserNodeLog[]) => void;
   setUserNodeRosLib: (rosLib: string) => void;
   setUserNodeTypesLib: (lib: string) => void;
+};
+
+type NodeRegistrationCacheItem = {
+  nodeId: string;
+  userNode: UserNode;
+  result: NodeRegistration;
 };
 
 function maybePlainObject(rawVal: unknown) {
@@ -111,11 +117,12 @@ export default class UserNodePlayer implements Player {
   // a node may set its own problem or clear its problem
   private _problemStore = new Map<string, PlayerProblem>();
 
-  private _nodeRegistrationCache: {
-    nodeId: string;
-    userNode: UserNode;
-    result: NodeRegistration;
-  }[] = [];
+  private _nodeRegistrationCache: NodeRegistrationCacheItem[] = [];
+
+  // Map of output topics to input topics. To produce an output we need to know the input topics
+  // that a script requires. When subscribers subscribe to the output topic, the user node player
+  // subscribes to the underlying input topics.
+  private _inputsByOutputTopic = new Map<string, readonly string[]>();
 
   // exposed as a static to allow testing to mock/replace
   static CreateNodeTransformWorker = (): SharedWorker => {
@@ -152,7 +159,7 @@ export default class UserNodePlayer implements Player {
     this._typesLibGenerator = new MemoizedLibGenerator(async (args) => {
       const lib = generateTypesLib({
         topics: args.topics,
-        datatypes: new Map([...basicDatatypes, ...foxgloveDatatypes, ...args.datatypes]),
+        datatypes: new Map([...basicDatatypes, ...args.datatypes]),
       });
 
       return await getPrettifiedCode(lib);
@@ -194,13 +201,13 @@ export default class UserNodePlayer implements Player {
 
   // When updating nodes while paused, we seek to the current time
   // (i.e. invoke _getMessages with an empty array) to refresh messages
-  private _getMessages = async (
+  private async _getMessages(
     parsedMessages: readonly MessageEvent<unknown>[],
     globalVariables: GlobalVariables,
     nodeRegistrations: readonly NodeRegistration[],
   ): Promise<{
     parsedMessages: readonly MessageEvent<unknown>[];
-  }> => {
+  }> {
     if (
       shallowequal(this._lastGetMessagesInput, {
         parsedMessages,
@@ -238,7 +245,7 @@ export default class UserNodePlayer implements Player {
     this._lastGetMessagesInput = { parsedMessages, globalVariables, nodeRegistrations };
     this._lastGetMessagesResult = result;
     return result;
-  };
+  }
 
   setGlobalVariables(globalVariables: GlobalVariables): void {
     this._globalVariables = globalVariables;
@@ -254,7 +261,6 @@ export default class UserNodePlayer implements Player {
     this._nodeRegistrationCache.splice(maxNodeRegistrationCacheCount);
 
     // This code causes us to reset workers twice because the forceSeek resets the workers too
-    // TODO: Only reset workers once
     return await this._resetWorkers().then(() => {
       this.setSubscriptions(this._subscriptions);
       const { currentTime, isPlaying = false } = this._lastPlayerStateActiveData ?? {};
@@ -265,10 +271,10 @@ export default class UserNodePlayer implements Player {
   }
 
   // Defines the inputs/outputs and worker interface of a user node.
-  private _createNodeRegistration = async (
+  private async _createNodeRegistration(
     nodeId: string,
     userNode: UserNode,
-  ): Promise<NodeRegistration> => {
+  ): Promise<NodeRegistration> {
     for (const cacheEntry of this._nodeRegistrationCache) {
       if (nodeId === cacheEntry.nodeId && isEqual(userNode, cacheEntry.userNode)) {
         return cacheEntry.result;
@@ -277,11 +283,7 @@ export default class UserNodePlayer implements Player {
     // Pass all the nodes a set of basic datatypes that we know how to render.
     // These could be overwritten later by bag datatypes, but these datatype definitions should be very stable.
     const { topics = [], datatypes = new Map() } = this._lastPlayerStateActiveData ?? {};
-    const nodeDatatypes: RosDatatypes = new Map([
-      ...basicDatatypes,
-      ...foxgloveDatatypes,
-      ...datatypes,
-    ]);
+    const nodeDatatypes: RosDatatypes = new Map([...basicDatatypes, ...datatypes]);
 
     const rosLib = await this._getRosLib();
     const typesLib = await this._getTypesLib();
@@ -460,7 +462,7 @@ export default class UserNodePlayer implements Player {
     };
     this._nodeRegistrationCache.push({ nodeId, userNode, result });
     return result;
-  };
+  }
 
   private _getTransformWorker(): Rpc {
     if (!this._nodeTransformRpc) {
@@ -551,19 +553,28 @@ export default class UserNodePlayer implements Player {
     const allNodeOutputs = new Set(
       allNodeRegistrations.map(({ nodeData }) => nodeData.outputTopic),
     );
-    const seenNodeOutputs = new Set<string>();
+
+    // Clear the output -> input map and re-populate it again with with all the node registrations
+    this._inputsByOutputTopic.clear();
 
     for (const nodeRegistration of allNodeRegistrations) {
       const { nodeData, nodeId } = nodeRegistration;
 
-      // Filter out nodes with compilation errors
-      if (hasTransformerErrors(nodeData)) {
-        this._setUserNodeDiagnostics(nodeId, nodeData.diagnostics);
+      if (!nodeData.outputTopic) {
+        this._setUserNodeDiagnostics(nodeId, [
+          ...nodeData.diagnostics,
+          {
+            severity: DiagnosticSeverity.Error,
+            message: `Output topic cannot be an empty string.`,
+            source: Sources.OutputTopicChecker,
+            code: ErrorCodes.OutputTopicChecker.NOT_UNIQUE,
+          },
+        ]);
         continue;
       }
 
       // Create diagnostic errors if more than one node outputs to the same topic
-      if (seenNodeOutputs.has(nodeData.outputTopic)) {
+      if (this._inputsByOutputTopic.has(nodeData.outputTopic)) {
         this._setUserNodeDiagnostics(nodeId, [
           ...nodeData.diagnostics,
           {
@@ -575,7 +586,9 @@ export default class UserNodePlayer implements Player {
         ]);
         continue;
       }
-      seenNodeOutputs.add(nodeData.outputTopic);
+
+      // Record the required input topics to service this output topic
+      this._inputsByOutputTopic.set(nodeData.outputTopic, nodeData.inputTopics);
 
       // Create diagnostic errors if node outputs overlap with real topics
       if (playerTopics.has(nodeData.outputTopic)) {
@@ -588,6 +601,12 @@ export default class UserNodePlayer implements Player {
             code: ErrorCodes.OutputTopicChecker.EXISTING_TOPIC,
           },
         ]);
+        continue;
+      }
+
+      // Filter out nodes with compilation errors
+      if (hasTransformerErrors(nodeData)) {
+        this._setUserNodeDiagnostics(nodeId, nodeData.diagnostics);
         continue;
       }
 
@@ -613,7 +632,9 @@ export default class UserNodePlayer implements Player {
       this._memoizedNodeDatatypes = nodeDatatypes;
     }
 
-    this._nodeRegistrations.forEach(({ nodeId }) => this._setUserNodeDiagnostics(nodeId, []));
+    for (const nodeRegistration of this._nodeRegistrations) {
+      this._setUserNodeDiagnostics(nodeRegistration.nodeId, []);
+    }
 
     this._pendingResetWorkers = undefined;
     pending.resolve();
@@ -758,6 +779,10 @@ export default class UserNodePlayer implements Player {
 
     const nodeSubscriptions = new Set<string>();
     const realTopicSubscriptions: SubscribePayload[] = [];
+
+    // For each subscription, identify required input topics by looking up the subscribed topic in
+    // the map of output topics -> inputs. Add these required input topics to the set of topic
+    // subscriptions to the underlying player.
     for (const subscription of subscriptions) {
       // When subscribing to the same node multiple times, only subscribe to the underlying
       // topics once. This is not strictly necessary, but it makes debugging a bit easier.
@@ -765,18 +790,23 @@ export default class UserNodePlayer implements Player {
         continue;
       }
 
-      const nodeRegistration = this._nodeRegistrations.find(
-        (info) => info.output.name === subscription.topic,
-      );
-      if (!nodeRegistration) {
+      const inputs = this._inputsByOutputTopic.get(subscription.topic);
+      if (!inputs) {
+        nodeSubscriptions.add(subscription.topic);
         realTopicSubscriptions.push(subscription);
         continue;
       }
+
+      // If the inputs array is empty then we don't have anything to subscribe to for this output
+      if (inputs.length === 0) {
+        continue;
+      }
+
       nodeSubscriptions.add(subscription.topic);
-      for (const inputTopic of nodeRegistration.inputs) {
+      for (const inputTopic of inputs) {
         realTopicSubscriptions.push({
           topic: inputTopic,
-          requester: { type: "node", name: nodeRegistration.output.name },
+          preloadType: subscription.preloadType ?? "partial",
         });
       }
     }
@@ -799,6 +829,8 @@ export default class UserNodePlayer implements Player {
   setParameter = (key: string, value: ParameterValue): void =>
     this._player.setParameter(key, value);
   publish = (request: PublishPayload): void => this._player.publish(request);
+  callService = async (service: string, request: unknown): Promise<unknown> =>
+    await this._player.callService(service, request);
   startPlayback = (): void => this._player.startPlayback?.();
   pausePlayback = (): void => this._player.pausePlayback?.();
   setPlaybackSpeed = (speed: number): void => this._player.setPlaybackSpeed?.(speed);

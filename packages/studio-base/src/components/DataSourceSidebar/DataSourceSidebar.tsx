@@ -14,14 +14,12 @@ import {
 } from "@mui/material";
 import { useState, PropsWithChildren, useEffect, useMemo } from "react";
 
-import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import {
   MessagePipelineContext,
   useMessagePipeline,
 } from "@foxglove/studio-base/components/MessagePipeline";
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
 import Stack from "@foxglove/studio-base/components/Stack";
-import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
 
 import { DataSourceInfo } from "./DataSourceInfo";
@@ -37,6 +35,11 @@ const StyledTab = muiStyled(Tab)(({ theme }) => ({
   minHeight: "auto",
   minWidth: theme.spacing(8),
   padding: theme.spacing(1.5, 2),
+  color: theme.palette.text.secondary,
+
+  "&.Mui-selected": {
+    color: theme.palette.text.primary,
+  },
 }));
 
 const StyledTabs = muiStyled(Tabs)({
@@ -83,7 +86,6 @@ const selectPlayerProblems = ({ playerState }: MessagePipelineContext) => player
 
 export default function DataSourceSidebar(props: Props): JSX.Element {
   const { onSelectDataSourceAction } = props;
-  const [enableOpenDialog] = useAppConfigurationValue(AppSetting.OPEN_DIALOG);
   const playerPresence = useMessagePipeline(selectPlayerPresence);
   const playerProblems = useMessagePipeline(selectPlayerProblems) ?? [];
   const [activeTab, setActiveTab] = useState<number>(0);
@@ -111,20 +113,18 @@ export default function DataSourceSidebar(props: Props): JSX.Element {
       disablePadding
       trailingItems={[
         isLoading && (
-          <Stack alignItems="center" justifyContent="center" padding={1}>
-            <CircularProgress size={20} variant="indeterminate" />
+          <Stack key="loading" alignItems="center" justifyContent="center" padding={1}>
+            <CircularProgress size={18} variant="indeterminate" />
           </Stack>
         ),
-        enableOpenDialog === true && (
-          <IconButton
-            key="add-connection"
-            color="primary"
-            title="New connection"
-            onClick={onSelectDataSourceAction}
-          >
-            <AddIcon />
-          </IconButton>
-        ),
+        <IconButton
+          key="add-connection"
+          color="primary"
+          title="New connection"
+          onClick={onSelectDataSourceAction}
+        >
+          <AddIcon />
+        </IconButton>,
       ].filter(Boolean)}
     >
       <Stack fullHeight>

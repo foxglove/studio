@@ -12,6 +12,7 @@
 //   You may not use this file except in compliance with the License.
 import { v4 as uuidv4 } from "uuid";
 
+import { debouncePromise } from "@foxglove/den/async";
 import { filterMap } from "@foxglove/den/collection";
 import Logger from "@foxglove/log";
 import {
@@ -48,7 +49,6 @@ import {
   RandomAccessDataProviderMetadata,
 } from "@foxglove/studio-base/randomAccessDataProviders/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
-import debouncePromise from "@foxglove/studio-base/util/debouncePromise";
 import delay from "@foxglove/studio-base/util/delay";
 import { isRangeCoveredByRanges } from "@foxglove/studio-base/util/ranges";
 import { getSanitizedTopics } from "@foxglove/studio-base/util/selectors";
@@ -670,6 +670,10 @@ export default class RandomAccessPlayer implements Player {
 
   publish(_payload: PublishPayload): void {
     throw new Error("Publishing is not supported by this data source");
+  }
+
+  async callService(): Promise<unknown> {
+    throw new Error("Service calls are not supported by this data source");
   }
 
   close(): void {

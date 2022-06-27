@@ -17,10 +17,11 @@ import { storiesOf } from "@storybook/react";
 import { Mosaic, MosaicWindow } from "react-mosaic-component";
 
 import ChildToggle from "@foxglove/studio-base/components/ChildToggle";
-import Icon from "@foxglove/studio-base/components/Icon";
 import MockPanelContextProvider from "@foxglove/studio-base/components/MockPanelContextProvider";
+import ToolbarIconButton from "@foxglove/studio-base/components/PanelToolbar/ToolbarIconButton";
 import MockCurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider/MockCurrentLayoutProvider";
 import HelpInfoProvider from "@foxglove/studio-base/providers/HelpInfoProvider";
+import { PanelSettingsEditorContextProvider } from "@foxglove/studio-base/providers/PanelSettingsEditorContextProvider";
 
 import PanelToolbar from "./index";
 
@@ -41,17 +42,21 @@ class MosaicWrapper extends React.Component<{
             toolbarControls={<div />}
             renderPreview={() => undefined as any}
           >
-            <HelpInfoProvider>
-              <Box
-                width="100%"
-                height="100%"
-                padding={3}
-                position="relative"
-                bgcolor="background.default"
-              >
-                <Box width={width}>{id === "Sibling" ? "Sibling Panel" : this.props.children}</Box>
-              </Box>
-            </HelpInfoProvider>
+            <PanelSettingsEditorContextProvider>
+              <HelpInfoProvider>
+                <Box
+                  width="100%"
+                  height="100%"
+                  padding={3}
+                  position="relative"
+                  bgcolor="background.default"
+                >
+                  <Box width={width}>
+                    {id === "Sibling" ? "Sibling Panel" : this.props.children}
+                  </Box>
+                </Box>
+              </HelpInfoProvider>
+            </PanelSettingsEditorContextProvider>
           </MosaicWindow>
         )}
         value={this.props.layout ?? "dummy"}
@@ -61,7 +66,7 @@ class MosaicWrapper extends React.Component<{
   }
 }
 
-class PanelToolbarWithOpenMenu extends React.PureComponent<{ hideToolbars?: boolean }> {
+class PanelToolbarWithOpenMenu extends React.PureComponent {
   override render() {
     return (
       <div
@@ -75,7 +80,7 @@ class PanelToolbarWithOpenMenu extends React.PureComponent<{ hideToolbars?: bool
           }
         }}
       >
-        <PanelToolbar hideToolbars={this.props.hideToolbars} helpContent={<div />}>
+        <PanelToolbar helpContent={<div />}>
           <div style={{ width: "100%", lineHeight: "22px", paddingLeft: 5 }}>
             Some controls here
           </div>
@@ -114,7 +119,7 @@ storiesOf("components/PanelToolbar", module)
   .add("non-floating (narrow)", () => {
     return (
       <MosaicWrapper width={268}>
-        <PanelToolbar alwaysVisible helpContent={<div />}>
+        <PanelToolbar helpContent={<div />}>
           <div style={{ width: "100%", lineHeight: "22px", paddingLeft: 5 }}>
             Some controls here
           </div>
@@ -126,7 +131,7 @@ storiesOf("components/PanelToolbar", module)
   .add("non-floating (wide with panel name)", () => {
     return (
       <MosaicWrapper width={468}>
-        <PanelToolbar alwaysVisible helpContent={<div />}>
+        <PanelToolbar helpContent={<div />}>
           <div style={{ width: "100%", lineHeight: "22px", paddingLeft: 5 }}>
             Some controls here
           </div>
@@ -137,13 +142,13 @@ storiesOf("components/PanelToolbar", module)
   })
   .add("one additional icon", () => {
     const additionalIcons = (
-      <Icon>
+      <ToolbarIconButton title="database icon">
         <DatabaseIcon />
-      </Icon>
+      </ToolbarIconButton>
     );
     return (
       <MosaicWrapper width={468}>
-        <PanelToolbar helpContent={<div />} additionalIcons={additionalIcons} alwaysVisible>
+        <PanelToolbar helpContent={<div />} additionalIcons={additionalIcons}>
           <div style={{ width: "100%", lineHeight: "22px", paddingLeft: 5 }}>
             Some controls here
           </div>
@@ -232,7 +237,7 @@ storiesOf("components/PanelToolbar", module)
               width={268}
               layout={{ direction: "row", first: "dummy", second: "Sibling" }}
             >
-              <PanelToolbarWithOpenMenu hideToolbars />
+              <PanelToolbarWithOpenMenu />
             </MosaicWrapper>
           );
         }

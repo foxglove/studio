@@ -59,6 +59,9 @@ export interface Player {
   // If the Player supports publishing (i.e. PlayerState#capabilities contains
   // PlayerCapabilities.advertise), publish a message.
   publish(request: PublishPayload): void;
+  // If the player support service calls (i.e. PlayerState#capabilities contains PlayerCapabilities.callServices)
+  // this will make a service call to the named service with the request payload.
+  callService(service: string, request: unknown): Promise<unknown>;
   // Basic playback controls. Available if `capabilities` contains PlayerCapabilities.playbackControl.
   startPlayback?(): void;
   pausePlayback?(): void;
@@ -271,16 +274,10 @@ export type SubscriptionPreloadType =
   | "partial"; // Fetch messages as needed.
 
 // Represents a subscription to a single topic, for use in `setSubscriptions`.
-// TODO(JP): Pull this into two types, one for the Player (which does not care about the
-// `requester`) and one for the Internals panel (which does).
 export type SubscribePayload = {
   // The topic name to subscribe to.
   topic: string;
-
   preloadType?: SubscriptionPreloadType;
-
-  // Optionally, where the request came from. Used in the "Internals" panel to improve debugging.
-  requester?: { type: "panel" | "node" | "other"; name: string };
 };
 
 // Represents a single topic publisher, for use in `setPublishers`.
@@ -302,6 +299,9 @@ export type PublishPayload = { topic: string; msg: Record<string, unknown> };
 export const PlayerCapabilities = {
   // Publishing messages. Need to be connected to some sort of live robotics system (e.g. ROS).
   advertise: "advertise",
+
+  // Calling services
+  callServices: "callServices",
 
   // Setting speed to something that is not real time.
   setSpeed: "setSpeed",

@@ -14,7 +14,8 @@
 import { useMemo, useRef } from "react";
 
 import {
-  TF_DATATYPES,
+  ROS_TF_DATATYPES,
+  FOXGLOVE_TF_DATATYPES,
   TRANSFORM_STAMPED_DATATYPES,
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/constants";
 import {
@@ -127,6 +128,15 @@ function useTransforms(args: Args): IImmutableTransformTree {
             continue;
           }
         }
+        // Handle Foxglove schemas which have frame_id and timestamp at the root instead of nested in header
+        if ("frame_id" in (msg.message as { frame_id?: string })) {
+          const frameId = (msg.message as { frame_id?: string }).frame_id;
+          if (frameId != undefined) {
+            transforms.getOrCreateFrame(frameId);
+            updated = true;
+            continue;
+          }
+        }
         // A hack specific to MarkerArray messages, which don't themselves have headers, but individual markers do.
         if ("markers" in (msg.message as Partial<MarkerArray>)) {
           const markers = (msg.message as MarkerArray).markers;
@@ -141,17 +151,18 @@ function useTransforms(args: Args): IImmutableTransformTree {
       }
 
       // Process all TF topics (ex: /tf and /tf_static)
-      if (TF_DATATYPES.includes(datatype)) {
+      if (ROS_TF_DATATYPES.includes(datatype)) {
         consumeTfs(msgs as MessageEvent<TfMessage>[], transforms);
         updated = true;
       } else if (TRANSFORM_STAMPED_DATATYPES.includes(datatype)) {
         consumeSingleTfs(msgs as MessageEvent<TF>[], transforms);
         updated = true;
-      } else if (datatype === "foxglove.FrameTransform") {
+      } else if (FOXGLOVE_TF_DATATYPES.includes(datatype)) {
         consumeFoxgloveFrameTransform(
-          msgs as MessageEvent<FoxgloveMessages[typeof datatype]>[],
+          msgs as MessageEvent<FoxgloveMessages["foxglove.FrameTransform"]>[],
           transforms,
         );
+        updated = true;
       }
     }
 

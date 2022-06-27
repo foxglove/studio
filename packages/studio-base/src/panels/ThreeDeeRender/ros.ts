@@ -2,6 +2,10 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import type { Time } from "@foxglove/rostime";
+
+import type { Pose } from "./transforms";
+
 export type Matrix3 = [number, number, number, number, number, number, number, number, number];
 
 // prettier-ignore
@@ -44,6 +48,7 @@ export enum MarkerAction {
 }
 
 export enum PointFieldType {
+  UNKNOWN = 0,
   INT8 = 1,
   UINT8 = 2,
   INT16 = 3,
@@ -54,10 +59,7 @@ export enum PointFieldType {
   FLOAT64 = 8,
 }
 
-export type RosTime = {
-  sec: number;
-  nsec: number;
-};
+export type RosTime = Time;
 
 export type RosDuration = RosTime;
 
@@ -66,6 +68,9 @@ export type Vector3 = {
   y: number;
   z: number;
 };
+
+export type Point = Vector3;
+export type Point32 = Vector3;
 
 export type Quaternion = {
   x: number;
@@ -87,14 +92,13 @@ export type ColorRGBA = {
   a: number;
 };
 
-export type Pose = {
-  position: Vector3;
-  orientation: Quaternion;
-};
-
 export type PoseWithCovariance = {
   pose: Pose;
   covariance: Matrix6;
+};
+
+export type Polygon = {
+  points: Point32[];
 };
 
 export type Header = {
@@ -103,14 +107,18 @@ export type Header = {
   seq?: number;
 };
 
-export type TF = {
+export type Transform = {
+  translation: Vector3;
+  rotation: Quaternion;
+};
+
+export type TransformStamped = {
   header: Header;
   child_frame_id: string;
-  transform: {
-    rotation: Quaternion;
-    translation: Vector3;
-  };
+  transform: Transform;
 };
+
+export type TFMessage = { transforms: TransformStamped[] };
 
 export type Marker = {
   header: Header;
@@ -128,6 +136,10 @@ export type Marker = {
   text: string;
   mesh_resource: string;
   mesh_use_embedded_materials: boolean;
+};
+
+export type MarkerArray = {
+  markers: Marker[];
 };
 
 export type PointField = {
@@ -149,6 +161,19 @@ export type PointCloud2 = {
   is_dense: boolean;
 };
 
+export type LaserScan = {
+  header: Header;
+  angle_min: number;
+  angle_max: number;
+  angle_increment: number;
+  time_increment: number;
+  scan_time: number;
+  range_min: number;
+  range_max: number;
+  ranges: Float32Array;
+  intensities: Float32Array;
+};
+
 export type MapMetaData = {
   map_load_time: RosTime;
   resolution: number;
@@ -166,6 +191,21 @@ export type OccupancyGrid = {
 export type PoseStamped = {
   header: Header;
   pose: Pose;
+};
+
+export type PoseArray = Readonly<{
+  header: Header;
+  poses: Pose[];
+}>;
+
+export type NavPath = Readonly<{
+  header: Header;
+  poses: PoseStamped[];
+}>;
+
+export type PolygonStamped = {
+  header: Header;
+  polygon: Polygon;
 };
 
 export type PoseWithCovarianceStamped = {
@@ -195,6 +235,45 @@ export type CameraInfo = {
   roi: RegionOfInterest;
 };
 
+// The capitalization of the single-letter matrix names is different between
+// ROS 1 and ROS 2. This type represents that ambiguity, before normalizing into
+// the CameraInfo type
+export type IncomingCameraInfo = {
+  header: Header;
+  height: number;
+  width: number;
+  distortion_model: string;
+  D: number[] | undefined;
+  K: Matrix3 | [] | undefined;
+  R: Matrix3 | [] | undefined;
+  P: Matrix3x4 | [] | undefined;
+  d: number[] | undefined;
+  k: Matrix3 | [] | undefined;
+  r: Matrix3 | [] | undefined;
+  p: Matrix3x4 | [] | undefined;
+  binning_x: number;
+  binning_y: number;
+  roi: RegionOfInterest;
+};
+
+export type Image = {
+  header: Header;
+  height: number;
+  width: number;
+  encoding: string;
+  is_bigendian: boolean;
+  step: number;
+  data: Int8Array | Uint8Array;
+};
+
+export type CompressedImage = {
+  header: Header;
+  format: string;
+  data: Uint8Array;
+};
+
+export const TIME_ZERO = { sec: 0, nsec: 0 };
+
 export const TRANSFORM_STAMPED_DATATYPES = new Set<string>();
 addRosDataType(TRANSFORM_STAMPED_DATATYPES, "geometry_msgs/TransformStamped");
 
@@ -214,18 +293,32 @@ addRosDataType(OCCUPANCY_GRID_DATATYPES, "nav_msgs/OccupancyGrid");
 export const POINTCLOUD_DATATYPES = new Set<string>();
 addRosDataType(POINTCLOUD_DATATYPES, "sensor_msgs/PointCloud2");
 
+export const LASERSCAN_DATATYPES = new Set<string>();
+addRosDataType(LASERSCAN_DATATYPES, "sensor_msgs/LaserScan");
+
 export const POSE_STAMPED_DATATYPES = new Set<string>();
 addRosDataType(POSE_STAMPED_DATATYPES, "geometry_msgs/PoseStamped");
 
 export const POSE_WITH_COVARIANCE_STAMPED_DATATYPES = new Set<string>();
 addRosDataType(POSE_WITH_COVARIANCE_STAMPED_DATATYPES, "geometry_msgs/PoseWithCovarianceStamped");
 
+export const POSE_ARRAY_DATATYPES = new Set<string>();
+addRosDataType(POSE_ARRAY_DATATYPES, "geometry_msgs/PoseArray");
+
+export const NAV_PATH_DATATYPES = new Set<string>();
+addRosDataType(NAV_PATH_DATATYPES, "nav_msgs/Path");
+
 export const CAMERA_INFO_DATATYPES = new Set<string>();
 addRosDataType(CAMERA_INFO_DATATYPES, "sensor_msgs/CameraInfo");
 
-export function rosTimeToNanoSec(rosTime: { sec: number; nsec: number }): bigint {
-  return BigInt(rosTime.sec) * BigInt(1e9) + BigInt(rosTime.nsec);
-}
+export const IMAGE_DATATYPES = new Set<string>();
+addRosDataType(IMAGE_DATATYPES, "sensor_msgs/Image");
+
+export const COMPRESSED_IMAGE_DATATYPES = new Set<string>();
+addRosDataType(COMPRESSED_IMAGE_DATATYPES, "sensor_msgs/CompressedImage");
+
+export const POLYGON_STAMPED_DATATYPES = new Set<string>();
+addRosDataType(POLYGON_STAMPED_DATATYPES, "geometry_msgs/PolygonStamped");
 
 // Expand a single ROS1 dataType into variations for ROS2 and protobufs,
 // then add them to the given output set

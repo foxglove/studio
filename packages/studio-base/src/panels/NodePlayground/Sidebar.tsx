@@ -21,7 +21,6 @@ import {
   ListItem,
   ListItemButton,
   ListItemText,
-  Stack,
   IconButton,
   Tabs,
   Tab,
@@ -29,10 +28,12 @@ import {
   Paper,
   CardHeader,
   Typography,
+  Divider,
 } from "@mui/material";
 import * as monacoApi from "monaco-editor/esm/vs/editor/editor.api";
 import { ReactNode, useCallback, useMemo } from "react";
 
+import Stack from "@foxglove/studio-base/components/Stack";
 import { Explorer } from "@foxglove/studio-base/panels/NodePlayground";
 import { Script } from "@foxglove/studio-base/panels/NodePlayground/script";
 import { getNodeProjectConfig } from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/typescript/projectConfig";
@@ -42,20 +43,17 @@ import { UserNodes } from "@foxglove/studio-base/types/panels";
 const STab = muiStyled(Tab)(({ theme }) => ({
   minWidth: "auto",
   padding: theme.spacing(1, 1.125),
-
-  "&.Mui-selected": {
-    backgroundColor: theme.palette.grey[100],
-  },
 }));
 
 const STabs = muiStyled(Tabs)({
   ".MuiTabs-indicator": {
-    display: "none",
+    right: "auto",
+    left: 1,
   },
 });
 
 const ExplorerWrapper = muiStyled("div")(({ theme }) => ({
-  backgroundColor: theme.palette.grey[100],
+  backgroundColor: theme.palette.grey[200],
   width: 350,
   overflow: "auto",
 }));
@@ -284,8 +282,8 @@ const Sidebar = ({
   );
 
   return (
-    <Paper>
-      <Stack direction="row" height="100%">
+    <Paper elevation={0}>
+      <Stack direction="row" fullHeight>
         <STabs orientation="vertical" value={activeExplorerTab}>
           <STab
             disableRipple
@@ -312,7 +310,13 @@ const Sidebar = ({
             onClick={() => updateExplorer(templatesSelected ? undefined : "templates")}
           />
         </STabs>
-        {explorer != undefined && <ExplorerWrapper>{explorers[explorer]}</ExplorerWrapper>}
+        {explorer != undefined && (
+          <>
+            <Divider flexItem orientation="vertical" />
+            <ExplorerWrapper>{explorers[explorer]}</ExplorerWrapper>
+          </>
+        )}
+        <Divider flexItem orientation="vertical" />
       </Stack>
     </Paper>
   );

@@ -35,7 +35,7 @@ const useStyles = makeStyles((theme) => ({
         borderRadius: 2,
       },
     },
-    "p:not(.MuiTypography-root)": {
+    "p:not([class^='Mui')": {
       margin: "1em 0",
 
       ":last-child": {
@@ -44,13 +44,6 @@ const useStyles = makeStyles((theme) => ({
     },
     "b, strong": {
       fontWeight: 700,
-    },
-    table: {
-      borderCollapse: "collapse",
-      borderSpacing: 0,
-    },
-    "th, td": {
-      verticalAlign: "top",
     },
 
     // container styling
@@ -89,8 +82,7 @@ const useStyles = makeStyles((theme) => ({
       ".mosaic-tile:first-child": {
         // make room for splitters - unfortunately this means the background color will show
         // through even if the tile has its own background color set
-        marginRight: 1,
-        marginBottom: 1,
+        gap: 1,
       },
       // The last tile does not need a bottom margin
       ".mosaic-tile:last-child": {
@@ -102,11 +94,11 @@ const useStyles = makeStyles((theme) => ({
       },
       // tile immediately after a row splitter needs 1px margin so the splitter doesn't overlap the tile content
       ".-row + .mosaic-tile": {
-        marginLeft: 1,
+        gap: 1,
       },
       // tile immediately after a column splitter needs 1px margin so the splitter doesn't overlap the tile content
       ".-column + .mosaic-tile": {
-        marginTop: 1,
+        gap: 1,
       },
       ".mosaic-window": {
         boxShadow: "none",
@@ -177,6 +169,34 @@ const useStyles = makeStyles((theme) => ({
         ".mosaic-tile": {
           margin: 0,
         },
+      },
+    },
+
+    // leaflet GUI styling
+    ".leaflet-bar a": {
+      userSelect: "none",
+      backgroundColor: theme.semanticColors.bodyStandoutBackground,
+      color: theme.semanticColors.buttonText,
+      borderBottomColor: theme.semanticColors.bodyDivider,
+
+      ":hover": {
+        backgroundColor: theme.semanticColors.bodyBackgroundHovered,
+        color: theme.semanticColors.buttonTextHovered,
+        borderBottomColor: theme.semanticColors.bodyDivider,
+      },
+      ":focus": {
+        color: theme.semanticColors.buttonTextPressed,
+      },
+      ":active": {
+        color: theme.semanticColors.buttonTextPressed,
+      },
+    },
+    ".leaflet-bar a.leaflet-disabled": {
+      backgroundColor: theme.semanticColors.bodyBackground,
+      color: theme.semanticColors.disabledBodyText,
+
+      "&:hover": {
+        backgroundColor: theme.semanticColors.bodyBackgroundHovered,
       },
     },
   },

@@ -9,13 +9,19 @@ import Stack from "@foxglove/studio-base/components/Stack";
 import { NumberInput } from "./NumberInput";
 
 export function Vec3Input({
+  disabled = false,
   onChange,
+  precision,
+  readOnly = false,
   step,
   value,
 }: {
+  disabled?: boolean;
   onChange: (
-    value: undefined | readonly [undefined | number, undefined | number, undefined | number],
+    value: undefined | [undefined | number, undefined | number, undefined | number],
   ) => void;
+  precision?: number;
+  readOnly?: boolean;
   step?: number;
   value: undefined | readonly [undefined | number, undefined | number, undefined | number];
 }): JSX.Element {
@@ -40,8 +46,11 @@ export function Vec3Input({
         <NumberInput
           key={position}
           size="small"
+          disabled={disabled}
+          readOnly={readOnly}
           variant="filled"
           fullWidth
+          precision={precision}
           step={step}
           value={pval}
           onChange={(newValue) => onChangeCallback(position, newValue)}

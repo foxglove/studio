@@ -2,10 +2,9 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import css from "@emotion/css";
-import produce from "immer";
-import { cloneDeep, merge, set } from "lodash";
-import React, { useCallback, useRef, useLayoutEffect, useEffect, useState, useMemo } from "react";
+import { isEqual, cloneDeep, merge } from "lodash";
+import React, { useCallback, useLayoutEffect, useEffect, useState, useMemo, useRef } from "react";
+import ReactDOM from "react-dom";
 import { useResizeDetector } from "react-resize-detector";
 import { DeepPartial } from "ts-essentials";
 import { useDebouncedCallback } from "use-debounce";
@@ -18,168 +17,137 @@ import {
   DEFAULT_CAMERA_STATE,
 } from "@foxglove/regl-worldview";
 import { toNanoSec } from "@foxglove/rostime";
-import { PanelExtensionContext, RenderState, Topic, MessageEvent } from "@foxglove/studio";
-import { SettingsTreeAction } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
+import {
+  LayoutActions,
+  MessageEvent,
+  PanelExtensionContext,
+  RenderState,
+  SettingsTreeAction,
+  SettingsTreeNodes,
+  Topic,
+} from "@foxglove/studio";
 import useCleanup from "@foxglove/studio-base/hooks/useCleanup";
 
 import { DebugGui } from "./DebugGui";
-import { setOverlayPosition } from "./LabelOverlay";
-import { Renderer } from "./Renderer";
-import { RendererContext, useRenderer, useRendererEvent } from "./RendererContext";
+import Interactions, {
+  InteractionContextMenu,
+  OBJECT_TAB_TYPE,
+  SelectionObject,
+  TabType,
+} from "./Interactions";
+import type { Renderable } from "./Renderable";
+import { Renderer, RendererConfig } from "./Renderer";
+import { RendererContext, useRendererEvent } from "./RendererContext";
 import { Stats } from "./Stats";
-import {
-  normalizeCameraInfo,
-  normalizeMarker,
-  normalizePoseStamped,
-  normalizePoseWithCovarianceStamped,
-} from "./normalizeMessages";
-import {
-  TRANSFORM_STAMPED_DATATYPES,
-  TF_DATATYPES,
-  MARKER_DATATYPES,
-  MARKER_ARRAY_DATATYPES,
-  TF,
-  Marker,
-  PointCloud2,
-  POINTCLOUD_DATATYPES,
-  OccupancyGrid,
-  OCCUPANCY_GRID_DATATYPES,
-  POSE_STAMPED_DATATYPES,
-  POSE_WITH_COVARIANCE_STAMPED_DATATYPES,
-  PoseStamped,
-  PoseWithCovarianceStamped,
-  CameraInfo,
-  CAMERA_INFO_DATATYPES,
-} from "./ros";
-import {
-  buildSettingsTree,
-  LayerType,
-  SelectEntry,
-  SUPPORTED_DATATYPES,
-  ThreeDeeRenderConfig,
-} from "./settings";
-
-const SHOW_DEBUG: true | false = false;
-const DEFAULT_FRAME_IDS = ["base_link", "odom", "map", "earth"];
+import type { MarkerUserData } from "./renderables/markers/RenderableMarker";
+import { TF_DATATYPES, TRANSFORM_STAMPED_DATATYPES } from "./ros";
 
 const log = Logger.getLogger(__filename);
 
-const labelLight = css`
-  position: relative;
-  color: #27272b;
-  background-color: #ececec99;
-`;
+const SHOW_DEBUG: true | false = false;
+const PANEL_STYLE: React.CSSProperties = {
+  width: "100%",
+  height: "100%",
+  display: "flex",
+  position: "relative",
+};
+const CANVAS_STYLE: React.CSSProperties = { position: "absolute", top: 0, left: 0 };
 
-const labelDark = css`
-  position: relative;
-  color: #e1e1e4;
-  background-color: #181818cc;
-`;
-
+/**
+ * Provides DOM overlay elements on top of the 3D scene (e.g. stats, debug GUI).
+ */
 function RendererOverlay(props: {
-  colorScheme: "dark" | "light" | undefined;
+  addPanel: LayoutActions["addPanel"];
   enableStats: boolean;
 }): JSX.Element {
-  const colorScheme = props.colorScheme;
-  const [_selectedRenderable, setSelectedRenderable] = useState<THREE.Object3D | undefined>(
-    undefined,
-  );
-  const [labelsMap, setLabelsMap] = useState(new Map<string, Marker>());
-  const labelsRef = useRef<HTMLDivElement>(ReactNull);
-  const renderer = useRenderer();
+  const [selectedRenderable, setSelectedRenderable] = useState<Renderable | undefined>(undefined);
+  const [interactionsTabType, setInteractionsTabType] = useState<TabType | undefined>(undefined);
 
-  useRendererEvent("renderableSelected", (renderable) => setSelectedRenderable(renderable));
-
-  useRendererEvent("showLabel", (labelId: string, labelMarker: Marker) => {
-    const curLabelMarker = labelsMap.get(labelId);
-    if (curLabelMarker === labelMarker) {
-      return;
-    }
-    setLabelsMap(new Map(labelsMap.set(labelId, labelMarker)));
+  useRendererEvent("renderableSelected", (renderable) => {
+    setSelectedRenderable(renderable);
+    setInteractionsTabType(renderable ? OBJECT_TAB_TYPE : undefined);
   });
-
-  useRendererEvent("removeLabel", (labelId: string) => {
-    if (!labelsMap.has(labelId)) {
-      return;
-    }
-    labelsMap.delete(labelId);
-    setLabelsMap(new Map(labelsMap));
-  });
-
-  useRendererEvent("endFrame", (_, curRenderer) => {
-    if (labelsRef.current) {
-      for (const labelId of labelsMap.keys()) {
-        const labelEl = document.getElementById(`label-${labelId}`);
-        if (labelEl) {
-          const worldPosition = curRenderer.markerWorldPosition(labelId);
-          if (worldPosition) {
-            setOverlayPosition(
-              labelEl.style,
-              worldPosition,
-              curRenderer.input.canvasSize,
-              curRenderer.camera,
-            );
-          }
-        }
-      }
-    }
-  });
-
-  // Create a div for each label
-  const labelElements = useMemo(() => {
-    const newLabelElements: JSX.Element[] = [];
-    if (!renderer) {
-      return newLabelElements;
-    }
-    const style = { left: "", top: "", transform: "" };
-    const labelCss = colorScheme === "dark" ? labelDark : labelLight;
-    for (const [labelId, labelMarker] of labelsMap) {
-      const worldPosition = renderer.markerWorldPosition(labelId);
-      if (worldPosition) {
-        setOverlayPosition(style, worldPosition, renderer.input.canvasSize, renderer.camera);
-        newLabelElements.push(
-          <div id={`label-${labelId}`} key={labelId} className={labelCss.name} style={style}>
-            {labelMarker.text}
-          </div>,
-        );
-      }
-    }
-    return newLabelElements;
-  }, [renderer, labelsMap, colorScheme]);
-
-  const labels = (
-    <div id="labels" ref={labelsRef} style={{ position: "absolute", top: 0 }}>
-      {labelElements}
-    </div>
-  );
 
   const stats = props.enableStats ? (
-    <div id="stats" style={{ position: "absolute", top: 0 }}>
+    <div id="stats" style={{ position: "absolute", top: "10px", left: "10px" }}>
       <Stats />
     </div>
   ) : undefined;
 
   const debug = SHOW_DEBUG ? (
-    <div id="debug" style={{ position: "absolute", top: 60 }}>
+    <div id="debug" style={{ position: "absolute", top: "70px", left: "10px" }}>
       <DebugGui />
     </div>
   ) : undefined;
 
+  const selectedObject = useMemo<SelectionObject | undefined>(() => {
+    if (!selectedRenderable) {
+      return undefined;
+    }
+
+    // Retrieve the original message for Markers. This needs to be rethought for
+    // other renderables that are generated from received messages
+    const maybeMarkerUserData = selectedRenderable.userData as Partial<MarkerUserData>;
+    const topic = maybeMarkerUserData.topic ?? "";
+    const originalMessage = maybeMarkerUserData.marker ?? {};
+
+    return {
+      object: {
+        pose: selectedRenderable.userData.pose,
+        interactionData: {
+          topic,
+          highlighted: true,
+          originalMessage,
+        },
+      },
+      instanceIndex: undefined,
+    };
+  }, [selectedRenderable]);
+
+  const clickedObjects = useMemo<SelectionObject[]>(() => {
+    return [];
+  }, []);
+
   return (
     <React.Fragment>
-      {labels}
+      <div
+        style={{
+          position: "absolute",
+          top: "10px",
+          right: "10px",
+        }}
+      >
+        <Interactions
+          addPanel={props.addPanel}
+          selectedObject={selectedObject}
+          interactionsTabType={interactionsTabType}
+          setInteractionsTabType={setInteractionsTabType}
+        />
+      </div>
+      {clickedObjects.length > 1 && !selectedObject && (
+        <InteractionContextMenu
+          clickedPosition={{ clientX: 0, clientY: 0 }}
+          clickedObjects={[]}
+          selectObject={() => {}}
+        />
+      )}
       {stats}
       {debug}
     </React.Fragment>
   );
 }
 
+/**
+ * A panel that renders a 3D scene. This is a thin wrapper around a `Renderer` instance.
+ */
 export function ThreeDeeRender({ context }: { context: PanelExtensionContext }): JSX.Element {
   const { initialState, saveState } = context;
 
   // Load and save the persisted panel configuration
-  const [config, setConfig] = useState<ThreeDeeRenderConfig>(() => {
-    const partialConfig = initialState as DeepPartial<ThreeDeeRenderConfig> | undefined;
+  const [config, setConfig] = useState<RendererConfig>(() => {
+    const partialConfig = initialState as DeepPartial<RendererConfig> | undefined;
+
+    // Initialize the camera from default settings overlaid with persisted settings
     const cameraState: CameraState = merge(
       cloneDeep(DEFAULT_CAMERA_STATE),
       partialConfig?.cameraState,
@@ -189,22 +157,32 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
       cameraState,
       followTf: partialConfig?.followTf,
       scene: partialConfig?.scene ?? {},
+      transforms: partialConfig?.transforms ?? {},
       topics: partialConfig?.topics ?? {},
+      layers: partialConfig?.layers ?? {},
     };
   });
-  const { cameraState, followTf: configFollowTf } = config;
+  const configRef = useRef(config);
+  const { cameraState } = config;
   const backgroundColor = config.scene.backgroundColor;
 
   const [canvas, setCanvas] = useState<HTMLCanvasElement | ReactNull>(ReactNull);
   const [renderer, setRenderer] = useState<Renderer | ReactNull>(ReactNull);
-  useEffect(() => setRenderer(canvas ? new Renderer(canvas) : ReactNull), [canvas]);
+  useEffect(
+    () => setRenderer(canvas ? new Renderer(canvas, configRef.current) : ReactNull),
+    [canvas],
+  );
 
   const [colorScheme, setColorScheme] = useState<"dark" | "light" | undefined>();
   const [topics, setTopics] = useState<ReadonlyArray<Topic> | undefined>();
   const [messages, setMessages] = useState<ReadonlyArray<MessageEvent<unknown>> | undefined>();
   const [currentTime, setCurrentTime] = useState<bigint | undefined>();
+  const [didSeek, setDidSeek] = useState<boolean>(false);
 
+  const renderRef = useRef({ needsRender: false });
   const [renderDone, setRenderDone] = useState<(() => void) | undefined>();
+
+  const datatypeHandlers = useMemo(() => renderer?.datatypeHandlers ?? new Map(), [renderer]);
 
   // Config cameraState
   const setCameraState = useCallback((state: CameraState) => {
@@ -224,196 +202,129 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
     return map;
   }, [topics]);
 
-  // Build a map from (renderable) topic name to LayerType enum
-  const topicsToLayerTypes = useMemo(() => buildTopicsToLayerTypes(topics), [topics]);
-
   // Handle user changes in the settings sidebar
   const actionHandler = useCallback(
-    (action: SettingsTreeAction) => {
-      setConfig((oldConfig) => {
-        const newConfig = produce(oldConfig, (draft) => {
-          set(draft, action.payload.path, action.payload.value);
-        });
-
-        // If a topic setting was changed, inform the renderer about it and
-        // draw a new frame
-        if (renderer && action.payload.path[0] === "topics") {
-          const topic = action.payload.path[1]!;
-          const layerType = topicsToLayerTypes.get(topic);
-          if (layerType != undefined) {
-            updateTopicSettings(renderer, topic, layerType, newConfig);
-          }
-        }
-
-        return newConfig;
-      });
-    },
-    [renderer, topicsToLayerTypes],
+    (action: SettingsTreeAction) => renderer?.settings.handleAction(action),
+    [renderer],
   );
 
-  // Maintain a list of coordinate frames for the settings sidebar
-  const [coordinateFrames, setCoordinateFrames] = useState<SelectEntry[]>(
-    coordinateFrameList(renderer),
+  // Maintain the settings tree
+  const [settingsTree, setSettingsTree] = useState<SettingsTreeNodes | undefined>(undefined);
+  const updateSettingsTree = useCallback(
+    (curRenderer: Renderer) => setSettingsTree(curRenderer.settings.tree()),
+    [],
   );
-  const [defaultFrame, setDefaultFrame] = useState<string | undefined>(undefined);
-  const updateCoordinateFrames = useCallback(
-    (curRenderer: Renderer) => {
-      setCoordinateFrames(coordinateFrameList(curRenderer));
+  useRendererEvent("settingsTreeChange", updateSettingsTree, renderer);
 
-      // Prefer frames from [REP-105](https://www.ros.org/reps/rep-0105.html)
-      for (const frameId of DEFAULT_FRAME_IDS) {
-        if (curRenderer.transformTree.hasFrame(frameId)) {
-          setDefaultFrame(frameId);
-          return;
-        }
-      }
+  // Save the panel configuration when it changes
+  const updateConfig = useCallback((curRenderer: Renderer) => setConfig(curRenderer.config), []);
+  useRendererEvent("configChange", updateConfig, renderer);
 
-      // Choose the root frame with the most children
-      const rootsToCounts = new Map<string, number>();
-      for (const frame of curRenderer.transformTree.frames().values()) {
-        const rootId = frame.root().id;
-        rootsToCounts.set(rootId, (rootsToCounts.get(rootId) ?? 0) + 1);
-      }
-      const rootsArray = Array.from(rootsToCounts.entries());
-      const rootId = rootsArray.sort((a, b) => b[1] - a[1])[0]?.[0];
-      if (rootId != undefined) {
-        setDefaultFrame(rootId);
-      }
-    },
-    [setDefaultFrame],
-  );
+  // Rebuild the settings sidebar tree as needed
   useEffect(() => {
-    renderer?.addListener("transformTreeUpdated", updateCoordinateFrames);
-    return () => void renderer?.removeListener("transformTreeUpdated", updateCoordinateFrames);
-  }, [renderer, updateCoordinateFrames]);
-
-  // Set the rendering frame (aka followTf) based on the configured frame, falling back to a
-  // heuristically chosen best frame for the current scene (defaultFrame)
-  const followTf = useMemo(
-    () =>
-      configFollowTf != undefined && renderer && renderer.transformTree.hasFrame(configFollowTf)
-        ? configFollowTf
-        : defaultFrame,
-    [configFollowTf, defaultFrame, renderer],
-  );
-
-  const fieldsProviders = renderer?.settingsFieldsProviders;
-
-  useEffect(() => {
-    // eslint-disable-next-line no-underscore-dangle, @typescript-eslint/no-explicit-any
-    (context as unknown as any).__updatePanelSettingsTree({
+    context.updatePanelSettingsEditor({
       actionHandler,
-      settings: buildSettingsTree({
-        config,
-        coordinateFrames,
-        followTf,
-        topics: topics ?? [],
-        topicsToLayerTypes,
-        fieldsProviders: fieldsProviders ?? new Map(),
-      }),
+      nodes: settingsTree ?? {},
     });
-  }, [
-    actionHandler,
-    config,
-    context,
-    coordinateFrames,
-    fieldsProviders,
-    followTf,
-    topics,
-    topicsToLayerTypes,
-  ]);
+  }, [actionHandler, context, settingsTree]);
 
   // Update the renderer's reference to `config` when it changes
   useEffect(() => {
     if (renderer) {
       renderer.config = config;
+      renderRef.current.needsRender = true;
     }
   }, [config, renderer]);
 
-  // Update renderer and draw a new frame when followTf changes
+  // Update the renderer's reference to `topics` when it changes
   useEffect(() => {
-    if (renderer?.config && followTf != undefined) {
-      renderer.renderFrameId = followTf;
-      renderer.animationFrame();
+    if (renderer) {
+      renderer.setTopics(topics);
+      renderRef.current.needsRender = true;
     }
-  }, [followTf, renderer]);
+  }, [topics, renderer]);
 
   // Save panel settings whenever they change
   const throttledSave = useDebouncedCallback(
-    (newConfig: ThreeDeeRenderConfig) => saveState(newConfig),
+    (newConfig: RendererConfig) => saveState(newConfig),
     1000,
+    { leading: false, trailing: true, maxWait: 1000 },
   );
   useEffect(() => throttledSave(config), [config, throttledSave]);
 
   // Dispose of the renderer (and associated GPU resources) on teardown
   useCleanup(() => renderer?.dispose());
 
-  // We use a layout effect to setup render handling for our panel. We also setup some topic subscriptions.
+  // Establish a connection to the message pipeline with context.watch and context.onRender
   useLayoutEffect(() => {
-    // The render handler is run by the broader studio system during playback when your panel
-    // needs to render because the fields it is watching have changed. How you handle rendering depends on your framework.
-    // You can only setup one render handler - usually early on in setting up your panel.
-    //
-    // Without a render handler your panel will never receive updates.
-    //
-    // The render handler could be invoked as often as 60hz during playback if fields are changing often.
     context.onRender = (renderState: RenderState, done) => {
-      if (renderState.currentTime) {
-        setCurrentTime(toNanoSec(renderState.currentTime));
-      }
+      ReactDOM.unstable_batchedUpdates(() => {
+        if (renderState.currentTime) {
+          setCurrentTime(toNanoSec(renderState.currentTime));
+        }
 
-      // render functions receive a _done_ callback. You MUST call this callback to indicate your panel has finished rendering.
-      // Your panel will not receive another render callback until _done_ is called from a prior render. If your panel is not done
-      // rendering before the next render call, studio shows a notification to the user that your panel is delayed.
-      //
-      // Set the done callback into a state variable to trigger a re-render
-      setRenderDone(done);
+        // Increment the seek count if didSeek is set to true, to trigger a
+        // state flush in Renderer
+        if (renderState.didSeek === true) {
+          setDidSeek(true);
+        }
 
-      // Keep UI elements and the renderer aware of the current color scheme
-      setColorScheme(renderState.colorScheme);
+        // Set the done callback into a state variable to trigger a re-render
+        setRenderDone(done);
 
-      // We may have new topics - since we are also watching for messages in the current frame, topics may not have changed
-      // It is up to you to determine the correct action when state has not changed
-      setTopics(renderState.topics);
+        // Keep UI elements and the renderer aware of the current color scheme
+        setColorScheme(renderState.colorScheme);
 
-      // currentFrame has messages on subscribed topics since the last render call
-      if (renderState.currentFrame) {
-        // Fully parse lazy messages
-        for (const messageEvent of renderState.currentFrame) {
-          const maybeLazy = messageEvent.message as { toJSON?: () => unknown };
-          if ("toJSON" in maybeLazy) {
-            (messageEvent as { message: unknown }).message = maybeLazy.toJSON!();
+        // We may have new topics - since we are also watching for messages in
+        // the current frame, topics may not have changed
+        setTopics(renderState.topics);
+
+        // currentFrame has messages on subscribed topics since the last render call
+        if (renderState.currentFrame) {
+          // Fully parse lazy messages
+          for (const messageEvent of renderState.currentFrame) {
+            const maybeLazy = messageEvent.message as { toJSON?: () => unknown };
+            if ("toJSON" in maybeLazy) {
+              (messageEvent as { message: unknown }).message = maybeLazy.toJSON!();
+            }
           }
         }
-      }
-      setMessages(renderState.currentFrame);
+        setMessages(renderState.currentFrame);
+      });
     };
 
-    context.watch("currentTime");
     context.watch("colorScheme");
-    context.watch("topics");
     context.watch("currentFrame");
+    context.watch("currentTime");
+    context.watch("didSeek");
+    context.watch("topics");
   }, [context]);
 
   // Build a list of topics to subscribe to
-  const topicsToSubscribe = useMemo(() => {
-    const subscriptionList: string[] = [];
+  const [topicsToSubscribe, setTopicsToSubscribe] = useState<string[] | undefined>(undefined);
+  useEffect(() => {
+    const subscriptions = new Set<string>();
     if (!topics) {
-      return undefined;
+      setTopicsToSubscribe(undefined);
+      return;
     }
 
     for (const topic of topics) {
       // Subscribe to all transform topics
       if (TF_DATATYPES.has(topic.datatype) || TRANSFORM_STAMPED_DATATYPES.has(topic.datatype)) {
-        subscriptionList.push(topic.name);
-      } else if (SUPPORTED_DATATYPES.has(topic.datatype)) {
-        // TODO: Allow disabling of subscriptions to non-TF topics
-        subscriptionList.push(topic.name);
+        subscriptions.add(topic.name);
+      } else if (datatypeHandlers.has(topic.datatype)) {
+        // Subscribe to known datatypes if the topic has not been toggled off
+        const topicConfig = config.topics[topic.name];
+        if (topicConfig?.visible !== false) {
+          subscriptions.add(topic.name);
+        }
       }
     }
 
-    return subscriptionList;
-  }, [topics]);
+    const newTopics = Array.from(subscriptions.keys()).sort();
+    setTopicsToSubscribe((prevTopics) => (isEqual(prevTopics, newTopics) ? prevTopics : newTopics));
+  }, [topics, config.topics, datatypeHandlers]);
 
   // Notify the extension context when our subscription list changes
   useEffect(() => {
@@ -421,34 +332,36 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
       return;
     }
     log.debug(`Subscribing to [${topicsToSubscribe.join(", ")}]`);
-    context.subscribe(topicsToSubscribe);
+    context.subscribe(topicsToSubscribe.map((topic) => ({ topic, preload: false })));
   }, [context, topicsToSubscribe]);
 
   // Keep the renderer currentTime up to date
   useEffect(() => {
     if (renderer && currentTime != undefined) {
       renderer.currentTime = currentTime;
+      renderRef.current.needsRender = true;
     }
   }, [currentTime, renderer]);
+
+  // Flush the renderer's state when the seek count changes
+  useEffect(() => {
+    if (renderer && didSeek) {
+      renderer.clear();
+      setDidSeek(false);
+    }
+  }, [renderer, didSeek]);
 
   // Keep the renderer colorScheme and backgroundColor up to date
   useEffect(() => {
     if (colorScheme && renderer) {
       renderer.setColorScheme(colorScheme, backgroundColor);
-      renderer.animationFrame();
+      renderRef.current.needsRender = true;
     }
   }, [backgroundColor, colorScheme, renderer]);
 
-  // Handle messages and render a frame if the camera has moved or new messages
-  // are available
+  // Handle messages and render a frame if new messages are available
   useEffect(() => {
-    if (!renderer) {
-      return;
-    }
-    renderer.setCameraState(cameraState);
-
-    if (!messages) {
-      renderer.animationFrame();
+    if (!renderer || !messages) {
       return;
     }
 
@@ -458,50 +371,26 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
         continue;
       }
 
-      if (TF_DATATYPES.has(datatype)) {
-        // tf2_msgs/TFMessage - Ingest the list of transforms into our TF tree
-        const tfMessage = message.message as { transforms: TF[] };
-        for (const tf of tfMessage.transforms) {
-          renderer.addTransformMessage(tf);
-        }
-      } else if (TRANSFORM_STAMPED_DATATYPES.has(datatype)) {
-        // geometry_msgs/TransformStamped - Ingest this single transform into our TF tree
-        const tf = message.message as TF;
-        renderer.addTransformMessage(tf);
-      } else if (MARKER_ARRAY_DATATYPES.has(datatype)) {
-        // visualization_msgs/MarkerArray - Ingest the list of markers
-        const markerArray = message.message as { markers: Marker[] };
-        for (const marker of markerArray.markers) {
-          renderer.addMarkerMessage(message.topic, marker);
-        }
-      } else if (MARKER_DATATYPES.has(datatype)) {
-        // visualization_msgs/Marker - Ingest this single marker
-        const marker = normalizeMarker(message.message as DeepPartial<Marker>);
-        renderer.addMarkerMessage(message.topic, marker);
-      } else if (OCCUPANCY_GRID_DATATYPES.has(datatype)) {
-        // nav_msgs/OccupancyGrid - Ingest this occupancy grid
-        const occupancyGrid = message.message as OccupancyGrid;
-        renderer.addOccupancyGridMessage(message.topic, occupancyGrid);
-      } else if (POINTCLOUD_DATATYPES.has(datatype)) {
-        // sensor_msgs/PointCloud2 - Ingest this point cloud
-        const pointCloud = message.message as PointCloud2;
-        renderer.addPointCloud2Message(message.topic, pointCloud);
-      } else if (POSE_STAMPED_DATATYPES.has(datatype)) {
-        const poseMesage = normalizePoseStamped(message.message as DeepPartial<PoseStamped>);
-        renderer.addPoseMessage(message.topic, poseMesage);
-      } else if (POSE_WITH_COVARIANCE_STAMPED_DATATYPES.has(datatype)) {
-        const poseMessage = normalizePoseWithCovarianceStamped(
-          message.message as DeepPartial<PoseWithCovarianceStamped>,
-        );
-        renderer.addPoseMessage(message.topic, poseMessage);
-      } else if (CAMERA_INFO_DATATYPES.has(datatype)) {
-        const cameraInfo = normalizeCameraInfo(message.message as DeepPartial<CameraInfo>);
-        renderer.addCameraInfoMessage(message.topic, cameraInfo);
-      }
+      renderer.addMessageEvent(message, datatype);
     }
 
-    renderer.animationFrame();
-  }, [cameraState, messages, renderer, topicsToDatatypes]);
+    renderRef.current.needsRender = true;
+  }, [messages, renderer, topicsToDatatypes]);
+
+  // Update the renderer when the camera moves
+  useEffect(() => {
+    cameraStore.setCameraState(cameraState);
+    renderer?.setCameraState(cameraState);
+    renderRef.current.needsRender = true;
+  }, [cameraState, cameraStore, renderer]);
+
+  // Render a new frame if requested
+  useEffect(() => {
+    if (renderer && renderRef.current.needsRender) {
+      renderer.animationFrame();
+      renderRef.current.needsRender = false;
+    }
+  });
 
   // Invoke the done callback once the render is complete
   useEffect(() => {
@@ -519,135 +408,28 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
     refreshRate: 0,
     refreshMode: "debounce",
   });
+
+  // Create a useCallback wrapper for adding a new panel to the layout, used to open the
+  // "Raw Messages" panel from the object inspector
+  const addPanel = useCallback(
+    (params: Parameters<LayoutActions["addPanel"]>[0]) => context.layout.addPanel(params),
+    [context.layout],
+  );
+
   return (
-    <div style={{ width: "100%", height: "100%", display: "flex" }} ref={resizeRef}>
+    <div style={PANEL_STYLE} ref={resizeRef}>
       <CameraListener cameraStore={cameraStore} shiftKeys={true}>
         <div
           // This element forces CameraListener to fill its container. We need this instead of just
-          // the canvas since three.js manages the size of the canvas element and we use position:absolute.
+          // the canvas since three.js manages the size of the canvas element and we use
+          // position:absolute
           style={{ width, height }}
         />
-        <canvas ref={setCanvas} style={{ position: "absolute", top: 0, left: 0 }} />
+        <canvas ref={setCanvas} style={CANVAS_STYLE} />
       </CameraListener>
       <RendererContext.Provider value={renderer}>
-        <RendererOverlay colorScheme={colorScheme} enableStats={config.scene.enableStats ?? true} />
+        <RendererOverlay addPanel={addPanel} enableStats={config.scene.enableStats ?? false} />
       </RendererContext.Provider>
     </div>
   );
-}
-
-function coordinateFrameList(renderer: Renderer | ReactNull | undefined): SelectEntry[] {
-  if (!renderer) {
-    return [];
-  }
-
-  type FrameEntry = { id: string; children: FrameEntry[] };
-
-  const frames = Array.from(renderer.transformTree.frames().values());
-  const frameMap = new Map<string, FrameEntry>(
-    frames.map((frame) => [frame.id, { id: frame.id, children: [] }]),
-  );
-
-  // Create a hierarchy of coordinate frames
-  const rootFrames: FrameEntry[] = [];
-  for (const frame of frames) {
-    const frameEntry = frameMap.get(frame.id)!;
-    const parentId = frame.parent()?.id;
-    if (parentId == undefined) {
-      rootFrames.push(frameEntry);
-    } else {
-      const parent = frameMap.get(parentId);
-      if (parent == undefined) {
-        continue;
-      }
-      parent.children.push(frameEntry);
-    }
-  }
-
-  // Convert the `rootFrames` hierarchy into a flat list of coordinate frames with depth
-  const output: SelectEntry[] = [];
-
-  function addFrame(frame: FrameEntry, depth: number) {
-    const frameName =
-      frame.id === "" || frame.id.startsWith(" ") || frame.id.endsWith(" ")
-        ? `"${frame.id}"`
-        : frame.id;
-    output.push({
-      value: frame.id,
-      label: `${"\u00A0\u00A0".repeat(depth)}${frameName}`,
-    });
-    frame.children.sort((a, b) => a.id.localeCompare(b.id));
-    for (const child of frame.children) {
-      addFrame(child, depth + 1);
-    }
-  }
-
-  rootFrames.sort((a, b) => a.id.localeCompare(b.id));
-  for (const entry of rootFrames) {
-    addFrame(entry, 0);
-  }
-
-  return output;
-}
-
-function buildTopicsToLayerTypes(topics: ReadonlyArray<Topic> | undefined): Map<string, LayerType> {
-  const map = new Map<string, LayerType>();
-  if (!topics) {
-    return map;
-  }
-  for (const topic of topics) {
-    const datatype = topic.datatype;
-    if (SUPPORTED_DATATYPES.has(datatype)) {
-      if (TF_DATATYPES.has(datatype) || TRANSFORM_STAMPED_DATATYPES.has(datatype)) {
-        map.set(topic.name, LayerType.Transform);
-      } else if (MARKER_DATATYPES.has(datatype) || MARKER_ARRAY_DATATYPES.has(datatype)) {
-        map.set(topic.name, LayerType.Marker);
-      } else if (OCCUPANCY_GRID_DATATYPES.has(datatype)) {
-        map.set(topic.name, LayerType.OccupancyGrid);
-      } else if (POINTCLOUD_DATATYPES.has(datatype)) {
-        map.set(topic.name, LayerType.PointCloud);
-      } else if (
-        POSE_STAMPED_DATATYPES.has(datatype) ||
-        POSE_WITH_COVARIANCE_STAMPED_DATATYPES.has(datatype)
-      ) {
-        map.set(topic.name, LayerType.Pose);
-      } else if (CAMERA_INFO_DATATYPES.has(datatype)) {
-        map.set(topic.name, LayerType.CameraInfo);
-      }
-    }
-  }
-  return map;
-}
-
-function updateTopicSettings(
-  renderer: Renderer,
-  topic: string,
-  layerType: LayerType,
-  config: ThreeDeeRenderConfig,
-) {
-  const topicConfig = config.topics[topic];
-  if (!topicConfig) {
-    return;
-  }
-
-  switch (layerType) {
-    case LayerType.Transform:
-      throw new Error(`Attempted to update topic settings for Transform "${topic}"`);
-    case LayerType.Marker:
-      renderer.setMarkerSettings(topic, topicConfig);
-      break;
-    case LayerType.OccupancyGrid:
-      renderer.setOccupancyGridSettings(topic, topicConfig);
-      break;
-    case LayerType.PointCloud:
-      renderer.setPointCloud2Settings(topic, topicConfig);
-      break;
-    case LayerType.Pose:
-      renderer.setPoseSettings(topic, topicConfig);
-      break;
-    case LayerType.CameraInfo:
-      renderer.setCameraInfoSettings(topic, topicConfig);
-      break;
-  }
-  renderer.animationFrame();
 }

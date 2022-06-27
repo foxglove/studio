@@ -13,7 +13,7 @@ import Ros1MemoryCacheDataProvider from "@foxglove/studio-base/randomAccessDataP
 import WorkerBagDataProvider from "@foxglove/studio-base/randomAccessDataProviders/WorkerBagDataProvider";
 import { getSeekToTime } from "@foxglove/studio-base/util/time";
 
-import * as SampleNuscenesLayout from "./SampleNuscenesLayout.json";
+import SampleNuscenesLayout from "./SampleNuscenesLayout.json";
 
 class SampleNuscenesDataSourceFactory implements IDataSourceFactory {
   id = "sample-nuscenes";
@@ -30,8 +30,7 @@ class SampleNuscenesDataSourceFactory implements IDataSourceFactory {
   }
 
   initialize(args: DataSourceFactoryInitializeArgs): ReturnType<IDataSourceFactory["initialize"]> {
-    const bagUrl =
-      "https://storage.googleapis.com/foxglove-public-assets/nuScenes-v1.0-mini-scene-0061.bag";
+    const bagUrl = "https://assets.foxglove.dev/nuScenes-v1.0-mini-scene-0061.bag";
 
     if (this.enableIterablePlayer) {
       const bagSource = new BagIterableSource({ type: "remote", url: bagUrl });

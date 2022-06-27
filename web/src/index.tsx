@@ -82,9 +82,8 @@ async function main() {
 
   const appConfiguration = new LocalStorageAppConfiguration({
     defaults: {
-      [AppSetting.OPEN_DIALOG]: true,
       [AppSetting.ENABLE_REACT_STRICT_MODE]: isDevelopment,
-      [AppSetting.EXPERIMENTAL_BAG_PLAYER]: true,
+      [AppSetting.EXPERIMENTAL_BAG_PLAYER]: false,
       [AppSetting.EXPERIMENTAL_DATA_PLATFORM_PLAYER]: isDevelopment,
       [AppSetting.EXPERIMENTAL_MCAP_PLAYER]: isDevelopment,
     },

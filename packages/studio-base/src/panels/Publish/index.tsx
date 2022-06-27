@@ -11,27 +11,23 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Box, Stack, Typography } from "@mui/material";
+import { Button, Typography, styled as muiStyled, OutlinedInput } from "@mui/material";
 import produce from "immer";
 import { set } from "lodash";
 import { useCallback, useEffect, useMemo, useRef } from "react";
-import styled from "styled-components";
 
 import { useRethrow } from "@foxglove/hooks";
+import { SettingsTreeAction, SettingsTreeNodes } from "@foxglove/studio";
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
 import Autocomplete, { IAutocomplete } from "@foxglove/studio-base/components/Autocomplete";
-import Button from "@foxglove/studio-base/components/Button";
-import { LegacyTextarea } from "@foxglove/studio-base/components/LegacyStyledComponents";
 import Panel from "@foxglove/studio-base/components/Panel";
-import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
-import {
-  SettingsTreeAction,
-  SettingsTreeNode,
-} from "@foxglove/studio-base/components/SettingsTreeEditor/types";
+import Stack from "@foxglove/studio-base/components/Stack";
 import usePublisher from "@foxglove/studio-base/hooks/usePublisher";
 import { PlayerCapabilities, Topic } from "@foxglove/studio-base/players/types";
 import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelSettingsEditorContextProvider";
+import { SaveConfig } from "@foxglove/studio-base/types/panels";
+import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import buildSampleMessage from "./buildSampleMessage";
 import helpContent from "./index.help.md";
@@ -48,33 +44,61 @@ type Config = Partial<{
 
 type Props = {
   config: Config;
-  saveConfig: (config: Partial<Config>) => void;
+  saveConfig: SaveConfig<Config>;
 };
 
-function buildSettingsTree(config: Config): SettingsTreeNode {
+function buildSettingsTree(config: Config): SettingsTreeNodes {
   return {
-    fields: {
-      advancedView: { label: "Editing Mode", input: "boolean", value: config.advancedView },
-      buttonText: { label: "Button Title", input: "string", value: config.buttonText },
-      buttonTooltip: { label: "Button Tooltip", input: "string", value: config.buttonTooltip },
-      buttonColor: { label: "Button Color", input: "rgb", value: config.buttonColor },
+    general: {
+      icon: "Settings",
+      fields: {
+        advancedView: { label: "Editing Mode", input: "boolean", value: config.advancedView },
+        buttonText: { label: "Button Title", input: "string", value: config.buttonText },
+        buttonTooltip: { label: "Button Tooltip", input: "string", value: config.buttonTooltip },
+        buttonColor: { label: "Button Color", input: "rgb", value: config.buttonColor },
+      },
     },
   };
 }
 
-const STextArea = styled(LegacyTextarea)`
-  width: 100%;
-  height: 100%;
-  resize: none;
-`;
+const StyledButton = muiStyled(Button, {
+  shouldForwardProp: (prop) => prop !== "buttonColor",
+})<{ buttonColor?: string }>(({ theme, buttonColor }) => {
+  if (buttonColor == undefined) {
+    return {};
+  }
+  const augmentedButtonColor = theme.palette.augmentColor({
+    color: { main: buttonColor },
+  });
 
-const SErrorText = styled.div`
-  flex: 1 1 auto;
-  display: flex;
-  align-items: center;
-  padding: 4px;
-  color: ${({ theme }) => theme.semanticColors.errorBackground};
-`;
+  return {
+    backgroundColor: augmentedButtonColor.main,
+    color: augmentedButtonColor.contrastText,
+
+    "&:hover": {
+      backgroundColor: augmentedButtonColor.dark,
+    },
+  };
+});
+
+const StyledTextarea = muiStyled(OutlinedInput)(({ theme }) => ({
+  width: "100%",
+  height: "100%",
+  textAlign: "left",
+  backgroundColor: theme.palette.background.paper,
+  overflow: "hidden",
+  padding: theme.spacing(1, 0.5),
+
+  ".MuiInputBase-input": {
+    height: "100% !important",
+    font: "inherit",
+    lineHeight: 1.4,
+    fontFamily: fonts.MONOSPACE,
+    fontSize: "100%",
+    overflow: "auto !important",
+    resize: "none",
+  },
+}));
 
 function getTopicName(topic: Topic): string {
   return topic.name;
@@ -119,7 +143,6 @@ function Publish(props: Props) {
 
   const datatypeNames = useMemo(() => Array.from(datatypes.keys()).sort(), [datatypes]);
   const { error, parsedObject } = useMemo(() => parseInput(value), [value]);
-  const { id: panelId } = usePanelContext();
   const updatePanelSettingsTree = usePanelSettingsTreeUpdate();
 
   // when the selected datatype changes, replace the textarea contents with a sample message of the correct shape
@@ -144,21 +167,25 @@ function Publish(props: Props) {
 
   const actionHandler = useCallback(
     (action: SettingsTreeAction) => {
+      if (action.action !== "update") {
+        return;
+      }
+
       saveConfig(
-        produce(props.config, (draft) => {
-          set(draft, action.payload.path, action.payload.value);
+        produce((draft) => {
+          set(draft, action.payload.path.slice(1), action.payload.value);
         }),
       );
     },
-    [props.config, saveConfig],
+    [saveConfig],
   );
 
   useEffect(() => {
-    updatePanelSettingsTree(panelId, {
+    updatePanelSettingsTree({
       actionHandler,
-      settings: buildSettingsTree(props.config),
+      nodes: buildSettingsTree(props.config),
     });
-  }, [actionHandler, panelId, props.config, updatePanelSettingsTree]);
+  }, [actionHandler, props.config, updatePanelSettingsTree]);
 
   const onChangeTopic = useCallback(
     (_event: unknown, name: string) => {
@@ -194,72 +221,76 @@ function Publish(props: Props) {
     }, [publish, parsedObject, topicName]),
   );
 
-  const onChange = useCallback(
-    (event: React.SyntheticEvent<HTMLTextAreaElement>) => {
-      saveConfig({ value: (event.target as { value?: string }).value });
-    },
-    [saveConfig],
-  );
-
   const canPublish = capabilities.includes(PlayerCapabilities.advertise);
 
   return (
-    <Stack height="100%" padding={1.5}>
-      <PanelToolbar helpContent={helpContent} floating />
+    <Stack fullHeight>
+      <PanelToolbar helpContent={helpContent} />
       {advancedView && (
-        <>
-          <Stack alignItems="baseline" spacing={1} padding={0.5} direction="row" flexShrink={0}>
-            <Typography color="text.secondary" variant="body2" component="label">
-              Topic:
-            </Typography>
-            <Autocomplete
-              placeholder="Choose a topic"
-              items={[...topics]}
-              hasError={false}
-              onChange={onChangeTopic}
-              onSelect={onSelectTopic}
-              selectedItem={{ name: topicName, datatype: "" }}
-              getItemText={getTopicName}
-              getItemValue={getTopicName}
-            />
-          </Stack>
-          <Stack alignItems="baseline" spacing={1} padding={0.5} direction="row" flexShrink={0}>
-            <Typography color="text.secondary" variant="body2" component="label">
-              Datatype:
-            </Typography>
-            <Autocomplete
-              clearOnFocus
-              placeholder="Choose a datatype"
-              items={datatypeNames}
-              onSelect={onSelectDatatype}
-              selectedItem={datatype}
-            />
-          </Stack>
-          <Box flexGrow={1} paddingY={1.5}>
-            <STextArea
+        <Stack flex="auto" padding={2} gap={1} paddingBottom={0}>
+          <div>
+            <Stack alignItems="baseline" gap={1} padding={0.5} direction="row" flexShrink={0}>
+              <Typography color="text.secondary" variant="body2" component="label">
+                Topic:
+              </Typography>
+              <Autocomplete
+                placeholder="Choose a topic"
+                items={[...topics]}
+                hasError={false}
+                onChange={onChangeTopic}
+                onSelect={onSelectTopic}
+                selectedItem={{ name: topicName, datatype: "" }}
+                getItemText={getTopicName}
+                getItemValue={getTopicName}
+              />
+            </Stack>
+            <Stack alignItems="baseline" gap={1} padding={0.5} direction="row" flexShrink={0}>
+              <Typography color="text.secondary" variant="body2" component="label">
+                Datatype:
+              </Typography>
+              <Autocomplete
+                clearOnFocus
+                placeholder="Choose a datatype"
+                items={datatypeNames}
+                onSelect={onSelectDatatype}
+                selectedItem={datatype}
+              />
+            </Stack>
+          </div>
+          <Stack flex="auto">
+            <StyledTextarea
+              multiline
               placeholder="Enter message content as JSON"
               value={value}
-              onChange={onChange}
+              onChange={(event) => saveConfig({ value: event.target.value })}
             />
-          </Box>
-        </>
+          </Stack>
+        </Stack>
       )}
       <Stack
         direction="row"
         flex="0 0 auto"
         alignItems="flex-start"
         justifyContent={advancedView ? "flex-end" : "center"}
+        padding={2}
       >
-        {error && <SErrorText>{error}</SErrorText>}
-        <Button
-          style={{ backgroundColor: buttonColor }}
-          tooltip={canPublish ? buttonTooltip : "Connect to ROS to publish data"}
+        {error && (
+          <Stack flex="auto" padding={0.5} justifyContent="center">
+            <Typography variant="body2" color="error.main">
+              {error}
+            </Typography>
+          </Stack>
+        )}
+        <StyledButton
+          variant="contained"
+          size="large"
+          buttonColor={buttonColor ? buttonColor : undefined}
+          title={canPublish ? buttonTooltip : "Connect to ROS to publish data"}
           disabled={!canPublish || parsedObject == undefined}
-          primary={canPublish && parsedObject != undefined}
           onClick={onPublishClicked}
         >
           {buttonText}
-        </Button>
+        </StyledButton>
       </Stack>
     </Stack>
   );

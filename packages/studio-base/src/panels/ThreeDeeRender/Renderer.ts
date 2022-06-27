@@ -3,45 +3,55 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import EventEmitter from "eventemitter3";
+import { Immutable, produce } from "immer";
 import * as THREE from "three";
+import { DeepPartial } from "ts-essentials";
+import { v4 as uuidv4 } from "uuid";
 
 import Logger from "@foxglove/log";
 import { CameraState } from "@foxglove/regl-worldview";
+import { toNanoSec } from "@foxglove/rostime";
+import {
+  MessageEvent,
+  SettingsIcon,
+  SettingsTreeAction,
+  SettingsTreeNodeActionItem,
+  SettingsTreeNodes,
+  Topic,
+} from "@foxglove/studio";
 
 import { Input } from "./Input";
-import { LayerErrors } from "./LayerErrors";
+import { Labels } from "./Labels";
 import { MaterialCache } from "./MaterialCache";
 import { ModelCache } from "./ModelCache";
 import { Picker } from "./Picker";
+import type { Renderable } from "./Renderable";
+import { SceneExtension } from "./SceneExtension";
 import { ScreenOverlay } from "./ScreenOverlay";
+import { SettingsManager, SettingsTreeEntry } from "./SettingsManager";
 import { stringToRgb } from "./color";
 import { DetailLevel, msaaSamples } from "./lod";
+import { normalizeTFMessage, normalizeTransformStamped } from "./normalizeMessages";
 import { Cameras } from "./renderables/Cameras";
-import { FrameAxes } from "./renderables/FrameAxes";
+import { CoreSettings } from "./renderables/CoreSettings";
+import { FrameAxes, LayerSettingsTransform } from "./renderables/FrameAxes";
+import { Grids } from "./renderables/Grids";
+import { Images } from "./renderables/Images";
 import { Markers } from "./renderables/Markers";
 import { OccupancyGrids } from "./renderables/OccupancyGrids";
-import { PointClouds } from "./renderables/PointClouds";
+import { PointCloudsAndLaserScans } from "./renderables/PointCloudsAndLaserScans";
+import { Polygons } from "./renderables/Polygons";
+import { PoseArrays } from "./renderables/PoseArrays";
 import { Poses } from "./renderables/Poses";
 import {
-  CameraInfo,
-  Marker,
-  OccupancyGrid,
-  PointCloud2,
-  PoseStamped,
-  PoseWithCovarianceStamped,
-  TF,
+  Header,
+  TFMessage,
+  TF_DATATYPES,
+  TransformStamped,
+  TRANSFORM_STAMPED_DATATYPES,
 } from "./ros";
-import {
-  FieldsProvider,
-  LayerSettingsCameraInfo,
-  LayerSettingsMarker,
-  LayerSettingsOccupancyGrid,
-  LayerSettingsPointCloud2,
-  LayerSettingsPose,
-  LayerType,
-  ThreeDeeRenderConfig,
-} from "./settings";
-import { TransformTree } from "./transforms/TransformTree";
+import { BaseSettings, CustomLayerSettings, SelectEntry } from "./settings";
+import { Transform, TransformTree } from "./transforms";
 
 const log = Logger.getLogger(__filename);
 
@@ -49,13 +59,42 @@ export type RendererEvents = {
   startFrame: (currentTime: bigint, renderer: Renderer) => void;
   endFrame: (currentTime: bigint, renderer: Renderer) => void;
   cameraMove: (renderer: Renderer) => void;
-  renderableSelected: (renderable: THREE.Object3D | undefined, renderer: Renderer) => void;
+  renderableSelected: (renderable: Renderable | undefined, renderer: Renderer) => void;
   transformTreeUpdated: (renderer: Renderer) => void;
-  showLabel: (labelId: string, labelMarker: Marker, renderer: Renderer) => void;
-  removeLabel: (labelId: string, renderer: Renderer) => void;
+  settingsTreeChange: (renderer: Renderer) => void;
+  configChange: (renderer: Renderer) => void;
 };
 
-const DEBUG_PICKING = false;
+export type RendererConfig = {
+  /** Camera settings for the currently rendering scene */
+  cameraState: CameraState;
+  /** Coordinate frameId of the rendering frame */
+  followTf: string | undefined;
+  scene: {
+    /** Show rendering metrics in a DOM overlay */
+    enableStats?: boolean;
+    /** Background color override for the scene, sent to `glClearColor()` */
+    backgroundColor?: string;
+  };
+  /** frameId -> settings */
+  transforms: Record<string, Partial<LayerSettingsTransform> | undefined>;
+  /** topicName -> settings */
+  topics: Record<string, Partial<BaseSettings> | undefined>;
+  /** instanceId -> settings */
+  layers: Record<string, Partial<CustomLayerSettings> | undefined>;
+};
+
+/** Callback for handling a message received on a topic */
+export type MessageHandler = (messageEvent: MessageEvent<unknown>) => void;
+
+/** Menu item entry and callback for the "Custom Layers" menu */
+export type CustomLayerAction = {
+  action: SettingsTreeNodeActionItem;
+  handler: (instanceId: string) => void;
+};
+
+// Enable this to render the hitmap to the screen after clicking
+const DEBUG_PICKING: boolean = false;
 
 // NOTE: These do not use .convertSRGBToLinear() since background color is not
 // affected by gamma correction
@@ -65,13 +104,25 @@ const DARK_BACKDROP = new THREE.Color(0x121217);
 const LIGHT_OUTLINE = new THREE.Color(0x000000).convertSRGBToLinear();
 const DARK_OUTLINE = new THREE.Color(0xffffff).convertSRGBToLinear();
 
+// Define rendering layers for multipass rendering used for the selection effect
 const LAYER_DEFAULT = 0;
 const LAYER_SELECTED = 1;
 
+// Keep a 60 second window of transforms by default
 const TRANSFORM_STORAGE_TIME_NS = 60n * BigInt(1e9);
 
 const UNIT_X = new THREE.Vector3(1, 0, 0);
 const PI_2 = Math.PI / 2;
+
+// Coordinate frames named in [REP-105](https://www.ros.org/reps/rep-0105.html)
+const DEFAULT_FRAME_IDS = ["base_link", "odom", "map", "earth"];
+
+const FOLLOW_TF_PATH = ["general", "followTf"];
+const NO_FRAME_SELECTED = "NO_FRAME_SELECTED";
+const FRAME_NOT_FOUND = "FRAME_NOT_FOUND";
+
+// An extensionId for injecting the "Custom Layers" node and its menu actions
+const CUSTOM_LAYERS_ID = "foxglove.CustomLayers";
 
 const tempColor = new THREE.Color();
 const tempVec = new THREE.Vector3();
@@ -79,49 +130,62 @@ const tempVec2 = new THREE.Vector2();
 const tempSpherical = new THREE.Spherical();
 const tempEuler = new THREE.Euler();
 
+/**
+ * An extensible 3D renderer attached to a `HTMLCanvasElement`,
+ * `WebGLRenderingContext`, and `SettingsTree`.
+ */
 export class Renderer extends EventEmitter<RendererEvents> {
   canvas: HTMLCanvasElement;
   gl: THREE.WebGLRenderer;
   maxLod = DetailLevel.High;
-  // TODO(jhurliman): Use multi-pass rendering with an OutlinePass for selected
-  // objects when <https://github.com/mrdoob/three.js/issues/23019> is resolved
-  // target: THREE.WebGLRenderTarget;
-  // composer: EffectComposer;
-  // outlinePass: OutlinePass;
-  config: ThreeDeeRenderConfig | undefined;
+  config: Immutable<RendererConfig>;
+  settings: SettingsManager;
+  topics: ReadonlyArray<Topic> | undefined;
+  topicsByName: ReadonlyMap<string, Topic> | undefined;
+  // extensionId -> SceneExtension
+  sceneExtensions = new Map<string, SceneExtension>();
+  // datatype -> handler[]
+  datatypeHandlers = new Map<string, MessageHandler[]>();
+  // layerId -> { action, handler }
+  customLayerActions = new Map<string, CustomLayerAction>();
   scene: THREE.Scene;
   dirLight: THREE.DirectionalLight;
   hemiLight: THREE.HemisphereLight;
   input: Input;
-  camera: THREE.PerspectiveCamera;
+
+  perspectiveCamera: THREE.PerspectiveCamera;
+  orthographicCamera: THREE.OrthographicCamera;
+  aspect: number;
+
   picker: Picker;
   selectionBackdrop: ScreenOverlay;
-  selectedObject: THREE.Object3D | undefined;
+  selectedObject: Renderable | undefined;
   materialCache = new MaterialCache();
-  layerErrors = new LayerErrors();
-  colorScheme: "dark" | "light" | undefined;
+  colorScheme: "dark" | "light" = "light";
   modelCache: ModelCache;
-  renderables = new Map<string, THREE.Object3D>();
   transformTree = new TransformTree(TRANSFORM_STORAGE_TIME_NS);
+  coordinateFrameList: SelectEntry[] = [];
   currentTime: bigint | undefined;
   fixedFrameId: string | undefined;
   renderFrameId: string | undefined;
-  settingsFieldsProviders = new Map<LayerType, FieldsProvider>();
 
-  frameAxes = new FrameAxes(this);
-  occupancyGrids = new OccupancyGrids(this);
-  pointClouds = new PointClouds(this);
-  markers = new Markers(this);
-  poses = new Poses(this);
-  cameras = new Cameras(this);
+  labels = new Labels(this);
 
-  constructor(canvas: HTMLCanvasElement) {
+  constructor(canvas: HTMLCanvasElement, config: RendererConfig) {
     super();
 
     // NOTE: Global side effect
     THREE.Object3D.DefaultUp = new THREE.Vector3(0, 0, 1);
 
+    this.settings = new SettingsManager(baseSettingsTree());
+    this.settings.on("update", () => this.emit("settingsTreeChange", this));
+    // Add the "Custom Layers" node first so merging happens in the correct order.
+    // Another approach would be to modify SettingsManager to allow merging parent
+    // nodes in after their children
+    this.settings.setNodesForKey(CUSTOM_LAYERS_ID, []);
+
     this.canvas = canvas;
+    this.config = config;
     this.gl = new THREE.WebGLRenderer({
       canvas,
       alpha: true,
@@ -136,6 +200,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.gl.info.autoReset = false;
     this.gl.shadowMap.enabled = false;
     this.gl.shadowMap.type = THREE.VSMShadowMap;
+    this.gl.sortObjects = false;
     this.gl.setPixelRatio(window.devicePixelRatio);
 
     let width = canvas.width;
@@ -146,15 +211,13 @@ export class Renderer extends EventEmitter<RendererEvents> {
       this.gl.setSize(width, height);
     }
 
-    this.modelCache = new ModelCache({ ignoreColladaUpAxis: true });
+    this.modelCache = new ModelCache({
+      ignoreColladaUpAxis: true,
+      edgeMaterial: this.materialCache.outlineMaterial,
+    });
 
     this.scene = new THREE.Scene();
-    this.scene.add(this.frameAxes);
-    this.scene.add(this.occupancyGrids);
-    this.scene.add(this.pointClouds);
-    this.scene.add(this.markers);
-    this.scene.add(this.poses);
-    this.scene.add(this.cameras);
+    this.scene.add(this.labels);
 
     this.dirLight = new THREE.DirectionalLight();
     this.dirLight.position.set(1, 1, 1);
@@ -177,47 +240,157 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.input.on("resize", (size) => this.resizeHandler(size));
     this.input.on("click", (cursorCoords) => this.clickHandler(cursorCoords));
 
-    const fov = 79;
-    const near = 0.01; // 1cm
-    const far = 10_000; // 10km
-    this.camera = new THREE.PerspectiveCamera(fov, width / height, near, far);
-    this.camera.up.set(0, 0, 1);
-    this.camera.position.set(1, -3, 1);
-    this.camera.lookAt(0, 0, 0);
+    this.perspectiveCamera = new THREE.PerspectiveCamera();
+    this.orthographicCamera = new THREE.OrthographicCamera();
 
-    this.picker = new Picker(this.gl, this.scene, this.camera, { debug: DEBUG_PICKING });
+    this.picker = new Picker(this.gl, this.scene, { debug: DEBUG_PICKING });
 
     this.selectionBackdrop = new ScreenOverlay();
     this.selectionBackdrop.visible = false;
     this.scene.add(this.selectionBackdrop);
 
+    this.renderFrameId = config.followTf;
+
     const samples = msaaSamples(this.maxLod, this.gl.capabilities);
     const renderSize = this.gl.getDrawingBufferSize(tempVec2);
+    this.aspect = renderSize.width / renderSize.height;
     log.debug(`Initialized ${renderSize.width}x${renderSize.height} renderer (${samples}x MSAA)`);
 
+    this.addSceneExtension(new CoreSettings(this));
+    this.addSceneExtension(new Cameras(this));
+    this.addSceneExtension(new FrameAxes(this));
+    this.addSceneExtension(new Grids(this));
+    this.addSceneExtension(new Images(this));
+    this.addSceneExtension(new Markers(this));
+    this.addSceneExtension(new OccupancyGrids(this));
+    this.addSceneExtension(new PointCloudsAndLaserScans(this));
+    this.addSceneExtension(new Polygons(this));
+    this.addSceneExtension(new Poses(this));
+    this.addSceneExtension(new PoseArrays(this));
+
+    this._updateCameras(config.cameraState);
     this.animationFrame();
   }
 
   dispose(): void {
     this.removeAllListeners();
+
+    for (const extension of this.sceneExtensions.values()) {
+      extension.dispose();
+    }
+    this.sceneExtensions.clear();
+
     this.picker.dispose();
     this.input.dispose();
-    this.frameAxes.dispose();
-    this.occupancyGrids.dispose();
-    this.pointClouds.dispose();
-    this.markers.dispose();
     this.gl.dispose();
   }
 
-  setSettingsFieldsProvider(layerType: LayerType, provider: FieldsProvider): void {
-    this.settingsFieldsProviders.set(layerType, provider);
-    this.settingsFieldsProviders = new Map(this.settingsFieldsProviders);
+  /**
+   * Clears internal state such as the TransformTree and removes Renderables from SceneExtensions.
+   * This is useful when seeking to a new playback position or when a new data source is loaded.
+   */
+  clear(): void {
+    this.transformTree.clear();
+    for (const extension of this.sceneExtensions.values()) {
+      extension.removeAllRenderables();
+    }
   }
 
+  addSceneExtension(extension: SceneExtension): void {
+    if (this.sceneExtensions.has(extension.extensionId)) {
+      throw new Error(`Attempted to add duplicate extensionId "${extension.extensionId}"`);
+    }
+    this.sceneExtensions.set(extension.extensionId, extension);
+    this.scene.add(extension);
+  }
+
+  updateConfig(updateHandler: (draft: RendererConfig) => void): void {
+    this.config = produce(this.config, updateHandler);
+    this.emit("configChange", this);
+  }
+
+  addDatatypeSubscriptions<T>(
+    datatypes: Iterable<string>,
+    handler: (messageEvent: MessageEvent<T>) => void,
+  ): void {
+    const genericHandler = handler as (messageEvent: MessageEvent<unknown>) => void;
+    for (const datatype of datatypes) {
+      let handlers = this.datatypeHandlers.get(datatype);
+      if (!handlers) {
+        handlers = [];
+        this.datatypeHandlers.set(datatype, handlers);
+      }
+      if (!handlers.includes(genericHandler)) {
+        handlers.push(genericHandler);
+      }
+    }
+  }
+
+  addCustomLayerAction(options: {
+    layerId: string;
+    label: string;
+    icon?: SettingsIcon;
+    handler: (instanceId: string) => void;
+  }): void {
+    const handler = options.handler;
+    // A unique id is assigned to each action to deduplicate selection events
+    // The layerId is used to map selection events back to their handlers
+    const instanceId = uuidv4();
+    const action: SettingsTreeNodeActionItem = {
+      type: "action",
+      id: `${options.layerId}-${instanceId}`,
+      label: options.label,
+      icon: options.icon,
+    };
+    this.customLayerActions.set(options.layerId, { action, handler });
+
+    // Rebuild the "Custom Layers" settings tree node
+    const actions: SettingsTreeNodeActionItem[] = Array.from(this.customLayerActions.values()).map(
+      (entry) => entry.action,
+    );
+    const entry: SettingsTreeEntry = {
+      path: ["layers"],
+      node: {
+        label: "Custom Layers",
+        defaultExpansionState: "expanded",
+        actions,
+        handler: this.handleCustomLayersAction,
+      },
+    };
+    this.settings.setNodesForKey(CUSTOM_LAYERS_ID, [entry]);
+  }
+
+  defaultFrameId(): string | undefined {
+    // Prefer frames from [REP-105](https://www.ros.org/reps/rep-0105.html)
+    for (const frameId of DEFAULT_FRAME_IDS) {
+      const frame = this.transformTree.frame(frameId);
+      if (frame) {
+        return frame.id;
+      }
+    }
+
+    // Choose the root frame with the most children
+    const rootsToCounts = new Map<string, number>();
+    for (const frame of this.transformTree.frames().values()) {
+      const rootId = frame.root().id;
+      rootsToCounts.set(rootId, (rootsToCounts.get(rootId) ?? 0) + 1);
+    }
+    const rootsArray = Array.from(rootsToCounts.entries());
+    const rootId = rootsArray.sort((a, b) => b[1] - a[1])[0]?.[0];
+    return rootId;
+  }
+
+  /** Update the color scheme and background color, rebuilding any materials as necessary */
   setColorScheme(colorScheme: "dark" | "light", backgroundColor: string | undefined): void {
     this.colorScheme = colorScheme;
 
     const bgColor = backgroundColor ? stringToRgb(tempColor, backgroundColor) : undefined;
+
+    for (const extension of this.sceneExtensions.values()) {
+      extension.setColorScheme(colorScheme, bgColor);
+    }
+
+    this.labels.setColorScheme(colorScheme, bgColor);
 
     if (colorScheme === "dark") {
       this.gl.setClearColor(bgColor ?? DARK_BACKDROP);
@@ -230,63 +403,138 @@ export class Renderer extends EventEmitter<RendererEvents> {
     }
   }
 
-  addTransformMessage(tf: TF): void {
-    this.frameAxes.addTransformMessage(tf);
+  /** Update the list of topics and rebuild all settings nodes when the identity
+   * of the topics list changes */
+  setTopics(topics: ReadonlyArray<Topic> | undefined): void {
+    const changed = this.topics !== topics;
+    this.topics = topics;
+    if (changed) {
+      // Rebuild topicsByName
+      this.topicsByName = topics ? new Map(topics.map((topic) => [topic.name, topic])) : undefined;
+
+      // Rebuild the settings nodes for all scene extensions
+      for (const extension of this.sceneExtensions.values()) {
+        this.settings.setNodesForKey(extension.extensionId, extension.settingsNodes());
+      }
+    }
   }
 
-  setTransformSettings(_name: string, _settings: { visible?: boolean }): void {
-    //
+  /** Translate a @foxglove/regl-worldview CameraState to the three.js coordinate system */
+  private _updateCameras(cameraState: CameraState): void {
+    if (cameraState.perspective) {
+      this.perspectiveCamera.position
+        .setFromSpherical(
+          tempSpherical.set(cameraState.distance, cameraState.phi, -cameraState.thetaOffset),
+        )
+        .applyAxisAngle(UNIT_X, PI_2);
+      this.perspectiveCamera.position.add(
+        tempVec.set(
+          cameraState.targetOffset[0],
+          cameraState.targetOffset[1],
+          cameraState.targetOffset[2], // always 0 in Worldview CameraListener
+        ),
+      );
+      this.perspectiveCamera.quaternion.setFromEuler(
+        tempEuler.set(cameraState.phi, 0, -cameraState.thetaOffset, "ZYX"),
+      );
+      this.perspectiveCamera.fov = cameraState.fovy * (180 / Math.PI);
+      this.perspectiveCamera.near = cameraState.near;
+      this.perspectiveCamera.far = cameraState.far;
+      this.perspectiveCamera.aspect = this.aspect;
+      this.perspectiveCamera.updateProjectionMatrix();
+    } else {
+      this.orthographicCamera.position.set(
+        cameraState.targetOffset[0],
+        cameraState.targetOffset[1],
+        cameraState.far / 2,
+      );
+      this.orthographicCamera.quaternion.setFromAxisAngle(
+        tempVec.set(0, 0, 1),
+        -cameraState.thetaOffset,
+      );
+      this.orthographicCamera.left = (-cameraState.distance / 2) * this.aspect;
+      this.orthographicCamera.right = (cameraState.distance / 2) * this.aspect;
+      this.orthographicCamera.top = cameraState.distance / 2;
+      this.orthographicCamera.bottom = -cameraState.distance / 2;
+      this.orthographicCamera.near = cameraState.near;
+      this.orthographicCamera.far = cameraState.far;
+      this.orthographicCamera.updateProjectionMatrix();
+    }
   }
 
-  addOccupancyGridMessage(topic: string, occupancyGrid: OccupancyGrid): void {
-    this.occupancyGrids.addOccupancyGridMessage(topic, occupancyGrid);
+  setCameraState(cameraState: CameraState): void {
+    this._updateCameras(cameraState);
+    this.emit("cameraMove", this);
   }
 
-  setOccupancyGridSettings(topic: string, settings: Partial<LayerSettingsOccupancyGrid>): void {
-    this.occupancyGrids.setTopicSettings(topic, settings);
+  activeCamera(): THREE.PerspectiveCamera | THREE.OrthographicCamera {
+    return this.config.cameraState.perspective ? this.perspectiveCamera : this.orthographicCamera;
   }
 
-  addPointCloud2Message(topic: string, pointCloud: PointCloud2): void {
-    this.pointClouds.addPointCloud2Message(topic, pointCloud);
-  }
+  addMessageEvent(messageEvent: Readonly<MessageEvent<unknown>>, datatype: string): void {
+    const { message } = messageEvent;
 
-  setPointCloud2Settings(topic: string, settings: Partial<LayerSettingsPointCloud2>): void {
-    this.pointClouds.setTopicSettings(topic, settings);
-  }
-
-  addMarkerMessage(topic: string, marker: Marker): void {
-    this.markers.addMarkerMessage(topic, marker);
-  }
-
-  setMarkerSettings(topic: string, settings: Partial<LayerSettingsMarker>): void {
-    this.markers.setTopicSettings(topic, settings);
-  }
-
-  addPoseMessage(topic: string, pose: PoseStamped | PoseWithCovarianceStamped): void {
-    this.poses.addPoseMessage(topic, pose);
-  }
-
-  setPoseSettings(topic: string, settings: Partial<LayerSettingsPose>): void {
-    this.poses.setTopicSettings(topic, settings);
-  }
-
-  addCameraInfoMessage(topic: string, cameraInfo: CameraInfo): void {
-    this.cameras.addCameraInfoMessage(topic, cameraInfo);
-  }
-
-  setCameraInfoSettings(topic: string, settings: Partial<LayerSettingsCameraInfo>): void {
-    this.cameras.setTopicSettings(topic, settings);
-  }
-
-  markerWorldPosition(markerId: string): Readonly<THREE.Vector3> | undefined {
-    const renderable = this.renderables.get(markerId);
-    if (!renderable) {
-      return undefined;
+    // If this message has a Header, scrape the frame_id from it
+    const maybeHasHeader = message as Partial<{ header: Partial<Header> }>;
+    if (maybeHasHeader.header) {
+      const frameId = maybeHasHeader.header.frame_id ?? "";
+      this.addCoordinateFrame(frameId);
     }
 
-    tempVec.set(0, 0, 0);
-    tempVec.applyMatrix4(renderable.matrixWorld);
-    return tempVec;
+    if (TF_DATATYPES.has(datatype)) {
+      // tf2_msgs/TFMessage - Ingest the list of transforms into our TF tree
+      const tfMessage = normalizeTFMessage(message as DeepPartial<TFMessage>);
+      for (const tf of tfMessage.transforms) {
+        this.addTransformMessage(tf);
+      }
+    } else if (TRANSFORM_STAMPED_DATATYPES.has(datatype)) {
+      // geometry_msgs/TransformStamped - Ingest this single transform into our TF tree
+      const tf = normalizeTransformStamped(message as DeepPartial<TransformStamped>);
+      this.addTransformMessage(tf);
+    }
+
+    const handlers = this.datatypeHandlers.get(datatype);
+    if (handlers) {
+      for (const handler of handlers) {
+        handler(messageEvent);
+      }
+    }
+  }
+
+  addCoordinateFrame(frameId: string): void {
+    if (!this.transformTree.hasFrame(frameId)) {
+      this.transformTree.getOrCreateFrame(frameId);
+      this.coordinateFrameList = this.transformTree.frameList();
+      // log.debug(`Added coordinate frame "${frameId}"`);
+      this.emit("transformTreeUpdated", this);
+    }
+  }
+
+  addTransformMessage(tf: TransformStamped): void {
+    const addParent = !this.transformTree.hasFrame(tf.header.frame_id);
+    const addChild = !this.transformTree.hasFrame(tf.child_frame_id);
+
+    // Create a new transform and add it to the renderer's TransformTree
+    const stamp = toNanoSec(tf.header.stamp);
+    const t = tf.transform.translation;
+    const q = tf.transform.rotation;
+    const transform = new Transform([t.x, t.y, t.z], [q.x, q.y, q.z, q.w]);
+    const updated = this.transformTree.addTransform(
+      tf.child_frame_id,
+      tf.header.frame_id,
+      stamp,
+      transform,
+    );
+
+    if (addParent || addChild) {
+      this.coordinateFrameList = this.transformTree.frameList();
+      // log.debug(`Added transform "${tf.header.frame_id}_T_${tf.child_frame_id}"`);
+      this.emit("transformTreeUpdated", this);
+    } else if (updated) {
+      this.coordinateFrameList = this.transformTree.frameList();
+      // log.debug(`Updated transform "${tf.header.frame_id}_T_${tf.child_frame_id}"`);
+      this.emit("transformTreeUpdated", this);
+    }
   }
 
   // Callback handlers
@@ -298,28 +546,33 @@ export class Renderer extends EventEmitter<RendererEvents> {
   };
 
   frameHandler = (currentTime: bigint): void => {
+    const camera = this.activeCamera();
     this.emit("startFrame", currentTime, this);
 
     this._updateFrames();
     this.materialCache.update(this.input.canvasSize);
 
-    this.frameAxes.startFrame(currentTime);
-    this.occupancyGrids.startFrame(currentTime);
-    this.pointClouds.startFrame(currentTime);
-    this.markers.startFrame(currentTime);
-    this.poses.startFrame(currentTime);
-    this.cameras.startFrame(currentTime);
-
     this.gl.clear();
-    this.camera.layers.set(LAYER_DEFAULT);
+    camera.layers.set(LAYER_DEFAULT);
     this.selectionBackdrop.visible = this.selectedObject != undefined;
-    this.gl.render(this.scene, this.camera);
+
+    const renderFrameId = this.renderFrameId;
+    const fixedFrameId = this.fixedFrameId;
+    if (renderFrameId == undefined || fixedFrameId == undefined) {
+      return;
+    }
+
+    for (const sceneExtension of this.sceneExtensions.values()) {
+      sceneExtension.startFrame(currentTime, renderFrameId, fixedFrameId);
+    }
+
+    this.gl.render(this.scene, camera);
 
     if (this.selectedObject) {
       this.gl.clearDepth();
-      this.camera.layers.set(LAYER_SELECTED);
+      camera.layers.set(LAYER_SELECTED);
       this.selectionBackdrop.visible = false;
-      this.gl.render(this.scene, this.camera);
+      this.gl.render(this.scene, camera);
     }
 
     this.emit("endFrame", currentTime, this);
@@ -327,44 +580,23 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.gl.info.reset();
   };
 
-  /** Translate a Worldview CameraState to the three.js coordinate system */
-  setCameraState(cameraState: CameraState): void {
-    this.camera.position
-      .setFromSpherical(
-        tempSpherical.set(cameraState.distance, cameraState.phi, -cameraState.thetaOffset),
-      )
-      .applyAxisAngle(UNIT_X, PI_2);
-    this.camera.position.add(
-      tempVec.set(
-        cameraState.targetOffset[0],
-        cameraState.targetOffset[1],
-        cameraState.targetOffset[2], // always 0 in Worldview CameraListener
-      ),
-    );
-    this.camera.quaternion.setFromEuler(
-      tempEuler.set(cameraState.phi, 0, -cameraState.thetaOffset, "ZYX"),
-    );
-    this.camera.fov = cameraState.fovy * (180 / Math.PI);
-    this.camera.near = cameraState.near;
-    this.camera.far = cameraState.far;
-    this.camera.updateProjectionMatrix();
-  }
-
   resizeHandler = (size: THREE.Vector2): void => {
     this.gl.setPixelRatio(window.devicePixelRatio);
     this.gl.setSize(size.width, size.height);
 
     const renderSize = this.gl.getDrawingBufferSize(tempVec2);
-    this.camera.aspect = renderSize.width / renderSize.height;
-    this.camera.updateProjectionMatrix();
+    this.aspect = renderSize.width / renderSize.height;
+    this._updateCameras(this.config.cameraState);
 
     log.debug(`Resized renderer to ${renderSize.width}x${renderSize.height}`);
     this.animationFrame();
   };
 
   clickHandler = (cursorCoords: THREE.Vector2): void => {
-    // Deselect the currently selected object
+    // Deselect the currently selected object, if one is selected
+    let prevSelected: THREE.Object3D | undefined;
     if (this.selectedObject) {
+      prevSelected = this.selectedObject;
       deselectObject(this.selectedObject);
       this.selectedObject = undefined;
     }
@@ -374,7 +606,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
     // Render a single pixel using a fragment shader that writes object IDs as
     // colors, then read the value of that single pixel back
-    const objectId = this.picker.pick(cursorCoords.x, cursorCoords.y);
+    const objectId = this.picker.pick(cursorCoords.x, cursorCoords.y, this.activeCamera());
     if (objectId < 0) {
       log.debug(`Background selected`);
       this.emit("renderableSelected", undefined, this);
@@ -382,52 +614,107 @@ export class Renderer extends EventEmitter<RendererEvents> {
     }
 
     // Traverse the scene looking for this objectId
-    const obj = this.scene.getObjectById(objectId);
+    const pickedObject = this.scene.getObjectById(objectId);
 
-    // Find the first ancestor of the clicked object that has a name
-    // TODO: We should probably use a better way to identify the clicked object
-    let selectedObj = obj;
-    while (selectedObj && selectedObj.name === "") {
-      selectedObj = selectedObj.parent ?? undefined;
+    // Find the first ancestor of the picked object that is a Renderable
+    let maybeRenderable = pickedObject as Partial<Renderable> | undefined;
+    while (maybeRenderable && maybeRenderable.isRenderable !== true) {
+      maybeRenderable = (maybeRenderable.parent ?? undefined) as Partial<Renderable> | undefined;
     }
-    this.selectedObject = selectedObj;
 
-    if (!selectedObj) {
-      log.warn(`No renderable found for objectId ${objectId}`);
+    const selectedRenderable = maybeRenderable as Renderable | undefined;
+    if (selectedRenderable === prevSelected) {
+      log.debug(
+        `Deselecting previously selected Renderable ${prevSelected?.id} (${prevSelected?.name})`,
+      );
+      if (!DEBUG_PICKING) {
+        // Re-render with no object selected
+        this.animationFrame();
+      }
+      return;
+    }
+
+    this.selectedObject = selectedRenderable;
+
+    if (!selectedRenderable) {
+      log.warn(`No Renderable found for objectId ${objectId}`);
       this.emit("renderableSelected", undefined, this);
       return;
     }
 
     // Select the newly selected object
-    selectObject(selectedObj);
-    this.emit("renderableSelected", selectedObj, this);
-    log.debug(`Selected object ${selectedObj.name}`);
+    selectObject(selectedRenderable);
+    this.emit("renderableSelected", selectedRenderable, this);
+    log.debug(`Selected Renderable ${selectedRenderable.id} (${selectedRenderable.name})`);
 
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (!DEBUG_PICKING) {
       // Re-render with the selected object
       this.animationFrame();
     }
   };
 
-  private _updateFrames(): void {
-    const frameId = this.renderFrameId;
-    if (frameId == undefined) {
-      this.fixedFrameId = undefined;
+  handleCustomLayersAction = (action: SettingsTreeAction): void => {
+    const path = action.payload.path;
+    if (action.action !== "perform-node-action" || path.length !== 1 || path[0] !== "layers") {
       return;
     }
 
-    const frame = this.transformTree.frame(frameId);
+    log.debug(`handleCustomLayersAction(${action.payload.id})`);
+
+    // Remove `-{uuid}` from the actionId to get the layerId
+    const actionId = action.payload.id;
+    const layerId = actionId.slice(0, -37);
+    const instanceId = actionId.slice(-36);
+
+    const entry = this.customLayerActions.get(layerId);
+    if (!entry) {
+      throw new Error(`No custom layer action found for "${layerId}"`);
+    }
+
+    // Regenerate the action menu entry with a new instanceId. The unique instanceId is generated
+    // here so we can deduplicate multiple callbacks for the same menu click event
+    const { label, icon } = entry.action;
+    this.addCustomLayerAction({ layerId, label, icon, handler: entry.handler });
+
+    // Trigger the add custom layer action handler
+    entry.handler(instanceId);
+  };
+
+  private _updateFrames(): void {
+    if (this.renderFrameId == undefined) {
+      this.renderFrameId = this.defaultFrameId();
+
+      if (this.renderFrameId == undefined) {
+        this.settings.errors.add(FOLLOW_TF_PATH, NO_FRAME_SELECTED, `No frame selected`);
+        this.fixedFrameId = undefined;
+        return;
+      } else {
+        log.debug(`Setting render frame to ${this.renderFrameId}`);
+      }
+    }
+
+    const frame = this.transformTree.frame(this.renderFrameId);
     if (!frame) {
       this.fixedFrameId = undefined;
+      this.settings.errors.add(
+        FOLLOW_TF_PATH,
+        FRAME_NOT_FOUND,
+        `Frame "${this.renderFrameId}" not found`,
+      );
       return;
     }
 
     const rootFrameId = frame.root().id;
     if (this.fixedFrameId !== rootFrameId) {
-      log.debug(`Changing fixed frame from "${this.fixedFrameId}" to "${rootFrameId}"`);
+      if (this.fixedFrameId == undefined) {
+        log.debug(`Setting fixed frame to ${rootFrameId}`);
+      } else {
+        log.debug(`Changing fixed frame from "${this.fixedFrameId}" to "${rootFrameId}"`);
+      }
       this.fixedFrameId = rootFrameId;
     }
+
+    this.settings.errors.clearPath(FOLLOW_TF_PATH);
   }
 }
 
@@ -443,4 +730,21 @@ function deselectObject(object: THREE.Object3D) {
   object.traverse((child) => {
     child.layers.set(LAYER_DEFAULT);
   });
+}
+
+// Creates a skeleton settings tree. The tree contents are filled in by scene extensions
+function baseSettingsTree(): SettingsTreeNodes {
+  return {
+    general: {},
+    scene: {},
+    cameraState: {},
+    transforms: {
+      label: "Transforms",
+      defaultExpansionState: "expanded",
+    },
+    topics: {
+      label: "Topics",
+      defaultExpansionState: "expanded",
+    },
+  };
 }

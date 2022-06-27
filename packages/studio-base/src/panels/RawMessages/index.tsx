@@ -17,7 +17,7 @@ import CheckboxMarkedIcon from "@mdi/svg/svg/checkbox-marked.svg";
 import PlusMinusIcon from "@mdi/svg/svg/plus-minus.svg";
 import LessIcon from "@mdi/svg/svg/unfold-less-horizontal.svg";
 import MoreIcon from "@mdi/svg/svg/unfold-more-horizontal.svg";
-import { Theme } from "@mui/material";
+import { MenuItem, Select, SelectChangeEvent, Theme } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import { Immutable } from "immer";
 // eslint-disable-next-line no-restricted-imports
@@ -27,9 +27,8 @@ import ReactHoverObserver from "react-hover-observer";
 import Tree from "react-json-tree";
 import { useLatest } from "react-use";
 
+import { SettingsTreeAction } from "@foxglove/studio";
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
-import Dropdown from "@foxglove/studio-base/components/Dropdown";
-import DropdownItem from "@foxglove/studio-base/components/Dropdown/DropdownItem";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import Icon from "@foxglove/studio-base/components/Icon";
 import useGetItemStringWithTimezone from "@foxglove/studio-base/components/JsonTree/useGetItemStringWithTimezone";
@@ -48,8 +47,6 @@ import { useMessageDataItem } from "@foxglove/studio-base/components/MessagePath
 import Panel from "@foxglove/studio-base/components/Panel";
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
-import { SettingsTreeAction } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
-import Tooltip from "@foxglove/studio-base/components/Tooltip";
 import getDiff, {
   diffLabels,
   diffLabelsByLabelText,
@@ -57,6 +54,7 @@ import getDiff, {
 } from "@foxglove/studio-base/panels/RawMessages/getDiff";
 import { Topic } from "@foxglove/studio-base/players/types";
 import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelSettingsEditorContextProvider";
+import { SaveConfig } from "@foxglove/studio-base/types/panels";
 import { useJsonTreeTheme } from "@foxglove/studio-base/util/globalConstants";
 import { enumValuesByDatatypeAndField } from "@foxglove/studio-base/util/selectors";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
@@ -80,7 +78,7 @@ export const PREV_MSG_METHOD = "previous message";
 
 type Props = {
   config: Immutable<RawMessagesPanelConfig>;
-  saveConfig: (arg0: Partial<RawMessagesPanelConfig>) => void;
+  saveConfig: SaveConfig<RawMessagesPanelConfig>;
 };
 
 const isSingleElemArray = (obj: unknown): obj is unknown[] => {
@@ -151,7 +149,6 @@ function RawMessages(props: Props) {
   const { openSiblingPanel } = usePanelContext();
   const { topicPath, diffMethod, diffTopicPath, diffEnabled, showFullMessageForDiff } = config;
   const { topics, datatypes } = useDataSourceInfo();
-  const { id: panelId } = usePanelContext();
 
   const defaultGetItemString = useGetItemStringWithTimezone();
   const getItemString = useMemo(
@@ -196,11 +193,7 @@ function RawMessages(props: Props) {
   const latestExpandedFields = useLatest(expandedFields);
 
   useEffect(() => {
-    if (
-      latestExpandedFields.current.keys.length === 0 &&
-      baseItem &&
-      config.autoExpandMode === "auto"
-    ) {
+    if (latestExpandedFields.current.size === 0 && baseItem && config.autoExpandMode === "auto") {
       const data = dataWithoutWrappingArray(baseItem.queriedData.map(({ value }) => value));
       const newExpandedFields = generateDeepKeyPaths(maybeDeepParse(data), 5);
       setExpandedFields(newExpandedFields);
@@ -215,6 +208,10 @@ function RawMessages(props: Props) {
 
   const settingsActionHandler = useCallback(
     (action: SettingsTreeAction) => {
+      if (action.action !== "update") {
+        return;
+      }
+
       if (action.payload.input === "select") {
         saveConfig({
           autoExpandMode: action.payload.value as RawMessagesPanelConfig["autoExpandMode"],
@@ -225,11 +222,11 @@ function RawMessages(props: Props) {
   );
 
   useEffect(() => {
-    updateSettingsTree(panelId, {
+    updateSettingsTree({
       actionHandler: settingsActionHandler,
-      settings: buildSettingsTree(config),
+      nodes: buildSettingsTree(config),
     });
-  }, [config, panelId, settingsActionHandler, updateSettingsTree]);
+  }, [config, settingsActionHandler, updateSettingsTree]);
 
   const onTopicPathChange = useCallback(
     (newTopicPath: string) => {
@@ -654,21 +651,21 @@ function RawMessages(props: Props) {
           />
           {diffEnabled && (
             <div className={classes.diff}>
-              <Tooltip contents="Diff method" placement="top">
-                <Dropdown
-                  value={diffMethod}
-                  onChange={(newDiffMethod) => saveConfig({ diffMethod: newDiffMethod })}
-                  noPortal
-                  btnStyle={{ padding: "4px 10px" }}
-                >
-                  <DropdownItem value={PREV_MSG_METHOD}>
-                    <span>{PREV_MSG_METHOD}</span>
-                  </DropdownItem>
-                  <DropdownItem value={CUSTOM_METHOD}>
-                    <span>custom</span>
-                  </DropdownItem>
-                </Dropdown>
-              </Tooltip>
+              <Select
+                variant="filled"
+                size="small"
+                title="Diff method"
+                value={diffMethod}
+                MenuProps={{ MenuListProps: { dense: true } }}
+                onChange={(event: SelectChangeEvent) =>
+                  saveConfig({
+                    diffMethod: event.target.value as RawMessagesPanelConfig["diffMethod"],
+                  })
+                }
+              >
+                <MenuItem value={PREV_MSG_METHOD}>{PREV_MSG_METHOD}</MenuItem>
+                <MenuItem value={CUSTOM_METHOD}>custom</MenuItem>
+              </Select>
               {diffMethod === CUSTOM_METHOD ? (
                 <MessagePathInput
                   index={1}

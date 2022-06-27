@@ -12,10 +12,10 @@
 //   You may not use this file except in compliance with the License.
 
 import { useTheme } from "@fluentui/react";
-import DownloadOutlineIcon from "@mdi/svg/svg/download-outline.svg";
-import { Stack } from "@mui/material";
+import DownloadIcon from "@mui/icons-material/Download";
+import { Typography } from "@mui/material";
 import produce from "immer";
-import { compact, set, uniq } from "lodash";
+import { compact, isEmpty, set, uniq } from "lodash";
 import memoizeWeak from "memoize-weak";
 import { useEffect, useCallback, useMemo, ComponentProps } from "react";
 
@@ -28,10 +28,9 @@ import {
   subtract as subtractTimes,
   toSec,
 } from "@foxglove/rostime";
-import { MessageEvent } from "@foxglove/studio";
+import { MessageEvent, SettingsTreeAction } from "@foxglove/studio";
 import { useBlocksByTopic, useMessageReducer } from "@foxglove/studio-base/PanelAPI";
 import { MessageBlock } from "@foxglove/studio-base/PanelAPI/useBlocksByTopic";
-import Icon from "@foxglove/studio-base/components/Icon";
 import parseRosPath, {
   getTopicsFromPaths,
 } from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
@@ -46,16 +45,18 @@ import {
   useMessagePipelineGetter,
 } from "@foxglove/studio-base/components/MessagePipeline";
 import Panel from "@foxglove/studio-base/components/Panel";
-import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
-import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
-import { SettingsTreeAction } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
+import PanelToolbar, {
+  PANEL_TOOLBAR_MIN_HEIGHT,
+} from "@foxglove/studio-base/components/PanelToolbar";
+import ToolbarIconButton from "@foxglove/studio-base/components/PanelToolbar/ToolbarIconButton";
+import Stack from "@foxglove/studio-base/components/Stack";
 import {
   ChartDefaultView,
   TimeBasedChartTooltipData,
 } from "@foxglove/studio-base/components/TimeBasedChart";
 import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelSettingsEditorContextProvider";
 import { OnClickArg as OnChartClickArgs } from "@foxglove/studio-base/src/components/Chart";
-import { OpenSiblingPanel, PanelConfig } from "@foxglove/studio-base/types/panels";
+import { OpenSiblingPanel, PanelConfig, SaveConfig } from "@foxglove/studio-base/types/panels";
 import { getTimestampForMessage } from "@foxglove/studio-base/util/time";
 
 import PlotChart from "./PlotChart";
@@ -89,7 +90,7 @@ export function openSiblingPlotPanel(openSiblingPanel: OpenSiblingPanel, topicNa
 
 type Props = {
   config: PlotConfig;
-  saveConfig: (arg0: Partial<PlotConfig>) => void;
+  saveConfig: SaveConfig<PlotConfig>;
 };
 
 // messagePathItems contains the whole parsed message, and we don't need to cache all of that.
@@ -444,30 +445,29 @@ function Plot(props: Props) {
     [messagePipeline, xAxisVal],
   );
 
-  const { id: panelId } = usePanelContext();
   const updatePanelSettingsTree = usePanelSettingsTreeUpdate();
 
   const actionHandler = useCallback(
     (action: SettingsTreeAction) => {
+      if (action.action !== "update") {
+        return;
+      }
+
       const { path, value } = action.payload;
       saveConfig(
-        produce(config, (draft) => {
-          if (path[0] === "timeSeriesOnly") {
-            set(draft, path.slice(1), value);
-          } else {
-            set(draft, path, value);
-          }
+        produce((draft) => {
+          set(draft, path.slice(1), value);
         }),
       );
     },
-    [config, saveConfig],
+    [saveConfig],
   );
   useEffect(() => {
-    updatePanelSettingsTree(panelId, {
+    updatePanelSettingsTree({
       actionHandler,
-      settings: buildSettingsTree(config),
+      nodes: buildSettingsTree(config),
     });
-  }, [actionHandler, config, panelId, updatePanelSettingsTree]);
+  }, [actionHandler, config, updatePanelSettingsTree]);
 
   const stackDirection = useMemo(
     () => (legendDisplay === "top" ? "column" : "row"),
@@ -485,17 +485,24 @@ function Plot(props: Props) {
       <PanelToolbar
         helpContent={helpContent}
         additionalIcons={
-          <Icon
-            fade
+          <ToolbarIconButton
             onClick={() => downloadCSV(datasets, xAxisVal)}
-            tooltip="Download plot data as CSV"
+            title="Download plot data as CSV"
           >
-            <DownloadOutlineIcon />
-          </Icon>
+            <DownloadIcon fontSize="small" />
+          </ToolbarIconButton>
         }
-        floating
-      />
-      <Stack direction={stackDirection} flex="auto" width="100%" height="100%">
+      >
+        <Typography noWrap variant="body2" color="text.secondary" flex="auto">
+          {isEmpty(title) ? "Plot" : title}
+        </Typography>
+      </PanelToolbar>
+      <Stack
+        direction={stackDirection}
+        flex="auto"
+        fullWidth
+        style={{ height: `calc(100% - ${PANEL_TOOLBAR_MIN_HEIGHT}px)` }}
+      >
         <PlotLegend
           paths={yAxisPaths}
           datasets={datasets}
@@ -510,7 +517,6 @@ function Plot(props: Props) {
           sidebarDimension={sidebarDimension}
         />
         <Stack flex="auto" alignItems="center" justifyContent="center" overflow="hidden">
-          {title && <div>{title}</div>}
           <PlotChart
             isSynced={xAxisVal === "timestamp" && isSynced}
             paths={yAxisPaths}
@@ -532,10 +538,10 @@ function Plot(props: Props) {
 }
 
 const defaultConfig: PlotConfig = {
-  title: undefined,
+  title: "Plot",
   paths: [{ value: "", enabled: true, timestampMethod: "receiveTime" }],
-  minYValue: "",
-  maxYValue: "",
+  minYValue: undefined,
+  maxYValue: undefined,
   showXAxisLabels: true,
   showYAxisLabels: true,
   showLegend: true,
