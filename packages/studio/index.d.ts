@@ -181,6 +181,9 @@ declare module "@foxglove/studio" {
     /** Actions the panel may perform related to the user's current layout. */
     readonly layout: LayoutActions;
 
+    /** Set to true if the data source is Robot Operating System (ROS) based. */
+    readonly ros: boolean;
+
     /**
      * Subscribe to updates on this field within the render state. Render will only be invoked when
      * this field changes.
@@ -282,8 +285,6 @@ declare module "@foxglove/studio" {
      * the representation of the panel settings in the editor.
      */
     updatePanelSettingsEditor(settings: Readonly<SettingsTree>): void;
-
-    ros: boolean;
   };
 
   export type ExtensionPanelRegistration = {
