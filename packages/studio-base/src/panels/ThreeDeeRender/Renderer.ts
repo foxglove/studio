@@ -43,6 +43,7 @@ import { PointCloudsAndLaserScans } from "./renderables/PointCloudsAndLaserScans
 import { Polygons } from "./renderables/Polygons";
 import { PoseArrays } from "./renderables/PoseArrays";
 import { Poses } from "./renderables/Poses";
+import { MarkerPool } from "./renderables/markers/MarkerPool";
 import {
   Header,
   TFMessage,
@@ -191,6 +192,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
   renderFrameId: string | undefined;
 
   labels = new Labels(this);
+  markerPool = new MarkerPool(this);
 
   constructor(canvas: HTMLCanvasElement, config: RendererConfig) {
     super();
@@ -301,6 +303,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     }
     this.sceneExtensions.clear();
 
+    this.markerPool.dispose();
     this.labels.dispose();
     this.picker.dispose();
     this.input.dispose();
