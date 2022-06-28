@@ -14,7 +14,12 @@ import {
   isTimeInRangeInclusive,
   fromNanoSec,
 } from "@foxglove/rostime";
-import { MessageEvent, Topic, TopicStats } from "@foxglove/studio-base/players/types";
+import {
+  MessageEvent,
+  PlayerProblem,
+  Topic,
+  TopicStats,
+} from "@foxglove/studio-base/players/types";
 import {
   RandomAccessDataProvider,
   ExtensionPoint,
@@ -44,6 +49,9 @@ export default class Mcap0StreamedDataProvider implements RandomAccessDataProvid
     const decompressHandlers = await loadDecompressHandlers();
 
     const streamReader = this.options.stream.getReader();
+
+    const problems: PlayerProblem[] = [];
+    const channelIdsWithErrors = new Set<number>();
 
     const messagesByChannel = new Map<number, MessageEvent<unknown>[]>();
     const schemasById = new Map<number, Mcap0Types.TypedMcapRecords["Schema"]>();
@@ -84,6 +92,9 @@ export default class Mcap0StreamedDataProvider implements RandomAccessDataProvid
             }
             break;
           }
+          if (channelIdsWithErrors.has(record.id)) {
+            break;
+          }
           if (record.schemaId === 0) {
             throw new Error(
               `Channel ${record.id} has no schema; channels without schemas are not supported`,
@@ -96,9 +107,18 @@ export default class Mcap0StreamedDataProvider implements RandomAccessDataProvid
             );
           }
 
-          const parsedChannel = parseChannel({ messageEncoding: record.messageEncoding, schema });
-          channelInfoById.set(record.id, { channel: record, parsedChannel });
-          messagesByChannel.set(record.id, []);
+          try {
+            const parsedChannel = parseChannel({ messageEncoding: record.messageEncoding, schema });
+            channelInfoById.set(record.id, { channel: record, parsedChannel });
+            messagesByChannel.set(record.id, []);
+          } catch (error) {
+            channelIdsWithErrors.add(record.id);
+            problems.push({
+              severity: "error",
+              message: `Error in topic ${record.topic} (channel ${record.id}): ${error.message}`,
+              error,
+            });
+          }
           break;
         }
 
@@ -107,6 +127,9 @@ export default class Mcap0StreamedDataProvider implements RandomAccessDataProvid
           const channelInfo = channelInfoById.get(channelId);
           const messages = messagesByChannel.get(channelId);
           if (!channelInfo || !messages) {
+            if (channelIdsWithErrors.has(channelId)) {
+              break; // error has already been reported
+            }
             throw new Error(`message for channel ${channelId} with no prior channel info`);
           }
           const receiveTime = fromNanoSec(record.logTime);
@@ -170,7 +193,7 @@ export default class Mcap0StreamedDataProvider implements RandomAccessDataProvid
         messageDefinitionsByTopic: {},
         parsedMessageDefinitionsByTopic: {},
       },
-      problems: [],
+      problems,
     };
   }
 
