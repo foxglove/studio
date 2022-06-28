@@ -301,6 +301,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     }
     this.sceneExtensions.clear();
 
+    this.labels.dispose();
     this.picker.dispose();
     this.input.dispose();
     this.gl.dispose();
