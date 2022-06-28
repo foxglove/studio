@@ -14,12 +14,7 @@ import {
   isTimeInRangeInclusive,
   fromNanoSec,
 } from "@foxglove/rostime";
-import {
-  MessageEvent,
-  PlayerProblem,
-  Topic,
-  TopicStats,
-} from "@foxglove/studio-base/players/types";
+import { MessageEvent, Topic, TopicStats } from "@foxglove/studio-base/players/types";
 import {
   RandomAccessDataProvider,
   ExtensionPoint,
@@ -27,6 +22,7 @@ import {
   GetMessagesTopics,
   InitializationResult,
   Connection,
+  RandomAccessDataProviderProblem,
 } from "@foxglove/studio-base/randomAccessDataProviders/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 
@@ -50,7 +46,7 @@ export default class Mcap0StreamedDataProvider implements RandomAccessDataProvid
 
     const streamReader = this.options.stream.getReader();
 
-    const problems: PlayerProblem[] = [];
+    const problems: RandomAccessDataProviderProblem[] = [];
     const channelIdsWithErrors = new Set<number>();
 
     const messagesByChannel = new Map<number, MessageEvent<unknown>[]>();
