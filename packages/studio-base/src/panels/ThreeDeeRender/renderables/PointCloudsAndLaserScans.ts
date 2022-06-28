@@ -160,9 +160,10 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
   override startFrame(currentTime: bigint, renderFrameId: string, fixedFrameId: string): void {
     super.startFrame(currentTime, renderFrameId, fixedFrameId);
     for (const renderable of this.renderables.values()) {
-      const laserScanMaterial = renderable.userData.laserScanMaterial;
-      if (laserScanMaterial) {
-        laserScanMaterial.uniforms.pixelRatio!.value = this.renderer.getPixelRatio();
+      const material = renderable.userData.points.material;
+      const pixelRatio = (material as Partial<LaserScanMaterial>).uniforms?.pixelRatio;
+      if (pixelRatio) {
+        pixelRatio.value = this.renderer.getPixelRatio();
       }
     }
   }
