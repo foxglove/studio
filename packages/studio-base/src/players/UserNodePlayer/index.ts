@@ -786,9 +786,10 @@ export default class UserNodePlayer implements Player {
     for (const subscription of subscriptions) {
       // When subscribing to the same node multiple times, only subscribe to the underlying
       // topics once. This is not strictly necessary, but it makes debugging a bit easier.
-      if (nodeSubscriptions.has(subscription.topic)) {
-        continue;
-      }
+      // fixme - should subscribe to full and partial for each topic
+      //if (nodeSubscriptions.has(subscription.topic)) {
+      //  continue;
+      //}
 
       const inputs = this._inputsByOutputTopic.get(subscription.topic);
       if (!inputs) {
