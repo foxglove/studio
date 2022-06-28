@@ -13,6 +13,14 @@ import { IdbExtensionStorage } from "./IdbExtensionStorage";
 
 const log = Log.getLogger(__filename);
 
+function parsePackageName(name: string): { publisher?: string; name: string } {
+  const res = /^@([^/]+)\/(.+)/.exec(name);
+  if (res == undefined) {
+    return { name };
+  }
+  return { publisher: res[1], name: res[2] as string };
+}
+
 function qualifiedName(namespace: ExtensionNamespace, info: ExtensionInfo): string {
   switch (namespace) {
     case "local":
@@ -26,14 +34,16 @@ function qualifiedName(namespace: ExtensionNamespace, info: ExtensionInfo): stri
 }
 
 function validatePackageInfo(info: Partial<ExtensionInfo>): ExtensionInfo {
-  if (info.publisher == undefined || info.publisher.length === 0) {
-    throw new Error("Invalid extension: missing publisher");
-  }
   if (info.name == undefined || info.name.length === 0) {
     throw new Error("Invalid extension: missing name");
   }
+  const { publisher: parsedPublisher, name } = parsePackageName(info.name);
+  const publisher = info.publisher ?? parsedPublisher;
+  if (publisher == undefined || publisher.length === 0) {
+    throw new Error("Invalid extension: missing publisher");
+  }
 
-  return info as ExtensionInfo;
+  return { ...info, publisher: publisher.toLowerCase(), name: name.toLowerCase() } as ExtensionInfo;
 }
 
 export class IdbExtensionLoader implements ExtensionLoader {
@@ -83,7 +93,7 @@ export class IdbExtensionLoader implements ExtensionLoader {
     }
 
     const rawInfo = validatePackageInfo(JSON.parse(pkgInfoText) as Partial<ExtensionInfo>);
-    const normalizedPublisher = rawInfo.publisher.toLowerCase().replace(/[\W_]+/g, "_");
+    const normalizedPublisher = rawInfo.publisher.toLowerCase().replace(/\W+/g, "");
     const info: ExtensionInfo = {
       ...rawInfo,
       id: `${normalizedPublisher}.${rawInfo.name}`,
@@ -98,10 +108,9 @@ export class IdbExtensionLoader implements ExtensionLoader {
     return info;
   }
 
-  async uninstallExtension(id: string): Promise<boolean> {
+  async uninstallExtension(id: string): Promise<void> {
     log.debug("Uninstalling extension", id);
 
     await this.#storage.delete(id);
-    return true;
   }
 }
