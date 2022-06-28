@@ -13,6 +13,7 @@ import { RenderableLineStrip } from "./RenderableLineStrip";
 import { RenderableMarker } from "./RenderableMarker";
 import { RenderableMeshResource } from "./RenderableMeshResource";
 import { RenderablePoints } from "./RenderablePoints";
+import { RenderableSphere } from "./RenderableSphere";
 import { RenderableSphereList } from "./RenderableSphereList";
 import { RenderableTextViewFacing } from "./RenderableTextViewFacing";
 import { RenderableTriangleList } from "./RenderableTriangleList";
@@ -20,7 +21,7 @@ import { RenderableTriangleList } from "./RenderableTriangleList";
 const CONSTRUCTORS = {
   [MarkerType.ARROW]: RenderableArrow,
   [MarkerType.CUBE]: RenderableCube,
-  [MarkerType.SPHERE]: RenderableMarker,
+  [MarkerType.SPHERE]: RenderableSphere,
   [MarkerType.CYLINDER]: RenderableCylinder,
   [MarkerType.LINE_STRIP]: RenderableLineStrip,
   [MarkerType.LINE_LIST]: RenderableLineList,
