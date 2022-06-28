@@ -9,6 +9,7 @@ import { filterMap } from "@foxglove/den/collection";
 import Log from "@foxglove/log";
 import { Time, subtract as subtractTimes, toNanoSec, add, fromNanoSec } from "@foxglove/rostime";
 import { MessageEvent } from "@foxglove/studio";
+import PlayerProblemManager from "@foxglove/studio-base/players/PlayerProblemManager";
 import { MessageBlock, Progress } from "@foxglove/studio-base/players/types";
 
 import { IIterableSource } from "./IIterableSource";
@@ -22,6 +23,7 @@ type BlockLoaderArgs = {
   end: Time;
   maxBlocks: number;
   minBlockDurationNs: number;
+  problemManager: PlayerProblemManager;
 };
 
 // A BlockSpan is a continuous set of blocks and topics to load for those blocks
@@ -32,6 +34,12 @@ type BlockSpan = {
 };
 
 type Blocks = (MessageBlock | undefined)[];
+
+type LoadArgs = {
+  abortSignal: AbortSignal;
+  startTime: Time;
+  progress: (progress: Progress) => Promise<void>;
+};
 
 /**
  * BlockLoader manages loading blocks from a source. Blocks are fixed time span containers for messages.
@@ -44,12 +52,14 @@ export class BlockLoader {
   private blockDurationNanos: number;
   private topics: Set<string> = new Set();
   private maxCacheSize: number = 0;
+  private problemManager: PlayerProblemManager;
 
   constructor(args: BlockLoaderArgs) {
     this.source = args.source;
     this.start = args.start;
     this.end = args.end;
     this.maxCacheSize = args.cacheSizeBytes;
+    this.problemManager = args.problemManager;
 
     const totalNs = Number(toNanoSec(subtractTimes(this.end, this.start))) + 1; // +1 since times are inclusive.
     if (totalNs > Number.MAX_SAFE_INTEGER * 0.9) {
@@ -71,12 +81,12 @@ export class BlockLoader {
     this.topics = topics;
   }
 
-  async load(time: Time, update: (progress: Progress) => Promise<void>): Promise<void> {
-    log.info("Start block load", time);
+  async load(args: LoadArgs): Promise<void> {
+    log.info("Start block load", args.startTime);
 
     const topics = this.topics;
 
-    let progress = this.progress(topics);
+    let progress = this.calculateProgress(topics);
 
     // Block caching works on the assumption that when seeking, the user wants to look at some
     // data before and after the current time.
@@ -93,7 +103,7 @@ export class BlockLoader {
     // When we need to evict, we evict backwards from the load blocks, so we evict: 3, 2, 1, 9, etc
 
     // turn startTime into a block ID with a min block id of 0
-    const startTime = subtractTimes(subtractTimes(time, this.start), { sec: 1, nsec: 0 });
+    const startTime = subtractTimes(subtractTimes(args.startTime, this.start), { sec: 1, nsec: 0 });
     const startNs = Math.max(0, Number(toNanoSec(startTime)));
     const beginBlockId = Math.floor(startNs / this.blockDurationNanos);
 
@@ -199,16 +209,13 @@ export class BlockLoader {
         }
         const iterResult = result.value;
 
-        // fixme - abort
-        // State change requested, bail
-        //if (this.nextState) {
-        //   await iterator.return?.();
-        //   return;
-        //}
+        if (args.abortSignal.aborted) {
+          await iterator.return?.();
+          return;
+        }
 
         if (iterResult.problem) {
-          // fixme - report problems
-          //  this.problemManager.addProblem(`connid-${iterResult.connectionId}`, iterResult.problem);
+          this.problemManager.addProblem(`connid-${iterResult.connectionId}`, iterResult.problem);
           continue;
         }
 
@@ -240,7 +247,7 @@ export class BlockLoader {
             }
           }
 
-          progress = this.progress(topics);
+          progress = this.calculateProgress(topics);
 
           // Set the new block to the id of our latest message
           currentBlockId = messageBlockId;
@@ -249,18 +256,16 @@ export class BlockLoader {
         const msgTopic = iterResult.msgEvent.topic;
         const events = messagesByTopic[msgTopic];
 
+        const problemKey = `unexpected-topic-${msgTopic}`;
         if (!events) {
-          // fixme
-          /*
-          this.problemManager.addProblem(`exexpected-topic-${msgTopic}`, {
+          this.problemManager.addProblem(problemKey, {
             severity: "error",
             message: `Received a messaged on an unexpected topic: ${msgTopic}.`,
           });
-          */
+
           continue;
         }
-        // fixme
-        // this.problemManager.removeProblem(`exexpected-topic-${msgTopic}`);
+        this.problemManager.removeProblem(problemKey);
 
         const messageSizeInBytes = iterResult.msgEvent.sizeInBytes;
         sizeInBytes += messageSizeInBytes;
@@ -285,7 +290,7 @@ export class BlockLoader {
         totalBlockSizeBytes += messageSizeInBytes;
         events.push(iterResult.msgEvent);
 
-        await update(progress);
+        await args.progress(progress);
       }
 
       // Close out the current block with the aggregated messages. Fill any blocks between
@@ -309,15 +314,15 @@ export class BlockLoader {
         }
       }
 
-      progress = this.progress(topics);
+      progress = this.calculateProgress(topics);
     }
 
-    await update(progress);
+    await args.progress(progress);
   }
 
   /// ---- private
 
-  private progress(topics: Set<string>): Progress {
+  private calculateProgress(topics: Set<string>): Progress {
     const fullyLoadedFractionRanges = simplify(
       filterMap(this.blocks, (thisBlock, blockIndex) => {
         if (!thisBlock) {

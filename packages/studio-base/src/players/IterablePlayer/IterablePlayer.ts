@@ -433,6 +433,7 @@ export class IterablePlayer implements Player {
         end: this._end,
         maxBlocks: MAX_BLOCKS,
         minBlockDurationNs: MIN_MEM_CACHE_BLOCK_SIZE_NS,
+        problemManager: this._problemManager,
       });
 
       // set the initial topics for the loader
@@ -843,27 +844,38 @@ export class IterablePlayer implements Player {
 
     this._blockLoader?.setTopics(this._partialTopics);
 
-    // fixme - how do we know when to abort block loading?
+    if (this._abort) {
+      throw new Error("Invarient. Abort controller already defined");
+    }
+    this._abort = new AbortController();
 
-    // During playback, we let the statePlay method emit state
-    // When idle, we can emit state
-    const shouldEmit = opt?.emit ?? true;
+    try {
+      // During playback, we let the statePlay method emit state
+      // When idle, we can emit state
+      const shouldEmit = opt?.emit ?? true;
 
-    let nextEmit = 0;
-    await this._blockLoader?.load(time, async (progress) => {
-      this._progress = progress;
+      let nextEmit = 0;
+      await this._blockLoader?.load({
+        abortSignal: this._abort.signal,
+        startTime: time,
+        progress: async (progress) => {
+          this._progress = progress;
 
-      // We throttle emitting the state since we could be loading blocks faster than 60fps and it
-      // is actually slower to try rendering with each new block compared to spacing out the
-      // rendering.
-      if (shouldEmit && Date.now() >= nextEmit) {
+          // We throttle emitting the state since we could be loading blocks faster than 60fps and it
+          // is actually slower to try rendering with each new block compared to spacing out the
+          // rendering.
+          if (shouldEmit && Date.now() >= nextEmit) {
+            await this._emitState();
+            nextEmit = Date.now() + 100;
+          }
+        },
+      });
+
+      if (shouldEmit) {
         await this._emitState();
-        nextEmit = Date.now() + 100;
       }
-    });
-
-    if (shouldEmit) {
-      await this._emitState();
+    } finally {
+      this._abort = undefined;
     }
   }
 }

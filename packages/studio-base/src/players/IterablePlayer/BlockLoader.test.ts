@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import PlayerProblemManager from "@foxglove/studio-base/players/PlayerProblemManager";
 import { MessageEvent } from "@foxglove/studio-base/players/types";
 
 import { BlockLoader } from "./BlockLoader";
@@ -43,16 +44,22 @@ describe("BlockLoader", () => {
       source: new TestSource(),
       start: { sec: 0, nsec: 0 },
       end: { sec: 0, nsec: 0 },
+      problemManager: new PlayerProblemManager(),
     });
 
-    await loader.load({ sec: 0, nsec: 0 }, async (progress) => {
-      expect(progress).toEqual({
-        fullyLoadedFractionRanges: [],
-        messageCache: {
-          blocks: [undefined],
-          startTime: { sec: 0, nsec: 0 },
-        },
-      });
+    const abort = new AbortController();
+    await loader.load({
+      abortSignal: abort.signal,
+      startTime: { sec: 0, nsec: 0 },
+      progress: async (progress) => {
+        expect(progress).toEqual({
+          fullyLoadedFractionRanges: [],
+          messageCache: {
+            blocks: [undefined],
+            startTime: { sec: 0, nsec: 0 },
+          },
+        });
+      },
     });
 
     expect.assertions(1);
@@ -66,16 +73,22 @@ describe("BlockLoader", () => {
       source: new TestSource(),
       start: { sec: 0, nsec: 0 },
       end: { sec: 5, nsec: 0 },
+      problemManager: new PlayerProblemManager(),
     });
 
-    await loader.load({ sec: 0, nsec: 0 }, async (progress) => {
-      expect(progress).toEqual({
-        fullyLoadedFractionRanges: [],
-        messageCache: {
-          blocks: [undefined, undefined, undefined],
-          startTime: { sec: 0, nsec: 0 },
-        },
-      });
+    const abort = new AbortController();
+    await loader.load({
+      abortSignal: abort.signal,
+      startTime: { sec: 0, nsec: 0 },
+      progress: async (progress) => {
+        expect(progress).toEqual({
+          fullyLoadedFractionRanges: [],
+          messageCache: {
+            blocks: [undefined, undefined, undefined],
+            startTime: { sec: 0, nsec: 0 },
+          },
+        });
+      },
     });
 
     expect.assertions(1);
@@ -89,53 +102,60 @@ describe("BlockLoader", () => {
       source: new TestSource(),
       start: { sec: 0, nsec: 0 },
       end: { sec: 5, nsec: 0 },
+      problemManager: new PlayerProblemManager(),
     });
 
     loader.setTopics(new Set(["foo"]));
-    await loader.load({ sec: 0, nsec: 0 }, async (progress) => {
-      expect(progress).toEqual({
-        fullyLoadedFractionRanges: [
-          {
-            start: 0,
-            end: 1,
-          },
-        ],
-        messageCache: {
-          blocks: [
+
+    const abort = new AbortController();
+    await loader.load({
+      abortSignal: abort.signal,
+      startTime: { sec: 0, nsec: 0 },
+      progress: async (progress) => {
+        expect(progress).toEqual({
+          fullyLoadedFractionRanges: [
             {
-              messagesByTopic: {
-                foo: [],
-              },
-              sizeInBytes: 0,
-            },
-            {
-              messagesByTopic: {
-                foo: [],
-              },
-              sizeInBytes: 0,
-            },
-            {
-              messagesByTopic: {
-                foo: [],
-              },
-              sizeInBytes: 0,
-            },
-            {
-              messagesByTopic: {
-                foo: [],
-              },
-              sizeInBytes: 0,
-            },
-            {
-              messagesByTopic: {
-                foo: [],
-              },
-              sizeInBytes: 0,
+              start: 0,
+              end: 1,
             },
           ],
-          startTime: { sec: 0, nsec: 0 },
-        },
-      });
+          messageCache: {
+            blocks: [
+              {
+                messagesByTopic: {
+                  foo: [],
+                },
+                sizeInBytes: 0,
+              },
+              {
+                messagesByTopic: {
+                  foo: [],
+                },
+                sizeInBytes: 0,
+              },
+              {
+                messagesByTopic: {
+                  foo: [],
+                },
+                sizeInBytes: 0,
+              },
+              {
+                messagesByTopic: {
+                  foo: [],
+                },
+                sizeInBytes: 0,
+              },
+              {
+                messagesByTopic: {
+                  foo: [],
+                },
+                sizeInBytes: 0,
+              },
+            ],
+            startTime: { sec: 0, nsec: 0 },
+          },
+        });
+      },
     });
 
     expect.assertions(1);
