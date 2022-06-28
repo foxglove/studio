@@ -134,6 +134,16 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     return entries;
   }
 
+  override startFrame(currentTime: bigint, renderFrameId: string, fixedFrameId: string): void {
+    super.startFrame(currentTime, renderFrameId, fixedFrameId);
+    for (const renderable of this.renderables.values()) {
+      const laserScanMaterial = renderable.userData.laserScanMaterial;
+      if (laserScanMaterial) {
+        laserScanMaterial.uniforms.pixelRatio!.value = this.renderer.getPixelRatio();
+      }
+    }
+  }
+
   handleSettingsAction = (action: SettingsTreeAction): void => {
     const path = action.payload.path;
     if (action.action !== "update" || path.length !== 3) {
@@ -210,7 +220,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
       renderable = new PointCloudAndLaserScanRenderable(topic, this.renderer, {
         receiveTime,
         messageTime: toNanoSec(pointCloud.header.stamp),
-        frameId: pointCloud.header.frame_id,
+        frameId: this.renderer.normalizeFrameId(pointCloud.header.frame_id),
         pose: makePose(),
         settingsPath: ["topics", topic],
         settings,
@@ -245,7 +255,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
   ): void {
     renderable.userData.receiveTime = receiveTime;
     renderable.userData.messageTime = toNanoSec(pointCloud.header.stamp);
-    renderable.userData.frameId = pointCloud.header.frame_id;
+    renderable.userData.frameId = this.renderer.normalizeFrameId(pointCloud.header.frame_id);
     renderable.userData.pointCloud = pointCloud;
     renderable.userData.laserScan = undefined;
 
@@ -462,7 +472,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
       renderable = new PointCloudAndLaserScanRenderable(topic, this.renderer, {
         receiveTime,
         messageTime: toNanoSec(laserScan.header.stamp),
-        frameId: laserScan.header.frame_id,
+        frameId: this.renderer.normalizeFrameId(laserScan.header.frame_id),
         pose: makePose(),
         settingsPath: ["topics", topic],
         settings,
@@ -490,7 +500,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
   ): void {
     renderable.userData.receiveTime = receiveTime;
     renderable.userData.messageTime = toNanoSec(laserScan.header.stamp);
-    renderable.userData.frameId = laserScan.header.frame_id;
+    renderable.userData.frameId = this.renderer.normalizeFrameId(laserScan.header.frame_id);
     renderable.userData.pointCloud = undefined;
     renderable.userData.laserScan = laserScan;
 
@@ -593,6 +603,7 @@ class LaserScanMaterial extends THREE.RawShaderMaterial {
         uniform mat4 projectionMatrix, modelViewMatrix;
 
         uniform float pointSize;
+        uniform float pixelRatio;
         uniform float angleMin, angleIncrement;
         uniform float rangeMin, rangeMax;
         in float position; // range, but must be named position in order for three.js to render anything
@@ -609,10 +620,10 @@ class LaserScanMaterial extends THREE.RawShaderMaterial {
           gl_Position = projectionMatrix * modelViewMatrix * pos;
           ${
             picking
-              ? `gl_PointSize = max(pointSize, ${LaserScanMaterial.MIN_PICKING_POINT_SIZE.toFixed(
+              ? `gl_PointSize = pixelRatio * max(pointSize, ${LaserScanMaterial.MIN_PICKING_POINT_SIZE.toFixed(
                   1,
                 )});`
-              : "gl_PointSize = pointSize;"
+              : "gl_PointSize = pixelRatio * pointSize;"
           }
 
         }
@@ -627,18 +638,22 @@ class LaserScanMaterial extends THREE.RawShaderMaterial {
         uniform bool isCircle;
         ${picking ? "uniform vec4 objectId;" : "in mediump vec4 vColor;"}
         out vec4 outColor;
+
+        ${THREE.ShaderChunk.encodings_pars_fragment /* for LinearTosRGB() */}
+
         void main() {
           if (isCircle) {
             vec2 cxy = 2.0 * gl_PointCoord - 1.0;
             if (dot(cxy, cxy) > 1.0) { discard; }
           }
-          ${picking ? "outColor = objectId;" : "outColor = vColor;"}
+          ${picking ? "outColor = objectId;" : "outColor = LinearTosRGB(vColor);"}
         }
       `,
     });
     this.uniforms = {
       isCircle: { value: false },
       pointSize: { value: 1 },
+      pixelRatio: { value: 1 },
       angleMin: { value: NaN },
       angleIncrement: { value: NaN },
       rangeMin: { value: NaN },

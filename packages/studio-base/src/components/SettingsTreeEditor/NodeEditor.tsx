@@ -26,6 +26,7 @@ import { SettingsTreeAction, SettingsTreeNode } from "@foxglove/studio";
 import Stack from "@foxglove/studio-base/components/Stack";
 
 import { FieldEditor } from "./FieldEditor";
+import { HighlightedText } from "./HighlightedText";
 import { NodeActionsMenu } from "./NodeActionsMenu";
 import { VisibilityToggle } from "./VisibilityToggle";
 import { icons } from "./icons";
@@ -34,6 +35,7 @@ import { prepareSettingsNodes } from "./utils";
 export type NodeEditorProps = {
   actionHandler: (action: SettingsTreeAction) => void;
   defaultOpen?: boolean;
+  filter?: string;
   path: readonly string[];
   settings?: DeepReadonly<SettingsTreeNode>;
 };
@@ -49,7 +51,9 @@ const EditButton = muiStyled(IconButton)(({ theme }) => ({
   padding: theme.spacing(0.5),
 }));
 
-const NodeHeader = muiStyled("div")(({ theme }) => {
+const NodeHeader = muiStyled("div", {
+  shouldForwardProp: (prop) => prop !== "visible",
+})<{ visible: boolean }>(({ theme, visible }) => {
   return {
     display: "flex",
     gridColumn: "span 2",
@@ -58,7 +62,7 @@ const NodeHeader = muiStyled("div")(({ theme }) => {
 
     "@media (pointer: fine)": {
       ".MuiCheckbox-root": {
-        visibility: "hidden",
+        visibility: visible ? "hidden" : "visible",
       },
 
       "[data-node-function=edit-label]": {
@@ -121,7 +125,7 @@ function ExpansionArrow({ expanded }: { expanded: boolean }): JSX.Element {
 const makeStablePath = memoizeWeak((path: readonly string[], key: string) => [...path, key]);
 
 function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
-  const { actionHandler, defaultOpen = true, settings = {} } = props;
+  const { actionHandler, defaultOpen = true, filter, settings = {} } = props;
   const [state, setState] = useImmer({ open: defaultOpen, editing: false });
 
   const theme = useTheme();
@@ -159,6 +163,7 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
       <NodeEditor
         actionHandler={actionHandler}
         defaultOpen={child.defaultExpansionState === "collapsed" ? false : true}
+        filter={filter}
         key={key}
         settings={child}
         path={makeStablePath(props.path, key)}
@@ -205,7 +210,7 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
 
   return (
     <>
-      <NodeHeader>
+      <NodeHeader visible={visible}>
         <NodeHeaderToggle
           hasProperties={hasProperties}
           indent={indent}
@@ -241,7 +246,7 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
               fontWeight={indent < 2 ? 600 : 400}
               color={visible ? "text.primary" : "text.disabled"}
             >
-              {settings.label ?? "General"}
+              <HighlightedText text={settings.label ?? "General"} highlight={filter} />
             </Typography>
           )}
         </NodeHeaderToggle>

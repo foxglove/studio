@@ -224,6 +224,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
   useEffect(() => {
     context.updatePanelSettingsEditor({
       actionHandler,
+      enableFilter: true,
       nodes: settingsTree ?? {},
     });
   }, [actionHandler, context, settingsTree]);
@@ -243,6 +244,13 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
       renderRef.current.needsRender = true;
     }
   }, [topics, renderer]);
+
+  // Tell the renderer if we are connected to a ROS data source
+  useEffect(() => {
+    if (renderer) {
+      renderer.ros = context.dataSourceProfile === "ros1" || context.dataSourceProfile === "ros2";
+    }
+  }, [context.dataSourceProfile, renderer]);
 
   // Save panel settings whenever they change
   const throttledSave = useDebouncedCallback(

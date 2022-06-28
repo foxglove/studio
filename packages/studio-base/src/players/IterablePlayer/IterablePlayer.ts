@@ -126,6 +126,7 @@ export class IterablePlayer implements Player {
     PlayerCapabilities.setSpeed,
     PlayerCapabilities.playbackControl,
   ];
+  private _profile: string | undefined;
   private _metricsCollector: PlayerMetricsCollectorInterface;
   private _subscriptions: SubscribePayload[] = [];
   private _allTopics: Set<string> = new Set();
@@ -390,9 +391,10 @@ export class IterablePlayer implements Player {
     await this._emitState();
 
     try {
-      const { start, end, topics, topicStats, problems, publishersByTopic, datatypes } =
+      const { start, end, topics, profile, topicStats, problems, publishersByTopic, datatypes } =
         await this._iterableSource.initialize();
 
+      this._profile = profile;
       this._start = this._currentTime = start;
       this._end = end;
       this._publishedTopics = publishersByTopic;
@@ -620,6 +622,7 @@ export class IterablePlayer implements Player {
         presence: PlayerPresence.ERROR,
         progress: {},
         capabilities: this._capabilities,
+        profile: this._profile,
         playerId: this._id,
         activeData: undefined,
         problems: this._problemManager.problems(),
@@ -641,6 +644,7 @@ export class IterablePlayer implements Player {
       presence: this._presence,
       progress: this._progress,
       capabilities: this._capabilities,
+      profile: this._profile,
       playerId: this._id,
       problems: this._problemManager.problems(),
       activeData: {

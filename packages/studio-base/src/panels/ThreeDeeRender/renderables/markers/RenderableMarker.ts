@@ -8,6 +8,7 @@ import { toNanoSec } from "@foxglove/rostime";
 
 import { BaseUserData, Renderable } from "../../Renderable";
 import type { Renderer } from "../../Renderer";
+import { rgbToThreeColor } from "../../color";
 import { Marker } from "../../ros";
 
 const tempColor = new THREE.Color();
@@ -32,7 +33,7 @@ export class RenderableMarker extends Renderable<MarkerUserData> {
     super(name, renderer, {
       receiveTime: receiveTime ?? 0n,
       messageTime: toNanoSec(marker.header.stamp),
-      frameId: marker.header.frame_id,
+      frameId: renderer.normalizeFrameId(marker.header.frame_id),
       pose: marker.pose,
       settingsPath: ["topics", topic, marker.ns, String(marker.id)], // unused
       settings: { visible: true, frameLocked: marker.frame_locked },
@@ -49,7 +50,7 @@ export class RenderableMarker extends Renderable<MarkerUserData> {
       this.userData.receiveTime = receiveTime;
     }
     this.userData.messageTime = toNanoSec(marker.header.stamp);
-    this.userData.frameId = marker.header.frame_id;
+    this.userData.frameId = this.renderer.normalizeFrameId(marker.header.frame_id);
     this.userData.pose = marker.pose;
     this.userData.marker = marker;
     this.userData.expiresIn = hasLifetime ? toNanoSec(marker.lifetime) : undefined;
@@ -60,14 +61,14 @@ export class RenderableMarker extends Renderable<MarkerUserData> {
     marker: Marker,
     callback: (color: THREE.Vector4Tuple, i: number) => void,
   ): void {
-    tempColor.setRGB(marker.color.r, marker.color.g, marker.color.b).convertSRGBToLinear();
+    rgbToThreeColor(tempColor, marker.color);
 
     const length = marker.points.length;
     for (let i = 0; i < length; i++) {
       const srgb = marker.colors[i];
       if (srgb) {
         // Per-point color
-        tempColor2.setRGB(srgb.r, srgb.g, srgb.b).convertSRGBToLinear();
+        rgbToThreeColor(tempColor2, srgb);
         tempTuple4[0] = tempColor2.r;
         tempTuple4[1] = tempColor2.g;
         tempTuple4[2] = tempColor2.b;

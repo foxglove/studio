@@ -402,9 +402,7 @@ const PanelExamplesSettings: SettingsTreeNodes = {
     fields: {
       color: { label: "Color", value: "#ffffff", input: "rgb" },
       shaft_length: { label: "Shaft length", value: 1.5, input: "number" },
-      shaft_width: { label: "Shaft width", value: 1.5, input: "number" },
-      head_length: { label: "Head length", value: 2, input: "number" },
-      head_width: { label: "Head width", value: 2, input: "number" },
+      shaft_position: { label: "Shaft Position", value: [1, 2, 3], input: "vec3", min: 0, max: 5 },
     },
   },
 };
@@ -572,6 +570,42 @@ const TopicSettings: SettingsTreeNodes = {
             value: 0,
           },
         },
+      },
+    },
+  },
+};
+
+const FilterSettings: SettingsTreeNodes = {
+  matchA: {
+    label: "MatchA",
+    children: {
+      childA: {
+        label: "ChildA",
+      },
+      matchA: {
+        label: "MatchA",
+      },
+    },
+  },
+  matchB: {
+    label: "MatchB",
+    children: {
+      childB: {
+        label: "ChildB",
+      },
+      matchA: {
+        label: "MatchA",
+      },
+    },
+  },
+  matchC: {
+    label: "MatchC",
+    children: {
+      childC: {
+        label: "ChildB",
+      },
+      matchA: {
+        label: "MatchC",
       },
     },
   },
@@ -747,3 +781,14 @@ export function IconExamples(): JSX.Element {
 export function Topics(): JSX.Element {
   return <Wrapper nodes={TopicSettings} />;
 }
+
+export function Filter(): JSX.Element {
+  return <Wrapper nodes={FilterSettings} />;
+}
+Filter.play = () => {
+  const node = document.querySelector("[data-test=settings-filter-field] input");
+  if (node) {
+    fireEvent.click(node);
+    fireEvent.change(node, { target: { value: "matcha" } });
+  }
+};
