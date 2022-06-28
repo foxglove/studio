@@ -7,14 +7,7 @@ import { isEqual } from "lodash";
 
 import { filterMap } from "@foxglove/den/collection";
 import Log from "@foxglove/log";
-import {
-  Time,
-  subtract as subtractTimes,
-  toNanoSec,
-  add,
-  compare,
-  fromNanoSec,
-} from "@foxglove/rostime";
+import { Time, subtract as subtractTimes, toNanoSec, add, fromNanoSec } from "@foxglove/rostime";
 import { MessageEvent } from "@foxglove/studio";
 import { MessageBlock, Progress } from "@foxglove/studio-base/players/types";
 
@@ -41,7 +34,7 @@ type BlockSpan = {
 type Blocks = (MessageBlock | undefined)[];
 
 /**
- * BlockLoader manages loading blocks from a source. Blocks pre-loaded ranges of messages on topics.
+ * BlockLoader manages loading blocks from a source. Blocks are fixed time span containers for messages.
  */
 export class BlockLoader {
   private source: IIterableSource;
@@ -74,6 +67,7 @@ export class BlockLoader {
   }
 
   setTopics(topics: Set<string>): void {
+    log.debug("setTopics", topics);
     this.topics = topics;
   }
 
@@ -118,9 +112,9 @@ export class BlockLoader {
       loadQueue.push(i);
     }
 
-    // When the list of topics changes, we want to avoid loading topics if the block already has the topic.
-    // Create spans of blocks based on which topics they need. This allows us to make larger requests
-    // for message data from the source which typically reduces overhead.
+    // When the list of topics changes, we want to avoid loading topics if the block already has the
+    // topic. Create spans of blocks based on which topics are needed. This allows us reduce
+    // overhead by making longer more continuous requests.
     const blockSpans: BlockSpan[] = [];
 
     let activeSpan: BlockSpan | undefined;
@@ -181,16 +175,11 @@ export class BlockLoader {
         fromNanoSec(BigInt(span.endId * this.blockDurationNanos + this.blockDurationNanos)),
       );
 
-      // fixme - remember that an iterator can produce no messages
-      // this means there were no messages for the range user wanted
       const iterator = this.source.messageIterator({
         topics: Array.from(span.topics),
         start: iteratorStartTime,
         end: iteratorEndTime,
       });
-
-      // fixme - A block is created when all the messages for its time would fall into the block
-      // As we read messages from the iterator, we need to determine when we move to the next block
 
       let messagesByTopic: Record<string, MessageEvent<unknown>[]> = {};
       // Set all topic arrays to empty to indicate we've read this topic
@@ -198,29 +187,19 @@ export class BlockLoader {
         messagesByTopic[topic] = [];
       }
 
-      let blockId = span.beginId;
-      const nextBlockTime = add(iteratorStartTime, fromNanoSec(BigInt(this.blockDurationNanos)));
+      let currentBlockId = span.beginId;
 
       let sizeInBytes = 0;
       for (;;) {
         const result = await iterator.next();
+        // Code after the for loop handles adding any aggregated messages to the current blockId
         if (result.done === true) {
-          // no more messages, write the block
-          const existingBlock = this.blocks[blockId];
-          const block: MessageBlock = {
-            messagesByTopic: {
-              ...existingBlock?.messagesByTopic,
-              ...messagesByTopic,
-            },
-            sizeInBytes: sizeInBytes + (existingBlock?.sizeInBytes ?? 0),
-          };
-
-          this.blocks[blockId] = block;
           break;
         }
-        const iterResult = result.value; // State change requested, bail
+        const iterResult = result.value;
 
         // fixme - abort
+        // State change requested, bail
         //if (this.nextState) {
         //   await iterator.return?.();
         //   return;
@@ -232,41 +211,38 @@ export class BlockLoader {
           continue;
         }
 
-        // fixme - messages arrive in time order from the iterator
-        // but they might skip blocks
+        const messageBlockId = this.timeToBlockId(iterResult.msgEvent.receiveTime);
 
-        // message is done, write the block
-        if (compare(iterResult.msgEvent.receiveTime, nextBlockTime) > 0) {
-          const existingBlock = this.blocks[blockId];
-          const block = {
-            messagesByTopic: {
-              ...existingBlock?.messagesByTopic,
-              ...messagesByTopic,
-            },
-            sizeInBytes: sizeInBytes + (existingBlock?.sizeInBytes ?? 0),
-          };
+        // Message is for a different block.
+        // 1. Close out the current block.
+        // 2. Fill in any block gaps.
+        // 3. start a new block.
+        if (messageBlockId !== currentBlockId) {
+          // Close out the current block with the aggregated messages. Fill any blocks between
+          // current and the new block with empty topic arrays. We can use empty arrays because we
+          // know these blocks have no messages since messages arrive in time order.
+          for (let i = currentBlockId; i < messageBlockId; ++i) {
+            const existingBlock = this.blocks[i];
 
-          this.blocks[blockId] = block;
+            this.blocks[i] = {
+              messagesByTopic: {
+                ...existingBlock?.messagesByTopic,
+                ...messagesByTopic,
+              },
+              sizeInBytes: sizeInBytes + (existingBlock?.sizeInBytes ?? 0),
+            };
 
-          // fixme - calculate the block id of the block this next message is going to load into
-          // if the new block id is > 1 from the previous block id, then we need to fill blocks with empty cause
-          // they didn't have any messages
-          // this block id might be outside our span - which BTW is an invariant since we calculated the end time
-          // if it is, then we
-          const newBlockId = this.timeToBlockId(iterResult.msgEvent.receiveTime);
-
-          // fixme - don't add 1 here, but compute the block Id of the next block using the receive time
-          // this might be in the next span so we need to finish up this one
-          blockId = newBlockId;
-
-          // start a new message batch
-          messagesByTopic = {};
-          // Set all topic arrays to empty to indicate we've read this topic
-          for (const topic of span.topics) {
-            messagesByTopic[topic] = [];
+            messagesByTopic = {};
+            // Set all topic arrays to empty to indicate we've read this topic
+            for (const topic of span.topics) {
+              messagesByTopic[topic] = [];
+            }
           }
 
           progress = this.progress(topics);
+
+          // Set the new block to the id of our latest message
+          currentBlockId = messageBlockId;
         }
 
         const msgTopic = iterResult.msgEvent.topic;
@@ -311,8 +287,28 @@ export class BlockLoader {
         await update(progress);
       }
 
-      // fixme - the set tracks all the block ids we did not load in the span because the iterator had no messages
-      // for these blocks we set the topics to empty since we know they don't have any messages
+      // Close out the current block with the aggregated messages. Fill any blocks between
+      // current and the new block with empty topic arrays. We can use empty arrays because we
+      // know these blocks have no messages since messages arrive in time order.
+      for (let i = currentBlockId; i < span.endId; ++i) {
+        const existingBlock = this.blocks[i];
+
+        this.blocks[i] = {
+          messagesByTopic: {
+            ...existingBlock?.messagesByTopic,
+            ...messagesByTopic,
+          },
+          sizeInBytes: sizeInBytes + (existingBlock?.sizeInBytes ?? 0),
+        };
+
+        messagesByTopic = {};
+        // Set all topic arrays to empty to indicate we've read this topic
+        for (const topic of span.topics) {
+          messagesByTopic[topic] = [];
+        }
+      }
+
+      progress = this.progress(topics);
     }
 
     await update(progress);

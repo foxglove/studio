@@ -5,6 +5,7 @@
 import { isEqual } from "lodash";
 import { v4 as uuidv4 } from "uuid";
 
+import { filterMap } from "@foxglove/den/collection";
 import Log from "@foxglove/log";
 import {
   Time,
@@ -149,10 +150,6 @@ export class IterablePlayer implements Player {
 
   private _problemManager = new PlayerProblemManager();
 
-  // Blocks is a sparse array of MessageBlock.
-  private _blocks: (MessageBlock | undefined)[] = [];
-  private _blockDurationNanos: number = 0;
-
   private _iterableSource: IIterableSource;
 
   // Some states register an abort controller to signal they should abort
@@ -237,12 +234,15 @@ export class IterablePlayer implements Player {
   }
 
   setSubscriptions(newSubscriptions: SubscribePayload[]): void {
+    log.debug("set subscriptions", newSubscriptions);
     this._subscriptions = newSubscriptions;
     this._metricsCollector.setSubscriptions(newSubscriptions);
 
     const allTopics = new Set(this._subscriptions.map((subscription) => subscription.topic));
     const partialTopics = new Set(
-      this._subscriptions.filter((sub) => sub.preloadType !== "partial").map((sub) => sub.topic),
+      filterMap(this._subscriptions, (sub) =>
+        sub.preloadType !== "partial" ? sub.topic : undefined,
+      ),
     );
 
     if (isEqual(allTopics, this._allTopics) && isEqual(partialTopics, this._partialTopics)) {
@@ -250,8 +250,8 @@ export class IterablePlayer implements Player {
     }
 
     this._allTopics = allTopics;
-    this._blockLoader?.setTopics(this._partialTopics);
     this._partialTopics = partialTopics;
+    this._blockLoader?.setTopics(this._partialTopics);
   }
 
   requestBackfill(): void {
@@ -390,16 +390,8 @@ export class IterablePlayer implements Player {
     await this._emitState();
 
     try {
-      const {
-        start,
-        end,
-        topics,
-        topicStats,
-        problems,
-        publishersByTopic,
-        datatypes,
-        blockDurationNanos,
-      } = await this._iterableSource.initialize();
+      const { start, end, topics, topicStats, problems, publishersByTopic, datatypes } =
+        await this._iterableSource.initialize();
 
       this._start = this._currentTime = start;
       this._end = end;
@@ -432,30 +424,16 @@ export class IterablePlayer implements Player {
       }
 
       // --- setup blocks
-      /*
-      const totalNs = Number(toNanoSec(subtractTimes(this._end, this._start))) + 1; // +1 since times are inclusive.
-      if (totalNs > Number.MAX_SAFE_INTEGER * 0.9) {
-        throw new Error("Time range is too long to be supported");
-      }
-
-      this._blockDurationNanos = Math.ceil(
-        Math.max(MIN_MEM_CACHE_BLOCK_SIZE_NS, totalNs / MAX_BLOCKS),
-      );
-      */
-
-      if (blockDurationNanos != undefined) {
-        this._blockDurationNanos = blockDurationNanos;
-      }
-
       this._blockLoader = new BlockLoader({
         cacheSizeBytes: DEFAULT_CACHE_SIZE_BYTES,
         source: this._iterableSource,
         start: this._start,
         end: this._end,
-        blockDurationNs: blockDurationNanos,
         maxBlocks: MAX_BLOCKS,
         minBlockDurationNs: MIN_MEM_CACHE_BLOCK_SIZE_NS,
       });
+
+      // set the initial topics for the loader
     } catch (error) {
       this._setError(`Error initializing: ${error.message}`, error);
     }
@@ -859,6 +837,8 @@ export class IterablePlayer implements Player {
       return;
     }
 
+    this._blockLoader?.setTopics(this._partialTopics);
+
     // fixme - how do we know when to abort block loading?
 
     // During playback, we let the statePlay method emit state
@@ -868,6 +848,8 @@ export class IterablePlayer implements Player {
     let nextEmit = 0;
     await this._blockLoader?.load(time, async (progress) => {
       this._progress = progress;
+
+      log.debug("progress");
 
       // We throttle emitting the state since we could be loading blocks faster than 60fps and it
       // is actually slower to try rendering with each new block compared to spacing out the

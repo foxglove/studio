@@ -162,7 +162,6 @@ export class DataPlatformIterableSource implements IIterableSource {
       end: this._end,
       problems,
       publishersByTopic: new Map(),
-      blockDurationNanos: this._requestDurationSecs * 1e9,
     };
   }
 
