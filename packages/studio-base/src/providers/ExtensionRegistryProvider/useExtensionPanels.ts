@@ -16,7 +16,7 @@ const log = Logger.getLogger(__filename);
 
 export function useExtensionPanels(
   extensions: ExtensionInfo[],
-  extensionLoaders: Pick<ExtensionLoader, "loadExtension">,
+  loadExtension: ExtensionLoader["loadExtension"],
 ): AsyncState<Record<string, RegisteredPanel>> {
   const registeredPanels = useAsync(async () => {
     // registered panels stored by their fully qualified id
@@ -52,13 +52,14 @@ export function useExtensionPanels(
 
           panels[fullId] = {
             extensionName: extension.qualifiedName,
+            namespace: extension.namespace,
             registration: params,
           };
         },
       };
 
       try {
-        const unwrappedExtensionSource = await extensionLoaders.loadExtension(extension.id);
+        const unwrappedExtensionSource = await loadExtension(extension.id);
 
         // eslint-disable-next-line no-new-func
         const fn = new Function("module", "require", unwrappedExtensionSource);
@@ -74,7 +75,7 @@ export function useExtensionPanels(
     }
 
     return panels;
-  }, [extensionLoaders, extensions]);
+  }, [extensions, loadExtension]);
 
   return registeredPanels;
 }

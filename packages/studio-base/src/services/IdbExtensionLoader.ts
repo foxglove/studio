@@ -98,10 +98,9 @@ export class IdbExtensionLoader implements ExtensionLoader {
     return info;
   }
 
-  async uninstallExtension(id: string): Promise<boolean> {
+  async uninstallExtension(id: string): Promise<void> {
     log.debug("Uninstalling extension", id);
 
     await this.#storage.delete(id);
-    return true;
   }
 }

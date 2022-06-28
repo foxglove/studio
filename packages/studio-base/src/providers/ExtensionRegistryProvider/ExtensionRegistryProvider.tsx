@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { PropsWithChildren, useEffect, useMemo } from "react";
+import { PropsWithChildren, useCallback, useEffect, useMemo } from "react";
 import { useAsyncFn } from "react-use";
 
 import Logger from "@foxglove/log";
@@ -10,27 +10,76 @@ import ExtensionRegistryContext from "@foxglove/studio-base/context/ExtensionReg
 import { ExtensionLoader } from "@foxglove/studio-base/services/ExtensionLoader";
 import { ExtensionInfo, ExtensionNamespace } from "@foxglove/studio-base/types/Extensions";
 
-import { useExtensionLoaders } from "./useExtensionLoaders";
 import { useExtensionPanels } from "./useExtensionPanels";
 
 const log = Logger.getLogger(__filename);
 
 const NO_EXTENSIONS: ExtensionInfo[] = [];
 
-export default function ExtensionRegistryProvider(
-  props: PropsWithChildren<{ loaders: readonly ExtensionLoader[] }>,
-): JSX.Element {
-  const extensionLoaders = useExtensionLoaders(props.loaders);
+const NO_PANELS = {};
 
+export default function ExtensionRegistryProvider({
+  children,
+  loaders,
+}: PropsWithChildren<{ loaders: readonly ExtensionLoader[] }>): JSX.Element {
   const [registeredExtensions, refreshExtensions] = useAsyncFn(async () => {
-    const extensionList = await extensionLoaders.getExtensions();
+    const extensionList = (
+      await Promise.all(loaders.map(async (loader) => await loader.getExtensions()))
+    )
+      .flat()
+      .sort();
     log.debug(`Found ${extensionList.length} extension(s)`);
     return extensionList;
-  }, [extensionLoaders]);
+  }, [loaders]);
+
+  const downloadExtension = useCallback(async (url: string) => {
+    const res = await fetch(url);
+    return new Uint8Array(await res.arrayBuffer());
+  }, []);
+
+  const loadExtension = useCallback(
+    async (id: string) => {
+      for (const loader of loaders) {
+        try {
+          return await loader.loadExtension(id);
+        } catch (error) {
+          log.debug(error);
+        }
+      }
+
+      throw new Error(`Extension ${id} not found`);
+    },
+    [loaders],
+  );
+
+  const installExtension = useCallback(
+    async (namespace: ExtensionNamespace, foxeFileData: Uint8Array) => {
+      const namespacedLoader = loaders.find((loader) => loader.namespace === namespace);
+      if (namespacedLoader == undefined) {
+        throw new Error("No extension loader found for namespace " + namespace);
+      }
+      const info = await namespacedLoader.installExtension(foxeFileData);
+      await refreshExtensions();
+      return info;
+    },
+    [loaders, refreshExtensions],
+  );
+
+  const uninstallExtension = useCallback(
+    async (namespace: ExtensionNamespace, id: string) => {
+      const namespacedLoader = loaders.find((loader) => loader.namespace === namespace);
+      if (namespacedLoader == undefined) {
+        throw new Error("No extension loader found for namespace " + namespace);
+      }
+      await namespacedLoader.uninstallExtension(id);
+      await refreshExtensions();
+    },
+    [loaders, refreshExtensions],
+  );
 
   const registeredPanels = useExtensionPanels(
     registeredExtensions.value ?? NO_EXTENSIONS,
-    extensionLoaders,
+    loadExtension,
   );
 
   useEffect(() => {
@@ -39,25 +88,23 @@ export default function ExtensionRegistryProvider(
 
   const value = useMemo(
     () => ({
-      downloadExtension: async (url: string) => await extensionLoaders.downloadExtension(url),
-      installExtension: async (namespace: ExtensionNamespace, foxeFileData: Uint8Array) => {
-        const info = await extensionLoaders.installExtension(namespace, foxeFileData);
-        await refreshExtensions();
-        return info;
-      },
-      loadExtension: async (id: string) => await extensionLoaders.loadExtension(id),
-      refreshExtensions: async () => {
-        await refreshExtensions();
-      },
+      downloadExtension,
+      installExtension,
+      loadExtension,
+      refreshExtensions,
       registeredExtensions: registeredExtensions.value ?? NO_EXTENSIONS,
-      registeredPanels: registeredPanels.value ?? {},
-      uninstallExtension: async (id: string) => {
-        const result = await extensionLoaders.uninstallExtension(id);
-        await refreshExtensions();
-        return result;
-      },
+      registeredPanels: registeredPanels.value ?? NO_PANELS,
+      uninstallExtension,
     }),
-    [extensionLoaders, refreshExtensions, registeredExtensions.value, registeredPanels.value],
+    [
+      downloadExtension,
+      installExtension,
+      loadExtension,
+      refreshExtensions,
+      registeredExtensions.value,
+      registeredPanels.value,
+      uninstallExtension,
+    ],
   );
 
   if (registeredExtensions.error) {
@@ -69,8 +116,6 @@ export default function ExtensionRegistryProvider(
   }
 
   return (
-    <ExtensionRegistryContext.Provider value={value}>
-      {props.children}
-    </ExtensionRegistryContext.Provider>
+    <ExtensionRegistryContext.Provider value={value}>{children}</ExtensionRegistryContext.Provider>
   );
 }

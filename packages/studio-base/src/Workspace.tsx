@@ -79,6 +79,7 @@ import useElectronFilesToOpen from "@foxglove/studio-base/hooks/useElectronFiles
 import { useInitialDeepLinkState } from "@foxglove/studio-base/hooks/useInitialDeepLinkState";
 import useNativeAppMenuEvent from "@foxglove/studio-base/hooks/useNativeAppMenuEvent";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
+import { useExtensionRegistrySync } from "@foxglove/studio-base/providers/ExtensionRegistryProvider/useExtensionRegistrySync";
 import { HelpInfoStore, useHelpInfo } from "@foxglove/studio-base/providers/HelpInfoProvider";
 import { PanelSettingsEditorContextProvider } from "@foxglove/studio-base/providers/PanelSettingsEditorContextProvider";
 
@@ -348,6 +349,8 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
   const { loadFromFile } = useAssets();
 
   const extensionRegistry = useExtensionRegistry();
+
+  useExtensionRegistrySync();
 
   const openHandle = useCallback(
     async (handle: FileSystemFileHandle) => {

@@ -48,6 +48,7 @@ export function ExtensionDetails({ extension, onClose, installed }: Props): Reac
   const readmeUrl = extension.readme;
   const changelogUrl = extension.changelog;
   const canInstall = extension.foxe != undefined;
+  const canUninstall = extension.namespace !== "private";
 
   const { value: readmeContent } = useAsync(
     async () => (readmeUrl != undefined ? await marketplace.getMarkdown(readmeUrl) : ""),
@@ -85,12 +86,12 @@ export function ExtensionDetails({ extension, onClose, installed }: Props): Reac
   }, [addToast, analytics, extension.foxe, extension.id, extensionRegistry, isMounted]);
 
   const uninstall = useCallback(async () => {
-    await extensionRegistry.uninstallExtension(extension.id);
+    await extensionRegistry.uninstallExtension(extension.namespace ?? "local", extension.id);
     if (isMounted()) {
       setIsInstalled(false);
       void analytics.logEvent(AppEvent.EXTENSION_UNINSTALL, { type: extension.id });
     }
-  }, [analytics, extension.id, extensionRegistry, isMounted]);
+  }, [analytics, extension.id, extension.namespace, extensionRegistry, isMounted]);
 
   return (
     <SidebarContent
@@ -123,7 +124,7 @@ export function ExtensionDetails({ extension, onClose, installed }: Props): Reac
             {extension.description}
           </Typography>
         </Stack>
-        {isInstalled ? (
+        {isInstalled && canUninstall ? (
           <StyledButton
             size="small"
             key="uninstall"

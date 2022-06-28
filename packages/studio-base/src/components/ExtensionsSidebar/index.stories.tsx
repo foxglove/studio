@@ -30,6 +30,19 @@ export default {
 const installedExtensions: ExtensionInfo[] = [
   {
     id: "publisher.storyextension",
+    name: "privatestoryextension",
+    qualifiedName: "storyextension",
+    displayName: "Private Extension Name",
+    description: "Private extension sample description",
+    publisher: "Private Publisher",
+    homepage: "https://foxglove.dev/",
+    license: "MIT",
+    version: "1.2.10",
+    keywords: ["storybook", "testing"],
+    namespace: "private",
+  },
+  {
+    id: "publisher.storyextension",
     name: "storyextension",
     qualifiedName: "storyextension",
     displayName: "Extension Name",
@@ -39,6 +52,7 @@ const installedExtensions: ExtensionInfo[] = [
     license: "MIT",
     version: "1.2.10",
     keywords: ["storybook", "testing"],
+    namespace: "local",
   },
 ];
 
@@ -64,7 +78,7 @@ const MockExtensionLoader: ExtensionLoader = {
   installExtension: async (_foxeFileData: Uint8Array) => {
     throw new Error("MockExtensionLoader cannot install extensions");
   },
-  uninstallExtension: async (_id: string) => false,
+  uninstallExtension: async (_id: string) => undefined,
 };
 
 const MockExtensionMarketplace: ExtensionMarketplace = {

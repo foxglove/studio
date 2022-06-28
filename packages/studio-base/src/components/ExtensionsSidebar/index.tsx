@@ -11,10 +11,12 @@ import {
   Typography,
   styled as muiStyled,
 } from "@mui/material";
-import { useMemo, useState } from "react";
-import { useAsync } from "react-use";
+import { differenceWith, groupBy, isEmpty, keyBy } from "lodash";
+import { useEffect, useMemo, useState } from "react";
+import { useAsyncFn } from "react-use";
 import { DeepReadonly } from "ts-essentials";
 
+import Log from "@foxglove/log";
 import { ExtensionDetails } from "@foxglove/studio-base/components/ExtensionDetails";
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
 import Stack from "@foxglove/studio-base/components/Stack";
@@ -25,6 +27,8 @@ import {
 import { useExtensionRegistry } from "@foxglove/studio-base/context/ExtensionRegistryContext";
 
 import helpContent from "./index.help.md";
+
+const log = Log.getLogger(__filename);
 
 const StyledListItemButton = muiStyled(ListItemButton)(({ theme }) => ({
   "&:hover": {
@@ -72,8 +76,6 @@ function ExtensionListEntry(props: {
 }
 
 export default function ExtensionsSidebar(): React.ReactElement {
-  const [shouldFetch, setShouldFetch] = useState<boolean>(true);
-  const [marketplaceEntries, setMarketplaceEntries] = useState<ExtensionMarketplaceDetail[]>([]);
   const [focusedExtension, setFocusedExtension] = useState<
     | {
         installed: boolean;
@@ -84,50 +86,61 @@ export default function ExtensionsSidebar(): React.ReactElement {
   const installed = useExtensionRegistry().registeredExtensions;
   const marketplace = useExtensionMarketplace();
 
-  const { error: availableError } = useAsync(async () => {
-    if (!shouldFetch) {
-      return;
-    }
-    setShouldFetch(false);
+  const [marketplaceEntries, refreshMarketplaceEntries] = useAsyncFn(
+    async () => await marketplace.getAvailableExtensions(),
+    [marketplace],
+  );
 
-    const entries = await marketplace.getAvailableExtensions();
-    setMarketplaceEntries(entries);
-  }, [marketplace, shouldFetch]);
-
-  const marketplaceMap = useMemo(() => {
-    return new Map<string, ExtensionMarketplaceDetail>(
-      marketplaceEntries.map((entry) => [entry.id, entry]),
-    );
-  }, [marketplaceEntries]);
+  const marketplaceMap = useMemo(
+    () => keyBy(marketplaceEntries.value ?? [], (entry) => entry.id),
+    [marketplaceEntries],
+  );
 
   const installedEntries = useMemo(
     () =>
       installed.map((entry) => {
-        const marketplaceEntry = marketplaceMap.get(entry.id);
+        const marketplaceEntry = marketplaceMap[entry.id];
         if (marketplaceEntry != undefined) {
-          return marketplaceEntry;
+          return { ...marketplaceEntry, namespace: entry.namespace };
         }
 
         return {
           id: entry.id,
           installed: true,
           name: entry.displayName,
+          displayName: entry.displayName,
           description: entry.description,
           publisher: entry.publisher,
           homepage: entry.homepage,
           license: entry.license,
           version: entry.version,
           keywords: entry.keywords,
+          namespace: entry.namespace,
+          qualifiedName: entry.qualifiedName,
         };
       }),
     [installed, marketplaceMap],
   );
 
+  const namespacedEntries = useMemo(
+    () => groupBy(installedEntries, (entry) => entry.namespace),
+    [installedEntries],
+  );
+
   // Hide installed extensions from the list of available extensions
-  const filteredMarketplaceEntries = useMemo(() => {
-    const installedIds = new Set<string>(installed.map((entry) => entry.id));
-    return marketplaceEntries.filter((entry) => !installedIds.has(entry.id));
-  }, [marketplaceEntries, installed]);
+  const filteredMarketplaceEntries = useMemo(
+    () =>
+      differenceWith(
+        marketplaceEntries.value ?? [],
+        installed,
+        (a, b) => a.id === b.id && a.namespace === b.namespace,
+      ),
+    [marketplaceEntries, installed],
+  );
+
+  useEffect(() => {
+    refreshMarketplaceEntries().catch((error) => log.error(error));
+  }, [refreshMarketplaceEntries]);
 
   if (focusedExtension != undefined) {
     return (
@@ -139,7 +152,7 @@ export default function ExtensionsSidebar(): React.ReactElement {
     );
   }
 
-  if (availableError) {
+  if (marketplaceEntries.error) {
     return (
       <SidebarContent title="Extensions">
         <Stack gap={1} alignItems="center" justifyContent="center" fullHeight>
@@ -147,7 +160,9 @@ export default function ExtensionsSidebar(): React.ReactElement {
             Failed to fetch the list of available extensions. Check your Internet connection and try
             again.
           </Typography>
-          <Button onClick={() => setShouldFetch(true)}>Retry Fetching Extensions</Button>
+          <Button onClick={async () => await refreshMarketplaceEntries()}>
+            Retry Fetching Extensions
+          </Button>
         </Stack>
       </SidebarContent>
     );
@@ -156,26 +171,30 @@ export default function ExtensionsSidebar(): React.ReactElement {
   return (
     <SidebarContent title="Extensions" helpContent={helpContent} disablePadding>
       <Stack gap={1}>
-        <List>
-          <Stack paddingY={0.25} paddingX={2}>
-            <Typography component="li" variant="overline" color="text.secondary">
-              Installed
-            </Typography>
-          </Stack>
-          {installedEntries.length > 0 ? (
-            installedEntries.map((entry) => (
-              <ExtensionListEntry
-                key={entry.id}
-                entry={entry}
-                onClick={() => setFocusedExtension({ installed: true, entry })}
-              />
-            ))
-          ) : (
+        {!isEmpty(namespacedEntries) ? (
+          Object.keys(namespacedEntries).map((namespace) => (
+            <List key={namespace}>
+              <Stack paddingY={0.25} paddingX={2}>
+                <Typography component="li" variant="overline" color="text.secondary">
+                  {namespace}
+                </Typography>
+              </Stack>
+              {(namespacedEntries[namespace] ?? []).map((entry) => (
+                <ExtensionListEntry
+                  key={`${entry.id}`}
+                  entry={entry}
+                  onClick={() => setFocusedExtension({ installed: true, entry })}
+                />
+              ))}
+            </List>
+          ))
+        ) : (
+          <List>
             <ListItem>
               <ListItemText primary="No installed extensions" />
             </ListItem>
-          )}
-        </List>
+          </List>
+        )}
         <List>
           <Stack paddingY={0.25} paddingX={2}>
             <Typography component="li" variant="overline" color="text.secondary">
@@ -184,7 +203,7 @@ export default function ExtensionsSidebar(): React.ReactElement {
           </Stack>
           {filteredMarketplaceEntries.map((entry) => (
             <ExtensionListEntry
-              key={entry.id}
+              key={`${entry.id}_${entry.namespace}`}
               entry={entry}
               onClick={() => setFocusedExtension({ installed: false, entry })}
             />

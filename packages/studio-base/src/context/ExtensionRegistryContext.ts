@@ -21,10 +21,10 @@ export type ExtensionRegistry = {
     foxeFileData: Uint8Array,
   ) => Promise<ExtensionInfo>;
   loadExtension(id: string): Promise<string>;
-  refreshExtensions: () => Promise<void>;
+  refreshExtensions: () => Promise<DeepReadonly<ExtensionInfo[]>>;
   registeredExtensions: ExtensionInfo[];
   registeredPanels: Record<string, RegisteredPanel>;
-  uninstallExtension(id: string): Promise<boolean>;
+  uninstallExtension(namespace: ExtensionNamespace, id: string): Promise<void>;
 };
 
 const ExtensionRegistryContext = createContext<DeepReadonly<ExtensionRegistry> | undefined>(

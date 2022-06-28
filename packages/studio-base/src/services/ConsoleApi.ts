@@ -4,6 +4,8 @@
 
 import * as base64 from "@protobufjs/base64";
 
+import { ExtensionInfo } from "@foxglove/studio-base/types/Extensions";
+
 type User = {
   id: string;
   email: string;
@@ -37,6 +39,16 @@ type DeviceCodeResponse = {
   verificationUri: string;
   expiresIn: number;
   interval: number;
+};
+
+type ExtensionResponse = {
+  activeVersion: string;
+  description: string;
+  foxe: string;
+  id: string;
+  name: string;
+  publisher: string;
+  sha256Sum: string;
 };
 
 type TokenArgs = {
@@ -133,6 +145,14 @@ class ConsoleApi {
         { method: "GET" },
       )
     ).json;
+  }
+
+  async getExtensions(): Promise<ExtensionInfo[]> {
+    return await this.get<ExtensionInfo[]>("/v1/extensions");
+  }
+
+  async getExtension(id: string): Promise<ExtensionResponse> {
+    return await this.get<ExtensionResponse>(`/v1/extensions/${id}`);
   }
 
   async getLayouts(options: { includeData: boolean }): Promise<readonly ConsoleApiLayout[]> {
