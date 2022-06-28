@@ -157,6 +157,16 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     return entries;
   }
 
+  override startFrame(currentTime: bigint, renderFrameId: string, fixedFrameId: string): void {
+    super.startFrame(currentTime, renderFrameId, fixedFrameId);
+    for (const renderable of this.renderables.values()) {
+      const laserScanMaterial = renderable.userData.laserScanMaterial;
+      if (laserScanMaterial) {
+        laserScanMaterial.uniforms.pixelRatio!.value = this.renderer.getPixelRatio();
+      }
+    }
+  }
+
   handleSettingsAction = (action: SettingsTreeAction): void => {
     const path = action.payload.path;
     if (action.action !== "update" || path.length !== 3) {
@@ -642,6 +652,7 @@ class LaserScanMaterial extends THREE.RawShaderMaterial {
         uniform mat4 projectionMatrix, modelViewMatrix;
 
         uniform float pointSize;
+        uniform float pixelRatio;
         uniform float angleMin, angleIncrement;
         uniform float rangeMin, rangeMax;
         in float position; // range, but must be named position in order for three.js to render anything
@@ -658,10 +669,10 @@ class LaserScanMaterial extends THREE.RawShaderMaterial {
           gl_Position = projectionMatrix * modelViewMatrix * pos;
           ${
             picking
-              ? `gl_PointSize = max(pointSize, ${LaserScanMaterial.MIN_PICKING_POINT_SIZE.toFixed(
+              ? `gl_PointSize = pixelRatio * max(pointSize, ${LaserScanMaterial.MIN_PICKING_POINT_SIZE.toFixed(
                   1,
                 )});`
-              : "gl_PointSize = pointSize;"
+              : "gl_PointSize = pixelRatio * pointSize;"
           }
 
         }
@@ -676,18 +687,22 @@ class LaserScanMaterial extends THREE.RawShaderMaterial {
         uniform bool isCircle;
         ${picking ? "uniform vec4 objectId;" : "in mediump vec4 vColor;"}
         out vec4 outColor;
+
+        ${THREE.ShaderChunk.encodings_pars_fragment /* for LinearTosRGB() */}
+
         void main() {
           if (isCircle) {
             vec2 cxy = 2.0 * gl_PointCoord - 1.0;
             if (dot(cxy, cxy) > 1.0) { discard; }
           }
-          ${picking ? "outColor = objectId;" : "outColor = vColor;"}
+          ${picking ? "outColor = objectId;" : "outColor = LinearTosRGB(vColor);"}
         }
       `,
     });
     this.uniforms = {
       isCircle: { value: false },
       pointSize: { value: 1 },
+      pixelRatio: { value: 1 },
       angleMin: { value: NaN },
       angleIncrement: { value: NaN },
       rangeMin: { value: NaN },
