@@ -849,8 +849,6 @@ export class IterablePlayer implements Player {
     await this._blockLoader?.load(time, async (progress) => {
       this._progress = progress;
 
-      log.debug("progress");
-
       // We throttle emitting the state since we could be loading blocks faster than 60fps and it
       // is actually slower to try rendering with each new block compared to spacing out the
       // rendering.

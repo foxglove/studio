@@ -93,16 +93,44 @@ describe("BlockLoader", () => {
     loader.setTopics(new Set(["foo"]));
     await loader.load({ sec: 0, nsec: 0 }, async (progress) => {
       expect(progress).toEqual({
-        fullyLoadedFractionRanges: [],
+        fullyLoadedFractionRanges: [
+          {
+            start: 0,
+            end: 1,
+          },
+        ],
         messageCache: {
           blocks: [
             {
-              foo: [],
+              messagesByTopic: {
+                foo: [],
+              },
+              sizeInBytes: 0,
             },
-            undefined,
-            undefined,
-            undefined,
-            undefined,
+            {
+              messagesByTopic: {
+                foo: [],
+              },
+              sizeInBytes: 0,
+            },
+            {
+              messagesByTopic: {
+                foo: [],
+              },
+              sizeInBytes: 0,
+            },
+            {
+              messagesByTopic: {
+                foo: [],
+              },
+              sizeInBytes: 0,
+            },
+            {
+              messagesByTopic: {
+                foo: [],
+              },
+              sizeInBytes: 0,
+            },
           ],
           startTime: { sec: 0, nsec: 0 },
         },

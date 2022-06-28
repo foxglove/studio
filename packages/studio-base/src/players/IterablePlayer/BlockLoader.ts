@@ -92,71 +92,79 @@ export class BlockLoader {
     //
     // When we need to evict, we evict backwards from the load blocks, so we evict: 3, 2, 1, 9, etc
 
-    const startTime = subtractTimes(subtractTimes(time, this.start), { sec: 1, nsec: 0 });
-
     // turn startTime into a block ID with a min block id of 0
+    const startTime = subtractTimes(subtractTimes(time, this.start), { sec: 1, nsec: 0 });
     const startNs = Math.max(0, Number(toNanoSec(startTime)));
     const beginBlockId = Math.floor(startNs / this.blockDurationNanos);
 
     const startBlockId = 0;
     const endBlockId = this.blocks.length - 1;
 
-    // Setup the block load order.
-    // The load order is from [beginBlock to endBlock], then [startBlock, beginBlock)
-    // Reversing this order produces the evict queue
-    const loadQueue: number[] = [];
-    for (let i = beginBlockId; i <= endBlockId; ++i) {
-      loadQueue.push(i);
-    }
-    for (let i = startBlockId; i < beginBlockId; ++i) {
-      loadQueue.push(i);
-    }
+    const computeSpans = (startIdx: number, endIdx: number) => {
+      const spans: BlockSpan[] = [];
+
+      let activeSpan: BlockSpan | undefined;
+      for (let i = startIdx; i < endIdx; ++i) {
+        // compute the topics this block needs
+        const existingBlock = this.blocks[i];
+        const blockTopics = existingBlock ? Object.keys(existingBlock.messagesByTopic) : [];
+
+        const topicsToFetch = new Set(topics);
+        for (const topic of blockTopics) {
+          topicsToFetch.delete(topic);
+        }
+
+        if (!activeSpan) {
+          activeSpan = {
+            beginId: i,
+            endId: i,
+            topics: topicsToFetch,
+          };
+          continue;
+        }
+
+        // If the topics of the active span equal the topics to fetch, grow the span
+        if (isEqual(activeSpan.topics, topicsToFetch)) {
+          activeSpan.endId = i;
+          continue;
+        }
+
+        spans.push(activeSpan);
+        activeSpan = {
+          beginId: i,
+          endId: i,
+          topics: topicsToFetch,
+        };
+      }
+      if (activeSpan) {
+        spans.push(activeSpan);
+      }
+
+      return spans;
+    };
 
     // When the list of topics changes, we want to avoid loading topics if the block already has the
     // topic. Create spans of blocks based on which topics are needed. This allows us reduce
     // overhead by making longer more continuous requests.
     const blockSpans: BlockSpan[] = [];
 
-    let activeSpan: BlockSpan | undefined;
-    for (let i = beginBlockId; i <= endBlockId; ++i) {
-      // compute the topics this block needs
-      const existingBlock = this.blocks[i];
-      const blockTopics = existingBlock ? Object.keys(existingBlock.messagesByTopic) : [];
-
-      const topicsToFetch = new Set(topics);
-      for (const topic of blockTopics) {
-        topicsToFetch.delete(topic);
-      }
-
-      if (!activeSpan) {
-        activeSpan = {
-          beginId: i,
-          endId: i,
-          topics: topicsToFetch,
-        };
-        continue;
-      }
-
-      // If the topics of the active span equal the topics to fetch, grow the span
-      if (isEqual(activeSpan.topics, topicsToFetch)) {
-        activeSpan.endId = i;
-        continue;
-      }
-
-      blockSpans.push(activeSpan);
-      activeSpan = {
-        beginId: i,
-        endId: i,
-        topics: topicsToFetch,
-      };
-    }
-    if (activeSpan) {
-      blockSpans.push(activeSpan);
-    }
-
-    let totalBlockSizeBytes = this.cacheSize();
+    // The load order is from [beginBlock to endBlock], then [startBlock, beginBlock)
+    blockSpans.push(...computeSpans(beginBlockId, endBlockId + 1));
+    blockSpans.push(...computeSpans(startBlockId, beginBlockId));
 
     log.debug("spans", blockSpans);
+
+    // The evict queue has the block ids that we can evict once we've reached our memory bounds.
+    const evictQueue: number[] = [];
+    for (let i = beginBlockId; i <= endBlockId; ++i) {
+      evictQueue.push(i);
+    }
+    for (let i = startBlockId; i < beginBlockId; ++i) {
+      evictQueue.push(i);
+    }
+    evictQueue.reverse();
+
+    let totalBlockSizeBytes = this.cacheSize();
 
     // Load all the spans, each span is a separate iterator because it requires different topics
     for (const span of blockSpans) {
@@ -165,15 +173,8 @@ export class BlockLoader {
         continue;
       }
 
-      // Start and end time are inclusive
-      const iteratorStartTime = add(
-        this.start,
-        fromNanoSec(BigInt(span.beginId * this.blockDurationNanos)),
-      );
-      const iteratorEndTime = add(
-        this.start,
-        fromNanoSec(BigInt(span.endId * this.blockDurationNanos + this.blockDurationNanos)),
-      );
+      const iteratorStartTime = this.blockIdToStartTime(span.beginId);
+      const iteratorEndTime = this.blockIdToEndTime(span.endId);
 
       const iterator = this.source.messageIterator({
         topics: Array.from(span.topics),
@@ -267,10 +268,10 @@ export class BlockLoader {
         // Adding this message will exceed the cache size
         // Evict blocks until we have enough size for the message
         while (
-          loadQueue.length > 0 &&
+          evictQueue.length > 0 &&
           totalBlockSizeBytes + messageSizeInBytes > this.maxCacheSize
         ) {
-          const evictId = loadQueue.pop();
+          const evictId = evictQueue.pop();
           if (evictId != undefined) {
             const lastBlock = this.blocks[evictId];
             this.blocks[evictId] = undefined;
@@ -290,7 +291,7 @@ export class BlockLoader {
       // Close out the current block with the aggregated messages. Fill any blocks between
       // current and the new block with empty topic arrays. We can use empty arrays because we
       // know these blocks have no messages since messages arrive in time order.
-      for (let i = currentBlockId; i < span.endId; ++i) {
+      for (let i = currentBlockId; i <= span.endId; ++i) {
         const existingBlock = this.blocks[i];
 
         this.blocks[i] = {
@@ -369,5 +370,14 @@ export class BlockLoader {
     }
 
     return Number(offset / BigInt(this.blockDurationNanos));
+  }
+
+  private blockIdToStartTime(id: number): Time {
+    return add(this.start, fromNanoSec(BigInt(id) * BigInt(this.blockDurationNanos)));
+  }
+
+  // The end time of a block is the start time of the next block minus 1 nanosecond
+  private blockIdToEndTime(id: number): Time {
+    return add(this.start, fromNanoSec(BigInt(id + 1) * BigInt(this.blockDurationNanos) - 1n));
   }
 }
