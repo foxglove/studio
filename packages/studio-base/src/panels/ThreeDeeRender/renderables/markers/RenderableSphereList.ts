@@ -9,7 +9,7 @@ import type { Renderer } from "../../Renderer";
 import { Marker } from "../../ros";
 import { RenderableMarker } from "./RenderableMarker";
 import { RenderableSphere } from "./RenderableSphere";
-import { markerHasTransparency, standardInstancedMaterial } from "./materials";
+import { markerHasTransparency, makeStandardInstancedMaterial } from "./materials";
 
 export class RenderableSphereList extends RenderableMarker {
   mesh: DynamicInstancedMesh<THREE.SphereGeometry, THREE.MeshStandardMaterial>;
@@ -19,7 +19,7 @@ export class RenderableSphereList extends RenderableMarker {
 
     // Sphere instanced mesh
     const geometry = RenderableSphere.Geometry(renderer.maxLod);
-    const material = standardInstancedMaterial(marker);
+    const material = makeStandardInstancedMaterial(marker);
     this.mesh = new DynamicInstancedMesh(geometry, material, marker.points.length);
     this.mesh.castShadow = true;
     this.mesh.receiveShadow = true;

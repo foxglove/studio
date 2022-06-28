@@ -9,7 +9,7 @@ import { rgbToThreeColor } from "../../color";
 import { DetailLevel, sphereSubdivisions } from "../../lod";
 import { Marker } from "../../ros";
 import { RenderableMarker } from "./RenderableMarker";
-import { standardMaterial } from "./materials";
+import { makeStandardMaterial } from "./materials";
 
 export class RenderableSphere extends RenderableMarker {
   private static lod: DetailLevel | undefined;
@@ -22,7 +22,7 @@ export class RenderableSphere extends RenderableMarker {
 
     // Sphere mesh
     const geometry = RenderableSphere.Geometry(renderer.maxLod);
-    this.mesh = new THREE.Mesh(geometry, standardMaterial(marker.color));
+    this.mesh = new THREE.Mesh(geometry, makeStandardMaterial(marker.color));
     this.mesh.castShadow = true;
     this.mesh.receiveShadow = true;
     this.add(this.mesh);

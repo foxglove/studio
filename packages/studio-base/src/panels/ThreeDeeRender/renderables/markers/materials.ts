@@ -32,7 +32,7 @@ export function markerHasTransparency(marker: Marker): boolean {
   }
 }
 
-export function standardMaterial(color: ColorRGBA): THREE.MeshStandardMaterial {
+export function makeStandardMaterial(color: ColorRGBA): THREE.MeshStandardMaterial {
   return new THREE.MeshStandardMaterial({
     color: new THREE.Color(color.r, color.g, color.b).convertSRGBToLinear(),
     metalness: 0,
@@ -44,7 +44,7 @@ export function standardMaterial(color: ColorRGBA): THREE.MeshStandardMaterial {
   });
 }
 
-export function standardVertexColorMaterial(marker: Marker): THREE.MeshStandardMaterial {
+export function makeStandardVertexColorMaterial(marker: Marker): THREE.MeshStandardMaterial {
   const transparent = markerHasTransparency(marker);
   return new THREE.MeshStandardMaterial({
     metalness: 0,
@@ -58,7 +58,7 @@ export function standardVertexColorMaterial(marker: Marker): THREE.MeshStandardM
   });
 }
 
-export function standardInstancedMaterial(marker: Marker): THREE.MeshStandardMaterial {
+export function makeStandardInstancedMaterial(marker: Marker): THREE.MeshStandardMaterial {
   const transparent = markerHasTransparency(marker);
   return new THREE.MeshStandardMaterial({
     metalness: 0,
@@ -70,7 +70,7 @@ export function standardInstancedMaterial(marker: Marker): THREE.MeshStandardMat
   });
 }
 
-export function linePrepassMaterial(marker: Marker): LineMaterial {
+export function makeLinePrepassMaterial(marker: Marker): LineMaterial {
   const lineWidth = marker.scale.x;
   const transparent = markerHasTransparency(marker);
   const material = new LineMaterial({
@@ -88,7 +88,7 @@ export function linePrepassMaterial(marker: Marker): LineMaterial {
   return material;
 }
 
-export function lineMaterial(marker: Marker): LineMaterial {
+export function makeLineMaterial(marker: Marker): LineMaterial {
   const lineWidth = marker.scale.x;
   const transparent = markerHasTransparency(marker);
   const material = new LineMaterial({
@@ -108,7 +108,7 @@ export function lineMaterial(marker: Marker): LineMaterial {
   return material;
 }
 
-export function linePickingMaterial(
+export function makeLinePickingMaterial(
   lineWidth: number,
   // eslint-disable-next-line @foxglove/no-boolean-parameters
   worldUnits: boolean,
@@ -135,7 +135,7 @@ export function linePickingMaterial(
   });
 }
 
-export function pointsMaterial(marker: Marker): THREE.PointsMaterial {
+export function makePointsMaterial(marker: Marker): THREE.PointsMaterial {
   const transparent = markerHasTransparency(marker);
   return new THREE.PointsMaterial({
     vertexColors: true,

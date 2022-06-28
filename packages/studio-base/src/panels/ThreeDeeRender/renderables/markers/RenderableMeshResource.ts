@@ -9,7 +9,7 @@ import type { Renderer } from "../../Renderer";
 import { rgbToThreeColor } from "../../color";
 import { Marker } from "../../ros";
 import { RenderableMarker } from "./RenderableMarker";
-import { standardMaterial } from "./materials";
+import { makeStandardMaterial } from "./materials";
 
 type GltfMesh = THREE.Mesh<
   THREE.BufferGeometry,
@@ -25,7 +25,7 @@ export class RenderableMeshResource extends RenderableMarker {
   constructor(topic: string, marker: Marker, receiveTime: bigint | undefined, renderer: Renderer) {
     super(topic, marker, receiveTime, renderer);
 
-    this.material = standardMaterial(marker.color);
+    this.material = makeStandardMaterial(marker.color);
     this.update(marker, receiveTime, true);
   }
 

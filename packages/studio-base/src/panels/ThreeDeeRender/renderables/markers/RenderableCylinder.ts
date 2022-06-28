@@ -9,7 +9,7 @@ import { rgbToThreeColor } from "../../color";
 import { cylinderSubdivisions, DetailLevel } from "../../lod";
 import { Marker } from "../../ros";
 import { RenderableMarker } from "./RenderableMarker";
-import { standardMaterial } from "./materials";
+import { makeStandardMaterial } from "./materials";
 
 export class RenderableCylinder extends RenderableMarker {
   private static lod: DetailLevel | undefined;
@@ -23,7 +23,7 @@ export class RenderableCylinder extends RenderableMarker {
     super(topic, marker, receiveTime, renderer);
 
     // Cylinder mesh
-    const material = standardMaterial(marker.color);
+    const material = makeStandardMaterial(marker.color);
     const cylinderGeometry = RenderableCylinder.Geometry(renderer.maxLod);
     this.mesh = new THREE.Mesh(cylinderGeometry, material);
     this.mesh.castShadow = true;

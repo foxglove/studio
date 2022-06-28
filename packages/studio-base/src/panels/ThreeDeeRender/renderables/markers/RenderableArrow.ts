@@ -11,7 +11,7 @@ import { arrowHeadSubdivisions, arrowShaftSubdivisions, DetailLevel } from "../.
 import { getRotationTo } from "../../math";
 import { Marker } from "../../ros";
 import { RenderableMarker } from "./RenderableMarker";
-import { standardMaterial } from "./materials";
+import { makeStandardMaterial } from "./materials";
 
 // const SHAFT_LENGTH = 1;
 // const SHAFT_DIAMETER = 0.1;
@@ -49,7 +49,7 @@ export class RenderableArrow extends RenderableMarker {
     // Shaft mesh
     this.shaftMesh = new THREE.Mesh(
       RenderableArrow.ShaftGeometry(renderer.maxLod),
-      standardMaterial(marker.color),
+      makeStandardMaterial(marker.color),
     );
     this.shaftMesh.castShadow = true;
     this.shaftMesh.receiveShadow = true;
@@ -58,7 +58,7 @@ export class RenderableArrow extends RenderableMarker {
     // Head mesh
     this.headMesh = new THREE.Mesh(
       RenderableArrow.HeadGeometry(renderer.maxLod),
-      standardMaterial(marker.color),
+      makeStandardMaterial(marker.color),
     );
     this.headMesh.castShadow = true;
     this.headMesh.receiveShadow = true;

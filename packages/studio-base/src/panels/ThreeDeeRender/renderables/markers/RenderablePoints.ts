@@ -8,7 +8,7 @@ import { DynamicBufferGeometry, DynamicFloatBufferGeometry } from "../../Dynamic
 import type { Renderer } from "../../Renderer";
 import { Marker } from "../../ros";
 import { RenderableMarker } from "./RenderableMarker";
-import { markerHasTransparency, pointsMaterial } from "./materials";
+import { markerHasTransparency, makePointsMaterial } from "./materials";
 
 export class RenderablePoints extends RenderableMarker {
   geometry: DynamicFloatBufferGeometry;
@@ -21,7 +21,7 @@ export class RenderablePoints extends RenderableMarker {
     this.geometry.createAttribute("position", 3);
     this.geometry.createAttribute("color", 4);
 
-    this.points = new THREE.Points(this.geometry, pointsMaterial(marker));
+    this.points = new THREE.Points(this.geometry, makePointsMaterial(marker));
     this.add(this.points);
 
     this.update(marker, receiveTime);

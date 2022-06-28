@@ -8,7 +8,7 @@ import type { Renderer } from "../../Renderer";
 import { rgbToThreeColor } from "../../color";
 import { Marker } from "../../ros";
 import { RenderableMarker } from "./RenderableMarker";
-import { standardMaterial } from "./materials";
+import { makeStandardMaterial } from "./materials";
 
 export class RenderableCube extends RenderableMarker {
   private static geometry: THREE.BoxGeometry | undefined;
@@ -21,7 +21,7 @@ export class RenderableCube extends RenderableMarker {
     super(topic, marker, receiveTime, renderer);
 
     // Cube mesh
-    this.mesh = new THREE.Mesh(RenderableCube.Geometry(), standardMaterial(marker.color));
+    this.mesh = new THREE.Mesh(RenderableCube.Geometry(), makeStandardMaterial(marker.color));
     this.mesh.castShadow = true;
     this.mesh.receiveShadow = true;
     this.add(this.mesh);

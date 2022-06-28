@@ -10,9 +10,9 @@ import type { Renderer } from "../../Renderer";
 import { Marker } from "../../ros";
 import { RenderableMarker } from "./RenderableMarker";
 import {
-  lineMaterial,
-  linePrepassMaterial,
-  linePickingMaterial,
+  makeLineMaterial,
+  makeLinePrepassMaterial,
+  makeLinePickingMaterial,
   markerHasTransparency,
 } from "./materials";
 
@@ -27,18 +27,18 @@ export class RenderableLineStrip extends RenderableMarker {
     this.geometry = new LineGeometry();
 
     // Stencil and depth pass 1
-    const matLinePrepass = linePrepassMaterial(marker);
+    const matLinePrepass = makeLinePrepassMaterial(marker);
     this.linePrepass = new Line2(this.geometry, matLinePrepass);
     this.linePrepass.renderOrder = 1;
     this.linePrepass.userData.picking = false;
     this.add(this.linePrepass);
 
     // Color pass 2
-    const matLine = lineMaterial(marker);
+    const matLine = makeLineMaterial(marker);
     this.line = new Line2(this.geometry, matLine);
     this.line.renderOrder = 2;
     const pickingLineWidth = marker.scale.x * 1.2;
-    this.line.userData.pickingMaterial = linePickingMaterial(pickingLineWidth, true);
+    this.line.userData.pickingMaterial = makeLinePickingMaterial(pickingLineWidth, true);
     this.add(this.line);
 
     this.update(marker, receiveTime);
@@ -65,8 +65,8 @@ export class RenderableLineStrip extends RenderableMarker {
     if (transparent !== markerHasTransparency(prevMarker)) {
       this.linePrepass.material.dispose();
       this.line.material.dispose();
-      this.linePrepass.material = linePrepassMaterial(marker);
-      this.line.material = lineMaterial(marker);
+      this.linePrepass.material = makeLinePrepassMaterial(marker);
+      this.line.material = makeLineMaterial(marker);
     }
 
     this.linePrepass.material.linewidth = lineWidth;

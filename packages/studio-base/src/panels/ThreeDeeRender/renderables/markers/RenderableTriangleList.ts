@@ -8,7 +8,7 @@ import type { Renderer } from "../../Renderer";
 import { rgbaToLinear } from "../../color";
 import { Marker } from "../../ros";
 import { RenderableMarker } from "./RenderableMarker";
-import { markerHasTransparency, standardVertexColorMaterial } from "./materials";
+import { markerHasTransparency, makeStandardVertexColorMaterial } from "./materials";
 
 const NOT_DIVISIBLE_ERR = "NOT_DIVISIBLE";
 const EMPTY_ERR = "EMPTY";
@@ -28,7 +28,7 @@ export class RenderableTriangleList extends RenderableMarker {
     this.vertices = new Float32Array(marker.points.length * 3);
     this.colors = new Float32Array(marker.colors.length * 4);
 
-    this.mesh = new THREE.Mesh(new THREE.BufferGeometry(), standardVertexColorMaterial(marker));
+    this.mesh = new THREE.Mesh(new THREE.BufferGeometry(), makeStandardVertexColorMaterial(marker));
     this.mesh.castShadow = true;
     this.mesh.receiveShadow = true;
     this.add(this.mesh);
@@ -62,7 +62,7 @@ export class RenderableTriangleList extends RenderableMarker {
       this.renderer.settings.errors.addToTopic(
         this.userData.topic,
         NOT_DIVISIBLE_ERR,
-        `TRIANGLE_LIST: points[${vertexCount}] is not divisible by 3 for marker ${markerId}`,
+        `TRIANGLE_LIST: points.length ${vertexCount} is not divisible by 3 for marker ${markerId}`,
       );
       vertexCount = Math.floor(vertexCount / 3) * 3;
     }
@@ -71,7 +71,7 @@ export class RenderableTriangleList extends RenderableMarker {
       this.renderer.settings.errors.addToTopic(
         this.userData.topic,
         COLORS_MISMATCH_ERR,
-        `TRIANGLE_LIST: colors[${marker.colors.length}] != points[${vertexCount}] for marker ${markerId}`,
+        `TRIANGLE_LIST: colors.length ${marker.colors.length} != points.length ${vertexCount} for marker ${markerId}`,
       );
       // Non-critical, we'll fall back to the default color if needed
     }

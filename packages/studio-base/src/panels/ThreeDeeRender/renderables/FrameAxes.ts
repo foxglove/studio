@@ -19,7 +19,7 @@ import { BaseSettings } from "../settings";
 import { Duration, Transform, makePose, CoordinateFrame, MAX_DURATION } from "../transforms";
 import { Axis } from "./Axis";
 import { DEFAULT_AXIS_SCALE, DEFAULT_LINE_COLOR_STR, DEFAULT_LINE_WIDTH_PX } from "./CoreSettings";
-import { linePickingMaterial } from "./markers/materials";
+import { makeLinePickingMaterial } from "./markers/materials";
 
 export type LayerSettingsTransform = BaseSettings;
 
@@ -68,7 +68,7 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
     this.lineMaterial = new LineMaterial({ linewidth });
     this.lineMaterial.color = color;
 
-    this.linePickingMaterial = linePickingMaterial(PICKING_LINE_SIZE, false);
+    this.linePickingMaterial = makeLinePickingMaterial(PICKING_LINE_SIZE, false);
 
     renderer.on("transformTreeUpdated", this.handleTransformTreeUpdated);
     renderer.on("startFrame", () => this.updateSettingsTree());
