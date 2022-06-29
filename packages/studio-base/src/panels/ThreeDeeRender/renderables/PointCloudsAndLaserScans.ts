@@ -258,17 +258,19 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
       const prevSettings = this.renderer.config.topics[topicName] as
         | Partial<LayerSettingsPointCloudAndLaserScan>
         | undefined;
+      const settings = { ...renderable.userData.settings, ...prevSettings };
       if (renderable.userData.pointCloud) {
         this._updatePointCloudRenderable(
           renderable,
           renderable.userData.pointCloud,
-          { ...renderable.userData.settings, ...prevSettings },
+          settings,
           renderable.userData.receiveTime,
         );
       } else if (renderable.userData.laserScan) {
         this._updateLaserScanRenderable(
           renderable,
           renderable.userData.laserScan,
+          settings,
           renderable.userData.receiveTime,
         );
       }
@@ -423,7 +425,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     const colorAttribute = latestEntry.points.geometry.attributes.color!;
 
     // Iterate the point cloud data to update position and color attributes
-    this._updatePointCloudAttributes(
+    this._updatePointCloudBuffers(
       pointCloud,
       tempFieldReaders,
       pointCount,
@@ -601,7 +603,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     output[1] = maxColorValue;
   }
 
-  _updatePointCloudAttributes(
+  _updatePointCloudBuffers(
     pointCloud: PointCloud2,
     readers: PointCloudFieldReaders,
     pointCount: number,
@@ -700,12 +702,18 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
       this.renderables.set(topic, renderable);
     }
 
-    this._updateLaserScanRenderable(renderable, laserScan, receiveTime);
+    this._updateLaserScanRenderable(
+      renderable,
+      laserScan,
+      renderable.userData.settings,
+      receiveTime,
+    );
   };
 
   _updateLaserScanRenderable(
     renderable: PointCloudAndLaserScanRenderable,
     laserScan: LaserScan,
+    settings: LayerSettingsPointCloudAndLaserScan,
     receiveTime: bigint,
   ): void {
     const messageTime = toNanoSec(laserScan.header.stamp);
@@ -715,7 +723,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     renderable.userData.pointCloud = undefined;
     renderable.userData.laserScan = laserScan;
 
-    const settings = renderable.userData.settings;
+    renderable.userData.settings = settings;
     const { colorField } = settings;
     const { intensities, ranges } = laserScan;
 
@@ -742,6 +750,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
       const geometry = this._createGeometry(topic, false);
       const points = createPoints(topic, geometry, laserScanMaterial, pickingMaterial);
       pointsHistory.push({ receiveTime, messageTime, points });
+      renderable.add(points);
     }
 
     const latestEntry = pointsHistory[pointsHistory.length - 1];
