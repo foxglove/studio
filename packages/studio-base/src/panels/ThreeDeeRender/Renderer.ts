@@ -22,7 +22,7 @@ import {
 
 import { Input } from "./Input";
 import { Labels } from "./Labels";
-import { MaterialCache } from "./MaterialCache";
+import { LineMaterial } from "./LineMaterial";
 import { ModelCache } from "./ModelCache";
 import { Picker } from "./Picker";
 import type { Renderable } from "./Renderable";
@@ -43,6 +43,7 @@ import { PointCloudsAndLaserScans } from "./renderables/PointCloudsAndLaserScans
 import { Polygons } from "./renderables/Polygons";
 import { PoseArrays } from "./renderables/PoseArrays";
 import { Poses } from "./renderables/Poses";
+import { MarkerPool } from "./renderables/markers/MarkerPool";
 import {
   Header,
   TFMessage,
@@ -169,6 +170,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
   dirLight: THREE.DirectionalLight;
   hemiLight: THREE.HemisphereLight;
   input: Input;
+  outlineMaterial = new THREE.LineBasicMaterial({ dithering: true });
 
   perspectiveCamera: THREE.PerspectiveCamera;
   orthographicCamera: THREE.OrthographicCamera;
@@ -181,7 +183,6 @@ export class Renderer extends EventEmitter<RendererEvents> {
   picker: Picker;
   selectionBackdrop: ScreenOverlay;
   selectedObject: Renderable | undefined;
-  materialCache = new MaterialCache();
   colorScheme: "dark" | "light" = "light";
   modelCache: ModelCache;
   transformTree = new TransformTree(TRANSFORM_STORAGE_TIME_NS);
@@ -189,8 +190,10 @@ export class Renderer extends EventEmitter<RendererEvents> {
   currentTime: bigint | undefined;
   fixedFrameId: string | undefined;
   renderFrameId: string | undefined;
+  followFrameId: string | undefined;
 
   labels = new Labels(this);
+  markerPool = new MarkerPool(this);
 
   constructor(canvas: HTMLCanvasElement, config: RendererConfig) {
     super();
@@ -234,7 +237,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
     this.modelCache = new ModelCache({
       ignoreColladaUpAxis: true,
-      edgeMaterial: this.materialCache.outlineMaterial,
+      edgeMaterial: this.outlineMaterial,
     });
 
     this.scene = new THREE.Scene();
@@ -270,7 +273,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.selectionBackdrop.visible = false;
     this.scene.add(this.selectionBackdrop);
 
-    this.renderFrameId = config.followTf;
+    this.followFrameId = config.followTf;
 
     const samples = msaaSamples(this.maxLod, this.gl.capabilities);
     const renderSize = this.gl.getDrawingBufferSize(tempVec2);
@@ -289,8 +292,22 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.addSceneExtension(new Poses(this));
     this.addSceneExtension(new PoseArrays(this));
 
+    this._watchDevicePixelRatio();
+
     this._updateCameras(config.cameraState);
     this.animationFrame();
+  }
+
+  private _watchDevicePixelRatio() {
+    window.matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`).addEventListener(
+      "change",
+      () => {
+        log.debug(`devicePixelRatio changed to ${window.devicePixelRatio}`);
+        this.resizeHandler(this.input.canvasSize);
+        this._watchDevicePixelRatio();
+      },
+      { once: true },
+    );
   }
 
   dispose(): void {
@@ -301,9 +318,15 @@ export class Renderer extends EventEmitter<RendererEvents> {
     }
     this.sceneExtensions.clear();
 
+    this.markerPool.dispose();
+    this.labels.dispose();
     this.picker.dispose();
     this.input.dispose();
     this.gl.dispose();
+  }
+
+  getPixelRatio(): number {
+    return this.gl.getPixelRatio();
   }
 
   /**
@@ -382,6 +405,16 @@ export class Renderer extends EventEmitter<RendererEvents> {
   }
 
   defaultFrameId(): string | undefined {
+    const allFrames = this.transformTree.frames();
+    if (allFrames.size === 0) {
+      return undefined;
+    }
+
+    // Top priority is the followFrameId
+    if (this.followFrameId != undefined && this.transformTree.hasFrame(this.followFrameId)) {
+      return this.followFrameId;
+    }
+
     // Prefer frames from [REP-105](https://www.ros.org/reps/rep-0105.html)
     for (const frameId of DEFAULT_FRAME_IDS) {
       const frame = this.transformTree.frame(frameId);
@@ -392,7 +425,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
     // Choose the root frame with the most children
     const rootsToCounts = new Map<string, number>();
-    for (const frame of this.transformTree.frames().values()) {
+    for (const frame of allFrames.values()) {
       const rootId = frame.root().id;
       rootsToCounts.set(rootId, (rootsToCounts.get(rootId) ?? 0) + 1);
     }
@@ -415,12 +448,12 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
     if (colorScheme === "dark") {
       this.gl.setClearColor(bgColor ?? DARK_BACKDROP);
-      this.materialCache.outlineMaterial.color.set(DARK_OUTLINE);
-      this.materialCache.outlineMaterial.needsUpdate = true;
+      this.outlineMaterial.color.set(DARK_OUTLINE);
+      this.outlineMaterial.needsUpdate = true;
     } else {
       this.gl.setClearColor(bgColor ?? LIGHT_BACKDROP);
-      this.materialCache.outlineMaterial.color.set(LIGHT_OUTLINE);
-      this.materialCache.outlineMaterial.needsUpdate = true;
+      this.outlineMaterial.color.set(LIGHT_OUTLINE);
+      this.outlineMaterial.needsUpdate = true;
     }
   }
 
@@ -587,7 +620,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.emit("startFrame", currentTime, this);
 
     this._updateFrames();
-    this.materialCache.update(this.input.canvasSize);
+    this._updateMaterials(this.input.canvasSize);
 
     this.gl.clear();
     camera.layers.set(LAYER_DEFAULT);
@@ -718,11 +751,23 @@ export class Renderer extends EventEmitter<RendererEvents> {
   };
 
   private _updateFrames(): void {
-    if (this.renderFrameId == undefined) {
+    if (
+      this.followFrameId != undefined &&
+      this.renderFrameId !== this.followFrameId &&
+      this.transformTree.hasFrame(this.followFrameId)
+    ) {
+      // followFrameId is set and is a valid frame, use it
+      this.renderFrameId = this.followFrameId;
+    } else if (
+      this.renderFrameId == undefined ||
+      !this.transformTree.hasFrame(this.renderFrameId)
+    ) {
+      // No valid renderFrameId set, fall back to selecting the heuristically
+      // most valid frame (if any frames are present)
       this.renderFrameId = this.defaultFrameId();
 
       if (this.renderFrameId == undefined) {
-        this.settings.errors.add(FOLLOW_TF_PATH, NO_FRAME_SELECTED, `No frame selected`);
+        this.settings.errors.add(FOLLOW_TF_PATH, NO_FRAME_SELECTED, `No coordinate frames found`);
         this.fixedFrameId = undefined;
         return;
       } else {
@@ -732,6 +777,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
     const frame = this.transformTree.frame(this.renderFrameId);
     if (!frame) {
+      this.renderFrameId = undefined;
       this.fixedFrameId = undefined;
       this.settings.errors.add(
         FOLLOW_TF_PATH,
@@ -752,6 +798,25 @@ export class Renderer extends EventEmitter<RendererEvents> {
     }
 
     this.settings.errors.clearPath(FOLLOW_TF_PATH);
+  }
+
+  private _updateMaterials(resolution: THREE.Vector2): void {
+    this.scene.traverse((object) => {
+      if ((object as Partial<THREE.Mesh>).isMesh) {
+        const mesh = object as THREE.Mesh;
+        const material = mesh.material as THREE.Material;
+
+        // Update render resolution uniforms
+        if (material instanceof LineMaterial) {
+          material.resolution = resolution;
+        } else if (
+          material instanceof THREE.ShaderMaterial &&
+          material.uniforms.resolution != undefined
+        ) {
+          material.uniforms.resolution.value = resolution;
+        }
+      }
+    });
   }
 }
 

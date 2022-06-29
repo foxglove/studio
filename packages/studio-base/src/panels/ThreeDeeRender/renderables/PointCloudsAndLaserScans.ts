@@ -7,8 +7,7 @@ import * as THREE from "three";
 import { toNanoSec } from "@foxglove/rostime";
 import { SettingsTreeAction, SettingsTreeFields, SettingsTreeNode, Topic } from "@foxglove/studio";
 
-import { DynamicBufferGeometry } from "../DynamicBufferGeometry";
-import { MaterialCache, PointCloudColor } from "../MaterialCache";
+import { DynamicBufferGeometry, DynamicFloatBufferGeometry } from "../DynamicBufferGeometry";
 import { BaseUserData, Renderable } from "../Renderable";
 import { Renderer } from "../Renderer";
 import { PartialMessage, PartialMessageEvent, SceneExtension } from "../SceneExtension";
@@ -77,10 +76,38 @@ const INTENSITY_FIELDS = new Set<string>(["intensity", "i"]);
 
 const INVALID_POINTCLOUD_OR_LASERSCAN = "INVALID_POINTCLOUD_OR_LASERSCAN";
 
+// Fragment shader chunk to convert sRGB to linear RGB. This is used by some
+// PointCloud materials to avoid expensive per-point colorspace conversion on
+// the CPU. Source: <https://github.com/mrdoob/three.js/blob/13b67d96/src/renderers/shaders/ShaderChunk/encodings_pars_fragment.glsl.js#L16-L18>
+const FS_SRGB_TO_LINEAR = /* glsl */ `
+vec3 sRGBToLinear(in vec3 value) {
+	return vec3(mix(
+    pow(value.rgb * 0.9478672986 + vec3(0.0521327014), vec3(2.4)),
+    value.rgb * 0.0773993808,
+    vec3(lessThanEqual(value.rgb, vec3(0.04045)))
+  ));
+}
+
+vec4 sRGBToLinear(in vec4 value) {
+  return vec4(sRGBToLinear(value.rgb), value.a);
+}
+`;
+
+// Fragment shader chunk to convert sRGB to linear RGB
+const FS_POINTCLOUD_SRGB_TO_LINEAR = /* glsl */ `
+outgoingLight = sRGBToLinear(outgoingLight);
+`;
+
+// Fragment shader chunk to render a GL_POINT as a circle
+const FS_POINTCLOUD_CIRCLE = /* glsl */ `
+vec2 cxy = 2.0 * gl_PointCoord - 1.0;
+if (dot(cxy, cxy) > 1.0) { discard; }
+`;
+
 const tempColor = { r: 0, g: 0, b: 0, a: 0 };
 
-type DynamicFloatBufferGeometry = DynamicBufferGeometry<Float32Array, Float32ArrayConstructor>;
-type DecayEntry = { receiveTime: bigint; buffer: THREE.BufferGeometry; points: THREE.Points };
+type Points = THREE.Points<DynamicFloatBufferGeometry, THREE.PointsMaterial | LaserScanMaterial>;
+type DecayEntry = { receiveTime: bigint; buffer: THREE.BufferGeometry; points: Points };
 
 export type PointCloudAndLaserScanUserData = BaseUserData & {
   settings: LayerSettingsPointCloudAndLaserScan;
@@ -88,24 +115,25 @@ export type PointCloudAndLaserScanUserData = BaseUserData & {
   pointCloud?: PointCloud2;
   laserScan?: LaserScan;
   geometry?: DynamicFloatBufferGeometry;
-  points?: THREE.Points;
+  points: Points;
   decay?: DecayEntry[];
-  pointCloudMaterial?: THREE.PointsMaterial;
-  laserScanMaterial?: LaserScanMaterial;
   pickingMaterial: THREE.ShaderMaterial | LaserScanMaterial;
 };
 
 export class PointCloudAndLaserScanRenderable extends Renderable<PointCloudAndLaserScanUserData> {
   override dispose(): void {
-    releasePointCloudMaterial(this.userData.settings, this.renderer.materialCache);
+    this.userData.pointCloud = undefined;
+    this.userData.laserScan = undefined;
     this.userData.geometry?.dispose();
+    this.userData.geometry = undefined;
+    this.userData.points.material.dispose();
     if (this.userData.decay) {
       for (const entry of this.userData.decay) {
         entry.buffer.dispose();
+        entry.points.material.dispose();
       }
+      this.userData.decay = undefined;
     }
-    this.userData.pickingMaterial.dispose();
-    this.userData.laserScanMaterial?.dispose();
     super.dispose();
   }
 }
@@ -143,6 +171,17 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     return entries;
   }
 
+  override startFrame(currentTime: bigint, renderFrameId: string, fixedFrameId: string): void {
+    super.startFrame(currentTime, renderFrameId, fixedFrameId);
+    for (const renderable of this.renderables.values()) {
+      const material = renderable.userData.points.material;
+      const pixelRatio = (material as Partial<LaserScanMaterial>).uniforms?.pixelRatio;
+      if (pixelRatio) {
+        pixelRatio.value = this.renderer.getPixelRatio();
+      }
+    }
+  }
+
   handleSettingsAction = (action: SettingsTreeAction): void => {
     const path = action.payload.path;
     if (action.action !== "update" || path.length !== 3) {
@@ -155,18 +194,14 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     const topicName = path[1]!;
     const renderable = this.renderables.get(topicName);
     if (renderable) {
-      releasePointCloudMaterial(renderable.userData.settings, this.renderer.materialCache);
-      const settings = this.renderer.config.topics[topicName] as
+      const prevSettings = this.renderer.config.topics[topicName] as
         | Partial<LayerSettingsPointCloudAndLaserScan>
         | undefined;
-      renderable.userData.settings = { ...renderable.userData.settings, ...settings };
       if (renderable.userData.pointCloud) {
-        renderable.userData.laserScanMaterial = undefined;
-        renderable.userData.points.material = renderable.userData.pointCloudMaterial =
-          pointCloudMaterial(renderable.userData.settings, this.renderer.materialCache);
         this._updatePointCloudRenderable(
           renderable,
           renderable.userData.pointCloud,
+          { ...renderable.userData.settings, ...prevSettings },
           renderable.userData.receiveTime,
         );
       } else if (renderable.userData.laserScan) {
@@ -205,11 +240,9 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
       }
 
       const isDecay = settings.decayTime > 0;
-      const geometry = isDecay
-        ? this._createStaticGeometry(topic)
-        : this._createDynamicGeometry(topic);
+      const geometry = this._createGeometry(topic, !isDecay);
 
-      const material = pointCloudMaterial(settings, this.renderer.materialCache);
+      const material = pointCloudMaterial(settings);
       const pickingMaterial = createPickingMaterial(settings);
       const points = new THREE.Points(geometry, material);
       points.frustumCulled = false;
@@ -225,10 +258,9 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
         settings,
         topic,
         pointCloud,
-        geometry: isDecay ? undefined : (geometry as DynamicFloatBufferGeometry),
-        decay: isDecay ? ([geometry] as THREE.BufferGeometry[]) : undefined,
+        geometry: isDecay ? undefined : geometry,
+        decay: isDecay ? [{ buffer: geometry, points, receiveTime }] : undefined,
         points,
-        pointCloudMaterial: material,
         pickingMaterial,
       });
       renderable.add(points);
@@ -245,19 +277,20 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
       this.updateSettingsTree();
     }
 
-    this._updatePointCloudRenderable(renderable, pointCloud, receiveTime);
+    this._updatePointCloudRenderable(
+      renderable,
+      pointCloud,
+      renderable.userData.settings,
+      receiveTime,
+    );
   };
 
-  _createStaticGeometry(topic: string): THREE.BufferGeometry {
-    const geometry = new THREE.BufferGeometry();
-    geometry.name = `${topic}:PointCloud2:geometry`;
-    geometry.setAttribute("position", new THREE.Float32BufferAttribute(0, 3));
-    geometry.setAttribute("color", new THREE.Float32BufferAttribute(0, 4));
-    return geometry;
-  }
-
-  _createDynamicGeometry(topic: string): DynamicFloatBufferGeometry {
-    const geometry = new DynamicBufferGeometry(Float32Array);
+  // eslint-disable-next-line @foxglove/no-boolean-parameters
+  _createGeometry(topic: string, dynamic: boolean): DynamicFloatBufferGeometry {
+    const geometry = new DynamicBufferGeometry(
+      Float32Array,
+      dynamic ? THREE.DynamicDrawUsage : THREE.StaticDrawUsage,
+    );
     geometry.name = `${topic}:PointCloud2:geometry`;
     geometry.createAttribute("position", 3);
     geometry.createAttribute("color", 4);
@@ -267,6 +300,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
   _updatePointCloudRenderable(
     renderable: PointCloudAndLaserScanRenderable,
     pointCloud: PointCloud2,
+    settings: LayerSettingsPointCloudAndLaserScan,
     receiveTime: bigint,
   ): void {
     renderable.userData.receiveTime = receiveTime;
@@ -275,7 +309,24 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     renderable.userData.pointCloud = pointCloud;
     renderable.userData.laserScan = undefined;
 
-    const settings = renderable.userData.settings;
+    const prevSettings = renderable.userData.settings;
+    const material = renderable.userData.points.material as THREE.PointsMaterial;
+    const needsRebuild =
+      colorHasTransparency(settings) !== material.transparent ||
+      pointCloudColorEncoding(settings) !== pointCloudColorEncoding(prevSettings) ||
+      settings.pointShape !== prevSettings.pointShape;
+
+    renderable.userData.settings = settings;
+    // const isDecay = settings.decayTime > 0;
+
+    // FIXME: Handle decay
+    if (needsRebuild) {
+      material.dispose();
+      renderable.userData.points.material = pointCloudMaterial(settings);
+    } else {
+      material.size = settings.pointSize;
+    }
+
     const data = pointCloud.data;
     const pointCount = Math.trunc(data.length / pointCloud.point_step);
 
@@ -398,6 +449,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     yReader ??= zeroReader;
     zReader ??= zeroReader;
 
+    // FIXME: handle decay
     const geometry = renderable.userData.geometry;
     geometry.resize(pointCount);
     const positionAttribute = geometry.attributes.position!;
@@ -496,8 +548,6 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
         laserScan,
         geometry,
         points,
-        pointCloudMaterial: undefined,
-        laserScanMaterial: material,
         pickingMaterial,
       });
       renderable.add(points);
@@ -523,6 +573,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     const settings = renderable.userData.settings;
     const { colorField } = settings;
     const { intensities, ranges } = laserScan;
+    const isDecay = settings.decayTime > 0;
 
     // Invalid laser scan checks
     if (intensities.length !== 0 && intensities.length !== ranges.length) {
@@ -536,9 +587,9 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
       return;
     }
 
-    const decay = renderable.userData.decay;
-    if (decay) {
-      //
+    // FIXME: Handle decay
+    if (isDecay) {
+      // const decay = renderable.userData.decay;
     } else {
       const geometry = renderable.userData.geometry!;
       geometry.resize(ranges.length);
@@ -548,10 +599,10 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     }
 
     // Update material uniforms
-    renderable.userData.laserScanMaterial?.update(settings, laserScan);
-    if (renderable.userData.pickingMaterial instanceof LaserScanMaterial) {
-      renderable.userData.pickingMaterial.update(settings, laserScan);
-    }
+    const laserScanMaterial = renderable.userData.points.material as LaserScanMaterial;
+    const pickingMaterial = renderable.userData.pickingMaterial as LaserScanMaterial;
+    laserScanMaterial.update(settings, laserScan);
+    pickingMaterial.update(settings, laserScan);
 
     // Determine min/max color values (if needed)
     let minColorValue = settings.minValue ?? Number.POSITIVE_INFINITY;
@@ -588,28 +639,41 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
   }
 }
 
-function pointCloudMaterial(
-  settings: LayerSettingsPointCloudAndLaserScan,
-  materialCache: MaterialCache,
-): THREE.PointsMaterial {
+function pointCloudMaterial(settings: LayerSettingsPointCloudAndLaserScan): THREE.PointsMaterial {
   const transparent = colorHasTransparency(settings);
   const encoding = pointCloudColorEncoding(settings);
   const scale = settings.pointSize;
-  return materialCache.acquire(
-    PointCloudColor.id(settings.pointShape, encoding, scale, transparent),
-    () => PointCloudColor.create(settings.pointShape, encoding, scale, transparent),
-    PointCloudColor.dispose,
-  );
-}
+  const shape = settings.pointShape;
 
-function releasePointCloudMaterial(
-  settings: LayerSettingsPointCloudAndLaserScan,
-  materialCache: MaterialCache,
-): void {
-  const transparent = colorHasTransparency(settings);
-  const encoding = pointCloudColorEncoding(settings);
-  const scale = settings.pointSize;
-  materialCache.release(PointCloudColor.id(settings.pointShape, encoding, scale, transparent));
+  const material = new THREE.PointsMaterial({
+    vertexColors: true,
+    size: scale,
+    sizeAttenuation: false,
+    transparent,
+    // The sorting issues caused by writing semi-transparent pixels to the depth buffer are less
+    // distracting for point clouds than the self-sorting artifacts when depth writing is disabled
+    depthWrite: true,
+  });
+
+  // Tell three.js to recompile the shader when `shape` or `encoding` change
+  material.customProgramCacheKey = () => `${shape}-${encoding}`;
+  material.onBeforeCompile = (shader) => {
+    const SEARCH = "#include <output_fragment>";
+    if (shape === "circle") {
+      // Patch the fragment shader to render points as circles
+      shader.fragmentShader =
+        FS_SRGB_TO_LINEAR + shader.fragmentShader.replace(SEARCH, FS_POINTCLOUD_CIRCLE + SEARCH);
+    }
+    if (encoding === "srgb") {
+      // Patch the fragment shader to add sRGB->linear color conversion
+      shader.fragmentShader = shader.fragmentShader.replace(
+        SEARCH,
+        FS_POINTCLOUD_SRGB_TO_LINEAR + SEARCH,
+      );
+    }
+  };
+
+  return material;
 }
 
 class LaserScanMaterial extends THREE.RawShaderMaterial {
@@ -624,6 +688,7 @@ class LaserScanMaterial extends THREE.RawShaderMaterial {
         uniform mat4 projectionMatrix, modelViewMatrix;
 
         uniform float pointSize;
+        uniform float pixelRatio;
         uniform float angleMin, angleIncrement;
         uniform float rangeMin, rangeMax;
         in float position; // range, but must be named position in order for three.js to render anything
@@ -640,10 +705,10 @@ class LaserScanMaterial extends THREE.RawShaderMaterial {
           gl_Position = projectionMatrix * modelViewMatrix * pos;
           ${
             picking
-              ? `gl_PointSize = max(pointSize, ${LaserScanMaterial.MIN_PICKING_POINT_SIZE.toFixed(
+              ? `gl_PointSize = pixelRatio * max(pointSize, ${LaserScanMaterial.MIN_PICKING_POINT_SIZE.toFixed(
                   1,
                 )});`
-              : "gl_PointSize = pointSize;"
+              : "gl_PointSize = pixelRatio * pointSize;"
           }
 
         }
@@ -658,18 +723,22 @@ class LaserScanMaterial extends THREE.RawShaderMaterial {
         uniform bool isCircle;
         ${picking ? "uniform vec4 objectId;" : "in mediump vec4 vColor;"}
         out vec4 outColor;
+
+        ${THREE.ShaderChunk.encodings_pars_fragment /* for LinearTosRGB() */}
+
         void main() {
           if (isCircle) {
             vec2 cxy = 2.0 * gl_PointCoord - 1.0;
             if (dot(cxy, cxy) > 1.0) { discard; }
           }
-          ${picking ? "outColor = objectId;" : "outColor = vColor;"}
+          ${picking ? "outColor = objectId;" : "outColor = LinearTosRGB(vColor);"}
         }
       `,
     });
     this.uniforms = {
       isCircle: { value: false },
       pointSize: { value: 1 },
+      pixelRatio: { value: 1 },
       angleMin: { value: NaN },
       angleIncrement: { value: NaN },
       rangeMin: { value: NaN },
@@ -681,14 +750,19 @@ class LaserScanMaterial extends THREE.RawShaderMaterial {
   }
 
   update(settings: LayerSettingsPointCloudAndLaserScan, laserScan: LaserScan): void {
-    this.transparent = colorHasTransparency(settings);
-    this.depthWrite = !this.transparent;
     this.uniforms.isCircle!.value = settings.pointShape === "circle";
     this.uniforms.pointSize!.value = settings.pointSize;
     this.uniforms.angleMin!.value = laserScan.angle_min;
     this.uniforms.angleIncrement!.value = laserScan.angle_increment;
     this.uniforms.rangeMin!.value = laserScan.range_min;
     this.uniforms.rangeMax!.value = laserScan.range_max;
+
+    const transparent = colorHasTransparency(settings);
+    if (transparent !== this.transparent) {
+      this.transparent = transparent;
+      this.depthWrite = !this.transparent;
+      this.needsUpdate = true;
+    }
   }
 }
 

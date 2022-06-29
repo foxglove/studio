@@ -5,35 +5,29 @@
 import * as THREE from "three";
 
 import type { Renderer } from "../../Renderer";
-import { rgbaEqual } from "../../color";
+import { rgbToThreeColor } from "../../color";
 import { Marker } from "../../ros";
 import { RenderableMarker } from "./RenderableMarker";
-import { releaseStandardMaterial, standardMaterial } from "./materials";
+import { makeStandardMaterial } from "./materials";
 
 export class RenderableCube extends RenderableMarker {
-  private static geometry: THREE.BoxGeometry | undefined;
-  private static edgesGeometry: THREE.EdgesGeometry | undefined;
+  private static cubeGeometry: THREE.BoxGeometry | undefined;
+  private static cubeEdgesGeometry: THREE.EdgesGeometry | undefined;
 
-  mesh: THREE.Mesh<THREE.BoxGeometry, THREE.Material>;
+  mesh: THREE.Mesh<THREE.BoxGeometry, THREE.MeshStandardMaterial>;
   outline: THREE.LineSegments | undefined;
 
   constructor(topic: string, marker: Marker, receiveTime: bigint | undefined, renderer: Renderer) {
     super(topic, marker, receiveTime, renderer);
 
     // Cube mesh
-    this.mesh = new THREE.Mesh(
-      RenderableCube.Geometry(),
-      standardMaterial(marker.color, renderer.materialCache),
-    );
+    this.mesh = new THREE.Mesh(RenderableCube.Geometry(), makeStandardMaterial(marker.color));
     this.mesh.castShadow = true;
     this.mesh.receiveShadow = true;
     this.add(this.mesh);
 
     // Cube outline
-    this.outline = new THREE.LineSegments(
-      RenderableCube.EdgesGeometry(),
-      renderer.materialCache.outlineMaterial,
-    );
+    this.outline = new THREE.LineSegments(RenderableCube.EdgesGeometry(), renderer.outlineMaterial);
     this.outline.userData.picking = false;
     this.mesh.add(this.outline);
 
@@ -41,34 +35,38 @@ export class RenderableCube extends RenderableMarker {
   }
 
   override dispose(): void {
-    releaseStandardMaterial(this.userData.marker.color, this.renderer.materialCache);
+    this.mesh.material.dispose();
   }
 
   override update(marker: Marker, receiveTime: bigint | undefined): void {
-    const prevMarker = this.userData.marker;
     super.update(marker, receiveTime);
 
-    if (!rgbaEqual(marker.color, prevMarker.color)) {
-      releaseStandardMaterial(prevMarker.color, this.renderer.materialCache);
-      this.mesh.material = standardMaterial(marker.color, this.renderer.materialCache);
+    const transparent = marker.color.a < 1;
+    if (transparent !== this.mesh.material.transparent) {
+      this.mesh.material.transparent = transparent;
+      this.mesh.material.depthWrite = !transparent;
+      this.mesh.material.needsUpdate = true;
     }
+
+    rgbToThreeColor(this.mesh.material.color, marker.color);
+    this.mesh.material.opacity = marker.color.a;
 
     this.scale.set(marker.scale.x, marker.scale.y, marker.scale.z);
   }
 
   static Geometry(): THREE.BoxGeometry {
-    if (!RenderableCube.geometry) {
-      RenderableCube.geometry = new THREE.BoxGeometry(1, 1, 1);
-      RenderableCube.geometry.computeBoundingSphere();
+    if (!RenderableCube.cubeGeometry) {
+      RenderableCube.cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
+      RenderableCube.cubeGeometry.computeBoundingSphere();
     }
-    return RenderableCube.geometry;
+    return RenderableCube.cubeGeometry;
   }
 
   static EdgesGeometry(): THREE.EdgesGeometry {
-    if (!RenderableCube.edgesGeometry) {
-      RenderableCube.edgesGeometry = new THREE.EdgesGeometry(RenderableCube.Geometry(), 40);
-      RenderableCube.edgesGeometry.computeBoundingSphere();
+    if (!RenderableCube.cubeEdgesGeometry) {
+      RenderableCube.cubeEdgesGeometry = new THREE.EdgesGeometry(RenderableCube.Geometry(), 40);
+      RenderableCube.cubeEdgesGeometry.computeBoundingSphere();
     }
-    return RenderableCube.edgesGeometry;
+    return RenderableCube.cubeEdgesGeometry;
   }
 }
