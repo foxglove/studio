@@ -390,6 +390,11 @@ export class Renderer extends EventEmitter<RendererEvents> {
   }
 
   defaultFrameId(): string | undefined {
+    const allFrames = this.transformTree.frames();
+    if (allFrames.size === 0) {
+      return undefined;
+    }
+
     // Prefer frames from [REP-105](https://www.ros.org/reps/rep-0105.html)
     for (const frameId of DEFAULT_FRAME_IDS) {
       const frame = this.transformTree.frame(frameId);
@@ -400,7 +405,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
     // Choose the root frame with the most children
     const rootsToCounts = new Map<string, number>();
-    for (const frame of this.transformTree.frames().values()) {
+    for (const frame of allFrames.values()) {
       const rootId = frame.root().id;
       rootsToCounts.set(rootId, (rootsToCounts.get(rootId) ?? 0) + 1);
     }
@@ -726,7 +731,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
   };
 
   private _updateFrames(): void {
-    if (this.renderFrameId == undefined) {
+    if (this.renderFrameId == undefined || !this.transformTree.hasFrame(this.renderFrameId)) {
       this.renderFrameId = this.defaultFrameId();
 
       if (this.renderFrameId == undefined) {
