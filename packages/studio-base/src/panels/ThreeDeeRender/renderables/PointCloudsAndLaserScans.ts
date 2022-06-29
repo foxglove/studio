@@ -23,7 +23,7 @@ import {
   PointFieldType,
 } from "../ros";
 import { BaseSettings } from "../settings";
-import { makePose } from "../transforms";
+import { makePose, MAX_DURATION } from "../transforms";
 import { updatePose } from "../updatePose";
 import { getColorConverter } from "./pointClouds/colors";
 import { FieldReader, getReader } from "./pointClouds/fieldReaders";
@@ -202,13 +202,11 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
       // Remove expired entries from the history of points when decayTime is enabled
       const pointsHistory = renderable.userData.pointsHistory;
       const decayTime = renderable.userData.settings.decayTime;
-      if (decayTime > 0) {
-        const expireTime = currentTime - BigInt(decayTime * 1e9);
-        while (pointsHistory.length > 1 && pointsHistory[0]!.receiveTime < expireTime) {
-          const entry = renderable.userData.pointsHistory.shift()!;
-          renderable.remove(entry.points);
-          entry.points.geometry.dispose();
-        }
+      const expireTime = decayTime > 0 ? currentTime - BigInt(decayTime * 1e9) : MAX_DURATION;
+      while (pointsHistory.length > 1 && pointsHistory[0]!.receiveTime < expireTime) {
+        const entry = renderable.userData.pointsHistory.shift()!;
+        renderable.remove(entry.points);
+        entry.points.geometry.dispose();
       }
 
       // Update the pose on each THREE.Points entry
@@ -1243,6 +1241,7 @@ function createPoints(
   pickingMaterial: THREE.Material,
 ): Points {
   const points = new THREE.Points<DynamicFloatBufferGeometry, Material>(geometry, material);
+  // We don't calculate the bounding sphere for points, so frustum culling is disabled
   points.frustumCulled = false;
   points.name = `${topic}:PointCloud2:points`;
   points.userData = {
