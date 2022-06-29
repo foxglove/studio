@@ -137,7 +137,14 @@ const ActionMenu = ({
                   {item.sectionProps.title}
                 </StyledMenuItem>
                 {item.sectionProps.items.map((subItem) => (
-                  <StyledMenuItem debug={item.debug} key={subItem.key} onClick={subItem.onClick}>
+                  <StyledMenuItem
+                    debug={item.debug}
+                    key={subItem.key}
+                    onClick={(event) => {
+                      subItem.onClick?.(event);
+                      handleClose();
+                    }}
+                  >
                     <Typography variant="inherit">{subItem.text}</Typography>
                   </StyledMenuItem>
                 ))}
@@ -148,7 +155,10 @@ const ActionMenu = ({
                 debug={item.debug}
                 disabled={item.disabled}
                 key={item.key}
-                onClick={item.onClick}
+                onClick={(event) => {
+                  item.onClick?.(event);
+                  handleClose();
+                }}
               >
                 <Typography variant="inherit" color={item.key === "delete" ? "error" : undefined}>
                   {item.text}
@@ -221,8 +231,13 @@ export default React.memo(function LayoutRow({
   }, [layout, onMakePersonalCopy]);
 
   const renameAction = useCallback(() => {
-    setEditingName(true);
-    setNameFieldValue(layout.name);
+    // Give the menu time to close before focusing the text field. The MUI Menu auto-focuses itself
+    // which results in an immediate onBlur of the text field if we try to focus it while the menu
+    // is still visible.
+    setTimeout(() => {
+      setEditingName(true);
+      setNameFieldValue(layout.name);
+    }, 0);
   }, [layout]);
 
   const onClick = useCallback(() => {
@@ -264,10 +279,7 @@ export default React.memo(function LayoutRow({
   );
 
   const onTextFieldMount = useCallback((field: HTMLInputElement | ReactNull) => {
-    // When focusing via right-click we need an extra tick to be able to successfully focus the field
-    setTimeout(() => {
-      field?.select();
-    }, 0);
+    field?.select();
   }, []);
 
   const confirmDelete = useCallback(() => {
@@ -438,8 +450,7 @@ export default React.memo(function LayoutRow({
         <ListItemText disableTypography>
           {editingName ? (
             <TextField
-              inputProps={{ ref: onTextFieldMount }}
-              // componentRef={onTextFieldMount}
+              inputRef={onTextFieldMount}
               value={nameFieldValue}
               onChange={(event) => setNameFieldValue(event.target.value)}
               onKeyDown={onTextFieldKeyDown}
