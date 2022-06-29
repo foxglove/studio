@@ -181,3 +181,32 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+  snap:
+    name: Publish snap
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Checkout ${{ github.event.release.target_commitish || github.event.inputs.target_commitish }}
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.release.target_commitish || github.event.inputs.target_commitish }}
+          token: ${{ secrets.FOXGLOVEBOT_GITHUB_TOKEN }}
+          lfs: true
+
+      - uses: actions/setup-node@v3.3.0
+        with:
+          node-version: 14.x
+          cache: yarn
+
+      - run: yarn install --immutable
+
+      - name: Download release binaries
+        run: yarn ts-node downloadReleases.ts
+
+      - uses: snapcore/action-publish@v1
+        env:
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_LOGIN }}
+        with:
+          snap: fixme-path-to-file.snap
+          release: stable
