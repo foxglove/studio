@@ -2,7 +2,6 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { useTheme } from "@fluentui/react";
 import AddIcon from "@mui/icons-material/Add";
 import CloudOffIcon from "@mui/icons-material/CloudOff";
 import FileOpenOutlinedIcon from "@mui/icons-material/FileOpenOutlined";
@@ -13,6 +12,7 @@ import {
   FormGroup,
   FormControlLabel,
   CircularProgress,
+  useTheme,
 } from "@mui/material";
 import { partition } from "lodash";
 import moment from "moment";
@@ -476,7 +476,7 @@ export default function LayoutBrowser({
               bottom: 0,
               left: 0,
               right: 0,
-              background: theme.semanticColors.bodyBackground,
+              background: theme.palette.background.default,
               ...debugBorder,
             }}
           >
