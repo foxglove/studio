@@ -452,12 +452,27 @@ export default function LayoutBrowser({
       ].filter(Boolean)}
     >
       {unsavedChangesPrompt}
-      <Stack fullHeight>
-        <div>
+      <Stack fullHeight gap={2}>
+        <LayoutSection
+          title={layoutManager.supportsSharing ? "Personal" : undefined}
+          emptyText="Add a new layout to get started with Foxglove Studio!"
+          items={layouts.value?.personal}
+          selectedId={currentLayoutId}
+          onSelect={onSelectLayout}
+          onRename={onRenameLayout}
+          onDuplicate={onDuplicateLayout}
+          onDelete={onDeleteLayout}
+          onShare={onShareLayout}
+          onExport={onExportLayout}
+          onOverwrite={onOverwriteLayout}
+          onRevert={onRevertLayout}
+          onMakePersonalCopy={onMakePersonalCopy}
+        />
+        {layoutManager.supportsSharing && (
           <LayoutSection
-            title={layoutManager.supportsSharing ? "Personal" : undefined}
-            emptyText="Add a new layout to get started with Foxglove Studio!"
-            items={layouts.value?.personal}
+            title="Team"
+            emptyText="Your organization doesn’t have any shared layouts yet. Share a personal layout to collaborate with other team members."
+            items={layouts.value?.shared}
             selectedId={currentLayoutId}
             onSelect={onSelectLayout}
             onRename={onRenameLayout}
@@ -469,26 +484,7 @@ export default function LayoutBrowser({
             onRevert={onRevertLayout}
             onMakePersonalCopy={onMakePersonalCopy}
           />
-        </div>
-        <div>
-          {layoutManager.supportsSharing && (
-            <LayoutSection
-              title="Team"
-              emptyText="Your organization doesn’t have any shared layouts yet. Share a personal layout to collaborate with other team members."
-              items={layouts.value?.shared}
-              selectedId={currentLayoutId}
-              onSelect={onSelectLayout}
-              onRename={onRenameLayout}
-              onDuplicate={onDuplicateLayout}
-              onDelete={onDeleteLayout}
-              onShare={onShareLayout}
-              onExport={onExportLayout}
-              onOverwrite={onOverwriteLayout}
-              onRevert={onRevertLayout}
-              onMakePersonalCopy={onMakePersonalCopy}
-            />
-          )}
-        </div>
+        )}
         <Stack flexGrow={1} />
         {showSignInPrompt && <SignInPrompt onDismiss={() => void setHideSignInPrompt(true)} />}
         {layoutDebug && (
