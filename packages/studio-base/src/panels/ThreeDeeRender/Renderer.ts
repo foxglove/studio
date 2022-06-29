@@ -190,6 +190,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
   currentTime: bigint | undefined;
   fixedFrameId: string | undefined;
   renderFrameId: string | undefined;
+  followFrameId: string | undefined;
 
   labels = new Labels(this);
   markerPool = new MarkerPool(this);
@@ -272,7 +273,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.selectionBackdrop.visible = false;
     this.scene.add(this.selectionBackdrop);
 
-    this.renderFrameId = config.followTf;
+    this.followFrameId = config.followTf;
 
     const samples = msaaSamples(this.maxLod, this.gl.capabilities);
     const renderSize = this.gl.getDrawingBufferSize(tempVec2);
@@ -393,6 +394,11 @@ export class Renderer extends EventEmitter<RendererEvents> {
     const allFrames = this.transformTree.frames();
     if (allFrames.size === 0) {
       return undefined;
+    }
+
+    // Top priority is the followFrameId
+    if (this.followFrameId != undefined && this.transformTree.hasFrame(this.followFrameId)) {
+      return this.followFrameId;
     }
 
     // Prefer frames from [REP-105](https://www.ros.org/reps/rep-0105.html)
@@ -731,11 +737,23 @@ export class Renderer extends EventEmitter<RendererEvents> {
   };
 
   private _updateFrames(): void {
-    if (this.renderFrameId == undefined || !this.transformTree.hasFrame(this.renderFrameId)) {
+    if (
+      this.followFrameId != undefined &&
+      this.renderFrameId !== this.followFrameId &&
+      this.transformTree.hasFrame(this.followFrameId)
+    ) {
+      // followFrameId is set and is a valid frame, use it
+      this.renderFrameId = this.followFrameId;
+    } else if (
+      this.renderFrameId == undefined ||
+      !this.transformTree.hasFrame(this.renderFrameId)
+    ) {
+      // No valid renderFrameId set, fall back to selecting the heuristically
+      // most valid frame (if any frames are present)
       this.renderFrameId = this.defaultFrameId();
 
       if (this.renderFrameId == undefined) {
-        this.settings.errors.add(FOLLOW_TF_PATH, NO_FRAME_SELECTED, `No frame selected`);
+        this.settings.errors.add(FOLLOW_TF_PATH, NO_FRAME_SELECTED, `No coordinate frames found`);
         this.fixedFrameId = undefined;
         return;
       } else {
@@ -745,6 +763,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
     const frame = this.transformTree.frame(this.renderFrameId);
     if (!frame) {
+      this.renderFrameId = undefined;
       this.fixedFrameId = undefined;
       this.settings.errors.add(
         FOLLOW_TF_PATH,
