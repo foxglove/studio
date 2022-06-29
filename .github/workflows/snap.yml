@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [main, release/*]
+  pull_request:
+
+jobs:
+  snap:
+    name: snap (ubuntu-20.04)
+    runs-on: ubuntu-20.04
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Required for Chromatic
+          lfs: true
+
+      - uses: actions/setup-node@v3.3.0
+        with:
+          node-version: 14.x
+
+      - name: Restore cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            .yarn/cache
+            **/node_modules
+          key: v5-${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: v5-${{ runner.os }}-yarn-
+
+      - run: yarn install --immutable
+
+      - run: yarn build:prod
+
+      - run: sudo snap install snapcraft --classic
+
+      # This works and produces x64 snaps
+      - run: yarn package --linux snap --x64
+      - run: ls dist
+
+      - name: Upload x64 snap
+        uses: actions/upload-artifact@v2
+        with:
+          if-no-files-found: error
+          path: dist/*.snap
+
+      # no longer works to build arm64 images:
+      # https://github.com/snapcore/action-build/issues/38#issuecomment-1153839995
+      #
+      # - run: yarn package --linux snap --arm64
+      #   continue-on-error: true
+      # - run: ls dist
+
+      # - uses: docker/setup-qemu-action@v2
+      # - uses: diddlesnaps/snapcraft-multiarch-action@v1
+      #   id: snapcraft
+      #   with:
+      #     path: dist/__snap-arm64
+      #     architecture: arm64
+
+      # - run: ls ${{ steps.snapcraft.outputs.snap }}
