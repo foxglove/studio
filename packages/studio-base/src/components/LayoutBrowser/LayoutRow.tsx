@@ -21,7 +21,6 @@ import {
 import {
   Fragment,
   PropsWithChildren,
-  // SetStateAction,
   useCallback,
   useContext,
   useLayoutEffect,
@@ -41,7 +40,20 @@ const StyledListItem = muiStyled(ListItem, {
   hasModifications: boolean;
   deletedOnServer: boolean;
 }>(({ hasModifications, deletedOnServer }) => ({
+  "@media (pointer: coarse)": {
+    ".MuiListItemButton-root": {
+      maxWidth: "100%",
+    },
+  },
   "@media (pointer: fine)": {
+    ".MuiListItemButton-root:hover": {
+      maxWidth: "100%",
+    },
+    ...((hasModifications || deletedOnServer) && {
+      ".MuiListItemButton-root": {
+        maxWidth: "100%",
+      },
+    }),
     ".MuiListItemSecondaryAction-root": {
       visibility: !hasModifications && !deletedOnServer && "hidden",
     },
@@ -435,7 +447,9 @@ export default React.memo(function LayoutRow({
               style={{ flex: "auto", font: "inherit" }}
             />
           ) : (
-            layout.name
+            <Typography variant="inherit" color="inherit" noWrap>
+              {layout.name}
+            </Typography>
           )}
         </ListItemText>
       </ListItemButton>
