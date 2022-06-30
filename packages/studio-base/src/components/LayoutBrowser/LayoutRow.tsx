@@ -2,7 +2,6 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { ContextualMenuItemType, IContextualMenuItem } from "@fluentui/react";
 import ErrorIcon from "@mui/icons-material/Error";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import {
@@ -19,7 +18,6 @@ import {
   styled as muiStyled,
 } from "@mui/material";
 import {
-  Fragment,
   PropsWithChildren,
   useCallback,
   useContext,
@@ -90,10 +88,33 @@ const StyledMenuItem = muiStyled(MenuItem, {
   }),
 }));
 
+export type LayoutActionMenuItem =
+  | {
+      type: "item";
+      text: string;
+      secondaryText?: string;
+      key: string;
+      onClick?: (event: React.MouseEvent<HTMLLIElement>) => void;
+      disabled?: boolean;
+      debug?: boolean;
+      "data-test"?: string;
+    }
+  | {
+      type: "divider";
+      key: string;
+      debug?: boolean;
+    }
+  | {
+      type: "header";
+      key: string;
+      text: string;
+      debug?: boolean;
+    };
+
 const ActionMenu = ({
   children,
   items = [],
-}: PropsWithChildren<{ items: IContextualMenuItem[] }>) => {
+}: PropsWithChildren<{ items: LayoutActionMenuItem[] }>) => {
   const [anchorEl, setAnchorEl] = useState<undefined | HTMLElement>(undefined);
   const open = Boolean(anchorEl);
 
@@ -104,6 +125,10 @@ const ActionMenu = ({
   const handleClose = () => {
     setAnchorEl(undefined);
   };
+
+  if (items.length > 0) {
+    return <></>;
+  }
 
   return (
     <>
@@ -117,57 +142,49 @@ const ActionMenu = ({
       >
         {children}
       </MuiIconButton>
-      {items.length > 0 && (
-        <Menu
-          id="layout-action-menu"
-          anchorEl={anchorEl}
-          open={open}
-          onClose={handleClose}
-          MenuListProps={{
-            "aria-labelledby": "layout-action-button",
-            dense: true,
-          }}
-        >
-          {items.map((item) =>
-            item.itemType === ContextualMenuItemType.Divider ? (
-              <Divider variant="middle" key={item.key} />
-            ) : item.sectionProps ? (
-              <Fragment key={item.key}>
-                <StyledMenuItem debug={item.debug} disabled>
-                  {item.sectionProps.title}
+      <Menu
+        id="layout-action-menu"
+        anchorEl={anchorEl}
+        open={open}
+        onClose={handleClose}
+        MenuListProps={{
+          "aria-labelledby": "layout-action-button",
+          dense: true,
+        }}
+      >
+        {items.map((item) => {
+          switch (item.type) {
+            case "divider":
+              return <Divider key={item.key} variant="middle" />;
+            case "item":
+              return (
+                <StyledMenuItem
+                  debug={item.debug}
+                  disabled={item.disabled}
+                  key={item.key}
+                  onClick={(event) => {
+                    item.onClick?.(event);
+                    handleClose();
+                  }}
+                >
+                  <Typography variant="inherit" color={item.key === "delete" ? "error" : undefined}>
+                    {item.text}
+                  </Typography>
                 </StyledMenuItem>
-                {item.sectionProps.items.map((subItem) => (
-                  <StyledMenuItem
-                    debug={item.debug}
-                    key={subItem.key}
-                    onClick={(event) => {
-                      subItem.onClick?.(event);
-                      handleClose();
-                    }}
-                  >
-                    <Typography variant="inherit">{subItem.text}</Typography>
-                  </StyledMenuItem>
-                ))}
-                <Divider variant="middle" />
-              </Fragment>
-            ) : (
-              <StyledMenuItem
-                debug={item.debug}
-                disabled={item.disabled}
-                key={item.key}
-                onClick={(event) => {
-                  item.onClick?.(event);
-                  handleClose();
-                }}
-              >
-                <Typography variant="inherit" color={item.key === "delete" ? "error" : undefined}>
-                  {item.text}
-                </Typography>
-              </StyledMenuItem>
-            ),
-          )}
-        </Menu>
-      )}
+              );
+            case "header":
+              return (
+                <MenuItem key={item.key}>
+                  <Typography variant="inherit" color="text.secondary">
+                    {item.text}
+                  </Typography>
+                </MenuItem>
+              );
+            default:
+              return undefined;
+          }
+        })}
+      </Menu>
     </>
   );
 };
@@ -297,17 +314,19 @@ export default React.memo(function LayoutRow({
     });
   }, [confirm, isMounted, layout, onDelete]);
 
-  const menuItems: (boolean | IContextualMenuItem)[] = [
+  const menuItems: (boolean | LayoutActionMenuItem)[] = [
     {
+      type: "item",
       key: "rename",
       text: "Rename",
       onClick: renameAction,
-      ["data-test"]: "rename-layout",
+      "data-test": "rename-layout",
       disabled: layoutIsShared(layout) && !isOnline,
       secondaryText: layoutIsShared(layout) && !isOnline ? "Offline" : undefined,
     },
     // For shared layouts, duplicate first requires saving or discarding changes
     !(layoutIsShared(layout) && hasModifications) && {
+      type: "item",
       key: "duplicate",
       text:
         layoutManager.supportsSharing && layoutIsShared(layout)
@@ -318,6 +337,7 @@ export default React.memo(function LayoutRow({
     },
     layoutManager.supportsSharing &&
       !layoutIsShared(layout) && {
+        type: "item",
         key: "share",
         text: "Share with team…",
         onClick: shareAction,
@@ -325,12 +345,14 @@ export default React.memo(function LayoutRow({
         secondaryText: !isOnline ? "Offline" : undefined,
       },
     {
+      type: "item",
       key: "export",
       text: "Export…",
       onClick: exportAction,
     },
-    { key: "divider_1", itemType: ContextualMenuItemType.Divider },
+    { key: "divider_1", type: "divider" },
     {
+      type: "item",
       key: "delete",
       text: "Delete",
       onClick: confirmDelete,
@@ -339,8 +361,9 @@ export default React.memo(function LayoutRow({
   ];
 
   if (hasModifications) {
-    const sectionItems: IContextualMenuItem[] = [
+    const sectionItems: LayoutActionMenuItem[] = [
       {
+        type: "item",
         key: "overwrite",
         text: "Save changes",
         onClick: overwriteAction,
@@ -348,6 +371,7 @@ export default React.memo(function LayoutRow({
         secondaryText: layoutIsShared(layout) && !isOnline ? "Offline" : undefined,
       },
       {
+        type: "item",
         key: "revert",
         text: "Revert",
         onClick: revertAction,
@@ -356,58 +380,65 @@ export default React.memo(function LayoutRow({
     ];
     if (layoutIsShared(layout)) {
       sectionItems.push({
+        type: "item",
         key: "copy_to_personal",
         text: "Make a personal copy",
-
         onClick: makePersonalCopyAction,
       });
     }
-    menuItems.unshift({
-      key: "changes",
-      itemType: ContextualMenuItemType.Section,
-      sectionProps: {
-        title: deletedOnServer
+    menuItems.unshift(
+      {
+        key: "changes",
+        type: "header",
+        text: deletedOnServer
           ? "Someone else has deleted this layout"
           : "This layout has unsaved changes",
-        items: sectionItems,
       },
-    });
+      ...sectionItems,
+      { key: "changes_divider", type: "divider" },
+    );
   }
 
   if (layoutDebug) {
     menuItems.push(
-      { key: "debug_divider", itemType: ContextualMenuItemType.Divider },
+      { key: "debug_divider", type: "divider" },
       {
+        type: "item",
         key: "debug_id",
         text: layout.id,
         disabled: true,
         debug: true,
       },
       {
+        type: "item",
         key: "debug_updated_at",
         text: `Saved at: ${layout.working?.savedAt ?? layout.baseline.savedAt}`,
         disabled: true,
         debug: true,
       },
       {
+        type: "item",
         key: "debug_sync_status",
         text: `Sync status: ${layout.syncInfo?.status}`,
         disabled: true,
         debug: true,
       },
       {
+        type: "item",
         key: "debug_edit",
         text: "Inject edit",
         onClick: () => void layoutDebug.injectEdit(layout.id),
         debug: true,
       },
       {
+        type: "item",
         key: "debug_rename",
         text: "Inject rename",
         onClick: () => void layoutDebug.injectRename(layout.id),
         debug: true,
       },
       {
+        type: "item",
         key: "debug_delete",
         text: "Inject delete",
         onClick: () => void layoutDebug.injectDelete(layout.id),
@@ -417,7 +448,7 @@ export default React.memo(function LayoutRow({
   }
 
   const filteredItems = menuItems.filter(
-    (item): item is IContextualMenuItem => typeof item === "object",
+    (item): item is LayoutActionMenuItem => typeof item === "object",
   );
 
   const actionIcon = useMemo(
