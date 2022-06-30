@@ -40,8 +40,6 @@ async function tryCreateIndexedReader(readable: Mcap0Types.IReadable) {
   return reader;
 }
 
-async function* noopMessageIterator(): AsyncIterator<Readonly<IteratorResult>> {}
-
 export class McapIterableSource implements IIterableSource {
   private _source: McapSource;
   private _sourceImpl: IIterableSource | undefined;
@@ -55,21 +53,7 @@ export class McapIterableSource implements IIterableSource {
     const readable = new FileReadable(source.file);
     const reader = await tryCreateIndexedReader(readable);
     if (!reader) {
-      return {
-        start: { sec: 0, nsec: 0 },
-        end: { sec: 0, nsec: 0 },
-        topics: [],
-        datatypes: new Map(),
-        profile: undefined,
-        problems: [
-          {
-            severity: "error",
-            message: "The mcap file is unindexed. Only indexed files are supported.",
-          },
-        ],
-        publishersByTopic: new Map(),
-        topicStats: new Map(),
-      };
+      throw new Error("The mcap file is unindexed. Only indexed files are supported.");
     }
 
     this._sourceImpl = new McapIndexedIterableSource(reader);
@@ -78,7 +62,7 @@ export class McapIterableSource implements IIterableSource {
 
   messageIterator(opt: MessageIteratorArgs): AsyncIterator<Readonly<IteratorResult>> {
     if (!this._sourceImpl) {
-      return noopMessageIterator();
+      throw new Error("Invariant: uninitialized");
     }
 
     return this._sourceImpl.messageIterator(opt);
@@ -86,7 +70,7 @@ export class McapIterableSource implements IIterableSource {
 
   async getBackfillMessages(args: GetBackfillMessagesArgs): Promise<MessageEvent<unknown>[]> {
     if (!this._sourceImpl) {
-      return [];
+      throw new Error("Invariant: uninitialized");
     }
 
     return await this._sourceImpl.getBackfillMessages(args);
