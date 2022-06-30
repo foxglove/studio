@@ -28,39 +28,37 @@ import { Layout, layoutIsShared } from "@foxglove/studio-base/services/ILayoutSt
 const StyledListItem = muiStyled(ListItem, {
   shouldForwardProp: (prop) =>
     prop !== "hasModifications" && prop !== "deletedOnServer" && prop !== "editingName",
-})<{
-  editingName: boolean;
-  hasModifications: boolean;
-  deletedOnServer: boolean;
-}>(({ editingName, hasModifications, deletedOnServer, theme }) => ({
-  ".MuiListItemSecondaryAction-root": {
-    right: theme.spacing(0.25),
-  },
-  ".MuiListItemButton-root": {
-    maxWidth: "100%",
-  },
-  "@media (pointer: fine)": {
-    ".MuiListItemButton-root": {
-      paddingRight: theme.spacing(4.5),
-    },
+})<{ editingName: boolean; hasModifications: boolean; deletedOnServer: boolean }>(
+  ({ editingName, hasModifications, deletedOnServer, theme }) => ({
     ".MuiListItemSecondaryAction-root": {
-      visibility: !hasModifications && !deletedOnServer && "hidden",
+      right: theme.spacing(0.25),
     },
-    "&:hover .MuiListItemSecondaryAction-root": {
-      visibility: "visible",
-    },
-  },
-  ...(editingName && {
     ".MuiListItemButton-root": {
-      paddingTop: theme.spacing(0.5),
-      paddingBottom: theme.spacing(0.5),
-      paddingLeft: theme.spacing(1),
+      maxWidth: "100%",
     },
-    ".MuiListItemText-root": {
-      margin: 0,
+    "@media (pointer: fine)": {
+      ".MuiListItemButton-root": {
+        paddingRight: theme.spacing(4.5),
+      },
+      ".MuiListItemSecondaryAction-root": {
+        visibility: !hasModifications && !deletedOnServer && "hidden",
+      },
+      "&:hover .MuiListItemSecondaryAction-root": {
+        visibility: "visible",
+      },
     },
+    ...(editingName && {
+      ".MuiListItemButton-root": {
+        paddingTop: theme.spacing(0.5),
+        paddingBottom: theme.spacing(0.5),
+        paddingLeft: theme.spacing(1),
+      },
+      ".MuiListItemText-root": {
+        margin: 0,
+      },
+    }),
   }),
-}));
+);
 
 const StyledMenuItem = muiStyled(MenuItem, {
   shouldForwardProp: (prop) => prop !== "debug",
@@ -143,13 +141,9 @@ export default React.memo(function LayoutRow({
   const [editingName, setEditingName] = useState(false);
   const [nameFieldValue, setNameFieldValue] = useState("");
   const [isOnline, setIsOnline] = useState(layoutManager.isOnline);
-  const [contextMenu, setContextMenu] = React.useState<
-    | {
-        mouseX: number;
-        mouseY: number;
-      }
-    | undefined
-  >(undefined);
+  const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | undefined>(
+    undefined,
+  );
 
   const deletedOnServer = layout.syncInfo?.status === "remotely-deleted";
   const hasModifications = layout.working != undefined;
@@ -246,14 +240,8 @@ export default React.memo(function LayoutRow({
     event.preventDefault();
     setContextMenu(
       contextMenu == undefined
-        ? {
-            mouseX: event.clientX + 2,
-            mouseY: event.clientY - 6,
-          }
-        : // repeated contextmenu when it is already open closes it with Chrome 84 on Ubuntu
-          // Other native context menus might behave different.
-          // With this behavior we prevent contextmenu from the backdrop to re-locale existing context menus.
-          undefined,
+        ? { mouseX: event.clientX + 2, mouseY: event.clientY - 6 }
+        : undefined,
     );
   };
 
