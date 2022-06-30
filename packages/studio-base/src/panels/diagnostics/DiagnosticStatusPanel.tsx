@@ -16,12 +16,12 @@ import produce from "immer";
 import { set, sortBy, uniq } from "lodash";
 import { useCallback, useMemo, useEffect } from "react";
 
+import { SettingsTreeAction } from "@foxglove/studio";
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import Panel from "@foxglove/studio-base/components/Panel";
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
-import { SettingsTreeAction } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
 import Stack from "@foxglove/studio-base/components/Stack";
 import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelSettingsEditorContextProvider";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
@@ -50,13 +50,7 @@ function DiagnosticStatusPanel(props: Props) {
   const { saveConfig, config } = props;
   const { topics } = useDataSourceInfo();
   const { openSiblingPanel } = usePanelContext();
-  const {
-    selectedHardwareId,
-    selectedName,
-    splitFraction,
-    topicToRender,
-    collapsedSections = [],
-  } = config;
+  const { selectedHardwareId, selectedName, splitFraction, topicToRender } = config;
 
   const updatePanelSettingsTree = usePanelSettingsTreeUpdate();
 
@@ -143,7 +137,7 @@ function DiagnosticStatusPanel(props: Props) {
   useEffect(() => {
     updatePanelSettingsTree({
       actionHandler,
-      roots: buildStatusPanelSettingsTree(topicToRender, availableTopics),
+      nodes: buildStatusPanelSettingsTree(topicToRender, availableTopics),
     });
   }, [actionHandler, availableTopics, topicToRender, updatePanelSettingsTree]);
 
@@ -178,7 +172,7 @@ function DiagnosticStatusPanel(props: Props) {
               variant="standard"
               {...params}
               InputProps={{ ...params.InputProps, disableUnderline: true }}
-              placeholder={selectedDisplayName}
+              placeholder={selectedDisplayName ?? "Filter"}
             />
           )}
         />
@@ -195,8 +189,6 @@ function DiagnosticStatusPanel(props: Props) {
               }
               topicToRender={topicToRender}
               openSiblingPanel={openSiblingPanel}
-              saveConfig={saveConfig}
-              collapsedSections={collapsedSections}
             />
           ))}
         </Stack>
@@ -211,7 +203,7 @@ function DiagnosticStatusPanel(props: Props) {
   );
 }
 
-const defaultConfig: Config = { topicToRender: DIAGNOSTIC_TOPIC, collapsedSections: [] };
+const defaultConfig: Config = { topicToRender: DIAGNOSTIC_TOPIC };
 
 export default Panel(
   Object.assign(DiagnosticStatusPanel, {

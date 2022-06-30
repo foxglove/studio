@@ -2,18 +2,16 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-/* eslint-disable no-underscore-dangle */
-
 import * as THREE from "three";
 import { clamp } from "three/src/math/MathUtils";
 
 import type { Renderer } from "../../Renderer";
-import { rgbaEqual } from "../../color";
+import { rgbToThreeColor } from "../../color";
 import { arrowHeadSubdivisions, arrowShaftSubdivisions, DetailLevel } from "../../lod";
 import { getRotationTo } from "../../math";
 import { Marker } from "../../ros";
 import { RenderableMarker } from "./RenderableMarker";
-import { releaseStandardMaterial, standardMaterial } from "./materials";
+import { makeStandardMaterial } from "./materials";
 
 // const SHAFT_LENGTH = 1;
 // const SHAFT_DIAMETER = 0.1;
@@ -33,15 +31,15 @@ const tempEnd = new THREE.Vector3();
 const tempDirection = new THREE.Vector3();
 
 export class RenderableArrow extends RenderableMarker {
-  private static _shaftLod: DetailLevel | undefined;
-  private static _headLod: DetailLevel | undefined;
-  private static _shaftGeometry: THREE.CylinderGeometry | undefined;
-  private static _headGeometry: THREE.ConeGeometry | undefined;
-  private static _shaftEdgesGeometry: THREE.EdgesGeometry | undefined;
-  private static _headEdgesGeometry: THREE.EdgesGeometry | undefined;
+  private static shaftLod: DetailLevel | undefined;
+  private static headLod: DetailLevel | undefined;
+  private static shaftGeometry: THREE.CylinderGeometry | undefined;
+  private static headGeometry: THREE.ConeGeometry | undefined;
+  private static shaftEdgesGeometry: THREE.EdgesGeometry | undefined;
+  private static headEdgesGeometry: THREE.EdgesGeometry | undefined;
 
-  shaftMesh: THREE.Mesh<THREE.CylinderGeometry, THREE.Material>;
-  headMesh: THREE.Mesh<THREE.ConeGeometry, THREE.Material>;
+  shaftMesh: THREE.Mesh<THREE.CylinderGeometry, THREE.MeshStandardMaterial>;
+  headMesh: THREE.Mesh<THREE.ConeGeometry, THREE.MeshStandardMaterial>;
   shaftOutline: THREE.LineSegments | undefined;
   headOutline: THREE.LineSegments | undefined;
 
@@ -49,30 +47,35 @@ export class RenderableArrow extends RenderableMarker {
     super(topic, marker, receiveTime, renderer);
 
     // Shaft mesh
-    const material = standardMaterial(marker.color, renderer.materialCache);
-    this.shaftMesh = new THREE.Mesh(RenderableArrow.shaftGeometry(renderer.maxLod), material);
+    this.shaftMesh = new THREE.Mesh(
+      RenderableArrow.ShaftGeometry(renderer.maxLod),
+      makeStandardMaterial(marker.color),
+    );
     this.shaftMesh.castShadow = true;
     this.shaftMesh.receiveShadow = true;
     this.add(this.shaftMesh);
 
     // Head mesh
-    this.headMesh = new THREE.Mesh(RenderableArrow.headGeometry(renderer.maxLod), material);
+    this.headMesh = new THREE.Mesh(
+      RenderableArrow.HeadGeometry(renderer.maxLod),
+      makeStandardMaterial(marker.color),
+    );
     this.headMesh.castShadow = true;
     this.headMesh.receiveShadow = true;
     this.add(this.headMesh);
 
     // Shaft outline
     this.shaftOutline = new THREE.LineSegments(
-      RenderableArrow.shaftEdgesGeometry(renderer.maxLod),
-      renderer.materialCache.outlineMaterial,
+      RenderableArrow.ShaftEdgesGeometry(renderer.maxLod),
+      renderer.outlineMaterial,
     );
     this.shaftOutline.userData.picking = false;
     this.shaftMesh.add(this.shaftOutline);
 
     // Head outline
     this.headOutline = new THREE.LineSegments(
-      RenderableArrow.headEdgesGeometry(renderer.maxLod),
-      renderer.materialCache.outlineMaterial,
+      RenderableArrow.HeadEdgesGeometry(renderer.maxLod),
+      renderer.outlineMaterial,
     );
     this.headOutline.userData.picking = false;
     this.headMesh.add(this.headOutline);
@@ -81,18 +84,28 @@ export class RenderableArrow extends RenderableMarker {
   }
 
   override dispose(): void {
-    releaseStandardMaterial(this.userData.marker.color, this._renderer.materialCache);
+    this.shaftMesh.material.dispose();
+    this.headMesh.material.dispose();
+    super.dispose();
   }
 
   override update(marker: Marker, receiveTime: bigint | undefined): void {
-    const prevMarker = this.userData.marker;
     super.update(marker, receiveTime);
 
-    if (!rgbaEqual(marker.color, prevMarker.color)) {
-      releaseStandardMaterial(prevMarker.color, this._renderer.materialCache);
-      this.shaftMesh.material = standardMaterial(marker.color, this._renderer.materialCache);
-      this.headMesh.material = this.shaftMesh.material;
+    const transparent = marker.color.a < 1;
+    if (transparent !== this.shaftMesh.material.transparent) {
+      this.shaftMesh.material.transparent = transparent;
+      this.shaftMesh.material.depthWrite = !transparent;
+      this.shaftMesh.material.needsUpdate = true;
+      this.headMesh.material.transparent = transparent;
+      this.headMesh.material.depthWrite = !transparent;
+      this.headMesh.material.needsUpdate = true;
     }
+
+    rgbToThreeColor(this.shaftMesh.material.color, marker.color);
+    this.shaftMesh.material.opacity = marker.color.a;
+    this.headMesh.material.color.set(this.shaftMesh.material.color);
+    this.headMesh.material.opacity = marker.color.a;
 
     // Adapted from <https://github.com/ros-visualization/rviz/blob/noetic-devel/src/rviz/default_plugin/markers/arrow_marker.cpp
     if (marker.points.length === 2) {
@@ -138,54 +151,54 @@ export class RenderableArrow extends RenderableMarker {
     }
   }
 
-  static shaftGeometry(lod: DetailLevel): THREE.CylinderGeometry {
-    if (!RenderableArrow._shaftGeometry || lod !== RenderableArrow._shaftLod) {
+  static ShaftGeometry(lod: DetailLevel): THREE.CylinderGeometry {
+    if (!RenderableArrow.shaftGeometry || lod !== RenderableArrow.shaftLod) {
       const subdivs = arrowShaftSubdivisions(lod);
-      RenderableArrow._shaftGeometry = new THREE.CylinderGeometry(0.5, 0.5, 1, subdivs, 1, false);
-      RenderableArrow._shaftGeometry.rotateZ(-Math.PI / 2);
-      RenderableArrow._shaftGeometry.computeBoundingSphere();
-      RenderableArrow._shaftLod = lod;
+      RenderableArrow.shaftGeometry = new THREE.CylinderGeometry(0.5, 0.5, 1, subdivs, 1, false);
+      RenderableArrow.shaftGeometry.rotateZ(-Math.PI / 2);
+      RenderableArrow.shaftGeometry.computeBoundingSphere();
+      RenderableArrow.shaftLod = lod;
     }
-    return RenderableArrow._shaftGeometry;
+    return RenderableArrow.shaftGeometry;
   }
 
-  static headGeometry(lod: DetailLevel): THREE.ConeGeometry {
-    if (!RenderableArrow._headGeometry || lod !== RenderableArrow._headLod) {
+  static HeadGeometry(lod: DetailLevel): THREE.ConeGeometry {
+    if (!RenderableArrow.headGeometry || lod !== RenderableArrow.headLod) {
       const subdivs = arrowHeadSubdivisions(lod);
-      RenderableArrow._headGeometry = new THREE.ConeGeometry(0.5, 1, subdivs, 1, false);
-      RenderableArrow._headGeometry.rotateZ(-Math.PI / 2);
-      RenderableArrow._headGeometry.computeBoundingSphere();
-      RenderableArrow._headLod = lod;
+      RenderableArrow.headGeometry = new THREE.ConeGeometry(0.5, 1, subdivs, 1, false);
+      RenderableArrow.headGeometry.rotateZ(-Math.PI / 2);
+      RenderableArrow.headGeometry.computeBoundingSphere();
+      RenderableArrow.headLod = lod;
     }
-    return RenderableArrow._headGeometry;
+    return RenderableArrow.headGeometry;
   }
 
-  static shaftEdgesGeometry(lod: DetailLevel): THREE.EdgesGeometry {
-    if (!RenderableArrow._shaftEdgesGeometry) {
-      const geometry = RenderableArrow.shaftGeometry(lod);
-      RenderableArrow._shaftEdgesGeometry = new THREE.EdgesGeometry(geometry, 40);
+  static ShaftEdgesGeometry(lod: DetailLevel): THREE.EdgesGeometry {
+    if (!RenderableArrow.shaftEdgesGeometry) {
+      const geometry = RenderableArrow.ShaftGeometry(lod);
+      RenderableArrow.shaftEdgesGeometry = new THREE.EdgesGeometry(geometry, 40);
 
       // We only want the outline of the base of the shaft, not the top of the
       // cylinder where it connects to the cone. Create a new position buffer
       // attribute with the first half of the vertices discarded
-      const positionsAttrib = RenderableArrow._shaftEdgesGeometry.getAttribute("position");
+      const positionsAttrib = RenderableArrow.shaftEdgesGeometry.getAttribute("position");
       const positions = Array.from(positionsAttrib.array);
       const newCount = (positions.length / 3 / 2) * 3;
       const newVertices = positions.slice(newCount, positions.length);
       const newPositionsAttrib = new THREE.Float32BufferAttribute(newVertices, 3);
-      RenderableArrow._shaftEdgesGeometry.setAttribute("position", newPositionsAttrib);
+      RenderableArrow.shaftEdgesGeometry.setAttribute("position", newPositionsAttrib);
 
-      RenderableArrow._shaftEdgesGeometry.computeBoundingSphere();
+      RenderableArrow.shaftEdgesGeometry.computeBoundingSphere();
     }
-    return RenderableArrow._shaftEdgesGeometry;
+    return RenderableArrow.shaftEdgesGeometry;
   }
 
-  static headEdgesGeometry(lod: DetailLevel): THREE.EdgesGeometry {
-    if (!RenderableArrow._headEdgesGeometry) {
-      const geometry = RenderableArrow.headGeometry(lod);
-      RenderableArrow._headEdgesGeometry = new THREE.EdgesGeometry(geometry, 40);
-      RenderableArrow._headEdgesGeometry.computeBoundingSphere();
+  static HeadEdgesGeometry(lod: DetailLevel): THREE.EdgesGeometry {
+    if (!RenderableArrow.headEdgesGeometry) {
+      const geometry = RenderableArrow.HeadGeometry(lod);
+      RenderableArrow.headEdgesGeometry = new THREE.EdgesGeometry(geometry, 40);
+      RenderableArrow.headEdgesGeometry.computeBoundingSphere();
     }
-    return RenderableArrow._headEdgesGeometry;
+    return RenderableArrow.headEdgesGeometry;
   }
 }

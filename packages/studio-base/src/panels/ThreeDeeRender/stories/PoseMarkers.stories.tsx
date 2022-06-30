@@ -3,12 +3,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { MessageEvent, Topic } from "@foxglove/studio";
-import useDelayedFixture from "@foxglove/studio-base/panels/ThreeDimensionalViz/stories/useDelayedFixture";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 
 import ThreeDeeRender from "../index";
-import { PoseStamped, PoseWithCovarianceStamped, TF } from "../ros";
+import { PoseStamped, PoseWithCovarianceStamped, TransformStamped } from "../ros";
 import { BASE_LINK_FRAME_ID, FIXED_FRAME_ID, QUAT_IDENTITY, SENSOR_FRAME_ID } from "./common";
+import useDelayedFixture from "./useDelayedFixture";
 
 export default {
   title: "panels/ThreeDeeRender",
@@ -22,9 +22,10 @@ export function PoseMarkers(): JSX.Element {
     { name: "/pose", datatype: "geometry_msgs/PoseStamped" },
     { name: "/pose_with_covariance", datatype: "geometry_msgs/PoseWithCovarianceStamped" },
     { name: "/pose_with_hidden_covariance", datatype: "geometry_msgs/PoseWithCovarianceStamped" },
+    { name: "/pose_axis_with_covariance", datatype: "geometry_msgs/PoseWithCovarianceStamped" },
   ];
 
-  const tf1: MessageEvent<TF> = {
+  const tf1: MessageEvent<TransformStamped> = {
     topic: "/tf",
     receiveTime: { sec: 10, nsec: 0 },
     message: {
@@ -37,7 +38,7 @@ export function PoseMarkers(): JSX.Element {
     },
     sizeInBytes: 0,
   };
-  const tf2: MessageEvent<TF> = {
+  const tf2: MessageEvent<TransformStamped> = {
     topic: "/tf",
     receiveTime: { sec: 10, nsec: 0 },
     message: {
@@ -112,6 +113,30 @@ export function PoseMarkers(): JSX.Element {
     sizeInBytes: 0,
   };
 
+  const pose4: MessageEvent<Partial<PoseWithCovarianceStamped>> = {
+    topic: "/pose_axis_with_covariance",
+    receiveTime: { sec: 10, nsec: 0 },
+    message: {
+      header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: SENSOR_FRAME_ID },
+      pose: {
+        pose: {
+          position: { x: 1, y: 0, z: -1 },
+          orientation: { x: 0, y: -Math.SQRT1_2, z: 0, w: Math.SQRT1_2 },
+        },
+        // prettier-ignore
+        covariance: [
+          1, 0, 0, 0, 0, 0,
+          0, 1, 0, 0, 0, 0,
+          0, 0, 1, 0, 0, 0,
+          0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0,
+        ],
+      },
+    },
+    sizeInBytes: 0,
+  };
+
   const fixture = useDelayedFixture({
     topics,
     frame: {
@@ -119,6 +144,7 @@ export function PoseMarkers(): JSX.Element {
       "/pose": [pose1],
       "/pose_with_covariance": [pose2],
       "/pose_with_hidden_covariance": [pose3],
+      "/pose_axis_with_covariance": [pose4],
     },
     capabilities: [],
     activeData: {
@@ -132,7 +158,6 @@ export function PoseMarkers(): JSX.Element {
         overrideConfig={{
           ...ThreeDeeRender.defaultConfig,
           followTf: "base_link",
-          scene: { enableStats: false },
           cameraState: {
             distance: 4,
             perspective: true,
@@ -147,12 +172,18 @@ export function PoseMarkers(): JSX.Element {
           },
           topics: {
             "/pose": {
+              type: "arrow",
               color: "rgba(107, 220, 255, 0.5)",
             },
+            "/pose_with_covariance": {
+              type: "arrow",
+            },
             "/pose_with_hidden_covariance": {
+              type: "arrow",
               showCovariance: false,
               covarianceColor: "rgba(255, 0, 0, 1)",
             },
+            // "/pose_axis_with_covariance": {}, // Default settings
           },
         }}
       />

@@ -20,11 +20,11 @@ import {
 import { DeepReadonly } from "ts-essentials";
 import { v4 as uuid } from "uuid";
 
+import { SettingsTreeAction, SettingsTreeField } from "@foxglove/studio";
 import MessagePathInput from "@foxglove/studio-base/components/MessagePathSyntax/MessagePathInput";
 import Stack from "@foxglove/studio-base/components/Stack";
 
 import { ColorPickerInput, ColorGradientInput, NumberInput, Vec3Input, Vec2Input } from "./inputs";
-import { SettingsTreeAction, SettingsTreeField } from "./types";
 
 // Used to both undefined and empty string in select inputs.
 const UNDEFINED_SENTINEL_VALUE = uuid();
@@ -327,6 +327,8 @@ function FieldInput({
           precision={field.precision}
           disabled={field.disabled}
           readOnly={field.readonly}
+          min={field.min}
+          max={field.max}
           onChange={(value) =>
             actionHandler({ action: "update", payload: { path, input: "vec3", value } })
           }
@@ -340,6 +342,8 @@ function FieldInput({
           precision={field.precision}
           disabled={field.disabled}
           readOnly={field.readonly}
+          min={field.min}
+          max={field.max}
           onChange={(value) =>
             actionHandler({ action: "update", payload: { path, input: "vec2", value } })
           }

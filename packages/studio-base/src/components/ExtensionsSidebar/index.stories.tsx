@@ -13,15 +13,13 @@
 
 import { useState } from "react";
 
+import { ExtensionInfo, ExtensionLoader } from "@foxglove/studio-base";
 import ExtensionsSidebar from "@foxglove/studio-base/components/ExtensionsSidebar";
 import AppConfigurationContext from "@foxglove/studio-base/context/AppConfigurationContext";
-import ExtensionLoaderContext, {
-  ExtensionInfo,
-  ExtensionLoader,
-} from "@foxglove/studio-base/context/ExtensionLoaderContext";
 import ExtensionMarketplaceContext, {
   ExtensionMarketplace,
 } from "@foxglove/studio-base/context/ExtensionMarketplaceContext";
+import ExtensionRegistryProvider from "@foxglove/studio-base/providers/ExtensionRegistryProvider/ExtensionRegistryProvider";
 import { makeMockAppConfiguration } from "@foxglove/studio-base/util/makeMockAppConfiguration";
 
 export default {
@@ -33,6 +31,7 @@ const installedExtensions: ExtensionInfo[] = [
   {
     id: "publisher.storyextension",
     name: "storyextension",
+    qualifiedName: "storyextension",
     displayName: "Extension Name",
     description: "Extension sample description",
     publisher: "Publisher",
@@ -47,6 +46,7 @@ const marketplaceExtensions: ExtensionInfo[] = [
   {
     id: "publisher.storyextension",
     name: "storyextension",
+    qualifiedName: "storyextension",
     displayName: "Extension Name",
     description: "Extension sample description",
     publisher: "Publisher",
@@ -58,9 +58,9 @@ const marketplaceExtensions: ExtensionInfo[] = [
 ];
 
 const MockExtensionLoader: ExtensionLoader = {
+  namespace: "local",
   getExtensions: async () => installedExtensions,
   loadExtension: async (_id: string) => "",
-  downloadExtension: async (_url: string) => new Uint8Array(),
   installExtension: async (_foxeFileData: Uint8Array) => {
     throw new Error("MockExtensionLoader cannot install extensions");
   },
@@ -78,11 +78,11 @@ export function Sidebar(): JSX.Element {
 
   return (
     <AppConfigurationContext.Provider value={config}>
-      <ExtensionLoaderContext.Provider value={MockExtensionLoader}>
+      <ExtensionRegistryProvider loaders={[MockExtensionLoader]}>
         <ExtensionMarketplaceContext.Provider value={MockExtensionMarketplace}>
           <ExtensionsSidebar />
         </ExtensionMarketplaceContext.Provider>
-      </ExtensionLoaderContext.Provider>
+      </ExtensionRegistryProvider>
     </AppConfigurationContext.Provider>
   );
 }

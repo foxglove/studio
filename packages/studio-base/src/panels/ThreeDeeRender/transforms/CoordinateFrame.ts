@@ -15,7 +15,7 @@ import { compareTime, Duration, interpolate, percentOf, Time } from "./time";
 
 type TimeAndTransform = [time: Time, transform: Transform];
 
-const INFINITE_DURATION: Duration = 4_294_967_295n * BigInt(1e9);
+export const MAX_DURATION: Duration = 4_294_967_295n * BigInt(1e9);
 
 const tempLower: TimeAndTransform = [0n, Transform.Identity()];
 const tempUpper: TimeAndTransform = [0n, Transform.Identity()];
@@ -150,9 +150,16 @@ export class CoordinateFrame {
       return false;
     }
 
-    // If there is no transform at or before `time`, early exit
+    // If the time is before the first transform, check if `time` is within
+    // `maxDelta` of the first transform
     const lte = this._transforms.findLessThanOrEqual(time);
     if (!lte) {
+      const [earliestTime, earliestTf] = this._transforms.minEntry()!;
+      if (earliestTime + maxDelta >= time) {
+        outLower[0] = outUpper[0] = earliestTime;
+        outLower[1] = outUpper[1] = earliestTf;
+        return true;
+      }
       return false;
     }
 
@@ -213,7 +220,7 @@ export class CoordinateFrame {
     input: Readonly<Pose>,
     srcFrame: CoordinateFrame,
     time: Time,
-    maxDelta: Duration = INFINITE_DURATION,
+    maxDelta: Duration = MAX_DURATION,
   ): Pose | undefined {
     // perf-sensitive: function params instead of options object to avoid allocations
     if (srcFrame === this) {
@@ -278,7 +285,7 @@ export class CoordinateFrame {
     srcFrame: CoordinateFrame,
     dstTime: Time,
     srcTime: Time,
-    maxDelta: Duration = INFINITE_DURATION,
+    maxDelta: Duration = MAX_DURATION,
   ): Pose | undefined {
     // perf-sensitive: function params instead of options object to avoid allocations
 
@@ -288,6 +295,14 @@ export class CoordinateFrame {
     }
     // Transform from the root frame to this frame
     return this.applyLocal(out, out, rootFrame, dstTime, maxDelta);
+  }
+
+  /**
+   * Returns a display-friendly rendition of `id`, quoting the frame id if it is
+   * an empty string or starts or ends with whitespace.
+   */
+  displayName(): string {
+    return CoordinateFrame.DisplayName(this.id);
   }
 
   /**
@@ -396,6 +411,16 @@ export class CoordinateFrame {
     mat4.multiply(tempMatrix, tempMatrix, tempTransform.setPose(input).matrix());
     tempTransform.setMatrixUnscaled(tempMatrix).toPose(out);
     return true;
+  }
+
+  /**
+   * Returns a display-friendly rendition of `frameId`, quoting the id if it is
+   * an empty string or starts or ends with whitespace.
+   */
+  static DisplayName(frameId: string): string {
+    return frameId === "" || frameId.startsWith(" ") || frameId.endsWith(" ")
+      ? `"${frameId}"`
+      : frameId;
   }
 }
 

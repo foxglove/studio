@@ -16,21 +16,23 @@ import {
 import { useCallback, useState } from "react";
 import { useToasts } from "react-toast-notifications";
 import { useAsync, useMountedState } from "react-use";
+import { DeepReadonly } from "ts-essentials";
 
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
 import Stack from "@foxglove/studio-base/components/Stack";
 import TextContent from "@foxglove/studio-base/components/TextContent";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
-import { useExtensionLoader } from "@foxglove/studio-base/context/ExtensionLoaderContext";
 import {
   ExtensionMarketplaceDetail,
   useExtensionMarketplace,
 } from "@foxglove/studio-base/context/ExtensionMarketplaceContext";
+import { useExtensionRegistry } from "@foxglove/studio-base/context/ExtensionRegistryContext";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
+import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
 
 type Props = {
   installed: boolean;
-  extension: ExtensionMarketplaceDetail;
+  extension: DeepReadonly<ExtensionMarketplaceDetail>;
   onClose: () => void;
 };
 
@@ -40,7 +42,7 @@ export function ExtensionDetails({ extension, onClose, installed }: Props): Reac
   const [isInstalled, setIsInstalled] = useState(installed);
   const [activeTab, setActiveTab] = useState<number>(0);
   const isMounted = useMountedState();
-  const extensionLoader = useExtensionLoader();
+  const extensionRegistry = useExtensionRegistry();
   const marketplace = useExtensionMarketplace();
   const { addToast } = useToasts();
   const readmeUrl = extension.readme;
@@ -59,13 +61,18 @@ export function ExtensionDetails({ extension, onClose, installed }: Props): Reac
   const analytics = useAnalytics();
 
   const install = useCallback(async () => {
+    if (!isDesktopApp()) {
+      addToast("Download the desktop app to use marketplace extensions.", { appearance: "error" });
+      return;
+    }
+
     const url = extension.foxe;
     try {
       if (url == undefined) {
         throw new Error(`Cannot install extension ${extension.id}, "foxe" URL is missing`);
       }
-      const data = await extensionLoader.downloadExtension(url);
-      await extensionLoader.installExtension(data);
+      const data = await extensionRegistry.downloadExtension(url);
+      await extensionRegistry.installExtension("local", data);
       if (isMounted()) {
         setIsInstalled(true);
         void analytics.logEvent(AppEvent.EXTENSION_INSTALL, { type: extension.id });
@@ -75,15 +82,15 @@ export function ExtensionDetails({ extension, onClose, installed }: Props): Reac
         appearance: "error",
       });
     }
-  }, [analytics, extension.id, extension.foxe, extensionLoader, isMounted, addToast]);
+  }, [addToast, analytics, extension.foxe, extension.id, extensionRegistry, isMounted]);
 
   const uninstall = useCallback(async () => {
-    await extensionLoader.uninstallExtension(extension.id);
+    await extensionRegistry.uninstallExtension(extension.id);
     if (isMounted()) {
       setIsInstalled(false);
       void analytics.logEvent(AppEvent.EXTENSION_UNINSTALL, { type: extension.id });
     }
-  }, [analytics, extension.id, extensionLoader, isMounted]);
+  }, [analytics, extension.id, extensionRegistry, isMounted]);
 
   return (
     <SidebarContent

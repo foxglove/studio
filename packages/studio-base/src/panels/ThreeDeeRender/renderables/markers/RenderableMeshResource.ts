@@ -4,12 +4,12 @@
 
 import * as THREE from "three";
 
-import { StandardColor } from "../../MaterialCache";
+import { LoadedModel } from "../../ModelCache";
 import type { Renderer } from "../../Renderer";
-import { rgbaEqual } from "../../color";
+import { rgbToThreeColor } from "../../color";
 import { Marker } from "../../ros";
 import { RenderableMarker } from "./RenderableMarker";
-import { releaseStandardMaterial, standardMaterial } from "./materials";
+import { makeStandardMaterial } from "./materials";
 
 type GltfMesh = THREE.Mesh<
   THREE.BufferGeometry,
@@ -19,38 +19,52 @@ type GltfMesh = THREE.Mesh<
 const MESH_FETCH_FAILED = "MESH_FETCH_FAILED";
 
 export class RenderableMeshResource extends RenderableMarker {
-  mesh: THREE.Group | undefined;
+  mesh: THREE.Group | THREE.Scene | undefined;
   material: THREE.MeshStandardMaterial;
 
   constructor(topic: string, marker: Marker, receiveTime: bigint | undefined, renderer: Renderer) {
     super(topic, marker, receiveTime, renderer);
 
-    this.material = standardMaterial(marker.color, renderer.materialCache);
-
-    this._loadModel(marker.mesh_resource, {
-      useEmbeddedMaterials: marker.mesh_use_embedded_materials,
-    }).catch(() => {});
-
-    this.update(marker, receiveTime);
+    this.material = makeStandardMaterial(marker.color);
+    this.update(marker, receiveTime, true);
   }
 
   override dispose(): void {
-    releaseStandardMaterial(this.userData.marker.color, this._renderer.materialCache);
+    this.material.dispose();
   }
 
-  override update(marker: Marker, receiveTime: bigint | undefined): void {
+  // eslint-disable-next-line @foxglove/no-boolean-parameters
+  override update(marker: Marker, receiveTime: bigint | undefined, forceLoad?: boolean): void {
     const prevMarker = this.userData.marker;
     super.update(marker, receiveTime);
 
-    if (!rgbaEqual(marker.color, prevMarker.color)) {
-      releaseStandardMaterial(prevMarker.color, this._renderer.materialCache);
-      this.material = standardMaterial(marker.color, this._renderer.materialCache);
+    const transparent = marker.color.a < 1;
+    if (transparent !== this.material.transparent) {
+      this.material.transparent = transparent;
+      this.material.depthWrite = !transparent;
+      this.material.needsUpdate = true;
     }
 
-    if (marker.mesh_resource !== prevMarker.mesh_resource) {
-      this._loadModel(marker.mesh_resource, {
-        useEmbeddedMaterials: marker.mesh_use_embedded_materials,
-      }).catch(() => {});
+    rgbToThreeColor(this.material.color, marker.color);
+    this.material.opacity = marker.color.a;
+
+    if (forceLoad === true || marker.mesh_resource !== prevMarker.mesh_resource) {
+      const opts = { useEmbeddedMaterials: marker.mesh_use_embedded_materials };
+      const errors = this.renderer.settings.errors;
+      this._loadModel(marker.mesh_resource, opts)
+        .then(() => {
+          // Remove any mesh fetch error message since loading was successful
+          errors.removeFromTopic(this.userData.topic, MESH_FETCH_FAILED);
+          // Render a new frame now that the model is loaded
+          this.renderer.animationFrame();
+        })
+        .catch((err) => {
+          errors.addToTopic(
+            this.userData.topic,
+            MESH_FETCH_FAILED,
+            `Unhandled error loading mesh resource from "${marker.mesh_resource}": ${err.message}`,
+          );
+        });
     }
 
     this.scale.set(marker.scale.x, marker.scale.y, marker.scale.z);
@@ -62,8 +76,8 @@ export class RenderableMeshResource extends RenderableMarker {
       this.mesh = undefined;
     }
 
-    const cachedModel = await this._renderer.modelCache.load(url, (err) => {
-      this._renderer.layerErrors.addToTopic(
+    const cachedModel = await this.renderer.modelCache.load(url, (err) => {
+      this.renderer.settings.errors.addToTopic(
         this.userData.topic,
         MESH_FETCH_FAILED,
         `Failed to load mesh resource from "${url}": ${err.message}`,
@@ -74,46 +88,48 @@ export class RenderableMeshResource extends RenderableMarker {
       return;
     }
 
-    const mesh = cachedModel.scene.clone(true);
-    const edgesToAdd: [edges: THREE.LineSegments, parent: THREE.Object3D][] = [];
+    const mesh = opts.useEmbeddedMaterials
+      ? cachedModel
+      : replaceMaterials(cachedModel, this.material);
+    this.mesh = mesh;
+    this.add(mesh);
+  }
+}
 
-    mesh.traverse((child) => {
-      if (!(child instanceof THREE.Mesh)) {
-        return;
-      }
-
-      // Enable shadows for all meshes
-      child.castShadow = true;
-      child.receiveShadow = true;
-
-      // Draw edges for all meshes
-      const edgesGeometry = new THREE.EdgesGeometry(child.geometry, 40);
-      const line = new THREE.LineSegments(
-        edgesGeometry,
-        this._renderer.materialCache.outlineMaterial,
-      );
-      edgesToAdd.push([line, child]);
-
-      if (!opts.useEmbeddedMaterials) {
-        // Dispose of any allocated textures and the material and swap it with
-        // our own material
-        const meshChild = child as GltfMesh;
-        if (Array.isArray(meshChild.material)) {
-          for (const material of meshChild.material) {
-            StandardColor.dispose(material);
-          }
-        } else {
-          StandardColor.dispose(meshChild.material);
-        }
-        meshChild.material = this.material;
-      }
-    });
-
-    for (const [line, parent] of edgesToAdd) {
-      parent.add(line);
+function replaceMaterials(model: LoadedModel, material: THREE.MeshStandardMaterial): LoadedModel {
+  const newModel = model.clone(true);
+  newModel.traverse((child: THREE.Object3D) => {
+    if (!(child instanceof THREE.Mesh)) {
+      return;
     }
 
-    this.mesh = mesh;
-    this.add(this.mesh);
-  }
+    // Dispose of any allocated textures and the material and swap it with
+    // our own material
+    const meshChild = child as GltfMesh;
+    if (Array.isArray(meshChild.material)) {
+      for (const embeddedMaterial of meshChild.material) {
+        disposeStandardMaterial(embeddedMaterial);
+      }
+    } else {
+      disposeStandardMaterial(meshChild.material);
+    }
+    meshChild.material = material;
+  });
+  return newModel;
+}
+
+/** Generic MeshStandardMaterial dispose function for materials loaded from an external source */
+function disposeStandardMaterial(material: THREE.MeshStandardMaterial): void {
+  material.map?.dispose();
+  material.lightMap?.dispose();
+  material.aoMap?.dispose();
+  material.emissiveMap?.dispose();
+  material.bumpMap?.dispose();
+  material.normalMap?.dispose();
+  material.displacementMap?.dispose();
+  material.roughnessMap?.dispose();
+  material.metalnessMap?.dispose();
+  material.alphaMap?.dispose();
+  material.envMap?.dispose();
+  material.dispose();
 }

@@ -289,6 +289,7 @@ export default class Ros1Player implements Player {
         presence: this._presence,
         progress: {},
         capabilities: CAPABILITIES,
+        profile: "ros1",
         playerId: this._id,
         problems: this._problems.problems(),
         activeData: undefined,
@@ -312,6 +313,7 @@ export default class Ros1Player implements Player {
       presence: this._presence,
       progress: {},
       capabilities: CAPABILITIES,
+      profile: "ros1",
       playerId: this._id,
       problems: this._problems.problems(),
       urlState: {
@@ -389,7 +391,7 @@ export default class Ros1Player implements Player {
 
       subscription.on("header", (_header, msgdef, _reader) => {
         // We have to create a new object instead of just updating _providerDatatypes to support
-        // shallow memo
+        // shallow memo downstream.
         const newDatatypes = this._getRosDatatypes(datatype, msgdef);
         this._providerDatatypes = new Map([...this._providerDatatypes, ...newDatatypes]);
       });

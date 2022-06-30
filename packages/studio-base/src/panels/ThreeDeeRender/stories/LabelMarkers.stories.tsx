@@ -3,12 +3,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { MessageEvent, Topic } from "@foxglove/studio";
-import useDelayedFixture from "@foxglove/studio-base/panels/ThreeDimensionalViz/stories/useDelayedFixture";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 
 import ThreeDeeRender from "../index";
-import { Marker, MarkerType, TF, Vector3 } from "../ros";
+import { Marker, MarkerType, TransformStamped, Vector3 } from "../ros";
 import { makeColor, QUAT_IDENTITY, SENSOR_FRAME_ID } from "./common";
+import useDelayedFixture from "./useDelayedFixture";
 
 export default {
   title: "panels/ThreeDeeRender",
@@ -21,7 +21,7 @@ export function LabelMarkers(): JSX.Element {
     { name: "/labels", datatype: "visualization_msgs/Marker" },
   ];
 
-  const tf1: MessageEvent<TF> = {
+  const tf1: MessageEvent<TransformStamped> = {
     topic: "/tf",
     receiveTime: { sec: 10, nsec: 0 },
     message: {
@@ -34,7 +34,7 @@ export function LabelMarkers(): JSX.Element {
     },
     sizeInBytes: 0,
   };
-  const tf2: MessageEvent<TF> = {
+  const tf2: MessageEvent<TransformStamped> = {
     topic: "/tf",
     receiveTime: { sec: 10, nsec: 0 },
     message: {
@@ -104,7 +104,6 @@ export function LabelMarkers(): JSX.Element {
         overrideConfig={{
           ...ThreeDeeRender.defaultConfig,
           followTf: "base_link",
-          scene: { enableStats: false },
           cameraState: {
             distance: 5.5,
             perspective: true,

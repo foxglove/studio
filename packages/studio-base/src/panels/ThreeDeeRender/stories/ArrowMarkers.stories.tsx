@@ -3,11 +3,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { MessageEvent, Topic } from "@foxglove/studio";
-import useDelayedFixture from "@foxglove/studio-base/panels/ThreeDimensionalViz/stories/useDelayedFixture";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 
 import ThreeDeeRender from "../index";
-import { Marker, TF } from "../ros";
+import { Marker, TransformStamped } from "../ros";
 import {
   BASE_LINK_FRAME_ID,
   FIXED_FRAME_ID,
@@ -15,6 +14,7 @@ import {
   QUAT_IDENTITY,
   SENSOR_FRAME_ID,
 } from "./common";
+import useDelayedFixture from "./useDelayedFixture";
 
 export default {
   title: "panels/ThreeDeeRender",
@@ -28,7 +28,7 @@ export function ArrowMarkers(): JSX.Element {
     { name: "/arrows", datatype: "visualization_msgs/Marker" },
   ];
 
-  const tf1: MessageEvent<TF> = {
+  const tf1: MessageEvent<TransformStamped> = {
     topic: "/tf",
     receiveTime: { sec: 10, nsec: 0 },
     message: {
@@ -41,7 +41,7 @@ export function ArrowMarkers(): JSX.Element {
     },
     sizeInBytes: 0,
   };
-  const tf2: MessageEvent<TF> = {
+  const tf2: MessageEvent<TransformStamped> = {
     topic: "/tf",
     receiveTime: { sec: 10, nsec: 0 },
     message: {
@@ -140,7 +140,6 @@ export function ArrowMarkers(): JSX.Element {
         overrideConfig={{
           ...ThreeDeeRender.defaultConfig,
           followTf: "base_link",
-          scene: { enableStats: false },
           cameraState: {
             distance: 4,
             perspective: true,

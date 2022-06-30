@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import Logger from "@foxglove/log";
-import { ExtensionInfo, ExtensionLoader } from "@foxglove/studio-base";
+import { ExtensionInfo, ExtensionLoader, ExtensionNamespace } from "@foxglove/studio-base";
 
 import { Desktop } from "../../common/types";
 
@@ -11,6 +11,7 @@ const log = Logger.getLogger(__filename);
 
 export class DesktopExtensionLoader implements ExtensionLoader {
   private bridge?: Desktop;
+  readonly namespace: ExtensionNamespace = "local";
 
   constructor(bridge: Desktop) {
     this.bridge = bridge;
@@ -25,6 +26,9 @@ export class DesktopExtensionLoader implements ExtensionLoader {
       return {
         id: item.id,
         name: pkgInfo.displayName,
+        namespace: this.namespace,
+        // Qualified name is display name for backwards compatibility with existing layouts.
+        qualifiedName: pkgInfo.displayName,
         displayName: pkgInfo.displayName,
         description: pkgInfo.description,
         publisher: pkgInfo.publisher,
@@ -42,11 +46,6 @@ export class DesktopExtensionLoader implements ExtensionLoader {
     return (await this.bridge?.loadExtension(id)) ?? "";
   }
 
-  async downloadExtension(url: string): Promise<Uint8Array> {
-    const res = await fetch(url);
-    return new Uint8Array(await res.arrayBuffer());
-  }
-
   async installExtension(foxeFileData: Uint8Array): Promise<ExtensionInfo> {
     if (this.bridge == undefined) {
       throw new Error(`Cannot install extension without a desktopBridge`);
@@ -55,14 +54,12 @@ export class DesktopExtensionLoader implements ExtensionLoader {
 
     const pkgInfo = detail.packageJson as ExtensionInfo;
 
-    // Unfortunately because we do not provide a subscriber interface for extension loader
-    // callers don't have a good way of being notified when the extension list changes
-    // instead of working around this we reload the entire display
-    window.location.reload();
-
     return {
       id: detail.id,
       name: pkgInfo.displayName,
+      namespace: this.namespace,
+      // Qualified name is display name for backwards compatibility with existing layouts.
+      qualifiedName: pkgInfo.displayName,
       displayName: pkgInfo.displayName,
       description: pkgInfo.description,
       publisher: pkgInfo.publisher,
@@ -74,10 +71,6 @@ export class DesktopExtensionLoader implements ExtensionLoader {
   }
 
   async uninstallExtension(id: string): Promise<boolean> {
-    const uninstalled = (await this.bridge?.uninstallExtension(id)) ?? false;
-
-    // see comments for window.location.reload() in installExtension
-    window.location.reload();
-    return uninstalled;
+    return (await this.bridge?.uninstallExtension(id)) ?? false;
   }
 }

@@ -8,10 +8,8 @@ import { LabelRenderable } from "../../Labels";
 import type { Renderer } from "../../Renderer";
 import { rgbaEqual } from "../../color";
 import { Marker } from "../../ros";
-import { poseApproxEq } from "../../transforms/geometry";
+import { poseApproxEq } from "../../transforms";
 import { RenderableMarker } from "./RenderableMarker";
-
-const QUAT_IDENTITY = { x: 0, y: 0, z: 0, w: 1 };
 
 export class RenderableTextViewFacing extends RenderableMarker {
   label: LabelRenderable | undefined;
@@ -23,7 +21,7 @@ export class RenderableTextViewFacing extends RenderableMarker {
   }
 
   override dispose(): void {
-    this._renderer.labels.removeById(this.name);
+    this.renderer.labels.removeById(this.name);
   }
 
   override update(marker: Marker, receiveTime: bigint | undefined): void {
@@ -44,14 +42,14 @@ export class RenderableTextViewFacing extends RenderableMarker {
       }
 
       // A field that affects the label appearance has changed, rebuild the label
-      this.label = this._renderer.labels.setLabel(this.name, {
+      this.label = this.renderer.labels.setLabel(this.name, {
         text: marker.text,
         color: marker.color,
       });
       this.add(this.label);
     } else if (!poseApproxEq(marker.pose, prevMarker.pose)) {
       // Just update the label pose
-      this.label.userData.pose = { position: marker.pose.position, orientation: QUAT_IDENTITY };
+      this.label.userData.pose.position = marker.pose.position;
     } else {
       // No change
     }

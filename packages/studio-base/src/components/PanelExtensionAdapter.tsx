@@ -23,6 +23,7 @@ import {
   PanelExtensionContext,
   ParameterValue,
   RenderState,
+  SettingsTree,
   Subscription,
   Topic,
 } from "@foxglove/studio";
@@ -32,7 +33,6 @@ import {
 } from "@foxglove/studio-base/components/MessagePipeline";
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
-import { SettingsTree } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
 import { useAppConfiguration } from "@foxglove/studio-base/context/AppConfigurationContext";
 import {
   useClearHoverValue,
@@ -78,6 +78,10 @@ function selectCapabilities(ctx: MessagePipelineContext) {
   return ctx.playerState.capabilities;
 }
 
+function selectProfile(ctx: MessagePipelineContext) {
+  return ctx.playerState.profile;
+}
+
 function selectSeekPlayback(ctx: MessagePipelineContext) {
   return ctx.seekPlayback;
 }
@@ -98,6 +102,7 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
   const setSubscriptions = useMessagePipeline(selectSetSubscriptions);
   const requestBackfill = useMessagePipeline(selectRequestBackfill);
   const capabilities = useMessagePipeline(selectCapabilities);
+  const dataSourceProfile = useMessagePipeline(selectProfile);
   const seekPlayback = useMessagePipeline(selectSeekPlayback);
   const { openSiblingPanel } = usePanelContext();
 
@@ -389,9 +394,6 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
     };
 
     return {
-      // This is here temporarily until the new panel settings API is ready. Do not use.
-      __updatePanelSettingsTree: updateSettings,
-
       initialState: configRef.current,
 
       saveState: saveConfig,
@@ -399,6 +401,8 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
       layout,
 
       seekPlayback: seekPlayback ? (stamp: number) => seekPlayback(fromSec(stamp)) : undefined,
+
+      dataSourceProfile,
 
       setParameter: (name: string, value: ParameterValue) => {
         const ctx = latestPipelineContextRef.current;
@@ -520,18 +524,21 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
       subscribeAppSettings: (settings: string[]) => {
         setSubscribedAppSettings(settings);
       },
+
+      updatePanelSettingsEditor: updateSettings,
     };
   }, [
     capabilities,
     clearHoverValue,
+    dataSourceProfile,
     openSiblingPanel,
     panelId,
-    updateSettings,
     requestBackfill,
     saveConfig,
     seekPlayback,
     setHoverValue,
     setSubscriptions,
+    updateSettings,
   ]);
 
   const panelContainerRef = useRef<HTMLDivElement>(ReactNull);

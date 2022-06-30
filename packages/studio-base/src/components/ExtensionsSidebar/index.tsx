@@ -13,15 +13,16 @@ import {
 } from "@mui/material";
 import { useMemo, useState } from "react";
 import { useAsync } from "react-use";
+import { DeepReadonly } from "ts-essentials";
 
 import { ExtensionDetails } from "@foxglove/studio-base/components/ExtensionDetails";
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
 import Stack from "@foxglove/studio-base/components/Stack";
-import { useExtensionLoader } from "@foxglove/studio-base/context/ExtensionLoaderContext";
 import {
   ExtensionMarketplaceDetail,
   useExtensionMarketplace,
 } from "@foxglove/studio-base/context/ExtensionMarketplaceContext";
+import { useExtensionRegistry } from "@foxglove/studio-base/context/ExtensionRegistryContext";
 
 import helpContent from "./index.help.md";
 
@@ -32,7 +33,7 @@ const StyledListItemButton = muiStyled(ListItemButton)(({ theme }) => ({
 }));
 
 function ExtensionListEntry(props: {
-  entry: ExtensionMarketplaceDetail;
+  entry: DeepReadonly<ExtensionMarketplaceDetail>;
   onClick: () => void;
 }): JSX.Element {
   const {
@@ -43,6 +44,7 @@ function ExtensionListEntry(props: {
     <ListItem disablePadding key={id}>
       <StyledListItemButton onClick={onClick}>
         <ListItemText
+          disableTypography
           primary={
             <Stack direction="row" alignItems="baseline" gap={0.5}>
               <Typography variant="subtitle2" fontWeight={600}>
@@ -75,21 +77,12 @@ export default function ExtensionsSidebar(): React.ReactElement {
   const [focusedExtension, setFocusedExtension] = useState<
     | {
         installed: boolean;
-        entry: ExtensionMarketplaceDetail;
+        entry: DeepReadonly<ExtensionMarketplaceDetail>;
       }
     | undefined
   >(undefined);
-  const extensionLoader = useExtensionLoader();
+  const installed = useExtensionRegistry().registeredExtensions;
   const marketplace = useExtensionMarketplace();
-
-  const { value: installed, error: installedError } = useAsync(
-    async () => await extensionLoader.getExtensions(),
-    [extensionLoader],
-  );
-
-  if (installedError) {
-    throw installedError;
-  }
 
   const { error: availableError } = useAsync(async () => {
     if (!shouldFetch) {
@@ -107,9 +100,9 @@ export default function ExtensionsSidebar(): React.ReactElement {
     );
   }, [marketplaceEntries]);
 
-  const installedEntries = useMemo<ExtensionMarketplaceDetail[]>(
+  const installedEntries = useMemo(
     () =>
-      (installed ?? []).map((entry) => {
+      installed.map((entry) => {
         const marketplaceEntry = marketplaceMap.get(entry.id);
         if (marketplaceEntry != undefined) {
           return marketplaceEntry;
@@ -118,7 +111,7 @@ export default function ExtensionsSidebar(): React.ReactElement {
         return {
           id: entry.id,
           installed: true,
-          name: entry.name,
+          name: entry.displayName,
           description: entry.description,
           publisher: entry.publisher,
           homepage: entry.homepage,
@@ -132,7 +125,7 @@ export default function ExtensionsSidebar(): React.ReactElement {
 
   // Hide installed extensions from the list of available extensions
   const filteredMarketplaceEntries = useMemo(() => {
-    const installedIds = new Set<string>(installed?.map((entry) => entry.id));
+    const installedIds = new Set<string>(installed.map((entry) => entry.id));
     return marketplaceEntries.filter((entry) => !installedIds.has(entry.id));
   }, [marketplaceEntries, installed]);
 
@@ -186,7 +179,7 @@ export default function ExtensionsSidebar(): React.ReactElement {
         <List>
           <Stack paddingY={0.25} paddingX={2}>
             <Typography component="li" variant="overline" color="text.secondary">
-              Avaiable
+              Available
             </Typography>
           </Stack>
           {filteredMarketplaceEntries.map((entry) => (

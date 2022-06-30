@@ -6,73 +6,69 @@ import * as THREE from "three";
 
 import { toNanoSec } from "@foxglove/rostime";
 
+import { BaseUserData, Renderable } from "../../Renderable";
 import type { Renderer } from "../../Renderer";
-import { Marker, Pose } from "../../ros";
-import { getMarkerId } from "./markerId";
+import { rgbToThreeColor } from "../../color";
+import { Marker } from "../../ros";
 
 const tempColor = new THREE.Color();
 const tempColor2 = new THREE.Color();
 const tempTuple4: THREE.Vector4Tuple = [0, 0, 0, 0];
 
-type MarkerUserData = {
+export type MarkerUserData = BaseUserData & {
   topic: string;
   marker: Marker;
-  pose: Pose;
-  srcTime: bigint;
-  receiveTime: bigint | undefined;
   expiresIn: bigint | undefined;
 };
 
-export class RenderableMarker extends THREE.Object3D {
-  override userData: MarkerUserData;
+export function getMarkerId(topic: string, ns: string, id: number): string {
+  return `${topic}:${ns ? ns + ":" : ""}${id}`.replace(/\s/g, "_");
+}
 
-  protected _renderer: Renderer;
-
+export class RenderableMarker extends Renderable<MarkerUserData> {
   constructor(topic: string, marker: Marker, receiveTime: bigint | undefined, renderer: Renderer) {
-    super();
-
-    this._renderer = renderer;
-
+    const name = getMarkerId(topic, marker.ns, marker.id);
     const hasLifetime = marker.lifetime.sec !== 0 || marker.lifetime.nsec !== 0;
 
-    this.name = getMarkerId(topic, marker.ns, marker.id);
-    this.userData = {
+    super(name, renderer, {
+      receiveTime: receiveTime ?? 0n,
+      messageTime: toNanoSec(marker.header.stamp),
+      frameId: renderer.normalizeFrameId(marker.header.frame_id),
+      pose: marker.pose,
+      settingsPath: ["topics", topic, marker.ns, String(marker.id)], // unused
+      settings: { visible: true, frameLocked: marker.frame_locked },
       topic,
       marker,
-      pose: marker.pose,
-      srcTime: toNanoSec(marker.header.stamp),
-      receiveTime,
       expiresIn: hasLifetime ? toNanoSec(marker.lifetime) : undefined,
-    };
-  }
-
-  dispose(): void {
-    //
+    });
   }
 
   update(marker: Marker, receiveTime: bigint | undefined): void {
     const hasLifetime = marker.lifetime.sec !== 0 || marker.lifetime.nsec !== 0;
 
-    this.userData.marker = marker;
-    this.userData.srcTime = toNanoSec(marker.header.stamp);
+    if (receiveTime != undefined) {
+      this.userData.receiveTime = receiveTime;
+    }
+    this.userData.messageTime = toNanoSec(marker.header.stamp);
+    this.userData.frameId = this.renderer.normalizeFrameId(marker.header.frame_id);
     this.userData.pose = marker.pose;
-    this.userData.receiveTime = receiveTime;
+    this.userData.marker = marker;
     this.userData.expiresIn = hasLifetime ? toNanoSec(marker.lifetime) : undefined;
   }
 
   // Convert sRGB values to linear
   protected _markerColorsToLinear(
     marker: Marker,
+    pointsLength: number,
     callback: (color: THREE.Vector4Tuple, i: number) => void,
   ): void {
-    tempColor.setRGB(marker.color.r, marker.color.g, marker.color.b).convertSRGBToLinear();
+    rgbToThreeColor(tempColor, marker.color);
 
-    const length = marker.points.length;
-    for (let i = 0; i < length; i++) {
+    for (let i = 0; i < pointsLength; i++) {
       const srgb = marker.colors[i];
       if (srgb) {
         // Per-point color
-        tempColor2.setRGB(srgb.r, srgb.g, srgb.b).convertSRGBToLinear();
+        rgbToThreeColor(tempColor2, srgb);
         tempTuple4[0] = tempColor2.r;
         tempTuple4[1] = tempColor2.g;
         tempTuple4[2] = tempColor2.b;

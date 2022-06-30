@@ -4,12 +4,12 @@
 
 import { fromSec } from "@foxglove/rostime";
 import { MessageEvent, Topic } from "@foxglove/studio";
-import useDelayedFixture from "@foxglove/studio-base/panels/ThreeDimensionalViz/stories/useDelayedFixture";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 
 import ThreeDeeRender from "../index";
-import { TF } from "../ros";
+import { TransformStamped } from "../ros";
 import { makeFail, makePass, QUAT_IDENTITY, TEST_COLORS, VEC3_ZERO } from "./common";
+import useDelayedFixture from "./useDelayedFixture";
 
 export default {
   title: "panels/ThreeDeeRender",
@@ -22,7 +22,7 @@ export function MarkerLifetimes(): JSX.Element {
     { name: "/markers", datatype: "visualization_msgs/Marker" },
     { name: "/tf", datatype: "geometry_msgs/TransformStamped" },
   ];
-  const tf1: MessageEvent<TF> = {
+  const tf1: MessageEvent<TransformStamped> = {
     topic: "/tf",
     receiveTime: { sec: 10, nsec: 0 },
     message: {
@@ -35,7 +35,7 @@ export function MarkerLifetimes(): JSX.Element {
     },
     sizeInBytes: 0,
   };
-  const tf2: MessageEvent<TF> = {
+  const tf2: MessageEvent<TransformStamped> = {
     topic: "/tf",
     receiveTime: { sec: 10, nsec: 0 },
     message: {
@@ -157,7 +157,6 @@ export function MarkerLifetimes(): JSX.Element {
         overrideConfig={{
           ...ThreeDeeRender.defaultConfig,
           followTf: "base_link",
-          scene: { enableStats: false },
           cameraState: {
             distance: 3,
             perspective: true,

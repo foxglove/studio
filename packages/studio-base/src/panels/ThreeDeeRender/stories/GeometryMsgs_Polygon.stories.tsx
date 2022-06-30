@@ -3,12 +3,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { MessageEvent, Topic } from "@foxglove/studio";
-import useDelayedFixture from "@foxglove/studio-base/panels/ThreeDimensionalViz/stories/useDelayedFixture";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 
 import ThreeDeeRender from "../index";
-import { PolygonStamped, TF } from "../ros";
+import { PolygonStamped, TransformStamped } from "../ros";
 import { QUAT_IDENTITY } from "./common";
+import useDelayedFixture from "./useDelayedFixture";
 
 export default {
   title: "panels/ThreeDeeRender",
@@ -21,7 +21,7 @@ export function GeometryMsgs_Polygon(): JSX.Element {
     { name: "/polygon", datatype: "geometry_msgs/PolygonStamped" },
     { name: "/tf", datatype: "geometry_msgs/TransformStamped" },
   ];
-  const tf1: MessageEvent<TF> = {
+  const tf1: MessageEvent<TransformStamped> = {
     topic: "/tf",
     receiveTime: { sec: 10, nsec: 0 },
     message: {
@@ -34,7 +34,7 @@ export function GeometryMsgs_Polygon(): JSX.Element {
     },
     sizeInBytes: 0,
   };
-  const tf2: MessageEvent<TF> = {
+  const tf2: MessageEvent<TransformStamped> = {
     topic: "/tf",
     receiveTime: { sec: 10, nsec: 0 },
     message: {
@@ -82,7 +82,6 @@ export function GeometryMsgs_Polygon(): JSX.Element {
         overrideConfig={{
           ...ThreeDeeRender.defaultConfig,
           followTf: "base_link",
-          scene: { enableStats: false },
           cameraState: {
             distance: 8.25,
             perspective: true,

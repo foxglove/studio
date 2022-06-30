@@ -2,27 +2,16 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import * as THREE from "three";
-
+import { BaseUserData, Renderable } from "../Renderable";
 import { Renderer } from "../Renderer";
 import { Marker, MarkerAction, MarkerType } from "../ros";
-import { LayerSettingsMarker, LayerSettingsMarkerNamespace } from "../settings";
+import { BaseSettings } from "../settings";
 import { updatePose } from "../updatePose";
-import { RenderableArrow } from "./markers/RenderableArrow";
-import { RenderableCube } from "./markers/RenderableCube";
-import { RenderableCubeList } from "./markers/RenderableCubeList";
-import { RenderableCylinder } from "./markers/RenderableCylinder";
-import { RenderableLineList } from "./markers/RenderableLineList";
-import { RenderableLineStrip } from "./markers/RenderableLineStrip";
-import { RenderableMarker } from "./markers/RenderableMarker";
-import { RenderableMeshResource } from "./markers/RenderableMeshResource";
-import { RenderablePoints } from "./markers/RenderablePoints";
-import { RenderableSphere } from "./markers/RenderableSphere";
-import { RenderableSphereList } from "./markers/RenderableSphereList";
-import { RenderableTextViewFacing } from "./markers/RenderableTextViewFacing";
-import { RenderableTriangleList } from "./markers/RenderableTriangleList";
-import { getMarkerId } from "./markers/markerId";
+import type { LayerSettingsMarker } from "./Markers";
+import { RenderableMarker, getMarkerId } from "./markers/RenderableMarker";
 import { missingTransformMessage, MISSING_TRANSFORM } from "./transforms";
+
+export type LayerSettingsMarkerNamespace = BaseSettings;
 
 const INVALID_CUBE_LIST = "INVALID_CUBE_LIST";
 const INVALID_LINE_LIST = "INVALID_LINE_LIST";
@@ -32,13 +21,13 @@ const INVALID_MARKER_TYPE = "INVALID_MARKER_TYPE";
 const INVALID_POINTS_LIST = "INVALID_POINTS_LIST";
 const INVALID_SPHERE_LIST = "INVALID_SPHERE_LIST";
 
-const DEFAULT_TOPIC_SETTINGS: LayerSettingsMarker = {
-  visible: true,
-  namespaces: {},
-};
-
 const DEFAULT_NAMESPACE_SETTINGS: LayerSettingsMarkerNamespace = {
   visible: true,
+};
+
+export type MarkerTopicUserData = BaseUserData & {
+  topic: string;
+  settings: LayerSettingsMarker;
 };
 
 type PartialMarkerSettings = Partial<LayerSettingsMarker> | undefined;
@@ -58,29 +47,21 @@ export class MarkersNamespace {
   }
 }
 
-export class TopicMarkers extends THREE.Object3D {
-  readonly topic: string;
-  readonly renderer: Renderer;
-  override userData: { settings: LayerSettingsMarker };
+export class TopicMarkers extends Renderable<MarkerTopicUserData> {
   namespaces = new Map<string, MarkersNamespace>();
 
-  constructor(topic: string, renderer: Renderer) {
-    super();
-    this.topic = topic;
-    this.renderer = renderer;
-
-    // Set the initial settings from default values merged with any user settings
-    const userSettings = renderer.config.topics[topic] as PartialMarkerSettings;
-    this.userData = { settings: { ...DEFAULT_TOPIC_SETTINGS, ...userSettings } };
+  // eslint-disable-next-line no-restricted-syntax
+  get topic(): string {
+    return this.userData.topic;
   }
 
-  dispose(): void {
+  override dispose(): void {
     for (const ns of this.namespaces.values()) {
       for (const marker of ns.markersById.values()) {
-        this.remove(marker);
-        marker.dispose();
+        this.renderer.markerPool.release(marker);
       }
     }
+    this.children.length = 0;
     this.namespaces.clear();
   }
 
@@ -94,19 +75,12 @@ export class TopicMarkers extends THREE.Object3D {
         this._deleteMarker(marker.ns, marker.id);
         break;
       case MarkerAction.DELETEALL: {
-        // Delete all markers on this topic
-        for (const ns of this.namespaces.values()) {
-          for (const renderable of ns.markersById.values()) {
-            this.remove(renderable);
-            renderable.dispose();
-          }
-        }
-        this.namespaces.clear();
+        this._deleteAllMarkers(marker.ns);
         break;
       }
       default:
         // Unknown action
-        this.renderer.layerErrors.addToTopic(
+        this.renderer.settings.errors.addToTopic(
           this.topic,
           INVALID_MARKER_ACTION,
           `Invalid marker action ${marker.action}`,
@@ -117,7 +91,7 @@ export class TopicMarkers extends THREE.Object3D {
   startFrame(currentTime: bigint, renderFrameId: string, fixedFrameId: string): void {
     this.visible = this.userData.settings.visible;
     if (!this.visible) {
-      this.renderer.layerErrors.clearTopic(this.topic);
+      this.renderer.settings.errors.clearTopic(this.topic);
       return;
     }
 
@@ -133,15 +107,15 @@ export class TopicMarkers extends THREE.Object3D {
         const expiresIn = renderable.userData.expiresIn;
 
         // Check if this marker has expired
-        if (receiveTime != undefined && expiresIn != undefined) {
+        if (expiresIn != undefined) {
           if (currentTime > receiveTime + expiresIn) {
             this._deleteMarker(ns.namespace, marker.id);
             continue;
           }
         }
 
-        const frameId = marker.header.frame_id;
-        const srcTime = marker.frame_locked ? currentTime : renderable.userData.srcTime;
+        const frameId = this.renderer.normalizeFrameId(marker.header.frame_id);
+        const srcTime = marker.frame_locked ? currentTime : renderable.userData.messageTime;
         const updated = updatePose(
           renderable,
           this.renderer.transformTree,
@@ -155,9 +129,9 @@ export class TopicMarkers extends THREE.Object3D {
         const topic = renderable.userData.topic;
         if (!updated) {
           const message = missingTransformMessage(renderFrameId, fixedFrameId, frameId);
-          this.renderer.layerErrors.addToTopic(topic, MISSING_TRANSFORM, message);
+          this.renderer.settings.errors.addToTopic(topic, MISSING_TRANSFORM, message);
         } else {
-          this.renderer.layerErrors.removeFromTopic(topic, MISSING_TRANSFORM);
+          this.renderer.settings.errors.removeFromTopic(topic, MISSING_TRANSFORM);
         }
       }
     }
@@ -171,6 +145,13 @@ export class TopicMarkers extends THREE.Object3D {
     }
 
     let renderable = ns.markersById.get(marker.id);
+
+    // Check if the marker with this id changed type
+    if (renderable && renderable.userData.marker.type !== marker.type) {
+      this._deleteMarker(marker.ns, marker.id);
+      renderable = undefined;
+    }
+
     if (!renderable) {
       renderable = this._createMarkerRenderable(marker, receiveTime);
       if (!renderable) {
@@ -189,7 +170,7 @@ export class TopicMarkers extends THREE.Object3D {
       const renderable = namespace.markersById.get(id);
       if (renderable) {
         this.remove(renderable);
-        renderable.dispose();
+        this.renderer.markerPool.release(renderable);
         namespace.markersById.delete(id);
         return true;
       }
@@ -197,106 +178,133 @@ export class TopicMarkers extends THREE.Object3D {
     return false;
   }
 
+  private _deleteAllMarkers(ns: string): void {
+    const clearNamespace = (namespace: MarkersNamespace): void => {
+      for (const renderable of namespace.markersById.values()) {
+        this.remove(renderable);
+        this.renderer.markerPool.release(renderable);
+      }
+      namespace.markersById.clear();
+    };
+
+    if (ns.length === 0) {
+      // Delete all markers on this topic
+      for (const namespace of this.namespaces.values()) {
+        clearNamespace(namespace);
+      }
+    } else {
+      // Delete all markers on the given namespace
+      const namespace = this.namespaces.get(ns);
+      if (namespace) {
+        clearNamespace(namespace);
+      }
+    }
+  }
+
   private _createMarkerRenderable(
     marker: Marker,
     receiveTime: bigint,
   ): RenderableMarker | undefined {
+    const pool = this.renderer.markerPool;
     switch (marker.type) {
       case MarkerType.ARROW:
-        return new RenderableArrow(this.topic, marker, receiveTime, this.renderer);
+        return pool.acquire(MarkerType.ARROW, this.topic, marker, receiveTime);
       case MarkerType.CUBE:
-        return new RenderableCube(this.topic, marker, receiveTime, this.renderer);
+        return pool.acquire(MarkerType.CUBE, this.topic, marker, receiveTime);
       case MarkerType.SPHERE:
-        return new RenderableSphere(this.topic, marker, receiveTime, this.renderer);
+        return pool.acquire(MarkerType.SPHERE, this.topic, marker, receiveTime);
       case MarkerType.CYLINDER:
-        return new RenderableCylinder(this.topic, marker, receiveTime, this.renderer);
+        return pool.acquire(MarkerType.CYLINDER, this.topic, marker, receiveTime);
       case MarkerType.LINE_STRIP:
         if (marker.points.length === 0) {
           const markerId = getMarkerId(this.topic, marker.ns, marker.id);
-          this.renderer.layerErrors.addToTopic(
+          this.renderer.settings.errors.addToTopic(
             this.topic,
             INVALID_LINE_STRIP,
             `LINE_STRIP marker ${markerId} has no points`,
           );
-          return;
+          return undefined;
         } else if (marker.points.length === 1) {
           const markerId = getMarkerId(this.topic, marker.ns, marker.id);
-          this.renderer.layerErrors.addToTopic(
+          this.renderer.settings.errors.addToTopic(
             this.topic,
             INVALID_LINE_STRIP,
             `LINE_STRIP marker ${markerId} only has one point`,
           );
-          return;
+          return undefined;
         }
-        return new RenderableLineStrip(this.topic, marker, receiveTime, this.renderer);
+        return pool.acquire(MarkerType.LINE_STRIP, this.topic, marker, receiveTime);
       case MarkerType.LINE_LIST:
         if (marker.points.length === 0) {
           const markerId = getMarkerId(this.topic, marker.ns, marker.id);
-          this.renderer.layerErrors.addToTopic(
+          this.renderer.settings.errors.addToTopic(
             this.topic,
             INVALID_LINE_LIST,
             `LINE_LIST marker ${markerId} has no points`,
           );
+          return undefined;
         } else if (marker.points.length === 1) {
           const markerId = getMarkerId(this.topic, marker.ns, marker.id);
-          this.renderer.layerErrors.addToTopic(
+          this.renderer.settings.errors.addToTopic(
             this.topic,
             INVALID_LINE_LIST,
             `LINE_LIST marker ${markerId} only has one point`,
           );
-          return;
+          return undefined;
         } else if (marker.points.length % 2 !== 0) {
           const markerId = getMarkerId(this.topic, marker.ns, marker.id);
-          this.renderer.layerErrors.addToTopic(
+          this.renderer.settings.errors.addToTopic(
             this.topic,
             INVALID_LINE_LIST,
             `LINE_LIST marker ${markerId} has an odd number of points (${marker.points.length})`,
           );
-          return;
+          if (marker.points.length === 1) {
+            return undefined;
+          }
         }
-        return new RenderableLineList(this.topic, marker, receiveTime, this.renderer);
+        return pool.acquire(MarkerType.LINE_LIST, this.topic, marker, receiveTime);
       case MarkerType.CUBE_LIST:
         if (marker.points.length === 0) {
           const markerId = getMarkerId(this.topic, marker.ns, marker.id);
-          this.renderer.layerErrors.addToTopic(
+          this.renderer.settings.errors.addToTopic(
             this.topic,
             INVALID_CUBE_LIST,
             `CUBE_LIST marker ${markerId} has no points`,
           );
-          return;
+          return undefined;
         }
-        return new RenderableCubeList(this.topic, marker, receiveTime, this.renderer);
+        return pool.acquire(MarkerType.CUBE_LIST, this.topic, marker, receiveTime);
       case MarkerType.SPHERE_LIST:
         if (marker.points.length === 0) {
           const markerId = getMarkerId(this.topic, marker.ns, marker.id);
-          this.renderer.layerErrors.addToTopic(
+          this.renderer.settings.errors.addToTopic(
             this.topic,
             INVALID_SPHERE_LIST,
             `SPHERE_LIST marker ${markerId} has no points`,
           );
-          return;
+          return undefined;
         }
-        return new RenderableSphereList(this.topic, marker, receiveTime, this.renderer);
+        return pool.acquire(MarkerType.SPHERE_LIST, this.topic, marker, receiveTime);
       case MarkerType.POINTS:
         if (marker.points.length === 0) {
           const markerId = getMarkerId(this.topic, marker.ns, marker.id);
-          this.renderer.layerErrors.addToTopic(
+          this.renderer.settings.errors.addToTopic(
             this.topic,
             INVALID_POINTS_LIST,
             `POINTS marker ${markerId} has no points`,
           );
-          return;
+          return undefined;
         }
-        return new RenderablePoints(this.topic, marker, receiveTime, this.renderer);
+        return pool.acquire(MarkerType.POINTS, this.topic, marker, receiveTime);
       case MarkerType.TEXT_VIEW_FACING:
-        return new RenderableTextViewFacing(this.topic, marker, receiveTime, this.renderer);
+        return pool.acquire(MarkerType.TEXT_VIEW_FACING, this.topic, marker, receiveTime);
       case MarkerType.MESH_RESOURCE:
-        return new RenderableMeshResource(this.topic, marker, receiveTime, this.renderer);
+        return pool.acquire(MarkerType.MESH_RESOURCE, this.topic, marker, receiveTime);
       case MarkerType.TRIANGLE_LIST:
-        return new RenderableTriangleList(this.topic, marker, receiveTime, this.renderer);
+        return pool.acquire(MarkerType.TRIANGLE_LIST, this.topic, marker, receiveTime);
       default: {
         const markerId = getMarkerId(this.topic, marker.ns, marker.id);
-        this.renderer.layerErrors.addToTopic(
+        this.renderer.settings.errors.addToTopic(
           this.topic,
           INVALID_MARKER_TYPE,
           `Marker ${markerId} has invalid type ${marker.type}`,

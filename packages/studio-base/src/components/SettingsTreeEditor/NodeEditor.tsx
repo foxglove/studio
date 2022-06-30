@@ -11,7 +11,6 @@ import {
   Divider,
   IconButton,
   InputBase,
-  ListItemProps,
   styled as muiStyled,
   Tooltip,
   Typography,
@@ -23,22 +22,22 @@ import { DeepReadonly } from "ts-essentials";
 import { useImmer } from "use-immer";
 
 import { filterMap } from "@foxglove/den/collection";
-import CommonIcons from "@foxglove/studio-base/components/CommonIcons";
+import { SettingsTreeAction, SettingsTreeNode } from "@foxglove/studio";
 import Stack from "@foxglove/studio-base/components/Stack";
 
 import { FieldEditor } from "./FieldEditor";
+import { HighlightedText } from "./HighlightedText";
 import { NodeActionsMenu } from "./NodeActionsMenu";
 import { VisibilityToggle } from "./VisibilityToggle";
-import { SettingsTreeAction, SettingsTreeNode } from "./types";
+import { icons } from "./icons";
+import { prepareSettingsNodes } from "./utils";
 
 export type NodeEditorProps = {
   actionHandler: (action: SettingsTreeAction) => void;
   defaultOpen?: boolean;
-  divider?: ListItemProps["divider"];
-  group?: string;
+  filter?: string;
   path: readonly string[];
   settings?: DeepReadonly<SettingsTreeNode>;
-  updateSettings?: (path: readonly string[], value: unknown) => void;
 };
 
 export const NODE_HEADER_MIN_HEIGHT = 35;
@@ -52,7 +51,9 @@ const EditButton = muiStyled(IconButton)(({ theme }) => ({
   padding: theme.spacing(0.5),
 }));
 
-const NodeHeader = muiStyled("div")(({ theme }) => {
+const NodeHeader = muiStyled("div", {
+  shouldForwardProp: (prop) => prop !== "visible",
+})<{ visible: boolean }>(({ theme, visible }) => {
   return {
     display: "flex",
     gridColumn: "span 2",
@@ -61,7 +62,7 @@ const NodeHeader = muiStyled("div")(({ theme }) => {
 
     "@media (pointer: fine)": {
       ".MuiCheckbox-root": {
-        visibility: "hidden",
+        visibility: visible ? "hidden" : "visible",
       },
 
       "[data-node-function=edit-label]": {
@@ -124,7 +125,7 @@ function ExpansionArrow({ expanded }: { expanded: boolean }): JSX.Element {
 const makeStablePath = memoizeWeak((path: readonly string[], key: string) => [...path, key]);
 
 function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
-  const { actionHandler, defaultOpen = true, settings = {} } = props;
+  const { actionHandler, defaultOpen = true, filter, settings = {} } = props;
   const [state, setState] = useImmer({ open: defaultOpen, editing: false });
 
   const theme = useTheme();
@@ -157,19 +158,20 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
     ) : undefined;
   });
 
-  const childNodes = filterMap(Object.entries(children ?? {}), ([key, child]) => {
-    return child ? (
+  const childNodes = prepareSettingsNodes(children ?? {}).map(([key, child]) => {
+    return (
       <NodeEditor
         actionHandler={actionHandler}
         defaultOpen={child.defaultExpansionState === "collapsed" ? false : true}
+        filter={filter}
         key={key}
         settings={child}
         path={makeStablePath(props.path, key)}
       />
-    ) : undefined;
+    );
   });
 
-  const IconComponent = settings.icon ? CommonIcons[settings.icon] : undefined;
+  const IconComponent = settings.icon ? icons[settings.icon] : undefined;
 
   const onEditLabel = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
@@ -208,7 +210,7 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
 
   return (
     <>
-      <NodeHeader>
+      <NodeHeader visible={visible}>
         <NodeHeaderToggle
           hasProperties={hasProperties}
           indent={indent}
@@ -244,7 +246,7 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
               fontWeight={indent < 2 ? 600 : 400}
               color={visible ? "text.primary" : "text.disabled"}
             >
-              {settings.label ?? "General"}
+              <HighlightedText text={settings.label ?? "General"} highlight={filter} />
             </Typography>
           )}
         </NodeHeaderToggle>

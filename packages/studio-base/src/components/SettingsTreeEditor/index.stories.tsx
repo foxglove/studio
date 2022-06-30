@@ -9,17 +9,16 @@ import { last } from "lodash";
 import { useCallback, useMemo, useState, useEffect } from "react";
 
 import Logger from "@foxglove/log";
+import {
+  SettingsTreeNode,
+  SettingsTreeNodes,
+  SettingsTreeFieldValue,
+  SettingsTreeAction,
+} from "@foxglove/studio";
 import { MessagePathInputStoryFixture } from "@foxglove/studio-base/components/MessagePathSyntax/fixture";
 import MockPanelContextProvider from "@foxglove/studio-base/components/MockPanelContextProvider";
 import SettingsTreeEditor from "@foxglove/studio-base/components/SettingsTreeEditor";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
-
-import {
-  SettingsTreeNode,
-  SettingsTreeRoots,
-  SettingsTreeFieldValue,
-  SettingsTreeAction,
-} from "./types";
 
 export default {
   title: "components/SettingsTreeEditor",
@@ -28,7 +27,7 @@ export default {
 
 const log = Logger.getLogger(__filename);
 
-const BasicSettings: SettingsTreeRoots = {
+const BasicSettings: SettingsTreeNodes = {
   general: {
     label: "General",
     icon: "Settings",
@@ -146,7 +145,7 @@ For ROS users, we also support package:// URLs
   empty: undefined,
 };
 
-const DisabledSettings: SettingsTreeRoots = {
+const DisabledSettings: SettingsTreeNodes = {
   general: {
     label: "Disabled Fields",
     icon: "Grid",
@@ -232,7 +231,7 @@ const DisabledSettings: SettingsTreeRoots = {
   },
 };
 
-const ReadonlySettings: SettingsTreeRoots = {
+const ReadonlySettings: SettingsTreeNodes = {
   general: {
     label: "ReadOnly Fields",
     icon: "Grid",
@@ -318,11 +317,12 @@ const ReadonlySettings: SettingsTreeRoots = {
   },
 };
 
-const PanelExamplesSettings: SettingsTreeRoots = {
+const PanelExamplesSettings: SettingsTreeNodes = {
   map: {
     label: "Map",
     icon: "Map",
     renamable: true,
+    order: 3,
     fields: {
       message_path: {
         label: "Message path",
@@ -367,6 +367,7 @@ const PanelExamplesSettings: SettingsTreeRoots = {
     label: "Grid",
     icon: "Grid",
     renamable: true,
+    order: 2,
     fields: {
       color: {
         label: "Color",
@@ -397,17 +398,16 @@ const PanelExamplesSettings: SettingsTreeRoots = {
     label: "Pose",
     icon: "Walk",
     renamable: true,
+    order: 1,
     fields: {
       color: { label: "Color", value: "#ffffff", input: "rgb" },
       shaft_length: { label: "Shaft length", value: 1.5, input: "number" },
-      shaft_width: { label: "Shaft width", value: 1.5, input: "number" },
-      head_length: { label: "Head length", value: 2, input: "number" },
-      head_width: { label: "Head width", value: 2, input: "number" },
+      shaft_position: { label: "Shaft Position", value: [1, 2, 3], input: "vec3", min: 0, max: 5 },
     },
   },
 };
 
-const IconExamplesSettings: SettingsTreeRoots = {
+const IconExamplesSettings: SettingsTreeNodes = {
   noIcon1: {
     label: "No Icon",
     fields: {
@@ -463,7 +463,7 @@ const IconExamplesSettings: SettingsTreeRoots = {
   },
 };
 
-const TopicSettings: SettingsTreeRoots = {
+const TopicSettings: SettingsTreeNodes = {
   topics: {
     label: "Topics",
     icon: "Topic",
@@ -575,11 +575,47 @@ const TopicSettings: SettingsTreeRoots = {
   },
 };
 
-function updateSettingsTreeRoots(
-  previous: SettingsTreeRoots,
+const FilterSettings: SettingsTreeNodes = {
+  matchA: {
+    label: "MatchA",
+    children: {
+      childA: {
+        label: "ChildA",
+      },
+      matchA: {
+        label: "MatchA",
+      },
+    },
+  },
+  matchB: {
+    label: "MatchB",
+    children: {
+      childB: {
+        label: "ChildB",
+      },
+      matchA: {
+        label: "MatchA",
+      },
+    },
+  },
+  matchC: {
+    label: "MatchC",
+    children: {
+      childC: {
+        label: "ChildB",
+      },
+      matchA: {
+        label: "MatchC",
+      },
+    },
+  },
+};
+
+function updateSettingsTreeNodes(
+  previous: SettingsTreeNodes,
   path: readonly string[],
   value: unknown,
-): SettingsTreeRoots {
+): SettingsTreeNodes {
   const workingPath = [...path];
   return produce(previous, (draft) => {
     let node: undefined | Partial<SettingsTreeNode> = draft[workingPath[0]!];
@@ -631,8 +667,8 @@ function makeGridNode(index: number): SettingsTreeNode {
   };
 }
 
-function Wrapper({ roots }: { roots: SettingsTreeRoots }): JSX.Element {
-  const [settingsRoots, setSettingsRoots] = useState({ ...roots });
+function Wrapper({ nodes }: { nodes: SettingsTreeNodes }): JSX.Element {
+  const [settingsNodes, setSettingsNodes] = useState({ ...nodes });
   const [dynamicNodes, setDynamicNodes] = useState<Record<string, SettingsTreeNode>>({});
 
   const actionHandler = useCallback(
@@ -663,8 +699,8 @@ function Wrapper({ roots }: { roots: SettingsTreeRoots }): JSX.Element {
         return;
       }
 
-      setSettingsRoots((previous) =>
-        updateSettingsTreeRoots(previous, action.payload.path, action.payload.value),
+      setSettingsNodes((previous) =>
+        updateSettingsTreeNodes(previous, action.payload.path, action.payload.value),
       );
     },
     [dynamicNodes],
@@ -674,13 +710,13 @@ function Wrapper({ roots }: { roots: SettingsTreeRoots }): JSX.Element {
     () => ({
       actionHandler,
       enableFilter: true,
-      roots: settingsRoots,
+      nodes: settingsNodes,
     }),
-    [settingsRoots, actionHandler],
+    [settingsNodes, actionHandler],
   );
 
   useEffect(() => {
-    setSettingsRoots(
+    setSettingsNodes(
       produce((draft) => {
         if ("general" in draft) {
           (draft as any).general.children = dynamicNodes;
@@ -707,7 +743,7 @@ function Wrapper({ roots }: { roots: SettingsTreeRoots }): JSX.Element {
 }
 
 export function Basics(): JSX.Element {
-  return <Wrapper roots={BasicSettings} />;
+  return <Wrapper nodes={BasicSettings} />;
 }
 
 Basics.play = () => {
@@ -717,15 +753,15 @@ Basics.play = () => {
 };
 
 export function DisabledFields(): JSX.Element {
-  return <Wrapper roots={DisabledSettings} />;
+  return <Wrapper nodes={DisabledSettings} />;
 }
 
 export function ReadonlyFields(): JSX.Element {
-  return <Wrapper roots={ReadonlySettings} />;
+  return <Wrapper nodes={ReadonlySettings} />;
 }
 
 export function PanelExamples(): JSX.Element {
-  return <Wrapper roots={PanelExamplesSettings} />;
+  return <Wrapper nodes={PanelExamplesSettings} />;
 }
 
 PanelExamples.play = () => {
@@ -739,9 +775,20 @@ PanelExamples.play = () => {
 };
 
 export function IconExamples(): JSX.Element {
-  return <Wrapper roots={IconExamplesSettings} />;
+  return <Wrapper nodes={IconExamplesSettings} />;
 }
 
 export function Topics(): JSX.Element {
-  return <Wrapper roots={TopicSettings} />;
+  return <Wrapper nodes={TopicSettings} />;
 }
+
+export function Filter(): JSX.Element {
+  return <Wrapper nodes={FilterSettings} />;
+}
+Filter.play = () => {
+  const node = document.querySelector("[data-test=settings-filter-field] input");
+  if (node) {
+    fireEvent.click(node);
+    fireEvent.change(node, { target: { value: "matcha" } });
+  }
+};

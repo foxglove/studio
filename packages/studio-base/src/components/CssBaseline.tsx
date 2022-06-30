@@ -35,7 +35,7 @@ const useStyles = makeStyles((theme) => ({
         borderRadius: 2,
       },
     },
-    "p:not(.MuiTypography-root)": {
+    "p:not([class^='Mui')": {
       margin: "1em 0",
 
       ":last-child": {
@@ -44,13 +44,6 @@ const useStyles = makeStyles((theme) => ({
     },
     "b, strong": {
       fontWeight: 700,
-    },
-    table: {
-      borderCollapse: "collapse",
-      borderSpacing: 0,
-    },
-    "th, td": {
-      verticalAlign: "top",
     },
 
     // container styling
@@ -176,6 +169,34 @@ const useStyles = makeStyles((theme) => ({
         ".mosaic-tile": {
           margin: 0,
         },
+      },
+    },
+
+    // leaflet GUI styling
+    ".leaflet-bar a": {
+      userSelect: "none",
+      backgroundColor: theme.semanticColors.bodyStandoutBackground,
+      color: theme.semanticColors.buttonText,
+      borderBottomColor: theme.semanticColors.bodyDivider,
+
+      ":hover": {
+        backgroundColor: theme.semanticColors.bodyBackgroundHovered,
+        color: theme.semanticColors.buttonTextHovered,
+        borderBottomColor: theme.semanticColors.bodyDivider,
+      },
+      ":focus": {
+        color: theme.semanticColors.buttonTextPressed,
+      },
+      ":active": {
+        color: theme.semanticColors.buttonTextPressed,
+      },
+    },
+    ".leaflet-bar a.leaflet-disabled": {
+      backgroundColor: theme.semanticColors.bodyBackground,
+      color: theme.semanticColors.disabledBodyText,
+
+      "&:hover": {
+        backgroundColor: theme.semanticColors.bodyBackgroundHovered,
       },
     },
   },

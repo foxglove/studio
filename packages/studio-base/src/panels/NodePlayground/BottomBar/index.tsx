@@ -110,7 +110,6 @@ const BottomBar = ({ nodeId, isSaved, save, diagnostics, logs }: Props): ReactEl
           paddingRight={1}
         >
           <StyledTabs
-            disableRipple
             textColor="inherit"
             value={bottomBarDisplay !== "closed" ? bottomBarDisplay : false}
             onChange={handleChange}
@@ -162,7 +161,7 @@ const BottomBar = ({ nodeId, isSaved, save, diagnostics, logs }: Props): ReactEl
               color="primary"
               variant="contained"
               disabled={isSaved}
-              title={"Ctrl/Cmd + S"}
+              title="Ctrl/Cmd + S"
               onClick={() => {
                 if (nodeId != undefined) {
                   save();

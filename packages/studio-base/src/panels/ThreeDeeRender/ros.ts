@@ -2,7 +2,9 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Time } from "@foxglove/rostime";
+import type { Time } from "@foxglove/rostime";
+
+import type { Pose } from "./transforms";
 
 export type Matrix3 = [number, number, number, number, number, number, number, number, number];
 
@@ -46,6 +48,7 @@ export enum MarkerAction {
 }
 
 export enum PointFieldType {
+  UNKNOWN = 0,
   INT8 = 1,
   UINT8 = 2,
   INT16 = 3,
@@ -89,11 +92,6 @@ export type ColorRGBA = {
   a: number;
 };
 
-export type Pose = {
-  position: Vector3;
-  orientation: Quaternion;
-};
-
 export type PoseWithCovariance = {
   pose: Pose;
   covariance: Matrix6;
@@ -109,14 +107,18 @@ export type Header = {
   seq?: number;
 };
 
-export type TF = {
+export type Transform = {
+  translation: Vector3;
+  rotation: Quaternion;
+};
+
+export type TransformStamped = {
   header: Header;
   child_frame_id: string;
-  transform: {
-    rotation: Quaternion;
-    translation: Vector3;
-  };
+  transform: Transform;
 };
+
+export type TFMessage = { transforms: TransformStamped[] };
 
 export type Marker = {
   header: Header;
@@ -159,6 +161,19 @@ export type PointCloud2 = {
   is_dense: boolean;
 };
 
+export type LaserScan = {
+  header: Header;
+  angle_min: number;
+  angle_max: number;
+  angle_increment: number;
+  time_increment: number;
+  scan_time: number;
+  range_min: number;
+  range_max: number;
+  ranges: Float32Array;
+  intensities: Float32Array;
+};
+
 export type MapMetaData = {
   map_load_time: RosTime;
   resolution: number;
@@ -177,6 +192,16 @@ export type PoseStamped = {
   header: Header;
   pose: Pose;
 };
+
+export type PoseArray = Readonly<{
+  header: Header;
+  poses: Pose[];
+}>;
+
+export type NavPath = Readonly<{
+  header: Header;
+  poses: PoseStamped[];
+}>;
 
 export type PolygonStamped = {
   header: Header;
@@ -205,6 +230,27 @@ export type CameraInfo = {
   K: Matrix3 | [];
   R: Matrix3 | [];
   P: Matrix3x4 | [];
+  binning_x: number;
+  binning_y: number;
+  roi: RegionOfInterest;
+};
+
+// The capitalization of the single-letter matrix names is different between
+// ROS 1 and ROS 2. This type represents that ambiguity, before normalizing into
+// the CameraInfo type
+export type IncomingCameraInfo = {
+  header: Header;
+  height: number;
+  width: number;
+  distortion_model: string;
+  D: number[] | undefined;
+  K: Matrix3 | [] | undefined;
+  R: Matrix3 | [] | undefined;
+  P: Matrix3x4 | [] | undefined;
+  d: number[] | undefined;
+  k: Matrix3 | [] | undefined;
+  r: Matrix3 | [] | undefined;
+  p: Matrix3x4 | [] | undefined;
   binning_x: number;
   binning_y: number;
   roi: RegionOfInterest;
@@ -240,6 +286,8 @@ addRosDataType(MARKER_DATATYPES, "visualization_msgs/Marker");
 
 export const MARKER_ARRAY_DATATYPES = new Set<string>();
 addRosDataType(MARKER_ARRAY_DATATYPES, "visualization_msgs/MarkerArray");
+// Support the legacy "studio_msgs/MarkerArray" datatype name
+addRosDataType(MARKER_ARRAY_DATATYPES, "studio_msgs/MarkerArray");
 
 export const OCCUPANCY_GRID_DATATYPES = new Set<string>();
 addRosDataType(OCCUPANCY_GRID_DATATYPES, "nav_msgs/OccupancyGrid");
@@ -247,11 +295,20 @@ addRosDataType(OCCUPANCY_GRID_DATATYPES, "nav_msgs/OccupancyGrid");
 export const POINTCLOUD_DATATYPES = new Set<string>();
 addRosDataType(POINTCLOUD_DATATYPES, "sensor_msgs/PointCloud2");
 
+export const LASERSCAN_DATATYPES = new Set<string>();
+addRosDataType(LASERSCAN_DATATYPES, "sensor_msgs/LaserScan");
+
 export const POSE_STAMPED_DATATYPES = new Set<string>();
 addRosDataType(POSE_STAMPED_DATATYPES, "geometry_msgs/PoseStamped");
 
 export const POSE_WITH_COVARIANCE_STAMPED_DATATYPES = new Set<string>();
 addRosDataType(POSE_WITH_COVARIANCE_STAMPED_DATATYPES, "geometry_msgs/PoseWithCovarianceStamped");
+
+export const POSE_ARRAY_DATATYPES = new Set<string>();
+addRosDataType(POSE_ARRAY_DATATYPES, "geometry_msgs/PoseArray");
+
+export const NAV_PATH_DATATYPES = new Set<string>();
+addRosDataType(NAV_PATH_DATATYPES, "nav_msgs/Path");
 
 export const CAMERA_INFO_DATATYPES = new Set<string>();
 addRosDataType(CAMERA_INFO_DATATYPES, "sensor_msgs/CameraInfo");

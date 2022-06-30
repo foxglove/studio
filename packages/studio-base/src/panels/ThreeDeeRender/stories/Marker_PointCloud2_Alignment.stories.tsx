@@ -3,12 +3,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { MessageEvent, Topic } from "@foxglove/studio";
-import useDelayedFixture from "@foxglove/studio-base/panels/ThreeDimensionalViz/stories/useDelayedFixture";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 
 import ThreeDeeRender from "../index";
-import { Marker, MarkerType, PointCloud2, TF } from "../ros";
+import { Marker, MarkerType, PointCloud2, TransformStamped } from "../ros";
 import { makeColor, QUAT_IDENTITY, rgba, VEC3_ZERO } from "./common";
+import useDelayedFixture from "./useDelayedFixture";
 
 export default {
   title: "panels/ThreeDeeRender",
@@ -22,7 +22,7 @@ export function Marker_PointCloud2_Alignment(): JSX.Element {
     { name: "/pointcloud", datatype: "sensor_msgs/PointCloud2" },
     { name: "/tf", datatype: "geometry_msgs/TransformStamped" },
   ];
-  const tf1: MessageEvent<TF> = {
+  const tf1: MessageEvent<TransformStamped> = {
     topic: "/tf",
     receiveTime: { sec: 10, nsec: 0 },
     message: {
@@ -35,7 +35,7 @@ export function Marker_PointCloud2_Alignment(): JSX.Element {
     },
     sizeInBytes: 0,
   };
-  const tf2: MessageEvent<TF> = {
+  const tf2: MessageEvent<TransformStamped> = {
     topic: "/tf",
     receiveTime: { sec: 10, nsec: 0 },
     message: {
@@ -142,9 +142,6 @@ export function Marker_PointCloud2_Alignment(): JSX.Element {
       <ThreeDeeRender
         overrideConfig={{
           ...ThreeDeeRender.defaultConfig,
-          scene: {
-            enableStats: false,
-          },
           topics: {
             "/pointcloud": {
               pointSize: 30,

@@ -4,10 +4,10 @@
 
 import * as THREE from "three";
 
-import { rgbaToLinear, SRGBToLinear, stringToRgba } from "../../color";
-import { clamp, lerp } from "../../math";
-import { ColorRGBA } from "../../ros";
-import { LayerSettingsPointCloud2 } from "../../settings";
+import { rgbaGradient, rgbaToLinear, SRGBToLinear, stringToRgba } from "../../color";
+import { clamp } from "../../math";
+import type { ColorRGBA } from "../../ros";
+import type { LayerSettingsPointCloudAndLaserScan } from "../PointCloudsAndLaserScans";
 
 export type ColorConverter = (output: ColorRGBA, colorValue: number) => void;
 
@@ -15,7 +15,7 @@ const tempColor1 = { r: 0, g: 0, b: 0, a: 0 };
 const tempColor2 = { r: 0, g: 0, b: 0, a: 0 };
 
 export function getColorConverter(
-  settings: LayerSettingsPointCloud2,
+  settings: LayerSettingsPointCloudAndLaserScan,
   minValue: number,
   maxValue: number,
 ): ColorConverter {
@@ -38,10 +38,7 @@ export function getColorConverter(
       rgbaToLinear(maxColor, maxColor);
       return (output: ColorRGBA, colorValue: number) => {
         const t = (colorValue - minValue) / valueDelta;
-        output.r = lerp(minColor.r, maxColor.r, t);
-        output.g = lerp(minColor.g, maxColor.g, t);
-        output.b = lerp(minColor.b, maxColor.b, t);
-        output.a = lerp(minColor.a, maxColor.a, t);
+        rgbaGradient(output, minColor, maxColor, t);
       };
     }
     case "colormap":

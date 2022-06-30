@@ -6,7 +6,7 @@ import { SRGBToLinear } from "three/src/math/ColorManagement";
 import { clamp } from "three/src/math/MathUtils";
 import tinycolor from "tinycolor2";
 
-import { approxEquals, uint8Equals } from "./math";
+import { approxEquals, lerp, uint8Equals } from "./math";
 import { ColorRGB, ColorRGBA } from "./ros";
 
 export { SRGBToLinear } from "three/src/math/ColorManagement";
@@ -42,6 +42,12 @@ export function stringToRgb<T extends ColorRGB | THREE.Color>(output: T, colorSt
   return output;
 }
 
+/** Converts a ColorRGB to THREE.Color and converts from sRGB to linear RGB. */
+export function rgbToThreeColor(output: THREE.Color, rgb: ColorRGB): THREE.Color {
+  return output.setRGB(rgb.r, rgb.g, rgb.b).convertSRGBToLinear();
+}
+
+// ts-prune-ignore-next
 export function rgbaToHexString(color: ColorRGBA): string {
   const rgba =
     (clamp(color.r * 255, 0, 255) << 24) ^
@@ -73,4 +79,24 @@ export function rgbaEqual(a: ColorRGBA, b: ColorRGBA): boolean {
     uint8Equals(a.b, b.b) &&
     approxEquals(a.a, b.a)
   );
+}
+
+/**
+ * Computes a gradient step from colors `a` to `b` using pre-multiplied alpha to
+ * match CSS linear gradients. The inputs are assumed to not have pre-multiplied
+ * alpha, and the output will have pre-multiplied alpha.
+ */
+export function rgbaGradient(output: ColorRGBA, a: ColorRGBA, b: ColorRGBA, t: number): ColorRGBA {
+  const aR = a.r * a.a;
+  const aG = a.g * a.a;
+  const aB = a.b * a.a;
+  const bR = b.r * b.a;
+  const bG = b.g * b.a;
+  const bB = b.b * b.a;
+
+  output.r = lerp(aR, bR, t);
+  output.g = lerp(aG, bG, t);
+  output.b = lerp(aB, bB, t);
+  output.a = lerp(a.a, b.a, t);
+  return output;
 }
