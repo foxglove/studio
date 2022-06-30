@@ -522,11 +522,12 @@ export class IterablePlayer implements Player {
         continue;
       }
 
-      messageEvents.push(iterResult.msgEvent);
-
       if (compare(iterResult.msgEvent.receiveTime, stopTime) > 0) {
+        this._lastMessage = iterResult.msgEvent;
         break;
       }
+
+      messageEvents.push(iterResult.msgEvent);
     }
 
     this._currentTime = stopTime;
