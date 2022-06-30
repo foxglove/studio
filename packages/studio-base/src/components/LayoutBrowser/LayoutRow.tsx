@@ -141,9 +141,11 @@ export default React.memo(function LayoutRow({
   const [editingName, setEditingName] = useState(false);
   const [nameFieldValue, setNameFieldValue] = useState("");
   const [isOnline, setIsOnline] = useState(layoutManager.isOnline);
-  const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | undefined>(
-    undefined,
-  );
+  const [contextMenuTarget, setContextMenuTarget] = useState<
+    | { type: "position"; mouseX: number; mouseY: number; element?: undefined }
+    | { type: "element"; element: Element }
+    | undefined
+  >(undefined);
 
   const deletedOnServer = layout.syncInfo?.status === "remotely-deleted";
   const hasModifications = layout.working != undefined;
@@ -236,18 +238,25 @@ export default React.memo(function LayoutRow({
     });
   }, [confirm, isMounted, layout, onDelete]);
 
-  const handleContextMenu = (event: React.MouseEvent) => {
+  const handleContextMenu = useCallback((event: React.MouseEvent) => {
     event.preventDefault();
-    setContextMenu(
-      contextMenu == undefined
-        ? { mouseX: event.clientX + 2, mouseY: event.clientY - 6 }
+    setContextMenuTarget((target) =>
+      target == undefined
+        ? { type: "position", mouseX: event.clientX, mouseY: event.clientY }
         : undefined,
     );
-  };
+  }, []);
 
-  const handleClose = () => {
-    setContextMenu(undefined);
-  };
+  const handleMenuButtonClick = useCallback((event: React.MouseEvent) => {
+    event.preventDefault();
+    setContextMenuTarget((target) =>
+      target == undefined ? { type: "element", element: event.currentTarget } : undefined,
+    );
+  }, []);
+
+  const handleClose = useCallback(() => {
+    setContextMenuTarget(undefined);
+  }, []);
 
   const menuItems: (boolean | LayoutActionMenuItem)[] = [
     {
@@ -409,10 +418,10 @@ export default React.memo(function LayoutRow({
       secondaryAction={
         <IconButton
           id="layout-actions"
-          aria-controls={contextMenu != undefined ? "layout-action-menu" : undefined}
+          aria-controls={contextMenuTarget != undefined ? "layout-action-menu" : undefined}
           aria-haspopup="true"
-          aria-expanded={contextMenu != undefined ? "true" : undefined}
-          onClick={handleContextMenu}
+          aria-expanded={contextMenuTarget != undefined ? "true" : undefined}
+          onClick={handleMenuButtonClick}
           onContextMenu={handleContextMenu}
         >
           {actionIcon}
@@ -448,13 +457,14 @@ export default React.memo(function LayoutRow({
       </ListItemButton>
       <Menu
         id="layout-action-menu"
-        open={contextMenu != undefined}
-        anchorReference="anchorPosition"
+        open={contextMenuTarget != undefined}
+        anchorReference={contextMenuTarget?.type === "position" ? "anchorPosition" : "anchorEl"}
         anchorPosition={
-          contextMenu != undefined
-            ? { top: contextMenu.mouseY, left: contextMenu.mouseX }
+          contextMenuTarget?.type === "position"
+            ? { top: contextMenuTarget.mouseY, left: contextMenuTarget.mouseX }
             : undefined
         }
+        anchorEl={contextMenuTarget?.element}
         onClose={handleClose}
         MenuListProps={{
           "aria-labelledby": "layout-actions",
