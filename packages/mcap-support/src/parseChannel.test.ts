@@ -3,7 +3,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import fs from "fs";
-import protobufjs from "protobufjs";
 import { FileDescriptorSet, IFileDescriptorSet } from "protobufjs/ext/descriptor";
 
 import { parseChannel } from "./parseChannel";
