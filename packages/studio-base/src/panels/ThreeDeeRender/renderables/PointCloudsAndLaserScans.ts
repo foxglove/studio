@@ -303,7 +303,10 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
       }
 
       const isDecay = settings.decayTime > 0;
-      const geometry = this._createGeometry(topic, !isDecay);
+      const geometry = this._createGeometry(
+        topic,
+        isDecay ? THREE.StaticDrawUsage : THREE.DynamicDrawUsage,
+      );
 
       const material = pointCloudMaterial(settings);
       const pickingMaterial = createPickingMaterial(settings);
@@ -345,12 +348,8 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     );
   };
 
-  // eslint-disable-next-line @foxglove/no-boolean-parameters
-  _createGeometry(topic: string, dynamic: boolean): DynamicFloatBufferGeometry {
-    const geometry = new DynamicBufferGeometry(
-      Float32Array,
-      dynamic ? THREE.DynamicDrawUsage : THREE.StaticDrawUsage,
-    );
+  _createGeometry(topic: string, usage: THREE.Usage): DynamicFloatBufferGeometry {
+    const geometry = new DynamicBufferGeometry(Float32Array, usage);
     geometry.name = `${topic}:PointCloud2:geometry`;
     geometry.createAttribute("position", 3);
     geometry.createAttribute("color", 4);
@@ -405,7 +404,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     const isDecay = settings.decayTime > 0;
     if (isDecay) {
       // Push a new (empty) entry to the history of points
-      const geometry = this._createGeometry(topic, false);
+      const geometry = this._createGeometry(topic, THREE.StaticDrawUsage);
       const points = createPoints(topic, geometry, material, renderable.userData.pickingMaterial);
       pointsHistory.push({ receiveTime, messageTime, points });
       renderable.add(points);
@@ -747,7 +746,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     const isDecay = settings.decayTime > 0;
     if (isDecay) {
       // Push a new (empty) entry to the history of points
-      const geometry = this._createGeometry(topic, false);
+      const geometry = this._createGeometry(topic, THREE.StaticDrawUsage);
       const points = createPoints(topic, geometry, laserScanMaterial, pickingMaterial);
       pointsHistory.push({ receiveTime, messageTime, points });
       renderable.add(points);
