@@ -26,11 +26,13 @@ import { useConfirm } from "@foxglove/studio-base/hooks/useConfirm";
 import { Layout, layoutIsShared } from "@foxglove/studio-base/services/ILayoutStorage";
 
 const StyledListItem = muiStyled(ListItem, {
-  shouldForwardProp: (prop) => prop !== "hasModifications" && prop !== "deletedOnServer",
+  shouldForwardProp: (prop) =>
+    prop !== "hasModifications" && prop !== "deletedOnServer" && prop !== "editingName",
 })<{
+  editingName: boolean;
   hasModifications: boolean;
   deletedOnServer: boolean;
-}>(({ hasModifications, deletedOnServer, theme }) => ({
+}>(({ editingName, hasModifications, deletedOnServer, theme }) => ({
   ".MuiListItemSecondaryAction-root": {
     right: theme.spacing(0.25),
   },
@@ -57,6 +59,16 @@ const StyledListItem = muiStyled(ListItem, {
       },
     },
   },
+  ...(editingName && {
+    ".MuiListItemButton-root": {
+      paddingTop: theme.spacing(0.5),
+      paddingBottom: theme.spacing(0.5),
+      paddingLeft: theme.spacing(1),
+    },
+    ".MuiListItemText-root": {
+      margin: 0,
+    },
+  }),
 }));
 
 const StyledMenuItem = muiStyled(MenuItem, {
@@ -411,6 +423,7 @@ export default React.memo(function LayoutRow({
 
   return (
     <StyledListItem
+      editingName={editingName}
       hasModifications={hasModifications}
       deletedOnServer={deletedOnServer}
       disablePadding
@@ -421,6 +434,7 @@ export default React.memo(function LayoutRow({
           aria-haspopup="true"
           aria-expanded={contextMenu != undefined ? "true" : undefined}
           onClick={handleContextMenu}
+          onContextMenu={handleContextMenu}
         >
           {actionIcon}
         </IconButton>
@@ -430,7 +444,7 @@ export default React.memo(function LayoutRow({
         selected={selected}
         onSubmit={onSubmit}
         onClick={editingName ? undefined : onClick}
-        onContextMenu={handleContextMenu}
+        onContextMenu={editingName ? undefined : handleContextMenu}
         component="form"
       >
         <ListItemText disableTypography>
@@ -441,7 +455,10 @@ export default React.memo(function LayoutRow({
               onChange={(event) => setNameFieldValue(event.target.value)}
               onKeyDown={onTextFieldKeyDown}
               onBlur={onBlur}
-              style={{ flex: "auto", font: "inherit" }}
+              fullWidth
+              style={{ font: "inherit" }}
+              size="small"
+              variant="filled"
             />
           ) : (
             <Typography variant="inherit" color="inherit" noWrap>
