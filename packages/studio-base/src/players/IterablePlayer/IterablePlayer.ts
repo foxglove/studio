@@ -842,7 +842,7 @@ export class IterablePlayer implements Player {
     this._blockLoader?.setTopics(this._partialTopics);
 
     if (this._abort) {
-      throw new Error("Invarient. Abort controller already defined");
+      throw new Error("Invariant. Abort controller already defined");
     }
     this._abort = new AbortController();
 
