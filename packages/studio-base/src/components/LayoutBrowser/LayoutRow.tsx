@@ -36,27 +36,18 @@ const StyledListItem = muiStyled(ListItem, {
   ".MuiListItemSecondaryAction-root": {
     right: theme.spacing(0.25),
   },
-  "@media (pointer: coarse)": {
-    ".MuiListItemButton-root": {
-      maxWidth: "100%",
-    },
+  ".MuiListItemButton-root": {
+    maxWidth: "100%",
   },
   "@media (pointer: fine)": {
-    ".MuiListItemButton-root:hover": {
-      maxWidth: "100%",
+    ".MuiListItemButton-root": {
+      paddingRight: theme.spacing(4.5),
     },
-    ...((hasModifications || deletedOnServer) && {
-      ".MuiListItemButton-root": {
-        maxWidth: "100%",
-      },
-    }),
     ".MuiListItemSecondaryAction-root": {
       visibility: !hasModifications && !deletedOnServer && "hidden",
     },
-    "&:hover": {
-      ".MuiListItemSecondaryAction-root": {
-        visibility: "visible",
-      },
+    "&:hover .MuiListItemSecondaryAction-root": {
+      visibility: "visible",
     },
   },
   ...(editingName && {
@@ -289,7 +280,7 @@ export default React.memo(function LayoutRow({
           ? "Make a personal copy"
           : "Duplicate",
       onClick: duplicateAction,
-      ["data-test"]: "duplicate-layout",
+      "data-test": "duplicate-layout",
     },
     layoutManager.supportsSharing &&
       !layoutIsShared(layout) && {
@@ -312,7 +303,7 @@ export default React.memo(function LayoutRow({
       key: "delete",
       text: "Delete",
       onClick: confirmDelete,
-      ["data-test"]: "delete-layout",
+      "data-test": "delete-layout",
     },
   ];
 
@@ -429,7 +420,7 @@ export default React.memo(function LayoutRow({
       disablePadding
       secondaryAction={
         <IconButton
-          id="layout-action-button"
+          id="layout-actions"
           aria-controls={contextMenu != undefined ? "layout-action-menu" : undefined}
           aria-haspopup="true"
           aria-expanded={contextMenu != undefined ? "true" : undefined}
@@ -478,7 +469,7 @@ export default React.memo(function LayoutRow({
         }
         onClose={handleClose}
         MenuListProps={{
-          "aria-labelledby": "layout-action-button",
+          "aria-labelledby": "layout-actions",
           dense: true,
         }}
       >
