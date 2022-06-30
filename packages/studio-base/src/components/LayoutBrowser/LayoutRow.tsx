@@ -8,7 +8,7 @@ import {
   ListItem,
   ListItemButton,
   ListItemText,
-  IconButton as MuiIconButton,
+  IconButton,
   Menu,
   MenuItem,
   SvgIcon,
@@ -17,14 +17,7 @@ import {
   TextField,
   styled as muiStyled,
 } from "@mui/material";
-import {
-  PropsWithChildren,
-  useCallback,
-  useContext,
-  useLayoutEffect,
-  useMemo,
-  useState,
-} from "react";
+import { useCallback, useContext, useLayoutEffect, useMemo, useState } from "react";
 import { useMountedState } from "react-use";
 
 import { useLayoutManager } from "@foxglove/studio-base/context/LayoutManagerContext";
@@ -37,7 +30,10 @@ const StyledListItem = muiStyled(ListItem, {
 })<{
   hasModifications: boolean;
   deletedOnServer: boolean;
-}>(({ hasModifications, deletedOnServer }) => ({
+}>(({ hasModifications, deletedOnServer, theme }) => ({
+  ".MuiListItemSecondaryAction-root": {
+    right: theme.spacing(0.25),
+  },
   "@media (pointer: coarse)": {
     ".MuiListItemButton-root": {
       maxWidth: "100%",
@@ -111,84 +107,6 @@ export type LayoutActionMenuItem =
       debug?: boolean;
     };
 
-const ActionMenu = ({
-  children,
-  items = [],
-}: PropsWithChildren<{ items: LayoutActionMenuItem[] }>) => {
-  const [anchorEl, setAnchorEl] = useState<undefined | HTMLElement>(undefined);
-  const open = Boolean(anchorEl);
-
-  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleClose = () => {
-    setAnchorEl(undefined);
-  };
-
-  if (items.length > 0) {
-    return <></>;
-  }
-
-  return (
-    <>
-      <MuiIconButton
-        id="layout-action-button"
-        aria-controls={open ? "layout-action-menu" : undefined}
-        aria-haspopup="true"
-        aria-expanded={open ? "true" : undefined}
-        onClick={handleClick}
-        style={{ marginRight: -13 }}
-      >
-        {children}
-      </MuiIconButton>
-      <Menu
-        id="layout-action-menu"
-        anchorEl={anchorEl}
-        open={open}
-        onClose={handleClose}
-        MenuListProps={{
-          "aria-labelledby": "layout-action-button",
-          dense: true,
-        }}
-      >
-        {items.map((item) => {
-          switch (item.type) {
-            case "divider":
-              return <Divider key={item.key} variant="middle" />;
-            case "item":
-              return (
-                <StyledMenuItem
-                  debug={item.debug}
-                  disabled={item.disabled}
-                  key={item.key}
-                  onClick={(event) => {
-                    item.onClick?.(event);
-                    handleClose();
-                  }}
-                >
-                  <Typography variant="inherit" color={item.key === "delete" ? "error" : undefined}>
-                    {item.text}
-                  </Typography>
-                </StyledMenuItem>
-              );
-            case "header":
-              return (
-                <MenuItem key={item.key}>
-                  <Typography variant="inherit" color="text.secondary">
-                    {item.text}
-                  </Typography>
-                </MenuItem>
-              );
-            default:
-              return undefined;
-          }
-        })}
-      </Menu>
-    </>
-  );
-};
-
 export default React.memo(function LayoutRow({
   layout,
   selected,
@@ -222,6 +140,13 @@ export default React.memo(function LayoutRow({
   const [editingName, setEditingName] = useState(false);
   const [nameFieldValue, setNameFieldValue] = useState("");
   const [isOnline, setIsOnline] = useState(layoutManager.isOnline);
+  const [contextMenu, setContextMenu] = React.useState<
+    | {
+        mouseX: number;
+        mouseY: number;
+      }
+    | undefined
+  >(undefined);
 
   const deletedOnServer = layout.syncInfo?.status === "remotely-deleted";
   const hasModifications = layout.working != undefined;
@@ -313,6 +238,25 @@ export default React.memo(function LayoutRow({
       }
     });
   }, [confirm, isMounted, layout, onDelete]);
+
+  const handleContextMenu = (event: React.MouseEvent) => {
+    event.preventDefault();
+    setContextMenu(
+      contextMenu == undefined
+        ? {
+            mouseX: event.clientX + 2,
+            mouseY: event.clientY - 6,
+          }
+        : // repeated contextmenu when it is already open closes it with Chrome 84 on Ubuntu
+          // Other native context menus might behave different.
+          // With this behavior we prevent contextmenu from the backdrop to re-locale existing context menus.
+          undefined,
+    );
+  };
+
+  const handleClose = () => {
+    setContextMenu(undefined);
+  };
 
   const menuItems: (boolean | LayoutActionMenuItem)[] = [
     {
@@ -470,12 +414,23 @@ export default React.memo(function LayoutRow({
       hasModifications={hasModifications}
       deletedOnServer={deletedOnServer}
       disablePadding
-      secondaryAction={<ActionMenu items={filteredItems}>{actionIcon}</ActionMenu>}
+      secondaryAction={
+        <IconButton
+          id="layout-action-button"
+          aria-controls={contextMenu != undefined ? "layout-action-menu" : undefined}
+          aria-haspopup="true"
+          aria-expanded={contextMenu != undefined ? "true" : undefined}
+          onClick={handleContextMenu}
+        >
+          {actionIcon}
+        </IconButton>
+      }
     >
       <ListItemButton
         selected={selected}
         onSubmit={onSubmit}
         onClick={editingName ? undefined : onClick}
+        onContextMenu={handleContextMenu}
         component="form"
       >
         <ListItemText disableTypography>
@@ -495,6 +450,53 @@ export default React.memo(function LayoutRow({
           )}
         </ListItemText>
       </ListItemButton>
+      <Menu
+        id="layout-action-menu"
+        open={contextMenu != undefined}
+        anchorReference="anchorPosition"
+        anchorPosition={
+          contextMenu != undefined
+            ? { top: contextMenu.mouseY, left: contextMenu.mouseX }
+            : undefined
+        }
+        onClose={handleClose}
+        MenuListProps={{
+          "aria-labelledby": "layout-action-button",
+          dense: true,
+        }}
+      >
+        {filteredItems.map((item) => {
+          switch (item.type) {
+            case "divider":
+              return <Divider key={item.key} variant="middle" />;
+            case "item":
+              return (
+                <StyledMenuItem
+                  debug={item.debug}
+                  disabled={item.disabled}
+                  key={item.key}
+                  data-test={item["data-test"]}
+                  onClick={(event) => {
+                    item.onClick?.(event);
+                    handleClose();
+                  }}
+                >
+                  <Typography variant="inherit" color={item.key === "delete" ? "error" : undefined}>
+                    {item.text}
+                  </Typography>
+                </StyledMenuItem>
+              );
+            case "header":
+              return (
+                <MenuItem disabled key={item.key}>
+                  {item.text}
+                </MenuItem>
+              );
+            default:
+              return undefined;
+          }
+        })}
+      </Menu>
     </StyledListItem>
   );
 });
