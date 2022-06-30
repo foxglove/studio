@@ -40,6 +40,8 @@ async function tryCreateIndexedReader(readable: Mcap0Types.IReadable) {
   return reader;
 }
 
+async function* noopMessageIterator(): AsyncIterator<Readonly<IteratorResult>> {}
+
 export class McapIterableSource implements IIterableSource {
   private _source: McapSource;
   private _sourceImpl: IIterableSource | undefined;
@@ -76,7 +78,7 @@ export class McapIterableSource implements IIterableSource {
 
   messageIterator(opt: MessageIteratorArgs): AsyncIterator<Readonly<IteratorResult>> {
     if (!this._sourceImpl) {
-      throw new Error("Invariant: uninitialized");
+      return noopMessageIterator();
     }
 
     return this._sourceImpl.messageIterator(opt);
@@ -84,7 +86,7 @@ export class McapIterableSource implements IIterableSource {
 
   async getBackfillMessages(args: GetBackfillMessagesArgs): Promise<MessageEvent<unknown>[]> {
     if (!this._sourceImpl) {
-      throw new Error("Invariant: uninitialized");
+      return [];
     }
 
     return await this._sourceImpl.getBackfillMessages(args);
