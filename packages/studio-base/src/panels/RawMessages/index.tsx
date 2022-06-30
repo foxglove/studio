@@ -298,6 +298,10 @@ function RawMessages(props: Props) {
         itemLabel = `${itemLabel} (${constantName})`;
       }
 
+      // When we encounter a nsec field (nanosecond) that is a number, we ensure the label displays 9 digits.
+      // This helps when visually scanning time values from `sec` and `nsec` fields.
+      // A nanosecond label of 099999999 makes it easier to realize this is 0.09 seconds compared to
+      // 99999999 which requires some counting to reamize this is also 0.09
       if (keyPath[0] === "nsec" && typeof itemValue === "number") {
         itemLabel = padStart(itemLabel, 9, "0");
       }
