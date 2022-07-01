@@ -92,10 +92,10 @@ void main() {
   vec4 color = vec4(uBackgroundColor.rgb * (1.0 - dist) + uColor * dist, uOpacity);
   // outColor = LinearTosRGB(color);
 
-  outColor = vec4(mix(uBackgroundColor, uColor, aastep(0.75, dist)), 1.);
+  outColor = vec4(mix(uBackgroundColor, uColor, aastep(0.75, dist)), uOpacity);
 
   bool insideChar = vInsideChar.x >= 0.0 && vInsideChar.x <= 1.0 && vInsideChar.y >= 0.0 && vInsideChar.y <= 1.0;
-  outColor = insideChar ? outColor : vec4(uBackgroundColor, 1.);
+  outColor = insideChar ? outColor : vec4(uBackgroundColor, uOpacity);
   outColor = LinearTosRGB(outColor);
 
   // outColor = insideChar ? vec4(0.,1.,0.,1.) : vec4(1.0,0.0,0.0, 1.0);
