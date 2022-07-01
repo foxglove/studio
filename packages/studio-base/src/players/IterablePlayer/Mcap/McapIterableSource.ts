@@ -25,9 +25,9 @@ async function tryCreateIndexedReader(readable: Mcap0Types.IReadable) {
 
   if (reader.chunkIndexes.length === 0 || reader.channelsById.size === 0) {
     if (reader.summaryOffsetsByOpcode.size > 0) {
-      throw new Error("The mcap file is empty or has an incomplete summary section.");
+      throw new Error("The MCAP file is empty or has an incomplete summary section.");
     } else {
-      throw new Error("The mcap file is unindexed. Only indexed files are supported.");
+      throw new Error("The MCAP file is unindexed. Only indexed files are supported.");
     }
   }
   return reader;
