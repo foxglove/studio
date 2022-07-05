@@ -223,7 +223,7 @@ export class Label extends THREE.Object3D {
       this.instanceAttributeData[i++] = char.atlasX;
       this.instanceAttributeData[i++] = char.atlasY;
       // instanceBoxSize
-      this.instanceAttributeData[i++] = char.width;
+      this.instanceAttributeData[i++] = char.xAdvance;
       this.instanceAttributeData[i++] = char.boxHeight;
       // instanceCharSize
       this.instanceAttributeData[i++] = char.width;

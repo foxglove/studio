@@ -25,6 +25,7 @@ export type CharLayoutInfo = {
   top: number;
   width: number;
   height: number;
+  xAdvance: number;
   boxTop: number;
   boxHeight: number;
   atlasX: number;
@@ -111,7 +112,8 @@ export class FontManager {
         height: sdf.height,
         yOffset: sdf.glyphTop,
         // xAdvance: sdf.glyphAdvance, //FIXME: overlaps = sadness
-        xAdvance: sdf.width,
+        // xAdvance: sdf.width,
+        xAdvance: Math.max(sdf.glyphAdvance as number, sdf.width),
       };
       maxAscent = Math.max(maxAscent, sdf.glyphTop);
       x += sdf.width;
@@ -147,6 +149,7 @@ export class FontManager {
           boxHeight: this.atlasData.lineHeight,
           width: info.width,
           height: info.height,
+          xAdvance: info.xAdvance,
           atlasX: info.atlasX,
           atlasY: info.atlasY,
         });

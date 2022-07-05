@@ -51,9 +51,9 @@ export function Layout(): JSX.Element {
       return;
     }
     const manager = new FontManager();
-    manager.update("Hello world!");
+    manager.update("Hello world!\nExample");
     const img = atlasToImageData(manager.atlasData);
-    const layout = manager.layout("Hello world! 🤗");
+    const layout = manager.layout("Hello world!\nExample 🤗");
 
     canvasRef.current.width = layout.width;
     canvasRef.current.height = layout.height;
