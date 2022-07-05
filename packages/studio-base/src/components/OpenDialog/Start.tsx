@@ -189,7 +189,7 @@ export default function Start(props: IStartProps): JSX.Element {
     <Stack gap={2.5}>
       <Grid>
         {recentItems.length > 0 && <ActionList gridColumn={2} title="Recent" items={recentItems} />}
-        <Stack flex="1 1 0" gap={2} style={{ minWidth: 340, gridRow: "1 / 4" }}>
+        <Stack flex="1 1 0" gap={2} style={{ gridRow: "1 / 4" }}>
           <Typography variant="h5" color="text.secondary">
             Open data source
           </Typography>
@@ -208,7 +208,7 @@ export default function Start(props: IStartProps): JSX.Element {
                   <Typography component="div" variant="subtitle1" color="text.primary">
                     {item.text}
                   </Typography>
-                  <Typography component="div" variant="body2" color="text.secondary">
+                  <Typography component="div" variant="body2" color="text.secondary" noWrap>
                     {item.secondaryText}
                   </Typography>
                 </Stack>
