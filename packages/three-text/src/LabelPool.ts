@@ -110,8 +110,8 @@ void main() {
         uTextureSize: { value: [atlasTexture.image.width, atlasTexture.image.height] },
         uMap: { value: atlasTexture },
         uOpacity: { value: 1 },
-        uColor: { value: [1, 0, 0.5] },
-        uBackgroundColor: { value: [0.6, 0.6, 1] },
+        uColor: { value: [0, 0, 0] },
+        uBackgroundColor: { value: [1, 1, 1] },
       },
 
       side: THREE.DoubleSide,
@@ -129,6 +129,8 @@ export class Label extends THREE.Object3D {
 
   instanceAttributeData: Float32Array;
   instanceAttributeBuffer: THREE.InstancedInterleavedBuffer;
+
+  attributes: THREE.InterleavedBufferAttribute[] = [];
 
   constructor(public labelPool: LabelPool) {
     super();
@@ -159,26 +161,37 @@ export class Label extends THREE.Object3D {
       10,
       1,
     );
-    this.geometry.setAttribute(
-      "instanceBoxPosition",
-      new THREE.InterleavedBufferAttribute(this.instanceAttributeBuffer, 2, 0),
+    const instanceBoxPosition = new THREE.InterleavedBufferAttribute(
+      this.instanceAttributeBuffer,
+      2,
+      0,
     );
-    this.geometry.setAttribute(
-      "instanceCharPosition",
-      new THREE.InterleavedBufferAttribute(this.instanceAttributeBuffer, 2, 2),
+    this.geometry.setAttribute("instanceBoxPosition", instanceBoxPosition);
+    this.attributes.push(instanceBoxPosition);
+    const instanceCharPosition = new THREE.InterleavedBufferAttribute(
+      this.instanceAttributeBuffer,
+      2,
+      2,
     );
-    this.geometry.setAttribute(
-      "instanceUv",
-      new THREE.InterleavedBufferAttribute(this.instanceAttributeBuffer, 2, 4),
+    this.geometry.setAttribute("instanceCharPosition", instanceCharPosition);
+    this.attributes.push(instanceCharPosition);
+    const instanceUv = new THREE.InterleavedBufferAttribute(this.instanceAttributeBuffer, 2, 4);
+    this.geometry.setAttribute("instanceUv", instanceUv);
+    this.attributes.push(instanceUv);
+    const instanceBoxSize = new THREE.InterleavedBufferAttribute(
+      this.instanceAttributeBuffer,
+      2,
+      6,
     );
-    this.geometry.setAttribute(
-      "instanceBoxSize",
-      new THREE.InterleavedBufferAttribute(this.instanceAttributeBuffer, 2, 6),
+    this.geometry.setAttribute("instanceBoxSize", instanceBoxSize);
+    this.attributes.push(instanceBoxSize);
+    const instanceCharSize = new THREE.InterleavedBufferAttribute(
+      this.instanceAttributeBuffer,
+      2,
+      8,
     );
-    this.geometry.setAttribute(
-      "instanceCharSize",
-      new THREE.InterleavedBufferAttribute(this.instanceAttributeBuffer, 2, 8),
-    );
+    this.geometry.setAttribute("instanceCharSize", instanceCharSize);
+    this.attributes.push(instanceCharSize);
 
     this.material = new LabelMaterial(labelPool.atlasTexture);
 
@@ -186,6 +199,21 @@ export class Label extends THREE.Object3D {
     this.mesh = new THREE.InstancedMesh(this.geometry, this.material, 0);
 
     this.add(this.mesh);
+  }
+
+  private reallocateAttributeBufferIfNeeded(numChars: number) {
+    const requiredLength = numChars * 10 * Float32Array.BYTES_PER_ELEMENT;
+    if (this.instanceAttributeData.byteLength < requiredLength) {
+      this.instanceAttributeData = new Float32Array(requiredLength);
+      this.instanceAttributeBuffer = new THREE.InstancedInterleavedBuffer(
+        this.instanceAttributeData,
+        10,
+        1,
+      );
+      for (const attrib of this.attributes) {
+        attrib.data = this.instanceAttributeBuffer;
+      }
+    }
   }
 
   update(text?: string): void {
@@ -204,12 +232,8 @@ export class Label extends THREE.Object3D {
 
     this.geometry.instanceCount = this.mesh.count = layoutInfo.chars.length;
 
-    const requiredLength = layoutInfo.chars.length * 10 * Float32Array.BYTES_PER_ELEMENT;
-    if (this.instanceAttributeData.byteLength < requiredLength) {
-      this.instanceAttributeBuffer.array = this.instanceAttributeData = new Float32Array(
-        requiredLength,
-      );
-    }
+    this.reallocateAttributeBufferIfNeeded(layoutInfo.chars.length);
+
     let i = 0;
     for (const char of layoutInfo.chars) {
       // instanceBoxPosition
@@ -231,10 +255,24 @@ export class Label extends THREE.Object3D {
     }
     this.instanceAttributeBuffer.needsUpdate = true;
   }
+
+  setColor(r: number, g: number, b: number): void {
+    this.material.uniforms.uColor!.value[0] = r;
+    this.material.uniforms.uColor!.value[1] = g;
+    this.material.uniforms.uColor!.value[2] = b;
+  }
+  setBackgroundColor(r: number, g: number, b: number): void {
+    this.material.uniforms.uBackgroundColor!.value[0] = r;
+    this.material.uniforms.uBackgroundColor!.value[1] = g;
+    this.material.uniforms.uBackgroundColor!.value[2] = b;
+  }
 }
 
 export class LabelPool {
   atlasTexture: THREE.DataTexture;
+
+  unusedLabels: Label[] = [];
+
   constructor(public fontManager: FontManager) {
     this.atlasTexture = new THREE.DataTexture(
       new Uint8ClampedArray(),
@@ -251,25 +289,30 @@ export class LabelPool {
   }
 
   update(text: string): void {
-    this.fontManager.update(text);
+    if (this.fontManager.update(text)) {
+      //FIXME: THREE.AlphaFormat not working? :(
+      const data = new Uint8ClampedArray(this.fontManager.atlasData.data.length * 4);
+      for (let i = 0; i < this.fontManager.atlasData.data.length; i++) {
+        data[i * 4 + 0] = data[i * 4 + 1] = data[i * 4 + 2] = 1;
+        data[i * 4 + 3] = this.fontManager.atlasData.data[i]!;
+      }
 
-    //FIXME: THREE.AlphaFormat not working? :(
-    const data = new Uint8ClampedArray(this.fontManager.atlasData.data.length * 4);
-    for (let i = 0; i < this.fontManager.atlasData.data.length; i++) {
-      data[i * 4 + 0] = data[i * 4 + 1] = data[i * 4 + 2] = 1;
-      data[i * 4 + 3] = this.fontManager.atlasData.data[i]!;
+      this.atlasTexture.image = {
+        data,
+        width: this.fontManager.atlasData.width,
+        height: this.fontManager.atlasData.height,
+      };
+      this.atlasTexture.needsUpdate = true;
     }
-
-    this.atlasTexture.image = {
-      data,
-      width: this.fontManager.atlasData.width,
-      height: this.fontManager.atlasData.height,
-    };
-    this.atlasTexture.needsUpdate = true;
   }
 
   acquire(): Label {
     //FIXME
-    return new Label(this);
+    return this.unusedLabels.pop() ?? new Label(this);
+  }
+
+  release(label: Label): void {
+    label.removeFromParent();
+    this.unusedLabels.push(label);
   }
 }

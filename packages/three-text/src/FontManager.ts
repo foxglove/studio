@@ -64,7 +64,7 @@ export class FontManager {
     this.update(initialAlphabet);
   }
 
-  update(newChars: string): void {
+  update(newChars: string): boolean {
     let needsUpdate = false;
     for (const char of newChars) {
       if (!this.alphabet.includes(char)) {
@@ -74,7 +74,7 @@ export class FontManager {
     }
 
     if (!needsUpdate) {
-      return;
+      return false;
     }
     const atlasWidth = 1024;
     const atlasHeight = 1024;
@@ -127,6 +127,7 @@ export class FontManager {
       maxAscent,
       lineHeight,
     };
+    return true;
   }
 
   layout(text: string): LayoutInfo {
