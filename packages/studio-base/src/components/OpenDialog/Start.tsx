@@ -2,7 +2,6 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { IButtonProps } from "@fluentui/react";
 import {
   Button,
   Checkbox,
@@ -19,10 +18,10 @@ import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectio
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import TextMiddleTruncate from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicTree/TextMiddleTruncate";
 
-import ActionList from "./ActionList";
+import ActionList, { ActionListItem } from "./ActionList";
 import { OpenDialogViews } from "./types";
 
-const HELP_ITEMS: IButtonProps[] = [
+const HELP_ITEMS: ActionListItem[] = [
   {
     id: "slack",
     href: "https://foxglove.dev/slack?utm_source=studio&utm_medium=open-dialog",
@@ -74,10 +73,6 @@ const StyledButton = muiStyled(Button)(({ theme }) => ({
   ".MuiButton-startIcon .MuiSvgIcon-fontSizeLarge": {
     fontSize: 28,
   },
-}));
-
-const RecentStack = muiStyled(Stack)(({ theme }) => ({
-  "&:hover": { color: theme.palette.primary.dark },
 }));
 
 const Grid = muiStyled("div")(({ theme }) => ({
@@ -162,12 +157,12 @@ export default function Start(props: IStartProps): JSX.Element {
     ];
   }, [onSelectView, supportedLocalFileExtensions, supportedRemoteFileExtensions]);
 
-  const recentItems: IButtonProps[] = useMemo(() => {
+  const recentItems: ActionListItem[] = useMemo(() => {
     return recentSources.map((recent) => {
       return {
         id: recent.id,
         children: (
-          <RecentStack overflow="hidden" direction="row" gap={1}>
+          <Stack overflow="hidden" direction="row" gap={1}>
             <Typography variant="body2" color="inherit" component="div" noWrap overflow="hidden">
               <TextMiddleTruncate text={recent.title} />
             </Typography>
@@ -176,7 +171,7 @@ export default function Start(props: IStartProps): JSX.Element {
                 {recent.label}
               </Typography>
             )}
-          </RecentStack>
+          </Stack>
         ),
         onClick: () => selectRecent(recent.id),
       };
@@ -207,6 +202,7 @@ export default function Start(props: IStartProps): JSX.Element {
                 size="large"
                 key={item.key}
                 startIcon={item.icon}
+                onClick={item.onClick}
               >
                 <Stack flex="auto" zeroMinWidth>
                   <Typography component="div" variant="subtitle1" color="text.primary">

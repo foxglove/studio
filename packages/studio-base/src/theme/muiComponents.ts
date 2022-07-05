@@ -408,6 +408,16 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
         selected: {},
       },
     },
+    MuiTabs: {
+      styleOverrides: {
+        vertical: {
+          ".MuiTabs-indicator": {
+            left: 0,
+            right: "auto",
+          },
+        },
+      },
+    },
     MuiTableCell: {
       styleOverrides: {
         stickyHeader: {
