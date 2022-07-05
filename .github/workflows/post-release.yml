@@ -210,4 +210,4 @@ jobs:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_LOGIN }}
         with:
           snap: fixme-path-to-file.snap
-          release: stable
+          release: candidate
