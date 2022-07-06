@@ -10,16 +10,17 @@ class LabelMaterial extends THREE.RawShaderMaterial {
   constructor(atlasTexture: THREE.Texture) {
     const picking = false; //FIXME
     super({
-      vertexShader: `\
+      vertexShader: /* glsl */ `\
 #version 300 es
 precision highp float;
 precision highp int;
 uniform mat4 projectionMatrix, modelViewMatrix, modelMatrix;
 
+uniform bool uBillboard;
 uniform float uScale;
 uniform vec2 uLabelSize;
 uniform vec2 uTextureSize;
-uniform vec2 uCenter;
+uniform vec2 uAnchorPoint;
 
 in vec2 uv;
 in vec2 position;
@@ -39,29 +40,28 @@ void main() {
   vPosInLabel = (instanceBoxPosition + position * instanceBoxSize);
   gl_Position = projectionMatrix * modelViewMatrix * vec4(vertexPos, 0.0, 1.0);
 
-  return;
-
   // Adapted from THREE.ShaderLib.sprite
+  if (uBillboard) {
+    float rotation = 0.0;
 
-  float rotation = 0.0;
-
-  vec4 mvPosition = modelViewMatrix * vec4( 0.0, 0.0, 0.0, 1.0 );
-  vec2 scale;
-  scale.x = length(modelMatrix[0].xyz);
-  scale.y = length(modelMatrix[1].xyz);
-  // #ifndef USE_SIZEATTENUATION
-  //   bool isPerspective = isPerspectiveMatrix( projectionMatrix );
-  //   if ( isPerspective ) scale *= - mvPosition.z;
-  // #endif
-  vec2 alignedPosition = ( position.xy - ( uCenter - vec2( 0.5 ) ) ) * scale;
-  vec2 rotatedPosition;
-  rotatedPosition.x = cos( rotation ) * alignedPosition.x - sin( rotation ) * alignedPosition.y;
-  rotatedPosition.y = sin( rotation ) * alignedPosition.x + cos( rotation ) * alignedPosition.y;
-  mvPosition.xy += rotatedPosition;
-  gl_Position = projectionMatrix * mvPosition;
+    vec4 mvPosition = modelViewMatrix * vec4( 0.0, 0.0, 0.0, 1.0 );
+    vec2 scale;
+    scale.x = length(modelMatrix[0].xyz);
+    scale.y = length(modelMatrix[1].xyz);
+    // #ifndef USE_SIZEATTENUATION
+    //   bool isPerspective = isPerspectiveMatrix( projectionMatrix );
+    //   if ( isPerspective ) scale *= - mvPosition.z;
+    // #endif
+    vec2 alignedPosition = vertexPos - uAnchorPoint * uLabelSize * uScale;
+    vec2 rotatedPosition;
+    rotatedPosition.x = cos( rotation ) * alignedPosition.x - sin( rotation ) * alignedPosition.y;
+    rotatedPosition.y = sin( rotation ) * alignedPosition.x + cos( rotation ) * alignedPosition.y;
+    mvPosition.xy += rotatedPosition;
+    gl_Position = projectionMatrix * mvPosition;
+  }
 }
 `,
-      fragmentShader: `\
+      fragmentShader: /* glsl */ `\
 #version 300 es
 #ifdef GL_FRAGMENT_PRECISION_HIGH
   precision highp float;
@@ -104,7 +104,8 @@ void main() {
 }
 `,
       uniforms: {
-        uCenter: { value: [0, 0] },
+        uAnchorPoint: { value: [0.5, 0.5] },
+        uBillboard: { value: false },
         uLabelSize: { value: [0, 0] },
         uScale: { value: 0 },
         uTextureSize: { value: [atlasTexture.image.width, atlasTexture.image.height] },
@@ -127,71 +128,35 @@ export class Label extends THREE.Object3D {
   geometry: THREE.InstancedBufferGeometry;
   material: LabelMaterial;
 
-  instanceAttributeData: Float32Array;
-  instanceAttributeBuffer: THREE.InstancedInterleavedBuffer;
+  instanceAttrData: Float32Array;
+  instanceAttrBuffer: THREE.InstancedInterleavedBuffer;
 
-  attributes: THREE.InterleavedBufferAttribute[] = [];
+  instanceBoxPosition: THREE.InterleavedBufferAttribute;
+  instanceCharPosition: THREE.InterleavedBufferAttribute;
+  instanceUv: THREE.InterleavedBufferAttribute;
+  instanceBoxSize: THREE.InterleavedBufferAttribute;
+  instanceCharSize: THREE.InterleavedBufferAttribute;
 
   constructor(public labelPool: LabelPool) {
     super();
 
     this.geometry = new THREE.InstancedBufferGeometry();
 
-    //FIXME: share these with all labels in LabelPool?
-    const positions: [number, number][] = [
-      [0, 0],
-      [0, 1],
-      [1, 0],
-      [1, 0],
-      [0, 1],
-      [1, 1],
-    ];
-    this.geometry.setAttribute(
-      "position",
-      new THREE.BufferAttribute(new Float32Array(positions.flat()), 2),
-    );
-    this.geometry.setAttribute(
-      "uv",
-      new THREE.BufferAttribute(new Float32Array(positions.map(([x, y]) => [x, 1 - y]).flat()), 2),
-    );
+    this.geometry.setAttribute("position", LabelPool.QUAD_POSITIONS);
+    this.geometry.setAttribute("uv", LabelPool.QUAD_UVS);
 
-    this.instanceAttributeData = new Float32Array();
-    this.instanceAttributeBuffer = new THREE.InstancedInterleavedBuffer(
-      this.instanceAttributeData,
-      10,
-      1,
-    );
-    const instanceBoxPosition = new THREE.InterleavedBufferAttribute(
-      this.instanceAttributeBuffer,
-      2,
-      0,
-    );
-    this.geometry.setAttribute("instanceBoxPosition", instanceBoxPosition);
-    this.attributes.push(instanceBoxPosition);
-    const instanceCharPosition = new THREE.InterleavedBufferAttribute(
-      this.instanceAttributeBuffer,
-      2,
-      2,
-    );
-    this.geometry.setAttribute("instanceCharPosition", instanceCharPosition);
-    this.attributes.push(instanceCharPosition);
-    const instanceUv = new THREE.InterleavedBufferAttribute(this.instanceAttributeBuffer, 2, 4);
-    this.geometry.setAttribute("instanceUv", instanceUv);
-    this.attributes.push(instanceUv);
-    const instanceBoxSize = new THREE.InterleavedBufferAttribute(
-      this.instanceAttributeBuffer,
-      2,
-      6,
-    );
-    this.geometry.setAttribute("instanceBoxSize", instanceBoxSize);
-    this.attributes.push(instanceBoxSize);
-    const instanceCharSize = new THREE.InterleavedBufferAttribute(
-      this.instanceAttributeBuffer,
-      2,
-      8,
-    );
-    this.geometry.setAttribute("instanceCharSize", instanceCharSize);
-    this.attributes.push(instanceCharSize);
+    this.instanceAttrData = new Float32Array();
+    this.instanceAttrBuffer = new THREE.InstancedInterleavedBuffer(this.instanceAttrData, 10, 1);
+    this.instanceBoxPosition = new THREE.InterleavedBufferAttribute(this.instanceAttrBuffer, 2, 0);
+    this.instanceCharPosition = new THREE.InterleavedBufferAttribute(this.instanceAttrBuffer, 2, 2);
+    this.instanceUv = new THREE.InterleavedBufferAttribute(this.instanceAttrBuffer, 2, 4);
+    this.instanceBoxSize = new THREE.InterleavedBufferAttribute(this.instanceAttrBuffer, 2, 6);
+    this.instanceCharSize = new THREE.InterleavedBufferAttribute(this.instanceAttrBuffer, 2, 8);
+    this.geometry.setAttribute("instanceBoxPosition", this.instanceBoxPosition);
+    this.geometry.setAttribute("instanceCharPosition", this.instanceCharPosition);
+    this.geometry.setAttribute("instanceUv", this.instanceUv);
+    this.geometry.setAttribute("instanceBoxSize", this.instanceBoxSize);
+    this.geometry.setAttribute("instanceCharSize", this.instanceCharSize);
 
     this.material = new LabelMaterial(labelPool.atlasTexture);
 
@@ -201,18 +166,22 @@ export class Label extends THREE.Object3D {
     this.add(this.mesh);
   }
 
+  dispose(): void {
+    this.geometry.dispose();
+    this.material.dispose();
+    this.mesh.dispose();
+  }
+
   private reallocateAttributeBufferIfNeeded(numChars: number) {
     const requiredLength = numChars * 10 * Float32Array.BYTES_PER_ELEMENT;
-    if (this.instanceAttributeData.byteLength < requiredLength) {
-      this.instanceAttributeData = new Float32Array(requiredLength);
-      this.instanceAttributeBuffer = new THREE.InstancedInterleavedBuffer(
-        this.instanceAttributeData,
-        10,
-        1,
-      );
-      for (const attrib of this.attributes) {
-        attrib.data = this.instanceAttributeBuffer;
-      }
+    if (this.instanceAttrData.byteLength < requiredLength) {
+      this.instanceAttrData = new Float32Array(requiredLength);
+      this.instanceAttrBuffer = new THREE.InstancedInterleavedBuffer(this.instanceAttrData, 10, 1);
+      this.instanceBoxPosition.data = this.instanceAttrBuffer;
+      this.instanceCharPosition.data = this.instanceAttrBuffer;
+      this.instanceUv.data = this.instanceAttrBuffer;
+      this.instanceBoxSize.data = this.instanceAttrBuffer;
+      this.instanceCharSize.data = this.instanceAttrBuffer;
     }
   }
 
@@ -237,23 +206,23 @@ export class Label extends THREE.Object3D {
     let i = 0;
     for (const char of layoutInfo.chars) {
       // instanceBoxPosition
-      this.instanceAttributeData[i++] = char.left;
-      this.instanceAttributeData[i++] = layoutInfo.height - char.boxTop - char.boxHeight;
+      this.instanceAttrData[i++] = char.left;
+      this.instanceAttrData[i++] = layoutInfo.height - char.boxTop - char.boxHeight;
       // instanceCharPosition
-      this.instanceAttributeData[i++] = char.left;
-      this.instanceAttributeData[i++] =
+      this.instanceAttrData[i++] = char.left;
+      this.instanceAttrData[i++] =
         layoutInfo.height - char.boxTop - char.boxHeight + char.top - char.boxTop;
       // instanceUv
-      this.instanceAttributeData[i++] = char.atlasX;
-      this.instanceAttributeData[i++] = char.atlasY;
+      this.instanceAttrData[i++] = char.atlasX;
+      this.instanceAttrData[i++] = char.atlasY;
       // instanceBoxSize
-      this.instanceAttributeData[i++] = char.xAdvance;
-      this.instanceAttributeData[i++] = char.boxHeight;
+      this.instanceAttrData[i++] = char.xAdvance;
+      this.instanceAttrData[i++] = char.boxHeight;
       // instanceCharSize
-      this.instanceAttributeData[i++] = char.width;
-      this.instanceAttributeData[i++] = char.height;
+      this.instanceAttrData[i++] = char.width;
+      this.instanceAttrData[i++] = char.height;
     }
-    this.instanceAttributeBuffer.needsUpdate = true;
+    this.instanceAttrBuffer.needsUpdate = true;
   }
 
   setColor(r: number, g: number, b: number): void {
@@ -269,12 +238,36 @@ export class Label extends THREE.Object3D {
   setOpacity(opacity: number): void {
     this.material.uniforms.uOpacity!.value = opacity;
   }
+
+  // eslint-disable-next-line @foxglove/no-boolean-parameters
+  setBillboard(billboard: boolean): void {
+    this.material.uniforms.uBillboard!.value = billboard;
+  }
+
+  setAnchorPoint(x: number, y: number): void {
+    this.material.uniforms.uAnchorPoint!.value[0] = x;
+    this.material.uniforms.uAnchorPoint!.value[1] = y;
+  }
 }
 
 export class LabelPool {
   atlasTexture: THREE.DataTexture;
 
-  unusedLabels: Label[] = [];
+  private availableLabels: Label[] = [];
+
+  static QUAD_POINTS: [number, number][] = [
+    [0, 0],
+    [0, 1],
+    [1, 0],
+    [1, 0],
+    [0, 1],
+    [1, 1],
+  ];
+  static QUAD_POSITIONS = new THREE.BufferAttribute(new Float32Array(this.QUAD_POINTS.flat()), 2);
+  static QUAD_UVS = new THREE.BufferAttribute(
+    new Float32Array(this.QUAD_POINTS.flatMap(([x, y]) => [x, 1 - y])),
+    2,
+  );
 
   constructor(public fontManager: FontManager) {
     this.atlasTexture = new THREE.DataTexture(
@@ -311,12 +304,18 @@ export class LabelPool {
   }
 
   acquire(): Label {
-    //FIXME
-    return this.unusedLabels.pop() ?? new Label(this);
+    return this.availableLabels.pop() ?? new Label(this);
   }
 
   release(label: Label): void {
     label.removeFromParent();
-    this.unusedLabels.push(label);
+    this.availableLabels.push(label);
+  }
+
+  dispose(): void {
+    for (const label of this.availableLabels) {
+      label.dispose();
+    }
+    this.atlasTexture.dispose();
   }
 }

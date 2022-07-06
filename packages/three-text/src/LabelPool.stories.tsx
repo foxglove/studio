@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { chunk } from "lodash";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import seedrandom from "seedrandom";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
@@ -18,63 +18,120 @@ export default {
 
 const rng = seedrandom("1");
 
-function makeScene(canvas: HTMLCanvasElement) {
-  const fontManager = new FontManager();
-  const labelPool = new LabelPool(fontManager);
+class StoryScene {
+  fontManager = new FontManager();
+  labelPool = new LabelPool(this.fontManager);
 
-  const camera = new THREE.PerspectiveCamera(
-    45,
-    canvas.clientWidth / canvas.clientHeight,
-    0.1,
-    2000,
-  );
-  camera.position.set(2, 2, 2);
+  camera = new THREE.PerspectiveCamera(45, 1, 0.1, 2000);
+  scene = new THREE.Scene();
+  renderer?: THREE.WebGLRenderer;
+  controls?: OrbitControls;
 
-  const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0xf0f0f0);
-
-  const axesHelper = new THREE.AxesHelper(5);
-  scene.add(axesHelper);
-
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-  renderer.setPixelRatio(window.devicePixelRatio);
-  renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-
-  function render() {
-    renderer.render(scene, camera);
+  constructor() {
+    this.camera.position.set(2, 2, 2);
+    this.scene.background = new THREE.Color(0xf0f0f0);
+    this.scene.add(new THREE.AxesHelper(5));
   }
 
-  const controls = new OrbitControls(camera, canvas);
-  controls.target.set(0, 0, 0);
-  controls.update();
+  dispose() {
+    this.controls?.dispose();
+    this.renderer?.dispose();
+  }
 
-  controls.addEventListener("change", render);
-
-  const dispose = () => {
-    controls.dispose();
-    renderer.dispose();
+  render = () => {
+    this.renderer?.render(this.scene, this.camera);
   };
-  return { scene, camera, render, labelPool, dispose };
+
+  setCanvas(canvas: HTMLCanvasElement) {
+    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    this.renderer.setPixelRatio(window.devicePixelRatio);
+
+    this.camera.aspect = canvas.clientWidth / canvas.clientHeight;
+    this.renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+
+    this.controls = new OrbitControls(this.camera, canvas);
+    this.controls.target.set(0, 0, 0);
+    this.controls.update();
+
+    this.controls.addEventListener("change", this.render);
+  }
 }
 
-Basic.parameters = { colorScheme: "dark" };
-export function Basic(): JSX.Element {
+export const Basic = Object.assign(BasicTemplate.bind({}), {
+  args: {
+    billboard: false,
+    anchorPointX: 0.5,
+    anchorPointY: 0.5,
+    positionX: 0,
+    positionY: 0,
+    positionZ: 0,
+  },
+  argTypes: {
+    anchorPointX: { control: { type: "range", min: 0, max: 1, step: 0.01 } },
+    anchorPointY: { control: { type: "range", min: 0, max: 1, step: 0.01 } },
+    positionX: { control: { type: "range", min: -5, max: 5, step: 0.01 } },
+    positionY: { control: { type: "range", min: -5, max: 5, step: 0.01 } },
+    positionZ: { control: { type: "range", min: -5, max: 5, step: 0.01 } },
+  },
+});
+function BasicTemplate({
+  billboard,
+  anchorPointX,
+  anchorPointY,
+  positionX,
+  positionY,
+  positionZ,
+}: {
+  billboard: boolean;
+  anchorPointX: number;
+  anchorPointY: number;
+  positionX: number;
+  positionY: number;
+  positionZ: number;
+}): JSX.Element {
   const canvasRef = useRef<HTMLCanvasElement>(ReactNull);
 
+  const [storyScene] = useState(() => new StoryScene());
+  const [label, setLabel] = useState<Label>();
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) {
-      return;
+      throw new Error("expected canvas");
     }
-    const { render, scene, labelPool, dispose } = makeScene(canvas);
+    storyScene.setCanvas(canvas);
+    const newLabel = storyScene.labelPool.acquire();
+    setLabel(newLabel);
 
-    const label = labelPool.acquire();
-    label.update("Hello world!\nExample");
-    scene.add(label);
+    newLabel.update("Hello world!\nExample");
+    storyScene.scene.add(newLabel);
+    storyScene.render();
 
-    render();
-    return dispose;
-  }, []);
+    return () => {
+      storyScene.labelPool.release(newLabel);
+      storyScene.dispose();
+    };
+  }, [storyScene]);
+
+  useEffect(() => {
+    if (label) {
+      label.setBillboard(billboard);
+      storyScene.render();
+    }
+  }, [billboard, label, storyScene]);
+
+  useEffect(() => {
+    if (label) {
+      label.setAnchorPoint(anchorPointX, anchorPointY);
+      storyScene.render();
+    }
+  }, [anchorPointX, anchorPointY, billboard, label, storyScene]);
+
+  useEffect(() => {
+    if (label) {
+      label.position.set(positionX, positionY, positionZ);
+      storyScene.render();
+    }
+  }, [label, positionX, positionY, positionZ, storyScene]);
 
   return <canvas ref={canvasRef} width={400} height={400} style={{ width: 400, height: 400 }} />;
 }
@@ -162,9 +219,6 @@ export function Cipher(): JSX.Element {
 
     const words: Word[] = [];
     const interval = setInterval(() => {
-      if (words.length > 0) {
-        return;
-      }
       const label = labelPool.acquire();
       label.position.set((rng() - 0.5) * 2, (rng() - 0.5) * 2, (rng() - 0.5) * 2);
       scene.add(label);
