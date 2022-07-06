@@ -15,6 +15,9 @@ const StyledTextField = muiStyled(TextField)({
   ".MuiInputBase-formControl.MuiInputBase-root": {
     padding: 0,
   },
+  ".MuiInputBase-root": {
+    cursor: "pointer",
+  },
   ".MuiInputBase-input": {
     fontFamily: fonts.MONOSPACE,
     alignItems: "center",
