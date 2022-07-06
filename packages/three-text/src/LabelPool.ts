@@ -266,6 +266,9 @@ export class Label extends THREE.Object3D {
     this.material.uniforms.uBackgroundColor!.value[1] = g;
     this.material.uniforms.uBackgroundColor!.value[2] = b;
   }
+  setOpacity(opacity: number): void {
+    this.material.uniforms.uOpacity!.value = opacity;
+  }
 }
 
 export class LabelPool {

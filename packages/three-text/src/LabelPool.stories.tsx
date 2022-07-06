@@ -54,8 +54,8 @@ function makeScene(canvas: HTMLCanvasElement) {
   return { scene, camera, render, labelPool, dispose };
 }
 
-Atlas.parameters = { colorScheme: "dark" };
-export function Atlas(): JSX.Element {
+Basic.parameters = { colorScheme: "dark" };
+export function Basic(): JSX.Element {
   const canvasRef = useRef<HTMLCanvasElement>(ReactNull);
 
   useEffect(() => {
@@ -85,6 +85,7 @@ class Word {
   timeOffset = Math.random() * 5000;
   constructor(public label: Label, private text: string) {
     label.update(text);
+    label.setOpacity(Math.random());
   }
 
   startFrame(t: number) {
