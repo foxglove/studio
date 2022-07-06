@@ -57,7 +57,7 @@ export class FontManager {
   constructor() {
     const start = " ".charCodeAt(0);
     const end = "~".charCodeAt(0);
-    let initialAlphabet = REPLACEMENT_CHARACTER; // always include replacement character
+    let initialAlphabet = REPLACEMENT_CHARACTER + "\n"; // always include replacement character
     for (let i = start; i <= end; i++) {
       initialAlphabet += String.fromCodePoint(i);
     }

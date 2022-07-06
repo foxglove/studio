@@ -2,8 +2,9 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { random, chunk } from "lodash";
+import { chunk } from "lodash";
 import { useEffect, useRef } from "react";
+import seedrandom from "seedrandom";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import Stats from "three/examples/jsm/libs/stats.module";
@@ -14,6 +15,8 @@ import { Label, LabelPool } from "./LabelPool";
 export default {
   title: "LabelPool",
 };
+
+const rng = seedrandom("1");
 
 function makeScene(canvas: HTMLCanvasElement) {
   const fontManager = new FontManager();
@@ -82,10 +85,9 @@ class Word {
   floatingIndices: number[] = [];
   length = 0;
   lastChangeTime = 0;
-  timeOffset = Math.random() * 5000;
+  timeOffset = rng() * 5000;
   constructor(public label: Label, private text: string) {
     label.update(text);
-    label.setOpacity(Math.random());
   }
 
   startFrame(t: number) {
@@ -95,19 +97,21 @@ class Word {
     tempColor.setHSL(1 - (t + this.timeOffset) / 5000, 0.5, 0.2);
     this.label.setBackgroundColor(tempColor.r, tempColor.g, tempColor.b);
 
+    this.label.setOpacity(0.5 + 0.5 * Math.sin((t + this.timeOffset) / 1000));
+
     if (t < this.lastChangeTime + 50) {
       return;
     }
     this.lastChangeTime = t;
-    if (Math.random() < 0.2 && this.floatingIndices.length > 0) {
+    if (rng() < 0.2 && this.floatingIndices.length > 0) {
       this.floatingIndices.pop();
       if (this.length === this.text.length && this.floatingIndices.length === 0) {
         this.length = 0;
       }
     }
 
-    if (Math.random() < 0.7 && this.length < this.text.length) {
-      this.floatingIndices.splice(random(this.floatingIndices.length), 0, this.length);
+    if (rng() < 0.7 && this.length < this.text.length) {
+      this.floatingIndices.splice(Math.floor(rng() * this.floatingIndices.length), 0, this.length);
       this.length++;
     }
     let string = "";
@@ -125,7 +129,9 @@ class Word {
         string += char;
       } else {
         const isUppercase = char.toUpperCase() === char;
-        string += String.fromCharCode((isUppercase ? 0 : 32) + random(65, 90));
+        string += String.fromCharCode(
+          (isUppercase ? 0 : 32) + 65 + Math.floor(rng() * (90 - 65 + 1)),
+        );
       }
       lineLength++;
     }
@@ -151,18 +157,18 @@ export function Cipher(): JSX.Element {
     const exampleText =
       "Lorem ipsum dolor sit amet consectetur adipisicing elit. Libero animi omnis deleniti dolorum eligendi corporis, amet expedita doloribus dicta quasi vero numquam fugiat! Inventore obcaecati, harum in laborum distinctio tenetur.";
     const texts = chunk(exampleText.split(" "), 3).map((words) =>
-      words.join(" ").replace(/\s/g, () => (Math.random() < 0.5 ? "\n" : " ")),
+      words.join(" ").replace(/\s/g, () => (rng() < 0.5 ? "\n" : " ")),
     );
 
     const words: Word[] = [];
     const interval = setInterval(() => {
-      if (words.length > 10) {
+      if (words.length > 0) {
         return;
       }
       const label = labelPool.acquire();
-      label.position.set(random(-1, 1), random(-1, 1), random(-1, 1));
+      label.position.set((rng() - 0.5) * 2, (rng() - 0.5) * 2, (rng() - 0.5) * 2);
       scene.add(label);
-      words.push(new Word(label, texts[random(texts.length - 1)]!));
+      words.push(new Word(label, texts[Math.floor(rng() * texts.length)]!));
 
       if (words.length > 10) {
         const word = words.shift()!;

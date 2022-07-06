@@ -292,7 +292,8 @@ export class LabelPool {
   }
 
   update(text: string): void {
-    if (this.fontManager.update(text)) {
+    //FIXME: probably need manager to notify us when updates happen so we know when the texture needs to be updated, unless we own the font manager
+    if (this.fontManager.update(text) || this.atlasTexture.image.width === 0) {
       //FIXME: THREE.AlphaFormat not working? :(
       const data = new Uint8ClampedArray(this.fontManager.atlasData.data.length * 4);
       for (let i = 0; i < this.fontManager.atlasData.data.length; i++) {
