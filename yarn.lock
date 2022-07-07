@@ -2518,6 +2518,7 @@ __metadata:
     "@foxglove/rostime": 1.1.2
     "@foxglove/schemas": 0.2.0
     "@foxglove/studio": "workspace:*"
+    "@foxglove/three-text": "workspace:*"
     "@foxglove/ulog": 2.1.2
     "@foxglove/velodyne-cloud": 1.0.1
     "@foxglove/wasm-bz2": 0.1.0
@@ -2688,7 +2689,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@foxglove/three-text@workspace:packages/three-text":
+"@foxglove/three-text@workspace:*, @foxglove/three-text@workspace:packages/three-text":
   version: 0.0.0-use.local
   resolution: "@foxglove/three-text@workspace:packages/three-text"
   dependencies:
