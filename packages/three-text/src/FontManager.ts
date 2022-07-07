@@ -86,8 +86,12 @@ export class FontManager extends EventDispatcher<{ type: "atlasChange" }> {
     const atlasWidth = 1024;
     const atlasHeight = 1024;
     const atlas = new Uint8ClampedArray(atlasWidth * atlasHeight);
+    const fontSize = this.options.fontSize ?? 48;
+    const buffer = Math.ceil(fontSize / 16);
     const tinysdf = new TinySDF({
-      fontSize: this.options.fontSize ?? 48,
+      fontSize,
+      buffer,
+      radius: Math.ceil(fontSize / 4),
       fontFamily: this.options.fontFamily ?? "monospace",
     });
 
@@ -121,9 +125,10 @@ export class FontManager extends EventDispatcher<{ type: "atlasChange" }> {
         width: sdf.width,
         height: sdf.height,
         yOffset: sdf.glyphTop,
-        // Use the full width in order to avoid z-fighting on character overlaps. Use glyphAdvance
-        // if it is larger than width (e.g. for space characters)
-        xAdvance: Math.max(sdf.glyphAdvance as number, sdf.width),
+        // Use the full width in order to avoid character overlaps and z-fighting. Use glyphAdvance
+        // if it is larger than width (e.g. for space characters). Subtract 1x the buffer so we
+        // don't end up with *too* much space between characters.
+        xAdvance: Math.max(sdf.glyphAdvance as number, sdf.width - buffer),
       };
       maxAscent = Math.max(maxAscent, sdf.glyphTop);
       x += sdf.width;

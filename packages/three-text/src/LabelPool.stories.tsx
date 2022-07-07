@@ -71,6 +71,7 @@ export const Basic = Object.assign(BasicTemplate.bind({}), {
     text: "Hello world!\nExample",
     lineHeight: 1,
     scaleFactor: 1,
+    opacity: 1,
     cameraMode: "perspective",
     billboard: false,
     anchorPointX: 0.5,
@@ -83,6 +84,7 @@ export const Basic = Object.assign(BasicTemplate.bind({}), {
     cameraMode: { control: "inline-radio", options: ["perspective", "orthographic"] },
     lineHeight: { control: { type: "range", min: 0.5, max: 5, step: 0.01 } },
     scaleFactor: { control: { type: "range", min: 0, max: 2, step: 0.01 } },
+    opacity: { control: { type: "range", min: 0, max: 1, step: 0.01 } },
     anchorPointX: { control: { type: "range", min: 0, max: 1, step: 0.01 } },
     anchorPointY: { control: { type: "range", min: 0, max: 1, step: 0.01 } },
     positionX: { control: { type: "range", min: -5, max: 5, step: 0.01 } },
@@ -95,6 +97,7 @@ function BasicTemplate({
   text,
   lineHeight,
   scaleFactor,
+  opacity,
   billboard,
   cameraMode,
   anchorPointX,
@@ -106,6 +109,7 @@ function BasicTemplate({
   text: string;
   lineHeight: number;
   scaleFactor: number;
+  opacity: number;
   cameraMode: "perspective" | "orthographic";
   billboard: boolean;
   anchorPointX: number;
@@ -159,6 +163,13 @@ function BasicTemplate({
       storyScene.render();
     }
   }, [lineHeight, label, storyScene]);
+
+  useEffect(() => {
+    if (label) {
+      label.setOpacity(opacity);
+      storyScene.render();
+    }
+  }, [opacity, label, storyScene]);
 
   useEffect(() => {
     if (label) {

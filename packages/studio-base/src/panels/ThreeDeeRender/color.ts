@@ -6,7 +6,7 @@ import { SRGBToLinear } from "three/src/math/ColorManagement";
 import { clamp } from "three/src/math/MathUtils";
 import tinycolor from "tinycolor2";
 
-import { approxEquals, lerp, uint8Equals } from "./math";
+import { lerp } from "./math";
 import { ColorRGB, ColorRGBA } from "./ros";
 
 export { SRGBToLinear } from "three/src/math/ColorManagement";
@@ -70,15 +70,6 @@ export function rgbaToLinear(output: ColorRGBA, color: ColorRGBA): ColorRGBA {
   output.b = SRGBToLinear(color.b);
   output.a = color.a;
   return output;
-}
-
-export function rgbaEqual(a: ColorRGBA, b: ColorRGBA): boolean {
-  return (
-    uint8Equals(a.r, b.r) &&
-    uint8Equals(a.g, b.g) &&
-    uint8Equals(a.b, b.b) &&
-    approxEquals(a.a, b.a)
-  );
 }
 
 // https://stackoverflow.com/a/596243
