@@ -36,7 +36,7 @@ void main() {
   // vUv = (instanceUv + uv * instanceBoxSize) / uTextureSize;
   vInsideChar = boxUv;
   vUv = (instanceUv + boxUv * instanceCharSize) / uTextureSize;
-  vec2 vertexPos = (instanceBoxPosition + position * instanceBoxSize) * uScale;
+  vec2 vertexPos = (instanceBoxPosition + position * instanceBoxSize - uAnchorPoint * uLabelSize) * uScale;
   vPosInLabel = (instanceBoxPosition + position * instanceBoxSize);
   gl_Position = projectionMatrix * modelViewMatrix * vec4(vertexPos, 0.0, 1.0);
 
@@ -52,7 +52,7 @@ void main() {
     //   bool isPerspective = isPerspectiveMatrix( projectionMatrix );
     //   if ( isPerspective ) scale *= - mvPosition.z;
     // #endif
-    vec2 alignedPosition = vertexPos - uAnchorPoint * uLabelSize * uScale;
+    vec2 alignedPosition = vertexPos;
     vec2 rotatedPosition;
     rotatedPosition.x = cos( rotation ) * alignedPosition.x - sin( rotation ) * alignedPosition.y;
     rotatedPosition.y = sin( rotation ) * alignedPosition.x + cos( rotation ) * alignedPosition.y;
