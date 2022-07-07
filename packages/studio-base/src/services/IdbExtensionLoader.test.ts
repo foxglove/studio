@@ -99,5 +99,30 @@ describe("IdbExtensionLoader", () => {
 
       expect((await loader.getExtensions())[0]).toBe(expectedInfo);
     });
+
+    it("Parses package prefixes", async () => {
+      const foxe = fs.readFileSync(`${__dirname}/../test/fixtures/prefixed-name-extension.foxe`);
+      const expectedInfo = {
+        id: "prefix.package-name",
+        name: "package-name",
+        namespace: "private",
+        publisher: "prefix",
+        qualifiedName: "private:package-name",
+      };
+
+      mockDBGetAll.mockReturnValue([expectedInfo]);
+
+      const loader = new IdbExtensionLoader("private");
+      await loader.installExtension(foxe);
+
+      expect(mockDBPut).toHaveBeenCalledWith("metadata", expectedInfo);
+
+      expect(mockDBPut).toHaveBeenCalledWith("extensions", {
+        content: foxe,
+        info: expectedInfo,
+      });
+
+      expect((await loader.getExtensions())[0]).toBe(expectedInfo);
+    });
   });
 });
