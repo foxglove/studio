@@ -225,7 +225,7 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
     const text = frame.displayName();
     const label = this.renderer.labelPool.acquire();
     label.setBillboard(true);
-    label.update(text);
+    label.setText(text);
     label.position.set(0, 0, 0.4);
     label.setLineHeight(this.renderer.config.scene.transforms?.labelSize ?? DEFAULT_TF_LABEL_SIZE);
     label.visible = this.renderer.config.scene.transforms?.showLabel ?? true;

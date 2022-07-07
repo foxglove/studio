@@ -25,7 +25,6 @@ class StoryScene {
 
   constructor() {
     this.perspectiveCamera.position.set(4, 4, 4);
-    this.orthographicCamera.position.copy(this.perspectiveCamera.position);
     this.scene.background = new THREE.Color(0xf0f0f0);
     this.scene.add(new THREE.AxesHelper(5));
   }
@@ -53,6 +52,11 @@ class StoryScene {
     this.controls.target.set(0, 0, 0);
     this.controls.update();
 
+    this.orthographicCamera.position.copy(this.perspectiveCamera.position);
+    this.orthographicCamera.rotation.copy(this.perspectiveCamera.rotation);
+    this.orthographicCamera.updateProjectionMatrix();
+    this.render();
+
     this.controls.addEventListener("change", () => {
       this.orthographicCamera.position.copy(this.perspectiveCamera.position);
       this.orthographicCamera.rotation.copy(this.perspectiveCamera.rotation);
@@ -66,7 +70,8 @@ export const Basic = Object.assign(BasicTemplate.bind({}), {
   args: {
     text: "Hello world!\nExample",
     lineHeight: 1,
-    camera: "perspective",
+    scaleFactor: 1,
+    cameraMode: "perspective",
     billboard: false,
     anchorPointX: 0.5,
     anchorPointY: 0.5,
@@ -75,8 +80,9 @@ export const Basic = Object.assign(BasicTemplate.bind({}), {
     positionZ: 0,
   },
   argTypes: {
-    camera: { control: "inline-radio", options: ["perspective", "orthographic"] },
+    cameraMode: { control: "inline-radio", options: ["perspective", "orthographic"] },
     lineHeight: { control: { type: "range", min: 0.5, max: 5, step: 0.01 } },
+    scaleFactor: { control: { type: "range", min: 0, max: 2, step: 0.01 } },
     anchorPointX: { control: { type: "range", min: 0, max: 1, step: 0.01 } },
     anchorPointY: { control: { type: "range", min: 0, max: 1, step: 0.01 } },
     positionX: { control: { type: "range", min: -5, max: 5, step: 0.01 } },
@@ -88,8 +94,9 @@ export const Basic = Object.assign(BasicTemplate.bind({}), {
 function BasicTemplate({
   text,
   lineHeight,
+  scaleFactor,
   billboard,
-  camera,
+  cameraMode,
   anchorPointX,
   anchorPointY,
   positionX,
@@ -98,7 +105,8 @@ function BasicTemplate({
 }: {
   text: string;
   lineHeight: number;
-  camera: "perspective" | "orthographic";
+  scaleFactor: number;
+  cameraMode: "perspective" | "orthographic";
   billboard: boolean;
   anchorPointX: number;
   anchorPointY: number;
@@ -129,16 +137,21 @@ function BasicTemplate({
   }, [storyScene]);
 
   useEffect(() => {
-    storyScene.perspective = camera === "perspective";
+    storyScene.perspective = cameraMode === "perspective";
     storyScene.render();
-  }, [storyScene, camera]);
+  }, [storyScene, cameraMode]);
 
   useEffect(() => {
     if (label) {
-      label.update(text);
+      label.setText(text);
       storyScene.render();
     }
   }, [text, label, storyScene]);
+
+  useEffect(() => {
+    storyScene.labelPool.setScaleFactor(scaleFactor);
+    storyScene.render();
+  }, [scaleFactor, storyScene]);
 
   useEffect(() => {
     if (label) {

@@ -59,7 +59,7 @@ export class FontManager {
     charInfo: {},
   };
 
-  constructor(public options: FontManagerOptions) {
+  constructor(public options: FontManagerOptions = {}) {
     const start = " ".charCodeAt(0);
     const end = "~".charCodeAt(0);
     let initialAlphabet = REPLACEMENT_CHARACTER + "\n"; // always include replacement character

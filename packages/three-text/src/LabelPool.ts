@@ -46,9 +46,9 @@ void main() {
     float rotation = 0.0;
 
     vec4 mvPosition = modelViewMatrix * vec4( 0.0, 0.0, 0.0, 1.0 );
-    vec2 scale;
-    scale.x = length(modelMatrix[0].xyz);
-    scale.y = length(modelMatrix[1].xyz);
+    // vec2 scale;
+    // scale.x = length(modelMatrix[0].xyz);
+    // scale.y = length(modelMatrix[1].xyz);
     // #ifndef USE_SIZEATTENUATION
     //   bool isPerspective = isPerspectiveMatrix( projectionMatrix );
     //   if ( isPerspective ) scale *= - mvPosition.z;
@@ -172,6 +172,13 @@ export class Label extends THREE.Object3D {
       // Trigger recalculation of scale uniform
       this.setLineHeight(this.lineHeight);
     });
+
+    labelPool.addEventListener("atlasChange", () => {
+      this.material.uniforms.uTextureSize!.value[0] = this.labelPool.atlasTexture.image.width;
+      this.material.uniforms.uTextureSize!.value[1] = this.labelPool.atlasTexture.image.height;
+      this.setLineHeight(this.lineHeight);
+      this._needsUpdateLayout = true;
+    });
   }
 
   dispose(): void {
@@ -193,16 +200,20 @@ export class Label extends THREE.Object3D {
     }
   }
 
-  update(text: string): void {
+  setText(text: string): void {
     if (text !== this.text) {
       this.text = text;
-      this.labelPool.update(text);
-      this.material.uniforms.uTextureSize!.value[0] = this.labelPool.atlasTexture.image.width;
-      this.material.uniforms.uTextureSize!.value[1] = this.labelPool.atlasTexture.image.height;
-      this.material.uniforms.uScale!.value =
-        this.lineHeight / this.labelPool.fontManager.atlasData.lineHeight;
+      this._needsUpdateLayout = true;
+      this.labelPool.updateAtlas(text);
+      this._updateLayoutIfNeeded();
     }
+  }
 
+  private _needsUpdateLayout = false;
+  private _updateLayoutIfNeeded() {
+    if (!this._needsUpdateLayout) {
+      return;
+    }
     const layoutInfo = this.labelPool.fontManager.layout(this.text);
     //FIXME: bad to use uniforms because we can't use the same material?
     this.material.uniforms.uLabelSize!.value[0] = layoutInfo.width;
@@ -232,6 +243,7 @@ export class Label extends THREE.Object3D {
       this.instanceAttrData[i++] = char.height;
     }
     this.instanceAttrBuffer.needsUpdate = true;
+    this._needsUpdateLayout = false;
   }
 
   setColor(r: number, g: number, b: number): void {
@@ -273,7 +285,6 @@ export class LabelPool extends EventDispatcher<{ type: "scaleFactorChange" | "at
   atlasTexture: THREE.DataTexture;
 
   private availableLabels: Label[] = [];
-  private allLabels: Label[] = [];
   private disposed = false;
 
   static QUAD_POINTS: [number, number][] = [
@@ -316,7 +327,7 @@ export class LabelPool extends EventDispatcher<{ type: "scaleFactorChange" | "at
     );
   }
 
-  update(text: string): void {
+  updateAtlas(text: string): void {
     //FIXME: probably need manager to notify us when updates happen so we know when the texture needs to be updated, unless we own the font manager
     if (this.fontManager.update(text) || this.atlasTexture.image.width === 0) {
       //FIXME: THREE.AlphaFormat not working? :(
@@ -332,8 +343,8 @@ export class LabelPool extends EventDispatcher<{ type: "scaleFactorChange" | "at
         height: this.fontManager.atlasData.height,
       };
       this.atlasTexture.needsUpdate = true;
+      this.dispatchEvent({ type: "atlasChange" });
     }
-    //TODO: force layout on labels
   }
 
   acquire(): Label {

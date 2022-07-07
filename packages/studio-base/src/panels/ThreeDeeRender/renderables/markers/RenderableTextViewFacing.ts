@@ -29,7 +29,7 @@ export class RenderableTextViewFacing extends RenderableMarker {
   override update(marker: Marker, receiveTime: bigint | undefined): void {
     super.update(marker, receiveTime);
 
-    this.label.update(marker.text);
+    this.label.setText(marker.text);
     //FIXME: support background & foreground colors from marker.colors[0,1]?
     this.label.setColor(
       SRGBToLinear(marker.color.r),
