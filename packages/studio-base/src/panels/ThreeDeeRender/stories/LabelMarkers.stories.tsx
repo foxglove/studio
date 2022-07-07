@@ -67,7 +67,7 @@ export function LabelMarkers(): JSX.Element {
         type: MarkerType.TEXT_VIEW_FACING,
         text,
         frame_locked: true,
-        color: makeColor(colorHex, size),
+        color: makeColor(colorHex, 1),
         pose: { position, orientation: QUAT_IDENTITY },
         scale: { x: 0, y: 0, z: size },
       },
@@ -75,17 +75,18 @@ export function LabelMarkers(): JSX.Element {
     };
   };
 
-  const label1 = makeLabel("Hello, world!", { x: -2, y: 1, z: 0 }, "#e60049", 0.2);
-  const label2 = makeLabel("Hello, world!", { x: -1, y: 1, z: 0 }, "#0bb4ff", 0.3);
-  const label3 = makeLabel("Hello, world!", { x: 0, y: 1, z: 0 }, "#50e991", 0.4);
-  const label4 = makeLabel("Hello, world!", { x: 1, y: 1, z: 0 }, "#e6d800", 0.5);
-  const label5 = makeLabel("Hello, world!", { x: -2, y: 0, z: 0 }, "#9b19f5", 0.6);
-  const label6 = makeLabel("Hello, world!", { x: -1, y: 0, z: 0 }, "#ffa300", 0.7);
-  const label7 = makeLabel("Hello, world!", { x: 1, y: 0, z: 0 }, "#dc0ab4", 0.8);
-  const label8 = makeLabel("Hello, world!", { x: -2, y: -1, z: 0 }, "#b3d4ff", 0.9);
-  const label9 = makeLabel("Hello, world!", { x: -1, y: -1, z: 0 }, "#00bfa0", 1.0);
-  const label10 = makeLabel("Hello, world!", { x: 0, y: -1, z: 0 }, "#b30000", 1.1);
-  const label11 = makeLabel("Hello, world!", { x: 1, y: -1, z: 0 }, "#7c1158", 1.2);
+  const maxScale = 0.8;
+  const label1 = makeLabel("Hello, world!", { x: -2, y: 1, z: 0 }, "#e60049", 2 * maxScale);
+  const label2 = makeLabel("Hello, world!", { x: -1, y: 1, z: 0 }, "#0bb4ff", 3 * maxScale);
+  const label3 = makeLabel("Hello, world!", { x: 0, y: 1, z: 0 }, "#50e991", 4 * maxScale);
+  const label4 = makeLabel("Hello, world!", { x: 1, y: 1, z: 0 }, "#e6d800", 5 * maxScale);
+  const label5 = makeLabel("Hello, world!", { x: -2, y: 0, z: 0 }, "#9b19f5", 6 * maxScale);
+  const label6 = makeLabel("Hello, world!", { x: -1, y: 0, z: 0 }, "#ffa300", 7 * maxScale);
+  const label7 = makeLabel("Hello, world!", { x: 1, y: 0, z: 0 }, "#dc0ab4", 8 * maxScale);
+  const label8 = makeLabel("Hello, world!", { x: -2, y: -1, z: 0 }, "#b3d4ff", 9 * maxScale);
+  const label9 = makeLabel("Hello, world!", { x: -1, y: -1, z: 0 }, "#00bfa0", 10 * maxScale);
+  const label10 = makeLabel("Hello, world!", { x: 0, y: -1, z: 0 }, "#b30000", 11 * maxScale);
+  const label11 = makeLabel("Hello, world!", { x: 1, y: -1, z: 0 }, "#7c1158", 12 * maxScale);
 
   const fixture = useDelayedFixture({
     topics,
