@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import TinySDF from "@mapbox/tiny-sdf";
+import { EventDispatcher } from "three";
 
 export type CharInfo = {
   atlasX: number;
@@ -48,7 +49,7 @@ export type FontManagerOptions = {
  * Manages the creation of a Signed Distance Field (SDF) font atlas, and performs text layout to
  * generate attributes for rendering text using the atlas.
  */
-export class FontManager {
+export class FontManager extends EventDispatcher<{ type: "atlasChange" }> {
   private alphabet = "";
   atlasData: AtlasData = {
     data: new Uint8ClampedArray(),
@@ -60,6 +61,7 @@ export class FontManager {
   };
 
   constructor(public options: FontManagerOptions = {}) {
+    super();
     const start = " ".charCodeAt(0);
     const end = "~".charCodeAt(0);
     let initialAlphabet = REPLACEMENT_CHARACTER + "\n"; // always include replacement character
@@ -69,7 +71,7 @@ export class FontManager {
     this.update(initialAlphabet);
   }
 
-  update(newChars: string): boolean {
+  update(newChars: string): void {
     let needsUpdate = false;
     for (const char of newChars) {
       if (!this.alphabet.includes(char)) {
@@ -79,7 +81,7 @@ export class FontManager {
     }
 
     if (!needsUpdate) {
-      return false;
+      return;
     }
     const atlasWidth = 1024;
     const atlasHeight = 1024;
@@ -135,7 +137,7 @@ export class FontManager {
       maxAscent,
       lineHeight,
     };
-    return true;
+    this.dispatchEvent({ type: "atlasChange" });
   }
 
   layout(text: string): LayoutInfo {

@@ -8,8 +8,7 @@ import { EventDispatcher } from "three";
 import { FontManager, FontManagerOptions } from "./FontManager";
 
 class LabelMaterial extends THREE.RawShaderMaterial {
-  constructor(atlasTexture: THREE.Texture) {
-    const picking = false; //FIXME
+  constructor(params: { atlasTexture?: THREE.Texture; picking?: boolean }) {
     super({
       vertexShader: /* glsl */ `\
 #version 300 es
@@ -62,7 +61,22 @@ void main() {
   }
 }
 `,
-      fragmentShader: /* glsl */ `\
+      fragmentShader:
+        params.picking === true
+          ? /* glsl */ `\
+#version 300 es
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+  precision highp float;
+#else
+  precision mediump float;
+#endif
+uniform vec4 objectId;
+out vec4 outColor;
+void main() {
+  outColor = objectId;
+}
+`
+          : /* glsl */ `\
 #version 300 es
 #ifdef GL_FRAGMENT_PRECISION_HIGH
   precision highp float;
@@ -71,7 +85,6 @@ void main() {
 #endif
 uniform sampler2D uMap;
 uniform float uOpacity;
-uniform vec4 objectId;
 uniform mediump vec3 uColor, uBackgroundColor;
 uniform float uScale;
 uniform vec2 uLabelSize;
@@ -100,8 +113,6 @@ void main() {
   outColor = LinearTosRGB(outColor);
 
   // outColor = insideChar ? vec4(0.,1.,0.,1.) : vec4(1.0,0.0,0.0, 1.0);
-
-  ${picking ? "outColor = objectId;" : ""}
 }
 `,
       uniforms: {
@@ -110,14 +121,18 @@ void main() {
         uBillboard: { value: false },
         uLabelSize: { value: [0, 0] },
         uScale: { value: 0 },
-        uTextureSize: { value: [atlasTexture.image.width, atlasTexture.image.height] },
-        uMap: { value: atlasTexture },
+        uTextureSize: {
+          value: [params.atlasTexture?.image.width ?? 0, params.atlasTexture?.image.height ?? 0],
+        },
+        uMap: { value: params.atlasTexture },
         uOpacity: { value: 1 },
         uColor: { value: [0, 0, 0] },
         uBackgroundColor: { value: [1, 1, 1] },
       },
 
       side: THREE.DoubleSide,
+      transparent: false,
+      depthWrite: true,
     });
   }
 }
@@ -127,6 +142,7 @@ export class Label extends THREE.Object3D {
   mesh: THREE.InstancedMesh;
   geometry: THREE.InstancedBufferGeometry;
   material: LabelMaterial;
+  pickingMaterial: LabelMaterial;
 
   instanceAttrData: Float32Array;
   instanceAttrBuffer: THREE.InstancedInterleavedBuffer;
@@ -160,10 +176,12 @@ export class Label extends THREE.Object3D {
     this.geometry.setAttribute("instanceBoxSize", this.instanceBoxSize);
     this.geometry.setAttribute("instanceCharSize", this.instanceCharSize);
 
-    this.material = new LabelMaterial(labelPool.atlasTexture);
+    this.material = new LabelMaterial({ atlasTexture: labelPool.atlasTexture });
+    this.pickingMaterial = new LabelMaterial({ picking: true });
 
     //FIXME: don't need InstancedMesh?
     this.mesh = new THREE.InstancedMesh(this.geometry, this.material, 0);
+    this.mesh.userData.pickingMaterial = this.pickingMaterial;
 
     this.add(this.mesh);
     this.setOpacity(1);
@@ -174,16 +192,23 @@ export class Label extends THREE.Object3D {
     });
 
     labelPool.addEventListener("atlasChange", () => {
-      this.material.uniforms.uTextureSize!.value[0] = this.labelPool.atlasTexture.image.width;
-      this.material.uniforms.uTextureSize!.value[1] = this.labelPool.atlasTexture.image.height;
-      this.setLineHeight(this.lineHeight);
-      this._needsUpdateLayout = true;
+      this._handleAtlasChange();
     });
+    this._handleAtlasChange();
+  }
+
+  private _handleAtlasChange() {
+    this.material.uniforms.uTextureSize!.value[0] = this.labelPool.atlasTexture.image.width;
+    this.material.uniforms.uTextureSize!.value[1] = this.labelPool.atlasTexture.image.height;
+    this.setLineHeight(this.lineHeight);
+    this._needsUpdateLayout = true;
+    this._updateLayoutIfNeeded();
   }
 
   dispose(): void {
     this.geometry.dispose();
     this.material.dispose();
+    this.pickingMaterial.dispose();
     this.mesh.dispose();
   }
 
@@ -215,9 +240,10 @@ export class Label extends THREE.Object3D {
       return;
     }
     const layoutInfo = this.labelPool.fontManager.layout(this.text);
-    //FIXME: bad to use uniforms because we can't use the same material?
     this.material.uniforms.uLabelSize!.value[0] = layoutInfo.width;
     this.material.uniforms.uLabelSize!.value[1] = layoutInfo.height;
+    this.pickingMaterial.uniforms.uLabelSize!.value[0] = layoutInfo.width;
+    this.pickingMaterial.uniforms.uLabelSize!.value[1] = layoutInfo.height;
 
     this.geometry.instanceCount = this.mesh.count = layoutInfo.chars.length;
 
@@ -266,18 +292,23 @@ export class Label extends THREE.Object3D {
   // eslint-disable-next-line @foxglove/no-boolean-parameters
   setBillboard(billboard: boolean): void {
     this.material.uniforms.uBillboard!.value = billboard;
+    this.pickingMaterial.uniforms.uBillboard!.value = billboard;
   }
 
   setAnchorPoint(x: number, y: number): void {
     this.material.uniforms.uAnchorPoint!.value[0] = x;
     this.material.uniforms.uAnchorPoint!.value[1] = y;
+    this.pickingMaterial.uniforms.uAnchorPoint!.value[0] = x;
+    this.pickingMaterial.uniforms.uAnchorPoint!.value[1] = y;
   }
 
   setLineHeight(lineHeight: number): void {
     this.lineHeight = lineHeight;
-    this.material.uniforms.uScale!.value =
+    const scale =
       (this.lineHeight * this.labelPool.scaleFactor) /
       this.labelPool.fontManager.atlasData.lineHeight;
+    this.material.uniforms.uScale!.value = scale;
+    this.pickingMaterial.uniforms.uScale!.value = scale;
   }
 }
 
@@ -325,26 +356,32 @@ export class LabelPool extends EventDispatcher<{ type: "scaleFactorChange" | "at
       THREE.LinearFilter,
       THREE.LinearFilter,
     );
+
+    this.fontManager.addEventListener("atlasChange", () => {
+      this._updateAtlasTexture();
+    });
+    this._updateAtlasTexture();
   }
 
   updateAtlas(text: string): void {
-    //FIXME: probably need manager to notify us when updates happen so we know when the texture needs to be updated, unless we own the font manager
-    if (this.fontManager.update(text) || this.atlasTexture.image.width === 0) {
-      //FIXME: THREE.AlphaFormat not working? :(
-      const data = new Uint8ClampedArray(this.fontManager.atlasData.data.length * 4);
-      for (let i = 0; i < this.fontManager.atlasData.data.length; i++) {
-        data[i * 4 + 0] = data[i * 4 + 1] = data[i * 4 + 2] = 1;
-        data[i * 4 + 3] = this.fontManager.atlasData.data[i]!;
-      }
+    this.fontManager.update(text);
+  }
 
-      this.atlasTexture.image = {
-        data,
-        width: this.fontManager.atlasData.width,
-        height: this.fontManager.atlasData.height,
-      };
-      this.atlasTexture.needsUpdate = true;
-      this.dispatchEvent({ type: "atlasChange" });
+  private _updateAtlasTexture() {
+    //FIXME: THREE.AlphaFormat not working? :(
+    const data = new Uint8ClampedArray(this.fontManager.atlasData.data.length * 4);
+    for (let i = 0; i < this.fontManager.atlasData.data.length; i++) {
+      data[i * 4 + 0] = data[i * 4 + 1] = data[i * 4 + 2] = 1;
+      data[i * 4 + 3] = this.fontManager.atlasData.data[i]!;
     }
+
+    this.atlasTexture.image = {
+      data,
+      width: this.fontManager.atlasData.width,
+      height: this.fontManager.atlasData.height,
+    };
+    this.atlasTexture.needsUpdate = true;
+    this.dispatchEvent({ type: "atlasChange" });
   }
 
   acquire(): Label {
