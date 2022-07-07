@@ -42,8 +42,6 @@ void main() {
 
   // Adapted from THREE.ShaderLib.sprite
   if (uBillboard) {
-    float rotation = 0.0;
-
     vec4 mvPosition = modelViewMatrix * vec4( 0.0, 0.0, 0.0, 1.0 );
     // vec2 scale;
     // scale.x = length(modelMatrix[0].xyz);
@@ -52,11 +50,7 @@ void main() {
     //   bool isPerspective = isPerspectiveMatrix( projectionMatrix );
     //   if ( isPerspective ) scale *= - mvPosition.z;
     // #endif
-    vec2 alignedPosition = vertexPos;
-    vec2 rotatedPosition;
-    rotatedPosition.x = cos( rotation ) * alignedPosition.x - sin( rotation ) * alignedPosition.y;
-    rotatedPosition.y = sin( rotation ) * alignedPosition.x + cos( rotation ) * alignedPosition.y;
-    mvPosition.xy += rotatedPosition;
+    mvPosition.xy += vertexPos;
     gl_Position = projectionMatrix * mvPosition;
   }
 }
@@ -104,15 +98,11 @@ float aastep(float threshold, float value) {
 void main() {
   float dist = texture(uMap, vUv).a;
   vec4 color = vec4(uBackgroundColor.rgb * (1.0 - dist) + uColor * dist, uOpacity);
-  // outColor = LinearTosRGB(color);
-
   outColor = vec4(mix(uBackgroundColor, uColor, aastep(0.75, dist)), uOpacity);
 
   bool insideChar = vInsideChar.x >= 0.0 && vInsideChar.x <= 1.0 && vInsideChar.y >= 0.0 && vInsideChar.y <= 1.0;
   outColor = insideChar ? outColor : vec4(uBackgroundColor, uOpacity);
   outColor = LinearTosRGB(outColor);
-
-  // outColor = insideChar ? vec4(0.,1.,0.,1.) : vec4(1.0,0.0,0.0, 1.0);
 }
 `,
       uniforms: {
@@ -179,7 +169,6 @@ export class Label extends THREE.Object3D {
     this.material = new LabelMaterial({ atlasTexture: labelPool.atlasTexture });
     this.pickingMaterial = new LabelMaterial({ picking: true });
 
-    //FIXME: don't need InstancedMesh?
     this.mesh = new THREE.InstancedMesh(this.geometry, this.material, 0);
     this.mesh.userData.pickingMaterial = this.pickingMaterial;
 

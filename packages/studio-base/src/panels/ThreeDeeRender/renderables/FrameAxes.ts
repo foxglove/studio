@@ -14,7 +14,7 @@ import { BaseUserData, Renderable } from "../Renderable";
 import { Renderer } from "../Renderer";
 import { SceneExtension } from "../SceneExtension";
 import { SettingsTreeEntry } from "../SettingsManager";
-import { stringToRgb } from "../color";
+import { getLuminance, stringToRgb } from "../color";
 import { BaseSettings } from "../settings";
 import { Duration, Transform, makePose, CoordinateFrame, MAX_DURATION } from "../transforms";
 import { Axis } from "./Axis";
@@ -61,6 +61,9 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
 
   lineMaterial: LineMaterial;
   linePickingMaterial: THREE.ShaderMaterial;
+
+  private labelForegroundColor = 1;
+  private labelBackgroundColor = new THREE.Color();
 
   constructor(renderer: Renderer) {
     super("foxglove.FrameAxes", renderer);
@@ -140,6 +143,33 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
           line.visible = true;
         }
       }
+    }
+  }
+
+  override setColorScheme(
+    colorScheme: "dark" | "light",
+    backgroundColor: THREE.Color | undefined,
+  ): void {
+    const foreground = colorScheme === "dark" ? 1 : 0;
+    this.labelForegroundColor = foreground;
+    this.labelBackgroundColor.setRGB(1 - foreground, 1 - foreground, 1 - foreground);
+    if (backgroundColor) {
+      this.labelForegroundColor =
+        getLuminance(backgroundColor.r, backgroundColor.g, backgroundColor.b) > 0.5 ? 0 : 1;
+      this.labelBackgroundColor.copy(backgroundColor);
+    }
+
+    for (const renderable of this.renderables.values()) {
+      renderable.userData.label.setColor(
+        this.labelForegroundColor,
+        this.labelForegroundColor,
+        this.labelForegroundColor,
+      );
+      renderable.userData.label.setBackgroundColor(
+        this.labelBackgroundColor.r,
+        this.labelBackgroundColor.g,
+        this.labelBackgroundColor.b,
+      );
     }
   }
 
@@ -229,6 +259,12 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
     label.position.set(0, 0, 0.4);
     label.setLineHeight(this.renderer.config.scene.transforms?.labelSize ?? DEFAULT_TF_LABEL_SIZE);
     label.visible = this.renderer.config.scene.transforms?.showLabel ?? true;
+    label.setColor(this.labelForegroundColor, this.labelForegroundColor, this.labelForegroundColor);
+    label.setBackgroundColor(
+      this.labelBackgroundColor.r,
+      this.labelBackgroundColor.g,
+      this.labelBackgroundColor.b,
+    );
 
     // Set the initial settings from default values merged with any user settings
     const userSettings = this.renderer.config.transforms[frameId] as

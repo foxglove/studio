@@ -440,9 +440,6 @@ export class Renderer extends EventEmitter<RendererEvents> {
       extension.setColorScheme(colorScheme, bgColor);
     }
 
-    //FIXME?
-    // this.labels.setColorScheme(colorScheme, bgColor);
-
     if (colorScheme === "dark") {
       this.gl.setClearColor(bgColor ?? DARK_BACKDROP);
       this.outlineMaterial.color.set(DARK_OUTLINE);

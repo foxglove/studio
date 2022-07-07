@@ -61,6 +61,7 @@ export class CoreSettings extends SceneExtension {
         path: ["scene"],
         node: {
           label: "Scene",
+          actions: [{ type: "action", id: "reset-scene", label: "Reset" }],
           fields: {
             enableStats: {
               label: "Render stats",
@@ -196,6 +197,15 @@ export class CoreSettings extends SceneExtension {
       this.renderer.updateConfig((draft) => {
         draft.cameraState = cloneDeep(DEFAULT_CAMERA_STATE);
       });
+      this.updateSettingsTree();
+      return;
+    }
+
+    if (action.action === "perform-node-action" && action.payload.id === "reset-scene") {
+      this.renderer.updateConfig((draft) => {
+        draft.scene = {};
+      });
+      this.updateSettingsTree();
       return;
     }
 

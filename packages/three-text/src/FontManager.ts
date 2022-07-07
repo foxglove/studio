@@ -121,8 +121,8 @@ export class FontManager extends EventDispatcher<{ type: "atlasChange" }> {
         width: sdf.width,
         height: sdf.height,
         yOffset: sdf.glyphTop,
-        // xAdvance: sdf.glyphAdvance, //FIXME: overlaps = sadness
-        // xAdvance: sdf.width,
+        // Use the full width in order to avoid z-fighting on character overlaps. Use glyphAdvance
+        // if it is larger than width (e.g. for space characters)
         xAdvance: Math.max(sdf.glyphAdvance as number, sdf.width),
       };
       maxAscent = Math.max(maxAscent, sdf.glyphTop);
