@@ -33,7 +33,6 @@ out mediump vec2 vPosInLabel;
 void main() {
   // Adjust uv coordinates so they are in the 0-1 range in the character region
   vec2 boxUv = (uv * instanceBoxSize - (instanceCharPosition - instanceBoxPosition)) / instanceCharSize;
-  // vUv = (instanceUv + uv * instanceBoxSize) / uTextureSize;
   vInsideChar = boxUv;
   vUv = (instanceUv + boxUv * instanceCharSize) / uTextureSize;
   vec2 vertexPos = (instanceBoxPosition + position * instanceBoxSize - uAnchorPoint * uLabelSize) * uScale;

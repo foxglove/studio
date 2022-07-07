@@ -22,8 +22,13 @@
     "storybook": "start-storybook -p 6006",
     "build-storybook": "build-storybook"
   },
+  "dependencies": {
+    "@mapbox/tiny-sdf": "2.0.5"
+  },
+  "peerDependencies": {
+    "three": ">=0.140.2"
+  },
   "devDependencies": {
-    "@mapbox/tiny-sdf": "2.0.5",
     "@storybook/addon-actions": "6.4.18",
     "@storybook/addon-essentials": "6.4.18",
     "@storybook/builder-webpack5": "6.4.18",
