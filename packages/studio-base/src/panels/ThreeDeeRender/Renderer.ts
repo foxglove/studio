@@ -791,6 +791,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
         return;
       } else {
         log.debug(`Setting render frame to ${this.renderFrameId}`);
+        this.settings.errors.remove(FOLLOW_TF_PATH, NO_FRAME_SELECTED);
       }
     }
 
@@ -804,6 +805,8 @@ export class Renderer extends EventEmitter<RendererEvents> {
         `Frame "${this.renderFrameId}" not found`,
       );
       return;
+    } else {
+      this.settings.errors.remove(FOLLOW_TF_PATH, FRAME_NOT_FOUND);
     }
 
     const rootFrameId = frame.root().id;
@@ -816,7 +819,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
       this.fixedFrameId = rootFrameId;
     }
 
-    if (this.renderFrameId !== this.followFrameId) {
+    if (this.followFrameId != undefined && this.renderFrameId !== this.followFrameId) {
       this.settings.errors.add(
         FOLLOW_TF_PATH,
         FRAME_NOT_FOUND,
