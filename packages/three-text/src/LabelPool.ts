@@ -357,7 +357,6 @@ export class LabelPool extends EventDispatcher<{ type: "scaleFactorChange" | "at
   }
 
   private _updateAtlasTexture() {
-    //FIXME: THREE.AlphaFormat not working? :(
     const data = new Uint8ClampedArray(this.fontManager.atlasData.data.length * 4);
     for (let i = 0; i < this.fontManager.atlasData.data.length; i++) {
       data[i * 4 + 0] = data[i * 4 + 1] = data[i * 4 + 2] = 1;
