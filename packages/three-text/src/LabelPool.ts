@@ -70,7 +70,7 @@ void main() {
 #endif
 uniform sampler2D uMap;
 uniform float uOpacity;
-${picking ? "uniform vec4 objectId;" : ""}
+uniform vec4 objectId;
 uniform mediump vec3 uColor, uBackgroundColor;
 uniform float uScale;
 uniform vec2 uLabelSize;
@@ -104,6 +104,7 @@ void main() {
 }
 `,
       uniforms: {
+        objectId: { value: [NaN, NaN, NaN, NaN] },
         uAnchorPoint: { value: [0.5, 0.5] },
         uBillboard: { value: false },
         uLabelSize: { value: [0, 0] },
