@@ -365,7 +365,10 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
           const arrayBuffer = await file.arrayBuffer();
           const data = new Uint8Array(arrayBuffer);
           const extension = await extensionRegistry.installExtension("local", data);
-          addToast(`Installed extension ${extension.id}`, { appearance: "success" });
+          addToast(`Installed extension ${extension.id}`, {
+            appearance: "success",
+            autoDismiss: true,
+          });
         } catch (err) {
           log.error(err);
           addToast(`Failed to install extension ${file.name}: ${err.message}`, {
@@ -412,7 +415,10 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
             const arrayBuffer = await file.arrayBuffer();
             const data = new Uint8Array(arrayBuffer);
             const extension = await extensionRegistry.installExtension("local", data);
-            addToast(`Installed extension ${extension.id}`, { appearance: "success" });
+            addToast(`Installed extension ${extension.id}`, {
+              appearance: "success",
+              autoDismiss: true,
+            });
           } catch (err) {
             log.error(err);
             addToast(`Failed to install extension ${file.name}: ${err.message}`, {
