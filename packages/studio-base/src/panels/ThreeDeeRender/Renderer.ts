@@ -603,19 +603,11 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
   // Callback handlers
 
-  private _animationFrame?: number;
   animationFrame = (): void => {
-    this._animationFrame = undefined;
     if (this.currentTime != undefined) {
       this.frameHandler(this.currentTime);
     }
   };
-
-  queueAnimationFrame(): void {
-    if (this._animationFrame == undefined) {
-      this._animationFrame = requestAnimationFrame(this.animationFrame);
-    }
-  }
 
   frameHandler = (currentTime: bigint): void => {
     const camera = this.activeCamera();
