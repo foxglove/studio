@@ -19,9 +19,10 @@ import {
   SettingsTreeNodes,
   Topic,
 } from "@foxglove/studio";
+import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
+import { LabelPool } from "@foxglove/three-text";
 
 import { Input } from "./Input";
-import { Labels } from "./Labels";
 import { LineMaterial } from "./LineMaterial";
 import { ModelCache } from "./ModelCache";
 import { Picker } from "./Picker";
@@ -76,16 +77,15 @@ export type RendererConfig = {
     enableStats?: boolean;
     /** Background color override for the scene, sent to `glClearColor()` */
     backgroundColor?: string;
-    /**
-     * Controls the size of labels by setting the pixel density per unit of
-     * world space (usually meters)
-     */
-    labelPixelsPerUnit?: number;
+    /* Scale factor to apply to all labels */
+    labelScaleFactor?: number;
     transforms?: {
       /** Toggles visibility of all transforms */
       visible?: boolean;
       /** Toggles visibility of frame axis labels */
       showLabel?: boolean;
+      /** Size of frame axis labels */
+      labelSize?: number;
       /** Size of coordinate frame axes */
       axisScale?: number;
       /** Width of the connecting line between child and parent frames */
@@ -189,7 +189,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
   renderFrameId: string | undefined;
   followFrameId: string | undefined;
 
-  labels = new Labels(this);
+  labelPool = new LabelPool({ fontFamily: fonts.MONOSPACE });
   markerPool = new MarkerPool(this);
 
   constructor(canvas: HTMLCanvasElement, config: RendererConfig) {
@@ -197,13 +197,6 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
     // NOTE: Global side effect
     THREE.Object3D.DefaultUp = new THREE.Vector3(0, 0, 1);
-
-    this.fontTexture = new THREE.DataTexture(
-      this.fontData.images[0]!.data,
-      this.fontData.common.scaleW,
-      this.fontData.common.scaleH,
-    );
-    this.fontTexture.needsUpdate = true;
 
     this.settings = new SettingsManager(baseSettingsTree());
     this.settings.on("update", () => this.emit("settingsTreeChange", this));
@@ -245,7 +238,6 @@ export class Renderer extends EventEmitter<RendererEvents> {
     });
 
     this.scene = new THREE.Scene();
-    this.scene.add(this.labels);
 
     this.dirLight = new THREE.DirectionalLight();
     this.dirLight.position.set(1, 1, 1);
@@ -322,9 +314,8 @@ export class Renderer extends EventEmitter<RendererEvents> {
     }
     this.sceneExtensions.clear();
 
-    this.fontTexture.dispose();
+    this.labelPool.dispose();
     this.markerPool.dispose();
-    this.labels.dispose();
     this.picker.dispose();
     this.input.dispose();
     this.gl.dispose();
@@ -449,7 +440,8 @@ export class Renderer extends EventEmitter<RendererEvents> {
       extension.setColorScheme(colorScheme, bgColor);
     }
 
-    this.labels.setColorScheme(colorScheme, bgColor);
+    //FIXME?
+    // this.labels.setColorScheme(colorScheme, bgColor);
 
     if (colorScheme === "dark") {
       this.gl.setClearColor(bgColor ?? DARK_BACKDROP);

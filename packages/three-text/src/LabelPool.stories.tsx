@@ -6,7 +6,6 @@ import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 
-import { FontManager } from "./FontManager";
 import { Label, LabelPool } from "./LabelPool";
 
 export default {
@@ -14,8 +13,7 @@ export default {
 };
 
 class StoryScene {
-  fontManager = new FontManager();
-  labelPool = new LabelPool(this.fontManager);
+  labelPool = new LabelPool();
 
   perspectiveCamera = new THREE.PerspectiveCamera(45, 1, 0.1, 2000);
   orthographicCamera = new THREE.OrthographicCamera(-5, 5, 5, -5, 0.1, 1000);
@@ -26,8 +24,8 @@ class StoryScene {
   perspective = true;
 
   constructor() {
-    this.perspectiveCamera.position.set(2, 2, 2);
-    this.orthographicCamera.position.set(2, 2, 2);
+    this.perspectiveCamera.position.set(4, 4, 4);
+    this.orthographicCamera.position.copy(this.perspectiveCamera.position);
     this.scene.background = new THREE.Color(0xf0f0f0);
     this.scene.add(new THREE.AxesHelper(5));
   }
@@ -67,7 +65,8 @@ class StoryScene {
 export const Basic = Object.assign(BasicTemplate.bind({}), {
   args: {
     text: "Hello world!\nExample",
-    perspective: true,
+    lineHeight: 1,
+    camera: "perspective",
     billboard: false,
     anchorPointX: 0.5,
     anchorPointY: 0.5,
@@ -76,6 +75,8 @@ export const Basic = Object.assign(BasicTemplate.bind({}), {
     positionZ: 0,
   },
   argTypes: {
+    camera: { control: "inline-radio", options: ["perspective", "orthographic"] },
+    lineHeight: { control: { type: "range", min: 0.5, max: 5, step: 0.01 } },
     anchorPointX: { control: { type: "range", min: 0, max: 1, step: 0.01 } },
     anchorPointY: { control: { type: "range", min: 0, max: 1, step: 0.01 } },
     positionX: { control: { type: "range", min: -5, max: 5, step: 0.01 } },
@@ -86,8 +87,9 @@ export const Basic = Object.assign(BasicTemplate.bind({}), {
 
 function BasicTemplate({
   text,
+  lineHeight,
   billboard,
-  perspective,
+  camera,
   anchorPointX,
   anchorPointY,
   positionX,
@@ -95,7 +97,8 @@ function BasicTemplate({
   positionZ,
 }: {
   text: string;
-  perspective: boolean;
+  lineHeight: number;
+  camera: "perspective" | "orthographic";
   billboard: boolean;
   anchorPointX: number;
   anchorPointY: number;
@@ -126,9 +129,9 @@ function BasicTemplate({
   }, [storyScene]);
 
   useEffect(() => {
-    storyScene.perspective = perspective;
+    storyScene.perspective = camera === "perspective";
     storyScene.render();
-  }, [storyScene, perspective]);
+  }, [storyScene, camera]);
 
   useEffect(() => {
     if (label) {
@@ -136,6 +139,13 @@ function BasicTemplate({
       storyScene.render();
     }
   }, [text, label, storyScene]);
+
+  useEffect(() => {
+    if (label) {
+      label.setLineHeight(lineHeight);
+      storyScene.render();
+    }
+  }, [lineHeight, label, storyScene]);
 
   useEffect(() => {
     if (label) {

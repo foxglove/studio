@@ -39,6 +39,11 @@ export type LayoutInfo = {
 
 const REPLACEMENT_CHARACTER = "\uFFFD";
 
+export type FontManagerOptions = {
+  fontFamily?: string;
+  fontSize?: number;
+};
+
 /**
  * Manages the creation of a Signed Distance Field (SDF) font atlas, and performs text layout to
  * generate attributes for rendering text using the atlas.
@@ -54,7 +59,7 @@ export class FontManager {
     charInfo: {},
   };
 
-  constructor() {
+  constructor(public options: FontManagerOptions) {
     const start = " ".charCodeAt(0);
     const end = "~".charCodeAt(0);
     let initialAlphabet = REPLACEMENT_CHARACTER + "\n"; // always include replacement character
@@ -79,7 +84,10 @@ export class FontManager {
     const atlasWidth = 1024;
     const atlasHeight = 1024;
     const atlas = new Uint8ClampedArray(atlasWidth * atlasHeight);
-    const tinysdf = new TinySDF({ fontSize: 48, fontFamily: "monospace" });
+    const tinysdf = new TinySDF({
+      fontSize: this.options.fontSize ?? 48,
+      fontFamily: this.options.fontFamily ?? "monospace",
+    });
 
     const charInfo: Record<string, CharInfo> = {};
     let x = 0;

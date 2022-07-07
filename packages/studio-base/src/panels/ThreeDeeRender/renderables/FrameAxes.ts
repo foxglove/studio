@@ -8,8 +8,8 @@ import { LineGeometry } from "three/examples/jsm/lines/LineGeometry";
 import { LineMaterial } from "three/examples/jsm/lines/LineMaterial";
 
 import { SettingsTreeAction, SettingsTreeFields } from "@foxglove/studio";
+import { Label } from "@foxglove/three-text";
 
-import { LabelRenderable } from "../Labels";
 import { BaseUserData, Renderable } from "../Renderable";
 import { Renderer } from "../Renderer";
 import { SceneExtension } from "../SceneExtension";
@@ -18,7 +18,12 @@ import { stringToRgb } from "../color";
 import { BaseSettings } from "../settings";
 import { Duration, Transform, makePose, CoordinateFrame, MAX_DURATION } from "../transforms";
 import { Axis } from "./Axis";
-import { DEFAULT_AXIS_SCALE, DEFAULT_LINE_COLOR_STR, DEFAULT_LINE_WIDTH_PX } from "./CoreSettings";
+import {
+  DEFAULT_AXIS_SCALE,
+  DEFAULT_LINE_COLOR_STR,
+  DEFAULT_LINE_WIDTH_PX,
+  DEFAULT_TF_LABEL_SIZE,
+} from "./CoreSettings";
 import { makeLinePickingMaterial } from "./markers/materials";
 
 export type LayerSettingsTransform = BaseSettings;
@@ -33,13 +38,13 @@ const DEFAULT_SETTINGS: LayerSettingsTransform = {
 
 export type FrameAxisUserData = BaseUserData & {
   axis: Axis;
-  label: LabelRenderable;
+  label: Label;
   parentLine: Line2;
 };
 
 class FrameAxisRenderable extends Renderable<FrameAxisUserData> {
   override dispose(): void {
-    this.renderer.labels.removeById(this.userData.label.userData.id);
+    this.renderer.labelPool.release(this.userData.label);
     super.dispose();
   }
 }
@@ -145,6 +150,12 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
     }
   }
 
+  setLabelSize(size: number): void {
+    for (const renderable of this.renderables.values()) {
+      renderable.userData.label.setLineHeight(size);
+    }
+  }
+
   setAxisScale(scale: number): void {
     for (const renderable of this.renderables.values()) {
       renderable.userData.axis.scale.set(scale, scale, scale);
@@ -212,8 +223,11 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
 
     // Text label
     const text = frame.displayName();
-    const label = this.renderer.labels.setLabel(`tf:${frameId}`, { text });
+    const label = this.renderer.labelPool.acquire();
+    label.setBillboard(true);
+    label.update(text);
     label.position.set(0, 0, 0.4);
+    label.setLineHeight(this.renderer.config.scene.transforms?.labelSize ?? DEFAULT_TF_LABEL_SIZE);
     label.visible = this.renderer.config.scene.transforms?.showLabel ?? true;
 
     // Set the initial settings from default values merged with any user settings

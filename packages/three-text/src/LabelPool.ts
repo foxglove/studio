@@ -3,8 +3,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import * as THREE from "three";
+import { EventDispatcher } from "three";
 
-import { FontManager } from "./FontManager";
+import { FontManager, FontManagerOptions } from "./FontManager";
 
 class LabelMaterial extends THREE.RawShaderMaterial {
   constructor(atlasTexture: THREE.Texture) {
@@ -117,8 +118,6 @@ void main() {
       },
 
       side: THREE.DoubleSide,
-      transparent: true,
-      depthWrite: false,
     });
   }
 }
@@ -137,6 +136,8 @@ export class Label extends THREE.Object3D {
   instanceUv: THREE.InterleavedBufferAttribute;
   instanceBoxSize: THREE.InterleavedBufferAttribute;
   instanceCharSize: THREE.InterleavedBufferAttribute;
+
+  lineHeight = 1;
 
   constructor(public labelPool: LabelPool) {
     super();
@@ -165,6 +166,12 @@ export class Label extends THREE.Object3D {
     this.mesh = new THREE.InstancedMesh(this.geometry, this.material, 0);
 
     this.add(this.mesh);
+    this.setOpacity(1);
+
+    labelPool.addEventListener("scaleFactorChange", () => {
+      // Trigger recalculation of scale uniform
+      this.setLineHeight(this.lineHeight);
+    });
   }
 
   dispose(): void {
@@ -186,13 +193,14 @@ export class Label extends THREE.Object3D {
     }
   }
 
-  update(text?: string): void {
-    if (text != undefined) {
+  update(text: string): void {
+    if (text !== this.text) {
       this.text = text;
       this.labelPool.update(text);
       this.material.uniforms.uTextureSize!.value[0] = this.labelPool.atlasTexture.image.width;
       this.material.uniforms.uTextureSize!.value[1] = this.labelPool.atlasTexture.image.height;
-      this.material.uniforms.uScale!.value = 1 / this.labelPool.fontManager.atlasData.lineHeight;
+      this.material.uniforms.uScale!.value =
+        this.lineHeight / this.labelPool.fontManager.atlasData.lineHeight;
     }
 
     const layoutInfo = this.labelPool.fontManager.layout(this.text);
@@ -238,6 +246,9 @@ export class Label extends THREE.Object3D {
   }
   setOpacity(opacity: number): void {
     this.material.uniforms.uOpacity!.value = opacity;
+    const transparent = opacity < 1;
+    this.material.transparent = transparent;
+    this.material.depthWrite = !transparent;
   }
 
   // eslint-disable-next-line @foxglove/no-boolean-parameters
@@ -249,12 +260,21 @@ export class Label extends THREE.Object3D {
     this.material.uniforms.uAnchorPoint!.value[0] = x;
     this.material.uniforms.uAnchorPoint!.value[1] = y;
   }
+
+  setLineHeight(lineHeight: number): void {
+    this.lineHeight = lineHeight;
+    this.material.uniforms.uScale!.value =
+      (this.lineHeight * this.labelPool.scaleFactor) /
+      this.labelPool.fontManager.atlasData.lineHeight;
+  }
 }
 
-export class LabelPool {
+export class LabelPool extends EventDispatcher<{ type: "scaleFactorChange" | "atlasChange" }> {
   atlasTexture: THREE.DataTexture;
 
   private availableLabels: Label[] = [];
+  private allLabels: Label[] = [];
+  private disposed = false;
 
   static QUAD_POINTS: [number, number][] = [
     [0, 0],
@@ -270,7 +290,18 @@ export class LabelPool {
     2,
   );
 
-  constructor(public fontManager: FontManager) {
+  fontManager: FontManager;
+  scaleFactor = 1;
+
+  setScaleFactor(scaleFactor: number): void {
+    this.scaleFactor = scaleFactor;
+    this.dispatchEvent({ type: "scaleFactorChange" });
+  }
+
+  constructor(options: FontManagerOptions = {}) {
+    super();
+    this.fontManager = new FontManager(options);
+
     this.atlasTexture = new THREE.DataTexture(
       new Uint8ClampedArray(),
       0,
@@ -302,6 +333,7 @@ export class LabelPool {
       };
       this.atlasTexture.needsUpdate = true;
     }
+    //TODO: force layout on labels
   }
 
   acquire(): Label {
@@ -309,8 +341,12 @@ export class LabelPool {
   }
 
   release(label: Label): void {
-    label.removeFromParent();
-    this.availableLabels.push(label);
+    if (this.disposed) {
+      label.dispose();
+    } else {
+      label.removeFromParent();
+      this.availableLabels.push(label);
+    }
   }
 
   dispose(): void {
@@ -318,5 +354,6 @@ export class LabelPool {
       label.dispose();
     }
     this.atlasTexture.dispose();
+    this.disposed = true;
   }
 }

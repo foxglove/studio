@@ -81,6 +81,11 @@ export function rgbaEqual(a: ColorRGBA, b: ColorRGBA): boolean {
   );
 }
 
+// https://stackoverflow.com/a/596243
+export function getLuminance(r: number, g: number, b: number): number {
+  return Math.hypot(0.5468 * r, 0.7662 * g, 0.3376 * b);
+}
+
 /**
  * Computes a gradient step from colors `a` to `b` using pre-multiplied alpha to
  * match CSS linear gradients. The inputs are assumed to not have pre-multiplied
