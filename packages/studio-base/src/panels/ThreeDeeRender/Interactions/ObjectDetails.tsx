@@ -81,7 +81,7 @@ function ObjectDetails({ interactionData, selectedObject }: Props): JSX.Element 
           return <span style={{ padding: "0 4px 0 0" }}>{label}</span>;
         }}
         valueRenderer={(label: string) => {
-          return <span style={{ marginLeft: 16 }}>{label}</span>;
+          return <span>{label}</span>;
         }}
       />
     </TreeContainer>
