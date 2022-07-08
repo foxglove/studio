@@ -82,6 +82,7 @@ export default function ExtensionRegistryProvider({
     loadExtension,
   );
 
+  // Refresh extensions on startup.
   useEffect(() => {
     refreshExtensions().catch((error) => log.error(error));
   }, [refreshExtensions]);

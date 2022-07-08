@@ -43,7 +43,7 @@ function validatePackageInfo(info: Partial<ExtensionInfo>): ExtensionInfo {
     throw new Error("Invalid extension: missing publisher");
   }
 
-  return { ...info, publisher, name } as ExtensionInfo;
+  return { ...info, publisher: publisher.toLowerCase(), name: name.toLowerCase() } as ExtensionInfo;
 }
 
 export class IdbExtensionLoader implements ExtensionLoader {
