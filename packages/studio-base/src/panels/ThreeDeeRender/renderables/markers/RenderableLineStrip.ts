@@ -6,6 +6,7 @@ import * as THREE from "three";
 import { Line2 } from "three/examples/jsm/lines/Line2";
 import { LineGeometry } from "three/examples/jsm/lines/LineGeometry";
 
+import { LineMaterial } from "../../LineMaterial";
 import type { Renderer } from "../../Renderer";
 import { Marker } from "../../ros";
 import { RenderableMarker } from "./RenderableMarker";
@@ -26,19 +27,21 @@ export class RenderableLineStrip extends RenderableMarker {
 
     this.geometry = new LineGeometry();
 
+    const options = { resolution: renderer.input.canvasSize, worldUnits: true };
+
     // Stencil and depth pass 1
-    const matLinePrepass = makeLinePrepassMaterial(marker);
+    const matLinePrepass = makeLinePrepassMaterial(marker, options);
     this.linePrepass = new Line2(this.geometry, matLinePrepass);
     this.linePrepass.renderOrder = 1;
     this.linePrepass.userData.picking = false;
     this.add(this.linePrepass);
 
     // Color pass 2
-    const matLine = makeLineMaterial(marker);
+    const matLine = makeLineMaterial(marker, options);
     this.line = new Line2(this.geometry, matLine);
     this.line.renderOrder = 2;
     const pickingLineWidth = marker.scale.x * 1.2;
-    this.line.userData.pickingMaterial = makeLinePickingMaterial(pickingLineWidth, true);
+    this.line.userData.pickingMaterial = makeLinePickingMaterial(pickingLineWidth, options);
     this.add(this.line);
 
     this.update(marker, receiveTime);
@@ -56,6 +59,8 @@ export class RenderableLineStrip extends RenderableMarker {
   }
 
   override update(marker: Marker, receiveTime: bigint | undefined): void {
+    const pointsLength = marker.points.length;
+
     const prevMarker = this.userData.marker;
     super.update(marker, receiveTime);
 
@@ -63,16 +68,27 @@ export class RenderableLineStrip extends RenderableMarker {
     const transparent = markerHasTransparency(marker);
 
     if (transparent !== markerHasTransparency(prevMarker)) {
-      this.linePrepass.material.dispose();
-      this.line.material.dispose();
-      this.linePrepass.material = makeLinePrepassMaterial(marker);
-      this.line.material = makeLineMaterial(marker);
+      this.linePrepass.material.transparent = transparent;
+      this.linePrepass.material.depthWrite = !transparent;
+      this.linePrepass.material.needsUpdate = true;
+      this.line.material.transparent = transparent;
+      this.line.material.depthWrite = !transparent;
+      this.line.material.needsUpdate = true;
     }
 
-    this.linePrepass.material.linewidth = lineWidth;
-    this.line.material.linewidth = lineWidth;
+    const matLinePrepass = this.linePrepass.material as LineMaterial;
+    matLinePrepass.lineWidth = lineWidth;
+    const matLine = this.line.material as LineMaterial;
+    matLine.lineWidth = lineWidth;
 
-    const pointsLength = marker.points.length;
+    const prevPointsLength = (this.geometry.attributes.instanceStart?.count ?? 0) * 2;
+    if (pointsLength !== prevPointsLength) {
+      this.geometry.dispose();
+      this.geometry = new LineGeometry();
+      this.linePrepass.geometry = this.geometry;
+      this.line.geometry = this.geometry;
+    }
+
     this._setPositions(marker, pointsLength);
     this._setColors(marker, pointsLength);
 
@@ -84,9 +100,10 @@ export class RenderableLineStrip extends RenderableMarker {
     const linePositions = new Float32Array(3 * pointsLength);
     for (let i = 0; i < pointsLength; i++) {
       const point = marker.points[i]!;
-      linePositions[i * 3 + 0] = point.x;
-      linePositions[i * 3 + 1] = point.y;
-      linePositions[i * 3 + 2] = point.z;
+      const offset = i * 3;
+      linePositions[offset + 0] = point.x;
+      linePositions[offset + 1] = point.y;
+      linePositions[offset + 2] = point.z;
     }
 
     this.geometry.setPositions(linePositions);
@@ -102,16 +119,17 @@ export class RenderableLineStrip extends RenderableMarker {
         return;
       }
       const i = ii - 1;
+      const offset = i * 8;
 
-      rgbaData[8 * i + 0] = color1[0];
-      rgbaData[8 * i + 1] = color1[1];
-      rgbaData[8 * i + 2] = color1[2];
-      rgbaData[8 * i + 3] = color1[3];
+      rgbaData[offset + 0] = color1[0];
+      rgbaData[offset + 1] = color1[1];
+      rgbaData[offset + 2] = color1[2];
+      rgbaData[offset + 3] = color1[3];
 
-      rgbaData[8 * i + 4] = color2[0];
-      rgbaData[8 * i + 5] = color2[1];
-      rgbaData[8 * i + 6] = color2[2];
-      rgbaData[8 * i + 7] = color2[3];
+      rgbaData[offset + 4] = color2[0];
+      rgbaData[offset + 5] = color2[1];
+      rgbaData[offset + 6] = color2[2];
+      rgbaData[offset + 7] = color2[3];
 
       copyTuple4(color2, color1);
     });
