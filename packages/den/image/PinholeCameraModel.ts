@@ -11,6 +11,8 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import type { CameraInfo } from "./CameraInfo";
+
 type Vector2 = { x: number; y: number };
 
 type Vector3 = { x: number; y: number; z: number };
@@ -25,29 +27,6 @@ type Matrix3x4 = [
 ];
 
 type Vec8 = [number, number, number, number, number, number, number, number];
-
-type FloatArray = number[] | Float32Array | Float64Array;
-
-type DistortionModel = "plumb_bob" | "rational_polynomial" | "";
-
-export type CameraInfo = Readonly<{
-  width: number;
-  height: number;
-  binning_x: number;
-  binning_y: number;
-  roi: {
-    x_offset: number;
-    y_offset: number;
-    height: number;
-    width: number;
-    do_rectify: boolean;
-  };
-  distortion_model: DistortionModel | string;
-  D: FloatArray;
-  K: FloatArray;
-  P: FloatArray;
-  R: FloatArray;
-}>;
 
 // Essentially a copy of ROSPinholeCameraModel
 // but only the relevant methods, i.e.
