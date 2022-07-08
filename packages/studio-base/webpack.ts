@@ -244,7 +244,6 @@ export function makeConfig(
         Buffer: ["buffer", "Buffer"],
         process: ["@foxglove/studio-base/util/process", "default"],
         setImmediate: ["@foxglove/studio-base/util/setImmediate", "default"],
-        THREE: "three",
       }),
       new webpack.DefinePlugin({
         // Should match webpack-defines.d.ts
