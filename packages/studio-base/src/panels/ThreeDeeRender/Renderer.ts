@@ -38,6 +38,7 @@ import { FrameAxes, LayerSettingsTransform } from "./renderables/FrameAxes";
 import { Grids } from "./renderables/Grids";
 import { Images } from "./renderables/Images";
 import { Markers } from "./renderables/Markers";
+import { MeasurementTool } from "./renderables/MeasurementTool";
 import { OccupancyGrids } from "./renderables/OccupancyGrids";
 import { PointCloudsAndLaserScans } from "./renderables/PointCloudsAndLaserScans";
 import { Polygons } from "./renderables/Polygons";
@@ -263,12 +264,12 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.scene.add(this.dirLight);
     this.scene.add(this.hemiLight);
 
-    this.input = new Input(canvas);
-    this.input.on("resize", (size) => this.resizeHandler(size));
-    this.input.on("click", (cursorCoords) => this.clickHandler(cursorCoords));
-
     this.perspectiveCamera = new THREE.PerspectiveCamera();
     this.orthographicCamera = new THREE.OrthographicCamera();
+
+    this.input = new Input(canvas, () => this.activeCamera());
+    this.input.on("resize", (size) => this.resizeHandler(size));
+    this.input.on("click", (cursorCoords) => this.clickHandler(cursorCoords));
 
     this.picker = new Picker(this.gl, this.scene, { debug: DEBUG_PICKING });
 
@@ -294,6 +295,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.addSceneExtension(new Polygons(this));
     this.addSceneExtension(new Poses(this));
     this.addSceneExtension(new PoseArrays(this));
+    this.addSceneExtension(new MeasurementTool(this));
 
     this._watchDevicePixelRatio();
 
@@ -627,9 +629,17 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
   // Callback handlers
 
+  private _animationFrame?: number;
   animationFrame = (): void => {
+    this._animationFrame = undefined;
     this.frameHandler(this.currentTime);
   };
+
+  queueAnimationFrame(): void {
+    if (this._animationFrame == undefined) {
+      this._animationFrame = requestAnimationFrame(this.animationFrame);
+    }
+  }
 
   frameHandler = (currentTime: bigint): void => {
     const camera = this.activeCamera();
