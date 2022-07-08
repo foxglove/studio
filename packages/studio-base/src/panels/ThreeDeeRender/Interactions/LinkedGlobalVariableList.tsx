@@ -30,7 +30,6 @@ const STable = styled(LegacyTable)`
   td {
     padding: 0.3em;
     border: none;
-    vertical-align: middle;
   }
 `;
 
@@ -63,7 +62,7 @@ export default function LinkedGlobalVariableList({ linkedGlobalVariables }: Prop
           {linkedGlobalVariables.map((linkedGlobalVariable, index) => (
             <tr key={index}>
               <td>
-                <GlobalVariableLink linkedGlobalVariable={linkedGlobalVariable} />
+                <GlobalVariableLink linkedGlobalVariable={linkedGlobalVariable} disablePadding />
               </td>
               <td style={{ wordBreak: "break-all" }}>
                 {linkedGlobalVariable.topic}.

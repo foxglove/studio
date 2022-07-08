@@ -30,6 +30,7 @@ type Props = {
   markerKeyPath?: string[];
   topic?: string;
   variableValue?: unknown;
+  disablePadding?: boolean;
 };
 
 export default function GlobalVariableLink({
@@ -39,6 +40,7 @@ export default function GlobalVariableLink({
   markerKeyPath,
   topic,
   variableValue,
+  disablePadding = false,
 }: Props): JSX.Element | ReactNull {
   const { linkedGlobalVariables } = useLinkedGlobalVariables();
   const [anchorEl, setAnchorEl] = useState<undefined | HTMLElement>(undefined);
@@ -113,7 +115,7 @@ export default function GlobalVariableLink({
         </Tooltip>
       )}
       {linkedGlobalVariableLocal != undefined && (
-        <GlobalVariableName name={linkedGlobalVariableLocal.name} paddingLeft />
+        <GlobalVariableName name={linkedGlobalVariableLocal.name} paddingLeft={!disablePadding} />
       )}
       <Menu
         id="link-menu"
