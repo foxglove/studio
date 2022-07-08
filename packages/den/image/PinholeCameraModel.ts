@@ -11,22 +11,49 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import {
-  CameraInfo,
-  Matrix3,
-  Matrix3x4,
-  MutablePoint,
-  MutablePoint2D,
-  Point2D,
-} from "@foxglove/studio-base/types/Messages";
+type Vector2 = { x: number; y: number };
+
+type Vector3 = { x: number; y: number; z: number };
+
+type Matrix3 = [number, number, number, number, number, number, number, number, number];
+
+// prettier-ignore
+type Matrix3x4 = [
+  number, number, number, number,
+  number, number, number, number,
+  number, number, number, number,
+];
 
 type Vec8 = [number, number, number, number, number, number, number, number];
+
+type FloatArray = number[] | Float32Array | Float64Array;
+
+type DistortionModel = "plumb_bob" | "rational_polynomial" | "";
+
+export type CameraInfo = Readonly<{
+  width: number;
+  height: number;
+  binning_x: number;
+  binning_y: number;
+  roi: {
+    x_offset: number;
+    y_offset: number;
+    height: number;
+    width: number;
+    do_rectify: boolean;
+  };
+  distortion_model: DistortionModel | string;
+  D: FloatArray;
+  K: FloatArray;
+  P: FloatArray;
+  R: FloatArray;
+}>;
 
 // Essentially a copy of ROSPinholeCameraModel
 // but only the relevant methods, i.e.
 // fromCameraInfo() and unrectifyPixel()
 // http://docs.ros.org/diamondback/api/image_geometry/html/c++/pinhole__camera__model_8cpp_source.html
-export default class PinholeCameraModel {
+export class PinholeCameraModel {
   // [k1, k2, p1, p2, k3, ?, ?, ?]
   D: Readonly<Vec8>;
   //     [fx  0 cx]
@@ -92,7 +119,7 @@ export default class PinholeCameraModel {
     }
   }
 
-  projectPixelTo3dRay(out: MutablePoint, pixel: Point2D): boolean {
+  projectPixelTo3dRay(out: Vector3, pixel: Readonly<Vector2>): boolean {
     const P = this.P;
     if (!P) {
       return false;
@@ -111,7 +138,7 @@ export default class PinholeCameraModel {
     return true;
   }
 
-  rectifyPixel(out: MutablePoint2D, point: Point2D, iterations = 3): MutablePoint2D {
+  rectifyPixel(out: Vector2, point: Readonly<Vector2>, iterations = 3): Vector2 {
     if (!this.P) {
       out.x = point.x;
       out.y = point.y;
@@ -164,7 +191,7 @@ export default class PinholeCameraModel {
     return out;
   }
 
-  unrectifyPixel(out: MutablePoint2D, point: Point2D): MutablePoint2D {
+  unrectifyPixel(out: Vector2, point: Readonly<Vector2>): Vector2 {
     if (!this.P) {
       out.x = point.x;
       out.y = point.y;
