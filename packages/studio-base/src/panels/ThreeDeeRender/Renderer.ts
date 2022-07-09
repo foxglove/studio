@@ -550,6 +550,12 @@ export class Renderer extends EventEmitter<RendererEvents> {
       this.addCoordinateFrame(frameId);
     }
 
+    // If this message has a top-level frame_id, scrape it
+    const maybeHasFrameId = message as Partial<{ frame_id: string }>;
+    if (maybeHasFrameId.frame_id != undefined) {
+      this.addCoordinateFrame(maybeHasFrameId.frame_id);
+    }
+
     if (TF_DATATYPES.has(datatype)) {
       // tf2_msgs/TFMessage - Ingest the list of transforms into our TF tree
       const tfMessage = normalizeTFMessage(message as DeepPartial<TFMessage>);

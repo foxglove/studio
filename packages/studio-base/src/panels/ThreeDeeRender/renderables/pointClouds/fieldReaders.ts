@@ -2,6 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { PackedElementField } from "@foxglove/schemas/schemas/typescript";
+
 import { PointField, PointFieldType } from "../../ros";
 
 export type FieldReader = (view: DataView, pointOffset: number) => number;
@@ -39,11 +41,15 @@ export function float64Reader(fieldOffset: number): FieldReader {
 }
 
 export function getReader(
-  field: PointField,
+  field: PackedElementField | PointField,
   pointStep: number,
   forceType?: PointFieldType,
 ): FieldReader | undefined {
-  switch (forceType ?? field.datatype) {
+  switch (
+    forceType ??
+    (field as Partial<PackedElementField>).type ??
+    (field as PointField).datatype
+  ) {
     case PointFieldType.INT8:
       return field.offset + 1 <= pointStep ? int8Reader(field.offset) : undefined;
     case PointFieldType.UINT8:
