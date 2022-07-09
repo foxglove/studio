@@ -3,6 +3,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import type { Time } from "@foxglove/rostime";
+import {
+  FrameTransform,
+  Transform as TransformWithTime,
+} from "@foxglove/schemas/schemas/typescript";
 
 import type { PartialMessage } from "./SceneExtension";
 import type {
@@ -133,6 +137,16 @@ export function normalizeTransform(transform: PartialMessage<Transform> | undefi
   };
 }
 
+export function normalizeTransformWithTime(
+  transform: PartialMessage<TransformWithTime> | undefined,
+): TransformWithTime {
+  return {
+    timestamp: normalizeTime(transform?.timestamp),
+    translation: normalizeVector3(transform?.translation),
+    rotation: normalizeQuaternion(transform?.rotation),
+  };
+}
+
 export function normalizeTransformStamped(
   transform: PartialMessage<TransformStamped> | undefined,
 ): TransformStamped {
@@ -146,5 +160,16 @@ export function normalizeTransformStamped(
 export function normalizeTFMessage(tfMessage: PartialMessage<TFMessage> | undefined): TFMessage {
   return {
     transforms: (tfMessage?.transforms ?? []).map(normalizeTransformStamped),
+  };
+}
+
+export function normalizeFrameTransform(
+  frameTransform: PartialMessage<FrameTransform> | undefined,
+): FrameTransform {
+  return {
+    timestamp: normalizeTime(frameTransform?.timestamp),
+    parent_frame_id: frameTransform?.parent_frame_id ?? "",
+    child_frame_id: frameTransform?.child_frame_id ?? "",
+    transform: normalizeTransformWithTime(frameTransform?.transform),
   };
 }

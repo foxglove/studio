@@ -11,6 +11,7 @@ import { v4 as uuidv4 } from "uuid";
 import Logger from "@foxglove/log";
 import { CameraState } from "@foxglove/regl-worldview";
 import { toNanoSec } from "@foxglove/rostime";
+import { FrameTransform } from "@foxglove/schemas/schemas/typescript";
 import {
   MessageEvent,
   SettingsIcon,
@@ -31,8 +32,13 @@ import { SceneExtension } from "./SceneExtension";
 import { ScreenOverlay } from "./ScreenOverlay";
 import { SettingsManager, SettingsTreeEntry } from "./SettingsManager";
 import { stringToRgb } from "./color";
+import { FRAME_TRANSFORM_DATATYPES } from "./foxglove";
 import { DetailLevel, msaaSamples } from "./lod";
-import { normalizeTFMessage, normalizeTransformStamped } from "./normalizeMessages";
+import {
+  normalizeFrameTransform,
+  normalizeTFMessage,
+  normalizeTransformStamped,
+} from "./normalizeMessages";
 import { Cameras } from "./renderables/Cameras";
 import { CoreSettings } from "./renderables/CoreSettings";
 import { FrameAxes, LayerSettingsTransform } from "./renderables/FrameAxes";
@@ -47,10 +53,12 @@ import { Poses } from "./renderables/Poses";
 import { MarkerPool } from "./renderables/markers/MarkerPool";
 import {
   Header,
+  Quaternion,
   TFMessage,
   TF_DATATYPES,
   TransformStamped,
   TRANSFORM_STAMPED_DATATYPES,
+  Vector3,
 } from "./ros";
 import { BaseSettings, CustomLayerSettings, SelectEntry } from "./settings";
 import { Transform, TransformTree } from "./transforms";
@@ -556,7 +564,11 @@ export class Renderer extends EventEmitter<RendererEvents> {
       this.addCoordinateFrame(maybeHasFrameId.frame_id);
     }
 
-    if (TF_DATATYPES.has(datatype)) {
+    if (FRAME_TRANSFORM_DATATYPES.has(datatype)) {
+      // foxglove.FrameTransform - Ingest the list of transforms into our TF tree
+      const transform = normalizeFrameTransform(message as DeepPartial<FrameTransform>);
+      this.addFrameTransform(transform);
+    } else if (TF_DATATYPES.has(datatype)) {
       // tf2_msgs/TFMessage - Ingest the list of transforms into our TF tree
       const tfMessage = normalizeTFMessage(message as DeepPartial<TFMessage>);
       for (const tf of tfMessage.transforms) {
@@ -599,31 +611,42 @@ export class Renderer extends EventEmitter<RendererEvents> {
     }
   }
 
+  addFrameTransform(transform: FrameTransform): void {
+    const parentId = transform.parent_frame_id;
+    const childId = transform.child_frame_id;
+    const stamp = toNanoSec(transform.transform.timestamp);
+    const t = transform.transform.translation;
+    const q = transform.transform.rotation;
+
+    this.addTransform(parentId, childId, stamp, t, q);
+  }
+
   addTransformMessage(tf: TransformStamped): void {
     const normalizedParentId = this.normalizeFrameId(tf.header.frame_id);
     const normalizedChildId = this.normalizeFrameId(tf.child_frame_id);
-    const addParent = !this.transformTree.hasFrame(normalizedParentId);
-    const addChild = !this.transformTree.hasFrame(normalizedChildId);
-
-    // Create a new transform and add it to the renderer's TransformTree
     const stamp = toNanoSec(tf.header.stamp);
     const t = tf.transform.translation;
     const q = tf.transform.rotation;
-    const transform = new Transform([t.x, t.y, t.z], [q.x, q.y, q.z, q.w]);
-    const updated = this.transformTree.addTransform(
-      normalizedChildId,
-      normalizedParentId,
-      stamp,
-      transform,
-    );
 
-    if (addParent || addChild) {
+    this.addTransform(normalizedParentId, normalizedChildId, stamp, t, q);
+  }
+
+  // Create a new transform and add it to the renderer's TransformTree
+  addTransform(
+    parentFrameId: string,
+    childFrameId: string,
+    stamp: bigint,
+    translation: Vector3,
+    rotation: Quaternion,
+  ): void {
+    const t = translation;
+    const q = rotation;
+
+    const transform = new Transform([t.x, t.y, t.z], [q.x, q.y, q.z, q.w]);
+    const updated = this.transformTree.addTransform(childFrameId, parentFrameId, stamp, transform);
+
+    if (updated) {
       this.coordinateFrameList = this.transformTree.frameList();
-      // log.debug(`Added transform "${normalizedParentId}_T_${normalizedChildId}"`);
-      this.emit("transformTreeUpdated", this);
-    } else if (updated) {
-      this.coordinateFrameList = this.transformTree.frameList();
-      // log.debug(`Updated transform "${normalizedParentId}_T_${normalizedChildId}"`);
       this.emit("transformTreeUpdated", this);
     }
   }
