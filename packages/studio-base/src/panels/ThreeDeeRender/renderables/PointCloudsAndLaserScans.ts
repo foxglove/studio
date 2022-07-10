@@ -32,7 +32,7 @@ import {
   PointFieldType,
 } from "../ros";
 import { BaseSettings } from "../settings";
-import { makePose, MAX_DURATION } from "../transforms";
+import { makePose, MAX_DURATION, Pose } from "../transforms";
 import { updatePose } from "../updatePose";
 import { getColorConverter } from "./pointClouds/colors";
 import { FieldReader, getReader } from "./pointClouds/fieldReaders";
@@ -338,7 +338,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
         receiveTime,
         messageTime,
         frameId: this.renderer.normalizeFrameId(pointCloud.frame_id),
-        pose: makePose(),
+        pose: getPose(pointCloud),
         settingsPath: ["topics", topic],
         settings,
         topic,
@@ -409,7 +409,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
         receiveTime,
         messageTime,
         frameId: this.renderer.normalizeFrameId(pointCloud.header.frame_id),
-        pose: makePose(),
+        pose: getPose(pointCloud),
         settingsPath: ["topics", topic],
         settings,
         topic,
@@ -1469,4 +1469,9 @@ function getStride(pointCloud: PointCloud | PointCloud2): number {
   return maybeRos.point_step != undefined
     ? maybeRos.point_step
     : (pointCloud as PointCloud).point_stride;
+}
+
+function getPose(pointCloud: PointCloud | PointCloud2): Pose {
+  const maybeFoxglove = pointCloud as Partial<PointCloud>;
+  return maybeFoxglove.pose ?? makePose();
 }
