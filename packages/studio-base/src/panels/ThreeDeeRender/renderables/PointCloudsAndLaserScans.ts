@@ -331,14 +331,14 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
 
       const material = pointCloudMaterial(settings);
       const pickingMaterial = createPickingMaterial(settings);
-      const points = createPoints(topic, geometry, material, pickingMaterial);
+      const points = createPoints(topic, getPose(pointCloud), geometry, material, pickingMaterial);
 
       const messageTime = toNanoSec(pointCloud.timestamp);
       renderable = new PointCloudAndLaserScanRenderable(topic, this.renderer, {
         receiveTime,
         messageTime,
         frameId: this.renderer.normalizeFrameId(pointCloud.frame_id),
-        pose: getPose(pointCloud),
+        pose: makePose(),
         settingsPath: ["topics", topic],
         settings,
         topic,
@@ -402,14 +402,14 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
 
       const material = pointCloudMaterial(settings);
       const pickingMaterial = createPickingMaterial(settings);
-      const points = createPoints(topic, geometry, material, pickingMaterial);
+      const points = createPoints(topic, getPose(pointCloud), geometry, material, pickingMaterial);
 
       const messageTime = toNanoSec(pointCloud.header.stamp);
       renderable = new PointCloudAndLaserScanRenderable(topic, this.renderer, {
         receiveTime,
         messageTime,
         frameId: this.renderer.normalizeFrameId(pointCloud.header.frame_id),
-        pose: getPose(pointCloud),
+        pose: makePose(),
         settingsPath: ["topics", topic],
         settings,
         topic,
@@ -497,7 +497,13 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     if (isDecay) {
       // Push a new (empty) entry to the history of points
       const geometry = this._createGeometry(topic, THREE.StaticDrawUsage);
-      const points = createPoints(topic, geometry, material, renderable.userData.pickingMaterial);
+      const points = createPoints(
+        topic,
+        getPose(pointCloud),
+        geometry,
+        material,
+        renderable.userData.pickingMaterial,
+      );
       pointsHistory.push({ receiveTime, messageTime, points });
       renderable.add(points);
     }
@@ -803,7 +809,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
 
       const material = new LaserScanMaterial();
       const pickingMaterial = new LaserScanMaterial({ picking: true });
-      const points = createPoints(topic, geometry, material, pickingMaterial);
+      const points = createPoints(topic, makePose(), geometry, material, pickingMaterial);
 
       material.update(settings, laserScan);
       pickingMaterial.update(settings, laserScan);
@@ -874,7 +880,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     if (isDecay) {
       // Push a new (empty) entry to the history of points
       const geometry = this._createGeometry(topic, THREE.StaticDrawUsage);
-      const points = createPoints(topic, geometry, laserScanMaterial, pickingMaterial);
+      const points = createPoints(topic, makePose(), geometry, laserScanMaterial, pickingMaterial);
       pointsHistory.push({ receiveTime, messageTime, points });
       renderable.add(points);
     }
@@ -1377,6 +1383,7 @@ function zeroReader(): number {
 
 function createPoints(
   topic: string,
+  pose: Pose,
   geometry: DynamicFloatBufferGeometry,
   material: Material,
   pickingMaterial: THREE.Material,
@@ -1387,7 +1394,7 @@ function createPoints(
   points.name = `${topic}:PointCloud:points`;
   points.userData = {
     pickingMaterial,
-    pose: makePose(),
+    pose,
   };
   return points;
 }
