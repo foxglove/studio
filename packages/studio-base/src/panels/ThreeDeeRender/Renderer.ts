@@ -614,7 +614,12 @@ export class Renderer extends EventEmitter<RendererEvents> {
   addFrameTransform(transform: FrameTransform): void {
     const parentId = transform.parent_frame_id;
     const childId = transform.child_frame_id;
-    const stamp = toNanoSec(transform.transform.timestamp);
+    // The docs at <https://foxglove.dev/docs/studio/messages/frame-transform>
+    // describe `transform.timestamp` as "Timestamp of transform" and
+    // `transform.transform.timestamp` as "Transform time". We choose the
+    // top-level timestamp for now until the ambiguity is resolved. See
+    // <https://github.com/foxglove/schemas/issues/45>
+    const stamp = toNanoSec(transform.timestamp);
     const t = transform.transform.translation;
     const q = transform.transform.rotation;
 
