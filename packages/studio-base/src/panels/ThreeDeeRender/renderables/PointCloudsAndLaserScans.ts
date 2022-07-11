@@ -21,6 +21,7 @@ import {
   normalizeFloat32Array,
   normalizeTime,
   normalizePose,
+  numericTypeToPointFieldType,
 } from "../normalizeMessages";
 import {
   LASERSCAN_DATATYPES,
@@ -34,7 +35,7 @@ import { BaseSettings } from "../settings";
 import { makePose, MAX_DURATION, Pose } from "../transforms";
 import { updatePose } from "../updatePose";
 import { getColorConverter } from "./pointClouds/colors";
-import { FieldReader, getReader, numericTypeToPointFieldType } from "./pointClouds/fieldReaders";
+import { FieldReader, getReader } from "./pointClouds/fieldReaders";
 import { missingTransformMessage, MISSING_TRANSFORM } from "./transforms";
 
 export type LayerSettingsPointCloudAndLaserScan = BaseSettings & {
@@ -172,7 +173,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     super("foxglove.PointCloudsAndLaserScans", renderer);
 
     renderer.addDatatypeSubscriptions(ROS_POINTCLOUD_DATATYPES, this.handleRosPointCloud);
-    renderer.addDatatypeSubscriptions(FOXGLOVE_POINTCLOUD_DATATYPES, this.handleFgPointCloud);
+    renderer.addDatatypeSubscriptions(FOXGLOVE_POINTCLOUD_DATATYPES, this.handleFoxglovePointCloud);
     renderer.addDatatypeSubscriptions(LASERSCAN_DATATYPES, this.handleLaserScan);
   }
 
@@ -297,7 +298,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     }
   };
 
-  handleFgPointCloud = (messageEvent: PartialMessageEvent<PointCloud>): void => {
+  handleFoxglovePointCloud = (messageEvent: PartialMessageEvent<PointCloud>): void => {
     const topic = messageEvent.topic;
     const pointCloud = normalizePointCloud(messageEvent.message);
     const receiveTime = toNanoSec(messageEvent.receiveTime);

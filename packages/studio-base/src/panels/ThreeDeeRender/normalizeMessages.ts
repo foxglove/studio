@@ -3,16 +3,18 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import type { Time } from "@foxglove/rostime";
-import type {
+import {
   FrameTransform,
+  NumericType,
   Transform as TransformWithTime,
 } from "@foxglove/schemas/schemas/typescript";
 
 import type { PartialMessage } from "./SceneExtension";
-import type {
+import {
   ColorRGBA,
   Header,
   Matrix6,
+  PointFieldType,
   Quaternion,
   TFMessage,
   Transform,
@@ -172,4 +174,27 @@ export function normalizeFrameTransform(
     child_frame_id: frameTransform?.child_frame_id ?? "",
     transform: normalizeTransformWithTime(frameTransform?.transform),
   };
+}
+
+export function numericTypeToPointFieldType(type: NumericType): PointFieldType {
+  switch (type) {
+    case NumericType.UINT8:
+      return PointFieldType.UINT8;
+    case NumericType.INT8:
+      return PointFieldType.INT8;
+    case NumericType.UINT16:
+      return PointFieldType.UINT16;
+    case NumericType.INT16:
+      return PointFieldType.INT16;
+    case NumericType.UINT32:
+      return PointFieldType.UINT32;
+    case NumericType.INT32:
+      return PointFieldType.INT32;
+    case NumericType.FLOAT32:
+      return PointFieldType.FLOAT32;
+    case NumericType.FLOAT64:
+      return PointFieldType.FLOAT64;
+    default:
+      return PointFieldType.UNKNOWN;
+  }
 }

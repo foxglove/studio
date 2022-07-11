@@ -2,8 +2,9 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { NumericType, PackedElementField } from "@foxglove/schemas/schemas/typescript";
+import type { PackedElementField } from "@foxglove/schemas/schemas/typescript";
 
+import { numericTypeToPointFieldType } from "../../normalizeMessages";
 import { PointField, PointFieldType } from "../../ros";
 
 export type FieldReader = (view: DataView, pointOffset: number) => number;
@@ -70,28 +71,5 @@ export function getReader(
       return field.offset + 8 <= pointStep ? float64Reader(field.offset) : undefined;
     default:
       return undefined;
-  }
-}
-
-export function numericTypeToPointFieldType(type: NumericType): PointFieldType {
-  switch (type) {
-    case NumericType.UINT8:
-      return PointFieldType.UINT8;
-    case NumericType.INT8:
-      return PointFieldType.INT8;
-    case NumericType.UINT16:
-      return PointFieldType.UINT16;
-    case NumericType.INT16:
-      return PointFieldType.INT16;
-    case NumericType.UINT32:
-      return PointFieldType.UINT32;
-    case NumericType.INT32:
-      return PointFieldType.INT32;
-    case NumericType.FLOAT32:
-      return PointFieldType.FLOAT32;
-    case NumericType.FLOAT64:
-      return PointFieldType.FLOAT64;
-    default:
-      return PointFieldType.UNKNOWN;
   }
 }
