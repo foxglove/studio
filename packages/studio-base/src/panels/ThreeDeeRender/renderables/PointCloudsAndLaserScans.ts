@@ -5,7 +5,7 @@
 import * as THREE from "three";
 
 import { Time, toNanoSec } from "@foxglove/rostime";
-import { PackedElementField, PointCloud } from "@foxglove/schemas/schemas/typescript";
+import type { PackedElementField, PointCloud } from "@foxglove/schemas/schemas/typescript";
 import { SettingsTreeAction, SettingsTreeFields, SettingsTreeNode, Topic } from "@foxglove/studio";
 
 import { DynamicBufferGeometry, DynamicFloatBufferGeometry } from "../DynamicBufferGeometry";

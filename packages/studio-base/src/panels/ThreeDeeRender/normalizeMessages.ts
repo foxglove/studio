@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import type { Time } from "@foxglove/rostime";
-import {
+import type {
   FrameTransform,
   Transform as TransformWithTime,
 } from "@foxglove/schemas/schemas/typescript";
