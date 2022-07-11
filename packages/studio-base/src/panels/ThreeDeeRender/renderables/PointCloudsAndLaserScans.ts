@@ -5,8 +5,7 @@
 import * as THREE from "three";
 
 import { Time, toNanoSec } from "@foxglove/rostime";
-import { PackedElementField } from "@foxglove/schemas/schemas/typescript/PackedElementField";
-import { PointCloud } from "@foxglove/schemas/schemas/typescript/PointCloud";
+import { PackedElementField, PointCloud } from "@foxglove/schemas/schemas/typescript";
 import { SettingsTreeAction, SettingsTreeFields, SettingsTreeNode, Topic } from "@foxglove/studio";
 
 import { DynamicBufferGeometry, DynamicFloatBufferGeometry } from "../DynamicBufferGeometry";
@@ -35,7 +34,7 @@ import { BaseSettings } from "../settings";
 import { makePose, MAX_DURATION, Pose } from "../transforms";
 import { updatePose } from "../updatePose";
 import { getColorConverter } from "./pointClouds/colors";
-import { FieldReader, getReader } from "./pointClouds/fieldReaders";
+import { FieldReader, getReader, numericTypeToPointFieldType } from "./pointClouds/fieldReaders";
 import { missingTransformMessage, MISSING_TRANSFORM } from "./transforms";
 
 export type LayerSettingsPointCloudAndLaserScan = BaseSettings & {
@@ -630,7 +629,11 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     for (let i = 0; i < pointCloud.fields.length; i++) {
       const field = pointCloud.fields[i]!;
       const count = (field as Partial<PointField>).count;
-      const type = (field as Partial<PackedElementField>).type ?? (field as PointField).datatype;
+      const numericType = (field as Partial<PackedElementField>).type;
+      const type =
+        numericType != undefined
+          ? numericTypeToPointFieldType(numericType)
+          : (field as PointField).datatype;
 
       if (count != undefined && count !== 1) {
         const message = `PointCloud field "${field.name}" has invalid count ${count}. Only 1 is supported`;
