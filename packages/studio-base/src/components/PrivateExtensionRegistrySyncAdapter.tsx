@@ -18,7 +18,7 @@ const SYNC_INTERVAL = 10 * 60 * 1_000; // 10 minutes
 /**
  * Implements private registry extension syncing.
  */
-export function useExtensionRegistrySync(): void {
+export function PrivateExtensionRegistrySyncAdapter(): ReactNull {
   const installedExtensions = useExtensionRegistry().registeredExtensions;
   const installExtension = useExtensionRegistry().installExtension;
   const uninstallExtension = useExtensionRegistry().uninstallExtension;
@@ -114,4 +114,6 @@ export function useExtensionRegistrySync(): void {
   useEffect(() => {
     syncExtensions().catch((error) => log.error(error));
   }, [syncExtensions]);
+
+  return ReactNull;
 }

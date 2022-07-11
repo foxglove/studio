@@ -3,7 +3,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { renderHook } from "@testing-library/react-hooks";
+import { render, waitFor } from "@testing-library/react";
 import fetchMock from "fetch-mock";
 
 import { useConsoleApi } from "@foxglove/studio-base/context/ConsoleApiContext";
@@ -11,7 +11,7 @@ import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext
 import ExtensionRegistryContext from "@foxglove/studio-base/context/ExtensionRegistryContext";
 import { ExtensionInfo } from "@foxglove/studio-base/types/Extensions";
 
-import { useExtensionRegistrySync } from "./useExtensionRegistrySync";
+import { PrivateExtensionRegistrySyncAdapter } from "./PrivateExtensionRegistrySyncAdapter";
 
 jest.mock("@foxglove/studio-base/context/CurrentUserContext");
 jest.mock("@foxglove/studio-base/context/ConsoleApiContext");
@@ -66,19 +66,13 @@ describe("Private registry sync adapter", () => {
 
     fetchMock.get("url", new Uint8Array());
 
-    renderHook(useExtensionRegistrySync, {
-      wrapper: ({ children }) => (
-        <ExtensionRegistryContext.Provider value={mockRegistryContextValue}>
-          {children}
-        </ExtensionRegistryContext.Provider>
-      ),
-    });
+    render(
+      <ExtensionRegistryContext.Provider value={mockRegistryContextValue}>
+        <PrivateExtensionRegistrySyncAdapter />
+      </ExtensionRegistryContext.Provider>,
+    );
 
-    // We have to wait for the sync effects to apply since the component won't
-    // rerender as a result of syncing.
-    await new Promise((resolve) => process.nextTick(resolve));
-
-    expect(mockRegistryContextValue.installExtension).toHaveBeenCalledTimes(3);
+    await waitFor(() => expect(mockRegistryContextValue.installExtension).toHaveBeenCalledTimes(3));
     expect(mockRegistryContextValue.installExtension).toHaveBeenCalledWith(
       "private",
       expect.anything(),

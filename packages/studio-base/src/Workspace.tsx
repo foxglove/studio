@@ -50,6 +50,7 @@ import panelsHelpContent from "@foxglove/studio-base/components/PanelList/index.
 import PanelSettings from "@foxglove/studio-base/components/PanelSettings";
 import PlaybackControls from "@foxglove/studio-base/components/PlaybackControls";
 import Preferences from "@foxglove/studio-base/components/Preferences";
+import { PrivateExtensionRegistrySyncAdapter } from "@foxglove/studio-base/components/PrivateExtensionRegistrySyncAdapter";
 import RemountOnValueChange from "@foxglove/studio-base/components/RemountOnValueChange";
 import Sidebar, { SidebarItem } from "@foxglove/studio-base/components/Sidebar";
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
@@ -79,7 +80,6 @@ import useElectronFilesToOpen from "@foxglove/studio-base/hooks/useElectronFiles
 import { useInitialDeepLinkState } from "@foxglove/studio-base/hooks/useInitialDeepLinkState";
 import useNativeAppMenuEvent from "@foxglove/studio-base/hooks/useNativeAppMenuEvent";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
-import { useExtensionRegistrySync } from "@foxglove/studio-base/providers/ExtensionRegistryProvider/useExtensionRegistrySync";
 import { HelpInfoStore, useHelpInfo } from "@foxglove/studio-base/providers/HelpInfoProvider";
 import { PanelSettingsEditorContextProvider } from "@foxglove/studio-base/providers/PanelSettingsEditorContextProvider";
 
@@ -350,8 +350,6 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
 
   const extensionRegistry = useExtensionRegistry();
 
-  useExtensionRegistrySync();
-
   const openHandle = useCallback(
     async (handle: FileSystemFileHandle) => {
       log.debug("open handle", handle);
@@ -581,6 +579,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
           <div className={classes.dropzone}>Drop a file here</div>
         </DropOverlay>
       </DocumentDropListener>
+      <PrivateExtensionRegistrySyncAdapter />
       <URLStateSyncAdapter />
       <div className={classes.container} ref={containerRef} tabIndex={0}>
         <Sidebar
