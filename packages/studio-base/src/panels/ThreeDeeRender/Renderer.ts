@@ -19,9 +19,10 @@ import {
   SettingsTreeNodes,
   Topic,
 } from "@foxglove/studio";
+import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
+import { LabelPool } from "@foxglove/three-text";
 
 import { Input } from "./Input";
-import { Labels } from "./Labels";
 import { LineMaterial } from "./LineMaterial";
 import { ModelCache } from "./ModelCache";
 import { Picker } from "./Picker";
@@ -77,16 +78,15 @@ export type RendererConfig = {
     enableStats?: boolean;
     /** Background color override for the scene, sent to `glClearColor()` */
     backgroundColor?: string;
-    /**
-     * Controls the size of labels by setting the pixel density per unit of
-     * world space (usually meters)
-     */
-    labelPixelsPerUnit?: number;
+    /* Scale factor to apply to all labels */
+    labelScaleFactor?: number;
     transforms?: {
       /** Toggles visibility of all transforms */
       visible?: boolean;
       /** Toggles visibility of frame axis labels */
       showLabel?: boolean;
+      /** Size of frame axis labels */
+      labelSize?: number;
       /** Size of coordinate frame axes */
       axisScale?: number;
       /** Width of the connecting line between child and parent frames */
@@ -192,10 +192,10 @@ export class Renderer extends EventEmitter<RendererEvents> {
   renderFrameId: string | undefined;
   followFrameId: string | undefined;
 
-  labels = new Labels(this);
+  labelPool = new LabelPool({ fontFamily: fonts.MONOSPACE });
   markerPool = new MarkerPool(this);
 
-  private _prevResolution: THREE.Vector2 | undefined;
+  private _prevResolution = new THREE.Vector2();
 
   constructor(canvas: HTMLCanvasElement, config: RendererConfig) {
     super();
@@ -245,7 +245,6 @@ export class Renderer extends EventEmitter<RendererEvents> {
     });
 
     this.scene = new THREE.Scene();
-    this.scene.add(this.labels);
 
     this.dirLight = new THREE.DirectionalLight();
     this.dirLight.position.set(1, 1, 1);
@@ -279,7 +278,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
     this.followFrameId = config.followTf;
 
-    const samples = msaaSamples(this.maxLod, this.gl.capabilities);
+    const samples = msaaSamples(this.gl.capabilities);
     const renderSize = this.gl.getDrawingBufferSize(tempVec2);
     this.aspect = renderSize.width / renderSize.height;
     log.debug(`Initialized ${renderSize.width}x${renderSize.height} renderer (${samples}x MSAA)`);
@@ -323,8 +322,8 @@ export class Renderer extends EventEmitter<RendererEvents> {
     }
     this.sceneExtensions.clear();
 
+    this.labelPool.dispose();
     this.markerPool.dispose();
-    this.labels.dispose();
     this.picker.dispose();
     this.input.dispose();
     this.gl.dispose();
@@ -446,8 +445,6 @@ export class Renderer extends EventEmitter<RendererEvents> {
     for (const extension of this.sceneExtensions.values()) {
       extension.setColorScheme(colorScheme, bgColor);
     }
-
-    this.labels.setColorScheme(colorScheme, bgColor);
 
     if (colorScheme === "dark") {
       this.gl.setClearColor(bgColor ?? DARK_BACKDROP);
@@ -842,23 +839,21 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
   private _updateResolution(): void {
     const resolution = this.input.canvasSize;
-    if (this._prevResolution?.equals(resolution) === true) {
+    if (this._prevResolution.equals(resolution)) {
       return;
     }
-    this._prevResolution = resolution;
+    this._prevResolution.copy(resolution);
 
     this.scene.traverse((object) => {
-      if ((object as Partial<THREE.Mesh>).isMesh) {
+      if ((object as Partial<THREE.Mesh>).material) {
         const mesh = object as THREE.Mesh;
-        const material = mesh.material as THREE.Material;
+        const material = mesh.material as Partial<LineMaterial>;
 
         // Update render resolution uniforms
-        if (material instanceof LineMaterial) {
-          material.resolution = resolution;
-        } else if (
-          material instanceof THREE.ShaderMaterial &&
-          material.uniforms.resolution != undefined
-        ) {
+        if (material.resolution) {
+          material.resolution.copy(resolution);
+        }
+        if (material.uniforms?.resolution) {
           material.uniforms.resolution.value = resolution;
         }
       }

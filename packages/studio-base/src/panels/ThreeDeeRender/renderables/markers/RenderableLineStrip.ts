@@ -27,19 +27,27 @@ export class RenderableLineStrip extends RenderableMarker {
 
     this.geometry = new LineGeometry();
 
-    // Stencil and depth pass 1
-    const matLinePrepass = makeLinePrepassMaterial(marker);
+    const options = { resolution: renderer.input.canvasSize, worldUnits: true };
+
+    // We alleviate corner artifacts using a two-pass render for lines. The
+    // first pass writes to depth only, followed by a color pass with stencil
+    // operations. The source for this technique is:
+    // <https://github.com/mrdoob/three.js/issues/23680#issuecomment-1063294691>
+    // <https://gkjohnson.github.io/threejs-sandbox/fat-line-opacity/webgl_lines_fat.html>
+
+    // Depth pass 1
+    const matLinePrepass = makeLinePrepassMaterial(marker, options);
     this.linePrepass = new Line2(this.geometry, matLinePrepass);
     this.linePrepass.renderOrder = 1;
     this.linePrepass.userData.picking = false;
     this.add(this.linePrepass);
 
     // Color pass 2
-    const matLine = makeLineMaterial(marker);
+    const matLine = makeLineMaterial(marker, options);
     this.line = new Line2(this.geometry, matLine);
     this.line.renderOrder = 2;
     const pickingLineWidth = marker.scale.x * 1.2;
-    this.line.userData.pickingMaterial = makeLinePickingMaterial(pickingLineWidth, true);
+    this.line.userData.pickingMaterial = makeLinePickingMaterial(pickingLineWidth, options);
     this.add(this.line);
 
     this.update(marker, receiveTime);
@@ -66,10 +74,12 @@ export class RenderableLineStrip extends RenderableMarker {
     const transparent = markerHasTransparency(marker);
 
     if (transparent !== markerHasTransparency(prevMarker)) {
-      this.linePrepass.material.dispose();
-      this.line.material.dispose();
-      this.linePrepass.material = makeLinePrepassMaterial(marker);
-      this.line.material = makeLineMaterial(marker);
+      this.linePrepass.material.transparent = transparent;
+      this.linePrepass.material.depthWrite = !transparent;
+      this.linePrepass.material.needsUpdate = true;
+      this.line.material.transparent = transparent;
+      this.line.material.depthWrite = !transparent;
+      this.line.material.needsUpdate = true;
     }
 
     const matLinePrepass = this.linePrepass.material as LineMaterial;
