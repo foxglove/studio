@@ -560,7 +560,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
     // If this message has a top-level frame_id, scrape it
     const maybeHasFrameId = message as Partial<{ frame_id: string }>;
-    if (maybeHasFrameId.frame_id != undefined) {
+    if (typeof maybeHasFrameId.frame_id === "string") {
       this.addCoordinateFrame(maybeHasFrameId.frame_id);
     }
 
