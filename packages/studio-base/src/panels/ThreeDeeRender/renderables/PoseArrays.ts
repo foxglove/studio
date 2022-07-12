@@ -318,9 +318,7 @@ export class PoseArrays extends SceneExtension<PoseArrayRenderable> {
             renderable.removeArrows();
             renderable.removeLineStrip();
 
-            this._createOrRemoveAxesToMatchPoses(renderable, poseArrayMessage, topic);
-
-            // Update the scale for each axis
+            // Update the scale for each existing axis
             const scale = renderable.userData.settings.axisScale * (1 / AXIS_LENGTH);
             for (const axis of renderable.userData.axes) {
               axis.scale.set(scale, scale, scale);
