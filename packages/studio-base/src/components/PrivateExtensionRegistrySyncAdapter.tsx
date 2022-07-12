@@ -78,8 +78,6 @@ export function PrivateExtensionRegistrySyncAdapter(): ReactNull {
         (a, b) => a.name === b.name,
       );
 
-      debugger;
-
       for (const extension of toInstall) {
         try {
           await installRemoteExtension(extension.id);

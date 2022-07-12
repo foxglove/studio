@@ -5,11 +5,14 @@
 
 import { render, waitFor } from "@testing-library/react";
 import fetchMock from "fetch-mock";
+import { useEffect } from "react";
 
 import { useConsoleApi } from "@foxglove/studio-base/context/ConsoleApiContext";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
-import ExtensionRegistryProvider from "@foxglove/studio-base/providers/ExtensionRegistryProvider";
-import { IdbExtensionLoader } from "@foxglove/studio-base/services/IdbExtensionLoader";
+import ExtensionRegistryProvider, {
+  useExtensionRegistry,
+} from "@foxglove/studio-base/providers/ExtensionRegistryProvider";
+import { ExtensionLoader } from "@foxglove/studio-base/services/ExtensionLoader";
 import { ExtensionInfo } from "@foxglove/studio-base/types/Extensions";
 
 import { PrivateExtensionRegistrySyncAdapter } from "./PrivateExtensionRegistrySyncAdapter";
@@ -34,6 +37,20 @@ function fakeExtension(overrides: Partial<ExtensionInfo>): ExtensionInfo {
   };
 }
 
+const source = `
+  module.exports = { activate: function() { return 1; } }
+`;
+
+function Wrapper(): JSX.Element {
+  const refreshExtensions = useExtensionRegistry((state) => state.refreshExtensions);
+  const registeredExtensions = useExtensionRegistry((state) => state.registeredExtensions);
+  useEffect(() => {
+    void refreshExtensions();
+  }, [refreshExtensions]);
+
+  return registeredExtensions ? <PrivateExtensionRegistrySyncAdapter /> : <></>;
+}
+
 describe("Private registry sync adapter", () => {
   it("Syncs private extensions", async () => {
     const getExtensions = jest.fn();
@@ -45,43 +62,37 @@ describe("Private registry sync adapter", () => {
       getExtension,
     });
 
-    const mockRegistryContextValue = {
-      downloadExtension: jest.fn(),
-      installExtension: jest.fn(),
-      loadExtension: jest.fn(),
-      refreshExtensions: jest.fn(),
-      registeredExtensions: [
-        fakeExtension({ namespace: "private", id: "private-installed", version: "1" }),
-        fakeExtension({ namespace: "local", id: "local-installed", version: "1" }),
-      ],
-      registeredPanels: {},
-      uninstallExtension: jest.fn(),
-    };
-
     getExtensions.mockReturnValue([
-      { id: "id1" },
-      { id: "id2" },
-      { id: "private-installed", version: 2 },
+      { name: "id1" },
+      { name: "id2" },
+      { name: "private-installed-1", activeVersion: "2" },
+      { name: "private-installed-2", activeVersion: "1" },
     ]);
     getExtension.mockReturnValue({ foxe: "url" });
 
     fetchMock.get("url", new Uint8Array());
 
+    const mockPrivateLoader = {
+      namespace: "private",
+      getExtensions: jest
+        .fn()
+        .mockResolvedValue([
+          fakeExtension({ namespace: "private", name: "private-installed-1", version: "1" }),
+          fakeExtension({ namespace: "private", name: "private-installed-2", version: "1" }),
+          fakeExtension({ namespace: "private", name: "private-to-delete", version: "1" }),
+        ]),
+      loadExtension: jest.fn().mockResolvedValue(source),
+      installExtension: jest.fn(),
+      uninstallExtension: jest.fn(),
+    };
+
     render(
-      <ExtensionRegistryProvider loaders={[new IdbExtensionLoader("private")]}>
-        <PrivateExtensionRegistrySyncAdapter />
+      <ExtensionRegistryProvider loaders={[mockPrivateLoader as ExtensionLoader]}>
+        <Wrapper />
       </ExtensionRegistryProvider>,
     );
 
-    await waitFor(() => expect(mockRegistryContextValue.installExtension).toHaveBeenCalledTimes(3));
-    expect(mockRegistryContextValue.installExtension).toHaveBeenCalledWith(
-      "private",
-      expect.anything(),
-    );
-    expect(mockRegistryContextValue.uninstallExtension).toHaveBeenCalledTimes(1);
-    expect(mockRegistryContextValue.uninstallExtension).toHaveBeenCalledWith(
-      "private",
-      expect.anything(),
-    );
+    await waitFor(() => expect(mockPrivateLoader.installExtension).toHaveBeenCalledTimes(3));
+    expect(mockPrivateLoader.uninstallExtension).toHaveBeenCalledTimes(1);
   });
 });
