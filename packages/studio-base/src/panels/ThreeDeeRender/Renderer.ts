@@ -561,9 +561,8 @@ export class Renderer extends EventEmitter<RendererEvents> {
       const frameId = maybeHasHeader.header.frame_id ?? "";
       this.addCoordinateFrame(frameId);
     } else if (Array.isArray(maybeHasMarkers.markers)) {
-      // If this message has an array called markers, scrape the frame_id from the first marker
-      const marker = maybeHasMarkers.markers[0];
-      if (marker) {
+      // If this message has an array called markers, scrape frame_id from all markers
+      for (const marker of maybeHasMarkers.markers) {
         const frameId = marker.header?.frame_id ?? "";
         this.addCoordinateFrame(frameId);
       }
