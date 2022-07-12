@@ -69,7 +69,7 @@ export function PrivateExtensionRegistrySyncAdapter(): ReactNull {
       const toInstall = differenceWith(
         remoteExtensions,
         installedPrivateExtensions,
-        (a, b) => a.name === b.name && a.version === b.version,
+        (a, b) => a.name === b.name && a.activeVersion === b.version,
       );
 
       const toRemove = differenceWith(
