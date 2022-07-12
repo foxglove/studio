@@ -729,6 +729,11 @@ export class Renderer extends EventEmitter<RendererEvents> {
   };
 
   clickHandler = (cursorCoords: THREE.Vector2): void => {
+    // Disable picking while the measurement tool is active
+    if (this.measurementTool.state !== "idle") {
+      return;
+    }
+
     // Deselect the currently selected object, if one is selected
     let prevSelected: THREE.Object3D | undefined;
     if (this.selectedObject) {

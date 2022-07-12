@@ -123,6 +123,7 @@ function RendererOverlay(props: {
           right: "10px",
           display: "flex",
           flexDirection: "column",
+          alignItems: "flex-end",
           gap: 10,
         }}
       >
@@ -140,7 +141,7 @@ function RendererOverlay(props: {
           >
             <RulerIcon />
           </IconButton>
-          <div>{props.measureDistance?.toFixed(2)}</div>
+          <div style={{ padding: 2 }}>{props.measureDistance?.toFixed(2)}</div>
         </Paper>
       </div>
       {clickedObjects.length > 1 && !selectedObject && (
