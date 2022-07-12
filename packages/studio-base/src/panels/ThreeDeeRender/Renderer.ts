@@ -11,7 +11,7 @@ import { v4 as uuidv4 } from "uuid";
 import Logger from "@foxglove/log";
 import { CameraState } from "@foxglove/regl-worldview";
 import { toNanoSec } from "@foxglove/rostime";
-import { FrameTransform } from "@foxglove/schemas/schemas/typescript";
+import type { FrameTransform } from "@foxglove/schemas/schemas/typescript";
 import {
   MessageEvent,
   SettingsIcon,
