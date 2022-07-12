@@ -298,7 +298,6 @@ export class PoseArrays extends SceneExtension<PoseArrayRenderable> {
     renderable: PoseArrayRenderable,
     poseArrayMessage: PoseArray,
     topic: string,
-    arrowScale: [number, number, number],
     colorStart: ColorRGBA,
     colorEnd: ColorRGBA
   ): void {
@@ -306,7 +305,7 @@ export class PoseArrays extends SceneExtension<PoseArrayRenderable> {
     const createArrowMarkerFromIndex = (i: number): Marker => {
       const t = i / (poseArrayMessage.poses.length - 1);
       const color = rgbaGradient(tempColor3, colorStart, colorEnd, t);
-      return createArrowMarker(arrowScale, color);
+      return createArrowMarker(renderable.userData.settings.arrowScale, color);
     }
 
     // Update the arrowMarker of existing RenderableArrow as needed
@@ -412,9 +411,7 @@ export class PoseArrays extends SceneExtension<PoseArrayRenderable> {
         }
         break;
       case "arrow":
-        this._createOrRemoveArrowsToMatchPoses(
-          renderable, poseArrayMessage, topic, settings.arrowScale, colorStart, colorEnd
-        );
+        this._createOrRemoveArrowsToMatchPoses(renderable, poseArrayMessage, topic, colorStart, colorEnd);
         for (let i = 0; i < poseArrayMessage.poses.length; i++) {
           setObjectPose(renderable.userData.arrows[i]!, poseArrayMessage.poses[i]!);
         }
