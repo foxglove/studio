@@ -277,7 +277,7 @@ export function Foxglove_PointCloud_Intensity(): JSX.Element {
         { name: "x", offset: 0, type: 7 },
         { name: "y", offset: 4, type: 7 },
         { name: "z", offset: 8, type: 7 },
-        { name: "intensity", offset: 12, type: 2 },
+        { name: "intensity", offset: 12, type: 1 },
       ],
       data,
     },
