@@ -140,10 +140,10 @@ function RendererOverlay(props: {
             title={props.measureActive ? "Cancel measuring" : "Measure distance"}
             onClick={props.onClickMeasure}
           >
-            <RulerIcon />
+            <RulerIcon style={{ width: 16, height: 16 }} />
           </IconButton>
-          <div style={{ padding: 2 }}>{props.measureDistance?.toFixed(2)}</div>
         </Paper>
+        <div>{props.measureDistance?.toFixed(2)}</div>
       </div>
       {clickedObjects.length > 1 && !selectedObject && (
         <InteractionContextMenu

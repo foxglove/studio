@@ -10,6 +10,8 @@ const MAX_DIST = 1;
 
 const tempVec2 = new THREE.Vector2();
 
+const XY_PLANE = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+
 export type InputEvents = {
   resize: (windowSize: THREE.Vector2) => void;
   click: (
@@ -164,7 +166,7 @@ export class Input extends EventEmitter<InputEvents> {
     );
     this.worldSpaceCursorCoords =
       this.raycaster.ray.intersectPlane(
-        new THREE.Plane(new THREE.Vector3(0, 0, 1), 0),
+        XY_PLANE,
         this.worldSpaceCursorCoords ?? new THREE.Vector3(),
       ) ?? undefined;
   }
