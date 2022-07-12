@@ -163,10 +163,12 @@ export class MeasurementTool extends SceneExtension {
         break;
       case "place-first-point":
         this.point1 = worldSpaceCursorCoords.clone();
+        this.point1NeedsUpdate = true;
         this._setState("place-second-point");
         break;
       case "place-second-point":
         this.point2 = worldSpaceCursorCoords.clone();
+        this.point2NeedsUpdate = true;
         this._setState("idle");
         break;
     }

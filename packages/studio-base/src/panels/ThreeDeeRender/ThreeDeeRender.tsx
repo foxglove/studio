@@ -135,6 +135,7 @@ function RendererOverlay(props: {
         />
         <Paper square={false} elevation={4}>
           <IconButton
+            data-test="measure-button"
             color={props.measureActive ? "info" : "inherit"}
             title={props.measureActive ? "Cancel measuring" : "Measure distance"}
             onClick={props.onClickMeasure}
