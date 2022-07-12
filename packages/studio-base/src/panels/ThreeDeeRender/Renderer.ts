@@ -172,6 +172,8 @@ export class Renderer extends EventEmitter<RendererEvents> {
   input: Input;
   outlineMaterial = new THREE.LineBasicMaterial({ dithering: true });
 
+  measurementTool: MeasurementTool;
+
   perspectiveCamera: THREE.PerspectiveCamera;
   orthographicCamera: THREE.OrthographicCamera;
   aspect: number;
@@ -294,7 +296,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.addSceneExtension(new Polygons(this));
     this.addSceneExtension(new Poses(this));
     this.addSceneExtension(new PoseArrays(this));
-    this.addSceneExtension(new MeasurementTool(this));
+    this.addSceneExtension((this.measurementTool = new MeasurementTool(this)));
 
     this._watchDevicePixelRatio();
 
