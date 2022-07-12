@@ -64,7 +64,6 @@ import {
   useCurrentLayoutSelector,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
-import { useExtensionRegistry } from "@foxglove/studio-base/context/ExtensionRegistryContext";
 import LinkHandlerContext from "@foxglove/studio-base/context/LinkHandlerContext";
 import { useNativeAppMenu } from "@foxglove/studio-base/context/NativeAppMenuContext";
 import {
@@ -80,6 +79,7 @@ import useElectronFilesToOpen from "@foxglove/studio-base/hooks/useElectronFiles
 import { useInitialDeepLinkState } from "@foxglove/studio-base/hooks/useInitialDeepLinkState";
 import useNativeAppMenuEvent from "@foxglove/studio-base/hooks/useNativeAppMenuEvent";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
+import { useExtensionRegistry } from "@foxglove/studio-base/providers/ExtensionRegistryProvider";
 import { HelpInfoStore, useHelpInfo } from "@foxglove/studio-base/providers/HelpInfoProvider";
 import { PanelSettingsEditorContextProvider } from "@foxglove/studio-base/providers/PanelSettingsEditorContextProvider";
 
@@ -348,7 +348,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
 
   const { loadFromFile } = useAssets();
 
-  const extensionRegistry = useExtensionRegistry();
+  const installExtension = useExtensionRegistry((state) => state.installExtension);
 
   const openHandle = useCallback(
     async (handle: FileSystemFileHandle) => {
@@ -362,7 +362,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
         try {
           const arrayBuffer = await file.arrayBuffer();
           const data = new Uint8Array(arrayBuffer);
-          const extension = await extensionRegistry.installExtension("local", data);
+          const extension = await installExtension("local", data);
           addToast(`Installed extension ${extension.id}`, {
             appearance: "success",
             autoDismiss: true,
@@ -395,7 +395,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
         selectSource(matchedSource.id, { type: "file", handle });
       }
     },
-    [addToast, availableSources, extensionRegistry, loadFromFile, selectSource],
+    [addToast, availableSources, installExtension, loadFromFile, selectSource],
   );
 
   const openFiles = useCallback(
@@ -412,7 +412,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
           try {
             const arrayBuffer = await file.arrayBuffer();
             const data = new Uint8Array(arrayBuffer);
-            const extension = await extensionRegistry.installExtension("local", data);
+            const extension = await installExtension("local", data);
             addToast(`Installed extension ${extension.id}`, {
               appearance: "success",
               autoDismiss: true,
@@ -453,7 +453,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
         }
       }
     },
-    [addToast, availableSources, extensionRegistry, loadFromFile, selectSource],
+    [addToast, availableSources, installExtension, loadFromFile, selectSource],
   );
 
   // files the main thread told us to open
@@ -555,6 +555,12 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     () => getMessagePipeline().playerState.activeData ?? {},
     [getMessagePipeline],
   );
+
+  const refreshExtensions = useExtensionRegistry((state) => state.refreshExtensions);
+
+  useEffect(() => {
+    refreshExtensions().catch((error) => log.error(error));
+  }, [refreshExtensions]);
 
   return (
     <MultiProvider

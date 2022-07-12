@@ -7,13 +7,13 @@ import { PropsWithChildren, useMemo } from "react";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import Panel from "@foxglove/studio-base/components/Panel";
 import PanelExtensionAdapter from "@foxglove/studio-base/components/PanelExtensionAdapter";
-import { useExtensionRegistry } from "@foxglove/studio-base/context/ExtensionRegistryContext";
 import PanelCatalogContext, {
   PanelCatalog,
   PanelInfo,
 } from "@foxglove/studio-base/context/PanelCatalogContext";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
 import panels from "@foxglove/studio-base/panels";
+import { useExtensionRegistry } from "@foxglove/studio-base/providers/ExtensionRegistryProvider";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 
 type PanelProps = {
@@ -29,12 +29,10 @@ export default function PanelCatalogProvider(
     AppSetting.ENABLE_LEGACY_PLOT_PANEL,
   );
 
-  const extensionRegistry = useExtensionRegistry();
+  const extensionPanels = useExtensionRegistry((state) => state.registeredPanels);
 
   const wrappedExtensionPanels = useMemo<PanelInfo[]>(() => {
-    const extensionPanels = extensionRegistry.registeredPanels;
-
-    return Object.values(extensionPanels).map((panel) => {
+    return Object.values(extensionPanels ?? {}).map((panel) => {
       const panelType = `${panel.extensionName}.${panel.registration.name}`;
       const PanelWrapper = (panelProps: PanelProps) => {
         return (
@@ -56,7 +54,7 @@ export default function PanelCatalogProvider(
         module: async () => ({ default: Panel(PanelWrapper) }),
       };
     });
-  }, [extensionRegistry]);
+  }, [extensionPanels]);
 
   const allPanels = useMemo(() => {
     return [...panels.builtin, ...panels.debug, ...panels.legacyPlot, ...wrappedExtensionPanels];

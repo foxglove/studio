@@ -19,7 +19,7 @@ import AppConfigurationContext from "@foxglove/studio-base/context/AppConfigurat
 import ExtensionMarketplaceContext, {
   ExtensionMarketplace,
 } from "@foxglove/studio-base/context/ExtensionMarketplaceContext";
-import ExtensionRegistryProvider from "@foxglove/studio-base/providers/ExtensionRegistryProvider/ExtensionRegistryProvider";
+import ExtensionRegistryProvider from "@foxglove/studio-base/providers/ExtensionRegistryProvider";
 import { makeMockAppConfiguration } from "@foxglove/studio-base/util/makeMockAppConfiguration";
 
 export default {

@@ -26,7 +26,7 @@ import {
   ExtensionMarketplaceDetail,
   useExtensionMarketplace,
 } from "@foxglove/studio-base/context/ExtensionMarketplaceContext";
-import { useExtensionRegistry } from "@foxglove/studio-base/context/ExtensionRegistryContext";
+import { useExtensionRegistry } from "@foxglove/studio-base/providers/ExtensionRegistryProvider";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
 
@@ -42,7 +42,9 @@ export function ExtensionDetails({ extension, onClose, installed }: Props): Reac
   const [isInstalled, setIsInstalled] = useState(installed);
   const [activeTab, setActiveTab] = useState<number>(0);
   const isMounted = useMountedState();
-  const extensionRegistry = useExtensionRegistry();
+  const downloadExtension = useExtensionRegistry((state) => state.downloadExtension);
+  const installExtension = useExtensionRegistry((state) => state.installExtension);
+  const uninstallExtension = useExtensionRegistry((state) => state.uninstallExtension);
   const marketplace = useExtensionMarketplace();
   const { addToast } = useToasts();
   const readmeUrl = extension.readme;
@@ -72,8 +74,8 @@ export function ExtensionDetails({ extension, onClose, installed }: Props): Reac
       if (url == undefined) {
         throw new Error(`Cannot install extension ${extension.id}, "foxe" URL is missing`);
       }
-      const data = await extensionRegistry.downloadExtension(url);
-      await extensionRegistry.installExtension("local", data);
+      const data = await downloadExtension(url);
+      await installExtension("local", data);
       if (isMounted()) {
         setIsInstalled(true);
         void analytics.logEvent(AppEvent.EXTENSION_INSTALL, { type: extension.id });
@@ -83,15 +85,23 @@ export function ExtensionDetails({ extension, onClose, installed }: Props): Reac
         appearance: "error",
       });
     }
-  }, [addToast, analytics, extension.foxe, extension.id, extensionRegistry, isMounted]);
+  }, [
+    addToast,
+    analytics,
+    downloadExtension,
+    extension.foxe,
+    extension.id,
+    installExtension,
+    isMounted,
+  ]);
 
   const uninstall = useCallback(async () => {
-    await extensionRegistry.uninstallExtension(extension.namespace ?? "local", extension.id);
+    await uninstallExtension(extension.namespace ?? "local", extension.id);
     if (isMounted()) {
       setIsInstalled(false);
       void analytics.logEvent(AppEvent.EXTENSION_UNINSTALL, { type: extension.id });
     }
-  }, [analytics, extension.id, extension.namespace, extensionRegistry, isMounted]);
+  }, [analytics, extension.id, extension.namespace, isMounted, uninstallExtension]);
 
   return (
     <SidebarContent

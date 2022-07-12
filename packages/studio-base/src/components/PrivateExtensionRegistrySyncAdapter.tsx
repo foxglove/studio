@@ -9,7 +9,7 @@ import { useLatest, useTimeoutFn } from "react-use";
 import Logger from "@foxglove/log";
 import { useConsoleApi } from "@foxglove/studio-base/context/ConsoleApiContext";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
-import { useExtensionRegistry } from "@foxglove/studio-base/context/ExtensionRegistryContext";
+import { useExtensionRegistry } from "@foxglove/studio-base/providers/ExtensionRegistryProvider";
 
 const log = Logger.getLogger(__filename);
 
@@ -19,9 +19,9 @@ const SYNC_INTERVAL = 10 * 60 * 1_000; // 10 minutes
  * Implements private registry extension syncing.
  */
 export function PrivateExtensionRegistrySyncAdapter(): ReactNull {
-  const installedExtensions = useExtensionRegistry().registeredExtensions;
-  const installExtension = useExtensionRegistry().installExtension;
-  const uninstallExtension = useExtensionRegistry().uninstallExtension;
+  const installedExtensions = useExtensionRegistry((state) => state.registeredExtensions);
+  const installExtension = useExtensionRegistry((state) => state.installExtension);
+  const uninstallExtension = useExtensionRegistry((state) => state.uninstallExtension);
 
   const api = useConsoleApi();
   const user = useCurrentUser();
@@ -58,7 +58,7 @@ export function PrivateExtensionRegistrySyncAdapter(): ReactNull {
       log.debug("Starting private extension sync.");
 
       const remoteExtensions = await fetchExtensions();
-      if (remoteExtensions == undefined) {
+      if (remoteExtensions == undefined || latestInstalledExtensions.current == undefined) {
         return;
       }
 
@@ -77,6 +77,8 @@ export function PrivateExtensionRegistrySyncAdapter(): ReactNull {
         remoteExtensions,
         (a, b) => a.name === b.name,
       );
+
+      debugger;
 
       for (const extension of toInstall) {
         try {

@@ -8,7 +8,8 @@ import fetchMock from "fetch-mock";
 
 import { useConsoleApi } from "@foxglove/studio-base/context/ConsoleApiContext";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
-import ExtensionRegistryContext from "@foxglove/studio-base/context/ExtensionRegistryContext";
+import ExtensionRegistryProvider from "@foxglove/studio-base/providers/ExtensionRegistryProvider";
+import { IdbExtensionLoader } from "@foxglove/studio-base/services/IdbExtensionLoader";
 import { ExtensionInfo } from "@foxglove/studio-base/types/Extensions";
 
 import { PrivateExtensionRegistrySyncAdapter } from "./PrivateExtensionRegistrySyncAdapter";
@@ -67,9 +68,9 @@ describe("Private registry sync adapter", () => {
     fetchMock.get("url", new Uint8Array());
 
     render(
-      <ExtensionRegistryContext.Provider value={mockRegistryContextValue}>
+      <ExtensionRegistryProvider loaders={[new IdbExtensionLoader("private")]}>
         <PrivateExtensionRegistrySyncAdapter />
-      </ExtensionRegistryContext.Provider>,
+      </ExtensionRegistryProvider>,
     );
 
     await waitFor(() => expect(mockRegistryContextValue.installExtension).toHaveBeenCalledTimes(3));

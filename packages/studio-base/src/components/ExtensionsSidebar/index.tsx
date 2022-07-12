@@ -24,7 +24,7 @@ import {
   ExtensionMarketplaceDetail,
   useExtensionMarketplace,
 } from "@foxglove/studio-base/context/ExtensionMarketplaceContext";
-import { useExtensionRegistry } from "@foxglove/studio-base/context/ExtensionRegistryContext";
+import { useExtensionRegistry } from "@foxglove/studio-base/providers/ExtensionRegistryProvider";
 
 import helpContent from "./index.help.md";
 
@@ -83,7 +83,7 @@ export default function ExtensionsSidebar(): React.ReactElement {
       }
     | undefined
   >(undefined);
-  const installed = useExtensionRegistry().registeredExtensions;
+  const installed = useExtensionRegistry((state) => state.registeredExtensions);
   const marketplace = useExtensionMarketplace();
 
   const [marketplaceEntries, refreshMarketplaceEntries] = useAsyncFn(
@@ -98,7 +98,7 @@ export default function ExtensionsSidebar(): React.ReactElement {
 
   const installedEntries = useMemo(
     () =>
-      installed.map((entry) => {
+      (installed ?? []).map((entry) => {
         const marketplaceEntry = marketplaceMap[entry.id];
         if (marketplaceEntry != undefined) {
           return { ...marketplaceEntry, namespace: entry.namespace };
@@ -132,7 +132,7 @@ export default function ExtensionsSidebar(): React.ReactElement {
     () =>
       differenceWith(
         marketplaceEntries.value ?? [],
-        installed,
+        installed ?? [],
         (a, b) => a.id === b.id && a.namespace === b.namespace,
       ),
     [marketplaceEntries, installed],
