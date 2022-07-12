@@ -107,9 +107,13 @@ export default class Rosbag2DataProvider implements RandomAccessDataProvider {
       parsedMessageDefinitionsByTopic[topicDef.name] = fullParsedMessageDefinitions;
     }
 
+    // Add 1 nsec to the end time because rosbag2 treats the time range as non-inclusive
+    // of the exact end time.
+    const inclusiveEndTime = { sec: end.sec, nsec: end.nsec + 1 };
+
     return {
       start,
-      end,
+      end: inclusiveEndTime,
       topics,
       topicStats,
       connections,
