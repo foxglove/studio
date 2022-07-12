@@ -267,6 +267,13 @@ export class PoseArrays extends SceneExtension<PoseArrayRenderable> {
   ): void {
     const scale = renderable.userData.settings.axisScale * (1 / AXIS_LENGTH);
 
+    // Update the scale of existing AxisRenderables as needed
+    const existingUpdateCount = Math.min(renderable.userData.axes.length, poseArrayMessage.poses.length);
+    for (let i = 0; i < existingUpdateCount; i++) {
+      const axis = renderable.userData.axes[i]!;
+      axis.scale.set(scale, scale, scale);
+    }
+
     // Create any AxisRenderables as needed
     while (renderable.userData.axes.length < poseArrayMessage.poses.length) {
       const axis = new Axis(topic, this.renderer);
@@ -317,12 +324,6 @@ export class PoseArrays extends SceneExtension<PoseArrayRenderable> {
           {
             renderable.removeArrows();
             renderable.removeLineStrip();
-
-            // Update the scale for each existing axis
-            const scale = renderable.userData.settings.axisScale * (1 / AXIS_LENGTH);
-            for (const axis of renderable.userData.axes) {
-              axis.scale.set(scale, scale, scale);
-            }
           }
           break;
         case "arrow":
