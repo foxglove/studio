@@ -260,6 +260,33 @@ export class PoseArrays extends SceneExtension<PoseArrayRenderable> {
     );
   }
 
+  _createOrRemoveAxesToMatchPoses(
+    renderable: PoseArrayRenderable,
+    poseArrayMessage: PoseArray,
+    topic: string
+  ): void {
+    const scale = renderable.userData.settings.axisScale * (1 / AXIS_LENGTH);
+
+    // Create any AxisRenderables as needed
+    while (renderable.userData.axes.length < poseArrayMessage.poses.length) {
+      const axis = new Axis(topic, this.renderer);
+      renderable.userData.axes.push(axis);
+      renderable.add(axis);
+
+      // Set the scale for each new axis
+      axis.scale.set(scale, scale, scale)
+    }
+
+    // Remove any AxisRenderables as needed
+    for (let i = poseArrayMessage.poses.length; i < renderable.userData.axes.length; i++) {
+      const axis = renderable.userData.axes[i]!;
+      renderable.remove(axis);
+      axis.dispose();
+    }
+
+    renderable.userData.axes.length = poseArrayMessage.poses.length;
+  }
+
   _updatePoseArrayRenderable(
     renderable: PoseArrayRenderable,
     poseArrayMessage: PoseArray,
@@ -291,12 +318,7 @@ export class PoseArrays extends SceneExtension<PoseArrayRenderable> {
             renderable.removeArrows();
             renderable.removeLineStrip();
 
-            // Create any AxisRenderables needed
-            while (renderable.userData.axes.length < poseArrayMessage.poses.length) {
-              const axis = new Axis(topic, this.renderer);
-              renderable.userData.axes.push(axis);
-              renderable.add(axis);
-            }
+            this._createOrRemoveAxesToMatchPoses(renderable, poseArrayMessage, topic);
 
             // Update the scale for each axis
             const scale = renderable.userData.settings.axisScale * (1 / AXIS_LENGTH);
@@ -361,6 +383,7 @@ export class PoseArrays extends SceneExtension<PoseArrayRenderable> {
     // Update the pose for each pose renderable
     switch (settings.type) {
       case "axis":
+        this._createOrRemoveAxesToMatchPoses(renderable, poseArrayMessage, topic);
         for (let i = 0; i < poseArrayMessage.poses.length; i++) {
           setObjectPose(renderable.userData.axes[i]!, poseArrayMessage.poses[i]!);
         }
