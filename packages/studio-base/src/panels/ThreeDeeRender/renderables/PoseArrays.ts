@@ -270,7 +270,7 @@ export class PoseArrays extends SceneExtension<PoseArrayRenderable> {
     // Update the scale of existing AxisRenderables as needed
     const existingUpdateCount = Math.min(
       renderable.userData.axes.length,
-      poseArrayMessage.poses.length
+      poseArrayMessage.poses.length,
     );
     for (let i = 0; i < existingUpdateCount; i++) {
       const axis = renderable.userData.axes[i]!;
@@ -314,7 +314,7 @@ export class PoseArrays extends SceneExtension<PoseArrayRenderable> {
     // Update the arrowMarker of existing RenderableArrow as needed
     const existingUpdateCount = Math.min(
       renderable.userData.arrows.length,
-      poseArrayMessage.poses.length
+      poseArrayMessage.poses.length,
     );
     for (let i = 0; i < existingUpdateCount; i++) {
       const arrowMarker = createArrowMarkerFromIndex(i);
@@ -422,7 +422,7 @@ export class PoseArrays extends SceneExtension<PoseArrayRenderable> {
           poseArrayMessage,
           topic,
           colorStart,
-          colorEnd
+          colorEnd,
         );
         for (let i = 0; i < poseArrayMessage.poses.length; i++) {
           setObjectPose(renderable.userData.arrows[i]!, poseArrayMessage.poses[i]!);
