@@ -70,6 +70,10 @@ export type RendererEvents = {
   endFrame: (currentTime: bigint, renderer: Renderer) => void;
   cameraMove: (renderer: Renderer) => void;
   renderableSelected: (renderable: Renderable | undefined, renderer: Renderer) => void;
+  parametersChange: (
+    parameters: ReadonlyMap<string, unknown> | undefined,
+    renderer: Renderer,
+  ) => void;
   transformTreeUpdated: (renderer: Renderer) => void;
   settingsTreeChange: (renderer: Renderer) => void;
   configChange: (renderer: Renderer) => void;
@@ -167,10 +171,13 @@ export class Renderer extends EventEmitter<RendererEvents> {
   settings: SettingsManager;
   topics: ReadonlyArray<Topic> | undefined;
   topicsByName: ReadonlyMap<string, Topic> | undefined;
+  parameters: ReadonlyMap<string, unknown> | undefined;
   // extensionId -> SceneExtension
   sceneExtensions = new Map<string, SceneExtension>();
   // datatype -> handler[]
   datatypeHandlers = new Map<string, MessageHandler[]>();
+  // topicName -> handler[]
+  topicHandlers = new Map<string, MessageHandler[]>();
   // layerId -> { action, handler }
   customLayerActions = new Map<string, CustomLayerAction>();
   scene: THREE.Scene;
@@ -380,6 +387,18 @@ export class Renderer extends EventEmitter<RendererEvents> {
     }
   }
 
+  addTopicSubscription<T>(topic: string, handler: (messageEvent: MessageEvent<T>) => void): void {
+    const genericHandler = handler as (messageEvent: MessageEvent<unknown>) => void;
+    let handlers = this.topicHandlers.get(topic);
+    if (!handlers) {
+      handlers = [];
+      this.topicHandlers.set(topic, handlers);
+    }
+    if (!handlers.includes(genericHandler)) {
+      handlers.push(genericHandler);
+    }
+  }
+
   addCustomLayerAction(options: {
     layerId: string;
     label: string;
@@ -487,6 +506,14 @@ export class Renderer extends EventEmitter<RendererEvents> {
       } else {
         this.settings.setLabel(["topics"], `Topics (${vizCount}/${topicCount})`);
       }
+    }
+  }
+
+  setParameters(parameters: ReadonlyMap<string, unknown> | undefined): void {
+    const changed = this.parameters !== parameters;
+    this.parameters = parameters;
+    if (changed) {
+      this.emit("parametersChange", parameters, this);
     }
   }
 
