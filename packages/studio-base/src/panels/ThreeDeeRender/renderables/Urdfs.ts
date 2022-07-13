@@ -424,14 +424,7 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     renderable.removeChildren();
 
     const createChild = (frameId: string, i: number, visual: UrdfVisual): void => {
-      const childRenderable = createRenderable(
-        visual,
-        robot,
-        i,
-        frameId,
-        renderable.userData.settings,
-        renderer,
-      );
+      const childRenderable = createRenderable(visual, robot, i, frameId, renderer);
       // Set the childRenderable settingsPath so errors route to the correct place
       childRenderable.userData.settingsPath = renderable.userData.settingsPath;
       renderable.userData.renderables.set(childRenderable.name, childRenderable);
@@ -498,7 +491,6 @@ function createRenderable(
   robot: UrdfRobot,
   id: number,
   frameId: string,
-  settings: LayerSettingsUrdf,
   renderer: Renderer,
 ): Renderable {
   const name = `${frameId}-${id}-${visual.geometry.geometryType}`;
