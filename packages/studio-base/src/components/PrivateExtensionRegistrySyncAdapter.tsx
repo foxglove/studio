@@ -110,10 +110,14 @@ export function PrivateExtensionRegistrySyncAdapter(): ReactNull {
     uninstallExtension,
   ]);
 
+  const extensionsLoaded = installedExtensions != undefined;
+
   // Do initial sync on startup.
   useEffect(() => {
-    syncExtensions().catch((error) => log.error(error));
-  }, [syncExtensions]);
+    if (extensionsLoaded) {
+      syncExtensions().catch((error) => log.error(error));
+    }
+  }, [extensionsLoaded, syncExtensions]);
 
   return ReactNull;
 }
