@@ -89,16 +89,15 @@ export class RenderableMeshResource extends RenderableMarker {
     }
 
     const mesh = opts.useEmbeddedMaterials
-      ? cachedModel
-      : replaceMaterials(cachedModel, this.material);
+      ? cachedModel.clone(true)
+      : replaceMaterials(cachedModel.clone(true), this.material);
     this.mesh = mesh;
     this.add(mesh);
   }
 }
 
 function replaceMaterials(model: LoadedModel, material: THREE.MeshStandardMaterial): LoadedModel {
-  const newModel = model.clone(true);
-  newModel.traverse((child: THREE.Object3D) => {
+  model.traverse((child: THREE.Object3D) => {
     if (!(child instanceof THREE.Mesh)) {
       return;
     }
@@ -115,7 +114,7 @@ function replaceMaterials(model: LoadedModel, material: THREE.MeshStandardMateri
     }
     meshChild.material = material;
   });
-  return newModel;
+  return model;
 }
 
 /** Generic MeshStandardMaterial dispose function for materials loaded from an external source */
