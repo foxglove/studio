@@ -273,15 +273,15 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     if (typeof robotDescription !== "string") {
       return;
     }
-    this._loadUrdf("/robot_description", robotDescription);
+    this._loadUrdf(TOPIC_NAME, robotDescription);
   };
 
   handleParametersChange = (parameters: ReadonlyMap<string, unknown> | undefined): void => {
-    const robotDescription = parameters?.get("/robot_description");
+    const robotDescription = parameters?.get(TOPIC_NAME);
     if (typeof robotDescription !== "string") {
       return;
     }
-    this._loadUrdf("/robot_description", robotDescription);
+    this._loadUrdf(TOPIC_NAME, robotDescription);
   };
 
   handleAddUrdf = (instanceId: string): void => {
@@ -354,9 +354,9 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
       return;
     }
 
-    const isTopic = instanceId === "/robot_description";
+    const isTopic = instanceId === TOPIC_NAME;
     const frameId = this.renderer.fixedFrameId ?? ""; // Unused
-    const settingsPath = isTopic ? ["topics", "/robot_description"] : ["layers", instanceId];
+    const settingsPath = isTopic ? ["topics", TOPIC_NAME] : ["layers", instanceId];
     const baseSettings = isTopic ? DEFAULT_SETTINGS : DEFAULT_CUSTOM_SETTINGS;
     const userSettings = isTopic
       ? this.renderer.config.topics[instanceId]
