@@ -438,9 +438,10 @@ export class Renderer extends EventEmitter<RendererEvents> {
     const actions: SettingsTreeNodeActionItem[] = Array.from(this.customLayerActions.values()).map(
       (entry) => entry.action,
     );
+    const children = this.settings.tree()["layers"]?.children;
     const entry: SettingsTreeEntry = {
       path: ["layers"],
-      node: { label, actions, handler: this.handleCustomLayersAction },
+      node: { label, actions, children, handler: this.handleCustomLayersAction },
     };
     this.settings.setNodesForKey(CUSTOM_LAYERS_ID, [entry]);
   }
