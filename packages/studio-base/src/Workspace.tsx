@@ -556,12 +556,6 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     [getMessagePipeline],
   );
 
-  const refreshExtensions = useExtensionRegistry((state) => state.refreshExtensions);
-
-  useEffect(() => {
-    refreshExtensions().catch((error) => log.error(error));
-  }, [refreshExtensions]);
-
   return (
     <MultiProvider
       providers={[

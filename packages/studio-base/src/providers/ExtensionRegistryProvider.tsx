@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { PropsWithChildren } from "react";
+import { PropsWithChildren, useEffect } from "react";
 import ReactDOM from "react-dom";
 import create, { StoreApi } from "zustand";
 import createZustandContext from "zustand/context";
@@ -143,9 +143,23 @@ export function createExtensionRegistryStore(
   }));
 }
 
+function InitialRefreshAdapter(): ReactNull {
+  const refreshExtensions = useExtensionRegistry((state) => state.refreshExtensions);
+  useEffect(() => {
+    refreshExtensions().catch((err) => log.error(err));
+  }, [refreshExtensions]);
+
+  return ReactNull;
+}
+
 export default function ExtensionRegistryProvider({
   children,
   loaders,
 }: PropsWithChildren<{ loaders: readonly ExtensionLoader[] }>): JSX.Element {
-  return <Provider createStore={() => createExtensionRegistryStore(loaders)}>{children}</Provider>;
+  return (
+    <Provider createStore={() => createExtensionRegistryStore(loaders)}>
+      <InitialRefreshAdapter />
+      {children}
+    </Provider>
+  );
 }

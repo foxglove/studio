@@ -5,7 +5,6 @@
 
 import { render, waitFor } from "@testing-library/react";
 import fetchMock from "fetch-mock";
-import { useEffect } from "react";
 
 import { useConsoleApi } from "@foxglove/studio-base/context/ConsoleApiContext";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
@@ -42,12 +41,7 @@ const source = `
 `;
 
 function Wrapper(): JSX.Element {
-  const refreshExtensions = useExtensionRegistry((state) => state.refreshExtensions);
   const registeredExtensions = useExtensionRegistry((state) => state.registeredExtensions);
-  useEffect(() => {
-    void refreshExtensions();
-  }, [refreshExtensions]);
-
   return registeredExtensions ? <PrivateExtensionRegistrySyncAdapter /> : <></>;
 }
 
