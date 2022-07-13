@@ -28,7 +28,8 @@ import {
   CameraStore,
   DEFAULT_CAMERA_STATE,
 } from "@foxglove/regl-worldview";
-import { toNanoSec } from "@foxglove/rostime";
+import { definitions as commonDefs } from "@foxglove/rosmsg-msgs-common";
+import { fromDate, toNanoSec } from "@foxglove/rostime";
 import {
   LayoutActions,
   MessageEvent,
@@ -43,6 +44,7 @@ import PublishPointIcon from "@foxglove/studio-base/components/PublishPointIcon"
 import PublishPoseEstimateIcon from "@foxglove/studio-base/components/PublishPoseEstimateIcon";
 import useCleanup from "@foxglove/studio-base/hooks/useCleanup";
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
+import { Point, makeCovarianceArray } from "@foxglove/studio-base/util/geometry";
 
 import { DebugGui } from "./DebugGui";
 import Interactions, {
@@ -56,9 +58,10 @@ import { Renderer, RendererConfig } from "./Renderer";
 import { RendererContext, useRendererEvent } from "./RendererContext";
 import { Stats } from "./Stats";
 import { FRAME_TRANSFORM_DATATYPES } from "./foxglove";
-import { PublishClickType } from "./renderables/PublishClickTool";
+import { PublishClickResult, PublishClickType } from "./renderables/PublishClickTool";
 import type { MarkerUserData } from "./renderables/markers/RenderableMarker";
 import { TF_DATATYPES, TRANSFORM_STAMPED_DATATYPES } from "./ros";
+import { Pose } from "./transforms/geometry";
 
 const log = Logger.getLogger(__filename);
 
@@ -85,6 +88,54 @@ const PublishClickIcons: Record<PublishClickType, React.ReactNode> = {
   pose_estimate: <PublishPoseEstimateIcon fontSize="inherit" />,
 };
 
+const PublishDatatypes = new Map(
+  (
+    [
+      "geometry_msgs/Point",
+      "geometry_msgs/PointStamped",
+      "geometry_msgs/Pose",
+      "geometry_msgs/PoseStamped",
+      "geometry_msgs/PoseWithCovariance",
+      "geometry_msgs/PoseWithCovarianceStamped",
+      "geometry_msgs/Quaternion",
+      "std_msgs/Header",
+    ] as Array<keyof typeof commonDefs>
+  ).map((type) => [type, commonDefs[type]]),
+);
+
+function makePointMessage(point: Point, frameId: string) {
+  const time = fromDate(new Date());
+  return {
+    header: { seq: 0, stamp: time, frame_id: frameId },
+    point: { x: point.x, y: point.y, z: 0 },
+  };
+}
+
+function makePoseMessage(pose: Pose, frameId: string) {
+  const time = fromDate(new Date());
+  return {
+    header: { seq: 0, stamp: time, frame_id: frameId },
+    pose,
+  };
+}
+
+function makePoseEstimateMessage(
+  pose: Pose,
+  frameId: string,
+  xDev: number,
+  yDev: number,
+  thetaDev: number,
+) {
+  const time = fromDate(new Date());
+  return {
+    header: { seq: 0, stamp: time, frame_id: frameId },
+    pose: {
+      covariance: makeCovarianceArray(xDev, yDev, thetaDev),
+      pose,
+    },
+  };
+}
+
 /**
  * Provides DOM overlay elements on top of the 3D scene (e.g. stats, debug GUI).
  */
@@ -94,6 +145,7 @@ function RendererOverlay(props: {
   measureActive: boolean;
   measureDistance?: number;
   onClickMeasure: () => void;
+  canPublish: boolean;
   publishActive: boolean;
   publishClickType: PublishClickType;
   onChangePublishClickType: (_: PublishClickType) => void;
@@ -200,74 +252,83 @@ function RendererOverlay(props: {
             </div>
           </IconButton>
 
-          <IconButton
-            {...longPressPublishEvent}
-            color={props.publishActive ? "info" : "inherit"}
-            title={props.publishActive ? "Click to cancel" : "Click to publish"}
-            ref={publickClickButtonRef}
-            onClick={props.onClickPublish}
-            data-test="publish-button"
-            style={{ fontSize: "1rem" }}
-          >
-            {selectedPublishClickIcon}
-            <div
-              style={{
-                borderBottom: "6px solid currentColor",
-                borderRight: "6px solid transparent",
-                bottom: 0,
-                left: 0,
-                height: 0,
-                width: 0,
-                margin: theme.spacing(0.25),
-                position: "absolute",
-              }}
-            />
-          </IconButton>
-          <Menu
-            id="publish-menu"
-            anchorEl={publickClickButtonRef.current}
-            anchorOrigin={{ vertical: "top", horizontal: "left" }}
-            transformOrigin={{ vertical: "top", horizontal: "right" }}
-            open={publishMenuExpanded}
-            onClose={() => setPublishMenuExpanded(false)}
-          >
-            <MenuItem
-              selected={props.publishClickType === "pose_estimate"}
-              onClick={() => {
-                props.onChangePublishClickType("pose_estimate");
-                setPublishMenuExpanded(false);
-              }}
-            >
-              <ListItemIcon>{PublishClickIcons.pose_estimate}</ListItemIcon>
-              <ListItemText>Publish pose estimate</ListItemText>
-            </MenuItem>
-            <MenuItem
-              selected={props.publishClickType === "goal"}
-              onClick={() => {
-                props.onChangePublishClickType("goal");
-                setPublishMenuExpanded(false);
-              }}
-            >
-              <ListItemIcon>{PublishClickIcons.goal}</ListItemIcon>
-              <ListItemText>Publish pose</ListItemText>
-            </MenuItem>
-            <MenuItem
-              selected={props.publishClickType === "point"}
-              onClick={() => {
-                props.onChangePublishClickType("point");
-                setPublishMenuExpanded(false);
-              }}
-            >
-              <ListItemIcon>{PublishClickIcons.point}</ListItemIcon>
-              <ListItemText>Publish point</ListItemText>
-            </MenuItem>
-            <MenuItem onClick={props.openSettings}>
-              <ListItemIcon>
-                <SettingsIcon fontSize="inherit" />
-              </ListItemIcon>
-              <ListItemText>Edit settings…</ListItemText>
-            </MenuItem>
-          </Menu>
+          {props.canPublish && (
+            <>
+              <IconButton
+                {...longPressPublishEvent}
+                color={props.publishActive ? "info" : "inherit"}
+                title={props.publishActive ? "Click to cancel" : "Click to publish"}
+                ref={publickClickButtonRef}
+                onClick={props.onClickPublish}
+                data-test="publish-button"
+                style={{ fontSize: "1rem" }}
+              >
+                {selectedPublishClickIcon}
+                <div
+                  style={{
+                    borderBottom: "6px solid currentColor",
+                    borderRight: "6px solid transparent",
+                    bottom: 0,
+                    left: 0,
+                    height: 0,
+                    width: 0,
+                    margin: theme.spacing(0.25),
+                    position: "absolute",
+                  }}
+                />
+              </IconButton>
+              <Menu
+                id="publish-menu"
+                anchorEl={publickClickButtonRef.current}
+                anchorOrigin={{ vertical: "top", horizontal: "left" }}
+                transformOrigin={{ vertical: "top", horizontal: "right" }}
+                open={publishMenuExpanded}
+                onClose={() => setPublishMenuExpanded(false)}
+              >
+                <MenuItem
+                  selected={props.publishClickType === "pose_estimate"}
+                  onClick={() => {
+                    props.onChangePublishClickType("pose_estimate");
+                    setPublishMenuExpanded(false);
+                  }}
+                >
+                  <ListItemIcon>{PublishClickIcons.pose_estimate}</ListItemIcon>
+                  <ListItemText>Publish pose estimate</ListItemText>
+                </MenuItem>
+                <MenuItem
+                  selected={props.publishClickType === "goal"}
+                  onClick={() => {
+                    props.onChangePublishClickType("goal");
+                    setPublishMenuExpanded(false);
+                  }}
+                >
+                  <ListItemIcon>{PublishClickIcons.goal}</ListItemIcon>
+                  <ListItemText>Publish pose</ListItemText>
+                </MenuItem>
+                <MenuItem
+                  selected={props.publishClickType === "point"}
+                  onClick={() => {
+                    props.onChangePublishClickType("point");
+                    setPublishMenuExpanded(false);
+                  }}
+                >
+                  <ListItemIcon>{PublishClickIcons.point}</ListItemIcon>
+                  <ListItemText>Publish point</ListItemText>
+                </MenuItem>
+                <MenuItem
+                  onClick={() => {
+                    props.openSettings();
+                    setPublishMenuExpanded(false);
+                  }}
+                >
+                  <ListItemIcon>
+                    <SettingsIcon fontSize="inherit" />
+                  </ListItemIcon>
+                  <ListItemText>Edit settings…</ListItemText>
+                </MenuItem>
+              </Menu>
+            </>
+          )}
         </Paper>
       </div>
       {clickedObjects.length > 1 && !selectedObject && (
@@ -597,40 +658,110 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
       renderer?.measurementTool.stopMeasuring();
     } else {
       renderer?.measurementTool.startMeasuring();
+      renderer?.publishClickTool.stop();
     }
-  }, [measureActive, renderer?.measurementTool]);
+  }, [measureActive, renderer]);
 
   const [publishActive, setPublishActive] = useState(false);
   const [publishClickType, setPublishClickType] = useState<PublishClickType>(
     renderer?.publishClickTool.publishClickType ?? "point",
   );
+
+  const publishTopics = useMemo(() => {
+    return {
+      goal: config.publish.poseTopic,
+      point: config.publish.pointTopic,
+      pose: config.publish.poseEstimateTopic,
+    };
+  }, [config.publish.poseTopic, config.publish.pointTopic, config.publish.poseEstimateTopic]);
+
+  useEffect(() => {
+    context.advertise?.(publishTopics.goal, "geometry_msgs/PoseStamped", {
+      datatypes: PublishDatatypes,
+    });
+    context.advertise?.(publishTopics.point, "geometry_msgs/PointStamped", {
+      datatypes: PublishDatatypes,
+    });
+    context.advertise?.(publishTopics.pose, "geometry_msgs/PoseWithCovarianceStamped", {
+      datatypes: PublishDatatypes,
+    });
+
+    return () => {
+      context.unadvertise?.(publishTopics.goal);
+      context.unadvertise?.(publishTopics.point);
+      context.unadvertise?.(publishTopics.pose);
+    };
+  }, [publishTopics, context]);
+
   useEffect(() => {
     const onStart = () => setPublishActive(true);
     const onTypeChange = () =>
       setPublishClickType(renderer?.publishClickTool.publishClickType ?? "point");
-    const onSubmit = (e) => {
-      console.log("aaaa", e);
+    const onSubmit = (event: PublishClickResult) => {
+      const frameId = renderer?.fixedFrameId;
+      if (frameId == undefined) {
+        log.warn("Unable to publish, fixedFrameId is not set");
+        return;
+      }
+      if (!context.publish) {
+        log.error("Data source does not support publishing");
+        return;
+      }
+      try {
+        switch (event.publishClickType) {
+          case "point": {
+            const message = makePointMessage(event.point, frameId);
+            context.publish(publishTopics.point, message);
+            break;
+          }
+          case "goal": {
+            const message = makePoseMessage(event.pose, frameId);
+            context.publish(publishTopics.goal, message);
+            break;
+          }
+          case "pose_estimate": {
+            const message = makePoseEstimateMessage(
+              event.pose,
+              frameId,
+              config.publish.poseEstimateXDeviation,
+              config.publish.poseEstimateYDeviation,
+              config.publish.poseEstimateThetaDeviation,
+            );
+            context.publish(publishTopics.pose, message);
+            break;
+          }
+        }
+      } catch (error) {
+        log.info(error);
+      }
     };
     const onEnd = () => setPublishActive(false);
     renderer?.publishClickTool.addEventListener("foxglove.publish-start", onStart);
-    renderer?.publishClickTool.addEventListener("foxglove.publish-submit", onSubmit);
+    renderer?.publishClickTool.addEventListener(
+      "foxglove.publish-submit",
+      onSubmit as (_: { type: "foxglove.publish-submit" }) => void,
+    );
     renderer?.publishClickTool.addEventListener("foxglove.publish-type-change", onTypeChange);
     renderer?.publishClickTool.addEventListener("foxglove.publish-end", onEnd);
     return () => {
       renderer?.publishClickTool.removeEventListener("foxglove.publish-start", onStart);
-      renderer?.publishClickTool.removeEventListener("foxglove.publish-submit", onSubmit);
+      renderer?.publishClickTool.removeEventListener(
+        "foxglove.publish-submit",
+        onSubmit as (_: { type: "foxglove.publish-submit" }) => void,
+      );
       renderer?.publishClickTool.removeEventListener("foxglove.publish-type-change", onTypeChange);
       renderer?.publishClickTool.removeEventListener("foxglove.publish-end", onEnd);
     };
-  }, [renderer?.publishClickTool]);
+  }, [config.publish, context, publishTopics, renderer?.fixedFrameId, renderer?.publishClickTool]);
 
   const onClickPublish = useCallback(() => {
     if (publishActive) {
       renderer?.publishClickTool.stop();
     } else {
       renderer?.publishClickTool.start();
+      renderer?.measurementTool.stopMeasuring();
     }
-  }, [publishActive, renderer?.publishClickTool]);
+  }, [publishActive, renderer]);
 
   return (
     <ThemeProvider isDark={colorScheme === "dark"}>
@@ -659,6 +790,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
             measureActive={measureActive}
             measureDistance={measureDistance}
             onClickMeasure={onClickMeasure}
+            canPublish={context.publish != undefined}
             publishActive={publishActive}
             onClickPublish={onClickPublish}
             publishClickType={publishClickType}
@@ -666,9 +798,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
               renderer?.publishClickTool.setPublishClickType(type);
               renderer?.publishClickTool.start();
             }}
-            openSettings={() => {
-              /*FIXME*/
-            }}
+            openSettings={() => context.openPanelSettings()}
           />
         </RendererContext.Provider>
       </div>

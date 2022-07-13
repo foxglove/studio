@@ -34,11 +34,13 @@ import {
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import { useAppConfiguration } from "@foxglove/studio-base/context/AppConfigurationContext";
+import { useSelectedPanels } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import {
   useClearHoverValue,
   useHoverValue,
   useSetHoverValue,
 } from "@foxglove/studio-base/context/HoverValueContext";
+import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
 import {
   AdvertiseOptions,
   PlayerCapabilities,
@@ -104,9 +106,11 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
   const capabilities = useMessagePipeline(selectCapabilities);
   const dataSourceProfile = useMessagePipeline(selectProfile);
   const seekPlayback = useMessagePipeline(selectSeekPlayback);
-  const { openSiblingPanel } = usePanelContext();
+  const { openSiblingPanel, id: panelId } = usePanelContext();
+  const { openPanelSettings } = useWorkspace();
+  const { setSelectedPanelIds } = useSelectedPanels();
 
-  const [panelId] = useState(() => uuid());
+  const [panelUuid] = useState(() => uuid());
 
   const [error, setError] = useState<Error | undefined>();
   const watchedFieldsRef = useRef(new Set<keyof RenderState>());
@@ -197,7 +201,7 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
     }
 
     if (watchedFieldsRef.current.has("currentFrame")) {
-      const currentFrame = ctx?.messageEventsBySubscriberId.get(panelId);
+      const currentFrame = ctx?.messageEventsBySubscriberId.get(panelUuid);
 
       // If there are new frames we render
       // If there are old frames we render (new frames either replace old or no new frames)
@@ -315,7 +319,7 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
     } catch (err) {
       setError(err);
     }
-  }, [colorScheme, panelId, renderFn]);
+  }, [colorScheme, panelUuid, renderFn]);
 
   const queueRender = useCallback(() => {
     if (!renderFn || rafRequestedRef.current != undefined) {
@@ -375,6 +379,10 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
     },
     [updatePanelSettingsTree],
   );
+  const openSettings = useCallback(() => {
+    setSelectedPanelIds([panelId]);
+    openPanelSettings();
+  }, [setSelectedPanelIds, panelId, openPanelSettings]);
 
   type PartialPanelExtensionContext = Omit<PanelExtensionContext, "panelElement">;
   const partialExtensionContext = useMemo<PartialPanelExtensionContext>(() => {
@@ -456,7 +464,7 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
             preloadType: item.preload === true ? "full" : "partial",
           };
         });
-        setSubscriptions(panelId, subscribePayloads);
+        setSubscriptions(panelUuid, subscribePayloads);
 
         if (topics.length > 0) {
           requestBackfill();
@@ -477,7 +485,7 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
             };
             advertisementsRef.current.set(topic, payload);
 
-            ctx.setPublishers(panelId, Array.from(advertisementsRef.current.values()));
+            ctx.setPublishers(panelUuid, Array.from(advertisementsRef.current.values()));
           }
         : undefined,
 
@@ -489,7 +497,7 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
             }
 
             advertisementsRef.current.delete(topic);
-            ctx.setPublishers(panelId, Array.from(advertisementsRef.current.values()));
+            ctx.setPublishers(panelUuid, Array.from(advertisementsRef.current.values()));
           }
         : undefined,
 
@@ -518,7 +526,7 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
 
       unsubscribeAll: () => {
         subscribedTopicsRef.current = [];
-        setSubscriptions(panelId, []);
+        setSubscriptions(panelUuid, []);
       },
 
       subscribeAppSettings: (settings: string[]) => {
@@ -526,19 +534,22 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
       },
 
       updatePanelSettingsEditor: updateSettings,
+
+      openPanelSettings: openSettings,
     };
   }, [
     capabilities,
     clearHoverValue,
     dataSourceProfile,
     openSiblingPanel,
-    panelId,
+    panelUuid,
     requestBackfill,
     saveConfig,
     seekPlayback,
     setHoverValue,
     setSubscriptions,
     updateSettings,
+    openSettings,
   ]);
 
   const panelContainerRef = useRef<HTMLDivElement>(ReactNull);
@@ -569,7 +580,7 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
     panelElement.style.overflow = "hidden";
     panelContainerRef.current.appendChild(panelElement);
 
-    log.info(`Init panel ${panelId}`);
+    log.info(`Init panel ${panelUuid}`);
     initPanel({
       panelElement,
       ...partialExtensionContext,
@@ -582,10 +593,10 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
 
     return () => {
       panelElement.remove();
-      latestPipelineContextRef.current?.setSubscriptions(panelId, []);
-      latestPipelineContextRef.current?.setPublishers(panelId, []);
+      latestPipelineContextRef.current?.setSubscriptions(panelUuid, []);
+      latestPipelineContextRef.current?.setPublishers(panelUuid, []);
     };
-  }, [initPanel, panelId, partialExtensionContext]);
+  }, [initPanel, panelUuid, partialExtensionContext]);
 
   const style: CSSProperties = {};
   if (slowRender) {

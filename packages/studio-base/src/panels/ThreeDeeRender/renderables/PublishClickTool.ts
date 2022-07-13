@@ -7,7 +7,7 @@ import * as THREE from "three";
 import { Renderer } from "../Renderer";
 import { SceneExtension } from "../SceneExtension";
 import { Marker, MarkerAction, MarkerType, TIME_ZERO } from "../ros";
-import { makePose } from "../transforms/geometry";
+import { makePose, Point, Pose } from "../transforms/geometry";
 import { RenderableArrow } from "./markers/RenderableArrow";
 import { RenderableSphere } from "./markers/RenderableSphere";
 
@@ -56,6 +56,10 @@ function makeSphereMarker(): Marker {
     mesh_use_embedded_materials: false,
   };
 }
+
+export type PublishClickResult =
+  | { type: "foxglove.publish-submit"; publishClickType: "point"; point: Point }
+  | { type: "foxglove.publish-submit"; publishClickType: "goal" | "pose_estimate"; pose: Pose };
 
 export class PublishClickTool extends SceneExtension {
   private sphere: RenderableSphere;
@@ -168,7 +172,7 @@ export class PublishClickTool extends SceneExtension {
           this.dispatchEvent({
             type: "foxglove.publish-submit",
             publishClickType: this.publishClickType,
-            point: this.point1,
+            point: { x: this.point1.x, y: this.point1.y, z: this.point1.z },
           });
           this._setState("idle");
         } else {
@@ -177,12 +181,21 @@ export class PublishClickTool extends SceneExtension {
         break;
       case "place-second-point":
         this.point2 = worldSpaceCursorCoords.clone();
-        this.dispatchEvent({
-          type: "foxglove.publish-submit",
-          publishClickType: this.publishClickType,
-          point1: this.point1,
-          point2: this.point2,
-        });
+        if (this.point1) {
+          const p = this.point1.clone();
+          const q = new THREE.Quaternion().setFromUnitVectors(
+            UNIT_X,
+            tempVec3.subVectors(this.point2, this.point1).normalize(),
+          );
+          this.dispatchEvent({
+            type: "foxglove.publish-submit",
+            publishClickType: this.publishClickType,
+            pose: {
+              position: { x: p.x, y: p.y, z: p.z },
+              orientation: { x: q.x, y: q.y, z: q.z, w: q.w },
+            },
+          });
+        }
         this._setState("idle");
         break;
     }

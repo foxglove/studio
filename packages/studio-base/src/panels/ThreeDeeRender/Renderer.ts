@@ -747,8 +747,8 @@ export class Renderer extends EventEmitter<RendererEvents> {
   };
 
   clickHandler = (cursorCoords: THREE.Vector2): void => {
-    // Disable picking while the measurement tool is active
-    if (this.measurementTool.state !== "idle") {
+    // Disable picking while a tool is active
+    if (this.measurementTool.state !== "idle" || this.publishClickTool.state !== "idle") {
       return;
     }
 

@@ -95,6 +95,7 @@ export class MeasurementTool extends SceneExtension {
   }
 
   stopMeasuring(): void {
+    this.point1 = this.point2 = this.distance = undefined;
     this._setState("idle");
   }
 
@@ -117,12 +118,12 @@ export class MeasurementTool extends SceneExtension {
         this.renderer.input.addListener("click", this._handleClick);
         this.renderer.input.addListener("mousemove", this._handleMouseMove);
         this.dispatchEvent({ type: "foxglove.measure-start" });
-        this._render();
         break;
       case "place-second-point":
         break;
     }
     this._updateDistance();
+    this._render();
   }
 
   private _handleMouseMove = (
