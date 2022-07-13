@@ -50,6 +50,7 @@ import { PointCloudsAndLaserScans } from "./renderables/PointCloudsAndLaserScans
 import { Polygons } from "./renderables/Polygons";
 import { PoseArrays } from "./renderables/PoseArrays";
 import { Poses } from "./renderables/Poses";
+import { Urdfs } from "./renderables/Urdfs";
 import { MarkerPool } from "./renderables/markers/MarkerPool";
 import {
   Header,
@@ -308,6 +309,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.addSceneExtension(new Polygons(this));
     this.addSceneExtension(new Poses(this));
     this.addSceneExtension(new PoseArrays(this));
+    this.addSceneExtension(new Urdfs(this));
 
     this._watchDevicePixelRatio();
 

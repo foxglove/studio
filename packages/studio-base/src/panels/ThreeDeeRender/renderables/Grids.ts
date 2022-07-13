@@ -189,8 +189,7 @@ export class Grids extends SceneExtension<GridRenderable> {
   handleAddGrid = (instanceId: string): void => {
     log.info(`Creating ${LAYER_ID} layer ${instanceId}`);
 
-    const config: LayerSettingsGrid = { ...DEFAULT_SETTINGS };
-    config.instanceId = instanceId;
+    const config: LayerSettingsGrid = { ...DEFAULT_SETTINGS, instanceId };
 
     // Add this instance to the config
     this.renderer.updateConfig((draft) => {
