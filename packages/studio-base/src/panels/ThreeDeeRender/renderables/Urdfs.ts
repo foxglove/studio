@@ -4,13 +4,7 @@
 
 import { maxBy } from "lodash";
 
-import {
-  UrdfGeometryMesh,
-  UrdfRobot,
-  UrdfVisual,
-  parseRobot,
-  UrdfCollider,
-} from "@foxglove/den/urdf";
+import { UrdfGeometryMesh, UrdfRobot, UrdfVisual, parseRobot } from "@foxglove/den/urdf";
 import Logger from "@foxglove/log";
 import { Pose } from "@foxglove/regl-worldview";
 import { SettingsTreeAction, SettingsTreeFields } from "@foxglove/studio";
@@ -21,14 +15,15 @@ import { BaseUserData, Renderable } from "../Renderable";
 import { Renderer } from "../Renderer";
 import { PartialMessageEvent, SceneExtension } from "../SceneExtension";
 import { SettingsTreeEntry } from "../SettingsManager";
-import { rgbaToCssString } from "../color";
 import { ColorRGBA, Marker, MarkerAction, MarkerType, Quaternion, Vector3 } from "../ros";
 import { BaseSettings, CustomLayerSettings } from "../settings";
 import { makePose } from "../transforms";
+import { updatePose } from "../updatePose";
 import { RenderableCube } from "./markers/RenderableCube";
 import { RenderableCylinder } from "./markers/RenderableCylinder";
 import { RenderableMeshResource } from "./markers/RenderableMeshResource";
 import { RenderableSphere } from "./markers/RenderableSphere";
+import { missingTransformMessage, MISSING_TRANSFORM } from "./transforms";
 
 const log = Logger.getLogger(__filename);
 
@@ -39,27 +34,22 @@ const VALID_URL_ERR = "ValidUrl";
 const FETCH_URDF_ERR = "FetchUrdf";
 const PARSE_URDF_ERR = "ParseUrdf";
 
+const DEFAULT_COLOR = { r: 1, g: 1, b: 1, a: 1 };
 const VEC3_ONE = { x: 1, y: 1, z: 1 };
-const DEFAULT_COLOR = { r: 36 / 255, g: 142 / 255, b: 255 / 255, a: 1 };
-
-const DEFAULT_COLOR_STR = rgbaToCssString(DEFAULT_COLOR);
 
 export type LayerSettingsUrdf = BaseSettings & {
-  instanceId: string;
-  color: string;
+  instanceId: string; // This will be set to the topic name
 };
 
 export type LayerSettingsCustomUrdf = CustomLayerSettings & {
   layerId: "foxglove.Urdf";
   url: string;
-  color: string;
 };
 
 const DEFAULT_SETTINGS: LayerSettingsUrdf = {
   visible: true,
   frameLocked: true,
   instanceId: "invalid",
-  color: DEFAULT_COLOR_STR,
 };
 
 const DEFAULT_CUSTOM_SETTINGS: LayerSettingsCustomUrdf = {
@@ -69,7 +59,6 @@ const DEFAULT_CUSTOM_SETTINGS: LayerSettingsCustomUrdf = {
   instanceId: "invalid",
   layerId: LAYER_ID,
   url: "",
-  color: DEFAULT_COLOR_STR,
 };
 
 export type UrdfUserData = BaseUserData & {
@@ -79,6 +68,11 @@ export type UrdfUserData = BaseUserData & {
   urdf: string | undefined;
   renderables: Map<string, Renderable>;
 };
+
+enum EmbeddedMaterialUsage {
+  Use,
+  Ignore,
+}
 
 type TransformData = {
   parent: string;
@@ -124,6 +118,13 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
       icon: "PrecisionManufacturing",
       handler: this.handleAddUrdf,
     });
+
+    // Load existing URDF layers from the config
+    for (const [instanceId, entry] of Object.entries(renderer.config.layers)) {
+      if (entry?.layerId === LAYER_ID) {
+        this._loadUrdf(instanceId, undefined);
+      }
+    }
   }
 
   override settingsNodes(): SettingsTreeEntry[] {
@@ -138,9 +139,7 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     if (topic != undefined || parameter != undefined) {
       const config = (configTopics[TOPIC_NAME] ?? {}) as Partial<LayerSettingsUrdf>;
 
-      const fields: SettingsTreeFields = {
-        color: { label: "Color", input: "rgba", value: config.color ?? DEFAULT_COLOR_STR },
-      };
+      const fields: SettingsTreeFields = {};
 
       entries.push({
         path: ["topics", TOPIC_NAME],
@@ -165,7 +164,6 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
 
         const fields: SettingsTreeFields = {
           url: { label: "URL", input: "string", placeholder, help, value: config.url ?? "" },
-          color: { label: "Color", input: "rgba", value: config.color ?? DEFAULT_COLOR_STR },
         };
 
         entries.push({
@@ -175,6 +173,8 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
             icon: "PrecisionManufacturing",
             fields,
             visible: config.visible ?? true,
+            actions: [{ type: "action", id: "delete", label: "Delete" }],
+            order: layerConfig.order,
             handler: layerHandler,
           },
         });
@@ -184,23 +184,50 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     return entries;
   }
 
-  handleTopicSettingsAction = (action: SettingsTreeAction): void => {
-    const path = action.payload.path;
-    if (action.action !== "update" || path.length !== 3) {
-      return;
+  override removeAllRenderables(): void {
+    // no-op
+  }
+
+  override startFrame(currentTime: bigint, renderFrameId: string, fixedFrameId: string): void {
+    for (const renderable of this.renderables.values()) {
+      const path = renderable.userData.settingsPath;
+      let hasTfError = false;
+
+      renderable.visible = renderable.userData.settings.visible;
+      if (!renderable.visible) {
+        this.renderer.settings.errors.clearPath(path);
+        continue;
+      }
+
+      // UrdfRenderables always stay at the origin. Their children renderables
+      // are individually updated since each child exists in a different frame
+      for (const childRenderable of renderable.userData.renderables.values()) {
+        const srcTime = currentTime;
+        const frameId = childRenderable.userData.frameId;
+        const updated = updatePose(
+          childRenderable,
+          this.renderer.transformTree,
+          renderFrameId,
+          fixedFrameId,
+          frameId,
+          currentTime,
+          srcTime,
+        );
+        if (!updated) {
+          const message = missingTransformMessage(renderFrameId, fixedFrameId, frameId);
+          this.renderer.settings.errors.add(path, MISSING_TRANSFORM, message);
+          hasTfError = true;
+        }
+      }
+
+      if (!hasTfError) {
+        this.renderer.settings.errors.remove(path, MISSING_TRANSFORM);
+      }
     }
-    this.saveSetting(path, action.payload.value);
-    // Update the renderable
-    const topicName = path[1]!;
-    const renderable = this.renderables.get(topicName);
-    if (renderable) {
-      const userSettings = this.renderer.config.topics[topicName] as
-        | Partial<LayerSettingsUrdf>
-        | undefined;
-      const instanceId = TOPIC_NAME;
-      const settings = { ...DEFAULT_SETTINGS, ...userSettings, instanceId };
-      this._updateUrdf(TOPIC_NAME, settings);
-    }
+  }
+
+  handleTopicSettingsAction = (_action: SettingsTreeAction): void => {
+    // no-op until there are editable fields for URDF topics
   };
 
   handleLayerSettingsAction = (action: SettingsTreeAction): void => {
@@ -238,24 +265,7 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     this.saveSetting(path, action.payload.value);
 
     const instanceId = path[1]!;
-
-    // Instantiate this renderable if it does not already exist
     this._loadUrdf(instanceId, undefined);
-    const renderable = this.renderables.get(instanceId)!;
-
-    // Check if a valid URL was provided
-    const url = (renderable.userData.settings as LayerSettingsCustomUrdf).url;
-    if (!isValidUrl(url)) {
-      this.renderer.settings.errors.add(
-        renderable.userData.settingsPath,
-        VALID_URL_ERR,
-        `Invalid URDF URL: ${url}`,
-      );
-      return;
-    }
-
-    this.renderer.settings.errors.remove(renderable.userData.settingsPath, VALID_URL_ERR);
-    this._fetchUrdf(instanceId, url);
   };
 
   handleRobotDescription = (messageEvent: PartialMessageEvent<{ data: string }>): void => {
@@ -286,34 +296,26 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
       draft.layers[instanceId] = { ...config, order };
     });
 
+    // Add the URDF renderable
+    this._loadUrdf(instanceId, undefined);
+
     // Update the settings tree
     this.updateSettingsTree();
   };
 
-  private _updateUrdf(
-    instanceId: string,
-    settings: LayerSettingsUrdf | LayerSettingsCustomUrdf,
-  ): void {
-    const renderable = this.renderables.get(instanceId);
-    if (!renderable) {
+  private _fetchUrdf(instanceId: string, url: string): void {
+    // This method should only be called for existing renderables
+    const renderable = this.renderables.get(instanceId)!;
+
+    // Check if a valid URL was provided
+    if (!isValidUrl(url)) {
+      const path = renderable.userData.settingsPath;
+      this.renderer.settings.errors.add(path, VALID_URL_ERR, `Invalid URDF URL: "${url}"`);
       return;
     }
+    this.renderer.settings.errors.remove(renderable.userData.settingsPath, VALID_URL_ERR);
 
-    const prevSettings = renderable.userData.settings;
-    const newSettings = { ...prevSettings, ...settings };
-    const settingsEqual = newSettings.color === prevSettings.color;
-
-    renderable.userData.settings = newSettings;
-
-    if (!settingsEqual) {
-      // Update the URDF color
-      // TODO
-    }
-  }
-
-  private _fetchUrdf(instanceId: string, url: string): void {
     // Check if this URL has already been fetched
-    const renderable = this.renderables.get(instanceId)!;
     if (renderable.userData.url === url) {
       return;
     }
@@ -348,7 +350,7 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
 
   private _loadUrdf(instanceId: string, urdf: string | undefined): void {
     let renderable = this.renderables.get(instanceId);
-    if (renderable && renderable.userData.urdf === urdf) {
+    if (renderable && urdf != undefined && renderable.userData.urdf === urdf) {
       return;
     }
 
@@ -362,10 +364,11 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     const settings = { ...baseSettings, ...userSettings, instanceId };
     const url = (settings as Partial<LayerSettingsCustomUrdf>).url;
 
+    // Create a UrdfRenderable if it does not already exist
     if (!renderable) {
       renderable = new UrdfRenderable(instanceId, this.renderer, {
         urdf,
-        url,
+        url: urdf != undefined ? url : undefined,
         fetching: undefined,
         renderables: new Map(),
         receiveTime: 0n,
@@ -380,14 +383,21 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     }
 
     renderable.userData.urdf = urdf;
-    renderable.userData.url = url;
+    renderable.userData.url = urdf != undefined ? url : undefined;
     renderable.userData.settings = settings;
+    renderable.userData.fetching = undefined;
 
     if (!urdf) {
       renderable.removeChildren();
+
+      // Fetch the URDF from the URL if we have one
+      if (url != undefined) {
+        this._fetchUrdf(instanceId, url);
+      }
       return;
     }
 
+    // Parse the URDF
     const loadedRenderable = renderable;
     parseUrdf(urdf)
       .then((parsed) => this._loadRobot(loadedRenderable, parsed))
@@ -413,34 +423,36 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     // Dispose any existing renderables
     renderable.removeChildren();
 
+    const createChild = (frameId: string, i: number, visual: UrdfVisual): void => {
+      const childRenderable = createRenderable(
+        visual,
+        robot,
+        i,
+        frameId,
+        renderable.userData.settings,
+        renderer,
+      );
+      // Set the childRenderable settingsPath so errors route to the correct place
+      childRenderable.userData.settingsPath = renderable.userData.settingsPath;
+      renderable.userData.renderables.set(childRenderable.name, childRenderable);
+      renderable.add(childRenderable);
+    };
+
     // Create a renderable for each link
     for (const link of robot.links.values()) {
       const frameId = link.name;
 
-      let i = 0;
-      for (const visual of link.visuals) {
-        const childRenderable = createRenderable(visual, robot, i++, frameId, renderer);
-        renderable.userData.renderables.set(childRenderable.name, childRenderable);
-        renderable.add(childRenderable);
+      for (let i = 0; i < link.visuals.length; i++) {
+        createChild(frameId, i, link.visuals[i]!);
       }
 
       if (link.visuals.length === 0 && link.colliders.length > 0) {
         // If there are no visuals, but there are colliders, render those instead
-        i = 0;
-        for (const collider of link.colliders) {
-          const childRenderable = createRenderable(collider, robot, i++, frameId, renderer);
-          renderable.userData.renderables.set(childRenderable.name, childRenderable);
-          renderable.add(childRenderable);
+        for (let i = 0; i < link.colliders.length; i++) {
+          createChild(frameId, i, link.colliders[i]!);
         }
       }
     }
-
-    const instanceId = renderable.userData.settings.instanceId;
-    const userSettings = this.renderer.config.layers[instanceId] as
-      | Partial<LayerSettingsCustomUrdf>
-      | undefined;
-    const settings = { ...DEFAULT_CUSTOM_SETTINGS, ...userSettings };
-    this._updateUrdf(instanceId, settings);
   }
 }
 
@@ -482,37 +494,40 @@ function getFileFetch(): (url: string) => Promise<string> {
 }
 
 function createRenderable(
-  collider: UrdfCollider,
+  visual: UrdfVisual,
   robot: UrdfRobot,
   id: number,
   frameId: string,
+  settings: LayerSettingsUrdf,
   renderer: Renderer,
 ): Renderable {
-  const name = `${frameId}-${id}-${collider.geometry.geometryType}`;
-  const orientation = eulerToQuaternion(collider.origin.rpy);
-  const pose = { position: collider.origin.xyz, orientation };
-  const color = getColor(collider, robot);
-  const type = collider.geometry.geometryType;
+  const name = `${frameId}-${id}-${visual.geometry.geometryType}`;
+  const orientation = eulerToQuaternion(visual.origin.rpy);
+  const pose = { position: visual.origin.xyz, orientation };
+  const color = getColor(visual, robot);
+  const type = visual.geometry.geometryType;
   switch (type) {
     case "box": {
-      const scale = collider.geometry.size;
+      const scale = visual.geometry.size;
       const marker = createMarker(frameId, MarkerType.CUBE, pose, scale, color);
       return new RenderableCube(name, marker, undefined, renderer);
     }
     case "cylinder": {
-      const cylinder = collider.geometry;
+      const cylinder = visual.geometry;
       const scale = { x: cylinder.radius * 2, y: cylinder.radius * 2, z: cylinder.length };
       const marker = createMarker(frameId, MarkerType.CUBE, pose, scale, color);
       return new RenderableCylinder(name, marker, undefined, renderer);
     }
     case "sphere": {
-      const sphere = collider.geometry;
+      const sphere = visual.geometry;
       const scale = { x: sphere.radius * 2, y: sphere.radius * 2, z: sphere.radius * 2 };
       const marker = createMarker(frameId, MarkerType.CUBE, pose, scale, color);
       return new RenderableSphere(name, marker, undefined, renderer);
     }
     case "mesh": {
-      const marker = createMeshMarker(frameId, pose, collider, collider.geometry, color);
+      // Use embedded materials only when no override material is defined in the URDF
+      const embedded = !visual.material ? EmbeddedMaterialUsage.Use : EmbeddedMaterialUsage.Ignore;
+      const marker = createMeshMarker(frameId, pose, embedded, visual.geometry, color);
       return new RenderableMeshResource(name, marker, undefined, renderer);
     }
     default:
@@ -562,7 +577,7 @@ function createMarker(
 function createMeshMarker(
   frameId: string,
   pose: Pose,
-  visual: UrdfVisual,
+  embeddedMaterialUsage: EmbeddedMaterialUsage,
   mesh: UrdfGeometryMesh,
   color: ColorRGBA,
 ): Marker {
@@ -582,10 +597,7 @@ function createMeshMarker(
     colors: [],
     text: "",
     mesh_resource: mesh.filename,
-    mesh_use_embedded_materials:
-      visual.material == undefined ||
-      // RViz ignores the URDF-specified material when the Collada mesh has an embedded material
-      mesh.filename.endsWith(".dae"),
+    mesh_use_embedded_materials: embeddedMaterialUsage === EmbeddedMaterialUsage.Use,
   };
 }
 
