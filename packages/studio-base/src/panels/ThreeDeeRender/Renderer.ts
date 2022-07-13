@@ -45,6 +45,7 @@ import { FrameAxes, LayerSettingsTransform } from "./renderables/FrameAxes";
 import { Grids } from "./renderables/Grids";
 import { Images } from "./renderables/Images";
 import { Markers } from "./renderables/Markers";
+import { MeasurementTool } from "./renderables/MeasurementTool";
 import { OccupancyGrids } from "./renderables/OccupancyGrids";
 import { PointCloudsAndLaserScans } from "./renderables/PointCloudsAndLaserScans";
 import { Polygons } from "./renderables/Polygons";
@@ -54,6 +55,7 @@ import { Urdfs } from "./renderables/Urdfs";
 import { MarkerPool } from "./renderables/markers/MarkerPool";
 import {
   Header,
+  MarkerArray,
   Quaternion,
   TFMessage,
   TF_DATATYPES,
@@ -187,6 +189,8 @@ export class Renderer extends EventEmitter<RendererEvents> {
   input: Input;
   outlineMaterial = new THREE.LineBasicMaterial({ dithering: true });
 
+  measurementTool: MeasurementTool;
+
   perspectiveCamera: THREE.PerspectiveCamera;
   orthographicCamera: THREE.OrthographicCamera;
   aspect: number;
@@ -278,12 +282,12 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.scene.add(this.dirLight);
     this.scene.add(this.hemiLight);
 
-    this.input = new Input(canvas);
-    this.input.on("resize", (size) => this.resizeHandler(size));
-    this.input.on("click", (cursorCoords) => this.clickHandler(cursorCoords));
-
     this.perspectiveCamera = new THREE.PerspectiveCamera();
     this.orthographicCamera = new THREE.OrthographicCamera();
+
+    this.input = new Input(canvas, () => this.activeCamera());
+    this.input.on("resize", (size) => this.resizeHandler(size));
+    this.input.on("click", (cursorCoords) => this.clickHandler(cursorCoords));
 
     this.picker = new Picker(this.gl, this.scene, { debug: DEBUG_PICKING });
 
@@ -310,6 +314,8 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.addSceneExtension(new Poses(this));
     this.addSceneExtension(new PoseArrays(this));
     this.addSceneExtension(new Urdfs(this));
+
+    this.addSceneExtension((this.measurementTool = new MeasurementTool(this)));
 
     this._watchDevicePixelRatio();
 
@@ -353,6 +359,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
    * This is useful when seeking to a new playback position or when a new data source is loaded.
    */
   clear(): void {
+    this.settings.errors.clear();
     this.transformTree.clear();
     for (const extension of this.sceneExtensions.values()) {
       extension.removeAllRenderables();
@@ -580,16 +587,22 @@ export class Renderer extends EventEmitter<RendererEvents> {
   addMessageEvent(messageEvent: Readonly<MessageEvent<unknown>>, datatype: string): void {
     const { message } = messageEvent;
 
-    // If this message has a Header, scrape the frame_id from it
     const maybeHasHeader = message as Partial<{ header: Partial<Header> }>;
+    const maybeHasMarkers = message as DeepPartial<MarkerArray>;
+    const maybeHasFrameId = message as Partial<{ frame_id: string }>;
+
     if (maybeHasHeader.header) {
+      // If this message has a Header, scrape the frame_id from it
       const frameId = maybeHasHeader.header.frame_id ?? "";
       this.addCoordinateFrame(frameId);
-    }
-
-    // If this message has a top-level frame_id, scrape it
-    const maybeHasFrameId = message as Partial<{ frame_id: string }>;
-    if (typeof maybeHasFrameId.frame_id === "string") {
+    } else if (Array.isArray(maybeHasMarkers.markers)) {
+      // If this message has an array called markers, scrape frame_id from all markers
+      for (const marker of maybeHasMarkers.markers) {
+        const frameId = marker.header?.frame_id ?? "";
+        this.addCoordinateFrame(frameId);
+      }
+    } else if (typeof maybeHasFrameId.frame_id === "string") {
+      // If this message has a top-level frame_id, scrape it
       this.addCoordinateFrame(maybeHasFrameId.frame_id);
     }
 
@@ -687,9 +700,17 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
   // Callback handlers
 
+  private _animationFrame?: number;
   animationFrame = (): void => {
+    this._animationFrame = undefined;
     this.frameHandler(this.currentTime);
   };
+
+  queueAnimationFrame(): void {
+    if (this._animationFrame == undefined) {
+      this._animationFrame = requestAnimationFrame(this.animationFrame);
+    }
+  }
 
   frameHandler = (currentTime: bigint): void => {
     const camera = this.activeCamera();
@@ -739,6 +760,11 @@ export class Renderer extends EventEmitter<RendererEvents> {
   };
 
   clickHandler = (cursorCoords: THREE.Vector2): void => {
+    // Disable picking while the measurement tool is active
+    if (this.measurementTool.state !== "idle") {
+      return;
+    }
+
     // Deselect the currently selected object, if one is selected
     let prevSelected: THREE.Object3D | undefined;
     if (this.selectedObject) {
@@ -865,8 +891,6 @@ export class Renderer extends EventEmitter<RendererEvents> {
         `Frame "${this.renderFrameId}" not found`,
       );
       return;
-    } else {
-      this.settings.errors.remove(FOLLOW_TF_PATH, FRAME_NOT_FOUND);
     }
 
     const rootFrameId = frame.root().id;
