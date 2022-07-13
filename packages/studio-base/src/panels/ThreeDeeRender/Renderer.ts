@@ -336,7 +336,12 @@ export class Renderer extends EventEmitter<RendererEvents> {
   }
 
   dispose(): void {
+    log.warn(`Disposing renderer`);
     this.removeAllListeners();
+
+    this.settings.off("update");
+    this.input.off("resize", this.resizeHandler);
+    this.input.off("click", this.clickHandler);
 
     for (const extension of this.sceneExtensions.values()) {
       extension.dispose();
