@@ -3,11 +3,21 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import RulerIcon from "@mdi/svg/svg/ruler.svg";
-import { IconButton, Paper } from "@mui/material";
-import { isEqual, cloneDeep, merge } from "lodash";
+import SettingsIcon from "@mui/icons-material/Settings";
+import {
+  IconButton,
+  ListItemIcon,
+  ListItemText,
+  Menu,
+  MenuItem,
+  Paper,
+  useTheme,
+} from "@mui/material";
+import { isEqual, cloneDeep, merge, round } from "lodash";
 import React, { useCallback, useLayoutEffect, useEffect, useState, useMemo, useRef } from "react";
 import ReactDOM from "react-dom";
 import { useResizeDetector } from "react-resize-detector";
+import { useLongPress } from "react-use";
 import { DeepPartial } from "ts-essentials";
 import { useDebouncedCallback } from "use-debounce";
 
@@ -28,6 +38,9 @@ import {
   SettingsTreeNodes,
   Topic,
 } from "@foxglove/studio";
+import PublishGoalIcon from "@foxglove/studio-base/components/PublishGoalIcon";
+import PublishPointIcon from "@foxglove/studio-base/components/PublishPointIcon";
+import PublishPoseEstimateIcon from "@foxglove/studio-base/components/PublishPoseEstimateIcon";
 import useCleanup from "@foxglove/studio-base/hooks/useCleanup";
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
 
@@ -43,6 +56,7 @@ import { Renderer, RendererConfig } from "./Renderer";
 import { RendererContext, useRendererEvent } from "./RendererContext";
 import { Stats } from "./Stats";
 import { FRAME_TRANSFORM_DATATYPES } from "./foxglove";
+import { PublishClickType } from "./renderables/PublishClickTool";
 import type { MarkerUserData } from "./renderables/markers/RenderableMarker";
 import { TF_DATATYPES, TRANSFORM_STAMPED_DATATYPES } from "./ros";
 
@@ -56,6 +70,21 @@ const PANEL_STYLE: React.CSSProperties = {
   position: "relative",
 };
 
+const DEFAULT_PUBLISH_SETTINGS = {
+  poseTopic: "/move_base_simple/goal",
+  pointTopic: "/clicked_point",
+  poseEstimateTopic: "/initialpose",
+  poseEstimateXDeviation: 0.5,
+  poseEstimateYDeviation: 0.5,
+  poseEstimateThetaDeviation: round(Math.PI / 12, 8),
+};
+
+const PublishClickIcons: Record<PublishClickType, React.ReactNode> = {
+  goal: <PublishGoalIcon fontSize="inherit" />,
+  point: <PublishPointIcon fontSize="inherit" />,
+  pose_estimate: <PublishPoseEstimateIcon fontSize="inherit" />,
+};
+
 /**
  * Provides DOM overlay elements on top of the 3D scene (e.g. stats, debug GUI).
  */
@@ -65,6 +94,11 @@ function RendererOverlay(props: {
   measureActive: boolean;
   measureDistance?: number;
   onClickMeasure: () => void;
+  publishActive: boolean;
+  publishClickType: PublishClickType;
+  onChangePublishClickType: (_: PublishClickType) => void;
+  onClickPublish: () => void;
+  openSettings: () => void;
 }): JSX.Element {
   const [selectedRenderable, setSelectedRenderable] = useState<Renderable | undefined>(undefined);
   const [interactionsTabType, setInteractionsTabType] = useState<TabType | undefined>(undefined);
@@ -114,6 +148,17 @@ function RendererOverlay(props: {
     return [];
   }, []);
 
+  const publickClickButtonRef = useRef<HTMLButtonElement>(ReactNull);
+  const [publishMenuExpanded, setPublishMenuExpanded] = useState(false);
+  const selectedPublishClickIcon = PublishClickIcons[props.publishClickType];
+
+  const onLongPressPublish = useCallback(() => {
+    setPublishMenuExpanded(true);
+  }, []);
+  const longPressPublishEvent = useLongPress(onLongPressPublish);
+
+  const theme = useTheme();
+
   return (
     <React.Fragment>
       <div
@@ -133,17 +178,97 @@ function RendererOverlay(props: {
           interactionsTabType={interactionsTabType}
           setInteractionsTabType={setInteractionsTabType}
         />
-        <Paper square={false} elevation={4}>
+        <Paper square={false} elevation={4} style={{ display: "flex", flexDirection: "column" }}>
           <IconButton
             data-test="measure-button"
             color={props.measureActive ? "info" : "inherit"}
             title={props.measureActive ? "Cancel measuring" : "Measure distance"}
             onClick={props.onClickMeasure}
+            style={{ position: "relative" }}
           >
             <RulerIcon style={{ width: 16, height: 16 }} />
+            <div
+              style={{
+                position: "absolute",
+                top: "50%",
+                left: theme.spacing(-0.75),
+                fontSize: "0.75rem",
+                transform: "translate(-100%, -50%)",
+              }}
+            >
+              {props.measureDistance?.toFixed(2)}
+            </div>
           </IconButton>
+
+          <IconButton
+            {...longPressPublishEvent}
+            color={props.publishActive ? "info" : "inherit"}
+            title={props.publishActive ? "Click to cancel" : "Click to publish"}
+            ref={publickClickButtonRef}
+            onClick={props.onClickPublish}
+            data-test="publish-button"
+            style={{ fontSize: "1rem" }}
+          >
+            {selectedPublishClickIcon}
+            <div
+              style={{
+                borderBottom: "6px solid currentColor",
+                borderRight: "6px solid transparent",
+                bottom: 0,
+                left: 0,
+                height: 0,
+                width: 0,
+                margin: theme.spacing(0.25),
+                position: "absolute",
+              }}
+            />
+          </IconButton>
+          <Menu
+            id="publish-menu"
+            anchorEl={publickClickButtonRef.current}
+            anchorOrigin={{ vertical: "top", horizontal: "left" }}
+            transformOrigin={{ vertical: "top", horizontal: "right" }}
+            open={publishMenuExpanded}
+            onClose={() => setPublishMenuExpanded(false)}
+          >
+            <MenuItem
+              selected={props.publishClickType === "pose_estimate"}
+              onClick={() => {
+                props.onChangePublishClickType("pose_estimate");
+                setPublishMenuExpanded(false);
+              }}
+            >
+              <ListItemIcon>{PublishClickIcons.pose_estimate}</ListItemIcon>
+              <ListItemText>Publish pose estimate</ListItemText>
+            </MenuItem>
+            <MenuItem
+              selected={props.publishClickType === "goal"}
+              onClick={() => {
+                props.onChangePublishClickType("goal");
+                setPublishMenuExpanded(false);
+              }}
+            >
+              <ListItemIcon>{PublishClickIcons.goal}</ListItemIcon>
+              <ListItemText>Publish pose</ListItemText>
+            </MenuItem>
+            <MenuItem
+              selected={props.publishClickType === "point"}
+              onClick={() => {
+                props.onChangePublishClickType("point");
+                setPublishMenuExpanded(false);
+              }}
+            >
+              <ListItemIcon>{PublishClickIcons.point}</ListItemIcon>
+              <ListItemText>Publish point</ListItemText>
+            </MenuItem>
+            <MenuItem onClick={props.openSettings}>
+              <ListItemIcon>
+                <SettingsIcon fontSize="inherit" />
+              </ListItemIcon>
+              <ListItemText>Edit settings…</ListItemText>
+            </MenuItem>
+          </Menu>
         </Paper>
-        <div>{props.measureDistance?.toFixed(2)}</div>
       </div>
       {clickedObjects.length > 1 && !selectedObject && (
         <InteractionContextMenu
@@ -173,6 +298,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
       cloneDeep(DEFAULT_CAMERA_STATE),
       partialConfig?.cameraState,
     );
+    const publish = merge(cloneDeep(DEFAULT_PUBLISH_SETTINGS), partialConfig?.publish);
 
     return {
       cameraState,
@@ -181,6 +307,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
       transforms: partialConfig?.transforms ?? {},
       topics: partialConfig?.topics ?? {},
       layers: partialConfig?.layers ?? {},
+      publish,
     };
   });
   const configRef = useRef(config);
@@ -473,6 +600,38 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
     }
   }, [measureActive, renderer?.measurementTool]);
 
+  const [publishActive, setPublishActive] = useState(false);
+  const [publishClickType, setPublishClickType] = useState<PublishClickType>(
+    renderer?.publishClickTool.publishClickType ?? "point",
+  );
+  useEffect(() => {
+    const onStart = () => setPublishActive(true);
+    const onTypeChange = () =>
+      setPublishClickType(renderer?.publishClickTool.publishClickType ?? "point");
+    const onSubmit = (e) => {
+      console.log("aaaa", e);
+    };
+    const onEnd = () => setPublishActive(false);
+    renderer?.publishClickTool.addEventListener("foxglove.publish-start", onStart);
+    renderer?.publishClickTool.addEventListener("foxglove.publish-submit", onSubmit);
+    renderer?.publishClickTool.addEventListener("foxglove.publish-type-change", onTypeChange);
+    renderer?.publishClickTool.addEventListener("foxglove.publish-end", onEnd);
+    return () => {
+      renderer?.publishClickTool.removeEventListener("foxglove.publish-start", onStart);
+      renderer?.publishClickTool.removeEventListener("foxglove.publish-submit", onSubmit);
+      renderer?.publishClickTool.removeEventListener("foxglove.publish-type-change", onTypeChange);
+      renderer?.publishClickTool.removeEventListener("foxglove.publish-end", onEnd);
+    };
+  }, [renderer?.publishClickTool]);
+
+  const onClickPublish = useCallback(() => {
+    if (publishActive) {
+      renderer?.publishClickTool.stop();
+    } else {
+      renderer?.publishClickTool.start();
+    }
+  }, [publishActive, renderer?.publishClickTool]);
+
   return (
     <ThemeProvider isDark={colorScheme === "dark"}>
       <div style={PANEL_STYLE} ref={resizeRef}>
@@ -489,7 +648,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
               position: "absolute",
               top: 0,
               left: 0,
-              ...(measureActive && { cursor: "crosshair" }),
+              ...((measureActive || publishActive) && { cursor: "crosshair" }),
             }}
           />
         </CameraListener>
@@ -500,6 +659,16 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
             measureActive={measureActive}
             measureDistance={measureDistance}
             onClickMeasure={onClickMeasure}
+            publishActive={publishActive}
+            onClickPublish={onClickPublish}
+            publishClickType={publishClickType}
+            onChangePublishClickType={(type) => {
+              renderer?.publishClickTool.setPublishClickType(type);
+              renderer?.publishClickTool.start();
+            }}
+            openSettings={() => {
+              /*FIXME*/
+            }}
           />
         </RendererContext.Provider>
       </div>

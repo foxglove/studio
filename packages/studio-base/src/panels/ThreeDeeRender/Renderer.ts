@@ -51,6 +51,7 @@ import { PointCloudsAndLaserScans } from "./renderables/PointCloudsAndLaserScans
 import { Polygons } from "./renderables/Polygons";
 import { PoseArrays } from "./renderables/PoseArrays";
 import { Poses } from "./renderables/Poses";
+import { PublishClickTool } from "./renderables/PublishClickTool";
 import { MarkerPool } from "./renderables/markers/MarkerPool";
 import {
   Header,
@@ -105,6 +106,20 @@ export type RendererConfig = {
     };
     /** Toggles visibility of all topics */
     topicsVisible?: boolean;
+  };
+  publish: {
+    /** The topic on which to publish poses */
+    poseTopic: string;
+    /** The topic on which to publish points */
+    pointTopic: string;
+    /** The topic on which to publish pose estimates */
+    poseEstimateTopic: string;
+    /** The X standard deviation to publish with poses */
+    poseEstimateXDeviation: number;
+    /** The Y standard deviation to publish with poses */
+    poseEstimateYDeviation: number;
+    /** The theta standard deviation to publish with poses */
+    poseEstimateThetaDeviation: number;
   };
   /** frameId -> settings */
   transforms: Record<string, Partial<LayerSettingsTransform> | undefined>;
@@ -182,6 +197,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
   outlineMaterial = new THREE.LineBasicMaterial({ dithering: true });
 
   measurementTool: MeasurementTool;
+  publishClickTool: PublishClickTool;
 
   perspectiveCamera: THREE.PerspectiveCamera;
   orthographicCamera: THREE.OrthographicCamera;
@@ -306,6 +322,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.addSceneExtension(new Poses(this));
     this.addSceneExtension(new PoseArrays(this));
     this.addSceneExtension((this.measurementTool = new MeasurementTool(this)));
+    this.addSceneExtension((this.publishClickTool = new PublishClickTool(this)));
 
     this._watchDevicePixelRatio();
 
@@ -861,6 +878,8 @@ export class Renderer extends EventEmitter<RendererEvents> {
         `Frame "${this.renderFrameId}" not found`,
       );
       return;
+    } else {
+      this.settings.errors.remove(FOLLOW_TF_PATH, FRAME_NOT_FOUND);
     }
 
     const rootFrameId = frame.root().id;

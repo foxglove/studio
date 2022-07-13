@@ -6,14 +6,14 @@ import * as THREE from "three";
 import { Renderer } from "../Renderer";
 import { SceneExtension } from "../SceneExtension";
 
-export type MeasurementState = "idle" | "place-first-point" | "place-second-point";
+type MeasurementState = "idle" | "place-first-point" | "place-second-point";
 
 /**
  * A material that interprets the input mesh coordinates in pixel space, regardless of the camera
  * perspective/zoom level.
  */
 class FixedSizeMeshMaterial extends THREE.ShaderMaterial {
-  constructor() {
+  constructor({ color }: { color: THREE.ColorRepresentation }) {
     super({
       vertexShader: /* glsl */ `
         #include <common>
@@ -33,12 +33,14 @@ class FixedSizeMeshMaterial extends THREE.ShaderMaterial {
         }
       `,
       fragmentShader: /* glsl */ `
+        uniform vec3 color;
         void main() {
-          gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+          gl_FragColor = vec4(color, 1.0);
         }
       `,
       uniforms: {
         canvasSize: { value: [0, 0] },
+        color: { value: new THREE.Color(color) },
       },
     });
   }
@@ -46,7 +48,7 @@ class FixedSizeMeshMaterial extends THREE.ShaderMaterial {
 
 export class MeasurementTool extends SceneExtension {
   private circleGeometry = new THREE.CircleGeometry(5, 16);
-  private circleMaterial = new FixedSizeMeshMaterial();
+  private circleMaterial = new FixedSizeMeshMaterial({ color: 0xff0000 });
   private circle1 = new THREE.Mesh(this.circleGeometry, this.circleMaterial);
   private circle2 = new THREE.Mesh(this.circleGeometry, this.circleMaterial);
 
@@ -70,6 +72,8 @@ export class MeasurementTool extends SceneExtension {
 
     this.line.frustumCulled = false;
     this.line.geometry.setAttribute("position", this.linePositionAttribute);
+    this.circle1.visible = false;
+    this.circle2.visible = false;
     this.add(this.circle1);
     this.add(this.circle2);
     this.add(this.line);

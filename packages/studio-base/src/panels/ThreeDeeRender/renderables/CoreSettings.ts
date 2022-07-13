@@ -37,7 +37,7 @@ export class CoreSettings extends SceneExtension {
 
   override settingsNodes(): SettingsTreeEntry[] {
     const config = this.renderer.config;
-    const camera = config.cameraState;
+    const { cameraState: camera, publish } = config;
     const handler = this.handleSettingsAction;
 
     const followTfOptions = this.renderer.coordinateFrameList;
@@ -196,6 +196,52 @@ export class CoreSettings extends SceneExtension {
           handler,
         },
       },
+      {
+        path: ["publish"],
+        node: {
+          label: "Publish",
+          fields: {
+            poseEstimateTopic: {
+              label: "Pose estimate topic",
+              input: "string",
+              value: publish.poseEstimateTopic,
+              help: "The topic on which to publish pose estimates",
+            },
+            poseTopic: {
+              label: "Pose topic",
+              input: "string",
+              value: publish.poseTopic,
+              help: "The topic on which to publish poses",
+            },
+            pointTopic: {
+              label: "Point topic",
+              input: "string",
+              value: publish.pointTopic,
+              help: "The topic on which to publish points",
+            },
+            poseEstimateXDeviation: {
+              label: "X deviation",
+              input: "number",
+              value: publish.poseEstimateXDeviation,
+              help: "The X standard deviation to publish with poses",
+            },
+            poseEstimateYDeviation: {
+              label: "Y deviation",
+              input: "number",
+              value: publish.poseEstimateYDeviation,
+              help: "The Y standard deviation to publish with poses",
+            },
+            poseEstimateThetaDeviation: {
+              label: "Theta deviation",
+              input: "number",
+              value: publish.poseEstimateThetaDeviation,
+              help: "The theta standard deviation to publish with poses",
+            },
+          },
+          defaultExpansionState: "collapsed",
+          handler,
+        },
+      },
     ];
   }
 
@@ -267,6 +313,9 @@ export class CoreSettings extends SceneExtension {
         }
       }
     } else if (category === "cameraState") {
+      // Update the configuration
+      this.renderer.updateConfig((draft) => set(draft, path, value));
+    } else if (category === "publish") {
       // Update the configuration
       this.renderer.updateConfig((draft) => set(draft, path, value));
     } else {
