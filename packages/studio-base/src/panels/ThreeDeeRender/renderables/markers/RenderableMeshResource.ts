@@ -54,15 +54,15 @@ export class RenderableMeshResource extends RenderableMarker {
       this._loadModel(marker.mesh_resource, opts)
         .then(() => {
           // Remove any mesh fetch error message since loading was successful
-          errors.removeFromTopic(this.userData.topic, MESH_FETCH_FAILED);
+          errors.remove(this.userData.settingsPath, MESH_FETCH_FAILED);
           // Render a new frame now that the model is loaded
           this.renderer.queueAnimationFrame();
         })
         .catch((err) => {
-          errors.addToTopic(
-            this.userData.topic,
+          errors.add(
+            this.userData.settingsPath,
             MESH_FETCH_FAILED,
-            `Unhandled error loading mesh resource from "${marker.mesh_resource}": ${err.message}`,
+            `Unhandled error loading mesh from "${marker.mesh_resource}": ${err.message}`,
           );
         });
     }
@@ -77,10 +77,10 @@ export class RenderableMeshResource extends RenderableMarker {
     }
 
     const cachedModel = await this.renderer.modelCache.load(url, (err) => {
-      this.renderer.settings.errors.addToTopic(
-        this.userData.topic,
+      this.renderer.settings.errors.add(
+        this.userData.settingsPath,
         MESH_FETCH_FAILED,
-        `Failed to load mesh resource from "${url}": ${err.message}`,
+        `Error loading mesh from "${url}": ${err.message}`,
       );
     });
 
