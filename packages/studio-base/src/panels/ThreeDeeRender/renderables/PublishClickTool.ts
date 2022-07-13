@@ -4,6 +4,7 @@
 
 import * as THREE from "three";
 
+import { Renderable, BaseUserData } from "../Renderable";
 import { Renderer } from "../Renderer";
 import { SceneExtension } from "../SceneExtension";
 import { Marker, MarkerAction, MarkerType, TIME_ZERO } from "../ros";
@@ -57,11 +58,14 @@ function makeSphereMarker(): Marker {
   };
 }
 
-export type PublishClickResult =
+export type PublishClickEvent =
+  | { type: "foxglove.publish-start" }
+  | { type: "foxglove.publish-end" }
+  | { type: "foxglove.publish-type-change" }
   | { type: "foxglove.publish-submit"; publishClickType: "point"; point: Point }
   | { type: "foxglove.publish-submit"; publishClickType: "goal" | "pose_estimate"; pose: Pose };
 
-export class PublishClickTool extends SceneExtension {
+export class PublishClickTool extends SceneExtension<Renderable<BaseUserData>, PublishClickEvent> {
   private sphere: RenderableSphere;
   private arrow: RenderableArrow;
 
@@ -181,7 +185,7 @@ export class PublishClickTool extends SceneExtension {
         break;
       case "place-second-point":
         this.point2 = worldSpaceCursorCoords.clone();
-        if (this.point1) {
+        if (this.point1 && this.publishClickType !== "point") {
           const p = this.point1.clone();
           const q = new THREE.Quaternion().setFromUnitVectors(
             UNIT_X,

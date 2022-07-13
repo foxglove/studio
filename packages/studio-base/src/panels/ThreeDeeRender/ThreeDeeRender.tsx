@@ -58,7 +58,7 @@ import { Renderer, RendererConfig } from "./Renderer";
 import { RendererContext, useRendererEvent } from "./RendererContext";
 import { Stats } from "./Stats";
 import { FRAME_TRANSFORM_DATATYPES } from "./foxglove";
-import { PublishClickResult, PublishClickType } from "./renderables/PublishClickTool";
+import { PublishClickEvent, PublishClickType } from "./renderables/PublishClickTool";
 import type { MarkerUserData } from "./renderables/markers/RenderableMarker";
 import { TF_DATATYPES, TRANSFORM_STAMPED_DATATYPES } from "./ros";
 import { Pose } from "./transforms/geometry";
@@ -697,7 +697,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
     const onStart = () => setPublishActive(true);
     const onTypeChange = () =>
       setPublishClickType(renderer?.publishClickTool.publishClickType ?? "point");
-    const onSubmit = (event: PublishClickResult) => {
+    const onSubmit = (event: PublishClickEvent & { type: "foxglove.publish-submit" }) => {
       const frameId = renderer?.fixedFrameId;
       if (frameId == undefined) {
         log.warn("Unable to publish, fixedFrameId is not set");
@@ -737,18 +737,12 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
     };
     const onEnd = () => setPublishActive(false);
     renderer?.publishClickTool.addEventListener("foxglove.publish-start", onStart);
-    renderer?.publishClickTool.addEventListener(
-      "foxglove.publish-submit",
-      onSubmit as (_: { type: "foxglove.publish-submit" }) => void,
-    );
+    renderer?.publishClickTool.addEventListener("foxglove.publish-submit", onSubmit);
     renderer?.publishClickTool.addEventListener("foxglove.publish-type-change", onTypeChange);
     renderer?.publishClickTool.addEventListener("foxglove.publish-end", onEnd);
     return () => {
       renderer?.publishClickTool.removeEventListener("foxglove.publish-start", onStart);
-      renderer?.publishClickTool.removeEventListener(
-        "foxglove.publish-submit",
-        onSubmit as (_: { type: "foxglove.publish-submit" }) => void,
-      );
+      renderer?.publishClickTool.removeEventListener("foxglove.publish-submit", onSubmit);
       renderer?.publishClickTool.removeEventListener("foxglove.publish-type-change", onTypeChange);
       renderer?.publishClickTool.removeEventListener("foxglove.publish-end", onEnd);
     };

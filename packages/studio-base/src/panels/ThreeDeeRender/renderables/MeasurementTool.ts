@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 import * as THREE from "three";
 
+import { Renderable, BaseUserData } from "../Renderable";
 import { Renderer } from "../Renderer";
 import { SceneExtension } from "../SceneExtension";
 
@@ -46,7 +47,12 @@ class FixedSizeMeshMaterial extends THREE.ShaderMaterial {
   }
 }
 
-export class MeasurementTool extends SceneExtension {
+type MeasurementEvent =
+  | { type: "foxglove.measure-start" }
+  | { type: "foxglove.measure-change" }
+  | { type: "foxglove.measure-end" };
+
+export class MeasurementTool extends SceneExtension<Renderable<BaseUserData>, MeasurementEvent> {
   private circleGeometry = new THREE.CircleGeometry(5, 16);
   private circleMaterial = new FixedSizeMeshMaterial({ color: 0xff0000 });
   private circle1 = new THREE.Mesh(this.circleGeometry, this.circleMaterial);
