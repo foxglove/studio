@@ -98,7 +98,9 @@ export function UnsavedChangesPrompt({
                 label={[
                   `Update team layout “${layout.name}”`,
                   !isOnline && "(unavailable while offline)",
-                ].join(" ")}
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
                 control={<Radio />}
                 disabled={!isOnline}
               />
