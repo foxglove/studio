@@ -367,6 +367,9 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
       },
     },
     MuiSelect: {
+      defaultProps: {
+        variant: "outlined",
+      },
       styleOverrides: {
         select: {
           "&.MuiInputBase-input": {
