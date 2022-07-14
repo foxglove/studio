@@ -207,6 +207,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
   markerPool = new MarkerPool(this);
 
   private _prevResolution = new THREE.Vector2();
+  private _pickingEnabled = false;
 
   constructor(canvas: HTMLCanvasElement, config: RendererConfig) {
     super();
@@ -446,6 +447,17 @@ export class Renderer extends EventEmitter<RendererEvents> {
     const rootsArray = Array.from(rootsToCounts.entries());
     const rootId = rootsArray.sort((a, b) => b[1] - a[1])[0]?.[0];
     return rootId;
+  }
+
+  /** Enable or disable object selection mode */
+  // eslint-disable-next-line @foxglove/no-boolean-parameters
+  setPickingEnabled(enabled: boolean): void {
+    this._pickingEnabled = enabled;
+    if (!enabled) {
+      this.selectedObject = undefined;
+      this.emit("renderableSelected", undefined, this);
+      this.animationFrame();
+    }
   }
 
   /** Update the color scheme and background color, rebuilding any materials as necessary */
@@ -730,6 +742,10 @@ export class Renderer extends EventEmitter<RendererEvents> {
   };
 
   clickHandler = (cursorCoords: THREE.Vector2): void => {
+    if (!this._pickingEnabled) {
+      return;
+    }
+
     // Disable picking while the measurement tool is active
     if (this.measurementTool.state !== "idle") {
       return;

@@ -40,7 +40,7 @@ import Interactions, {
 } from "./Interactions";
 import type { Renderable } from "./Renderable";
 import { MessageHandler, Renderer, RendererConfig } from "./Renderer";
-import { RendererContext, useRendererEvent } from "./RendererContext";
+import { RendererContext, useRenderer, useRendererEvent } from "./RendererContext";
 import { Stats } from "./Stats";
 import { FRAME_TRANSFORM_DATATYPES } from "./foxglove";
 import type { MarkerUserData } from "./renderables/markers/RenderableMarker";
@@ -68,10 +68,20 @@ function RendererOverlay(props: {
 }): JSX.Element {
   const [selectedRenderable, setSelectedRenderable] = useState<Renderable | undefined>(undefined);
   const [interactionsTabType, setInteractionsTabType] = useState<TabType | undefined>(undefined);
+  const renderer = useRenderer();
+
+  // Toggle object selection mode on/off in the renderer
+  useEffect(() => {
+    if (renderer) {
+      renderer.setPickingEnabled(interactionsTabType != undefined);
+    }
+  }, [interactionsTabType, renderer]);
 
   useRendererEvent("renderableSelected", (renderable) => {
     setSelectedRenderable(renderable);
-    setInteractionsTabType(renderable ? OBJECT_TAB_TYPE : undefined);
+    if (renderable) {
+      setInteractionsTabType(OBJECT_TAB_TYPE);
+    }
   });
 
   const stats = props.enableStats ? (
