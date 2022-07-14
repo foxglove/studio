@@ -71,7 +71,7 @@ const DEFAULT_GRADIENT_STR: Gradient = [
 ];
 
 const DEFAULT_SETTINGS: LayerSettingsPoseArray = {
-  visible: true,
+  visible: false,
   type: DEFAULT_TYPE,
   axisScale: DEFAULT_AXIS_SCALE,
   arrowScale: DEFAULT_ARROW_SCALE,
@@ -181,7 +181,7 @@ export class PoseArrays extends SceneExtension<PoseArrayRenderable> {
             label: topic.name,
             icon: NAV_PATH_DATATYPES.has(topic.datatype) ? "Timeline" : "Flag",
             fields,
-            visible: config.visible ?? true,
+            visible: config.visible ?? DEFAULT_SETTINGS.visible,
             handler,
           },
         });

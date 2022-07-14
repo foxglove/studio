@@ -56,7 +56,7 @@ const DEFAULT_COVARIANCE_COLOR_STR = rgbaToCssString(DEFAULT_COVARIANCE_COLOR);
 
 const DEFAULT_SETTINGS: LayerSettingsPose = {
   type: DEFAULT_TYPE,
-  visible: true,
+  visible: false,
   axisScale: DEFAULT_AXIS_SCALE,
   arrowScale: DEFAULT_ARROW_SCALE,
   color: DEFAULT_COLOR_STR,
@@ -167,7 +167,7 @@ export class Poses extends SceneExtension<PoseRenderable> {
             label: topic.name,
             icon: "Flag",
             fields,
-            visible: config.visible ?? true,
+            visible: config.visible ?? DEFAULT_SETTINGS.visible,
             order: topic.name.toLocaleLowerCase(),
             handler,
           },

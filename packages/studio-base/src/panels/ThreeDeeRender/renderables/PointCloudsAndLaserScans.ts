@@ -83,7 +83,7 @@ const DEFAULT_MAX_COLOR = { r: 227, g: 177, b: 135, a: 1 };
 const DEFAULT_RGB_BYTE_ORDER = "rgba";
 
 const DEFAULT_SETTINGS: LayerSettingsPointCloudAndLaserScan = {
-  visible: true,
+  visible: false,
   frameLocked: false,
   pointSize: DEFAULT_POINT_SIZE,
   pointShape: DEFAULT_POINT_SHAPE,
@@ -1344,7 +1344,7 @@ function settingsNode(
     icon: kind === "pointcloud" ? "Points" : "Radar",
     fields,
     order: topic.name.toLocaleLowerCase(),
-    visible: config.visible ?? true,
+    visible: config.visible ?? DEFAULT_SETTINGS.visible,
   };
 }
 

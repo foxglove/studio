@@ -29,7 +29,7 @@ export type LayerSettingsMarker = BaseSettings & {
 };
 
 const DEFAULT_SETTINGS: LayerSettingsMarker = {
-  visible: true,
+  visible: false,
   namespaces: {},
 };
 
@@ -52,7 +52,7 @@ export class Markers extends SceneExtension<TopicMarkers> {
           label: topic.name,
           icon: "Shapes",
           order: topic.name.toLocaleLowerCase(),
-          visible: config.visible ?? true,
+          visible: config.visible ?? DEFAULT_SETTINGS.visible,
           handler: this.handleSettingsActionTopic,
         };
 

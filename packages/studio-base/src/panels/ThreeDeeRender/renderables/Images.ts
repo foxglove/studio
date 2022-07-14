@@ -58,7 +58,7 @@ const DEFAULT_IMAGE_WIDTH = 512;
 const DEFAULT_DISTANCE = 1;
 
 const DEFAULT_SETTINGS: LayerSettingsImage = {
-  visible: true,
+  visible: false,
   frameLocked: true,
   cameraInfoTopic: undefined,
   distance: DEFAULT_DISTANCE,
@@ -138,7 +138,7 @@ export class Images extends SceneExtension<ImageRenderable> {
           node: {
             icon: "ImageProjection",
             fields,
-            visible: config.visible ?? true,
+            visible: config.visible ?? DEFAULT_SETTINGS.visible,
             order: topic.name.toLocaleLowerCase(),
             handler,
           },

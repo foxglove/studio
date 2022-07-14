@@ -36,7 +36,7 @@ const DEFAULT_LINE_WIDTH = 0.1;
 const DEFAULT_COLOR_STR = rgbaToCssString(DEFAULT_COLOR);
 
 const DEFAULT_SETTINGS: LayerSettingsPolygon = {
-  visible: true,
+  visible: false,
   lineWidth: DEFAULT_LINE_WIDTH,
   color: DEFAULT_COLOR_STR,
 };
@@ -86,7 +86,7 @@ export class Polygons extends SceneExtension<PolygonRenderable> {
             label: topic.name,
             icon: "Star",
             fields,
-            visible: config.visible ?? true,
+            visible: config.visible ?? DEFAULT_SETTINGS.visible,
             handler,
           },
         });

@@ -50,7 +50,7 @@ const DEFAULT_COLOR_STR = rgbaToCssString(DEFAULT_COLOR);
 const CAMERA_MODEL = "CameraModel";
 
 const DEFAULT_SETTINGS: LayerSettingsCameraInfo = {
-  visible: true,
+  visible: false,
   frameLocked: true,
   distance: DEFAULT_DISTANCE,
   width: DEFAULT_WIDTH,
@@ -103,7 +103,7 @@ export class Cameras extends SceneExtension<CameraInfoRenderable> {
           node: {
             icon: "Camera",
             fields,
-            visible: config.visible ?? true,
+            visible: config.visible ?? DEFAULT_SETTINGS.visible,
             handler,
             order: topic.name.toLocaleLowerCase(),
           },

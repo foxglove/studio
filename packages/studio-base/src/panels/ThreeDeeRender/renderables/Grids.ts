@@ -127,7 +127,7 @@ export class Grids extends SceneExtension<GridRenderable> {
           label: config.label ?? "Grid",
           icon: "Grid",
           fields,
-          visible: config.visible ?? true,
+          visible: config.visible ?? DEFAULT_SETTINGS.visible,
           actions: [{ type: "action", id: "delete", label: "Delete" }],
           order: layerConfig.order,
           handler,
