@@ -16,9 +16,9 @@ const log = Logger.getLogger(__filename);
 const SYNC_INTERVAL = 10 * 60 * 1_000; // 10 minutes
 
 /**
- * Implements private registry extension syncing.
+ * Implements organization registry extension syncing.
  */
-export function PrivateExtensionRegistrySyncAdapter(): ReactNull {
+export function OrgExtensionRegistrySyncAdapter(): ReactNull {
   const installedExtensions = useExtensionRegistry((state) => state.registeredExtensions);
   const installExtension = useExtensionRegistry((state) => state.installExtension);
   const uninstallExtension = useExtensionRegistry((state) => state.uninstallExtension);
@@ -39,7 +39,7 @@ export function PrivateExtensionRegistrySyncAdapter(): ReactNull {
       const metaData = await api.getExtension(id);
       const dataResponse = await fetch(metaData.foxe);
       const data = new Uint8Array(await dataResponse.arrayBuffer());
-      await installExtension("private", data);
+      await installExtension("org", data);
     },
     [api, installExtension],
   );
@@ -63,7 +63,7 @@ export function PrivateExtensionRegistrySyncAdapter(): ReactNull {
       }
 
       const installedPrivateExtensions = latestInstalledExtensions.current.filter(
-        (extension) => extension.namespace === "private",
+        (extension) => extension.namespace === "org",
       );
 
       const toInstall = differenceWith(
@@ -88,7 +88,7 @@ export function PrivateExtensionRegistrySyncAdapter(): ReactNull {
 
       for (const extension of toRemove) {
         try {
-          await uninstallExtension("private", extension.id);
+          await uninstallExtension("org", extension.id);
         } catch (error) {
           log.error(error);
         }

@@ -36,6 +36,15 @@ const StyledListItemButton = muiStyled(ListItemButton)(({ theme }) => ({
   },
 }));
 
+function displayNameForNamespace(namespace: string): string {
+  switch (namespace) {
+    case "org":
+      return "Organization";
+    default:
+      return namespace;
+  }
+}
+
 function ExtensionListEntry(props: {
   entry: DeepReadonly<ExtensionMarketplaceDetail>;
   onClick: () => void;
@@ -172,14 +181,14 @@ export default function ExtensionsSidebar(): React.ReactElement {
     <SidebarContent title="Extensions" helpContent={helpContent} disablePadding>
       <Stack gap={1}>
         {!isEmpty(namespacedEntries) ? (
-          Object.keys(namespacedEntries).map((namespace) => (
+          Object.entries(namespacedEntries).map(([namespace, entries]) => (
             <List key={namespace}>
               <Stack paddingY={0.25} paddingX={2}>
                 <Typography component="li" variant="overline" color="text.secondary">
-                  {namespace}
+                  {displayNameForNamespace(namespace)}
                 </Typography>
               </Stack>
-              {(namespacedEntries[namespace] ?? []).map((entry) => (
+              {entries.map((entry) => (
                 <ExtensionListEntry
                   key={`${entry.id}`}
                   entry={entry}

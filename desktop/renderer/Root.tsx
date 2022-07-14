@@ -92,7 +92,7 @@ export default function Root({
 
   const layoutStorage = useMemo(() => new NativeStorageLayoutStorage(storageBridge), []);
   const [extensionLoaders] = useState(() => [
-    new IdbExtensionLoader("private"),
+    new IdbExtensionLoader("org"),
     new DesktopExtensionLoader(desktopBridge),
   ]);
   const consoleApi = useMemo(() => new ConsoleApi(process.env.FOXGLOVE_API_URL!), []);

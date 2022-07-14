@@ -5,7 +5,7 @@
 /**
  * Extensions are installed into separate namespaces enumerated here.
  */
-export type ExtensionNamespace = "local" | "private";
+export type ExtensionNamespace = "local" | "org";
 
 /**
  * Metadata describing an extension.

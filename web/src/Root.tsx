@@ -65,7 +65,7 @@ export function Root({ appConfiguration }: { appConfiguration: IAppConfiguration
 
   const layoutStorage = useMemo(() => new IdbLayoutStorage(), []);
   const [extensionLoaders] = useState(() => [
-    new IdbExtensionLoader("private"),
+    new IdbExtensionLoader("org"),
     new IdbExtensionLoader("local"),
   ]);
   const consoleApi = useMemo(() => new ConsoleApi(process.env.FOXGLOVE_API_URL!), []);

@@ -39,7 +39,7 @@ const installedExtensions: ExtensionInfo[] = [
     license: "MIT",
     version: "1.2.10",
     keywords: ["storybook", "testing"],
-    namespace: "private",
+    namespace: "org",
   },
   {
     id: "publisher.storyextension",

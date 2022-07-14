@@ -13,7 +13,7 @@ import ExtensionRegistryProvider from "@foxglove/studio-base/providers/Extension
 import { ExtensionLoader } from "@foxglove/studio-base/services/ExtensionLoader";
 import { ExtensionInfo } from "@foxglove/studio-base/types/Extensions";
 
-import { PrivateExtensionRegistrySyncAdapter } from "./PrivateExtensionRegistrySyncAdapter";
+import { OrgExtensionRegistrySyncAdapter } from "./OrgExtensionRegistrySyncAdapter";
 
 jest.mock("@foxglove/studio-base/context/CurrentUserContext");
 jest.mock("@foxglove/studio-base/context/ConsoleApiContext");
@@ -41,7 +41,7 @@ const source = `
 
 function Wrapper(): JSX.Element {
   const registeredExtensions = useExtensionRegistry((state) => state.registeredExtensions);
-  return registeredExtensions ? <PrivateExtensionRegistrySyncAdapter /> : <></>;
+  return registeredExtensions ? <OrgExtensionRegistrySyncAdapter /> : <></>;
 }
 
 describe("Private registry sync adapter", () => {
@@ -66,13 +66,13 @@ describe("Private registry sync adapter", () => {
     fetchMock.get("url", new Uint8Array());
 
     const mockPrivateLoader = {
-      namespace: "private",
+      namespace: "org",
       getExtensions: jest
         .fn()
         .mockResolvedValue([
-          fakeExtension({ namespace: "private", name: "private-installed-1", version: "1" }),
-          fakeExtension({ namespace: "private", name: "private-installed-2", version: "1" }),
-          fakeExtension({ namespace: "private", name: "private-to-delete", version: "1" }),
+          fakeExtension({ namespace: "org", name: "private-installed-1", version: "1" }),
+          fakeExtension({ namespace: "org", name: "private-installed-2", version: "1" }),
+          fakeExtension({ namespace: "org", name: "private-to-delete", version: "1" }),
         ]),
       loadExtension: jest.fn().mockResolvedValue(source),
       installExtension: jest.fn(),

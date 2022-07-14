@@ -81,13 +81,13 @@ describe("IdbExtensionLoader", () => {
 
       const expectedInfo = {
         ...pkgInfo,
-        namespace: "private",
-        qualifiedName: "private:foxglove:studio-extension-turtlesim",
+        namespace: "org",
+        qualifiedName: "org:foxglove:studio-extension-turtlesim",
       };
 
       mockDBGetAll.mockReturnValue([expectedInfo]);
 
-      const loader = new IdbExtensionLoader("private");
+      const loader = new IdbExtensionLoader("org");
       await loader.installExtension(foxe);
 
       expect(mockDBPut).toHaveBeenCalledWith("metadata", expectedInfo);
@@ -105,14 +105,14 @@ describe("IdbExtensionLoader", () => {
       const expectedInfo = {
         id: "prefix.package-name",
         name: "package-name",
-        namespace: "private",
+        namespace: "org",
         publisher: "prefix",
-        qualifiedName: "private:prefix:package-name",
+        qualifiedName: "org:prefix:package-name",
       };
 
       mockDBGetAll.mockReturnValue([expectedInfo]);
 
-      const loader = new IdbExtensionLoader("private");
+      const loader = new IdbExtensionLoader("org");
       await loader.installExtension(foxe);
 
       expect(mockDBPut).toHaveBeenCalledWith("metadata", expectedInfo);

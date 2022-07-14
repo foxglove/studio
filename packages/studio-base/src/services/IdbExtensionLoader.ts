@@ -31,7 +31,7 @@ function qualifiedName(
       // For local namespace we follow the legacy naming convention of using displayName
       // in order to stay compatible with existing layouts.
       return info.displayName;
-    case "private":
+    case "org":
       // For private registry we use namespace and package name.
       return [namespace, publisher, info.name].join(":");
   }
@@ -98,6 +98,7 @@ export class IdbExtensionLoader implements ExtensionLoader {
 
     const rawInfo = validatePackageInfo(JSON.parse(pkgInfoText) as Partial<ExtensionInfo>);
     const normalizedPublisher = rawInfo.publisher.replace(/\W+/g, "");
+
     const info: ExtensionInfo = {
       ...rawInfo,
       id: `${normalizedPublisher}.${rawInfo.name}`,

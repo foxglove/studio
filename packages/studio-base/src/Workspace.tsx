@@ -44,13 +44,13 @@ import {
 } from "@foxglove/studio-base/components/MessagePipeline";
 import MultiProvider from "@foxglove/studio-base/components/MultiProvider";
 import { OpenDialog, OpenDialogViews } from "@foxglove/studio-base/components/OpenDialog";
+import { OrgExtensionRegistrySyncAdapter } from "@foxglove/studio-base/components/OrgExtensionRegistrySyncAdapter";
 import PanelLayout from "@foxglove/studio-base/components/PanelLayout";
 import PanelList from "@foxglove/studio-base/components/PanelList";
 import panelsHelpContent from "@foxglove/studio-base/components/PanelList/index.help.md";
 import PanelSettings from "@foxglove/studio-base/components/PanelSettings";
 import PlaybackControls from "@foxglove/studio-base/components/PlaybackControls";
 import Preferences from "@foxglove/studio-base/components/Preferences";
-import { PrivateExtensionRegistrySyncAdapter } from "@foxglove/studio-base/components/PrivateExtensionRegistrySyncAdapter";
 import RemountOnValueChange from "@foxglove/studio-base/components/RemountOnValueChange";
 import Sidebar, { SidebarItem } from "@foxglove/studio-base/components/Sidebar";
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
@@ -579,7 +579,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
           <div className={classes.dropzone}>Drop a file here</div>
         </DropOverlay>
       </DocumentDropListener>
-      <PrivateExtensionRegistrySyncAdapter />
+      <OrgExtensionRegistrySyncAdapter />
       <URLStateSyncAdapter />
       <div className={classes.container} ref={containerRef} tabIndex={0}>
         <Sidebar
