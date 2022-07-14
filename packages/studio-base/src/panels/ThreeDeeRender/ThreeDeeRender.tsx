@@ -39,7 +39,7 @@ import Interactions, {
   TabType,
 } from "./Interactions";
 import type { Renderable } from "./Renderable";
-import { Renderer, RendererConfig } from "./Renderer";
+import { MessageHandler, Renderer, RendererConfig } from "./Renderer";
 import { RendererContext, useRendererEvent } from "./RendererContext";
 import { Stats } from "./Stats";
 import { FRAME_TRANSFORM_DATATYPES } from "./foxglove";
@@ -203,7 +203,10 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
   const renderRef = useRef({ needsRender: false });
   const [renderDone, setRenderDone] = useState<(() => void) | undefined>();
 
-  const datatypeHandlers = useMemo(() => renderer?.datatypeHandlers ?? new Map(), [renderer]);
+  const datatypeHandlers = useMemo(
+    () => renderer?.datatypeHandlers ?? new Map<string, MessageHandler[]>(),
+    [renderer],
+  );
 
   // Config cameraState
   const setCameraState = useCallback((state: CameraState) => {
@@ -346,11 +349,14 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
         TRANSFORM_STAMPED_DATATYPES.has(topic.datatype)
       ) {
         subscriptions.add(topic.name);
-      } else if (datatypeHandlers.has(topic.datatype)) {
-        // Subscribe to known datatypes if the topic has not been toggled off
-        const topicConfig = config.topics[topic.name];
-        if (topicConfig?.visible !== false) {
-          subscriptions.add(topic.name);
+      } else {
+        const handlers = datatypeHandlers.get(topic.datatype);
+        if (handlers) {
+          // Subscribe to known datatypes if the topic has not been toggled off
+          // or if there are multiple handlers
+          if (handlers.length > 1 || config.topics[topic.name]?.visible !== false) {
+            subscriptions.add(topic.name);
+          }
         }
       }
     }
