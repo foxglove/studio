@@ -15,6 +15,15 @@ const BLUE = makeColorAttribute("#2196f3");
 const YELLOW = makeColorAttribute("#ffeb3b");
 
 const URDF = `<?xml version="1.0"?>
+<robot name="URDF Test2">
+  <joint name="mesh-no-material_T_layer" type="fixed">
+    <parent link="mesh-no-material"/>
+    <child link="layer"/>
+    <origin xyz="1 -2 0"/>
+  </joint>
+</robot>`;
+
+const URDF2 = `<?xml version="1.0"?>
 <robot name="URDF Test">
   <material name="box-material"><color rgba="${RED}"/></material>
   <material name="cylinder-material"><color rgba="${GREEN}"/></material>
@@ -73,18 +82,15 @@ const URDF = `<?xml version="1.0"?>
 
   <link name="mesh-no-material">
     <visual>
-      <geometry><mesh filename="${STL_CUBE_MESH_RESOURCE}"/></geometry>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry><mesh filename="${STL_CUBE_MESH_RESOURCE}" scale="0.25 0.25 0.5"/></geometry>
+      <origin rpy="0 0 0" xyz="0 0 -0.25"/>
     </visual>
   </link>
-</robot>`;
 
-const URDF2 = `<?xml version="1.0"?>
-<robot name="URDF Test2">
-  <joint name="mesh-no-material_T_layer" type="fixed">
-    <parent link="mesh-no-material"/>
-    <child link="layer"/>
-    <origin xyz="0 1 0"/>
+  <joint name="mesh_T_mesh-no-material" type="fixed">
+    <parent link="mesh"/>
+    <child link="mesh-no-material"/>
+    <origin rpy="0 0 0" xyz="1 2 0"/>
   </joint>
 </robot>`;
 

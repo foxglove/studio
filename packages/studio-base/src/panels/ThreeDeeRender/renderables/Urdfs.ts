@@ -593,13 +593,13 @@ function createMeshMarker(
   };
 }
 
+const VALID_PROTOCOLS = ["https:", "http:", "file:", "data:"];
+
 function isValidUrl(str: string): boolean {
   try {
     const url = new URL(str);
     return (
-      (supportsPackageUrl && url.protocol === "package:") ||
-      url.protocol === "https:" ||
-      url.protocol === "http:"
+      (supportsPackageUrl && url.protocol === "package:") || VALID_PROTOCOLS.includes(url.protocol)
     );
   } catch (_) {
     return false;
