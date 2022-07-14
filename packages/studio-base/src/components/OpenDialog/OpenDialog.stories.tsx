@@ -9,15 +9,46 @@ import PlayerSelectionContext, {
 import OpenDialog from "./OpenDialog";
 
 export default {
-  component: OpenDialog,
+  colorScheme: "light",
   title: "components/OpenDialog",
+  component: OpenDialog,
 };
 
-export const Start = (): JSX.Element => <OpenDialog />;
+// Start
 
-export const Remote = (): JSX.Element => <OpenDialog activeView="remote" />;
+export const StartLight = (): JSX.Element => <OpenDialog />;
 
-export const Connection = (): JSX.Element => {
+StartLight.parameters = {
+  colorScheme: "light",
+  title: "components/OpenDialog/Start/Light",
+};
+
+export const StartDark = (): JSX.Element => <OpenDialog />;
+
+StartDark.parameters = {
+  colorScheme: "dark",
+  title: "components/OpenDialog/Start/Dark",
+};
+
+// Remote
+
+export const RemoteLight = (): JSX.Element => <OpenDialog activeView="remote" />;
+
+RemoteLight.parameters = {
+  colorScheme: "light",
+  title: "components/OpenDialog/Remote/Light",
+};
+
+export const RemoteDark = (): JSX.Element => <OpenDialog activeView="remote" />;
+
+RemoteDark.parameters = {
+  colorScheme: "dark",
+  title: "components/OpenDialog/Remote/Dark",
+};
+
+// Connection
+
+export const ConnectionLight = (): JSX.Element => {
   const playerSelection: PlayerSelection = {
     selectSource: () => {},
     selectRecent: () => {},
@@ -44,4 +75,43 @@ export const Connection = (): JSX.Element => {
       <OpenDialog activeView="connection" />
     </PlayerSelectionContext.Provider>
   );
+};
+
+ConnectionLight.parameters = {
+  colorScheme: "light",
+  title: "components/OpenDialog/Connection/Light",
+};
+
+export const ConnectionDark = (): JSX.Element => {
+  const playerSelection: PlayerSelection = {
+    selectSource: () => {},
+    selectRecent: () => {},
+    recentSources: [],
+    availableSources: [
+      {
+        id: "foo",
+        type: "connection",
+        displayName: "My Data Source",
+
+        formConfig: {
+          fields: [{ id: "key", label: "Some Label" }],
+        },
+
+        initialize: () => {
+          return undefined;
+        },
+      },
+    ],
+  };
+
+  return (
+    <PlayerSelectionContext.Provider value={playerSelection}>
+      <OpenDialog activeView="connection" />
+    </PlayerSelectionContext.Provider>
+  );
+};
+
+ConnectionDark.parameters = {
+  colorScheme: "dark",
+  title: "components/OpenDialog/Connection/Dark",
 };
