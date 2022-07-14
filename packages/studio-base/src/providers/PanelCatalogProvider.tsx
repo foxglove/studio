@@ -7,13 +7,13 @@ import { PropsWithChildren, useMemo } from "react";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import Panel from "@foxglove/studio-base/components/Panel";
 import PanelExtensionAdapter from "@foxglove/studio-base/components/PanelExtensionAdapter";
+import { useExtensionRegistry } from "@foxglove/studio-base/context/ExtensionRegistryContext";
 import PanelCatalogContext, {
   PanelCatalog,
   PanelInfo,
 } from "@foxglove/studio-base/context/PanelCatalogContext";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
 import panels from "@foxglove/studio-base/panels";
-import { useExtensionRegistry } from "@foxglove/studio-base/providers/ExtensionRegistryProvider";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 
 type PanelProps = {

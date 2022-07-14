@@ -64,6 +64,7 @@ import {
   useCurrentLayoutSelector,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
+import { useExtensionRegistry } from "@foxglove/studio-base/context/ExtensionRegistryContext";
 import LinkHandlerContext from "@foxglove/studio-base/context/LinkHandlerContext";
 import { useNativeAppMenu } from "@foxglove/studio-base/context/NativeAppMenuContext";
 import {
@@ -79,7 +80,6 @@ import useElectronFilesToOpen from "@foxglove/studio-base/hooks/useElectronFiles
 import { useInitialDeepLinkState } from "@foxglove/studio-base/hooks/useInitialDeepLinkState";
 import useNativeAppMenuEvent from "@foxglove/studio-base/hooks/useNativeAppMenuEvent";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
-import { useExtensionRegistry } from "@foxglove/studio-base/providers/ExtensionRegistryProvider";
 import { HelpInfoStore, useHelpInfo } from "@foxglove/studio-base/providers/HelpInfoProvider";
 import { PanelSettingsEditorContextProvider } from "@foxglove/studio-base/providers/PanelSettingsEditorContextProvider";
 

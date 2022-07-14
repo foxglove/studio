@@ -9,7 +9,7 @@ import { useLatest, useTimeoutFn } from "react-use";
 import Logger from "@foxglove/log";
 import { useConsoleApi } from "@foxglove/studio-base/context/ConsoleApiContext";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
-import { useExtensionRegistry } from "@foxglove/studio-base/providers/ExtensionRegistryProvider";
+import { useExtensionRegistry } from "@foxglove/studio-base/context/ExtensionRegistryContext";
 
 const log = Logger.getLogger(__filename);
 

@@ -2,24 +2,22 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { PropsWithChildren, useEffect } from "react";
+import { PropsWithChildren, useEffect, useState } from "react";
 import ReactDOM from "react-dom";
-import create, { StoreApi } from "zustand";
-import createZustandContext from "zustand/context";
+import { createStore, StoreApi } from "zustand";
 
 import Logger from "@foxglove/log";
 import { ExtensionContext, ExtensionModule } from "@foxglove/studio";
 import {
   ExtensionRegistry,
+  ExtensionRegistryContext,
   RegisteredPanel,
+  useExtensionRegistry,
 } from "@foxglove/studio-base/context/ExtensionRegistryContext";
 import { ExtensionLoader } from "@foxglove/studio-base/services/ExtensionLoader";
 import { ExtensionInfo, ExtensionNamespace } from "@foxglove/studio-base/types/Extensions";
 
 const log = Logger.getLogger(__filename);
-
-const { Provider, useStore } = createZustandContext<StoreApi<ExtensionRegistry>>();
-export const useExtensionRegistry = useStore;
 
 async function registerExtensionPanels(
   extensions: ExtensionInfo[],
@@ -86,7 +84,7 @@ async function registerExtensionPanels(
 export function createExtensionRegistryStore(
   loaders: readonly ExtensionLoader[],
 ): StoreApi<ExtensionRegistry> {
-  return create((set, get) => ({
+  return createStore((set, get) => ({
     downloadExtension: async (url: string) => {
       const res = await fetch(url);
       return new Uint8Array(await res.arrayBuffer());
@@ -156,10 +154,12 @@ export default function ExtensionRegistryProvider({
   children,
   loaders,
 }: PropsWithChildren<{ loaders: readonly ExtensionLoader[] }>): JSX.Element {
+  const [store] = useState(createExtensionRegistryStore(loaders));
+
   return (
-    <Provider createStore={() => createExtensionRegistryStore(loaders)}>
+    <ExtensionRegistryContext.Provider value={store}>
       <InitialRefreshAdapter />
       {children}
-    </Provider>
+    </ExtensionRegistryContext.Provider>
   );
 }

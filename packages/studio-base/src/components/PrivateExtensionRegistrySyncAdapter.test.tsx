@@ -8,9 +8,8 @@ import fetchMock from "fetch-mock";
 
 import { useConsoleApi } from "@foxglove/studio-base/context/ConsoleApiContext";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
-import ExtensionRegistryProvider, {
-  useExtensionRegistry,
-} from "@foxglove/studio-base/providers/ExtensionRegistryProvider";
+import { useExtensionRegistry } from "@foxglove/studio-base/context/ExtensionRegistryContext";
+import ExtensionRegistryProvider from "@foxglove/studio-base/providers/ExtensionRegistryProvider";
 import { ExtensionLoader } from "@foxglove/studio-base/services/ExtensionLoader";
 import { ExtensionInfo } from "@foxglove/studio-base/types/Extensions";
 

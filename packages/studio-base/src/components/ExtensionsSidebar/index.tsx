@@ -24,7 +24,7 @@ import {
   ExtensionMarketplaceDetail,
   useExtensionMarketplace,
 } from "@foxglove/studio-base/context/ExtensionMarketplaceContext";
-import { useExtensionRegistry } from "@foxglove/studio-base/providers/ExtensionRegistryProvider";
+import { useExtensionRegistry } from "@foxglove/studio-base/context/ExtensionRegistryContext";
 
 import helpContent from "./index.help.md";
 

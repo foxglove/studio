@@ -26,7 +26,7 @@ import {
   ExtensionMarketplaceDetail,
   useExtensionMarketplace,
 } from "@foxglove/studio-base/context/ExtensionMarketplaceContext";
-import { useExtensionRegistry } from "@foxglove/studio-base/providers/ExtensionRegistryProvider";
+import { useExtensionRegistry } from "@foxglove/studio-base/context/ExtensionRegistryContext";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
 
