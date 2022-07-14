@@ -206,6 +206,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
 
   const [colorScheme, setColorScheme] = useState<"dark" | "light" | undefined>();
   const [topics, setTopics] = useState<ReadonlyArray<Topic> | undefined>();
+  const [parameters, setParameters] = useState<ReadonlyMap<string, unknown> | undefined>();
   const [messages, setMessages] = useState<ReadonlyArray<MessageEvent<unknown>> | undefined>();
   const [currentTime, setCurrentTime] = useState<bigint | undefined>();
   const [didSeek, setDidSeek] = useState<boolean>(false);
@@ -215,6 +216,11 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
 
   const datatypeHandlers = useMemo(
     () => renderer?.datatypeHandlers ?? new Map<string, MessageHandler[]>(),
+    [renderer],
+  );
+
+  const topicHandlers = useMemo(
+    () => renderer?.topicHandlers ?? new Map<string, MessageHandler[]>(),
     [renderer],
   );
 
@@ -321,6 +327,9 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
         // the current frame, topics may not have changed
         setTopics(renderState.topics);
 
+        // Watch for any changes in the map of observed parameters
+        setParameters(renderState.parameters);
+
         // currentFrame has messages on subscribed topics since the last render call
         if (renderState.currentFrame) {
           // Fully parse lazy messages
@@ -339,6 +348,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
     context.watch("currentFrame");
     context.watch("currentTime");
     context.watch("didSeek");
+    context.watch("parameters");
     context.watch("topics");
   }, [context]);
 
@@ -352,28 +362,29 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
     }
 
     for (const topic of topics) {
-      // Subscribe to all transform topics
       if (
         FRAME_TRANSFORM_DATATYPES.has(topic.datatype) ||
         TF_DATATYPES.has(topic.datatype) ||
         TRANSFORM_STAMPED_DATATYPES.has(topic.datatype)
       ) {
+        // Subscribe to all transform topics
         subscriptions.add(topic.name);
-      } else {
-        const handlers = datatypeHandlers.get(topic.datatype);
-        if (handlers) {
-          // Subscribe to known datatypes if the topic has not been toggled off
-          // or if there are multiple handlers
-          if (handlers.length > 1 || config.topics[topic.name]?.visible !== false) {
-            subscriptions.add(topic.name);
-          }
-        }
+      } else if (config.topics[topic.name]?.visible === true) {
+        // Subscribe if the topic is visible
+        subscriptions.add(topic.name);
+      } else if (
+        // prettier-ignore
+        (topicHandlers.get(topic.name)?.length ?? 0) +
+        (datatypeHandlers.get(topic.datatype)?.length ?? 0) > 1
+      ) {
+        // Subscribe if there are multiple handlers registered for this topic
+        subscriptions.add(topic.name);
       }
     }
 
     const newTopics = Array.from(subscriptions.keys()).sort();
     setTopicsToSubscribe((prevTopics) => (isEqual(prevTopics, newTopics) ? prevTopics : newTopics));
-  }, [topics, config.topics, datatypeHandlers]);
+  }, [topics, config.topics, datatypeHandlers, topicHandlers]);
 
   // Notify the extension context when our subscription list changes
   useEffect(() => {
@@ -383,6 +394,13 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
     log.debug(`Subscribing to [${topicsToSubscribe.join(", ")}]`);
     context.subscribe(topicsToSubscribe.map((topic) => ({ topic, preload: false })));
   }, [context, topicsToSubscribe]);
+
+  // Keep the renderer parameters up to date
+  useEffect(() => {
+    if (renderer) {
+      renderer.setParameters(parameters);
+    }
+  }, [parameters, renderer]);
 
   // Keep the renderer currentTime up to date
   useEffect(() => {
