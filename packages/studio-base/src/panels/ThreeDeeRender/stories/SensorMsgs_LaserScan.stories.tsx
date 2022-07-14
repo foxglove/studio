@@ -122,6 +122,7 @@ function SensorMsgs_LaserScan({
           scene: { enableStats: false },
           topics: {
             "/scan": {
+              visible: true,
               pointSize: 10,
               colorMode: "colormap",
               colorMap: "turbo",

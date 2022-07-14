@@ -135,6 +135,7 @@ function SensorMsgs_PointCloud2({ rgbaFieldName }: { rgbaFieldName: string }): J
           followTf: "base_link",
           topics: {
             "/pointcloud": {
+              visible: true,
               pointSize: 10,
               colorMode: rgbaFieldName,
               colorField: rgbaFieldName,
