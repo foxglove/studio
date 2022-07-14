@@ -628,9 +628,16 @@ export class Renderer extends EventEmitter<RendererEvents> {
       this.addTransformMessage(tf);
     }
 
-    const handlers = this.datatypeHandlers.get(datatype);
-    if (handlers) {
-      for (const handler of handlers) {
+    const handlersForTopic = this.topicHandlers.get(messageEvent.topic);
+    if (handlersForTopic) {
+      for (const handler of handlersForTopic) {
+        handler(messageEvent);
+      }
+    }
+
+    const handlersForDatatype = this.datatypeHandlers.get(datatype);
+    if (handlersForDatatype) {
+      for (const handler of handlersForDatatype) {
         handler(messageEvent);
       }
     }
