@@ -142,7 +142,10 @@ export function UnconnectedPanelLayout(props: Props): React.ReactElement {
                 <EmptyState>Unknown panel type: {type}.</EmptyState>
               </Stack>
             );
-        panelComponentCache.current.set(type, Panel);
+
+        if (panelInfo) {
+          panelComponentCache.current.set(type, Panel);
+        }
       }
 
       // When a panel changes from being the only panel to one of many in a layout and
@@ -175,6 +178,7 @@ export function UnconnectedPanelLayout(props: Props): React.ReactElement {
     },
     [createTile, tabId, panelCatalog],
   );
+
   const bodyToRender = useMemo(
     () =>
       layout != undefined ? (
