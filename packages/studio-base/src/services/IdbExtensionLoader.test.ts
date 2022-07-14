@@ -19,11 +19,11 @@ const pkgInfo = {
     typescript: "4.3.2",
   },
   displayName: "turtlesim",
-  id: "foxglove.studio-extension-turtlesim",
+  id: "Foxglove Inc.studio-extension-turtlesim",
   license: "MPL-2.0",
   main: "./dist/extension.js",
   name: "studio-extension-turtlesim",
-  publisher: "foxglove",
+  publisher: "Foxglove Inc.",
   scripts: {
     build: "fox build",
     "foxglove:prepublish": "fox build --mode production",
@@ -82,7 +82,7 @@ describe("IdbExtensionLoader", () => {
       const expectedInfo = {
         ...pkgInfo,
         namespace: "org",
-        qualifiedName: "org:foxglove:studio-extension-turtlesim",
+        qualifiedName: "org:Foxglove Inc:studio-extension-turtlesim",
       };
 
       mockDBGetAll.mockReturnValue([expectedInfo]);
@@ -103,11 +103,11 @@ describe("IdbExtensionLoader", () => {
     it("Parses package prefixes", async () => {
       const foxe = fs.readFileSync(`${__dirname}/../test/fixtures/prefixed-name-extension.foxe`);
       const expectedInfo = {
-        id: "prefix.package-name",
+        id: "Prefix.package-name",
         name: "package-name",
         namespace: "org",
-        publisher: "prefix",
-        qualifiedName: "org:prefix:package-name",
+        publisher: "Prefix",
+        qualifiedName: "org:Prefix:package-name",
       };
 
       mockDBGetAll.mockReturnValue([expectedInfo]);

@@ -47,7 +47,7 @@ function validatePackageInfo(info: Partial<ExtensionInfo>): ExtensionInfo {
     throw new Error("Invalid extension: missing publisher");
   }
 
-  return { ...info, publisher: publisher.toLowerCase(), name: name.toLowerCase() } as ExtensionInfo;
+  return { ...info, publisher, name: name.toLowerCase() } as ExtensionInfo;
 }
 
 export class IdbExtensionLoader implements ExtensionLoader {
@@ -97,7 +97,7 @@ export class IdbExtensionLoader implements ExtensionLoader {
     }
 
     const rawInfo = validatePackageInfo(JSON.parse(pkgInfoText) as Partial<ExtensionInfo>);
-    const normalizedPublisher = rawInfo.publisher.replace(/\W+/g, "");
+    const normalizedPublisher = rawInfo.publisher.replace(/[^A-Za-z0-9_\s]+/g, "");
 
     const info: ExtensionInfo = {
       ...rawInfo,
