@@ -51,20 +51,13 @@ export class RenderableMeshResource extends RenderableMarker {
     if (forceLoad === true || marker.mesh_resource !== prevMarker.mesh_resource) {
       const opts = { useEmbeddedMaterials: marker.mesh_use_embedded_materials };
       const errors = this.renderer.settings.errors;
-      this._loadModel(marker.mesh_resource, opts)
-        .then(() => {
-          // Remove any mesh fetch error message since loading was successful
-          errors.remove(this.userData.settingsPath, MESH_FETCH_FAILED);
-          // Render a new frame now that the model is loaded
-          this.renderer.queueAnimationFrame();
-        })
-        .catch((err) => {
-          errors.add(
-            this.userData.settingsPath,
-            MESH_FETCH_FAILED,
-            `Unhandled error loading mesh from "${marker.mesh_resource}": ${err.message}`,
-          );
-        });
+      this._loadModel(marker.mesh_resource, opts).catch((err) => {
+        errors.add(
+          this.userData.settingsPath,
+          MESH_FETCH_FAILED,
+          `Unhandled error loading mesh from "${marker.mesh_resource}": ${err.message}`,
+        );
+      });
     }
 
     this.scale.set(marker.scale.x, marker.scale.y, marker.scale.z);
@@ -85,6 +78,13 @@ export class RenderableMeshResource extends RenderableMarker {
     });
 
     if (!cachedModel) {
+      if (!this.renderer.settings.errors.hasError(this.userData.settingsPath, MESH_FETCH_FAILED)) {
+        this.renderer.settings.errors.add(
+          this.userData.settingsPath,
+          MESH_FETCH_FAILED,
+          `Failed to load mesh from "${url}"`,
+        );
+      }
       return;
     }
 
@@ -93,6 +93,11 @@ export class RenderableMeshResource extends RenderableMarker {
       : replaceMaterials(cachedModel.clone(true), this.material);
     this.mesh = mesh;
     this.add(mesh);
+
+    // Remove any mesh fetch error message since loading was successful
+    this.renderer.settings.errors.remove(this.userData.settingsPath, MESH_FETCH_FAILED);
+    // Render a new frame now that the model is loaded
+    this.renderer.queueAnimationFrame();
   }
 }
 
