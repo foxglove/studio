@@ -183,7 +183,7 @@ export class Cameras extends SceneExtension<CameraInfoRenderable> {
     settings: Partial<LayerSettingsCameraInfo> | undefined,
   ): void {
     const prevSettings = renderable.userData.settings;
-    const newSettings = { ...prevSettings, ...settings };
+    const newSettings = { ...DEFAULT_SETTINGS, ...settings };
     const settingsEqual =
       newSettings.color === prevSettings.color &&
       newSettings.distance === prevSettings.distance &&

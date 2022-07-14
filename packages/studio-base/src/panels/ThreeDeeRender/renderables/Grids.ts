@@ -223,14 +223,13 @@ export class Grids extends SceneExtension<GridRenderable> {
       return;
     }
 
+    const newSettings = { ...DEFAULT_SETTINGS, ...settings };
     if (!renderable) {
-      const createSettings = { ...DEFAULT_SETTINGS, ...settings };
-      renderable = this._createRenderable(instanceId, createSettings);
-      renderable.userData.pose = xyzrpyToPose(createSettings.position, createSettings.rotation);
+      renderable = this._createRenderable(instanceId, newSettings);
+      renderable.userData.pose = xyzrpyToPose(newSettings.position, newSettings.rotation);
     }
 
     const prevSettings = renderable.userData.settings;
-    const newSettings = { ...prevSettings, ...settings };
     const markersEqual =
       newSettings.size === prevSettings.size &&
       newSettings.divisions === prevSettings.divisions &&

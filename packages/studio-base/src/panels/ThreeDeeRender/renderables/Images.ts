@@ -251,7 +251,7 @@ export class Images extends SceneExtension<ImageRenderable> {
     settings: Partial<LayerSettingsImage> | undefined,
   ): void {
     const prevSettings = renderable.userData.settings;
-    const newSettings = { ...prevSettings, ...settings };
+    const newSettings = { ...DEFAULT_SETTINGS, ...settings };
     const geometrySettingsEqual =
       newSettings.cameraInfoTopic === prevSettings.cameraInfoTopic &&
       newSettings.distance === prevSettings.distance;
