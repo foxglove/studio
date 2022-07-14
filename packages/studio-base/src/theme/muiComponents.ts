@@ -84,6 +84,11 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
         },
       },
     },
+    MuiFormControl: {
+      defaultProps: {
+        variant: "standard",
+      },
+    },
     MuiButton: {
       defaultProps: {
         disableElevation: true,
