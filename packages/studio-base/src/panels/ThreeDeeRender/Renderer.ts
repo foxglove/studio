@@ -474,10 +474,12 @@ export class Renderer extends EventEmitter<RendererEvents> {
       this.gl.setClearColor(bgColor ?? DARK_BACKDROP);
       this.outlineMaterial.color.set(DARK_OUTLINE);
       this.outlineMaterial.needsUpdate = true;
+      this.selectionBackdrop.setColor(DARK_BACKDROP, 0.9);
     } else {
       this.gl.setClearColor(bgColor ?? LIGHT_BACKDROP);
       this.outlineMaterial.color.set(LIGHT_OUTLINE);
       this.outlineMaterial.needsUpdate = true;
+      this.selectionBackdrop.setColor(LIGHT_BACKDROP, 0.9);
     }
   }
 
