@@ -148,7 +148,7 @@ export class Images extends SceneExtension<ImageRenderable> {
     return entries;
   }
 
-  handleSettingsAction = (action: SettingsTreeAction): void => {
+  override handleSettingsAction = (action: SettingsTreeAction): void => {
     const path = action.payload.path;
     if (action.action !== "update" || path.length !== 3) {
       return;

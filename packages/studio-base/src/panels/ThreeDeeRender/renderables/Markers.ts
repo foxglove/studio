@@ -53,7 +53,7 @@ export class Markers extends SceneExtension<TopicMarkers> {
           icon: "Shapes",
           order: topic.name.toLocaleLowerCase(),
           visible: config.visible ?? DEFAULT_SETTINGS.visible,
-          handler: this.handleSettingsActionTopic,
+          handler: this.handleSettingsAction,
         };
 
         // Create a list of all the namespaces for this topic
@@ -89,7 +89,7 @@ export class Markers extends SceneExtension<TopicMarkers> {
     }
   }
 
-  handleSettingsActionTopic = (action: SettingsTreeAction): void => {
+  override handleSettingsAction = (action: SettingsTreeAction): void => {
     const path = action.payload.path;
     if (action.action !== "update" || path.length !== 3) {
       return;

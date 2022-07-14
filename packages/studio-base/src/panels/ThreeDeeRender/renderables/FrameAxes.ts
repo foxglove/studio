@@ -216,7 +216,7 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
     stringToRgb(this.lineMaterial.color, color);
   }
 
-  handleSettingsAction = (action: SettingsTreeAction): void => {
+  override handleSettingsAction = (action: SettingsTreeAction): void => {
     const path = action.payload.path;
     if (action.action !== "update") {
       return;

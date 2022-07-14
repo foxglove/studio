@@ -150,7 +150,7 @@ export class Grids extends SceneExtension<GridRenderable> {
     super.startFrame(currentTime, renderFrameId, fixedFrameId);
   }
 
-  handleSettingsAction = (action: SettingsTreeAction): void => {
+  override handleSettingsAction = (action: SettingsTreeAction): void => {
     const path = action.payload.path;
 
     // Handle menu actions (delete)
