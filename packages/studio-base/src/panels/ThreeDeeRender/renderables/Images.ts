@@ -22,6 +22,7 @@ import {
 import Logger from "@foxglove/log";
 import { toNanoSec } from "@foxglove/rostime";
 import { SettingsTreeAction, SettingsTreeFields } from "@foxglove/studio";
+import type { RosValue } from "@foxglove/studio-base/players/types";
 import { MutablePoint } from "@foxglove/studio-base/types/Messages";
 
 import { BaseUserData, Renderable } from "../Renderable";
@@ -80,6 +81,17 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     this.userData.material?.dispose();
     this.userData.geometry?.dispose();
     super.dispose();
+  }
+
+  override details(): Record<string, RosValue> {
+    const cameraInfoTopic = this.userData.settings.cameraInfoTopic;
+    const cameraInfoRenderable = cameraInfoTopic
+      ? camerasExtension(this.renderer)?.renderables.get(cameraInfoTopic)
+      : undefined;
+    return {
+      image: this.userData.image,
+      camera_info: cameraInfoRenderable?.userData.cameraInfo,
+    };
   }
 }
 
@@ -232,12 +244,6 @@ export class Images extends SceneExtension<ImageRenderable> {
     }
   };
 
-  private _camerasExtension() {
-    return this.renderer.sceneExtensions.get("foxglove.Cameras") as
-      | SceneExtension<Renderable<CameraInfoUserData>>
-      | undefined;
-  }
-
   private _updateImageRenderable(
     renderable: ImageRenderable,
     image: Image | CompressedImage,
@@ -270,7 +276,9 @@ export class Images extends SceneExtension<ImageRenderable> {
 
     // Create the plane geometry if needed
     if (settings?.cameraInfoTopic != undefined && renderable.userData.geometry == undefined) {
-      const cameraRenderable = this._camerasExtension()?.renderables.get(settings.cameraInfoTopic);
+      const cameraRenderable = camerasExtension(this.renderer)?.renderables.get(
+        settings.cameraInfoTopic,
+      );
       const cameraModel = cameraRenderable?.userData.cameraModel;
       if (cameraModel) {
         // log.debug(
@@ -504,6 +512,12 @@ function cameraInfoTopicMatches(topic: string, cameraInfoTopic: string): boolean
   }
 
   return true;
+}
+
+function camerasExtension(renderer: Renderer) {
+  return renderer.sceneExtensions.get("foxglove.Cameras") as
+    | SceneExtension<Renderable<CameraInfoUserData>>
+    | undefined;
 }
 
 function autoSelectCameraInfoTopic(

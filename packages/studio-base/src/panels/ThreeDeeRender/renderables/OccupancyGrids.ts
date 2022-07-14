@@ -6,6 +6,7 @@ import * as THREE from "three";
 
 import { toNanoSec } from "@foxglove/rostime";
 import { SettingsTreeAction, SettingsTreeFields } from "@foxglove/studio";
+import type { RosValue } from "@foxglove/studio-base/players/types";
 
 import { BaseUserData, Renderable } from "../Renderable";
 import { Renderer } from "../Renderer";
@@ -69,6 +70,10 @@ export class OccupancyGridRenderable extends Renderable<OccupancyGridUserData> {
     this.userData.texture.dispose();
     this.userData.material.dispose();
     this.userData.pickingMaterial.dispose();
+  }
+
+  override details(): Record<string, RosValue> {
+    return this.userData.occupancyGrid;
   }
 }
 

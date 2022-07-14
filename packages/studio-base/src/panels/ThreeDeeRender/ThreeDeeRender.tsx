@@ -104,8 +104,8 @@ function RendererOverlay(props: {
     // Retrieve the original message for Markers. This needs to be rethought for
     // other renderables that are generated from received messages
     const maybeMarkerUserData = selectedRenderable.userData as Partial<MarkerUserData>;
-    const topic = maybeMarkerUserData.topic ?? "";
-    const originalMessage = maybeMarkerUserData.marker ?? {};
+    const topic = maybeMarkerUserData.topic ?? selectedRenderable.name;
+    const originalMessage = selectedRenderable.details();
 
     return {
       object: {

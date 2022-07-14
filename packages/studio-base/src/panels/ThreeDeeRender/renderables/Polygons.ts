@@ -4,6 +4,7 @@
 
 import { toNanoSec } from "@foxglove/rostime";
 import { SettingsTreeAction, SettingsTreeFields } from "@foxglove/studio";
+import type { RosValue } from "@foxglove/studio-base/players/types";
 
 import { BaseUserData, Renderable } from "../Renderable";
 import { Renderer } from "../Renderer";
@@ -51,6 +52,10 @@ export class PolygonRenderable extends Renderable<PolygonUserData> {
   override dispose(): void {
     this.userData.lines?.dispose();
     super.dispose();
+  }
+
+  override details(): Record<string, RosValue> {
+    return this.userData.polygonStamped;
   }
 }
 

@@ -774,21 +774,25 @@ export class Renderer extends EventEmitter<RendererEvents> {
     // Traverse the scene looking for this objectId
     const pickedObject = this.scene.getObjectById(objectId);
 
-    // Find the first ancestor of the picked object that is a Renderable
+    // Find the highest ancestor of the picked object that is a Renderable
+    let selectedRenderable: Renderable | undefined;
     let maybeRenderable = pickedObject as Partial<Renderable> | undefined;
-    while (maybeRenderable && maybeRenderable.isRenderable !== true) {
+    while (maybeRenderable) {
+      if (maybeRenderable.pickable === true) {
+        selectedRenderable = maybeRenderable as Renderable;
+      }
       maybeRenderable = (maybeRenderable.parent ?? undefined) as Partial<Renderable> | undefined;
     }
 
-    const selectedRenderable = maybeRenderable as Renderable | undefined;
-    if (selectedRenderable === prevSelected) {
+    if (prevSelected && selectedRenderable === prevSelected) {
       log.debug(
-        `Deselecting previously selected Renderable ${prevSelected?.id} (${prevSelected?.name})`,
+        `Deselecting previously selected Renderable ${prevSelected.id} (${prevSelected.name})`,
       );
       if (!DEBUG_PICKING) {
         // Re-render with no object selected
         this.animationFrame();
       }
+      this.emit("renderableSelected", undefined, this);
       return;
     }
 

@@ -7,6 +7,7 @@ import * as THREE from "three";
 import { Time, toNanoSec } from "@foxglove/rostime";
 import type { PackedElementField, PointCloud } from "@foxglove/schemas/schemas/typescript";
 import { SettingsTreeAction, SettingsTreeFields, SettingsTreeNode, Topic } from "@foxglove/studio";
+import type { RosValue } from "@foxglove/studio-base/players/types";
 
 import { DynamicBufferGeometry, DynamicFloatBufferGeometry } from "../DynamicBufferGeometry";
 import { BaseUserData, Renderable } from "../Renderable";
@@ -163,6 +164,10 @@ export class PointCloudAndLaserScanRenderable extends Renderable<PointCloudAndLa
     this.userData.material.dispose();
     this.userData.pickingMaterial.dispose();
     super.dispose();
+  }
+
+  override details(): Record<string, RosValue> {
+    return this.userData.pointCloud ?? this.userData.laserScan ?? {};
   }
 }
 

@@ -6,6 +6,7 @@ import * as THREE from "three";
 
 import { toNanoSec } from "@foxglove/rostime";
 import { SettingsTreeAction, SettingsTreeFields } from "@foxglove/studio";
+import type { RosValue } from "@foxglove/studio-base/players/types";
 
 import { BaseUserData, Renderable } from "../Renderable";
 import { Renderer } from "../Renderer";
@@ -83,6 +84,10 @@ export class PoseRenderable extends Renderable<PoseUserData> {
     this.userData.arrow?.dispose();
     this.userData.sphere?.dispose();
     super.dispose();
+  }
+
+  override details(): Record<string, RosValue> {
+    return this.userData.poseMessage;
   }
 }
 
