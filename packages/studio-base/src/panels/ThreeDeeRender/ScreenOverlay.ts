@@ -2,8 +2,9 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import type { vec4 } from "gl-matrix";
 import * as THREE from "three";
+
+type vec4 = [number, number, number, number];
 
 export class ScreenOverlay extends THREE.Object3D {
   private static geometry: THREE.PlaneGeometry | undefined;
