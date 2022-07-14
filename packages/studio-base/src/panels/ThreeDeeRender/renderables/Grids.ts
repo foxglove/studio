@@ -174,7 +174,7 @@ export class Grids extends SceneExtension<GridRenderable> {
     }
 
     if (path.length !== 3) {
-      return;
+      return; // Doesn't match the pattern of ["layers", instanceId, field]
     }
 
     this.saveSetting(path, action.payload.value);

@@ -259,7 +259,7 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     }
 
     if (path.length !== 3) {
-      return;
+      return; // Doesn't match the pattern of ["layers", instanceId, field]
     }
 
     this.saveSetting(path, action.payload.value);
@@ -304,8 +304,10 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
   };
 
   private _fetchUrdf(instanceId: string, url: string): void {
-    // This method should only be called for existing renderables
-    const renderable = this.renderables.get(instanceId)!;
+    const renderable = this.renderables.get(instanceId);
+    if (!renderable) {
+      throw new Error(`_fetchUrdf() should only be called for existing renderables`);
+    }
 
     // Check if a valid URL was provided
     if (!isValidUrl(url)) {
