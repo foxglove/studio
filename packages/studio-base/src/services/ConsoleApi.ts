@@ -41,12 +41,12 @@ type DeviceCodeResponse = {
 
 type ExtensionResponse = {
   activeVersion: string;
-  description: string;
+  description?: string;
   foxe: string;
   id: string;
   name: string;
   publisher: string;
-  sha256Sum: string;
+  sha256Sum?: string;
 };
 
 type TokenArgs = {
