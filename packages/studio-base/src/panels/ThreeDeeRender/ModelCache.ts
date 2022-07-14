@@ -26,8 +26,8 @@ type ErrorCallback = (err: Error) => void;
 
 const DEFAULT_COLOR = new THREE.Color(0x248eff).convertSRGBToLinear();
 
-// https://github.com/Ultimaker/Cura/issues/4141
 const GLTF_MIME_TYPES = ["model/gltf", "model/gltf-binary", "model/gltf+json"];
+// Sourced from <https://github.com/Ultimaker/Cura/issues/4141>
 const STL_MIME_TYPES = ["model/stl", "model/x.stl-ascii", "model/x.stl-binary", "application/sla"];
 const DAE_MIME_TYPES = ["model/vnd.collada+xml"];
 const OBJ_MIME_TYPES = ["model/obj", "text/prs.wavefront-obj"];
