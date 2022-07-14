@@ -191,7 +191,7 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
     MuiDialog: {
       defaultProps: {
         PaperProps: {
-          elevation: 1,
+          elevation: 4,
         },
       },
     },

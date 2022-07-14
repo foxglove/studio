@@ -150,7 +150,7 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
       onClose={onDismiss}
       fullWidth
       PaperProps={{
-        elevation: 1,
+        elevation: 4,
         style: { maxWidth: "calc(min(768px, 100% - 32px))" },
       }}
     >
