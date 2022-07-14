@@ -82,7 +82,7 @@ describe("IdbExtensionLoader", () => {
       const expectedInfo = {
         ...pkgInfo,
         namespace: "private",
-        qualifiedName: "private:studio-extension-turtlesim",
+        qualifiedName: "private:foxglove:studio-extension-turtlesim",
       };
 
       mockDBGetAll.mockReturnValue([expectedInfo]);
@@ -107,7 +107,7 @@ describe("IdbExtensionLoader", () => {
         name: "package-name",
         namespace: "private",
         publisher: "prefix",
-        qualifiedName: "private:package-name",
+        qualifiedName: "private:prefix:package-name",
       };
 
       mockDBGetAll.mockReturnValue([expectedInfo]);

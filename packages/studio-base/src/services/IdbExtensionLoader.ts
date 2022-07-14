@@ -21,7 +21,11 @@ function parsePackageName(name: string): { publisher?: string; name: string } {
   return { publisher: res[1], name: res[2] as string };
 }
 
-function qualifiedName(namespace: ExtensionNamespace, info: ExtensionInfo): string {
+function qualifiedName(
+  namespace: ExtensionNamespace,
+  publisher: string,
+  info: ExtensionInfo,
+): string {
   switch (namespace) {
     case "local":
       // For local namespace we follow the legacy naming convention of using displayName
@@ -29,7 +33,7 @@ function qualifiedName(namespace: ExtensionNamespace, info: ExtensionInfo): stri
       return info.displayName;
     case "private":
       // For private registry we use namespace and package name.
-      return [namespace, info.name].join(":");
+      return [namespace, publisher, info.name].join(":");
   }
 }
 
@@ -93,12 +97,12 @@ export class IdbExtensionLoader implements ExtensionLoader {
     }
 
     const rawInfo = validatePackageInfo(JSON.parse(pkgInfoText) as Partial<ExtensionInfo>);
-    const normalizedPublisher = rawInfo.publisher.toLowerCase().replace(/\W+/g, "");
+    const normalizedPublisher = rawInfo.publisher.replace(/\W+/g, "");
     const info: ExtensionInfo = {
       ...rawInfo,
       id: `${normalizedPublisher}.${rawInfo.name}`,
       namespace: this.namespace,
-      qualifiedName: qualifiedName(this.namespace, rawInfo),
+      qualifiedName: qualifiedName(this.namespace, normalizedPublisher, rawInfo),
     };
     await this.#storage.put({
       content: foxeFileData,
