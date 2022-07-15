@@ -55,7 +55,6 @@ import { RendererContext, useRenderer, useRendererEvent } from "./RendererContex
 import { Stats } from "./Stats";
 import { FRAME_TRANSFORM_DATATYPES } from "./foxglove";
 import { PublishClickEvent, PublishClickType } from "./renderables/PublishClickTool";
-import type { MarkerUserData } from "./renderables/markers/RenderableMarker";
 import { TF_DATATYPES, TRANSFORM_STAMPED_DATATYPES } from "./ros";
 import { Pose } from "./transforms/geometry";
 
