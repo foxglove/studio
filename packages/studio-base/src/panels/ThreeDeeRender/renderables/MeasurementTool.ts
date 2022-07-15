@@ -36,12 +36,12 @@ class FixedSizeMeshMaterial extends THREE.ShaderMaterial {
       fragmentShader: /* glsl */ `
         uniform vec3 color;
         void main() {
-          gl_FragColor = vec4(color, 1.0);
+          gl_FragColor = LinearTosRGB(vec4(color, 1.0));
         }
       `,
       uniforms: {
         canvasSize: { value: [0, 0] },
-        color: { value: new THREE.Color(color) },
+        color: { value: new THREE.Color(color).convertSRGBToLinear() },
       },
     });
   }
