@@ -189,6 +189,8 @@ export class Label extends THREE.Object3D {
       renderer.getSize(tempVec2);
       this.material.uniforms.uCanvasSize!.value[0] = tempVec2.x;
       this.material.uniforms.uCanvasSize!.value[1] = tempVec2.y;
+      this.pickingMaterial.uniforms.uCanvasSize!.value[0] = tempVec2.x;
+      this.pickingMaterial.uniforms.uCanvasSize!.value[1] = tempVec2.y;
     };
 
     this.add(this.mesh);
