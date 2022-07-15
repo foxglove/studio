@@ -26,6 +26,7 @@ export const Point = Object.assign(PublishClickToolTemplate.bind({}), {
     await delay(100);
     const canvas = document.querySelector("canvas")!;
     canvas.dispatchEvent(new MouseEvent("mousemove", { clientX: 400, clientY: 400 }));
+    await delay(100);
   },
 });
 
@@ -37,6 +38,7 @@ export const PosePosition = Object.assign(PublishClickToolTemplate.bind({}), {
     await delay(100);
     const canvas = document.querySelector("canvas")!;
     canvas.dispatchEvent(new MouseEvent("mousemove", { clientX: 400, clientY: 400 }));
+    await delay(100);
   },
 });
 
@@ -51,6 +53,7 @@ export const PoseComplete = Object.assign(PublishClickToolTemplate.bind({}), {
     canvas.dispatchEvent(new MouseEvent("mousedown", { clientX: 400, clientY: 400 }));
     canvas.dispatchEvent(new MouseEvent("click", { clientX: 400, clientY: 400 }));
     canvas.dispatchEvent(new MouseEvent("mousemove", { clientX: 500, clientY: 300 }));
+    await delay(100);
   },
 });
 
@@ -62,6 +65,7 @@ export const PoseEstimatePosition = Object.assign(PublishClickToolTemplate.bind(
     await delay(100);
     const canvas = document.querySelector("canvas")!;
     canvas.dispatchEvent(new MouseEvent("mousemove", { clientX: 400, clientY: 400 }));
+    await delay(100);
   },
 });
 
