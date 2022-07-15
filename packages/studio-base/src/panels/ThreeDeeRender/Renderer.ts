@@ -837,7 +837,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     let selectedRenderable: Renderable | undefined;
     let maybeRenderable = pickedObject as Partial<Renderable> | undefined;
     while (maybeRenderable) {
-      if (maybeRenderable.pickable === true) {
+      if (maybeRenderable.picking === true) {
         selectedRenderable = maybeRenderable as Renderable;
       }
       maybeRenderable = (maybeRenderable.parent ?? undefined) as Partial<Renderable> | undefined;
