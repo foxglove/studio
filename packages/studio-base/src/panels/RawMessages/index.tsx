@@ -12,12 +12,18 @@
 //   You may not use this file except in compliance with the License.
 
 import { useTheme } from "@fluentui/react";
-import CheckboxBlankOutlineIcon from "@mdi/svg/svg/checkbox-blank-outline.svg";
-import CheckboxMarkedIcon from "@mdi/svg/svg/checkbox-marked.svg";
+import PlusMinusBoxIcon from "@mdi/svg/svg/plus-minus-box.svg";
 import PlusMinusIcon from "@mdi/svg/svg/plus-minus.svg";
 import LessIcon from "@mdi/svg/svg/unfold-less-horizontal.svg";
 import MoreIcon from "@mdi/svg/svg/unfold-more-horizontal.svg";
-import { MenuItem, Select, SelectChangeEvent, Theme } from "@mui/material";
+import {
+  Checkbox,
+  FormControlLabel,
+  MenuItem,
+  Select,
+  SelectChangeEvent,
+  Theme,
+} from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import { Immutable } from "immer";
 // eslint-disable-next-line no-restricted-imports
@@ -30,7 +36,6 @@ import { useLatest } from "react-use";
 import { SettingsTreeAction } from "@foxglove/studio";
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
-import Icon from "@foxglove/studio-base/components/Icon";
 import useGetItemStringWithTimezone from "@foxglove/studio-base/components/JsonTree/useGetItemStringWithTimezone";
 import MessagePathInput from "@foxglove/studio-base/components/MessagePathSyntax/MessagePathInput";
 import {
@@ -47,6 +52,7 @@ import { useMessageDataItem } from "@foxglove/studio-base/components/MessagePath
 import Panel from "@foxglove/studio-base/components/Panel";
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
+import ToolbarIconButton from "@foxglove/studio-base/components/PanelToolbar/ToolbarIconButton";
 import getDiff, {
   diffLabels,
   diffLabelsByLabelText,
@@ -440,10 +446,6 @@ function RawMessages(props: Props) {
         })
       : {};
 
-    const CheckboxComponent = showFullMessageForDiff
-      ? CheckboxMarkedIcon
-      : CheckboxBlankOutlineIcon;
-
     return (
       <div className={classes.topic}>
         <Metadata
@@ -463,15 +465,18 @@ function RawMessages(props: Props) {
         ) : (
           <>
             {diffEnabled && (
-              <div
-                style={{ cursor: "pointer", fontSize: "11px" }}
-                onClick={() => saveConfig({ showFullMessageForDiff: !showFullMessageForDiff })}
-              >
-                <Icon style={{ verticalAlign: "middle" }}>
-                  <CheckboxComponent />
-                </Icon>{" "}
-                Show full msg
-              </div>
+              <FormControlLabel
+                disableTypography
+                checked={showFullMessageForDiff}
+                control={
+                  <Checkbox
+                    size="small"
+                    defaultChecked
+                    onChange={() => saveConfig({ showFullMessageForDiff: !showFullMessageForDiff })}
+                  />
+                }
+                label="Show full msg"
+              />
             )}
             <Tree
               labelRenderer={(raw) => (
@@ -651,19 +656,21 @@ function RawMessages(props: Props) {
   return (
     <div className={classes.root}>
       <PanelToolbar helpContent={helpContent}>
-        <Icon tooltip="Toggle diff" size="medium" fade onClick={onToggleDiff} active={diffEnabled}>
-          <PlusMinusIcon />
-        </Icon>
-        <Icon
-          tooltip={expandAll ?? false ? "Collapse all" : "Expand all"}
-          size="medium"
-          fade
-          dataTest="expand-all"
+        <ToolbarIconButton
+          title="Toggle diff"
+          onClick={onToggleDiff}
+          color={diffEnabled ? "default" : "inherit"}
+        >
+          {diffEnabled ? <PlusMinusBoxIcon /> : <PlusMinusIcon />}
+        </ToolbarIconButton>
+        <ToolbarIconButton
+          title={expandAll === true ? "Collapse all" : "Expand all"}
+          color={diffEnabled ? "default" : "inherit"}
           onClick={onToggleExpandAll}
-          style={{ position: "relative", top: 1 }}
+          data-test="expand-all"
         >
           {expandAll ?? false ? <LessIcon /> : <MoreIcon />}
-        </Icon>
+        </ToolbarIconButton>
         <div className={classes.topicInputs}>
           <MessagePathInput
             index={0}
