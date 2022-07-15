@@ -2248,9 +2248,6 @@ __metadata:
 "@foxglove/den@workspace:*, @foxglove/den@workspace:packages/den":
   version: 0.0.0-use.local
   resolution: "@foxglove/den@workspace:packages/den"
-  dependencies:
-    async-mutex: 0.3.2
-    typescript: 4.6.2
   languageName: unknown
   linkType: soft
 
@@ -2518,6 +2515,7 @@ __metadata:
     "@foxglove/rostime": 1.1.2
     "@foxglove/schemas": 0.2.0
     "@foxglove/studio": "workspace:*"
+    "@foxglove/three-text": "workspace:*"
     "@foxglove/ulog": 2.1.2
     "@foxglove/velodyne-cloud": 1.0.1
     "@foxglove/wasm-bz2": 0.1.0
@@ -2576,7 +2574,7 @@ __metadata:
     "@types/uuid": 8.3.4
     "@types/wicg-file-system-access": 2020.9.5
     "@types/ws": 8.5.2
-    "@wojtekmaj/enzyme-adapter-react-17": 0.6.6
+    "@wojtekmaj/enzyme-adapter-react-17": 0.6.7
     amplitude-js: 8.16.1
     argparse: 2.0.1
     async-mutex: 0.3.2
@@ -2613,7 +2611,7 @@ __metadata:
     lodash: 4.17.21
     mathjs: 10.1.1
     memoize-weak: 1.0.2
-    moment: 2.29.2
+    moment: 2.29.4
     moment-duration-format: 2.3.2
     moment-timezone: 0.5.34
     monaco-editor: 0.30.1
@@ -2684,6 +2682,24 @@ __metadata:
 "@foxglove/studio@workspace:*, @foxglove/studio@workspace:packages/studio":
   version: 0.0.0-use.local
   resolution: "@foxglove/studio@workspace:packages/studio"
+  languageName: unknown
+  linkType: soft
+
+"@foxglove/three-text@workspace:*, @foxglove/three-text@workspace:packages/three-text":
+  version: 0.0.0-use.local
+  resolution: "@foxglove/three-text@workspace:packages/three-text"
+  dependencies:
+    "@mapbox/tiny-sdf": 2.0.5
+    "@storybook/addon-actions": 6.4.18
+    "@storybook/addon-essentials": 6.4.18
+    "@storybook/builder-webpack5": 6.4.18
+    "@storybook/manager-webpack5": 6.4.18
+    "@storybook/react": 6.4.18
+    three: 0.140.2
+    ts-loader: 9.2.7
+    typescript: 4.6.2
+  peerDependencies:
+    three: ">=0.140.2"
   languageName: unknown
   linkType: soft
 
@@ -3085,6 +3101,13 @@ __metadata:
     lodash: ^4.17.15
     tmp-promise: ^3.0.2
   checksum: 12527e42c2865504eb2a91cc419e52dd7a68c1eda1138c0713a1520a5413ef9dabfa9d21b7908d211998b75c60035d1d5ae87c00fe8ff5be8fa8449525235dd5
+  languageName: node
+  linkType: hard
+
+"@mapbox/tiny-sdf@npm:2.0.5":
+  version: 2.0.5
+  resolution: "@mapbox/tiny-sdf@npm:2.0.5"
+  checksum: 23fd158ea795592cf1f825fcac20d48230c54a6985a931f609af8b4e69cd99f1c798dc893baec63f4fd6f42ffc3e7292b39f4126966412edd4606eb3dbf86b54
   languageName: node
   linkType: hard
 
@@ -7019,11 +7042,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@wojtekmaj/enzyme-adapter-react-17@npm:0.6.6":
-  version: 0.6.6
-  resolution: "@wojtekmaj/enzyme-adapter-react-17@npm:0.6.6"
+"@wojtekmaj/enzyme-adapter-react-17@npm:0.6.7":
+  version: 0.6.7
+  resolution: "@wojtekmaj/enzyme-adapter-react-17@npm:0.6.7"
   dependencies:
-    "@wojtekmaj/enzyme-adapter-utils": ^0.1.2
+    "@wojtekmaj/enzyme-adapter-utils": ^0.1.4
     enzyme-shallow-equal: ^1.0.0
     has: ^1.0.0
     prop-types: ^15.7.0
@@ -7033,13 +7056,13 @@ __metadata:
     enzyme: ^3.0.0
     react: ^17.0.0-0
     react-dom: ^17.0.0-0
-  checksum: bf6dad41313456d7a80fdd44e0a0e95a49af8f841b1d0ac5a03c48973877ecaf9ac4d457e3f6edd0df7d40abfe625a8aaa77ffb822224a25e5e866be41d9ea0f
+  checksum: 5cd4c01adf0d778c5ef749964ae971422f0d445be11f9585de6a077edc32ea7ca74f14c240cf5f0848a8147596d84ed133820c91fc98d33f02b9dc6eee3fd158
   languageName: node
   linkType: hard
 
-"@wojtekmaj/enzyme-adapter-utils@npm:^0.1.2":
-  version: 0.1.2
-  resolution: "@wojtekmaj/enzyme-adapter-utils@npm:0.1.2"
+"@wojtekmaj/enzyme-adapter-utils@npm:^0.1.4":
+  version: 0.1.4
+  resolution: "@wojtekmaj/enzyme-adapter-utils@npm:0.1.4"
   dependencies:
     function.prototype.name: ^1.1.0
     has: ^1.0.0
@@ -7047,7 +7070,7 @@ __metadata:
     prop-types: ^15.7.0
   peerDependencies:
     react: ^17.0.0-0
-  checksum: 4b2f5ff155c600137342c0ee19512b27d469fef98c20fee85785014e71d21b75cab48f93c8004548bd86410395e7577265acfa873e7a2d863c73291734c6d652
+  checksum: af567b15a734ee5eb224e70cb77f42c1761ec0a0997663fdf10209988ea2dc09d5729ddfbeab9980c5e2358809004cd05187031b8c9a6f499aa59a82dea466d8
   languageName: node
   linkType: hard
 
@@ -17871,10 +17894,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"moment@npm:2.29.2, moment@npm:>= 2.9.0, moment@npm:>=2.14.0":
-  version: 2.29.2
-  resolution: "moment@npm:2.29.2"
-  checksum: ee850b5776485e2af0775ceb3cfebaa7d7638f0a750fe0678fcae24c310749f96c1938808384bd422a55e5703834a71fcb09c8a1d36d9cf847f6ed0205d7a3e5
+"moment@npm:2.29.4, moment@npm:>= 2.9.0, moment@npm:>=2.14.0":
+  version: 2.29.4
+  resolution: "moment@npm:2.29.4"
+  checksum: 0ec3f9c2bcba38dc2451b1daed5daded747f17610b92427bebe1d08d48d8b7bdd8d9197500b072d14e326dd0ccf3e326b9e3d07c5895d3d49e39b6803b76e80e
   languageName: node
   linkType: hard
 

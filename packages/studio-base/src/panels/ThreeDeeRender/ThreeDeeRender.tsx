@@ -2,6 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import RulerIcon from "@mdi/svg/svg/ruler.svg";
+import { IconButton, Paper } from "@mui/material";
 import { isEqual, cloneDeep, merge } from "lodash";
 import React, { useCallback, useLayoutEffect, useEffect, useState, useMemo, useRef } from "react";
 import ReactDOM from "react-dom";
@@ -37,9 +39,10 @@ import Interactions, {
   TabType,
 } from "./Interactions";
 import type { Renderable } from "./Renderable";
-import { Renderer, RendererConfig } from "./Renderer";
-import { RendererContext, useRendererEvent } from "./RendererContext";
+import { MessageHandler, Renderer, RendererConfig } from "./Renderer";
+import { RendererContext, useRenderer, useRendererEvent } from "./RendererContext";
 import { Stats } from "./Stats";
+import { FRAME_TRANSFORM_DATATYPES } from "./foxglove";
 import type { MarkerUserData } from "./renderables/markers/RenderableMarker";
 import { TF_DATATYPES, TRANSFORM_STAMPED_DATATYPES } from "./ros";
 
@@ -52,7 +55,6 @@ const PANEL_STYLE: React.CSSProperties = {
   display: "flex",
   position: "relative",
 };
-const CANVAS_STYLE: React.CSSProperties = { position: "absolute", top: 0, left: 0 };
 
 /**
  * Provides DOM overlay elements on top of the 3D scene (e.g. stats, debug GUI).
@@ -60,13 +62,26 @@ const CANVAS_STYLE: React.CSSProperties = { position: "absolute", top: 0, left: 
 function RendererOverlay(props: {
   addPanel: LayoutActions["addPanel"];
   enableStats: boolean;
+  measureActive: boolean;
+  measureDistance?: number;
+  onClickMeasure: () => void;
 }): JSX.Element {
   const [selectedRenderable, setSelectedRenderable] = useState<Renderable | undefined>(undefined);
   const [interactionsTabType, setInteractionsTabType] = useState<TabType | undefined>(undefined);
+  const renderer = useRenderer();
+
+  // Toggle object selection mode on/off in the renderer
+  useEffect(() => {
+    if (renderer) {
+      renderer.setPickingEnabled(interactionsTabType != undefined);
+    }
+  }, [interactionsTabType, renderer]);
 
   useRendererEvent("renderableSelected", (renderable) => {
     setSelectedRenderable(renderable);
-    setInteractionsTabType(renderable ? OBJECT_TAB_TYPE : undefined);
+    if (renderable) {
+      setInteractionsTabType(OBJECT_TAB_TYPE);
+    }
   });
 
   const stats = props.enableStats ? (
@@ -89,8 +104,8 @@ function RendererOverlay(props: {
     // Retrieve the original message for Markers. This needs to be rethought for
     // other renderables that are generated from received messages
     const maybeMarkerUserData = selectedRenderable.userData as Partial<MarkerUserData>;
-    const topic = maybeMarkerUserData.topic ?? "";
-    const originalMessage = maybeMarkerUserData.marker ?? {};
+    const topic = maybeMarkerUserData.topic ?? selectedRenderable.name;
+    const originalMessage = selectedRenderable.details();
 
     return {
       object: {
@@ -116,6 +131,10 @@ function RendererOverlay(props: {
           position: "absolute",
           top: "10px",
           right: "10px",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-end",
+          gap: 10,
         }}
       >
         <Interactions
@@ -124,6 +143,17 @@ function RendererOverlay(props: {
           interactionsTabType={interactionsTabType}
           setInteractionsTabType={setInteractionsTabType}
         />
+        <Paper square={false} elevation={4}>
+          <IconButton
+            data-test="measure-button"
+            color={props.measureActive ? "info" : "inherit"}
+            title={props.measureActive ? "Cancel measuring" : "Measure distance"}
+            onClick={props.onClickMeasure}
+          >
+            <RulerIcon style={{ width: 16, height: 16 }} />
+          </IconButton>
+        </Paper>
+        <div>{props.measureDistance?.toFixed(2)}</div>
       </div>
       {clickedObjects.length > 1 && !selectedObject && (
         <InteractionContextMenu
@@ -176,6 +206,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
 
   const [colorScheme, setColorScheme] = useState<"dark" | "light" | undefined>();
   const [topics, setTopics] = useState<ReadonlyArray<Topic> | undefined>();
+  const [parameters, setParameters] = useState<ReadonlyMap<string, unknown> | undefined>();
   const [messages, setMessages] = useState<ReadonlyArray<MessageEvent<unknown>> | undefined>();
   const [currentTime, setCurrentTime] = useState<bigint | undefined>();
   const [didSeek, setDidSeek] = useState<boolean>(false);
@@ -183,7 +214,15 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
   const renderRef = useRef({ needsRender: false });
   const [renderDone, setRenderDone] = useState<(() => void) | undefined>();
 
-  const datatypeHandlers = useMemo(() => renderer?.datatypeHandlers ?? new Map(), [renderer]);
+  const datatypeHandlers = useMemo(
+    () => renderer?.datatypeHandlers ?? new Map<string, MessageHandler[]>(),
+    [renderer],
+  );
+
+  const topicHandlers = useMemo(
+    () => renderer?.topicHandlers ?? new Map<string, MessageHandler[]>(),
+    [renderer],
+  );
 
   // Config cameraState
   const setCameraState = useCallback((state: CameraState) => {
@@ -288,6 +327,9 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
         // the current frame, topics may not have changed
         setTopics(renderState.topics);
 
+        // Watch for any changes in the map of observed parameters
+        setParameters(renderState.parameters);
+
         // currentFrame has messages on subscribed topics since the last render call
         if (renderState.currentFrame) {
           // Fully parse lazy messages
@@ -306,6 +348,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
     context.watch("currentFrame");
     context.watch("currentTime");
     context.watch("didSeek");
+    context.watch("parameters");
     context.watch("topics");
   }, [context]);
 
@@ -319,21 +362,29 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
     }
 
     for (const topic of topics) {
-      // Subscribe to all transform topics
-      if (TF_DATATYPES.has(topic.datatype) || TRANSFORM_STAMPED_DATATYPES.has(topic.datatype)) {
+      if (
+        FRAME_TRANSFORM_DATATYPES.has(topic.datatype) ||
+        TF_DATATYPES.has(topic.datatype) ||
+        TRANSFORM_STAMPED_DATATYPES.has(topic.datatype)
+      ) {
+        // Subscribe to all transform topics
         subscriptions.add(topic.name);
-      } else if (datatypeHandlers.has(topic.datatype)) {
-        // Subscribe to known datatypes if the topic has not been toggled off
-        const topicConfig = config.topics[topic.name];
-        if (topicConfig?.visible !== false) {
-          subscriptions.add(topic.name);
-        }
+      } else if (config.topics[topic.name]?.visible === true) {
+        // Subscribe if the topic is visible
+        subscriptions.add(topic.name);
+      } else if (
+        // prettier-ignore
+        (topicHandlers.get(topic.name)?.length ?? 0) +
+        (datatypeHandlers.get(topic.datatype)?.length ?? 0) > 1
+      ) {
+        // Subscribe if there are multiple handlers registered for this topic
+        subscriptions.add(topic.name);
       }
     }
 
     const newTopics = Array.from(subscriptions.keys()).sort();
     setTopicsToSubscribe((prevTopics) => (isEqual(prevTopics, newTopics) ? prevTopics : newTopics));
-  }, [topics, config.topics, datatypeHandlers]);
+  }, [topics, config.topics, datatypeHandlers, topicHandlers]);
 
   // Notify the extension context when our subscription list changes
   useEffect(() => {
@@ -343,6 +394,13 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
     log.debug(`Subscribing to [${topicsToSubscribe.join(", ")}]`);
     context.subscribe(topicsToSubscribe.map((topic) => ({ topic, preload: false })));
   }, [context, topicsToSubscribe]);
+
+  // Keep the renderer parameters up to date
+  useEffect(() => {
+    if (renderer) {
+      renderer.setParameters(parameters);
+    }
+  }, [parameters, renderer]);
 
   // Keep the renderer currentTime up to date
   useEffect(() => {
@@ -425,6 +483,30 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
     [context.layout],
   );
 
+  const [measureActive, setMeasureActive] = useState(false);
+  const [measureDistance, setMeasureDistance] = useState<number | undefined>();
+  useEffect(() => {
+    const onStart = () => setMeasureActive(true);
+    const onChange = () => setMeasureDistance(renderer?.measurementTool.distance);
+    const onEnd = () => setMeasureActive(false);
+    renderer?.measurementTool.addEventListener("foxglove.measure-start", onStart);
+    renderer?.measurementTool.addEventListener("foxglove.measure-change", onChange);
+    renderer?.measurementTool.addEventListener("foxglove.measure-end", onEnd);
+    return () => {
+      renderer?.measurementTool.removeEventListener("foxglove.measure-start", onStart);
+      renderer?.measurementTool.removeEventListener("foxglove.measure-change", onChange);
+      renderer?.measurementTool.removeEventListener("foxglove.measure-end", onEnd);
+    };
+  }, [renderer?.measurementTool]);
+
+  const onClickMeasure = useCallback(() => {
+    if (measureActive) {
+      renderer?.measurementTool.stopMeasuring();
+    } else {
+      renderer?.measurementTool.startMeasuring();
+    }
+  }, [measureActive, renderer?.measurementTool]);
+
   return (
     <ThemeProvider isDark={colorScheme === "dark"}>
       <div style={PANEL_STYLE} ref={resizeRef}>
@@ -435,10 +517,24 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
             // position:absolute
             style={{ width, height }}
           />
-          <canvas ref={setCanvas} style={CANVAS_STYLE} />
+          <canvas
+            ref={setCanvas}
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              ...(measureActive && { cursor: "crosshair" }),
+            }}
+          />
         </CameraListener>
         <RendererContext.Provider value={renderer}>
-          <RendererOverlay addPanel={addPanel} enableStats={config.scene.enableStats ?? false} />
+          <RendererOverlay
+            addPanel={addPanel}
+            enableStats={config.scene.enableStats ?? false}
+            measureActive={measureActive}
+            measureDistance={measureDistance}
+            onClickMeasure={onClickMeasure}
+          />
         </RendererContext.Provider>
       </div>
     </ThemeProvider>
