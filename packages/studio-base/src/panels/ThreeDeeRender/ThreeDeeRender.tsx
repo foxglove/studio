@@ -3,7 +3,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import RulerIcon from "@mdi/svg/svg/ruler.svg";
-import SettingsIcon from "@mui/icons-material/Settings";
 import {
   IconButton,
   ListItemIcon,
@@ -13,11 +12,11 @@ import {
   Paper,
   useTheme,
 } from "@mui/material";
-import { isEqual, cloneDeep, merge, round } from "lodash";
+import { isEqual, cloneDeep, merge } from "lodash";
 import React, { useCallback, useLayoutEffect, useEffect, useState, useMemo, useRef } from "react";
 import ReactDOM from "react-dom";
 import { useResizeDetector } from "react-resize-detector";
-import { useLongPress } from "react-use";
+import { useLatest, useLongPress } from "react-use";
 import { DeepPartial } from "ts-essentials";
 import { useDebouncedCallback } from "use-debounce";
 
@@ -43,6 +42,7 @@ import PublishGoalIcon from "@foxglove/studio-base/components/PublishGoalIcon";
 import PublishPointIcon from "@foxglove/studio-base/components/PublishPointIcon";
 import PublishPoseEstimateIcon from "@foxglove/studio-base/components/PublishPoseEstimateIcon";
 import useCleanup from "@foxglove/studio-base/hooks/useCleanup";
+import { DEFAULT_PUBLISH_SETTINGS } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/CoreSettings";
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
 import { Point, makeCovarianceArray } from "@foxglove/studio-base/util/geometry";
 
@@ -73,17 +73,8 @@ const PANEL_STYLE: React.CSSProperties = {
   position: "relative",
 };
 
-const DEFAULT_PUBLISH_SETTINGS = {
-  poseTopic: "/move_base_simple/goal",
-  pointTopic: "/clicked_point",
-  poseEstimateTopic: "/initialpose",
-  poseEstimateXDeviation: 0.5,
-  poseEstimateYDeviation: 0.5,
-  poseEstimateThetaDeviation: round(Math.PI / 12, 8),
-};
-
 const PublishClickIcons: Record<PublishClickType, React.ReactNode> = {
-  goal: <PublishGoalIcon fontSize="inherit" />,
+  pose: <PublishGoalIcon fontSize="inherit" />,
   point: <PublishPointIcon fontSize="inherit" />,
   pose_estimate: <PublishPoseEstimateIcon fontSize="inherit" />,
 };
@@ -150,7 +141,6 @@ function RendererOverlay(props: {
   publishClickType: PublishClickType;
   onChangePublishClickType: (_: PublishClickType) => void;
   onClickPublish: () => void;
-  openSettings: () => void;
 }): JSX.Element {
   const [selectedRenderable, setSelectedRenderable] = useState<Renderable | undefined>(undefined);
   const [interactionsTabType, setInteractionsTabType] = useState<TabType | undefined>(undefined);
@@ -296,13 +286,13 @@ function RendererOverlay(props: {
                   <ListItemText>Publish pose estimate</ListItemText>
                 </MenuItem>
                 <MenuItem
-                  selected={props.publishClickType === "goal"}
+                  selected={props.publishClickType === "pose"}
                   onClick={() => {
-                    props.onChangePublishClickType("goal");
+                    props.onChangePublishClickType("pose");
                     setPublishMenuExpanded(false);
                   }}
                 >
-                  <ListItemIcon>{PublishClickIcons.goal}</ListItemIcon>
+                  <ListItemIcon>{PublishClickIcons.pose}</ListItemIcon>
                   <ListItemText>Publish pose</ListItemText>
                 </MenuItem>
                 <MenuItem
@@ -314,17 +304,6 @@ function RendererOverlay(props: {
                 >
                   <ListItemIcon>{PublishClickIcons.point}</ListItemIcon>
                   <ListItemText>Publish point</ListItemText>
-                </MenuItem>
-                <MenuItem
-                  onClick={() => {
-                    props.openSettings();
-                    setPublishMenuExpanded(false);
-                  }}
-                >
-                  <ListItemIcon>
-                    <SettingsIcon fontSize="inherit" />
-                  </ListItemIcon>
-                  <ListItemText>Edit settings…</ListItemText>
                 </MenuItem>
               </Menu>
             </>
@@ -663,9 +642,13 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
   }, [measureActive, renderer]);
 
   const [publishActive, setPublishActive] = useState(false);
-  const [publishClickType, setPublishClickType] = useState<PublishClickType>(
-    renderer?.publishClickTool.publishClickType ?? "point",
-  );
+  useEffect(() => {
+    if (renderer?.publishClickTool.publishClickType !== config.publish.type) {
+      renderer?.publishClickTool.setPublishClickType(config.publish.type);
+      // stop if we changed types while a publish action was already in progress
+      renderer?.publishClickTool.stop();
+    }
+  }, [config.publish.type, renderer]);
 
   const publishTopics = useMemo(() => {
     return {
@@ -693,10 +676,10 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
     };
   }, [publishTopics, context]);
 
+  const latestPublishConfig = useLatest(config.publish);
+
   useEffect(() => {
     const onStart = () => setPublishActive(true);
-    const onTypeChange = () =>
-      setPublishClickType(renderer?.publishClickTool.publishClickType ?? "point");
     const onSubmit = (event: PublishClickEvent & { type: "foxglove.publish-submit" }) => {
       const frameId = renderer?.fixedFrameId;
       if (frameId == undefined) {
@@ -714,7 +697,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
             context.publish(publishTopics.point, message);
             break;
           }
-          case "goal": {
+          case "pose": {
             const message = makePoseMessage(event.pose, frameId);
             context.publish(publishTopics.goal, message);
             break;
@@ -723,9 +706,9 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
             const message = makePoseEstimateMessage(
               event.pose,
               frameId,
-              config.publish.poseEstimateXDeviation,
-              config.publish.poseEstimateYDeviation,
-              config.publish.poseEstimateThetaDeviation,
+              latestPublishConfig.current.poseEstimateXDeviation,
+              latestPublishConfig.current.poseEstimateYDeviation,
+              latestPublishConfig.current.poseEstimateThetaDeviation,
             );
             context.publish(publishTopics.pose, message);
             break;
@@ -738,15 +721,19 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
     const onEnd = () => setPublishActive(false);
     renderer?.publishClickTool.addEventListener("foxglove.publish-start", onStart);
     renderer?.publishClickTool.addEventListener("foxglove.publish-submit", onSubmit);
-    renderer?.publishClickTool.addEventListener("foxglove.publish-type-change", onTypeChange);
     renderer?.publishClickTool.addEventListener("foxglove.publish-end", onEnd);
     return () => {
       renderer?.publishClickTool.removeEventListener("foxglove.publish-start", onStart);
       renderer?.publishClickTool.removeEventListener("foxglove.publish-submit", onSubmit);
-      renderer?.publishClickTool.removeEventListener("foxglove.publish-type-change", onTypeChange);
       renderer?.publishClickTool.removeEventListener("foxglove.publish-end", onEnd);
     };
-  }, [config.publish, context, publishTopics, renderer?.fixedFrameId, renderer?.publishClickTool]);
+  }, [
+    context,
+    latestPublishConfig,
+    publishTopics,
+    renderer?.fixedFrameId,
+    renderer?.publishClickTool,
+  ]);
 
   const onClickPublish = useCallback(() => {
     if (publishActive) {
@@ -787,12 +774,11 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
             canPublish={context.publish != undefined}
             publishActive={publishActive}
             onClickPublish={onClickPublish}
-            publishClickType={publishClickType}
+            publishClickType={renderer?.publishClickTool.publishClickType ?? "point"}
             onChangePublishClickType={(type) => {
               renderer?.publishClickTool.setPublishClickType(type);
               renderer?.publishClickTool.start();
             }}
-            openSettings={() => context.openPanelSettings()}
           />
         </RendererContext.Provider>
       </div>

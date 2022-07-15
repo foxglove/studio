@@ -51,7 +51,7 @@ import { PointCloudsAndLaserScans } from "./renderables/PointCloudsAndLaserScans
 import { Polygons } from "./renderables/Polygons";
 import { PoseArrays } from "./renderables/PoseArrays";
 import { Poses } from "./renderables/Poses";
-import { PublishClickTool } from "./renderables/PublishClickTool";
+import { PublishClickTool, PublishClickType } from "./renderables/PublishClickTool";
 import { MarkerPool } from "./renderables/markers/MarkerPool";
 import {
   Header,
@@ -108,6 +108,8 @@ export type RendererConfig = {
     topicsVisible?: boolean;
   };
   publish: {
+    /** The type of message to publish when clicking in the scene */
+    type: PublishClickType;
     /** The topic on which to publish poses */
     poseTopic: string;
     /** The topic on which to publish points */
@@ -310,6 +312,9 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.aspect = renderSize.width / renderSize.height;
     log.debug(`Initialized ${renderSize.width}x${renderSize.height} renderer (${samples}x MSAA)`);
 
+    this.measurementTool = new MeasurementTool(this);
+    this.publishClickTool = new PublishClickTool(this);
+
     this.addSceneExtension(new CoreSettings(this));
     this.addSceneExtension(new Cameras(this));
     this.addSceneExtension(new FrameAxes(this));
@@ -321,8 +326,8 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.addSceneExtension(new Polygons(this));
     this.addSceneExtension(new Poses(this));
     this.addSceneExtension(new PoseArrays(this));
-    this.addSceneExtension((this.measurementTool = new MeasurementTool(this)));
-    this.addSceneExtension((this.publishClickTool = new PublishClickTool(this)));
+    this.addSceneExtension(this.measurementTool);
+    this.addSceneExtension(this.publishClickTool);
 
     this._watchDevicePixelRatio();
 

@@ -2,22 +2,33 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { cloneDeep, set } from "lodash";
+import { cloneDeep, round, set } from "lodash";
 
 import { DEFAULT_CAMERA_STATE } from "@foxglove/regl-worldview";
 import { SettingsTreeAction } from "@foxglove/studio";
 
-import { Renderer } from "../Renderer";
+import { Renderer, RendererConfig } from "../Renderer";
 import { SceneExtension } from "../SceneExtension";
 import { SettingsTreeEntry } from "../SettingsManager";
 import { fieldSize, PRECISION_DEGREES, PRECISION_DISTANCE, SelectEntry } from "../settings";
 import type { FrameAxes } from "./FrameAxes";
+import { PublishClickType } from "./PublishClickTool";
 
 export const DEFAULT_LABEL_SCALE_FACTOR = 1;
 export const DEFAULT_AXIS_SCALE = 1;
 export const DEFAULT_LINE_WIDTH_PX = 2;
 export const DEFAULT_LINE_COLOR_STR = "#ffff00";
 export const DEFAULT_TF_LABEL_SIZE = 0.2;
+
+export const DEFAULT_PUBLISH_SETTINGS: RendererConfig["publish"] = {
+  type: "point",
+  poseTopic: "/move_base_simple/goal",
+  pointTopic: "/clicked_point",
+  poseEstimateTopic: "/initialpose",
+  poseEstimateXDeviation: 0.5,
+  poseEstimateYDeviation: 0.5,
+  poseEstimateThetaDeviation: round(Math.PI / 12, 8),
+};
 
 const ONE_DEGREE = Math.PI / 180;
 
@@ -27,11 +38,19 @@ export class CoreSettings extends SceneExtension {
 
     renderer.on("transformTreeUpdated", this.handleTransformTreeUpdated);
     renderer.on("cameraMove", this.handleCameraMove);
+    renderer.publishClickTool.addEventListener(
+      "foxglove.publish-type-change",
+      this.handlePublishToolChange,
+    );
   }
 
   override dispose(): void {
     this.renderer.off("transformTreeUpdated", this.handleTransformTreeUpdated);
     this.renderer.off("cameraMove", this.handleCameraMove);
+    this.renderer.publishClickTool.removeEventListener(
+      "foxglove.publish-type-change",
+      this.handlePublishToolChange,
+    );
     super.dispose();
   }
 
@@ -201,42 +220,52 @@ export class CoreSettings extends SceneExtension {
         node: {
           label: "Publish",
           fields: {
-            poseEstimateTopic: {
-              label: "Pose estimate topic",
+            type: {
+              label: "Type",
+              input: "select",
+              value: publish.type,
+              options: [
+                { label: "Point (geometry_msgs/Point)", value: "point" },
+                { label: "Pose (geometry_msgs/PoseStamped)", value: "pose" },
+                {
+                  label: "Pose estimate (geometry_msgs/PoseWithCovarianceStamped)",
+                  value: "pose_estimate",
+                },
+              ],
+              help: "The type of message to publish when clicking in the scene",
+            },
+            topic: {
+              label: "Topic",
               input: "string",
-              value: publish.poseEstimateTopic,
-              help: "The topic on which to publish pose estimates",
+              value: {
+                point: publish.pointTopic,
+                pose: publish.poseTopic,
+                pose_estimate: publish.poseEstimateTopic,
+              }[publish.type],
+              help: `The topic on which to publish ${
+                { point: "points", pose: "poses", pose_estimate: "pose estimates" }[publish.type]
+              }`,
             },
-            poseTopic: {
-              label: "Pose topic",
-              input: "string",
-              value: publish.poseTopic,
-              help: "The topic on which to publish poses",
-            },
-            pointTopic: {
-              label: "Point topic",
-              input: "string",
-              value: publish.pointTopic,
-              help: "The topic on which to publish points",
-            },
-            poseEstimateXDeviation: {
-              label: "X deviation",
-              input: "number",
-              value: publish.poseEstimateXDeviation,
-              help: "The X standard deviation to publish with poses",
-            },
-            poseEstimateYDeviation: {
-              label: "Y deviation",
-              input: "number",
-              value: publish.poseEstimateYDeviation,
-              help: "The Y standard deviation to publish with poses",
-            },
-            poseEstimateThetaDeviation: {
-              label: "Theta deviation",
-              input: "number",
-              value: publish.poseEstimateThetaDeviation,
-              help: "The theta standard deviation to publish with poses",
-            },
+            ...(publish.type === "pose_estimate" && {
+              poseEstimateXDeviation: {
+                label: "X deviation",
+                input: "number",
+                value: publish.poseEstimateXDeviation,
+                help: "The X standard deviation to publish with pose estimates",
+              },
+              poseEstimateYDeviation: {
+                label: "Y deviation",
+                input: "number",
+                value: publish.poseEstimateYDeviation,
+                help: "The Y standard deviation to publish with pose estimates",
+              },
+              poseEstimateThetaDeviation: {
+                label: "Theta deviation",
+                input: "number",
+                value: publish.poseEstimateThetaDeviation,
+                help: "The theta standard deviation to publish with pose estimates",
+              },
+            }),
           },
           defaultExpansionState: "collapsed",
           handler,
@@ -317,7 +346,32 @@ export class CoreSettings extends SceneExtension {
       this.renderer.updateConfig((draft) => set(draft, path, value));
     } else if (category === "publish") {
       // Update the configuration
-      this.renderer.updateConfig((draft) => set(draft, path, value));
+      if (path[1] === "topic") {
+        this.renderer.updateConfig((draft) => {
+          switch (draft.publish.type) {
+            case "point":
+              draft.publish.pointTopic =
+                (value as string | undefined) ?? DEFAULT_PUBLISH_SETTINGS.pointTopic;
+              break;
+            case "pose":
+              draft.publish.poseTopic =
+                (value as string | undefined) ?? DEFAULT_PUBLISH_SETTINGS.poseTopic;
+              break;
+            case "pose_estimate":
+              draft.publish.poseEstimateTopic =
+                (value as string | undefined) ?? DEFAULT_PUBLISH_SETTINGS.poseEstimateTopic;
+              break;
+          }
+        });
+      } else if (path[1] === "type") {
+        // ThreeDeeRender will update the config based on this change
+        if (this.renderer.publishClickTool.publishClickType !== value) {
+          this.renderer.publishClickTool.setPublishClickType(value as PublishClickType);
+          this.renderer.publishClickTool.stop();
+        }
+      } else {
+        this.renderer.updateConfig((draft) => set(draft, path, value));
+      }
     } else {
       return;
     }
@@ -331,6 +385,14 @@ export class CoreSettings extends SceneExtension {
   };
 
   handleCameraMove = (): void => {
+    this.updateSettingsTree();
+  };
+
+  handlePublishToolChange = (): void => {
+    this.renderer.updateConfig((draft) => {
+      draft.publish.type = this.renderer.publishClickTool.publishClickType;
+      return draft;
+    });
     this.updateSettingsTree();
   };
 }

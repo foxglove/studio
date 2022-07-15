@@ -14,7 +14,7 @@ import { RenderableSphere } from "./markers/RenderableSphere";
 
 const UNIT_X = new THREE.Vector3(1, 0, 0);
 const tempVec3 = new THREE.Vector3();
-export type PublishClickType = "pose_estimate" | "goal" | "point";
+export type PublishClickType = "pose_estimate" | "pose" | "point";
 
 export type PublishClickState = "idle" | "place-first-point" | "place-second-point";
 
@@ -63,7 +63,7 @@ export type PublishClickEvent =
   | { type: "foxglove.publish-end" }
   | { type: "foxglove.publish-type-change" }
   | { type: "foxglove.publish-submit"; publishClickType: "point"; point: Point }
-  | { type: "foxglove.publish-submit"; publishClickType: "goal" | "pose_estimate"; pose: Pose };
+  | { type: "foxglove.publish-submit"; publishClickType: "pose" | "pose_estimate"; pose: Pose };
 
 export class PublishClickTool extends SceneExtension<Renderable<BaseUserData>, PublishClickEvent> {
   private sphere: RenderableSphere;

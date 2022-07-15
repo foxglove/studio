@@ -290,9 +290,6 @@ declare module "@foxglove/studio" {
      * the representation of the panel settings in the editor.
      */
     updatePanelSettingsEditor(settings: Readonly<SettingsTree>): void;
-
-    /** Open the settings editor to this panel's settings. */
-    openPanelSettings(): void;
   };
 
   export type ExtensionPanelRegistration = {
