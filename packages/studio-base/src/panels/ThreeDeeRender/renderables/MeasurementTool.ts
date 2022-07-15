@@ -68,6 +68,10 @@ export class MeasurementTool extends SceneExtension {
   constructor(renderer: Renderer) {
     super("foxglove.MeasurementTool", renderer);
 
+    this.line.userData.picking = false;
+    this.circle1.userData.picking = false;
+    this.circle2.userData.picking = false;
+
     this.line.frustumCulled = false;
     this.line.geometry.setAttribute("position", this.linePositionAttribute);
     this.add(this.circle1);
