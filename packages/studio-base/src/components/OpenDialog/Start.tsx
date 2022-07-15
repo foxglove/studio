@@ -80,6 +80,7 @@ const Grid = muiStyled("div")(({ theme }) => ({
   display: "grid",
   gap: theme.spacing(2.5, 4),
   gridTemplateRows: "repeat(2, auto) 1fr",
+  gridTemplateColumns: "auto 1fr",
 
   "@media(max-width: 800px)": {
     display: "flex",
