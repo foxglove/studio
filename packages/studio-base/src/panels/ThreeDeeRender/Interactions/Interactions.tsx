@@ -18,13 +18,9 @@ import ExpandingToolbar, {
   ToolGroup,
   ToolGroupFixedSizePane,
 } from "@foxglove/studio-base/components/ExpandingToolbar";
-import { decodeAdditionalFields } from "@foxglove/studio-base/panels/ThreeDimensionalViz/commands/PointClouds/selection";
-import { PointCloud2 } from "@foxglove/studio-base/types/Messages";
-import { maybeCast } from "@foxglove/studio-base/util/maybeCast";
 
 import { Pose } from "../transforms";
 import ObjectDetails from "./ObjectDetails";
-import PointCloudDetails from "./PointCloudDetails";
 import TopicLink from "./TopicLink";
 import { SEmptyState, SRow, SValue } from "./styling";
 import { InteractionData } from "./types";
@@ -54,19 +50,8 @@ const InteractionsBaseComponent = React.memo<Props>(function InteractionsBaseCom
   interactionsTabType,
   setInteractionsTabType,
 }: Props) {
-  const { object } = selectedObject ?? {};
   const selectedInteractionData = selectedObject?.object.interactionData;
-
-  const { originalMessage } = selectedInteractionData ?? {};
-
-  const isPointCloud = maybeCast<{ type?: number }>(object)?.type === 102;
-  const maybeFullyDecodedObject = React.useMemo(
-    () =>
-      isPointCloud
-        ? decodeAdditionalFields(originalMessage as unknown as PointCloud2)
-        : originalMessage,
-    [isPointCloud, originalMessage],
-  );
+  const originalMessage = selectedInteractionData?.originalMessage;
 
   return (
     <ExpandingToolbar
@@ -77,18 +62,15 @@ const InteractionsBaseComponent = React.memo<Props>(function InteractionsBaseCom
     >
       <ToolGroup name={OBJECT_TAB_TYPE}>
         <ToolGroupFixedSizePane>
-          {maybeFullyDecodedObject ? (
+          {originalMessage ? (
             <>
-              {selectedInteractionData && (
-                <SRow>
-                  <SValue>
-                    <TopicLink addPanel={addPanel} topic={selectedInteractionData.topic} />
-                  </SValue>
-                </SRow>
-              )}
-              {isPointCloud && <PointCloudDetails selectedObject={selectedObject!} />}
+              <SRow>
+                <SValue>
+                  <TopicLink addPanel={addPanel} topic={selectedInteractionData.topic} />
+                </SValue>
+              </SRow>
               <ObjectDetails
-                selectedObject={maybeFullyDecodedObject}
+                selectedObject={originalMessage}
                 interactionData={selectedInteractionData}
               />
             </>
