@@ -86,9 +86,12 @@ export class MeasurementTool extends SceneExtension<Renderable<BaseUserData>, Me
     this.label.setSizeAttenuation(false);
     this.label.setLineHeight(12);
     this.label.setColor(1, 0, 0);
+
+    // Make the label appear on top of other objects in the scene so it doesn't get clipped/occluded
     this.label.renderOrder = 9999999;
     this.label.material.depthTest = false;
     this.label.material.depthWrite = false;
+    this.label.material.transparent = true;
 
     this.line.frustumCulled = false;
     this.line.geometry.setAttribute("position", this.linePositionAttribute);
