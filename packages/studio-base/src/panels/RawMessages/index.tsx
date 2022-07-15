@@ -12,17 +12,19 @@
 //   You may not use this file except in compliance with the License.
 
 import { useTheme } from "@fluentui/react";
-import PlusMinusBoxIcon from "@mdi/svg/svg/plus-minus-box.svg";
-import PlusMinusIcon from "@mdi/svg/svg/plus-minus.svg";
-import LessIcon from "@mdi/svg/svg/unfold-less-horizontal.svg";
-import MoreIcon from "@mdi/svg/svg/unfold-more-horizontal.svg";
+import DiffIcon from "@mui/icons-material/Difference";
+import DiffOutlinedIcon from "@mui/icons-material/DifferenceOutlined";
+import UnfoldLessIcon from "@mui/icons-material/UnfoldLess";
+import UnfoldMoreIcon from "@mui/icons-material/UnfoldMore";
 import {
   Checkbox,
   FormControlLabel,
+  IconButton,
   MenuItem,
   Select,
   SelectChangeEvent,
   Theme,
+  styled as muiStyled,
 } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import { Immutable } from "immer";
@@ -52,7 +54,6 @@ import { useMessageDataItem } from "@foxglove/studio-base/components/MessagePath
 import Panel from "@foxglove/studio-base/components/Panel";
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
-import ToolbarIconButton from "@foxglove/studio-base/components/PanelToolbar/ToolbarIconButton";
 import getDiff, {
   diffLabels,
   diffLabelsByLabelText,
@@ -145,6 +146,10 @@ const useStyles = makeStyles((theme: Theme) => ({
     // https://stackoverflow.com/questions/62319014/make-text-selection-treat-adjacent-elements-as-separate-words
     fontSize: 0,
   },
+}));
+
+const StyledIconButton = muiStyled(IconButton)(({ theme }) => ({
+  padding: theme.spacing(0.5),
 }));
 
 function RawMessages(props: Props) {
@@ -656,21 +661,27 @@ function RawMessages(props: Props) {
   return (
     <div className={classes.root}>
       <PanelToolbar helpContent={helpContent}>
-        <ToolbarIconButton
+        <StyledIconButton
           title="Toggle diff"
           onClick={onToggleDiff}
           color={diffEnabled ? "default" : "inherit"}
+          size="small"
         >
-          {diffEnabled ? <PlusMinusBoxIcon /> : <PlusMinusIcon />}
-        </ToolbarIconButton>
-        <ToolbarIconButton
-          title={expandAll === true ? "Collapse all" : "Expand all"}
-          color={diffEnabled ? "default" : "inherit"}
+          {diffEnabled ? <DiffIcon fontSize="small" /> : <DiffOutlinedIcon fontSize="small" />}
+        </StyledIconButton>
+        <StyledIconButton
+          title={expandAll ?? false ? "Collapse all" : "Expand all"}
           onClick={onToggleExpandAll}
+          color={diffEnabled ? "default" : "inherit"}
           data-test="expand-all"
+          size="small"
         >
-          {expandAll ?? false ? <LessIcon /> : <MoreIcon />}
-        </ToolbarIconButton>
+          {expandAll ?? false ? (
+            <UnfoldLessIcon fontSize="small" />
+          ) : (
+            <UnfoldMoreIcon fontSize="small" />
+          )}
+        </StyledIconButton>
         <div className={classes.topicInputs}>
           <MessagePathInput
             index={0}
