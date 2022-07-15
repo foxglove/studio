@@ -256,7 +256,7 @@ function RendererOverlay(props: {
             color={props.measureActive ? "info" : "inherit"}
             title={props.measureActive ? "Cancel measuring" : "Measure distance"}
             onClick={props.onClickMeasure}
-            style={{ position: "relative" }}
+            style={{ position: "relative", pointerEvents: "auto" }}
           >
             <RulerIcon style={{ width: 16, height: 16 }} />
             <div
@@ -281,7 +281,7 @@ function RendererOverlay(props: {
                 ref={publickClickButtonRef}
                 onClick={props.onClickPublish}
                 data-test="publish-button"
-                style={{ fontSize: "1rem" }}
+                style={{ fontSize: "1rem", pointerEvents: "auto" }}
               >
                 {selectedPublishClickIcon}
                 <div

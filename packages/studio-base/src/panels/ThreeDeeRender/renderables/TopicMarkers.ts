@@ -50,7 +50,7 @@ export class MarkersNamespace {
 }
 
 export class TopicMarkers extends Renderable<MarkerTopicUserData> {
-  override picking = false;
+  override pickable = false;
   namespaces = new Map<string, MarkersNamespace>();
 
   // eslint-disable-next-line no-restricted-syntax

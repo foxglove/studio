@@ -963,7 +963,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     let selectedRenderable: Renderable | undefined;
     let maybeRenderable = pickedObject as Partial<Renderable> | undefined;
     while (maybeRenderable) {
-      if (maybeRenderable.picking === true) {
+      if (maybeRenderable.pickable === true) {
         selectedRenderable = maybeRenderable as Renderable;
       }
       maybeRenderable = (maybeRenderable.parent ?? undefined) as Partial<Renderable> | undefined;
