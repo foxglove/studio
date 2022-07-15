@@ -23,6 +23,16 @@ import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 
 import PanelLayout from "./PanelLayout";
 
+async function openPanelMenu() {
+  const buttons = await screen.findAllByRole("panel-menu");
+  fireEvent.click(buttons[0]!);
+}
+
+async function goFullScreen() {
+  await openPanelMenu();
+  fireEvent.click(screen.getByRole("panel-menu-fullscreen")!);
+}
+
 const allPanels: readonly PanelInfo[] = [
   { title: "Some Panel", type: "Sample1", module: async () => await new Promise(() => {}) },
   {
@@ -92,13 +102,12 @@ export const PanelNotFound = (): JSX.Element => {
   );
 };
 PanelNotFound.parameters = { colorScheme: "dark" };
+PanelNotFound.play = openPanelMenu;
+
 export const PanelNotFoundLight = Object.assign(PanelNotFound.bind(undefined), {
   parameters: { colorScheme: "light" },
 });
-PanelNotFound.play = async () => {
-  const buttons = await screen.findAllByRole("panel-menu");
-  fireEvent.click(buttons[0]!);
-};
+PanelNotFoundLight.play = openPanelMenu;
 
 export const PanelWithError = (): JSX.Element => {
   return (
@@ -131,8 +140,7 @@ export const RemoveUnknownPanel = (): JSX.Element => {
   );
 };
 RemoveUnknownPanel.play = async () => {
-  const buttons = await screen.findAllByRole("panel-menu");
-  fireEvent.click(buttons[0]!);
+  await openPanelMenu();
   fireEvent.click(screen.getByRole("panel-menu-remove")!);
 };
 
@@ -151,12 +159,6 @@ export const PanelLoading = (): JSX.Element => {
     </DndProvider>
   );
 };
-
-async function goFullScreen() {
-  const buttons = await screen.findAllByRole("panel-menu");
-  fireEvent.click(buttons[0]!);
-  fireEvent.click(screen.getByRole("panel-menu-fullscreen")!);
-}
 
 export const FullScreen = (): JSX.Element => {
   return (
