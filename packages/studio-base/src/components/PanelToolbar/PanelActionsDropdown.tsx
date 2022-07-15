@@ -202,7 +202,7 @@ export function PanelActionsDropdown({ isOpen, setIsOpen, isUnknownPanel }: Prop
         target={buttonRef}
         onDismiss={() => setIsOpen(false)}
       />
-      <ToolbarIconButton title="More" role="panel-menu" onClick={() => setIsOpen(!isOpen)}>
+      <ToolbarIconButton title="More" data-testid="panel-menu" onClick={() => setIsOpen(!isOpen)}>
         <MoreVertIcon />
       </ToolbarIconButton>
     </div>
