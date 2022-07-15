@@ -14,16 +14,63 @@ export default {
   component: OpenDialog,
 };
 
+// Connection
+const playerSelection: PlayerSelection = {
+  selectSource: () => {},
+  selectRecent: () => {},
+  recentSources: [
+    {
+      id: "1111",
+      title: "NuScenes-v1.0-mini-scene-0655.bag",
+    },
+    {
+      id: "2222",
+      title: "NuScenes-v1.0-mini-scene-0656.bag",
+    },
+    {
+      id: "3333",
+      title: "ws://localhost:9090/",
+      label: "Rosbridge (ROS 1 & 2)",
+    },
+  ],
+  availableSources: [
+    {
+      id: "foo",
+      type: "connection",
+      displayName: "My Data Source",
+      description: "Data source description",
+      iconName: "studio.ROS",
+      warning: "This is a warning",
+
+      formConfig: {
+        fields: [{ id: "key", label: "Some Label" }],
+      },
+
+      initialize: () => {
+        return undefined;
+      },
+    },
+  ],
+};
+
 // Start
 
-export const StartLight = (): JSX.Element => <OpenDialog />;
+export const StartLight = (): JSX.Element => (
+  <PlayerSelectionContext.Provider value={playerSelection}>
+    <OpenDialog />
+  </PlayerSelectionContext.Provider>
+);
 
 StartLight.parameters = {
   colorScheme: "light",
   title: "components/OpenDialog/Start/Light",
 };
 
-export const StartDark = (): JSX.Element => <OpenDialog />;
+export const StartDark = (): JSX.Element => (
+  <PlayerSelectionContext.Provider value={playerSelection}>
+    <OpenDialog />
+  </PlayerSelectionContext.Provider>
+);
 
 StartDark.parameters = {
   colorScheme: "dark",
@@ -46,70 +93,22 @@ RemoteDark.parameters = {
   title: "components/OpenDialog/Remote/Dark",
 };
 
-// Connection
-
-export const ConnectionLight = (): JSX.Element => {
-  const playerSelection: PlayerSelection = {
-    selectSource: () => {},
-    selectRecent: () => {},
-    recentSources: [],
-    availableSources: [
-      {
-        id: "foo",
-        type: "connection",
-        displayName: "My Data Source",
-
-        formConfig: {
-          fields: [{ id: "key", label: "Some Label" }],
-        },
-
-        initialize: () => {
-          return undefined;
-        },
-      },
-    ],
-  };
-
-  return (
-    <PlayerSelectionContext.Provider value={playerSelection}>
-      <OpenDialog activeView="connection" />
-    </PlayerSelectionContext.Provider>
-  );
-};
+export const ConnectionLight = (): JSX.Element => (
+  <PlayerSelectionContext.Provider value={playerSelection}>
+    <OpenDialog activeView="connection" />
+  </PlayerSelectionContext.Provider>
+);
 
 ConnectionLight.parameters = {
   colorScheme: "light",
   title: "components/OpenDialog/Connection/Light",
 };
 
-export const ConnectionDark = (): JSX.Element => {
-  const playerSelection: PlayerSelection = {
-    selectSource: () => {},
-    selectRecent: () => {},
-    recentSources: [],
-    availableSources: [
-      {
-        id: "foo",
-        type: "connection",
-        displayName: "My Data Source",
-
-        formConfig: {
-          fields: [{ id: "key", label: "Some Label" }],
-        },
-
-        initialize: () => {
-          return undefined;
-        },
-      },
-    ],
-  };
-
-  return (
-    <PlayerSelectionContext.Provider value={playerSelection}>
-      <OpenDialog activeView="connection" />
-    </PlayerSelectionContext.Provider>
-  );
-};
+export const ConnectionDark = (): JSX.Element => (
+  <PlayerSelectionContext.Provider value={playerSelection}>
+    <OpenDialog activeView="connection" />
+  </PlayerSelectionContext.Provider>
+);
 
 ConnectionDark.parameters = {
   colorScheme: "dark",

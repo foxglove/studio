@@ -123,13 +123,9 @@ export default function Connection(props: ConnectionProps): JSX.Element {
             })}
           </StyledTabs>
         </Stack>
-        <Stack key={selectedSource?.id} flex="1 0 240px" gap={2}>
+        <Stack key={selectedSource?.id} flex="1 0" gap={2}>
           {selectedSource?.warning && <Alert severity="warning">{selectedSource.warning}</Alert>}
-          {selectedSource?.description && (
-            <Typography color="text.secondary">{selectedSource.description}</Typography>
-          )}
           {selectedSource?.description && <Typography>{selectedSource.description}</Typography>}
-
           {selectedSource?.formConfig != undefined && (
             <Stack flexGrow={1} justifyContent="space-between">
               <Stack gap={2}>
