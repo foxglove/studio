@@ -162,7 +162,7 @@ export function PanelActionsDropdown({ isOpen, setIsOpen, isUnknownPanel }: Prop
           iconName: "FullScreenMaximize",
           styles: { root: { height: 24, marginLeft: 2, marginRight: 6 } },
         },
-        role: "panel-menu-fullscreen",
+        "data-testid": "panel-menu-fullscreen",
       });
     }
 
@@ -171,7 +171,7 @@ export function PanelActionsDropdown({ isOpen, setIsOpen, isUnknownPanel }: Prop
       text: "Remove panel",
       onClick: close,
       iconProps: { iconName: "Delete" },
-      role: "panel-menu-remove",
+      "data-testid": "panel-menu-remove",
     });
 
     return items;

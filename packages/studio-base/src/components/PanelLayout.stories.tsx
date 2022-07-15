@@ -24,13 +24,13 @@ import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 import PanelLayout from "./PanelLayout";
 
 async function openPanelMenu() {
-  const buttons = await screen.findAllByRole("panel-menu");
+  const buttons = await screen.findAllByTestId("panel-menu");
   fireEvent.click(buttons[0]!);
 }
 
 async function goFullScreen() {
   await openPanelMenu();
-  fireEvent.click(screen.getByRole("panel-menu-fullscreen")!);
+  fireEvent.click(screen.getByTestId("panel-menu-fullscreen")!);
 }
 
 const allPanels: readonly PanelInfo[] = [
@@ -140,8 +140,8 @@ export const RemoveUnknownPanel = (): JSX.Element => {
   );
 };
 RemoveUnknownPanel.play = async () => {
-  (await screen.findAllByRole("panel-menu")).forEach((button) => fireEvent.click(button));
-  (await screen.findAllByRole("panel-menu-remove")).forEach((button) => fireEvent.click(button));
+  (await screen.findAllByTestId("panel-menu")).forEach((button) => fireEvent.click(button));
+  (await screen.findAllByTestId("panel-menu-remove")).forEach((button) => fireEvent.click(button));
 };
 
 export const PanelLoading = (): JSX.Element => {
