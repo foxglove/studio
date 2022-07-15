@@ -4,29 +4,26 @@
 
 import CheckIcon from "@mui/icons-material/Check";
 import CopyAllIcon from "@mui/icons-material/CopyAll";
-import { styled as muiStyled, Tooltip } from "@mui/material";
-import { makeStyles } from "@mui/styles";
-import { useCallback, useState } from "react";
+import FilterIcon from "@mui/icons-material/FilterAlt";
+import StateTransitionsIcon from "@mui/icons-material/PowerInput";
+import ScatterPlotIcon from "@mui/icons-material/ScatterPlot";
+import LineChartIcon from "@mui/icons-material/ShowChart";
+import { IconButtonProps, styled as muiStyled, Tooltip, TooltipProps } from "@mui/material";
+import { useCallback, useMemo, useState } from "react";
 
 import HoverableIconButton from "@foxglove/studio-base/components/HoverableIconButton";
+import Stack from "@foxglove/studio-base/components/Stack";
+import { openSiblingPlotPanel, plotableRosTypes } from "@foxglove/studio-base/panels/Plot";
+import {
+  openSiblingStateTransitionsPanel,
+  transitionableRosTypes,
+} from "@foxglove/studio-base/panels/StateTransitions";
 import { OpenSiblingPanel } from "@foxglove/studio-base/types/panels";
 import clipboard from "@foxglove/studio-base/util/clipboard";
 
 import HighlightedValue from "./HighlightedValue";
-import RawMessagesIcons from "./RawMessagesIcons";
 import { copyMessageReplacer } from "./copyMessageReplacer";
 import { ValueAction } from "./getValueActionForValue";
-
-const useStyles = makeStyles({
-  iconBox: {
-    display: "inline-block",
-    whiteSpace: "nowrap",
-    width: 0,
-    height: 0,
-    position: "relative",
-    left: 6,
-  },
-});
 
 const StyledIconButton = muiStyled(HoverableIconButton)`
   padding: 0;
@@ -39,6 +36,15 @@ const StyledIconButton = muiStyled(HoverableIconButton)`
     opacity: 0.6;
   }
 `;
+
+type Action = {
+  key: string;
+  tooltip: TooltipProps["title"];
+  icon: React.ReactNode;
+  onClick?: IconButtonProps["onClick"];
+  activeColor?: IconButtonProps["color"];
+  color?: IconButtonProps["color"];
+};
 
 export default function Value({
   arrLabel,
@@ -57,8 +63,27 @@ export default function Value({
   onTopicPathChange: (arg0: string) => void;
   openSiblingPanel: OpenSiblingPanel;
 }): JSX.Element {
-  const classes = useStyles();
   const [copied, setCopied] = useState(false);
+
+  const openPlotPanel = useCallback(
+    (pathSuffix: string) => () => {
+      openSiblingPlotPanel(openSiblingPanel, `${basePath}${pathSuffix}`);
+    },
+    [basePath, openSiblingPanel],
+  );
+
+  const openStateTransitionsPanel = useCallback(
+    (pathSuffix: string) => () => {
+      openSiblingStateTransitionsPanel(openSiblingPanel, `${basePath}${pathSuffix}`);
+    },
+    [basePath, openSiblingPanel],
+  );
+
+  const onFilter = useCallback(() => {
+    if (valueAction != undefined) {
+      onTopicPathChange(`${basePath}${valueAction.filterPath}`);
+    }
+  }, [basePath, valueAction, onTopicPathChange]);
 
   const handleCopy = useCallback((value: string) => {
     void clipboard.copy(value).then(() => {
@@ -67,34 +92,88 @@ export default function Value({
     });
   }, []);
 
+  const availableActions = useMemo(() => {
+    const actions: Action[] = [];
+
+    if (arrLabel.length > 0) {
+      actions.push({
+        key: "Copy",
+        activeColor: copied ? "success" : "primary",
+        tooltip: copied ? "Copied" : "Copy to Clipboard",
+        icon: copied ? <CheckIcon fontSize="inherit" /> : <CopyAllIcon fontSize="inherit" />,
+        onClick: () => handleCopy(JSON.stringify(itemValue, copyMessageReplacer, 2) ?? ""),
+      });
+    }
+
+    if (valueAction != undefined) {
+      const isPlotableType = plotableRosTypes.includes(valueAction.primitiveType);
+      const isTransitionalType = transitionableRosTypes.includes(valueAction.primitiveType);
+      const isMultiSlicePath = valueAction.multiSlicePath === valueAction.singleSlicePath;
+
+      if (valueAction.filterPath.length > 0) {
+        actions.push({
+          key: "Filter",
+          tooltip: "Filter on this value",
+          icon: <FilterIcon fontSize="inherit" />,
+          onClick: onFilter,
+        });
+      }
+
+      if (isPlotableType) {
+        actions.push({
+          key: "line",
+          tooltip: "Plot this value on a line chart",
+          icon: <LineChartIcon fontSize="inherit" />,
+          onClick: () => openPlotPanel(valueAction.singleSlicePath),
+        });
+      }
+
+      if (isPlotableType && !isMultiSlicePath) {
+        actions.push({
+          key: "scatter",
+          tooltip: "Plot this value on a scatter plot",
+          icon: <ScatterPlotIcon fontSize="inherit" />,
+          onClick: () => openPlotPanel(valueAction.multiSlicePath),
+        });
+      }
+
+      if (isTransitionalType && isMultiSlicePath) {
+        actions.push({
+          key: "stateTransitions",
+          tooltip: "View state transitions for this value",
+          icon: <StateTransitionsIcon fontSize="inherit" />,
+          onClick: () => openStateTransitionsPanel(valueAction.singleSlicePath),
+        });
+      }
+    }
+
+    return actions;
+  }, [
+    arrLabel.length,
+    copied,
+    handleCopy,
+    itemValue,
+    onFilter,
+    openPlotPanel,
+    openStateTransitionsPanel,
+    valueAction,
+  ]);
+
   return (
-    <span>
+    <Stack inline flexWrap="wrap" direction="row" alignItems="center" gap={0.25}>
       <HighlightedValue itemLabel={itemLabel} />
-      {arrLabel.length !== 0 && (
-        <>
-          {arrLabel}
-          <Tooltip arrow title={copied ? "Copied" : "Copy to Clipboard"}>
-            <StyledIconButton
-              size="small"
-              aria-label={copied ? "Copied" : "Copy to Clipboard"}
-              activeColor={copied ? "success" : "primary"}
-              onClick={() => handleCopy(JSON.stringify(itemValue, copyMessageReplacer, 2) ?? "")}
-              color="inherit"
-              icon={copied ? <CheckIcon fontSize="inherit" /> : <CopyAllIcon fontSize="inherit" />}
-            />
-          </Tooltip>
-        </>
-      )}
-      <span className={classes.iconBox}>
-        {valueAction != undefined ? (
-          <RawMessagesIcons
-            valueAction={valueAction}
-            basePath={basePath}
-            onTopicPathChange={onTopicPathChange}
-            openSiblingPanel={openSiblingPanel}
+      {arrLabel}
+      {availableActions.map((action) => (
+        <Tooltip key={action.key} arrow title={action.tooltip} placement="top">
+          <StyledIconButton
+            size="small"
+            activeColor={action.activeColor}
+            onClick={action.onClick}
+            color="inherit"
+            icon={action.icon}
           />
-        ) : undefined}
-      </span>
-    </span>
+        </Tooltip>
+      ))}
+    </Stack>
   );
 }

@@ -122,8 +122,8 @@ const useStyles = makeStyles((theme: Theme) => ({
     flex: "auto",
   },
   iconWrapper: {
-    display: "inline",
-    paddingRight: 40, // To make it so the icons appear when you move the mouse somewhat close.
+    display: "inline-flex",
+    alignItems: "center",
   },
   singleVal: {
     fontSize: "2.5em",
