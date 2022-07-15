@@ -25,7 +25,9 @@ import TopicLink from "./TopicLink";
 import { SEmptyState, SRow, SValue } from "./styling";
 import { InteractionData } from "./types";
 
+// ts-prune-ignore-next
 export const OBJECT_TAB_TYPE = "Selected object";
+// ts-prune-ignore-next
 export const LINKED_VARIABLES_TAB_TYPE = "Linked variables";
 export type TabType = typeof OBJECT_TAB_TYPE | typeof LINKED_VARIABLES_TAB_TYPE;
 
