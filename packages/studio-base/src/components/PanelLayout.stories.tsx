@@ -140,8 +140,8 @@ export const RemoveUnknownPanel = (): JSX.Element => {
   );
 };
 RemoveUnknownPanel.play = async () => {
-  await openPanelMenu();
-  fireEvent.click(screen.getByRole("panel-menu-remove")!);
+  (await screen.findAllByRole("panel-menu")).forEach((button) => fireEvent.click(button));
+  (await screen.findAllByRole("panel-menu-remove")).forEach((button) => fireEvent.click(button));
 };
 
 export const PanelLoading = (): JSX.Element => {
