@@ -52,6 +52,7 @@ import { Polygons } from "./renderables/Polygons";
 import { PoseArrays } from "./renderables/PoseArrays";
 import { Poses } from "./renderables/Poses";
 import { PublishClickTool, PublishClickType } from "./renderables/PublishClickTool";
+import { Urdfs } from "./renderables/Urdfs";
 import { MarkerPool } from "./renderables/markers/MarkerPool";
 import {
   Header,
@@ -73,6 +74,10 @@ export type RendererEvents = {
   endFrame: (currentTime: bigint, renderer: Renderer) => void;
   cameraMove: (renderer: Renderer) => void;
   renderableSelected: (renderable: Renderable | undefined, renderer: Renderer) => void;
+  parametersChange: (
+    parameters: ReadonlyMap<string, unknown> | undefined,
+    renderer: Renderer,
+  ) => void;
   transformTreeUpdated: (renderer: Renderer) => void;
   settingsTreeChange: (renderer: Renderer) => void;
   configChange: (renderer: Renderer) => void;
@@ -165,8 +170,9 @@ const FOLLOW_TF_PATH = ["general", "followTf"];
 const NO_FRAME_SELECTED = "NO_FRAME_SELECTED";
 const FRAME_NOT_FOUND = "FRAME_NOT_FOUND";
 
-// An extensionId for injecting the "Custom Layers" node and its menu actions
-const CUSTOM_LAYERS_ID = "foxglove.CustomLayers";
+// An extensionId for creating the top-level settings nodes such as "Topics" and
+// "Custom Layers"
+const RENDERER_ID = "foxglove.Renderer";
 
 const tempColor = new THREE.Color();
 const tempVec = new THREE.Vector3();
@@ -186,10 +192,13 @@ export class Renderer extends EventEmitter<RendererEvents> {
   settings: SettingsManager;
   topics: ReadonlyArray<Topic> | undefined;
   topicsByName: ReadonlyMap<string, Topic> | undefined;
+  parameters: ReadonlyMap<string, unknown> | undefined;
   // extensionId -> SceneExtension
   sceneExtensions = new Map<string, SceneExtension>();
   // datatype -> handler[]
   datatypeHandlers = new Map<string, MessageHandler[]>();
+  // topicName -> handler[]
+  topicHandlers = new Map<string, MessageHandler[]>();
   // layerId -> { action, handler }
   customLayerActions = new Map<string, CustomLayerAction>();
   scene: THREE.Scene;
@@ -225,6 +234,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
   markerPool = new MarkerPool(this);
 
   private _prevResolution = new THREE.Vector2();
+  private _pickingEnabled = false;
 
   constructor(canvas: HTMLCanvasElement, config: RendererConfig) {
     super();
@@ -237,10 +247,10 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
     this.settings = new SettingsManager(baseSettingsTree());
     this.settings.on("update", () => this.emit("settingsTreeChange", this));
-    // Add the "Custom Layers" node first so merging happens in the correct order.
+    // Add the top-level nodes first so merging happens in the correct order.
     // Another approach would be to modify SettingsManager to allow merging parent
     // nodes in after their children
-    this.settings.setNodesForKey(CUSTOM_LAYERS_ID, []);
+    this.settings.setNodesForKey(RENDERER_ID, []);
     this.updateCustomLayersCount();
 
     this.gl = new THREE.WebGLRenderer({
@@ -326,6 +336,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.addSceneExtension(new Polygons(this));
     this.addSceneExtension(new Poses(this));
     this.addSceneExtension(new PoseArrays(this));
+    this.addSceneExtension(new Urdfs(this));
     this.addSceneExtension(this.measurementTool);
     this.addSceneExtension(this.publishClickTool);
 
@@ -348,7 +359,12 @@ export class Renderer extends EventEmitter<RendererEvents> {
   }
 
   dispose(): void {
+    log.warn(`Disposing renderer`);
     this.removeAllListeners();
+
+    this.settings.off("update");
+    this.input.off("resize", this.resizeHandler);
+    this.input.off("click", this.clickHandler);
 
     for (const extension of this.sceneExtensions.values()) {
       extension.dispose();
@@ -408,6 +424,18 @@ export class Renderer extends EventEmitter<RendererEvents> {
     }
   }
 
+  addTopicSubscription<T>(topic: string, handler: (messageEvent: MessageEvent<T>) => void): void {
+    const genericHandler = handler as (messageEvent: MessageEvent<unknown>) => void;
+    let handlers = this.topicHandlers.get(topic);
+    if (!handlers) {
+      handlers = [];
+      this.topicHandlers.set(topic, handlers);
+    }
+    if (!handlers.includes(genericHandler)) {
+      handlers.push(genericHandler);
+    }
+  }
+
   addCustomLayerAction(options: {
     layerId: string;
     label: string;
@@ -426,18 +454,33 @@ export class Renderer extends EventEmitter<RendererEvents> {
     };
     this.customLayerActions.set(options.layerId, { action, handler });
 
-    const layerCount = Object.keys(this.config.layers).length;
-    const label = `Custom Layers${layerCount > 0 ? ` (${layerCount})` : ""}`;
-
-    // Rebuild the "Custom Layers" settings tree node
-    const actions: SettingsTreeNodeActionItem[] = Array.from(this.customLayerActions.values()).map(
-      (entry) => entry.action,
-    );
-    const entry: SettingsTreeEntry = {
-      path: ["layers"],
-      node: { label, actions, handler: this.handleCustomLayersAction },
+    // "Topics" settings tree node
+    const topics: SettingsTreeEntry = {
+      path: ["topics"],
+      node: {
+        label: this._topicsNodeLabel(),
+        defaultExpansionState: "expanded",
+        actions: [
+          { id: "show-all", type: "action", label: "Show All" },
+          { id: "hide-all", type: "action", label: "Hide All" },
+        ],
+        handler: this.handleTopicsAction,
+      },
     };
-    this.settings.setNodesForKey(CUSTOM_LAYERS_ID, [entry]);
+
+    // "Custom Layers" settings tree node
+    const layerCount = Object.keys(this.config.layers).length;
+    const customLayers: SettingsTreeEntry = {
+      path: ["layers"],
+      node: {
+        label: `Custom Layers${layerCount > 0 ? ` (${layerCount})` : ""}`,
+        children: this.settings.tree()["layers"]?.children,
+        actions: Array.from(this.customLayerActions.values()).map((entry) => entry.action),
+        handler: this.handleCustomLayersAction,
+      },
+    };
+
+    this.settings.setNodesForKey(RENDERER_ID, [topics, customLayers]);
   }
 
   defaultFrameId(): string | undefined {
@@ -470,6 +513,17 @@ export class Renderer extends EventEmitter<RendererEvents> {
     return rootId;
   }
 
+  /** Enable or disable object selection mode */
+  // eslint-disable-next-line @foxglove/no-boolean-parameters
+  setPickingEnabled(enabled: boolean): void {
+    this._pickingEnabled = enabled;
+    if (!enabled) {
+      this.selectedObject = undefined;
+      this.emit("renderableSelected", undefined, this);
+      this.animationFrame();
+    }
+  }
+
   /** Update the color scheme and background color, rebuilding any materials as necessary */
   setColorScheme(colorScheme: "dark" | "light", backgroundColor: string | undefined): void {
     this.colorScheme = colorScheme;
@@ -484,10 +538,12 @@ export class Renderer extends EventEmitter<RendererEvents> {
       this.gl.setClearColor(bgColor ?? DARK_BACKDROP);
       this.outlineMaterial.color.set(DARK_OUTLINE);
       this.outlineMaterial.needsUpdate = true;
+      this.selectionBackdrop.setColor(DARK_BACKDROP, 0.9);
     } else {
       this.gl.setClearColor(bgColor ?? LIGHT_BACKDROP);
       this.outlineMaterial.color.set(LIGHT_OUTLINE);
       this.outlineMaterial.needsUpdate = true;
+      this.selectionBackdrop.setColor(LIGHT_BACKDROP, 0.9);
     }
   }
 
@@ -505,16 +561,16 @@ export class Renderer extends EventEmitter<RendererEvents> {
         this.settings.setNodesForKey(extension.extensionId, extension.settingsNodes());
       }
 
-      // Update the Topics node label
-      const topicCount = this.topics?.length ?? 0;
-      const topicsNode = this.settings.tree()["topics"];
-      const vizCount = Object.keys(topicsNode?.children ?? {}).length;
+      // Update the "Topics" node label
+      this.settings.setLabel(["topics"], this._topicsNodeLabel());
+    }
+  }
 
-      if (topicCount === 0 && vizCount === 0) {
-        this.settings.setLabel(["topics"], `Topics`);
-      } else {
-        this.settings.setLabel(["topics"], `Topics (${vizCount}/${topicCount})`);
-      }
+  setParameters(parameters: ReadonlyMap<string, unknown> | undefined): void {
+    const changed = this.parameters !== parameters;
+    this.parameters = parameters;
+    if (changed) {
+      this.emit("parametersChange", parameters, this);
     }
   }
 
@@ -522,6 +578,13 @@ export class Renderer extends EventEmitter<RendererEvents> {
     const layerCount = Object.keys(this.config.layers).length;
     const label = `Custom Layers${layerCount > 0 ? ` (${layerCount})` : ""}`;
     this.settings.setLabel(["layers"], label);
+  }
+
+  private _topicsNodeLabel(): string {
+    const topicCount = this.topics?.length ?? 0;
+    const topicsNode = this.settings.tree()["topics"];
+    const vizCount = Object.keys(topicsNode?.children ?? {}).length;
+    return topicCount === 0 && vizCount === 0 ? "Topics" : `Topics (${vizCount}/${topicCount})`;
   }
 
   /** Translate a @foxglove/regl-worldview CameraState to the three.js coordinate system */
@@ -614,9 +677,16 @@ export class Renderer extends EventEmitter<RendererEvents> {
       this.addTransformMessage(tf);
     }
 
-    const handlers = this.datatypeHandlers.get(datatype);
-    if (handlers) {
-      for (const handler of handlers) {
+    const handlersForTopic = this.topicHandlers.get(messageEvent.topic);
+    if (handlersForTopic) {
+      for (const handler of handlersForTopic) {
+        handler(messageEvent);
+      }
+    }
+
+    const handlersForDatatype = this.datatypeHandlers.get(datatype);
+    if (handlersForDatatype) {
+      for (const handler of handlersForDatatype) {
         handler(messageEvent);
       }
     }
@@ -752,6 +822,10 @@ export class Renderer extends EventEmitter<RendererEvents> {
   };
 
   clickHandler = (cursorCoords: THREE.Vector2): void => {
+    if (!this._pickingEnabled) {
+      return;
+    }
+
     // Disable picking while a tool is active
     if (this.measurementTool.state !== "idle" || this.publishClickTool.state !== "idle") {
       return;
@@ -780,21 +854,25 @@ export class Renderer extends EventEmitter<RendererEvents> {
     // Traverse the scene looking for this objectId
     const pickedObject = this.scene.getObjectById(objectId);
 
-    // Find the first ancestor of the picked object that is a Renderable
+    // Find the highest ancestor of the picked object that is a Renderable
+    let selectedRenderable: Renderable | undefined;
     let maybeRenderable = pickedObject as Partial<Renderable> | undefined;
-    while (maybeRenderable && maybeRenderable.isRenderable !== true) {
+    while (maybeRenderable) {
+      if (maybeRenderable.pickable === true) {
+        selectedRenderable = maybeRenderable as Renderable;
+      }
       maybeRenderable = (maybeRenderable.parent ?? undefined) as Partial<Renderable> | undefined;
     }
 
-    const selectedRenderable = maybeRenderable as Renderable | undefined;
-    if (selectedRenderable === prevSelected) {
+    if (prevSelected && selectedRenderable === prevSelected) {
       log.debug(
-        `Deselecting previously selected Renderable ${prevSelected?.id} (${prevSelected?.name})`,
+        `Deselecting previously selected Renderable ${prevSelected.id} (${prevSelected.name})`,
       );
       if (!DEBUG_PICKING) {
         // Re-render with no object selected
         this.animationFrame();
       }
+      this.emit("renderableSelected", undefined, this);
       return;
     }
 
@@ -817,12 +895,41 @@ export class Renderer extends EventEmitter<RendererEvents> {
     }
   };
 
+  handleTopicsAction = (action: SettingsTreeAction): void => {
+    const path = action.payload.path;
+    if (action.action !== "perform-node-action" || path.length !== 1 || path[0] !== "topics") {
+      return;
+    }
+    log.debug(`handleTopicsAction(${action.payload.id})`);
+
+    // eslint-disable-next-line @foxglove/no-boolean-parameters
+    const toggleTopicVisibility = (value: boolean) => {
+      for (const extension of this.sceneExtensions.values()) {
+        for (const node of extension.settingsNodes()) {
+          if (node.path[0] === "topics") {
+            extension.handleSettingsAction({
+              action: "update",
+              payload: { path: [...node.path, "visible"], input: "boolean", value },
+            });
+          }
+        }
+      }
+    };
+
+    if (action.payload.id === "show-all") {
+      // Show all topics
+      toggleTopicVisibility(true);
+    } else if (action.payload.id === "hide-all") {
+      // Hide all topics
+      toggleTopicVisibility(false);
+    }
+  };
+
   handleCustomLayersAction = (action: SettingsTreeAction): void => {
     const path = action.payload.path;
     if (action.action !== "perform-node-action" || path.length !== 1 || path[0] !== "layers") {
       return;
     }
-
     log.debug(`handleCustomLayersAction(${action.payload.id})`);
 
     // Remove `-{uuid}` from the actionId to get the layerId
@@ -953,9 +1060,6 @@ function baseSettingsTree(): SettingsTreeNodes {
     scene: {},
     cameraState: {},
     transforms: {},
-    topics: {
-      label: "Topics",
-      defaultExpansionState: "expanded",
-    },
+    topics: {},
   };
 }

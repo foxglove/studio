@@ -127,7 +127,7 @@ export class Grids extends SceneExtension<GridRenderable> {
           label: config.label ?? "Grid",
           icon: "Grid",
           fields,
-          visible: config.visible ?? true,
+          visible: config.visible ?? DEFAULT_SETTINGS.visible,
           actions: [{ type: "action", id: "delete", label: "Delete" }],
           order: layerConfig.order,
           handler,
@@ -150,7 +150,7 @@ export class Grids extends SceneExtension<GridRenderable> {
     super.startFrame(currentTime, renderFrameId, fixedFrameId);
   }
 
-  handleSettingsAction = (action: SettingsTreeAction): void => {
+  override handleSettingsAction = (action: SettingsTreeAction): void => {
     const path = action.payload.path;
 
     // Handle menu actions (delete)
@@ -174,7 +174,7 @@ export class Grids extends SceneExtension<GridRenderable> {
     }
 
     if (path.length !== 3) {
-      return;
+      return; // Doesn't match the pattern of ["layers", instanceId, field]
     }
 
     this.saveSetting(path, action.payload.value);
@@ -189,8 +189,7 @@ export class Grids extends SceneExtension<GridRenderable> {
   handleAddGrid = (instanceId: string): void => {
     log.info(`Creating ${LAYER_ID} layer ${instanceId}`);
 
-    const config: LayerSettingsGrid = { ...DEFAULT_SETTINGS };
-    config.instanceId = instanceId;
+    const config: LayerSettingsGrid = { ...DEFAULT_SETTINGS, instanceId };
 
     // Add this instance to the config
     this.renderer.updateConfig((draft) => {
@@ -223,14 +222,13 @@ export class Grids extends SceneExtension<GridRenderable> {
       return;
     }
 
+    const newSettings = { ...DEFAULT_SETTINGS, ...settings };
     if (!renderable) {
-      const createSettings = { ...DEFAULT_SETTINGS, ...settings };
-      renderable = this._createRenderable(instanceId, createSettings);
-      renderable.userData.pose = xyzrpyToPose(createSettings.position, createSettings.rotation);
+      renderable = this._createRenderable(instanceId, newSettings);
+      renderable.userData.pose = xyzrpyToPose(newSettings.position, newSettings.rotation);
     }
 
     const prevSettings = renderable.userData.settings;
-    const newSettings = { ...prevSettings, ...settings };
     const markersEqual =
       newSettings.size === prevSettings.size &&
       newSettings.divisions === prevSettings.divisions &&
