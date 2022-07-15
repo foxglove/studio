@@ -30,7 +30,7 @@ async function openPanelMenu() {
 
 async function goFullScreen() {
   await openPanelMenu();
-  fireEvent.click(screen.getByTestId("panel-menu-fullscreen")!);
+  fireEvent.click(screen.getAllByTestId("panel-menu-fullscreen")[0]!);
 }
 
 const allPanels: readonly PanelInfo[] = [
