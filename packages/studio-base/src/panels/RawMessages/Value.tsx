@@ -26,15 +26,11 @@ import { copyMessageReplacer } from "./copyMessageReplacer";
 import { ValueAction } from "./getValueActionForValue";
 
 const StyledIconButton = muiStyled(HoverableIconButton)`
-  padding: 0;
   font-size: ${({ theme }) => theme.typography.pxToRem(16)};
+  padding: 0;
 
-  &:hover {
-    background-color: transparent;
-  }
-  &:not(:hover) {
-    opacity: 0.6;
-  }
+  &:hover { background-color: transparent; }
+  &:not(:hover) { opacity: 0.6; }
 `;
 
 type Action = {
@@ -104,7 +100,6 @@ export default function Value({
         onClick: () => handleCopy(JSON.stringify(itemValue, copyMessageReplacer, 2) ?? ""),
       });
     }
-
     if (valueAction != undefined) {
       const isPlotableType = plotableRosTypes.includes(valueAction.primitiveType);
       const isTransitionalType = transitionableRosTypes.includes(valueAction.primitiveType);
@@ -118,7 +113,6 @@ export default function Value({
           onClick: onFilter,
         });
       }
-
       if (isPlotableType) {
         actions.push({
           key: "line",
@@ -127,7 +121,6 @@ export default function Value({
           onClick: () => openPlotPanel(valueAction.singleSlicePath),
         });
       }
-
       if (isPlotableType && !isMultiSlicePath) {
         actions.push({
           key: "scatter",
@@ -136,7 +129,6 @@ export default function Value({
           onClick: () => openPlotPanel(valueAction.multiSlicePath),
         });
       }
-
       if (isTransitionalType && isMultiSlicePath) {
         actions.push({
           key: "stateTransitions",
@@ -146,10 +138,9 @@ export default function Value({
         });
       }
     }
-
     return actions;
   }, [
-    arrLabel.length,
+    arrLabel,
     copied,
     handleCopy,
     itemValue,
