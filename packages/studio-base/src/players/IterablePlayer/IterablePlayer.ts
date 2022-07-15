@@ -845,8 +845,6 @@ export class IterablePlayer implements Player {
           return;
         }
 
-        // fixme - if we can't tick because we are still buffering, we need to indicate that
-        // maybe we need to query buffered source on some interval until we _can_ tick?
         this._progress = {
           fullyLoadedFractionRanges: this._bufferedSource.loadedRanges(),
           messageCache: this._progress.messageCache,

@@ -67,12 +67,11 @@ class Logger {
 
   private _updateHandlers() {
     if (this._enabled) {
-      // fixme - these prefixes are duplicating what the web console already tells us
-      //const prefix = this._name.length > 0 ? `[${this._name}]` : "";
-      this.debug = console.debug.bind(global.console);
-      this.info = console.info.bind(global.console);
-      this.warn = console.warn.bind(global.console);
-      this.error = console.error.bind(global.console);
+      const prefix = this._name.length > 0 ? `[${this._name}]` : "";
+      this.debug = console.debug.bind(global.console, `${prefix}`);
+      this.info = console.info.bind(global.console, `${prefix}`);
+      this.warn = console.warn.bind(global.console, `${prefix}`);
+      this.error = console.error.bind(global.console, `${prefix}`);
     } else {
       this.debug = noop;
       this.info = noop;
