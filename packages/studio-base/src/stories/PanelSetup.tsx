@@ -51,6 +51,7 @@ import {
   AdvertiseOptions,
 } from "@foxglove/studio-base/players/types";
 import MockCurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider/MockCurrentLayoutProvider";
+import ExtensionCatalogProvider from "@foxglove/studio-base/providers/ExtensionCatalogProvider";
 import HelpInfoProvider from "@foxglove/studio-base/providers/HelpInfoProvider";
 import {
   PanelSettingsEditorContextProvider,
@@ -336,11 +337,13 @@ export default function PanelSetup(props: Props): JSX.Element {
       <HoverValueProvider>
         <MockCurrentLayoutProvider onAction={props.onLayoutAction}>
           <PanelSettingsEditorContextProvider>
-            <HelpInfoProvider>
-              <ThemeProvider isDark={theme.isInverted}>
-                <UnconnectedPanelSetup {...props} />
-              </ThemeProvider>
-            </HelpInfoProvider>
+            <ExtensionCatalogProvider loaders={[]}>
+              <HelpInfoProvider>
+                <ThemeProvider isDark={theme.isInverted}>
+                  <UnconnectedPanelSetup {...props} />
+                </ThemeProvider>
+              </HelpInfoProvider>
+            </ExtensionCatalogProvider>
           </PanelSettingsEditorContextProvider>
         </MockCurrentLayoutProvider>
       </HoverValueProvider>
