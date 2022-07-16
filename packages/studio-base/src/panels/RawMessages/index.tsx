@@ -11,7 +11,6 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { useTheme } from "@fluentui/react";
 import DiffIcon from "@mui/icons-material/Difference";
 import DiffOutlinedIcon from "@mui/icons-material/DifferenceOutlined";
 import UnfoldLessIcon from "@mui/icons-material/UnfoldLess";
@@ -23,10 +22,10 @@ import {
   MenuItem,
   Select,
   SelectChangeEvent,
-  Theme,
   styled as muiStyled,
+  useTheme,
+  Typography,
 } from "@mui/material";
-import { makeStyles } from "@mui/styles";
 import { Immutable } from "immer";
 // eslint-disable-next-line no-restricted-imports
 import { first, isEqual, get, last, padStart } from "lodash";
@@ -54,6 +53,7 @@ import { useMessageDataItem } from "@foxglove/studio-base/components/MessagePath
 import Panel from "@foxglove/studio-base/components/Panel";
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
+import Stack from "@foxglove/studio-base/components/Stack";
 import getDiff, {
   diffLabels,
   diffLabelsByLabelText,
@@ -107,54 +107,27 @@ function maybeDeepParse(val: unknown) {
   return val;
 }
 
-const useStyles = makeStyles((theme: Theme) => ({
-  root: {
-    display: "flex",
-    flexDirection: "column",
-    flex: "auto",
-    overflow: "hidden",
-    position: "relative",
-  },
-  topic: {
-    display: "flex",
-    flexDirection: "column",
-    flex: "auto",
-    overflow: "hidden auto",
-    paddingLeft: theme.spacing(0.75),
-    fontFamily: fonts.SANS_SERIF,
-    fontFeatureSettings: `${fonts.SANS_SERIF_FEATURE_SETTINGS}, "zero"`,
-  },
-  diff: {
-    display: "flex",
-    flex: "auto",
-  },
-  iconWrapper: {
-    display: "inline-flex",
-    alignItems: "center",
-  },
-  singleVal: {
-    fontSize: "2.5em",
-    wordWrap: "break-word",
-    fontWeight: "bold",
-    whiteSpace: "pre-line",
-  },
-  topicInputs: {
-    width: "100%",
-    lineHeight: "20px",
-  },
-  invisibleSpace: {
-    // https://stackoverflow.com/questions/62319014/make-text-selection-treat-adjacent-elements-as-separate-words
-    fontSize: 0,
-  },
-}));
-
 const StyledIconButton = muiStyled(IconButton)(({ theme }) => ({
   padding: theme.spacing(0.5),
 }));
 
+const Topic = muiStyled(Stack)(({ theme }) => ({
+  flex: "auto",
+  overflowX: "hidden",
+  paddingLeft: theme.spacing(0.75),
+  fontFamily: fonts.SANS_SERIF,
+  fontFeatureSettings: `${fonts.SANS_SERIF_FEATURE_SETTINGS}, "zero"`,
+}));
+
+const StyledHoverObserver = muiStyled(ReactHoverObserver)({
+  display: "inline-flex",
+  alignItems: "center",
+});
+
 function RawMessages(props: Props) {
-  const theme = useTheme();
-  const classes = useStyles();
+  const {
+    palette: { mode: themePreference },
+  } = useTheme();
   const jsonTreeTheme = useJsonTreeTheme();
   const { config, saveConfig } = props;
   const { openSiblingPanel } = usePanelContext();
@@ -166,9 +139,14 @@ function RawMessages(props: Props) {
     () =>
       diffEnabled
         ? (type: string, data: DiffObject, itemType: React.ReactNode) =>
-            getItemStringForDiff({ type, data, itemType, isInverted: theme.isInverted })
+            getItemStringForDiff({
+              type,
+              data,
+              itemType,
+              isInverted: themePreference === "dark",
+            })
         : defaultGetItemString,
-    [defaultGetItemString, diffEnabled, theme.isInverted],
+    [defaultGetItemString, diffEnabled, themePreference],
   );
 
   const topicRosPath: RosPath | undefined = useMemo(() => parseRosPath(topicPath), [topicPath]);
@@ -355,7 +333,7 @@ function RawMessages(props: Props) {
       itemValue: unknown,
       ...keyPath: (number | string)[]
     ) => (
-      <ReactHoverObserver className={classes.iconWrapper}>
+      <StyledHoverObserver>
         {({ isHovering }: { isHovering: boolean }) => {
           const lastKeyPath = last(keyPath) as number;
           let valueAction: ValueAction | undefined;
@@ -402,9 +380,9 @@ function RawMessages(props: Props) {
             />
           );
         }}
-      </ReactHoverObserver>
+      </StyledHoverObserver>
     ),
-    [classes, datatypes, getValueLabels, onTopicPathChange, openSiblingPanel],
+    [datatypes, getValueLabels, onTopicPathChange, openSiblingPanel],
   );
 
   const renderSingleTopicOrDiffOutput = useCallback(() => {
@@ -452,7 +430,7 @@ function RawMessages(props: Props) {
       : {};
 
     return (
-      <div className={classes.topic}>
+      <Topic>
         <Metadata
           data={data}
           diffData={diffData}
@@ -462,9 +440,14 @@ function RawMessages(props: Props) {
           {...(diffItem ? { diffMessage: diffItem.messageEvent } : undefined)}
         />
         {shouldDisplaySingleVal ? (
-          <div className={classes.singleVal}>
+          <Typography
+            variant="h1"
+            fontWeight="bold"
+            whiteSpace="pre-line"
+            style={{ wordWrap: "break-word" }}
+          >
             <MaybeCollapsedValue itemLabel={String(singleVal)} />
-          </div>
+          </Typography>
         ) : diffEnabled && isEqual({}, diff) ? (
           <EmptyState>No difference found</EmptyState>
         ) : (
@@ -487,7 +470,8 @@ function RawMessages(props: Props) {
               labelRenderer={(raw) => (
                 <>
                   <DiffSpan>{first(raw)}</DiffSpan>
-                  <span className={classes.invisibleSpace}>&nbsp;</span>
+                  {/* https://stackoverflow.com/questions/62319014/make-text-selection-treat-adjacent-elements-as-separate-words */}
+                  <span style={{ fontSize: 0 }}>&nbsp;</span>
                 </>
               )}
               shouldExpandNode={shouldExpandNode}
@@ -566,11 +550,12 @@ function RawMessages(props: Props) {
                   let backgroundColor;
                   let textDecoration;
                   if (diffLabelsByLabelText[keyPath[0]]) {
-                    backgroundColor = theme.isInverted
-                      ? // @ts-expect-error backgroundColor is not a property?
-                        diffLabelsByLabelText[keyPath[0]].invertedBackgroundColor
-                      : // @ts-expect-error backgroundColor is not a property?
-                        diffLabelsByLabelText[keyPath[0]].backgroundColor;
+                    backgroundColor =
+                      themePreference === "dark"
+                        ? // @ts-expect-error backgroundColor is not a property?
+                          diffLabelsByLabelText[keyPath[0]].invertedBackgroundColor
+                        : // @ts-expect-error backgroundColor is not a property?
+                          diffLabelsByLabelText[keyPath[0]].backgroundColor;
                     textDecoration =
                       keyPath[0] === diffLabels.DELETED.labelText ? "line-through" : "none";
                   }
@@ -578,11 +563,12 @@ function RawMessages(props: Props) {
                   // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                   const nestedObjKey = Object.keys(nestedObj)[0];
                   if (nestedObjKey != undefined && diffLabelsByLabelText[nestedObjKey]) {
-                    backgroundColor = theme.isInverted
-                      ? // @ts-expect-error backgroundColor is not a property?
-                        diffLabelsByLabelText[nestedObjKey].invertedBackgroundColor
-                      : // @ts-expect-error backgroundColor is not a property?
-                        diffLabelsByLabelText[nestedObjKey].backgroundColor;
+                    backgroundColor =
+                      themePreference === "dark"
+                        ? // @ts-expect-error backgroundColor is not a property?
+                          diffLabelsByLabelText[nestedObjKey].invertedBackgroundColor
+                        : // @ts-expect-error backgroundColor is not a property?
+                          diffLabelsByLabelText[nestedObjKey].backgroundColor;
                     textDecoration =
                       nestedObjKey === diffLabels.DELETED.labelText ? "line-through" : "none";
                   }
@@ -612,11 +598,12 @@ function RawMessages(props: Props) {
                   // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                   const nestedObjKey = Object.keys(nestedObj)[0];
                   if (nestedObjKey != undefined && diffLabelsByLabelText[nestedObjKey]) {
-                    backgroundColor = theme.isInverted
-                      ? // @ts-expect-error backgroundColor is not a property?
-                        diffLabelsByLabelText[nestedObjKey].invertedBackgroundColor
-                      : // @ts-expect-error backgroundColor is not a property?
-                        diffLabelsByLabelText[nestedObjKey].backgroundColor;
+                    backgroundColor =
+                      themePreference === "dark"
+                        ? // @ts-expect-error backgroundColor is not a property?
+                          diffLabelsByLabelText[nestedObjKey].invertedBackgroundColor
+                        : // @ts-expect-error backgroundColor is not a property?
+                          diffLabelsByLabelText[nestedObjKey].backgroundColor;
                     textDecoration =
                       nestedObjKey === diffLabels.DELETED.labelText ? "line-through" : "none";
                   }
@@ -634,7 +621,7 @@ function RawMessages(props: Props) {
             />
           </>
         )}
-      </div>
+      </Topic>
     );
   }, [
     topicPath,
@@ -644,7 +631,6 @@ function RawMessages(props: Props) {
     diffItem,
     showFullMessageForDiff,
     topic,
-    classes,
     getItemString,
     jsonTreeTheme,
     expandAll,
@@ -655,11 +641,11 @@ function RawMessages(props: Props) {
     valueRenderer,
     rootStructureItem,
     renderDiffLabel,
-    theme,
+    themePreference,
   ]);
 
   return (
-    <div className={classes.root}>
+    <Stack flex="auto" overflow="hidden" position="relative">
       <PanelToolbar helpContent={helpContent}>
         <StyledIconButton
           title="Toggle diff"
@@ -682,7 +668,7 @@ function RawMessages(props: Props) {
             <UnfoldMoreIcon fontSize="small" />
           )}
         </StyledIconButton>
-        <div className={classes.topicInputs}>
+        <Stack direction="row" fullWidth alignItems="center">
           <MessagePathInput
             index={0}
             path={topicPath}
@@ -690,7 +676,7 @@ function RawMessages(props: Props) {
             inputStyle={{ height: 20 }}
           />
           {diffEnabled && (
-            <div className={classes.diff}>
+            <Stack direction="row" flex="auto">
               <Select
                 variant="filled"
                 size="small"
@@ -706,7 +692,7 @@ function RawMessages(props: Props) {
                 <MenuItem value={PREV_MSG_METHOD}>{PREV_MSG_METHOD}</MenuItem>
                 <MenuItem value={CUSTOM_METHOD}>custom</MenuItem>
               </Select>
-              {diffMethod === CUSTOM_METHOD ? (
+              {diffMethod === CUSTOM_METHOD && (
                 <MessagePathInput
                   index={1}
                   path={diffTopicPath}
@@ -714,13 +700,13 @@ function RawMessages(props: Props) {
                   inputStyle={{ height: "100%" }}
                   {...(topic ? { prioritizedDatatype: topic.datatype } : {})}
                 />
-              ) : undefined}
-            </div>
+              )}
+            </Stack>
           )}
-        </div>
+        </Stack>
       </PanelToolbar>
       {renderSingleTopicOrDiffOutput()}
-    </div>
+    </Stack>
   );
 }
 
