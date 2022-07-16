@@ -18,31 +18,15 @@ export default {
   component: ThreeDeeRender,
 };
 
-function makeIndicator() {
-  const div = document.createElement("div");
-  div.style.position = "absolute";
-  div.style.top = "0px";
-  div.style.left = "0px";
-  div.style.zIndex = "999999";
-  div.style.backgroundColor = "red";
-  div.style.color = "white";
-  document.body.appendChild(div);
-  return div;
-}
-
 export const Point = Object.assign(PublishClickToolTemplate.bind({}), {
   parameters: { colorScheme: "dark", chromatic: { delay: 200 } },
   args: { type: "point" },
   play: async () => {
-    const indicator = makeIndicator();
     document.querySelector<HTMLElement>("[data-test=publish-button]")!.click();
-    indicator.innerText = "clicked";
     await delay(100);
     const canvas = document.querySelector("canvas")!;
     canvas.dispatchEvent(new MouseEvent("mousemove", { clientX: 400, clientY: 400 }));
-    indicator.innerText = "moved";
     await delay(10);
-    indicator.innerText = "done";
   },
 });
 
@@ -50,15 +34,11 @@ export const PosePosition = Object.assign(PublishClickToolTemplate.bind({}), {
   parameters: { colorScheme: "dark", chromatic: { delay: 200 } },
   args: { type: "pose" },
   play: async () => {
-    const indicator = makeIndicator();
     document.querySelector<HTMLElement>("[data-test=publish-button]")!.click();
-    indicator.innerText = "clicked";
     await delay(100);
     const canvas = document.querySelector("canvas")!;
     canvas.dispatchEvent(new MouseEvent("mousemove", { clientX: 400, clientY: 400 }));
-    indicator.innerText = "moved";
     await delay(10);
-    indicator.innerText = "done";
   },
 });
 
@@ -66,20 +46,17 @@ export const PoseComplete = Object.assign(PublishClickToolTemplate.bind({}), {
   parameters: { colorScheme: "dark", chromatic: { delay: 200 } },
   args: { type: "pose" },
   play: async () => {
-    const indicator = makeIndicator();
     document.querySelector<HTMLElement>("[data-test=publish-button]")!.click();
-    indicator.innerText = "clicked";
     await delay(100);
     const canvas = document.querySelector("canvas")!;
     canvas.dispatchEvent(new MouseEvent("mousemove", { clientX: 400, clientY: 400 }));
-    indicator.innerText = "moved";
+    await delay(10);
     canvas.dispatchEvent(new MouseEvent("mousedown", { clientX: 400, clientY: 400 }));
+    await delay(10);
     canvas.dispatchEvent(new MouseEvent("click", { clientX: 400, clientY: 400 }));
-    indicator.innerText = "clicked2";
+    await delay(10);
     canvas.dispatchEvent(new MouseEvent("mousemove", { clientX: 500, clientY: 300 }));
-    indicator.innerText = "moved2";
     await delay(100);
-    indicator.innerText = "done";
   },
 });
 
@@ -87,15 +64,11 @@ export const PoseEstimatePosition = Object.assign(PublishClickToolTemplate.bind(
   parameters: { colorScheme: "dark", chromatic: { delay: 200 } },
   args: { type: "pose_estimate" },
   play: async () => {
-    const indicator = makeIndicator();
     document.querySelector<HTMLElement>("[data-test=publish-button]")!.click();
-    indicator.innerText = "clicked";
     await delay(100);
     const canvas = document.querySelector("canvas")!;
     canvas.dispatchEvent(new MouseEvent("mousemove", { clientX: 400, clientY: 400 }));
-    indicator.innerText = "moved";
     await delay(100);
-    indicator.innerText = "done";
   },
 });
 
@@ -103,20 +76,17 @@ export const PoseEstimateComplete = Object.assign(PublishClickToolTemplate.bind(
   parameters: { colorScheme: "dark", chromatic: { delay: 200 } },
   args: { type: "pose_estimate" },
   play: async () => {
-    const indicator = makeIndicator();
     document.querySelector<HTMLElement>("[data-test=publish-button]")!.click();
-    indicator.innerText = "clicked";
     await delay(100);
     const canvas = document.querySelector("canvas")!;
     canvas.dispatchEvent(new MouseEvent("mousemove", { clientX: 400, clientY: 400 }));
-    indicator.innerText = "moved";
+    await delay(10);
     canvas.dispatchEvent(new MouseEvent("mousedown", { clientX: 400, clientY: 400 }));
+    await delay(10);
     canvas.dispatchEvent(new MouseEvent("click", { clientX: 400, clientY: 400 }));
-    indicator.innerText = "clicked";
+    await delay(10);
     canvas.dispatchEvent(new MouseEvent("mousemove", { clientX: 500, clientY: 300 }));
-    indicator.innerText = "moved2";
     await delay(100);
-    indicator.innerText = "done";
   },
 });
 
