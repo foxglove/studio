@@ -194,11 +194,11 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
           elevation: 4,
         },
       },
-    },
-    MuiBackdrop: {
       styleOverrides: {
         root: {
-          backgroundColor: alpha(theme.palette.common.black, 0.4),
+          ".MuiBackdrop-root": {
+            backgroundColor: alpha(theme.palette.common.black, 0.4),
+          },
         },
       },
     },
