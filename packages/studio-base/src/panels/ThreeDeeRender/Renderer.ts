@@ -51,6 +51,7 @@ import { PointCloudsAndLaserScans } from "./renderables/PointCloudsAndLaserScans
 import { Polygons } from "./renderables/Polygons";
 import { PoseArrays } from "./renderables/PoseArrays";
 import { Poses } from "./renderables/Poses";
+import { PublishClickTool, PublishClickType } from "./renderables/PublishClickTool";
 import { Urdfs } from "./renderables/Urdfs";
 import { MarkerPool } from "./renderables/markers/MarkerPool";
 import {
@@ -72,7 +73,11 @@ export type RendererEvents = {
   startFrame: (currentTime: bigint, renderer: Renderer) => void;
   endFrame: (currentTime: bigint, renderer: Renderer) => void;
   cameraMove: (renderer: Renderer) => void;
-  renderableSelected: (renderable: Renderable | undefined, renderer: Renderer) => void;
+  renderablesClicked: (
+    renderables: Renderable[],
+    cursorCoords: { x: number; y: number },
+    renderer: Renderer,
+  ) => void;
   parametersChange: (
     parameters: ReadonlyMap<string, unknown> | undefined,
     renderer: Renderer,
@@ -111,6 +116,22 @@ export type RendererConfig = {
     /** Toggles visibility of all topics */
     topicsVisible?: boolean;
   };
+  publish: {
+    /** The type of message to publish when clicking in the scene */
+    type: PublishClickType;
+    /** The topic on which to publish poses */
+    poseTopic: string;
+    /** The topic on which to publish points */
+    pointTopic: string;
+    /** The topic on which to publish pose estimates */
+    poseEstimateTopic: string;
+    /** The X standard deviation to publish with poses */
+    poseEstimateXDeviation: number;
+    /** The Y standard deviation to publish with poses */
+    poseEstimateYDeviation: number;
+    /** The theta standard deviation to publish with poses */
+    poseEstimateThetaDeviation: number;
+  };
   /** frameId -> settings */
   transforms: Record<string, Partial<LayerSettingsTransform> | undefined>;
   /** topicName -> settings */
@@ -130,6 +151,9 @@ export type CustomLayerAction = {
 
 // Enable this to render the hitmap to the screen after clicking
 const DEBUG_PICKING: boolean = false;
+
+// Maximum number of objects to present as selection options in a single click
+const MAX_SELECTIONS = 10;
 
 // NOTE: These do not use .convertSRGBToLinear() since background color is not
 // affected by gamma correction
@@ -191,6 +215,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
   outlineMaterial = new THREE.LineBasicMaterial({ dithering: true });
 
   measurementTool: MeasurementTool;
+  publishClickTool: PublishClickTool;
 
   perspectiveCamera: THREE.PerspectiveCamera;
   orthographicCamera: THREE.OrthographicCamera;
@@ -202,7 +227,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
   picker: Picker;
   selectionBackdrop: ScreenOverlay;
-  selectedObject: Renderable | undefined;
+  selectedRenderable: Renderable | undefined;
   colorScheme: "dark" | "light" = "light";
   modelCache: ModelCache;
   transformTree = new TransformTree();
@@ -304,6 +329,9 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.aspect = renderSize.width / renderSize.height;
     log.debug(`Initialized ${renderSize.width}x${renderSize.height} renderer (${samples}x MSAA)`);
 
+    this.measurementTool = new MeasurementTool(this);
+    this.publishClickTool = new PublishClickTool(this);
+
     this.addSceneExtension(new CoreSettings(this));
     this.addSceneExtension(new Cameras(this));
     this.addSceneExtension(new FrameAxes(this));
@@ -316,8 +344,8 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.addSceneExtension(new Poses(this));
     this.addSceneExtension(new PoseArrays(this));
     this.addSceneExtension(new Urdfs(this));
-
-    this.addSceneExtension((this.measurementTool = new MeasurementTool(this)));
+    this.addSceneExtension(this.measurementTool);
+    this.addSceneExtension(this.publishClickTool);
 
     this._watchDevicePixelRatio();
 
@@ -497,9 +525,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
   setPickingEnabled(enabled: boolean): void {
     this._pickingEnabled = enabled;
     if (!enabled) {
-      this.selectedObject = undefined;
-      this.emit("renderableSelected", undefined, this);
-      this.animationFrame();
+      this.setSelectedRenderable(undefined);
     }
   }
 
@@ -517,12 +543,12 @@ export class Renderer extends EventEmitter<RendererEvents> {
       this.gl.setClearColor(bgColor ?? DARK_BACKDROP);
       this.outlineMaterial.color.set(DARK_OUTLINE);
       this.outlineMaterial.needsUpdate = true;
-      this.selectionBackdrop.setColor(DARK_BACKDROP, 0.9);
+      this.selectionBackdrop.setColor(DARK_BACKDROP, 0.8);
     } else {
       this.gl.setClearColor(bgColor ?? LIGHT_BACKDROP);
       this.outlineMaterial.color.set(LIGHT_OUTLINE);
       this.outlineMaterial.needsUpdate = true;
-      this.selectionBackdrop.setColor(LIGHT_BACKDROP, 0.9);
+      this.selectionBackdrop.setColor(LIGHT_BACKDROP, 0.8);
     }
   }
 
@@ -612,6 +638,28 @@ export class Renderer extends EventEmitter<RendererEvents> {
   setCameraState(cameraState: CameraState): void {
     this._updateCameras(cameraState);
     this.emit("cameraMove", this);
+  }
+
+  setSelectedRenderable(selectedRenderable: Renderable | undefined): void {
+    if (this.selectedRenderable === selectedRenderable) {
+      return;
+    }
+
+    if (this.selectedRenderable) {
+      // Deselect the previously selected renderable
+      deselectObject(this.selectedRenderable);
+      log.debug(`Deselected ${this.selectedRenderable.id} (${this.selectedRenderable.name})`);
+    }
+
+    this.selectedRenderable = selectedRenderable;
+
+    if (selectedRenderable) {
+      // Select the newly selected renderable
+      selectObject(selectedRenderable);
+      log.debug(`Selected ${selectedRenderable.id} (${selectedRenderable.name})`);
+    }
+
+    this.animationFrame();
   }
 
   activeCamera(): THREE.PerspectiveCamera | THREE.OrthographicCamera {
@@ -762,7 +810,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
     this.gl.clear();
     camera.layers.set(LAYER_DEFAULT);
-    this.selectionBackdrop.visible = this.selectedObject != undefined;
+    this.selectionBackdrop.visible = this.selectedRenderable != undefined;
 
     const renderFrameId = this.renderFrameId;
     const fixedFrameId = this.fixedFrameId;
@@ -776,7 +824,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
     this.gl.render(this.scene, camera);
 
-    if (this.selectedObject) {
+    if (this.selectedRenderable) {
       this.gl.clearDepth();
       camera.layers.set(LAYER_SELECTED);
       this.selectionBackdrop.visible = false;
@@ -802,76 +850,43 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
   clickHandler = (cursorCoords: THREE.Vector2): void => {
     if (!this._pickingEnabled) {
+      this.setSelectedRenderable(undefined);
       return;
     }
 
-    // Disable picking while the measurement tool is active
-    if (this.measurementTool.state !== "idle") {
+    // Disable picking while a tool is active
+    if (this.measurementTool.state !== "idle" || this.publishClickTool.state !== "idle") {
       return;
     }
 
-    // Deselect the currently selected object, if one is selected
-    let prevSelected: THREE.Object3D | undefined;
-    if (this.selectedObject) {
-      prevSelected = this.selectedObject;
-      deselectObject(this.selectedObject);
-      this.selectedObject = undefined;
+    // Deselect the currently selected object, if one is selected and re-render
+    // the scene to update the render lists
+    this.setSelectedRenderable(undefined);
+
+    // Pick a single renderable, hide it, re-render, and run picking again until
+    // the backdrop is hit or we exceed MAX_SELECTIONS
+    const camera = this.activeCamera();
+    const selections: Renderable[] = [];
+    let curSelection: Renderable | undefined;
+    while (
+      (curSelection = this._pickSingleObject(cursorCoords)) &&
+      selections.length < MAX_SELECTIONS
+    ) {
+      selections.push(curSelection);
+      curSelection.visible = false;
+      this.gl.render(this.scene, camera);
     }
 
-    // Re-render the scene to update the render lists
-    this.animationFrame();
-
-    // Render a single pixel using a fragment shader that writes object IDs as
-    // colors, then read the value of that single pixel back
-    const objectId = this.picker.pick(cursorCoords.x, cursorCoords.y, this.activeCamera());
-    if (objectId < 0) {
-      log.debug(`Background selected`);
-      this.emit("renderableSelected", undefined, this);
-      return;
+    // Put everything back to normal and render one last frame
+    for (const selection of selections) {
+      selection.visible = true;
     }
-
-    // Traverse the scene looking for this objectId
-    const pickedObject = this.scene.getObjectById(objectId);
-
-    // Find the highest ancestor of the picked object that is a Renderable
-    let selectedRenderable: Renderable | undefined;
-    let maybeRenderable = pickedObject as Partial<Renderable> | undefined;
-    while (maybeRenderable) {
-      if (maybeRenderable.pickable === true) {
-        selectedRenderable = maybeRenderable as Renderable;
-      }
-      maybeRenderable = (maybeRenderable.parent ?? undefined) as Partial<Renderable> | undefined;
-    }
-
-    if (prevSelected && selectedRenderable === prevSelected) {
-      log.debug(
-        `Deselecting previously selected Renderable ${prevSelected.id} (${prevSelected.name})`,
-      );
-      if (!DEBUG_PICKING) {
-        // Re-render with no object selected
-        this.animationFrame();
-      }
-      this.emit("renderableSelected", undefined, this);
-      return;
-    }
-
-    this.selectedObject = selectedRenderable;
-
-    if (!selectedRenderable) {
-      log.warn(`No Renderable found for objectId ${objectId}`);
-      this.emit("renderableSelected", undefined, this);
-      return;
-    }
-
-    // Select the newly selected object
-    selectObject(selectedRenderable);
-    this.emit("renderableSelected", selectedRenderable, this);
-    log.debug(`Selected Renderable ${selectedRenderable.id} (${selectedRenderable.name})`);
-
     if (!DEBUG_PICKING) {
-      // Re-render with the selected object
       this.animationFrame();
     }
+
+    log.debug(`Clicked ${selections.length} renderable(s)`);
+    this.emit("renderablesClicked", selections, cursorCoords, this);
   };
 
   handleTopicsAction = (action: SettingsTreeAction): void => {
@@ -933,6 +948,36 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.updateCustomLayersCount();
   };
 
+  private _pickSingleObject(cursorCoords: THREE.Vector2): Renderable | undefined {
+    // Render a single pixel using a fragment shader that writes object IDs as
+    // colors, then read the value of that single pixel back
+    const objectId = this.picker.pick(cursorCoords.x, cursorCoords.y, this.activeCamera());
+    if (objectId === -1) {
+      return undefined;
+    }
+
+    // Traverse the scene looking for this objectId
+    const pickedObject = this.scene.getObjectById(objectId);
+
+    // Find the highest ancestor of the picked object that is a Renderable
+    let selectedRenderable: Renderable | undefined;
+    let maybeRenderable = pickedObject as Partial<Renderable> | undefined;
+    while (maybeRenderable) {
+      if (maybeRenderable.pickable === true) {
+        selectedRenderable = maybeRenderable as Renderable;
+      }
+      maybeRenderable = (maybeRenderable.parent ?? undefined) as Partial<Renderable> | undefined;
+    }
+
+    if (!selectedRenderable) {
+      log.warn(
+        `No Renderable found for objectId ${objectId} (name="${pickedObject?.name}" uuid=${pickedObject?.uuid})`,
+      );
+    }
+
+    return selectedRenderable;
+  }
+
   private _updateFrames(): void {
     if (
       this.followFrameId != undefined &&
@@ -969,6 +1014,8 @@ export class Renderer extends EventEmitter<RendererEvents> {
         `Frame "${this.renderFrameId}" not found`,
       );
       return;
+    } else {
+      this.settings.errors.remove(FOLLOW_TF_PATH, FRAME_NOT_FOUND);
     }
 
     const rootFrameId = frame.root().id;
