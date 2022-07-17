@@ -471,7 +471,7 @@ export class IterablePlayer implements Player {
 
     // set the playIterator to the seek time
     log.debug("Initializing forward iterator from", next);
-    await this._bufferedSource.stop();
+    await this._bufferedSource.stopProducer();
     this._playbackIterator = this._bufferedSource.messageIterator({
       topics: Array.from(this._allTopics),
       start: next,
