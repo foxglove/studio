@@ -658,7 +658,6 @@ function RawMessages(props: Props) {
         <StyledIconButton
           title={expandAll ?? false ? "Collapse all" : "Expand all"}
           onClick={onToggleExpandAll}
-          color={diffEnabled ? "default" : "inherit"}
           data-test="expand-all"
           size="small"
         >
@@ -668,7 +667,7 @@ function RawMessages(props: Props) {
             <UnfoldMoreIcon fontSize="small" />
           )}
         </StyledIconButton>
-        <Stack direction="row" fullWidth alignItems="center">
+        <Stack fullWidth paddingLeft={0.25}>
           <MessagePathInput
             index={0}
             path={topicPath}
