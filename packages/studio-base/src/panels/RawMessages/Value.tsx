@@ -33,7 +33,17 @@ const StyledIconButton = muiStyled(HoverableIconButton)`
   &:not(:hover) { opacity: 0.6; }
 `;
 
-type Action = {
+type ValueProps = {
+  arrLabel: string;
+  basePath: string;
+  itemLabel: string;
+  itemValue: unknown;
+  valueAction: ValueAction | undefined;
+  onTopicPathChange: (arg0: string) => void;
+  openSiblingPanel: OpenSiblingPanel;
+};
+
+type ValueActionItem = {
   key: string;
   tooltip: TooltipProps["title"];
   icon: React.ReactNode;
@@ -42,44 +52,34 @@ type Action = {
   color?: IconButtonProps["color"];
 };
 
-export default function Value({
-  arrLabel,
-  basePath,
-  itemLabel,
-  itemValue,
-  valueAction,
-  onTopicPathChange,
-  openSiblingPanel,
-}: {
-  arrLabel: string;
-  basePath: string;
-  itemLabel: string;
-  itemValue: unknown;
-  valueAction: ValueAction | undefined;
-  onTopicPathChange: (arg0: string) => void;
-  openSiblingPanel: OpenSiblingPanel;
-}): JSX.Element {
+export default function Value(props: ValueProps): JSX.Element {
+  const {
+    arrLabel,
+    basePath,
+    itemLabel,
+    itemValue,
+    valueAction,
+    onTopicPathChange,
+    openSiblingPanel,
+  } = props;
   const [copied, setCopied] = useState(false);
 
   const openPlotPanel = useCallback(
-    (pathSuffix: string) => () => {
-      openSiblingPlotPanel(openSiblingPanel, `${basePath}${pathSuffix}`);
-    },
+    (pathSuffix: string) => () =>
+      openSiblingPlotPanel(openSiblingPanel, `${basePath}${pathSuffix}`),
     [basePath, openSiblingPanel],
   );
 
   const openStateTransitionsPanel = useCallback(
-    (pathSuffix: string) => () => {
-      openSiblingStateTransitionsPanel(openSiblingPanel, `${basePath}${pathSuffix}`);
-    },
+    (pathSuffix: string) => () =>
+      openSiblingStateTransitionsPanel(openSiblingPanel, `${basePath}${pathSuffix}`),
     [basePath, openSiblingPanel],
   );
 
-  const onFilter = useCallback(() => {
-    if (valueAction != undefined) {
-      onTopicPathChange(`${basePath}${valueAction.filterPath}`);
-    }
-  }, [basePath, valueAction, onTopicPathChange]);
+  const onFilter = useCallback(
+    () => onTopicPathChange(`${basePath}${valueAction?.filterPath}`),
+    [basePath, valueAction, onTopicPathChange],
+  );
 
   const handleCopy = useCallback((value: string) => {
     void clipboard.copy(value).then(() => {
@@ -89,7 +89,7 @@ export default function Value({
   }, []);
 
   const availableActions = useMemo(() => {
-    const actions: Action[] = [];
+    const actions: ValueActionItem[] = [];
 
     if (arrLabel.length > 0) {
       actions.push({
@@ -118,7 +118,7 @@ export default function Value({
           key: "line",
           tooltip: "Plot this value on a line chart",
           icon: <LineChartIcon fontSize="inherit" />,
-          onClick: () => openPlotPanel(valueAction.singleSlicePath),
+          onClick: openPlotPanel(valueAction.singleSlicePath),
         });
       }
       if (isPlotableType && !isMultiSlicePath) {
@@ -126,7 +126,7 @@ export default function Value({
           key: "scatter",
           tooltip: "Plot this value on a scatter plot",
           icon: <ScatterPlotIcon fontSize="inherit" />,
-          onClick: () => openPlotPanel(valueAction.multiSlicePath),
+          onClick: openPlotPanel(valueAction.multiSlicePath),
         });
       }
       if (isTransitionalType && isMultiSlicePath) {
@@ -134,7 +134,7 @@ export default function Value({
           key: "stateTransitions",
           tooltip: "View state transitions for this value",
           icon: <StateTransitionsIcon fontSize="inherit" />,
-          onClick: () => openStateTransitionsPanel(valueAction.singleSlicePath),
+          onClick: openStateTransitionsPanel(valueAction.singleSlicePath),
         });
       }
     }
