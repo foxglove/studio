@@ -30,6 +30,7 @@ export const Point = Object.assign(PublishClickToolTemplate.bind({}), {
       document.querySelector<HTMLElement>("[data-test=publish-button]")!.click();
       await delay(100);
       const canvas = document.querySelector("canvas")!;
+      getPublishClickDebugLogElement().innerText += `canvas ${canvas.offsetWidth} ${canvas.offsetHeight}\n`;
       getPublishClickDebugLogElement().innerText += "story mousemove\n";
       canvas.dispatchEvent(new MouseEvent("mousemove", { clientX: 400, clientY: 400 }));
       await delay(10);
@@ -48,6 +49,7 @@ export const PosePosition = Object.assign(PublishClickToolTemplate.bind({}), {
       document.querySelector<HTMLElement>("[data-test=publish-button]")!.click();
       await delay(100);
       const canvas = document.querySelector("canvas")!;
+      getPublishClickDebugLogElement().innerText += `canvas ${canvas.offsetWidth} ${canvas.offsetHeight}\n`;
       getPublishClickDebugLogElement().innerText += "story mousemove\n";
       canvas.dispatchEvent(new MouseEvent("mousemove", { clientX: 400, clientY: 400 }));
       await delay(10);
@@ -66,6 +68,7 @@ export const PoseComplete = Object.assign(PublishClickToolTemplate.bind({}), {
       document.querySelector<HTMLElement>("[data-test=publish-button]")!.click();
       await delay(100);
       const canvas = document.querySelector("canvas")!;
+      getPublishClickDebugLogElement().innerText += `canvas ${canvas.offsetWidth} ${canvas.offsetHeight}\n`;
       getPublishClickDebugLogElement().innerText += "story mousemove\n";
       canvas.dispatchEvent(new MouseEvent("mousemove", { clientX: 400, clientY: 400 }));
       await delay(10);
@@ -93,6 +96,7 @@ export const PoseEstimatePosition = Object.assign(PublishClickToolTemplate.bind(
       document.querySelector<HTMLElement>("[data-test=publish-button]")!.click();
       await delay(100);
       const canvas = document.querySelector("canvas")!;
+      canvas.dispatchEvent(new MouseEvent(`mousemovecanvas clientX: 400, clientY: 400  ${canvas.offsetWidth} ${canvas.offsetHeight}})`;
       canvas.dispatchEvent(new MouseEvent("mousemove", { clientX: 400, clientY: 400 }));
       await delay(100);
       await new Promise((resolve) => requestAnimationFrame(resolve));
@@ -110,6 +114,7 @@ export const PoseEstimateComplete = Object.assign(PublishClickToolTemplate.bind(
       document.querySelector<HTMLElement>("[data-test=publish-button]")!.click();
       await delay(100);
       const canvas = document.querySelector("canvas")!;
+      getPublishClickDebugLogElement().innerText += `canvas ${canvas.offsetWidth} ${canvas.offsetHeight}\n`;
       getPublishClickDebugLogElement().innerText += "story mousemove\n";
       canvas.dispatchEvent(new MouseEvent("mousemove", { clientX: 400, clientY: 400 }));
       await delay(10);
