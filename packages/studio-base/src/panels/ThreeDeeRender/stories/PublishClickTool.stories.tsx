@@ -2,9 +2,12 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { useEffect } from "react";
+
 import { MessageEvent, Topic } from "@foxglove/studio";
 import { PlayerCapabilities } from "@foxglove/studio-base/players/types";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
+import { useReadySignal } from "@foxglove/studio-base/stories/ReadySignalContext";
 import delay from "@foxglove/studio-base/util/delay";
 
 import ThreeDeeRender from "../index";
@@ -19,78 +22,95 @@ export default {
 };
 
 export const Point = Object.assign(PublishClickToolTemplate.bind({}), {
-  parameters: { colorScheme: "dark", chromatic: { delay: 1000 } },
-  args: { type: "point" },
-  play: async () => {
-    document.querySelector<HTMLElement>("[data-test=publish-button]")!.click();
-    await delay(100);
-    const canvas = document.querySelector("canvas")!;
-    canvas.dispatchEvent(new MouseEvent("mousemove", { clientX: 400, clientY: 400 }));
-    await delay(10);
+  parameters: { colorScheme: "dark", useReadySignal: true },
+  args: {
+    type: "point",
+    play: async () => {
+      document.querySelector<HTMLElement>("[data-test=publish-button]")!.click();
+      await delay(100);
+      const canvas = document.querySelector("canvas")!;
+      canvas.dispatchEvent(new MouseEvent("mousemove", { clientX: 400, clientY: 400 }));
+      await delay(10);
+    },
   },
 });
 
 export const PosePosition = Object.assign(PublishClickToolTemplate.bind({}), {
-  parameters: { colorScheme: "dark", chromatic: { delay: 1000 } },
-  args: { type: "pose" },
-  play: async () => {
-    document.querySelector<HTMLElement>("[data-test=publish-button]")!.click();
-    await delay(100);
-    const canvas = document.querySelector("canvas")!;
-    canvas.dispatchEvent(new MouseEvent("mousemove", { clientX: 400, clientY: 400 }));
-    await delay(10);
+  parameters: { colorScheme: "dark", useReadySignal: true },
+  args: {
+    type: "pose",
+    play: async () => {
+      document.querySelector<HTMLElement>("[data-test=publish-button]")!.click();
+      await delay(100);
+      const canvas = document.querySelector("canvas")!;
+      canvas.dispatchEvent(new MouseEvent("mousemove", { clientX: 400, clientY: 400 }));
+      await delay(10);
+    },
   },
 });
 
 export const PoseComplete = Object.assign(PublishClickToolTemplate.bind({}), {
-  parameters: { colorScheme: "dark", chromatic: { delay: 1000 } },
-  args: { type: "pose" },
-  play: async () => {
-    document.querySelector<HTMLElement>("[data-test=publish-button]")!.click();
-    await delay(100);
-    const canvas = document.querySelector("canvas")!;
-    canvas.dispatchEvent(new MouseEvent("mousemove", { clientX: 400, clientY: 400 }));
-    await delay(10);
-    canvas.dispatchEvent(new MouseEvent("mousedown", { clientX: 400, clientY: 400 }));
-    await delay(10);
-    canvas.dispatchEvent(new MouseEvent("click", { clientX: 400, clientY: 400 }));
-    await delay(10);
-    canvas.dispatchEvent(new MouseEvent("mousemove", { clientX: 500, clientY: 300 }));
-    await delay(100);
+  parameters: { colorScheme: "dark", useReadySignal: true },
+  args: {
+    type: "pose",
+    play: async () => {
+      document.querySelector<HTMLElement>("[data-test=publish-button]")!.click();
+      await delay(100);
+      const canvas = document.querySelector("canvas")!;
+      canvas.dispatchEvent(new MouseEvent("mousemove", { clientX: 400, clientY: 400 }));
+      await delay(10);
+      canvas.dispatchEvent(new MouseEvent("mousedown", { clientX: 400, clientY: 400 }));
+      await delay(10);
+      canvas.dispatchEvent(new MouseEvent("click", { clientX: 400, clientY: 400 }));
+      await delay(10);
+      canvas.dispatchEvent(new MouseEvent("mousemove", { clientX: 500, clientY: 300 }));
+      await delay(100);
+    },
   },
 });
 
 export const PoseEstimatePosition = Object.assign(PublishClickToolTemplate.bind({}), {
-  parameters: { colorScheme: "dark", chromatic: { delay: 1000 } },
-  args: { type: "pose_estimate" },
-  play: async () => {
-    document.querySelector<HTMLElement>("[data-test=publish-button]")!.click();
-    await delay(100);
-    const canvas = document.querySelector("canvas")!;
-    canvas.dispatchEvent(new MouseEvent("mousemove", { clientX: 400, clientY: 400 }));
-    await delay(100);
+  parameters: { colorScheme: "dark", useReadySignal: true },
+  args: {
+    type: "pose_estimate",
+    play: async () => {
+      document.querySelector<HTMLElement>("[data-test=publish-button]")!.click();
+      await delay(100);
+      const canvas = document.querySelector("canvas")!;
+      canvas.dispatchEvent(new MouseEvent("mousemove", { clientX: 400, clientY: 400 }));
+      await delay(100);
+    },
   },
 });
 
 export const PoseEstimateComplete = Object.assign(PublishClickToolTemplate.bind({}), {
-  parameters: { colorScheme: "dark", chromatic: { delay: 1000 } },
-  args: { type: "pose_estimate" },
-  play: async () => {
-    document.querySelector<HTMLElement>("[data-test=publish-button]")!.click();
-    await delay(100);
-    const canvas = document.querySelector("canvas")!;
-    canvas.dispatchEvent(new MouseEvent("mousemove", { clientX: 400, clientY: 400 }));
-    await delay(10);
-    canvas.dispatchEvent(new MouseEvent("mousedown", { clientX: 400, clientY: 400 }));
-    await delay(10);
-    canvas.dispatchEvent(new MouseEvent("click", { clientX: 400, clientY: 400 }));
-    await delay(10);
-    canvas.dispatchEvent(new MouseEvent("mousemove", { clientX: 500, clientY: 300 }));
-    await delay(100);
+  parameters: { colorScheme: "dark", useReadySignal: true },
+  args: {
+    type: "pose_estimate",
+    play: async () => {
+      document.querySelector<HTMLElement>("[data-test=publish-button]")!.click();
+      await delay(100);
+      const canvas = document.querySelector("canvas")!;
+      canvas.dispatchEvent(new MouseEvent("mousemove", { clientX: 400, clientY: 400 }));
+      await delay(10);
+      canvas.dispatchEvent(new MouseEvent("mousedown", { clientX: 400, clientY: 400 }));
+      await delay(10);
+      canvas.dispatchEvent(new MouseEvent("click", { clientX: 400, clientY: 400 }));
+      await delay(10);
+      canvas.dispatchEvent(new MouseEvent("mousemove", { clientX: 500, clientY: 300 }));
+      await delay(100);
+    },
   },
 });
 
-function PublishClickToolTemplate({ type }: { type: PublishClickType }): JSX.Element {
+function PublishClickToolTemplate({
+  type,
+  play,
+}: {
+  type: PublishClickType;
+  play: () => Promise<void>;
+}): JSX.Element {
+  const readySignal = useReadySignal();
   const topics: Topic[] = [{ name: "/tf", datatype: "geometry_msgs/TransformStamped" }];
   const tf1: MessageEvent<TransformStamped> = {
     topic: "/tf",
@@ -114,6 +134,14 @@ function PublishClickToolTemplate({ type }: { type: PublishClickType }): JSX.Ele
       currentTime: { sec: 0, nsec: 0 },
     },
   });
+
+  useEffect(() => {
+    if (fixture.topics && fixture.topics.length >= 0) {
+      setTimeout(() => {
+        void play().then(() => readySignal());
+      }, 0);
+    }
+  }, [fixture.topics, play, readySignal]);
   return (
     <PanelSetup fixture={fixture}>
       <ThreeDeeRender
