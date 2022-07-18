@@ -62,7 +62,7 @@ describe("BufferedIterableSource", () => {
     const bufferedSource = new BufferedIterableSource(source);
 
     await bufferedSource.initialize();
-    expect(bufferedSource.loadedRanges()).toEqual([]);
+    expect(bufferedSource.loadedRanges()).toEqual([{ start: 0, end: 0 }]);
   });
 
   it("should produce messages that the source produces", async () => {
@@ -332,7 +332,7 @@ describe("BufferedIterableSource", () => {
       await messageIterator.return?.();
     }
 
-    // A new message iterator at the start time should properly read the first messages
+    // A new message iterator at the start time should properly a new message then the other messages
     {
       const doneYield = waiter(1);
 
@@ -365,20 +365,39 @@ describe("BufferedIterableSource", () => {
       ]);
 
       {
-        const iterResult = messageIterator.next();
-        await expect(iterResult).resolves.toEqual({
-          done: false,
-          value: {
-            problem: undefined,
-            connectionId: undefined,
-            msgEvent: {
-              receiveTime: { sec: 0, nsec: 1 },
-              message: undefined,
-              sizeInBytes: 0,
-              topic: "a",
+        {
+          const iterResult = messageIterator.next();
+          await expect(iterResult).resolves.toEqual({
+            done: false,
+            value: {
+              problem: undefined,
+              connectionId: undefined,
+              msgEvent: {
+                receiveTime: { sec: 0, nsec: 1 },
+                message: undefined,
+                sizeInBytes: 0,
+                topic: "a",
+              },
             },
-          },
-        });
+          });
+        }
+
+        {
+          const iterResult = messageIterator.next();
+          await expect(iterResult).resolves.toEqual({
+            done: false,
+            value: {
+              problem: undefined,
+              connectionId: undefined,
+              msgEvent: {
+                receiveTime: { sec: 0, nsec: 500000000 },
+                message: undefined,
+                sizeInBytes: 0,
+                topic: "a",
+              },
+            },
+          });
+        }
       }
 
       {
