@@ -19,7 +19,7 @@ export default {
 };
 
 export const Point = Object.assign(PublishClickToolTemplate.bind({}), {
-  parameters: { colorScheme: "dark", chromatic: { delay: 200 } },
+  parameters: { colorScheme: "dark", chromatic: { delay: 1000 } },
   args: { type: "point" },
   play: async () => {
     document.querySelector<HTMLElement>("[data-test=publish-button]")!.click();
@@ -31,7 +31,7 @@ export const Point = Object.assign(PublishClickToolTemplate.bind({}), {
 });
 
 export const PosePosition = Object.assign(PublishClickToolTemplate.bind({}), {
-  parameters: { colorScheme: "dark", chromatic: { delay: 200 } },
+  parameters: { colorScheme: "dark", chromatic: { delay: 1000 } },
   args: { type: "pose" },
   play: async () => {
     document.querySelector<HTMLElement>("[data-test=publish-button]")!.click();
@@ -43,7 +43,7 @@ export const PosePosition = Object.assign(PublishClickToolTemplate.bind({}), {
 });
 
 export const PoseComplete = Object.assign(PublishClickToolTemplate.bind({}), {
-  parameters: { colorScheme: "dark", chromatic: { delay: 200 } },
+  parameters: { colorScheme: "dark", chromatic: { delay: 1000 } },
   args: { type: "pose" },
   play: async () => {
     document.querySelector<HTMLElement>("[data-test=publish-button]")!.click();
@@ -61,7 +61,7 @@ export const PoseComplete = Object.assign(PublishClickToolTemplate.bind({}), {
 });
 
 export const PoseEstimatePosition = Object.assign(PublishClickToolTemplate.bind({}), {
-  parameters: { colorScheme: "dark", chromatic: { delay: 200 } },
+  parameters: { colorScheme: "dark", chromatic: { delay: 1000 } },
   args: { type: "pose_estimate" },
   play: async () => {
     document.querySelector<HTMLElement>("[data-test=publish-button]")!.click();
@@ -73,7 +73,7 @@ export const PoseEstimatePosition = Object.assign(PublishClickToolTemplate.bind(
 });
 
 export const PoseEstimateComplete = Object.assign(PublishClickToolTemplate.bind({}), {
-  parameters: { colorScheme: "dark", chromatic: { delay: 200 } },
+  parameters: { colorScheme: "dark", chromatic: { delay: 1000 } },
   args: { type: "pose_estimate" },
   play: async () => {
     document.querySelector<HTMLElement>("[data-test=publish-button]")!.click();
