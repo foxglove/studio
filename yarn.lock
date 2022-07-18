@@ -24775,7 +24775,6 @@ __metadata:
     "@foxglove/studio-base": "workspace:*"
     "@types/copy-webpack-plugin": 10.1.0
     copy-webpack-plugin: 10.2.4
-    webpack: 5.73.0
   languageName: unknown
   linkType: soft
 
