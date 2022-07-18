@@ -96,7 +96,7 @@ export const PoseEstimatePosition = Object.assign(PublishClickToolTemplate.bind(
       document.querySelector<HTMLElement>("[data-test=publish-button]")!.click();
       await delay(100);
       const canvas = document.querySelector("canvas")!;
-      canvas.dispatchEvent(new MouseEvent(`mousemovecanvas clientX: 400, clientY: 400  ${canvas.offsetWidth} ${canvas.offsetHeight}})`;
+      getPublishClickDebugLogElement().innerText += `canvas ${canvas.offsetWidth} ${canvas.offsetHeight}\n`;
       canvas.dispatchEvent(new MouseEvent("mousemove", { clientX: 400, clientY: 400 }));
       await delay(100);
       await new Promise((resolve) => requestAnimationFrame(resolve));
