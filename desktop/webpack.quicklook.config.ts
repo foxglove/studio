@@ -3,11 +3,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import ReactRefreshPlugin from "@pmmmwh/react-refresh-webpack-plugin";
-import { ESBuildMinifyPlugin } from "esbuild-loader";
 import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
 import HtmlWebpackPlugin from "html-webpack-plugin";
 import path from "path";
 import ReactRefreshTypescript from "react-refresh-typescript";
+import TerserPlugin from "terser-webpack-plugin";
 import createStyledComponentsTransformer from "typescript-plugin-styled-components";
 import { Configuration, ProvidePlugin } from "webpack";
 import "webpack-dev-server";
@@ -32,7 +32,7 @@ export default (_env: unknown, argv: WebpackArgv): Configuration => {
 
     context: path.resolve(__dirname, "./quicklook"),
     entry: "./index.tsx",
-    target: "web",
+    target: ["web", "es2020"],
     devtool: isDev ? "eval-cheap-module-source-map" : "source-map",
 
     output: {
@@ -71,9 +71,13 @@ export default (_env: unknown, argv: WebpackArgv): Configuration => {
     optimization: {
       removeAvailableModules: true,
       minimizer: [
-        new ESBuildMinifyPlugin({
-          target: "es2020",
-          minifyIdentifiers: false, // readable error stack traces are helpful for debugging
+        new TerserPlugin({
+          minify: TerserPlugin.swcMinify,
+          // `terserOptions` options will be passed to `swc` (`@swc/core`)
+          // Link to options - https://swc.rs/docs/config-js-minify
+          terserOptions: {
+            ecma: 2020,
+          },
         }),
       ],
     },

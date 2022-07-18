@@ -2,9 +2,9 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { ESBuildMinifyPlugin } from "esbuild-loader";
 import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
 import path from "path";
+import TerserPlugin from "terser-webpack-plugin";
 import { Configuration, EnvironmentPlugin } from "webpack";
 
 import { WebpackArgv } from "@foxglove/studio-base/WebpackArgv";
@@ -15,7 +15,7 @@ export default (_: unknown, argv: WebpackArgv): Configuration => {
   return {
     context: path.resolve(__dirname, "./preload"),
     entry: "./index.ts",
-    target: "electron-preload",
+    target: ["electron-preload", "es2020"],
     devtool: isDev ? "eval-cheap-module-source-map" : "source-map",
 
     output: {
@@ -48,9 +48,13 @@ export default (_: unknown, argv: WebpackArgv): Configuration => {
     optimization: {
       removeAvailableModules: true,
       minimizer: [
-        new ESBuildMinifyPlugin({
-          target: "es2020",
-          minifyIdentifiers: false, // readable error stack traces are helpful for debugging
+        new TerserPlugin({
+          minify: TerserPlugin.swcMinify,
+          // `terserOptions` options will be passed to `swc` (`@swc/core`)
+          // Link to options - https://swc.rs/docs/config-js-minify
+          terserOptions: {
+            ecma: 2020,
+          },
         }),
       ],
     },

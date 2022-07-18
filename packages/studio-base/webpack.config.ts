@@ -8,6 +8,7 @@
 
 import { CleanWebpackPlugin } from "clean-webpack-plugin";
 import path from "path";
+import TerserPlugin from "terser-webpack-plugin";
 import { Configuration } from "webpack";
 
 import { WebpackArgv } from "@foxglove/studio-base/WebpackArgv";
@@ -22,7 +23,7 @@ const mainConfig = (env: unknown, argv: WebpackArgv): Configuration => {
   const config: Configuration = {
     ...appWebpackConfig,
 
-    target: "web",
+    target: ["web", "es2020"],
     context: path.resolve(__dirname),
     entry: "./src/index.ts",
     devtool: isDev ? "eval-cheap-module-source-map" : "inline-source-map",
@@ -35,7 +36,15 @@ const mainConfig = (env: unknown, argv: WebpackArgv): Configuration => {
     },
 
     optimization: {
-      minimize: false,
+      removeAvailableModules: true,
+      minimizer: [
+        new TerserPlugin({
+          minify: TerserPlugin.swcMinify,
+          // `terserOptions` options will be passed to `swc` (`@swc/core`)
+          // Link to options - https://swc.rs/docs/config-js-minify
+          terserOptions: {},
+        }),
+      ],
     },
 
     output: {

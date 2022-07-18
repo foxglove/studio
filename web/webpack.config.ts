@@ -8,6 +8,7 @@ import { CleanWebpackPlugin } from "clean-webpack-plugin";
 import CopyPlugin from "copy-webpack-plugin";
 import HtmlWebpackPlugin from "html-webpack-plugin";
 import path from "path";
+import TerserPlugin from "terser-webpack-plugin";
 import { Configuration, EnvironmentPlugin, WebpackPluginInstance } from "webpack";
 import type { Configuration as WebpackDevServerConfiguration } from "webpack-dev-server";
 
@@ -85,7 +86,7 @@ const mainConfig = (env: unknown, argv: WebpackArgv): Configuration => {
 
     ...appWebpackConfig,
 
-    target: "web",
+    target: ["web", "es2020"],
     context: path.resolve(__dirname, "src"),
     entry: "./index.tsx",
     devtool: isDev ? "eval-cheap-module-source-map" : "source-map",
@@ -97,6 +98,20 @@ const mainConfig = (env: unknown, argv: WebpackArgv): Configuration => {
       filename: isDev ? "[name].js" : "[name].[contenthash].js",
 
       path: path.resolve(__dirname, ".webpack"),
+    },
+
+    optimization: {
+      removeAvailableModules: true,
+      minimizer: [
+        new TerserPlugin({
+          minify: TerserPlugin.swcMinify,
+          // `terserOptions` options will be passed to `swc` (`@swc/core`)
+          // Link to options - https://swc.rs/docs/config-js-minify
+          terserOptions: {
+            ecma: 2020,
+          },
+        }),
+      ],
     },
 
     plugins: [
