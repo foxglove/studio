@@ -18,6 +18,22 @@ export type PublishClickType = "pose_estimate" | "pose" | "point";
 
 export type PublishClickState = "idle" | "place-first-point" | "place-second-point";
 
+export function getPublishClickDebugLogElement(): HTMLDivElement {
+  let div = document.querySelector<HTMLDivElement>("#publish-click-debug-log");
+  if (!div) {
+    div = document.createElement("div");
+    div.id = "publish-click-debug-log";
+    div.style.position = "absolute";
+    div.style.top = "0";
+    div.style.left = "0";
+    div.style.color = "white";
+    div.style.backgroundColor = "#ff000077";
+    div.style.whiteSpace = "pre";
+    document.body.appendChild(div);
+  }
+  return div;
+}
+
 function makeArrowMarker(type: PublishClickType): Marker {
   return {
     header: { frame_id: "", stamp: { sec: 0, nsec: 0 } },
@@ -93,6 +109,12 @@ export class PublishClickTool extends SceneExtension<Renderable<BaseUserData>, P
     this.add(this.sphere);
     this.add(this.arrow);
     this._setState("idle");
+    this.arrow.headMesh.onBeforeRender = () => {
+      getPublishClickDebugLogElement().innerText += `PublishClickTool arrow onBeforeRender\n`;
+    };
+    this.arrow.headMesh.onAfterRender = () => {
+      getPublishClickDebugLogElement().innerText += `PublishClickTool arrow onAfterRender\n`;
+    };
   }
 
   override dispose(): void {
@@ -119,6 +141,7 @@ export class PublishClickTool extends SceneExtension<Renderable<BaseUserData>, P
 
   private _setState(state: PublishClickState): void {
     this.state = state;
+    getPublishClickDebugLogElement().innerText += `PublishClickTool _setState(${state})\n`;
     switch (state) {
       case "idle":
         this.point1 = this.point2 = undefined;
@@ -142,6 +165,9 @@ export class PublishClickTool extends SceneExtension<Renderable<BaseUserData>, P
     worldSpaceCursorCoords: THREE.Vector3 | undefined,
     _event: MouseEvent,
   ) => {
+    getPublishClickDebugLogElement().innerText += `PublishClickTool mousemove ${worldSpaceCursorCoords?.x.toFixed(
+      2,
+    )} ${worldSpaceCursorCoords?.y.toFixed(2)} ${worldSpaceCursorCoords?.z.toFixed(2)}\n`;
     if (!worldSpaceCursorCoords) {
       return;
     }
@@ -163,6 +189,9 @@ export class PublishClickTool extends SceneExtension<Renderable<BaseUserData>, P
     worldSpaceCursorCoords: THREE.Vector3 | undefined,
     _event: MouseEvent,
   ) => {
+    getPublishClickDebugLogElement().innerText += `PublishClickTool click ${worldSpaceCursorCoords?.x.toFixed(
+      2,
+    )} ${worldSpaceCursorCoords?.y.toFixed(2)} ${worldSpaceCursorCoords?.z.toFixed(2)}\n`;
     if (!worldSpaceCursorCoords) {
       return;
     }
@@ -207,6 +236,7 @@ export class PublishClickTool extends SceneExtension<Renderable<BaseUserData>, P
   };
 
   private _render() {
+    getPublishClickDebugLogElement().innerText += `PublishClickTool._render()\n`;
     if (this.publishClickType === "point") {
       this.arrow.visible = false;
       if (this.point1) {
