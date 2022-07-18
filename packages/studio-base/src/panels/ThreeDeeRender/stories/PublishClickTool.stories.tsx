@@ -27,6 +27,7 @@ export const Point = Object.assign(PublishClickToolTemplate.bind({}), {
     await delay(100);
     const canvas = document.querySelector("canvas")!;
     for (let tries = 0; tries < 10 && (canvas.offsetWidth === 0 || canvas.offsetHeight === 0); ) {
+      getPublishClickDebugLogElement().innerText += `delay because canvas width=${canvas.offsetWidth} height=${canvas.offsetHeight}\n`;
       await delay(10);
     }
     getPublishClickDebugLogElement().innerText += `canvas ${canvas.offsetWidth} ${canvas.offsetHeight}\n`;
@@ -47,6 +48,7 @@ export const PosePosition = Object.assign(PublishClickToolTemplate.bind({}), {
     await delay(100);
     const canvas = document.querySelector("canvas")!;
     for (let tries = 0; tries < 10 && (canvas.offsetWidth === 0 || canvas.offsetHeight === 0); ) {
+      getPublishClickDebugLogElement().innerText += `delay because canvas width=${canvas.offsetWidth} height=${canvas.offsetHeight}\n`;
       await delay(10);
     }
     getPublishClickDebugLogElement().innerText += `canvas ${canvas.offsetWidth} ${canvas.offsetHeight}\n`;
@@ -67,6 +69,7 @@ export const PoseComplete = Object.assign(PublishClickToolTemplate.bind({}), {
     await delay(100);
     const canvas = document.querySelector("canvas")!;
     for (let tries = 0; tries < 10 && (canvas.offsetWidth === 0 || canvas.offsetHeight === 0); ) {
+      getPublishClickDebugLogElement().innerText += `delay because canvas width=${canvas.offsetWidth} height=${canvas.offsetHeight}\n`;
       await delay(10);
     }
     getPublishClickDebugLogElement().innerText += `canvas ${canvas.offsetWidth} ${canvas.offsetHeight}\n`;
@@ -96,6 +99,7 @@ export const PoseEstimatePosition = Object.assign(PublishClickToolTemplate.bind(
     await delay(100);
     const canvas = document.querySelector("canvas")!;
     for (let tries = 0; tries < 10 && (canvas.offsetWidth === 0 || canvas.offsetHeight === 0); ) {
+      getPublishClickDebugLogElement().innerText += `delay because canvas width=${canvas.offsetWidth} height=${canvas.offsetHeight}\n`;
       await delay(10);
     }
     getPublishClickDebugLogElement().innerText += `canvas ${canvas.offsetWidth} ${canvas.offsetHeight}\n`;
@@ -115,6 +119,7 @@ export const PoseEstimateComplete = Object.assign(PublishClickToolTemplate.bind(
     await delay(100);
     const canvas = document.querySelector("canvas")!;
     for (let tries = 0; tries < 10 && (canvas.offsetWidth === 0 || canvas.offsetHeight === 0); ) {
+      getPublishClickDebugLogElement().innerText += `delay because canvas width=${canvas.offsetWidth} height=${canvas.offsetHeight}\n`;
       await delay(10);
     }
     getPublishClickDebugLogElement().innerText += `canvas ${canvas.offsetWidth} ${canvas.offsetHeight}\n`;
