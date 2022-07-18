@@ -2,8 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { getColorFromString, hsv2hsl } from "@fluentui/react";
-import { Typography, styled as muiStyled } from "@mui/material";
+import { Typography, styled as muiStyled, useTheme } from "@mui/material";
 import { last } from "lodash";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useReducer, useState } from "react";
 
@@ -22,14 +21,6 @@ type Props = {
   context: PanelExtensionContext;
 };
 
-function getTextColorForBackground(backgroundColor: string) {
-  const color = getColorFromString(backgroundColor);
-  if (!color) {
-    return "white";
-  }
-  const hsl = hsv2hsl(color.h, color.s, color.v);
-  return hsl.l >= 50 ? "black" : "white";
-}
 const defaultConfig: Config = {
   path: "",
   style: "bulb",
@@ -137,6 +128,9 @@ export function Indicator({ context }: Props): JSX.Element {
   // panel extensions must notify when they've completed rendering
   // onRender will setRenderDone to a done callback which we can invoke after we've rendered
   const [renderDone, setRenderDone] = useState<() => void>(() => () => {});
+  const {
+    palette: { augmentColor },
+  } = useTheme();
 
   const [config, setConfig] = useState(() => ({
     ...defaultConfig,
@@ -241,7 +235,9 @@ export function Indicator({ context }: Props): JSX.Element {
           <Typography
             color={
               style === "background"
-                ? getTextColorForBackground(matchingRule?.color ?? fallbackColor)
+                ? augmentColor({
+                    color: { main: matchingRule?.color ?? fallbackColor },
+                  }).contrastText
                 : matchingRule?.color ?? fallbackColor
             }
             fontFamily={fonts.MONOSPACE}
