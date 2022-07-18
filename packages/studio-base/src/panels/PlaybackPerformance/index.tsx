@@ -122,7 +122,7 @@ export function UnconnectedPlaybackPerformance({
   return (
     <Stack flex="auto">
       <PanelToolbar helpContent={helpContent} />
-      <Stack flex="auto" justifyContent="center" gap={1} padding={1}>
+      <Stack flex="auto" justifyContent="center" gap={2} padding={1}>
         <PlaybackPerformanceItem
           points={perfPoints.current.speed}
           maximum={1.6}
