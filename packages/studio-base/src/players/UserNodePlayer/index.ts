@@ -10,6 +10,7 @@
 //   This source code is licensed under the Apache License, Version 2.0,
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
+
 import { isEqual } from "lodash";
 import memoizeWeak from "memoize-weak";
 import shallowequal from "shallowequal";
@@ -272,45 +273,39 @@ export default class UserNodePlayer implements Player {
       return this._lastBlockRequest.result;
     }
 
-    const outputBlocks: (MessageBlock | undefined)[] = [];
+    // If no downstream subscriptions want blocks for our output topics we can just pass through
+    // the blocks from the underlying player.
+    const fullRegistrations = nodeRegistrations.filter(
+      (reg) => this._nodeSubscriptions[reg.output.name]?.preloadType === "full",
+    );
+    if (fullRegistrations.length === 0) {
+      return blocks;
+    }
 
+    const outputBlocks: (MessageBlock | undefined)[] = [];
     for (const block of blocks) {
       if (!block) {
         outputBlocks.push(block);
         continue;
       }
 
+      // Flatten and re-sort block messages so that nodes see them in the same order
+      // as the non-block nodes.
       const messagesByTopic = { ...block.messagesByTopic };
-
-      // for each node registration, iterate the input topics
-      // for each input topic process the messagesByTopic
-      for (const nodeRegistration of nodeRegistrations) {
-        const topic = nodeRegistration.output.name;
-        const subscription = this._nodeSubscriptions[topic];
-        if (subscription == undefined || subscription.preloadType !== "full") {
-          continue;
-        }
-
-        const outputMessages: MessageEvent<unknown>[] = [];
-        for (const inputTopic of nodeRegistration.inputs) {
-          const inputMessages = block.messagesByTopic[inputTopic];
-          if (!inputMessages) {
-            continue;
-          }
-
-          for (const inputMessage of inputMessages) {
-            const outputMessage = await nodeRegistration.processBlockMessage(
-              inputMessage,
-              globalVariables,
-            );
-            if (!outputMessage) {
-              continue;
+      const blockMessages = Object.values(messagesByTopic)
+        .flat()
+        .sort((a, b) => compare(a.receiveTime, b.receiveTime));
+      for (const nodeRegistration of fullRegistrations) {
+        const outTopic = nodeRegistration.output.name;
+        for (const message of blockMessages) {
+          if (nodeRegistration.inputs.includes(message.topic)) {
+            const outputMessage = await nodeRegistration.processMessage(message, globalVariables);
+            if (outputMessage) {
+              messagesByTopic[outTopic] ??= [];
+              messagesByTopic[outTopic]?.push(outputMessage);
             }
-            outputMessages.push(outputMessage);
           }
         }
-
-        messagesByTopic[topic] = outputMessages;
       }
 
       outputBlocks.push({
@@ -521,9 +516,6 @@ export default class UserNodePlayer implements Player {
       };
     };
 
-    const processMessage = buildMessageProcessor();
-    const processBlockMessage = buildMessageProcessor();
-
     const terminate = () => {
       this._problemStore.delete(problemKey);
 
@@ -539,8 +531,8 @@ export default class UserNodePlayer implements Player {
       nodeData,
       inputs: inputTopics,
       output: { name: outputTopic, datatype: outputDatatype },
-      processMessage,
-      processBlockMessage,
+      processMessage: buildMessageProcessor(),
+      processBlockMessage: buildMessageProcessor(),
       terminate,
     };
     this._nodeRegistrationCache.push({ nodeId, userNode, result });
