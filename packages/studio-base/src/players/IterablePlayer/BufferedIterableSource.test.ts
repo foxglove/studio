@@ -153,21 +153,6 @@ describe("BufferedIterableSource", () => {
         topics: ["a"],
       });
 
-      await signal.wait();
-
-      for (;;) {
-        const iterResult = await messageIterator.next();
-        if (iterResult.done === true) {
-          break;
-        }
-      }
-    }
-
-    {
-      const messageIterator = bufferedSource.messageIterator({
-        topics: ["a"],
-      });
-
       // confirm messages are what we expect
       for (let i = 0; i < 8; ++i) {
         const iterResult = messageIterator.next();
@@ -261,7 +246,6 @@ describe("BufferedIterableSource", () => {
 
     await bufferedSource.initialize();
 
-    // Wait for the first 5 to signal to test that we've loaded half the source range
     const partialBuffer = waiter(6);
     const doneYield = waiter(1);
 
@@ -290,7 +274,7 @@ describe("BufferedIterableSource", () => {
 
     await partialBuffer.wait();
 
-    expect(bufferedSource.loadedRanges()).toEqual([{ start: 0, end: 0.5 }]);
+    expect(bufferedSource.loadedRanges()).toEqual([{ start: 0, end: 0.499999999 }]);
 
     // When the underlying source has finished loading, the _end_ is reached even if the last message is not at the end time
     await doneYield.wait();

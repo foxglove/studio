@@ -20,7 +20,8 @@ import {
 const log = Log.getLogger(__filename);
 
 /**
- * BufferedIterableSource proxies access to IIterableSource.
+ * BufferedIterableSource proxies access to IIterableSource. It buffers the messageIterator by
+ * reading ahead in the underlying source.
  *
  * The architecture of BufferedIterableSource follows a producer-consumer model. The messageIterator
  * is the consumer and reads messages from cache while the startProducer method produces messages by
@@ -69,15 +70,17 @@ class BufferedIterableSource implements IIterableSource {
 
     log.debug("Starting producer");
 
-    this.cache = [];
+    // Clear the cache and start producing into an empty array, the consumer removes elements from
+    // the start of the array.
+    this.cache.length = 0;
+
+    const sourceIterator = this.source.messageIterator({
+      topics: args.topics,
+      start: args.start,
+      end: args.end,
+    });
 
     try {
-      const sourceIterator = this.source.messageIterator({
-        topics: args.topics,
-        start: args.start,
-        end: args.end,
-      });
-
       for (;;) {
         if (this.aborted) {
           break;
@@ -108,6 +111,7 @@ class BufferedIterableSource implements IIterableSource {
         this.readSignal?.resolve();
       }
     } finally {
+      await sourceIterator.return?.();
       // Indicate to the consumer that it can try reading again
       this.readSignal?.resolve();
     }
@@ -136,8 +140,10 @@ class BufferedIterableSource implements IIterableSource {
 
     const start = args.start ?? this.initResult.start;
 
+    const readAheadTime = { sec: 10, nsec: 0 };
+
     // Setup the initial cacheUntilTime to start buffing data
-    this.readUntil = addTime(start, { sec: 5, nsec: 0 });
+    this.readUntil = addTime(start, readAheadTime);
 
     this.aborted = false;
 
@@ -177,7 +183,7 @@ class BufferedIterableSource implements IIterableSource {
           }
 
           if (item.msgEvent) {
-            self.readUntil = addTime(item.msgEvent.receiveTime, { sec: 5, nsec: 0 });
+            self.readUntil = addTime(item.msgEvent.receiveTime, readAheadTime);
           }
 
           self.writeSignal?.resolve();

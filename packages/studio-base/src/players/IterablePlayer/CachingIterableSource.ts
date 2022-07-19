@@ -5,7 +5,7 @@
 import { isEqual } from "lodash";
 
 import Log from "@foxglove/log";
-import { subtract, add, toNanoSec, compare, fromNanoSec } from "@foxglove/rostime";
+import { subtract, add, toNanoSec, compare } from "@foxglove/rostime";
 import { Time, MessageEvent } from "@foxglove/studio";
 import { Range } from "@foxglove/studio-base/util/ranges";
 
@@ -39,8 +39,11 @@ type CacheBlock = {
   // Sorted cache item tuples. The first value is the timestamp of the iterator result and the second is the result.
   items: [bigint, IteratorResult][];
 
-  // If the block has fully finished buffering and will have no more items added
-  done: boolean;
+  // The last time this block was accessed.
+  lastAccess: number;
+
+  // The size of this block in bytes
+  size: number;
 };
 
 /**
@@ -101,6 +104,14 @@ class CachingIterableSource implements IIterableSource {
 
   private initResult?: Initalization;
 
+  private totalSizeBytes: number = 0;
+
+  // Maximum total cache size
+  private maxTotalSizeBytes: number = 1e9;
+
+  // Maximum size per block
+  private maxBlockSizeBytes: number = 50000000;
+
   constructor(source: IIterableSource) {
     this.source = source;
   }
@@ -119,144 +130,241 @@ class CachingIterableSource implements IIterableSource {
       throw new Error("Invariant: uninitialized");
     }
 
-    const newTopics = [...args.topics].sort();
+    let sourceMessageIterator: AsyncIterator<Readonly<IteratorResult>> | undefined;
+    try {
+      const newTopics = [...args.topics].sort();
 
-    // When the list of topics we want changes we purge the entire cache and start again.
-    // This is heavy-handed but avoids dealing with how to handle disjoint cached ranges across topics.
-    if (!isEqual(newTopics, this.cachedTopics)) {
-      log.debug("topics changed - clearing cache, resetting range");
-      this.cachedTopics = newTopics;
-      this.cache.length = 0;
-    }
-
-    // Where we want to read messages from. As we move through blocks and messages, the read head
-    // moves forward to track the next place we should be reading.
-    let readHead = args.start ?? this.initResult.start;
-
-    for (;;) {
-      if (compare(readHead, this.initResult.end) > 0) {
-        break;
+      // When the list of topics we want changes we purge the entire cache and start again.
+      // This is heavy-handed but avoids dealing with how to handle disjoint cached ranges across topics.
+      if (!isEqual(newTopics, this.cachedTopics)) {
+        log.debug("topics changed - clearing cache, resetting range");
+        this.cachedTopics = newTopics;
+        this.cache.length = 0;
       }
 
-      let cacheBlockIndex = this.cache.findIndex((item) => {
-        return compare(item.start, readHead) <= 0 && compare(item.end, readHead) >= 0;
-      });
+      // Where we want to read messages from. As we move through blocks and messages, the read head
+      // moves forward to track the next place we should be reading.
+      let readHead = args.start ?? this.initResult.start;
 
-      let block = this.cache[cacheBlockIndex];
+      for (;;) {
+        if (compare(readHead, this.initResult.end) > 0) {
+          break;
+        }
 
-      // There is no block for our start time, so we need to make one to contain our cached items
-      if (!block) {
-        block = {
-          start: readHead,
-
-          // fixme - I think this needs to be 1 _past_ the last read
-          end: readHead,
-
-          items: [],
-          done: false,
-        };
-
-        const insertIndex = this.cache.findIndex((item) => {
-          // Find the first index where bufferStart is less than an existing start
-          return compare(readHead, item.start) <= 0;
+        let cacheBlockIndex = this.cache.findIndex((item) => {
+          return compare(item.start, readHead) <= 0 && compare(item.end, readHead) >= 0;
         });
 
-        if (insertIndex < 0) {
-          cacheBlockIndex = this.cache.length;
-          this.cache.push(block);
-        } else {
-          cacheBlockIndex = insertIndex;
-          // add the new cache block before the existing block
-          this.cache.splice(cacheBlockIndex, 0, block);
+        let block = this.cache[cacheBlockIndex];
+
+        // if the block start === end and done is false, then it could have been a new block we started but never
+        // got around to adding any messages into, we remove it.
+        if (block && compare(block.start, block.end) === 0 && block.items.length === 0) {
+          block = undefined;
+          this.cache.splice(cacheBlockIndex, 1);
+          cacheBlockIndex = -1;
+          continue;
         }
 
-        this.recomputeLoadedRangeCache();
-      }
+        let cacheIndex = -1;
+        if (block) {
+          cacheIndex = findCacheItem(block.items, toNanoSec(readHead));
+          if (cacheIndex < 0) {
+            cacheIndex = ~cacheIndex;
+          }
+        }
+        let cachedItem = block?.items[cacheIndex];
 
-      // lookup the cached result item
-      let cacheIndex = findCacheItem(block.items, toNanoSec(readHead));
-      if (cacheIndex < 0) {
-        cacheIndex = ~cacheIndex;
-      }
+        // We have a block found an item within the block.
+        // Yield the rest of the block
+        if (block && cachedItem) {
+          // We have a cached item, we can consume our cache until we've read to the end
+          for (let idx = cacheIndex; idx < block.items.length; ++idx) {
+            cachedItem = block.items[idx];
+            if (!cachedItem) {
+              break;
+            }
 
-      let cachedItem = block.items[cacheIndex];
+            // update the last time this block was accessed
+            block.lastAccess = Date.now();
 
-      if (cachedItem) {
-        // We have a cached item, we can consume our cache until we've read to the end
-        for (;;) {
-          cachedItem = block.items[cacheIndex];
-          if (!cachedItem) {
-            break;
+            // Increment to the next cache item
+            cacheIndex += 1;
+            yield cachedItem[1];
           }
 
-          // Track the last result we've read so when we've run our of results we know where to start again
-          readHead = add(fromNanoSec(cachedItem[0]), { sec: 0, nsec: 1 });
-
-          // Increment to the next cache item
-          cacheIndex += 1;
-          yield cachedItem[1];
-        }
-      } else {
-        // We don't have a cache item, we need to read from the underlying source
-
-        if (block.done) {
-          // fixme - can this happen? we have a done block and it didn't have our item?
-          // how did we get this block in the first place?
+          // We know that block.end represents the last messages possible in the block, so our
+          // next read can start at 1 nanosecond after the end
           readHead = add(block.end, { sec: 0, nsec: 1 });
           continue;
         }
 
-        const nextBlock = this.cache[cacheBlockIndex + 1];
+        let sourceReadStart = readHead;
+        let sourceReadEnd = this.initResult.end;
 
-        // If there's a block that follows ours then we only need to read _up to_ its start time
-        const end = nextBlock
-          ? subtract(nextBlock.start, { sec: 0, nsec: 1 })
-          : this.initResult.end;
+        // We have a block that is not done, we continue from where we left off and read until the next block starts
+        if (block) {
+          // We start our read after the end of the block since block end has already included all those messages
+          sourceReadStart = add(block.end, { sec: 0, nsec: 1 });
 
-        // fixme - for empty blocks we ca'nt start at 1 nanosecond after end because
-        // we haven't read that time yet
-        const sourceStart = block.end;
+          const nextBlock = this.cache[cacheBlockIndex + 1];
+          if (nextBlock) {
+            sourceReadEnd = subtract(nextBlock.start, { sec: 0, nsec: 1 });
+          }
+        } else {
+          // We do not have a block
+          // We will insert a new block, and setup the source to read the range for the new block
 
-        const sourceIterator = this.source.messageIterator({
+          // Look for the block that we will insert our block before
+          const insertIndex = this.cache.findIndex((item) => {
+            // Find the first index where readHead is less than an existing start
+            return compare(readHead, item.start) < 0;
+          });
+
+          // If we have a next block (this is the block ours would come before), then we only need
+          // to read up to that block.
+          const nextBlock = this.cache[insertIndex];
+          if (nextBlock) {
+            sourceReadEnd = subtract(nextBlock.start, { sec: 0, nsec: 1 });
+          }
+
+          if (compare(sourceReadStart, sourceReadEnd) > 0) {
+            throw new Error("Invariant: sourceReadStart > sourceReadEnd");
+          }
+
+          // Our new block starts at sourceReadStart (has no end yet)
+          const newBlock: CacheBlock = {
+            start: sourceReadStart,
+            end: sourceReadStart,
+            items: [],
+            size: 0,
+            lastAccess: Date.now(),
+          };
+
+          if (insertIndex < 0) {
+            cacheBlockIndex = this.cache.length;
+            this.cache.push(newBlock);
+          } else {
+            cacheBlockIndex = insertIndex;
+            // add the new cache block before the existing block
+            this.cache.splice(cacheBlockIndex, 0, newBlock);
+          }
+
+          block = newBlock;
+        }
+
+        sourceMessageIterator = this.source.messageIterator({
           topics: this.cachedTopics,
-          start: sourceStart,
-          end,
+          start: sourceReadStart,
+          end: sourceReadEnd,
         });
 
         // The cache is indexed on time, but iterator results that are problems might not have a time.
         // For these we use the lastTime that we knew about (or had a message for).
         // This variable tracks the last known time from a read.
-        let lastTime = toNanoSec(sourceStart);
+        let lastTime = toNanoSec(sourceReadStart);
+
+        let pendingIterResults: [bigint, IteratorResult][] = [];
 
         for (;;) {
-          const iterResult = await sourceIterator.next();
+          const iterResult = await sourceMessageIterator.next();
           if (iterResult.done === true) {
-            block.end = end;
-            block.done = true;
-            this.recomputeLoadedRangeCache();
+            block.end = sourceReadEnd;
+
+            // write any cached messages to the block since we know they occur <= end
+            block.items.push(...pendingIterResults);
+            pendingIterResults = [];
 
             readHead = add(block.end, { sec: 0, nsec: 1 });
+
+            this.recomputeLoadedRangeCache();
             break;
+          }
+
+          const sizeInBytes = iterResult.value.msgEvent?.sizeInBytes ?? 0;
+
+          // Determine if our total size would exceed max and purge the oldest block
+          if (this.totalSizeBytes + sizeInBytes > this.maxTotalSizeBytes) {
+            const res = this.cache.reduce<[number, number]>(
+              (prev, curr, currIdx) => {
+                if (curr.lastAccess < prev[1]) {
+                  return [currIdx, curr.lastAccess];
+                }
+
+                return prev;
+              },
+              [-1, Number.MAX_SAFE_INTEGER],
+            );
+
+            const oldestIdx = res[0];
+
+            if (oldestIdx === cacheBlockIndex) {
+              throw new Error("Cannot evict the active cache block.");
+            } else {
+              const oldestBlock = this.cache[oldestIdx];
+              if (oldestBlock) {
+                cacheBlockIndex -= 1;
+                this.totalSizeBytes -= oldestBlock.size;
+                this.cache.splice(oldestIdx, 1);
+
+                this.recomputeLoadedRangeCache();
+              }
+            }
           }
 
           // If we have a message event, then we update our known time to this message event
           if (iterResult.value.msgEvent) {
-            lastTime = toNanoSec(iterResult.value.msgEvent.receiveTime);
+            const receiveTime = iterResult.value.msgEvent.receiveTime;
+            const receiveTimeNs = toNanoSec(receiveTime);
 
-            // fixme - update end only when we've moved to next time
-            // must preserve semantic that end has been read completely
-            block.end = iterResult.value.msgEvent.receiveTime;
-            this.recomputeLoadedRangeCache();
+            // There might be multiple messages at the same time, and since block end time
+            // is inclusive we only update the end time once we've moved to the next time
+            if (receiveTimeNs > lastTime) {
+              // write any cached messages to the block
+              block.items.push(...pendingIterResults);
+              pendingIterResults.length = 0;
+
+              // Set the end time to 1 nanosecond before the current receive time since we know we've
+              // read up to this receive time.
+              block.end = subtract(receiveTime, { sec: 0, nsec: 1 });
+
+              lastTime = receiveTimeNs;
+              this.recomputeLoadedRangeCache();
+            }
           }
 
-          // Update the cache
-          // fixme - only update the cache when we've moved on to another time
-          // because we have to preserve the semantic that _end_ has been read completely
-          block.items.push([lastTime, iterResult.value]);
+          // Store the latest message in pending results and flush to the block when time moves forward
+          pendingIterResults.push([lastTime, iterResult.value]);
+
+          // update the last time this block was accessed
+          block.lastAccess = Date.now();
+
+          this.totalSizeBytes += sizeInBytes;
+          block.size += sizeInBytes;
+
+          // When the block has grown too big, we introduce another block and continue caching into that.
+          if (block.size > this.maxBlockSizeBytes) {
+            // The new block starts right after our previous one
+            readHead = add(block.end, { sec: 0, nsec: 1 });
+
+            block = {
+              start: readHead,
+              end: readHead,
+              items: [],
+              size: 0,
+              lastAccess: Date.now(),
+            };
+
+            cacheBlockIndex += 1;
+            // This block needs to be after our current one
+            this.cache.splice(cacheBlockIndex, 0, block);
+          }
 
           yield iterResult.value;
         }
       }
+    } finally {
+      await sourceMessageIterator?.return?.();
     }
   }
 
