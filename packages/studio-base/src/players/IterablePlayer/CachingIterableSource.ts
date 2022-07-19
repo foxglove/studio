@@ -19,7 +19,7 @@ import {
 
 const log = Log.getLogger(__filename);
 
-// An individual cache item represents a continues range of CacheIteratorItems
+// An individual cache item represents a continuous range of CacheIteratorItems
 type CacheBlock = {
   // The start time of the cache item (inclusive).
   //
