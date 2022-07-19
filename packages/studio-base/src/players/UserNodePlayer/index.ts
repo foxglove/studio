@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { isEqual, pick, uniq } from "lodash";
+import { isEqual, uniq } from "lodash";
 import memoizeWeak from "memoize-weak";
 import shallowequal from "shallowequal";
 import { v4 as uuidv4 } from "uuid";
