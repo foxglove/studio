@@ -142,10 +142,10 @@ export default forwardRef<HTMLDivElement, PropsWithChildren<StackProps>>(functio
     zeroMinWidth,
   });
 
-  return React.createElement(
-    "div",
-    { ref, className: cx(classes.root, className), style, ...rest },
-    children,
+  return (
+    <div ref={ref} className={cx(classes.root, className)} style={style} {...rest}>
+      {children}
+    </div>
   );
 });
 
