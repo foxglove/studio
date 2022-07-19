@@ -1,7 +1,7 @@
 # A workflow to add bug issues to the roadmap project
 # https://github.com/actions/add-to-project
 
-name: Add bugs to roadmap project
+name: Issues
 
 on:
   issues:
