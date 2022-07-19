@@ -150,11 +150,6 @@ export default forwardRef<HTMLDivElement, PropsWithChildren<StackProps>>(functio
 });
 
 export type StackProps = {
-  /** Override or extend the styles applied to the component. */
-  classes?: {
-    root: string;
-  };
-
   /** Class name applied to the root element. */
   className?: string;
 
