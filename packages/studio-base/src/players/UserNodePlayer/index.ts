@@ -294,8 +294,8 @@ export default class UserNodePlayer implements Player {
       // Flatten and re-sort block messages so that nodes see them in the same order
       // as the non-block nodes.
       const messagesByTopic = { ...block.messagesByTopic };
-      const blockMessages = Object.values(pick(messagesByTopic, allInputTopics))
-        .flat()
+      const blockMessages = allInputTopics
+        .flatMap((topic) => messagesByTopic[topic] ?? [])
         .sort((a, b) => compare(a.receiveTime, b.receiveTime));
       for (const nodeRegistration of fullRegistrations) {
         const outTopic = nodeRegistration.output.name;
