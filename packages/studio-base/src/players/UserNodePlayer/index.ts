@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { isEqual } from "lodash";
+import { isEqual, pick, uniq } from "lodash";
 import memoizeWeak from "memoize-weak";
 import shallowequal from "shallowequal";
 import { v4 as uuidv4 } from "uuid";
@@ -282,6 +282,8 @@ export default class UserNodePlayer implements Player {
       return blocks;
     }
 
+    const allInputTopics = uniq(fullRegistrations.flatMap((reg) => reg.inputs));
+
     const outputBlocks: (MessageBlock | undefined)[] = [];
     for (const block of blocks) {
       if (!block) {
@@ -292,7 +294,7 @@ export default class UserNodePlayer implements Player {
       // Flatten and re-sort block messages so that nodes see them in the same order
       // as the non-block nodes.
       const messagesByTopic = { ...block.messagesByTopic };
-      const blockMessages = Object.values(messagesByTopic)
+      const blockMessages = Object.values(pick(messagesByTopic, allInputTopics))
         .flat()
         .sort((a, b) => compare(a.receiveTime, b.receiveTime));
       for (const nodeRegistration of fullRegistrations) {
