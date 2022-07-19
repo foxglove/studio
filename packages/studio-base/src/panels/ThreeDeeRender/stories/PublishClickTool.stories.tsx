@@ -8,7 +8,7 @@ import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 import delay from "@foxglove/studio-base/util/delay";
 
 import ThreeDeeRender from "../index";
-import { getPublishClickDebugLogElement, PublishClickType } from "../renderables/PublishClickTool";
+import { PublishClickType } from "../renderables/PublishClickTool";
 import { TransformStamped } from "../ros";
 import { QUAT_IDENTITY } from "./common";
 import useDelayedFixture from "./useDelayedFixture";
@@ -22,20 +22,15 @@ export const Point = Object.assign(PublishClickToolTemplate.bind({}), {
   parameters: { colorScheme: "dark" },
   args: { type: "point" },
   play: async () => {
-    getPublishClickDebugLogElement().innerText += "story click button\n";
     document.querySelector<HTMLElement>("[data-test=publish-button]")!.click();
     await delay(100);
     const canvas = document.querySelector("canvas")!;
     for (let tries = 0; tries < 10 && (canvas.offsetWidth === 0 || canvas.offsetHeight === 0); ) {
-      getPublishClickDebugLogElement().innerText += `delay because canvas width=${canvas.offsetWidth} height=${canvas.offsetHeight}\n`;
       await delay(10);
     }
-    getPublishClickDebugLogElement().innerText += `canvas ${canvas.offsetWidth} ${canvas.offsetHeight}\n`;
-    getPublishClickDebugLogElement().innerText += "story mousemove\n";
     canvas.dispatchEvent(new MouseEvent("mousemove", { clientX: 400, clientY: 400 }));
     await delay(10);
     await new Promise((resolve) => requestAnimationFrame(resolve));
-    getPublishClickDebugLogElement().innerText += "story end\n";
   },
 });
 
@@ -43,20 +38,15 @@ export const PosePosition = Object.assign(PublishClickToolTemplate.bind({}), {
   parameters: { colorScheme: "dark" },
   args: { type: "pose" },
   play: async () => {
-    getPublishClickDebugLogElement().innerText += "story click button\n";
     document.querySelector<HTMLElement>("[data-test=publish-button]")!.click();
     await delay(100);
     const canvas = document.querySelector("canvas")!;
     for (let tries = 0; tries < 10 && (canvas.offsetWidth === 0 || canvas.offsetHeight === 0); ) {
-      getPublishClickDebugLogElement().innerText += `delay because canvas width=${canvas.offsetWidth} height=${canvas.offsetHeight}\n`;
       await delay(10);
     }
-    getPublishClickDebugLogElement().innerText += `canvas ${canvas.offsetWidth} ${canvas.offsetHeight}\n`;
-    getPublishClickDebugLogElement().innerText += "story mousemove\n";
     canvas.dispatchEvent(new MouseEvent("mousemove", { clientX: 400, clientY: 400 }));
     await delay(10);
     await new Promise((resolve) => requestAnimationFrame(resolve));
-    getPublishClickDebugLogElement().innerText += "story end\n";
   },
 });
 
@@ -64,29 +54,21 @@ export const PoseComplete = Object.assign(PublishClickToolTemplate.bind({}), {
   parameters: { colorScheme: "dark" },
   args: { type: "pose" },
   play: async () => {
-    getPublishClickDebugLogElement().innerText += "story click button\n";
     document.querySelector<HTMLElement>("[data-test=publish-button]")!.click();
     await delay(100);
     const canvas = document.querySelector("canvas")!;
     for (let tries = 0; tries < 10 && (canvas.offsetWidth === 0 || canvas.offsetHeight === 0); ) {
-      getPublishClickDebugLogElement().innerText += `delay because canvas width=${canvas.offsetWidth} height=${canvas.offsetHeight}\n`;
       await delay(10);
     }
-    getPublishClickDebugLogElement().innerText += `canvas ${canvas.offsetWidth} ${canvas.offsetHeight}\n`;
-    getPublishClickDebugLogElement().innerText += "story mousemove\n";
     canvas.dispatchEvent(new MouseEvent("mousemove", { clientX: 400, clientY: 400 }));
     await delay(10);
-    getPublishClickDebugLogElement().innerText += "story mousedown\n";
     canvas.dispatchEvent(new MouseEvent("mousedown", { clientX: 400, clientY: 400 }));
     await delay(10);
-    getPublishClickDebugLogElement().innerText += "story click\n";
     canvas.dispatchEvent(new MouseEvent("click", { clientX: 400, clientY: 400 }));
     await delay(10);
-    getPublishClickDebugLogElement().innerText += "story mousemove\n";
     canvas.dispatchEvent(new MouseEvent("mousemove", { clientX: 500, clientY: 300 }));
     await delay(100);
     await new Promise((resolve) => requestAnimationFrame(resolve));
-    getPublishClickDebugLogElement().innerText += "story end\n";
   },
 });
 
@@ -94,19 +76,15 @@ export const PoseEstimatePosition = Object.assign(PublishClickToolTemplate.bind(
   parameters: { colorScheme: "dark" },
   args: { type: "pose_estimate" },
   play: async () => {
-    getPublishClickDebugLogElement().innerText += "story click button\n";
     document.querySelector<HTMLElement>("[data-test=publish-button]")!.click();
     await delay(100);
     const canvas = document.querySelector("canvas")!;
     for (let tries = 0; tries < 10 && (canvas.offsetWidth === 0 || canvas.offsetHeight === 0); ) {
-      getPublishClickDebugLogElement().innerText += `delay because canvas width=${canvas.offsetWidth} height=${canvas.offsetHeight}\n`;
       await delay(10);
     }
-    getPublishClickDebugLogElement().innerText += `canvas ${canvas.offsetWidth} ${canvas.offsetHeight}\n`;
     canvas.dispatchEvent(new MouseEvent("mousemove", { clientX: 400, clientY: 400 }));
     await delay(100);
     await new Promise((resolve) => requestAnimationFrame(resolve));
-    getPublishClickDebugLogElement().innerText += "story end\n";
   },
 });
 
@@ -114,29 +92,21 @@ export const PoseEstimateComplete = Object.assign(PublishClickToolTemplate.bind(
   parameters: { colorScheme: "dark" },
   args: { type: "pose_estimate" },
   play: async () => {
-    getPublishClickDebugLogElement().innerText += "story click button\n";
     document.querySelector<HTMLElement>("[data-test=publish-button]")!.click();
     await delay(100);
     const canvas = document.querySelector("canvas")!;
     for (let tries = 0; tries < 10 && (canvas.offsetWidth === 0 || canvas.offsetHeight === 0); ) {
-      getPublishClickDebugLogElement().innerText += `delay because canvas width=${canvas.offsetWidth} height=${canvas.offsetHeight}\n`;
       await delay(10);
     }
-    getPublishClickDebugLogElement().innerText += `canvas ${canvas.offsetWidth} ${canvas.offsetHeight}\n`;
-    getPublishClickDebugLogElement().innerText += "story mousemove\n";
     canvas.dispatchEvent(new MouseEvent("mousemove", { clientX: 400, clientY: 400 }));
     await delay(10);
-    getPublishClickDebugLogElement().innerText += "story mousedown\n";
     canvas.dispatchEvent(new MouseEvent("mousedown", { clientX: 400, clientY: 400 }));
     await delay(10);
-    getPublishClickDebugLogElement().innerText += "story click\n";
     canvas.dispatchEvent(new MouseEvent("click", { clientX: 400, clientY: 400 }));
     await delay(10);
-    getPublishClickDebugLogElement().innerText += "story mousemove\n";
     canvas.dispatchEvent(new MouseEvent("mousemove", { clientX: 500, clientY: 300 }));
     await delay(100);
     await new Promise((resolve) => requestAnimationFrame(resolve));
-    getPublishClickDebugLogElement().innerText += "story end\n";
   },
 });
 

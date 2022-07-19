@@ -6,8 +6,6 @@ import EventEmitter from "eventemitter3";
 import * as THREE from "three";
 import { Key } from "ts-key-enum";
 
-import { getPublishClickDebugLogElement } from "./renderables/PublishClickTool";
-
 const MAX_DIST = 1;
 
 const tempVec2 = new THREE.Vector2();
@@ -91,7 +89,6 @@ export class Input extends EventEmitter<InputEvents> {
   onResize = (_entries: ResizeObserverEntry[]): void => {
     if (this.canvas.parentElement) {
       const newSize = innerSize(this.canvas.parentElement);
-      getPublishClickDebugLogElement().innerText += `Input onResize ${newSize.width} ${newSize.height}\n`;
       if (isNaN(newSize.width) || isNaN(newSize.height)) {
         return;
       }
@@ -156,7 +153,6 @@ export class Input extends EventEmitter<InputEvents> {
   };
 
   private updateCursorCoords(event: MouseEvent): void {
-    getPublishClickDebugLogElement().innerText += `Input updateCursorCoords ${event.offsetX} ${event.offsetY} / ${this.canvasSize.width} ${this.canvasSize.height}\n`;
     this.cursorCoords.x = event.offsetX;
     this.cursorCoords.y = event.offsetY;
 
