@@ -7,7 +7,7 @@ import { makeStyles } from "tss-react/mui";
 
 const useStyles = makeStyles<StackProps>()((theme, props) => ({
   root: {
-    display: "flex",
+    display: props.inline === true ? "inline-flex" : "flex",
     flexDirection: props.direction,
     flex: props.flex,
     flexBasis: props.flexBasis,
@@ -77,9 +77,9 @@ export default forwardRef<HTMLDivElement, PropsWithChildren<StackProps>>(functio
   ref,
 ): JSX.Element {
   const {
-    children,
     alignItems,
     alignSelf,
+    children,
     className,
     direction = "column",
     flex,
@@ -92,18 +92,19 @@ export default forwardRef<HTMLDivElement, PropsWithChildren<StackProps>>(functio
     gap,
     gapX,
     gapY,
+    inline = false,
     justifyContent,
     order,
     overflow,
     overflowX,
     overflowY,
     padding,
-    paddingX,
-    paddingY,
-    paddingTop,
     paddingBottom,
     paddingLeft,
     paddingRight,
+    paddingTop,
+    paddingX,
+    paddingY,
     position,
     style,
     zeroMinWidth = false,
@@ -124,18 +125,19 @@ export default forwardRef<HTMLDivElement, PropsWithChildren<StackProps>>(functio
     gap,
     gapX,
     gapY,
+    inline,
     justifyContent,
     order,
     overflow,
     overflowX,
     overflowY,
     padding,
-    paddingX,
-    paddingY,
-    paddingTop,
     paddingBottom,
     paddingLeft,
     paddingRight,
+    paddingTop,
+    paddingX,
+    paddingY,
     position,
     zeroMinWidth,
   });
@@ -167,6 +169,9 @@ export type StackProps = {
 
   /** Make stack 100% height. */
   fullWidth?: boolean;
+
+  /** Sets the display to inline-flex property. */
+  inline?: boolean;
 
   /** Defines the `justify-content` style property. */
   justifyContent?: CSSProperties["justifyContent"];
