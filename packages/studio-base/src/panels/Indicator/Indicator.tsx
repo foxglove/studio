@@ -2,9 +2,10 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Typography, styled as muiStyled, useTheme } from "@mui/material";
+import { Typography, useTheme } from "@mui/material";
 import { last } from "lodash";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useReducer, useState } from "react";
+import { withStyles } from "tss-react/mui";
 
 import { MessageEvent, PanelExtensionContext, SettingsTreeAction } from "@foxglove/studio";
 import { RosPath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
@@ -29,16 +30,18 @@ const defaultConfig: Config = {
   rules: [{ operator: "=", rawValue: "true", color: "#68e24a", label: "True" }],
 };
 
-const IndicatorBulb = muiStyled("div")({
-  width: 40,
-  height: 40,
-  borderRadius: "50%",
-  position: "relative",
-  backgroundImage: [
-    `radial-gradient(transparent, transparent 55%, rgba(255,255,255,0.4) 80%, rgba(255,255,255,0.4))`,
-    `radial-gradient(circle at 38% 35%, rgba(255,255,255,0.8), transparent 30%, transparent)`,
-    `radial-gradient(circle at 46% 44%, transparent, transparent 61%, rgba(0,0,0,0.7) 74%, rgba(0,0,0,0.7))`,
-  ].join(","),
+const IndicatorBulb = withStyles("div", {
+  root: {
+    width: 40,
+    height: 40,
+    borderRadius: "50%",
+    position: "relative",
+    backgroundImage: [
+      `radial-gradient(transparent, transparent 55%, rgba(255,255,255,0.4) 80%, rgba(255,255,255,0.4))`,
+      `radial-gradient(circle at 38% 35%, rgba(255,255,255,0.8), transparent 30%, transparent)`,
+      `radial-gradient(circle at 46% 44%, transparent, transparent 61%, rgba(0,0,0,0.7) 74%, rgba(0,0,0,0.7))`,
+    ].join(","),
+  },
 });
 
 type State = {
