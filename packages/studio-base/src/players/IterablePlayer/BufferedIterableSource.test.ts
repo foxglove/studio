@@ -316,6 +316,7 @@ describe("BufferedIterableSource", () => {
       await doneYield.wait();
       expect(bufferedSource.loadedRanges()).toEqual([{ start: 0.5, end: 1 }]);
       await messageIterator.return?.();
+      await bufferedSource.stopProducer();
     }
 
     // A new message iterator at the start time should properly a new message then the other messages
