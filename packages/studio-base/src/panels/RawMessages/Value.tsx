@@ -8,8 +8,9 @@ import FilterIcon from "@mui/icons-material/FilterAlt";
 import StateTransitionsIcon from "@mui/icons-material/PowerInput";
 import ScatterPlotIcon from "@mui/icons-material/ScatterPlot";
 import LineChartIcon from "@mui/icons-material/ShowChart";
-import { IconButtonProps, styled as muiStyled, Tooltip, TooltipProps } from "@mui/material";
+import { IconButtonProps, Tooltip, TooltipProps } from "@mui/material";
 import { useCallback, useMemo, useState } from "react";
+import { withStyles } from "tss-react/mui";
 
 import HoverableIconButton from "@foxglove/studio-base/components/HoverableIconButton";
 import Stack from "@foxglove/studio-base/components/Stack";
@@ -25,13 +26,17 @@ import HighlightedValue from "./HighlightedValue";
 import { copyMessageReplacer } from "./copyMessageReplacer";
 import { ValueAction } from "./getValueActionForValue";
 
-const StyledIconButton = muiStyled(HoverableIconButton)`
-  font-size: ${({ theme }) => theme.typography.pxToRem(16)};
-  padding: 0;
+const StyledIconButton = withStyles(HoverableIconButton, (theme) => ({
+  root: {
+    "&.MuiIconButton-root": {
+      fontSize: theme.typography.pxToRem(16),
+      padding: theme.spacing(0.125),
 
-  &:hover { background-color: transparent; }
-  &:not(:hover) { opacity: 0.6; }
-`;
+      "&:hover": { backgroundColor: "transparent" },
+      "&:not(:hover)": { opacity: 0.6 },
+    },
+  },
+}));
 
 type ValueProps = {
   arrLabel: string;

@@ -22,7 +22,6 @@ import {
   MenuItem,
   Select,
   SelectChangeEvent,
-  styled as muiStyled,
   useTheme,
   Typography,
 } from "@mui/material";
@@ -33,6 +32,7 @@ import { useState, useCallback, useMemo, useEffect } from "react";
 import ReactHoverObserver from "react-hover-observer";
 import Tree from "react-json-tree";
 import { useLatest } from "react-use";
+import { makeStyles } from "tss-react/mui";
 
 import { SettingsTreeAction } from "@foxglove/studio";
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
@@ -107,27 +107,25 @@ function maybeDeepParse(val: unknown) {
   return val;
 }
 
-const StyledIconButton = muiStyled(IconButton)(({ theme }) => ({
-  padding: theme.spacing(0.5),
+const useStyles = makeStyles()((theme) => ({
+  iconButton: {
+    padding: theme.spacing(0.5),
+  },
+  topic: {
+    fontFamily: fonts.SANS_SERIF,
+    fontFeatureSettings: `${fonts.SANS_SERIF_FEATURE_SETTINGS}, "zero"`,
+  },
+  hoverObserver: {
+    display: "inline-flex",
+    alignItems: "center",
+  },
 }));
-
-const Topic = muiStyled(Stack)(({ theme }) => ({
-  flex: "auto",
-  overflowX: "hidden",
-  paddingLeft: theme.spacing(0.75),
-  fontFamily: fonts.SANS_SERIF,
-  fontFeatureSettings: `${fonts.SANS_SERIF_FEATURE_SETTINGS}, "zero"`,
-}));
-
-const StyledHoverObserver = muiStyled(ReactHoverObserver)({
-  display: "inline-flex",
-  alignItems: "center",
-});
 
 function RawMessages(props: Props) {
   const {
     palette: { mode: themePreference },
   } = useTheme();
+  const { classes } = useStyles();
   const jsonTreeTheme = useJsonTreeTheme();
   const { config, saveConfig } = props;
   const { openSiblingPanel } = usePanelContext();
@@ -333,7 +331,7 @@ function RawMessages(props: Props) {
       itemValue: unknown,
       ...keyPath: (number | string)[]
     ) => (
-      <StyledHoverObserver>
+      <ReactHoverObserver className={classes.hoverObserver}>
         {({ isHovering }: { isHovering: boolean }) => {
           const lastKeyPath = last(keyPath) as number;
           let valueAction: ValueAction | undefined;
@@ -380,9 +378,9 @@ function RawMessages(props: Props) {
             />
           );
         }}
-      </StyledHoverObserver>
+      </ReactHoverObserver>
     ),
-    [datatypes, getValueLabels, onTopicPathChange, openSiblingPanel],
+    [classes.hoverObserver, datatypes, getValueLabels, onTopicPathChange, openSiblingPanel],
   );
 
   const renderSingleTopicOrDiffOutput = useCallback(() => {
@@ -430,7 +428,7 @@ function RawMessages(props: Props) {
       : {};
 
     return (
-      <Topic>
+      <Stack className={classes.topic} flex="auto" overflowX="hidden" paddingLeft={0.75}>
         <Metadata
           data={data}
           diffData={diffData}
@@ -621,7 +619,7 @@ function RawMessages(props: Props) {
             />
           </>
         )}
-      </Topic>
+      </Stack>
     );
   }, [
     topicPath,
@@ -630,6 +628,7 @@ function RawMessages(props: Props) {
     baseItem,
     diffItem,
     showFullMessageForDiff,
+    classes.topic,
     topic,
     getItemString,
     jsonTreeTheme,
@@ -647,15 +646,17 @@ function RawMessages(props: Props) {
   return (
     <Stack flex="auto" overflow="hidden" position="relative">
       <PanelToolbar helpContent={helpContent}>
-        <StyledIconButton
+        <IconButton
+          className={classes.iconButton}
           title="Toggle diff"
           onClick={onToggleDiff}
           color={diffEnabled ? "default" : "inherit"}
           size="small"
         >
           {diffEnabled ? <DiffIcon fontSize="small" /> : <DiffOutlinedIcon fontSize="small" />}
-        </StyledIconButton>
-        <StyledIconButton
+        </IconButton>
+        <IconButton
+          className={classes.iconButton}
           title={expandAll ?? false ? "Collapse all" : "Expand all"}
           onClick={onToggleExpandAll}
           data-test="expand-all"
@@ -666,7 +667,7 @@ function RawMessages(props: Props) {
           ) : (
             <UnfoldMoreIcon fontSize="small" />
           )}
-        </StyledIconButton>
+        </IconButton>
         <Stack fullWidth paddingLeft={0.25}>
           <MessagePathInput
             index={0}
