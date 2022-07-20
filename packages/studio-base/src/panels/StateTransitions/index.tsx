@@ -37,6 +37,7 @@ import Panel from "@foxglove/studio-base/components/Panel";
 import PanelToolbar, {
   PANEL_TOOLBAR_MIN_HEIGHT,
 } from "@foxglove/studio-base/components/PanelToolbar";
+import Stack from "@foxglove/studio-base/components/Stack";
 import TimeBasedChart, {
   TimeBasedChartTooltipData,
 } from "@foxglove/studio-base/components/TimeBasedChart";
@@ -72,14 +73,6 @@ const fontFamily = fonts.MONOSPACE;
 const fontSize = 10;
 const fontWeight = "bold";
 
-const SRoot = muiStyled("div")`
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-  z-index: 0; // create new stacking context
-  overflow: hidden;
-`;
-
 const AddButton = muiStyled(Button, {
   shouldForwardProp: (props) => props !== "mousePresent",
 })<{
@@ -92,19 +85,13 @@ const AddButton = muiStyled(Button, {
   zIndex: 1,
 }));
 
-const SChartContainerOuter = muiStyled("div")`
-  width: 100%;
-  flex: auto;
-  overflow-x: hidden;
-  overflow-y: auto;
-`;
-
 const SChartContainerInner = muiStyled("div")`
   position: relative;
   margin-top: 10px;
 `;
 
 const inputLeft = 20;
+
 const SInputContainer = styled.div<{ shrink: boolean }>`
   display: flex;
   position: absolute;
@@ -379,7 +366,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
   const mousePresent = usePanelMousePresence(rootRef);
 
   return (
-    <SRoot ref={rootRef}>
+    <Stack ref={rootRef} flexGrow={1} overflow="hidden" style={{ zIndex: 0 }}>
       <PanelToolbar helpContent={helpContent} />
       <AddButton
         size="small"
@@ -396,7 +383,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
       >
         Add topic
       </AddButton>
-      <SChartContainerOuter>
+      <Stack fullWidth flex="auto" overflowX="hidden" overflowY="auto">
         <SChartContainerInner style={{ height }} ref={sizeRef}>
           <TimeBasedChart
             zoom
@@ -448,8 +435,8 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
             </SInputContainer>
           ))}
         </SChartContainerInner>
-      </SChartContainerOuter>
-    </SRoot>
+      </Stack>
+    </Stack>
   );
 });
 
