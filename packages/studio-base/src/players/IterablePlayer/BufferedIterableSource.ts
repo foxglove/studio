@@ -129,7 +129,7 @@ class BufferedIterableSource implements IIterableSource {
     return this.source.loadedRanges();
   }
 
-  messageIterator(args: MessageIteratorArgs): AsyncIterator<Readonly<IteratorResult>> {
+  messageIterator(args: MessageIteratorArgs): AsyncIterableIterator<Readonly<IteratorResult>> {
     if (!this.initResult) {
       throw new Error("Invariant: uninitialized");
     }

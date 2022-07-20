@@ -27,7 +27,9 @@ class TestSource implements IIterableSource {
     };
   }
 
-  async *messageIterator(_args: MessageIteratorArgs): AsyncIterator<Readonly<IteratorResult>> {}
+  async *messageIterator(
+    _args: MessageIteratorArgs,
+  ): AsyncIterableIterator<Readonly<IteratorResult>> {}
 
   async getBackfillMessages(_args: GetBackfillMessagesArgs): Promise<MessageEvent<unknown>[]> {
     return [];
@@ -51,7 +53,7 @@ describe("BufferedIterableSource", () => {
 
     source.messageIterator = async function* messageIterator(
       _args: MessageIteratorArgs,
-    ): AsyncIterator<Readonly<IteratorResult>> {
+    ): AsyncIterableIterator<Readonly<IteratorResult>> {
       for (let i = 0; i < 8; ++i) {
         yield {
           msgEvent: {
@@ -101,7 +103,7 @@ describe("BufferedIterableSource", () => {
     // because we have cached we shouldn't be calling source anymore
     source.messageIterator = function messageIterator(
       _args: MessageIteratorArgs,
-    ): AsyncIterator<Readonly<IteratorResult>> {
+    ): AsyncIterableIterator<Readonly<IteratorResult>> {
       throw new Error("should not be called");
     };
 
@@ -147,7 +149,7 @@ describe("BufferedIterableSource", () => {
     {
       source.messageIterator = async function* messageIterator(
         _args: MessageIteratorArgs,
-      ): AsyncIterator<Readonly<IteratorResult>> {
+      ): AsyncIterableIterator<Readonly<IteratorResult>> {
         yield {
           msgEvent: {
             topic: "a",
@@ -197,7 +199,7 @@ describe("BufferedIterableSource", () => {
     {
       source.messageIterator = async function* messageIterator(
         _args: MessageIteratorArgs,
-      ): AsyncIterator<Readonly<IteratorResult>> {
+      ): AsyncIterableIterator<Readonly<IteratorResult>> {
         yield {
           msgEvent: {
             topic: "a",
