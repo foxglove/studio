@@ -20,14 +20,10 @@ const useStyles = makeStyles<StackProps>()((theme, props) => ({
     alignSelf: props.alignSelf,
     order: props.order,
     overflow: props.overflow,
+    overflowX: props.overflowX,
+    overflowY: props.overflowY,
     position: props.position,
 
-    ...(props.overflowX != undefined && {
-      overflowX: props.overflowX,
-    }),
-    ...(props.overflowY != undefined && {
-      overflowY: props.overflowY,
-    }),
     ...(props.zeroMinWidth === true && {
       minWidth: 0,
     }),
