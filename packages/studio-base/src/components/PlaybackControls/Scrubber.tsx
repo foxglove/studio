@@ -2,9 +2,10 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { styled as muiStyled, Typography } from "@mui/material";
+import { Typography } from "@mui/material";
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { useLatest } from "react-use";
+import { makeStyles } from "tss-react/mui";
 import { v4 as uuidv4 } from "uuid";
 
 import { subtract as subtractTimes, toSec, fromSec, Time } from "@foxglove/rostime";
@@ -26,38 +27,38 @@ import PlaybackBarHoverTicks from "./PlaybackBarHoverTicks";
 import { ProgressPlot } from "./ProgressPlot";
 import Slider from "./Slider";
 
-const TooltipWrapper = muiStyled("div")(({ theme }) => ({
-  fontFeatureSettings: `${fonts.SANS_SERIF_FEATURE_SETTINGS}, "zero"`,
-  fontFamily: fonts.SANS_SERIF,
-  whiteSpace: "nowrap",
-  gap: theme.spacing(0.5),
-  display: "grid",
-  gridTemplateColumns: "auto 1fr",
-  flexDirection: "column",
-}));
-
-const Marker = muiStyled("div")(({ theme }) => ({
-  backgroundColor: theme.palette.text.primary,
-  position: "absolute",
-  height: 8,
-  borderRadius: 1,
-  width: 2,
-  transform: "translate(-50%, 0)",
-}));
-
-const ScrubberTrack = muiStyled("div", {
-  shouldForwardProp: (prop) => prop !== "active",
-})<{ active?: boolean }>(({ active = false, theme }) => ({
-  label: "Scrubber-track",
-  position: "absolute",
-  left: 0,
-  right: 0,
-  height: 4,
-  backgroundColor: theme.palette.action.focus,
-
-  ...(!active && {
+const useStyles = makeStyles()((theme) => ({
+  tooltipWrapper: {
+    label: "Scrubber-tooltipWrapper",
+    fontFeatureSettings: `${fonts.SANS_SERIF_FEATURE_SETTINGS}, "zero"`,
+    fontFamily: fonts.SANS_SERIF,
+    whiteSpace: "nowrap",
+    gap: theme.spacing(0.5),
+    display: "grid",
+    gridTemplateColumns: "auto 1fr",
+    flexDirection: "column",
+  },
+  marker: {
+    label: "Scrubber-marker",
+    backgroundColor: theme.palette.text.primary,
+    position: "absolute",
+    height: 8,
+    borderRadius: 1,
+    width: 2,
+    transform: "translate(-50%, 0)",
+  },
+  track: {
+    label: "Scrubber-track",
+    position: "absolute",
+    left: 0,
+    right: 0,
+    height: 4,
+    backgroundColor: theme.palette.action.focus,
+  },
+  trackActive: {
+    label: "Scrubber-trackActive",
     opacity: theme.palette.action.disabledOpacity,
-  }),
+  },
 }));
 
 const selectStartTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.startTime;
@@ -73,6 +74,7 @@ type Props = {
 
 export default function Scrubber(props: Props): JSX.Element {
   const { onSeek } = props;
+  const { classes, cx } = useStyles();
 
   const [hoverComponentId] = useState<string>(() => uuidv4());
   const el = useRef<HTMLDivElement>(ReactNull);
@@ -116,7 +118,7 @@ export default function Scrubber(props: Props): JSX.Element {
       tooltipItems.push({ title: "Elapsed", value: `${toSec(timeFromStart).toFixed(9)} sec` });
 
       const tip = (
-        <TooltipWrapper>
+        <div className={classes.tooltipWrapper}>
           {tooltipItems.map((item) => (
             <Fragment key={item.title}>
               <Typography align="right" variant="body2">
@@ -127,7 +129,7 @@ export default function Scrubber(props: Props): JSX.Element {
               </Typography>
             </Fragment>
           ))}
-        </TooltipWrapper>
+        </div>
       );
       setTooltipState({ x, y, tip });
       setHoverValue({
@@ -136,7 +138,14 @@ export default function Scrubber(props: Props): JSX.Element {
         value: toSec(timeFromStart),
       });
     },
-    [latestStartTime, setHoverValue, hoverComponentId, formatTime, timeFormat],
+    [
+      latestStartTime,
+      timeFormat,
+      classes.tooltipWrapper,
+      setHoverValue,
+      hoverComponentId,
+      formatTime,
+    ],
   );
 
   const clearHoverValue = useClearHoverValue();
@@ -149,12 +158,15 @@ export default function Scrubber(props: Props): JSX.Element {
   // Clean up the hover value when we are unmounted -- important for storybook.
   useEffect(() => onHoverOut, [onHoverOut]);
 
-  const renderSlider = useCallback((val?: number) => {
-    if (val == undefined) {
-      return undefined;
-    }
-    return <Marker style={{ left: `${val * 100}%` }} />;
-  }, []);
+  const renderSlider = useCallback(
+    (val?: number) => {
+      if (val == undefined) {
+        return undefined;
+      }
+      return <div className={classes.marker} style={{ left: `${val * 100}%` }} />;
+    },
+    [classes.marker],
+  );
 
   const [tooltipState, setTooltipState] = useState<
     { x: number; y: number; tip: JSX.Element } | undefined
@@ -185,7 +197,7 @@ export default function Scrubber(props: Props): JSX.Element {
       style={{ height: 28 }}
     >
       {tooltip}
-      <ScrubberTrack active={!!startTime} />
+      <div className={cx(classes.track, { [classes.trackActive]: !!startTime })} />
       <Stack position="absolute" flex="auto" fullWidth style={{ height: 4 }}>
         <ProgressPlot loading={loading} availableRanges={ranges} />
       </Stack>
