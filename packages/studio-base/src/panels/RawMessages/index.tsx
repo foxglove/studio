@@ -540,6 +540,7 @@ function RawMessages(props: Props) {
                 nestedNode: ({ style }, keyPath: any) => {
                   const baseStyle = {
                     ...style,
+                    paddingTop: 2,
                     marginTop: 2,
                     textDecoration: "inherit",
                   };
