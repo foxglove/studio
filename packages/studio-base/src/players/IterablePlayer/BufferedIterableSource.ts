@@ -32,7 +32,6 @@ class BufferedIterableSource implements IIterableSource {
 
   private readDone = false;
   private aborted = false;
-  private active = false;
 
   // The producer uses this signal to notify a waiting consumer there is data to consume.
   private readSignal?: Signal<void>;
@@ -123,6 +122,7 @@ class BufferedIterableSource implements IIterableSource {
     this.aborted = true;
     this.writeSignal?.resolve();
     await this.producer;
+    this.producer = undefined;
   }
 
   loadedRanges(): Range[] {
@@ -134,7 +134,7 @@ class BufferedIterableSource implements IIterableSource {
       throw new Error("Invariant: uninitialized");
     }
 
-    if (this.active) {
+    if (this.producer) {
       throw new Error("Invariant: BufferedIterableSource allows only one messageIterator");
     }
 
@@ -160,8 +160,6 @@ class BufferedIterableSource implements IIterableSource {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     return (async function* bufferedIterableGenerator() {
-      self.active = true;
-
       try {
         if (args.topics.length === 0) {
           return;
@@ -193,7 +191,6 @@ class BufferedIterableSource implements IIterableSource {
       } finally {
         log.debug("ending buffered message iterator");
         await self.stopProducer();
-        self.active = false;
       }
     })();
   }

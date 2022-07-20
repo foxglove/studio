@@ -800,6 +800,9 @@ export class IterablePlayer implements Player {
       };
       await this._emitState();
 
+      // When idling nothing is querying the source, but our buffered source might be
+      // buffering behind the scenes. Every second we emit state with an update to show that
+      // buffering is happening.
       await Promise.race([delay(1000), aborted]);
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, @typescript-eslint/strict-boolean-expressions
       if (this._nextState) {
