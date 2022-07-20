@@ -11,8 +11,8 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { useTheme, styled as muiStyled } from "@mui/material";
 import { useCallback } from "react";
+import { makeStyles } from "tss-react/mui";
 
 import AutoSizingCanvas from "@foxglove/studio-base/components/AutoSizingCanvas";
 
@@ -27,13 +27,11 @@ type SparklineProps = {
   nowStamp?: number; // Mostly for testing.
 };
 
-const Wrapper = muiStyled("div", {
-  shouldForwardProp: (prop) => prop !== "height" && prop !== "width",
-})<{ height?: number; width?: number }>(({ height, width, theme }) => ({
-  flex: "none",
-  backgroundColor: theme.palette.grey[300],
-  width,
-  height,
+const useStyles = makeStyles()((theme) => ({
+  root: {
+    flex: "none",
+    backgroundColor: theme.palette.grey[300],
+  },
 }));
 
 function draw(
@@ -65,7 +63,7 @@ function draw(
 }
 
 export function Sparkline(props: SparklineProps): JSX.Element {
-  const theme = useTheme();
+  const { classes, theme } = useStyles();
   const drawCallback = useCallback(
     (context: CanvasRenderingContext2D, width: number, height: number) => {
       draw(
@@ -82,8 +80,8 @@ export function Sparkline(props: SparklineProps): JSX.Element {
     [props.maximum, props.nowStamp, props.points, props.timeRange, theme.palette],
   );
   return (
-    <Wrapper width={props.width} height={props.height}>
+    <div className={classes.root} style={{ height: props.height, width: props.width }}>
       <AutoSizingCanvas draw={drawCallback} />
-    </Wrapper>
+    </div>
   );
 }
