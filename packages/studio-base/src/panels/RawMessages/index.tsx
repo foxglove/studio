@@ -109,7 +109,9 @@ function maybeDeepParse(val: unknown) {
 
 const useStyles = makeStyles()((theme) => ({
   iconButton: {
-    padding: theme.spacing(0.5),
+    "&.MuiIconButton-root": {
+      padding: theme.spacing(0.25),
+    },
   },
   topic: {
     fontFamily: fonts.SANS_SERIF,
