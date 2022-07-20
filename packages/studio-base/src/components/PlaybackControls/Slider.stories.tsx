@@ -11,30 +11,31 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { styled as muiStyled } from "@mui/material";
 import { Box } from "@mui/system";
 import { Story } from "@storybook/react";
 import { useState } from "react";
+import { makeStyles } from "tss-react/mui";
 
 import Slider from "./Slider";
 
-const StyledRange = muiStyled("div")`
-  background-color: ${({ theme }) => theme.palette.info.dark};
-  border-radius: ${({ theme }) => theme.shape.borderRadius}px;
-  height: 20%;
-  left: 0;
-  position: absolute;
-`;
-
-const StyledMarker = muiStyled("div")`
-  background-color: ${({ theme }) => theme.palette.background.paper};
-  border: 1px solid;
-  border-color: ${({ theme }) => theme.palette.text.primary};
-  height: 150%;
-  position: absolute;
-  top: -25%;
-  width: 6px;
-`;
+const useStyles = makeStyles()((theme) => ({
+  customMarker: {
+    backgroundColor: theme.palette.background.paper,
+    border: "1px solid",
+    borderColor: theme.palette.text.primary,
+    height: "150%",
+    position: "absolute",
+    top: "-25%",
+    width: 6,
+  },
+  customRange: {
+    backgroundColor: theme.palette.info.dark,
+    borderRadius: theme.shape.borderRadius,
+    height: "20%",
+    left: 0,
+    position: "absolute",
+  },
+}));
 
 export default {
   title: "components/PlaybackControls/Slider",
@@ -73,6 +74,7 @@ export const Examples: Story = () => {
 };
 
 export const CustomRenderer: Story = () => {
+  const { classes } = useStyles();
   const [draggableValue, setDraggableValue] = useState(25);
 
   return (
@@ -86,8 +88,8 @@ export const CustomRenderer: Story = () => {
           value={draggableValue}
           renderSlider={(width) => (
             <>
-              <StyledRange style={{ width: `${(width ?? 0) * 100}%` }} />
-              <StyledMarker style={{ left: `${(width ?? 0) * 100}%` }} />
+              <div className={classes.customRange} style={{ width: `${(width ?? 0) * 100}%` }} />
+              <div className={classes.customMarker} style={{ left: `${(width ?? 0) * 100}%` }} />
             </>
           )}
         />
