@@ -541,6 +541,7 @@ function RawMessages(props: Props) {
                   const baseStyle = {
                     ...style,
                     paddingTop: 2,
+                    paddingBottom: 2,
                     marginTop: 2,
                     textDecoration: "inherit",
                   };
