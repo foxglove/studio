@@ -373,8 +373,9 @@ class CachingIterableSource implements IIterableSource {
       throw new Error("Invariant: uninitialized");
     }
 
-    // Find a block that contains our time, if we don't have a block that contains the end time
-    // then we can't know that we will load the backfill messages correctly
+    // Find a block that contains args.time. We must find a block that contains args.time rather
+    // than one that occurs anytime before args.time to correctly get the last message before
+    // args.time rather than any message that occurs before args.time.
     const cacheBlockIndex = this.cache.findIndex((item) => {
       return compare(item.start, args.time) <= 0 && compare(item.end, args.time) >= 0;
     });
@@ -382,8 +383,18 @@ class CachingIterableSource implements IIterableSource {
     const out: MessageEvent<unknown>[] = [];
     const needsTopics = new Set(args.topics);
 
-    const cacheBlock = this.cache[cacheBlockIndex];
-    if (cacheBlock) {
+    // Starting at the block we found for args.time, work backwards through blocks until:
+    // * we've loaded all the topics
+    // * we have a gap between our block and the previous block
+    //
+    // We must stop going backwards when we have a gap because we can no longer know if the source
+    // actually does have messages in the gap.
+    for (let idx = cacheBlockIndex; idx >= 0 && needsTopics.size > 0; --idx) {
+      const cacheBlock = this.cache[cacheBlockIndex];
+      if (!cacheBlock) {
+        break;
+      }
+
       let readIdx = findCacheItem(cacheBlock.items, toNanoSec(args.time));
 
       // If readIdx is negative then we don't have an exact match, but readIdx does tell us what that is
@@ -408,6 +419,13 @@ class CachingIterableSource implements IIterableSource {
           needsTopics.delete(msgEvent.topic);
         }
         out.push(msgEvent);
+      }
+
+      const prevBlock = this.cache[cacheBlockIndex - 1];
+      // If we have a gap between the start of our block and the previous block, then we must stop
+      // trying to read from the block cache
+      if (prevBlock && compare(add(prevBlock.end, { sec: 0, nsec: 1 }), cacheBlock.start) !== 0) {
+        break;
       }
     }
 
