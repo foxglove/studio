@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { isEqual } from "lodash";
+import { isEqual, sortedIndexBy } from "lodash";
 
 import { minIndexBy } from "@foxglove/den/collection";
 import Log from "@foxglove/log";
@@ -45,6 +45,11 @@ type CacheBlock = {
 
   // The size of this block in bytes
   size: number;
+};
+
+type Options = {
+  maxBlockSize?: number;
+  maxTotalSize?: number;
 };
 
 /**
@@ -113,13 +118,15 @@ class CachingIterableSource implements IIterableSource {
   private totalSizeBytes: number = 0;
 
   // Maximum total cache size
-  private maxTotalSizeBytes: number = 1e9;
+  private maxTotalSizeBytes: number;
 
   // Maximum size per block
-  private maxBlockSizeBytes: number = 50000000;
+  private maxBlockSizeBytes: number;
 
-  constructor(source: IIterableSource) {
+  constructor(source: IIterableSource, opt?: Options) {
     this.source = source;
+    this.maxTotalSizeBytes = opt?.maxTotalSize ?? 1e9;
+    this.maxBlockSizeBytes = opt?.maxBlockSize ?? 50000000;
   }
 
   async initialize(): Promise<Initalization> {
@@ -244,14 +251,14 @@ class CachingIterableSource implements IIterableSource {
             lastAccess: Date.now(),
           };
 
-          // Look for the block that will come after our new block
-          const insertIndex = this.cache.findIndex((item) => {
-            // Find the first index where readHead is less than an existing start
-            return compare(newBlock.start, item.start) < 0;
-          });
+          // Find where we need to insert our new block.
+          // It should come before any blocks with a start time > than new block start time.
+          const insertIndex = sortedIndexBy(this.cache, newBlock, (item) => toNanoSec(item.start));
 
           this.cache.splice(insertIndex, 0, newBlock);
           block = newBlock;
+
+          this.recomputeLoadedRangeCache();
         }
 
         const sizeInBytes = iterResult.msgEvent?.sizeInBytes ?? 0;
@@ -438,6 +445,7 @@ class CachingIterableSource implements IIterableSource {
   // Throws if the cache block we want to purge is the active block.
   private maybePurgeCache(opt: { activeBlock: CacheBlock; sizeInBytes: number }): boolean {
     const { activeBlock, sizeInBytes } = opt;
+
     // Determine if our total size would exceed max and purge the oldest block
     if (this.totalSizeBytes + sizeInBytes < this.maxTotalSizeBytes) {
       return false;
@@ -445,6 +453,7 @@ class CachingIterableSource implements IIterableSource {
 
     // Find the oldest cache item
     const oldestIdx = minIndexBy(this.cache, (a, b) => a.lastAccess - b.lastAccess);
+
     const oldestBlock = this.cache[oldestIdx];
     if (oldestBlock) {
       if (oldestBlock === activeBlock) {

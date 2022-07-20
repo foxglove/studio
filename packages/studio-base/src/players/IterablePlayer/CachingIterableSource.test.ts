@@ -17,7 +17,7 @@ class TestSource implements IIterableSource {
   async initialize(): Promise<Initalization> {
     return {
       start: { sec: 0, nsec: 0 },
-      end: { sec: 1, nsec: 0 },
+      end: { sec: 10, nsec: 0 },
       topics: [],
       topicStats: new Map(),
       profile: undefined,
@@ -196,7 +196,7 @@ describe("CachingIterableSource", () => {
         yield {
           msgEvent: {
             topic: "a",
-            receiveTime: { sec: 0, nsec: 500000000 },
+            receiveTime: { sec: 5, nsec: 0 },
             message: undefined,
             sizeInBytes: 0,
           },
@@ -207,7 +207,7 @@ describe("CachingIterableSource", () => {
 
       const messageIterator = bufferedSource.messageIterator({
         topics: ["a"],
-        start: { sec: 0, nsec: 500000000 },
+        start: { sec: 5, nsec: 0 },
       });
 
       // Read one message
@@ -219,7 +219,7 @@ describe("CachingIterableSource", () => {
             problem: undefined,
             connectionId: undefined,
             msgEvent: {
-              receiveTime: { sec: 0, nsec: 500000000 },
+              receiveTime: { sec: 5, nsec: 0 },
               message: undefined,
               sizeInBytes: 0,
               topic: "a",
@@ -246,7 +246,7 @@ describe("CachingIterableSource", () => {
         yield {
           msgEvent: {
             topic: "a",
-            receiveTime: { sec: 0, nsec: 1 },
+            receiveTime: { sec: 0, nsec: 0 },
             message: undefined,
             sizeInBytes: 0,
           },
@@ -269,7 +269,7 @@ describe("CachingIterableSource", () => {
             problem: undefined,
             connectionId: undefined,
             msgEvent: {
-              receiveTime: { sec: 0, nsec: 1 },
+              receiveTime: { sec: 0, nsec: 0 },
               message: undefined,
               sizeInBytes: 0,
               topic: "a",
@@ -286,7 +286,7 @@ describe("CachingIterableSource", () => {
             problem: undefined,
             connectionId: undefined,
             msgEvent: {
-              receiveTime: { sec: 0, nsec: 500000000 },
+              receiveTime: { sec: 5, nsec: 0 },
               message: undefined,
               sizeInBytes: 0,
               topic: "a",
@@ -303,9 +303,81 @@ describe("CachingIterableSource", () => {
       }
 
       expect(bufferedSource.loadedRanges()).toEqual([
-        { start: 0, end: 0.499999999 },
+        { start: 0, end: 0.4999999999 },
         { start: 0.5, end: 1 },
       ]);
     }
+  });
+
+  it("should purge blocks when filled", async () => {
+    const source = new TestSource();
+    const bufferedSource = new CachingIterableSource(source, {
+      maxBlockSize: 100,
+      maxTotalSize: 300,
+    });
+
+    await bufferedSource.initialize();
+
+    source.messageIterator = async function* messageIterator(
+      _args: MessageIteratorArgs,
+    ): AsyncIterableIterator<Readonly<IteratorResult>> {
+      yield {
+        msgEvent: {
+          topic: "a",
+          receiveTime: { sec: 0, nsec: 0 },
+          message: undefined,
+          sizeInBytes: 101,
+        },
+        problem: undefined,
+        connectionId: undefined,
+      };
+
+      yield {
+        msgEvent: {
+          topic: "a",
+          receiveTime: { sec: 5, nsec: 1 },
+          message: undefined,
+          sizeInBytes: 101,
+        },
+        problem: undefined,
+        connectionId: undefined,
+      };
+
+      yield {
+        msgEvent: {
+          topic: "a",
+          receiveTime: { sec: 10, nsec: 0 },
+          message: undefined,
+          sizeInBytes: 101,
+        },
+        problem: undefined,
+        connectionId: undefined,
+      };
+    };
+
+    const messageIterator = bufferedSource.messageIterator({
+      topics: ["a"],
+    });
+
+    await messageIterator.next();
+
+    // Nothing has been actually saved into the cache but we did emit the first item
+    expect(bufferedSource.loadedRanges()).toEqual([{ start: 0, end: 0 }]);
+
+    await messageIterator.next();
+    // We've read another message which let us setup a block for all the time we've read till now
+    expect(bufferedSource.loadedRanges()).toEqual([{ start: 0, end: 0.5 }]);
+
+    await messageIterator.next();
+    expect(bufferedSource.loadedRanges()).toEqual([
+      { start: 0, end: 0.5 },
+      { start: 0.5000000001, end: 0.9999999999 },
+    ]);
+
+    await messageIterator.next();
+    expect(bufferedSource.loadedRanges()).toEqual([
+      { start: 0.5000000001, end: 0.9999999999 },
+      { start: 1, end: 1 },
+    ]);
   });
 });

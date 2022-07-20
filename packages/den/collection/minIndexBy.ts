@@ -7,7 +7,7 @@ function minIndexBy<T>(collection: Array<T>, compare: (itemA: T, itemB: T) => nu
     return -1;
   }
 
-  let minIdx = -1;
+  let minIdx = 0;
   let minItem = collection[0]!;
 
   for (let i = 1; i < collection.length; ++i) {
