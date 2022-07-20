@@ -2,7 +2,6 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { styled as muiStyled } from "@mui/material";
 import { clamp } from "lodash";
 import {
   useCallback,
@@ -13,6 +12,7 @@ import {
   useState,
   useLayoutEffect,
 } from "react";
+import { makeStyles } from "tss-react/mui";
 
 import Logger from "@foxglove/log";
 
@@ -30,31 +30,34 @@ type Props = {
   renderSlider?: (value?: number) => ReactNode;
 };
 
-const SliderRoot = muiStyled("div")<{ disabled?: boolean }>(
-  ({ disabled = false, theme }) => `
-  label: Slider-base;
-  width: 100%;
-  height: 100%;
-  position: relative;
-  cursor: ${disabled ? "not-allowed" : "pointer"};
-  display: flex;
-  align-items: center;
-  opacity: ${disabled ? theme.palette.action.disabledOpacity : 1};
-`,
-);
+const useStyles = makeStyles()((theme) => ({
+  root: {
+    label: "Slider-root",
+    display: "flex",
+    width: "100%",
+    height: "100%",
+    position: "relative",
+    alignItems: "center",
+    cursor: "pointer",
+  },
+  rootDisabled: {
+    label: "Slider-rootDisabled",
+    cursor: "not-allowed",
+    opacity: theme.palette.action.disabledOpacity,
+  },
+  range: {
+    label: "Slider-range",
+    backgroundColor: theme.palette.action.active,
+    position: "absolute",
+    height: "100%",
+  },
+}));
 
-const StyledRange = muiStyled("div")`
-  label: Slider-range;
-  background-color: ${({ theme }) => theme.palette.action.active};
-  position: absolute;
-  height: 100%;
-`;
-
-function defaultRenderSlider(value: number | undefined): ReactNode {
+function defaultRenderSlider(value: number | undefined, className: string): ReactNode {
   if (value == undefined || isNaN(value)) {
     return ReactNull;
   }
-  return <StyledRange style={{ width: `${value * 100}%` }} />;
+  return <div className={className} style={{ width: `${value * 100}%` }} />;
 }
 
 export default function Slider(props: Props): JSX.Element {
@@ -69,6 +72,7 @@ export default function Slider(props: Props): JSX.Element {
     onHoverOut,
     onChange,
   } = props;
+  const { classes, cx } = useStyles();
 
   const elRef = useRef<HTMLDivElement | ReactNull>(ReactNull);
 
@@ -177,15 +181,17 @@ export default function Slider(props: Props): JSX.Element {
   }, [mouseDown, onMouseMove, onMouseUp]);
 
   return (
-    <SliderRoot
-      disabled={disabled}
+    <div
       ref={elRef}
       onMouseDown={onMouseDown}
       onMouseMove={onMouseMove}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
+      className={cx(classes.root, {
+        [classes.rootDisabled]: disabled,
+      })}
     >
-      {renderSlider(sliderValue)}
-    </SliderRoot>
+      {renderSlider(sliderValue, classes.range)}
+    </div>
   );
 }
