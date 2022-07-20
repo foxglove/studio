@@ -22,7 +22,7 @@ import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 // workaround for ESM in jest: https://github.com/foxglove/studio/issues/1854
 const Markdown = React.lazy(async () => await import("react-markdown"));
 
-const TextContentRoot = withStyles("div", ((theme) => {
+const TextContentRoot = withStyles("div", (theme) => {
   const { palette, shape, spacing, typography, shadows } = theme;
   return {
     root: {
