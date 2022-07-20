@@ -3,3 +3,4 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 export { default as filterMap } from "./filterMap";
+export * from "./minIndexBy";

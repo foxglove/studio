@@ -36,7 +36,7 @@ class TestSource implements IIterableSource {
   }
 }
 
-describe("BufferedIterableSource", () => {
+describe("CachingIterableSource", () => {
   it("should construct and initialize", async () => {
     const source = new TestSource();
     const bufferedSource = new CachingIterableSource(source);
@@ -137,6 +137,49 @@ describe("BufferedIterableSource", () => {
       });
 
       expect(bufferedSource.loadedRanges()).toEqual([{ start: 0, end: 1 }]);
+    }
+  });
+
+  it("should purge the cache when topics change", async () => {
+    const source = new TestSource();
+    const bufferedSource = new CachingIterableSource(source);
+
+    await bufferedSource.initialize();
+
+    source.messageIterator = async function* messageIterator(
+      _args: MessageIteratorArgs,
+    ): AsyncIterableIterator<Readonly<IteratorResult>> {
+      yield {
+        msgEvent: {
+          topic: "a",
+          receiveTime: { sec: 0, nsec: 1 },
+          message: undefined,
+          sizeInBytes: 0,
+        },
+        problem: undefined,
+        connectionId: undefined,
+      };
+    };
+
+    {
+      const messageIterator = bufferedSource.messageIterator({
+        topics: ["a"],
+      });
+
+      for await (const _ of messageIterator) {
+        // no-op
+      }
+
+      expect(bufferedSource.loadedRanges()).toEqual([{ start: 0, end: 1 }]);
+    }
+
+    {
+      const messageIterator = bufferedSource.messageIterator({
+        topics: [],
+      });
+
+      await messageIterator.next();
+      expect(bufferedSource.loadedRanges()).toEqual([{ start: 0, end: 0 }]);
     }
   });
 
