@@ -19,7 +19,12 @@ import {
 
 const log = Log.getLogger(__filename);
 
-const READ_AHEAD_DURATION = { sec: 10, nsec: 0 };
+const DEFAULT_READ_AHEAD_DURATION = { sec: 10, nsec: 0 };
+
+type Options = {
+  // How far ahead to buffer
+  readAheadDuration?: Time;
+};
 
 /**
  * BufferedIterableSource proxies access to IIterableSource. It buffers the messageIterator by
@@ -44,6 +49,7 @@ class BufferedIterableSource implements IIterableSource {
   // The producer loads results into the cache and the consumer reads from the cache.
   private cache: IteratorResult[] = [];
 
+  // The location of the consumer read head
   private readHead: Time = { sec: 0, nsec: 0 };
 
   // The promise for the current producer. The message generator starts a producer and awaits the
@@ -52,7 +58,11 @@ class BufferedIterableSource implements IIterableSource {
 
   private initResult?: Initalization;
 
-  constructor(source: IIterableSource) {
+  // How far ahead of the read head we should try to keep buffering
+  private readAheadDuration: Time;
+
+  constructor(source: IIterableSource, opt?: Options) {
+    this.readAheadDuration = opt?.readAheadDuration ?? DEFAULT_READ_AHEAD_DURATION;
     this.source = new CachingIterableSource(source);
   }
 
@@ -86,7 +96,10 @@ class BufferedIterableSource implements IIterableSource {
           break;
         }
 
-        const readUntil = addTime(streamStart, READ_AHEAD_DURATION);
+        const readUntil = addTime(
+          streamStart,
+          addTime(this.readAheadDuration, this.readAheadDuration),
+        );
         const streamEnd = clampTime(readUntil, this.initResult.start, this.initResult.end);
 
         const sourceIterator = this.source.messageIterator({
@@ -116,6 +129,7 @@ class BufferedIterableSource implements IIterableSource {
           return;
         }
 
+        // Wait until we've consumed enough data that we should read more
         for (;;) {
           // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
           if (this.aborted) {
@@ -124,7 +138,7 @@ class BufferedIterableSource implements IIterableSource {
 
           // If this.readHead + readAheadTime > streamEnd, we start another stream for buffering
           // otherwise we wait
-          const targetUntil = addTime(this.readHead, READ_AHEAD_DURATION);
+          const targetUntil = addTime(this.readHead, this.readAheadDuration);
           if (compare(targetUntil, streamEnd) > 0 || this.cache.length === 0) {
             streamStart = addTime(streamEnd, { sec: 0, nsec: 1 });
             break;
