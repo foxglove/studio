@@ -1,6 +1,6 @@
 {
   "name": "@foxglove/studio-base",
-  "version": "1.17.1-dev",
+  "version": "1.18.0-dev",
   "description": "Core components of Foxglove Studio",
   "license": "MPL-2.0",
   "repository": {
@@ -53,7 +53,7 @@
     "@foxglove/velodyne-cloud": "1.0.1",
     "@foxglove/wasm-bz2": "0.1.0",
     "@foxglove/ws-protocol": "0.0.8",
-    "@mcap/core": "0.2.1",
+    "@mcap/core": "0.2.2",
     "@mdi/svg": "6.5.95",
     "@mui/icons-material": "5.4.1",
     "@mui/material": "5.4.1",
@@ -107,7 +107,7 @@
     "@types/uuid": "8.3.4",
     "@types/wicg-file-system-access": "2020.9.5",
     "@types/ws": "8.5.2",
-    "@wojtekmaj/enzyme-adapter-react-17": "0.6.6",
+    "@wojtekmaj/enzyme-adapter-react-17": "0.6.7",
     "amplitude-js": "8.16.1",
     "argparse": "2.0.1",
     "async-mutex": "0.3.2",
@@ -140,6 +140,7 @@
     "idb-keyval": "6.1.0",
     "immer": "9.0.12",
     "intervals-fn": "3.0.3",
+    "jszip": "3.10.0",
     "leaflet": "1.7.1",
     "lodash": "4.17.21",
     "mathjs": "10.1.1",

@@ -31,7 +31,7 @@ import {
 } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import fuzzySort from "fuzzysort";
-import { isEmpty } from "lodash";
+import { countBy, isEmpty } from "lodash";
 import { useCallback, useEffect, useMemo } from "react";
 import { useDrag } from "react-dnd";
 import { MosaicDragType, MosaicPath } from "react-mosaic-component";
@@ -44,6 +44,7 @@ import {
   usePanelMosaicId,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { PanelInfo, usePanelCatalog } from "@foxglove/studio-base/context/PanelCatalogContext";
+import { ExtensionNamespace } from "@foxglove/studio-base/types/Extensions";
 import {
   PanelConfig,
   MosaicDropTargetPosition,
@@ -105,6 +106,7 @@ type PanelItemProps = {
     config?: PanelConfig;
     relatedConfigs?: SavedProps;
     thumbnail?: string;
+    extensionNamespace?: ExtensionNamespace;
   };
   searchQuery: string;
   checked?: boolean;
@@ -202,6 +204,11 @@ function DraggablePanelItem({
     },
     [connectDragSource, tooltipRef, scrollRef],
   );
+
+  const targetString = panel.extensionNamespace
+    ? `${panel.title} [${panel.extensionNamespace}]`
+    : panel.title;
+
   switch (mode) {
     case "grid":
       return (
@@ -216,7 +223,7 @@ function DraggablePanelItem({
               <CardContent className={classes.cardContent}>
                 <Typography variant="subtitle2" gutterBottom>
                   <span data-test={`panel-menu-item ${panel.title}`}>
-                    <TextHighlight targetStr={panel.title} searchText={searchQuery} />
+                    <TextHighlight targetStr={targetString} searchText={searchQuery} />
                   </span>
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
@@ -241,7 +248,7 @@ function DraggablePanelItem({
             <ListItemText
               primary={
                 <span data-test={`panel-menu-item ${panel.title}`}>
-                  <TextHighlight targetStr={panel.title} searchText={searchQuery} />
+                  <TextHighlight targetStr={targetString} searchText={searchQuery} />
                 </span>
               }
               primaryTypographyProps={{ fontWeight: checked ? "bold" : undefined }}
@@ -259,10 +266,11 @@ export type PanelSelection = {
     [panelId: string]: PanelConfig;
   };
 };
+
 type Props = {
   mode?: "grid" | "list";
   onPanelSelect: (arg0: PanelSelection) => void;
-  selectedPanelTitle?: string;
+  selectedPanelType?: string;
   backgroundColor?: string;
 };
 
@@ -292,7 +300,7 @@ function verifyPanels(panels: readonly PanelInfo[]) {
 function PanelList(props: Props): JSX.Element {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [highlightedPanelIdx, setHighlightedPanelIdx] = React.useState<number | undefined>();
-  const { mode, onPanelSelect, selectedPanelTitle, backgroundColor } = props;
+  const { mode, onPanelSelect, selectedPanelType, backgroundColor } = props;
   const classes = useStyles({ backgroundColor });
 
   const { dropPanel } = useCurrentLayoutActions();
@@ -325,8 +333,22 @@ function PanelList(props: Props): JSX.Element {
   }, []);
 
   const panelCatalog = usePanelCatalog();
-  const { allRegularPanels, allPreconfiguredPanels } = useMemo(() => {
+
+  const namespacedPanels = useMemo(() => {
+    // Remove namespace if panel title is unique.
     const panels = panelCatalog.getPanels();
+    const countByTitle = countBy(panels, (panel) => panel.title);
+    return panels.map((panel) => {
+      if ((countByTitle[panel.title] ?? 0) > 1) {
+        return panel;
+      } else {
+        return { ...panel, namespace: undefined };
+      }
+    });
+  }, [panelCatalog]);
+
+  const { allRegularPanels, allPreconfiguredPanels } = useMemo(() => {
+    const panels = namespacedPanels;
     const regular = panels.filter((panel) => !panel.config);
     const preconfigured = panels.filter((panel) => panel.config);
     const sortByTitle = (a: PanelInfo, b: PanelInfo) =>
@@ -336,7 +358,7 @@ function PanelList(props: Props): JSX.Element {
       allRegularPanels: [...regular].sort(sortByTitle),
       allPreconfiguredPanels: [...preconfigured].sort(sortByTitle),
     };
-  }, [panelCatalog]);
+  }, [namespacedPanels]);
 
   useEffect(() => {
     verifyPanels([...allRegularPanels, ...allPreconfiguredPanels]);
@@ -421,20 +443,20 @@ function PanelList(props: Props): JSX.Element {
             onPanelSelect({ type, config, relatedConfigs });
             blurActiveElement();
           }}
-          checked={title === selectedPanelTitle}
+          checked={type === selectedPanelType}
           highlighted={highlightedPanel?.title === title}
           searchQuery={searchQuery}
         />
       );
     },
     [
+      highlightedPanel?.title,
       mode,
-      highlightedPanel,
       mosaicId,
       onPanelMenuItemDrop,
       onPanelSelect,
       searchQuery,
-      selectedPanelTitle,
+      selectedPanelType,
     ],
   );
 

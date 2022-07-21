@@ -11,7 +11,8 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { setWarningCallback, useTheme } from "@fluentui/react";
+import { setWarningCallback } from "@fluentui/react";
+import { useTheme } from "@mui/material";
 import { flatten } from "lodash";
 import { ComponentProps, ReactNode, useLayoutEffect, useRef, useState } from "react";
 import { DndProvider } from "react-dnd";
@@ -51,6 +52,7 @@ import {
   AdvertiseOptions,
 } from "@foxglove/studio-base/players/types";
 import MockCurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider/MockCurrentLayoutProvider";
+import ExtensionCatalogProvider from "@foxglove/studio-base/providers/ExtensionCatalogProvider";
 import HelpInfoProvider from "@foxglove/studio-base/providers/HelpInfoProvider";
 import {
   PanelSettingsEditorContextProvider,
@@ -336,11 +338,13 @@ export default function PanelSetup(props: Props): JSX.Element {
       <HoverValueProvider>
         <MockCurrentLayoutProvider onAction={props.onLayoutAction}>
           <PanelSettingsEditorContextProvider>
-            <HelpInfoProvider>
-              <ThemeProvider isDark={theme.isInverted}>
-                <UnconnectedPanelSetup {...props} />
-              </ThemeProvider>
-            </HelpInfoProvider>
+            <ExtensionCatalogProvider loaders={[]}>
+              <HelpInfoProvider>
+                <ThemeProvider isDark={theme.palette.mode === "dark"}>
+                  <UnconnectedPanelSetup {...props} />
+                </ThemeProvider>
+              </HelpInfoProvider>
+            </ExtensionCatalogProvider>
           </PanelSettingsEditorContextProvider>
         </MockCurrentLayoutProvider>
       </HoverValueProvider>

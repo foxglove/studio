@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Theme, ThemeOptions } from "@mui/material/styles";
+import { alpha, Theme, ThemeOptions } from "@mui/material/styles";
 import { CSSProperties } from "@mui/styles";
 
 type MuiLabComponents = {
@@ -82,6 +82,11 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
         endAdornment: {
           top: `calc(50% - ${theme.spacing(1.5)})`,
         },
+      },
+    },
+    MuiFormControl: {
+      defaultProps: {
+        variant: "standard",
       },
     },
     MuiButton: {
@@ -180,6 +185,46 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
           ".MuiAutocomplete-root &": {
             paddingTop: 0,
           },
+        },
+      },
+    },
+    MuiDialog: {
+      defaultProps: {
+        PaperProps: {
+          elevation: 4,
+        },
+      },
+      styleOverrides: {
+        root: {
+          ".MuiBackdrop-root": {
+            backgroundColor: alpha(theme.palette.common.black, 0.4),
+          },
+        },
+      },
+    },
+    MuiDialogActions: {
+      styleOverrides: {
+        root: {
+          padding: theme.spacing(3),
+        },
+      },
+    },
+    MuiDialogContent: {
+      styleOverrides: {
+        root: {
+          ...theme.typography.body1,
+
+          "& + .MuiDialogActions-root": {
+            paddingTop: 0,
+          },
+        },
+      },
+    },
+    MuiDialogTitle: {
+      styleOverrides: {
+        root: {
+          ...theme.typography.h4,
+          fontWeight: 600,
         },
       },
     },
@@ -329,6 +374,9 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
       },
     },
     MuiSelect: {
+      defaultProps: {
+        variant: "outlined",
+      },
       styleOverrides: {
         select: {
           "&.MuiInputBase-input": {
@@ -346,6 +394,11 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
       defaultProps: {
         elevation: 2,
         square: true,
+      },
+      styleOverrides: {
+        elevation: {
+          backgroundImage: "none !important",
+        },
       },
     },
     MuiRadio: {
@@ -365,6 +418,16 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
           },
         },
         selected: {},
+      },
+    },
+    MuiTabs: {
+      styleOverrides: {
+        vertical: {
+          ".MuiTabs-indicator": {
+            left: 0,
+            right: "auto",
+          },
+        },
       },
     },
     MuiTableCell: {

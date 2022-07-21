@@ -7,6 +7,7 @@ import * as THREE from "three";
 import { Time, toNanoSec } from "@foxglove/rostime";
 import type { PackedElementField, PointCloud } from "@foxglove/schemas/schemas/typescript";
 import { SettingsTreeAction, SettingsTreeFields, SettingsTreeNode, Topic } from "@foxglove/studio";
+import type { RosValue } from "@foxglove/studio-base/players/types";
 
 import { DynamicBufferGeometry, DynamicFloatBufferGeometry } from "../DynamicBufferGeometry";
 import { BaseUserData, Renderable } from "../Renderable";
@@ -80,9 +81,10 @@ const DEFAULT_FLAT_COLOR = { r: 1, g: 1, b: 1, a: 1 };
 const DEFAULT_MIN_COLOR = { r: 100, g: 47, b: 105, a: 1 };
 const DEFAULT_MAX_COLOR = { r: 227, g: 177, b: 135, a: 1 };
 const DEFAULT_RGB_BYTE_ORDER = "rgba";
+const SKIP_MIN_MAX = ["flat", "rgb", "rgba"];
 
 const DEFAULT_SETTINGS: LayerSettingsPointCloudAndLaserScan = {
-  visible: true,
+  visible: false,
   frameLocked: false,
   pointSize: DEFAULT_POINT_SIZE,
   pointShape: DEFAULT_POINT_SHAPE,
@@ -163,6 +165,10 @@ export class PointCloudAndLaserScanRenderable extends Renderable<PointCloudAndLa
     this.userData.material.dispose();
     this.userData.pickingMaterial.dispose();
     super.dispose();
+  }
+
+  override details(): Record<string, RosValue> {
+    return this.userData.pointCloud ?? this.userData.laserScan ?? {};
   }
 }
 
@@ -264,7 +270,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     }
   }
 
-  handleSettingsAction = (action: SettingsTreeAction): void => {
+  override handleSettingsAction = (action: SettingsTreeAction): void => {
     const path = action.payload.path;
     if (action.action !== "update" || path.length !== 3) {
       return;
@@ -722,6 +728,10 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     pointStep: number,
     settings: LayerSettingsPointCloudAndLaserScan,
   ): void {
+    if (SKIP_MIN_MAX.includes(settings.colorMode)) {
+      return;
+    }
+
     let minColorValue = settings.minValue ?? Number.POSITIVE_INFINITY;
     let maxColorValue = settings.maxValue ?? Number.NEGATIVE_INFINITY;
     if (settings.minValue == undefined || settings.maxValue == undefined) {
@@ -1339,7 +1349,7 @@ function settingsNode(
     icon: kind === "pointcloud" ? "Points" : "Radar",
     fields,
     order: topic.name.toLocaleLowerCase(),
-    visible: config.visible ?? true,
+    visible: config.visible ?? DEFAULT_SETTINGS.visible,
   };
 }
 

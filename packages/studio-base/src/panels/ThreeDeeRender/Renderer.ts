@@ -45,11 +45,14 @@ import { FrameAxes, LayerSettingsTransform } from "./renderables/FrameAxes";
 import { Grids } from "./renderables/Grids";
 import { Images } from "./renderables/Images";
 import { Markers } from "./renderables/Markers";
+import { MeasurementTool } from "./renderables/MeasurementTool";
 import { OccupancyGrids } from "./renderables/OccupancyGrids";
 import { PointCloudsAndLaserScans } from "./renderables/PointCloudsAndLaserScans";
 import { Polygons } from "./renderables/Polygons";
 import { PoseArrays } from "./renderables/PoseArrays";
 import { Poses } from "./renderables/Poses";
+import { PublishClickTool, PublishClickType } from "./renderables/PublishClickTool";
+import { Urdfs } from "./renderables/Urdfs";
 import { MarkerPool } from "./renderables/markers/MarkerPool";
 import {
   Header,
@@ -70,7 +73,15 @@ export type RendererEvents = {
   startFrame: (currentTime: bigint, renderer: Renderer) => void;
   endFrame: (currentTime: bigint, renderer: Renderer) => void;
   cameraMove: (renderer: Renderer) => void;
-  renderableSelected: (renderable: Renderable | undefined, renderer: Renderer) => void;
+  renderablesClicked: (
+    renderables: Renderable[],
+    cursorCoords: { x: number; y: number },
+    renderer: Renderer,
+  ) => void;
+  parametersChange: (
+    parameters: ReadonlyMap<string, unknown> | undefined,
+    renderer: Renderer,
+  ) => void;
   transformTreeUpdated: (renderer: Renderer) => void;
   settingsTreeChange: (renderer: Renderer) => void;
   configChange: (renderer: Renderer) => void;
@@ -89,8 +100,6 @@ export type RendererConfig = {
     /* Scale factor to apply to all labels */
     labelScaleFactor?: number;
     transforms?: {
-      /** Toggles visibility of all transforms */
-      visible?: boolean;
       /** Toggles visibility of frame axis labels */
       showLabel?: boolean;
       /** Size of frame axis labels */
@@ -104,6 +113,22 @@ export type RendererConfig = {
     };
     /** Toggles visibility of all topics */
     topicsVisible?: boolean;
+  };
+  publish: {
+    /** The type of message to publish when clicking in the scene */
+    type: PublishClickType;
+    /** The topic on which to publish poses */
+    poseTopic: string;
+    /** The topic on which to publish points */
+    pointTopic: string;
+    /** The topic on which to publish pose estimates */
+    poseEstimateTopic: string;
+    /** The X standard deviation to publish with poses */
+    poseEstimateXDeviation: number;
+    /** The Y standard deviation to publish with poses */
+    poseEstimateYDeviation: number;
+    /** The theta standard deviation to publish with poses */
+    poseEstimateThetaDeviation: number;
   };
   /** frameId -> settings */
   transforms: Record<string, Partial<LayerSettingsTransform> | undefined>;
@@ -124,6 +149,9 @@ export type CustomLayerAction = {
 
 // Enable this to render the hitmap to the screen after clicking
 const DEBUG_PICKING: boolean = false;
+
+// Maximum number of objects to present as selection options in a single click
+const MAX_SELECTIONS = 10;
 
 // NOTE: These do not use .convertSRGBToLinear() since background color is not
 // affected by gamma correction
@@ -147,8 +175,9 @@ const FOLLOW_TF_PATH = ["general", "followTf"];
 const NO_FRAME_SELECTED = "NO_FRAME_SELECTED";
 const FRAME_NOT_FOUND = "FRAME_NOT_FOUND";
 
-// An extensionId for injecting the "Custom Layers" node and its menu actions
-const CUSTOM_LAYERS_ID = "foxglove.CustomLayers";
+// An extensionId for creating the top-level settings nodes such as "Topics" and
+// "Custom Layers"
+const RENDERER_ID = "foxglove.Renderer";
 
 const tempColor = new THREE.Color();
 const tempVec = new THREE.Vector3();
@@ -168,10 +197,13 @@ export class Renderer extends EventEmitter<RendererEvents> {
   settings: SettingsManager;
   topics: ReadonlyArray<Topic> | undefined;
   topicsByName: ReadonlyMap<string, Topic> | undefined;
+  parameters: ReadonlyMap<string, unknown> | undefined;
   // extensionId -> SceneExtension
   sceneExtensions = new Map<string, SceneExtension>();
   // datatype -> handler[]
   datatypeHandlers = new Map<string, MessageHandler[]>();
+  // topicName -> handler[]
+  topicHandlers = new Map<string, MessageHandler[]>();
   // layerId -> { action, handler }
   customLayerActions = new Map<string, CustomLayerAction>();
   scene: THREE.Scene;
@@ -179,6 +211,9 @@ export class Renderer extends EventEmitter<RendererEvents> {
   hemiLight: THREE.HemisphereLight;
   input: Input;
   outlineMaterial = new THREE.LineBasicMaterial({ dithering: true });
+
+  measurementTool: MeasurementTool;
+  publishClickTool: PublishClickTool;
 
   perspectiveCamera: THREE.PerspectiveCamera;
   orthographicCamera: THREE.OrthographicCamera;
@@ -190,7 +225,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
   picker: Picker;
   selectionBackdrop: ScreenOverlay;
-  selectedObject: Renderable | undefined;
+  selectedRenderable: Renderable | undefined;
   colorScheme: "dark" | "light" = "light";
   modelCache: ModelCache;
   transformTree = new TransformTree();
@@ -204,6 +239,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
   markerPool = new MarkerPool(this);
 
   private _prevResolution = new THREE.Vector2();
+  private _pickingEnabled = false;
 
   constructor(canvas: HTMLCanvasElement, config: RendererConfig) {
     super();
@@ -216,10 +252,10 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
     this.settings = new SettingsManager(baseSettingsTree());
     this.settings.on("update", () => this.emit("settingsTreeChange", this));
-    // Add the "Custom Layers" node first so merging happens in the correct order.
+    // Add the top-level nodes first so merging happens in the correct order.
     // Another approach would be to modify SettingsManager to allow merging parent
     // nodes in after their children
-    this.settings.setNodesForKey(CUSTOM_LAYERS_ID, []);
+    this.settings.setNodesForKey(RENDERER_ID, []);
     this.updateCustomLayersCount();
 
     this.gl = new THREE.WebGLRenderer({
@@ -271,12 +307,12 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.scene.add(this.dirLight);
     this.scene.add(this.hemiLight);
 
-    this.input = new Input(canvas);
-    this.input.on("resize", (size) => this.resizeHandler(size));
-    this.input.on("click", (cursorCoords) => this.clickHandler(cursorCoords));
-
     this.perspectiveCamera = new THREE.PerspectiveCamera();
     this.orthographicCamera = new THREE.OrthographicCamera();
+
+    this.input = new Input(canvas, () => this.activeCamera());
+    this.input.on("resize", (size) => this.resizeHandler(size));
+    this.input.on("click", (cursorCoords) => this.clickHandler(cursorCoords));
 
     this.picker = new Picker(this.gl, this.scene, { debug: DEBUG_PICKING });
 
@@ -291,6 +327,9 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.aspect = renderSize.width / renderSize.height;
     log.debug(`Initialized ${renderSize.width}x${renderSize.height} renderer (${samples}x MSAA)`);
 
+    this.measurementTool = new MeasurementTool(this);
+    this.publishClickTool = new PublishClickTool(this);
+
     this.addSceneExtension(new CoreSettings(this));
     this.addSceneExtension(new Cameras(this));
     this.addSceneExtension(new FrameAxes(this));
@@ -302,6 +341,9 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.addSceneExtension(new Polygons(this));
     this.addSceneExtension(new Poses(this));
     this.addSceneExtension(new PoseArrays(this));
+    this.addSceneExtension(new Urdfs(this));
+    this.addSceneExtension(this.measurementTool);
+    this.addSceneExtension(this.publishClickTool);
 
     this._watchDevicePixelRatio();
 
@@ -322,7 +364,12 @@ export class Renderer extends EventEmitter<RendererEvents> {
   }
 
   dispose(): void {
+    log.warn(`Disposing renderer`);
     this.removeAllListeners();
+
+    this.settings.off("update");
+    this.input.off("resize", this.resizeHandler);
+    this.input.off("click", this.clickHandler);
 
     for (const extension of this.sceneExtensions.values()) {
       extension.dispose();
@@ -345,6 +392,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
    * This is useful when seeking to a new playback position or when a new data source is loaded.
    */
   clear(): void {
+    this.settings.errors.clear();
     this.transformTree.clear();
     for (const extension of this.sceneExtensions.values()) {
       extension.removeAllRenderables();
@@ -381,6 +429,18 @@ export class Renderer extends EventEmitter<RendererEvents> {
     }
   }
 
+  addTopicSubscription<T>(topic: string, handler: (messageEvent: MessageEvent<T>) => void): void {
+    const genericHandler = handler as (messageEvent: MessageEvent<unknown>) => void;
+    let handlers = this.topicHandlers.get(topic);
+    if (!handlers) {
+      handlers = [];
+      this.topicHandlers.set(topic, handlers);
+    }
+    if (!handlers.includes(genericHandler)) {
+      handlers.push(genericHandler);
+    }
+  }
+
   addCustomLayerAction(options: {
     layerId: string;
     label: string;
@@ -399,18 +459,33 @@ export class Renderer extends EventEmitter<RendererEvents> {
     };
     this.customLayerActions.set(options.layerId, { action, handler });
 
-    const layerCount = Object.keys(this.config.layers).length;
-    const label = `Custom Layers${layerCount > 0 ? ` (${layerCount})` : ""}`;
-
-    // Rebuild the "Custom Layers" settings tree node
-    const actions: SettingsTreeNodeActionItem[] = Array.from(this.customLayerActions.values()).map(
-      (entry) => entry.action,
-    );
-    const entry: SettingsTreeEntry = {
-      path: ["layers"],
-      node: { label, actions, handler: this.handleCustomLayersAction },
+    // "Topics" settings tree node
+    const topics: SettingsTreeEntry = {
+      path: ["topics"],
+      node: {
+        label: this._topicsNodeLabel(),
+        defaultExpansionState: "expanded",
+        actions: [
+          { id: "show-all", type: "action", label: "Show All" },
+          { id: "hide-all", type: "action", label: "Hide All" },
+        ],
+        handler: this.handleTopicsAction,
+      },
     };
-    this.settings.setNodesForKey(CUSTOM_LAYERS_ID, [entry]);
+
+    // "Custom Layers" settings tree node
+    const layerCount = Object.keys(this.config.layers).length;
+    const customLayers: SettingsTreeEntry = {
+      path: ["layers"],
+      node: {
+        label: `Custom Layers${layerCount > 0 ? ` (${layerCount})` : ""}`,
+        children: this.settings.tree()["layers"]?.children,
+        actions: Array.from(this.customLayerActions.values()).map((entry) => entry.action),
+        handler: this.handleCustomLayersAction,
+      },
+    };
+
+    this.settings.setNodesForKey(RENDERER_ID, [topics, customLayers]);
   }
 
   defaultFrameId(): string | undefined {
@@ -443,6 +518,15 @@ export class Renderer extends EventEmitter<RendererEvents> {
     return rootId;
   }
 
+  /** Enable or disable object selection mode */
+  // eslint-disable-next-line @foxglove/no-boolean-parameters
+  setPickingEnabled(enabled: boolean): void {
+    this._pickingEnabled = enabled;
+    if (!enabled) {
+      this.setSelectedRenderable(undefined);
+    }
+  }
+
   /** Update the color scheme and background color, rebuilding any materials as necessary */
   setColorScheme(colorScheme: "dark" | "light", backgroundColor: string | undefined): void {
     this.colorScheme = colorScheme;
@@ -457,10 +541,12 @@ export class Renderer extends EventEmitter<RendererEvents> {
       this.gl.setClearColor(bgColor ?? DARK_BACKDROP);
       this.outlineMaterial.color.set(DARK_OUTLINE);
       this.outlineMaterial.needsUpdate = true;
+      this.selectionBackdrop.setColor(DARK_BACKDROP, 0.8);
     } else {
       this.gl.setClearColor(bgColor ?? LIGHT_BACKDROP);
       this.outlineMaterial.color.set(LIGHT_OUTLINE);
       this.outlineMaterial.needsUpdate = true;
+      this.selectionBackdrop.setColor(LIGHT_BACKDROP, 0.8);
     }
   }
 
@@ -478,16 +564,16 @@ export class Renderer extends EventEmitter<RendererEvents> {
         this.settings.setNodesForKey(extension.extensionId, extension.settingsNodes());
       }
 
-      // Update the Topics node label
-      const topicCount = this.topics?.length ?? 0;
-      const topicsNode = this.settings.tree()["topics"];
-      const vizCount = Object.keys(topicsNode?.children ?? {}).length;
+      // Update the "Topics" node label
+      this.settings.setLabel(["topics"], this._topicsNodeLabel());
+    }
+  }
 
-      if (topicCount === 0 && vizCount === 0) {
-        this.settings.setLabel(["topics"], `Topics`);
-      } else {
-        this.settings.setLabel(["topics"], `Topics (${vizCount}/${topicCount})`);
-      }
+  setParameters(parameters: ReadonlyMap<string, unknown> | undefined): void {
+    const changed = this.parameters !== parameters;
+    this.parameters = parameters;
+    if (changed) {
+      this.emit("parametersChange", parameters, this);
     }
   }
 
@@ -495,6 +581,13 @@ export class Renderer extends EventEmitter<RendererEvents> {
     const layerCount = Object.keys(this.config.layers).length;
     const label = `Custom Layers${layerCount > 0 ? ` (${layerCount})` : ""}`;
     this.settings.setLabel(["layers"], label);
+  }
+
+  private _topicsNodeLabel(): string {
+    const topicCount = this.topics?.length ?? 0;
+    const topicsNode = this.settings.tree()["topics"];
+    const vizCount = Object.keys(topicsNode?.children ?? {}).length;
+    return topicCount === 0 && vizCount === 0 ? "Topics" : `Topics (${vizCount}/${topicCount})`;
   }
 
   /** Translate a @foxglove/regl-worldview CameraState to the three.js coordinate system */
@@ -545,6 +638,28 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.emit("cameraMove", this);
   }
 
+  setSelectedRenderable(selectedRenderable: Renderable | undefined): void {
+    if (this.selectedRenderable === selectedRenderable) {
+      return;
+    }
+
+    if (this.selectedRenderable) {
+      // Deselect the previously selected renderable
+      deselectObject(this.selectedRenderable);
+      log.debug(`Deselected ${this.selectedRenderable.id} (${this.selectedRenderable.name})`);
+    }
+
+    this.selectedRenderable = selectedRenderable;
+
+    if (selectedRenderable) {
+      // Select the newly selected renderable
+      selectObject(selectedRenderable);
+      log.debug(`Selected ${selectedRenderable.id} (${selectedRenderable.name})`);
+    }
+
+    this.animationFrame();
+  }
+
   activeCamera(): THREE.PerspectiveCamera | THREE.OrthographicCamera {
     return this.config.cameraState.perspective ? this.perspectiveCamera : this.orthographicCamera;
   }
@@ -587,9 +702,16 @@ export class Renderer extends EventEmitter<RendererEvents> {
       this.addTransformMessage(tf);
     }
 
-    const handlers = this.datatypeHandlers.get(datatype);
-    if (handlers) {
-      for (const handler of handlers) {
+    const handlersForTopic = this.topicHandlers.get(messageEvent.topic);
+    if (handlersForTopic) {
+      for (const handler of handlersForTopic) {
+        handler(messageEvent);
+      }
+    }
+
+    const handlersForDatatype = this.datatypeHandlers.get(datatype);
+    if (handlersForDatatype) {
+      for (const handler of handlersForDatatype) {
         handler(messageEvent);
       }
     }
@@ -665,9 +787,17 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
   // Callback handlers
 
+  private _animationFrame?: number;
   animationFrame = (): void => {
+    this._animationFrame = undefined;
     this.frameHandler(this.currentTime);
   };
+
+  queueAnimationFrame(): void {
+    if (this._animationFrame == undefined) {
+      this._animationFrame = requestAnimationFrame(this.animationFrame);
+    }
+  }
 
   frameHandler = (currentTime: bigint): void => {
     const camera = this.activeCamera();
@@ -678,7 +808,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
     this.gl.clear();
     camera.layers.set(LAYER_DEFAULT);
-    this.selectionBackdrop.visible = this.selectedObject != undefined;
+    this.selectionBackdrop.visible = this.selectedRenderable != undefined;
 
     const renderFrameId = this.renderFrameId;
     const fixedFrameId = this.fixedFrameId;
@@ -692,7 +822,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
     this.gl.render(this.scene, camera);
 
-    if (this.selectedObject) {
+    if (this.selectedRenderable) {
       this.gl.clearDepth();
       camera.layers.set(LAYER_SELECTED);
       this.selectionBackdrop.visible = false;
@@ -717,63 +847,73 @@ export class Renderer extends EventEmitter<RendererEvents> {
   };
 
   clickHandler = (cursorCoords: THREE.Vector2): void => {
-    // Deselect the currently selected object, if one is selected
-    let prevSelected: THREE.Object3D | undefined;
-    if (this.selectedObject) {
-      prevSelected = this.selectedObject;
-      deselectObject(this.selectedObject);
-      this.selectedObject = undefined;
-    }
-
-    // Re-render the scene to update the render lists
-    this.animationFrame();
-
-    // Render a single pixel using a fragment shader that writes object IDs as
-    // colors, then read the value of that single pixel back
-    const objectId = this.picker.pick(cursorCoords.x, cursorCoords.y, this.activeCamera());
-    if (objectId < 0) {
-      log.debug(`Background selected`);
-      this.emit("renderableSelected", undefined, this);
+    if (!this._pickingEnabled) {
+      this.setSelectedRenderable(undefined);
       return;
     }
 
-    // Traverse the scene looking for this objectId
-    const pickedObject = this.scene.getObjectById(objectId);
-
-    // Find the first ancestor of the picked object that is a Renderable
-    let maybeRenderable = pickedObject as Partial<Renderable> | undefined;
-    while (maybeRenderable && maybeRenderable.isRenderable !== true) {
-      maybeRenderable = (maybeRenderable.parent ?? undefined) as Partial<Renderable> | undefined;
-    }
-
-    const selectedRenderable = maybeRenderable as Renderable | undefined;
-    if (selectedRenderable === prevSelected) {
-      log.debug(
-        `Deselecting previously selected Renderable ${prevSelected?.id} (${prevSelected?.name})`,
-      );
-      if (!DEBUG_PICKING) {
-        // Re-render with no object selected
-        this.animationFrame();
-      }
+    // Disable picking while a tool is active
+    if (this.measurementTool.state !== "idle" || this.publishClickTool.state !== "idle") {
       return;
     }
 
-    this.selectedObject = selectedRenderable;
+    // Deselect the currently selected object, if one is selected and re-render
+    // the scene to update the render lists
+    this.setSelectedRenderable(undefined);
 
-    if (!selectedRenderable) {
-      log.warn(`No Renderable found for objectId ${objectId}`);
-      this.emit("renderableSelected", undefined, this);
-      return;
+    // Pick a single renderable, hide it, re-render, and run picking again until
+    // the backdrop is hit or we exceed MAX_SELECTIONS
+    const camera = this.activeCamera();
+    const selections: Renderable[] = [];
+    let curSelection: Renderable | undefined;
+    while (
+      (curSelection = this._pickSingleObject(cursorCoords)) &&
+      selections.length < MAX_SELECTIONS
+    ) {
+      selections.push(curSelection);
+      curSelection.visible = false;
+      this.gl.render(this.scene, camera);
     }
 
-    // Select the newly selected object
-    selectObject(selectedRenderable);
-    this.emit("renderableSelected", selectedRenderable, this);
-    log.debug(`Selected Renderable ${selectedRenderable.id} (${selectedRenderable.name})`);
-
+    // Put everything back to normal and render one last frame
+    for (const selection of selections) {
+      selection.visible = true;
+    }
     if (!DEBUG_PICKING) {
-      // Re-render with the selected object
       this.animationFrame();
+    }
+
+    log.debug(`Clicked ${selections.length} renderable(s)`);
+    this.emit("renderablesClicked", selections, cursorCoords, this);
+  };
+
+  handleTopicsAction = (action: SettingsTreeAction): void => {
+    const path = action.payload.path;
+    if (action.action !== "perform-node-action" || path.length !== 1 || path[0] !== "topics") {
+      return;
+    }
+    log.debug(`handleTopicsAction(${action.payload.id})`);
+
+    // eslint-disable-next-line @foxglove/no-boolean-parameters
+    const toggleTopicVisibility = (value: boolean) => {
+      for (const extension of this.sceneExtensions.values()) {
+        for (const node of extension.settingsNodes()) {
+          if (node.path[0] === "topics") {
+            extension.handleSettingsAction({
+              action: "update",
+              payload: { path: [...node.path, "visible"], input: "boolean", value },
+            });
+          }
+        }
+      }
+    };
+
+    if (action.payload.id === "show-all") {
+      // Show all topics
+      toggleTopicVisibility(true);
+    } else if (action.payload.id === "hide-all") {
+      // Hide all topics
+      toggleTopicVisibility(false);
     }
   };
 
@@ -782,7 +922,6 @@ export class Renderer extends EventEmitter<RendererEvents> {
     if (action.action !== "perform-node-action" || path.length !== 1 || path[0] !== "layers") {
       return;
     }
-
     log.debug(`handleCustomLayersAction(${action.payload.id})`);
 
     // Remove `-{uuid}` from the actionId to get the layerId
@@ -807,6 +946,39 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.updateCustomLayersCount();
   };
 
+  private _pickSingleObject(cursorCoords: THREE.Vector2): Renderable | undefined {
+    // Render a single pixel using a fragment shader that writes object IDs as
+    // colors, then read the value of that single pixel back
+    const objectId = this.picker.pick(cursorCoords.x, cursorCoords.y, this.activeCamera());
+    if (objectId === -1) {
+      return undefined;
+    }
+
+    // Traverse the scene looking for this objectId
+    const pickedObject = this.scene.getObjectById(objectId);
+
+    // Find the highest ancestor of the picked object that is a Renderable
+    let selectedRenderable: Renderable | undefined;
+    let maybeRenderable = pickedObject as Partial<Renderable> | undefined;
+    while (maybeRenderable) {
+      if (maybeRenderable.pickable === true) {
+        selectedRenderable = maybeRenderable as Renderable;
+      }
+      maybeRenderable = (maybeRenderable.parent ?? undefined) as Partial<Renderable> | undefined;
+    }
+
+    if (!selectedRenderable) {
+      log.warn(
+        `No Renderable found for objectId ${objectId} (name="${pickedObject?.name}" uuid=${pickedObject?.uuid})`,
+      );
+    }
+
+    return selectedRenderable;
+  }
+
+  /** Tracks the number of frames so we can recompute the defaultFrameId when frames are added. */
+  private _lastTransformFrameCount = 0;
+
   private _updateFrames(): void {
     if (
       this.followFrameId != undefined &&
@@ -817,11 +989,13 @@ export class Renderer extends EventEmitter<RendererEvents> {
       this.renderFrameId = this.followFrameId;
     } else if (
       this.renderFrameId == undefined ||
+      this.transformTree.frames().size !== this._lastTransformFrameCount ||
       !this.transformTree.hasFrame(this.renderFrameId)
     ) {
-      // No valid renderFrameId set, fall back to selecting the heuristically
-      // most valid frame (if any frames are present)
+      // No valid renderFrameId set, or new frames have been added, fall back to selecting the
+      // heuristically most valid frame (if any frames are present)
       this.renderFrameId = this.defaultFrameId();
+      this._lastTransformFrameCount = this.transformTree.frames().size;
 
       if (this.renderFrameId == undefined) {
         this.settings.errors.add(FOLLOW_TF_PATH, NO_FRAME_SELECTED, `No coordinate frames found`);
@@ -911,11 +1085,9 @@ function baseSettingsTree(): SettingsTreeNodes {
   return {
     general: {},
     scene: {},
-    cameraState: {},
     transforms: {},
-    topics: {
-      label: "Topics",
-      defaultExpansionState: "expanded",
-    },
+    topics: {},
+    layers: {},
+    publish: {},
   };
 }
