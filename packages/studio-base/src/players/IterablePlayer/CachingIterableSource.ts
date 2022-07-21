@@ -191,6 +191,7 @@ class CachingIterableSource implements IIterableSource {
       // If we have a next block (this is the block ours would come before), then we only need
       // to read up to that block.
       const nextBlock = this.cache[nextBlockIndex];
+
       let sourceReadEnd = nextBlock ? subtract(nextBlock.start, { sec: 0, nsec: 1 }) : maxEnd;
 
       if (compare(sourceReadStart, sourceReadEnd) > 0) {

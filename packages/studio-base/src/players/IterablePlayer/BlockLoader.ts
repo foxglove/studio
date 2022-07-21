@@ -203,7 +203,6 @@ export class BlockLoader {
       let sizeInBytes = 0;
       for await (const iterResult of iterator) {
         if (args.abortSignal.aborted) {
-          await iterator.return?.();
           return;
         }
 
