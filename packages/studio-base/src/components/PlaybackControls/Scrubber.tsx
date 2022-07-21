@@ -55,8 +55,8 @@ const useStyles = makeStyles()((theme) => ({
     height: 4,
     backgroundColor: theme.palette.action.focus,
   },
-  trackActive: {
-    label: "Scrubber-trackActive",
+  trackDisabled: {
+    label: "Scrubber-trackDisabled",
     opacity: theme.palette.action.disabledOpacity,
   },
 }));
@@ -197,7 +197,7 @@ export default function Scrubber(props: Props): JSX.Element {
       style={{ height: 28 }}
     >
       {tooltip}
-      <div className={cx(classes.track, { [classes.trackActive]: !!startTime })} />
+      <div className={cx(classes.track, { [classes.trackDisabled]: !startTime })} />
       <Stack position="absolute" flex="auto" fullWidth style={{ height: 4 }}>
         <ProgressPlot loading={loading} availableRanges={ranges} />
       </Stack>
