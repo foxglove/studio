@@ -45,14 +45,12 @@ import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables"
 import useIndexedDbRecents from "@foxglove/studio-base/hooks/useIndexedDbRecents";
 import useWarnImmediateReRender from "@foxglove/studio-base/hooks/useWarnImmediateReRender";
 import AnalyticsMetricsCollector from "@foxglove/studio-base/players/AnalyticsMetricsCollector";
-import OrderedStampPlayer from "@foxglove/studio-base/players/OrderedStampPlayer";
 import UserNodePlayer from "@foxglove/studio-base/players/UserNodePlayer";
 import { Player } from "@foxglove/studio-base/players/types";
 import { UserNodes } from "@foxglove/studio-base/types/panels";
 
 const log = Logger.getLogger(__filename);
 
-const DEFAULT_MESSAGE_ORDER = "receiveTime";
 const EMPTY_USER_NODES: UserNodes = Object.freeze({});
 const EMPTY_GLOBAL_VARIABLES: GlobalVariables = Object.freeze({});
 
@@ -60,8 +58,6 @@ type PlayerManagerProps = {
   playerSources: IDataSourceFactory[];
 };
 
-const messageOrderSelector = (state: LayoutState) =>
-  state.selectedLayout?.data?.playbackConfig.messageOrder ?? DEFAULT_MESSAGE_ORDER;
 const userNodesSelector = (state: LayoutState) =>
   state.selectedLayout?.data?.userNodes ?? EMPTY_USER_NODES;
 const globalVariablesSelector = (state: LayoutState) =>
@@ -93,11 +89,6 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
     AppSetting.UNLIMITED_MEMORY_CACHE,
   );
 
-  // Use the default message ordering unless this experimental flag is enabled
-  const [enableMessageOrdering = false] = useAppConfigurationValue<boolean>(
-    AppSetting.EXPERIMENTAL_MESSAGE_ORDER,
-  );
-
   // When we implement per-data-connector UI settings we will move this into the foxglove data platform source.
   const consoleApi = useContext(ConsoleApiContext);
 
@@ -106,11 +97,6 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
 
   const [basePlayer, setBasePlayer] = useState<Player | undefined>();
 
-  const configuredMessageOrder = useCurrentLayoutSelector(messageOrderSelector);
-  const messageOrder = useMemo(
-    () => (enableMessageOrdering ? configuredMessageOrder : DEFAULT_MESSAGE_ORDER),
-    [configuredMessageOrder, enableMessageOrdering],
-  );
   const userNodes = useCurrentLayoutSelector(userNodesSelector);
   const globalVariables = useCurrentLayoutSelector(globalVariablesSelector);
 
@@ -123,21 +109,16 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
   // Updating the player with new values in handled by effects below the player useMemo or within
   // the message pipeline
   const globalVariablesRef = useLatest(globalVariables);
-  const messageOrderRef = useLatest(messageOrder);
 
-  const player = useMemo<OrderedStampPlayer | undefined>(() => {
+  const player = useMemo(() => {
     if (!basePlayer) {
       return undefined;
     }
 
     const userNodePlayer = new UserNodePlayer(basePlayer, userNodeActions);
-    const headerStampPlayer = new OrderedStampPlayer(userNodePlayer, messageOrderRef.current);
-    headerStampPlayer.setGlobalVariables(globalVariablesRef.current);
-    return headerStampPlayer;
-  }, [basePlayer, globalVariablesRef, messageOrderRef, userNodeActions]);
-
-  // Update player with new message order
-  useLayoutEffect(() => player?.setMessageOrder(messageOrder), [player, messageOrder]);
+    userNodePlayer.setGlobalVariables(globalVariablesRef.current);
+    return userNodePlayer;
+  }, [basePlayer, globalVariablesRef, userNodeActions]);
 
   useLayoutEffect(() => void player?.setUserNodes(userNodes), [player, userNodes]);
 
