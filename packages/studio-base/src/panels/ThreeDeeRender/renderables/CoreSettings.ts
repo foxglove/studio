@@ -72,7 +72,8 @@ export class CoreSettings extends SceneExtension {
           label: "Frame",
           fields: {
             followTf: {
-              label: "Render Frame",
+              label: "Display Frame",
+              help: "The coordinate frame to place the camera in. The camera position and orientation will be relative to the origin of this frame.",
               input: "select",
               options: followTfOptions,
               value: followTfValue,
