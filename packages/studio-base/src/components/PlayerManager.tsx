@@ -82,13 +82,6 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
   const analytics = useAnalytics();
   const metricsCollector = useMemo(() => new AnalyticsMetricsCollector(analytics), [analytics]);
 
-  // When we implmenent per-data-connector UI settings we will move this into the appropriate
-  // data sources. We might also consider this a studio responsibility and handle generically for
-  // all data sources.
-  const [unlimitedMemoryCache = false] = useAppConfigurationValue<boolean>(
-    AppSetting.UNLIMITED_MEMORY_CACHE,
-  );
-
   // When we implement per-data-connector UI settings we will move this into the foxglove data platform source.
   const consoleApi = useContext(ConsoleApiContext);
 
@@ -143,7 +136,6 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
         const newPlayer = foundSource.initialize({
           consoleApi,
           metricsCollector,
-          unlimitedMemoryCache,
         });
 
         setBasePlayer(newPlayer);
@@ -183,7 +175,6 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
               ...args.params,
               consoleApi,
               metricsCollector,
-              unlimitedMemoryCache,
             });
             setBasePlayer(newPlayer);
 
@@ -220,7 +211,6 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
                 file: multiFile ? undefined : file,
                 files: multiFile ? fileList : undefined,
                 metricsCollector,
-                unlimitedMemoryCache,
               });
 
               setBasePlayer(newPlayer);
@@ -246,7 +236,6 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
               const newPlayer = foundSource.initialize({
                 file,
                 metricsCollector,
-                unlimitedMemoryCache,
               });
 
               setBasePlayer(newPlayer);
@@ -276,7 +265,6 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
       metricsCollector,
       playerSources,
       setSelectedLayoutId,
-      unlimitedMemoryCache,
     ],
   );
 
