@@ -33,6 +33,22 @@ function formatTimeRaw(stamp: Time): string {
 }
 
 const useStyles = makeStyles()(() => ({
+  root: {
+    width: "100%",
+    display: "flex",
+    flexDirection: "column",
+  },
+  header: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 16,
+  },
+  details: {
+    display: "flex",
+    flexDirection: "column",
+    flex: "1 1 0",
+  },
   summaryRow: {
     margin: "2px 0",
     fontSize: "14px",
@@ -155,7 +171,7 @@ export default function FileInfoDisplay({
   fileInfo?: FileInfo;
   error?: Error;
 }): JSX.Element {
-  const { classes, cx } = useStyles();
+  const { classes } = useStyles();
   const compressionTypes = useMemo(
     () =>
       fileInfo?.compressionTypes &&
@@ -166,25 +182,24 @@ export default function FileInfoDisplay({
   );
   useEffect(() => error && console.error(error), [error]);
   return (
-    <div style={{ width: "100%", display: "flex", flexDirection: "column" }}>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          marginBottom: 16,
-        }}
-      >
+    <div className={classes.root}>
+      <header className={classes.header}>
         <div className={classes.iconContainer}>
           <img src={fileStats.name.endsWith(".mcap") ? mcapIcon : bagIcon} style={{ width: 128 }} />
           {fileInfo?.fileType && (
-            <div className={cx(classes.fileType, classes.hideNarrow)}>{fileInfo.fileType}</div>
+            <div className={classes.hideNarrow}>
+              <span className={classes.fileType}>{fileInfo.fileType}</span>
+            </div>
           )}
         </div>
-        <div style={{ display: "flex", flexDirection: "column", flex: "1 1 0" }}>
-          <div className={cx(classes.fileName, classes.hideNarrow)}>{fileStats.name}</div>
+        <div className={classes.details}>
+          <div className={classes.hideNarrow}>
+            <span className={classes.fileName}>{fileStats.name}</span>
+          </div>
           {fileInfo?.fileType && (
-            <div className={cx(classes.showNarrow, classes.fileType)}>{fileInfo.fileType}</div>
+            <div className={classes.showNarrow}>
+              <span className={classes.fileType}>{fileInfo.fileType}</span>
+            </div>
           )}
           <div className={classes.summaryRow}>
             {[
@@ -215,7 +230,7 @@ export default function FileInfoDisplay({
             </div>
           )}
         </div>
-      </div>
+      </header>
       {error && <Flash color="error">{error.toString()}</Flash>}
       <table className={classes.topicList}>
         <tbody>
