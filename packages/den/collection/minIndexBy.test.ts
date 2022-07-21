@@ -19,4 +19,9 @@ describe("minIndexBy", () => {
     const idx = minIndexBy([3], (a, b) => a - b);
     expect(idx).toEqual(0);
   });
+
+  it("should work with multiple smallest values", () => {
+    const idx = minIndexBy([3, 2, 1, 1, 1], (a, b) => a - b);
+    expect(idx).toEqual(2);
+  });
 });
