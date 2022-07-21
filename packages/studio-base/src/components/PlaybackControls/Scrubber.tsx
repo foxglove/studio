@@ -66,7 +66,7 @@ const selectCurrentTime = (ctx: MessagePipelineContext) => ctx.playerState.activ
 const selectEndTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.endTime;
 const selectRanges = (ctx: MessagePipelineContext) =>
   ctx.playerState.progress.fullyLoadedFractionRanges;
-const selectPrecense = (ctx: MessagePipelineContext) => ctx.playerState.presence;
+const selectPresence = (ctx: MessagePipelineContext) => ctx.playerState.presence;
 
 type Props = {
   onSeek: (seekTo: Time) => void;
@@ -84,7 +84,7 @@ export default function Scrubber(props: Props): JSX.Element {
   const startTime = useMessagePipeline(selectStartTime);
   const currentTime = useMessagePipeline(selectCurrentTime);
   const endTime = useMessagePipeline(selectEndTime);
-  const presence = useMessagePipeline(selectPrecense);
+  const presence = useMessagePipeline(selectPresence);
   const ranges = useMessagePipeline(selectRanges);
 
   const setHoverValue = useSetHoverValue();
