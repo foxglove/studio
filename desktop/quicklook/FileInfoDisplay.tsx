@@ -12,7 +12,8 @@ import bagIcon from "../../resources/icon/BagIcon.png";
 import mcapIcon from "../../resources/icon/McapIcon.png";
 import Flash from "./Flash";
 import formatByteSize from "./formatByteSize";
-import { FileInfo } from "./types";
+import { BODY_PADDING } from "./styleConstants";
+import { FileInfo, TopicInfo } from "./types";
 
 const NARROW_MAX_WIDTH = 399.99;
 const NARROW_MIN_WIDTH = 400;
@@ -86,8 +87,8 @@ const useStyles = makeStyles()(() => ({
     borderSpacing: "0 4px",
 
     [`@media (max-width: ${NARROW_MAX_WIDTH}px)`]: {
-      marginLeft: -10,
-      marginRight: -10,
+      marginLeft: -BODY_PADDING,
+      marginRight: -BODY_PADDING,
     },
   },
   topicRowWrapper: {
@@ -160,6 +161,26 @@ function formatCount(count: number | bigint | undefined, noun: string): string |
     return undefined;
   }
   return `${count.toLocaleString()}\xa0${noun}${count === 1 || count === 1n ? "" : "s"}`;
+}
+
+function TopicRow(props: { info: TopicInfo }) {
+  const {
+    info: { topic, datatype, numMessages, numConnections },
+  } = props;
+  const { classes } = useStyles();
+
+  return (
+    <tr className={classes.topicRowWrapper}>
+      <td className={classes.messageCount}>{numMessages?.toLocaleString()}</td>
+      <td className={classes.topicNameAndDatatype}>
+        <code className={classes.topicName}>{topic}</code>
+        <div className={classes.datatype}>
+          {datatype}
+          {numConnections > 1 && ` (${numConnections})`}
+        </div>
+      </td>
+    </tr>
+  );
 }
 
 export default function FileInfoDisplay({
@@ -235,16 +256,7 @@ export default function FileInfoDisplay({
       <table className={classes.topicList}>
         <tbody>
           {fileInfo?.topics?.map((topicInfo, i) => (
-            <tr key={i} className={classes.topicRowWrapper}>
-              <td className={classes.messageCount}>{topicInfo.numMessages?.toLocaleString()}</td>
-              <td className={classes.topicNameAndDatatype}>
-                <code className={classes.topicName}>{topicInfo.topic}</code>
-                <div className={classes.datatype}>
-                  {topicInfo.datatype}
-                  {topicInfo.numConnections > 1 && ` (${topicInfo.numConnections})`}
-                </div>
-              </td>
-            </tr>
+            <TopicRow key={i} info={topicInfo} />
           ))}
         </tbody>
       </table>
