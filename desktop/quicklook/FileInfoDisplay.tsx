@@ -12,11 +12,8 @@ import bagIcon from "../../resources/icon/BagIcon.png";
 import mcapIcon from "../../resources/icon/McapIcon.png";
 import Flash from "./Flash";
 import formatByteSize from "./formatByteSize";
-import { BODY_PADDING } from "./styleConstants";
+import { BODY_PADDING, NARROW_MAX_WIDTH, NARROW_MIN_WIDTH } from "./styleConstants";
 import { FileInfo, TopicInfo } from "./types";
-
-const NARROW_MAX_WIDTH = 399.99;
-const NARROW_MIN_WIDTH = 400;
 
 const log = Logger.getLogger(__filename);
 
