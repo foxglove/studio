@@ -19,7 +19,7 @@ import {
 
 const log = Log.getLogger(__filename);
 
-const DEFAULT_READ_AHEAD_DURATION = { sec: 10, nsec: 0 };
+const DEFAULT_READ_AHEAD_DURATION = { sec: 5, nsec: 0 };
 
 type Options = {
   // How far ahead to buffer
