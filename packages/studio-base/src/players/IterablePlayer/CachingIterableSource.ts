@@ -279,7 +279,6 @@ class CachingIterableSource implements IIterableSource {
               const pendingSizeInBytes = pendingIterResult[1].msgEvent?.sizeInBytes ?? 0;
               block.items.push(pendingIterResult);
               block.size += pendingSizeInBytes;
-              this.totalSizeBytes += pendingSizeInBytes;
             }
 
             pendingIterResults.length = 0;
@@ -295,6 +294,9 @@ class CachingIterableSource implements IIterableSource {
             this.recomputeLoadedRangeCache();
           }
         }
+
+        // As we add items to pending we also consider them as part of the total size
+        this.totalSizeBytes += sizeInBytes;
 
         // Store the latest message in pending results and flush to the block when time moves forward
         pendingIterResults.push([lastTime, iterResult]);
@@ -323,18 +325,17 @@ class CachingIterableSource implements IIterableSource {
           const pendingSizeInBytes = pendingIterResult[1].msgEvent?.sizeInBytes ?? 0;
           block.items.push(pendingIterResult);
           block.size += pendingSizeInBytes;
-          this.totalSizeBytes += pendingSizeInBytes;
         }
 
         pendingIterResults.length = 0;
-
-        readHead = add(block.end, { sec: 0, nsec: 1 });
 
         this.recomputeLoadedRangeCache();
       } else {
         // We don't have a block after finishing our source. This can happen if the last
         // thing we read in the source made our block be over size and we cycled to a new block.
-        // Since we never loop again we need to insert an empty block from the last one we read
+        // This can also happen if there were no messages in our source range.
+        //
+        // Since we never loop again we need to insert an empty block from the readHead
         // to sourceReadEnd because we know there's nothing else in that range.
         const newBlock: CacheBlock = {
           start: readHead,
@@ -347,7 +348,6 @@ class CachingIterableSource implements IIterableSource {
         for (const pendingIterResult of pendingIterResults) {
           const pendingSizeInBytes = pendingIterResult[1].msgEvent?.sizeInBytes ?? 0;
           newBlock.size += pendingSizeInBytes;
-          this.totalSizeBytes += pendingSizeInBytes;
         }
 
         // Find where we need to insert our new block.
@@ -357,6 +357,10 @@ class CachingIterableSource implements IIterableSource {
 
         this.recomputeLoadedRangeCache();
       }
+
+      // We've read everything there was to read for this source, so our next read will be after
+      // the end of this source
+      readHead = add(sourceReadEnd, { sec: 0, nsec: 1 });
     }
   }
 

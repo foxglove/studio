@@ -369,15 +369,35 @@ describe("CachingIterableSource", () => {
     expect(bufferedSource.loadedRanges()).toEqual([{ start: 0, end: 0.5 }]);
 
     await messageIterator.next();
-    expect(bufferedSource.loadedRanges()).toEqual([
-      { start: 0, end: 0.5 },
-      { start: 0.5000000001, end: 0.9999999999 },
-    ]);
+    expect(bufferedSource.loadedRanges()).toEqual([{ start: 0.5000000001, end: 0.9999999999 }]);
 
     await messageIterator.next();
     expect(bufferedSource.loadedRanges()).toEqual([
       { start: 0.5000000001, end: 0.9999999999 },
       { start: 1, end: 1 },
     ]);
+  });
+
+  it("should return fully cached when there is no data in the source", async () => {
+    const source = new TestSource();
+    const bufferedSource = new CachingIterableSource(source, {
+      maxBlockSize: 100,
+      maxTotalSize: 300,
+    });
+
+    await bufferedSource.initialize();
+
+    source.messageIterator = async function* messageIterator(
+      _args: MessageIteratorArgs,
+    ): AsyncIterableIterator<Readonly<IteratorResult>> {
+      // no-op
+    };
+
+    const messageIterator = bufferedSource.messageIterator({
+      topics: ["a"],
+    });
+
+    await messageIterator.next();
+    expect(bufferedSource.loadedRanges()).toEqual([{ start: 0, end: 1 }]);
   });
 });
