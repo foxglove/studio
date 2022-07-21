@@ -5,3 +5,4 @@
 export { default as filterMap } from "./filterMap";
 export * from "./ArrayMap";
 export * from "./minIndexBy";
+export * from "./binarySearch";

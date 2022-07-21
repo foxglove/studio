@@ -4,7 +4,7 @@
 
 import { isEqual, sortedIndexBy } from "lodash";
 
-import { minIndexBy } from "@foxglove/den/collection";
+import { minIndexBy, sortedIndexByTuple } from "@foxglove/den/collection";
 import Log from "@foxglove/log";
 import { subtract, add, toNanoSec, compare } from "@foxglove/rostime";
 import { Time, MessageEvent } from "@foxglove/studio";
@@ -52,45 +52,8 @@ type Options = {
   maxTotalSize?: number;
 };
 
-/**
- * Performs a binary search on cache to find the index of the entry with the given key.
- *
- * Copied from @foxglove/den/collection ArrayMap
- *
- * @param key Key to search for.
- * @returns The index of the key/value tuple if an exact match is found; otherwise, a negative
- * number. If the key is not found and the key is less than one or more keys in the list, the
- * negative number returned is the bitwise complement of the index of the first element with a
- * larger key. If the key is not found and is greater than all keys in the list, the negative
- * number returned is the bitwise complement of the index of the last element plus 1.
- */
-function findCacheItem(items: [bigint, IteratorResult][], key: bigint) {
-  const list = items;
-  if (list.length === 0) {
-    return -1;
-  }
-
-  let left = 0;
-  let right = list.length - 1;
-
-  while (left <= right) {
-    const mid = (left + right) >> 1;
-    const midKey = list[mid]![0];
-
-    if (midKey === key) {
-      return mid;
-    } else if (key < midKey) {
-      right = mid - 1;
-    } else {
-      left = mid + 1;
-    }
-  }
-
-  return ~left;
-}
-
 function findStartCacheItemIndex(items: [bigint, IteratorResult][], key: bigint) {
-  const idx = findCacheItem(items, key);
+  const idx = sortedIndexByTuple(items, key);
   return idx < 0 ? ~idx : idx;
 }
 
@@ -391,7 +354,7 @@ class CachingIterableSource implements IIterableSource {
         break;
       }
 
-      let readIdx = findCacheItem(cacheBlock.items, toNanoSec(args.time));
+      let readIdx = sortedIndexByTuple(cacheBlock.items, toNanoSec(args.time));
 
       // If readIdx is negative then we don't have an exact match, but readIdx does tell us what that is
       // See the findCacheItem documentation for how to interpret it.
