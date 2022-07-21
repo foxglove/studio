@@ -465,9 +465,9 @@ export class IterablePlayer implements Player {
       throw new Error("Invariant: Tried to reset playback iterator with no current time.");
     }
 
-    await this._playbackIterator?.return?.();
-
     const next = add(this._currentTime, { sec: 0, nsec: 1 });
+
+    await this._playbackIterator?.return?.();
 
     // set the playIterator to the seek time
     log.debug("Initializing forward iterator from", next);
@@ -872,7 +872,8 @@ export class IterablePlayer implements Player {
     this._isPlaying = false;
     this._closed = true;
     this._metricsCollector.close();
-    this._playbackIterator?.return?.().catch((err) => log.error(err));
+    await this._bufferedSource.stopProducer();
+    await this._playbackIterator?.return?.();
     this._playbackIterator = undefined;
   }
 

@@ -80,7 +80,7 @@ class BufferedIterableSource implements IIterableSource {
     });
 
     try {
-      for (;;) {
+      for await (const result of sourceIterator) {
         if (this.aborted) {
           break;
         }
@@ -98,13 +98,7 @@ class BufferedIterableSource implements IIterableSource {
           continue;
         }
 
-        const result = await sourceIterator.next();
-        if (result.done === true) {
-          this.readDone = true;
-          break;
-        }
-
-        this.cache.push(result.value);
+        this.cache.push(result);
 
         // Indicate to the consumer that it can try reading again
         this.readSignal?.resolve();
@@ -113,6 +107,7 @@ class BufferedIterableSource implements IIterableSource {
       await sourceIterator.return?.();
       // Indicate to the consumer that it can try reading again
       this.readSignal?.resolve();
+      this.readDone = true;
     }
 
     log.debug("producer done");
@@ -146,6 +141,7 @@ class BufferedIterableSource implements IIterableSource {
     this.readUntil = addTime(start, readAheadTime);
 
     this.aborted = false;
+    this.readDone = false;
 
     // Create and start the producer when the messageIterator function is called.
     this.producer = this.startProducer(args);

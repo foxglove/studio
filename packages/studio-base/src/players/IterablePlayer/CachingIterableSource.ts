@@ -254,8 +254,8 @@ class CachingIterableSource implements IIterableSource {
           // Find where we need to insert our new block.
           // It should come before any blocks with a start time > than new block start time.
           const insertIndex = sortedIndexBy(this.cache, newBlock, (item) => toNanoSec(item.start));
-
           this.cache.splice(insertIndex, 0, newBlock);
+
           block = newBlock;
 
           this.recomputeLoadedRangeCache();
@@ -331,6 +331,31 @@ class CachingIterableSource implements IIterableSource {
         readHead = add(block.end, { sec: 0, nsec: 1 });
 
         this.recomputeLoadedRangeCache();
+      } else {
+        // We don't have a block after finishing our source. This can happen if the last
+        // thing we read in the source made our block be over size and we cycled to a new block.
+        // Since we never loop again we need to insert an empty block from the last one we read
+        // to sourceReadEnd because we know there's nothing else in that range.
+        const newBlock: CacheBlock = {
+          start: readHead,
+          end: sourceReadEnd,
+          items: pendingIterResults,
+          size: 0,
+          lastAccess: Date.now(),
+        };
+
+        for (const pendingIterResult of pendingIterResults) {
+          const pendingSizeInBytes = pendingIterResult[1].msgEvent?.sizeInBytes ?? 0;
+          newBlock.size += pendingSizeInBytes;
+          this.totalSizeBytes += pendingSizeInBytes;
+        }
+
+        // Find where we need to insert our new block.
+        // It should come before any blocks with a start time > than new block start time.
+        const insertIndex = sortedIndexBy(this.cache, newBlock, (item) => toNanoSec(item.start));
+        this.cache.splice(insertIndex, 0, newBlock);
+
+        this.recomputeLoadedRangeCache();
       }
     }
   }
@@ -365,7 +390,7 @@ class CachingIterableSource implements IIterableSource {
       let readIdx = findCacheItem(cacheBlock.items, toNanoSec(args.time));
 
       // If readIdx is negative then we don't have an exact match, but readIdx does tell us what that is
-      // See the binarySearch documentation for how to interpret it.
+      // See the findCacheItem documentation for how to interpret it.
       if (readIdx < 0) {
         readIdx = ~readIdx;
 
