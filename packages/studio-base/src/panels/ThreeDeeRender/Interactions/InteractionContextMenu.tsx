@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { ListItemText, Menu, MenuItem } from "@mui/material";
+import { ListItemText, Menu, MenuItem, MenuProps } from "@mui/material";
 import { useCallback } from "react";
 
 import { getObject } from "@foxglove/studio-base/panels/ThreeDimensionalViz/threeDimensionalVizUtils";
@@ -16,6 +16,7 @@ type ClickedPosition = { clientX: number; clientY: number };
 type Props = {
   clickedPosition: ClickedPosition;
   clickedObjects: MouseEventObject[];
+  onClose: MenuProps["onClose"];
   selectObject: (arg0?: MouseEventObject) => void;
 };
 
@@ -46,14 +47,16 @@ function InteractionContextMenuItem({
   );
 }
 
-export default function InteractionContextMenu({
+export function InteractionContextMenu({
   clickedObjects = [],
   clickedPosition = { clientX: 0, clientY: 0 },
+  onClose,
   selectObject,
 }: Props): JSX.Element {
   return (
     <Menu
       open
+      onClose={onClose}
       anchorReference="anchorPosition"
       anchorPosition={{
         top: clickedPosition.clientY,

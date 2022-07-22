@@ -13,7 +13,7 @@
 
 import { storiesOf } from "@storybook/react";
 
-import InteractionContextMenu from "./InteractionContextMenu";
+import { InteractionContextMenu } from "./InteractionContextMenu";
 
 const selectedObject = {
   id: "obj-1",
@@ -86,7 +86,7 @@ storiesOf("panels/ThreeDeeRender/Interactions/InteractionContextMenu", module).a
       <div
         style={{ background: "#2d2c33", display: "flex", flexDirection: "row", flexWrap: "wrap" }}
       >
-        <InteractionContextMenu {...sharedProps} />
+        <InteractionContextMenu onClose={() => {}} {...sharedProps} />
       </div>
     );
   },
