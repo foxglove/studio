@@ -10,14 +10,34 @@
 //   This source code is licensed under the Apache License, Version 2.0,
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
-import { Callout, DefaultButton, IconButton } from "@fluentui/react";
+
+import { Callout, DefaultButton } from "@fluentui/react";
 import CloseIcon from "@mdi/svg/svg/close.svg";
-import { Stack } from "@mui/material";
+import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+import DoneIcon from "@mui/icons-material/Done";
+import EditIcon from "@mui/icons-material/Edit";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import {
+  Card,
+  Collapse,
+  Divider,
+  InputBase,
+  IconButton,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+  Paper,
+  Stack,
+  Typography,
+} from "@mui/material";
 import { partition, pick, union, without } from "lodash";
 import { useEffect, useMemo, useCallback, useRef, useState, ReactElement } from "react";
+import JSONTree from "react-json-tree";
 import styled, { css, FlattenSimpleInterpolation, keyframes } from "styled-components";
 
 import Icon from "@foxglove/studio-base/components/Icon";
+import JsonInput from "@foxglove/studio-base/components/JsonInput";
 import { LegacyTable } from "@foxglove/studio-base/components/LegacyStyledComponents";
 import { Item, Menu } from "@foxglove/studio-base/components/Menu";
 import Tooltip from "@foxglove/studio-base/components/Tooltip";
@@ -27,7 +47,12 @@ import useGlobalVariables, {
   GlobalVariables,
 } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import useLinkedGlobalVariables from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/useLinkedGlobalVariables";
-import { colors as sharedColors, fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
+import { useJsonTreeTheme } from "@foxglove/studio-base/util/globalConstants";
+import {
+  colors,
+  colors as sharedColors,
+  fonts,
+} from "@foxglove/studio-base/util/sharedStyleConstants";
 
 // The minimum amount of time to wait between showing the global variable update animation again
 export const ANIMATION_RESET_DELAY_MS = 3000;
@@ -158,7 +183,9 @@ const changeGlobalKey = (
 };
 
 function LinkedGlobalVariableRow({ name }: { name: string }): ReactElement {
-  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const jsonTreeTheme = useJsonTreeTheme();
+  const [open, setOpen] = useState<boolean>(false);
+  const [editing, setEditing] = useState<boolean>(false);
   const { globalVariables, setGlobalVariables } = useGlobalVariables();
   const { linkedGlobalVariables, setLinkedGlobalVariables } = useLinkedGlobalVariables();
 
@@ -193,8 +220,78 @@ function LinkedGlobalVariableRow({ name }: { name: string }): ReactElement {
   const moreButton = useRef<HTMLElement>(ReactNull);
 
   return (
-    <>
-      <td>${name}</td>
+    <Stack>
+      <ListItem
+        dense
+        component="div"
+        disablePadding
+        secondaryAction={
+          <Stack direction="row" style={{ marginRight: -12 }}>
+            <IconButton
+              onClick={() => {
+                if (!open && !editing) {
+                  setOpen(true);
+                }
+                setEditing(!editing);
+              }}
+              size="small"
+            >
+              {editing ? <DoneIcon fontSize="small" /> : <EditIcon fontSize="small" />}
+            </IconButton>
+            <IconButton size="small">
+              <MoreVertIcon fontSize="small" />
+            </IconButton>
+          </Stack>
+        }
+      >
+        <ListItemButton onClick={() => setOpen(!open)}>
+          <ListItemText
+            primary={
+              <Stack direction="row" alignItems="center" style={{ marginLeft: -12 }}>
+                {open ? (
+                  <ArrowDropDownIcon />
+                ) : (
+                  <ArrowDropDownIcon style={{ transform: "rotate(-90deg)" }} />
+                )}
+                ${name}
+              </Stack>
+            }
+            primaryTypographyProps={{
+              component: "div",
+              fontWeight: 600,
+              variant: "body2",
+            }}
+          />
+        </ListItemButton>
+      </ListItem>
+      <Collapse in={open} sx={{ bgcolor: "action.hover" }}>
+        <Divider />
+        <Stack paddingBottom={1} paddingTop={0.5} paddingX={1.25}>
+          {editing ? (
+            <InputBase
+              autoFocus
+              size="small"
+              multiline
+              value={JSON.stringify(globalVariables[name], undefined, 2)}
+              inputProps={{
+                style: {
+                  fontFamily: fonts.MONOSPACE,
+                },
+              }}
+            />
+          ) : (
+            <JSONTree
+              data={globalVariables[name]}
+              shouldExpandNode={(_markerKeyPath, _data, level) => level < 2}
+              invertTheme={false}
+              postprocessValue={maybePlainObject}
+              theme={{ ...jsonTreeTheme, tree: { margin: 0 } }}
+              hideRoot
+            />
+          )}
+        </Stack>
+      </Collapse>
+      {/* <td>${name}</td>
       <td width="100%">
         <JSONInput
           value={JSON.stringify(globalVariables[name]) ?? ""}
@@ -249,9 +346,17 @@ function LinkedGlobalVariableRow({ name }: { name: string }): ReactElement {
             )}
           </IconButton>
         </Stack>
-      </td>
-    </>
+      </td> */}
+      <Divider />
+    </Stack>
   );
+}
+
+function maybePlainObject(rawVal: unknown) {
+  if (typeof rawVal === "object" && rawVal && "toJSON" in rawVal) {
+    return (rawVal as { toJSON: () => unknown }).toJSON();
+  }
+  return rawVal;
 }
 
 function GlobalVariablesTable(): ReactElement {
@@ -293,83 +398,90 @@ function GlobalVariablesTable(): ReactElement {
   }, [globalVariables, skipAnimation]);
 
   return (
-    <SGlobalVariablesTable>
-      <LegacyTable>
-        <thead>
-          <tr>
-            <th>Variable</th>
-            <th>Value</th>
-            <th>Topic(s)</th>
-          </tr>
-        </thead>
-        <tbody>
-          {linked.map((name, idx) => (
-            <SAnimatedRow
-              key={`linked-${idx}`}
-              skipAnimation={skipAnimation.current}
-              animate={changedVariables.includes(name)}
-            >
-              <LinkedGlobalVariableRow name={name} />
-            </SAnimatedRow>
-          ))}
-          {unlinked.map((name, idx) => (
-            <SAnimatedRow
-              key={`unlinked-${idx}`}
-              skipAnimation={skipAnimation.current}
-              animate={changedVariables.includes(name)}
-            >
-              <td data-testid="global-variable-key">
-                <ValidatedResizingInput
-                  value={name}
-                  dataTest={`global-variable-key-input-${name}`}
-                  onChange={(newKey) =>
-                    changeGlobalKey(
-                      newKey,
-                      name,
-                      globalVariables,
-                      linked.length + idx,
-                      overwriteGlobalVariables,
-                    )
-                  }
-                  invalidInputs={without(globalVariableNames, name).concat("")}
-                />
-              </td>
-              <td width="100%">
-                <JSONInput
-                  dataTest={`global-variable-value-input-${JSON.stringify(
-                    globalVariables[name] ?? "",
-                  )}`}
-                  value={JSON.stringify(globalVariables[name]) ?? ""}
-                  onChange={(newVal) => setGlobalVariables({ [name]: newVal })}
-                />
-              </td>
-              <td width="100%">
-                <Stack
-                  direction="row"
-                  flex="auto"
-                  alignItems="center"
-                  justifyContent="space-between"
-                >
-                  --
-                  <SIconWrapper onClick={() => setGlobalVariables({ [name]: undefined })}>
-                    <Icon size="small">
-                      <CloseIcon />
-                    </Icon>
-                  </SIconWrapper>
-                </Stack>
-              </td>
-            </SAnimatedRow>
-          ))}
-        </tbody>
-      </LegacyTable>
-      <Stack direction="row" flex="auto" marginTop={2.5}>
-        <DefaultButton
-          text="Add variable"
-          disabled={globalVariables[""] != undefined}
-          onClick={() => setGlobalVariables({ "": "" })}
-        />
+    <>
+      <Stack>
+        {linked.map((name, idx) => (
+          <LinkedGlobalVariableRow key={`${idx}.${name}`} name={name} />
+        ))}
       </Stack>
-    </SGlobalVariablesTable>
+      {/* <SGlobalVariablesTable>
+        <LegacyTable>
+          <thead>
+            <tr>
+              <th>Variable</th>
+              <th>Value</th>
+              <th>Topic(s)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {linked.map((name, idx) => (
+              <SAnimatedRow
+                key={`linked-${idx}`}
+                skipAnimation={skipAnimation.current}
+                animate={changedVariables.includes(name)}
+              >
+                <LinkedGlobalVariableRow name={name} />
+              </SAnimatedRow>
+            ))}
+            {unlinked.map((name, idx) => (
+              <SAnimatedRow
+                key={`unlinked-${idx}`}
+                skipAnimation={skipAnimation.current}
+                animate={changedVariables.includes(name)}
+              >
+                <td data-test="global-variable-key">
+                  <ValidatedResizingInput
+                    value={name}
+                    dataTest={`global-variable-key-input-${name}`}
+                    onChange={(newKey) =>
+                      changeGlobalKey(
+                        newKey,
+                        name,
+                        globalVariables,
+                        linked.length + idx,
+                        overwriteGlobalVariables,
+                      )
+                    }
+                    invalidInputs={without(globalVariableNames, name).concat("")}
+                  />
+                </td>
+                <td width="100%">
+                  <JSONInput
+                    dataTest={`global-variable-value-input-${JSON.stringify(
+                      globalVariables[name] ?? "",
+                    )}`}
+                    value={JSON.stringify(globalVariables[name]) ?? ""}
+                    onChange={(newVal) => setGlobalVariables({ [name]: newVal })}
+                  />
+                </td>
+                <td width="100%">
+                  <Stack
+                    direction="row"
+                    flex="auto"
+                    alignItems="center"
+                    justifyContent="space-between"
+                  >
+                    --
+                    <SIconWrapper onClick={() => setGlobalVariables({ [name]: undefined })}>
+                      <Icon size="small">
+                        <CloseIcon />
+                      </Icon>
+                    </SIconWrapper>
+                  </Stack>
+                </td>
+              </SAnimatedRow>
+            ))}
+          </tbody>
+        </LegacyTable>
+        <Stack direction="row" flex="auto" marginTop={2.5}>
+          <DefaultButton
+            text="Add variable"
+            disabled={globalVariables[""] != undefined}
+            onClick={() => setGlobalVariables({ "": "" })}
+          />
+        </Stack>
+      </SGlobalVariablesTable> */}
+    </>
   );
 }
 

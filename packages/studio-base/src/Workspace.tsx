@@ -156,7 +156,7 @@ function AddPanel() {
 
 function Variables() {
   return (
-    <SidebarContent title="Variables" helpContent={variablesHelpContent}>
+    <SidebarContent title="Variables" disablePadding helpContent={variablesHelpContent}>
       <GlobalVariablesTable />
     </SidebarContent>
   );
