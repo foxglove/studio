@@ -253,7 +253,7 @@ function LinkedGlobalVariableRow({ name }: { name: string }): ReactElement {
                 ) : (
                   <ArrowDropDownIcon style={{ transform: "rotate(-90deg)" }} />
                 )}
-                ${name}
+                {name}
               </Stack>
             }
             primaryTypographyProps={{
