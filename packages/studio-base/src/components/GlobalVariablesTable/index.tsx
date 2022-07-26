@@ -11,32 +11,36 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import AddIcon from "@mui/icons-material/Add";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import {
   Collapse,
   Divider,
-  InputBase,
   IconButton,
   Menu,
   MenuItem,
-  List,
   ListItem,
   ListItemButton,
   ListItemText,
   Typography,
   styled as muiStyled,
   useTheme,
+  Button,
+  ListItemButtonProps,
 } from "@mui/material";
 import CodeEditor from "@uiw/react-textarea-code-editor";
-import { partition, pick } from "lodash";
+import { partition, pick, union } from "lodash";
 import { useMemo, useCallback, useRef, useState, ReactElement, useEffect } from "react";
 
+import helpContent from "@foxglove/studio-base/components/GlobalVariablesTable/index.help.md";
+import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
 import Stack from "@foxglove/studio-base/components/Stack";
 import useGlobalVariables, {
   GlobalVariables,
 } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import useLinkedGlobalVariables from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/useLinkedGlobalVariables";
+import clipboard from "@foxglove/studio-base/util/clipboard";
 
 const StyledListItem = muiStyled(ListItem, {
   shouldForwardProp: (prop) => prop !== "hasMenu",
@@ -82,21 +86,18 @@ const changeGlobalKey = (
 
 function LinkedGlobalVariableRow({
   name,
+  selected,
   linked,
 }: {
   name: string;
+  selected: ListItemButtonProps["selected"];
   linked?: boolean;
 }): JSX.Element {
   const [open, setOpen] = useState<boolean>(false);
   const [anchorEl, setAnchorEl] = React.useState<undefined | HTMLElement>(undefined);
+  const [copied, setCopied] = useState(false);
   const menuOpen = Boolean(anchorEl);
 
-  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-  const handleClose = () => {
-    setAnchorEl(undefined);
-  };
   const { globalVariables, setGlobalVariables } = useGlobalVariables();
   const { linkedGlobalVariables, setLinkedGlobalVariables } = useLinkedGlobalVariables();
 
@@ -131,6 +132,22 @@ function LinkedGlobalVariableRow({
   const moreButton = useRef<HTMLElement>(ReactNull);
 
   const value = useMemo(() => globalVariables[name], [globalVariables, name]);
+
+  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(undefined);
+  };
+
+  const handleCopy = useCallback(() => {
+    void clipboard.copy(JSON.stringify(value)).then(() => {
+      setOpen(true);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  }, [value]);
 
   return (
     <Stack>
@@ -173,7 +190,6 @@ function LinkedGlobalVariableRow({
                   </Typography>
                 </MenuItem>
               ))}
-              <MenuItem>Copy value</MenuItem>
               {linkedTopicPaths.length > 0 && <Divider variant="middle" />}
               <MenuItem onClick={unlinkAndDelete}>
                 <Typography color="error.main" variant="inherit">
@@ -184,7 +200,7 @@ function LinkedGlobalVariableRow({
           </Stack>
         }
       >
-        <ListItemButton onClick={() => setOpen(!open)}>
+        <ListItemButton selected={selected} onClick={() => setOpen(!open)}>
           <ListItemText
             primary={
               <Stack direction="row" alignItems="center" style={{ marginLeft: -12 }}>
@@ -207,12 +223,23 @@ function LinkedGlobalVariableRow({
       <Collapse in={open}>
         <Divider />
         {open && (
-          <CodeEditor
-            value={JSON.stringify(value, undefined, 4)}
-            language="json"
-            padding={12}
-            readOnly={linked}
-          />
+          <div style={{ position: "relative" }}>
+            <div
+              style={{
+                position: "absolute",
+                top: 0,
+                right: 0,
+                zIndex: 1001,
+                marginTop: 5,
+                marginRight: 6,
+              }}
+            >
+              <Button size="small" onClick={handleCopy} color={copied ? "primary" : "inherit"}>
+                {copied ? "Copied" : "Copy"}
+              </Button>
+            </div>
+            <CodeEditor value={JSON.stringify(value, undefined, 4)} language="json" padding={12} />
+          </div>
         )}
       </Collapse>
       {/* <td>${name}</td>
@@ -294,47 +321,70 @@ function GlobalVariablesTable(): ReactElement {
   }, [globalVariableNames, linkedGlobalVariablesByName]);
 
   // Don't run the animation when the Table first renders
-  // const skipAnimation = useRef<boolean>(true);
-  // useEffect(() => {
-  //   const timeoutId = setTimeout(() => (skipAnimation.current = false), ANIMATION_RESET_DELAY_MS);
-  //   return () => clearTimeout(timeoutId);
-  // }, []);
+  const skipAnimation = useRef<boolean>(true);
+  useEffect(() => {
+    const timeoutId = setTimeout(() => (skipAnimation.current = false), 300);
+    return () => clearTimeout(timeoutId);
+  }, []);
 
   const previousGlobalVariablesRef = useRef<GlobalVariables | undefined>(globalVariables);
 
   const [changedVariables, setChangedVariables] = useState<string[]>([]);
-  // useEffect(() => {
-  //   if (skipAnimation.current || isActiveElementEditable()) {
-  //     previousGlobalVariablesRef.current = globalVariables;
-  //     return;
-  //   }
-  //   const newChangedVariables = union(
-  //     Object.keys(globalVariables),
-  //     Object.keys(previousGlobalVariablesRef.current ?? {}),
-  //   ).filter((name) => {
-  //     const previousValue = previousGlobalVariablesRef.current?.[name];
-  //     return previousValue !== globalVariables[name];
-  //   });
+  useEffect(() => {
+    if (skipAnimation.current || isActiveElementEditable()) {
+      previousGlobalVariablesRef.current = globalVariables;
+      return;
+    }
+    const newChangedVariables = union(
+      Object.keys(globalVariables),
+      Object.keys(previousGlobalVariablesRef.current ?? {}),
+    ).filter((name) => {
+      const previousValue = previousGlobalVariablesRef.current?.[name];
+      return previousValue !== globalVariables[name];
+    });
 
-  //   setChangedVariables(newChangedVariables);
-  //   previousGlobalVariablesRef.current = globalVariables;
-  //   const timerId = setTimeout(() => setChangedVariables([]), ANIMATION_RESET_DELAY_MS);
-  //   return () => clearTimeout(timerId);
-  // }, [globalVariables, skipAnimation]);
+    setChangedVariables(newChangedVariables);
+    previousGlobalVariablesRef.current = globalVariables;
+    const timerId = setTimeout(() => setChangedVariables([]), 300);
+    return () => clearTimeout(timerId);
+  }, [globalVariables, skipAnimation]);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-color-mode", theme.palette.mode);
   }, [theme.palette.mode]);
 
   return (
-    <>
+    <SidebarContent
+      trailingItems={[
+        <IconButton
+          key="add-global-variable"
+          color="primary"
+          disabled={globalVariables[""] != undefined}
+          onClick={() => setGlobalVariables({ "": "" })}
+        >
+          <AddIcon />
+        </IconButton>,
+      ]}
+      title="Variables"
+      disablePadding
+      helpContent={helpContent}
+    >
       <Stack flex="auto">
         <Divider />
         {linked.map((name, idx) => (
-          <LinkedGlobalVariableRow key={`${idx}.${name}`} name={name} linked />
+          <LinkedGlobalVariableRow
+            key={`${idx}.${name}`}
+            name={name}
+            selected={changedVariables.includes(name)}
+            linked
+          />
         ))}
         {unlinked.map((name, idx) => (
-          <LinkedGlobalVariableRow key={`${idx}.${name}`} name={name} />
+          <LinkedGlobalVariableRow
+            key={`${idx}.${name}`}
+            name={name}
+            selected={changedVariables.includes(name)}
+          />
         ))}
       </Stack>
       {/* <SGlobalVariablesTable>
@@ -414,7 +464,7 @@ function GlobalVariablesTable(): ReactElement {
           />
         </Stack>
       </SGlobalVariablesTable> */}
-    </>
+    </SidebarContent>
   );
 }
 

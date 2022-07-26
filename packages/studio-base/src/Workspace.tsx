@@ -32,7 +32,6 @@ import DocumentDropListener from "@foxglove/studio-base/components/DocumentDropL
 import DropOverlay from "@foxglove/studio-base/components/DropOverlay";
 import ExtensionsSidebar from "@foxglove/studio-base/components/ExtensionsSidebar";
 import GlobalVariablesTable from "@foxglove/studio-base/components/GlobalVariablesTable";
-import variablesHelpContent from "@foxglove/studio-base/components/GlobalVariablesTable/index.help.md";
 import HelpSidebar, {
   MESSAGE_PATH_SYNTAX_HELP_INFO,
 } from "@foxglove/studio-base/components/HelpSidebar";
@@ -150,14 +149,6 @@ function AddPanel() {
       ) : (
         <PanelList onPanelSelect={addPanel} backgroundColor={theme.palette.background.default} />
       )}
-    </SidebarContent>
-  );
-}
-
-function Variables() {
-  return (
-    <SidebarContent title="Variables" disablePadding helpContent={variablesHelpContent}>
-      <GlobalVariablesTable />
     </SidebarContent>
   );
 }
@@ -537,7 +528,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
         "panel-settings",
         { iconName: "PanelSettings", title: "Panel settings", component: PanelSettings },
       ],
-      ["variables", { iconName: "Variable2", title: "Variables", component: Variables }],
+      ["variables", { iconName: "Variable2", title: "Variables", component: GlobalVariablesTable }],
       ["preferences", { iconName: "Settings", title: "Preferences", component: Preferences }],
       ["extensions", { iconName: "AddIn", title: "Extensions", component: ExtensionsSidebar }],
       ["help", { iconName: "QuestionCircle", title: "Help", component: HelpSidebar }],
