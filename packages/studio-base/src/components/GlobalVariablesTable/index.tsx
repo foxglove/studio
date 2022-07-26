@@ -14,7 +14,6 @@
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import {
-  Card,
   Collapse,
   Divider,
   InputBase,
@@ -25,15 +24,13 @@ import {
   ListItem,
   ListItemButton,
   ListItemText,
-  Paper,
-  Tab,
-  Tabs,
   Typography,
   styled as muiStyled,
+  useTheme,
 } from "@mui/material";
 import CodeEditor from "@uiw/react-textarea-code-editor";
 import { partition, pick } from "lodash";
-import { useMemo, useCallback, useRef, useState, ReactElement } from "react";
+import { useMemo, useCallback, useRef, useState, ReactElement, useEffect } from "react";
 
 import Stack from "@foxglove/studio-base/components/Stack";
 import useGlobalVariables, {
@@ -41,24 +38,21 @@ import useGlobalVariables, {
 } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import useLinkedGlobalVariables from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/useLinkedGlobalVariables";
 
-const StyledTab = muiStyled(Tab)(({ theme }) => ({
-  minHeight: "auto",
-  minWidth: theme.spacing(8),
-  padding: theme.spacing(1.5, 2),
-  color: theme.palette.text.secondary,
+const StyledListItem = muiStyled(ListItem, {
+  shouldForwardProp: (prop) => prop !== "hasMenu",
+})<{ hasMenu?: boolean }>(({ hasMenu = false, theme }) => {
+  return {
+    paddingRight: theme.spacing(0.5),
+    minHeight: 35,
 
-  "&.Mui-selected": {
-    color: theme.palette.text.primary,
-  },
-}));
+    "@media (pointer: fine)": {
+      ".MuiListItemSecondaryAction-root": { visibility: hasMenu ? "visible" : "hidden" },
 
-const StyledTabs = muiStyled(Tabs)({
-  minHeight: "auto",
-
-  ".MuiTabs-indicator": {
-    transform: "scaleX(0.5)",
-    height: 2,
-  },
+      "&:hover": {
+        ".MuiListItemSecondaryAction-root": { visibility: "visible" },
+      },
+    },
+  };
 });
 
 export function isActiveElementEditable(): boolean {
@@ -88,20 +82,20 @@ const changeGlobalKey = (
 
 function LinkedGlobalVariableRow({
   name,
-  unlinked,
+  linked,
 }: {
   name: string;
-  unlinked?: boolean;
-}): ReactElement {
+  linked?: boolean;
+}): JSX.Element {
   const [open, setOpen] = useState<boolean>(false);
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [anchorEl, setAnchorEl] = React.useState<undefined | HTMLElement>(undefined);
   const menuOpen = Boolean(anchorEl);
 
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
   };
   const handleClose = () => {
-    setAnchorEl(null);
+    setAnchorEl(undefined);
   };
   const { globalVariables, setGlobalVariables } = useGlobalVariables();
   const { linkedGlobalVariables, setLinkedGlobalVariables } = useLinkedGlobalVariables();
@@ -140,12 +134,12 @@ function LinkedGlobalVariableRow({
 
   return (
     <Stack>
-      <ListItem
+      <StyledListItem
+        hasMenu={menuOpen}
         dense
-        component="div"
         disablePadding
         secondaryAction={
-          <Stack direction="row" alignItems="center" gap={0.125}>
+          <Stack direction="row" alignItems="center" gap={0.125} style={{ marginRight: -8 }}>
             <IconButton
               size="small"
               id="variable-action-button"
@@ -179,8 +173,8 @@ function LinkedGlobalVariableRow({
                   </Typography>
                 </MenuItem>
               ))}
-              <MenuItem>Rename</MenuItem>
-              <Divider variant="middle" />
+              <MenuItem>Copy value</MenuItem>
+              {linkedTopicPaths.length > 0 && <Divider variant="middle" />}
               <MenuItem onClick={unlinkAndDelete}>
                 <Typography color="error.main" variant="inherit">
                   Delete variable
@@ -209,14 +203,15 @@ function LinkedGlobalVariableRow({
             }}
           />
         </ListItemButton>
-      </ListItem>
+      </StyledListItem>
       <Collapse in={open}>
         <Divider />
         {open && (
           <CodeEditor
-            value={JSON.stringify(globalVariables[name], undefined, 4)}
+            value={JSON.stringify(value, undefined, 4)}
             language="json"
             padding={12}
+            readOnly={linked}
           />
         )}
       </Collapse>
@@ -289,6 +284,7 @@ function maybePlainObject(rawVal: unknown) {
 }
 
 function GlobalVariablesTable(): ReactElement {
+  const theme = useTheme();
   const { globalVariables, setGlobalVariables, overwriteGlobalVariables } = useGlobalVariables();
   const { linkedGlobalVariablesByName } = useLinkedGlobalVariables();
   const globalVariableNames = useMemo(() => Object.keys(globalVariables), [globalVariables]);
@@ -326,19 +322,19 @@ function GlobalVariablesTable(): ReactElement {
   //   return () => clearTimeout(timerId);
   // }, [globalVariables, skipAnimation]);
 
+  useEffect(() => {
+    document.documentElement.setAttribute("data-color-mode", theme.palette.mode);
+  }, [theme.palette.mode]);
+
   return (
     <>
       <Stack flex="auto">
-        <StyledTabs value={0} textColor="inherit">
-          <StyledTab label="Selected Object" value={0} />
-          <StyledTab label="Variables" value={1} />
-        </StyledTabs>
         <Divider />
         {linked.map((name, idx) => (
-          <LinkedGlobalVariableRow key={`${idx}.${name}`} name={name} />
+          <LinkedGlobalVariableRow key={`${idx}.${name}`} name={name} linked />
         ))}
         {unlinked.map((name, idx) => (
-          <LinkedGlobalVariableRow key={`${idx}.${name}`} name={name} unlinked />
+          <LinkedGlobalVariableRow key={`${idx}.${name}`} name={name} />
         ))}
       </Stack>
       {/* <SGlobalVariablesTable>
