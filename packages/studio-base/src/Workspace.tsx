@@ -573,6 +573,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
           return;
         }
 
+        ev.preventDefault();
         setSelectedSidebarItem(undefined);
       },
     }),
