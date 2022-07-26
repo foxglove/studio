@@ -123,6 +123,14 @@ function activeElementIsInput() {
   );
 }
 
+function keyboardEventHasModifier(event: KeyboardEvent) {
+  if (navigator.userAgent.includes("Mac")) {
+    return event.metaKey;
+  } else {
+    return event.ctrlKey;
+  }
+}
+
 function AddPanel() {
   const addPanel = useAddPanel();
   const { openLayoutBrowser } = useWorkspace();
@@ -557,7 +565,11 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
   const keyDownHandlers = useMemo(
     () => ({
       b: (ev: KeyboardEvent) => {
-        if (!ev.ctrlKey || activeElementIsInput() || selectedSidebarItem == undefined) {
+        if (
+          !keyboardEventHasModifier(ev) ||
+          activeElementIsInput() ||
+          selectedSidebarItem == undefined
+        ) {
           return;
         }
 
