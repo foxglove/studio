@@ -24,7 +24,6 @@ import {
   ListItemButton,
   ListItemText,
   Typography,
-  styled as muiStyled,
   useTheme,
   Button,
   ListItemButtonProps,
@@ -32,6 +31,7 @@ import {
 import CodeEditor from "@uiw/react-textarea-code-editor";
 import { partition, pick, union } from "lodash";
 import { useMemo, useCallback, useRef, useState, ReactElement, useEffect } from "react";
+import { makeStyles } from "tss-react/mui";
 
 import helpContent from "@foxglove/studio-base/components/GlobalVariablesTable/index.help.md";
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
@@ -42,22 +42,41 @@ import useGlobalVariables, {
 import useLinkedGlobalVariables from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/useLinkedGlobalVariables";
 import clipboard from "@foxglove/studio-base/util/clipboard";
 
-const StyledListItem = muiStyled(ListItem, {
-  shouldForwardProp: (prop) => prop !== "hasMenu",
-})<{ hasMenu?: boolean }>(({ hasMenu = false, theme }) => {
-  return {
-    paddingRight: theme.spacing(0.5),
-    minHeight: 35,
+export const ANIMATION_RESET_DELAY_MS = 3000;
 
+const useStyles = makeStyles<void, "copyButton">()((theme, _params, classes) => ({
+  copyButton: {
+    position: "absolute",
+    top: -1,
+    right: 0,
+    zIndex: theme.zIndex.mobileStepper,
+    marginTop: theme.spacing(0.75),
+    marginRight: theme.spacing(0.75),
+  },
+  editorWrapper: {
+    position: "relative",
+
+    [`&:not(:hover) .${classes.copyButton}`]: {
+      visibility: "hidden",
+    },
+  },
+  menuVisible: {
+    visibility: "visible",
+  },
+  listItem: {
     "@media (pointer: fine)": {
-      ".MuiListItemSecondaryAction-root": { visibility: hasMenu ? "visible" : "hidden" },
-
-      "&:hover": {
-        ".MuiListItemSecondaryAction-root": { visibility: "visible" },
+      "&:not(:hover) .MuiListItemSecondaryAction-root": {
+        visibility: "hidden",
       },
     },
-  };
-});
+  },
+  listItemButton: {
+    "&.Mui-selected": {
+      color: theme.palette.primary.main,
+      transition: `background-color 300ms ease-in-out`,
+    },
+  },
+}));
 
 export function isActiveElementEditable(): boolean {
   const activeEl = document.activeElement;
@@ -93,6 +112,7 @@ function LinkedGlobalVariableRow({
   selected: ListItemButtonProps["selected"];
   linked?: boolean;
 }): JSX.Element {
+  const { classes, cx } = useStyles();
   const [open, setOpen] = useState<boolean>(false);
   const [anchorEl, setAnchorEl] = React.useState<undefined | HTMLElement>(undefined);
   const [copied, setCopied] = useState(false);
@@ -151,10 +171,11 @@ function LinkedGlobalVariableRow({
 
   return (
     <Stack>
-      <StyledListItem
-        hasMenu={menuOpen}
+      <ListItem
+        className={classes.listItem}
         dense
         disablePadding
+        classes={{ secondaryAction: cx({ [classes.menuVisible]: menuOpen }) }}
         secondaryAction={
           <Stack direction="row" alignItems="center" gap={0.125} style={{ marginRight: -8 }}>
             <IconButton
@@ -200,7 +221,11 @@ function LinkedGlobalVariableRow({
           </Stack>
         }
       >
-        <ListItemButton selected={selected} onClick={() => setOpen(!open)}>
+        <ListItemButton
+          className={classes.listItemButton}
+          selected={selected}
+          onClick={() => setOpen(!open)}
+        >
           <ListItemText
             primary={
               <Stack direction="row" alignItems="center" style={{ marginLeft: -12 }}>
@@ -219,25 +244,19 @@ function LinkedGlobalVariableRow({
             }}
           />
         </ListItemButton>
-      </StyledListItem>
+      </ListItem>
       <Collapse in={open}>
         <Divider />
         {open && (
-          <div style={{ position: "relative" }}>
-            <div
-              style={{
-                position: "absolute",
-                top: 0,
-                right: 0,
-                zIndex: 1001,
-                marginTop: 5,
-                marginRight: 6,
-              }}
+          <div className={classes.editorWrapper}>
+            <Button
+              className={classes.copyButton}
+              size="small"
+              onClick={handleCopy}
+              color={copied ? "primary" : "inherit"}
             >
-              <Button size="small" onClick={handleCopy} color={copied ? "primary" : "inherit"}>
-                {copied ? "Copied" : "Copy"}
-              </Button>
-            </div>
+              {copied ? "Copied" : "Copy"}
+            </Button>
             <CodeEditor value={JSON.stringify(value, undefined, 4)} language="json" padding={12} />
           </div>
         )}
@@ -323,7 +342,7 @@ function GlobalVariablesTable(): ReactElement {
   // Don't run the animation when the Table first renders
   const skipAnimation = useRef<boolean>(true);
   useEffect(() => {
-    const timeoutId = setTimeout(() => (skipAnimation.current = false), 300);
+    const timeoutId = setTimeout(() => (skipAnimation.current = false), ANIMATION_RESET_DELAY_MS);
     return () => clearTimeout(timeoutId);
   }, []);
 
@@ -345,7 +364,7 @@ function GlobalVariablesTable(): ReactElement {
 
     setChangedVariables(newChangedVariables);
     previousGlobalVariablesRef.current = globalVariables;
-    const timerId = setTimeout(() => setChangedVariables([]), 300);
+    const timerId = setTimeout(() => setChangedVariables([]), ANIMATION_RESET_DELAY_MS);
     return () => clearTimeout(timerId);
   }, [globalVariables, skipAnimation]);
 
