@@ -52,6 +52,8 @@ const useStyles = makeStyles<void, "copyButton">()((theme, _params, classes) => 
     zIndex: theme.zIndex.mobileStepper,
     marginTop: theme.spacing(0.75),
     marginRight: theme.spacing(0.75),
+    paddingLeft: theme.spacing(0.25),
+    paddingRight: theme.spacing(0.25),
   },
   editorWrapper: {
     position: "relative",
