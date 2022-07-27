@@ -427,6 +427,7 @@ export default React.memo(function LayoutRow({
       }
     >
       <ListItemButton
+        data-testid="layout-list-item"
         selected={selected || multiSelected}
         onSubmit={onSubmit}
         onClick={editingName ? undefined : onClick}
