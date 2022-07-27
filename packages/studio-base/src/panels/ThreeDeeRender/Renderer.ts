@@ -242,6 +242,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
   private _prevResolution = new THREE.Vector2();
   private _pickingEnabled = false;
+  private _isUpdatingCameraState = false;
 
   constructor(canvas: HTMLCanvasElement, config: RendererConfig) {
     super();
@@ -606,6 +607,10 @@ export class Renderer extends EventEmitter<RendererEvents> {
   /** Translate a @foxglove/regl-worldview CameraState to the three.js coordinate system */
   private _updateCameras(cameraState: CameraState): void {
     if (cameraState.perspective) {
+      // Unlock the polar angle (pitch axis)
+      this.controls.minPolarAngle = 0;
+      this.controls.maxPolarAngle = Math.PI;
+
       this.perspectiveCamera.position
         .setFromSpherical(
           tempSpherical.set(cameraState.distance, cameraState.phi, -cameraState.thetaOffset),
@@ -632,6 +637,10 @@ export class Renderer extends EventEmitter<RendererEvents> {
         cameraState.targetOffset[2],
       );
     } else {
+      // Lock the polar angle during 2D mode
+      const curPolarAngle = this.controls.getPolarAngle();
+      this.controls.minPolarAngle = this.controls.maxPolarAngle = curPolarAngle;
+
       this.orthographicCamera.position.set(
         cameraState.targetOffset[0],
         cameraState.targetOffset[1],
@@ -651,7 +660,6 @@ export class Renderer extends EventEmitter<RendererEvents> {
     }
   }
 
-  private _isUpdatingCameraState = false;
   setCameraState(cameraState: CameraState): void {
     this._isUpdatingCameraState = true;
     this._updateCameras(cameraState);
