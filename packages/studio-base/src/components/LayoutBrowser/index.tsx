@@ -215,16 +215,7 @@ export default function LayoutBrowser({
         }
         void analytics.logEvent(AppEvent.LAYOUT_SELECT, { permission: item.permission });
       }
-      const selectedIsShared =
-        layouts.value?.shared.some((layout) => layout.id === item.id) === true;
-      const currentIsShared =
-        currentLayoutId != undefined &&
-        layouts.value?.shared.some((layout) => layout.id === currentLayoutId) === true;
-      if (
-        (event?.ctrlKey === true || event?.metaKey === true) &&
-        !selectedIsShared &&
-        !currentIsShared
-      ) {
+      if (event?.ctrlKey === true || event?.metaKey === true) {
         if (item.id !== currentLayoutId) {
           dispatch({ type: "toggle-selected", id: item.id });
         }
@@ -233,14 +224,7 @@ export default function LayoutBrowser({
         dispatch({ type: "select-id", id: item.id });
       }
     },
-    [
-      analytics,
-      currentLayoutId,
-      dispatch,
-      layouts.value?.shared,
-      promptForUnsavedChanges,
-      setSelectedLayoutId,
-    ],
+    [analytics, currentLayoutId, dispatch, promptForUnsavedChanges, setSelectedLayoutId],
   );
 
   const onRenameLayout = useCallbackWithToast(
