@@ -18,7 +18,7 @@ describe("Condvar", () => {
 
     await wait1;
     await wait2;
-    expect(Date.now() - start).toBeGreaterThan(500);
+    expect(Date.now() - start).toBeGreaterThan(480);
   });
 
   it("should notifyOne waiting", async () => {
@@ -37,6 +37,6 @@ describe("Condvar", () => {
     }, 500);
 
     await wait2;
-    expect(Date.now() - start).toBeGreaterThan(500);
+    expect(Date.now() - start).toBeGreaterThan(480);
   });
 });
