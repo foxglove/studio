@@ -312,6 +312,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
     this.perspectiveCamera = new THREE.PerspectiveCamera();
     this.orthographicCamera = new THREE.OrthographicCamera();
+
     this.controls = new OrbitControls(this.perspectiveCamera, this.canvas);
     this.controls.screenSpacePanning = false; // only allow panning in the XY plane
     this.controls.mouseButtons.LEFT = THREE.MOUSE.PAN;
@@ -323,6 +324,11 @@ export class Renderer extends EventEmitter<RendererEvents> {
         this.emit("cameraMove", this);
       }
     });
+
+    // Make the canvas able to receive keyboard events and setup WASD controls
+    canvas.tabIndex = 1000;
+    this.controls.keys = { LEFT: "KeyA", RIGHT: "KeyD", UP: "KeyW", BOTTOM: "KeyS" };
+    this.controls.listenToKeyEvents(canvas);
 
     this.input = new Input(canvas, () => this.activeCamera());
     this.input.on("resize", (size) => this.resizeHandler(size));
