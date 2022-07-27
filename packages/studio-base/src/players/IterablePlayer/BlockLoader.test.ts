@@ -123,30 +123,35 @@ describe("BlockLoader", () => {
                 messagesByTopic: {
                   a: [msgEvents[0], msgEvents[1]],
                 },
+                needTopics: new Set(),
                 sizeInBytes: 0,
               },
               {
                 messagesByTopic: {
                   a: [msgEvents[2], msgEvents[3]],
                 },
+                needTopics: new Set(),
                 sizeInBytes: 0,
               },
               {
                 messagesByTopic: {
                   a: [msgEvents[4]],
                 },
+                needTopics: new Set(),
                 sizeInBytes: 0,
               },
               {
                 messagesByTopic: {
                   a: [],
                 },
+                needTopics: new Set(),
                 sizeInBytes: 0,
               },
               {
                 messagesByTopic: {
                   a: [],
                 },
+                needTopics: new Set(),
                 sizeInBytes: 0,
               },
             ],
@@ -226,30 +231,35 @@ describe("BlockLoader", () => {
                   a: [msgEvents[0], msgEvents[1]],
                 },
                 sizeInBytes: 0,
+                needTopics: new Set(),
               },
               {
                 messagesByTopic: {
                   a: [msgEvents[2], msgEvents[3]],
                 },
                 sizeInBytes: 0,
+                needTopics: new Set(),
               },
               {
                 messagesByTopic: {
                   a: [msgEvents[4]],
                 },
                 sizeInBytes: 0,
+                needTopics: new Set(),
               },
               {
                 messagesByTopic: {
                   a: [],
                 },
                 sizeInBytes: 0,
+                needTopics: new Set(),
               },
               {
                 messagesByTopic: {
                   a: [],
                 },
                 sizeInBytes: 0,
+                needTopics: new Set(),
               },
             ],
             startTime: { sec: 0, nsec: 0 },
@@ -331,6 +341,7 @@ describe("BlockLoader", () => {
                   messagesByTopic: {
                     a: [msgEvents[0], msgEvents[1]],
                   },
+                  needTopics: new Set(),
                   sizeInBytes: 0,
                 },
                 undefined,
@@ -363,6 +374,7 @@ describe("BlockLoader", () => {
                   messagesByTopic: {
                     a: [msgEvents[0], msgEvents[1]],
                   },
+                  needTopics: new Set(),
                   sizeInBytes: 0,
                 },
                 undefined,
@@ -371,12 +383,14 @@ describe("BlockLoader", () => {
                   messagesByTopic: {
                     a: [msgEvents[5], msgEvents[6]],
                   },
+                  needTopics: new Set(),
                   sizeInBytes: 0,
                 },
                 {
                   messagesByTopic: {
                     a: [msgEvents[7]],
                   },
+                  needTopics: new Set(),
                   sizeInBytes: 0,
                 },
                 undefined,
@@ -403,12 +417,14 @@ describe("BlockLoader", () => {
                   messagesByTopic: {
                     a: [msgEvents[0], msgEvents[1]],
                   },
+                  needTopics: new Set(),
                   sizeInBytes: 0,
                 },
                 {
                   messagesByTopic: {
                     a: [msgEvents[2], msgEvents[3]],
                   },
+                  needTopics: new Set(),
                   sizeInBytes: 0,
                 },
                 undefined,
@@ -416,12 +432,14 @@ describe("BlockLoader", () => {
                   messagesByTopic: {
                     a: [msgEvents[5], msgEvents[6]],
                   },
+                  needTopics: new Set(),
                   sizeInBytes: 0,
                 },
                 {
                   messagesByTopic: {
                     a: [msgEvents[7]],
                   },
+                  needTopics: new Set(),
                   sizeInBytes: 0,
                 },
                 undefined,
@@ -448,36 +466,42 @@ describe("BlockLoader", () => {
                     a: [msgEvents[0], msgEvents[1]],
                   },
                   sizeInBytes: 0,
+                  needTopics: new Set(),
                 },
                 {
                   messagesByTopic: {
                     a: [msgEvents[2], msgEvents[3]],
                   },
                   sizeInBytes: 0,
+                  needTopics: new Set(),
                 },
                 {
                   messagesByTopic: {
                     a: [msgEvents[4]],
                   },
                   sizeInBytes: 0,
+                  needTopics: new Set(),
                 },
                 {
                   messagesByTopic: {
                     a: [msgEvents[5], msgEvents[6]],
                   },
                   sizeInBytes: 0,
+                  needTopics: new Set(),
                 },
                 {
                   messagesByTopic: {
                     a: [msgEvents[7]],
                   },
                   sizeInBytes: 0,
+                  needTopics: new Set(),
                 },
                 {
                   messagesByTopic: {
                     a: [msgEvents[8], msgEvents[9]],
                   },
                   sizeInBytes: 0,
+                  needTopics: new Set(),
                 },
               ],
               startTime: { sec: 0, nsec: 0 },
@@ -575,12 +599,14 @@ describe("BlockLoader", () => {
                     a: [msgEvents[0], msgEvents[1], msgEvents[2]],
                   },
                   sizeInBytes: 0,
+                  needTopics: new Set(),
                 },
                 {
                   messagesByTopic: {
                     a: [msgEvents[3]],
                   },
                   sizeInBytes: 0,
+                  needTopics: new Set(),
                 },
               ],
               startTime: { sec: 0, nsec: 0 },
