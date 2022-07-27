@@ -13,6 +13,7 @@
 
 import AddIcon from "@mui/icons-material/Add";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+import LinkIcon from "@mui/icons-material/Link";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import {
   Collapse,
@@ -27,6 +28,7 @@ import {
   useTheme,
   Button,
   ListItemButtonProps,
+  Tooltip,
 } from "@mui/material";
 import CodeEditor from "@uiw/react-textarea-code-editor";
 import { partition, pick, union } from "lodash";
@@ -47,27 +49,23 @@ export const ANIMATION_RESET_DELAY_MS = 3000;
 const useStyles = makeStyles<void, "copyButton">()((theme, _params, classes) => ({
   copyButton: {
     position: "absolute",
-    top: -1,
+    bottom: -1,
     right: 0,
     zIndex: theme.zIndex.mobileStepper,
-    marginTop: theme.spacing(0.75),
-    marginRight: theme.spacing(0.75),
-    paddingLeft: theme.spacing(0.25),
-    paddingRight: theme.spacing(0.25),
+    margin: theme.spacing(0.75),
+
+    "&.MuiButton-root": {
+      paddingLeft: theme.spacing(1),
+      paddingRight: theme.spacing(1),
+      minWidth: "auto",
+    },
   },
   editorWrapper: {
     position: "relative",
-
-    [`&:not(:hover) .${classes.copyButton}`]: {
-      visibility: "hidden",
-    },
-  },
-  menuVisible: {
-    visibility: "visible",
   },
   listItem: {
     "@media (pointer: fine)": {
-      "&:not(:hover) .MuiListItemSecondaryAction-root": {
+      [`&:not(:hover) .${classes.copyButton}`]: {
         visibility: "hidden",
       },
     },
@@ -151,8 +149,6 @@ function LinkedGlobalVariableRow({
     setGlobalVariables({ [name]: undefined });
   }, [linkedGlobalVariables, name, setGlobalVariables, setLinkedGlobalVariables]);
 
-  const moreButton = useRef<HTMLElement>(ReactNull);
-
   const value = useMemo(() => globalVariables[name], [globalVariables, name]);
 
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -172,14 +168,35 @@ function LinkedGlobalVariableRow({
   }, [value]);
 
   return (
-    <Stack>
+    <Stack className={classes.listItem}>
       <ListItem
-        className={classes.listItem}
         dense
         disablePadding
-        classes={{ secondaryAction: cx({ [classes.menuVisible]: menuOpen }) }}
         secondaryAction={
-          <Stack direction="row" alignItems="center" gap={0.125} style={{ marginRight: -8 }}>
+          <Stack direction="row" alignItems="center" gap={0.25} style={{ marginRight: -8 }}>
+            {linkedTopicPaths.length > 0 && (
+              <Tooltip
+                arrow
+                placement="top"
+                title={
+                  linkedTopicPaths.length > 0 && (
+                    <Stack padding={0.25} gap={0.25}>
+                      <Typography variant="overline" style={{ opacity: 0.8 }}>
+                        {linkedTopicPaths.length} LINKED TOPIC
+                        {linkedTopicPaths.length > 1 ? "S" : ""}
+                      </Typography>
+                      {linkedTopicPaths.map((path) => (
+                        <Typography key={path} variant="inherit">
+                          {path}
+                        </Typography>
+                      ))}
+                    </Stack>
+                  )
+                }
+              >
+                <LinkIcon color="info" style={{ opacity: 0.8 }} />
+              </Tooltip>
+            )}
             <IconButton
               size="small"
               id="variable-action-button"
@@ -231,11 +248,7 @@ function LinkedGlobalVariableRow({
           <ListItemText
             primary={
               <Stack direction="row" alignItems="center" style={{ marginLeft: -12 }}>
-                {open ? (
-                  <ArrowDropDownIcon />
-                ) : (
-                  <ArrowDropDownIcon style={{ transform: "rotate(-90deg)" }} />
-                )}
+                <ArrowDropDownIcon style={{ transform: !open ? "rotate(-90deg)" : undefined }} />
                 {name}
               </Stack>
             }
@@ -392,15 +405,7 @@ function GlobalVariablesTable(): ReactElement {
     >
       <Stack flex="auto">
         <Divider />
-        {linked.map((name, idx) => (
-          <LinkedGlobalVariableRow
-            key={`${idx}.${name}`}
-            name={name}
-            selected={changedVariables.includes(name)}
-            linked
-          />
-        ))}
-        {unlinked.map((name, idx) => (
+        {[...linked, ...unlinked].map((name, idx) => (
           <LinkedGlobalVariableRow
             key={`${idx}.${name}`}
             name={name}
