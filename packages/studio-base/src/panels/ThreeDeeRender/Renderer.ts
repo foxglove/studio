@@ -384,6 +384,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.settings.off("update");
     this.input.off("resize", this.resizeHandler);
     this.input.off("click", this.clickHandler);
+    this.controls.dispose();
 
     for (const extension of this.sceneExtensions.values()) {
       extension.dispose();
