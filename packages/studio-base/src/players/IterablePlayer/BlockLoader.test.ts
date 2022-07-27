@@ -106,7 +106,7 @@ describe("BlockLoader", () => {
     let count = 0;
     await loader.startLoading({
       progress: async (progress) => {
-        if (++count < 4) {
+        if (++count < 3) {
           return;
         }
 
@@ -511,15 +511,100 @@ describe("BlockLoader", () => {
       },
     ]);
 
-    expect.assertions(6);
+    expect.assertions(5);
   });
 
-  // fixme - jumping forward in time while loading doesn't work
+  it("should avoid emitting progress when nothing changed", async () => {
+    const source = new TestSource();
 
-  // fixme
-  // when changing the active time and all blocks are loaded, we still emit progress several times?
-  // strange because we didn't actually change anything...
-  // as active time continues to change we continue to emit progress - again nothing changed...
+    const loader = new BlockLoader({
+      maxBlocks: 2,
+      cacheSizeBytes: 1,
+      minBlockDurationNs: 1,
+      source,
+      start: { sec: 0, nsec: 0 },
+      end: { sec: 5, nsec: 0 },
+      problemManager: new PlayerProblemManager(),
+    });
 
-  // fixme - sometimes it looks like blocks are evicted even tho we don't need to evict?
+    const msgEvents: MessageEvent<unknown>[] = [];
+    for (let i = 0; i < 4; ++i) {
+      msgEvents.push({
+        topic: "a",
+        receiveTime: { sec: i, nsec: 0 },
+        message: undefined,
+        sizeInBytes: 0,
+      });
+    }
+
+    source.messageIterator = async function* messageIterator(
+      _args: MessageIteratorArgs,
+    ): AsyncIterableIterator<Readonly<IteratorResult>> {
+      for (let i = 0; i < msgEvents.length; ++i) {
+        const msgEvent = msgEvents[i]!;
+        yield {
+          msgEvent,
+          problem: undefined,
+          connectionId: undefined,
+        };
+      }
+    };
+
+    loader.setTopics(new Set("a"));
+    let count = 0;
+    await loader.startLoading({
+      progress: async (progress) => {
+        count += 1;
+        if (count > 2) {
+          throw new Error("Too many progress callbacks");
+        }
+
+        if (count === 2) {
+          // eslint-disable-next-line jest/no-conditional-expect
+          expect(progress).toEqual({
+            fullyLoadedFractionRanges: [
+              {
+                start: 0,
+                end: 1,
+              },
+            ],
+            messageCache: {
+              blocks: [
+                {
+                  messagesByTopic: {
+                    a: [msgEvents[0], msgEvents[1], msgEvents[2]],
+                  },
+                  sizeInBytes: 0,
+                },
+                {
+                  messagesByTopic: {
+                    a: [msgEvents[3]],
+                  },
+                  sizeInBytes: 0,
+                },
+              ],
+              startTime: { sec: 0, nsec: 0 },
+            },
+          });
+
+          // eslint-disable-next-line require-yield
+          source.messageIterator = async function* messageIterator(
+            _args: MessageIteratorArgs,
+          ): AsyncIterableIterator<Readonly<IteratorResult>> {
+            throw new Error("Should not call iterator");
+          };
+
+          // Everything has loaded so now we seek to a new time
+          // We should not get any more progress updates
+          setTimeout(() => {
+            loader.setActiveTime({ sec: 4, nsec: 0 });
+          }, 0);
+
+          setTimeout(async () => {
+            await loader.stopLoading();
+          }, 500);
+        }
+      },
+    });
+  });
 });

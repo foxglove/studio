@@ -34,13 +34,6 @@ type BlockLoaderArgs = {
   problemManager: PlayerProblemManager;
 };
 
-// A BlockSpan is a continuous set of blocks and topics to load for those blocks
-type BlockSpan = {
-  beginId: number;
-  endId: number;
-  topics: Set<string>;
-};
-
 type Blocks = (MessageBlock | undefined)[];
 
 type LoadArgs = {
@@ -164,13 +157,17 @@ export class BlockLoader {
 
       console.log({ beginBlockId, lastBlockId });
 
+      // Note: lastBlockId is actually 1-past-last block so we can skip this loop if the begin and last are the same
+      if (beginBlockId === lastBlockId) {
+        continue;
+      }
+
       // starting at beginBlockId, identify the first block we need to load
       // this is our start block, from the start block identify to _load to_ block
       // this is our end block
       // load from start block up to end block
       // if end block is at end, go back to 0 and keep going until we reach beginBlockId
       for (let i = beginBlockId; i < lastBlockId; ++i) {
-        // fixme - fetchBlockId can be looked up onces before beginBlockId
         const fetchBlockId = i;
 
         // Topics we will fetch for this range
@@ -276,11 +273,10 @@ export class BlockLoader {
               }
             }
 
-            progress = this.calculateProgress(topics);
-
             // Set the new block to the id of our latest message
             currentBlockId = messageBlockId;
 
+            progress = this.calculateProgress(topics);
             args.progress(progress);
           }
 
@@ -380,12 +376,14 @@ export class BlockLoader {
           }
         }
 
+        if (currentBlockId <= endBlockId) {
+          progress = this.calculateProgress(topics);
+          args.progress(progress);
+        }
+
         // We've processed through endBlockId now, next cycle can skip all those blocks
         i = endBlockId + 1;
       }
-
-      progress = this.calculateProgress(topics);
-      args.progress(progress);
     }
   }
 
