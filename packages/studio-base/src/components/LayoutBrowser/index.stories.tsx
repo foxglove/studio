@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Story, StoryContext } from "@storybook/react";
-import { createEvent, fireEvent, screen } from "@testing-library/dom";
+import { fireEvent, screen } from "@testing-library/dom";
 import { useEffect, useMemo } from "react";
 import TestUtils from "react-dom/test-utils";
 import { useAsync } from "react-use";
