@@ -42,7 +42,7 @@ export default function Root({
   appConfiguration: IAppConfiguration;
 }): JSX.Element {
   const enableExperimentalLatching: boolean =
-    (appConfiguration.get(AppSetting.EXPERIMENTAL_LATCHING) as boolean | undefined) ?? false;
+    (appConfiguration.get(AppSetting.EXPERIMENTAL_LATCHING) as boolean | undefined) ?? true;
 
   const dataSources: IDataSourceFactory[] = useMemo(() => {
     const sources = [
