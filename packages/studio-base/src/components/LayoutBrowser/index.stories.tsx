@@ -280,6 +280,9 @@ DeleteSelectedLayout.play = async () => {
     fireEvent.click(layouts[1]);
   }
   await deleteLayoutInteraction(1);
+  if (layouts[0]) {
+    fireEvent.click(layouts[0]);
+  }
 };
 DeleteSelectedLayout.parameters = { colorScheme: "dark" };
 

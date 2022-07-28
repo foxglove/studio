@@ -49,6 +49,9 @@ function reducer(draft: State, action: Action) {
       break;
     case "shift-multi-action": {
       const id = draft.multiAction?.ids.shift();
+      if (draft.multiAction?.ids.length === 0) {
+        draft.multiAction = undefined;
+      }
       pull(draft.selectedIds, id);
       break;
     }

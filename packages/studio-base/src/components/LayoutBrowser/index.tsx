@@ -81,7 +81,9 @@ export default function LayoutBrowser({
   });
 
   useLayoutEffect(() => {
-    const busyListener = () => dispatch({ type: "set-busy", value: layoutManager.isBusy });
+    const busyListener = () => {
+      dispatch({ type: "set-busy", value: layoutManager.isBusy });
+    };
     const onlineListener = () => dispatch({ type: "set-online", value: layoutManager.isOnline });
     const errorListener = () => dispatch({ type: "set-error", value: layoutManager.error });
     busyListener();
@@ -453,7 +455,7 @@ export default function LayoutBrowser({
 
   const showSignInPrompt = supportsSignIn && !layoutManager.supportsSharing && !hideSignInPrompt;
 
-  const pendingMultiAction = state.multiAction != undefined;
+  const pendingMultiAction = state.multiAction?.ids != undefined;
 
   return (
     <SidebarContent
