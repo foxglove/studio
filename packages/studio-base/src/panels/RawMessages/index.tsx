@@ -199,6 +199,7 @@ function RawMessages(props: Props) {
 
   const onTopicPathChange = useCallback(
     (newTopicPath: string) => {
+      setExpansion(undefined);
       saveConfig({ topicPath: newTopicPath });
     },
     [saveConfig],
