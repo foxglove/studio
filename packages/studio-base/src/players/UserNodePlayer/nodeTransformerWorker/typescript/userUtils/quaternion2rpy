@@ -1,0 +1,36 @@
+// utility function to convert from ROS Quaternion message type to roll, pitch, yaw (in degrees)
+// this is useful to make human readable plots of a robot's IMU or Pose (any message with a 'quaternion' or 'orientation' field)
+// inspired by plotjuggler feature that does this behind the scenes automatically
+// https://github.com/facontidavide/PlotJuggler/blob/f5f4bdc2176ebec2505c55f21bdf711f86f79cdc/plotjuggler_app/resources/default.snippets.xml
+
+import { Input } from "./types";
+type Output = {
+  roll_deg: number;
+  pitch_deg: number;
+  yaw_deg: number;
+};
+export const inputs = ["/<robot_name>/imu"];
+export const output = "/studio_node/<robot_name>/imu";
+
+export default function node(event: Input<"/<robot_name>/imu">): Output {
+  // edit these lines to fit your message structure, this assumes a standard ROS IMU message
+  let w = event.message.orientation.w;
+  let x = event.message.orientation.x;
+  let y = event.message.orientation.y;
+  let z = event.message.orientation.z;
+
+  // from quaternion to roll/pitch/yaw
+  let dcm00 = w * w + x * x - y * y - z * z;
+  let dcm10 = 2 * (x * y + w * z);
+  let dcm20 = 2 * (x * z - w * y);
+  let dcm21 = 2 * (w * x + y * z);
+  let dcm22 = w * w - x * x - y * y + z * z;
+  let roll_deg = (Math.atan2(dcm21, dcm22) * 180) / Math.PI;
+  let pitch_deg = (Math.asin(-dcm20) * 180) / Math.PI;
+  let yaw_deg = (Math.atan2(dcm10, dcm00) * 180) / Math.PI;
+  return {
+    roll_deg: roll_deg,
+    pitch_deg: pitch_deg,
+    yaw_deg: yaw_deg,
+  };
+}
