@@ -11,8 +11,8 @@ import {
   ParsedMessageDefinitionsByTopic,
   Topic,
   TopicStats,
+  PlayerProblem,
 } from "@foxglove/studio-base/players/types";
-import { PlayerProblem } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import { MessageType, ULog } from "@foxglove/ulog";
 import { BlobReader } from "@foxglove/ulog/web";
