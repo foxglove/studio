@@ -34,7 +34,6 @@ import Tree from "react-json-tree";
 import { useLatest } from "react-use";
 import { makeStyles } from "tss-react/mui";
 
-import { SettingsTreeAction } from "@foxglove/studio";
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import useGetItemStringWithTimezone from "@foxglove/studio-base/components/JsonTree/useGetItemStringWithTimezone";
@@ -60,7 +59,6 @@ import getDiff, {
   DiffObject,
 } from "@foxglove/studio-base/panels/RawMessages/getDiff";
 import { Topic } from "@foxglove/studio-base/players/types";
-import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelSettingsEditorContextProvider";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 import { useJsonTreeTheme } from "@foxglove/studio-base/util/globalConstants";
 import { enumValuesByDatatypeAndField } from "@foxglove/studio-base/util/selectors";
@@ -76,7 +74,6 @@ import {
   getStructureItemForPath,
 } from "./getValueActionForValue";
 import helpContent from "./index.help.md";
-import { buildSettingsTree } from "./settings";
 import { RawMessagesPanelConfig } from "./types";
 import { DATA_ARRAY_PREVIEW_LIMIT, generateDeepKeyPaths, getItemStringForDiff } from "./utils";
 
@@ -165,7 +162,7 @@ function RawMessages(props: Props) {
   }, [datatypes, topic, topicRosPath]);
 
   // When expandAll is unset, we'll use expandedFields to get expanded info
-  const [expandAll, setExpandAll] = useState<boolean | undefined>(config.autoExpandMode === "all");
+  const [expandAll, setExpandAll] = useState<boolean | undefined>();
   const [expandedFields, setExpandedFields] = useState(new Set<string>());
 
   const matchedMessages = useMessageDataItem(topicPath, { historySize: 2 });
@@ -182,40 +179,13 @@ function RawMessages(props: Props) {
   const latestExpandedFields = useLatest(expandedFields);
 
   useEffect(() => {
-    if (latestExpandedFields.current.size === 0 && baseItem && config.autoExpandMode === "auto") {
+    if (latestExpandedFields.current.size === 0 && baseItem) {
       const data = dataWithoutWrappingArray(baseItem.queriedData.map(({ value }) => value));
       const newExpandedFields = generateDeepKeyPaths(maybeDeepParse(data), 5);
       setExpandedFields(newExpandedFields);
       setExpandAll(undefined);
-    } else if (config.autoExpandMode === "all") {
-      setExpandedFields(new Set());
-      setExpandAll(true);
     }
-  }, [baseItem, config.autoExpandMode, latestExpandedFields]);
-
-  const updateSettingsTree = usePanelSettingsTreeUpdate();
-
-  const settingsActionHandler = useCallback(
-    (action: SettingsTreeAction) => {
-      if (action.action !== "update") {
-        return;
-      }
-
-      if (action.payload.input === "select") {
-        saveConfig({
-          autoExpandMode: action.payload.value as RawMessagesPanelConfig["autoExpandMode"],
-        });
-      }
-    },
-    [saveConfig],
-  );
-
-  useEffect(() => {
-    updateSettingsTree({
-      actionHandler: settingsActionHandler,
-      nodes: buildSettingsTree(config),
-    });
-  }, [config, settingsActionHandler, updateSettingsTree]);
+  }, [baseItem, latestExpandedFields]);
 
   const onTopicPathChange = useCallback(
     (newTopicPath: string) => {
@@ -714,7 +684,6 @@ function RawMessages(props: Props) {
 }
 
 const defaultConfig: RawMessagesPanelConfig = {
-  autoExpandMode: "auto",
   diffEnabled: false,
   diffMethod: CUSTOM_METHOD,
   diffTopicPath: "",
