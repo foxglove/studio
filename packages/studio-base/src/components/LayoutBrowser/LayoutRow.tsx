@@ -94,7 +94,7 @@ export type LayoutActionMenuItem =
       onClick?: (event: React.MouseEvent<HTMLLIElement>) => void;
       disabled?: boolean;
       debug?: boolean;
-      "data-test"?: string;
+      "data-testid"?: string;
     }
   | {
       type: "divider";
@@ -267,7 +267,7 @@ export default React.memo(function LayoutRow({
       key: "rename",
       text: "Rename",
       onClick: renameAction,
-      "data-test": "rename-layout",
+      "data-testid": "rename-layout",
       disabled: (layoutIsShared(layout) && !isOnline) || multiSelection,
       secondaryText: layoutIsShared(layout) && !isOnline ? "Offline" : undefined,
     },
@@ -281,7 +281,7 @@ export default React.memo(function LayoutRow({
           : "Duplicate",
       onClick: duplicateAction,
       disabled: multiSelection,
-      "data-test": "duplicate-layout",
+      "data-testid": "duplicate-layout",
     },
     layoutManager.supportsSharing &&
       !layoutIsShared(layout) && {
@@ -305,7 +305,7 @@ export default React.memo(function LayoutRow({
       key: "delete",
       text: "Delete",
       onClick: confirmDelete,
-      "data-test": "delete-layout",
+      "data-testid": "delete-layout",
     },
   ];
 
@@ -423,7 +423,7 @@ export default React.memo(function LayoutRow({
       disablePadding
       secondaryAction={
         <IconButton
-          data-testid="layout-actions"
+          data-testidid="layout-actions"
           aria-controls={contextMenuTarget != undefined ? "layout-action-menu" : undefined}
           aria-haspopup="true"
           aria-expanded={contextMenuTarget != undefined ? "true" : undefined}
@@ -435,7 +435,7 @@ export default React.memo(function LayoutRow({
       }
     >
       <ListItemButton
-        data-testid="layout-list-item"
+        data-testidid="layout-list-item"
         selected={selected || multiSelectedIds.includes(layout.id)}
         onSubmit={onSubmit}
         onClick={editingName ? undefined : onClick}
@@ -490,7 +490,7 @@ export default React.memo(function LayoutRow({
                   debug={item.debug}
                   disabled={item.disabled}
                   key={item.key}
-                  data-test={item["data-test"]}
+                  data-testid={item["data-testid"]}
                   onClick={(event) => {
                     item.onClick?.(event);
                     handleClose();
