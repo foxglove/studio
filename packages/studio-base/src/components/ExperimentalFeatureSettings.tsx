@@ -37,13 +37,8 @@ const features: Feature[] = [
   },
   {
     key: AppSetting.EXPERIMENTAL_LATCHING,
-    name: "Experimental latching",
-    description: (
-      <>
-        The experimental latching feature enables message latching for bag, mcap, and data platform
-        sources.
-      </>
-    ),
+    name: "Latching",
+    description: <>Enable message latching for bag, mcap, and data platform sources.</>,
   },
 ];
 if (process.env.NODE_ENV === "development") {
