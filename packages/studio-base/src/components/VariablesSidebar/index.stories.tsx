@@ -16,11 +16,11 @@ import { HTML5Backend } from "react-dnd-html5-backend";
 
 import MockCurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider/MockCurrentLayoutProvider";
 
-import GlobalVariablesTable from ".";
+import VariablesSidebar from ".";
 
 export default {
-  title: "components/GlobalVariablesTable",
-  component: GlobalVariablesTable,
+  title: "components/VariablesSidebar",
+  component: VariablesSidebar,
 };
 
 export function Table(): JSX.Element {
@@ -28,7 +28,7 @@ export function Table(): JSX.Element {
     <div style={{ margin: 30, height: 400 }}>
       <DndProvider backend={HTML5Backend}>
         <MockCurrentLayoutProvider>
-          <GlobalVariablesTable />
+          <VariablesSidebar />
         </MockCurrentLayoutProvider>
       </DndProvider>
     </div>

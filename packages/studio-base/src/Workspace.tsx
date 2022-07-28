@@ -31,7 +31,6 @@ import { DataSourceSidebar } from "@foxglove/studio-base/components/DataSourceSi
 import DocumentDropListener from "@foxglove/studio-base/components/DocumentDropListener";
 import DropOverlay from "@foxglove/studio-base/components/DropOverlay";
 import ExtensionsSidebar from "@foxglove/studio-base/components/ExtensionsSidebar";
-import GlobalVariablesTable from "@foxglove/studio-base/components/GlobalVariablesTable";
 import HelpSidebar, {
   MESSAGE_PATH_SYNTAX_HELP_INFO,
 } from "@foxglove/studio-base/components/HelpSidebar";
@@ -57,6 +56,7 @@ import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent"
 import { SignInFormModal } from "@foxglove/studio-base/components/SignInFormModal";
 import Stack from "@foxglove/studio-base/components/Stack";
 import { URLStateSyncAdapter } from "@foxglove/studio-base/components/URLStateSyncAdapter";
+import VariablesSidebar from "@foxglove/studio-base/components/VariablesSidebar";
 import { useAssets } from "@foxglove/studio-base/context/AssetsContext";
 import ConsoleApiContext from "@foxglove/studio-base/context/ConsoleApiContext";
 import {
@@ -528,7 +528,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
         "panel-settings",
         { iconName: "PanelSettings", title: "Panel settings", component: PanelSettings },
       ],
-      ["variables", { iconName: "Variable2", title: "Variables", component: GlobalVariablesTable }],
+      ["variables", { iconName: "Variable2", title: "Variables", component: VariablesSidebar }],
       ["preferences", { iconName: "Settings", title: "Preferences", component: Preferences }],
       ["extensions", { iconName: "AddIn", title: "Extensions", component: ExtensionsSidebar }],
       ["help", { iconName: "QuestionCircle", title: "Help", component: HelpSidebar }],

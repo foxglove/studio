@@ -38,7 +38,7 @@ export function isActiveElementEditable(): boolean {
   );
 }
 
-export default function GlobalVariablesTable(): ReactElement {
+export default function VariablesSidebar(): ReactElement {
   const { globalVariables, setGlobalVariables } = useGlobalVariables();
   const { linkedGlobalVariablesByName } = useLinkedGlobalVariables();
   const globalVariableNames = useMemo(() => Object.keys(globalVariables), [globalVariables]);
