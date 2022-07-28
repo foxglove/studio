@@ -39,8 +39,10 @@ export default function ThemeProvider({
     }
     registerIcons({ icons });
     setIconsRegistered(true);
+    // Trick CodeEditor into sync with our theme
+    document.documentElement.setAttribute("data-color-mode", isDark ? "dark" : "light");
     return undefined;
-  }, [iconsRegistered]);
+  }, [iconsRegistered, isDark]);
 
   const muiTheme = useMemo(() => createMuiTheme(isDark ? "dark" : "light"), [isDark]);
   const fluentTheme = useMemo(() => createFluentTheme({ isInverted: isDark }), [isDark]);

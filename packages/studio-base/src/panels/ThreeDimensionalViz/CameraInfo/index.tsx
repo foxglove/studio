@@ -195,6 +195,7 @@ export default function CameraInfo({
                 value={cameraState}
                 onChange={(newCameraState) => saveConfig({ cameraState: newCameraState })}
                 dataValidator={cameraStateValidator}
+                maxHeight={220}
               />
             ) : (
               <Stack flex="auto">
