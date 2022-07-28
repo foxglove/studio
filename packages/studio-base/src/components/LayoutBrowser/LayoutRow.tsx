@@ -17,7 +17,7 @@ import {
   TextField,
   styled as muiStyled,
 } from "@mui/material";
-import { useCallback, useContext, useLayoutEffect, useMemo, useState } from "react";
+import { useCallback, useContext, useLayoutEffect, useMemo, useState, MouseEvent } from "react";
 import { useMountedState } from "react-use";
 
 import { useLayoutManager } from "@foxglove/studio-base/context/LayoutManagerContext";
@@ -94,7 +94,7 @@ export type LayoutActionMenuItem =
       onClick?: (event: React.MouseEvent<HTMLLIElement>) => void;
       disabled?: boolean;
       debug?: boolean;
-      "data-test"?: string;
+      "data-testid"?: string;
     }
   | {
       type: "divider";
@@ -110,6 +110,7 @@ export type LayoutActionMenuItem =
 
 export default React.memo(function LayoutRow({
   layout,
+  multiSelectedIds,
   selected,
   onSelect,
   onRename,
@@ -122,8 +123,9 @@ export default React.memo(function LayoutRow({
   onMakePersonalCopy,
 }: {
   layout: Layout;
+  multiSelectedIds: readonly string[];
   selected: boolean;
-  onSelect: (item: Layout, params?: { selectedViaClick?: boolean }) => void;
+  onSelect: (item: Layout, params?: { selectedViaClick?: boolean; event?: MouseEvent }) => void;
   onRename: (item: Layout, newName: string) => void;
   onDuplicate: (item: Layout) => void;
   onDelete: (item: Layout) => void;
@@ -149,6 +151,7 @@ export default React.memo(function LayoutRow({
 
   const deletedOnServer = layout.syncInfo?.status === "remotely-deleted";
   const hasModifications = layout.working != undefined;
+  const multiSelection = multiSelectedIds.length > 1;
 
   useLayoutEffect(() => {
     const onlineListener = () => setIsOnline(layoutManager.isOnline);
@@ -172,20 +175,16 @@ export default React.memo(function LayoutRow({
   }, [layout, onMakePersonalCopy]);
 
   const renameAction = useCallback(() => {
-    // Give the menu time to close before focusing the text field. The MUI Menu auto-focuses itself
-    // which results in an immediate onBlur of the text field if we try to focus it while the menu
-    // is still visible.
-    setTimeout(() => {
-      setEditingName(true);
-      setNameFieldValue(layout.name);
-    }, 0);
+    setNameFieldValue(layout.name);
+    setEditingName(true);
   }, [layout]);
 
-  const onClick = useCallback(() => {
-    if (!selected) {
-      onSelect(layout, { selectedViaClick: true });
-    }
-  }, [layout, onSelect, selected]);
+  const onClick = useCallback(
+    (event: MouseEvent) => {
+      onSelect(layout, { selectedViaClick: true, event });
+    },
+    [layout, onSelect],
+  );
 
   const duplicateAction = useCallback(() => onDuplicate(layout), [layout, onDuplicate]);
   const shareAction = useCallback(() => onShare(layout), [layout, onShare]);
@@ -224,11 +223,15 @@ export default React.memo(function LayoutRow({
   }, []);
 
   const confirmDelete = useCallback(() => {
+    const layoutWarning =
+      !multiSelection && layoutIsShared(layout)
+        ? "Team members will no longer be able to access this layout. "
+        : "";
+    const prompt = `${layoutWarning}This action cannot be undone.`;
+    const title = multiSelection ? "Delete selected layouts?" : `Delete “${layout.name}”?`;
     void confirm({
-      title: `Delete “${layout.name}”?`,
-      prompt: `${
-        layoutIsShared(layout) ? "Team members will no longer be able to access this layout." : ""
-      } This action cannot be undone.`,
+      title,
+      prompt,
       ok: "Delete",
       variant: "danger",
     }).then((response) => {
@@ -236,7 +239,7 @@ export default React.memo(function LayoutRow({
         onDelete(layout);
       }
     });
-  }, [confirm, isMounted, layout, onDelete]);
+  }, [confirm, isMounted, layout, multiSelection, onDelete]);
 
   const handleContextMenu = useCallback((event: React.MouseEvent) => {
     event.preventDefault();
@@ -264,8 +267,8 @@ export default React.memo(function LayoutRow({
       key: "rename",
       text: "Rename",
       onClick: renameAction,
-      "data-test": "rename-layout",
-      disabled: layoutIsShared(layout) && !isOnline,
+      "data-testid": "rename-layout",
+      disabled: (layoutIsShared(layout) && !isOnline) || multiSelection,
       secondaryText: layoutIsShared(layout) && !isOnline ? "Offline" : undefined,
     },
     // For shared layouts, duplicate first requires saving or discarding changes
@@ -277,7 +280,8 @@ export default React.memo(function LayoutRow({
           ? "Make a personal copy"
           : "Duplicate",
       onClick: duplicateAction,
-      "data-test": "duplicate-layout",
+      disabled: multiSelection,
+      "data-testid": "duplicate-layout",
     },
     layoutManager.supportsSharing &&
       !layoutIsShared(layout) && {
@@ -285,13 +289,14 @@ export default React.memo(function LayoutRow({
         key: "share",
         text: "Share with team…",
         onClick: shareAction,
-        disabled: !isOnline,
+        disabled: !isOnline || multiSelection,
         secondaryText: !isOnline ? "Offline" : undefined,
       },
     {
       type: "item",
       key: "export",
       text: "Export…",
+      disabled: multiSelection,
       onClick: exportAction,
     },
     { key: "divider_1", type: "divider" },
@@ -300,7 +305,7 @@ export default React.memo(function LayoutRow({
       key: "delete",
       text: "Delete",
       onClick: confirmDelete,
-      "data-test": "delete-layout",
+      "data-testid": "delete-layout",
     },
   ];
 
@@ -311,7 +316,7 @@ export default React.memo(function LayoutRow({
         key: "overwrite",
         text: "Save changes",
         onClick: overwriteAction,
-        disabled: deletedOnServer || (layoutIsShared(layout) && !isOnline),
+        disabled: deletedOnServer || (layoutIsShared(layout) && !isOnline) || multiSelection,
         secondaryText: layoutIsShared(layout) && !isOnline ? "Offline" : undefined,
       },
       {
@@ -319,7 +324,7 @@ export default React.memo(function LayoutRow({
         key: "revert",
         text: "Revert",
         onClick: revertAction,
-        disabled: deletedOnServer,
+        disabled: deletedOnServer || multiSelection,
       },
     ];
     if (layoutIsShared(layout)) {
@@ -327,6 +332,7 @@ export default React.memo(function LayoutRow({
         type: "item",
         key: "copy_to_personal",
         text: "Make a personal copy",
+        disabled: multiSelection,
         onClick: makePersonalCopyAction,
       });
     }
@@ -417,7 +423,7 @@ export default React.memo(function LayoutRow({
       disablePadding
       secondaryAction={
         <IconButton
-          id="layout-actions"
+          data-testid="layout-actions"
           aria-controls={contextMenuTarget != undefined ? "layout-action-menu" : undefined}
           aria-haspopup="true"
           aria-expanded={contextMenuTarget != undefined ? "true" : undefined}
@@ -429,7 +435,8 @@ export default React.memo(function LayoutRow({
       }
     >
       <ListItemButton
-        selected={selected}
+        data-testid="layout-list-item"
+        selected={selected || multiSelectedIds.includes(layout.id)}
         onSubmit={onSubmit}
         onClick={editingName ? undefined : onClick}
         onContextMenu={editingName ? undefined : handleContextMenu}
@@ -458,6 +465,8 @@ export default React.memo(function LayoutRow({
       <Menu
         id="layout-action-menu"
         open={contextMenuTarget != undefined}
+        disableAutoFocus
+        disableRestoreFocus
         anchorReference={contextMenuTarget?.type === "position" ? "anchorPosition" : "anchorEl"}
         anchorPosition={
           contextMenuTarget?.type === "position"
@@ -481,7 +490,7 @@ export default React.memo(function LayoutRow({
                   debug={item.debug}
                   disabled={item.disabled}
                   key={item.key}
-                  data-test={item["data-test"]}
+                  data-testid={item["data-testid"]}
                   onClick={(event) => {
                     item.onClick?.(event);
                     handleClose();

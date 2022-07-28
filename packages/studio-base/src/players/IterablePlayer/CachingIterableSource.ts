@@ -89,7 +89,7 @@ class CachingIterableSource implements IIterableSource {
   constructor(source: IIterableSource, opt?: Options) {
     this.source = source;
     this.maxTotalSizeBytes = opt?.maxTotalSize ?? 1e9;
-    this.maxBlockSizeBytes = opt?.maxBlockSize ?? 50000000;
+    this.maxBlockSizeBytes = opt?.maxBlockSize ?? 5000000;
   }
 
   async initialize(): Promise<Initalization> {
@@ -119,6 +119,7 @@ class CachingIterableSource implements IIterableSource {
       log.debug("topics changed - clearing cache, resetting range");
       this.cachedTopics = newTopics;
       this.cache.length = 0;
+      this.totalSizeBytes = 0;
       this.recomputeLoadedRangeCache();
     }
 
@@ -234,12 +235,6 @@ class CachingIterableSource implements IIterableSource {
           this.cache.splice(insertIndex, 0, newBlock);
 
           block = newBlock;
-
-          this.recomputeLoadedRangeCache();
-        }
-
-        const sizeInBytes = iterResult.msgEvent?.sizeInBytes ?? 0;
-        if (this.maybePurgeCache({ activeBlock: block, sizeInBytes })) {
           this.recomputeLoadedRangeCache();
         }
 
@@ -272,20 +267,25 @@ class CachingIterableSource implements IIterableSource {
           }
         }
 
-        // As we add items to pending we also consider them as part of the total size
-        this.totalSizeBytes += sizeInBytes;
-
-        // Store the latest message in pending results and flush to the block when time moves forward
-        pendingIterResults.push([lastTime, iterResult]);
-
-        // When the block has grown too big, we introduce another block and continue caching into that.
-        if (block.size > this.maxBlockSizeBytes) {
+        // Block is too big so we close it and will start a new one next loop
+        if (block.size >= this.maxBlockSizeBytes) {
           // The new block starts right after our previous one
           readHead = add(block.end, { sec: 0, nsec: 1 });
 
           // Will force creation of a new block on the next loop
           block = undefined;
         }
+
+        const sizeInBytes = iterResult.msgEvent?.sizeInBytes ?? 0;
+        if (this.maybePurgeCache({ activeBlock: block, sizeInBytes })) {
+          this.recomputeLoadedRangeCache();
+        }
+
+        // As we add items to pending we also consider them as part of the total size
+        this.totalSizeBytes += sizeInBytes;
+
+        // Store the latest message in pending results and flush to the block when time moves forward
+        pendingIterResults.push([lastTime, iterResult]);
 
         yield iterResult;
       }
@@ -363,7 +363,7 @@ class CachingIterableSource implements IIterableSource {
     // We must stop going backwards when we have a gap because we can no longer know if the source
     // actually does have messages in the gap.
     for (let idx = cacheBlockIndex; idx >= 0 && needsTopics.size > 0; --idx) {
-      const cacheBlock = this.cache[cacheBlockIndex];
+      const cacheBlock = this.cache[idx];
       if (!cacheBlock) {
         break;
       }
@@ -387,14 +387,13 @@ class CachingIterableSource implements IIterableSource {
         }
 
         const msgEvent = record[1].msgEvent;
-
         if (needsTopics.has(msgEvent.topic)) {
           needsTopics.delete(msgEvent.topic);
+          out.push(msgEvent);
         }
-        out.push(msgEvent);
       }
 
-      const prevBlock = this.cache[cacheBlockIndex - 1];
+      const prevBlock = this.cache[idx - 1];
       // If we have a gap between the start of our block and the previous block, then we must stop
       // trying to read from the block cache
       if (prevBlock && compare(add(prevBlock.end, { sec: 0, nsec: 1 }), cacheBlock.start) !== 0) {
@@ -449,11 +448,11 @@ class CachingIterableSource implements IIterableSource {
   // @return true if a block was purged
   //
   // Throws if the cache block we want to purge is the active block.
-  private maybePurgeCache(opt: { activeBlock: CacheBlock; sizeInBytes: number }): boolean {
+  private maybePurgeCache(opt: { activeBlock?: CacheBlock; sizeInBytes: number }): boolean {
     const { activeBlock, sizeInBytes } = opt;
 
     // Determine if our total size would exceed max and purge the oldest block
-    if (this.totalSizeBytes + sizeInBytes < this.maxTotalSizeBytes) {
+    if (this.totalSizeBytes + sizeInBytes <= this.maxTotalSizeBytes) {
       return false;
     }
 
