@@ -423,7 +423,7 @@ export default React.memo(function LayoutRow({
       disablePadding
       secondaryAction={
         <IconButton
-          data-testidid="layout-actions"
+          data-testid="layout-actions"
           aria-controls={contextMenuTarget != undefined ? "layout-action-menu" : undefined}
           aria-haspopup="true"
           aria-expanded={contextMenuTarget != undefined ? "true" : undefined}
@@ -435,7 +435,7 @@ export default React.memo(function LayoutRow({
       }
     >
       <ListItemButton
-        data-testidid="layout-list-item"
+        data-testid="layout-list-item"
         selected={selected || multiSelectedIds.includes(layout.id)}
         onSubmit={onSubmit}
         onClick={editingName ? undefined : onClick}
