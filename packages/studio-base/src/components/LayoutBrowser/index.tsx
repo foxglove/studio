@@ -4,7 +4,6 @@
 
 import AddIcon from "@mui/icons-material/Add";
 import CloudOffIcon from "@mui/icons-material/CloudOff";
-import DeleteIcon from "@mui/icons-material/Delete";
 import FileOpenOutlinedIcon from "@mui/icons-material/FileOpenOutlined";
 import {
   Button,
@@ -113,36 +112,30 @@ export default function LayoutBrowser({
     { loading: true },
   );
 
-  const queueMultipleLayoutsForDelete = useCallback(async () => {
-    const response = await confirm({
-      title: `Delete multiple layouts?`,
-      prompt: `Are you sure you want to delete ${state.selectedIds.length} layouts?. This cannot be undone.`,
-      ok: "Delete",
-      variant: "danger",
-    });
-    if (response !== "ok") {
-      return;
-    }
-
-    dispatch({ type: "queue-deletes" });
-  }, [confirm, dispatch, state.selectedIds.length]);
-
   useEffect(() => {
-    const deleteLayouts = async () => {
-      const toDelete = state.queuedDeleteIds[0];
-      if (toDelete) {
+    const processAction = async () => {
+      if (!state.multiAction) {
+        return;
+      }
+
+      const id = state.multiAction.ids[0];
+      if (id) {
         try {
-          await layoutManager.deleteLayout({ id: toDelete as LayoutID });
-          dispatch({ type: "shift-queued-deletes" });
+          switch (state.multiAction.action) {
+            case "delete":
+              await layoutManager.deleteLayout({ id: id as LayoutID });
+              dispatch({ type: "shift-multi-action" });
+              break;
+          }
         } catch (err) {
           addToast(`Error deleting layouts: ${err.message}`, { appearance: "error" });
-          dispatch({ type: "clear-queued-deletes" });
+          dispatch({ type: "clear-multi-action" });
         }
       }
     };
 
-    deleteLayouts().catch((err) => log.error(err));
-  }, [addToast, dispatch, layoutManager, state.queuedDeleteIds]);
+    processAction().catch((err) => log.error(err));
+  }, [addToast, dispatch, layoutManager, state.multiAction]);
 
   useEffect(() => {
     const listener = () => void reloadLayouts();
@@ -253,6 +246,11 @@ export default function LayoutBrowser({
 
   const onDeleteLayout = useCallbackWithToast(
     async (item: Layout) => {
+      if (state.selectedIds.length > 0) {
+        dispatch({ type: "queue-multi-action", action: "delete" });
+        return;
+      }
+
       void analytics.logEvent(AppEvent.LAYOUT_DELETE, { permission: item.permission });
 
       // If the layout was selected, select a different available layout.
@@ -268,7 +266,14 @@ export default function LayoutBrowser({
       }
       await layoutManager.deleteLayout({ id: item.id });
     },
-    [analytics, currentLayoutId, dispatch, layoutManager, setSelectedLayoutId],
+    [
+      analytics,
+      currentLayoutId,
+      dispatch,
+      layoutManager,
+      setSelectedLayoutId,
+      state.selectedIds.length,
+    ],
   );
 
   const createNewLayout = useCallbackWithToast(async () => {
@@ -448,7 +453,7 @@ export default function LayoutBrowser({
 
   const showSignInPrompt = supportsSignIn && !layoutManager.supportsSharing && !hideSignInPrompt;
 
-  const queuedMultiActions = state.queuedDeleteIds.length > 0;
+  const pendingMultiAction = state.multiAction != undefined;
 
   return (
     <SidebarContent
@@ -456,21 +461,10 @@ export default function LayoutBrowser({
       helpContent={helpContent}
       disablePadding
       trailingItems={[
-        (layouts.loading || state.busy || queuedMultiActions) && (
+        (layouts.loading || state.busy || pendingMultiAction) && (
           <Stack key="loading" alignItems="center" justifyContent="center" padding={1}>
             <CircularProgress size={18} variant="indeterminate" />
           </Stack>
-        ),
-        state.selectedIds.length > 1 && (
-          <IconButton
-            color="primary"
-            key="delete"
-            disabled={queuedMultiActions}
-            title="Delete Selected"
-            onClick={queueMultipleLayoutsForDelete}
-          >
-            <DeleteIcon />
-          </IconButton>
         ),
         (!state.online || state.error != undefined) && (
           <IconButton color="primary" key="offline" disabled title="Offline">
@@ -499,7 +493,7 @@ export default function LayoutBrowser({
       ].filter(Boolean)}
     >
       {unsavedChangesPrompt}
-      <Stack fullHeight gap={2} style={{ pointerEvents: queuedMultiActions ? "none" : "auto" }}>
+      <Stack fullHeight gap={2} style={{ pointerEvents: pendingMultiAction ? "none" : "auto" }}>
         <LayoutSection
           title={layoutManager.supportsSharing ? "Personal" : undefined}
           emptyText="Add a new layout to get started with Foxglove Studio!"
