@@ -182,6 +182,21 @@ function RawMessages(props: Props) {
     }
   }, [baseItem]);
 
+  const canExpandAll = useMemo(() => {
+    if (expansion === "none") {
+      return true;
+    }
+    if (expansion === "all") {
+      return false;
+    }
+
+    if (typeof expansion === "object" && Object.values(expansion).some((v) => v === "c")) {
+      return true;
+    } else {
+      return false;
+    }
+  }, [expansion]);
+
   const onTopicPathChange = useCallback(
     (newTopicPath: string) => {
       saveConfig({ topicPath: newTopicPath });
@@ -201,8 +216,8 @@ function RawMessages(props: Props) {
   }, [diffEnabled, saveConfig]);
 
   const onToggleExpandAll = useCallback(() => {
-    setExpansion((oldExpansion) => (oldExpansion === "all" ? "none" : "all"));
-  }, []);
+    setExpansion(canExpandAll ? "all" : "none");
+  }, [canExpandAll]);
 
   const onLabelClick = useCallback(
     (keypath: (string | number)[]) => {
@@ -644,16 +659,12 @@ function RawMessages(props: Props) {
         </IconButton>
         <IconButton
           className={classes.iconButton}
-          title={expansion === "all" ? "Collapse all" : "Expand all"}
+          title={canExpandAll ? "Expand all" : "Collapse all"}
           onClick={onToggleExpandAll}
           data-testid="expand-all"
           size="small"
         >
-          {expansion === "all" ? (
-            <UnfoldLessIcon fontSize="small" />
-          ) : (
-            <UnfoldMoreIcon fontSize="small" />
-          )}
+          {canExpandAll ? <UnfoldMoreIcon fontSize="small" /> : <UnfoldLessIcon fontSize="small" />}
         </IconButton>
         <Stack fullWidth paddingLeft={0.25}>
           <MessagePathInput
