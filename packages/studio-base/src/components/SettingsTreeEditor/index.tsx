@@ -4,7 +4,7 @@
 
 import ClearIcon from "@mui/icons-material/Clear";
 import SearchIcon from "@mui/icons-material/Search";
-import { AppBar, IconButton, TextField, styled as muiStyled } from "@mui/material";
+import { AppBar, IconButton, TextField, styled as muiStyled, Divider } from "@mui/material";
 import memoizeWeak from "memoize-weak";
 import { useMemo, useState } from "react";
 import { DeepReadonly } from "ts-essentials";
@@ -75,6 +75,7 @@ export default function SettingsTreeEditor({
           />
         </StyledAppBar>
       )}
+      <Divider />
       <FieldGrid>
         {definedNodes.map(([key, root]) => (
           <NodeEditor

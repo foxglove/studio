@@ -12,7 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import AddIcon from "@mui/icons-material/Add";
-import { IconButton } from "@mui/material";
+import { Divider, IconButton } from "@mui/material";
 import { partition, union } from "lodash";
 import { useMemo, useRef, useState, ReactElement, useEffect } from "react";
 
@@ -26,7 +26,7 @@ import useLinkedGlobalVariables from "@foxglove/studio-base/panels/ThreeDimensio
 
 import Variable from "./Variable";
 
-export const ANIMATION_RESET_DELAY_MS = 3000;
+const ANIMATION_RESET_DELAY_MS = 3000;
 
 export function isActiveElementEditable(): boolean {
   const activeEl = document.activeElement;
@@ -38,7 +38,7 @@ export function isActiveElementEditable(): boolean {
   );
 }
 
-function GlobalVariablesTable(): ReactElement {
+export default function GlobalVariablesTable(): ReactElement {
   const { globalVariables, setGlobalVariables } = useGlobalVariables();
   const { linkedGlobalVariablesByName } = useLinkedGlobalVariables();
   const globalVariableNames = useMemo(() => Object.keys(globalVariables), [globalVariables]);
@@ -94,11 +94,12 @@ function GlobalVariablesTable(): ReactElement {
       helpContent={helpContent}
     >
       <Stack flex="auto">
+        <Divider />
         {linked.map((name, idx) => (
           <Variable
             key={`linked.${idx}`}
             name={name}
-            selected={skipAnimation.current && changedVariables.includes(name)}
+            selected={!skipAnimation.current && changedVariables.includes(name)}
             linked
             linkedIndex={linked.length + idx}
           />
@@ -107,7 +108,7 @@ function GlobalVariablesTable(): ReactElement {
           <Variable
             key={`unlinked.${idx}`}
             name={name}
-            selected={skipAnimation.current && changedVariables.includes(name)}
+            selected={!skipAnimation.current && changedVariables.includes(name)}
             linkedIndex={linked.length + idx}
           />
         ))}
@@ -115,5 +116,3 @@ function GlobalVariablesTable(): ReactElement {
     </SidebarContent>
   );
 }
-
-export default GlobalVariablesTable;

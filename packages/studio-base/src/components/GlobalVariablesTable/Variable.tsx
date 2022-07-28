@@ -31,11 +31,16 @@ import useGlobalVariables, {
 import useLinkedGlobalVariables from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/useLinkedGlobalVariables";
 import clipboard from "@foxglove/studio-base/util/clipboard";
 
-export const ANIMATION_RESET_DELAY_MS = 3000;
-
 const useStyles = makeStyles<void, "copyButton">()((theme, _params, classes) => ({
+  root: {
+    "@media (pointer: fine)": {
+      [`&:not(:hover) .${classes.copyButton}`]: {
+        visibility: "hidden",
+      },
+    },
+  },
   copyButton: {
-    top: -1,
+    top: 0,
     right: 0,
     zIndex: theme.zIndex.mobileStepper,
 
@@ -50,13 +55,6 @@ const useStyles = makeStyles<void, "copyButton">()((theme, _params, classes) => 
   editorWrapper: {
     position: "relative",
     backgroundColor: theme.palette.grey[50],
-  },
-  listItem: {
-    "@media (pointer: fine)": {
-      [`&:not(:hover) .${classes.copyButton}`]: {
-        visibility: "hidden",
-      },
-    },
   },
   listItemButton: {
     "&:focus-within": {
@@ -86,17 +84,17 @@ const changeGlobalKey = (
 
 export default function Variable({
   name,
-  selected,
+  selected = false,
   linked = false,
   linkedIndex,
 }: {
   name: string;
-  selected: ListItemButtonProps["selected"];
+  selected?: ListItemButtonProps["selected"];
   linked?: boolean;
   linkedIndex: number;
 }): JSX.Element {
   const { classes } = useStyles();
-  const [open, setOpen] = useState<boolean>(false);
+  const [open, setOpen] = useState<boolean>(true);
   const [anchorEl, setAnchorEl] = React.useState<undefined | HTMLElement>(undefined);
   const [copied, setCopied] = useState(false);
   const menuOpen = Boolean(anchorEl);
@@ -151,7 +149,7 @@ export default function Variable({
   }, [value]);
 
   return (
-    <Stack className={classes.listItem}>
+    <Stack className={classes.root}>
       <ListItem
         dense
         disablePadding
@@ -177,7 +175,7 @@ export default function Variable({
                   )
                 }
               >
-                <LinkIcon color="info" style={{ opacity: 0.8 }} />
+                <LinkIcon color={selected ? "primary" : "info"} style={{ opacity: 0.8 }} />
               </Tooltip>
             )}
             <IconButton
