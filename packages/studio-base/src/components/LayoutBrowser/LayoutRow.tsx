@@ -223,15 +223,15 @@ export default React.memo(function LayoutRow({
   }, []);
 
   const confirmDelete = useCallback(() => {
+    const layoutWarning =
+      !multiSelection && layoutIsShared(layout)
+        ? "Team members will no longer be able to access this layout. "
+        : "";
+    const prompt = `${layoutWarning}This action cannot be undone.`;
+    const title = multiSelection ? "Delete selected layouts?" : `Delete “${layout.name}”?`;
     void confirm({
-      title: multiSelection ? "Delete selected layouts?" : `Delete “${layout.name}”?`,
-      prompt: multiSelection
-        ? "This action cannot be undone."
-        : `${
-            layoutIsShared(layout)
-              ? "Team members will no longer be able to access this layout."
-              : ""
-          } This action cannot be undone.`,
+      title,
+      prompt,
       ok: "Delete",
       variant: "danger",
     }).then((response) => {
