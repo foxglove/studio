@@ -27,7 +27,7 @@ import {
 } from "@mui/material";
 // eslint-disable-next-line no-restricted-imports
 import { first, isEqual, get, last, padStart } from "lodash";
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import ReactHoverObserver from "react-hover-observer";
 import Tree from "react-json-tree";
 import { DeepReadonly } from "ts-essentials";
@@ -161,7 +161,7 @@ function RawMessages(props: Props) {
     ).structureItem;
   }, [datatypes, topic, topicRosPath]);
 
-  const [expansion, setExpansion] = useState<RawMessagesPanelConfig["expansion"]>(config.expansion);
+  const [expansion, setExpansion] = useState(config.expansion);
   const matchedMessages = useMessageDataItem(topicPath, { historySize: 2 });
   const diffMessages = useMessageDataItem(diffEnabled ? diffTopicPath : "");
 
@@ -176,8 +176,7 @@ function RawMessages(props: Props) {
   const autoExpandPaths = useMemo(() => {
     if (baseItem) {
       const data = dataWithoutWrappingArray(baseItem.queriedData.map(({ value }) => value));
-      // return generateDeepKeyPaths(maybeDeepParse(data), 5);
-      return generateDeepKeyPaths(maybeDeepParse(data), 1);
+      return generateDeepKeyPaths(maybeDeepParse(data), 5);
     } else {
       return new Set<string>();
     }
@@ -216,14 +215,20 @@ function RawMessages(props: Props) {
         } else if (old == undefined) {
           return { [key]: autoExpandPaths.has(key) ? "c" : "e" };
         } else {
-          return { ...old, [key]: old[key] === "c" ? "e" : "c" };
+          if (old[key]) {
+            return { ...old, [key]: old[key] === "c" ? "e" : "c" };
+          } else {
+            return { ...old, [key]: autoExpandPaths.has(key) ? "c" : "e" };
+          }
         }
       });
     },
     [autoExpandPaths],
   );
 
-  console.log({ expansion });
+  useEffect(() => {
+    saveConfig({ expansion });
+  }, [expansion, saveConfig]);
 
   const getValueLabels = useCallback(
     ({
