@@ -16,7 +16,6 @@ import { Divider, IconButton } from "@mui/material";
 import { partition, union } from "lodash";
 import { useMemo, useRef, useState, ReactElement, useEffect } from "react";
 
-import helpContent from "@foxglove/studio-base/components/GlobalVariablesTable/index.help.md";
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
 import Stack from "@foxglove/studio-base/components/Stack";
 import useGlobalVariables, {
@@ -25,10 +24,11 @@ import useGlobalVariables, {
 import useLinkedGlobalVariables from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/useLinkedGlobalVariables";
 
 import Variable from "./Variable";
+import helpContent from "./index.help.md";
 
 const ANIMATION_RESET_DELAY_MS = 3000;
 
-export function isActiveElementEditable(): boolean {
+function isActiveElementEditable(): boolean {
   const activeEl = document.activeElement;
   return (
     activeEl != undefined &&
@@ -79,6 +79,9 @@ export default function VariablesSidebar(): ReactElement {
 
   return (
     <SidebarContent
+      title="Variables"
+      disablePadding
+      helpContent={helpContent}
       trailingItems={[
         <IconButton
           key="add-global-variable"
@@ -89,9 +92,6 @@ export default function VariablesSidebar(): ReactElement {
           <AddIcon />
         </IconButton>,
       ]}
-      title="Variables"
-      disablePadding
-      helpContent={helpContent}
     >
       <Stack flex="auto">
         <Divider />

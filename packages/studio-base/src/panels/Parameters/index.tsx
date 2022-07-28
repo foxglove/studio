@@ -35,7 +35,7 @@ import helpContent from "./index.help.md";
 // The minimum amount of time to wait between showing the parameter update animation again
 export const ANIMATION_RESET_DELAY_MS = 3000;
 
-export function isActiveElementEditable(): boolean {
+function isActiveElementEditable(): boolean {
   const activeEl = document.activeElement;
   return (
     activeEl != undefined &&
