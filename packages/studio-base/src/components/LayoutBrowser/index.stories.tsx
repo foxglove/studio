@@ -142,14 +142,21 @@ MultiSelect.parameters = {
 MultiSelect.play = async () => {
   const layouts = await screen.findAllByTestId("layout-list-item");
   const user = userEvent.setup();
+
   await user.click(layouts[0]!);
+
   await user.keyboard("{Meta>}");
   await user.click(layouts[1]!);
   await user.click(layouts[3]!);
   await user.keyboard("{/Meta}");
+
   await user.keyboard("{Shift>}");
   await user.click(layouts[6]!);
   await user.keyboard("{/Shift}");
+
+  await user.keyboard("{Meta>}");
+  await user.click(layouts[4]!);
+  await user.keyboard("{/Meta}");
 };
 
 export function MultiDelete(): JSX.Element {
