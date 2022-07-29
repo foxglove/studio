@@ -21,7 +21,7 @@ const useStyles = makeStyles()((theme) => ({
     fontWeight: 700,
     fontFeatureSettings: "normal",
     letterSpacing: "-0.025em",
-    lineHeight: radius * 2,
+    lineHeight: `${radius * 2}px`,
     textAlign: "center",
   },
 }));
