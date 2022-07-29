@@ -372,6 +372,7 @@ function PanelList(props: Props): JSX.Element {
               keys: ["title", "description"],
               // Weigh title matches more heavily than description matches.
               scoreFn: (a) => Math.max(a[0] ? a[0].score : -1000, a[1] ? a[1].score - 100 : -1000),
+              threshold: -900,
             })
             .map((searchResult) => searchResult.obj)
         : panels;
