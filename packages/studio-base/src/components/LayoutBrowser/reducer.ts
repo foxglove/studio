@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { compact, pull, xor } from "lodash";
+import { compact, pull, union, xor } from "lodash";
 import { Dispatch } from "react";
 import { useImmerReducer } from "use-immer";
 
@@ -53,7 +53,7 @@ function reducer(draft: State, action: Action) {
             const start = Math.min(lastId, thisId);
             const end = Math.max(lastId, thisId);
             for (let i = start; i <= end; i++) {
-              draft.selectedIds.push(layouts[i]!.id);
+              draft.selectedIds = union(draft.selectedIds, [layouts[i]!.id]);
             }
           }
         }
