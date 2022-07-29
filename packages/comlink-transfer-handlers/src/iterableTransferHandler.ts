@@ -3,8 +3,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { transferHandlers, proxy, TransferHandler } from "comlink";
+import { isObject } from "lodash";
 
-const isObject = (val: unknown): val is object => typeof val === "object" && val != undefined;
 const isAsyncIterable = (val: unknown): val is AsyncIterable<unknown> =>
   isObject(val) && !Array.isArray(val) && Symbol.asyncIterator in val;
 
