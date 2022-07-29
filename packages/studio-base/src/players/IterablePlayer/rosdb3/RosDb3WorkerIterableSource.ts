@@ -24,7 +24,7 @@ const ComlinkWrapper = Comlink.wrap<Constructor<RosDb3IterableSource>>(
   new Worker(new URL("./RosDb3WorkerIterableSource.worker", import.meta.url)),
 );
 
-export class RosDb3WorkerIerableSource implements IIterableSource {
+export class RosDb3WorkerIterableSource implements IIterableSource {
   private files: File[];
   private wrapper?: Comlink.Remote<IIterableSource>;
 
