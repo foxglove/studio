@@ -11,8 +11,8 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Layer, makeStyles } from "@fluentui/react";
-import cx from "classnames";
+import { Layer } from "@fluentui/react";
+import { alpha, Paper, useTheme } from "@mui/material";
 import { Fzf, FzfResultItem } from "fzf";
 import { maxBy } from "lodash";
 import React, {
@@ -25,8 +25,9 @@ import React, {
 } from "react";
 import ReactAutocomplete from "react-autocomplete";
 import textMetrics from "text-metrics";
+import { makeStyles } from "tss-react/mui";
 
-import { colors, fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
+import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 // react-autocomplete tries to auto-scroll as soon as the menu is rendered, which is not compatible
 // with fluentui's Layer because the Layer takes a couple of react render cycles before elements are
@@ -46,14 +47,11 @@ function measureText(text: string): number {
 const ROW_HEIGHT = 24;
 const MAX_ITEMS = 200;
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   root: {
-    borderRadius: 3,
     borderTopLeftRadius: 0,
-    boxShadow: theme.effects.elevation16,
     position: "fixed",
     overflow: "auto",
-    background: theme.semanticColors.menuBackground,
     zIndex: 1,
     marginLeft: -6,
   },
@@ -61,7 +59,7 @@ const useStyles = makeStyles((theme) => ({
     background: "transparent !important",
     borderRadius: 0,
     border: "none",
-    color: theme.semanticColors.inputText,
+    color: theme.palette.text.primary,
     flexGrow: 1,
     fontSize: "1rem",
     margin: 0,
@@ -70,21 +68,20 @@ const useStyles = makeStyles((theme) => ({
     fontFamily: fonts.SANS_SERIF,
 
     "&.disabled, &[disabled]": {
-      color: theme.semanticColors.disabledText,
-      backgroundColor: theme.semanticColors.disabledBackground,
+      color: theme.palette.text.disabled,
     },
     "&:focus": {
       outline: "none",
     },
     "&::placeholder": {
-      color: theme.semanticColors.inputPlaceholderText,
+      color: theme.palette.text.secondary,
     },
   },
   inputError: {
-    color: `${theme.semanticColors.errorIcon} !important`,
+    color: `${theme.palette.error.main} !important`,
   },
   inputPlaceholder: {
-    color: theme.semanticColors.inputPlaceholderText,
+    color: theme.palette.text.secondary,
   },
   item: {
     padding: 6,
@@ -92,14 +89,17 @@ const useStyles = makeStyles((theme) => ({
     minHeight: ROW_HEIGHT,
     lineHeight: ROW_HEIGHT - 10,
     overflowWrap: "break-word",
-    color: theme.semanticColors.menuItemText,
+    color: theme.palette.text.primary,
     whiteSpace: "pre",
   },
   itemSelected: {
-    backgroundColor: theme.semanticColors.menuItemBackgroundHovered,
+    backgroundColor: alpha(
+      theme.palette.primary.main,
+      theme.palette.action.selectedOpacity + theme.palette.action.hoverOpacity,
+    ),
   },
   itemHighlighted: {
-    backgroundColor: theme.semanticColors.menuItemBackgroundHovered,
+    backgroundColor: theme.palette.action.hover,
   },
 }));
 
@@ -176,12 +176,13 @@ function itemToFzfResult<T>(item: T): FzfResultItem<T> {
 }
 
 const HighlightChars = (props: { str: string; indices: Set<number> }) => {
+  const theme = useTheme();
   const chars = props.str.split("");
 
   const nodes = chars.map((char, i) => {
     if (props.indices.has(i)) {
       return (
-        <b key={i} style={{ color: colors.HIGHLIGHT }}>
+        <b key={i} style={{ color: theme.palette.info.main }}>
           {char}
         </b>
       );
@@ -202,7 +203,7 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
   const ignoreBlur = useRef<boolean>(false);
 
   // Context
-  const classes = useStyles();
+  const { classes, cx } = useStyles();
 
   // State
   const [showAllItems, setShowAllItems] = useState<boolean>(false);
@@ -435,7 +436,7 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
       value={value ?? ""}
       inputProps={{
         className: cx(classes.input, {
-          [classes.inputError]: hasError,
+          [classes.inputError]: hasError === true,
           [classes.inputPlaceholder]: value == undefined || value.length === 0,
         }),
         autoCorrect: "off",
@@ -480,7 +481,8 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
         const maxHeight = `calc(100vh - 10px - ${style.top}px)`;
 
         return (
-          <div
+          <Paper
+            elevation={16}
             className={classes.root}
             key={
               autocompleteKey
@@ -510,7 +512,7 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
             >
               {menuItemsToShow}
             </div>
-          </div>
+          </Paper>
         );
       }}
       // @ts-expect-error renderMenuWrapper added in the fork but we don't have typings for it
