@@ -227,7 +227,7 @@ function DraggablePanelItem({
                   </span>
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  {panel.description}
+                  <TextHighlight targetStr={panel.description ?? ""} searchText={searchQuery} />
                 </Typography>
               </CardContent>
             </Stack>
@@ -368,7 +368,7 @@ function PanelList(props: Props): JSX.Element {
     (panels: PanelInfo[]) => {
       return searchQuery.length > 0
         ? fuzzySort
-            .go(searchQuery, panels, { key: "title" })
+            .go(searchQuery, panels, { keys: ["title", "description"] })
             .map((searchResult) => searchResult.obj)
         : panels;
     },
