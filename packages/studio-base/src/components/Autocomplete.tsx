@@ -87,7 +87,7 @@ const useStyles = makeStyles()((theme) => ({
     padding: 6,
     cursor: "pointer",
     minHeight: ROW_HEIGHT,
-    lineHeight: ROW_HEIGHT - 10,
+    lineHeight: `${ROW_HEIGHT - 10}px`,
     overflowWrap: "break-word",
     color: theme.palette.text.primary,
     whiteSpace: "pre",
