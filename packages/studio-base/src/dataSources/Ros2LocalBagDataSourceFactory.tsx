@@ -7,7 +7,7 @@ import {
   DataSourceFactoryInitializeArgs,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import { IterablePlayer } from "@foxglove/studio-base/players/IterablePlayer";
-import { RosDb3WorkerIterableSource } from "@foxglove/studio-base/players/IterablePlayer/rosdb3";
+import { RosDb3IterableSource } from "@foxglove/studio-base/players/IterablePlayer/rosdb3";
 import RandomAccessPlayer from "@foxglove/studio-base/players/RandomAccessPlayer";
 import { Player } from "@foxglove/studio-base/players/types";
 import MemoryCacheDataProvider from "@foxglove/studio-base/randomAccessDataProviders/MemoryCacheDataProvider";
@@ -37,7 +37,7 @@ class Ros2LocalBagDataSourceFactory implements IDataSourceFactory {
         return undefined;
       }
 
-      const bagSource = new RosDb3WorkerIterableSource(files);
+      const bagSource = new RosDb3IterableSource(files);
       return new IterablePlayer({
         metricsCollector: args.metricsCollector,
         source: bagSource,
