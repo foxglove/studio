@@ -257,7 +257,7 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
     [filterText, getItemText, items, sortWhenFiltering],
   );
 
-  const hasError = props.hasError ?? (autocompleteItems.length === 0 && value?.length);
+  const hasError = Boolean(props.hasError ?? (autocompleteItems.length === 0 && value?.length));
 
   const open = focused && autocompleteItems.length > 0;
   if (!open) {
@@ -436,7 +436,7 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
       value={value ?? ""}
       inputProps={{
         className: cx(classes.input, {
-          [classes.inputError]: hasError === true,
+          [classes.inputError]: hasError,
           [classes.inputPlaceholder]: value == undefined || value.length === 0,
         }),
         autoCorrect: "off",
