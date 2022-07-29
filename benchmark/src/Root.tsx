@@ -10,6 +10,8 @@ import McapLocalBenchmarkDataSourceFactory from "./dataSources/McapLocalBenchmar
 import { LAYOUTS } from "./layouts";
 import { PredefinedLayoutStorage, MemoryAppConfiguration } from "./services";
 
+const BENCHMARK_NAME = "benchmark-3d-panel"; // see layouts.ts
+
 export function Root(): JSX.Element {
   const [appConfiguration] = useState(
     () =>
@@ -28,17 +30,16 @@ export function Root(): JSX.Element {
 
   const layoutStorage = useMemo(() => new PredefinedLayoutStorage(LAYOUTS), []);
   const [extensionLoaders] = useState(() => []);
-  const consoleApi = useMemo(() => new ConsoleApi(process.env.FOXGLOVE_API_URL!), []);
+  const consoleApi = useMemo(() => new ConsoleApi(process.env.FOXGLOVE_API_URL ?? ""), []);
 
-  // Enable dialog auth in development since using cookie auth does not work between
-  // localhost and the hosted dev deployment due to browser cookie/host security.
-  const enableDialogAuth = process.env.NODE_ENV === "development";
+  const url = new URL(window.location.href);
+  url.searchParams.set("layoutId", BENCHMARK_NAME);
 
   return (
     <App
-      enableDialogAuth={enableDialogAuth}
-      enableLaunchPreferenceScreen
-      deepLinks={[window.location.href]}
+      enableDialogAuth={true}
+      enableLaunchPreferenceScreen={false}
+      deepLinks={[url.href]}
       dataSources={dataSources}
       appConfiguration={appConfiguration}
       layoutStorage={layoutStorage}

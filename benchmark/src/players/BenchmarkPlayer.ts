@@ -9,6 +9,7 @@ import { IIterableSource } from "@foxglove/studio-base/players/IterablePlayer/II
 import {
   AdvertiseOptions,
   Player,
+  PlayerCapabilities,
   PlayerPresence,
   PlayerState,
   PublishPayload,
@@ -17,6 +18,8 @@ import {
 import delay from "@foxglove/studio-base/util/delay";
 
 const log = Log.getLogger(__filename);
+
+const CAPABILITIES: string[] = [PlayerCapabilities.playbackControl];
 
 class BenchmarkPlayer implements Player {
   private source: IIterableSource;
@@ -64,40 +67,55 @@ class BenchmarkPlayer implements Player {
       throw new Error("Invariant: listener is not set");
     }
 
-    log.debug("Initializing benchmark player");
+    log.info("Initializing benchmark player");
 
     await listener({
       profile: undefined,
       presence: PlayerPresence.INITIALIZING,
       name: this.name + "\ninitializing source",
       playerId: this.name,
-      capabilities: [],
+      capabilities: CAPABILITIES,
       progress: {},
     });
 
     // initialize
     const result = await this.source.initialize();
 
-    const { start, end, topicStats, datatypes, topics } = result;
+    const { start: startTime, end: endTime, topicStats, datatypes, topics } = result;
 
     // Bail on any problems
     for (const problem of result.problems) {
       throw new Error(problem.message);
     }
 
-    log.debug("Loading messages");
+    do {
+      log.info("Waiting for topic subscriptions...");
 
-    // Allow the layout to subscribe to any messages it needs
-    await delay(500);
+      // Allow the layout to subscribe to any messages it needs
+      await delay(500);
 
-    await listener({
-      profile: undefined,
-      presence: PlayerPresence.INITIALIZING,
-      name: this.name + "\ngetting messages",
-      playerId: this.name,
-      capabilities: [],
-      progress: {},
-    });
+      await listener({
+        profile: undefined,
+        presence: PlayerPresence.INITIALIZING,
+        name: this.name + "\ngetting messages",
+        playerId: this.name,
+        capabilities: CAPABILITIES,
+        progress: {},
+        activeData: {
+          messages: [],
+          totalBytesReceived: 0,
+          currentTime: startTime,
+          startTime,
+          isPlaying: false,
+          speed: 1,
+          lastSeekTime: 1,
+          endTime,
+          topics,
+          topicStats,
+          datatypes,
+        },
+      });
+    } while (this.subscriptions.length === 0);
 
     // Get all messages for our subscriptions
     const subscribeTopics = this.subscriptions.map((sub) => sub.topic);
@@ -106,6 +124,7 @@ class BenchmarkPlayer implements Player {
     });
 
     const msgEvents: MessageEvent<unknown>[] = [];
+    const frameMs: number[] = [];
 
     // Load all messages into memory
     for await (const item of iterator) {
@@ -114,26 +133,30 @@ class BenchmarkPlayer implements Player {
         throw new Error(item.problem.message);
       }
       msgEvents.push(item.msgEvent);
+      frameMs.push(0);
     }
 
-    log.debug(`Loaded ${msgEvents.length} message events`);
-    log.debug("Starting playback");
+    log.info(`Starting playback of ${msgEvents.length} message events`);
 
     performance.mark("message-emit-start");
 
-    for (const msgEvent of msgEvents) {
+    let totalBytesReceived = 0;
+    for (let i = 0; i < msgEvents.length; i++) {
+      const msgEvent = msgEvents[i]!;
+      totalBytesReceived += msgEvent.sizeInBytes;
+      const startFrame = performance.now();
       await listener({
         profile: undefined,
         presence: PlayerPresence.PRESENT,
         name: this.name,
         playerId: this.name,
-        capabilities: [],
+        capabilities: CAPABILITIES,
         progress: {},
         activeData: {
           messages: [msgEvent],
-          totalBytesReceived: 0,
-          startTime: start,
-          endTime: end,
+          totalBytesReceived,
+          startTime,
+          endTime,
           currentTime: msgEvent.receiveTime,
           isPlaying: true,
           speed: 1,
@@ -143,10 +166,28 @@ class BenchmarkPlayer implements Player {
           datatypes,
         },
       });
+      const endFrame = performance.now();
+      frameMs[i] = endFrame - startFrame;
     }
 
     performance.mark("message-emit-end");
     performance.measure("message-emit", "message-emit-start", "message-emit-end");
+
+    // Discard the first and last frames
+    const filteredFrameMs = frameMs.slice(1, -1);
+
+    const totalFrameMs = filteredFrameMs.reduce((a, b) => a + b, 0);
+    const avgFrameMs = totalFrameMs / filteredFrameMs.length;
+
+    const sortedFrameMs = filteredFrameMs.sort();
+    const medianFrameMs = sortedFrameMs[Math.floor(sortedFrameMs.length * 0.5)]!;
+    const p90FrameMs = sortedFrameMs[Math.floor(sortedFrameMs.length * 0.9)]!;
+
+    log.info(
+      `Frame time (filtered) average: ${avgFrameMs}, median: ${medianFrameMs}, P90: ${p90FrameMs}`,
+    );
+    // eslint-disable-next-line no-restricted-syntax
+    console.log(frameMs);
   }
 }
 
