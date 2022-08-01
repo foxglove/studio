@@ -149,10 +149,10 @@ const useStyles = makeStyles()((theme) => ({
         zIndex: 99,
 
         ".mosaic-split-line": {
-          boxShadow: `0 0 0 1px ${theme.palette.divider}`,
+          boxShadow: `0 0 0 1px ${theme.palette.action.focus}`,
         },
         "&:hover .mosaic-split-line": {
-          boxShadow: `0 0 0 1px ${theme.palette.divider}`,
+          boxShadow: `0 0 0 1px ${theme.palette.action.focus}`,
         },
         "&.-row": {
           marginTop: 2,
