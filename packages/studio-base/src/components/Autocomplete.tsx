@@ -482,7 +482,7 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
 
         return (
           <Paper
-            elevation={8}
+            elevation={6}
             className={classes.root}
             key={
               autocompleteKey
