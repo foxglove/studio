@@ -140,12 +140,10 @@ export default function Variable({
 
   const value = useMemo(() => globalVariables[name], [globalVariables, name]);
 
-  const handleCopy = useCallback(() => {
-    return void clipboard.copy(JSON.stringify(value, undefined, 2) ?? "").then(() => {
-      setOpen(true);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    });
+  const handleCopy = useCallback(async () => {
+    await clipboard.copy(JSON.stringify(value, undefined, 2) ?? "");
+    setOpen(true);
+    setCopied(true);
   }, [value]);
 
   return (
