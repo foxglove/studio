@@ -146,6 +146,14 @@ export default function Variable({
     setCopied(true);
   }, [value]);
 
+  const onChange = useCallback(
+    (newVal: unknown) => {
+      setGlobalVariables({ [name]: newVal });
+      setCopied(false);
+    },
+    [name, setGlobalVariables],
+  );
+
   return (
     <Stack className={classes.root}>
       <ListItem
@@ -271,11 +279,7 @@ export default function Variable({
           >
             {copied ? "Copied" : "Copy"}
           </Button>
-          <JsonInput
-            value={value}
-            readOnly={linked}
-            onChange={(newVal) => setGlobalVariables({ [name]: newVal })}
-          />
+          <JsonInput value={value} readOnly={linked} onChange={onChange} />
         </div>
       )}
       <Divider />
