@@ -4,6 +4,7 @@
 
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import LinkIcon from "@mui/icons-material/Link";
+import ErrorIcon from "@mui/icons-material/Error";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import {
   Divider,
@@ -20,7 +21,7 @@ import {
   InputBase,
 } from "@mui/material";
 import { pick } from "lodash";
-import { useMemo, useCallback, useState } from "react";
+import { useMemo, useCallback, useState, ChangeEvent } from "react";
 import { makeStyles } from "tss-react/mui";
 
 import JsonInput from "@foxglove/studio-base/components/JsonInput";
@@ -94,6 +95,7 @@ export default function Variable({
   linkedIndex: number;
 }): JSX.Element {
   const { classes } = useStyles();
+  const [editedName, setEditedName] = useState(name);
   const [open, setOpen] = useState<boolean>(true);
   const [anchorEl, setAnchorEl] = React.useState<undefined | HTMLElement>(undefined);
   const [copied, setCopied] = useState(false);
@@ -146,13 +148,22 @@ export default function Variable({
     setCopied(true);
   }, [value]);
 
-  const onChange = useCallback(
+  const onChangeValue = useCallback(
     (newVal: unknown) => {
       setGlobalVariables({ [name]: newVal });
       setCopied(false);
     },
     [name, setGlobalVariables],
   );
+
+  const onChangeName = useCallback((newName: string) => {
+    setEditedName(newName);
+    if (globalVariables[newName] == undefined) {
+      changeGlobalKey(newName, name, globalVariables, linkedIndex, overwriteGlobalVariables);
+    }
+  }, []);
+
+  const nameIsInError = name !== editedName && globalVariables[editedName] != undefined;
 
   return (
     <Stack className={classes.root}>
@@ -239,24 +250,19 @@ export default function Variable({
                 {linked ? (
                   name
                 ) : (
-                  <InputBase
-                    autoFocus={name === ""}
-                    value={name}
-                    placeholder="variable_name"
-                    data-test={`global-variable-key-input-${name}`}
-                    style={{ font: "inherit", flex: "auto", padding: 0 }}
-                    onClick={(e) => e.stopPropagation()}
-                    onFocus={() => name === "" && setOpen(true)}
-                    onChange={(event) =>
-                      changeGlobalKey(
-                        event.target.value,
-                        name,
-                        globalVariables,
-                        linkedIndex,
-                        overwriteGlobalVariables,
-                      )
-                    }
-                  />
+                  <>
+                    <InputBase
+                      autoFocus={editedName === ""}
+                      value={editedName}
+                      placeholder="variable_name"
+                      data-testid={`global-variable-key-input-${editedName}`}
+                      style={{ font: "inherit", flex: "auto", padding: 0 }}
+                      onClick={(e) => e.stopPropagation()}
+                      onFocus={() => editedName === "" && setOpen(true)}
+                      onChange={(event) => onChangeName(event.target.value)}
+                    />
+                    {nameIsInError && <ErrorIcon fontSize="inherit" color="error" />}
+                  </>
                 )}
               </Stack>
             }
@@ -279,7 +285,7 @@ export default function Variable({
           >
             {copied ? "Copied" : "Copy"}
           </Button>
-          <JsonInput value={value} readOnly={linked} onChange={onChange} />
+          <JsonInput value={value} readOnly={linked} onChange={onChangeValue} />
         </div>
       )}
       <Divider />
