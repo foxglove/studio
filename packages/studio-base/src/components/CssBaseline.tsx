@@ -58,7 +58,6 @@ const useStyles = makeStyles()((theme) => ({
     color: theme.palette.text.primary,
     font: "inherit",
     fontSize: theme.typography.body2.fontSize,
-    lineHeight: theme.typography.body2.lineHeight,
     fontFeatureSettings: fonts.SANS_SERIF_FEATURE_SETTINGS,
 
     // mosaic styling
