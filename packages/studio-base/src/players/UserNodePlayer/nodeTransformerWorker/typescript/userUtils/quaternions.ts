@@ -18,6 +18,12 @@ export type Euler = {
   yaw: number;
 };
 
+/**
+ * Converts a quaternion to a Euler roll, pitch, yaw representation, in degrees.
+ *
+ * @param quaternion Input quaternion.
+ * @returns Converted Euler angle roll, pitch, yaw representation, in degrees.
+ */
 export function quaternionToEuler(quaternion: Quaternion): Euler {
   const { x, y, z, w } = quaternion;
 
