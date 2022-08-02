@@ -3,8 +3,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
-import LinkIcon from "@mui/icons-material/Link";
 import ErrorIcon from "@mui/icons-material/Error";
+import LinkIcon from "@mui/icons-material/Link";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import {
   Divider,
@@ -21,7 +21,7 @@ import {
   InputBase,
 } from "@mui/material";
 import { pick } from "lodash";
-import { useMemo, useCallback, useState, ChangeEvent } from "react";
+import { useMemo, useCallback, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 
 import JsonInput from "@foxglove/studio-base/components/JsonInput";
@@ -156,12 +156,15 @@ export default function Variable({
     [name, setGlobalVariables],
   );
 
-  const onChangeName = useCallback((newName: string) => {
-    setEditedName(newName);
-    if (globalVariables[newName] == undefined) {
-      changeGlobalKey(newName, name, globalVariables, linkedIndex, overwriteGlobalVariables);
-    }
-  }, []);
+  const onChangeName = useCallback(
+    (newName: string) => {
+      setEditedName(newName);
+      if (globalVariables[newName] == undefined) {
+        changeGlobalKey(newName, name, globalVariables, linkedIndex, overwriteGlobalVariables);
+      }
+    },
+    [globalVariables, linkedIndex, name, overwriteGlobalVariables],
+  );
 
   const nameIsInError = name !== editedName && globalVariables[editedName] != undefined;
 
