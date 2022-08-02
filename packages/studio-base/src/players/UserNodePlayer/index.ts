@@ -16,7 +16,7 @@ import memoizeWeak from "memoize-weak";
 import shallowequal from "shallowequal";
 import { v4 as uuidv4 } from "uuid";
 
-import { signal } from "@foxglove/den/async";
+import { Condvar } from "@foxglove/den/async";
 import Log from "@foxglove/log";
 import { Time, compare } from "@foxglove/rostime";
 import { ParameterValue } from "@foxglove/studio";
@@ -125,6 +125,8 @@ export default class UserNodePlayer implements Player {
   // that a script requires. When subscribers subscribe to the output topic, the user node player
   // subscribes to the underlying input topics.
   private _inputsByOutputTopic = new Map<string, readonly string[]>();
+
+  private _resetCondvar = new Condvar();
 
   // exposed as a static to allow testing to mock/replace
   static CreateNodeTransformWorker = (): SharedWorker => {
@@ -381,7 +383,7 @@ export default class UserNodePlayer implements Player {
     const { inputTopics, outputTopic, transpiledCode, projectCode, outputDatatype } = nodeData;
 
     let rpc: Rpc | undefined;
-    let terminateSignal = signal<void>();
+    const terminateCondvar = new Condvar();
 
     // problemKey is a unique identifier for each userspace node so we can manage problems from
     // a specific node. A node may have a problem that may later clear. Using the key we can add/remove
@@ -390,8 +392,7 @@ export default class UserNodePlayer implements Player {
 
     const buildMessageProcessor = (): NodeRegistration["processMessage"] => {
       return async (msgEvent: MessageEvent<unknown>, globalVariables: GlobalVariables) => {
-        // We allow _resetWorkers to "cancel" the processing by creating a new signal every time we process a message
-        terminateSignal = signal<void>();
+        const terminateSignal = terminateCondvar.wait();
 
         // Register the node within a web worker to be executed.
         if (!rpc) {
@@ -405,7 +406,7 @@ export default class UserNodePlayer implements Player {
               log.error(event);
 
               this._problemStore.set(problemKey, {
-                message: `Node playground runtime error: ${event.message}`,
+                message: `User script runtime error: ${event.message}`,
                 severity: "error",
               });
 
@@ -419,7 +420,7 @@ export default class UserNodePlayer implements Player {
 
               this._problemStore.set(problemKey, {
                 severity: "error",
-                message: `Node playground runtime error: ${String(event.data)}`,
+                message: `User script runtime error: ${String(event.data)}`,
               });
 
               void this._emitState();
@@ -432,7 +433,7 @@ export default class UserNodePlayer implements Player {
 
               this._problemStore.set(problemKey, {
                 severity: "error",
-                message: `Node playground runtime error: ${msg}`,
+                message: `User script runtime error: ${msg}`,
               });
 
               void this._emitState();
@@ -478,7 +479,7 @@ export default class UserNodePlayer implements Player {
 
         if (!result) {
           this._problemStore.set(problemKey, {
-            message: `Node playground node ${nodeId} timed out`,
+            message: `User Script ${nodeId} timed out`,
             severity: "warn",
           });
           return;
@@ -503,7 +504,7 @@ export default class UserNodePlayer implements Player {
         if (!result.message) {
           this._problemStore.set(problemKey, {
             severity: "warn",
-            message: `Node playground node ${nodeId} did not produce a message`,
+            message: `User Script ${nodeId} did not produce a message`,
           });
           return;
         }
@@ -523,8 +524,7 @@ export default class UserNodePlayer implements Player {
 
     const terminate = () => {
       this._problemStore.delete(problemKey);
-
-      terminateSignal.resolve();
+      terminateCondvar.notifyAll();
       if (rpc) {
         this._unusedNodeRuntimeWorkers.push(rpc);
         rpc = undefined;
@@ -556,7 +556,7 @@ export default class UserNodePlayer implements Player {
 
         this._problemStore.set("worker-error", {
           severity: "error",
-          message: `Node playground error: ${event.message}`,
+          message: `User Script error: ${event.message}`,
         });
 
         void this._emitState();
@@ -568,7 +568,7 @@ export default class UserNodePlayer implements Player {
 
         this._problemStore.set("worker-error", {
           severity: "error",
-          message: `Node playground error: ${String(event.data)}`,
+          message: `User Script error: ${String(event.data)}`,
         });
 
         void this._emitState();
@@ -581,7 +581,7 @@ export default class UserNodePlayer implements Player {
 
         this._problemStore.set("worker-error", {
           severity: "error",
-          message: `Node playground error: ${msg}`,
+          message: `User Script error: ${msg}`,
         });
 
         void this._emitState();
@@ -601,20 +601,18 @@ export default class UserNodePlayer implements Player {
       return;
     }
 
-    // Make sure that we only run this function once at a time, but using this instead of `debouncePromise` so that it
-    // returns a promise.
+    // Make sure that we only run this function once at a time
     if (this._pendingResetWorkers) {
       await this._pendingResetWorkers;
     }
-    const pending = signal();
-    this._pendingResetWorkers = pending;
+    this._pendingResetWorkers = this._resetCondvar.wait();
 
     // This early return is an optimization measure so that the
     // `nodeRegistrations` array is not re-defined, which will invalidate
     // downstream caches. (i.e. `this._getTopics`)
     if (this._nodeRegistrations.length === 0 && Object.entries(this._userNodes).length === 0) {
-      pending.resolve();
       this._pendingResetWorkers = undefined;
+      this._resetCondvar.notifyAll();
       return;
     }
 
@@ -717,7 +715,7 @@ export default class UserNodePlayer implements Player {
     }
 
     this._pendingResetWorkers = undefined;
-    pending.resolve();
+    this._resetCondvar.notifyAll();
   }
 
   private async _getRosLib(): Promise<string> {

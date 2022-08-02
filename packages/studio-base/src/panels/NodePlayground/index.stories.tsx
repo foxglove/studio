@@ -21,8 +21,8 @@ import { SExpectedResult } from "@foxglove/studio-base/stories/storyHelpers";
 import { DEFAULT_STUDIO_NODE_PREFIX } from "@foxglove/studio-base/util/globalConstants";
 
 const userNodes = {
-  nodeId1: { name: "/studio_node/node", sourceCode: "const someVariableName = 1;" },
-  nodeId2: { name: "/studio_node/node2", sourceCode: "const anotherVariableName = 2;" },
+  nodeId1: { name: "/studio_script/script", sourceCode: "const someVariableName = 1;" },
+  nodeId2: { name: "/studio_script/script2", sourceCode: "const anotherVariableName = 2;" },
 };
 
 const userNodeRosLib = `
@@ -144,7 +144,7 @@ storiesOf("panels/NodePlayground", module)
         ...fixture,
         userNodes: {
           nodeId1: {
-            name: "/studio_node/node",
+            name: "/studio_script/script",
             sourceCode: sourceCodeWithUtils,
           },
         },
@@ -161,7 +161,7 @@ storiesOf("panels/NodePlayground", module)
         ...fixture,
         userNodes: {
           nodeId1: {
-            name: "/studio_node/node",
+            name: "/studio_script/script",
             sourceCode: sourceCodeWithUtils,
           },
         },
@@ -173,11 +173,11 @@ storiesOf("panels/NodePlayground", module)
           // Change the userNodes to confirm the code in the Editor updates
           actions.setUserNodes({
             nodeId1: {
-              name: "/studio_node/node",
+              name: "/studio_script/script",
               sourceCode: utilsSourceCode,
             },
           });
-          el.querySelectorAll<HTMLElement>("[data-test=node-explorer]")[0]?.click();
+          el.querySelectorAll<HTMLElement>("[data-testid=node-explorer]")[0]?.click();
         }, 500);
       }}
     >
@@ -193,7 +193,7 @@ storiesOf("panels/NodePlayground", module)
         ...fixture,
         userNodes: {
           nodeId1: {
-            name: "/studio_node/node",
+            name: "/studio_script/script",
             sourceCode: sourceCodeWithUtils,
           },
         },
@@ -206,7 +206,7 @@ storiesOf("panels/NodePlayground", module)
           selectedNodeId: "nodeId1",
           additionalBackStackItems: [
             {
-              filePath: "/studio_node/pointClouds",
+              filePath: "/studio_script/pointClouds",
               code: utilsSourceCode,
               readOnly: true,
             },
@@ -221,7 +221,7 @@ storiesOf("panels/NodePlayground", module)
         ...fixture,
         userNodes: {
           nodeId1: {
-            name: "/studio_node/node",
+            name: "/studio_script/script",
             sourceCode: sourceCodeWithUtils,
           },
         },
@@ -230,7 +230,7 @@ storiesOf("panels/NodePlayground", module)
       }}
       onMount={(el) => {
         setTimeout(() => {
-          el.querySelectorAll<HTMLElement>("[data-test=go-back]")[0]!.click();
+          el.querySelectorAll<HTMLElement>("[data-testid=go-back]")[0]!.click();
         }, 500);
       }}
     >
@@ -239,7 +239,7 @@ storiesOf("panels/NodePlayground", module)
           selectedNodeId: "nodeId1",
           additionalBackStackItems: [
             {
-              filePath: "/studio_node/pointClouds",
+              filePath: "/studio_script/pointClouds",
               code: utilsSourceCode,
               readOnly: true,
             },
@@ -254,7 +254,7 @@ storiesOf("panels/NodePlayground", module)
         fixture={{ ...fixture, userNodes }}
         onMount={(el) => {
           setTimeout(() => {
-            el.querySelectorAll<HTMLElement>("[data-test=node-explorer]")[0]!.click();
+            el.querySelectorAll<HTMLElement>("[data-testid=node-explorer]")[0]!.click();
           }, SIDEBAR_OPEN_CLICK_TIMEOUT);
         }}
       >
@@ -268,7 +268,7 @@ storiesOf("panels/NodePlayground", module)
         fixture={{ ...fixture, userNodes }}
         onMount={(el) => {
           setTimeout(() => {
-            el.querySelectorAll<HTMLElement>("[data-test=node-explorer]")[0]!.click();
+            el.querySelectorAll<HTMLElement>("[data-testid=node-explorer]")[0]!.click();
           }, SIDEBAR_OPEN_CLICK_TIMEOUT);
         }}
       >
@@ -282,7 +282,7 @@ storiesOf("panels/NodePlayground", module)
         fixture={{ ...fixture, userNodes }}
         onMount={(el) => {
           setTimeout(() => {
-            el.querySelectorAll<HTMLElement>("[data-test=utils-explorer]")[0]!.click();
+            el.querySelectorAll<HTMLElement>("[data-testid=utils-explorer]")[0]!.click();
           }, SIDEBAR_OPEN_CLICK_TIMEOUT);
         }}
       >
@@ -296,7 +296,7 @@ storiesOf("panels/NodePlayground", module)
         fixture={{ ...fixture, userNodes }}
         onMount={(el) => {
           setTimeout(() => {
-            el.querySelectorAll<HTMLElement>("[data-test=templates-explorer]")[0]!.click();
+            el.querySelectorAll<HTMLElement>("[data-testid=templates-explorer]")[0]!.click();
           }, SIDEBAR_OPEN_CLICK_TIMEOUT);
         }}
       >
@@ -322,7 +322,7 @@ storiesOf("panels/NodePlayground", module)
     <PanelSetup
       fixture={{
         ...fixture,
-        userNodes: { nodeId1: { name: "/studio_node/node", sourceCode: "" } },
+        userNodes: { nodeId1: { name: "/studio_script/script", sourceCode: "" } },
         userNodeDiagnostics: { nodeId1: [] },
       }}
     >
@@ -333,12 +333,12 @@ storiesOf("panels/NodePlayground", module)
     <PanelSetup
       fixture={{
         ...fixture,
-        userNodes: { nodeId1: { name: "/studio_node/node", sourceCode: "" } },
+        userNodes: { nodeId1: { name: "/studio_script/script", sourceCode: "" } },
         userNodeDiagnostics: { nodeId1: [] },
       }}
       onMount={(el) => {
         setTimeout(() => {
-          const diagnosticsErrorsLabel = el.querySelector<HTMLElement>("[data-test=np-errors]");
+          const diagnosticsErrorsLabel = el.querySelector<HTMLElement>("[data-testid=np-errors]");
           if (diagnosticsErrorsLabel) {
             diagnosticsErrorsLabel.click();
           }
@@ -352,12 +352,12 @@ storiesOf("panels/NodePlayground", module)
     <PanelSetup
       fixture={{
         ...fixture,
-        userNodes: { nodeId1: { name: "/studio_node/node", sourceCode: "" } },
+        userNodes: { nodeId1: { name: "/studio_script/script", sourceCode: "" } },
         userNodeDiagnostics: { nodeId1: [] },
       }}
       onMount={(el) => {
         setTimeout(() => {
-          const logsLabel = el.querySelector<HTMLElement>("[data-test=np-logs]");
+          const logsLabel = el.querySelector<HTMLElement>("[data-testid=np-logs]");
           if (logsLabel) {
             logsLabel.click();
           }
@@ -371,7 +371,7 @@ storiesOf("panels/NodePlayground", module)
     <PanelSetup
       fixture={{
         ...fixture,
-        userNodes: { nodeId1: { name: "/studio_node/node", sourceCode: "" } },
+        userNodes: { nodeId1: { name: "/studio_script/script", sourceCode: "" } },
         userNodeDiagnostics: {
           nodeId1: [
             {
@@ -415,7 +415,7 @@ storiesOf("panels/NodePlayground", module)
     <PanelSetup
       fixture={{
         ...fixture,
-        userNodes: { nodeId1: { name: "/studio_node/node", sourceCode: "" } },
+        userNodes: { nodeId1: { name: "/studio_script/script", sourceCode: "" } },
         userNodeDiagnostics: {
           nodeId1: [
             {
@@ -453,7 +453,7 @@ storiesOf("panels/NodePlayground", module)
       }}
       onMount={(el) => {
         setTimeout(() => {
-          const diagnosticsErrorsLabel = el.querySelector<HTMLElement>("[data-test=np-errors]");
+          const diagnosticsErrorsLabel = el.querySelector<HTMLElement>("[data-testid=np-errors]");
           if (diagnosticsErrorsLabel) {
             diagnosticsErrorsLabel.click();
           }
@@ -469,7 +469,7 @@ storiesOf("panels/NodePlayground", module)
         ...fixture,
         userNodes: {
           nodeId1: {
-            name: "/studio_node/node",
+            name: "/studio_script/script",
             sourceCode: sourceCodeWithLogs,
           },
         },
@@ -486,7 +486,7 @@ storiesOf("panels/NodePlayground", module)
         ...fixture,
         userNodes: {
           nodeId1: {
-            name: "/studio_node/node",
+            name: "/studio_script/script",
             sourceCode: sourceCodeWithLogs,
           },
         },
@@ -495,7 +495,7 @@ storiesOf("panels/NodePlayground", module)
       }}
       onMount={(el) => {
         setTimeout(() => {
-          const logsLabel = el.querySelector<HTMLElement>("[data-test=np-logs]");
+          const logsLabel = el.querySelector<HTMLElement>("[data-testid=np-logs]");
           if (logsLabel) {
             logsLabel.click();
           }
@@ -509,16 +509,16 @@ storiesOf("panels/NodePlayground", module)
     <PanelSetup
       fixture={{
         ...fixture,
-        userNodes: { nodeId1: { name: "/studio_node/node", sourceCode: "" } },
+        userNodes: { nodeId1: { name: "/studio_script/script", sourceCode: "" } },
         userNodeDiagnostics: { nodeId1: [] },
         userNodeLogs: { nodeId1: logs },
       }}
       onFirstMount={(el) => {
         setTimeout(() => {
-          const logsLabel = el.querySelector<HTMLElement>("[data-test=np-logs]");
+          const logsLabel = el.querySelector<HTMLElement>("[data-testid=np-logs]");
           if (logsLabel) {
             logsLabel.click();
-            const clearBtn = el.querySelector<HTMLElement>("button[data-test=np-logs-clear]");
+            const clearBtn = el.querySelector<HTMLElement>("button[data-testid=np-logs-clear]");
             if (clearBtn) {
               clearBtn.click();
             }

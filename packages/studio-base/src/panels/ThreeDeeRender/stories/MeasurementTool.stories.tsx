@@ -20,7 +20,7 @@ export default {
 MeasurementTool.parameters = { colorScheme: "dark", chromatic: { delay: 200 } };
 MeasurementTool.play = async () => {
   getPublishClickDebugLogElement().innerText += "story click button\n";
-  document.querySelector<HTMLElement>("[data-test=measure-button]")!.click();
+  document.querySelector<HTMLElement>("[data-testid=measure-button]")!.click();
   await delay(100);
   const canvas = document.querySelector("canvas")!;
   for (let tries = 0; tries < 10 && (canvas.offsetWidth === 0 || canvas.offsetHeight === 0); ) {

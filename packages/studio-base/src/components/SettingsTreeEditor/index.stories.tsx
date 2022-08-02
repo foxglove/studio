@@ -762,7 +762,7 @@ export function Basics(): JSX.Element {
 }
 
 Basics.play = () => {
-  Array.from(document.querySelectorAll("[data-test=node-actions-menu-button]"))
+  Array.from(document.querySelectorAll("[data-testid=node-actions-menu-button]"))
     .slice(0, 1)
     .forEach((node) => fireEvent.click(node));
 };
@@ -801,7 +801,7 @@ export function Filter(): JSX.Element {
   return <Wrapper nodes={FilterSettings} />;
 }
 Filter.play = () => {
-  const node = document.querySelector("[data-test=settings-filter-field] input");
+  const node = document.querySelector("[data-testid=settings-filter-field] input");
   if (node) {
     fireEvent.click(node);
     fireEvent.change(node, { target: { value: "matcha" } });
@@ -810,4 +810,76 @@ Filter.play = () => {
 
 export function Colors(): JSX.Element {
   return <Wrapper nodes={ColorSettings} />;
+}
+
+export function Vec2(): JSX.Element {
+  const settings: SettingsTreeNodes = {
+    fields: {
+      fields: {
+        basic: {
+          label: "Basic",
+          input: "vec2",
+        },
+        labels: {
+          label: "Custom Labels",
+          input: "vec2",
+          labels: ["A", "B"],
+        },
+        values: {
+          label: "Values",
+          input: "vec2",
+          value: [1.1111, 2.2222],
+        },
+        someValues: {
+          label: "Some values",
+          input: "vec2",
+          value: [1.1111, undefined],
+        },
+        placeholder: {
+          label: "Placeholder",
+          input: "vec2",
+          placeholder: ["foo", "bar"],
+          value: [1.1111, undefined],
+        },
+      },
+    },
+  };
+
+  return <Wrapper nodes={settings} />;
+}
+
+export function Vec3(): JSX.Element {
+  const settings: SettingsTreeNodes = {
+    fields: {
+      fields: {
+        basic: {
+          label: "Basic",
+          input: "vec3",
+        },
+        labels: {
+          label: "Custom Labels",
+          input: "vec3",
+          labels: ["A", "B", "C"],
+        },
+        values: {
+          label: "Values",
+          input: "vec3",
+          value: [1.1111, 2.2222, 3.333],
+        },
+        someValues: {
+          label: "Some values",
+          input: "vec3",
+          value: [1.1111, undefined, 2.222],
+        },
+        placeholder: {
+          label: "Placeholder",
+          input: "vec3",
+          placeholder: ["foo", "bar", "baz"],
+          value: [1.1111, undefined, undefined],
+        },
+      },
+    },
+  };
+
+  return <Wrapper nodes={settings} />;
 }

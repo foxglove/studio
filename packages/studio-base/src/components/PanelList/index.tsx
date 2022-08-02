@@ -222,12 +222,12 @@ function DraggablePanelItem({
               )}
               <CardContent className={classes.cardContent}>
                 <Typography variant="subtitle2" gutterBottom>
-                  <span data-test={`panel-menu-item ${panel.title}`}>
+                  <span data-testid={`panel-menu-item ${panel.title}`}>
                     <TextHighlight targetStr={targetString} searchText={searchQuery} />
                   </span>
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  {panel.description}
+                  <TextHighlight targetStr={panel.description ?? ""} searchText={searchQuery} />
                 </Typography>
               </CardContent>
             </Stack>
@@ -247,7 +247,7 @@ function DraggablePanelItem({
           >
             <ListItemText
               primary={
-                <span data-test={`panel-menu-item ${panel.title}`}>
+                <span data-testid={`panel-menu-item ${panel.title}`}>
                   <TextHighlight targetStr={targetString} searchText={searchQuery} />
                 </span>
               }
@@ -368,7 +368,12 @@ function PanelList(props: Props): JSX.Element {
     (panels: PanelInfo[]) => {
       return searchQuery.length > 0
         ? fuzzySort
-            .go(searchQuery, panels, { key: "title" })
+            .go(searchQuery, panels, {
+              keys: ["title", "description"],
+              // Weigh title matches more heavily than description matches.
+              scoreFn: (a) => Math.max(a[0] ? a[0].score : -1000, a[1] ? a[1].score - 100 : -1000),
+              threshold: -900,
+            })
             .map((searchResult) => searchResult.obj)
         : panels;
     },

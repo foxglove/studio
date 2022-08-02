@@ -23,7 +23,7 @@ export const Point = Object.assign(PublishClickToolTemplate.bind({}), {
   args: { type: "point" },
   play: async () => {
     getPublishClickDebugLogElement().innerText += "story click button\n";
-    document.querySelector<HTMLElement>("[data-test=publish-button]")!.click();
+    document.querySelector<HTMLElement>("[data-testid=publish-button]")!.click();
     await delay(100);
     const canvas = document.querySelector("canvas")!;
     for (let tries = 0; tries < 10 && (canvas.offsetWidth === 0 || canvas.offsetHeight === 0); ) {
@@ -44,7 +44,7 @@ export const PosePosition = Object.assign(PublishClickToolTemplate.bind({}), {
   args: { type: "pose" },
   play: async () => {
     getPublishClickDebugLogElement().innerText += "story click button\n";
-    document.querySelector<HTMLElement>("[data-test=publish-button]")!.click();
+    document.querySelector<HTMLElement>("[data-testid=publish-button]")!.click();
     await delay(100);
     const canvas = document.querySelector("canvas")!;
     for (let tries = 0; tries < 10 && (canvas.offsetWidth === 0 || canvas.offsetHeight === 0); ) {
@@ -65,7 +65,7 @@ export const PoseComplete = Object.assign(PublishClickToolTemplate.bind({}), {
   args: { type: "pose" },
   play: async () => {
     getPublishClickDebugLogElement().innerText += "story click button\n";
-    document.querySelector<HTMLElement>("[data-test=publish-button]")!.click();
+    document.querySelector<HTMLElement>("[data-testid=publish-button]")!.click();
     await delay(100);
     const canvas = document.querySelector("canvas")!;
     for (let tries = 0; tries < 10 && (canvas.offsetWidth === 0 || canvas.offsetHeight === 0); ) {
@@ -95,7 +95,7 @@ export const PoseEstimatePosition = Object.assign(PublishClickToolTemplate.bind(
   args: { type: "pose_estimate" },
   play: async () => {
     getPublishClickDebugLogElement().innerText += "story click button\n";
-    document.querySelector<HTMLElement>("[data-test=publish-button]")!.click();
+    document.querySelector<HTMLElement>("[data-testid=publish-button]")!.click();
     await delay(100);
     const canvas = document.querySelector("canvas")!;
     for (let tries = 0; tries < 10 && (canvas.offsetWidth === 0 || canvas.offsetHeight === 0); ) {
@@ -115,7 +115,7 @@ export const PoseEstimateComplete = Object.assign(PublishClickToolTemplate.bind(
   args: { type: "pose_estimate" },
   play: async () => {
     getPublishClickDebugLogElement().innerText += "story click button\n";
-    document.querySelector<HTMLElement>("[data-test=publish-button]")!.click();
+    document.querySelector<HTMLElement>("[data-testid=publish-button]")!.click();
     await delay(100);
     const canvas = document.querySelector("canvas")!;
     for (let tries = 0; tries < 10 && (canvas.offsetWidth === 0 || canvas.offsetHeight === 0); ) {
