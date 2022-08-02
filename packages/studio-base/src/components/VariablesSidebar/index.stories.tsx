@@ -1,15 +1,6 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
-//
-// This file incorporates work covered by the following copyright and
-// permission notice:
-//
-//   Copyright 2018-2021 Cruise LLC
-//
-//   This source code is licensed under the Apache License, Version 2.0,
-//   found at http://www.apache.org/licenses/LICENSE-2.0
-//   You may not use this file except in compliance with the License.
 
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
@@ -23,14 +14,50 @@ export default {
   component: VariablesSidebar,
 };
 
-export function Table(): JSX.Element {
+const initialState = {
+  globalVariables: {
+    selected_id: 1234,
+    linked_variable: { seq: 0, stamp: { sec: 1535385092, nsec: 150099000 }, frame_id: "map" },
+  },
+  linkedGlobalVariables: [
+    {
+      topic: "linked_variable",
+      markerKeyPath: ["", ""],
+      name: "linked_variable",
+    },
+  ],
+};
+
+export function Default(): JSX.Element {
   return (
-    <div style={{ margin: 30, height: 400 }}>
-      <DndProvider backend={HTML5Backend}>
-        <MockCurrentLayoutProvider>
-          <VariablesSidebar />
-        </MockCurrentLayoutProvider>
-      </DndProvider>
-    </div>
+    <DndProvider backend={HTML5Backend}>
+      <MockCurrentLayoutProvider>
+        <VariablesSidebar />
+      </MockCurrentLayoutProvider>
+    </DndProvider>
   );
 }
+
+export function WithVariablesLight(): JSX.Element {
+  return (
+    <DndProvider backend={HTML5Backend}>
+      <MockCurrentLayoutProvider initialState={initialState}>
+        <VariablesSidebar />
+      </MockCurrentLayoutProvider>
+    </DndProvider>
+  );
+}
+
+WithVariablesLight.parameters = { colorScheme: "light" };
+
+export function WithVariablesDark(): JSX.Element {
+  return (
+    <DndProvider backend={HTML5Backend}>
+      <MockCurrentLayoutProvider initialState={initialState}>
+        <VariablesSidebar />
+      </MockCurrentLayoutProvider>
+    </DndProvider>
+  );
+}
+
+WithVariablesDark.parameters = { colorScheme: "dark" };
