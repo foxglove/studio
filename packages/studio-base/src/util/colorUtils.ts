@@ -34,7 +34,7 @@ export const hexToColorObj = (hex: string, alpha?: number): Color => {
 
 // Convert a color object (scaled to 1, 1, 1, 1) to a fluentUI IRGB by scaling
 // the RGB values to 255 and the alpha to 100.
-export const colorObjToRGBA = (color: Color): ColorFormats.RGBA => {
+export const colorObjToRGBA = (color: Color): Color => {
   return {
     r: Math.round(255 * color.r),
     g: Math.round(255 * color.g),
