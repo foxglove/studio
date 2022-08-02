@@ -139,20 +139,19 @@ const useStyles = makeStyles()((theme) => ({
         zIndex: "unset",
       },
       ".mosaic-window-title": {
-        fontSize: "12px",
+        fontSize: 12,
         lineHeight: "30px",
-        paddingLeft: "5px",
-        color: colors.GREY,
+        paddingLeft: 5,
       },
       ".mosaic-split": {
         background: "none !important",
         zIndex: 99,
 
         ".mosaic-split-line": {
-          boxShadow: `0 0 0 1px ${theme.palette.action.focus}`,
+          boxShadow: `0 0 0 1px ${theme.palette.grey.A200}`,
         },
         "&:hover .mosaic-split-line": {
-          boxShadow: `0 0 0 1px ${theme.palette.action.focus}`,
+          boxShadow: `0 0 0 1px ${theme.palette.grey.A200}`,
         },
         "&.-row": {
           marginTop: 2,
