@@ -8,24 +8,19 @@ export class VecQueue<T> {
   private buffer: Array<T | undefined> = new Array(4);
 
   enqueue(item: T): void {
-    // When the write head is ahead of the read head we can grow the array at the end
-    if (this.writePos >= this.readPos) {
-      // Write position is past the buffer end, we could wrap around to the front if readPos is > 0
-      if (this.writePos >= this.buffer.length) {
-        // Read head is at the start, we will write at the end
-        if (this.readPos > 0) {
-          this.writePos = this.writePos % this.buffer.length;
-        } else {
-          this.addCapacity();
-          this.buffer[this.writePos] = item;
-          this.writePos += 1;
-          return;
-        }
-      } else {
+    // When the write position is past the buffer end, we need to take one of two actions:
+    // 1. If read position is at 0, we grow the array and write to the end
+    // 2. Otherwise, we wrap write to the front and continue writing
+    if (this.writePos >= this.buffer.length) {
+      // Read head is at the start, we will write at the end
+      if (this.readPos === 0) {
+        this.addCapacity();
         this.buffer[this.writePos] = item;
         this.writePos += 1;
         return;
       }
+
+      this.writePos = this.writePos % this.buffer.length;
     }
 
     // Read is only 1 away from write, so once the item is written our write head would be at the read head
