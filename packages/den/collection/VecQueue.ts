@@ -2,11 +2,21 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+/**
+ * VecQueue provides an interface for a FIFO queue backed by a growing circular buffer.
+ *
+ * `enqueue` inserts items at the end of the queue (possibly growing the underlying buffer)
+ * `dequeue` removes items from the front of the queue
+ */
 export class VecQueue<T> {
   private readPos = 0;
   private writePos = 0;
   private buffer: Array<T | undefined> = new Array(4);
 
+  /**
+   * Add an item at the end of the queue. If the queue is full the underlying buffer is grown.
+   * @param item the item to insert into the queue
+   */
   enqueue(item: T): void {
     // When the write position is past the buffer end, we need to take one of two actions:
     // 1. If read position is at 0, we grow the array and write to the end
@@ -15,12 +25,9 @@ export class VecQueue<T> {
       // Read head is at the start, we will write at the end
       if (this.readPos === 0) {
         this.addCapacity();
-        this.buffer[this.writePos] = item;
-        this.writePos += 1;
-        return;
+      } else {
+        this.writePos = this.writePos % this.buffer.length;
       }
-
-      this.writePos = this.writePos % this.buffer.length;
     }
 
     // Read is only 1 away from write, so once the item is written our write head would be at the read head
@@ -34,6 +41,10 @@ export class VecQueue<T> {
     this.writePos++;
   }
 
+  /**
+   * Remove an item from the front of the queue and return it.
+   * @returns the first item in the queue or undefined if the queue is empty
+   */
   dequeue(): T | undefined {
     if (this.readPos === this.writePos) {
       return undefined;
@@ -51,6 +62,9 @@ export class VecQueue<T> {
     return item;
   }
 
+  /**
+   * @returns the number of items in the queue
+   */
   size(): number {
     if (this.writePos >= this.readPos) {
       return this.writePos - this.readPos;
@@ -59,10 +73,16 @@ export class VecQueue<T> {
     return this.buffer.length - this.readPos + this.writePos;
   }
 
+  /**
+   * @returns the capacity of the underlying circular buffer
+   */
   capacity(): number {
     return this.buffer.length;
   }
 
+  /**
+   * Clear the queue.
+   */
   clear(): void {
     this.buffer.length = 0;
     this.writePos = 0;
