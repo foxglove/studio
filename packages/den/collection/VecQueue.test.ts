@@ -37,8 +37,8 @@ describe("VecQueue", () => {
       queue.enqueue(i);
       expect(queue.size()).toEqual(1);
       expect(queue.dequeue()).toEqual(i);
+      expect(queue.size()).toEqual(0);
     }
-    expect(queue.size()).toEqual(0);
   });
 
   it("should clear", () => {
@@ -51,6 +51,12 @@ describe("VecQueue", () => {
     }
     queue.clear();
     expect(queue.size()).toEqual(0);
+    for (let i = 0; i < 10; ++i) {
+      queue.enqueue(i);
+    }
+    for (let i = 0; i < 3; ++i) {
+      expect(queue.dequeue()).toEqual(i);
+    }
   });
 
   it("should read then write without growing", () => {
