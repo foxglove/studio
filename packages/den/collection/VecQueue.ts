@@ -95,13 +95,30 @@ export class VecQueue<T> {
 
     // if the read head is before write, then there's no change to index management and write can continue at end
     // if the read head is ahead of write, then we can un-wrap the write bytes
-    if (this.readPos > this.writePos) {
+    if (this.readPos <= this.writePos) {
+      return;
+    }
+
+    const newLen = this.buffer.length;
+
+    // if writePos is past half it is cheaper to move the read elements
+    if (this.writePos >= oldLen / 2) {
+      const oldCount = oldLen - this.readPos;
+      // move the read elements to the end giving us the most room to write
+      const offset = newLen - oldCount;
+      for (let i = 0; i < oldCount; ++i) {
+        this.buffer[offset + i] = this.buffer[this.readPos + i];
+        this.buffer[this.readPos + i] = undefined;
+      }
+      this.readPos = offset;
+    } else {
       // copy all the elements from start to writePos - 1 to the end of the extended buffer
       for (let i = 0; i < this.writePos; ++i) {
         this.buffer[oldLen + i] = this.buffer[i];
         this.buffer[i] = undefined;
       }
-      this.writePos = oldLen;
+
+      this.writePos = oldLen + this.writePos;
     }
   }
 }
