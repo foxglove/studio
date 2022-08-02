@@ -10,7 +10,7 @@ import "@foxglove/studio-base/styles/assets/plex-mono.css";
 
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
-const useStyles = makeStyles()((theme) => ({
+const useStyles = makeStyles()(({ palette, typography }) => ({
   root: {
     "*,*:before,*:after": {
       boxSizing: "inherit",
@@ -31,7 +31,7 @@ const useStyles = makeStyles()((theme) => ({
         background: "transparent",
       },
       "::-webkit-scrollbar-thumb": {
-        background: theme.palette.action.focus,
+        background: palette.action.focus,
         borderRadius: 2,
       },
     },
@@ -54,10 +54,10 @@ const useStyles = makeStyles()((theme) => ({
     position: "relative",
     flex: "1 1 100%",
     overflow: "hidden",
-    background: theme.palette.background.default,
-    color: theme.palette.text.primary,
+    background: palette.background.default,
+    color: palette.text.primary,
     font: "inherit",
-    fontSize: theme.typography.body2.fontSize,
+    fontSize: typography.body2.fontSize,
     fontFeatureSettings: fonts.SANS_SERIF_FEATURE_SETTINGS,
 
     // mosaic styling
@@ -69,8 +69,8 @@ const useStyles = makeStyles()((theme) => ({
         right: 0,
 
         ".drop-target-container .drop-target": {
-          backgroundColor: theme.palette.action.hover,
-          border: `2px solid ${theme.palette.divider}`,
+          backgroundColor: palette.action.hover,
+          border: `2px solid ${palette.divider}`,
         },
         ".drop-target-container .drop-target-hover": {
           opacity: 0.3,
@@ -148,10 +148,10 @@ const useStyles = makeStyles()((theme) => ({
         zIndex: 99,
 
         ".mosaic-split-line": {
-          boxShadow: `0 0 0 1px ${theme.palette.grey.A200}`,
+          boxShadow: `0 0 0 1px ${palette.grey[palette.mode === "dark" ? "A200" : "A100"]}`,
         },
         "&:hover .mosaic-split-line": {
-          boxShadow: `0 0 0 1px ${theme.palette.grey.A200}`,
+          boxShadow: `0 0 0 1px ${palette.grey[palette.mode === "dark" ? "A200" : "A100"]}`,
         },
         "&.-row": {
           marginTop: 2,
@@ -174,34 +174,34 @@ const useStyles = makeStyles()((theme) => ({
     // leaflet GUI styling
     ".leaflet-bar": {
       userSelect: "none",
-      backgroundColor: theme.palette.background.paper,
+      backgroundColor: palette.background.paper,
       borderRadius: 4,
 
       a: {
         lineHeight: 1.2,
         backgroundColor: "transparent",
-        color: theme.palette.text.primary,
-        borderBottomColor: theme.palette.divider,
+        color: palette.text.primary,
+        borderBottomColor: palette.divider,
 
         "&:hover": {
-          backgroundColor: theme.palette.action.hover,
-          color: theme.palette.text.primary,
-          borderBottomColor: theme.palette.divider,
+          backgroundColor: palette.action.hover,
+          color: palette.text.primary,
+          borderBottomColor: palette.divider,
         },
         "&:focus": {
-          color: theme.palette.text.primary,
+          color: palette.text.primary,
         },
         "&:active": {
-          color: theme.palette.text.primary,
+          color: palette.text.primary,
         },
       },
     },
     ".leaflet-bar a.leaflet-disabled": {
-      backgroundColor: theme.palette.action.disabledBackground,
-      color: theme.palette.text.disabled,
+      backgroundColor: palette.action.disabledBackground,
+      color: palette.text.disabled,
 
       "&:hover": {
-        backgroundColor: theme.palette.action.disabledBackground,
+        backgroundColor: palette.action.disabledBackground,
       },
     },
   },
