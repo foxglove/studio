@@ -106,14 +106,13 @@ export default React.memo<Props>(function PanelToolbar({
             {panelContext.title}
           </Typography>
         ))}
-      <div ref={controlsDragRef}>
-        <PanelToolbarControls
-          additionalIcons={additionalIconsWithHelp}
-          isUnknownPanel={!!isUnknownPanel}
-          menuOpen={menuOpen}
-          setMenuOpen={setMenuOpen}
-        />
-      </div>
+      <PanelToolbarControls
+        additionalIcons={additionalIconsWithHelp}
+        isUnknownPanel={!!isUnknownPanel}
+        menuOpen={menuOpen}
+        ref={controlsDragRef}
+        setMenuOpen={setMenuOpen}
+      />
     </PanelToolbarRoot>
   );
 });
