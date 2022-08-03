@@ -11,25 +11,12 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Checkbox, FormControlLabel, Link, Typography } from "@mui/material";
-import { makeStyles } from "tss-react/mui";
+import { Checkbox } from "@fluentui/react";
+import { Link, Typography } from "@mui/material";
 
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import Stack from "@foxglove/studio-base/components/Stack";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
-
-const useStyles = makeStyles()({
-  checkbox: {
-    "&.MuiCheckbox-root": {
-      paddingTop: 0,
-    },
-  },
-  formControlLabel: {
-    "&.MuiFormControlLabel-root": {
-      alignItems: "start",
-    },
-  },
-});
 
 type Feature = {
   key: AppSetting;
@@ -77,28 +64,33 @@ if (process.env.NODE_ENV === "development") {
 
 function ExperimentalFeatureItem(props: { feature: Feature }) {
   const { feature } = props;
-  const { classes } = useStyles();
 
   const [enabled, setEnabled] = useAppConfigurationValue<boolean>(feature.key);
   return (
-    <FormControlLabel
-      className={classes.formControlLabel}
-      control={
+    <Stack gap={2}>
+      <Stack flexGrow={1} gap={0.5}>
         <Checkbox
-          className={classes.checkbox}
+          onRenderLabel={() => {
+            return (
+              <Stack gap={0.25} paddingLeft={0.5}>
+                <Typography fontWeight={600}>{feature.name}</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {feature.description}
+                </Typography>
+              </Stack>
+            );
+          }}
           checked={enabled}
           onChange={(_, checked) => void setEnabled(checked)}
+          styles={{
+            text: {
+              minWidth: 60,
+            },
+            label: { alignItems: "baseline" },
+          }}
         />
-      }
-      label={
-        <Stack gap={0.25} paddingLeft={0.5}>
-          <Typography fontWeight={600}>{feature.name}</Typography>
-          <Typography variant="body2" color="text.secondary">
-            {feature.description}
-          </Typography>
-        </Stack>
-      }
-    />
+      </Stack>
+    </Stack>
   );
 }
 
