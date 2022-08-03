@@ -97,7 +97,7 @@ export default React.memo<Props>(function PanelToolbar({
     <PanelToolbarRoot
       backgroundColor={backgroundColor}
       data-testid="mosaic-drag-handle"
-      enableDrag={panelContext?.connectToolbarDragHandle != undefined}
+      enableDrag={rootDragRef != undefined}
       ref={rootDragRef}
     >
       {children ??
