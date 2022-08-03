@@ -135,7 +135,7 @@ function TimezoneSettings(): React.ReactElement {
   const allItems = useMemo(() => [...fixedItems, ...timezoneItems], [fixedItems, timezoneItems]);
 
   const selectedItem = useMemo(
-    () => (timezone != undefined && allItems.find((item) => item.data === timezone)) || detectItem,
+    () => (timezone != undefined && allItems.find((item) => item.key === timezone)) || detectItem,
     [allItems, detectItem, timezone],
   );
 
