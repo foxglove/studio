@@ -148,7 +148,13 @@ function TimezoneSettings(): React.ReactElement {
         options={[...fixedItems, ...timezoneItems]}
         value={selectedItem}
         renderOption={(props, option: Option) =>
-          option.divider === true ? <Divider /> : <li {...props}>{option.label}</li>
+          option.divider === true ? (
+            <Divider />
+          ) : (
+            <li {...props} key={option.key}>
+              {option.label}
+            </li>
+          )
         }
         renderInput={(params) => (
           <TextField
