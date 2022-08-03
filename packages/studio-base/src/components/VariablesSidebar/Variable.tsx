@@ -53,6 +53,18 @@ const useStyles = makeStyles<void, "copyButton">()((theme, _params, classes) => 
       minWidth: "auto",
     },
   },
+  input: {
+    font: "inherit",
+    flex: "auto",
+    padding: 0,
+
+    "&.Mui-error": {
+      color: theme.palette.error.main,
+    },
+  },
+  edgeEnd: {
+    marginRight: theme.spacing(-1),
+  },
   editorWrapper: {
     position: "relative",
     backgroundColor: theme.palette.grey[50],
@@ -174,7 +186,7 @@ export default function Variable({
         dense
         disablePadding
         secondaryAction={
-          <Stack direction="row" alignItems="center" gap={0.25} style={{ marginRight: -8 }}>
+          <Stack className={classes.edgeEnd} direction="row" alignItems="center" gap={0.25}>
             {linkedTopicPaths.length > 0 && (
               <Tooltip
                 arrow
@@ -255,16 +267,23 @@ export default function Variable({
                 ) : (
                   <>
                     <InputBase
+                      className={classes.input}
                       autoFocus={editedName === ""}
+                      error={nameIsInError}
                       value={editedName}
                       placeholder="variable_name"
                       data-testid={`global-variable-key-input-${editedName}`}
-                      style={{ font: "inherit", flex: "auto", padding: 0 }}
                       onClick={(e) => e.stopPropagation()}
                       onFocus={() => editedName === "" && setOpen(true)}
                       onChange={(event) => onChangeName(event.target.value)}
+                      endAdornment={
+                        nameIsInError && (
+                          <Tooltip arrow title="A variable with this name already exists">
+                            <ErrorIcon className={classes.edgeEnd} fontSize="small" color="error" />
+                          </Tooltip>
+                        )
+                      }
                     />
-                    {nameIsInError && <ErrorIcon fontSize="inherit" color="error" />}
                   </>
                 )}
               </Stack>
