@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Badge, Tab, Tabs, useTheme } from "@mui/material";
+import { Badge, Paper, Tab, Tabs } from "@mui/material";
 import {
   useLayoutEffect,
   useRef,
@@ -74,7 +74,6 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
   );
   const [mosaicValue, setMosaicValue] = useState<MosaicNode<"sidebar" | "children">>("children");
 
-  const theme = useTheme();
   const { classes } = useStyles();
 
   const prevSelectedKey = useRef<string | undefined>(undefined);
@@ -177,13 +176,9 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
               {id === "children" ? (
                 (children as JSX.Element)
               ) : (
-                <div
-                  style={{
-                    backgroundColor: theme.palette.background.paper,
-                  }}
-                >
+                <Paper square elevation={0}>
                   <SelectedComponent />
-                </div>
+                </Paper>
               )}
             </ErrorBoundary>
           )}
