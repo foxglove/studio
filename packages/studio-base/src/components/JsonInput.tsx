@@ -57,7 +57,7 @@ export type BaseProps = {
  * Any external value change will cause the input string to change and trigger new validations.
  * Only valid internal value change will call onChange. Any data processing and validation error will trigger onError.
  */
-export function ValidatedInputBase({
+function ValidatedInputBase({
   dataValidator = () => undefined,
   onChange,
   onError,
