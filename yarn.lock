@@ -23370,6 +23370,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"three@patch:three@npm:0.140.2#.yarn/patches/three-npm-0.140.2-944041dff4::locator=foxglove-studio%40workspace%3A.":
+  version: 0.140.2
+  resolution: "three@patch:three@npm%3A0.140.2#.yarn/patches/three-npm-0.140.2-944041dff4::version=0.140.2&hash=51dd4b&locator=foxglove-studio%40workspace%3A."
+  checksum: 3a2aec5ac91551e4675c6b13c14e89eb0b8725efa5c74906b0064b4d2bfef603972089633f842dbf81185eaa5a98e3c224faa9073396d77bf63080665d1b1c30
+  languageName: node
+  linkType: hard
+
 "throat@npm:^6.0.1":
   version: 6.0.1
   resolution: "throat@npm:6.0.1"
