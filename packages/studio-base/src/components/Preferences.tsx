@@ -77,7 +77,7 @@ function ColorSchemeSettings(): JSX.Element {
   );
   return (
     <Stack>
-      <FormLabel>Color scheme</FormLabel>
+      <FormLabel>Color scheme:</FormLabel>
       <Select
         value={colorScheme}
         fullWidth
