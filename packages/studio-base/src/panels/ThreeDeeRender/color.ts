@@ -2,14 +2,13 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { SRGBToLinear } from "three/src/math/ColorManagement";
-import { clamp } from "three/src/math/MathUtils";
+import * as THREE from "three";
 import tinycolor from "tinycolor2";
 
 import { lerp } from "./math";
 import { ColorRGB, ColorRGBA } from "./ros";
 
-export { SRGBToLinear } from "three/src/math/ColorManagement";
+export const SRGBToLinear = THREE.SRGBToLinear;
 
 export function stringToRgba(output: ColorRGBA, colorStr: string): ColorRGBA {
   const color = tinycolor(colorStr);
@@ -50,10 +49,10 @@ export function rgbToThreeColor(output: THREE.Color, rgb: ColorRGB): THREE.Color
 // ts-prune-ignore-next
 export function rgbaToHexString(color: ColorRGBA): string {
   const rgba =
-    (clamp(color.r * 255, 0, 255) << 24) ^
-    (clamp(color.g * 255, 0, 255) << 16) ^
-    (clamp(color.b * 255, 0, 255) << 8) ^
-    (clamp(color.a * 255, 0, 255) << 0);
+    (THREE.MathUtils.clamp(color.r * 255, 0, 255) << 24) ^
+    (THREE.MathUtils.clamp(color.g * 255, 0, 255) << 16) ^
+    (THREE.MathUtils.clamp(color.b * 255, 0, 255) << 8) ^
+    (THREE.MathUtils.clamp(color.a * 255, 0, 255) << 0);
   return ("00000000" + rgba.toString(16)).slice(-8);
 }
 
@@ -65,9 +64,9 @@ export function rgbaToCssString(color: ColorRGBA): string {
 }
 
 export function rgbaToLinear(output: ColorRGBA, color: ColorRGBA): ColorRGBA {
-  output.r = SRGBToLinear(color.r);
-  output.g = SRGBToLinear(color.g);
-  output.b = SRGBToLinear(color.b);
+  output.r = THREE.SRGBToLinear(color.r);
+  output.g = THREE.SRGBToLinear(color.g);
+  output.b = THREE.SRGBToLinear(color.b);
   output.a = color.a;
   return output;
 }
