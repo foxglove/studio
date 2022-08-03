@@ -2,8 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Badge, Tab, Tabs, Theme, useTheme } from "@mui/material";
-import { makeStyles } from "@mui/styles";
+import { Badge, Tab, Tabs, useTheme } from "@mui/material";
 import {
   useLayoutEffect,
   useRef,
@@ -13,6 +12,7 @@ import {
   ComponentProps,
 } from "react";
 import { MosaicNode, MosaicWithoutDragDropContext } from "react-mosaic-component";
+import { makeStyles } from "tss-react/mui";
 
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import { BuiltinIcon } from "@foxglove/studio-base/components/BuiltinIcon";
@@ -34,7 +34,7 @@ export type SidebarItem = {
   url?: string;
 };
 
-const useStyles = makeStyles((theme: Theme) => ({
+const useStyles = makeStyles()((theme) => ({
   nav: {
     boxSizing: "content-box",
     borderRight: `1px solid ${theme.palette.divider}`,
@@ -75,7 +75,7 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
   const [mosaicValue, setMosaicValue] = useState<MosaicNode<"sidebar" | "children">>("children");
 
   const theme = useTheme();
-  const classes = useStyles();
+  const { classes } = useStyles();
 
   const prevSelectedKey = useRef<string | undefined>(undefined);
   useLayoutEffect(() => {
