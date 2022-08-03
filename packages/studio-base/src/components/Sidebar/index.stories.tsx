@@ -21,13 +21,14 @@ const E = () => <>E</>;
 
 const ITEMS = new Map<string, SidebarItem>([
   ["a", { title: "A", component: A, iconName: "Add" }],
-  ["b", { title: "B", component: B, iconName: "ErrorBadge" }],
   ["c", { title: "C", component: C, iconName: "Cancel" }],
   ["d", { title: "D", component: D, iconName: "Delete" }],
   ["e", { title: "E", component: E, badge: { count: 2 }, iconName: "Edit" }],
 ]);
 
-const BOTTOM_ITEMS = ["b"];
+const BOTTOM_ITEMS = new Map<string, SidebarItem>([
+  ["b", { title: "B", component: B, iconName: "ErrorBadge" }],
+]);
 
 function Story({
   clickKey,
