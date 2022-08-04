@@ -78,7 +78,7 @@ export default function VariablesSidebar(): ReactElement {
           key="add-global-variable"
           color="primary"
           disabled={globalVariables[""] != undefined}
-          onClick={() => setGlobalVariables({ "": "" })}
+          onClick={() => setGlobalVariables({ "": '""' })}
         >
           <AddIcon />
         </IconButton>,

@@ -192,6 +192,10 @@ function ValidatedInputBase({
 
 export default function JsonInput(props: BaseProps): JSX.Element {
   function stringify(val: unknown) {
+    if (val === '""') {
+      return val;
+    }
+
     return JSON.stringify(val, undefined, 2) ?? "";
   }
 
