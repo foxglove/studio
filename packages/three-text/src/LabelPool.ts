@@ -9,7 +9,9 @@ import { FontManager, FontManagerOptions } from "./FontManager";
 
 const tempVec2 = new THREE.Vector2();
 
-class LabelMaterial extends THREE.RawShaderMaterial {
+export class LabelMaterial extends THREE.RawShaderMaterial {
+  picking: boolean;
+
   constructor(params: { atlasTexture?: THREE.Texture; picking?: boolean }) {
     super({
       vertexShader: /* glsl */ `\
@@ -138,15 +140,7 @@ void main() {
       depthWrite: true,
     });
 
-    // We use a patched version of THREE.js where the internal WebGLShaderCache class has been
-    // modified to allow caching based on `vertexShaderKey` and/or `fragmentShaderKey` instead of
-    // using the full shader source as a Map key
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (this as any).vertexShaderKey = "LabelMaterial-VertexShader";
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (this as any).fragmentShaderKey = `LabelMaterial-FragmentShader${
-      params.picking === true ? "-picking" : ""
-    }`;
+    this.picking = params.picking ?? false;
   }
 }
 

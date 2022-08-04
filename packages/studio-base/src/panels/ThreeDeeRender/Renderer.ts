@@ -22,7 +22,7 @@ import {
   Topic,
 } from "@foxglove/studio";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
-import { LabelPool } from "@foxglove/three-text";
+import { LabelMaterial, LabelPool } from "@foxglove/three-text";
 
 import { Input } from "./Input";
 import { LineMaterial } from "./LineMaterial";
@@ -185,6 +185,21 @@ const tempVec = new THREE.Vector3();
 const tempVec2 = new THREE.Vector2();
 const tempSpherical = new THREE.Spherical();
 const tempEuler = new THREE.Euler();
+
+// We use a patched version of THREE.js where the internal WebGLShaderCache class has been
+// modified to allow caching based on `vertexShaderKey` and/or `fragmentShaderKey` instead of
+// using the full shader source as a Map key
+Object.defineProperty(LabelMaterial.prototype, "vertexShaderKey", {
+  get() {
+    return "LabelMaterial-VertexShader";
+  },
+});
+Object.defineProperty(LabelMaterial.prototype, "fragmentShaderKey", {
+  get() {
+    // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
+    return this.picking ? "LabelMaterial-FragmentShader-picking" : "LabelMaterial-FragmentShader";
+  },
+});
 
 /**
  * An extensible 3D renderer attached to a `HTMLCanvasElement`,
