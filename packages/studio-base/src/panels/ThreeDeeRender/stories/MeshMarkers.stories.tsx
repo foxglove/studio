@@ -140,7 +140,7 @@ f 5/6/6 1/12/6 8/11/6`),
           layers: {
             grid: { layerId: "foxglove.Grid" },
           },
-          cameraState: { ...DEFAULT_CAMERA_STATE, distance: 5, thetaOffset: 1 },
+          cameraState: { ...DEFAULT_CAMERA_STATE, distance: 5, thetaOffset: 50 },
           topics: {
             "/markers": { visible: true },
           },
