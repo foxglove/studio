@@ -56,6 +56,13 @@ const useStyles = makeStyles()({
       alignItems: "start",
     },
   },
+  colorSchemeToggle: {
+    flexWrap: "wrap",
+
+    "& .MuiToggleButton-root": {
+      flexGrow: 1,
+    },
+  },
 });
 
 function formatTimezone(name: string) {
@@ -71,6 +78,7 @@ function formatTimezone(name: string) {
 }
 
 function ColorSchemeSettings(): JSX.Element {
+  const { classes } = useStyles();
   const [colorScheme = "dark", setColorScheme] = useAppConfigurationValue<string>(
     AppSetting.COLOR_SCHEME,
   );
@@ -82,7 +90,7 @@ function ColorSchemeSettings(): JSX.Element {
         exclusive
         value={colorScheme}
         onChange={(_, value: string) => void setColorScheme(value)}
-        style={{ flexWrap: "wrap" }}
+        className={classes.colorSchemeToggle}
       >
         <ToggleButton disableRipple value="dark">
           <DarkModeIcon fontSize="small" /> Dark
