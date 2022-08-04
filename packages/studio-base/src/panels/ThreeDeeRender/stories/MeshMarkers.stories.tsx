@@ -2,10 +2,10 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { DEFAULT_CAMERA_STATE } from "@foxglove/regl-worldview";
 import { MessageEvent, Topic } from "@foxglove/studio";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 
+import { DEFAULT_CAMERA_STATE } from "../camera";
 import ThreeDeeRender from "../index";
 import { Marker } from "../ros";
 import { makeColor, STL_CUBE_MESH_RESOURCE } from "./common";

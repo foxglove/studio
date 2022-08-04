@@ -4,7 +4,6 @@
 
 import { quat } from "gl-matrix";
 
-import { Vec4, vec4ToOrientation } from "@foxglove/regl-worldview";
 import { MessageEvent, Topic } from "@foxglove/studio";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 
@@ -17,6 +16,10 @@ export default {
   title: "panels/ThreeDeeRender",
   component: ThreeDeeRender,
 };
+
+type Vec4 = [number, number, number, number];
+
+const vec4ToOrientation = ([x, y, z, w]: Vec4) => ({ x, y, z, w });
 
 GeometryMsgs_PoseArray.parameters = { colorScheme: "dark" };
 function GeometryMsgs_PoseArray(): JSX.Element {
