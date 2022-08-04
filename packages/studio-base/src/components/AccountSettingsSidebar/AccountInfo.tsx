@@ -2,8 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { DefaultButton, Icon, PrimaryButton } from "@fluentui/react";
-import { CircularProgress, Typography, useTheme } from "@mui/material";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import { Button, CircularProgress, Typography } from "@mui/material";
 import { useCallback } from "react";
 import { useToasts } from "react-toast-notifications";
 import { useAsyncFn } from "react-use";
@@ -18,7 +18,6 @@ const log = Logger.getLogger(__filename);
 export const AVATAR_ICON_SIZE = 42;
 
 export default function AccountInfo(props: { currentUser?: User }): JSX.Element {
-  const theme = useTheme();
   const { signOut } = useCurrentUser();
   const { addToast } = useToasts();
   const confirm = useConfirm();
@@ -43,6 +42,10 @@ export default function AccountInfo(props: { currentUser?: User }): JSX.Element 
     });
   }, [beginSignOut, confirm]);
 
+  const onSettingsClick = useCallback(() => {
+    window.open(process.env.FOXGLOVE_ACCOUNT_DASHBOARD_URL, "_blank");
+  }, []);
+
   if (!props.currentUser) {
     return <></>;
   }
@@ -51,16 +54,7 @@ export default function AccountInfo(props: { currentUser?: User }): JSX.Element 
     <Stack fullHeight justifyContent="space-between">
       <Stack gap={2}>
         <Stack direction="row" alignItems="center" gap={1}>
-          <Icon
-            iconName="BlockheadFilled"
-            styles={{
-              root: {
-                color: theme.palette.primary.main,
-                fontSize: AVATAR_ICON_SIZE,
-                height: AVATAR_ICON_SIZE,
-              },
-            }}
-          />
+          <AccountCircleIcon color="primary" style={{ fontSize: AVATAR_ICON_SIZE }} />
           <Stack justifyContent="center">
             <Typography variant="subtitle1">{props.currentUser.email}</Typography>
             <Typography variant="body2" color="text.secondary">
@@ -68,14 +62,14 @@ export default function AccountInfo(props: { currentUser?: User }): JSX.Element 
             </Typography>
           </Stack>
         </Stack>
-        <PrimaryButton href={process.env.FOXGLOVE_ACCOUNT_DASHBOARD_URL} target="_blank">
+        <Button onClick={onSettingsClick} variant="contained">
           Account settings
-        </PrimaryButton>
+        </Button>
       </Stack>
       <Stack gap={1}>
-        <DefaultButton onClick={onSignoutClick}>
+        <Button onClick={onSignoutClick} variant="outlined">
           Sign out&nbsp;{loading && <CircularProgress size={16} />}
-        </DefaultButton>
+        </Button>
       </Stack>
     </Stack>
   );
