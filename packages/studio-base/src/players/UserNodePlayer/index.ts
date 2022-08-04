@@ -915,16 +915,39 @@ export default class UserNodePlayer implements Player {
     }
   };
 
-  setPublishers = (publishers: AdvertiseOptions[]): void => this._player.setPublishers(publishers);
-  setParameter = (key: string, value: ParameterValue): void =>
-    this._player.setParameter(key, value);
-  publish = (request: PublishPayload): void => this._player.publish(request);
-  callService = async (service: string, request: unknown): Promise<unknown> =>
-    await this._player.callService(service, request);
-  startPlayback = (): void => this._player.startPlayback?.();
-  pausePlayback = (): void => this._player.pausePlayback?.();
-  setPlaybackSpeed = (speed: number): void => this._player.setPlaybackSpeed?.(speed);
-  seekPlayback = (time: Time, backfillDuration?: Time): void =>
-    this._player.seekPlayback?.(time, backfillDuration);
-  requestBackfill = (): void => this._player.requestBackfill();
+  setPublishers(publishers: AdvertiseOptions[]): void {
+    return this._player.setPublishers(publishers);
+  }
+
+  setParameter(key: string, value: ParameterValue): void {
+    return this._player.setParameter(key, value);
+  }
+
+  publish(request: PublishPayload): void {
+    return this._player.publish(request);
+  }
+
+  async callService(service: string, request: unknown): Promise<unknown> {
+    return await this._player.callService(service, request);
+  }
+
+  startPlayback(opt?: { untilTime: Time }): void {
+    return this._player.startPlayback?.(opt);
+  }
+
+  pausePlayback(): void {
+    return this._player.pausePlayback?.();
+  }
+
+  setPlaybackSpeed(speed: number): void {
+    return this._player.setPlaybackSpeed?.(speed);
+  }
+
+  seekPlayback(time: Time, backfillDuration?: Time): void {
+    return this._player.seekPlayback?.(time, backfillDuration);
+  }
+
+  requestBackfill(): void {
+    return this._player.requestBackfill();
+  }
 }

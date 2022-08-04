@@ -538,7 +538,12 @@ export default class RandomAccessPlayer implements Player {
     };
   }
 
-  startPlayback(): void {
+  startPlayback(opt?: { untilTime: Time }): void {
+    // RandomAccessPlayer does not currently support untilTime so it just seeks
+    if (opt?.untilTime) {
+      return this.seekPlayback(opt.untilTime);
+    }
+
     if (this._isPlaying) {
       return;
     }

@@ -62,7 +62,7 @@ export interface Player {
   // this will make a service call to the named service with the request payload.
   callService(service: string, request: unknown): Promise<unknown>;
   // Basic playback controls. Available if `capabilities` contains PlayerCapabilities.playbackControl.
-  startPlayback?(): void;
+  startPlayback?(opt?: { untilTime: Time }): void;
   pausePlayback?(): void;
   seekPlayback?(time: Time, backfillDuration?: Time): void;
   // Seek to a particular time. Might trigger backfilling.

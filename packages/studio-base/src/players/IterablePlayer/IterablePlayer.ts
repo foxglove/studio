@@ -166,6 +166,8 @@ export class IterablePlayer implements Player {
 
   private readonly _sourceId: string;
 
+  private _untilTime?: Time;
+
   constructor(options: IterablePlayerOptions) {
     const { metricsCollector, urlParams, source, name, enablePreload, sourceId } = options;
 
@@ -191,11 +193,14 @@ export class IterablePlayer implements Player {
     this._setState("initialize");
   }
 
-  startPlayback(): void {
-    if (this._isPlaying) {
+  startPlayback(opt?: { untilTime: Time }): void {
+    if (this._isPlaying || this._untilTime) {
       return;
     }
 
+    if (opt?.untilTime) {
+      this._untilTime = clampTime(opt.untilTime, this._start, this._end);
+    }
     this._metricsCollector.play(this._speed);
     this._isPlaying = true;
 
@@ -214,6 +219,7 @@ export class IterablePlayer implements Player {
     // clear out last tick millis so we don't read a huge chunk when we unpause
     this._lastTickMillis = undefined;
     this._isPlaying = false;
+    this._untilTime = undefined;
     if (this._state === "play") {
       this._setState("idle");
     }
@@ -723,7 +729,7 @@ export class IterablePlayer implements Player {
     const end: Time = clampTime(
       add(this._currentTime, fromMillis(rangeMillis)),
       this._start,
-      this._end,
+      this._untilTime ?? this._end,
     );
 
     const msgEvents: MessageEvent<unknown>[] = [];
@@ -736,6 +742,10 @@ export class IterablePlayer implements Player {
         this._currentTime = end;
         this._messages = msgEvents;
         this._emitState();
+
+        if (this._untilTime && compare(this._currentTime, this._untilTime) >= 0) {
+          this.pausePlayback();
+        }
         return;
       }
 
@@ -798,9 +808,15 @@ export class IterablePlayer implements Player {
     this._currentTime = end;
     this._messages = msgEvents;
     this._emitState();
+
+    // This tick has reached the end of the untilTime so we go back to pause
+    if (this._untilTime && compare(this._currentTime, this._untilTime) >= 0) {
+      this.pausePlayback();
+    }
   }
 
   private async _stateIdle() {
+    this._isPlaying = false;
     this._presence = PlayerPresence.PRESENT;
     this._emitState();
 
