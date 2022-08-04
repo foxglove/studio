@@ -136,12 +136,10 @@ function getConicGradient(config: Config, width: number, height: number, gaugeAn
           break;
         case "turbo": {
           const numStops = 20;
-          colorStops = new Array(numStops)
-            .fill(undefined)
-            .map((_, i) => ({
-              color: turboColorString(i / (numStops - 1)),
-              location: i / (numStops - 1),
-            }));
+          colorStops = new Array(numStops).fill(undefined).map((_, i) => ({
+            color: turboColorString(i / (numStops - 1)),
+            location: i / (numStops - 1),
+          }));
           break;
         }
       }
