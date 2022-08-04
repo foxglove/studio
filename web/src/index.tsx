@@ -45,8 +45,6 @@ if (!rootEl) {
   throw new Error("missing #root element");
 }
 
-const isDevelopment = process.env.NODE_ENV === "development";
-
 async function main() {
   const chromeMatch = navigator.userAgent.match(/Chrome\/(\d+)\./);
   const chromeVersion = chromeMatch ? parseInt(chromeMatch[1] ?? "", 10) : 0;
