@@ -29,5 +29,4 @@ export enum AppSetting {
 
   // Dev only
   ENABLE_LAYOUT_DEBUGGING = "enableLayoutDebugging",
-  ENABLE_REACT_STRICT_MODE = "enableReactStrictMode",
 }
