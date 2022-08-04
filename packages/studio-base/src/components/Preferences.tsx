@@ -34,7 +34,9 @@ import Stack from "@foxglove/studio-base/components/Stack";
 import { useAppTimeFormat } from "@foxglove/studio-base/hooks";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
 import { TimeDisplayMethod } from "@foxglove/studio-base/types/panels";
+import { formatTime } from "@foxglove/studio-base/util/formatTime";
 import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
+import { formatTimeRaw } from "@foxglove/studio-base/util/time";
 
 const MESSAGE_RATES = [1, 3, 5, 10, 15, 20, 30, 60];
 
@@ -56,7 +58,7 @@ const useStyles = makeStyles()({
       alignItems: "start",
     },
   },
-  colorSchemeToggle: {
+  toggle: {
     flexWrap: "wrap",
 
     "& .MuiToggleButton-root": {
@@ -90,7 +92,7 @@ function ColorSchemeSettings(): JSX.Element {
         exclusive
         value={colorScheme}
         onChange={(_, value: string) => void setColorScheme(value)}
-        className={classes.colorSchemeToggle}
+        className={classes.toggle}
       >
         <ToggleButton disableRipple value="dark">
           <DarkModeIcon fontSize="small" /> Dark
@@ -182,26 +184,30 @@ function TimezoneSettings(): React.ReactElement {
 }
 
 function TimeFormat(): React.ReactElement {
+  const { classes } = useStyles();
   const { timeFormat, setTimeFormat } = useAppTimeFormat();
-  const options: Array<{ key: TimeDisplayMethod; text: string }> = [
-    { key: "SEC", text: "Seconds" },
-    { key: "TOD", text: "Local" },
-  ];
+
+  const [timezone] = useAppConfigurationValue<string>(AppSetting.TIMEZONE);
+
+  const exampleTime = { sec: 946713600, nsec: 0 };
 
   return (
     <Stack>
       <FormLabel>Timestamp format:</FormLabel>
-      <Select
+      <ToggleButtonGroup
+        size="small"
+        className={classes.toggle}
+        exclusive
         value={timeFormat}
-        fullWidth
-        onChange={(event) => void setTimeFormat(event.target.value as TimeDisplayMethod)}
+        onChange={(_, value: TimeDisplayMethod) => void setTimeFormat(value)}
       >
-        {options.map((option) => (
-          <MenuItem key={option.key} value={option.key}>
-            {option.text}
-          </MenuItem>
-        ))}
-      </Select>
+        <ToggleButton disableRipple value="SEC">
+          {formatTimeRaw(exampleTime)}
+        </ToggleButton>
+        <ToggleButton disableRipple value="TOD">
+          {formatTime(exampleTime, timezone)}
+        </ToggleButton>
+      </ToggleButtonGroup>
     </Stack>
   );
 }
