@@ -134,8 +134,5 @@
     "webpack-dev-server": "4.7.4",
     "webpack-hot-middleware": "2.25.1"
   },
-  "packageManager": "yarn@3.1.0",
-  "dependencies": {
-    "meshoptimizer": "0.18.0"
-  }
+  "packageManager": "yarn@3.1.0"
 }
