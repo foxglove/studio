@@ -3,6 +3,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import {
+  DarkMode as DarkModeIcon,
+  LightMode as LightModeIcon,
+  WbTwilight as TwilightIcon,
+} from "@mui/icons-material";
+import {
   Autocomplete,
   Checkbox,
   Divider,
@@ -13,6 +18,8 @@ import {
   Select,
   TextField,
   Typography,
+  ButtonGroup,
+  Button,
 } from "@mui/material";
 import moment from "moment-timezone";
 import { useMemo } from "react";
@@ -67,28 +74,35 @@ function ColorSchemeSettings(): JSX.Element {
   const [colorScheme = "dark", setColorScheme] = useAppConfigurationValue<string>(
     AppSetting.COLOR_SCHEME,
   );
-  const options = useMemo(
-    () => [
-      { key: "light", text: "Light", iconProps: { iconName: "WeatherSunny" } },
-      { key: "dark", text: "Dark", iconProps: { iconName: "WeatherMoon" } },
-      { key: "system", text: "Follow system", iconProps: { iconName: "CircleHalfFill" } },
-    ],
-    [],
-  );
   return (
     <Stack>
       <FormLabel>Color scheme:</FormLabel>
-      <Select
-        value={colorScheme}
-        fullWidth
-        onChange={(event) => void setColorScheme(event.target.value)}
-      >
-        {options.map((option) => (
-          <MenuItem key={option.key} value={option.key}>
-            {option.text}
-          </MenuItem>
-        ))}
-      </Select>
+      <ButtonGroup>
+        <Button
+          disableRipple
+          startIcon={<DarkModeIcon />}
+          onClick={() => void setColorScheme("dark")}
+          variant={colorScheme === "dark" ? "contained" : "outlined"}
+        >
+          Dark
+        </Button>
+        <Button
+          disableRipple
+          startIcon={<TwilightIcon />}
+          onClick={() => void setColorScheme("system")}
+          variant={colorScheme === "system" ? "contained" : "outlined"}
+        >
+          System
+        </Button>
+        <Button
+          disableRipple
+          startIcon={<LightModeIcon />}
+          onClick={() => void setColorScheme("light")}
+          variant={colorScheme === "light" ? "contained" : "outlined"}
+        >
+          Light
+        </Button>
+      </ButtonGroup>
     </Stack>
   );
 }
