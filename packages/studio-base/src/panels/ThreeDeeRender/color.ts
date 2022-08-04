@@ -8,7 +8,11 @@ import tinycolor from "tinycolor2";
 import { lerp } from "./math";
 import { ColorRGB, ColorRGBA } from "./ros";
 
-export const SRGBToLinear = THREE.SRGBToLinear;
+// From https://github.com/mrdoob/three.js/blob/dev/src/math/ColorManagement.js
+// which is not exported
+export function SRGBToLinear(c: number): number {
+  return c < 0.04045 ? c * 0.0773993808 : Math.pow(c * 0.9478672986 + 0.0521327014, 2.4);
+}
 
 export function stringToRgba(output: ColorRGBA, colorStr: string): ColorRGBA {
   const color = tinycolor(colorStr);
@@ -64,9 +68,9 @@ export function rgbaToCssString(color: ColorRGBA): string {
 }
 
 export function rgbaToLinear(output: ColorRGBA, color: ColorRGBA): ColorRGBA {
-  output.r = THREE.SRGBToLinear(color.r);
-  output.g = THREE.SRGBToLinear(color.g);
-  output.b = THREE.SRGBToLinear(color.b);
+  output.r = SRGBToLinear(color.r);
+  output.g = SRGBToLinear(color.g);
+  output.b = SRGBToLinear(color.b);
   output.a = color.a;
   return output;
 }
