@@ -18,8 +18,8 @@ import {
   Select,
   TextField,
   Typography,
-  ButtonGroup,
-  Button,
+  ToggleButtonGroup,
+  ToggleButton,
 } from "@mui/material";
 import moment from "moment-timezone";
 import { useMemo } from "react";
@@ -77,32 +77,23 @@ function ColorSchemeSettings(): JSX.Element {
   return (
     <Stack>
       <FormLabel>Color scheme:</FormLabel>
-      <ButtonGroup>
-        <Button
-          disableRipple
-          startIcon={<DarkModeIcon />}
-          onClick={() => void setColorScheme("dark")}
-          variant={colorScheme === "dark" ? "contained" : "outlined"}
-        >
-          Dark
-        </Button>
-        <Button
-          disableRipple
-          startIcon={<TwilightIcon />}
-          onClick={() => void setColorScheme("system")}
-          variant={colorScheme === "system" ? "contained" : "outlined"}
-        >
-          System
-        </Button>
-        <Button
-          disableRipple
-          startIcon={<LightModeIcon />}
-          onClick={() => void setColorScheme("light")}
-          variant={colorScheme === "light" ? "contained" : "outlined"}
-        >
-          Light
-        </Button>
-      </ButtonGroup>
+      <ToggleButtonGroup
+        size="small"
+        exclusive
+        value={colorScheme}
+        onChange={(_, value: string) => void setColorScheme(value)}
+        style={{ flexWrap: "wrap" }}
+      >
+        <ToggleButton disableRipple value="dark">
+          <DarkModeIcon fontSize="small" /> Dark
+        </ToggleButton>
+        <ToggleButton disableRipple value="light">
+          <LightModeIcon fontSize="small" /> Light
+        </ToggleButton>
+        <ToggleButton disableRipple value="system">
+          <TwilightIcon fontSize="small" /> Follow system
+        </ToggleButton>
+      </ToggleButtonGroup>
     </Stack>
   );
 }
