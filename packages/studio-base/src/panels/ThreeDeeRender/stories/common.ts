@@ -75,6 +75,10 @@ facet normal -1 0 0 outer loop vertex -0.5 -0.5 0.5 vertex -0.5 0.5 0.5 vertex -
 facet normal -1 0 0 outer loop vertex -0.5 0.5 -0.5 vertex -0.5 -0.5 -0.5 vertex -0.5 -0.5 0.5 endloop endfacet
 endsolid AssimpScene`);
 
+export function rad2deg(rad: number): number {
+  return (rad * 180) / Math.PI;
+}
+
 // ts-prune-ignore-next
 export function makeColor(hex: string, alpha?: number): ColorRGBA {
   const color = stringToRgba({ r: 0, g: 0, b: 0, a: 1 }, hex);

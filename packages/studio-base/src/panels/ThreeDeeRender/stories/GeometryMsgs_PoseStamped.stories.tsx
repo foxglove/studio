@@ -9,7 +9,7 @@ import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 
 import ThreeDeeRender from "../index";
 import { PoseStamped, TransformStamped } from "../ros";
-import { QUAT_IDENTITY } from "./common";
+import { QUAT_IDENTITY, rad2deg } from "./common";
 import useDelayedFixture from "./useDelayedFixture";
 
 export default {
@@ -141,10 +141,10 @@ export function GeometryMsgs_PoseStamped(): JSX.Element {
           cameraState: {
             distance: 15,
             perspective: false,
-            phi: 0,
+            phi: rad2deg(0),
             targetOffset: [-0.6, 0.5, 0],
-            thetaOffset: 0,
-            fovy: 0.75,
+            thetaOffset: rad2deg(0),
+            fovy: rad2deg(0.75),
             near: 0.01,
             far: 5000,
             target: [0, 0, 0],
