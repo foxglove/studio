@@ -22,7 +22,12 @@ import {
   DiagnosticSeverity,
   ErrorCodes,
 } from "@foxglove/studio-base/players/UserNodePlayer/types";
-import { MessageEvent, PlayerStateActiveData, Topic } from "@foxglove/studio-base/players/types";
+import {
+  MessageEvent,
+  PlayerState,
+  PlayerStateActiveData,
+  Topic,
+} from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import { UserNode } from "@foxglove/studio-base/types/panels";
 import { basicDatatypes } from "@foxglove/studio-base/util/basicDatatypes";
@@ -94,7 +99,6 @@ const basicPlayerState: PlayerStateActiveData = {
   lastSeekTime: 0,
   totalBytesReceived: 1234,
   messages: [],
-  messageOrder: "receiveTime",
   currentTime: { sec: 0, nsec: 0 },
   topics: [],
   topicStats: new Map(),
@@ -124,6 +128,7 @@ const setListenerHelper = (player: UserNodePlayer, numPromises: number = 1) => {
     signal<{
       topicNames: string[];
       messages: readonly MessageEvent<unknown>[];
+      progress?: PlayerState["progress"];
       topics: Topic[] | undefined;
       datatypes: RosDatatypes | undefined;
     }>(),
@@ -138,6 +143,7 @@ const setListenerHelper = (player: UserNodePlayer, numPromises: number = 1) => {
     signals[numEmits]?.resolve({
       topicNames,
       messages,
+      progress: playerState.progress,
       topics: playerState.activeData?.topics,
       datatypes: playerState.activeData?.datatypes,
     });
@@ -253,7 +259,6 @@ describe("UserNodePlayer", () => {
         activeData: {
           ...basicPlayerState,
           messages: [],
-          messageOrder: "receiveTime",
           currentTime: { sec: 0, nsec: 0 },
           topics: [{ name: "/np_input", datatype: `${DEFAULT_STUDIO_NODE_PREFIX}1` }],
           datatypes: new Map(Object.entries({ foo: { definitions: [] } })),
@@ -284,7 +289,6 @@ describe("UserNodePlayer", () => {
       const activeData: PlayerStateActiveData = {
         ...basicPlayerState,
         messages: [],
-        messageOrder: "receiveTime",
         currentTime: { sec: 0, nsec: 0 },
         topics: [{ name: "/np_input", datatype: "/np_input_datatype" }],
         datatypes: new Map(Object.entries({ foo: { definitions: [] } })),
@@ -294,7 +298,7 @@ describe("UserNodePlayer", () => {
       const { topics: firstTopics, datatypes: firstDatatypes }: any = await done1;
       expect(firstTopics).toEqual([
         { name: "/np_input", datatype: "/np_input_datatype" },
-        { name: "/studio_node/1", datatype: `${DEFAULT_STUDIO_NODE_PREFIX}1` },
+        { name: "/studio_script/1", datatype: `${DEFAULT_STUDIO_NODE_PREFIX}1` },
       ]);
       expect(firstDatatypes).toEqual(
         new Map([
@@ -353,7 +357,6 @@ describe("UserNodePlayer", () => {
         activeData: {
           ...basicPlayerState,
           messages: messagesArray,
-          messageOrder: "receiveTime",
           currentTime: { sec: 0, nsec: 0 },
           topics,
           datatypes,
@@ -366,7 +369,6 @@ describe("UserNodePlayer", () => {
         activeData: {
           ...basicPlayerState,
           messages: messagesArray,
-          messageOrder: "receiveTime",
           currentTime: { sec: 0, nsec: 0 },
           topics,
           datatypes,
@@ -389,7 +391,6 @@ describe("UserNodePlayer", () => {
         activeData: {
           ...basicPlayerState,
           messages: [],
-          messageOrder: "receiveTime",
           currentTime: { sec: 0, nsec: 0 },
           topics: [{ name: "/np_input", datatype: "std_msgs/Header" }],
           datatypes: new Map(Object.entries({ foo: { definitions: [] } })),
@@ -417,7 +418,6 @@ describe("UserNodePlayer", () => {
         activeData: {
           ...basicPlayerState,
           messages: [],
-          messageOrder: "receiveTime",
           currentTime: { sec: 0, nsec: 0 },
           topics: [],
           datatypes: new Map(Object.entries({ foo: { definitions: [] } })),
@@ -443,7 +443,6 @@ describe("UserNodePlayer", () => {
         activeData: {
           ...basicPlayerState,
           messages: [upstreamFirst],
-          messageOrder: "receiveTime",
           currentTime: upstreamFirst.receiveTime,
           topics: [{ name: "/np_input", datatype: "std_msgs/Header" }],
           datatypes: new Map(Object.entries({ foo: { definitions: [] } })),
@@ -470,7 +469,6 @@ describe("UserNodePlayer", () => {
         activeData: {
           ...basicPlayerState,
           messages: [upstreamFirst],
-          messageOrder: "receiveTime",
           currentTime: upstreamFirst.receiveTime,
           topics: [{ name: "/np_input", datatype: "std_msgs/Header" }],
           datatypes: new Map(Object.entries({ foo: { definitions: [] } })),
@@ -488,6 +486,70 @@ describe("UserNodePlayer", () => {
           sizeInBytes: 0,
         },
       ]);
+    });
+
+    it("produces blocks for full subscriptions", async () => {
+      const fakePlayer = new FakePlayer();
+      const userNodePlayer = new UserNodePlayer(fakePlayer, defaultUserNodeActions);
+
+      const [done] = setListenerHelper(userNodePlayer);
+
+      userNodePlayer.setSubscriptions([
+        { topic: `${DEFAULT_STUDIO_NODE_PREFIX}1`, preloadType: "full" },
+      ]);
+      await userNodePlayer.setUserNodes({
+        [nodeId]: { name: `${DEFAULT_STUDIO_NODE_PREFIX}1`, sourceCode: nodeUserCode },
+      });
+
+      void fakePlayer.emit({
+        activeData: {
+          ...basicPlayerState,
+          messages: [upstreamFirst],
+          currentTime: upstreamFirst.receiveTime,
+          topics: [{ name: "/np_input", datatype: "std_msgs/Header" }],
+          datatypes: new Map(Object.entries({ foo: { definitions: [] } })),
+        },
+        progress: {
+          fullyLoadedFractionRanges: [{ start: 0, end: 1 }],
+          messageCache: {
+            blocks: [
+              { messagesByTopic: { [upstreamFirst.topic]: [upstreamFirst] }, sizeInBytes: 1 },
+            ],
+            startTime: upstreamFirst.receiveTime,
+          },
+        },
+      });
+
+      const { progress }: any = await done;
+
+      expect(progress).toEqual({
+        fullyLoadedFractionRanges: [{ start: 0, end: 1 }],
+        messageCache: {
+          startTime: { sec: 0, nsec: 1 },
+          blocks: [
+            {
+              messagesByTopic: {
+                "/np_input": [upstreamFirst],
+                [`${DEFAULT_STUDIO_NODE_PREFIX}1`]: [
+                  {
+                    topic: `${DEFAULT_STUDIO_NODE_PREFIX}1`,
+                    receiveTime: {
+                      sec: 0,
+                      nsec: 1,
+                    },
+                    message: {
+                      custom_np_field: "abc",
+                      value: "bar",
+                    },
+                    sizeInBytes: 0,
+                  },
+                ],
+              },
+              sizeInBytes: 1,
+            },
+          ],
+        },
+      });
     });
 
     it("does not add to logs when there is no 'log' invocation in the user code", async () => {
@@ -510,7 +572,6 @@ describe("UserNodePlayer", () => {
         activeData: {
           ...basicPlayerState,
           messages: [upstreamFirst],
-          messageOrder: "receiveTime",
           currentTime: upstreamFirst.receiveTime,
           topics: [{ name: "/np_input", datatype: "std_msgs/Header" }],
           datatypes: new Map(Object.entries({ foo: { definitions: [] } })),
@@ -548,7 +609,6 @@ describe("UserNodePlayer", () => {
         activeData: {
           ...basicPlayerState,
           messages: [upstreamFirst],
-          messageOrder: "receiveTime",
           currentTime: upstreamFirst.receiveTime,
           topics,
           datatypes,
@@ -560,7 +620,6 @@ describe("UserNodePlayer", () => {
         activeData: {
           ...basicPlayerState,
           messages: [upstreamSecond],
-          messageOrder: "receiveTime",
           currentTime: upstreamSecond.receiveTime,
           topics,
           datatypes,
@@ -606,7 +665,6 @@ describe("UserNodePlayer", () => {
         activeData: {
           ...basicPlayerState,
           messages: [upstreamFirst],
-          messageOrder: "receiveTime",
           currentTime: upstreamFirst.receiveTime,
           topics: [{ name: "/np_input", datatype: "std_msgs/Header" }],
           datatypes: new Map(Object.entries({ "std_msgs/Header": { definitions: [] } })),
@@ -655,7 +713,6 @@ describe("UserNodePlayer", () => {
         activeData: {
           ...basicPlayerState,
           messages: [upstreamFirst],
-          messageOrder: "receiveTime",
           currentTime: upstreamFirst.receiveTime,
           topics: [{ name: "/np_input", datatype: "std_msgs/Header" }],
           datatypes: new Map(Object.entries({ foo: { definitions: [] } })),
@@ -669,7 +726,6 @@ describe("UserNodePlayer", () => {
         activeData: {
           ...basicPlayerState,
           messages: [upstreamSecond],
-          messageOrder: "receiveTime",
           currentTime: upstreamSecond.receiveTime,
           topics: [{ name: "/np_input", datatype: "std_msgs/Header" }],
           datatypes: new Map(Object.entries({ foo: { definitions: [] } })),
@@ -713,7 +769,6 @@ describe("UserNodePlayer", () => {
         activeData: {
           ...basicPlayerState,
           messages: [upstreamFirst],
-          messageOrder: "receiveTime",
           currentTime: upstreamFirst.receiveTime,
           topics: [{ name: "/np_input", datatype: "std_msgs/Header" }],
           datatypes: new Map(
@@ -761,7 +816,6 @@ describe("UserNodePlayer", () => {
         activeData: {
           ...basicPlayerState,
           messages: [upstreamFirst],
-          messageOrder: "receiveTime",
           currentTime: upstreamFirst.receiveTime,
           topics: [
             { name: "/np_input", datatype: "std_msgs/Header" },
@@ -824,7 +878,6 @@ describe("UserNodePlayer", () => {
         activeData: {
           ...basicPlayerState,
           messages: [upstreamFirst],
-          messageOrder: "receiveTime",
           currentTime: upstreamFirst.receiveTime,
           topics: [{ name: "/np_input", datatype: "std_msgs/Header" }],
           datatypes: new Map(
@@ -878,7 +931,6 @@ describe("UserNodePlayer", () => {
         activeData: {
           ...basicPlayerState,
           messages: [upstreamFirst],
-          messageOrder: "receiveTime",
           currentTime: upstreamFirst.receiveTime,
           topics: [{ name: "/np_input", datatype: "std_msgs/Header" }],
           datatypes: new Map(
@@ -893,7 +945,6 @@ describe("UserNodePlayer", () => {
         activeData: {
           ...basicPlayerState,
           messages: [upstreamSecond],
-          messageOrder: "receiveTime",
           currentTime: upstreamSecond.receiveTime,
           lastSeekTime: 1,
           topics: [{ name: "/np_input", datatype: "std_msgs/Header" }],
@@ -1008,7 +1059,6 @@ describe("UserNodePlayer", () => {
         activeData: {
           ...basicPlayerState,
           messages: [upstreamFirst],
-          messageOrder: "receiveTime",
           currentTime: upstreamFirst.receiveTime,
           topics: [{ name: "/np_input", datatype: "std_msgs/Header" }],
           datatypes: new Map(
@@ -1047,7 +1097,6 @@ describe("UserNodePlayer", () => {
         activeData: {
           ...basicPlayerState,
           messages: [upstreamFirst],
-          messageOrder: "receiveTime",
           currentTime: upstreamFirst.receiveTime,
           topics: [{ name: "/np_input", datatype: "std_msgs/Header" }],
           datatypes: new Map(
@@ -1064,7 +1113,6 @@ describe("UserNodePlayer", () => {
         activeData: {
           ...basicPlayerState,
           messages: [upstreamFirst],
-          messageOrder: "receiveTime",
           currentTime: upstreamFirst.receiveTime,
           topics: [{ name: "/np_input", datatype: "std_msgs/Header" }],
           datatypes: new Map(
@@ -1161,7 +1209,6 @@ describe("UserNodePlayer", () => {
           activeData: {
             ...basicPlayerState,
             messages: [upstreamFirst],
-            messageOrder: "receiveTime",
             currentTime: upstreamFirst.receiveTime,
             topics: [{ name: "/np_input", datatype: "std_msgs/Header" }],
             datatypes: new Map(
@@ -1207,7 +1254,6 @@ describe("UserNodePlayer", () => {
           activeData: {
             ...basicPlayerState,
             messages: [upstreamFirst],
-            messageOrder: "receiveTime",
             currentTime: upstreamFirst.receiveTime,
             topics: [{ name: "/np_input", datatype: "std_msgs/Header" }],
             datatypes: new Map(
@@ -1264,7 +1310,6 @@ describe("UserNodePlayer", () => {
           activeData: {
             ...basicPlayerState,
             messages: [upstreamFirst],
-            messageOrder: "receiveTime",
             currentTime: upstreamFirst.receiveTime,
             topics: [{ name: "/np_input", datatype: "std_msgs/Header" }],
             datatypes: new Map(
@@ -1308,7 +1353,6 @@ describe("UserNodePlayer", () => {
           activeData: {
             ...basicPlayerState,
             messages: [upstreamFirst],
-            messageOrder: "receiveTime",
             currentTime: upstreamFirst.receiveTime,
             topics: [{ name: "/np_input", datatype: "std_msgs/Header" }],
             datatypes: exampleDatatypes,
@@ -1341,7 +1385,6 @@ describe("UserNodePlayer", () => {
         const activeData: PlayerStateActiveData = {
           ...basicPlayerState,
           messages: [upstreamFirst],
-          messageOrder: "receiveTime",
           currentTime: upstreamFirst.receiveTime,
           topics: [{ name: "/np_input", datatype: "std_msgs/Header" }],
           datatypes: new Map(Object.entries({ foo: { definitions: [] } })),
@@ -1400,7 +1443,6 @@ describe("UserNodePlayer", () => {
           activeData: {
             ...basicPlayerState,
             messages: [upstreamFirst],
-            messageOrder: "receiveTime",
             currentTime: upstreamFirst.receiveTime,
             topics,
             datatypes,
@@ -1502,7 +1544,6 @@ describe("UserNodePlayer", () => {
         activeData: {
           ...basicPlayerState,
           messages: [upstreamFirst],
-          messageOrder: "receiveTime",
           currentTime: upstreamFirst.receiveTime,
           topics: [{ name: "/np_input", datatype: "std_msgs/Header" }],
           datatypes: new Map(Object.entries({ foo: { definitions: [] } })),

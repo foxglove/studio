@@ -2,10 +2,11 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { DefaultButton, Dialog, DialogFooter, PrimaryButton, TextField } from "@fluentui/react";
-import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { Button, Dialog, DialogActions, DialogContent, TextField, Typography } from "@mui/material";
+import { FormEvent, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useKeyPressEvent } from "react-use";
 
-import { useDialogHostId } from "@foxglove/studio-base/context/DialogHostIdContext";
+import Stack from "@foxglove/studio-base/components/Stack";
 import ModalContext from "@foxglove/studio-base/context/ModalContext";
 
 type PromptOptions = {
@@ -48,6 +49,19 @@ function ModalPrompt({
     }
   }, [transformer, value]);
 
+  const onConfirmAction = () => {
+    try {
+      onComplete(transformer ? transformer(value) : value);
+    } catch (err) {
+      onComplete(undefined);
+    }
+  };
+
+  const onSubmitAction = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    onConfirmAction();
+  };
+
   const completed = useRef(false);
   const onComplete = useCallback(
     (result: string | undefined) => {
@@ -58,47 +72,61 @@ function ModalPrompt({
     },
     [originalOnComplete],
   );
+
+  useKeyPressEvent("Enter", onConfirmAction);
+
   // Ensure we still call onComplete(undefined) when the component unmounts, if it hasn't been
   // called already
   useEffect(() => {
     return () => onComplete(undefined);
   }, [onComplete]);
 
-  const hostId = useDialogHostId();
-
   return (
-    <Dialog
-      hidden={false}
-      onDismiss={() => onComplete(undefined)}
-      dialogContentProps={{ title, subText }}
-      modalProps={{ layerProps: { hostId } }}
-    >
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          try {
-            onComplete(transformer ? transformer(value) : value);
-          } catch (err) {
-            onComplete(undefined);
-          }
-        }}
-      >
-        <TextField
-          label={label}
-          autoFocus
-          placeholder={placeholder}
-          value={value}
-          errorMessage={errorMessage}
-          onChange={(_, newValue) => setValue(newValue ?? "")}
-        />
-        <DialogFooter>
-          <DefaultButton onClick={() => onComplete(undefined)} text="Cancel" />
-          <PrimaryButton
-            type="submit"
-            disabled={value === "" || errorMessage != undefined}
-            text="OK"
+    <Dialog open maxWidth="xs" fullWidth onClose={() => onComplete(undefined)}>
+      <form onSubmit={onSubmitAction}>
+        <Stack paddingX={3} paddingTop={2}>
+          <Typography variant="h4" fontWeight={600} gutterBottom>
+            {title}
+          </Typography>
+          {subText && (
+            <Typography variant="body1" color="text.secondary">
+              {subText}
+            </Typography>
+          )}
+        </Stack>
+        <DialogContent>
+          <TextField
+            label={label}
+            autoFocus
+            fullWidth
+            placeholder={placeholder}
+            value={value}
+            error={errorMessage != undefined}
+            helperText={errorMessage}
+            FormHelperTextProps={{
+              variant: "standard",
+            }}
+            onChange={(event) => setValue(event.target.value)}
           />
-        </DialogFooter>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            color="inherit"
+            size="large"
+            variant="outlined"
+            onClick={() => onComplete(undefined)}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            variant="contained"
+            size="large"
+            disabled={value === "" || errorMessage != undefined}
+          >
+            OK
+          </Button>
+        </DialogActions>
       </form>
     </Dialog>
   );

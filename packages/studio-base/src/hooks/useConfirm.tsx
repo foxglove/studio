@@ -11,10 +11,10 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { DefaultButton, Dialog, DialogFooter } from "@fluentui/react";
-import { useCallback, useEffect, useContext, useRef } from "react";
+import { Dialog, DialogContent, DialogTitle, DialogActions, Button } from "@mui/material";
+import { useCallback, useContext, useEffect, useRef } from "react";
+import { useKeyPressEvent } from "react-use";
 
-import { useDialogHostId } from "@foxglove/studio-base/context/DialogHostIdContext";
 import ModalContext from "@foxglove/studio-base/context/ModalContext";
 
 type ConfirmVariant = "danger" | "primary";
@@ -52,69 +52,51 @@ function ConfirmModal(props: ConfirmModalProps) {
     [originalOnComplete],
   );
 
+  useKeyPressEvent("Enter", () => onComplete("ok"));
+
   // Ensure we still call onComplete(undefined) when the component unmounts, if it hasn't been
   // called already
   useEffect(() => {
     return () => onComplete("cancel");
   }, [onComplete]);
 
-  const hostId = useDialogHostId();
-
-  const confirmStyle = props.variant ?? "primary";
-
   const buttons = [
     props.cancel !== false && (
-      <DefaultButton
+      <Button
+        size="large"
+        variant="outlined"
+        color="inherit"
         key="cancel"
         onClick={() => onComplete("cancel")}
-        text={props.cancel ?? "Cancel"}
-      />
+      >
+        {props.cancel ?? "Cancel"}
+      </Button>
     ),
-    <DefaultButton
+    <Button
       key="confirm"
-      primary={confirmStyle === "primary"}
-      styles={
-        confirmStyle === "danger"
-          ? {
-              root: { backgroundColor: "#c72121", borderColor: "#c72121", color: "white" },
-              rootHovered: {
-                backgroundColor: "#b31b1b",
-                borderColor: "#b31b1b",
-                color: "white",
-              },
-              rootPressed: {
-                backgroundColor: "#771010",
-                borderColor: "#771010",
-                color: "white",
-              },
-            }
-          : undefined
-      }
+      variant="contained"
+      size="large"
+      color={props.variant === "danger" ? "error" : "primary"}
       type="submit"
-      text={props.ok ?? "OK"}
-    />,
+    >
+      {props.ok ?? "OK"}
+    </Button>,
   ];
-  if (confirmStyle === "danger") {
+  if (props.variant === "danger") {
     buttons.reverse();
   }
 
   return (
-    <Dialog
-      hidden={false}
-      onDismiss={() => onComplete("cancel")}
-      dialogContentProps={{ title: props.title }}
-      modalProps={{ layerProps: { hostId } }}
-      minWidth={320}
-      maxWidth={480}
-    >
+    <Dialog open onClose={() => onComplete("cancel")} maxWidth="xs" fullWidth>
       <form
         onSubmit={(event) => {
           event.preventDefault();
           onComplete("ok");
         }}
       >
-        {props.prompt}
-        <DialogFooter styles={{ actions: { whiteSpace: "nowrap" } }}>{buttons}</DialogFooter>
+        <DialogTitle>{props.title}</DialogTitle>
+        <DialogContent>{props.prompt}</DialogContent>
+        <DialogActions>{buttons}</DialogActions>
       </form>
     </Dialog>
   );

@@ -7,7 +7,7 @@ import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 
 import ThreeDeeRender from "../index";
 import { ColorRGBA, Marker, TransformStamped } from "../ros";
-import { makeColor, QUAT_IDENTITY, SENSOR_FRAME_ID } from "./common";
+import { makeColor, QUAT_IDENTITY, rad2deg, SENSOR_FRAME_ID } from "./common";
 import useDelayedFixture from "./useDelayedFixture";
 
 export default {
@@ -299,7 +299,7 @@ export function Markers(): JSX.Element {
         position: { x: -1, y: -1, z: 0 },
         orientation: { x: 0, y: 0, z: 0, w: 1 },
       },
-      scale: { x: 1, y: 1, z: 1 },
+      scale: { x: 0, y: 0, z: 0.1 },
       color: makeColor("#4caf50", 0.5),
       text: "Lorem Ipsum\nDolor Sit Amet",
       lifetime: { sec: 0, nsec: 0 },
@@ -514,14 +514,17 @@ export function Markers(): JSX.Element {
           cameraState: {
             distance: 5.5,
             perspective: true,
-            phi: 0.5,
+            phi: rad2deg(0.5),
             targetOffset: [-0.5, 0.75, 0],
-            thetaOffset: -0.25,
-            fovy: 0.75,
+            thetaOffset: rad2deg(-0.25),
+            fovy: rad2deg(0.75),
             near: 0.01,
             far: 5000,
             target: [0, 0, 0],
             targetOrientation: [0, 0, 0, 1],
+          },
+          topics: {
+            "/markers": { visible: true },
           },
         }}
       />

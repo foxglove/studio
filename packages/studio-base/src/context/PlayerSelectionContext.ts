@@ -10,7 +10,6 @@ import ConsoleApi from "@foxglove/studio-base/services/ConsoleApi";
 
 export type DataSourceFactoryInitializeArgs = {
   metricsCollector: PlayerMetricsCollectorInterface;
-  unlimitedMemoryCache: boolean;
   folder?: FileSystemDirectoryHandle;
   file?: File;
   files?: File[];
@@ -46,6 +45,7 @@ export interface IDataSourceFactory {
   disabledReason?: string | JSX.Element;
   badgeText?: string;
   hidden?: boolean;
+  warning?: string;
 
   sampleLayout?: PanelsState;
 

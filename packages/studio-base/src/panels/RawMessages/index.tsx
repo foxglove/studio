@@ -11,26 +11,30 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { useTheme } from "@fluentui/react";
-import CheckboxBlankOutlineIcon from "@mdi/svg/svg/checkbox-blank-outline.svg";
-import CheckboxMarkedIcon from "@mdi/svg/svg/checkbox-marked.svg";
-import PlusMinusIcon from "@mdi/svg/svg/plus-minus.svg";
-import LessIcon from "@mdi/svg/svg/unfold-less-horizontal.svg";
-import MoreIcon from "@mdi/svg/svg/unfold-more-horizontal.svg";
-import { MenuItem, Select, SelectChangeEvent, Theme } from "@mui/material";
-import { makeStyles } from "@mui/styles";
-import { Immutable } from "immer";
+import DiffIcon from "@mui/icons-material/Difference";
+import DiffOutlinedIcon from "@mui/icons-material/DifferenceOutlined";
+import UnfoldLessIcon from "@mui/icons-material/UnfoldLess";
+import UnfoldMoreIcon from "@mui/icons-material/UnfoldMore";
+import {
+  Checkbox,
+  FormControlLabel,
+  IconButton,
+  MenuItem,
+  Select,
+  SelectChangeEvent,
+  useTheme,
+  Typography,
+} from "@mui/material";
 // eslint-disable-next-line no-restricted-imports
-import { first, isEqual, get, last } from "lodash";
+import { first, isEqual, get, last, padStart } from "lodash";
 import { useState, useCallback, useMemo, useEffect } from "react";
 import ReactHoverObserver from "react-hover-observer";
 import Tree from "react-json-tree";
-import { useLatest } from "react-use";
+import { DeepReadonly } from "ts-essentials";
+import { makeStyles } from "tss-react/mui";
 
-import { SettingsTreeAction } from "@foxglove/studio";
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
-import Icon from "@foxglove/studio-base/components/Icon";
 import useGetItemStringWithTimezone from "@foxglove/studio-base/components/JsonTree/useGetItemStringWithTimezone";
 import MessagePathInput from "@foxglove/studio-base/components/MessagePathSyntax/MessagePathInput";
 import {
@@ -47,13 +51,13 @@ import { useMessageDataItem } from "@foxglove/studio-base/components/MessagePath
 import Panel from "@foxglove/studio-base/components/Panel";
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
+import Stack from "@foxglove/studio-base/components/Stack";
 import getDiff, {
   diffLabels,
   diffLabelsByLabelText,
   DiffObject,
 } from "@foxglove/studio-base/panels/RawMessages/getDiff";
 import { Topic } from "@foxglove/studio-base/players/types";
-import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelSettingsEditorContextProvider";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 import { useJsonTreeTheme } from "@foxglove/studio-base/util/globalConstants";
 import { enumValuesByDatatypeAndField } from "@foxglove/studio-base/util/selectors";
@@ -69,7 +73,6 @@ import {
   getStructureItemForPath,
 } from "./getValueActionForValue";
 import helpContent from "./index.help.md";
-import { buildSettingsTree } from "./settings";
 import { RawMessagesPanelConfig } from "./types";
 import { DATA_ARRAY_PREVIEW_LIMIT, generateDeepKeyPaths, getItemStringForDiff } from "./utils";
 
@@ -77,7 +80,7 @@ export const CUSTOM_METHOD = "custom";
 export const PREV_MSG_METHOD = "previous message";
 
 type Props = {
-  config: Immutable<RawMessagesPanelConfig>;
+  config: DeepReadonly<RawMessagesPanelConfig>;
   saveConfig: SaveConfig<RawMessagesPanelConfig>;
 };
 
@@ -87,6 +90,7 @@ const isSingleElemArray = (obj: unknown): obj is unknown[] => {
   }
   return obj.filter((a) => a != undefined).length === 1;
 };
+
 const dataWithoutWrappingArray = (data: unknown) => {
   return isSingleElemArray(data) && typeof data[0] === "object" ? data[0] : data;
 };
@@ -100,50 +104,32 @@ function maybeDeepParse(val: unknown) {
   return val;
 }
 
-const useStyles = makeStyles((theme: Theme) => ({
-  root: {
-    display: "flex",
-    flexDirection: "column",
-    flex: "auto",
-    overflow: "hidden",
-    position: "relative",
+const useStyles = makeStyles()((theme) => ({
+  iconButton: {
+    "&.MuiIconButton-root": {
+      padding: theme.spacing(0.25),
+    },
   },
   topic: {
-    display: "flex",
-    flexDirection: "column",
-    flex: "auto",
-    overflow: "hidden auto",
-    paddingLeft: theme.spacing(0.75),
     fontFamily: fonts.SANS_SERIF,
     fontFeatureSettings: `${fonts.SANS_SERIF_FEATURE_SETTINGS}, "zero"`,
   },
-  diff: {
-    display: "flex",
-    flex: "auto",
+  big: {
+    "&.MuiTypography-root": {
+      fontFeatureSettings: `${fonts.SANS_SERIF_FEATURE_SETTINGS}, "zero"`,
+    },
   },
-  iconWrapper: {
-    display: "inline",
-    paddingRight: 40, // To make it so the icons appear when you move the mouse somewhat close.
-  },
-  singleVal: {
-    fontSize: "2.5em",
-    wordWrap: "break-word",
-    fontWeight: "bold",
-    whiteSpace: "pre-line",
-  },
-  topicInputs: {
-    width: "100%",
-    lineHeight: "20px",
-  },
-  invisibleSpace: {
-    // https://stackoverflow.com/questions/62319014/make-text-selection-treat-adjacent-elements-as-separate-words
-    fontSize: 0,
+  hoverObserver: {
+    display: "inline-flex",
+    alignItems: "center",
   },
 }));
 
 function RawMessages(props: Props) {
-  const theme = useTheme();
-  const classes = useStyles();
+  const {
+    palette: { mode: themePreference },
+  } = useTheme();
+  const { classes } = useStyles();
   const jsonTreeTheme = useJsonTreeTheme();
   const { config, saveConfig } = props;
   const { openSiblingPanel } = usePanelContext();
@@ -155,9 +141,14 @@ function RawMessages(props: Props) {
     () =>
       diffEnabled
         ? (type: string, data: DiffObject, itemType: React.ReactNode) =>
-            getItemStringForDiff({ type, data, itemType, isInverted: theme.isInverted })
+            getItemStringForDiff({
+              type,
+              data,
+              itemType,
+              isInverted: themePreference === "dark",
+            })
         : defaultGetItemString,
-    [defaultGetItemString, diffEnabled, theme.isInverted],
+    [defaultGetItemString, diffEnabled, themePreference],
   );
 
   const topicRosPath: RosPath | undefined = useMemo(() => parseRosPath(topicPath), [topicPath]);
@@ -175,10 +166,7 @@ function RawMessages(props: Props) {
     ).structureItem;
   }, [datatypes, topic, topicRosPath]);
 
-  // When expandAll is unset, we'll use expandedFields to get expanded info
-  const [expandAll, setExpandAll] = useState<boolean | undefined>(config.autoExpandMode === "all");
-  const [expandedFields, setExpandedFields] = useState(new Set<string>());
-
+  const [expansion, setExpansion] = useState(config.expansion);
   const matchedMessages = useMessageDataItem(topicPath, { historySize: 2 });
   const diffMessages = useMessageDataItem(diffEnabled ? diffTopicPath : "");
 
@@ -190,46 +178,33 @@ function RawMessages(props: Props) {
   const baseItem = inTimetickDiffMode ? prevTickObj : currTickObj;
   const diffItem = inTimetickDiffMode ? currTickObj : diffTopicObj;
 
-  const latestExpandedFields = useLatest(expandedFields);
-
-  useEffect(() => {
-    if (latestExpandedFields.current.size === 0 && baseItem && config.autoExpandMode === "auto") {
+  const autoExpandPaths = useMemo(() => {
+    if (baseItem) {
       const data = dataWithoutWrappingArray(baseItem.queriedData.map(({ value }) => value));
-      const newExpandedFields = generateDeepKeyPaths(maybeDeepParse(data), 5);
-      setExpandedFields(newExpandedFields);
-      setExpandAll(undefined);
-    } else if (config.autoExpandMode === "all") {
-      setExpandedFields(new Set());
-      setExpandAll(true);
+      return generateDeepKeyPaths(maybeDeepParse(data), 5);
+    } else {
+      return new Set<string>();
     }
-  }, [baseItem, config.autoExpandMode, latestExpandedFields]);
+  }, [baseItem]);
 
-  const updateSettingsTree = usePanelSettingsTreeUpdate();
+  const canExpandAll = useMemo(() => {
+    if (expansion === "none") {
+      return true;
+    }
+    if (expansion === "all") {
+      return false;
+    }
 
-  const settingsActionHandler = useCallback(
-    (action: SettingsTreeAction) => {
-      if (action.action !== "update") {
-        return;
-      }
-
-      if (action.payload.input === "select") {
-        saveConfig({
-          autoExpandMode: action.payload.value as RawMessagesPanelConfig["autoExpandMode"],
-        });
-      }
-    },
-    [saveConfig],
-  );
-
-  useEffect(() => {
-    updateSettingsTree({
-      actionHandler: settingsActionHandler,
-      nodes: buildSettingsTree(config),
-    });
-  }, [config, settingsActionHandler, updateSettingsTree]);
+    if (typeof expansion === "object" && Object.values(expansion).some((v) => v === "c")) {
+      return true;
+    } else {
+      return false;
+    }
+  }, [expansion]);
 
   const onTopicPathChange = useCallback(
     (newTopicPath: string) => {
+      setExpansion(undefined);
       saveConfig({ topicPath: newTopicPath });
     },
     [saveConfig],
@@ -247,36 +222,46 @@ function RawMessages(props: Props) {
   }, [diffEnabled, saveConfig]);
 
   const onToggleExpandAll = useCallback(() => {
-    setExpandedFields(new Set());
-    setExpandAll((currVal) => !(currVal ?? false));
-  }, []);
+    setExpansion(canExpandAll ? "all" : "none");
+  }, [canExpandAll]);
 
   const onLabelClick = useCallback(
     (keypath: (string | number)[]) => {
-      // Create a unique key according to the keypath / raw
       const key = keypath.join("~");
-      const expandedFieldsCopy = new Set(expandedFields);
-      if (expandedFieldsCopy.has(key)) {
-        expandedFieldsCopy.delete(key);
-        setExpandedFields(expandedFieldsCopy);
-      } else {
-        expandedFieldsCopy.add(key);
-        setExpandedFields(expandedFieldsCopy);
-      }
-      setExpandAll(undefined);
+      setExpansion((old) => {
+        if (old === "all") {
+          return { [key]: "c" };
+        } else if (old === "none") {
+          return { [key]: "e" };
+        } else if (old == undefined) {
+          return { [key]: autoExpandPaths.has(key) ? "c" : "e" };
+        } else {
+          if (old[key]) {
+            return { ...old, [key]: old[key] === "c" ? "e" : "c" };
+          } else {
+            return { ...old, [key]: autoExpandPaths.has(key) ? "c" : "e" };
+          }
+        }
+      });
     },
-    [expandedFields],
+    [autoExpandPaths],
   );
+
+  useEffect(() => {
+    saveConfig({ expansion });
+  }, [expansion, saveConfig]);
 
   const getValueLabels = useCallback(
     ({
       constantName,
       label,
       itemValue,
+      keyPath,
     }: {
       constantName: string | undefined;
       label: string;
       itemValue: unknown;
+      keyPath: ReadonlyArray<number | string>;
     }): { arrLabel: string; itemLabel: string } => {
       let itemLabel = label;
       if (typeof itemValue === "bigint") {
@@ -295,6 +280,15 @@ function RawMessages(props: Props) {
       if (constantName != undefined) {
         itemLabel = `${itemLabel} (${constantName})`;
       }
+
+      // When we encounter a nsec field (nanosecond) that is a number, we ensure the label displays 9 digits.
+      // This helps when visually scanning time values from `sec` and `nsec` fields.
+      // A nanosecond label of 099999999 makes it easier to realize this is 0.09 seconds compared to
+      // 99999999 which requires some counting to reamize this is also 0.09
+      if (keyPath[0] === "nsec" && typeof itemValue === "number") {
+        itemLabel = padStart(itemLabel, 9, "0");
+      }
+
       return { arrLabel, itemLabel };
     },
     [],
@@ -303,7 +297,12 @@ function RawMessages(props: Props) {
   const renderDiffLabel = useCallback(
     (label: string, itemValue: unknown) => {
       let constantName: string | undefined;
-      const { arrLabel, itemLabel } = getValueLabels({ constantName, label, itemValue });
+      const { arrLabel, itemLabel } = getValueLabels({
+        constantName,
+        label,
+        itemValue,
+        keyPath: [],
+      });
       return (
         <Value
           arrLabel={arrLabel}
@@ -328,7 +327,7 @@ function RawMessages(props: Props) {
       itemValue: unknown,
       ...keyPath: (number | string)[]
     ) => (
-      <ReactHoverObserver className={classes.iconWrapper}>
+      <ReactHoverObserver className={classes.hoverObserver}>
         {({ isHovering }: { isHovering: boolean }) => {
           const lastKeyPath = last(keyPath) as number;
           let valueAction: ValueAction | undefined;
@@ -356,7 +355,13 @@ function RawMessages(props: Props) {
             }
           }
           const basePath = queriedData[lastKeyPath]?.path ?? "";
-          const { arrLabel, itemLabel } = getValueLabels({ constantName, label, itemValue });
+          const { arrLabel, itemLabel } = getValueLabels({
+            constantName,
+            label,
+            itemValue,
+            keyPath,
+          });
+
           return (
             <Value
               arrLabel={arrLabel}
@@ -371,16 +376,27 @@ function RawMessages(props: Props) {
         }}
       </ReactHoverObserver>
     ),
-    [classes, datatypes, getValueLabels, onTopicPathChange, openSiblingPanel],
+    [classes.hoverObserver, datatypes, getValueLabels, onTopicPathChange, openSiblingPanel],
   );
 
   const renderSingleTopicOrDiffOutput = useCallback(() => {
     const shouldExpandNode = (keypath: (string | number)[]) => {
-      if (expandAll != undefined) {
-        return expandAll;
+      if (expansion === "all") {
+        return true;
+      }
+      if (expansion === "none") {
+        return false;
       }
 
-      return expandedFields.has(keypath.join("~"));
+      const joinedPath = keypath.join("~");
+      if (expansion && expansion[joinedPath] === "c") {
+        return false;
+      }
+      if (expansion && expansion[joinedPath] === "e") {
+        return true;
+      }
+
+      return autoExpandPaths.has(joinedPath);
     };
 
     if (topicPath.length === 0) {
@@ -418,12 +434,8 @@ function RawMessages(props: Props) {
         })
       : {};
 
-    const CheckboxComponent = showFullMessageForDiff
-      ? CheckboxMarkedIcon
-      : CheckboxBlankOutlineIcon;
-
     return (
-      <div className={classes.topic}>
+      <Stack className={classes.topic} flex="auto" overflowX="hidden" paddingLeft={0.75}>
         <Metadata
           data={data}
           diffData={diffData}
@@ -433,29 +445,39 @@ function RawMessages(props: Props) {
           {...(diffItem ? { diffMessage: diffItem.messageEvent } : undefined)}
         />
         {shouldDisplaySingleVal ? (
-          <div className={classes.singleVal}>
+          <Typography
+            className={classes.big}
+            variant="h1"
+            fontWeight="bold"
+            whiteSpace="pre-line"
+            style={{ wordWrap: "break-word" }}
+          >
             <MaybeCollapsedValue itemLabel={String(singleVal)} />
-          </div>
+          </Typography>
         ) : diffEnabled && isEqual({}, diff) ? (
           <EmptyState>No difference found</EmptyState>
         ) : (
           <>
             {diffEnabled && (
-              <div
-                style={{ cursor: "pointer", fontSize: "11px" }}
-                onClick={() => saveConfig({ showFullMessageForDiff: !showFullMessageForDiff })}
-              >
-                <Icon style={{ verticalAlign: "middle" }}>
-                  <CheckboxComponent />
-                </Icon>{" "}
-                Show full msg
-              </div>
+              <FormControlLabel
+                disableTypography
+                checked={showFullMessageForDiff}
+                control={
+                  <Checkbox
+                    size="small"
+                    defaultChecked
+                    onChange={() => saveConfig({ showFullMessageForDiff: !showFullMessageForDiff })}
+                  />
+                }
+                label="Show full msg"
+              />
             )}
             <Tree
               labelRenderer={(raw) => (
                 <>
                   <DiffSpan>{first(raw)}</DiffSpan>
-                  <span className={classes.invisibleSpace}>&nbsp;</span>
+                  {/* https://stackoverflow.com/questions/62319014/make-text-selection-treat-adjacent-elements-as-separate-words */}
+                  <span style={{ fontSize: 0 }}>&nbsp;</span>
                 </>
               )}
               shouldExpandNode={shouldExpandNode}
@@ -524,7 +546,8 @@ function RawMessages(props: Props) {
                 nestedNode: ({ style }, keyPath: any) => {
                   const baseStyle = {
                     ...style,
-                    padding: "2px 0 2px 0",
+                    paddingTop: 2,
+                    paddingBottom: 2,
                     marginTop: 2,
                     textDecoration: "inherit",
                   };
@@ -534,11 +557,12 @@ function RawMessages(props: Props) {
                   let backgroundColor;
                   let textDecoration;
                   if (diffLabelsByLabelText[keyPath[0]]) {
-                    backgroundColor = theme.isInverted
-                      ? // @ts-expect-error backgroundColor is not a property?
-                        diffLabelsByLabelText[keyPath[0]].invertedBackgroundColor
-                      : // @ts-expect-error backgroundColor is not a property?
-                        diffLabelsByLabelText[keyPath[0]].backgroundColor;
+                    backgroundColor =
+                      themePreference === "dark"
+                        ? // @ts-expect-error backgroundColor is not a property?
+                          diffLabelsByLabelText[keyPath[0]].invertedBackgroundColor
+                        : // @ts-expect-error backgroundColor is not a property?
+                          diffLabelsByLabelText[keyPath[0]].backgroundColor;
                     textDecoration =
                       keyPath[0] === diffLabels.DELETED.labelText ? "line-through" : "none";
                   }
@@ -546,11 +570,12 @@ function RawMessages(props: Props) {
                   // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                   const nestedObjKey = Object.keys(nestedObj)[0];
                   if (nestedObjKey != undefined && diffLabelsByLabelText[nestedObjKey]) {
-                    backgroundColor = theme.isInverted
-                      ? // @ts-expect-error backgroundColor is not a property?
-                        diffLabelsByLabelText[nestedObjKey].invertedBackgroundColor
-                      : // @ts-expect-error backgroundColor is not a property?
-                        diffLabelsByLabelText[nestedObjKey].backgroundColor;
+                    backgroundColor =
+                      themePreference === "dark"
+                        ? // @ts-expect-error backgroundColor is not a property?
+                          diffLabelsByLabelText[nestedObjKey].invertedBackgroundColor
+                        : // @ts-expect-error backgroundColor is not a property?
+                          diffLabelsByLabelText[nestedObjKey].backgroundColor;
                     textDecoration =
                       nestedObjKey === diffLabels.DELETED.labelText ? "line-through" : "none";
                   }
@@ -580,11 +605,12 @@ function RawMessages(props: Props) {
                   // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                   const nestedObjKey = Object.keys(nestedObj)[0];
                   if (nestedObjKey != undefined && diffLabelsByLabelText[nestedObjKey]) {
-                    backgroundColor = theme.isInverted
-                      ? // @ts-expect-error backgroundColor is not a property?
-                        diffLabelsByLabelText[nestedObjKey].invertedBackgroundColor
-                      : // @ts-expect-error backgroundColor is not a property?
-                        diffLabelsByLabelText[nestedObjKey].backgroundColor;
+                    backgroundColor =
+                      themePreference === "dark"
+                        ? // @ts-expect-error backgroundColor is not a property?
+                          diffLabelsByLabelText[nestedObjKey].invertedBackgroundColor
+                        : // @ts-expect-error backgroundColor is not a property?
+                          diffLabelsByLabelText[nestedObjKey].backgroundColor;
                     textDecoration =
                       nestedObjKey === diffLabels.DELETED.labelText ? "line-through" : "none";
                   }
@@ -602,47 +628,53 @@ function RawMessages(props: Props) {
             />
           </>
         )}
-      </div>
+      </Stack>
     );
   }, [
-    topicPath,
-    diffEnabled,
-    diffMethod,
+    autoExpandPaths,
     baseItem,
+    classes.big,
+    classes.topic,
+    diffEnabled,
     diffItem,
-    showFullMessageForDiff,
-    topic,
-    classes,
+    diffMethod,
+    diffTopicPath,
+    expansion,
     getItemString,
     jsonTreeTheme,
-    expandAll,
-    expandedFields,
-    diffTopicPath,
-    saveConfig,
     onLabelClick,
-    valueRenderer,
-    rootStructureItem,
     renderDiffLabel,
-    theme,
+    rootStructureItem,
+    saveConfig,
+    showFullMessageForDiff,
+    themePreference,
+    topic,
+    topicPath,
+    valueRenderer,
   ]);
 
   return (
-    <div className={classes.root}>
+    <Stack flex="auto" overflow="hidden" position="relative">
       <PanelToolbar helpContent={helpContent}>
-        <Icon tooltip="Toggle diff" size="medium" fade onClick={onToggleDiff} active={diffEnabled}>
-          <PlusMinusIcon />
-        </Icon>
-        <Icon
-          tooltip={expandAll ?? false ? "Collapse all" : "Expand all"}
-          size="medium"
-          fade
-          dataTest="expand-all"
-          onClick={onToggleExpandAll}
-          style={{ position: "relative", top: 1 }}
+        <IconButton
+          className={classes.iconButton}
+          title="Toggle diff"
+          onClick={onToggleDiff}
+          color={diffEnabled ? "default" : "inherit"}
+          size="small"
         >
-          {expandAll ?? false ? <LessIcon /> : <MoreIcon />}
-        </Icon>
-        <div className={classes.topicInputs}>
+          {diffEnabled ? <DiffIcon fontSize="small" /> : <DiffOutlinedIcon fontSize="small" />}
+        </IconButton>
+        <IconButton
+          className={classes.iconButton}
+          title={canExpandAll ? "Expand all" : "Collapse all"}
+          onClick={onToggleExpandAll}
+          data-testid="expand-all"
+          size="small"
+        >
+          {canExpandAll ? <UnfoldMoreIcon fontSize="small" /> : <UnfoldLessIcon fontSize="small" />}
+        </IconButton>
+        <Stack fullWidth paddingLeft={0.25}>
           <MessagePathInput
             index={0}
             path={topicPath}
@@ -650,7 +682,7 @@ function RawMessages(props: Props) {
             inputStyle={{ height: 20 }}
           />
           {diffEnabled && (
-            <div className={classes.diff}>
+            <Stack direction="row" flex="auto">
               <Select
                 variant="filled"
                 size="small"
@@ -666,7 +698,7 @@ function RawMessages(props: Props) {
                 <MenuItem value={PREV_MSG_METHOD}>{PREV_MSG_METHOD}</MenuItem>
                 <MenuItem value={CUSTOM_METHOD}>custom</MenuItem>
               </Select>
-              {diffMethod === CUSTOM_METHOD ? (
+              {diffMethod === CUSTOM_METHOD && (
                 <MessagePathInput
                   index={1}
                   path={diffTopicPath}
@@ -674,18 +706,17 @@ function RawMessages(props: Props) {
                   inputStyle={{ height: "100%" }}
                   {...(topic ? { prioritizedDatatype: topic.datatype } : {})}
                 />
-              ) : undefined}
-            </div>
+              )}
+            </Stack>
           )}
-        </div>
+        </Stack>
       </PanelToolbar>
       {renderSingleTopicOrDiffOutput()}
-    </div>
+    </Stack>
   );
 }
 
 const defaultConfig: RawMessagesPanelConfig = {
-  autoExpandMode: "auto",
   diffEnabled: false,
   diffMethod: CUSTOM_METHOD,
   diffTopicPath: "",

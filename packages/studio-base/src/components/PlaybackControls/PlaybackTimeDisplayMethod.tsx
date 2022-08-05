@@ -39,10 +39,10 @@ type PlaybackTimeDisplayMethodProps = {
 };
 
 const StyledTextField = muiStyled(TextField)<{ error?: boolean }>(({ error, theme }) => ({
-  fontFeatureSettings: `${fonts.SANS_SERIF_FEATURE_SETTINGS}, 'zero'`,
   borderRadius: theme.shape.borderRadius,
 
   ".MuiInputBase-input": {
+    fontFeatureSettings: `${fonts.SANS_SERIF_FEATURE_SETTINGS}, 'zero' !important`,
     minWidth: "20ch",
   },
   ".MuiIconButton-root": {
@@ -210,7 +210,7 @@ export default function PlaybackTimeDisplayMethod({
         <form onSubmit={onSubmit} style={{ width: "100%" }}>
           <StyledTextField
             aria-label="Playback Time Method"
-            data-test="PlaybackTime-text"
+            data-testid="PlaybackTime-text"
             value={isEditing ? inputText : currentTimeString}
             error={hasError}
             variant="filled"

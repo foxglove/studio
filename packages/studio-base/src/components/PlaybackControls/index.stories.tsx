@@ -41,7 +41,6 @@ function getPlayerState(): PlayerState {
     playerId: "1",
     activeData: {
       messages: [],
-      messageOrder: "receiveTime",
       startTime: { sec: START_TIME, nsec: 331 },
       endTime: { sec: START_TIME + 20, nsec: 331 },
       currentTime: { sec: START_TIME + 5, nsec: 331 },
@@ -58,7 +57,13 @@ function getPlayerState(): PlayerState {
 }
 
 const mockAppConfiguration: IAppConfiguration = {
-  get: () => undefined,
+  get: (key: string) => {
+    if (key === "timezone") {
+      return "America/Los_Angeles";
+    } else {
+      return undefined;
+    }
+  },
   set: async () => {},
   addChangeListener: () => {},
   removeChangeListener: () => {},

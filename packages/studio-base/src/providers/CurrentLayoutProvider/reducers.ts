@@ -72,7 +72,6 @@ import { isTabPanelConfig } from "../../util/layout";
 
 export const defaultPlaybackConfig: PlaybackConfig = {
   speed: 1.0,
-  messageOrder: "receiveTime",
 };
 
 function changePanelLayout(
@@ -691,6 +690,11 @@ const endDrag = (panelsState: PanelsState, dragPayload: EndDragPayload): PanelsS
     const config = originalSavedProps[id];
     return config ? { id, config } : undefined;
   });
+
+  // If dragging within the same tab without position & destination just cancel the drag.
+  if (withinSameTab && position == undefined && destinationPath == undefined) {
+    return { ...panelsState, layout: originalLayout, configById: originalSavedProps };
+  }
 
   if (withinSameTab && sourceTabConfig && position != undefined && destinationPath != undefined) {
     return dragWithinSameTab(panelsState, {

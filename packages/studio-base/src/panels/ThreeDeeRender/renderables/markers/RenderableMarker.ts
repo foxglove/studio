@@ -5,6 +5,7 @@
 import * as THREE from "three";
 
 import { toNanoSec } from "@foxglove/rostime";
+import { RosValue } from "@foxglove/studio-base/players/types";
 
 import { BaseUserData, Renderable } from "../../Renderable";
 import type { Renderer } from "../../Renderer";
@@ -35,12 +36,16 @@ export class RenderableMarker extends Renderable<MarkerUserData> {
       messageTime: toNanoSec(marker.header.stamp),
       frameId: renderer.normalizeFrameId(marker.header.frame_id),
       pose: marker.pose,
-      settingsPath: ["topics", topic, marker.ns, String(marker.id)], // unused
+      settingsPath: ["topics", topic],
       settings: { visible: true, frameLocked: marker.frame_locked },
       topic,
       marker,
       expiresIn: hasLifetime ? toNanoSec(marker.lifetime) : undefined,
     });
+  }
+
+  override details(): Record<string, RosValue> {
+    return this.userData.marker;
   }
 
   update(marker: Marker, receiveTime: bigint | undefined): void {
@@ -59,12 +64,12 @@ export class RenderableMarker extends Renderable<MarkerUserData> {
   // Convert sRGB values to linear
   protected _markerColorsToLinear(
     marker: Marker,
+    pointsLength: number,
     callback: (color: THREE.Vector4Tuple, i: number) => void,
   ): void {
     rgbToThreeColor(tempColor, marker.color);
 
-    const length = marker.points.length;
-    for (let i = 0; i < length; i++) {
+    for (let i = 0; i < pointsLength; i++) {
       const srgb = marker.colors[i];
       if (srgb) {
         // Per-point color

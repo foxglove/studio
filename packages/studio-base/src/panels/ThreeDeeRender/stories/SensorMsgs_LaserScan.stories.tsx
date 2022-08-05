@@ -10,7 +10,7 @@ import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 
 import ThreeDeeRender from "../index";
 import { LaserScan, PointCloud2, TransformStamped } from "../ros";
-import { QUAT_IDENTITY } from "./common";
+import { QUAT_IDENTITY, rad2deg } from "./common";
 import useDelayedFixture from "./useDelayedFixture";
 
 export default {
@@ -122,6 +122,7 @@ function SensorMsgs_LaserScan({
           scene: { enableStats: false },
           topics: {
             "/scan": {
+              visible: true,
               pointSize: 10,
               colorMode: "colormap",
               colorMap: "turbo",
@@ -135,10 +136,10 @@ function SensorMsgs_LaserScan({
           cameraState: {
             distance: 13.5,
             perspective: true,
-            phi: 1.22,
+            phi: rad2deg(1.22),
             targetOffset: [0.25, -0.5, 0],
-            thetaOffset: -0.33,
-            fovy: 0.75,
+            thetaOffset: rad2deg(-0.33),
+            fovy: rad2deg(0.75),
             near: 0.01,
             far: 5000,
             target: [0, 0, 0],
@@ -312,12 +313,14 @@ export function ComparisonWithPointCloudColors(): JSX.Element {
           scene: { enableStats: false },
           topics: {
             "/scan": {
+              visible: true,
               pointSize: 10,
               colorMode: "colormap",
               colorMap: "turbo",
               colorField: "intensity",
             },
             "/cloud": {
+              visible: true,
               pointSize: 10,
               colorMode: "colormap",
               colorMap: "turbo",
@@ -330,10 +333,10 @@ export function ComparisonWithPointCloudColors(): JSX.Element {
           cameraState: {
             distance: 5,
             perspective: false,
-            phi: 0,
+            phi: rad2deg(0),
             targetOffset: [0, 1, 0],
-            thetaOffset: 0,
-            fovy: 0.75,
+            thetaOffset: rad2deg(0),
+            fovy: rad2deg(0.75),
             near: 0.01,
             far: 5000,
             target: [0, 0, 0],

@@ -105,10 +105,17 @@ export default class LayoutManager implements ILayoutManager {
 
   isOnline = false;
 
+  error: undefined | Error = undefined;
+
   // eslint-disable-next-line @foxglove/no-boolean-parameters
   setOnline(online: boolean): void {
     this.isOnline = online;
     this.emitter.emit("onlinechange");
+  }
+
+  setError(error: undefined | Error): void {
+    this.error = error;
+    this.emitter.emit("errorchange");
   }
 
   constructor({
@@ -409,9 +416,10 @@ export default class LayoutManager implements ILayoutManager {
               savedAt: now,
             },
             working: undefined,
-            syncInfo: this.remote
-              ? { status: "updated", lastRemoteSavedAt: localLayout.syncInfo?.lastRemoteSavedAt }
-              : localLayout.syncInfo,
+            syncInfo:
+              this.remote && localLayout.syncInfo?.status !== "new"
+                ? { status: "updated", lastRemoteSavedAt: localLayout.syncInfo?.lastRemoteSavedAt }
+                : localLayout.syncInfo,
           }),
       );
       this.notifyChangeListeners({ type: "change", updatedLayout: result });
@@ -478,6 +486,12 @@ export default class LayoutManager implements ILayoutManager {
       this.currentSync = this.syncWithRemoteImpl(abortSignal);
       await this.currentSync;
       this.notifyChangeListeners({ type: "change", updatedLayout: undefined });
+      if (this.error) {
+        this.setError(undefined);
+      }
+    } catch (error) {
+      this.setError(error);
+      throw error;
     } finally {
       this.currentSync = undefined;
       log.debug(`Completed sync in ${((performance.now() - start) / 1000).toFixed(2)}s`);
@@ -529,6 +543,9 @@ export default class LayoutManager implements ILayoutManager {
           }
 
           case "delete-local":
+            log.debug(
+              `Deleting local layout ${operation.localLayout.id}, whose sync status was ${operation.localLayout.syncInfo?.status}`,
+            );
             await local.delete(operation.localLayout.id);
             this.notifyChangeListeners({ type: "delete", layoutId: operation.localLayout.id });
             break;

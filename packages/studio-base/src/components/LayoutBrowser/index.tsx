@@ -2,22 +2,32 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { IconButton, useTheme } from "@fluentui/react";
-import { Button, Switch, FormGroup, FormControlLabel, CircularProgress } from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
+import CloudOffIcon from "@mui/icons-material/CloudOff";
+import FileOpenOutlinedIcon from "@mui/icons-material/FileOpenOutlined";
+import {
+  Button,
+  IconButton,
+  Switch,
+  FormGroup,
+  FormControlLabel,
+  CircularProgress,
+  useTheme,
+} from "@mui/material";
 import { partition } from "lodash";
 import moment from "moment";
 import path from "path";
-import { useCallback, useContext, useEffect, useLayoutEffect, useState } from "react";
+import { MouseEvent, useCallback, useContext, useEffect, useLayoutEffect } from "react";
 import { useToasts } from "react-toast-notifications";
 import { useMountedState } from "react-use";
 import useAsyncFn from "react-use/lib/useAsyncFn";
 
+import Logger from "@foxglove/log";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import SignInPrompt from "@foxglove/studio-base/components/LayoutBrowser/SignInPrompt";
 import { useUnsavedChangesPrompt } from "@foxglove/studio-base/components/LayoutBrowser/UnsavedChangesPrompt";
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
 import Stack from "@foxglove/studio-base/components/Stack";
-import { useTooltip } from "@foxglove/studio-base/components/Tooltip";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 import ConsoleApiContext from "@foxglove/studio-base/context/ConsoleApiContext";
 import {
@@ -34,13 +44,16 @@ import { useConfirm } from "@foxglove/studio-base/hooks/useConfirm";
 import { usePrompt } from "@foxglove/studio-base/hooks/usePrompt";
 import { defaultPlaybackConfig } from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
-import { Layout, layoutIsShared } from "@foxglove/studio-base/services/ILayoutStorage";
+import { Layout, LayoutID, layoutIsShared } from "@foxglove/studio-base/services/ILayoutStorage";
 import { downloadTextFile } from "@foxglove/studio-base/util/download";
 import showOpenFilePicker from "@foxglove/studio-base/util/showOpenFilePicker";
 
 import LayoutSection from "./LayoutSection";
 import helpContent from "./index.help.md";
+import { useLayoutBrowserReducer } from "./reducer";
 import { debugBorder } from "./styles";
+
+const log = Logger.getLogger(__filename);
 
 const selectedLayoutIdSelector = (state: LayoutState) => state.selectedLayout?.id;
 
@@ -61,20 +74,30 @@ export default function LayoutBrowser({
   const currentLayoutId = useCurrentLayoutSelector(selectedLayoutIdSelector);
   const { setSelectedLayoutId } = useCurrentLayoutActions();
 
-  const [isBusy, setIsBusy] = useState(layoutManager.isBusy);
-  const [isOnline, setIsOnline] = useState(layoutManager.isOnline);
+  const [state, dispatch] = useLayoutBrowserReducer({
+    busy: layoutManager.isBusy,
+    error: layoutManager.error,
+    online: layoutManager.isOnline,
+  });
+
   useLayoutEffect(() => {
-    const busyListener = () => setIsBusy(layoutManager.isBusy);
-    const onlineListener = () => setIsOnline(layoutManager.isOnline);
+    const busyListener = () => {
+      dispatch({ type: "set-busy", value: layoutManager.isBusy });
+    };
+    const onlineListener = () => dispatch({ type: "set-online", value: layoutManager.isOnline });
+    const errorListener = () => dispatch({ type: "set-error", value: layoutManager.error });
     busyListener();
     onlineListener();
+    errorListener();
     layoutManager.on("busychange", busyListener);
     layoutManager.on("onlinechange", onlineListener);
+    layoutManager.on("errorchange", errorListener);
     return () => {
       layoutManager.off("busychange", busyListener);
       layoutManager.off("onlinechange", onlineListener);
+      layoutManager.off("errorchange", errorListener);
     };
-  }, [layoutManager]);
+  }, [dispatch, layoutManager]);
 
   const [layouts, reloadLayouts] = useAsyncFn(
     async () => {
@@ -92,6 +115,51 @@ export default function LayoutBrowser({
   );
 
   useEffect(() => {
+    const processAction = async () => {
+      if (!state.multiAction) {
+        return;
+      }
+
+      const id = state.multiAction.ids[0];
+      if (id) {
+        try {
+          switch (state.multiAction.action) {
+            case "delete":
+              await layoutManager.deleteLayout({ id: id as LayoutID });
+              dispatch({ type: "shift-multi-action" });
+              break;
+            case "duplicate": {
+              const layout = await layoutManager.getLayout(id as LayoutID);
+              if (layout) {
+                await layoutManager.saveNewLayout({
+                  name: `${layout.name} copy`,
+                  data: layout.working?.data ?? layout.baseline.data,
+                  permission: "CREATOR_WRITE",
+                });
+              }
+              dispatch({ type: "shift-multi-action" });
+              break;
+            }
+            case "revert":
+              await layoutManager.revertLayout({ id: id as LayoutID });
+              dispatch({ type: "shift-multi-action" });
+              break;
+            case "save":
+              await layoutManager.overwriteLayout({ id: id as LayoutID });
+              dispatch({ type: "shift-multi-action" });
+              break;
+          }
+        } catch (err) {
+          addToast(`Error processing layouts: ${err.message}`, { appearance: "error" });
+          dispatch({ type: "clear-multi-action" });
+        }
+      }
+    };
+
+    processAction().catch((err) => log.error(err));
+  }, [addToast, dispatch, layoutManager, state.multiAction]);
+
+  useEffect(() => {
     const listener = () => void reloadLayouts();
     layoutManager.on("change", listener);
     return () => layoutManager.off("change", listener);
@@ -99,7 +167,7 @@ export default function LayoutBrowser({
 
   // Start loading on first mount
   useEffect(() => {
-    void reloadLayouts();
+    reloadLayouts().catch((err) => log.error(err));
   }, [reloadLayouts]);
 
   /**
@@ -147,22 +215,44 @@ export default function LayoutBrowser({
           });
           return true;
       }
-      return false;
     }
     return true;
   }, [analytics, currentLayoutId, layoutManager, openUnsavedChangesPrompt]);
 
   const onSelectLayout = useCallbackWithToast(
-    async (item: Layout, { selectedViaClick = false }: { selectedViaClick?: boolean } = {}) => {
+    async (
+      item: Layout,
+      { selectedViaClick = false, event }: { selectedViaClick?: boolean; event?: MouseEvent } = {},
+    ) => {
       if (selectedViaClick) {
         if (!(await promptForUnsavedChanges())) {
           return;
         }
         void analytics.logEvent(AppEvent.LAYOUT_SELECT, { permission: item.permission });
       }
-      setSelectedLayoutId(item.id);
+      if (event?.ctrlKey === true || event?.metaKey === true || event?.shiftKey === true) {
+        if (item.id !== currentLayoutId) {
+          dispatch({
+            type: "select-id",
+            id: item.id,
+            layouts: layouts.value,
+            modKey: event.ctrlKey || event.metaKey,
+            shiftKey: event.shiftKey,
+          });
+        }
+      } else {
+        setSelectedLayoutId(item.id);
+        dispatch({ type: "select-id", id: item.id });
+      }
     },
-    [analytics, promptForUnsavedChanges, setSelectedLayoutId],
+    [
+      analytics,
+      currentLayoutId,
+      dispatch,
+      layouts.value,
+      promptForUnsavedChanges,
+      setSelectedLayoutId,
+    ],
   );
 
   const onRenameLayout = useCallbackWithToast(
@@ -175,6 +265,11 @@ export default function LayoutBrowser({
 
   const onDuplicateLayout = useCallbackWithToast(
     async (item: Layout) => {
+      if (state.selectedIds.length > 1) {
+        dispatch({ type: "queue-multi-action", action: "duplicate" });
+        return;
+      }
+
       if (!(await promptForUnsavedChanges())) {
         return;
       }
@@ -186,11 +281,23 @@ export default function LayoutBrowser({
       await onSelectLayout(newLayout);
       void analytics.logEvent(AppEvent.LAYOUT_DUPLICATE, { permission: item.permission });
     },
-    [analytics, layoutManager, onSelectLayout, promptForUnsavedChanges],
+    [
+      analytics,
+      dispatch,
+      layoutManager,
+      onSelectLayout,
+      promptForUnsavedChanges,
+      state.selectedIds.length,
+    ],
   );
 
   const onDeleteLayout = useCallbackWithToast(
     async (item: Layout) => {
+      if (state.selectedIds.length > 1) {
+        dispatch({ type: "queue-multi-action", action: "delete" });
+        return;
+      }
+
       void analytics.logEvent(AppEvent.LAYOUT_DELETE, { permission: item.permission });
 
       // If the layout was selected, select a different available layout.
@@ -202,10 +309,18 @@ export default function LayoutBrowser({
         const storedLayouts = await layoutManager.getLayouts();
         const targetLayout = storedLayouts.find((layout) => layout.id !== currentLayoutId);
         setSelectedLayoutId(targetLayout?.id);
+        dispatch({ type: "select-id", id: targetLayout?.id });
       }
       await layoutManager.deleteLayout({ id: item.id });
     },
-    [analytics, currentLayoutId, layoutManager, setSelectedLayoutId],
+    [
+      analytics,
+      currentLayoutId,
+      dispatch,
+      layoutManager,
+      setSelectedLayoutId,
+      state.selectedIds.length,
+    ],
   );
 
   const createNewLayout = useCallbackWithToast(async () => {
@@ -215,7 +330,7 @@ export default function LayoutBrowser({
     const name = `Unnamed layout ${moment(currentDateForStorybook).format("l")} at ${moment(
       currentDateForStorybook,
     ).format("LT")}`;
-    const state: Omit<PanelsState, "name" | "id"> = {
+    const panelState: Omit<PanelsState, "name" | "id"> = {
       configById: {},
       globalVariables: {},
       userNodes: {},
@@ -224,7 +339,7 @@ export default function LayoutBrowser({
     };
     const newLayout = await layoutManager.saveNewLayout({
       name,
-      data: state as PanelsState,
+      data: panelState as PanelsState,
       permission: "CREATOR_WRITE",
     });
     void onSelectLayout(newLayout);
@@ -264,6 +379,14 @@ export default function LayoutBrowser({
 
   const onOverwriteLayout = useCallbackWithToast(
     async (item: Layout) => {
+      // We don't need to confirm the multiple selection case because we force users to save
+      // or abandon changes before selecting another layout with unsaved changes to the current
+      // shared layout.
+      if (state.selectedIds.length > 1) {
+        dispatch({ type: "queue-multi-action", action: "save" });
+        return;
+      }
+
       if (layoutIsShared(item)) {
         const response = await confirm({
           title: `Update “${item.name}”?`,
@@ -278,24 +401,20 @@ export default function LayoutBrowser({
       await layoutManager.overwriteLayout({ id: item.id });
       void analytics.logEvent(AppEvent.LAYOUT_OVERWRITE, { permission: item.permission });
     },
-    [analytics, confirm, layoutManager],
+    [analytics, confirm, dispatch, layoutManager, state.selectedIds.length],
   );
 
   const onRevertLayout = useCallbackWithToast(
     async (item: Layout) => {
-      const response = await confirm({
-        title: `Revert “${item.name}”?`,
-        prompt: "Your changes will be permantly deleted. This cannot be undone.",
-        ok: "Discard changes",
-        variant: "danger",
-      });
-      if (response !== "ok") {
+      if (state.selectedIds.length > 1) {
+        dispatch({ type: "queue-multi-action", action: "revert" });
         return;
       }
+
       await layoutManager.revertLayout({ id: item.id });
       void analytics.logEvent(AppEvent.LAYOUT_REVERT, { permission: item.permission });
     },
-    [analytics, confirm, layoutManager],
+    [analytics, dispatch, layoutManager, state.selectedIds.length],
   );
 
   const onMakePersonalCopy = useCallbackWithToast(
@@ -376,10 +495,6 @@ export default function LayoutBrowser({
     void analytics.logEvent(AppEvent.LAYOUT_IMPORT, { numLayouts: fileHandles.length });
   }, [promptForUnsavedChanges, isMounted, layoutManager, onSelectLayout, analytics, addToast]);
 
-  const createLayoutTooltip = useTooltip({ contents: "Create new layout" });
-  const importLayoutTooltip = useTooltip({ contents: "Import layout" });
-  const offlineTooltip = useTooltip({ contents: "Offline" });
-
   const layoutDebug = useContext(LayoutStorageDebuggingContext);
   const supportsSignIn = useContext(ConsoleApiContext) != undefined;
 
@@ -389,75 +504,69 @@ export default function LayoutBrowser({
 
   const showSignInPrompt = supportsSignIn && !layoutManager.supportsSharing && !hideSignInPrompt;
 
+  const pendingMultiAction = state.multiAction?.ids != undefined;
+
   return (
     <SidebarContent
       title="Layouts"
       helpContent={helpContent}
       disablePadding
       trailingItems={[
-        (layouts.loading || isBusy) && (
+        (layouts.loading || state.busy || pendingMultiAction) && (
           <Stack key="loading" alignItems="center" justifyContent="center" padding={1}>
             <CircularProgress size={18} variant="indeterminate" />
           </Stack>
         ),
-        !isOnline && (
-          <IconButton
-            key="offline"
-            checked
-            elementRef={offlineTooltip.ref}
-            iconProps={{ iconName: "CloudOffFilled" }}
-            styles={{
-              rootChecked: { backgroundColor: "transparent" },
-              rootCheckedHovered: { backgroundColor: "transparent" },
-              icon: {
-                color: theme.semanticColors.disabledBodyText,
-                svg: { fill: "currentColor", height: "1em", width: "1em" },
-              },
-            }}
-          >
-            {offlineTooltip.tooltip}
+        (!state.online || state.error != undefined) && (
+          <IconButton color="primary" key="offline" disabled title="Offline">
+            <CloudOffIcon />
           </IconButton>
         ),
         <IconButton
+          color="primary"
           key="add-layout"
-          elementRef={createLayoutTooltip.ref}
-          iconProps={{ iconName: "Add" }}
           onClick={createNewLayout}
-          ariaLabel="Create new layout"
-          data-test="add-layout"
-          styles={{
-            icon: {
-              svg: { height: "1em", width: "1em" },
-              "> span": { display: "flex" },
-            },
-          }}
+          aria-label="Create new layout"
+          data-testid="add-layout"
+          title="Create new layout"
         >
-          {createLayoutTooltip.tooltip}
+          <AddIcon />
         </IconButton>,
         <IconButton
+          color="primary"
           key="import-layout"
-          elementRef={importLayoutTooltip.ref}
-          iconProps={{ iconName: "OpenFile" }}
           onClick={importLayout}
-          ariaLabel="Import layout"
-          styles={{
-            icon: {
-              svg: { height: "1em", width: "1em" },
-              "> span": { display: "flex" },
-            },
-          }}
+          aria-label="Import layout"
+          title="Import layout"
         >
-          {importLayoutTooltip.tooltip}
+          <FileOpenOutlinedIcon />
         </IconButton>,
       ].filter(Boolean)}
     >
       {unsavedChangesPrompt}
-      <Stack fullHeight>
-        <div>
+      <Stack fullHeight gap={2} style={{ pointerEvents: pendingMultiAction ? "none" : "auto" }}>
+        <LayoutSection
+          title={layoutManager.supportsSharing ? "Personal" : undefined}
+          emptyText="Add a new layout to get started with Foxglove Studio!"
+          items={layouts.value?.personal}
+          multiSelectedIds={state.selectedIds}
+          selectedId={currentLayoutId}
+          onSelect={onSelectLayout}
+          onRename={onRenameLayout}
+          onDuplicate={onDuplicateLayout}
+          onDelete={onDeleteLayout}
+          onShare={onShareLayout}
+          onExport={onExportLayout}
+          onOverwrite={onOverwriteLayout}
+          onRevert={onRevertLayout}
+          onMakePersonalCopy={onMakePersonalCopy}
+        />
+        {layoutManager.supportsSharing && (
           <LayoutSection
-            title={layoutManager.supportsSharing ? "Personal" : undefined}
-            emptyText="Add a new layout to get started with Foxglove Studio!"
-            items={layouts.value?.personal}
+            title="Team"
+            emptyText="Your organization doesn’t have any shared layouts yet. Share a personal layout to collaborate with other team members."
+            items={layouts.value?.shared}
+            multiSelectedIds={state.selectedIds}
             selectedId={currentLayoutId}
             onSelect={onSelectLayout}
             onRename={onRenameLayout}
@@ -469,26 +578,7 @@ export default function LayoutBrowser({
             onRevert={onRevertLayout}
             onMakePersonalCopy={onMakePersonalCopy}
           />
-        </div>
-        <div>
-          {layoutManager.supportsSharing && (
-            <LayoutSection
-              title="Team"
-              emptyText="Your organization doesn’t have any shared layouts yet. Share a personal layout to collaborate with other team members."
-              items={layouts.value?.shared}
-              selectedId={currentLayoutId}
-              onSelect={onSelectLayout}
-              onRename={onRenameLayout}
-              onDuplicate={onDuplicateLayout}
-              onDelete={onDeleteLayout}
-              onShare={onShareLayout}
-              onExport={onExportLayout}
-              onOverwrite={onOverwriteLayout}
-              onRevert={onRevertLayout}
-              onMakePersonalCopy={onMakePersonalCopy}
-            />
-          )}
-        </div>
+        )}
         <Stack flexGrow={1} />
         {showSignInPrompt && <SignInPrompt onDismiss={() => void setHideSignInPrompt(true)} />}
         {layoutDebug && (
@@ -500,7 +590,7 @@ export default function LayoutBrowser({
               bottom: 0,
               left: 0,
               right: 0,
-              background: theme.semanticColors.bodyBackground,
+              background: theme.palette.background.default,
               ...debugBorder,
             }}
           >

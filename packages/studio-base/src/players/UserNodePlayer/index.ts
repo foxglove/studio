@@ -10,12 +10,13 @@
 //   This source code is licensed under the Apache License, Version 2.0,
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
-import { isEqual } from "lodash";
+
+import { isEqual, uniq } from "lodash";
 import memoizeWeak from "memoize-weak";
 import shallowequal from "shallowequal";
 import { v4 as uuidv4 } from "uuid";
 
-import { signal } from "@foxglove/den/async";
+import { Condvar } from "@foxglove/den/async";
 import Log from "@foxglove/log";
 import { Time, compare } from "@foxglove/rostime";
 import { ParameterValue } from "@foxglove/studio";
@@ -46,6 +47,7 @@ import {
   Topic,
   MessageEvent,
   PlayerProblem,
+  MessageBlock,
 } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import { UserNode, UserNodes } from "@foxglove/studio-base/types/panels";
@@ -91,7 +93,7 @@ export default class UserNodePlayer implements Player {
   private _memoizedNodeTopics: readonly Topic[] = [];
 
   private _subscriptions: SubscribePayload[] = [];
-  private _nodeSubscriptions = new Set<string>();
+  private _nodeSubscriptions: Record<string, SubscribePayload> = {};
   private _userNodes: UserNodes = {};
 
   // listener for state updates
@@ -123,6 +125,8 @@ export default class UserNodePlayer implements Player {
   // that a script requires. When subscribers subscribe to the output topic, the user node player
   // subscribes to the underlying input topics.
   private _inputsByOutputTopic = new Map<string, readonly string[]>();
+
+  private _resetCondvar = new Condvar();
 
   // exposed as a static to allow testing to mock/replace
   static CreateNodeTransformWorker = (): SharedWorker => {
@@ -189,6 +193,15 @@ export default class UserNodePlayer implements Player {
     },
   );
 
+  private _lastBlockRequest: {
+    input?: {
+      blocks: readonly (MessageBlock | undefined)[];
+      globalVariables: GlobalVariables;
+      nodeRegistrations: readonly NodeRegistration[];
+    };
+    result: (MessageBlock | undefined)[];
+  } = { result: [] };
+
   // Basic memoization by remembering the last values passed to getMessages
   private _lastGetMessagesInput: {
     parsedMessages: readonly MessageEvent<unknown>[];
@@ -222,7 +235,7 @@ export default class UserNodePlayer implements Player {
       const messagePromises = [];
       for (const nodeRegistration of nodeRegistrations) {
         if (
-          this._nodeSubscriptions.has(nodeRegistration.output.name) &&
+          this._nodeSubscriptions[nodeRegistration.output.name] &&
           nodeRegistration.inputs.includes(message.topic)
         ) {
           const messagePromise = nodeRegistration.processMessage(message, globalVariables);
@@ -245,6 +258,75 @@ export default class UserNodePlayer implements Player {
     this._lastGetMessagesInput = { parsedMessages, globalVariables, nodeRegistrations };
     this._lastGetMessagesResult = result;
     return result;
+  }
+
+  private async _getBlocks(
+    blocks: readonly (MessageBlock | undefined)[],
+    globalVariables: GlobalVariables,
+    nodeRegistrations: readonly NodeRegistration[],
+  ): Promise<readonly (MessageBlock | undefined)[]> {
+    if (
+      shallowequal(this._lastBlockRequest.input, {
+        blocks,
+        globalVariables,
+        nodeRegistrations,
+      })
+    ) {
+      return this._lastBlockRequest.result;
+    }
+
+    // If no downstream subscriptions want blocks for our output topics we can just pass through
+    // the blocks from the underlying player.
+    const fullRegistrations = nodeRegistrations.filter(
+      (reg) => this._nodeSubscriptions[reg.output.name]?.preloadType === "full",
+    );
+    if (fullRegistrations.length === 0) {
+      return blocks;
+    }
+
+    const allInputTopics = uniq(fullRegistrations.flatMap((reg) => reg.inputs));
+
+    const outputBlocks: (MessageBlock | undefined)[] = [];
+    for (const block of blocks) {
+      if (!block) {
+        outputBlocks.push(block);
+        continue;
+      }
+
+      // Flatten and re-sort block messages so that nodes see them in the same order
+      // as the non-block nodes.
+      const messagesByTopic = { ...block.messagesByTopic };
+      const blockMessages = allInputTopics
+        .flatMap((topic) => messagesByTopic[topic] ?? [])
+        .sort((a, b) => compare(a.receiveTime, b.receiveTime));
+      for (const nodeRegistration of fullRegistrations) {
+        const outTopic = nodeRegistration.output.name;
+        for (const message of blockMessages) {
+          if (nodeRegistration.inputs.includes(message.topic)) {
+            const outputMessage = await nodeRegistration.processMessage(message, globalVariables);
+            if (outputMessage) {
+              messagesByTopic[outTopic] ??= [];
+              messagesByTopic[outTopic]?.push(outputMessage);
+            }
+          }
+        }
+      }
+
+      // Note that this size doesn't include the new processed messqges. We may need
+      // to recalculate this if it turns out to be important for good cache eviction
+      // behavior.
+      outputBlocks.push({
+        messagesByTopic,
+        sizeInBytes: block.sizeInBytes,
+      });
+    }
+
+    this._lastBlockRequest = {
+      input: { blocks, globalVariables, nodeRegistrations },
+      result: outputBlocks,
+    };
+
+    return outputBlocks;
   }
 
   setGlobalVariables(globalVariables: GlobalVariables): void {
@@ -301,151 +383,148 @@ export default class UserNodePlayer implements Player {
     const { inputTopics, outputTopic, transpiledCode, projectCode, outputDatatype } = nodeData;
 
     let rpc: Rpc | undefined;
-    let terminateSignal = signal<void>();
+    const terminateCondvar = new Condvar();
 
     // problemKey is a unique identifier for each userspace node so we can manage problems from
     // a specific node. A node may have a problem that may later clear. Using the key we can add/remove
     // problems for specific userspace nodes independently of other userspace nodes.
     const problemKey = `node-id-${nodeId}`;
 
-    const processMessage: NodeRegistration["processMessage"] = async (
-      msgEvent,
-      globalVariables,
-    ): Promise<MessageEvent<unknown> | undefined> => {
-      // We allow _resetWorkers to "cancel" the processing by creating a new signal every time we process a message
-      terminateSignal = signal<void>();
+    const buildMessageProcessor = (): NodeRegistration["processMessage"] => {
+      return async (msgEvent: MessageEvent<unknown>, globalVariables: GlobalVariables) => {
+        const terminateSignal = terminateCondvar.wait();
 
-      // Register the node within a web worker to be executed.
-      if (!rpc) {
-        rpc = this._unusedNodeRuntimeWorkers.pop();
-
-        // initialize a new worker since no unused one is available
+        // Register the node within a web worker to be executed.
         if (!rpc) {
-          const worker = UserNodePlayer.CreateNodeRuntimeWorker();
+          rpc = this._unusedNodeRuntimeWorkers.pop();
 
-          worker.onerror = (event) => {
-            log.error(event);
+          // initialize a new worker since no unused one is available
+          if (!rpc) {
+            const worker = UserNodePlayer.CreateNodeRuntimeWorker();
 
-            this._problemStore.set(problemKey, {
-              message: `Node playground runtime error: ${event.message}`,
-              severity: "error",
+            worker.onerror = (event) => {
+              log.error(event);
+
+              this._problemStore.set(problemKey, {
+                message: `User script runtime error: ${event.message}`,
+                severity: "error",
+              });
+
+              // trigger listener updates
+              void this._emitState();
+            };
+
+            const port: MessagePort = worker.port;
+            port.onmessageerror = (event) => {
+              log.error(event);
+
+              this._problemStore.set(problemKey, {
+                severity: "error",
+                message: `User script runtime error: ${String(event.data)}`,
+              });
+
+              void this._emitState();
+            };
+            port.start();
+            rpc = new Rpc(port);
+
+            rpc.receive("error", (msg) => {
+              log.error(msg);
+
+              this._problemStore.set(problemKey, {
+                severity: "error",
+                message: `User script runtime error: ${msg}`,
+              });
+
+              void this._emitState();
             });
+          }
 
-            // trigger listener updates
-            void this._emitState();
-          };
-
-          const port: MessagePort = worker.port;
-          port.onmessageerror = (event) => {
-            log.error(event);
-
-            this._problemStore.set(problemKey, {
-              severity: "error",
-              message: `Node playground runtime error: ${String(event.data)}`,
-            });
-
-            void this._emitState();
-          };
-          port.start();
-          rpc = new Rpc(port);
-
-          rpc.receive("error", (msg) => {
-            log.error(msg);
-
-            this._problemStore.set(problemKey, {
-              severity: "error",
-              message: `Node playground runtime error: ${msg}`,
-            });
-
-            void this._emitState();
-          });
-        }
-
-        const { error, userNodeDiagnostics, userNodeLogs } = await rpc.send<RegistrationOutput>(
-          "registerNode",
-          {
-            projectCode,
-            nodeCode: transpiledCode,
-          },
-        );
-        if (error != undefined) {
-          this._setUserNodeDiagnostics(nodeId, [
-            ...userNodeDiagnostics,
+          const { error, userNodeDiagnostics, userNodeLogs } = await rpc.send<RegistrationOutput>(
+            "registerNode",
             {
-              source: Sources.Runtime,
-              severity: DiagnosticSeverity.Error,
-              message: error,
-              code: ErrorCodes.RUNTIME,
+              projectCode,
+              nodeCode: transpiledCode,
             },
-          ]);
-          return;
-        }
-        this._addUserNodeLogs(nodeId, userNodeLogs);
-      }
-
-      // To send the message over RPC we invoke maybePlainObject which calls toJSON on the message
-      // and builds a plain js object of the entire message. This is expensive so a future enhancement
-      // would be to send the underlying message array and build a lazy message reader
-      const result = await Promise.race([
-        rpc.send<ProcessMessageOutput>("processMessage", {
-          message: {
-            topic: msgEvent.topic,
-            receiveTime: msgEvent.receiveTime,
-            message: maybePlainObject(msgEvent.message),
-          },
-          globalVariables,
-        }),
-        terminateSignal,
-      ]);
-
-      if (!result) {
-        this._problemStore.set(problemKey, {
-          message: `Node playground node ${nodeId} timed out`,
-          severity: "warn",
-        });
-        return;
-      }
-
-      const diagnostics =
-        result.error != undefined
-          ? [
+          );
+          if (error != undefined) {
+            this._setUserNodeDiagnostics(nodeId, [
+              ...userNodeDiagnostics,
               {
                 source: Sources.Runtime,
                 severity: DiagnosticSeverity.Error,
-                message: result.error,
+                message: error,
                 code: ErrorCodes.RUNTIME,
               },
-            ]
-          : [];
-      if (diagnostics.length > 0) {
-        this._setUserNodeDiagnostics(nodeId, diagnostics);
-      }
-      this._addUserNodeLogs(nodeId, result.userNodeLogs);
+            ]);
+            return;
+          }
+          this._addUserNodeLogs(nodeId, userNodeLogs);
+        }
 
-      if (!result.message) {
-        this._problemStore.set(problemKey, {
-          severity: "warn",
-          message: `Node playground node ${nodeId} did not produce a message`,
-        });
-        return;
-      }
+        // To send the message over RPC we invoke maybePlainObject which calls toJSON on the message
+        // and builds a plain js object of the entire message. This is expensive so a future enhancement
+        // would be to send the underlying message array and build a lazy message reader
+        const result = await Promise.race([
+          rpc.send<ProcessMessageOutput>("processMessage", {
+            message: {
+              topic: msgEvent.topic,
+              receiveTime: msgEvent.receiveTime,
+              message: maybePlainObject(msgEvent.message),
+            },
+            globalVariables,
+          }),
+          terminateSignal,
+        ]);
 
-      // At this point we've received a message successfully from the userspace node, therefore
-      // we clear any previous problem from this node.
-      this._problemStore.delete(problemKey);
+        if (!result) {
+          this._problemStore.set(problemKey, {
+            message: `User Script ${nodeId} timed out`,
+            severity: "warn",
+          });
+          return;
+        }
 
-      return {
-        topic: outputTopic,
-        receiveTime: msgEvent.receiveTime,
-        message: result.message,
-        sizeInBytes: msgEvent.sizeInBytes,
+        const diagnostics =
+          result.error != undefined
+            ? [
+                {
+                  source: Sources.Runtime,
+                  severity: DiagnosticSeverity.Error,
+                  message: result.error,
+                  code: ErrorCodes.RUNTIME,
+                },
+              ]
+            : [];
+        if (diagnostics.length > 0) {
+          this._setUserNodeDiagnostics(nodeId, diagnostics);
+        }
+        this._addUserNodeLogs(nodeId, result.userNodeLogs);
+
+        if (!result.message) {
+          this._problemStore.set(problemKey, {
+            severity: "warn",
+            message: `User Script ${nodeId} did not produce a message`,
+          });
+          return;
+        }
+
+        // At this point we've received a message successfully from the userspace node, therefore
+        // we clear any previous problem from this node.
+        this._problemStore.delete(problemKey);
+
+        return {
+          topic: outputTopic,
+          receiveTime: msgEvent.receiveTime,
+          message: result.message,
+          sizeInBytes: msgEvent.sizeInBytes,
+        };
       };
     };
 
     const terminate = () => {
       this._problemStore.delete(problemKey);
-
-      terminateSignal.resolve();
+      terminateCondvar.notifyAll();
       if (rpc) {
         this._unusedNodeRuntimeWorkers.push(rpc);
         rpc = undefined;
@@ -457,7 +536,8 @@ export default class UserNodePlayer implements Player {
       nodeData,
       inputs: inputTopics,
       output: { name: outputTopic, datatype: outputDatatype },
-      processMessage,
+      processMessage: buildMessageProcessor(),
+      processBlockMessage: buildMessageProcessor(),
       terminate,
     };
     this._nodeRegistrationCache.push({ nodeId, userNode, result });
@@ -476,7 +556,7 @@ export default class UserNodePlayer implements Player {
 
         this._problemStore.set("worker-error", {
           severity: "error",
-          message: `Node playground error: ${event.message}`,
+          message: `User Script error: ${event.message}`,
         });
 
         void this._emitState();
@@ -488,7 +568,7 @@ export default class UserNodePlayer implements Player {
 
         this._problemStore.set("worker-error", {
           severity: "error",
-          message: `Node playground error: ${String(event.data)}`,
+          message: `User Script error: ${String(event.data)}`,
         });
 
         void this._emitState();
@@ -501,7 +581,7 @@ export default class UserNodePlayer implements Player {
 
         this._problemStore.set("worker-error", {
           severity: "error",
-          message: `Node playground error: ${msg}`,
+          message: `User Script error: ${msg}`,
         });
 
         void this._emitState();
@@ -521,20 +601,18 @@ export default class UserNodePlayer implements Player {
       return;
     }
 
-    // Make sure that we only run this function once at a time, but using this instead of `debouncePromise` so that it
-    // returns a promise.
+    // Make sure that we only run this function once at a time
     if (this._pendingResetWorkers) {
       await this._pendingResetWorkers;
     }
-    const pending = signal();
-    this._pendingResetWorkers = pending;
+    this._pendingResetWorkers = this._resetCondvar.wait();
 
     // This early return is an optimization measure so that the
     // `nodeRegistrations` array is not re-defined, which will invalidate
     // downstream caches. (i.e. `this._getTopics`)
     if (this._nodeRegistrations.length === 0 && Object.entries(this._userNodes).length === 0) {
-      pending.resolve();
       this._pendingResetWorkers = undefined;
+      this._resetCondvar.notifyAll();
       return;
     }
 
@@ -637,7 +715,7 @@ export default class UserNodePlayer implements Player {
     }
 
     this._pendingResetWorkers = undefined;
-    pending.resolve();
+    this._resetCondvar.notifyAll();
   }
 
   private async _getRosLib(): Promise<string> {
@@ -716,8 +794,26 @@ export default class UserNodePlayer implements Player {
         this._nodeRegistrations,
       );
 
+      const playerProgress = {
+        ...playerState.progress,
+      };
+
+      if (playerProgress.messageCache) {
+        const newBlocks = await this._getBlocks(
+          playerProgress.messageCache.blocks,
+          globalVariables,
+          this._nodeRegistrations,
+        );
+
+        playerProgress.messageCache = {
+          startTime: playerProgress.messageCache.startTime,
+          blocks: newBlocks,
+        };
+      }
+
       const newPlayerState = {
         ...playerState,
+        progress: playerProgress,
         activeData: {
           ...activeData,
           messages: parsedMessages,
@@ -777,7 +873,7 @@ export default class UserNodePlayer implements Player {
   setSubscriptions(subscriptions: SubscribePayload[]): void {
     this._subscriptions = subscriptions;
 
-    const nodeSubscriptions = new Set<string>();
+    const nodeSubscriptions: Record<string, SubscribePayload> = {};
     const realTopicSubscriptions: SubscribePayload[] = [];
 
     // For each subscription, identify required input topics by looking up the subscribed topic in
@@ -786,7 +882,7 @@ export default class UserNodePlayer implements Player {
     for (const subscription of subscriptions) {
       const inputs = this._inputsByOutputTopic.get(subscription.topic);
       if (!inputs) {
-        nodeSubscriptions.add(subscription.topic);
+        nodeSubscriptions[subscription.topic] = subscription;
         realTopicSubscriptions.push(subscription);
         continue;
       }
@@ -796,7 +892,7 @@ export default class UserNodePlayer implements Player {
         continue;
       }
 
-      nodeSubscriptions.add(subscription.topic);
+      nodeSubscriptions[subscription.topic] = subscription;
       for (const inputTopic of inputs) {
         realTopicSubscriptions.push({
           topic: inputTopic,

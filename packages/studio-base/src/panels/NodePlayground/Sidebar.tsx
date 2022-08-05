@@ -45,13 +45,6 @@ const STab = muiStyled(Tab)(({ theme }) => ({
   padding: theme.spacing(1, 1.125),
 }));
 
-const STabs = muiStyled(Tabs)({
-  ".MuiTabs-indicator": {
-    right: "auto",
-    left: 1,
-  },
-});
-
 const ExplorerWrapper = muiStyled("div")(({ theme }) => ({
   backgroundColor: theme.palette.grey[200],
   width: 350,
@@ -69,7 +62,7 @@ type NodesListProps = {
 const NodesList = ({ nodes, selectNode, deleteNode, collapse, selectedNodeId }: NodesListProps) => {
   return (
     <Stack flex="auto">
-      <SidebarHeader title="Nodes" collapse={collapse} />
+      <SidebarHeader title="Scripts" collapse={collapse} />
       <List dense>
         {Object.keys(nodes).map((nodeId) => {
           return (
@@ -213,7 +206,7 @@ const Sidebar = ({
             title="Utilities"
             subheader={
               <Typography variant="body2" color="text.secondary" component="div">
-                You can import any of these modules into your node using the following syntax:{" "}
+                You can import any of these modules into your script using the following syntax:{" "}
                 <pre>{`import { ... } from "./pointClouds.ts".`}</pre>
               </Typography>
             }
@@ -233,8 +226,8 @@ const Sidebar = ({
             ))}
             <ListItem
               disablePadding
-              onClick={gotoUtils.bind(undefined, "/studio_node/generatedTypes.ts")}
-              selected={script ? script.filePath === "/studio_node/generatedTypes.ts" : false}
+              onClick={gotoUtils.bind(undefined, "/studio_script/generatedTypes.ts")}
+              selected={script ? script.filePath === "/studio_script/generatedTypes.ts" : false}
             >
               <ListItemButton>
                 <ListItemText
@@ -250,7 +243,7 @@ const Sidebar = ({
         <Stack flex="auto">
           <SidebarHeader
             title="Templates"
-            subheader="Create nodes from these templates, click a template to create a new node."
+            subheader="Create scripts from these templates, click a template to create a new script."
             collapse={() => updateExplorer(undefined)}
           />
           <List dense>
@@ -284,13 +277,13 @@ const Sidebar = ({
   return (
     <Paper elevation={0}>
       <Stack direction="row" fullHeight>
-        <STabs orientation="vertical" value={activeExplorerTab}>
+        <Tabs orientation="vertical" value={activeExplorerTab}>
           <STab
             disableRipple
             value="nodes"
-            title="Nodes"
+            title="Scripts"
             icon={<NoteIcon fontSize="large" />}
-            data-test="node-explorer"
+            data-testid="node-explorer"
             onClick={() => updateExplorer(nodesSelected ? undefined : "nodes")}
           />
           <STab
@@ -298,7 +291,7 @@ const Sidebar = ({
             value="utils"
             title="Utilities"
             icon={<ConstructionOutlinedIcon fontSize="large" />}
-            data-test="utils-explorer"
+            data-testid="utils-explorer"
             onClick={() => updateExplorer(utilsSelected ? undefined : "utils")}
           />
           <STab
@@ -306,10 +299,10 @@ const Sidebar = ({
             value="templates"
             title="Templates"
             icon={<TemplateIcon fontSize="large" />}
-            data-test="templates-explorer"
+            data-testid="templates-explorer"
             onClick={() => updateExplorer(templatesSelected ? undefined : "templates")}
           />
-        </STabs>
+        </Tabs>
         {explorer != undefined && (
           <>
             <Divider flexItem orientation="vertical" />

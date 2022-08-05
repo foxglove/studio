@@ -78,7 +78,10 @@ export default {
   decorators: [
     (StoryComponent: Story, { parameters }: StoryContext): JSX.Element => {
       return (
-        <PanelSetup fixture={parameters.panelSetup?.fixture}>
+        <PanelSetup
+          fixture={parameters.panelSetup?.fixture}
+          includeSettings={parameters.includeSettings}
+        >
           <StoryComponent />
         </PanelSetup>
       );
@@ -112,6 +115,22 @@ SinglePoint.parameters = {
       },
     },
   },
+};
+
+export const SinglePointWithSettings = (): JSX.Element => {
+  return <MapPanel overrideConfig={{ layer: "custom" }} />;
+};
+SinglePointWithSettings.parameters = {
+  ...SinglePoint.parameters,
+  includeSettings: true,
+};
+
+export const SinglePointWithSettingsOverride = (): JSX.Element => {
+  return <MapPanel overrideConfig={{ layer: "custom", topicColors: { "/gps": "#ffc0cb" } }} />;
+};
+SinglePointWithSettingsOverride.parameters = {
+  ...SinglePoint.parameters,
+  includeSettings: true,
 };
 
 export const MultipleTopics = (): JSX.Element => {

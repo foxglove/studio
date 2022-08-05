@@ -20,7 +20,7 @@ import styled from "styled-components";
 import ChildToggle from "@foxglove/studio-base/components/ChildToggle";
 import ColorPicker from "@foxglove/studio-base/components/ColorPicker";
 import Icon from "@foxglove/studio-base/components/Icon";
-import Menu, { Item } from "@foxglove/studio-base/components/Menu";
+import { Menu, Item } from "@foxglove/studio-base/components/Menu";
 import Tooltip from "@foxglove/studio-base/components/Tooltip";
 import useGlobalVariables from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { LinkedGlobalVariable } from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/useLinkedGlobalVariables";
@@ -150,7 +150,7 @@ function StyleExpressionNode(props: {
         marginLeft: `-${OUTER_LEFT_MARGIN}px`,
       }}
     >
-      <SLeft data-test={`ns~${name}`}>
+      <SLeft data-testid={`ns~${name}`}>
         <Icon style={{ color: "rgba(255,255,255, 0.3)" }}>
           <EarthIcon style={{ width: 16, height: 16 }} />
         </Icon>

@@ -9,7 +9,7 @@ import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 
 import ThreeDeeRender from "../index";
 import { PointCloud2, TransformStamped } from "../ros";
-import { QUAT_IDENTITY } from "./common";
+import { QUAT_IDENTITY, rad2deg } from "./common";
 import useDelayedFixture from "./useDelayedFixture";
 
 export default {
@@ -135,6 +135,7 @@ function SensorMsgs_PointCloud2({ rgbaFieldName }: { rgbaFieldName: string }): J
           followTf: "base_link",
           topics: {
             "/pointcloud": {
+              visible: true,
               pointSize: 10,
               colorMode: rgbaFieldName,
               colorField: rgbaFieldName,
@@ -147,10 +148,10 @@ function SensorMsgs_PointCloud2({ rgbaFieldName }: { rgbaFieldName: string }): J
           cameraState: {
             distance: 13.5,
             perspective: true,
-            phi: 1.22,
+            phi: rad2deg(1.22),
             targetOffset: [0.25, -0.5, 0],
-            thetaOffset: -0.33,
-            fovy: 0.75,
+            thetaOffset: rad2deg(-0.33),
+            fovy: rad2deg(0.75),
             near: 0.01,
             far: 5000,
             target: [0, 0, 0],
@@ -308,6 +309,7 @@ export function SensorMsgs_PointCloud2_Intensity(): JSX.Element {
           followTf: "base_link",
           topics: {
             "/pointcloud": {
+              visible: true,
               pointSize: 5,
             },
           },
@@ -317,10 +319,10 @@ export function SensorMsgs_PointCloud2_Intensity(): JSX.Element {
           cameraState: {
             distance: 13.5,
             perspective: true,
-            phi: 1.22,
+            phi: rad2deg(1.22),
             targetOffset: [0.25, -0.5, 3],
-            thetaOffset: -0.33,
-            fovy: 0.75,
+            thetaOffset: rad2deg(-0.33),
+            fovy: rad2deg(0.75),
             near: 0.01,
             far: 5000,
             target: [0, 0, 0],
@@ -396,14 +398,17 @@ export function SensorMsgs_PointCloud2_TwoDimensions(): JSX.Element {
           cameraState: {
             distance: 13.5,
             perspective: true,
-            phi: 1.22,
+            phi: rad2deg(1.22),
             targetOffset: [0.25, -0.5, 0],
-            thetaOffset: -0.33,
-            fovy: 0.75,
+            thetaOffset: rad2deg(-0.33),
+            fovy: rad2deg(0.75),
             near: 0.01,
             far: 5000,
             target: [0, 0, 0],
             targetOrientation: [0, 0, 0, 1],
+          },
+          topics: {
+            "/pointcloud": { visible: true },
           },
         }}
       />

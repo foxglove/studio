@@ -36,6 +36,7 @@ import variablesHelpContent from "@foxglove/studio-base/components/GlobalVariabl
 import HelpSidebar, {
   MESSAGE_PATH_SYNTAX_HELP_INFO,
 } from "@foxglove/studio-base/components/HelpSidebar";
+import KeyListener from "@foxglove/studio-base/components/KeyListener";
 import LayoutBrowser from "@foxglove/studio-base/components/LayoutBrowser";
 import {
   MessagePipelineContext,
@@ -44,6 +45,7 @@ import {
 } from "@foxglove/studio-base/components/MessagePipeline";
 import MultiProvider from "@foxglove/studio-base/components/MultiProvider";
 import { OpenDialog, OpenDialogViews } from "@foxglove/studio-base/components/OpenDialog";
+import { OrgExtensionRegistrySyncAdapter } from "@foxglove/studio-base/components/OrgExtensionRegistrySyncAdapter";
 import PanelLayout from "@foxglove/studio-base/components/PanelLayout";
 import PanelList from "@foxglove/studio-base/components/PanelList";
 import panelsHelpContent from "@foxglove/studio-base/components/PanelList/index.help.md";
@@ -63,7 +65,7 @@ import {
   useCurrentLayoutSelector,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
-import { useExtensionRegistry } from "@foxglove/studio-base/context/ExtensionRegistryContext";
+import { useExtensionCatalog } from "@foxglove/studio-base/context/ExtensionCatalogContext";
 import LinkHandlerContext from "@foxglove/studio-base/context/LinkHandlerContext";
 import { useNativeAppMenu } from "@foxglove/studio-base/context/NativeAppMenuContext";
 import {
@@ -113,6 +115,21 @@ type SidebarItemKey =
   | "help";
 
 const selectedLayoutIdSelector = (state: LayoutState) => state.selectedLayout?.id;
+
+function activeElementIsInput() {
+  return (
+    document.activeElement instanceof HTMLInputElement ||
+    document.activeElement instanceof HTMLTextAreaElement
+  );
+}
+
+function keyboardEventHasModifier(event: KeyboardEvent) {
+  if (navigator.userAgent.includes("Mac")) {
+    return event.metaKey;
+  } else {
+    return event.ctrlKey;
+  }
+}
 
 function AddPanel() {
   const addPanel = useAddPanel();
@@ -347,7 +364,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
 
   const { loadFromFile } = useAssets();
 
-  const extensionRegistry = useExtensionRegistry();
+  const installExtension = useExtensionCatalog((state) => state.installExtension);
 
   const openHandle = useCallback(
     async (handle: FileSystemFileHandle) => {
@@ -361,8 +378,11 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
         try {
           const arrayBuffer = await file.arrayBuffer();
           const data = new Uint8Array(arrayBuffer);
-          const extension = await extensionRegistry.installExtension("local", data);
-          addToast(`Installed extension ${extension.id}`, { appearance: "success" });
+          const extension = await installExtension("local", data);
+          addToast(`Installed extension ${extension.id}`, {
+            appearance: "success",
+            autoDismiss: true,
+          });
         } catch (err) {
           log.error(err);
           addToast(`Failed to install extension ${file.name}: ${err.message}`, {
@@ -391,7 +411,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
         selectSource(matchedSource.id, { type: "file", handle });
       }
     },
-    [addToast, availableSources, extensionRegistry, loadFromFile, selectSource],
+    [addToast, availableSources, installExtension, loadFromFile, selectSource],
   );
 
   const openFiles = useCallback(
@@ -408,8 +428,11 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
           try {
             const arrayBuffer = await file.arrayBuffer();
             const data = new Uint8Array(arrayBuffer);
-            const extension = await extensionRegistry.installExtension("local", data);
-            addToast(`Installed extension ${extension.id}`, { appearance: "success" });
+            const extension = await installExtension("local", data);
+            addToast(`Installed extension ${extension.id}`, {
+              appearance: "success",
+              autoDismiss: true,
+            });
           } catch (err) {
             log.error(err);
             addToast(`Failed to install extension ${file.name}: ${err.message}`, {
@@ -446,7 +469,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
         }
       }
     },
-    [addToast, availableSources, extensionRegistry, loadFromFile, selectSource],
+    [addToast, availableSources, installExtension, loadFromFile, selectSource],
   );
 
   // files the main thread told us to open
@@ -499,7 +522,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
       [
         "connection",
         {
-          iconName: "DataManagementSettings",
+          iconName: "DatabaseSettings",
           title: "Data source",
           component: DataSourceSidebarItem,
           badge:
@@ -512,7 +535,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
       ["add-panel", { iconName: "RectangularClipping", title: "Add panel", component: AddPanel }],
       [
         "panel-settings",
-        { iconName: "SingleColumnEdit", title: "Panel settings", component: PanelSettings },
+        { iconName: "PanelSettings", title: "Panel settings", component: PanelSettings },
       ],
       ["variables", { iconName: "Variable2", title: "Variables", component: Variables }],
       ["preferences", { iconName: "Settings", title: "Preferences", component: Preferences }],
@@ -538,6 +561,24 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
   const sidebarBottomItems: readonly SidebarItemKey[] = useMemo(() => {
     return supportsAccountSettings ? ["help", "account", "preferences"] : ["help", "preferences"];
   }, [supportsAccountSettings]);
+
+  const keyDownHandlers = useMemo(
+    () => ({
+      b: (ev: KeyboardEvent) => {
+        if (
+          !keyboardEventHasModifier(ev) ||
+          activeElementIsInput() ||
+          selectedSidebarItem == undefined
+        ) {
+          return;
+        }
+
+        ev.preventDefault();
+        setSelectedSidebarItem(undefined);
+      },
+    }),
+    [selectedSidebarItem],
+  );
 
   const play = useMessagePipeline(selectPlay);
   const pause = useMessagePipeline(selectPause);
@@ -572,7 +613,9 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
           <div className={classes.dropzone}>Drop a file here</div>
         </DropOverlay>
       </DocumentDropListener>
+      <OrgExtensionRegistrySyncAdapter />
       <URLStateSyncAdapter />
+      <KeyListener global keyDownHandlers={keyDownHandlers} />
       <div className={classes.container} ref={containerRef} tabIndex={0}>
         <Sidebar
           items={sidebarItems}

@@ -4,14 +4,12 @@
 
 import * as THREE from "three";
 
-import Logger from "@foxglove/log";
-import { toNanoSec } from "@foxglove/rostime";
-import { SettingsTreeAction, SettingsTreeFields } from "@foxglove/studio";
-import PinholeCameraModel from "@foxglove/studio-base/panels/Image/lib/PinholeCameraModel";
 import {
+  PinholeCameraModel,
   decodeYUV,
   decodeRGB8,
   decodeRGBA8,
+  decodeBGRA8,
   decodeBGR8,
   decodeFloat1c,
   decodeBayerRGGB8,
@@ -20,7 +18,11 @@ import {
   decodeBayerGRBG8,
   decodeMono8,
   decodeMono16,
-} from "@foxglove/studio-base/panels/Image/lib/decodings";
+} from "@foxglove/den/image";
+import Logger from "@foxglove/log";
+import { toNanoSec } from "@foxglove/rostime";
+import { SettingsTreeAction, SettingsTreeFields } from "@foxglove/studio";
+import type { RosValue } from "@foxglove/studio-base/players/types";
 import { MutablePoint } from "@foxglove/studio-base/types/Messages";
 
 import { BaseUserData, Renderable } from "../Renderable";
@@ -50,13 +52,14 @@ export type LayerSettingsImage = BaseSettings & {
   color: string;
 };
 
+const NO_CAMERA_INFO_ERR = "NoCameraInfo";
 const CREATE_BITMAP_ERR = "CreateBitmap";
 
 const DEFAULT_IMAGE_WIDTH = 512;
 const DEFAULT_DISTANCE = 1;
 
 const DEFAULT_SETTINGS: LayerSettingsImage = {
-  visible: true,
+  visible: false,
   frameLocked: true,
   cameraInfoTopic: undefined,
   distance: DEFAULT_DISTANCE,
@@ -79,6 +82,17 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     this.userData.material?.dispose();
     this.userData.geometry?.dispose();
     super.dispose();
+  }
+
+  override details(): Record<string, RosValue> {
+    const cameraInfoTopic = this.userData.settings.cameraInfoTopic;
+    const cameraInfoRenderable = cameraInfoTopic
+      ? camerasExtension(this.renderer)?.renderables.get(cameraInfoTopic)
+      : undefined;
+    return {
+      image: this.userData.image,
+      camera_info: cameraInfoRenderable?.userData.cameraInfo,
+    };
   }
 }
 
@@ -125,7 +139,7 @@ export class Images extends SceneExtension<ImageRenderable> {
           node: {
             icon: "ImageProjection",
             fields,
-            visible: config.visible ?? true,
+            visible: config.visible ?? DEFAULT_SETTINGS.visible,
             order: topic.name.toLocaleLowerCase(),
             handler,
           },
@@ -135,7 +149,7 @@ export class Images extends SceneExtension<ImageRenderable> {
     return entries;
   }
 
-  handleSettingsAction = (action: SettingsTreeAction): void => {
+  override handleSettingsAction = (action: SettingsTreeAction): void => {
     const path = action.payload.path;
     if (action.action !== "update" || path.length !== 3) {
       return;
@@ -209,6 +223,12 @@ export class Images extends SceneExtension<ImageRenderable> {
           draft.topics[topic] = updatedUserSettings;
         });
         this.updateSettingsTree();
+      } else {
+        this.renderer.settings.errors.addToTopic(
+          topic,
+          NO_CAMERA_INFO_ERR,
+          "No CameraInfo topic found",
+        );
       }
     }
 
@@ -231,12 +251,6 @@ export class Images extends SceneExtension<ImageRenderable> {
     }
   };
 
-  private _camerasExtension() {
-    return this.renderer.sceneExtensions.get("foxglove.Cameras") as
-      | SceneExtension<Renderable<CameraInfoUserData>>
-      | undefined;
-  }
-
   private _updateImageRenderable(
     renderable: ImageRenderable,
     image: Image | CompressedImage,
@@ -244,7 +258,7 @@ export class Images extends SceneExtension<ImageRenderable> {
     settings: Partial<LayerSettingsImage> | undefined,
   ): void {
     const prevSettings = renderable.userData.settings;
-    const newSettings = { ...prevSettings, ...settings };
+    const newSettings = { ...DEFAULT_SETTINGS, ...settings };
     const geometrySettingsEqual =
       newSettings.cameraInfoTopic === prevSettings.cameraInfoTopic &&
       newSettings.distance === prevSettings.distance;
@@ -267,9 +281,16 @@ export class Images extends SceneExtension<ImageRenderable> {
       }
     }
 
+    const hasCameraInfo = settings?.cameraInfoTopic != undefined;
+    if (hasCameraInfo) {
+      this.renderer.settings.errors.removeFromTopic(topic, NO_CAMERA_INFO_ERR);
+    }
+
     // Create the plane geometry if needed
-    if (settings?.cameraInfoTopic != undefined && renderable.userData.geometry == undefined) {
-      const cameraRenderable = this._camerasExtension()?.renderables.get(settings.cameraInfoTopic);
+    if (hasCameraInfo && renderable.userData.geometry == undefined) {
+      const cameraRenderable = camerasExtension(this.renderer)?.renderables.get(
+        settings.cameraInfoTopic!,
+      );
       const cameraModel = cameraRenderable?.userData.cameraModel;
       if (cameraModel) {
         // log.debug(
@@ -360,7 +381,7 @@ function tryCreateMesh(renderable: ImageRenderable, renderer: Renderer): void {
     // log.debug(`Building mesh for camera image on "${renderable.userData.topic}"`);
     renderable.userData.mesh = new THREE.Mesh(geometry, renderable.userData.material);
     renderable.add(renderable.userData.mesh);
-    renderer.animationFrame();
+    renderer.queueAnimationFrame();
   }
 }
 
@@ -489,20 +510,23 @@ function multiplyScalar(vec: MutablePoint, scalar: number): void {
   vec.z *= scalar;
 }
 
-function cameraInfoTopicMatches(topic: string, cameraInfoTopic: string): boolean {
+export function cameraInfoTopicMatches(topic: string, cameraInfoTopic: string): boolean {
   const imageParts = topic.split("/");
   const infoParts = cameraInfoTopic.split("/");
-  if (imageParts.length !== infoParts.length) {
-    return false;
-  }
 
-  for (let i = 0; i < imageParts.length - 1; i++) {
+  for (let i = 0; i < imageParts.length - 1 && i < infoParts.length - 1; i++) {
     if (imageParts[i] !== infoParts[i]) {
       return false;
     }
   }
 
   return true;
+}
+
+function camerasExtension(renderer: Renderer) {
+  return renderer.sceneExtensions.get("foxglove.Cameras") as
+    | SceneExtension<Renderable<CameraInfoUserData>>
+    | undefined;
 }
 
 function autoSelectCameraInfoTopic(
@@ -536,6 +560,9 @@ function rawImageToDataTexture(
       break;
     case "rgba8":
       decodeRGBA8(rawData, width, height, output.image.data);
+      break;
+    case "bgra8":
+      decodeBGRA8(rawData, width, height, output.image.data);
       break;
     case "bgr8":
     case "8UC3":

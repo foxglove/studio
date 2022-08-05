@@ -25,7 +25,6 @@ import {
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import { Range } from "@foxglove/studio-base/util/ranges";
 import { NotificationSeverity } from "@foxglove/studio-base/util/sendNotification";
-import { TimestampMethod } from "@foxglove/studio-base/util/time";
 
 // re-exported until other import sites are updated from players/types to @foxglove/studio
 export type { MessageEvent };
@@ -47,7 +46,7 @@ export interface Player {
   // should return a promise from the listener that resolves when the UI has finished updating, so
   // that we don't get overwhelmed with new state that we can't keep up with. The Player is
   // responsible for appropriately throttling based on when we resolve this promise.
-  setListener(listener: (arg0: PlayerState) => Promise<void>): void;
+  setListener(listener: (playerState: PlayerState) => Promise<void>): void;
   // Close the player; i.e. terminate any connections it might have open.
   close(): void;
   // Set a new set of subscriptions/advertisers. This might trigger fetching
@@ -87,6 +86,7 @@ export enum PlayerPresence {
   NOT_PRESENT = "NOT_PRESENT",
   INITIALIZING = "INITIALIZING",
   RECONNECTING = "RECONNECTING",
+  BUFFERING = "BUFFERING",
   PRESENT = "PRESENT",
   ERROR = "ERROR",
 }
@@ -179,9 +179,6 @@ export type PlayerStateActiveData = {
   // E.g. 1.0 is real time, 0.2 is 20% of real time.
   speed: number;
 
-  // The order in which messages are published.
-  messageOrder: TimestampMethod;
-
   // The last time a seek / discontinuity in messages happened. This will clear out data within
   // `PanelAPI` so we're not looking at stale data.
   // TODO(JP): This currently is a time per `Date.now()`, but we don't need that anywhere, so we
@@ -239,12 +236,21 @@ export type TopicStats = {
   lastMessageTime?: Time;
 };
 
+type RosTypedArray =
+  | Int8Array
+  | Uint8Array
+  | Int16Array
+  | Uint16Array
+  | Int32Array
+  | Uint32Array
+  | Float32Array
+  | Float64Array;
+
 type RosSingularField = number | string | boolean | RosObject; // No time -- consider it a message.
 export type RosValue =
   | RosSingularField
   | readonly RosSingularField[]
-  | Uint8Array
-  | Int8Array
+  | RosTypedArray
   | undefined
   // eslint-disable-next-line no-restricted-syntax
   | null;

@@ -1729,6 +1729,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@emotion/cache@npm:*, @emotion/cache@npm:^11.7.1":
+  version: 11.9.3
+  resolution: "@emotion/cache@npm:11.9.3"
+  dependencies:
+    "@emotion/memoize": ^0.7.4
+    "@emotion/sheet": ^1.1.1
+    "@emotion/utils": ^1.0.0
+    "@emotion/weak-memoize": ^0.2.5
+    stylis: 4.0.13
+  checksum: 6e0aab2fa5b9b6b0b9bf66b5328ed44265c23ced16b46c13d2602c3497fabd95299f6cf2c87cbc02b630452aa3cff599c194c538125d744aa135824129698ccc
+  languageName: node
+  linkType: hard
+
 "@emotion/cache@npm:^10.0.27":
   version: 10.0.29
   resolution: "@emotion/cache@npm:10.0.29"
@@ -1738,19 +1751,6 @@ __metadata:
     "@emotion/utils": 0.11.3
     "@emotion/weak-memoize": 0.2.5
   checksum: 78b37fb0c2e513c90143a927abef229e995b6738ef8a92ce17abe2ed409b38859ddda7c14d7f4854d6f4e450b6db50231532f53a7fec4903d7ae775b2ae3fd64
-  languageName: node
-  linkType: hard
-
-"@emotion/cache@npm:^11.7.1":
-  version: 11.7.1
-  resolution: "@emotion/cache@npm:11.7.1"
-  dependencies:
-    "@emotion/memoize": ^0.7.4
-    "@emotion/sheet": ^1.1.0
-    "@emotion/utils": ^1.0.0
-    "@emotion/weak-memoize": ^0.2.5
-    stylis: 4.0.13
-  checksum: cf7aa8fe3bacfdedcda94b53e76a7635e122043439715fcfbf7f1a81340cfe6099a59134481a03ec3e0437466566d18528577d1e6ea92f5b98c372b8b38a8f35
   languageName: node
   linkType: hard
 
@@ -1843,6 +1843,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@emotion/serialize@npm:*, @emotion/serialize@npm:^1.0.2":
+  version: 1.0.4
+  resolution: "@emotion/serialize@npm:1.0.4"
+  dependencies:
+    "@emotion/hash": ^0.8.0
+    "@emotion/memoize": ^0.7.4
+    "@emotion/unitless": ^0.7.5
+    "@emotion/utils": ^1.0.0
+    csstype: ^3.0.2
+  checksum: e8cc342056734e176ea837fe44035126dea174962db40852a7ced499d258c0056b0fd3c298743c446f9ba0f2647cb42dfb623b8e5783c265deb9eb20138d68e7
+  languageName: node
+  linkType: hard
+
 "@emotion/serialize@npm:^0.11.15, @emotion/serialize@npm:^0.11.16":
   version: 0.11.16
   resolution: "@emotion/serialize@npm:0.11.16"
@@ -1856,19 +1869,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@emotion/serialize@npm:^1.0.2":
-  version: 1.0.2
-  resolution: "@emotion/serialize@npm:1.0.2"
-  dependencies:
-    "@emotion/hash": ^0.8.0
-    "@emotion/memoize": ^0.7.4
-    "@emotion/unitless": ^0.7.5
-    "@emotion/utils": ^1.0.0
-    csstype: ^3.0.2
-  checksum: ff84fbe09ec06e7ad3deaef5c5b5ea6af6a522e8efe49c2b398b875d06872626284a83b6b18b7f777750c94264a61e7924157d869d9bca2f675731bbb91a6055
-  languageName: node
-  linkType: hard
-
 "@emotion/sheet@npm:0.9.4":
   version: 0.9.4
   resolution: "@emotion/sheet@npm:0.9.4"
@@ -1876,10 +1876,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@emotion/sheet@npm:^1.1.0":
-  version: 1.1.0
-  resolution: "@emotion/sheet@npm:1.1.0"
-  checksum: a4b74e16a8fea1157413efe4904f5f679d724323cb605d66d20a0b98744422f5d411fca927ceb52e4de454a0a819c5273ca9496db9f011b4ecd17b9f1b212007
+"@emotion/sheet@npm:^1.1.0, @emotion/sheet@npm:^1.1.1":
+  version: 1.1.1
+  resolution: "@emotion/sheet@npm:1.1.1"
+  checksum: b916ac665735ef6dfda26b09f2d3493789d432d649733db9da18c4db0115e7fdadeb8d45f6490320248916bb13d978bba74c914b711ac96f659b76a5e52d5cd2
   languageName: node
   linkType: hard
 
@@ -1947,17 +1947,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@emotion/utils@npm:*, @emotion/utils@npm:^1.0.0":
+  version: 1.1.0
+  resolution: "@emotion/utils@npm:1.1.0"
+  checksum: d3b681ca3a23b07033ac6c6937e71010a5549ac8ccec325eb6c91a7e48d9a73db83fa5dadc58be981bb125d7c00fedca868ea4362b1da9e02866615f96be4df1
+  languageName: node
+  linkType: hard
+
 "@emotion/utils@npm:0.11.3":
   version: 0.11.3
   resolution: "@emotion/utils@npm:0.11.3"
   checksum: 9c4204bda84f9acd153a9be9478a83f9baa74d5d7a4c21882681c4d1b86cd113b84540cb1f92e1c30313b5075f024da2658dbc553f5b00776ef9b6ec7991c0c9
-  languageName: node
-  linkType: hard
-
-"@emotion/utils@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "@emotion/utils@npm:1.0.0"
-  checksum: 3ce8048441a915447d9ef51eb6d1d4cbcce8c8d1647bc7a23333ce2fb2249e74cf9471670d6f49a716e93ff633c9e7a6633517698e17391aebfc40c9d0cabcc0
   languageName: node
   linkType: hard
 
@@ -2238,6 +2238,14 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@foxglove/comlink-transfer-handlers@workspace:*, @foxglove/comlink-transfer-handlers@workspace:packages/comlink-transfer-handlers":
+  version: 0.0.0-use.local
+  resolution: "@foxglove/comlink-transfer-handlers@workspace:packages/comlink-transfer-handlers"
+  dependencies:
+    typescript: 4.6.2
+  languageName: unknown
+  linkType: soft
+
 "@foxglove/crc@npm:^0.0.3":
   version: 0.0.3
   resolution: "@foxglove/crc@npm:0.0.3"
@@ -2248,9 +2256,6 @@ __metadata:
 "@foxglove/den@workspace:*, @foxglove/den@workspace:packages/den":
   version: 0.0.0-use.local
   resolution: "@foxglove/den@workspace:packages/den"
-  dependencies:
-    async-mutex: 0.3.2
-    typescript: 4.6.2
   languageName: unknown
   linkType: soft
 
@@ -2310,7 +2315,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@foxglove/mcap-support@workspace:packages/mcap-support"
   dependencies:
-    "@foxglove/schemas": 0.2.0
+    "@foxglove/schemas": 0.3.0
     "@foxglove/wasm-bz2": 0.1.0
     "@protobufjs/base64": 1.1.2
     "@types/zstd-codec": "workspace:*"
@@ -2474,7 +2479,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@foxglove/schemas@npm:0.2.0, @foxglove/schemas@npm:^0.2.0":
+"@foxglove/schemas@npm:0.3.0":
+  version: 0.3.0
+  resolution: "@foxglove/schemas@npm:0.3.0"
+  dependencies:
+    "@foxglove/rosmsg-msgs-common": ^1.0.4
+    tslib: ^2
+  checksum: d0cdcaf9ec264f5395b3636b5fd11925f8893d31dbe9ed1d4de7c988b8aa6d7b6580728d9cbe0b4504c511324835f8bfea02656facb1f0a5c66f4fd4be043b39
+  languageName: node
+  linkType: hard
+
+"@foxglove/schemas@npm:^0.2.0":
   version: 0.2.0
   resolution: "@foxglove/schemas@npm:0.2.0"
   dependencies:
@@ -2502,6 +2517,7 @@ __metadata:
     "@fluentui/react-icons-mdl2": 1.2.14
     "@foxglove/avl": 1.0.0
     "@foxglove/chartjs-plugin-zoom": 2.0.4
+    "@foxglove/comlink-transfer-handlers": "workspace:*"
     "@foxglove/den": "workspace:*"
     "@foxglove/electron-socket": 2.0.0
     "@foxglove/hooks": "workspace:*"
@@ -2516,13 +2532,14 @@ __metadata:
     "@foxglove/rosmsg-serialization": 1.3.0
     "@foxglove/rosmsg2-serialization": 1.0.6
     "@foxglove/rostime": 1.1.2
-    "@foxglove/schemas": 0.2.0
+    "@foxglove/schemas": 0.3.0
     "@foxglove/studio": "workspace:*"
+    "@foxglove/three-text": "workspace:*"
     "@foxglove/ulog": 2.1.2
     "@foxglove/velodyne-cloud": 1.0.1
     "@foxglove/wasm-bz2": 0.1.0
     "@foxglove/ws-protocol": 0.0.8
-    "@mcap/core": 0.2.1
+    "@mcap/core": 0.2.2
     "@mdi/svg": 6.5.95
     "@mui/icons-material": 5.4.1
     "@mui/material": 5.4.1
@@ -2533,6 +2550,7 @@ __metadata:
     "@testing-library/dom": 8.11.3
     "@testing-library/react": 12.1.2
     "@testing-library/react-hooks": 7.0.2
+    "@testing-library/user-event": 14.3.0
     "@types/amplitude-js": 8.16.0
     "@types/argparse": 2.0.10
     "@types/circular-dependency-plugin": 5.0.5
@@ -2576,7 +2594,7 @@ __metadata:
     "@types/uuid": 8.3.4
     "@types/wicg-file-system-access": 2020.9.5
     "@types/ws": 8.5.2
-    "@wojtekmaj/enzyme-adapter-react-17": 0.6.6
+    "@wojtekmaj/enzyme-adapter-react-17": 0.6.7
     amplitude-js: 8.16.1
     argparse: 2.0.1
     async-mutex: 0.3.2
@@ -2587,6 +2605,7 @@ __metadata:
     chromatic: 6.4.3
     circular-dependency-plugin: 5.2.2
     classnames: 2.3.1
+    comlink: 4.3.1
     cross-env: 7.0.3
     crypto-browserify: 3.12.0
     css-loader: 6.6.0
@@ -2609,11 +2628,13 @@ __metadata:
     idb-keyval: 6.1.0
     immer: 9.0.12
     intervals-fn: 3.0.3
+    jszip: 3.10.0
     leaflet: 1.7.1
     lodash: 4.17.21
     mathjs: 10.1.1
     memoize-weak: 1.0.2
-    moment: 2.29.2
+    meshoptimizer: 0.18.0
+    moment: 2.29.4
     moment-duration-format: 2.3.2
     moment-timezone: 0.5.34
     monaco-editor: 0.30.1
@@ -2658,12 +2679,13 @@ __metadata:
     style-loader: 3.3.1
     styled-components: 5.3.3
     text-metrics: 3.0.0
-    three: 0.140.2
+    three: "patch:three@0.140.2#../../patches/three.patch"
     tinycolor2: 1.4.2
     ts-essentials: 9.1.2
     ts-key-enum: 2.0.11
     ts-loader: 9.2.7
     tsconfig-paths: 3.13.0
+    tss-react: 3.7.1
     ttypescript: 1.5.13
     typescript: 4.6.2
     typescript-plugin-styled-components: 2.0.0
@@ -2677,13 +2699,31 @@ __metadata:
     wasm-lz4: 2.0.0
     webpack: 5.68.0
     xacro-parser: 0.3.8
-    zustand: 4.0.0-rc.1
+    zustand: 4.0.0
   languageName: unknown
   linkType: soft
 
 "@foxglove/studio@workspace:*, @foxglove/studio@workspace:packages/studio":
   version: 0.0.0-use.local
   resolution: "@foxglove/studio@workspace:packages/studio"
+  languageName: unknown
+  linkType: soft
+
+"@foxglove/three-text@workspace:*, @foxglove/three-text@workspace:packages/three-text":
+  version: 0.0.0-use.local
+  resolution: "@foxglove/three-text@workspace:packages/three-text"
+  dependencies:
+    "@mapbox/tiny-sdf": 2.0.5
+    "@storybook/addon-actions": 6.4.18
+    "@storybook/addon-essentials": 6.4.18
+    "@storybook/builder-webpack5": 6.4.18
+    "@storybook/manager-webpack5": 6.4.18
+    "@storybook/react": 6.4.18
+    three: 0.140.2
+    ts-loader: 9.2.7
+    typescript: 4.6.2
+  peerDependencies:
+    three: ">=0.140.2"
   languageName: unknown
   linkType: soft
 
@@ -3088,6 +3128,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@mapbox/tiny-sdf@npm:2.0.5":
+  version: 2.0.5
+  resolution: "@mapbox/tiny-sdf@npm:2.0.5"
+  checksum: 23fd158ea795592cf1f825fcac20d48230c54a6985a931f609af8b4e69cd99f1c798dc893baec63f4fd6f42ffc3e7292b39f4126966412edd4606eb3dbf86b54
+  languageName: node
+  linkType: hard
+
 "@mapbox/tiny-sdf@npm:^1.1.1":
   version: 1.2.5
   resolution: "@mapbox/tiny-sdf@npm:1.2.5"
@@ -3095,14 +3142,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mcap/core@npm:0.2.1":
-  version: 0.2.1
-  resolution: "@mcap/core@npm:0.2.1"
+"@mcap/core@npm:0.2.2":
+  version: 0.2.2
+  resolution: "@mcap/core@npm:0.2.2"
   dependencies:
     "@foxglove/crc": ^0.0.3
     heap-js: ^2.1.6
     tslib: ^2
-  checksum: cdbacbf1592ccdc6352fa80074d80fd3d0445e1f27cbafc63cce33e41fc3a40a29a1d5419102cdd2731018ad4c46b9728f32362719d8dc997a4853b262927a0e
+  checksum: b7b5f6fd8c33b064abf0d4d71a026c804caf5f4e6bc50a0c60aad9a0c85f7a0acc92511a1385b47ae8ca1faef5ef820af2822c5861a4f2cb84e91aeaee1003d4
   languageName: node
   linkType: hard
 
@@ -5305,6 +5352,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@testing-library/user-event@npm:14.3.0":
+  version: 14.3.0
+  resolution: "@testing-library/user-event@npm:14.3.0"
+  peerDependencies:
+    "@testing-library/dom": ">=7.21.4"
+  checksum: cbd5954460496519cb2ff3fa506ca598d7e4c2e3d2f2e129b21909758f5ec87573aad7d6c79aebffd4bd0ea843315b3064a2a76e545f196bd4c82489cb3afc1d
+  languageName: node
+  linkType: hard
+
 "@tootallnate/once@npm:1":
   version: 1.1.2
   resolution: "@tootallnate/once@npm:1.1.2"
@@ -7019,11 +7075,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@wojtekmaj/enzyme-adapter-react-17@npm:0.6.6":
-  version: 0.6.6
-  resolution: "@wojtekmaj/enzyme-adapter-react-17@npm:0.6.6"
+"@wojtekmaj/enzyme-adapter-react-17@npm:0.6.7":
+  version: 0.6.7
+  resolution: "@wojtekmaj/enzyme-adapter-react-17@npm:0.6.7"
   dependencies:
-    "@wojtekmaj/enzyme-adapter-utils": ^0.1.2
+    "@wojtekmaj/enzyme-adapter-utils": ^0.1.4
     enzyme-shallow-equal: ^1.0.0
     has: ^1.0.0
     prop-types: ^15.7.0
@@ -7033,13 +7089,13 @@ __metadata:
     enzyme: ^3.0.0
     react: ^17.0.0-0
     react-dom: ^17.0.0-0
-  checksum: bf6dad41313456d7a80fdd44e0a0e95a49af8f841b1d0ac5a03c48973877ecaf9ac4d457e3f6edd0df7d40abfe625a8aaa77ffb822224a25e5e866be41d9ea0f
+  checksum: 5cd4c01adf0d778c5ef749964ae971422f0d445be11f9585de6a077edc32ea7ca74f14c240cf5f0848a8147596d84ed133820c91fc98d33f02b9dc6eee3fd158
   languageName: node
   linkType: hard
 
-"@wojtekmaj/enzyme-adapter-utils@npm:^0.1.2":
-  version: 0.1.2
-  resolution: "@wojtekmaj/enzyme-adapter-utils@npm:0.1.2"
+"@wojtekmaj/enzyme-adapter-utils@npm:^0.1.4":
+  version: 0.1.4
+  resolution: "@wojtekmaj/enzyme-adapter-utils@npm:0.1.4"
   dependencies:
     function.prototype.name: ^1.1.0
     has: ^1.0.0
@@ -7047,7 +7103,7 @@ __metadata:
     prop-types: ^15.7.0
   peerDependencies:
     react: ^17.0.0-0
-  checksum: 4b2f5ff155c600137342c0ee19512b27d469fef98c20fee85785014e71d21b75cab48f93c8004548bd86410395e7577265acfa873e7a2d863c73291734c6d652
+  checksum: af567b15a734ee5eb224e70cb77f42c1761ec0a0997663fdf10209988ea2dc09d5729ddfbeab9980c5e2358809004cd05187031b8c9a6f499aa59a82dea466d8
   languageName: node
   linkType: hard
 
@@ -9430,6 +9486,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"comlink@npm:4.3.1":
+  version: 4.3.1
+  resolution: "comlink@npm:4.3.1"
+  checksum: 557360a6558708c55aff74a25f834bfb9bfca8a42444682c4d5aead57681534a0206202be2a2760b4de124c3ba6d485b08978b6d5469cb3d26bf1438ee28a4f1
+  languageName: node
+  linkType: hard
+
 "comma-separated-tokens@npm:^1.0.0":
   version: 1.0.8
   resolution: "comma-separated-tokens@npm:1.0.8"
@@ -10562,7 +10625,6 @@ __metadata:
     "@foxglove/electron-socket": 2.0.0
     "@foxglove/studio-base": "workspace:*"
     "@types/plist": ^3.0.2
-    jszip: 3.7.1
     plist: 3.0.5
     quicklookjs: 0.0.3
   languageName: unknown
@@ -16392,15 +16454,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jszip@npm:3.7.1, jszip@npm:^3.1.0":
-  version: 3.7.1
-  resolution: "jszip@npm:3.7.1"
+"jszip@npm:3.10.0, jszip@npm:^3.1.0":
+  version: 3.10.0
+  resolution: "jszip@npm:3.10.0"
   dependencies:
     lie: ~3.3.0
     pako: ~1.0.2
     readable-stream: ~2.3.6
-    set-immediate-shim: ~1.0.1
-  checksum: 67d737a82b294cc102e7451e32d5acbbab29860399be460cae598084327e6f2ea0c9bca2d3dad701da6a75ddf77f34c6a1dd7db0c3d5c0fec5998b7e56d6d59d
+    setimmediate: ^1.0.5
+  checksum: 80cc8e0e466467e9e21447f604f9262509b29a9c65170a3fee415ac0a403beb370840973cdc17f75d2b92ab3e60685f94d267706510d46bed2dd14858a38e459
   languageName: node
   linkType: hard
 
@@ -17326,6 +17388,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"meshoptimizer@npm:0.18.0":
+  version: 0.18.0
+  resolution: "meshoptimizer@npm:0.18.0"
+  checksum: d9f07b4659315b18f677edea0c7eb25aa0ca8c8ec5d67c7ee3f0d90237144d6bcdc4098dfb5d1de166f5bcd57a735455851b9841fa3f9c52f3aa5cbc2178ecec
+  languageName: node
+  linkType: hard
+
 "methods@npm:~1.1.2":
   version: 1.1.2
   resolution: "methods@npm:1.1.2"
@@ -17871,10 +17940,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"moment@npm:2.29.2, moment@npm:>= 2.9.0, moment@npm:>=2.14.0":
-  version: 2.29.2
-  resolution: "moment@npm:2.29.2"
-  checksum: ee850b5776485e2af0775ceb3cfebaa7d7638f0a750fe0678fcae24c310749f96c1938808384bd422a55e5703834a71fcb09c8a1d36d9cf847f6ed0205d7a3e5
+"moment@npm:2.29.4, moment@npm:>= 2.9.0, moment@npm:>=2.14.0":
+  version: 2.29.4
+  resolution: "moment@npm:2.29.4"
+  checksum: 0ec3f9c2bcba38dc2451b1daed5daded747f17610b92427bebe1d08d48d8b7bdd8d9197500b072d14e326dd0ccf3e326b9e3d07c5895d3d49e39b6803b76e80e
   languageName: node
   linkType: hard
 
@@ -21996,13 +22065,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"set-immediate-shim@npm:~1.0.1":
-  version: 1.0.1
-  resolution: "set-immediate-shim@npm:1.0.1"
-  checksum: 5085c84039d1e5eee73d2bf48ce765fcec76159021d0cc7b40e23bcdf62cb6d450ffb781e3c62c1118425242c48eae96df712cba0a20a437e86b0d4a15d51a11
-  languageName: node
-  linkType: hard
-
 "set-value@npm:^2.0.0, set-value@npm:^2.0.1":
   version: 2.0.1
   resolution: "set-value@npm:2.0.1"
@@ -22015,7 +22077,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"setimmediate@npm:^1.0.4":
+"setimmediate@npm:^1.0.4, setimmediate@npm:^1.0.5":
   version: 1.0.5
   resolution: "setimmediate@npm:1.0.5"
   checksum: c9a6f2c5b51a2dabdc0247db9c46460152ffc62ee139f3157440bd48e7c59425093f42719ac1d7931f054f153e2d26cf37dfeb8da17a794a58198a2705e527fd
@@ -23316,6 +23378,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"three@patch:three@0.140.2#../../patches/three.patch::locator=%40foxglove%2Fstudio-base%40workspace%3Apackages%2Fstudio-base":
+  version: 0.140.2
+  resolution: "three@patch:three@npm%3A0.140.2#../../patches/three.patch::version=0.140.2&hash=51dd4b&locator=%40foxglove%2Fstudio-base%40workspace%3Apackages%2Fstudio-base"
+  checksum: 3a2aec5ac91551e4675c6b13c14e89eb0b8725efa5c74906b0064b4d2bfef603972089633f842dbf81185eaa5a98e3c224faa9073396d77bf63080665d1b1c30
+  languageName: node
+  linkType: hard
+
 "throat@npm:^6.0.1":
   version: 6.0.1
   resolution: "throat@npm:6.0.1"
@@ -23727,6 +23796,24 @@ __metadata:
   version: 1.14.1
   resolution: "tslib@npm:1.14.1"
   checksum: dbe628ef87f66691d5d2959b3e41b9ca0045c3ee3c7c7b906cc1e328b39f199bb1ad9e671c39025bd56122ac57dfbf7385a94843b1cc07c60a4db74795829acd
+  languageName: node
+  linkType: hard
+
+"tss-react@npm:3.7.1":
+  version: 3.7.1
+  resolution: "tss-react@npm:3.7.1"
+  dependencies:
+    "@emotion/cache": "*"
+    "@emotion/serialize": "*"
+    "@emotion/utils": "*"
+  peerDependencies:
+    "@emotion/react": ^11.4.1
+    "@emotion/server": ^11.4.0
+    react: ^16.8.0 || ^17.0.2 || ^18.0.0
+  peerDependenciesMeta:
+    "@emotion/server":
+      optional: true
+  checksum: beb58baebda01f212c45632f21c6df89156fbce3221aac92cf14cccbf425d034272ce5d880f78f2feb00550dbd322acdf0e376d0c04d718a1d778af07b96bc46
   languageName: node
   linkType: hard
 
@@ -24478,12 +24565,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"use-sync-external-store@npm:1.1.0":
-  version: 1.1.0
-  resolution: "use-sync-external-store@npm:1.1.0"
+"use-sync-external-store@npm:1.2.0":
+  version: 1.2.0
+  resolution: "use-sync-external-store@npm:1.2.0"
   peerDependencies:
     react: ^16.8.0 || ^17.0.0 || ^18.0.0
-  checksum: 8993a0b642f91d7fcdbb02b7b3ac984bd3af4769686f38291fe7fcfe73dfb73d6c64d20dfb7e5e7fbf5a6da8f5392d6f8e5b00c243a04975595946e82c02b883
+  checksum: 5c639e0f8da3521d605f59ce5be9e094ca772bd44a4ce7322b055a6f58eeed8dda3c94cabd90c7a41fb6fa852210092008afe48f7038792fd47501f33299116a
   languageName: node
   linkType: hard
 
@@ -25631,11 +25718,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zustand@npm:4.0.0-rc.1":
-  version: 4.0.0-rc.1
-  resolution: "zustand@npm:4.0.0-rc.1"
+"zustand@npm:4.0.0":
+  version: 4.0.0
+  resolution: "zustand@npm:4.0.0"
   dependencies:
-    use-sync-external-store: 1.1.0
+    use-sync-external-store: 1.2.0
   peerDependencies:
     immer: ">=9.0"
     react: ">=16.8"
@@ -25644,7 +25731,7 @@ __metadata:
       optional: true
     react:
       optional: true
-  checksum: c88ae96286229b3c463cf7989c860fcde8ec9cf885eb50a0e0eaf9642388d407a854e5e07b9f80676454732bf15e1c7645201cff21fd9feacd5df8bbd62fcd46
+  checksum: b8ae5971dff79a1007d46f9a6bfa39ed5cc5b101a877eeec069ebdb6c8285ec8e3463e40cfa7c0f1507a41f43fe26ffb44b556063cb70ac03bccf1ea6e0f69d6
   languageName: node
   linkType: hard
 

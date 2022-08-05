@@ -3,12 +3,14 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import type { Time } from "@foxglove/rostime";
+import type { FrameTransform } from "@foxglove/schemas/schemas/typescript";
 
 import type { PartialMessage } from "./SceneExtension";
-import type {
+import {
   ColorRGBA,
   Header,
   Matrix6,
+  PointFieldType,
   Quaternion,
   TFMessage,
   Transform,
@@ -16,6 +18,35 @@ import type {
   Vector3,
 } from "./ros";
 import type { Pose } from "./transforms";
+
+// This should be importable from @foxglove/schemas, but importing enums from
+// that package is currently not working. See <https://github.com/foxglove/schemas/issues/41>
+// for more details
+enum NumericType {
+  UNKNOWN = 0,
+  UINT8 = 1,
+  INT8 = 2,
+  UINT16 = 3,
+  INT16 = 4,
+  UINT32 = 5,
+  INT32 = 6,
+  FLOAT32 = 7,
+  FLOAT64 = 8,
+}
+
+// Legacy foxglove.Transform type -- see https://github.com/foxglove/schemas/pull/46
+type LegacyTransform = {
+  timestamp: Time;
+  translation: Vector3;
+  rotation: Quaternion;
+};
+// Legacy foxglove.FrameTransform type -- see https://github.com/foxglove/schemas/pull/46
+export type LegacyFrameTransform = {
+  timestamp: Time;
+  parent_frame_id: string;
+  child_frame_id: string;
+  transform: LegacyTransform;
+};
 
 export function normalizeTime(time: Partial<Time> | undefined): Time {
   if (!time) {
@@ -147,4 +178,43 @@ export function normalizeTFMessage(tfMessage: PartialMessage<TFMessage> | undefi
   return {
     transforms: (tfMessage?.transforms ?? []).map(normalizeTransformStamped),
   };
+}
+
+export function normalizeFrameTransform(
+  frameTransform:
+    | (PartialMessage<FrameTransform> & PartialMessage<LegacyFrameTransform>)
+    | undefined,
+): FrameTransform {
+  return {
+    timestamp: normalizeTime(frameTransform?.timestamp),
+    parent_frame_id: frameTransform?.parent_frame_id ?? "",
+    child_frame_id: frameTransform?.child_frame_id ?? "",
+    translation: normalizeVector3(
+      frameTransform?.translation ?? frameTransform?.transform?.translation,
+    ),
+    rotation: normalizeQuaternion(frameTransform?.rotation ?? frameTransform?.transform?.rotation),
+  };
+}
+
+export function numericTypeToPointFieldType(type: NumericType): PointFieldType {
+  switch (type) {
+    case NumericType.UINT8:
+      return PointFieldType.UINT8;
+    case NumericType.INT8:
+      return PointFieldType.INT8;
+    case NumericType.UINT16:
+      return PointFieldType.UINT16;
+    case NumericType.INT16:
+      return PointFieldType.INT16;
+    case NumericType.UINT32:
+      return PointFieldType.UINT32;
+    case NumericType.INT32:
+      return PointFieldType.INT32;
+    case NumericType.FLOAT32:
+      return PointFieldType.FLOAT32;
+    case NumericType.FLOAT64:
+      return PointFieldType.FLOAT64;
+    default:
+      return PointFieldType.UNKNOWN;
+  }
 }

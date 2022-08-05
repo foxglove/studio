@@ -11,12 +11,25 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Checkbox } from "@fluentui/react";
-import { Link, Typography } from "@mui/material";
+import { Checkbox, FormControlLabel, Link, Typography } from "@mui/material";
+import { makeStyles } from "tss-react/mui";
 
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import Stack from "@foxglove/studio-base/components/Stack";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
+
+const useStyles = makeStyles()({
+  checkbox: {
+    "&.MuiCheckbox-root": {
+      paddingTop: 0,
+    },
+  },
+  formControlLabel: {
+    "&.MuiFormControlLabel-root": {
+      alignItems: "start",
+    },
+  },
+});
 
 type Feature = {
   key: AppSetting;
@@ -25,16 +38,6 @@ type Feature = {
 };
 
 const features: Feature[] = [
-  {
-    key: AppSetting.UNLIMITED_MEMORY_CACHE,
-    name: "Unlimited in-memory cache",
-    description: (
-      <>
-        Fully buffer a bag into memory. This may use up a lot of system memory. Changing this
-        setting requires a restart.
-      </>
-    ),
-  },
   {
     key: AppSetting.SHOW_DEBUG_PANELS,
     name: "Studio debug panels",
@@ -46,28 +49,14 @@ const features: Feature[] = [
     description: <>Enable the Legacy Plot panel.</>,
   },
   {
-    key: AppSetting.EXPERIMENTAL_BAG_PLAYER,
-    name: "Experimental bag player",
-    description: (
-      <>The experimental bag player uses a new approach to loading messages from bag files.</>
-    ),
+    key: AppSetting.EXPERIMENTAL_LATCHING,
+    name: "Latching",
+    description: <>Enable message latching for bag, mcap, and data platform sources.</>,
   },
   {
-    key: AppSetting.EXPERIMENTAL_DATA_PLATFORM_PLAYER,
-    name: "Experimental data platform player",
-    description: (
-      <>
-        The experimental data platform player uses a new approach to loading messages from Foxglove
-        Data Platform.
-      </>
-    ),
-  },
-  {
-    key: AppSetting.EXPERIMENTAL_MCAP_PLAYER,
-    name: "Experimental mcap player",
-    description: (
-      <>The experimental mcap player uses a new approach to loading messages from mcap files.</>
-    ),
+    key: AppSetting.ENABLE_MEMORY_USE_INDICATOR,
+    name: "Memory use indicator",
+    description: <>Show the app memory use in the navbar.</>,
   },
 ];
 if (process.env.NODE_ENV === "development") {
@@ -89,52 +78,32 @@ if (process.env.NODE_ENV === "development") {
       </>
     ),
   });
-  features.push({
-    key: AppSetting.EXPERIMENTAL_MESSAGE_ORDER,
-    name: "Configurable message playback order",
-    description: (
-      <>
-        Allow messages to be sorted by either receive time or header.stamp during playback. Playback
-        with header.stamp mode is experimental and not fully implemented.
-      </>
-    ),
-  });
-  features.push({
-    key: AppSetting.ENABLE_MEMORY_USE_INDICATOR,
-    name: "Memory use indicator",
-    description: <>Show the app memory use in the sidebar.</>,
-  });
 }
 
 function ExperimentalFeatureItem(props: { feature: Feature }) {
   const { feature } = props;
+  const { classes } = useStyles();
 
   const [enabled, setEnabled] = useAppConfigurationValue<boolean>(feature.key);
   return (
-    <Stack gap={2}>
-      <Stack flexGrow={1} gap={0.5}>
+    <FormControlLabel
+      className={classes.formControlLabel}
+      control={
         <Checkbox
-          onRenderLabel={() => {
-            return (
-              <Stack gap={0.25} paddingLeft={0.5}>
-                <Typography fontWeight={600}>{feature.name}</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {feature.description}
-                </Typography>
-              </Stack>
-            );
-          }}
+          className={classes.checkbox}
           checked={enabled}
           onChange={(_, checked) => void setEnabled(checked)}
-          styles={{
-            text: {
-              minWidth: 60,
-            },
-            label: { alignItems: "baseline" },
-          }}
         />
-      </Stack>
-    </Stack>
+      }
+      label={
+        <Stack gap={0.25} paddingLeft={0.5}>
+          <Typography fontWeight={600}>{feature.name}</Typography>
+          <Typography variant="body2" color="text.secondary">
+            {feature.description}
+          </Typography>
+        </Stack>
+      }
+    />
   );
 }
 
