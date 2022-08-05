@@ -90,6 +90,14 @@ export class TopicMarkers extends Renderable<MarkerTopicUserData> {
     }
   }
 
+  update(): void {
+    for (const ns of this.namespaces.values()) {
+      for (const renderable of ns.markersById.values()) {
+        renderable.update(renderable.userData.originalMarker, renderable.userData.receiveTime);
+      }
+    }
+  }
+
   startFrame(currentTime: bigint, renderFrameId: string, fixedFrameId: string): void {
     this.visible = this.userData.settings.visible;
     if (!this.visible) {
@@ -161,9 +169,9 @@ export class TopicMarkers extends Renderable<MarkerTopicUserData> {
       }
       this.add(renderable);
       ns.markersById.set(marker.id, renderable);
-    } else {
-      renderable.update(marker, receiveTime);
     }
+
+    renderable.update(marker, receiveTime);
   }
 
   private _deleteMarker(ns: string, id: number): boolean {

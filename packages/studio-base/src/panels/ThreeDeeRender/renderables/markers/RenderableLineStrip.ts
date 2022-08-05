@@ -64,12 +64,12 @@ export class RenderableLineStrip extends RenderableMarker {
     super.dispose();
   }
 
-  override update(marker: Marker, receiveTime: bigint | undefined): void {
-    const pointsLength = marker.points.length;
-
+  override update(newMarker: Marker, receiveTime: bigint | undefined): void {
     const prevMarker = this.userData.marker;
-    super.update(marker, receiveTime);
+    super.update(newMarker, receiveTime);
+    const marker = this.userData.marker;
 
+    const pointsLength = marker.points.length;
     const lineWidth = marker.scale.x;
     const transparent = markerHasTransparency(marker);
 
