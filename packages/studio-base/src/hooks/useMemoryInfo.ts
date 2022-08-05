@@ -8,7 +8,7 @@ import Logger from "@foxglove/log";
 
 const log = Logger.getLogger(__filename);
 
-export type MemoryInfo = {
+type MemoryInfo = {
   /// Maximum heap size in bytes
   jsHeapSizeLimit: number;
   /// current size in bytes of the JS heap including free space not occupied by any JS objects
@@ -21,7 +21,7 @@ interface Performance {
   memory?: MemoryInfo;
 }
 
-export type UseMemoryInfoOptions = {
+type UseMemoryInfoOptions = {
   refreshIntervalMs: number;
 };
 
