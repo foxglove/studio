@@ -75,6 +75,7 @@ export default function VariablesSidebar(): ReactElement {
       helpContent={helpContent}
       trailingItems={[
         <IconButton
+          data-testid="add-variable-button"
           key="add-global-variable"
           color="primary"
           disabled={globalVariables[""] != undefined}

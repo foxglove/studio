@@ -214,6 +214,7 @@ export default function Variable({
             <IconButton
               size="small"
               id="variable-action-button"
+              data-testid="variable-action-button"
               aria-controls={open ? "variable-action-menu" : undefined}
               aria-haspopup="true"
               aria-expanded={open ? "true" : undefined}
