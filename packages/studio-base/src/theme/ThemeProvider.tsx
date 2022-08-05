@@ -13,6 +13,8 @@ import { createMuiTheme, createFluentTheme } from "@foxglove/studio-base/theme";
 
 import icons from "./icons";
 
+// Make sure mui styles are loaded first so that our makeStyles customizations
+// take precedence.
 export const muiCache = createCache({
   key: "mui",
   prepend: true,
