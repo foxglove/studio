@@ -2,18 +2,11 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import createCache from "@emotion/cache";
-import { CacheProvider } from "@emotion/react";
 import { useMedia } from "react-use";
 
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
-
-export const muiCache = createCache({
-  key: "mui",
-  prepend: true,
-});
 
 export function ColorSchemeThemeProvider({
   children,
@@ -21,9 +14,5 @@ export function ColorSchemeThemeProvider({
   const [colorScheme = "dark"] = useAppConfigurationValue<string>(AppSetting.COLOR_SCHEME);
   const systemSetting = useMedia("(prefers-color-scheme: dark)");
   const isDark = colorScheme === "dark" || (colorScheme === "system" && systemSetting);
-  return (
-    <CacheProvider value={muiCache}>
-      <ThemeProvider isDark={isDark}>{children}</ThemeProvider>
-    </CacheProvider>
-  );
+  return <ThemeProvider isDark={isDark}>{children}</ThemeProvider>;
 }

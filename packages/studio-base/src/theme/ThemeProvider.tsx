@@ -1,6 +1,8 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
+import createCache from "@emotion/cache";
+import { CacheProvider } from "@emotion/react";
 import { ThemeProvider as FluentThemeProvider } from "@fluentui/react";
 import { registerIcons, unregisterIcons } from "@fluentui/style-utilities";
 import { ThemeProvider as MuiThemeProvider } from "@mui/material";
@@ -10,6 +12,11 @@ import { ThemeProvider as StyledThemeProvider } from "styled-components";
 import { createMuiTheme, createFluentTheme } from "@foxglove/studio-base/theme";
 
 import icons from "./icons";
+
+export const muiCache = createCache({
+  key: "mui",
+  prepend: true,
+});
 
 // By default the ThemeProvider adds an extra div to the DOM tree. We can disable this with a
 // custom `as` component to FluentThemeProvider. The component must support a `ref` property
@@ -40,19 +47,21 @@ export default function ThemeProvider({
   }
 
   return (
-    <MuiThemeProvider theme={muiTheme}>
-      <FluentThemeProvider
-        as={ThemeContainer}
-        applyTo="none" // skip default global styles for now
-        theme={fluentTheme}
-      >
-        <StyledThemeProvider
-          // Expose the same theme to styled-components - see types/styled-components.d.ts for type definitions
+    <CacheProvider value={muiCache}>
+      <MuiThemeProvider theme={muiTheme}>
+        <FluentThemeProvider
+          as={ThemeContainer}
+          applyTo="none" // skip default global styles for now
           theme={fluentTheme}
         >
-          {children}
-        </StyledThemeProvider>
-      </FluentThemeProvider>
-    </MuiThemeProvider>
+          <StyledThemeProvider
+            // Expose the same theme to styled-components - see types/styled-components.d.ts for type definitions
+            theme={fluentTheme}
+          >
+            {children}
+          </StyledThemeProvider>
+        </FluentThemeProvider>
+      </MuiThemeProvider>
+    </CacheProvider>
   );
 }
