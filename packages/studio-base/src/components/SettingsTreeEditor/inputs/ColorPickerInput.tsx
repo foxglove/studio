@@ -4,7 +4,7 @@
 
 import { ColorPicker } from "@fluentui/react";
 import ClearIcon from "@mui/icons-material/Clear";
-import { TextField, Popover, Button, IconButton } from "@mui/material";
+import { TextField, Popover, IconButton } from "@mui/material";
 import { useCallback, MouseEvent, useState } from "react";
 import tinycolor from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
