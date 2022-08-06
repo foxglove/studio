@@ -1306,7 +1306,7 @@ function settingsNode(
           ],
           value: colorMap,
         };
-        fields.opacity = {
+        fields.colorMapAlpha = {
           label: "Opacity",
           input: "number",
           step: 0.1,
