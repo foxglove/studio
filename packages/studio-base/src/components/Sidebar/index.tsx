@@ -221,7 +221,7 @@ export default function Sidebar<K extends string>({
           onGrowData={onGrowData}
         />
         {bottomItems.map((key) => onRenderItem({ key }))}
-        {enableMemoryUseIndocator && <MemoryUseIndicator />}
+        {enableMemoryUseIndicator && <MemoryUseIndicator />}
       </Stack>
       {
         // By always rendering the mosaic, even if we are only showing children, we can prevent the

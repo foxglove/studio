@@ -56,7 +56,7 @@ const features: Feature[] = [
   {
     key: AppSetting.ENABLE_MEMORY_USE_INDICATOR,
     name: "Memory use indicator",
-    description: <>Show the app memory use in the navbar.</>,
+    description: <>Show the app memory use in the sidebar.</>,
   },
 ];
 if (process.env.NODE_ENV === "development") {
