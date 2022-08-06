@@ -48,11 +48,13 @@ export function getColorConverter(
           return (output: ColorRGBA, colorValue: number) => {
             const t = (colorValue - minValue) / valueDelta;
             turboCached(output, t);
+            output.a = settings.colorMapAlpha;
           };
         case "rainbow":
           return (output: ColorRGBA, colorValue: number) => {
             const t = (colorValue - minValue) / valueDelta;
             rainbow(output, t);
+            output.a = settings.colorMapAlpha;
           };
       }
       throw new Error(`Unrecognized color map: ${settings.colorMap}`);
