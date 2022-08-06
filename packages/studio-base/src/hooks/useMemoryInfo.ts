@@ -17,6 +17,8 @@ type MemoryInfo = {
   usedJSHeapSize: number;
 };
 
+// Our DOM types don't have types for performance.memory since this is a chrome feature
+// We make our own version of Performance which optionally has MemoryInfo
 interface Performance {
   memory?: MemoryInfo;
 }
