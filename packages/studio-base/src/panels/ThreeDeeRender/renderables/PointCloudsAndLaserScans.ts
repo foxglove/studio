@@ -48,7 +48,7 @@ export type LayerSettingsPointCloudAndLaserScan = BaseSettings & {
   colorField: string | undefined;
   gradient: [string, string];
   colorMap: "turbo" | "rainbow";
-  colorMapAlpha: number;
+  explicitAlpha: number;
   rgbByteOrder: "rgba" | "bgra" | "abgr";
   minValue: number | undefined;
   maxValue: number | undefined;
@@ -95,7 +95,7 @@ const DEFAULT_SETTINGS: LayerSettingsPointCloudAndLaserScan = {
   colorField: undefined,
   gradient: [rgbaToCssString(DEFAULT_MIN_COLOR), rgbaToCssString(DEFAULT_MAX_COLOR)],
   colorMap: DEFAULT_COLOR_MAP,
-  colorMapAlpha: 1,
+  explicitAlpha: 1,
   rgbByteOrder: DEFAULT_RGB_BYTE_ORDER,
   minValue: undefined,
   maxValue: undefined,
@@ -1123,9 +1123,8 @@ function colorHasTransparency(settings: LayerSettingsPointCloudAndLaserScan): bo
         stringToRgba(tempColor, settings.gradient[1]).a < 1.0
       );
     case "colormap":
-      return settings.colorMapAlpha < 1.0;
     case "rgb":
-      return false;
+      return settings.explicitAlpha < 1.0;
     case "rgba":
       // It's too expensive to check the alpha value of each color. Just assume it's transparent
       return true;
@@ -1233,7 +1232,7 @@ function settingsNode(
   const colorFieldOptions = msgFields.map((field) => ({ label: field, value: field }));
   const gradient = config.gradient;
   const colorMap = config.colorMap ?? "turbo";
-  const colorMapAlpha = config.colorMapAlpha ?? 1;
+  const explicitAlpha = config.explicitAlpha ?? 1;
   const rgbByteOrder = config.rgbByteOrder ?? "rgba";
   const minValue = config.minValue;
   const maxValue = config.maxValue;
@@ -1306,16 +1305,6 @@ function settingsNode(
           ],
           value: colorMap,
         };
-        fields.colorMapAlpha = {
-          label: "Opacity",
-          input: "number",
-          step: 0.1,
-          placeholder: "1",
-          precision: 3,
-          min: 0,
-          max: 1,
-          value: colorMapAlpha,
-        };
         break;
       case "rgb":
         fields.rgbByteOrder = {
@@ -1341,6 +1330,19 @@ function settingsNode(
           value: rgbByteOrder,
         };
         break;
+    }
+
+    if (colorMode === "colormap" || colorMode === "rgb") {
+      fields.explicitAlpha = {
+        label: "Opacity",
+        input: "number",
+        step: 0.1,
+        placeholder: "1",
+        precision: 3,
+        min: 0,
+        max: 1,
+        value: explicitAlpha,
+      };
     }
 
     fields.minValue = {
