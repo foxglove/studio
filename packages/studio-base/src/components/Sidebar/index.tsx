@@ -80,7 +80,7 @@ export default function Sidebar<K extends string>({
   selectedKey: K | undefined;
   onSelectKey: (key: K | undefined) => void;
 }>): JSX.Element {
-  const [enableMemoryUseIndocator = false] = useAppConfigurationValue<boolean>(
+  const [enableMemoryUseIndicator = false] = useAppConfigurationValue<boolean>(
     AppSetting.ENABLE_MEMORY_USE_INDICATOR,
   );
   const [mosaicValue, setMosaicValue] = useState<MosaicNode<"sidebar" | "children">>("children");
