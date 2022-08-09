@@ -11,18 +11,10 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import {
-  Dropdown,
-  IDropdownOption,
-  TagPicker,
-  ISelectableOption,
-  useTheme,
-  IDropdownStyles,
-} from "@fluentui/react";
+import { TagPicker } from "@fluentui/react";
 import CopyAllIcon from "@mui/icons-material/CopyAll";
-import { useTheme as useMuiTheme } from "@mui/material";
-import cx from "classnames";
-import { useMemo } from "react";
+import { MenuItem, Select, useTheme as useMuiTheme } from "@mui/material";
+import { useCallback } from "react";
 
 import ToolbarIconButton from "@foxglove/studio-base/components/PanelToolbar/ToolbarIconButton";
 import Stack from "@foxglove/studio-base/components/Stack";
@@ -33,7 +25,7 @@ import LevelToString from "./LevelToString";
 import { LogMessageEvent, LogLevel } from "./types";
 
 // Create the log level options nodes once since they don't change per render.
-const LOG_LEVEL_OPTIONS: IDropdownOption[] = [
+const LOG_LEVEL_OPTIONS = [
   { text: ">= DEBUG", key: LogLevel.DEBUG },
   { text: ">= INFO", key: LogLevel.INFO },
   { text: ">= WARN", key: LogLevel.WARN },
@@ -55,84 +47,46 @@ export type FilterBarProps = {
   onFilterChange: (filter: Filter) => void;
 };
 
-// custom renderer for item in dropdown list to color text
-function renderOption(
-  option: ISelectableOption | undefined,
-  logStyles: ReturnType<typeof useLogStyles>["classes"],
-) {
-  if (!option) {
-    return ReactNull;
-  }
-  const strLevel = LevelToString(option.key as number);
-
-  return (
-    <div
-      key={option.key}
-      className={cx({
-        [logStyles.fatal]: strLevel === "FATAL",
-        [logStyles.error]: strLevel === "ERROR",
-        [logStyles.warn]: strLevel === "WARN",
-        [logStyles.info]: strLevel === "INFO",
-        [logStyles.debug]: strLevel === "DEBUG",
-      })}
-    >
-      {option.text}
-    </div>
-  );
-}
-
-// custom renderer for selected dropdown item to color the text
-function renderTitle(
-  options: IDropdownOption[] | undefined,
-  logStyles: ReturnType<typeof useLogStyles>["classes"],
-) {
-  if (!options) {
-    return ReactNull;
-  }
-  return <>{options.map((option) => renderOption(option, logStyles))}</>;
-}
-
 export default function FilterBar(props: FilterBarProps): JSX.Element {
-  const { classes: logStyles } = useLogStyles();
+  const { classes: logStyles, cx } = useLogStyles();
   const nodeNameOptions = Array.from(props.nodeNames, (name) => ({ name, key: name }));
 
   const selectedItems = Array.from(props.searchTerms, (term) => ({
     name: term,
     key: term,
   }));
-  const theme = useTheme();
   const muiTheme = useMuiTheme();
-  const dropdownStyles: Partial<IDropdownStyles> = useMemo(
-    () => ({
-      root: {
-        minWidth: "100px",
-      },
-      caretDownWrapper: {
-        top: 0,
-        lineHeight: 16,
-        height: 16,
-      },
-      title: {
-        backgroundColor: "transparent",
-        fontSize: theme.fonts.small.fontSize,
-        borderColor: theme.semanticColors.bodyDivider,
-        lineHeight: 22,
-        height: 22,
-      },
-      dropdownItemSelected: {
-        fontSize: theme.fonts.small.fontSize,
-        lineHeight: 22,
-        height: 22,
-        minHeight: 22,
-      },
-      dropdownItem: {
-        lineHeight: 22,
-        height: 22,
-        minHeight: 22,
-        fontSize: theme.fonts.small.fontSize,
-      },
-    }),
-    [theme],
+
+  const logLevelToClass = useCallback(
+    (level: number) => {
+      const strLevel = LevelToString(level);
+      return cx({
+        [logStyles.fatal]: strLevel === "FATAL",
+        [logStyles.error]: strLevel === "ERROR",
+        [logStyles.warn]: strLevel === "WARN",
+        [logStyles.info]: strLevel === "INFO",
+        [logStyles.debug]: strLevel === "DEBUG",
+      });
+    },
+    [cx, logStyles.debug, logStyles.error, logStyles.fatal, logStyles.info, logStyles.warn],
+  );
+
+  const logLevelItems = LOG_LEVEL_OPTIONS.map((option, index) => {
+    const classes = logLevelToClass(option.key);
+    return (
+      <MenuItem key={index} value={option.key} className={classes}>
+        {option.text}
+      </MenuItem>
+    );
+  });
+
+  const renderLogLevelValue = useCallback(
+    (value: number) => {
+      const option = LOG_LEVEL_OPTIONS.find((o) => o.key === value);
+      const classes = logLevelToClass(Number(option?.key ?? LogLevel.DEBUG));
+      return <div className={classes}>{option?.text}</div>;
+    },
+    [logLevelToClass],
   );
 
   return (
@@ -143,21 +97,19 @@ export default function FilterBar(props: FilterBarProps): JSX.Element {
       alignItems="center"
       style={{ marginRight: muiTheme.spacing(-1) }} // Spacing hack until we can unify the toolbar items.
     >
-      <Dropdown
-        styles={dropdownStyles}
-        onRenderOption={(option) => renderOption(option, logStyles)}
-        onRenderTitle={(options) => renderTitle(options, logStyles)}
-        onChange={(_ev, option) => {
-          if (option) {
-            props.onFilterChange({
-              minLogLevel: option.key as number,
-              searchTerms: Array.from(props.searchTerms),
-            });
-          }
+      <Select
+        value={props.minLogLevel}
+        size="small"
+        renderValue={renderLogLevelValue}
+        onChange={(event) => {
+          props.onFilterChange({
+            minLogLevel: Number(event.target.value),
+            searchTerms: Array.from(props.searchTerms),
+          });
         }}
-        options={LOG_LEVEL_OPTIONS}
-        selectedKey={props.minLogLevel}
-      />
+      >
+        {logLevelItems}
+      </Select>
       <Stack flex="auto" gap={1}>
         <TagPicker
           inputProps={{
