@@ -11,13 +11,14 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { TagPicker } from "@fluentui/react";
 import CopyAllIcon from "@mui/icons-material/CopyAll";
-import { MenuItem, Select, useTheme as useMuiTheme } from "@mui/material";
+import { MenuItem, Select, Typography } from "@mui/material";
 import { useCallback } from "react";
+import { makeStyles } from "tss-react/mui";
 
 import ToolbarIconButton from "@foxglove/studio-base/components/PanelToolbar/ToolbarIconButton";
 import Stack from "@foxglove/studio-base/components/Stack";
+import { FilterTagInput } from "@foxglove/studio-base/panels/Log/FilterTagInput";
 import useLogStyles from "@foxglove/studio-base/panels/Log/useLogStyles";
 import clipboard from "@foxglove/studio-base/util/clipboard";
 
@@ -32,6 +33,18 @@ const LOG_LEVEL_OPTIONS = [
   { text: ">= ERROR", key: LogLevel.ERROR },
   { text: ">= FATAL", key: LogLevel.FATAL },
 ];
+
+const useStyles = makeStyles()((theme) => ({
+  root: {
+    marginRight: theme.spacing(-1),
+  },
+  levelSelect: {
+    ".MuiSelect-select.MuiInputBase-inputSizeSmall": {
+      paddingBottom: theme.spacing(0.5),
+      paddingTop: theme.spacing(0.5),
+    },
+  },
+}));
 
 type Filter = {
   minLogLevel: number;
@@ -48,14 +61,8 @@ export type FilterBarProps = {
 };
 
 export default function FilterBar(props: FilterBarProps): JSX.Element {
-  const { classes: logStyles, cx } = useLogStyles();
-  const nodeNameOptions = Array.from(props.nodeNames, (name) => ({ name, key: name }));
-
-  const selectedItems = Array.from(props.searchTerms, (term) => ({
-    name: term,
-    key: term,
-  }));
-  const muiTheme = useMuiTheme();
+  const { classes: logStyles } = useLogStyles();
+  const { classes, cx } = useStyles();
 
   const logLevelToClass = useCallback(
     (level: number) => {
@@ -72,10 +79,10 @@ export default function FilterBar(props: FilterBarProps): JSX.Element {
   );
 
   const logLevelItems = LOG_LEVEL_OPTIONS.map((option, index) => {
-    const classes = logLevelToClass(option.key);
+    const className = logLevelToClass(option.key);
     return (
-      <MenuItem key={index} value={option.key} className={classes}>
-        {option.text}
+      <MenuItem key={index} value={option.key} className={className}>
+        <Typography variant="body2">{option.text}</Typography>
       </MenuItem>
     );
   });
@@ -83,21 +90,16 @@ export default function FilterBar(props: FilterBarProps): JSX.Element {
   const renderLogLevelValue = useCallback(
     (value: number) => {
       const option = LOG_LEVEL_OPTIONS.find((o) => o.key === value);
-      const classes = logLevelToClass(Number(option?.key ?? LogLevel.DEBUG));
-      return <div className={classes}>{option?.text}</div>;
+      const className = logLevelToClass(Number(option?.key ?? LogLevel.DEBUG));
+      return <div className={className}>{option?.text}</div>;
     },
     [logLevelToClass],
   );
 
   return (
-    <Stack
-      flex="auto"
-      direction="row"
-      gap={0.5}
-      alignItems="center"
-      style={{ marginRight: muiTheme.spacing(-1) }} // Spacing hack until we can unify the toolbar items.
-    >
+    <Stack className={classes.root} flex="auto" direction="row" gap={0.5} alignItems="center">
       <Select
+        className={classes.levelSelect}
         value={props.minLogLevel}
         size="small"
         renderValue={renderLogLevelValue}
@@ -110,56 +112,16 @@ export default function FilterBar(props: FilterBarProps): JSX.Element {
       >
         {logLevelItems}
       </Select>
-      <Stack flex="auto" gap={1}>
-        <TagPicker
-          inputProps={{
-            placeholder: "Search filter",
-          }}
-          styles={{
-            text: { minWidth: 0, minHeight: 22 },
-            input: {
-              width: 0,
-              height: 20,
-              fontSize: 11,
-
-              "::placeholder": {
-                fontSize: 11,
-              },
-            },
-            root: { height: 22 },
-            itemsWrapper: {
-              ".ms-TagItem": { lineHeight: 16, height: 16, fontSize: 11 },
-              ".ms-TagItem-text": { margin: "0 4px" },
-              ".ms-TagItem-close": {
-                fontSize: 11,
-                width: 20,
-
-                ".ms-Button-icon": {
-                  margin: 0,
-                },
-              },
-            },
-          }}
-          removeButtonAriaLabel="Remove"
-          selectionAriaLabel="Filter"
-          resolveDelay={50}
-          selectedItems={selectedItems}
-          onResolveSuggestions={(filter: string) => {
-            return [
-              { name: filter, key: filter },
-              ...nodeNameOptions.filter(({ key }) =>
-                selectedItems.every((item) => item.key !== key),
-              ),
-            ];
-          }}
-          onChange={(items) => {
-            props.onFilterChange({
-              minLogLevel: props.minLogLevel,
-              searchTerms: items?.map((item) => item.name) ?? [],
-            });
-          }}
-        />
-      </Stack>
+      <FilterTagInput
+        items={[...props.searchTerms]}
+        suggestions={[...props.nodeNames]}
+        onChange={(items: string[]) => {
+          props.onFilterChange({
+            minLogLevel: props.minLogLevel,
+            searchTerms: items,
+          });
+        }}
+      />
       <Stack direction="row" alignItems="center" gap={0.5}>
         <ToolbarIconButton
           onClick={() => {
