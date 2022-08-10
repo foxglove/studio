@@ -198,6 +198,7 @@ const outlineColors = [
   { r: 1, g: 0, b: 1, a: 1 },
 ];
 export const foxgloveAnnotations: ImageAnnotations = {
+  circles: [],
   points: [
     {
       timestamp: { sec: 0, nsec: 0 },
