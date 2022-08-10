@@ -5,7 +5,6 @@
 import { filterMap } from "@foxglove/den/collection";
 import { fromNanoSec } from "@foxglove/rostime";
 import { ImageAnnotations, type PointsAnnotationType } from "@foxglove/schemas/schemas/typescript";
-import { FoxgloveMessages } from "@foxglove/studio-base/types/FoxgloveMessages";
 import {
   ImageMarker,
   ImageMarkerArray,
@@ -198,9 +197,7 @@ function normalizeAnnotations(
     case "foxglove_msgs/ImageAnnotations":
     case "foxglove_msgs/msg/ImageAnnotations":
     case "foxglove.ImageAnnotations": {
-      return normalizeFoxgloveImageAnnotations(
-        message as FoxgloveMessages["foxglove.ImageAnnotations"],
-      );
+      return normalizeFoxgloveImageAnnotations(message as ImageAnnotations);
     }
   }
 
