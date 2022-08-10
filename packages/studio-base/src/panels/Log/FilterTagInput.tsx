@@ -8,8 +8,16 @@ import { makeStyles } from "tss-react/mui";
 
 const useStyles = makeStyles()((theme) => ({
   input: {
+    ".MuiInputBase-root.MuiInputBase-sizeSmall .MuiAutocomplete-input.MuiInputBase-inputSizeSmall":
+      {
+        paddingBottom: 0,
+        paddingTop: 0,
+      },
     ".MuiInputBase-root.MuiInputBase-sizeSmall": {
       padding: theme.spacing(0.125),
+    },
+    ".MuiAutocomplete-tag": {
+      margin: 0,
     },
   },
   ".MuiAutocomplete-tag": {
