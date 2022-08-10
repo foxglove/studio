@@ -401,15 +401,33 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
   const renderRef = useRef({ needsRender: false });
   const [renderDone, setRenderDone] = useState<(() => void) | undefined>();
 
-  const datatypeHandlers = useMemo(
-    () => renderer?.datatypeHandlers ?? new Map<string, MessageHandler[]>(),
-    [renderer],
+  const [datatypeHandlers, setDatatypeHandlers] = useState(
+    () => new Map<string, MessageHandler[]>(),
   );
+  useEffect(() => {
+    if (renderer) {
+      setDatatypeHandlers(new Map(renderer.datatypeHandlers));
+      const listener = (sender: Renderer) => setDatatypeHandlers(new Map(sender.datatypeHandlers));
+      renderer.addListener("datatypeHandlersChanged", listener);
+      return () => {
+        renderer.removeListener("datatypeHandlersChanged", listener);
+      };
+    }
+    return undefined;
+  }, [renderer]);
 
-  const topicHandlers = useMemo(
-    () => renderer?.topicHandlers ?? new Map<string, MessageHandler[]>(),
-    [renderer],
-  );
+  const [topicHandlers, setTopicHandlers] = useState(() => new Map<string, MessageHandler[]>());
+  useEffect(() => {
+    if (renderer) {
+      setTopicHandlers(new Map(renderer.topicHandlers));
+      const listener = (sender: Renderer) => setTopicHandlers(new Map(sender.topicHandlers));
+      renderer.addListener("topicHandlersChanged", listener);
+      return () => {
+        renderer.removeListener("topicHandlersChanged", listener);
+      };
+    }
+    return undefined;
+  }, [renderer]);
 
   // Config cameraState
   useEffect(() => {
@@ -567,7 +585,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
       } else if (
         // prettier-ignore
         (topicHandlers.get(topic.name)?.length ?? 0) +
-        (datatypeHandlers.get(topic.datatype)?.length ?? 0) > 1
+        (datatypeHandlers.get(topic.datatype)?.length ?? 0) > 0
       ) {
         // Subscribe if there are multiple handlers registered for this topic
         subscriptions.add(topic.name);

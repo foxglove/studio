@@ -5,7 +5,7 @@
 import { set } from "lodash";
 
 import { toNanoSec } from "@foxglove/rostime";
-import {
+import type {
   ArrowPrimitive,
   CubePrimitive,
   CylinderPrimitive,
@@ -23,7 +23,7 @@ import { SettingsTreeAction } from "@foxglove/studio";
 import { Renderer } from "../Renderer";
 import { PartialMessage, PartialMessageEvent, SceneExtension } from "../SceneExtension";
 import { SettingsTreeEntry, SettingsTreeNodeWithActionHandler } from "../SettingsManager";
-import { SCENE_UPDATES_DATATYPES } from "../foxglove";
+import { SCENE_UPDATE_DATATYPES } from "../foxglove";
 import {
   normalizeColorRGBA,
   normalizeColorRGBAs,
@@ -39,61 +39,61 @@ import { BaseSettings } from "../settings";
 import { makePose } from "../transforms";
 import { LayerSettingsMarkerNamespace, TopicEntities } from "./TopicEntities";
 
-export type LayerSettingsMarker = BaseSettings & {
-  namespaces: Record<string, LayerSettingsMarkerNamespace>;
+export type LayerSettingsEntity = BaseSettings & {
+  // namespaces: Record<string, LayerSettingsMarkerNamespace>;
 };
 
-const DEFAULT_SETTINGS: LayerSettingsMarker = {
+const DEFAULT_SETTINGS: LayerSettingsEntity = {
   visible: false,
-  namespaces: {},
+  // namespaces: {},
 };
 
 export class FoxgloveSceneEntities extends SceneExtension<TopicEntities> {
   constructor(renderer: Renderer) {
     super("foxglove.SceneEntities", renderer);
 
-    renderer.addDatatypeSubscriptions(SCENE_UPDATES_DATATYPES, this.handleSceneUpdates);
+    renderer.addDatatypeSubscriptions(SCENE_UPDATE_DATATYPES, this.handleSceneUpdate);
   }
 
-  // override settingsNodes(): SettingsTreeEntry[] {
-  //   const configTopics = this.renderer.config.topics;
-  //   const entries: SettingsTreeEntry[] = [];
-  //   for (const topic of this.renderer.topics ?? []) {
-  //     if (MARKER_ARRAY_DATATYPES.has(topic.datatype) || MARKER_DATATYPES.has(topic.datatype)) {
-  //       const config = (configTopics[topic.name] ?? {}) as Partial<LayerSettingsMarker>;
+  override settingsNodes(): SettingsTreeEntry[] {
+    const configTopics = this.renderer.config.topics;
+    const entries: SettingsTreeEntry[] = [];
+    for (const topic of this.renderer.topics ?? []) {
+      if (SCENE_UPDATE_DATATYPES.has(topic.datatype)) {
+        const config = (configTopics[topic.name] ?? {}) as Partial<LayerSettingsEntity>;
 
-  //       const node: SettingsTreeNodeWithActionHandler = {
-  //         label: topic.name,
-  //         icon: "Shapes",
-  //         order: topic.name.toLocaleLowerCase(),
-  //         visible: config.visible ?? DEFAULT_SETTINGS.visible,
-  //         handler: this.handleSettingsAction,
-  //       };
+        const node: SettingsTreeNodeWithActionHandler = {
+          label: topic.name,
+          icon: "Shapes",
+          order: topic.name.toLocaleLowerCase(),
+          visible: config.visible ?? DEFAULT_SETTINGS.visible,
+          handler: this.handleSettingsAction,
+        };
 
-  //       // Create a list of all the namespaces for this topic
-  //       const topicEntities = this.renderables.get(topic.name);
-  //       const namespaces = Array.from(topicEntities?.namespaces.values() ?? [])
-  //         .filter((ns) => ns.namespace !== "")
-  //         .sort((a, b) => a.namespace.localeCompare(b.namespace));
-  //       if (namespaces.length > 0) {
-  //         node.children = {};
-  //         for (const ns of namespaces) {
-  //           const child: SettingsTreeNodeWithActionHandler = {
-  //             label: ns.namespace,
-  //             icon: "Shapes",
-  //             visible: ns.settings.visible,
-  //             defaultExpansionState: namespaces.length > 1 ? "collapsed" : "expanded",
-  //             handler: this.handleSettingsActionNamespace,
-  //           };
-  //           node.children[`ns:${ns.namespace}`] = child;
-  //         }
-  //       }
+        // // Create a list of all the namespaces for this topic
+        // const topicEntities = this.renderables.get(topic.name);
+        // const namespaces = Array.from(topicEntities?.namespaces.values() ?? [])
+        //   .filter((ns) => ns.namespace !== "")
+        //   .sort((a, b) => a.namespace.localeCompare(b.namespace));
+        // if (namespaces.length > 0) {
+        //   node.children = {};
+        //   for (const ns of namespaces) {
+        //     const child: SettingsTreeNodeWithActionHandler = {
+        //       label: ns.namespace,
+        //       icon: "Shapes",
+        //       visible: ns.settings.visible,
+        //       defaultExpansionState: namespaces.length > 1 ? "collapsed" : "expanded",
+        //       handler: this.handleSettingsActionNamespace,
+        //     };
+        //     node.children[`ns:${ns.namespace}`] = child;
+        //   }
+        // }
 
-  //       entries.push({ path: ["topics", topic.name], node });
-  //     }
-  //   }
-  //   return entries;
-  // }
+        entries.push({ path: ["topics", topic.name], node });
+      }
+    }
+    return entries;
+  }
 
   override startFrame(currentTime: bigint, renderFrameId: string, fixedFrameId: string): void {
     // Don't use SceneExtension#startFrame() because our renderables represent one topic each with
@@ -103,24 +103,24 @@ export class FoxgloveSceneEntities extends SceneExtension<TopicEntities> {
     }
   }
 
-  // override handleSettingsAction = (action: SettingsTreeAction): void => {
-  //   const path = action.payload.path;
-  //   if (action.action !== "update" || path.length !== 3) {
-  //     return;
-  //   }
+  override handleSettingsAction = (action: SettingsTreeAction): void => {
+    const path = action.payload.path;
+    if (action.action !== "update" || path.length !== 3) {
+      return;
+    }
 
-  //   this.saveSetting(path, action.payload.value);
+    this.saveSetting(path, action.payload.value);
 
-  //   // Update the TopicEntities settings
-  //   const topicName = path[1]!;
-  //   const renderable = this.renderables.get(topicName);
-  //   if (renderable) {
-  //     const settings = this.renderer.config.topics[topicName] as
-  //       | Partial<LayerSettingsMarker>
-  //       | undefined;
-  //     renderable.userData.settings = { ...renderable.userData.settings, ...settings };
-  //   }
-  // };
+    // Update the TopicEntities settings
+    const topicName = path[1]!;
+    const renderable = this.renderables.get(topicName);
+    if (renderable) {
+      const settings = this.renderer.config.topics[topicName] as
+        | Partial<LayerSettingsEntity>
+        | undefined;
+      renderable.userData.settings = { ...renderable.userData.settings, ...settings };
+    }
+  };
 
   // handleSettingsActionNamespace = (action: SettingsTreeAction): void => {
   //   const path = action.payload.path;
@@ -161,7 +161,7 @@ export class FoxgloveSceneEntities extends SceneExtension<TopicEntities> {
   //   this.updateSettingsTree();
   // };
 
-  handleSceneUpdates = (messageEvent: PartialMessageEvent<SceneUpdate>): void => {
+  handleSceneUpdate = (messageEvent: PartialMessageEvent<SceneUpdate>): void => {
     const topic = messageEvent.topic;
     const sceneUpdates = messageEvent.message;
     const receiveTime = toNanoSec(messageEvent.receiveTime);
@@ -181,45 +181,27 @@ export class FoxgloveSceneEntities extends SceneExtension<TopicEntities> {
   // };
 
   addEntity(topic: string, entity: SceneEntity, receiveTime: bigint): void {
-    const topicEntities = this._getTopicEntities(topic, entity, receiveTime);
-    const prevNsCount = topicEntities.namespaces.size;
-    topicEntities.addEntity(entity, receiveTime);
+    const topicEntities = this._getTopicEntities(topic);
+    // const prevNsCount = topicEntities.namespaces.size;
+    topicEntities.addOrUpdateEntity(entity, receiveTime);
 
-    // If the topic has a new namespace, rebuild the settings node for this topic
-    if (prevNsCount !== topicEntities.namespaces.size) {
-      this.updateSettingsTree();
-    }
+    // // If the topic has a new namespace, rebuild the settings node for this topic
+    // if (prevNsCount !== topicEntities.namespaces.size) {
+    //   this.updateSettingsTree();
+    // }
   }
 
-  addMarkerArray(topic: string, markerArray: Marker[], receiveTime: bigint): void {
-    const firstMarker = markerArray[0];
-    if (!firstMarker) {
-      return;
-    }
-
-    const topicEntities = this._getTopicEntities(topic, firstMarker, receiveTime);
-    const prevNsCount = topicEntities.namespaces.size;
-    for (const marker of markerArray) {
-      topicEntities.addEntity(marker, receiveTime);
-    }
-
-    // If the topic has a new namespace, rebuild the settings node for this topic
-    if (prevNsCount !== topicEntities.namespaces.size) {
-      this.updateSettingsTree();
-    }
-  }
-
-  private _getTopicEntities(topic: string, marker: Marker, receiveTime: bigint): TopicEntities {
+  private _getTopicEntities(topic: string): TopicEntities {
     let topicEntities = this.renderables.get(topic);
     if (!topicEntities) {
       const userSettings = this.renderer.config.topics[topic] as
-        | Partial<LayerSettingsMarker>
+        | Partial<LayerSettingsEntity>
         | undefined;
 
       topicEntities = new TopicEntities(topic, this.renderer, {
-        receiveTime,
-        messageTime: toNanoSec(marker.header.stamp),
-        frameId: this.renderer.normalizeFrameId(marker.header.frame_id),
+        receiveTime: -1n,
+        messageTime: -1n,
+        frameId: "",
         pose: makePose(),
         settingsPath: ["topics", topic],
         topic,
@@ -293,7 +275,7 @@ function normalizeCylinderPrimitive(
 
 function normalizeLinePrimitive(line: PartialMessage<LinePrimitive>): LinePrimitive {
   return {
-    type: line.type ?? LineType.LINE_STRIP,
+    type: line.type ?? (0 as LineType.LINE_STRIP),
     pose: normalizePose(line.pose),
     thickness: line.thickness ?? 0.05,
     scale_invariant: line.scale_invariant ?? false,

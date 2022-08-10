@@ -2,9 +2,17 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import {
+  SceneEntity,
+  SceneEntityDeletion,
+  SceneEntityDeletionType,
+} from "@foxglove/schemas/schemas/typescript";
+import { RenderableCubes } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/primitives/RenderableCubes";
+import { emptyPose } from "@foxglove/studio-base/util/Pose";
+
 import { BaseUserData, Renderable } from "../Renderable";
 import { Renderer } from "../Renderer";
-import { Marker, MarkerAction, MarkerType } from "../ros";
+import { Marker, MarkerAction } from "../ros";
 import { BaseSettings } from "../settings";
 import { updatePose } from "../updatePose";
 import type { LayerSettingsMarker } from "./Markers";
@@ -17,7 +25,7 @@ export type LayerSettingsMarkerNamespace = BaseSettings;
 const INVALID_CUBE_LIST = "INVALID_CUBE_LIST";
 const INVALID_LINE_LIST = "INVALID_LINE_LIST";
 const INVALID_LINE_STRIP = "INVALID_LINE_STRIP";
-const INVALID_MARKER_ACTION = "INVALID_MARKER_ACTION";
+const INVALID_DELETION_TYPE = "INVALID_DELETION_TYPE";
 const INVALID_MARKER_TYPE = "INVALID_MARKER_TYPE";
 const INVALID_POINTS_LIST = "INVALID_POINTS_LIST";
 const INVALID_SPHERE_LIST = "INVALID_SPHERE_LIST";
@@ -26,7 +34,7 @@ const DEFAULT_NAMESPACE_SETTINGS: LayerSettingsMarkerNamespace = {
   visible: true,
 };
 
-export type MarkerTopicUserData = BaseUserData & {
+export type EntityTopicUserData = BaseUserData & {
   topic: string;
   settings: LayerSettingsMarker;
 };
@@ -48,9 +56,13 @@ export class MarkersNamespace {
   }
 }
 
-export class TopicEntities extends Renderable<MarkerTopicUserData> {
+type EntityRenderables = {
+  cubes?: RenderableCubes;
+};
+
+export class TopicEntities extends Renderable<EntityTopicUserData> {
   override pickable = false;
-  namespaces = new Map<string, MarkersNamespace>();
+  private renderablesById = new Map<string, EntityRenderables>();
 
   // eslint-disable-next-line no-restricted-syntax
   get topic(): string {
@@ -58,34 +70,30 @@ export class TopicEntities extends Renderable<MarkerTopicUserData> {
   }
 
   override dispose(): void {
-    for (const ns of this.namespaces.values()) {
-      for (const marker of ns.markersById.values()) {
-        this.renderer.markerPool.release(marker);
+    for (const marker of this.renderablesById.values()) {
+      for (const renderable of Object.values(marker)) {
+        // this.renderer.markerPool.release(renderable);//FIXME
+        renderable.dispose();
       }
     }
     this.children.length = 0;
-    this.namespaces.clear();
+    this.renderablesById.clear();
   }
 
-  addEntity(marker: Marker, receiveTime: bigint): void {
-    switch (marker.action) {
-      case MarkerAction.ADD:
-      case MarkerAction.MODIFY:
-        this._addOrUpdateMarker(marker, receiveTime);
+  deleteEntity(deletion: SceneEntityDeletion): void {
+    switch (deletion.type) {
+      case 0 as SceneEntityDeletionType.MATCHING_ID:
+        this._deleteEntity(deletion.id);
         break;
-      case MarkerAction.DELETE:
-        this._deleteMarker(marker.ns, marker.id);
+      case 1 as SceneEntityDeletionType.ALL:
+        this._deleteAllEntities();
         break;
-      case MarkerAction.DELETEALL: {
-        this._deleteAllMarkers(marker.ns);
-        break;
-      }
       default:
         // Unknown action
         this.renderer.settings.errors.addToTopic(
           this.topic,
-          INVALID_MARKER_ACTION,
-          `Invalid marker action ${marker.action}`,
+          INVALID_DELETION_TYPE,
+          `Invalid deletion type ${deletion.type}`,
         );
     }
   }
@@ -97,27 +105,24 @@ export class TopicEntities extends Renderable<MarkerTopicUserData> {
       return;
     }
 
-    for (const ns of this.namespaces.values()) {
-      for (const renderable of ns.markersById.values()) {
-        renderable.visible = ns.settings.visible;
-        if (!renderable.visible) {
-          continue;
-        }
+    for (const renderables of this.renderablesById.values()) {
+      for (const renderable of Object.values(renderables)) {
+        const entity: SceneEntity = renderable.userData.entity; //FIXME: add types
+        // const receiveTime = renderable.userData.receiveTime;
+        // const expiresIn = renderable.userData.expiresIn;
 
-        const marker = renderable.userData.marker;
-        const receiveTime = renderable.userData.receiveTime;
-        const expiresIn = renderable.userData.expiresIn;
+        // // Check if this entity has expired
+        // if (expiresIn != undefined) {
+        //   if (currentTime > receiveTime + expiresIn) {
+        //     this._deleteEntity(entity.id);
+        //     continue;
+        //   }
+        // }
 
-        // Check if this marker has expired
-        if (expiresIn != undefined) {
-          if (currentTime > receiveTime + expiresIn) {
-            this._deleteMarker(ns.namespace, marker.id);
-            continue;
-          }
-        }
-
-        const frameId = this.renderer.normalizeFrameId(marker.header.frame_id);
-        const srcTime = marker.frame_locked ? currentTime : renderable.userData.messageTime;
+        const frameId = this.renderer.normalizeFrameId(entity.frame_id);
+        const srcTime = entity.frame_locked
+          ? currentTime
+          : (renderable.userData.messageTime as bigint);
         const updated = updatePose(
           renderable,
           this.renderer.transformTree,
@@ -128,7 +133,7 @@ export class TopicEntities extends Renderable<MarkerTopicUserData> {
           srcTime,
         );
         renderable.visible = updated;
-        const topic = renderable.userData.topic;
+        const topic = this.userData.topic; //FIXME: used to be renderable.userData.topic, does this matter?
         if (!updated) {
           const message = missingTransformMessage(renderFrameId, fixedFrameId, frameId);
           this.renderer.settings.errors.addToTopic(topic, MISSING_TRANSFORM, message);
@@ -139,184 +144,54 @@ export class TopicEntities extends Renderable<MarkerTopicUserData> {
     }
   }
 
-  private _addOrUpdateMarker(marker: Marker, receiveTime: bigint): void {
-    let ns = this.namespaces.get(marker.ns);
-    if (!ns) {
-      ns = new MarkersNamespace(this.topic, marker.ns, this.renderer);
-      this.namespaces.set(marker.ns, ns);
-    }
-
-    let renderable = ns.markersById.get(marker.id);
-
-    // Check if the marker with this id changed type
-    if (renderable && renderable.userData.marker.type !== marker.type) {
-      this._deleteMarker(marker.ns, marker.id);
-      renderable = undefined;
-    }
-
+  addOrUpdateEntity(entity: SceneEntity, receiveTime: bigint): void {
+    let renderable = this.renderablesById.get(entity.id);
     if (!renderable) {
-      renderable = this._createMarkerRenderable(marker, receiveTime);
-      if (!renderable) {
-        return;
-      }
-      this.add(renderable);
-      ns.markersById.set(marker.id, renderable);
-    } else {
-      renderable.update(marker, receiveTime);
+      renderable = {};
+      this.renderablesById.set(entity.id, renderable);
     }
+
+    // // Check if the marker with this id changed type
+    // if (renderable && renderable.userData.marker.type !== entity.type) {
+    //   this._deleteEntity(entity.id);
+    //   renderable = undefined;
+    // }
+
+    // if (!renderable) {
+    //   renderable = this._createMarkerRenderable(entity, receiveTime);
+    //   if (!renderable) {
+    //     return;
+    //   }
+    //   this.add(renderable);
+    //   this.renderablesById.set(entity.id, renderable);
+    // } else {
+    //   renderable.update(entity, receiveTime);
+    // }
+
+    if (!renderable.cubes) {
+      renderable.cubes = new RenderableCubes(this.topic, this.renderer);
+      renderable.cubes.userData.pose = emptyPose();
+      this.add(renderable.cubes);
+    }
+
+    renderable.cubes.update(entity, receiveTime);
   }
 
-  private _deleteMarker(ns: string, id: number): boolean {
-    const namespace = this.namespaces.get(ns);
-    if (namespace) {
-      const renderable = namespace.markersById.get(id);
-      if (renderable) {
-        this.remove(renderable);
-        this.renderer.markerPool.release(renderable);
-        namespace.markersById.delete(id);
-        return true;
-      }
-    }
-    return false;
+  private _deleteEntity(_id: string) {
+    //   const renderable = this.renderablesById.get(id);
+    //   if (renderable) {
+    //     this.remove(renderable);
+    //     this.renderer.markerPool.release(renderable);
+    //     this.renderablesById.delete(id);
+    //     return true;
+    // }
   }
 
-  private _deleteAllMarkers(ns: string): void {
-    const clearNamespace = (namespace: MarkersNamespace): void => {
-      for (const renderable of namespace.markersById.values()) {
-        this.remove(renderable);
-        this.renderer.markerPool.release(renderable);
-      }
-      namespace.markersById.clear();
-    };
-
-    if (ns.length === 0) {
-      // Delete all markers on this topic
-      for (const namespace of this.namespaces.values()) {
-        clearNamespace(namespace);
-      }
-    } else {
-      // Delete all markers on the given namespace
-      const namespace = this.namespaces.get(ns);
-      if (namespace) {
-        clearNamespace(namespace);
-      }
-    }
-  }
-
-  private _createMarkerRenderable(
-    marker: Marker,
-    receiveTime: bigint,
-  ): RenderableMarker | undefined {
-    const pool = this.renderer.markerPool;
-    switch (marker.type) {
-      case MarkerType.ARROW:
-        return pool.acquire(MarkerType.ARROW, this.topic, marker, receiveTime);
-      case MarkerType.CUBE:
-        return pool.acquire(MarkerType.CUBE, this.topic, marker, receiveTime);
-      case MarkerType.SPHERE:
-        return pool.acquire(MarkerType.SPHERE, this.topic, marker, receiveTime);
-      case MarkerType.CYLINDER:
-        return pool.acquire(MarkerType.CYLINDER, this.topic, marker, receiveTime);
-      case MarkerType.LINE_STRIP:
-        if (marker.points.length === 0) {
-          const markerId = getMarkerId(this.topic, marker.ns, marker.id);
-          this.renderer.settings.errors.addToTopic(
-            this.topic,
-            INVALID_LINE_STRIP,
-            `LINE_STRIP marker ${markerId} has no points`,
-          );
-          return undefined;
-        } else if (marker.points.length === 1) {
-          const markerId = getMarkerId(this.topic, marker.ns, marker.id);
-          this.renderer.settings.errors.addToTopic(
-            this.topic,
-            INVALID_LINE_STRIP,
-            `LINE_STRIP marker ${markerId} only has one point`,
-          );
-          return undefined;
-        }
-        return pool.acquire(MarkerType.LINE_STRIP, this.topic, marker, receiveTime);
-      case MarkerType.LINE_LIST:
-        if (marker.points.length === 0) {
-          const markerId = getMarkerId(this.topic, marker.ns, marker.id);
-          this.renderer.settings.errors.addToTopic(
-            this.topic,
-            INVALID_LINE_LIST,
-            `LINE_LIST marker ${markerId} has no points`,
-          );
-          return undefined;
-        } else if (marker.points.length === 1) {
-          const markerId = getMarkerId(this.topic, marker.ns, marker.id);
-          this.renderer.settings.errors.addToTopic(
-            this.topic,
-            INVALID_LINE_LIST,
-            `LINE_LIST marker ${markerId} only has one point`,
-          );
-          return undefined;
-        } else if (marker.points.length % 2 !== 0) {
-          const markerId = getMarkerId(this.topic, marker.ns, marker.id);
-          this.renderer.settings.errors.addToTopic(
-            this.topic,
-            INVALID_LINE_LIST,
-            `LINE_LIST marker ${markerId} has an odd number of points (${marker.points.length})`,
-          );
-          if (marker.points.length === 1) {
-            return undefined;
-          }
-        }
-        return pool.acquire(MarkerType.LINE_LIST, this.topic, marker, receiveTime);
-      case MarkerType.CUBE_LIST:
-        if (marker.points.length === 0) {
-          const markerId = getMarkerId(this.topic, marker.ns, marker.id);
-          this.renderer.settings.errors.addToTopic(
-            this.topic,
-            INVALID_CUBE_LIST,
-            `CUBE_LIST marker ${markerId} has no points`,
-          );
-          return undefined;
-        }
-        return pool.acquire(MarkerType.CUBE_LIST, this.topic, marker, receiveTime);
-      case MarkerType.SPHERE_LIST:
-        if (marker.points.length === 0) {
-          const markerId = getMarkerId(this.topic, marker.ns, marker.id);
-          this.renderer.settings.errors.addToTopic(
-            this.topic,
-            INVALID_SPHERE_LIST,
-            `SPHERE_LIST marker ${markerId} has no points`,
-          );
-          return undefined;
-        }
-        return pool.acquire(MarkerType.SPHERE_LIST, this.topic, marker, receiveTime);
-      case MarkerType.POINTS:
-        if (marker.points.length === 0) {
-          const markerId = getMarkerId(this.topic, marker.ns, marker.id);
-          this.renderer.settings.errors.addToTopic(
-            this.topic,
-            INVALID_POINTS_LIST,
-            `POINTS marker ${markerId} has no points`,
-          );
-          return undefined;
-        }
-        return pool.acquire(MarkerType.POINTS, this.topic, marker, receiveTime);
-      case MarkerType.TEXT_VIEW_FACING:
-        return pool.acquire(MarkerType.TEXT_VIEW_FACING, this.topic, marker, receiveTime);
-      case MarkerType.MESH_RESOURCE: {
-        const renderable = pool.acquire(MarkerType.MESH_RESOURCE, this.topic, marker, receiveTime);
-        // Force reload the mesh
-        (renderable as RenderableMeshResource).update(marker, receiveTime, true);
-        return renderable;
-      }
-      case MarkerType.TRIANGLE_LIST:
-        return pool.acquire(MarkerType.TRIANGLE_LIST, this.topic, marker, receiveTime);
-      default: {
-        const markerId = getMarkerId(this.topic, marker.ns, marker.id);
-        this.renderer.settings.errors.addToTopic(
-          this.topic,
-          INVALID_MARKER_TYPE,
-          `Marker ${markerId} has invalid type ${marker.type}`,
-        );
-        return undefined;
-      }
-    }
+  private _deleteAllEntities() {
+    // for (const renderable of this.renderablesById.values()) {
+    //   this.remove(renderable);
+    //   this.renderer.markerPool.release(renderable);
+    // }
+    // this.renderablesById.clear();
   }
 }

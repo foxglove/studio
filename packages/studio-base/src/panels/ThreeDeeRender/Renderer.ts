@@ -11,7 +11,7 @@ import { v4 as uuidv4 } from "uuid";
 
 import Logger from "@foxglove/log";
 import { toNanoSec } from "@foxglove/rostime";
-import type { FrameTransform } from "@foxglove/schemas/schemas/typescript";
+import type { FrameTransform, SceneUpdate } from "@foxglove/schemas/schemas/typescript";
 import {
   MessageEvent,
   SettingsIcon,
@@ -87,6 +87,8 @@ export type RendererEvents = {
   transformTreeUpdated: (renderer: Renderer) => void;
   settingsTreeChange: (renderer: Renderer) => void;
   configChange: (renderer: Renderer) => void;
+  datatypeHandlersChanged: (renderer: Renderer) => void;
+  topicHandlersChanged: (renderer: Renderer) => void;
 };
 
 export type RendererConfig = {
@@ -470,6 +472,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
         handlers.push(genericHandler);
       }
     }
+    this.emit("datatypeHandlersChanged", this);
   }
 
   addTopicSubscription<T>(topic: string, handler: (messageEvent: MessageEvent<T>) => void): void {
@@ -482,6 +485,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     if (!handlers.includes(genericHandler)) {
       handlers.push(genericHandler);
     }
+    this.emit("topicHandlersChanged", this);
   }
 
   addCustomLayerAction(options: {
@@ -732,6 +736,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
     const maybeHasHeader = message as Partial<{ header: Partial<Header> }>;
     const maybeHasMarkers = message as DeepPartial<MarkerArray>;
+    const maybeHasEntities = message as DeepPartial<SceneUpdate>;
     const maybeHasFrameId = message as Partial<{ frame_id: string }>;
 
     if (maybeHasHeader.header) {
@@ -742,6 +747,12 @@ export class Renderer extends EventEmitter<RendererEvents> {
       // If this message has an array called markers, scrape frame_id from all markers
       for (const marker of maybeHasMarkers.markers) {
         const frameId = marker.header?.frame_id ?? "";
+        this.addCoordinateFrame(frameId);
+      }
+    } else if (Array.isArray(maybeHasEntities.entities)) {
+      // If this message has an array called entities, scrape frame_id from all entities
+      for (const entity of maybeHasEntities.entities) {
+        const frameId = entity.frame_id ?? "";
         this.addCoordinateFrame(frameId);
       }
     } else if (typeof maybeHasFrameId.frame_id === "string") {
