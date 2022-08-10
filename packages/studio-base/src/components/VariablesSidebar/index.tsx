@@ -17,7 +17,7 @@ import useLinkedGlobalVariables from "@foxglove/studio-base/panels/ThreeDimensio
 import Variable from "./Variable";
 import helpContent from "./index.help.md";
 
-const ANIMATION_RESET_DELAY_MS = 3000;
+const ANIMATION_RESET_DELAY_MS = 1500;
 
 function isActiveElementEditable(): boolean {
   const activeEl = document.activeElement;

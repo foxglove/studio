@@ -56,8 +56,10 @@ const useStyles = makeStyles<void, "copyButton">()((theme, _params, classes) => 
   input: {
     font: "inherit",
     flex: "auto",
-    padding: 0,
 
+    ".MuiInputBase-input": {
+      padding: 0,
+    },
     "&.Mui-error": {
       color: theme.palette.error.main,
     },
