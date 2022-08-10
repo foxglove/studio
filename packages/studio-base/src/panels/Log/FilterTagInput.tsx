@@ -10,8 +10,8 @@ const useStyles = makeStyles()((theme) => ({
   input: {
     ".MuiInputBase-root.MuiInputBase-sizeSmall .MuiAutocomplete-input.MuiInputBase-inputSizeSmall":
       {
-        paddingBottom: 0,
-        paddingTop: 0,
+        paddingBottom: theme.spacing(0.425),
+        paddingTop: theme.spacing(0.425),
       },
     ".MuiInputBase-root.MuiInputBase-sizeSmall": {
       padding: theme.spacing(0.125),
