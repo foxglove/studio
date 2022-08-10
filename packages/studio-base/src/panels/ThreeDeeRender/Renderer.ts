@@ -53,6 +53,7 @@ import { Polygons } from "./renderables/Polygons";
 import { PoseArrays } from "./renderables/PoseArrays";
 import { Poses } from "./renderables/Poses";
 import { PublishClickTool, PublishClickType } from "./renderables/PublishClickTool";
+import { FoxgloveSceneEntities } from "./renderables/SceneEntities";
 import { Urdfs } from "./renderables/Urdfs";
 import { MarkerPool } from "./renderables/markers/MarkerPool";
 import {
@@ -376,6 +377,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.addSceneExtension(new Grids(this));
     this.addSceneExtension(new Images(this));
     this.addSceneExtension(new Markers(this));
+    this.addSceneExtension(new FoxgloveSceneEntities(this));
     this.addSceneExtension(new OccupancyGrids(this));
     this.addSceneExtension(new PointCloudsAndLaserScans(this));
     this.addSceneExtension(new Polygons(this));

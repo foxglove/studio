@@ -2479,6 +2479,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@foxglove/schemas@github:foxglove/schemas#f40c12fa48bcaa2735076b47fcf8484e01cfb43e":
+  version: 0.3.0
+  resolution: "@foxglove/schemas@https://github.com/foxglove/schemas.git#commit=f40c12fa48bcaa2735076b47fcf8484e01cfb43e"
+  dependencies:
+    "@foxglove/rosmsg-msgs-common": ^1.0.4
+    tslib: ^2
+  checksum: 44f48099a0a5e11ad5d81200f4fe383c1101ecaff2ab36188e63753bd0895abb53d5ba6a5ce7e0b8eaf4976ce7d6f9bc02ff61ca7bdd302beb73cb5e96e4a4d1
+  languageName: node
+  linkType: hard
+
 "@foxglove/schemas@npm:0.3.0":
   version: 0.3.0
   resolution: "@foxglove/schemas@npm:0.3.0"
@@ -2532,7 +2542,7 @@ __metadata:
     "@foxglove/rosmsg-serialization": 1.5.0
     "@foxglove/rosmsg2-serialization": 1.0.6
     "@foxglove/rostime": 1.1.2
-    "@foxglove/schemas": 0.3.0
+    "@foxglove/schemas": "github:foxglove/schemas#f40c12fa48bcaa2735076b47fcf8484e01cfb43e"
     "@foxglove/studio": "workspace:*"
     "@foxglove/three-text": "workspace:*"
     "@foxglove/ulog": 2.1.2
