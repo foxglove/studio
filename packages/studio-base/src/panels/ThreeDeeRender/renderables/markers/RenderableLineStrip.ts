@@ -67,6 +67,8 @@ export class RenderableLineStrip extends RenderableMarker {
   override update(marker: Marker, receiveTime: bigint | undefined): void {
     const pointsLength = marker.points.length;
     if (pointsLength === 0) {
+      // THREE.LineGeometry.setPositions crashes when given an empty array:
+      // https://github.com/foxglove/studio/issues/3954
       this.linePrepass.visible = false;
       this.line.visible = false;
       return;
