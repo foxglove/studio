@@ -437,9 +437,32 @@ class CachingIterableSource implements IIterableSource {
       return;
     }
 
-    this.loadedRangesCache = this.cache.map((block) => {
-      const start = Number(toNanoSec(block.start) - sourceStartNs) / rangeNs;
-      const end = Number(toNanoSec(block.end) - sourceStartNs) / rangeNs;
+    // Merge continuous ranges (i.e. a block that starts 1 nanosecond after previous ends)
+    // This avoids float rounding errors when computing loadedRangesCache and produces
+    // continuous ranges for continuous spans
+    const ranges: { start: bigint; end: bigint }[] = [];
+    let prevRange: { start: bigint; end: bigint } | undefined;
+    for (const block of this.cache) {
+      const range = {
+        start: toNanoSec(block.start),
+        end: toNanoSec(block.end),
+      };
+      if (!prevRange) {
+        prevRange = range;
+      } else if (prevRange.end + 1n === range.start) {
+        prevRange.end = range.end;
+      } else {
+        ranges.push(prevRange);
+        prevRange = range;
+      }
+    }
+    if (prevRange) {
+      ranges.push(prevRange);
+    }
+
+    this.loadedRangesCache = ranges.map((item) => {
+      const start = Number(item.start - sourceStartNs) / rangeNs;
+      const end = Number(item.end - sourceStartNs) / rangeNs;
       return { start, end };
     });
   }
