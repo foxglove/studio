@@ -444,6 +444,20 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
       },
       styleOverrides: {
         label: iconHack,
+        root: {
+          "&:active": {
+            backgroundColor: alpha(
+              theme.palette.text.primary,
+              theme.palette.action.activatedOpacity,
+            ),
+          },
+          "&.Mui-selected:active": {
+            backgroundColor: alpha(
+              theme.palette.primary.main,
+              theme.palette.action.selectedOpacity + theme.palette.action.activatedOpacity,
+            ),
+          },
+        },
       },
     },
     MuiToolbar: {
