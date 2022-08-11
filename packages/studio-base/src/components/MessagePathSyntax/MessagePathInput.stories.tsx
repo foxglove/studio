@@ -142,9 +142,9 @@ AutocompleteScalarFromTopic.story = {
 };
 
 export const AutocompleteScalarFromFullTopic = (): JSX.Element => {
-  return <MessagePathInputStory path="/some_logs_topic" validTypes={["int32"]} />;
+  return <MessagePathInputStory path="" validTypes={["int32"]} />;
 };
-AutocompleteScalarFromTopic.play = makePathAndSelectionAction("/some_logs_topic", 0);
+AutocompleteScalarFromFullTopic.play = makePathAndSelectionAction("/some_logs_topic", 0);
 AutocompleteScalarFromFullTopic.story = {
   name: "autocomplete scalar from full topic",
 };
