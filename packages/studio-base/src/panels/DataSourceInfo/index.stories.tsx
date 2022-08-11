@@ -40,10 +40,6 @@ const TOPICS: Topic[] = [
   },
 ];
 
-const fixture = {
-  topics: TOPICS,
-};
-
 export function Default(): JSX.Element {
   return (
     <MockMessagePipelineProvider
@@ -52,7 +48,7 @@ export function Default(): JSX.Element {
       topics={TOPICS}
       presence={PlayerPresence.PRESENT}
     >
-      <PanelSetup fixture={fixture}>
+      <PanelSetup fixture={{ topics: TOPICS }}>
         <DataSourceInfoPanel />
       </PanelSetup>
     </MockMessagePipelineProvider>
