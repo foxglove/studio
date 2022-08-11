@@ -101,7 +101,7 @@ function SourceInfo(): JSX.Element {
     });
   }, [topicStats, topics]);
 
-  const columns: GridColDef[] = [
+  const columns: GridColDef<TopicListItem>[] = [
     {
       headerName: "Topic name",
       field: "name",
