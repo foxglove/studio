@@ -40,8 +40,6 @@ import { formatTimeRaw } from "@foxglove/studio-base/util/time";
 
 const MESSAGE_RATES = [1, 3, 5, 10, 15, 20, 30, 60];
 
-const os = OsContextSingleton; // workaround for https://github.com/webpack/webpack/issues/12960
-
 const useStyles = makeStyles()((theme) => ({
   autocompleteInput: {
     "&.MuiOutlinedInput-input": {
@@ -311,7 +309,10 @@ function RosPackagePath(): React.ReactElement {
     AppSetting.ROS_PACKAGE_PATH,
   );
 
-  const rosPackagePathPlaceholder = useMemo(() => os?.getEnvVar("ROS_PACKAGE_PATH"), []);
+  const rosPackagePathPlaceholder = useMemo(
+    () => OsContextSingleton?.getEnvVar("ROS_PACKAGE_PATH"),
+    [],
+  );
 
   return (
     <TextField
@@ -337,7 +338,7 @@ export default function Preferences(): React.ReactElement {
   // electron-updater does not provide a way to detect if we are on a supported update platform
   // so we hard-code linux as an _unsupported_ auto-update platform since we cannot auto-update
   // with our .deb package install method on linux.
-  const supportsAppUpdates = isDesktopApp() && os?.platform !== "linux";
+  const supportsAppUpdates = isDesktopApp() && OsContextSingleton?.platform !== "linux";
 
   const { classes } = useStyles();
 
