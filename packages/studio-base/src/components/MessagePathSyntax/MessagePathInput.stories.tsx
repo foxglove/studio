@@ -131,6 +131,9 @@ storiesOf("components/MessagePathInput", module)
   .add("autocomplete topics", () => {
     return <MessagePathInputStory path="/" />;
   })
+  .add("autocomplete scalar from topic and empty path", () => {
+    return <MessagePathInputSelectionStory path="" validTypes={["int32"]} selectInput={2} />;
+  })
   .add("autocomplete scalar from topic", () => {
     return (
       <MessagePathInputSelectionStory path="/some_logs_" validTypes={["int32"]} selectInput={1} />
