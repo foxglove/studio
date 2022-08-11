@@ -48,19 +48,21 @@ export function DefaultWithTimezone(): JSX.Element {
   return <Wrapper entries={[["timezone", "America/Los_Angeles"]]} />;
 }
 
+ChangingTimezone.parameters = { colorScheme: "light" };
 export function ChangingTimezone(): JSX.Element {
   return <Wrapper />;
 }
 ChangingTimezone.play = async () => {
   const user = userEvent.setup();
-  const inputs = await screen.findAllByDisplayValue("Detect from system", { exact: false });
-  await user.click(inputs[0]!);
+  const input = await screen.findByDisplayValue("Detect from system", { exact: false });
+  await user.click(input);
 
   await userEvent.keyboard("New_York");
   const item = await screen.findByText("New_York", { exact: false });
   await user.click(item);
 };
 
+ChangingTimeFormat.parameters = { colorScheme: "light" };
 export function ChangingTimeFormat(): JSX.Element {
   return <Wrapper />;
 }
