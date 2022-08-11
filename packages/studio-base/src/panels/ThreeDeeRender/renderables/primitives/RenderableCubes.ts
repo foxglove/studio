@@ -16,6 +16,7 @@ const tempVec3 = new THREE.Vector3();
 const tempVec3_2 = new THREE.Vector3();
 const tempMat4 = new THREE.Matrix4();
 const tempQuat = new THREE.Quaternion();
+
 export class RenderableCubes extends THREE.Object3D {
   private static cubeGeometry: THREE.BoxGeometry | undefined;
   private static cubeEdgesGeometry: THREE.EdgesGeometry | undefined;
@@ -27,6 +28,8 @@ export class RenderableCubes extends THREE.Object3D {
   });
   geometry: THREE.InstancedBufferGeometry;
   mesh: THREE.InstancedMesh<THREE.BoxGeometry, THREE.MeshStandardMaterial>;
+
+  outlineGeometry: THREE.InstancedBufferGeometry;
   outline: THREE.LineSegments | undefined;
 
   renderer: Renderer;
@@ -54,12 +57,26 @@ export class RenderableCubes extends THREE.Object3D {
     this.add(this.mesh);
 
     // Cube outline
-    this.outline = new THREE.LineSegments(
+    this.outlineGeometry = new THREE.InstancedBufferGeometry().copy(
       RenderableCubes.EdgesGeometry(),
-      renderer.outlineMaterial,
     );
+    // this.outlineGeometry.setAttribute(
+    //   "instanceMatrix",
+    //   new THREE.InstancedBufferAttribute(
+    //     new Float32Array(new THREE.Matrix4().identity().toArray()),
+    //     16,
+    //     undefined,
+    //     1,
+    //   ),
+    // );
+    this.outline = new THREE.LineSegments(this.outlineGeometry, renderer.instancedOutlineMaterial);
+    this.outline.frustumCulled = false;
+    // this.outline = new THREE.LineSegments(
+    //   RenderableCubes.EdgesGeometry(),
+    //   renderer.outlineMaterial,
+    // );
     this.outline.userData.picking = false;
-    this.mesh.add(this.outline);
+    this.add(this.outline);
   }
 
   private reallocateAttributeBufferIfNeeded(numCubes: number) {
@@ -95,6 +112,9 @@ export class RenderableCubes extends THREE.Object3D {
     this.mesh.instanceColor.count = cubes.length;
     this.mesh.instanceMatrix.needsUpdate = true;
     this.mesh.instanceColor.needsUpdate = true;
+
+    this.outlineGeometry.instanceCount = cubes.length;
+    this.outlineGeometry.setAttribute("instanceMatrix", this.mesh.instanceMatrix);
 
     let i = 0;
     for (const cube of cubes) {

@@ -209,6 +209,14 @@ Object.defineProperty(LabelMaterial.prototype, "fragmentShaderKey", {
   configurable: true,
 });
 
+class InstancedLineMaterial extends THREE.LineBasicMaterial {
+  constructor(...args: ConstructorParameters<typeof THREE.LineBasicMaterial>) {
+    super(...args);
+    this.defines ??= {};
+    this.defines.USE_INSTANCING = true;
+  }
+}
+
 /**
  * An extensible 3D renderer attached to a `HTMLCanvasElement`,
  * `WebGLRenderingContext`, and `SettingsTree`.
@@ -235,6 +243,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
   hemiLight: THREE.HemisphereLight;
   input: Input;
   outlineMaterial = new THREE.LineBasicMaterial({ dithering: true });
+  instancedOutlineMaterial = new InstancedLineMaterial({ dithering: true });
 
   measurementTool: MeasurementTool;
   publishClickTool: PublishClickTool;
@@ -588,11 +597,15 @@ export class Renderer extends EventEmitter<RendererEvents> {
       this.gl.setClearColor(bgColor ?? DARK_BACKDROP);
       this.outlineMaterial.color.set(DARK_OUTLINE);
       this.outlineMaterial.needsUpdate = true;
+      this.instancedOutlineMaterial.color.set(DARK_OUTLINE);
+      this.instancedOutlineMaterial.needsUpdate = true;
       this.selectionBackdrop.setColor(DARK_BACKDROP, 0.8);
     } else {
       this.gl.setClearColor(bgColor ?? LIGHT_BACKDROP);
       this.outlineMaterial.color.set(LIGHT_OUTLINE);
       this.outlineMaterial.needsUpdate = true;
+      this.instancedOutlineMaterial.color.set(LIGHT_OUTLINE);
+      this.instancedOutlineMaterial.needsUpdate = true;
       this.selectionBackdrop.setColor(LIGHT_BACKDROP, 0.8);
     }
   }
