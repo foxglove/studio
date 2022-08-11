@@ -187,6 +187,9 @@ function SourceInfo(): JSX.Element {
         density="compact"
         hideFooter
         disableColumnMenu
+        localeText={{
+          noRowsLabel: "No Topics",
+        }}
       />
     </Stack>
   );
