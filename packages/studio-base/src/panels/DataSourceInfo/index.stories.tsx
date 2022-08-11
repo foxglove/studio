@@ -21,9 +21,6 @@ const TOPICS: Topic[] = [
   { datatype: "tf2_msgs/TFMessage", name: "/tf" },
   { datatype: "nav_msgs/OccupancyGrid", name: "/drivable_area" },
   { datatype: "sensor_msgs/PointCloud2", name: "/RADAR_FRONT" },
-  { datatype: "sensor_msgs/CompressedImage", name: "/CAM_FRONT/image_rect_compressed" },
-  { datatype: "sensor_msgs/CameraInfo", name: "/CAM_FRONT/camera_info" },
-  { datatype: "visualization_msgs/ImageMarker", name: "/CAM_FRONT_RIGHT/image_markers_lidar" },
   { datatype: "sensor_msgs/CompressedImage", name: "/CAM_BACK_RIGHT/image_rect_compressed" },
   { datatype: "sensor_msgs/CameraInfo", name: "/CAM_BACK_RIGHT/camera_info" },
   { datatype: "visualization_msgs/ImageMarker", name: "/CAM_BACK/image_markers_lidar" },
@@ -34,10 +31,6 @@ const TOPICS: Topic[] = [
   { datatype: "sensor_msgs/Imu", name: "/imu" },
   { datatype: "diagnostic_msgs/DiagnosticArray", name: "/diagnostics" },
   { datatype: "nav_msgs/Odometry", name: "/odom" },
-  {
-    datatype: "foxglove_msgs/ImageMarkerArray",
-    name: "/CAM_FRONT_RIGHT/image_markers_annotations",
-  },
 ];
 
 export function Default(): JSX.Element {
