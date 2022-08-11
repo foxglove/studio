@@ -97,7 +97,13 @@ function ColorSchemeSettings(): JSX.Element {
   return (
     <Stack>
       <FormLabel>Color scheme:</FormLabel>
-      <ToggleButtonGroup size="small" exclusive value={colorScheme} onChange={handleChange}>
+      <ToggleButtonGroup
+        color="primary"
+        size="small"
+        exclusive
+        value={colorScheme}
+        onChange={handleChange}
+      >
         <ToggleButton className={classes.toggleButton} value="dark">
           <DarkModeIcon /> Dark
         </ToggleButton>
@@ -198,6 +204,7 @@ function TimeFormat(): React.ReactElement {
     <Stack>
       <FormLabel>Timestamp format:</FormLabel>
       <ToggleButtonGroup
+        color="primary"
         size="small"
         orientation="vertical"
         exclusive
@@ -225,6 +232,7 @@ function LaunchDefault(): React.ReactElement {
     <Stack>
       <FormLabel>Open links in:</FormLabel>
       <ToggleButtonGroup
+        color="primary"
         size="small"
         exclusive
         value={preference}
