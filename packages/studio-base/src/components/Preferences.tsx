@@ -5,6 +5,8 @@
 import Brightness5Icon from "@mui/icons-material/Brightness5";
 import ComputerIcon from "@mui/icons-material/Computer";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
+import QuestionAnswerOutlinedIcon from "@mui/icons-material/QuestionAnswerOutlined";
+import WebIcon from "@mui/icons-material/Web";
 import {
   Autocomplete,
   Checkbox,
@@ -200,7 +202,7 @@ function TimeFormat(): React.ReactElement {
         orientation="vertical"
         exclusive
         value={timeFormat}
-        onChange={(_, value: TimeDisplayMethod) => void setTimeFormat(value)}
+        onChange={(_, value?: TimeDisplayMethod) => value != undefined && void setTimeFormat(value)}
       >
         <ToggleButton value="SEC" data-testid="timeformat-seconds">
           {formatTimeRaw(exampleTime)}
@@ -214,30 +216,30 @@ function TimeFormat(): React.ReactElement {
 }
 
 function LaunchDefault(): React.ReactElement {
+  const { classes } = useStyles();
   const [preference = "unknown", setPreference] = useAppConfigurationValue<string | undefined>(
     AppSetting.LAUNCH_PREFERENCE,
   );
 
-  const options: Array<{ key: string; text: string }> = [
-    { key: "unknown", text: "Ask each time" },
-    { key: "web", text: "Web app" },
-    { key: "desktop", text: "Desktop app" },
-  ];
-
   return (
     <Stack>
       <FormLabel>Open links in:</FormLabel>
-      <Select
+      <ToggleButtonGroup
+        size="small"
+        exclusive
         value={preference}
-        fullWidth
-        onChange={(event) => void setPreference(event.target.value)}
+        onChange={(_, value?: string) => value != undefined && void setPreference(value)}
       >
-        {options.map((option) => (
-          <MenuItem key={option.key} value={option.key}>
-            {option.text}
-          </MenuItem>
-        ))}
-      </Select>
+        <ToggleButton value="web" className={classes.toggleButton}>
+          <WebIcon /> Web app
+        </ToggleButton>
+        <ToggleButton value="desktop" className={classes.toggleButton}>
+          <ComputerIcon /> Desktop app
+        </ToggleButton>
+        <ToggleButton value="unknown" className={classes.toggleButton}>
+          <QuestionAnswerOutlinedIcon /> Ask each time
+        </ToggleButton>
+      </ToggleButtonGroup>
     </Stack>
   );
 }
