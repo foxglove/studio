@@ -16,6 +16,9 @@ const useStyles = makeStyles()((theme) => ({
     padding: theme.spacing(2),
   },
   picker: {
+    "&.react-colorful": {
+      width: "100%",
+    },
     ".react-colorful__last-control": {
       borderRadius: 0,
     },
