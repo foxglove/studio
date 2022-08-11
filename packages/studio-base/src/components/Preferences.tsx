@@ -62,7 +62,6 @@ const useStyles = makeStyles()((theme) => ({
     display: "flex !important",
     flexDirection: "column",
     gap: theme.spacing(0.75),
-    flex: "1 1 33.33%",
     lineHeight: "1 !important",
   },
 }));
@@ -100,6 +99,7 @@ function ColorSchemeSettings(): JSX.Element {
       <ToggleButtonGroup
         color="primary"
         size="small"
+        fullWidth
         exclusive
         value={colorScheme}
         onChange={handleChange}
@@ -207,6 +207,7 @@ function TimeFormat(): React.ReactElement {
         color="primary"
         size="small"
         orientation="vertical"
+        fullWidth
         exclusive
         value={timeFormat}
         onChange={(_, value?: TimeDisplayMethod) => value != undefined && void setTimeFormat(value)}
@@ -234,6 +235,7 @@ function LaunchDefault(): React.ReactElement {
       <ToggleButtonGroup
         color="primary"
         size="small"
+        fullWidth
         exclusive
         value={preference}
         onChange={(_, value?: string) => value != undefined && void setPreference(value)}
