@@ -146,16 +146,16 @@ function SourceInfo(): JSX.Element {
 
   if (!startTime || !endTime) {
     return (
-      <Stack fullHeight>
+      <>
         <PanelToolbar helpContent={helpContent} />
         <EmptyState>Waiting for data...</EmptyState>
-      </Stack>
+      </>
     );
   }
 
   const duration = subtractTimes(endTime, startTime);
   return (
-    <Stack fullHeight>
+    <>
       <PanelToolbar helpContent={helpContent} />
       <Divider />
       <Stack className={classes.header} padding={1.5} gap={1}>
@@ -189,7 +189,7 @@ function SourceInfo(): JSX.Element {
         disableColumnMenu
         localeText={{ noRowsLabel: "No Topics" }}
       />
-    </Stack>
+    </>
   );
 }
 
