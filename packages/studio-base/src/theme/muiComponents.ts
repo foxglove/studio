@@ -438,6 +438,9 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
       },
     },
     MuiToggleButton: {
+      defaultProps: {
+        disableRipple: true,
+      },
       styleOverrides: {
         label: iconHack,
       },

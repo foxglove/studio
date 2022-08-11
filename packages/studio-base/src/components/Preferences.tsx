@@ -2,11 +2,9 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import {
-  DarkMode as DarkModeIcon,
-  LightMode as LightModeIcon,
-  WbTwilight as TwilightIcon,
-} from "@mui/icons-material";
+import Brightness5Icon from "@mui/icons-material/Brightness5";
+import ComputerIcon from "@mui/icons-material/Computer";
+import DarkModeIcon from "@mui/icons-material/DarkMode";
 import {
   Autocomplete,
   Checkbox,
@@ -22,7 +20,7 @@ import {
   ToggleButton,
 } from "@mui/material";
 import moment from "moment-timezone";
-import { useMemo } from "react";
+import { MouseEvent, useCallback, useMemo } from "react";
 import { makeStyles } from "tss-react/mui";
 
 import { filterMap } from "@foxglove/den/collection";
@@ -42,7 +40,7 @@ const MESSAGE_RATES = [1, 3, 5, 10, 15, 20, 30, 60];
 
 const os = OsContextSingleton; // workaround for https://github.com/webpack/webpack/issues/12960
 
-const useStyles = makeStyles()({
+const useStyles = makeStyles()((theme) => ({
   autocompleteInput: {
     "&.MuiOutlinedInput-input": {
       padding: 0,
@@ -58,14 +56,14 @@ const useStyles = makeStyles()({
       alignItems: "start",
     },
   },
-  toggle: {
-    flexWrap: "wrap",
-
-    "& .MuiToggleButton-root": {
-      flexGrow: 1,
-    },
+  toggleButton: {
+    display: "flex !important",
+    flexDirection: "column",
+    gap: theme.spacing(0.75),
+    flex: "1 1 33.33%",
+    lineHeight: "1 !important",
   },
-});
+}));
 
 function formatTimezone(name: string) {
   const tz = moment.tz(name);
@@ -84,24 +82,28 @@ function ColorSchemeSettings(): JSX.Element {
   const [colorScheme = "dark", setColorScheme] = useAppConfigurationValue<string>(
     AppSetting.COLOR_SCHEME,
   );
+
+  const handleChange = useCallback(
+    (_event: MouseEvent<HTMLElement>, value?: string) => {
+      if (value != undefined) {
+        void setColorScheme(value);
+      }
+    },
+    [setColorScheme],
+  );
+
   return (
     <Stack>
       <FormLabel>Color scheme:</FormLabel>
-      <ToggleButtonGroup
-        size="small"
-        exclusive
-        value={colorScheme}
-        onChange={(_, value: string) => void setColorScheme(value)}
-        className={classes.toggle}
-      >
-        <ToggleButton disableRipple value="dark">
-          <DarkModeIcon fontSize="small" /> Dark
+      <ToggleButtonGroup size="small" exclusive value={colorScheme} onChange={handleChange}>
+        <ToggleButton className={classes.toggleButton} value="dark">
+          <DarkModeIcon /> Dark
         </ToggleButton>
-        <ToggleButton disableRipple value="light">
-          <LightModeIcon fontSize="small" /> Light
+        <ToggleButton className={classes.toggleButton} value="light">
+          <Brightness5Icon /> Light
         </ToggleButton>
-        <ToggleButton disableRipple value="system">
-          <TwilightIcon fontSize="small" /> Follow system
+        <ToggleButton className={classes.toggleButton} value="system">
+          <ComputerIcon /> Follow system
         </ToggleButton>
       </ToggleButtonGroup>
     </Stack>
@@ -184,7 +186,6 @@ function TimezoneSettings(): React.ReactElement {
 }
 
 function TimeFormat(): React.ReactElement {
-  const { classes } = useStyles();
   const { timeFormat, setTimeFormat } = useAppTimeFormat();
 
   const [timezone] = useAppConfigurationValue<string>(AppSetting.TIMEZONE);
@@ -196,17 +197,13 @@ function TimeFormat(): React.ReactElement {
       <FormLabel>Timestamp format:</FormLabel>
       <ToggleButtonGroup
         size="small"
-        className={classes.toggle}
+        orientation="vertical"
         exclusive
         value={timeFormat}
         onChange={(_, value: TimeDisplayMethod) => void setTimeFormat(value)}
       >
-        <ToggleButton disableRipple value="SEC">
-          {formatTimeRaw(exampleTime)}
-        </ToggleButton>
-        <ToggleButton disableRipple value="TOD">
-          {formatTime(exampleTime, timezone)}
-        </ToggleButton>
+        <ToggleButton value="SEC">{formatTimeRaw(exampleTime)}</ToggleButton>
+        <ToggleButton value="TOD">{formatTime(exampleTime, timezone)}</ToggleButton>
       </ToggleButtonGroup>
     </Stack>
   );
