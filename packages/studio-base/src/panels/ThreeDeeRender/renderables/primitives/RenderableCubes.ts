@@ -21,7 +21,6 @@ export class RenderableCubes extends THREE.Object3D {
   private static cubeEdgesGeometry: THREE.EdgesGeometry | undefined;
 
   material = new THREE.MeshStandardMaterial({
-    vertexColors: true,
     metalness: 0,
     roughness: 1,
     dithering: true,
