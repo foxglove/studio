@@ -202,8 +202,12 @@ function TimeFormat(): React.ReactElement {
         value={timeFormat}
         onChange={(_, value: TimeDisplayMethod) => void setTimeFormat(value)}
       >
-        <ToggleButton value="SEC">{formatTimeRaw(exampleTime)}</ToggleButton>
-        <ToggleButton value="TOD">{formatTime(exampleTime, timezone)}</ToggleButton>
+        <ToggleButton value="SEC" data-testid="timeformat-seconds">
+          {formatTimeRaw(exampleTime)}
+        </ToggleButton>
+        <ToggleButton value="TOD" data-testid="timeformat-local">
+          {formatTime(exampleTime, timezone)}
+        </ToggleButton>
       </ToggleButtonGroup>
     </Stack>
   );

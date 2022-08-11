@@ -66,9 +66,9 @@ export function ChangingTimeFormat(): JSX.Element {
 }
 ChangingTimeFormat.play = async () => {
   const user = userEvent.setup();
-  const inputs = await screen.findAllByText("Local", { exact: false });
+  const inputs = await screen.findAllByTestId("timeformat-local");
   await user.click(inputs[0]!);
 
-  const item = await screen.findByText("Seconds", { exact: false });
+  const item = await screen.findByTestId("timeformat-seconds");
   await user.click(item);
 };
