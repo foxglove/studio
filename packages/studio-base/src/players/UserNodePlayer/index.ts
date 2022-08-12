@@ -931,12 +931,20 @@ export default class UserNodePlayer implements Player {
     return await this._player.callService(service, request);
   }
 
-  startPlayback(opt?: { untilTime: Time }): void {
-    return this._player.startPlayback?.(opt);
+  startPlayback(): void {
+    return this._player.startPlayback?.();
   }
 
   pausePlayback(): void {
     return this._player.pausePlayback?.();
+  }
+
+  playUntil(time: Time): void {
+    if (this._player.playUntil) {
+      this._player.playUntil(time);
+      return;
+    }
+    this._player.seekPlayback?.(time);
   }
 
   setPlaybackSpeed(speed: number): void {

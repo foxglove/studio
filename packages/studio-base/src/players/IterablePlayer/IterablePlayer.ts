@@ -193,7 +193,15 @@ export class IterablePlayer implements Player {
     this._setState("initialize");
   }
 
-  startPlayback(opt?: { untilTime: Time }): void {
+  startPlayback(): void {
+    this.startPlayImpl();
+  }
+
+  playUntil(time: Time): void {
+    this.startPlayImpl({ untilTime: time });
+  }
+
+  private startPlayImpl(opt?: { untilTime: Time }): void {
     if (this._isPlaying || this._untilTime) {
       return;
     }
@@ -724,13 +732,12 @@ export class IterablePlayer implements Player {
       throw new Error("Invariant: Tried to play with no current time.");
     }
 
+    // If we have an until time, we will read all the messages until that time in one tick
+    const targetTime = this._untilTime ?? add(this._currentTime, fromMillis(rangeMillis));
+
     // The end time when we want to stop reading messages and emit state for the tick
     // The end time is inclusive.
-    const end: Time = clampTime(
-      add(this._currentTime, fromMillis(rangeMillis)),
-      this._start,
-      this._untilTime ?? this._end,
-    );
+    const end: Time = clampTime(targetTime, this._start, this._end);
 
     const msgEvents: MessageEvent<unknown>[] = [];
 

@@ -62,9 +62,11 @@ export interface Player {
   // this will make a service call to the named service with the request payload.
   callService(service: string, request: unknown): Promise<unknown>;
   // Basic playback controls. Available if `capabilities` contains PlayerCapabilities.playbackControl.
-  startPlayback?(opt?: { untilTime: Time }): void;
+  startPlayback?(): void;
   pausePlayback?(): void;
   seekPlayback?(time: Time, backfillDuration?: Time): void;
+  // Advanced playback controls.
+  playUntil?(time: Time): void;
   // Seek to a particular time. Might trigger backfilling.
   // If the Player supports non-real-time speeds (i.e. PlayerState#capabilities contains
   // PlayerCapabilities.setSpeed), set that speed. E.g. 1.0 is real time, 0.2 is 20% of real time.
