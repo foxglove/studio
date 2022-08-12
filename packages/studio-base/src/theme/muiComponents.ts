@@ -5,6 +5,8 @@
 import { alpha, Theme, ThemeOptions } from "@mui/material/styles";
 import { CSSProperties } from "@mui/styles";
 
+import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
+
 type MuiLabComponents = {
   MuiFocusVisible?: {
     styleOverrides?: {
@@ -87,6 +89,15 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
     MuiFormControl: {
       defaultProps: {
         variant: "standard",
+      },
+    },
+    MuiBadge: {
+      styleOverrides: {
+        badge: {
+          height: 16,
+          minWidth: 16,
+          padding: theme.spacing(0, 0.25),
+        },
       },
     },
     MuiButton: {
