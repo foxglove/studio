@@ -8,7 +8,7 @@ import { toNanoSec } from "@foxglove/rostime";
 import { CubePrimitive, SceneEntity } from "@foxglove/schemas/schemas/typescript";
 
 import type { Renderer } from "../../Renderer";
-// import { rgbToThreeColor } from "../../color";
+import { rgbToThreeColor } from "../../color";
 // import { makeStandardMaterial } from "./materials";
 
 const tempColor = new THREE.Color();
@@ -30,7 +30,7 @@ export class RenderableCubes extends THREE.Object3D {
   mesh: THREE.InstancedMesh<THREE.BoxGeometry, THREE.MeshStandardMaterial>;
 
   outlineGeometry: THREE.InstancedBufferGeometry;
-  outline: THREE.LineSegments | undefined;
+  outline: THREE.LineSegments;
 
   renderer: Renderer;
 
@@ -79,52 +79,47 @@ export class RenderableCubes extends THREE.Object3D {
     this.add(this.outline);
   }
 
-  private reallocateAttributeBufferIfNeeded(numCubes: number) {
-    // const requiredLength = numCubes * 10 * Float32Array.BYTES_PER_ELEMENT;
-    // if (this.instanceAttrData.byteLength < requiredLength) {
-    //   this.instanceAttrData = new Float32Array(requiredLength);
-    //   this.instanceAttrBuffer = new THREE.InstancedInterleavedBuffer(this.instanceAttrData, 10, 1);
-    //   this.instanceBoxPosition.data = this.instanceAttrBuffer;
-    //   this.instanceCharPosition.data = this.instanceAttrBuffer;
-    //   this.instanceUv.data = this.instanceAttrBuffer;
-    //   this.instanceBoxSize.data = this.instanceAttrBuffer;
-    //   this.instanceCharSize.data = this.instanceAttrBuffer;
-    // }
+  private _ensureCapacity(numCubes: number) {
+    const capacity = this.mesh.instanceMatrix.array.length >>> 4;
+    if (numCubes > capacity) {
+      const newCapacity = Math.trunc(Math.max(capacity, numCubes) * 1.5) + 16;
+
+      this.mesh.instanceMatrix = new THREE.InstancedBufferAttribute(
+        new Float32Array(16 * newCapacity),
+        16,
+      );
+      this.mesh.instanceColor = new THREE.InstancedBufferAttribute(
+        new Float32Array(3 * newCapacity),
+        3,
+      );
+      this.mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+      this.mesh.instanceColor.setUsage(THREE.DynamicDrawUsage);
+      this.mesh.material.needsUpdate = true; // needed to make colors work: https://discourse.threejs.org/t/instancedmesh-color-doesnt-work-when-initial-count-is-0/41355
+      // this.mesh.geometry.setAttribute("instanceColor", this.mesh.instanceColor);
+
+      // THREE.js doesn't correctly recompute the new max instance count when dynamically
+      // reassigning the attribute of InstancedBufferGeometry, so we just create a new geometry
+      this.outlineGeometry.dispose();
+      this.outlineGeometry = new THREE.InstancedBufferGeometry().copy(
+        RenderableCubes.EdgesGeometry(),
+      );
+      this.outlineGeometry.instanceCount = newCapacity;
+      this.outlineGeometry.setAttribute("instanceMatrix", this.mesh.instanceMatrix);
+      this.outline.geometry = this.outlineGeometry;
+    }
   }
 
   private _updateMesh(cubes: CubePrimitive[]) {
     let isTransparent = false;
 
-    this.mesh.instanceMatrix = new THREE.InstancedBufferAttribute(
-      new Float32Array(16 * cubes.length),
-      16,
-    );
-    this.mesh.instanceColor = new THREE.InstancedBufferAttribute(
-      new Float32Array(3 * cubes.length),
-      3,
-    );
-
-    this.mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    this.mesh.instanceColor.setUsage(THREE.DynamicDrawUsage);
-
-    this.mesh.count = cubes.length;
-    this.mesh.instanceMatrix.count = cubes.length;
-    this.mesh.instanceColor.count = cubes.length;
-    this.mesh.instanceMatrix.needsUpdate = true;
-    this.mesh.instanceColor.needsUpdate = true;
-
-    this.outlineGeometry.instanceCount = cubes.length;
-    this.outlineGeometry.setAttribute("instanceMatrix", this.mesh.instanceMatrix);
+    this._ensureCapacity(cubes.length);
 
     let i = 0;
     for (const cube of cubes) {
       if (cube.color.a < 1) {
         isTransparent = true;
       }
-      this.mesh.setColorAt(
-        i,
-        tempColor.setRGB(cube.color.r, cube.color.g, cube.color.b).convertSRGBToLinear(),
-      );
+      this.mesh.setColorAt(i, rgbToThreeColor(tempColor, cube.color));
       this.mesh.setMatrixAt(
         i,
         tempMat4.compose(
@@ -140,13 +135,28 @@ export class RenderableCubes extends THREE.Object3D {
       );
       i++;
     }
+
     this.mesh.material.transparent = isTransparent;
     this.mesh.material.depthWrite = !isTransparent;
+
+    this.mesh.count = cubes.length;
+    this.outlineGeometry.instanceCount = cubes.length;
+    // this.outlineGeometry.setDrawRange(0, cubes.length);
+    // this.mesh.instanceMatrix.count = cubes.length;
+    this.mesh.instanceMatrix.needsUpdate = true;
+
+    // may be null if we were initialized with count 0 and still have 0 cubes
+    if (this.mesh.instanceColor) {
+      // this.mesh.instanceColor.count = cubes.length;
+      this.mesh.instanceColor.needsUpdate = true;
+    }
   }
 
   dispose(): void {
+    this.mesh.dispose();
     this.material.dispose();
     this.geometry.dispose();
+    this.outlineGeometry.dispose();
   }
 
   update(entity: SceneEntity, _receiveTime: bigint | undefined): void {
