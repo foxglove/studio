@@ -50,10 +50,13 @@ function CopyIconButton({ text }: { text: string }): JSX.Element {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = useCallback(() => {
-    void clipboard.copy(text).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    });
+    clipboard
+      .copy(text)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      })
+      .catch((e) => console.warn(e));
   }, [text]);
 
   return (
