@@ -88,12 +88,7 @@ export function ColorPickerInput(props: ColorPickerInputProps): JSX.Element {
           readOnly: true,
           startAdornment: <ColorSwatch color={swatchColor} onClick={handleClick} />,
           endAdornment: (
-            <IconButton
-              // className={classes.clearButton}
-              onClick={clearValue}
-              size="small"
-              color="primary"
-            >
+            <IconButton onClick={clearValue} size="small" color="primary">
               <ClearIcon />
             </IconButton>
           ),

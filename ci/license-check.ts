@@ -9,7 +9,6 @@ import { promisify } from "util";
 const initChecker = promisify(checker.init);
 
 const ALLOWED_LICENSES = [
-  "Artistic-2.0",
   "MPL-2.0",
   "MIT",
   "BSD",
