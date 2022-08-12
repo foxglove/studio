@@ -5,8 +5,6 @@
 import { alpha, Theme, ThemeOptions } from "@mui/material/styles";
 import { CSSProperties } from "@mui/styles";
 
-import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
-
 type MuiLabComponents = {
   MuiFocusVisible?: {
     styleOverrides?: {
