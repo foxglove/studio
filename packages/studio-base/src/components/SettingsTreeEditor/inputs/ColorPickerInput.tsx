@@ -50,12 +50,11 @@ type ColorPickerInputProps = {
   value: undefined | string;
   onChange: (value: undefined | string) => void;
   placeholder?: string;
-  swatchOrientation?: "start" | "end";
   readOnly?: boolean;
 };
 
 export function ColorPickerInput(props: ColorPickerInputProps): JSX.Element {
-  const { alphaType, disabled, onChange, readOnly, swatchOrientation = "start", value } = props;
+  const { alphaType, disabled, onChange, readOnly, value } = props;
 
   const { classes, cx } = useStyles();
 
@@ -96,17 +95,19 @@ export function ColorPickerInput(props: ColorPickerInputProps): JSX.Element {
         variant="filled"
         InputProps={{
           readOnly: true,
-          startAdornment: swatchOrientation === "start" && (
-            <ColorSwatch color={swatchColor} onClick={handleClick} />
-          ),
-          endAdornment: swatchOrientation === "end" && (
-            <ColorSwatch color={swatchColor} onClick={handleClick} />
+          startAdornment: <ColorSwatch color={swatchColor} onClick={handleClick} />,
+          endAdornment: (
+            <IconButton
+              className={classes.clearButton}
+              onClick={clearValue}
+              size="small"
+              color="primary"
+            >
+              <ClearIcon />
+            </IconButton>
           ),
         }}
       />
-      <IconButton className={classes.clearButton} onClick={clearValue} size="small" color="primary">
-        <ClearIcon />
-      </IconButton>
       <Popover
         open={open}
         anchorEl={anchorElement}
