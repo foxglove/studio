@@ -13,6 +13,7 @@ ignorePatterns:
 
 plugins:
   - file-progress
+  - deprecate
 
 extends:
   - plugin:@foxglove/base
@@ -24,6 +25,13 @@ settings:
 
 rules:
   "@foxglove/license-header": error
+
+  deprecate/import:
+    - warn
+    - name: styled-components
+      use: tss-react/mui
+    - name: "@fluentui/react"
+      use: "@mui/material"
 
   # show progress while linting
   file-progress/activate: warn
