@@ -2,7 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { TextField, InputAdornment } from "@mui/material";
+import TagIcon from "@mui/icons-material/Tag";
+import { TextField } from "@mui/material";
 import { useCallback, useState, useEffect, useMemo } from "react";
 import { HexAlphaColorPicker, HexColorPicker } from "react-colorful";
 import tinycolor from "tinycolor2";
@@ -10,6 +11,7 @@ import { makeStyles } from "tss-react/mui";
 import { useDebouncedCallback } from "use-debounce";
 
 import Stack from "@foxglove/studio-base/components/Stack";
+import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 const useStyles = makeStyles()((theme) => ({
   container: {
@@ -18,12 +20,19 @@ const useStyles = makeStyles()((theme) => ({
   picker: {
     "&.react-colorful": {
       width: "100%",
+      gap: theme.spacing(0.75),
     },
     ".react-colorful__last-control": {
       borderRadius: 0,
     },
     ".react-colorful__saturation": {
       borderRadius: 0,
+    },
+    ".react-colorful__hue": {
+      order: -1,
+    },
+    ".react-colorful__hue-pointer": {
+      zIndex: 4,
     },
   },
 }));
@@ -87,11 +96,13 @@ export function ColorPickerControl(props: ColorPickerInputProps): JSX.Element {
         />
       )}
       <TextField
-        label="Hex"
+        size="small"
         error={editedValueIsInvalid}
         InputProps={{
-          startAdornment: <InputAdornment position="start">#</InputAdornment>,
+          startAdornment: <TagIcon fontSize="small" />,
+          style: { fontFamily: fonts.MONOSPACE },
         }}
+        placeholder={alphaType === "alpha" ? "RRGGBBAA" : "RRGGBB"}
         value={editedValue}
         onChange={(event) => updateEditedValue(event.target.value)}
       />
