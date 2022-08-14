@@ -2,21 +2,25 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Badge, Tab, Tabs, Theme, useTheme } from "@mui/material";
-import { makeStyles } from "@mui/styles";
+import { Badge, Paper, Tab, Tabs } from "@mui/material";
 import {
+  ComponentProps,
+  PropsWithChildren,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
-  PropsWithChildren,
-  useMemo,
-  ComponentProps,
 } from "react";
 import { MosaicNode, MosaicWithoutDragDropContext } from "react-mosaic-component";
+import { makeStyles } from "tss-react/mui";
 
+import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import { BuiltinIcon } from "@foxglove/studio-base/components/BuiltinIcon";
 import ErrorBoundary from "@foxglove/studio-base/components/ErrorBoundary";
 import Stack from "@foxglove/studio-base/components/Stack";
+import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
+
+import { MemoryUseIndicator } from "./MemoryUseIndicator";
 
 function Noop(): ReactNull {
   return ReactNull;
@@ -30,11 +34,32 @@ export type SidebarItem = {
   url?: string;
 };
 
-const useStyles = makeStyles((theme: Theme) => ({
+const useStyles = makeStyles()((theme) => ({
   nav: {
     boxSizing: "content-box",
     borderRight: `1px solid ${theme.palette.divider}`,
     backgroundColor: theme.palette.background.paper,
+  },
+  tab: {
+    padding: theme.spacing(1.625),
+    minWidth: 50,
+  },
+  badge: {
+    "*:not(.MuiBadge-badge)": {
+      width: "1.5rem",
+      height: "1.5rem",
+      fontSize: "1.5rem",
+      display: "flex",
+
+      ".root-span": {
+        display: "contents",
+      },
+      svg: {
+        fontSize: "inherit",
+        width: "auto",
+        height: "auto",
+      },
+    },
   },
   mosaicWrapper: {
     flex: "1 1 100%",
@@ -65,13 +90,13 @@ type SidebarProps<K> = PropsWithChildren<{
 
 export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.Element {
   const { children, items, bottomItems, selectedKey, onSelectKey } = props;
-
+  const [enableMemoryUseIndicator = false] = useAppConfigurationValue<boolean>(
+    AppSetting.ENABLE_MEMORY_USE_INDICATOR,
+  );
   const [mosaicValue, setMosaicValue] = useState<MosaicNode<"sidebar" | "children">>("children");
-
-  const theme = useTheme();
-  const classes = useStyles();
-
+  const { classes } = useStyles();
   const prevSelectedKey = useRef<string | undefined>(undefined);
+
   useLayoutEffect(() => {
     if (prevSelectedKey.current !== selectedKey) {
       if (selectedKey == undefined) {
@@ -97,42 +122,52 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
   const topTabs = useMemo(() => {
     return [...items.entries()].map(([key, item]) => (
       <Tab
+        className={classes.tab}
         value={key}
         key={key}
-        style={{ minWidth: "50px" }}
         title={item.title}
         icon={
           <Badge
+            className={classes.badge}
             badgeContent={item.badge?.count}
             invisible={item.badge == undefined}
-            color="primary"
+            color="error"
+            anchorOrigin={{
+              vertical: "bottom",
+              horizontal: "right",
+            }}
           >
             <BuiltinIcon name={item.iconName} />
           </Badge>
         }
       />
     ));
-  }, [items]);
+  }, [classes, items]);
 
   const bottomTabs = useMemo(() => {
     return [...bottomItems.entries()].map(([key, item]) => (
       <Tab
+        className={classes.tab}
         value={key}
         key={key}
-        style={{ minWidth: "50px" }}
         title={item.title}
         icon={
           <Badge
+            className={classes.badge}
             badgeContent={item.badge?.count}
             invisible={item.badge == undefined}
-            color="primary"
+            color="error"
+            anchorOrigin={{
+              vertical: "bottom",
+              horizontal: "right",
+            }}
           >
             <BuiltinIcon name={item.iconName} />
           </Badge>
         }
       />
     ));
-  }, [bottomItems]);
+  }, [bottomItems, classes]);
 
   return (
     <Stack direction="row" fullHeight overflow="hidden">
@@ -154,6 +189,7 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
           onChange={onHandleChange}
         >
           {bottomTabs}
+          {enableMemoryUseIndicator && <MemoryUseIndicator />}
         </Tabs>
       </Stack>
       {
@@ -170,13 +206,9 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
               {id === "children" ? (
                 (children as JSX.Element)
               ) : (
-                <div
-                  style={{
-                    backgroundColor: theme.palette.background.paper,
-                  }}
-                >
+                <Paper square elevation={0}>
                   <SelectedComponent />
-                </div>
+                </Paper>
               )}
             </ErrorBoundary>
           )}

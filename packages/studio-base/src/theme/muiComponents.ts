@@ -89,6 +89,15 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
         variant: "standard",
       },
     },
+    MuiBadge: {
+      styleOverrides: {
+        badge: {
+          height: 16,
+          minWidth: 16,
+          padding: theme.spacing(0, 0.25),
+        },
+      },
+    },
     MuiButton: {
       defaultProps: {
         disableElevation: true,
@@ -363,6 +372,7 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
     MuiOutlinedInput: {
       styleOverrides: {
         input: {
+          boxSizing: "content-box",
           padding: theme.spacing(1, 1.25),
         },
         inputSizeSmall: {
