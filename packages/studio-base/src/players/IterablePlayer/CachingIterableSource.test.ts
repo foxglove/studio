@@ -726,7 +726,7 @@ describe("CachingIterableSource", () => {
     }
   });
 
-  it.only("should produce messages that have the same timestamp", async () => {
+  it("should produce messages that have the same timestamp", async () => {
     const source = new TestSource();
     const bufferedSource = new CachingIterableSource(source, {
       maxBlockSize: 100,
