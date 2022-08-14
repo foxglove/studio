@@ -59,6 +59,7 @@
     "@mui/icons-material": "5.4.1",
     "@mui/material": "5.4.1",
     "@mui/styles": "5.4.1",
+    "@mui/x-data-grid": "5.15.1",
     "@protobufjs/base64": "1.1.2",
     "@sentry/core": "6.19.6",
     "@sentry/types": "6.19.6",
@@ -212,7 +213,7 @@
     "use-pan-and-zoom": "0.6.5",
     "uuid": "8.3.2",
     "wasm-lz4": "2.0.0",
-    "webpack": "5.68.0",
+    "webpack": "5.74.0",
     "xacro-parser": "0.3.8",
     "zustand": "4.0.0"
   }
