@@ -207,6 +207,9 @@ export class IterablePlayer implements Player {
     }
 
     if (opt?.untilTime) {
+      if (this._currentTime && compare(opt.untilTime, this._currentTime) <= 0) {
+        throw new Error("Invariant: playUntil time must be after the current time");
+      }
       this._untilTime = clampTime(opt.untilTime, this._start, this._end);
     }
     this._metricsCollector.play(this._speed);
@@ -257,6 +260,7 @@ export class IterablePlayer implements Player {
 
     this._metricsCollector.seek(targetTime);
     this._seekTarget = targetTime;
+    this._untilTime = undefined;
 
     this._blockLoader?.setActiveTime(targetTime);
     this._setState("seek-backfill");
@@ -732,12 +736,10 @@ export class IterablePlayer implements Player {
       throw new Error("Invariant: Tried to play with no current time.");
     }
 
-    // If we have an until time, we will read all the messages until that time in one tick
-    const targetTime = this._untilTime ?? add(this._currentTime, fromMillis(rangeMillis));
-
     // The end time when we want to stop reading messages and emit state for the tick
     // The end time is inclusive.
-    const end: Time = clampTime(targetTime, this._start, this._end);
+    const targetTime = add(this._currentTime, fromMillis(rangeMillis));
+    const end: Time = clampTime(targetTime, this._start, this._untilTime ?? this._end);
 
     const msgEvents: MessageEvent<unknown>[] = [];
 

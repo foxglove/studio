@@ -916,15 +916,15 @@ export default class UserNodePlayer implements Player {
   };
 
   setPublishers(publishers: AdvertiseOptions[]): void {
-    return this._player.setPublishers(publishers);
+    this._player.setPublishers(publishers);
   }
 
   setParameter(key: string, value: ParameterValue): void {
-    return this._player.setParameter(key, value);
+    this._player.setParameter(key, value);
   }
 
   publish(request: PublishPayload): void {
-    return this._player.publish(request);
+    this._player.publish(request);
   }
 
   async callService(service: string, request: unknown): Promise<unknown> {
@@ -932,11 +932,11 @@ export default class UserNodePlayer implements Player {
   }
 
   startPlayback(): void {
-    return this._player.startPlayback?.();
+    this._player.startPlayback?.();
   }
 
   pausePlayback(): void {
-    return this._player.pausePlayback?.();
+    this._player.pausePlayback?.();
   }
 
   playUntil(time: Time): void {
@@ -948,14 +948,14 @@ export default class UserNodePlayer implements Player {
   }
 
   setPlaybackSpeed(speed: number): void {
-    return this._player.setPlaybackSpeed?.(speed);
+    this._player.setPlaybackSpeed?.(speed);
   }
 
   seekPlayback(time: Time, backfillDuration?: Time): void {
-    return this._player.seekPlayback?.(time, backfillDuration);
+    this._player.seekPlayback?.(time, backfillDuration);
   }
 
   requestBackfill(): void {
-    return this._player.requestBackfill();
+    this._player.requestBackfill();
   }
 }
