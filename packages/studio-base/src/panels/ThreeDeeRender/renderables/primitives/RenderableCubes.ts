@@ -9,7 +9,6 @@ import { CubePrimitive, SceneEntity } from "@foxglove/schemas/schemas/typescript
 
 import type { Renderer } from "../../Renderer";
 import { rgbToThreeColor } from "../../color";
-// import { makeStandardMaterial } from "./materials";
 
 const tempColor = new THREE.Color();
 const tempVec3 = new THREE.Vector3();
@@ -70,11 +69,7 @@ export class RenderableCubes extends THREE.Object3D {
 
       this.mesh.removeFromParent();
       this.mesh.dispose();
-      this.mesh = new THREE.InstancedMesh(
-        this.mesh.geometry,
-        this.mesh.material,
-        this.maxInstances,
-      );
+      this.mesh = new THREE.InstancedMesh(this.mesh.geometry, this.material, this.maxInstances);
       this.add(this.mesh);
 
       // THREE.js doesn't correctly recompute the new max instance count when dynamically
