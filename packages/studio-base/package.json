@@ -59,6 +59,7 @@
     "@mui/icons-material": "5.4.1",
     "@mui/material": "5.4.1",
     "@mui/styles": "5.4.1",
+    "@mui/x-data-grid": "5.15.1",
     "@protobufjs/base64": "1.1.2",
     "@sentry/core": "6.19.6",
     "@sentry/types": "6.19.6",
@@ -165,6 +166,7 @@
     "rc-tree": "5.4.3",
     "react": "17.0.2",
     "react-autocomplete": "janpaul123/react-autocomplete#bc8737070b5744069719c8fcd4e0a197192b0d48",
+    "react-colorful": "5.6.0",
     "react-dom": "patch:react-dom@npm:17.0.2#../../patches/react-dom.patch",
     "react-highlight-words": "0.17.0",
     "react-hover-observer": "2.1.1",
@@ -212,7 +214,7 @@
     "use-pan-and-zoom": "0.6.5",
     "uuid": "8.3.2",
     "wasm-lz4": "2.0.0",
-    "webpack": "5.68.0",
+    "webpack": "5.74.0",
     "xacro-parser": "0.3.8",
     "zustand": "4.0.0"
   }
