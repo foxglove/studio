@@ -6,6 +6,7 @@ import { Badge, Paper, Tab, Tabs } from "@mui/material";
 import {
   ComponentProps,
   PropsWithChildren,
+  useCallback,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -21,6 +22,7 @@ import Stack from "@foxglove/studio-base/components/Stack";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 
 import { MemoryUseIndicator } from "./MemoryUseIndicator";
+import { TabSpacer } from "./TabSpacer";
 
 function Noop(): ReactNull {
   return ReactNull;
@@ -39,6 +41,12 @@ const useStyles = makeStyles()((theme) => ({
     boxSizing: "content-box",
     borderRight: `1px solid ${theme.palette.divider}`,
     backgroundColor: theme.palette.background.paper,
+  },
+  tabs: {
+    flexGrow: 1,
+    ".MuiTabs-flexContainerVertical": {
+      height: "100%",
+    },
   },
   tab: {
     padding: theme.spacing(1.625),
@@ -113,19 +121,34 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
     }
   }, [selectedKey]);
 
-  const SelectedComponent = (selectedKey != undefined && items.get(selectedKey)?.component) || Noop;
+  const allItems = useMemo(() => {
+    return new Map([...items, ...bottomItems]);
+  }, [bottomItems, items]);
 
-  const onHandleChange = (_ev: unknown, value: K) => {
-    onSelectKey(value);
-  };
+  const SelectedComponent =
+    (selectedKey != undefined && allItems.get(selectedKey)?.component) || Noop;
+
+  const onClickTabAction = useCallback(
+    (key: K) => {
+      // toggle tab selected/unselected on click
+      if (selectedKey === key) {
+        onSelectKey(undefined);
+      } else {
+        onSelectKey(key);
+      }
+    },
+    [selectedKey, onSelectKey],
+  );
 
   const topTabs = useMemo(() => {
     return [...items.entries()].map(([key, item]) => (
       <Tab
+        data-sidebar-key={key}
         className={classes.tab}
         value={key}
         key={key}
         title={item.title}
+        onClick={() => onClickTabAction(key)}
         icon={
           <Badge
             className={classes.badge}
@@ -142,7 +165,7 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
         }
       />
     ));
-  }, [classes, items]);
+  }, [classes, items, onClickTabAction]);
 
   const bottomTabs = useMemo(() => {
     return [...bottomItems.entries()].map(([key, item]) => (
@@ -151,6 +174,7 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
         value={key}
         key={key}
         title={item.title}
+        onClick={() => onClickTabAction(key)}
         icon={
           <Badge
             className={classes.badge}
@@ -167,27 +191,20 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
         }
       />
     ));
-  }, [bottomItems, classes]);
+  }, [bottomItems, classes, onClickTabAction]);
 
   return (
     <Stack direction="row" fullHeight overflow="hidden">
       <Stack className={classes.nav} flexShrink={0} justifyContent="space-between">
         <Tabs
+          className={classes.tabs}
           orientation="vertical"
           variant="scrollable"
           value={selectedKey ?? false}
           scrollButtons={false}
-          onChange={onHandleChange}
         >
           {topTabs}
-        </Tabs>
-        <Tabs
-          orientation="vertical"
-          variant="scrollable"
-          value={selectedKey ?? false}
-          scrollButtons={false}
-          onChange={onHandleChange}
-        >
+          <TabSpacer />
           {bottomTabs}
           {enableMemoryUseIndicator && <MemoryUseIndicator />}
         </Tabs>
