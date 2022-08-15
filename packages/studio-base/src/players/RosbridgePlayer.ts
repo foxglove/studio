@@ -676,27 +676,25 @@ export default class RosbridgePlayer implements Player {
     return this._clockTime ?? fromMillis(Date.now());
   }
 
+  // Refreshes the full system state graph. Runs in the background so we don't
+  // block app startup while mapping large node graphs.
   private _refreshSystemState(): void {
     if (this._isRefreshing) {
       return;
     }
 
     this._isRefreshing = true;
-    let error: undefined | Error = undefined;
     const publishers = new Map<string, Set<string>>();
     const subscribers = new Map<string, Set<string>>();
     const services = new Map<string, Set<string>>();
 
-    const addError = (newError: Error) => {
-      if (!error) {
-        error = newError;
-        this._isRefreshing = false;
-        this._problems.addProblem("requestTopics:system-state", {
-          severity: "error",
-          message: "Failed to fetch node details from rosbridge",
-          error,
-        });
-      }
+    const addError = (error: Error) => {
+      this._problems.addProblem("requestTopics:system-state", {
+        severity: "error",
+        message: "Failed to fetch node details from rosbridge",
+        error,
+      });
+      this._isRefreshing = false;
     };
 
     const addEntry = (map: Map<string, Set<string>>, key: string, value: string) => {
@@ -708,30 +706,32 @@ export default class RosbridgePlayer implements Player {
       entries.add(value);
     };
 
-    this._rosClient?.getNodes((nodes) => {
-      nodes.forEach((node, index) => {
-        if (error) {
-          return;
-        }
-
+    const makeGetNodeDetailsPromise = async (node: string) =>
+      await new Promise<void>((resolve, reject) => {
         this._rosClient?.getNodeDetails(
           node,
           (newSubscriptions, newPublications, newServices) => {
             newSubscriptions.forEach((pub) => addEntry(publishers, pub, node));
             newPublications.forEach((sub) => addEntry(subscribers, sub, node));
             newServices.forEach((srv) => addEntry(services, srv, node));
-
-            if (index === nodes.length - 1) {
-              this._publishedTopics = publishers;
-              this._subscribedTopics = subscribers;
-              this._services = services;
-              this._isRefreshing = false;
-              this._emitState();
-            }
+            resolve();
           },
-          addError,
+          reject,
         );
       });
-    }, addError);
+
+    new Promise<string[]>((resolve, reject) => {
+      this._rosClient?.getNodes((nodes) => resolve(nodes), reject);
+    })
+      .then((nodes) => nodes.map(makeGetNodeDetailsPromise))
+      .then(async (promises) => await Promise.allSettled(promises))
+      .then(() => {
+        this._publishedTopics = publishers;
+        this._subscribedTopics = subscribers;
+        this._services = services;
+        this._isRefreshing = false;
+        this._emitState();
+      })
+      .catch(addError);
   }
 }
