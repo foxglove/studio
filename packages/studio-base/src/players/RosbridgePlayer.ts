@@ -62,6 +62,7 @@ export default class RosbridgePlayer implements Player {
   private _url: string; // WebSocket URL.
   private _rosClient?: roslib.Ros; // The roslibjs client when we're connected.
   private _id: string = uuidv4(); // Unique ID for this player.
+  private _isRefreshing = false; // True if currently refreshing the node graph.
   private _listener?: (arg0: PlayerState) => Promise<void>; // Listener for _emitState().
   private _closed: boolean = false; // Whether the player has been completely closed using close().
   private _providerTopics?: Topic[]; // Topics as published by the WebSocket.
@@ -299,22 +300,8 @@ export default class RosbridgePlayer implements Player {
       // Try subscribing again, since we might now be able to subscribe to some new topics.
       this.setSubscriptions(this._requestedSubscriptions);
 
-      // Fetch the full graph topology
-      try {
-        const graph = await this._getSystemState();
-        this._publishedTopics = graph.publishers;
-        this._subscribedTopics = graph.subscribers;
-        this._services = graph.services;
-      } catch (error) {
-        this._problems.addProblem("requestTopics:system-state", {
-          severity: "error",
-          message: "Failed to fetch node details from rosbridge",
-          error,
-        });
-        this._publishedTopics = new Map();
-        this._subscribedTopics = new Map();
-        this._services = new Map();
-      }
+      // Refresh the full graph topology
+      this._refreshSystemState();
     } catch (error) {
       log.error(error);
       clearTimeout(topicsStallWarningTimeout);
@@ -689,11 +676,27 @@ export default class RosbridgePlayer implements Player {
     return this._clockTime ?? fromMillis(Date.now());
   }
 
-  private async _getSystemState(): Promise<RosGraph> {
-    const output: RosGraph = {
-      publishers: new Map<string, Set<string>>(),
-      subscribers: new Map<string, Set<string>>(),
-      services: new Map<string, Set<string>>(),
+  private _refreshSystemState(): void {
+    if (this._isRefreshing) {
+      return;
+    }
+
+    this._isRefreshing = true;
+    let error: undefined | Error = undefined;
+    const publishers = new Map<string, Set<string>>();
+    const subscribers = new Map<string, Set<string>>();
+    const services = new Map<string, Set<string>>();
+
+    const addError = (newError: Error) => {
+      if (!error) {
+        error = newError;
+        this._isRefreshing = false;
+        this._problems.addProblem("requestTopics:system-state", {
+          severity: "error",
+          message: "Failed to fetch node details from rosbridge",
+          error,
+        });
+      }
     };
 
     const addEntry = (map: Map<string, Set<string>>, key: string, value: string) => {
@@ -705,30 +708,30 @@ export default class RosbridgePlayer implements Player {
       entries.add(value);
     };
 
-    // Note that we're calling two layers of nested callbacks here so we need to make sure
-    // we wrap each layer in indepedent promises and resolve them all before returning
-    // or we will immediately resolve `output` before it's initialized and downstream
-    // clients will never register the eventual update. This could probably be
-    // simplified with a promisfy utility.
-    return await new Promise((outerResolve, outerReject) => {
-      this._rosClient?.getNodes(async (nodes) => {
-        const promises = nodes.map(async (node) => {
-          return await new Promise((innerResolve, innerReject) => {
-            this._rosClient?.getNodeDetails(
-              node,
-              (subscriptions, publications, services) => {
-                publications.forEach((pub) => addEntry(output.publishers, pub, node));
-                subscriptions.forEach((sub) => addEntry(output.subscribers, sub, node));
-                services.forEach((srv) => addEntry(output.services, srv, node));
-                innerResolve(undefined);
-              },
-              innerReject,
-            );
-          });
-        });
-        await Promise.allSettled(promises);
-        outerResolve(output);
-      }, outerReject);
-    });
+    this._rosClient?.getNodes((nodes) => {
+      nodes.forEach((node, index) => {
+        if (error) {
+          return;
+        }
+
+        this._rosClient?.getNodeDetails(
+          node,
+          (newSubscriptions, newPublications, newServices) => {
+            newSubscriptions.forEach((pub) => addEntry(publishers, pub, node));
+            newPublications.forEach((sub) => addEntry(subscribers, sub, node));
+            newServices.forEach((srv) => addEntry(services, srv, node));
+
+            if (index === nodes.length - 1) {
+              this._publishedTopics = publishers;
+              this._subscribedTopics = subscribers;
+              this._services = services;
+              this._isRefreshing = false;
+              this._emitState();
+            }
+          },
+          addError,
+        );
+      });
+    }, addError);
   }
 }
