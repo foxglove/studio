@@ -11,14 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import {
-  useCallback,
-  useLayoutEffect,
-  useRef,
-  useState,
-  useMemo,
-  useReducer,
-} from "react";
+import { useCallback, useLayoutEffect, useRef, useState, useMemo, useReducer } from "react";
 import { useResizeDetector } from "react-resize-detector";
 import { useAsync } from "react-use";
 import { makeStyles } from "tss-react/mui";
@@ -98,7 +91,7 @@ const webWorkerManager = new WebWorkerManager(() => {
 }, 1);
 
 type RenderImage = (
-  args: RenderArgs & { canvas: RenderableCanvas },
+  args: RenderArgs & { canvas: RenderableCanvas }
 ) => Promise<Dimensions | undefined>;
 
 const supportsOffscreenCanvas =
@@ -115,7 +108,8 @@ export function ImageCanvas(props: Props): JSX.Element {
   const { mode } = config;
   const { classes, cx } = useStyles();
 
-  const renderInMainThread = (props.renderInMainThread ?? false) || !supportsOffscreenCanvas;
+  const renderInMainThread =
+    (props.renderInMainThread ?? false) || !supportsOffscreenCanvas;
 
   const [_, forceUpdate] = useReducer((x: number) => x + 1, 0);
 
@@ -140,7 +134,9 @@ export function ImageCanvas(props: Props): JSX.Element {
   });
 
   // The render function dispatches rendering to the main thread or a worker
-  const [doRenderImage, setDoRenderImage] = useState<RenderImage | undefined>(undefined);
+  const [doRenderImage, setDoRenderImage] = useState<RenderImage | undefined>(
+    undefined
+  );
 
   const workerRef = useRef<Rpc | undefined>();
 
@@ -179,21 +175,31 @@ export function ImageCanvas(props: Props): JSX.Element {
       // Potentially performance-sensitive; await can be expensive
       // eslint-disable-next-line @typescript-eslint/promise-function-async
       const workerRender: RenderImage = (args) => {
-        const { geometry, imageMessage, options, rawMarkerData: rawMarkers } = args;
-
-        return worker.send<Dimensions | undefined, RenderArgs & { id: string }>("renderImage", {
+        const {
           geometry,
-          id,
           imageMessage,
           options,
           rawMarkerData: rawMarkers,
-        });
+        } = args;
+
+        return worker.send<Dimensions | undefined, RenderArgs & { id: string }>(
+          "renderImage",
+          {
+            geometry,
+            id,
+            imageMessage,
+            options,
+            rawMarkerData: rawMarkers,
+          }
+        );
       };
 
       const transferredCanvas = newCanvas.transferControlToOffscreen();
 
       worker
-        .send<void>("initialize", { id, canvas: transferredCanvas }, [transferredCanvas])
+        .send<void>("initialize", { id, canvas: transferredCanvas }, [
+          transferredCanvas,
+        ])
         .then(() => {
           if (mounted) {
             setDoRenderImage(() => workerRender);
@@ -335,7 +341,7 @@ export function ImageCanvas(props: Props): JSX.Element {
           }
         });
     },
-    [devicePixelRatio, props.setActivePixelData, workerId],
+    [devicePixelRatio, props.setActivePixelData, workerId]
   );
 
   const resetPanZoom = useCallback(() => {
@@ -371,8 +377,12 @@ export function ImageCanvas(props: Props): JSX.Element {
   return (
     <div ref={rootRef} className={classes.root} tabIndex={0}>
       <KeyListener keyDownHandlers={keyDownHandlers} />
-      {error && <div className={classes.errorMessage}>Error: {error.message}</div>}
-      {renderError && <div className={classes.errorMessage}>Error: {renderError.message}</div>}
+      {error && (
+        <div className={classes.errorMessage}>Error: {error.message}</div>
+      )}
+      {renderError && (
+        <div className={classes.errorMessage}>Error: {renderError.message}</div>
+      )}
       <ZoomMenu
         zoom={scaleValue}
         setZoom={setZoom}
