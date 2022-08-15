@@ -18,7 +18,6 @@ import {
   useState,
   useMemo,
   useReducer,
-  useEffect,
 } from "react";
 import { useResizeDetector } from "react-resize-detector";
 import { useAsync } from "react-use";
