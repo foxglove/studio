@@ -26,8 +26,12 @@ export class RenderableCubes extends THREE.Object3D {
     roughness: 1,
     dithering: true,
   });
-  geometry: THREE.InstancedBufferGeometry;
   mesh: THREE.InstancedMesh<THREE.BoxGeometry, THREE.MeshStandardMaterial>;
+  /**
+   * The initial count passed to `mesh`'s constructor, i.e. the maximum number of instances it can
+   * render before we need to create a new mesh object
+   */
+  maxInstances: number;
 
   outlineGeometry: THREE.InstancedBufferGeometry;
   outline: THREE.LineSegments;
@@ -38,64 +42,40 @@ export class RenderableCubes extends THREE.Object3D {
     super();
     this.renderer = renderer;
 
-    // const numVertices=24;
-    this.geometry = new THREE.InstancedBufferGeometry().copy(new THREE.BoxGeometry(1, 1, 1));
-
-    // const instanceData = new Float32Array(numVertices * 4);
-    // const buffer = new THREE.InstancedInterleavedBuffer();
-    // const color = new THREE.InstancedBufferAttribute(instanceData, 4, undefined, 1);
-
-    // this.geometry.setAttribute('color', color)
-    // const nonInstanceBuffer = new THREE.InterleavedBuffer(attributeData, 8);
-    // this.position = new THREE.InterleavedBufferAttribute(nonInstanceBuffer, 3, 0);
-    // this.normal = new THREE.InterleavedBufferAttribute(nonInstanceBuffer, 3, 3);
-    // this.geometry.setAttribute("position");
-    // this.geometry.setAttribute("normal");
-    // this.geometry.setAttribute("color");
     // Cube mesh
-    this.mesh = new THREE.InstancedMesh(RenderableCubes.Geometry(), this.material, 0);
+    this.maxInstances = 16;
+    this.mesh = new THREE.InstancedMesh(
+      RenderableCubes.Geometry(),
+      this.material,
+      this.maxInstances,
+    );
+    this.mesh.count = 0;
     this.add(this.mesh);
 
     // Cube outline
     this.outlineGeometry = new THREE.InstancedBufferGeometry().copy(
       RenderableCubes.EdgesGeometry(),
     );
-    // this.outlineGeometry.setAttribute(
-    //   "instanceMatrix",
-    //   new THREE.InstancedBufferAttribute(
-    //     new Float32Array(new THREE.Matrix4().identity().toArray()),
-    //     16,
-    //     undefined,
-    //     1,
-    //   ),
-    // );
+    this.outlineGeometry.setAttribute("instanceMatrix", this.mesh.instanceMatrix);
     this.outline = new THREE.LineSegments(this.outlineGeometry, renderer.instancedOutlineMaterial);
     this.outline.frustumCulled = false;
-    // this.outline = new THREE.LineSegments(
-    //   RenderableCubes.EdgesGeometry(),
-    //   renderer.outlineMaterial,
-    // );
     this.outline.userData.picking = false;
     this.add(this.outline);
   }
 
   private _ensureCapacity(numCubes: number) {
-    const capacity = this.mesh.instanceMatrix.array.length >>> 4;
-    if (numCubes > capacity) {
-      const newCapacity = Math.trunc(Math.max(capacity, numCubes) * 1.5) + 16;
+    if (numCubes > this.maxInstances) {
+      const newCapacity = Math.trunc(numCubes * 1.5) + 16;
+      this.maxInstances = newCapacity;
 
-      this.mesh.instanceMatrix = new THREE.InstancedBufferAttribute(
-        new Float32Array(16 * newCapacity),
-        16,
+      this.mesh.removeFromParent();
+      this.mesh.dispose();
+      this.mesh = new THREE.InstancedMesh(
+        this.mesh.geometry,
+        this.mesh.material,
+        this.maxInstances,
       );
-      this.mesh.instanceColor = new THREE.InstancedBufferAttribute(
-        new Float32Array(3 * newCapacity),
-        3,
-      );
-      this.mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-      this.mesh.instanceColor.setUsage(THREE.DynamicDrawUsage);
-      this.mesh.material.needsUpdate = true; // needed to make colors work: https://discourse.threejs.org/t/instancedmesh-color-doesnt-work-when-initial-count-is-0/41355
-      // this.mesh.geometry.setAttribute("instanceColor", this.mesh.instanceColor);
+      this.add(this.mesh);
 
       // THREE.js doesn't correctly recompute the new max instance count when dynamically
       // reassigning the attribute of InstancedBufferGeometry, so we just create a new geometry
@@ -139,15 +119,16 @@ export class RenderableCubes extends THREE.Object3D {
     this.mesh.material.transparent = isTransparent;
     this.mesh.material.depthWrite = !isTransparent;
 
+    if (this.mesh.count === 0 && cubes.length > 0) {
+      // needed to make colors work: https://discourse.threejs.org/t/instancedmesh-color-doesnt-work-when-initial-count-is-0/41355
+      this.mesh.material.needsUpdate = true;
+    }
     this.mesh.count = cubes.length;
     this.outlineGeometry.instanceCount = cubes.length;
-    // this.outlineGeometry.setDrawRange(0, cubes.length);
-    // this.mesh.instanceMatrix.count = cubes.length;
     this.mesh.instanceMatrix.needsUpdate = true;
 
     // may be null if we were initialized with count 0 and still have 0 cubes
     if (this.mesh.instanceColor) {
-      // this.mesh.instanceColor.count = cubes.length;
       this.mesh.instanceColor.needsUpdate = true;
     }
   }
@@ -155,7 +136,6 @@ export class RenderableCubes extends THREE.Object3D {
   dispose(): void {
     this.mesh.dispose();
     this.material.dispose();
-    this.geometry.dispose();
     this.outlineGeometry.dispose();
   }
 
