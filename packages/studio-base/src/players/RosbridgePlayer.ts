@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { isEqual, sortBy } from "lodash";
+import { isEqual, sortBy, transform } from "lodash";
 import roslib from "roslib";
 import { v4 as uuidv4 } from "uuid";
 
@@ -44,6 +44,27 @@ const log = Log.getLogger(__dirname);
 
 const CAPABILITIES = [PlayerCapabilities.advertise, PlayerCapabilities.callServices];
 
+type RosNodeDetails = {
+  subcriptions: [string, string[]];
+  publications: [string, string[]];
+  services: [string, string[]];
+};
+
+function collateNodeDetails(details: Array<[string, string[]]>): Map<string, Set<string>> {
+  return transform(
+    details,
+    (acc, [node, values]) => {
+      for (const value of values) {
+        if (!acc.has(value)) {
+          acc.set(value, new Set());
+        }
+        acc.get(value)?.add(node);
+      }
+    },
+    new Map<string, Set<string>>(),
+  );
+}
+
 function isClockMessage(topic: string, msg: unknown): msg is { clock: Time } {
   const maybeClockMsg = msg as { clock?: Time };
   return topic === "/clock" && maybeClockMsg.clock != undefined && !isNaN(maybeClockMsg.clock.sec);
@@ -51,6 +72,26 @@ function isClockMessage(topic: string, msg: unknown): msg is { clock: Time } {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value != undefined;
+}
+
+function isFulfilledPromise<T>(value: PromiseSettledResult<T>): value is PromiseFulfilledResult<T> {
+  return value.status === "fulfilled";
+}
+
+async function makeGetNodeDetailsPromise(rosClient: roslib.Ros, node: string) {
+  return await new Promise<RosNodeDetails>((resolve, reject) => {
+    rosClient.getNodeDetails(
+      node,
+      (subscriptions, publications, services) => {
+        resolve({
+          publications: [node, publications],
+          services: [node, services],
+          subcriptions: [node, subscriptions],
+        });
+      },
+      reject,
+    );
+  });
 }
 
 // Connects to `rosbridge_server` instance using `roslibjs`. Currently doesn't support seeking or
@@ -678,59 +719,36 @@ export default class RosbridgePlayer implements Player {
   // Refreshes the full system state graph. Runs in the background so we don't
   // block app startup while mapping large node graphs.
   private _refreshSystemState(): void {
-    if (this._isRefreshing) {
+    const rosClient = this._rosClient;
+    if (this._isRefreshing || rosClient == undefined) {
       return;
     }
 
-    this._isRefreshing = true;
-    const publishers = new Map<string, Set<string>>();
-    const subscribers = new Map<string, Set<string>>();
-    const services = new Map<string, Set<string>>();
-
-    const addError = (error: Error) => {
-      this._problems.addProblem("requestTopics:system-state", {
-        severity: "error",
-        message: "Failed to fetch node details from rosbridge",
-        error,
-      });
-      this._isRefreshing = false;
-    };
-
-    const addEntry = (map: Map<string, Set<string>>, key: string, value: string) => {
-      let entries = map.get(key);
-      if (entries == undefined) {
-        entries = new Set<string>();
-        map.set(key, entries);
-      }
-      entries.add(value);
-    };
-
-    const makeGetNodeDetailsPromise = async (node: string) =>
-      await new Promise<void>((resolve, reject) => {
-        this._rosClient?.getNodeDetails(
-          node,
-          (newSubscriptions, newPublications, newServices) => {
-            newSubscriptions.forEach((pub) => addEntry(publishers, pub, node));
-            newPublications.forEach((sub) => addEntry(subscribers, sub, node));
-            newServices.forEach((srv) => addEntry(services, srv, node));
-            resolve();
-          },
-          reject,
-        );
-      });
-
     new Promise<string[]>((resolve, reject) => {
+      this._isRefreshing = true;
       this._rosClient?.getNodes((nodes) => resolve(nodes), reject);
     })
-      .then((nodes) => nodes.map(makeGetNodeDetailsPromise))
+      .then((nodes) => nodes.map(async (node) => await makeGetNodeDetailsPromise(rosClient, node)))
       .then(async (promises) => await Promise.allSettled(promises))
-      .then(() => {
-        this._publishedTopics = publishers;
-        this._subscribedTopics = subscribers;
-        this._services = services;
+      .then((items) => {
+        const fulfilledItems = items.filter(isFulfilledPromise);
+        this._publishedTopics = collateNodeDetails(
+          fulfilledItems.map((item) => item.value.publications),
+        );
+        this._subscribedTopics = collateNodeDetails(
+          fulfilledItems.map((item) => item.value.subcriptions),
+        );
+        this._services = collateNodeDetails(fulfilledItems.map((item) => item.value.services));
         this._isRefreshing = false;
         this._emitState();
       })
-      .catch(addError);
+      .catch((error) => {
+        this._problems.addProblem("requestTopics:system-state", {
+          severity: "error",
+          message: "Failed to fetch node details from rosbridge",
+          error,
+        });
+        this._isRefreshing = false;
+      });
   }
 }
