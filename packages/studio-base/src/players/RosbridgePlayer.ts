@@ -712,8 +712,8 @@ export default class RosbridgePlayer implements Player {
     // simplified with a promisfy utility.
     return await new Promise((outerResolve, outerReject) => {
       this._rosClient?.getNodes(async (nodes) => {
-        for (const node of nodes) {
-          await new Promise((innerResolve, innerReject) => {
+        const promises = nodes.map(async (node) => {
+          return await new Promise((innerResolve, innerReject) => {
             this._rosClient?.getNodeDetails(
               node,
               (subscriptions, publications, services) => {
@@ -725,7 +725,8 @@ export default class RosbridgePlayer implements Player {
               innerReject,
             );
           });
-        }
+        });
+        await Promise.allSettled(promises);
         outerResolve(output);
       }, outerReject);
     });
