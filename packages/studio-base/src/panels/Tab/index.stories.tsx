@@ -12,11 +12,12 @@
 //   You may not use this file except in compliance with the License.
 
 import { Story } from "@storybook/react";
-import TestUtils from "react-dom/test-utils";
+import { fireEvent } from "@testing-library/dom";
 
 import MockPanelContextProvider from "@foxglove/studio-base/components/MockPanelContextProvider";
 import Panel from "@foxglove/studio-base/components/Panel";
 import PanelLayout from "@foxglove/studio-base/components/PanelLayout";
+import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import { PanelCatalog, PanelInfo } from "@foxglove/studio-base/context/PanelCatalogContext";
 import {
   nestedTabLayoutFixture,
@@ -24,19 +25,28 @@ import {
 } from "@foxglove/studio-base/panels/Tab/nestedTabLayoutFixture";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 import { SExpectedResult } from "@foxglove/studio-base/stories/storyHelpers";
-import { dragAndDrop } from "@foxglove/studio-base/test/dragAndDropHelper";
 import tick from "@foxglove/studio-base/util/tick";
 
 import Tab from "./index";
 
 const SamplePanel1 = function () {
-  return <div>Sample Panel 1</div>;
+  return (
+    <div>
+      <PanelToolbar />
+      <div>Sample Panel 1</div>
+    </div>
+  );
 };
 SamplePanel1.panelType = "Sample1";
 SamplePanel1.defaultConfig = {};
 
 const SamplePanel2 = function () {
-  return <div>Sample Panel 2</div>;
+  return (
+    <div>
+      <PanelToolbar />
+      <div>Sample Panel 2</div>
+    </div>
+  );
 };
 SamplePanel2.panelType = "Sample2";
 SamplePanel2.defaultConfig = {};
@@ -49,6 +59,11 @@ const allPanels: readonly PanelInfo[] = [
   { title: "Happy Panel", type: "Sample2", module: async () => ({ default: MockPanel2 }) },
   { title: "Tab", type: "Tab", module: async () => ({ default: Tab }) },
 ];
+
+function dragAndDrop(source: Element, target: Element): void {
+  fireEvent.dragStart(source);
+  fireEvent.drop(target);
+}
 
 class MockPanelCatalog implements PanelCatalog {
   getPanels(): readonly PanelInfo[] {
@@ -192,7 +207,7 @@ export const DraggingAPanelFromThePanelListUpdatesTheTabsLayout: Story = () => {
             '[data-testid="panel-menu-item Some Panel"]',
           )[0];
           const panel = document.querySelectorAll('[data-testid="empty-drop-target"]')[0];
-          await dragAndDrop(imageItem, panel);
+          dragAndDrop(imageItem!, panel!);
         }, DEFAULT_TIMEOUT);
       }}
     >
@@ -226,7 +241,7 @@ export const DraggingAPanelFromThePanelListCreatesANewTabIfThereAreNone: Story =
             '[data-testid="panel-menu-item Some Panel"]',
           )[0];
           const panel = document.querySelectorAll('[data-testid="empty-drop-target"]')[0];
-          await dragAndDrop(imageItem, panel);
+          dragAndDrop(imageItem!, panel!);
         }, DEFAULT_TIMEOUT);
       }}
     >
@@ -357,7 +372,7 @@ export const ReorderTabsWithinTabPanelByDroppingOnTab: Story = () => {
           const tabs = document.querySelectorAll("[draggable=true]");
 
           // Drag and drop the first tab onto the third tab
-          await dragAndDrop(tabs[0], tabs[2]);
+          dragAndDrop(tabs[0]!, tabs[2]!);
         }, DEFAULT_TIMEOUT);
       }}
     >
@@ -369,38 +384,6 @@ export const ReorderTabsWithinTabPanelByDroppingOnTab: Story = () => {
 
 ReorderTabsWithinTabPanelByDroppingOnTab.story = {
   name: "reorder tabs within Tab panel by dropping on tab",
-};
-
-export const ReorderTabsWithinTabPanelByDroppingOnToolbar: Story = () => {
-  return (
-    <PanelSetup
-      panelCatalog={new MockPanelCatalog()}
-      fixture={{
-        ...fixture,
-        savedProps: {
-          "Tab!a": { activeTabIdx: 0, tabs: manyTabs.slice(0, 2) },
-        },
-      }}
-      style={{ width: "100%" }}
-      onMount={() => {
-        setTimeout(async () => {
-          await tick();
-          const tabs = document.querySelectorAll("[draggable=true]");
-          const toolbar = document.querySelectorAll('[data-testid="toolbar-droppable"]')[0];
-
-          // Drag and drop the first tab onto the toolbar
-          await dragAndDrop(tabs[0], toolbar);
-        }, DEFAULT_TIMEOUT);
-      }}
-    >
-      <PanelLayout />
-      <SExpectedResult>Expected result: #2, #1 (selected)</SExpectedResult>
-    </PanelSetup>
-  );
-};
-
-ReorderTabsWithinTabPanelByDroppingOnToolbar.story = {
-  name: "reorder tabs within Tab panel by dropping on toolbar",
 };
 
 export const MoveTabToDifferentTabPanel: Story = () => {
@@ -425,16 +408,13 @@ export const MoveTabToDifferentTabPanel: Story = () => {
         setTimeout(async () => {
           await tick();
           const tabs = document.querySelectorAll("[data-testid=toolbar-tab]");
-          const toolbar = document.querySelectorAll('[data-testid="toolbar-droppable"]')[1];
-
-          // Drag and drop the first tab onto the toolbar of the second tab panel
-          await dragAndDrop(tabs[1], toolbar);
+          dragAndDrop(tabs[0]!, tabs[2]!);
         }, DEFAULT_TIMEOUT);
       }}
     >
       <PanelLayout />
       <SExpectedResult style={{ left: 0 }}>Should have only #2</SExpectedResult>
-      <SExpectedResult style={{ left: "50%" }}>Should have #3 and #1</SExpectedResult>
+      <SExpectedResult style={{ left: "50%" }}>Should have #1 and #3</SExpectedResult>
     </PanelSetup>
   );
 };
@@ -462,14 +442,9 @@ export const PreventDraggingSelectedParentTabIntoChildTabPanel: Story = () => {
         setTimeout(async () => {
           await tick();
           const tabs = document.querySelectorAll("[draggable=true]");
-          const toolbar = document.querySelectorAll('[data-testid="toolbar-droppable"]')[0];
 
-          // Drag the first tab in the parent tab panel over the second tab in the child tab panel
-          tabs[0]?.dispatchEvent(new MouseEvent("dragstart", { bubbles: true }));
-          tabs[0]?.dispatchEvent(new MouseEvent("dragenter", { bubbles: true }));
-          toolbar?.dispatchEvent(new MouseEvent("dragout", { bubbles: true }));
-          await tick();
-          tabs[2]?.dispatchEvent(new MouseEvent("dragover", { bubbles: true }));
+          fireEvent.dragStart(tabs[0]!);
+          fireEvent.dragOver(tabs[2]!);
         }, DEFAULT_TIMEOUT);
       }}
     >
@@ -499,16 +474,14 @@ export const DraggingAndDroppingANestedTabPanelDoesNotRemoveAnyTabs: Story = () 
             document.querySelectorAll('[data-testid~="Tab!Left"] [data-testid="add-tab"]')[0] as any
           ).click();
 
-          const dragHandle =
-            document.querySelector('[data-testid~="Tab!RightInner"] [data-testid="panel-menu"]') ??
-            undefined;
-          await dragAndDrop(
-            dragHandle,
-            () =>
-              document.querySelector(
-                '[data-testid~="Tab!Left"] [data-testid="empty-drop-target"]',
-              ) ?? undefined,
+          const dragHandle = document.querySelector(
+            '[data-testid~="Tab!RightInner"] [data-testid="panel-menu"]',
           );
+
+          const target = document.querySelector(
+            '[data-testid~="Tab!Left"] [data-testid="empty-drop-target"]',
+          );
+          dragAndDrop(dragHandle!, target!);
         }, DEFAULT_TIMEOUT);
       }}
     >
@@ -529,26 +502,14 @@ export const SupportsDraggingBetweenTabsAnywhereInTheLayout: Story = () => {
       style={{ width: "100%" }}
       onMount={() => {
         setTimeout(async () => {
-          const mouseEnterContainer = document.querySelectorAll('[data-testid~="Plot!1"]')[0];
-          if (!mouseEnterContainer) {
-            throw new Error("missing plot panel");
-          }
-          TestUtils.Simulate.mouseEnter(mouseEnterContainer);
           const dragHandle = document.querySelector(
-            '[data-testid~="Plot!1"] [data-testid="mosaic-drag-handle"]',
+            '[data-testid~="Sample1"] [data-testid="mosaic-drag-handle"]',
           );
-          if (!dragHandle) {
-            throw new Error("missing drag handle");
-          }
-          await dragAndDrop(dragHandle, () => {
-            const dropTarget = document
-              .querySelector('[data-testid~="unknown!inner4"]')
-              ?.parentElement?.parentElement?.querySelector(".drop-target.left");
-            if (!dropTarget) {
-              throw new Error("missing drop target");
-            }
-            return dropTarget;
-          });
+          const target = document
+            .querySelector('[data-testid~="unknown!inner4"]')
+            ?.parentElement?.parentElement?.querySelector(".drop-target.left");
+
+          dragAndDrop(dragHandle!, target!);
         }, DEFAULT_TIMEOUT);
       }}
     >
