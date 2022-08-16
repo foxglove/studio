@@ -21,6 +21,7 @@ import {
   useMemo,
   useLayoutEffect,
   useContext,
+  MouseEvent,
 } from "react";
 import { useToasts } from "react-toast-notifications";
 
@@ -128,6 +129,12 @@ function keyboardEventHasModifier(event: KeyboardEvent) {
   } else {
     return event.ctrlKey;
   }
+}
+
+// Suppress context menu for the entire app.
+function onContextMenu(event: MouseEvent) {
+  event.preventDefault();
+  return false;
 }
 
 function AddPanel() {
@@ -609,7 +616,12 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
       <OrgExtensionRegistrySyncAdapter />
       <URLStateSyncAdapter />
       <KeyListener global keyDownHandlers={keyDownHandlers} />
-      <div className={classes.container} ref={containerRef} tabIndex={0}>
+      <div
+        className={classes.container}
+        ref={containerRef}
+        tabIndex={0}
+        onContextMenu={onContextMenu}
+      >
         <Sidebar
           items={sidebarItems}
           bottomItems={sidebarBottomItems}
