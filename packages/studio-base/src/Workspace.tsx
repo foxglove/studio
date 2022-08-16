@@ -534,7 +534,6 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     ]);
 
     const bottomItems = new Map<SidebarItemKey, SidebarItem>([
-      ["preferences", { iconName: "Settings", title: "Preferences", component: Preferences }],
       ["help", { iconName: "QuestionCircle", title: "Help", component: HelpSidebar }],
     ]);
 
@@ -543,6 +542,12 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
         iconName: currentUser != undefined ? "BlockheadFilled" : "Blockhead",
         title: currentUser != undefined ? `Signed in as ${currentUser.email}` : "Account",
         component: AccountSettings,
+      });
+
+      bottomItems.set("preferences", {
+        iconName: "Settings",
+        title: "Preferences",
+        component: Preferences,
       });
     }
 
