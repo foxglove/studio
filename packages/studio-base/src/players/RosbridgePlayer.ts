@@ -16,6 +16,7 @@ import roslib from "roslib";
 import { v4 as uuidv4 } from "uuid";
 
 import { debouncePromise } from "@foxglove/den/async";
+import { filterMap } from "@foxglove/den/collection";
 import Log from "@foxglove/log";
 import { parse as parseMessageDefinition } from "@foxglove/rosmsg";
 import { LazyMessageReader } from "@foxglove/rosmsg-serialization";
@@ -45,15 +46,19 @@ const log = Log.getLogger(__dirname);
 const CAPABILITIES = [PlayerCapabilities.advertise, PlayerCapabilities.callServices];
 
 type RosNodeDetails = {
-  subcriptions: [string, string[]];
-  publications: [string, string[]];
-  services: [string, string[]];
+  subscriptions: [node: string, values: string[]];
+  publications: [node: string, values: string[]];
+  services: [node: string, values: string[]];
 };
 
-function collateNodeDetails(details: Array<[string, string[]]>): Map<string, Set<string>> {
+function collateNodeDetails(
+  details: RosNodeDetails[],
+  key: keyof RosNodeDetails,
+): Map<string, Set<string>> {
   return transform(
     details,
-    (acc, [node, values]) => {
+    (acc, detail) => {
+      const [node, values] = detail[key];
       for (const value of values) {
         if (!acc.has(value)) {
           acc.set(value, new Set());
@@ -74,10 +79,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value != undefined;
 }
 
-function isFulfilledPromise<T>(value: PromiseSettledResult<T>): value is PromiseFulfilledResult<T> {
-  return value.status === "fulfilled";
-}
-
 async function makeGetNodeDetailsPromise(rosClient: roslib.Ros, node: string) {
   return await new Promise<RosNodeDetails>((resolve, reject) => {
     rosClient.getNodeDetails(
@@ -86,7 +87,7 @@ async function makeGetNodeDetailsPromise(rosClient: roslib.Ros, node: string) {
         resolve({
           publications: [node, publications],
           services: [node, services],
-          subcriptions: [node, subscriptions],
+          subscriptions: [node, subscriptions],
         });
       },
       reject,
@@ -731,15 +732,12 @@ export default class RosbridgePlayer implements Player {
       .then((nodes) => nodes.map(async (node) => await makeGetNodeDetailsPromise(rosClient, node)))
       .then(async (promises) => await Promise.allSettled(promises))
       .then((items) => {
-        const fulfilledItems = items.filter(isFulfilledPromise);
-        this._publishedTopics = collateNodeDetails(
-          fulfilledItems.map((item) => item.value.publications),
+        const fulfilled = filterMap(items, (item) =>
+          item.status === "fulfilled" ? item.value : undefined,
         );
-        this._subscribedTopics = collateNodeDetails(
-          fulfilledItems.map((item) => item.value.subcriptions),
-        );
-        this._services = collateNodeDetails(fulfilledItems.map((item) => item.value.services));
-        this._isRefreshing = false;
+        this._publishedTopics = collateNodeDetails(fulfilled, "publications");
+        this._subscribedTopics = collateNodeDetails(fulfilled, "subscriptions");
+        this._services = collateNodeDetails(fulfilled, "services");
         this._emitState();
       })
       .catch((error) => {
@@ -748,6 +746,8 @@ export default class RosbridgePlayer implements Player {
           message: "Failed to fetch node details from rosbridge",
           error,
         });
+      })
+      .finally(() => {
         this._isRefreshing = false;
       });
   }
