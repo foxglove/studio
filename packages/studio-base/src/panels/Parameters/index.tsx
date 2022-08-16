@@ -140,7 +140,7 @@ function Parameters(): ReactElement {
         setCopied(true);
         setTimeout(() => setCopied(false), 1500);
       })
-      .catch((e) => console.warn(e));
+      .catch((err) => console.warn(err));
   }, []);
 
   if (!canGetParams) {

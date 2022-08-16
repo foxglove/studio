@@ -44,7 +44,7 @@ const getFixture = ({
 };
 
 export default {
-  title: "Parameters",
+  title: "panels/Parameters",
   component: Parameters,
 };
 
