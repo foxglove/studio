@@ -31,8 +31,6 @@ import { DataSourceSidebar } from "@foxglove/studio-base/components/DataSourceSi
 import DocumentDropListener from "@foxglove/studio-base/components/DocumentDropListener";
 import DropOverlay from "@foxglove/studio-base/components/DropOverlay";
 import ExtensionsSidebar from "@foxglove/studio-base/components/ExtensionsSidebar";
-import GlobalVariablesTable from "@foxglove/studio-base/components/GlobalVariablesTable";
-import variablesHelpContent from "@foxglove/studio-base/components/GlobalVariablesTable/index.help.md";
 import HelpSidebar, {
   MESSAGE_PATH_SYNTAX_HELP_INFO,
 } from "@foxglove/studio-base/components/HelpSidebar";
@@ -58,6 +56,7 @@ import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent"
 import { SignInFormModal } from "@foxglove/studio-base/components/SignInFormModal";
 import Stack from "@foxglove/studio-base/components/Stack";
 import { URLStateSyncAdapter } from "@foxglove/studio-base/components/URLStateSyncAdapter";
+import VariablesSidebar from "@foxglove/studio-base/components/VariablesSidebar";
 import { useAssets } from "@foxglove/studio-base/context/AssetsContext";
 import ConsoleApiContext from "@foxglove/studio-base/context/ConsoleApiContext";
 import {
@@ -154,14 +153,6 @@ function AddPanel() {
   );
 }
 
-function Variables() {
-  return (
-    <SidebarContent title="Variables" helpContent={variablesHelpContent}>
-      <GlobalVariablesTable />
-    </SidebarContent>
-  );
-}
-
 type WorkspaceProps = {
   deepLinks?: string[];
 };
@@ -176,6 +167,7 @@ const selectIsPlaying = (ctx: MessagePipelineContext) =>
 const selectPause = (ctx: MessagePipelineContext) => ctx.pausePlayback;
 const selectPlay = (ctx: MessagePipelineContext) => ctx.startPlayback;
 const selectSeek = (ctx: MessagePipelineContext) => ctx.seekPlayback;
+const selectPlayUntil = (ctx: MessagePipelineContext) => ctx.playUntil;
 
 const selectSetHelpInfo = (store: HelpInfoStore) => store.setHelpInfo;
 
@@ -517,8 +509,8 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     };
   }, []);
 
-  const sidebarItems = useMemo<Map<SidebarItemKey, SidebarItem>>(() => {
-    const SIDEBAR_ITEMS = new Map<SidebarItemKey, SidebarItem>([
+  const [sidebarItems, sidebarBottomItems] = useMemo(() => {
+    const topItems = new Map<SidebarItemKey, SidebarItem>([
       [
         "connection",
         {
@@ -537,30 +529,30 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
         "panel-settings",
         { iconName: "PanelSettings", title: "Panel settings", component: PanelSettings },
       ],
-      ["variables", { iconName: "Variable2", title: "Variables", component: Variables }],
-      ["preferences", { iconName: "Settings", title: "Preferences", component: Preferences }],
+      ["variables", { iconName: "Variable2", title: "Variables", component: VariablesSidebar }],
       ["extensions", { iconName: "AddIn", title: "Extensions", component: ExtensionsSidebar }],
+    ]);
+
+    const bottomItems = new Map<SidebarItemKey, SidebarItem>([
       ["help", { iconName: "QuestionCircle", title: "Help", component: HelpSidebar }],
     ]);
 
-    return supportsAccountSettings
-      ? new Map([
-          ...SIDEBAR_ITEMS,
-          [
-            "account",
-            {
-              iconName: currentUser != undefined ? "BlockheadFilled" : "Blockhead",
-              title: currentUser != undefined ? `Signed in as ${currentUser.email}` : "Account",
-              component: AccountSettings,
-            },
-          ],
-        ])
-      : SIDEBAR_ITEMS;
-  }, [DataSourceSidebarItem, playerProblems, supportsAccountSettings, currentUser]);
+    if (supportsAccountSettings) {
+      bottomItems.set("account", {
+        iconName: currentUser != undefined ? "BlockheadFilled" : "Blockhead",
+        title: currentUser != undefined ? `Signed in as ${currentUser.email}` : "Account",
+        component: AccountSettings,
+      });
 
-  const sidebarBottomItems: readonly SidebarItemKey[] = useMemo(() => {
-    return supportsAccountSettings ? ["help", "account", "preferences"] : ["help", "preferences"];
-  }, [supportsAccountSettings]);
+      bottomItems.set("preferences", {
+        iconName: "Settings",
+        title: "Preferences",
+        component: Preferences,
+      });
+    }
+
+    return [topItems, bottomItems];
+  }, [DataSourceSidebarItem, playerProblems, supportsAccountSettings, currentUser]);
 
   const keyDownHandlers = useMemo(
     () => ({
@@ -581,6 +573,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
   );
 
   const play = useMessagePipeline(selectPlay);
+  const playUntil = useMessagePipeline(selectPlayUntil);
   const pause = useMessagePipeline(selectPause);
   const seek = useMessagePipeline(selectSeek);
   const isPlaying = useMessagePipeline(selectIsPlaying);
@@ -633,6 +626,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
                     play={play}
                     pause={pause}
                     seek={seek}
+                    playUntil={playUntil}
                     isPlaying={isPlaying}
                     getTimeInfo={getTimeInfo}
                   />

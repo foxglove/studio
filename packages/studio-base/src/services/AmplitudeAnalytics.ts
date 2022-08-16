@@ -3,7 +3,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { setUser as setSentryUser, addBreadcrumb as addSentryBreadcrumb } from "@sentry/core";
-import { Severity } from "@sentry/types";
 import amplitude, { AmplitudeClient } from "amplitude-js";
 import moment from "moment";
 
@@ -18,14 +17,12 @@ import IAnalytics, {
 
 const log = Logger.getLogger("Analytics");
 
-const os = OsContextSingleton; // workaround for https://github.com/webpack/webpack/issues/12960
-
 export class AmplitudeAnalytics implements IAnalytics {
   private _amp?: AmplitudeClient;
 
   constructor(options: { enableTelemetry: boolean; amplitudeApiKey?: string }) {
     const platform = getPlatformName();
-    const appVersion = os?.getAppVersion();
+    const appVersion = OsContextSingleton?.getAppVersion();
     const { glVendor, glRenderer } = getWebGLInfo() ?? {
       glVendor: "(unknown)",
       glRenderer: "(unknown)",
@@ -78,7 +75,7 @@ export class AmplitudeAnalytics implements IAnalytics {
       type: getEventBreadcrumbType(event),
       category: `studio.${getEventCategory(event).toLowerCase()}`,
       message: event,
-      level: Severity.Info,
+      level: "info",
       data,
       timestamp: Date.now() / 1000,
     });
@@ -94,7 +91,7 @@ export class AmplitudeAnalytics implements IAnalytics {
 }
 
 function getPlatformName(): string {
-  const platform = os?.platform ?? "web";
+  const platform = OsContextSingleton?.platform ?? "web";
   switch (platform) {
     case "darwin":
       return "macOS";
