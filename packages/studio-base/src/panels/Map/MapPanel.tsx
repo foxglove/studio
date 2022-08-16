@@ -16,6 +16,7 @@ import {
 import { difference, minBy, partition, union } from "lodash";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
+import { makeStyles } from "tss-react/mui";
 import { useDebouncedCallback } from "use-debounce";
 
 import { toSec } from "@foxglove/rostime";
@@ -31,6 +32,18 @@ import { darkColor, lightColor, lineColors } from "@foxglove/studio-base/util/pl
 import { Config, validateCustomUrl, buildSettingsTree } from "./config";
 import { hasFix } from "./support";
 import { MapPanelMessage, Point } from "./types";
+
+const useStyles = makeStyles()({
+  container: {
+    cursor: "auto",
+    inset: 0,
+    position: "absolute",
+    visibility: "hidden",
+  },
+  containerWithCenter: {
+    visibility: "visible",
+  },
+});
 
 type GeoJsonMessage = MessageEvent<FoxgloveMessages["foxglove.GeoJSON"]>;
 
@@ -66,6 +79,8 @@ function topicMessageType(topic: Topic) {
 
 function MapPanel(props: MapPanelProps): JSX.Element {
   const { context } = props;
+
+  const { classes, cx } = useStyles();
 
   const mapContainerRef = useRef<HTMLDivElement>(ReactNull);
 
@@ -618,25 +633,13 @@ function MapPanel(props: MapPanelProps): JSX.Element {
   return (
     <Stack ref={sizeRef} fullHeight fullWidth position="relative">
       {!center && (
-        <Stack
-          alignItems="center"
-          justifyContent="center"
-          position="absolute"
-          style={{ top: 0, right: 0, bottom: 0, left: 0 }}
-        >
+        <Stack alignItems="center" justifyContent="center" position="absolute" style={{ inset: 0 }}>
           Waiting for first GPS point...
         </Stack>
       )}
       <Stack
-        position="absolute"
+        className={cx(classes.container, { [classes.containerWithCenter]: center != undefined })}
         ref={mapContainerRef}
-        style={{
-          top: 0,
-          right: 0,
-          bottom: 0,
-          left: 0,
-          visibility: center ? "visible" : "hidden",
-        }}
       />
     </Stack>
   );
