@@ -23,7 +23,7 @@ import React, {
   useMemo,
   MouseEvent,
 } from "react";
-import { useMountedState, useThrottle } from "react-use";
+import { useMountedState } from "react-use";
 import { useDebouncedCallback } from "use-debounce";
 import { v4 as uuidv4 } from "uuid";
 
@@ -662,16 +662,12 @@ export default function TimeBasedChart(props: Props): JSX.Element {
     });
   }, [datasets, linesToHide]);
 
-  // throttle the downsampleDatasets callback since this is an input to the downsampledData memo
-  // avoids doing a downsample if the callback changes rapidly
-  const throttledDownsample = useThrottle(() => downsampleDatasets, 100);
-
   // downsample datasets with the latest downsample function
   const downsampledDatasets = useMemo(() => {
     void invalidateDownsample;
 
-    return throttledDownsample(visibleDatasets);
-  }, [invalidateDownsample, throttledDownsample, visibleDatasets]);
+    return downsampleDatasets(visibleDatasets);
+  }, [invalidateDownsample, downsampleDatasets, visibleDatasets]);
 
   const downsampledData = useMemo(() => {
     return {

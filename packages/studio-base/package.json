@@ -37,7 +37,7 @@
     "@foxglove/electron-socket": "2.0.0",
     "@foxglove/hooks": "workspace:*",
     "@foxglove/mcap-support": "workspace:*",
-    "@foxglove/regl-worldview": "2.4.0",
+    "@foxglove/regl-worldview": "2.5.0",
     "@foxglove/ros1": "1.5.0",
     "@foxglove/ros2": "3.3.0",
     "@foxglove/rosbag": "0.2.2",

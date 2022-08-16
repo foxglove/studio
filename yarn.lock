@@ -2358,9 +2358,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@foxglove/regl-worldview@npm:2.4.0":
-  version: 2.4.0
-  resolution: "@foxglove/regl-worldview@npm:2.4.0"
+"@foxglove/regl-worldview@npm:2.5.0":
+  version: 2.5.0
+  resolution: "@foxglove/regl-worldview@npm:2.5.0"
   dependencies:
     "@babel/runtime": ^7.3.1
     "@mapbox/tiny-sdf": ^1.1.1
@@ -2376,9 +2376,9 @@ __metadata:
     reselect: ^3.0.1
     shallowequal: 1.1.0
   peerDependencies:
-    react: 16.x
-    react-dom: 16.x
-  checksum: c509b5307845d436c182a3a6eaf6253ba449af3bfe40b1acd4938ebfc12bfb53fc9a037dee51a6e6bfd9c4b1d582b11eba4b82401b0f756505034b50758f2c2c
+    react: 16.x || 17.x || 18.x
+    react-dom: 16.x || 17.x || 18.x
+  checksum: e6d46d79d833dd1eeb18cbd106b6a40bf189a0135ea07a8740b1e576213edb98b8031d211cbcfc4864553d42e09353d69136dfb6c0a4ab8b3cc07e2f954d7fd1
   languageName: node
   linkType: hard
 
@@ -2543,7 +2543,7 @@ __metadata:
     "@foxglove/electron-socket": 2.0.0
     "@foxglove/hooks": "workspace:*"
     "@foxglove/mcap-support": "workspace:*"
-    "@foxglove/regl-worldview": 2.4.0
+    "@foxglove/regl-worldview": 2.5.0
     "@foxglove/ros1": 1.5.0
     "@foxglove/ros2": 3.3.0
     "@foxglove/rosbag": 0.2.2
