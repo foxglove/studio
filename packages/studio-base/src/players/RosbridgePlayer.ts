@@ -79,22 +79,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value != undefined;
 }
 
-async function makeGetNodeDetailsPromise(rosClient: roslib.Ros, node: string) {
-  return await new Promise<RosNodeDetails>((resolve, reject) => {
-    rosClient.getNodeDetails(
-      node,
-      (subscriptions, publications, services) => {
-        resolve({
-          publications: [node, publications],
-          services: [node, services],
-          subscriptions: [node, subscriptions],
-        });
-      },
-      reject,
-    );
-  });
-}
-
 // Connects to `rosbridge_server` instance using `roslibjs`. Currently doesn't support seeking or
 // showing simulated time, so current time from Date.now() is always used instead. Also doesn't yet
 // support raw ROS messages; instead we use the CBOR compression provided by roslibjs, which
@@ -342,7 +326,7 @@ export default class RosbridgePlayer implements Player {
       this.setSubscriptions(this._requestedSubscriptions);
 
       // Refresh the full graph topology
-      this._refreshSystemState();
+      this._refreshSystemState().catch((error) => log.error(error));
     } catch (error) {
       log.error(error);
       clearTimeout(topicsStallWarningTimeout);
@@ -719,36 +703,53 @@ export default class RosbridgePlayer implements Player {
 
   // Refreshes the full system state graph. Runs in the background so we don't
   // block app startup while mapping large node graphs.
-  private _refreshSystemState(): void {
+  private async _refreshSystemState(): Promise<void> {
     const rosClient = this._rosClient;
     if (this._isRefreshing || rosClient == undefined) {
       return;
     }
 
-    new Promise<string[]>((resolve, reject) => {
+    try {
       this._isRefreshing = true;
-      this._rosClient?.getNodes((nodes) => resolve(nodes), reject);
-    })
-      .then((nodes) => nodes.map(async (node) => await makeGetNodeDetailsPromise(rosClient, node)))
-      .then(async (promises) => await Promise.allSettled(promises))
-      .then((items) => {
-        const fulfilled = filterMap(items, (item) =>
-          item.status === "fulfilled" ? item.value : undefined,
-        );
-        this._publishedTopics = collateNodeDetails(fulfilled, "publications");
-        this._subscribedTopics = collateNodeDetails(fulfilled, "subscriptions");
-        this._services = collateNodeDetails(fulfilled, "services");
-        this._emitState();
-      })
-      .catch((error) => {
-        this._problems.addProblem("requestTopics:system-state", {
-          severity: "error",
-          message: "Failed to fetch node details from rosbridge",
-          error,
-        });
-      })
-      .finally(() => {
-        this._isRefreshing = false;
+
+      const nodes = await new Promise<string[]>((resolve, reject) => {
+        this._rosClient?.getNodes((fetchedNodes) => resolve(fetchedNodes), reject);
       });
+
+      const promises = nodes.map(async (node) => {
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+        return await new Promise<RosNodeDetails>((resolve, reject) => {
+          rosClient.getNodeDetails(
+            node,
+            (subscriptions, publications, services) => {
+              resolve({
+                publications: [node, publications],
+                services: [node, services],
+                subscriptions: [node, subscriptions],
+              });
+            },
+            reject,
+          );
+        });
+      });
+
+      const results = await Promise.allSettled(promises);
+      const fulfilled = filterMap(results, (item) =>
+        item.status === "fulfilled" ? item.value : undefined,
+      );
+      this._publishedTopics = collateNodeDetails(fulfilled, "publications");
+      this._subscribedTopics = collateNodeDetails(fulfilled, "subscriptions");
+      this._services = collateNodeDetails(fulfilled, "services");
+
+      this._emitState();
+    } catch (error) {
+      this._problems.addProblem("requestTopics:system-state", {
+        severity: "error",
+        message: "Failed to fetch node details from rosbridge",
+        error,
+      });
+    } finally {
+      this._isRefreshing = false;
+    }
   }
 }
