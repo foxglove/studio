@@ -484,7 +484,7 @@ export default function TimeBasedChart(props: Props): JSX.Element {
       if (globalBounds.userInteraction) {
         min = globalBounds.min;
         max = globalBounds.max;
-      } else if (defaultView?.type !== "following") {
+      } else if (defaultView?.type !== "fixed") {
         // if following and no user interaction - we leave our bounds as they are
         min = Math.min(min ?? globalBounds.min, globalBounds.min);
         max = Math.max(max ?? globalBounds.max, globalBounds.max);

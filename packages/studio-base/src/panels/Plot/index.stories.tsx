@@ -379,6 +379,21 @@ LineGraph.parameters = {
   useReadySignal: true,
 };
 
+LineGraphWithXMinMax.storyName = "line graph with x min & max";
+export function LineGraphWithXMinMax(): JSX.Element {
+  const readySignal = useReadySignal({ count: 3 });
+  const pauseFrame = useCallback(() => readySignal, [readySignal]);
+  return (
+    <PlotWrapper
+      pauseFrame={pauseFrame}
+      config={{ ...exampleConfig, minXValue: 1, maxXValue: 2 }}
+    />
+  );
+}
+LineGraphWithXMinMax.parameters = {
+  useReadySignal: true,
+};
+
 LineGraphWithNoTitle.storyName = "line graph with no title";
 export function LineGraphWithNoTitle(): JSX.Element {
   const readySignal = useReadySignal({ count: 3 });

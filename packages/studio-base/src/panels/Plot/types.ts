@@ -18,6 +18,8 @@ type DeprecatedPlotConfig = {
 export type PlotConfig = DeprecatedPlotConfig & {
   title?: string;
   paths: PlotPath[];
+  minXValue?: string | number;
+  maxXValue?: string | number;
   minYValue?: string | number;
   maxYValue?: string | number;
   showLegend: boolean;
