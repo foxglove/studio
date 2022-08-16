@@ -131,8 +131,12 @@ function keyboardEventHasModifier(event: KeyboardEvent) {
   }
 }
 
-// Suppress context menu for the entire app.
+// Suppress context menu for the entire app except on inputs & textareas.
 function onContextMenu(event: MouseEvent) {
+  if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+    return;
+  }
+
   event.preventDefault();
   return false;
 }
