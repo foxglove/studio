@@ -150,7 +150,7 @@ overrides:
       "no-restricted-imports": off
     files:
       # Ignore existing implementations of fluentui, styled-components, and @mui/styled
-      - "studio/web/src/VersionBanner.tsx"
+      - "web/src/VersionBanner.tsx"
       - "packages/studio-base/src/components/Autocomplete.tsx"
       - "packages/studio-base/src/components/ChildToggle/index.tsx"
       - "packages/studio-base/src/components/ColorPicker/index.tsx"
@@ -185,6 +185,7 @@ overrides:
       - "packages/studio-base/src/components/PanelToolbar/ToolbarIconButton.tsx"
       - "packages/studio-base/src/components/PanelToolbar/index.tsx"
       - "packages/studio-base/src/components/PlaybackControls/PlaybackTimeDisplayMethod.tsx"
+      - "packages/studio-base/src/components/PlaybackControls/Slider.stories.tsx"
       - "packages/studio-base/src/components/PlaybackSpeedControls.tsx"
       - "packages/studio-base/src/components/SegmentedControl.tsx"
       - "packages/studio-base/src/components/SettingsTreeEditor/FieldEditor.tsx"
