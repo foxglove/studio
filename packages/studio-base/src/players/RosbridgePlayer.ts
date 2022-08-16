@@ -45,11 +45,10 @@ const log = Log.getLogger(__dirname);
 
 const CAPABILITIES = [PlayerCapabilities.advertise, PlayerCapabilities.callServices];
 
-type RosNodeDetails = {
-  subscriptions: [node: string, values: string[]];
-  publications: [node: string, values: string[]];
-  services: [node: string, values: string[]];
-};
+type RosNodeDetails = Record<
+  "subscriptions" | "publications" | "services",
+  { node: string; values: string[] }
+>;
 
 function collateNodeDetails(
   details: RosNodeDetails[],
@@ -58,7 +57,7 @@ function collateNodeDetails(
   return transform(
     details,
     (acc, detail) => {
-      const [node, values] = detail[key];
+      const { node, values } = detail[key];
       for (const value of values) {
         if (!acc.has(value)) {
           acc.set(value, new Set());
@@ -704,8 +703,7 @@ export default class RosbridgePlayer implements Player {
   // Refreshes the full system state graph. Runs in the background so we don't
   // block app startup while mapping large node graphs.
   private async _refreshSystemState(): Promise<void> {
-    const rosClient = this._rosClient;
-    if (this._isRefreshing || rosClient == undefined) {
+    if (this._isRefreshing) {
       return;
     }
 
@@ -717,15 +715,14 @@ export default class RosbridgePlayer implements Player {
       });
 
       const promises = nodes.map(async (node) => {
-        await new Promise((resolve) => setTimeout(resolve, 5000));
         return await new Promise<RosNodeDetails>((resolve, reject) => {
-          rosClient.getNodeDetails(
+          this._rosClient?.getNodeDetails(
             node,
             (subscriptions, publications, services) => {
               resolve({
-                publications: [node, publications],
-                services: [node, services],
-                subscriptions: [node, subscriptions],
+                publications: { node, values: publications },
+                services: { node, values: services },
+                subscriptions: { node, values: subscriptions },
               });
             },
             reject,
