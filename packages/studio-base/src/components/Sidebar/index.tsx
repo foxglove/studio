@@ -53,7 +53,7 @@ const useStyles = makeStyles()((theme) => ({
     minWidth: 50,
   },
   badge: {
-    "*:not(.MuiBadge-badge)": {
+    "> *:not(.MuiBadge-badge)": {
       width: "1.5rem",
       height: "1.5rem",
       fontSize: "1.5rem",
