@@ -794,6 +794,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
       ...prevConfig,
       cameraState: { ...prevConfig.cameraState, perspective: !prevConfig.cameraState.perspective },
     }));
+    // Wait for the setConfig to propagate to the renderer before updating the settings tree
     setTimeout(() => renderer?.updateCoreSettings(), 0);
   }, [renderer]);
 
