@@ -13,7 +13,7 @@
 
 import DownloadIcon from "@mui/icons-material/Download";
 import { Typography, useTheme } from "@mui/material";
-import { compact, isEmpty, uniq } from "lodash";
+import { compact, isEmpty, isNumber, uniq } from "lodash";
 import memoizeWeak from "memoize-weak";
 import { useEffect, useCallback, useMemo, ComponentProps } from "react";
 
@@ -224,11 +224,12 @@ function Plot(props: Props) {
 
   const endTimeSinceStart = timeSincePreloadedStart(endTime);
   const fixedView = useMemo<ChartDefaultView | undefined>(() => {
-    if (minXValue != undefined && maxXValue != undefined) {
+    // Apply min/max x-value if either min or max or both is defined.
+    if ((isNumber(minXValue) && isNumber(endTimeSinceStart)) || isNumber(maxXValue)) {
       return {
         type: "fixed",
-        minXValue: Number(minXValue),
-        maxXValue: Number(maxXValue),
+        minXValue: isNumber(minXValue) ? minXValue : 0,
+        maxXValue: isNumber(maxXValue) ? maxXValue : endTimeSinceStart ?? 0,
       };
     }
     if (xAxisVal === "timestamp" && startTime && endTimeSinceStart != undefined) {

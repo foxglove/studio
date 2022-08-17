@@ -411,12 +411,13 @@ export function LineGraphWithSettings(): JSX.Element {
   return (
     <PlotWrapper
       pauseFrame={pauseFrame}
-      config={{ ...exampleConfig, minYValue: 1, maxYValue: -1 }}
+      config={{ ...exampleConfig, minYValue: 1, maxYValue: -1, minXValue: 0, maxXValue: 3 }}
       includeSettings
     />
   );
 }
 LineGraphWithSettings.parameters = {
+  colorScheme: "light",
   useReadySignal: true,
 };
 
@@ -886,6 +887,36 @@ export function CustomXAxisTopic(): JSX.Element {
 CustomXAxisTopic.parameters = {
   useReadySignal: true,
 };
+
+export function CustomXAxisTopicWithXLimits(): JSX.Element {
+  const readySignal = useReadySignal({ count: 3 });
+  const pauseFrame = useCallback(() => readySignal, [readySignal]);
+
+  return (
+    <PlotWrapper
+      pauseFrame={pauseFrame}
+      config={{
+        ...exampleConfig,
+        xAxisVal: "custom",
+        minXValue: 1.3,
+        maxXValue: 1.8,
+        paths: [
+          {
+            value: "/some_topic/location.pose.acceleration",
+            enabled: true,
+            timestampMethod: "receiveTime",
+          },
+        ],
+        xAxisPath: { value: "/some_topic/location.pose.velocity", enabled: true },
+      }}
+    />
+  );
+}
+CustomXAxisTopicWithXLimits.parameters = {
+  colorScheme: "light",
+  useReadySignal: true,
+};
+CustomXAxisTopicWithXLimits.storyName = "custom x-axis topic with x limits";
 
 CurrentCustomXAxisTopic.storyName = "current custom x-axis topic";
 export function CurrentCustomXAxisTopic(): JSX.Element {
