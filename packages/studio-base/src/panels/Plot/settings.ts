@@ -73,7 +73,7 @@ function buildSettingsTree(config: PlotConfig): SettingsTreeNodes {
     xAxis: {
       label: "X Axis",
       fields: {
-        showYAxisLabels: {
+        showXAxisLabels: {
           label: "Show labels",
           input: "boolean",
           value: config.showXAxisLabels,
