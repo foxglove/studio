@@ -391,8 +391,26 @@ export function LineGraphWithXMinMax(): JSX.Element {
   );
 }
 LineGraphWithXMinMax.parameters = {
+  colorScheme: "light",
   useReadySignal: true,
 };
+
+export function LineGraphWithXRange(): JSX.Element {
+  const readySignal = useReadySignal({ count: 3 });
+  const pauseFrame = useCallback(() => readySignal, [readySignal]);
+  return (
+    <PlotWrapper
+      pauseFrame={pauseFrame}
+      config={{ ...exampleConfig, followingViewWidth: 3 }}
+      includeSettings
+    />
+  );
+}
+LineGraphWithXRange.parameters = {
+  colorScheme: "light",
+  useReadySignal: true,
+};
+LineGraphWithXRange.storyName = "line graph with x range";
 
 LineGraphWithNoTitle.storyName = "line graph with no title";
 export function LineGraphWithNoTitle(): JSX.Element {
