@@ -199,6 +199,49 @@ const LAYOUTS = new Map<string, Layout>([
       syncInfo: undefined,
     },
   ],
+  [
+    "benchmark-single-plot",
+    {
+      id: "benchmark-single-plot" as LayoutID,
+      name: "Benchmark - Single Plot",
+      permission: "CREATOR_WRITE",
+      baseline: {
+        data: {
+          configById: {
+            "Plot!a": {
+              title: "10 second window",
+              paths: [
+                {
+                  value: "sinewave.value",
+                  enabled: true,
+                  timestampMethod: "receiveTime",
+                },
+              ],
+              showXAxisLabels: true,
+              showYAxisLabels: true,
+              showLegend: true,
+              legendDisplay: "floating",
+              showPlotValuesInLegend: false,
+              isSynced: true,
+              xAxisVal: "timestamp",
+              sidebarDimension: 240,
+              followingViewWidth: 10,
+            },
+          },
+          globalVariables: {},
+          userNodes: {},
+          linkedGlobalVariables: [],
+          playbackConfig: {
+            speed: 1,
+          },
+          layout: "Plot!a",
+        },
+        savedAt: new Date().toISOString() as ISO8601Timestamp,
+      },
+      working: undefined,
+      syncInfo: undefined,
+    },
+  ],
 ]);
 
 export { LAYOUTS };

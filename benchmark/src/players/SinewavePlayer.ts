@@ -1,0 +1,131 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/
+
+import Log from "@foxglove/log";
+import * as rostime from "@foxglove/rostime";
+import { Time } from "@foxglove/rostime";
+import { MessageEvent } from "@foxglove/studio";
+import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
+import {
+  AdvertiseOptions,
+  Player,
+  PlayerPresence,
+  PlayerState,
+  PublishPayload,
+  SubscribePayload,
+  Topic,
+} from "@foxglove/studio-base/players/types";
+import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
+
+const log = Log.getLogger(__filename);
+
+const CAPABILITIES: string[] = [];
+
+class SinewavePlayer implements Player {
+  private name: string = "sinewave";
+  private startTime: Time = rostime.fromDate(new Date());
+  private listener?: (state: PlayerState) => Promise<void>;
+  private topicStats = new Map();
+  private datatypes: RosDatatypes = new Map();
+
+  constructor() {
+    this.datatypes.set("Sinewave", {
+      name: "Sinewave",
+      definitions: [
+        {
+          name: "value",
+          type: "float32",
+        },
+      ],
+    });
+  }
+
+  setListener(listener: (state: PlayerState) => Promise<void>): void {
+    this.listener = listener;
+    void this.run();
+  }
+  close(): void {
+    // no-op
+  }
+  setSubscriptions(_subscriptions: SubscribePayload[]): void {}
+  setPublishers(_publishers: AdvertiseOptions[]): void {
+    // no-op
+  }
+  setParameter(_key: string, _value: unknown): void {
+    throw new Error("Method not implemented.");
+  }
+  publish(_request: PublishPayload): void {
+    throw new Error("Method not implemented.");
+  }
+  async callService(_service: string, _request: unknown): Promise<unknown> {
+    throw new Error("Method not implemented.");
+  }
+  requestBackfill(): void {
+    // no-op
+  }
+  setGlobalVariables(_globalVariables: GlobalVariables): void {
+    throw new Error("Method not implemented.");
+  }
+
+  private async run() {
+    const listener = this.listener;
+    if (!listener) {
+      throw new Error("Invariant: listener is not set");
+    }
+
+    log.info("Initializing benchmark player");
+
+    await listener({
+      profile: undefined,
+      presence: PlayerPresence.PRESENT,
+      name: this.name,
+      playerId: this.name,
+      capabilities: CAPABILITIES,
+      progress: {},
+      urlState: {
+        sourceId: "synthetic",
+      },
+    });
+
+    const topics: Topic[] = [{ name: "sinewave", datatype: "Sinewave" }];
+
+    for (;;) {
+      const now = rostime.fromDate(new Date());
+      const value = Math.sin(rostime.toSec(now));
+
+      const messages: MessageEvent<unknown>[] = [
+        {
+          receiveTime: now,
+          topic: "sinewave",
+          message: { value },
+          sizeInBytes: 0,
+        },
+      ];
+
+      await listener({
+        profile: undefined,
+        presence: PlayerPresence.PRESENT,
+        name: this.name,
+        playerId: this.name,
+        capabilities: CAPABILITIES,
+        progress: {},
+        activeData: {
+          messages,
+          totalBytesReceived: 0,
+          currentTime: now,
+          startTime: this.startTime,
+          isPlaying: false,
+          speed: 1,
+          lastSeekTime: 1,
+          endTime: now,
+          topics,
+          topicStats: this.topicStats,
+          datatypes: this.datatypes,
+        },
+      });
+    }
+  }
+}
+
+export { SinewavePlayer };
