@@ -234,7 +234,11 @@ const LAYOUTS = new Map<string, Layout>([
           playbackConfig: {
             speed: 1,
           },
-          layout: "Plot!a",
+          layout: {
+            first: "Plot!a",
+            second: "PlaybackPerformance!1fz1hnn",
+            direction: "column",
+          },
         },
         savedAt: new Date().toISOString() as ISO8601Timestamp,
       },
