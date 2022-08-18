@@ -500,7 +500,7 @@ export default class UserNodePlayer implements Player {
         if (allDiagnostics.length > 0) {
           this._problemStore.set(problemKey, {
             severity: "error",
-            message: `User Script ${nodeId} suffered an error.`,
+            message: `User Script ${nodeId} encountered an error.`,
             tip: "Open the User Scripts panel and check the Problems tab for errors.",
           });
 
