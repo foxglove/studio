@@ -30,10 +30,6 @@ import HoverableIconButton from "@foxglove/studio-base/components/HoverableIconB
 import KeyListener from "@foxglove/studio-base/components/KeyListener";
 import LoopIcon from "@foxglove/studio-base/components/LoopIcon";
 import {
-  MessagePipelineContext,
-  useMessagePipeline,
-} from "@foxglove/studio-base/components/MessagePipeline";
-import {
   jumpSeek,
   DIRECTION,
 } from "@foxglove/studio-base/components/PlaybackControls/sharedHelpers";
@@ -42,6 +38,7 @@ import Stack from "@foxglove/studio-base/components/Stack";
 import { Player } from "@foxglove/studio-base/players/types";
 
 import PlaybackTimeDisplay from "./PlaybackTimeDisplay";
+import { RepeatAdapter } from "./RepeatAdapter";
 import Scrubber from "./Scrubber";
 
 const useStyles = makeStyles()((theme) => ({
@@ -153,34 +150,9 @@ export default function PlaybackControls(props: {
     [seekBackwardAction, seekForwardAction, togglePlayPause],
   );
 
-  const repeatSelector = useCallback(
-    (ctx: MessagePipelineContext) => {
-      if (!repeat) {
-        return;
-      }
-
-      const activeData = ctx.playerState.activeData;
-      const currentTime = activeData?.currentTime;
-      const endTime = activeData?.endTime;
-      const startTime = activeData?.startTime;
-
-      // repeat logic could also live in messagePipeline but since it is only triggered
-      // from playback controls we've implemented it here for now - if there is demand
-      // to toggle repeat from elsewhere this logic can move
-      if (startTime && currentTime && endTime && compare(currentTime, endTime) >= 0) {
-        seek(startTime);
-        // if the user turns on repeat and we are at the end, we assume they want to play from start
-        // even if paused
-        play();
-      }
-    },
-    [play, repeat, seek],
-  );
-
-  useMessagePipeline(repeatSelector);
-
   return (
     <>
+      <RepeatAdapter play={play} seek={seek} repeatEnabled={repeat} />
       <KeyListener global keyDownHandlers={keyDownHandlers} />
       <Stack className={classes.root} direction="row" alignItems="center" gap={1} padding={1}>
         <Stack direction="row" alignItems="center" gap={1}>
