@@ -307,7 +307,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.gl.info.autoReset = false;
     this.gl.shadowMap.enabled = false;
     this.gl.shadowMap.type = THREE.VSMShadowMap;
-    this.gl.sortObjects = false;
+    this.gl.sortObjects = true;
     this.gl.setPixelRatio(window.devicePixelRatio);
 
     let width = canvas.width;
@@ -519,7 +519,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     const topics: SettingsTreeEntry = {
       path: ["topics"],
       node: {
-        label: this._topicsNodeLabel(),
+        label: "Topics",
         defaultExpansionState: "expanded",
         actions: [
           { id: "show-all", type: "action", label: "Show All" },
@@ -623,9 +623,6 @@ export class Renderer extends EventEmitter<RendererEvents> {
       for (const extension of this.sceneExtensions.values()) {
         this.settings.setNodesForKey(extension.extensionId, extension.settingsNodes());
       }
-
-      // Update the "Topics" node label
-      this.settings.setLabel(["topics"], this._topicsNodeLabel());
     }
   }
 
@@ -643,13 +640,6 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.settings.setLabel(["layers"], label);
   }
 
-  private _topicsNodeLabel(): string {
-    const topicCount = this.topics?.length ?? 0;
-    const topicsNode = this.settings.tree()["topics"];
-    const vizCount = Object.keys(topicsNode?.children ?? {}).length;
-    return topicCount === 0 && vizCount === 0 ? "Topics" : `Topics (${vizCount}/${topicCount})`;
-  }
-
   /** Translate a CameraState to the three.js coordinate system */
   private _updateCameras(cameraState: CameraState): void {
     const targetOffset = tempVec3;
@@ -658,30 +648,32 @@ export class Renderer extends EventEmitter<RendererEvents> {
     const phi = THREE.MathUtils.degToRad(cameraState.phi);
     const theta = -THREE.MathUtils.degToRad(cameraState.thetaOffset);
 
+    // Always update the perspective camera even if the current mode is orthographic. This is needed
+    // to make the OrbitControls work properly since they track the perspective camera.
+    // https://github.com/foxglove/studio/issues/4138
+
+    // Convert the camera spherical coordinates (radius, phi, theta) to Cartesian (X, Y, Z)
+    tempSpherical.set(cameraState.distance, phi, theta);
+    this.perspectiveCamera.position.setFromSpherical(tempSpherical).applyAxisAngle(UNIT_X, PI_2);
+    this.perspectiveCamera.position.add(targetOffset);
+
+    // Convert the camera spherical coordinates (phi, theta) to a quaternion rotation
+    this.perspectiveCamera.quaternion.setFromEuler(tempEuler.set(phi, 0, theta, "ZYX"));
+    this.perspectiveCamera.fov = cameraState.fovy;
+    this.perspectiveCamera.near = cameraState.near;
+    this.perspectiveCamera.far = cameraState.far;
+    this.perspectiveCamera.aspect = this.aspect;
+    this.perspectiveCamera.updateProjectionMatrix();
+
+    this.controls.target.copy(targetOffset);
+
     if (cameraState.perspective) {
       // Unlock the polar angle (pitch axis)
       this.controls.minPolarAngle = 0;
       this.controls.maxPolarAngle = Math.PI;
-
-      // Convert the camera spherical coordinates (radius, phi, theta) to Cartesian (X, Y, Z)
-      tempSpherical.set(cameraState.distance, phi, theta);
-      this.perspectiveCamera.position.setFromSpherical(tempSpherical).applyAxisAngle(UNIT_X, PI_2);
-
-      // Add the camera offset
-      this.perspectiveCamera.position.add(targetOffset);
-
-      // Convert the camera spherical coordinates (phi, theta) to a quaternion rotation
-      this.perspectiveCamera.quaternion.setFromEuler(tempEuler.set(phi, 0, theta, "ZYX"));
-      this.perspectiveCamera.fov = cameraState.fovy;
-      this.perspectiveCamera.near = cameraState.near;
-      this.perspectiveCamera.far = cameraState.far;
-      this.perspectiveCamera.aspect = this.aspect;
-      this.perspectiveCamera.updateProjectionMatrix();
-
-      this.controls.target.copy(targetOffset);
     } else {
       // Lock the polar angle during 2D mode
-      const curPolarAngle = this.controls.getPolarAngle();
+      const curPolarAngle = THREE.MathUtils.degToRad(this.config.cameraState.phi);
       this.controls.minPolarAngle = this.controls.maxPolarAngle = curPolarAngle;
 
       this.orthographicCamera.position.set(targetOffset.x, targetOffset.y, cameraState.far / 2);
