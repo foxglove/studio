@@ -47,8 +47,8 @@ export function Root({ appConfiguration }: { appConfiguration: IAppConfiguration
         useIterablePlayer: enableExperimentalLatching,
       }),
       new SampleNuscenesDataSourceFactory({ useIterablePlayer: enableExperimentalLatching }),
-      new McapLocalDataSourceFactory({ useIterablePlayer: enableExperimentalLatching }),
-      new McapRemoteDataSourceFactory({ useIterablePlayer: enableExperimentalLatching }),
+      new McapLocalDataSourceFactory(),
+      new McapRemoteDataSourceFactory(),
     ];
 
     return sources;
