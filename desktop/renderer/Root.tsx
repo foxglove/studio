@@ -58,7 +58,7 @@ export default function Root({
       new FoxgloveDataPlatformDataSourceFactory({
         useIterablePlayer: enableExperimentalLatching,
       }),
-      new SampleNuscenesDataSourceFactory({ useIterablePlayer: enableExperimentalLatching }),
+      new SampleNuscenesDataSourceFactory(),
       new McapLocalDataSourceFactory({ useIterablePlayer: enableExperimentalLatching }),
       new McapRemoteDataSourceFactory({ useIterablePlayer: enableExperimentalLatching }),
     ];
