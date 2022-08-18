@@ -5,13 +5,20 @@
 import { useLayoutEffect } from "react";
 
 import { compare, Time } from "@foxglove/rostime";
-import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
+import {
+  MessagePipelineContext,
+  useMessagePipeline,
+} from "@foxglove/studio-base/components/MessagePipeline";
 
 type RepeatAdapterProps = {
   repeatEnabled: boolean;
   play: () => void;
   seek: (to: Time) => void;
 };
+
+function activeDataSelector(ctx: MessagePipelineContext) {
+  return ctx.playerState.activeData;
+}
 
 /**
  * RepeatAdapter handled looping from the start of playback when playback reaches the end
@@ -22,7 +29,7 @@ type RepeatAdapterProps = {
 export function RepeatAdapter(props: RepeatAdapterProps): JSX.Element {
   const { play, seek, repeatEnabled } = props;
 
-  const activeData = useMessagePipeline((ctx) => ctx.playerState.activeData);
+  const activeData = useMessagePipeline(activeDataSelector);
 
   useLayoutEffect(() => {
     if (!repeatEnabled) {
