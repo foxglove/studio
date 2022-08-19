@@ -36,7 +36,7 @@ const TextContentRoot = withStyles("div", (theme) => {
       "h1, h2, h3, h4, h5, h6": {
         color: palette.text.primary,
 
-        "&:first-of-type": { marginTop: 0 },
+        "&:first-child": { marginTop: 0 },
       },
       h1: {
         fontFamily: typography.h4.fontFamily,
