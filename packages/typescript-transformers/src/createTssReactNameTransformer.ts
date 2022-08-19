@@ -25,31 +25,29 @@ function isImportedFrom(node: ts.Node, targetModule: string, program: ts.Program
 export function createTssReactNameTransformer(
   program: ts.Program,
 ): ts.TransformerFactory<ts.SourceFile> {
-  return (context) => {
-    return (sourceFile) => {
-      const visitor = (node: ts.Node): ts.Node => {
-        if (
-          ts.isCallExpression(node) &&
-          ts.isIdentifier(node.expression) &&
-          node.expression.text === "makeStyles" &&
-          node.arguments.length === 0 &&
-          isImportedFrom(node.expression, "tss-react/mui", program)
-        ) {
-          const sanitizedFilename = sourceFile.fileName
-            .replace(/^.*packages\/[^/]*\//, "")
-            .replace(/[^a-zA-Z0-9_-]/g, "_");
-          return context.factory.updateCallExpression(node, node.expression, node.typeArguments, [
-            context.factory.createObjectLiteralExpression([
-              context.factory.createPropertyAssignment(
-                "name",
-                context.factory.createStringLiteral(sanitizedFilename),
-              ),
-            ]),
-          ]);
-        }
-        return ts.visitEachChild(node, visitor, context);
-      };
-      return ts.visitNode(sourceFile, visitor);
+  return (context) => (sourceFile) => {
+    const visitor = (node: ts.Node): ts.Node => {
+      if (
+        ts.isCallExpression(node) &&
+        ts.isIdentifier(node.expression) &&
+        node.expression.text === "makeStyles" &&
+        node.arguments.length === 0 &&
+        isImportedFrom(node.expression, "tss-react/mui", program)
+      ) {
+        const sanitizedFilename = sourceFile.fileName
+          .replace(/^.*packages\/[^/]*\//, "")
+          .replace(/[^a-zA-Z0-9_-]/g, "_");
+        return context.factory.updateCallExpression(node, node.expression, node.typeArguments, [
+          context.factory.createObjectLiteralExpression([
+            context.factory.createPropertyAssignment(
+              "name",
+              context.factory.createStringLiteral(sanitizedFilename),
+            ),
+          ]),
+        ]);
+      }
+      return ts.visitEachChild(node, visitor, context);
     };
+    return ts.visitNode(sourceFile, visitor);
   };
 }
