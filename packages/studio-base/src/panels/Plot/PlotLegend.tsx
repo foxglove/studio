@@ -83,7 +83,16 @@ type StyleProps = {
 };
 
 const useStyles = makeStyles<StyleProps>()(
-  (theme, { legendDisplay, sidebarDimension, showLegend, showPlotValuesInLegend = false }) => ({
+  (
+    theme,
+    // prettier-ignore
+    {
+      legendDisplay,
+      sidebarDimension,
+      showLegend,
+      showPlotValuesInLegend = false,
+    },
+  ) => ({
     addButton: {
       minWidth: 100,
       backgroundColor: `${theme.palette.action.hover} !important`,
