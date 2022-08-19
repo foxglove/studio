@@ -6,8 +6,10 @@ import { Box } from "@mui/material";
 
 import { fromDate } from "@foxglove/rostime";
 import MockMessagePipelineProvider from "@foxglove/studio-base/components/MessagePipeline/MockMessagePipelineProvider";
+import CurrentUserContext, { User } from "@foxglove/studio-base/context/CurrentUserContext";
 import ModalHost from "@foxglove/studio-base/context/ModalHost";
 import { PlayerPresence, Topic } from "@foxglove/studio-base/players/types";
+import EventsProvider from "@foxglove/studio-base/providers/EventsProvider";
 
 import DataSourceSidebar from "./DataSourceSidebar";
 
@@ -129,6 +131,34 @@ export const PlayerPresent = (): JSX.Element => {
         <Box height="100%" bgcolor="background.paper">
           <DataSourceSidebar onSelectDataSourceAction={() => {}} />
         </Box>
+      </MockMessagePipelineProvider>
+    </ModalHost>
+  );
+};
+
+export const WithEvents = (): JSX.Element => {
+  const userContextValue = {
+    currentUser: { id: "ok" } as User,
+    signIn: () => undefined,
+    signOut: async () => undefined,
+  };
+
+  return (
+    <ModalHost>
+      <MockMessagePipelineProvider
+        startTime={START_TIME}
+        endTime={END_TIME}
+        topics={TOPICS}
+        presence={PlayerPresence.PRESENT}
+        urlState={{ sourceId: "foxglove-data-platform" }}
+      >
+        <CurrentUserContext.Provider value={userContextValue}>
+          <EventsProvider>
+            <Box height="100%" bgcolor="background.paper">
+              <DataSourceSidebar onSelectDataSourceAction={() => {}} />
+            </Box>
+          </EventsProvider>
+        </CurrentUserContext.Provider>
       </MockMessagePipelineProvider>
     </ModalHost>
   );
