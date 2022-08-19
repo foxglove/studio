@@ -76,7 +76,6 @@ class THREEStats {
   public dom: HTMLDivElement;
   private beginTime: number;
   private prevTime: number;
-  private frames = 0;
   private msPanel: Panel;
   // fpsPanel: Panel;
   private memPanel: Panel;
@@ -124,8 +123,6 @@ class THREEStats {
   };
 
   public end = () => {
-    this.frames++;
-
     const time = performance.now();
 
     this.msPanel.update(time - this.beginTime, 1000 / 30);
@@ -134,7 +131,6 @@ class THREEStats {
       // this.fpsPanel.update((this.frames * 1000) / (time - this.prevTime), 100);
 
       this.prevTime = time;
-      this.frames = 0;
 
       const memory = (
         performance as unknown as { memory: { usedJSHeapSize: number; jsHeapSizeLimit: number } }

@@ -425,16 +425,6 @@ export class PoseArrays extends SceneExtension<PoseArrayRenderable> {
       }
     }
   }
-
-  private _destroyArrows(renderable: PoseArrayRenderable): void {
-    for (const arrow of renderable.userData.arrows) {
-      renderable.remove(arrow);
-      arrow.dispose();
-    }
-    renderable.userData.arrows.length = 0;
-  }
-
-  private _destroyAxes(): void {}
 }
 
 function getDefaultType(topic: Topic | undefined): DisplayType {
