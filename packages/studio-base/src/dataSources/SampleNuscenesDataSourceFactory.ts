@@ -19,7 +19,9 @@ class SampleNuscenesDataSourceFactory implements IDataSourceFactory {
   public hidden = true;
   public sampleLayout = SampleNuscenesLayout as IDataSourceFactory["sampleLayout"];
 
-  initialize(args: DataSourceFactoryInitializeArgs): ReturnType<IDataSourceFactory["initialize"]> {
+  public initialize(
+    args: DataSourceFactoryInitializeArgs,
+  ): ReturnType<IDataSourceFactory["initialize"]> {
     const bagUrl = "https://assets.foxglove.dev/nuScenes-v1.0-mini-scene-0061.bag";
 
     const bagSource = new BagIterableSource({ type: "remote", url: bagUrl });
