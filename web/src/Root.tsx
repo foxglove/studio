@@ -6,7 +6,6 @@ import { useMemo, useState } from "react";
 
 import {
   IDataSourceFactory,
-  AppSetting,
   Ros1LocalBagDataSourceFactory,
   Ros2LocalBagDataSourceFactory,
   RosbridgeDataSourceFactory,
