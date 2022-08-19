@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { alpha } from "@mui/material";
 import { PropsWithChildren } from "react";
 import { makeStyles } from "tss-react/mui";
 
@@ -9,8 +10,6 @@ import "@foxglove/studio-base/styles/assets/inter.css";
 import "@foxglove/studio-base/styles/assets/plex-mono.css";
 
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
-
-import { alpha } from "@mui/material";
 
 const useStyles = makeStyles()(({ palette, typography }) => ({
   root: {
