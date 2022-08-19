@@ -15,6 +15,7 @@ import {
   PublishPayload,
   SubscribePayload,
   Topic,
+  TopicStats,
 } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 
@@ -26,7 +27,6 @@ class SinewavePlayer implements Player {
   private name: string = "sinewave";
   private startTime: Time = rostime.fromDate(new Date());
   private listener?: (state: PlayerState) => Promise<void>;
-  private topicStats = new Map();
   private datatypes: RosDatatypes = new Map();
 
   constructor() {
@@ -88,20 +88,43 @@ class SinewavePlayer implements Player {
       },
     });
 
-    const topics: Topic[] = [{ name: "sinewave", datatype: "Sinewave" }];
+    const sinewaveCount = 100;
 
+    const topics: Topic[] = [];
+
+    const startTime = rostime.fromDate(new Date());
+
+    for (let i = 0; i < sinewaveCount; ++i) {
+      const topicName = `sinewave_${i}`;
+      topics.push({ name: topicName, datatype: "Sinewave" });
+    }
+
+    let messageCount = 0;
     for (;;) {
+      messageCount += 1;
+
+      const topicStats = new Map<string, TopicStats>();
+
       const now = rostime.fromDate(new Date());
       const value = Math.sin(rostime.toSec(now));
 
-      const messages: MessageEvent<unknown>[] = [
-        {
+      const messages: MessageEvent<unknown>[] = [];
+
+      for (let i = 0; i < sinewaveCount; ++i) {
+        const topicName = `sinewave_${i}`;
+        messages.push({
           receiveTime: now,
-          topic: "sinewave",
-          message: { value },
+          topic: topicName,
+          message: { value: value + i * 0.1 },
           sizeInBytes: 0,
-        },
-      ];
+        });
+
+        topicStats.set(topicName, {
+          numMessages: messageCount,
+          firstMessageTime: startTime,
+          lastMessageTime: now,
+        });
+      }
 
       await listener({
         profile: undefined,
@@ -120,7 +143,7 @@ class SinewavePlayer implements Player {
           lastSeekTime: 1,
           endTime: now,
           topics,
-          topicStats: this.topicStats,
+          topicStats,
           datatypes: this.datatypes,
         },
       });

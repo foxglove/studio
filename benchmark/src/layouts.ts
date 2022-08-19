@@ -212,7 +212,32 @@ const LAYOUTS = new Map<string, Layout>([
               title: "10 second window",
               paths: [
                 {
-                  value: "sinewave.value",
+                  value: "sinewave_0.value",
+                  enabled: true,
+                  timestampMethod: "receiveTime",
+                },
+                {
+                  value: "sinewave_1.value",
+                  enabled: true,
+                  timestampMethod: "receiveTime",
+                },
+                {
+                  value: "sinewave_2.value",
+                  enabled: true,
+                  timestampMethod: "receiveTime",
+                },
+                {
+                  value: "sinewave_3.value",
+                  enabled: true,
+                  timestampMethod: "receiveTime",
+                },
+                {
+                  value: "sinewave_4.value",
+                  enabled: true,
+                  timestampMethod: "receiveTime",
+                },
+                {
+                  value: "sinewave_5.value",
                   enabled: true,
                   timestampMethod: "receiveTime",
                 },
