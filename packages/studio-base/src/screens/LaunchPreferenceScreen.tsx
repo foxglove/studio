@@ -13,9 +13,6 @@ import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import { useSessionStorageValue } from "@foxglove/studio-base/hooks/useSessionStorageValue";
 
 const useStyles = makeStyles()((theme) => ({
-  // root: {
-  //   backgroundColor: theme.palette.background.default,
-  // },
   card: {
     display: "flex",
     flexDirection: "column",

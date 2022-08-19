@@ -62,11 +62,6 @@ const useStyles = makeStyles()({
     flex: "auto",
     overflow: "hidden",
   },
-  // toolbar: {
-  //   display: "flex",
-  //   flexGrow: 1,
-  //   alignItems: "baseline",
-  // },
   content: {
     display: "flex",
     flexDirection: "column",
