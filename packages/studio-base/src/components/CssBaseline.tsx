@@ -10,6 +10,8 @@ import "@foxglove/studio-base/styles/assets/plex-mono.css";
 
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
+import { alpha } from "@mui/material";
+
 const useStyles = makeStyles()(({ palette, typography }) => ({
   root: {
     "code, pre, tt": {
@@ -67,10 +69,10 @@ const useStyles = makeStyles()(({ palette, typography }) => ({
 
         ".drop-target-container .drop-target": {
           backgroundColor: palette.action.hover,
-          border: `2px solid ${palette.divider}`,
+          border: `2px solid ${alpha(palette.divider, 0.5)}`,
         },
         ".drop-target-container .drop-target-hover": {
-          opacity: 0.3,
+          opacity: 1,
         },
       },
       ".mosaic-tile": {
