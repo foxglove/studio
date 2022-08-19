@@ -9,6 +9,7 @@ import { CubePrimitive, SceneEntity } from "@foxglove/schemas/schemas/typescript
 
 import type { Renderer } from "../../Renderer";
 import { rgbToThreeColor } from "../../color";
+import { MeshStandardMaterialWithInstanceOpacity } from "./MeshStandardMaterialWithInstanceOpacity";
 
 const tempColor = new THREE.Color();
 const tempVec3 = new THREE.Vector3();
@@ -20,12 +21,17 @@ export class RenderableCubes extends THREE.Object3D {
   private static cubeGeometry: THREE.BoxGeometry | undefined;
   private static cubeEdgesGeometry: THREE.EdgesGeometry | undefined;
 
-  material = new THREE.MeshStandardMaterial({
+  // Each RenderableCubes needs its own geometry because we attach additional custom attributes to it.
+  geometry = new THREE.BoxGeometry(1, 1, 1);
+  mesh: THREE.InstancedMesh<THREE.BoxGeometry, MeshStandardMaterialWithInstanceOpacity>;
+  instanceOpacity: THREE.InstancedBufferAttribute;
+  // FIXME: could be shared with all other renderable primitives?
+  material = new MeshStandardMaterialWithInstanceOpacity({
     metalness: 0,
     roughness: 1,
     dithering: true,
   });
-  mesh: THREE.InstancedMesh<THREE.BoxGeometry, THREE.MeshStandardMaterial>;
+
   /**
    * The initial count passed to `mesh`'s constructor, i.e. the maximum number of instances it can
    * render before we need to create a new mesh object
@@ -43,11 +49,12 @@ export class RenderableCubes extends THREE.Object3D {
 
     // Cube mesh
     this.maxInstances = 16;
-    this.mesh = new THREE.InstancedMesh(
-      RenderableCubes.Geometry(),
-      this.material,
-      this.maxInstances,
+    this.mesh = new THREE.InstancedMesh(this.geometry, this.material, this.maxInstances);
+    this.instanceOpacity = new THREE.InstancedBufferAttribute(
+      new Float32Array(this.maxInstances),
+      1,
     );
+    this.geometry.setAttribute("instanceOpacity", this.instanceOpacity);
     this.mesh.count = 0;
     this.add(this.mesh);
 
@@ -70,6 +77,11 @@ export class RenderableCubes extends THREE.Object3D {
       this.mesh.removeFromParent();
       this.mesh.dispose();
       this.mesh = new THREE.InstancedMesh(this.mesh.geometry, this.material, this.maxInstances);
+      this.instanceOpacity = new THREE.InstancedBufferAttribute(
+        new Float32Array(this.maxInstances),
+        1,
+      );
+      this.geometry.setAttribute("instanceOpacity", this.instanceOpacity);
       this.add(this.mesh);
 
       // THREE.js doesn't correctly recompute the new max instance count when dynamically
@@ -95,6 +107,7 @@ export class RenderableCubes extends THREE.Object3D {
         isTransparent = true;
       }
       this.mesh.setColorAt(i, rgbToThreeColor(tempColor, cube.color));
+      this.instanceOpacity.setX(i, cube.color.a);
       this.mesh.setMatrixAt(
         i,
         tempMat4.compose(
@@ -121,6 +134,7 @@ export class RenderableCubes extends THREE.Object3D {
     this.mesh.count = cubes.length;
     this.outlineGeometry.instanceCount = cubes.length;
     this.mesh.instanceMatrix.needsUpdate = true;
+    this.instanceOpacity.needsUpdate = true;
 
     // may be null if we were initialized with count 0 and still have 0 cubes
     if (this.mesh.instanceColor) {
@@ -130,12 +144,13 @@ export class RenderableCubes extends THREE.Object3D {
 
   dispose(): void {
     this.mesh.dispose();
+    this.geometry.dispose();
     this.material.dispose();
     this.outlineGeometry.dispose();
   }
 
   update(entity: SceneEntity, _receiveTime: bigint | undefined): void {
-    //TODO: put in superclass? do these even need to be in userData?
+    //FIXME: put in superclass? do these even need to be in userData?
     this.userData.messageTime = toNanoSec(entity.timestamp);
     this.userData.frameId = this.renderer.normalizeFrameId(entity.frame_id);
     this.userData.entity = entity;
