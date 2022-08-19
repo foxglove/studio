@@ -61,6 +61,7 @@ describe("app state url parser", () => {
       url.searchParams.append("ds.deviceId", "dummy");
       url.searchParams.append("ds.start", start);
       url.searchParams.append("ds.end", end);
+      url.searchParams.append("ds.eventId", "eventId");
 
       const parsed = parseAppURLState(url);
       expect(parsed).toMatchObject({
@@ -69,6 +70,7 @@ describe("app state url parser", () => {
         time: { sec: now.sec + 500, nsec: 0 },
         dsParams: {
           deviceId: "dummy",
+          eventId: "eventId",
           start,
           end,
         },
