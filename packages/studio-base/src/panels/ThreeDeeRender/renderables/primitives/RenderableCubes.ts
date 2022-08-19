@@ -9,7 +9,8 @@ import { CubePrimitive, SceneEntity } from "@foxglove/schemas/schemas/typescript
 
 import type { Renderer } from "../../Renderer";
 import { rgbToThreeColor } from "../../color";
-import { MeshStandardMaterialWithInstanceOpacity } from "./MeshStandardMaterialWithInstanceOpacity";
+import { MeshStandardMaterialWithInstanceOpacity } from "../materials/MeshStandardMaterialWithInstanceOpacity";
+import { RenderablePrimitive } from "./types";
 
 const tempColor = new THREE.Color();
 const tempVec3 = new THREE.Vector3();
@@ -17,7 +18,7 @@ const tempVec3_2 = new THREE.Vector3();
 const tempMat4 = new THREE.Matrix4();
 const tempQuat = new THREE.Quaternion();
 
-export class RenderableCubes extends THREE.Object3D {
+export class RenderableCubes extends THREE.Object3D implements RenderablePrimitive {
   private static cubeGeometry: THREE.BoxGeometry | undefined;
   private static cubeEdgesGeometry: THREE.EdgesGeometry | undefined;
 
@@ -43,7 +44,7 @@ export class RenderableCubes extends THREE.Object3D {
 
   renderer: Renderer;
 
-  constructor(topic: string, renderer: Renderer) {
+  constructor(renderer: Renderer) {
     super();
     this.renderer = renderer;
 
@@ -158,7 +159,7 @@ export class RenderableCubes extends THREE.Object3D {
     this._updateMesh(entity.cubes);
   }
 
-  static Geometry(): THREE.BoxGeometry {
+  private static Geometry(): THREE.BoxGeometry {
     if (!RenderableCubes.cubeGeometry) {
       RenderableCubes.cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
       RenderableCubes.cubeGeometry.computeBoundingSphere();
@@ -166,7 +167,7 @@ export class RenderableCubes extends THREE.Object3D {
     return RenderableCubes.cubeGeometry;
   }
 
-  static EdgesGeometry(): THREE.EdgesGeometry {
+  private static EdgesGeometry(): THREE.EdgesGeometry {
     if (!RenderableCubes.cubeEdgesGeometry) {
       RenderableCubes.cubeEdgesGeometry = new THREE.EdgesGeometry(RenderableCubes.Geometry(), 40);
       RenderableCubes.cubeEdgesGeometry.computeBoundingSphere();

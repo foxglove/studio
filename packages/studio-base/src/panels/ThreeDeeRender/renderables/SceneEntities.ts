@@ -38,6 +38,7 @@ import {
 import { BaseSettings } from "../settings";
 import { makePose } from "../transforms";
 import { LayerSettingsMarkerNamespace, TopicEntities } from "./TopicEntities";
+import { PrimitivePool } from "./primitives/PrimitivePool";
 
 export type LayerSettingsEntity = BaseSettings & {
   // namespaces: Record<string, LayerSettingsMarkerNamespace>;
@@ -49,6 +50,8 @@ const DEFAULT_SETTINGS: LayerSettingsEntity = {
 };
 
 export class FoxgloveSceneEntities extends SceneExtension<TopicEntities> {
+  private primitivePool = new PrimitivePool(this.renderer);
+
   constructor(renderer: Renderer) {
     super("foxglove.SceneEntities", renderer);
 
@@ -198,7 +201,7 @@ export class FoxgloveSceneEntities extends SceneExtension<TopicEntities> {
         | Partial<LayerSettingsEntity>
         | undefined;
 
-      topicEntities = new TopicEntities(topic, this.renderer, {
+      topicEntities = new TopicEntities(topic, this.primitivePool, this.renderer, {
         receiveTime: -1n,
         messageTime: -1n,
         frameId: "",
@@ -211,6 +214,11 @@ export class FoxgloveSceneEntities extends SceneExtension<TopicEntities> {
       this.add(topicEntities);
     }
     return topicEntities;
+  }
+
+  override dispose(): void {
+    super.dispose();
+    this.primitivePool.dispose();
   }
 }
 

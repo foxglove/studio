@@ -7,7 +7,6 @@ import {
   SceneEntityDeletion,
   SceneEntityDeletionType,
 } from "@foxglove/schemas/schemas/typescript";
-import { RenderableCubes } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/primitives/RenderableCubes";
 import { emptyPose } from "@foxglove/studio-base/util/Pose";
 
 import { BaseUserData, Renderable } from "../Renderable";
@@ -18,6 +17,9 @@ import { updatePose } from "../updatePose";
 import type { LayerSettingsMarker } from "./Markers";
 import { RenderableMarker, getMarkerId } from "./markers/RenderableMarker";
 import { RenderableMeshResource } from "./markers/RenderableMeshResource";
+import { PrimitivePool } from "./primitives/PrimitivePool";
+import { RenderableCubes } from "./primitives/RenderableCubes";
+import { PrimitiveType } from "./primitives/types";
 import { missingTransformMessage, MISSING_TRANSFORM } from "./transforms";
 
 export type LayerSettingsMarkerNamespace = BaseSettings;
@@ -57,12 +59,21 @@ export class MarkersNamespace {
 }
 
 type EntityRenderables = {
-  cubes?: RenderableCubes;
+  [PrimitiveType.CUBES]?: RenderableCubes;
 };
 
 export class TopicEntities extends Renderable<EntityTopicUserData> {
   override pickable = false;
   private renderablesById = new Map<string, EntityRenderables>();
+
+  constructor(
+    name: string,
+    private primitivePool: PrimitivePool,
+    renderer: Renderer,
+    userData: EntityTopicUserData,
+  ) {
+    super(name, renderer, userData);
+  }
 
   // eslint-disable-next-line no-restricted-syntax
   get topic(): string {
@@ -70,14 +81,8 @@ export class TopicEntities extends Renderable<EntityTopicUserData> {
   }
 
   override dispose(): void {
-    for (const marker of this.renderablesById.values()) {
-      for (const renderable of Object.values(marker)) {
-        // this.renderer.markerPool.release(renderable);//FIXME
-        renderable.dispose();
-      }
-    }
     this.children.length = 0;
-    this.renderablesById.clear();
+    this._deleteAllEntities();
   }
 
   deleteEntity(deletion: SceneEntityDeletion): void {
@@ -168,30 +173,41 @@ export class TopicEntities extends Renderable<EntityTopicUserData> {
     //   renderable.update(entity, receiveTime);
     // }
 
-    if (!renderable.cubes) {
-      renderable.cubes = new RenderableCubes(this.topic, this.renderer);
-      renderable.cubes.userData.pose = emptyPose();
-      this.add(renderable.cubes);
+    let cubes = renderable[PrimitiveType.CUBES];
+    if (!cubes) {
+      cubes = this.primitivePool.acquire(PrimitiveType.CUBES);
+      cubes.name = `${entity.id}:${PrimitiveType.CUBES} on ${this.topic}`;
+      renderable[PrimitiveType.CUBES] = cubes;
+      this.add(cubes);
     }
 
-    renderable.cubes.update(entity, receiveTime);
+    cubes.update(entity, receiveTime);
   }
 
-  private _deleteEntity(_id: string) {
-    //   const renderable = this.renderablesById.get(id);
-    //   if (renderable) {
-    //     this.remove(renderable);
-    //     this.renderer.markerPool.release(renderable);
-    //     this.renderablesById.delete(id);
-    //     return true;
-    // }
+  private _removeRenderables(renderables: EntityRenderables): void {
+    for (const [primitiveType, primitive] of Object.entries(renderables) as [
+      PrimitiveType,
+      EntityRenderables[PrimitiveType],
+    ][]) {
+      if (primitive) {
+        this.remove(primitive);
+        this.primitivePool.release(primitiveType, primitive);
+      }
+    }
+  }
+
+  private _deleteEntity(id: string) {
+    const renderables = this.renderablesById.get(id);
+    if (renderables) {
+      this._removeRenderables(renderables);
+    }
+    this.renderablesById.delete(id);
   }
 
   private _deleteAllEntities() {
-    // for (const renderable of this.renderablesById.values()) {
-    //   this.remove(renderable);
-    //   this.renderer.markerPool.release(renderable);
-    // }
-    // this.renderablesById.clear();
+    for (const renderables of this.renderablesById.values()) {
+      this._removeRenderables(renderables);
+    }
+    this.renderablesById.clear();
   }
 }
