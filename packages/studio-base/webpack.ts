@@ -9,6 +9,7 @@ import MonacoWebpackPlugin from "monaco-editor-webpack-plugin";
 import monacoPkg from "monaco-editor/package.json";
 import path from "path";
 import ReactRefreshTypescript from "react-refresh-typescript";
+import ts from "typescript";
 import createStyledComponentsTransformer from "typescript-plugin-styled-components";
 import webpack, { Configuration, WebpackPluginInstance } from "webpack";
 
@@ -43,6 +44,54 @@ type Options = {
   // those out while iterating.
   allowUnusedVariables?: boolean;
 };
+
+/**
+ * Add `name` automatically to `makeStyles()` calls.
+ */
+function createTssReactPlugin(program: ts.Program): ts.TransformerFactory<ts.SourceFile> {
+  function isImportedFrom(node: ts.Node, targetModule: string) {
+    for (const declaration of program
+      .getTypeChecker()
+      .getSymbolAtLocation(node)
+      ?.getDeclarations() ?? []) {
+      if (ts.isImportSpecifier(declaration)) {
+        const module = ts.findAncestor(declaration, ts.isImportDeclaration)?.moduleSpecifier;
+        if (module && ts.isStringLiteral(module) && module.text === targetModule) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  return (context) => {
+    return (sourceFile) => {
+      const visitor = (node: ts.Node): ts.Node => {
+        if (
+          ts.isCallExpression(node) &&
+          ts.isIdentifier(node.expression) &&
+          node.expression.text === "makeStyles" &&
+          node.arguments.length === 0 &&
+          isImportedFrom(node.expression, "tss-react/mui")
+        ) {
+          const sanitizedFilename = path
+            .relative(__dirname, sourceFile.fileName)
+            .replace(/[^a-zA-Z0-9_-]/g, "_");
+          return context.factory.updateCallExpression(node, node.expression, node.typeArguments, [
+            context.factory.createObjectLiteralExpression([
+              context.factory.createPropertyAssignment(
+                "name",
+                context.factory.createStringLiteral(sanitizedFilename),
+              ),
+            ]),
+          ]);
+        }
+        return ts.visitEachChild(node, visitor, context);
+      };
+      return ts.visitNode(sourceFile, visitor);
+    };
+  };
+}
 
 // Create a partial webpack configuration required to build app using webpack.
 // Returns a webpack configuration containing resolve, module, plugins, and node fields.
@@ -116,11 +165,12 @@ export function makeConfig(
                 onlyCompileBundledFiles: true,
                 projectReferences: true,
                 configFile: path.resolve(__dirname, isDev ? "tsconfig.dev.json" : "tsconfig.json"),
-                getCustomTransformers: () => ({
+                getCustomTransformers: (program: ts.Program) => ({
                   before: [
                     styledComponentsTransformer,
                     // only include refresh plugin when using webpack server
                     ...(isServe ? [ReactRefreshTypescript()] : []),
+                    createTssReactPlugin(program),
                   ],
                 }),
               },
