@@ -140,21 +140,9 @@ export class OccupancyGrids extends SceneExtension<OccupancyGridRenderable> {
       // Check if the transparency changed and we need to create a new material
       const newTransparent = occupancyGridHasTransparency(renderable.userData.settings);
       if (prevTransparent !== newTransparent) {
-        renderable.userData.material.dispose();
-        renderable.userData.pickingMaterial.dispose();
-        renderable.remove(renderable.userData.mesh);
-
-        const newSettings = renderable.userData.settings;
-        const mesh = createMesh(topicName, renderable.userData.texture, newSettings);
-        const material = mesh.material as THREE.MeshBasicMaterial;
-        const pickingMaterial = mesh.userData.pickingMaterial as THREE.ShaderMaterial;
-        const texture = material.map as THREE.DataTexture;
-
-        renderable.userData.mesh = mesh;
-        renderable.userData.material = material;
-        renderable.userData.pickingMaterial = pickingMaterial;
-        renderable.userData.texture = texture;
-        renderable.add(mesh);
+        renderable.userData.material.transparent = newTransparent;
+        renderable.userData.material.depthWrite = !newTransparent;
+        renderable.userData.material.needsUpdate = true;
       }
 
       this._updateOccupancyGridRenderable(
