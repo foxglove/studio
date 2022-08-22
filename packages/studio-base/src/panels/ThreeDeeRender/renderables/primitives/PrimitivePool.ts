@@ -12,7 +12,7 @@ const CONSTRUCTORS = {
 };
 
 /**
- * An object pool for RenderableMarker subclass objects.
+ * An object pool for RenderablePrimitive subclass objects.
  */
 export class PrimitivePool {
   private primitivesByType = new Map<PrimitiveType, RenderablePrimitive[]>();

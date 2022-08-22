@@ -53,7 +53,7 @@ export class TopicEntities extends Renderable<EntityTopicUserData> {
   }
 
   public updateSettings(): void {
-    // Updates each individual marker renderable using the current topic settings
+    // Updates each individual primitive renderable using the current topic settings
     for (const renderable of this.renderablesById.values()) {
       renderable[PrimitiveType.CUBES]?.updateSettings(this.userData.settings);
     }
@@ -103,15 +103,21 @@ export class TopicEntities extends Renderable<EntityTopicUserData> {
       this.renderablesById.set(entity.id, renderable);
     }
 
+    const hasCubes = entity.cubes.length > 0;
     let cubes = renderable[PrimitiveType.CUBES];
-    if (!cubes) {
-      cubes = this.primitivePool.acquire(PrimitiveType.CUBES);
-      cubes.name = `${entity.id}:${PrimitiveType.CUBES} on ${this.topic}`;
-      renderable[PrimitiveType.CUBES] = cubes;
-      this.add(cubes);
+    if (hasCubes) {
+      if (!cubes) {
+        cubes = this.primitivePool.acquire(PrimitiveType.CUBES);
+        cubes.name = `${entity.id}:${PrimitiveType.CUBES} on ${this.topic}`;
+        renderable[PrimitiveType.CUBES] = cubes;
+        this.add(cubes);
+      }
+      cubes.update(entity, this.userData.settings);
+    } else if (cubes) {
+      this.remove(cubes);
+      delete renderable[PrimitiveType.CUBES];
+      this.primitivePool.release(PrimitiveType.CUBES, cubes);
     }
-
-    cubes.update(entity, this.userData.settings);
   }
 
   public deleteEntities(deletion: SceneEntityDeletion): void {
