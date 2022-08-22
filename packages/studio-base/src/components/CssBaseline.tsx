@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { alpha } from "@mui/material";
 import { PropsWithChildren } from "react";
 import { makeStyles } from "tss-react/mui";
 
@@ -67,16 +68,16 @@ const useStyles = makeStyles()(({ palette, typography }) => ({
 
         ".drop-target-container .drop-target": {
           backgroundColor: palette.action.hover,
-          border: `2px solid ${palette.divider}`,
+          border: `2px solid ${alpha(palette.divider, 0.5)}`,
         },
         ".drop-target-container .drop-target-hover": {
-          opacity: 0.3,
+          opacity: 1,
         },
       },
       ".mosaic-tile": {
         margin: 0,
       },
-      ".mosaic-tile:first-child": {
+      ".mosaic-tile:first-of-type": {
         // make room for splitters - unfortunately this means the background color will show
         // through even if the tile has its own background color set
         gap: 1,

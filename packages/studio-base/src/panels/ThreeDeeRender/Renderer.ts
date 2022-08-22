@@ -210,7 +210,7 @@ Object.defineProperty(LabelMaterial.prototype, "fragmentShaderKey", {
 });
 
 class InstancedLineMaterial extends THREE.LineBasicMaterial {
-  constructor(...args: ConstructorParameters<typeof THREE.LineBasicMaterial>) {
+  public constructor(...args: ConstructorParameters<typeof THREE.LineBasicMaterial>) {
     super(...args);
     this.defines ??= {};
     this.defines.USE_INSTANCING = true;
@@ -222,61 +222,62 @@ class InstancedLineMaterial extends THREE.LineBasicMaterial {
  * `WebGLRenderingContext`, and `SettingsTree`.
  */
 export class Renderer extends EventEmitter<RendererEvents> {
-  canvas: HTMLCanvasElement;
-  gl: THREE.WebGLRenderer;
-  maxLod = DetailLevel.High;
-  config: Immutable<RendererConfig>;
-  settings: SettingsManager;
-  topics: ReadonlyArray<Topic> | undefined;
-  topicsByName: ReadonlyMap<string, Topic> | undefined;
-  parameters: ReadonlyMap<string, unknown> | undefined;
+  private canvas: HTMLCanvasElement;
+  public readonly gl: THREE.WebGLRenderer;
+  public maxLod = DetailLevel.High;
+  public config: Immutable<RendererConfig>;
+  public settings: SettingsManager;
+  public topics: ReadonlyArray<Topic> | undefined;
+  public topicsByName: ReadonlyMap<string, Topic> | undefined;
+  public parameters: ReadonlyMap<string, unknown> | undefined;
   // extensionId -> SceneExtension
-  sceneExtensions = new Map<string, SceneExtension>();
+  public sceneExtensions = new Map<string, SceneExtension>();
   // datatype -> handler[]
-  datatypeHandlers = new Map<string, MessageHandler[]>();
+  public datatypeHandlers = new Map<string, MessageHandler[]>();
   // topicName -> handler[]
-  topicHandlers = new Map<string, MessageHandler[]>();
+  public topicHandlers = new Map<string, MessageHandler[]>();
   // layerId -> { action, handler }
-  customLayerActions = new Map<string, CustomLayerAction>();
-  scene: THREE.Scene;
-  dirLight: THREE.DirectionalLight;
-  hemiLight: THREE.HemisphereLight;
-  input: Input;
-  outlineMaterial = new THREE.LineBasicMaterial({ dithering: true });
-  instancedOutlineMaterial = new InstancedLineMaterial({ dithering: true });
+  private customLayerActions = new Map<string, CustomLayerAction>();
+  private scene: THREE.Scene;
+  private dirLight: THREE.DirectionalLight;
+  private hemiLight: THREE.HemisphereLight;
+  public input: Input;
+  public readonly outlineMaterial = new THREE.LineBasicMaterial({ dithering: true });
+  public readonly instancedOutlineMaterial = new InstancedLineMaterial({ dithering: true });
 
-  measurementTool: MeasurementTool;
-  publishClickTool: PublishClickTool;
+  private coreSettings: CoreSettings;
+  public measurementTool: MeasurementTool;
+  public publishClickTool: PublishClickTool;
 
-  perspectiveCamera: THREE.PerspectiveCamera;
-  orthographicCamera: THREE.OrthographicCamera;
-  aspect: number;
-  controls: OrbitControls;
+  private perspectiveCamera: THREE.PerspectiveCamera;
+  private orthographicCamera: THREE.OrthographicCamera;
+  private aspect: number;
+  private controls: OrbitControls;
 
   // Are we connected to a ROS data source? Normalize coordinate frames if so by
   // stripping any leading "/" prefix. See `normalizeFrameId()` for details.
-  ros = false;
+  public ros = false;
 
-  picker: Picker;
-  selectionBackdrop: ScreenOverlay;
-  selectedRenderable: Renderable | undefined;
-  colorScheme: "dark" | "light" = "light";
-  modelCache: ModelCache;
-  transformTree = new TransformTree();
-  coordinateFrameList: SelectEntry[] = [];
-  currentTime = 0n;
-  fixedFrameId: string | undefined;
-  renderFrameId: string | undefined;
-  followFrameId: string | undefined;
+  private picker: Picker;
+  private selectionBackdrop: ScreenOverlay;
+  private selectedRenderable: Renderable | undefined;
+  public colorScheme: "dark" | "light" = "light";
+  public modelCache: ModelCache;
+  public transformTree = new TransformTree();
+  public coordinateFrameList: SelectEntry[] = [];
+  public currentTime = 0n;
+  public fixedFrameId: string | undefined;
+  public renderFrameId: string | undefined;
+  public followFrameId: string | undefined;
 
-  labelPool = new LabelPool({ fontFamily: fonts.MONOSPACE });
-  markerPool = new MarkerPool(this);
+  public labelPool = new LabelPool({ fontFamily: fonts.MONOSPACE });
+  public markerPool = new MarkerPool(this);
 
   private _prevResolution = new THREE.Vector2();
   private _pickingEnabled = false;
   private _isUpdatingCameraState = false;
 
-  constructor(canvas: HTMLCanvasElement, config: RendererConfig) {
+  public constructor(canvas: HTMLCanvasElement, config: RendererConfig) {
     super();
 
     // NOTE: Global side effect
@@ -381,8 +382,9 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
     this.measurementTool = new MeasurementTool(this);
     this.publishClickTool = new PublishClickTool(this);
+    this.coreSettings = new CoreSettings(this);
 
-    this.addSceneExtension(new CoreSettings(this));
+    this.addSceneExtension(this.coreSettings);
     this.addSceneExtension(new Cameras(this));
     this.addSceneExtension(new FrameAxes(this));
     this.addSceneExtension(new Grids(this));
@@ -416,7 +418,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     );
   }
 
-  dispose(): void {
+  public dispose(): void {
     log.warn(`Disposing renderer`);
     this.removeAllListeners();
 
@@ -437,7 +439,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.gl.dispose();
   }
 
-  getPixelRatio(): number {
+  public getPixelRatio(): number {
     return this.gl.getPixelRatio();
   }
 
@@ -445,7 +447,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
    * Clears internal state such as the TransformTree and removes Renderables from SceneExtensions.
    * This is useful when seeking to a new playback position or when a new data source is loaded.
    */
-  clear(): void {
+  public clear(): void {
     this.settings.errors.clear();
     this.transformTree.clear();
     for (const extension of this.sceneExtensions.values()) {
@@ -453,7 +455,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     }
   }
 
-  addSceneExtension(extension: SceneExtension): void {
+  private addSceneExtension(extension: SceneExtension): void {
     if (this.sceneExtensions.has(extension.extensionId)) {
       throw new Error(`Attempted to add duplicate extensionId "${extension.extensionId}"`);
     }
@@ -461,12 +463,17 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.scene.add(extension);
   }
 
-  updateConfig(updateHandler: (draft: RendererConfig) => void): void {
+  public updateConfig(updateHandler: (draft: RendererConfig) => void): void {
     this.config = produce(this.config, updateHandler);
     this.emit("configChange", this);
   }
 
-  addDatatypeSubscriptions<T>(
+  /** Updates the settings tree for core settings to account for any changes in the config. */
+  public updateCoreSettings(): void {
+    this.coreSettings.updateSettingsTree();
+  }
+
+  public addDatatypeSubscriptions<T>(
     datatypes: Iterable<string>,
     handler: (messageEvent: MessageEvent<T>) => void,
   ): void {
@@ -484,7 +491,10 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.emit("datatypeHandlersChanged", this);
   }
 
-  addTopicSubscription<T>(topic: string, handler: (messageEvent: MessageEvent<T>) => void): void {
+  public addTopicSubscription<T>(
+    topic: string,
+    handler: (messageEvent: MessageEvent<T>) => void,
+  ): void {
     const genericHandler = handler as (messageEvent: MessageEvent<unknown>) => void;
     let handlers = this.topicHandlers.get(topic);
     if (!handlers) {
@@ -497,7 +507,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.emit("topicHandlersChanged", this);
   }
 
-  addCustomLayerAction(options: {
+  public addCustomLayerAction(options: {
     layerId: string;
     label: string;
     icon?: SettingsIcon;
@@ -544,7 +554,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.settings.setNodesForKey(RENDERER_ID, [topics, customLayers]);
   }
 
-  defaultFrameId(): string | undefined {
+  private defaultFrameId(): string | undefined {
     const allFrames = this.transformTree.frames();
     if (allFrames.size === 0) {
       return undefined;
@@ -576,7 +586,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
   /** Enable or disable object selection mode */
   // eslint-disable-next-line @foxglove/no-boolean-parameters
-  setPickingEnabled(enabled: boolean): void {
+  public setPickingEnabled(enabled: boolean): void {
     this._pickingEnabled = enabled;
     if (!enabled) {
       this.setSelectedRenderable(undefined);
@@ -584,7 +594,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
   }
 
   /** Update the color scheme and background color, rebuilding any materials as necessary */
-  setColorScheme(colorScheme: "dark" | "light", backgroundColor: string | undefined): void {
+  public setColorScheme(colorScheme: "dark" | "light", backgroundColor: string | undefined): void {
     this.colorScheme = colorScheme;
 
     const bgColor = backgroundColor ? stringToRgb(tempColor, backgroundColor) : undefined;
@@ -612,7 +622,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
   /** Update the list of topics and rebuild all settings nodes when the identity
    * of the topics list changes */
-  setTopics(topics: ReadonlyArray<Topic> | undefined): void {
+  public setTopics(topics: ReadonlyArray<Topic> | undefined): void {
     const changed = this.topics !== topics;
     this.topics = topics;
     if (changed) {
@@ -626,7 +636,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     }
   }
 
-  setParameters(parameters: ReadonlyMap<string, unknown> | undefined): void {
+  public setParameters(parameters: ReadonlyMap<string, unknown> | undefined): void {
     const changed = this.parameters !== parameters;
     this.parameters = parameters;
     if (changed) {
@@ -634,7 +644,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     }
   }
 
-  updateCustomLayersCount(): void {
+  public updateCustomLayersCount(): void {
     const layerCount = Object.keys(this.config.layers).length;
     const label = `Custom Layers${layerCount > 0 ? ` (${layerCount})` : ""}`;
     this.settings.setLabel(["layers"], label);
@@ -688,14 +698,14 @@ export class Renderer extends EventEmitter<RendererEvents> {
     }
   }
 
-  setCameraState(cameraState: CameraState): void {
+  public setCameraState(cameraState: CameraState): void {
     this._isUpdatingCameraState = true;
     this._updateCameras(cameraState);
     this.controls.update();
     this._isUpdatingCameraState = false;
   }
 
-  getCameraState(): CameraState {
+  public getCameraState(): CameraState {
     return {
       perspective: this.config.cameraState.perspective,
       distance: this.controls.getDistance(),
@@ -710,7 +720,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     };
   }
 
-  setSelectedRenderable(selectedRenderable: Renderable | undefined): void {
+  public setSelectedRenderable(selectedRenderable: Renderable | undefined): void {
     if (this.selectedRenderable === selectedRenderable) {
       return;
     }
@@ -732,11 +742,11 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.animationFrame();
   }
 
-  activeCamera(): THREE.PerspectiveCamera | THREE.OrthographicCamera {
+  private activeCamera(): THREE.PerspectiveCamera | THREE.OrthographicCamera {
     return this.config.cameraState.perspective ? this.perspectiveCamera : this.orthographicCamera;
   }
 
-  addMessageEvent(messageEvent: Readonly<MessageEvent<unknown>>, datatype: string): void {
+  public addMessageEvent(messageEvent: Readonly<MessageEvent<unknown>>, datatype: string): void {
     const { message } = messageEvent;
 
     const maybeHasHeader = message as Partial<{ header: Partial<Header> }>;
@@ -802,14 +812,14 @@ export class Renderer extends EventEmitter<RendererEvents> {
    * > tf2 does not accept frame_ids starting with "/"
    * Source: <http://wiki.ros.org/tf2/Migration#tf_prefix_backwards_compatibility>
    */
-  normalizeFrameId(frameId: string): string {
+  public normalizeFrameId(frameId: string): string {
     if (!this.ros || !frameId.startsWith("/")) {
       return frameId;
     }
     return frameId.slice(1);
   }
 
-  addCoordinateFrame(frameId: string): void {
+  private addCoordinateFrame(frameId: string): void {
     const normalizedFrameId = this.normalizeFrameId(frameId);
     if (!this.transformTree.hasFrame(normalizedFrameId)) {
       this.transformTree.getOrCreateFrame(normalizedFrameId);
@@ -819,7 +829,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     }
   }
 
-  addFrameTransform(transform: FrameTransform): void {
+  private addFrameTransform(transform: FrameTransform): void {
     const parentId = transform.parent_frame_id;
     const childId = transform.child_frame_id;
     const stamp = toNanoSec(transform.timestamp);
@@ -829,7 +839,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.addTransform(parentId, childId, stamp, t, q);
   }
 
-  addTransformMessage(tf: TransformStamped): void {
+  private addTransformMessage(tf: TransformStamped): void {
     const normalizedParentId = this.normalizeFrameId(tf.header.frame_id);
     const normalizedChildId = this.normalizeFrameId(tf.child_frame_id);
     const stamp = toNanoSec(tf.header.stamp);
@@ -840,7 +850,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
   }
 
   // Create a new transform and add it to the renderer's TransformTree
-  addTransform(
+  public addTransform(
     parentFrameId: string,
     childFrameId: string,
     stamp: bigint,
@@ -862,18 +872,18 @@ export class Renderer extends EventEmitter<RendererEvents> {
   // Callback handlers
 
   private _animationFrame?: number;
-  animationFrame = (): void => {
+  public animationFrame = (): void => {
     this._animationFrame = undefined;
     this.frameHandler(this.currentTime);
   };
 
-  queueAnimationFrame(): void {
+  public queueAnimationFrame(): void {
     if (this._animationFrame == undefined) {
       this._animationFrame = requestAnimationFrame(this.animationFrame);
     }
   }
 
-  frameHandler = (currentTime: bigint): void => {
+  private frameHandler = (currentTime: bigint): void => {
     this.currentTime = currentTime;
     this._updateFrames();
     this._updateResolution();
@@ -909,7 +919,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.gl.info.reset();
   };
 
-  resizeHandler = (size: THREE.Vector2): void => {
+  private resizeHandler = (size: THREE.Vector2): void => {
     this.gl.setPixelRatio(window.devicePixelRatio);
     this.gl.setSize(size.width, size.height);
 
@@ -921,7 +931,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.animationFrame();
   };
 
-  clickHandler = (cursorCoords: THREE.Vector2): void => {
+  private clickHandler = (cursorCoords: THREE.Vector2): void => {
     if (!this._pickingEnabled) {
       this.setSelectedRenderable(undefined);
       return;
@@ -962,7 +972,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.emit("renderablesClicked", selections, cursorCoords, this);
   };
 
-  handleTopicsAction = (action: SettingsTreeAction): void => {
+  private handleTopicsAction = (action: SettingsTreeAction): void => {
     const path = action.payload.path;
     if (action.action !== "perform-node-action" || path.length !== 1 || path[0] !== "topics") {
       return;
@@ -992,7 +1002,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     }
   };
 
-  handleCustomLayersAction = (action: SettingsTreeAction): void => {
+  private handleCustomLayersAction = (action: SettingsTreeAction): void => {
     const path = action.payload.path;
     if (action.action !== "perform-node-action" || path.length !== 1 || path[0] !== "layers") {
       return;

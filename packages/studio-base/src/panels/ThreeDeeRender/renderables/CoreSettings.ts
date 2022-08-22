@@ -30,10 +30,8 @@ export const DEFAULT_PUBLISH_SETTINGS: RendererConfig["publish"] = {
   poseEstimateThetaDeviation: round(Math.PI / 12, 8),
 };
 
-const ONE_DEGREE = Math.PI / 180;
-
 export class CoreSettings extends SceneExtension {
-  constructor(renderer: Renderer) {
+  public constructor(renderer: Renderer) {
     super("foxglove.CoreSettings", renderer);
 
     renderer.on("transformTreeUpdated", this.handleTransformTreeUpdated);
@@ -44,7 +42,7 @@ export class CoreSettings extends SceneExtension {
     );
   }
 
-  override dispose(): void {
+  public override dispose(): void {
     this.renderer.off("transformTreeUpdated", this.handleTransformTreeUpdated);
     this.renderer.off("cameraMove", this.handleCameraMove);
     this.renderer.publishClickTool.removeEventListener(
@@ -54,7 +52,7 @@ export class CoreSettings extends SceneExtension {
     super.dispose();
   }
 
-  override settingsNodes(): SettingsTreeEntry[] {
+  public override settingsNodes(): SettingsTreeEntry[] {
     const config = this.renderer.config;
     const { cameraState: camera, publish } = config;
     const handler = this.handleSettingsAction;
@@ -145,7 +143,7 @@ export class CoreSettings extends SceneExtension {
                 thetaOffset: {
                   label: "Theta",
                   input: "number",
-                  step: ONE_DEGREE,
+                  step: 1,
                   precision: PRECISION_DEGREES,
                   value: camera.thetaOffset,
                 },
@@ -153,14 +151,14 @@ export class CoreSettings extends SceneExtension {
                   phi: {
                     label: "Phi",
                     input: "number",
-                    step: ONE_DEGREE,
+                    step: 1,
                     precision: PRECISION_DEGREES,
                     value: camera.phi,
                   },
                   fovy: {
                     label: "Y-Axis FOV",
                     input: "number",
-                    step: ONE_DEGREE,
+                    step: 1,
                     precision: PRECISION_DEGREES,
                     value: camera.fovy,
                   },
@@ -245,7 +243,7 @@ export class CoreSettings extends SceneExtension {
     ];
   }
 
-  override handleSettingsAction = (action: SettingsTreeAction): void => {
+  public override handleSettingsAction = (action: SettingsTreeAction): void => {
     if (action.action === "perform-node-action" && action.payload.id === "reset-camera") {
       this.renderer.updateConfig((draft) => {
         draft.cameraState = cloneDeep(DEFAULT_CAMERA_STATE);
@@ -334,15 +332,15 @@ export class CoreSettings extends SceneExtension {
     this.updateSettingsTree();
   };
 
-  handleTransformTreeUpdated = (): void => {
+  private handleTransformTreeUpdated = (): void => {
     this.updateSettingsTree();
   };
 
-  handleCameraMove = (): void => {
+  private handleCameraMove = (): void => {
     this.updateSettingsTree();
   };
 
-  handlePublishToolChange = (): void => {
+  private handlePublishToolChange = (): void => {
     this.renderer.updateConfig((draft) => {
       draft.publish.type = this.renderer.publishClickTool.publishClickType;
       return draft;

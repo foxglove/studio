@@ -14,9 +14,6 @@ import {
   Time,
   toRFC3339String,
 } from "@foxglove/rostime";
-import streamMessages, {
-  ParsedChannelAndEncodings,
-} from "@foxglove/studio-base/players/FoxgloveDataPlatformPlayer/streamMessages";
 import {
   PlayerProblem,
   Topic,
@@ -33,7 +30,8 @@ import {
   MessageIteratorArgs,
   IteratorResult,
   GetBackfillMessagesArgs,
-} from "./IIterableSource";
+} from "../IIterableSource";
+import streamMessages, { ParsedChannelAndEncodings } from "./streamMessages";
 
 const log = Logger.getLogger(__filename);
 
@@ -59,14 +57,14 @@ export class DataPlatformIterableSource implements IIterableSource {
    */
   private _parsedChannelsByTopic = new Map<string, ParsedChannelAndEncodings[]>();
 
-  constructor(options: DataPlatformIterableSourceOptions) {
+  public constructor(options: DataPlatformIterableSourceOptions) {
     this._consoleApi = options.api;
     this._start = options.start;
     this._end = options.end;
     this._deviceId = options.deviceId;
   }
 
-  async initialize(): Promise<Initalization> {
+  public async initialize(): Promise<Initalization> {
     const [coverage, rawTopics] = await Promise.all([
       this._consoleApi.coverage({
         deviceId: this._deviceId,
@@ -163,7 +161,7 @@ export class DataPlatformIterableSource implements IIterableSource {
     };
   }
 
-  async *messageIterator(
+  public async *messageIterator(
     args: MessageIteratorArgs,
   ): AsyncIterableIterator<Readonly<IteratorResult>> {
     const api = this._consoleApi;
@@ -201,7 +199,7 @@ export class DataPlatformIterableSource implements IIterableSource {
     }
   }
 
-  async getBackfillMessages({
+  public async getBackfillMessages({
     topics,
     time,
     abortSignal,
