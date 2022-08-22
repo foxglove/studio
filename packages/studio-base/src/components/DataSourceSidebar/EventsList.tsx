@@ -60,9 +60,6 @@ const useStyles = makeStyles<void, "eventMetadata">()((theme, _params, classes) 
       },
     },
   },
-  span2: {
-    gridColumn: "span 2",
-  },
   eventMetadata: {
     padding: theme.spacing(1),
     backgroundColor: theme.palette.background.default,
