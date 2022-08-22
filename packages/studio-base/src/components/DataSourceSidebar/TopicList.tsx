@@ -229,7 +229,7 @@ export function TopicList(): JSX.Element {
           : undefined,
     },
     1000,
-    { maxWait: 1000 },
+    { leading: true, maxWait: 1000 },
   );
 
   const filteredTopics: FzfResultItem<TopicWithStats>[] = useMemo(

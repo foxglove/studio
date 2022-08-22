@@ -110,7 +110,7 @@ function DataSourceInfo(): JSX.Element {
   const [debouncedTimes] = useDebounce(
     { endTime, duration: startTime && endTime ? subtractTimes(endTime, startTime) : undefined },
     100,
-    { maxWait: 100 },
+    { leading: true, maxWait: 100 },
   );
 
   return (
