@@ -324,6 +324,7 @@ function useRendererProperty<K extends keyof Renderer>(
       return;
     }
     const onChange = () => setValue(renderer[key]);
+    onChange();
 
     renderer.addListener(event, onChange);
     return () => {
