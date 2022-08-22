@@ -8,6 +8,7 @@ import {
   SceneEntityDeletion,
   SceneEntityDeletionType,
 } from "@foxglove/schemas/schemas/typescript";
+import { LayerSettingsEntity } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/SceneEntities";
 
 import { BaseUserData, Renderable } from "../Renderable";
 import { Renderer } from "../Renderer";
@@ -21,6 +22,7 @@ const INVALID_DELETION_TYPE = "INVALID_DELETION_TYPE";
 
 export type EntityTopicUserData = BaseUserData & {
   topic: string;
+  settings: LayerSettingsEntity;
 };
 
 type EntityRenderables = {
@@ -48,6 +50,13 @@ export class TopicEntities extends Renderable<EntityTopicUserData> {
   public override dispose(): void {
     this.children.length = 0;
     this._deleteAllEntities();
+  }
+
+  public updateSettings(): void {
+    // Updates each individual marker renderable using the current topic settings
+    for (const renderable of this.renderablesById.values()) {
+      renderable[PrimitiveType.CUBES]?.updateSettings(this.userData.settings);
+    }
   }
 
   public startFrame(currentTime: bigint, renderFrameId: string, fixedFrameId: string): void {
@@ -87,7 +96,7 @@ export class TopicEntities extends Renderable<EntityTopicUserData> {
     }
   }
 
-  public addOrUpdateEntity(entity: SceneEntity, receiveTime: bigint): void {
+  public addOrUpdateEntity(entity: SceneEntity): void {
     let renderable = this.renderablesById.get(entity.id);
     if (!renderable) {
       renderable = {};
@@ -102,7 +111,7 @@ export class TopicEntities extends Renderable<EntityTopicUserData> {
       this.add(cubes);
     }
 
-    cubes.update(entity, receiveTime);
+    cubes.update(entity, this.userData.settings);
   }
 
   public deleteEntities(deletion: SceneEntityDeletion): void {

@@ -9,7 +9,8 @@ import { RosValue } from "@foxglove/studio-base/players/types";
 import { emptyPose } from "@foxglove/studio-base/util/Pose";
 
 import type { Renderer } from "../../Renderer";
-import { rgbToThreeColor } from "../../color";
+import { makeRgba, rgbToThreeColor, stringToRgba } from "../../color";
+import { LayerSettingsEntity } from "../SceneEntities";
 import { MeshStandardMaterialWithInstanceOpacity } from "../materials/MeshStandardMaterialWithInstanceOpacity";
 import { RenderablePrimitive } from "./RenderablePrimitive";
 
@@ -18,6 +19,7 @@ const tempVec3 = new THREE.Vector3();
 const tempVec3_2 = new THREE.Vector3();
 const tempMat4 = new THREE.Matrix4();
 const tempQuat = new THREE.Quaternion();
+const tempRgba = makeRgba();
 
 export class RenderableCubes extends RenderablePrimitive {
   private static cubeGeometry: THREE.BoxGeometry | undefined;
@@ -48,7 +50,7 @@ export class RenderableCubes extends RenderablePrimitive {
       messageTime: -1n,
       frameId: "",
       pose: emptyPose(),
-      settings: { visible: true },
+      settings: { visible: true, color: undefined },
       settingsPath: [],
       entity: undefined,
     });
@@ -107,13 +109,18 @@ export class RenderableCubes extends RenderablePrimitive {
 
     this._ensureCapacity(cubes.length);
 
+    const overrideColor = this.userData.settings.color
+      ? stringToRgba(tempRgba, this.userData.settings.color)
+      : undefined;
+
     let i = 0;
     for (const cube of cubes) {
-      if (cube.color.a < 1) {
+      const color = overrideColor ?? cube.color;
+      if (color.a < 1) {
         isTransparent = true;
       }
-      this.mesh.setColorAt(i, rgbToThreeColor(tempColor, cube.color));
-      this.instanceOpacity.setX(i, cube.color.a);
+      this.mesh.setColorAt(i, rgbToThreeColor(tempColor, color));
+      this.instanceOpacity.setX(i, color.a);
       this.mesh.setMatrixAt(
         i,
         tempMat4.compose(
@@ -155,9 +162,16 @@ export class RenderableCubes extends RenderablePrimitive {
     this.outlineGeometry.dispose();
   }
 
-  public update(entity: SceneEntity, _receiveTime: bigint | undefined): void {
+  public update(entity: SceneEntity | undefined, settings: LayerSettingsEntity): void {
     this.userData.entity = entity;
-    this._updateMesh(entity.cubes);
+    this.userData.settings = settings;
+    if (entity) {
+      this._updateMesh(entity.cubes);
+    }
+  }
+
+  public updateSettings(settings: LayerSettingsEntity): void {
+    this.update(this.userData.entity, settings);
   }
 
   public override details(): Record<string, RosValue> {

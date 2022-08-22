@@ -2,7 +2,6 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { toNanoSec } from "@foxglove/rostime";
 import {
   ArrowPrimitive,
   CubePrimitive,
@@ -37,10 +36,13 @@ import { makePose } from "../transforms";
 import { TopicEntities } from "./TopicEntities";
 import { PrimitivePool } from "./primitives/PrimitivePool";
 
-export type LayerSettingsEntity = BaseSettings;
+export type LayerSettingsEntity = BaseSettings & {
+  color: string | undefined;
+};
 
 const DEFAULT_SETTINGS: LayerSettingsEntity = {
   visible: false,
+  color: undefined,
 };
 
 export class FoxgloveSceneEntities extends SceneExtension<TopicEntities> {
@@ -63,6 +65,9 @@ export class FoxgloveSceneEntities extends SceneExtension<TopicEntities> {
           label: topic.name,
           icon: "Shapes",
           order: topic.name.toLocaleLowerCase(),
+          fields: {
+            color: { label: "Color", input: "rgba", value: config.color },
+          },
           visible: config.visible ?? DEFAULT_SETTINGS.visible,
           handler: this.handleSettingsAction,
         };
@@ -100,18 +105,18 @@ export class FoxgloveSceneEntities extends SceneExtension<TopicEntities> {
       const settings = this.renderer.config.topics[topicName] as
         | Partial<LayerSettingsEntity>
         | undefined;
-      renderable.userData.settings = { ...renderable.userData.settings, ...settings };
+      renderable.userData.settings = { ...DEFAULT_SETTINGS, ...settings };
+      renderable.updateSettings();
     }
   };
 
   private handleSceneUpdate = (messageEvent: PartialMessageEvent<SceneUpdate>): void => {
     const topic = messageEvent.topic;
     const sceneUpdates = messageEvent.message;
-    const receiveTime = toNanoSec(messageEvent.receiveTime);
 
     for (const entityMsg of sceneUpdates.entities ?? []) {
       const entity = normalizeSceneEntity(entityMsg);
-      this._getTopicEntities(topic).addOrUpdateEntity(entity, receiveTime);
+      this._getTopicEntities(topic).addOrUpdateEntity(entity);
     }
 
     for (const deletionMsg of sceneUpdates.deletions ?? []) {

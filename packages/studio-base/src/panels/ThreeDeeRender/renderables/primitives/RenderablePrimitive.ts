@@ -4,9 +4,13 @@
 
 import { SceneEntity } from "@foxglove/schemas/schemas/typescript";
 import { BaseUserData, Renderable } from "@foxglove/studio-base/panels/ThreeDeeRender/Renderable";
+import { LayerSettingsEntity } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/SceneEntities";
 import { emptyPose } from "@foxglove/studio-base/util/Pose";
 
-export type EntityRenderableUserData = BaseUserData & { entity?: SceneEntity };
+export type EntityRenderableUserData = BaseUserData & {
+  entity?: SceneEntity;
+  settings?: LayerSettingsEntity;
+};
 
 export class RenderablePrimitive extends Renderable<EntityRenderableUserData> {
   public prepareForReuse(): void {
