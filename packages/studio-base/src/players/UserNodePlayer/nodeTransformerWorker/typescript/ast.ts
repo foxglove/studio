@@ -58,8 +58,8 @@ const MAX_DEPTH = 100;
 // error class, just throw a regular error. This error will be reported in the notification tab
 // as a true error, so that users can inform us when things are truly broken.
 export class DatatypeExtractionError extends Error {
-  diagnostic: Diagnostic;
-  constructor(diagnostic: Diagnostic) {
+  public diagnostic: Diagnostic;
+  public constructor(diagnostic: Diagnostic) {
     super();
     this.diagnostic = diagnostic;
   }
@@ -279,7 +279,7 @@ export const constructDatatypes = (
   // In this case, we've detected that the return type comes from the generated types file.
   // We can look up the datatype name by finding it in the file. The name will be the property name
   // under which the type exists.
-  if (node.getSourceFile().fileName === "/studio_node/generatedTypes.ts") {
+  if (node.getSourceFile().fileName === "/studio_script/generatedTypes.ts") {
     if (ts.isPropertySignature(node.parent) && ts.isStringLiteral(node.parent.name)) {
       const datatype = node.parent.name.text;
       return {

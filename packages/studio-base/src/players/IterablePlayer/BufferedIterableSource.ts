@@ -2,7 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { signal, Signal } from "@foxglove/den/async";
+import { Condvar } from "@foxglove/den/async";
+import { VecQueue } from "@foxglove/den/collection";
 import Log from "@foxglove/log";
 import { add as addTime, compare, clampTime } from "@foxglove/rostime";
 import { Time, MessageEvent } from "@foxglove/studio";
@@ -41,13 +42,13 @@ class BufferedIterableSource implements IIterableSource {
   private aborted = false;
 
   // The producer uses this signal to notify a waiting consumer there is data to consume.
-  private readSignal?: Signal<void>;
+  private readSignal = new Condvar();
 
   // The consumer uses this signal to notify a waiting producer that something has been consumed.
-  private writeSignal?: Signal<void>;
+  private writeSignal = new Condvar();
 
   // The producer loads results into the cache and the consumer reads from the cache.
-  private cache: IteratorResult[] = [];
+  private cache = new VecQueue<IteratorResult>();
 
   // The location of the consumer read head
   private readHead: Time = { sec: 0, nsec: 0 };
@@ -61,12 +62,12 @@ class BufferedIterableSource implements IIterableSource {
   // How far ahead of the read head we should try to keep buffering
   private readAheadDuration: Time;
 
-  constructor(source: IIterableSource, opt?: Options) {
+  public constructor(source: IIterableSource, opt?: Options) {
     this.readAheadDuration = opt?.readAheadDuration ?? DEFAULT_READ_AHEAD_DURATION;
     this.source = new CachingIterableSource(source);
   }
 
-  async initialize(): Promise<Initalization> {
+  public async initialize(): Promise<Initalization> {
     this.initResult = await this.source.initialize();
     return this.initResult;
   }
@@ -85,7 +86,7 @@ class BufferedIterableSource implements IIterableSource {
 
     // Clear the cache and start producing into an empty array, the consumer removes elements from
     // the start of the array.
-    this.cache.length = 0;
+    this.cache.clear();
 
     // Streaming starts where the read head is and adjust as data is buffered and read
     let streamStart = this.readHead;
@@ -118,10 +119,10 @@ class BufferedIterableSource implements IIterableSource {
             throw new Error("Invariant: out of bounds result");
           }
 
-          this.cache.push(result);
+          this.cache.enqueue(result);
 
           // Indicate to the consumer that it can try reading again
-          this.readSignal?.resolve();
+          this.readSignal.notifyAll();
         }
 
         // We've streamed through the end of our data source
@@ -139,38 +140,37 @@ class BufferedIterableSource implements IIterableSource {
           // If this.readHead + readAheadTime > streamEnd, we start another stream for buffering
           // otherwise we wait
           const targetUntil = addTime(this.readHead, this.readAheadDuration);
-          if (compare(targetUntil, streamEnd) > 0 || this.cache.length === 0) {
+          if (compare(targetUntil, streamEnd) > 0 || this.cache.size() === 0) {
             streamStart = addTime(streamEnd, { sec: 0, nsec: 1 });
             break;
           }
 
-          // if readUntil hasn't changed, then we wait for it to change?
-          this.writeSignal = signal();
-          await this.writeSignal;
-          this.writeSignal = undefined;
+          await this.writeSignal.wait();
         }
       }
     } finally {
       // Indicate to the consumer that it can try reading again
-      this.readSignal?.resolve();
+      this.readSignal.notifyAll();
       this.readDone = true;
     }
 
     log.debug("producer done");
   }
 
-  async stopProducer(): Promise<void> {
+  public async stopProducer(): Promise<void> {
     this.aborted = true;
-    this.writeSignal?.resolve();
+    this.writeSignal.notifyAll();
     await this.producer;
     this.producer = undefined;
   }
 
-  loadedRanges(): Range[] {
+  public loadedRanges(): Range[] {
     return this.source.loadedRanges();
   }
 
-  messageIterator(args: MessageIteratorArgs): AsyncIterableIterator<Readonly<IteratorResult>> {
+  public messageIterator(
+    args: MessageIteratorArgs,
+  ): AsyncIterableIterator<Readonly<IteratorResult>> {
     if (!this.initResult) {
       throw new Error("Invariant: uninitialized");
     }
@@ -206,17 +206,14 @@ class BufferedIterableSource implements IIterableSource {
         }
 
         for (;;) {
-          const item = self.cache.shift();
+          const item = self.cache.dequeue();
           if (!item) {
             if (self.readDone) {
               break;
             }
 
             // Wait for more stuff to load
-            self.readSignal = signal();
-            await self.readSignal;
-            self.readSignal = undefined;
-
+            await self.readSignal.wait();
             continue;
           }
 
@@ -226,7 +223,7 @@ class BufferedIterableSource implements IIterableSource {
             self.readHead = item.msgEvent.receiveTime;
           }
 
-          self.writeSignal?.resolve();
+          self.writeSignal.notifyAll();
 
           yield item;
         }
@@ -237,7 +234,9 @@ class BufferedIterableSource implements IIterableSource {
     })();
   }
 
-  async getBackfillMessages(args: GetBackfillMessagesArgs): Promise<MessageEvent<unknown>[]> {
+  public async getBackfillMessages(
+    args: GetBackfillMessagesArgs,
+  ): Promise<MessageEvent<unknown>[]> {
     return await this.source.getBackfillMessages(args);
   }
 }

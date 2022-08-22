@@ -13,7 +13,7 @@
 
 import { debounce, flatten } from "lodash";
 
-import { signal } from "@foxglove/den/async";
+import { Condvar } from "@foxglove/den/async";
 import { useShallowMemo } from "@foxglove/hooks";
 import { Time } from "@foxglove/rostime";
 import { MessageEvent, ParameterValue } from "@foxglove/studio";
@@ -57,6 +57,7 @@ export type MessagePipelineContext = {
   callService: (service: string, request: unknown) => Promise<unknown>;
   startPlayback?: () => void;
   pausePlayback?: () => void;
+  playUntil?: (time: Time) => void;
   setPlaybackSpeed?: (speed: number) => void;
   seekPlayback?: (time: Time) => void;
   // Don't render the next frame until the returned function has been called.
@@ -202,6 +203,10 @@ export function MessagePipelineProvider({
         : undefined,
     [player, capabilities],
   );
+  const playUntil = useMemo(
+    () => (player?.playUntil ? player.playUntil.bind(player) : undefined),
+    [player],
+  );
   const pausePlayback = useMemo(
     () =>
       capabilities.includes(PlayerCapabilities.playbackControl)
@@ -224,10 +229,10 @@ export function MessagePipelineProvider({
     [player, capabilities],
   );
   const pauseFrame = useCallback((name: string) => {
-    const promise = signal();
-    promisesToWaitForRef.current.push({ name, promise });
+    const condvar = new Condvar();
+    promisesToWaitForRef.current.push({ name, promise: condvar.wait() });
     return () => {
-      promise.resolve();
+      condvar.notifyAll();
     };
   }, []);
   const requestBackfill = useMemo(
@@ -254,6 +259,7 @@ export function MessagePipelineProvider({
         publish,
         callService,
         startPlayback,
+        playUntil,
         pausePlayback,
         setPlaybackSpeed,
         seekPlayback,

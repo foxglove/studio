@@ -47,6 +47,7 @@ const allPanels: PanelInfo[] = [
   {
     title: "Preconfigured Panel AAA",
     type: "Sample1",
+    description: "Panel description",
     module: async () => ({ default: MockPanel1 }),
     config: { text: "def" },
   },
@@ -59,10 +60,10 @@ const allPanels: PanelInfo[] = [
 ];
 
 class MockPanelCatalog implements PanelCatalog {
-  getPanels(): readonly PanelInfo[] {
+  public getPanels(): readonly PanelInfo[] {
     return allPanels;
   }
-  getPanelByType(type: string): PanelInfo | undefined {
+  public getPanelByType(type: string): PanelInfo | undefined {
     return allPanels.find((panel) => !panel.config && panel.type === type);
   }
 }
@@ -146,6 +147,9 @@ storiesOf("components/PanelList", module)
   })
   .add("filtered panel list", () => <PanelListWithInteractions inputValue="AAA" />)
   .add("filtered panel grid", () => <PanelListWithInteractions mode="grid" inputValue="AAA" />)
+  .add("filtered panel grid with description", () => (
+    <PanelListWithInteractions mode="grid" inputValue="description" />
+  ))
   .add("filtered panel list light", () => <PanelListWithInteractions inputValue="AAA" />, {
     colorScheme: "light",
   })

@@ -65,6 +65,12 @@ function getNormalizedTopics(topics: readonly string[]): string[] {
   return uniq(topics).sort();
 }
 
+type CurrentConnection = {
+  id: string;
+  topics: string[];
+  remainingBlockRange: Range;
+};
+
 // Get the blocks to keep for the current cache purge, given the most recently accessed ranges, the
 // blocks byte sizes, the minimum number of blocks to always keep, and the maximum cache size.
 //
@@ -239,11 +245,7 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
   private _totalNs: number = 0;
 
   // The current "connection", which represents the range that we're downloading.
-  private _currentConnection?: {
-    id: string;
-    topics: string[];
-    remainingBlockRange: Range;
-  };
+  private _currentConnection?: CurrentConnection;
 
   // The read requests we've received via `getMessages`.
   private _readRequests: {
@@ -274,12 +276,12 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
   private _readAheadBlocks: number = 0;
   private _memCacheBlockSizeNs: number = 0;
 
-  constructor(provider: RandomAccessDataProvider) {
+  public constructor(provider: RandomAccessDataProvider) {
     this._cacheSizeBytes = DEFAULT_CACHE_SIZE_BYTES;
     this._provider = provider;
   }
 
-  async initialize(extensionPoint: ExtensionPoint): Promise<InitializationResult> {
+  public async initialize(extensionPoint: ExtensionPoint): Promise<InitializationResult> {
     this._extensionPoint = extensionPoint;
     const result = await this._provider.initialize({
       ...extensionPoint,
@@ -310,7 +312,7 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
 
   // Potentially performance-sensitive; await can be expensive
   // eslint-disable-next-line @typescript-eslint/promise-function-async
-  getMessages(
+  public getMessages(
     startTime: Time,
     endTime: Time,
     subscriptions: GetMessagesTopics,
@@ -339,7 +341,7 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
     });
   }
 
-  async close(): Promise<void> {
+  public async close(): Promise<void> {
     delete this._currentConnection; // Make sure that the current "connection" loop stops executing.
 
     return await this._provider.close();
@@ -541,7 +543,7 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
 
     // Just loop infinitely, but break if the connection is not current any more.
     for (;;) {
-      const currentConnection = this._currentConnection;
+      const currentConnection: CurrentConnection = this._currentConnection;
       if (!isCurrent()) {
         return false;
       }
@@ -728,7 +730,7 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
     });
   }
 
-  setCacheSizeBytesInTests(cacheSizeBytes: number): void {
+  public setCacheSizeBytesInTests(cacheSizeBytes: number): void {
     this._cacheSizeBytes = cacheSizeBytes;
   }
 }

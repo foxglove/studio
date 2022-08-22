@@ -8,7 +8,8 @@ import { MessageEvent, Topic } from "@foxglove/studio";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 
 import ThreeDeeRender from "../index";
-import { makePass, QUAT_IDENTITY, TEST_COLORS } from "./common";
+import { LegacyFrameTransform } from "../normalizeMessages";
+import { makePass, QUAT_IDENTITY, rad2deg, TEST_COLORS } from "./common";
 import useDelayedFixture from "./useDelayedFixture";
 
 const VEC3_ZERO = { x: 0, y: 0, z: 0 };
@@ -31,15 +32,13 @@ export function FoxgloveFrameTransform(): JSX.Element {
       timestamp: { sec: 1, nsec: 0 },
       parent_frame_id: "map",
       child_frame_id: "base_link",
-      transform: {
-        timestamp: { sec: 1, nsec: 0 },
-        translation: VEC3_ZERO,
-        rotation: QUAT_IDENTITY,
-      },
+      translation: VEC3_ZERO,
+      rotation: QUAT_IDENTITY,
     },
     sizeInBytes: 0,
   };
-  const tf_t3: MessageEvent<FrameTransform> = {
+  // backwards compatibility with legacy message format
+  const tf_t3: MessageEvent<LegacyFrameTransform> = {
     topic: "/tf",
     receiveTime: { sec: 10, nsec: 0 },
     message: {
@@ -101,10 +100,10 @@ export function FoxgloveFrameTransform(): JSX.Element {
           cameraState: {
             distance: 3,
             perspective: true,
-            phi: 1,
+            phi: rad2deg(1),
             targetOffset: [0, 0, 0],
-            thetaOffset: 0,
-            fovy: 0.75,
+            thetaOffset: rad2deg(0),
+            fovy: rad2deg(0.75),
             near: 0.01,
             far: 5000,
             target: [0, 0, 0],

@@ -5,6 +5,7 @@
 import { isEqual } from "lodash";
 import { v4 as uuidv4 } from "uuid";
 
+import { debouncePromise } from "@foxglove/den/async";
 import { filterMap } from "@foxglove/den/collection";
 import Log from "@foxglove/log";
 import {
@@ -49,7 +50,7 @@ const DEFAULT_CACHE_SIZE_BYTES = 1.0e9;
 
 // Amount to wait until panels have had the chance to subscribe to topics before
 // we start playback
-const SEEK_START_DELAY_MS = 100;
+const START_DELAY_MS = 100;
 
 // Messages are laid out in blocks with a fixed number of milliseconds.
 const MIN_MEM_CACHE_BLOCK_SIZE_NS = 0.1e9;
@@ -83,7 +84,6 @@ type IterablePlayerOptions = {
 type IterablePlayerState =
   | "preinit"
   | "initialize"
-  | "start-delay"
   | "start-play"
   | "idle"
   | "seek-backfill"
@@ -139,7 +139,6 @@ export class IterablePlayer implements Player {
   private _receivedBytes: number = 0;
   private _hasError = false;
   private _lastRangeMillis?: number;
-  private _closed: boolean = false;
   private _lastMessage?: MessageEvent<unknown>;
   private _publishedTopics = new Map<string, Set<string>>();
   private _seekTarget?: Time;
@@ -161,10 +160,15 @@ export class IterablePlayer implements Player {
   private _playbackIterator?: AsyncIterator<Readonly<IteratorResult>>;
 
   private _blockLoader?: BlockLoader;
+  private _blockLoadingProcess?: Promise<void>;
+
+  private _emitState: ReturnType<typeof debouncePromise>;
 
   private readonly _sourceId: string;
 
-  constructor(options: IterablePlayerOptions) {
+  private _untilTime?: Time;
+
+  public constructor(options: IterablePlayerOptions) {
     const { metricsCollector, urlParams, source, name, enablePreload, sourceId } = options;
 
     this._iterableSource = source;
@@ -175,9 +179,13 @@ export class IterablePlayer implements Player {
     this._metricsCollector.playerConstructed();
     this._enablePreload = enablePreload ?? true;
     this._sourceId = sourceId;
+
+    // Wrap emitStateImpl in a debouncePromise for our states to call. Since we can emit from states
+    // or from block loading updates we use debouncePromise to guard against concurrent emits.
+    this._emitState = debouncePromise(this._emitStateImpl.bind(this));
   }
 
-  setListener(listener: (playerState: PlayerState) => Promise<void>): void {
+  public setListener(listener: (playerState: PlayerState) => Promise<void>): void {
     if (this._listener) {
       throw new Error("Cannot setListener again");
     }
@@ -185,11 +193,25 @@ export class IterablePlayer implements Player {
     this._setState("initialize");
   }
 
-  startPlayback(): void {
-    if (this._isPlaying) {
+  public startPlayback(): void {
+    this.startPlayImpl();
+  }
+
+  public playUntil(time: Time): void {
+    this.startPlayImpl({ untilTime: time });
+  }
+
+  private startPlayImpl(opt?: { untilTime: Time }): void {
+    if (this._isPlaying || this._untilTime) {
       return;
     }
 
+    if (opt?.untilTime) {
+      if (this._currentTime && compare(opt.untilTime, this._currentTime) <= 0) {
+        throw new Error("Invariant: playUntil time must be after the current time");
+      }
+      this._untilTime = clampTime(opt.untilTime, this._start, this._end);
+    }
     this._metricsCollector.play(this._speed);
     this._isPlaying = true;
 
@@ -200,7 +222,7 @@ export class IterablePlayer implements Player {
     }
   }
 
-  pausePlayback(): void {
+  public pausePlayback(): void {
     if (!this._isPlaying) {
       return;
     }
@@ -208,12 +230,13 @@ export class IterablePlayer implements Player {
     // clear out last tick millis so we don't read a huge chunk when we unpause
     this._lastTickMillis = undefined;
     this._isPlaying = false;
+    this._untilTime = undefined;
     if (this._state === "play") {
       this._setState("idle");
     }
   }
 
-  setPlaybackSpeed(speed: number): void {
+  public setPlaybackSpeed(speed: number): void {
     delete this._lastRangeMillis;
     this._speed = speed;
     this._metricsCollector.setSpeed(speed);
@@ -225,7 +248,7 @@ export class IterablePlayer implements Player {
     }
   }
 
-  seekPlayback(time: Time): void {
+  public seekPlayback(time: Time): void {
     // Seeking before initialization is complete is a no-op since we do not
     // yet know the time range of the source
     if (this._state === "preinit" || this._state === "initialize") {
@@ -237,10 +260,13 @@ export class IterablePlayer implements Player {
 
     this._metricsCollector.seek(targetTime);
     this._seekTarget = targetTime;
+    this._untilTime = undefined;
+
+    this._blockLoader?.setActiveTime(targetTime);
     this._setState("seek-backfill");
   }
 
-  setSubscriptions(newSubscriptions: SubscribePayload[]): void {
+  public setSubscriptions(newSubscriptions: SubscribePayload[]): void {
     log.debug("set subscriptions", newSubscriptions);
     this._subscriptions = newSubscriptions;
     this._metricsCollector.setSubscriptions(newSubscriptions);
@@ -261,7 +287,7 @@ export class IterablePlayer implements Player {
     this._blockLoader?.setTopics(this._partialTopics);
   }
 
-  requestBackfill(): void {
+  public requestBackfill(): void {
     // The message pipeline invokes requestBackfill after setting subscriptions. It does this so any
     // new panels that subscribe receive their messages even if the topic was already subscribed.
     //
@@ -279,27 +305,27 @@ export class IterablePlayer implements Player {
     }
   }
 
-  setPublishers(_publishers: AdvertiseOptions[]): void {
+  public setPublishers(_publishers: AdvertiseOptions[]): void {
     // no-op
   }
 
-  setParameter(_key: string, _value: ParameterValue): void {
+  public setParameter(_key: string, _value: ParameterValue): void {
     throw new Error("Parameter editing is not supported by this data source");
   }
 
-  publish(_payload: PublishPayload): void {
+  public publish(_payload: PublishPayload): void {
     throw new Error("Publishing is not supported by this data source");
   }
 
-  async callService(): Promise<unknown> {
+  public async callService(): Promise<unknown> {
     throw new Error("Service calls are not supported by this data source");
   }
 
-  close(): void {
+  public close(): void {
     this._setState("close");
   }
 
-  setGlobalVariables(): void {
+  public setGlobalVariables(): void {
     // no-op
   }
 
@@ -312,8 +338,10 @@ export class IterablePlayer implements Player {
 
     // Support moving between idle (pause) and play and preserving the playback iterator
     if (newState !== "idle" && newState !== "play" && this._playbackIterator) {
-      log.info("Ending playback iterator because next state is not IDLE or PLAY");
-      void this._playbackIterator.return?.().catch((err) => {
+      log.debug("Ending playback iterator because next state is not IDLE or PLAY");
+      const oldIterator = this._playbackIterator;
+      this._playbackIterator = undefined;
+      void oldIterator.return?.().catch((err) => {
         log.error(err);
       });
     }
@@ -341,13 +369,10 @@ export class IterablePlayer implements Player {
 
         switch (state) {
           case "preinit":
-            await this._emitState();
+            this._emitState();
             break;
           case "initialize":
             await this._stateInitialize();
-            break;
-          case "start-delay":
-            await this._stateStartDelay();
             break;
           case "start-play":
             await this._stateStartPlay();
@@ -374,7 +399,7 @@ export class IterablePlayer implements Player {
     } catch (err) {
       log.error(err);
       this._setError((err as Error).message, err);
-      await this._emitState();
+      this._emitState();
     } finally {
       this._runningState = false;
     }
@@ -393,7 +418,7 @@ export class IterablePlayer implements Player {
   // Initialize the source and player members
   private async _stateInitialize(): Promise<void> {
     // emit state indicating start of initialization
-    await this._emitState();
+    this._emitState();
 
     try {
       const { start, end, topics, profile, topicStats, problems, publishersByTopic, datatypes } =
@@ -430,39 +455,41 @@ export class IterablePlayer implements Player {
         idx += 1;
       }
 
-      // --- setup blocks
-      this._blockLoader = new BlockLoader({
-        cacheSizeBytes: DEFAULT_CACHE_SIZE_BYTES,
-        source: this._iterableSource,
-        start: this._start,
-        end: this._end,
-        maxBlocks: MAX_BLOCKS,
-        minBlockDurationNs: MIN_MEM_CACHE_BLOCK_SIZE_NS,
-        problemManager: this._problemManager,
-      });
+      if (this._enablePreload) {
+        // --- setup blocks
+        this._blockLoader = new BlockLoader({
+          cacheSizeBytes: DEFAULT_CACHE_SIZE_BYTES,
+          source: this._iterableSource,
+          start: this._start,
+          end: this._end,
+          maxBlocks: MAX_BLOCKS,
+          minBlockDurationNs: MIN_MEM_CACHE_BLOCK_SIZE_NS,
+          problemManager: this._problemManager,
+        });
+      }
 
       // set the initial topics for the loader
     } catch (error) {
       this._setError(`Error initializing: ${error.message}`, error);
     }
-    await this._emitState();
+    this._emitState();
+
     if (!this._hasError) {
-      this._setState("start-delay");
+      // Wait a bit until panels have had the chance to subscribe to topics before we start
+      // playback.
+      await delay(START_DELAY_MS);
+
+      this._blockLoader?.setActiveTime(this._start);
+      this._blockLoader?.setTopics(this._partialTopics);
+
+      // Block loadings is constantly running and tries to keep the preloaded messages in memory
+      this._blockLoadingProcess = this.startBlockLoading();
+
+      this._setState("start-play");
     }
   }
 
-  // Wait a bit until panels have had the chance to subscribe to topics before we start
-  // playback.
-  private async _stateStartDelay() {
-    await new Promise((resolve) => setTimeout(resolve, SEEK_START_DELAY_MS));
-    if (this._closed || this._nextState) {
-      return;
-    }
-
-    this._setState("start-play");
-  }
-
-  private async _stateResetPlaybackIterator() {
+  private async resetPlaybackIterator() {
     if (!this._currentTime) {
       throw new Error("Invariant: Tried to reset playback iterator with no current time.");
     }
@@ -478,7 +505,14 @@ export class IterablePlayer implements Player {
       topics: Array.from(this._allTopics),
       start: next,
     });
+  }
 
+  private async _stateResetPlaybackIterator() {
+    if (!this._currentTime) {
+      throw new Error("Invariant: Tried to reset playback iterator with no current time.");
+    }
+
+    await this.resetPlaybackIterator();
     this._setState(this._isPlaying ? "play" : "idle");
   }
 
@@ -511,10 +545,9 @@ export class IterablePlayer implements Player {
 
     // If we take too long to read the data, we set the player into a BUFFERING presence. This
     // indicates that the player is waiting to load more data.
-    let tickEmit: Promise<void> | undefined;
     const tickTimeout = setTimeout(() => {
       this._presence = PlayerPresence.BUFFERING;
-      tickEmit = this._emitState();
+      this._emitState();
     }, 100);
 
     try {
@@ -544,17 +577,12 @@ export class IterablePlayer implements Player {
       }
     } finally {
       clearTimeout(tickTimeout);
-      await tickEmit;
     }
 
     this._currentTime = stopTime;
     this._messages = messageEvents;
     this._presence = PlayerPresence.PRESENT;
-    await this._emitState();
-
-    if (this._nextState) {
-      return;
-    }
+    this._emitState();
     this._setState("idle");
   }
 
@@ -569,10 +597,6 @@ export class IterablePlayer implements Player {
     this._lastMessage = undefined;
     this._seekTarget = undefined;
 
-    // If the seekAckTimeout emits a state, _stateSeekBackfill must wait for it to complete.
-    // It would be invalid to allow the _stateSeekBackfill to finish prior to completion
-    let seekAckWait: Promise<void> | undefined;
-
     // If the backfill does not complete within 100 milliseconds, we emit a seek event with no messages.
     // This provides feedback to the user that we've acknowledged their seek request but haven't loaded the data.
     const seekAckTimeout = setTimeout(() => {
@@ -580,8 +604,7 @@ export class IterablePlayer implements Player {
       this._messages = [];
       this._currentTime = targetTime;
       this._lastSeekEmitTime = Date.now();
-
-      seekAckWait = this._emitState();
+      this._emitState();
     }, 100);
 
     const topics = Array.from(this._allTopics);
@@ -607,11 +630,6 @@ export class IterablePlayer implements Player {
     // We've successfully loaded the messages and will emit those, no longer need the ackTimeout
     clearTimeout(seekAckTimeout);
 
-    // timeout may have triggered, so we need to wait for any emit that happened
-    if (seekAckWait) {
-      await seekAckWait;
-    }
-
     if (this._nextState) {
       return;
     }
@@ -619,17 +637,13 @@ export class IterablePlayer implements Player {
     this._currentTime = targetTime;
     this._lastSeekEmitTime = Date.now();
     this._presence = PlayerPresence.PRESENT;
-    await this._emitState();
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, @typescript-eslint/strict-boolean-expressions
-    if (this._nextState) {
-      return;
-    }
-
-    this._setState("reset-playback-iterator");
+    this._emitState();
+    await this.resetPlaybackIterator();
+    this._setState(this._isPlaying ? "play" : "idle");
   }
 
   /** Emit the player state to the registered listener */
-  private async _emitState() {
+  private async _emitStateImpl() {
     if (!this._listener) {
       return;
     }
@@ -656,6 +670,9 @@ export class IterablePlayer implements Player {
     this._messages = [];
 
     const currentTime = this._currentTime ?? this._start;
+
+    // Notify the block loader about the current time so it tries to keep current time loaded
+    this._blockLoader?.setActiveTime(currentTime);
 
     const data: PlayerState = {
       name: this._name,
@@ -721,11 +738,8 @@ export class IterablePlayer implements Player {
 
     // The end time when we want to stop reading messages and emit state for the tick
     // The end time is inclusive.
-    const end: Time = clampTime(
-      add(this._currentTime, fromMillis(rangeMillis)),
-      this._start,
-      this._end,
-    );
+    const targetTime = add(this._currentTime, fromMillis(rangeMillis));
+    const end: Time = clampTime(targetTime, this._start, this._untilTime ?? this._end);
 
     const msgEvents: MessageEvent<unknown>[] = [];
 
@@ -734,9 +748,16 @@ export class IterablePlayer implements Player {
     if (this._lastMessage) {
       // If the last message we saw is still ahead of the tick end time, we don't emit anything
       if (compare(this._lastMessage.receiveTime, end) > 0) {
+        // Wait for the previous render frame to finish
+        await this._emitState.currentPromise;
+
         this._currentTime = end;
         this._messages = msgEvents;
-        await this._emitState();
+        this._emitState();
+
+        if (this._untilTime && compare(this._currentTime, this._untilTime) >= 0) {
+          this.pausePlayback();
+        }
         return;
       }
 
@@ -747,11 +768,10 @@ export class IterablePlayer implements Player {
     // If we take too long to read the tick data, we set the player into a BUFFERING presence. This
     // indicates that the player is waiting to load more data. When the tick finally finishes, we
     // clear this timeout.
-    let tickEmit: Promise<void> | undefined;
     const tickTimeout = setTimeout(() => {
       this._presence = PlayerPresence.BUFFERING;
-      tickEmit = this._emitState();
-    }, 100);
+      this._emitState();
+    }, 500);
 
     try {
       // Read from the iterator through the end of the tick time
@@ -783,7 +803,6 @@ export class IterablePlayer implements Player {
       }
     } finally {
       clearTimeout(tickTimeout);
-      await tickEmit;
     }
 
     // Set the presence back to PRESENT since we are no longer buffering
@@ -793,33 +812,29 @@ export class IterablePlayer implements Player {
       return;
     }
 
+    // Wait on any active emit state to finish as part of this tick
+    // Without waiting on the emit state to finish we might drop messages since our emitState
+    // might get debounced
+    await this._emitState.currentPromise;
+
     this._currentTime = end;
     this._messages = msgEvents;
-    await this._emitState();
+    this._emitState();
+
+    // This tick has reached the end of the untilTime so we go back to pause
+    if (this._untilTime && compare(this._currentTime, this._untilTime) >= 0) {
+      this.pausePlayback();
+    }
   }
 
   private async _stateIdle() {
+    this._isPlaying = false;
     this._presence = PlayerPresence.PRESENT;
-    await this._emitState();
-    if (this._nextState) {
-      return;
-    }
-
-    if (this._currentTime) {
-      const start = performance.now();
-      await this.loadBlocks(this._currentTime);
-      log.info(`Block load took: ${performance.now() - start} ms`);
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, @typescript-eslint/strict-boolean-expressions
-    if (this._nextState) {
-      return;
-    }
+    this._emitState();
 
     if (this._abort) {
       throw new Error("Invariant: some other abort controller exists");
     }
-
     const abort = (this._abort = new AbortController());
 
     const aborted = new Promise<void>((resolve) => {
@@ -833,13 +848,12 @@ export class IterablePlayer implements Player {
         fullyLoadedFractionRanges: this._bufferedSource.loadedRanges(),
         messageCache: this._progress.messageCache,
       };
-      await this._emitState();
+      this._emitState();
 
       // When idling nothing is querying the source, but our buffered source might be
       // buffering behind the scenes. Every second we emit state with an update to show that
       // buffering is happening.
       await Promise.race([delay(1000), aborted]);
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, @typescript-eslint/strict-boolean-expressions
       if (this._nextState) {
         break;
       }
@@ -857,9 +871,13 @@ export class IterablePlayer implements Player {
     // get new messages for new topics
     const allTopics = this._allTopics;
 
-    const blockLoading = this.loadBlocks(this._currentTime, { emit: false });
     try {
       while (this._isPlaying && !this._hasError && !this._nextState) {
+        if (compare(this._currentTime, this._end) >= 0) {
+          this._setState("idle");
+          return;
+        }
+
         const start = Date.now();
 
         await this._tick();
@@ -879,12 +897,6 @@ export class IterablePlayer implements Player {
           return;
         }
 
-        // Eslint doesn't understand that this._nextState could change
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, @typescript-eslint/strict-boolean-expressions
-        if (this._nextState) {
-          return;
-        }
-
         this._progress = {
           fullyLoadedFractionRanges: this._bufferedSource.loadedRanges(),
           messageCache: this._progress.messageCache,
@@ -899,63 +911,30 @@ export class IterablePlayer implements Player {
       }
     } catch (err) {
       this._setError((err as Error).message, err);
-      await this._emitState();
-    } finally {
-      await blockLoading;
+      this._emitState();
     }
   }
 
   private async _stateClose() {
     this._isPlaying = false;
-    this._closed = true;
     this._metricsCollector.close();
+    await this._blockLoader?.stopLoading();
+    await this._blockLoadingProcess;
     await this._bufferedSource.stopProducer();
     await this._playbackIterator?.return?.();
     this._playbackIterator = undefined;
   }
 
-  private async loadBlocks(time: Time, opt?: { emit: boolean }) {
-    if (!this._enablePreload) {
-      return;
-    }
+  private async startBlockLoading() {
+    await this._blockLoader?.startLoading({
+      progress: async (progress) => {
+        this._progress = {
+          fullyLoadedFractionRanges: this._progress.fullyLoadedFractionRanges,
+          messageCache: progress.messageCache,
+        };
 
-    this._blockLoader?.setTopics(this._partialTopics);
-
-    if (this._abort) {
-      throw new Error("Invariant. Abort controller already defined");
-    }
-    this._abort = new AbortController();
-
-    try {
-      // During playback, we let the statePlay method emit state
-      // When idle, we can emit state
-      const shouldEmit = opt?.emit ?? true;
-
-      let nextEmit = 0;
-      await this._blockLoader?.load({
-        abortSignal: this._abort.signal,
-        startTime: time,
-        progress: async (progress) => {
-          this._progress = {
-            fullyLoadedFractionRanges: this._bufferedSource.loadedRanges(),
-            messageCache: progress.messageCache,
-          };
-
-          // We throttle emitting the state since we could be loading blocks faster than 60fps and it
-          // is actually slower to try rendering with each new block compared to spacing out the
-          // rendering.
-          if (shouldEmit && Date.now() >= nextEmit) {
-            await this._emitState();
-            nextEmit = Date.now() + 100;
-          }
-        },
-      });
-
-      if (shouldEmit) {
-        await this._emitState();
-      }
-    } finally {
-      this._abort = undefined;
-    }
+        this._emitState();
+      },
+    });
   }
 }

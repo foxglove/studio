@@ -1,3 +1,4 @@
+/** @jest-environment jsdom */
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
@@ -17,11 +18,11 @@ import useCleanup from "./useCleanup";
 
 describe("useCleanup", () => {
   class Example {
-    destroyed: boolean;
-    constructor() {
+    public destroyed: boolean;
+    public constructor() {
       this.destroyed = false;
     }
-    destroy() {
+    public destroy() {
       this.destroyed = true;
     }
   }

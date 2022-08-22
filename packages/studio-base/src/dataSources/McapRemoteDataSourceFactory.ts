@@ -6,6 +6,8 @@ import {
   IDataSourceFactory,
   DataSourceFactoryInitializeArgs,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
+import { IterablePlayer } from "@foxglove/studio-base/players/IterablePlayer";
+import { McapIterableSource } from "@foxglove/studio-base/players/IterablePlayer/Mcap/McapIterableSource";
 import RandomAccessPlayer from "@foxglove/studio-base/players/RandomAccessPlayer";
 import { Player } from "@foxglove/studio-base/players/types";
 import McapDataProvider from "@foxglove/studio-base/randomAccessDataProviders/McapDataProvider";
@@ -13,18 +15,34 @@ import MemoryCacheDataProvider from "@foxglove/studio-base/randomAccessDataProvi
 import { getSeekToTime } from "@foxglove/studio-base/util/time";
 
 export default class McapRemoteDataSourceFactory implements IDataSourceFactory {
-  id = "mcap-remote-file";
-  type: IDataSourceFactory["type"] = "remote-file";
-  displayName = "MCAP";
-  iconName: IDataSourceFactory["iconName"] = "FileASPX";
-  supportedFileTypes = [".mcap"];
-  description = "Fetch and load pre-recorded MCAP files from a remote location.";
-  docsLink = "https://foxglove.dev/docs/studio/connection/mcap";
+  public id = "mcap-remote-file";
+  public type: IDataSourceFactory["type"] = "remote-file";
+  public displayName = "MCAP";
+  public iconName: IDataSourceFactory["iconName"] = "FileASPX";
+  public supportedFileTypes = [".mcap"];
+  public description = "Fetch and load pre-recorded MCAP files from a remote location.";
+  public docsLink = "https://foxglove.dev/docs/studio/connection/mcap";
 
-  initialize(args: DataSourceFactoryInitializeArgs): Player | undefined {
+  private enableIterablePlayer = false;
+
+  public constructor(opt?: { useIterablePlayer: boolean }) {
+    this.enableIterablePlayer = opt?.useIterablePlayer ?? false;
+  }
+
+  public initialize(args: DataSourceFactoryInitializeArgs): Player | undefined {
     const url = args.url;
     if (!url) {
       return;
+    }
+
+    if (this.enableIterablePlayer) {
+      const source = new McapIterableSource({ type: "url", url });
+      return new IterablePlayer({
+        metricsCollector: args.metricsCollector,
+        source,
+        name: url,
+        sourceId: this.id,
+      });
     }
 
     const mcapProvider = new McapDataProvider({ source: { type: "remote", url } });
