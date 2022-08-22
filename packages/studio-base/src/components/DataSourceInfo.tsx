@@ -16,7 +16,7 @@ import Timestamp from "@foxglove/studio-base/components/Timestamp";
 import { subtractTimes } from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/typescript/userUtils/time";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
 
-import { MultilineMiddleTruncate } from "../MultilineMiddleTruncate";
+import { MultilineMiddleTruncate } from "./MultilineMiddleTruncate";
 
 const selectStartTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.startTime;
 const selectEndTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.endTime;

@@ -2,82 +2,82 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import CheckIcon from "@mui/icons-material/Check";
-import CopyAllIcon from "@mui/icons-material/CopyAll";
-import { Divider, IconButton, Typography } from "@mui/material";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import { useCallback, useMemo, useState } from "react";
+import { Box, Divider, Typography } from "@mui/material";
+import { cloneDeep } from "lodash";
+import { useCallback, useMemo } from "react";
 import { makeStyles } from "tss-react/mui";
+import { useDebounce } from "use-debounce";
 
-import { areEqual, subtract as subtractTimes, toSec } from "@foxglove/rostime";
-import Duration from "@foxglove/studio-base/components/Duration";
+import { areEqual, subtract as subtractTimes, Time, toSec } from "@foxglove/rostime";
+import { DataSourceInfo } from "@foxglove/studio-base/components/DataSourceInfo";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
 import Panel from "@foxglove/studio-base/components/Panel";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
-import Stack from "@foxglove/studio-base/components/Stack";
-import Timestamp from "@foxglove/studio-base/components/Timestamp";
 import { Topic, TopicStats } from "@foxglove/studio-base/src/players/types";
-import clipboard from "@foxglove/studio-base/util/clipboard";
 
 import helpContent from "./index.help.md";
 
-type TopicListItem = Topic & Partial<TopicStats> & { id: string };
+type TopicListItem = Topic & Partial<TopicStats> & { id: string; duration: Time };
 
 const EMPTY_TOPICS: Topic[] = [];
 const EMPTY_TOPIC_STATS = new Map<string, TopicStats>();
 
-const useStyles = makeStyles<void, "copyIcon">()((theme, _params, classes) => ({
+const useStyles = makeStyles()((theme) => ({
+  grid: {
+    display: "grid",
+    gridTemplateColumns: "auto auto auto auto",
+    overflowY: "auto",
+  },
+  gridCell: {
+    paddingBlock: theme.spacing(1),
+    paddingInline: theme.spacing(1.5),
+  },
+  gridRow: {
+    display: "contents",
+    "&:hover > *": {
+      backgroundColor: theme.palette.background.paper,
+    },
+  },
   header: {
-    backgroundColor: theme.palette.background.paper,
-  },
-  tableRow: {
-    [`&:hover .${classes.copyIcon}`]: {
-      display: "block",
-    },
-  },
-  copyIcon: {
-    display: "none",
-
-    "&:hover": {
-      backgroundColor: "transparent",
-    },
+    paddingBlock: theme.spacing(1),
+    paddingInline: theme.spacing(1.5),
   },
 }));
 
-function CopyIconButton({ text }: { text: string }): JSX.Element {
-  const { classes } = useStyles();
-  const [copied, setCopied] = useState(false);
+function formatItemFrequency(item: TopicListItem) {
+  const { numMessages, firstMessageTime, lastMessageTime, duration } = item;
 
-  const handleCopy = useCallback(() => {
-    clipboard
-      .copy(text)
-      .then(() => {
-        setCopied(true);
-        setTimeout(() => setCopied(false), 1500);
-      })
-      .catch((e) => console.warn(e));
-  }, [text]);
+  if (numMessages == undefined) {
+    // No message count, so no frequency
+    return "–";
+  }
+  if (firstMessageTime == undefined || lastMessageTime == undefined) {
+    // Message count but no timestamps, use the full connection duration
+    return `${(numMessages / toSec(duration)).toFixed(2)} Hz`;
+  }
+  if (numMessages < 2 || areEqual(firstMessageTime, lastMessageTime)) {
+    // Not enough messages or time span to calculate a frequency
+    return "–";
+  }
+  const topicDurationSec = toSec(subtractTimes(lastMessageTime, firstMessageTime));
+  return `${((numMessages - 1) / topicDurationSec).toFixed(2)} Hz`;
+}
+
+function TopicRow({ item }: { item: TopicListItem }): JSX.Element {
+  const { classes } = useStyles();
 
   return (
-    <Stack overflow="hidden" flex="auto" direction="row" alignItems="center" gap={1}>
-      <Typography title={text} noWrap flex="auto" variant="inherit" style={{ minWidth: 0 }}>
-        {text}
-      </Typography>
-      <IconButton
-        className={classes.copyIcon}
-        edge="end"
-        size="small"
-        onClick={handleCopy}
-        title={copied ? "Copied" : "Copy to Clipboard"}
-        aria-label={copied ? "Copied" : "Copy to Clipboard"}
-        color={copied ? "success" : "primary"}
-      >
-        {copied ? <CheckIcon fontSize="small" /> : <CopyAllIcon fontSize="small" />}
-      </IconButton>
-    </Stack>
+    <div className={classes.gridRow}>
+      <span className={classes.gridCell}>{item.name}</span>
+      <span className={classes.gridCell}>{item.datatype}</span>
+      <span className={classes.gridCell}>{item.numMessages?.toLocaleString() ?? "–"}</span>
+      <span className={classes.gridCell}>{formatItemFrequency(item)}</span>
+    </div>
   );
 }
+
+const MemoTopicRow = React.memo(TopicRow);
 
 function SourceInfo(): JSX.Element {
   const { classes } = useStyles();
@@ -93,61 +93,27 @@ function SourceInfo(): JSX.Element {
   );
   const endTime = useMessagePipeline(useCallback((ctx) => ctx.playerState.activeData?.endTime, []));
 
+  const duration = endTime && startTime ? subtractTimes(endTime, startTime) : { sec: 0, nsec: 0 };
+
+  const [debouncedData] = useDebounce(
+    { topics, topicStats: cloneDeep(topicStats), duration, endTime },
+    500,
+    { leading: true, maxWait: 500 },
+  );
+
   const detailListItems = useMemo<TopicListItem[]>(() => {
-    return topics.map((topic) => {
-      const stats = topicStats.get(topic.name);
+    return debouncedData.topics.map((topic) => {
+      const stats = debouncedData.topicStats.get(topic.name);
       return {
         ...topic,
         ...stats,
+        duration: debouncedData.duration,
         id: topic.name,
       };
     });
-  }, [topicStats, topics]);
+  }, [debouncedData.duration, debouncedData.topicStats, debouncedData.topics]);
 
-  const columns: GridColDef<TopicListItem>[] = [
-    {
-      headerName: "Topic name",
-      field: "name",
-      flex: 3,
-      renderCell: ({ row }) => <CopyIconButton text={row.name} />,
-    },
-    {
-      headerName: "Datatype",
-      field: "datatype",
-      flex: 2,
-      renderCell: ({ row }) => <CopyIconButton text={row.datatype} />,
-    },
-    {
-      headerName: "Message count",
-      field: "numMessages",
-      width: 144,
-      renderCell: ({ row }) => row.numMessages?.toLocaleString() ?? "–",
-    },
-    {
-      headerName: "Frequency",
-      field: "frequency",
-      width: 144,
-      renderCell: ({ row }) => {
-        const { numMessages, firstMessageTime, lastMessageTime } = row;
-        if (numMessages == undefined) {
-          // No message count, so no frequency
-          return "–";
-        }
-        if (firstMessageTime == undefined || lastMessageTime == undefined) {
-          // Message count but no timestamps, use the full connection duration
-          return `${(numMessages / toSec(duration)).toFixed(2)} Hz`;
-        }
-        if (numMessages < 2 || areEqual(firstMessageTime, lastMessageTime)) {
-          // Not enough messages or time span to calculate a frequency
-          return "–";
-        }
-        const topicDurationSec = toSec(subtractTimes(lastMessageTime, firstMessageTime));
-        return `${((numMessages - 1) / topicDurationSec).toFixed(2)} Hz`;
-      },
-    },
-  ];
-
-  if (!startTime || !endTime) {
+  if (!startTime || !debouncedData.endTime) {
     return (
       <>
         <PanelToolbar helpContent={helpContent} />
@@ -156,42 +122,31 @@ function SourceInfo(): JSX.Element {
     );
   }
 
-  const duration = subtractTimes(endTime, startTime);
   return (
     <>
       <PanelToolbar helpContent={helpContent} />
       <Divider />
-      <Stack className={classes.header} padding={1.5} gap={1}>
-        <Stack gap={0.5}>
-          <Typography variant="overline" color="text.secondary">
-            Start time
-          </Typography>
-          <Timestamp horizontal time={startTime} />
-        </Stack>
-        <Stack gap={0.5}>
-          <Typography variant="overline" color="text.secondary">
-            End Time
-          </Typography>
-          <Timestamp horizontal time={endTime} />
-        </Stack>
-        <Stack gap={0.5}>
-          <Typography variant="overline" color="text.secondary">
-            Duration
-          </Typography>
-          <Duration duration={duration} />
-        </Stack>
-      </Stack>
+      <Box paddingTop={1}>
+        <DataSourceInfo />
+      </Box>
       <Divider />
-      <DataGrid
-        classes={{ row: classes.tableRow }}
-        rows={detailListItems}
-        columns={columns}
-        disableSelectionOnClick
-        density="compact"
-        hideFooter
-        disableColumnMenu
-        localeText={{ noRowsLabel: "No Topics" }}
-      />
+      <Box className={classes.grid}>
+        <Typography variant="subtitle2" className={classes.header}>
+          Topic Name
+        </Typography>
+        <Typography variant="subtitle2" className={classes.header}>
+          Datatype
+        </Typography>
+        <Typography variant="subtitle2" className={classes.header}>
+          Message count
+        </Typography>
+        <Typography variant="subtitle2" className={classes.header}>
+          Frequency
+        </Typography>
+        {detailListItems.map((item) => (
+          <MemoTopicRow key={item.name} item={item} />
+        ))}
+      </Box>
     </>
   );
 }

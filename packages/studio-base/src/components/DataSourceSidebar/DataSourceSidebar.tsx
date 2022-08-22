@@ -22,7 +22,7 @@ import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent"
 import Stack from "@foxglove/studio-base/components/Stack";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
 
-import { DataSourceInfo } from "./DataSourceInfo";
+import { DataSourceInfo } from "../DataSourceInfo";
 import { ProblemsList } from "./ProblemsList";
 import { TopicList } from "./TopicList";
 import helpContent from "./help.md";
