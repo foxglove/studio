@@ -119,6 +119,7 @@ function DataSourceInfo(): JSX.Element {
       endTime={debouncedTimes.endTime}
       playerName={playerName}
       playerPresence={playerPresence}
+      startTime={startTime}
     />
   );
 }
