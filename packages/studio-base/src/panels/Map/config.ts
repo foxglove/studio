@@ -9,7 +9,7 @@ import { SettingsTreeFields, SettingsTreeNodes } from "@foxglove/studio";
 
 // Persisted panel state
 export type Config = {
-  center: undefined | { lat: number; lon: number };
+  center?: { lat: number; lon: number };
   customTileUrl: string;
   disabledTopics: string[];
   followTopic: string;
