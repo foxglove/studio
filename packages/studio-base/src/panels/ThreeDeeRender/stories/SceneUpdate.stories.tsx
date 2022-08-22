@@ -19,7 +19,8 @@ BasicEntities.parameters = { colorScheme: "light", chromatic: { delay: 100 } };
 export function BasicEntities(): JSX.Element {
   const topics: Topic[] = [
     { name: "transforms", datatype: "foxglove.FrameTransform" },
-    { name: "scene", datatype: "foxglove.SceneUpdate" },
+    { name: "scene1", datatype: "foxglove.SceneUpdate" },
+    { name: "scene2", datatype: "foxglove.SceneUpdate" },
   ];
 
   const tf1: MessageEvent<FrameTransform> = {
@@ -47,8 +48,8 @@ export function BasicEntities(): JSX.Element {
     sizeInBytes: 0,
   };
 
-  const entity1: MessageEvent<SceneUpdate> = {
-    topic: "scene",
+  const scene1: MessageEvent<SceneUpdate> = {
+    topic: "scene1",
     receiveTime: { sec: 10, nsec: 0 },
     message: {
       deletions: [],
@@ -85,11 +86,45 @@ export function BasicEntities(): JSX.Element {
     sizeInBytes: 0,
   };
 
+  const scene2: MessageEvent<SceneUpdate> = {
+    topic: "scene2",
+    receiveTime: { sec: 10, nsec: 0 },
+    message: {
+      deletions: [],
+      entities: [
+        {
+          timestamp: { sec: 0, nsec: 0 },
+          frame_id: SENSOR_FRAME_ID,
+          id: "entity2",
+          lifetime: { sec: 0, nsec: 0 },
+          frame_locked: true,
+          metadata: [],
+          arrows: [],
+          cubes: [
+            {
+              pose: xyzrpyToPose([2, 0, 0], [0, 0, 0]),
+              size: { x: 0.8, y: 0.5, z: 1 },
+              color: makeColor("#f44336", 0.5),
+            },
+          ],
+          spheres: [],
+          cylinders: [],
+          lines: [],
+          triangles: [],
+          texts: [],
+          models: [],
+        },
+      ],
+    },
+    sizeInBytes: 0,
+  };
+
   const fixture = {
     topics,
     frame: {
       transforms: [tf1, tf2],
-      scene: [entity1],
+      scene1: [scene1],
+      scene2: [scene2],
     },
     capabilities: [],
     activeData: {
@@ -107,7 +142,7 @@ export function BasicEntities(): JSX.Element {
             grid: { layerId: "foxglove.Grid" },
           },
           cameraState: {
-            distance: 5.5,
+            distance: 8,
             perspective: true,
             phi: rad2deg(0.5),
             targetOffset: [-0.5, 0.75, 0],
@@ -119,7 +154,8 @@ export function BasicEntities(): JSX.Element {
             targetOrientation: [0, 0, 0, 1],
           },
           topics: {
-            scene: { visible: true },
+            scene1: { visible: true },
+            scene2: { visible: true, color: "#6324c7ff" },
           },
         }}
       />
