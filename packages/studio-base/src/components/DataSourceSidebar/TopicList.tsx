@@ -220,24 +220,28 @@ export function TopicList(): JSX.Element {
 
   // Clone deep is necessary here because players mutate the stats directly and
   // break memoization.
-  const [debouncedItems] = useDebounce(cloneDeep(items), 1000, { maxWait: 1000 });
-
-  const [duration] = useDebounce(
-    endTime != undefined && startTime != undefined ? subtractTimes(endTime, startTime) : undefined,
-    500,
-    { maxWait: 500 },
+  const [debouncedData] = useDebounce(
+    {
+      items: cloneDeep(items),
+      duration:
+        endTime != undefined && startTime != undefined
+          ? subtractTimes(endTime, startTime)
+          : undefined,
+    },
+    1000,
+    { maxWait: 1000 },
   );
 
   const filteredTopics: FzfResultItem<TopicWithStats>[] = useMemo(
     () =>
       filterText
-        ? new Fzf(debouncedItems, {
+        ? new Fzf(debouncedData.items, {
             fuzzy: filterText.length > 2 ? "v2" : false,
             sort: true,
             selector: (item) => `${item.name}|${item.datatype}`,
           }).find(filterText)
-        : debouncedItems.map((item) => topicToFzfResult(item)),
-    [filterText, debouncedItems],
+        : debouncedData.items.map((item) => topicToFzfResult(item)),
+    [filterText, debouncedData.items],
   );
 
   if (playerPresence === PlayerPresence.ERROR) {
@@ -311,7 +315,7 @@ export function TopicList(): JSX.Element {
         <List key="topics" dense disablePadding>
           {filteredTopics.map(({ item, positions }) => {
             const messageCount = item.numMessages;
-            const messageHz = messageFrequency(item, duration);
+            const messageHz = messageFrequency(item, debouncedData.duration);
 
             return (
               <MemoTopicListItem
