@@ -137,12 +137,15 @@ export class RenderableCubes extends RenderablePrimitive {
       i++;
     }
 
-    this.mesh.material.transparent = isTransparent;
-    this.mesh.material.depthWrite = !isTransparent;
+    if (this.material.transparent !== isTransparent) {
+      this.material.needsUpdate = true;
+    }
+    this.material.transparent = isTransparent;
+    this.material.depthWrite = !isTransparent;
 
     if (this.mesh.count === 0 && cubes.length > 0) {
       // needed to make colors work: https://discourse.threejs.org/t/instancedmesh-color-doesnt-work-when-initial-count-is-0/41355
-      this.mesh.material.needsUpdate = true;
+      this.material.needsUpdate = true;
     }
     this.mesh.count = cubes.length;
     this.outlineGeometry.instanceCount = cubes.length;
