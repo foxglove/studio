@@ -2,10 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { set } from "lodash";
-
 import { toNanoSec } from "@foxglove/rostime";
-import type {
+import {
   ArrowPrimitive,
   CubePrimitive,
   CylinderPrimitive,
@@ -13,6 +11,8 @@ import type {
   LineType,
   ModelPrimitive,
   SceneEntity,
+  SceneEntityDeletion,
+  SceneEntityDeletionType,
   SceneUpdate,
   SpherePrimitive,
   TextPrimitive,
@@ -27,38 +27,32 @@ import { SCENE_UPDATE_DATATYPES } from "../foxglove";
 import {
   normalizeColorRGBA,
   normalizeColorRGBAs,
-  normalizeHeader,
   normalizePose,
   normalizeTime,
   normalizeVector3,
-  normalizeVector3s,
   normalizeByteArray,
 } from "../normalizeMessages";
-// import { Marker, MarkerArray, MARKER_ARRAY_DATATYPES, MARKER_DATATYPES } from "../ros";
 import { BaseSettings } from "../settings";
 import { makePose } from "../transforms";
-import { LayerSettingsMarkerNamespace, TopicEntities } from "./TopicEntities";
+import { TopicEntities } from "./TopicEntities";
 import { PrimitivePool } from "./primitives/PrimitivePool";
 
-export type LayerSettingsEntity = BaseSettings & {
-  // namespaces: Record<string, LayerSettingsMarkerNamespace>;
-};
+export type LayerSettingsEntity = BaseSettings;
 
 const DEFAULT_SETTINGS: LayerSettingsEntity = {
   visible: false,
-  // namespaces: {},
 };
 
 export class FoxgloveSceneEntities extends SceneExtension<TopicEntities> {
   private primitivePool = new PrimitivePool(this.renderer);
 
-  constructor(renderer: Renderer) {
+  public constructor(renderer: Renderer) {
     super("foxglove.SceneEntities", renderer);
 
     renderer.addDatatypeSubscriptions(SCENE_UPDATE_DATATYPES, this.handleSceneUpdate);
   }
 
-  override settingsNodes(): SettingsTreeEntry[] {
+  public override settingsNodes(): SettingsTreeEntry[] {
     const configTopics = this.renderer.config.topics;
     const entries: SettingsTreeEntry[] = [];
     for (const topic of this.renderer.topics ?? []) {
@@ -73,32 +67,17 @@ export class FoxgloveSceneEntities extends SceneExtension<TopicEntities> {
           handler: this.handleSettingsAction,
         };
 
-        // // Create a list of all the namespaces for this topic
-        // const topicEntities = this.renderables.get(topic.name);
-        // const namespaces = Array.from(topicEntities?.namespaces.values() ?? [])
-        //   .filter((ns) => ns.namespace !== "")
-        //   .sort((a, b) => a.namespace.localeCompare(b.namespace));
-        // if (namespaces.length > 0) {
-        //   node.children = {};
-        //   for (const ns of namespaces) {
-        //     const child: SettingsTreeNodeWithActionHandler = {
-        //       label: ns.namespace,
-        //       icon: "Shapes",
-        //       visible: ns.settings.visible,
-        //       defaultExpansionState: namespaces.length > 1 ? "collapsed" : "expanded",
-        //       handler: this.handleSettingsActionNamespace,
-        //     };
-        //     node.children[`ns:${ns.namespace}`] = child;
-        //   }
-        // }
-
         entries.push({ path: ["topics", topic.name], node });
       }
     }
     return entries;
   }
 
-  override startFrame(currentTime: bigint, renderFrameId: string, fixedFrameId: string): void {
+  public override startFrame(
+    currentTime: bigint,
+    renderFrameId: string,
+    fixedFrameId: string,
+  ): void {
     // Don't use SceneExtension#startFrame() because our renderables represent one topic each with
     // many entities. Instead, call startFrame on each renderable
     for (const renderable of this.renderables.values()) {
@@ -106,7 +85,7 @@ export class FoxgloveSceneEntities extends SceneExtension<TopicEntities> {
     }
   }
 
-  override handleSettingsAction = (action: SettingsTreeAction): void => {
+  public override handleSettingsAction = (action: SettingsTreeAction): void => {
     const path = action.payload.path;
     if (action.action !== "update" || path.length !== 3) {
       return;
@@ -125,74 +104,21 @@ export class FoxgloveSceneEntities extends SceneExtension<TopicEntities> {
     }
   };
 
-  // handleSettingsActionNamespace = (action: SettingsTreeAction): void => {
-  //   const path = action.payload.path;
-  //   if (action.action !== "update" || path.length !== 4) {
-  //     return;
-  //   }
-
-  //   const topicName = path[1]!;
-  //   const namespaceKey = path[2]!;
-  //   const fieldName = path[3]!;
-  //   const namespace = namespaceKey.slice(3); // remove `ns:` prefix
-
-  //   this.renderer.updateConfig((draft) => {
-  //     // We build the settings tree with paths of the form
-  //     //   ["topics", <topic>, "ns:"<namespace>, "visible"]
-  //     // but the config is stored with paths of the form
-  //     //   ["topics", <topic>, "namespaces", <namespace>, "visible"]
-  //     const actualPath = ["topics", topicName, "namespaces", namespace, fieldName];
-  //     set(draft, actualPath, action.payload.value);
-  //   });
-
-  //   // Update the MarkersNamespace settings
-  //   const renderable = this.renderables.get(topicName);
-  //   if (renderable) {
-  //     const settings = this.renderer.config.topics[topicName] as
-  //       | Partial<LayerSettingsMarker>
-  //       | undefined;
-  //     const ns = renderable.namespaces.get(namespace);
-  //     if (ns) {
-  //       const nsSettings = settings?.namespaces?.[namespace] as
-  //         | Partial<LayerSettingsMarkerNamespace>
-  //         | undefined;
-  //       ns.settings = { ...ns.settings, ...nsSettings };
-  //     }
-  //   }
-
-  //   // Update the settings sidebar
-  //   this.updateSettingsTree();
-  // };
-
-  handleSceneUpdate = (messageEvent: PartialMessageEvent<SceneUpdate>): void => {
+  private handleSceneUpdate = (messageEvent: PartialMessageEvent<SceneUpdate>): void => {
     const topic = messageEvent.topic;
     const sceneUpdates = messageEvent.message;
     const receiveTime = toNanoSec(messageEvent.receiveTime);
 
     for (const entityMsg of sceneUpdates.entities ?? []) {
       const entity = normalizeSceneEntity(entityMsg);
-      this.addEntity(topic, entity, receiveTime);
+      this._getTopicEntities(topic).addOrUpdateEntity(entity, receiveTime);
+    }
+
+    for (const deletionMsg of sceneUpdates.deletions ?? []) {
+      const deletion = normalizeSceneEntityDeletion(deletionMsg);
+      this._getTopicEntities(topic).deleteEntities(deletion);
     }
   };
-
-  // handleMarker = (messageEvent: PartialMessageEvent<Marker>): void => {
-  //   const topic = messageEvent.topic;
-  //   const marker = normalizeSceneEntity(messageEvent.message);
-  //   const receiveTime = toNanoSec(messageEvent.receiveTime);
-
-  //   this.addMarker(topic, marker, receiveTime);
-  // };
-
-  addEntity(topic: string, entity: SceneEntity, receiveTime: bigint): void {
-    const topicEntities = this._getTopicEntities(topic);
-    // const prevNsCount = topicEntities.namespaces.size;
-    topicEntities.addOrUpdateEntity(entity, receiveTime);
-
-    // // If the topic has a new namespace, rebuild the settings node for this topic
-    // if (prevNsCount !== topicEntities.namespaces.size) {
-    //   this.updateSettingsTree();
-    // }
-  }
 
   private _getTopicEntities(topic: string): TopicEntities {
     let topicEntities = this.renderables.get(topic);
@@ -216,7 +142,7 @@ export class FoxgloveSceneEntities extends SceneExtension<TopicEntities> {
     return topicEntities;
   }
 
-  override dispose(): void {
+  public override dispose(): void {
     super.dispose();
     this.primitivePool.dispose();
   }
@@ -239,6 +165,16 @@ function normalizeSceneEntity(entity: PartialMessage<SceneEntity>): SceneEntity 
     triangles: entity.triangles?.map(normalizeTriangleListPrimitive) ?? [],
     texts: entity.texts?.map(normalizeTextPrimitive) ?? [],
     models: entity.models?.map(normalizeModelPrimitive) ?? [],
+  };
+}
+
+function normalizeSceneEntityDeletion(
+  entity: PartialMessage<SceneEntityDeletion>,
+): SceneEntityDeletion {
+  return {
+    timestamp: normalizeTime(entity.timestamp),
+    type: entity.type ?? (0 as SceneEntityDeletionType.MATCHING_ID),
+    id: entity.id ?? "",
   };
 }
 

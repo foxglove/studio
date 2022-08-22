@@ -4,13 +4,14 @@
 
 import * as THREE from "three";
 
-import { toNanoSec } from "@foxglove/rostime";
 import { CubePrimitive, SceneEntity } from "@foxglove/schemas/schemas/typescript";
+import { RosValue } from "@foxglove/studio-base/players/types";
+import { emptyPose } from "@foxglove/studio-base/util/Pose";
 
 import type { Renderer } from "../../Renderer";
 import { rgbToThreeColor } from "../../color";
 import { MeshStandardMaterialWithInstanceOpacity } from "../materials/MeshStandardMaterialWithInstanceOpacity";
-import { RenderablePrimitive } from "./types";
+import { RenderablePrimitive } from "./RenderablePrimitive";
 
 const tempColor = new THREE.Color();
 const tempVec3 = new THREE.Vector3();
@@ -18,16 +19,15 @@ const tempVec3_2 = new THREE.Vector3();
 const tempMat4 = new THREE.Matrix4();
 const tempQuat = new THREE.Quaternion();
 
-export class RenderableCubes extends THREE.Object3D implements RenderablePrimitive {
+export class RenderableCubes extends RenderablePrimitive {
   private static cubeGeometry: THREE.BoxGeometry | undefined;
   private static cubeEdgesGeometry: THREE.EdgesGeometry | undefined;
 
   // Each RenderableCubes needs its own geometry because we attach additional custom attributes to it.
-  geometry = new THREE.BoxGeometry(1, 1, 1);
-  mesh: THREE.InstancedMesh<THREE.BoxGeometry, MeshStandardMaterialWithInstanceOpacity>;
-  instanceOpacity: THREE.InstancedBufferAttribute;
-  // FIXME: could be shared with all other renderable primitives?
-  material = new MeshStandardMaterialWithInstanceOpacity({
+  private geometry = new THREE.BoxGeometry(1, 1, 1);
+  private mesh: THREE.InstancedMesh<THREE.BoxGeometry, MeshStandardMaterialWithInstanceOpacity>;
+  private instanceOpacity: THREE.InstancedBufferAttribute;
+  private material = new MeshStandardMaterialWithInstanceOpacity({
     metalness: 0,
     roughness: 1,
     dithering: true,
@@ -37,16 +37,21 @@ export class RenderableCubes extends THREE.Object3D implements RenderablePrimiti
    * The initial count passed to `mesh`'s constructor, i.e. the maximum number of instances it can
    * render before we need to create a new mesh object
    */
-  maxInstances: number;
+  private maxInstances: number;
 
-  outlineGeometry: THREE.InstancedBufferGeometry;
-  outline: THREE.LineSegments;
+  private outlineGeometry: THREE.InstancedBufferGeometry;
+  private outline: THREE.LineSegments;
 
-  renderer: Renderer;
-
-  constructor(renderer: Renderer) {
-    super();
-    this.renderer = renderer;
+  public constructor(renderer: Renderer) {
+    super("", renderer, {
+      receiveTime: -1n,
+      messageTime: -1n,
+      frameId: "",
+      pose: emptyPose(),
+      settings: { visible: true },
+      settingsPath: [],
+      entity: undefined,
+    });
 
     // Cube mesh
     this.maxInstances = 16;
@@ -143,20 +148,20 @@ export class RenderableCubes extends THREE.Object3D implements RenderablePrimiti
     }
   }
 
-  dispose(): void {
+  public override dispose(): void {
     this.mesh.dispose();
     this.geometry.dispose();
     this.material.dispose();
     this.outlineGeometry.dispose();
   }
 
-  update(entity: SceneEntity, _receiveTime: bigint | undefined): void {
-    //FIXME: put in superclass? do these even need to be in userData?
-    this.userData.messageTime = toNanoSec(entity.timestamp);
-    this.userData.frameId = this.renderer.normalizeFrameId(entity.frame_id);
+  public update(entity: SceneEntity, _receiveTime: bigint | undefined): void {
     this.userData.entity = entity;
-
     this._updateMesh(entity.cubes);
+  }
+
+  public override details(): Record<string, RosValue> {
+    return this.userData.entity ?? {};
   }
 
   private static Geometry(): THREE.BoxGeometry {

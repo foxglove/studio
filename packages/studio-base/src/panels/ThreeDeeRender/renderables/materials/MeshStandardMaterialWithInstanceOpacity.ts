@@ -11,7 +11,7 @@ export class MeshStandardMaterialWithInstanceOpacity extends THREE.MeshStandardM
     super(parameters);
   }
 
-  override onBeforeCompile(shader: THREE.Shader, renderer: THREE.WebGLRenderer): void {
+  public override onBeforeCompile(shader: THREE.Shader, renderer: THREE.WebGLRenderer): void {
     super.onBeforeCompile(shader, renderer);
     shader.vertexShader = shader.vertexShader
       .replace(

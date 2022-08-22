@@ -2,11 +2,10 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { emptyPose } from "@foxglove/studio-base/util/Pose";
-
 import type { Renderer } from "../../Renderer";
 import { RenderableCubes } from "./RenderableCubes";
-import { PrimitiveType, RenderablePrimitive } from "./types";
+import { RenderablePrimitive } from "./RenderablePrimitive";
+import { PrimitiveType } from "./types";
 
 const CONSTRUCTORS = {
   [PrimitiveType.CUBES]: RenderableCubes,
@@ -19,33 +18,25 @@ export class PrimitivePool {
   private primitivesByType = new Map<PrimitiveType, RenderablePrimitive[]>();
   private disposed = false;
 
-  constructor(private renderer: Renderer) {}
+  public constructor(private renderer: Renderer) {}
 
-  acquire<T extends PrimitiveType>(
-    type: T,
-    // topic: string,
-    // marker: Marker,
-    // receiveTime: bigint | undefined,
-  ): InstanceType<typeof CONSTRUCTORS[T]> {
-    const primitives = this.primitivesByType.get(type);
-    if (primitives) {
-      const primitive = primitives.pop();
-      if (primitive) {
-        //FIXME: how are these used?
-        // primitive.userData.settingsPath = ["topics", topic];
-        // primitive.userData.settings = { visible: true, frameLocked: marker.frame_locked };
-        // primitive.userData.topic = topic;
-        // primitive.update(marker, receiveTime);
-        primitive.userData.pose = emptyPose();
-        return primitive as InstanceType<typeof CONSTRUCTORS[T]>;
-      }
+  public acquire<T extends PrimitiveType>(type: T): InstanceType<typeof CONSTRUCTORS[T]> {
+    if (this.disposed) {
+      throw new Error(`Attempt to acquire PrimitiveType.${type} after PrimitivePool was disposed`);
     }
-    const primitive = new CONSTRUCTORS[type](this.renderer);
-    primitive.userData.pose = emptyPose();
-    return primitive as InstanceType<typeof CONSTRUCTORS[T]>;
+    const primitive = this.primitivesByType.get(type)?.pop();
+    if (primitive) {
+      primitive.prepareForReuse();
+      return primitive as InstanceType<typeof CONSTRUCTORS[T]>;
+    }
+    // https://github.com/microsoft/TypeScript/issues/44049
+    return new CONSTRUCTORS[type](this.renderer) as InstanceType<typeof CONSTRUCTORS[T]>;
   }
 
-  release<T extends PrimitiveType>(type: T, primitive: InstanceType<typeof CONSTRUCTORS[T]>): void {
+  public release<T extends PrimitiveType>(
+    type: T,
+    primitive: InstanceType<typeof CONSTRUCTORS[T]>,
+  ): void {
     if (this.disposed) {
       primitive.dispose();
       return;
@@ -58,7 +49,7 @@ export class PrimitivePool {
     }
   }
 
-  dispose(): void {
+  public dispose(): void {
     for (const primitives of this.primitivesByType.values()) {
       for (const primitive of primitives) {
         primitive.dispose();

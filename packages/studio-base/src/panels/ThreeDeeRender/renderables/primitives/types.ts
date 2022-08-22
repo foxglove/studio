@@ -5,7 +5,3 @@
 export enum PrimitiveType {
   CUBES = "CUBES",
 }
-
-export interface RenderablePrimitive extends THREE.Object3D {
-  dispose(): void;
-}
