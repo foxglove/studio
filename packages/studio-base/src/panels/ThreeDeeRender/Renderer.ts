@@ -14,6 +14,7 @@ import { toNanoSec } from "@foxglove/rostime";
 import type { FrameTransform, SceneUpdate } from "@foxglove/schemas/schemas/typescript";
 import {
   MessageEvent,
+  ParameterValue,
   SettingsIcon,
   SettingsTreeAction,
   SettingsTreeNodeActionItem,
@@ -66,7 +67,7 @@ import {
   TRANSFORM_STAMPED_DATATYPES,
   Vector3,
 } from "./ros";
-import { BaseSettings, CustomLayerSettings, SelectEntry } from "./settings";
+import { BaseSettings, CustomLayerSettings, SelectEntry, SubscriptionType } from "./settings";
 import { Transform, TransformTree } from "./transforms";
 
 const log = Logger.getLogger(__filename);
@@ -227,15 +228,22 @@ export class Renderer extends EventEmitter<RendererEvents> {
   public maxLod = DetailLevel.High;
   public config: Immutable<RendererConfig>;
   public settings: SettingsManager;
+  // [{ name, datatype }]
   public topics: ReadonlyArray<Topic> | undefined;
+  // topicName -> { name, datatype }
   public topicsByName: ReadonlyMap<string, Topic> | undefined;
-  public parameters: ReadonlyMap<string, unknown> | undefined;
+  // parameterKey -> parameterValue
+  public parameters: ReadonlyMap<string, ParameterValue> | undefined;
   // extensionId -> SceneExtension
   public sceneExtensions = new Map<string, SceneExtension>();
-  // datatype -> handler[]
+  // datatype -> handler[], only active when visibility is toggled on
   public datatypeHandlers = new Map<string, MessageHandler[]>();
-  // topicName -> handler[]
+  // datatype -> handler[], always active
+  public forcedDatatypeHandlers = new Map<string, MessageHandler[]>();
+  // topicName -> handler[], only active when visibility is toggled on
   public topicHandlers = new Map<string, MessageHandler[]>();
+  // topicName -> handler[], always active
+  public forcedTopicHandlers = new Map<string, MessageHandler[]>();
   // layerId -> { action, handler }
   private customLayerActions = new Map<string, CustomLayerAction>();
   private scene: THREE.Scene;
@@ -276,6 +284,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
   private _prevResolution = new THREE.Vector2();
   private _pickingEnabled = false;
   private _isUpdatingCameraState = false;
+  private _animationFrame?: number;
 
   public constructor(canvas: HTMLCanvasElement, config: RendererConfig) {
     super();
@@ -384,6 +393,12 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.publishClickTool = new PublishClickTool(this);
     this.coreSettings = new CoreSettings(this);
 
+    // Internal handlers for TF messages to update the transform tree
+    const always = SubscriptionType.Always;
+    this.addDatatypeSubscriptions(FRAME_TRANSFORM_DATATYPES, this.handleFrameTransform, always);
+    this.addDatatypeSubscriptions(TF_DATATYPES, this.handleTFMessage, always);
+    this.addDatatypeSubscriptions(TRANSFORM_STAMPED_DATATYPES, this.handleTransformStamped, always);
+
     this.addSceneExtension(this.coreSettings);
     this.addSceneExtension(new Cameras(this));
     this.addSceneExtension(new FrameAxes(this));
@@ -476,13 +491,16 @@ export class Renderer extends EventEmitter<RendererEvents> {
   public addDatatypeSubscriptions<T>(
     datatypes: Iterable<string>,
     handler: (messageEvent: MessageEvent<T>) => void,
+    type = SubscriptionType.WhenVisible,
   ): void {
     const genericHandler = handler as (messageEvent: MessageEvent<unknown>) => void;
+    const handlersMap =
+      type === SubscriptionType.Always ? this.forcedDatatypeHandlers : this.datatypeHandlers;
     for (const datatype of datatypes) {
-      let handlers = this.datatypeHandlers.get(datatype);
+      let handlers = handlersMap.get(datatype);
       if (!handlers) {
         handlers = [];
-        this.datatypeHandlers.set(datatype, handlers);
+        handlersMap.set(datatype, handlers);
       }
       if (!handlers.includes(genericHandler)) {
         handlers.push(genericHandler);
@@ -494,12 +512,15 @@ export class Renderer extends EventEmitter<RendererEvents> {
   public addTopicSubscription<T>(
     topic: string,
     handler: (messageEvent: MessageEvent<T>) => void,
+    type = SubscriptionType.WhenVisible,
   ): void {
     const genericHandler = handler as (messageEvent: MessageEvent<unknown>) => void;
-    let handlers = this.topicHandlers.get(topic);
+    const handlersMap =
+      type === SubscriptionType.Always ? this.forcedTopicHandlers : this.topicHandlers;
+    let handlers = handlersMap.get(topic);
     if (!handlers) {
       handlers = [];
-      this.topicHandlers.set(topic, handlers);
+      handlersMap.set(topic, handlers);
     }
     if (!handlers.includes(genericHandler)) {
       handlers.push(genericHandler);
@@ -749,11 +770,12 @@ export class Renderer extends EventEmitter<RendererEvents> {
   public addMessageEvent(messageEvent: Readonly<MessageEvent<unknown>>, datatype: string): void {
     const { message } = messageEvent;
 
-    const maybeHasHeader = message as Partial<{ header: Partial<Header> }>;
+    const maybeHasHeader = message as DeepPartial<{ header: Header }>;
     const maybeHasMarkers = message as DeepPartial<MarkerArray>;
     const maybeHasEntities = message as DeepPartial<SceneUpdate>;
-    const maybeHasFrameId = message as Partial<{ frame_id: string }>;
+    const maybeHasFrameId = message as DeepPartial<Header>;
 
+    // Extract coordinate frame IDs from all incoming messages
     if (maybeHasHeader.header) {
       // If this message has a Header, scrape the frame_id from it
       const frameId = maybeHasHeader.header.frame_id ?? "";
@@ -775,35 +797,10 @@ export class Renderer extends EventEmitter<RendererEvents> {
       this.addCoordinateFrame(maybeHasFrameId.frame_id);
     }
 
-    if (FRAME_TRANSFORM_DATATYPES.has(datatype)) {
-      // foxglove.FrameTransform - Ingest the list of transforms into our TF tree
-      const transform = normalizeFrameTransform(message as DeepPartial<FrameTransform>);
-      this.addFrameTransform(transform);
-    } else if (TF_DATATYPES.has(datatype)) {
-      // tf2_msgs/TFMessage - Ingest the list of transforms into our TF tree
-      const tfMessage = normalizeTFMessage(message as DeepPartial<TFMessage>);
-      for (const tf of tfMessage.transforms) {
-        this.addTransformMessage(tf);
-      }
-    } else if (TRANSFORM_STAMPED_DATATYPES.has(datatype)) {
-      // geometry_msgs/TransformStamped - Ingest this single transform into our TF tree
-      const tf = normalizeTransformStamped(message as DeepPartial<TransformStamped>);
-      this.addTransformMessage(tf);
-    }
-
-    const handlersForTopic = this.topicHandlers.get(messageEvent.topic);
-    if (handlersForTopic) {
-      for (const handler of handlersForTopic) {
-        handler(messageEvent);
-      }
-    }
-
-    const handlersForDatatype = this.datatypeHandlers.get(datatype);
-    if (handlersForDatatype) {
-      for (const handler of handlersForDatatype) {
-        handler(messageEvent);
-      }
-    }
+    handleMessage(messageEvent, this.forcedTopicHandlers.get(messageEvent.topic));
+    handleMessage(messageEvent, this.topicHandlers.get(messageEvent.topic));
+    handleMessage(messageEvent, this.forcedDatatypeHandlers.get(datatype));
+    handleMessage(messageEvent, this.datatypeHandlers.get(datatype));
   }
 
   /** Match the behavior of `tf::Transformer` by stripping leading slashes from
@@ -871,7 +868,6 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
   // Callback handlers
 
-  private _animationFrame?: number;
   public animationFrame = (): void => {
     this._animationFrame = undefined;
     this.frameHandler(this.currentTime);
@@ -970,6 +966,28 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
     log.debug(`Clicked ${selections.length} renderable(s)`);
     this.emit("renderablesClicked", selections, cursorCoords, this);
+  };
+
+  private handleFrameTransform = ({ message }: MessageEvent<DeepPartial<FrameTransform>>): void => {
+    // foxglove.FrameTransform - Ingest the list of transforms into our TF tree
+    const transform = normalizeFrameTransform(message);
+    this.addFrameTransform(transform);
+  };
+
+  private handleTFMessage = ({ message }: MessageEvent<DeepPartial<TFMessage>>): void => {
+    // tf2_msgs/TFMessage - Ingest the list of transforms into our TF tree
+    const tfMessage = normalizeTFMessage(message);
+    for (const tf of tfMessage.transforms) {
+      this.addTransformMessage(tf);
+    }
+  };
+
+  private handleTransformStamped = ({
+    message,
+  }: MessageEvent<DeepPartial<TransformStamped>>): void => {
+    // geometry_msgs/TransformStamped - Ingest this single transform into our TF tree
+    const tf = normalizeTransformStamped(message);
+    this.addTransformMessage(tf);
   };
 
   private handleTopicsAction = (action: SettingsTreeAction): void => {
@@ -1149,6 +1167,17 @@ export class Renderer extends EventEmitter<RendererEvents> {
         }
       }
     });
+  }
+}
+
+function handleMessage(
+  messageEvent: Readonly<MessageEvent<unknown>>,
+  handlers: MessageHandler[] | undefined,
+): void {
+  if (handlers) {
+    for (const handler of handlers) {
+      handler(messageEvent);
+    }
   }
 }
 

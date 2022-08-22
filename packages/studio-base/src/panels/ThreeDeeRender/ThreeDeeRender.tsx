@@ -26,6 +26,7 @@ import {
   LayoutActions,
   MessageEvent,
   PanelExtensionContext,
+  ParameterValue,
   RenderState,
   SettingsTreeAction,
   SettingsTreeNodes,
@@ -41,11 +42,10 @@ import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
 import { DebugGui } from "./DebugGui";
 import { Interactions, InteractionContextMenu, SelectionObject, TabType } from "./Interactions";
 import type { Renderable } from "./Renderable";
-import { MessageHandler, Renderer, RendererConfig } from "./Renderer";
+import { Renderer, RendererConfig, RendererEvents } from "./Renderer";
 import { RendererContext, useRenderer, useRendererEvent } from "./RendererContext";
 import { Stats } from "./Stats";
 import { CameraState, DEFAULT_CAMERA_STATE, MouseEventObject } from "./camera";
-import { FRAME_TRANSFORM_DATATYPES } from "./foxglove";
 import {
   PublishDatatypes,
   makePointMessage,
@@ -53,7 +53,6 @@ import {
   makePoseMessage,
 } from "./publish";
 import { PublishClickEvent, PublishClickType } from "./renderables/PublishClickTool";
-import { TF_DATATYPES, TRANSFORM_STAMPED_DATATYPES } from "./ros";
 
 const log = Logger.getLogger(__filename);
 
@@ -313,6 +312,27 @@ function RendererOverlay(props: {
   );
 }
 
+function useRendererProperty<K extends keyof Renderer>(
+  renderer: Renderer | undefined,
+  key: K,
+  event: keyof RendererEvents,
+  fallback: () => Renderer[K],
+): Renderer[K] {
+  const [value, setValue] = useState(() => renderer?.[key] ?? fallback());
+  useEffect(() => {
+    if (!renderer) {
+      return;
+    }
+    const onChange = () => setValue(renderer[key]);
+
+    renderer.addListener(event, onChange);
+    return () => {
+      renderer.removeListener(event, onChange);
+    };
+  }, [renderer, event, key]);
+  return value;
+}
+
 /**
  * A panel that renders a 3D scene. This is a thin wrapper around a `Renderer` instance.
  */
@@ -345,15 +365,15 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
   const backgroundColor = config.scene.backgroundColor;
 
   const [canvas, setCanvas] = useState<HTMLCanvasElement | ReactNull>(ReactNull);
-  const [renderer, setRenderer] = useState<Renderer | ReactNull>(ReactNull);
+  const [renderer, setRenderer] = useState<Renderer | undefined>(undefined);
   useEffect(
-    () => setRenderer(canvas ? new Renderer(canvas, configRef.current) : ReactNull),
+    () => setRenderer(canvas ? new Renderer(canvas, configRef.current) : undefined),
     [canvas],
   );
 
   const [colorScheme, setColorScheme] = useState<"dark" | "light" | undefined>();
   const [topics, setTopics] = useState<ReadonlyArray<Topic> | undefined>();
-  const [parameters, setParameters] = useState<ReadonlyMap<string, unknown> | undefined>();
+  const [parameters, setParameters] = useState<ReadonlyMap<string, ParameterValue> | undefined>();
   const [messages, setMessages] = useState<ReadonlyArray<MessageEvent<unknown>> | undefined>();
   const [currentTime, setCurrentTime] = useState<bigint | undefined>();
   const [didSeek, setDidSeek] = useState<boolean>(false);
@@ -361,33 +381,30 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
   const renderRef = useRef({ needsRender: false });
   const [renderDone, setRenderDone] = useState<(() => void) | undefined>();
 
-  const [datatypeHandlers, setDatatypeHandlers] = useState(
-    () => new Map<string, MessageHandler[]>(),
+  const datatypeHandlers = useRendererProperty(
+    renderer,
+    "datatypeHandlers",
+    "datatypeHandlersChanged",
+    () => new Map(),
   );
-  useEffect(() => {
-    if (renderer) {
-      setDatatypeHandlers(new Map(renderer.datatypeHandlers));
-      const listener = (sender: Renderer) => setDatatypeHandlers(new Map(sender.datatypeHandlers));
-      renderer.addListener("datatypeHandlersChanged", listener);
-      return () => {
-        renderer.removeListener("datatypeHandlersChanged", listener);
-      };
-    }
-    return undefined;
-  }, [renderer]);
-
-  const [topicHandlers, setTopicHandlers] = useState(() => new Map<string, MessageHandler[]>());
-  useEffect(() => {
-    if (renderer) {
-      setTopicHandlers(new Map(renderer.topicHandlers));
-      const listener = (sender: Renderer) => setTopicHandlers(new Map(sender.topicHandlers));
-      renderer.addListener("topicHandlersChanged", listener);
-      return () => {
-        renderer.removeListener("topicHandlersChanged", listener);
-      };
-    }
-    return undefined;
-  }, [renderer]);
+  const forcedDatatypeHandlers = useRendererProperty(
+    renderer,
+    "forcedDatatypeHandlers",
+    "datatypeHandlersChanged",
+    () => new Map(),
+  );
+  const topicHandlers = useRendererProperty(
+    renderer,
+    "topicHandlers",
+    "topicHandlersChanged",
+    () => new Map(),
+  );
+  const forcedTopicHandlers = useRendererProperty(
+    renderer,
+    "forcedTopicHandlers",
+    "topicHandlersChanged",
+    () => new Map(),
+  );
 
   // Config cameraState
   useEffect(() => {
@@ -533,29 +550,26 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
     }
 
     for (const topic of topics) {
-      if (
-        FRAME_TRANSFORM_DATATYPES.has(topic.datatype) ||
-        TF_DATATYPES.has(topic.datatype) ||
-        TRANSFORM_STAMPED_DATATYPES.has(topic.datatype)
-      ) {
-        // Subscribe to all transform topics
+      if (forcedTopicHandlers.has(topic.name) || forcedDatatypeHandlers.has(topic.datatype)) {
         subscriptions.add(topic.name);
-      } else if (config.topics[topic.name]?.visible === true) {
-        // Subscribe if the topic is visible
-        subscriptions.add(topic.name);
-      } else if (
-        // prettier-ignore
-        (topicHandlers.get(topic.name)?.length ?? 0) +
-        (datatypeHandlers.get(topic.datatype)?.length ?? 0) > 0
-      ) {
-        // Subscribe if there are multiple handlers registered for this topic
-        subscriptions.add(topic.name);
+      } else if (topicHandlers.has(topic.name) || datatypeHandlers.has(topic.datatype)) {
+        // Only subscribe if the topic visibility has been toggled on
+        if (config.topics[topic.name]?.visible === true) {
+          subscriptions.add(topic.name);
+        }
       }
     }
 
     const newTopics = Array.from(subscriptions.keys()).sort();
     setTopicsToSubscribe((prevTopics) => (isEqual(prevTopics, newTopics) ? prevTopics : newTopics));
-  }, [topics, config.topics, datatypeHandlers, topicHandlers]);
+  }, [
+    topics,
+    config.topics,
+    datatypeHandlers,
+    topicHandlers,
+    forcedTopicHandlers,
+    forcedDatatypeHandlers,
+  ]);
 
   // Notify the extension context when our subscription list changes
   useEffect(() => {
