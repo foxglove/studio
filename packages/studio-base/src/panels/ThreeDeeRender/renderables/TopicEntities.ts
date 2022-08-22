@@ -73,6 +73,13 @@ export class TopicEntities extends Renderable<EntityTopicUserData> {
           continue;
         }
 
+        // Check if this entity has expired
+        const expiresAt = renderable.userData.expiresAt;
+        if (expiresAt != undefined && currentTime > expiresAt) {
+          this._deleteEntity(entity.id);
+          break;
+        }
+
         const frameId = this.renderer.normalizeFrameId(entity.frame_id);
         const srcTime = entity.frame_locked ? currentTime : toNanoSec(entity.timestamp);
         const updated = updatePose(
@@ -96,7 +103,7 @@ export class TopicEntities extends Renderable<EntityTopicUserData> {
     }
   }
 
-  public addOrUpdateEntity(entity: SceneEntity): void {
+  public addOrUpdateEntity(entity: SceneEntity, receiveTime: bigint): void {
     let renderable = this.renderablesById.get(entity.id);
     if (!renderable) {
       renderable = {};
@@ -112,7 +119,7 @@ export class TopicEntities extends Renderable<EntityTopicUserData> {
         renderable[PrimitiveType.CUBES] = cubes;
         this.add(cubes);
       }
-      cubes.update(entity, this.userData.settings);
+      cubes.update(entity, this.userData.settings, receiveTime);
     } else if (cubes) {
       this.remove(cubes);
       delete renderable[PrimitiveType.CUBES];

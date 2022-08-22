@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { toNanoSec } from "@foxglove/rostime";
 import {
   ArrowPrimitive,
   CubePrimitive,
@@ -116,7 +117,7 @@ export class FoxgloveSceneEntities extends SceneExtension<TopicEntities> {
 
     for (const entityMsg of sceneUpdates.entities ?? []) {
       const entity = normalizeSceneEntity(entityMsg);
-      this._getTopicEntities(topic).addOrUpdateEntity(entity);
+      this._getTopicEntities(topic).addOrUpdateEntity(entity, toNanoSec(messageEvent.receiveTime));
     }
 
     for (const deletionMsg of sceneUpdates.deletions ?? []) {

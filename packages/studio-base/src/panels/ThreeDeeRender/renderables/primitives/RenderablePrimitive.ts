@@ -9,6 +9,7 @@ import { emptyPose } from "@foxglove/studio-base/util/Pose";
 
 export type EntityRenderableUserData = BaseUserData & {
   entity?: SceneEntity;
+  expiresAt?: bigint;
   settings?: LayerSettingsEntity;
 };
 

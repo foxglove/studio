@@ -4,6 +4,7 @@
 
 import * as THREE from "three";
 
+import { toNanoSec } from "@foxglove/rostime";
 import { CubePrimitive, SceneEntity } from "@foxglove/schemas/schemas/typescript";
 import { RosValue } from "@foxglove/studio-base/players/types";
 import { emptyPose } from "@foxglove/studio-base/util/Pose";
@@ -165,16 +166,23 @@ export class RenderableCubes extends RenderablePrimitive {
     this.outlineGeometry.dispose();
   }
 
-  public update(entity: SceneEntity | undefined, settings: LayerSettingsEntity): void {
+  public update(
+    entity: SceneEntity | undefined,
+    settings: LayerSettingsEntity,
+    receiveTime: bigint,
+  ): void {
     this.userData.entity = entity;
     this.userData.settings = settings;
+    this.userData.receiveTime = receiveTime;
     if (entity) {
+      const lifetimeNs = toNanoSec(entity.lifetime);
+      this.userData.expiresAt = lifetimeNs === 0n ? undefined : receiveTime + lifetimeNs;
       this._updateMesh(entity.cubes);
     }
   }
 
   public updateSettings(settings: LayerSettingsEntity): void {
-    this.update(this.userData.entity, settings);
+    this.update(this.userData.entity, settings, this.userData.receiveTime);
   }
 
   public override details(): Record<string, RosValue> {
