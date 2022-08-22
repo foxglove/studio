@@ -70,7 +70,7 @@ export function BasicEntities(): JSX.Element {
             {
               pose: xyzrpyToPose([1, 0, 0], [0, 0, 10]),
               size: { x: 0.4, y: 0.2, z: 1 },
-              color: makeColor("#afe663", 0.5),
+              color: makeColor("#afe663", 0.9),
             },
           ],
           spheres: [],
