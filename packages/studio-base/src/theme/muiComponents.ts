@@ -2,8 +2,10 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { alpha, Theme, ThemeOptions } from "@mui/material/styles";
-import { CSSProperties } from "@mui/styles";
+import type {} from "@mui/x-data-grid/themeAugmentation";
+
+import { alpha, Theme, ThemeOptions } from "@mui/material";
+import { CSSProperties } from "react";
 
 type MuiLabComponents = {
   MuiFocusVisible?: {
@@ -87,6 +89,15 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
     MuiFormControl: {
       defaultProps: {
         variant: "standard",
+      },
+    },
+    MuiBadge: {
+      styleOverrides: {
+        badge: {
+          height: 16,
+          minWidth: 16,
+          padding: theme.spacing(0, 0.25),
+        },
       },
     },
     MuiButton: {
@@ -439,8 +450,25 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
       },
     },
     MuiToggleButton: {
+      defaultProps: {
+        disableRipple: true,
+      },
       styleOverrides: {
         label: iconHack,
+        root: {
+          "&:active": {
+            backgroundColor: alpha(
+              theme.palette.text.primary,
+              theme.palette.action.activatedOpacity,
+            ),
+          },
+          "&.Mui-selected:active": {
+            backgroundColor: alpha(
+              theme.palette.primary.main,
+              theme.palette.action.selectedOpacity + theme.palette.action.activatedOpacity,
+            ),
+          },
+        },
       },
     },
     MuiToolbar: {

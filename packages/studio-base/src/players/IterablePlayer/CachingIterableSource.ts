@@ -52,11 +52,6 @@ type Options = {
   maxTotalSize?: number;
 };
 
-function findStartCacheItemIndex(items: [bigint, IteratorResult][], key: bigint) {
-  const idx = sortedIndexByTuple(items, key);
-  return idx < 0 ? ~idx : idx;
-}
-
 /**
  * CachingIterableSource proxies access to IIterableSource through a memory buffer.
  *
@@ -86,22 +81,22 @@ class CachingIterableSource implements IIterableSource {
   // Maximum size per block
   private maxBlockSizeBytes: number;
 
-  constructor(source: IIterableSource, opt?: Options) {
+  public constructor(source: IIterableSource, opt?: Options) {
     this.source = source;
-    this.maxTotalSizeBytes = opt?.maxTotalSize ?? 1e9;
-    this.maxBlockSizeBytes = opt?.maxBlockSize ?? 5000000;
+    this.maxTotalSizeBytes = opt?.maxTotalSize ?? 1073741824; // 1GB
+    this.maxBlockSizeBytes = opt?.maxBlockSize ?? 52428800; // 50MB
   }
 
-  async initialize(): Promise<Initalization> {
+  public async initialize(): Promise<Initalization> {
     this.initResult = await this.source.initialize();
     return this.initResult;
   }
 
-  loadedRanges(): Range[] {
+  public loadedRanges(): Range[] {
     return this.loadedRangesCache;
   }
 
-  async *messageIterator(
+  public async *messageIterator(
     args: MessageIteratorArgs,
   ): AsyncIterableIterator<Readonly<IteratorResult>> {
     if (!this.initResult) {
@@ -148,7 +143,10 @@ class CachingIterableSource implements IIterableSource {
 
       // We've found a block containing our readHead, try reading items from the block
       if (block) {
-        const cacheIndex = findStartCacheItemIndex(block.items, toNanoSec(readHead));
+        const cacheIndex = CachingIterableSource.FindStartCacheItemIndex(
+          block.items,
+          toNanoSec(readHead),
+        );
 
         // We have a cached item, we can consume our cache until we've read to the end
         for (let idx = cacheIndex; idx < block.items.length; ++idx) {
@@ -304,8 +302,6 @@ class CachingIterableSource implements IIterableSource {
           block.size += pendingSizeInBytes;
         }
 
-        pendingIterResults.length = 0;
-
         this.recomputeLoadedRangeCache();
       } else {
         // We don't have a block after finishing our source. This can happen if the last
@@ -341,7 +337,9 @@ class CachingIterableSource implements IIterableSource {
     }
   }
 
-  async getBackfillMessages(args: GetBackfillMessagesArgs): Promise<MessageEvent<unknown>[]> {
+  public async getBackfillMessages(
+    args: GetBackfillMessagesArgs,
+  ): Promise<MessageEvent<unknown>[]> {
     if (!this.initResult) {
       throw new Error("Invariant: uninitialized");
     }
@@ -368,7 +366,8 @@ class CachingIterableSource implements IIterableSource {
         break;
       }
 
-      let readIdx = sortedIndexByTuple(cacheBlock.items, toNanoSec(args.time));
+      const targetTime = toNanoSec(args.time);
+      let readIdx = sortedIndexByTuple(cacheBlock.items, targetTime);
 
       // If readIdx is negative then we don't have an exact match, but readIdx does tell us what that is
       // See the findCacheItem documentation for how to interpret it.
@@ -378,6 +377,17 @@ class CachingIterableSource implements IIterableSource {
         // readIdx will point to the element after our time (or 1 past the end of the array)
         // We subtract 1 to start reading from before that element or end of array
         readIdx -= 1;
+      } else {
+        // When readIdx is an exact match we get a positive value. For an exact match we traverse
+        // forward linearly to find the last occurrence of the matching timestamp in our cache
+        // block. We can then read backwards in the block to find the last messages on all requested
+        // topics.
+        for (let i = readIdx + 1; i < cacheBlock.items.length; ++i) {
+          if (cacheBlock.items[i]?.[0] !== targetTime) {
+            break;
+          }
+          readIdx = i;
+        }
       }
 
       for (let i = readIdx; i >= 0; --i) {
@@ -437,11 +447,36 @@ class CachingIterableSource implements IIterableSource {
       return;
     }
 
-    this.loadedRangesCache = this.cache.map((block) => {
-      const start = Number(toNanoSec(block.start) - sourceStartNs) / rangeNs;
-      const end = Number(toNanoSec(block.end) - sourceStartNs) / rangeNs;
-      return { start, end };
-    });
+    // Merge continuous ranges (i.e. a block that starts 1 nanosecond after previous ends)
+    // This avoids float rounding errors when computing loadedRangesCache and produces
+    // continuous ranges for continuous spans
+    const ranges: { start: number; end: number }[] = [];
+    let prevRange: { start: bigint; end: bigint } | undefined;
+    for (const block of this.cache) {
+      const range = {
+        start: toNanoSec(block.start),
+        end: toNanoSec(block.end),
+      };
+      if (!prevRange) {
+        prevRange = range;
+      } else if (prevRange.end + 1n === range.start) {
+        prevRange.end = range.end;
+      } else {
+        ranges.push({
+          start: Number(prevRange.start - sourceStartNs) / rangeNs,
+          end: Number(prevRange.end - sourceStartNs) / rangeNs,
+        });
+        prevRange = range;
+      }
+    }
+    if (prevRange) {
+      ranges.push({
+        start: Number(prevRange.start - sourceStartNs) / rangeNs,
+        end: Number(prevRange.end - sourceStartNs) / rangeNs,
+      });
+    }
+
+    this.loadedRangesCache = ranges;
   }
 
   // Purge the oldest cache block if adding sizeInBytes to the cache would exceed the maxTotalSizeBytes
@@ -470,6 +505,33 @@ class CachingIterableSource implements IIterableSource {
     }
 
     return false;
+  }
+
+  private static FindStartCacheItemIndex(items: [bigint, IteratorResult][], key: bigint) {
+    // A common case is to access consecutive blocks during playback. In that case, we expect to
+    // read from the first item in the block. We check this special case first to avoid a binary
+    // search if we are able to find the key in the first item.
+    if (items[0] != undefined && items[0][0] >= key) {
+      return 0;
+    }
+
+    let idx = sortedIndexByTuple(items, key);
+    if (idx < 0) {
+      return ~idx;
+    }
+
+    // An exact match just means we've found a matching item, not necessarily the first or last
+    // matching item. We want the first item so we linearly iterate backwards until we no longer have
+    // a match.
+    for (let i = idx - 1; i >= 0; --i) {
+      const prevItem = items[i];
+      if (prevItem != undefined && prevItem[0] !== key) {
+        break;
+      }
+      idx = i;
+    }
+
+    return idx;
   }
 }
 

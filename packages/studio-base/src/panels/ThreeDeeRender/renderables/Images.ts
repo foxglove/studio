@@ -77,14 +77,14 @@ export type ImageUserData = BaseUserData & {
 };
 
 export class ImageRenderable extends Renderable<ImageUserData> {
-  override dispose(): void {
+  public override dispose(): void {
     this.userData.texture?.dispose();
     this.userData.material?.dispose();
     this.userData.geometry?.dispose();
     super.dispose();
   }
 
-  override details(): Record<string, RosValue> {
+  public override details(): Record<string, RosValue> {
     const cameraInfoTopic = this.userData.settings.cameraInfoTopic;
     const cameraInfoRenderable = cameraInfoTopic
       ? camerasExtension(this.renderer)?.renderables.get(cameraInfoTopic)
@@ -97,9 +97,9 @@ export class ImageRenderable extends Renderable<ImageUserData> {
 }
 
 export class Images extends SceneExtension<ImageRenderable> {
-  cameraInfoTopics = new Set<string>();
+  private cameraInfoTopics = new Set<string>();
 
-  constructor(renderer: Renderer) {
+  public constructor(renderer: Renderer) {
     super("foxglove.Images", renderer);
 
     renderer.addDatatypeSubscriptions(IMAGE_DATATYPES, this.handleRawImage);
@@ -114,7 +114,7 @@ export class Images extends SceneExtension<ImageRenderable> {
     );
   }
 
-  override settingsNodes(): SettingsTreeEntry[] {
+  public override settingsNodes(): SettingsTreeEntry[] {
     const configTopics = this.renderer.config.topics;
     const handler = this.handleSettingsAction;
     const entries: SettingsTreeEntry[] = [];
@@ -156,7 +156,7 @@ export class Images extends SceneExtension<ImageRenderable> {
     return entries;
   }
 
-  override handleSettingsAction = (action: SettingsTreeAction): void => {
+  public override handleSettingsAction = (action: SettingsTreeAction): void => {
     const path = action.payload.path;
     if (action.action !== "update" || path.length !== 3) {
       return;
@@ -176,15 +176,15 @@ export class Images extends SceneExtension<ImageRenderable> {
     }
   };
 
-  handleRawImage = (messageEvent: PartialMessageEvent<Image>): void => {
+  private handleRawImage = (messageEvent: PartialMessageEvent<Image>): void => {
     this.handleImage(messageEvent, normalizeImage(messageEvent.message));
   };
 
-  handleCompressedImage = (messageEvent: PartialMessageEvent<CompressedImage>): void => {
+  private handleCompressedImage = (messageEvent: PartialMessageEvent<CompressedImage>): void => {
     this.handleImage(messageEvent, normalizeCompressedImage(messageEvent.message));
   };
 
-  handleImage = (
+  private handleImage = (
     messageEvent: PartialMessageEvent<Image | CompressedImage>,
     image: Image | CompressedImage,
   ): void => {
@@ -242,7 +242,7 @@ export class Images extends SceneExtension<ImageRenderable> {
     this._updateImageRenderable(renderable, image, receiveTime, renderable.userData.settings);
   };
 
-  handleCameraInfo = (messageEvent: PartialMessageEvent<CameraInfo>): void => {
+  private handleCameraInfo = (messageEvent: PartialMessageEvent<CameraInfo>): void => {
     const topic = messageEvent.topic;
     const updated = !this.cameraInfoTopics.has(topic);
     this.cameraInfoTopics.add(topic);
