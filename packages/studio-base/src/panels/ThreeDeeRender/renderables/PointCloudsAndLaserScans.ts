@@ -48,6 +48,7 @@ export type LayerSettingsPointCloudAndLaserScan = BaseSettings & {
   colorField: string | undefined;
   gradient: [string, string];
   colorMap: "turbo" | "rainbow";
+  explicitAlpha: number;
   rgbByteOrder: "rgba" | "bgra" | "abgr";
   minValue: number | undefined;
   maxValue: number | undefined;
@@ -94,6 +95,7 @@ const DEFAULT_SETTINGS: LayerSettingsPointCloudAndLaserScan = {
   colorField: undefined,
   gradient: [rgbaToCssString(DEFAULT_MIN_COLOR), rgbaToCssString(DEFAULT_MAX_COLOR)],
   colorMap: DEFAULT_COLOR_MAP,
+  explicitAlpha: 1,
   rgbByteOrder: DEFAULT_RGB_BYTE_ORDER,
   minValue: undefined,
   maxValue: undefined,
@@ -155,7 +157,7 @@ const tempFieldReaders: PointCloudFieldReaders = {
 };
 
 export class PointCloudAndLaserScanRenderable extends Renderable<PointCloudAndLaserScanUserData> {
-  override dispose(): void {
+  public override dispose(): void {
     this.userData.pointCloud = undefined;
     this.userData.laserScan = undefined;
     for (const entry of this.userData.pointsHistory) {
@@ -167,7 +169,7 @@ export class PointCloudAndLaserScanRenderable extends Renderable<PointCloudAndLa
     super.dispose();
   }
 
-  override details(): Record<string, RosValue> {
+  public override details(): Record<string, RosValue> {
     return this.userData.pointCloud ?? this.userData.laserScan ?? {};
   }
 }
@@ -175,7 +177,7 @@ export class PointCloudAndLaserScanRenderable extends Renderable<PointCloudAndLa
 export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserScanRenderable> {
   private pointCloudFieldsByTopic = new Map<string, string[]>();
 
-  constructor(renderer: Renderer) {
+  public constructor(renderer: Renderer) {
     super("foxglove.PointCloudsAndLaserScans", renderer);
 
     renderer.addDatatypeSubscriptions(ROS_POINTCLOUD_DATATYPES, this.handleRosPointCloud);
@@ -183,7 +185,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     renderer.addDatatypeSubscriptions(LASERSCAN_DATATYPES, this.handleLaserScan);
   }
 
-  override settingsNodes(): SettingsTreeEntry[] {
+  public override settingsNodes(): SettingsTreeEntry[] {
     const configTopics = this.renderer.config.topics;
     const handler = this.handleSettingsAction;
     const entries: SettingsTreeEntry[] = [];
@@ -206,7 +208,11 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     return entries;
   }
 
-  override startFrame(currentTime: bigint, renderFrameId: string, fixedFrameId: string): void {
+  public override startFrame(
+    currentTime: bigint,
+    renderFrameId: string,
+    fixedFrameId: string,
+  ): void {
     // Do not call super.startFrame() since we handle updatePose() manually.
     // Instead of updating the pose for each Renderable in this.renderables, we
     // update the pose of each THREE.Points object in the pointsHistory of each
@@ -270,7 +276,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     }
   }
 
-  override handleSettingsAction = (action: SettingsTreeAction): void => {
+  public override handleSettingsAction = (action: SettingsTreeAction): void => {
     const path = action.payload.path;
     if (action.action !== "update" || path.length !== 3) {
       return;
@@ -304,7 +310,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     }
   };
 
-  handleFoxglovePointCloud = (messageEvent: PartialMessageEvent<PointCloud>): void => {
+  private handleFoxglovePointCloud = (messageEvent: PartialMessageEvent<PointCloud>): void => {
     const topic = messageEvent.topic;
     const pointCloud = normalizePointCloud(messageEvent.message);
     const receiveTime = toNanoSec(messageEvent.receiveTime);
@@ -375,7 +381,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     );
   };
 
-  handleRosPointCloud = (messageEvent: PartialMessageEvent<PointCloud2>): void => {
+  private handleRosPointCloud = (messageEvent: PartialMessageEvent<PointCloud2>): void => {
     const topic = messageEvent.topic;
     const pointCloud = normalizePointCloud2(messageEvent.message);
     const receiveTime = toNanoSec(messageEvent.receiveTime);
@@ -446,7 +452,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     );
   };
 
-  _createGeometry(topic: string, usage: THREE.Usage): DynamicFloatBufferGeometry {
+  private _createGeometry(topic: string, usage: THREE.Usage): DynamicFloatBufferGeometry {
     const geometry = new DynamicBufferGeometry(Float32Array, usage);
     geometry.name = `${topic}:PointCloud:geometry`;
     geometry.createAttribute("position", 3);
@@ -454,7 +460,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     return geometry;
   }
 
-  _updatePointCloudRenderable(
+  private _updatePointCloudRenderable(
     renderable: PointCloudAndLaserScanRenderable,
     pointCloud: PointCloud | PointCloud2,
     settings: LayerSettingsPointCloudAndLaserScan,
@@ -538,7 +544,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     );
   }
 
-  _validatePointCloud(
+  private _validatePointCloud(
     pointCloud: PointCloud | PointCloud2,
     renderable: PointCloudAndLaserScanRenderable,
   ): boolean {
@@ -548,7 +554,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
       : this._validateFoxglovePointCloud(pointCloud as PointCloud, renderable);
   }
 
-  _validateFoxglovePointCloud(
+  private _validateFoxglovePointCloud(
     pointCloud: PointCloud,
     renderable: PointCloudAndLaserScanRenderable,
   ): boolean {
@@ -569,7 +575,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     return true;
   }
 
-  _validateRosPointCloud(
+  private _validateRosPointCloud(
     pointCloud: PointCloud2,
     renderable: PointCloudAndLaserScanRenderable,
   ): boolean {
@@ -616,7 +622,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     return true;
   }
 
-  _getPointCloudFieldReaders(
+  private _getPointCloudFieldReaders(
     output: PointCloudFieldReaders,
     pointCloud: PointCloud | PointCloud2,
     renderable: PointCloudAndLaserScanRenderable,
@@ -720,7 +726,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     return true;
   }
 
-  _minMaxColorValues(
+  private _minMaxColorValues(
     output: THREE.Vector2Tuple,
     colorReader: FieldReader,
     view: DataView,
@@ -749,7 +755,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     output[1] = maxColorValue;
   }
 
-  _updatePointCloudBuffers(
+  private _updatePointCloudBuffers(
     pointCloud: PointCloud | PointCloud2,
     readers: PointCloudFieldReaders,
     pointCount: number,
@@ -788,7 +794,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     colorAttribute.needsUpdate = true;
   }
 
-  handleLaserScan = (messageEvent: PartialMessageEvent<LaserScan>): void => {
+  private handleLaserScan = (messageEvent: PartialMessageEvent<LaserScan>): void => {
     const topic = messageEvent.topic;
     const laserScan = normalizeLaserScan(messageEvent.message);
     const receiveTime = toNanoSec(messageEvent.receiveTime);
@@ -856,7 +862,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     );
   };
 
-  _updateLaserScanRenderable(
+  private _updateLaserScanRenderable(
     renderable: PointCloudAndLaserScanRenderable,
     laserScan: LaserScan,
     settings: LayerSettingsPointCloudAndLaserScan,
@@ -995,9 +1001,9 @@ function pointCloudMaterial(settings: LayerSettingsPointCloudAndLaserScan): THRE
 }
 
 class LaserScanMaterial extends THREE.RawShaderMaterial {
-  static MIN_PICKING_POINT_SIZE = 8;
+  private static MIN_PICKING_POINT_SIZE = 8;
 
-  constructor({ picking = false }: { picking?: boolean } = {}) {
+  public constructor({ picking = false }: { picking?: boolean } = {}) {
     super({
       vertexShader: `\
         #version 300 es
@@ -1067,7 +1073,7 @@ class LaserScanMaterial extends THREE.RawShaderMaterial {
     }
   }
 
-  update(settings: LayerSettingsPointCloudAndLaserScan, laserScan: LaserScan): void {
+  public update(settings: LayerSettingsPointCloudAndLaserScan, laserScan: LaserScan): void {
     this.uniforms.isCircle!.value = settings.pointShape === "circle";
     this.uniforms.pointSize!.value = settings.pointSize;
     this.uniforms.angleMin!.value = laserScan.angle_min;
@@ -1122,7 +1128,7 @@ function colorHasTransparency(settings: LayerSettingsPointCloudAndLaserScan): bo
       );
     case "colormap":
     case "rgb":
-      return false;
+      return settings.explicitAlpha < 1.0;
     case "rgba":
       // It's too expensive to check the alpha value of each color. Just assume it's transparent
       return true;
@@ -1230,6 +1236,7 @@ function settingsNode(
   const colorFieldOptions = msgFields.map((field) => ({ label: field, value: field }));
   const gradient = config.gradient;
   const colorMap = config.colorMap ?? "turbo";
+  const explicitAlpha = config.explicitAlpha ?? 1;
   const rgbByteOrder = config.rgbByteOrder ?? "rgba";
   const minValue = config.minValue;
   const maxValue = config.maxValue;
@@ -1327,6 +1334,19 @@ function settingsNode(
           value: rgbByteOrder,
         };
         break;
+    }
+
+    if (colorMode === "colormap" || colorMode === "rgb") {
+      fields.explicitAlpha = {
+        label: "Opacity",
+        input: "number",
+        step: 0.1,
+        placeholder: "1",
+        precision: 3,
+        min: 0,
+        max: 1,
+        value: explicitAlpha,
+      };
     }
 
     fields.minValue = {

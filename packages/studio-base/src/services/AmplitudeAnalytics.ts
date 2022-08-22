@@ -3,7 +3,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { setUser as setSentryUser, addBreadcrumb as addSentryBreadcrumb } from "@sentry/core";
-import { Severity } from "@sentry/types";
 import amplitude, { AmplitudeClient } from "amplitude-js";
 import moment from "moment";
 
@@ -18,14 +17,12 @@ import IAnalytics, {
 
 const log = Logger.getLogger("Analytics");
 
-const os = OsContextSingleton; // workaround for https://github.com/webpack/webpack/issues/12960
-
 export class AmplitudeAnalytics implements IAnalytics {
   private _amp?: AmplitudeClient;
 
-  constructor(options: { enableTelemetry: boolean; amplitudeApiKey?: string }) {
+  public constructor(options: { enableTelemetry: boolean; amplitudeApiKey?: string }) {
     const platform = getPlatformName();
-    const appVersion = os?.getAppVersion();
+    const appVersion = OsContextSingleton?.getAppVersion();
     const { glVendor, glRenderer } = getWebGLInfo() ?? {
       glVendor: "(unknown)",
       glRenderer: "(unknown)",
@@ -61,7 +58,7 @@ export class AmplitudeAnalytics implements IAnalytics {
     }
   }
 
-  setUser(user?: User): void {
+  public setUser(user?: User): void {
     // Amplitude will continue to associate events with the last signed in user for this deviceId.
     // It is possible to call regenerateDeviceId() after sign out, but this means future events
     // will appear as a new unique user. We also don't want to call regenerateDeviceId() every time
@@ -73,12 +70,12 @@ export class AmplitudeAnalytics implements IAnalytics {
     setSentryUser({ id: user?.id, device_id: this._amp?.options.deviceId });
   }
 
-  async logEvent(event: AppEvent, data?: { [key: string]: unknown }): Promise<void> {
+  public async logEvent(event: AppEvent, data?: { [key: string]: unknown }): Promise<void> {
     addSentryBreadcrumb({
       type: getEventBreadcrumbType(event),
       category: `studio.${getEventCategory(event).toLowerCase()}`,
       message: event,
-      level: Severity.Info,
+      level: "info",
       data,
       timestamp: Date.now() / 1000,
     });
@@ -94,7 +91,7 @@ export class AmplitudeAnalytics implements IAnalytics {
 }
 
 function getPlatformName(): string {
-  const platform = os?.platform ?? "web";
+  const platform = OsContextSingleton?.platform ?? "web";
   switch (platform) {
     case "darwin":
       return "macOS";

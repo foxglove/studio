@@ -34,12 +34,17 @@ export class RenderableArrow extends RenderableMarker {
   private static shaftEdgesGeometry: THREE.EdgesGeometry | undefined;
   private static headEdgesGeometry: THREE.EdgesGeometry | undefined;
 
-  shaftMesh: THREE.Mesh<THREE.CylinderGeometry, THREE.MeshStandardMaterial>;
-  headMesh: THREE.Mesh<THREE.ConeGeometry, THREE.MeshStandardMaterial>;
-  shaftOutline: THREE.LineSegments | undefined;
-  headOutline: THREE.LineSegments | undefined;
+  public shaftMesh: THREE.Mesh<THREE.CylinderGeometry, THREE.MeshStandardMaterial>;
+  public headMesh: THREE.Mesh<THREE.ConeGeometry, THREE.MeshStandardMaterial>;
+  private shaftOutline: THREE.LineSegments | undefined;
+  private headOutline: THREE.LineSegments | undefined;
 
-  constructor(topic: string, marker: Marker, receiveTime: bigint | undefined, renderer: Renderer) {
+  public constructor(
+    topic: string,
+    marker: Marker,
+    receiveTime: bigint | undefined,
+    renderer: Renderer,
+  ) {
     super(topic, marker, receiveTime, renderer);
 
     // Shaft mesh
@@ -79,13 +84,13 @@ export class RenderableArrow extends RenderableMarker {
     this.update(marker, receiveTime);
   }
 
-  override dispose(): void {
+  public override dispose(): void {
     this.shaftMesh.material.dispose();
     this.headMesh.material.dispose();
     super.dispose();
   }
 
-  override update(newMarker: Marker, receiveTime: bigint | undefined): void {
+  public override update(newMarker: Marker, receiveTime: bigint | undefined): void {
     super.update(newMarker, receiveTime);
     const marker = this.userData.marker;
 
@@ -148,7 +153,7 @@ export class RenderableArrow extends RenderableMarker {
     }
   }
 
-  static ShaftGeometry(lod: DetailLevel): THREE.CylinderGeometry {
+  private static ShaftGeometry(lod: DetailLevel): THREE.CylinderGeometry {
     if (!RenderableArrow.shaftGeometry || lod !== RenderableArrow.shaftLod) {
       const subdivs = arrowShaftSubdivisions(lod);
       RenderableArrow.shaftGeometry = new THREE.CylinderGeometry(0.5, 0.5, 1, subdivs, 1, false);
@@ -159,7 +164,7 @@ export class RenderableArrow extends RenderableMarker {
     return RenderableArrow.shaftGeometry;
   }
 
-  static HeadGeometry(lod: DetailLevel): THREE.ConeGeometry {
+  private static HeadGeometry(lod: DetailLevel): THREE.ConeGeometry {
     if (!RenderableArrow.headGeometry || lod !== RenderableArrow.headLod) {
       const subdivs = arrowHeadSubdivisions(lod);
       RenderableArrow.headGeometry = new THREE.ConeGeometry(0.5, 1, subdivs, 1, false);
@@ -170,7 +175,7 @@ export class RenderableArrow extends RenderableMarker {
     return RenderableArrow.headGeometry;
   }
 
-  static ShaftEdgesGeometry(lod: DetailLevel): THREE.EdgesGeometry {
+  private static ShaftEdgesGeometry(lod: DetailLevel): THREE.EdgesGeometry {
     if (!RenderableArrow.shaftEdgesGeometry) {
       const geometry = RenderableArrow.ShaftGeometry(lod);
       RenderableArrow.shaftEdgesGeometry = new THREE.EdgesGeometry(geometry, 40);
@@ -190,7 +195,7 @@ export class RenderableArrow extends RenderableMarker {
     return RenderableArrow.shaftEdgesGeometry;
   }
 
-  static HeadEdgesGeometry(lod: DetailLevel): THREE.EdgesGeometry {
+  private static HeadEdgesGeometry(lod: DetailLevel): THREE.EdgesGeometry {
     if (!RenderableArrow.headEdgesGeometry) {
       const geometry = RenderableArrow.HeadGeometry(lod);
       RenderableArrow.headEdgesGeometry = new THREE.EdgesGeometry(geometry, 40);

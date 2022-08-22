@@ -77,7 +77,7 @@ export default class Ros2Player implements Player {
   private _emitTimer?: ReturnType<typeof setTimeout>;
   private readonly _sourceId: string;
 
-  constructor({ domainId, metricsCollector, sourceId }: Ros2PlayerOpts) {
+  public constructor({ domainId, metricsCollector, sourceId }: Ros2PlayerOpts) {
     log.info(`initializing Ros2Player (domainId=${domainId})`);
     this._domainId = domainId;
     this._metricsCollector = metricsCollector;
@@ -149,8 +149,7 @@ export default class Ros2Player implements Player {
   }
 
   private _open = async (): Promise<void> => {
-    const os = OsContextSingleton;
-    if (this._closed || os == undefined) {
+    if (this._closed || OsContextSingleton == undefined) {
       return;
     }
     this._presence = PlayerPresence.INITIALIZING;
@@ -161,10 +160,10 @@ export default class Ros2Player implements Player {
 
     if (this._rosNode == undefined) {
       const rosNode = new RosNode({
-        name: `/foxglovestudio_${os.pid}`,
+        name: `/foxglovestudio_${OsContextSingleton.pid}`,
         domainId: this._domainId,
         udpSocketCreate,
-        getNetworkInterfaces: os.getNetworkInterfaces,
+        getNetworkInterfaces: OsContextSingleton.getNetworkInterfaces,
         log: rosLog,
       });
       this._rosNode = rosNode;
@@ -371,12 +370,12 @@ export default class Ros2Player implements Player {
     });
   });
 
-  setListener(listener: (arg0: PlayerState) => Promise<void>): void {
+  public setListener(listener: (arg0: PlayerState) => Promise<void>): void {
     this._listener = listener;
     this._emitState();
   }
 
-  close(): void {
+  public close(): void {
     this._closed = true;
     if (this._rosNode) {
       void this._rosNode.shutdown();
@@ -389,7 +388,7 @@ export default class Ros2Player implements Player {
     this._hasReceivedMessage = false;
   }
 
-  setSubscriptions(subscriptions: SubscribePayload[]): void {
+  public setSubscriptions(subscriptions: SubscribePayload[]): void {
     this._requestedSubscriptions = subscriptions;
 
     if (!this._rosNode || this._closed) {
@@ -541,7 +540,7 @@ export default class Ros2Player implements Player {
     this._emitState();
   };
 
-  setPublishers(_publishers: AdvertiseOptions[]): void {
+  public setPublishers(_publishers: AdvertiseOptions[]): void {
     if (!this._rosNode || this._closed) {
       return;
     }
@@ -602,12 +601,12 @@ export default class Ros2Player implements Player {
     this._emitState();
   }
 
-  setParameter(_key: string, _value: ParameterValue): void {
+  public setParameter(_key: string, _value: ParameterValue): void {
     // log.debug(`Ros1Player.setParameter(key=${key}, value=${value})`);
     // this._rosNode?.setParameter(key, value);
   }
 
-  publish(_payload: PublishPayload): void {
+  public publish(_payload: PublishPayload): void {
     // const problemId = `publish:${topic}`;
     // if (this._rosNode != undefined) {
     //   if (this._rosNode.isAdvertising(topic)) {
@@ -631,15 +630,15 @@ export default class Ros2Player implements Player {
     // }
   }
 
-  async callService(): Promise<unknown> {
+  public async callService(): Promise<unknown> {
     throw new Error("Service calls are not supported by this data source");
   }
 
   // Bunch of unsupported stuff. Just don't do anything for these.
-  requestBackfill(): void {
+  public requestBackfill(): void {
     // no-op
   }
-  setGlobalVariables(): void {
+  public setGlobalVariables(): void {
     // no-op
   }
 

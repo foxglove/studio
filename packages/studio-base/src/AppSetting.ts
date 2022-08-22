@@ -20,7 +20,6 @@ export enum AppSetting {
   // Experimental features
   SHOW_DEBUG_PANELS = "showDebugPanels",
   ENABLE_LEGACY_PLOT_PANEL = "enableLegacyPlotPanel",
-  EXPERIMENTAL_LATCHING = "experimental.latching",
 
   // Miscellaneous
   HIDE_SIGN_IN_PROMPT = "hideSignInPrompt",
@@ -30,4 +29,5 @@ export enum AppSetting {
   // Dev only
   ENABLE_LAYOUT_DEBUGGING = "enableLayoutDebugging",
   ENABLE_REACT_STRICT_MODE = "enableReactStrictMode",
+  ENABLE_MEMORY_USE_INDICATOR = "dev.memory-use-indicator",
 }

@@ -18,11 +18,16 @@ import {
 } from "./materials";
 
 export class RenderableLineStrip extends RenderableMarker {
-  geometry: LineGeometry;
-  linePrepass: Line2;
-  line: Line2;
+  private geometry: LineGeometry;
+  private linePrepass: Line2;
+  private line: Line2;
 
-  constructor(topic: string, marker: Marker, receiveTime: bigint | undefined, renderer: Renderer) {
+  public constructor(
+    topic: string,
+    marker: Marker,
+    receiveTime: bigint | undefined,
+    renderer: Renderer,
+  ) {
     super(topic, marker, receiveTime, renderer);
 
     this.geometry = new LineGeometry();
@@ -53,7 +58,7 @@ export class RenderableLineStrip extends RenderableMarker {
     this.update(marker, receiveTime);
   }
 
-  override dispose(): void {
+  public override dispose(): void {
     this.linePrepass.material.dispose();
     this.line.material.dispose();
 
@@ -64,7 +69,7 @@ export class RenderableLineStrip extends RenderableMarker {
     super.dispose();
   }
 
-  override update(newMarker: Marker, receiveTime: bigint | undefined): void {
+  public override update(newMarker: Marker, receiveTime: bigint | undefined): void {
     const prevMarker = this.userData.marker;
     super.update(newMarker, receiveTime);
     const marker = this.userData.marker;
@@ -72,6 +77,17 @@ export class RenderableLineStrip extends RenderableMarker {
     const pointsLength = marker.points.length;
     const lineWidth = marker.scale.x;
     const transparent = markerHasTransparency(marker);
+
+    if (pointsLength === 0) {
+      // THREE.LineGeometry.setPositions crashes when given an empty array:
+      // https://github.com/foxglove/studio/issues/3954
+      this.linePrepass.visible = false;
+      this.line.visible = false;
+      return;
+    } else {
+      this.linePrepass.visible = true;
+      this.line.visible = true;
+    }
 
     if (transparent !== markerHasTransparency(prevMarker)) {
       this.linePrepass.material.transparent = transparent;

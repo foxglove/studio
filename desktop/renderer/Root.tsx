@@ -41,8 +41,7 @@ export default function Root({
 }: {
   appConfiguration: IAppConfiguration;
 }): JSX.Element {
-  const enableExperimentalLatching: boolean =
-    (appConfiguration.get(AppSetting.EXPERIMENTAL_LATCHING) as boolean | undefined) ?? true;
+  const enableExperimentalLatching = true;
 
   const dataSources: IDataSourceFactory[] = useMemo(() => {
     const sources = [
@@ -55,10 +54,8 @@ export default function Root({
       new Ros2LocalBagDataSourceFactory({ useIterablePlayer: enableExperimentalLatching }),
       new UlogLocalDataSourceFactory(),
       new VelodyneDataSourceFactory(),
-      new FoxgloveDataPlatformDataSourceFactory({
-        useIterablePlayer: enableExperimentalLatching,
-      }),
-      new SampleNuscenesDataSourceFactory({ useIterablePlayer: enableExperimentalLatching }),
+      new FoxgloveDataPlatformDataSourceFactory(),
+      new SampleNuscenesDataSourceFactory(),
       new McapLocalDataSourceFactory({ useIterablePlayer: enableExperimentalLatching }),
       new McapRemoteDataSourceFactory({ useIterablePlayer: enableExperimentalLatching }),
     ];

@@ -29,7 +29,12 @@ export function getMarkerId(topic: string, ns: string, id: number): string {
 }
 
 export class RenderableMarker extends Renderable<MarkerUserData> {
-  constructor(topic: string, marker: Marker, receiveTime: bigint | undefined, renderer: Renderer) {
+  public constructor(
+    topic: string,
+    marker: Marker,
+    receiveTime: bigint | undefined,
+    renderer: Renderer,
+  ) {
     const name = getMarkerId(topic, marker.ns, marker.id);
     const hasLifetime = marker.lifetime.sec !== 0 || marker.lifetime.nsec !== 0;
 
@@ -47,11 +52,11 @@ export class RenderableMarker extends Renderable<MarkerUserData> {
     });
   }
 
-  override details(): Record<string, RosValue> {
+  public override details(): Record<string, RosValue> {
     return this.userData.originalMarker;
   }
 
-  update(marker: Marker, receiveTime: bigint | undefined): void {
+  public update(marker: Marker, receiveTime: bigint | undefined): void {
     const hasLifetime = marker.lifetime.sec !== 0 || marker.lifetime.nsec !== 0;
 
     if (receiveTime != undefined) {

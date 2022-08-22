@@ -79,6 +79,7 @@ export type Fixture = {
   frame?: Frame;
   topics?: Topic[];
   capabilities?: string[];
+  profile?: string;
   activeData?: Partial<PlayerStateActiveData>;
   progress?: Progress;
   datatypes?: RosDatatypes;
@@ -166,10 +167,10 @@ export const MosaicWrapper = ({ children }: { children: React.ReactNode }): JSX.
 
 // empty catalog if one is not provided via props
 class MockPanelCatalog implements PanelCatalog {
-  getPanels(): readonly PanelInfo[] {
+  public getPanels(): readonly PanelInfo[] {
     return [];
   }
-  getPanelByType(_type: string): PanelInfo | undefined {
+  public getPanelByType(_type: string): PanelInfo | undefined {
     return undefined;
   }
 }
@@ -266,6 +267,7 @@ function UnconnectedPanelSetup(props: UnconnectedProps): JSX.Element | ReactNull
     topics = [],
     datatypes,
     capabilities,
+    profile,
     activeData,
     progress,
     publish,
@@ -302,6 +304,7 @@ function UnconnectedPanelSetup(props: UnconnectedProps): JSX.Element | ReactNull
         datatypes={dTypes}
         messages={allData}
         pauseFrame={props.pauseFrame}
+        profile={profile}
         activeData={activeData}
         progress={progress}
         publish={publish}

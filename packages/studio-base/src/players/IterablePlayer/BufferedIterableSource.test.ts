@@ -36,7 +36,7 @@ function waiter(count: number) {
 }
 
 class TestSource implements IIterableSource {
-  async initialize(): Promise<Initalization> {
+  public async initialize(): Promise<Initalization> {
     return {
       start: { sec: 0, nsec: 0 },
       end: { sec: 10, nsec: 0 },
@@ -49,11 +49,13 @@ class TestSource implements IIterableSource {
     };
   }
 
-  async *messageIterator(
+  public async *messageIterator(
     _args: MessageIteratorArgs,
   ): AsyncIterableIterator<Readonly<IteratorResult>> {}
 
-  async getBackfillMessages(_args: GetBackfillMessagesArgs): Promise<MessageEvent<unknown>[]> {
+  public async getBackfillMessages(
+    _args: GetBackfillMessagesArgs,
+  ): Promise<MessageEvent<unknown>[]> {
     return [];
   }
 }
@@ -346,10 +348,7 @@ describe("BufferedIterableSource", () => {
 
       await doneYield.wait();
 
-      expect(bufferedSource.loadedRanges()).toEqual([
-        { start: 0, end: 0.4999999999 },
-        { start: 0.5, end: 1 },
-      ]);
+      expect(bufferedSource.loadedRanges()).toEqual([{ start: 0, end: 1 }]);
 
       {
         {
@@ -456,9 +455,6 @@ describe("BufferedIterableSource", () => {
     await messageIterator.next();
     await signal.wait();
     expect(count).toEqual(2);
-    expect(bufferedSource.loadedRanges()).toEqual([
-      { start: 0, end: 0.2 },
-      { start: 0.2000000001, end: 0.4000000001 },
-    ]);
+    expect(bufferedSource.loadedRanges()).toEqual([{ start: 0, end: 0.4000000001 }]);
   });
 });
