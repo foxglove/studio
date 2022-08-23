@@ -43,6 +43,36 @@ const useStyles = makeStyles()((theme) => ({
     paddingBlock: theme.spacing(1),
     paddingInline: theme.spacing(1.5),
   },
+  table: {
+    borderCollapse: "collapse",
+    display: "block",
+    flex: 1,
+    overflowY: "auto",
+
+    thead: {
+      position: "sticky",
+      textAlign: "left",
+      top: 0,
+    },
+
+    tr: {
+      "&:hover": {
+        backgroundColor: theme.palette.background.paper,
+      },
+    },
+
+    th: {
+      backgroundColor: theme.palette.background.paper,
+      paddingBlock: theme.spacing(1),
+      paddingInline: theme.spacing(1.5),
+      whiteSpace: "nowrap",
+      width: "100%",
+    },
+
+    td: {
+      whiteSpace: "nowrap",
+    },
+  },
 }));
 
 function formatItemFrequency(item: TopicListItem) {
@@ -68,12 +98,12 @@ function TopicRow({ item }: { item: TopicListItem }): JSX.Element {
   const { classes } = useStyles();
 
   return (
-    <div className={classes.gridRow}>
-      <span className={classes.gridCell}>{item.name}</span>
-      <span className={classes.gridCell}>{item.datatype}</span>
-      <span className={classes.gridCell}>{item.numMessages?.toLocaleString() ?? "–"}</span>
-      <span className={classes.gridCell}>{formatItemFrequency(item)}</span>
-    </div>
+    <tr>
+      <td className={classes.gridCell}>{item.name}</td>
+      <td className={classes.gridCell}>{item.datatype}</td>
+      <td className={classes.gridCell}>{item.numMessages?.toLocaleString() ?? "–"}</td>
+      <td className={classes.gridCell}>{formatItemFrequency(item)}</td>
+    </tr>
   );
 }
 
@@ -130,23 +160,21 @@ function SourceInfo(): JSX.Element {
         <DataSourceInfo />
       </Box>
       <Divider />
-      <Box className={classes.grid}>
-        <Typography variant="subtitle2" className={classes.header}>
-          Topic Name
-        </Typography>
-        <Typography variant="subtitle2" className={classes.header}>
-          Datatype
-        </Typography>
-        <Typography variant="subtitle2" className={classes.header}>
-          Message count
-        </Typography>
-        <Typography variant="subtitle2" className={classes.header}>
-          Frequency
-        </Typography>
-        {detailListItems.map((item) => (
-          <MemoTopicRow key={item.name} item={item} />
-        ))}
-      </Box>
+      <table className={classes.table}>
+        <thead>
+          <tr>
+            <th>Topic Name</th>
+            <th>Datatype</th>
+            <th>Message count</th>
+            <th>Frequency</th>
+          </tr>
+        </thead>
+        <tbody>
+          {detailListItems.map((item) => (
+            <MemoTopicRow key={item.name} item={item} />
+          ))}
+        </tbody>
+      </table>
     </>
   );
 }
