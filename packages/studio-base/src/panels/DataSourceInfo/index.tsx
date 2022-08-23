@@ -8,7 +8,7 @@ import { useLatest } from "react-use";
 import { makeStyles } from "tss-react/mui";
 
 import { areEqual, subtract as subtractTimes, Time, toSec } from "@foxglove/rostime";
-import { DataSourceInfo } from "@foxglove/studio-base/components/DataSourceInfo";
+import { DataSourceInfoView } from "@foxglove/studio-base/components/DataSourceInfoView";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import {
   MessagePipelineContext,
@@ -185,7 +185,7 @@ function SourceInfo(): JSX.Element {
       <PanelToolbar helpContent={helpContent} />
       <Divider />
       <Box paddingTop={1}>
-        <DataSourceInfo />
+        <DataSourceInfoView />
       </Box>
       <Divider />
       <table className={classes.table} ref={rootRef}>
