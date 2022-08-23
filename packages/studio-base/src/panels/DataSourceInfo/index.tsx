@@ -2,11 +2,10 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Box, Divider, Typography } from "@mui/material";
-import { cloneDeep } from "lodash";
-import { useCallback, useMemo } from "react";
+import { Box, Divider } from "@mui/material";
+import { useCallback, useEffect, useRef } from "react";
+import { useLatest } from "react-use";
 import { makeStyles } from "tss-react/mui";
-import { useDebounce } from "use-debounce";
 
 import { areEqual, subtract as subtractTimes, Time, toSec } from "@foxglove/rostime";
 import { DataSourceInfo } from "@foxglove/studio-base/components/DataSourceInfo";
@@ -18,31 +17,10 @@ import { Topic, TopicStats } from "@foxglove/studio-base/src/players/types";
 
 import helpContent from "./index.help.md";
 
-type TopicListItem = Topic & Partial<TopicStats> & { id: string; duration: Time };
-
 const EMPTY_TOPICS: Topic[] = [];
 const EMPTY_TOPIC_STATS = new Map<string, TopicStats>();
 
 const useStyles = makeStyles()((theme) => ({
-  grid: {
-    display: "grid",
-    gridTemplateColumns: "auto auto auto auto",
-    overflowY: "auto",
-  },
-  gridCell: {
-    paddingBlock: theme.spacing(1),
-    paddingInline: theme.spacing(1.5),
-  },
-  gridRow: {
-    display: "contents",
-    "&:hover > *": {
-      backgroundColor: theme.palette.background.paper,
-    },
-  },
-  header: {
-    paddingBlock: theme.spacing(1),
-    paddingInline: theme.spacing(1.5),
-  },
   table: {
     borderCollapse: "collapse",
     display: "block",
@@ -70,18 +48,19 @@ const useStyles = makeStyles()((theme) => ({
     },
 
     td: {
+      paddingBlock: theme.spacing(1),
+      paddingInline: theme.spacing(1.5),
       whiteSpace: "nowrap",
     },
   },
 }));
 
-function formatItemFrequency(item: TopicListItem) {
-  const { numMessages, firstMessageTime, lastMessageTime, duration } = item;
-
-  if (numMessages == undefined) {
-    // No message count, so no frequency
-    return "–";
-  }
+function formatItemFrequency(
+  numMessages: number,
+  firstMessageTime: undefined | Time,
+  lastMessageTime: undefined | Time,
+  duration: Time,
+) {
   if (firstMessageTime == undefined || lastMessageTime == undefined) {
     // Message count but no timestamps, use the full connection duration
     return `${(numMessages / toSec(duration)).toFixed(2)} Hz`;
@@ -94,15 +73,37 @@ function formatItemFrequency(item: TopicListItem) {
   return `${((numMessages - 1) / topicDurationSec).toFixed(2)} Hz`;
 }
 
-function TopicRow({ item }: { item: TopicListItem }): JSX.Element {
-  const { classes } = useStyles();
-
+function TopicRow({
+  countElements,
+  freqElements,
+  topic,
+}: {
+  countElements: Record<string, HTMLTableCellElement>;
+  freqElements: Record<string, HTMLTableCellElement>;
+  topic: Topic;
+}): JSX.Element {
   return (
     <tr>
-      <td className={classes.gridCell}>{item.name}</td>
-      <td className={classes.gridCell}>{item.datatype}</td>
-      <td className={classes.gridCell}>{item.numMessages?.toLocaleString() ?? "–"}</td>
-      <td className={classes.gridCell}>{formatItemFrequency(item)}</td>
+      <td>{topic.name}</td>
+      <td>{topic.datatype}</td>
+      <td
+        ref={(elem) => {
+          if (elem) {
+            countElements[topic.name] = elem;
+          }
+        }}
+      >
+        &mdash;
+      </td>
+      <td
+        ref={(elem) => {
+          if (elem) {
+            freqElements[topic.name] = elem;
+          }
+        }}
+      >
+        &mdash;
+      </td>
     </tr>
   );
 }
@@ -125,25 +126,43 @@ function SourceInfo(): JSX.Element {
 
   const duration = endTime && startTime ? subtractTimes(endTime, startTime) : { sec: 0, nsec: 0 };
 
-  const [debouncedData] = useDebounce(
-    { topics, topicStats: cloneDeep(topicStats), duration, endTime },
-    500,
-    { leading: true, maxWait: 500 },
+  const latestDuration = useLatest(duration);
+
+  const rootRef = useRef<HTMLTableElement>(ReactNull);
+
+  const countElements = useRef<Record<string, HTMLTableCellElement>>({});
+  const freqElements = useRef<Record<string, HTMLTableCellElement>>({});
+
+  const animCount = useRef(0);
+
+  const animate = useCallback(
+    (stats: Map<string, TopicStats>) => {
+      stats.forEach((value, key) => {
+        const countElem = countElements.current[key];
+        if (countElem) {
+          countElem.innerText = value.numMessages.toLocaleString();
+        }
+        const freqElem = freqElements.current[key];
+        if (freqElem) {
+          freqElem.innerText = formatItemFrequency(
+            value.numMessages,
+            value.firstMessageTime,
+            value.lastMessageTime,
+            latestDuration.current,
+          );
+        }
+      });
+    },
+    [latestDuration],
   );
 
-  const detailListItems = useMemo<TopicListItem[]>(() => {
-    return debouncedData.topics.map((topic) => {
-      const stats = debouncedData.topicStats.get(topic.name);
-      return {
-        ...topic,
-        ...stats,
-        duration: debouncedData.duration,
-        id: topic.name,
-      };
-    });
-  }, [debouncedData.duration, debouncedData.topicStats, debouncedData.topics]);
+  useEffect(() => {
+    if (animCount.current++ % 2 === 0) {
+      requestAnimationFrame(() => animate(topicStats));
+    }
+  }, [animate, topicStats]);
 
-  if (!startTime || !debouncedData.endTime) {
+  if (!startTime || !endTime) {
     return (
       <>
         <PanelToolbar helpContent={helpContent} />
@@ -160,7 +179,7 @@ function SourceInfo(): JSX.Element {
         <DataSourceInfo />
       </Box>
       <Divider />
-      <table className={classes.table}>
+      <table className={classes.table} ref={rootRef}>
         <thead>
           <tr>
             <th>Topic Name</th>
@@ -170,8 +189,13 @@ function SourceInfo(): JSX.Element {
           </tr>
         </thead>
         <tbody>
-          {detailListItems.map((item) => (
-            <MemoTopicRow key={item.name} item={item} />
+          {topics.map((topic) => (
+            <MemoTopicRow
+              countElements={countElements.current}
+              freqElements={freqElements.current}
+              key={topic.name}
+              topic={topic}
+            />
           ))}
         </tbody>
       </table>
