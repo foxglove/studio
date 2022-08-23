@@ -26,6 +26,12 @@ const useStyles = makeStyles()((theme) => ({
   button: {
     padding: theme.spacing(0.125),
 
+    ".MuiSvgIcon-root": {
+      fontSize: theme.typography.pxToRem(16),
+    },
+    ".MuiButton-startIcon": {
+      marginRight: theme.spacing(0.5),
+    },
     "&:hover": {
       backgroundColor: "transparent",
     },
@@ -72,7 +78,7 @@ export default function Metadata({
         </Typography>
         <CopyButton
           size="small"
-          iconSize="small"
+          iconSize="inherit"
           className={classes.button}
           value={JSON.stringify(data, copyMessageReplacer, 2) ?? ""}
         />
@@ -88,14 +94,14 @@ export default function Metadata({
             >{`diff @ ${formatTimeRaw(diffMessage.receiveTime)} sec `}</Typography>
             <CopyButton
               size="small"
-              iconSize="small"
+              iconSize="inherit"
               className={classes.button}
               value={JSON.stringify(diffData, copyMessageReplacer, 2) ?? ""}
             />
           </Stack>
           <CopyButton
             size="small"
-            iconSize="small"
+            iconSize="inherit"
             className={classes.button}
             value={JSON.stringify(diff, copyMessageReplacer, 2) ?? ""}
           >
