@@ -2,49 +2,42 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Grow } from "@mui/material";
-import { SnackbarProvider } from "notistack";
+import CloseIcon from "@mui/icons-material/Close";
+import { Grow, IconButton } from "@mui/material";
+import { SnackbarProvider, useSnackbar } from "notistack";
 import { PropsWithChildren } from "react";
 import { makeStyles } from "tss-react/mui";
 
 const useStyles = makeStyles()((theme) => ({
   /* eslint-disable tss-unused-classes/unused-classes */
   root: {
-    ".SnackbarContent-root": {
-      padding: theme.spacing(0.5, 1.5),
-    },
+    ".SnackbarContent-root": { padding: theme.spacing(0.5, 1.5) },
   },
   variantSuccess: {
-    "&.SnackbarContent-root": {
-      backgroundColor: theme.palette.success.main,
-      color: theme.palette.success.contrastText,
-    },
+    "&.SnackbarContent-root": { backgroundColor: theme.palette.success.main },
   },
   variantError: {
-    "&.SnackbarContent-root": {
-      backgroundColor: theme.palette.error.main,
-      color: theme.palette.error.contrastText,
-    },
+    "&.SnackbarContent-root": { backgroundColor: theme.palette.error.main },
   },
   variantInfo: {
-    "&.SnackbarContent-root": {
-      backgroundColor: theme.palette.info.main,
-      color: theme.palette.info.contrastText,
-    },
+    "&.SnackbarContent-root": { backgroundColor: theme.palette.info.main },
   },
   variantWarning: {
-    "&.SnackbarContent-root": {
-      backgroundColor: theme.palette.warning.main,
-      color: theme.palette.warning.contrastText,
-    },
+    "&.SnackbarContent-root": { backgroundColor: theme.palette.warning.main },
   },
   /* eslint-enable tss-unused-classes/unused-classes */
 }));
 
 export default function StudioToastProvider(props: PropsWithChildren<unknown>): JSX.Element {
   const { classes } = useStyles();
+  const { closeSnackbar } = useSnackbar();
   return (
     <SnackbarProvider
+      action={(id) => (
+        <IconButton size="small" onClick={() => closeSnackbar(id)}>
+          <CloseIcon fontSize="inherit" />
+        </IconButton>
+      )}
       anchorOrigin={{ vertical: "top", horizontal: "center" }}
       maxSnack={4}
       TransitionComponent={Grow}
