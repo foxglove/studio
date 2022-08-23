@@ -4,10 +4,8 @@
 
 import { Skeleton, Typography } from "@mui/material";
 import { MutableRefObject, useEffect, useRef } from "react";
-import { useDebounce } from "use-debounce";
 
 import { Time } from "@foxglove/rostime";
-import Duration from "@foxglove/studio-base/components/Duration";
 import {
   MessagePipelineContext,
   useMessagePipeline,
