@@ -11,8 +11,8 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { useSnackbar, VariantType } from "notistack";
 import { useLayoutEffect, useState } from "react";
-import { useToasts, AppearanceTypes } from "react-toast-notifications";
 
 import NotificationModal from "@foxglove/studio-base/components/NotificationModal";
 import {
@@ -24,7 +24,7 @@ import {
   NotificationMessage,
 } from "@foxglove/studio-base/util/sendNotification";
 
-const severityToToastAppearance = (severity: NotificationSeverity): AppearanceTypes => {
+const severityToToastAppearance = (severity: NotificationSeverity): VariantType => {
   switch (severity) {
     case "error":
       return "error";
@@ -38,7 +38,7 @@ const severityToToastAppearance = (severity: NotificationSeverity): AppearanceTy
 };
 
 export default function SendNotificationToastAdapter(): React.ReactElement {
-  const { addToast } = useToasts();
+  const { enqueueSnackbar } = useSnackbar();
 
   const [notificationDetails, setNotificationDetails] = useState<NotificationMessage | undefined>(
     undefined,
@@ -60,7 +60,7 @@ export default function SendNotificationToastAdapter(): React.ReactElement {
           });
         };
 
-        addToast(
+        enqueueSnackbar(
           <span>
             {message}{" "}
             <i style={{ cursor: "pointer" }} onClick={onDetails}>
@@ -68,7 +68,7 @@ export default function SendNotificationToastAdapter(): React.ReactElement {
             </i>
           </span>,
           {
-            appearance: severityToToastAppearance(severity),
+            variant: severityToToastAppearance(severity),
           },
         );
       },
@@ -77,7 +77,7 @@ export default function SendNotificationToastAdapter(): React.ReactElement {
     return () => {
       unsetNotificationHandler();
     };
-  }, [addToast]);
+  }, [enqueueSnackbar]);
 
   return (
     <>

@@ -3,8 +3,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Story, StoryContext } from "@storybook/react";
+import { SnackbarProvider } from "notistack";
 import { useMemo, useRef } from "react";
-import { ToastProvider } from "react-toast-notifications";
 
 import { Condvar } from "@foxglove/den/async";
 import CssBaseline from "@foxglove/studio-base/components/CssBaseline";
@@ -76,7 +76,7 @@ function StudioContextProviders({
     /* eslint-disable react/jsx-key */
     <AppConfigurationContext.Provider value={appConfiguration} />,
     <ReadySignalContext.Provider value={readySignal} />,
-    <ToastProvider>{undefined}</ToastProvider>,
+    <SnackbarProvider>{undefined}</SnackbarProvider>,
     <HoverValueProvider />,
     <UserNodeStateProvider />,
     /* eslint-enable react/jsx-key */
