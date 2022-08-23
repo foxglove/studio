@@ -3,11 +3,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Box, Divider } from "@mui/material";
-import { useCallback, useEffect, useRef } from "react";
-import { useLatest } from "react-use";
 import { makeStyles } from "tss-react/mui";
 
-import { areEqual, subtract as subtractTimes, Time, toSec } from "@foxglove/rostime";
 import { DataSourceInfoView } from "@foxglove/studio-base/components/DataSourceInfoView";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import {
@@ -16,12 +13,12 @@ import {
 } from "@foxglove/studio-base/components/MessagePipeline";
 import Panel from "@foxglove/studio-base/components/Panel";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
-import { Topic, TopicStats } from "@foxglove/studio-base/src/players/types";
+import { useDirectTopicStatsUpdate } from "@foxglove/studio-base/hooks/useDirectTopicStatsUpdate";
+import { Topic } from "@foxglove/studio-base/src/players/types";
 
 import helpContent from "./index.help.md";
 
 const EMPTY_TOPICS: Topic[] = [];
-const EMPTY_TOPIC_STATS = new Map<string, TopicStats>();
 
 const useStyles = makeStyles()((theme) => ({
   table: {
@@ -58,31 +55,13 @@ const useStyles = makeStyles()((theme) => ({
   },
 }));
 
-function formatItemFrequency(
-  numMessages: number,
-  firstMessageTime: undefined | Time,
-  lastMessageTime: undefined | Time,
-  duration: Time,
-) {
-  if (firstMessageTime == undefined || lastMessageTime == undefined) {
-    // Message count but no timestamps, use the full connection duration
-    return `${(numMessages / toSec(duration)).toFixed(2)} Hz`;
-  }
-  if (numMessages < 2 || areEqual(firstMessageTime, lastMessageTime)) {
-    // Not enough messages or time span to calculate a frequency
-    return "–";
-  }
-  const topicDurationSec = toSec(subtractTimes(lastMessageTime, firstMessageTime));
-  return `${((numMessages - 1) / topicDurationSec).toFixed(2)} Hz`;
-}
-
 function TopicRow({
   countElements,
-  freqElements,
+  frequencyElements,
   topic,
 }: {
-  countElements: Record<string, HTMLTableCellElement>;
-  freqElements: Record<string, HTMLTableCellElement>;
+  countElements: Record<string, HTMLElement>;
+  frequencyElements: Record<string, HTMLElement>;
   topic: Topic;
 }): JSX.Element {
   return (
@@ -101,7 +80,7 @@ function TopicRow({
       <td
         ref={(elem) => {
           if (elem) {
-            freqElements[topic.name] = elem;
+            frequencyElements[topic.name] = elem;
           }
         }}
       >
@@ -113,8 +92,6 @@ function TopicRow({
 
 const selectTopics = (ctx: MessagePipelineContext) =>
   ctx.playerState.activeData?.topics ?? EMPTY_TOPICS;
-const selectTopicStats = (ctx: MessagePipelineContext) =>
-  ctx.playerState.activeData?.topicStats ?? EMPTY_TOPIC_STATS;
 const selectStartTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.startTime;
 const selectEndTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.endTime;
 
@@ -124,52 +101,10 @@ function SourceInfo(): JSX.Element {
   const { classes } = useStyles();
 
   const topics = useMessagePipeline(selectTopics);
-  const topicStats = useMessagePipeline(selectTopicStats);
   const startTime = useMessagePipeline(selectStartTime);
   const endTime = useMessagePipeline(selectEndTime);
 
-  const duration = endTime && startTime ? subtractTimes(endTime, startTime) : { sec: 0, nsec: 0 };
-
-  const latestDuration = useLatest(duration);
-
-  const rootRef = useRef<HTMLTableElement>(ReactNull);
-
-  const countElements = useRef<Record<string, HTMLTableCellElement>>({});
-  const freqElements = useRef<Record<string, HTMLTableCellElement>>({});
-
-  const animCount = useRef(0);
-
-  useEffect(() => {
-    countElements.current = {};
-    freqElements.current = {};
-  }, [topics]);
-
-  const animate = useCallback(
-    (stats: Map<string, TopicStats>) => {
-      stats.forEach((value, key) => {
-        const countElem = countElements.current[key];
-        if (countElem) {
-          countElem.innerText = value.numMessages.toLocaleString();
-        }
-        const freqElem = freqElements.current[key];
-        if (freqElem) {
-          freqElem.innerText = formatItemFrequency(
-            value.numMessages,
-            value.firstMessageTime,
-            value.lastMessageTime,
-            latestDuration.current,
-          );
-        }
-      });
-    },
-    [latestDuration],
-  );
-
-  useEffect(() => {
-    if (animCount.current++ % 2 === 0) {
-      animate(topicStats);
-    }
-  }, [animate, topicStats]);
+  const { countElements, frequencyElements } = useDirectTopicStatsUpdate(6);
 
   if (!startTime || !endTime) {
     return (
@@ -188,7 +123,7 @@ function SourceInfo(): JSX.Element {
         <DataSourceInfoView />
       </Box>
       <Divider />
-      <table className={classes.table} ref={rootRef}>
+      <table className={classes.table}>
         <thead>
           <tr>
             <th>Topic Name</th>
@@ -200,8 +135,8 @@ function SourceInfo(): JSX.Element {
         <tbody>
           {topics.map((topic) => (
             <MemoTopicRow
-              countElements={countElements.current}
-              freqElements={freqElements.current}
+              countElements={countElements}
+              frequencyElements={frequencyElements}
               key={topic.name}
               topic={topic}
             />
