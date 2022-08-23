@@ -55,6 +55,23 @@ export function Default(): JSX.Element {
   return <EventsList />;
 }
 
+export function Hovered(): JSX.Element {
+  const setEvents = useEvents((store) => store.setEvents);
+  useEffect(() => {
+    setEvents({ loading: false, value: makeEvents(20) });
+  }, [setEvents]);
+
+  return <EventsList />;
+}
+Hovered.play = async () => {
+  const user = userEvent.setup();
+  const elements = await screen.findAllByTestId("sidebar-event");
+  await user.hover(elements[0]!);
+};
+Hovered.parameters = {
+  colorScheme: "light",
+};
+
 export function Filtered(): JSX.Element {
   const setEvents = useEvents((store) => store.setEvents);
   useEffect(() => {

@@ -22,52 +22,78 @@ import {
 import { useAppTimeFormat } from "@foxglove/studio-base/hooks";
 import { ConsoleEvent } from "@foxglove/studio-base/services/ConsoleApi";
 
-const useStyles = makeStyles<void, "eventMetadata">()((theme, _params, classes) => ({
-  appBar: {
-    top: -1,
-    zIndex: theme.zIndex.appBar - 1,
-    display: "flex",
-    flexDirection: "row",
-    padding: theme.spacing(1),
-    gap: theme.spacing(1),
-    alignItems: "center",
-  },
-  grid: {
-    backgroundColor: theme.palette.divider,
-    display: "grid",
-    flex: 1,
-    gap: "1px",
-    gridTemplateColumns: "auto 1fr",
-    overflowY: "auto",
-    paddingTop: "1px",
-  },
-  root: {
-    backgroundColor: theme.palette.background.paper,
-    maxHeight: "100%",
-  },
-  spacer: {
-    backgroundColor: theme.palette.background.paper,
-    height: theme.spacing(1),
-    gridColumn: "span 2",
-  },
-  event: {
-    display: "contents",
-    cursor: "default",
+const useStyles = makeStyles<void, "eventMetadata" | "eventSelected">()(
+  (theme, _params, classes) => ({
+    appBar: {
+      top: -1,
+      zIndex: theme.zIndex.appBar - 1,
+      display: "flex",
+      flexDirection: "row",
+      padding: theme.spacing(1),
+      gap: theme.spacing(1),
+      alignItems: "center",
+      borderBottom: `1px solid ${theme.palette.divider}`,
+    },
+    grid: {
+      display: "grid",
+      flex: 1,
+      gridTemplateColumns: "auto 1fr",
+      overflowY: "auto",
+      padding: theme.spacing(1),
+    },
+    root: {
+      backgroundColor: theme.palette.background.paper,
+      maxHeight: "100%",
+    },
+    spacer: {
+      cursor: "default",
+      height: theme.spacing(1),
+      gridColumn: "span 2",
+    },
+    event: {
+      display: "contents",
+      cursor: "pointer",
 
-    "&:hover": {
-      [`.${classes.eventMetadata}`]: {
-        backgroundColor: alpha(theme.palette.primary.main, theme.palette.action.activatedOpacity),
+      [`&:hover, &:focus, &.${classes.eventSelected}`]: {
+        [`.${classes.eventMetadata}`]: {
+          backgroundColor: alpha(theme.palette.primary.main, theme.palette.action.focusOpacity),
+          borderColor: theme.palette.primary.main,
+        },
       },
     },
-  },
-  eventMetadata: {
-    padding: theme.spacing(1),
-    backgroundColor: theme.palette.background.default,
-  },
-  targetedEvent: {
-    fontWeight: "bold",
-  },
-}));
+    eventSelected: {
+      [`.${classes.eventMetadata}`]: {
+        backgroundColor: alpha(theme.palette.primary.main, theme.palette.action.activatedOpacity),
+        borderColor: theme.palette.primary.main,
+        boxShadow: `0 0 0 1px ${theme.palette.primary.main}`,
+      },
+    },
+    eventMetadata: {
+      padding: theme.spacing(1),
+      backgroundColor: theme.palette.background.default,
+      borderRight: `1px solid ${theme.palette.divider}`,
+      borderBottom: `1px solid ${theme.palette.divider}`,
+
+      "&:nth-of-type(odd)": {
+        borderLeft: `1px solid ${theme.palette.divider}`,
+      },
+      "&:first-of-type": {
+        borderTop: `1px solid ${theme.palette.divider}`,
+        borderTopLeftRadius: theme.shape.borderRadius,
+      },
+      "&:nth-of-type(2)": {
+        borderTop: `1px solid ${theme.palette.divider}`,
+        borderTopRightRadius: theme.shape.borderRadius,
+      },
+      "&:nth-last-of-type(2)": {
+        borderBottomRightRadius: theme.shape.borderRadius,
+      },
+      "&:nth-last-of-type(3)": {
+        borderBottomLeftRadius: theme.shape.borderRadius,
+      },
+    },
+  }),
+);
 
 const selectStartTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.startTime;
 const selectTargetEventId = ({ playerState }: MessagePipelineContext) =>
@@ -91,18 +117,15 @@ function EventView(params: {
 
   return (
     <div
-      className={classes.event}
+      data-testid="sidebar-event"
+      className={cx(classes.event, { [classes.eventSelected]: isTargeted })}
       onMouseEnter={() => onHoverStart(event)}
       onMouseLeave={() => onHoverEnd(event)}
     >
       {fields.map(([key, value]) => (
         <Fragment key={key}>
-          <div className={cx(classes.eventMetadata, { [classes.targetedEvent]: isTargeted })}>
-            {key}
-          </div>
-          <div className={cx(classes.eventMetadata, { [classes.targetedEvent]: isTargeted })}>
-            {value}
-          </div>
+          <div className={classes.eventMetadata}>{key}</div>
+          <div className={classes.eventMetadata}>{value}</div>
         </Fragment>
       ))}
       <div className={classes.spacer} />
