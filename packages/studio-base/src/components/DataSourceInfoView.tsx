@@ -15,7 +15,7 @@ import Timestamp from "@foxglove/studio-base/components/Timestamp";
 import { useAppTimeFormat } from "@foxglove/studio-base/hooks";
 import { subtractTimes } from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/typescript/userUtils/time";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
-import { formatDuration } from "@foxglove/studio-base/util/formatTime";
+import { formatDate, formatDuration } from "@foxglove/studio-base/util/formatTime";
 
 import { MultilineMiddleTruncate } from "./MultilineMiddleTruncate";
 
@@ -98,6 +98,8 @@ function DataSourceInfoContent(props: {
 
 const MemoDataSourceInfoContent = React.memo(DataSourceInfoContent);
 
+const EmDash = "\u2014";
+
 export function DataSourceInfoView(): JSX.Element {
   const startTime = useMessagePipeline(selectStartTime);
   const endTime = useMessagePipeline(selectEndTime);
@@ -115,14 +117,15 @@ export function DataSourceInfoView(): JSX.Element {
         const durationStr = formatDuration(duration);
         durationRef.current.innerText = durationStr;
       } else {
-        durationRef.current.innerText = "-";
+        durationRef.current.innerText = EmDash;
       }
     }
     if (endTimeRef.current) {
       if (endTime) {
-        endTimeRef.current.innerText = formatTime(endTime);
+        const date = formatDate(endTime, undefined);
+        endTimeRef.current.innerText = `${date} ${formatTime(endTime)}`;
       } else {
-        endTimeRef.current.innerText = "-";
+        endTimeRef.current.innerText = EmDash;
       }
     }
   }, [endTime, formatTime, startTime]);
