@@ -10,7 +10,10 @@ import { makeStyles } from "tss-react/mui";
 import { areEqual, subtract as subtractTimes, Time, toSec } from "@foxglove/rostime";
 import { DataSourceInfo } from "@foxglove/studio-base/components/DataSourceInfo";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
-import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
+import {
+  MessagePipelineContext,
+  useMessagePipeline,
+} from "@foxglove/studio-base/components/MessagePipeline";
 import Panel from "@foxglove/studio-base/components/Panel";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import { Topic, TopicStats } from "@foxglove/studio-base/src/players/types";
@@ -108,21 +111,22 @@ function TopicRow({
   );
 }
 
+const selectTopics = (ctx: MessagePipelineContext) =>
+  ctx.playerState.activeData?.topics ?? EMPTY_TOPICS;
+const selectTopicStats = (ctx: MessagePipelineContext) =>
+  ctx.playerState.activeData?.topicStats ?? EMPTY_TOPIC_STATS;
+const selectStartTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.startTime;
+const selectEndTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.endTime;
+
 const MemoTopicRow = React.memo(TopicRow);
 
 function SourceInfo(): JSX.Element {
   const { classes } = useStyles();
 
-  const topics = useMessagePipeline(
-    useCallback((ctx) => ctx.playerState.activeData?.topics ?? EMPTY_TOPICS, []),
-  );
-  const topicStats = useMessagePipeline(
-    useCallback((ctx) => ctx.playerState.activeData?.topicStats ?? EMPTY_TOPIC_STATS, []),
-  );
-  const startTime = useMessagePipeline(
-    useCallback((ctx) => ctx.playerState.activeData?.startTime, []),
-  );
-  const endTime = useMessagePipeline(useCallback((ctx) => ctx.playerState.activeData?.endTime, []));
+  const topics = useMessagePipeline(selectTopics);
+  const topicStats = useMessagePipeline(selectTopicStats);
+  const startTime = useMessagePipeline(selectStartTime);
+  const endTime = useMessagePipeline(selectEndTime);
 
   const duration = endTime && startTime ? subtractTimes(endTime, startTime) : { sec: 0, nsec: 0 };
 
@@ -134,6 +138,11 @@ function SourceInfo(): JSX.Element {
   const freqElements = useRef<Record<string, HTMLTableCellElement>>({});
 
   const animCount = useRef(0);
+
+  useEffect(() => {
+    countElements.current = {};
+    freqElements.current = {};
+  }, [topics]);
 
   const animate = useCallback(
     (stats: Map<string, TopicStats>) => {
