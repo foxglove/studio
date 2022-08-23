@@ -7,6 +7,8 @@
 import { render } from "@testing-library/react";
 import { act } from "react-dom/test-utils";
 
+import { Condvar } from "@foxglove/den/async";
+import { Time } from "@foxglove/rostime";
 import { PanelExtensionContext, RenderState } from "@foxglove/studio";
 import MockPanelContextProvider from "@foxglove/studio-base/components/MockPanelContextProvider";
 import PanelExtensionAdapter from "@foxglove/studio-base/components/PanelExtensionAdapter";
@@ -553,6 +555,68 @@ describe("PanelExtensionAdapter", () => {
       { variables: new Map([["foo", { nested: [1, 2, 3] }]]) },
       { variables: new Map() },
     ]);
+    mockRAF.mockRestore();
+  });
+
+  it("should call pause frame with new frame and resume after rendering", async () => {
+    const renderStates: RenderState[] = [];
+
+    const initPanel = jest.fn((context: PanelExtensionContext) => {
+      context.watch("currentTime");
+      context.onRender = (renderState, done) => {
+        renderStates.push({ ...renderState });
+        done();
+      };
+    });
+
+    const config = {};
+    const saveConfig = () => {};
+
+    const pauseFrameCond = new Condvar();
+
+    const Wrapper = ({ currentTime }: { currentTime?: Time }) => {
+      return (
+        <ThemeProvider isDark>
+          <MockPanelContextProvider>
+            <PanelSetup
+              fixture={{
+                activeData: { currentTime },
+              }}
+              pauseFrame={() => {
+                return () => {
+                  pauseFrameCond.notifyAll();
+                };
+              }}
+            >
+              <PanelExtensionAdapter
+                config={config}
+                saveConfig={saveConfig}
+                initPanel={initPanel}
+              />
+            </PanelSetup>
+          </MockPanelContextProvider>
+        </ThemeProvider>
+      );
+    };
+
+    // Setup the request animation frame to take some time
+    const mockRAF = jest.spyOn(window, "requestAnimationFrame").mockImplementation((cb) => {
+      queueMicrotask(() => cb(performance.now())) as any;
+      return 1;
+    });
+
+    const resumeFrameWait = pauseFrameCond.wait();
+    render(<Wrapper currentTime={{ sec: 1, nsec: 0 }} />);
+    expect(initPanel).toHaveBeenCalled();
+
+    await act(async () => await resumeFrameWait);
+
+    expect(renderStates).toEqual([
+      {
+        currentTime: { sec: 1, nsec: 0 },
+      },
+    ]);
+
     mockRAF.mockRestore();
   });
 });

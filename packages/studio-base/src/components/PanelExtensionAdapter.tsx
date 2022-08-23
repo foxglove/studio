@@ -139,6 +139,8 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
 
   const latestPipelineContextRef = useRef<MessagePipelineContext | undefined>(undefined);
 
+  const resumeFrameRef = useRef<(() => void) | undefined>(undefined);
+
   const [slowRender, setSlowRender] = useState(false);
 
   const { globalVariables, setGlobalVariables } = useGlobalVariables();
@@ -324,6 +326,7 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
     }
 
     if (!shouldRender) {
+      resumeFrameRef.current?.();
       return;
     }
 
@@ -338,6 +341,14 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
           return;
         }
         doneCalled = true;
+
+        resumeFrameRef.current?.();
+        resumeFrameRef.current = undefined;
+
+        // fixme - do I still need this renderingRef?
+        // how is it that request animation frame got called again?
+        // queueFrame is called from multiple places (i.e. hover value update)
+        // and if we are still rendering that and a new update comes in
         renderingRef.current = false;
       });
     } catch (err) {
@@ -353,13 +364,34 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
   }, [renderFn, renderPanelImpl]);
 
   // Queue render when message pipeline has new data
-  const messagePipelineSelector = useCallback(
-    (ctx: MessagePipelineContext) => {
+  const messagePipelineSelector = useCallback((ctx: MessagePipelineContext) => {
+    return ctx;
+    /*
+      // fixme - can't produce different values for the same input
+      // thats a no-no for selector land!
+      // side effects in selector :( ultimate sadness
+
+      // We have a new context to render but we also still have an existing frame we haven't rendered!
+      // This should technically be an invariant
+      if (latestPipelineContextRef.current !== ctx && resumeFrameRef.current) {
+        // fixme - analytics instead of throw?
+        // fixme - in tests can't console error cause tests are not waiting for resume frame properly
+        //throw new Error("dropping frame");
+        //console.error("dropping frame");
+        return true;
+      }
+
+      // fixme - if we return here and the panel never resumes we have a problem?
+      if (resumeFrameRef.current) {
+        return true;
+      }
+
+      resumeFrameRef.current = latestPipelineContextRef.current?.pauseFrame(panelId);
       latestPipelineContextRef.current = ctx;
       queueRender();
-    },
-    [queueRender],
-  );
+      return false;
+      */
+  }, []);
 
   useEffect(() => {
     const handlers = new Map<string, (newValue: AppSettingValue) => void>();
@@ -393,7 +425,36 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
     }
   }, [hoverValue, queueRender]);
 
-  useMessagePipeline(messagePipelineSelector);
+  const ctx = useMessagePipeline(messagePipelineSelector);
+
+  useLayoutEffect(() => {
+    // We have a new context to render but we also still have an existing frame we haven't rendered!
+    // This should technically be an invariant
+    if (latestPipelineContextRef.current !== ctx && resumeFrameRef.current) {
+      console.error("already rendering so won't replace context!");
+      setSlowRender(true);
+      return;
+      // fixme - analytics instead of throw?
+      // fixme - in tests can't console error cause tests are not waiting for resume frame properly
+      //throw new Error("dropping frame");
+      //console.error("dropping frame");
+    }
+
+    // fixme - if we return here and the panel never resumes are we stuck forever?
+    if (resumeFrameRef.current) {
+      console.error("already rendering so won't replace context!");
+      setSlowRender(true);
+      return;
+    }
+
+    setSlowRender(false);
+    resumeFrameRef.current = latestPipelineContextRef.current?.pauseFrame(panelId);
+    latestPipelineContextRef.current = ctx;
+
+    // fixme - do we need to queue render or should we just use react to do it?
+    // maybe we can avoid a context ref?
+    queueRender();
+  }, [ctx, panelId, queueRender]);
 
   const updatePanelSettingsTree = usePanelSettingsTreeUpdate();
 
