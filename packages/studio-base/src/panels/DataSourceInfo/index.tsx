@@ -158,7 +158,7 @@ function SourceInfo(): JSX.Element {
 
   useEffect(() => {
     if (animCount.current++ % 2 === 0) {
-      requestAnimationFrame(() => animate(topicStats));
+      animate(topicStats);
     }
   }, [animate, topicStats]);
 
