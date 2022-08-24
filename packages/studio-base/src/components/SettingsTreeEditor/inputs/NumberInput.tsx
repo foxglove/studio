@@ -27,7 +27,6 @@ const useStyles = makeStyles()((theme) => ({
   },
 
   textField: {
-    cursor: "auto",
     ".MuiInputBase-formControl.MuiInputBase-root": {
       paddingTop: 0,
       paddingBottom: 0,
@@ -56,7 +55,9 @@ const useStyles = makeStyles()((theme) => ({
       theme.palette.mode === "light"
         ? darken(theme.palette.background.default, 0.1)
         : lighten(theme.palette.background.default, 0.2),
-    cursor: "none",
+    input: {
+      cursor: "none",
+    },
   },
 }));
 
@@ -133,13 +134,14 @@ export function NumberInput(
 
   const onPointerMove = useCallback(
     (event: React.PointerEvent) => {
-      if (event.buttons === 1 && latestValue.current != undefined) {
+      if (event.buttons === 1) {
+        const startValue = latestValue.current ?? placeHolderValue ?? 0;
         event.preventDefault();
         const scale = event.shiftKey ? 10 : 1;
-        updateValue(latestValue.current + event.movementX * 0.05 * step * scale);
+        updateValue(startValue + event.movementX * 0.05 * step * scale);
       }
     },
-    [latestValue, step, updateValue],
+    [latestValue, placeHolderValue, step, updateValue],
   );
 
   return (
@@ -151,13 +153,13 @@ export function NumberInput(
       }
       type="number"
       className={cx(classes.textField, { [classes.textFieldScrubbing]: pointerDown })}
-      onPointerDown={onPointerDown}
-      onPointerUp={onPointerUp}
-      onPointerMove={onPointerMove}
       inputProps={{
         max: props.max,
         min: props.min,
         step: stepAmount,
+        onPointerDown,
+        onPointerUp,
+        onPointerMove,
       }}
       InputProps={{
         readOnly,
