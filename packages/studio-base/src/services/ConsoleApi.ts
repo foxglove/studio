@@ -75,6 +75,11 @@ type CoverageResponse = {
   end: string;
 };
 
+type DeviceResponse = {
+  id: string;
+  name: string;
+};
+
 export type LayoutID = string & { __brand: "LayoutID" };
 export type ISO8601Timestamp = string & { __brand: "ISO8601Timestamp" };
 
@@ -151,6 +156,10 @@ class ConsoleApi {
 
   public async getExtension(id: string): Promise<ExtensionResponse> {
     return await this.get<ExtensionResponse>(`/v1/extensions/${id}`);
+  }
+
+  public async getDevice(id: string): Promise<DeviceResponse> {
+    return await this.get<DeviceResponse>(`/v1/devices/${id}`);
   }
 
   public async getLayouts(options: { includeData: boolean }): Promise<readonly ConsoleApiLayout[]> {
