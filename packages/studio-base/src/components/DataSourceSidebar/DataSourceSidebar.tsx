@@ -87,6 +87,8 @@ const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => player
 const selectPlayerProblems = ({ playerState }: MessagePipelineContext) => playerState.problems;
 const selectPlayerSourceId = ({ playerState }: MessagePipelineContext) =>
   playerState.urlState?.sourceId;
+const selectTargetEventId = ({ playerState }: MessagePipelineContext) =>
+  playerState.urlState?.parameters?.eventId;
 
 export default function DataSourceSidebar(props: Props): JSX.Element {
   const { onSelectDataSourceAction } = props;
@@ -94,6 +96,7 @@ export default function DataSourceSidebar(props: Props): JSX.Element {
   const playerProblems = useMessagePipeline(selectPlayerProblems) ?? [];
   const { currentUser } = useCurrentUser();
   const playerSourceId = useMessagePipeline(selectPlayerSourceId);
+  const targetEventId = useMessagePipeline(selectTargetEventId);
   const [activeTab, setActiveTab] = useState<number>(0);
 
   const showEventsTab = currentUser != undefined && playerSourceId === "foxglove-data-platform";
@@ -108,12 +111,12 @@ export default function DataSourceSidebar(props: Props): JSX.Element {
   useEffect(() => {
     if (playerPresence === PlayerPresence.ERROR || playerPresence === PlayerPresence.RECONNECTING) {
       setActiveTab(2);
-    } else if (showEventsTab) {
+    } else if (showEventsTab && targetEventId != undefined) {
       setActiveTab(1);
     } else {
       setActiveTab(0);
     }
-  }, [playerPresence, showEventsTab]);
+  }, [playerPresence, showEventsTab, targetEventId]);
 
   return (
     <SidebarContent
