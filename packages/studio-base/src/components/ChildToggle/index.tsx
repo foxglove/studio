@@ -11,8 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Layer } from "@fluentui/react";
-import { Box, Stack } from "@mui/material";
+import { Box, Backdrop, Stack } from "@mui/material";
 import cx from "classnames";
 import {
   ReactElement,
@@ -76,7 +75,7 @@ type Props = {
 // a component which takes 2 child components: toggle trigger and content
 // when the toggle trigger component is clicked the onToggle callback will fire
 // setting isOpen to true will show the content component, floating below the trigger component
-export default function ChildToggle(props: Props): ReactElement {
+export default function ChildToggle(props: Props): JSX.Element {
   const {
     isOpen: controlledIsOpen,
     defaultIsOpen,
@@ -231,7 +230,13 @@ export default function ChildToggle(props: Props): ReactElement {
       </div>
     );
 
-    return noPortal ? tree : <Layer eventBubblingEnabled>{tree}</Layer>;
+    return noPortal ? (
+      tree
+    ) : (
+      <Backdrop open invisible>
+        {tree}
+      </Backdrop>
+    );
   }
 
   const keyDownHandlers = {

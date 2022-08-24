@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Layer } from "@fluentui/react";
+import { Backdrop } from "@mui/material";
 import { useSnackbar } from "notistack";
 import { extname } from "path";
 import { useCallback, useLayoutEffect, useState } from "react";
@@ -169,7 +169,9 @@ export default function DocumentDropListener(props: Props): JSX.Element {
         data-puppeteer-file-upload
         multiple
       />
-      {hovering && <Layer>{props.children}</Layer>}
+      <Backdrop open={hovering} invisible>
+        {props.children}
+      </Backdrop>
     </>
   );
 }
