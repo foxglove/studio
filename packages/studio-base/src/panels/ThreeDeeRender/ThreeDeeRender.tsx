@@ -26,10 +26,12 @@ import {
   LayoutActions,
   MessageEvent,
   PanelExtensionContext,
+  ParameterValue,
   RenderState,
   SettingsTreeAction,
   SettingsTreeNodes,
   Topic,
+  VariableValue,
 } from "@foxglove/studio";
 import PublishGoalIcon from "@foxglove/studio-base/components/PublishGoalIcon";
 import PublishPointIcon from "@foxglove/studio-base/components/PublishPointIcon";
@@ -45,7 +47,6 @@ import { MessageHandler, Renderer, RendererConfig } from "./Renderer";
 import { RendererContext, useRenderer, useRendererEvent } from "./RendererContext";
 import { Stats } from "./Stats";
 import { CameraState, DEFAULT_CAMERA_STATE, MouseEventObject } from "./camera";
-import { FRAME_TRANSFORM_DATATYPES } from "./foxglove";
 import {
   PublishDatatypes,
   makePointMessage,
@@ -53,12 +54,11 @@ import {
   makePoseMessage,
 } from "./publish";
 import { PublishClickEvent, PublishClickType } from "./renderables/PublishClickTool";
-import { TF_DATATYPES, TRANSFORM_STAMPED_DATATYPES } from "./ros";
 
 const log = Logger.getLogger(__filename);
 
 const SHOW_DEBUG: true | false = false;
-
+const SELECTED_ID_VARIABLE = "selected_id";
 const PANEL_STYLE: React.CSSProperties = {
   width: "100%",
   height: "100%",
@@ -353,7 +353,8 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
 
   const [colorScheme, setColorScheme] = useState<"dark" | "light" | undefined>();
   const [topics, setTopics] = useState<ReadonlyArray<Topic> | undefined>();
-  const [parameters, setParameters] = useState<ReadonlyMap<string, unknown> | undefined>();
+  const [parameters, setParameters] = useState<ReadonlyMap<string, ParameterValue> | undefined>();
+  const [variables, setVariables] = useState<ReadonlyMap<string, VariableValue> | undefined>();
   const [messages, setMessages] = useState<ReadonlyArray<MessageEvent<unknown>> | undefined>();
   const [currentTime, setCurrentTime] = useState<bigint | undefined>();
   const [didSeek, setDidSeek] = useState<boolean>(false);
@@ -365,9 +366,16 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
     () => renderer?.datatypeHandlers ?? new Map<string, MessageHandler[]>(),
     [renderer],
   );
-
+  const forcedDatatypeHandlers = useMemo(
+    () => renderer?.forcedDatatypeHandlers ?? new Map<string, MessageHandler[]>(),
+    [renderer],
+  );
   const topicHandlers = useMemo(
     () => renderer?.topicHandlers ?? new Map<string, MessageHandler[]>(),
+    [renderer],
+  );
+  const forcedTopicHandlers = useMemo(
+    () => renderer?.forcedTopicHandlers ?? new Map<string, MessageHandler[]>(),
     [renderer],
   );
 
@@ -411,6 +419,16 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
   // Save the panel configuration when it changes
   const updateConfig = useCallback((curRenderer: Renderer) => setConfig(curRenderer.config), []);
   useRendererEvent("configChange", updateConfig, renderer);
+
+  // Write to a global variable when the current selection changes
+  const updateSelectedRenderable = useCallback(
+    (renderable: Renderable | undefined) => {
+      const id = (renderable?.details() as { id?: number | string } | undefined)?.id;
+      context.setVariable(SELECTED_ID_VARIABLE, id ?? ReactNull);
+    },
+    [context],
+  );
+  useRendererEvent("selectedRenderable", updateSelectedRenderable, renderer);
 
   // Rebuild the settings sidebar tree as needed
   useEffect(() => {
@@ -483,6 +501,9 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
         // Watch for any changes in the map of observed parameters
         setParameters(renderState.parameters);
 
+        // Watch for any changes in the map of global variables
+        setVariables(renderState.variables);
+
         // currentFrame has messages on subscribed topics since the last render call
         if (renderState.currentFrame) {
           // Fully parse lazy messages
@@ -502,6 +523,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
     context.watch("currentTime");
     context.watch("didSeek");
     context.watch("parameters");
+    context.watch("variables");
     context.watch("topics");
   }, [context]);
 
@@ -515,29 +537,26 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
     }
 
     for (const topic of topics) {
-      if (
-        FRAME_TRANSFORM_DATATYPES.has(topic.datatype) ||
-        TF_DATATYPES.has(topic.datatype) ||
-        TRANSFORM_STAMPED_DATATYPES.has(topic.datatype)
-      ) {
-        // Subscribe to all transform topics
+      if (forcedTopicHandlers.has(topic.name) || forcedDatatypeHandlers.has(topic.datatype)) {
         subscriptions.add(topic.name);
-      } else if (config.topics[topic.name]?.visible === true) {
-        // Subscribe if the topic is visible
-        subscriptions.add(topic.name);
-      } else if (
-        // prettier-ignore
-        (topicHandlers.get(topic.name)?.length ?? 0) +
-        (datatypeHandlers.get(topic.datatype)?.length ?? 0) > 1
-      ) {
-        // Subscribe if there are multiple handlers registered for this topic
-        subscriptions.add(topic.name);
+      } else if (topicHandlers.has(topic.name) || datatypeHandlers.has(topic.datatype)) {
+        // Only subscribe if the topic visibility has been toggled on
+        if (config.topics[topic.name]?.visible === true) {
+          subscriptions.add(topic.name);
+        }
       }
     }
 
     const newTopics = Array.from(subscriptions.keys()).sort();
     setTopicsToSubscribe((prevTopics) => (isEqual(prevTopics, newTopics) ? prevTopics : newTopics));
-  }, [topics, config.topics, datatypeHandlers, topicHandlers]);
+  }, [
+    topics,
+    config.topics,
+    datatypeHandlers,
+    topicHandlers,
+    forcedTopicHandlers,
+    forcedDatatypeHandlers,
+  ]);
 
   // Notify the extension context when our subscription list changes
   useEffect(() => {
@@ -554,6 +573,13 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
       renderer.setParameters(parameters);
     }
   }, [parameters, renderer]);
+
+  // Keep the renderer variables up to date
+  useEffect(() => {
+    if (renderer && variables) {
+      renderer.setVariables(variables);
+    }
+  }, [variables, renderer, context]);
 
   // Keep the renderer currentTime up to date
   useEffect(() => {

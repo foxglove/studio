@@ -4,8 +4,8 @@
 
 import type {} from "@mui/x-data-grid/themeAugmentation";
 
-import { alpha, Theme, ThemeOptions } from "@mui/material/styles";
-import { CSSProperties } from "@mui/styles";
+import { alpha, Theme, ThemeOptions } from "@mui/material";
+import { CSSProperties } from "react";
 
 type MuiLabComponents = {
   MuiFocusVisible?: {
@@ -425,8 +425,13 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
         root: {
           opacity: 0.8,
 
-          "&$selected": {
+          "&.Mui-selected": {
             opacity: 1,
+          },
+
+          "&:not(.Mui-selected):hover": {
+            opacity: 1,
+            color: theme.palette.action.active,
           },
         },
         selected: {},

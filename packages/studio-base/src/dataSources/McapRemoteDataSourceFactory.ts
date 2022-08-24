@@ -11,15 +11,25 @@ import { McapIterableSource } from "@foxglove/studio-base/players/IterablePlayer
 import { Player } from "@foxglove/studio-base/players/types";
 
 export default class McapRemoteDataSourceFactory implements IDataSourceFactory {
-  id = "mcap-remote-file";
-  type: IDataSourceFactory["type"] = "remote-file";
-  displayName = "MCAP";
-  iconName: IDataSourceFactory["iconName"] = "FileASPX";
-  supportedFileTypes = [".mcap"];
-  description = "Fetch and load pre-recorded MCAP files from a remote location.";
-  docsLink = "https://foxglove.dev/docs/studio/connection/mcap";
+  public id = "mcap-remote-file";
+  public type: IDataSourceFactory["type"] = "remote-file";
+  public displayName = "MCAP";
+  public iconName: IDataSourceFactory["iconName"] = "FileASPX";
+  public supportedFileTypes = [".mcap"];
+  public description = "Fetch and load pre-recorded MCAP files from a remote location.";
+  public docsLink = "https://foxglove.dev/docs/studio/connection/mcap";
 
+<<<<<<< HEAD
   initialize(args: DataSourceFactoryInitializeArgs): Player | undefined {
+=======
+  private enableIterablePlayer = false;
+
+  public constructor(opt?: { useIterablePlayer: boolean }) {
+    this.enableIterablePlayer = opt?.useIterablePlayer ?? false;
+  }
+
+  public initialize(args: DataSourceFactoryInitializeArgs): Player | undefined {
+>>>>>>> origin/main
     const url = args.url;
     if (!url) {
       return;

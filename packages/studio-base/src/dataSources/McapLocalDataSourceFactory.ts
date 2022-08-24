@@ -11,13 +11,23 @@ import { McapIterableSource } from "@foxglove/studio-base/players/IterablePlayer
 import { Player } from "@foxglove/studio-base/players/types";
 
 class McapLocalDataSourceFactory implements IDataSourceFactory {
-  id = "mcap-local-file";
-  type: IDataSourceFactory["type"] = "file";
-  displayName = "MCAP";
-  iconName: IDataSourceFactory["iconName"] = "OpenFile";
-  supportedFileTypes = [".mcap"];
+  public id = "mcap-local-file";
+  public type: IDataSourceFactory["type"] = "file";
+  public displayName = "MCAP";
+  public iconName: IDataSourceFactory["iconName"] = "OpenFile";
+  public supportedFileTypes = [".mcap"];
 
+<<<<<<< HEAD
   initialize(args: DataSourceFactoryInitializeArgs): Player | undefined {
+=======
+  private enableIterablePlayer = false;
+
+  public constructor(opt?: { useIterablePlayer: boolean }) {
+    this.enableIterablePlayer = opt?.useIterablePlayer ?? false;
+  }
+
+  public initialize(args: DataSourceFactoryInitializeArgs): Player | undefined {
+>>>>>>> origin/main
     const file = args.file;
     if (!file) {
       return;

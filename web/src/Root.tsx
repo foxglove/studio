@@ -6,7 +6,6 @@ import { useMemo, useState } from "react";
 
 import {
   IDataSourceFactory,
-  AppSetting,
   Ros1LocalBagDataSourceFactory,
   Ros2LocalBagDataSourceFactory,
   RosbridgeDataSourceFactory,
@@ -29,8 +28,7 @@ import VelodyneUnavailableDataSourceFactory from "./dataSources/VelodyneUnavaila
 import { IdbLayoutStorage } from "./services/IdbLayoutStorage";
 
 export function Root({ appConfiguration }: { appConfiguration: IAppConfiguration }): JSX.Element {
-  const enableExperimentalLatching: boolean =
-    (appConfiguration.get(AppSetting.EXPERIMENTAL_LATCHING) as boolean | undefined) ?? true;
+  const enableExperimentalLatching = true;
 
   const dataSources: IDataSourceFactory[] = useMemo(() => {
     const sources = [
@@ -43,12 +41,19 @@ export function Root({ appConfiguration }: { appConfiguration: IAppConfiguration
       new FoxgloveWebSocketDataSourceFactory(),
       new UlogLocalDataSourceFactory(),
       new VelodyneUnavailableDataSourceFactory(),
+<<<<<<< HEAD
       new FoxgloveDataPlatformDataSourceFactory({
         useIterablePlayer: enableExperimentalLatching,
       }),
       new SampleNuscenesDataSourceFactory({ useIterablePlayer: enableExperimentalLatching }),
       new McapLocalDataSourceFactory(),
       new McapRemoteDataSourceFactory(),
+=======
+      new FoxgloveDataPlatformDataSourceFactory(),
+      new SampleNuscenesDataSourceFactory(),
+      new McapLocalDataSourceFactory({ useIterablePlayer: enableExperimentalLatching }),
+      new McapRemoteDataSourceFactory({ useIterablePlayer: enableExperimentalLatching }),
+>>>>>>> origin/main
     ];
 
     return sources;
