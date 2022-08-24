@@ -1,6 +1,6 @@
 {
   "name": "@foxglove/studio-base",
-  "version": "1.22.0-dev",
+  "version": "1.23.0-dev",
   "description": "Core components of Foxglove Studio",
   "license": "MPL-2.0",
   "repository": {
@@ -49,7 +49,8 @@
     "@foxglove/rostime": "1.1.2",
     "@foxglove/schemas": "0.4.0",
     "@foxglove/studio": "workspace:*",
-    "@foxglove/three-text": "workspace:*",
+    "@foxglove/three-text": "0.1.0",
+    "@foxglove/typescript-transformers": "workspace:*",
     "@foxglove/ulog": "2.1.2",
     "@foxglove/velodyne-cloud": "1.0.1",
     "@foxglove/wasm-bz2": "0.1.0",
@@ -58,7 +59,6 @@
     "@mdi/svg": "6.5.95",
     "@mui/icons-material": "5.4.1",
     "@mui/material": "5.4.1",
-    "@mui/styles": "5.4.1",
     "@mui/x-data-grid": "5.15.1",
     "@protobufjs/base64": "1.1.2",
     "@sentry/core": "7.10.0",

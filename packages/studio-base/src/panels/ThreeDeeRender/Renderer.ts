@@ -14,11 +14,13 @@ import { toNanoSec } from "@foxglove/rostime";
 import type { FrameTransform } from "@foxglove/schemas/schemas/typescript";
 import {
   MessageEvent,
+  ParameterValue,
   SettingsIcon,
   SettingsTreeAction,
   SettingsTreeNodeActionItem,
   SettingsTreeNodes,
   Topic,
+  VariableValue,
 } from "@foxglove/studio";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 import { LabelMaterial, LabelPool } from "@foxglove/three-text";
@@ -65,7 +67,7 @@ import {
   TRANSFORM_STAMPED_DATATYPES,
   Vector3,
 } from "./ros";
-import { BaseSettings, CustomLayerSettings, SelectEntry } from "./settings";
+import { BaseSettings, CustomLayerSettings, SelectEntry, SubscriptionType } from "./settings";
 import { Transform, TransformTree } from "./transforms";
 
 const log = Logger.getLogger(__filename);
@@ -79,8 +81,13 @@ export type RendererEvents = {
     cursorCoords: { x: number; y: number },
     renderer: Renderer,
   ) => void;
+  selectedRenderable: (renderable: Renderable | undefined, renderer: Renderer) => void;
   parametersChange: (
-    parameters: ReadonlyMap<string, unknown> | undefined,
+    parameters: ReadonlyMap<string, ParameterValue> | undefined,
+    renderer: Renderer,
+  ) => void;
+  variablesChange: (
+    variables: ReadonlyMap<string, VariableValue> | undefined,
     renderer: Renderer,
   ) => void;
   transformTreeUpdated: (renderer: Renderer) => void;
@@ -211,61 +218,71 @@ Object.defineProperty(LabelMaterial.prototype, "fragmentShaderKey", {
  * `WebGLRenderingContext`, and `SettingsTree`.
  */
 export class Renderer extends EventEmitter<RendererEvents> {
-  canvas: HTMLCanvasElement;
-  gl: THREE.WebGLRenderer;
-  maxLod = DetailLevel.High;
-  config: Immutable<RendererConfig>;
-  settings: SettingsManager;
-  topics: ReadonlyArray<Topic> | undefined;
-  topicsByName: ReadonlyMap<string, Topic> | undefined;
-  parameters: ReadonlyMap<string, unknown> | undefined;
+  private canvas: HTMLCanvasElement;
+  public readonly gl: THREE.WebGLRenderer;
+  public maxLod = DetailLevel.High;
+  public config: Immutable<RendererConfig>;
+  public settings: SettingsManager;
+  // [{ name, datatype }]
+  public topics: ReadonlyArray<Topic> | undefined;
+  // topicName -> { name, datatype }
+  public topicsByName: ReadonlyMap<string, Topic> | undefined;
+  // parameterKey -> parameterValue
+  public parameters: ReadonlyMap<string, ParameterValue> | undefined;
+  // variableName -> variableValue
+  public variables: ReadonlyMap<string, VariableValue> = new Map();
   // extensionId -> SceneExtension
-  sceneExtensions = new Map<string, SceneExtension>();
-  // datatype -> handler[]
-  datatypeHandlers = new Map<string, MessageHandler[]>();
-  // topicName -> handler[]
-  topicHandlers = new Map<string, MessageHandler[]>();
+  public sceneExtensions = new Map<string, SceneExtension>();
+  // datatype -> handler[], only active when visibility is toggled on
+  public datatypeHandlers = new Map<string, MessageHandler[]>();
+  // datatype -> handler[], always active
+  public forcedDatatypeHandlers = new Map<string, MessageHandler[]>();
+  // topicName -> handler[], only active when visibility is toggled on
+  public topicHandlers = new Map<string, MessageHandler[]>();
+  // topicName -> handler[], always active
+  public forcedTopicHandlers = new Map<string, MessageHandler[]>();
   // layerId -> { action, handler }
-  customLayerActions = new Map<string, CustomLayerAction>();
-  scene: THREE.Scene;
-  dirLight: THREE.DirectionalLight;
-  hemiLight: THREE.HemisphereLight;
-  input: Input;
-  outlineMaterial = new THREE.LineBasicMaterial({ dithering: true });
+  private customLayerActions = new Map<string, CustomLayerAction>();
+  private scene: THREE.Scene;
+  private dirLight: THREE.DirectionalLight;
+  private hemiLight: THREE.HemisphereLight;
+  public input: Input;
+  public readonly outlineMaterial = new THREE.LineBasicMaterial({ dithering: true });
 
-  coreSettings: CoreSettings;
-  measurementTool: MeasurementTool;
-  publishClickTool: PublishClickTool;
+  private coreSettings: CoreSettings;
+  public measurementTool: MeasurementTool;
+  public publishClickTool: PublishClickTool;
 
-  perspectiveCamera: THREE.PerspectiveCamera;
-  orthographicCamera: THREE.OrthographicCamera;
-  aspect: number;
-  controls: OrbitControls;
+  private perspectiveCamera: THREE.PerspectiveCamera;
+  private orthographicCamera: THREE.OrthographicCamera;
+  private aspect: number;
+  private controls: OrbitControls;
 
   // Are we connected to a ROS data source? Normalize coordinate frames if so by
   // stripping any leading "/" prefix. See `normalizeFrameId()` for details.
-  ros = false;
+  public ros = false;
 
-  picker: Picker;
-  selectionBackdrop: ScreenOverlay;
-  selectedRenderable: Renderable | undefined;
-  colorScheme: "dark" | "light" = "light";
-  modelCache: ModelCache;
-  transformTree = new TransformTree();
-  coordinateFrameList: SelectEntry[] = [];
-  currentTime = 0n;
-  fixedFrameId: string | undefined;
-  renderFrameId: string | undefined;
-  followFrameId: string | undefined;
+  private picker: Picker;
+  private selectionBackdrop: ScreenOverlay;
+  private selectedRenderable: Renderable | undefined;
+  public colorScheme: "dark" | "light" = "light";
+  public modelCache: ModelCache;
+  public transformTree = new TransformTree();
+  public coordinateFrameList: SelectEntry[] = [];
+  public currentTime = 0n;
+  public fixedFrameId: string | undefined;
+  public renderFrameId: string | undefined;
+  public followFrameId: string | undefined;
 
-  labelPool = new LabelPool({ fontFamily: fonts.MONOSPACE });
-  markerPool = new MarkerPool(this);
+  public labelPool = new LabelPool({ fontFamily: fonts.MONOSPACE });
+  public markerPool = new MarkerPool(this);
 
   private _prevResolution = new THREE.Vector2();
   private _pickingEnabled = false;
   private _isUpdatingCameraState = false;
+  private _animationFrame?: number;
 
-  constructor(canvas: HTMLCanvasElement, config: RendererConfig) {
+  public constructor(canvas: HTMLCanvasElement, config: RendererConfig) {
     super();
 
     // NOTE: Global side effect
@@ -372,6 +389,12 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.publishClickTool = new PublishClickTool(this);
     this.coreSettings = new CoreSettings(this);
 
+    // Internal handlers for TF messages to update the transform tree
+    const always = SubscriptionType.Always;
+    this.addDatatypeSubscriptions(FRAME_TRANSFORM_DATATYPES, this.handleFrameTransform, always);
+    this.addDatatypeSubscriptions(TF_DATATYPES, this.handleTFMessage, always);
+    this.addDatatypeSubscriptions(TRANSFORM_STAMPED_DATATYPES, this.handleTransformStamped, always);
+
     this.addSceneExtension(this.coreSettings);
     this.addSceneExtension(new Cameras(this));
     this.addSceneExtension(new FrameAxes(this));
@@ -405,7 +428,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     );
   }
 
-  dispose(): void {
+  public dispose(): void {
     log.warn(`Disposing renderer`);
     this.removeAllListeners();
 
@@ -426,7 +449,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.gl.dispose();
   }
 
-  getPixelRatio(): number {
+  public getPixelRatio(): number {
     return this.gl.getPixelRatio();
   }
 
@@ -434,7 +457,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
    * Clears internal state such as the TransformTree and removes Renderables from SceneExtensions.
    * This is useful when seeking to a new playback position or when a new data source is loaded.
    */
-  clear(): void {
+  public clear(): void {
     this.settings.errors.clear();
     this.transformTree.clear();
     for (const extension of this.sceneExtensions.values()) {
@@ -442,7 +465,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     }
   }
 
-  addSceneExtension(extension: SceneExtension): void {
+  private addSceneExtension(extension: SceneExtension): void {
     if (this.sceneExtensions.has(extension.extensionId)) {
       throw new Error(`Attempted to add duplicate extensionId "${extension.extensionId}"`);
     }
@@ -450,26 +473,29 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.scene.add(extension);
   }
 
-  updateConfig(updateHandler: (draft: RendererConfig) => void): void {
+  public updateConfig(updateHandler: (draft: RendererConfig) => void): void {
     this.config = produce(this.config, updateHandler);
     this.emit("configChange", this);
   }
 
   /** Updates the settings tree for core settings to account for any changes in the config. */
-  updateCoreSettings(): void {
+  public updateCoreSettings(): void {
     this.coreSettings.updateSettingsTree();
   }
 
-  addDatatypeSubscriptions<T>(
+  public addDatatypeSubscriptions<T>(
     datatypes: Iterable<string>,
     handler: (messageEvent: MessageEvent<T>) => void,
+    type = SubscriptionType.WhenVisible,
   ): void {
     const genericHandler = handler as (messageEvent: MessageEvent<unknown>) => void;
+    const handlersMap =
+      type === SubscriptionType.Always ? this.forcedDatatypeHandlers : this.datatypeHandlers;
     for (const datatype of datatypes) {
-      let handlers = this.datatypeHandlers.get(datatype);
+      let handlers = handlersMap.get(datatype);
       if (!handlers) {
         handlers = [];
-        this.datatypeHandlers.set(datatype, handlers);
+        handlersMap.set(datatype, handlers);
       }
       if (!handlers.includes(genericHandler)) {
         handlers.push(genericHandler);
@@ -477,19 +503,25 @@ export class Renderer extends EventEmitter<RendererEvents> {
     }
   }
 
-  addTopicSubscription<T>(topic: string, handler: (messageEvent: MessageEvent<T>) => void): void {
+  public addTopicSubscription<T>(
+    topic: string,
+    handler: (messageEvent: MessageEvent<T>) => void,
+    type = SubscriptionType.WhenVisible,
+  ): void {
     const genericHandler = handler as (messageEvent: MessageEvent<unknown>) => void;
-    let handlers = this.topicHandlers.get(topic);
+    const handlersMap =
+      type === SubscriptionType.Always ? this.forcedTopicHandlers : this.topicHandlers;
+    let handlers = handlersMap.get(topic);
     if (!handlers) {
       handlers = [];
-      this.topicHandlers.set(topic, handlers);
+      handlersMap.set(topic, handlers);
     }
     if (!handlers.includes(genericHandler)) {
       handlers.push(genericHandler);
     }
   }
 
-  addCustomLayerAction(options: {
+  public addCustomLayerAction(options: {
     layerId: string;
     label: string;
     icon?: SettingsIcon;
@@ -536,7 +568,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.settings.setNodesForKey(RENDERER_ID, [topics, customLayers]);
   }
 
-  defaultFrameId(): string | undefined {
+  private defaultFrameId(): string | undefined {
     const allFrames = this.transformTree.frames();
     if (allFrames.size === 0) {
       return undefined;
@@ -568,7 +600,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
   /** Enable or disable object selection mode */
   // eslint-disable-next-line @foxglove/no-boolean-parameters
-  setPickingEnabled(enabled: boolean): void {
+  public setPickingEnabled(enabled: boolean): void {
     this._pickingEnabled = enabled;
     if (!enabled) {
       this.setSelectedRenderable(undefined);
@@ -576,7 +608,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
   }
 
   /** Update the color scheme and background color, rebuilding any materials as necessary */
-  setColorScheme(colorScheme: "dark" | "light", backgroundColor: string | undefined): void {
+  public setColorScheme(colorScheme: "dark" | "light", backgroundColor: string | undefined): void {
     this.colorScheme = colorScheme;
 
     const bgColor = backgroundColor ? stringToRgb(tempColor, backgroundColor) : undefined;
@@ -600,7 +632,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
   /** Update the list of topics and rebuild all settings nodes when the identity
    * of the topics list changes */
-  setTopics(topics: ReadonlyArray<Topic> | undefined): void {
+  public setTopics(topics: ReadonlyArray<Topic> | undefined): void {
     const changed = this.topics !== topics;
     this.topics = topics;
     if (changed) {
@@ -614,7 +646,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     }
   }
 
-  setParameters(parameters: ReadonlyMap<string, unknown> | undefined): void {
+  public setParameters(parameters: ReadonlyMap<string, ParameterValue> | undefined): void {
     const changed = this.parameters !== parameters;
     this.parameters = parameters;
     if (changed) {
@@ -622,7 +654,15 @@ export class Renderer extends EventEmitter<RendererEvents> {
     }
   }
 
-  updateCustomLayersCount(): void {
+  public setVariables(variables: ReadonlyMap<string, VariableValue>): void {
+    const changed = this.variables !== variables;
+    this.variables = variables;
+    if (changed) {
+      this.emit("variablesChange", variables, this);
+    }
+  }
+
+  public updateCustomLayersCount(): void {
     const layerCount = Object.keys(this.config.layers).length;
     const label = `Custom Layers${layerCount > 0 ? ` (${layerCount})` : ""}`;
     this.settings.setLabel(["layers"], label);
@@ -676,14 +716,14 @@ export class Renderer extends EventEmitter<RendererEvents> {
     }
   }
 
-  setCameraState(cameraState: CameraState): void {
+  public setCameraState(cameraState: CameraState): void {
     this._isUpdatingCameraState = true;
     this._updateCameras(cameraState);
     this.controls.update();
     this._isUpdatingCameraState = false;
   }
 
-  getCameraState(): CameraState {
+  public getCameraState(): CameraState {
     return {
       perspective: this.config.cameraState.perspective,
       distance: this.controls.getDistance(),
@@ -698,7 +738,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     };
   }
 
-  setSelectedRenderable(selectedRenderable: Renderable | undefined): void {
+  public setSelectedRenderable(selectedRenderable: Renderable | undefined): void {
     if (this.selectedRenderable === selectedRenderable) {
       return;
     }
@@ -717,20 +757,23 @@ export class Renderer extends EventEmitter<RendererEvents> {
       log.debug(`Selected ${selectedRenderable.id} (${selectedRenderable.name})`);
     }
 
+    this.emit("selectedRenderable", selectedRenderable, this);
+
     this.animationFrame();
   }
 
-  activeCamera(): THREE.PerspectiveCamera | THREE.OrthographicCamera {
+  private activeCamera(): THREE.PerspectiveCamera | THREE.OrthographicCamera {
     return this.config.cameraState.perspective ? this.perspectiveCamera : this.orthographicCamera;
   }
 
-  addMessageEvent(messageEvent: Readonly<MessageEvent<unknown>>, datatype: string): void {
+  public addMessageEvent(messageEvent: Readonly<MessageEvent<unknown>>, datatype: string): void {
     const { message } = messageEvent;
 
-    const maybeHasHeader = message as Partial<{ header: Partial<Header> }>;
+    const maybeHasHeader = message as DeepPartial<{ header: Header }>;
     const maybeHasMarkers = message as DeepPartial<MarkerArray>;
-    const maybeHasFrameId = message as Partial<{ frame_id: string }>;
+    const maybeHasFrameId = message as DeepPartial<Header>;
 
+    // Extract coordinate frame IDs from all incoming messages
     if (maybeHasHeader.header) {
       // If this message has a Header, scrape the frame_id from it
       const frameId = maybeHasHeader.header.frame_id ?? "";
@@ -746,35 +789,10 @@ export class Renderer extends EventEmitter<RendererEvents> {
       this.addCoordinateFrame(maybeHasFrameId.frame_id);
     }
 
-    if (FRAME_TRANSFORM_DATATYPES.has(datatype)) {
-      // foxglove.FrameTransform - Ingest the list of transforms into our TF tree
-      const transform = normalizeFrameTransform(message as DeepPartial<FrameTransform>);
-      this.addFrameTransform(transform);
-    } else if (TF_DATATYPES.has(datatype)) {
-      // tf2_msgs/TFMessage - Ingest the list of transforms into our TF tree
-      const tfMessage = normalizeTFMessage(message as DeepPartial<TFMessage>);
-      for (const tf of tfMessage.transforms) {
-        this.addTransformMessage(tf);
-      }
-    } else if (TRANSFORM_STAMPED_DATATYPES.has(datatype)) {
-      // geometry_msgs/TransformStamped - Ingest this single transform into our TF tree
-      const tf = normalizeTransformStamped(message as DeepPartial<TransformStamped>);
-      this.addTransformMessage(tf);
-    }
-
-    const handlersForTopic = this.topicHandlers.get(messageEvent.topic);
-    if (handlersForTopic) {
-      for (const handler of handlersForTopic) {
-        handler(messageEvent);
-      }
-    }
-
-    const handlersForDatatype = this.datatypeHandlers.get(datatype);
-    if (handlersForDatatype) {
-      for (const handler of handlersForDatatype) {
-        handler(messageEvent);
-      }
-    }
+    handleMessage(messageEvent, this.forcedTopicHandlers.get(messageEvent.topic));
+    handleMessage(messageEvent, this.topicHandlers.get(messageEvent.topic));
+    handleMessage(messageEvent, this.forcedDatatypeHandlers.get(datatype));
+    handleMessage(messageEvent, this.datatypeHandlers.get(datatype));
   }
 
   /** Match the behavior of `tf::Transformer` by stripping leading slashes from
@@ -783,14 +801,14 @@ export class Renderer extends EventEmitter<RendererEvents> {
    * > tf2 does not accept frame_ids starting with "/"
    * Source: <http://wiki.ros.org/tf2/Migration#tf_prefix_backwards_compatibility>
    */
-  normalizeFrameId(frameId: string): string {
+  public normalizeFrameId(frameId: string): string {
     if (!this.ros || !frameId.startsWith("/")) {
       return frameId;
     }
     return frameId.slice(1);
   }
 
-  addCoordinateFrame(frameId: string): void {
+  private addCoordinateFrame(frameId: string): void {
     const normalizedFrameId = this.normalizeFrameId(frameId);
     if (!this.transformTree.hasFrame(normalizedFrameId)) {
       this.transformTree.getOrCreateFrame(normalizedFrameId);
@@ -800,7 +818,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     }
   }
 
-  addFrameTransform(transform: FrameTransform): void {
+  private addFrameTransform(transform: FrameTransform): void {
     const parentId = transform.parent_frame_id;
     const childId = transform.child_frame_id;
     const stamp = toNanoSec(transform.timestamp);
@@ -810,7 +828,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.addTransform(parentId, childId, stamp, t, q);
   }
 
-  addTransformMessage(tf: TransformStamped): void {
+  private addTransformMessage(tf: TransformStamped): void {
     const normalizedParentId = this.normalizeFrameId(tf.header.frame_id);
     const normalizedChildId = this.normalizeFrameId(tf.child_frame_id);
     const stamp = toNanoSec(tf.header.stamp);
@@ -821,7 +839,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
   }
 
   // Create a new transform and add it to the renderer's TransformTree
-  addTransform(
+  public addTransform(
     parentFrameId: string,
     childFrameId: string,
     stamp: bigint,
@@ -842,19 +860,18 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
   // Callback handlers
 
-  private _animationFrame?: number;
-  animationFrame = (): void => {
+  public animationFrame = (): void => {
     this._animationFrame = undefined;
     this.frameHandler(this.currentTime);
   };
 
-  queueAnimationFrame(): void {
+  public queueAnimationFrame(): void {
     if (this._animationFrame == undefined) {
       this._animationFrame = requestAnimationFrame(this.animationFrame);
     }
   }
 
-  frameHandler = (currentTime: bigint): void => {
+  private frameHandler = (currentTime: bigint): void => {
     this.currentTime = currentTime;
     this._updateFrames();
     this._updateResolution();
@@ -890,7 +907,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.gl.info.reset();
   };
 
-  resizeHandler = (size: THREE.Vector2): void => {
+  private resizeHandler = (size: THREE.Vector2): void => {
     this.gl.setPixelRatio(window.devicePixelRatio);
     this.gl.setSize(size.width, size.height);
 
@@ -902,7 +919,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.animationFrame();
   };
 
-  clickHandler = (cursorCoords: THREE.Vector2): void => {
+  private clickHandler = (cursorCoords: THREE.Vector2): void => {
     if (!this._pickingEnabled) {
       this.setSelectedRenderable(undefined);
       return;
@@ -943,7 +960,29 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.emit("renderablesClicked", selections, cursorCoords, this);
   };
 
-  handleTopicsAction = (action: SettingsTreeAction): void => {
+  private handleFrameTransform = ({ message }: MessageEvent<DeepPartial<FrameTransform>>): void => {
+    // foxglove.FrameTransform - Ingest the list of transforms into our TF tree
+    const transform = normalizeFrameTransform(message);
+    this.addFrameTransform(transform);
+  };
+
+  private handleTFMessage = ({ message }: MessageEvent<DeepPartial<TFMessage>>): void => {
+    // tf2_msgs/TFMessage - Ingest the list of transforms into our TF tree
+    const tfMessage = normalizeTFMessage(message);
+    for (const tf of tfMessage.transforms) {
+      this.addTransformMessage(tf);
+    }
+  };
+
+  private handleTransformStamped = ({
+    message,
+  }: MessageEvent<DeepPartial<TransformStamped>>): void => {
+    // geometry_msgs/TransformStamped - Ingest this single transform into our TF tree
+    const tf = normalizeTransformStamped(message);
+    this.addTransformMessage(tf);
+  };
+
+  private handleTopicsAction = (action: SettingsTreeAction): void => {
     const path = action.payload.path;
     if (action.action !== "perform-node-action" || path.length !== 1 || path[0] !== "topics") {
       return;
@@ -973,7 +1012,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     }
   };
 
-  handleCustomLayersAction = (action: SettingsTreeAction): void => {
+  private handleCustomLayersAction = (action: SettingsTreeAction): void => {
     const path = action.payload.path;
     if (action.action !== "perform-node-action" || path.length !== 1 || path[0] !== "layers") {
       return;
@@ -1120,6 +1159,17 @@ export class Renderer extends EventEmitter<RendererEvents> {
         }
       }
     });
+  }
+}
+
+function handleMessage(
+  messageEvent: Readonly<MessageEvent<unknown>>,
+  handlers: MessageHandler[] | undefined,
+): void {
+  if (handlers) {
+    for (const handler of handlers) {
+      handler(messageEvent);
+    }
   }
 }
 
