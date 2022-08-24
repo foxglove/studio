@@ -3,7 +3,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Story, StoryContext } from "@storybook/react";
-import { SnackbarProvider } from "notistack";
 import { useMemo, useRef } from "react";
 
 import { Condvar } from "@foxglove/den/async";
