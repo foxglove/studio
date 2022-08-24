@@ -7,8 +7,8 @@ import { isEmpty, set } from "lodash";
 import { useCallback, useEffect, useMemo } from "react";
 import { URDFRobot } from "urdf-loader";
 
+import { filterMap } from "@foxglove/den/collection";
 import { SettingsTreeAction, SettingsTreeFields, SettingsTreeNodes, Topic } from "@foxglove/studio";
-import { filterMap } from "@foxglove/studio-base/../../den/collection";
 import * as PanelAPI from "@foxglove/studio-base/PanelAPI";
 import { useAssets } from "@foxglove/studio-base/context/AssetsContext";
 import useRobotDescriptionAsset from "@foxglove/studio-base/panels/URDFViewer/useRobotDescriptionAsset";
