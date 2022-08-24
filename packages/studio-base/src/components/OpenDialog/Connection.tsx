@@ -38,15 +38,13 @@ const useStyles = makeStyles()((theme) => ({
     minHeight: "auto",
     paddingTop: theme.spacing(1.5),
     paddingBottom: theme.spacing(1.5),
-  },
-  iconWrapper: {
-    marginBottom: 0,
-    marginRight: theme.spacing(1.5),
-    fontSize: theme.typography.pxToRem(24),
-    color: theme.palette.primary.main,
 
     "> span": {
       display: "flex",
+      color: theme.palette.primary.main,
+      marginRight: theme.spacing(1.5),
+      height: "auto",
+      width: "auto",
     },
     svg: {
       fontSize: "inherit",
@@ -125,10 +123,7 @@ export default function Connection(props: ConnectionProps): JSX.Element {
                   key={id}
                   icon={<BuiltinIcon name={iconName} />}
                   label={displayName}
-                  classes={{
-                    root: classes.tab,
-                    iconWrapper: classes.iconWrapper,
-                  }}
+                  className={classes.tab}
                 />
               );
             })}
