@@ -225,8 +225,14 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
         }
       }
 
+      tempVec.copy(LABEL_OFFSET);
+      const { labelScaleFactor } = this.renderer.config.scene;
+      if (labelScaleFactor != undefined) {
+        // scale offset by labelScaleFactor
+        tempVec.z += (labelScaleFactor - 1.0) * 0.1;
+      }
       // Add the label offset in "world" coordinates (in the render frame)
-      worldPosition.add(LABEL_OFFSET);
+      worldPosition.add(tempVec);
       // Transform worldPosition back to the local coordinate frame of the
       // renderable, which the label is a child of
       renderable.worldToLocal(worldPosition);
