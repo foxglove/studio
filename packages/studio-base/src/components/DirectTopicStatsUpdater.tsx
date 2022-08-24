@@ -40,9 +40,13 @@ const selectEndTime = ({ playerState }: MessagePipelineContext) => playerState.a
 const selectTopicStats = (ctx: MessagePipelineContext) =>
   ctx.playerState.activeData?.topicStats ?? EMPTY_TOPIC_STATS;
 
+const EmDash = "\u2014";
+
 /**
  * Encapsulates logic for directly updating topic stats DOM elements, bypassing
- * react for performance.
+ * react for performance. To use this component mount it directly under your component
+ * containing topics you want to update. Tag each topic stat field with data-topic
+ * and data-topic-stat attributes.
  *
  * @property interval - the interval, in frames, between updates.
  */
@@ -67,7 +71,7 @@ export function DirectTopicStatsUpdater({ interval = 1 }: { interval?: number })
         const topic = field.dataset.topic;
         if (field.dataset.topicStat === "count") {
           const numMessages = latestStats.current.get(topic)?.numMessages;
-          field.innerText = numMessages != undefined ? numMessages.toLocaleString() : "-";
+          field.innerText = numMessages != undefined ? numMessages.toLocaleString() : EmDash;
         }
         if (field.dataset.topicStat === "frequency") {
           const stat = latestStats.current.get(topic);
@@ -79,7 +83,7 @@ export function DirectTopicStatsUpdater({ interval = 1 }: { interval?: number })
               latestDuration.current,
             );
           } else {
-            field.innerText = "-";
+            field.innerText = EmDash;
           }
         }
       }
@@ -96,5 +100,5 @@ export function DirectTopicStatsUpdater({ interval = 1 }: { interval?: number })
     updateStats();
   }, [updateStats]);
 
-  return <div ref={rootRef} />;
+  return <div ref={rootRef} style={{ display: "none" }} />;
 }
