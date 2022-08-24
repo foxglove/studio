@@ -21,6 +21,7 @@ import { Duration, Transform, makePose, CoordinateFrame, MAX_DURATION } from "..
 import { Axis, AXIS_LENGTH } from "./Axis";
 import {
   DEFAULT_AXIS_SCALE,
+  DEFAULT_LABEL_SCALE_FACTOR,
   DEFAULT_LINE_COLOR_STR,
   DEFAULT_LINE_WIDTH_PX,
   DEFAULT_TF_LABEL_SIZE,
@@ -204,7 +205,8 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
     const axisScale = this.renderer.config.scene.transforms?.axisScale ?? DEFAULT_AXIS_SCALE;
     const axisLength = AXIS_LENGTH * axisScale;
     const labelSize = this.renderer.config.scene.transforms?.labelSize ?? DEFAULT_TF_LABEL_SIZE;
-    const labelOffsetZ = axisLength + labelSize * 1.5;
+    const labelScale = this.renderer.config.scene.labelScaleFactor ?? DEFAULT_LABEL_SCALE_FACTOR;
+    const labelOffsetZ = axisLength + labelSize * labelScale * 1.5;
 
     // Update the lines and labels between coordinate frames
     for (const renderable of this.renderables.values()) {
