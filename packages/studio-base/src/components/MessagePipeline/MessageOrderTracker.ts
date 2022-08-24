@@ -115,7 +115,6 @@ class MessageOrderTracker {
             `Processed a message on ${message.topic} at ${formattedTime} which is earlier than ` +
             `last processed message on ${this.lastMessageTopic} at ${lastMessageTime}.`;
 
-          log.error(errorMessage);
           problems.push({
             severity: "warn",
             message: "Data went back in time",
