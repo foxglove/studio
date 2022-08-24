@@ -4,7 +4,7 @@
 
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import { IconButton, TextFieldProps, TextField } from "@mui/material";
+import { IconButton, TextFieldProps, TextField, darken, lighten } from "@mui/material";
 import { clamp, isFinite } from "lodash";
 import { ReactNode, useCallback, useState } from "react";
 import { useKeyPress, useLatest } from "react-use";
@@ -27,7 +27,6 @@ const useStyles = makeStyles()((theme) => ({
   },
 
   textField: {
-    backgroundColor: theme.palette.background.paper,
     cursor: "auto",
     ".MuiInputBase-formControl.MuiInputBase-root": {
       paddingTop: 0,
@@ -53,7 +52,10 @@ const useStyles = makeStyles()((theme) => ({
   },
 
   textFieldScrubbing: {
-    backgroundColor: theme.palette.background.default,
+    backgroundColor:
+      theme.palette.mode === "light"
+        ? darken(theme.palette.background.default, 0.1)
+        : lighten(theme.palette.background.default, 0.2),
     cursor: "none",
   },
 }));
