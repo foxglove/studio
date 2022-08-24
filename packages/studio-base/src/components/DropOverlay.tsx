@@ -11,42 +11,50 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { styled as muiStyled } from "@mui/material";
+import { Backdrop, Typography } from "@mui/material";
+import { alpha } from "@mui/material";
+import { PropsWithChildren } from "react";
+import { makeStyles } from "tss-react/mui";
 
-const Outer = muiStyled("div")(({ theme }) => ({
-  position: "fixed",
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  display: "flex",
-  flexDirection: "column",
-  background: theme.palette.action.hover,
-  zIndex: theme.zIndex.tooltip,
-  pointerEvents: "none",
-  padding: theme.spacing(5),
+const useStyles = makeStyles()((theme) => ({
+  outer: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    display: "flex",
+    flexDirection: "column",
+    background: alpha(theme.palette.background.paper, 0.67),
+    backgroundImage: `linear-gradient(${theme.palette.action.hover}, ${theme.palette.action.hover})`,
+    pointerEvents: "none",
+    padding: theme.spacing(5),
+  },
+  inner: {
+    borderRadius: 16,
+    height: "100%",
+    border: `2px dashed ${theme.palette.text.primary}`,
+    display: "flex",
+    flexDirection: "column",
+    textAlign: "center",
+    alignItems: "center",
+    justifyContent: "center",
+    fontWeight: 800,
+    padding: theme.spacing(5),
+    lineHeight: "normal",
+  },
 }));
 
-const Inner = muiStyled("div")(({ theme }) => ({
-  borderRadius: 16,
-  height: "100%",
-  border: `2px dashed ${theme.palette.text.primary}`,
-  display: "flex",
-  flexDirection: "column",
-  textAlign: "center",
-  alignItems: "center",
-  justifyContent: "center",
-  color: theme.palette.text.primary,
-  fontWeight: 800,
-  padding: theme.spacing(5),
-  lineHeight: "normal",
-}));
-
-function DropOverlay({ children }: { children: React.ReactNode }): JSX.Element {
+function DropOverlay(props: PropsWithChildren<{ open: boolean }>): JSX.Element {
+  const { classes } = useStyles();
   return (
-    <Outer>
-      <Inner>{children}</Inner>
-    </Outer>
+    <Backdrop open={props.open} style={{ zIndex: 10000000 }}>
+      <div className={classes.outer}>
+        <div className={classes.inner}>
+          <Typography fontSize="4rem">{props.children}</Typography>
+        </div>
+      </div>
+    </Backdrop>
   );
 }
 

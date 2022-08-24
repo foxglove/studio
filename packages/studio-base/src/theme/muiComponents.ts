@@ -91,6 +91,14 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
         variant: "standard",
       },
     },
+    MuiBackdrop: {
+      styleOverrides: {
+        root: {
+          zIndex: theme.zIndex.modal,
+          color: theme.palette.getContrastText(theme.palette.background.paper),
+        },
+      },
+    },
     MuiBadge: {
       styleOverrides: {
         badge: {
