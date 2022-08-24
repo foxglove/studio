@@ -17,17 +17,7 @@ class McapLocalDataSourceFactory implements IDataSourceFactory {
   public iconName: IDataSourceFactory["iconName"] = "OpenFile";
   public supportedFileTypes = [".mcap"];
 
-<<<<<<< HEAD
-  initialize(args: DataSourceFactoryInitializeArgs): Player | undefined {
-=======
-  private enableIterablePlayer = false;
-
-  public constructor(opt?: { useIterablePlayer: boolean }) {
-    this.enableIterablePlayer = opt?.useIterablePlayer ?? false;
-  }
-
   public initialize(args: DataSourceFactoryInitializeArgs): Player | undefined {
->>>>>>> origin/main
     const file = args.file;
     if (!file) {
       return;

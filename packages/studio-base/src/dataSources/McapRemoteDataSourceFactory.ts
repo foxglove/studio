@@ -19,17 +19,7 @@ export default class McapRemoteDataSourceFactory implements IDataSourceFactory {
   public description = "Fetch and load pre-recorded MCAP files from a remote location.";
   public docsLink = "https://foxglove.dev/docs/studio/connection/mcap";
 
-<<<<<<< HEAD
-  initialize(args: DataSourceFactoryInitializeArgs): Player | undefined {
-=======
-  private enableIterablePlayer = false;
-
-  public constructor(opt?: { useIterablePlayer: boolean }) {
-    this.enableIterablePlayer = opt?.useIterablePlayer ?? false;
-  }
-
   public initialize(args: DataSourceFactoryInitializeArgs): Player | undefined {
->>>>>>> origin/main
     const url = args.url;
     if (!url) {
       return;

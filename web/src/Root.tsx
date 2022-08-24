@@ -41,19 +41,10 @@ export function Root({ appConfiguration }: { appConfiguration: IAppConfiguration
       new FoxgloveWebSocketDataSourceFactory(),
       new UlogLocalDataSourceFactory(),
       new VelodyneUnavailableDataSourceFactory(),
-<<<<<<< HEAD
-      new FoxgloveDataPlatformDataSourceFactory({
-        useIterablePlayer: enableExperimentalLatching,
-      }),
-      new SampleNuscenesDataSourceFactory({ useIterablePlayer: enableExperimentalLatching }),
-      new McapLocalDataSourceFactory(),
-      new McapRemoteDataSourceFactory(),
-=======
       new FoxgloveDataPlatformDataSourceFactory(),
       new SampleNuscenesDataSourceFactory(),
-      new McapLocalDataSourceFactory({ useIterablePlayer: enableExperimentalLatching }),
-      new McapRemoteDataSourceFactory({ useIterablePlayer: enableExperimentalLatching }),
->>>>>>> origin/main
+      new McapLocalDataSourceFactory(),
+      new McapRemoteDataSourceFactory(),
     ];
 
     return sources;
