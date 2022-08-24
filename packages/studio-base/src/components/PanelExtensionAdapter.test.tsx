@@ -46,7 +46,7 @@ describe("PanelExtensionAdapter", () => {
 
     const handle = render(<Wrapper />);
 
-    // force a re-render to make sure we call init panel once
+    // force a re-render to make sure we do not call init panel again
     handle.rerender(<Wrapper />);
   });
 
@@ -105,15 +105,10 @@ describe("PanelExtensionAdapter", () => {
     wrapper.rerender(<Wrapper lastSeekTime={2} />);
     await act(async () => await Promise.resolve());
     expect(renderStates).toEqual([
-      { currentFrame: [message], didSeek: true },
-      { currentFrame: [message], didSeek: false },
-      { currentFrame: [message], didSeek: false },
-      { currentFrame: [message], didSeek: false },
-      { currentFrame: [message], didSeek: false },
-      { currentFrame: [message], didSeek: false },
       { currentFrame: [message], didSeek: false },
       { currentFrame: [message], didSeek: true },
       { currentFrame: [message], didSeek: false },
+      { currentFrame: [message], didSeek: true },
     ]);
     mockRAF.mockRestore();
   });
