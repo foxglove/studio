@@ -31,6 +31,7 @@ export type LayerSettingsTransform = BaseSettings;
 
 const PICKING_LINE_SIZE = 6;
 const PI_2 = Math.PI / 2;
+const LABEL_OFFSET = new THREE.Vector3(0, 0, 0.4);
 
 const DEFAULT_SETTINGS: LayerSettingsTransform = {
   visible: true,
@@ -69,7 +70,6 @@ const tempUpper: [Duration, Transform] = [0n, Transform.Identity()];
 const tempQuaternion = new THREE.Quaternion();
 const tempEuler = new THREE.Euler();
 
-const labelOffset = new THREE.Vector3(0, 0, 0.4);
 export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
   private static lineGeometry: LineGeometry | undefined;
 
@@ -206,30 +206,31 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
       const line = renderable.userData.parentLine;
       const childFrame = this.renderer.transformTree.frame(renderable.userData.frameId);
       const parentFrame = childFrame?.parent();
-      // NOTE: tempVecB should not be changed until the label uses it
-      renderable.getWorldPosition(tempVecB);
-      // lines require a parent renderable because they draw a line from the parent
+      // NOTE: tempVecB should not be used until the label uses it below
+      const worldPosition = tempVecB;
+      renderable.getWorldPosition(worldPosition);
+      // Lines require a parent renderable because they draw a line from the parent
       // frame origin to the child frame origin
       line.visible = false;
       if (parentFrame) {
         const parentRenderable = this.renderables.get(parentFrame.id);
         if (parentRenderable?.visible === true) {
-          parentRenderable.getWorldPosition(tempVec);
-          // tempVecB is the world position of the renderable(child) frame
-          const dist = tempVec.distanceTo(tempVecB);
-          line.lookAt(tempVec);
+          const parentWorldPosition = tempVec;
+          parentRenderable.getWorldPosition(parentWorldPosition);
+          const dist = parentWorldPosition.distanceTo(worldPosition);
+          line.lookAt(parentWorldPosition);
           line.rotateY(-PI_2);
           line.scale.set(dist, 1, 1);
           line.visible = true;
         }
       }
 
-      // tempVecB should not be changed from the renderable world position
-      // add label offset to world position
-      tempVecB.add(labelOffset);
-      // transform world-offset position back to local frame to set the label new position
-      renderable.worldToLocal(tempVecB);
-      label.position.set(tempVecB.x, tempVecB.y, tempVecB.z);
+      // Add the label offset in "world" coordinates (in the render frame)
+      worldPosition.add(LABEL_OFFSET);
+      // Transform worldPosition back to the local coordinate frame of the
+      // renderable, which the label is a child of
+      renderable.worldToLocal(worldPosition);
+      label.position.set(worldPosition.x, worldPosition.y, worldPosition.z);
     }
   }
 
