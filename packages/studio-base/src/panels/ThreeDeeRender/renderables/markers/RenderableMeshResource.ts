@@ -124,6 +124,7 @@ function removeLights(model: LoadedModel): void {
     }
   });
   for (const light of lights) {
+    light.dispose();
     light.removeFromParent();
   }
 }
