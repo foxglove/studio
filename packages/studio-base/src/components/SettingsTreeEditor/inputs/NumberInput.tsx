@@ -7,7 +7,7 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { IconButton, TextFieldProps, TextField, darken, lighten } from "@mui/material";
 import { clamp, isFinite } from "lodash";
 import { ReactNode, useCallback, useState } from "react";
-import { useKeyPress, useLatest } from "react-use";
+import { useLatest } from "react-use";
 import { makeStyles } from "tss-react/mui";
 
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
@@ -82,10 +82,6 @@ export function NumberInput(
   const { classes, cx } = useStyles();
   const { value, iconDown, iconUp, step = 1, onChange, disabled, readOnly } = props;
 
-  const [shiftPressed] = useKeyPress("Shift");
-
-  const stepAmount = shiftPressed ? step * 10 : step;
-
   const [pointerDown, setPointerDown] = useState(false);
 
   const latestValue = useLatest(value);
@@ -133,10 +129,11 @@ export function NumberInput(
   }, []);
 
   const onPointerMove = useCallback(
-    (event: React.PointerEvent) => {
+    (event: React.PointerEvent<HTMLInputElement>) => {
       if (event.buttons === 1) {
-        const startValue = latestValue.current ?? placeHolderValue ?? 0;
         event.preventDefault();
+        event.currentTarget.blur();
+        const startValue = latestValue.current ?? placeHolderValue ?? 0;
         const scale = event.shiftKey ? 10 : 1;
         updateValue(startValue + event.movementX * 0.05 * step * scale);
       }
@@ -156,7 +153,7 @@ export function NumberInput(
       inputProps={{
         max: props.max,
         min: props.min,
-        step: stepAmount,
+        step,
         onPointerDown,
         onPointerUp,
         onPointerMove,
