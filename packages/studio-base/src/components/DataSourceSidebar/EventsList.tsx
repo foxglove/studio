@@ -95,6 +95,7 @@ const useStyles = makeStyles<void, "eventMetadata" | "eventSelected">()(
   }),
 );
 
+const selectSeek = (ctx: MessagePipelineContext) => ctx.seekPlayback;
 const selectStartTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.startTime;
 const selectTargetEventId = ({ playerState }: MessagePipelineContext) =>
   playerState.urlState?.parameters?.eventId;
@@ -103,10 +104,11 @@ function EventView(params: {
   event: ConsoleEvent;
   formattedTime: string;
   isTargeted: boolean;
+  onClick: (event: ConsoleEvent) => void;
   onHoverStart: (event: ConsoleEvent) => void;
   onHoverEnd: (event: ConsoleEvent) => void;
 }): JSX.Element {
-  const { event, formattedTime, isTargeted, onHoverStart, onHoverEnd } = params;
+  const { event, formattedTime, isTargeted, onClick, onHoverStart, onHoverEnd } = params;
   const { classes, cx } = useStyles();
 
   const fields = compact([
@@ -119,6 +121,7 @@ function EventView(params: {
     <div
       data-testid="sidebar-event"
       className={cx(classes.event, { [classes.eventSelected]: isTargeted })}
+      onClick={() => onClick(event)}
       onMouseEnter={() => onHoverStart(event)}
       onMouseLeave={() => onHoverEnd(event)}
     >
@@ -143,6 +146,7 @@ export function EventsList(): JSX.Element {
   const clearHoverValue = useClearHoverValue();
   const [filter, setFilter] = useState("");
   const targetEventId = useMessagePipeline(selectTargetEventId);
+  const seek = useMessagePipeline(selectSeek);
 
   const filteredEvents = useMemo(() => {
     if (filter.length === 0) {
@@ -163,6 +167,16 @@ export function EventsList(): JSX.Element {
         return { event, formattedTime: formatTime(time) };
       }),
     [filteredEvents, formatTime],
+  );
+
+  const onClick = useCallback(
+    (event: ConsoleEvent) => {
+      if (seek) {
+        const time = fromNanoSec(BigInt(event.timestampNanos));
+        seek(time);
+      }
+    },
+    [seek],
   );
 
   const onHoverEnd = useCallback(
@@ -244,6 +258,7 @@ export function EventsList(): JSX.Element {
               event={event.event}
               formattedTime={event.formattedTime}
               isTargeted={event.event.id === targetEventId}
+              onClick={onClick}
               onHoverStart={onHoverStart}
               onHoverEnd={onHoverEnd}
             />
