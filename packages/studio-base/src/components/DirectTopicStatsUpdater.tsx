@@ -13,6 +13,7 @@ import {
 import { subtractTimes } from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/typescript/userUtils/time";
 import { TopicStats } from "@foxglove/studio-base/players/types";
 
+const EM_DASH = "\u2014";
 const EMPTY_TOPIC_STATS = new Map<string, TopicStats>();
 
 function formatItemFrequency(
@@ -27,7 +28,7 @@ function formatItemFrequency(
   }
   if (numMessages < 2 || areEqual(firstMessageTime, lastMessageTime)) {
     // Not enough messages or time span to calculate a frequency
-    return "–";
+    return EM_DASH;
   }
   const topicDurationSec = toSec(subtractTimes(lastMessageTime, firstMessageTime));
   return `${((numMessages - 1) / topicDurationSec).toFixed(2)} Hz`;
@@ -39,8 +40,6 @@ const selectEndTime = ({ playerState }: MessagePipelineContext) => playerState.a
 
 const selectTopicStats = (ctx: MessagePipelineContext) =>
   ctx.playerState.activeData?.topicStats ?? EMPTY_TOPIC_STATS;
-
-const EmDash = "\u2014";
 
 /**
  * Encapsulates logic for directly updating topic stats DOM elements, bypassing
@@ -69,12 +68,15 @@ export function DirectTopicStatsUpdater({ interval = 1 }: { interval?: number })
     rootRef.current.parentElement?.querySelectorAll("[data-topic]").forEach((field) => {
       if (field instanceof HTMLElement && field.dataset.topic) {
         const topic = field.dataset.topic;
+        const stat = latestStats.current.get(topic);
         if (field.dataset.topicStat === "count") {
-          const numMessages = latestStats.current.get(topic)?.numMessages;
-          field.innerText = numMessages != undefined ? numMessages.toLocaleString() : EmDash;
+          if (stat) {
+            field.innerText = stat.numMessages.toLocaleString();
+          } else {
+            field.innerText = EM_DASH;
+          }
         }
         if (field.dataset.topicStat === "frequency") {
-          const stat = latestStats.current.get(topic);
           if (stat) {
             field.innerText = formatItemFrequency(
               stat.numMessages,
@@ -83,7 +85,7 @@ export function DirectTopicStatsUpdater({ interval = 1 }: { interval?: number })
               latestDuration.current,
             );
           } else {
-            field.innerText = EmDash;
+            field.innerText = EM_DASH;
           }
         }
       }

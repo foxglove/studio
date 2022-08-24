@@ -18,7 +18,7 @@ function Wrapper(StoryFn: Story): JSX.Element {
           datatype: "std_msgs/String",
         },
         {
-          name: "/topic_2",
+          name: '"/topic_2"',
           datatype: "std_msgs/String",
         },
       ]}
@@ -33,7 +33,7 @@ function Wrapper(StoryFn: Story): JSX.Element {
             },
           ],
           [
-            "/topic_2",
+            '"/topic_2"',
             {
               numMessages: 3456,
               firstMessageTime: { sec: 1, nsec: 0 },
