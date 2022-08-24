@@ -22,7 +22,26 @@ function Wrapper(StoryFn: Story): JSX.Element {
           datatype: "std_msgs/String",
         },
       ]}
-      topicStats={new Map<string, TopicStats>([["/topic_1", { numMessages: 1234 }]])}
+      topicStats={
+        new Map<string, TopicStats>([
+          [
+            "/topic_1",
+            {
+              numMessages: 1234,
+              firstMessageTime: { sec: 1, nsec: 0 },
+              lastMessageTime: { sec: 2, nsec: 0 },
+            },
+          ],
+          [
+            "/topic_2",
+            {
+              numMessages: 3456,
+              firstMessageTime: { sec: 1, nsec: 0 },
+              lastMessageTime: { sec: 2, nsec: 0 },
+            },
+          ],
+        ])
+      }
     >
       <StoryFn />
     </MockMessagePipelineProvider>

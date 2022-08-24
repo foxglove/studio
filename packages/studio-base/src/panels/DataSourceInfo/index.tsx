@@ -6,6 +6,7 @@ import { Box, Divider } from "@mui/material";
 import { makeStyles } from "tss-react/mui";
 
 import { DataSourceInfoView } from "@foxglove/studio-base/components/DataSourceInfoView";
+import { DirectTopicStatsUpdater } from "@foxglove/studio-base/components/DirectTopicStatsUpdater";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import {
   MessagePipelineContext,
@@ -13,7 +14,6 @@ import {
 } from "@foxglove/studio-base/components/MessagePipeline";
 import Panel from "@foxglove/studio-base/components/Panel";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
-import { useDirectTopicStatsUpdate } from "@foxglove/studio-base/hooks/useDirectTopicStatsUpdate";
 import { Topic } from "@foxglove/studio-base/src/players/types";
 
 import helpContent from "./index.help.md";
@@ -55,35 +55,15 @@ const useStyles = makeStyles()((theme) => ({
   },
 }));
 
-function TopicRow({
-  countElements,
-  frequencyElements,
-  topic,
-}: {
-  countElements: Record<string, HTMLElement>;
-  frequencyElements: Record<string, HTMLElement>;
-  topic: Topic;
-}): JSX.Element {
+function TopicRow({ topic }: { topic: Topic }): JSX.Element {
   return (
     <tr>
       <td>{topic.name}</td>
       <td>{topic.datatype}</td>
-      <td
-        ref={(elem) => {
-          if (elem) {
-            countElements[topic.name] = elem;
-          }
-        }}
-      >
+      <td data-topic={topic.name} data-topic-stat="count">
         &mdash;
       </td>
-      <td
-        ref={(elem) => {
-          if (elem) {
-            frequencyElements[topic.name] = elem;
-          }
-        }}
-      >
+      <td data-topic={topic.name} data-topic-stat="frequency">
         &mdash;
       </td>
     </tr>
@@ -103,8 +83,6 @@ function SourceInfo(): JSX.Element {
   const topics = useMessagePipeline(selectTopics);
   const startTime = useMessagePipeline(selectStartTime);
   const endTime = useMessagePipeline(selectEndTime);
-
-  const { countElements, frequencyElements } = useDirectTopicStatsUpdate(6);
 
   if (!startTime || !endTime) {
     return (
@@ -134,15 +112,11 @@ function SourceInfo(): JSX.Element {
         </thead>
         <tbody>
           {topics.map((topic) => (
-            <MemoTopicRow
-              countElements={countElements}
-              frequencyElements={frequencyElements}
-              key={topic.name}
-              topic={topic}
-            />
+            <MemoTopicRow key={topic.name} topic={topic} />
           ))}
         </tbody>
       </table>
+      <DirectTopicStatsUpdater interval={6} />
     </>
   );
 }

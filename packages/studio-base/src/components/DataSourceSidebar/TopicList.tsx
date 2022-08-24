@@ -20,12 +20,12 @@ import {
 import { Fzf, FzfResultItem } from "fzf";
 import { useMemo, useState } from "react";
 
+import { DirectTopicStatsUpdater } from "@foxglove/studio-base/components/DirectTopicStatsUpdater";
 import {
   MessagePipelineContext,
   useMessagePipeline,
 } from "@foxglove/studio-base/components/MessagePipeline";
 import Stack from "@foxglove/studio-base/components/Stack";
-import { useDirectTopicStatsUpdate } from "@foxglove/studio-base/hooks/useDirectTopicStatsUpdate";
 import { PlayerPresence, TopicStats } from "@foxglove/studio-base/players/types";
 import { Topic } from "@foxglove/studio-base/src/players/types";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
@@ -113,13 +113,9 @@ const selectTopics = (ctx: MessagePipelineContext) =>
   ctx.playerState.activeData?.topics ?? EMPTY_TOPICS;
 
 function TopicListItem({
-  countElements,
-  frequencyElements,
   topic,
   positions,
 }: {
-  countElements: Record<string, HTMLElement>;
-  frequencyElements: Record<string, HTMLElement>;
   topic: Topic;
   positions: Set<number>;
 }): JSX.Element {
@@ -133,25 +129,19 @@ function TopicListItem({
             variant="caption"
             component="div"
             color="text.secondary"
-            ref={(elem: ReactNull | HTMLDivElement) => {
-              if (elem) {
-                countElements[topic.name] = elem;
-              }
-            }}
+            data-topic={topic.name}
+            data-topic-stat="count"
           >
-            –
+            &mdash;
           </Typography>
           <Typography
             variant="caption"
             component="div"
             color="text.secondary"
-            ref={(elem: ReactNull | HTMLDivElement) => {
-              if (elem) {
-                frequencyElements[topic.name] = elem;
-              }
-            }}
+            data-topic={topic.name}
+            data-topic-stat="frequency"
           >
-            –
+            &mdash;
           </Typography>
         </Stack>
       }
@@ -181,8 +171,6 @@ export function TopicList(): JSX.Element {
 
   const playerPresence = useMessagePipeline(selectPlayerPresence);
   const topics = useMessagePipeline(selectTopics);
-
-  const { countElements, frequencyElements } = useDirectTopicStatsUpdate(6);
 
   const filteredTopics: FzfResultItem<Topic>[] = useMemo(
     () =>
@@ -266,15 +254,7 @@ export function TopicList(): JSX.Element {
       {filteredTopics.length > 0 ? (
         <List key="topics" dense disablePadding>
           {filteredTopics.map(({ item: topic, positions }) => {
-            return (
-              <MemoTopicListItem
-                key={topic.name}
-                countElements={countElements}
-                frequencyElements={frequencyElements}
-                topic={topic}
-                positions={positions}
-              />
-            );
+            return <MemoTopicListItem key={topic.name} topic={topic} positions={positions} />;
           })}
         </List>
       ) : (
@@ -298,6 +278,7 @@ export function TopicList(): JSX.Element {
           )}
         </Stack>
       )}
+      <DirectTopicStatsUpdater interval={6} />
     </>
   );
 }

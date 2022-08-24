@@ -2,11 +2,10 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { useLatest } from "react-use";
 
 import { areEqual, Time, toSec } from "@foxglove/rostime";
-import { Topic } from "@foxglove/studio";
 import {
   MessagePipelineContext,
   useMessagePipeline,
@@ -14,7 +13,6 @@ import {
 import { subtractTimes } from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/typescript/userUtils/time";
 import { TopicStats } from "@foxglove/studio-base/players/types";
 
-const EMPTY_TOPICS: Topic[] = [];
 const EMPTY_TOPIC_STATS = new Map<string, TopicStats>();
 
 function formatItemFrequency(
@@ -39,9 +37,6 @@ const selectStartTime = ({ playerState }: MessagePipelineContext) =>
   playerState.activeData?.startTime;
 const selectEndTime = ({ playerState }: MessagePipelineContext) => playerState.activeData?.endTime;
 
-const selectTopics = (ctx: MessagePipelineContext) =>
-  ctx.playerState.activeData?.topics ?? EMPTY_TOPICS;
-
 const selectTopicStats = (ctx: MessagePipelineContext) =>
   ctx.playerState.activeData?.topicStats ?? EMPTY_TOPIC_STATS;
 
@@ -49,56 +44,57 @@ const selectTopicStats = (ctx: MessagePipelineContext) =>
  * Encapsulates logic for directly updating topic stats DOM elements, bypassing
  * react for performance.
  *
- * @param interval - the interval, in frames, between updates.
+ * @property interval - the interval, in frames, between updates.
  */
-export function useDirectTopicStatsUpdate(interval: number = 1): {
-  countElements: Record<string, HTMLElement>;
-  frequencyElements: Record<string, HTMLElement>;
-} {
+export function DirectTopicStatsUpdater({ interval = 1 }: { interval?: number }): JSX.Element {
   const startTime = useMessagePipeline(selectStartTime);
   const endTime = useMessagePipeline(selectEndTime);
-  const topics = useMessagePipeline(selectTopics);
   const topicStats = useMessagePipeline(selectTopicStats);
   const duration = endTime && startTime ? subtractTimes(endTime, startTime) : { sec: 0, nsec: 0 };
 
   const latestDuration = useLatest(duration);
+  const latestStats = useLatest(topicStats);
+  const updateCount = useRef(0);
+  const rootRef = useRef<HTMLDivElement>(ReactNull);
 
-  const countElements = useRef<Record<string, HTMLElement>>({});
-  const frequencyElements = useRef<Record<string, HTMLElement>>({});
-
-  const animCount = useRef(0);
-
-  useEffect(() => {
-    countElements.current = {};
-    frequencyElements.current = {};
-  }, [topics]);
-
-  const animate = useCallback(
-    (stats: Map<string, TopicStats>) => {
-      stats.forEach((value, key) => {
-        const countElem = countElements.current[key];
-        if (countElem) {
-          countElem.innerText = value.numMessages.toLocaleString();
-        }
-        const freqElem = frequencyElements.current[key];
-        if (freqElem) {
-          freqElem.innerText = formatItemFrequency(
-            value.numMessages,
-            value.firstMessageTime,
-            value.lastMessageTime,
-            latestDuration.current,
-          );
-        }
-      });
-    },
-    [latestDuration],
-  );
-
-  useEffect(() => {
-    if (animCount.current++ % interval === 0) {
-      animate(topicStats);
+  const updateStats = useCallback(() => {
+    if (!rootRef.current) {
+      return;
     }
-  }, [animate, interval, topicStats]);
 
-  return { countElements: countElements.current, frequencyElements: frequencyElements.current };
+    rootRef.current.parentElement?.querySelectorAll("[data-topic]").forEach((field) => {
+      if (field instanceof HTMLElement && field.dataset.topic) {
+        const topic = field.dataset.topic;
+        if (field.dataset.topicStat === "count") {
+          const numMessages = latestStats.current.get(topic)?.numMessages;
+          field.innerText = numMessages != undefined ? numMessages.toLocaleString() : "-";
+        }
+        if (field.dataset.topicStat === "frequency") {
+          const stat = latestStats.current.get(topic);
+          if (stat) {
+            field.innerText = formatItemFrequency(
+              stat.numMessages,
+              stat.firstMessageTime,
+              stat.lastMessageTime,
+              latestDuration.current,
+            );
+          } else {
+            field.innerText = "-";
+          }
+        }
+      }
+    });
+  }, [latestDuration, latestStats]);
+
+  useEffect(() => {
+    if (updateCount.current++ % interval === 0) {
+      updateStats();
+    }
+  }, [updateStats, interval, topicStats]);
+
+  useLayoutEffect(() => {
+    updateStats();
+  }, [updateStats]);
+
+  return <div ref={rootRef} />;
 }
