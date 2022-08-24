@@ -11,10 +11,11 @@ import { Condvar } from "@foxglove/den/async";
 import { Time } from "@foxglove/rostime";
 import { PanelExtensionContext, RenderState } from "@foxglove/studio";
 import MockPanelContextProvider from "@foxglove/studio-base/components/MockPanelContextProvider";
-import PanelExtensionAdapter from "@foxglove/studio-base/components/PanelExtensionAdapter";
 import { PlayerCapabilities } from "@foxglove/studio-base/players/types";
 import PanelSetup, { Fixture } from "@foxglove/studio-base/stories/PanelSetup";
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
+
+import PanelExtensionAdapter from "./PanelExtensionAdapter";
 
 describe("PanelExtensionAdapter", () => {
   it("should call initPanel", (done) => {
