@@ -97,7 +97,7 @@ export default function DataSourceSidebar(props: Props): JSX.Element {
   const { currentUser } = useCurrentUser();
   const playerSourceId = useMessagePipeline(selectPlayerSourceId);
   const targetEventId = useMessagePipeline(selectTargetEventId);
-  const [activeTab, setActiveTab] = useState<number>(0);
+  const [activeTab, setActiveTab] = useState(0);
 
   const showEventsTab = currentUser != undefined && playerSourceId === "foxglove-data-platform";
 
@@ -113,8 +113,6 @@ export default function DataSourceSidebar(props: Props): JSX.Element {
       setActiveTab(2);
     } else if (showEventsTab && targetEventId != undefined) {
       setActiveTab(1);
-    } else {
-      setActiveTab(0);
     }
   }, [playerPresence, showEventsTab, targetEventId]);
 
