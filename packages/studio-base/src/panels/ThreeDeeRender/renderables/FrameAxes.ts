@@ -62,7 +62,6 @@ class FrameAxisRenderable extends Renderable<FrameAxisUserData> {
   }
 }
 
-const labelOffset = new THREE.Vector3();
 const tempVec = new THREE.Vector3();
 const tempVecB = new THREE.Vector3();
 const tempLower: [Duration, Transform] = [0n, Transform.Identity()];
@@ -205,7 +204,7 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
     const axisScale = this.renderer.config.scene.transforms?.axisScale ?? DEFAULT_AXIS_SCALE;
     const axisLength = AXIS_LENGTH * axisScale;
     const labelSize = this.renderer.config.scene.transforms?.labelSize ?? DEFAULT_TF_LABEL_SIZE;
-    labelOffset.set(0, 0, axisLength + labelSize * 1.5);
+    const labelOffsetZ = axisLength + labelSize * 1.5;
 
     // Update the lines and labels between coordinate frames
     for (const renderable of this.renderables.values()) {
@@ -233,7 +232,7 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
       }
 
       // Add the label offset in "world" coordinates (in the render frame)
-      worldPosition.add(labelOffset);
+      worldPosition.z += labelOffsetZ;
       // Transform worldPosition back to the local coordinate frame of the
       // renderable, which the label is a child of
       renderable.worldToLocal(worldPosition);
