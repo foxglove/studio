@@ -23,7 +23,7 @@ const severityToToastAppearance = (severity: NotificationSeverity): VariantType 
     case "warn":
       return "warning";
     case "info":
-      return "info";
+      return "default";
     default:
       return "default";
   }

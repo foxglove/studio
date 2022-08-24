@@ -3,8 +3,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import CloseIcon from "@mui/icons-material/Close";
+import InfoIcon from "@mui/icons-material/InfoOutlined";
 import { Grow, IconButton } from "@mui/material";
-import { SnackbarProvider, useSnackbar } from "notistack";
+import { SnackbarProvider, SnackbarKey, useSnackbar } from "notistack";
 import { PropsWithChildren } from "react";
 import { makeStyles } from "tss-react/mui";
 
@@ -28,16 +29,23 @@ const useStyles = makeStyles()((theme) => ({
   /* eslint-enable tss-unused-classes/unused-classes */
 }));
 
-export default function StudioToastProvider(props: PropsWithChildren<unknown>): JSX.Element {
-  const { classes } = useStyles();
+const CloseSnackbarAction = ({ id }: { id: SnackbarKey }) => {
   const { closeSnackbar } = useSnackbar();
   return (
+    <IconButton size="small" color="inherit" onClick={() => closeSnackbar(id)}>
+      <CloseIcon fontSize="inherit" />
+    </IconButton>
+  );
+};
+
+export default function StudioToastProvider(props: PropsWithChildren<unknown>): JSX.Element {
+  const { classes } = useStyles();
+  return (
     <SnackbarProvider
-      action={(id) => (
-        <IconButton size="small" onClick={() => closeSnackbar(id)}>
-          <CloseIcon fontSize="inherit" />
-        </IconButton>
-      )}
+      action={(id) => <CloseSnackbarAction id={id} />}
+      iconVariant={{
+        default: <InfoIcon color="info" style={{ marginInlineEnd: 8 }} />,
+      }}
       anchorOrigin={{ vertical: "top", horizontal: "center" }}
       maxSnack={4}
       TransitionComponent={Grow}

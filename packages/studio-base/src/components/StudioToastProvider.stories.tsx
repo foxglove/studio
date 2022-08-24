@@ -65,7 +65,7 @@ export const MultipleMessages = (): JSX.Element => {
 
   useEffect(() => {
     enqueueSnackbar("Something bad happened 1", { variant: "error", persist: true });
-    enqueueSnackbar("Here's a helpful tip", { variant: "info", persist: true });
+    enqueueSnackbar("Here's a helpful tip", { variant: "default", persist: true });
     enqueueSnackbar("Just a warning", { variant: "warning", persist: true });
     enqueueSnackbar("Something bad happened 2", { variant: "error", persist: true });
   }, [enqueueSnackbar]);
