@@ -11,7 +11,8 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Box, Backdrop, Stack } from "@mui/material";
+import { Layer } from "@fluentui/react";
+import { Box, Stack } from "@mui/material";
 import cx from "classnames";
 import {
   ReactElement,
@@ -230,13 +231,7 @@ export default function ChildToggle(props: Props): JSX.Element {
       </div>
     );
 
-    return noPortal ? (
-      tree
-    ) : (
-      <Backdrop open invisible>
-        {tree}
-      </Backdrop>
-    );
+    return noPortal ? tree : <Layer eventBubblingEnabled>{tree}</Layer>;
   }
 
   const keyDownHandlers = {
