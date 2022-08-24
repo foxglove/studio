@@ -16,6 +16,7 @@ import {
 import { useUpdateEffect } from "react-use";
 import { v4 as uuid } from "uuid";
 
+import { useValueChangedDebugLog } from "@foxglove/hooks";
 import Logger from "@foxglove/log";
 import { fromSec, toSec } from "@foxglove/rostime";
 import {
@@ -75,45 +76,11 @@ const EmptyParameters = new Map<string, ParameterValue>();
 
 const EmptyTopics: readonly Topic[] = [];
 
-function selectSetSubscriptions(ctx: MessagePipelineContext) {
-  return ctx.setSubscriptions;
-}
-
-function selectRequestBackfill(ctx: MessagePipelineContext) {
-  return ctx.requestBackfill;
-}
-
-function selectCapabilities(ctx: MessagePipelineContext) {
-  return ctx.playerState.capabilities;
-}
-
-function selectProfile(ctx: MessagePipelineContext) {
-  return ctx.playerState.profile;
-}
-
-function selectSeekPlayback(ctx: MessagePipelineContext) {
-  return ctx.seekPlayback;
-}
-
 function selectContext(ctx: MessagePipelineContext) {
   return ctx;
 }
 
 type RenderFn = (renderState: Readonly<RenderState>, done: () => void) => void;
-
-function useValueChangedDebugLog(value: unknown, msg: string) {
-  if (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test") {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const prevValue = useRef<unknown>(value);
-    if (prevValue.current !== value) {
-      log.debug(`value changed: ${msg}`);
-    }
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    useLayoutEffect(() => {
-      prevValue.current = value;
-    });
-  }
-}
 
 function generateRender() {
   let prevVariables: GlobalVariables = EMPTY_GLOBAL_VARIABLES;
@@ -151,6 +118,7 @@ function generateRender() {
     if (subscribedTopics !== prevSubscribedTopics) {
       prevBlocks = undefined;
     }
+    prevSubscribedTopics = subscribedTopics;
 
     // Should render indicates whether any fields of render state are updated
     let shouldRender = false;
@@ -292,12 +260,13 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
   // Buffer initial state so initPanel is not called on every config update.
   const [initialState, setInitialState] = useState(config);
 
-  // fixme - replace with single selector
-  const setSubscriptions = useMessagePipeline(selectSetSubscriptions);
-  const requestBackfill = useMessagePipeline(selectRequestBackfill);
-  const capabilities = useMessagePipeline(selectCapabilities);
-  const dataSourceProfile = useMessagePipeline(selectProfile);
-  const seekPlayback = useMessagePipeline(selectSeekPlayback);
+  const messagePipelineContext = useMessagePipeline(selectContext);
+
+  const { playerState, pauseFrame, setSubscriptions, requestBackfill, seekPlayback } =
+    messagePipelineContext;
+
+  const { capabilities, profile: dataSourceProfile } = playerState;
+
   const { openSiblingPanel } = usePanelContext();
 
   const [panelId] = useState(() => uuid());
@@ -342,10 +311,6 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
   //
   // This getter allows the extension context to remain stable through pipeline changes
   const getMessagePipelineContext = useMessagePipelineGetter();
-
-  const messagePipelineContext = useMessagePipeline(selectContext);
-
-  const { playerState, pauseFrame } = messagePipelineContext;
 
   // Generate render produces a function which computers the latest render state from a set of inputs
   // Spiritually its like a reducer
@@ -392,6 +357,12 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
     [messagePipelineContext.messageEventsBySubscriberId, panelId],
   );
 
+  // The rendering ref is set when we've begin rendering the frame (calling the panel's render
+  // function)
+  //
+  // If another update arrives before the panel finishes rendering, we will update the
+  // slowRenderState to indicate that the panel could not keep up with rendering relative to
+  // updates.
   const renderingRef = useRef<boolean>(false);
   useLayoutEffect(() => {
     if (!renderFn) {
@@ -414,8 +385,6 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
     }
 
     if (renderingRef.current) {
-      // fixme - keep a warn? do something else?
-      console.warn("Could not render frame because already rendering");
       setSlowRender(true);
       return;
     }
@@ -431,6 +400,7 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
       renderFn(renderState, () => {
         // ignore any additional done calls from the panel
         if (doneCalled) {
+          log.warn(`${panelId} called render done function twice`);
           return;
         }
         doneCalled = true;
