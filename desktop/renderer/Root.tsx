@@ -51,13 +51,13 @@ export default function Root({
       new Ros1LocalBagDataSourceFactory({ useIterablePlayer: enableExperimentalLatching }),
       new Ros1RemoteBagDataSourceFactory({ useIterablePlayer: enableExperimentalLatching }),
       new Ros2SocketDataSourceFactory(),
-      new Ros2LocalBagDataSourceFactory({ useIterablePlayer: enableExperimentalLatching }),
+      new Ros2LocalBagDataSourceFactory(),
       new UlogLocalDataSourceFactory(),
       new VelodyneDataSourceFactory(),
       new FoxgloveDataPlatformDataSourceFactory(),
       new SampleNuscenesDataSourceFactory(),
-      new McapLocalDataSourceFactory({ useIterablePlayer: enableExperimentalLatching }),
-      new McapRemoteDataSourceFactory({ useIterablePlayer: enableExperimentalLatching }),
+      new McapLocalDataSourceFactory(),
+      new McapRemoteDataSourceFactory(),
     ];
 
     return sources;

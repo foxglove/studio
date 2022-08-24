@@ -3,31 +3,35 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Skeleton, Typography } from "@mui/material";
+import { MutableRefObject, useEffect, useRef } from "react";
 
-import Duration from "@foxglove/studio-base/components/Duration";
+import { Time } from "@foxglove/rostime";
 import {
   MessagePipelineContext,
   useMessagePipeline,
 } from "@foxglove/studio-base/components/MessagePipeline";
 import Stack from "@foxglove/studio-base/components/Stack";
 import Timestamp from "@foxglove/studio-base/components/Timestamp";
+import { useAppTimeFormat } from "@foxglove/studio-base/hooks";
 import { subtractTimes } from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/typescript/userUtils/time";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
+import { formatDate, formatDuration } from "@foxglove/studio-base/util/formatTime";
 
-import { MultilineMiddleTruncate } from "../MultilineMiddleTruncate";
+import { MultilineMiddleTruncate } from "./MultilineMiddleTruncate";
 
 const selectStartTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.startTime;
 const selectEndTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.endTime;
 const selectPlayerName = (ctx: MessagePipelineContext) => ctx.playerState.name;
 const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => playerState.presence;
 
-function DataSourceInfo(): JSX.Element {
-  const startTime = useMessagePipeline(selectStartTime);
-  const endTime = useMessagePipeline(selectEndTime);
-  const playerName = useMessagePipeline(selectPlayerName);
-  const playerPresence = useMessagePipeline(selectPlayerPresence);
-
-  const duration = startTime && endTime ? subtractTimes(endTime, startTime) : undefined;
+function DataSourceInfoContent(props: {
+  durationRef: MutableRefObject<ReactNull | HTMLDivElement>;
+  endTimeRef: MutableRefObject<ReactNull | HTMLDivElement>;
+  playerName?: string;
+  playerPresence: PlayerPresence;
+  startTime?: Time;
+}): JSX.Element {
+  const { durationRef, endTimeRef, playerName, playerPresence, startTime } = props;
 
   return (
     <Stack gap={1.5} paddingX={2} paddingBottom={2}>
@@ -69,10 +73,8 @@ function DataSourceInfo(): JSX.Element {
         </Typography>
         {playerPresence === PlayerPresence.INITIALIZING ? (
           <Skeleton animation="wave" width="50%" />
-        ) : endTime ? (
-          <Timestamp horizontal time={endTime} />
         ) : (
-          <Typography variant="inherit" color="text.secondary">
+          <Typography variant="inherit" ref={endTimeRef}>
             &mdash;
           </Typography>
         )}
@@ -84,10 +86,8 @@ function DataSourceInfo(): JSX.Element {
         </Typography>
         {playerPresence === PlayerPresence.INITIALIZING ? (
           <Skeleton animation="wave" width={100} />
-        ) : duration ? (
-          <Duration duration={duration} />
         ) : (
-          <Typography variant="inherit" color="text.secondary">
+          <Typography variant="inherit" ref={durationRef}>
             &mdash;
           </Typography>
         )}
@@ -96,4 +96,47 @@ function DataSourceInfo(): JSX.Element {
   );
 }
 
-export { DataSourceInfo };
+const MemoDataSourceInfoContent = React.memo(DataSourceInfoContent);
+
+const EmDash = "\u2014";
+
+export function DataSourceInfoView(): JSX.Element {
+  const startTime = useMessagePipeline(selectStartTime);
+  const endTime = useMessagePipeline(selectEndTime);
+  const playerName = useMessagePipeline(selectPlayerName);
+  const playerPresence = useMessagePipeline(selectPlayerPresence);
+  const durationRef = useRef<HTMLDivElement>(ReactNull);
+  const endTimeRef = useRef<HTMLDivElement>(ReactNull);
+  const { formatTime } = useAppTimeFormat();
+
+  // We bypass react and update the DOM elements directly for better performance here.
+  useEffect(() => {
+    if (durationRef.current) {
+      const duration = endTime && startTime ? subtractTimes(endTime, startTime) : undefined;
+      if (duration) {
+        const durationStr = formatDuration(duration);
+        durationRef.current.innerText = durationStr;
+      } else {
+        durationRef.current.innerText = EmDash;
+      }
+    }
+    if (endTimeRef.current) {
+      if (endTime) {
+        const date = formatDate(endTime, undefined);
+        endTimeRef.current.innerText = `${date} ${formatTime(endTime)}`;
+      } else {
+        endTimeRef.current.innerText = EmDash;
+      }
+    }
+  }, [endTime, formatTime, startTime]);
+
+  return (
+    <MemoDataSourceInfoContent
+      durationRef={durationRef}
+      endTimeRef={endTimeRef}
+      playerName={playerName}
+      playerPresence={playerPresence}
+      startTime={startTime}
+    />
+  );
+}
