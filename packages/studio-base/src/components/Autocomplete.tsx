@@ -520,7 +520,7 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
       }}
       // @ts-expect-error renderMenuWrapper added in the fork but we don't have typings for it
       renderMenuWrapper={(menu: React.ReactNode) => (
-        <Backdrop open invisible>
+        <Backdrop open invisible style={{ zIndex: 10000000 }}>
           {menu}
         </Backdrop>
       )}
