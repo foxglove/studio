@@ -356,6 +356,8 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
     }
   }, [colorScheme, globalVariables, panelId, renderFn]);
 
+  // fixme - I think this should be removed
+  // we should trigger render from the update of our three inputs
   const queueRender = useCallback(() => {
     if (!renderFn || rafRequestedRef.current != undefined) {
       return;
@@ -366,31 +368,6 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
   // Queue render when message pipeline has new data
   const messagePipelineSelector = useCallback((ctx: MessagePipelineContext) => {
     return ctx;
-    /*
-      // fixme - can't produce different values for the same input
-      // thats a no-no for selector land!
-      // side effects in selector :( ultimate sadness
-
-      // We have a new context to render but we also still have an existing frame we haven't rendered!
-      // This should technically be an invariant
-      if (latestPipelineContextRef.current !== ctx && resumeFrameRef.current) {
-        // fixme - analytics instead of throw?
-        // fixme - in tests can't console error cause tests are not waiting for resume frame properly
-        //throw new Error("dropping frame");
-        //console.error("dropping frame");
-        return true;
-      }
-
-      // fixme - if we return here and the panel never resumes we have a problem?
-      if (resumeFrameRef.current) {
-        return true;
-      }
-
-      resumeFrameRef.current = latestPipelineContextRef.current?.pauseFrame(panelId);
-      latestPipelineContextRef.current = ctx;
-      queueRender();
-      return false;
-      */
   }, []);
 
   useEffect(() => {
@@ -650,7 +627,10 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
     // Reset local state when the panel element is mounted or changes
     setRenderFn(undefined);
     prevRenderState.current = {};
+    // fixme - why isn't this in the cleanup logic?
     if (rafRequestedRef.current != undefined) {
+      // fixme - why do we use raf?
+      // fixme - resume?
       // Any pending render requests from the previously mounted panel must be canceled, because
       // when they render they will change prevRenderState. Clearing prevRenderState here allows the
       // newly mounted panel to receive the correct renderState.
