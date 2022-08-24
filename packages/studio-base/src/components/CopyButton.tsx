@@ -50,7 +50,7 @@ export default function CopyButton(
 
   if (children == undefined) {
     return (
-      <Tooltip arrow title={copied ? "Copied" : "Copy entire message to clipboard"}>
+      <Tooltip arrow title={copied ? "Copied" : "Copy to clipboard"}>
         <IconButton
           edge={edge}
           className={className}
