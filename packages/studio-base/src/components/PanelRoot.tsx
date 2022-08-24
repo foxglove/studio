@@ -101,10 +101,11 @@ export const usePanelRootStyles = makeStyles<
 
 export const PanelRoot = forwardRef<HTMLDivElement, PropsWithChildren<PanelRootProps>>(
   function PanelRoot(props, ref): JSX.Element {
-    const { fullscreenState, selected, sourceRect, hasFullscreenDescendant } = props;
+    const { fullscreenState, selected, sourceRect, hasFullscreenDescendant, className, ...rest } =
+      props;
     const { classes, cx } = usePanelRootStyles({ sourceRect, hasFullscreenDescendant });
 
-    const className = cx(PANEL_ROOT_CLASS_NAME, classes.root, {
+    const classNames = cx(PANEL_ROOT_CLASS_NAME, className, classes.root, {
       [classes.entering]: fullscreenState === "entering",
       [classes.entered]: fullscreenState === "entered",
       [classes.exiting]: fullscreenState === "exiting",
@@ -113,7 +114,7 @@ export const PanelRoot = forwardRef<HTMLDivElement, PropsWithChildren<PanelRootP
     });
 
     return (
-      <div ref={ref} className={className}>
+      <div ref={ref} className={classNames} {...rest}>
         {props.children}
       </div>
     );
