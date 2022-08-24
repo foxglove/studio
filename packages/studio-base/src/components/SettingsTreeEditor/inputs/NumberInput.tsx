@@ -4,46 +4,57 @@
 
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import { IconButton, TextFieldProps, TextField, styled as muiStyled } from "@mui/material";
+import { IconButton, TextFieldProps, TextField } from "@mui/material";
 import { clamp, isFinite } from "lodash";
-import { ReactNode, useCallback } from "react";
+import { ReactNode, useCallback, useState } from "react";
+import { useKeyPress, useLatest } from "react-use";
+import { makeStyles } from "tss-react/mui";
 
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
-const StyledTextField = muiStyled(TextField)({
-  ".MuiInputBase-formControl.MuiInputBase-root": {
-    paddingTop: 0,
-    paddingBottom: 0,
+const useStyles = makeStyles()((theme) => ({
+  iconButton: {
+    "&.MuiIconButton-edgeStart": {
+      marginLeft: theme.spacing(-0.75),
+      borderTopRightRadius: 0,
+      borderBottomRightRadius: 0,
+    },
+    "&.MuiIconButton-edgeEnd": {
+      marginRight: theme.spacing(-0.75),
+      borderTopLeftRadius: 0,
+      borderBottomLeftRadius: 0,
+    },
   },
-  ".MuiInputBase-input": {
-    textAlign: "center",
-    fontFamily: fonts.MONOSPACE,
 
-    "&::-webkit-outer-spin-button, &::-webkit-inner-spin-button": {
-      appearance: "none",
-      margin: 0,
+  textField: {
+    backgroundColor: theme.palette.background.paper,
+    cursor: "auto",
+    ".MuiInputBase-formControl.MuiInputBase-root": {
+      paddingTop: 0,
+      paddingBottom: 0,
     },
-  },
-  "@media (pointer: fine)": {
-    ".MuiIconButton-root": {
-      visibility: "hidden",
-    },
-    "&:hover .MuiIconButton-root": {
-      visibility: "visible",
-    },
-  },
-});
+    ".MuiInputBase-input": {
+      textAlign: "center",
+      fontFamily: fonts.MONOSPACE,
 
-const StyledIconButton = muiStyled(IconButton)(({ theme }) => ({
-  "&.MuiIconButton-edgeStart": {
-    marginLeft: theme.spacing(-0.75),
-    borderTopRightRadius: 0,
-    borderBottomRightRadius: 0,
+      "&::-webkit-outer-spin-button, &::-webkit-inner-spin-button": {
+        appearance: "none",
+        margin: 0,
+      },
+    },
+    "@media (pointer: fine)": {
+      ".MuiIconButton-root": {
+        visibility: "hidden",
+      },
+      "&:hover .MuiIconButton-root": {
+        visibility: "visible",
+      },
+    },
   },
-  "&.MuiIconButton-edgeEnd": {
-    marginRight: theme.spacing(-0.75),
-    borderTopLeftRadius: 0,
-    borderBottomLeftRadius: 0,
+
+  textFieldScrubbing: {
+    backgroundColor: theme.palette.background.default,
+    cursor: "none",
   },
 }));
 
@@ -65,7 +76,16 @@ export function NumberInput(
     onChange: (value: undefined | number) => void;
   } & Omit<TextFieldProps, "onChange">,
 ): JSX.Element {
+  const { classes, cx } = useStyles();
   const { value, iconDown, iconUp, step = 1, onChange, disabled, readOnly } = props;
+
+  const [shiftPressed] = useKeyPress("Shift");
+
+  const stepAmount = shiftPressed ? step * 10 : step;
+
+  const [pointerDown, setPointerDown] = useState(false);
+
+  const latestValue = useLatest(value);
 
   const placeHolderValue = isFinite(Number(props.placeholder))
     ? Number(props.placeholder)
@@ -99,19 +119,49 @@ export function NumberInput(
       ? limitPrecision(value, props.precision)
       : value;
 
+  const onPointerDown = useCallback((event: React.PointerEvent) => {
+    event.currentTarget.setPointerCapture(event.pointerId);
+    setPointerDown(true);
+  }, []);
+
+  const onPointerUp = useCallback((event: React.PointerEvent) => {
+    event.currentTarget.releasePointerCapture(event.pointerId);
+    setPointerDown(false);
+  }, []);
+
+  const onPointerMove = useCallback(
+    (event: React.PointerEvent) => {
+      if (event.buttons === 1 && latestValue.current != undefined) {
+        event.preventDefault();
+        const scale = event.shiftKey ? 10 : 1;
+        updateValue(latestValue.current + event.movementX * 0.05 * step * scale);
+      }
+    },
+    [latestValue, step, updateValue],
+  );
+
   return (
-    <StyledTextField
+    <TextField
       {...props}
       value={limitedValue ?? ""}
       onChange={(event) =>
         updateValue(event.target.value.length > 0 ? Number(event.target.value) : undefined)
       }
       type="number"
-      inputProps={{ max: props.max, min: props.min, step }}
+      className={cx(classes.textField, { [classes.textFieldScrubbing]: pointerDown })}
+      onPointerDown={onPointerDown}
+      onPointerUp={onPointerUp}
+      onPointerMove={onPointerMove}
+      inputProps={{
+        max: props.max,
+        min: props.min,
+        step: stepAmount,
+      }}
       InputProps={{
         readOnly,
         startAdornment: (
-          <StyledIconButton
+          <IconButton
+            className={classes.iconButton}
             size="small"
             edge="start"
             onClick={(event: React.MouseEvent) =>
@@ -119,10 +169,11 @@ export function NumberInput(
             }
           >
             {iconDown ?? <ChevronLeftIcon fontSize="small" />}
-          </StyledIconButton>
+          </IconButton>
         ),
         endAdornment: (
-          <StyledIconButton
+          <IconButton
+            className={classes.iconButton}
             size="small"
             edge="end"
             onClick={(event: React.MouseEvent) =>
@@ -130,7 +181,7 @@ export function NumberInput(
             }
           >
             {iconUp ?? <ChevronRightIcon fontSize="small" />}
-          </StyledIconButton>
+          </IconButton>
         ),
       }}
     />
