@@ -94,7 +94,6 @@ export type RandomAccessPlayerOptions = {
 export default class RandomAccessPlayer implements Player {
   private _urlParams?: Record<string, string>;
   private _name?: string;
-  private _filePath?: string;
   private _provider: RandomAccessDataProvider;
   private _seekBackNs: bigint;
   private _isPlaying: boolean = false;
