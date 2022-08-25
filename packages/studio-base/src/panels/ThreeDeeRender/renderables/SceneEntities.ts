@@ -264,7 +264,7 @@ function normalizeModelPrimitive(model: PartialMessage<ModelPrimitive>): ModelPr
     pose: normalizePose(model.pose),
     scale: normalizeVector3(model.scale),
     color: normalizeColorRGBA(model.color),
-    embedded_materials: model.embedded_materials ?? true,
+    override_color: model.override_color ?? false,
     url: model.url ?? "",
     media_type: model.media_type ?? "",
     data: normalizeByteArray(model.data),

@@ -58,7 +58,7 @@
     "@types/node": "15.3.0",
     "esbuild-loader/esbuild": "0.14.7",
     "react-dnd": "14.0.2",
-    "@foxglove/schemas": "github:foxglove/schemas#40a8341a1388fee9aa57b8a25efab2f3e920dbc5"
+    "@foxglove/schemas": "github:foxglove/schemas#94898bfc24f9629b42233497d386181fe5afb92b"
   },
   "devDependencies": {
     "@actions/core": "1.6.0",

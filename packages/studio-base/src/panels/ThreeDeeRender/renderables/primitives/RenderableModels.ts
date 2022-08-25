@@ -24,7 +24,7 @@ type RenderableModel = {
   /** Model wrapped in a Group to allow setting the group's position/orientation/scale without affecting the model */
   model: THREE.Group;
   /** Reference to the original model before modification so it can be re-cloned if necessary. */
-  originalModel: LoadedModel;
+  cachedModel: LoadedModel;
 };
 
 export class RenderableModels extends RenderablePrimitive {
@@ -72,15 +72,11 @@ export class RenderableModels extends RenderablePrimitive {
             this._updateModel(renderable, primitive);
           } else {
             // Load the model if necessary
-            const loadedModel = await this._loadModel(url, {
+            const cachedModel = await this._loadCachedModel(url, {
               overrideMediaType: primitive.media_type.length > 0 ? primitive.media_type : undefined,
-              useEmbeddedMaterials: primitive.embedded_materials,
             });
-            if (loadedModel) {
-              renderable = {
-                model: new THREE.Group().add(loadedModel),
-                originalModel: loadedModel,
-              };
+            if (cachedModel) {
+              renderable = { model: cloneAndPrepareModel(cachedModel), cachedModel };
               this._updateModel(renderable, primitive);
             }
           }
@@ -159,9 +155,9 @@ export class RenderableModels extends RenderablePrimitive {
     return this.userData.entity ?? {};
   }
 
-  private async _loadModel(
+  private async _loadCachedModel(
     url: string,
-    opts: { overrideMediaType?: string; useEmbeddedMaterials: boolean },
+    opts: { overrideMediaType?: string },
   ): Promise<LoadedModel | undefined> {
     const cachedModel = await this.renderer.modelCache.load(
       url,
@@ -186,17 +182,14 @@ export class RenderableModels extends RenderablePrimitive {
       return undefined;
     }
 
-    const model = cachedModel.clone(true);
-    removeLights(model);
-
-    return model;
+    return cachedModel;
   }
 
   /**
    * @returns true if model was successfully updated, false if it needs to be reloaded
    */
   private _updateModel(renderable: RenderableModel, primitive: ModelPrimitive) {
-    if (!primitive.embedded_materials) {
+    if (primitive.override_color) {
       if (!renderable.material) {
         renderable.material = new THREE.MeshStandardMaterial({
           metalness: 0,
@@ -212,7 +205,7 @@ export class RenderableModels extends RenderablePrimitive {
       renderable.material.needsUpdate = true;
     } else if (renderable.material) {
       // We already discarded the original materials, need to re-clone them from the original model
-      renderable.model = new THREE.Group().add(renderable.originalModel.clone(true));
+      renderable.model = cloneAndPrepareModel(renderable.cachedModel);
       renderable.material = undefined;
     }
 
@@ -235,8 +228,14 @@ export class RenderableModels extends RenderablePrimitive {
   private _disposeModel(renderable: RenderableModel) {
     renderable.material?.dispose();
     disposeModel(renderable.model);
-    disposeModel(renderable.originalModel);
+    disposeModel(renderable.cachedModel);
   }
+}
+
+function cloneAndPrepareModel(cachedModel: LoadedModel) {
+  const model = cachedModel.clone(true);
+  removeLights(model);
+  return new THREE.Group().add(model);
 }
 
 function disposeModel(object: THREE.Object3D) {
