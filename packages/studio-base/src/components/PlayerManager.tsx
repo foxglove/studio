@@ -241,6 +241,10 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
                 return;
               }
 
+              // If we are selecting a single file, the desktop environment might have features to
+              // show the user which file they've selected (i.e. macOS proxy icon)
+              void nativeWindow?.setRepresentedFilename((file as { path?: string }).path); // File.path is added by Electron
+
               const newPlayer = foundSource.initialize({
                 file,
                 metricsCollector,
