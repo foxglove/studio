@@ -6,15 +6,16 @@ import * as THREE from "three";
 
 import { toNanoSec } from "@foxglove/rostime";
 import { ModelPrimitive, SceneEntity } from "@foxglove/schemas/schemas/typescript";
-import { RosValue } from "@foxglove/studio-base/players/types";
 import { emptyPose } from "@foxglove/studio-base/util/Pose";
 
 import { LoadedModel } from "../../ModelCache";
 import type { Renderer } from "../../Renderer";
-import { rgbToThreeColor } from "../../color";
+import { makeRgba, rgbToThreeColor, stringToRgba } from "../../color";
 import { LayerSettingsEntity } from "../SceneEntities";
 import { removeLights, replaceMaterials } from "../models";
 import { RenderablePrimitive } from "./RenderablePrimitive";
+
+const tempRgba = makeRgba();
 
 const MODEL_FETCH_FAILED = "MODEL_FETCH_FAILED";
 
@@ -151,10 +152,6 @@ export class RenderableModels extends RenderablePrimitive {
     this.update(this.userData.entity, settings, this.userData.receiveTime);
   }
 
-  public override details(): Record<string, RosValue> {
-    return this.userData.entity ?? {};
-  }
-
   private async _loadCachedModel(
     url: string,
     opts: { overrideMediaType?: string },
@@ -189,7 +186,12 @@ export class RenderableModels extends RenderablePrimitive {
    * @returns true if model was successfully updated, false if it needs to be reloaded
    */
   private _updateModel(renderable: RenderableModel, primitive: ModelPrimitive) {
-    if (primitive.override_color) {
+    const overrideColor = this.userData.settings.color
+      ? stringToRgba(tempRgba, this.userData.settings.color)
+      : primitive.override_color
+      ? primitive.color
+      : undefined;
+    if (overrideColor) {
       if (!renderable.material) {
         renderable.material = new THREE.MeshStandardMaterial({
           metalness: 0,
@@ -198,8 +200,8 @@ export class RenderableModels extends RenderablePrimitive {
         });
         replaceMaterials(renderable.model, renderable.material);
       }
-      rgbToThreeColor(renderable.material.color, primitive.color);
-      const transparent = primitive.color.a < 1;
+      rgbToThreeColor(renderable.material.color, overrideColor);
+      const transparent = overrideColor.a < 1;
       renderable.material.transparent = transparent;
       renderable.material.depthWrite = !transparent;
       renderable.material.needsUpdate = true;

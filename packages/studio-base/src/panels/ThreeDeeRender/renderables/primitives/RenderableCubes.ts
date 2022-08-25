@@ -6,7 +6,6 @@ import * as THREE from "three";
 
 import { toNanoSec } from "@foxglove/rostime";
 import { CubePrimitive, SceneEntity } from "@foxglove/schemas/schemas/typescript";
-import { RosValue } from "@foxglove/studio-base/players/types";
 import { emptyPose } from "@foxglove/studio-base/util/Pose";
 
 import type { Renderer } from "../../Renderer";
@@ -183,10 +182,6 @@ export class RenderableCubes extends RenderablePrimitive {
 
   public updateSettings(settings: LayerSettingsEntity): void {
     this.update(this.userData.entity, settings, this.userData.receiveTime);
-  }
-
-  public override details(): Record<string, RosValue> {
-    return this.userData.entity ?? {};
   }
 
   private static Geometry(): THREE.BoxGeometry {
