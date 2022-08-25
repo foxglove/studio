@@ -40,9 +40,14 @@ export class RenderableModels extends RenderablePrimitive {
   }
 
   private _updateModels(models: ModelPrimitive[]) {
+    this.clear();
+
     const newRenderablesByUrl = new Map<string, RenderableModel[]>();
     const originalUpdateCount = ++this.updateCount;
 
+    Promise.all(models.map(async (primitive) => this._updateOrCreateModel(primitive)))
+      .then((renderableModel) => {})
+      .catch(console.error);
     for (const primitive of models) {
       let url = primitive.url;
       let objectUrl: string | undefined;
