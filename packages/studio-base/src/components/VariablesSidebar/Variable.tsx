@@ -292,7 +292,7 @@ export default function Variable(props: {
                       error={isDuplicate}
                       value={editedName ?? name}
                       placeholder="variable_name"
-                      data-testid={`global-variable-key-input-${editedName ?? name}`}
+                      data-testid={`global-variable-key-input-${name}`}
                       onClick={(e) => e.stopPropagation()}
                       onFocus={() => editedName === "" && setExpanded(true)}
                       onChange={(event) => setEditedName(event.target.value)}
