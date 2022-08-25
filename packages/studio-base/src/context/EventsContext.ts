@@ -11,6 +11,8 @@ import { ConsoleEvent } from "@foxglove/studio-base/services/ConsoleApi";
 
 export type EventsStore = {
   events: AsyncState<ConsoleEvent[]>;
+  selectedEventId: undefined | string;
+  selectEvent: (id: undefined | string) => void;
   setEvents: (events: AsyncState<ConsoleEvent[]>) => void;
 };
 

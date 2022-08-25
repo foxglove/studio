@@ -13,6 +13,8 @@ export default function EventsProvider({ children }: { children?: ReactNode }): 
   const [store] = useState(
     createStore<EventsStore>((set) => ({
       events: { loading: false, value: [] },
+      selectedEventId: undefined,
+      selectEvent: (id: undefined | string) => set({ selectedEventId: id }),
       setEvents: (events: AsyncState<ConsoleEvent[]>) => set({ events }),
     })),
   );

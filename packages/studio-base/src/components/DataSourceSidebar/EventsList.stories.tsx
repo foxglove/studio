@@ -78,6 +78,27 @@ Filtered.parameters = {
   colorScheme: "light",
 };
 
+export function Selected(): JSX.Element {
+  const setEvents = useEvents((store) => store.setEvents);
+  const selectEvent = useEvents((store) => store.selectEvent);
+
+  useEffect(() => {
+    const events = makeEvents(20);
+
+    setEvents({ loading: false, value: events });
+  }, [selectEvent, setEvents]);
+
+  return <EventsList />;
+}
+Selected.play = async () => {
+  const user = userEvent.setup();
+  const events = await screen.findAllByTestId("sidebar-event");
+  await user.click(events[1]!);
+};
+Selected.parameters = {
+  colorScheme: "light",
+};
+
 export function WithTarget(): JSX.Element {
   const setEvents = useEvents((store) => store.setEvents);
   useEffect(() => {

@@ -14,7 +14,7 @@ import {
   useMessagePipeline,
 } from "@foxglove/studio-base/components/MessagePipeline";
 import Stack from "@foxglove/studio-base/components/Stack";
-import { useEvents } from "@foxglove/studio-base/context/EventsContext";
+import { EventsStore, useEvents } from "@foxglove/studio-base/context/EventsContext";
 import {
   useClearHoverValue,
   useSetHoverValue,
@@ -97,18 +97,16 @@ const useStyles = makeStyles<void, "eventMetadata" | "eventSelected">()(
 
 const selectSeek = (ctx: MessagePipelineContext) => ctx.seekPlayback;
 const selectStartTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.startTime;
-const selectTargetEventId = ({ playerState }: MessagePipelineContext) =>
-  playerState.urlState?.parameters?.eventId;
 
 function EventView(params: {
   event: ConsoleEvent;
   formattedTime: string;
-  isTargeted: boolean;
+  isSelected: boolean;
   onClick: (event: ConsoleEvent) => void;
   onHoverStart: (event: ConsoleEvent) => void;
   onHoverEnd: (event: ConsoleEvent) => void;
 }): JSX.Element {
-  const { event, formattedTime, isTargeted, onClick, onHoverStart, onHoverEnd } = params;
+  const { event, formattedTime, isSelected, onClick, onHoverStart, onHoverEnd } = params;
   const { classes, cx } = useStyles();
 
   const fields = compact([
@@ -120,7 +118,7 @@ function EventView(params: {
   return (
     <div
       data-testid="sidebar-event"
-      className={cx(classes.event, { [classes.eventSelected]: isTargeted })}
+      className={cx(classes.event, { [classes.eventSelected]: isSelected })}
       onClick={() => onClick(event)}
       onMouseEnter={() => onHoverStart(event)}
       onMouseLeave={() => onHoverEnd(event)}
@@ -138,14 +136,19 @@ function EventView(params: {
 
 const MemoEventView = React.memo(EventView);
 
+const selectEvents = (store: EventsStore) => store.events;
+const selectSelectedEventId = (store: EventsStore) => store.selectedEventId;
+const selectSelectEvent = (store: EventsStore) => store.selectEvent;
+
 export function EventsList(): JSX.Element {
-  const events = useEvents((store) => store.events);
+  const events = useEvents(selectEvents);
+  const selectedEventId = useEvents(selectSelectedEventId);
+  const selectEvent = useEvents(selectSelectEvent);
   const { formatTime } = useAppTimeFormat();
   const startTime = useMessagePipeline(selectStartTime);
   const setHoverValue = useSetHoverValue();
   const clearHoverValue = useClearHoverValue();
   const [filter, setFilter] = useState("");
-  const targetEventId = useMessagePipeline(selectTargetEventId);
   const seek = useMessagePipeline(selectSeek);
 
   const filteredEvents = useMemo(() => {
@@ -171,12 +174,13 @@ export function EventsList(): JSX.Element {
 
   const onClick = useCallback(
     (event: ConsoleEvent) => {
+      selectEvent(event.id);
       if (seek) {
         const time = fromNanoSec(BigInt(event.timestampNanos));
         seek(time);
       }
     },
-    [seek],
+    [seek, selectEvent],
   );
 
   const onHoverEnd = useCallback(
@@ -257,7 +261,7 @@ export function EventsList(): JSX.Element {
               key={event.event.id}
               event={event.event}
               formattedTime={event.formattedTime}
-              isTargeted={event.event.id === targetEventId}
+              isSelected={event.event.id === selectedEventId}
               onClick={onClick}
               onHoverStart={onHoverStart}
               onHoverEnd={onHoverEnd}
