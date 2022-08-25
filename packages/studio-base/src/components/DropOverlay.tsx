@@ -11,8 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Backdrop, Typography } from "@mui/material";
-import { alpha } from "@mui/material";
+import { alpha, Backdrop, Typography } from "@mui/material";
 import { PropsWithChildren } from "react";
 import { makeStyles } from "tss-react/mui";
 
