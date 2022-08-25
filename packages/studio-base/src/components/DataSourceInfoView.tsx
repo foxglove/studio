@@ -21,15 +21,11 @@ import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import { MultilineMiddleTruncate } from "./MultilineMiddleTruncate";
 
-const useStyles = makeStyles()((theme) => ({
+const useStyles = makeStyles()({
   numericValue: {
-    color: theme.palette.secondary.main,
     fontFamily: fonts.MONOSPACE,
   },
-  value: {
-    color: theme.palette.secondary.main,
-  },
-}));
+});
 
 const selectStartTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.startTime;
 const selectEndTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.endTime;
@@ -57,11 +53,9 @@ function DataSourceInfoContent(props: {
             <Skeleton animation="wave" width="40%" />
           </Typography>
         ) : playerPresence === PlayerPresence.RECONNECTING ? (
-          <Typography className={classes.value} variant="inherit">
-            Waiting for connection…
-          </Typography>
+          <Typography variant="inherit">Waiting for connection…</Typography>
         ) : playerName ? (
-          <Typography className={classes.value} variant="inherit" component="span">
+          <Typography variant="inherit" component="span">
             <MultilineMiddleTruncate text={playerName} />
           </Typography>
         ) : (
