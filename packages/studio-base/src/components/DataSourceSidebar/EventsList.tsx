@@ -9,6 +9,7 @@ import { Fragment, useCallback, useMemo, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 
 import { fromNanoSec, subtract, toSec } from "@foxglove/rostime";
+import { HighlightedText } from "@foxglove/studio-base/components/HighlightedText";
 import {
   MessagePipelineContext,
   useMessagePipeline,
@@ -100,13 +101,14 @@ const selectStartTime = (ctx: MessagePipelineContext) => ctx.playerState.activeD
 
 function EventView(params: {
   event: ConsoleEvent;
+  filter: string;
   formattedTime: string;
   isSelected: boolean;
   onClick: (event: ConsoleEvent) => void;
   onHoverStart: (event: ConsoleEvent) => void;
   onHoverEnd: (event: ConsoleEvent) => void;
 }): JSX.Element {
-  const { event, formattedTime, isSelected, onClick, onHoverStart, onHoverEnd } = params;
+  const { event, filter, formattedTime, isSelected, onClick, onHoverStart, onHoverEnd } = params;
   const { classes, cx } = useStyles();
 
   const fields = compact([
@@ -125,8 +127,12 @@ function EventView(params: {
     >
       {fields.map(([key, value]) => (
         <Fragment key={key}>
-          <div className={classes.eventMetadata}>{key}</div>
-          <div className={classes.eventMetadata}>{value}</div>
+          <div className={classes.eventMetadata}>
+            <HighlightedText text={key ?? ""} highlight={filter} />
+          </div>
+          <div className={classes.eventMetadata}>
+            <HighlightedText text={value ?? ""} highlight={filter} />
+          </div>
         </Fragment>
       ))}
       <div className={classes.spacer} />
@@ -158,7 +164,10 @@ export function EventsList(): JSX.Element {
     const lowFilter = filter.toLowerCase();
 
     return (events.value ?? []).filter((event) =>
-      Object.values(event.metadata).some((value) => value.toLowerCase().includes(lowFilter)),
+      Object.entries(event.metadata).some(
+        ([key, value]) =>
+          key.toLowerCase().includes(lowFilter) || value.toLowerCase().includes(lowFilter),
+      ),
     );
   }, [events.value, filter]);
 
@@ -260,6 +269,7 @@ export function EventsList(): JSX.Element {
             <MemoEventView
               key={event.event.id}
               event={event.event}
+              filter={filter}
               formattedTime={event.formattedTime}
               isSelected={event.event.id === selectedEventId}
               onClick={onClick}
