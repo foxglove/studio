@@ -49,6 +49,14 @@ import diagnosticSummaryThumbnail from "./diagnostics/thumbnails/diagnostic-summ
 
 const builtin: PanelInfo[] = [
   {
+    title: "Time Display",
+    type: "Time Display Panel",
+    description: "Display simulation time and Real time",
+    help: ThreeDimensionalVizHelp,
+
+    module: async () => await import("./TimeDisplay"),
+  },
+  {
     title: "3D",
     type: "3D Panel",
     description: "Display visualization markers and models in a 3D scene.",
