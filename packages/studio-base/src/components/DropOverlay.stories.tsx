@@ -6,14 +6,11 @@ import DropOverlay from "@foxglove/studio-base/components/DropOverlay";
 
 export default {
   title: "components/DropOverlay",
+  component: DropOverlay,
 };
 
-export function Dark(): JSX.Element {
-  return <DropOverlay open>Some DropOverlay</DropOverlay>;
-}
+export const Dark = (): JSX.Element => <DropOverlay open>Some DropOverlay</DropOverlay>;
 Dark.parameters = { colorScheme: "dark" };
 
-export function Light(): JSX.Element {
-  return <DropOverlay open>Some DropOverlay</DropOverlay>;
-}
+export const Light = (): JSX.Element => <DropOverlay open>Some DropOverlay</DropOverlay>;
 Light.parameters = { colorScheme: "light" };
