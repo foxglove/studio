@@ -44,10 +44,12 @@ export class McapIterableSource implements IIterableSource {
 
   public async initialize(): Promise<Initalization> {
     const source = this._source;
+    let filePath: string | undefined;
 
     switch (source.type) {
       case "file": {
         const readable = new FileReadable(source.file);
+        filePath = maybeReadFilePath(source.file);
         const reader = await tryCreateIndexedReader(readable);
         this._sourceImpl = new McapIndexedIterableSource(reader);
         break;
@@ -61,7 +63,9 @@ export class McapIterableSource implements IIterableSource {
       }
     }
 
-    return await this._sourceImpl.initialize();
+    const res = await this._sourceImpl.initialize();
+    res.filePath ??= filePath;
+    return res;
   }
 
   public messageIterator(

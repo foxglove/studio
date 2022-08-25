@@ -151,6 +151,8 @@ export class BagIterableSource implements IIterableSource {
       }
     }
 
+    const filePath =
+      this._source.type === "file" ? maybeReadFilePath(this._source.file) : undefined;
     return {
       topics: Array.from(topics.values()),
       topicStats,
@@ -160,6 +162,7 @@ export class BagIterableSource implements IIterableSource {
       profile: "ros1",
       datatypes,
       publishersByTopic,
+      filePath,
     };
   }
 

@@ -97,6 +97,11 @@ export class RosDb3IterableSource implements IIterableSource {
     this.start = start;
     this.end = end;
 
+    let filePath: string | undefined;
+    if (this.files.length === 1) {
+      filePath = maybeReadFilePath(this.files[0]!);
+    }
+
     return {
       topics: Array.from(topics.values()),
       topicStats,
@@ -106,6 +111,7 @@ export class RosDb3IterableSource implements IIterableSource {
       profile: "ros2",
       datatypes,
       publishersByTopic: new Map(),
+      filePath,
     };
   }
 
