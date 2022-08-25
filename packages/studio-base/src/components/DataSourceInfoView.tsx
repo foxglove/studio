@@ -128,7 +128,7 @@ export function DataSourceInfoView(): JSX.Element {
         endTimeRef.current.innerText = EmDash;
       }
     }
-  }, [endTime, formatTime, startTime]);
+  }, [endTime, formatTime, startTime, playerPresence]);
 
   return (
     <MemoDataSourceInfoContent
