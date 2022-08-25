@@ -54,7 +54,7 @@ const useStyles = makeStyles<void, "eventMetadata" | "eventSelected">()(
       display: "contents",
       cursor: "pointer",
 
-      [`&:hover, &:focus, &.${classes.eventSelected}`]: {
+      "&:hover, &:focus": {
         [`.${classes.eventMetadata}`]: {
           backgroundColor: alpha(theme.palette.primary.main, theme.palette.action.focusOpacity),
           borderColor: theme.palette.primary.main,
