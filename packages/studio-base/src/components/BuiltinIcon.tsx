@@ -5,13 +5,10 @@
 import ICONS from "@foxglove/studio-base/theme/icons";
 
 type BuiltinIconProps = {
-  name?: RegisteredIconNames;
+  name: keyof typeof ICONS;
 };
 
 function BuiltinIcon(props: BuiltinIconProps): JSX.Element {
-  if (props.name == undefined) {
-    return <></>;
-  }
   return ICONS[props.name];
 }
 

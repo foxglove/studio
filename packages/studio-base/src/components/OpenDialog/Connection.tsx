@@ -121,7 +121,7 @@ export default function Connection(props: ConnectionProps): JSX.Element {
                 <Tab
                   value={idx}
                   key={id}
-                  icon={<BuiltinIcon name={iconName} />}
+                  icon={<BuiltinIcon name={iconName ?? "Flow"} />}
                   label={displayName}
                   className={classes.tab}
                 />
