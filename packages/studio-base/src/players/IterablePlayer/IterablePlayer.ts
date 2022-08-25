@@ -242,7 +242,7 @@ export class IterablePlayer implements Player {
     this._metricsCollector.setSpeed(speed);
 
     // Queue event state update to update speed in player state to UI
-    this._emitState();
+    this._queueEmitState();
   }
 
   public seekPlayback(time: Time): void {
