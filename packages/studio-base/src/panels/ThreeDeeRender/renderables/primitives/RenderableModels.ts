@@ -19,8 +19,12 @@ import { RenderablePrimitive } from "./RenderablePrimitive";
 const MODEL_FETCH_FAILED = "MODEL_FETCH_FAILED";
 
 type RenderableModel = {
+  /** Material used to override the model's colors when embedded_materials is false */
   material?: THREE.MeshStandardMaterial;
+  /** Model wrapped in a Group to allow setting the group's position/orientation/scale without affecting the model */
   model: THREE.Group;
+  /** Reference to the original model before modification so it can be re-cloned if necessary. */
+  originalModel: LoadedModel;
 };
 
 export class RenderableModels extends RenderablePrimitive {
@@ -42,68 +46,57 @@ export class RenderableModels extends RenderablePrimitive {
   private _updateModels(models: ModelPrimitive[]) {
     this.clear();
 
-    const newRenderablesByUrl = new Map<string, RenderableModel[]>();
     const originalUpdateCount = ++this.updateCount;
 
-    Promise.all(models.map(async (primitive) => this._updateOrCreateModel(primitive)))
-      .then((renderableModel) => {})
-      .catch(console.error);
-    for (const primitive of models) {
-      let url = primitive.url;
-      let objectUrl: string | undefined;
-      if (url.length === 0) {
-        url = objectUrl = URL.createObjectURL(
-          new Blob([primitive.data], { type: primitive.media_type }),
-        );
-      }
-      const existingModel = this.renderablesByUrl.get(url)?.pop();
-      if (existingModel) {
-        console.log("remove", url);
-        existingModel.model.removeFromParent();
-        if (this._updateModel(existingModel, primitive)) {
-          let newRenderables = newRenderablesByUrl.get(url);
-          if (!newRenderables) {
-            newRenderables = [];
-            newRenderablesByUrl.set(url, newRenderables);
-          }
-          newRenderables.push(existingModel);
-          continue;
-        } else {
-          this._disposeModel(existingModel);
-        }
-      }
+    const prevRenderablesByUrl = this.renderablesByUrl;
+    this.renderablesByUrl = new Map();
 
-      this._loadModel(url, {
-        overrideMediaType: primitive.media_type.length > 0 ? primitive.media_type : undefined,
-        useEmbeddedMaterials: primitive.embedded_materials,
-      })
-        .then((loadedModel) => {
-          if (!loadedModel) {
+    Promise.all(
+      models.map(async (primitive) => {
+        let url = primitive.url;
+        let objectUrl: string | undefined;
+        if (url.length === 0) {
+          url = objectUrl = URL.createObjectURL(
+            new Blob([primitive.data], { type: primitive.media_type }),
+          );
+        }
+        let newRenderables = this.renderablesByUrl.get(url);
+        if (!newRenderables) {
+          newRenderables = [];
+          this.renderablesByUrl.set(url, newRenderables);
+        }
+        try {
+          let renderable = prevRenderablesByUrl.get(url)?.pop();
+          // Use an existing model that we previously loaded
+          if (renderable) {
+            this._updateModel(renderable, primitive);
+          } else {
+            // Load the model if necessary
+            const loadedModel = await this._loadModel(url, {
+              overrideMediaType: primitive.media_type.length > 0 ? primitive.media_type : undefined,
+              useEmbeddedMaterials: primitive.embedded_materials,
+            });
+            if (loadedModel) {
+              renderable = {
+                model: new THREE.Group().add(loadedModel),
+                originalModel: loadedModel,
+              };
+              this._updateModel(renderable, primitive);
+            }
+          }
+
+          if (originalUpdateCount !== this.updateCount) {
+            // another update has come in, bail before doing any mutations
             return;
           }
-          const renderableModel = { model: new THREE.Group().add(loadedModel) };
-          if (this.updateCount !== originalUpdateCount) {
-            this._disposeModel(renderableModel);
+          if (renderable) {
+            newRenderables.push(renderable);
+            this.add(renderable.model);
+
+            // Render a new frame now that the model is loaded
+            this.renderer.queueAnimationFrame();
           }
-
-          // use this.renderablesByUrl instead of newRenderablesByUrl because it has already been swapped
-          let newRenderables = this.renderablesByUrl.get(url);
-          if (!newRenderables) {
-            newRenderables = [];
-            this.renderablesByUrl.set(url, newRenderables);
-          }
-          newRenderables.push(renderableModel);
-
-          this._updateModel(renderableModel, primitive);
-          console.log("add", url);
-          this.add(renderableModel.model);
-
-          // Remove any mesh fetch error message since loading was successful
-          this.renderer.settings.errors.remove(this.userData.settingsPath, MODEL_FETCH_FAILED);
-          // Render a new frame now that the model is loaded
-          this.renderer.queueAnimationFrame();
-        })
-        .catch((err) => {
+        } catch (err) {
           this.renderer.settings.errors.add(
             this.userData.settingsPath,
             MODEL_FETCH_FAILED,
@@ -111,24 +104,27 @@ export class RenderableModels extends RenderablePrimitive {
               objectUrl != undefined ? `${primitive.data.byteLength}-byte data` : `"${url}"`
             }: ${err.message}`,
           );
-        })
-        .finally(() => {
+        } finally {
           if (objectUrl != undefined) {
             URL.revokeObjectURL(objectUrl);
           }
-        });
-    }
-
-    // remove remaining models that are no longer used
-    for (const renderables of this.renderablesByUrl.values()) {
-      for (const renderable of renderables) {
-        console.log("remove");
-        renderable.model.removeFromParent();
-        this._disposeModel(renderable);
-      }
-    }
-
-    this.renderablesByUrl = newRenderablesByUrl;
+        }
+      }),
+    )
+      .then(() => {
+        // Remove any mesh fetch error message since loading was successful
+        this.renderer.settings.errors.remove(this.userData.settingsPath, MODEL_FETCH_FAILED);
+      })
+      .catch(console.error)
+      .finally(() => {
+        // remove remaining models that are no longer used
+        for (const renderables of prevRenderablesByUrl.values()) {
+          for (const renderable of renderables) {
+            renderable.model.removeFromParent();
+            this._disposeModel(renderable);
+          }
+        }
+      });
   }
 
   public override dispose(): void {
@@ -199,7 +195,7 @@ export class RenderableModels extends RenderablePrimitive {
   /**
    * @returns true if model was successfully updated, false if it needs to be reloaded
    */
-  private _updateModel(renderable: RenderableModel, primitive: ModelPrimitive): boolean {
+  private _updateModel(renderable: RenderableModel, primitive: ModelPrimitive) {
     if (!primitive.embedded_materials) {
       if (!renderable.material) {
         renderable.material = new THREE.MeshStandardMaterial({
@@ -215,9 +211,9 @@ export class RenderableModels extends RenderablePrimitive {
       renderable.material.depthWrite = !transparent;
       renderable.material.needsUpdate = true;
     } else if (renderable.material) {
-      // We already discarded the original materials, need to reload them
-      //FIXME: store reference to original model from cache?
-      return false;
+      // We already discarded the original materials, need to re-clone them from the original model
+      renderable.model = new THREE.Group().add(renderable.originalModel.clone(true));
+      renderable.material = undefined;
     }
 
     renderable.model.scale.set(primitive.scale.x, primitive.scale.y, primitive.scale.z);
@@ -238,6 +234,29 @@ export class RenderableModels extends RenderablePrimitive {
 
   private _disposeModel(renderable: RenderableModel) {
     renderable.material?.dispose();
-    // renderable.model.dispose();//FIXME
+    disposeModel(renderable.model);
+    disposeModel(renderable.originalModel);
   }
+}
+
+function disposeModel(object: THREE.Object3D) {
+  object.traverse((child) => {
+    if (child instanceof THREE.Mesh) {
+      child.geometry.dispose();
+      if (child.material instanceof THREE.MeshStandardMaterial) {
+        child.material.map?.dispose();
+        child.material.lightMap?.dispose();
+        child.material.aoMap?.dispose();
+        child.material.emissiveMap?.dispose();
+        child.material.bumpMap?.dispose();
+        child.material.normalMap?.dispose();
+        child.material.displacementMap?.dispose();
+        child.material.roughnessMap?.dispose();
+        child.material.metalnessMap?.dispose();
+        child.material.alphaMap?.dispose();
+        child.material.envMap?.dispose();
+      }
+      child.material.dispose();
+    }
+  });
 }
