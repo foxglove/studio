@@ -6,7 +6,7 @@ import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { IconButton, TextFieldProps, TextField } from "@mui/material";
 import { clamp, isFinite } from "lodash";
-import { ReactNode, useCallback } from "react";
+import { ReactNode, useCallback, useRef } from "react";
 import { useLatest } from "react-use";
 import { makeStyles } from "tss-react/mui";
 
@@ -52,11 +52,6 @@ const useStyles = makeStyles()((theme) => ({
   },
 }));
 
-function limitPrecision(x: number, digits: number): number {
-  const factor = Math.pow(10, digits);
-  return Math.round(x * factor) / factor;
-}
-
 export function NumberInput(
   props: {
     iconUp?: ReactNode;
@@ -71,7 +66,20 @@ export function NumberInput(
   } & Omit<TextFieldProps, "onChange">,
 ): JSX.Element {
   const { classes } = useStyles();
-  const { value, iconDown, iconUp, step = 1, onChange, disabled, readOnly } = props;
+  const {
+    value,
+    iconDown,
+    iconUp,
+    step = 1,
+    min,
+    max,
+    onChange,
+    disabled,
+    readOnly,
+    precision = 2,
+  } = props;
+
+  const inputRef = useRef<HTMLInputElement>(ReactNull);
 
   const latestValue = useLatest(value);
 
@@ -88,24 +96,11 @@ export function NumberInput(
       const clampedValue =
         newValue == undefined
           ? undefined
-          : clamp(
-              newValue,
-              props.min ?? Number.NEGATIVE_INFINITY,
-              props.max ?? Number.POSITIVE_INFINITY,
-            );
-      const newLimitedValue =
-        props.precision != undefined && clampedValue != undefined
-          ? limitPrecision(clampedValue, props.precision)
-          : clampedValue;
-      onChange(newLimitedValue);
+          : clamp(newValue, min ?? Number.NEGATIVE_INFINITY, max ?? Number.POSITIVE_INFINITY);
+      onChange(clampedValue);
     },
-    [disabled, readOnly, props.min, props.max, props.precision, onChange],
+    [disabled, readOnly, min, max, onChange],
   );
-
-  const limitedValue =
-    props.precision != undefined && value != undefined
-      ? limitPrecision(value, props.precision)
-      : value;
 
   const onPointerDown = useCallback((event: React.PointerEvent) => {
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -128,18 +123,20 @@ export function NumberInput(
     [latestValue, placeHolderValue, step, updateValue],
   );
 
+  const displayValue =
+    inputRef.current === document.activeElement ? value : value?.toFixed(precision);
+
   return (
     <TextField
       {...props}
-      value={limitedValue ?? ""}
+      value={displayValue ?? ""}
       onChange={(event) =>
         updateValue(event.target.value.length > 0 ? Number(event.target.value) : undefined)
       }
       type="number"
       className={classes.textField}
       inputProps={{
-        max: props.max,
-        min: props.min,
+        ref: inputRef,
         step,
         onPointerDown,
         onPointerUp,
