@@ -99,18 +99,6 @@ Selected.parameters = {
   colorScheme: "light",
 };
 
-export function WithTarget(): JSX.Element {
-  const setEvents = useEvents((store) => store.setEvents);
-  useEffect(() => {
-    setEvents({ loading: false, value: makeEvents(20) });
-  }, [setEvents]);
-
-  return <EventsList />;
-}
-WithTarget.parameters = {
-  targetEventId: "event_3",
-};
-
 export function WithError(): JSX.Element {
   const setEvents = useEvents((store) => store.setEvents);
   useEffect(() => {
