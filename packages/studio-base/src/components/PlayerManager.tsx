@@ -122,6 +122,9 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
     async (sourceId: string, args?: DataSourceArgs) => {
       log.debug(`Select Source: ${sourceId}`);
 
+      // Clear any previous represented filename
+      void nativeWindow?.setRepresentedFilename(undefined);
+
       const foundSource = playerSources.find((source) => source.id === sourceId);
       if (!foundSource) {
         enqueueSnackbar(`Unknown data source: ${sourceId}`, { variant: "warning" });
@@ -212,6 +215,8 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
                 metricsCollector,
               });
 
+              // If we are selecting a single file, the desktop environment might have features to
+              // show the user which file they've selected (i.e. macOS proxy icon)
               if (file) {
                 void nativeWindow?.setRepresentedFilename((file as { path?: string }).path); // File.path is added by Electron
               }
