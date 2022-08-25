@@ -67,7 +67,8 @@ export const MultipleMessages = (): JSX.Element => {
     enqueueSnackbar("Something bad happened 1", { variant: "error", persist: true });
     enqueueSnackbar("Here's a helpful tip", { variant: "default", persist: true });
     enqueueSnackbar("Just a warning", { variant: "warning", persist: true });
-    enqueueSnackbar("Something bad happened 2", { variant: "error", persist: true });
+    enqueueSnackbar("Great job!", { variant: "success", persist: true });
+    enqueueSnackbar("Something happened 2", { variant: "info", persist: true });
   }, [enqueueSnackbar]);
 
   return <StudioToastProvider />;
