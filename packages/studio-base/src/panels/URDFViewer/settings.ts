@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import produce from "immer";
-import { isEmpty, set } from "lodash";
+import { clamp, isEmpty, set } from "lodash";
 import { useCallback, useEffect, useMemo } from "react";
 import { URDFRobot } from "urdf-loader";
 
@@ -43,16 +43,25 @@ export function buildSettingsTree(
     : [];
 
   const jointFields: SettingsTreeFields = Object.fromEntries(
-    joints.map(([name]) => [
-      name,
-      {
-        label: name,
-        input: "number",
-        precision: 2,
-        step: 0.5,
-        value: (config.customJointValues ?? {})[name],
-      },
-    ]),
+    joints.map(([name, joint]) => {
+      const min = joint.jointType === "continuous" ? -Math.PI : +joint.limit.lower;
+      const max = joint.jointType === "continuous" ? Math.PI : +joint.limit.upper;
+      const value =
+        config.customJointValues?.[name] ?? clamp(0, +joint.limit.lower, +joint.limit.upper);
+
+      return [
+        name,
+        {
+          label: name,
+          input: "number",
+          precision: 2,
+          min,
+          max,
+          step: 0.25,
+          value,
+        },
+      ];
+    }),
   );
 
   const settings: SettingsTreeNodes = {
