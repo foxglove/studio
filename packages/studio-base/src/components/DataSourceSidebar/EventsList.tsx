@@ -96,6 +96,33 @@ const useStyles = makeStyles<void, "eventMetadata" | "eventSelected">()(
   }),
 );
 
+function formatEventDuration(event: ConsoleEvent) {
+  if (event.durationNanos === "0") {
+    // instant
+    return "-";
+  }
+
+  if (!event.durationNanos) {
+    return "";
+  }
+
+  const intDuration = BigInt(event.durationNanos);
+
+  if (intDuration >= BigInt(1e9)) {
+    return `${Number(intDuration / BigInt(1e9))}s`;
+  }
+
+  if (intDuration >= BigInt(1e6)) {
+    return `${Number(intDuration / BigInt(1e6))}ms`;
+  }
+
+  if (intDuration >= BigInt(1e3)) {
+    return `${Number(intDuration / BigInt(1e3))}µs`;
+  }
+
+  return `${event.durationNanos}ns`;
+}
+
 const selectSeek = (ctx: MessagePipelineContext) => ctx.seekPlayback;
 const selectStartTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.startTime;
 
@@ -113,7 +140,7 @@ function EventView(params: {
 
   const fields = compact([
     ["timestamp", formattedTime],
-    Number(event.durationNanos) > 0 && ["duration", `${event.durationNanos}ns`],
+    Number(event.durationNanos) > 0 && ["duration", formatEventDuration(event)],
     ...Object.entries(event.metadata),
   ]);
 
