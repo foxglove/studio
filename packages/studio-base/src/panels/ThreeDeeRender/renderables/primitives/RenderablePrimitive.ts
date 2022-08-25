@@ -14,6 +14,15 @@ export type EntityRenderableUserData = BaseUserData & {
 };
 
 export class RenderablePrimitive extends Renderable<EntityRenderableUserData> {
+  public update(
+    entity: SceneEntity | undefined,
+    settings: LayerSettingsEntity,
+    receiveTime: bigint,
+  ): void {
+    void entity;
+    void settings;
+    void receiveTime;
+  }
   public prepareForReuse(): void {
     this.userData.entity = undefined;
     this.userData.pose = emptyPose();

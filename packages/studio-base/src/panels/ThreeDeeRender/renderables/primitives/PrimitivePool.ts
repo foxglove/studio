@@ -4,11 +4,13 @@
 
 import type { Renderer } from "../../Renderer";
 import { RenderableCubes } from "./RenderableCubes";
+import { RenderableModels } from "./RenderableModels";
 import { RenderablePrimitive } from "./RenderablePrimitive";
 import { PrimitiveType } from "./types";
 
 const CONSTRUCTORS = {
   [PrimitiveType.CUBES]: RenderableCubes,
+  [PrimitiveType.MODELS]: RenderableModels,
 };
 
 /**

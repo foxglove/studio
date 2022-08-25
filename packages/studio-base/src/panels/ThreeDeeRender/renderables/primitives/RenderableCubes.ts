@@ -166,7 +166,7 @@ export class RenderableCubes extends RenderablePrimitive {
     this.outlineGeometry.dispose();
   }
 
-  public update(
+  public override update(
     entity: SceneEntity | undefined,
     settings: LayerSettingsEntity,
     receiveTime: bigint,
