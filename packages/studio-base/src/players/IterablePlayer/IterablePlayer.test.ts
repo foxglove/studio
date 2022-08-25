@@ -126,7 +126,6 @@ describe("IterablePlayer", () => {
       profile: undefined,
       presence: PlayerPresence.INITIALIZING,
       progress: {},
-      filePath: undefined,
       urlState: {
         sourceId: "test",
         parameters: undefined,
@@ -227,7 +226,6 @@ describe("IterablePlayer", () => {
         fullyLoadedFractionRanges: [{ start: 0, end: 1 }],
         messageCache: undefined,
       },
-      filePath: undefined,
       urlState: {
         sourceId: "test",
         parameters: undefined,

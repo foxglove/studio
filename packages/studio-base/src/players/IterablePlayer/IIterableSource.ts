@@ -19,9 +19,6 @@ export type Initalization = {
   publishersByTopic: Map<string, Set<string>>;
 
   problems: PlayerProblem[];
-
-  // The path to a local file if the source refers to a local file
-  filePath?: string;
 };
 
 export type MessageIteratorArgs = {

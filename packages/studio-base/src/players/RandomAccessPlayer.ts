@@ -294,7 +294,6 @@ export default class RandomAccessPlayer implements Player {
     if (this._hasError) {
       return this._listener({
         name: this._name,
-        filePath: this._filePath,
         presence: PlayerPresence.ERROR,
         progress: {},
         capabilities: this._capabilities,
@@ -342,7 +341,6 @@ export default class RandomAccessPlayer implements Player {
 
     const data: PlayerState = {
       name: this._name,
-      filePath: this._filePath,
       presence: this._reconnecting
         ? PlayerPresence.RECONNECTING
         : this._initializing

@@ -33,6 +33,7 @@ import {
   useCurrentLayoutSelector,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { useLayoutManager } from "@foxglove/studio-base/context/LayoutManagerContext";
+import { useNativeWindow } from "@foxglove/studio-base/context/NativeWindowContext";
 import PlayerSelectionContext, {
   DataSourceArgs,
   IDataSourceFactory,
@@ -74,6 +75,8 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
     setUserNodeRosLib,
     setUserNodeTypesLib,
   });
+
+  const nativeWindow = useNativeWindow();
 
   const isMounted = useMountedState();
 
@@ -209,6 +212,10 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
                 metricsCollector,
               });
 
+              if (file) {
+                void nativeWindow?.setRepresentedFilename((file as { path?: string }).path); // File.path is added by Electron
+              }
+
               setBasePlayer(newPlayer);
               return;
             } else if (handle) {
@@ -253,14 +260,15 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
       }
     },
     [
-      addRecent,
+      playerSources,
+      metricsCollector,
       enqueueSnackbar,
       consoleApi,
-      isMounted,
       layoutStorage,
-      metricsCollector,
-      playerSources,
+      isMounted,
       setSelectedLayoutId,
+      addRecent,
+      nativeWindow,
     ],
   );
 

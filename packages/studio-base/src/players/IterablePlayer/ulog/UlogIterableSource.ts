@@ -114,7 +114,6 @@ export class UlogIterableSource implements IIterableSource {
       problems,
       publishersByTopic: new Map(),
       topicStats,
-      filePath: maybeReadFilePath(file),
     };
   }
 

@@ -101,7 +101,6 @@ type IterablePlayerState =
 export class IterablePlayer implements Player {
   private _urlParams?: Record<string, string>;
   private _name?: string;
-  private _filePath?: string;
   private _nextState?: IterablePlayerState;
   private _state: IterablePlayerState = "preinit";
   private _runningState: boolean = false;
@@ -421,24 +420,14 @@ export class IterablePlayer implements Player {
     this._queueEmitState();
 
     try {
-      const {
-        start,
-        end,
-        topics,
-        profile,
-        topicStats,
-        problems,
-        publishersByTopic,
-        datatypes,
-        filePath,
-      } = await this._bufferedSource.initialize();
+      const { start, end, topics, profile, topicStats, problems, publishersByTopic, datatypes } =
+        await this._bufferedSource.initialize();
 
       this._profile = profile;
       this._start = this._currentTime = start;
       this._end = end;
       this._publishedTopics = publishersByTopic;
       this._providerDatatypes = datatypes;
-      this._filePath = filePath;
 
       // Studio does not like duplicate topics or topics with different datatypes
       // Check for duplicates or for mismatched datatypes
@@ -662,7 +651,6 @@ export class IterablePlayer implements Player {
     if (this._hasError) {
       return await this._listener({
         name: this._name,
-        filePath: this._filePath,
         presence: PlayerPresence.ERROR,
         progress: {},
         capabilities: this._capabilities,
@@ -687,7 +675,6 @@ export class IterablePlayer implements Player {
 
     const data: PlayerState = {
       name: this._name,
-      filePath: this._filePath,
       presence: this._presence,
       progress: this._progress,
       capabilities: this._capabilities,
