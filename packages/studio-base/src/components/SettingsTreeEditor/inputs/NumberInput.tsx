@@ -4,9 +4,9 @@
 
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import { IconButton, TextFieldProps, TextField, darken, lighten } from "@mui/material";
+import { IconButton, TextFieldProps, TextField } from "@mui/material";
 import { clamp, isFinite } from "lodash";
-import { ReactNode, useCallback, useState } from "react";
+import { ReactNode, useCallback } from "react";
 import { useLatest } from "react-use";
 import { makeStyles } from "tss-react/mui";
 
@@ -34,6 +34,7 @@ const useStyles = makeStyles()((theme) => ({
     ".MuiInputBase-input": {
       textAlign: "center",
       fontFamily: fonts.MONOSPACE,
+      cursor: "ew-resize",
 
       "&::-webkit-outer-spin-button, &::-webkit-inner-spin-button": {
         appearance: "none",
@@ -47,16 +48,6 @@ const useStyles = makeStyles()((theme) => ({
       "&:hover .MuiIconButton-root": {
         visibility: "visible",
       },
-    },
-  },
-
-  textFieldScrubbing: {
-    backgroundColor:
-      theme.palette.mode === "light"
-        ? darken(theme.palette.background.default, 0.1)
-        : lighten(theme.palette.background.default, 0.2),
-    input: {
-      cursor: "none",
     },
   },
 }));
@@ -79,10 +70,8 @@ export function NumberInput(
     onChange: (value: undefined | number) => void;
   } & Omit<TextFieldProps, "onChange">,
 ): JSX.Element {
-  const { classes, cx } = useStyles();
+  const { classes } = useStyles();
   const { value, iconDown, iconUp, step = 1, onChange, disabled, readOnly } = props;
-
-  const [pointerDown, setPointerDown] = useState(false);
 
   const latestValue = useLatest(value);
 
@@ -120,12 +109,10 @@ export function NumberInput(
 
   const onPointerDown = useCallback((event: React.PointerEvent) => {
     event.currentTarget.setPointerCapture(event.pointerId);
-    setPointerDown(true);
   }, []);
 
   const onPointerUp = useCallback((event: React.PointerEvent) => {
     event.currentTarget.releasePointerCapture(event.pointerId);
-    setPointerDown(false);
   }, []);
 
   const onPointerMove = useCallback(
@@ -149,7 +136,7 @@ export function NumberInput(
         updateValue(event.target.value.length > 0 ? Number(event.target.value) : undefined)
       }
       type="number"
-      className={cx(classes.textField, { [classes.textFieldScrubbing]: pointerDown })}
+      className={classes.textField}
       inputProps={{
         max: props.max,
         min: props.min,
