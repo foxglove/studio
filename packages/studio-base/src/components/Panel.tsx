@@ -554,9 +554,12 @@ export default function Panel<
           {fullscreen && <KeyListener global keyDownHandlers={fullScreenKeyHandlers} />}
           <Transition
             in={fullscreen}
-            timeout={{ exit: theme.transitions.duration.shorter }}
             onExited={() => setHasFullscreenDescendant(false)}
             nodeRef={panelRootRef}
+            timeout={{
+              // match to transition duration inside PanelRoot
+              exit: theme.transitions.duration.shorter,
+            }}
           >
             {(fullscreenState) => (
               <PanelRoot

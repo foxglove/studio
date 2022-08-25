@@ -21,6 +21,7 @@ export const usePanelRootStyles = makeStyles<
 >()((theme, props) => {
   const { palette, transitions } = theme;
   const { sourceRect, hasFullscreenDescendant } = props;
+  const duration = transitions.duration.shorter;
 
   return {
     root: {
@@ -30,7 +31,9 @@ export const usePanelRootStyles = makeStyles<
       overflow: "hidden",
       backgroundColor: palette.background.default,
       border: `0px solid ${alpha(palette.primary.main, 0.67)}`,
-      transition: transitions.create("border-width", { duration: transitions.duration.shorter }),
+      transition: transitions.create("border-width", {
+        duration, // match to timeout duration inside Panel component
+      }),
 
       "::after": {
         content: "''",
@@ -59,7 +62,7 @@ export const usePanelRootStyles = makeStyles<
       left: sourceRect?.left ?? 0,
       right: sourceRect ? window.innerWidth - sourceRect.right : 0,
       bottom: sourceRect ? window.innerHeight - sourceRect.bottom : 0,
-      zIndex: 10000, // zIndex?
+      zIndex: 10000,
     },
     entered: {
       borderWidth: 4,
@@ -67,10 +70,10 @@ export const usePanelRootStyles = makeStyles<
       top: 0,
       left: 0,
       right: 0,
-      bottom: 50, // plabackbar.height?
-      zIndex: 10000, // zIndex?
+      bottom: 50, // match PlaybackBar height
+      zIndex: 10000,
       transition: transitions.create(["border-width", "top", "right", "bottom", "left"], {
-        duration: transitions.duration.shorter,
+        duration, // match to timeout duration inside Panel component
       }),
     },
     exiting: {
@@ -81,7 +84,7 @@ export const usePanelRootStyles = makeStyles<
       bottom: sourceRect ? window.innerHeight - sourceRect.bottom : 0,
       zIndex: 10000,
       transition: transitions.create(["border-width", "top", "right", "bottom", "left"], {
-        duration: transitions.duration.shorter,
+        duration, // match to timeout duration inside Panel component
       }),
     },
     exited: {
