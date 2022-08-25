@@ -16,6 +16,7 @@ import { useAppTimeFormat } from "@foxglove/studio-base/hooks";
 import { subtractTimes } from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/typescript/userUtils/time";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
 import { formatDate, formatDuration } from "@foxglove/studio-base/util/formatTime";
+import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import { MultilineMiddleTruncate } from "./MultilineMiddleTruncate";
 
@@ -74,7 +75,7 @@ function DataSourceInfoContent(props: {
         {playerPresence === PlayerPresence.INITIALIZING ? (
           <Skeleton animation="wave" width="50%" />
         ) : (
-          <Typography variant="inherit" ref={endTimeRef}>
+          <Typography fontFamily={fonts.MONOSPACE} variant="inherit" ref={endTimeRef}>
             &mdash;
           </Typography>
         )}
@@ -87,7 +88,7 @@ function DataSourceInfoContent(props: {
         {playerPresence === PlayerPresence.INITIALIZING ? (
           <Skeleton animation="wave" width={100} />
         ) : (
-          <Typography variant="inherit" ref={durationRef}>
+          <Typography fontFamily={fonts.MONOSPACE} variant="inherit" ref={durationRef}>
             &mdash;
           </Typography>
         )}
