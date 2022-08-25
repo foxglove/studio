@@ -68,6 +68,8 @@ Interactive.play = async () => {
   fireEvent.click(deleteButton);
 };
 
+Interactive.parameters = { colorScheme: "light" };
+
 export function WithVariablesLight(): JSX.Element {
   return (
     <DndProvider backend={HTML5Backend}>
