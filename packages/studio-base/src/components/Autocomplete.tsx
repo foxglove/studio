@@ -481,7 +481,7 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
         const longestItem = maxBy(autocompleteItems, (item) => getItemText(item.item).length);
         const width =
           50 + (longestItem != undefined ? measureText(getItemText(longestItem.item)) : 0);
-        const maxHeight = `calc(100vh - 10px - ${style.top}px - 20px)`;
+        const maxHeight = `calc(100vh - 10px - ${style.top}px)`;
 
         return (
           <Paper
