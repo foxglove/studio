@@ -50,12 +50,11 @@ export default function DiffStats({
         .join(", ")
     : undefined;
 
-  const startingCounts = {
+  const counts = getChangeCounts(data, {
     [ADDED.labelText]: 0,
     [CHANGED.labelText]: 0,
     [DELETED.labelText]: 0,
-  };
-  const counts = getChangeCounts(data, startingCounts);
+  });
 
   return (
     <>
