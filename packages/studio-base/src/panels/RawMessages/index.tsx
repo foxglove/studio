@@ -64,7 +64,7 @@ import { enumValuesByDatatypeAndField } from "@foxglove/studio-base/util/selecto
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import DiffSpan from "./DiffSpan";
-import { ItemStringForDiff } from "./ItemStringForDiff";
+import DiffStats from "./DiffStats";
 import MaybeCollapsedValue from "./MaybeCollapsedValue";
 import Metadata from "./Metadata";
 import Value from "./Value";
@@ -142,7 +142,7 @@ function RawMessages(props: Props) {
     () =>
       diffEnabled
         ? (_type: string, data: DiffObject, itemType: React.ReactNode) => (
-            <ItemStringForDiff data={data} itemType={itemType} />
+            <DiffStats data={data} itemType={itemType} />
           )
         : defaultGetItemString,
     [defaultGetItemString, diffEnabled],

@@ -34,13 +34,13 @@ const useStyles = makeStyles()((theme) => ({
   },
 }));
 
-export const ItemStringForDiff = ({
+export default function DiffStats({
   data,
   itemType,
 }: {
   data: DiffObject;
   itemType: ReactNode;
-}): JSX.Element => {
+}): JSX.Element {
   const { classes } = useStyles();
   const { ADDED, DELETED, CHANGED, ID } = diffLabels;
   const id = data[ID.labelText] as DiffObject | undefined;
@@ -79,4 +79,4 @@ export const ItemStringForDiff = ({
       </div>
     </>
   );
-};
+}

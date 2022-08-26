@@ -13,7 +13,7 @@
 
 import tinyColor from "tinycolor2";
 
-const robotStylesColors = {
+export const robotStylesColors = {
   DARK: "#08080a",
   DARK1: "#111114",
   DARK2: "#1a1a1f",
