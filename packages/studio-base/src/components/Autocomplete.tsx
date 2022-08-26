@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { alpha, Paper, useTheme, Backdrop } from "@mui/material";
+import { alpha, Paper, useTheme, Modal } from "@mui/material";
 import { Fzf, FzfResultItem } from "fzf";
 import { maxBy } from "lodash";
 import React, {
@@ -481,7 +481,7 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
         const longestItem = maxBy(autocompleteItems, (item) => getItemText(item.item).length);
         const width =
           50 + (longestItem != undefined ? measureText(getItemText(longestItem.item)) : 0);
-        const maxHeight = `calc(100vh - 10px - ${style.top}px)`;
+        const maxHeight = `calc(100vh - 10px - ${style.top}px - 20px)`;
 
         return (
           <Paper
@@ -520,9 +520,9 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
       }}
       // @ts-expect-error renderMenuWrapper added in the fork but we don't have typings for it
       renderMenuWrapper={(menu) => (
-        <Backdrop open invisible>
+        <Modal disableAutoFocus open={open} hideBackdrop>
           {menu}
-        </Backdrop>
+        </Modal>
       )}
       ref={autocomplete}
       wrapperStyle={{
