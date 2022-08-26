@@ -4,34 +4,26 @@
 
 import { isEqual } from "lodash";
 import { ReactNode, useState } from "react";
-import { AsyncState } from "react-use/lib/useAsyncFn";
 import { createStore, StoreApi } from "zustand";
 
 import {
   InteractionStateContext,
-  InteractionStateStore,
+  TimelineInteractionStateStore,
   SyncBounds,
 } from "@foxglove/studio-base/context/InteractionStateContext";
-import { DataEvent } from "@foxglove/studio-base/types/DataEvent";
 import { HoverValue } from "@foxglove/studio-base/types/hoverValue";
 
-function createInteractionStateStore(): StoreApi<InteractionStateStore> {
+function createTimelineInteractionStateStore(): StoreApi<TimelineInteractionStateStore> {
   return createStore((set, get) => {
     return {
-      events: { loading: false, value: [] },
       globalBounds: undefined,
       hoverValue: undefined,
-      selectedEventId: undefined,
       syncBounds: undefined,
 
       clearHoverValue: (componentId: string) =>
         set((store) => ({
           hoverValue: store.hoverValue?.componentId === componentId ? undefined : store.hoverValue,
         })),
-
-      selectEvent: (selectedEventId: undefined | string) => set({ selectedEventId }),
-
-      setEvents: (events: AsyncState<DataEvent[]>) => set({ events, selectedEventId: undefined }),
 
       setGlobalBounds: (
         newBounds:
@@ -54,12 +46,12 @@ function createInteractionStateStore(): StoreApi<InteractionStateStore> {
   });
 }
 
-export default function InteractionStateProvider({
+export default function TimelineInteractionStateProvider({
   children,
 }: {
   children?: ReactNode;
 }): JSX.Element {
-  const [store] = useState(createInteractionStateStore());
+  const [store] = useState(createTimelineInteractionStateStore());
 
   return (
     <InteractionStateContext.Provider value={store}>{children}</InteractionStateContext.Provider>

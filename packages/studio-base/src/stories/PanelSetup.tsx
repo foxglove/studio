@@ -53,11 +53,11 @@ import {
 import MockCurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider/MockCurrentLayoutProvider";
 import ExtensionCatalogProvider from "@foxglove/studio-base/providers/ExtensionCatalogProvider";
 import HelpInfoProvider from "@foxglove/studio-base/providers/HelpInfoProvider";
-import InteractionStateProvider from "@foxglove/studio-base/providers/InteractionStateProvider";
 import {
   PanelSettingsEditorContextProvider,
   usePanelSettingsEditorStore,
 } from "@foxglove/studio-base/providers/PanelSettingsEditorContextProvider";
+import TimelineInteractionStateProvider from "@foxglove/studio-base/providers/TimelineInteractionStateProvider";
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import { SavedProps, UserNodes } from "@foxglove/studio-base/types/panels";
@@ -338,7 +338,7 @@ export default function PanelSetup(props: Props): JSX.Element {
   const theme = useTheme();
   return (
     <UserNodeStateProvider>
-      <InteractionStateProvider>
+      <TimelineInteractionStateProvider>
         <MockCurrentLayoutProvider onAction={props.onLayoutAction}>
           <PanelSettingsEditorContextProvider>
             <ExtensionCatalogProvider loaders={[]}>
@@ -350,7 +350,7 @@ export default function PanelSetup(props: Props): JSX.Element {
             </ExtensionCatalogProvider>
           </PanelSettingsEditorContextProvider>
         </MockCurrentLayoutProvider>
-      </InteractionStateProvider>
+      </TimelineInteractionStateProvider>
     </UserNodeStateProvider>
   );
 }

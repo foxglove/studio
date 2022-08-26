@@ -15,14 +15,13 @@ import {
   useMessagePipeline,
 } from "@foxglove/studio-base/components/MessagePipeline";
 import Stack from "@foxglove/studio-base/components/Stack";
+import { EventsStore, useEvents } from "@foxglove/studio-base/context/EventsContext";
 import {
-  InteractionStateStore,
   useClearHoverValue,
-  useInteractionState,
   useSetHoverValue,
 } from "@foxglove/studio-base/context/InteractionStateContext";
 import { useAppTimeFormat } from "@foxglove/studio-base/hooks";
-import { DataEvent } from "@foxglove/studio-base/types/DataEvent";
+import { ConsoleEvent } from "@foxglove/studio-base/services/ConsoleApi";
 
 const useStyles = makeStyles<void, "eventMetadata" | "eventSelected">()(
   (theme, _params, classes) => ({
@@ -97,7 +96,7 @@ const useStyles = makeStyles<void, "eventMetadata" | "eventSelected">()(
   }),
 );
 
-function formatEventDuration(event: DataEvent) {
+function formatEventDuration(event: ConsoleEvent) {
   if (event.durationNanos === "0") {
     // instant
     return "-";
@@ -128,13 +127,13 @@ const selectSeek = (ctx: MessagePipelineContext) => ctx.seekPlayback;
 const selectStartTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.startTime;
 
 function EventView(params: {
-  event: DataEvent;
+  event: ConsoleEvent;
   filter: string;
   formattedTime: string;
   isSelected: boolean;
-  onClick: (event: DataEvent) => void;
-  onHoverStart: (event: DataEvent) => void;
-  onHoverEnd: (event: DataEvent) => void;
+  onClick: (event: ConsoleEvent) => void;
+  onHoverStart: (event: ConsoleEvent) => void;
+  onHoverEnd: (event: ConsoleEvent) => void;
 }): JSX.Element {
   const { event, filter, formattedTime, isSelected, onClick, onHoverStart, onHoverEnd } = params;
   const { classes, cx } = useStyles();
@@ -170,14 +169,14 @@ function EventView(params: {
 
 const MemoEventView = React.memo(EventView);
 
-const selectEvents = (store: InteractionStateStore) => store.events;
-const selectSelectedEventId = (store: InteractionStateStore) => store.selectedEventId;
-const selectSelectEvent = (store: InteractionStateStore) => store.selectEvent;
+const selectEvents = (store: EventsStore) => store.events;
+const selectSelectedEventId = (store: EventsStore) => store.selectedEventId;
+const selectSelectEvent = (store: EventsStore) => store.selectEvent;
 
 export function EventsList(): JSX.Element {
-  const events = useInteractionState(selectEvents);
-  const selectedEventId = useInteractionState(selectSelectedEventId);
-  const selectEvent = useInteractionState(selectSelectEvent);
+  const events = useEvents(selectEvents);
+  const selectedEventId = useEvents(selectSelectedEventId);
+  const selectEvent = useEvents(selectSelectEvent);
   const { formatTime } = useAppTimeFormat();
   const startTime = useMessagePipeline(selectStartTime);
   const setHoverValue = useSetHoverValue();
@@ -210,7 +209,7 @@ export function EventsList(): JSX.Element {
   );
 
   const onClick = useCallback(
-    (event: DataEvent) => {
+    (event: ConsoleEvent) => {
       selectEvent(event.id);
       if (seek) {
         const time = fromNanoSec(BigInt(event.timestampNanos));
@@ -221,14 +220,14 @@ export function EventsList(): JSX.Element {
   );
 
   const onHoverEnd = useCallback(
-    (event: DataEvent) => {
+    (event: ConsoleEvent) => {
       clearHoverValue(`event_${event.id}`);
     },
     [clearHoverValue],
   );
 
   const onHoverStart = useCallback(
-    (event: DataEvent) => {
+    (event: ConsoleEvent) => {
       const time = fromNanoSec(BigInt(event.timestampNanos));
       const delta = startTime ? subtract(time, startTime) : undefined;
       const deltaTime = delta ? toSec(delta) : undefined;

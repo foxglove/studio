@@ -12,7 +12,7 @@ import MultiProvider from "@foxglove/studio-base/components/MultiProvider";
 import StudioToastProvider from "@foxglove/studio-base/components/StudioToastProvider";
 import AppConfigurationContext from "@foxglove/studio-base/context/AppConfigurationContext";
 import { UserNodeStateProvider } from "@foxglove/studio-base/context/UserNodeStateContext";
-import InteractionStateProvider from "@foxglove/studio-base/providers/InteractionStateProvider";
+import TimelineInteractionStateProvider from "@foxglove/studio-base/providers/TimelineInteractionStateProvider";
 import ReadySignalContext from "@foxglove/studio-base/stories/ReadySignalContext";
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
 import { makeMockAppConfiguration } from "@foxglove/studio-base/util/makeMockAppConfiguration";
@@ -77,7 +77,7 @@ function StudioContextProviders({
     <AppConfigurationContext.Provider value={appConfiguration} />,
     <ReadySignalContext.Provider value={readySignal} />,
     <StudioToastProvider />,
-    <InteractionStateProvider />,
+    <TimelineInteractionStateProvider />,
     <UserNodeStateProvider />,
     /* eslint-enable react/jsx-key */
   ];

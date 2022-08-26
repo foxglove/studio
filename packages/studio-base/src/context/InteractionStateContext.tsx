@@ -12,29 +12,23 @@
 //   You may not use this file except in compliance with the License.
 
 import { createContext, useCallback } from "react";
-import { AsyncState } from "react-use/lib/useAsyncFn";
 import { DeepReadonly } from "ts-essentials";
 import { StoreApi, useStore } from "zustand";
 
 import useGuaranteedContext from "@foxglove/studio-base/hooks/useGuaranteedContext";
-import { DataEvent } from "@foxglove/studio-base/types/DataEvent";
 import type { HoverValue } from "@foxglove/studio-base/types/hoverValue";
 
 export type SyncBounds = { min: number; max: number; sourceId: string; userInteraction: boolean };
 
 /**
  * The InteractionStateStore manages state related to dynamic user interactions with data in the app.
- * Things like the hovered time value, selected events, and global bounds for plots are managed here.
+ * Things like the hovered time value and global bounds for plots are managed here.
  */
-export type InteractionStateStore = DeepReadonly<{
-  events: AsyncState<DataEvent[]>;
+export type TimelineInteractionStateStore = DeepReadonly<{
   globalBounds: undefined | SyncBounds;
   hoverValue: undefined | HoverValue;
-  selectedEventId: undefined | string;
 
   clearHoverValue: (componentId: string) => void;
-  selectEvent: (id: undefined | string) => void;
-  setEvents: (events: AsyncState<DataEvent[]>) => void;
   setGlobalBounds: (
     newBounds:
       | undefined
@@ -44,21 +38,21 @@ export type InteractionStateStore = DeepReadonly<{
   setHoverValue: (value: HoverValue) => void;
 }>;
 
-export const InteractionStateContext = createContext<undefined | StoreApi<InteractionStateStore>>(
-  undefined,
-);
-const selectClearHoverValue = (store: InteractionStateStore) => store.clearHoverValue;
+export const InteractionStateContext = createContext<
+  undefined | StoreApi<TimelineInteractionStateStore>
+>(undefined);
+const selectClearHoverValue = (store: TimelineInteractionStateStore) => store.clearHoverValue;
 
-export function useClearHoverValue(): InteractionStateStore["clearHoverValue"] {
-  return useInteractionState(selectClearHoverValue);
+export function useClearHoverValue(): TimelineInteractionStateStore["clearHoverValue"] {
+  return useTimelineInteractionState(selectClearHoverValue);
 }
 
-const selectSetHoverValue = (store: InteractionStateStore) => {
+const selectSetHoverValue = (store: TimelineInteractionStateStore) => {
   return store.setHoverValue;
 };
 
-export function useSetHoverValue(): InteractionStateStore["setHoverValue"] {
-  return useInteractionState(selectSetHoverValue);
+export function useSetHoverValue(): TimelineInteractionStateStore["setHoverValue"] {
+  return useTimelineInteractionState(selectSetHoverValue);
 }
 
 export function useHoverValue(args?: {
@@ -70,7 +64,7 @@ export function useHoverValue(args?: {
   const isTimestampScale = args?.isTimestampScale ?? false;
 
   const selector = useCallback(
-    (store: InteractionStateStore) => {
+    (store: TimelineInteractionStateStore) => {
       if (!hasArgs) {
         // Raw form -- user needs to check that the value should be shown.
         return store.hoverValue;
@@ -88,15 +82,15 @@ export function useHoverValue(args?: {
     [hasArgs, componentId, isTimestampScale],
   );
 
-  return useInteractionState(selector);
+  return useTimelineInteractionState(selector);
 }
 
 /**
  * This hook wraps all access to the interaction state store. Pass selectors
  * to access parts of the store.
  */
-export function useInteractionState<T>(
-  selector: (store: InteractionStateStore) => T,
+export function useTimelineInteractionState<T>(
+  selector: (store: TimelineInteractionStateStore) => T,
   equalityFn?: (a: T, b: T) => boolean,
 ): T {
   const context = useGuaranteedContext(InteractionStateContext);

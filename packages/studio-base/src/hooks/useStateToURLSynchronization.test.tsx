@@ -18,7 +18,7 @@ import { ReactNode } from "react";
 import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
 import { useCurrentLayoutSelector } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { useStateToURLSynchronization } from "@foxglove/studio-base/hooks/useStateToURLSynchronization";
-import InteractionStateProvider from "@foxglove/studio-base/providers/InteractionStateProvider";
+import EventsProvider from "@foxglove/studio-base/providers/EventsProvider";
 
 jest.mock("@foxglove/studio-base/context/CurrentLayoutContext");
 jest.mock("@foxglove/studio-base/components/MessagePipeline");
@@ -44,7 +44,7 @@ describe("useStateToURLSynchronization", () => {
     );
 
     const wrapper = ({ children }: { children: ReactNode }) => (
-      <InteractionStateProvider>{children}</InteractionStateProvider>
+      <EventsProvider>{children}</EventsProvider>
     );
 
     const { rerender } = renderHook(useStateToURLSynchronization, { wrapper });

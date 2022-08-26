@@ -10,8 +10,8 @@ import { useEffect } from "react";
 
 import { toNanoSec } from "@foxglove/rostime";
 import MockMessagePipelineProvider from "@foxglove/studio-base/components/MessagePipeline/MockMessagePipelineProvider";
-import { useInteractionState } from "@foxglove/studio-base/context/InteractionStateContext";
-import InteractionStateProvider from "@foxglove/studio-base/providers/InteractionStateProvider";
+import { useEvents } from "@foxglove/studio-base/context/EventsContext";
+import EventsProvider from "@foxglove/studio-base/providers/EventsProvider";
 
 import { EventsList } from "./EventsList";
 
@@ -23,9 +23,9 @@ function Wrapper(Child: Story, ctx: StoryContext): JSX.Element {
         parameters: { eventId: ctx.parameters.targetEventId },
       }}
     >
-      <InteractionStateProvider>
+      <EventsProvider>
         <Child />
-      </InteractionStateProvider>
+      </EventsProvider>
     </MockMessagePipelineProvider>
   );
 }
@@ -52,7 +52,7 @@ function makeEvents(count: number) {
 }
 
 export function Default(): JSX.Element {
-  const setEvents = useInteractionState((store) => store.setEvents);
+  const setEvents = useEvents((store) => store.setEvents);
   useEffect(() => {
     setEvents({ loading: false, value: makeEvents(20) });
   }, [setEvents]);
@@ -61,7 +61,7 @@ export function Default(): JSX.Element {
 }
 
 export function Filtered(): JSX.Element {
-  const setEvents = useInteractionState((store) => store.setEvents);
+  const setEvents = useEvents((store) => store.setEvents);
   useEffect(() => {
     setEvents({ loading: false, value: makeEvents(20) });
   }, [setEvents]);
@@ -79,8 +79,8 @@ Filtered.parameters = {
 };
 
 export function Selected(): JSX.Element {
-  const setEvents = useInteractionState((store) => store.setEvents);
-  const selectEvent = useInteractionState((store) => store.selectEvent);
+  const setEvents = useEvents((store) => store.setEvents);
+  const selectEvent = useEvents((store) => store.selectEvent);
 
   useEffect(() => {
     const events = makeEvents(20);
@@ -100,7 +100,7 @@ Selected.parameters = {
 };
 
 export function WithError(): JSX.Element {
-  const setEvents = useInteractionState((store) => store.setEvents);
+  const setEvents = useEvents((store) => store.setEvents);
   useEffect(() => {
     setEvents({ loading: false, error: new Error("Error loading events") });
   }, [setEvents]);
@@ -109,7 +109,7 @@ export function WithError(): JSX.Element {
 }
 
 export function Loading(): JSX.Element {
-  const setEvents = useInteractionState((store) => store.setEvents);
+  const setEvents = useEvents((store) => store.setEvents);
   useEffect(() => {
     setEvents({ loading: true });
   }, [setEvents]);

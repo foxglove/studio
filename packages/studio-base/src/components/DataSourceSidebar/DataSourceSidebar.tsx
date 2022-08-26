@@ -22,10 +22,7 @@ import {
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
 import Stack from "@foxglove/studio-base/components/Stack";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
-import {
-  InteractionStateStore,
-  useInteractionState,
-} from "@foxglove/studio-base/context/InteractionStateContext";
+import { EventsStore, useEvents } from "@foxglove/studio-base/context/EventsContext";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
 
 import { DataSourceInfoView } from "../DataSourceInfoView";
@@ -91,7 +88,7 @@ const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => player
 const selectPlayerProblems = ({ playerState }: MessagePipelineContext) => playerState.problems;
 const selectPlayerSourceId = ({ playerState }: MessagePipelineContext) =>
   playerState.urlState?.sourceId;
-const selectSelectedEventId = (store: InteractionStateStore) => store.selectedEventId;
+const selectSelectedEventId = (store: EventsStore) => store.selectedEventId;
 
 export default function DataSourceSidebar(props: Props): JSX.Element {
   const { onSelectDataSourceAction } = props;
@@ -99,7 +96,7 @@ export default function DataSourceSidebar(props: Props): JSX.Element {
   const playerProblems = useMessagePipeline(selectPlayerProblems) ?? [];
   const { currentUser } = useCurrentUser();
   const playerSourceId = useMessagePipeline(selectPlayerSourceId);
-  const selectedEventId = useInteractionState(selectSelectedEventId);
+  const selectedEventId = useEvents(selectSelectedEventId);
   const [activeTab, setActiveTab] = useState(0);
 
   const showEventsTab = currentUser != undefined && playerSourceId === "foxglove-data-platform";
