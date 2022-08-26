@@ -95,11 +95,7 @@ type Props = {
   dataTest?: string;
 };
 
-/**
- *
- * @deprecated use "@mui/material/IconButton" instead
- *
- */
+/** @deprecated use "@mui/material/IconButton" instead */
 
 const Icon = (props: Props): JSX.Element => {
   const { classes, cx } = useStyles();
