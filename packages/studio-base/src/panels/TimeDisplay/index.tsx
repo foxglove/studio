@@ -35,6 +35,12 @@ const useStyles = makeStyles({
     float: "left",
     marginRight: "600px",
   },
+  container: {
+    fontSize: "17px",
+    padding: "10px",
+    margin: "5px",
+    textA: "left",
+  },
 });
 
 function TimeDisplay(props: Props) {
@@ -52,19 +58,25 @@ function TimeDisplay(props: Props) {
   const inTimetickDiffMode = diffEnabled && diffMethod === PREV_MSG_METHOD;
   const baseItem = inTimetickDiffMode ? prevTickObj : currTickObj;
 
+  //----for Real time-----//
+  const currentRealDate = new Date();
+  const realTimeString = `${`0${currentRealDate.getHours()}`.slice(
+    -2,
+  )}:${`0${currentRealDate.getMinutes()}`.slice(-2)}:${`0${currentRealDate.getSeconds()}`.slice(
+    -2,
+  )}`;
+
   const renderSingleTopicOrDiffOutput = useCallback(() => {
     if (!baseItem) {
       return <EmptyState>Waiting for next message</EmptyState>;
     }
 
     return (
-      <div>
-        <div>
-          <h1>Time display </h1>
-        </div>
+      <div className={classes.container}>
+        Real Time:<span>{realTimeString}</span>
       </div>
     );
-  }, [baseItem]);
+  }, [realTimeString]);
 
   return (
     <div>
@@ -79,7 +91,6 @@ function TimeDisplay(props: Props) {
 const defaultConfig: TimeDisplayPanelConfig = {
   diffEnabled: false,
   diffMethod: CUSTOM_METHOD,
-
   topicPath: "/clock",
 };
 
