@@ -11,7 +11,7 @@ import { useEffect } from "react";
 import { toNanoSec } from "@foxglove/rostime";
 import MockMessagePipelineProvider from "@foxglove/studio-base/components/MessagePipeline/MockMessagePipelineProvider";
 import { useInteractionState } from "@foxglove/studio-base/context/InteractionStateContext";
-import { InteractionStateProvider } from "@foxglove/studio-base/providers/InteractionStateProvider";
+import InteractionStateProvider from "@foxglove/studio-base/providers/InteractionStateProvider";
 
 import { EventsList } from "./EventsList";
 

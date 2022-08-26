@@ -53,7 +53,7 @@ import {
 import MockCurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider/MockCurrentLayoutProvider";
 import ExtensionCatalogProvider from "@foxglove/studio-base/providers/ExtensionCatalogProvider";
 import HelpInfoProvider from "@foxglove/studio-base/providers/HelpInfoProvider";
-import { InteractionStateProvider } from "@foxglove/studio-base/providers/InteractionStateProvider";
+import InteractionStateProvider from "@foxglove/studio-base/providers/InteractionStateProvider";
 import {
   PanelSettingsEditorContextProvider,
   usePanelSettingsEditorStore,

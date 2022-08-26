@@ -6,7 +6,7 @@ import { useState, Suspense, Fragment, useEffect } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
-import { InteractionStateProvider } from "@foxglove/studio-base/providers/InteractionStateProvider";
+import InteractionStateProvider from "@foxglove/studio-base/providers/InteractionStateProvider";
 
 import Workspace from "./Workspace";
 import { ColorSchemeThemeProvider } from "./components/ColorSchemeThemeProvider";

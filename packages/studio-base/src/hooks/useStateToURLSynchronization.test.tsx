@@ -18,7 +18,7 @@ import { ReactNode } from "react";
 import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
 import { useCurrentLayoutSelector } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { useStateToURLSynchronization } from "@foxglove/studio-base/hooks/useStateToURLSynchronization";
-import { InteractionStateProvider } from "@foxglove/studio-base/providers/InteractionStateProvider";
+import InteractionStateProvider from "@foxglove/studio-base/providers/InteractionStateProvider";
 
 jest.mock("@foxglove/studio-base/context/CurrentLayoutContext");
 jest.mock("@foxglove/studio-base/components/MessagePipeline");

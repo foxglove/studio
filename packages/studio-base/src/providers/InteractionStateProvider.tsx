@@ -54,7 +54,11 @@ function createInteractionStateStore(): StoreApi<InteractionStateStore> {
   });
 }
 
-export function InteractionStateProvider({ children }: { children?: ReactNode }): JSX.Element {
+export default function InteractionStateProvider({
+  children,
+}: {
+  children?: ReactNode;
+}): JSX.Element {
   const [store] = useState(createInteractionStateStore());
 
   return (

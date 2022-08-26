@@ -10,7 +10,7 @@ import MockMessagePipelineProvider from "@foxglove/studio-base/components/Messag
 import CurrentUserContext, { User } from "@foxglove/studio-base/context/CurrentUserContext";
 import ModalHost from "@foxglove/studio-base/context/ModalHost";
 import { PlayerPresence, Topic } from "@foxglove/studio-base/players/types";
-import { InteractionStateProvider } from "@foxglove/studio-base/providers/InteractionStateProvider";
+import InteractionStateProvider from "@foxglove/studio-base/providers/InteractionStateProvider";
 
 import DataSourceSidebar from "./DataSourceSidebar";
 
