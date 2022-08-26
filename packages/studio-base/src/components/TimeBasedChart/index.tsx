@@ -40,7 +40,7 @@ import Tooltip from "@foxglove/studio-base/components/Tooltip";
 import {
   useClearHoverValue,
   useSetHoverValue,
-} from "@foxglove/studio-base/context/HoverValueContext";
+} from "@foxglove/studio-base/context/InteractionStateContext";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import HoverBar from "./HoverBar";

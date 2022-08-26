@@ -32,7 +32,6 @@ import {
   useSelectedPanels,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { PanelsActions } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
-import { HoverValueProvider } from "@foxglove/studio-base/context/HoverValueContext";
 import PanelCatalogContext, {
   PanelCatalog,
   PanelInfo,
@@ -54,6 +53,7 @@ import {
 import MockCurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider/MockCurrentLayoutProvider";
 import ExtensionCatalogProvider from "@foxglove/studio-base/providers/ExtensionCatalogProvider";
 import HelpInfoProvider from "@foxglove/studio-base/providers/HelpInfoProvider";
+import { InteractionStateProvider } from "@foxglove/studio-base/providers/InteractionStateProvider";
 import {
   PanelSettingsEditorContextProvider,
   usePanelSettingsEditorStore,
@@ -338,7 +338,7 @@ export default function PanelSetup(props: Props): JSX.Element {
   const theme = useTheme();
   return (
     <UserNodeStateProvider>
-      <HoverValueProvider>
+      <InteractionStateProvider>
         <MockCurrentLayoutProvider onAction={props.onLayoutAction}>
           <PanelSettingsEditorContextProvider>
             <ExtensionCatalogProvider loaders={[]}>
@@ -350,7 +350,7 @@ export default function PanelSetup(props: Props): JSX.Element {
             </ExtensionCatalogProvider>
           </PanelSettingsEditorContextProvider>
         </MockCurrentLayoutProvider>
-      </HoverValueProvider>
+      </InteractionStateProvider>
     </UserNodeStateProvider>
   );
 }

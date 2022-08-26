@@ -41,7 +41,7 @@ import {
   useClearHoverValue,
   useHoverValue,
   useSetHoverValue,
-} from "@foxglove/studio-base/context/HoverValueContext";
+} from "@foxglove/studio-base/context/InteractionStateContext";
 import useGlobalVariables from "@foxglove/studio-base/hooks/useGlobalVariables";
 import {
   AdvertiseOptions,
