@@ -62,7 +62,6 @@ export type MessagePipelineContext = {
   seekPlayback?: (time: Time) => void;
   // Don't render the next frame until the returned function has been called.
   pauseFrame: (name: string) => ResumeFrame;
-  requestBackfill: () => void;
 };
 
 // exported only for MockMessagePipelineProvider
@@ -235,10 +234,6 @@ export function MessagePipelineProvider({
       condvar.notifyAll();
     };
   }, []);
-  const requestBackfill = useMemo(
-    () => debounce(() => (player ? player.requestBackfill() : undefined)),
-    [player],
-  );
 
   useEffect(() => {
     player?.setGlobalVariables(globalVariables);
@@ -264,7 +259,6 @@ export function MessagePipelineProvider({
         setPlaybackSpeed,
         seekPlayback,
         pauseFrame,
-        requestBackfill,
       })}
     >
       {children}
