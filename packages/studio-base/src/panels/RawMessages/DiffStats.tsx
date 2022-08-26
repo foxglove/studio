@@ -58,7 +58,11 @@ export default function DiffStats({
 
   return (
     <>
-      {id && `${itemType} ${idLabel}`}
+      {id && (
+        <>
+          {itemType} {idLabel}
+        </>
+      )}
       <div className={classes.diff}>
         {(counts[ADDED.labelText] !== 0 || counts[DELETED.labelText] !== 0) && (
           <div className={classes.badge}>
