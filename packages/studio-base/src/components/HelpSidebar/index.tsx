@@ -2,8 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import ChevronLeftIcon from "@mdi/svg/svg/chevron-left.svg";
-import { Link, Typography } from "@mui/material";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import { IconButton, Link, Typography } from "@mui/material";
 import { useMemo } from "react";
 import { useUnmount } from "react-use";
 
@@ -128,21 +128,20 @@ export default function HelpSidebar({
 
   return (
     <SidebarContent
-      leadingItems={
-        helpInfo.content == undefined
-          ? undefined
-          : [
-              <Icon
-                key="back-arrow"
-                size="small"
-                style={{ marginRight: "5px" }}
-                onClick={() => setHelpInfo(DEFAULT_HELP_INFO)}
-              >
-                <ChevronLeftIcon />
-              </Icon>,
-            ]
-      }
       title={isHomeView ? "Help" : helpInfo.title}
+      leadingItems={[
+        helpInfo.content != undefined && (
+          <IconButton
+            key="back-arrow"
+            size="small"
+            style={{ marginRight: 4 }}
+            edge="start"
+            onClick={() => setHelpInfo(DEFAULT_HELP_INFO)}
+          >
+            <ChevronLeftIcon fontSize="small" />
+          </IconButton>
+        ),
+      ]}
     >
       <Stack>
         {isHomeView ? (
