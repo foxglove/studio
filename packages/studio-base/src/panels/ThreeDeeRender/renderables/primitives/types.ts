@@ -5,6 +5,7 @@
 export enum PrimitiveType {
   CUBES = "CUBES",
   MODELS = "MODELS",
+  LINES = "LINES",
 }
 
-export const ALL_PRIMITIVE_TYPES = [PrimitiveType.CUBES, PrimitiveType.MODELS];
+export const ALL_PRIMITIVE_TYPES = [PrimitiveType.CUBES, PrimitiveType.MODELS, PrimitiveType.LINES];

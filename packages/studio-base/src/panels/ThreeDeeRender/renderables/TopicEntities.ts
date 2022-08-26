@@ -15,6 +15,7 @@ import { Renderer } from "../Renderer";
 import { updatePose } from "../updatePose";
 import { PrimitivePool } from "./primitives/PrimitivePool";
 import { RenderableCubes } from "./primitives/RenderableCubes";
+import { RenderableLines } from "./primitives/RenderableLines";
 import { RenderableModels } from "./primitives/RenderableModels";
 import { ALL_PRIMITIVE_TYPES, PrimitiveType } from "./primitives/types";
 import { missingTransformMessage, MISSING_TRANSFORM } from "./transforms";
@@ -29,11 +30,13 @@ export type EntityTopicUserData = BaseUserData & {
 type EntityRenderables = {
   [PrimitiveType.CUBES]?: RenderableCubes;
   [PrimitiveType.MODELS]?: RenderableModels;
+  [PrimitiveType.LINES]?: RenderableLines;
 };
 
 const PRIMITIVE_KEYS = {
   [PrimitiveType.CUBES]: "cubes",
   [PrimitiveType.MODELS]: "models",
+  [PrimitiveType.LINES]: "lines",
 } as const;
 
 export class TopicEntities extends Renderable<EntityTopicUserData> {
@@ -61,9 +64,10 @@ export class TopicEntities extends Renderable<EntityTopicUserData> {
 
   public updateSettings(): void {
     // Updates each individual primitive renderable using the current topic settings
-    for (const renderable of this.renderablesById.values()) {
-      renderable[PrimitiveType.CUBES]?.updateSettings(this.userData.settings);
-      renderable[PrimitiveType.MODELS]?.updateSettings(this.userData.settings);
+    for (const renderables of this.renderablesById.values()) {
+      for (const renderable of Object.values(renderables)) {
+        renderable.updateSettings(this.userData.settings);
+      }
     }
   }
 

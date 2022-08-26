@@ -2388,13 +2388,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@foxglove/schemas@github:foxglove/schemas#94898bfc24f9629b42233497d386181fe5afb92b":
+"@foxglove/schemas@github:foxglove/schemas#deefc4656375cc328d32e6bac854be5d5ef0f2c0":
   version: 0.4.0
-  resolution: "@foxglove/schemas@https://github.com/foxglove/schemas.git#commit=94898bfc24f9629b42233497d386181fe5afb92b"
+  resolution: "@foxglove/schemas@https://github.com/foxglove/schemas.git#commit=deefc4656375cc328d32e6bac854be5d5ef0f2c0"
   dependencies:
     "@foxglove/rosmsg-msgs-common": ^1.0.4
     tslib: ^2
-  checksum: f18bb15d3cf7d0dcf4150b3a258bec3089dc7381754995fe39e4991385c13d9a6e62f0e99cbc0d330aa5c57e5b28cdf1b086000ddd99eadacf672119b2c377b5
+  checksum: 8e3426571d75ddea6d181df47641607e556f018fc3ea25da8109165d9d08515c87f5449c9eabfe07e3cfb9e92083e612803f47b5478abcfa9281316e8e858c0e
   languageName: node
   linkType: hard
 
