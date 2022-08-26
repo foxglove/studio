@@ -21,6 +21,10 @@ import type { HoverValue } from "@foxglove/studio-base/types/hoverValue";
 
 export type SyncBounds = { min: number; max: number; sourceId: string; userInteraction: boolean };
 
+/**
+ * The InteractionStateStore manages state related to dynamic user interactions with data in the app.
+ * Things like the hovered time value, selected events, and global bounds for plots are managed here.
+ */
 export type InteractionStateStore = Readonly<{
   events: AsyncState<DataEvent[]>;
   globalBounds: undefined | SyncBounds;
@@ -42,15 +46,6 @@ export type InteractionStateStore = Readonly<{
 export const InteractionStateContext = createContext<undefined | StoreApi<InteractionStateStore>>(
   undefined,
 );
-
-export function useInteractionState<T>(
-  selector: (store: InteractionStateStore) => T,
-  equalityFn?: (a: T, b: T) => boolean,
-): T {
-  const context = useGuaranteedContext(InteractionStateContext);
-  return useStore(context, selector, equalityFn);
-}
-
 const selectClearHoverValue = (store: InteractionStateStore) => store.clearHoverValue;
 
 export function useClearHoverValue(): InteractionStateStore["clearHoverValue"] {
@@ -91,4 +86,16 @@ export function useHoverValue(args?: {
   );
 
   return useInteractionState(selector);
+}
+
+/**
+ * This hook wraps all access to the interaction state store. Pass selectors
+ * to access parts of the store.
+ */
+export function useInteractionState<T>(
+  selector: (store: InteractionStateStore) => T,
+  equalityFn?: (a: T, b: T) => boolean,
+): T {
+  const context = useGuaranteedContext(InteractionStateContext);
+  return useStore(context, selector, equalityFn);
 }
