@@ -13,6 +13,7 @@
 
 import { createContext, useCallback } from "react";
 import { AsyncState } from "react-use/lib/useAsyncFn";
+import { DeepReadonly } from "ts-essentials";
 import { StoreApi, useStore } from "zustand";
 
 import useGuaranteedContext from "@foxglove/studio-base/hooks/useGuaranteedContext";
@@ -25,7 +26,7 @@ export type SyncBounds = { min: number; max: number; sourceId: string; userInter
  * The InteractionStateStore manages state related to dynamic user interactions with data in the app.
  * Things like the hovered time value, selected events, and global bounds for plots are managed here.
  */
-export type InteractionStateStore = Readonly<{
+export type InteractionStateStore = DeepReadonly<{
   events: AsyncState<DataEvent[]>;
   globalBounds: undefined | SyncBounds;
   hoverValue: undefined | HoverValue;
@@ -52,7 +53,9 @@ export function useClearHoverValue(): InteractionStateStore["clearHoverValue"] {
   return useInteractionState(selectClearHoverValue);
 }
 
-const selectSetHoverValue = (store: InteractionStateStore) => store.setHoverValue;
+const selectSetHoverValue = (store: InteractionStateStore) => {
+  return store.setHoverValue;
+};
 
 export function useSetHoverValue(): InteractionStateStore["setHoverValue"] {
   return useInteractionState(selectSetHoverValue);
