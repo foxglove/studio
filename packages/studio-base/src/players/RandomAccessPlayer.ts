@@ -94,7 +94,6 @@ export type RandomAccessPlayerOptions = {
 export default class RandomAccessPlayer implements Player {
   private _urlParams?: Record<string, string>;
   private _name?: string;
-  private _filePath?: string;
   private _provider: RandomAccessDataProvider;
   private _seekBackNs: bigint;
   private _isPlaying: boolean = false;
@@ -294,7 +293,6 @@ export default class RandomAccessPlayer implements Player {
     if (this._hasError) {
       return this._listener({
         name: this._name,
-        filePath: this._filePath,
         presence: PlayerPresence.ERROR,
         progress: {},
         capabilities: this._capabilities,
@@ -342,7 +340,6 @@ export default class RandomAccessPlayer implements Player {
 
     const data: PlayerState = {
       name: this._name,
-      filePath: this._filePath,
       presence: this._reconnecting
         ? PlayerPresence.RECONNECTING
         : this._initializing
@@ -653,9 +650,7 @@ export default class RandomAccessPlayer implements Player {
   public setSubscriptions(newSubscriptions: SubscribePayload[]): void {
     this._parsedSubscribedTopics = new Set(newSubscriptions.map(({ topic }) => topic));
     this._metricsCollector.setSubscriptions(newSubscriptions);
-  }
 
-  public requestBackfill(): void {
     if (this._isPlaying || this._initializing || !this._currentTime) {
       return;
     }

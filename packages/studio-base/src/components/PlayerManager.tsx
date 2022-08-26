@@ -11,6 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { useSnackbar } from "notistack";
 import {
   PropsWithChildren,
   useCallback,
@@ -19,7 +20,6 @@ import {
   useMemo,
   useState,
 } from "react";
-import { useToasts } from "react-toast-notifications";
 import { useLatest, useMountedState } from "react-use";
 
 import { useShallowMemo } from "@foxglove/hooks";
@@ -33,6 +33,7 @@ import {
   useCurrentLayoutSelector,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { useLayoutManager } from "@foxglove/studio-base/context/LayoutManagerContext";
+import { useNativeWindow } from "@foxglove/studio-base/context/NativeWindowContext";
 import PlayerSelectionContext, {
   DataSourceArgs,
   IDataSourceFactory,
@@ -75,6 +76,8 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
     setUserNodeTypesLib,
   });
 
+  const nativeWindow = useNativeWindow();
+
   const isMounted = useMountedState();
 
   const analytics = useAnalytics();
@@ -113,17 +116,18 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
 
   useLayoutEffect(() => void player?.setUserNodes(userNodes), [player, userNodes]);
 
-  const { addToast } = useToasts();
+  const { enqueueSnackbar } = useSnackbar();
 
   const selectSource = useCallback(
     async (sourceId: string, args?: DataSourceArgs) => {
       log.debug(`Select Source: ${sourceId}`);
 
+      // Clear any previous represented filename
+      void nativeWindow?.setRepresentedFilename(undefined);
+
       const foundSource = playerSources.find((source) => source.id === sourceId);
       if (!foundSource) {
-        addToast(`Unknown data source: ${sourceId}`, {
-          appearance: "warning",
-        });
+        enqueueSnackbar(`Unknown data source: ${sourceId}`, { variant: "warning" });
         return;
       }
 
@@ -154,7 +158,7 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
               setSelectedLayoutId(sourceLayout.id);
             }
           } catch (err) {
-            addToast((err as Error).message, { appearance: "error" });
+            enqueueSnackbar((err as Error).message, { variant: "error" });
           }
         }
 
@@ -162,7 +166,7 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
       }
 
       if (!args) {
-        addToast("Unable to initialize player: no args", { appearance: "error" });
+        enqueueSnackbar("Unable to initialize player: no args", { variant: "error" });
         return;
       }
 
@@ -211,6 +215,12 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
                 metricsCollector,
               });
 
+              // If we are selecting a single file, the desktop environment might have features to
+              // show the user which file they've selected (i.e. macOS proxy icon)
+              if (file) {
+                void nativeWindow?.setRepresentedFilename((file as { path?: string }).path); // File.path is added by Electron
+              }
+
               setBasePlayer(newPlayer);
               return;
             } else if (handle) {
@@ -231,6 +241,10 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
                 return;
               }
 
+              // If we are selecting a single file, the desktop environment might have features to
+              // show the user which file they've selected (i.e. macOS proxy icon)
+              void nativeWindow?.setRepresentedFilename((file as { path?: string }).path); // File.path is added by Electron
+
               const newPlayer = foundSource.initialize({
                 file,
                 metricsCollector,
@@ -249,20 +263,21 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
           }
         }
 
-        addToast("Unable to initialize player", { appearance: "error" });
+        enqueueSnackbar("Unable to initialize player", { variant: "error" });
       } catch (error) {
-        addToast((error as Error).message, { appearance: "error" });
+        enqueueSnackbar((error as Error).message, { variant: "error" });
       }
     },
     [
-      addRecent,
-      addToast,
-      consoleApi,
-      isMounted,
-      layoutStorage,
-      metricsCollector,
       playerSources,
+      metricsCollector,
+      enqueueSnackbar,
+      consoleApi,
+      layoutStorage,
+      isMounted,
       setSelectedLayoutId,
+      addRecent,
+      nativeWindow,
     ],
   );
 
@@ -272,9 +287,7 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
       // find the recent from the list and initialize
       const foundRecent = recents.find((value) => value.id === recentId);
       if (!foundRecent) {
-        addToast(`Failed to restore recent: ${recentId}`, {
-          appearance: "error",
-        });
+        enqueueSnackbar(`Failed to restore recent: ${recentId}`, { variant: "error" });
         return;
       }
 
@@ -294,7 +307,7 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
         }
       }
     },
-    [recents, addToast, selectSource],
+    [recents, enqueueSnackbar, selectSource],
   );
 
   // Make a RecentSources array for the PlayerSelectionContext
