@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { debounce, flatten } from "lodash";
+import { flatten } from "lodash";
 
 import { Condvar } from "@foxglove/den/async";
 import { useShallowMemo } from "@foxglove/hooks";
