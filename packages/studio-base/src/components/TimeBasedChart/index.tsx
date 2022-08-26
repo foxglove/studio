@@ -205,16 +205,15 @@ export default function TimeBasedChart(props: Props): JSX.Element {
 
   const hoverBar = useRef<HTMLDivElement>(ReactNull);
 
+  // Ignore global bounds if we're not synced.
   const globalBoundsSelector = useCallback(
     (store: InteractionStateStore) => {
       return isSynced ? store.globalBounds : undefined;
     },
     [isSynced],
   );
-
   const globalBounds = useInteractionState(globalBoundsSelector);
   const setGlobalBounds = useInteractionState(selectSetGlobalBounds);
-  // const [globalBounds, setGlobalBounds] = useGlobalXBounds({ enabled: isSynced });
 
   const linesToHide = useMemo(() => props.linesToHide ?? {}, [props.linesToHide]);
 
