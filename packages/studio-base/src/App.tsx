@@ -6,7 +6,6 @@ import { useState, Suspense, Fragment, useEffect } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
-import EventsProvider from "@foxglove/studio-base/providers/EventsProvider";
 import { InteractionStateProvider } from "@foxglove/studio-base/providers/InteractionStateProvider";
 
 import Workspace from "./Workspace";
@@ -108,7 +107,6 @@ export function App(props: AppProps): JSX.Element {
     <ExtensionMarketplaceProvider />,
     <ExtensionCatalogProvider loaders={extensionLoaders} />,
     <PlayerManager playerSources={dataSources} />,
-    <EventsProvider />,
     /* eslint-enable react/jsx-key */
   ];
 

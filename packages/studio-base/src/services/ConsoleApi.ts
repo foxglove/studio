@@ -4,6 +4,8 @@
 
 import * as base64 from "@protobufjs/base64";
 
+import { DataEvent } from "@foxglove/studio-base/types/DataEvent";
+
 type User = {
   id: string;
   email: string;
@@ -49,17 +51,7 @@ type ExtensionResponse = {
   sha256Sum?: string;
 };
 
-export type ConsoleEvent = {
-  id: string;
-  createdAt: string;
-  deviceId: string;
-  durationNanos: string;
-  metadata: Record<string, string>;
-  timestampNanos: string;
-  updatedAt: string;
-};
-
-type EventsResponse = ConsoleEvent[];
+type EventsResponse = DataEvent[];
 
 type TokenArgs = {
   deviceCode: string;

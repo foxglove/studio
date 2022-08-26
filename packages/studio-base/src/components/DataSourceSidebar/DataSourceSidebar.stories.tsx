@@ -10,17 +10,17 @@ import MockMessagePipelineProvider from "@foxglove/studio-base/components/Messag
 import CurrentUserContext, { User } from "@foxglove/studio-base/context/CurrentUserContext";
 import ModalHost from "@foxglove/studio-base/context/ModalHost";
 import { PlayerPresence, Topic } from "@foxglove/studio-base/players/types";
-import EventsProvider from "@foxglove/studio-base/providers/EventsProvider";
+import { InteractionStateProvider } from "@foxglove/studio-base/providers/InteractionStateProvider";
 
 import DataSourceSidebar from "./DataSourceSidebar";
 
 function Wrapper(StoryFn: Story): JSX.Element {
   return (
-    <EventsProvider>
+    <InteractionStateProvider>
       <ModalHost>
         <StoryFn />
       </ModalHost>
-    </EventsProvider>
+    </InteractionStateProvider>
   );
 }
 
@@ -156,11 +156,11 @@ export const WithEvents = (): JSX.Element => {
       urlState={{ sourceId: "foxglove-data-platform" }}
     >
       <CurrentUserContext.Provider value={userContextValue}>
-        <EventsProvider>
+        <InteractionStateProvider>
           <Box height="100%" bgcolor="background.paper">
             <DataSourceSidebar onSelectDataSourceAction={() => {}} />
           </Box>
-        </EventsProvider>
+        </InteractionStateProvider>
       </CurrentUserContext.Provider>
     </MockMessagePipelineProvider>
   );

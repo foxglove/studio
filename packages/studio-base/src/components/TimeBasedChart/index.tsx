@@ -35,10 +35,11 @@ import { RpcElement, RpcScales } from "@foxglove/studio-base/components/Chart/ty
 import KeyListener from "@foxglove/studio-base/components/KeyListener";
 import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
 import TimeBasedChartLegend from "@foxglove/studio-base/components/TimeBasedChart/TimeBasedChartLegend";
-import makeGlobalState from "@foxglove/studio-base/components/TimeBasedChart/makeGlobalState";
 import Tooltip from "@foxglove/studio-base/components/Tooltip";
 import {
+  InteractionStateStore,
   useClearHoverValue,
+  useInteractionState,
   useSetHoverValue,
 } from "@foxglove/studio-base/context/InteractionStateContext";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
@@ -98,9 +99,7 @@ type ChartComponentProps = ComponentProps<typeof ChartComponent>;
 // eslint-disable-next-line no-restricted-syntax
 const ChartNull = null;
 
-// only sync the x axis and allow y-axis scales to auto-calculate
-type SyncBounds = { min: number; max: number; sourceId: string; userInteraction: boolean };
-const useGlobalXBounds = makeGlobalState<SyncBounds>();
+const selectSetGlobalBounds = (store: InteractionStateStore) => store.setGlobalBounds;
 
 // Calculation mode for the "reset view" view.
 export type ChartDefaultView =
@@ -206,7 +205,16 @@ export default function TimeBasedChart(props: Props): JSX.Element {
 
   const hoverBar = useRef<HTMLDivElement>(ReactNull);
 
-  const [globalBounds, setGlobalBounds] = useGlobalXBounds({ enabled: isSynced });
+  const globalBoundsSelector = useCallback(
+    (store: InteractionStateStore) => {
+      return isSynced ? store.globalBounds : undefined;
+    },
+    [isSynced],
+  );
+
+  const globalBounds = useInteractionState(globalBoundsSelector);
+  const setGlobalBounds = useInteractionState(selectSetGlobalBounds);
+  // const [globalBounds, setGlobalBounds] = useGlobalXBounds({ enabled: isSynced });
 
   const linesToHide = useMemo(() => props.linesToHide ?? {}, [props.linesToHide]);
 

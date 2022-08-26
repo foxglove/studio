@@ -8,7 +8,7 @@ import Logger from "@foxglove/log";
 import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
 import { useConsoleApi } from "@foxglove/studio-base/context/ConsoleApiContext";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
-import { useEvents } from "@foxglove/studio-base/context/EventsContext";
+import { useInteractionState } from "@foxglove/studio-base/context/InteractionStateContext";
 
 const log = Logger.getLogger(__filename);
 
@@ -16,7 +16,7 @@ export function EventsSyncAdapter(): ReactNull {
   const { currentUser } = useCurrentUser();
   const urlState = useMessagePipeline((s) => s.playerState.urlState);
   const consoleApi = useConsoleApi();
-  const setEvents = useEvents((store) => store.setEvents);
+  const setEvents = useInteractionState((store) => store.setEvents);
 
   useAsync(async () => {
     if (

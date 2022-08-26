@@ -12,38 +12,54 @@
 //   You may not use this file except in compliance with the License.
 
 import { createContext, useCallback } from "react";
+import { AsyncState } from "react-use/lib/useAsyncFn";
 import { StoreApi, useStore } from "zustand";
 
 import useGuaranteedContext from "@foxglove/studio-base/hooks/useGuaranteedContext";
+import { DataEvent } from "@foxglove/studio-base/types/DataEvent";
 import type { HoverValue } from "@foxglove/studio-base/types/hoverValue";
 
-export type IteractionStateStore = Readonly<{
+export type SyncBounds = { min: number; max: number; sourceId: string; userInteraction: boolean };
+
+export type InteractionStateStore = Readonly<{
+  events: AsyncState<DataEvent[]>;
+  globalBounds: undefined | SyncBounds;
   hoverValue: undefined | HoverValue;
+  selectedEventId: undefined | string;
+
   clearHoverValue: (componentId: string) => void;
+  selectEvent: (id: undefined | string) => void;
+  setEvents: (events: AsyncState<DataEvent[]>) => void;
+  setGlobalBounds: (
+    newBounds:
+      | undefined
+      | SyncBounds
+      | ((oldValue: undefined | SyncBounds) => undefined | SyncBounds),
+  ) => void;
   setHoverValue: (value: HoverValue) => void;
 }>;
 
-export const InteractionStateContext = createContext<undefined | StoreApi<IteractionStateStore>>(
+export const InteractionStateContext = createContext<undefined | StoreApi<InteractionStateStore>>(
   undefined,
 );
 
 export function useInteractionState<T>(
-  selector: (store: IteractionStateStore) => T,
+  selector: (store: InteractionStateStore) => T,
   equalityFn?: (a: T, b: T) => boolean,
 ): T {
   const context = useGuaranteedContext(InteractionStateContext);
   return useStore(context, selector, equalityFn);
 }
 
-const selectClearHoverValue = (store: IteractionStateStore) => store.clearHoverValue;
+const selectClearHoverValue = (store: InteractionStateStore) => store.clearHoverValue;
 
-export function useClearHoverValue(): IteractionStateStore["clearHoverValue"] {
+export function useClearHoverValue(): InteractionStateStore["clearHoverValue"] {
   return useInteractionState(selectClearHoverValue);
 }
 
-const selectSetHoverValue = (store: IteractionStateStore) => store.setHoverValue;
+const selectSetHoverValue = (store: InteractionStateStore) => store.setHoverValue;
 
-export function useSetHoverValue(): IteractionStateStore["setHoverValue"] {
+export function useSetHoverValue(): InteractionStateStore["setHoverValue"] {
   return useInteractionState(selectSetHoverValue);
 }
 
@@ -56,7 +72,7 @@ export function useHoverValue(args?: {
   const isTimestampScale = args?.isTimestampScale ?? false;
 
   const selector = useCallback(
-    (store: IteractionStateStore) => {
+    (store: InteractionStateStore) => {
       if (!hasArgs) {
         // Raw form -- user needs to check that the value should be shown.
         return store.hoverValue;
