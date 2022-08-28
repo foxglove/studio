@@ -64,10 +64,9 @@ export class Picker {
       generateMipmaps: false,
     });
     this.pixelBuffer = new Uint8Array(4);
-    // We need to be inside of .render in order to call renderBufferDirect in renderList() so create an empty scene
-    // and use the onAfterRender callback to actually render geometry for picking.
+    // We need to be inside of .render in order to call renderBufferDirect in
+    // renderList() so create an empty scene
     this.emptyScene = new THREE.Scene();
-    this.emptyScene.onAfterRender = this.handleAfterRender;
   }
 
   public dispose(): void {
@@ -84,6 +83,8 @@ export class Picker {
     camera: THREE.OrthographicCamera | THREE.PerspectiveCamera,
     shouldPickObject = AlwaysPickObject,
   ): number {
+    // Use the onAfterRender callback to actually render geometry for picking
+    this.emptyScene.onAfterRender = this.handleAfterRender;
     this.camera = camera;
     this.shouldPickObjectCB = shouldPickObject;
     const hw = (PIXEL_WIDTH / 2) | 0;
@@ -92,7 +93,7 @@ export class Picker {
     const yi = Math.max(0, y * pixelRatio - hw);
     const w = this.gl.domElement.width;
     const h = this.gl.domElement.height;
-    // Set the projection matrix to only look at the pixel we are interested in
+    // Set the projection matrix to only look at the pixels we are interested in
     camera.setViewOffset(w, h, xi, yi, PIXEL_WIDTH, PIXEL_WIDTH);
     const currRenderTarget = this.gl.getRenderTarget();
     const currAlpha = this.gl.getClearAlpha();
@@ -118,6 +119,58 @@ export class Picker {
     }
 
     return val;
+  }
+
+  public pickInstance(
+    x: number,
+    y: number,
+    camera: THREE.OrthographicCamera | THREE.PerspectiveCamera,
+    mesh: THREE.Mesh<THREE.BufferGeometry, THREE.Material>,
+  ): number {
+    this.emptyScene.onAfterRender = () => {
+      const renderItem: THREE.RenderItem = {
+        id: mesh.id,
+        object: mesh,
+        geometry: mesh.geometry,
+        material: mesh.material,
+        // `program` is not used by WebGLRenderer even though it is defined in RenderItem
+        program: undefined as unknown as THREE.WebGLProgram,
+        groupOrder: 0,
+        renderOrder: 0,
+        z: 0,
+        group: ReactNull,
+      };
+      this.processItem(renderItem);
+    };
+    this.camera = camera;
+
+    const hw = (PIXEL_WIDTH / 2) | 0;
+    const pixelRatio = this.gl.getPixelRatio();
+    const xi = Math.max(0, x * pixelRatio - hw);
+    const yi = Math.max(0, y * pixelRatio - hw);
+    const w = this.gl.domElement.width;
+    const h = this.gl.domElement.height;
+    // Set the projection matrix to only look at the pixels we are interested in
+    camera.setViewOffset(w, h, xi, yi, PIXEL_WIDTH, PIXEL_WIDTH);
+    const currRenderTarget = this.gl.getRenderTarget();
+    const currAlpha = this.gl.getClearAlpha();
+    this.gl.getClearColor(this.currClearColor);
+    this.gl.setRenderTarget(this.pickingTarget);
+    this.gl.setClearColor(WHITE_COLOR);
+    this.gl.setClearAlpha(1);
+    this.gl.clear();
+    this.gl.render(this.emptyScene, camera);
+    this.gl.readRenderTargetPixels(this.pickingTarget, hw, hw, 1, 1, this.pixelBuffer);
+    this.gl.setRenderTarget(currRenderTarget);
+    this.gl.setClearColor(this.currClearColor, currAlpha);
+    camera.clearViewOffset();
+
+    return (
+      (this.pixelBuffer[0]! << 24) +
+      (this.pixelBuffer[1]! << 16) +
+      (this.pixelBuffer[2]! << 8) +
+      this.pixelBuffer[3]!
+    );
   }
 
   public pickDebugRender(camera: THREE.OrthographicCamera | THREE.PerspectiveCamera): void {
@@ -157,53 +210,82 @@ export class Picker {
       return;
     }
 
-    const useInstancing = (object as Partial<THREE.InstancedMesh>).isInstancedMesh === true ? 1 : 0;
     const sprite = material.type === "SpriteMaterial" ? 1 : 0;
     const sizeAttenuation =
       (material as Partial<THREE.PointsMaterial>).sizeAttenuation === true ? 1 : 0;
-    const index = (useInstancing << 0) | (sprite << 1) | (sizeAttenuation << 2);
+    const index = (sprite << 0) | (sizeAttenuation << 1);
     const pickingMaterial = renderItem.object.userData.pickingMaterial as
       | THREE.ShaderMaterial
       | undefined;
-    let renderMaterial = pickingMaterial ?? this.materialCache.get(index);
-    if (!renderMaterial) {
-      let vertexShader = THREE.ShaderChunk.meshbasic_vert;
-      if (sprite === 1) {
-        vertexShader = THREE.ShaderChunk.sprite_vert!;
-      }
-      if (sizeAttenuation === 1) {
-        vertexShader = "#define USE_SIZEATTENUATION\n\n" + vertexShader;
-      }
-      renderMaterial = new THREE.ShaderMaterial({
-        vertexShader,
-        fragmentShader: /* glsl */ `
-           uniform vec4 objectId;
-           void main() {
-             gl_FragColor = objectId;
-           }
-         `,
-        side: THREE.DoubleSide,
-        uniforms: { objectId: { value: [NaN, NaN, NaN, NaN] } },
-      });
-      this.materialCache.set(index, renderMaterial);
-    }
+    const renderMaterial =
+      pickingMaterial ??
+      this.materialCache.get(index) ??
+      this.createRenderMaterial(index, sprite, sizeAttenuation);
     if (sprite === 1) {
       renderMaterial.uniforms.rotation = { value: (material as THREE.SpriteMaterial).rotation };
       renderMaterial.uniforms.center = { value: (object as THREE.Sprite).center };
     }
-    const iObjectId = renderMaterial.uniforms.objectId;
-    if (!iObjectId) {
-      throw new Error(`objectId uniform not found in picking material`);
-    }
-    iObjectId.value = [
-      ((objId >> 24) & 255) / 255,
-      ((objId >> 16) & 255) / 255,
-      ((objId >> 8) & 255) / 255,
-      (objId & 255) / 255,
-    ];
-    renderMaterial.uniformsNeedUpdate = true;
+    setObjectId(renderMaterial, objId);
     this.gl.renderBufferDirect(this.camera, NullScene, geometry, renderMaterial, object, ReactNull);
   };
+
+  private processInstancedItem = (renderItem: THREE.RenderItem): void => {
+    if (!this.camera) {
+      return;
+    }
+    const object = renderItem.object;
+    const material = renderItem.material;
+    const geometry = renderItem.geometry;
+    if (
+      !geometry || // Skip if geometry is not defined
+      renderItem.object.userData.picking === false || // Skip if object is marked no picking
+    ) {
+      return;
+    }
+
+    // TODO: Create a default shader that uses `objectId = gl_InstanceID`
+  };
+
+  private createRenderMaterial(
+    index: number,
+    sprite: 0 | 1,
+    sizeAttenuation: 0 | 1,
+  ): THREE.ShaderMaterial {
+    let vertexShader = THREE.ShaderChunk.meshbasic_vert;
+    if (sprite === 1) {
+      vertexShader = THREE.ShaderChunk.sprite_vert!;
+    }
+    if (sizeAttenuation === 1) {
+      vertexShader = "#define USE_SIZEATTENUATION\n\n" + vertexShader;
+    }
+    const renderMaterial = new THREE.ShaderMaterial({
+      vertexShader,
+      fragmentShader: /* glsl */ `
+          uniform vec4 objectId;
+          void main() {
+            gl_FragColor = objectId;
+          }
+        `,
+      side: THREE.DoubleSide,
+      uniforms: { objectId: { value: [NaN, NaN, NaN, NaN] } },
+    });
+    this.materialCache.set(index, renderMaterial);
+    return renderMaterial;
+  }
+}
+
+function setObjectId(material: THREE.ShaderMaterial, objectId: number): void {
+  const iObjectId = material.uniforms.objectId;
+  if (!iObjectId) {
+    throw new Error(`objectId uniform not found in picking material`);
+  }
+  iObjectId.value = [
+    ((objectId >> 24) & 255) / 255,
+    ((objectId >> 16) & 255) / 255,
+    ((objectId >> 8) & 255) / 255,
+    (objectId & 255) / 255,
+  ];
+  material.uniformsNeedUpdate = true;
 }
 
 // Used for debug colors, this remaps objectIds to pseudo-random 32-bit integers
