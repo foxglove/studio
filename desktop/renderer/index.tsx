@@ -12,11 +12,7 @@ import ReactDOM from "react-dom";
 
 import { Sockets } from "@foxglove/electron-socket/renderer";
 import Logger from "@foxglove/log";
-import {
-  installDevtoolsFormatters,
-  overwriteFetch,
-  waitForFonts,
-} from "@foxglove/studio-base";
+import { installDevtoolsFormatters, overwriteFetch, waitForFonts } from "@foxglove/studio-base";
 
 import pkgInfo from "../../package.json";
 import { Storage } from "../common/types";
