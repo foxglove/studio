@@ -71,6 +71,27 @@ export class RenderableLines extends RenderablePrimitive {
     });
     material.lineWidth = primitive.thickness; // Fix for THREE.js type annotations
 
+    const pickingMaterial = new THREE.ShaderMaterial({
+      vertexShader: material.vertexShader,
+      fragmentShader: /* glsl */ `
+      uniform vec4 objectId;
+      void main() {
+        gl_FragColor = objectId;
+      }
+    `,
+      clipping: true,
+      uniforms: {
+        objectId: { value: [NaN, NaN, NaN, NaN] },
+        linewidth: { value: primitive.thickness },
+        resolution: { value: this.renderer.input.canvasSize },
+        dashOffset: { value: 0 },
+        dashScale: { value: 1 },
+        dashSize: { value: 1 },
+        gapSize: { value: 1 },
+      },
+      defines: !primitive.scale_invariant ? { WORLD_UNITS: "" } : {},
+    });
+
     let line: LineSegments2;
 
     switch (primitive.type) {
@@ -122,6 +143,7 @@ export class RenderableLines extends RenderablePrimitive {
       material.uniforms.opacity!.value = singleColor.a;
     }
 
+    line.userData.pickingMaterial = pickingMaterial;
     return line;
   }
 
@@ -129,6 +151,7 @@ export class RenderableLines extends RenderablePrimitive {
     for (const line of this._lines) {
       line.geometry.dispose();
       line.material.dispose();
+      line.userData.pickingMaterial.dispose();
     }
   }
 
