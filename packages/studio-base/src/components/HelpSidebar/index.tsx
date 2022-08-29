@@ -134,11 +134,10 @@ export default function HelpSidebar({
           <IconButton
             key="back-arrow"
             size="small"
-            style={{ marginRight: 4 }}
             edge="start"
             onClick={() => setHelpInfo(DEFAULT_HELP_INFO)}
           >
-            <ChevronLeftIcon fontSize="small" />
+            <ChevronLeftIcon />
           </IconButton>
         ),
       ]}

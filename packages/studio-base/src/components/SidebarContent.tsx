@@ -5,7 +5,7 @@
 import HelpIcon from "@mui/icons-material/Help";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import { IconButton, styled as muiStyled, Typography } from "@mui/material";
-import { useState, useMemo, CSSProperties } from "react";
+import { useState, useMemo, CSSProperties, Fragment } from "react";
 
 import Stack from "@foxglove/studio-base/components/Stack";
 import TextContent from "@foxglove/studio-base/components/TextContent";
@@ -62,9 +62,9 @@ export function SidebarContent({
     <Stack overflow={overflow} fullHeight flex="auto" gap={1}>
       <Toolbar flexShrink={0} direction="row" alignItems="center" padding={2}>
         {leadingItems && (
-          <Stack direction="row" alignItems="center">
+          <Stack direction="row" alignItems="center" gap={0.5}>
             {leadingItems.map((item, i) => (
-              <div key={i}>{item}</div>
+              <Fragment key={i}>{item}</Fragment>
             ))}
           </Stack>
         )}
