@@ -12,12 +12,19 @@ import Stack from "@foxglove/studio-base/components/Stack";
 import TextContent from "@foxglove/studio-base/components/TextContent";
 
 const useStyles = makeStyles()((theme) => ({
+  leadingItems: {
+    display: "flex",
+    alignItems: "center",
+    marginLeft: theme.spacing(-1),
+    gap: theme.spacing(0.5),
+  },
   toolbar: {
     minHeight: 56,
     flexShrink: 0,
     display: "flex",
     alignItems: "center",
     padding: theme.spacing(2),
+    gap: theme.spacing(0.5),
   },
 }));
 
@@ -54,11 +61,11 @@ export function SidebarContent({
     <Stack overflow={overflow} fullHeight flex="auto" gap={1}>
       <div className={classes.toolbar}>
         {leadingItems && (
-          <Stack direction="row" alignItems="center" gap={0.5}>
+          <div className={classes.leadingItems}>
             {leadingItems.map((item, i) => (
               <Fragment key={i}>{item}</Fragment>
             ))}
-          </Stack>
+          </div>
         )}
         <Typography component="h2" variant="h4" fontWeight={800} flex="auto">
           {title}
