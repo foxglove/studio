@@ -21,7 +21,7 @@ import { RenderablePrimitive } from "./RenderablePrimitive";
 const tempRgba = makeRgba();
 
 export class RenderableLines extends RenderablePrimitive {
-  private _lines: Line2[] = [];
+  private _lines: LineSegments2[] = [];
   public constructor(renderer: Renderer) {
     super("", renderer, {
       receiveTime: -1n,
@@ -58,64 +58,70 @@ export class RenderableLines extends RenderablePrimitive {
   }
 
   private _makeLine(primitive: LinePrimitive) {
+    let geometry: LineSegmentsGeometry;
+    let isSegments = false;
+
+    const transparent = true;
+    const material = new LineMaterial({
+      worldUnits: !primitive.scale_invariant,
+      linewidth: primitive.thickness,
+      transparent,
+      depthWrite: !transparent,
+    });
+    material.lineWidth = primitive.thickness; // Fix for THREE.js type annotations
+
+    let line: LineSegments2;
+
     switch (primitive.type) {
-      case 2 as LineType.LINE_LIST: //FIXME
       case 0 as LineType.LINE_STRIP:
       case 1 as LineType.LINE_LOOP: {
-        const positions = getPositions(primitive);
-        const geometry = new LineGeometry();
-        geometry.setPositions(positions);
-        const transparent = true;
-        const material = new LineMaterial({
-          worldUnits: !primitive.scale_invariant,
-          // color: 0xff0000,
-          linewidth: primitive.thickness,
-          transparent,
-          depthWrite: !transparent,
-          // resolution: options.resolution,
-          // stencilWrite: true,
-          // stencilRef: 0,
-          // stencilFunc: THREE.NotEqualStencilFunc,
-          // stencilFail: THREE.ReplaceStencilOp,
-          // stencilZPass: THREE.ReplaceStencilOp,
-        });
-        material.lineWidth = primitive.thickness; // Fix for THREE.js type annotations
-
-        const singleColor = this.userData.settings.color
-          ? stringToRgba(tempRgba, this.userData.settings.color)
-          : primitive.colors.length === 0
-          ? primitive.color
-          : undefined;
-        if (singleColor == undefined) {
-          material.vertexColors = true;
-          material.opacity = 1;
-          const colors = getColors(primitive);
-          const instanceColorBuffer = new THREE.InstancedInterleavedBuffer(colors, 4, 1);
-          geometry.setAttribute(
-            "instanceColorStart",
-            new THREE.InterleavedBufferAttribute(instanceColorBuffer, 4, 0),
-          );
-          geometry.setAttribute(
-            "instanceColorEnd",
-            new THREE.InterleavedBufferAttribute(instanceColorBuffer, 4, 4),
-          );
-        } else {
-          material.vertexColors = false;
-          material.color = rgbToThreeColor(new THREE.Color(), singleColor);
-          material.opacity = singleColor.a; //FIXME: not working? direct uniform update works
-          material.uniforms.opacity!.value = singleColor.a;
-        }
-
-        const line = new Line2(geometry, material);
-        return line;
+        const lineGeometry = new LineGeometry(); // separate variable to work around typescript refinement
+        geometry = lineGeometry;
+        line = new Line2(lineGeometry, material);
+        break;
       }
-      // case 2 as LineType.LINE_LIST: {
-      //   throw new Error("NYI");
-      //   // const geometry = new LineSegmentsGeometry();
-      //   // const line = new LineSegments2(geometry, material);
-      //   // return line;
-      // }
+      case 2 as LineType.LINE_LIST: {
+        isSegments = true;
+        geometry = new LineSegmentsGeometry();
+        line = new LineSegments2(geometry, material);
+        break;
+      }
     }
+
+    const positions = getPositions(primitive);
+    geometry.setPositions(positions);
+
+    const singleColor = this.userData.settings.color
+      ? stringToRgba(tempRgba, this.userData.settings.color)
+      : primitive.colors.length === 0
+      ? primitive.color
+      : undefined;
+    if (singleColor == undefined) {
+      material.vertexColors = true;
+      material.opacity = 1;
+      material.uniforms.opacity!.value = 1;
+      const colors = getColors(primitive);
+      const instanceColorBuffer = new THREE.InstancedInterleavedBuffer(
+        colors,
+        isSegments ? 8 : 4,
+        1,
+      );
+      geometry.setAttribute(
+        "instanceColorStart",
+        new THREE.InterleavedBufferAttribute(instanceColorBuffer, 4, 0),
+      );
+      geometry.setAttribute(
+        "instanceColorEnd",
+        new THREE.InterleavedBufferAttribute(instanceColorBuffer, 4, 4),
+      );
+    } else {
+      material.vertexColors = false;
+      material.color = rgbToThreeColor(new THREE.Color(), singleColor);
+      // material.opacity = singleColor.a; // does not work for some reason
+      material.uniforms.opacity!.value = singleColor.a;
+    }
+
+    return line;
   }
 
   public override dispose(): void {
@@ -145,6 +151,10 @@ export class RenderableLines extends RenderablePrimitive {
   }
 }
 
+/**
+ * Converts (x,y,z) values specified in `primitive.points` (and possibly `primitive.indices`) into
+ * vertices for LineGeometry or LineSegmentsGeometry.
+ */
 function getPositions(primitive: LinePrimitive): Float32Array {
   const isLoop = primitive.type === (1 as LineType.LINE_LOOP);
   let positions: Float32Array;
@@ -177,6 +187,10 @@ function getPositions(primitive: LinePrimitive): Float32Array {
   return positions;
 }
 
+/**
+ * Converts RGBA colors specified in `primitive.colors` (and possibly `primitive.indices`) into
+ * vertices for LineGeometry or LineSegmentsGeometry.
+ */
 function getColors(primitive: LinePrimitive): Float32Array {
   const isLoop = primitive.type === (1 as LineType.LINE_LOOP);
   let colors: Float32Array;
