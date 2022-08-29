@@ -4,30 +4,21 @@
 
 import HelpIcon from "@mui/icons-material/Help";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
-import { IconButton, styled as muiStyled, Typography } from "@mui/material";
+import { IconButton, Typography } from "@mui/material";
 import { useState, useMemo, CSSProperties, Fragment } from "react";
+import { makeStyles } from "tss-react/mui";
 
 import Stack from "@foxglove/studio-base/components/Stack";
 import TextContent from "@foxglove/studio-base/components/TextContent";
 
-export const TOOLBAR_HEIGHT = 56;
-
-const Toolbar = muiStyled(Stack)({
-  minHeight: TOOLBAR_HEIGHT,
-});
-
-const ContentWrapper = muiStyled("div", {
-  shouldForwardProp: (prop) => prop !== "disablePadding",
-})<{ disablePadding: boolean }>(({ theme, disablePadding }) => ({
-  flexGrow: 1,
-
-  ...(!disablePadding && {
-    padding: theme.spacing(0, 2, 2),
-  }),
-}));
-
-const HelpContent = muiStyled("div")(({ theme }) => ({
-  padding: theme.spacing(0, 2, 2),
+const useStyles = makeStyles()((theme) => ({
+  toolbar: {
+    minHeight: 56,
+    flexShrink: 0,
+    display: "flex",
+    alignItems: "center",
+    padding: theme.spacing(2),
+  },
 }));
 
 export function SidebarContent({
@@ -39,6 +30,7 @@ export function SidebarContent({
   overflow = "auto",
   trailingItems,
 }: React.PropsWithChildren<SidebarContentProps>): JSX.Element {
+  const { classes } = useStyles();
   const [showHelp, setShowHelp] = useState<boolean>(false);
 
   const trailingItemsWithHelp = useMemo(() => {
@@ -60,7 +52,7 @@ export function SidebarContent({
 
   return (
     <Stack overflow={overflow} fullHeight flex="auto" gap={1}>
-      <Toolbar flexShrink={0} direction="row" alignItems="center" padding={2}>
+      <div className={classes.toolbar}>
         {leadingItems && (
           <Stack direction="row" alignItems="center" gap={0.5}>
             {leadingItems.map((item, i) => (
@@ -78,13 +70,15 @@ export function SidebarContent({
             ))}
           </Stack>
         )}
-      </Toolbar>
+      </div>
       {showHelp && (
-        <HelpContent>
+        <Stack paddingX={2} paddingBottom={2}>
           <TextContent allowMarkdownHtml={true}>{helpContent}</TextContent>
-        </HelpContent>
+        </Stack>
       )}
-      <ContentWrapper disablePadding={disablePadding}>{children}</ContentWrapper>
+      <Stack flex="auto" {...(!disablePadding && { paddingX: 2, paddingBottom: 2 })}>
+        {children}
+      </Stack>
     </Stack>
   );
 }
