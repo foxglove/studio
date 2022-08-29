@@ -33,7 +33,7 @@ const selectStartTime = (ctx: MessagePipelineContext) => ctx.playerState.activeD
 const selectEndTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.endTime;
 
 /**
- * Syncs events from server and syncs hovered event ID with hovered time.
+ * Syncs events from server and syncs hovered event with hovered time.
  */
 export function EventsSyncAdapter(): ReactNull {
   const { currentUser } = useCurrentUser();

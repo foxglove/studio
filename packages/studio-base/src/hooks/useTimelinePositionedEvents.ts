@@ -43,11 +43,11 @@ export function useTimelinePositionedEvents(): undefined | TimelinePositionedEve
   const endSecs = useMemo(() => (endTime ? toSec(endTime) : undefined), [endTime]);
 
   const timelineEvents: undefined | TimelinePositionedEvent[] = useMemo(() => {
-    if (startSecs == undefined || endSecs == undefined) {
+    if (events == undefined || startSecs == undefined || endSecs == undefined) {
       return undefined;
     }
 
-    return (events ?? []).map((event) => {
+    return events.map((event) => {
       const startPosition = scale(event.startTimeInSeconds, startSecs, endSecs, 0, 1);
       const endPosition = scale(event.endTimeInSeconds, startSecs, endSecs, 0, 1);
       return { event, endPosition, startPosition, time: event.startTimeInSeconds };
