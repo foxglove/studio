@@ -41,7 +41,7 @@ import {
   useClearHoverValue,
   useTimelineInteractionState,
   useSetHoverValue,
-} from "@foxglove/studio-base/context/InteractionStateContext";
+} from "@foxglove/studio-base/context/TimelineInteractionStateContext";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import HoverBar from "./HoverBar";

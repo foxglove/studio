@@ -7,10 +7,10 @@ import { ReactNode, useState } from "react";
 import { createStore, StoreApi } from "zustand";
 
 import {
-  InteractionStateContext,
+  TimelineInteractionStateContext,
   TimelineInteractionStateStore,
   SyncBounds,
-} from "@foxglove/studio-base/context/InteractionStateContext";
+} from "@foxglove/studio-base/context/TimelineInteractionStateContext";
 import { HoverValue } from "@foxglove/studio-base/types/hoverValue";
 
 function createTimelineInteractionStateStore(): StoreApi<TimelineInteractionStateStore> {
@@ -63,6 +63,8 @@ export default function TimelineInteractionStateProvider({
   const [store] = useState(createTimelineInteractionStateStore());
 
   return (
-    <InteractionStateContext.Provider value={store}>{children}</InteractionStateContext.Provider>
+    <TimelineInteractionStateContext.Provider value={store}>
+      {children}
+    </TimelineInteractionStateContext.Provider>
   );
 }

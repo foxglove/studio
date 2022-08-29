@@ -21,7 +21,7 @@ import type { HoverValue } from "@foxglove/studio-base/types/hoverValue";
 export type SyncBounds = { min: number; max: number; sourceId: string; userInteraction: boolean };
 
 /**
- * The InteractionStateStore manages state related to dynamic user interactions with data in the app.
+ * The TimelineInteractionStateStore manages state related to dynamic user interactions with data in the app.
  * Things like the hovered time value and global bounds for plots are managed here.
  */
 export type TimelineInteractionStateStore = DeepReadonly<{
@@ -38,7 +38,7 @@ export type TimelineInteractionStateStore = DeepReadonly<{
   setHoverValue: (value: HoverValue) => void;
 }>;
 
-export const InteractionStateContext = createContext<
+export const TimelineInteractionStateContext = createContext<
   undefined | StoreApi<TimelineInteractionStateStore>
 >(undefined);
 const selectClearHoverValue = (store: TimelineInteractionStateStore) => store.clearHoverValue;
@@ -93,6 +93,6 @@ export function useTimelineInteractionState<T>(
   selector: (store: TimelineInteractionStateStore) => T,
   equalityFn?: (a: T, b: T) => boolean,
 ): T {
-  const context = useGuaranteedContext(InteractionStateContext);
+  const context = useGuaranteedContext(TimelineInteractionStateContext);
   return useStore(context, selector, equalityFn);
 }
