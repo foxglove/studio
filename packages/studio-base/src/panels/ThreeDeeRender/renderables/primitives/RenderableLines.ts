@@ -67,6 +67,7 @@ export class RenderableLines extends RenderablePrimitive {
       linewidth: primitive.thickness,
       transparent,
       depthWrite: !transparent,
+      resolution: this.renderer.input.canvasSize,
     });
     material.lineWidth = primitive.thickness; // Fix for THREE.js type annotations
 
