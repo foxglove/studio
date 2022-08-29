@@ -15,7 +15,7 @@ import { ConsoleEvent } from "@foxglove/studio-base/services/ConsoleApi";
 import { HoverValue } from "@foxglove/studio-base/types/hoverValue";
 
 function createTimelineInteractionStateStore(): StoreApi<TimelineInteractionStateStore> {
-  return createStore((set, get) => {
+  return createStore((set) => {
     return {
       globalBounds: undefined,
       hoveredEvent: undefined,
@@ -33,7 +33,7 @@ function createTimelineInteractionStateStore(): StoreApi<TimelineInteractionStat
           | ((oldValue: undefined | SyncBounds) => undefined | SyncBounds),
       ) => {
         if (typeof newBounds === "function") {
-          set({ globalBounds: newBounds(get().globalBounds) });
+          set((store) => ({ globalBounds: newBounds(store.globalBounds) }));
         } else {
           set({ globalBounds: newBounds });
         }
