@@ -184,7 +184,7 @@ function getPositions(primitive: LinePrimitive): Float32Array {
   let positions: Float32Array;
   const indices = primitive.indices;
   if (indices.length > 0) {
-    positions = new Float32Array(indices.length * 3);
+    positions = new Float32Array((indices.length + (isLoop ? 1 : 0)) * 3);
 
     let i = 0;
     for (const idx of indices) {
@@ -194,7 +194,7 @@ function getPositions(primitive: LinePrimitive): Float32Array {
       positions[i++] = z;
     }
   } else {
-    positions = new Float32Array(primitive.points.length * 3);
+    positions = new Float32Array((primitive.points.length + (isLoop ? 1 : 0)) * 3);
 
     let i = 0;
     for (const { x, y, z } of primitive.points) {
