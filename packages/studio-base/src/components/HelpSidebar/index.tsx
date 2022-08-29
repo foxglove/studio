@@ -129,18 +129,20 @@ export default function HelpSidebar({
   return (
     <SidebarContent
       title={isHomeView ? "Help" : helpInfo.title}
-      leadingItems={[
-        helpInfo.content != undefined && (
-          <IconButton
-            key="back-arrow"
-            size="small"
-            edge="start"
-            onClick={() => setHelpInfo(DEFAULT_HELP_INFO)}
-          >
-            <ChevronLeftIcon />
-          </IconButton>
-        ),
-      ]}
+      leadingItems={
+        helpInfo.content != undefined
+          ? [
+              <IconButton
+                key="back-arrow"
+                size="small"
+                edge="start"
+                onClick={() => setHelpInfo(DEFAULT_HELP_INFO)}
+              >
+                <ChevronLeftIcon />
+              </IconButton>,
+            ]
+          : undefined
+      }
     >
       <Stack>
         {isHomeView ? (

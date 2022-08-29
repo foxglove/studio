@@ -60,7 +60,7 @@ export function SidebarContent({
   return (
     <Stack overflow={overflow} fullHeight flex="auto" gap={1}>
       <div className={classes.toolbar}>
-        {leadingItems && (
+        {leadingItems != undefined && (
           <div className={classes.leadingItems}>
             {leadingItems.map((item, i) => (
               <Fragment key={i}>{item}</Fragment>
