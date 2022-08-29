@@ -11,26 +11,21 @@ import {
   TimelineInteractionStateStore,
   SyncBounds,
 } from "@foxglove/studio-base/context/TimelineInteractionStateContext";
+import { ConsoleEvent } from "@foxglove/studio-base/services/ConsoleApi";
 import { HoverValue } from "@foxglove/studio-base/types/hoverValue";
 
 function createTimelineInteractionStateStore(): StoreApi<TimelineInteractionStateStore> {
   return createStore((set, get) => {
     return {
-      /** Shared time bounds for synced plots, if any. */
       globalBounds: undefined,
-
-      /** The point in time hovered over by the user. */
+      hoveredEvent: undefined,
       hoverValue: undefined,
 
-      /** Clears the current hover value. */
       clearHoverValue: (componentId: string) =>
         set((store) => ({
           hoverValue: store.hoverValue?.componentId === componentId ? undefined : store.hoverValue,
         })),
 
-      /**
-       * Sets new global bounds.
-       */
       setGlobalBounds: (
         newBounds:
           | undefined
@@ -44,9 +39,8 @@ function createTimelineInteractionStateStore(): StoreApi<TimelineInteractionStat
         }
       },
 
-      /**
-       * Sets the new hover value.
-       */
+      setHoveredEvent: (hoveredEvent: undefined | ConsoleEvent) => set({ hoveredEvent }),
+
       setHoverValue: (newValue: HoverValue) =>
         set((store) => ({
           hoverValue: isEqual(newValue, store.hoverValue) ? store.hoverValue : newValue,

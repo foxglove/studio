@@ -8,7 +8,7 @@ import { compact } from "lodash";
 import { Fragment, useCallback, useMemo, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 
-import { fromNanoSec, subtract, toSec } from "@foxglove/rostime";
+import { subtract, toSec } from "@foxglove/rostime";
 import { HighlightedText } from "@foxglove/studio-base/components/HighlightedText";
 import {
   MessagePipelineContext,
@@ -17,8 +17,10 @@ import {
 import Stack from "@foxglove/studio-base/components/Stack";
 import { EventsStore, useEvents } from "@foxglove/studio-base/context/EventsContext";
 import {
+  TimelineInteractionStateStore,
   useClearHoverValue,
   useSetHoverValue,
+  useTimelineInteractionState,
 } from "@foxglove/studio-base/context/TimelineInteractionStateContext";
 import { useAppTimeFormat } from "@foxglove/studio-base/hooks";
 import { ConsoleEvent } from "@foxglove/studio-base/services/ConsoleApi";
@@ -54,17 +56,17 @@ const useStyles = makeStyles<void, "eventMetadata" | "eventSelected">()(
     event: {
       display: "contents",
       cursor: "pointer",
-
-      "&:hover, &:focus": {
-        [`.${classes.eventMetadata}`]: {
-          backgroundColor: alpha(theme.palette.primary.main, theme.palette.action.focusOpacity),
-          borderColor: theme.palette.primary.main,
-        },
-      },
     },
     eventSelected: {
       [`.${classes.eventMetadata}`]: {
         backgroundColor: alpha(theme.palette.primary.main, theme.palette.action.activatedOpacity),
+        borderColor: theme.palette.primary.main,
+        boxShadow: `0 0 0 1px ${theme.palette.primary.main}`,
+      },
+    },
+    eventHovered: {
+      [`.${classes.eventMetadata}`]: {
+        backgroundColor: alpha(theme.palette.primary.main, theme.palette.action.focusOpacity),
         borderColor: theme.palette.primary.main,
         boxShadow: `0 0 0 1px ${theme.palette.primary.main}`,
       },
@@ -130,12 +132,14 @@ function EventView(params: {
   event: ConsoleEvent;
   filter: string;
   formattedTime: string;
+  isHovered: boolean;
   isSelected: boolean;
   onClick: (event: ConsoleEvent) => void;
   onHoverStart: (event: ConsoleEvent) => void;
   onHoverEnd: (event: ConsoleEvent) => void;
 }): JSX.Element {
-  const { event, filter, formattedTime, isSelected, onClick, onHoverStart, onHoverEnd } = params;
+  const { event, filter, formattedTime, isHovered, isSelected, onClick, onHoverStart, onHoverEnd } =
+    params;
   const { classes, cx } = useStyles();
 
   const fields = compact([
@@ -147,7 +151,10 @@ function EventView(params: {
   return (
     <div
       data-testid="sidebar-event"
-      className={cx(classes.event, { [classes.eventSelected]: isSelected })}
+      className={cx(classes.event, {
+        [classes.eventSelected]: isSelected,
+        [classes.eventHovered]: isHovered,
+      })}
       onClick={() => onClick(event)}
       onMouseEnter={() => onHoverStart(event)}
       onMouseLeave={() => onHoverEnd(event)}
@@ -170,6 +177,7 @@ function EventView(params: {
 const MemoEventView = React.memo(EventView);
 
 const selectEvents = (store: EventsStore) => store.events;
+const selectHoveredEvent = (store: TimelineInteractionStateStore) => store.hoveredEvent;
 const selectSelectedEventId = (store: EventsStore) => store.selectedEventId;
 const selectSelectEvent = (store: EventsStore) => store.selectEvent;
 
@@ -183,6 +191,7 @@ export function EventsList(): JSX.Element {
   const clearHoverValue = useClearHoverValue();
   const [filter, setFilter] = useState("");
   const seek = useMessagePipeline(selectSeek);
+  const hoveredEvent = useTimelineInteractionState(selectHoveredEvent);
 
   const filteredEvents = useMemo(() => {
     if (filter.length === 0) {
@@ -201,9 +210,7 @@ export function EventsList(): JSX.Element {
   const timestampedEvents = useMemo(
     () =>
       filteredEvents.map((event) => {
-        const time = fromNanoSec(BigInt(event.timestampNanos));
-
-        return { event, formattedTime: formatTime(time) };
+        return { event, formattedTime: formatTime(event.startTime) };
       }),
     [filteredEvents, formatTime],
   );
@@ -212,8 +219,7 @@ export function EventsList(): JSX.Element {
     (event: ConsoleEvent) => {
       selectEvent(event.id);
       if (seek) {
-        const time = fromNanoSec(BigInt(event.timestampNanos));
-        seek(time);
+        seek(event.startTime);
       }
     },
     [seek, selectEvent],
@@ -228,8 +234,7 @@ export function EventsList(): JSX.Element {
 
   const onHoverStart = useCallback(
     (event: ConsoleEvent) => {
-      const time = fromNanoSec(BigInt(event.timestampNanos));
-      const delta = startTime ? subtract(time, startTime) : undefined;
+      const delta = startTime ? subtract(event.startTime, startTime) : undefined;
       const deltaTime = delta ? toSec(delta) : undefined;
       const hoverId = `event_${event.id}`;
 
@@ -298,6 +303,7 @@ export function EventsList(): JSX.Element {
               event={event.event}
               filter={filter}
               formattedTime={event.formattedTime}
+              isHovered={event.event.id === hoveredEvent?.id}
               isSelected={event.event.id === selectedEventId}
               onClick={onClick}
               onHoverStart={onHoverStart}

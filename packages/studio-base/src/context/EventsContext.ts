@@ -4,17 +4,19 @@
 
 import { createContext } from "react";
 import { AsyncState } from "react-use/lib/useAsyncFn";
+import { DeepReadonly } from "ts-essentials";
 import { StoreApi, useStore } from "zustand";
 
 import useGuaranteedContext from "@foxglove/studio-base/hooks/useGuaranteedContext";
 import { ConsoleEvent } from "@foxglove/studio-base/services/ConsoleApi";
 
-export type EventsStore = {
+export type EventsStore = DeepReadonly<{
   events: AsyncState<ConsoleEvent[]>;
   selectedEventId: undefined | string;
+
   selectEvent: (id: undefined | string) => void;
   setEvents: (events: AsyncState<ConsoleEvent[]>) => void;
-};
+}>;
 
 export const EventsContext = createContext<undefined | StoreApi<EventsStore>>(undefined);
 

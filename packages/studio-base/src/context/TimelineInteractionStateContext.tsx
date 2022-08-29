@@ -16,6 +16,7 @@ import { DeepReadonly } from "ts-essentials";
 import { StoreApi, useStore } from "zustand";
 
 import useGuaranteedContext from "@foxglove/studio-base/hooks/useGuaranteedContext";
+import { ConsoleEvent } from "@foxglove/studio-base/services/ConsoleApi";
 import type { HoverValue } from "@foxglove/studio-base/types/hoverValue";
 
 export type SyncBounds = { min: number; max: number; sourceId: string; userInteraction: boolean };
@@ -25,16 +26,30 @@ export type SyncBounds = { min: number; max: number; sourceId: string; userInter
  * Things like the hovered time value and global bounds for plots are managed here.
  */
 export type TimelineInteractionStateStore = DeepReadonly<{
+  /** Shared time bounds for synced plots, if any. */
   globalBounds: undefined | SyncBounds;
+
+  /** The event hovered over by the user, if any. */
+  hoveredEvent: undefined | ConsoleEvent;
+
+  /** The point in time hovered over by the user. */
   hoverValue: undefined | HoverValue;
 
+  /** Clears the current hover value. */
   clearHoverValue: (componentId: string) => void;
+
+  /** Sets new global bounds. */
   setGlobalBounds: (
     newBounds:
       | undefined
       | SyncBounds
       | ((oldValue: undefined | SyncBounds) => undefined | SyncBounds),
   ) => void;
+
+  /** Sets or clears the currently hovered event. */
+  setHoveredEvent: (event: undefined | ConsoleEvent) => void;
+
+  /** Sets the new hover value. */
   setHoverValue: (value: HoverValue) => void;
 }>;
 
@@ -55,6 +70,10 @@ export function useSetHoverValue(): TimelineInteractionStateStore["setHoverValue
   return useTimelineInteractionState(selectSetHoverValue);
 }
 
+/**
+ * Encapsulates logic for selecting the current hover value depending
+ * on which component registered the hover value.
+ */
 export function useHoverValue(args?: {
   componentId: string;
   isTimestampScale: boolean;
