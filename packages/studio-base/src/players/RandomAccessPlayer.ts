@@ -94,7 +94,6 @@ export type RandomAccessPlayerOptions = {
 export default class RandomAccessPlayer implements Player {
   private _urlParams?: Record<string, string>;
   private _name?: string;
-  private _filePath?: string;
   private _provider: RandomAccessDataProvider;
   private _seekBackNs: bigint;
   private _isPlaying: boolean = false;
@@ -147,7 +146,7 @@ export default class RandomAccessPlayer implements Player {
   // These are set/cleared in the store to track the current set of problems
   private _problems = new Map<string, PlayerProblem>();
 
-  constructor(provider: RandomAccessDataProvider, options: RandomAccessPlayerOptions) {
+  public constructor(provider: RandomAccessDataProvider, options: RandomAccessPlayerOptions) {
     const { metricsCollector, seekToTime, urlParams, name, sourceId } = options;
     const seekBackNs = options.seekBackNs ?? DEFAULT_SEEK_BACK_NANOSECONDS;
 
@@ -180,7 +179,7 @@ export default class RandomAccessPlayer implements Player {
     this._emitState();
   }
 
-  setListener(listener: (arg0: PlayerState) => Promise<void>): void {
+  public setListener(listener: (arg0: PlayerState) => Promise<void>): void {
     this._listener = listener;
     this._emitState();
 
@@ -294,7 +293,6 @@ export default class RandomAccessPlayer implements Player {
     if (this._hasError) {
       return this._listener({
         name: this._name,
-        filePath: this._filePath,
         presence: PlayerPresence.ERROR,
         progress: {},
         capabilities: this._capabilities,
@@ -342,7 +340,6 @@ export default class RandomAccessPlayer implements Player {
 
     const data: PlayerState = {
       name: this._name,
-      filePath: this._filePath,
       presence: this._reconnecting
         ? PlayerPresence.RECONNECTING
         : this._initializing
@@ -538,7 +535,7 @@ export default class RandomAccessPlayer implements Player {
     };
   }
 
-  startPlayback(): void {
+  public startPlayback(): void {
     if (this._isPlaying) {
       return;
     }
@@ -548,7 +545,7 @@ export default class RandomAccessPlayer implements Player {
     this._read();
   }
 
-  pausePlayback(): void {
+  public pausePlayback(): void {
     if (!this._isPlaying) {
       return;
     }
@@ -559,7 +556,7 @@ export default class RandomAccessPlayer implements Player {
     this._emitState();
   }
 
-  setPlaybackSpeed(speed: number): void {
+  public setPlaybackSpeed(speed: number): void {
     delete this._lastRangeMillis;
     this._speed = speed;
     this._metricsCollector.setSpeed(speed);
@@ -639,7 +636,7 @@ export default class RandomAccessPlayer implements Player {
     }
   });
 
-  seekPlayback(time: Time, backfillDuration?: Time): void {
+  public seekPlayback(time: Time, backfillDuration?: Time): void {
     // Only seek when the provider initialization is done.
     if (!this._initialized) {
       return;
@@ -650,35 +647,33 @@ export default class RandomAccessPlayer implements Player {
     this._seekPlaybackInternal(backfillDuration);
   }
 
-  setSubscriptions(newSubscriptions: SubscribePayload[]): void {
+  public setSubscriptions(newSubscriptions: SubscribePayload[]): void {
     this._parsedSubscribedTopics = new Set(newSubscriptions.map(({ topic }) => topic));
     this._metricsCollector.setSubscriptions(newSubscriptions);
-  }
 
-  requestBackfill(): void {
     if (this._isPlaying || this._initializing || !this._currentTime) {
       return;
     }
     this.seekPlayback(this._currentTime);
   }
 
-  setPublishers(_publishers: AdvertiseOptions[]): void {
+  public setPublishers(_publishers: AdvertiseOptions[]): void {
     // no-op
   }
 
-  setParameter(_key: string, _value: ParameterValue): void {
+  public setParameter(_key: string, _value: ParameterValue): void {
     throw new Error("Parameter editing is not supported by this data source");
   }
 
-  publish(_payload: PublishPayload): void {
+  public publish(_payload: PublishPayload): void {
     throw new Error("Publishing is not supported by this data source");
   }
 
-  async callService(): Promise<unknown> {
+  public async callService(): Promise<unknown> {
     throw new Error("Service calls are not supported by this data source");
   }
 
-  close(): void {
+  public close(): void {
     this._isPlaying = false;
     this._closed = true;
     if (!this._initializing && !this._hasError) {
@@ -688,7 +683,7 @@ export default class RandomAccessPlayer implements Player {
   }
 
   // Exposed for testing.
-  hasCachedRange(start: Time, end: Time): boolean {
+  public hasCachedRange(start: Time, end: Time): boolean {
     const fractionStart = percentOf(this._start, this._end, start);
     const fractionEnd = percentOf(this._start, this._end, end);
     return isRangeCoveredByRanges(
@@ -697,7 +692,7 @@ export default class RandomAccessPlayer implements Player {
     );
   }
 
-  setGlobalVariables(): void {
+  public setGlobalVariables(): void {
     // no-op
   }
 }

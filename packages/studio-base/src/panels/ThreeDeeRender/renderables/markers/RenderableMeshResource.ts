@@ -19,24 +19,34 @@ type GltfMesh = THREE.Mesh<
 const MESH_FETCH_FAILED = "MESH_FETCH_FAILED";
 
 export class RenderableMeshResource extends RenderableMarker {
-  mesh: THREE.Group | THREE.Scene | undefined;
-  material: THREE.MeshStandardMaterial;
+  private mesh: THREE.Group | THREE.Scene | undefined;
+  private material: THREE.MeshStandardMaterial;
 
-  constructor(topic: string, marker: Marker, receiveTime: bigint | undefined, renderer: Renderer) {
+  public constructor(
+    topic: string,
+    marker: Marker,
+    receiveTime: bigint | undefined,
+    renderer: Renderer,
+  ) {
     super(topic, marker, receiveTime, renderer);
 
     this.material = makeStandardMaterial(marker.color);
     this.update(marker, receiveTime, true);
   }
 
-  override dispose(): void {
+  public override dispose(): void {
     this.material.dispose();
   }
 
-  // eslint-disable-next-line @foxglove/no-boolean-parameters
-  override update(marker: Marker, receiveTime: bigint | undefined, forceLoad?: boolean): void {
+  public override update(
+    newMarker: Marker,
+    receiveTime: bigint | undefined,
+    // eslint-disable-next-line @foxglove/no-boolean-parameters
+    forceLoad?: boolean,
+  ): void {
     const prevMarker = this.userData.marker;
-    super.update(marker, receiveTime);
+    super.update(newMarker, receiveTime);
+    const marker = this.userData.marker;
 
     const transparent = marker.color.a < 1;
     if (transparent !== this.material.transparent) {
@@ -88,9 +98,12 @@ export class RenderableMeshResource extends RenderableMarker {
       return;
     }
 
-    const mesh = opts.useEmbeddedMaterials
-      ? cachedModel.clone(true)
-      : replaceMaterials(cachedModel.clone(true), this.material);
+    const mesh = cachedModel.clone(true);
+    removeLights(mesh);
+    if (!opts.useEmbeddedMaterials) {
+      replaceMaterials(mesh, this.material);
+    }
+
     this.mesh = mesh;
     this.add(mesh);
 
@@ -101,7 +114,22 @@ export class RenderableMeshResource extends RenderableMarker {
   }
 }
 
-function replaceMaterials(model: LoadedModel, material: THREE.MeshStandardMaterial): LoadedModel {
+function removeLights(model: LoadedModel): void {
+  // Remove lights from the model
+  const lights: THREE.Light[] = [];
+  model.traverse((child: THREE.Object3D) => {
+    const maybeLight = child as Partial<THREE.Light>;
+    if (maybeLight.isLight === true) {
+      lights.push(maybeLight as THREE.Light);
+    }
+  });
+  for (const light of lights) {
+    light.dispose();
+    light.removeFromParent();
+  }
+}
+
+function replaceMaterials(model: LoadedModel, material: THREE.MeshStandardMaterial): void {
   model.traverse((child: THREE.Object3D) => {
     if (!(child instanceof THREE.Mesh)) {
       return;
@@ -119,7 +147,6 @@ function replaceMaterials(model: LoadedModel, material: THREE.MeshStandardMateri
     }
     meshChild.material = material;
   });
-  return model;
 }
 
 /** Generic MeshStandardMaterial dispose function for materials loaded from an external source */

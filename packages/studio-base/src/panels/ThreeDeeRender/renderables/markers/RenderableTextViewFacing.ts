@@ -10,9 +10,14 @@ import { Marker } from "../../ros";
 import { RenderableMarker } from "./RenderableMarker";
 
 export class RenderableTextViewFacing extends RenderableMarker {
-  label: Label;
+  private label: Label;
 
-  constructor(topic: string, marker: Marker, receiveTime: bigint | undefined, renderer: Renderer) {
+  public constructor(
+    topic: string,
+    marker: Marker,
+    receiveTime: bigint | undefined,
+    renderer: Renderer,
+  ) {
     super(topic, marker, receiveTime, renderer);
 
     this.label = renderer.labelPool.acquire();
@@ -22,12 +27,13 @@ export class RenderableTextViewFacing extends RenderableMarker {
     this.update(marker, receiveTime);
   }
 
-  override dispose(): void {
+  public override dispose(): void {
     this.renderer.labelPool.release(this.label);
   }
 
-  override update(marker: Marker, receiveTime: bigint | undefined): void {
-    super.update(marker, receiveTime);
+  public override update(newMarker: Marker, receiveTime: bigint | undefined): void {
+    super.update(newMarker, receiveTime);
+    const marker = this.userData.marker;
 
     this.label.setText(marker.text);
     this.label.setColor(

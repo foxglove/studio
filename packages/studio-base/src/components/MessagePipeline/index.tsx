@@ -62,7 +62,6 @@ export type MessagePipelineContext = {
   seekPlayback?: (time: Time) => void;
   // Don't render the next frame until the returned function has been called.
   pauseFrame: (name: string) => ResumeFrame;
-  requestBackfill: () => void;
 };
 
 // exported only for MockMessagePipelineProvider
@@ -126,7 +125,28 @@ export function MessagePipelineProvider({
     () => flatten(Object.values(publishersById)),
     [publishersById],
   );
-  useEffect(() => player?.setSubscriptions(subscriptions), [player, subscriptions]);
+
+  // Debounce the subscription updates for players. This batches multiple subscribe calls
+  // into one update for the player which avoids fetching data that will be immediately discarded.
+  //
+  // The delay of 0ms is intentional as we only want to give one timeout cycle to batch updates
+  const debouncedPlayerSetSubscriptions = useMemo(() => {
+    return debounce((subs: SubscribePayload[]) => {
+      player?.setSubscriptions(subs);
+    });
+  }, [player]);
+
+  // when unmounting or changing the debounce function cancel any pending debounce
+  useEffect(() => {
+    return () => {
+      debouncedPlayerSetSubscriptions.cancel();
+    };
+  }, [debouncedPlayerSetSubscriptions]);
+
+  useEffect(
+    () => debouncedPlayerSetSubscriptions(subscriptions),
+    [debouncedPlayerSetSubscriptions, subscriptions],
+  );
   useEffect(() => player?.setPublishers(publishers), [player, publishers]);
 
   // Slow down the message pipeline framerate to the given FPS if it is set to less than 60
@@ -235,10 +255,6 @@ export function MessagePipelineProvider({
       condvar.notifyAll();
     };
   }, []);
-  const requestBackfill = useMemo(
-    () => debounce(() => (player ? player.requestBackfill() : undefined)),
-    [player],
-  );
 
   useEffect(() => {
     player?.setGlobalVariables(globalVariables);
@@ -264,7 +280,6 @@ export function MessagePipelineProvider({
         setPlaybackSpeed,
         seekPlayback,
         pauseFrame,
-        requestBackfill,
       })}
     >
       {children}

@@ -79,9 +79,7 @@ async function main() {
   const { Root } = await import("./Root");
 
   const appConfiguration = new LocalStorageAppConfiguration({
-    defaults: {
-      [AppSetting.EXPERIMENTAL_LATCHING]: true,
-    },
+    defaults: {},
   });
 
   ReactDOM.render(

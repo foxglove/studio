@@ -82,6 +82,7 @@ type TransformData = {
 
 type ParsedUrdf = {
   robot: UrdfRobot;
+  frames: string[];
   transforms: TransformData[];
 };
 
@@ -90,13 +91,13 @@ type ParsedUrdf = {
 const supportsPackageUrl = isDesktopApp();
 
 export class UrdfRenderable extends Renderable<UrdfUserData> {
-  override dispose(): void {
+  public override dispose(): void {
     this.removeChildren();
     this.userData.urdf = undefined;
     super.dispose();
   }
 
-  removeChildren(): void {
+  public removeChildren(): void {
     for (const childRenderable of this.userData.renderables.values()) {
       childRenderable.dispose();
     }
@@ -106,7 +107,10 @@ export class UrdfRenderable extends Renderable<UrdfUserData> {
 }
 
 export class Urdfs extends SceneExtension<UrdfRenderable> {
-  constructor(renderer: Renderer) {
+  private frames: string[] = [];
+  private transforms: TransformData[] = [];
+
+  public constructor(renderer: Renderer) {
     super("foxglove.Urdfs", renderer);
 
     renderer.addTopicSubscription(TOPIC_NAME, this.handleRobotDescription);
@@ -126,7 +130,12 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     }
   }
 
-  override settingsNodes(): SettingsTreeEntry[] {
+  public override dispose(): void {
+    this.frames = [];
+    this.transforms = [];
+  }
+
+  public override settingsNodes(): SettingsTreeEntry[] {
     const configTopics = this.renderer.config.topics;
     const topicHandler = this.handleTopicSettingsAction;
     const layerHandler = this.handleLayerSettingsAction;
@@ -183,11 +192,16 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     return entries;
   }
 
-  override removeAllRenderables(): void {
-    // no-op
+  public override removeAllRenderables(): void {
+    // Re-add coordinate frames and transforms since the scene has been cleared
+    this._loadTransforms(this.frames, this.transforms);
   }
 
-  override startFrame(currentTime: bigint, renderFrameId: string, fixedFrameId: string): void {
+  public override startFrame(
+    currentTime: bigint,
+    renderFrameId: string,
+    fixedFrameId: string,
+  ): void {
     for (const renderable of this.renderables.values()) {
       const path = renderable.userData.settingsPath;
       let hasTfError = false;
@@ -225,11 +239,11 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     }
   }
 
-  handleTopicSettingsAction = (_action: SettingsTreeAction): void => {
+  private handleTopicSettingsAction = (_action: SettingsTreeAction): void => {
     // no-op until there are editable fields for URDF topics
   };
 
-  handleLayerSettingsAction = (action: SettingsTreeAction): void => {
+  private handleLayerSettingsAction = (action: SettingsTreeAction): void => {
     const path = action.payload.path;
 
     // Handle menu actions (delete)
@@ -267,7 +281,7 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     this._loadUrdf(instanceId, undefined);
   };
 
-  handleRobotDescription = (messageEvent: PartialMessageEvent<{ data: string }>): void => {
+  private handleRobotDescription = (messageEvent: PartialMessageEvent<{ data: string }>): void => {
     const robotDescription = messageEvent.message.data;
     if (typeof robotDescription !== "string") {
       return;
@@ -275,7 +289,7 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     this._loadUrdf(TOPIC_NAME, robotDescription);
   };
 
-  handleParametersChange = (parameters: ReadonlyMap<string, unknown> | undefined): void => {
+  private handleParametersChange = (parameters: ReadonlyMap<string, unknown> | undefined): void => {
     const robotDescription = parameters?.get(TOPIC_NAME);
     if (typeof robotDescription !== "string") {
       return;
@@ -283,7 +297,7 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     this._loadUrdf(TOPIC_NAME, robotDescription);
   };
 
-  handleAddUrdf = (instanceId: string): void => {
+  private handleAddUrdf = (instanceId: string): void => {
     log.info(`Creating ${LAYER_ID} layer ${instanceId}`);
 
     const config: LayerSettingsCustomUrdf = { ...DEFAULT_CUSTOM_SETTINGS, instanceId };
@@ -413,13 +427,10 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
       });
   }
 
-  private _loadRobot(renderable: UrdfRenderable, { robot, transforms }: ParsedUrdf): void {
+  private _loadRobot(renderable: UrdfRenderable, { robot, frames, transforms }: ParsedUrdf): void {
     const renderer = this.renderer;
 
-    // Import all transforms from the URDF into the scene
-    for (const { parent, child, translation, rotation } of transforms) {
-      renderer.addTransform(parent, child, 0n, translation, rotation);
-    }
+    this._loadTransforms(frames, transforms);
 
     // Dispose any existing renderables
     renderable.removeChildren();
@@ -448,15 +459,31 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
       }
     }
   }
+
+  private _loadTransforms(frames: string[], transforms: TransformData[]): void {
+    this.frames = frames;
+    this.transforms = transforms;
+
+    // Import all coordinate frames from the URDF into the scene
+    for (const frameId of frames) {
+      this.renderer.addCoordinateFrame(frameId);
+    }
+
+    // Import all transforms from the URDF into the scene
+    for (const { parent, child, translation, rotation } of transforms) {
+      this.renderer.addTransform(parent, child, 0n, translation, rotation);
+    }
+  }
 }
 
-async function parseUrdf(text: string): Promise<{ robot: UrdfRobot; transforms: TransformData[] }> {
+async function parseUrdf(text: string): Promise<ParsedUrdf> {
   const fileFetcher = getFileFetch();
 
   try {
     log.debug(`Parsing ${text.length} byte URDF`);
     const robot = await parseRobot(text, fileFetcher);
 
+    const frames = Array.from(robot.links.values(), (link) => link.name);
     const transforms = Array.from(robot.joints.values(), (joint) => {
       const translation = joint.origin.xyz;
       const rotation = eulerToQuaternion(joint.origin.rpy);
@@ -469,7 +496,7 @@ async function parseUrdf(text: string): Promise<{ robot: UrdfRobot; transforms: 
       return transform;
     });
 
-    return { robot, transforms };
+    return { robot, frames, transforms };
   } catch (err) {
     throw new Error(`Failed to parse ${text.length} byte URDF: ${err}`);
   }

@@ -21,16 +21,17 @@ import { DeepPartial } from "ts-essentials";
 import { useDebouncedCallback } from "use-debounce";
 
 import Logger from "@foxglove/log";
-import { definitions as commonDefs } from "@foxglove/rosmsg-msgs-common";
-import { fromDate, toNanoSec } from "@foxglove/rostime";
+import { toNanoSec } from "@foxglove/rostime";
 import {
   LayoutActions,
   MessageEvent,
   PanelExtensionContext,
+  ParameterValue,
   RenderState,
   SettingsTreeAction,
   SettingsTreeNodes,
   Topic,
+  VariableValue,
 } from "@foxglove/studio";
 import PublishGoalIcon from "@foxglove/studio-base/components/PublishGoalIcon";
 import PublishPointIcon from "@foxglove/studio-base/components/PublishPointIcon";
@@ -38,7 +39,6 @@ import PublishPoseEstimateIcon from "@foxglove/studio-base/components/PublishPos
 import useCleanup from "@foxglove/studio-base/hooks/useCleanup";
 import { DEFAULT_PUBLISH_SETTINGS } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/CoreSettings";
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
-import { Point, makeCovarianceArray } from "@foxglove/studio-base/util/geometry";
 
 import { DebugGui } from "./DebugGui";
 import { Interactions, InteractionContextMenu, SelectionObject, TabType } from "./Interactions";
@@ -47,15 +47,18 @@ import { MessageHandler, Renderer, RendererConfig } from "./Renderer";
 import { RendererContext, useRenderer, useRendererEvent } from "./RendererContext";
 import { Stats } from "./Stats";
 import { CameraState, DEFAULT_CAMERA_STATE, MouseEventObject } from "./camera";
-import { FRAME_TRANSFORM_DATATYPES } from "./foxglove";
+import {
+  PublishDatatypes,
+  makePointMessage,
+  makePoseEstimateMessage,
+  makePoseMessage,
+} from "./publish";
 import { PublishClickEvent, PublishClickType } from "./renderables/PublishClickTool";
-import { TF_DATATYPES, TRANSFORM_STAMPED_DATATYPES } from "./ros";
-import { Pose } from "./transforms/geometry";
 
 const log = Logger.getLogger(__filename);
 
 const SHOW_DEBUG: true | false = false;
-
+const SELECTED_ID_VARIABLE = "selected_id";
 const PANEL_STYLE: React.CSSProperties = {
   width: "100%",
   height: "100%",
@@ -68,54 +71,6 @@ const PublishClickIcons: Record<PublishClickType, React.ReactNode> = {
   point: <PublishPointIcon fontSize="inherit" />,
   pose_estimate: <PublishPoseEstimateIcon fontSize="inherit" />,
 };
-
-const PublishDatatypes = new Map(
-  (
-    [
-      "geometry_msgs/Point",
-      "geometry_msgs/PointStamped",
-      "geometry_msgs/Pose",
-      "geometry_msgs/PoseStamped",
-      "geometry_msgs/PoseWithCovariance",
-      "geometry_msgs/PoseWithCovarianceStamped",
-      "geometry_msgs/Quaternion",
-      "std_msgs/Header",
-    ] as Array<keyof typeof commonDefs>
-  ).map((type) => [type, commonDefs[type]]),
-);
-
-function makePointMessage(point: Point, frameId: string) {
-  const time = fromDate(new Date());
-  return {
-    header: { seq: 0, stamp: time, frame_id: frameId },
-    point: { x: point.x, y: point.y, z: 0 },
-  };
-}
-
-function makePoseMessage(pose: Pose, frameId: string) {
-  const time = fromDate(new Date());
-  return {
-    header: { seq: 0, stamp: time, frame_id: frameId },
-    pose,
-  };
-}
-
-function makePoseEstimateMessage(
-  pose: Pose,
-  frameId: string,
-  xDev: number,
-  yDev: number,
-  thetaDev: number,
-) {
-  const time = fromDate(new Date());
-  return {
-    header: { seq: 0, stamp: time, frame_id: frameId },
-    pose: {
-      covariance: makeCovarianceArray(xDev, yDev, thetaDev),
-      pose,
-    },
-  };
-}
 
 /**
  * Provides DOM overlay elements on top of the 3D scene (e.g. stats, debug GUI).
@@ -142,6 +97,9 @@ function RendererOverlay(props: {
   const [selectedRenderable, setSelectedRenderable] = useState<Renderable | undefined>(undefined);
   const [interactionsTabType, setInteractionsTabType] = useState<TabType | undefined>(undefined);
   const renderer = useRenderer();
+
+  // Publish control is only available if the canPublish prop is true and we have a fixed frame in the renderer
+  const showPublishControl: boolean = props.canPublish && renderer?.fixedFrameId != undefined;
 
   // Toggle object selection mode on/off in the renderer
   useEffect(() => {
@@ -265,7 +223,7 @@ function RendererOverlay(props: {
             <RulerIcon style={{ width: 16, height: 16 }} />
           </IconButton>
 
-          {props.canPublish && (
+          {showPublishControl && (
             <>
               <IconButton
                 {...longPressPublishEvent}
@@ -395,7 +353,8 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
 
   const [colorScheme, setColorScheme] = useState<"dark" | "light" | undefined>();
   const [topics, setTopics] = useState<ReadonlyArray<Topic> | undefined>();
-  const [parameters, setParameters] = useState<ReadonlyMap<string, unknown> | undefined>();
+  const [parameters, setParameters] = useState<ReadonlyMap<string, ParameterValue> | undefined>();
+  const [variables, setVariables] = useState<ReadonlyMap<string, VariableValue> | undefined>();
   const [messages, setMessages] = useState<ReadonlyArray<MessageEvent<unknown>> | undefined>();
   const [currentTime, setCurrentTime] = useState<bigint | undefined>();
   const [didSeek, setDidSeek] = useState<boolean>(false);
@@ -407,9 +366,16 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
     () => renderer?.datatypeHandlers ?? new Map<string, MessageHandler[]>(),
     [renderer],
   );
-
+  const forcedDatatypeHandlers = useMemo(
+    () => renderer?.forcedDatatypeHandlers ?? new Map<string, MessageHandler[]>(),
+    [renderer],
+  );
   const topicHandlers = useMemo(
     () => renderer?.topicHandlers ?? new Map<string, MessageHandler[]>(),
+    [renderer],
+  );
+  const forcedTopicHandlers = useMemo(
+    () => renderer?.forcedTopicHandlers ?? new Map<string, MessageHandler[]>(),
     [renderer],
   );
 
@@ -454,6 +420,16 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
   const updateConfig = useCallback((curRenderer: Renderer) => setConfig(curRenderer.config), []);
   useRendererEvent("configChange", updateConfig, renderer);
 
+  // Write to a global variable when the current selection changes
+  const updateSelectedRenderable = useCallback(
+    (renderable: Renderable | undefined) => {
+      const id = (renderable?.details() as { id?: number | string } | undefined)?.id;
+      context.setVariable(SELECTED_ID_VARIABLE, id ?? ReactNull);
+    },
+    [context],
+  );
+  useRendererEvent("selectedRenderable", updateSelectedRenderable, renderer);
+
   // Rebuild the settings sidebar tree as needed
   useEffect(() => {
     context.updatePanelSettingsEditor({
@@ -463,7 +439,8 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
     });
   }, [actionHandler, context, settingsTree]);
 
-  // Update the renderer's reference to `config` when it changes
+  // Update the renderer's reference to `config` when it changes. Note that this does *not*
+  // automatically update the settings tree.
   useEffect(() => {
     if (renderer) {
       renderer.config = config;
@@ -524,6 +501,9 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
         // Watch for any changes in the map of observed parameters
         setParameters(renderState.parameters);
 
+        // Watch for any changes in the map of global variables
+        setVariables(renderState.variables);
+
         // currentFrame has messages on subscribed topics since the last render call
         if (renderState.currentFrame) {
           // Fully parse lazy messages
@@ -543,6 +523,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
     context.watch("currentTime");
     context.watch("didSeek");
     context.watch("parameters");
+    context.watch("variables");
     context.watch("topics");
   }, [context]);
 
@@ -556,29 +537,26 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
     }
 
     for (const topic of topics) {
-      if (
-        FRAME_TRANSFORM_DATATYPES.has(topic.datatype) ||
-        TF_DATATYPES.has(topic.datatype) ||
-        TRANSFORM_STAMPED_DATATYPES.has(topic.datatype)
-      ) {
-        // Subscribe to all transform topics
+      if (forcedTopicHandlers.has(topic.name) || forcedDatatypeHandlers.has(topic.datatype)) {
         subscriptions.add(topic.name);
-      } else if (config.topics[topic.name]?.visible === true) {
-        // Subscribe if the topic is visible
-        subscriptions.add(topic.name);
-      } else if (
-        // prettier-ignore
-        (topicHandlers.get(topic.name)?.length ?? 0) +
-        (datatypeHandlers.get(topic.datatype)?.length ?? 0) > 1
-      ) {
-        // Subscribe if there are multiple handlers registered for this topic
-        subscriptions.add(topic.name);
+      } else if (topicHandlers.has(topic.name) || datatypeHandlers.has(topic.datatype)) {
+        // Only subscribe if the topic visibility has been toggled on
+        if (config.topics[topic.name]?.visible === true) {
+          subscriptions.add(topic.name);
+        }
       }
     }
 
     const newTopics = Array.from(subscriptions.keys()).sort();
     setTopicsToSubscribe((prevTopics) => (isEqual(prevTopics, newTopics) ? prevTopics : newTopics));
-  }, [topics, config.topics, datatypeHandlers, topicHandlers]);
+  }, [
+    topics,
+    config.topics,
+    datatypeHandlers,
+    topicHandlers,
+    forcedTopicHandlers,
+    forcedDatatypeHandlers,
+  ]);
 
   // Notify the extension context when our subscription list changes
   useEffect(() => {
@@ -595,6 +573,13 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
       renderer.setParameters(parameters);
     }
   }, [parameters, renderer]);
+
+  // Keep the renderer variables up to date
+  useEffect(() => {
+    if (renderer && variables) {
+      renderer.setVariables(variables);
+    }
+  }, [variables, renderer, context]);
 
   // Keep the renderer currentTime up to date
   useEffect(() => {
@@ -734,6 +719,11 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
         log.error("Data source does not support publishing");
         return;
       }
+      if (context.dataSourceProfile !== "ros1" && context.dataSourceProfile !== "ros2") {
+        log.warn("Publishing is only supported in ros1 and ros2");
+        return;
+      }
+
       try {
         switch (event.publishClickType) {
           case "point": {
@@ -793,7 +783,9 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
       ...prevConfig,
       cameraState: { ...prevConfig.cameraState, perspective: !prevConfig.cameraState.perspective },
     }));
-  }, []);
+    // Wait for the setConfig to propagate to the renderer before updating the settings tree
+    setTimeout(() => renderer?.updateCoreSettings(), 0);
+  }, [renderer]);
 
   const onKeyDown = useCallback(
     (event: React.KeyboardEvent) => {
@@ -805,6 +797,11 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
     },
     [onTogglePerspective],
   );
+
+  // The 3d panel only supports publishing to ros1 and ros2 data sources
+  const isRosDataSource =
+    context.dataSourceProfile === "ros1" || context.dataSourceProfile === "ros2";
+  const canPublish = context.publish != undefined && isRosDataSource;
 
   return (
     <ThemeProvider isDark={colorScheme === "dark"}>
@@ -827,7 +824,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
             onTogglePerspective={onTogglePerspective}
             measureActive={measureActive}
             onClickMeasure={onClickMeasure}
-            canPublish={context.publish != undefined}
+            canPublish={canPublish}
             publishActive={publishActive}
             onClickPublish={onClickPublish}
             publishClickType={renderer?.publishClickTool.publishClickType ?? "point"}

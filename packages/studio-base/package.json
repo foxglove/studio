@@ -1,6 +1,6 @@
 {
   "name": "@foxglove/studio-base",
-  "version": "1.22.0-dev",
+  "version": "1.23.0-dev",
   "description": "Core components of Foxglove Studio",
   "license": "MPL-2.0",
   "repository": {
@@ -49,7 +49,8 @@
     "@foxglove/rostime": "1.1.2",
     "@foxglove/schemas": "0.4.0",
     "@foxglove/studio": "workspace:*",
-    "@foxglove/three-text": "workspace:*",
+    "@foxglove/three-text": "0.1.0",
+    "@foxglove/typescript-transformers": "workspace:*",
     "@foxglove/ulog": "2.1.2",
     "@foxglove/velodyne-cloud": "1.0.1",
     "@foxglove/wasm-bz2": "0.1.0",
@@ -58,7 +59,6 @@
     "@mdi/svg": "6.5.95",
     "@mui/icons-material": "5.4.1",
     "@mui/material": "5.4.1",
-    "@mui/styles": "5.4.1",
     "@mui/x-data-grid": "5.15.1",
     "@protobufjs/base64": "1.1.2",
     "@sentry/core": "7.10.0",
@@ -158,6 +158,7 @@
     "natsort": "2.0.3",
     "nearley": "2.20.1",
     "nearley-loader": "2.0.0",
+    "notistack": "2.0.5",
     "path-browserify": "1.0.1",
     "prettier": "2.5.1",
     "promise-queue": "2.2.5",
@@ -179,7 +180,6 @@
     "react-resize-detector": "7.0.0",
     "react-svg-loader": "3.0.3",
     "react-table": "7.7.0",
-    "react-toast-notifications": "2.5.1",
     "react-transition-group": "4.4.2",
     "react-use": "patch:react-use@17.3.1#../../patches/react-use.patch",
     "react-virtualized": "9.22.3",
@@ -215,6 +215,6 @@
     "wasm-lz4": "2.0.0",
     "webpack": "5.74.0",
     "xacro-parser": "0.3.8",
-    "zustand": "4.0.0"
+    "zustand": "4.1.1"
   }
 }

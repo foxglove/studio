@@ -20,7 +20,7 @@ import {
 import { IterablePlayer } from "./IterablePlayer";
 
 class TestSource implements IIterableSource {
-  async initialize(): Promise<Initalization> {
+  public async initialize(): Promise<Initalization> {
     return {
       start: { sec: 0, nsec: 0 },
       end: { sec: 1, nsec: 0 },
@@ -33,19 +33,22 @@ class TestSource implements IIterableSource {
     };
   }
 
-  async *messageIterator(
+  public async *messageIterator(
     _args: MessageIteratorArgs,
   ): AsyncIterableIterator<Readonly<IteratorResult>> {}
 
-  async getBackfillMessages(_args: GetBackfillMessagesArgs): Promise<MessageEvent<unknown>[]> {
+  public async getBackfillMessages(
+    _args: GetBackfillMessagesArgs,
+  ): Promise<MessageEvent<unknown>[]> {
     return [];
   }
 }
 
 type PlayerStateWithoutPlayerId = Omit<PlayerState, "playerId">;
 
+// Testing class used to keep track of expected number of state transitions
 class PlayerStateStore {
-  done: Promise<PlayerStateWithoutPlayerId[]>;
+  public done: Promise<PlayerStateWithoutPlayerId[]>;
 
   private playerStates: PlayerStateWithoutPlayerId[] = [];
   private expected: number;
@@ -53,14 +56,20 @@ class PlayerStateStore {
     // no-op
   };
 
-  constructor(expected: number) {
+  /**
+   * @param expected - number of state transitions to be listened to before done is resolved
+   */
+  public constructor(expected: number) {
     this.expected = expected;
     this.done = new Promise((resolve) => {
       this.resolve = resolve;
     });
   }
 
-  async add(state: PlayerState): Promise<void> {
+  // when add is hooked up to the listener each state will be added to the playerStates array
+  // when the playerState length reaches the expected number of transitions it will resolve the promise
+  // if it exceeds it will throw an error and break the test
+  public async add(state: PlayerState): Promise<void> {
     const { playerId: _playerId, ...rest } = state;
     this.playerStates.push(rest);
     if (this.playerStates.length === this.expected) {
@@ -75,7 +84,11 @@ class PlayerStateStore {
     }
   }
 
-  reset(expected: number): void {
+  /**
+   * reset allows for reinitializing without needing to create and hook up a new instance
+   * @param expected - number of state transitions to be listened to before done is resolved
+   */
+  public reset(expected: number): void {
     this.expected = expected;
     this.playerStates = [];
     this.done = new Promise((resolve) => {
@@ -124,7 +137,6 @@ describe("IterablePlayer", () => {
       profile: undefined,
       presence: PlayerPresence.INITIALIZING,
       progress: {},
-      filePath: undefined,
       urlState: {
         sourceId: "test",
         parameters: undefined,
@@ -225,7 +237,6 @@ describe("IterablePlayer", () => {
         fullyLoadedFractionRanges: [{ start: 0, end: 1 }],
         messageCache: undefined,
       },
-      filePath: undefined,
       urlState: {
         sourceId: "test",
         parameters: undefined,
@@ -298,6 +309,50 @@ describe("IterablePlayer", () => {
     {
       const playerStates = await store.done;
       expect(playerStates.length).toEqual(1);
+    }
+
+    player.close();
+  });
+  it("should not override seek-backfill state when setPlayback speed is called", async () => {
+    const source = new TestSource();
+    const player = new IterablePlayer({
+      source,
+      enablePreload: false,
+      sourceId: "test",
+    });
+    const store = new PlayerStateStore(4);
+    player.setListener(async (state) => await store.add(state));
+    await store.done;
+
+    player.seekPlayback({ sec: 0, nsec: 0 });
+    player.setPlaybackSpeed(1);
+
+    // // Replace the message iterator to produce 1 message (for the first tick), and then
+    // // set back to not producing any messages
+    const origMsgIterator = source.messageIterator.bind(source);
+    source.messageIterator = async function* messageIterator(
+      _args: MessageIteratorArgs,
+    ): AsyncIterableIterator<Readonly<IteratorResult>> {
+      source.messageIterator = origMsgIterator;
+
+      yield {
+        msgEvent: {
+          topic: "foo",
+          receiveTime: { sec: 0, nsec: 99000001 },
+          message: undefined,
+          sizeInBytes: 0,
+        },
+        problem: undefined,
+        connectionId: undefined,
+      };
+    };
+
+    store.reset(1);
+
+    {
+      // if the playback iterator is undefined it will throw an invariant error
+      expect(() => player.startPlayback()).not.toThrowError();
+      await store.done;
     }
 
     player.close();
