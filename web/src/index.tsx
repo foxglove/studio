@@ -8,7 +8,6 @@ import { StrictMode } from "react";
 import ReactDOM from "react-dom";
 
 import Logger from "@foxglove/log";
-import { AppSetting } from "@foxglove/studio-base";
 
 import VersionBanner from "./VersionBanner";
 import LocalStorageAppConfiguration from "./services/LocalStorageAppConfiguration";

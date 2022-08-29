@@ -13,7 +13,6 @@ import ReactDOM from "react-dom";
 import { Sockets } from "@foxglove/electron-socket/renderer";
 import Logger from "@foxglove/log";
 import {
-  AppSetting,
   installDevtoolsFormatters,
   overwriteFetch,
   waitForFonts,
