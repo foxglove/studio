@@ -28,7 +28,7 @@ const useStyles = makeStyles()((theme) => ({
 // Returns a button that pops out an ColorPicker in MUI Popover
 export default function ColorPicker({
   color,
-  circleSize = 24,
+  circleSize = 25,
   onChange,
   buttonShape,
   alphaType = "none",
