@@ -21,11 +21,7 @@ const useStyles = makeStyles()((theme) => ({
   circleButton: {
     backgroundImage: `linear-gradient(135deg, #00000080 0%, #00000080 50%, #FFFFFF80 50%, #FFFFFF80 100%)`,
     borderRadius: "50%",
-    border: `1px solid ${theme.palette.text.secondary}`,
-
-    ":hover": {
-      borderColor: theme.palette.text.primary,
-    },
+    border: `1px solid ${theme.palette.text.primary}`,
   },
 }));
 
@@ -61,9 +57,9 @@ export default function ColorPicker({
           aria-expanded={open ? "true" : undefined}
           onClick={handleClick}
           style={{
-            fontSize: circleSize,
-            height: circleSize + 2,
-            width: circleSize + 2,
+            fontSize: circleSize - 2,
+            height: circleSize,
+            width: circleSize,
           }}
         >
           <SvgIcon fontSize="inherit">
