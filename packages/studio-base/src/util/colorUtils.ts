@@ -12,7 +12,6 @@
 //   You may not use this file except in compliance with the License.
 
 import * as THREE from "three";
-import tinycolor, { ColorFormats } from "tinycolor2";
 
 import { Color } from "@foxglove/studio-base/types/Messages";
 
