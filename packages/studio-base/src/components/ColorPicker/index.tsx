@@ -87,6 +87,14 @@ export default function ColorPicker({
     [buttonShape, circleSize, classes, handleClick, hexColor, open],
   );
 
+  const onChangeCallback = useCallback(
+    (newColor: string) => {
+      const parsed = tinycolor(newColor).toRgb();
+      onChange(parsed);
+    },
+    [onChange],
+  );
+
   return (
     <>
       {button}
@@ -103,7 +111,7 @@ export default function ColorPicker({
           horizontal: "center",
         }}
       >
-        <ColorPickerControl alphaType={alphaType} value={hexColor} onChange={onChange} />
+        <ColorPickerControl alphaType={alphaType} value={hexColor} onChange={onChangeCallback} />
       </Popover>
     </>
   );
