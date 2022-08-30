@@ -55,7 +55,7 @@ export default function ColorPicker({
       buttonShape === "circle" ? (
         <ButtonBase
           className={classes.circleButton}
-          id="color-picker-button"
+          data-testid="color-picker-button"
           aria-controls={open ? "color-picker-menu" : undefined}
           aria-haspopup="true"
           aria-expanded={open ? "true" : undefined}
@@ -74,7 +74,7 @@ export default function ColorPicker({
         <Button
           variant="outlined"
           color="secondary"
-          id="color-picker-button"
+          data-testid="color-picker-button"
           aria-controls={open ? "color-picker-menu" : undefined}
           aria-haspopup="true"
           aria-expanded={open ? "true" : undefined}
