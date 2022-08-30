@@ -4,13 +4,58 @@
 
 import produce from "immer";
 import { isNumber, set } from "lodash";
+import memoizeWeak from "memoize-weak";
 import { useCallback, useEffect } from "react";
 
-import { SettingsTreeAction, SettingsTreeNodes } from "@foxglove/studio";
+import { SettingsTreeAction, SettingsTreeNode, SettingsTreeNodes } from "@foxglove/studio";
+import { PlotPath } from "@foxglove/studio-base/panels/Plot/internalTypes";
 import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelSettingsEditorContextProvider";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
+import { lineColors } from "@foxglove/studio-base/util/plotColors";
 
 import { plotableRosTypes, PlotConfig } from "./types";
+
+const makePathNode = memoizeWeak((path: PlotPath, index: number): SettingsTreeNode => {
+  return {
+    actions: [{ type: "action", id: "delete-path", label: "Delete" }],
+    label: path.label ?? `Series ${index + 1}`,
+    renamable: true,
+    visible: path.enabled,
+    fields: {
+      value: {
+        input: "messagepath",
+        label: "Path",
+        value: path.value,
+        validTypes: plotableRosTypes,
+      },
+      color: {
+        input: "rgb",
+        label: "Color",
+        value: path.color ?? lineColors[index % lineColors.length],
+      },
+      timestampMethod: {
+        input: "select",
+        label: "Timestamp",
+        value: path.timestampMethod,
+        options: [
+          { label: "Receive Time", value: "receiveTime" },
+          { label: "Header Stamp", value: "headerStamp" },
+        ],
+      },
+    },
+  };
+});
+
+const makeRootPathNode = memoizeWeak((paths: PlotPath[]): SettingsTreeNode => {
+  const children = Object.fromEntries(
+    paths.map((path, index) => [`${index}`, makePathNode(path, index)]),
+  );
+  return {
+    label: "Paths",
+    children,
+    actions: [{ type: "action", id: "add-path", label: "Add Path" }],
+  };
+});
 
 function buildSettingsTree(config: PlotConfig): SettingsTreeNodes {
   const maxYError =
@@ -22,35 +67,6 @@ function buildSettingsTree(config: PlotConfig): SettingsTreeNodes {
     isNumber(config.minXValue) && isNumber(config.maxXValue) && config.minXValue >= config.maxXValue
       ? "X max must be greater than X min."
       : undefined;
-
-  const paths: SettingsTreeNodes = Object.fromEntries(
-    config.paths.map((path, index) => [
-      `${index}`,
-      {
-        actions: [{ type: "action", id: "delete-path", label: "Delete" }],
-        label: `Series ${index + 1}`,
-        visible: path.enabled,
-        fields: {
-          value: {
-            input: "messagepath",
-            label: "Path",
-            value: path.value,
-            validTypes: plotableRosTypes,
-          },
-          color: { input: "rgb", label: "Color", value: path.color },
-          timestampMethod: {
-            input: "select",
-            label: "Timestamp",
-            value: path.timestampMethod,
-            options: [
-              { label: "Receive Time", value: "receiveTime" },
-              { label: "Header Stamp", value: "headerStamp" },
-            ],
-          },
-        },
-      },
-    ]),
-  );
 
   return {
     general: {
@@ -76,11 +92,7 @@ function buildSettingsTree(config: PlotConfig): SettingsTreeNodes {
         },
       },
     },
-    paths: {
-      label: "Paths",
-      children: paths,
-      actions: [{ type: "action", id: "add-path", label: "Add Path" }],
-    },
+    paths: makeRootPathNode(config.paths),
     yAxis: {
       label: "Y Axis",
       fields: {
@@ -164,7 +176,11 @@ export function usePlotPanelSettings(config: PlotConfig, saveConfig: SaveConfig<
         if (action.payload.id === "add-path") {
           saveConfig(
             produce<PlotConfig>((draft) => {
-              draft.paths.push({ timestampMethod: "receiveTime", value: "", enabled: true });
+              draft.paths.push({
+                timestampMethod: "receiveTime",
+                value: "",
+                enabled: true,
+              });
             }),
           );
         } else if (action.payload.id === "delete-path") {
