@@ -59,7 +59,8 @@ export class RenderableLines extends RenderablePrimitive {
 
   private _makeLine(primitive: LinePrimitive) {
     let geometry: LineSegmentsGeometry;
-    let isSegments = false;
+    const isSegments = primitive.type === (2 as LineType.LINE_LIST);
+    const isLoop = primitive.type === (1 as LineType.LINE_LOOP);
 
     const transparent = true;
     const material = new LineMaterial({
@@ -103,7 +104,6 @@ export class RenderableLines extends RenderablePrimitive {
         break;
       }
       case 2 as LineType.LINE_LIST: {
-        isSegments = true;
         geometry = new LineSegmentsGeometry();
         line = new LineSegments2(geometry, material);
         break;
@@ -142,6 +142,16 @@ export class RenderableLines extends RenderablePrimitive {
       // material.opacity = singleColor.a; // does not work for some reason
       material.uniforms.opacity!.value = singleColor.a;
     }
+
+    // Set an explicit instance count, because three.js ignores attribute offsets when
+    // automatically computing the instance count (and results differ across browsers because they
+    // depend on the key iteration order, since three.js derives the count from the first
+    // instanced interleaved attribute it sees).
+    geometry.instanceCount = isSegments
+      ? primitive.points.length >>> 1
+      : isLoop
+      ? primitive.points.length
+      : primitive.points.length - 1;
 
     line.userData.pickingMaterial = pickingMaterial;
     return line;
