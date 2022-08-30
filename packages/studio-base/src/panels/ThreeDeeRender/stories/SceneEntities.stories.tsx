@@ -2,6 +2,9 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import * as THREE from "three";
+import { STLExporter } from "three/examples/jsm/exporters/STLExporter";
+import { TeapotGeometry } from "three/examples/jsm/geometries/TeapotGeometry";
 import tinycolor from "tinycolor2";
 
 import { FrameTransform, LineType, SceneUpdate } from "@foxglove/schemas/schemas/typescript";
@@ -10,7 +13,7 @@ import { xyzrpyToPose } from "@foxglove/studio-base/panels/ThreeDeeRender/transf
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 
 import ThreeDeeRender from "../index";
-import { makeColor, QUAT_IDENTITY, rad2deg, STL_CUBE_MESH, STL_CUBE_MESH_RESOURCE } from "./common";
+import { makeColor, QUAT_IDENTITY, rad2deg } from "./common";
 
 export default {
   title: "panels/ThreeDeeRender/SceneEntities",
@@ -24,6 +27,11 @@ function makeStoryScene({
   topic: string;
   frameId: string;
 }): MessageEvent<SceneUpdate> {
+  const teapotMesh = new THREE.Mesh(new TeapotGeometry(1));
+  teapotMesh.rotateX(Math.PI / 2);
+  teapotMesh.updateMatrixWorld();
+  const teapotSTL = new STLExporter().parse(teapotMesh);
+
   /** Reorder points for testing `indices` */
   function rearrange<T>(arr: T[]): T[] {
     for (let i = 0; i + 1 < arr.length; i += 2) {
@@ -154,19 +162,19 @@ function makeStoryScene({
           models: [
             {
               pose: xyzrpyToPose([0, 3, 0], [0, 0, 0]),
-              scale: { x: 0.5, y: 0.2, z: 0.5 },
+              scale: { x: 0.3, y: 0.2, z: 0.2 },
               color: makeColor("#59e860", 0.8),
               override_color: false,
               url: "",
               media_type: "model/stl",
-              data: new TextEncoder().encode(STL_CUBE_MESH),
+              data: new TextEncoder().encode(teapotSTL),
             },
             {
               pose: xyzrpyToPose([1, 3, 0], [0, 0, 30]),
-              scale: { x: 0.5, y: 0.2, z: 0.5 },
+              scale: { x: 0.3, y: 0.2, z: 0.2 },
               color: makeColor("#59e860", 0.8),
               override_color: true,
-              url: STL_CUBE_MESH_RESOURCE,
+              url: encodeURI(`data:model/stl;utf8,${teapotSTL}`),
               media_type: "",
               data: new Uint8Array(),
             },

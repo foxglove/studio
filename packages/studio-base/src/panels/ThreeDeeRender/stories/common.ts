@@ -60,7 +60,7 @@ export const PNG_TEST_IMAGE = new Uint8Array(base64.length(PNG_TEST_IMAGE_BASE64
 base64.decode(PNG_TEST_IMAGE_BASE64, PNG_TEST_IMAGE, 0);
 
 // ts-prune-ignore-next
-export const STL_CUBE_MESH = `solid AssimpScene
+export const STL_CUBE_MESH_RESOURCE = encodeURI(`data:model/stl;utf8,solid AssimpScene
 facet normal 0 0 -1 outer loop vertex -0.5 -0.5 -0.5 vertex -0.5 0.5 -0.5 vertex 0.5 0.5 -0.5 endloop endfacet
 facet normal 0 0 -1 outer loop vertex 0.5 0.5 -0.5 vertex 0.5 -0.5 -0.5 vertex -0.5 -0.5 -0.5 endloop endfacet
 facet normal 0 0 1 outer loop vertex 0.5 -0.5 0.5 vertex 0.5 0.5 0.5 vertex -0.5 0.5 0.5 endloop endfacet
@@ -73,10 +73,7 @@ facet normal 0 -1 0 outer loop vertex 0.5 -0.5 0.5 vertex -0.5 -0.5 0.5 vertex -
 facet normal 0 -1 0 outer loop vertex -0.5 -0.5 -0.5 vertex 0.5 -0.5 -0.5 vertex 0.5 -0.5 0.5 endloop endfacet
 facet normal -1 0 0 outer loop vertex -0.5 -0.5 0.5 vertex -0.5 0.5 0.5 vertex -0.5 0.5 -0.5 endloop endfacet
 facet normal -1 0 0 outer loop vertex -0.5 0.5 -0.5 vertex -0.5 -0.5 -0.5 vertex -0.5 -0.5 0.5 endloop endfacet
-endsolid AssimpScene`;
-
-// ts-prune-ignore-next
-export const STL_CUBE_MESH_RESOURCE = encodeURI(`data:model/stl;utf8,${STL_CUBE_MESH}`);
+endsolid AssimpScene`);
 
 // ts-prune-ignore-next
 export function rad2deg(rad: number): number {
