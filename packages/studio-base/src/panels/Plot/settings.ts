@@ -10,7 +10,7 @@ import { SettingsTreeAction, SettingsTreeNodes } from "@foxglove/studio";
 import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelSettingsEditorContextProvider";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 
-import { PlotConfig } from "./types";
+import { plotableRosTypes, PlotConfig } from "./types";
 
 function buildSettingsTree(config: PlotConfig): SettingsTreeNodes {
   const maxYError =
@@ -22,6 +22,35 @@ function buildSettingsTree(config: PlotConfig): SettingsTreeNodes {
     isNumber(config.minXValue) && isNumber(config.maxXValue) && config.minXValue >= config.maxXValue
       ? "X max must be greater than X min."
       : undefined;
+
+  const paths: SettingsTreeNodes = Object.fromEntries(
+    config.paths.map((path, index) => [
+      `${index}`,
+      {
+        actions: [{ type: "action", id: "delete-path", label: "Delete" }],
+        label: `Series ${index + 1}`,
+        visible: path.enabled,
+        fields: {
+          value: {
+            input: "messagepath",
+            label: "Path",
+            value: path.value,
+            validTypes: plotableRosTypes,
+          },
+          color: { input: "rgb", label: "Color", value: path.color },
+          timestampMethod: {
+            input: "select",
+            label: "Timestamp",
+            value: path.timestampMethod,
+            options: [
+              { label: "Receive Time", value: "receiveTime" },
+              { label: "Header Stamp", value: "headerStamp" },
+            ],
+          },
+        },
+      },
+    ]),
+  );
 
   return {
     general: {
@@ -46,6 +75,11 @@ function buildSettingsTree(config: PlotConfig): SettingsTreeNodes {
           value: config.showPlotValuesInLegend,
         },
       },
+    },
+    paths: {
+      label: "Paths",
+      children: paths,
+      actions: [{ type: "action", id: "add-path", label: "Add Path" }],
     },
     yAxis: {
       label: "Y Axis",
@@ -107,24 +141,41 @@ export function usePlotPanelSettings(config: PlotConfig, saveConfig: SaveConfig<
 
   const actionHandler = useCallback(
     (action: SettingsTreeAction) => {
-      if (action.action !== "update") {
-        return;
+      if (action.action === "update") {
+        const { path, value } = action.payload;
+        saveConfig(
+          produce((draft) => {
+            if (path[0] === "paths") {
+              set(draft, path, value);
+            } else {
+              set(draft, path.slice(1), value);
+
+              // X min/max and following width are mutually exclusive.
+              if (path[1] === "followingViewWidth") {
+                draft.minXValue = undefined;
+                draft.maxXValue = undefined;
+              } else if (path[1] === "minXValue" || path[1] === "maxXValue") {
+                draft.followingViewWidth = undefined;
+              }
+            }
+          }),
+        );
+      } else {
+        if (action.payload.id === "add-path") {
+          saveConfig(
+            produce<PlotConfig>((draft) => {
+              draft.paths.push({ timestampMethod: "receiveTime", value: "", enabled: true });
+            }),
+          );
+        } else if (action.payload.id === "delete-path") {
+          const index = action.payload.path[1];
+          saveConfig(
+            produce<PlotConfig>((draft) => {
+              draft.paths.splice(Number(index), 1);
+            }),
+          );
+        }
       }
-
-      const { path, value } = action.payload;
-      saveConfig(
-        produce((draft) => {
-          set(draft, path.slice(1), value);
-
-          // X min/max and following width are mutually exclusive.
-          if (path[1] === "followingViewWidth") {
-            draft.minXValue = undefined;
-            draft.maxXValue = undefined;
-          } else if (path[1] === "minXValue" || path[1] === "maxXValue") {
-            draft.followingViewWidth = undefined;
-          }
-        }),
-      );
     },
     [saveConfig],
   );
