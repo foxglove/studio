@@ -15,7 +15,6 @@ import { makeStyles } from "@mui/styles";
 import { Immutable } from "immer";
 import { useCallback } from "react";
 
-import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import { useMessageDataItem } from "@foxglove/studio-base/components/MessagePathSyntax/useMessageDataItem";
 import Panel from "@foxglove/studio-base/components/Panel";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
@@ -31,15 +30,14 @@ type Props = {
 };
 
 const useStyles = makeStyles({
-  text: {
-    float: "left",
-    marginRight: "600px",
-  },
   container: {
     fontSize: "17px",
     padding: "10px",
     margin: "5px",
-    textA: "left",
+    textAlign: "left",
+  },
+  text: {
+    marginRight: "600px",
   },
 });
 
@@ -59,29 +57,39 @@ function TimeDisplay(props: Props) {
   const baseItem = inTimetickDiffMode ? prevTickObj : currTickObj;
 
   //----for Real time-----//
+
   const currentRealDate = new Date();
   const realTimeString = `${`0${currentRealDate.getHours()}`.slice(
     -2,
   )}:${`0${currentRealDate.getMinutes()}`.slice(-2)}:${`0${currentRealDate.getSeconds()}`.slice(
     -2,
   )}`;
+  //----for Simulation time-----//
+
+  const simSec = baseItem?.messageEvent.message.clock.sec;
+
+  const simNsec = baseItem?.messageEvent.message.clock.nsec;
+
+  const simTimeString = `${`0${simSec}`.slice(-2)}:${simNsec}`;
 
   const renderSingleTopicOrDiffOutput = useCallback(() => {
-    if (!baseItem) {
-      return <EmptyState>Waiting for next message</EmptyState>;
-    }
-
     return (
       <div className={classes.container}>
-        Real Time:<span>{realTimeString}</span>
+        <div>
+          Simulation Time : <span>{simTimeString}</span>
+        </div>
+        <br />
+        <div>
+          Real Time: <span>{realTimeString}</span>
+        </div>
       </div>
     );
-  }, [realTimeString]);
+  }, [realTimeString, simTimeString, classes]);
 
   return (
     <div>
       <PanelToolbar helpContent={helpContent}>
-        <p className={classes.text}>Time Display</p>
+        <div className={classes.text}>Time Display</div>
       </PanelToolbar>
       {renderSingleTopicOrDiffOutput()}
     </div>

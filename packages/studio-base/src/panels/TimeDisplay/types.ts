@@ -5,6 +5,5 @@
 export type TimeDisplayPanelConfig = {
   diffEnabled: boolean;
   diffMethod: "custom" | "previous message";
-
   topicPath: string;
 };

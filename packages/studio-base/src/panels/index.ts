@@ -51,7 +51,7 @@ const builtin: PanelInfo[] = [
   {
     title: "Time Display",
     type: "Time Display Panel",
-    description: "Display simulation time and Real time",
+    description: "Display simulation time and real time",
     help: ThreeDimensionalVizHelp,
 
     module: async () => await import("./TimeDisplay"),
