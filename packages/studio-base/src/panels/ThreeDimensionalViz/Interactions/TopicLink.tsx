@@ -11,10 +11,10 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { Tooltip } from "@mui/material";
 import styled from "styled-components";
 
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
-import Tooltip from "@foxglove/studio-base/components/Tooltip";
 import { PanelConfig } from "@foxglove/studio-base/types/panels";
 import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
@@ -41,11 +41,8 @@ export default function TopicLink({ topic }: Props): JSX.Element {
   }, [openSiblingPanel, topic]);
 
   return (
-    <Tooltip placement="top" contents={`View ${topic} in Raw Messages panel`}>
-      {/* extra span to work around tooltip NaN positioning bug */}
-      <span>
-        <STopicLink onClick={openRawMessages}>{topic}</STopicLink>
-      </span>
+    <Tooltip placement="top" title={`View ${topic} in Raw Messages panel`} arrow>
+      <STopicLink onClick={openRawMessages}>{topic}</STopicLink>
     </Tooltip>
   );
 }

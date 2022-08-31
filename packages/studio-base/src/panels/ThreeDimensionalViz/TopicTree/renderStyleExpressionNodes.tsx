@@ -13,6 +13,7 @@
 
 import DotsVerticalIcon from "@mdi/svg/svg/dots-vertical.svg";
 import EarthIcon from "@mdi/svg/svg/earth.svg";
+import { Tooltip } from "@mui/material";
 import { groupBy } from "lodash";
 import { useCallback, useContext } from "react";
 import styled from "styled-components";
@@ -21,7 +22,6 @@ import ChildToggle from "@foxglove/studio-base/components/ChildToggle";
 import ColorPicker from "@foxglove/studio-base/components/ColorPicker";
 import Icon from "@foxglove/studio-base/components/Icon";
 import { Menu, Item } from "@foxglove/studio-base/components/Menu";
-import Tooltip from "@foxglove/studio-base/components/Tooltip";
 import useGlobalVariables from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { LinkedGlobalVariable } from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/useLinkedGlobalVariables";
 import { ColorOverride } from "@foxglove/studio-base/panels/ThreeDimensionalViz/Layout";
@@ -153,7 +153,7 @@ function StyleExpressionNode(props: {
         <Icon style={{ color: "rgba(255,255,255, 0.3)" }}>
           <EarthIcon style={{ width: 16, height: 16 }} />
         </Icon>
-        <Tooltip contents={tooltipContent} placement="top">
+        <Tooltip title={tooltipContent} placement="top">
           <SDisplayName>
             .{markerKeyPath.join(".")} == ${name}
           </SDisplayName>

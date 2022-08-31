@@ -14,11 +14,11 @@
 import { useTheme } from "@fluentui/react";
 import AlertCircleIcon from "@mdi/svg/svg/alert-circle.svg";
 import LeadPencilIcon from "@mdi/svg/svg/lead-pencil.svg";
+import { Tooltip } from "@mui/material";
 import { useContext } from "react";
 import styled from "styled-components";
 
 import Icon from "@foxglove/studio-base/components/Icon";
-import Tooltip from "@foxglove/studio-base/components/Tooltip";
 import useGuaranteedContext from "@foxglove/studio-base/hooks/useGuaranteedContext";
 import { ThreeDimensionalVizContext } from "@foxglove/studio-base/panels/ThreeDimensionalViz/ThreeDimensionalVizContext";
 import { canEditDatatype } from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicSettingsEditor";
@@ -121,7 +121,7 @@ type Props = {
   derivedCustomSettings?: DerivedCustomSettings;
   width: number;
   filterText: string;
-  tooltips?: React.ReactNode[];
+  tooltip?: React.ReactNode;
   visibleTopicsCount: number;
 };
 
@@ -136,7 +136,7 @@ export default function TreeNodeRow({
   nodeVisibleInScene,
   sceneErrors,
   setCurrentEditingTopic,
-  tooltips,
+  tooltip,
   visible,
   visibleTopicsCount,
   width,
@@ -211,7 +211,7 @@ export default function TreeNodeRow({
           isXSWidth={isXSWidth}
           maxWidth={maxNodeNameWidth}
           displayName={name ? name : topicName}
-          tooltips={tooltips}
+          tooltip={tooltip}
           topicName={topicName}
           searchText={filterText}
           {...(showVisibleTopicsCount
@@ -219,7 +219,7 @@ export default function TreeNodeRow({
                 additionalElem: (
                   <Tooltip
                     placement="top"
-                    contents={`${visibleTopicsCount} visible ${
+                    title={`${visibleTopicsCount} visible ${
                       visibleTopicsCount === 1 ? "topic" : "topics"
                     } in this group`}
                   >
@@ -240,7 +240,7 @@ export default function TreeNodeRow({
           </Icon>
         )}
         {showGroupError && errorTooltip && sceneErrors.length > 0 && (
-          <Tooltip contents={errorTooltip} placement="top">
+          <Tooltip title={errorTooltip} placement="top">
             <SErrorCount>{`${sceneErrors.length} ${
               sceneErrors.length === 1 ? "error" : "errors"
             }`}</SErrorCount>
