@@ -57,8 +57,7 @@
   "resolutions": {
     "@types/node": "15.3.0",
     "esbuild-loader/esbuild": "0.14.7",
-    "react-dnd": "14.0.2",
-    "@foxglove/schemas": "github:foxglove/schemas#deefc4656375cc328d32e6bac854be5d5ef0f2c0"
+    "react-dnd": "14.0.2"
   },
   "devDependencies": {
     "@actions/core": "1.6.0",
