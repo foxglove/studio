@@ -66,9 +66,8 @@ const useStyles = makeStyles<void, "eventMetadata" | "eventSelected">()(
     },
     eventHovered: {
       [`.${classes.eventMetadata}`]: {
-        backgroundColor: alpha(theme.palette.info.main, theme.palette.action.focusOpacity),
+        backgroundColor: alpha(theme.palette.info.main, theme.palette.action.hoverOpacity),
         borderColor: theme.palette.info.main,
-        boxShadow: `0 0 0 1px ${theme.palette.info.main}`,
       },
     },
     eventMetadata: {
