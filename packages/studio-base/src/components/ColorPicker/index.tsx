@@ -92,7 +92,7 @@ export default function ColorPicker({
   );
 
   return (
-    <>
+    <div>
       {button}
       <Popover
         open={open}
@@ -109,6 +109,6 @@ export default function ColorPicker({
       >
         <ColorPickerControl alphaType={alphaType} value={hexColor} onChange={onChangeCallback} />
       </Popover>
-    </>
+    </div>
   );
 }
