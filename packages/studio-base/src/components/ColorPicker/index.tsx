@@ -19,7 +19,6 @@ type Props = {
 
 const useStyles = makeStyles()((theme) => ({
   circleButton: {
-    backgroundImage: `linear-gradient(135deg, #00000080 0%, #00000080 50%, #FFFFFF80 50%, #FFFFFF80 100%)`,
     borderRadius: "50%",
     border: `1px solid ${theme.palette.text.primary}`,
   },
