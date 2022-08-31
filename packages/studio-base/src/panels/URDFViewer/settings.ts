@@ -57,7 +57,7 @@ export function buildSettingsTree(
           precision: 2,
           min,
           max,
-          step: 0.25,
+          step: 0.05,
           value,
         },
       ];
