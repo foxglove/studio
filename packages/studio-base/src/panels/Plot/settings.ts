@@ -8,6 +8,8 @@ import memoizeWeak from "memoize-weak";
 import { useCallback, useEffect } from "react";
 
 import { SettingsTreeAction, SettingsTreeNode, SettingsTreeNodes } from "@foxglove/studio";
+import { AppSetting } from "@foxglove/studio-base/AppSetting";
+import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import { PlotPath } from "@foxglove/studio-base/panels/Plot/internalTypes";
 import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelSettingsEditorContextProvider";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
@@ -15,9 +17,9 @@ import { lineColors } from "@foxglove/studio-base/util/plotColors";
 
 import { plotableRosTypes, PlotConfig } from "./types";
 
-const makePathNode = memoizeWeak((path: PlotPath, index: number): SettingsTreeNode => {
+const makeSeriesNode = memoizeWeak((path: PlotPath, index: number): SettingsTreeNode => {
   return {
-    actions: [{ type: "action", id: "delete-path", label: "Delete" }],
+    actions: [{ type: "action", id: "delete-series", label: "Delete" }],
     label: path.label ?? `Series ${index + 1}`,
     renamable: true,
     visible: path.enabled,
@@ -46,18 +48,19 @@ const makePathNode = memoizeWeak((path: PlotPath, index: number): SettingsTreeNo
   };
 });
 
-const makeRootPathNode = memoizeWeak((paths: PlotPath[]): SettingsTreeNode => {
+const makeRootSeriesNode = memoizeWeak((paths: PlotPath[]): SettingsTreeNode => {
   const children = Object.fromEntries(
-    paths.map((path, index) => [`${index}`, makePathNode(path, index)]),
+    paths.map((path, index) => [`${index}`, makeSeriesNode(path, index)]),
   );
   return {
-    label: "Paths",
+    label: "Series",
     children,
-    actions: [{ type: "action", id: "add-path", label: "Add Path" }],
+    actions: [{ type: "action", id: "add-series", label: "Add series" }],
   };
 });
 
-function buildSettingsTree(config: PlotConfig): SettingsTreeNodes {
+// eslint-disable-next-line @foxglove/no-boolean-parameters
+function buildSettingsTree(config: PlotConfig, enableSeries: boolean): SettingsTreeNodes {
   const maxYError =
     isNumber(config.minYValue) && isNumber(config.maxYValue) && config.minYValue >= config.maxYValue
       ? "Y max must be greater than Y min."
@@ -92,7 +95,7 @@ function buildSettingsTree(config: PlotConfig): SettingsTreeNodes {
         },
       },
     },
-    paths: makeRootPathNode(config.paths),
+    paths: enableSeries ? makeRootSeriesNode(config.paths) : undefined,
     yAxis: {
       label: "Y Axis",
       fields: {
@@ -150,6 +153,9 @@ function buildSettingsTree(config: PlotConfig): SettingsTreeNodes {
 
 export function usePlotPanelSettings(config: PlotConfig, saveConfig: SaveConfig<PlotConfig>): void {
   const updatePanelSettingsTree = usePanelSettingsTreeUpdate();
+  const [enableSeries = false] = useAppConfigurationValue<boolean>(
+    AppSetting.ENABLE_PLOT_PANEL_SERIES_SETTINGS,
+  );
 
   const actionHandler = useCallback(
     (action: SettingsTreeAction) => {
@@ -173,7 +179,7 @@ export function usePlotPanelSettings(config: PlotConfig, saveConfig: SaveConfig<
           }),
         );
       } else {
-        if (action.payload.id === "add-path") {
+        if (action.payload.id === "add-series") {
           saveConfig(
             produce<PlotConfig>((draft) => {
               draft.paths.push({
@@ -183,7 +189,7 @@ export function usePlotPanelSettings(config: PlotConfig, saveConfig: SaveConfig<
               });
             }),
           );
-        } else if (action.payload.id === "delete-path") {
+        } else if (action.payload.id === "delete-series") {
           const index = action.payload.path[1];
           saveConfig(
             produce<PlotConfig>((draft) => {
@@ -199,7 +205,7 @@ export function usePlotPanelSettings(config: PlotConfig, saveConfig: SaveConfig<
   useEffect(() => {
     updatePanelSettingsTree({
       actionHandler,
-      nodes: buildSettingsTree(config),
+      nodes: buildSettingsTree(config, enableSeries),
     });
-  }, [actionHandler, config, updatePanelSettingsTree]);
+  }, [actionHandler, config, enableSeries, updatePanelSettingsTree]);
 }
