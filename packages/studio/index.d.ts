@@ -449,7 +449,7 @@ declare module "@foxglove/studio" {
     | {
         input: "toggle";
         value?: string;
-        options: Array<{ label: string; value: undefined | string }>;
+        options: string[] | Array<{ label: string; value: undefined | string }>;
       }
     | {
         input: "vec3";

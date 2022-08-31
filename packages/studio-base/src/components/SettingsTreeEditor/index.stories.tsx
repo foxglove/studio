@@ -574,10 +574,7 @@ const TopicSettings: SettingsTreeNodes = {
             label: "Point Shape",
             input: "toggle",
             value: "Circle",
-            options: [
-              { label: "Circle", value: "circle" },
-              { label: "Square", value: "square" },
-            ],
+            options: ["Circle", "Square"],
           },
           decay_time: {
             label: "Decay Time (seconds)",
