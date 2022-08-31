@@ -18,6 +18,7 @@ import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import Stack from "@foxglove/studio-base/components/Stack";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import { useSessionStorageValue } from "@foxglove/studio-base/hooks/useSessionStorageValue";
+import { LaunchPreferenceValue } from "@foxglove/studio-base/types/LaunchPreferenceValue";
 
 const useStyles = makeStyles()((theme) => ({
   button: {
@@ -43,17 +44,17 @@ export function LaunchPreferenceScreen(): ReactElement {
 
   async function launchInWeb() {
     if (rememberPreference) {
-      await setGlobalPreference("web");
+      await setGlobalPreference(LaunchPreferenceValue.WEB);
     } else {
-      setSessionPreference("web");
+      setSessionPreference(LaunchPreferenceValue.WEB);
     }
   }
 
   async function launchInDesktop() {
     if (rememberPreference) {
-      await setGlobalPreference("desktop");
+      await setGlobalPreference(LaunchPreferenceValue.DESKTOP);
     } else {
-      setSessionPreference("desktop");
+      setSessionPreference(LaunchPreferenceValue.DESKTOP);
     }
   }
 
@@ -66,13 +67,13 @@ export function LaunchPreferenceScreen(): ReactElement {
 
   const actions = [
     {
-      key: "web",
+      key: LaunchPreferenceValue.WEB,
       primary: "Web",
       secondary: "Requires Chrome v76+",
       onClick: () => void launchInWeb(),
     },
     {
-      key: "desktop",
+      key: LaunchPreferenceValue.DESKTOP,
       primary: "Desktop App",
       secondary: "For Linux, Windows, and macOS",
       onClick: () => void launchInDesktop(),
