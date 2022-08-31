@@ -175,13 +175,23 @@ function FieldInput({
           size="small"
           onChange={(_event, value) => {
             if (field.readonly !== true) {
-              actionHandler({ action: "update", payload: { path, input: "toggle", value } });
+              actionHandler({
+                action: "update",
+                payload: {
+                  path,
+                  input: "toggle",
+                  value: value === UNDEFINED_SENTINEL_VALUE ? undefined : value,
+                },
+              });
             }
           }}
         >
           {field.options.map((opt) => (
-            <ToggleButton key={opt} value={opt}>
-              {opt}
+            <ToggleButton
+              key={opt.value ?? UNDEFINED_SENTINEL_VALUE}
+              value={opt.value ?? UNDEFINED_SENTINEL_VALUE}
+            >
+              {opt.label}
             </ToggleButton>
           ))}
         </StyledToggleButtonGroup>
