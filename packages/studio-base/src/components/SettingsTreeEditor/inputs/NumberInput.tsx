@@ -50,6 +50,11 @@ const useStyles = makeStyles()((theme) => ({
       },
     },
   },
+  textFieldReadonly: {
+    ".MuiInputBase-input": {
+      cursor: "auto",
+    },
+  },
 }));
 
 export function NumberInput(
@@ -65,7 +70,7 @@ export function NumberInput(
     onChange: (value: undefined | number) => void;
   } & Omit<TextFieldProps, "onChange">,
 ): JSX.Element {
-  const { classes } = useStyles();
+  const { classes, cx } = useStyles();
   const {
     value,
     iconDown,
@@ -148,7 +153,7 @@ export function NumberInput(
         updateValue(event.target.value.length > 0 ? Number(event.target.value) : undefined)
       }
       type="number"
-      className={classes.textField}
+      className={cx(classes.textField, { [classes.textFieldReadonly]: readOnly })}
       inputProps={{
         ref: inputRef,
         step,
