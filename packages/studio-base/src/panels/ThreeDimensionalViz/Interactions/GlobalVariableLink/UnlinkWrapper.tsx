@@ -24,10 +24,6 @@ import GlobalVariableName from "../GlobalVariableName";
 import { LinkedGlobalVariable } from "../useLinkedGlobalVariables";
 
 const useStyles = makeStyles<void, "linkOnIcon" | "linkOffIcon">()((_theme, _props, classes) => ({
-  root: {
-    display: "flex",
-    gap: 6,
-  },
   wrapper: {
     marginTop: 1,
     [`&:hover .${classes.linkOnIcon}`]: {
