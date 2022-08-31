@@ -18,9 +18,10 @@ export function LaunchPreference(props: PropsWithChildren<unknown>): JSX.Element
 
   const url = new URL(window.location.href);
 
-  // Session preferences take priority over global preferences.
+  // Session preferences take priority over URL and global preferences. This allows the button in
+  // LaunchPreferenceScreen to override the url when clicked.
   let activePreference =
-    url.searchParams.get("openIn") ?? sessionLaunchPreference ?? globalLaunchPreference;
+    sessionLaunchPreference ?? url.searchParams.get("openIn") ?? globalLaunchPreference;
   switch (activePreference) {
     case LaunchPreferenceValue.WEB:
     case LaunchPreferenceValue.DESKTOP:
