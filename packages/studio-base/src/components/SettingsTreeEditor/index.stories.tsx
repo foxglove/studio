@@ -210,7 +210,7 @@ const DisabledSettings: SettingsTreeNodes = {
       toggle: {
         input: "toggle",
         label: "Toggle",
-        value: "One",
+        value: "one",
         options: [
           { label: "One", value: "one" },
           { label: "Two", value: "two" },
@@ -299,7 +299,7 @@ const ReadonlySettings: SettingsTreeNodes = {
       toggle: {
         input: "toggle",
         label: "Toggle",
-        value: "One",
+        value: "one",
         options: [
           { label: "One", value: "one" },
           { label: "Two", value: "two" },
@@ -358,7 +358,7 @@ const PanelExamplesSettings: SettingsTreeNodes = {
       },
       color_by: {
         label: "Color by",
-        value: "Flat",
+        value: "flat",
         input: "toggle",
         options: [
           { label: "Flat", value: "flat" },
@@ -548,7 +548,7 @@ const TopicSettings: SettingsTreeNodes = {
           point_shape: {
             label: "Point Shape",
             input: "toggle",
-            value: "Circle",
+            value: "circle",
             options: [
               { label: "Circle", value: "circle" },
               { label: "Square", value: "square" },
