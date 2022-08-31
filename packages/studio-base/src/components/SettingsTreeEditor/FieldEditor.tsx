@@ -169,7 +169,7 @@ function FieldInput({
       return (
         <StyledToggleButtonGroup
           fullWidth
-          value={field.value}
+          value={field.value ?? UNDEFINED_SENTINEL_VALUE}
           exclusive
           disabled={field.disabled}
           size="small"
