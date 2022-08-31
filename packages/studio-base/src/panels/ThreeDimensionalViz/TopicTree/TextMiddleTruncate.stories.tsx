@@ -37,7 +37,7 @@ storiesOf("panels/ThreeDimensionalViz/TopicTree/TextMiddleTruncate", module).add
       <div>
         <p>Show the last part of topic name with visibile tooltip:</p>
         <TextMiddleTruncate
-          tooltip={<span key="0">This is a topic tooltip</span>}
+          tooltips={[<span key="0">This is a topic tooltip</span>]}
           testShowTooltip
           endTextLength={LONG_TOPIC_NAME.split("/").pop()!.length + 1}
           text={LONG_TOPIC_NAME}

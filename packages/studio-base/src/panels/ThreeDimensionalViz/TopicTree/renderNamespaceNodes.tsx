@@ -130,7 +130,7 @@ function NamespaceNodeRow({
           maxWidth={maxNodeNameLen}
           displayName={namespace}
           topicName=""
-          tooltip={
+          tooltips={[
             <TooltipRow key={namespace}>
               <TooltipTable>
                 <tbody>
@@ -142,8 +142,8 @@ function NamespaceNodeRow({
                   </tr>
                 </tbody>
               </TooltipTable>
-            </TooltipRow>
-          }
+            </TooltipRow>,
+          ]}
           searchText={filterText}
         />
       </SLeft>

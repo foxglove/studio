@@ -20,7 +20,6 @@ export default styled.span`
   flex-direction: row;
   display: inline-flex;
   align-items: center;
-  text-indent: 0;
   word-break: normal;
 
   span.icon {

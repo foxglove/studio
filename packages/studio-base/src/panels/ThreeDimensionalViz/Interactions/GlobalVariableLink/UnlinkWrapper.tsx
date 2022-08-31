@@ -11,40 +11,43 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import LinkIcon from "@mui/icons-material/Link";
-import LinkOffIcon from "@mui/icons-material/LinkOff";
-import { Tooltip } from "@mui/material";
+import LinkVariantOffIcon from "@mdi/svg/svg/link-variant-off.svg";
+import LinkVariantIcon from "@mdi/svg/svg/link-variant.svg";
 import { useState, ReactNode } from "react";
-import { makeStyles } from "tss-react/mui";
+import styled from "styled-components";
 
 import ChildToggle from "@foxglove/studio-base/components/ChildToggle";
-import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
+import Icon from "@foxglove/studio-base/components/Icon";
 
 import GlobalVariableName from "../GlobalVariableName";
 import { LinkedGlobalVariable } from "../useLinkedGlobalVariables";
 
-const useStyles = makeStyles<void, "linkOnIcon" | "linkOffIcon">()((_theme, _props, classes) => ({
-  wrapper: {
-    marginTop: 1,
-    [`&:hover .${classes.linkOnIcon}`]: {
-      display: "none",
-    },
-    [`&:hover .${classes.linkOffIcon}`]: {
-      display: "block",
-    },
-  },
-  icon: {
-    color: colors.BLUE,
-    height: 15,
-    width: 15,
-  },
-  linkOnIcon: {
-    display: "block",
-  },
-  linkOffIcon: {
-    display: "none",
-  },
-}));
+const SIconWrapper = styled.span`
+  .icon {
+    /* TODO(Audrey): remove the hard-coded icon style once we clean up 3D panel styles   */
+    width: 15px !important;
+    height: 15px !important;
+    font-size: 15px !important;
+  }
+  .linked-icon {
+    opacity: 1;
+    display: inline-block;
+  }
+  .link-off-icon {
+    opacity: 0;
+    display: none;
+  }
+  &:hover {
+    .linked-icon {
+      opacity: 0;
+      display: none;
+    }
+    .link-off-icon {
+      opacity: 1;
+      display: inline-block;
+    }
+  }
+`;
 
 type Props = {
   linkedGlobalVariable: LinkedGlobalVariable;
@@ -62,7 +65,6 @@ export default function UnlinkWrapper({
   tooltip,
 }: Props): JSX.Element {
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  const { classes, cx } = useStyles();
   return (
     <>
       <ChildToggle
@@ -71,24 +73,21 @@ export default function UnlinkWrapper({
         onToggle={setIsOpen}
         isOpen={isOpen}
       >
-        <div className={classes.wrapper}>
-          <Tooltip
-            arrow
-            placement="top"
-            title={
-              tooltip ?? (
+        <SIconWrapper>
+          <Icon
+            fade
+            tooltipProps={{
+              contents: tooltip ?? (
                 <span>
                   Unlink this field from <GlobalVariableName name={linkedGlobalVariable.name} />
                 </span>
-              )
-            }
+              ),
+            }}
           >
-            <div>
-              <LinkIcon className={cx(classes.icon, classes.linkOnIcon)} />
-              <LinkOffIcon className={cx(classes.icon, classes.linkOffIcon)} />
-            </div>
-          </Tooltip>
-        </div>
+            <LinkVariantOffIcon className="link-off-icon" />
+            <LinkVariantIcon className="linked-icon" />
+          </Icon>
+        </SIconWrapper>
         <span>{children({ setIsOpen, linkedGlobalVariable })}</span>
       </ChildToggle>
       <GlobalVariableName name={linkedGlobalVariable.name} leftPadding />

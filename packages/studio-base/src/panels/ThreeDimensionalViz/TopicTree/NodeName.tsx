@@ -11,8 +11,9 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Tooltip } from "@mui/material";
 import styled from "styled-components";
+
+import Tooltip from "@foxglove/studio-base/components/Tooltip";
 
 import TextHighlight from "./TextHighlight";
 import TextMiddleTruncate from "./TextMiddleTruncate";
@@ -57,7 +58,7 @@ type Props = {
   style?: {
     [attr: string]: string | number;
   };
-  tooltip?: React.ReactNode;
+  tooltips?: React.ReactNode[];
 };
 
 export default function NodeName({
@@ -68,7 +69,7 @@ export default function NodeName({
   topicName,
   searchText,
   style = {},
-  tooltip,
+  tooltips,
 }: Props): JSX.Element {
   let targetStr = displayName ? displayName : topicName;
 
@@ -79,8 +80,8 @@ export default function NodeName({
   }
   const xsWidthElem =
     isXSWidth &&
-    (tooltip != undefined ? (
-      <Tooltip title={tooltip} placement="top">
+    (tooltips ? (
+      <Tooltip contents={tooltips} placement="top">
         <SName>{targetStr}</SName>
       </Tooltip>
     ) : (
@@ -93,7 +94,7 @@ export default function NodeName({
       endTextLength={
         topicName.length > 0 ? topicName.split("/").pop()!.length + 1 : DEFAULT_END_TEXT_LENGTH
       }
-      tooltip={tooltip}
+      tooltips={tooltips}
     />
   );
   return (

@@ -11,8 +11,9 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Tooltip } from "@mui/material";
 import styled from "styled-components";
+
+import Tooltip from "@foxglove/studio-base/components/Tooltip";
 
 export const DEFAULT_END_TEXT_LENGTH = 16;
 
@@ -42,7 +43,7 @@ const SEnd = styled.div`
 `;
 
 type Props = {
-  tooltip?: React.ReactNode;
+  tooltips?: React.ReactNode[];
   text: string;
   endTextLength?: number;
   style?: {
@@ -52,7 +53,7 @@ type Props = {
 };
 
 export default function TextMiddleTruncate({
-  tooltip,
+  tooltips,
   text,
   endTextLength,
   style,
@@ -73,7 +74,7 @@ export default function TextMiddleTruncate({
     </STextMiddleTruncate>
   );
   return (
-    <Tooltip title={tooltip ?? ""} placement="top" open={testShowTooltip}>
+    <Tooltip contents={tooltips} placement="top" shown={testShowTooltip}>
       {elem}
     </Tooltip>
   );
