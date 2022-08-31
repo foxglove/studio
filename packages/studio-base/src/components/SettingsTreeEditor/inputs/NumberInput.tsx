@@ -6,6 +6,7 @@ import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { IconButton, TextFieldProps, TextField } from "@mui/material";
 import { clamp, isFinite } from "lodash";
+import { number } from "mathjs";
 import { ReactNode, useCallback, useRef } from "react";
 import { useLatest } from "react-use";
 import { makeStyles } from "tss-react/mui";
@@ -81,6 +82,9 @@ export function NumberInput(
 
   const inputRef = useRef<HTMLInputElement>(ReactNull);
 
+  // Maintain our own internal scrub value during the scrub to prevent jitter.
+  const scrubValue = useRef(0);
+
   const latestValue = useLatest(value);
 
   const placeHolderValue = isFinite(Number(props.placeholder))
@@ -102,9 +106,13 @@ export function NumberInput(
     [disabled, readOnly, min, max, onChange],
   );
 
-  const onPointerDown = useCallback((event: React.PointerEvent) => {
-    event.currentTarget.setPointerCapture(event.pointerId);
-  }, []);
+  const onPointerDown = useCallback(
+    (event: React.PointerEvent) => {
+      event.currentTarget.setPointerCapture(event.pointerId);
+      scrubValue.current = latestValue.current ?? placeHolderValue ?? 0;
+    },
+    [latestValue, placeHolderValue],
+  );
 
   const onPointerUp = useCallback((event: React.PointerEvent) => {
     event.currentTarget.releasePointerCapture(event.pointerId);
@@ -115,12 +123,12 @@ export function NumberInput(
       if (event.buttons === 1) {
         event.preventDefault();
         event.currentTarget.blur();
-        const startValue = latestValue.current ?? placeHolderValue ?? 0;
         const scale = event.shiftKey ? 10 : 1;
-        updateValue(startValue + event.movementX * 0.05 * step * scale);
+        scrubValue.current += event.movementX * 0.1 * step * scale;
+        updateValue(scrubValue.current);
       }
     },
-    [latestValue, placeHolderValue, step, updateValue],
+    [step, updateValue],
   );
 
   const displayValue =
