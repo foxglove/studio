@@ -108,7 +108,8 @@ export function NumberInput(
   const onPointerDown = useCallback(
     (event: React.PointerEvent) => {
       event.currentTarget.setPointerCapture(event.pointerId);
-      scrubValue.current = latestValue.current ?? placeHolderValue ?? 0;
+      const scrubStart = latestValue.current ?? placeHolderValue ?? 0;
+      scrubValue.current = isFinite(scrubStart) ? scrubStart : 0;
     },
     [latestValue, placeHolderValue],
   );
@@ -123,7 +124,13 @@ export function NumberInput(
         event.preventDefault();
         event.currentTarget.blur();
         const scale = event.shiftKey ? 10 : 1;
-        scrubValue.current += event.movementX * 0.1 * step * scale;
+        const delta =
+          Math.sign(event.movementX) *
+          Math.pow(Math.abs(event.movementX), 1.5) *
+          0.1 *
+          step *
+          scale;
+        scrubValue.current += delta;
         updateValue(scrubValue.current);
       }
     },
