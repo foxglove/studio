@@ -23,9 +23,7 @@ const useStyles = makeStyles()(({ transitions, palette }) => ({
     alignItems: "center",
   },
   tick: {
-    transition: transitions.create("height", {
-      duration: transitions.duration.shorter,
-    }),
+    transition: transitions.create("height", { duration: transitions.duration.shortest }),
     backgroundBlendMode: "overlay",
     backgroundColor: palette.info.main,
     opacity: 0.6,
@@ -33,7 +31,7 @@ const useStyles = makeStyles()(({ transitions, palette }) => ({
     height: 6,
   },
   tickHovered: {
-    transition: transitions.create("height", { duration: transitions.duration.shorter }),
+    transition: transitions.create("height", { duration: transitions.duration.shortest }),
     height: 12,
   },
 }));
