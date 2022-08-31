@@ -41,9 +41,6 @@ export function LaunchPreferenceScreen(): ReactElement {
   const [_, setSessionPreference] = useSessionStorageValue(AppSetting.LAUNCH_PREFERENCE);
   const [rememberPreference, setRememberPreference] = useState(globalPreference != undefined);
 
-  const cleanWebURL = new URL(window.location.href);
-  cleanWebURL.searchParams.delete("launch");
-
   async function launchInWeb() {
     if (rememberPreference) {
       await setGlobalPreference("web");

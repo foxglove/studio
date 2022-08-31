@@ -16,10 +16,12 @@ export function LaunchPreference(props: PropsWithChildren<unknown>): JSX.Element
   );
   const [sessionLaunchPreference] = useSessionStorageValue(AppSetting.LAUNCH_PREFERENCE);
 
-  // Session preferences take priority over global preferences.
-  const activePreference = sessionLaunchPreference ?? globalLaunchPreference;
-
   const url = new URL(window.location.href);
+
+  // Session preferences take priority over global preferences.
+  const activePreference =
+    url.searchParams.get("openIn") ?? sessionLaunchPreference ?? globalLaunchPreference;
+
   const hasParams = Array.from(url.searchParams.entries()).length > 0;
   // Ask the user in which environment they want to open this session.
   if (activePreference === "unknown" && hasParams) {
