@@ -6,34 +6,55 @@ import { clamp } from "lodash";
 import { makeStyles } from "tss-react/mui";
 
 import {
+  TimelineInteractionStateStore,
+  useTimelineInteractionState,
+} from "@foxglove/studio-base/context/TimelineInteractionStateContext";
+import {
   TimelinePositionedEvent,
   useTimelinePositionedEvents,
 } from "@foxglove/studio-base/hooks/useTimelinePositionedEvents";
 
-const useStyles = makeStyles()((theme) => ({
+const useStyles = makeStyles()(({ transitions, palette }) => ({
   root: {
     inset: 0,
     pointerEvents: "none",
     position: "absolute",
+    display: "flex",
+    alignItems: "center",
   },
-
   tick: {
-    backgroundColor: theme.palette.primary.main,
-    borderRadius: 2,
-    bottom: 6,
-    opacity: 0.5,
+    transition: transitions.create("height", {
+      duration: transitions.duration.shorter,
+    }),
+    backgroundBlendMode: "overlay",
+    backgroundColor: palette.info.main,
+    opacity: 0.6,
     position: "absolute",
-    top: 6,
+    height: 6,
+  },
+  tickHovered: {
+    transition: transitions.create("height", { duration: transitions.duration.shorter }),
+    height: 12,
   },
 }));
 
+const selectHoveredEvent = (store: TimelineInteractionStateStore) => store.hoveredEvent;
+
 function EventTick({ event }: { event: TimelinePositionedEvent }): JSX.Element {
-  const { classes } = useStyles();
+  const hoveredEvent = useTimelineInteractionState(selectHoveredEvent);
+  const { classes, cx } = useStyles();
 
   const left = `calc(${clamp(event.startPosition, 0, 1) * 100}% - 1px)`;
   const right = `calc(100% - ${clamp(event.endPosition, 0, 1) * 100}% - 1px)`;
 
-  return <div className={classes.tick} style={{ left, right }}></div>;
+  return (
+    <div
+      className={cx(classes.tick, {
+        [classes.tickHovered]: hoveredEvent?.id === event.event.id,
+      })}
+      style={{ left, right }}
+    />
+  );
 }
 
 const MemoEventTick = React.memo(EventTick);

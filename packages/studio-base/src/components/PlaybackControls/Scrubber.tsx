@@ -57,7 +57,7 @@ const useStyles = makeStyles()((theme) => ({
     position: "absolute",
     left: 0,
     right: 0,
-    height: 4,
+    height: 6,
     backgroundColor: theme.palette.action.focus,
   },
   trackDisabled: {
@@ -237,7 +237,7 @@ export default function Scrubber(props: Props): JSX.Element {
     >
       {tooltip}
       <div className={cx(classes.track, { [classes.trackDisabled]: !startTime })} />
-      <Stack position="absolute" flex="auto" fullWidth style={{ height: 4 }}>
+      <Stack position="absolute" flex="auto" fullWidth style={{ height: 6 }}>
         <ProgressPlot loading={loading} availableRanges={ranges} />
       </Stack>
       <Stack ref={el} fullHeight fullWidth position="absolute" flex={1}>
@@ -252,7 +252,6 @@ export default function Scrubber(props: Props): JSX.Element {
           onChange={onChange}
           renderSlider={renderSlider}
         />
-        <EventsOverlay />
       </Stack>
       <PlaybackBarHoverTicks componentId={hoverComponentId} />
     </Stack>

@@ -59,16 +59,16 @@ const useStyles = makeStyles<void, "eventMetadata" | "eventSelected">()(
     },
     eventSelected: {
       [`.${classes.eventMetadata}`]: {
-        backgroundColor: alpha(theme.palette.primary.main, theme.palette.action.activatedOpacity),
-        borderColor: theme.palette.primary.main,
-        boxShadow: `0 0 0 1px ${theme.palette.primary.main}`,
+        backgroundColor: alpha(theme.palette.info.main, theme.palette.action.activatedOpacity),
+        borderColor: theme.palette.info.main,
+        boxShadow: `0 0 0 1px ${theme.palette.info.main}`,
       },
     },
     eventHovered: {
       [`.${classes.eventMetadata}`]: {
-        backgroundColor: alpha(theme.palette.primary.main, theme.palette.action.focusOpacity),
-        borderColor: theme.palette.primary.main,
-        boxShadow: `0 0 0 1px ${theme.palette.primary.main}`,
+        backgroundColor: alpha(theme.palette.info.main, theme.palette.action.focusOpacity),
+        borderColor: theme.palette.info.main,
+        boxShadow: `0 0 0 1px ${theme.palette.info.main}`,
       },
     },
     eventMetadata: {
