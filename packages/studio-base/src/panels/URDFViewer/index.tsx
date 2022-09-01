@@ -3,9 +3,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Button } from "@mui/material";
-import { isEmpty } from "lodash";
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { differenceBy, first, isEmpty } from "lodash";
+import { useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
+import { usePrevious } from "react-use";
 import { makeStyles } from "tss-react/mui";
 
 import {
@@ -88,25 +89,25 @@ function URDFViewer({ config, saveConfig }: Props) {
   });
   const { assets } = useAssets();
 
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+  const urdfAssets = useMemo(() => assets.filter((asset) => asset.type === "urdf"), [assets]);
+
   const model = useMemo(() => {
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    const asset = assets.find(({ type, uuid }) => uuid === selectedAssetId && type === "urdf");
-    return asset?.model;
-  }, [assets, selectedAssetId]);
+    if (selectedAssetId) {
+      return urdfAssets.find((asset) => asset.uuid === selectedAssetId)?.model;
+    } else {
+      return urdfAssets[0]?.model;
+    }
+  }, [urdfAssets, selectedAssetId]);
 
   // Automatically select newly added URDF assets
-  const prevAssets = useRef<typeof assets | undefined>();
+  const prevAssets = usePrevious(urdfAssets);
   useEffect(() => {
-    const prevAssetIds = new Set(prevAssets.current?.map(({ uuid }) => uuid));
-    prevAssets.current = assets;
-    for (const asset of assets) {
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-      if (!prevAssetIds.has(asset.uuid) && asset.type === "urdf") {
-        saveConfig({ selectedAssetId: asset.uuid });
-        return;
-      }
+    const newAsset = first(differenceBy(urdfAssets, prevAssets ?? [], (asset) => asset.uuid));
+    if (newAsset) {
+      saveConfig({ selectedAssetId: newAsset.uuid });
     }
-  }, [assets, saveConfig]);
+  }, [urdfAssets, saveConfig, prevAssets]);
 
   const [renderer] = useState(() => new Renderer());
 
