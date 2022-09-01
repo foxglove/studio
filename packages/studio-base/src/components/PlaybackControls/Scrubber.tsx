@@ -42,7 +42,7 @@ const useStyles = makeStyles()((theme) => ({
     label: "Scrubber-marker",
     backgroundColor: theme.palette.text.primary,
     position: "absolute",
-    height: 8,
+    height: 16,
     borderRadius: 1,
     width: 2,
     transform: "translate(-50%, 0)",
@@ -52,7 +52,7 @@ const useStyles = makeStyles()((theme) => ({
     position: "absolute",
     left: 0,
     right: 0,
-    height: 4,
+    height: 8,
     backgroundColor: theme.palette.action.focus,
   },
   trackDisabled: {
@@ -194,14 +194,13 @@ export default function Scrubber(props: Props): JSX.Element {
       flexGrow={1}
       alignItems="center"
       position="relative"
-      style={{ height: 28 }}
+      style={{ height: 20 }}
     >
       {tooltip}
       <div className={cx(classes.track, { [classes.trackDisabled]: !startTime })} />
-      <Stack position="absolute" flex="auto" fullWidth style={{ height: 4 }}>
+      <Stack position="absolute" flex="auto" fullWidth style={{ height: 8 }}>
         <ProgressPlot loading={loading} availableRanges={ranges} />
       </Stack>
-      <PlaybackBarHoverTicks componentId={hoverComponentId} />
       <Stack ref={el} fullHeight fullWidth position="absolute" flex={1}>
         <Slider
           min={min ?? 0}
@@ -215,6 +214,7 @@ export default function Scrubber(props: Props): JSX.Element {
           renderSlider={renderSlider}
         />
       </Stack>
+      <PlaybackBarHoverTicks componentId={hoverComponentId} />
     </Stack>
   );
 }
