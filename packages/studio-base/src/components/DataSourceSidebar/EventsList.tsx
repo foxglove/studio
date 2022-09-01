@@ -56,6 +56,12 @@ const useStyles = makeStyles<void, "eventMetadata" | "eventSelected">()(
     event: {
       display: "contents",
       cursor: "pointer",
+      "&:hover": {
+        [`.${classes.eventMetadata}`]: {
+          backgroundColor: alpha(theme.palette.info.main, theme.palette.action.hoverOpacity),
+          borderColor: theme.palette.info.main,
+        },
+      },
     },
     eventSelected: {
       [`.${classes.eventMetadata}`]: {
@@ -216,12 +222,17 @@ export function EventsList(): JSX.Element {
 
   const onClick = useCallback(
     (event: ConsoleEvent) => {
-      selectEvent(event.id);
+      if (event.id === selectedEventId) {
+        selectEvent(undefined);
+      } else {
+        selectEvent(event.id);
+      }
+
       if (seek) {
         seek(event.startTime);
       }
     },
-    [seek, selectEvent],
+    [seek, selectEvent, selectedEventId],
   );
 
   const onHoverEnd = useCallback(
