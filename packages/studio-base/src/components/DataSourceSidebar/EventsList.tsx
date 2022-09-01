@@ -303,9 +303,9 @@ export function EventsList(): JSX.Element {
           placeholder="Filter event metadata"
           InputProps={{
             startAdornment: <SearchIcon fontSize="small" />,
-            endAdornment: (
-              <IconButton onClick={clearFilter} size="small" color="primary">
-                <ClearIcon />
+            endAdornment: filter !== "" && (
+              <IconButton edge="end" onClick={clearFilter} size="small">
+                <ClearIcon fontSize="small" />
               </IconButton>
             ),
           }}
