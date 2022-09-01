@@ -95,9 +95,9 @@ function buildSettingsTree(config: PlotConfig, enableSeries: boolean): SettingsT
         },
       },
     },
-    paths: enableSeries ? makeRootSeriesNode(config.paths) : undefined,
     yAxis: {
       label: "Y Axis",
+      defaultExpansionState: "collapsed",
       fields: {
         showYAxisLabels: {
           label: "Show labels",
@@ -121,6 +121,7 @@ function buildSettingsTree(config: PlotConfig, enableSeries: boolean): SettingsT
     },
     xAxis: {
       label: "X Axis",
+      defaultExpansionState: "collapsed",
       fields: {
         showXAxisLabels: {
           label: "Show labels",
@@ -148,6 +149,7 @@ function buildSettingsTree(config: PlotConfig, enableSeries: boolean): SettingsT
         },
       },
     },
+    paths: enableSeries ? makeRootSeriesNode(config.paths) : undefined,
   };
 }
 
