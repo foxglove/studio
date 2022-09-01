@@ -65,7 +65,7 @@ const useStyles = makeStyles()((theme) => ({
   },
 }));
 
-const selectHoveredEvent = (store: TimelineInteractionStateStore) => store.hoveredEvent;
+const selectHoveredEvents = (store: TimelineInteractionStateStore) => store.hoveredEvents;
 const selectStartTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.startTime;
 const selectCurrentTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.currentTime;
 const selectEndTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.endTime;
@@ -93,7 +93,7 @@ export default function Scrubber(props: Props): JSX.Element {
   const endTime = useMessagePipeline(selectEndTime);
   const presence = useMessagePipeline(selectPresence);
   const ranges = useMessagePipeline(selectRanges);
-  const hoveredEvent = useTimelineInteractionState(selectHoveredEvent);
+  const hoveredEvents = useTimelineInteractionState(selectHoveredEvents);
 
   const setHoverValue = useSetHoverValue();
 
@@ -114,24 +114,25 @@ export default function Scrubber(props: Props): JSX.Element {
 
       const tooltipItems: TooltipItem[] = [];
 
-      if (hoveredEvent) {
-        tooltipItems.push({
-          type: "item",
-          title: "Start",
-          value: formatTime(hoveredEvent.startTime),
-        });
-        tooltipItems.push({
-          type: "item",
-          title: "End",
-          value: formatTime(hoveredEvent.endTime),
-        });
-        if (!isEmpty(hoveredEvent.metadata)) {
-          tooltipItems.push({ type: "divider" });
-          Object.entries(hoveredEvent.metadata).forEach(([metaKey, metaValue]) => {
-            tooltipItems.push({ type: "item", title: metaKey, value: metaValue });
+      if (!isEmpty(hoveredEvents)) {
+        Object.values(hoveredEvents).forEach((event) => {
+          tooltipItems.push({
+            type: "item",
+            title: "Start",
+            value: formatTime(event.startTime),
           });
-        }
-        tooltipItems.push({ type: "divider" });
+          tooltipItems.push({
+            type: "item",
+            title: "End",
+            value: formatTime(event.endTime),
+          });
+          if (!isEmpty(event.metadata)) {
+            Object.entries(event.metadata).forEach(([metaKey, metaValue]) => {
+              tooltipItems.push({ type: "item", title: metaKey, value: metaValue });
+            });
+          }
+          tooltipItems.push({ type: "divider" });
+        });
       }
 
       switch (timeFormat) {
@@ -156,7 +157,7 @@ export default function Scrubber(props: Props): JSX.Element {
               return <Divider key={`divider_${idx}`} className={classes.tooltipDivider} />;
             }
             return (
-              <Fragment key={item.title}>
+              <Fragment key={`${item.title}_${idx}`}>
                 <Typography align="right" variant="body2">
                   {item.title}:
                 </Typography>
@@ -180,7 +181,7 @@ export default function Scrubber(props: Props): JSX.Element {
       classes.tooltipWrapper,
       formatTime,
       hoverComponentId,
-      hoveredEvent,
+      hoveredEvents,
       latestStartTime,
       setHoverValue,
       timeFormat,

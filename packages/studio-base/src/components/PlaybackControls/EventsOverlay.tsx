@@ -46,11 +46,11 @@ const useStyles = makeStyles()(({ transitions, palette }) => ({
   },
 }));
 
-const selectHoveredEvent = (store: TimelineInteractionStateStore) => store.hoveredEvent;
+const selectHoveredEvents = (store: TimelineInteractionStateStore) => store.hoveredEvents;
 const selectSelectedEventId = (store: EventsStore) => store.selectedEventId;
 
 function EventTick({ event }: { event: TimelinePositionedEvent }): JSX.Element {
-  const hoveredEvent = useTimelineInteractionState(selectHoveredEvent);
+  const hoveredEvents = useTimelineInteractionState(selectHoveredEvents);
   const selectedEventId = useEvents(selectSelectedEventId);
   const { classes, cx } = useStyles();
 
@@ -60,7 +60,7 @@ function EventTick({ event }: { event: TimelinePositionedEvent }): JSX.Element {
   return (
     <div
       className={cx(classes.tick, {
-        [classes.tickHovered]: hoveredEvent?.id === event.event.id,
+        [classes.tickHovered]: hoveredEvents[event.event.id] != undefined,
         [classes.tickSelected]: selectedEventId === event.event.id,
       })}
       style={{ left, right }}

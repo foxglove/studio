@@ -28,7 +28,7 @@ const log = Logger.getLogger(__filename);
 
 const selectUrlState = (ctx: MessagePipelineContext) => ctx.playerState.urlState;
 const selectSetEvents = (store: EventsStore) => store.setEvents;
-const selectSetHoveredEvent = (store: TimelineInteractionStateStore) => store.setHoveredEvent;
+const selectSetHoveredEvents = (store: TimelineInteractionStateStore) => store.setHoveredEvents;
 const selectStartTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.startTime;
 const selectEndTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.endTime;
 
@@ -40,7 +40,7 @@ export function EventsSyncAdapter(): ReactNull {
   const urlState = useMessagePipeline(selectUrlState);
   const consoleApi = useConsoleApi();
   const setEvents = useEvents(selectSetEvents);
-  const setHoveredEvent = useTimelineInteractionState(selectSetHoveredEvent);
+  const setHoveredEvents = useTimelineInteractionState(selectSetHoveredEvents);
   const hoverValue = useHoverValue();
   const startTime = useMessagePipeline(selectStartTime);
   const endTime = useMessagePipeline(selectEndTime);
@@ -75,21 +75,21 @@ export function EventsSyncAdapter(): ReactNull {
     }
   }, [consoleApi, currentUser, setEvents, urlState?.parameters, urlState?.sourceId]);
 
-  // Sync hovered value and hovered event.
+  // Sync hovered value and hovered events.
   useEffect(() => {
     if (hoverValue && timelineEvents && timeRange != undefined && timeRange > 0) {
       const hoverPosition = scale(hoverValue.value, 0, timeRange, 0, 1);
-      const hoveredEvent = timelineEvents.find((event) => {
+      const hoveredEvents = timelineEvents.filter((event) => {
         return (
           hoverPosition >= event.startPosition * (1 - HOVER_TOLERANCE) &&
           hoverPosition <= event.endPosition * (1 + HOVER_TOLERANCE)
         );
       });
-      setHoveredEvent(hoveredEvent?.event);
+      setHoveredEvents(hoveredEvents.map((event) => event.event));
     } else {
-      setHoveredEvent(undefined);
+      setHoveredEvents([]);
     }
-  }, [hoverValue, setHoveredEvent, timeRange, timelineEvents]);
+  }, [hoverValue, setHoveredEvents, timeRange, timelineEvents]);
 
   return ReactNull;
 }

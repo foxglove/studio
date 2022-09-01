@@ -182,7 +182,7 @@ function EventView(params: {
 const MemoEventView = React.memo(EventView);
 
 const selectEvents = (store: EventsStore) => store.events;
-const selectHoveredEvent = (store: TimelineInteractionStateStore) => store.hoveredEvent;
+const selectHoveredEvents = (store: TimelineInteractionStateStore) => store.hoveredEvents;
 const selectSelectedEventId = (store: EventsStore) => store.selectedEventId;
 const selectSelectEvent = (store: EventsStore) => store.selectEvent;
 
@@ -196,7 +196,8 @@ export function EventsList(): JSX.Element {
   const clearHoverValue = useClearHoverValue();
   const [filter, setFilter] = useState("");
   const seek = useMessagePipeline(selectSeek);
-  const hoveredEvent = useTimelineInteractionState(selectHoveredEvent);
+  const hoveredEvents = useTimelineInteractionState(selectHoveredEvents);
+  const [isHovering, setIsHovering] = useState(false);
 
   const filteredEvents = useMemo(() => {
     if (filter.length === 0) {
@@ -237,6 +238,8 @@ export function EventsList(): JSX.Element {
 
   const onHoverEnd = useCallback(
     (event: ConsoleEvent) => {
+      setIsHovering(false);
+
       clearHoverValue(`event_${event.id}`);
     },
     [clearHoverValue],
@@ -244,6 +247,8 @@ export function EventsList(): JSX.Element {
 
   const onHoverStart = useCallback(
     (event: ConsoleEvent) => {
+      setIsHovering(true);
+
       const delta = startTime ? subtract(event.startTime, startTime) : undefined;
       const deltaTime = delta ? toSec(delta) : undefined;
       const hoverId = `event_${event.id}`;
@@ -313,7 +318,9 @@ export function EventsList(): JSX.Element {
               event={event.event}
               filter={filter}
               formattedTime={event.formattedTime}
-              isHovered={event.event.id === hoveredEvent?.id}
+              // When hovering within the event list only show hover state on directly
+              // hovered event.
+              isHovered={hoveredEvents[event.event.id] != undefined && !isHovering}
               isSelected={event.event.id === selectedEventId}
               onClick={onClick}
               onHoverStart={onHoverStart}

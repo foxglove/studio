@@ -29,8 +29,8 @@ export type TimelineInteractionStateStore = DeepReadonly<{
   /** Shared time bounds for synced plots, if any. */
   globalBounds: undefined | SyncBounds;
 
-  /** The event hovered over by the user, if any. */
-  hoveredEvent: undefined | ConsoleEvent;
+  /** The events hovered over by the user, if any. */
+  hoveredEvents: Record<string, ConsoleEvent>;
 
   /** The point in time hovered over by the user. */
   hoverValue: undefined | HoverValue;
@@ -46,8 +46,8 @@ export type TimelineInteractionStateStore = DeepReadonly<{
       | ((oldValue: undefined | SyncBounds) => undefined | SyncBounds),
   ) => void;
 
-  /** Sets or clears the currently hovered event. */
-  setHoveredEvent: (event: undefined | ConsoleEvent) => void;
+  /** Sets the currently hovered events. */
+  setHoveredEvents: (events: ConsoleEvent[]) => void;
 
   /** Sets the new hover value. */
   setHoverValue: (value: HoverValue) => void;
