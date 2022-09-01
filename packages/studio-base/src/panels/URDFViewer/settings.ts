@@ -43,11 +43,14 @@ export function buildSettingsTree(
     : [];
 
   const jointFields: SettingsTreeFields = Object.fromEntries(
-    joints.map(([name, joint]) => {
+    filterMap(joints, ([name, joint]) => {
       const min = joint.jointType === "continuous" ? -Math.PI : +joint.limit.lower;
       const max = joint.jointType === "continuous" ? Math.PI : +joint.limit.upper;
       const value =
         config.customJointValues?.[name] ?? clamp(0, +joint.limit.lower, +joint.limit.upper);
+      if (min === max) {
+        return undefined;
+      }
 
       return [
         name,
