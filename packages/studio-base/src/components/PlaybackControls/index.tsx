@@ -44,9 +44,8 @@ const useStyles = makeStyles()((theme) => ({
   root: {
     displauy: "flex",
     flexDirection: "column",
-    padding: theme.spacing(1),
+    padding: theme.spacing(0.5, 1, 1, 1),
     position: "relative",
-    label: "PlaybackControls-root",
     backgroundColor: theme.palette.background.paper,
     borderTop: `1px solid ${theme.palette.divider}`,
     zIndex: 100000,
