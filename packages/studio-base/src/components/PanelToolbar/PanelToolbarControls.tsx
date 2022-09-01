@@ -18,11 +18,9 @@ import PanelContext from "@foxglove/studio-base/components/PanelContext";
 import ToolbarIconButton from "@foxglove/studio-base/components/PanelToolbar/ToolbarIconButton";
 import Stack from "@foxglove/studio-base/components/Stack";
 import { useSelectedPanels } from "@foxglove/studio-base/context/CurrentLayoutContext";
+import { PanelSettingsEditorStore } from "@foxglove/studio-base/context/PanelSettingsEditorContext";
 import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
-import {
-  PanelSettingsEditorStore,
-  usePanelSettingsEditorStore,
-} from "@foxglove/studio-base/providers/PanelSettingsEditorContextProvider";
+import { usePanelSettingsEditorStore } from "@foxglove/studio-base/providers/PanelSettingsEditorContextProvider";
 
 import { PanelActionsDropdown } from "./PanelActionsDropdown";
 
