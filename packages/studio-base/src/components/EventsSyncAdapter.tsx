@@ -7,24 +7,44 @@ import { useAsync } from "react-use";
 
 import { scaleValue as scale } from "@foxglove/den/math";
 import Logger from "@foxglove/log";
-import { subtract, toSec } from "@foxglove/rostime";
+import { subtract, Time, toSec } from "@foxglove/rostime";
 import {
   MessagePipelineContext,
   useMessagePipeline,
 } from "@foxglove/studio-base/components/MessagePipeline";
 import { useConsoleApi } from "@foxglove/studio-base/context/ConsoleApiContext";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
-import { EventsStore, useEvents } from "@foxglove/studio-base/context/EventsContext";
+import {
+  EventsStore,
+  TimelinePositionedEvent,
+  useEvents,
+} from "@foxglove/studio-base/context/EventsContext";
 import {
   TimelineInteractionStateStore,
   useHoverValue,
   useTimelineInteractionState,
 } from "@foxglove/studio-base/context/TimelineInteractionStateContext";
-import { useTimelinePositionedEvents } from "@foxglove/studio-base/hooks/useTimelinePositionedEvents";
+import { EventsSelectors } from "@foxglove/studio-base/providers/EventsProvider";
+import { ConsoleEvent } from "@foxglove/studio-base/services/ConsoleApi";
 
 const HOVER_TOLERANCE = 0.01;
 
 const log = Logger.getLogger(__filename);
+
+function positionEvents(
+  events: ConsoleEvent[],
+  startTime: Time,
+  endTime: Time,
+): TimelinePositionedEvent[] {
+  const startSecs = toSec(startTime);
+  const endSecs = toSec(endTime);
+
+  return events.map((event) => {
+    const startPosition = scale(event.startTimeInSeconds, startSecs, endSecs, 0, 1);
+    const endPosition = scale(event.endTimeInSeconds, startSecs, endSecs, 0, 1);
+    return { event, endPosition, startPosition, time: event.startTimeInSeconds };
+  });
+}
 
 const selectUrlState = (ctx: MessagePipelineContext) => ctx.playerState.urlState;
 const selectSetEvents = (store: EventsStore) => store.setEvents;
@@ -44,7 +64,7 @@ export function EventsSyncAdapter(): ReactNull {
   const hoverValue = useHoverValue();
   const startTime = useMessagePipeline(selectStartTime);
   const endTime = useMessagePipeline(selectEndTime);
-  const timelineEvents = useTimelinePositionedEvents();
+  const events = useEvents(EventsSelectors.selectFilteredEvents);
 
   const timeRange = useMemo(() => {
     if (!startTime || !endTime) {
@@ -58,6 +78,8 @@ export function EventsSyncAdapter(): ReactNull {
   useAsync(async () => {
     if (
       currentUser &&
+      startTime &&
+      endTime &&
       urlState?.sourceId === "foxglove-data-platform" &&
       urlState.parameters != undefined
     ) {
@@ -65,7 +87,8 @@ export function EventsSyncAdapter(): ReactNull {
       setEvents({ loading: true });
       try {
         const fetchedEvents = await consoleApi.getEvents(queryParams);
-        setEvents({ loading: false, value: fetchedEvents });
+        const positionedEvents = positionEvents(fetchedEvents, startTime, endTime);
+        setEvents({ loading: false, value: positionedEvents });
       } catch (error) {
         log.error(error);
         setEvents({ loading: false, error });
@@ -73,23 +96,31 @@ export function EventsSyncAdapter(): ReactNull {
     } else {
       setEvents({ loading: false });
     }
-  }, [consoleApi, currentUser, setEvents, urlState?.parameters, urlState?.sourceId]);
+  }, [
+    consoleApi,
+    currentUser,
+    endTime,
+    setEvents,
+    startTime,
+    urlState?.parameters,
+    urlState?.sourceId,
+  ]);
 
   // Sync hovered value and hovered events.
   useEffect(() => {
-    if (hoverValue && timelineEvents && timeRange != undefined && timeRange > 0) {
+    if (hoverValue && timeRange != undefined && timeRange > 0) {
       const hoverPosition = scale(hoverValue.value, 0, timeRange, 0, 1);
-      const hoveredEvents = timelineEvents.filter((event) => {
+      const hoveredEvents = events.filter((event) => {
         return (
           hoverPosition >= event.startPosition * (1 - HOVER_TOLERANCE) &&
           hoverPosition <= event.endPosition * (1 + HOVER_TOLERANCE)
         );
       });
-      setHoveredEvents(hoveredEvents.map((event) => event.event));
+      setHoveredEvents(hoveredEvents);
     } else {
       setHoveredEvents([]);
     }
-  }, [hoverValue, setHoveredEvents, timeRange, timelineEvents]);
+  }, [hoverValue, setHoveredEvents, timeRange, events]);
 
   return ReactNull;
 }

@@ -6,15 +6,16 @@ import { alpha } from "@mui/material";
 import { clamp } from "lodash";
 import { makeStyles } from "tss-react/mui";
 
-import { EventsStore, useEvents } from "@foxglove/studio-base/context/EventsContext";
+import {
+  EventsStore,
+  TimelinePositionedEvent,
+  useEvents,
+} from "@foxglove/studio-base/context/EventsContext";
 import {
   TimelineInteractionStateStore,
   useTimelineInteractionState,
 } from "@foxglove/studio-base/context/TimelineInteractionStateContext";
-import {
-  TimelinePositionedEvent,
-  useTimelinePositionedEvents,
-} from "@foxglove/studio-base/hooks/useTimelinePositionedEvents";
+import { EventsSelectors } from "@foxglove/studio-base/providers/EventsProvider";
 
 const useStyles = makeStyles()(({ transitions, palette }) => ({
   root: {
@@ -71,12 +72,12 @@ function EventTick({ event }: { event: TimelinePositionedEvent }): JSX.Element {
 const MemoEventTick = React.memo(EventTick);
 
 export function EventsOverlay(): JSX.Element {
-  const events = useTimelinePositionedEvents();
+  const events = useEvents(EventsSelectors.selectFilteredEvents);
   const { classes } = useStyles();
 
   return (
     <div className={classes.root}>
-      {(events ?? []).map((event) => (
+      {events.map((event) => (
         <MemoEventTick key={event.event.id} event={event} />
       ))}
     </div>

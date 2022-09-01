@@ -15,11 +15,20 @@ import { createContext, useCallback } from "react";
 import { DeepReadonly } from "ts-essentials";
 import { StoreApi, useStore } from "zustand";
 
+import { TimelinePositionedEvent } from "@foxglove/studio-base/context/EventsContext";
 import useGuaranteedContext from "@foxglove/studio-base/hooks/useGuaranteedContext";
-import { ConsoleEvent } from "@foxglove/studio-base/services/ConsoleApi";
 import type { HoverValue } from "@foxglove/studio-base/types/hoverValue";
 
-export type SyncBounds = { min: number; max: number; sourceId: string; userInteraction: boolean };
+/**
+ * Represents the global bounds to which synced plots conform, including the id of the
+ * component that set those bounds.
+ */
+export type SyncBounds = {
+  min: number;
+  max: number;
+  sourceId: string;
+  userInteraction: boolean;
+};
 
 /**
  * The TimelineInteractionStateStore manages state related to dynamic user interactions with data in the app.
@@ -30,7 +39,7 @@ export type TimelineInteractionStateStore = DeepReadonly<{
   globalBounds: undefined | SyncBounds;
 
   /** The events hovered over by the user, if any. */
-  hoveredEvents: Record<string, ConsoleEvent>;
+  hoveredEvents: Record<string, TimelinePositionedEvent>;
 
   /** The point in time hovered over by the user. */
   hoverValue: undefined | HoverValue;
@@ -47,7 +56,7 @@ export type TimelineInteractionStateStore = DeepReadonly<{
   ) => void;
 
   /** Sets the currently hovered events. */
-  setHoveredEvents: (events: ConsoleEvent[]) => void;
+  setHoveredEvents: (events: TimelinePositionedEvent[]) => void;
 
   /** Sets the new hover value. */
   setHoverValue: (value: HoverValue) => void;

@@ -2,8 +2,9 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import ClearIcon from "@mui/icons-material/Clear";
 import SearchIcon from "@mui/icons-material/Search";
-import { alpha, AppBar, CircularProgress, TextField, Typography } from "@mui/material";
+import { alpha, AppBar, CircularProgress, IconButton, TextField, Typography } from "@mui/material";
 import { compact } from "lodash";
 import { Fragment, useCallback, useMemo, useState } from "react";
 import { makeStyles } from "tss-react/mui";
@@ -23,6 +24,7 @@ import {
   useTimelineInteractionState,
 } from "@foxglove/studio-base/context/TimelineInteractionStateContext";
 import { useAppTimeFormat } from "@foxglove/studio-base/hooks";
+import { EventsSelectors } from "@foxglove/studio-base/providers/EventsProvider";
 import { ConsoleEvent } from "@foxglove/studio-base/services/ConsoleApi";
 
 const useStyles = makeStyles<void, "eventMetadata" | "eventSelected">()(
@@ -181,6 +183,8 @@ function EventView(params: {
 
 const MemoEventView = React.memo(EventView);
 
+const selectEventFilter = (store: EventsStore) => store.filter;
+const selectSetEventFilter = (store: EventsStore) => store.setFilter;
 const selectEvents = (store: EventsStore) => store.events;
 const selectHoveredEvents = (store: TimelineInteractionStateStore) => store.hoveredEvents;
 const selectSelectedEventId = (store: EventsStore) => store.selectedEventId;
@@ -194,32 +198,24 @@ export function EventsList(): JSX.Element {
   const startTime = useMessagePipeline(selectStartTime);
   const setHoverValue = useSetHoverValue();
   const clearHoverValue = useClearHoverValue();
-  const [filter, setFilter] = useState("");
   const seek = useMessagePipeline(selectSeek);
   const hoveredEvents = useTimelineInteractionState(selectHoveredEvents);
   const [isHovering, setIsHovering] = useState(false);
-
-  const filteredEvents = useMemo(() => {
-    if (filter.length === 0) {
-      return events.value ?? [];
-    }
-    const lowFilter = filter.toLowerCase();
-
-    return (events.value ?? []).filter((event) =>
-      Object.entries(event.metadata).some(
-        ([key, value]) =>
-          key.toLowerCase().includes(lowFilter) || value.toLowerCase().includes(lowFilter),
-      ),
-    );
-  }, [events.value, filter]);
+  const filter = useEvents(selectEventFilter);
+  const setFilter = useEvents(selectSetEventFilter);
+  const filteredEvents = useEvents(EventsSelectors.selectFilteredEvents);
 
   const timestampedEvents = useMemo(
     () =>
-      filteredEvents.map((event) => {
+      filteredEvents.map(({ event }) => {
         return { event, formattedTime: formatTime(event.startTime) };
       }),
     [filteredEvents, formatTime],
   );
+
+  const clearFilter = useCallback(() => {
+    setFilter("");
+  }, [setFilter]);
 
   const onClick = useCallback(
     (event: ConsoleEvent) => {
@@ -307,6 +303,11 @@ export function EventsList(): JSX.Element {
           placeholder="Filter event metadata"
           InputProps={{
             startAdornment: <SearchIcon fontSize="small" />,
+            endAdornment: (
+              <IconButton onClick={clearFilter} size="small" color="primary">
+                <ClearIcon />
+              </IconButton>
+            ),
           }}
         />
       </AppBar>

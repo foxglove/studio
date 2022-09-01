@@ -6,12 +6,12 @@ import { isEqual, keyBy } from "lodash";
 import { ReactNode, useState } from "react";
 import { createStore, StoreApi } from "zustand";
 
+import { TimelinePositionedEvent } from "@foxglove/studio-base/context/EventsContext";
 import {
   TimelineInteractionStateContext,
   TimelineInteractionStateStore,
   SyncBounds,
 } from "@foxglove/studio-base/context/TimelineInteractionStateContext";
-import { ConsoleEvent } from "@foxglove/studio-base/services/ConsoleApi";
 import { HoverValue } from "@foxglove/studio-base/types/hoverValue";
 
 function createTimelineInteractionStateStore(): StoreApi<TimelineInteractionStateStore> {
@@ -39,8 +39,8 @@ function createTimelineInteractionStateStore(): StoreApi<TimelineInteractionStat
         }
       },
 
-      setHoveredEvents: (hoveredEvents: ConsoleEvent[]) =>
-        set({ hoveredEvents: keyBy(hoveredEvents, (event) => event.id) }),
+      setHoveredEvents: (hoveredEvents: TimelinePositionedEvent[]) =>
+        set({ hoveredEvents: keyBy(hoveredEvents, (event) => event.event.id) }),
 
       setHoverValue: (newValue: HoverValue) =>
         set((store) => ({

@@ -115,7 +115,7 @@ export default function Scrubber(props: Props): JSX.Element {
       const tooltipItems: TooltipItem[] = [];
 
       if (!isEmpty(hoveredEvents)) {
-        Object.values(hoveredEvents).forEach((event) => {
+        Object.values(hoveredEvents).forEach(({ event }) => {
           tooltipItems.push({
             type: "item",
             title: "Start",
