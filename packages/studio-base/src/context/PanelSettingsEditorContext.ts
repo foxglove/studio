@@ -4,9 +4,10 @@
 
 import { createContext } from "react";
 import { DeepReadonly } from "ts-essentials";
-import { StoreApi } from "zustand";
+import { useStore, StoreApi } from "zustand";
 
 import { SettingsTree } from "@foxglove/studio";
+import useGuaranteedContext from "@foxglove/studio-base/hooks/useGuaranteedContext";
 
 export type ImmutableSettingsTree = DeepReadonly<SettingsTree>;
 
@@ -18,3 +19,11 @@ export type PanelSettingsEditorStore = {
 export const PanelSettingsEditorContext = createContext<
   undefined | StoreApi<PanelSettingsEditorStore>
 >(undefined);
+
+export function usePanelSettingsEditorStore<T>(
+  selector: (store: PanelSettingsEditorStore) => T,
+  equalityFn?: (a: T, b: T) => boolean,
+): T {
+  const context = useGuaranteedContext(PanelSettingsEditorContext);
+  return useStore(context, selector, equalityFn);
+}

@@ -3,15 +3,15 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { ReactNode, useCallback, useState } from "react";
-import { createStore, useStore, StoreApi } from "zustand";
+import { createStore, StoreApi } from "zustand";
 
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import {
   ImmutableSettingsTree,
   PanelSettingsEditorContext,
   PanelSettingsEditorStore,
+  usePanelSettingsEditorStore,
 } from "@foxglove/studio-base/context/PanelSettingsEditorContext";
-import useGuaranteedContext from "@foxglove/studio-base/hooks/useGuaranteedContext";
 
 function createSettingsEditorStore(): StoreApi<PanelSettingsEditorStore> {
   return createStore((set) => {
@@ -30,14 +30,6 @@ function createSettingsEditorStore(): StoreApi<PanelSettingsEditorStore> {
 }
 
 const updateSettingsTreeSelector = (store: PanelSettingsEditorStore) => store.updateSettingsTree;
-
-export function usePanelSettingsEditorStore<T>(
-  selector: (store: PanelSettingsEditorStore) => T,
-  equalityFn?: (a: T, b: T) => boolean,
-): T {
-  const context = useGuaranteedContext(PanelSettingsEditorContext);
-  return useStore(context, selector, equalityFn);
-}
 
 /**
  * Returns updater function for the current panels settings tree.
