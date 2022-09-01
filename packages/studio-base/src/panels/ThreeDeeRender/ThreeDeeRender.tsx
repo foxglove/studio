@@ -839,7 +839,6 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
         <canvas
           ref={setCanvas}
           style={{
-            outline: "none",
             position: "absolute",
             top: 0,
             left: 0,
