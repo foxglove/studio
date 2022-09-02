@@ -8,14 +8,15 @@ import {
   SceneEntityDeletion,
   SceneEntityDeletionType,
 } from "@foxglove/schemas/schemas/typescript";
-import { LayerSettingsEntity } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/SceneEntities";
 
 import { BaseUserData, Renderable } from "../Renderable";
 import { Renderer } from "../Renderer";
 import { updatePose } from "../updatePose";
+import { LayerSettingsEntity } from "./SceneEntities";
 import { PrimitivePool } from "./primitives/PrimitivePool";
 import { RenderableArrows } from "./primitives/RenderableArrows";
 import { RenderableCubes } from "./primitives/RenderableCubes";
+import { RenderableCylinders } from "./primitives/RenderableCylinders";
 import { RenderableLines } from "./primitives/RenderableLines";
 import { RenderableModels } from "./primitives/RenderableModels";
 import { ALL_PRIMITIVE_TYPES, PrimitiveType } from "./primitives/types";
@@ -32,6 +33,7 @@ type EntityRenderables = {
   [PrimitiveType.CUBES]?: RenderableCubes;
   [PrimitiveType.MODELS]?: RenderableModels;
   [PrimitiveType.LINES]?: RenderableLines;
+  [PrimitiveType.CYLINDERS]?: RenderableCylinders;
   [PrimitiveType.ARROWS]?: RenderableArrows;
 };
 
@@ -39,6 +41,7 @@ const PRIMITIVE_KEYS = {
   [PrimitiveType.CUBES]: "cubes",
   [PrimitiveType.MODELS]: "models",
   [PrimitiveType.LINES]: "lines",
+  [PrimitiveType.CYLINDERS]: "cylinders",
   [PrimitiveType.ARROWS]: "arrows",
 } as const;
 
@@ -70,6 +73,14 @@ export class TopicEntities extends Renderable<EntityTopicUserData> {
     for (const renderables of this.renderablesById.values()) {
       for (const renderable of Object.values(renderables)) {
         renderable.updateSettings(this.userData.settings);
+      }
+    }
+  }
+
+  public setColorScheme(colorScheme: "dark" | "light"): void {
+    for (const renderables of this.renderablesById.values()) {
+      for (const renderable of Object.values(renderables)) {
+        renderable.setColorScheme(colorScheme);
       }
     }
   }
@@ -132,6 +143,7 @@ export class TopicEntities extends Renderable<EntityTopicUserData> {
         if (!renderable) {
           renderable = this.primitivePool.acquire(primitiveType);
           renderable.name = `${entity.id}:${primitiveType} on ${this.topic}`;
+          renderable.setColorScheme(this.renderer.colorScheme);
           // @ts-expect-error TS doesn't know that renderable matches primitiveType
           renderables[primitiveType] = renderable;
           this.add(renderable);
