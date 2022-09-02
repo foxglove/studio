@@ -292,7 +292,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
       const prevSettings = this.renderer.config.topics[topicName] as
         | Partial<LayerSettingsPointCloudAndLaserScan>
         | undefined;
-      const settings = { ...renderable.userData.settings, ...prevSettings };
+      const settings = { ...DEFAULT_SETTINGS, ...prevSettings };
       if (renderable.userData.pointCloud) {
         this._updatePointCloudRenderable(
           renderable,

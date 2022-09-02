@@ -434,7 +434,8 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
 
   // Handle user changes in the settings sidebar
   const actionHandler = useCallback(
-    (action: SettingsTreeAction) => renderer?.settings.handleAction(action),
+    (action: SettingsTreeAction) =>
+      ReactDOM.unstable_batchedUpdates(() => renderer?.settings.handleAction(action)),
     [renderer],
   );
 
