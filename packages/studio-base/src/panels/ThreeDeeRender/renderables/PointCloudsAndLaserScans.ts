@@ -235,7 +235,8 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
       // Remove expired entries from the history of points when decayTime is enabled
       const pointsHistory = renderable.userData.pointsHistory;
       const decayTime = renderable.userData.settings.decayTime;
-      const expireTime = decayTime > 0 ? currentTime - BigInt(decayTime * 1e9) : MAX_DURATION;
+      const expireTime =
+        decayTime > 0 ? currentTime - BigInt(Math.round(decayTime * 1e9)) : MAX_DURATION;
       while (pointsHistory.length > 1 && pointsHistory[0]!.receiveTime < expireTime) {
         const entry = renderable.userData.pointsHistory.shift()!;
         renderable.remove(entry.points);
@@ -1261,6 +1262,7 @@ function settingsNode(
     input: "number",
     step: 0.5,
     placeholder: "0 seconds",
+    min: 0,
     precision: 3,
     value: decayTime,
   };
