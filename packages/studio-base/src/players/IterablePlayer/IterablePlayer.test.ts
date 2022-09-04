@@ -153,13 +153,13 @@ describe("IterablePlayer", () => {
       {
         ...baseState,
         presence: PlayerPresence.PRESENT,
-        activeData: { ...baseState.activeData, currentTime: { sec: 0, nsec: 99000000 } },
+        activeData: { ...baseState.activeData, currentTime: { sec: 0, nsec: 0 } },
       },
       // idle
       {
         ...baseState,
         presence: PlayerPresence.PRESENT,
-        activeData: { ...baseState.activeData, currentTime: { sec: 0, nsec: 99000000 } },
+        activeData: { ...baseState.activeData, currentTime: { sec: 0, nsec: 0 } },
         progress: {
           fullyLoadedFractionRanges: [{ start: 0, end: 0 }],
           messageCache: undefined,
