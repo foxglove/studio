@@ -8,6 +8,7 @@ import { App, IDataSourceFactory, ConsoleApi, AppSetting } from "@foxglove/studi
 
 import { McapLocalBenchmarkDataSourceFactory, SyntheticDataSourceFactory } from "./dataSources";
 import { LAYOUTS } from "./layouts";
+import { PointcloudPlayer, SinewavePlayer } from "./players";
 import { PredefinedLayoutStorage, MemoryAppConfiguration } from "./services";
 
 export function Root(): JSX.Element {
@@ -22,7 +23,11 @@ export function Root(): JSX.Element {
   );
 
   const dataSources: IDataSourceFactory[] = useMemo(() => {
-    const sources = [new McapLocalBenchmarkDataSourceFactory(), new SyntheticDataSourceFactory()];
+    const sources = [
+      new McapLocalBenchmarkDataSourceFactory(),
+      new SyntheticDataSourceFactory("pointcloud", PointcloudPlayer),
+      new SyntheticDataSourceFactory("sinewave", SinewavePlayer),
+    ];
 
     return sources;
   }, []);
