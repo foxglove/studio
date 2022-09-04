@@ -576,7 +576,6 @@ export class IterablePlayer implements Player {
       clearTimeout(tickTimeout);
     }
 
-    this._currentTime = stopTime;
     this._messages = messageEvents;
     this._presence = PlayerPresence.PRESENT;
     this._queueEmitState();
