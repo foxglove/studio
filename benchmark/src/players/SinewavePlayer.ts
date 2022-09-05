@@ -2,8 +2,6 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { std } from "mathjs";
-
 import Log from "@foxglove/log";
 import * as rostime from "@foxglove/rostime";
 import { Time } from "@foxglove/rostime";
@@ -100,8 +98,6 @@ class SinewavePlayer implements Player {
       topics.push({ name: topicName, datatype: "Sinewave" });
     }
 
-    const frameTimes: number[] = [];
-
     let messageCount = 0;
     for (;;) {
       messageCount += 1;
@@ -155,29 +151,8 @@ class SinewavePlayer implements Player {
 
       const frameEndMs = performance.now();
       const frameTimeMs = frameEndMs - frameStartMs;
-      frameTimes.push(frameTimeMs);
 
-      if (frameTimes.length % 100 === 0) {
-        // Discard the first and last frames
-        const filteredFrameMs = frameTimes.slice(1, -1);
-
-        const totalFrameMs = filteredFrameMs.reduce((a, b) => a + b, 0);
-        const avgFrameMs = totalFrameMs / filteredFrameMs.length;
-
-        const sortedFrameMs = filteredFrameMs.sort();
-        const medianFrameMs = sortedFrameMs[Math.floor(sortedFrameMs.length * 0.5)]!;
-        const p90FrameMs = sortedFrameMs[Math.floor(sortedFrameMs.length * 0.9)]!;
-        const stddev = std(filteredFrameMs);
-
-        BenchmarkStats.Instance().record({
-          avgFrameMs,
-          medianFrameMs,
-          p90FrameMs,
-          stddev,
-        });
-
-        frameTimes.length = 0;
-      }
+      BenchmarkStats.Instance().recordFrameTime(frameTimeMs);
     }
   }
 }
