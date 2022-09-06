@@ -11,13 +11,13 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Layer } from "@fluentui/react";
+import { useSnackbar } from "notistack";
 import { extname } from "path";
 import { useCallback, useLayoutEffect, useState } from "react";
-import { useToasts } from "react-toast-notifications";
+
+import DropOverlay from "@foxglove/studio-base/components/DropOverlay";
 
 type Props = {
-  children: React.ReactNode; // Shown when dragging in a file.
   allowedExtensions?: string[];
   onDrop?: (event: { files?: File[]; handles?: FileSystemFileHandle[] }) => void;
 };
@@ -27,7 +27,7 @@ export default function DocumentDropListener(props: Props): JSX.Element {
 
   const { onDrop: onDropProp, allowedExtensions } = props;
 
-  const { addToast } = useToasts();
+  const { enqueueSnackbar } = useSnackbar();
 
   const onDrop = useCallback(
     async (ev: DragEvent) => {
@@ -112,9 +112,7 @@ export default function DocumentDropListener(props: Props): JSX.Element {
 
       // Check for no supported files
       if (filteredFiles.length === 0 && filteredHandles?.length === 0) {
-        addToast("The file format is unsupported.", {
-          appearance: "error",
-        });
+        enqueueSnackbar("The file format is unsupported.", { variant: "error" });
         return;
       }
 
@@ -123,7 +121,7 @@ export default function DocumentDropListener(props: Props): JSX.Element {
 
       onDropProp?.({ files: filteredFiles, handles: filteredHandles });
     },
-    [addToast, onDropProp, allowedExtensions],
+    [enqueueSnackbar, onDropProp, allowedExtensions],
   );
 
   const onDragOver = useCallback(
@@ -171,7 +169,7 @@ export default function DocumentDropListener(props: Props): JSX.Element {
         data-puppeteer-file-upload
         multiple
       />
-      {hovering && <Layer>{props.children}</Layer>}
+      <DropOverlay open={hovering}>Drop a file here</DropOverlay>
     </>
   );
 }

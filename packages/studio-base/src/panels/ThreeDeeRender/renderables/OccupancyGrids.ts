@@ -30,10 +30,6 @@ export type LayerSettingsOccupancyGrid = BaseSettings & {
   invalidColor: string;
 };
 
-// TODO(jhurliman): Upload the OccupancyGrid data directly as a R8I texture and
-// use a custom ShaderMaterial with an isampler2D uniform to reimplement the
-// updateTexture() logic in a shader
-
 const INVALID_OCCUPANCY_GRID = "INVALID_OCCUPANCY_GRID";
 
 const DEFAULT_MIN_COLOR = { r: 1, g: 1, b: 1, a: 1 }; // white
@@ -135,7 +131,7 @@ export class OccupancyGrids extends SceneExtension<OccupancyGridRenderable> {
       const settings = this.renderer.config.topics[topicName] as
         | Partial<LayerSettingsOccupancyGrid>
         | undefined;
-      renderable.userData.settings = { ...renderable.userData.settings, ...settings };
+      renderable.userData.settings = { ...DEFAULT_SETTINGS, ...settings };
 
       // Check if the transparency changed and we need to create a new material
       const newTransparent = occupancyGridHasTransparency(renderable.userData.settings);

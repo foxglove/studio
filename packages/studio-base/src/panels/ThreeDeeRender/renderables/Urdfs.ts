@@ -82,6 +82,7 @@ type TransformData = {
 
 type ParsedUrdf = {
   robot: UrdfRobot;
+  frames: string[];
   transforms: TransformData[];
 };
 
@@ -106,6 +107,9 @@ export class UrdfRenderable extends Renderable<UrdfUserData> {
 }
 
 export class Urdfs extends SceneExtension<UrdfRenderable> {
+  private frames: string[] = [];
+  private transforms: TransformData[] = [];
+
   public constructor(renderer: Renderer) {
     super("foxglove.Urdfs", renderer);
 
@@ -124,6 +128,11 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
         this._loadUrdf(instanceId, undefined);
       }
     }
+  }
+
+  public override dispose(): void {
+    this.frames = [];
+    this.transforms = [];
   }
 
   public override settingsNodes(): SettingsTreeEntry[] {
@@ -184,7 +193,8 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
   }
 
   public override removeAllRenderables(): void {
-    // no-op
+    // Re-add coordinate frames and transforms since the scene has been cleared
+    this._loadTransforms(this.frames, this.transforms);
   }
 
   public override startFrame(
@@ -417,13 +427,10 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
       });
   }
 
-  private _loadRobot(renderable: UrdfRenderable, { robot, transforms }: ParsedUrdf): void {
+  private _loadRobot(renderable: UrdfRenderable, { robot, frames, transforms }: ParsedUrdf): void {
     const renderer = this.renderer;
 
-    // Import all transforms from the URDF into the scene
-    for (const { parent, child, translation, rotation } of transforms) {
-      renderer.addTransform(parent, child, 0n, translation, rotation);
-    }
+    this._loadTransforms(frames, transforms);
 
     // Dispose any existing renderables
     renderable.removeChildren();
@@ -452,15 +459,31 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
       }
     }
   }
+
+  private _loadTransforms(frames: string[], transforms: TransformData[]): void {
+    this.frames = frames;
+    this.transforms = transforms;
+
+    // Import all coordinate frames from the URDF into the scene
+    for (const frameId of frames) {
+      this.renderer.addCoordinateFrame(frameId);
+    }
+
+    // Import all transforms from the URDF into the scene
+    for (const { parent, child, translation, rotation } of transforms) {
+      this.renderer.addTransform(parent, child, 0n, translation, rotation);
+    }
+  }
 }
 
-async function parseUrdf(text: string): Promise<{ robot: UrdfRobot; transforms: TransformData[] }> {
+async function parseUrdf(text: string): Promise<ParsedUrdf> {
   const fileFetcher = getFileFetch();
 
   try {
     log.debug(`Parsing ${text.length} byte URDF`);
     const robot = await parseRobot(text, fileFetcher);
 
+    const frames = Array.from(robot.links.values(), (link) => link.name);
     const transforms = Array.from(robot.joints.values(), (joint) => {
       const translation = joint.origin.xyz;
       const rotation = eulerToQuaternion(joint.origin.rpy);
@@ -473,7 +496,7 @@ async function parseUrdf(text: string): Promise<{ robot: UrdfRobot; transforms: 
       return transform;
     });
 
-    return { robot, transforms };
+    return { robot, frames, transforms };
   } catch (err) {
     throw new Error(`Failed to parse ${text.length} byte URDF: ${err}`);
   }

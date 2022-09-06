@@ -13,8 +13,7 @@
 
 import DownloadIcon from "@mui/icons-material/Download";
 import { Typography, useTheme } from "@mui/material";
-import produce from "immer";
-import { compact, isEmpty, set, uniq } from "lodash";
+import { compact, isEmpty, isNumber, uniq } from "lodash";
 import memoizeWeak from "memoize-weak";
 import { useEffect, useCallback, useMemo, ComponentProps } from "react";
 
@@ -27,7 +26,7 @@ import {
   subtract as subtractTimes,
   toSec,
 } from "@foxglove/rostime";
-import { MessageEvent, SettingsTreeAction } from "@foxglove/studio";
+import { MessageEvent } from "@foxglove/studio";
 import { useBlocksByTopic, useMessageReducer } from "@foxglove/studio-base/PanelAPI";
 import { MessageBlock } from "@foxglove/studio-base/PanelAPI/useBlocksByTopic";
 import parseRosPath, {
@@ -53,7 +52,6 @@ import {
   ChartDefaultView,
   TimeBasedChartTooltipData,
 } from "@foxglove/studio-base/components/TimeBasedChart";
-import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelSettingsEditorContextProvider";
 import { OnClickArg as OnChartClickArgs } from "@foxglove/studio-base/src/components/Chart";
 import { OpenSiblingPanel, PanelConfig, SaveConfig } from "@foxglove/studio-base/types/panels";
 import { getTimestampForMessage } from "@foxglove/studio-base/util/time";
@@ -64,7 +62,7 @@ import { downloadCSV } from "./csv";
 import { getDatasets } from "./datasets";
 import helpContent from "./index.help.md";
 import { PlotDataByPath, PlotDataItem } from "./internalTypes";
-import { buildSettingsTree } from "./settings";
+import { usePlotPanelSettings } from "./settings";
 import { PlotConfig } from "./types";
 
 export { plotableRosTypes } from "./types";
@@ -122,18 +120,42 @@ const getMessagePathItemsForBlock = memoizeWeak(
 
 const ZERO_TIME = { sec: 0, nsec: 0 };
 
+const performance = window.performance;
+
 function getBlockItemsByPath(
   decodeMessagePathsForMessagesByTopic: (_: MessageBlock) => MessageDataItemsByPath,
   blocks: readonly MessageBlock[],
 ) {
   const ret: Record<string, PlotDataItem[][]> = {};
   const lastBlockIndexForPath: Record<string, number> = {};
-  blocks.forEach((block, i: number) => {
+  let count = 0;
+  let i = 0;
+  for (const block of blocks) {
     const messagePathItemsForBlock: PlotDataByPath = getMessagePathItemsForBlock(
       decodeMessagePathsForMessagesByTopic,
       block,
     );
-    Object.entries(messagePathItemsForBlock).forEach(([path, messagePathItems]) => {
+
+    // After 1 million data points we check if there is more memory to continue loading more
+    // data points. This helps prevent runaway memory use if the user tried to plot a binary topic.
+    //
+    // An example would be to try plotting `/map.data[:]` where map is an occupancy grid
+    // this can easily result in many millions of points.
+    if (count >= 1_000_000) {
+      // if we have memory stats we can let the user have more points as long as memory is not under pressure
+      if (performance.memory) {
+        const pct = performance.memory.usedJSHeapSize / performance.memory.jsHeapSizeLimit;
+        if (isNaN(pct) || pct > 0.6) {
+          return ret;
+        }
+      } else {
+        return ret;
+      }
+    }
+
+    for (const [path, messagePathItems] of Object.entries(messagePathItemsForBlock)) {
+      count += messagePathItems[0]?.[0]?.queriedData.length ?? 0;
+
       const existingItems = ret[path] ?? [];
       // getMessagePathItemsForBlock returns an array of exactly one range of items.
       const [pathItems] = messagePathItems;
@@ -154,8 +176,10 @@ function getBlockItemsByPath(
       }
       ret[path] = existingItems;
       lastBlockIndexForPath[path] = i;
-    });
-  });
+    }
+
+    i += 1;
+  }
   return ret;
 }
 
@@ -177,6 +201,8 @@ function Plot(props: Props) {
     title,
     followingViewWidth,
     paths: yAxisPaths,
+    minXValue,
+    maxXValue,
     minYValue,
     maxYValue,
     showXAxisLabels,
@@ -224,11 +250,19 @@ function Plot(props: Props) {
 
   const endTimeSinceStart = timeSincePreloadedStart(endTime);
   const fixedView = useMemo<ChartDefaultView | undefined>(() => {
+    // Apply min/max x-value if either min or max or both is defined.
+    if ((isNumber(minXValue) && isNumber(endTimeSinceStart)) || isNumber(maxXValue)) {
+      return {
+        type: "fixed",
+        minXValue: isNumber(minXValue) ? minXValue : 0,
+        maxXValue: isNumber(maxXValue) ? maxXValue : endTimeSinceStart ?? 0,
+      };
+    }
     if (xAxisVal === "timestamp" && startTime && endTimeSinceStart != undefined) {
       return { type: "fixed", minXValue: 0, maxXValue: endTimeSinceStart };
     }
     return undefined;
-  }, [endTimeSinceStart, startTime, xAxisVal]);
+  }, [maxXValue, minXValue, endTimeSinceStart, startTime, xAxisVal]);
 
   // following view and fixed view are split to keep defaultView identity stable when possible
   const defaultView = useMemo<ChartDefaultView | undefined>(() => {
@@ -436,29 +470,7 @@ function Plot(props: Props) {
     [messagePipeline, xAxisVal],
   );
 
-  const updatePanelSettingsTree = usePanelSettingsTreeUpdate();
-
-  const actionHandler = useCallback(
-    (action: SettingsTreeAction) => {
-      if (action.action !== "update") {
-        return;
-      }
-
-      const { path, value } = action.payload;
-      saveConfig(
-        produce((draft) => {
-          set(draft, path.slice(1), value);
-        }),
-      );
-    },
-    [saveConfig],
-  );
-  useEffect(() => {
-    updatePanelSettingsTree({
-      actionHandler,
-      nodes: buildSettingsTree(config),
-    });
-  }, [actionHandler, config, updatePanelSettingsTree]);
+  usePlotPanelSettings(config, saveConfig);
 
   const stackDirection = useMemo(
     () => (legendDisplay === "top" ? "column" : "row"),

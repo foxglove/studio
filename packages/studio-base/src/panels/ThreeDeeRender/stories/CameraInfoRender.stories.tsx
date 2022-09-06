@@ -132,11 +132,11 @@ export function CameraInfoRender(): JSX.Element {
           ...ThreeDeeRender.defaultConfig,
           followTf: SENSOR_FRAME_ID,
           cameraState: {
-            distance: 1.25,
+            distance: 1.85,
             perspective: true,
             phi: rad2deg(0),
             targetOffset: [0, 0, 0],
-            thetaOffset: rad2deg(0),
+            thetaOffset: rad2deg(Math.PI),
             fovy: rad2deg(0.75),
             near: 0.01,
             far: 5000,

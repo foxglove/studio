@@ -18,9 +18,10 @@ import { SettingsTreeEntry } from "../SettingsManager";
 import { getLuminance, stringToRgb } from "../color";
 import { BaseSettings, fieldSize } from "../settings";
 import { Duration, Transform, makePose, CoordinateFrame, MAX_DURATION } from "../transforms";
-import { Axis } from "./Axis";
+import { Axis, AXIS_LENGTH } from "./Axis";
 import {
   DEFAULT_AXIS_SCALE,
+  DEFAULT_LABEL_SCALE_FACTOR,
   DEFAULT_LINE_COLOR_STR,
   DEFAULT_LINE_WIDTH_PX,
   DEFAULT_TF_LABEL_SIZE,
@@ -199,23 +200,45 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
 
     super.startFrame(currentTime, renderFrameId, fixedFrameId);
 
-    // Update the lines between coordinate frames
+    // Compute the label offset based on the axis length and label size. We want the label
+    // to float a little above the up axis arrow, proportional to the height of the label
+    const axisScale = this.renderer.config.scene.transforms?.axisScale ?? DEFAULT_AXIS_SCALE;
+    const axisLength = AXIS_LENGTH * axisScale;
+    const labelSize = this.renderer.config.scene.transforms?.labelSize ?? DEFAULT_TF_LABEL_SIZE;
+    const labelScale = this.renderer.config.scene.labelScaleFactor ?? DEFAULT_LABEL_SCALE_FACTOR;
+    const labelOffsetZ = axisLength + labelSize * labelScale * 1.5;
+
+    // Update the lines and labels between coordinate frames
     for (const renderable of this.renderables.values()) {
+      const label = renderable.userData.label;
       const line = renderable.userData.parentLine;
-      line.visible = false;
       const childFrame = this.renderer.transformTree.frame(renderable.userData.frameId);
       const parentFrame = childFrame?.parent();
+      // NOTE: tempVecB should not be used until the label uses it below
+      const worldPosition = tempVecB;
+      renderable.getWorldPosition(worldPosition);
+      // Lines require a parent renderable because they draw a line from the parent
+      // frame origin to the child frame origin
+      line.visible = false;
       if (parentFrame) {
         const parentRenderable = this.renderables.get(parentFrame.id);
         if (parentRenderable?.visible === true) {
-          parentRenderable.getWorldPosition(tempVec);
-          const dist = tempVec.distanceTo(renderable.getWorldPosition(tempVecB));
-          line.lookAt(tempVec);
+          const parentWorldPosition = tempVec;
+          parentRenderable.getWorldPosition(parentWorldPosition);
+          const dist = parentWorldPosition.distanceTo(worldPosition);
+          line.lookAt(parentWorldPosition);
           line.rotateY(-PI_2);
           line.scale.set(dist, 1, 1);
           line.visible = true;
         }
       }
+
+      // Add the label offset in "world" coordinates (in the render frame)
+      worldPosition.z += labelOffsetZ;
+      // Transform worldPosition back to the local coordinate frame of the
+      // renderable, which the label is a child of
+      renderable.worldToLocal(worldPosition);
+      label.position.set(worldPosition.x, worldPosition.y, worldPosition.z);
     }
   }
 
@@ -368,7 +391,6 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
     const label = this.renderer.labelPool.acquire();
     label.setBillboard(true);
     label.setText(text);
-    label.position.set(0, 0, 0.4);
     label.setLineHeight(config.scene.transforms?.labelSize ?? DEFAULT_TF_LABEL_SIZE);
     label.visible = config.scene.transforms?.showLabel ?? true;
     label.setColor(this.labelForegroundColor, this.labelForegroundColor, this.labelForegroundColor);

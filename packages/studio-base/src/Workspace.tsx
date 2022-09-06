@@ -11,6 +11,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { Link, Typography } from "@mui/material";
+import { useSnackbar } from "notistack";
 import { extname } from "path";
 import {
   useState,
@@ -21,7 +22,6 @@ import {
   useLayoutEffect,
   useContext,
 } from "react";
-import { useToasts } from "react-toast-notifications";
 import { makeStyles } from "tss-react/mui";
 
 import Logger from "@foxglove/log";
@@ -29,7 +29,6 @@ import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import AccountSettings from "@foxglove/studio-base/components/AccountSettingsSidebar/AccountSettings";
 import { DataSourceSidebar } from "@foxglove/studio-base/components/DataSourceSidebar";
 import DocumentDropListener from "@foxglove/studio-base/components/DocumentDropListener";
-import DropOverlay from "@foxglove/studio-base/components/DropOverlay";
 import ExtensionsSidebar from "@foxglove/studio-base/components/ExtensionsSidebar";
 import HelpSidebar, {
   MESSAGE_PATH_SYNTAX_HELP_INFO,
@@ -43,7 +42,6 @@ import {
 } from "@foxglove/studio-base/components/MessagePipeline";
 import MultiProvider from "@foxglove/studio-base/components/MultiProvider";
 import { OpenDialog, OpenDialogViews } from "@foxglove/studio-base/components/OpenDialog";
-import { OrgExtensionRegistrySyncAdapter } from "@foxglove/studio-base/components/OrgExtensionRegistrySyncAdapter";
 import PanelLayout from "@foxglove/studio-base/components/PanelLayout";
 import PanelList from "@foxglove/studio-base/components/PanelList";
 import panelsHelpContent from "@foxglove/studio-base/components/PanelList/index.help.md";
@@ -55,7 +53,7 @@ import Sidebar, { SidebarItem } from "@foxglove/studio-base/components/Sidebar";
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
 import { SignInFormModal } from "@foxglove/studio-base/components/SignInFormModal";
 import Stack from "@foxglove/studio-base/components/Stack";
-import { URLStateSyncAdapter } from "@foxglove/studio-base/components/URLStateSyncAdapter";
+import { SyncAdapters } from "@foxglove/studio-base/components/SyncAdapters";
 import VariablesSidebar from "@foxglove/studio-base/components/VariablesSidebar";
 import { useAssets } from "@foxglove/studio-base/context/AssetsContext";
 import ConsoleApiContext from "@foxglove/studio-base/context/ConsoleApiContext";
@@ -95,10 +93,6 @@ const useStyles = makeStyles()({
     flex: "1 1 100%",
     outline: "none",
     overflow: "hidden",
-  },
-  dropzone: {
-    fontSize: "4em",
-    marginBottom: "1em",
   },
 });
 
@@ -159,7 +153,7 @@ type WorkspaceProps = {
 const DEFAULT_DEEPLINKS = Object.freeze([]);
 
 const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => playerState.presence;
-const selectRequestBackfill = ({ requestBackfill }: MessagePipelineContext) => requestBackfill;
+const selectSetSubscriptions = ({ setSubscriptions }: MessagePipelineContext) => setSubscriptions;
 const selectPlayerProblems = ({ playerState }: MessagePipelineContext) => playerState.problems;
 const selectIsPlaying = (ctx: MessagePipelineContext) =>
   ctx.playerState.activeData?.isPlaying === true;
@@ -190,9 +184,9 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
 
   const supportsAccountSettings = useContext(ConsoleApiContext) != undefined;
 
-  // we use requestBackfill to signal when a player changes for RemountOnValueChange below
+  // we use setSubscriptions to detect when a player changes for RemountOnValueChange below
   // see comment below above the RemountOnValueChange component
-  const requestBackfill = useMessagePipeline(selectRequestBackfill);
+  const setSubscriptions = useMessagePipeline(selectSetSubscriptions);
 
   const isPlayerPresent = playerPresence !== PlayerPresence.NOT_PRESENT;
 
@@ -351,7 +345,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     };
   }, [connectionSources, nativeAppMenu, selectSource]);
 
-  const { addToast } = useToasts();
+  const { enqueueSnackbar } = useSnackbar();
 
   const { loadFromFile } = useAssets();
 
@@ -370,14 +364,11 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
           const arrayBuffer = await file.arrayBuffer();
           const data = new Uint8Array(arrayBuffer);
           const extension = await installExtension("local", data);
-          addToast(`Installed extension ${extension.id}`, {
-            appearance: "success",
-            autoDismiss: true,
-          });
+          enqueueSnackbar(`Installed extension ${extension.id}`, { variant: "success" });
         } catch (err) {
           log.error(err);
-          addToast(`Failed to install extension ${file.name}: ${err.message}`, {
-            appearance: "error",
+          enqueueSnackbar(`Failed to install extension ${file.name}: ${err.message}`, {
+            variant: "error",
           });
         }
       } else {
@@ -387,9 +378,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
           }
         } catch (err) {
           log.error(err);
-          addToast(`Failed to load ${file.name}: ${err.message}`, {
-            appearance: "error",
-          });
+          enqueueSnackbar(`Failed to load ${file.name}: ${err.message}`, { variant: "error" });
         }
       }
 
@@ -402,7 +391,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
         selectSource(matchedSource.id, { type: "file", handle });
       }
     },
-    [addToast, availableSources, installExtension, loadFromFile, selectSource],
+    [availableSources, enqueueSnackbar, installExtension, loadFromFile, selectSource],
   );
 
   const openFiles = useCallback(
@@ -420,14 +409,11 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
             const arrayBuffer = await file.arrayBuffer();
             const data = new Uint8Array(arrayBuffer);
             const extension = await installExtension("local", data);
-            addToast(`Installed extension ${extension.id}`, {
-              appearance: "success",
-              autoDismiss: true,
-            });
+            enqueueSnackbar(`Installed extension ${extension.id}`, { variant: "success" });
           } catch (err) {
             log.error(err);
-            addToast(`Failed to install extension ${file.name}: ${err.message}`, {
-              appearance: "error",
+            enqueueSnackbar(`Failed to install extension ${file.name}: ${err.message}`, {
+              variant: "error",
             });
           }
         } else {
@@ -437,9 +423,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
             }
           } catch (err) {
             log.error(err);
-            addToast(`Failed to load ${file.name}: ${err.message}`, {
-              appearance: "error",
-            });
+            enqueueSnackbar(`Failed to load ${file.name}: ${err.message}`, { variant: "error" });
           }
         }
       }
@@ -460,7 +444,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
         }
       }
     },
-    [addToast, availableSources, installExtension, loadFromFile, selectSource],
+    [availableSources, enqueueSnackbar, installExtension, loadFromFile, selectSource],
   );
 
   // files the main thread told us to open
@@ -600,13 +584,8 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
           onDismiss={() => setShowOpenDialog(undefined)}
         />
       )}
-      <DocumentDropListener onDrop={dropHandler} allowedExtensions={allowedDropExtensions}>
-        <DropOverlay>
-          <div className={classes.dropzone}>Drop a file here</div>
-        </DropOverlay>
-      </DocumentDropListener>
-      <OrgExtensionRegistrySyncAdapter />
-      <URLStateSyncAdapter />
+      <DocumentDropListener onDrop={dropHandler} allowedExtensions={allowedDropExtensions} />
+      <SyncAdapters />
       <KeyListener global keyDownHandlers={keyDownHandlers} />
       <div className={classes.container} ref={containerRef} tabIndex={0}>
         <Sidebar
@@ -616,7 +595,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
           onSelectKey={selectSidebarItem}
         >
           {/* To ensure no stale player state remains, we unmount all panels when players change */}
-          <RemountOnValueChange value={requestBackfill}>
+          <RemountOnValueChange value={setSubscriptions}>
             <Stack>
               <PanelLayout />
               {play && pause && seek && (

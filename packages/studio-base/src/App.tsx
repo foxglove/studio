@@ -6,6 +6,9 @@ import { useState, Suspense, Fragment, useEffect } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
+import EventsProvider from "@foxglove/studio-base/providers/EventsProvider";
+import TimelineInteractionStateProvider from "@foxglove/studio-base/providers/TimelineInteractionStateProvider";
+
 import Workspace from "./Workspace";
 import { ColorSchemeThemeProvider } from "./components/ColorSchemeThemeProvider";
 import CssBaseline from "./components/CssBaseline";
@@ -20,7 +23,6 @@ import AnalyticsProvider from "./context/AnalyticsProvider";
 import AppConfigurationContext, { IAppConfiguration } from "./context/AppConfigurationContext";
 import { AssetsProvider } from "./context/AssetsContext";
 import ConsoleApiContext from "./context/ConsoleApiContext";
-import { HoverValueProvider } from "./context/HoverValueContext";
 import LayoutStorageContext from "./context/LayoutStorageContext";
 import ModalHost from "./context/ModalHost";
 import NativeAppMenuContext, { INativeAppMenu } from "./context/NativeAppMenuContext";
@@ -100,12 +102,13 @@ export function App(props: AppProps): JSX.Element {
     <ModalHost />, // render modal elements inside the ThemeProvider
     <AssetsProvider loaders={assetLoaders} />,
     <HelpInfoProvider />,
-    <HoverValueProvider />,
+    <TimelineInteractionStateProvider />,
     <UserNodeStateProvider />,
     <CurrentLayoutProvider />,
     <ExtensionMarketplaceProvider />,
     <ExtensionCatalogProvider loaders={extensionLoaders} />,
     <PlayerManager playerSources={dataSources} />,
+    <EventsProvider />,
     /* eslint-enable react/jsx-key */
   ];
 
