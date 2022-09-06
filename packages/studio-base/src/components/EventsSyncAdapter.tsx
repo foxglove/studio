@@ -54,7 +54,7 @@ function positionEvents(
 
 const selectUrlState = (ctx: MessagePipelineContext) => ctx.playerState.urlState;
 const selectSetEvents = (store: EventsStore) => store.setEvents;
-const selectSetHoveredEvents = (store: TimelineInteractionStateStore) =>
+const selectSetEventsAtHoverValue = (store: TimelineInteractionStateStore) =>
   store.setEventsAtHoverValue;
 const selectStartTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.startTime;
 const selectEndTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.endTime;
@@ -67,7 +67,7 @@ export function EventsSyncAdapter(): ReactNull {
   const urlState = useMessagePipeline(selectUrlState);
   const consoleApi = useConsoleApi();
   const setEvents = useEvents(selectSetEvents);
-  const setHoveredEvents = useTimelineInteractionState(selectSetHoveredEvents);
+  const setEventsAtHoverValue = useTimelineInteractionState(selectSetEventsAtHoverValue);
   const hoverValue = useHoverValue();
   const startTime = useMessagePipeline(selectStartTime);
   const endTime = useMessagePipeline(selectEndTime);
@@ -123,11 +123,11 @@ export function EventsSyncAdapter(): ReactNull {
           hoverPosition <= event.endPosition * (1 + HOVER_TOLERANCE)
         );
       });
-      setHoveredEvents(hoveredEvents);
+      setEventsAtHoverValue(hoveredEvents);
     } else {
-      setHoveredEvents([]);
+      setEventsAtHoverValue([]);
     }
-  }, [hoverValue, setHoveredEvents, timeRange, events]);
+  }, [hoverValue, setEventsAtHoverValue, timeRange, events]);
 
   return ReactNull;
 }
