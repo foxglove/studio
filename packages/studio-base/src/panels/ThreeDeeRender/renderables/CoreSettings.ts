@@ -303,7 +303,7 @@ export class CoreSettings extends SceneExtension {
           // any follow -> stationary no clear
           // stationary -> any follow clear offset (center on frame)
           if (draft.followMode === "follow-none") {
-            draft.cameraState.targetOffset = DEFAULT_CAMERA_STATE.targetOffset;
+            draft.cameraState.targetOffset = [...DEFAULT_CAMERA_STATE.targetOffset];
             draft.cameraState.thetaOffset = DEFAULT_CAMERA_STATE.thetaOffset;
           } else if (followMode === "follow-pose") {
             draft.cameraState.thetaOffset = DEFAULT_CAMERA_STATE.thetaOffset;
