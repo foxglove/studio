@@ -24,7 +24,7 @@ const StyledIconButton = muiStyled(IconButton, {
 export default forwardRef(function ToolbarIconButton(
   props: {
     subMenuActive?: boolean;
-    title?: string; // require title for accessibility
+    title?: string;
   } & Partial<IconButtonProps>,
   ref: ForwardedRef<HTMLButtonElement>,
 ): React.ReactElement {
