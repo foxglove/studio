@@ -261,7 +261,8 @@ export class RenderableArrows extends RenderablePrimitive {
   private static ShaftGeometry() {
     if (!RenderableArrows.shaftGeometry) {
       RenderableArrows.shaftGeometry = new THREE.CylinderGeometry(0.5, 0.5, 1, 16);
-      RenderableArrows.shaftGeometry.rotateZ(Math.PI / 2).translate(0.5, 0, 0);
+      // Adjust cylinder so ends are centered on (0,0,0) and (1,0,0)
+      RenderableArrows.shaftGeometry.rotateZ(-Math.PI / 2).translate(0.5, 0, 0);
       RenderableArrows.shaftGeometry.computeBoundingSphere();
     }
     return RenderableArrows.shaftGeometry;
@@ -281,6 +282,7 @@ export class RenderableArrows extends RenderablePrimitive {
   private static HeadGeometry() {
     if (!RenderableArrows.headGeometry) {
       RenderableArrows.headGeometry = new THREE.ConeGeometry(0.5, 1, 16);
+      // Adjust cone so base is centered on (0,0,0) and tip is at (1,0,0)
       RenderableArrows.headGeometry.rotateZ(-Math.PI / 2).translate(0.5, 0, 0);
       RenderableArrows.headGeometry.computeBoundingSphere();
     }
