@@ -5,7 +5,6 @@
 import { ReactNode, useState } from "react";
 import { AsyncState } from "react-use/lib/useAsyncFn";
 import { createSelector } from "reselect";
-import { DeepReadonly } from "ts-essentials";
 import { createStore } from "zustand";
 
 import {
@@ -16,17 +15,20 @@ import {
 
 const NO_EVENTS: TimelinePositionedEvent[] = [];
 
+function createEventsStore() {
+  return createStore<EventsStore>((set) => ({
+    filter: "",
+    events: { loading: false, value: NO_EVENTS },
+    selectedEventId: undefined,
+    selectEvent: (id: undefined | string) => set({ selectedEventId: id }),
+    setEvents: (events: AsyncState<TimelinePositionedEvent[]>) =>
+      set({ events, filter: "", selectedEventId: undefined }),
+    setFilter: (filter: string) => set({ filter }),
+  }));
+}
+
 export default function EventsProvider({ children }: { children?: ReactNode }): JSX.Element {
-  const [store] = useState(
-    createStore<EventsStore>((set) => ({
-      filter: "",
-      events: { loading: false, value: NO_EVENTS },
-      selectedEventId: undefined,
-      selectEvent: (id: undefined | string) => set({ selectedEventId: id }),
-      setEvents: (events: AsyncState<TimelinePositionedEvent[]>) => set({ events }),
-      setFilter: (filter: string) => set({ filter }),
-    })),
-  );
+  const [store] = useState(createEventsStore);
 
   return <EventsContext.Provider value={store}>{children}</EventsContext.Provider>;
 }
@@ -34,7 +36,7 @@ export default function EventsProvider({ children }: { children?: ReactNode }): 
 const selectFilteredEvents = createSelector(
   (store: EventsStore) => store.events.value,
   (store: EventsStore) => store.filter,
-  (events: undefined | DeepReadonly<TimelinePositionedEvent[]>, filter: string) => {
+  (events, filter) => {
     if (!events) {
       return NO_EVENTS;
     }

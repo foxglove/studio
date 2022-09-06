@@ -254,6 +254,7 @@ export default function Scrubber(props: Props): JSX.Element {
           renderSlider={renderSlider}
         />
       </Stack>
+      <EventsOverlay />
       <PlaybackBarHoverTicks componentId={hoverComponentId} />
     </Stack>
   );
