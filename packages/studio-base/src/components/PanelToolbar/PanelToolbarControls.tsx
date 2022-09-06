@@ -12,16 +12,22 @@
 //   You may not use this file except in compliance with the License.
 
 import SettingsIcon from "@mui/icons-material/Settings";
-import { forwardRef, useCallback, useContext } from "react";
+import { Tooltip } from "@mui/material";
+import produce from "immer";
+import { forwardRef, useCallback, useContext, useEffect } from "react";
+import { useAsyncFn } from "react-use";
+import { makeStyles } from "tss-react/mui";
 
 import PanelContext from "@foxglove/studio-base/components/PanelContext";
 import ToolbarIconButton from "@foxglove/studio-base/components/PanelToolbar/ToolbarIconButton";
 import Stack from "@foxglove/studio-base/components/Stack";
 import { useSelectedPanels } from "@foxglove/studio-base/context/CurrentLayoutContext";
+import { usePanelCatalog } from "@foxglove/studio-base/context/PanelCatalogContext";
 import {
   PanelSettingsEditorStore,
   usePanelSettingsEditorStore,
 } from "@foxglove/studio-base/context/PanelSettingsEditorContext";
+import { useUserProfileStorage } from "@foxglove/studio-base/context/UserProfileStorageContext";
 import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
 
 import { PanelActionsDropdown } from "./PanelActionsDropdown";
@@ -34,12 +40,26 @@ type PanelToolbarControlsProps = {
   setMenuOpen: (_: boolean) => void;
 };
 
+const useStyles = makeStyles()((theme) => ({
+  settingsOnboardingTooltip: {
+    backgroundColor: theme.palette.primary.main,
+    boxShadow: theme.shadows[8],
+    fontSize: theme.typography.body1.fontSize,
+    "& .MuiTooltip-arrow": {
+      color: theme.palette.primary.main,
+    },
+    marginTop: `${theme.spacing(1)} !important`,
+  },
+}));
+
 const PanelToolbarControlsComponent = forwardRef<HTMLDivElement, PanelToolbarControlsProps>(
   (props, ref) => {
     const { additionalIcons, isUnknownPanel, menuOpen, setMenuOpen } = props;
-    const panelId = useContext(PanelContext)?.id;
+    const { id: panelId, type: panelType } = useContext(PanelContext) ?? {};
+    const panelCatalog = usePanelCatalog();
     const { setSelectedPanelIds } = useSelectedPanels();
     const { openPanelSettings } = useWorkspace();
+    const { classes } = useStyles();
 
     const hasSettingsSelector = useCallback(
       (store: PanelSettingsEditorStore) =>
@@ -49,21 +69,80 @@ const PanelToolbarControlsComponent = forwardRef<HTMLDivElement, PanelToolbarCon
 
     const hasSettings = usePanelSettingsEditorStore(hasSettingsSelector);
 
-    const openSettings = useCallback(() => {
+    const { getUserProfile, setUserProfile } = useUserProfileStorage();
+    const [{ value: settingsOnboardingTooltip }, loadOnboardingState] =
+      useAsyncFn(async (): Promise<string | undefined> => {
+        if (panelType == undefined || !hasSettings) {
+          return undefined;
+        }
+        const tooltip = panelCatalog.getPanelByType(panelType)?.settingsOnboardingTooltip;
+        if (tooltip == undefined) {
+          return undefined;
+        }
+        const { onboarding } = await getUserProfile();
+        const { settingsTooltipShownForPanelTypes = [] } = onboarding ?? {};
+        if (settingsTooltipShownForPanelTypes.includes(panelType)) {
+          return undefined;
+        }
+        return tooltip;
+      }, [getUserProfile, hasSettings, panelCatalog, panelType]);
+    useEffect(() => {
+      void loadOnboardingState();
+    }, [loadOnboardingState]);
+
+    const openSettings = useCallback(async () => {
       if (panelId) {
         setSelectedPanelIds([panelId]);
         openPanelSettings();
       }
-    }, [setSelectedPanelIds, openPanelSettings, panelId]);
+      if (panelType) {
+        await setUserProfile((profile) =>
+          produce(profile, (draft) => {
+            draft.onboarding ??= { settingsTooltipShownForPanelTypes: [] };
+            draft.onboarding.settingsTooltipShownForPanelTypes?.push(panelType);
+          }),
+        );
+        await loadOnboardingState();
+      }
+    }, [
+      panelId,
+      panelType,
+      setSelectedPanelIds,
+      openPanelSettings,
+      setUserProfile,
+      loadOnboardingState,
+    ]);
+
+    let settingsButton = (
+      <ToolbarIconButton onClick={openSettings}>
+        <SettingsIcon />
+      </ToolbarIconButton>
+    );
+    if (settingsOnboardingTooltip) {
+      settingsButton = (
+        <Tooltip
+          open
+          title={settingsOnboardingTooltip}
+          arrow
+          PopperProps={{
+            modifiers: [
+              {
+                name: "preventOverflow",
+                options: { altAxis: true, padding: 10 },
+              },
+            ],
+          }}
+          componentsProps={{ tooltip: { className: classes.settingsOnboardingTooltip } }}
+        >
+          {settingsButton}
+        </Tooltip>
+      );
+    }
 
     return (
       <Stack direction="row" alignItems="center" paddingLeft={1} ref={ref}>
         {additionalIcons}
-        {hasSettings && (
-          <ToolbarIconButton title="Settings" onClick={openSettings}>
-            <SettingsIcon />
-          </ToolbarIconButton>
-        )}
+        {hasSettings && settingsButton}
         <PanelActionsDropdown
           isOpen={menuOpen}
           setIsOpen={setMenuOpen}
