@@ -22,6 +22,9 @@ export type TimelinePositionedEvent = {
 
   /** The start position of the event, as a value 0-1 relative to the timeline. */
   startPosition: number;
+
+  /** The time, in seconds, relative to the start of the timeline. */
+  secondsSinceStart: number;
 };
 
 export type EventsStore = DeepReadonly<{

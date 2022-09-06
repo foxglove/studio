@@ -65,7 +65,7 @@ const useStyles = makeStyles()((theme) => ({
   },
 }));
 
-const selectHoveredEvents = (store: TimelineInteractionStateStore) => store.hoveredEvents;
+const selectHoveredEvents = (store: TimelineInteractionStateStore) => store.eventsAtHoverValue;
 const selectStartTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.startTime;
 const selectCurrentTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.currentTime;
 const selectEndTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.endTime;

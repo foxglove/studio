@@ -35,6 +35,7 @@ export function makeMockEvents(
       },
       startPosition: idx / count,
       endPosition: idx / count + 0.1,
+      secondsSinceStart: toSec(startTime),
     };
   });
 }

@@ -35,17 +35,23 @@ export type SyncBounds = {
  * Things like the hovered time value and global bounds for plots are managed here.
  */
 export type TimelineInteractionStateStore = DeepReadonly<{
+  /** The events overlapping the current hover time, if any. */
+  eventsAtHoverValue: Record<string, TimelinePositionedEvent>;
+
   /** Shared time bounds for synced plots, if any. */
   globalBounds: undefined | SyncBounds;
 
-  /** The events hovered over by the user, if any. */
-  hoveredEvents: Record<string, TimelinePositionedEvent>;
+  /** The event directly hovered over by the user, if any. */
+  hoveredEvent: undefined | TimelinePositionedEvent;
 
   /** The point in time hovered over by the user. */
   hoverValue: undefined | HoverValue;
 
   /** Clears the current hover value. */
   clearHoverValue: (componentId: string) => void;
+
+  /** Sets the events overlapping the current hover time. */
+  setEventsAtHoverValue: (events: TimelinePositionedEvent[]) => void;
 
   /** Sets new global bounds. */
   setGlobalBounds: (
@@ -55,8 +61,8 @@ export type TimelineInteractionStateStore = DeepReadonly<{
       | ((oldValue: undefined | SyncBounds) => undefined | SyncBounds),
   ) => void;
 
-  /** Sets the currently hovered events. */
-  setHoveredEvents: (events: TimelinePositionedEvent[]) => void;
+  /** Sets or clears the directly hovered event. */
+  setHoveredEvent: (hoveredEvent: undefined | TimelinePositionedEvent) => void;
 
   /** Sets the new hover value. */
   setHoverValue: (value: HoverValue) => void;

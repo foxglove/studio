@@ -42,13 +42,20 @@ function positionEvents(
   return events.map((event) => {
     const startPosition = scale(event.startTimeInSeconds, startSecs, endSecs, 0, 1);
     const endPosition = scale(event.endTimeInSeconds, startSecs, endSecs, 0, 1);
-    return { event, endPosition, startPosition, time: event.startTimeInSeconds };
+    return {
+      event,
+      endPosition,
+      startPosition,
+      time: event.startTimeInSeconds,
+      secondsSinceStart: event.startTimeInSeconds - startSecs,
+    };
   });
 }
 
 const selectUrlState = (ctx: MessagePipelineContext) => ctx.playerState.urlState;
 const selectSetEvents = (store: EventsStore) => store.setEvents;
-const selectSetHoveredEvents = (store: TimelineInteractionStateStore) => store.setHoveredEvents;
+const selectSetHoveredEvents = (store: TimelineInteractionStateStore) =>
+  store.setEventsAtHoverValue;
 const selectStartTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.startTime;
 const selectEndTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.endTime;
 

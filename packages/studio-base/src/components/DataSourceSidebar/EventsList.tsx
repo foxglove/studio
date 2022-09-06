@@ -6,21 +6,22 @@ import ClearIcon from "@mui/icons-material/Clear";
 import SearchIcon from "@mui/icons-material/Search";
 import { alpha, AppBar, CircularProgress, IconButton, TextField, Typography } from "@mui/material";
 import { compact } from "lodash";
-import { Fragment, useCallback, useMemo, useState } from "react";
+import { Fragment, useCallback, useMemo } from "react";
 import { makeStyles } from "tss-react/mui";
 
-import { subtract, toSec } from "@foxglove/rostime";
 import { HighlightedText } from "@foxglove/studio-base/components/HighlightedText";
 import {
   MessagePipelineContext,
   useMessagePipeline,
 } from "@foxglove/studio-base/components/MessagePipeline";
 import Stack from "@foxglove/studio-base/components/Stack";
-import { EventsStore, useEvents } from "@foxglove/studio-base/context/EventsContext";
+import {
+  EventsStore,
+  TimelinePositionedEvent,
+  useEvents,
+} from "@foxglove/studio-base/context/EventsContext";
 import {
   TimelineInteractionStateStore,
-  useClearHoverValue,
-  useSetHoverValue,
   useTimelineInteractionState,
 } from "@foxglove/studio-base/context/TimelineInteractionStateContext";
 import { useAppTimeFormat } from "@foxglove/studio-base/hooks";
@@ -133,17 +134,16 @@ function formatEventDuration(event: ConsoleEvent) {
 }
 
 const selectSeek = (ctx: MessagePipelineContext) => ctx.seekPlayback;
-const selectStartTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.startTime;
 
 function EventView(params: {
-  event: ConsoleEvent;
+  event: TimelinePositionedEvent;
   filter: string;
   formattedTime: string;
   isHovered: boolean;
   isSelected: boolean;
-  onClick: (event: ConsoleEvent) => void;
-  onHoverStart: (event: ConsoleEvent) => void;
-  onHoverEnd: (event: ConsoleEvent) => void;
+  onClick: (event: TimelinePositionedEvent) => void;
+  onHoverStart: (event: TimelinePositionedEvent) => void;
+  onHoverEnd: (event: TimelinePositionedEvent) => void;
 }): JSX.Element {
   const { event, filter, formattedTime, isHovered, isSelected, onClick, onHoverStart, onHoverEnd } =
     params;
@@ -151,8 +151,8 @@ function EventView(params: {
 
   const fields = compact([
     ["timestamp", formattedTime],
-    Number(event.durationNanos) > 0 && ["duration", formatEventDuration(event)],
-    ...Object.entries(event.metadata),
+    Number(event.event.durationNanos) > 0 && ["duration", formatEventDuration(event.event)],
+    ...Object.entries(event.event.metadata),
   ]);
 
   return (
@@ -186,7 +186,9 @@ const MemoEventView = React.memo(EventView);
 const selectEventFilter = (store: EventsStore) => store.filter;
 const selectSetEventFilter = (store: EventsStore) => store.setFilter;
 const selectEvents = (store: EventsStore) => store.events;
-const selectHoveredEvents = (store: TimelineInteractionStateStore) => store.hoveredEvents;
+const selectHoveredEvent = (store: TimelineInteractionStateStore) => store.hoveredEvent;
+const selectSetHoveredEvent = (store: TimelineInteractionStateStore) => store.setHoveredEvent;
+const selectEventsAtHoverValue = (store: TimelineInteractionStateStore) => store.eventsAtHoverValue;
 const selectSelectedEventId = (store: EventsStore) => store.selectedEventId;
 const selectSelectEvent = (store: EventsStore) => store.selectEvent;
 
@@ -195,20 +197,18 @@ export function EventsList(): JSX.Element {
   const selectedEventId = useEvents(selectSelectedEventId);
   const selectEvent = useEvents(selectSelectEvent);
   const { formatTime } = useAppTimeFormat();
-  const startTime = useMessagePipeline(selectStartTime);
-  const setHoverValue = useSetHoverValue();
-  const clearHoverValue = useClearHoverValue();
   const seek = useMessagePipeline(selectSeek);
-  const hoveredEvents = useTimelineInteractionState(selectHoveredEvents);
-  const [isHovering, setIsHovering] = useState(false);
+  const eventsAtHoverValue = useTimelineInteractionState(selectEventsAtHoverValue);
+  const hoveredEvent = useTimelineInteractionState(selectHoveredEvent);
+  const setHoveredEvent = useTimelineInteractionState(selectSetHoveredEvent);
   const filter = useEvents(selectEventFilter);
   const setFilter = useEvents(selectSetEventFilter);
   const filteredEvents = useEvents(EventsSelectors.selectFilteredEvents);
 
   const timestampedEvents = useMemo(
     () =>
-      filteredEvents.map(({ event }) => {
-        return { event, formattedTime: formatTime(event.startTime) };
+      filteredEvents.map((event) => {
+        return { ...event, formattedTime: formatTime(event.event.startTime) };
       }),
     [filteredEvents, formatTime],
   );
@@ -218,48 +218,29 @@ export function EventsList(): JSX.Element {
   }, [setFilter]);
 
   const onClick = useCallback(
-    (event: ConsoleEvent) => {
-      if (event.id === selectedEventId) {
+    (event: TimelinePositionedEvent) => {
+      if (event.event.id === selectedEventId) {
         selectEvent(undefined);
       } else {
-        selectEvent(event.id);
+        selectEvent(event.event.id);
       }
 
       if (seek) {
-        seek(event.startTime);
+        seek(event.event.startTime);
       }
     },
     [seek, selectEvent, selectedEventId],
   );
 
-  const onHoverEnd = useCallback(
-    (event: ConsoleEvent) => {
-      setIsHovering(false);
-
-      clearHoverValue(`event_${event.id}`);
-    },
-    [clearHoverValue],
-  );
+  const onHoverEnd = useCallback(() => {
+    setHoveredEvent(undefined);
+  }, [setHoveredEvent]);
 
   const onHoverStart = useCallback(
-    (event: ConsoleEvent) => {
-      setIsHovering(true);
-
-      const delta = startTime ? subtract(event.startTime, startTime) : undefined;
-      const deltaTime = delta ? toSec(delta) : undefined;
-      const hoverId = `event_${event.id}`;
-
-      if (deltaTime == undefined) {
-        return;
-      }
-
-      setHoverValue({
-        componentId: hoverId,
-        type: "PLAYBACK_SECONDS",
-        value: deltaTime,
-      });
+    (event: TimelinePositionedEvent) => {
+      setHoveredEvent(event);
     },
-    [setHoverValue, startTime],
+    [setHoveredEvent],
   );
 
   const { classes } = useStyles();
@@ -316,12 +297,16 @@ export function EventsList(): JSX.Element {
           return (
             <MemoEventView
               key={event.event.id}
-              event={event.event}
+              event={event}
               filter={filter}
               formattedTime={event.formattedTime}
               // When hovering within the event list only show hover state on directly
               // hovered event.
-              isHovered={hoveredEvents[event.event.id] != undefined && !isHovering}
+              isHovered={
+                hoveredEvent
+                  ? event.event.id === hoveredEvent.event.id
+                  : eventsAtHoverValue[event.event.id] != undefined
+              }
               isSelected={event.event.id === selectedEventId}
               onClick={onClick}
               onHoverStart={onHoverStart}

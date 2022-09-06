@@ -17,14 +17,18 @@ import { HoverValue } from "@foxglove/studio-base/types/hoverValue";
 function createTimelineInteractionStateStore(): StoreApi<TimelineInteractionStateStore> {
   return createStore((set) => {
     return {
+      eventsAtHoverValue: {},
       globalBounds: undefined,
-      hoveredEvents: {},
+      hoveredEvent: undefined,
       hoverValue: undefined,
 
       clearHoverValue: (componentId: string) =>
         set((store) => ({
           hoverValue: store.hoverValue?.componentId === componentId ? undefined : store.hoverValue,
         })),
+
+      setEventsAtHoverValue: (eventsAtHoverValue: TimelinePositionedEvent[]) =>
+        set({ eventsAtHoverValue: keyBy(eventsAtHoverValue, (event) => event.event.id) }),
 
       setGlobalBounds: (
         newBounds:
@@ -39,8 +43,20 @@ function createTimelineInteractionStateStore(): StoreApi<TimelineInteractionStat
         }
       },
 
-      setHoveredEvents: (hoveredEvents: TimelinePositionedEvent[]) =>
-        set({ hoveredEvents: keyBy(hoveredEvents, (event) => event.event.id) }),
+      setHoveredEvent: (hoveredEvent: undefined | TimelinePositionedEvent) => {
+        if (hoveredEvent) {
+          set({
+            hoveredEvent,
+            hoverValue: {
+              componentId: `event_${hoveredEvent.event.id}`,
+              type: "PLAYBACK_SECONDS",
+              value: hoveredEvent.secondsSinceStart,
+            },
+          });
+        } else {
+          set({ hoveredEvent: undefined, hoverValue: undefined });
+        }
+      },
 
       setHoverValue: (newValue: HoverValue) =>
         set((store) => ({
