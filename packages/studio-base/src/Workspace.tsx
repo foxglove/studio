@@ -29,7 +29,6 @@ import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import AccountSettings from "@foxglove/studio-base/components/AccountSettingsSidebar/AccountSettings";
 import { DataSourceSidebar } from "@foxglove/studio-base/components/DataSourceSidebar";
 import DocumentDropListener from "@foxglove/studio-base/components/DocumentDropListener";
-import DropOverlay from "@foxglove/studio-base/components/DropOverlay";
 import ExtensionsSidebar from "@foxglove/studio-base/components/ExtensionsSidebar";
 import HelpSidebar, {
   MESSAGE_PATH_SYNTAX_HELP_INFO,
@@ -95,10 +94,6 @@ const useStyles = makeStyles()({
     outline: "none",
     overflow: "hidden",
   },
-  dropzone: {
-    fontSize: "4em",
-    marginBottom: "1em",
-  },
 });
 
 type SidebarItemKey =
@@ -158,7 +153,7 @@ type WorkspaceProps = {
 const DEFAULT_DEEPLINKS = Object.freeze([]);
 
 const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => playerState.presence;
-const selectRequestBackfill = ({ requestBackfill }: MessagePipelineContext) => requestBackfill;
+const selectSetSubscriptions = ({ setSubscriptions }: MessagePipelineContext) => setSubscriptions;
 const selectPlayerProblems = ({ playerState }: MessagePipelineContext) => playerState.problems;
 const selectIsPlaying = (ctx: MessagePipelineContext) =>
   ctx.playerState.activeData?.isPlaying === true;
@@ -189,9 +184,9 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
 
   const supportsAccountSettings = useContext(ConsoleApiContext) != undefined;
 
-  // we use requestBackfill to signal when a player changes for RemountOnValueChange below
+  // we use setSubscriptions to detect when a player changes for RemountOnValueChange below
   // see comment below above the RemountOnValueChange component
-  const requestBackfill = useMessagePipeline(selectRequestBackfill);
+  const setSubscriptions = useMessagePipeline(selectSetSubscriptions);
 
   const isPlayerPresent = playerPresence !== PlayerPresence.NOT_PRESENT;
 
@@ -589,11 +584,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
           onDismiss={() => setShowOpenDialog(undefined)}
         />
       )}
-      <DocumentDropListener onDrop={dropHandler} allowedExtensions={allowedDropExtensions}>
-        <DropOverlay>
-          <div className={classes.dropzone}>Drop a file here</div>
-        </DropOverlay>
-      </DocumentDropListener>
+      <DocumentDropListener onDrop={dropHandler} allowedExtensions={allowedDropExtensions} />
       <SyncAdapters />
       <KeyListener global keyDownHandlers={keyDownHandlers} />
       <div className={classes.container} ref={containerRef} tabIndex={0}>
@@ -604,7 +595,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
           onSelectKey={selectSidebarItem}
         >
           {/* To ensure no stale player state remains, we unmount all panels when players change */}
-          <RemountOnValueChange value={requestBackfill}>
+          <RemountOnValueChange value={setSubscriptions}>
             <Stack>
               <PanelLayout />
               {play && pause && seek && (

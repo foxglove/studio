@@ -41,7 +41,7 @@ import {
   useClearHoverValue,
   useHoverValue,
   useSetHoverValue,
-} from "@foxglove/studio-base/context/HoverValueContext";
+} from "@foxglove/studio-base/context/TimelineInteractionStateContext";
 import useGlobalVariables from "@foxglove/studio-base/hooks/useGlobalVariables";
 import {
   AdvertiseOptions,
@@ -85,8 +85,7 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
 
   const messagePipelineContext = useMessagePipeline(selectContext);
 
-  const { playerState, pauseFrame, setSubscriptions, requestBackfill, seekPlayback } =
-    messagePipelineContext;
+  const { playerState, pauseFrame, setSubscriptions, seekPlayback } = messagePipelineContext;
 
   const { capabilities, profile: dataSourceProfile } = playerState;
 
@@ -339,9 +338,6 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
 
         setSubscribedTopics(newSubscribedTopics);
         setSubscriptions(panelId, subscribePayloads);
-        if (topics.length > 0) {
-          requestBackfill();
-        }
       },
 
       advertise: capabilities.includes(PlayerCapabilities.advertise)
@@ -404,7 +400,6 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
     getMessagePipelineContext,
     openSiblingPanel,
     panelId,
-    requestBackfill,
     saveConfig,
     seekPlayback,
     setGlobalVariables,
