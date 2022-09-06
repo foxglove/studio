@@ -198,6 +198,9 @@ const tempVec2 = new THREE.Vector2();
 const tempSpherical = new THREE.Spherical();
 const tempEuler = new THREE.Euler();
 
+// used for holding unfollowPoseSnapshot in render frame every new frame
+const snapshotInRenderFrame = makePose();
+
 // We use a patched version of THREE.js where the internal WebGLShaderCache class has been
 // modified to allow caching based on `vertexShaderKey` and/or `fragmentShaderKey` instead of
 // using the full shader source as a Map key
@@ -756,6 +759,8 @@ export class Renderer extends EventEmitter<RendererEvents> {
   public setCameraState(cameraState: CameraState): void {
     this._isUpdatingCameraState = true;
     this._updateCameras(cameraState);
+    // only active for follow pose mode because it introduces strange behavior into the other modes
+    // due to the fact that they are manipulating the camera after update with the `cameraGroup`
     if (this.followMode === "follow-pose") {
       this.controls.update();
     }
@@ -945,15 +950,12 @@ export class Renderer extends EventEmitter<RendererEvents> {
       renderFrame &&
       fixedFrame
     ) {
-      const snapshotInRenderFrame = renderFrame.applyLocal(
-        makePose(),
+      renderFrame.applyLocal(
+        snapshotInRenderFrame,
         this.unfollowPoseSnapshot,
         fixedFrame,
         currentTime,
       );
-      if (!snapshotInRenderFrame) {
-        return;
-      }
       /**
        * the application of the unfollowPoseSnapshot position and orientation
        * components makes the camera position and rotation static relative to the fixed frame.
