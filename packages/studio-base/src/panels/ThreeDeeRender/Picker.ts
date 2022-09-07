@@ -9,6 +9,8 @@
 
 import * as THREE from "three";
 
+import type { Renderable } from "./Renderable";
+
 type Camera = THREE.PerspectiveCamera | THREE.OrthographicCamera;
 
 // The width and height of the output viewport. This could be 1 to sample a
@@ -20,6 +22,11 @@ const WHITE_COLOR = new THREE.Color(0xffffff);
 const AlwaysPickObject = (_obj: THREE.Object3D) => true;
 // This works around an incorrect method definition, where passing null is valid
 const NullScene = ReactNull as unknown as THREE.Scene;
+
+export type PickedRenderable = {
+  renderable: Renderable;
+  instanceIndex?: number;
+};
 
 export type PickerOptions = {
   debug?: boolean;
@@ -99,8 +106,7 @@ export class Picker {
     const currAlpha = this.gl.getClearAlpha();
     this.gl.getClearColor(this.currClearColor);
     this.gl.setRenderTarget(this.pickingTarget);
-    this.gl.setClearColor(WHITE_COLOR);
-    this.gl.setClearAlpha(1);
+    this.gl.setClearColor(WHITE_COLOR, 1);
     this.gl.clear();
     this.gl.render(this.emptyScene, camera);
     this.gl.readRenderTargetPixels(this.pickingTarget, hw, hw, 1, 1, this.pixelBuffer);
@@ -125,23 +131,9 @@ export class Picker {
     x: number,
     y: number,
     camera: THREE.OrthographicCamera | THREE.PerspectiveCamera,
-    mesh: THREE.Mesh<THREE.BufferGeometry, THREE.Material>,
+    renderable: Renderable,
   ): number {
-    this.emptyScene.onAfterRender = () => {
-      const renderItem: THREE.RenderItem = {
-        id: mesh.id,
-        object: mesh,
-        geometry: mesh.geometry,
-        material: mesh.material,
-        // `program` is not used by WebGLRenderer even though it is defined in RenderItem
-        program: undefined as unknown as THREE.WebGLProgram,
-        groupOrder: 0,
-        renderOrder: 0,
-        z: 0,
-        group: ReactNull,
-      };
-      this.processItem(renderItem);
-    };
+    this.emptyScene.onAfterRender = this.makeHandleInstanceAfterRender(renderable);
     this.camera = camera;
 
     const hw = (PIXEL_WIDTH / 2) | 0;
@@ -156,14 +148,17 @@ export class Picker {
     const currAlpha = this.gl.getClearAlpha();
     this.gl.getClearColor(this.currClearColor);
     this.gl.setRenderTarget(this.pickingTarget);
-    this.gl.setClearColor(WHITE_COLOR);
-    this.gl.setClearAlpha(1);
+    this.gl.setClearColor(WHITE_COLOR, 1);
     this.gl.clear();
     this.gl.render(this.emptyScene, camera);
     this.gl.readRenderTargetPixels(this.pickingTarget, hw, hw, 1, 1, this.pixelBuffer);
     this.gl.setRenderTarget(currRenderTarget);
     this.gl.setClearColor(this.currClearColor, currAlpha);
     camera.clearViewOffset();
+
+    if (this.debug) {
+      this.pickInstanceDebugRender(camera, renderable);
+    }
 
     return (
       (this.pixelBuffer[0]! << 24) +
@@ -175,10 +170,25 @@ export class Picker {
 
   public pickDebugRender(camera: THREE.OrthographicCamera | THREE.PerspectiveCamera): void {
     this.isDebugPass = true;
+    this.emptyScene.onAfterRender = this.handleAfterRender;
     const currAlpha = this.gl.getClearAlpha();
     this.gl.getClearColor(this.currClearColor);
-    this.gl.setClearColor(WHITE_COLOR);
-    this.gl.setClearAlpha(1);
+    this.gl.setClearColor(WHITE_COLOR, 1);
+    this.gl.clear();
+    this.gl.render(this.emptyScene, camera);
+    this.gl.setClearColor(this.currClearColor, currAlpha);
+    this.isDebugPass = false;
+  }
+
+  public pickInstanceDebugRender(
+    camera: THREE.OrthographicCamera | THREE.PerspectiveCamera,
+    renderable: Renderable,
+  ): void {
+    this.isDebugPass = true;
+    this.emptyScene.onAfterRender = this.makeHandleInstanceAfterRender(renderable);
+    const currAlpha = this.gl.getClearAlpha();
+    this.gl.getClearColor(this.currClearColor);
+    this.gl.setClearColor(WHITE_COLOR, 1);
     this.gl.clear();
     this.gl.render(this.emptyScene, camera);
     this.gl.setClearColor(this.currClearColor, currAlpha);
@@ -193,6 +203,32 @@ export class Picker {
     renderList.transmissive.forEach(this.processItem);
     renderList.transparent.forEach(this.processItem);
   };
+
+  private makeHandleInstanceAfterRender(renderable: Renderable): () => void {
+    return (): void => {
+      // Note that no attempt is made to define a sensible sort order. Since the
+      // instanced picking pass should only be rendering opaque pixels, the
+      // worst that will happen is some overdraw
+      renderable.traverseVisible((object) => {
+        const maybeRender = object as Partial<THREE.Mesh>;
+        if (maybeRender.id != undefined && maybeRender.geometry && maybeRender.material) {
+          const renderItem: THREE.RenderItem = {
+            id: maybeRender.id,
+            object,
+            geometry: maybeRender.geometry,
+            material: maybeRender.material as THREE.Material,
+            // `program` is not used by WebGLRenderer even though it is defined in RenderItem
+            program: undefined as unknown as THREE.WebGLProgram,
+            groupOrder: 0,
+            renderOrder: 0,
+            z: 0,
+            group: ReactNull,
+          };
+          this.processInstancedItem(renderItem);
+        }
+      });
+    };
+  }
 
   private processItem = (renderItem: THREE.RenderItem): void => {
     if (!this.camera) {
@@ -213,14 +249,10 @@ export class Picker {
     const sprite = material.type === "SpriteMaterial" ? 1 : 0;
     const sizeAttenuation =
       (material as Partial<THREE.PointsMaterial>).sizeAttenuation === true ? 1 : 0;
-    const index = (sprite << 0) | (sizeAttenuation << 1);
     const pickingMaterial = renderItem.object.userData.pickingMaterial as
       | THREE.ShaderMaterial
       | undefined;
-    const renderMaterial =
-      pickingMaterial ??
-      this.materialCache.get(index) ??
-      this.createRenderMaterial(index, sprite, sizeAttenuation);
+    const renderMaterial = pickingMaterial ?? this.renderMaterial(sprite, sizeAttenuation);
     if (sprite === 1) {
       renderMaterial.uniforms.rotation = { value: (material as THREE.SpriteMaterial).rotation };
       renderMaterial.uniforms.center = { value: (object as THREE.Sprite).center };
@@ -234,23 +266,28 @@ export class Picker {
       return;
     }
     const object = renderItem.object;
-    const material = renderItem.material;
     const geometry = renderItem.geometry;
     if (
       !geometry || // Skip if geometry is not defined
-      renderItem.object.userData.picking === false || // Skip if object is marked no picking
+      renderItem.object.userData.picking === false // Skip if object is marked no picking
     ) {
       return;
     }
 
-    // TODO: Create a default shader that uses `objectId = gl_InstanceID`
+    const instancePickingMaterial = renderItem.object.userData.instancePickingMaterial as
+      | THREE.ShaderMaterial
+      | undefined;
+    const renderMaterial = instancePickingMaterial ?? this.instanceRenderMaterial();
+    this.gl.renderBufferDirect(this.camera, NullScene, geometry, renderMaterial, object, ReactNull);
   };
 
-  private createRenderMaterial(
-    index: number,
-    sprite: 0 | 1,
-    sizeAttenuation: 0 | 1,
-  ): THREE.ShaderMaterial {
+  private renderMaterial(sprite: 0 | 1, sizeAttenuation: 0 | 1): THREE.ShaderMaterial {
+    const index = (sprite << 0) | (sizeAttenuation << 1);
+    let renderMaterial = this.materialCache.get(index);
+    if (renderMaterial) {
+      return renderMaterial;
+    }
+
     let vertexShader = THREE.ShaderChunk.meshbasic_vert;
     if (sprite === 1) {
       vertexShader = THREE.ShaderChunk.sprite_vert!;
@@ -258,10 +295,46 @@ export class Picker {
     if (sizeAttenuation === 1) {
       vertexShader = "#define USE_SIZEATTENUATION\n\n" + vertexShader;
     }
-    const renderMaterial = new THREE.ShaderMaterial({
+    renderMaterial = new THREE.ShaderMaterial({
       vertexShader,
       fragmentShader: /* glsl */ `
           uniform vec4 objectId;
+          void main() {
+            gl_FragColor = objectId;
+          }
+        `,
+      side: THREE.DoubleSide,
+      uniforms: { objectId: { value: [NaN, NaN, NaN, NaN] } },
+    });
+    this.materialCache.set(index, renderMaterial);
+    return renderMaterial;
+  }
+
+  private instanceRenderMaterial(): THREE.ShaderMaterial {
+    const index = -1; // special materialCache index used for the instanced picking material
+    let renderMaterial = this.materialCache.get(index);
+    if (renderMaterial) {
+      return renderMaterial;
+    }
+
+    let vertexShader = THREE.ShaderChunk.meshbasic_vert;
+    vertexShader = vertexShader.replace(
+      "void main() {",
+      /* glsl */ `
+      varying vec4 objectId;
+
+      void main() {
+        objectId = vec4(
+          float((gl_InstanceID >> 24) & 255) / 255.0,
+          float((gl_InstanceID >> 16) & 255) / 255.0,
+          float((gl_InstanceID >> 8) & 255) / 255.0,
+          float(gl_InstanceID & 255) / 255.0);
+      `,
+    );
+    renderMaterial = new THREE.ShaderMaterial({
+      vertexShader,
+      fragmentShader: /* glsl */ `
+          varying vec4 objectId;
           void main() {
             gl_FragColor = objectId;
           }
