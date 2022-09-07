@@ -302,7 +302,7 @@ function FieldInput({
                 return option.label.trim();
               }
             }
-            return value;
+            return undefined;
           }}
           onChange={(event) =>
             actionHandler({
