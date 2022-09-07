@@ -22,7 +22,7 @@ import PanelContext from "@foxglove/studio-base/components/PanelContext";
 import ToolbarIconButton from "@foxglove/studio-base/components/PanelToolbar/ToolbarIconButton";
 import Stack from "@foxglove/studio-base/components/Stack";
 import { useSelectedPanels } from "@foxglove/studio-base/context/CurrentLayoutContext";
-import { usePanelCatalog } from "@foxglove/studio-base/context/PanelCatalogContext";
+import PanelCatalogContext from "@foxglove/studio-base/context/PanelCatalogContext";
 import {
   PanelSettingsEditorStore,
   usePanelSettingsEditorStore,
@@ -56,7 +56,7 @@ const PanelToolbarControlsComponent = forwardRef<HTMLDivElement, PanelToolbarCon
   (props, ref) => {
     const { additionalIcons, isUnknownPanel, menuOpen, setMenuOpen } = props;
     const { id: panelId, type: panelType } = useContext(PanelContext) ?? {};
-    const panelCatalog = usePanelCatalog();
+    const panelCatalog = useContext(PanelCatalogContext);
     const { setSelectedPanelIds } = useSelectedPanels();
     const { openPanelSettings } = useWorkspace();
     const { classes } = useStyles();
@@ -75,7 +75,7 @@ const PanelToolbarControlsComponent = forwardRef<HTMLDivElement, PanelToolbarCon
         if (panelType == undefined || !hasSettings) {
           return undefined;
         }
-        const tooltip = panelCatalog.getPanelByType(panelType)?.settingsOnboardingTooltip;
+        const tooltip = panelCatalog?.getPanelByType(panelType)?.settingsOnboardingTooltip;
         if (tooltip == undefined) {
           return undefined;
         }
