@@ -3,7 +3,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import type { Renderer } from "../../Renderer";
+import { RenderableArrows } from "./RenderableArrows";
 import { RenderableCubes } from "./RenderableCubes";
+import { RenderableCylinders } from "./RenderableCylinders";
 import { RenderableLines } from "./RenderableLines";
 import { RenderableModels } from "./RenderableModels";
 import { RenderablePrimitive } from "./RenderablePrimitive";
@@ -13,6 +15,8 @@ const CONSTRUCTORS = {
   [PrimitiveType.CUBES]: RenderableCubes,
   [PrimitiveType.MODELS]: RenderableModels,
   [PrimitiveType.LINES]: RenderableLines,
+  [PrimitiveType.CYLINDERS]: RenderableCylinders,
+  [PrimitiveType.ARROWS]: RenderableArrows,
 };
 
 /**
@@ -61,5 +65,13 @@ export class PrimitivePool {
     }
     this.primitivesByType.clear();
     this.disposed = true;
+  }
+
+  public setColorScheme(colorScheme: "dark" | "light"): void {
+    for (const primitives of this.primitivesByType.values()) {
+      for (const primitive of primitives) {
+        primitive.setColorScheme(colorScheme);
+      }
+    }
   }
 }

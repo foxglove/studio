@@ -354,6 +354,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
 
     return {
       cameraState,
+      followMode: partialConfig?.followMode ?? "follow-pose",
       followTf: partialConfig?.followTf,
       scene: partialConfig?.scene ?? {},
       transforms: partialConfig?.transforms ?? {},
@@ -413,7 +414,11 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
   useEffect(() => {
     const listener = () => {
       if (renderer) {
-        setConfig((prevConfig) => ({ ...prevConfig, cameraState: renderer.getCameraState() }));
+        const newCameraState = renderer.getCameraState();
+        // This needs to be before `setConfig` otherwise flickering will occur during
+        // non-follow mode playback
+        renderer.setCameraState(newCameraState);
+        setConfig((prevConfig) => ({ ...prevConfig, cameraState: newCameraState }));
       }
     };
     renderer?.addListener("cameraMove", listener);
@@ -434,7 +439,12 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
 
   // Handle user changes in the settings sidebar
   const actionHandler = useCallback(
-    (action: SettingsTreeAction) => renderer?.settings.handleAction(action),
+    (action: SettingsTreeAction) =>
+      // Wrapping in unstable_batchedUpdates causes React to run effects _after_ the handleAction
+      // function has finished executing. This allows scene extensions that call
+      // renderer.updateConfig to read out the new config value and configure their renderables
+      // before the render occurs.
+      ReactDOM.unstable_batchedUpdates(() => renderer?.settings.handleAction(action)),
     [renderer],
   );
 
@@ -655,8 +665,10 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
 
   // Update the renderer when the camera moves
   useEffect(() => {
-    renderer?.setCameraState(cameraState);
-    renderRef.current.needsRender = true;
+    if (!isEqual(cameraState, renderer?.getCameraState())) {
+      renderer?.setCameraState(cameraState);
+      renderRef.current.needsRender = true;
+    }
   }, [cameraState, renderer]);
 
   // Render a new frame if requested
