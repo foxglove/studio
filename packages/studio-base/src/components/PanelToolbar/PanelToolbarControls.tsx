@@ -41,14 +41,18 @@ type PanelToolbarControlsProps = {
 };
 
 const useStyles = makeStyles()((theme) => ({
-  settingsOnboardingTooltip: {
-    backgroundColor: theme.palette.primary.main,
+  tooltip: {
+    backgroundColor: theme.palette.info.light,
+    color: theme.palette.info.contrastText,
+    padding: theme.spacing(1, 1.5),
     boxShadow: theme.shadows[8],
-    fontSize: theme.typography.body1.fontSize,
-    "& .MuiTooltip-arrow": {
-      color: theme.palette.primary.main,
-    },
+    fontSize: theme.typography.body2.fontSize,
+    lineHeight: theme.typography.body2.lineHeight,
     marginTop: `${theme.spacing(1)} !important`,
+
+    "& .MuiTooltip-arrow": {
+      color: theme.palette.info.light,
+    },
   },
 }));
 
@@ -122,17 +126,18 @@ const PanelToolbarControlsComponent = forwardRef<HTMLDivElement, PanelToolbarCon
       settingsButton = (
         <Tooltip
           open
-          title={settingsOnboardingTooltip}
+          classes={{ tooltip: classes.tooltip }}
+          title={<div style={{ maxWidth: 168 }}>{settingsOnboardingTooltip}</div>}
           arrow
+          TransitionProps={{ in: true }}
           PopperProps={{
             modifiers: [
               {
                 name: "preventOverflow",
-                options: { altAxis: true, padding: 10 },
+                options: { altAxis: true, padding: 4 },
               },
             ],
           }}
-          componentsProps={{ tooltip: { className: classes.settingsOnboardingTooltip } }}
         >
           {settingsButton}
         </Tooltip>
