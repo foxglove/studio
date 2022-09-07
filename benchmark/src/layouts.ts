@@ -5,6 +5,7 @@
 import { Layout, LayoutID, ISO8601Timestamp } from "@foxglove/studio-base";
 
 import Empty from "./layouts/Empty.json";
+import PointcloudMultiple3dLegacy from "./layouts/PointcloudMultiple3dLegacy.json";
 import PointcloudMultipleThreeDee from "./layouts/PointcloudMultipleThreeDee.json";
 import PointcloudRawMessageAnd3d from "./layouts/PointcloudRawMessageAnd3d.json";
 import SinewaveSinglePlot from "./layouts/SinewaveSinglePlot.json";
@@ -37,6 +38,11 @@ const layouts = [
     "PointcloudMultipleThreeDee",
     "Pointcloud - Multiple 3d",
     PointcloudMultipleThreeDee,
+  ),
+  panelStateJsonToLayout(
+    "PointcloudMultiple3dLegacy",
+    "Pointcloud - Multiple 3d Legacy",
+    PointcloudMultiple3dLegacy,
   ),
 ];
 
