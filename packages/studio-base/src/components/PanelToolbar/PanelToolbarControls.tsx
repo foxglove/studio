@@ -27,7 +27,7 @@ import {
   PanelSettingsEditorStore,
   usePanelSettingsEditorStore,
 } from "@foxglove/studio-base/context/PanelSettingsEditorContext";
-import { useUserProfileStorage } from "@foxglove/studio-base/context/UserProfileStorageContext";
+import { UserProfileStorageContext } from "@foxglove/studio-base/context/UserProfileStorageContext";
 import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
 
 import { PanelActionsDropdown } from "./PanelActionsDropdown";
@@ -69,23 +69,23 @@ const PanelToolbarControlsComponent = forwardRef<HTMLDivElement, PanelToolbarCon
 
     const hasSettings = usePanelSettingsEditorStore(hasSettingsSelector);
 
-    const { getUserProfile, setUserProfile } = useUserProfileStorage();
+    const userProfileStorage = useContext(UserProfileStorageContext);
     const [{ value: settingsOnboardingTooltip }, loadOnboardingState] =
       useAsyncFn(async (): Promise<string | undefined> => {
-        if (panelType == undefined || !hasSettings) {
+        if (panelType == undefined || userProfileStorage == undefined || !hasSettings) {
           return undefined;
         }
         const tooltip = panelCatalog?.getPanelByType(panelType)?.settingsOnboardingTooltip;
         if (tooltip == undefined) {
           return undefined;
         }
-        const { onboarding } = await getUserProfile();
+        const { onboarding } = await userProfileStorage.getUserProfile();
         const { settingsTooltipShownForPanelTypes = [] } = onboarding ?? {};
         if (settingsTooltipShownForPanelTypes.includes(panelType)) {
           return undefined;
         }
         return tooltip;
-      }, [getUserProfile, hasSettings, panelCatalog, panelType]);
+      }, [hasSettings, panelCatalog, panelType, userProfileStorage]);
     useEffect(() => {
       void loadOnboardingState();
     }, [loadOnboardingState]);
@@ -95,8 +95,8 @@ const PanelToolbarControlsComponent = forwardRef<HTMLDivElement, PanelToolbarCon
         setSelectedPanelIds([panelId]);
         openPanelSettings();
       }
-      if (panelType) {
-        await setUserProfile((profile) =>
+      if (panelType && userProfileStorage) {
+        await userProfileStorage.setUserProfile((profile) =>
           produce(profile, (draft) => {
             draft.onboarding ??= { settingsTooltipShownForPanelTypes: [] };
             draft.onboarding.settingsTooltipShownForPanelTypes?.push(panelType);
@@ -107,9 +107,9 @@ const PanelToolbarControlsComponent = forwardRef<HTMLDivElement, PanelToolbarCon
     }, [
       panelId,
       panelType,
+      userProfileStorage,
       setSelectedPanelIds,
       openPanelSettings,
-      setUserProfile,
       loadOnboardingState,
     ]);
 
