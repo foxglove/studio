@@ -5599,9 +5599,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@types/foxglove__roslibjs@workspace:*, @types/foxglove__roslibjs@workspace:packages/@types/roslib":
+"@types/foxglove__roslibjs@workspace:*, @types/foxglove__roslibjs@workspace:packages/@types/foxglove__roslibjs":
   version: 0.0.0-use.local
-  resolution: "@types/foxglove__roslibjs@workspace:packages/@types/roslib"
+  resolution: "@types/foxglove__roslibjs@workspace:packages/@types/foxglove__roslibjs"
   languageName: unknown
   linkType: soft
 
