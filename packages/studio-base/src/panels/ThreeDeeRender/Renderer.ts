@@ -28,7 +28,7 @@ import { LabelMaterial, LabelPool } from "@foxglove/three-text";
 import { Input } from "./Input";
 import { LineMaterial } from "./LineMaterial";
 import { ModelCache } from "./ModelCache";
-import { Picker } from "./Picker";
+import { PickedRenderable, Picker } from "./Picker";
 import type { Renderable } from "./Renderable";
 import { SceneExtension } from "./SceneExtension";
 import { ScreenOverlay } from "./ScreenOverlay";
@@ -69,7 +69,7 @@ import {
   Vector3,
 } from "./ros";
 import { BaseSettings, CustomLayerSettings, SelectEntry, SubscriptionType } from "./settings";
-import { Transform, TransformTree } from "./transforms";
+import { makePose, Pose, Transform, TransformTree } from "./transforms";
 
 const log = Logger.getLogger(__filename);
 
@@ -78,11 +78,11 @@ export type RendererEvents = {
   endFrame: (currentTime: bigint, renderer: Renderer) => void;
   cameraMove: (renderer: Renderer) => void;
   renderablesClicked: (
-    renderables: Renderable[],
+    selections: PickedRenderable[],
     cursorCoords: { x: number; y: number },
     renderer: Renderer,
   ) => void;
-  selectedRenderable: (renderable: Renderable | undefined, renderer: Renderer) => void;
+  selectedRenderable: (selection: PickedRenderable | undefined, renderer: Renderer) => void;
   parametersChange: (
     parameters: ReadonlyMap<string, ParameterValue> | undefined,
     renderer: Renderer,
@@ -98,11 +98,15 @@ export type RendererEvents = {
   topicHandlersChanged: (renderer: Renderer) => void;
 };
 
+export type FollowMode = "follow-pose" | "follow-position" | "follow-none";
+
 export type RendererConfig = {
   /** Camera settings for the currently rendering scene */
   cameraState: CameraState;
   /** Coordinate frameId of the rendering frame */
   followTf: string | undefined;
+  /** Camera follow mode */
+  followMode: FollowMode;
   scene: {
     /** Show rendering metrics in a DOM overlay */
     enableStats?: boolean;
@@ -194,6 +198,9 @@ const tempVec2 = new THREE.Vector2();
 const tempSpherical = new THREE.Spherical();
 const tempEuler = new THREE.Euler();
 
+// used for holding unfollowPoseSnapshot in render frame every new frame
+const snapshotInRenderFrame = makePose();
+
 // We use a patched version of THREE.js where the internal WebGLShaderCache class has been
 // modified to allow caching based on `vertexShaderKey` and/or `fragmentShaderKey` instead of
 // using the full shader source as a Map key
@@ -264,8 +271,15 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
   private perspectiveCamera: THREE.PerspectiveCamera;
   private orthographicCamera: THREE.OrthographicCamera;
+  // This group is used to transform the cameras based on the Frame follow mode
+  // quaternion is affected in stationary and position-only follow modes
+  // both position and quaternion of the group are affected in stationary mode
+  private cameraGroup: THREE.Group;
   private aspect: number;
   private controls: OrbitControls;
+  public followMode: FollowMode;
+  // The pose of the render frame in the fixed frame when following was disabled
+  private unfollowPoseSnapshot: Pose | undefined;
 
   // Are we connected to a ROS data source? Normalize coordinate frames if so by
   // stripping any leading "/" prefix. See `normalizeFrameId()` for details.
@@ -273,7 +287,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
   private picker: Picker;
   private selectionBackdrop: ScreenOverlay;
-  private selectedRenderable: Renderable | undefined;
+  private selectedRenderable: PickedRenderable | undefined;
   public colorScheme: "dark" | "light" = "light";
   public modelCache: ModelCache;
   public transformTree = new TransformTree();
@@ -359,13 +373,18 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
     this.perspectiveCamera = new THREE.PerspectiveCamera();
     this.orthographicCamera = new THREE.OrthographicCamera();
+    this.cameraGroup = new THREE.Group();
+
+    this.cameraGroup.add(this.perspectiveCamera);
+    this.cameraGroup.add(this.orthographicCamera);
+    this.scene.add(this.cameraGroup);
 
     this.controls = new OrbitControls(this.perspectiveCamera, this.canvas);
     this.controls.screenSpacePanning = false; // only allow panning in the XY plane
     this.controls.mouseButtons.LEFT = THREE.MOUSE.PAN;
     this.controls.mouseButtons.RIGHT = THREE.MOUSE.ROTATE;
-    this.controls.touches.ONE = THREE.TOUCH.DOLLY_PAN;
-    this.controls.touches.TWO = THREE.TOUCH.ROTATE;
+    this.controls.touches.ONE = THREE.TOUCH.PAN;
+    this.controls.touches.TWO = THREE.TOUCH.DOLLY_ROTATE;
     this.controls.addEventListener("change", () => {
       if (!this._isUpdatingCameraState) {
         this.emit("cameraMove", this);
@@ -388,6 +407,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.scene.add(this.selectionBackdrop);
 
     this.followFrameId = config.followTf;
+    this.followMode = config.followMode;
 
     const samples = msaaSamples(this.gl.capabilities);
     const renderSize = this.gl.getDrawingBufferSize(tempVec2);
@@ -739,7 +759,11 @@ export class Renderer extends EventEmitter<RendererEvents> {
   public setCameraState(cameraState: CameraState): void {
     this._isUpdatingCameraState = true;
     this._updateCameras(cameraState);
-    this.controls.update();
+    // only active for follow pose mode because it introduces strange behavior into the other modes
+    // due to the fact that they are manipulating the camera after update with the `cameraGroup`
+    if (this.followMode === "follow-pose") {
+      this.controls.update();
+    }
     this._isUpdatingCameraState = false;
   }
 
@@ -758,28 +782,33 @@ export class Renderer extends EventEmitter<RendererEvents> {
     };
   }
 
-  public setSelectedRenderable(selectedRenderable: Renderable | undefined): void {
-    if (this.selectedRenderable === selectedRenderable) {
+  public setSelectedRenderable(selection: PickedRenderable | undefined): void {
+    if (this.selectedRenderable === selection) {
       return;
     }
 
-    if (this.selectedRenderable) {
+    const prevSelected = this.selectedRenderable;
+    if (prevSelected) {
       // Deselect the previously selected renderable
-      deselectObject(this.selectedRenderable);
-      log.debug(`Deselected ${this.selectedRenderable.id} (${this.selectedRenderable.name})`);
+      deselectObject(prevSelected.renderable);
+      log.debug(`Deselected ${prevSelected.renderable.id} (${prevSelected.renderable.name})`);
     }
 
-    this.selectedRenderable = selectedRenderable;
+    this.selectedRenderable = selection;
 
-    if (selectedRenderable) {
+    if (selection) {
       // Select the newly selected renderable
-      selectObject(selectedRenderable);
-      log.debug(`Selected ${selectedRenderable.id} (${selectedRenderable.name})`);
+      selectObject(selection.renderable);
+      log.debug(
+        `Selected ${selection.renderable.id} (${selection.renderable.name}) (instance=${selection.instanceIndex})`,
+      );
     }
 
-    this.emit("selectedRenderable", selectedRenderable, this);
+    this.emit("selectedRenderable", selection, this);
 
-    this.animationFrame();
+    if (!DEBUG_PICKING) {
+      this.animationFrame();
+    }
   }
 
   private activeCamera(): THREE.PerspectiveCamera | THREE.OrthographicCamera {
@@ -900,7 +929,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
   private frameHandler = (currentTime: bigint): void => {
     this.currentTime = currentTime;
-    this._updateFrames();
+    this._updateFrames(currentTime);
     this._updateResolution();
 
     this.gl.clear();
@@ -914,6 +943,48 @@ export class Renderer extends EventEmitter<RendererEvents> {
     const fixedFrameId = this.fixedFrameId;
     if (renderFrameId == undefined || fixedFrameId == undefined) {
       return;
+    }
+
+    const renderFrame = this.transformTree.frame(renderFrameId);
+    const fixedFrame = this.transformTree.frame(fixedFrameId);
+
+    // If in stationary or follow-position modes
+    if (
+      this.followMode !== "follow-pose" &&
+      this.unfollowPoseSnapshot &&
+      renderFrame &&
+      fixedFrame
+    ) {
+      renderFrame.applyLocal(
+        snapshotInRenderFrame,
+        this.unfollowPoseSnapshot,
+        fixedFrame,
+        currentTime,
+      );
+      /**
+       * the application of the unfollowPoseSnapshot position and orientation
+       * components makes the camera position and rotation static relative to the fixed frame.
+       * So when the display frame changes the angle of the camera relative
+       * to the scene will not change because only the snapshotPose orientation is applied
+       */
+      if (this.followMode === "follow-position") {
+        // only make orientation static/stationary in this mode
+        // the position still follows the frame
+        this.cameraGroup.position.set(0, 0, 0);
+      } else {
+        this.cameraGroup.position.set(
+          snapshotInRenderFrame.position.x,
+          snapshotInRenderFrame.position.y,
+          snapshotInRenderFrame.position.z,
+        );
+      }
+      // this negates the rotation of the changes in renderFrame
+      this.cameraGroup.quaternion.set(
+        snapshotInRenderFrame.orientation.x,
+        snapshotInRenderFrame.orientation.y,
+        snapshotInRenderFrame.orientation.z,
+        snapshotInRenderFrame.orientation.w,
+      );
     }
 
     for (const sceneExtension of this.sceneExtensions.values()) {
@@ -964,20 +1035,20 @@ export class Renderer extends EventEmitter<RendererEvents> {
     // Pick a single renderable, hide it, re-render, and run picking again until
     // the backdrop is hit or we exceed MAX_SELECTIONS
     const camera = this.activeCamera();
-    const selections: Renderable[] = [];
-    let curSelection: Renderable | undefined;
+    const selections: PickedRenderable[] = [];
+    let curSelection: PickedRenderable | undefined;
     while (
       (curSelection = this._pickSingleObject(cursorCoords)) &&
       selections.length < MAX_SELECTIONS
     ) {
       selections.push(curSelection);
-      curSelection.visible = false;
+      curSelection.renderable.visible = false;
       this.gl.render(this.scene, camera);
     }
 
     // Put everything back to normal and render one last frame
     for (const selection of selections) {
-      selection.visible = true;
+      selection.renderable.visible = true;
     }
     if (!DEBUG_PICKING) {
       this.animationFrame();
@@ -1068,7 +1139,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.updateCustomLayersCount();
   };
 
-  private _pickSingleObject(cursorCoords: THREE.Vector2): Renderable | undefined {
+  private _pickSingleObject(cursorCoords: THREE.Vector2): PickedRenderable | undefined {
     // Render a single pixel using a fragment shader that writes object IDs as
     // colors, then read the value of that single pixel back
     const objectId = this.picker.pick(cursorCoords.x, cursorCoords.y, this.activeCamera());
@@ -1080,28 +1151,40 @@ export class Renderer extends EventEmitter<RendererEvents> {
     const pickedObject = this.scene.getObjectById(objectId);
 
     // Find the highest ancestor of the picked object that is a Renderable
-    let selectedRenderable: Renderable | undefined;
+    let renderable: Renderable | undefined;
     let maybeRenderable = pickedObject as Partial<Renderable> | undefined;
     while (maybeRenderable) {
       if (maybeRenderable.pickable === true) {
-        selectedRenderable = maybeRenderable as Renderable;
+        renderable = maybeRenderable as Renderable;
       }
       maybeRenderable = (maybeRenderable.parent ?? undefined) as Partial<Renderable> | undefined;
     }
 
-    if (!selectedRenderable) {
+    if (!renderable) {
       log.warn(
         `No Renderable found for objectId ${objectId} (name="${pickedObject?.name}" uuid=${pickedObject?.uuid})`,
       );
+      return undefined;
     }
 
-    return selectedRenderable;
+    let instanceIndex: number | undefined;
+    if (renderable.pickableInstances) {
+      instanceIndex = this.picker.pickInstance(
+        cursorCoords.x,
+        cursorCoords.y,
+        this.activeCamera(),
+        renderable,
+      );
+      instanceIndex = instanceIndex === -1 ? undefined : instanceIndex;
+    }
+
+    return { renderable, instanceIndex };
   }
 
   /** Tracks the number of frames so we can recompute the defaultFrameId when frames are added. */
   private _lastTransformFrameCount = 0;
 
-  private _updateFrames(): void {
+  private _updateFrames(currentTime: bigint): void {
     if (
       this.followFrameId != undefined &&
       this.renderFrameId !== this.followFrameId &&
@@ -1162,7 +1245,53 @@ export class Renderer extends EventEmitter<RendererEvents> {
       this.fixedFrameId = fixedFrameId;
     }
 
+    // Should only occur on reload when the saved followMode is not follow
+    if (this.followMode !== "follow-pose" && !this.unfollowPoseSnapshot) {
+      // Snapshot the current pose of the render frame in the fixed frame
+      this.unfollowPoseSnapshot = makePose();
+      fixedFrame.applyLocal(
+        this.unfollowPoseSnapshot,
+        this.unfollowPoseSnapshot,
+        frame,
+        currentTime,
+      );
+    }
     this.settings.errors.clearPath(FOLLOW_TF_PATH);
+  }
+
+  // This should not be called on initialization only on settings changes
+  public updateFollowMode(newFollowMode: FollowMode): void {
+    if (this.followMode === newFollowMode) {
+      return;
+    }
+
+    if (!this.renderFrameId || !this.fixedFrameId) {
+      this.followMode = newFollowMode;
+      return;
+    }
+
+    const renderFrame = this.transformTree.frame(this.renderFrameId);
+    const fixedFrame = this.transformTree.frame(this.fixedFrameId);
+
+    if (!renderFrame || !fixedFrame) {
+      // if this happens it will be set on initialization in _updateFrames
+      this.followMode = newFollowMode;
+      return;
+    }
+
+    // always create a new snapshot when changing frames to minimize old snapshots causing camera jumps
+    this.unfollowPoseSnapshot = makePose();
+    fixedFrame.applyLocal(
+      this.unfollowPoseSnapshot,
+      this.unfollowPoseSnapshot,
+      renderFrame,
+      this.currentTime,
+    );
+
+    // reset any applied cameraGroup settings so that they aren't applied in follow mode
+    this.cameraGroup.position.set(0, 0, 0);
+    this.cameraGroup.quaternion.set(0, 0, 0, 1);
+    this.followMode = newFollowMode;
   }
 
   private _updateResolution(): void {
