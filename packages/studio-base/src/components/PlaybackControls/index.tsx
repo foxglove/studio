@@ -42,9 +42,10 @@ import Scrubber from "./Scrubber";
 
 const useStyles = makeStyles()((theme) => ({
   root: {
-    displauy: "flex",
+    display: "flex",
     flexDirection: "column",
     padding: theme.spacing(0.5, 1, 1, 1),
+    gap: theme.spacing(0.5),
     position: "relative",
     backgroundColor: theme.palette.background.paper,
     borderTop: `1px solid ${theme.palette.divider}`,

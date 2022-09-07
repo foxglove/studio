@@ -29,7 +29,6 @@ import Slider from "./Slider";
 
 const useStyles = makeStyles()((theme) => ({
   tooltipWrapper: {
-    label: "Scrubber-tooltipWrapper",
     fontFeatureSettings: `${fonts.SANS_SERIF_FEATURE_SETTINGS}, "zero"`,
     fontFamily: fonts.SANS_SERIF,
     whiteSpace: "nowrap",
@@ -39,7 +38,6 @@ const useStyles = makeStyles()((theme) => ({
     flexDirection: "column",
   },
   marker: {
-    label: "Scrubber-marker",
     backgroundColor: theme.palette.text.primary,
     position: "absolute",
     height: 16,
@@ -48,7 +46,6 @@ const useStyles = makeStyles()((theme) => ({
     transform: "translate(-50%, 0)",
   },
   track: {
-    label: "Scrubber-track",
     position: "absolute",
     left: 0,
     right: 0,
@@ -56,7 +53,6 @@ const useStyles = makeStyles()((theme) => ({
     backgroundColor: theme.palette.action.focus,
   },
   trackDisabled: {
-    label: "Scrubber-trackDisabled",
     opacity: theme.palette.action.disabledOpacity,
   },
 }));
