@@ -66,7 +66,7 @@ const builtin: PanelInfo[] = [
     help: ThreeDeeRenderHelp,
     thumbnail: threeDeeRenderThumbnail,
     module: async () => await import("./ThreeDeeRender"),
-    settingsOnboardingTooltip: "Configure topics to visualize in the panel settings.",
+    settingsOnboardingTooltip: "Open settings to configure topics and layers.",
   },
   {
     title: `Diagnostics – Detail (ROS)`,
