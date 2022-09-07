@@ -11,8 +11,9 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import CloseIcon from "@mui/icons-material/Close";
 import SettingsIcon from "@mui/icons-material/Settings";
-import { Tooltip } from "@mui/material";
+import { IconButton, Tooltip } from "@mui/material";
 import produce from "immer";
 import { forwardRef, useCallback, useContext, useEffect } from "react";
 import { useAsyncFn } from "react-use";
@@ -41,18 +42,15 @@ type PanelToolbarControlsProps = {
 };
 
 const useStyles = makeStyles()((theme) => ({
+  popper: {
+    zIndex: theme.zIndex.modal - 1,
+  },
   tooltip: {
-    backgroundColor: theme.palette.info.light,
-    color: theme.palette.info.contrastText,
     padding: theme.spacing(1, 1.5),
     boxShadow: theme.shadows[8],
     fontSize: theme.typography.body2.fontSize,
     lineHeight: theme.typography.body2.lineHeight,
     marginTop: `${theme.spacing(1)} !important`,
-
-    "& .MuiTooltip-arrow": {
-      color: theme.palette.info.light,
-    },
   },
 }));
 
@@ -94,28 +92,27 @@ const PanelToolbarControlsComponent = forwardRef<HTMLDivElement, PanelToolbarCon
       void loadOnboardingState();
     }, [loadOnboardingState]);
 
+    const onDismissTooltip = useCallback(async () => {
+      if (panelType && userProfileStorage) {
+        await userProfileStorage.setUserProfile((profile) =>
+          produce(profile, (draft) => {
+            draft.onboarding ??= { settingsTooltipShownForPanelTypes: [] };
+            if (draft.onboarding.settingsTooltipShownForPanelTypes?.includes(panelType) !== true) {
+              draft.onboarding.settingsTooltipShownForPanelTypes?.push(panelType);
+            }
+          }),
+        );
+        await loadOnboardingState();
+      }
+    }, [loadOnboardingState, panelType, userProfileStorage]);
+
     const openSettings = useCallback(async () => {
       if (panelId) {
         setSelectedPanelIds([panelId]);
         openPanelSettings();
       }
-      if (panelType && userProfileStorage) {
-        await userProfileStorage.setUserProfile((profile) =>
-          produce(profile, (draft) => {
-            draft.onboarding ??= { settingsTooltipShownForPanelTypes: [] };
-            draft.onboarding.settingsTooltipShownForPanelTypes?.push(panelType);
-          }),
-        );
-        await loadOnboardingState();
-      }
-    }, [
-      panelId,
-      panelType,
-      userProfileStorage,
-      setSelectedPanelIds,
-      openPanelSettings,
-      loadOnboardingState,
-    ]);
+      await onDismissTooltip();
+    }, [panelId, onDismissTooltip, setSelectedPanelIds, openPanelSettings]);
 
     let settingsButton = (
       <ToolbarIconButton onClick={openSettings}>
@@ -126,8 +123,24 @@ const PanelToolbarControlsComponent = forwardRef<HTMLDivElement, PanelToolbarCon
       settingsButton = (
         <Tooltip
           open
-          classes={{ tooltip: classes.tooltip }}
-          title={<div style={{ maxWidth: 168 }}>{settingsOnboardingTooltip}</div>}
+          classes={{ popper: classes.popper, tooltip: classes.tooltip }}
+          title={
+            <Stack direction="row" alignItems="center" style={{ maxWidth: 190 }}>
+              <span>{settingsOnboardingTooltip}</span>
+              <IconButton
+                aria-label="Dismiss"
+                role="button"
+                size="small"
+                color="inherit"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  void onDismissTooltip();
+                }}
+              >
+                <CloseIcon fontSize="small" />
+              </IconButton>
+            </Stack>
+          }
           arrow
           TransitionProps={{ in: true }}
           PopperProps={{
