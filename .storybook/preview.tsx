@@ -11,10 +11,6 @@ import GlobalCss from "@foxglove/studio-base/components/GlobalCss";
 import MultiProvider from "@foxglove/studio-base/components/MultiProvider";
 import StudioToastProvider from "@foxglove/studio-base/components/StudioToastProvider";
 import AppConfigurationContext from "@foxglove/studio-base/context/AppConfigurationContext";
-import PanelCatalogContext, {
-  PanelCatalog,
-  PanelInfo,
-} from "@foxglove/studio-base/context/PanelCatalogContext";
 import { UserNodeStateProvider } from "@foxglove/studio-base/context/UserNodeStateContext";
 import TimelineInteractionStateProvider from "@foxglove/studio-base/providers/TimelineInteractionStateProvider";
 import ReadySignalContext from "@foxglove/studio-base/stories/ReadySignalContext";
@@ -54,15 +50,6 @@ function useCombinedReadySignal(
   }, [readySignal]);
 }
 
-class MockPanelCatalog implements PanelCatalog {
-  public getPanels(): readonly PanelInfo[] {
-    return [];
-  }
-  public getPanelByType(_type: string): PanelInfo | undefined {
-    return undefined;
-  }
-}
-
 function StudioContextProviders({
   children,
   ctx,
@@ -92,7 +79,6 @@ function StudioContextProviders({
     <StudioToastProvider />,
     <TimelineInteractionStateProvider />,
     <UserNodeStateProvider />,
-    <PanelCatalogContext.Provider value={new MockPanelCatalog()} />,
     /* eslint-enable react/jsx-key */
   ];
   return (
