@@ -57,9 +57,9 @@
         "perspective": true,
         "phi": 49.743164062495055,
         "target": [0, 0, 0],
-        "targetOffset": [0.0026563252462465676, 0, 0],
+        "targetOffset": [0, 0, 0],
         "targetOrientation": [0, 0, 0, 1],
-        "thetaOffset": 40.83398437500137,
+        "thetaOffset": 45,
         "fovy": 45,
         "near": 0.01,
         "far": 5000
@@ -67,48 +67,6 @@
       "scene": {},
       "transforms": {},
       "topics": {
-        "/CAM_FRONT/camera_info": {
-          "visible": true
-        },
-        "/CAM_FRONT_RIGHT/camera_info": {
-          "visible": true
-        },
-        "/CAM_BACK_RIGHT/camera_info": {
-          "visible": true
-        },
-        "/CAM_BACK/camera_info": {
-          "visible": true
-        },
-        "/CAM_BACK_LEFT/camera_info": {
-          "visible": true
-        },
-        "/CAM_FRONT_LEFT/camera_info": {
-          "visible": true
-        },
-        "/CAM_FRONT/image_rect_compressed": {
-          "visible": true,
-          "cameraInfoTopic": "/CAM_FRONT/camera_info"
-        },
-        "/CAM_FRONT_RIGHT/image_rect_compressed": {
-          "visible": true,
-          "cameraInfoTopic": "/CAM_FRONT_RIGHT/camera_info"
-        },
-        "/CAM_BACK_RIGHT/image_rect_compressed": {
-          "visible": true,
-          "cameraInfoTopic": "/CAM_BACK_RIGHT/camera_info"
-        },
-        "/CAM_BACK/image_rect_compressed": {
-          "visible": true,
-          "cameraInfoTopic": "/CAM_BACK/camera_info"
-        },
-        "/CAM_BACK_LEFT/image_rect_compressed": {
-          "visible": true,
-          "cameraInfoTopic": "/CAM_BACK_LEFT/camera_info"
-        },
-        "/CAM_FRONT_LEFT/image_rect_compressed": {
-          "visible": true,
-          "cameraInfoTopic": "/CAM_FRONT_LEFT/camera_info"
-        },
         "/semantic_map": {
           "visible": true
         },
@@ -116,12 +74,7 @@
           "visible": true
         },
         "/map": {
-          "visible": true,
-          "minColor": "#ffffffe8"
-        },
-        "/drivable_area": {
-          "visible": true,
-          "minColor": "#ffffffe8"
+          "visible": true
         },
         "/RADAR_FRONT": {
           "visible": true,
@@ -191,10 +144,10 @@
     "3D!3edtgyg": {
       "cameraState": {
         "perspective": false,
-        "distance": 96.92665761744826,
-        "phi": 23.13664040114723,
-        "thetaOffset": 93.19529011462126,
-        "targetOffset": [0.006139906388460175, 0.01455309600523527, 8.76814499299543e-19],
+        "distance": 100,
+        "phi": 45,
+        "thetaOffset": 90,
+        "targetOffset": [0, 0, 0],
         "target": [0, 0, 0],
         "targetOrientation": [0, 0, 0, 1],
         "fovy": 45,
@@ -204,48 +157,6 @@
       "scene": {},
       "transforms": {},
       "topics": {
-        "/CAM_FRONT/camera_info": {
-          "visible": true
-        },
-        "/CAM_FRONT_RIGHT/camera_info": {
-          "visible": true
-        },
-        "/CAM_BACK_RIGHT/camera_info": {
-          "visible": true
-        },
-        "/CAM_BACK/camera_info": {
-          "visible": true
-        },
-        "/CAM_BACK_LEFT/camera_info": {
-          "visible": true
-        },
-        "/CAM_FRONT_LEFT/camera_info": {
-          "visible": true
-        },
-        "/CAM_FRONT/image_rect_compressed": {
-          "visible": true,
-          "cameraInfoTopic": "/CAM_FRONT/camera_info"
-        },
-        "/CAM_FRONT_RIGHT/image_rect_compressed": {
-          "visible": true,
-          "cameraInfoTopic": "/CAM_FRONT_RIGHT/camera_info"
-        },
-        "/CAM_BACK_RIGHT/image_rect_compressed": {
-          "visible": true,
-          "cameraInfoTopic": "/CAM_BACK_RIGHT/camera_info"
-        },
-        "/CAM_BACK/image_rect_compressed": {
-          "visible": true,
-          "cameraInfoTopic": "/CAM_BACK/camera_info"
-        },
-        "/CAM_BACK_LEFT/image_rect_compressed": {
-          "visible": true,
-          "cameraInfoTopic": "/CAM_BACK_LEFT/camera_info"
-        },
-        "/CAM_FRONT_LEFT/image_rect_compressed": {
-          "visible": true,
-          "cameraInfoTopic": "/CAM_FRONT_LEFT/camera_info"
-        },
         "/semantic_map": {
           "visible": true
         },
@@ -259,42 +170,6 @@
         "/drivable_area": {
           "visible": true,
           "minColor": "#ffffff"
-        },
-        "/RADAR_FRONT": {
-          "visible": true,
-          "colorField": "x",
-          "colorMode": "colormap",
-          "colorMap": "turbo"
-        },
-        "/RADAR_FRONT_LEFT": {
-          "visible": true,
-          "colorField": "x",
-          "colorMode": "colormap",
-          "colorMap": "turbo"
-        },
-        "/RADAR_FRONT_RIGHT": {
-          "visible": true,
-          "colorField": "x",
-          "colorMode": "colormap",
-          "colorMap": "turbo"
-        },
-        "/RADAR_BACK_LEFT": {
-          "visible": true,
-          "colorField": "x",
-          "colorMode": "colormap",
-          "colorMap": "turbo"
-        },
-        "/RADAR_BACK_RIGHT": {
-          "visible": true,
-          "colorField": "x",
-          "colorMode": "colormap",
-          "colorMap": "turbo"
-        },
-        "/LIDAR_TOP": {
-          "visible": true,
-          "colorField": "intensity",
-          "colorMode": "colormap",
-          "colorMap": "turbo"
         },
         "/pose": {
           "visible": true,
