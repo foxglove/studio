@@ -28,10 +28,6 @@ import { compare, Time } from "@foxglove/rostime";
 import HoverableIconButton from "@foxglove/studio-base/components/HoverableIconButton";
 import KeyListener from "@foxglove/studio-base/components/KeyListener";
 import LoopIcon from "@foxglove/studio-base/components/LoopIcon";
-import {
-  jumpSeek,
-  DIRECTION,
-} from "@foxglove/studio-base/components/PlaybackControls/sharedHelpers";
 import PlaybackSpeedControls from "@foxglove/studio-base/components/PlaybackSpeedControls";
 import Stack from "@foxglove/studio-base/components/Stack";
 import { Player } from "@foxglove/studio-base/players/types";
@@ -39,6 +35,7 @@ import { Player } from "@foxglove/studio-base/players/types";
 import PlaybackTimeDisplay from "./PlaybackTimeDisplay";
 import { RepeatAdapter } from "./RepeatAdapter";
 import Scrubber from "./Scrubber";
+import { jumpSeek, DIRECTION } from "./sharedHelpers";
 
 const useStyles = makeStyles()((theme) => ({
   root: {
