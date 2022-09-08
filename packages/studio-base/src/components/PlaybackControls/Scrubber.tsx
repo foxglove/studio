@@ -2,9 +2,10 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Divider, Typography } from "@mui/material";
+import { Divider, Tooltip, Typography } from "@mui/material";
+import { Instance } from "@popperjs/core";
 import { isEmpty } from "lodash";
-import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLatest } from "react-use";
 import { makeStyles } from "tss-react/mui";
 import { v4 as uuidv4 } from "uuid";
@@ -15,7 +16,6 @@ import {
   useMessagePipeline,
 } from "@foxglove/studio-base/components/MessagePipeline";
 import Stack from "@foxglove/studio-base/components/Stack";
-import { useTooltip } from "@foxglove/studio-base/components/Tooltip";
 import {
   TimelineInteractionStateStore,
   useClearHoverValue,
@@ -35,15 +35,23 @@ const useStyles = makeStyles()((theme) => ({
   tooltipDivider: {
     gridColumn: "span 2",
     marginBlock: theme.spacing(0.5),
+    opacity: 0.5,
   },
   tooltipWrapper: {
     fontFeatureSettings: `${fonts.SANS_SERIF_FEATURE_SETTINGS}, "zero"`,
     fontFamily: fonts.SANS_SERIF,
     whiteSpace: "nowrap",
-    gap: theme.spacing(0.5),
+    columnGap: theme.spacing(0.5),
     display: "grid",
+    alignItems: "center",
     gridTemplateColumns: "auto 1fr",
     flexDirection: "column",
+  },
+  itemKey: {
+    fontSize: "0.7rem",
+    opacity: 0.7,
+    textAlign: "end",
+    textTransform: "lowercase",
   },
   marker: {
     backgroundColor: theme.palette.text.primary,
@@ -97,6 +105,8 @@ export default function Scrubber(props: Props): JSX.Element {
 
   const setHoverValue = useSetHoverValue();
 
+  const [hoverX, setHoverX] = useState<undefined | number>();
+
   const onChange = useCallback((value: number) => onSeek(fromSec(value)), [onSeek]);
 
   const latestStartTime = useLatest(startTime);
@@ -105,95 +115,85 @@ export default function Scrubber(props: Props): JSX.Element {
       if (!latestStartTime.current || el.current == undefined) {
         return;
       }
-      const currentEl = el.current;
-      // fix the y position of the tooltip to float on top of the playback bar
-      const y = currentEl.getBoundingClientRect().top;
-
       const stamp = fromSec(value);
       const timeFromStart = subtractTimes(stamp, latestStartTime.current);
-
-      const tooltipItems: TooltipItem[] = [];
-
-      if (!isEmpty(hoveredEvents)) {
-        Object.values(hoveredEvents).forEach(({ event }) => {
-          tooltipItems.push({
-            type: "item",
-            title: "Start",
-            value: formatTime(event.startTime),
-          });
-          tooltipItems.push({
-            type: "item",
-            title: "End",
-            value: formatTime(event.endTime),
-          });
-          if (!isEmpty(event.metadata)) {
-            Object.entries(event.metadata).forEach(([metaKey, metaValue]) => {
-              tooltipItems.push({ type: "item", title: metaKey, value: metaValue });
-            });
-          }
-          tooltipItems.push({ type: "divider" });
-        });
-      }
-
-      switch (timeFormat) {
-        case "TOD":
-          tooltipItems.push({ type: "item", title: "Time", value: formatTime(stamp) });
-          break;
-        case "SEC":
-          tooltipItems.push({ type: "item", title: "SEC", value: formatTime(stamp) });
-          break;
-      }
-
-      tooltipItems.push({
-        type: "item",
-        title: "Elapsed",
-        value: `${toSec(timeFromStart).toFixed(9)} sec`,
-      });
-
-      const tip = (
-        <div className={classes.tooltipWrapper}>
-          {tooltipItems.map((item, idx) => {
-            if (item.type === "divider") {
-              return <Divider key={`divider_${idx}`} className={classes.tooltipDivider} />;
-            }
-            return (
-              <Fragment key={`${item.title}_${idx}`}>
-                <Typography align="right" variant="body2">
-                  {item.title}:
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {item.value}
-                </Typography>
-              </Fragment>
-            );
-          })}
-        </div>
-      );
-      setTooltipState({ x, y, tip });
+      setHoverX(value);
       setHoverValue({
         componentId: hoverComponentId,
         type: "PLAYBACK_SECONDS",
         value: toSec(timeFromStart),
       });
     },
-    [
-      classes.tooltipDivider,
-      classes.tooltipWrapper,
-      formatTime,
-      hoverComponentId,
-      hoveredEvents,
-      latestStartTime,
-      setHoverValue,
-      timeFormat,
-    ],
+    [hoverComponentId, latestStartTime, setHoverValue],
   );
 
   const clearHoverValue = useClearHoverValue();
 
   const onHoverOut = useCallback(() => {
-    setTooltipState(undefined);
     clearHoverValue(hoverComponentId);
   }, [clearHoverValue, hoverComponentId]);
+
+  const tooltip = useMemo(() => {
+    if (!latestStartTime.current || el.current == undefined || hoverX == undefined) {
+      return;
+    }
+    const stamp = fromSec(hoverX);
+    const timeFromStart = subtractTimes(stamp, latestStartTime.current);
+
+    const tooltipItems: TooltipItem[] = [];
+
+    if (!isEmpty(hoveredEvents)) {
+      Object.values(hoveredEvents).forEach(({ event }) => {
+        tooltipItems.push({
+          type: "item",
+          title: "Start",
+          value: formatTime(event.startTime),
+        });
+        tooltipItems.push({
+          type: "item",
+          title: "End",
+          value: formatTime(event.endTime),
+        });
+        if (!isEmpty(event.metadata)) {
+          Object.entries(event.metadata).forEach(([metaKey, metaValue]) => {
+            tooltipItems.push({ type: "item", title: metaKey, value: metaValue });
+          });
+        }
+        tooltipItems.push({ type: "divider" });
+      });
+    }
+
+    switch (timeFormat) {
+      case "TOD":
+        tooltipItems.push({ type: "item", title: "Time", value: formatTime(stamp) });
+        break;
+      case "SEC":
+        tooltipItems.push({ type: "item", title: "SEC", value: formatTime(stamp) });
+        break;
+    }
+
+    tooltipItems.push({
+      type: "item",
+      title: "Elapsed",
+      value: `${toSec(timeFromStart).toFixed(9)} sec`,
+    });
+
+    return (
+      <div className={classes.tooltipWrapper}>
+        {tooltipItems.map((item, idx) => {
+          if (item.type === "divider") {
+            return <Divider key={`divider_${idx}`} className={classes.tooltipDivider} />;
+          }
+          return (
+            <Fragment key={`${item.title}_${idx}`}>
+              <Typography className={classes.itemKey}>{item.title}</Typography>
+              <Typography variant="subtitle2">{item.value}</Typography>
+            </Fragment>
+          );
+        })}
+      </div>
+    );
+  }, [classes, formatTime, hoveredEvents, latestStartTime, timeFormat, hoverX]);
 
   // Clean up the hover value when we are unmounted -- important for storybook.
   useEffect(() => onHoverOut, [onHoverOut]);
@@ -208,19 +208,6 @@ export default function Scrubber(props: Props): JSX.Element {
     [classes.marker],
   );
 
-  const [tooltipState, setTooltipState] = useState<
-    { x: number; y: number; tip: JSX.Element } | undefined
-  >();
-  const { tooltip } = useTooltip({
-    contents: tooltipState?.tip,
-    noPointerEvents: true,
-    shown: tooltipState != undefined,
-    targetPosition: {
-      x: tooltipState?.x ?? 0,
-      y: tooltipState?.y ?? 0,
-    },
-  });
-
   const min = startTime && toSec(startTime);
   const max = endTime && toSec(endTime);
   const value = currentTime == undefined ? undefined : toSec(currentTime);
@@ -228,34 +215,68 @@ export default function Scrubber(props: Props): JSX.Element {
 
   const loading = presence === PlayerPresence.INITIALIZING || presence === PlayerPresence.BUFFERING;
 
+  const popperRef = React.useRef<Instance>(ReactNull);
+
+  const areaRef = useRef<HTMLDivElement>(ReactNull);
+  const positionRef = React.useRef<{ x: number; y: number }>({
+    x: 0,
+    y: 0,
+  });
+
+  const handleMouseMove = (event: React.MouseEvent) => {
+    positionRef.current = { x: event.clientX, y: event.clientY };
+
+    if (popperRef.current != undefined) {
+      void popperRef.current.update();
+    }
+  };
+
   return (
-    <Stack
-      direction="row"
-      flexGrow={1}
-      alignItems="center"
-      position="relative"
-      style={{ height: 32 }}
+    <Tooltip
+      title={<>{tooltip}</>}
+      placement="top"
+      PopperProps={{
+        popperRef,
+        anchorEl: {
+          getBoundingClientRect: () => {
+            return new DOMRect(
+              positionRef.current.x,
+              areaRef.current!.getBoundingClientRect().y,
+              0,
+              0,
+            );
+          },
+        },
+      }}
     >
-      {tooltip}
-      <div className={cx(classes.track, { [classes.trackDisabled]: !startTime })} />
-      <Stack position="absolute" flex="auto" fullWidth style={{ height: 6 }}>
-        <ProgressPlot loading={loading} availableRanges={ranges} />
+      <Stack
+        direction="row"
+        flexGrow={1}
+        onMouseMove={handleMouseMove}
+        alignItems="center"
+        position="relative"
+        style={{ height: 32 }}
+      >
+        <div className={cx(classes.track, { [classes.trackDisabled]: !startTime })} />
+        <Stack ref={areaRef} position="absolute" flex="auto" fullWidth style={{ height: 6 }}>
+          <ProgressPlot loading={loading} availableRanges={ranges} />
+        </Stack>
+        <Stack ref={el} fullHeight fullWidth position="absolute" flex={1}>
+          <Slider
+            min={min ?? 0}
+            max={max ?? 100}
+            disabled={min == undefined || max == undefined}
+            step={step}
+            value={value}
+            onHoverOver={onHoverOver}
+            onHoverOut={onHoverOut}
+            onChange={onChange}
+            renderSlider={renderSlider}
+          />
+        </Stack>
+        <EventsOverlay />
+        <PlaybackBarHoverTicks componentId={hoverComponentId} />
       </Stack>
-      <Stack ref={el} fullHeight fullWidth position="absolute" flex={1}>
-        <Slider
-          min={min ?? 0}
-          max={max ?? 100}
-          disabled={min == undefined || max == undefined}
-          step={step}
-          value={value}
-          onHoverOver={onHoverOver}
-          onHoverOut={onHoverOut}
-          onChange={onChange}
-          renderSlider={renderSlider}
-        />
-      </Stack>
-      <EventsOverlay />
-      <PlaybackBarHoverTicks componentId={hoverComponentId} />
-    </Stack>
+    </Tooltip>
   );
 }

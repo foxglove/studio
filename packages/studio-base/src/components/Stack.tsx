@@ -241,4 +241,6 @@ export type StackProps = {
 
   /** CSS styles to apply to the component. */
   style?: CSSProperties;
+
+  onMouseMove?: React.DOMAttributes<HTMLDivElement>["onMouseMove"];
 };
