@@ -45,7 +45,7 @@ const useStyles = makeStyles()((theme) => ({
   popper: {
     zIndex: theme.zIndex.modal - 1,
     // Hide the tooltip when behind a modal dialog
-    "body:has(> .MuiModal-root) &": {
+    "body:has(> .MuiModal-root) &, .MuiModal-root ~ &": {
       visibility: "hidden",
     },
   },
