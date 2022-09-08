@@ -49,7 +49,7 @@ const useStyles = makeStyles()((theme) => ({
     position: "absolute",
     left: 0,
     right: 0,
-    height: 8,
+    height: 4,
     backgroundColor: theme.palette.action.focus,
   },
   trackDisabled: {
@@ -190,11 +190,11 @@ export default function Scrubber(props: Props): JSX.Element {
       flexGrow={1}
       alignItems="center"
       position="relative"
-      style={{ height: 20 }}
+      style={{ height: 32 }}
     >
       {tooltip}
       <div className={cx(classes.track, { [classes.trackDisabled]: !startTime })} />
-      <Stack position="absolute" flex="auto" fullWidth style={{ height: 8 }}>
+      <Stack position="absolute" flex="auto" fullWidth style={{ height: 4 }}>
         <ProgressPlot loading={loading} availableRanges={ranges} />
       </Stack>
       <Stack ref={el} fullHeight fullWidth position="absolute" flex={1}>

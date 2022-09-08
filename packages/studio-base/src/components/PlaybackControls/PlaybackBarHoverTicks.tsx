@@ -25,7 +25,7 @@ const useStyles = makeStyles()((theme) => ({
     height: 16,
     borderRadius: 1,
     width: 2,
-    top: 2,
+    top: 8,
     transform: "translate(-50%, 0)",
     backgroundColor: theme.palette.warning.main,
   },
