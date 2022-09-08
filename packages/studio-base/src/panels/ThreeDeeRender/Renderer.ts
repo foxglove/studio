@@ -157,8 +157,15 @@ export type RendererConfig = {
 export type MessageHandler<T = unknown> = (messageEvent: MessageEvent<T>) => void;
 
 export type RendererSubscription<T = unknown> = {
+  /** Preload the full history of topic messages as a best effort */
   preload?: boolean;
+  /**
+   * By default, topic subscriptions are only created when the topic visibility
+   * has been toggled on by the user in the settings sidebar. Enabling forced
+   * will unconditionally create the topic subscription(s)
+   */
   forced?: boolean;
+  /** Callback that will be fired for each matching incoming message */
   handler: MessageHandler<T>;
 };
 
