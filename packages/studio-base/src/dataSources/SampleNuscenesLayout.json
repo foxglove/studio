@@ -53,9 +53,9 @@
     },
     "3D!12ucir": {
       "cameraState": {
-        "distance": 36.57562343364031,
+        "distance": 35,
         "perspective": true,
-        "phi": 49.743164062495055,
+        "phi": 60,
         "target": [0, 0, 0],
         "targetOffset": [0, 0, 0],
         "targetOrientation": [0, 0, 0, 1],
