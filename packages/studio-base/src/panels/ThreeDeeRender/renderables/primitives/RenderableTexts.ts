@@ -42,7 +42,7 @@ export class RenderableTexts extends RenderablePrimitive {
     }
   }
 
-  private _updateMesh(texts: TextPrimitive[]) {
+  private _updateTexts(texts: TextPrimitive[]) {
     this._ensureCapacity(texts.length);
     const overrideColor = this.userData.settings.color
       ? stringToRgba(tempRgba, this.userData.settings.color)
@@ -81,21 +81,13 @@ export class RenderableTexts extends RenderablePrimitive {
       );
 
       label.position.set(text.pose.position.x, text.pose.position.y, text.pose.position.z);
-      label.userData.pose = text.pose;
       i++;
     }
     // need to release the no longer used labels so that they don't linger on the scene
     if (i < this.labels.length) {
-      let j = this.labels.length;
-      // will loop until the index of the first non-updated label (i)
-      while (j >= i) {
-        const label = this.labels.pop();
-        if (!label) {
-          break;
-        }
+      // cuts off remaining labels and loops through  them  release to from labelpool
+      for (const label of this.labels.splice(i)) {
         this.labelPool.release(label);
-        this.remove(label);
-        j--;
       }
     }
   }
@@ -117,7 +109,7 @@ export class RenderableTexts extends RenderablePrimitive {
     if (entity) {
       const lifetimeNs = toNanoSec(entity.lifetime);
       this.userData.expiresAt = lifetimeNs === 0n ? undefined : receiveTime + lifetimeNs;
-      this._updateMesh(entity.texts);
+      this._updateTexts(entity.texts);
     }
   }
 
