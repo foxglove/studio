@@ -3,8 +3,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import {
+  Alert,
   Button,
   ButtonGroup,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -13,15 +15,21 @@ import {
 } from "@mui/material";
 import produce from "immer";
 import { countBy } from "lodash";
-import { useCallback, useState } from "react";
+import { Fragment, KeyboardEvent, useCallback, useState } from "react";
+import { useAsyncFn } from "react-use";
 import { makeStyles } from "tss-react/mui";
 
-import { toDate } from "@foxglove/rostime";
+import Log from "@foxglove/log";
+import { toDate, toNanoSec } from "@foxglove/rostime";
 import {
   MessagePipelineContext,
   useMessagePipeline,
 } from "@foxglove/studio-base/components/MessagePipeline";
 import Stack from "@foxglove/studio-base/components/Stack";
+import { useConsoleApi } from "@foxglove/studio-base/context/ConsoleApiContext";
+import { EventsStore, useEvents } from "@foxglove/studio-base/context/EventsContext";
+
+const log = Log.getLogger(__filename);
 
 const useStyles = makeStyles()((theme) => ({
   fields: {
@@ -35,6 +43,7 @@ const useStyles = makeStyles()((theme) => ({
 type KeyValue = { key: string; value: string };
 
 const selectCurrentTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.currentTime;
+const selectRefreshEvents = (store: EventsStore) => store.refreshEvents;
 
 function formatDateTimeString(date: Date) {
   return date.toISOString().replace("Z", "");
@@ -44,7 +53,9 @@ export function CreateEventDialog(props: { deviceId: string; onClose: () => void
   const { deviceId, onClose } = props;
 
   const { classes } = useStyles();
+  const consoleApi = useConsoleApi();
 
+  const refreshEvents = useEvents(selectRefreshEvents);
   const currentTime = useMessagePipeline(selectCurrentTime);
   const [event, setEvent] = useState<{
     startTime: undefined | Date;
@@ -53,7 +64,7 @@ export function CreateEventDialog(props: { deviceId: string; onClose: () => void
     metadata: KeyValue[];
   }>({
     startTime: currentTime ? toDate(currentTime) : undefined,
-    duration: 5,
+    duration: 0,
     durationUnit: "sec",
     metadata: [{ key: "", value: "" }],
   });
@@ -78,15 +89,48 @@ export function CreateEventDialog(props: { deviceId: string; onClose: () => void
     );
   }, []);
 
-  const keyedMetadata = countBy(event.metadata, (kv) => kv.key);
-  const hasDuplicateKey = Object.entries(keyedMetadata).some(
+  const countedMetadata = countBy(event.metadata, (kv) => kv.key);
+  const hasDuplicateKey = Object.entries(countedMetadata).some(
     ([key, count]) => key.length > 0 && count > 1,
   );
-
   const canSubmit = event.startTime != undefined && event.duration != undefined && !hasDuplicateKey;
 
+  const [createdEvent, createEvent] = useAsyncFn(async () => {
+    if (event.startTime == undefined || event.duration == undefined) {
+      return;
+    }
+
+    const filteredMeta = event.metadata.filter(
+      (meta) => meta.key.length > 0 && meta.value.length > 0,
+    );
+    const keyedMetadata = Object.fromEntries(
+      filteredMeta.map((meta) => [meta.key.trim(), meta.value.trim()]),
+    );
+    await consoleApi.createEvent({
+      deviceId,
+      timestamp: event.startTime.toISOString(),
+      durationNanos: toNanoSec(
+        event.durationUnit === "sec"
+          ? { sec: event.duration, nsec: 0 }
+          : { sec: 0, nsec: event.duration },
+      ).toString(),
+      metadata: keyedMetadata,
+    });
+    onClose();
+    refreshEvents();
+  }, [consoleApi, deviceId, event, onClose, refreshEvents]);
+
+  const onMetaDataKeyDown = useCallback(
+    (keyboardEvent: KeyboardEvent) => {
+      if (keyboardEvent.key === "Enter") {
+        createEvent().catch((error) => log.error(error));
+      }
+    },
+    [createEvent],
+  );
+
   return (
-    <Dialog open>
+    <Dialog open onClose={onClose}>
       <DialogTitle>Create Event</DialogTitle>
       <DialogContent>
         <div className={classes.fields}>
@@ -117,12 +161,14 @@ export function CreateEventDialog(props: { deviceId: string; onClose: () => void
                 endAdornment: (
                   <ButtonGroup variant="contained" disableElevation size="small">
                     <Button
+                      tabIndex={-1}
                       variant={event.durationUnit === "sec" ? "contained" : "outlined"}
                       onClick={() => setEvent((old) => ({ ...old, durationUnit: "sec" }))}
                     >
                       sec
                     </Button>
                     <Button
+                      tabIndex={-1}
                       variant={event.durationUnit === "nsec" ? "contained" : "outlined"}
                       onClick={() => setEvent((old) => ({ ...old, durationUnit: "nsec" }))}
                     >
@@ -134,25 +180,25 @@ export function CreateEventDialog(props: { deviceId: string; onClose: () => void
             />
           </Stack>
           {event.metadata.map(({ key, value }, index) => {
-            const hasDuplicate = ((key.length > 0 && keyedMetadata[key]) ?? 0) > 1;
+            const hasDuplicate = ((key.length > 0 && countedMetadata[key]) ?? 0) > 1;
             return (
-              <>
+              <Fragment key={index}>
                 <TextField
-                  key={`${index}_key`}
                   value={key}
                   autoFocus={index === 0}
                   placeholder="key"
                   error={hasDuplicate}
                   helperText={hasDuplicate ? "Duplicate key" : undefined}
                   label={index === 0 ? "Metadata" : undefined}
+                  onKeyDown={onMetaDataKeyDown}
                   onChange={(ev) => updateMetadata(index, "key", ev.currentTarget.value)}
                 />
                 <TextField
-                  key={`${index}_value`}
                   value={value}
                   placeholder="value"
                   label={index === 0 ? "value" : undefined}
                   helperText={hasDuplicate ? "error" : undefined}
+                  onKeyDown={onMetaDataKeyDown}
                   FormHelperTextProps={{
                     style: {
                       visibility: "hidden",
@@ -165,7 +211,7 @@ export function CreateEventDialog(props: { deviceId: string; onClose: () => void
                   }}
                   onChange={(ev) => updateMetadata(index, "value", ev.currentTarget.value)}
                 />
-              </>
+              </Fragment>
             );
           })}
         </div>
@@ -174,10 +220,19 @@ export function CreateEventDialog(props: { deviceId: string; onClose: () => void
         <Button variant="outlined" size="large" onClick={onClose}>
           Cancel
         </Button>
-        <Button variant="contained" size="large" onClick={onClose} disabled={!canSubmit}>
+        <Button
+          variant="contained"
+          size="large"
+          onClick={createEvent}
+          disabled={!canSubmit || createdEvent.loading}
+        >
+          {createdEvent.loading && (
+            <CircularProgress color="inherit" size="1rem" style={{ marginRight: "0.5rem" }} />
+          )}
           Create Event
         </Button>
       </DialogActions>
+      {createdEvent.error?.message && <Alert severity="error">{createdEvent.error.message}</Alert>}
     </Dialog>
   );
 }

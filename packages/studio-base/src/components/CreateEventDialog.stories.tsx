@@ -24,5 +24,5 @@ export default {
 };
 
 export function Default(): JSX.Element {
-  return <CreateEventDialog onClose={() => undefined} />;
+  return <CreateEventDialog deviceId="dummyDevice" onClose={() => undefined} />;
 }

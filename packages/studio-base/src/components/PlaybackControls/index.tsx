@@ -59,6 +59,8 @@ const useStyles = makeStyles()((theme) => ({
 const selectDeviceId = (ctx: MessagePipelineContext) => {
   if (ctx.playerState.urlState?.sourceId === "foxglove-data-platform") {
     return ctx.playerState.urlState.parameters?.deviceId;
+  } else {
+    return undefined;
   }
 };
 
