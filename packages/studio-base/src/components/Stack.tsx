@@ -242,5 +242,11 @@ export type StackProps = {
   /** CSS styles to apply to the component. */
   style?: CSSProperties;
 
-  onMouseMove?: React.DOMAttributes<HTMLDivElement>["onMouseMove"];
+  /** Standard pointer events. */
+  onPointerDown?: React.DOMAttributes<HTMLDivElement>["onPointerDown"];
+  onPointerEnter?: React.DOMAttributes<HTMLDivElement>["onPointerEnter"];
+  onPointerLeave?: React.DOMAttributes<HTMLDivElement>["onPointerLeave"];
+  onPointerMove?: React.DOMAttributes<HTMLDivElement>["onPointerMove"];
+  onPointerOver?: React.DOMAttributes<HTMLDivElement>["onPointerOver"];
+  onPointerUp?: React.DOMAttributes<HTMLDivElement>["onPointerUp"];
 };
