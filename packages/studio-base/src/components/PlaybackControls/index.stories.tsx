@@ -78,12 +78,14 @@ function Wrapper({
   children,
   progress,
   presence,
+  noActiveData,
 }: {
   isPlaying?: boolean;
   activeData?: PlayerStateActiveData;
   children: React.ReactNode;
   progress?: PlayerState["progress"];
   presence?: PlayerState["presence"];
+  noActiveData?: boolean;
 }) {
   return (
     <MockMessagePipelineProvider
@@ -95,6 +97,7 @@ function Wrapper({
       seekPlayback={action("seek")}
       startPlayback={action("play")}
       progress={progress}
+      noActiveData={noActiveData}
     >
       <div style={{ padding: 20, margin: 20 }}>{children}</div>
     </MockMessagePipelineProvider>
@@ -148,7 +151,7 @@ Paused.parameters = { colorScheme: "both-column" };
 
 export const Disabled: Story = () => {
   return (
-    <Wrapper presence={PlayerPresence.ERROR} activeData={{ currentTime: undefined }}>
+    <Wrapper presence={PlayerPresence.ERROR} noActiveData>
       <PlaybackControls
         isPlaying={false}
         getTimeInfo={() => ({})}
