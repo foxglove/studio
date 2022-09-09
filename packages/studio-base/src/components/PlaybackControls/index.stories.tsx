@@ -148,7 +148,7 @@ Paused.parameters = { colorScheme: "both-column" };
 
 export const Disabled: Story = () => {
   return (
-    <Wrapper presence={PlayerPresence.ERROR}>
+    <Wrapper presence={PlayerPresence.ERROR} activeData={{ currentTime: undefined }}>
       <PlaybackControls
         isPlaying={false}
         getTimeInfo={() => ({})}
