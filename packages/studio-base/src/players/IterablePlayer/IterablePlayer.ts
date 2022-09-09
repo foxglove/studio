@@ -644,9 +644,10 @@ export class IterablePlayer implements Player {
         throw err;
       }
     } finally {
-      // Clear the seek target. We've either seeked here and set the current time or we are no longer seeking
-      this._seekTarget = undefined;
-
+      // Unless the next state is a seek backfill, we clear the seek target since we have finished seeking
+      if (this._nextState !== "seek-backfill") {
+        this._seekTarget = undefined;
+      }
       clearTimeout(seekAckTimeout);
       this._abort = undefined;
     }
