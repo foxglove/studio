@@ -13,23 +13,13 @@
 
 import { first, kebabCase, last } from "lodash";
 
+import { definitions as commonDefs } from "@foxglove/rosmsg-msgs-common";
 import { foxgloveMessageSchemas } from "@foxglove/schemas";
 import { diffLabels, DiffObject } from "@foxglove/studio-base/panels/RawMessages/getDiff";
 
 export const DATA_ARRAY_PREVIEW_LIMIT = 20;
-const ROS_COMMON_MSG_PACKAGES: Set<string> = new Set([
-  "actionlib_msgs",
-  "diagnostic_msgs",
-  "geometry_msgs",
-  "nav_msgs",
-  "sensor_msgs",
-  "shape_msgs",
-  "std_msgs",
-  "stereo_msgs",
-  "trajectory_msgs",
-  "visualization_msgs",
-  "turtlesim",
-]);
+const ROS_COMMON_MSG_PACKAGES = new Set(Object.keys(commonDefs).map((key) => key.split("/")[0]!));
+ROS_COMMON_MSG_PACKAGES.add("turtlesim");
 
 function isTypedArray(obj: unknown) {
   return Boolean(
@@ -107,7 +97,7 @@ for (const schema of Object.values(foxgloveMessageSchemas)) {
   foxgloveDocsLinksByDatatype.set(`foxglove.${schema.name}`, url);
 }
 
-export function getMessageDocumentationLink(datatype: string): string {
+export function getMessageDocumentationLink(datatype: string): string | undefined {
   const parts = datatype.split(/[/.]/);
   const pkg = first(parts);
   const filename = last(parts);
@@ -121,5 +111,5 @@ export function getMessageDocumentationLink(datatype: string): string {
     return foxgloveDocsLink;
   }
 
-  return `https://www.google.com/search?q=${datatype}`;
+  return undefined;
 }

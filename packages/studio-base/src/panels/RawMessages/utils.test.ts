@@ -18,8 +18,6 @@ describe("getMessageDocumentationLink", () => {
     expect(getMessageDocumentationLink("foxglove.CircleAnnotation")).toEqual(
       "https://foxglove.dev/docs/studio/messages/circle-annotation",
     );
-    expect(getMessageDocumentationLink("foxglove.DoesNotExist")).toEqual(
-      "https://www.google.com/search?q=foxglove.DoesNotExist",
-    );
+    expect(getMessageDocumentationLink("foxglove.DoesNotExist")).toBeUndefined();
   });
 });
