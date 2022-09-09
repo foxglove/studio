@@ -77,16 +77,19 @@ function Wrapper({
   activeData,
   children,
   progress,
+  presence,
 }: {
   isPlaying?: boolean;
   activeData?: PlayerStateActiveData;
   children: React.ReactNode;
   progress?: PlayerState["progress"];
+  presence?: PlayerState["presence"];
 }) {
   return (
     <MockMessagePipelineProvider
       isPlaying={isPlaying}
       capabilities={["setSpeed", "playbackControl"]}
+      presence={presence}
       activeData={activeData}
       pausePlayback={action("pause")}
       seekPlayback={action("seek")}
@@ -142,6 +145,21 @@ export const Paused: Story = () => {
   );
 };
 Paused.parameters = { colorScheme: "both-column" };
+
+export const Disabled: Story = () => {
+  return (
+    <Wrapper presence={PlayerPresence.ERROR}>
+      <PlaybackControls
+        isPlaying={false}
+        getTimeInfo={() => ({})}
+        play={action("play")}
+        pause={action("pause")}
+        seek={action("seek")}
+      />
+    </Wrapper>
+  );
+};
+Disabled.parameters = { colorScheme: "both-column" };
 
 export const DownloadProgressByRanges: Story = () => {
   const player = getPlayerState();
