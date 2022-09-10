@@ -16,6 +16,7 @@ import {
 } from "../IIterableSource";
 import { FileReadable } from "./FileReadable";
 import { McapIndexedIterableSource } from "./McapIndexedIterableSource";
+import { McapStreamingIterableSource } from "./McapStreamingIterableSource";
 import { RemoteFileReadable } from "./RemoteFileReadable";
 
 type McapSource = { type: "file"; file: File } | { type: "url"; url: string };
@@ -25,11 +26,7 @@ async function tryCreateIndexedReader(readable: Mcap0Types.IReadable) {
   const reader = await Mcap0IndexedReader.Initialize({ readable, decompressHandlers });
 
   if (reader.chunkIndexes.length === 0 || reader.channelsById.size === 0) {
-    if (reader.summaryOffsetsByOpcode.size > 0) {
-      throw new Error("The MCAP file is empty or has an incomplete summary section.");
-    } else {
-      throw new Error("The MCAP file is unindexed. Only indexed files are supported.");
-    }
+    return undefined;
   }
   return reader;
 }
@@ -49,14 +46,37 @@ export class McapIterableSource implements IIterableSource {
       case "file": {
         const readable = new FileReadable(source.file);
         const reader = await tryCreateIndexedReader(readable);
-        this._sourceImpl = new McapIndexedIterableSource(reader);
+        if (reader) {
+          this._sourceImpl = new McapIndexedIterableSource(reader);
+        } else {
+          this._sourceImpl = new McapStreamingIterableSource({
+            size: source.file.size,
+            stream: source.file.stream(),
+          });
+        }
         break;
       }
       case "url": {
         const readable = new RemoteFileReadable(source.url);
         await readable.open();
         const reader = await tryCreateIndexedReader(readable);
-        this._sourceImpl = new McapIndexedIterableSource(reader);
+        if (reader) {
+          this._sourceImpl = new McapIndexedIterableSource(reader);
+        } else {
+          const response = await fetch(source.url);
+          if (!response.body) {
+            throw new Error(`Unable to stream remote file. <${source.url}>`);
+          }
+          const size = response.headers.get("content-length");
+          if (size == undefined) {
+            throw new Error(`Remote file is missing Content-Length header. <${source.url}>`);
+          }
+
+          this._sourceImpl = new McapStreamingIterableSource({
+            size: parseInt(size),
+            stream: response.body,
+          });
+        }
         break;
       }
     }
