@@ -468,16 +468,26 @@ export class IterablePlayer implements Player {
       }
 
       if (this._enablePreload) {
-        // --- setup blocks
-        this._blockLoader = new BlockLoader({
-          cacheSizeBytes: DEFAULT_CACHE_SIZE_BYTES,
-          source: this._iterableSource,
-          start: this._start,
-          end: this._end,
-          maxBlocks: MAX_BLOCKS,
-          minBlockDurationNs: MIN_MEM_CACHE_BLOCK_SIZE_NS,
-          problemManager: this._problemManager,
-        });
+        // --- setup block loader which loads messages for _full_ subscriptions in the "background"
+        try {
+          this._blockLoader = new BlockLoader({
+            cacheSizeBytes: DEFAULT_CACHE_SIZE_BYTES,
+            source: this._iterableSource,
+            start: this._start,
+            end: this._end,
+            maxBlocks: MAX_BLOCKS,
+            minBlockDurationNs: MIN_MEM_CACHE_BLOCK_SIZE_NS,
+            problemManager: this._problemManager,
+          });
+        } catch (err) {
+          log.error(err);
+          this._problemManager.addProblem("block-loader", {
+            severity: "warn",
+            message: "Failed to initialize message preloading",
+            tip: "Check that the start and end time of your data are the same year.",
+            error: err,
+          });
+        }
       }
 
       // set the initial topics for the loader
@@ -516,6 +526,7 @@ export class IterablePlayer implements Player {
     this._playbackIterator = this._bufferedSource.messageIterator({
       topics: Array.from(this._allTopics),
       start: next,
+      consumptionType: "partial",
     });
   }
 
@@ -548,6 +559,7 @@ export class IterablePlayer implements Player {
     this._playbackIterator = this._bufferedSource.messageIterator({
       topics: Array.from(this._allTopics),
       start: this._start,
+      consumptionType: "partial",
     });
 
     this._lastMessage = undefined;

@@ -373,5 +373,5 @@ class ConsoleApi {
   }
 }
 
-export type { Org, DeviceCodeResponse, Session };
+export type { Org, DeviceCodeResponse, Session, CoverageResponse };
 export default ConsoleApi;
