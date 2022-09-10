@@ -358,7 +358,7 @@ describe("IterablePlayer", () => {
     player.close();
   });
 
-  it.only("should make a new message iterator when topic subscriptions change", async () => {
+  it("should make a new message iterator when topic subscriptions change", async () => {
     const source = new TestSource();
     const player = new IterablePlayer({
       source,
