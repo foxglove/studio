@@ -188,6 +188,11 @@ export class McapStreamingIterableSource implements IIterableSource {
       });
     }
 
+    problems.push({
+      message: "This file unindexed. Unindexed files may have degraded performance.",
+      severity: "warn",
+    });
+
     return {
       start: this.start,
       end: this.end,
