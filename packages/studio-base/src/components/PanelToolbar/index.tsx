@@ -103,7 +103,8 @@ export default React.memo<Props>(function PanelToolbar({
       {children ??
         (panelContext != undefined && (
           <Typography noWrap variant="body2" color="text.secondary" flex="auto">
-            {panelContext.title}
+            {panelContext.title} - drag:
+            {JSON.stringify(rootDragRef != undefined || controlsDragRef != undefined)}
           </Typography>
         ))}
       <PanelToolbarControls

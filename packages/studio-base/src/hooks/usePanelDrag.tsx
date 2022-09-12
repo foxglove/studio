@@ -36,6 +36,7 @@ export default function usePanelDrag(props: {
   onDragEnd?: () => void;
 }): [ConnectDragSource, ConnectDragPreview] {
   const { tabId: sourceTabId, panelId, onDragStart, onDragEnd } = props;
+  console.log("usePanelDrag", sourceTabId, panelId);
   const { mosaicWindowActions } = useContext(MosaicWindowContext);
 
   const mosaicId = usePanelMosaicId();
@@ -63,6 +64,7 @@ export default function usePanelDrag(props: {
 
       // The defer is necessary as the element must be present on start for HTML DnD to not cry
       const path = mosaicWindowActions.getPath();
+      console.log("drag item", path, sourceTabId);
       const deferredHide = defer(() => {
         startDrag({ path, sourceTabId });
       });

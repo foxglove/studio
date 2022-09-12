@@ -168,7 +168,7 @@ export function UnconnectedPanelLayout(props: Props): React.ReactElement {
               </EmptyState>
             }
           >
-            <Panel childId={id} tabId={tabId} key={`${id}${tabId}${path.length}`} />
+            <Panel childId={id} tabId={tabId} key={`${id}${tabId}`} />
           </Suspense>
         </MosaicWindow>
       );
