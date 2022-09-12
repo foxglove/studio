@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Tooltip } from "@mui/material";
+import { Fade, Tooltip } from "@mui/material";
 import { Instance } from "@popperjs/core";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLatest } from "react-use";
@@ -138,6 +138,8 @@ export default function Scrubber(props: Props): JSX.Element {
     <Tooltip
       title={hoverX != undefined ? <PlaybackControlsTooltipContent hoverXPosition={hoverX} /> : ""}
       placement="top"
+      TransitionComponent={Fade}
+      TransitionProps={{ timeout: 0 }}
       PopperProps={{
         popperRef,
         anchorEl: {
