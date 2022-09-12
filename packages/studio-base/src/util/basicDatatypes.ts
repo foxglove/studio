@@ -15,13 +15,13 @@ import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
  */
 export const basicDatatypes: RosDatatypes = new Map();
 
-// Add ROS1 message schemas
-for (const [name, def] of Object.entries(ros1)) {
+// Add ROS2 message schemas
+for (const [name, def] of Object.entries(ros2galactic)) {
   basicDatatypes.set(name, def);
 }
 
-// Add ROS2 message schemas
-for (const [name, def] of Object.entries(ros2galactic)) {
+// Add ROS1 message schemas
+for (const [name, def] of Object.entries(ros1)) {
   basicDatatypes.set(name, def);
 }
 
