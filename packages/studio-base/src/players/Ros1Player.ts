@@ -119,7 +119,7 @@ export default class Ros1Player implements Player {
     // https://github.com/ros/ros_comm/blob/noetic-devel/clients/roscpp/src/libros/transport/transport_tcp.cpp#L393-L395
     // https://github.com/ros/ros_comm/blob/f5fa3a168760d62e9693f10dcb9adfffc6132d22/clients/roscpp/src/libros/transport/transport.cpp#L67-L72
     let listenHostname = undefined;
-    if (hostname && hostname === "localhost") {
+    if (hostname === "localhost") {
       listenHostname = "localhost";
     }
     await tcpServer.listen(undefined, listenHostname, 10);
