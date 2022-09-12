@@ -5,6 +5,8 @@
 import { Story } from "@storybook/react";
 
 import MockMessagePipelineProvider from "@foxglove/studio-base/components/MessagePipeline/MockMessagePipelineProvider";
+import ConsoleApiContext from "@foxglove/studio-base/context/ConsoleApiContext";
+import EventsProvider from "@foxglove/studio-base/providers/EventsProvider";
 
 import { CreateEventDialog } from "./CreateEventDialog";
 
@@ -12,11 +14,19 @@ export default {
   component: CreateEventDialog,
   title: "components/CreateEventDialog",
   decorators: [
-    (StoryFn: Story): JSX.Element => (
-      <MockMessagePipelineProvider>
-        <StoryFn />
-      </MockMessagePipelineProvider>
-    ),
+    (StoryFn: Story): JSX.Element => {
+      const consoleApi = {} as any;
+
+      return (
+        <ConsoleApiContext.Provider value={consoleApi}>
+          <EventsProvider>
+            <MockMessagePipelineProvider>
+              <StoryFn />
+            </MockMessagePipelineProvider>
+          </EventsProvider>
+        </ConsoleApiContext.Provider>
+      );
+    },
   ],
   parameters: {
     colorScheme: "light",
