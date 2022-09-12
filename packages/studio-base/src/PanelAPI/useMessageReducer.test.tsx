@@ -125,7 +125,7 @@ describe("useMessageReducer", () => {
     expect(result.current).toEqual(2);
   });
 
-  it("calls addMessage for messages added later", async () => {
+  it.only("calls addMessage for messages added later", async () => {
     const message1 = {
       topic: "/foo",
       receiveTime: { sec: 0, nsec: 0 },
@@ -158,6 +158,7 @@ describe("useMessageReducer", () => {
       },
     );
 
+    console.log("rerender with message1");
     messages = [message1];
     rerender({ topics: ["/foo"] });
 
@@ -165,6 +166,7 @@ describe("useMessageReducer", () => {
     expect(addMessage.mock.calls).toEqual([[1, message1]]);
     expect(result.current).toEqual(2);
 
+    console.log("rerender with new topics");
     // Subscribe to a new topic, then receive a message on that topic
     rerender({ topics: ["/foo", "/bar"] });
 
@@ -172,6 +174,7 @@ describe("useMessageReducer", () => {
     expect(addMessage.mock.calls).toEqual([[1, message1]]);
     expect(result.current).toEqual(2);
 
+    console.log("rerender with message2");
     messages = [message2];
     rerender({ topics: ["/foo", "/bar"] });
 
