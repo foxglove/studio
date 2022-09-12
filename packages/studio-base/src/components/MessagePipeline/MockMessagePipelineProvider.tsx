@@ -213,6 +213,8 @@ export default function MockMessagePipelineProvider(
             if (
               action.type === "update-subscriber" &&
               newState.public.messageEventsBySubscriberId.size === 0 &&
+              newState.public.playerState.activeData?.messages.length !== 0 &&
+              [...newState.subscriptionsById.values()].some((subs) => subs.length !== 0) &&
               !state.sentFirstMessages
             ) {
               newState.public.messageEventsBySubscriberId.set(action.id, []);
@@ -228,8 +230,9 @@ export default function MockMessagePipelineProvider(
                 ),
               );
               newState.public.messageEventsBySubscriberId = messageEventsBySubscriberId;
+              return { ...newState, dispatch: state.dispatch, sentFirstMessages: true };
             }
-            return { ...newState, dispatch: state.dispatch, sentFirstMessages: true };
+            return { ...newState, dispatch: state.dispatch };
           });
         }
       };
