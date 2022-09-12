@@ -17,6 +17,7 @@ import produce from "immer";
 import { countBy } from "lodash";
 import { Fragment, KeyboardEvent, useCallback, useState } from "react";
 import { useAsyncFn } from "react-use";
+import { keyframes } from "tss-react";
 import { makeStyles } from "tss-react/mui";
 
 import Log from "@foxglove/log";
@@ -31,12 +32,24 @@ import { EventsStore, useEvents } from "@foxglove/studio-base/context/EventsCont
 
 const log = Log.getLogger(__filename);
 
+const fadeInAnimation = keyframes`
+from {
+    opacity: 0;
+}
+to {
+    opacity: 1;
+}
+`;
+
 const useStyles = makeStyles()((theme) => ({
   fields: {
     alignItems: "center",
     display: "grid",
     gridTemplateColumns: "1fr 1fr",
     gap: theme.spacing(1),
+  },
+  metaField: {
+    animation: `${fadeInAnimation} 0.2s ease-in-out`,
   },
 }));
 
@@ -184,6 +197,7 @@ export function CreateEventDialog(props: { deviceId: string; onClose: () => void
               <Fragment key={index}>
                 <TextField
                   value={key}
+                  className={index > 0 ? classes.metaField : undefined}
                   autoFocus={index === 0}
                   placeholder="key"
                   error={hasDuplicate}
@@ -194,6 +208,7 @@ export function CreateEventDialog(props: { deviceId: string; onClose: () => void
                 />
                 <TextField
                   value={value}
+                  className={index > 0 ? classes.metaField : undefined}
                   placeholder="value"
                   label={index === 0 ? "value" : undefined}
                   helperText={hasDuplicate ? "error" : undefined}
