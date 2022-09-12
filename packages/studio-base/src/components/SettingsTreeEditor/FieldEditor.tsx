@@ -40,8 +40,10 @@ const useStyles = makeStyles<void, "error">()((theme, _params, classes) => {
     fieldLabel: {
       textAlign: "end",
       color: theme.palette.text.secondary,
+      overflow: "hidden",
       whiteSpace: "nowrap",
       flex: "auto",
+      textOverflow: "ellipsis",
     },
     fieldWrapper: {
       marginRight: theme.spacing(1.25),
