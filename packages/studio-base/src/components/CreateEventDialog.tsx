@@ -134,7 +134,6 @@ export function CreateEventDialog(props: { deviceId: string; onClose: () => void
       <DialogTitle>Create Event</DialogTitle>
       <DialogContent>
         <div className={classes.fields}>
-          <TextField value={deviceId} label="Device ID" style={{ gridColumn: "span 2" }} />
           <TextField
             label="Start time"
             value={event.startTime ? formatDateTimeString(event.startTime) : ""}
