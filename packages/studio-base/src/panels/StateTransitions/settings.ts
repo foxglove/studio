@@ -22,7 +22,7 @@ function buildSettingsTree(config: StateTransitionConfig): SettingsTreeNodes {
   };
 }
 
-export function usePlotPanelSettings(
+export function useStateTransitionsPanelSettings(
   config: StateTransitionConfig,
   saveConfig: SaveConfig<StateTransitionConfig>,
 ): void {

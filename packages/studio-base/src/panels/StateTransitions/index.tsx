@@ -53,6 +53,7 @@ import { TimestampMethod } from "@foxglove/studio-base/util/time";
 
 import helpContent from "./index.help.md";
 import messagesToDatasets from "./messagesToDatasets";
+import { useStateTransitionsPanelSettings } from "./settings";
 import { StateTransitionPath } from "./types";
 
 export const transitionableRosTypes = [
@@ -343,6 +344,8 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
   const data: ChartData = useShallowMemo({ datasets });
   const rootRef = useRef<HTMLDivElement>(ReactNull);
   const mousePresent = usePanelMousePresence(rootRef);
+
+  useStateTransitionsPanelSettings(config, saveConfig);
 
   return (
     <Stack ref={rootRef} flexGrow={1} overflow="hidden" style={{ zIndex: 0 }}>
