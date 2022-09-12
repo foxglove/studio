@@ -13,7 +13,7 @@
 
 import { omit } from "lodash";
 import { useEffect, useRef, useState } from "react";
-import shallowEqual from "shallowequal";
+import shallowequal from "shallowequal";
 import { createStore } from "zustand";
 
 import { Time, isLessThan } from "@foxglove/rostime";
@@ -71,7 +71,6 @@ type MockMessagePipelineProps = {
 };
 type MockMessagePipelineState = MessagePipelineInternalState & {
   mockProps: MockMessagePipelineProps;
-  sentFirstMessages: boolean;
   dispatch: (
     action:
       | MessagePipelineStateAction
@@ -183,7 +182,7 @@ export default function MockMessagePipelineProvider(
       const dispatch: MockMessagePipelineState["dispatch"] = (action) => {
         if (action.type === "set-mock-props") {
           set((state) => {
-            if (shallowEqual(state.mockProps, action.mockProps)) {
+            if (shallowequal(state.mockProps, action.mockProps)) {
               return state;
             }
             const publicState = getPublicState(state, action.mockProps, state.dispatch);
@@ -207,30 +206,29 @@ export default function MockMessagePipelineProvider(
             // on player listener callback - not on subscriber changes
             //
             // In tests, the first setSubscriptions call happens after we've already set props.messages
-            // So we have some special logic to detect the _first_ change of subscriptions
+            // So we have some special logic to detect the change of subscriptions
             // and update messageEventsBySubscriberId.
             const newState = reducer(state, action);
-            if (
-              action.type === "update-subscriber" &&
-              newState.public.messageEventsBySubscriberId.size === 0 &&
-              newState.public.playerState.activeData?.messages.length !== 0 &&
-              [...newState.subscriptionsById.values()].some((subs) => subs.length !== 0) &&
-              !state.sentFirstMessages
-            ) {
-              newState.public.messageEventsBySubscriberId.set(action.id, []);
-              const messageEventsBySubscriberId = new Map(
-                Array.from(
-                  newState.subscriptionsById.entries(),
-                  ([id, payloads]: [string, SubscribePayload[]]) => [
-                    id,
-                    newState.public.playerState.activeData?.messages.filter((msg) =>
-                      payloads.find((payload) => payload.topic === msg.topic),
-                    ) ?? [],
-                  ],
-                ),
-              );
-              newState.public.messageEventsBySubscriberId = messageEventsBySubscriberId;
-              return { ...newState, dispatch: state.dispatch, sentFirstMessages: true };
+            const messages = newState.public.playerState.activeData?.messages;
+            if (action.type === "update-subscriber" && messages && messages.length !== 0) {
+              let changed = false;
+              const messageEventsBySubscriberId = new Map<string, MessageEvent<unknown>[]>();
+              for (const [id, subs] of newState.subscriptionsById) {
+                const existingMsgs = newState.public.messageEventsBySubscriberId.get(id);
+                const newMsgs = messages.filter(
+                  (msg) => subs.find((sub) => sub.topic === msg.topic) != undefined,
+                );
+                if (!shallowequal(existingMsgs, newMsgs)) {
+                  messageEventsBySubscriberId.set(id, newMsgs);
+                  changed = true;
+                  continue;
+                }
+              }
+
+              if (changed) {
+                newState.public.messageEventsBySubscriberId = messageEventsBySubscriberId;
+              }
+              return { ...newState, dispatch: state.dispatch };
             }
             return { ...newState, dispatch: state.dispatch };
           });
@@ -239,7 +237,6 @@ export default function MockMessagePipelineProvider(
       const initialPublicState = getPublicState(undefined, props, dispatch);
       return {
         mockProps: omit(props, "children"),
-        sentFirstMessages: false,
         player: undefined,
         dispatch,
         publishersById: {},
