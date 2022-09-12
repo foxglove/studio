@@ -142,11 +142,20 @@ export default function Scrubber(props: Props): JSX.Element {
       TransitionProps={{ timeout: 0 }}
       PopperProps={{
         popperRef,
+        modifiers: [
+          {
+            name: "offset",
+            options: {
+              // Offset popper to hug the track better.
+              offset: [0, -12],
+            },
+          },
+        ],
         anchorEl: {
           getBoundingClientRect: () => {
             return new DOMRect(
               positionRef.current.x,
-              8 + (hoverElRef.current?.getBoundingClientRect().y ?? 0),
+              hoverElRef.current?.getBoundingClientRect().y ?? 0,
               0,
               0,
             );
