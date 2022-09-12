@@ -102,7 +102,7 @@ function getPublicState(
       presence: props.presence ?? PlayerPresence.PRESENT,
       playerId: props.playerId ?? "1",
       progress: props.progress ?? {},
-      capabilities: props.capabilities ?? [],
+      capabilities: props.capabilities ?? prevState?.public.playerState.capabilities ?? [],
       profile: props.profile,
       problems: props.problems,
       urlState: props.urlState,
@@ -133,15 +133,22 @@ function getPublicState(
         ? [...props.topics].sort((a, b) => a.name.localeCompare(b.name))
         : [],
     datatypes: props.datatypes ?? NO_DATATYPES,
-    setSubscriptions(id, payloads) {
-      console.log("dispatching update-subscriber from", new Error().stack);
-      dispatch({ type: "update-subscriber", id, payloads });
-      props.setSubscriptions?.(id, payloads);
-    },
-    setPublishers(id, payloads) {
-      dispatch({ type: "set-publishers", id, payloads });
-      props.setPublishers?.(id, payloads);
-    },
+    setSubscriptions:
+      (props.setSubscriptions === prevState?.mockProps.setSubscriptions
+        ? prevState?.public.setSubscriptions
+        : undefined) ??
+      ((id, payloads) => {
+        dispatch({ type: "update-subscriber", id, payloads });
+        props.setSubscriptions?.(id, payloads);
+      }),
+    setPublishers:
+      (props.setPublishers === prevState?.mockProps.setPublishers
+        ? prevState?.public.setPublishers
+        : undefined) ??
+      ((id, payloads) => {
+        dispatch({ type: "set-publishers", id, payloads });
+        props.setPublishers?.(id, payloads);
+      }),
     setParameter: props.setParameter ?? noop,
     publish: props.publish ?? noop,
     callService: props.callService ?? (async () => {}),
@@ -171,30 +178,18 @@ export default function MockMessagePipelineProvider(
     }
   }
 
-  // See comment for messageEventsBySubscriberId below on the purpose of this ref
-  // const firstChangeRef = useRef<boolean>(false);
-
   const [store] = useState(() =>
     createStore<MockMessagePipelineState>((set) => {
       const dispatch: MockMessagePipelineState["dispatch"] = (action) => {
-        console.log("dispatch", action);
         if (action.type === "set-mock-props") {
           set((state) => {
             if (shallowEqual(state.mockProps, action.mockProps)) {
-              console.log("mock props didn't change");
               return state;
             }
             const publicState = getPublicState(state, action.mockProps, state.dispatch);
             const newState = reducer(state, {
               type: "update-player-state",
               playerState: publicState.playerState,
-            });
-            console.log("new mock props =>", {
-              newTopicsBySubscriberId: newState.newTopicsBySubscriberId,
-              messageEventsBySubscriberId: JSON.stringify([
-                ...newState.public.messageEventsBySubscriberId.entries(),
-              ]),
-              messages: newState.public.playerState.activeData?.messages.map((m) => m.message),
             });
             return {
               ...newState,
@@ -208,6 +203,12 @@ export default function MockMessagePipelineProvider(
           });
         } else {
           set((state) => {
+            // In the real pipeline, the messageEventsBySubscriberId only change
+            // on player listener callback - not on subscriber changes
+            //
+            // In tests, the first setSubscriptions call happens after we've already set props.messages
+            // So we have some special logic to detect the _first_ change of subscriptions
+            // and update messageEventsBySubscriberId.
             const newState = reducer(state, action);
             if (
               action.type === "update-subscriber" &&
@@ -226,20 +227,13 @@ export default function MockMessagePipelineProvider(
                   ],
                 ),
               );
-              console.log(
-                "hack",
-                newState.subscriptionsById,
-                newState.public.playerState.activeData,
-                "=>",
-                messageEventsBySubscriberId,
-              );
               newState.public.messageEventsBySubscriberId = messageEventsBySubscriberId;
             }
-            const res = { ...newState, dispatch: state.dispatch, sentFirstMessages: true };
-            console.log("completed update", action, res);
+            return { ...newState, dispatch: state.dispatch, sentFirstMessages: true };
           });
         }
       };
+      const initialPublicState = getPublicState(undefined, props, dispatch);
       return {
         mockProps: omit(props, "children"),
         sentFirstMessages: false,
@@ -250,9 +244,9 @@ export default function MockMessagePipelineProvider(
         subscriberIdsByTopic: new Map(),
         newTopicsBySubscriberId: new Map(),
         lastMessageEventByTopic: new Map(),
-        lastCapabilities: [],
+        lastCapabilities: initialPublicState.playerState.capabilities,
         public: {
-          ...getPublicState(undefined, props, dispatch),
+          ...initialPublicState,
           messageEventsBySubscriberId: new Map(),
         },
       };
@@ -263,64 +257,5 @@ export default function MockMessagePipelineProvider(
     store.getState().dispatch({ type: "set-mock-props", mockProps: omit(props, "children") });
   }, [props, store]);
 
-  // const [allSubscriptions, setAllSubscriptions] = useState<{
-  //   [key: string]: SubscribePayload[];
-  // }>({});
-  // const flattenedSubscriptions: SubscribePayload[] = useMemo(
-  //   () => flatten(Object.values(allSubscriptions)),
-  //   [allSubscriptions],
-  // );
-  // const setSubscriptions = useCallback(
-  //   (id: string, subs: SubscribePayload[]) => {
-  //     setAllSubscriptions((sub) => ({ ...sub, [id]: subs }));
-  //     const setSubs = props.setSubscriptions;
-  //     setSubs?.(id, subs);
-  //     if (subs.length > 0) {
-  //       firstChangeRef.current = true;
-  //     }
-  //   },
-  //   [setAllSubscriptions, props.setSubscriptions],
-  // );
-
-  // const capabilities = useShallowMemo(props.capabilities ?? []);
-
-  // // In the real pipeline, the messageEventsBySubscriberId only change
-  // // on player listener callback - not on subscriber changes
-  // //
-  // // In tests, the first setSubscriptions call happens after we've already set props.messages
-  // // So we have some special logic to detect the _first_ change of subscriptions
-  // // and update messageEventsBySubscriberId.
-  // const latestAllSubs = useLatest(allSubscriptions);
-  // const firstChange = firstChangeRef.current;
-  // const messageEventsBySubscriberId = useMemo(() => {
-  //   void firstChange;
-  //   return new Map(
-  //     Object.entries(latestAllSubs.current).map(([id, payloads]) => [
-  //       id,
-  //       props.messages?.filter((msg) => payloads.find((payload) => payload.topic === msg.topic)) ??
-  //         [],
-  //     ]),
-  //   );
-  // }, [firstChange, props.messages, latestAllSubs]);
-
-  // {
-  //   playerState,
-  //   sortedTopics: (props.topics ?? []).sort(naturalSort("name")),
-  //   datatypes: props.datatypes ?? NO_DATATYPES,
-  //   subscriptions: flattenedSubscriptions,
-  //   publishers: [],
-  //   messageEventsBySubscriberId,
-  //   setSubscriptions,
-  //   setPublishers: props.setPublishers ?? noop,
-  //   setParameter: props.setParameter ?? noop,
-  //   publish: props.publish ?? noop,
-  //   callService: props.callService ?? (async () => await Promise.reject()),
-  //   startPlayback: props.startPlayback ?? noop,
-  //   pausePlayback: props.pausePlayback ?? noop,
-  //   setPlaybackSpeed: noop,
-  //   seekPlayback: props.seekPlayback ?? noop,
-  //   pauseFrame: props.pauseFrame ?? (() => noop),
-  // }
-  console.log("in MockMessagePipelineProvider render");
   return <ContextInternal.Provider value={store}>{props.children}</ContextInternal.Provider>;
 }

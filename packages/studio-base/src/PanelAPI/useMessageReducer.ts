@@ -51,11 +51,7 @@ function selectSetSubscriptions(ctx: MessagePipelineContext) {
 }
 
 export function useMessageReducer<T>(props: Params<T>): T {
-  const [id] = useState(() => {
-    const i = uuidv4();
-    console.log("useMessageReducer id ", i);
-    return i;
-  });
+  const [id] = useState(() => uuidv4());
   const { restore, addMessage, addMessages, preloadType = "partial" } = props;
 
   // only one of the add message callbacks should be provided
@@ -94,15 +90,8 @@ export function useMessageReducer<T>(props: Params<T>): T {
   }, [preloadType, requestedTopics]);
 
   const setSubscriptions = useMessagePipeline(selectSetSubscriptions);
-  console.log("useMessageReducer render with subscriptions", id, subscriptions);
-  useEffect(() => {
-    console.log("useMessageReducer effect setSubscriptions", id, subscriptions);
-    return setSubscriptions(id, subscriptions);
-  }, [id, setSubscriptions, subscriptions]);
-  useCleanup(() => {
-    console.log("useMessageReducer cleanup setSubscriptions []", id);
-    return setSubscriptions(id, []);
-  });
+  useEffect(() => setSubscriptions(id, subscriptions), [id, setSubscriptions, subscriptions]);
+  useCleanup(() => setSubscriptions(id, []));
 
   const state = useRef<
     | Readonly<{
@@ -125,24 +114,15 @@ export function useMessageReducer<T>(props: Params<T>): T {
       function selectReducedMessages(ctx: MessagePipelineContext): T {
         const messageEvents = ctx.messageEventsBySubscriberId.get(id);
         const lastSeekTime = ctx.playerState.activeData?.lastSeekTime;
-        console.log(
-          "selecting messages: ",
-          messageEvents,
-          "from",
-          ctx.messageEventsBySubscriberId,
-          id,
-        );
 
         let newReducedValue: T;
         if (!state.current || lastSeekTime !== state.current.lastSeekTime) {
-          console.log("initial restore (or seek)");
           newReducedValue = restore(undefined);
         } else if (
           restore !== state.current.restore ||
           addMessage !== state.current.addMessage ||
           addMessages !== state.current.addMessages
         ) {
-          console.log("fn changed, restoring");
           newReducedValue = restore(state.current.reducedValue);
         } else {
           newReducedValue = state.current.reducedValue;
@@ -153,7 +133,6 @@ export function useMessageReducer<T>(props: Params<T>): T {
           messageEvents.length > 0 &&
           messageEvents !== state.current?.messageEvents
         ) {
-          console.log("addMessage for new messages:", messageEvents);
           if (addMessages) {
             if (messageEvents.length > 0) {
               newReducedValue = addMessages(newReducedValue, messageEvents);

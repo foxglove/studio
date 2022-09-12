@@ -97,7 +97,6 @@ export function createMessagePipelineStore({
       sortedTopics: [],
       datatypes: new Map(),
       setSubscriptions(id, payloads) {
-        console.log("original dispatch?!");
         get().dispatch({ type: "update-subscriber", id, payloads });
       },
       setPublishers(id, payloads) {
@@ -215,7 +214,7 @@ function updatePlayerStateAction(
   const newTopicsBySubscriberId = new Map(prevState.newTopicsBySubscriberId);
 
   // Put messages into per-subscriber queues
-  if (messages) {
+  if (messages && messages !== prevState.public.playerState.activeData?.messages) {
     for (const messageEvent of messages) {
       // Save the last message on every topic to send the last message
       // to newly subscribed panels.
@@ -236,7 +235,6 @@ function updatePlayerStateAction(
         subscriberMessageEvents.push(messageEvent);
       }
     }
-    console.log("updated state with messages:", messages, messagesBySubscriberId);
   }
 
   // Inject the last message on a topic to all new subscribers of the topic
@@ -253,7 +251,6 @@ function updatePlayerStateAction(
       }
       const msgEvent = lastMessageEventByTopic.get(topic);
       if (msgEvent) {
-        console.log("injecting new topics for ", id, msgEvent);
         const subscriberMessageEvents = messagesBySubscriberId.get(id) ?? [];
         // the injected message is older than any new messages
         subscriberMessageEvents.unshift(msgEvent);
@@ -261,7 +258,7 @@ function updatePlayerStateAction(
       }
     }
     // We've processed all new subscriber topics into message queues
-    newTopicsBySubscriberId.delete(id);
+    newTopics.clear();
   }
 
   const newPublicState = {
