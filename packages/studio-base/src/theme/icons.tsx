@@ -41,6 +41,7 @@ import {
   OpenFileIcon,
   RectangularClippingIcon,
   Variable2Icon,
+  BacklogListIcon,
 } from "@fluentui/react-icons-mdl2";
 import CloseIcon from "@mdi/svg/svg/close.svg";
 import SearchIcon from "@mdi/svg/svg/magnify.svg";
@@ -61,6 +62,7 @@ const icons: {
 } = {
   Add: <AddIcon />,
   AddIn: <AddInIcon />,
+  BacklogList: <BacklogListIcon />,
   Blockhead: <BlockheadIcon />,
   BlockheadFilled: <BlockheadFilledIcon />,
   BookStar: <BookStar24Regular />,

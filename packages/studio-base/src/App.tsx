@@ -7,6 +7,7 @@ import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
 import EventsProvider from "@foxglove/studio-base/providers/EventsProvider";
+import { StudioLogsControlProvider } from "@foxglove/studio-base/providers/StudioLogsControlProvider";
 import TimelineInteractionStateProvider from "@foxglove/studio-base/providers/TimelineInteractionStateProvider";
 
 import Workspace from "./Workspace";
@@ -91,6 +92,7 @@ export function App(props: AppProps): JSX.Element {
 
   const providers = [
     /* eslint-disable react/jsx-key */
+    <StudioLogsControlProvider />,
     <ConsoleApiContext.Provider value={consoleApi} />,
     <CurrentUserProviderComponent />,
     <ConsoleApiRemoteLayoutStorageProvider />,
