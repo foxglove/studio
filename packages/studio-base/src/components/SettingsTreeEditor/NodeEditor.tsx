@@ -96,6 +96,11 @@ const useStyles = makeStyles()((theme) => ({
       ".MuiCheckbox-root": {
         visibility: "hidden",
       },
+      "&:hover": {
+        ".MuiCheckbox-root": {
+          visibility: "visible",
+        },
+      },
     },
   },
 
