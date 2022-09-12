@@ -10,8 +10,8 @@ import ErrorIcon from "@mui/icons-material/Error";
 import {
   Divider,
   IconButton,
-  InputBase,
   styled as muiStyled,
+  TextField,
   Tooltip,
   Typography,
   useTheme,
@@ -19,6 +19,7 @@ import {
 import memoizeWeak from "memoize-weak";
 import { ChangeEvent, useCallback } from "react";
 import { DeepReadonly } from "ts-essentials";
+import { makeStyles } from "tss-react/mui";
 import { useImmer } from "use-immer";
 
 import { filterMap } from "@foxglove/den/collection";
@@ -41,6 +42,19 @@ export type NodeEditorProps = {
 };
 
 export const NODE_HEADER_MIN_HEIGHT = 35;
+
+const useStyles = makeStyles()((theme) => ({
+  editNameField: {
+    font: "inherit",
+    gridColumn: "span 2",
+    width: "100%",
+
+    ".MuiInputBase-input": {
+      fontSize: "0.75rem",
+      padding: theme.spacing(0.75, 1),
+    },
+  },
+}));
 
 const FieldPadding = muiStyled("div", { skipSx: true })(({ theme }) => ({
   gridColumn: "span 2",
@@ -126,6 +140,8 @@ const makeStablePath = memoizeWeak((path: readonly string[], key: string) => [..
 function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
   const { actionHandler, defaultOpen = true, filter, settings = {} } = props;
   const [state, setState] = useImmer({ open: defaultOpen, editing: false });
+
+  const { classes } = useStyles();
 
   const theme = useTheme();
   const indent = props.path.length;
@@ -228,14 +244,15 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
             />
           )}
           {state.editing ? (
-            <InputBase
+            <TextField
+              className={classes.editNameField}
               autoFocus
-              fullWidth
+              variant="filled"
               onChange={onEditLabel}
               value={settings.label}
+              onBlur={toggleEditing}
               onKeyDown={onLabelKeyDown}
               onFocus={(event) => event.target.select()}
-              style={{ font: "inherit" }}
             />
           ) : (
             <Typography
