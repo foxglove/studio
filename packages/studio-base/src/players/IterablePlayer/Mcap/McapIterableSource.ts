@@ -4,6 +4,7 @@
 
 import { Mcap0IndexedReader, Mcap0Types } from "@mcap/core";
 
+import Log from "@foxglove/log";
 import { loadDecompressHandlers } from "@foxglove/mcap-support";
 import { MessageEvent } from "@foxglove/studio-base/players/types";
 
@@ -19,16 +20,23 @@ import { McapIndexedIterableSource } from "./McapIndexedIterableSource";
 import { McapStreamingIterableSource } from "./McapStreamingIterableSource";
 import { RemoteFileReadable } from "./RemoteFileReadable";
 
+const log = Log.getLogger(__filename);
+
 type McapSource = { type: "file"; file: File } | { type: "url"; url: string };
 
 async function tryCreateIndexedReader(readable: Mcap0Types.IReadable) {
   const decompressHandlers = await loadDecompressHandlers();
-  const reader = await Mcap0IndexedReader.Initialize({ readable, decompressHandlers });
+  try {
+    const reader = await Mcap0IndexedReader.Initialize({ readable, decompressHandlers });
 
-  if (reader.chunkIndexes.length === 0 || reader.channelsById.size === 0) {
+    if (reader.chunkIndexes.length === 0 || reader.channelsById.size === 0) {
+      return undefined;
+    }
+    return reader;
+  } catch (err) {
+    log.error(err);
     return undefined;
   }
-  return reader;
 }
 
 export class McapIterableSource implements IIterableSource {

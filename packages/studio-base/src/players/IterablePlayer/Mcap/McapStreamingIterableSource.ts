@@ -14,6 +14,8 @@ import {
   fromNanoSec,
   subtract,
   toSec,
+  toRFC3339String,
+  compare,
 } from "@foxglove/rostime";
 import { Topic, MessageEvent } from "@foxglove/studio";
 import {
@@ -25,6 +27,8 @@ import {
 } from "@foxglove/studio-base/players/IterablePlayer/IIterableSource";
 import { PlayerProblem, TopicStats } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
+
+const DURATION_YEAR_SEC = 365 * 24 * 60 * 60;
 
 type Options = { size: number; stream: ReadableStream<Uint8Array> };
 
@@ -180,16 +184,20 @@ export class McapStreamingIterableSource implements IIterableSource {
     this.end = endTime ?? { sec: 0, nsec: 0 };
 
     const fileDuration = toSec(subtract(this.end, this.start));
-    if (fileDuration > 2.628e6) {
+    if (fileDuration > DURATION_YEAR_SEC) {
+      const startRfc = toRFC3339String(this.start);
+      const endRfc = toRFC3339String(this.end);
+
       problems.push({
         message: "This file has an abnormally long duration.",
-        tip: "Check the start and end time.",
+        tip: `The start ${startRfc} and end ${endRfc} are greater than a year.`,
         severity: "warn",
       });
     }
 
     problems.push({
       message: "This file unindexed. Unindexed files may have degraded performance.",
+      tip: "See the mcap spec: https://mcap.dev/specification/index.html#summary-section",
       severity: "warn",
     });
 
@@ -222,14 +230,14 @@ export class McapStreamingIterableSource implements IIterableSource {
 
     const topicsSet = new Set(topics);
 
-    for (const msgEvents of this.msgEventsByChannel.values()) {
+    for (const [channelId, msgEvents] of this.msgEventsByChannel) {
       for (const msgEvent of msgEvents) {
         if (
           isTimeInRangeInclusive(msgEvent.receiveTime, start, end) &&
           topicsSet.has(msgEvent.topic)
         ) {
           yield {
-            connectionId: undefined,
+            connectionId: channelId,
             problem: undefined,
             msgEvent,
           };
@@ -239,8 +247,21 @@ export class McapStreamingIterableSource implements IIterableSource {
   }
 
   public async getBackfillMessages(
-    _args: GetBackfillMessagesArgs,
+    args: GetBackfillMessagesArgs,
   ): Promise<MessageEvent<unknown>[]> {
-    return [];
+    if (!this.msgEventsByChannel) {
+      throw new Error("initialization not completed");
+    }
+
+    const needTopics = args.topics;
+    const msgEventsByTopic = new Map<string, MessageEvent<unknown>>();
+    for (const [_, msgEvents] of this.msgEventsByChannel) {
+      for (const msgEvent of msgEvents) {
+        if (compare(msgEvent.receiveTime, args.time) <= 0 && needTopics.includes(msgEvent.topic)) {
+          msgEventsByTopic.set(msgEvent.topic, msgEvent);
+        }
+      }
+    }
+    return [...msgEventsByTopic.values()];
   }
 }
