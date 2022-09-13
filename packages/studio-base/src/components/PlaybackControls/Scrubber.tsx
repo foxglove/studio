@@ -145,6 +145,12 @@ export default function Scrubber(props: Props): JSX.Element {
         popperRef,
         modifiers: [
           {
+            name: "computeStyles",
+            options: {
+              gpuAcceleration: false, // Fixes hairline seam on arrow in chrome.
+            },
+          },
+          {
             name: "offset",
             options: {
               // Offset popper to hug the track better.
