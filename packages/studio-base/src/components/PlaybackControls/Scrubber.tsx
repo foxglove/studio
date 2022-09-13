@@ -138,6 +138,7 @@ export default function Scrubber(props: Props): JSX.Element {
     <Tooltip
       title={hoverX != undefined ? <PlaybackControlsTooltipContent hoverXPosition={hoverX} /> : ""}
       placement="top"
+      disableInteractive
       TransitionComponent={Fade}
       TransitionProps={{ timeout: 0 }}
       PopperProps={{
