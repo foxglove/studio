@@ -2,23 +2,26 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import AddIcon from "@mui/icons-material/Add";
+import RemoveIcon from "@mui/icons-material/Remove";
 import {
   Alert,
   Button,
   CircularProgress,
   Dialog,
   DialogActions,
-  Grid,
   TextField,
   ToggleButton,
   ToggleButtonGroup,
   Typography,
   FormLabel,
   FormControl,
+  IconButton,
+  ButtonGroup,
 } from "@mui/material";
 import produce from "immer";
 import { countBy } from "lodash";
-import { Fragment, KeyboardEvent, useCallback, useState } from "react";
+import { KeyboardEvent, useCallback, useState } from "react";
 import { useAsyncFn } from "react-use";
 import { keyframes } from "tss-react";
 import { makeStyles } from "tss-react/mui";
@@ -49,7 +52,7 @@ const useStyles = makeStyles<void, "toggleButton" | "field">()((theme, _params, 
   grid: {
     alignItems: "center",
     display: "grid",
-    gridTemplateColumns: "1fr 1fr",
+    gridTemplateColumns: "1fr 1fr auto",
     gap: theme.spacing(1),
     overflow: "auto",
     alignContent: "flex-start",
@@ -90,10 +93,6 @@ type KeyValue = { key: string; value: string };
 
 const selectCurrentTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.currentTime;
 const selectRefreshEvents = (store: EventsStore) => store.refreshEvents;
-
-function formatDateTimeString(date: Date) {
-  return date.toISOString().replace("Z", "");
-}
 
 export function CreateEventDialog(props: { deviceId: string; onClose: () => void }): JSX.Element {
   const { deviceId, onClose } = props;
@@ -177,6 +176,24 @@ export function CreateEventDialog(props: { deviceId: string; onClose: () => void
     [createEvent],
   );
 
+  const addRow = useCallback((index: number) => {
+    setEvent(
+      produce((draft) => {
+        draft.metadata.splice(index, 0, { key: "", value: "" });
+      }),
+    );
+  }, []);
+
+  const removeRow = useCallback((index: number) => {
+    setEvent(
+      produce((draft) => {
+        if (draft.metadata.length > 1) {
+          draft.metadata.splice(index, 1);
+        }
+      }),
+    );
+  }, []);
+
   const formattedStartTime = currentTime ? formatTime(currentTime) : "-";
 
   return (
@@ -184,14 +201,12 @@ export function CreateEventDialog(props: { deviceId: string; onClose: () => void
       <Stack paddingX={3} paddingTop={2}>
         <Typography variant="h2">Create event</Typography>
       </Stack>
-      <Grid container spacing={1} paddingX={3} paddingTop={2}>
-        <Grid item xs={12} md={6}>
+      <Stack paddingX={3} paddingTop={2}>
+        <div className={classes.grid}>
           <FormControl>
             <FormLabel>Start Time</FormLabel>
             <Typography paddingY={1}>{formattedStartTime}</Typography>
           </FormControl>
-        </Grid>
-        <Grid item xs={12} md={6}>
           <TextField
             value={event.duration ?? ""}
             fullWidth
@@ -227,11 +242,18 @@ export function CreateEventDialog(props: { deviceId: string; onClose: () => void
               ),
             }}
           />
-        </Grid>
-      </Grid>
+          <ButtonGroup style={{ visibility: "hidden" }}>
+            <IconButton tabIndex={-1}>
+              <AddIcon />
+            </IconButton>
+            <IconButton tabIndex={-1}>
+              <AddIcon />
+            </IconButton>
+          </ButtonGroup>
+        </div>
+      </Stack>
       <Stack paddingX={3} paddingTop={2}>
         <FormLabel>Metadata</FormLabel>
-
         <div className={classes.grid}>
           {event.metadata.map(({ key, value }, index) => {
             const hasDuplicate = ((key.length > 0 && countedMetadata[key]) ?? 0) > 1;
@@ -255,6 +277,18 @@ export function CreateEventDialog(props: { deviceId: string; onClose: () => void
                   onKeyDown={onMetaDataKeyDown}
                   onChange={(ev) => updateMetadata(index, "value", ev.currentTarget.value)}
                 />
+                <ButtonGroup>
+                  <IconButton tabIndex={-1} onClick={() => addRow(index)}>
+                    <AddIcon />
+                  </IconButton>
+                  <IconButton
+                    tabIndex={-1}
+                    onClick={() => removeRow(index)}
+                    style={{ visibility: event.metadata.length > 1 ? "visible" : "hidden" }}
+                  >
+                    <RemoveIcon />
+                  </IconButton>
+                </ButtonGroup>
               </div>
             );
           })}
