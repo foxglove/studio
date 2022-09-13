@@ -254,6 +254,22 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
               onBlur={toggleEditing}
               onKeyDown={onLabelKeyDown}
               onFocus={(event) => event.target.select()}
+              InputProps={{
+                endAdornment: (
+                  <IconButton
+                    className={classes.editButton}
+                    title="Rename"
+                    data-node-function="edit-label"
+                    color="primary"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      toggleEditing();
+                    }}
+                  >
+                    <CheckIcon fontSize="small" />
+                  </IconButton>
+                ),
+              }}
             />
           ) : (
             <Typography
@@ -268,7 +284,7 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
           )}
         </div>
         <Stack alignItems="center" direction="row">
-          {settings.renamable === true && (
+          {settings.renamable === true && !state.editing && (
             <IconButton
               className={classes.editButton}
               title="Rename"
@@ -279,7 +295,7 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
                 toggleEditing();
               }}
             >
-              {state.editing ? <CheckIcon fontSize="small" /> : <EditIcon fontSize="small" />}
+              <EditIcon fontSize="small" />
             </IconButton>
           )}
           {settings.visible != undefined && (
