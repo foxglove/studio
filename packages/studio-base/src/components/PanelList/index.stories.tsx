@@ -41,7 +41,12 @@ const MockPanel1 = Panel(SamplePanel1);
 const MockPanel2 = Panel(SamplePanel2);
 
 const allPanels: PanelInfo[] = [
-  { title: "Regular Panel BBB", type: "Sample1", module: async () => ({ default: MockPanel1 }) },
+  {
+    title: "Regular Panel BBB",
+    type: "Sample1",
+    badge: "new",
+    module: async () => ({ default: MockPanel1 }),
+  },
   { title: "Regular Panel AAA", type: "Sample2", module: async () => ({ default: MockPanel2 }) },
 
   {

@@ -17,6 +17,7 @@ export type PanelInfo = {
   description?: string;
   thumbnail?: string;
   help?: React.ReactNode;
+  badge?: "new" | "beta" | "legacy";
 
   /**
    * Tooltip to show on the settings button to help new users find the panel settings. Shown on

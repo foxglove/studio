@@ -26,6 +26,7 @@ import {
   Typography,
   TextField,
   IconButton,
+  Badge,
 } from "@mui/material";
 import fuzzySort from "fuzzysort";
 import { countBy, isEmpty } from "lodash";
@@ -51,39 +52,47 @@ import {
 } from "@foxglove/studio-base/types/panels";
 import { mightActuallyBePartial } from "@foxglove/studio-base/util/mightActuallyBePartial";
 
-const useStyles = makeStyles()((theme) => {
-  return {
-    fullHeight: {
-      height: "100%",
-    },
-    imagePlaceholder: {
-      paddingBottom: `${(200 / 280) * 100}%`,
-      backgroundColor: theme.palette.background.default,
-    },
-    cardContent: {
-      flex: "auto",
-    },
-    grab: {
-      cursor: "grab",
-    },
-    grid: {
-      display: "grid !important",
-      gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
-      gap: theme.spacing(2),
-    },
-    toolbar: {
-      position: "sticky",
-      top: -0.5, // yep that's a half pixel to avoid a gap between the appbar and panel top
-      zIndex: 100,
-      display: "flex",
-      padding: theme.spacing(2),
-      justifyContent: "stretch",
-      backgroundImage: `linear-gradient(to top, transparent, ${
-        theme.palette.background.paper
-      } ${theme.spacing(1.5)}) !important`,
-    },
-  };
-});
+const useStyles = makeStyles()((theme) => ({
+  fullHeight: {
+    height: "100%",
+  },
+  imagePlaceholder: {
+    paddingBottom: `${(200 / 280) * 100}%`,
+    backgroundColor: theme.palette.background.default,
+  },
+  badge: {
+    transform: "none",
+    paddingRight: theme.spacing(0.5),
+    paddingLeft: theme.spacing(0.5),
+    position: "relative",
+    marginLeft: theme.spacing(0.5),
+  },
+  badgeInvisible: {
+    display: "none",
+  },
+  cardContent: {
+    flex: "auto",
+  },
+  grab: {
+    cursor: "grab",
+  },
+  grid: {
+    display: "grid !important",
+    gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+    gap: theme.spacing(2),
+  },
+  toolbar: {
+    position: "sticky",
+    top: -0.5, // yep that's a half pixel to avoid a gap between the appbar and panel top
+    zIndex: 100,
+    display: "flex",
+    padding: theme.spacing(2),
+    justifyContent: "stretch",
+    backgroundImage: `linear-gradient(to top, transparent, ${
+      theme.palette.background.paper
+    } ${theme.spacing(1.5)}) !important`,
+  },
+}));
 
 type DropDescription = {
   type: string;
@@ -104,6 +113,7 @@ type PanelItemProps = {
     relatedConfigs?: SavedProps;
     thumbnail?: string;
     extensionNamespace?: ExtensionNamespace;
+    badge?: "new" | "beta" | "legacy";
   };
   searchQuery: string;
   checked?: boolean;
@@ -244,9 +254,18 @@ function DraggablePanelItem({
           >
             <ListItemText
               primary={
-                <span data-testid={`panel-menu-item ${panel.title}`}>
+                <Badge
+                  invisible={panel.badge == undefined}
+                  classes={{
+                    badge: classes.badge,
+                    invisible: classes.badgeInvisible,
+                  }}
+                  data-testid={`panel-menu-item ${panel.title}`}
+                  badgeContent={panel.badge?.toUpperCase()}
+                  color={panel.badge === "legacy" ? "error" : "primary"}
+                >
                   <TextHighlight targetStr={targetString} searchText={searchQuery} />
-                </span>
+                </Badge>
               }
               primaryTypographyProps={{ fontWeight: checked ? "bold" : undefined }}
             />
