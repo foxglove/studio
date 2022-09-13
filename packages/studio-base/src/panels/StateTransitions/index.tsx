@@ -54,7 +54,7 @@ import { TimestampMethod } from "@foxglove/studio-base/util/time";
 import helpContent from "./index.help.md";
 import messagesToDatasets from "./messagesToDatasets";
 import { useStateTransitionsPanelSettings } from "./settings";
-import { StateTransitionPath } from "./types";
+import { StateTransitionConfig } from "./types";
 
 export const transitionableRosTypes = [
   "bool",
@@ -146,7 +146,7 @@ const plugins: ChartOptions["plugins"] = {
   },
 };
 
-export type StateTransitionConfig = { paths: StateTransitionPath[] };
+export type StateTransitionConfig = StateTransitionConfig;
 
 export function openSiblingStateTransitionsPanel(
   openSiblingPanel: OpenSiblingPanel,
