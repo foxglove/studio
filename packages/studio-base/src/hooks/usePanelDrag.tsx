@@ -36,7 +36,6 @@ export default function usePanelDrag(props: {
   onDragEnd?: () => void;
 }): [ConnectDragSource, ConnectDragPreview] {
   const { tabId: sourceTabId, panelId, onDragStart, onDragEnd } = props;
-  console.log("usePanelDrag", sourceTabId, panelId);
   const { mosaicWindowActions } = useContext(MosaicWindowContext);
 
   const mosaicId = usePanelMosaicId();

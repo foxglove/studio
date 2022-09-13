@@ -20,7 +20,6 @@ import { last } from "lodash";
 import React, {
   useState,
   useCallback,
-  useContext,
   useMemo,
   useRef,
   ComponentType,
@@ -29,6 +28,7 @@ import React, {
   useLayoutEffect,
   useEffect,
   CSSProperties,
+  useContext,
 } from "react";
 import {
   MosaicContext,
@@ -47,6 +47,7 @@ import { useConfigById } from "@foxglove/studio-base/PanelAPI";
 import KeyListener from "@foxglove/studio-base/components/KeyListener";
 import PanelContext from "@foxglove/studio-base/components/PanelContext";
 import PanelErrorBoundary from "@foxglove/studio-base/components/PanelErrorBoundary";
+import { MosaicPathContext } from "@foxglove/studio-base/components/PanelLayout";
 import { PanelRoot, PANEL_ROOT_CLASS_NAME } from "@foxglove/studio-base/components/PanelRoot";
 import {
   useCurrentLayoutActions,
@@ -203,7 +204,10 @@ export default function Panel<
     const [hasFullscreenDescendant, _setHasFullscreenDescendant] = useState(false);
     const panelRootRef = useRef<HTMLDivElement>(ReactNull);
     const panelCatalog = usePanelCatalog();
-    const isTopLevelPanel = mosaicWindowActions.getPath().length === 0 && tabId == undefined;
+
+    const mosaicPath = useContext(MosaicPathContext);
+    const isTopLevelPanel =
+      mosaicPath != undefined && mosaicPath.length === 0 && tabId == undefined;
 
     // There may be a parent panel (when a panel is in a tab).
     const parentPanelContext = useContext(PanelContext);
