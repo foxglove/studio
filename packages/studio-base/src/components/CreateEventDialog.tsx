@@ -14,6 +14,7 @@ import {
   ToggleButtonGroup,
   Typography,
   FormLabel,
+  FormControl,
 } from "@mui/material";
 import produce from "immer";
 import { countBy } from "lodash";
@@ -137,10 +138,10 @@ export function CreateEventDialog(props: { deviceId: string; onClose: () => void
   const { formatTime } = useAppTimeFormat();
 
   const countedMetadata = countBy(event.metadata, (kv) => kv.key);
-  const hasDuplicateKey = Object.entries(countedMetadata).some(
+  const duplicateKey = Object.entries(countedMetadata).find(
     ([key, count]) => key.length > 0 && count > 1,
   );
-  const canSubmit = event.startTime != undefined && event.duration != undefined && !hasDuplicateKey;
+  const canSubmit = event.startTime != undefined && event.duration != undefined && !duplicateKey;
 
   const [createdEvent, createEvent] = useAsyncFn(async () => {
     if (event.startTime == undefined || event.duration == undefined) {
@@ -182,23 +183,13 @@ export function CreateEventDialog(props: { deviceId: string; onClose: () => void
     <Dialog open onClose={onClose} fullWidth maxWidth="sm">
       <Stack paddingX={3} paddingTop={2}>
         <Typography variant="h2">Create event</Typography>
-        <Typography variant="subtitle2" color="text.secondary">
-          {formattedStartTime}
-        </Typography>
       </Stack>
       <Grid container spacing={1} paddingX={3} paddingTop={2}>
         <Grid item xs={12} md={6}>
-          <TextField
-            label="Start time"
-            fullWidth
-            value={event.startTime ? formatDateTimeString(event.startTime) : ""}
-            type="datetime-local"
-            onChange={(ev) => {
-              const startTime = new Date(ev.currentTarget.value);
-              setEvent((oldEvent) => ({ ...oldEvent, startTime }));
-            }}
-            inputProps={{ step: 1 }}
-          />
+          <FormControl>
+            <FormLabel>Start Time</FormLabel>
+            <Typography paddingY={1}>{formattedStartTime}</Typography>
+          </FormControl>
         </Grid>
         <Grid item xs={12} md={6}>
           <TextField
@@ -245,30 +236,26 @@ export function CreateEventDialog(props: { deviceId: string; onClose: () => void
           {event.metadata.map(({ key, value }, index) => {
             const hasDuplicate = ((key.length > 0 && countedMetadata[key]) ?? 0) > 1;
             return (
-              <Fragment key={index}>
-                <div className={classes.row}>
-                  <TextField
-                    className={classes.field}
-                    fullWidth
-                    value={key}
-                    autoFocus={index === 0}
-                    placeholder="key"
-                    error={hasDuplicate}
-                    helperText={hasDuplicate ? "Duplicate key" : undefined}
-                    onKeyDown={onMetaDataKeyDown}
-                    onChange={(ev) => updateMetadata(index, "key", ev.currentTarget.value)}
-                  />
-                  <TextField
-                    className={classes.field}
-                    fullWidth
-                    value={value}
-                    placeholder="value"
-                    helperText={hasDuplicate ? "error" : undefined}
-                    onKeyDown={onMetaDataKeyDown}
-                    onChange={(ev) => updateMetadata(index, "value", ev.currentTarget.value)}
-                  />
-                </div>
-              </Fragment>
+              <div className={classes.row} key={index}>
+                <TextField
+                  className={classes.field}
+                  fullWidth
+                  value={key}
+                  autoFocus={index === 0}
+                  placeholder="key"
+                  error={hasDuplicate}
+                  onKeyDown={onMetaDataKeyDown}
+                  onChange={(ev) => updateMetadata(index, "key", ev.currentTarget.value)}
+                />
+                <TextField
+                  className={classes.field}
+                  fullWidth
+                  value={value}
+                  placeholder="value"
+                  onKeyDown={onMetaDataKeyDown}
+                  onChange={(ev) => updateMetadata(index, "value", ev.currentTarget.value)}
+                />
+              </div>
             );
           })}
         </div>
@@ -289,6 +276,7 @@ export function CreateEventDialog(props: { deviceId: string; onClose: () => void
           Create Event
         </Button>
       </DialogActions>
+      {duplicateKey && <Alert severity="error">Duplicate key {duplicateKey[0]}</Alert>}
       {createdEvent.error?.message && <Alert severity="error">{createdEvent.error.message}</Alert>}
     </Dialog>
   );
