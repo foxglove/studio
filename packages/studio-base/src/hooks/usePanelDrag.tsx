@@ -63,7 +63,6 @@ export default function usePanelDrag(props: {
 
       // The defer is necessary as the element must be present on start for HTML DnD to not cry
       const path = mosaicWindowActions.getPath();
-      console.log("drag item", path, sourceTabId);
       const deferredHide = defer(() => {
         startDrag({ path, sourceTabId });
       });

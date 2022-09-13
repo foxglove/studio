@@ -416,18 +416,6 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
 
   const panelContainerRef = useRef<HTMLDivElement>(ReactNull);
 
-  useValueChangedDebugLog(capabilities, "capabilities");
-  useValueChangedDebugLog(clearHoverValue, "clearHoverValue");
-  useValueChangedDebugLog(dataSourceProfile, "dataSourceProfile");
-  useValueChangedDebugLog(getMessagePipelineContext, "getMessagePipelineContext");
-  useValueChangedDebugLog(openSiblingPanel, "openSiblingPanel");
-  useValueChangedDebugLog(panelId, "panelId");
-  useValueChangedDebugLog(saveConfig, "saveConfig");
-  useValueChangedDebugLog(seekPlayback, "seekPlayback");
-  useValueChangedDebugLog(setGlobalVariables, "setGlobalVariables");
-  useValueChangedDebugLog(setHoverValue, "setHoverValue");
-  useValueChangedDebugLog(setSubscriptions, "setSubscriptions");
-  useValueChangedDebugLog(updateSettings, "updateSettings");
   useValueChangedDebugLog(initPanel, "initPanel");
   useValueChangedDebugLog(panelId, "panelId");
   useValueChangedDebugLog(partialExtensionContext, "partialExtensionContext");
