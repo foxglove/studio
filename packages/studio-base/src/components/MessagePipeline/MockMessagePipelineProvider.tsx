@@ -218,7 +218,9 @@ export default function MockMessagePipelineProvider(
                 const newMsgs = messages.filter(
                   (msg) => subs.find((sub) => sub.topic === msg.topic) != undefined,
                 );
-                if (!shallowequal(existingMsgs, newMsgs)) {
+                if (existingMsgs && shallowequal(existingMsgs, newMsgs)) {
+                  messageEventsBySubscriberId.set(id, existingMsgs);
+                } else {
                   messageEventsBySubscriberId.set(id, newMsgs);
                   changed = true;
                   continue;
