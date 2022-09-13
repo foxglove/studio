@@ -31,6 +31,7 @@ import {
 import Stack from "@foxglove/studio-base/components/Stack";
 import { useConsoleApi } from "@foxglove/studio-base/context/ConsoleApiContext";
 import { EventsStore, useEvents } from "@foxglove/studio-base/context/EventsContext";
+import { useAppTimeFormat } from "@foxglove/studio-base/hooks";
 
 const log = Log.getLogger(__filename);
 
@@ -133,6 +134,8 @@ export function CreateEventDialog(props: { deviceId: string; onClose: () => void
     );
   }, []);
 
+  const { formatTime } = useAppTimeFormat();
+
   const countedMetadata = countBy(event.metadata, (kv) => kv.key);
   const hasDuplicateKey = Object.entries(countedMetadata).some(
     ([key, count]) => key.length > 0 && count > 1,
@@ -173,13 +176,15 @@ export function CreateEventDialog(props: { deviceId: string; onClose: () => void
     [createEvent],
   );
 
+  const formattedStartTime = currentTime ? formatTime(currentTime) : "-";
+
   return (
     <Dialog open onClose={onClose} fullWidth maxWidth="sm">
       <Stack paddingX={3} paddingTop={2}>
         <Typography variant="h2">Create event</Typography>
-        <Typography variant="subtitle2" color="text.secondary">{`${toDate(
-          currentTime,
-        )}`}</Typography>
+        <Typography variant="subtitle2" color="text.secondary">
+          {formattedStartTime}
+        </Typography>
       </Stack>
       <Grid container spacing={1} paddingX={3} paddingTop={2}>
         <Grid item xs={12} md={6}>
