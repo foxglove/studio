@@ -62,6 +62,7 @@ const builtin: PanelInfo[] = [
   {
     title: "3D",
     type: "3D",
+    badge: "new",
     description: "Display markers, camera images, meshes, URDFs, and more in a 3D scene.",
     help: ThreeDeeRenderHelp,
     thumbnail: threeDeeRenderThumbnail,

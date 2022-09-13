@@ -60,12 +60,17 @@ const useStyles = makeStyles()((theme) => ({
     paddingBottom: `${(200 / 280) * 100}%`,
     backgroundColor: theme.palette.background.default,
   },
+  badgeRoot: {
+    alignItems: "center",
+  },
   badge: {
     transform: "none",
-    paddingRight: theme.spacing(0.5),
-    paddingLeft: theme.spacing(0.5),
+    fontSize: "0.5rem",
+    paddingRight: theme.spacing(0.75),
+    paddingLeft: theme.spacing(0.75),
+    height: "1.5em",
     position: "relative",
-    marginLeft: theme.spacing(0.5),
+    marginLeft: theme.spacing(0.75),
   },
   badgeInvisible: {
     display: "none",
@@ -113,7 +118,7 @@ type PanelItemProps = {
     relatedConfigs?: SavedProps;
     thumbnail?: string;
     extensionNamespace?: ExtensionNamespace;
-    badge?: "new" | "beta" | "legacy";
+    badge?: string;
   };
   searchQuery: string;
   checked?: boolean;
@@ -257,12 +262,13 @@ function DraggablePanelItem({
                 <Badge
                   invisible={panel.badge == undefined}
                   classes={{
+                    root: classes.badgeRoot,
                     badge: classes.badge,
                     invisible: classes.badgeInvisible,
                   }}
                   data-testid={`panel-menu-item ${panel.title}`}
                   badgeContent={panel.badge?.toUpperCase()}
-                  color={panel.badge === "legacy" ? "error" : "primary"}
+                  color="primary"
                 >
                   <TextHighlight targetStr={targetString} searchText={searchQuery} />
                 </Badge>
