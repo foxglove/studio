@@ -20,8 +20,9 @@ import {
   Next20Regular,
   Previous20Filled,
   Previous20Regular,
+  Tag20Filled,
+  Tag20Regular,
 } from "@fluentui/react-icons";
-import { Button } from "@mui/material";
 import { useCallback, useMemo, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 
@@ -164,8 +165,17 @@ export default function PlaybackControls(props: {
       <div className={classes.root}>
         <Scrubber onSeek={seek} />
         <Stack direction="row" alignItems="center" justifyContent="space-evenly" flex={1} gap={1}>
-          <Stack direction="row" flex={1}>
+          <Stack direction="row" flex={1} gap={0.5}>
             <PlaybackTimeDisplay onSeek={seek} onPause={pause} />
+            {currentUser && deviceId && (
+              <HoverableIconButton
+                size="small"
+                title="Create event"
+                icon={<Tag20Regular />}
+                activeIcon={<Tag20Filled />}
+                onClick={toggleCreateEventDialog}
+              />
+            )}
           </Stack>
           <Stack direction="row" alignItems="center" gap={1}>
             <HoverableIconButton
@@ -194,11 +204,6 @@ export default function PlaybackControls(props: {
             />
           </Stack>
           <Stack direction="row" flex={1} alignItems="center" justifyContent="flex-end" gap={0.5}>
-            {currentUser && deviceId && (
-              <Button color="inherit" onClick={toggleCreateEventDialog}>
-                Create Event
-              </Button>
-            )}
             <HoverableIconButton
               size="small"
               title="Loop playback"

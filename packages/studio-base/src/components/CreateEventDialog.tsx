@@ -5,13 +5,16 @@
 import {
   Alert,
   Button,
-  ButtonGroup,
   CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
-  DialogTitle,
+  Grid,
   TextField,
+  ToggleButton,
+  ToggleButtonGroup,
+  Typography,
+  FormLabel,
 } from "@mui/material";
 import produce from "immer";
 import { countBy } from "lodash";
@@ -33,23 +36,47 @@ import { EventsStore, useEvents } from "@foxglove/studio-base/context/EventsCont
 const log = Log.getLogger(__filename);
 
 const fadeInAnimation = keyframes`
-from {
+  from {
     opacity: 0;
-}
-to {
+  }
+  to {
     opacity: 1;
-}
+  }
 `;
 
-const useStyles = makeStyles()((theme) => ({
-  fields: {
+const useStyles = makeStyles<void, "toggleButton" | "field">()((theme, _params, classes) => ({
+  grid: {
     alignItems: "center",
     display: "grid",
     gridTemplateColumns: "1fr 1fr",
     gap: theme.spacing(1),
+    overflow: "auto",
+    alignContent: "flex-start",
   },
-  metaField: {
+  row: {
     animation: `${fadeInAnimation} 0.2s ease-in-out`,
+    display: "contents",
+
+    "&:focus-within": {
+      [`.${classes.field} .MuiOutlinedInput-root`]: {
+        backgroundColor: theme.palette.action.hover,
+      },
+    },
+  },
+  field: {}, // keep for parent selector
+  toggleButton: {
+    border: "none",
+    lineHeight: 1,
+  },
+  toggleButtonGroup: {
+    marginRight: theme.spacing(-1),
+    gap: theme.spacing(0.25),
+
+    [`.${classes.toggleButton}`]: {
+      borderRadius: `${theme.shape.borderRadius}px !important`,
+      marginLeft: "0px !important",
+      borderLeft: "none !important",
+    },
   },
 }));
 
@@ -144,9 +171,14 @@ export function CreateEventDialog(props: { deviceId: string; onClose: () => void
 
   return (
     <Dialog open onClose={onClose}>
-      <DialogTitle>Create Event</DialogTitle>
-      <DialogContent>
-        <div className={classes.fields}>
+      <Stack paddingX={3} paddingTop={2}>
+        <Typography variant="h2">Create event</Typography>
+        <Typography variant="subtitle2" color="text.secondary">{`${toDate(
+          currentTime,
+        )}`}</Typography>
+      </Stack>
+      <Grid container spacing={2} paddingX={3} paddingTop={2}>
+        <Grid item>
           <TextField
             label="Start time"
             value={event.startTime ? formatDateTimeString(event.startTime) : ""}
@@ -157,79 +189,79 @@ export function CreateEventDialog(props: { deviceId: string; onClose: () => void
             }}
             inputProps={{ step: 1 }}
           />
-          <Stack>
-            <TextField
-              value={event.duration ?? ""}
-              label="Duration"
-              onChange={(ev) => {
-                const duration = Number(ev.currentTarget.value);
-                setEvent((oldEvent) => ({
-                  ...oldEvent,
-                  duration: duration > 0 ? duration : undefined,
-                }));
-              }}
-              type="number"
-              InputProps={{
-                endAdornment: (
-                  <ButtonGroup variant="contained" disableElevation size="small">
-                    <Button
-                      tabIndex={-1}
-                      variant={event.durationUnit === "sec" ? "contained" : "outlined"}
-                      onClick={() => setEvent((old) => ({ ...old, durationUnit: "sec" }))}
-                    >
-                      sec
-                    </Button>
-                    <Button
-                      tabIndex={-1}
-                      variant={event.durationUnit === "nsec" ? "contained" : "outlined"}
-                      onClick={() => setEvent((old) => ({ ...old, durationUnit: "nsec" }))}
-                    >
-                      nsec
-                    </Button>
-                  </ButtonGroup>
-                ),
-              }}
-            />
-          </Stack>
+        </Grid>
+        <Grid item>
+          <TextField
+            value={event.duration ?? ""}
+            label="Duration"
+            onChange={(ev) => {
+              const duration = Number(ev.currentTarget.value);
+              setEvent((oldEvent) => ({
+                ...oldEvent,
+                duration: duration > 0 ? duration : undefined,
+              }));
+            }}
+            type="number"
+            InputProps={{
+              endAdornment: (
+                <ToggleButtonGroup
+                  className={classes.toggleButtonGroup}
+                  size="small"
+                  exclusive
+                  value={event.durationUnit}
+                  onChange={(_ev, durationUnit) => {
+                    if (event.durationUnit !== durationUnit) {
+                      setEvent((old) => ({ ...old, durationUnit }));
+                    }
+                  }}
+                >
+                  <ToggleButton className={classes.toggleButton} tabIndex={-1} value="sec">
+                    sec
+                  </ToggleButton>
+                  <ToggleButton className={classes.toggleButton} tabIndex={-1} value="nsec">
+                    nsec
+                  </ToggleButton>
+                </ToggleButtonGroup>
+              ),
+            }}
+          />
+        </Grid>
+      </Grid>
+      <Stack paddingX={3} paddingTop={2}>
+        <FormLabel>Metadata</FormLabel>
+
+        <div className={classes.grid}>
           {event.metadata.map(({ key, value }, index) => {
             const hasDuplicate = ((key.length > 0 && countedMetadata[key]) ?? 0) > 1;
             return (
               <Fragment key={index}>
-                <TextField
-                  value={key}
-                  className={index > 0 ? classes.metaField : undefined}
-                  autoFocus={index === 0}
-                  placeholder="key"
-                  error={hasDuplicate}
-                  helperText={hasDuplicate ? "Duplicate key" : undefined}
-                  label={index === 0 ? "Metadata" : undefined}
-                  onKeyDown={onMetaDataKeyDown}
-                  onChange={(ev) => updateMetadata(index, "key", ev.currentTarget.value)}
-                />
-                <TextField
-                  value={value}
-                  className={index > 0 ? classes.metaField : undefined}
-                  placeholder="value"
-                  label={index === 0 ? "value" : undefined}
-                  helperText={hasDuplicate ? "error" : undefined}
-                  onKeyDown={onMetaDataKeyDown}
-                  FormHelperTextProps={{
-                    style: {
-                      visibility: "hidden",
-                    },
-                  }}
-                  InputLabelProps={{
-                    style: {
-                      visibility: "hidden",
-                    },
-                  }}
-                  onChange={(ev) => updateMetadata(index, "value", ev.currentTarget.value)}
-                />
+                <div className={classes.row}>
+                  <TextField
+                    className={classes.field}
+                    fullWidth
+                    value={key}
+                    autoFocus={index === 0}
+                    placeholder="key"
+                    error={hasDuplicate}
+                    helperText={hasDuplicate ? "Duplicate key" : undefined}
+                    onKeyDown={onMetaDataKeyDown}
+                    onChange={(ev) => updateMetadata(index, "key", ev.currentTarget.value)}
+                  />
+                  <TextField
+                    className={classes.field}
+                    fullWidth
+                    value={value}
+                    placeholder="value"
+                    helperText={hasDuplicate ? "error" : undefined}
+                    onKeyDown={onMetaDataKeyDown}
+                    onChange={(ev) => updateMetadata(index, "value", ev.currentTarget.value)}
+                  />
+                </div>
               </Fragment>
             );
           })}
         </div>
-      </DialogContent>
+      </Stack>
       <DialogActions>
         <Button variant="outlined" size="large" onClick={onClose}>
           Cancel

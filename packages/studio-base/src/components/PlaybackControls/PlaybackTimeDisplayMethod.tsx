@@ -48,10 +48,6 @@ const StyledTextField = muiStyled(TextField)<{ error?: boolean }>(({ error, them
   },
   "&:not(.Mui-disabled):hover": {
     backgroundColor: theme.palette.action.hover,
-
-    ".MuiIconButton-root": {
-      visibility: "visible",
-    },
   },
   ".MuiFilledInput-root": {
     backgroundColor: "transparent",
@@ -68,7 +64,6 @@ const StyledTextField = muiStyled(TextField)<{ error?: boolean }>(({ error, them
     borderTopLeftRadius: 0,
     borderBottomLeftRadius: 0,
     borderLeft: `1px solid ${theme.palette.background.paper}`,
-    visibility: "hidden",
     marginRight: theme.spacing(-1),
   },
   ...(error === true && {
