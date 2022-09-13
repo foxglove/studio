@@ -28,7 +28,7 @@ export default function useRobotDescriptionAsset(): {
   }, [robotDescriptionParam]);
 
   const messageBar = robotDescriptionAssetError && !assetErrorDismissed && (
-    <Snackbar open>
+    <Snackbar open anchorOrigin={{ vertical: "top", horizontal: "center" }}>
       <Alert variant="filled" severity="warning" onClose={() => setAssetErrorDismissed(true)}>
         {robotDescriptionAssetError.toString()}
       </Alert>
