@@ -20,7 +20,6 @@ import React, {
   useRef,
   LazyExoticComponent,
   useEffect,
-  createContext,
 } from "react";
 import { useDrop } from "react-dnd";
 import {
@@ -49,8 +48,7 @@ import { MosaicDropResult, PanelConfig } from "@foxglove/studio-base/types/panel
 import { getPanelIdForType, getPanelTypeFromId } from "@foxglove/studio-base/util/layout";
 
 import ErrorBoundary from "./ErrorBoundary";
-
-export const MosaicPathContext = createContext<MosaicPath | undefined>(undefined);
+import { MosaicPathContext } from "./MosaicPathContext";
 
 type Props = {
   layout?: MosaicNode<string>;
