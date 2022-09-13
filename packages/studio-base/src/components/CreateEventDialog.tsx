@@ -8,7 +8,6 @@ import {
   CircularProgress,
   Dialog,
   DialogActions,
-  DialogContent,
   Grid,
   TextField,
   ToggleButton,
@@ -57,9 +56,14 @@ const useStyles = makeStyles<void, "toggleButton" | "field">()((theme, _params, 
     animation: `${fadeInAnimation} 0.2s ease-in-out`,
     display: "contents",
 
-    "&:focus-within": {
+    "&:hover": {
       [`.${classes.field} .MuiOutlinedInput-root`]: {
         backgroundColor: theme.palette.action.hover,
+      },
+    },
+    "&:focus-within": {
+      [`.${classes.field} .MuiOutlinedInput-root`]: {
+        backgroundColor: theme.palette.action.focus,
       },
     },
   },
@@ -170,17 +174,18 @@ export function CreateEventDialog(props: { deviceId: string; onClose: () => void
   );
 
   return (
-    <Dialog open onClose={onClose}>
+    <Dialog open onClose={onClose} fullWidth maxWidth="sm">
       <Stack paddingX={3} paddingTop={2}>
         <Typography variant="h2">Create event</Typography>
         <Typography variant="subtitle2" color="text.secondary">{`${toDate(
           currentTime,
         )}`}</Typography>
       </Stack>
-      <Grid container spacing={2} paddingX={3} paddingTop={2}>
-        <Grid item>
+      <Grid container spacing={1} paddingX={3} paddingTop={2}>
+        <Grid item xs={12} md={6}>
           <TextField
             label="Start time"
+            fullWidth
             value={event.startTime ? formatDateTimeString(event.startTime) : ""}
             type="datetime-local"
             onChange={(ev) => {
@@ -190,9 +195,10 @@ export function CreateEventDialog(props: { deviceId: string; onClose: () => void
             inputProps={{ step: 1 }}
           />
         </Grid>
-        <Grid item>
+        <Grid item xs={12} md={6}>
           <TextField
             value={event.duration ?? ""}
+            fullWidth
             label="Duration"
             onChange={(ev) => {
               const duration = Number(ev.currentTarget.value);
