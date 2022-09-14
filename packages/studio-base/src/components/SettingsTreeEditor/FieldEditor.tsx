@@ -45,6 +45,9 @@ const useStyles = makeStyles<void, "error">()((theme, _params, classes) => {
       flex: "auto",
       textOverflow: "ellipsis",
     },
+    fieldLabelErrorIcon: {
+      marginInlineStart: theme.spacing(0.5),
+    },
     fieldWrapper: {
       marginRight: theme.spacing(1.25),
       [`&.${classes.error}`]: {
@@ -485,7 +488,7 @@ function FieldEditorComponent({
             placement="top"
             title={<Typography variant="subtitle2">{field.error}</Typography>}
           >
-            <ErrorIcon color="error" fontSize="small" />
+            <ErrorIcon color="error" fontSize="small" className={classes.fieldLabelErrorIcon} />
           </Tooltip>
         )}
       </Stack>
