@@ -146,8 +146,6 @@ const plugins: ChartOptions["plugins"] = {
   },
 };
 
-export type StateTransitionConfig = StateTransitionConfig;
-
 export function openSiblingStateTransitionsPanel(
   openSiblingPanel: OpenSiblingPanel,
   topicName: string,
