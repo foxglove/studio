@@ -117,19 +117,23 @@ export class RenderableTriangles extends RenderablePrimitive {
         material.vertexColors = true;
         // can assume that color exists since colorchanged is true
         geometry.attributes.color!.needsUpdate = true;
-        if (transparent) {
-          material.transparent = transparent;
-          material.depthWrite = !transparent;
-        } else {
-          material.transparent = transparent;
-          material.depthWrite = !transparent;
-        }
       } else if (singleColor) {
+        transparent = singleColor.a < 1.0;
         material.vertexColors = false;
-        material.transparent = singleColor.a < 1.0;
-        material.depthWrite = singleColor.a >= 1.0;
         material.color = rgbToThreeColor(new THREE.Color(), singleColor);
         mesh.material.opacity = singleColor.a;
+        material.needsUpdate = true;
+      }
+
+      if (material.transparent !== transparent) {
+        material.needsUpdate = true;
+      }
+      if (transparent) {
+        material.transparent = transparent;
+        material.depthWrite = !transparent;
+      } else {
+        material.transparent = transparent;
+        material.depthWrite = !transparent;
       }
 
       if (primitive.indices.length > 0) {
