@@ -73,6 +73,18 @@ type PointCloudFieldReaders = {
   colorReader: FieldReader;
 };
 
+type NormalizedLaserScan = {
+  timestamp: Time;
+  frame_id: string;
+  pose: Pose;
+  start_angle: number;
+  end_angle: number;
+  range_min: number;
+  range_max: number;
+  ranges: Float32Array;
+  intensities: Float32Array;
+};
+
 type PointCloudAndLaserScanUserData = BaseUserData & {
   settings: LayerSettingsPointCloudAndLaserScan;
   topic: string;
@@ -1704,18 +1716,6 @@ function normalizePointCloud2(message: PartialMessage<PointCloud2>): PointCloud2
     is_dense: message.is_dense ?? false,
   };
 }
-
-type NormalizedLaserScan = {
-  timestamp: Time;
-  frame_id: string;
-  pose: Pose;
-  start_angle: number;
-  end_angle: number;
-  range_min: number;
-  range_max: number;
-  ranges: Float32Array;
-  intensities: Float32Array;
-};
 
 function normalizeFoxgloveLaserScan(
   message: PartialMessage<FoxgloveLaserScan>,
