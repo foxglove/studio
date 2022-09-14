@@ -395,8 +395,7 @@ export class Images extends SceneExtension<ImageRenderable> {
           );
         });
     } else {
-      const raw = image as RosImage;
-      const { width, height } = raw;
+      const { width, height } = image;
       const prevTexture = renderable.userData.texture as THREE.DataTexture | undefined;
       if (
         prevTexture == undefined ||
@@ -413,7 +412,7 @@ export class Images extends SceneExtension<ImageRenderable> {
       }
 
       const texture = renderable.userData.texture as THREE.DataTexture;
-      rawImageToDataTexture(raw, {}, texture);
+      rawImageToDataTexture(image, {}, texture);
       texture.needsUpdate = true;
     }
 
@@ -604,11 +603,12 @@ function autoSelectCameraInfoTopic(
 }
 
 function rawImageToDataTexture(
-  image: RosImage,
+  image: RosImage | RawImage,
   options: RawImageOptions,
   output: THREE.DataTexture,
 ): void {
-  const { encoding, width, height, is_bigendian } = image;
+  const { encoding, width, height } = image;
+  const is_bigendian = "is_bigendian" in image ? image.is_bigendian : false;
   const rawData = image.data as Uint8Array;
   switch (encoding) {
     case "yuv422":
@@ -655,12 +655,13 @@ function rawImageToDataTexture(
   }
 }
 
-function normalizeImageData(data: unknown): Uint8Array {
+function normalizeImageData(data: Int8Array): Int8Array;
+function normalizeImageData(data: PartialMessage<Uint8Array> | undefined): Uint8Array;
+function normalizeImageData(data: unknown): Int8Array | Uint8Array;
+function normalizeImageData(data: unknown): Int8Array | Uint8Array {
   if (data == undefined) {
     return new Uint8Array(0);
-  } else if (data instanceof Int8Array) {
-    return new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
-  } else if (data instanceof Uint8Array) {
+  } else if (data instanceof Int8Array || data instanceof Uint8Array) {
     return data;
   } else {
     return new Uint8Array(0);
