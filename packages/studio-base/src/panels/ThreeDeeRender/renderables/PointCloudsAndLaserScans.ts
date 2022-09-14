@@ -1013,6 +1013,9 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
       throw new Error(`pointsHistory is empty for ${topic}`);
     }
 
+    latestEntry.receiveTime = receiveTime;
+    latestEntry.messageTime = messageTime;
+
     const geometry = latestEntry.points.geometry;
     geometry.resize(ranges.length);
     const rangeAttribute = geometry.attributes.position!;
