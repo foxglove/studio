@@ -139,6 +139,21 @@ export function OnePath(): JSX.Element {
   );
 }
 
+WithSettings.parameters = { useReadySignal: true };
+export function WithSettings(): JSX.Element {
+  const readySignal = useReadySignal({ count: 3 });
+  const pauseFrame = useCallback(() => readySignal, [readySignal]);
+  return (
+    <PanelSetup fixture={fixture} pauseFrame={pauseFrame} includeSettings>
+      <StateTransitions
+        overrideConfig={{
+          paths: [{ value: "/some/topic/with/state.state", timestampMethod: "receiveTime" }],
+        }}
+      />
+    </PanelSetup>
+  );
+}
+
 MultiplePaths.parameters = { useReadySignal: true };
 export function MultiplePaths(): JSX.Element {
   const readySignal = useReadySignal({ count: 3 });
