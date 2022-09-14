@@ -32,9 +32,12 @@ export function useStateTransitionsPanelSettings(
     (action: SettingsTreeAction) => {
       if (action.action !== "update") {
         return;
-      } else if (action.payload.input === "boolean") {
-        const partialConfig = { isSynced: action.payload.value };
-        saveConfig(partialConfig);
+      } else if (
+        action.payload.input === "boolean" &&
+        action.payload.path[0] === "general" &&
+        action.payload.path[1] === "isSynced"
+      ) {
+        saveConfig({ isSynced: action.payload.value });
       }
     },
     [saveConfig],

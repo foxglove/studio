@@ -370,7 +370,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
         <div className={classes.chartWrapper} style={{ height }} ref={sizeRef}>
           <TimeBasedChart
             zoom
-            isSynced
+            isSynced={config.isSynced}
             showXAxisLabels
             width={width ?? 0}
             height={height}
