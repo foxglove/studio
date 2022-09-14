@@ -6,6 +6,10 @@ import * as THREE from "three";
 
 import { toNanoSec } from "@foxglove/rostime";
 import { SceneEntity, TriangleListPrimitive } from "@foxglove/schemas/schemas/typescript";
+import {
+  DynamicBufferGeometry,
+  DynamicFloatBufferGeometry,
+} from "@foxglove/studio-base/panels/ThreeDeeRender/DynamicBufferGeometry";
 import { emptyPose } from "@foxglove/studio-base/util/Pose";
 
 import type { Renderer } from "../../Renderer";
@@ -15,7 +19,7 @@ import { RenderablePrimitive } from "./RenderablePrimitive";
 
 const tempRgba = makeRgba();
 
-type TriangleMesh = THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>;
+type TriangleMesh = THREE.Mesh<DynamicFloatBufferGeometry, THREE.MeshStandardMaterial>;
 export class RenderableTriangles extends RenderablePrimitive {
   private _triangleMeshes: TriangleMesh[] = [];
   public constructor(renderer: Renderer) {
@@ -31,10 +35,8 @@ export class RenderableTriangles extends RenderablePrimitive {
   }
 
   private _ensureCapacity(triCount: number) {
-    if (triCount > this._triangleMeshes.length) {
-      for (let i = this._triangleMeshes.length - 1; i < triCount; i++) {
-        this._triangleMeshes.push(makeTriangleMesh());
-      }
+    while (triCount > this._triangleMeshes.length) {
+      this._triangleMeshes.push(makeTriangleMesh());
     }
   }
   private _updateTriangleMeshes(tris: TriangleListPrimitive[]) {
@@ -51,25 +53,32 @@ export class RenderableTriangles extends RenderablePrimitive {
       }
       const { geometry, material } = mesh;
       let transparent = false;
-      let dataChanged = false;
-      let vertices = geometry.attributes.position;
-      if (!vertices || vertices.count < primitive.points.length) {
-        vertices = new THREE.BufferAttribute(new Float32Array(primitive.points.length * 3), 3);
+
+      let vertChanged = false;
+      let colorChanged = false;
+
+      geometry.resize(primitive.points.length);
+
+      if (!geometry.attributes.position) {
+        geometry.createAttribute("position", 3);
       }
+      const vertices = geometry.attributes.position!;
+
       const singleColor = this.userData.settings.color
         ? stringToRgba(tempRgba, this.userData.settings.color)
         : primitive.colors.length === 0
         ? primitive.color
         : undefined;
 
-      let colors = geometry.attributes.color;
-      if (!singleColor && (!colors || colors.count < primitive.points.length)) {
-        colors = new THREE.BufferAttribute(new Float32Array(primitive.points.length * 4), 4);
+      if (!singleColor && !geometry.attributes.color) {
+        geometry.createAttribute("color", 4);
       }
+      const colors = geometry.attributes.color;
+
       for (let i = 0; i < primitive.points.length; i++) {
         const point = primitive.points[i]!;
-        dataChanged =
-          dataChanged ||
+        vertChanged =
+          vertChanged ||
           vertices.getX(i) !== point.x ||
           vertices.getY(i) !== point.y ||
           vertices.getZ(i) !== point.z;
@@ -83,8 +92,8 @@ export class RenderableTriangles extends RenderablePrimitive {
           const g = SRGBToLinear(color.g);
           const b = SRGBToLinear(color.b);
           const a = SRGBToLinear(color.a);
-          dataChanged =
-            dataChanged ||
+          colorChanged =
+            colorChanged ||
             colors.getX(i) !== r ||
             colors.getY(i) !== g ||
             colors.getZ(i) !== b ||
@@ -98,30 +107,36 @@ export class RenderableTriangles extends RenderablePrimitive {
           }
         }
       }
-      if (dataChanged) {
-        geometry.setAttribute("position", vertices);
-        if (colors) {
-          geometry.setAttribute("color", colors);
-          if (transparent) {
-            material.transparent = transparent;
-            material.depthWrite = !transparent;
-            material.vertexColors = true;
-          }
-          geometry.attributes.color!.needsUpdate = true;
-        }
-
-        geometry.attributes.position!.needsUpdate = true;
+      if (vertChanged) {
         geometry.computeVertexNormals();
         geometry.computeBoundingSphere();
+        geometry.attributes.position!.needsUpdate = true;
       }
-      geometry.setIndex(primitive.indices);
 
-      if (singleColor) {
+      if (colorChanged) {
+        material.vertexColors = true;
+        // can assume that color exists since colorchanged is true
+        geometry.attributes.color!.needsUpdate = true;
+        if (transparent) {
+          material.transparent = transparent;
+          material.depthWrite = !transparent;
+        } else {
+          material.transparent = transparent;
+          material.depthWrite = !transparent;
+        }
+      } else if (singleColor) {
         material.vertexColors = false;
         material.transparent = singleColor.a < 1.0;
         material.depthWrite = singleColor.a >= 1.0;
         material.color = rgbToThreeColor(new THREE.Color(), singleColor);
         mesh.material.opacity = singleColor.a;
+      }
+
+      if (primitive.indices.length > 0) {
+        geometry.setIndex(primitive.indices);
+        // this is set in `geometry.resize` to itemCount
+        // which works for non-indexed geometries but not for indexed geoms
+        geometry.setDrawRange(0, primitive.indices.length);
       }
 
       mesh.position.set(
@@ -145,6 +160,8 @@ export class RenderableTriangles extends RenderablePrimitive {
       mesh.geometry.dispose();
       mesh.material.dispose();
     }
+    this.clear();
+    this._triangleMeshes.length = 0;
   }
 
   public override update(
@@ -169,7 +186,7 @@ export class RenderableTriangles extends RenderablePrimitive {
 
 function makeTriangleMesh(): TriangleMesh {
   return new THREE.Mesh(
-    new THREE.BufferGeometry(),
+    new DynamicBufferGeometry(Float32Array),
     new THREE.MeshStandardMaterial({
       metalness: 0,
       roughness: 1,
