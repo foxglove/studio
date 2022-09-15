@@ -54,7 +54,7 @@ import { TimestampMethod } from "@foxglove/studio-base/util/time";
 import helpContent from "./index.help.md";
 import messagesToDatasets from "./messagesToDatasets";
 import { useStateTransitionsPanelSettings } from "./settings";
-import { StateTransitionConfig } from "./types";
+import { StateTransitionConfig, StateTransitionPath } from "./types";
 
 export const transitionableRosTypes = [
   "bool",
@@ -197,7 +197,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
       throw new Error("index not set");
     }
     const newPaths = config.paths.slice();
-    const newPath = newPaths[index];
+    const newPath: StateTransitionPath | undefined = newPaths[index];
     if (newPath) {
       newPaths[index] = { ...newPath, timestampMethod: value };
     }
@@ -409,7 +409,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
               <TimestampMethodDropdown
                 path={path}
                 index={index}
-                iconButtonProps={{ disabled: !path }}
+                iconButtonProps={{ disabled: path !== "" }}
                 timestampMethod={timestampMethod}
                 onTimestampMethodChange={onInputTimestampMethodChange}
               />
@@ -421,7 +421,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
   );
 });
 
-const defaultConfig: PanelConfig = { paths: [] };
+const defaultConfig: StateTransitionConfig = { paths: [], isSynced: true };
 export default Panel(
   Object.assign(StateTransitions, {
     panelType: "StateTransitions",
