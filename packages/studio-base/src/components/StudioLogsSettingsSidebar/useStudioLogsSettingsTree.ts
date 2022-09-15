@@ -7,9 +7,7 @@ import { useMemo } from "react";
 
 import Log from "@foxglove/log";
 import { SettingsTree, SettingsTreeNode, SettingsTreeNodes } from "@foxglove/studio";
-import SettingsTreeEditor from "@foxglove/studio-base/components/SettingsTreeEditor";
-import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
-import { useStudioLogsControl } from "@foxglove/studio-base/context/StudioLogsControlContext";
+import { useStudioLogsSettings } from "@foxglove/studio-base/context/StudioLogsSettingsContext";
 
 const log = Log.getLogger(__filename);
 
@@ -18,8 +16,8 @@ type ItemDetail = {
   fullPath: string;
 };
 
-function useStudioLogs() {
-  const logsControl = useStudioLogsControl();
+function useStudioLogsSettingsTree(): SettingsTree {
+  const logsConfig = useStudioLogsSettings();
 
   return useMemo<SettingsTree>(() => {
     // When building the settings tree we strip away uninformative parts of the channel name (i.e.
@@ -39,7 +37,7 @@ function useStudioLogs() {
       children: {},
     };
 
-    for (const channel of logsControl.channels) {
+    for (const channel of logsConfig.channels) {
       const channelName = channel.name;
 
       const parts = channelName.split("/");
@@ -162,16 +160,16 @@ function useStudioLogs() {
         switch (item?.type) {
           case "prefix":
             if (enable) {
-              logsControl.enablePrefix(item.fullPath);
+              logsConfig.enablePrefix(item.fullPath);
             } else {
-              logsControl.disablePrefix(item.fullPath);
+              logsConfig.disablePrefix(item.fullPath);
             }
             break;
           case "channel":
             if (enable) {
-              logsControl.enableChannel(item.fullPath);
+              logsConfig.enableChannel(item.fullPath);
             } else {
-              logsControl.disableChannel(item.fullPath);
+              logsConfig.disableChannel(item.fullPath);
             }
             break;
           default:
@@ -181,17 +179,7 @@ function useStudioLogs() {
       },
       nodes: settingsRoot,
     };
-  }, [logsControl]);
+  }, [logsConfig]);
 }
 
-function StudioLogsControl(): JSX.Element {
-  const logSettings = useStudioLogs();
-
-  return (
-    <SidebarContent overflow="auto" title="Studio Logs" disablePadding>
-      <SettingsTreeEditor settings={logSettings} />
-    </SidebarContent>
-  );
-}
-
-export { StudioLogsControl };
+export { useStudioLogsSettingsTree };

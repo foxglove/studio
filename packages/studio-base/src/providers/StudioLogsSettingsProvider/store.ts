@@ -2,28 +2,25 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { PropsWithChildren, useEffect, useState } from "react";
-import { useLocalStorage } from "react-use";
-import { createStore } from "zustand";
+import { createStore, StoreApi } from "zustand";
 
 import Log, { Logger } from "@foxglove/log";
 import {
-  IStudioLogsControl,
-  StudioLogControlChannel,
-  StudioLogsControlContext,
-} from "@foxglove/studio-base/context/StudioLogsControlContext";
+  IStudioLogsSettings,
+  StudioLogConfigChannel,
+} from "@foxglove/studio-base/context/StudioLogsSettingsContext";
+
+import { LocalStorageSaveState } from "./types";
 
 const log = Log.getLogger(__filename);
 
-type LocalStorageSaveState = {
-  disabledChannels: string[];
-};
-
-function createStudioLogsControl(initialState?: LocalStorageSaveState) {
+function createStudioLogsSettingsStore(
+  initialState?: LocalStorageSaveState,
+): StoreApi<IStudioLogsSettings> {
   log.debug(
-    `Initializing log control. ${initialState?.disabledChannels.length ?? 0} disabled channels.`,
+    `Initializing log Config. ${initialState?.disabledChannels.length ?? 0} disabled channels.`,
   );
-  const channels: StudioLogControlChannel[] = [];
+  const channels: StudioLogConfigChannel[] = [];
 
   // Lookup channel by name, there might be multiple channels that use the same name
   const channelByName = new Map<string, Logger[]>();
@@ -54,7 +51,7 @@ function createStudioLogsControl(initialState?: LocalStorageSaveState) {
     channelByName.set(name, existing);
   }
 
-  function regenerateChannels(set: (partial: Partial<IStudioLogsControl>) => void) {
+  function regenerateChannels(set: (partial: Partial<IStudioLogsSettings>) => void) {
     let didChange = false;
     for (const channel of channels) {
       const logChannels = channelByName.get(channel.name);
@@ -76,7 +73,7 @@ function createStudioLogsControl(initialState?: LocalStorageSaveState) {
     set({ channels: [...channels] });
   }
 
-  return createStore<IStudioLogsControl>((set) => ({
+  return createStore<IStudioLogsSettings>((set) => ({
     channels,
 
     enableChannel(name: string) {
@@ -131,30 +128,4 @@ function createStudioLogsControl(initialState?: LocalStorageSaveState) {
   }));
 }
 
-function StudioLogsControlProvider(props: PropsWithChildren<unknown>): JSX.Element {
-  const [studioLogsControlSavedState, setStudioLogsControlSavedState] =
-    useLocalStorage<LocalStorageSaveState>("fox.studio-logs-control", { disabledChannels: [] });
-
-  const [providerValue] = useState(() => createStudioLogsControl(studioLogsControlSavedState));
-
-  useEffect(() => {
-    return providerValue.subscribe((value) => {
-      const disabledChannels: string[] = [];
-
-      for (const channel of value.channels) {
-        if (!channel.enabled) {
-          disabledChannels.push(channel.name);
-        }
-      }
-      setStudioLogsControlSavedState({ disabledChannels });
-    });
-  }, [providerValue, setStudioLogsControlSavedState]);
-
-  return (
-    <StudioLogsControlContext.Provider value={providerValue}>
-      {props.children}
-    </StudioLogsControlContext.Provider>
-  );
-}
-
-export { StudioLogsControlProvider };
+export { createStudioLogsSettingsStore };

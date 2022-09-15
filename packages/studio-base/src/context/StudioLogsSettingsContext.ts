@@ -7,9 +7,9 @@ import { StoreApi, useStore } from "zustand";
 
 import useGuaranteedContext from "@foxglove/studio-base/hooks/useGuaranteedContext";
 
-type StudioLogControlChannel = { name: string; enabled: boolean };
+type StudioLogConfigChannel = { name: string; enabled: boolean };
 
-interface IStudioLogsControl {
+interface IStudioLogsSettings {
   readonly channels: ReadonlyArray<{ name: string; enabled: boolean }>;
 
   // Enable/disable a channel. Name is the full name of the channel.
@@ -21,12 +21,14 @@ interface IStudioLogsControl {
   disablePrefix(prefix: string): void;
 }
 
-const StudioLogsControlContext = createContext<undefined | StoreApi<IStudioLogsControl>>(undefined);
+const StudioLogsSettingsContext = createContext<undefined | StoreApi<IStudioLogsSettings>>(
+  undefined,
+);
 
-function useStudioLogsControl(): IStudioLogsControl {
-  const context = useGuaranteedContext(StudioLogsControlContext);
+function useStudioLogsSettings(): IStudioLogsSettings {
+  const context = useGuaranteedContext(StudioLogsSettingsContext);
   return useStore(context);
 }
 
-export { StudioLogsControlContext, useStudioLogsControl };
-export type { IStudioLogsControl, StudioLogControlChannel };
+export { StudioLogsSettingsContext, useStudioLogsSettings };
+export type { IStudioLogsSettings, StudioLogConfigChannel };

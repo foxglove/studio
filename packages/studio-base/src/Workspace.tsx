@@ -53,7 +53,7 @@ import Sidebar, { SidebarItem } from "@foxglove/studio-base/components/Sidebar";
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
 import { SignInFormModal } from "@foxglove/studio-base/components/SignInFormModal";
 import Stack from "@foxglove/studio-base/components/Stack";
-import { StudioLogsControl } from "@foxglove/studio-base/components/StudioLogsControl";
+import { StudioLogsSettingsSidebar } from "@foxglove/studio-base/components/StudioLogsSettingsSidebar";
 import { SyncAdapters } from "@foxglove/studio-base/components/SyncAdapters";
 import VariablesSidebar from "@foxglove/studio-base/components/VariablesSidebar";
 import { useAssets } from "@foxglove/studio-base/context/AssetsContext";
@@ -107,7 +107,7 @@ type SidebarItemKey =
   | "layouts"
   | "preferences"
   | "help"
-  | "studio-logs-control";
+  | "studio-logs-settings";
 
 const selectedLayoutIdSelector = (state: LayoutState) => state.selectedLayout?.id;
 
@@ -523,10 +523,10 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     ]);
 
     if (enableStudioLogsSidebar) {
-      topItems.set("studio-logs-control", {
+      topItems.set("studio-logs-settings", {
         iconName: "BacklogList",
-        title: "Studio Logs",
-        component: StudioLogsControl,
+        title: "Studio Logs Settings",
+        component: StudioLogsSettingsSidebar,
       });
     }
 
