@@ -11,7 +11,7 @@ function StudioLogsSettingsSidebar(): JSX.Element {
   const logSettings = useStudioLogsSettingsTree();
 
   return (
-    <SidebarContent overflow="auto" title="Studio Logs" disablePadding>
+    <SidebarContent overflow="auto" title="Studio Logs Settings" disablePadding>
       <SettingsTreeEditor settings={logSettings} />
     </SidebarContent>
   );
