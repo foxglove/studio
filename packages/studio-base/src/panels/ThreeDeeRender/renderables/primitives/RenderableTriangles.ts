@@ -85,9 +85,7 @@ export class RenderableTriangles extends RenderablePrimitive {
           vertices.getX(i) !== point.x ||
           vertices.getY(i) !== point.y ||
           vertices.getZ(i) !== point.z;
-        vertices.setX(i, point.x);
-        vertices.setY(i, point.y);
-        vertices.setZ(i, point.z);
+        vertices.setXYZ(i, point.x, point.y, point.z);
 
         if (!singleColor && colors && primitive.colors.length > 0) {
           const color = primitive.colors[i]!;
@@ -101,10 +99,7 @@ export class RenderableTriangles extends RenderablePrimitive {
             colors.getY(i) !== g ||
             colors.getZ(i) !== b ||
             colors.getW(i) !== a;
-          colors.setX(i, r);
-          colors.setY(i, g);
-          colors.setZ(i, b);
-          colors.setW(i, a);
+          colors.setXYZW(i, r, g, b, a);
           if (!transparent && a < 1.0) {
             transparent = true;
           }
@@ -149,11 +144,31 @@ export class RenderableTriangles extends RenderablePrimitive {
         material.needsUpdate = true;
       }
 
-      if (primitive.indices.length > 0) {
-        geometry.setIndex(primitive.indices);
+      const indices = primitive.indices;
+      if (indices.length > 0) {
+        if (!geometry.index || geometry.index.count < indices.length) {
+          const array = new Uint32Array(Math.round(indices.length * 1.5) + 16);
+          array.set(indices);
+          geometry.index = new THREE.BufferAttribute(array, 1);
+          geometry.index.count = indices.length;
+        } else {
+          const array = geometry.index.array as Uint32Array;
+          let needsUpdate = false;
+          for (let i = 0; i < indices.length; i++) {
+            if (array[i] !== indices[i]) {
+              array[i] = indices[i]!;
+              needsUpdate = true;
+            }
+          }
+          geometry.index.needsUpdate = needsUpdate;
+        }
+
         // this is set in `geometry.resize` to itemCount
         // which works for non-indexed geometries but not for indexed geoms
-        geometry.setDrawRange(0, primitive.indices.length);
+        geometry.setDrawRange(0, indices.length);
+      } else {
+        // eslint-disable-next-line no-restricted-syntax
+        geometry.index = null;
       }
 
       mesh.position.set(
