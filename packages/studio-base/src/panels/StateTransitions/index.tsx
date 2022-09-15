@@ -54,7 +54,7 @@ import { TimestampMethod } from "@foxglove/studio-base/util/time";
 import helpContent from "./index.help.md";
 import messagesToDatasets from "./messagesToDatasets";
 import { useStateTransitionsPanelSettings } from "./settings";
-import { StateTransitionConfig, StateTransitionPath } from "./types";
+import { StateTransitionConfig } from "./types";
 
 export const transitionableRosTypes = [
   "bool",
@@ -197,7 +197,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
       throw new Error("index not set");
     }
     const newPaths = config.paths.slice();
-    const newPath: StateTransitionPath | undefined = newPaths[index];
+    const newPath = newPaths[index];
     if (newPath) {
       newPaths[index] = { ...newPath, timestampMethod: value };
     }
