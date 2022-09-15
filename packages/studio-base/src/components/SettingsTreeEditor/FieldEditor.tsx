@@ -38,15 +38,10 @@ const useStyles = makeStyles<void, "error">()((theme, _params, classes) => {
   return {
     error: {},
     fieldLabel: {
-      textAlign: "end",
       color: theme.palette.text.secondary,
       overflow: "hidden",
-      whiteSpace: "nowrap",
-      flex: "auto",
       textOverflow: "ellipsis",
-    },
-    fieldLabelErrorIcon: {
-      marginInlineStart: theme.spacing(0.5),
+      whiteSpace: "nowrap",
     },
     fieldWrapper: {
       marginRight: theme.spacing(1.25),
@@ -480,17 +475,24 @@ function FieldEditorComponent({
 
   return (
     <>
-      <Stack direction="row" alignItems="center" paddingLeft={paddingLeft} fullHeight>
-        <FieldLabel field={field} />
+      <Stack
+        direction="row"
+        alignItems="center"
+        justifyContent="end"
+        gap={0.5}
+        paddingLeft={paddingLeft}
+        fullHeight
+      >
         {field.error && (
           <Tooltip
             arrow
             placement="top"
             title={<Typography variant="subtitle2">{field.error}</Typography>}
           >
-            <ErrorIcon color="error" fontSize="small" className={classes.fieldLabelErrorIcon} />
+            <ErrorIcon color="error" fontSize="small" />
           </Tooltip>
         )}
+        <FieldLabel field={field} />
       </Stack>
       <div className={cx(classes.fieldWrapper, { [classes.error]: field.error != undefined })}>
         <FieldInput actionHandler={actionHandler} field={field} path={path} />
