@@ -18,6 +18,7 @@ import {
 import {
   AddIcon,
   AddInIcon,
+  BacklogListIcon,
   CancelIcon,
   CaretSolidDownIcon,
   CheckMarkIcon,
@@ -41,7 +42,6 @@ import {
   OpenFileIcon,
   RectangularClippingIcon,
   Variable2Icon,
-  BacklogListIcon,
 } from "@fluentui/react-icons-mdl2";
 import CloseIcon from "@mdi/svg/svg/close.svg";
 import SearchIcon from "@mdi/svg/svg/magnify.svg";
