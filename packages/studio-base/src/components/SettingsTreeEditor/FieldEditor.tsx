@@ -478,7 +478,7 @@ function FieldEditorComponent({
       <Stack
         direction="row"
         alignItems="center"
-        justifyContent="end"
+        justifyContent="flex-end"
         gap={0.5}
         paddingLeft={paddingLeft}
         fullHeight
