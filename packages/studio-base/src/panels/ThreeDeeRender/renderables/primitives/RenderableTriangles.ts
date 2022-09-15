@@ -18,6 +18,7 @@ import { LayerSettingsEntity } from "../SceneEntities";
 import { RenderablePrimitive } from "./RenderablePrimitive";
 
 const tempRgba = makeRgba();
+const tempColor = new THREE.Color();
 
 type TriangleMesh = THREE.Mesh<DynamicFloatBufferGeometry, THREE.MeshStandardMaterial>;
 export class RenderableTriangles extends RenderablePrimitive {
@@ -57,6 +58,8 @@ export class RenderableTriangles extends RenderablePrimitive {
       let vertChanged = false;
       let colorChanged = false;
 
+      // note this sets the drawrange to the count
+      // we set the drawrange again for indexed geometries below
       geometry.resize(primitive.points.length);
 
       if (!geometry.attributes.position) {
@@ -113,27 +116,37 @@ export class RenderableTriangles extends RenderablePrimitive {
         geometry.attributes.position!.needsUpdate = true;
       }
 
+      // covers the case where a geometry went from being defined by a single color to vertex colors
+      // but there was no difference in the vertex colors that already existed and the new ones
+      // we can tell this by checking the current vertexColors of the material, if false -> previously singleColor
+      colorChanged = !material.vertexColors && !singleColor && primitive.colors.length > 0;
       if (colorChanged) {
         material.vertexColors = true;
+        // need to set overall material color back or else it will blend them with the vertex colors
+        material.color.set("#ffffff");
+        material.opacity = 1.0;
         // can assume that color exists since colorchanged is true
         geometry.attributes.color!.needsUpdate = true;
+        material.needsUpdate = true;
       } else if (singleColor) {
         transparent = singleColor.a < 1.0;
-        material.vertexColors = false;
-        material.color = rgbToThreeColor(new THREE.Color(), singleColor);
-        mesh.material.opacity = singleColor.a;
-        material.needsUpdate = true;
+        const newColor = rgbToThreeColor(tempColor, singleColor);
+        const materialNeedsUpdate =
+          material.vertexColors ||
+          !material.color.equals(newColor) ||
+          mesh.material.opacity !== singleColor.a;
+        if (materialNeedsUpdate) {
+          material.vertexColors = false;
+          material.color.copy(tempColor);
+          mesh.material.opacity = singleColor.a;
+          material.needsUpdate = true;
+        }
       }
 
       if (material.transparent !== transparent) {
+        material.transparent = transparent;
+        material.depthWrite = !transparent;
         material.needsUpdate = true;
-      }
-      if (transparent) {
-        material.transparent = transparent;
-        material.depthWrite = !transparent;
-      } else {
-        material.transparent = transparent;
-        material.depthWrite = !transparent;
       }
 
       if (primitive.indices.length > 0) {
