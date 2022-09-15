@@ -133,6 +133,7 @@ export function OnePath(): JSX.Element {
       <StateTransitions
         overrideConfig={{
           paths: [{ value: "/some/topic/with/state.state", timestampMethod: "receiveTime" }],
+          isSynced: true,
         }}
       />
     </PanelSetup>
@@ -148,6 +149,7 @@ export function WithSettings(): JSX.Element {
       <StateTransitions
         overrideConfig={{
           paths: [{ value: "/some/topic/with/state.state", timestampMethod: "receiveTime" }],
+          isSynced: true,
         }}
       />
     </PanelSetup>
@@ -166,6 +168,7 @@ export function MultiplePaths(): JSX.Element {
             value: "/some/topic/with/state.state",
             timestampMethod: "receiveTime",
           }),
+          isSynced: true,
         }}
       />
     </PanelSetup>
@@ -194,6 +197,7 @@ export function MultiplePathsWithHover(): JSX.Element {
             value: "/some/topic/with/state.state",
             timestampMethod: "receiveTime",
           }),
+          isSynced: true,
         }}
       />
     </PanelSetup>
@@ -209,6 +213,7 @@ export function LongPath(): JSX.Element {
       <StateTransitions
         overrideConfig={{
           paths: [{ value: "/some/topic/with/state.state", timestampMethod: "receiveTime" }],
+          isSynced: true,
         }}
       />
     </PanelSetup>
@@ -224,6 +229,7 @@ export function JsonPath(): JSX.Element {
       <StateTransitions
         overrideConfig={{
           paths: [{ value: "/some/topic/with/state.data.value", timestampMethod: "receiveTime" }],
+          isSynced: true,
         }}
       />
     </PanelSetup>
@@ -241,6 +247,7 @@ export function ColorClash(): JSX.Element {
           paths: [
             { value: "/some/topic/with/string_state.data.value", timestampMethod: "receiveTime" },
           ],
+          isSynced: true,
         }}
       />
     </PanelSetup>
@@ -306,6 +313,7 @@ export function Blocks(): JSX.Element {
             { value: "/blocks.state", timestampMethod: "receiveTime" },
             { value: "/blocks.state", timestampMethod: "receiveTime" },
           ],
+          isSynced: true,
         }}
       />
     </PanelSetup>
