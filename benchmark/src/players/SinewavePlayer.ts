@@ -19,6 +19,8 @@ import {
 } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 
+import { BenchmarkStats } from "../BenchmarkStats";
+
 const log = Log.getLogger(__filename);
 
 const CAPABILITIES: string[] = [];
@@ -71,7 +73,7 @@ class SinewavePlayer implements Player {
       throw new Error("Invariant: listener is not set");
     }
 
-    log.info("Initializing benchmark player");
+    log.info("Initializing sinewave player");
 
     await listener({
       profile: undefined,
@@ -81,7 +83,7 @@ class SinewavePlayer implements Player {
       capabilities: CAPABILITIES,
       progress: {},
       urlState: {
-        sourceId: "synthetic",
+        sourceId: "sinewave",
       },
     });
 
@@ -123,6 +125,8 @@ class SinewavePlayer implements Player {
         });
       }
 
+      const frameStartMs = performance.now();
+
       await listener({
         profile: undefined,
         presence: PlayerPresence.PRESENT,
@@ -144,6 +148,11 @@ class SinewavePlayer implements Player {
           datatypes: this.datatypes,
         },
       });
+
+      const frameEndMs = performance.now();
+      const frameTimeMs = frameEndMs - frameStartMs;
+
+      BenchmarkStats.Instance().recordFrameTime(frameTimeMs);
     }
   }
 }

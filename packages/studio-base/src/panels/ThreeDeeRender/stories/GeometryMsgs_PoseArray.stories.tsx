@@ -21,7 +21,7 @@ type Vec4 = [number, number, number, number];
 const vec4ToOrientation = ([x, y, z, w]: Vec4) => ({ x, y, z, w });
 
 GeometryMsgs_PoseArray.parameters = { colorScheme: "dark" };
-function GeometryMsgs_PoseArray(): JSX.Element {
+export function GeometryMsgs_PoseArray(): JSX.Element {
   const topics: Topic[] = [
     { name: "/baselink_path", datatype: "geometry_msgs/PoseArray" },
     { name: "/sensor_path", datatype: "geometry_msgs/PoseArray" },

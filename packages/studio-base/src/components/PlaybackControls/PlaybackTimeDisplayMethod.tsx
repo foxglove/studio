@@ -41,6 +41,25 @@ type PlaybackTimeDisplayMethodProps = {
 const StyledTextField = muiStyled(TextField)<{ error?: boolean }>(({ error, theme }) => ({
   borderRadius: theme.shape.borderRadius,
 
+  "&.Mui-disabled": {
+    ".MuiFilledInput-root": {
+      backgroundColor: "transparent",
+    },
+  },
+  "&:not(.Mui-disabled):hover": {
+    backgroundColor: theme.palette.action.hover,
+
+    ".MuiIconButton-root": {
+      visibility: "visible",
+    },
+  },
+  ".MuiFilledInput-root": {
+    backgroundColor: "transparent",
+
+    ":hover": {
+      backgroundColor: "transparent",
+    },
+  },
   ".MuiInputBase-input": {
     fontFeatureSettings: `${fonts.SANS_SERIF_FEATURE_SETTINGS}, 'zero' !important`,
     minWidth: "20ch",
@@ -49,6 +68,8 @@ const StyledTextField = muiStyled(TextField)<{ error?: boolean }>(({ error, them
     borderTopLeftRadius: 0,
     borderBottomLeftRadius: 0,
     borderLeft: `1px solid ${theme.palette.background.paper}`,
+    visibility: "hidden",
+    marginRight: theme.spacing(-1),
   },
   ...(error === true && {
     outline: `1px solid ${theme.palette.error.main}`,
@@ -80,7 +101,6 @@ function PlaybackTimeMethodMenu({
   return (
     <>
       <IconButton
-        edge="end"
         id="playback-time-display-toggle-button"
         aria-controls={open ? "playback-time-display-toggle-menu" : undefined}
         aria-haspopup="true"
@@ -214,6 +234,7 @@ export default function PlaybackTimeDisplayMethod({
             value={isEditing ? inputText : currentTimeString}
             error={hasError}
             variant="filled"
+            size="small"
             InputProps={{
               startAdornment: hasError ? <WarningIcon color="error" /> : undefined,
               endAdornment: (
@@ -246,8 +267,11 @@ export default function PlaybackTimeDisplayMethod({
         </form>
       ) : (
         <StyledTextField
+          className="Mui-disabled"
           disabled
-          defaultValue="–"
+          variant="filled"
+          size="small"
+          defaultValue={timeFormat.timeFormat === "SEC" ? "0000000000.000000000" : "00:00:00.000"}
           InputProps={{
             endAdornment: (
               <IconButton edge="end" disabled>
