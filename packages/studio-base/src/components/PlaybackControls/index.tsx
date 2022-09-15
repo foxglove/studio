@@ -20,14 +20,14 @@ import {
   Next20Regular,
   Previous20Filled,
   Previous20Regular,
-  Tag20Filled,
-  Tag20Regular,
 } from "@fluentui/react-icons";
 import { useCallback, useMemo, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 
 import { compare, Time } from "@foxglove/rostime";
 import { CreateEventDialog } from "@foxglove/studio-base/components/CreateEventDialog";
+import EventIcon from "@foxglove/studio-base/components/EventIcon";
+import EventOutlinedIcon from "@foxglove/studio-base/components/EventOutlinedIcon";
 import HoverableIconButton from "@foxglove/studio-base/components/HoverableIconButton";
 import KeyListener from "@foxglove/studio-base/components/KeyListener";
 import LoopIcon from "@foxglove/studio-base/components/LoopIcon";
@@ -166,16 +166,16 @@ export default function PlaybackControls(props: {
         <Scrubber onSeek={seek} />
         <Stack direction="row" alignItems="center" justifyContent="space-evenly" flex={1} gap={1}>
           <Stack direction="row" flex={1} gap={0.5}>
-            <PlaybackTimeDisplay onSeek={seek} onPause={pause} />
             {currentUser && deviceId && (
               <HoverableIconButton
                 size="small"
                 title="Create event"
-                icon={<Tag20Regular />}
-                activeIcon={<Tag20Filled />}
+                icon={<EventOutlinedIcon />}
+                activeIcon={<EventIcon />}
                 onClick={toggleCreateEventDialog}
               />
             )}
+            <PlaybackTimeDisplay onSeek={seek} onPause={pause} />
           </Stack>
           <Stack direction="row" alignItems="center" gap={1}>
             <HoverableIconButton

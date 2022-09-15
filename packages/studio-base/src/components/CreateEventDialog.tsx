@@ -48,7 +48,7 @@ const fadeInAnimation = keyframes`
   }
 `;
 
-const useStyles = makeStyles<void, "toggleButton" | "field">()((theme, _params, classes) => ({
+const useStyles = makeStyles<void, "toggleButton">()((theme, _params, classes) => ({
   grid: {
     alignItems: "center",
     display: "grid",
@@ -60,19 +60,7 @@ const useStyles = makeStyles<void, "toggleButton" | "field">()((theme, _params, 
   row: {
     animation: `${fadeInAnimation} 0.2s ease-in-out`,
     display: "contents",
-
-    "&:hover": {
-      [`.${classes.field} .MuiOutlinedInput-root`]: {
-        backgroundColor: theme.palette.action.hover,
-      },
-    },
-    "&:focus-within": {
-      [`.${classes.field} .MuiOutlinedInput-root`]: {
-        backgroundColor: theme.palette.action.focus,
-      },
-    },
   },
-  field: {}, // keep for parent selector
   toggleButton: {
     border: "none",
     lineHeight: 1,
@@ -260,7 +248,6 @@ export function CreateEventDialog(props: { deviceId: string; onClose: () => void
             return (
               <div className={classes.row} key={index}>
                 <TextField
-                  className={classes.field}
                   fullWidth
                   value={key}
                   autoFocus={index === 0}
@@ -270,7 +257,6 @@ export function CreateEventDialog(props: { deviceId: string; onClose: () => void
                   onChange={(ev) => updateMetadata(index, "key", ev.currentTarget.value)}
                 />
                 <TextField
-                  className={classes.field}
                   fullWidth
                   value={value}
                   placeholder="value"
