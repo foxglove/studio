@@ -5,7 +5,7 @@
 import { useTheme } from "@mui/material";
 import { isEqual } from "lodash";
 import { CSSProperties, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { useLatest, useUpdateEffect } from "react-use";
+import { useUpdateEffect } from "react-use";
 import { v4 as uuid } from "uuid";
 
 import { useValueChangedDebugLog } from "@foxglove/hooks";
@@ -90,7 +90,13 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
   const { openSiblingPanel } = usePanelContext();
 
   const [panelId, setPanelId] = useState(() => uuid());
-  const latestPanelId = useLatest(panelId);
+  const latestPanelId = useRef<string | undefined>(panelId);
+  useLayoutEffect(() => {
+    latestPanelId.current = panelId;
+    return () => {
+      latestPanelId.current = undefined;
+    };
+  }, [panelId]);
 
   const [error, setError] = useState<Error | undefined>();
   const [watchedFields, setWatchedFields] = useState(new Set<keyof RenderState>());
