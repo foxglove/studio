@@ -14,7 +14,6 @@ class Logger {
   public static default = new Logger("");
 
   private _name: string;
-  //private _enabled = true;
 
   // all new loggers are created from the default logger
   private constructor(name: string) {
