@@ -16,6 +16,7 @@ import {
   fromMillis,
   fromNanoSec,
   toString,
+  toRFC3339String,
 } from "@foxglove/rostime";
 import { MessageEvent, ParameterValue } from "@foxglove/studio";
 import NoopMetricsCollector from "@foxglove/studio-base/players/NoopMetricsCollector";
@@ -481,10 +482,14 @@ export class IterablePlayer implements Player {
           });
         } catch (err) {
           log.error(err);
+
+          const startStr = toRFC3339String(this._start);
+          const endStr = toRFC3339String(this._end);
+
           this._problemManager.addProblem("block-loader", {
             severity: "warn",
             message: "Failed to initialize message preloading",
-            tip: "Check that the start and end time of your data are the same year.",
+            tip: `The start (${startStr}) and end (${endStr}) of your data is too far apart.`,
             error: err,
           });
         }

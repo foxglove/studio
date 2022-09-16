@@ -419,6 +419,7 @@ describe("BufferedIterableSource", () => {
         topics: ["a"],
         start: { sec: 0, nsec: 0 },
         end: { sec: 10, nsec: 0 },
+        consumptionType: "partial",
       });
       messageIteratorCount += 1;
 
@@ -447,20 +448,13 @@ describe("BufferedIterableSource", () => {
     // Wait for the buffered iterable source to stop reading messages
     await signal.wait();
 
-    expect(bufferedSource.loadedRanges()).toEqual([{ start: 0, end: 0.2999999999 }]);
+    expect(bufferedSource.loadedRanges()).toEqual([{ start: 0, end: 0.1999999999 }]);
 
-    // Reading the second message does not need to buffer any data because we still have enough data
-    // to read
-    await messageIterator.next();
-    expect(bufferedSource.loadedRanges()).toEqual([{ start: 0, end: 0.2999999999 }]);
-
-    // Reading the third message pushes us to buffer more data, so we setup another signal and wait
-    // for the buffered iterable source to settle
+    // Reading the second message buffers more data
     signal = waiter(1);
     await messageIterator.next();
-
     await signal.wait();
-    expect(bufferedSource.loadedRanges()).toEqual([{ start: 0, end: 0.4999999999 }]);
+    expect(bufferedSource.loadedRanges()).toEqual([{ start: 0, end: 0.2999999999 }]);
 
     // We should have called the messageIterator method only once
     expect(messageIteratorCount).toEqual(1);

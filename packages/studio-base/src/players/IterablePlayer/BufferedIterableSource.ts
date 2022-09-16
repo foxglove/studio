@@ -20,7 +20,7 @@ import {
 
 const log = Log.getLogger(__filename);
 
-const DEFAULT_READ_AHEAD_DURATION = { sec: 5, nsec: 0 };
+const DEFAULT_READ_AHEAD_DURATION = { sec: 10, nsec: 0 };
 
 type Options = {
   // How far ahead to buffer
@@ -88,8 +88,6 @@ class BufferedIterableSource implements IIterableSource {
     // the start of the array.
     this.cache.clear();
 
-    const twoTimesReadAhead = addTime(this.readAheadDuration, this.readAheadDuration);
-
     try {
       const sourceIterator = this.source.messageIterator({
         topics: args.topics,
@@ -97,10 +95,12 @@ class BufferedIterableSource implements IIterableSource {
         consumptionType: "partial",
       });
 
-      // Messages are read from the source until they read the readUntil time. readUntil is set to
-      // two readAheadDuration values from the start time
+      // Messages are read from the source until reaching the readUntil time. Then we wait for the read head
+      // to move forward until it is within 1 headAheadDuration of the readUntil time until trying to read more.
+      // We set the readUntil time to 2x readAheadDuration so that every move of the read head does not require
+      // also reading the underlying source. This creates the effect of buffering some
       let readUntil = clampTime(
-        addTime(this.readHead, twoTimesReadAhead),
+        addTime(this.readHead, this.readAheadDuration),
         this.initResult.start,
         this.initResult.end,
       );
@@ -120,28 +120,14 @@ class BufferedIterableSource implements IIterableSource {
           continue;
         }
 
-        // We've buffered through the current readUntil. Wait until the reader is within 1 readAheadDuration
-        // of readUntil and then buffer more
-        for (;;) {
-          if (this.cache.size() === 0) {
-            break;
-          }
-          const targetUntil = addTime(this.readHead, this.readAheadDuration);
-          if (result.msgEvent && compare(targetUntil, readUntil) > 0) {
-            // reset the readUntil to two readAheadDurations from the read head
-            readUntil = clampTime(
-              addTime(this.readHead, twoTimesReadAhead),
-              this.initResult.start,
-              this.initResult.end,
-            );
-            break;
-          }
-          await this.writeSignal.wait();
-          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-          if (this.aborted) {
-            return;
-          }
+        // If we didn't load anything into the cache keep reading
+        if (this.cache.size() === 0) {
+          continue;
         }
+
+        // Wait for messages to be read and then update the new readUntil
+        await this.writeSignal.wait();
+        readUntil = addTime(this.readHead, this.readAheadDuration);
       }
     } finally {
       // Indicate to the consumer that it can try reading again
