@@ -14,7 +14,6 @@ import { LocalStorageSaveState } from "./types";
 
 const log = Log.getLogger(__filename);
 
-// fixme - override anything in saved settings? reason would be to prevent user from keeping debug logs on...
 const defaultGlobalLevel: LogLevel = process.env.NODE_ENV === "development" ? "debug" : "warn";
 
 function createStudioLogsSettingsStore(
