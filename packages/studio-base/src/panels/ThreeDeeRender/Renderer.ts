@@ -115,6 +115,8 @@ export type RendererConfig = {
     /* Scale factor to apply to all labels */
     labelScaleFactor?: number;
     transforms?: {
+      /** Toggles translation and rotation offset controls for frames */
+      editable?: boolean;
       /** Toggles visibility of frame axis labels */
       showLabel?: boolean;
       /** Size of frame axis labels */
