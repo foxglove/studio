@@ -37,7 +37,7 @@ export type LayerSettingsTransform = BaseSettings & {
 const PICKING_LINE_SIZE = 6;
 const PI_2 = Math.PI / 2;
 
-const DEFAULT_EDITABLE = true;
+const DEFAULT_EDITABLE = false;
 
 const DEFAULT_SETTINGS: LayerSettingsTransform = {
   visible: true,
