@@ -5,7 +5,7 @@
 /* eslint-disable no-underscore-dangle */
 /* eslint-disable @foxglove/no-boolean-parameters */
 
-import { mat4 } from "gl-matrix";
+import { mat4, quat, vec3, vec4 } from "gl-matrix";
 
 import { ArrayMap } from "@foxglove/den/collection";
 
@@ -17,10 +17,15 @@ type TimeAndTransform = [time: Time, transform: Transform];
 
 export const MAX_DURATION: Duration = 4_294_967_295n * BigInt(1e9);
 
+const RAD2DEG = 180 / Math.PI;
+
 const tempLower: TimeAndTransform = [0n, Transform.Identity()];
 const tempUpper: TimeAndTransform = [0n, Transform.Identity()];
+const tempVec3: vec3 = [0, 0, 0];
+const tempVec4: vec4 = [0, 0, 0, 0];
 const tempTransform = Transform.Identity();
 const tempMatrix = mat4Identity();
+const temp2Matrix = mat4Identity();
 
 /**
  * CoordinateFrame is a named 3D coordinate frame with an optional parent frame
@@ -33,6 +38,8 @@ export class CoordinateFrame {
   public readonly id: string;
   public maxStorageTime: Duration;
   public maxCapacity: number;
+  public offsetPosition: vec3 | undefined;
+  public offsetEulerDegrees: vec3 | undefined;
 
   private _parent?: CoordinateFrame;
   private _transforms: ArrayMap<Time, Transform>;
@@ -399,6 +406,21 @@ export class CoordinateFrame {
         return false;
       }
       CoordinateFrame.InterpolateTransform(tempTransform, tempLower, tempUpper, time);
+
+      if (curFrame.offsetEulerDegrees) {
+        const quaternion = tempTransform.rotation();
+        const rotationMatrix = mat4.fromQuat(temp2Matrix, quaternion);
+        const euler = eulerFromMatrixUnscaled(tempVec3, rotationMatrix);
+        vec3.add(euler, euler, curFrame.offsetEulerDegrees);
+        tempTransform.setRotation(quat.fromEuler(tempVec4, euler[0], euler[1], euler[2]));
+      }
+
+      if (curFrame.offsetPosition) {
+        const p = tempTransform.position() as vec3;
+        vec3.add(p, p, curFrame.offsetPosition);
+        tempTransform.setPosition(p);
+      }
+
       mat4.multiply(out, tempTransform.matrix(), out);
 
       if (curFrame._parent == undefined) {
@@ -469,4 +491,32 @@ function copyPose(out: Pose, pose: Readonly<Pose>): void {
   out.orientation.y = o.y;
   out.orientation.z = o.z;
   out.orientation.w = o.w;
+}
+
+// Compute XYZ Euler angles in degrees from an unscaled rotation matrix. This
+// method is adapted from THREE.js Euler#setFromRotationMatrix()
+function eulerFromMatrixUnscaled(out: vec3, m: mat4): vec3 {
+  const m11 = m[0];
+  const m12 = m[4];
+  const m13 = m[8];
+  const m22 = m[5];
+  const m23 = m[9];
+  const m32 = m[6];
+  const m33 = m[10];
+
+  out[1] = Math.asin(Math.max(-1, Math.min(1, m13)));
+
+  if (Math.abs(m13) < 0.9999999) {
+    out[0] = Math.atan2(-m23, m33);
+    out[2] = Math.atan2(-m12, m11);
+  } else {
+    out[0] = Math.atan2(m32, m22);
+    out[2] = 0;
+  }
+
+  // Convert to degrees
+  out[0] *= RAD2DEG;
+  out[1] *= RAD2DEG;
+  out[2] *= RAD2DEG;
+  return out;
 }

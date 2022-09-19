@@ -48,7 +48,6 @@ export type FrameAxisUserData = BaseUserData & {
   axis: Axis;
   label: Label;
   parentLine: Line2;
-  group: THREE.Group;
 };
 
 class FrameAxisRenderable extends Renderable<FrameAxisUserData> {
@@ -226,14 +225,13 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
 
     // Update the lines and labels between coordinate frames
     for (const renderable of this.renderables.values()) {
-      const group = renderable.userData.group;
       const label = renderable.userData.label;
       const line = renderable.userData.parentLine;
       const childFrame = this.renderer.transformTree.frame(renderable.userData.frameId);
       const parentFrame = childFrame?.parent();
       // NOTE: tempVecB should not be used until the label uses it below
       const worldPosition = tempVecB;
-      group.getWorldPosition(worldPosition);
+      renderable.getWorldPosition(worldPosition);
       // Lines require a parent renderable because they draw a line from the parent
       // frame origin to the child frame origin
       line.visible = false;
@@ -241,7 +239,7 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
         const parentRenderable = this.renderables.get(parentFrame.id);
         if (parentRenderable?.visible === true) {
           const parentWorldPosition = tempVec;
-          parentRenderable.userData.group.getWorldPosition(parentWorldPosition);
+          parentRenderable.getWorldPosition(parentWorldPosition);
           const dist = parentWorldPosition.distanceTo(worldPosition);
           line.lookAt(parentWorldPosition);
           line.rotateY(-PI_2);
@@ -254,7 +252,7 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
       worldPosition.z += labelOffsetZ;
       // Transform worldPosition back to the local coordinate frame of the
       // renderable, which the label is a child of
-      group.worldToLocal(worldPosition);
+      renderable.worldToLocal(worldPosition);
       label.position.set(worldPosition.x, worldPosition.y, worldPosition.z);
     }
   }
@@ -439,9 +437,6 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
     const axisScale = config.scene.transforms?.axisScale ?? DEFAULT_AXIS_SCALE;
     axis.scale.set(axisScale, axisScale, axisScale);
 
-    // Group containing the renderables that can be independently translated/rotated
-    const group = new THREE.Group();
-
     // Create a scene graph object to hold the axis, a text label, and a line to
     // the parent frame
     const renderable = new FrameAxisRenderable(frameId, this.renderer, {
@@ -454,12 +449,10 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
       axis,
       label,
       parentLine,
-      group,
     });
-    group.add(axis);
-    group.add(label);
-    group.add(parentLine);
-    renderable.add(group);
+    renderable.add(axis);
+    renderable.add(label);
+    renderable.add(parentLine);
 
     this.add(renderable);
     this.renderables.set(frameId, renderable);
@@ -468,25 +461,17 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
   }
 
   private _updateFrameAxis(renderable: FrameAxisRenderable): void {
-    const group = renderable.userData.group;
+    const frame = this.renderer.transformTree.getOrCreateFrame(renderable.userData.frameId);
     const frameKey = `frame:${renderable.userData.frameId}`;
     const xyzOffset = this.renderer.config.transforms[frameKey]?.xyzOffset;
     const rpyOffset = this.renderer.config.transforms[frameKey]?.rpyOffset;
 
-    if (xyzOffset) {
-      group.position.set(xyzOffset[0] ?? 0, xyzOffset[1] ?? 0, xyzOffset[2] ?? 0);
-    } else {
-      group.position.set(0, 0, 0);
-    }
-
-    if (rpyOffset) {
-      const r = THREE.MathUtils.degToRad(rpyOffset[0] ?? 0);
-      const p = THREE.MathUtils.degToRad(rpyOffset[1] ?? 0);
-      const y = THREE.MathUtils.degToRad(rpyOffset[2] ?? 0);
-      group.rotation.set(r, p, y);
-    } else {
-      group.rotation.set(0, 0, 0);
-    }
+    frame.offsetPosition = xyzOffset
+      ? [xyzOffset[0] ?? 0, xyzOffset[1] ?? 0, xyzOffset[2] ?? 0]
+      : undefined;
+    frame.offsetEulerDegrees = rpyOffset
+      ? [rpyOffset[0] ?? 0, rpyOffset[1] ?? 0, rpyOffset[2] ?? 0]
+      : undefined;
   }
 
   private static LineGeometry(): LineGeometry {
