@@ -353,7 +353,7 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
       this.saveSetting(["scene", "transforms", setting], value);
 
       if (setting === "editable") {
-        //
+        this._updateFrameAxes();
       } else if (setting === "showLabel") {
         const showLabel = value as boolean | undefined;
         this.setLabelVisible(showLabel ?? true);
@@ -460,8 +460,23 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
     this._updateFrameAxis(renderable);
   }
 
+  private _updateFrameAxes(): void {
+    for (const renderable of this.renderables.values()) {
+      this._updateFrameAxis(renderable);
+    }
+  }
+
   private _updateFrameAxis(renderable: FrameAxisRenderable): void {
     const frame = this.renderer.transformTree.getOrCreateFrame(renderable.userData.frameId);
+
+    // Check if TF editing is disabled
+    const editable = this.renderer.config.scene.transforms?.editable ?? true;
+    if (!editable) {
+      frame.offsetPosition = undefined;
+      frame.offsetEulerDegrees = undefined;
+      return;
+    }
+
     const frameKey = `frame:${renderable.userData.frameId}`;
     const xyzOffset = this.renderer.config.transforms[frameKey]?.xyzOffset;
     const rpyOffset = this.renderer.config.transforms[frameKey]?.rpyOffset;
