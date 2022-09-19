@@ -423,7 +423,8 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
     );
 
     // Set the initial settings from default values merged with any user settings
-    const userSettings = config.transforms[frameId] as Partial<LayerSettingsTransform> | undefined;
+    const frameKey = `frame:${frameId}`;
+    const userSettings = config.transforms[frameKey] as Partial<LayerSettingsTransform> | undefined;
     const settings = { ...DEFAULT_SETTINGS, ...userSettings };
 
     // Parent line
@@ -448,7 +449,7 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
       messageTime: 0n,
       frameId,
       pose: makePose(),
-      settingsPath: ["transforms", frameId],
+      settingsPath: ["transforms", frameKey],
       settings,
       axis,
       label,
