@@ -480,15 +480,8 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
     }
 
     const frameKey = `frame:${renderable.userData.frameId}`;
-    const xyzOffset = this.renderer.config.transforms[frameKey]?.xyzOffset;
-    const rpyOffset = this.renderer.config.transforms[frameKey]?.rpyOffset;
-
-    frame.offsetPosition = xyzOffset
-      ? [xyzOffset[0] ?? 0, xyzOffset[1] ?? 0, xyzOffset[2] ?? 0]
-      : undefined;
-    frame.offsetEulerDegrees = rpyOffset
-      ? [rpyOffset[0] ?? 0, rpyOffset[1] ?? 0, rpyOffset[2] ?? 0]
-      : undefined;
+    frame.offsetPosition = getOffset(this.renderer.config.transforms[frameKey]?.xyzOffset);
+    frame.offsetEulerDegrees = getOffset(this.renderer.config.transforms[frameKey]?.rpyOffset);
   }
 
   private static LineGeometry(): LineGeometry {
@@ -630,4 +623,19 @@ function round(x: number, precision: number): number {
 
 function vec3IsZero(v: THREE.Vector3Tuple, eps = 1e-6): boolean {
   return Math.abs(v[0]) < eps && Math.abs(v[1]) < eps && Math.abs(v[2]) < eps;
+}
+
+function getOffset(
+  maybeOffset: Readonly<[number | undefined, number | undefined, number | undefined]> | undefined,
+): THREE.Vector3Tuple | undefined {
+  if (!maybeOffset) {
+    return undefined;
+  }
+  const x = maybeOffset[0] ?? 0;
+  const y = maybeOffset[1] ?? 0;
+  const z = maybeOffset[2] ?? 0;
+  if (x === 0 && y === 0 && z === 0) {
+    return undefined;
+  }
+  return [x, y, z];
 }
