@@ -17,6 +17,7 @@ type TimeAndTransform = [time: Time, transform: Transform];
 
 export const MAX_DURATION: Duration = 4_294_967_295n * BigInt(1e9);
 
+const DEG2RAD = Math.PI / 180;
 const RAD2DEG = 180 / Math.PI;
 
 const tempLower: TimeAndTransform = [0n, Transform.Identity()];
@@ -412,7 +413,7 @@ export class CoordinateFrame {
         const rotationMatrix = mat4.fromQuat(temp2Matrix, quaternion);
         const euler = eulerFromMatrixUnscaled(tempVec3, rotationMatrix);
         vec3.add(euler, euler, curFrame.offsetEulerDegrees);
-        tempTransform.setRotation(quat.fromEuler(tempVec4, euler[0], euler[1], euler[2]));
+        tempTransform.setRotation(quaternionFromEuler(tempVec4, euler));
       }
 
       if (curFrame.offsetPosition) {
@@ -518,5 +519,27 @@ function eulerFromMatrixUnscaled(out: vec3, m: mat4): vec3 {
   out[0] *= RAD2DEG;
   out[1] *= RAD2DEG;
   out[2] *= RAD2DEG;
+  return out;
+}
+
+// Compute a quaternion from XYZ Euler angles in degrees. This method is adapted
+// from THREE.js Quaternionr#setFromEuler()
+function quaternionFromEuler(out: quat, euler: vec3): quat {
+  const x = euler[0] * DEG2RAD;
+  const y = euler[1] * DEG2RAD;
+  const z = euler[2] * DEG2RAD;
+
+  const c1 = Math.cos(x / 2);
+  const c2 = Math.cos(y / 2);
+  const c3 = Math.cos(z / 2);
+
+  const s1 = Math.sin(x / 2);
+  const s2 = Math.sin(y / 2);
+  const s3 = Math.sin(z / 2);
+
+  out[0] = s1 * c2 * c3 + c1 * s2 * s3;
+  out[1] = c1 * s2 * c3 - s1 * c2 * s3;
+  out[2] = c1 * c2 * s3 + s1 * s2 * c3;
+  out[3] = c1 * c2 * c3 - s1 * s2 * s3;
   return out;
 }
