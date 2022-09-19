@@ -37,6 +37,8 @@ export type LayerSettingsTransform = BaseSettings & {
 const PICKING_LINE_SIZE = 6;
 const PI_2 = Math.PI / 2;
 
+const DEFAULT_EDITABLE = true;
+
 const DEFAULT_SETTINGS: LayerSettingsTransform = {
   visible: true,
   frameLocked: true,
@@ -129,7 +131,7 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
           editable: {
             label: "Editable",
             input: "boolean",
-            value: config.scene.transforms?.editable ?? true,
+            value: config.scene.transforms?.editable ?? DEFAULT_EDITABLE,
           },
           showLabel: {
             label: "Labels",
@@ -470,7 +472,7 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
     const frame = this.renderer.transformTree.getOrCreateFrame(renderable.userData.frameId);
 
     // Check if TF editing is disabled
-    const editable = this.renderer.config.scene.transforms?.editable ?? true;
+    const editable = this.renderer.config.scene.transforms?.editable ?? DEFAULT_EDITABLE;
     if (!editable) {
       frame.offsetPosition = undefined;
       frame.offsetEulerDegrees = undefined;
@@ -563,7 +565,7 @@ function buildSettingsFields(
     },
   };
 
-  if (config.scene.transforms?.editable ?? true) {
+  if (config.scene.transforms?.editable ?? DEFAULT_EDITABLE) {
     let xyzOffsetValue = config.transforms[frameKey]?.xyzOffset as THREE.Vector3Tuple | undefined;
     let rpyOffsetValue = config.transforms[frameKey]?.rpyOffset as THREE.Vector3Tuple | undefined;
 
