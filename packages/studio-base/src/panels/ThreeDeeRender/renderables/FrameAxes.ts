@@ -631,9 +631,7 @@ function getOffset(
   if (!maybeOffset) {
     return undefined;
   }
-  const x = maybeOffset[0] ?? 0;
-  const y = maybeOffset[1] ?? 0;
-  const z = maybeOffset[2] ?? 0;
+  const [x = 0, y = 0, z = 0] = maybeOffset;
   if (x === 0 && y === 0 && z === 0) {
     return undefined;
   }
