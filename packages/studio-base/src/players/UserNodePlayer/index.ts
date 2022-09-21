@@ -11,6 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { captureException } from "@sentry/core";
 import { isEqual, uniq } from "lodash";
 import memoizeWeak from "memoize-weak";
 import shallowequal from "shallowequal";
@@ -84,6 +85,7 @@ function maybePlainObject(rawVal: unknown) {
   return rawVal;
 }
 
+/** Mutable state protected by a mutex lock */
 type ProtectedState = {
   nodeRegistrationCache: NodeRegistrationCacheItem[];
   nodeRegistrations: readonly NodeRegistration[];
@@ -885,7 +887,10 @@ export default class UserNodePlayer implements Player {
       .runExclusive(async (state) => {
         this._setSubscriptionsUnlocked(subscriptions, state);
       })
-      .catch((err) => log.error(err));
+      .catch((err) => {
+        log.error(err);
+        captureException(err);
+      });
   }
 
   private _setSubscriptionsUnlocked(
