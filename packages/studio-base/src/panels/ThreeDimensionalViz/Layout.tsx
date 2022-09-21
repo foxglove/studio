@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { useTheme } from "@mui/material";
+import { Alert, useTheme } from "@mui/material";
 import { groupBy } from "lodash";
 import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
@@ -23,10 +23,12 @@ import { filterMap } from "@foxglove/den/collection";
 import { useShallowMemo } from "@foxglove/hooks";
 import { Worldview, CameraState, ReglClickInfo, MouseEventObject } from "@foxglove/regl-worldview";
 import { Time } from "@foxglove/rostime";
+import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import * as PanelAPI from "@foxglove/studio-base/PanelAPI";
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
 import KeyListener from "@foxglove/studio-base/components/KeyListener";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
+import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import useGlobalVariables from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { Save3DConfig } from "@foxglove/studio-base/panels/ThreeDimensionalViz";
 import DebugStats from "@foxglove/studio-base/panels/ThreeDimensionalViz/DebugStats";
@@ -793,9 +795,22 @@ export default function Layout({
 
   const loadModelOptions = useMemo(() => ({ ignoreColladaUpAxis }), [ignoreColladaUpAxis]);
 
+  const [closedBanner, setClosedBanner] = useAppConfigurationValue<boolean>(
+    AppSetting.CLOSED_OLD3D_DEPRECATION_BANNER,
+  );
+
+  const deprecationBanner =
+    closedBanner === true ? undefined : (
+      <Alert severity="info" color="warning" onClose={() => void setClosedBanner(true)}>
+        The 3D (Legacy) panel is now deprecated. Try adding a new 3D panel.
+      </Alert>
+    );
+
   return (
     <ThreeDimensionalVizContext.Provider value={threeDimensionalVizContextValue}>
       <TopicTreeContext.Provider value={topicTreeData}>
+        <PanelToolbar helpContent={helpContent} />
+        {deprecationBanner}
         <div
           ref={containerRef}
           onClick={onControlsOverlayClick}
@@ -805,7 +820,6 @@ export default function Layout({
           data-testid="3dviz-layout"
         >
           <KeyListener keyDownHandlers={keyDownHandlers} />
-          <PanelToolbar helpContent={helpContent} />
           <div style={{ position: "absolute", width: "100%", height: "100%" }}>
             <div
               style={{
