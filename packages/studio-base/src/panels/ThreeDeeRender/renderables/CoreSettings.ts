@@ -30,6 +30,18 @@ export const DEFAULT_PUBLISH_SETTINGS: RendererConfig["publish"] = {
   poseEstimateThetaDeviation: round(Math.PI / 12, 8),
 };
 
+const TopicsFilterOptions = [
+  { label: "All", value: "list-all" },
+  { label: "Visible", value: "list-visible" },
+  { label: "Not Visible", value: "list-not-visible" },
+];
+export const TopicsFilterSelect = {
+  label: "Filter Topics",
+  help: "Filter Topics By Visibility",
+  input: "select",
+  options: TopicsFilterOptions,
+};
+
 export class CoreSettings extends SceneExtension {
   public constructor(renderer: Renderer) {
     super("foxglove.CoreSettings", renderer);
