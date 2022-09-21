@@ -44,12 +44,10 @@ const log = Logger.getLogger(__filename);
  * This scopes the required interface to a small subset of ConsoleApi to make it easier to mock/stub
  * for tests.
  */
-export interface DataPlatformInterableSourceConsoleApi {
-  coverage: ConsoleApi["coverage"];
-  topics: ConsoleApi["topics"];
-  getDevice: ConsoleApi["getDevice"];
-  stream: ConsoleApi["stream"];
-}
+export type DataPlatformInterableSourceConsoleApi = Pick<
+  ConsoleApi,
+  "coverage" | "topics" | "getDevice" | "stream"
+>;
 
 type DataPlatformIterableSourceOptions = {
   api: DataPlatformInterableSourceConsoleApi;

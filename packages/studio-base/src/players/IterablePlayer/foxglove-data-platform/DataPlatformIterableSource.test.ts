@@ -81,38 +81,37 @@ describe("DataPlatformIterableSource", () => {
       // no-op
     }
 
-    expect(streamMessages as jest.Mock).toHaveBeenNthCalledWith(
-      1,
-      expect.objectContaining({
-        params: {
-          deviceId: "device-id",
-          start: { sec: 0, nsec: 0 },
-          end: { sec: 5, nsec: 0 },
-          topics: ["foo"],
-        },
-      }),
-    );
-    expect(streamMessages as jest.Mock).toHaveBeenNthCalledWith(
-      2,
-      expect.objectContaining({
-        params: {
-          deviceId: "device-id",
-          start: { sec: 5, nsec: 1 },
-          end: { sec: 10, nsec: 1 },
-          topics: ["foo"],
-        },
-      }),
-    );
-    expect(streamMessages as jest.Mock).toHaveBeenNthCalledWith(
-      3,
-      expect.objectContaining({
-        params: {
-          deviceId: "device-id",
-          start: { sec: 20, nsec: 0 },
-          end: { sec: 25, nsec: 0 },
-          topics: ["foo"],
-        },
-      }),
-    );
+    expect((streamMessages as jest.Mock).mock.calls).toEqual([
+      [
+        expect.objectContaining({
+          params: {
+            deviceId: "device-id",
+            start: { sec: 0, nsec: 0 },
+            end: { sec: 5, nsec: 0 },
+            topics: ["foo"],
+          },
+        }),
+      ],
+      [
+        expect.objectContaining({
+          params: {
+            deviceId: "device-id",
+            start: { sec: 5, nsec: 1 },
+            end: { sec: 10, nsec: 1 },
+            topics: ["foo"],
+          },
+        }),
+      ],
+      [
+        expect.objectContaining({
+          params: {
+            deviceId: "device-id",
+            start: { sec: 20, nsec: 0 },
+            end: { sec: 25, nsec: 0 },
+            topics: ["foo"],
+          },
+        }),
+      ],
+    ]);
   });
 });
