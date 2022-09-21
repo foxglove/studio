@@ -17,7 +17,6 @@ import {
   ParameterValue,
   SettingsIcon,
   SettingsTreeAction,
-  SettingsTreeField,
   SettingsTreeNodeActionItem,
   SettingsTreeNodes,
   Topic,
@@ -100,7 +99,7 @@ export type RendererEvents = {
 };
 
 export type FollowMode = "follow-pose" | "follow-position" | "follow-none";
-export type TopicsFilter = "list-all" | "list-visible" | "list-not-visible";
+export type TopicsFilter = "all" | "visible" | "not-visible";
 
 export type RendererConfig = {
   /** Camera settings for the currently rendering scene */
@@ -295,7 +294,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
   private aspect: number;
   private controls: OrbitControls;
   public followMode: FollowMode;
-  private topicSettingsFilter: TopicsFilter;
+  private topicsFilter: TopicsFilter;
   // The pose of the render frame in the fixed frame when following was disabled
   private unfollowPoseSnapshot: Pose | undefined;
 
@@ -427,7 +426,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.followFrameId = config.followTf;
     this.followMode = config.followMode;
 
-    this.topicSettingsFilter = config.topicsFilter;
+    this.topicsFilter = config.topicsFilter;
 
     const samples = msaaSamples(this.gl.capabilities);
     const renderSize = this.gl.getDrawingBufferSize(tempVec2);
@@ -642,8 +641,8 @@ export class Renderer extends EventEmitter<RendererEvents> {
         fields: {
           topicsFilter: {
             ...TopicsFilterSelect,
-            value: this.topicSettingsFilter,
-          } as SettingsTreeField,
+            value: this.topicsFilter,
+          },
         },
         handler: this.handleTopicsAction,
       },
@@ -737,9 +736,9 @@ export class Renderer extends EventEmitter<RendererEvents> {
       entry.node.visible == undefined || !entry.node.visible;
 
     const filterFn =
-      this.topicSettingsFilter === "list-all"
+      this.topicsFilter === "all"
         ? listAllFilter
-        : this.topicSettingsFilter === "list-visible"
+        : this.topicsFilter === "visible"
         ? listVisibleFilter
         : listInvisibleFilter;
 
@@ -1153,7 +1152,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
       path[1] === "topicsFilter"
     ) {
       const value = action.payload.value as TopicsFilter;
-      this.topicSettingsFilter = value;
+      this.topicsFilter = value;
       this.syncSettingsTree();
       return;
     }

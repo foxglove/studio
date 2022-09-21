@@ -31,14 +31,14 @@ export const DEFAULT_PUBLISH_SETTINGS: RendererConfig["publish"] = {
 };
 
 const TopicsFilterOptions = [
-  { label: "All", value: "list-all" },
-  { label: "Visible", value: "list-visible" },
-  { label: "Not Visible", value: "list-not-visible" },
+  { label: "All", value: "all" },
+  { label: "Visible", value: "visible" },
+  { label: "Not Visible", value: "not-visible" },
 ];
 export const TopicsFilterSelect = {
   label: "Filter Topics",
   help: "Filter Topics By Visibility",
-  input: "select",
+  input: "select" as const,
   options: TopicsFilterOptions,
 };
 
