@@ -36,8 +36,8 @@ const TopicsFilterOptions = [
   { label: "Not Visible", value: "not-visible" },
 ];
 export const TopicsFilterSelect = {
-  label: "Filter Topics",
-  help: "Filter Topics By Visibility",
+  label: "Filter topics",
+  help: "Filter topics by visibility",
   input: "select" as const,
   options: TopicsFilterOptions,
 };
