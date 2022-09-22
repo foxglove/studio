@@ -729,25 +729,24 @@ export class Renderer extends EventEmitter<RendererEvents> {
   }
 
   private _rebuildSceneExtensionNodes(): void {
-    const listAllFilter = (_: SettingsTreeEntry) => true;
     const listVisibleFilter = (entry: SettingsTreeEntry) =>
       entry.node.visible == undefined || entry.node.visible;
     const listInvisibleFilter = (entry: SettingsTreeEntry) =>
       entry.node.visible == undefined || !entry.node.visible;
 
     const filterFn =
-      this.topicsFilter === "all"
-        ? listAllFilter
-        : this.topicsFilter === "visible"
+      this.topicsFilter === "visible"
         ? listVisibleFilter
-        : listInvisibleFilter;
+        : this.topicsFilter === "not-visible"
+        ? listInvisibleFilter
+        : undefined;
 
     // Rebuild the settings nodes for all scene extensions
     for (const extension of this.sceneExtensions.values()) {
-      this.settings.setNodesForKey(
-        extension.extensionId,
-        extension.settingsNodes().filter(filterFn),
-      );
+      const settingsNodes = filterFn
+        ? extension.settingsNodes().filter(filterFn)
+        : extension.settingsNodes();
+      this.settings.setNodesForKey(extension.extensionId, settingsNodes);
     }
   }
 
