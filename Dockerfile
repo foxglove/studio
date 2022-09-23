@@ -3,6 +3,7 @@ FROM node:16 as build
 WORKDIR /src
 COPY . ./
 
+ENV FOXGLOVE_DISABLE_SIGN_IN=true
 RUN yarn install --immutable
 RUN yarn run web:build:prod
 

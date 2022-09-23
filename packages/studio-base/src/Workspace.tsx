@@ -150,6 +150,7 @@ function AddPanel() {
 
 type WorkspaceProps = {
   deepLinks?: string[];
+  disableSignin?: boolean;
 };
 
 const DEFAULT_DEEPLINKS = Object.freeze([]);
@@ -534,7 +535,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
       ["help", { iconName: "QuestionCircle", title: "Help", component: HelpSidebar }],
     ]);
 
-    if (supportsAccountSettings) {
+    if (supportsAccountSettings && props.disableSignin !== true) {
       bottomItems.set("account", {
         iconName: currentUser != undefined ? "BlockheadFilled" : "Blockhead",
         title: currentUser != undefined ? `Signed in as ${currentUser.email}` : "Account",
@@ -552,9 +553,10 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
   }, [
     DataSourceSidebarItem,
     playerProblems,
-    supportsAccountSettings,
-    currentUser,
     enableStudioLogsSidebar,
+    supportsAccountSettings,
+    props.disableSignin,
+    currentUser,
   ]);
 
   const keyDownHandlers = useMemo(
