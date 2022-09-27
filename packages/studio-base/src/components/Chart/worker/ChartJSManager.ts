@@ -184,11 +184,13 @@ export default class ChartJSManager {
     options,
     width,
     height,
+    resetBounds,
     data,
   }: {
     options?: ChartOptions;
     width?: number;
     height?: number;
+    resetBounds: boolean;
     data?: ChartData;
   }): RpcScales {
     const instance = this._chartInstance;
@@ -213,8 +215,17 @@ export default class ChartJSManager {
       }
 
       // If the user manually zoomed or panned this chart we avoid updating the scales since they have updated.
-      if (!this._hasZoomed && !this._hasPanned) {
-        instance.options.scales = options.scales;
+      if (!this._hasZoomed && !this._hasPanned && instance.options.scales) {
+        instance.options.scales.x = scales.x;
+      }
+
+      // Let the chart manage its own y scale unless we've been told to reset or if an explicit
+      // min and max have been specified.
+      if (
+        (resetBounds || (scales.y?.min != undefined && scales.y.max != undefined)) &&
+        instance.options.scales
+      ) {
+        instance.options.scales.y = scales.y;
       }
     }
 
@@ -299,7 +310,7 @@ export default class ChartJSManager {
       });
     }
 
-    // sort elemtents by proximity to the cursor
+    // sort elements by proximity to the cursor
     out.sort((itemA, itemB) => {
       const dxA = event.clientX - itemA.view.x;
       const dyA = event.clientY - itemA.view.y;
