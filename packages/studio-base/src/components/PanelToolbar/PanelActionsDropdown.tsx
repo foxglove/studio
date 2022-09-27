@@ -11,21 +11,14 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import {
-  Delete20Regular,
-  FullScreenMaximize20Regular,
-  ShapeSubtract20Regular,
-  SplitHorizontal20Regular,
-  SplitVertical20Regular,
-} from "@fluentui/react-icons";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import { Divider, ListItemText, Menu, MenuItem, SvgIcon } from "@mui/material";
+import { Divider, Menu, MenuItem } from "@mui/material";
 import { useCallback, useContext, useMemo, useRef, useState } from "react";
 import { MosaicContext, MosaicNode, MosaicWindowContext } from "react-mosaic-component";
 import { makeStyles } from "tss-react/mui";
 
 import PanelContext from "@foxglove/studio-base/components/PanelContext";
-import PanelList, { PanelSelection } from "@foxglove/studio-base/components/PanelList";
+import ChangePanelMenuItem from "@foxglove/studio-base/components/PanelToolbar/ChangePanelMenuItem";
 import ToolbarIconButton from "@foxglove/studio-base/components/PanelToolbar/ToolbarIconButton";
 import { getPanelTypeFromMosaic } from "@foxglove/studio-base/components/PanelToolbar/utils";
 import { useCurrentLayoutActions } from "@foxglove/studio-base/context/CurrentLayoutContext";
@@ -35,44 +28,25 @@ type Props = {
 };
 
 const useStyles = makeStyles()((theme) => ({
-  error: {
-    color: theme.palette.error.main,
-  },
-  menuItem: {
-    minWidth: 200,
-
-    ".root-span": {
-      marginLeft: theme.spacing(-1),
-      marginRight: theme.spacing(1),
-      display: "flex",
-    },
-  },
+  error: { color: theme.palette.error.main },
 }));
 
 export function PanelActionsDropdown({ isUnknownPanel }: Props): JSX.Element {
-  const { classes, cx } = useStyles();
+  const { classes } = useStyles();
   const [anchorEl, setAnchorEl] = useState<undefined | HTMLElement>(undefined);
-  const [showPanelSwitcher, setShowPanelSwitcher] = useState(false);
-  const { swapPanel } = useCurrentLayoutActions();
-  const panelContext = useContext(PanelContext);
-  const tabId = panelContext?.tabId;
-  const { mosaicActions } = useContext(MosaicContext);
-  const { mosaicWindowActions } = useContext(MosaicWindowContext);
-
   const menuOpen = Boolean(anchorEl);
 
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
   };
-  const handleClose = useCallback(() => {
-    if (showPanelSwitcher) {
-      setShowPanelSwitcher(false);
-    }
-    if (!showPanelSwitcher) {
-      setAnchorEl(undefined);
-    }
-  }, [showPanelSwitcher]);
+  const handleClose = () => {
+    setAnchorEl(undefined);
+  };
 
+  const panelContext = useContext(PanelContext);
+  const tabId = panelContext?.tabId;
+  const { mosaicActions } = useContext(MosaicContext);
+  const { mosaicWindowActions } = useContext(MosaicWindowContext);
   const {
     getCurrentLayoutState: getCurrentLayout,
     closePanel,
@@ -111,37 +85,8 @@ export function PanelActionsDropdown({ isUnknownPanel }: Props): JSX.Element {
     [getCurrentLayout, getPanelType, mosaicActions, mosaicWindowActions, splitPanel, tabId],
   );
 
-  const swap = useCallback(
-    (id?: string) =>
-      ({ type, config, relatedConfigs }: PanelSelection) => {
-        // Reselecting current panel type is a no-op.
-        if (type === panelContext?.type) {
-          handleClose();
-          return;
-        }
-
-        swapPanel({
-          tabId,
-          originalId: id ?? "",
-          type,
-          root: mosaicActions.getRoot() as MosaicNode<string>,
-          path: mosaicWindowActions.getPath(),
-          config: config ?? {},
-          relatedConfigs,
-        });
-      },
-    [handleClose, mosaicActions, mosaicWindowActions, panelContext?.type, swapPanel, tabId],
-  );
-
   const menuItems = useMemo(() => {
     const items = [];
-
-    items.push({
-      key: "change-panel",
-      text: "Change panel…",
-      onClick: () => setShowPanelSwitcher(true),
-      icon: <ShapeSubtract20Regular />,
-    });
 
     if (!isUnknownPanel) {
       items.push(
@@ -149,13 +94,11 @@ export function PanelActionsDropdown({ isUnknownPanel }: Props): JSX.Element {
           key: "hsplit",
           text: "Split horizontal",
           onClick: () => split(panelContext?.id, "column"),
-          icon: <SplitHorizontal20Regular />,
         },
         {
           key: "vsplit",
           text: "Split vertical",
           onClick: () => split(panelContext?.id, "row"),
-          icon: <SplitVertical20Regular />,
         },
       );
     }
@@ -166,7 +109,6 @@ export function PanelActionsDropdown({ isUnknownPanel }: Props): JSX.Element {
         text: "Fullscreen",
         onClick: panelContext?.enterFullscreen,
         "data-testid": "panel-menu-fullscreen",
-        icon: <FullScreenMaximize20Regular />,
       });
     }
 
@@ -178,7 +120,6 @@ export function PanelActionsDropdown({ isUnknownPanel }: Props): JSX.Element {
       onClick: close,
       "data-testid": "panel-menu-remove",
       className: classes.error,
-      icon: <Delete20Regular />,
     });
 
     return items;
@@ -215,33 +156,22 @@ export function PanelActionsDropdown({ isUnknownPanel }: Props): JSX.Element {
         }}
         MenuListProps={{
           "aria-labelledby": "panel-menu-button",
-          dense: true,
         }}
-        PaperProps={{ style: { maxHeight: 400 } }}
       >
-        {showPanelSwitcher ? (
-          <PanelList
-            selectedPanelType={panelContext?.type}
-            onPanelSelect={swap(panelContext?.id)}
-            disablePadding
-          />
-        ) : (
-          menuItems.map((item, idx) =>
-            item.type === "divider" ? (
-              <Divider key={`divider-${idx}`} variant="middle" />
-            ) : (
-              <MenuItem
-                key={item.key}
-                onClick={item.onClick}
-                className={cx(item.className, classes.menuItem)}
-                data-testid={item["data-testid"]}
-                style={{ alignItems: "center", gap: 4 }}
-              >
-                {item.icon ? item.icon : <SvgIcon />}
-                <ListItemText primary={item.text} />
-              </MenuItem>
-            ),
-          )
+        <ChangePanelMenuItem tabId={tabId} />
+        {menuItems.map((item, idx) =>
+          item.type === "divider" ? (
+            <Divider key={`divider-${idx}`} variant="middle" />
+          ) : (
+            <MenuItem
+              key={item.key}
+              onClick={item.onClick}
+              className={item.className}
+              data-testid={item["data-testid"]}
+            >
+              {item.text}
+            </MenuItem>
+          ),
         )}
       </Menu>
     </div>

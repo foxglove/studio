@@ -82,9 +82,6 @@ const useStyles = makeStyles()((theme) => {
         theme.palette.background.paper
       } ${theme.spacing(1.5)}) !important`,
     },
-    disablePadding: {
-      padding: theme.spacing(0, 1),
-    },
   };
 });
 
@@ -271,7 +268,6 @@ type Props = {
   mode?: "grid" | "list";
   onPanelSelect: (arg0: PanelSelection) => void;
   selectedPanelType?: string;
-  disablePadding?: boolean;
 };
 
 // sanity checks to help panel authors debug issues
@@ -300,8 +296,8 @@ function verifyPanels(panels: readonly PanelInfo[]) {
 function PanelList(props: Props): JSX.Element {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [highlightedPanelIdx, setHighlightedPanelIdx] = React.useState<number | undefined>();
-  const { disablePadding = false, mode, onPanelSelect, selectedPanelType } = props;
-  const { classes, cx } = useStyles();
+  const { mode, onPanelSelect, selectedPanelType } = props;
+  const { classes } = useStyles();
 
   const { dropPanel } = useCurrentLayoutActions();
   const mosaicId = usePanelMosaicId();
@@ -467,10 +463,9 @@ function PanelList(props: Props): JSX.Element {
 
   return (
     <div className={classes.fullHeight}>
-      <div className={cx(classes.toolbar, { [classes.disablePadding]: disablePadding })}>
+      <div className={classes.toolbar}>
         <TextField
           fullWidth
-          size="small"
           placeholder="Search panels"
           value={searchQuery}
           onChange={handleSearchChange}
@@ -492,7 +487,9 @@ function PanelList(props: Props): JSX.Element {
           {allFilteredPanels.map(displayPanelListItem)}
         </Container>
       ) : (
-        <List dense>{allFilteredPanels.map(displayPanelListItem)}</List>
+        <List dense disablePadding>
+          {allFilteredPanels.map(displayPanelListItem)}
+        </List>
       )}
       {noResults && (
         <Stack alignItems="center" justifyContent="center" paddingX={1} paddingY={2}>
