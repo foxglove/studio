@@ -185,7 +185,8 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     return extensions;
   }, [availableSources]);
 
-  const supportsAccountSettings = useContext(ConsoleApiContext) != undefined;
+  const supportsAccountSettings =
+    useContext(ConsoleApiContext) != undefined && props.disableSignin !== true;
 
   // We use playerId to detect when a player changes for RemountOnValueChange below
   // see comment below above the RemountOnValueChange component
@@ -535,7 +536,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
       ["help", { iconName: "QuestionCircle", title: "Help", component: HelpSidebar }],
     ]);
 
-    if (supportsAccountSettings && props.disableSignin !== true) {
+    if (supportsAccountSettings) {
       bottomItems.set("account", {
         iconName: currentUser != undefined ? "BlockheadFilled" : "Blockhead",
         title: currentUser != undefined ? `Signed in as ${currentUser.email}` : "Account",
@@ -555,7 +556,6 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     playerProblems,
     enableStudioLogsSidebar,
     supportsAccountSettings,
-    props.disableSignin,
     currentUser,
   ]);
 
