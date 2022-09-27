@@ -11,9 +11,27 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Alert, useTheme } from "@mui/material";
+import {
+  Alert,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Link,
+  useTheme,
+} from "@mui/material";
 import { groupBy } from "lodash";
-import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
 import { useResizeDetector } from "react-resize-detector";
 import { makeStyles } from "tss-react/mui";
 import { useDebouncedCallback } from "use-debounce";
@@ -27,6 +45,7 @@ import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import * as PanelAPI from "@foxglove/studio-base/PanelAPI";
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
 import KeyListener from "@foxglove/studio-base/components/KeyListener";
+import PanelContext from "@foxglove/studio-base/components/PanelContext";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import useGlobalVariables from "@foxglove/studio-base/hooks/useGlobalVariables";
@@ -798,19 +817,55 @@ export default function Layout({
   const [closedBanner, setClosedBanner] = useAppConfigurationValue<boolean>(
     AppSetting.CLOSED_OLD3D_DEPRECATION_BANNER,
   );
+  const [showUpgradeConfirmDialog, setShowUpgradeConfirmDialog] = useState(false);
 
   const deprecationBanner =
     closedBanner === true ? undefined : (
       <Alert severity="info" color="warning" onClose={() => void setClosedBanner(true)}>
-        The 3D (Legacy) panel is now deprecated. Try adding a new 3D panel.
+        The 3D (Legacy) panel is now deprecated.{" "}
+        <Link onClick={() => setShowUpgradeConfirmDialog(true)}>Upgrade to the new 3D panel</Link>
       </Alert>
     );
+
+  const panelContext = useContext(PanelContext);
+  const upgradeConfirmDialog = useMemo(
+    () => (
+      <Dialog open={showUpgradeConfirmDialog}>
+        <DialogTitle>Replace this panel?</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to replace this 3D (Legacy) panel with the new 3D panel?
+            <br />
+            <br />
+            Your selected topics and settings will be lost.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button variant="outlined" onClick={() => setShowUpgradeConfirmDialog(false)}>
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() => {
+              panelContext?.replacePanel("3D");
+              void setClosedBanner(true);
+              setShowUpgradeConfirmDialog(false);
+            }}
+          >
+            Replace panel
+          </Button>
+        </DialogActions>
+      </Dialog>
+    ),
+    [panelContext, setClosedBanner, showUpgradeConfirmDialog],
+  );
 
   return (
     <ThreeDimensionalVizContext.Provider value={threeDimensionalVizContextValue}>
       <TopicTreeContext.Provider value={topicTreeData}>
         <PanelToolbar helpContent={helpContent} />
         {deprecationBanner}
+        {upgradeConfirmDialog}
         <div
           ref={containerRef}
           onClick={onControlsOverlayClick}
