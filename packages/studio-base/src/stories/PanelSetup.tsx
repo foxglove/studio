@@ -306,6 +306,9 @@ function UnconnectedPanelSetup(props: UnconnectedProps): JSX.Element | ReactNull
         activeData={activeData}
         progress={progress}
         publish={publish}
+        startPlayback={() => {}}
+        pausePlayback={() => {}}
+        seekPlayback={() => {}}
         setPublishers={setPublishers}
         setSubscriptions={setSubscriptions}
       >
