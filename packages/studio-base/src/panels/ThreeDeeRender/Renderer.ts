@@ -644,7 +644,6 @@ export class Renderer extends EventEmitter<RendererEvents> {
             value: this.topicsFilter,
           },
         },
-        children: this.settings.tree()["topics"]?.children,
         handler: this.handleTopicsAction,
       },
     };
