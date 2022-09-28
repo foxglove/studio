@@ -183,7 +183,7 @@ async function loadCollada(
   // <up_axis> handling and skip rotation entirely for the Z_UP case
   const xml = new DOMParser().parseFromString(text, "application/xml");
   const upAxis = ignoreUpAxis
-    ? "Y_UP"
+    ? "Z_UP"
     : (xml.querySelector("up_axis")?.textContent ?? "Y_UP").trim().toUpperCase();
   xml.querySelectorAll("up_axis").forEach((node) => node.remove());
   const xmlText = xml.documentElement.outerHTML;
