@@ -85,7 +85,7 @@ export function MeshMarkerOrientation(): JSX.Element {
     message: {
       ...baseMeshMarker.message,
       ns: "glb",
-      pose: { position: { x: -2, y: 0, z: 0 }, orientation: { x: 0, y: 0, z: 0, w: 1 } },
+      pose: { position: { x: -2, y: 0, z: 0.25 }, orientation: { x: 0, y: 0, z: 0, w: 1 } },
       mesh_resource: GLTF_AXES_MESH_RESOURCE,
     },
   };
@@ -95,7 +95,7 @@ export function MeshMarkerOrientation(): JSX.Element {
     message: {
       ...baseMeshMarker.message,
       ns: "dae",
-      pose: { position: { x: 0, y: 0, z: 0 }, orientation: { x: 0, y: 0, z: 0, w: 1 } },
+      pose: { position: { x: 0, y: 0, z: 0.25 }, orientation: { x: 0, y: 0, z: 0, w: 1 } },
       mesh_resource: COLLADA_AXES_MESH_RESOURCE,
     },
   };
@@ -105,7 +105,7 @@ export function MeshMarkerOrientation(): JSX.Element {
     message: {
       ...baseMeshMarker.message,
       ns: "stl",
-      pose: { position: { x: 2, y: 0, z: 0 }, orientation: { x: 0, y: 0, z: 0, w: 1 } },
+      pose: { position: { x: 2, y: 0, z: 0.25 }, orientation: { x: 0, y: 0, z: 0, w: 1 } },
       mesh_resource: STL_AXES_MESH_RESOURCE,
     },
   };
@@ -115,7 +115,7 @@ export function MeshMarkerOrientation(): JSX.Element {
     message: {
       ...baseMeshMarker.message,
       ns: "obj",
-      pose: { position: { x: 4, y: 0, z: 0 }, orientation: { x: 0, y: 0, z: 0, w: 1 } },
+      pose: { position: { x: 4, y: 0, z: 0.25 }, orientation: { x: 0, y: 0, z: 0, w: 1 } },
       mesh_resource: OBJ_AXES_MESH_RESOURCE,
     },
   };
@@ -182,7 +182,6 @@ export function MeshMarkerOrientation(): JSX.Element {
           scene: {
             transforms: {
               showLabel: false,
-              axisScale: 0,
             },
           },
           cameraState: { ...DEFAULT_CAMERA_STATE, distance: 6, thetaOffset: 50 },
