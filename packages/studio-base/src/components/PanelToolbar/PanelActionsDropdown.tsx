@@ -14,17 +14,19 @@
 import {
   Delete20Regular,
   FullScreenMaximize20Regular,
+  ShapeSubtract20Regular,
   SplitHorizontal20Regular,
   SplitVertical20Regular,
 } from "@fluentui/react-icons";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { Divider, Menu, MenuItem } from "@mui/material";
-import { useCallback, useContext, useMemo, useRef, useState } from "react";
+import { MouseEvent, useCallback, useContext, useMemo, useRef, useState } from "react";
 import { MosaicContext, MosaicNode, MosaicWindowContext } from "react-mosaic-component";
 import { makeStyles } from "tss-react/mui";
 
 import PanelContext from "@foxglove/studio-base/components/PanelContext";
-import ChangePanelMenuItem from "@foxglove/studio-base/components/PanelToolbar/ChangePanelMenuItem";
+import ChangePanelMenu from "@foxglove/studio-base/components/PanelToolbar/ChangePanelMenu";
 import ToolbarIconButton from "@foxglove/studio-base/components/PanelToolbar/ToolbarIconButton";
 import { getPanelTypeFromMosaic } from "@foxglove/studio-base/components/PanelToolbar/utils";
 import { useCurrentLayoutActions } from "@foxglove/studio-base/context/CurrentLayoutContext";
@@ -35,6 +37,9 @@ type Props = {
 
 const useStyles = makeStyles()((theme) => ({
   error: { color: theme.palette.error.main },
+  icon: {
+    marginRight: theme.spacing(-1),
+  },
   menuItem: {
     display: "flex",
     gap: theme.spacing(1),
@@ -45,10 +50,10 @@ const useStyles = makeStyles()((theme) => ({
       marginLeft: theme.spacing(-0.25),
     },
     "&.Mui-selected": {
-      backgroundColor: theme.palette.action.focus,
+      backgroundColor: theme.palette.action.hover,
 
       "&:hover": {
-        backgroundColor: theme.palette.action.focus,
+        backgroundColor: theme.palette.action.hover,
       },
     },
   },
@@ -56,8 +61,11 @@ const useStyles = makeStyles()((theme) => ({
 
 export function PanelActionsDropdown({ isUnknownPanel }: Props): JSX.Element {
   const { classes, cx } = useStyles();
-  const [anchorEl, setAnchorEl] = useState<undefined | HTMLElement>(undefined);
-  const menuOpen = Boolean(anchorEl);
+  const [menuAnchorEl, setMenuAnchorEl] = useState<undefined | HTMLElement>(undefined);
+  const [subMenuAnchorEl, setSubmenuAnchorEl] = useState<undefined | HTMLElement>(undefined);
+
+  const menuOpen = Boolean(menuAnchorEl);
+  const submenuOpen = Boolean(subMenuAnchorEl);
 
   const panelContext = useContext(PanelContext);
   const tabId = panelContext?.tabId;
@@ -73,12 +81,29 @@ export function PanelActionsDropdown({ isUnknownPanel }: Props): JSX.Element {
     [mosaicActions, mosaicWindowActions],
   );
 
-  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setAnchorEl(event.currentTarget);
+  const handleMenuClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setSubmenuAnchorEl(undefined);
+    setMenuAnchorEl(event.currentTarget);
   };
 
   const handleMenuClose = () => {
-    setAnchorEl(undefined);
+    setSubmenuAnchorEl(undefined);
+    setMenuAnchorEl(undefined);
+  };
+
+  const handleSubmenuClick = (event: MouseEvent<HTMLElement>) => {
+    if (subMenuAnchorEl !== event.currentTarget) {
+      setSubmenuAnchorEl(event.currentTarget);
+    }
+    setMenuAnchorEl(undefined);
+  };
+
+  const handleSubmenuClose = useCallback(() => {
+    setSubmenuAnchorEl(undefined);
+  }, []);
+
+  const handleSubmenuMouseEnter = (event: MouseEvent<HTMLElement>) => {
+    setSubmenuAnchorEl(event.currentTarget);
   };
 
   const close = useCallback(() => {
@@ -182,7 +207,7 @@ export function PanelActionsDropdown({ isUnknownPanel }: Props): JSX.Element {
         aria-controls={menuOpen ? "panel-menu" : undefined}
         aria-haspopup="true"
         aria-expanded={menuOpen ? "true" : undefined}
-        onClick={handleClick}
+        onClick={handleMenuClick}
         data-testid="panel-menu"
         title="More"
       >
@@ -190,7 +215,7 @@ export function PanelActionsDropdown({ isUnknownPanel }: Props): JSX.Element {
       </ToolbarIconButton>
       <Menu
         id="panel-menu"
-        anchorEl={anchorEl}
+        anchorEl={menuAnchorEl}
         open={menuOpen}
         onClose={handleMenuClose}
         anchorOrigin={{
@@ -199,9 +224,25 @@ export function PanelActionsDropdown({ isUnknownPanel }: Props): JSX.Element {
         }}
         MenuListProps={{
           "aria-labelledby": "panel-menu-button",
+          dense: true,
         }}
       >
-        <ChangePanelMenuItem tabId={tabId} />
+        <MenuItem
+          className={classes.menuItem}
+          selected={submenuOpen}
+          id="change-panel-button"
+          aria-controls={submenuOpen ? "change-panel-menu" : undefined}
+          aria-haspopup="true"
+          aria-expanded={submenuOpen ? "true" : undefined}
+          onClick={handleSubmenuClick}
+          onMouseEnter={handleSubmenuMouseEnter}
+        >
+          <ShapeSubtract20Regular />
+          Change Panel
+          <ChevronRightIcon className={classes.icon} fontSize="small" />
+        </MenuItem>
+        <ChangePanelMenu anchorEl={subMenuAnchorEl} onClose={handleSubmenuClose} tabId={tabId} />
+        <Divider variant="middle" />
         {menuItems.map((item, idx) =>
           item.type === "divider" ? (
             <Divider key={`divider-${idx}`} variant="middle" />
@@ -209,6 +250,7 @@ export function PanelActionsDropdown({ isUnknownPanel }: Props): JSX.Element {
             <MenuItem
               key={item.key}
               onClick={item.onClick}
+              onMouseEnter={() => setSubmenuAnchorEl(undefined)}
               className={cx(classes.menuItem, item.className)}
               data-testid={item["data-testid"]}
             >
