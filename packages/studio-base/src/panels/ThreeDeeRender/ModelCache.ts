@@ -163,6 +163,12 @@ function loadSTL(url: string, buffer: ArrayBuffer): LoadedModel {
   const mesh = new THREE.Mesh(bufferGeometry, material);
   const group = new THREE.Group();
   group.add(mesh);
+
+  // THREE.js uses Y-up, while Studio follows the ROS
+  // [REP-0103](https://www.ros.org/reps/rep-0103.html) convention of Z-up
+  group.rotateZ(Math.PI / 2);
+  group.rotateX(Math.PI / 2);
+
   return group;
 }
 
@@ -185,6 +191,11 @@ async function loadCollada(
   const dae = daeLoader.parse(text, baseUrl(url));
   manager.itemEnd(url);
 
+  // THREE.js uses Y-up, while Studio follows the ROS
+  // [REP-0103](https://www.ros.org/reps/rep-0103.html) convention of Z-up
+  dae.scene.rotateZ(Math.PI / 2);
+  dae.scene.rotateX(Math.PI / 2);
+
   return fixDaeMaterials(dae.scene);
 }
 
@@ -206,6 +217,11 @@ async function loadOBJ(
   manager.itemStart(url);
   const group = objLoader.parse(text);
   manager.itemEnd(url);
+
+  // THREE.js uses Y-up, while Studio follows the ROS
+  // [REP-0103](https://www.ros.org/reps/rep-0103.html) convention of Z-up
+  group.rotateZ(Math.PI / 2);
+  group.rotateX(Math.PI / 2);
 
   return fixObjMaterials(group);
 }
