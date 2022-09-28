@@ -853,11 +853,11 @@ export default function Layout({
               panelContext?.replacePanel("3D", {
                 followTf: latestConfig.current.followTf,
                 followMode:
-                  latestConfig.current.followTf === "follow-pose"
-                    ? "follow-orientation"
-                    : latestConfig.current.followTf === "follow-position"
-                    ? "follow"
-                    : "no-follow",
+                  latestConfig.current.followMode === "follow-orientation"
+                    ? "follow-pose"
+                    : latestConfig.current.followMode === "follow"
+                    ? "follow-position"
+                    : "follow-none",
                 cameraState: latestConfig.current.cameraState,
                 publish: {
                   poseTopic: latestConfig.current.clickToPublishPoseTopic,
