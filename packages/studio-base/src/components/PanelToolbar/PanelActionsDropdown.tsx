@@ -11,6 +11,12 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import {
+  Delete20Regular,
+  FullScreenMaximize20Regular,
+  SplitHorizontal20Regular,
+  SplitVertical20Regular,
+} from "@fluentui/react-icons";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { Divider, Menu, MenuItem } from "@mui/material";
 import { useCallback, useContext, useMemo, useRef, useState } from "react";
@@ -29,19 +35,29 @@ type Props = {
 
 const useStyles = makeStyles()((theme) => ({
   error: { color: theme.palette.error.main },
+  menuItem: {
+    display: "flex",
+    gap: theme.spacing(1),
+    alignItems: "center",
+
+    ".root-span": {
+      display: "flex",
+      marginLeft: theme.spacing(-0.25),
+    },
+    "&.Mui-selected": {
+      backgroundColor: theme.palette.action.focus,
+
+      "&:hover": {
+        backgroundColor: theme.palette.action.focus,
+      },
+    },
+  },
 }));
 
 export function PanelActionsDropdown({ isUnknownPanel }: Props): JSX.Element {
-  const { classes } = useStyles();
+  const { classes, cx } = useStyles();
   const [anchorEl, setAnchorEl] = useState<undefined | HTMLElement>(undefined);
   const menuOpen = Boolean(anchorEl);
-
-  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-  const handleClose = () => {
-    setAnchorEl(undefined);
-  };
 
   const panelContext = useContext(PanelContext);
   const tabId = panelContext?.tabId;
@@ -57,12 +73,21 @@ export function PanelActionsDropdown({ isUnknownPanel }: Props): JSX.Element {
     [mosaicActions, mosaicWindowActions],
   );
 
+  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(undefined);
+  };
+
   const close = useCallback(() => {
     closePanel({
       tabId,
       root: mosaicActions.getRoot() as MosaicNode<string>,
       path: mosaicWindowActions.getPath(),
     });
+    handleMenuClose();
   }, [closePanel, mosaicActions, mosaicWindowActions, tabId]);
 
   const split = useCallback(
@@ -81,9 +106,15 @@ export function PanelActionsDropdown({ isUnknownPanel }: Props): JSX.Element {
         path: mosaicWindowActions.getPath(),
         config,
       });
+      handleMenuClose();
     },
     [getCurrentLayout, getPanelType, mosaicActions, mosaicWindowActions, splitPanel, tabId],
   );
+
+  const enterFullscreen = useCallback(() => {
+    panelContext?.enterFullscreen();
+    handleMenuClose();
+  }, [panelContext]);
 
   const menuItems = useMemo(() => {
     const items = [];
@@ -93,11 +124,13 @@ export function PanelActionsDropdown({ isUnknownPanel }: Props): JSX.Element {
         {
           key: "hsplit",
           text: "Split horizontal",
+          icon: <SplitHorizontal20Regular />,
           onClick: () => split(panelContext?.id, "column"),
         },
         {
           key: "vsplit",
           text: "Split vertical",
+          icon: <SplitVertical20Regular />,
           onClick: () => split(panelContext?.id, "row"),
         },
       );
@@ -107,7 +140,8 @@ export function PanelActionsDropdown({ isUnknownPanel }: Props): JSX.Element {
       items.push({
         key: "enter-fullscreen",
         text: "Fullscreen",
-        onClick: panelContext?.enterFullscreen,
+        icon: <FullScreenMaximize20Regular />,
+        onClick: enterFullscreen,
         "data-testid": "panel-menu-fullscreen",
       });
     }
@@ -117,13 +151,22 @@ export function PanelActionsDropdown({ isUnknownPanel }: Props): JSX.Element {
     items.push({
       key: "remove",
       text: "Remove panel",
+      icon: <Delete20Regular />,
       onClick: close,
       "data-testid": "panel-menu-remove",
       className: classes.error,
     });
 
     return items;
-  }, [classes, close, isUnknownPanel, panelContext, split]);
+  }, [
+    classes.error,
+    close,
+    enterFullscreen,
+    isUnknownPanel,
+    panelContext?.id,
+    panelContext?.isFullscreen,
+    split,
+  ]);
 
   const buttonRef = useRef<HTMLDivElement>(ReactNull);
   const type = getPanelType();
@@ -149,7 +192,7 @@ export function PanelActionsDropdown({ isUnknownPanel }: Props): JSX.Element {
         id="panel-menu"
         anchorEl={anchorEl}
         open={menuOpen}
-        onClose={handleClose}
+        onClose={handleMenuClose}
         anchorOrigin={{
           vertical: "top",
           horizontal: "right",
@@ -166,9 +209,10 @@ export function PanelActionsDropdown({ isUnknownPanel }: Props): JSX.Element {
             <MenuItem
               key={item.key}
               onClick={item.onClick}
-              className={item.className}
+              className={cx(classes.menuItem, item.className)}
               data-testid={item["data-testid"]}
             >
+              {item.icon}
               {item.text}
             </MenuItem>
           ),

@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { ShapeSubtract20Regular } from "@fluentui/react-icons";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { ClickAwayListener, Divider, Grow, MenuItem, Paper, Popper } from "@mui/material";
 import { MouseEvent, useCallback, useContext, useState } from "react";
@@ -27,7 +28,12 @@ const useStyles = makeStyles()((theme) => ({
     display: "flex",
     gap: theme.spacing(1),
     justifyContent: "space-between",
+    alignItems: "center",
 
+    ".root-span": {
+      display: "flex",
+      marginLeft: theme.spacing(-0.25),
+    },
     "&.Mui-selected": {
       backgroundColor: theme.palette.action.focus,
 
@@ -55,16 +61,24 @@ export default function ChangePanelMenuItem({ tabId }: { tabId?: string }): JSX.
     }
     setAnchorEl(undefined);
   };
-  const handleMouseEnter = (event: MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
+
   const handleClose = useCallback(() => {
     if (!overSubMenu) {
       setAnchorEl(undefined);
     }
   }, [overSubMenu]);
 
-  const swap = useCallback(
+  const handleMouseEnter = (event: MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMouseLeave = () => {
+    if (!overSubMenu) {
+      setAnchorEl(undefined);
+    }
+  };
+
+  const handleSwap = useCallback(
     (id?: string) =>
       ({ type, config, relatedConfigs }: PanelSelection) => {
         // Reselecting current panel type is a no-op.
@@ -97,7 +111,9 @@ export default function ChangePanelMenuItem({ tabId }: { tabId?: string }): JSX.
         aria-expanded={open ? "true" : undefined}
         onClick={handleClick}
         onMouseEnter={handleMouseEnter}
+        onMouseLeave={!overSubMenu ? handleMouseLeave : undefined}
       >
+        <ShapeSubtract20Regular />
         Change Panel
         <ChevronRightIcon className={classes.icon} fontSize="small" />
       </MenuItem>
@@ -135,7 +151,7 @@ export default function ChangePanelMenuItem({ tabId }: { tabId?: string }): JSX.
               <ClickAwayListener onClickAway={handleClose}>
                 <PanelList
                   selectedPanelType={panelContext?.type}
-                  onPanelSelect={swap(panelContext?.id)}
+                  onPanelSelect={handleSwap(panelContext?.id)}
                 />
               </ClickAwayListener>
             </Paper>
