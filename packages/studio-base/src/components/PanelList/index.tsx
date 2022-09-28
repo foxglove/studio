@@ -19,14 +19,15 @@ import {
   CardContent,
   CardMedia,
   Container,
+  Fade,
+  IconButton,
   List,
   ListItem,
   ListItemButton,
   ListItemText,
+  TextField,
   Tooltip,
   Typography,
-  TextField,
-  IconButton,
 } from "@mui/material";
 import fuzzySort from "fuzzysort";
 import { countBy, isEmpty } from "lodash";
@@ -216,6 +217,7 @@ function DraggablePanelItem({
         <Tooltip
           placement="right"
           enterDelay={200}
+          TransitionComponent={Fade}
           title={
             <Stack paddingTop={0.25} style={{ width: 200 }}>
               {panel.thumbnail != undefined && <img src={panel.thumbnail} alt={panel.title} />}
