@@ -826,6 +826,7 @@ export default function Layout({
         <Link color="inherit" onClick={() => setShowUpgradeConfirmDialog(true)}>
           Upgrade to the new 3D panel
         </Link>
+        .
       </Alert>
     );
 
