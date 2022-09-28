@@ -218,10 +218,7 @@ export function PanelActionsDropdown({ isUnknownPanel }: Props): JSX.Element {
         anchorEl={menuAnchorEl}
         open={menuOpen}
         onClose={handleMenuClose}
-        anchorOrigin={{
-          vertical: "top",
-          horizontal: "right",
-        }}
+        anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
         MenuListProps={{
           "aria-labelledby": "panel-menu-button",
           dense: true,
