@@ -33,6 +33,7 @@ import React, {
   useState,
 } from "react";
 import { useResizeDetector } from "react-resize-detector";
+import { useLatest } from "react-use";
 import { makeStyles } from "tss-react/mui";
 import { useDebouncedCallback } from "use-debounce";
 import { useImmerReducer } from "use-immer";
@@ -831,6 +832,8 @@ export default function Layout({
     );
 
   const panelContext = useContext(PanelContext);
+  const latestConfig = useLatest(config);
+  const latestTransforms = useLatest(transforms);
   const upgradeConfirmDialog = useMemo(
     () => (
       <Dialog open={showUpgradeConfirmDialog} onClose={() => setShowUpgradeConfirmDialog(false)}>
@@ -847,7 +850,43 @@ export default function Layout({
           <Button
             variant="contained"
             onClick={() => {
-              panelContext?.replacePanel("3D");
+              panelContext?.replacePanel("3D", {
+                followTf: latestConfig.current.followTf,
+                followMode:
+                  latestConfig.current.followTf === "follow-pose"
+                    ? "follow-orientation"
+                    : latestConfig.current.followTf === "follow-position"
+                    ? "follow"
+                    : "no-follow",
+                cameraState: latestConfig.current.cameraState,
+                publish: {
+                  poseTopic: latestConfig.current.clickToPublishPoseTopic,
+                  pointTopic: latestConfig.current.clickToPublishPointTopic,
+                  poseEstimateTopic: latestConfig.current.clickToPublishPoseEstimateTopic,
+                  poseEstimateXDeviation: latestConfig.current.clickToPublishPoseEstimateXDeviation,
+                  poseEstimateYDeviation: latestConfig.current.clickToPublishPoseEstimateYDeviation,
+                  poseEstimateThetaDeviation:
+                    latestConfig.current.clickToPublishPoseEstimateThetaDeviation,
+                },
+                topics: Object.fromEntries(
+                  filterMap(latestConfig.current.checkedKeys, (key) =>
+                    key.startsWith("t:")
+                      ? [key.substring("t:".length), { visible: true }]
+                      : undefined,
+                  ),
+                ),
+                transforms: Object.fromEntries([
+                  ...Array.from(latestTransforms.current.frames().keys(), (id) => [
+                    `frame:${id}`,
+                    { visible: false },
+                  ]),
+                  ...filterMap(latestConfig.current.checkedKeys, (key) =>
+                    key.startsWith("ns:/tf:")
+                      ? ["frame:" + key.substring("ns:/tf:".length), { visible: true }]
+                      : undefined,
+                  ),
+                ]),
+              });
               void setClosedBanner(true);
               setShowUpgradeConfirmDialog(false);
             }}
@@ -857,7 +896,7 @@ export default function Layout({
         </DialogActions>
       </Dialog>
     ),
-    [panelContext, setClosedBanner, showUpgradeConfirmDialog],
+    [latestConfig, latestTransforms, panelContext, setClosedBanner, showUpgradeConfirmDialog],
   );
 
   return (

@@ -334,7 +334,7 @@ export default function Panel<
     );
 
     const replacePanel = useCallback(
-      (newPanelType: string) => {
+      (newPanelType: string, config: Record<string, unknown>) => {
         if (childId == undefined) {
           return;
         }
@@ -344,7 +344,7 @@ export default function Panel<
           type: newPanelType,
           root: mosaicActions.getRoot() as MosaicNode<string>,
           path: mosaicWindowActions.getPath(),
-          config: {},
+          config,
         });
       },
       [childId, mosaicActions, mosaicWindowActions, swapPanel, tabId],
