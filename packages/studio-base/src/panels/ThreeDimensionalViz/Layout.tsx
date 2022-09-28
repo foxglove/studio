@@ -823,7 +823,7 @@ export default function Layout({
     closedBanner === true ? undefined : (
       <Alert severity="info" color="warning" onClose={() => void setClosedBanner(true)}>
         The 3D (Legacy) panel is now deprecated.{" "}
-        <Link onClick={() => setShowUpgradeConfirmDialog(true)}>Upgrade to the new 3D panel</Link>
+        <Link color="inherit" onClick={() => setShowUpgradeConfirmDialog(true)}>Upgrade to the new 3D panel</Link>
       </Alert>
     );
 
