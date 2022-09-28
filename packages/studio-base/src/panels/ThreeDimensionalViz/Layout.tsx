@@ -822,8 +822,9 @@ export default function Layout({
   const deprecationBanner =
     closedBanner === true ? undefined : (
       <Alert severity="info" color="warning" onClose={() => void setClosedBanner(true)}>
-        The 3D (Legacy) panel is now deprecated.{" "}
+        The 3D (Legacy) panel is deprecated.{" "}
         <Link color="inherit" onClick={() => setShowUpgradeConfirmDialog(true)}>Upgrade to the new 3D panel</Link>
+        .
       </Alert>
     );
 
@@ -831,13 +832,10 @@ export default function Layout({
   const upgradeConfirmDialog = useMemo(
     () => (
       <Dialog open={showUpgradeConfirmDialog}>
-        <DialogTitle>Replace this panel?</DialogTitle>
+        <DialogTitle>Upgrade to the new 3D panel</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to replace this 3D (Legacy) panel with the new 3D panel?
-            <br />
-            <br />
-            Your selected topics and settings will be lost.
+            After upgrading this panel, you will need to reconfigure your selected topics.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
