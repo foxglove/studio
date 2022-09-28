@@ -75,7 +75,7 @@ export function MeshMarkers(): JSX.Element {
       points: [],
       colors: [],
       text: "",
-      mesh_resource: encodeURI(OBJ_CUBE_MESH_RESOURCE),
+      mesh_resource: OBJ_CUBE_MESH_RESOURCE,
       mesh_use_embedded_materials: true,
       lifetime: { sec: 0, nsec: 0 },
     },
