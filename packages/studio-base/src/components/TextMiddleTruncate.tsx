@@ -43,7 +43,7 @@ type Props = {
   endTextLength?: number;
   testShowTooltip?: boolean;
   className?: string;
-  styles?: CSSProperties;
+  style?: CSSProperties;
 };
 
 export default function TextMiddleTruncate({
@@ -52,7 +52,7 @@ export default function TextMiddleTruncate({
   endTextLength,
   testShowTooltip,
   className,
-  styles,
+  style,
 }: Props): React.ReactElement {
   const { classes } = useStyles();
   const startTextLen = Math.max(
@@ -64,7 +64,7 @@ export default function TextMiddleTruncate({
   const endText = text.substring(startTextLen);
 
   const elem = (
-    <Stack direction="row" justifyContent="flex-start" {...{ className, styles }}>
+    <Stack direction="row" justifyContent="flex-start" {...{ className, style }}>
       <div className={classes.start}>{startText}</div>
       <div className={classes.end}>{endText}</div>
     </Stack>
