@@ -42,32 +42,30 @@ export default {
 };
 
 export const Examples: Story = () => {
-  const [value, setValue] = useState(50);
+  const [value, setValue] = useState(0.5);
   const [draggableValue, setDraggableValue] = useState(25);
   return (
     <Box padding={4}>
       <p>standard (clickable)</p>
       <Box bgcolor="error.light" height={30} width={300}>
-        <Slider min={10} max={200} onChange={(v) => setValue(v)} value={value} />
+        <Slider onChange={(v) => setValue(v)} fraction={value} />
       </Box>
       <p>disabled (not clickable)</p>
       <Box bgcolor="error.light" height={30} width={300}>
-        <Slider disabled min={10} max={200} onChange={(v) => setValue(v)} value={value} />
+        <Slider disabled onChange={(v) => setValue(v)} fraction={value} />
       </Box>
       <p>no value</p>
       <Box bgcolor="error.light" height={30} width={300}>
         <Slider
-          min={10}
-          max={200}
           onChange={() => {
             // no-op
           }}
-          value={undefined}
+          fraction={undefined}
         />
       </Box>
       <p>draggable</p>
       <Box bgcolor="info.main" height={20} width={500}>
-        <Slider min={10} max={200} onChange={(v) => setDraggableValue(v)} value={draggableValue} />
+        <Slider onChange={(v) => setDraggableValue(v)} fraction={draggableValue} />
       </Box>
     </Box>
   );
@@ -82,10 +80,8 @@ export const CustomRenderer: Story = () => {
       <p>Customize slider UI using renderSlider</p>
       <Box bgcolor="info.main" height={20} width={500}>
         <Slider
-          min={10}
-          max={200}
           onChange={(v) => setDraggableValue(v)}
-          value={draggableValue}
+          fraction={draggableValue}
           renderSlider={(width) => (
             <>
               <div className={classes.customRange} style={{ width: `${(width ?? 0) * 100}%` }} />
