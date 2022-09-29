@@ -834,7 +834,6 @@ export default function TimeBasedChart(props: Props): JSX.Element {
         disableInteractive
         TransitionComponent={Fade}
         TransitionProps={{ timeout: 0 }}
-        leaveDelay={200}
         PopperProps={{
           anchorEl: {
             getBoundingClientRect: () => {
