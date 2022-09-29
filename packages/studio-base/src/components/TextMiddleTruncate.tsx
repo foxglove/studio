@@ -12,6 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { Tooltip } from "@mui/material";
+import { CSSProperties } from "react";
 import { makeStyles } from "tss-react/mui";
 
 import Stack from "@foxglove/studio-base/components/Stack";
@@ -41,6 +42,8 @@ type Props = {
   text: string;
   endTextLength?: number;
   testShowTooltip?: boolean;
+  className?: string;
+  styles?: CSSProperties;
 };
 
 export default function TextMiddleTruncate({
@@ -48,7 +51,8 @@ export default function TextMiddleTruncate({
   text,
   endTextLength,
   testShowTooltip,
-  ...rest
+  className,
+  styles,
 }: Props): React.ReactElement {
   const { classes } = useStyles();
   const startTextLen = Math.max(
@@ -60,7 +64,7 @@ export default function TextMiddleTruncate({
   const endText = text.substring(startTextLen);
 
   const elem = (
-    <Stack direction="row" justifyContent="flex-start" {...rest}>
+    <Stack direction="row" justifyContent="flex-start" {...{ className, styles }}>
       <div className={classes.start}>{startText}</div>
       <div className={classes.end}>{endText}</div>
     </Stack>
