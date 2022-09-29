@@ -11,6 +11,8 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { fireEvent, screen } from "@testing-library/dom";
+
 import TextMiddleTruncate from "./TextMiddleTruncate";
 
 const LONG_TOPIC_NAME =
@@ -21,6 +23,10 @@ export default {
   component: TextMiddleTruncate,
 };
 
+async function hoverText() {
+  const allText = await screen.findAllByTestId("text-middle-truncate");
+  fireEvent.pointerOver(allText[3]!);
+}
 export function Default(): JSX.Element {
   return (
     <div
@@ -46,18 +52,10 @@ export function Default(): JSX.Element {
 
       <div>Show the last part of topic name with visibile text:</div>
       <TextMiddleTruncate
-        testShowTooltip
-        endTextLength={LONG_TOPIC_NAME.split("/").pop()!.length + 1}
-        text={LONG_TOPIC_NAME}
-      />
-
-      <div>Show the last part of topic name with visibile tooltip:</div>
-      <TextMiddleTruncate
-        tooltips={[<span key="0">This is a topic tooltip</span>]}
-        testShowTooltip
         endTextLength={LONG_TOPIC_NAME.split("/").pop()!.length + 1}
         text={LONG_TOPIC_NAME}
       />
     </div>
   );
 }
+Default.play = hoverText;

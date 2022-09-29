@@ -11,15 +11,17 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Tooltip } from "@mui/material";
 import { CSSProperties } from "react";
 import { makeStyles } from "tss-react/mui";
-
-import Stack from "@foxglove/studio-base/components/Stack";
 
 const DEFAULT_END_TEXT_LENGTH = 16;
 
 const useStyles = makeStyles()(() => ({
+  root: {
+    alignSelf: "start",
+    display: "flex",
+    justifyContent: "flex-start",
+  },
   start: {
     overflow: "hidden",
     textOverflow: "ellipsis",
@@ -38,23 +40,19 @@ const useStyles = makeStyles()(() => ({
 }));
 
 type Props = {
-  tooltips?: React.ReactNode[];
   text: string;
   endTextLength?: number;
-  testShowTooltip?: boolean;
   className?: string;
   style?: CSSProperties;
 };
 
 export default function TextMiddleTruncate({
-  tooltips,
   text,
   endTextLength,
-  testShowTooltip,
   className,
   style,
-}: Props): React.ReactElement {
-  const { classes } = useStyles();
+}: Props): JSX.Element {
+  const { classes, cx } = useStyles();
   const startTextLen = Math.max(
     0,
     text.length -
@@ -63,15 +61,23 @@ export default function TextMiddleTruncate({
   const startText = text.substring(0, startTextLen);
   const endText = text.substring(startTextLen);
 
-  const elem = (
-    <Stack direction="row" justifyContent="flex-start" {...{ className, style }}>
+  if (!startText) {
+    return (
+      <div className={cx(classes.end, className)} style={style}>
+        {endText}
+      </div>
+    );
+  }
+
+  return (
+    <div
+      data-testid="text-middle-truncate"
+      className={cx(className, classes.root)}
+      title={text}
+      style={style}
+    >
       <div className={classes.start}>{startText}</div>
       <div className={classes.end}>{endText}</div>
-    </Stack>
-  );
-  return (
-    <Tooltip title={<>{tooltips ?? text}</>} placement="top" open={testShowTooltip}>
-      {elem}
-    </Tooltip>
+    </div>
   );
 }
