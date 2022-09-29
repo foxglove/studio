@@ -26,7 +26,6 @@ import React, {
   Profiler,
   MouseEventHandler,
   useLayoutEffect,
-  useEffect,
   CSSProperties,
   useContext,
 } from "react";
@@ -193,6 +192,7 @@ export default function Panel<
       updatePanelConfigs,
       createTabPanel,
       closePanel,
+      swapPanel,
       getCurrentLayoutState,
     } = useCurrentLayoutActions();
 
@@ -330,6 +330,23 @@ export default function Panel<
         panelCatalog,
         savePanelConfigs,
       ],
+    );
+
+    const replacePanel = useCallback(
+      (newPanelType: string, config: Record<string, unknown>) => {
+        if (childId == undefined) {
+          return;
+        }
+        swapPanel({
+          tabId,
+          originalId: childId,
+          type: newPanelType,
+          root: mosaicActions.getRoot() as MosaicNode<string>,
+          path: mosaicWindowActions.getPath(),
+          config,
+        });
+      },
+      [childId, mosaicActions, mosaicWindowActions, swapPanel, tabId],
     );
 
     const { panelSettingsOpen } = useWorkspace();
@@ -479,16 +496,6 @@ export default function Panel<
       [exitFullscreen],
     );
 
-    /* Ensure user exits full-screen mode when leaving window, even if key is still pressed down */
-    useEffect(() => {
-      const listener = () => {
-        exitFullscreen();
-        setQuickActionsKeyPressed(false);
-      };
-      window.addEventListener("blur", listener);
-      return () => window.removeEventListener("blur", listener);
-    }, [exitFullscreen]);
-
     const otherPanelProps = useShallowMemo(otherProps);
     const childProps = useMemo(
       // We have to lie to TypeScript with "as PanelProps" because the "PanelProps extends {...}"
@@ -545,6 +552,7 @@ export default function Panel<
             saveConfig: saveConfig as SaveConfig<PanelConfig>,
             updatePanelConfigs,
             openSiblingPanel,
+            replacePanel,
             enterFullscreen,
             exitFullscreen,
             setHasFullscreenDescendant,

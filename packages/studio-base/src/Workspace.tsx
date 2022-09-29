@@ -150,6 +150,7 @@ function AddPanel() {
 
 type WorkspaceProps = {
   deepLinks?: string[];
+  disableSignin?: boolean;
 };
 
 const DEFAULT_DEEPLINKS = Object.freeze([]);
@@ -184,7 +185,8 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     return extensions;
   }, [availableSources]);
 
-  const supportsAccountSettings = useContext(ConsoleApiContext) != undefined;
+  const supportsAccountSettings =
+    useContext(ConsoleApiContext) != undefined && props.disableSignin !== true;
 
   // We use playerId to detect when a player changes for RemountOnValueChange below
   // see comment below above the RemountOnValueChange component
@@ -540,21 +542,21 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
         title: currentUser != undefined ? `Signed in as ${currentUser.email}` : "Account",
         component: AccountSettings,
       });
-
-      bottomItems.set("preferences", {
-        iconName: "Settings",
-        title: "Preferences",
-        component: Preferences,
-      });
     }
+
+    bottomItems.set("preferences", {
+      iconName: "Settings",
+      title: "Preferences",
+      component: Preferences,
+    });
 
     return [topItems, bottomItems];
   }, [
     DataSourceSidebarItem,
     playerProblems,
+    enableStudioLogsSidebar,
     supportsAccountSettings,
     currentUser,
-    enableStudioLogsSidebar,
   ]);
 
   const keyDownHandlers = useMemo(
