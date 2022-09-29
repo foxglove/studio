@@ -91,10 +91,15 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
       },
     },
     MuiFab: {
+      defaultProps: {
+        color: "inherit",
+      },
       styleOverrides: {
         root: {
-          backgroundColor: theme.palette.background.paper,
           boxShadow: theme.shadows[2],
+        },
+        colorInherit: {
+          backgroundColor: theme.palette.background.paper,
         },
       },
     },

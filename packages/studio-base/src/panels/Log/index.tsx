@@ -56,8 +56,9 @@ const SUPPORTED_DATATYPES = [
 const useStyles = makeStyles()((theme) => ({
   floatingButton: {
     position: "absolute",
-    bottom: theme.spacing(1),
-    right: theme.spacing(1.5),
+    bottom: 0,
+    right: 0,
+    margin: theme.spacing(1.5),
   },
 }));
 
@@ -199,6 +200,7 @@ const LogPanel = React.memo(({ config, saveConfig }: Props) => {
           direction="column-reverse"
           data-testid="log-messages-list"
         >
+          {/* items property wants a mutable array but filteredMessages is readonly */}
           <List
             componentRef={listRef}
             items={filteredMessages as ArrayElementType<typeof filteredMessages>[]}
