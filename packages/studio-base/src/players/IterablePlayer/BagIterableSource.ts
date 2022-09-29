@@ -195,7 +195,7 @@ export class BagIterableSource implements IIterableSource {
 
       if (reader) {
         // bagMsgEvent.data is a view on top of the entire chunk. To avoid keeping references for
-        // chunks (which will full up memory space when we cache messages) when make a copy of the
+        // chunks (which will fill up memory space when we cache messages) when make a copy of the
         // data.
         const dataCopy = bagMsgEvent.data.slice();
         const parsedMessage = reader.readMessage(dataCopy);
