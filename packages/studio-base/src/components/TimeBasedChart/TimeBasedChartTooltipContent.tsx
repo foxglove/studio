@@ -34,11 +34,11 @@ const useStyles = makeStyles()((theme) => ({
     overflowWrap: "break-word",
   },
   overflow: {
-    color: theme.palette.text.disabled,
+    opacity: theme.palette.action.disabledOpacity,
     fontStyle: "italic",
   },
   path: {
-    color: theme.palette.text.secondary,
+    opacity: 0.6,
     whiteSpace: "nowrap",
   },
 }));
