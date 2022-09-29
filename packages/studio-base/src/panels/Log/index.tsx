@@ -11,6 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { List, IList } from "@fluentui/react/lib/List";
 import DoubleArrowDownIcon from "@mui/icons-material/KeyboardDoubleArrowDown";
 import { Fab } from "@mui/material";
 import produce from "immer";
@@ -34,6 +35,8 @@ import filterMessages from "./filterMessages";
 import helpContent from "./index.help.md";
 import { buildSettingsTree } from "./settings";
 import { Config, LogMessageEvent } from "./types";
+
+type ArrayElementType<T extends readonly unknown[]> = T extends readonly (infer E)[] ? E : never;
 
 type Props = {
   config: Config;
@@ -145,6 +148,8 @@ const LogPanel = React.memo(({ config, saveConfig }: Props) => {
     [msgEvents, minLogLevel, searchTerms, topicDatatype],
   );
 
+  const listRef = useRef<IList>(ReactNull);
+
   const [hasUserScrolled, setHasUserScrolled] = useState(false);
   const divRef = useRef<HTMLDivElement>(ReactNull);
 
@@ -158,26 +163,6 @@ const LogPanel = React.memo(({ config, saveConfig }: Props) => {
     // With column-reverse flex direction, 0 scroll top is the bottom (latest) message
     div.scrollTop = 0;
   }, []);
-
-  const renderMessage = useCallback(
-    (message: LogMessageEvent, index: number) => {
-      const datatype = datatypeByTopic.get(message.topic);
-      if (!datatype) {
-        return;
-      }
-
-      const normalizedLog = normalizedLogMessage(datatype, message["message"]);
-      return (
-        <LogMessage
-          key={index}
-          value={normalizedLog}
-          timestampFormat={timeFormat}
-          timeZone={timeZone}
-        />
-      );
-    },
-    [datatypeByTopic, timeFormat, timeZone],
-  );
 
   useLayoutEffect(() => {
     const div = divRef.current;
@@ -214,7 +199,29 @@ const LogPanel = React.memo(({ config, saveConfig }: Props) => {
           direction="column-reverse"
           data-testid="log-messages-list"
         >
-          {filteredMessages.map((msg, index) => renderMessage(msg, index))}
+          <List
+            componentRef={listRef}
+            items={filteredMessages as ArrayElementType<typeof filteredMessages>[]}
+            onRenderCell={(item) => {
+              if (!item) {
+                return;
+              }
+
+              const datatype = datatypeByTopic.get(item.topic);
+              if (!datatype) {
+                return;
+              }
+
+              const normalizedLog = normalizedLogMessage(datatype, item["message"]);
+              return (
+                <LogMessage
+                  value={normalizedLog}
+                  timestampFormat={timeFormat}
+                  timeZone={timeZone}
+                />
+              );
+            }}
+          />
         </Stack>
       </Stack>
       {hasUserScrolled && (
