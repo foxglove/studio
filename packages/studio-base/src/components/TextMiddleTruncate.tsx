@@ -70,7 +70,7 @@ export default function TextMiddleTruncate({
     </Stack>
   );
   return (
-    <Tooltip title={<>{tooltips}</>} placement="top" open={testShowTooltip}>
+    <Tooltip title={<>{tooltips ?? text}</>} placement="top" open={testShowTooltip}>
       {elem}
     </Tooltip>
   );
