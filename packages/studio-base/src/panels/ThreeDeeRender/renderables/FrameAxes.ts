@@ -457,7 +457,7 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
     renderable.add(parentLine);
 
     this.add(renderable);
-    this.renderables.set(frameId, renderable);
+    this.renderables.set(frameKey, renderable);
 
     this._updateFrameAxis(renderable);
   }
