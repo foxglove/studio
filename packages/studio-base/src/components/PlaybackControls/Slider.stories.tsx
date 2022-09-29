@@ -43,7 +43,7 @@ export default {
 
 export const Examples: Story = () => {
   const [value, setValue] = useState(0.5);
-  const [draggableValue, setDraggableValue] = useState(25);
+  const [draggableValue, setDraggableValue] = useState(0.25);
   return (
     <Box padding={4}>
       <p>standard (clickable)</p>
@@ -73,7 +73,7 @@ export const Examples: Story = () => {
 
 export const CustomRenderer: Story = () => {
   const { classes } = useStyles();
-  const [draggableValue, setDraggableValue] = useState(25);
+  const [draggableValue, setDraggableValue] = useState(0.25);
 
   return (
     <Box padding={4}>
