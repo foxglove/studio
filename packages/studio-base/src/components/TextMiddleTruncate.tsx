@@ -11,26 +11,21 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { Tooltip } from "@mui/material";
 import { makeStyles } from "tss-react/mui";
 
-import Tooltip from "@foxglove/studio-base/components/Tooltip";
+import Stack from "@foxglove/studio-base/components/Stack";
 
-export const DEFAULT_END_TEXT_LENGTH = 16;
+const DEFAULT_END_TEXT_LENGTH = 16;
 
 const useStyles = makeStyles()(() => ({
-  STextMiddleTruncate: {
-    display: "flex",
-    flexDirection: "row",
-    flexWrap: "nowrap",
-    justifyContent: "flex-start",
-  },
-  SStart: {
+  start: {
     overflow: "hidden",
     textOverflow: "ellipsis",
     whiteSpace: "nowrap",
     flexShrink: 1,
   },
-  SEnd: {
+  end: {
     whiteSpace: "nowrap",
     flexBasis: "content",
     flexGrow: 0,
@@ -45,9 +40,6 @@ type Props = {
   tooltips?: React.ReactNode[];
   text: string;
   endTextLength?: number;
-  style?: {
-    [attr: string]: string | number;
-  };
   testShowTooltip?: boolean;
 };
 
@@ -55,8 +47,8 @@ export default function TextMiddleTruncate({
   tooltips,
   text,
   endTextLength,
-  style,
   testShowTooltip,
+  ...rest
 }: Props): React.ReactElement {
   const { classes } = useStyles();
   const startTextLen = Math.max(
@@ -68,13 +60,13 @@ export default function TextMiddleTruncate({
   const endText = text.substring(startTextLen);
 
   const elem = (
-    <div className={classes.STextMiddleTruncate} style={style}>
-      <div className={classes.SStart}>{startText}</div>
-      <div className={classes.SEnd}>{endText}</div>
-    </div>
+    <Stack direction="row" justifyContent="flex-start" {...rest}>
+      <div className={classes.start}>{startText}</div>
+      <div className={classes.end}>{endText}</div>
+    </Stack>
   );
   return (
-    <Tooltip contents={tooltips} placement="top" shown={testShowTooltip}>
+    <Tooltip title={<>{tooltips}</>} placement="top" open={testShowTooltip}>
       {elem}
     </Tooltip>
   );
