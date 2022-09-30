@@ -41,8 +41,8 @@ class FoxgloveDataPlatformDataSourceFactory implements IDataSourceFactory {
       api: args.consoleApi,
       deviceId,
       importId,
-      ...(startTime && { start: startTime }),
-      ...(endTime && { end: endTime }),
+      start: startTime,
+      end: endTime,
     });
     return new IterablePlayer({
       metricsCollector: args.metricsCollector,
