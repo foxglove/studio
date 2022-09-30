@@ -77,7 +77,7 @@ function TopicRow({ topic }: { topic: Topic }): JSX.Element {
           edge="end"
           size="small"
           iconSize="small"
-          copyText={() => topic.name}
+          getText={() => topic.name}
         />
       </td>
       <td>
@@ -87,7 +87,7 @@ function TopicRow({ topic }: { topic: Topic }): JSX.Element {
           edge="end"
           size="small"
           iconSize="small"
-          copyText={() => topic.datatype}
+          getText={() => topic.datatype}
         />
       </td>
       <td data-topic={topic.name} data-topic-stat="count">

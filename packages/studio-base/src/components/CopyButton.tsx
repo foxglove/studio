@@ -19,7 +19,7 @@ import clipboard from "@foxglove/studio-base/util/clipboard";
 
 export default function CopyButton(
   props: PropsWithChildren<{
-    copyText: () => string;
+    getText: () => string;
     size?: "small" | "medium" | "large";
     iconSize?: SvgIconProps["fontSize"];
     color?: ButtonProps["color"] | IconButtonProps["color"];
@@ -34,19 +34,19 @@ export default function CopyButton(
     edge,
     size = "medium",
     iconSize = "medium",
-    copyText,
+    getText,
   } = props;
   const [copied, setCopied] = useState(false);
 
   const handleCopy = useCallback(() => {
     clipboard
-      .copy(copyText())
+      .copy(getText())
       .then(() => {
         setCopied(true);
         setTimeout(() => setCopied(false), 1500);
       })
       .catch((err) => console.warn(err));
-  }, [copyText]);
+  }, [getText]);
 
   if (children == undefined) {
     return (
