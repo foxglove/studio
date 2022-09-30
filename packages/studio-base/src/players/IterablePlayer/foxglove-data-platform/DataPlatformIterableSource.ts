@@ -62,8 +62,8 @@ export class DataPlatformIterableSource implements IIterableSource {
 
   private _start: Time | undefined;
   private _end: Time | undefined;
-  private _deviceId: string | undefined;
-  private _importId: string | undefined;
+  private readonly _deviceId: string | undefined;
+  private readonly _importId: string | undefined;
   private _knownTopicNames: string[] = [];
 
   /**
@@ -226,17 +226,24 @@ export class DataPlatformIterableSource implements IIterableSource {
       return;
     }
 
+    if (!this._start || !this._end || (!deviceId && !importId)) {
+      log.debug("source needs to be initialized");
+      return;
+    }
+
     const streamStart = args.start ?? this._start;
-    const streamEnd =
-      this._end && this._start
-        ? clampTime(args.end ?? this._end, this._start, this._end)
-        : args.end ?? this._end;
+    const streamEnd = clampTime(args.end ?? this._end, this._start, this._end);
 
     if (args.consumptionType === "full") {
       const stream = streamMessages({
         api,
         parsedChannelsByTopic,
-        params: { deviceId, importId, start: streamStart, end: streamEnd, topics: args.topics },
+        params: {
+          ...(deviceId ? { deviceId } : { importId: importId! }),
+          start: streamStart,
+          end: streamEnd,
+          topics: args.topics,
+        },
       });
 
       for await (const messages of stream) {
@@ -249,16 +256,17 @@ export class DataPlatformIterableSource implements IIterableSource {
     }
 
     let localStart = streamStart;
-    let localEnd =
-      localStart && streamStart && streamEnd
-        ? clampTime(addTime(localStart, { sec: 5, nsec: 0 }), streamStart, streamEnd)
-        : undefined;
-
+    let localEnd = clampTime(addTime(localStart, { sec: 5, nsec: 0 }), streamStart, streamEnd);
     for (;;) {
       const stream = streamMessages({
         api,
         parsedChannelsByTopic,
-        params: { deviceId, importId, start: localStart, end: localEnd, topics: args.topics },
+        params: {
+          ...(deviceId ? { deviceId } : { importId: importId! }),
+          start: localStart,
+          end: localEnd,
+          topics: args.topics,
+        },
       });
 
       for await (const messages of stream) {
@@ -267,7 +275,7 @@ export class DataPlatformIterableSource implements IIterableSource {
         }
       }
 
-      if (!localEnd || !streamEnd || compare(localEnd, streamEnd) >= 0) {
+      if (compare(localEnd, streamEnd) >= 0) {
         return;
       }
 
@@ -296,11 +304,8 @@ export class DataPlatformIterableSource implements IIterableSource {
         }
       }
 
-      localStart = streamStart ? clampTime(localStart, streamStart, streamEnd) : undefined;
-      localEnd =
-        localStart && streamStart
-          ? clampTime(addTime(localStart, { sec: 5, nsec: 0 }), streamStart, streamEnd)
-          : undefined;
+      localStart = clampTime(localStart, streamStart, streamEnd);
+      localEnd = clampTime(addTime(localStart, { sec: 5, nsec: 0 }), streamStart, streamEnd);
     }
   }
 
@@ -315,14 +320,18 @@ export class DataPlatformIterableSource implements IIterableSource {
       return [];
     }
 
+    if (!this._deviceId && !this._importId) {
+      log.debug("source needs to be initialized");
+      return [];
+    }
+
     const messages: MessageEvent<unknown>[] = [];
     for await (const block of streamMessages({
       api: this._consoleApi,
       parsedChannelsByTopic: this._parsedChannelsByTopic,
       signal: abortSignal,
       params: {
-        deviceId: this._deviceId,
-        importId: this._importId,
+        ...(this._deviceId ? { deviceId: this._deviceId } : { importId: this._importId! }),
         start: time,
         end: time,
         topics,

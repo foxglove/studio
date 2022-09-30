@@ -49,11 +49,10 @@ export async function* streamMessages({
   signal?: AbortSignal;
 
   /** Parameters indicating the time range to stream. */
-  params: {
-    importId?: string;
-    deviceId?: string;
-    start?: Time;
-    end?: Time;
+  params: (
+    | { importId: string; deviceId?: string; start?: Time; end?: Time }
+    | { importId?: string; deviceId: string; start: Time; end: Time }
+  ) & {
     topics: readonly string[];
     replayPolicy?: "lastPerChannel" | "";
     replayLookbackSeconds?: number;
