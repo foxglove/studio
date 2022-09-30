@@ -106,7 +106,7 @@ export default function Scrubber(props: Props): JSX.Element {
         return;
       }
       const duration = toSec(subtractTimes(latestEndTime.current, latestStartTime.current));
-      const timeFromStart = fromSec(fraction * duration); //subtractTimes(stamp, latestStartTime.current);
+      const timeFromStart = fromSec(fraction * duration);
       setHoverStamp(addTimes(latestStartTime.current, timeFromStart));
       setHoverValue({
         componentId: hoverComponentId,
