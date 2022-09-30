@@ -291,7 +291,7 @@ function verifyPanels(panels: readonly PanelInfo[]) {
   }
 }
 
-function PanelList(props: Props): JSX.Element {
+const PanelList = React.forwardRef<HTMLDivElement, Props>((props: Props, ref) => {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [highlightedPanelIdx, setHighlightedPanelIdx] = React.useState<number | undefined>();
   const { mode, onPanelSelect, selectedPanelType } = props;
@@ -465,7 +465,7 @@ function PanelList(props: Props): JSX.Element {
   );
 
   return (
-    <div className={classes.fullHeight}>
+    <div className={classes.fullHeight} ref={ref}>
       <div className={classes.toolbar}>
         <TextField
           fullWidth
@@ -503,6 +503,7 @@ function PanelList(props: Props): JSX.Element {
       )}
     </div>
   );
-}
+});
+PanelList.displayName = "Panel List";
 
 export default PanelList;
