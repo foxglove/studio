@@ -67,6 +67,8 @@ export default function ShareJsonModal({
     downloadTextFile(value, "layout.json");
   }, [value]);
 
+  const copyText = useCallback(() => value, [value]);
+
   return (
     <Dialog open onClose={onRequestClose} maxWidth="sm" fullWidth>
       <Stack
@@ -94,7 +96,7 @@ export default function ShareJsonModal({
           fullWidth
           multiline
           rows={10}
-          value={value}
+          value={() => value}
           onChange={(event) => setValue(event.target.value)}
           autoFocus
           error={error != undefined}
@@ -110,7 +112,7 @@ export default function ShareJsonModal({
           <IconButton onClick={handleDownload} title="Download" aria-label="Download">
             <FileDownloadIcon />
           </IconButton>
-          <CopyButton color="default" value={value} />
+          <CopyButton color="default" copyText={copyText} />
           <HoverableIconButton
             activeColor="error"
             onClick={() => setValue("{}")}
