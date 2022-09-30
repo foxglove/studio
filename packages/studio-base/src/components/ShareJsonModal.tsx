@@ -96,7 +96,7 @@ export default function ShareJsonModal({
           fullWidth
           multiline
           rows={10}
-          value={() => value}
+          value={value}
           onChange={(event) => setValue(event.target.value)}
           autoFocus
           error={error != undefined}
