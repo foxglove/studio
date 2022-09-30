@@ -395,6 +395,11 @@ function PanelList(props: Props): JSX.Element {
 
   const onKeyDown = React.useCallback(
     (e: React.KeyboardEvent) => {
+      // Prevent key down events from triggering the parent menu, if any.
+      if (e.key !== "Escape") {
+        e.stopPropagation();
+      }
+
       if (mode === "grid") {
         return;
       }
