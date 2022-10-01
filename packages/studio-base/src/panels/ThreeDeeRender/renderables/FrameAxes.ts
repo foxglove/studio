@@ -77,6 +77,7 @@ const tempLower: [Duration, Transform] = [0n, Transform.Identity()];
 const tempUpper: [Duration, Transform] = [0n, Transform.Identity()];
 const tempQuaternion = new THREE.Quaternion();
 const tempEuler = new THREE.Euler();
+const tempTfPath: [string, string] = ["transforms", ""];
 
 export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
   private static lineGeometry: LineGeometry | undefined;
@@ -178,12 +179,14 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
       const tfConfig = (configTransforms[frameKey] ?? {}) as Partial<LayerSettingsTransform>;
       const frame = this.renderer.transformTree.frame(frameId);
       const fields = buildSettingsFields(frame, this.renderer.currentTime, config);
+      tempTfPath[1] = frameKey;
       children[frameKey] = {
         label,
         fields,
         visible: tfConfig.visible ?? true,
         order: order++,
         defaultExpansionState: "collapsed",
+        error: this.renderer.settings.errors.errors.errorAtPath(tempTfPath),
       };
     }
 
