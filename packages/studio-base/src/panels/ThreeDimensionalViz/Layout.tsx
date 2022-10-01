@@ -901,7 +901,7 @@ export default function Layout({
         </DialogActions>
       </Dialog>
     ),
-    [latestConfig, latestTransforms, panelContext, setClosedBanner, showUpgradeConfirmDialog],
+    [latestConfig, latestTransforms, panelContext, showUpgradeConfirmDialog],
   );
 
   return (
