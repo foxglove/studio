@@ -508,6 +508,7 @@ function buildSettingsFields(
     return { parent: { label: "Parent", input: "string", readonly: true, value: "<root>" } };
   }
 
+  const historySizeValue = String(frame?.transformsSize() ?? 0);
   let ageValue: string | undefined;
   let xyzValue: THREE.Vector3Tuple | undefined;
   let rpyValue: THREE.Vector3Tuple | undefined;
@@ -542,6 +543,12 @@ function buildSettingsFields(
       input: "string",
       readonly: true,
       value: ageValue,
+    },
+    historySize: {
+      label: "History size",
+      input: "string",
+      readonly: true,
+      value: historySizeValue,
     },
     xyz: {
       label: "Translation",
