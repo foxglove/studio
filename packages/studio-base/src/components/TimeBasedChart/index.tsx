@@ -80,6 +80,9 @@ const useStyles = makeStyles()((theme) => ({
     justifyContent: "start",
     padding: theme.spacing(4, 0, 1, 0),
   },
+  tooltip: {
+    maxWidth: "none",
+  },
   bar: {
     position: "absolute",
     top: 0,
@@ -828,58 +831,53 @@ export default function TimeBasedChart(props: Props): JSX.Element {
   return (
     <Stack direction="row" fullWidth>
       <Tooltip
+        arrow={false}
+        classes={{ tooltip: classes.tooltip }}
         open={activeTooltip != undefined}
         placement="right"
         title={tooltipContent ?? <></>}
         disableInteractive
+        followCursor
         TransitionComponent={Fade}
         TransitionProps={{ timeout: 0 }}
-        PopperProps={{
-          anchorEl: {
-            getBoundingClientRect: () => {
-              return new DOMRect(activeTooltip?.x ?? 0, activeTooltip?.y ?? 0, 0, 0);
-            },
-          },
-        }}
       >
-        <div />
-      </Tooltip>
-      <Stack direction="row" style={{ width }}>
-        <div className={classes.root} onDoubleClick={onResetZoom}>
-          <HoverBar
-            componentId={componentId}
-            isTimestampScale={xAxisIsPlaybackTime}
-            scales={currentScalesRef.current}
-          >
-            <div
-              className={classes.bar}
-              ref={hoverBar}
-              style={{
-                backgroundColor: xAxisIsPlaybackTime
-                  ? theme.palette.warning.main
-                  : theme.palette.info.main,
-              }}
-            />
-          </HoverBar>
-
-          <div ref={canvasContainer} onMouseMove={onMouseMove} onMouseOut={onMouseOut}>
-            <ChartComponent {...chartProps} />
-          </div>
-
-          {showReset && (
-            <Button
-              className={classes.resetZoomButton}
-              variant="contained"
-              color="inherit"
-              title="(shortcut: double-click)"
-              onClick={onResetZoom}
+        <Stack direction="row" style={{ width }}>
+          <div className={classes.root} onDoubleClick={onResetZoom}>
+            <HoverBar
+              componentId={componentId}
+              isTimestampScale={xAxisIsPlaybackTime}
+              scales={currentScalesRef.current}
             >
-              Reset view
-            </Button>
-          )}
-          <KeyListener global keyDownHandlers={keyDownHandlers} keyUpHandlers={keyUphandlers} />
-        </div>
-      </Stack>
+              <div
+                className={classes.bar}
+                ref={hoverBar}
+                style={{
+                  backgroundColor: xAxisIsPlaybackTime
+                    ? theme.palette.warning.main
+                    : theme.palette.info.main,
+                }}
+              />
+            </HoverBar>
+
+            <div ref={canvasContainer} onMouseMove={onMouseMove} onMouseOut={onMouseOut}>
+              <ChartComponent {...chartProps} />
+            </div>
+
+            {showReset && (
+              <Button
+                className={classes.resetZoomButton}
+                variant="contained"
+                color="inherit"
+                title="(shortcut: double-click)"
+                onClick={onResetZoom}
+              >
+                Reset view
+              </Button>
+            )}
+            <KeyListener global keyDownHandlers={keyDownHandlers} keyUpHandlers={keyUphandlers} />
+          </div>
+        </Stack>
+      </Tooltip>
       {drawLegend === true && (
         <div className={classes.legend}>
           <TimeBasedChartLegend
