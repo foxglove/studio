@@ -26,6 +26,7 @@ import { now } from "./time";
 
 const log = Log.getLogger(__filename);
 
+const TRANSFORMS_PER_TICK = 50;
 const CAPABILITIES: string[] = [];
 
 class TransformPlayer implements Player {
@@ -101,28 +102,14 @@ class TransformPlayer implements Player {
     topics.push({ name: "tf", datatype: "foxglove.FrameTransform" });
 
     let numMessages = 0;
-    let initializing = true;
-    let startTime = rostime.fromSec(0);
+    let startTime: Time | undefined;
     for (;;) {
       const topicStats = new Map<string, TopicStats>();
       const messages: MessageEvent<FrameTransform>[] = [];
       const timestamp = now();
 
-      if (initializing) {
-        initializing = false;
+      if (!startTime) {
         startTime = timestamp;
-        messages.push({
-          receiveTime: timestamp,
-          topic: "tf",
-          message: {
-            timestamp,
-            parent_frame_id: "odom",
-            child_frame_id: "base_link",
-            translation: { x: 1, y: 0, z: 1 },
-            rotation: { x: 0, y: 0, z: 0, w: 1 },
-          },
-          sizeInBytes: 86 + "odom".length + "base_link".length,
-        });
       }
 
       messages.push({
@@ -130,13 +117,29 @@ class TransformPlayer implements Player {
         topic: "tf",
         message: {
           timestamp,
-          parent_frame_id: "map",
-          child_frame_id: "odom",
-          translation: { x: 2, y: 0, z: 1 },
-          rotation: currentRotation(timestamp),
+          parent_frame_id: "odom",
+          child_frame_id: "base_link",
+          translation: { x: 1, y: 0, z: 1 },
+          rotation: { x: 0, y: 0, z: 0, w: 1 },
         },
-        sizeInBytes: 86 + "map".length + "odom".length,
+        sizeInBytes: 86 + "odom".length + "base_link".length,
       });
+
+      for (let i = 0; i < TRANSFORMS_PER_TICK; i++) {
+        const curTimestamp = rostime.subtract(timestamp, { sec: 0, nsec: TRANSFORMS_PER_TICK - i });
+        messages.push({
+          receiveTime: timestamp,
+          topic: "tf",
+          message: {
+            timestamp: curTimestamp,
+            parent_frame_id: "map",
+            child_frame_id: "odom",
+            translation: { x: 2, y: 0, z: 1 },
+            rotation: currentRotation(timestamp),
+          },
+          sizeInBytes: 86 + "map".length + "odom".length,
+        });
+      }
 
       numMessages += messages.length;
 
