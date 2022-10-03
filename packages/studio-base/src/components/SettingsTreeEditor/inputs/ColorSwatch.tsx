@@ -7,7 +7,9 @@ import tinycolor from "tinycolor2";
 
 function calculateBorderColor(theme: Theme, color: string): string {
   const parsedColor = tinycolor(color);
-  return parsedColor.isValid() ? theme.palette.getContrastText(parsedColor.toHexString()) : color;
+  return parsedColor.isValid()
+    ? theme.palette.getContrastText(parsedColor.toHexString())
+    : theme.palette.text.primary;
 }
 
 export const ColorSwatch = muiStyled("div", {
