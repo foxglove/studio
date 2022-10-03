@@ -71,7 +71,7 @@ export class RenderableTriangles extends RenderablePrimitive {
         : undefined;
 
       if (!singleColor && !geometry.attributes.color) {
-        geometry.createAttribute("color", Uint8Array, 4);
+        geometry.createAttribute("color", Uint8Array, 4, true);
       }
       const colors = geometry.attributes.color;
 
@@ -86,10 +86,10 @@ export class RenderableTriangles extends RenderablePrimitive {
 
         if (!singleColor && colors && primitive.colors.length > 0) {
           const color = primitive.colors[i]!;
-          const r = SRGBToLinear(color.r);
-          const g = SRGBToLinear(color.g);
-          const b = SRGBToLinear(color.b);
-          const a = color.a;
+          const r = (SRGBToLinear(color.r) * 255) | 0;
+          const g = (SRGBToLinear(color.g) * 255) | 0;
+          const b = (SRGBToLinear(color.b) * 255) | 0;
+          const a = (color.a * 255) | 0;
           colorChanged =
             colorChanged ||
             colors.getX(i) !== r ||
