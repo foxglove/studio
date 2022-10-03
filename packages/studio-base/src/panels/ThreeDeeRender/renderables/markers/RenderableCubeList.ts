@@ -12,10 +12,15 @@ import { RenderableMarker } from "./RenderableMarker";
 import { markerHasTransparency, makeStandardInstancedMaterial } from "./materials";
 
 export class RenderableCubeList extends RenderableMarker {
-  mesh: DynamicInstancedMesh<THREE.BoxGeometry, THREE.MeshStandardMaterial>;
+  private mesh: DynamicInstancedMesh<THREE.BoxGeometry, THREE.MeshStandardMaterial>;
   // outline: THREE.LineSegments | undefined;
 
-  constructor(topic: string, marker: Marker, receiveTime: bigint | undefined, renderer: Renderer) {
+  public constructor(
+    topic: string,
+    marker: Marker,
+    receiveTime: bigint | undefined,
+    renderer: Renderer,
+  ) {
     super(topic, marker, receiveTime, renderer);
 
     // Cube instanced mesh
@@ -25,25 +30,17 @@ export class RenderableCubeList extends RenderableMarker {
     this.mesh.receiveShadow = true;
     this.add(this.mesh);
 
-    // TODO(jhurliman): Instanced cube outlines
-    // Cube outlines
-    // this.outline = new THREE.LineSegments(
-    //   RenderableCubeList.edgesGeometry(),
-    //   materialCache.outlineMaterial,
-    // );
-    // this.outline.userData.picking = false;
-    // this.add(this.outline);
-
     this.update(marker, receiveTime);
   }
 
-  override dispose(): void {
+  public override dispose(): void {
     this.mesh.material.dispose();
   }
 
-  override update(marker: Marker, receiveTime: bigint | undefined): void {
+  public override update(newMarker: Marker, receiveTime: bigint | undefined): void {
     const prevMarker = this.userData.marker;
-    super.update(marker, receiveTime);
+    super.update(newMarker, receiveTime);
+    const marker = this.userData.marker;
 
     const transparent = markerHasTransparency(marker);
     if (transparent !== markerHasTransparency(prevMarker)) {

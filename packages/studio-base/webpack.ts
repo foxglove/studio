@@ -9,8 +9,11 @@ import MonacoWebpackPlugin from "monaco-editor-webpack-plugin";
 import monacoPkg from "monaco-editor/package.json";
 import path from "path";
 import ReactRefreshTypescript from "react-refresh-typescript";
+import ts from "typescript";
 import createStyledComponentsTransformer from "typescript-plugin-styled-components";
 import webpack, { Configuration, WebpackPluginInstance } from "webpack";
+
+import { createTssReactNameTransformer } from "@foxglove/typescript-transformers";
 
 import { WebpackArgv } from "./WebpackArgv";
 import packageJson from "./package.json";
@@ -19,7 +22,7 @@ if (monacoPkg.version !== "0.30.1") {
   throw new Error(`
     It looks like you are trying to change the version of Monaco.
 
-    Please make a node playground node and confirm that loading a data source properly updates
+    Please make a User Script and confirm that loading a data source properly updates
     the "ros" library and that Input and Message interfaces are usable:
       - Messages. should autocomplete
       - Input<""> should autocomplete
@@ -116,19 +119,23 @@ export function makeConfig(
                 onlyCompileBundledFiles: true,
                 projectReferences: true,
                 configFile: path.resolve(__dirname, isDev ? "tsconfig.dev.json" : "tsconfig.json"),
-                getCustomTransformers: () => ({
+                compilerOptions: {
+                  sourceMap: true,
+                },
+                getCustomTransformers: (program: ts.Program) => ({
                   before: [
                     styledComponentsTransformer,
                     // only include refresh plugin when using webpack server
-                    ...(isServe ? [ReactRefreshTypescript()] : []),
-                  ],
+                    isServe && ReactRefreshTypescript(),
+                    isDev && createTssReactNameTransformer(program),
+                  ].filter(Boolean),
                 }),
               },
             },
           ],
         },
         {
-          // "?raw" imports are used to load stringified typescript in Node Playground
+          // "?raw" imports are used to load stringified typescript in User Scripts
           // https://webpack.js.org/guides/asset-modules/#replacing-inline-loader-syntax
           resourceQuery: /raw/,
           type: "asset/source",
@@ -229,6 +236,8 @@ export function makeConfig(
         new ESBuildMinifyPlugin({
           target: "es2020",
           minifyIdentifiers: false, // readable error stack traces are helpful for debugging
+          minifySyntax: true,
+          minifyWhitespace: true,
         }),
       ],
     },

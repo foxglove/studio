@@ -32,12 +32,13 @@ export default function TextHighlight({ targetStr = "", searchText = "" }: Props
   if (searchText.length === 0) {
     return <>{targetStr}</>;
   }
-  const result = fuzzySort.highlight(
-    fuzzySort.single(searchText, targetStr) ?? undefined,
-    "<span class='TextHighlight-highlight'>",
-    "</span>",
-  );
-  // TODO(Audrey): compute highlighted parts separately in order to avoid dangerouslySetInnerHTML
+
+  const match = fuzzySort.single(searchText, targetStr);
+
+  const result = match
+    ? fuzzySort.highlight(match, "<span class='TextHighlight-highlight'>", "</span>")
+    : undefined;
+
   return (
     <STextHighlight>
       {result != undefined && result.length > 0 ? (

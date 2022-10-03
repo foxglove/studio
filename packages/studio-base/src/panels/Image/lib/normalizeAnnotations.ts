@@ -4,31 +4,35 @@
 
 import { filterMap } from "@foxglove/den/collection";
 import { fromNanoSec } from "@foxglove/rostime";
-import { FoxgloveMessages } from "@foxglove/studio-base/types/FoxgloveMessages";
+import { ImageAnnotations, PointsAnnotationType } from "@foxglove/schemas";
 import {
   ImageMarker,
   ImageMarkerArray,
   ImageMarkerType,
 } from "@foxglove/studio-base/types/Messages";
+import { mightActuallyBePartial } from "@foxglove/studio-base/util/mightActuallyBePartial";
 
 import type { Annotation, PointsAnnotation } from "../types";
 
-function foxglovePointTypeToStyle(type: number): PointsAnnotation["style"] | undefined {
+function foxglovePointTypeToStyle(
+  type: PointsAnnotationType,
+): PointsAnnotation["style"] | undefined {
   switch (type) {
-    case 0:
+    case PointsAnnotationType.UNKNOWN:
+    case PointsAnnotationType.POINTS:
       return "points";
-    case 1:
+    case PointsAnnotationType.LINE_LOOP:
       return "polygon";
-    case 2:
+    case PointsAnnotationType.LINE_STRIP:
       return "line_strip";
-    case 3:
+    case PointsAnnotationType.LINE_LIST:
       return "line_list";
   }
   return undefined;
 }
 
 function normalizeFoxgloveImageAnnotations(
-  message: FoxgloveMessages["foxglove.ImageAnnotations"],
+  message: Partial<ImageAnnotations>,
 ): Annotation[] | undefined {
   if (!message.circles && !message.points) {
     return undefined;
@@ -66,8 +70,8 @@ function normalizeFoxgloveImageAnnotations(
       style,
       points: point.points,
       outlineColors: point.outline_colors,
-      outlineColor: point.outline_color,
-      thickness: point.thickness,
+      outlineColor: mightActuallyBePartial(point).outline_color ?? { r: 1, g: 1, b: 1, a: 1 },
+      thickness: mightActuallyBePartial(point).thickness ?? 1,
       fillColor: point.fill_color,
     });
   }
@@ -192,9 +196,7 @@ function normalizeAnnotations(
     case "foxglove_msgs/ImageAnnotations":
     case "foxglove_msgs/msg/ImageAnnotations":
     case "foxglove.ImageAnnotations": {
-      return normalizeFoxgloveImageAnnotations(
-        message as FoxgloveMessages["foxglove.ImageAnnotations"],
-      );
+      return normalizeFoxgloveImageAnnotations(message as ImageAnnotations);
     }
   }
 

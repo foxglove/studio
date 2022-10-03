@@ -40,6 +40,7 @@ const DropTarget = muiStyled("div", {
 }>(({ isOver, theme }) => ({
   width: "100%",
   height: "100%",
+  minHeight: 0,
 
   ...(isOver && {
     "&:after": {
@@ -78,16 +79,12 @@ export const EmptyPanelLayout = ({ tabId }: Props): JSX.Element => {
   );
 
   return (
-    <DropTarget isOver={isOver} ref={drop} data-test="empty-drop-target">
+    <DropTarget isOver={isOver} ref={drop} data-testid="empty-drop-target">
       <Root>
         <Stack paddingBottom={2}>
           <Typography variant="body2" paddingX={2} paddingTop={2}>
             Select a panel below to add it to your layout.{" "}
-            <Link
-              color="primary"
-              target="_blank"
-              href="https://foxglove.dev/docs/app-concepts/layouts"
-            >
+            <Link color="primary" target="_blank" href="https://foxglove.dev/docs/studio/layouts">
               Learn more
             </Link>
           </Typography>

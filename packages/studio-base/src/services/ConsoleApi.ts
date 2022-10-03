@@ -4,6 +4,8 @@
 
 import * as base64 from "@protobufjs/base64";
 
+import { add, fromNanoSec, Time, toSec } from "@foxglove/rostime";
+
 type User = {
   id: string;
   email: string;
@@ -49,6 +51,22 @@ type ExtensionResponse = {
   sha256Sum?: string;
 };
 
+export type ConsoleEvent = {
+  id: string;
+  createdAt: string;
+  deviceId: string;
+  durationNanos: string;
+  endTime: Time;
+  endTimeInSeconds: number;
+  metadata: Record<string, string>;
+  startTime: Time;
+  startTimeInSeconds: number;
+  timestampNanos: string;
+  updatedAt: string;
+};
+
+type EventsResponse = ConsoleEvent[];
+
 type TokenArgs = {
   deviceCode: string;
   clientId: string;
@@ -75,6 +93,11 @@ type CoverageResponse = {
   end: string;
 };
 
+type DeviceResponse = {
+  id: string;
+  name: string;
+};
+
 export type LayoutID = string & { __brand: "LayoutID" };
 export type ISO8601Timestamp = string & { __brand: "ISO8601Timestamp" };
 
@@ -95,41 +118,41 @@ class ConsoleApi {
   private _authHeader?: string;
   private _responseObserver: undefined | ((response: Response) => void);
 
-  constructor(baseUrl: string) {
+  public constructor(baseUrl: string) {
     this._baseUrl = baseUrl;
   }
 
-  setAuthHeader(header: string): void {
+  public setAuthHeader(header: string): void {
     this._authHeader = header;
   }
 
-  setResponseObserver(observer: undefined | ((response: Response) => void)): void {
+  public setResponseObserver(observer: undefined | ((response: Response) => void)): void {
     this._responseObserver = observer;
   }
 
-  async orgs(): Promise<Org[]> {
+  public async orgs(): Promise<Org[]> {
     return await this.get<Org[]>("/v1/orgs");
   }
 
-  async me(): Promise<User> {
+  public async me(): Promise<User> {
     return await this.get<User>("/v1/me");
   }
 
-  async signin(args: SigninArgs): Promise<Session> {
+  public async signin(args: SigninArgs): Promise<Session> {
     return await this.post<Session>("/v1/signin", args);
   }
 
-  async signout(): Promise<void> {
+  public async signout(): Promise<void> {
     return await this.post<void>("/v1/signout");
   }
 
-  async deviceCode(args: DeviceCodeArgs): Promise<DeviceCodeResponse> {
+  public async deviceCode(args: DeviceCodeArgs): Promise<DeviceCodeResponse> {
     return await this.post<DeviceCodeResponse>("/v1/auth/device-code", {
       clientId: args.clientId,
     });
   }
 
-  async token(args: TokenArgs): Promise<TokenResponse> {
+  public async token(args: TokenArgs): Promise<TokenResponse> {
     return await this.post<TokenResponse>("/v1/auth/token", {
       deviceCode: args.deviceCode,
       clientId: args.clientId,
@@ -145,21 +168,54 @@ class ConsoleApi {
     ).json;
   }
 
-  async getExtensions(): Promise<ExtensionResponse[]> {
+  public async getExtensions(): Promise<ExtensionResponse[]> {
     return await this.get<ExtensionResponse[]>("/v1/extensions");
   }
 
-  async getExtension(id: string): Promise<ExtensionResponse> {
+  public async getExtension(id: string): Promise<ExtensionResponse> {
     return await this.get<ExtensionResponse>(`/v1/extensions/${id}`);
   }
 
-  async getLayouts(options: { includeData: boolean }): Promise<readonly ConsoleApiLayout[]> {
+  public async getDevice(id: string): Promise<DeviceResponse> {
+    return await this.get<DeviceResponse>(`/v1/devices/${id}`);
+  }
+
+  public async createEvent(params: {
+    deviceId: string;
+    timestamp: string;
+    durationNanos: string;
+    metadata: Record<string, string>;
+  }): Promise<ConsoleEvent> {
+    const rawEvent = await this.post<ConsoleEvent>(`/beta/device-events`, params);
+    return rawEvent;
+  }
+
+  public async getEvents(params: {
+    deviceId: string;
+    start: string;
+    end: string;
+  }): Promise<EventsResponse> {
+    const rawEvents = await this.get<EventsResponse>(`/beta/device-events`, params);
+    return rawEvents.map((event) => {
+      const startTime = fromNanoSec(BigInt(event.timestampNanos));
+      const endTime = add(startTime, fromNanoSec(BigInt(event.durationNanos)));
+      return {
+        ...event,
+        endTime,
+        endTimeInSeconds: toSec(endTime),
+        startTime,
+        startTimeInSeconds: toSec(startTime),
+      };
+    });
+  }
+
+  public async getLayouts(options: { includeData: boolean }): Promise<readonly ConsoleApiLayout[]> {
     return await this.get<ConsoleApiLayout[]>("/v1/layouts", {
       includeData: options.includeData ? "true" : "false",
     });
   }
 
-  async getLayout(
+  public async getLayout(
     id: LayoutID,
     options: { includeData: boolean },
   ): Promise<ConsoleApiLayout | undefined> {
@@ -168,7 +224,7 @@ class ConsoleApi {
     });
   }
 
-  async createLayout(layout: {
+  public async createLayout(layout: {
     id: LayoutID | undefined;
     savedAt: ISO8601Timestamp | undefined;
     name: string | undefined;
@@ -178,7 +234,7 @@ class ConsoleApi {
     return await this.post<ConsoleApiLayout>("/v1/layouts", layout);
   }
 
-  async updateLayout(layout: {
+  public async updateLayout(layout: {
     id: LayoutID;
     savedAt: ISO8601Timestamp;
     name: string | undefined;
@@ -196,11 +252,11 @@ class ConsoleApi {
     }
   }
 
-  async deleteLayout(id: LayoutID): Promise<boolean> {
+  public async deleteLayout(id: LayoutID): Promise<boolean> {
     return (await this.delete(`/v1/layouts/${id}`)).status === 200;
   }
 
-  async coverage(params: {
+  public async coverage(params: {
     deviceId: string;
     start: string;
     end: string;
@@ -208,7 +264,7 @@ class ConsoleApi {
     return await this.get<CoverageResponse[]>("/v1/data/coverage", params);
   }
 
-  async topics(params: {
+  public async topics(params: {
     deviceId: string;
     start: string;
     end: string;
@@ -229,7 +285,7 @@ class ConsoleApi {
     });
   }
 
-  async stream(params: {
+  public async stream(params: {
     deviceId: string;
     start: string;
     end: string;
@@ -327,5 +383,5 @@ class ConsoleApi {
   }
 }
 
-export type { Org, DeviceCodeResponse, Session };
+export type { Org, DeviceCodeResponse, Session, CoverageResponse };
 export default ConsoleApi;

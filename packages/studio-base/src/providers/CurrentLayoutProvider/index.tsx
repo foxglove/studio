@@ -2,14 +2,16 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 import { difference, isEqual } from "lodash";
+import { useSnackbar } from "notistack";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getNodeAtPath } from "react-mosaic-component";
-import { useToasts } from "react-toast-notifications";
 import { useAsync, useAsyncFn, useMountedState } from "react-use";
+import shallowequal from "shallowequal";
 import { v4 as uuidv4 } from "uuid";
 
 import { useShallowMemo } from "@foxglove/hooks";
 import Logger from "@foxglove/log";
+import { VariableValue } from "@foxglove/studio";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 import CurrentLayoutContext, {
   ICurrentLayout,
@@ -53,7 +55,7 @@ const SAVE_INTERVAL_MS = 1000;
 export default function CurrentLayoutProvider({
   children,
 }: React.PropsWithChildren<unknown>): JSX.Element {
-  const { addToast } = useToasts();
+  const { enqueueSnackbar } = useSnackbar();
   const { getUserProfile, setUserProfile } = useUserProfileStorage();
   const layoutManager = useLayoutManager();
   const analytics = useAnalytics();
@@ -96,10 +98,12 @@ export default function CurrentLayoutProvider({
   const getSelectedPanelIds = useCallback(() => selectedPanelIds.current, []);
   const setSelectedPanelIds = useCallback(
     (value: readonly string[] | ((prevState: readonly string[]) => readonly string[])): void => {
-      selectedPanelIds.current =
-        typeof value === "function" ? value(selectedPanelIds.current) : value;
-      for (const listener of [...selectedPanelIdsListeners.current]) {
-        listener(selectedPanelIds.current);
+      const newValue = typeof value === "function" ? value(selectedPanelIds.current) : value;
+      if (!shallowequal(newValue, selectedPanelIds.current)) {
+        selectedPanelIds.current = newValue;
+        for (const listener of [...selectedPanelIdsListeners.current]) {
+          listener(selectedPanelIds.current);
+        }
       }
     },
     [],
@@ -133,19 +137,21 @@ export default function CurrentLayoutProvider({
           if (saveToProfile) {
             setUserProfile({ currentLayoutId: id }).catch((error) => {
               console.error(error);
-              addToast(`The current layout could not be saved. ${error.toString()}`, {
-                appearance: "error",
+              enqueueSnackbar(`The current layout could not be saved. ${error.toString()}`, {
+                variant: "error",
               });
             });
           }
         }
       } catch (error) {
         console.error(error);
-        addToast(`The layout could not be loaded. ${error.toString()}`, { appearance: "error" });
+        enqueueSnackbar(`The layout could not be loaded. ${error.toString()}`, {
+          variant: "error",
+        });
         setLayoutState({ selectedLayout: undefined });
       }
     },
-    [addToast, isMounted, layoutManager, setLayoutState, setUserProfile],
+    [enqueueSnackbar, isMounted, layoutManager, setLayoutState, setUserProfile],
   );
 
   type UpdateLayoutParams = { id: LayoutID; data: PanelsState };
@@ -189,8 +195,8 @@ export default function CurrentLayoutProvider({
           layoutManager.updateLayout(params).catch((error) => {
             log.error(error);
             if (isMounted()) {
-              addToast(`Your changes could not be saved. ${error.toString()}`, {
-                appearance: "error",
+              enqueueSnackbar(`Your changes could not be saved. ${error.toString()}`, {
+                variant: "error",
                 id: "CurrentLayoutProvider.throttledSave",
               });
             }
@@ -203,7 +209,7 @@ export default function CurrentLayoutProvider({
       // debounced params are set in the proper order, we invoke setLayoutState at the end.
       setLayoutState({ selectedLayout: { ...newLayout, loading: false } });
     },
-    [addToast, analytics, isMounted, layoutManager, setLayoutState],
+    [analytics, enqueueSnackbar, isMounted, layoutManager, setLayoutState],
   );
 
   // Changes to the layout storage from external user actions (such as resetting a layout to a
@@ -237,13 +243,13 @@ export default function CurrentLayoutProvider({
 
       if (event.layoutId === layoutStateRef.current.selectedLayout.id) {
         await setSelectedLayoutId(undefined);
-        addToast("Your active layout was deleted.", { appearance: "warning" });
+        enqueueSnackbar("Your active layout was deleted.", { variant: "warning" });
       }
     };
 
     layoutManager.on("change", listener);
     return () => layoutManager.off("change", listener);
-  }, [addToast, layoutManager, setSelectedLayoutId]);
+  }, [enqueueSnackbar, layoutManager, setSelectedLayoutId]);
 
   // Load initial state by re-selecting the last selected layout from the UserProfile.
   useAsync(async () => {
@@ -284,9 +290,9 @@ export default function CurrentLayoutProvider({
       },
       changePanelLayout: (payload: ChangePanelLayoutPayload) =>
         performAction({ type: "CHANGE_PANEL_LAYOUT", payload }),
-      overwriteGlobalVariables: (payload: { [key: string]: unknown }) =>
+      overwriteGlobalVariables: (payload: Record<string, VariableValue>) =>
         performAction({ type: "OVERWRITE_GLOBAL_DATA", payload }),
-      setGlobalVariables: (payload: { [key: string]: unknown }) =>
+      setGlobalVariables: (payload: Record<string, VariableValue>) =>
         performAction({ type: "SET_GLOBAL_DATA", payload }),
       setUserNodes: (payload: Partial<UserNodes>) =>
         performAction({ type: "SET_USER_NODES", payload }),

@@ -4,13 +4,12 @@
 
 import { quat } from "gl-matrix";
 
-import { Vec4, vec4ToOrientation } from "@foxglove/regl-worldview";
 import { MessageEvent, Topic } from "@foxglove/studio";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 
 import ThreeDeeRender from "../index";
 import { PoseArray, TransformStamped } from "../ros";
-import { QUAT_IDENTITY } from "./common";
+import { QUAT_IDENTITY, rad2deg } from "./common";
 import useDelayedFixture from "./useDelayedFixture";
 
 export default {
@@ -18,8 +17,11 @@ export default {
   component: ThreeDeeRender,
 };
 
+type Vec4 = [number, number, number, number];
+const vec4ToOrientation = ([x, y, z, w]: Vec4) => ({ x, y, z, w });
+
 GeometryMsgs_PoseArray.parameters = { colorScheme: "dark" };
-function GeometryMsgs_PoseArray(): JSX.Element {
+export function GeometryMsgs_PoseArray(): JSX.Element {
   const topics: Topic[] = [
     { name: "/baselink_path", datatype: "geometry_msgs/PoseArray" },
     { name: "/sensor_path", datatype: "geometry_msgs/PoseArray" },
@@ -152,10 +154,10 @@ function GeometryMsgs_PoseArray(): JSX.Element {
           cameraState: {
             distance: 15,
             perspective: true,
-            phi: 0.25,
+            phi: rad2deg(0.25),
             targetOffset: [0, 2, 0],
-            thetaOffset: -0.25,
-            fovy: 0.75,
+            thetaOffset: rad2deg(-0.25),
+            fovy: rad2deg(0.75),
             near: 0.01,
             far: 5000,
             target: [0, 0, 0],

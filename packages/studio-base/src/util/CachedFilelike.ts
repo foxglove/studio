@@ -60,8 +60,6 @@ export interface FileReader {
 const LOGGING_INTERVAL_IN_BYTES = 1024 * 1024 * 100; // Log every 100MiB to avoid cluttering the logs too much.
 const CACHE_BLOCK_SIZE = 1024 * 1024 * 10; // 10MiB blocks.
 // Don't start a new connection if we're 5MiB away from downloading the requested byte.
-// TODO(JP): It would be better (but a bit more involved) to express this in seconds, and take into
-// account actual download speed.
 const CLOSE_ENOUGH_BYTES_TO_NOT_START_NEW_CONNECTION = 1024 * 1024 * 5;
 
 const log = Logger.getLogger(__filename);
@@ -101,7 +99,7 @@ export default class CachedFilelike implements Filelike {
   // The last time we've encountered an error;
   private _lastErrorTime?: number;
 
-  constructor(options: {
+  public constructor(options: {
     fileReader: FileReader;
     cacheSizeInBytes?: number;
     log?: ILogger;
@@ -115,7 +113,7 @@ export default class CachedFilelike implements Filelike {
     this._virtualBuffer = new VirtualLRUBuffer({ size: 0 });
   }
 
-  async open(): Promise<void> {
+  public async open(): Promise<void> {
     if (this._fileSize != undefined) {
       return;
     }
@@ -139,7 +137,7 @@ export default class CachedFilelike implements Filelike {
   }
 
   // Get the file size. Requires a call to `open()` or `read()` first.
-  size(): number {
+  public size(): number {
     if (this._fileSize == undefined) {
       throw new Error("CachedFilelike has not been opened");
     }
@@ -148,7 +146,7 @@ export default class CachedFilelike implements Filelike {
 
   // Potentially performance-sensitive; await can be expensive
   // eslint-disable-next-line @typescript-eslint/promise-function-async
-  read(offset: number, length: number): Promise<Uint8Array> {
+  public read(offset: number, length: number): Promise<Uint8Array> {
     if (length === 0) {
       return Promise.resolve(new Uint8Array());
     }
@@ -221,13 +219,13 @@ export default class CachedFilelike implements Filelike {
 
   // Replace the current connection with a new one, spanning a certain range.
   private _setConnection(range: Range): void {
-    this._log.info(`Setting new connection @ ${rangeToString(range)}`);
+    this._log.debug(`Setting new connection @ ${rangeToString(range)}`);
 
     if (this._currentConnection) {
       // Destroy the current connection if there is one.
       const currentConnection = this._currentConnection;
       currentConnection.stream.destroy();
-      this._log.info(
+      this._log.debug(
         `Destroyed current connection @ ${rangeToString(currentConnection.remainingRange)}`,
       );
     }

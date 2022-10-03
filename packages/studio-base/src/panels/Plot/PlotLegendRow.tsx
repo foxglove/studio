@@ -2,21 +2,20 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { useTheme as useFluentUITheme } from "@fluentui/react";
 import {
   Close as CloseIcon,
   Error as ErrorIcon,
   Remove as RemoveIcon,
   MoreVert as MoreVertIcon,
 } from "@mui/icons-material";
-import { IconButton, Theme, Tooltip, Typography, useTheme } from "@mui/material";
-import { createStyles, makeStyles } from "@mui/styles";
+import { IconButton, Tooltip, Typography, useTheme } from "@mui/material";
 import { ComponentProps, useCallback, useMemo, useState } from "react";
+import { makeStyles } from "tss-react/mui";
 import { v4 as uuidv4 } from "uuid";
 
 import MessagePathInput from "@foxglove/studio-base/components/MessagePathSyntax/MessagePathInput";
 import TimeBasedChart from "@foxglove/studio-base/components/TimeBasedChart";
-import { useHoverValue } from "@foxglove/studio-base/context/HoverValueContext";
+import { useHoverValue } from "@foxglove/studio-base/context/TimelineInteractionStateContext";
 import { getLineColor } from "@foxglove/studio-base/util/plotColors";
 
 import PathSettingsModal from "./PathSettingsModal";
@@ -35,72 +34,70 @@ type PlotLegendRowProps = {
   showPlotValuesInLegend: boolean;
 };
 
-const useStyles = makeStyles((theme: Theme) =>
-  createStyles({
-    root: {
-      display: "contents",
+const useStyles = makeStyles()((theme) => ({
+  root: {
+    display: "contents",
 
-      "&:hover, &:focus-within": {
-        "& .MuiIconButton-root": {
-          backgroundColor: theme.palette.action.hover,
-        },
-        "& > *:last-child": {
-          opacity: 1,
-        },
-        "& > *": {
-          backgroundColor: theme.palette.action.hover,
-        },
+    "&:hover, &:focus-within": {
+      "& .MuiIconButton-root": {
+        backgroundColor: theme.palette.action.hover,
       },
-    },
-    listIcon: {
-      padding: theme.spacing(0.25),
-      position: "sticky",
-      left: 0,
-      // creates an opaque background for the sticky element
-      backgroundImage: `linear-gradient(${theme.palette.background.paper}, ${theme.palette.background.paper})`,
-      backgroundBlendMode: "overlay",
-    },
-    legendIconButton: {
-      padding: `${theme.spacing(0.125)} !important`,
-      marginLeft: theme.spacing(0.25),
-    },
-    inputWrapper: {
-      display: "flex",
-      alignItems: "center",
-      padding: theme.spacing(0.25),
-    },
-    plotValue: {
-      display: "flex",
-      alignItems: "center",
-      padding: theme.spacing(0.25),
-    },
-    actionButton: {
-      padding: `${theme.spacing(0.25)} !important`,
-      color: theme.palette.text.secondary,
-
-      "&:hover": {
-        color: theme.palette.text.primary,
-      },
-    },
-    actions: {
-      display: "flex",
-      flexDirection: "row",
-      alignItems: "center",
-      padding: theme.spacing(0.25),
-      gap: theme.spacing(0.25),
-      position: "sticky",
-      right: 0,
-      opacity: 0,
-      // creates an opaque background for the sticky element
-      backgroundImage: `linear-gradient(${theme.palette.background.paper}, ${theme.palette.background.paper})`,
-      backgroundBlendMode: "overlay",
-
-      "&:hover": {
+      "& > *:last-child": {
         opacity: 1,
       },
+      "& > *": {
+        backgroundColor: theme.palette.action.hover,
+      },
     },
-  }),
-);
+  },
+  listIcon: {
+    padding: theme.spacing(0.25),
+    position: "sticky",
+    left: 0,
+    // creates an opaque background for the sticky element
+    backgroundImage: `linear-gradient(${theme.palette.background.paper}, ${theme.palette.background.paper})`,
+    backgroundBlendMode: "overlay",
+  },
+  legendIconButton: {
+    padding: `${theme.spacing(0.125)} !important`,
+    marginLeft: theme.spacing(0.25),
+  },
+  inputWrapper: {
+    display: "flex",
+    alignItems: "center",
+    padding: theme.spacing(0.25),
+  },
+  plotValue: {
+    display: "flex",
+    alignItems: "center",
+    padding: theme.spacing(0.25),
+  },
+  actionButton: {
+    padding: `${theme.spacing(0.25)} !important`,
+    color: theme.palette.text.secondary,
+
+    "&:hover": {
+      color: theme.palette.text.primary,
+    },
+  },
+  actions: {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    padding: theme.spacing(0.25),
+    gap: theme.spacing(0.25),
+    position: "sticky",
+    right: 0,
+    opacity: 0,
+    // creates an opaque background for the sticky element
+    backgroundImage: `linear-gradient(${theme.palette.background.paper}, ${theme.palette.background.paper})`,
+    backgroundBlendMode: "overlay",
+
+    "&:hover": {
+      opacity: 1,
+    },
+  },
+}));
 
 export default function PlotLegendRow({
   index,
@@ -126,7 +123,6 @@ export default function PlotLegendRow({
     isTimestampScale: true,
   });
 
-  const fluentUITheme = useFluentUITheme();
   const theme = useTheme();
 
   const currentDisplay = useMemo(() => {
@@ -147,21 +143,15 @@ export default function PlotLegendRow({
     }
     return {
       value,
-      color: hoverValue?.value != undefined ? fluentUITheme.palette.yellowDark : "inherit",
+      color: hoverValue?.value != undefined ? theme.palette.warning.main : "inherit",
     };
-  }, [
-    showPlotValuesInLegend,
-    hoverValue?.value,
-    currentTime,
-    fluentUITheme.palette.yellowDark,
-    correspondingData,
-  ]);
+  }, [showPlotValuesInLegend, hoverValue?.value, currentTime, theme.palette, correspondingData]);
 
   const legendIconColor = path.enabled
     ? getLineColor(path.color, index)
     : theme.palette.text.secondary;
 
-  const classes = useStyles();
+  const { classes } = useStyles();
 
   const isReferenceLinePlotPath = isReferenceLinePlotPathType(path);
 

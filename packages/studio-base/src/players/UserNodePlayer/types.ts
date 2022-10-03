@@ -103,6 +103,10 @@ export type NodeRegistration = {
   nodeData: NodeData;
   inputs: readonly string[];
   output: Topic;
+  processBlockMessage: (
+    messageEvent: MessageEvent<unknown>,
+    globalVariables: GlobalVariables,
+  ) => Promise<MessageEvent<unknown> | undefined>;
   processMessage: (
     messageEvent: MessageEvent<unknown>,
     globalVariables: GlobalVariables,
@@ -114,7 +118,7 @@ export type NodeDataTransformer = (nodeData: NodeData, topics: Topic[]) => NodeD
 
 export type UserNodeLog = {
   source: "registerNode" | "processMessage";
-  value: unknown; // TODO: This should ideally share the type def of `log()` in `lib.js`
+  value: unknown;
 };
 
 export type RegistrationOutput = {

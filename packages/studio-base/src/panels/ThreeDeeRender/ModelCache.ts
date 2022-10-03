@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { MeshoptDecoder } from "meshoptimizer";
 import * as THREE from "three";
 import dracoDecoderWasmUrl from "three/examples/jsm/../js/libs/draco/draco_decoder.wasm";
 import dracoWasmWrapperJs from "three/examples/jsm/../js/libs/draco/draco_wasm_wrapper.js?raw";
@@ -15,9 +16,13 @@ import Logger from "@foxglove/log";
 
 const log = Logger.getLogger(__filename);
 
-export type LoadModelOptions = {
+export type ModelCacheOptions = {
   edgeMaterial: THREE.Material;
   ignoreColladaUpAxis: boolean;
+};
+
+type LoadModelOptions = {
+  overrideMediaType?: string;
 };
 
 export type LoadedModel = THREE.Group | THREE.Scene;
@@ -37,17 +42,21 @@ export class ModelCache {
   private _models = new Map<string, Promise<LoadedModel | undefined>>();
   private _edgeMaterial: THREE.Material;
 
-  constructor(private loadModelOptions: LoadModelOptions) {
-    this._edgeMaterial = loadModelOptions.edgeMaterial;
+  public constructor(public readonly options: ModelCacheOptions) {
+    this._edgeMaterial = options.edgeMaterial;
   }
 
-  async load(url: string, reportError: ErrorCallback): Promise<LoadedModel | undefined> {
+  public async load(
+    url: string,
+    opts: LoadModelOptions,
+    reportError: ErrorCallback,
+  ): Promise<LoadedModel | undefined> {
     let promise = this._models.get(url);
     if (promise) {
       return await promise;
     }
 
-    promise = this._loadModel(url, this.loadModelOptions, reportError)
+    promise = this._loadModel(url, opts, reportError)
       .then((model) => addEdges(model, this._edgeMaterial))
       .catch(async (err) => {
         reportError(err as Error);
@@ -76,7 +85,7 @@ export class ModelCache {
       throw new Error(`${buffer.byteLength} bytes received`);
     }
     const view = new DataView(buffer);
-    const contentType = response.headers.get("content-type") ?? "";
+    const contentType = options.overrideMediaType ?? response.headers.get("content-type") ?? "";
 
     // Check if this is a glTF .glb or .gltf file
     if (
@@ -95,13 +104,8 @@ export class ModelCache {
 
     // Check if this is a COLLADA file based on content-type or file extension
     if (DAE_MIME_TYPES.includes(contentType) || /\.dae$/i.test(url)) {
-      let text = this._textDecoder.decode(buffer);
-      if (options.ignoreColladaUpAxis) {
-        const xml = new DOMParser().parseFromString(text, "application/xml");
-        xml.querySelectorAll("up_axis").forEach((node) => node.remove());
-        text = xml.documentElement.outerHTML;
-      }
-      return await loadCollada(url, text, reportError);
+      const text = this._textDecoder.decode(buffer);
+      return await loadCollada(url, text, this.options.ignoreColladaUpAxis, reportError);
     }
 
     // Check if this is an OBJ file based on content-type or file extension
@@ -124,6 +128,7 @@ async function loadGltf(url: string, reportError: ErrorCallback): Promise<Loaded
   const manager = new THREE.LoadingManager(undefined, undefined, onError);
   manager.setURLModifier(rewriteUrl);
   const gltfLoader = new GLTFLoader(manager);
+  gltfLoader.setMeshoptDecoder(MeshoptDecoder);
   gltfLoader.setDRACOLoader(createDracoLoader(manager));
 
   manager.itemStart(url);
@@ -132,7 +137,6 @@ async function loadGltf(url: string, reportError: ErrorCallback): Promise<Loaded
 
   // THREE.js uses Y-up, while Studio follows the ROS
   // [REP-0103](https://www.ros.org/reps/rep-0103.html) convention of Z-up
-  gltf.scene.rotateZ(Math.PI / 2);
   gltf.scene.rotateX(Math.PI / 2);
 
   return gltf.scene;
@@ -153,12 +157,19 @@ function loadSTL(url: string, buffer: ArrayBuffer): LoadedModel {
   const mesh = new THREE.Mesh(bufferGeometry, material);
   const group = new THREE.Group();
   group.add(mesh);
+
+  // THREE.js uses Y-up, while Studio follows the ROS
+  // [REP-0103](https://www.ros.org/reps/rep-0103.html) convention of Z-up
+  group.rotateX(Math.PI / 2);
+
   return group;
 }
 
 async function loadCollada(
   url: string,
   text: string,
+  // eslint-disable-next-line @foxglove/no-boolean-parameters
+  ignoreUpAxis: boolean,
   reportError: ErrorCallback,
 ): Promise<LoadedModel> {
   const onError = (assetUrl: string) => {
@@ -167,13 +178,29 @@ async function loadCollada(
     reportError(new Error(`Failed to load COLLADA asset "${originalUrl}"`));
   };
 
+  // The three.js ColladaLoader handles <up_axis> by detecting Z_UP and simply
+  // applying a scene rotation. Since Studio is already Z_UP, we do our own
+  // <up_axis> handling and skip rotation entirely for the Z_UP case
+  const xml = new DOMParser().parseFromString(text, "application/xml");
+  const upAxis = ignoreUpAxis
+    ? "Z_UP"
+    : (xml.querySelector("up_axis")?.textContent ?? "Y_UP").trim().toUpperCase();
+  xml.querySelectorAll("up_axis").forEach((node) => node.remove());
+  const xmlText = xml.documentElement.outerHTML;
+
   const manager = new THREE.LoadingManager(undefined, undefined, onError);
   manager.setURLModifier(rewriteUrl);
   const daeLoader = new ColladaLoader(manager);
 
   manager.itemStart(url);
-  const dae = daeLoader.parse(text, baseUrl(url));
+  const dae = daeLoader.parse(xmlText, baseUrl(url));
   manager.itemEnd(url);
+
+  // If the <up_axis> is Y_UP, rotate to the Studio convention of Z-up following
+  // ROS [REP-0103](https://www.ros.org/reps/rep-0103.html)
+  if (upAxis === "Y_UP") {
+    dae.scene.rotateX(Math.PI / 2);
+  }
 
   return fixDaeMaterials(dae.scene);
 }
@@ -196,6 +223,10 @@ async function loadOBJ(
   manager.itemStart(url);
   const group = objLoader.parse(text);
   manager.itemEnd(url);
+
+  // THREE.js uses Y-up, while Studio follows the ROS
+  // [REP-0103](https://www.ros.org/reps/rep-0103.html) convention of Z-up
+  group.rotateX(Math.PI / 2);
 
   return fixObjMaterials(group);
 }
@@ -265,6 +296,13 @@ function toStandard(
 ): THREE.MeshStandardMaterial {
   const standard = new THREE.MeshStandardMaterial({ name: material.name });
   const shininess = (material as Partial<THREE.MeshPhongMaterial>).shininess ?? 0; // [0-100]
+
+  // MeshStandardMaterial.copy() assumes the normalScale property exists, which
+  // is true for other MeshStandardMaterials or MeshPhongMaterial but not
+  // MeshLambertMaterial. Default initialize this property if needed so the
+  // `standard.copy(material)` below succeeds
+  const maybePhong = material as Partial<THREE.MeshPhongMaterial>;
+  maybePhong.normalScale ??= new THREE.Vector2(1, 1);
 
   standard.copy(material);
   standard.metalness = 0;

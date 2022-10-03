@@ -7,47 +7,83 @@ const channels = new Map<string, Logger>();
 
 const noop = () => {};
 
+type LogLevel = "error" | "warn" | "info" | "debug";
+
 class Logger {
   // default logger has an empty name
-  static default = new Logger("");
+  public static default = new Logger("");
 
   private _name: string;
-  private _enabled = true;
 
   // all new loggers are created from the default logger
   private constructor(name: string) {
     this._name = name;
-    this._updateHandlers();
-
+    this.setLevel("debug");
     channels.set(name, this);
   }
 
   // fully qualified name for the logger
-  name() {
+  public name(): string {
     return this._name;
   }
 
-  isEnabled() {
-    return this._enabled;
+  /**
+   * Return true if the level would display when logged by the logger
+   */
+  public isLevelOn(level: LogLevel): boolean {
+    switch (level) {
+      case "debug":
+        return this.debug !== noop;
+      case "info":
+        return this.info !== noop;
+      case "warn":
+        return this.warn !== noop;
+      case "error":
+        return this.error !== noop;
+    }
+    return false;
   }
 
-  enable() {
-    this._enabled = true;
-    this._updateHandlers();
+  /**
+   * Set the allowed log level. Any log calls with severity "below" this one will be ignored.
+   *
+   * i.e. setting a level of "warn" will ignore any "info" or "debug" logs
+   */
+  public setLevel(level: LogLevel): void {
+    this.debug = noop;
+    this.info = noop;
+    this.warn = noop;
+    this.error = noop;
+
+    switch (level) {
+      case "debug":
+        this.debug = console.debug.bind(global.console);
+        this.info = console.info.bind(global.console);
+        this.warn = console.warn.bind(global.console);
+        this.error = console.error.bind(global.console);
+        break;
+      case "info":
+        this.info = console.info.bind(global.console);
+        this.warn = console.warn.bind(global.console);
+        this.error = console.error.bind(global.console);
+        break;
+      case "warn":
+        this.warn = console.warn.bind(global.console);
+        this.error = console.error.bind(global.console);
+        break;
+      case "error":
+        this.error = console.error.bind(global.console);
+        break;
+    }
   }
 
-  disable() {
-    this._enabled = false;
-    this._updateHandlers();
-  }
-
-  debug(..._args: unknown[]) {}
-  info(..._args: unknown[]) {}
-  warn(..._args: unknown[]) {}
-  error(..._args: unknown[]) {}
+  public debug(..._args: unknown[]): void {}
+  public info(..._args: unknown[]): void {}
+  public warn(..._args: unknown[]): void {}
+  public error(..._args: unknown[]): void {}
 
   // create a new logger under this logger's namespace
-  getLogger(name: string): Logger {
+  public getLogger(name: string): Logger {
     const shortName = name.replace(/^.+\.(asar|webpack)[\\/\\]/, "").replace(/^(\.\.\/)+/, "");
     const channelName = this._name.length > 0 ? `${this._name}.${shortName}` : shortName;
     const existing = channels.get(channelName);
@@ -61,24 +97,26 @@ class Logger {
   }
 
   // get all logging channels
-  channels(): Logger[] {
+  public channels(): Logger[] {
     return Array.from(channels.values());
   }
+}
 
-  private _updateHandlers() {
-    if (this._enabled) {
-      const prefix = this._name.length > 0 ? `[${this._name}]` : "";
-      this.debug = console.debug.bind(global.console, `${prefix}`);
-      this.info = console.info.bind(global.console, `${prefix}`);
-      this.warn = console.warn.bind(global.console, `${prefix}`);
-      this.error = console.error.bind(global.console, `${prefix}`);
-    } else {
-      this.debug = noop;
-      this.info = noop;
-      this.warn = noop;
-      this.error = noop;
-    }
+function toLogLevel(maybeLevel: string): LogLevel {
+  switch (maybeLevel) {
+    case "debug":
+      return "debug";
+    case "info":
+      return "info";
+    case "warn":
+      return "warn";
+    case "error":
+      return "error";
+    default:
+      return "warn";
   }
 }
 
 export default Logger.default;
+export { Logger, toLogLevel };
+export type { LogLevel };

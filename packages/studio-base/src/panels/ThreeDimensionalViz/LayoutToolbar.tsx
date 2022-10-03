@@ -11,12 +11,10 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Theme } from "@mui/material";
-import { makeStyles } from "@mui/styles";
+import { makeStyles } from "tss-react/mui";
 
 import { MouseEventObject } from "@foxglove/regl-worldview";
 import { Time } from "@foxglove/rostime";
-import { PANEL_TOOLBAR_MIN_HEIGHT } from "@foxglove/studio-base/components/PanelToolbar";
 import CameraInfo from "@foxglove/studio-base/panels/ThreeDimensionalViz/CameraInfo";
 import Crosshair from "@foxglove/studio-base/panels/ThreeDimensionalViz/Crosshair";
 import FollowTFControl from "@foxglove/studio-base/panels/ThreeDimensionalViz/FollowTFControl";
@@ -59,10 +57,10 @@ type Props = LayoutToolbarSharedProps &
     showCrosshair?: boolean;
   };
 
-const useStyles = makeStyles((theme: Theme) => ({
+const useStyles = makeStyles()((theme) => ({
   controls: {
     position: "absolute",
-    top: `calc(${PANEL_TOOLBAR_MIN_HEIGHT}px + ${theme.spacing(1.5)})`,
+    top: theme.spacing(1.5),
     right: theme.spacing(1),
     zIndex: 101,
     display: "flex",
@@ -108,7 +106,7 @@ function LayoutToolbar({
   toggleSearchTextOpen,
   transforms,
 }: Props) {
-  const classes = useStyles();
+  const { classes } = useStyles();
   return (
     <>
       <div className={classes.controls}>

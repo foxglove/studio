@@ -1,18 +1,11 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
-//
-// This file incorporates work covered by the following copyright and
-// permission notice:
-//
-//   Copyright 2019-2021 Cruise LLC
-//
-//   This source code is licensed under the Apache License, Version 2.0,
-//   found at http://www.apache.org/licenses/LICENSE-2.0
-//   You may not use this file except in compliance with the License.
+
+import { Tooltip, Typography } from "@mui/material";
 import { useMemo } from "react";
 import { useResizeDetector } from "react-resize-detector";
-import styled, { css } from "styled-components";
+import { makeStyles } from "tss-react/mui";
 
 import { add, fromSec, toSec } from "@foxglove/rostime";
 import { RpcScales } from "@foxglove/studio-base/components/Chart/types";
@@ -20,45 +13,28 @@ import {
   MessagePipelineContext,
   useMessagePipeline,
 } from "@foxglove/studio-base/components/MessagePipeline";
+import Stack from "@foxglove/studio-base/components/Stack";
 import HoverBar from "@foxglove/studio-base/components/TimeBasedChart/HoverBar";
-import { useHoverValue } from "@foxglove/studio-base/context/HoverValueContext";
+import { useHoverValue } from "@foxglove/studio-base/context/TimelineInteractionStateContext";
 import { useAppTimeFormat } from "@foxglove/studio-base/hooks";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
-const sharedTickStyles = css`
-  position: absolute;
-  left: 0px;
-  width: 0px;
-  height: 0px;
-
-  border-left: 5px solid transparent;
-  border-right: 5px solid transparent;
-
-  margin-left: -5px;
-`;
-
-const TopTick = styled.div`
-  ${sharedTickStyles}
-  top: 8px;
-  border-top: 5px solid #f7be00;
-`;
-
-const BottomTick = styled.div`
-  ${sharedTickStyles}
-  bottom: 8px;
-  border-bottom: 5px solid #f7be00;
-`;
-
-const TimeLabel = styled.div`
-  position: absolute;
-  left: 0;
-  top: 0px;
-  font-family: ${fonts.MONOSPACE};
-  font-size: ${({ theme }) => theme.fonts.xSmall.fontSize};
-  color: ${({ theme }) => theme.palette.yellowDark};
-  transform: translate(-50%, -50%);
-  white-space: nowrap;
-`;
+const useStyles = makeStyles()((theme) => ({
+  tick: {
+    position: "absolute",
+    height: 16,
+    borderRadius: 1,
+    width: 2,
+    top: 8,
+    transform: "translate(-50%, 0)",
+    backgroundColor: theme.palette.warning.main,
+  },
+  tooltip: {
+    '&[data-popper-placement*="top"] .MuiTooltip-tooltip': {
+      marginBottom: theme.spacing(1),
+    },
+  },
+}));
 
 function getStartTime(ctx: MessagePipelineContext) {
   return ctx.playerState.activeData?.startTime;
@@ -74,6 +50,7 @@ type Props = {
 
 export default function PlaybackBarHoverTicks(props: Props): JSX.Element {
   const { componentId } = props;
+  const { classes } = useStyles();
 
   const startTime = useMessagePipeline(getStartTime);
   const endTime = useMessagePipeline(getEndTime);
@@ -121,14 +98,29 @@ export default function PlaybackBarHoverTicks(props: Props): JSX.Element {
   const displayHoverTime = hoverValue != undefined && hoverValue.componentId !== componentId;
 
   return (
-    <div ref={ref} style={{ width: "100%" }}>
+    <Stack ref={ref} flex="auto">
       {scaleBounds && (
         <HoverBar componentId={componentId} scales={scaleBounds} isTimestampScale>
-          {displayHoverTime && <TimeLabel>{hoverTimeDisplay}</TimeLabel>}
-          <TopTick />
-          <BottomTick />
+          <Tooltip
+            arrow
+            classes={{ popper: classes.tooltip }}
+            placement="top"
+            disableFocusListener
+            disableHoverListener
+            disableTouchListener
+            disableInteractive
+            TransitionProps={{ timeout: 0 }}
+            open={displayHoverTime}
+            title={
+              <Typography align="center" variant="caption" fontFamily={fonts.MONOSPACE} noWrap>
+                {hoverTimeDisplay}
+              </Typography>
+            }
+          >
+            <div className={classes.tick} />
+          </Tooltip>
         </HoverBar>
       )}
-    </div>
+    </Stack>
   );
 }

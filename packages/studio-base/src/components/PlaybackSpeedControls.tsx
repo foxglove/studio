@@ -29,8 +29,12 @@ const configSpeedSelector = (state: LayoutState) =>
   state.selectedLayout?.data?.playbackConfig.speed;
 
 const StyledButton = muiStyled(Button)(({ theme }) => ({
-  paddingTop: theme.spacing(1),
-  paddingBottom: theme.spacing(1),
+  padding: theme.spacing(0.625, 0.5),
+  backgroundColor: "transparent",
+
+  ":hover": {
+    backgroundColor: theme.palette.action.hover,
+  },
 }));
 
 export default function PlaybackSpeedControls(): JSX.Element {
@@ -75,7 +79,7 @@ export default function PlaybackSpeedControls(): JSX.Element {
         aria-haspopup="true"
         aria-expanded={open ? "true" : undefined}
         onClick={handleClick}
-        data-test="PlaybackSpeedControls-Dropdown"
+        data-testid="PlaybackSpeedControls-Dropdown"
         disabled={setPlaybackSpeed == undefined}
         disableRipple
         variant="contained"

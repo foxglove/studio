@@ -11,6 +11,9 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { screen } from "@testing-library/dom";
+import userEvent from "@testing-library/user-event";
+import { range } from "lodash";
 import TestUtils from "react-dom/test-utils";
 
 import Log from "@foxglove/studio-base/panels/Log";
@@ -96,6 +99,30 @@ const fixture = {
   },
 };
 
+function makeLongFixture() {
+  const levels = [1, 2, 4, 8, 16];
+
+  return {
+    topics: [{ name: "/rosout", datatype: "rosgraph_msgs/Log" }],
+    frame: {
+      "/rosout": range(200).map((idx) => ({
+        topic: "/rosout",
+        receiveTime: { sec: 10 * idx, nsec: 0 },
+        message: {
+          file: "some_topic_utils/src/foo.cpp",
+          function: "vector<int> some_topic::findInt",
+          header: { stamp: { sec: 123, nsec: 0 } },
+          level: levels[idx % levels.length],
+          line: 242,
+          msg: `Couldn't find int ${idx + 1}.`,
+          name: "/some_topic",
+        },
+        sizeInBytes: 0,
+      })),
+    },
+  };
+}
+
 export default {
   title: "panels/Log",
   component: Log,
@@ -104,6 +131,14 @@ export default {
 export const Simple = (): JSX.Element => {
   return (
     <PanelSetup fixture={fixture}>
+      <Log />
+    </PanelSetup>
+  );
+};
+
+export const Scrolled = (): JSX.Element => {
+  return (
+    <PanelSetup fixture={makeLongFixture()}>
       <Log />
     </PanelSetup>
   );
@@ -141,10 +176,10 @@ export const TopicToRender = (): JSX.Element => {
       }}
       onMount={() => {
         TestUtils.Simulate.mouseEnter(
-          document.querySelectorAll("[data-test~=panel-mouseenter-container]")[0]!,
+          document.querySelectorAll("[data-testid~=panel-mouseenter-container]")[0]!,
         );
         setTimeout(() => {
-          TestUtils.Simulate.click(document.querySelectorAll("[data-test=topic-set]")[0]!);
+          TestUtils.Simulate.click(document.querySelectorAll("[data-testid=topic-set]")[0]!);
         });
       }}
     >
@@ -185,6 +220,25 @@ export const CaseInsensitiveFilter = (): JSX.Element => {
 };
 
 CaseInsensitiveFilter.title = `case insensitive message filtering: "could", "Ipsum"`;
+
+export const AutoCompleteItems = (): JSX.Element => {
+  return (
+    <PanelSetup fixture={fixture}>
+      <Log
+        overrideConfig={{
+          searchTerms: ["could", "Ipsum"],
+          minLogLevel: 1,
+          topicToRender: "/rosout",
+        }}
+      />
+    </PanelSetup>
+  );
+};
+AutoCompleteItems.play = async () => {
+  const user = userEvent.setup();
+  const input = (await screen.findAllByPlaceholderText("Search filter"))[0]!;
+  await user.click(input);
+};
 
 export const FoxgloveLog = (): JSX.Element => {
   const foxgloveLogFixture = {

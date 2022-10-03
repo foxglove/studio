@@ -11,16 +11,15 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { useTheme } from "@fluentui/react";
 import CameraControlIcon from "@mdi/svg/svg/camera-control.svg";
-import { Button, Tooltip, styled as muiStyled } from "@mui/material";
+import { Button, Tooltip, styled as muiStyled, useTheme } from "@mui/material";
 import { vec3 } from "gl-matrix";
 import { isEqual } from "lodash";
+import styled from "styled-components";
 
 import { CameraState, cameraStateSelectors, Vec3 } from "@foxglove/regl-worldview";
 import ExpandingToolbar, { ToolGroup } from "@foxglove/studio-base/components/ExpandingToolbar";
 import JsonInput from "@foxglove/studio-base/components/JsonInput";
-import { LegacyInput } from "@foxglove/studio-base/components/LegacyStyledComponents";
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import Stack from "@foxglove/studio-base/components/Stack";
 import {
@@ -33,6 +32,7 @@ import {
   ThreeDimensionalVizConfig,
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/types";
 import clipboard from "@foxglove/studio-base/util/clipboard";
+import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import { point2DValidator, cameraStateValidator } from "./validate";
 
@@ -52,6 +52,29 @@ const StyledButton = muiStyled(Button)({
   lineHeight: 1.25,
   minWidth: 40,
 });
+
+const StyledInput = styled.input`
+  background-color: ${({ theme }) => theme.palette.neutralLighter};
+  border-radius: ${({ theme }) => theme.effects.roundedCorner2};
+  border: none;
+  color: ${({ theme }) => theme.semanticColors.inputText};
+  font: inherit;
+  font-family: ${fonts.SANS_SERIF};
+  font-feature-settings: ${fonts.SANS_SERIF_FEATURE_SETTINGS};
+  font-size: 100%;
+  margin: 0 0.2em;
+  padding: 8px 12px;
+  text-align: left;
+
+  &.disabled {
+    color: ${({ theme }) => theme.semanticColors.disabledText};
+    background-color: ${({ theme }) => theme.semanticColors.buttonBackgroundDisabled};
+  }
+  &:focus {
+    background-color: ${({ theme }) => theme.palette.neutralLighterAlt};
+    outline: none;
+  }
+`;
 
 export type CameraInfoPropsWithoutCameraState = {
   followMode: FollowMode;
@@ -196,6 +219,7 @@ export default function CameraInfo({
                 value={cameraState}
                 onChange={(newCameraState) => saveConfig({ cameraState: newCameraState })}
                 dataValidator={cameraStateValidator}
+                maxHeight={220}
               />
             ) : (
               <Stack flex="auto">
@@ -206,7 +230,7 @@ export default function CameraInfo({
                       <SLabel>Auto sync:</SLabel>
                     </Tooltip>
                     <SValue>
-                      <LegacyInput
+                      <StyledInput
                         type="checkbox"
                         checked={autoSyncCameraState}
                         onChange={() =>
@@ -221,14 +245,12 @@ export default function CameraInfo({
                   </Stack>
                   <Stack direction="row" alignItems="center">
                     <SLabel
-                      style={
-                        cameraState.perspective ? { color: theme.semanticColors.disabledText } : {}
-                      }
+                      style={cameraState.perspective ? { color: theme.palette.text.disabled } : {}}
                     >
                       Show crosshair:
                     </SLabel>
                     <SValue>
-                      <LegacyInput
+                      <StyledInput
                         type="checkbox"
                         disabled={cameraState.perspective}
                         checked={showCrosshair}
@@ -238,7 +260,13 @@ export default function CameraInfo({
                   </Stack>
                   {showCrosshair && !cameraState.perspective && (
                     <Stack paddingLeft={LABEL_WIDTH / 8}>
-                      <SValue>
+                      <div
+                        style={{
+                          background: theme.palette.action.hover,
+                          borderRadius: theme.shape.borderRadius,
+                          border: `1px solid ${theme.palette.divider}`,
+                        }}
+                      >
                         <JsonInput
                           value={{ x: camPos2DTrimmed[0], y: camPos2DTrimmed[1] }}
                           onChange={(data) => {
@@ -260,7 +288,7 @@ export default function CameraInfo({
                           }}
                           dataValidator={point2DValidator}
                         />
-                      </SValue>
+                      </div>
                     </Stack>
                   )}
                 </Stack>

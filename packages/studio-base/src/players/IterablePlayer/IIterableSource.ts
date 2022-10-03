@@ -14,6 +14,7 @@ export type Initalization = {
   topicStats: Map<string, TopicStats>;
   datatypes: RosDatatypes;
   profile: string | undefined;
+  name?: string;
 
   /** Publisher names by topic **/
   publishersByTopic: Map<string, Set<string>>;
@@ -40,6 +41,17 @@ export type MessageIteratorArgs = {
    * The last message receiveTime will be <= end.
    * */
   end?: Time;
+
+  /**
+   * Indicate the expected way the iterator is consumed.
+   *
+   * Data sources may choose to change internal mechanics depending on whether the messages are
+   * consumed immediate in full from the iterator or if it might be read partially.
+   *
+   * `full` indicates that the caller plans to read the entire iterator
+   * `partial` indicates that the caller plans to read the iterator but may not read all the messages
+   */
+  consumptionType?: "full" | "partial";
 };
 
 export type IteratorResult =
@@ -86,7 +98,7 @@ export interface IIterableSource {
    * generator function, and a `finally` block to do any necessary cleanup tasks when the request
    * finishes or is canceled.
    */
-  messageIterator(args: MessageIteratorArgs): AsyncIterator<Readonly<IteratorResult>>;
+  messageIterator(args: MessageIteratorArgs): AsyncIterableIterator<Readonly<IteratorResult>>;
 
   /**
    * Load the most recent messages per topic that occurred before or at the target time, if

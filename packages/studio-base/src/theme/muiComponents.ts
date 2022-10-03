@@ -2,8 +2,10 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Theme, ThemeOptions } from "@mui/material/styles";
-import { CSSProperties } from "@mui/styles";
+import type {} from "@mui/x-data-grid/themeAugmentation";
+
+import { alpha, Theme, ThemeOptions } from "@mui/material";
+import { CSSProperties } from "react";
 
 type MuiLabComponents = {
   MuiFocusVisible?: {
@@ -35,6 +37,10 @@ const iconHack = {
     flexShrink: 0,
     userSelect: "none",
   },
+};
+
+const disableBackgroundColorTransition = {
+  transition: "none",
 };
 
 export default function muiComponents(theme: Theme): ThemeOptions["components"] & MuiLabComponents {
@@ -84,9 +90,31 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
         },
       },
     },
+    MuiFab: {
+      defaultProps: {
+        color: "inherit",
+      },
+      styleOverrides: {
+        root: {
+          boxShadow: theme.shadows[2],
+        },
+        colorInherit: {
+          backgroundColor: theme.palette.background.paper,
+        },
+      },
+    },
     MuiFormControl: {
       defaultProps: {
         variant: "standard",
+      },
+    },
+    MuiBadge: {
+      styleOverrides: {
+        badge: {
+          height: 16,
+          minWidth: 16,
+          padding: theme.spacing(0, 0.25),
+        },
       },
     },
     MuiButton: {
@@ -94,6 +122,9 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
         disableElevation: true,
       },
       styleOverrides: {
+        root: {
+          ...disableBackgroundColorTransition,
+        },
         containedInherit: {
           backgroundColor: theme.palette.action.focus,
         },
@@ -113,6 +144,11 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
     MuiCardActionArea: {
       defaultProps: {
         disableRipple: true,
+      },
+      styleOverrides: {
+        focusHighlight: {
+          ...disableBackgroundColorTransition,
+        },
       },
     },
     MuiCardContent: {
@@ -185,6 +221,7 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
           ".MuiAutocomplete-root &": {
             paddingTop: 0,
           },
+          ...disableBackgroundColorTransition,
         },
       },
     },
@@ -192,6 +229,13 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
       defaultProps: {
         PaperProps: {
           elevation: 4,
+        },
+      },
+      styleOverrides: {
+        root: {
+          ".MuiBackdrop-root": {
+            backgroundColor: alpha(theme.palette.common.black, 0.4),
+          },
         },
       },
     },
@@ -244,6 +288,7 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
           "&:hover": {
             backgroundColor: theme.palette.action.hover,
           },
+          ...disableBackgroundColorTransition,
         },
       },
     },
@@ -335,6 +380,11 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
     },
     MuiListItemButton: {
       defaultProps: { disableRipple: true },
+      styleOverrides: {
+        root: {
+          ...disableBackgroundColorTransition,
+        },
+      },
     },
     MuiMenu: {
       styleOverrides: {
@@ -356,6 +406,7 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
     MuiOutlinedInput: {
       styleOverrides: {
         input: {
+          boxSizing: "content-box",
           padding: theme.spacing(1, 1.25),
         },
         inputSizeSmall: {
@@ -388,6 +439,11 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
         elevation: 2,
         square: true,
       },
+      styleOverrides: {
+        elevation: {
+          backgroundImage: "none !important",
+        },
+      },
     },
     MuiRadio: {
       defaultProps: {
@@ -401,8 +457,13 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
         root: {
           opacity: 0.8,
 
-          "&$selected": {
+          "&.Mui-selected": {
             opacity: 1,
+          },
+
+          "&:not(.Mui-selected):hover": {
+            opacity: 1,
+            color: theme.palette.text.primary,
           },
         },
         selected: {},
@@ -426,14 +487,46 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
       },
     },
     MuiToggleButton: {
+      defaultProps: {
+        disableRipple: true,
+      },
       styleOverrides: {
         label: iconHack,
+        root: {
+          "&:active": {
+            backgroundColor: alpha(
+              theme.palette.text.primary,
+              theme.palette.action.activatedOpacity,
+            ),
+          },
+          "&.Mui-selected:active": {
+            backgroundColor: alpha(
+              theme.palette.primary.main,
+              theme.palette.action.selectedOpacity + theme.palette.action.activatedOpacity,
+            ),
+          },
+        },
       },
     },
     MuiToolbar: {
       styleOverrides: {
         root: {
           justifyContent: "space-between",
+        },
+      },
+    },
+    MuiTooltip: {
+      defaultProps: {
+        arrow: true,
+      },
+      styleOverrides: {
+        arrow: {
+          color: theme.palette.grey[700],
+        },
+        tooltip: {
+          backgroundColor: theme.palette.grey[700],
+          fontWeight: "normal",
+          fontSize: "0.75rem",
         },
       },
     },

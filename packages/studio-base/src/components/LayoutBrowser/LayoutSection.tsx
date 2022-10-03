@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Typography, List } from "@mui/material";
+import { MouseEvent } from "react";
 
 import Stack from "@foxglove/studio-base/components/Stack";
 import { Layout } from "@foxglove/studio-base/services/ILayoutStorage";
@@ -13,6 +14,8 @@ export default function LayoutSection({
   title,
   emptyText,
   items,
+  anySelectedModifiedLayouts,
+  multiSelectedIds,
   selectedId,
   onSelect,
   onRename,
@@ -27,8 +30,10 @@ export default function LayoutSection({
   title: string | undefined;
   emptyText: string | undefined;
   items: readonly Layout[] | undefined;
+  anySelectedModifiedLayouts: boolean;
+  multiSelectedIds: readonly string[];
   selectedId?: string;
-  onSelect: (item: Layout, params?: { selectedViaClick?: boolean }) => void;
+  onSelect: (item: Layout, params?: { selectedViaClick?: boolean; event?: MouseEvent }) => void;
   onRename: (item: Layout, newName: string) => void;
   onDuplicate: (item: Layout) => void;
   onDelete: (item: Layout) => void;
@@ -57,6 +62,8 @@ export default function LayoutSection({
         )}
         {items?.map((layout) => (
           <LayoutRow
+            anySelectedModifiedLayouts={anySelectedModifiedLayouts}
+            multiSelectedIds={multiSelectedIds}
             selected={layout.id === selectedId}
             key={layout.id}
             layout={layout}

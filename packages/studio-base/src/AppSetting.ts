@@ -18,20 +18,17 @@ export enum AppSetting {
   CRASH_REPORTING_ENABLED = "telemetry.crashReportingEnabled",
 
   // Experimental features
-  UNLIMITED_MEMORY_CACHE = "experimental.unlimited-memory-cache",
   SHOW_DEBUG_PANELS = "showDebugPanels",
   ENABLE_LEGACY_PLOT_PANEL = "enableLegacyPlotPanel",
-  EXPERIMENTAL_BAG_PLAYER = "experimental.bag-player",
-  EXPERIMENTAL_DATA_PLATFORM_PLAYER = "experimental.data-platform-player",
-  EXPERIMENTAL_MCAP_PLAYER = "experimental.mcap-player",
-  EXPERIMENTAL_MESSAGE_ORDER = "experimental.message-order",
+  ENABLE_PLOT_PANEL_SERIES_SETTINGS = "enablePlotPathSeriesSettings",
 
   // Miscellaneous
   HIDE_SIGN_IN_PROMPT = "hideSignInPrompt",
   LAUNCH_PREFERENCE = "launchPreference",
   SHOW_OPEN_DIALOG_ON_STARTUP = "ui.open-dialog-startup",
+  CLOSED_OLD3D_DEPRECATION_BANNER = "closedOld3dDeprecationBannerV2",
 
   // Dev only
   ENABLE_LAYOUT_DEBUGGING = "enableLayoutDebugging",
-  ENABLE_REACT_STRICT_MODE = "enableReactStrictMode",
+  ENABLE_MEMORY_USE_INDICATOR = "dev.memory-use-indicator",
 }

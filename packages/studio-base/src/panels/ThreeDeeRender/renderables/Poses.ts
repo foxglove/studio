@@ -5,6 +5,7 @@
 import * as THREE from "three";
 
 import { toNanoSec } from "@foxglove/rostime";
+import { PoseInFrame } from "@foxglove/schemas";
 import { SettingsTreeAction, SettingsTreeFields } from "@foxglove/studio";
 import type { RosValue } from "@foxglove/studio-base/players/types";
 
@@ -13,8 +14,14 @@ import { Renderer } from "../Renderer";
 import { PartialMessage, PartialMessageEvent, SceneExtension } from "../SceneExtension";
 import { SettingsTreeEntry } from "../SettingsManager";
 import { makeRgba, rgbaToCssString, stringToRgba } from "../color";
+import { POSE_IN_FRAME_DATATYPES } from "../foxglove";
 import { vecEqual } from "../math";
-import { normalizeHeader, normalizeMatrix6, normalizePose } from "../normalizeMessages";
+import {
+  normalizeHeader,
+  normalizeMatrix6,
+  normalizePose,
+  normalizeTime,
+} from "../normalizeMessages";
 import {
   Marker,
   PoseWithCovarianceStamped,
@@ -73,45 +80,48 @@ export type PoseUserData = BaseUserData & {
   settings: LayerSettingsPose;
   topic: string;
   poseMessage: PoseStamped | PoseWithCovarianceStamped;
+  originalMessage: Record<string, RosValue>;
   axis?: Axis;
   arrow?: RenderableArrow;
   sphere?: RenderableSphere;
 };
 
 export class PoseRenderable extends Renderable<PoseUserData> {
-  override dispose(): void {
+  public override dispose(): void {
     this.userData.axis?.dispose();
     this.userData.arrow?.dispose();
     this.userData.sphere?.dispose();
     super.dispose();
   }
 
-  override details(): Record<string, RosValue> {
-    return this.userData.poseMessage;
+  public override details(): Record<string, RosValue> {
+    return this.userData.originalMessage;
   }
 }
 
 export class Poses extends SceneExtension<PoseRenderable> {
-  constructor(renderer: Renderer) {
+  public constructor(renderer: Renderer) {
     super("foxglove.Poses", renderer);
 
     renderer.addDatatypeSubscriptions(POSE_STAMPED_DATATYPES, this.handlePoseStamped);
+    renderer.addDatatypeSubscriptions(POSE_IN_FRAME_DATATYPES, this.handlePoseInFrame);
     renderer.addDatatypeSubscriptions(
       POSE_WITH_COVARIANCE_STAMPED_DATATYPES,
       this.handlePoseWithCovariance,
     );
   }
 
-  override settingsNodes(): SettingsTreeEntry[] {
+  public override settingsNodes(): SettingsTreeEntry[] {
     const configTopics = this.renderer.config.topics;
     const handler = this.handleSettingsAction;
     const entries: SettingsTreeEntry[] = [];
     for (const topic of this.renderer.topics ?? []) {
       const isPoseStamped = POSE_STAMPED_DATATYPES.has(topic.datatype);
+      const isPoseInFrame = POSE_IN_FRAME_DATATYPES.has(topic.datatype);
       const isPoseWithCovarianceStamped = isPoseStamped
         ? false
         : POSE_WITH_COVARIANCE_STAMPED_DATATYPES.has(topic.datatype);
-      if (isPoseStamped || isPoseWithCovarianceStamped) {
+      if (isPoseStamped || isPoseWithCovarianceStamped || isPoseInFrame) {
         const config = (configTopics[topic.name] ?? {}) as Partial<LayerSettingsPose>;
         const type = config.type ?? DEFAULT_TYPE;
 
@@ -177,7 +187,7 @@ export class Poses extends SceneExtension<PoseRenderable> {
     return entries;
   }
 
-  override handleSettingsAction = (action: SettingsTreeAction): void => {
+  public override handleSettingsAction = (action: SettingsTreeAction): void => {
     const path = action.payload.path;
     if (action.action !== "update" || path.length !== 3) {
       return;
@@ -195,29 +205,37 @@ export class Poses extends SceneExtension<PoseRenderable> {
       this._updatePoseRenderable(
         renderable,
         renderable.userData.poseMessage,
+        renderable.userData.originalMessage,
         renderable.userData.receiveTime,
-        { ...renderable.userData.settings, ...settings },
+        { ...DEFAULT_SETTINGS, ...settings },
       );
     }
   };
 
-  handlePoseStamped = (messageEvent: PartialMessageEvent<PoseStamped>): void => {
+  private handlePoseStamped = (messageEvent: PartialMessageEvent<PoseStamped>): void => {
     const poseMessage = normalizePoseStamped(messageEvent.message);
     const receiveTime = toNanoSec(messageEvent.receiveTime);
-    this.addPose(messageEvent.topic, poseMessage, receiveTime);
+    this.addPose(messageEvent.topic, poseMessage, messageEvent.message, receiveTime);
   };
 
-  handlePoseWithCovariance = (
+  private handlePoseInFrame = (messageEvent: PartialMessageEvent<PoseInFrame>): void => {
+    const poseMessage = normalizePoseInFrameToPoseStamped(messageEvent.message);
+    const receiveTime = toNanoSec(messageEvent.receiveTime);
+    this.addPose(messageEvent.topic, poseMessage, messageEvent.message, receiveTime);
+  };
+
+  private handlePoseWithCovariance = (
     messageEvent: PartialMessageEvent<PoseWithCovarianceStamped>,
   ): void => {
     const poseMessage = normalizePoseWithCovarianceStamped(messageEvent.message);
     const receiveTime = toNanoSec(messageEvent.receiveTime);
-    this.addPose(messageEvent.topic, poseMessage, receiveTime);
+    this.addPose(messageEvent.topic, poseMessage, messageEvent.message, receiveTime);
   };
 
-  addPose(
+  private addPose(
     topic: string,
     poseMessage: PoseStamped | PoseWithCovarianceStamped,
+    originalMessage: Record<string, RosValue>,
     receiveTime: bigint,
   ): void {
     let renderable = this.renderables.get(topic);
@@ -237,6 +255,7 @@ export class Poses extends SceneExtension<PoseRenderable> {
         settings,
         topic,
         poseMessage,
+        originalMessage,
         axis: undefined,
         arrow: undefined,
         sphere: undefined,
@@ -246,12 +265,19 @@ export class Poses extends SceneExtension<PoseRenderable> {
       this.renderables.set(topic, renderable);
     }
 
-    this._updatePoseRenderable(renderable, poseMessage, receiveTime, renderable.userData.settings);
+    this._updatePoseRenderable(
+      renderable,
+      poseMessage,
+      originalMessage,
+      receiveTime,
+      renderable.userData.settings,
+    );
   }
 
-  _updatePoseRenderable(
+  private _updatePoseRenderable(
     renderable: PoseRenderable,
     poseMessage: PoseStamped | PoseWithCovarianceStamped,
+    originalMessage: Record<string, RosValue>,
     receiveTime: bigint,
     settings: LayerSettingsPose,
   ): void {
@@ -259,6 +285,7 @@ export class Poses extends SceneExtension<PoseRenderable> {
     renderable.userData.messageTime = toNanoSec(poseMessage.header.stamp);
     renderable.userData.frameId = this.renderer.normalizeFrameId(poseMessage.header.frame_id);
     renderable.userData.poseMessage = poseMessage;
+    renderable.userData.originalMessage = originalMessage;
 
     // Default the covariance sphere to hidden. If showCovariance is set and a valid covariance
     // matrix is present, it will be shown
@@ -399,6 +426,13 @@ function createSphereMarker(
 export function normalizePoseStamped(pose: PartialMessage<PoseStamped>): PoseStamped {
   return {
     header: normalizeHeader(pose.header),
+    pose: normalizePose(pose.pose),
+  };
+}
+
+function normalizePoseInFrameToPoseStamped(pose: PartialMessage<PoseInFrame>): PoseStamped {
+  return {
+    header: { stamp: normalizeTime(pose.timestamp), frame_id: pose.frame_id ?? "" },
     pose: normalizePose(pose.pose),
   };
 }

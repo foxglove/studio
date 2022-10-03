@@ -20,18 +20,18 @@ interface ArrayConstructor {
 }
 
 export class DynamicBufferGeometry extends THREE.BufferGeometry {
-  override attributes: { [name: string]: THREE.BufferAttribute } = {};
+  public override attributes: { [name: string]: THREE.BufferAttribute } = {};
 
   private _attributeConstructors = new Map<string, ArrayConstructor>();
   private _usage: THREE.Usage;
   private _itemCapacity = 0;
 
-  constructor(usage: THREE.Usage = THREE.DynamicDrawUsage) {
+  public constructor(usage: THREE.Usage = THREE.DynamicDrawUsage) {
     super();
     this._usage = usage;
   }
 
-  createAttribute<T extends TypedArray, C extends TypedArrayConstructor<T>>(
+  public createAttribute<T extends TypedArray, C extends TypedArrayConstructor<T>>(
     name: THREE.BuiltinShaderAttributeName | string,
     arrayConstructor: C,
     itemSize: number,
@@ -45,7 +45,7 @@ export class DynamicBufferGeometry extends THREE.BufferGeometry {
     return this.setAttribute(name, attribute);
   }
 
-  resize(itemCount: number): void {
+  public resize(itemCount: number): void {
     this.setDrawRange(0, itemCount);
 
     if (itemCount <= this._itemCapacity) {
@@ -61,7 +61,7 @@ export class DynamicBufferGeometry extends THREE.BufferGeometry {
       const data = new dataConstructor(itemCount * attribute.itemSize);
       const newAttrib = new THREE.BufferAttribute(data, attribute.itemSize, attribute.normalized);
       newAttrib.setUsage(this._usage);
-      this.attributes[attributeName] = newAttrib;
+      this.setAttribute(attributeName, newAttrib);
     }
 
     this._itemCapacity = itemCount;

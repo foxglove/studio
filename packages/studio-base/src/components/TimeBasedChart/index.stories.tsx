@@ -119,7 +119,7 @@ export function CanZoomAndUpdate(): JSX.Element {
 
     // Zoom is a continuous event, so we need to simulate wheel multiple times
     for (let i = 0; i < 5; i++) {
-      triggerWheel(canvasEl, 2);
+      triggerWheel(canvasEl.parentElement!, 2);
       await new Promise((resolve) => setTimeout(resolve, 10));
     }
 
@@ -168,11 +168,14 @@ export function CleansUpTooltipOnUnmount(_args: unknown): JSX.Element | ReactNul
     // wait for chart to render before triggering tooltip
     let tooltip: Element | undefined;
 
-    TestUtils.Simulate.mouseEnter(canvas!);
+    TestUtils.Simulate.mouseEnter(canvas!.parentElement!);
     for (let i = 0; !tooltip && i < 20; i++) {
-      TestUtils.Simulate.mouseMove(canvas!, { clientX: 330 + left, clientY: 339 + top });
+      TestUtils.Simulate.mouseMove(canvas!.parentElement!, {
+        clientX: 330 + left,
+        clientY: 339 + top,
+      });
       await new Promise((resolve) => setTimeout(resolve, 100));
-      tooltip = document.querySelector("[data-test~=TimeBasedChartTooltipContent]") ?? undefined;
+      tooltip = document.querySelector("[data-testid~=TimeBasedChartTooltipContent]") ?? undefined;
     }
     if (tooltip == undefined) {
       throw new Error("could not find tooltip");

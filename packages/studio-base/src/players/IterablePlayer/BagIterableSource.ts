@@ -36,11 +36,11 @@ export class BagIterableSource implements IIterableSource {
   private _bag: Bag | undefined;
   private _readersByConnectionId = new Map<number, LazyMessageReader>();
 
-  constructor(source: BagSource) {
+  public constructor(source: BagSource) {
     this._source = source;
   }
 
-  async initialize(): Promise<Initalization> {
+  public async initialize(): Promise<Initalization> {
     await decompressLZ4.isLoaded;
     const bzip2 = await Bzip2.init();
 
@@ -163,7 +163,9 @@ export class BagIterableSource implements IIterableSource {
     };
   }
 
-  async *messageIterator(opt: MessageIteratorArgs): AsyncGenerator<Readonly<IteratorResult>> {
+  public async *messageIterator(
+    opt: MessageIteratorArgs,
+  ): AsyncIterableIterator<Readonly<IteratorResult>> {
     yield* this._messageIterator({ ...opt, reverse: false });
   }
 
@@ -192,7 +194,11 @@ export class BagIterableSource implements IIterableSource {
       }
 
       if (reader) {
-        const parsedMessage = reader.readMessage(bagMsgEvent.data);
+        // bagMsgEvent.data is a view on top of the entire chunk. To avoid keeping references for
+        // chunks (which will fill up memory space when we cache messages) when make a copy of the
+        // data.
+        const dataCopy = bagMsgEvent.data.slice();
+        const parsedMessage = reader.readMessage(dataCopy);
 
         yield {
           connectionId,
@@ -218,7 +224,7 @@ export class BagIterableSource implements IIterableSource {
     }
   }
 
-  async getBackfillMessages({
+  public async getBackfillMessages({
     topics,
     time,
   }: GetBackfillMessagesArgs): Promise<MessageEvent<unknown>[]> {

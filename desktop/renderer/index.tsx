@@ -76,20 +76,21 @@ async function main() {
     (global as { storageBridge?: Storage }).storageBridge!,
     {
       defaults: {
-        [AppSetting.ENABLE_REACT_STRICT_MODE]: isDevelopment,
-        [AppSetting.EXPERIMENTAL_BAG_PLAYER]: false,
-        [AppSetting.EXPERIMENTAL_DATA_PLATFORM_PLAYER]: isDevelopment,
-        [AppSetting.EXPERIMENTAL_MCAP_PLAYER]: isDevelopment,
+        [AppSetting.SHOW_DEBUG_PANELS]: isDevelopment,
       },
     },
   );
 
-  const enableStrictMode = appConfiguration.get(AppSetting.ENABLE_REACT_STRICT_MODE) as boolean;
-  const root = <Root appConfiguration={appConfiguration} />;
-  ReactDOM.render(enableStrictMode ? <StrictMode>{root}</StrictMode> : root, rootEl, () => {
-    // Integration tests look for this console log to indicate the app has rendered once
-    log.debug("App rendered");
-  });
+  ReactDOM.render(
+    <StrictMode>
+      <Root appConfiguration={appConfiguration} />
+    </StrictMode>,
+    rootEl,
+    () => {
+      // Integration tests look for this console log to indicate the app has rendered once
+      log.debug("App rendered");
+    },
+  );
 }
 
 void main();

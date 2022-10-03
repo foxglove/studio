@@ -4,14 +4,14 @@
 
 import { cloneDeep, round, set } from "lodash";
 
-import { DEFAULT_CAMERA_STATE } from "@foxglove/regl-worldview";
 import { SettingsTreeAction } from "@foxglove/studio";
 
-import { Renderer, RendererConfig } from "../Renderer";
+import { FollowMode, Renderer, RendererConfig } from "../Renderer";
 import { SceneExtension } from "../SceneExtension";
 import { SettingsTreeEntry } from "../SettingsManager";
-import { fieldSize, PRECISION_DEGREES, PRECISION_DISTANCE, SelectEntry } from "../settings";
-import type { FrameAxes } from "./FrameAxes";
+import { DEFAULT_CAMERA_STATE } from "../camera";
+import { PRECISION_DEGREES, PRECISION_DISTANCE, SelectEntry } from "../settings";
+import { CoordinateFrame } from "../transforms";
 import { PublishClickType } from "./PublishClickTool";
 
 export const DEFAULT_LABEL_SCALE_FACTOR = 1;
@@ -30,10 +30,10 @@ export const DEFAULT_PUBLISH_SETTINGS: RendererConfig["publish"] = {
   poseEstimateThetaDeviation: round(Math.PI / 12, 8),
 };
 
-const ONE_DEGREE = Math.PI / 180;
+const FOLLOW_TF_PATH = ["general", "followTf"];
 
 export class CoreSettings extends SceneExtension {
-  constructor(renderer: Renderer) {
+  public constructor(renderer: Renderer) {
     super("foxglove.CoreSettings", renderer);
 
     renderer.on("transformTreeUpdated", this.handleTransformTreeUpdated);
@@ -42,9 +42,12 @@ export class CoreSettings extends SceneExtension {
       "foxglove.publish-type-change",
       this.handlePublishToolChange,
     );
+
+    renderer.labelPool.scaleFactor =
+      renderer.config.scene.labelScaleFactor ?? DEFAULT_LABEL_SCALE_FACTOR;
   }
 
-  override dispose(): void {
+  public override dispose(): void {
     this.renderer.off("transformTreeUpdated", this.handleTransformTreeUpdated);
     this.renderer.off("cameraMove", this.handleCameraMove);
     this.renderer.publishClickTool.removeEventListener(
@@ -54,29 +57,55 @@ export class CoreSettings extends SceneExtension {
     super.dispose();
   }
 
-  override settingsNodes(): SettingsTreeEntry[] {
+  public override settingsNodes(): SettingsTreeEntry[] {
     const config = this.renderer.config;
     const { cameraState: camera, publish } = config;
     const handler = this.handleSettingsAction;
 
-    const followTfOptions = this.renderer.coordinateFrameList;
+    // If the user-selected frame does not exist, show it in the dropdown
+    // anyways. A settings node error will be displayed
+    let followTfOptions = this.renderer.coordinateFrameList;
+    const followFrameId = this.renderer.followFrameId;
+    if (followFrameId != undefined && !this.renderer.transformTree.hasFrame(followFrameId)) {
+      followTfOptions = [
+        { label: CoordinateFrame.DisplayName(followFrameId), value: followFrameId },
+        ...followTfOptions,
+      ];
+    }
+
     const followTfValue = selectBest(
       [this.renderer.followFrameId, config.followTf, this.renderer.renderFrameId],
       followTfOptions,
     );
+    const followTfError = this.renderer.settings.errors.errors.errorAtPath(FOLLOW_TF_PATH);
+
+    const followModeOptions = [
+      { label: "Pose", value: "follow-pose" },
+      { label: "Position", value: "follow-position" },
+      { label: "Fixed", value: "follow-none" },
+    ];
+    const followModeValue = this.renderer.followMode;
 
     return [
       {
         path: ["general"],
         node: {
-          label: "General",
+          label: "Frame",
           fields: {
             followTf: {
-              label: "Frame",
+              label: "Display frame",
+              help: "The coordinate frame to place the camera in. The camera position and orientation will be relative to the origin of this frame.",
               input: "select",
               options: followTfOptions,
               value: followTfValue,
-              error: this.renderer.settings.errors.errors.errorAtPath(["general", "followTf"]),
+              error: followTfError,
+            },
+            followMode: {
+              label: "Follow mode",
+              help: "Change the camera behavior during playback to follow the display frame or not.",
+              input: "select",
+              options: followModeOptions,
+              value: followModeValue,
             },
           },
           defaultExpansionState: "expanded",
@@ -94,7 +123,11 @@ export class CoreSettings extends SceneExtension {
               input: "boolean",
               value: config.scene.enableStats,
             },
-            backgroundColor: { label: "Color", input: "rgb", value: config.scene.backgroundColor },
+            backgroundColor: {
+              label: "Background",
+              input: "rgb",
+              value: config.scene.backgroundColor,
+            },
             labelScaleFactor: {
               label: "Label scale",
               help: "Scale factor to apply to all labels",
@@ -105,110 +138,76 @@ export class CoreSettings extends SceneExtension {
               value: config.scene.labelScaleFactor,
               placeholder: String(DEFAULT_LABEL_SCALE_FACTOR),
             },
+            ignoreColladaUpAxis: {
+              label: "Ignore COLLADA <up_axis>",
+              help: "Match the behavior of rviz by ignoring the <up_axis> tag in COLLADA files",
+              input: "boolean",
+              value: config.scene.ignoreColladaUpAxis,
+              error:
+                (config.scene.ignoreColladaUpAxis ?? false) !==
+                this.renderer.modelCache.options.ignoreColladaUpAxis
+                  ? "This setting requires a restart to take effect"
+                  : undefined,
+            },
           },
           children: {
-            transforms: {
-              label: "Transforms",
+            cameraState: {
+              label: "View",
+              actions: [{ type: "action", id: "reset-camera", label: "Reset" }],
               fields: {
-                showLabel: {
-                  label: "Labels",
-                  input: "boolean",
-                  value: config.scene.transforms?.showLabel ?? true,
+                distance: {
+                  label: "Distance",
+                  input: "number",
+                  step: 1,
+                  precision: PRECISION_DISTANCE,
+                  value: camera.distance,
                 },
-                ...((config.scene.transforms?.showLabel ?? true) && {
-                  labelSize: {
-                    label: "Label size",
+                perspective: { label: "Perspective", input: "boolean", value: camera.perspective },
+                targetOffset: {
+                  label: "Target",
+                  input: "vec3",
+                  labels: ["X", "Y", "Z"],
+                  precision: PRECISION_DISTANCE,
+                  value: [...camera.targetOffset],
+                },
+                thetaOffset: {
+                  label: "Theta",
+                  input: "number",
+                  step: 1,
+                  precision: PRECISION_DEGREES,
+                  value: camera.thetaOffset,
+                },
+                ...(camera.perspective && {
+                  phi: {
+                    label: "Phi",
                     input: "number",
-                    min: 0,
-                    step: 0.01,
-                    precision: 2,
-                    placeholder: String(DEFAULT_TF_LABEL_SIZE),
-                    value: config.scene.transforms?.labelSize,
+                    step: 1,
+                    precision: PRECISION_DEGREES,
+                    value: camera.phi,
+                  },
+                  fovy: {
+                    label: "Y-Axis FOV",
+                    input: "number",
+                    step: 1,
+                    precision: PRECISION_DEGREES,
+                    value: camera.fovy,
                   },
                 }),
-                axisScale: fieldSize(
-                  "Axis scale",
-                  config.scene.transforms?.axisScale,
-                  DEFAULT_AXIS_SCALE,
-                ),
-                lineWidth: {
-                  label: "Line width",
+                near: {
+                  label: "Near",
                   input: "number",
-                  min: 0,
-                  step: 0.5,
-                  precision: 1,
-                  value: config.scene.transforms?.lineWidth,
-                  placeholder: String(DEFAULT_LINE_WIDTH_PX),
+                  step: DEFAULT_CAMERA_STATE.near,
+                  precision: PRECISION_DISTANCE,
+                  value: camera.near,
                 },
-                lineColor: {
-                  label: "Line color",
-                  input: "rgb",
-                  value: config.scene.transforms?.lineColor ?? DEFAULT_LINE_COLOR_STR,
+                far: {
+                  label: "Far",
+                  input: "number",
+                  step: 1,
+                  precision: PRECISION_DISTANCE,
+                  value: camera.far,
                 },
               },
-            },
-          },
-          defaultExpansionState: "collapsed",
-          handler,
-        },
-      },
-      {
-        path: ["cameraState"],
-        node: {
-          label: "Camera",
-          actions: [{ type: "action", id: "reset-camera", label: "Reset" }],
-          fields: {
-            distance: {
-              label: "Distance",
-              input: "number",
-              step: 1,
-              precision: PRECISION_DISTANCE,
-              value: camera.distance,
-            },
-            perspective: { label: "Perspective", input: "boolean", value: camera.perspective },
-            targetOffset: {
-              label: "Target",
-              input: "vec3",
-              labels: ["X", "Y", "Z"],
-              precision: PRECISION_DISTANCE,
-              value: [...camera.targetOffset],
-            },
-            thetaOffset: {
-              label: "Theta",
-              input: "number",
-              step: ONE_DEGREE,
-              precision: PRECISION_DEGREES,
-              value: camera.thetaOffset,
-            },
-            ...(camera.perspective && {
-              phi: {
-                label: "Phi",
-                input: "number",
-                step: ONE_DEGREE,
-                precision: PRECISION_DEGREES,
-                value: camera.phi,
-              },
-              fovy: {
-                label: "Y-Axis FOV",
-                input: "number",
-                step: ONE_DEGREE,
-                precision: PRECISION_DEGREES,
-                value: camera.fovy,
-              },
-            }),
-            near: {
-              label: "Near",
-              input: "number",
-              step: DEFAULT_CAMERA_STATE.near,
-              precision: PRECISION_DISTANCE,
-              value: camera.near,
-            },
-            far: {
-              label: "Far",
-              input: "number",
-              step: 1,
-              precision: PRECISION_DISTANCE,
-              value: camera.far,
             },
           },
           defaultExpansionState: "collapsed",
@@ -274,7 +273,7 @@ export class CoreSettings extends SceneExtension {
     ];
   }
 
-  override handleSettingsAction = (action: SettingsTreeAction): void => {
+  public override handleSettingsAction = (action: SettingsTreeAction): void => {
     if (action.action === "perform-node-action" && action.payload.id === "reset-camera") {
       this.renderer.updateConfig((draft) => {
         draft.cameraState = cloneDeep(DEFAULT_CAMERA_STATE);
@@ -309,42 +308,41 @@ export class CoreSettings extends SceneExtension {
 
         this.renderer.followFrameId = followTf;
         this.renderer.settings.errors.clearPath(["general", "followTf"]);
+      } else if (path[1] === "followMode") {
+        const followMode = value as FollowMode;
+        // Update the configuration. This is done manually since followMode is at the top level of
+        // config, not under `general`
+        this.renderer.updateConfig((draft) => {
+          // any follow -> stationary no clear
+          // stationary -> any follow clear offset (center on frame)
+          if (draft.followMode === "follow-none") {
+            draft.cameraState.targetOffset = [...DEFAULT_CAMERA_STATE.targetOffset];
+            draft.cameraState.thetaOffset = DEFAULT_CAMERA_STATE.thetaOffset;
+          } else if (followMode === "follow-pose") {
+            draft.cameraState.thetaOffset = DEFAULT_CAMERA_STATE.thetaOffset;
+          }
+          draft.followMode = followMode;
+        });
+
+        this.renderer.updateFollowMode(followMode);
       }
     } else if (category === "scene") {
-      // Update the configuration
-      this.renderer.updateConfig((draft) => set(draft, path, value));
+      if (path[1] === "cameraState") {
+        // Update the configuration. This is done manually since cameraState is at the top level of
+        // config, not under `scene`
+        this.renderer.updateConfig((draft) => set(draft, path.slice(1), value));
+      } else {
+        // Update the configuration
+        this.renderer.updateConfig((draft) => set(draft, path, value));
 
-      if (path[1] === "backgroundColor") {
-        const backgroundColor = value as string | undefined;
-        this.renderer.setColorScheme(this.renderer.colorScheme, backgroundColor);
-      } else if (path[1] === "labelScaleFactor") {
-        const labelScaleFactor = value as number | undefined;
-        this.renderer.labelPool.setScaleFactor(labelScaleFactor ?? DEFAULT_LABEL_SCALE_FACTOR);
-      } else if (path[1] === "transforms") {
-        const frameAxes = this.renderer.sceneExtensions.get("foxglove.FrameAxes") as
-          | FrameAxes
-          | undefined;
-
-        if (path[2] === "showLabel") {
-          const showLabel = value as boolean | undefined;
-          frameAxes?.setLabelVisible(showLabel ?? true);
-        } else if (path[2] === "labelSize") {
-          const labelSize = value as number | undefined;
-          frameAxes?.setLabelSize(labelSize ?? DEFAULT_TF_LABEL_SIZE);
-        } else if (path[2] === "axisScale") {
-          const axisScale = value as number | undefined;
-          frameAxes?.setAxisScale(axisScale ?? DEFAULT_AXIS_SCALE);
-        } else if (path[2] === "lineWidth") {
-          const lineWidth = value as number | undefined;
-          frameAxes?.setLineWidth(lineWidth ?? DEFAULT_LINE_WIDTH_PX);
-        } else if (path[2] === "lineColor") {
-          const lineColor = value as string | undefined;
-          frameAxes?.setLineColor(lineColor ?? DEFAULT_LINE_COLOR_STR);
+        if (path[1] === "backgroundColor") {
+          const backgroundColor = value as string | undefined;
+          this.renderer.setColorScheme(this.renderer.colorScheme, backgroundColor);
+        } else if (path[1] === "labelScaleFactor") {
+          const labelScaleFactor = value as number | undefined;
+          this.renderer.labelPool.setScaleFactor(labelScaleFactor ?? DEFAULT_LABEL_SCALE_FACTOR);
         }
       }
-    } else if (category === "cameraState") {
-      // Update the configuration
-      this.renderer.updateConfig((draft) => set(draft, path, value));
     } else if (category === "publish") {
       // Update the configuration
       if (path[1] === "topic") {
@@ -381,15 +379,15 @@ export class CoreSettings extends SceneExtension {
     this.updateSettingsTree();
   };
 
-  handleTransformTreeUpdated = (): void => {
+  private handleTransformTreeUpdated = (): void => {
     this.updateSettingsTree();
   };
 
-  handleCameraMove = (): void => {
+  private handleCameraMove = (): void => {
     this.updateSettingsTree();
   };
 
-  handlePublishToolChange = (): void => {
+  private handlePublishToolChange = (): void => {
     this.renderer.updateConfig((draft) => {
       draft.publish.type = this.renderer.publishClickTool.publishClickType;
       return draft;

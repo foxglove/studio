@@ -3,10 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import type { Time } from "@foxglove/rostime";
-import type {
-  FrameTransform,
-  Transform as TransformWithTime,
-} from "@foxglove/schemas/schemas/typescript";
+import { FrameTransform, NumericType } from "@foxglove/schemas";
 
 import type { PartialMessage } from "./SceneExtension";
 import {
@@ -22,20 +19,19 @@ import {
 } from "./ros";
 import type { Pose } from "./transforms";
 
-// This should be importable from @foxglove/schemas, but importing enums from
-// that package is currently not working. See <https://github.com/foxglove/schemas/issues/41>
-// for more details
-enum NumericType {
-  UNKNOWN = 0,
-  UINT8 = 1,
-  INT8 = 2,
-  UINT16 = 3,
-  INT16 = 4,
-  UINT32 = 5,
-  INT32 = 6,
-  FLOAT32 = 7,
-  FLOAT64 = 8,
-}
+// Legacy foxglove.Transform type -- see https://github.com/foxglove/schemas/pull/46
+type LegacyTransform = {
+  timestamp: Time;
+  translation: Vector3;
+  rotation: Quaternion;
+};
+// Legacy foxglove.FrameTransform type -- see https://github.com/foxglove/schemas/pull/46
+export type LegacyFrameTransform = {
+  timestamp: Time;
+  parent_frame_id: string;
+  child_frame_id: string;
+  transform: LegacyTransform;
+};
 
 export function normalizeTime(time: Partial<Time> | undefined): Time {
   if (!time) {
@@ -73,7 +69,11 @@ export function normalizeFloat32Array(array: unknown): Float32Array {
     return new Float32Array(0);
   } else if (array instanceof Float32Array) {
     return array;
-  } else if (Array.isArray(array) || array instanceof ArrayBuffer) {
+  } else if (
+    Array.isArray(array) ||
+    array instanceof ArrayBuffer ||
+    array instanceof Float64Array
+  ) {
     return new Float32Array(array);
   } else {
     return new Float32Array(0);
@@ -153,16 +153,6 @@ export function normalizeTransform(transform: PartialMessage<Transform> | undefi
   };
 }
 
-export function normalizeTransformWithTime(
-  transform: PartialMessage<TransformWithTime> | undefined,
-): TransformWithTime {
-  return {
-    timestamp: normalizeTime(transform?.timestamp),
-    translation: normalizeVector3(transform?.translation),
-    rotation: normalizeQuaternion(transform?.rotation),
-  };
-}
-
 export function normalizeTransformStamped(
   transform: PartialMessage<TransformStamped> | undefined,
 ): TransformStamped {
@@ -180,13 +170,18 @@ export function normalizeTFMessage(tfMessage: PartialMessage<TFMessage> | undefi
 }
 
 export function normalizeFrameTransform(
-  frameTransform: PartialMessage<FrameTransform> | undefined,
+  frameTransform:
+    | (PartialMessage<FrameTransform> & PartialMessage<LegacyFrameTransform>)
+    | undefined,
 ): FrameTransform {
   return {
     timestamp: normalizeTime(frameTransform?.timestamp),
     parent_frame_id: frameTransform?.parent_frame_id ?? "",
     child_frame_id: frameTransform?.child_frame_id ?? "",
-    transform: normalizeTransformWithTime(frameTransform?.transform),
+    translation: normalizeVector3(
+      frameTransform?.translation ?? frameTransform?.transform?.translation,
+    ),
+    rotation: normalizeQuaternion(frameTransform?.rotation ?? frameTransform?.transform?.rotation),
   };
 }
 

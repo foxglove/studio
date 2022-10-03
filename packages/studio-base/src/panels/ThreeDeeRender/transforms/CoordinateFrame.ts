@@ -5,9 +5,9 @@
 /* eslint-disable no-underscore-dangle */
 /* eslint-disable @foxglove/no-boolean-parameters */
 
-import { mat4 } from "gl-matrix";
+import { mat4, quat, vec3, vec4 } from "gl-matrix";
 
-import { ArrayMap } from "@foxglove/den/collection/ArrayMap";
+import { ArrayMap } from "@foxglove/den/collection";
 
 import { Transform } from "./Transform";
 import { Pose, mat4Identity } from "./geometry";
@@ -17,10 +17,16 @@ type TimeAndTransform = [time: Time, transform: Transform];
 
 export const MAX_DURATION: Duration = 4_294_967_295n * BigInt(1e9);
 
+const DEG2RAD = Math.PI / 180;
+const RAD2DEG = 180 / Math.PI;
+
 const tempLower: TimeAndTransform = [0n, Transform.Identity()];
 const tempUpper: TimeAndTransform = [0n, Transform.Identity()];
+const tempVec3: vec3 = [0, 0, 0];
+const tempVec4: vec4 = [0, 0, 0, 0];
 const tempTransform = Transform.Identity();
 const tempMatrix = mat4Identity();
+const temp2Matrix = mat4Identity();
 
 /**
  * CoordinateFrame is a named 3D coordinate frame with an optional parent frame
@@ -30,14 +36,16 @@ const tempMatrix = mat4Identity();
  */
 // ts-prune-ignore-next
 export class CoordinateFrame {
-  readonly id: string;
-  maxStorageTime: Duration;
-  maxCapacity: number;
+  public readonly id: string;
+  public maxStorageTime: Duration;
+  public maxCapacity: number;
+  public offsetPosition: vec3 | undefined;
+  public offsetEulerDegrees: vec3 | undefined;
 
   private _parent?: CoordinateFrame;
   private _transforms: ArrayMap<Time, Transform>;
 
-  constructor(
+  public constructor(
     id: string,
     parent: CoordinateFrame | undefined,
     maxStorageTime: Duration,
@@ -50,7 +58,7 @@ export class CoordinateFrame {
     this._transforms = new ArrayMap<Time, Transform>();
   }
 
-  parent(): CoordinateFrame | undefined {
+  public parent(): CoordinateFrame | undefined {
     return this._parent;
   }
 
@@ -58,7 +66,7 @@ export class CoordinateFrame {
    * Returns the top-most frame by walking up each parent frame. If the current
    * frame does not have a parent, the current frame is returned.
    */
-  root(): CoordinateFrame {
+  public root(): CoordinateFrame {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     let root: CoordinateFrame = this;
     while (root._parent) {
@@ -70,15 +78,22 @@ export class CoordinateFrame {
   /**
    * Returns true if this frame has no parent frame.
    */
-  isRoot(): boolean {
+  public isRoot(): boolean {
     return this._parent == undefined;
+  }
+
+  /**
+   * Returns the number of transforms stored in the transform history.
+   */
+  public transformsSize(): number {
+    return this._transforms.size;
   }
 
   /**
    * Set the parent frame for this frame. If the parent frame is already set to
    * a different frame, the transform history is cleared.
    */
-  setParent(parent: CoordinateFrame): void {
+  public setParent(parent: CoordinateFrame): void {
     if (this._parent && this._parent !== parent) {
       this._transforms.clear();
     }
@@ -91,7 +106,7 @@ export class CoordinateFrame {
    * @param id Frame ID to search for
    * @returns The ancestor frame, or undefined if not found
    */
-  findAncestor(id: string): CoordinateFrame | undefined {
+  public findAncestor(id: string): CoordinateFrame | undefined {
     let ancestor: CoordinateFrame | undefined = this._parent;
     while (ancestor) {
       if (ancestor.id === id) {
@@ -109,7 +124,7 @@ export class CoordinateFrame {
    *
    * If a transform with an identical timestamp already exists, it is replaced.
    */
-  addTransform(time: Time, transform: Transform): void {
+  public addTransform(time: Time, transform: Transform): void {
     this._transforms.set(time, transform);
 
     // Remove transforms that are too old
@@ -120,7 +135,7 @@ export class CoordinateFrame {
     }
 
     // Trim down to the maximum history size
-    if (this._transforms.size > this.maxCapacity) {
+    while (this._transforms.size > this.maxCapacity) {
       this._transforms.shift();
     }
   }
@@ -139,7 +154,7 @@ export class CoordinateFrame {
    *   transform
    * @returns True if the search was successful
    */
-  findClosestTransforms(
+  public findClosestTransforms(
     outLower: TimeAndTransform,
     outUpper: TimeAndTransform,
     time: Time,
@@ -225,7 +240,7 @@ export class CoordinateFrame {
    *   transform
    * @returns A reference to `out` on success, otherwise undefined
    */
-  applyLocal(
+  public applyLocal(
     out: Pose,
     input: Readonly<Pose>,
     srcFrame: CoordinateFrame,
@@ -288,7 +303,7 @@ export class CoordinateFrame {
    *   transform
    * @returns A reference to `out` on success, otherwise undefined
    */
-  apply(
+  public apply(
     out: Pose,
     input: Readonly<Pose>,
     rootFrame: CoordinateFrame,
@@ -311,7 +326,7 @@ export class CoordinateFrame {
    * Returns a display-friendly rendition of `id`, quoting the frame id if it is
    * an empty string or starts or ends with whitespace.
    */
-  displayName(): string {
+  public displayName(): string {
     return CoordinateFrame.DisplayName(this.id);
   }
 
@@ -322,7 +337,7 @@ export class CoordinateFrame {
    * @param upper End [time, transform]
    * @param time Interpolant in the range [lower[0], upper[0]]
    */
-  static Interpolate(
+  public static Interpolate(
     output: TimeAndTransform,
     lower: TimeAndTransform,
     upper: TimeAndTransform,
@@ -351,7 +366,7 @@ export class CoordinateFrame {
    * @param upper End [time, transform]
    * @param time Interpolant in the range [lower[0], upper[0]]
    */
-  static InterpolateTransform(
+  public static InterpolateTransform(
     output: Transform,
     lower: TimeAndTransform,
     upper: TimeAndTransform,
@@ -383,7 +398,7 @@ export class CoordinateFrame {
    *   transform
    * @returns True on success
    */
-  static GetTransformMatrix(
+  public static GetTransformMatrix(
     out: mat4,
     parentFrame: CoordinateFrame,
     childFrame: CoordinateFrame,
@@ -399,6 +414,21 @@ export class CoordinateFrame {
         return false;
       }
       CoordinateFrame.InterpolateTransform(tempTransform, tempLower, tempUpper, time);
+
+      if (curFrame.offsetEulerDegrees) {
+        const quaternion = tempTransform.rotation();
+        const rotationMatrix = mat4.fromQuat(temp2Matrix, quaternion);
+        const euler = eulerFromMatrixUnscaled(tempVec3, rotationMatrix);
+        vec3.add(euler, euler, curFrame.offsetEulerDegrees);
+        tempTransform.setRotation(quaternionFromEuler(tempVec4, euler));
+      }
+
+      if (curFrame.offsetPosition) {
+        const p = tempTransform.position() as vec3;
+        vec3.add(p, p, curFrame.offsetPosition);
+        tempTransform.setPosition(p);
+      }
+
       mat4.multiply(out, tempTransform.matrix(), out);
 
       if (curFrame._parent == undefined) {
@@ -426,7 +456,7 @@ export class CoordinateFrame {
    *   transform
    * @returns True on success
    */
-  static Apply(
+  public static Apply(
     out: Pose,
     input: Readonly<Pose>,
     parent: CoordinateFrame,
@@ -452,7 +482,7 @@ export class CoordinateFrame {
    * Returns a display-friendly rendition of `frameId`, quoting the id if it is
    * an empty string or starts or ends with whitespace.
    */
-  static DisplayName(frameId: string): string {
+  public static DisplayName(frameId: string): string {
     return frameId === "" || frameId.startsWith(" ") || frameId.endsWith(" ")
       ? `"${frameId}"`
       : frameId;
@@ -469,4 +499,54 @@ function copyPose(out: Pose, pose: Readonly<Pose>): void {
   out.orientation.y = o.y;
   out.orientation.z = o.z;
   out.orientation.w = o.w;
+}
+
+// Compute XYZ Euler angles in degrees from an unscaled rotation matrix. This
+// method is adapted from THREE.js Euler#setFromRotationMatrix()
+function eulerFromMatrixUnscaled(out: vec3, m: mat4): vec3 {
+  const m11 = m[0];
+  const m12 = m[4];
+  const m13 = m[8];
+  const m22 = m[5];
+  const m23 = m[9];
+  const m32 = m[6];
+  const m33 = m[10];
+
+  out[1] = Math.asin(Math.max(-1, Math.min(1, m13)));
+
+  if (Math.abs(m13) < 0.9999999) {
+    out[0] = Math.atan2(-m23, m33);
+    out[2] = Math.atan2(-m12, m11);
+  } else {
+    out[0] = Math.atan2(m32, m22);
+    out[2] = 0;
+  }
+
+  // Convert to degrees
+  out[0] *= RAD2DEG;
+  out[1] *= RAD2DEG;
+  out[2] *= RAD2DEG;
+  return out;
+}
+
+// Compute a quaternion from XYZ Euler angles in degrees. This method is adapted
+// from THREE.js Quaternionr#setFromEuler()
+function quaternionFromEuler(out: quat, euler: vec3): quat {
+  const x = euler[0] * DEG2RAD;
+  const y = euler[1] * DEG2RAD;
+  const z = euler[2] * DEG2RAD;
+
+  const c1 = Math.cos(x / 2);
+  const c2 = Math.cos(y / 2);
+  const c3 = Math.cos(z / 2);
+
+  const s1 = Math.sin(x / 2);
+  const s2 = Math.sin(y / 2);
+  const s3 = Math.sin(z / 2);
+
+  out[0] = s1 * c2 * c3 + c1 * s2 * s3;
+  out[1] = c1 * s2 * c3 - s1 * c2 * s3;
+  out[2] = c1 * c2 * s3 + s1 * s2 * c3;
+  out[3] = c1 * c2 * c3 - s1 * s2 * s3;
+  return out;
 }

@@ -16,7 +16,6 @@ import { Box } from "@mui/material";
 import { storiesOf } from "@storybook/react";
 import { Mosaic, MosaicWindow } from "react-mosaic-component";
 
-import ChildToggle from "@foxglove/studio-base/components/ChildToggle";
 import MockPanelContextProvider from "@foxglove/studio-base/components/MockPanelContextProvider";
 import ToolbarIconButton from "@foxglove/studio-base/components/PanelToolbar/ToolbarIconButton";
 import MockCurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider/MockCurrentLayoutProvider";
@@ -30,7 +29,7 @@ class MosaicWrapper extends React.Component<{
   children: React.ReactNode;
   width?: number;
 }> {
-  override render() {
+  public override render() {
     const { width } = this.props;
     return (
       <Mosaic
@@ -67,7 +66,7 @@ class MosaicWrapper extends React.Component<{
 }
 
 class PanelToolbarWithOpenMenu extends React.PureComponent {
-  override render() {
+  public override render() {
     return (
       <div
         ref={(el) => {
@@ -84,27 +83,10 @@ class PanelToolbarWithOpenMenu extends React.PureComponent {
           <div style={{ width: "100%", lineHeight: "22px", paddingLeft: 5 }}>
             Some controls here
           </div>
-          <KeepToolbarVisibleHack />
         </PanelToolbar>
       </div>
     );
   }
-}
-
-// Keep PanelToolbar visible by rendering an empty ChildToggle inside the toolbar
-function KeepToolbarVisibleHack() {
-  return (
-    <ChildToggle
-      isOpen={true}
-      onToggle={() => {
-        // no-op
-      }}
-      position="above"
-    >
-      <span />
-      <span />
-    </ChildToggle>
-  );
 }
 
 storiesOf("components/PanelToolbar", module)
@@ -123,7 +105,6 @@ storiesOf("components/PanelToolbar", module)
           <div style={{ width: "100%", lineHeight: "22px", paddingLeft: 5 }}>
             Some controls here
           </div>
-          <KeepToolbarVisibleHack />
         </PanelToolbar>
       </MosaicWrapper>
     );
@@ -135,7 +116,6 @@ storiesOf("components/PanelToolbar", module)
           <div style={{ width: "100%", lineHeight: "22px", paddingLeft: 5 }}>
             Some controls here
           </div>
-          <KeepToolbarVisibleHack />
         </PanelToolbar>
       </MosaicWrapper>
     );
@@ -152,7 +132,6 @@ storiesOf("components/PanelToolbar", module)
           <div style={{ width: "100%", lineHeight: "22px", paddingLeft: 5 }}>
             Some controls here
           </div>
-          <KeepToolbarVisibleHack />
         </PanelToolbar>
       </MosaicWrapper>
     );
@@ -161,7 +140,7 @@ storiesOf("components/PanelToolbar", module)
     "menu (only panel)",
     () => {
       class Story extends React.Component {
-        override render() {
+        public override render() {
           return (
             <MosaicWrapper width={268}>
               <PanelToolbarWithOpenMenu />
@@ -177,7 +156,7 @@ storiesOf("components/PanelToolbar", module)
     "menu light",
     () => {
       class Story extends React.Component {
-        override render() {
+        public override render() {
           return (
             <MosaicWrapper width={268}>
               <PanelToolbarWithOpenMenu />
@@ -193,7 +172,7 @@ storiesOf("components/PanelToolbar", module)
     "menu (with sibling panel)",
     () => {
       class Story extends React.Component {
-        override render() {
+        public override render() {
           return (
             <MosaicWrapper
               width={268}
@@ -212,7 +191,7 @@ storiesOf("components/PanelToolbar", module)
     "menu for Tab panel",
     () => {
       class Story extends React.Component {
-        override render() {
+        public override render() {
           return (
             <MosaicWrapper
               width={268}
@@ -231,7 +210,7 @@ storiesOf("components/PanelToolbar", module)
     "no toolbars",
     () => {
       class Story extends React.Component {
-        override render() {
+        public override render() {
           return (
             <MosaicWrapper
               width={268}

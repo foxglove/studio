@@ -41,39 +41,25 @@ export default function Root({
 }: {
   appConfiguration: IAppConfiguration;
 }): JSX.Element {
-  const enableExperimentalBagPlayer: boolean =
-    (appConfiguration.get(AppSetting.EXPERIMENTAL_BAG_PLAYER) as boolean | undefined) ?? false;
-  const enableExperimentalDataPlatformPlayer: boolean =
-    (appConfiguration.get(AppSetting.EXPERIMENTAL_DATA_PLATFORM_PLAYER) as boolean | undefined) ??
-    false;
-  const enableExperimentalMcapPlayer: boolean =
-    (appConfiguration.get(AppSetting.EXPERIMENTAL_MCAP_PLAYER) as boolean | undefined) ?? false;
-
   const dataSources: IDataSourceFactory[] = useMemo(() => {
     const sources = [
       new RosbridgeDataSourceFactory(),
       new FoxgloveWebSocketDataSourceFactory(),
       new Ros1SocketDataSourceFactory(),
-      new Ros1LocalBagDataSourceFactory({ useIterablePlayer: enableExperimentalBagPlayer }),
-      new Ros1RemoteBagDataSourceFactory({ useIterablePlayer: enableExperimentalBagPlayer }),
+      new Ros1LocalBagDataSourceFactory(),
+      new Ros1RemoteBagDataSourceFactory(),
       new Ros2SocketDataSourceFactory(),
       new Ros2LocalBagDataSourceFactory(),
       new UlogLocalDataSourceFactory(),
       new VelodyneDataSourceFactory(),
-      new FoxgloveDataPlatformDataSourceFactory({
-        useIterablePlayer: enableExperimentalDataPlatformPlayer,
-      }),
-      new SampleNuscenesDataSourceFactory({ useIterablePlayer: enableExperimentalBagPlayer }),
-      new McapLocalDataSourceFactory({ useIterablePlayer: enableExperimentalMcapPlayer }),
+      new FoxgloveDataPlatformDataSourceFactory(),
+      new SampleNuscenesDataSourceFactory(),
+      new McapLocalDataSourceFactory(),
       new McapRemoteDataSourceFactory(),
     ];
 
     return sources;
-  }, [
-    enableExperimentalBagPlayer,
-    enableExperimentalDataPlatformPlayer,
-    enableExperimentalMcapPlayer,
-  ]);
+  }, []);
 
   if (!storageBridge) {
     throw new Error("storageBridge is missing");
@@ -95,7 +81,7 @@ export default function Root({
     new IdbExtensionLoader("org"),
     new DesktopExtensionLoader(desktopBridge),
   ]);
-  const consoleApi = useMemo(() => new ConsoleApi(process.env.FOXGLOVE_API_URL!), []);
+  const consoleApi = useMemo(() => new ConsoleApi(process.env.FOXGLOVE_API_URL ?? ""), []);
   const nativeAppMenu = useMemo(() => new NativeAppMenu(menuBridge), []);
   const nativeWindow = useMemo(() => new NativeWindow(desktopBridge), []);
 

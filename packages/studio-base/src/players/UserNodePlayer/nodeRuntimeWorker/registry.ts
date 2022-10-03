@@ -15,8 +15,11 @@ import path from "path";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import {
   Diagnostic,
+  DiagnosticSeverity,
+  ErrorCodes,
   ProcessMessageOutput,
   RegistrationOutput,
+  Sources,
   UserNodeLog,
 } from "@foxglove/studio-base/players/UserNodePlayer/types";
 import { DEFAULT_STUDIO_NODE_PREFIX } from "@foxglove/studio-base/util/globalConstants";
@@ -112,7 +115,7 @@ export const registerNode = ({
 
     const require = (id: string) => requireImplementation(id, projectCode);
 
-    // Using new Function in order to execute user-input text in Node Playground as code
+    // Using new Function in order to execute user-input text in User Scripts as code
     // eslint-disable-next-line no-new-func
     new Function("exports", "require", nodeCode)(nodeExports, require);
     nodeCallback = nodeExports.default!;
@@ -157,11 +160,18 @@ export const processMessage = ({
     return { message: newMessage, error: undefined, userNodeLogs, userNodeDiagnostics };
   } catch (err) {
     const error: string = err.toString();
+    const diagnostic: Diagnostic = {
+      source: Sources.Runtime,
+      severity: DiagnosticSeverity.Error,
+      message: error.length > 0 ? error : "Unknown error encountered running this node.",
+      code: ErrorCodes.RUNTIME,
+    };
+
     return {
       message: undefined,
-      error: error.length > 0 ? error : "Unknown error encountered running this node.",
+      error: undefined,
       userNodeLogs,
-      userNodeDiagnostics,
+      userNodeDiagnostics: [diagnostic],
     };
   }
 };

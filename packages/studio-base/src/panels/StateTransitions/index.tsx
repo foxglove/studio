@@ -12,13 +12,13 @@
 //   You may not use this file except in compliance with the License.
 
 import AddIcon from "@mui/icons-material/Add";
-import { Button, styled as muiStyled } from "@mui/material";
+import ClearIcon from "@mui/icons-material/Clear";
+import { alpha, Button, IconButton } from "@mui/material";
 import { ChartOptions, ScaleOptions } from "chart.js";
 import { uniq } from "lodash";
 import { useCallback, useMemo, useRef } from "react";
 import { useResizeDetector } from "react-resize-detector";
-import styled, { css } from "styled-components";
-import tinycolor from "tinycolor2";
+import { makeStyles } from "tss-react/mui";
 
 import { useShallowMemo } from "@foxglove/hooks";
 import { add as addTimes, fromSec, subtract as subtractTimes, toSec } from "@foxglove/rostime";
@@ -37,6 +37,7 @@ import Panel from "@foxglove/studio-base/components/Panel";
 import PanelToolbar, {
   PANEL_TOOLBAR_MIN_HEIGHT,
 } from "@foxglove/studio-base/components/PanelToolbar";
+import Stack from "@foxglove/studio-base/components/Stack";
 import TimeBasedChart, {
   TimeBasedChartTooltipData,
 } from "@foxglove/studio-base/components/TimeBasedChart";
@@ -52,7 +53,8 @@ import { TimestampMethod } from "@foxglove/studio-base/util/time";
 
 import helpContent from "./index.help.md";
 import messagesToDatasets from "./messagesToDatasets";
-import { StateTransitionPath } from "./types";
+import { useStateTransitionsPanelSettings } from "./settings";
+import { StateTransitionConfig } from "./types";
 
 export const transitionableRosTypes = [
   "bool",
@@ -72,84 +74,48 @@ const fontFamily = fonts.MONOSPACE;
 const fontSize = 10;
 const fontWeight = "bold";
 
-const SRoot = muiStyled("div")`
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-  z-index: 0; // create new stacking context
-  overflow: hidden;
-`;
+const useStyles = makeStyles()((theme) => ({
+  addButton: {
+    position: "absolute",
+    top: `calc(${PANEL_TOOLBAR_MIN_HEIGHT}px + ${theme.spacing(1)})`,
+    right: theme.spacing(0.5),
+    zIndex: 1,
+  },
+  clearButton: {
+    "&.MuiIconButton-root": {
+      padding: theme.spacing(0.125),
+    },
+  },
+  visibilityHidden: {
+    visibility: "hidden",
+  },
+  chartWrapper: {
+    position: "relative",
+    marginTop: theme.spacing(0.5),
+  },
+  row: {
+    display: "grid",
+    position: "absolute",
+    alignItems: "center",
+    gridTemplateColumns: "auto minmax(min-content, 1fr) auto",
+    gap: theme.spacing(0.25),
+    paddingLeft: theme.spacing(0.25),
+    left: theme.spacing(0.5),
+    borderRadius: theme.shape.borderRadius,
 
-const AddButton = muiStyled(Button, {
-  shouldForwardProp: (props) => props !== "mousePresent",
-})<{
-  mousePresent: boolean;
-}>(({ mousePresent, theme }) => ({
-  visibility: mousePresent ? "visible" : "hidden",
-  position: "absolute",
-  top: `calc(${PANEL_TOOLBAR_MIN_HEIGHT}px + ${theme.spacing(1)})`,
-  right: theme.spacing(1),
-  zIndex: 1,
+    ".MuiIconButton-root": {
+      visibility: "hidden",
+    },
+    "&:hover, &:focus-within": {
+      backgroundColor: alpha(theme.palette.background.paper, 0.67),
+      backgroundImage: `linear-gradient(to right, ${theme.palette.action.focus}, ${theme.palette.action.focus})`,
+
+      ".MuiIconButton-root": {
+        visibility: "visible",
+      },
+    },
+  },
 }));
-
-const SChartContainerOuter = muiStyled("div")`
-  width: 100%;
-  flex: auto;
-  overflow-x: hidden;
-  overflow-y: auto;
-`;
-
-const SChartContainerInner = muiStyled("div")`
-  position: relative;
-  margin-top: 10px;
-`;
-
-const inputLeft = 20;
-const SInputContainer = styled.div<{ shrink: boolean }>`
-  display: flex;
-  position: absolute;
-  padding-left: ${inputLeft}px;
-  margin-top: -2px;
-  height: 20px;
-  padding-right: 4px;
-  max-width: calc(100% - ${inputLeft}px);
-  min-width: min(100%, 150px); // Don't let it get too small.
-  overflow: hidden;
-  line-height: 20px;
-
-  &:hover {
-    background: ${({ theme }) => tinycolor(theme.palette.neutralLight).setAlpha(0.5).toRgbString()};
-  }
-
-  // Move over the first input on hover for the toolbar.
-  ${(props) =>
-    props.shrink &&
-    css`
-      max-width: calc(100% - 150px);
-    `}
-`;
-
-const SInputDelete = styled.div`
-  display: none;
-  position: absolute;
-  left: ${inputLeft}px;
-  transform: translateX(-100%);
-  user-select: none;
-  height: 20px;
-  line-height: 20px;
-  padding: 0 6px;
-  background: ${({ theme }) => tinycolor(theme.palette.neutralLight).setAlpha(0.5).toRgbString()};
-  cursor: pointer;
-
-  &:hover {
-    background: ${({ theme }) =>
-      tinycolor(theme.palette.neutralLight).setAlpha(0.75).toRgbString()};
-  }
-
-  ${SInputContainer}:hover & {
-    display: block;
-  }
-`;
 
 const plugins: ChartOptions["plugins"] = {
   datalabels: {
@@ -179,8 +145,6 @@ const plugins: ChartOptions["plugins"] = {
     },
   },
 };
-
-export type StateTransitionConfig = { paths: StateTransitionPath[] };
 
 export function openSiblingStateTransitionsPanel(
   openSiblingPanel: OpenSiblingPanel,
@@ -214,6 +178,7 @@ type Props = {
 const StateTransitions = React.memo(function StateTransitions(props: Props) {
   const { config, saveConfig } = props;
   const { paths } = config;
+  const { classes, cx } = useStyles();
 
   const onInputChange = (value: string, index?: number) => {
     if (index == undefined) {
@@ -378,29 +343,34 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
   const rootRef = useRef<HTMLDivElement>(ReactNull);
   const mousePresent = usePanelMousePresence(rootRef);
 
+  useStateTransitionsPanelSettings(config, saveConfig);
+
   return (
-    <SRoot ref={rootRef}>
+    <Stack ref={rootRef} flexGrow={1} overflow="hidden" style={{ zIndex: 0 }}>
       <PanelToolbar helpContent={helpContent} />
-      <AddButton
-        size="small"
-        variant="contained"
-        color="inherit"
-        startIcon={<AddIcon />}
-        disableRipple
-        mousePresent={mousePresent}
-        onClick={() =>
-          saveConfig({
-            paths: [...config.paths, { value: "", timestampMethod: "receiveTime" }],
-          })
-        }
+      <div
+        className={cx(classes.addButton, {
+          [classes.visibilityHidden]: !mousePresent,
+        })}
       >
-        Add topic
-      </AddButton>
-      <SChartContainerOuter>
-        <SChartContainerInner style={{ height }} ref={sizeRef}>
+        <Button
+          size="small"
+          variant="contained"
+          color="inherit"
+          startIcon={<AddIcon />}
+          disableRipple
+          onClick={() =>
+            saveConfig({ paths: [...config.paths, { value: "", timestampMethod: "receiveTime" }] })
+          }
+        >
+          Add topic
+        </Button>
+      </div>
+      <Stack fullWidth flex="auto" overflowX="hidden" overflowY="auto">
+        <div className={classes.chartWrapper} style={{ height }} ref={sizeRef}>
           <TimeBasedChart
             zoom
-            isSynced
+            isSynced={config.isSynced}
             showXAxisLabels
             width={width ?? 0}
             height={height}
@@ -416,20 +386,18 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
           />
 
           {paths.map(({ value: path, timestampMethod }, index) => (
-            <SInputContainer
-              key={index}
-              style={{ top: index * heightPerTopic }}
-              shrink={index === 0}
-            >
-              <SInputDelete
+            <div className={classes.row} key={index} style={{ top: index * heightPerTopic }}>
+              <IconButton
+                size="small"
+                className={classes.clearButton}
                 onClick={() => {
                   const newPaths = config.paths.slice();
                   newPaths.splice(index, 1);
                   saveConfig({ paths: newPaths });
                 }}
               >
-                ✕
-              </SInputDelete>
+                <ClearIcon fontSize="inherit" />
+              </IconButton>
               <MessagePathInput
                 path={path}
                 onChange={onInputChange}
@@ -441,19 +409,19 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
               <TimestampMethodDropdown
                 path={path}
                 index={index}
-                iconButtonProps={{ disabled: !path }}
+                iconButtonProps={{ disabled: path !== "" }}
                 timestampMethod={timestampMethod}
                 onTimestampMethodChange={onInputTimestampMethodChange}
               />
-            </SInputContainer>
+            </div>
           ))}
-        </SChartContainerInner>
-      </SChartContainerOuter>
-    </SRoot>
+        </div>
+      </Stack>
+    </Stack>
   );
 });
 
-const defaultConfig: PanelConfig = { paths: [] };
+const defaultConfig: StateTransitionConfig = { paths: [], isSynced: true };
 export default Panel(
   Object.assign(StateTransitions, {
     panelType: "StateTransitions",

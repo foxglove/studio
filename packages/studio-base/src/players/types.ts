@@ -17,15 +17,9 @@ import { RosMsgDefinition } from "@foxglove/rosmsg";
 import { Time } from "@foxglove/rostime";
 import type { MessageEvent, ParameterValue } from "@foxglove/studio";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
-import {
-  AverageThroughput,
-  RandomAccessDataProviderStall,
-  InitializationPerformanceMetadata,
-} from "@foxglove/studio-base/randomAccessDataProviders/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import { Range } from "@foxglove/studio-base/util/ranges";
 import { NotificationSeverity } from "@foxglove/studio-base/util/sendNotification";
-import { TimestampMethod } from "@foxglove/studio-base/util/time";
 
 // re-exported until other import sites are updated from players/types to @foxglove/studio
 export type { MessageEvent };
@@ -47,7 +41,7 @@ export interface Player {
   // should return a promise from the listener that resolves when the UI has finished updating, so
   // that we don't get overwhelmed with new state that we can't keep up with. The Player is
   // responsible for appropriately throttling based on when we resolve this promise.
-  setListener(listener: (arg0: PlayerState) => Promise<void>): void;
+  setListener(listener: (playerState: PlayerState) => Promise<void>): void;
   // Close the player; i.e. terminate any connections it might have open.
   close(): void;
   // Set a new set of subscriptions/advertisers. This might trigger fetching
@@ -66,18 +60,11 @@ export interface Player {
   startPlayback?(): void;
   pausePlayback?(): void;
   seekPlayback?(time: Time, backfillDuration?: Time): void;
+  playUntil?(time: Time): void;
   // Seek to a particular time. Might trigger backfilling.
   // If the Player supports non-real-time speeds (i.e. PlayerState#capabilities contains
   // PlayerCapabilities.setSpeed), set that speed. E.g. 1.0 is real time, 0.2 is 20% of real time.
   setPlaybackSpeed?(speedFraction: number): void;
-  // Request a backfill for Players that support it. Allowed to be a no-op if the player does not
-  // support backfilling, or if it's already playing (in which case we'd get new messages soon anyway).
-  // This is currently called after subscriptions changed. We do our best in the MessagePipeline to
-  // not call this method too often (e.g. it's debounced).
-  // TODO(JP): We can't call this too often right now, since it clears out all existing data in
-  // panels, so e.g. the Plot panel which might have a lot of data loaded would get cleared to just
-  // a small backfilled amount of data. We should somehow make this more granular.
-  requestBackfill(): void;
   // Set the globalVariables for Players that support it.
   // This is generally used to pass new globalVariables to the UserNodePlayer
   setGlobalVariables(globalVariables: GlobalVariables): void;
@@ -87,6 +74,7 @@ export enum PlayerPresence {
   NOT_PRESENT = "NOT_PRESENT",
   INITIALIZING = "INITIALIZING",
   RECONNECTING = "RECONNECTING",
+  BUFFERING = "BUFFERING",
   PRESENT = "PRESENT",
   ERROR = "ERROR",
 }
@@ -108,8 +96,6 @@ export type PlayerState = {
   presence: PlayerPresence;
 
   // Show some sort of progress indication in the playback bar; see `type Progress` for more details.
-  // TODO(JP): Maybe we should unify some progress and the other initialization fields above into
-  // one "status" object?
   progress: Progress;
 
   // Capabilities of this particular `Player`, which are not shared across all players.
@@ -131,9 +117,6 @@ export type PlayerState = {
   // String name for the player
   // The player could set this value to represent the current connection, name, ports, etc.
   name?: string;
-
-  /** A path to a file on disk currently being accessed by the player */
-  filePath?: string;
 
   // Surface issues during playback or player initialization
   problems?: PlayerProblem[];
@@ -179,14 +162,8 @@ export type PlayerStateActiveData = {
   // E.g. 1.0 is real time, 0.2 is 20% of real time.
   speed: number;
 
-  // The order in which messages are published.
-  messageOrder: TimestampMethod;
-
   // The last time a seek / discontinuity in messages happened. This will clear out data within
   // `PanelAPI` so we're not looking at stale data.
-  // TODO(JP): This currently is a time per `Date.now()`, but we don't need that anywhere, so we
-  // should change this to a `resetMessagesId` where you just have to set it to a unique id (better
-  // to have an id than a boolean, in case the listener skips parsing a state for some reason).
   lastSeekTime: number;
 
   // A list of topics that panels can subscribe to. This list may change across states,
@@ -249,12 +226,11 @@ type RosTypedArray =
   | Float32Array
   | Float64Array;
 
-type RosSingularField = number | string | boolean | RosObject; // No time -- consider it a message.
+type RosSingularField = number | string | boolean | RosObject | undefined; // No time -- consider it a message.
 export type RosValue =
   | RosSingularField
   | readonly RosSingularField[]
   | RosTypedArray
-  | undefined
   // eslint-disable-next-line no-restricted-syntax
   | null;
 
@@ -347,9 +323,6 @@ export interface PlayerMetricsCollectorInterface {
   setSubscriptions(subscriptions: SubscribePayload[]): void;
   recordBytesReceived(bytes: number): void;
   recordPlaybackTime(time: Time, params: { stillLoadingData: boolean }): void;
-  recordDataProviderPerformance(metadata: AverageThroughput): void;
   recordUncachedRangeRequest(): void;
   recordTimeToFirstMsgs(): void;
-  recordDataProviderInitializePerformance(metadata: InitializationPerformanceMetadata): void;
-  recordDataProviderStall(metadata: RandomAccessDataProviderStall): void;
 }

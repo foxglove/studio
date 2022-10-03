@@ -30,15 +30,11 @@ export type LayerSettingsOccupancyGrid = BaseSettings & {
   invalidColor: string;
 };
 
-// TODO(jhurliman): Upload the OccupancyGrid data directly as a R8I texture and
-// use a custom ShaderMaterial with an isampler2D uniform to reimplement the
-// updateTexture() logic in a shader
-
 const INVALID_OCCUPANCY_GRID = "INVALID_OCCUPANCY_GRID";
 
-const DEFAULT_MIN_COLOR = { r: 1, g: 1, b: 1, a: 0.5 }; // white
-const DEFAULT_MAX_COLOR = { r: 0, g: 0, b: 0, a: 0.5 }; // black
-const DEFAULT_UNKNOWN_COLOR = { r: 0.5, g: 0.5, b: 0.5, a: 0.5 }; // gray
+const DEFAULT_MIN_COLOR = { r: 1, g: 1, b: 1, a: 1 }; // white
+const DEFAULT_MAX_COLOR = { r: 0, g: 0, b: 0, a: 1 }; // black
+const DEFAULT_UNKNOWN_COLOR = { r: 0.5, g: 0.5, b: 0.5, a: 1 }; // gray
 const DEFAULT_INVALID_COLOR = { r: 1, g: 0, b: 1, a: 1 }; // magenta
 
 const DEFAULT_MIN_COLOR_STR = rgbaToCssString(DEFAULT_MIN_COLOR);
@@ -61,18 +57,18 @@ export type OccupancyGridUserData = BaseUserData & {
   occupancyGrid: OccupancyGrid;
   mesh: THREE.Mesh;
   texture: THREE.DataTexture;
-  material: THREE.MeshStandardMaterial | THREE.MeshBasicMaterial;
+  material: THREE.MeshBasicMaterial;
   pickingMaterial: THREE.ShaderMaterial;
 };
 
 export class OccupancyGridRenderable extends Renderable<OccupancyGridUserData> {
-  override dispose(): void {
+  public override dispose(): void {
     this.userData.texture.dispose();
     this.userData.material.dispose();
     this.userData.pickingMaterial.dispose();
   }
 
-  override details(): Record<string, RosValue> {
+  public override details(): Record<string, RosValue> {
     return this.userData.occupancyGrid;
   }
 }
@@ -80,13 +76,13 @@ export class OccupancyGridRenderable extends Renderable<OccupancyGridUserData> {
 export class OccupancyGrids extends SceneExtension<OccupancyGridRenderable> {
   private static geometry: THREE.PlaneGeometry | undefined;
 
-  constructor(renderer: Renderer) {
+  public constructor(renderer: Renderer) {
     super("foxglove.OccupancyGrids", renderer);
 
     renderer.addDatatypeSubscriptions(OCCUPANCY_GRID_DATATYPES, this.handleOccupancyGrid);
   }
 
-  override settingsNodes(): SettingsTreeEntry[] {
+  public override settingsNodes(): SettingsTreeEntry[] {
     const configTopics = this.renderer.config.topics;
     const handler = this.handleSettingsAction;
     const entries: SettingsTreeEntry[] = [];
@@ -119,7 +115,7 @@ export class OccupancyGrids extends SceneExtension<OccupancyGridRenderable> {
     return entries;
   }
 
-  override handleSettingsAction = (action: SettingsTreeAction): void => {
+  public override handleSettingsAction = (action: SettingsTreeAction): void => {
     const path = action.payload.path;
     if (action.action !== "update" || path.length !== 3) {
       return;
@@ -131,10 +127,20 @@ export class OccupancyGrids extends SceneExtension<OccupancyGridRenderable> {
     const topicName = path[1]!;
     const renderable = this.renderables.get(topicName);
     if (renderable) {
+      const prevTransparent = occupancyGridHasTransparency(renderable.userData.settings);
       const settings = this.renderer.config.topics[topicName] as
         | Partial<LayerSettingsOccupancyGrid>
         | undefined;
-      renderable.userData.settings = { ...renderable.userData.settings, ...settings };
+      renderable.userData.settings = { ...DEFAULT_SETTINGS, ...settings };
+
+      // Check if the transparency changed and we need to create a new material
+      const newTransparent = occupancyGridHasTransparency(renderable.userData.settings);
+      if (prevTransparent !== newTransparent) {
+        renderable.userData.material.transparent = newTransparent;
+        renderable.userData.material.depthWrite = !newTransparent;
+        renderable.userData.material.needsUpdate = true;
+      }
+
       this._updateOccupancyGridRenderable(
         renderable,
         renderable.userData.occupancyGrid,
@@ -143,7 +149,7 @@ export class OccupancyGrids extends SceneExtension<OccupancyGridRenderable> {
     }
   };
 
-  handleOccupancyGrid = (messageEvent: PartialMessageEvent<OccupancyGrid>): void => {
+  private handleOccupancyGrid = (messageEvent: PartialMessageEvent<OccupancyGrid>): void => {
     const topic = messageEvent.topic;
     const occupancyGrid = normalizeOccupancyGrid(messageEvent.message);
     const receiveTime = toNanoSec(messageEvent.receiveTime);
@@ -156,15 +162,10 @@ export class OccupancyGrids extends SceneExtension<OccupancyGridRenderable> {
         | undefined;
       const settings = { ...DEFAULT_SETTINGS, ...userSettings };
 
-      // Create the texture, material, and mesh
       const texture = createTexture(occupancyGrid);
-      const pickingMaterial = createPickingMaterial(texture);
-      const material = createMaterial(texture, topic, settings);
-      const mesh = new THREE.Mesh(OccupancyGrids.Geometry(), material);
-      mesh.castShadow = true;
-      mesh.receiveShadow = true;
-      // This overrides the picking material used for `mesh`. See Picker.ts
-      mesh.userData.pickingMaterial = pickingMaterial;
+      const mesh = createMesh(topic, texture, settings);
+      const material = mesh.material as THREE.MeshBasicMaterial;
+      const pickingMaterial = mesh.userData.pickingMaterial as THREE.ShaderMaterial;
 
       // Create the renderable
       renderable = new OccupancyGridRenderable(topic, this.renderer, {
@@ -190,7 +191,7 @@ export class OccupancyGrids extends SceneExtension<OccupancyGridRenderable> {
     this._updateOccupancyGridRenderable(renderable, occupancyGrid, receiveTime);
   };
 
-  _updateOccupancyGridRenderable(
+  private _updateOccupancyGridRenderable(
     renderable: OccupancyGridRenderable,
     occupancyGrid: OccupancyGrid,
     receiveTime: bigint,
@@ -227,7 +228,7 @@ export class OccupancyGrids extends SceneExtension<OccupancyGridRenderable> {
     renderable.scale.set(resolution * width, resolution * height, 1);
   }
 
-  static Geometry(): THREE.PlaneGeometry {
+  public static Geometry(): THREE.PlaneGeometry {
     if (!OccupancyGrids.geometry) {
       OccupancyGrids.geometry = new THREE.PlaneGeometry(1, 1, 1, 1);
       OccupancyGrids.geometry.translate(0.5, 0.5, 0);
@@ -266,6 +267,22 @@ function createTexture(occupancyGrid: OccupancyGrid): THREE.DataTexture {
   );
   texture.generateMipmaps = false;
   return texture;
+}
+
+function createMesh(
+  topic: string,
+  texture: THREE.DataTexture,
+  settings: LayerSettingsOccupancyGrid,
+): THREE.Mesh {
+  // Create the texture, material, and mesh
+  const pickingMaterial = createPickingMaterial(texture);
+  const material = createMaterial(texture, topic, settings);
+  const mesh = new THREE.Mesh(OccupancyGrids.Geometry(), material);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  // This overrides the picking material used for `mesh`. See Picker.ts
+  mesh.userData.pickingMaterial = pickingMaterial;
+  return mesh;
 }
 
 const tempUnknownColor = { r: 0, g: 0, b: 0, a: 0 };
@@ -330,16 +347,18 @@ function createMaterial(
   texture: THREE.DataTexture,
   topic: string,
   settings: LayerSettingsOccupancyGrid,
-): THREE.MeshStandardMaterial | THREE.MeshBasicMaterial {
+): THREE.MeshBasicMaterial {
   const transparent = occupancyGridHasTransparency(settings);
-  const material = new THREE.MeshBasicMaterial({
+  return new THREE.MeshBasicMaterial({
+    name: `${topic}:Material`,
+    // Enable alpha clipping. Fully transparent (alpha=0) pixels are skipped
+    // even when transparency is disabled
+    alphaTest: 1e-4,
+    depthWrite: !transparent,
     map: texture,
     side: THREE.DoubleSide,
+    transparent,
   });
-  material.name = `${topic}:Material`;
-  material.transparent = transparent;
-  material.depthWrite = !material.transparent;
-  return material;
 }
 
 function createPickingMaterial(texture: THREE.DataTexture): THREE.ShaderMaterial {

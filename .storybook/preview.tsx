@@ -4,15 +4,15 @@
 
 import { Story, StoryContext } from "@storybook/react";
 import { useMemo, useRef } from "react";
-import { ToastProvider } from "react-toast-notifications";
 
-import { signal } from "@foxglove/den/async";
+import { Condvar } from "@foxglove/den/async";
 import CssBaseline from "@foxglove/studio-base/components/CssBaseline";
 import GlobalCss from "@foxglove/studio-base/components/GlobalCss";
 import MultiProvider from "@foxglove/studio-base/components/MultiProvider";
+import StudioToastProvider from "@foxglove/studio-base/components/StudioToastProvider";
 import AppConfigurationContext from "@foxglove/studio-base/context/AppConfigurationContext";
-import { HoverValueProvider } from "@foxglove/studio-base/context/HoverValueContext";
 import { UserNodeStateProvider } from "@foxglove/studio-base/context/UserNodeStateContext";
+import TimelineInteractionStateProvider from "@foxglove/studio-base/providers/TimelineInteractionStateProvider";
 import ReadySignalContext from "@foxglove/studio-base/stories/ReadySignalContext";
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
 import { makeMockAppConfiguration } from "@foxglove/studio-base/util/makeMockAppConfiguration";
@@ -55,10 +55,10 @@ function StudioContextProviders({
   ctx,
 }: React.PropsWithChildren<{ ctx: StoryContext }>): JSX.Element {
   if (ctx.parameters.useReadySignal === true) {
-    const sig = signal();
-    ctx.parameters.storyReady = sig;
+    const condvar = new Condvar();
+    ctx.parameters.storyReady = condvar.wait();
     ctx.parameters.readySignal = () => {
-      sig.resolve();
+      condvar.notifyAll();
     };
   }
 
@@ -76,8 +76,8 @@ function StudioContextProviders({
     /* eslint-disable react/jsx-key */
     <AppConfigurationContext.Provider value={appConfiguration} />,
     <ReadySignalContext.Provider value={readySignal} />,
-    <ToastProvider>{undefined}</ToastProvider>,
-    <HoverValueProvider />,
+    <StudioToastProvider />,
+    <TimelineInteractionStateProvider />,
     <UserNodeStateProvider />,
     /* eslint-enable react/jsx-key */
   ];

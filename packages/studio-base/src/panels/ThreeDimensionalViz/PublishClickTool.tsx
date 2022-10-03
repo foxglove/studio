@@ -6,7 +6,7 @@ import { ReactElement, useCallback, useEffect, useMemo } from "react";
 
 import Logger from "@foxglove/log";
 import { ReglClickInfo } from "@foxglove/regl-worldview";
-import { definitions as commonDefs } from "@foxglove/rosmsg-msgs-common";
+import { ros1 } from "@foxglove/rosmsg-msgs-common";
 import { fromDate } from "@foxglove/rostime";
 import {
   MessagePipelineContext,
@@ -50,7 +50,7 @@ function makePointMessage(topic: string, point: Point, frameId: string) {
   return {
     topic,
     msg: {
-      header: { seq: 0, stamp: time, frame_id: frameId },
+      header: { stamp: time, frame_id: frameId },
       point: { x: point.x, y: point.y, z: 0 },
     },
   };
@@ -61,7 +61,7 @@ function makePoseMessage(topic: string, start: Point, end: Point, frameId: strin
   return {
     topic,
     msg: {
-      header: { seq: 0, stamp: time, frame_id: frameId },
+      header: { stamp: time, frame_id: frameId },
       pose: {
         position: { x: start.x, y: start.y, z: 0 },
         orientation: quaternionFromPoints(start, end),
@@ -83,7 +83,7 @@ function makePoseEstimateMessage(
   return {
     topic,
     msg: {
-      header: { seq: 0, stamp: time, frame_id: frameId },
+      header: { stamp: time, frame_id: frameId },
       pose: {
         covariance: makeCovarianceArray(x, y, theta),
         pose: {
@@ -95,7 +95,7 @@ function makePoseEstimateMessage(
   };
 }
 
-const MessageTypes: Array<keyof typeof commonDefs> = [
+const MessageTypes: Array<keyof typeof ros1> = [
   "geometry_msgs/Point",
   "geometry_msgs/PointStamped",
   "geometry_msgs/Pose",
@@ -164,7 +164,7 @@ export function PublishClickTool(props: Props): ReactElement {
   ]);
 
   useEffect(() => {
-    const datatypes = new Map(MessageTypes.map((type) => [type, commonDefs[type]]));
+    const datatypes = new Map(MessageTypes.map((type) => [type, ros1[type]]));
 
     setPublishers("panel-click", [
       {

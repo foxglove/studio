@@ -225,7 +225,7 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
       // Check if accepting this completion would result in a path to a non-complex field.
       const completedPath = completeStart + rawValue + completeEnd;
       const completedField = topicFields.get(completedPath);
-      const isSimpleField = completedField?.isComplex === false;
+      const isSimpleField = completedField != undefined && completedField.isComplex !== true;
 
       // If we're dealing with a topic name, and we cannot validly end in a message type,
       // add a "." so the user can keep typing to autocomplete the message path.
@@ -341,7 +341,6 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
 
         // Provide filter suggestions for primitive values, since they're the only kinds of values
         // that can be filtered on.
-        // TODO: add support for nested paths to primitives, such as "/some_topic{foo.bar==3}".
         for (const name of Object.keys(structureTraversalResult.structureItem.nextByName)) {
           const item = structureTraversalResult.structureItem.nextByName[name];
           if (item?.structureType === "primitive") {

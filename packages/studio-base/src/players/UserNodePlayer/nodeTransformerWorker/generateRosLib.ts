@@ -50,7 +50,6 @@ const createTimeInterfaceDeclaration = (name: string) => {
 };
 
 // Since rosbagjs treats json as a primitive, we have to shim it in.
-// TODO: Update json declaration in a smarter way.
 const jsonInterfaceDeclaration = ts.factory.createInterfaceDeclaration(
   undefined,
   /* decorators */
@@ -117,7 +116,6 @@ export const generateTypeDefs = (datatypes: RosDatatypes): InterfaceDeclarations
       const rosPrimitive = rosPrimitivesToTypeScriptMap.get(type);
       const rosSpecial = rosSpecialTypesToTypescriptMap.get(type);
       if (isConstant === true) {
-        // TODO: Support ROS constants at some point.
         return undefined;
       } else if (isArray === true && typedArray != undefined) {
         node = ts.factory.createTypeReferenceNode(typedArray);
@@ -174,6 +172,7 @@ const generateRosLib = ({
     /* name */
     [
       ts.factory.createTypeParameterDeclaration(
+        [],
         "T",
         ts.factory.createTypeOperatorNode(
           ts.SyntaxKind.KeyOfKeyword,
@@ -277,8 +276,8 @@ const generateRosLib = ({
      * Input<"/your_input_topic_2">'.
      *
      * These types are dynamically generated from the bag(s) currently in your
-     * Foxglove Studio session, so if a datatype changes, your Node Playground
-     * node may not compile on the newly formatted bag.
+     * Foxglove Studio session, so if a datatype changes, your User Script
+     * may not compile on the newly formatted bag.
      */
     ${printer.printNode(ts.EmitHint.Unspecified, typedMessage, sourceFile)}
   `;

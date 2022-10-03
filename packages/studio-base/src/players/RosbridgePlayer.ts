@@ -11,13 +11,13 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { isEqual, sortBy } from "lodash";
-import roslib from "roslib";
+import { isEqual, sortBy, transform } from "lodash";
 import { v4 as uuidv4 } from "uuid";
 
 import { debouncePromise } from "@foxglove/den/async";
+import { filterMap } from "@foxglove/den/collection";
 import Log from "@foxglove/log";
-import type { RosGraph } from "@foxglove/ros1";
+import roslib from "@foxglove/roslibjs";
 import { parse as parseMessageDefinition } from "@foxglove/rosmsg";
 import { LazyMessageReader } from "@foxglove/rosmsg-serialization";
 import { MessageReader as ROS2MessageReader } from "@foxglove/rosmsg2-serialization";
@@ -40,11 +40,34 @@ import {
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import { bagConnectionsToDatatypes } from "@foxglove/studio-base/util/bagConnectionsHelper";
 import { getTopicsByTopicName } from "@foxglove/studio-base/util/selectors";
-import { TimestampMethod } from "@foxglove/studio-base/util/time";
 
 const log = Log.getLogger(__dirname);
 
 const CAPABILITIES = [PlayerCapabilities.advertise, PlayerCapabilities.callServices];
+
+type RosNodeDetails = Record<
+  "subscriptions" | "publications" | "services",
+  { node: string; values: string[] }
+>;
+
+function collateNodeDetails(
+  details: RosNodeDetails[],
+  key: keyof RosNodeDetails,
+): Map<string, Set<string>> {
+  return transform(
+    details,
+    (acc, detail) => {
+      const { node, values } = detail[key];
+      for (const value of values) {
+        if (!acc.has(value)) {
+          acc.set(value, new Set());
+        }
+        acc.get(value)?.add(node);
+      }
+    },
+    new Map<string, Set<string>>(),
+  );
+}
 
 function isClockMessage(topic: string, msg: unknown): msg is { clock: Time } {
   const maybeClockMsg = msg as { clock?: Time };
@@ -63,6 +86,7 @@ export default class RosbridgePlayer implements Player {
   private _url: string; // WebSocket URL.
   private _rosClient?: roslib.Ros; // The roslibjs client when we're connected.
   private _id: string = uuidv4(); // Unique ID for this player.
+  private _isRefreshing = false; // True if currently refreshing the node graph.
   private _listener?: (arg0: PlayerState) => Promise<void>; // Listener for _emitState().
   private _closed: boolean = false; // Whether the player has been completely closed using close().
   private _providerTopics?: Topic[]; // Topics as published by the WebSocket.
@@ -80,7 +104,6 @@ export default class RosbridgePlayer implements Player {
   private _topicSubscriptions = new Map<string, roslib.Topic>();
   private _requestedSubscriptions: SubscribePayload[] = []; // Requested subscriptions by setSubscriptions()
   private _parsedMessages: MessageEvent<unknown>[] = []; // Queue of messages that we'll send in next _emitState() call.
-  private _messageOrder: TimestampMethod = "receiveTime";
   private _requestTopicsTimeout?: ReturnType<typeof setTimeout>; // setTimeout() handle for _requestTopics().
   // active publishers for the current connection
   private _topicPublishers = new Map<string, roslib.Topic>();
@@ -97,7 +120,7 @@ export default class RosbridgePlayer implements Player {
   private readonly _sourceId: string;
   private _rosVersion: 1 | 2 | undefined;
 
-  constructor({
+  public constructor({
     url,
     metricsCollector,
     sourceId,
@@ -301,22 +324,8 @@ export default class RosbridgePlayer implements Player {
       // Try subscribing again, since we might now be able to subscribe to some new topics.
       this.setSubscriptions(this._requestedSubscriptions);
 
-      // Fetch the full graph topology
-      try {
-        const graph = await this._getSystemState();
-        this._publishedTopics = graph.publishers;
-        this._subscribedTopics = graph.subscribers;
-        this._services = graph.services;
-      } catch (error) {
-        this._problems.addProblem("requestTopics:system-state", {
-          severity: "error",
-          message: "Failed to fetch node details from rosbridge",
-          error,
-        });
-        this._publishedTopics = new Map();
-        this._subscribedTopics = new Map();
-        this._services = new Map();
-      }
+      // Refresh the full graph topology
+      this._refreshSystemState().catch((error) => log.error(error));
     } catch (error) {
       log.error(error);
       clearTimeout(topicsStallWarningTimeout);
@@ -388,7 +397,6 @@ export default class RosbridgePlayer implements Player {
       activeData: {
         messages,
         totalBytesReceived: this._receivedBytes,
-        messageOrder: this._messageOrder,
         startTime: _start,
         endTime: currentTime,
         currentTime,
@@ -408,12 +416,12 @@ export default class RosbridgePlayer implements Player {
     });
   });
 
-  setListener(listener: (arg0: PlayerState) => Promise<void>): void {
+  public setListener(listener: (arg0: PlayerState) => Promise<void>): void {
     this._listener = listener;
     this._emitState();
   }
 
-  close(): void {
+  public close(): void {
     this._closed = true;
     if (this._rosClient) {
       this._rosClient.close();
@@ -426,7 +434,7 @@ export default class RosbridgePlayer implements Player {
     this._hasReceivedMessage = false;
   }
 
-  setSubscriptions(subscriptions: SubscribePayload[]): void {
+  public setSubscriptions(subscriptions: SubscribePayload[]): void {
     this._requestedSubscriptions = subscriptions;
 
     if (!this._rosClient || this._closed) {
@@ -562,7 +570,7 @@ export default class RosbridgePlayer implements Player {
     }
   }
 
-  setPublishers(publishers: AdvertiseOptions[]): void {
+  public setPublishers(publishers: AdvertiseOptions[]): void {
     // Since `setPublishers` is rarely called, we can get away with just throwing away the old
     // Roslib.Topic objects and creating new ones.
     for (const publisher of this._topicPublishers.values()) {
@@ -573,11 +581,11 @@ export default class RosbridgePlayer implements Player {
     this._setupPublishers();
   }
 
-  setParameter(_key: string, _value: ParameterValue): void {
+  public setParameter(_key: string, _value: ParameterValue): void {
     throw new Error("Parameter editing is not supported by the Rosbridge connection");
   }
 
-  publish({ topic, msg }: PublishPayload): void {
+  public publish({ topic, msg }: PublishPayload): void {
     const publisher = this._topicPublishers.get(topic);
     if (!publisher) {
       throw new Error(
@@ -608,7 +616,7 @@ export default class RosbridgePlayer implements Player {
     return await serviceTypePromise;
   }
 
-  async callService(service: string, request: unknown): Promise<unknown> {
+  public async callService(service: string, request: unknown): Promise<unknown> {
     if (!this._rosClient) {
       throw new Error("Not connected");
     }
@@ -637,22 +645,19 @@ export default class RosbridgePlayer implements Player {
   }
 
   // Bunch of unsupported stuff. Just don't do anything for these.
-  startPlayback(): void {
+  public startPlayback(): void {
     // no-op
   }
-  pausePlayback(): void {
+  public pausePlayback(): void {
     // no-op
   }
-  seekPlayback(_time: Time): void {
+  public seekPlayback(_time: Time): void {
     // no-op
   }
-  setPlaybackSpeed(_speedFraction: number): void {
+  public setPlaybackSpeed(_speedFraction: number): void {
     // no-op
   }
-  requestBackfill(): void {
-    // no-op
-  }
-  setGlobalVariables(): void {
+  public setGlobalVariables(): void {
     // no-op
   }
 
@@ -692,45 +697,53 @@ export default class RosbridgePlayer implements Player {
     return this._clockTime ?? fromMillis(Date.now());
   }
 
-  private async _getSystemState(): Promise<RosGraph> {
-    const output: RosGraph = {
-      publishers: new Map<string, Set<string>>(),
-      subscribers: new Map<string, Set<string>>(),
-      services: new Map<string, Set<string>>(),
-    };
+  // Refreshes the full system state graph. Runs in the background so we don't
+  // block app startup while mapping large node graphs.
+  private async _refreshSystemState(): Promise<void> {
+    if (this._isRefreshing) {
+      return;
+    }
 
-    const addEntry = (map: Map<string, Set<string>>, key: string, value: string) => {
-      let entries = map.get(key);
-      if (entries == undefined) {
-        entries = new Set<string>();
-        map.set(key, entries);
-      }
-      entries.add(value);
-    };
+    try {
+      this._isRefreshing = true;
 
-    // Note that we're calling two layers of nested callbacks here so we need to make sure
-    // we wrap each layer in indepedent promises and resolve them all before returning
-    // or we will immediately resolve `output` before it's initialized and downstream
-    // clients will never register the eventual update. This could probably be
-    // simplified with a promisfy utility.
-    return await new Promise((outerResolve, outerReject) => {
-      this._rosClient?.getNodes(async (nodes) => {
-        for (const node of nodes) {
-          await new Promise((innerResolve, innerReject) => {
-            this._rosClient?.getNodeDetails(
-              node,
-              (subscriptions, publications, services) => {
-                publications.forEach((pub) => addEntry(output.publishers, pub, node));
-                subscriptions.forEach((sub) => addEntry(output.subscribers, sub, node));
-                services.forEach((srv) => addEntry(output.services, srv, node));
-                innerResolve(undefined);
-              },
-              innerReject,
-            );
-          });
-        }
-        outerResolve(output);
-      }, outerReject);
-    });
+      const nodes = await new Promise<string[]>((resolve, reject) => {
+        this._rosClient?.getNodes((fetchedNodes) => resolve(fetchedNodes), reject);
+      });
+
+      const promises = nodes.map(async (node) => {
+        return await new Promise<RosNodeDetails>((resolve, reject) => {
+          this._rosClient?.getNodeDetails(
+            node,
+            (subscriptions, publications, services) => {
+              resolve({
+                publications: { node, values: publications },
+                services: { node, values: services },
+                subscriptions: { node, values: subscriptions },
+              });
+            },
+            reject,
+          );
+        });
+      });
+
+      const results = await Promise.allSettled(promises);
+      const fulfilled = filterMap(results, (item) =>
+        item.status === "fulfilled" ? item.value : undefined,
+      );
+      this._publishedTopics = collateNodeDetails(fulfilled, "publications");
+      this._subscribedTopics = collateNodeDetails(fulfilled, "subscriptions");
+      this._services = collateNodeDetails(fulfilled, "services");
+
+      this._emitState();
+    } catch (error) {
+      this._problems.addProblem("requestTopics:system-state", {
+        severity: "error",
+        message: "Failed to fetch node details from rosbridge",
+        error,
+      });
+    } finally {
+      this._isRefreshing = false;
+    }
   }
 }

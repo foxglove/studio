@@ -2,83 +2,116 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { ITextStyles, DetailsList, Text, useTheme, CheckboxVisibility } from "@fluentui/react";
-import { Divider, Theme } from "@mui/material";
-import { makeStyles } from "@mui/styles";
-import { useCallback, useMemo } from "react";
+import { Box, Divider } from "@mui/material";
+import { makeStyles } from "tss-react/mui";
 
-import { areEqual, subtract as subtractTimes, toSec } from "@foxglove/rostime";
-import CopyText from "@foxglove/studio-base/components/CopyText";
-import Duration from "@foxglove/studio-base/components/Duration";
+import CopyButton from "@foxglove/studio-base/components/CopyButton";
+import { DataSourceInfoView } from "@foxglove/studio-base/components/DataSourceInfoView";
+import { DirectTopicStatsUpdater } from "@foxglove/studio-base/components/DirectTopicStatsUpdater";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
-import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
+import {
+  MessagePipelineContext,
+  useMessagePipeline,
+} from "@foxglove/studio-base/components/MessagePipeline";
 import Panel from "@foxglove/studio-base/components/Panel";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
-import Timestamp from "@foxglove/studio-base/components/Timestamp";
-import { Topic, TopicStats } from "@foxglove/studio-base/src/players/types";
+import { Topic } from "@foxglove/studio-base/src/players/types";
 
 import helpContent from "./index.help.md";
 
-type TopicListItem = Topic & Partial<TopicStats> & { key: string };
+const useStyles = makeStyles<void, "copyIcon">()((theme, _params, classes) => ({
+  copyIcon: {
+    visibility: "hidden",
 
-const useStyles = makeStyles((theme: Theme) => ({
-  root: {
-    overflow: "hidden auto",
+    "&:hover": {
+      backgroundColor: "transparent",
+    },
   },
-  header: {
-    display: "flex",
-    flexDirection: "column",
-    borderBottom: `2px solid ${theme.palette.divider}`,
-    backgroundColor: theme.palette.background.paper,
-    padding: theme.spacing(1.5),
-    gap: theme.spacing(1),
-  },
-  row: {
-    display: "flex",
-    flexDirection: "column",
-    gap: theme.spacing(0.5),
+  table: {
+    borderCollapse: "collapse",
+    display: "block",
+    flex: 1,
+    overflowY: "auto",
+
+    thead: {
+      position: "sticky",
+      textAlign: "left",
+      top: 0,
+    },
+
+    tr: {
+      "&:hover": {
+        backgroundColor: theme.palette.background.paper,
+      },
+    },
+
+    th: {
+      backgroundColor: theme.palette.background.paper,
+      paddingBlock: theme.spacing(1),
+      paddingInline: theme.spacing(1.5),
+      whiteSpace: "nowrap",
+      width: "100%",
+    },
+
+    td: {
+      paddingBlock: theme.spacing(0.25),
+      paddingInline: theme.spacing(1.5),
+      whiteSpace: "nowrap",
+
+      [`&:hover .${classes.copyIcon}`]: {
+        visibility: "visible",
+      },
+    },
   },
 }));
 
-const EMPTY_TOPICS: Topic[] = [];
-const EMPTY_TOPIC_STATS = new Map<string, TopicStats>();
+function TopicRow({ topic }: { topic: Topic }): JSX.Element {
+  const { classes } = useStyles();
 
-function SourceInfo() {
-  const classes = useStyles();
-  const topics = useMessagePipeline(
-    useCallback((ctx) => ctx.playerState.activeData?.topics ?? EMPTY_TOPICS, []),
+  return (
+    <tr>
+      <td>
+        {topic.name}
+        <CopyButton
+          className={classes.copyIcon}
+          edge="end"
+          size="small"
+          iconSize="small"
+          getText={() => topic.name}
+        />
+      </td>
+      <td>
+        {topic.datatype}
+        <CopyButton
+          className={classes.copyIcon}
+          edge="end"
+          size="small"
+          iconSize="small"
+          getText={() => topic.datatype}
+        />
+      </td>
+      <td data-topic={topic.name} data-topic-stat="count">
+        &mdash;
+      </td>
+      <td data-topic={topic.name} data-topic-stat="frequency">
+        &mdash;
+      </td>
+    </tr>
   );
-  const topicStats = useMessagePipeline(
-    useCallback((ctx) => ctx.playerState.activeData?.topicStats ?? EMPTY_TOPIC_STATS, []),
-  );
-  const startTime = useMessagePipeline(
-    useCallback((ctx) => ctx.playerState.activeData?.startTime, []),
-  );
-  const endTime = useMessagePipeline(useCallback((ctx) => ctx.playerState.activeData?.endTime, []));
-  const theme = useTheme();
-  const subheaderStyles = useMemo(
-    () =>
-      ({
-        root: {
-          fontVariant: "small-caps",
-          textTransform: "lowercase",
-          color: theme.palette.neutralSecondaryAlt,
-          letterSpacing: "0.5px",
-        },
-      } as ITextStyles),
-    [theme],
-  );
+}
 
-  const detailListItems = useMemo<TopicListItem[]>(() => {
-    return topics.map((topic) => {
-      const stats = topicStats.get(topic.name);
-      return {
-        ...topic,
-        ...stats,
-        key: topic.name,
-      };
-    });
-  }, [topicStats, topics]);
+const selectSortedTopics = (ctx: MessagePipelineContext) => ctx.sortedTopics;
+const selectStartTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.startTime;
+const selectEndTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.endTime;
+
+const MemoTopicRow = React.memo(TopicRow);
+
+function SourceInfo(): JSX.Element {
+  const { classes } = useStyles();
+
+  const topics = useMessagePipeline(selectSortedTopics);
+  const startTime = useMessagePipeline(selectStartTime);
+  const endTime = useMessagePipeline(selectEndTime);
 
   if (!startTime || !endTime) {
     return (
@@ -89,109 +122,30 @@ function SourceInfo() {
     );
   }
 
-  const duration = subtractTimes(endTime, startTime);
   return (
     <>
       <PanelToolbar helpContent={helpContent} />
       <Divider />
-      <div className={classes.root}>
-        <header className={classes.header}>
-          <div className={classes.row}>
-            <Text styles={subheaderStyles}>Start time</Text>
-            <Timestamp horizontal time={startTime} />
-          </div>
-          <div className={classes.row}>
-            <Text styles={subheaderStyles}>End Time</Text>
-            <Timestamp horizontal time={endTime} />
-          </div>
-          <div className={classes.row}>
-            <Text styles={subheaderStyles}>Duration</Text>
-            <Duration duration={duration} />
-          </div>
-        </header>
-
-        <DetailsList
-          compact
-          checkboxVisibility={CheckboxVisibility.hidden}
-          disableSelectionZone
-          enableUpdateAnimations={false}
-          items={detailListItems}
-          styles={{
-            root: {
-              ".ms-DetailsHeader": { paddingTop: 0, height: 32, lineHeight: 32 },
-              ".ms-DetailsHeader-cell": { height: 32 },
-              ".ms-DetailsHeader-cellName": { ...theme.fonts.smallPlus, fontWeight: "bold" },
-            },
-          }}
-          columns={[
-            {
-              key: "name",
-              name: "Topic name",
-              fieldName: "name",
-              minWidth: 0,
-              isResizable: true,
-              data: "string",
-              isPadded: true,
-              onRender: (item: TopicListItem) => (
-                <CopyText
-                  copyText={item.name}
-                  textProps={{ variant: "small" }}
-                  tooltip={`Click to copy topic name ${item.name} to clipboard.`}
-                >
-                  {item.name}
-                </CopyText>
-              ),
-            },
-            {
-              key: "datatype",
-              name: "Datatype",
-              fieldName: "datatype",
-              minWidth: 0,
-              isResizable: true,
-              data: "string",
-              isPadded: true,
-              onRender: (item: TopicListItem) => (
-                <CopyText
-                  copyText={item.datatype}
-                  textProps={{ variant: "small" }}
-                  tooltip={`Click to copy topic name ${item.datatype} to clipboard.`}
-                >
-                  {item.datatype}
-                </CopyText>
-              ),
-            },
-            {
-              key: "numMessages",
-              name: "Message count",
-              fieldName: "numMessages",
-              minWidth: 0,
-              onRender: (item: TopicListItem) => item.numMessages?.toLocaleString() ?? "–",
-            },
-            {
-              key: "frequency",
-              name: "Frequency",
-              minWidth: 0,
-              onRender: (item: TopicListItem) => {
-                const { numMessages, firstMessageTime, lastMessageTime } = item;
-                if (numMessages == undefined) {
-                  // No message count, so no frequency
-                  return "–";
-                }
-                if (firstMessageTime == undefined || lastMessageTime == undefined) {
-                  // Message count but no timestamps, use the full connection duration
-                  return `${(numMessages / toSec(duration)).toFixed(2)} Hz`;
-                }
-                if (numMessages < 2 || areEqual(firstMessageTime, lastMessageTime)) {
-                  // Not enough messages or time span to calculate a frequency
-                  return "–";
-                }
-                const topicDurationSec = toSec(subtractTimes(lastMessageTime, firstMessageTime));
-                return `${((numMessages - 1) / topicDurationSec).toFixed(2)} Hz`;
-              },
-            },
-          ]}
-        />
-      </div>
+      <Box paddingTop={1}>
+        <DataSourceInfoView />
+      </Box>
+      <Divider />
+      <table className={classes.table}>
+        <thead>
+          <tr>
+            <th>Topic Name</th>
+            <th>Datatype</th>
+            <th>Message count</th>
+            <th>Frequency</th>
+          </tr>
+        </thead>
+        <tbody>
+          {topics.map((topic) => (
+            <MemoTopicRow key={topic.name} topic={topic} />
+          ))}
+        </tbody>
+      </table>
+      <DirectTopicStatsUpdater interval={6} />
     </>
   );
 }

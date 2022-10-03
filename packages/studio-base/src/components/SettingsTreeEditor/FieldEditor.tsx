@@ -9,7 +9,6 @@ import {
   ToggleButton,
   ToggleButtonGroup,
   Typography,
-  styled as muiStyled,
   List,
   MenuItem,
   Select,
@@ -18,6 +17,7 @@ import {
   ListProps,
 } from "@mui/material";
 import { DeepReadonly } from "ts-essentials";
+import { makeStyles } from "tss-react/mui";
 import { v4 as uuid } from "uuid";
 
 import { SettingsTreeAction, SettingsTreeField } from "@foxglove/studio";
@@ -29,82 +29,88 @@ import { ColorPickerInput, ColorGradientInput, NumberInput, Vec3Input, Vec2Input
 // Used to both undefined and empty string in select inputs.
 const UNDEFINED_SENTINEL_VALUE = uuid();
 
-const StyledToggleButtonGroup = muiStyled(ToggleButtonGroup)(({ theme }) => ({
-  backgroundColor: theme.palette.action.hover,
-  gap: theme.spacing(0.25),
-
-  "& .MuiToggleButtonGroup-grouped": {
-    margin: theme.spacing(0.55),
-    borderRadius: theme.shape.borderRadius,
-    paddingTop: 0,
-    paddingBottom: 0,
-    borderColor: "transparent",
-    lineHeight: 1.75,
-
-    "&.Mui-selected": {
-      background: theme.palette.background.paper,
-      borderColor: "transparent",
-
-      "&:hover": {
-        borderColor: theme.palette.action.active,
-      },
-    },
-    "&:not(:first-of-type)": {
-      borderRadius: theme.shape.borderRadius,
-    },
-    "&:first-of-type": {
-      borderRadius: theme.shape.borderRadius,
-    },
-  },
-}));
-
-const PsuedoInputWrapper = muiStyled(Stack)(({ theme }) => {
+const useStyles = makeStyles<void, "error">()((theme, _params, classes) => {
   const prefersDarkMode = theme.palette.mode === "dark";
-  const backgroundColor = prefersDarkMode ? "rgba(255, 255, 255, 0.09)" : "rgba(0, 0, 0, 0.06)";
+  const inputBackgroundColor = prefersDarkMode
+    ? "rgba(255, 255, 255, 0.09)"
+    : "rgba(0, 0, 0, 0.06)";
 
   return {
-    padding: theme.spacing(0.75, 1),
-    borderRadius: theme.shape.borderRadius,
-    fontSize: "0.75em",
-    backgroundColor,
-
-    input: {
-      height: "1.4375em",
+    error: {},
+    fieldLabel: {
+      color: theme.palette.text.secondary,
+      overflow: "hidden",
+      textOverflow: "ellipsis",
+      whiteSpace: "nowrap",
     },
-    "&:hover": {
-      backgroundColor: prefersDarkMode ? "rgba(255, 255, 255, 0.13)" : "rgba(0, 0, 0, 0.09)",
-      // Reset on touch devices, it doesn't add specificity
-      "@media (hover: none)": {
-        backgroundColor,
+    fieldWrapper: {
+      marginRight: theme.spacing(1.25),
+      [`&.${classes.error}`]: {
+        ".MuiInputBase-root": {
+          outline: `1px ${theme.palette.error.main} solid`,
+          outlineOffset: -1,
+        },
       },
     },
-    "&:focus-within": {
-      backgroundColor,
+    multiLabelWrapper: {
+      display: "grid",
+      gridTemplateColumns: "1fr auto",
+      columnGap: theme.spacing(0.5),
+      height: "100%",
+      width: "100%",
+      alignItems: "center",
+      textAlign: "end",
+    },
+    pseudoInputWrapper: {
+      padding: theme.spacing(0.75, 1),
+      borderRadius: theme.shape.borderRadius,
+      fontSize: "0.75em",
+      backgroundColor: inputBackgroundColor,
+
+      input: {
+        height: "1.4375em",
+      },
+      "&:hover": {
+        backgroundColor: prefersDarkMode ? "rgba(255, 255, 255, 0.13)" : "rgba(0, 0, 0, 0.09)",
+        // Reset on touch devices, it doesn't add specificity
+        "@media (hover: none)": {
+          backgroundColor: inputBackgroundColor,
+        },
+      },
+      "&:focus-within": {
+        backgroundColor: inputBackgroundColor,
+      },
+    },
+    styledToggleButtonGroup: {
+      backgroundColor: theme.palette.action.hover,
+      gap: theme.spacing(0.25),
+
+      "& .MuiToggleButtonGroup-grouped": {
+        margin: theme.spacing(0.55),
+        borderRadius: theme.shape.borderRadius,
+        paddingTop: 0,
+        paddingBottom: 0,
+        borderColor: "transparent",
+        lineHeight: 1.75,
+
+        "&.Mui-selected": {
+          background: theme.palette.background.paper,
+          borderColor: "transparent",
+
+          "&:hover": {
+            borderColor: theme.palette.action.active,
+          },
+        },
+        "&:not(:first-of-type)": {
+          borderRadius: theme.shape.borderRadius,
+        },
+        "&:first-of-type": {
+          borderRadius: theme.shape.borderRadius,
+        },
+      },
     },
   };
 });
-
-const MultiLabelWrapper = muiStyled("div")(({ theme }) => ({
-  display: "grid",
-  gridTemplateColumns: "1fr auto",
-  columnGap: theme.spacing(0.5),
-  height: "100%",
-  width: "100%",
-  alignItems: "center",
-}));
-
-const FieldWrapper = muiStyled("div", {
-  shouldForwardProp: (prop) => prop !== "error",
-})<{ error: boolean }>(({ error, theme }) => ({
-  marginRight: theme.spacing(1.25),
-
-  ...(error && {
-    ".MuiInputBase-root": {
-      outline: `1px ${theme.palette.error.main} solid`,
-      outlineOffset: -1,
-    },
-  }),
-}));
 
 function FieldInput({
   actionHandler,
@@ -115,6 +121,8 @@ function FieldInput({
   field: DeepReadonly<SettingsTreeField>;
   path: readonly string[];
 }): JSX.Element {
+  const { classes } = useStyles();
+
   switch (field.input) {
     case "autocomplete":
       return (
@@ -167,24 +175,35 @@ function FieldInput({
       );
     case "toggle":
       return (
-        <StyledToggleButtonGroup
+        <ToggleButtonGroup
+          className={classes.styledToggleButtonGroup}
           fullWidth
-          value={field.value}
+          value={field.value ?? UNDEFINED_SENTINEL_VALUE}
           exclusive
           disabled={field.disabled}
           size="small"
           onChange={(_event, value) => {
             if (field.readonly !== true) {
-              actionHandler({ action: "update", payload: { path, input: "toggle", value } });
+              actionHandler({
+                action: "update",
+                payload: {
+                  path,
+                  input: "toggle",
+                  value: value === UNDEFINED_SENTINEL_VALUE ? undefined : value,
+                },
+              });
             }
           }}
         >
           {field.options.map((opt) => (
-            <ToggleButton key={opt} value={opt}>
-              {opt}
+            <ToggleButton
+              key={(typeof opt === "string" ? opt : opt.value) ?? UNDEFINED_SENTINEL_VALUE}
+              value={(typeof opt === "string" ? opt : opt.value) ?? UNDEFINED_SENTINEL_VALUE}
+            >
+              {typeof opt === "string" ? opt : opt.label}
             </ToggleButton>
           ))}
-        </StyledToggleButtonGroup>
+        </ToggleButtonGroup>
       );
     case "string":
       return (
@@ -208,7 +227,8 @@ function FieldInput({
       );
     case "boolean":
       return (
-        <StyledToggleButtonGroup
+        <ToggleButtonGroup
+          className={classes.styledToggleButtonGroup}
           fullWidth
           value={field.value ?? false}
           exclusive
@@ -223,9 +243,9 @@ function FieldInput({
             }
           }}
         >
-          <ToggleButton value={true}>On</ToggleButton>
           <ToggleButton value={false}>Off</ToggleButton>
-        </StyledToggleButtonGroup>
+          <ToggleButton value={true}>On</ToggleButton>
+        </ToggleButtonGroup>
       );
     case "rgb":
       return (
@@ -241,6 +261,7 @@ function FieldInput({
               payload: { path, input: "rgb", value },
             })
           }
+          hideClearButton={field.hideClearButton}
         />
       );
     case "rgba":
@@ -261,7 +282,7 @@ function FieldInput({
       );
     case "messagepath":
       return (
-        <PsuedoInputWrapper direction="row">
+        <Stack className={classes.pseudoInputWrapper} direction="row">
           <MessagePathInput
             path={field.value ?? ""}
             disabled={field.disabled}
@@ -274,7 +295,7 @@ function FieldInput({
             }
             validTypes={field.validTypes}
           />
-        </PsuedoInputWrapper>
+        </Stack>
       );
     case "select":
       return (
@@ -286,6 +307,14 @@ function FieldInput({
           readOnly={field.readonly}
           variant="filled"
           value={field.value ?? UNDEFINED_SENTINEL_VALUE}
+          renderValue={(value) => {
+            for (const option of field.options) {
+              if (option.value === value) {
+                return option.label.trim();
+              }
+            }
+            return undefined;
+          }}
           onChange={(event) =>
             actionHandler({
               action: "update",
@@ -323,6 +352,7 @@ function FieldInput({
       return (
         <Vec3Input
           step={field.step}
+          placeholder={field.placeholder}
           value={field.value}
           precision={field.precision}
           disabled={field.disabled}
@@ -339,6 +369,7 @@ function FieldInput({
         <Vec2Input
           step={field.step}
           value={field.value}
+          placeholder={field.placeholder}
           precision={field.precision}
           disabled={field.disabled}
           readOnly={field.readonly}
@@ -353,11 +384,13 @@ function FieldInput({
 }
 
 function FieldLabel({ field }: { field: DeepReadonly<SettingsTreeField> }): JSX.Element {
+  const { classes } = useStyles();
+
   if (field.input === "vec2") {
     const labels = field.labels ?? ["X", "Y"];
     return (
       <>
-        <MultiLabelWrapper>
+        <div className={classes.multiLabelWrapper}>
           <Typography
             title={field.label}
             variant="subtitle2"
@@ -380,14 +413,14 @@ function FieldLabel({ field }: { field: DeepReadonly<SettingsTreeField> }): JSX.
               {label}
             </Typography>
           ))}
-        </MultiLabelWrapper>
+        </div>
       </>
     );
   } else if (field.input === "vec3") {
     const labels = field.labels ?? ["X", "Y", "Z"];
     return (
       <>
-        <MultiLabelWrapper>
+        <div className={classes.multiLabelWrapper}>
           <Typography
             title={field.label}
             variant="subtitle2"
@@ -410,18 +443,16 @@ function FieldLabel({ field }: { field: DeepReadonly<SettingsTreeField> }): JSX.
               {label}
             </Typography>
           ))}
-        </MultiLabelWrapper>
+        </div>
       </>
     );
   } else {
     return (
       <>
         <Typography
+          className={classes.fieldLabel}
           title={field.help ?? field.label}
           variant="subtitle2"
-          color="text.secondary"
-          noWrap
-          flex="auto"
         >
           {field.label}
         </Typography>
@@ -441,11 +472,18 @@ function FieldEditorComponent({
 }): JSX.Element {
   const indent = Math.min(path.length, 4);
   const paddingLeft = 0.75 + 2 * (indent - 1);
+  const { classes, cx } = useStyles();
 
   return (
     <>
-      <Stack direction="row" alignItems="center" paddingLeft={paddingLeft} fullHeight>
-        <FieldLabel field={field} />
+      <Stack
+        direction="row"
+        alignItems="center"
+        justifyContent="flex-end"
+        gap={0.5}
+        paddingLeft={paddingLeft}
+        fullHeight
+      >
         {field.error && (
           <Tooltip
             arrow
@@ -455,10 +493,11 @@ function FieldEditorComponent({
             <ErrorIcon color="error" fontSize="small" />
           </Tooltip>
         )}
+        <FieldLabel field={field} />
       </Stack>
-      <FieldWrapper error={field.error != undefined}>
+      <div className={cx(classes.fieldWrapper, { [classes.error]: field.error != undefined })}>
         <FieldInput actionHandler={actionHandler} field={field} path={path} />
-      </FieldWrapper>
+      </div>
       <Stack paddingBottom={0.25} style={{ gridColumn: "span 2" }} />
     </>
   );

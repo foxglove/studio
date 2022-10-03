@@ -6,7 +6,6 @@ import { useMemo, useState } from "react";
 
 import {
   IDataSourceFactory,
-  AppSetting,
   Ros1LocalBagDataSourceFactory,
   Ros2LocalBagDataSourceFactory,
   RosbridgeDataSourceFactory,
@@ -29,53 +28,43 @@ import VelodyneUnavailableDataSourceFactory from "./dataSources/VelodyneUnavaila
 import { IdbLayoutStorage } from "./services/IdbLayoutStorage";
 
 export function Root({ appConfiguration }: { appConfiguration: IAppConfiguration }): JSX.Element {
-  const enableExperimentalBagPlayer: boolean =
-    (appConfiguration.get(AppSetting.EXPERIMENTAL_BAG_PLAYER) as boolean | undefined) ?? false;
-  const enableExperimentalDataPlatformPlayer: boolean =
-    (appConfiguration.get(AppSetting.EXPERIMENTAL_DATA_PLATFORM_PLAYER) as boolean | undefined) ??
-    false;
-  const enableExperimentalMcapPlayer: boolean =
-    (appConfiguration.get(AppSetting.EXPERIMENTAL_MCAP_PLAYER) as boolean | undefined) ?? false;
-
   const dataSources: IDataSourceFactory[] = useMemo(() => {
     const sources = [
       new Ros1UnavailableDataSourceFactory(),
-      new Ros1LocalBagDataSourceFactory({ useIterablePlayer: enableExperimentalBagPlayer }),
-      new Ros1RemoteBagDataSourceFactory({ useIterablePlayer: enableExperimentalBagPlayer }),
+      new Ros1LocalBagDataSourceFactory(),
+      new Ros1RemoteBagDataSourceFactory(),
       new Ros2UnavailableDataSourceFactory(),
       new Ros2LocalBagDataSourceFactory(),
       new RosbridgeDataSourceFactory(),
       new FoxgloveWebSocketDataSourceFactory(),
       new UlogLocalDataSourceFactory(),
       new VelodyneUnavailableDataSourceFactory(),
-      new FoxgloveDataPlatformDataSourceFactory({
-        useIterablePlayer: enableExperimentalDataPlatformPlayer,
-      }),
-      new SampleNuscenesDataSourceFactory({ useIterablePlayer: enableExperimentalBagPlayer }),
-      new McapLocalDataSourceFactory({ useIterablePlayer: enableExperimentalMcapPlayer }),
+      new FoxgloveDataPlatformDataSourceFactory(),
+      new SampleNuscenesDataSourceFactory(),
+      new McapLocalDataSourceFactory(),
       new McapRemoteDataSourceFactory(),
     ];
 
     return sources;
-  }, [
-    enableExperimentalBagPlayer,
-    enableExperimentalDataPlatformPlayer,
-    enableExperimentalMcapPlayer,
-  ]);
+  }, []);
 
   const layoutStorage = useMemo(() => new IdbLayoutStorage(), []);
   const [extensionLoaders] = useState(() => [
     new IdbExtensionLoader("org"),
     new IdbExtensionLoader("local"),
   ]);
-  const consoleApi = useMemo(() => new ConsoleApi(process.env.FOXGLOVE_API_URL!), []);
+  const consoleApi = useMemo(() => new ConsoleApi(process.env.FOXGLOVE_API_URL ?? ""), []);
 
   // Enable dialog auth in development since using cookie auth does not work between
   // localhost and the hosted dev deployment due to browser cookie/host security.
-  const enableDialogAuth = process.env.NODE_ENV === "development";
+  const enableDialogAuth =
+    process.env.NODE_ENV === "development" || process.env.FOXGLOVE_ENABLE_DIALOG_AUTH != undefined;
+
+  const disableSignin = process.env.FOXGLOVE_DISABLE_SIGN_IN != undefined;
 
   return (
     <App
+      disableSignin={disableSignin}
       enableDialogAuth={enableDialogAuth}
       enableLaunchPreferenceScreen
       deepLinks={[window.location.href]}

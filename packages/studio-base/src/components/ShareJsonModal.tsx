@@ -3,9 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import FileDownloadIcon from "@mdi/svg/svg/file-download-outline.svg";
-import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DeleteOutline from "@mui/icons-material/DeleteOutline";
 import {
   Button,
@@ -19,9 +17,9 @@ import {
 } from "@mui/material";
 import { useCallback, useMemo, useState } from "react";
 
+import CopyButton from "@foxglove/studio-base/components/CopyButton";
 import HoverableIconButton from "@foxglove/studio-base/components/HoverableIconButton";
 import Stack from "@foxglove/studio-base/components/Stack";
-import clipboard from "@foxglove/studio-base/util/clipboard";
 import { downloadTextFile } from "@foxglove/studio-base/util/download";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
@@ -51,7 +49,6 @@ export default function ShareJsonModal({
   title,
 }: Props): JSX.Element {
   const [value, setValue] = useState(JSON.stringify(initialValue, undefined, 2) ?? "");
-  const [copied, setCopied] = useState(false);
 
   const { decodedValue, error } = useMemo(() => {
     try {
@@ -66,16 +63,11 @@ export default function ShareJsonModal({
     onRequestClose();
   }, [decodedValue, onChange, onRequestClose]);
 
-  const handleCopy = useCallback(() => {
-    void clipboard.copy(value).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    });
-  }, [value]);
-
   const handleDownload = useCallback(() => {
     downloadTextFile(value, "layout.json");
   }, [value]);
+
+  const getText = useCallback(() => value, [value]);
 
   return (
     <Dialog open onClose={onRequestClose} maxWidth="sm" fullWidth>
@@ -120,14 +112,7 @@ export default function ShareJsonModal({
           <IconButton onClick={handleDownload} title="Download" aria-label="Download">
             <FileDownloadIcon />
           </IconButton>
-          <IconButton
-            onClick={handleCopy}
-            title={copied ? "Copied" : "Copy to Clipboard"}
-            aria-label={copied ? "Copied" : "Copy to Clipboard"}
-            color={copied ? "success" : "default"}
-          >
-            {copied ? <CheckIcon /> : <ContentCopyIcon />}
-          </IconButton>
+          <CopyButton color="default" getText={getText} />
           <HoverableIconButton
             activeColor="error"
             onClick={() => setValue("{}")}

@@ -20,12 +20,19 @@ import {
   KeyboardArrowDown as KeyboardArrowDownIcon,
   ArrowDropDown as ArrowDropDownIcon,
 } from "@mui/icons-material";
-import { Button, IconButton, Theme, alpha, MenuItem, Menu } from "@mui/material";
-import { makeStyles } from "@mui/styles";
-import cx from "classnames";
+import { alpha, Button, IconButton, Menu, MenuItem } from "@mui/material";
 import { last } from "lodash";
-import { ComponentProps, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  ComponentProps,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useLatest } from "react-use";
+import { makeStyles } from "tss-react/mui";
 import { useDebouncedCallback } from "use-debounce";
 
 import MessagePathInput from "@foxglove/studio-base/components/MessagePathSyntax/MessagePathInput";
@@ -75,65 +82,72 @@ type StyleProps = {
   sidebarDimension: PlotLegendProps["sidebarDimension"];
 };
 
-const useStyles = makeStyles((theme: Theme) => ({
-  addButton: {
-    minWidth: 100,
-    backgroundColor: `${theme.palette.action.hover} !important`,
-  },
-  dragHandle: ({ legendDisplay }: StyleProps) => ({
-    userSelect: "none",
-    border: `0px solid ${theme.palette.action.hover}`,
-    ...(legendDisplay === "left"
-      ? {
-          cursor: "ew-resize",
-          borderRightWidth: 2,
-          height: "100%",
-          width: theme.spacing(0.5),
-        }
-      : {
-          cursor: "ns-resize",
-          borderBottomWidth: 2,
-          height: theme.spacing(0.5),
-          width: "100%",
-        }),
-
-    "&:hover": {
-      borderColor: theme.palette.action.selected,
+const useStyles = makeStyles<StyleProps>()(
+  (
+    theme,
+    // prettier-ignore
+    {
+      legendDisplay,
+      sidebarDimension,
+      showLegend,
+      showPlotValuesInLegend = false,
     },
-  }),
-  dropdownWrapper: {
-    zIndex: 4,
-    height: 20,
-
-    "&:hover": {
-      backgroundColor: theme.palette.action.hover,
+  ) => ({
+    addButton: {
+      minWidth: 100,
+      backgroundColor: `${theme.palette.action.hover} !important`,
     },
-  },
-  dropdown: {
-    backgroundColor: "transparent !important",
-    padding: "4px !important",
-  },
-  footer: ({ legendDisplay }: StyleProps) => ({
-    padding: theme.spacing(0.5),
-    gridColumn: "span 4",
-    ...(legendDisplay !== "floating" && {
+    dragHandle: {
+      userSelect: "none",
+      border: `0px solid ${theme.palette.action.hover}`,
+      ...(legendDisplay === "left"
+        ? {
+            cursor: "ew-resize",
+            borderRightWidth: 2,
+            height: "100%",
+            width: theme.spacing(0.5),
+          }
+        : {
+            cursor: "ns-resize",
+            borderBottomWidth: 2,
+            height: theme.spacing(0.5),
+            width: "100%",
+          }),
+
+      "&:hover": {
+        borderColor: theme.palette.action.selected,
+      },
+    },
+    // dropdownWrapper: {
+    //   zIndex: 4,
+    //   height: 20,
+
+    //   "&:hover": {
+    //     backgroundColor: theme.palette.action.hover,
+    //   },
+    // },
+    // dropdown: {
+    //   backgroundColor: "transparent !important",
+    //   padding: "4px !important",
+    // },
+    footer: {
+      padding: theme.spacing(0.5),
+      gridColumn: showPlotValuesInLegend ? "span 4" : "span 3",
       position: "sticky",
       right: 0,
       left: 0,
-    }),
-  }),
-  floatingWrapper: {
-    overflow: "hidden",
-    display: "flex",
-    flexDirection: "column",
-    height: "100%",
-  },
-  grid: {
-    alignItems: "stretch",
-    position: "relative",
-    display: "grid",
-    gridTemplateColumns: ({ showPlotValuesInLegend = false }: StyleProps) =>
-      [
+    },
+    floatingWrapper: {
+      overflow: "hidden",
+      display: "flex",
+      flexDirection: "column",
+      height: "100%",
+    },
+    grid: {
+      alignItems: "stretch",
+      position: "relative",
+      display: "grid",
+      gridTemplateColumns: [
         "auto",
         "minmax(max-content, 1fr)",
         showPlotValuesInLegend && "minmax(max-content, 1fr)",
@@ -141,92 +155,93 @@ const useStyles = makeStyles((theme: Theme) => ({
       ]
         .filter(Boolean)
         .join(" "),
-  },
-  header: {
-    display: "flex",
-    alignItems: "center",
-    padding: theme.spacing(0.25),
-    height: 26,
-    position: "sticky",
-    top: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: theme.palette.background.paper,
-    zIndex: theme.zIndex.mobileStepper + 1,
-  },
-  legendContent: ({ legendDisplay }: StyleProps) => ({
-    display: "flex",
-    flexDirection: "column",
-    backgroundColor: alpha(theme.palette.background.paper, 0.8),
-    overflow: "auto",
-    pointerEvents: "auto",
-    [legendDisplay !== "floating" ? "height" : "maxHeight"]: "100%",
-    position: "relative",
-  }),
-  toggleButton: ({ legendDisplay }: StyleProps) => ({
-    cursor: "pointer",
-    userSelect: "none",
-    pointerEvents: "auto",
-    ...{
-      left: { height: "100%", padding: "0px !important" },
-      top: { width: "100%", padding: "0px !important" },
-      floating: undefined,
-    }[legendDisplay],
-
-    "&:hover": {
-      backgroundColor: theme.palette.action.focus,
     },
-  }),
-  toggleButtonFloating: {
-    marginRight: theme.spacing(0.25),
-    borderRadius: theme.shape.borderRadius,
-    backgroundColor: `${theme.palette.action.focus} !important`,
-    visibility: ({ showLegend }: StyleProps) => (showLegend ? "visible" : "hidden"),
-
-    "&:hover": {
+    header: {
+      display: "flex",
+      alignItems: "center",
+      padding: theme.spacing(0.25),
+      height: 26,
+      position: "sticky",
+      top: 0,
+      left: 0,
+      right: 0,
       backgroundColor: theme.palette.background.paper,
+      zIndex: theme.zIndex.mobileStepper + 1,
     },
-    ".mosaic-window:hover &": {
-      visibility: "initial",
+    legendContent: {
+      display: "flex",
+      flexDirection: "column",
+      backgroundColor: alpha(theme.palette.background.paper, 0.8),
+      overflow: "auto",
+      pointerEvents: "auto",
+      [legendDisplay !== "floating" ? "height" : "maxHeight"]: "100%",
+      position: "relative",
     },
-  },
-  root: {
-    display: "flex",
-    alignItems: "flex-start",
-    position: "relative",
-    color: theme.palette.text.secondary,
-    backgroundColor: theme.palette.background.paper,
-    borderTop: `${theme.palette.background.default} solid 1px`,
-    flexDirection: ({ legendDisplay }: StyleProps) => (legendDisplay === "top" ? "column" : "row"),
-  },
-  rootFloating: {
-    cursor: "pointer",
-    position: "absolute",
-    left: theme.spacing(4),
-    top: `calc(${theme.spacing(1)} + ${PANEL_TOOLBAR_MIN_HEIGHT}px)`,
-    bottom: theme.spacing(3),
-    maxWidth: `calc(100% - ${theme.spacing(8)})`,
-    backgroundColor: "transparent",
-    borderTop: "none",
-    pointerEvents: "none",
-    zIndex: theme.zIndex.mobileStepper,
-    gap: theme.spacing(0.5),
-  },
-  wrapper: ({ legendDisplay }: StyleProps) => ({
-    display: "flex",
-    flexDirection: legendDisplay === "left" ? "row" : "column",
-    width: legendDisplay === "top" ? "100%" : undefined,
-    height: legendDisplay === "left" ? "100%" : undefined,
+    toggleButton: {
+      cursor: "pointer",
+      userSelect: "none",
+      pointerEvents: "auto",
+      ...{
+        left: { height: "100%", padding: "0px !important" },
+        top: { width: "100%", padding: "0px !important" },
+        floating: undefined,
+      }[legendDisplay],
+
+      "&:hover": {
+        backgroundColor: theme.palette.action.focus,
+      },
+    },
+    toggleButtonFloating: {
+      marginRight: theme.spacing(0.25),
+      borderRadius: theme.shape.borderRadius,
+      backgroundColor: `${theme.palette.action.focus} !important`,
+      visibility: showLegend ? "visible" : "hidden",
+
+      "&:hover": {
+        backgroundColor: theme.palette.background.paper,
+      },
+      ".mosaic-window:hover &": {
+        visibility: "initial",
+      },
+    },
+    root: {
+      display: "flex",
+      alignItems: "flex-start",
+      position: "relative",
+      color: theme.palette.text.secondary,
+      backgroundColor: theme.palette.background.paper,
+      borderTop: `${theme.palette.background.default} solid 1px`,
+      flexDirection: legendDisplay === "top" ? "column" : "row",
+    },
+    rootFloating: {
+      cursor: "pointer",
+      position: "absolute",
+      left: theme.spacing(4),
+      top: `calc(${theme.spacing(1)} + ${PANEL_TOOLBAR_MIN_HEIGHT}px)`,
+      bottom: theme.spacing(3),
+      maxWidth: `calc(100% - ${theme.spacing(8)})`,
+      backgroundColor: "transparent",
+      borderTop: "none",
+      pointerEvents: "none",
+      zIndex: theme.zIndex.mobileStepper,
+      gap: theme.spacing(0.5),
+    },
+    wrapper: {
+      display: "flex",
+      flexDirection: legendDisplay === "left" ? "row" : "column",
+      width: legendDisplay === "top" ? "100%" : undefined,
+      height: legendDisplay === "left" ? "100%" : undefined,
+    },
+    wrapperContent: {
+      display: "flex",
+      flexDirection: "column",
+      flexGrow: 1,
+      gap: theme.spacing(0.5),
+      overflow: "auto",
+      [legendDisplay === "left" ? "width" : "height"]: sidebarDimension,
+    },
   }),
-  wrapperContent: ({ legendDisplay, sidebarDimension }: StyleProps) => ({
-    display: "flex",
-    flexDirection: "column",
-    flexGrow: 1,
-    gap: theme.spacing(0.5),
-    overflow: "auto",
-    [legendDisplay === "left" ? "width" : "height"]: sidebarDimension,
-  }),
-}));
+);
 
 function AxisDropdown({
   xAxisVal,
@@ -310,7 +325,7 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element {
     xAxisPath,
     xAxisVal,
   } = props;
-  const classes = useStyles({
+  const { classes, cx } = useStyles({
     legendDisplay,
     sidebarDimension,
     showLegend,
@@ -384,9 +399,11 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element {
     document.removeEventListener("mousemove", handleMouseMove, true);
   };
 
+  const contentRef = useRef<HTMLDivElement>(ReactNull);
+
   const legendContent = useMemo(
     () => (
-      <div className={classes.legendContent}>
+      <div ref={contentRef} className={classes.legendContent}>
         <header className={classes.header}>
           <AxisDropdown
             xAxisVal={xAxisVal}
@@ -467,6 +484,37 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element {
       xAxisVal,
     ],
   );
+
+  // Hack to fix nested input scrolling on Linux Chrome. Manually scroll content to the
+  // far left or right when the user navigates to the start or end of the
+  // message path input.
+  useLayoutEffect(() => {
+    const content = contentRef.current;
+    if (!content) {
+      return;
+    }
+
+    const listener = (event: KeyboardEvent) => {
+      if (event.target instanceof HTMLInputElement) {
+        if (event.target.selectionStart === 0) {
+          content.scrollTo(0, 0);
+        }
+        if (event.target.selectionStart === event.target.value.length) {
+          content.scrollTo(content.scrollWidth, 0);
+        }
+      }
+    };
+
+    content.querySelectorAll("input").forEach((input) => {
+      input.addEventListener("keydown", listener);
+    });
+
+    return () => {
+      content.querySelectorAll("input").forEach((input) => {
+        input.removeEventListener("keydown", listener);
+      });
+    };
+  }, []);
 
   return (
     <div className={cx(classes.root, { [classes.rootFloating]: legendDisplay === "floating" })}>

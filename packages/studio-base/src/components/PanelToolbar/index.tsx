@@ -13,7 +13,7 @@
 
 import FullscreenExitIcon from "@mui/icons-material/FullscreenExit";
 import { styled as muiStyled, Typography } from "@mui/material";
-import { useContext, useState, useMemo, CSSProperties } from "react";
+import { useContext, useMemo, CSSProperties } from "react";
 
 import PanelContext from "@foxglove/studio-base/components/PanelContext";
 import ToolbarIconButton from "@foxglove/studio-base/components/PanelToolbar/ToolbarIconButton";
@@ -62,7 +62,6 @@ export default React.memo<Props>(function PanelToolbar({
   isUnknownPanel = false,
 }: Props) {
   const { isFullscreen, exitFullscreen } = useContext(PanelContext) ?? {};
-  const [menuOpen, setMenuOpen] = useState(false);
 
   const panelContext = useContext(PanelContext);
 
@@ -85,12 +84,20 @@ export default React.memo<Props>(function PanelToolbar({
     );
   }, [additionalIcons, isFullscreen, exitFullscreen]);
 
+  // If we have children then we limit the drag area to the controls. Otherwise the entire
+  // toolbar is draggable.
+  const rootDragRef =
+    isUnknownPanel || children != undefined ? undefined : panelContext?.connectToolbarDragHandle;
+
+  const controlsDragRef =
+    isUnknownPanel || children == undefined ? undefined : panelContext?.connectToolbarDragHandle;
+
   return (
     <PanelToolbarRoot
       backgroundColor={backgroundColor}
-      data-test="mosaic-drag-handle"
-      enableDrag={panelContext?.connectToolbarDragHandle != undefined}
-      ref={isUnknownPanel ? undefined : panelContext?.connectToolbarDragHandle}
+      data-testid="mosaic-drag-handle"
+      enableDrag={rootDragRef != undefined}
+      ref={rootDragRef}
     >
       {children ??
         (panelContext != undefined && (
@@ -101,8 +108,7 @@ export default React.memo<Props>(function PanelToolbar({
       <PanelToolbarControls
         additionalIcons={additionalIconsWithHelp}
         isUnknownPanel={!!isUnknownPanel}
-        menuOpen={menuOpen}
-        setMenuOpen={setMenuOpen}
+        ref={controlsDragRef}
       />
     </PanelToolbarRoot>
   );

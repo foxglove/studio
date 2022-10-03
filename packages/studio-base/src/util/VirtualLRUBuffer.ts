@@ -44,7 +44,7 @@ import { isRangeCoveredByRanges, Range } from "./ranges";
 const kMaxLength = Math.pow(2, 32);
 
 export default class VirtualLRUBuffer {
-  byteLength: number; // How many bytes does this buffer represent.
+  public readonly byteLength: number; // How many bytes does this buffer represent.
   private _blocks: Uint8Array[] = []; // Actual `Buffer` for each block.
   // How many bytes is each block. This used to work up to 2GiB minus a byte, and now seems to crash
   // past 2GiB minus 4KiB. Default to 1GiB so we don't get caught out next time the limit drops.
@@ -53,7 +53,7 @@ export default class VirtualLRUBuffer {
   private _lastAccessedBlockIndices: number[] = []; // Indexes of blocks, from least to most recently accessed.
   private _rangesWithData: Range[] = []; // Ranges for which we have data copied in (and have not been evicted).
 
-  constructor(options: { size: number; blockSize?: number; numberOfBlocks?: number }) {
+  public constructor(options: { size: number; blockSize?: number; numberOfBlocks?: number }) {
     this.byteLength = options.size;
     this._blockSize = options.blockSize ?? this._blockSize;
     this._numberOfBlocks = options.numberOfBlocks ?? this._numberOfBlocks;
@@ -61,18 +61,18 @@ export default class VirtualLRUBuffer {
 
   // Check if the range between `start` (inclusive) and `end` (exclusive) fully contains data
   // copied in through `VirtualLRUBuffer#copyFrom`.
-  hasData(start: number, end: number): boolean {
+  public hasData(start: number, end: number): boolean {
     return isRangeCoveredByRanges({ start, end }, this._rangesWithData);
   }
 
   // Get the minimal number of start-end pairs for which `VirtualLRUBuffer#hasData` will return true.
   // The array is sorted by `start`.
-  getRangesWithData(): Range[] {
+  public getRangesWithData(): Range[] {
     return this._rangesWithData;
   }
 
   // Copy data from the `source` buffer to the byte at `targetStart` in the VirtualLRUBuffer.
-  copyFrom(source: Uint8Array, targetStart: number): void {
+  public copyFrom(source: Uint8Array, targetStart: number): void {
     if (targetStart < 0 || targetStart >= this.byteLength) {
       throw new Error("VirtualLRUBuffer#copyFrom invalid input");
     }
@@ -81,7 +81,6 @@ export default class VirtualLRUBuffer {
 
     // Walk through the blocks and copy the data over. If the input buffer is too large we will
     // currently just evict the earliest copied in data.
-    // TODO(JP): We could throw an error in that case if this is causing a lot of trouble.
     let position = range.start;
     while (position < range.end) {
       const { blockIndex, positionInBlock, remainingBytesInBlock } =
@@ -96,7 +95,7 @@ export default class VirtualLRUBuffer {
   // Get a slice of data. Throws if `VirtualLRUBuffer#hasData(start, end)` is false, so be sure to check
   // that first. Will use an efficient `slice` instead of a copy if all the data happens to
   // be contained in one block.
-  slice(start: number, end: number): Uint8Array {
+  public slice(start: number, end: number): Uint8Array {
     const size = end - start;
     if (start < 0 || end > this.byteLength || size <= 0 || size > kMaxLength) {
       throw new Error("VirtualLRUBuffer#slice invalid input");
@@ -147,9 +146,6 @@ export default class VirtualLRUBuffer {
       // If we have too many blocks, remove the least recently used one.
       // Note that we don't reuse blocks, since other code might still hold a reference to it
       // via the `VirtualLRUBuffer#slice` method.
-      // TODO(JP): It might be worth measuring if under typical use it's faster to reuse blocks and always
-      // copy to a new buffer in `VirtualLRUBuffer#slice` (less garbage collection), or if the current method
-      // is better (faster slicing).
       const deleteIndex = this._lastAccessedBlockIndices.shift();
       if (deleteIndex != undefined) {
         delete this._blocks[deleteIndex];

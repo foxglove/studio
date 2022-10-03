@@ -2,21 +2,28 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import Brightness5Icon from "@mui/icons-material/Brightness5";
+import ComputerIcon from "@mui/icons-material/Computer";
+import DarkModeIcon from "@mui/icons-material/DarkMode";
+import QuestionAnswerOutlinedIcon from "@mui/icons-material/QuestionAnswerOutlined";
+import WebIcon from "@mui/icons-material/Web";
 import {
+  Autocomplete,
   Checkbox,
-  ChoiceGroup,
-  DirectionalHint,
-  Dropdown,
-  IChoiceGroupOption,
-  IComboBoxOption,
-  Label,
-  SelectableOptionMenuItemType,
+  Divider,
+  FormControl,
+  FormControlLabel,
+  FormLabel,
+  MenuItem,
+  Select,
   TextField,
-  VirtualizedComboBox,
-} from "@fluentui/react";
-import { Typography } from "@mui/material";
+  Typography,
+  ToggleButtonGroup,
+  ToggleButton,
+} from "@mui/material";
 import moment from "moment-timezone";
-import { useCallback, useMemo, useState } from "react";
+import { MouseEvent, useCallback, useMemo } from "react";
+import { makeStyles } from "tss-react/mui";
 
 import { filterMap } from "@foxglove/den/collection";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
@@ -26,13 +33,37 @@ import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent"
 import Stack from "@foxglove/studio-base/components/Stack";
 import { useAppTimeFormat } from "@foxglove/studio-base/hooks";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
+import { LaunchPreferenceValue } from "@foxglove/studio-base/types/LaunchPreferenceValue";
 import { TimeDisplayMethod } from "@foxglove/studio-base/types/panels";
-import fuzzyFilter from "@foxglove/studio-base/util/fuzzyFilter";
+import { formatTime } from "@foxglove/studio-base/util/formatTime";
 import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
+import { formatTimeRaw } from "@foxglove/studio-base/util/time";
 
 const MESSAGE_RATES = [1, 3, 5, 10, 15, 20, 30, 60];
 
-const os = OsContextSingleton; // workaround for https://github.com/webpack/webpack/issues/12960
+const useStyles = makeStyles()((theme) => ({
+  autocompleteInput: {
+    "&.MuiOutlinedInput-input": {
+      padding: 0,
+    },
+  },
+  checkbox: {
+    "&.MuiCheckbox-root": {
+      paddingTop: 0,
+    },
+  },
+  formControlLabel: {
+    "&.MuiFormControlLabel-root": {
+      alignItems: "start",
+    },
+  },
+  toggleButton: {
+    display: "flex !important",
+    flexDirection: "column",
+    gap: theme.spacing(0.75),
+    lineHeight: "1 !important",
+  },
+}));
 
 function formatTimezone(name: string) {
   const tz = moment.tz(name);
@@ -47,39 +78,55 @@ function formatTimezone(name: string) {
 }
 
 function ColorSchemeSettings(): JSX.Element {
-  const [colorScheme = "dark", setColorScheme] = useAppConfigurationValue<string>(
+  const { classes } = useStyles();
+  const [colorScheme = "system", setColorScheme] = useAppConfigurationValue<string>(
     AppSetting.COLOR_SCHEME,
   );
-  const options: IChoiceGroupOption[] = useMemo(
-    () => [
-      { key: "light", text: "Light", iconProps: { iconName: "WeatherSunny" } },
-      { key: "dark", text: "Dark", iconProps: { iconName: "WeatherMoon" } },
-      { key: "system", text: "Follow system", iconProps: { iconName: "CircleHalfFill" } },
-    ],
-    [],
+
+  const handleChange = useCallback(
+    (_event: MouseEvent<HTMLElement>, value?: string) => {
+      if (value != undefined) {
+        void setColorScheme(value);
+      }
+    },
+    [setColorScheme],
   );
+
   return (
-    <ChoiceGroup
-      label="Color scheme"
-      options={options}
-      selectedKey={colorScheme}
-      onChange={(_event, option) => {
-        if (option != undefined) {
-          void setColorScheme(option.key);
-        }
-      }}
-    />
+    <Stack>
+      <FormLabel>Color scheme:</FormLabel>
+      <ToggleButtonGroup
+        color="primary"
+        size="small"
+        fullWidth
+        exclusive
+        value={colorScheme}
+        onChange={handleChange}
+      >
+        <ToggleButton className={classes.toggleButton} value="dark">
+          <DarkModeIcon /> Dark
+        </ToggleButton>
+        <ToggleButton className={classes.toggleButton} value="light">
+          <Brightness5Icon /> Light
+        </ToggleButton>
+        <ToggleButton className={classes.toggleButton} value="system">
+          <ComputerIcon /> Follow system
+        </ToggleButton>
+      </ToggleButtonGroup>
+    </Stack>
   );
 }
 
 function TimezoneSettings(): React.ReactElement {
-  type Option = Omit<IComboBoxOption, "data"> & { data: string | undefined };
+  type Option = { key: string; label: string; data?: string; divider?: boolean };
+
+  const { classes } = useStyles();
 
   const [timezone, setTimezone] = useAppConfigurationValue<string>(AppSetting.TIMEZONE);
-  const detectItem = useMemo(
+  const detectItem: Option = useMemo(
     () => ({
       key: "detect",
-      text: `Detect from system: ${formatTimezone(moment.tz.guess())}`,
+      label: `Detect from system: ${formatTimezone(moment.tz.guess())}`,
       data: undefined,
     }),
     [],
@@ -87,11 +134,16 @@ function TimezoneSettings(): React.ReactElement {
   const fixedItems: Option[] = useMemo(
     () => [
       detectItem,
-      { key: "zone:UTC", text: `${formatTimezone("UTC")}`, data: "UTC" },
-      { key: "sep", text: "", data: "-separator-", itemType: SelectableOptionMenuItemType.Divider },
+      { key: "zone:UTC", label: `${formatTimezone("UTC")}`, data: "UTC" },
+      {
+        key: "sep",
+        label: "",
+        divider: true,
+      },
     ],
     [detectItem],
   );
+
   const timezoneItems: Option[] = useMemo(
     () =>
       filterMap(moment.tz.names(), (name) => {
@@ -99,152 +151,140 @@ function TimezoneSettings(): React.ReactElement {
         if (name === "UTC") {
           return undefined;
         }
-        return { key: `zone:${name}`, text: formatTimezone(name), data: name };
+        return { key: `zone:${name}`, label: formatTimezone(name), data: name };
       }),
     [],
   );
 
-  const itemsByData = useMemo(() => {
-    const map = new Map<string, Option>();
-    for (const item of fixedItems) {
-      if (item.data != undefined) {
-        map.set(item.data, item);
-      }
-    }
-    for (const item of timezoneItems) {
-      if (item.data != undefined) {
-        map.set(item.data, item);
-      }
-    }
-    return map;
-  }, [fixedItems, timezoneItems]);
+  const allItems = useMemo(() => [...fixedItems, ...timezoneItems], [fixedItems, timezoneItems]);
 
   const selectedItem = useMemo(
-    () => (timezone != undefined && itemsByData.get(timezone)) || detectItem,
-    [itemsByData, timezone, detectItem],
-  );
-
-  const [filterText, setFilterText] = useState<string>("");
-  const filteredItems = useMemo(() => {
-    const matchingItems = fuzzyFilter({
-      options: timezoneItems,
-      filter: filterText,
-      getText: (item) => item.text,
-    });
-    return [...fixedItems, ...matchingItems];
-  }, [fixedItems, timezoneItems, filterText]);
-
-  const onPendingValueChanged = useCallback(
-    (_option?: IComboBoxOption, _index?: number, value?: string) => {
-      if (value != undefined) {
-        setFilterText(value);
-      }
-    },
-    [],
+    () => (timezone != undefined && allItems.find((item) => item.data === timezone)) || detectItem,
+    [allItems, detectItem, timezone],
   );
 
   return (
-    <VirtualizedComboBox
-      label="Display timestamps in:"
-      options={filteredItems}
-      allowFreeform
-      autoComplete="on"
-      openOnKeyboardFocus
-      selectedKey={selectedItem.key}
-      onChange={(_event, option) => {
-        if (option) {
-          void setTimezone(option.data as string);
+    <FormControl fullWidth>
+      <Typography color="text.secondary" marginBottom={0.5}>
+        Display timestamps in:
+      </Typography>
+      <Autocomplete
+        options={[...fixedItems, ...timezoneItems]}
+        value={selectedItem}
+        renderOption={(props, option: Option) =>
+          option.divider === true ? (
+            <Divider key={option.key} />
+          ) : (
+            <li {...props} key={option.key}>
+              {option.label}
+            </li>
+          )
         }
-      }}
-      onPendingValueChanged={onPendingValueChanged}
-      calloutProps={{
-        directionalHint: DirectionalHint.bottomLeftEdge,
-        directionalHintFixed: true,
-      }}
-    />
+        renderInput={(params) => (
+          <TextField
+            {...params}
+            inputProps={{ ...params.inputProps, className: classes.autocompleteInput }}
+          />
+        )}
+        onChange={(_event, value) => void setTimezone(value?.data)}
+      />
+    </FormControl>
   );
 }
 
 function TimeFormat(): React.ReactElement {
   const { timeFormat, setTimeFormat } = useAppTimeFormat();
-  const entries: Array<{ key: TimeDisplayMethod; text: string }> = [
-    { key: "SEC", text: "Seconds" },
-    { key: "TOD", text: "Local" },
-  ];
+
+  const [timezone] = useAppConfigurationValue<string>(AppSetting.TIMEZONE);
+
+  const exampleTime = { sec: 946713600, nsec: 0 };
 
   return (
-    <Dropdown
-      label="Timestamp format:"
-      options={entries}
-      openOnKeyboardFocus
-      selectedKey={timeFormat}
-      onChange={(_event, option) => {
-        if (option) {
-          void setTimeFormat(String(option.key) as TimeDisplayMethod);
-        }
-      }}
-      calloutProps={{
-        directionalHint: DirectionalHint.bottomLeftEdge,
-        directionalHintFixed: true,
-      }}
-    />
+    <Stack>
+      <FormLabel>Timestamp format:</FormLabel>
+      <ToggleButtonGroup
+        color="primary"
+        size="small"
+        orientation="vertical"
+        fullWidth
+        exclusive
+        value={timeFormat}
+        onChange={(_, value?: TimeDisplayMethod) => value != undefined && void setTimeFormat(value)}
+      >
+        <ToggleButton value="SEC" data-testid="timeformat-seconds">
+          {formatTimeRaw(exampleTime)}
+        </ToggleButton>
+        <ToggleButton value="TOD" data-testid="timeformat-local">
+          {formatTime(exampleTime, timezone)}
+        </ToggleButton>
+      </ToggleButtonGroup>
+    </Stack>
   );
 }
 
 function LaunchDefault(): React.ReactElement {
-  const [preference = "unknown", setPreference] = useAppConfigurationValue<string | undefined>(
+  const { classes } = useStyles();
+  const [preference, setPreference] = useAppConfigurationValue<string | undefined>(
     AppSetting.LAUNCH_PREFERENCE,
   );
-
-  const entries: Array<{ key: string; text: string }> = [
-    { key: "unknown", text: "Ask each time" },
-    { key: "web", text: "Web app" },
-    { key: "desktop", text: "Desktop app" },
-  ];
+  let sanitizedPreference: LaunchPreferenceValue;
+  switch (preference) {
+    case LaunchPreferenceValue.WEB:
+    case LaunchPreferenceValue.DESKTOP:
+    case LaunchPreferenceValue.ASK:
+      sanitizedPreference = preference;
+      break;
+    default:
+      sanitizedPreference = LaunchPreferenceValue.WEB;
+  }
 
   return (
-    <Dropdown
-      label="Open links in:"
-      options={entries}
-      openOnKeyboardFocus
-      selectedKey={preference}
-      onChange={(_event, option) => {
-        if (option) {
-          void setPreference(String(option.key));
-        }
-      }}
-      calloutProps={{
-        directionalHint: DirectionalHint.bottomLeftEdge,
-        directionalHintFixed: true,
-      }}
-    />
+    <Stack>
+      <FormLabel>Open links in:</FormLabel>
+      <ToggleButtonGroup
+        color="primary"
+        size="small"
+        fullWidth
+        exclusive
+        value={sanitizedPreference}
+        onChange={(_, value?: string) => value != undefined && void setPreference(value)}
+      >
+        <ToggleButton value={LaunchPreferenceValue.WEB} className={classes.toggleButton}>
+          <WebIcon /> Web app
+        </ToggleButton>
+        <ToggleButton value={LaunchPreferenceValue.DESKTOP} className={classes.toggleButton}>
+          <ComputerIcon /> Desktop app
+        </ToggleButton>
+        <ToggleButton value={LaunchPreferenceValue.ASK} className={classes.toggleButton}>
+          <QuestionAnswerOutlinedIcon /> Ask each time
+        </ToggleButton>
+      </ToggleButtonGroup>
+    </Stack>
   );
 }
 
 function MessageFramerate(): React.ReactElement {
   const [messageRate, setMessageRate] = useAppConfigurationValue<number>(AppSetting.MESSAGE_RATE);
-  const entries = useMemo(
+  const options = useMemo(
     () => MESSAGE_RATES.map((rate) => ({ key: rate, text: `${rate}`, data: rate })),
     [],
   );
 
   return (
-    <VirtualizedComboBox
-      label="Message rate (Hz):"
-      options={entries}
-      autoComplete="on"
-      openOnKeyboardFocus
-      selectedKey={messageRate ?? 60}
-      onChange={(_event, option) => {
-        if (option) {
-          void setMessageRate(option.data as number);
-        }
-      }}
-      calloutProps={{
-        directionalHint: DirectionalHint.bottomLeftEdge,
-        directionalHintFixed: true,
-      }}
-    />
+    <Stack>
+      <FormLabel>Message rate (Hz):</FormLabel>
+      <Select
+        value={messageRate ?? 60}
+        fullWidth
+        onChange={(event) => void setMessageRate(event.target.value as number)}
+      >
+        {options.map((option) => (
+          <MenuItem key={option.key} value={option.key}>
+            {option.text}
+          </MenuItem>
+        ))}
+      </Select>
+    </Stack>
   );
 }
 
@@ -253,15 +293,23 @@ function AutoUpdate(): React.ReactElement {
     AppSetting.UPDATES_ENABLED,
   );
 
+  const { classes } = useStyles();
+
   return (
     <>
-      <Label>Updates:</Label>
-      <Checkbox
-        checked={updatesEnabled}
+      <Typography color="text.secondary" marginBottom={0.5}>
+        Updates:
+      </Typography>
+      <FormControlLabel
+        className={classes.formControlLabel}
+        control={
+          <Checkbox
+            className={classes.checkbox}
+            checked={updatesEnabled}
+            onChange={(_event, checked) => void setUpdatedEnabled(checked)}
+          />
+        }
         label="Automatically install updates"
-        onChange={(_, newValue) => {
-          void setUpdatedEnabled(newValue ?? true);
-        }}
       />
     </>
   );
@@ -272,14 +320,18 @@ function RosPackagePath(): React.ReactElement {
     AppSetting.ROS_PACKAGE_PATH,
   );
 
-  const rosPackagePathPlaceholder = useMemo(() => os?.getEnvVar("ROS_PACKAGE_PATH"), []);
+  const rosPackagePathPlaceholder = useMemo(
+    () => OsContextSingleton?.getEnvVar("ROS_PACKAGE_PATH"),
+    [],
+  );
 
   return (
     <TextField
+      fullWidth
       label="ROS_PACKAGE_PATH"
       placeholder={rosPackagePathPlaceholder}
       value={rosPackagePath ?? ""}
-      onChange={(_event, newValue) => void setRosPackagePath(newValue ? newValue : undefined)}
+      onChange={(event) => void setRosPackagePath(event.target.value)}
     />
   );
 }
@@ -297,7 +349,9 @@ export default function Preferences(): React.ReactElement {
   // electron-updater does not provide a way to detect if we are on a supported update platform
   // so we hard-code linux as an _unsupported_ auto-update platform since we cannot auto-update
   // with our .deb package install method on linux.
-  const supportsAppUpdates = isDesktopApp() && os?.platform !== "linux";
+  const supportsAppUpdates = isDesktopApp() && OsContextSingleton?.platform !== "linux";
+
+  const { classes } = useStyles();
 
   return (
     <SidebarContent title="Preferences">
@@ -306,7 +360,7 @@ export default function Preferences(): React.ReactElement {
           <Typography component="h2" variant="h5" gutterBottom color="primary">
             General
           </Typography>
-          <Stack gap={1}>
+          <Stack gap={2}>
             <div>
               <ColorSchemeSettings />
             </div>
@@ -347,18 +401,30 @@ export default function Preferences(): React.ReactElement {
           <Typography component="h2" variant="h5" gutterBottom color="primary">
             Privacy
           </Typography>
-          <Stack gap={1}>
+          <Stack gap={2}>
             <Typography color="text.secondary">
               Changes will take effect the next time Foxglove Studio is launched.
             </Typography>
-            <Checkbox
-              checked={telemetryEnabled ?? true}
-              onChange={(_event, checked) => void setTelemetryEnabled(checked)}
+            <FormControlLabel
+              className={classes.formControlLabel}
+              control={
+                <Checkbox
+                  className={classes.checkbox}
+                  checked={telemetryEnabled ?? true}
+                  onChange={(_event, checked) => void setTelemetryEnabled(checked)}
+                />
+              }
               label="Send anonymized usage data to help us improve Foxglove Studio"
             />
-            <Checkbox
-              checked={crashReportingEnabled ?? true}
-              onChange={(_event, checked) => void setCrashReportingEnabled(checked)}
+            <FormControlLabel
+              className={classes.formControlLabel}
+              control={
+                <Checkbox
+                  className={classes.checkbox}
+                  checked={crashReportingEnabled ?? true}
+                  onChange={(_event, checked) => void setCrashReportingEnabled(checked)}
+                />
+              }
               label="Send anonymized crash reports"
             />
           </Stack>

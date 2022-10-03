@@ -43,6 +43,10 @@ const BasicSettings: SettingsTreeNodes = {
     ],
     fields: {
       emptyField: undefined,
+      longField: {
+        input: "string",
+        label: "A field with a very long label that might wrap or truncate",
+      },
       numberWithPrecision: {
         input: "number",
         label: "Number with precision",
@@ -210,8 +214,11 @@ const DisabledSettings: SettingsTreeNodes = {
       toggle: {
         input: "toggle",
         label: "Toggle",
-        value: "One",
-        options: ["One", "Two"],
+        value: "one",
+        options: [
+          { label: "One", value: "one" },
+          { label: "Two", value: "two" },
+        ],
         disabled: true,
       },
       vec2: {
@@ -296,8 +303,11 @@ const ReadonlySettings: SettingsTreeNodes = {
       toggle: {
         input: "toggle",
         label: "Toggle",
-        value: "One",
-        options: ["One", "Two"],
+        value: "one",
+        options: [
+          { label: "One", value: "one" },
+          { label: "Two", value: "two" },
+        ],
         readonly: true,
       },
       vec2: {
@@ -352,9 +362,12 @@ const PanelExamplesSettings: SettingsTreeNodes = {
       },
       color_by: {
         label: "Color by",
-        value: "Flat",
+        value: "flat",
         input: "toggle",
-        options: ["Flat", "Point data"],
+        options: [
+          { label: "Flat", value: "flat" },
+          { label: "Point data", value: "data" },
+        ],
       },
       marker_color: {
         label: "Marker color",
@@ -539,8 +552,11 @@ const TopicSettings: SettingsTreeNodes = {
           point_shape: {
             label: "Point Shape",
             input: "toggle",
-            value: "Circle",
-            options: ["Circle", "Square"],
+            value: "circle",
+            options: [
+              { label: "Circle", value: "circle" },
+              { label: "Square", value: "square" },
+            ],
           },
           decay_time: {
             label: "Decay Time (seconds)",
@@ -616,12 +632,19 @@ const ColorSettings: SettingsTreeNodes = {
     fields: {
       undefined: { label: "Undefined", input: "rgb", value: undefined, placeholder: "placeholder" },
       invalid: { label: "Invalid", input: "rgb", value: "invalid" },
+      hiddenClearButton: {
+        label: "Hidden Clear Button",
+        input: "rgb",
+        value: "#00ffbf",
+        hideClearButton: true,
+      },
       hex6: { label: "Hex 6", input: "rgb", value: "#ffaa00" },
       hex8: { label: "Hex 8", input: "rgb", value: "#00aaff88" },
       rgb: { label: "RGB", input: "rgb", value: "rgb(255, 128, 0)" },
       rgba: { label: "RGBA", input: "rgba", value: "rgba(255, 0, 0, 0.5)" },
       rgbaBlack: { label: "RGBA Black", input: "rgba", value: "rgba(0, 0, 0, 1)" },
       rgbaWhite: { label: "RGBA White", input: "rgba", value: "rgba(255, 255, 255, 1)" },
+      gradient: { label: "Gradient", input: "gradient", value: ["#000000", "#ffffff"] },
     },
   },
 };
@@ -762,7 +785,7 @@ export function Basics(): JSX.Element {
 }
 
 Basics.play = () => {
-  Array.from(document.querySelectorAll("[data-test=node-actions-menu-button]"))
+  Array.from(document.querySelectorAll("[data-testid=node-actions-menu-button]"))
     .slice(0, 1)
     .forEach((node) => fireEvent.click(node));
 };
@@ -801,7 +824,7 @@ export function Filter(): JSX.Element {
   return <Wrapper nodes={FilterSettings} />;
 }
 Filter.play = () => {
-  const node = document.querySelector("[data-test=settings-filter-field] input");
+  const node = document.querySelector("[data-testid=settings-filter-field] input");
   if (node) {
     fireEvent.click(node);
     fireEvent.change(node, { target: { value: "matcha" } });
@@ -810,4 +833,84 @@ Filter.play = () => {
 
 export function Colors(): JSX.Element {
   return <Wrapper nodes={ColorSettings} />;
+}
+
+export function EmptyValue(): JSX.Element {
+  return <Wrapper nodes={ColorSettings} />;
+}
+
+export function SetHiddenValueToTrue(): JSX.Element {
+  return <Wrapper nodes={ColorSettings} />;
+}
+
+export function Vec2(): JSX.Element {
+  const settings: SettingsTreeNodes = {
+    fields: {
+      fields: {
+        basic: {
+          label: "Basic",
+          input: "vec2",
+        },
+        labels: {
+          label: "Custom Labels",
+          input: "vec2",
+          labels: ["A", "B"],
+        },
+        values: {
+          label: "Values",
+          input: "vec2",
+          value: [1.1111, 2.2222],
+        },
+        someValues: {
+          label: "Some values",
+          input: "vec2",
+          value: [1.1111, undefined],
+        },
+        placeholder: {
+          label: "Placeholder",
+          input: "vec2",
+          placeholder: ["foo", "bar"],
+          value: [1.1111, undefined],
+        },
+      },
+    },
+  };
+
+  return <Wrapper nodes={settings} />;
+}
+
+export function Vec3(): JSX.Element {
+  const settings: SettingsTreeNodes = {
+    fields: {
+      fields: {
+        basic: {
+          label: "Basic",
+          input: "vec3",
+        },
+        labels: {
+          label: "Custom Labels",
+          input: "vec3",
+          labels: ["A", "B", "C"],
+        },
+        values: {
+          label: "Values",
+          input: "vec3",
+          value: [1.1111, 2.2222, 3.333],
+        },
+        someValues: {
+          label: "Some values",
+          input: "vec3",
+          value: [1.1111, undefined, 2.222],
+        },
+        placeholder: {
+          label: "Placeholder",
+          input: "vec3",
+          placeholder: ["foo", "bar", "baz"],
+          value: [1.1111, undefined, undefined],
+        },
+      },
+    },
+  };
+
+  return <Wrapper nodes={settings} />;
 }

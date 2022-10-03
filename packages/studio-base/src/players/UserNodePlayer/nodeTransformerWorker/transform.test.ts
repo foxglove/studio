@@ -220,7 +220,7 @@ describe("pipeline", () => {
         "log({ 'a': { 'a': undefined } })",
         "log({ 1: { 'a': undefined } })",
         "const x: [number, number] = [ 1, 1, ]; log({ 'a': x })",
-        "const y: any = {}; log({ 'a': y })", // TODO: Add back in after updating Typescript to support enums
+        "const y: any = {}; log({ 'a': y })",
         // "enum Enums { Red, Green, Blue }; log({ 'a': Enums })",
       ])("can compile logs", (sourceCode) => {
         const { diagnostics } = compile({ ...baseNodeData, sourceCode });
@@ -291,7 +291,7 @@ describe("pipeline", () => {
           import { Input, Messages } from "ros";
 
           export const inputs = ["/tick_information"];
-          export const output = "/studio_node/my_node";
+          export const output = "/studio_script/my_node";
 
           const publisher = (message: Input<"/tick_information">): Messages.std_msgs__TickInfo => {
             return {
@@ -717,7 +717,7 @@ describe("pipeline", () => {
             return {position: { x: 1, y: 2, z: 3 }, orientation: { x: 4, y: 5, z: 6, w: 7}};
           };`,
         datatypes: poseDataType,
-      }, // TODO: add a test for an import interface type in the return type
+      },
       {
         description: "Type reference as return type",
         sourceCode: `
@@ -1080,7 +1080,7 @@ describe("pipeline", () => {
           };
           export default publisher;`,
         datatypes: baseDatatypesWithNestedColor,
-        outputDatatype: "/studio_node/main",
+        outputDatatype: "/studio_script/main",
       },
       {
         description: "Should handle type aliases",
@@ -1156,7 +1156,7 @@ describe("pipeline", () => {
           type Message<T extends keyof MessageBySchemaName> = MessageBySchemaName[T];
 
           export const inputs = ["/some_topic"];
-          export const output = "/studio_node/sample";
+          export const output = "/studio_script/sample";
 
           type PoseStamped = Message<"pkg/Custom">;
           type Output = PoseStamped;
@@ -1169,18 +1169,18 @@ describe("pipeline", () => {
           export default publisher;`,
         datatypes: new Map(
           Object.entries({
-            "/studio_node/main": {
+            "/studio_script/main": {
               definitions: [
                 {
                   arrayLength: undefined,
                   isArray: false,
                   isComplex: true,
                   name: "header",
-                  type: "/studio_node/main/header",
+                  type: "/studio_script/main/header",
                 },
               ],
             },
-            "/studio_node/main/header": {
+            "/studio_script/main/header": {
               definitions: [
                 {
                   arrayLength: undefined,
@@ -1207,7 +1207,7 @@ describe("pipeline", () => {
             },
           }),
         ),
-        outputDatatype: "/studio_node/main",
+        outputDatatype: "/studio_script/main",
       },
       {
         description: "Should detect output datatype from input datatypes",
