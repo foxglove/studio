@@ -89,7 +89,7 @@ export class RenderableTriangles extends RenderablePrimitive {
           const r = SRGBToLinear(color.r);
           const g = SRGBToLinear(color.g);
           const b = SRGBToLinear(color.b);
-          const a = SRGBToLinear(color.a);
+          const a = color.a;
           colorChanged =
             colorChanged ||
             colors.getX(i) !== r ||
