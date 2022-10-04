@@ -13,6 +13,7 @@ import {
   colorHasTransparency,
   ColorModeSettings,
   getColorConverter,
+  autoSelectColorField,
 } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/pointClouds/colors";
 import type { RosValue } from "@foxglove/studio-base/players/types";
 
@@ -165,7 +166,7 @@ export class FoxgloveGrid extends SceneExtension<FoxgloveGridRenderable> {
         | undefined;
       const settings = { ...DEFAULT_SETTINGS, ...userSettings };
       if (settings.colorField == undefined) {
-        autoSelectColorField(settings, foxgloveGrid);
+        autoSelectColorField(settings, foxgloveGrid.fields);
         // Update user settings with the newly selected color field
         this.renderer.updateConfig((draft) => {
           const updatedUserSettings = { ...userSettings };
@@ -423,52 +424,6 @@ function numericTypeWidth(type: NumericType): number {
       return 8;
     default:
       return 0;
-  }
-}
-
-const COLOR_FIELDS = new Set<string>(["rgb", "rgba", "bgr", "bgra", "abgr", "color"]);
-
-// FIELD FN
-function autoSelectColorField(output: LayerSettingsFoxgloveGrid, foxgloveGrid: Grid): void {
-  // Prefer color fields first
-  for (const field of foxgloveGrid.fields) {
-    const fieldNameLower = field.name.toLowerCase();
-    if (COLOR_FIELDS.has(fieldNameLower)) {
-      output.colorField = field.name;
-      switch (fieldNameLower) {
-        case "rgb":
-          output.colorMode = "rgb";
-          output.rgbByteOrder = "abgr";
-          break;
-        default:
-        case "rgba":
-          output.colorMode = "rgba";
-          output.rgbByteOrder = "abgr";
-          break;
-        case "bgr":
-          output.colorMode = "rgb";
-          output.rgbByteOrder = "bgra";
-          break;
-        case "bgra":
-          output.colorMode = "rgba";
-          output.rgbByteOrder = "bgra";
-          break;
-        case "abgr":
-          output.colorMode = "rgba";
-          output.rgbByteOrder = "abgr";
-          break;
-      }
-      return;
-    }
-  }
-
-  // Fall back to using the first field
-  if (foxgloveGrid.fields.length > 0) {
-    const firstField = foxgloveGrid.fields[0]!;
-    output.colorField = firstField.name;
-    output.colorMode = "colormap";
-    output.colorMap = "turbo";
-    return;
   }
 }
 
