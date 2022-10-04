@@ -77,6 +77,7 @@ const tempLower: [Duration, Transform] = [0n, Transform.Identity()];
 const tempUpper: [Duration, Transform] = [0n, Transform.Identity()];
 const tempQuaternion = new THREE.Quaternion();
 const tempEuler = new THREE.Euler();
+const tempTfPath: [string, string] = ["transforms", ""];
 
 export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
   private static lineGeometry: LineGeometry | undefined;
@@ -168,6 +169,11 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
             input: "rgb",
             value: config.scene.transforms?.lineColor ?? DEFAULT_LINE_COLOR_STR,
           },
+          enablePreloading: {
+            label: "Enable preloading",
+            input: "boolean",
+            value: config.scene.transforms?.enablePreloading ?? true,
+          },
         },
       },
     };
@@ -178,12 +184,14 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
       const tfConfig = (configTransforms[frameKey] ?? {}) as Partial<LayerSettingsTransform>;
       const frame = this.renderer.transformTree.frame(frameId);
       const fields = buildSettingsFields(frame, this.renderer.currentTime, config);
+      tempTfPath[1] = frameKey;
       children[frameKey] = {
         label,
         fields,
         visible: tfConfig.visible ?? true,
         order: order++,
         defaultExpansionState: "collapsed",
+        error: this.renderer.settings.errors.errors.errorAtPath(tempTfPath),
       };
     }
 
@@ -324,9 +332,9 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
 
       this.renderer.updateConfig((draft) => {
         for (const frameId of this.renderables.keys()) {
-          const frameIdSanitized = frameId === "settings" ? "$settings" : frameId;
-          draft.transforms[frameIdSanitized] ??= {};
-          draft.transforms[frameIdSanitized]!.visible = value;
+          const frameKeySanitized = frameId === "settings" ? "$settings" : `frame:${frameId}`;
+          draft.transforms[frameKeySanitized] ??= {};
+          draft.transforms[frameKeySanitized]!.visible = value;
         }
       });
 
@@ -505,6 +513,7 @@ function buildSettingsFields(
     return { parent: { label: "Parent", input: "string", readonly: true, value: "<root>" } };
   }
 
+  const historySizeValue = String(frame?.transformsSize() ?? 0);
   let ageValue: string | undefined;
   let xyzValue: THREE.Vector3Tuple | undefined;
   let rpyValue: THREE.Vector3Tuple | undefined;
@@ -539,6 +548,12 @@ function buildSettingsFields(
       input: "string",
       readonly: true,
       value: ageValue,
+    },
+    historySize: {
+      label: "History size",
+      input: "string",
+      readonly: true,
+      value: historySizeValue,
     },
     xyz: {
       label: "Translation",

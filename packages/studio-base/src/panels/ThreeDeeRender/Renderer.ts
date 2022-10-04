@@ -129,6 +129,8 @@ export type RendererConfig = {
       lineWidth?: number;
       /** Color of the connecting line between child and parent frames */
       lineColor?: string;
+      /** Enable transform preloading */
+      enablePreloading?: boolean;
     };
     /** Toggles visibility of all topics */
     topicsVisible?: boolean;
@@ -204,6 +206,7 @@ const DEFAULT_FRAME_IDS = ["base_link", "odom", "map", "earth"];
 const FOLLOW_TF_PATH = ["general", "followTf"];
 const NO_FRAME_SELECTED = "NO_FRAME_SELECTED";
 const FRAME_NOT_FOUND = "FRAME_NOT_FOUND";
+const TF_OVERFLOW = "TF_OVERFLOW";
 
 // An extensionId for creating the top-level settings nodes such as "Topics" and
 // "Custom Layers"
@@ -435,17 +438,17 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.addDatatypeSubscriptions(FRAME_TRANSFORM_DATATYPES, {
       handler: this.handleFrameTransform,
       forced: true,
-      preload: true,
+      preload: config.scene.transforms?.enablePreloading ?? true,
     });
     this.addDatatypeSubscriptions(TF_DATATYPES, {
       handler: this.handleTFMessage,
       forced: true,
-      preload: true,
+      preload: config.scene.transforms?.enablePreloading ?? true,
     });
     this.addDatatypeSubscriptions(TRANSFORM_STAMPED_DATATYPES, {
       handler: this.handleTransformStamped,
       forced: true,
-      preload: true,
+      preload: config.scene.transforms?.enablePreloading ?? true,
     });
 
     this.addSceneExtension(this.coreSettings);
@@ -933,6 +936,17 @@ export class Renderer extends EventEmitter<RendererEvents> {
     if (updated) {
       this.coordinateFrameList = this.transformTree.frameList();
       this.emit("transformTreeUpdated", this);
+    }
+
+    // Check if the transform history for this frame is at capacity and show an error if so. This
+    // error can't be cleared until the scene is reloaded
+    const frame = this.transformTree.getOrCreateFrame(childFrameId);
+    if (frame.transformsSize() === frame.maxCapacity) {
+      this.settings.errors.add(
+        ["transforms", `frame:${childFrameId}`],
+        TF_OVERFLOW,
+        `Transform history is at capacity (${frame.maxCapacity}), TFs will be dropped`,
+      );
     }
   }
 
