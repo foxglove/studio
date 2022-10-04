@@ -601,7 +601,7 @@ declare module "@foxglove/studio" {
     /**
      * Filter Children by visibility status
      */
-    visibilityFilterEnabled?: boolean;
+    enableVisibilityFilter?: boolean;
   };
 
   /**

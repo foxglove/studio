@@ -169,7 +169,7 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
   const indent = props.path.length;
   const allowVisibilityToggle = props.settings?.visible != undefined;
   const visible = props.settings?.visible !== false;
-  const selectVisibilityFilterEnabled = props.settings?.visibilityFilterEnabled === true;
+  const selectVisibilityFilterEnabled = props.settings?.enableVisibilityFilter === true;
 
   const selectVisibilityFilter = (action: SettingsTreeAction) => {
     if (action.action === "update" && action.payload.input === "select") {
