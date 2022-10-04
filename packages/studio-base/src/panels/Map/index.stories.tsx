@@ -4,7 +4,7 @@
 
 import { Story, StoryContext } from "@storybook/react";
 import { cloneDeep, tap } from "lodash";
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useState } from "react";
 import { useTimeoutFn } from "react-use";
 
 import {
@@ -280,12 +280,14 @@ SinglePointFullCovariance.parameters = {
 const GeoCenter = { lat: 34.9949, lon: 135.785 };
 
 export const GeoJSON = (): JSX.Element => {
+  const [topics] = useState([
+    { name: "/geo", datatype: "foxglove.GeoJSON" },
+    { name: "/geo2", datatype: "foxglove.GeoJSON" },
+    { name: "/gps", datatype: "sensor_msgs/NavSatFix" },
+  ]);
+
   const [fixture, setFixture] = useState<Fixture>({
-    topics: [
-      { name: "/geo", datatype: "foxglove.GeoJSON" },
-      { name: "/geo2", datatype: "foxglove.GeoJSON" },
-      { name: "/gps", datatype: "sensor_msgs/NavSatFix" },
-    ],
+    topics,
     frame: {
       "/gps": [
         {
@@ -320,13 +322,11 @@ export const GeoJSON = (): JSX.Element => {
     },
   });
 
+  // Send a second messaqge on /geo topic. This should replace the previous message but not
+  // the /geo2 message.
   useTimeoutFn(() => {
     setFixture({
-      topics: [
-        { name: "/geo", datatype: "foxglove.GeoJSON" },
-        { name: "/geo2", datatype: "foxglove.GeoJSON" },
-        { name: "/gps", datatype: "sensor_msgs/NavSatFix" },
-      ],
+      topics,
       frame: {
         "/geo": [
           {
@@ -344,29 +344,6 @@ export const GeoJSON = (): JSX.Element => {
     });
   }, 1000);
 
-  // useLayoutEffect(() => {
-  //   setFixture({
-  //     topics: [
-  //       { name: "/geo", datatype: "foxglove.GeoJSON" },
-  //       { name: "/geo2", datatype: "foxglove.GeoJSON" },
-  //     ],
-  //     frame: {
-  //       "/geo": [
-  //         {
-  //           topic: "/geo",
-  //           receiveTime: { sec: 130, nsec: 0 },
-  //           message: {
-  //             geojson: JSON.stringify(
-  //               makeGeoJsonMessage({ lat: GeoCenter.lat + 0.075, lon: GeoCenter.lon + 0.075 }),
-  //             ),
-  //           },
-  //           sizeInBytes: 10,
-  //         },
-  //       ],
-  //     },
-  //   });
-  // }, []);
-
   return (
     <PanelSetup fixture={fixture}>
       <MapPanel
@@ -380,7 +357,7 @@ export const GeoJSON = (): JSX.Element => {
 };
 GeoJSON.parameters = {
   chromatic: {
-    delay: 1000,
+    delay: 2000,
   },
   colorScheme: "light",
 };
