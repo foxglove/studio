@@ -280,11 +280,11 @@ SinglePointFullCovariance.parameters = {
 const GeoCenter = { lat: 34.9949, lon: 135.785 };
 
 export const GeoJSON = (): JSX.Element => {
-  const [topics] = useState([
+  const topics = [
     { name: "/geo", datatype: "foxglove.GeoJSON" },
     { name: "/geo2", datatype: "foxglove.GeoJSON" },
     { name: "/gps", datatype: "sensor_msgs/NavSatFix" },
-  ]);
+  ];
 
   const [fixture, setFixture] = useState<Fixture>({
     topics,
