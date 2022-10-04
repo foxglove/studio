@@ -302,7 +302,9 @@ export const GeoJSON = (): JSX.Element => {
           topic: "/geo",
           receiveTime: { sec: 123, nsec: 0 },
           message: {
-            geojson: JSON.stringify(makeGeoJsonMessage(GeoCenter)),
+            geojson: JSON.stringify(
+              makeGeoJsonMessage({ lat: GeoCenter.lat - 0.2, lon: GeoCenter.lon - 0.2 }),
+            ),
           },
           sizeInBytes: 10,
         },
@@ -334,7 +336,7 @@ export const GeoJSON = (): JSX.Element => {
             receiveTime: { sec: 130, nsec: 0 },
             message: {
               geojson: JSON.stringify(
-                makeGeoJsonMessage({ lat: GeoCenter.lat + 0.075, lon: GeoCenter.lon + 0.075 }),
+                makeGeoJsonMessage({ lat: GeoCenter.lat + 0.2, lon: GeoCenter.lon + 0.1 }),
               ),
             },
             sizeInBytes: 10,
