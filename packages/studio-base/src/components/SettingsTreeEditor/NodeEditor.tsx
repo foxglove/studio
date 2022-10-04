@@ -169,7 +169,7 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
   const indent = props.path.length;
   const allowVisibilityToggle = props.settings?.visible != undefined;
   const visible = props.settings?.visible !== false;
-  const selectVisibilityFilterEnabled = props.settings?.selectVisibilityFilterEnabled === true;
+  const selectVisibilityFilterEnabled = props.settings?.visibilityFilterEnabled === true;
 
   const selectVisibilityFilter = (action: SettingsTreeAction) => {
     if (action.action === "update" && action.payload.input === "select") {
@@ -210,21 +210,18 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
       : state.visibilityFilter === "invisible"
       ? showInvisibleFilter
       : undefined;
-  const childNodes = prepareSettingsNodes(children ?? {}).reduce((agg, [key, child]) => {
-    if (!filterFn || filterFn(child)) {
-      agg.push(
-        <NodeEditor
-          actionHandler={actionHandler}
-          defaultOpen={child.defaultExpansionState === "collapsed" ? false : true}
-          filter={filter}
-          key={key}
-          settings={child}
-          path={makeStablePath(props.path, key)}
-        />,
-      );
-    }
-    return agg;
-  }, [] as JSX.Element[]);
+  const childNodes = filterMap(prepareSettingsNodes(children ?? {}), ([key, child]) => {
+    return !filterFn || filterFn(child) ? (
+      <NodeEditor
+        actionHandler={actionHandler}
+        defaultOpen={child.defaultExpansionState === "collapsed" ? false : true}
+        filter={filter}
+        key={key}
+        settings={child}
+        path={makeStablePath(props.path, key)}
+      />
+    ) : undefined;
+  });
 
   const IconComponent = settings.icon ? icons[settings.icon] : undefined;
 
