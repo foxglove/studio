@@ -974,11 +974,11 @@ describe("useDecodeMessagePathsForMessagesByTopic", () => {
       },
     });
 
-    const message = {
+    const message: MessageEvent<unknown> = {
       topic: "/topic1",
       receiveTime: { sec: 0, nsec: 0 },
       message: { value: 1 },
-      datatype: "datatype",
+      schemaName: "datatype",
       sizeInBytes: 0,
     };
     const messagesByTopic = {
