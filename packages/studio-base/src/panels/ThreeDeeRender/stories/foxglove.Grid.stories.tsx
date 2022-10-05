@@ -2,8 +2,6 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import seedrandom from "seedrandom";
-
 import { Grid, NumericType } from "@foxglove/schemas";
 import { MessageEvent, Topic } from "@foxglove/studio";
 import { LayerSettingsFoxgloveGrid } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/FoxgloveGrid";
@@ -391,7 +389,6 @@ function Foxglove_Grid_RGBA(): JSX.Element {
 }
 
 function Foxglove_Grid_Float(): JSX.Element {
-  const rng = seedrandom("seed");
   const topics: Topic[] = [
     { name: "/grid", datatype: "foxglove.Grid" },
     { name: "/tf", datatype: "geometry_msgs/TransformStamped" },
@@ -433,7 +430,7 @@ function Foxglove_Grid_Float(): JSX.Element {
   for (let i = 0; i < rowCount; i++) {
     for (let j = 0; j < column_count; j++) {
       const offset = (i * column_count + j) * cell_stride;
-      view.setFloat32(offset, rng());
+      view.setFloat32(offset, f(i, j), true);
     }
   }
   const cell_size = {
@@ -486,9 +483,9 @@ function Foxglove_Grid_Float(): JSX.Element {
               visible: true,
               colorField: "height",
               colorMode: "gradient",
-              gradient: ["#ffffffFF", "#00000000"],
-              minValue: 0.0,
-              maxValue: 1.0,
+              gradient: ["#ffffffFF", "#ff00bb80"],
+              minValue: -0.25,
+              maxValue: 0.25,
             } as LayerSettingsFoxgloveGrid,
           },
           layers: {
