@@ -76,18 +76,21 @@ export async function* streamMessages({
   log.debug("streamMessages", params);
   const startTimer = performance.now();
 
-  const startString = params.start ? toRFC3339String(params.start) : undefined;
-  const endString = params.end ? toRFC3339String(params.end) : undefined;
-
-  const deviceId = params.type === "by-device" ? params.deviceId : undefined;
-  const importId = params.type === "by-import" ? params.importId : undefined;
-
-  const streamParams = importId
-    ? { importId, start: startString, end: endString }
-    : { deviceId: deviceId!, start: startString ?? "", end: endString ?? "" };
+  const apiParams =
+    params.type === "by-device"
+      ? {
+          deviceId: params.deviceId,
+          start: toRFC3339String(params.start),
+          end: toRFC3339String(params.end),
+        }
+      : {
+          importId: params.importId,
+          start: params.start ? toRFC3339String(params.start) : undefined,
+          end: params.end ? toRFC3339String(params.end) : undefined,
+        };
 
   const { link: mcapUrl } = await api.stream({
-    ...streamParams,
+    ...apiParams,
     topics: params.topics,
     outputFormat: "mcap0",
     replayPolicy: params.replayPolicy,

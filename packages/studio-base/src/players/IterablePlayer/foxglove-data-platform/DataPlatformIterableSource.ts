@@ -12,7 +12,6 @@ import {
   fromRFC3339String,
   isGreaterThan,
   isLessThan,
-  Time,
   toRFC3339String,
   add as addTime,
   compare,
@@ -52,18 +51,16 @@ export type DataPlatformInterableSourceConsoleApi = Pick<
   "coverage" | "topics" | "getDevice" | "stream"
 >;
 
-type DataPlatformIterableSourceOptions = DataPlatformSourceParameters & {
+type DataPlatformIterableSourceOptions = {
   api: DataPlatformInterableSourceConsoleApi;
+  params: DataPlatformSourceParameters;
 };
 
 export class DataPlatformIterableSource implements IIterableSource {
   private readonly _consoleApi: DataPlatformInterableSourceConsoleApi;
 
-  private _start: Time | undefined;
-  private _end: Time | undefined;
-  private readonly _deviceId: string | undefined;
-  private readonly _importId: string | undefined;
   private _knownTopicNames: string[] = [];
+  private _params: DataPlatformSourceParameters;
 
   /**
    * Cached readers for each schema so we don't have to re-parse definitions on each stream request.
@@ -76,23 +73,24 @@ export class DataPlatformIterableSource implements IIterableSource {
 
   public constructor(options: DataPlatformIterableSourceOptions) {
     this._consoleApi = options.api;
-    this._start = options.start;
-    this._end = options.end;
-    this._deviceId = options.type === "by-device" ? options.deviceId : undefined;
-    this._importId = options.type === "by-import" ? options.importId : undefined;
+    this._params = options.params;
   }
 
   public async initialize(): Promise<Initalization> {
-    const startString = this._start ? toRFC3339String(this._start) : undefined;
-    const endString = this._end ? toRFC3339String(this._end) : undefined;
+    const params = this._params;
 
-    if (!(this._importId || (this._deviceId && startString && endString))) {
-      throw new Error("Either importId, or all of deviceId/start/end is required");
-    }
-
-    const apiParams = this._importId
-      ? { importId: this._importId, start: startString, end: endString }
-      : { deviceId: this._deviceId!, start: startString!, end: endString! };
+    const apiParams =
+      params.type === "by-device"
+        ? {
+            deviceId: params.deviceId,
+            start: toRFC3339String(params.start),
+            end: toRFC3339String(params.end),
+          }
+        : {
+            importId: params.importId,
+            start: params.start ? toRFC3339String(params.start) : undefined,
+            end: params.end ? toRFC3339String(params.end) : undefined,
+          };
 
     const [coverage, rawTopics] = await Promise.all([
       this._consoleApi.coverage(apiParams),
@@ -101,11 +99,11 @@ export class DataPlatformIterableSource implements IIterableSource {
 
     if (rawTopics.length === 0 || coverage.length === 0) {
       throw new Error(
-        this._deviceId && this._start && this._end
-          ? `No data available for ${this._deviceId} between ${formatTimeRaw(
-              this._start,
-            )} and ${formatTimeRaw(this._end)}.`
-          : `No data available for ${this._importId}`,
+        params.type === "by-device"
+          ? `No data available for ${params.deviceId} between ${formatTimeRaw(
+              params.start,
+            )} and ${formatTimeRaw(params.end)}.`
+          : `No data available for ${params.importId}`,
       );
     }
 
@@ -125,16 +123,16 @@ export class DataPlatformIterableSource implements IIterableSource {
     }
 
     const device = await this._consoleApi.getDevice(
-      this._deviceId ?? coverageStart?.deviceId ?? "",
+      params.type === "by-device" ? params.deviceId : coverageStart?.deviceId ?? "",
     );
 
-    if (!this._start || isLessThan(this._start, coverageStartTime)) {
-      log.debug("Increased start time from", this._start, "to", coverageStartTime);
-      this._start = coverageStartTime;
+    if (!params.start || isLessThan(params.start, coverageStartTime)) {
+      log.debug("Increased start time from", params.start, "to", coverageStartTime);
+      params.start = coverageStartTime;
     }
-    if (!this._end || isGreaterThan(this._end, coverageEndTime)) {
-      log.debug("Reduced end time from", this._end, "to", coverageEndTime);
-      this._end = coverageEndTime;
+    if (!params.end || isGreaterThan(params.end, coverageEndTime)) {
+      log.debug("Reduced end time from", params.end, "to", coverageEndTime);
+      params.end = coverageEndTime;
     }
 
     const topics: Topic[] = [];
@@ -191,8 +189,8 @@ export class DataPlatformIterableSource implements IIterableSource {
       topics,
       topicStats,
       datatypes,
-      start: this._start,
-      end: this._end,
+      start: params.start,
+      end: params.end,
       profile: undefined,
       problems,
       publishersByTopic: new Map(),
@@ -206,8 +204,6 @@ export class DataPlatformIterableSource implements IIterableSource {
     log.debug("message iterator", args);
 
     const api = this._consoleApi;
-    const deviceId = this._deviceId;
-    const importId = this._importId;
     const parsedChannelsByTopic = this._parsedChannelsByTopic;
 
     // Data platform treats topic array length 0 as "all topics". Until that is changed, we filter out
@@ -226,19 +222,20 @@ export class DataPlatformIterableSource implements IIterableSource {
       return;
     }
 
-    if (!this._start || !this._end || (!deviceId && !importId)) {
+    if (!this._params.start || !this._params.end) {
       log.debug("source needs to be initialized");
       return;
     }
 
-    const streamStart = args.start ?? this._start;
-    const streamEnd = clampTime(args.end ?? this._end, this._start, this._end);
+    const streamStart = args.start ?? this._params.start;
+    const streamEnd = clampTime(args.end ?? this._params.end, this._params.start, this._params.end);
 
     if (args.consumptionType === "full") {
-      const streamByParams: DataPlatformSourceParameters = importId
-        ? { type: "by-import", importId, start: streamStart, end: streamEnd }
-        : { type: "by-device", deviceId: deviceId!, start: streamStart, end: streamEnd };
-
+      const streamByParams: DataPlatformSourceParameters = {
+        ...this._params,
+        start: streamStart,
+        end: streamEnd,
+      };
       const stream = streamMessages({
         api,
         parsedChannelsByTopic,
@@ -258,10 +255,11 @@ export class DataPlatformIterableSource implements IIterableSource {
     let localEnd = clampTime(addTime(localStart, { sec: 5, nsec: 0 }), streamStart, streamEnd);
 
     for (;;) {
-      const streamByParams: DataPlatformSourceParameters = importId
-        ? { type: "by-import", importId, start: localStart, end: localEnd }
-        : { type: "by-device", deviceId: deviceId!, start: localStart, end: localEnd };
-
+      const streamByParams: DataPlatformSourceParameters = {
+        ...this._params,
+        start: localStart,
+        end: localEnd,
+      };
       const stream = streamMessages({
         api,
         parsedChannelsByTopic,
@@ -319,14 +317,11 @@ export class DataPlatformIterableSource implements IIterableSource {
       return [];
     }
 
-    if (!this._deviceId && !this._importId) {
-      log.debug("source needs to be initialized");
-      return [];
-    }
-
-    const streamByParams: DataPlatformSourceParameters = this._importId
-      ? { type: "by-import", importId: this._importId, start: time, end: time }
-      : { type: "by-device", deviceId: this._deviceId!, start: time, end: time };
+    const streamByParams: DataPlatformSourceParameters = {
+      ...this._params,
+      start: time,
+      end: time,
+    };
 
     const messages: MessageEvent<unknown>[] = [];
     for await (const block of streamMessages({

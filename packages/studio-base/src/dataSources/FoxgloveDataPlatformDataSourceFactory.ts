@@ -42,8 +42,8 @@ class FoxgloveDataPlatformDataSourceFactory implements IDataSourceFactory {
       : { type: "by-device", deviceId: deviceId!, start: startTime!, end: endTime! };
 
     const source = new DataPlatformIterableSource({
-      ...dpSourceParams,
       api: args.consoleApi,
+      params: dpSourceParams,
     });
 
     return new IterablePlayer({
