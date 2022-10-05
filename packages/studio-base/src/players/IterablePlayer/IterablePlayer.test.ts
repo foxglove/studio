@@ -148,7 +148,10 @@ describe("IterablePlayer", () => {
       // before initialize
       { ...baseState, activeData: { ...baseState.activeData, endTime: { sec: 0, nsec: 0 } } },
       // start delay
-      baseState,
+      {
+        ...baseState,
+        presence: PlayerPresence.PRESENT,
+      },
       // startPlay
       {
         ...baseState,
@@ -201,6 +204,7 @@ describe("IterablePlayer", () => {
             receiveTime: { sec: 0, nsec: 1 },
             message: undefined,
             sizeInBytes: 0,
+            datatype: "foo",
           },
         ];
       };
@@ -255,6 +259,7 @@ describe("IterablePlayer", () => {
             receiveTime: { sec: 0, nsec: 1 },
             sizeInBytes: 0,
             topic: "foo",
+            datatype: "foo",
           },
         ],
       },
@@ -296,6 +301,7 @@ describe("IterablePlayer", () => {
           receiveTime: { sec: 0, nsec: 99000001 },
           message: undefined,
           sizeInBytes: 0,
+          datatype: "foo",
         },
         problem: undefined,
         connectionId: undefined,
@@ -341,6 +347,7 @@ describe("IterablePlayer", () => {
           receiveTime: { sec: 0, nsec: 99000001 },
           message: undefined,
           sizeInBytes: 0,
+          datatype: "foo",
         },
         problem: undefined,
         connectionId: undefined,

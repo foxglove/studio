@@ -72,6 +72,10 @@ declare module "@foxglove/studio" {
     /** The topic name this message was received on, i.e. "/some/topic" */
     topic: string;
     /**
+     * The datatype is an identifier for the type of message within the message event.
+     */
+    datatype: string;
+    /**
      * The time in nanoseconds this message was received. This may be set by the
      * local system clock or the data source, depending on the data source used
      * and whether time is simulated via a /clock topic or similar mechanism.
@@ -597,6 +601,11 @@ declare module "@foxglove/studio" {
      * to the action handler.
      **/
     visible?: boolean;
+
+    /**
+     * Filter Children by visibility status
+     */
+    enableVisibilityFilter?: boolean;
   };
 
   /**
