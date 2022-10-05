@@ -175,7 +175,7 @@ describe("IterablePlayer", () => {
     player.close();
   });
 
-  it("provides error message for duplicate topics", async () => {
+  it("provides error message for inconsistent topic datatypes", async () => {
     class DuplicateTopicsSource implements IIterableSource {
       public async initialize(): Promise<Initalization> {
         return {
@@ -214,9 +214,9 @@ describe("IterablePlayer", () => {
     const playerStates = await store.done;
     expect(last(playerStates)!.problems).toEqual([
       {
-        message: "Duplicate topic: A",
+        message: "Inconsistent datatype for topic: A",
         severity: "warn",
-        tip: "Source produced two topics named A, with datatypes B and C. This may result in errors during visualization.",
+        tip: "Topic A has messages with multiple datatypes: B, C. This may result in errors during visualization.",
       },
     ]);
     (console.warn as jest.Mock).mockClear();
