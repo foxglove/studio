@@ -62,6 +62,7 @@ function Foxglove_Grid_Uint8(): JSX.Element {
   ];
   const tf1: MessageEvent<TransformStamped> = {
     topic: "/tf",
+    datatype: "geometry_msgs/TransformStamped",
     receiveTime: { sec: 10, nsec: 0 },
     message: {
       header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "map" },
@@ -75,6 +76,7 @@ function Foxglove_Grid_Uint8(): JSX.Element {
   };
   const tf2: MessageEvent<TransformStamped> = {
     topic: "/tf",
+    datatype: "geometry_msgs/TransformStamped",
     receiveTime: { sec: 10, nsec: 0 },
     message: {
       header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "base_link" },
@@ -127,6 +129,7 @@ function Foxglove_Grid_Uint8(): JSX.Element {
   };
   const grid: MessageEvent<Grid> = {
     topic: "/grid",
+    datatype: "foxglove.Grid",
     receiveTime: { sec: 10, nsec: 0 },
     message: {
       timestamp: { sec: 0, nsec: 0 },
@@ -277,6 +280,7 @@ function Foxglove_Grid_RGBA(): JSX.Element {
   ];
   const tf1: MessageEvent<TransformStamped> = {
     topic: "/tf",
+    datatype: "geometry_msgs/TransformStamped",
     receiveTime: { sec: 10, nsec: 0 },
     message: {
       header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "map" },
@@ -290,6 +294,7 @@ function Foxglove_Grid_RGBA(): JSX.Element {
   };
   const tf2: MessageEvent<TransformStamped> = {
     topic: "/tf",
+    datatype: "geometry_msgs/TransformStamped",
     receiveTime: { sec: 10, nsec: 0 },
     message: {
       header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "base_link" },
@@ -321,6 +326,7 @@ function Foxglove_Grid_RGBA(): JSX.Element {
   };
   const grid: MessageEvent<Grid> = {
     topic: "/grid",
+    datatype: "foxglove.Grid",
     receiveTime: { sec: 10, nsec: 0 },
     message: {
       timestamp: { sec: 0, nsec: 0 },
@@ -395,6 +401,7 @@ function Foxglove_Grid_Float(): JSX.Element {
   ];
   const tf1: MessageEvent<TransformStamped> = {
     topic: "/tf",
+    datatype: "geometry_msgs/TransformStamped",
     receiveTime: { sec: 10, nsec: 0 },
     message: {
       header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "map" },
@@ -408,6 +415,7 @@ function Foxglove_Grid_Float(): JSX.Element {
   };
   const tf2: MessageEvent<TransformStamped> = {
     topic: "/tf",
+    datatype: "geometry_msgs/TransformStamped",
     receiveTime: { sec: 10, nsec: 0 },
     message: {
       header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "base_link" },
@@ -439,6 +447,7 @@ function Foxglove_Grid_Float(): JSX.Element {
   };
   const grid: MessageEvent<Grid> = {
     topic: "/grid",
+    datatype: "foxglove.Grid",
     receiveTime: { sec: 10, nsec: 0 },
     message: {
       timestamp: { sec: 0, nsec: 0 },
