@@ -601,17 +601,18 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.customLayerActions.set(options.layerId, { action, handler });
 
     // "Topics" settings tree node
+    const topicsChildren = this.settings.tree()["topics"]?.children;
     const topics: SettingsTreeEntry = {
       path: ["topics"],
       node: {
-        enableVisibilityFilter: true,
+        enableVisibilityFilter: Object.keys(topicsChildren ?? {}).length > 0 ? true : undefined,
         label: "Topics",
         defaultExpansionState: "expanded",
         actions: [
           { id: "show-all", type: "action", label: "Show All" },
           { id: "hide-all", type: "action", label: "Hide All" },
         ],
-        children: this.settings.tree()["topics"]?.children,
+        children: topicsChildren,
         handler: this.handleTopicsAction,
       },
     };
