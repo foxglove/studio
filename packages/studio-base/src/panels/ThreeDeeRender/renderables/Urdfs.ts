@@ -81,6 +81,12 @@ const DEFAULT_CUSTOM_SETTINGS: LayerSettingsCustomUrdf = {
   url: "",
 };
 
+const tempVec3a = new THREE.Vector3();
+const tempVec3b = new THREE.Vector3();
+const tempQuaternion1 = new THREE.Quaternion();
+const tempQuaternion2 = new THREE.Quaternion();
+const tempEuler = new THREE.Euler();
+
 export type UrdfUserData = BaseUserData & {
   settings: LayerSettingsUrdf | LayerSettingsCustomUrdf;
   fetching?: { url: string; control: AbortController };
@@ -337,12 +343,12 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
       const frame = this.renderer.transformTree.getOrCreateFrame(transformData.child);
       const frameKey = `frame:${frame.id}`;
       const isAngular = joint.jointType === "revolute" || joint.jointType === "continuous";
-      const axis = new THREE.Vector3(joint.axis.x, joint.axis.y, joint.axis.z);
+      const axis = tempVec3a.set(joint.axis.x, joint.axis.y, joint.axis.z);
 
       if (isAngular) {
         const degrees = action.payload.value as number;
-        const quaternion = new THREE.Quaternion().setFromAxisAngle(axis, degrees * DEG2RAD);
-        const euler = new THREE.Euler().setFromQuaternion(quaternion);
+        const quaternion = tempQuaternion1.setFromAxisAngle(axis, degrees * DEG2RAD);
+        const euler = tempEuler.setFromQuaternion(quaternion);
         frame.offsetEulerDegrees = [euler.x * RAD2DEG, euler.y * RAD2DEG, euler.z * RAD2DEG];
         this.saveSetting(["transforms", frameKey, "rpyOffset"], frame.offsetEulerDegrees);
       } else {
@@ -997,12 +1003,6 @@ function urdfChildren(
   };
   return children;
 }
-
-const tempVec3a = new THREE.Vector3();
-const tempVec3b = new THREE.Vector3();
-const tempQuaternion1 = new THREE.Quaternion();
-const tempQuaternion2 = new THREE.Quaternion();
-const tempEuler = new THREE.Euler();
 
 function eulerDegreesToQuaternion(eulerDegrees: vec3): THREE.Quaternion {
   tempEuler.set(eulerDegrees[0] * DEG2RAD, eulerDegrees[1] * DEG2RAD, eulerDegrees[2] * DEG2RAD);
