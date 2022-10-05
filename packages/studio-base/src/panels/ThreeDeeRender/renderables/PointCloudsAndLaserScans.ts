@@ -1443,20 +1443,6 @@ export function autoSelectColorField(
   }
 }
 
-function bestColorByField(fields: string[]): string {
-  for (const field of fields) {
-    if (COLOR_FIELDS.has(field)) {
-      return field;
-    }
-  }
-  for (const field of fields) {
-    if (INTENSITY_FIELDS.has(field)) {
-      return field;
-    }
-  }
-  return "x";
-}
-
 export function pointCloudSettingsNode(
   pclFieldsByTopic: Map<string, string[]>,
   config: Partial<LayerSettingsPointCloudAndLaserScan>,
