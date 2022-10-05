@@ -487,42 +487,46 @@ function MapPanel(props: MapPanelProps): JSX.Element {
       return;
     }
 
-    const groupedNavMessages = groupBy(currentNavMessages, (msg) => msg.topic);
-    for (const [topic, messages] of Object.entries(groupedNavMessages)) {
+    const navByTopic = groupBy(currentNavMessages, (msg) => msg.topic);
+    for (const [topic, messages] of Object.entries(navByTopic)) {
       const topicLayer = topicLayers.get(topic);
-      if (topicLayer) {
-        topicLayer.currentFrame.clearLayers();
-        const [fixEvents, noFixEvents] = partition(messages, hasFix);
-
-        const pointLayerNoFix = FilteredPointLayer({
-          map: currentMap,
-          navSatMessageEvents: noFixEvents,
-          bounds: filterBounds ?? currentMap.getBounds(),
-          color: darkColor(topicLayer.baseColor),
-          hoverColor: darkColor(topicLayer.baseColor),
-          showAccuracy: true,
-        });
-
-        const pointLayerFix = FilteredPointLayer({
-          map: currentMap,
-          navSatMessageEvents: fixEvents,
-          bounds: filterBounds ?? currentMap.getBounds(),
-          color: topicLayer.baseColor,
-          hoverColor: darkColor(topicLayer.baseColor),
-          showAccuracy: true,
-        });
-
-        topicLayer.currentFrame.addLayer(pointLayerNoFix);
-        topicLayer.currentFrame.addLayer(pointLayerFix);
+      if (!topicLayer) {
+        continue;
       }
+
+      topicLayer.currentFrame.clearLayers();
+      const [fixEvents, noFixEvents] = partition(messages, hasFix);
+
+      const pointLayerNoFix = FilteredPointLayer({
+        map: currentMap,
+        navSatMessageEvents: noFixEvents,
+        bounds: filterBounds ?? currentMap.getBounds(),
+        color: darkColor(topicLayer.baseColor),
+        hoverColor: darkColor(topicLayer.baseColor),
+        showAccuracy: true,
+      });
+
+      const pointLayerFix = FilteredPointLayer({
+        map: currentMap,
+        navSatMessageEvents: fixEvents,
+        bounds: filterBounds ?? currentMap.getBounds(),
+        color: topicLayer.baseColor,
+        hoverColor: darkColor(topicLayer.baseColor),
+        showAccuracy: true,
+      });
+
+      topicLayer.currentFrame.addLayer(pointLayerNoFix);
+      topicLayer.currentFrame.addLayer(pointLayerFix);
     }
 
-    const groupedGeoMessages = groupBy(currentGeoMessages, (msg) => msg.topic);
-    for (const [topic, messages] of Object.entries(groupedGeoMessages)) {
+    const geoByTopic = groupBy(currentGeoMessages, (msg) => msg.topic);
+    for (const [topic, messages] of Object.entries(geoByTopic)) {
       const topicLayer = topicLayers.get(topic);
       if (topicLayer) {
         topicLayer.currentFrame.clearLayers();
-        messages.forEach((msg) => addGeoJsonMessage(msg, topicLayer.currentFrame));
+        for (const message of messages) {
+          addGeoJsonMessage(message, topicLayer.currentFrame);
+        }
       }
     }
   }, [
