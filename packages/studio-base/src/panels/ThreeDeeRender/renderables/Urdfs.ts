@@ -148,6 +148,9 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     super("foxglove.Urdfs", renderer);
 
     renderer.addTopicSubscription(TOPIC_NAME, this.handleRobotDescription);
+    // Note that this subscription will never happen because it does not appear as a topic in the
+    // topic list that can have its visibility toggled on. The ThreeDeeRender subscription logic
+    // needs to become more flexible to make this possible
     renderer.addDatatypeSubscriptions(JOINTSTATE_DATATYPES, this.handleJointState);
     renderer.on("parametersChange", this.handleParametersChange);
     renderer.addCustomLayerAction({
