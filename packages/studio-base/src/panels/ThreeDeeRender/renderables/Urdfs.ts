@@ -464,6 +464,11 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
       return;
     }
 
+    // Clear any previous parsed data for this instanceId
+    this.transformsByInstanceId.delete(instanceId);
+    this.framesByInstanceId.delete(instanceId);
+    this.updateSettingsTree();
+
     const isTopic = instanceId === TOPIC_NAME;
     const frameId = this.renderer.fixedFrameId ?? ""; // Unused
     const settingsPath = isTopic ? ["topics", TOPIC_NAME] : ["layers", instanceId];
