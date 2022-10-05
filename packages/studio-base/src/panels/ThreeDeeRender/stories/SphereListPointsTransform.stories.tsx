@@ -69,7 +69,7 @@ export function SphereListPointsTransform(): JSX.Element {
         },
       },
     },
-    datatype: "geometry_msgs/TransformStamped",
+    schemaName: "geometry_msgs/TransformStamped",
     sizeInBytes: 0,
   };
 

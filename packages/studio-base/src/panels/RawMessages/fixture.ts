@@ -361,7 +361,7 @@ export const topicsToDiffFixture: Fixture = {
           toBeDeletedVal: "Bye!",
           toBeDeletedObj: { a: 1, b: 2, c: 3 },
         },
-        datatype: "baz/enum_advanced",
+        schemaName: "baz/enum_advanced",
         sizeInBytes: 0,
       },
     ],
@@ -369,7 +369,7 @@ export const topicsToDiffFixture: Fixture = {
       {
         ...enumAdvancedFixture.frame["/baz/enum_advanced"][0]!,
         topic: "/another/baz/enum_advanced",
-        datatype: "baz/enum_advanced",
+        schemaName: "baz/enum_advanced",
         message: {
           ...exampleMessage,
           state: 2,
