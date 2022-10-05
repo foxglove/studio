@@ -293,6 +293,7 @@ export const GeoJSON = (): JSX.Element => {
         {
           topic: "/gps",
           receiveTime: { sec: 123, nsec: 456 },
+          datatype: "sensor_msgs/NavSatFix",
           message: EMPTY_MESSAGE,
           sizeInBytes: 10,
         },
@@ -301,6 +302,7 @@ export const GeoJSON = (): JSX.Element => {
         {
           topic: "/geo",
           receiveTime: { sec: 123, nsec: 0 },
+          datatype: "foxglove.GeoJSON",
           message: {
             geojson: JSON.stringify(
               makeGeoJsonMessage({ lat: GeoCenter.lat - 0.2, lon: GeoCenter.lon - 0.2 }),
@@ -313,6 +315,7 @@ export const GeoJSON = (): JSX.Element => {
         {
           topic: "/geo2",
           receiveTime: { sec: 123, nsec: 0 },
+          datatype: "foxglove.GeoJSON",
           message: {
             geojson: JSON.stringify(
               makeGeoJsonMessage({ lat: GeoCenter.lat - 0.1, lon: GeoCenter.lon - 0.1 }),
@@ -334,6 +337,7 @@ export const GeoJSON = (): JSX.Element => {
           {
             topic: "/geo",
             receiveTime: { sec: 130, nsec: 0 },
+            datatype: "foxglove.GeoJSON",
             message: {
               geojson: JSON.stringify(
                 makeGeoJsonMessage({ lat: GeoCenter.lat + 0.2, lon: GeoCenter.lon + 0.1 }),
