@@ -455,6 +455,11 @@ export class IterablePlayer implements Player {
           problems.push({
             severity: "warn",
             message: `Duplicate topic: ${topic.name}`,
+            tip: `Source${name ? ` “${name}”` : ``} produced two topics named ${
+              topic.name
+            }, with datatypes ${existingTopic.datatype} and ${
+              topic.datatype
+            }. This may result in errors during visualization.`,
           });
           continue;
         }
