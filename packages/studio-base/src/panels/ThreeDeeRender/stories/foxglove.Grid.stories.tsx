@@ -15,6 +15,7 @@ import useDelayedFixture from "./useDelayedFixture";
 export default {
   title: "panels/ThreeDeeRender",
   component: ThreeDeeRender,
+  parameters: { colorScheme: "light" },
 };
 
 function makeGridData({ rows, cols, pattern }: { rows: number; cols: number; pattern: string }) {
