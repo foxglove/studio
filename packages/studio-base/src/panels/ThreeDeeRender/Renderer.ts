@@ -58,6 +58,7 @@ import { Poses } from "./renderables/Poses";
 import { PublishClickTool, PublishClickType } from "./renderables/PublishClickTool";
 import { FoxgloveSceneEntities } from "./renderables/SceneEntities";
 import { Urdfs } from "./renderables/Urdfs";
+import { VelodyneScans } from "./renderables/VelodyneScans";
 import { MarkerPool } from "./renderables/markers/MarkerPool";
 import {
   Header,
@@ -462,6 +463,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.addSceneExtension(new FoxgloveGrid(this));
     this.addSceneExtension(new OccupancyGrids(this));
     this.addSceneExtension(new PointCloudsAndLaserScans(this));
+    this.addSceneExtension(new VelodyneScans(this));
     this.addSceneExtension(new Polygons(this));
     this.addSceneExtension(new Poses(this));
     this.addSceneExtension(new PoseArrays(this));
