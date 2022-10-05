@@ -306,10 +306,6 @@ export class FoxgloveGrid extends SceneExtension<FoxgloveGridRenderable> {
     // Iterate the grid data to determine min/max color values (if needed)
     minMaxColorValues(
       tempMinMaxColor,
-      tempFieldReader.fieldReader,
-      view,
-      cols * rows,
-      cell_stride,
       settings,
       foxgloveGrid.fields.find((field) => settings.colorField === field.name)?.type ??
         NumericType.UNKNOWN,
@@ -500,10 +496,6 @@ function normalizeFoxgloveGrid(message: PartialMessage<Grid>): Grid {
 
 function minMaxColorValues(
   output: THREE.Vector2Tuple,
-  colorReader: FieldReader,
-  view: DataView,
-  cellCount: number,
-  cellStride: number,
   settings: LayerSettingsFoxgloveGrid,
   numericType: NumericType,
 ): void {
@@ -512,19 +504,8 @@ function minMaxColorValues(
   }
 
   const [numericMin, numericMax] = NumericTypeMinMaxValueMap[numericType];
-  let minColorValue = settings.minValue ?? numericMin;
-  let maxColorValue = settings.maxValue ?? numericMax;
-  if (settings.minValue == undefined || settings.maxValue == undefined) {
-    for (let i = 0; i < cellCount; i++) {
-      const offset = i * cellStride;
-      const colorValue = colorReader(view, offset);
-      minColorValue = Math.min(minColorValue, colorValue);
-      maxColorValue = Math.max(maxColorValue, colorValue);
-    }
-    minColorValue = settings.minValue ?? minColorValue;
-    maxColorValue = settings.maxValue ?? maxColorValue;
-  }
-
+  const minColorValue = settings.minValue ?? numericMin;
+  const maxColorValue = settings.maxValue ?? numericMax;
   output[0] = minColorValue;
   output[1] = maxColorValue;
 }
@@ -537,6 +518,6 @@ const NumericTypeMinMaxValueMap: Record<NumericType, [number, number]> = {
   [NumericType.INT8]: [-128, 127],
   [NumericType.INT16]: [-Math.pow(2, 16 - 1), -Math.pow(2, 16 - 1) - 1],
   [NumericType.INT32]: [-Math.pow(2, 32 - 1), -Math.pow(2, 32 - 1) - 1],
-  [NumericType.FLOAT32]: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY],
-  [NumericType.FLOAT64]: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY],
+  [NumericType.FLOAT32]: [0, 1.0],
+  [NumericType.FLOAT64]: [0, 1.0],
 };

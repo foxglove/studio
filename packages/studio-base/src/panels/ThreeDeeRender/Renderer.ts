@@ -343,7 +343,6 @@ export class Renderer extends EventEmitter<RendererEvents> {
       canvas,
       alpha: true,
       antialias: true,
-      logarithmicDepthBuffer: true,
     });
     if (!this.gl.capabilities.isWebGL2) {
       throw new Error("WebGL2 is not supported");
