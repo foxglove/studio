@@ -5,8 +5,9 @@
 import * as THREE from "three";
 
 import { Time, toNanoSec } from "@foxglove/rostime";
-import type {
+import {
   LaserScan as FoxgloveLaserScan,
+  NumericType,
   PackedElementField,
   PointCloud,
 } from "@foxglove/schemas";
@@ -474,7 +475,9 @@ export class PointCloudAndLaserScanRenderable extends Renderable<PointCloudAndLa
         // other than uint32
         const forceType =
           (settings.colorMode === "rgb" || settings.colorMode === "rgba") && byteWidth >= 4
-            ? PointFieldType.UINT32
+            ? numericType != undefined
+              ? NumericType.UINT32
+              : PointFieldType.UINT32
             : undefined;
         colorReader = getReader(field, stride, forceType);
         if (!colorReader) {

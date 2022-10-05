@@ -511,7 +511,7 @@ function minMaxColorValues(
 }
 
 const NumericTypeMinMaxValueMap: Record<NumericType, [number, number]> = {
-  [NumericType.UNKNOWN]: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY],
+  [NumericType.UNKNOWN]: [0, 1.0],
   [NumericType.UINT8]: [0, 255],
   [NumericType.UINT16]: [0, 65535],
   [NumericType.UINT32]: [0, Math.pow(2, 32) - 1],
