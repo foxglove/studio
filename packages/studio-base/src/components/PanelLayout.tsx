@@ -12,7 +12,6 @@
 //   You may not use this file except in compliance with the License.
 
 import { Button, CircularProgress, styled as muiStyled } from "@mui/material";
-import moment from "moment";
 import React, {
   LazyExoticComponent,
   PropsWithChildren,
@@ -42,13 +41,13 @@ import {
   usePanelMosaicId,
   useCurrentLayoutActions,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
-import { PanelsState } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
 import "react-mosaic-component/react-mosaic-component.css";
 import { useExtensionCatalog } from "@foxglove/studio-base/context/ExtensionCatalogContext";
 import { useLayoutManager } from "@foxglove/studio-base/context/LayoutManagerContext";
 import { PanelComponent, usePanelCatalog } from "@foxglove/studio-base/context/PanelCatalogContext";
+import { useUserProfileStorage } from "@foxglove/studio-base/context/UserProfileStorageContext";
 import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
-import { defaultPlaybackConfig } from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
+import { defaultLayout } from "@foxglove/studio-base/providers/CurrentLayoutProvider/defaultLayout";
 import { MosaicDropResult, PanelConfig } from "@foxglove/studio-base/types/panels";
 import { getPanelIdForType, getPanelTypeFromId } from "@foxglove/studio-base/util/layout";
 
@@ -224,14 +223,11 @@ export default function PanelLayout(): JSX.Element {
   const { changePanelLayout, setSelectedLayoutId } = useCurrentLayoutActions();
   const { openLayoutBrowser } = useWorkspace();
   const layoutManager = useLayoutManager();
+  const { getUserProfile } = useUserProfileStorage();
   const layoutExists = useCurrentLayoutSelector(selectedLayoutExistsSelector);
   const layoutLoading = useCurrentLayoutSelector(selectedLayoutLoadingSelector);
   const mosaicLayout = useCurrentLayoutSelector(selectedLayoutMosaicSelector);
   const registeredExtensions = useExtensionCatalog((state) => state.installedExtensions);
-
-  const currentDateForStorybook = useMemo(() => new Date("2021-06-16T04:28:33.549Z"), []);
-  const selectedLayoutIdSelector = (state: LayoutState) => state.selectedLayout?.id;
-  const currentLayoutId = useCurrentLayoutSelector(selectedLayoutIdSelector);
 
   const [, dispatch] = useLayoutBrowserReducer({
     busy: layoutManager.isBusy,
@@ -241,25 +237,21 @@ export default function PanelLayout(): JSX.Element {
 
   const createNewLayout = async () => {
     openLayoutBrowser();
-    const panelState: Omit<PanelsState, "name" | "id"> = {
-      configById: {},
-      globalVariables: {},
-      userNodes: {},
-      linkedGlobalVariables: [],
-      playbackConfig: defaultPlaybackConfig,
-    };
-    const name = `Unnamed layout ${moment(currentDateForStorybook).format("l")} at ${moment(
-      currentDateForStorybook,
-    ).format("LT")}`;
-    const newLayout = await layoutManager.saveNewLayout({
-      name,
-      data: panelState as PanelsState,
-      permission: "CREATOR_WRITE",
-    });
+    const { currentLayoutId } = await getUserProfile();
+    const layouts = await layoutManager.getLayouts();
+    let layout = layouts[layouts.length - 1] ?? undefined;
 
-    if (newLayout.id !== currentLayoutId) {
-      setSelectedLayoutId(newLayout.id);
-      dispatch({ type: "select-id", id: newLayout.id });
+    if (layout == undefined) {
+      layout = await layoutManager.saveNewLayout({
+        name: "Default",
+        data: defaultLayout,
+        permission: "CREATOR_WRITE",
+      });
+    }
+
+    if (layout.id !== currentLayoutId) {
+      setSelectedLayoutId(layout.id);
+      dispatch({ type: "select-id", id: layout.id });
     }
   };
 
