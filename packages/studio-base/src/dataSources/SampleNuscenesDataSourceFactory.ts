@@ -7,7 +7,7 @@ import {
   DataSourceFactoryInitializeArgs,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import { IterablePlayer } from "@foxglove/studio-base/players/IterablePlayer";
-import { BagIterableSource } from "@foxglove/studio-base/players/IterablePlayer/BagIterableSource";
+import { McapIterableSource } from "@foxglove/studio-base/players/IterablePlayer/Mcap/McapIterableSource";
 
 import SampleNuscenesLayout from "./SampleNuscenesLayout.json";
 
@@ -22,9 +22,9 @@ class SampleNuscenesDataSourceFactory implements IDataSourceFactory {
   public initialize(
     args: DataSourceFactoryInitializeArgs,
   ): ReturnType<IDataSourceFactory["initialize"]> {
-    const bagUrl = "https://assets.foxglove.dev/nuScenes-v1.0-mini-scene-0061.bag";
+    const bagUrl = "https://assets.foxglove.dev/NuScenes-v1.0-mini-scene-0061-ac35b82af.mcap";
 
-    const bagSource = new BagIterableSource({ type: "remote", url: bagUrl });
+    const bagSource = new McapIterableSource({ type: "url", url: bagUrl });
     return new IterablePlayer({
       source: bagSource,
       isSampleDataSource: true,
