@@ -40,8 +40,8 @@ import {
   LayoutState,
   useCurrentLayoutSelector,
   usePanelMosaicId,
+  useCurrentLayoutActions,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
-import { useCurrentLayoutActions } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { PanelsState } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
 import "react-mosaic-component/react-mosaic-component.css";
 import { useExtensionCatalog } from "@foxglove/studio-base/context/ExtensionCatalogContext";
