@@ -11,7 +11,8 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { CircularProgress, Link, styled as muiStyled } from "@mui/material";
+import { Button, CircularProgress, styled as muiStyled } from "@mui/material";
+import moment from "moment";
 import React, {
   LazyExoticComponent,
   PropsWithChildren,
@@ -29,21 +30,25 @@ import {
   MosaicWindow,
   MosaicWithoutDragDropContext,
 } from "react-mosaic-component";
-import "react-mosaic-component/react-mosaic-component.css";
 
 import { EmptyPanelLayout } from "@foxglove/studio-base/components/EmptyPanelLayout";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
+import { useLayoutBrowserReducer } from "@foxglove/studio-base/components/LayoutBrowser/reducer";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import Stack from "@foxglove/studio-base/components/Stack";
 import {
   LayoutState,
-  useCurrentLayoutActions,
   useCurrentLayoutSelector,
   usePanelMosaicId,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
+import { useCurrentLayoutActions } from "@foxglove/studio-base/context/CurrentLayoutContext";
+import { PanelsState } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
+import "react-mosaic-component/react-mosaic-component.css";
 import { useExtensionCatalog } from "@foxglove/studio-base/context/ExtensionCatalogContext";
+import { useLayoutManager } from "@foxglove/studio-base/context/LayoutManagerContext";
 import { PanelComponent, usePanelCatalog } from "@foxglove/studio-base/context/PanelCatalogContext";
 import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
+import { defaultPlaybackConfig } from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
 import { MosaicDropResult, PanelConfig } from "@foxglove/studio-base/types/panels";
 import { getPanelIdForType, getPanelTypeFromId } from "@foxglove/studio-base/util/layout";
 
@@ -216,12 +221,47 @@ const selectedLayoutExistsSelector = (state: LayoutState) =>
 const selectedLayoutMosaicSelector = (state: LayoutState) => state.selectedLayout?.data?.layout;
 
 export default function PanelLayout(): JSX.Element {
-  const { changePanelLayout } = useCurrentLayoutActions();
+  const { changePanelLayout, setSelectedLayoutId } = useCurrentLayoutActions();
   const { openLayoutBrowser } = useWorkspace();
+  const layoutManager = useLayoutManager();
   const layoutExists = useCurrentLayoutSelector(selectedLayoutExistsSelector);
   const layoutLoading = useCurrentLayoutSelector(selectedLayoutLoadingSelector);
   const mosaicLayout = useCurrentLayoutSelector(selectedLayoutMosaicSelector);
   const registeredExtensions = useExtensionCatalog((state) => state.installedExtensions);
+
+  const currentDateForStorybook = useMemo(() => new Date("2021-06-16T04:28:33.549Z"), []);
+  const selectedLayoutIdSelector = (state: LayoutState) => state.selectedLayout?.id;
+  const currentLayoutId = useCurrentLayoutSelector(selectedLayoutIdSelector);
+
+  const [, dispatch] = useLayoutBrowserReducer({
+    busy: layoutManager.isBusy,
+    error: layoutManager.error,
+    online: layoutManager.isOnline,
+  });
+
+  const createNewLayout = async () => {
+    openLayoutBrowser();
+    const panelState: Omit<PanelsState, "name" | "id"> = {
+      configById: {},
+      globalVariables: {},
+      userNodes: {},
+      linkedGlobalVariables: [],
+      playbackConfig: defaultPlaybackConfig,
+    };
+    const name = `Unnamed layout ${moment(currentDateForStorybook).format("l")} at ${moment(
+      currentDateForStorybook,
+    ).format("LT")}`;
+    const newLayout = await layoutManager.saveNewLayout({
+      name,
+      data: panelState as PanelsState,
+      permission: "CREATOR_WRITE",
+    });
+
+    if (newLayout.id !== currentLayoutId) {
+      setSelectedLayoutId(newLayout.id);
+      dispatch({ type: "select-id", id: newLayout.id });
+    }
+  };
 
   const onChange = useCallback(
     (newLayout: MosaicNode<string> | undefined) => {
@@ -246,10 +286,9 @@ export default function PanelLayout(): JSX.Element {
 
   return (
     <EmptyState>
-      <Link onClick={openLayoutBrowser} underline="hover">
-        Select a layout
-      </Link>{" "}
-      in the sidebar to get started!
+      <Button variant="contained" size="large" onClick={createNewLayout}>
+        Create new layout
+      </Button>
     </EmptyState>
   );
 }
