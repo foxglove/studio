@@ -5,8 +5,7 @@
 import { screen } from "@testing-library/react";
 
 import { MessageEvent } from "@foxglove/studio";
-import { PlayerCapabilities } from "@foxglove/studio-base/players/types";
-import { Topic } from "@foxglove/studio-base/players/types";
+import { PlayerCapabilities, Topic } from "@foxglove/studio-base/players/types";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 import delay from "@foxglove/studio-base/util/delay";
 
