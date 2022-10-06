@@ -13,6 +13,7 @@ import {
   NavSatFixService,
   NavSatFixStatus,
 } from "@foxglove/studio-base/panels/Map/types";
+import { Topic } from "@foxglove/studio-base/players/types";
 import PanelSetup, { Fixture } from "@foxglove/studio-base/stories/PanelSetup";
 
 import MapPanel from "./index";
@@ -280,10 +281,10 @@ SinglePointFullCovariance.parameters = {
 const GeoCenter = { lat: 34.9949, lon: 135.785 };
 
 export const GeoJSON = (): JSX.Element => {
-  const topics = [
-    { name: "/geo", datatype: "foxglove.GeoJSON" },
-    { name: "/geo2", datatype: "foxglove.GeoJSON" },
-    { name: "/gps", datatype: "sensor_msgs/NavSatFix" },
+  const topics: Topic[] = [
+    { name: "/geo", schemaName: "foxglove.GeoJSON" },
+    { name: "/geo2", schemaName: "foxglove.GeoJSON" },
+    { name: "/gps", schemaName: "sensor_msgs/NavSatFix" },
   ];
 
   const [fixture, setFixture] = useState<Fixture>({

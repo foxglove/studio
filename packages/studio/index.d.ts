@@ -44,13 +44,17 @@ declare module "@foxglove/studio" {
      */
     name: string;
     /**
-     * The datatype is an identifier for the types of messages on this topic. Typically this is the
-     * fully-qualified name of the message type. The fully-qualified name depends on the data source
-     * and data loaded by the data source.
-     *
-     * i.e. package.Message in protobuf-like serialization or pkg/Msg in ROS systems.
+     * @deprecated Renamed to `schemaName`. `datatype` will be removed in a future release.
      */
     datatype: string;
+    /**
+     * The schema name is an identifier for the types of messages on this topic. Typically this is the
+     * fully-qualified name of the message schema. The fully-qualified name depends on the data source
+     * and data loaded by the data source.
+     *
+     * i.e. `package.Message` in protobuf-like serialization or `pkg/Msg` in ROS systems.
+     */
+    schemaName: string;
   };
 
   export type Subscription = {
@@ -281,11 +285,11 @@ declare module "@foxglove/studio" {
     subscribeAppSettings(settings: string[]): void;
 
     /**
-     * Indicate intent to advertise on a specific topic and datatype.
+     * Indicate intent to advertise on a specific topic.
      *
      * The options object is passed to the current data source for additional configuration.
      */
-    advertise?(topic: string, datatype: string, options?: Record<string, unknown>): void;
+    advertise?(topic: string, schemaName: string, options?: Record<string, unknown>): void;
 
     /**
      * Indicate that you no longer want to advertise on this topic.
