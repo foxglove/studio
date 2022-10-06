@@ -12,7 +12,24 @@ import useGuaranteedContext from "@foxglove/studio-base/hooks/useGuaranteedConte
 export type ImmutableSettingsTree = DeepReadonly<SettingsTree>;
 
 export type PanelSettingsEditorStore = {
+  /**
+   *  Used for forcing remounts on panels when fundamental properties change.
+   */
+  sequenceNumbers: Record<string, number>;
+
+  /**
+   * Per-panel settings UI trees.
+   */
   settingsTrees: Record<string, ImmutableSettingsTree>;
+
+  /**
+   * Increments the sequence number for the panel, forcing a remount.
+   */
+  incrementSequenceNumber: (panelId: string) => void;
+
+  /**
+   * Updates the settings UI for the given panel.
+   */
   updateSettingsTree: (panelId: string, settingsTree: ImmutableSettingsTree) => void;
 };
 

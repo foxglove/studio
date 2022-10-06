@@ -20,6 +20,8 @@ import React, {
   useRef,
   LazyExoticComponent,
   useEffect,
+  ReactNode,
+  Fragment,
 } from "react";
 import { useDrop } from "react-dnd";
 import {
@@ -43,6 +45,10 @@ import {
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { useExtensionCatalog } from "@foxglove/studio-base/context/ExtensionCatalogContext";
 import { PanelComponent, usePanelCatalog } from "@foxglove/studio-base/context/PanelCatalogContext";
+import {
+  PanelSettingsEditorStore,
+  usePanelSettingsEditorStore,
+} from "@foxglove/studio-base/context/PanelSettingsEditorContext";
 import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
 import { MosaicDropResult, PanelConfig } from "@foxglove/studio-base/types/panels";
 import { getPanelIdForType, getPanelTypeFromId } from "@foxglove/studio-base/util/layout";
@@ -92,6 +98,28 @@ function TabMosaicWrapper({ tabId, children }: PropsWithChildren<{ tabId?: strin
       {children}
     </HideTopLevelDropTargets>
   );
+}
+
+/**
+ * Wrapper component used to force-remount the panel when key properties like the tabId
+ * or settings sequence number change.
+ */
+function PanelRemounter({
+  children,
+  id,
+  tabId,
+}: {
+  children: ReactNode;
+  id: string;
+  tabId: undefined | string;
+}): JSX.Element {
+  const selector = useCallback(
+    (store: PanelSettingsEditorStore) => store.sequenceNumbers[id] ?? 0,
+    [id],
+  );
+  const sequenceNumber = usePanelSettingsEditorStore(selector);
+
+  return <Fragment key={`${id}${tabId ?? ""}${sequenceNumber}`}>{children}</Fragment>;
 }
 
 export function UnconnectedPanelLayout(props: Props): React.ReactElement {
@@ -166,7 +194,9 @@ export function UnconnectedPanelLayout(props: Props): React.ReactElement {
             }
           >
             <MosaicPathContext.Provider value={path}>
-              <Panel childId={id} tabId={tabId} key={`${id}${tabId}`} />
+              <PanelRemounter id={id} tabId={tabId}>
+                <Panel childId={id} tabId={tabId} />
+              </PanelRemounter>
             </MosaicPathContext.Provider>
           </Suspense>
         </MosaicWindow>
