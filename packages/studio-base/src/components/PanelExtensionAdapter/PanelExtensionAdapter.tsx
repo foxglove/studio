@@ -76,8 +76,7 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
   // The panel is meant to manage the config and call saveConfig on its own.
   //
   // We store the config in a ref to avoid re-initializing the panel when the react config
-  // changes. The initialState is updated in an effect below so that if the panel does re-initialize
-  // it does so with the latest config.
+  // changes.
   const initialState = useLatest(config);
 
   const messagePipelineContext = useMessagePipeline(selectContext);
@@ -132,7 +131,7 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
   // This getter allows the extension context to remain stable through pipeline changes
   const getMessagePipelineContext = useMessagePipelineGetter();
 
-  // initRenderStateBuilder render produces a function which computers the latest render state from a set of inputs
+  // initRenderStateBuilder render produces a function which computes the latest render state from a set of inputs
   // Spiritually its like a reducer
   const [buildRenderState, setBuildRenderState] = useState(() => initRenderStateBuilder());
 
