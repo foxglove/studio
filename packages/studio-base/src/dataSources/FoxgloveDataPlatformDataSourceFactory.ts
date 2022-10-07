@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { fromRFC3339String, toRFC3339String } from "@foxglove/rostime";
+import { fromRFC3339String } from "@foxglove/rostime";
 import {
   IDataSourceFactory,
   DataSourceFactoryInitializeArgs,
@@ -10,6 +10,7 @@ import {
 import { IterablePlayer } from "@foxglove/studio-base/players/IterablePlayer";
 import { DataPlatformIterableSource } from "@foxglove/studio-base/players/IterablePlayer/foxglove-data-platform";
 import { Player } from "@foxglove/studio-base/players/types";
+import { DataPlatformSourceParameters } from "@foxglove/studio-base/services/ConsoleApi";
 import { formatTimeRaw } from "@foxglove/studio-base/util/time";
 
 class FoxgloveDataPlatformDataSourceFactory implements IDataSourceFactory {
@@ -28,31 +29,37 @@ class FoxgloveDataPlatformDataSourceFactory implements IDataSourceFactory {
     const start = args.start as string | undefined;
     const end = args.end as string | undefined;
     const deviceId = args.deviceId as string | undefined;
-    if (!start || !end || !deviceId) {
-      return;
-    }
+    const importId = args.importId as string | undefined;
 
-    const startTime = fromRFC3339String(start);
-    const endTime = fromRFC3339String(end);
-    if (!startTime || !endTime) {
+    const startTime = start ? fromRFC3339String(start) : undefined;
+    const endTime = end ? fromRFC3339String(end) : undefined;
+
+    if (!(importId || (deviceId && startTime && endTime))) {
       return;
     }
+    const dpSourceParams: DataPlatformSourceParameters = importId
+      ? { type: "by-import", importId, start: startTime, end: endTime }
+      : { type: "by-device", deviceId: deviceId!, start: startTime!, end: endTime! };
+
     const source = new DataPlatformIterableSource({
       api: args.consoleApi,
-      start: startTime,
-      end: endTime,
-      deviceId,
+      params: dpSourceParams,
     });
+
     return new IterablePlayer({
       metricsCollector: args.metricsCollector,
       source,
       sourceId: this.id,
       urlParams: {
-        deviceId,
-        start: toRFC3339String(startTime),
-        end: toRFC3339String(endTime),
+        ...(importId && { importId }),
+        ...(!importId && deviceId && { deviceId }),
+        ...(startTime && { start }),
+        ...(endTime && { end }),
       },
-      name: `${deviceId}, ${formatTimeRaw(startTime)} to ${formatTimeRaw(endTime)}`,
+      name:
+        startTime && endTime && deviceId
+          ? `${deviceId}, ${formatTimeRaw(startTime)} to ${formatTimeRaw(endTime)}`
+          : `${importId}`,
     });
   }
 }

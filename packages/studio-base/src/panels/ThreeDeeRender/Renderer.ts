@@ -22,6 +22,7 @@ import {
   Topic,
   VariableValue,
 } from "@foxglove/studio";
+import { FoxgloveGrid } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/FoxgloveGrid";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 import { LabelMaterial, LabelPool } from "@foxglove/three-text";
 
@@ -57,6 +58,7 @@ import { Poses } from "./renderables/Poses";
 import { PublishClickTool, PublishClickType } from "./renderables/PublishClickTool";
 import { FoxgloveSceneEntities } from "./renderables/SceneEntities";
 import { Urdfs } from "./renderables/Urdfs";
+import { VelodyneScans } from "./renderables/VelodyneScans";
 import { MarkerPool } from "./renderables/markers/MarkerPool";
 import {
   Header,
@@ -458,8 +460,10 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.addSceneExtension(new Images(this));
     this.addSceneExtension(new Markers(this));
     this.addSceneExtension(new FoxgloveSceneEntities(this));
+    this.addSceneExtension(new FoxgloveGrid(this));
     this.addSceneExtension(new OccupancyGrids(this));
     this.addSceneExtension(new PointCloudsAndLaserScans(this));
+    this.addSceneExtension(new VelodyneScans(this));
     this.addSceneExtension(new Polygons(this));
     this.addSceneExtension(new Poses(this));
     this.addSceneExtension(new PoseArrays(this));
@@ -604,6 +608,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     const topics: SettingsTreeEntry = {
       path: ["topics"],
       node: {
+        enableVisibilityFilter: true,
         label: "Topics",
         defaultExpansionState: "expanded",
         actions: [

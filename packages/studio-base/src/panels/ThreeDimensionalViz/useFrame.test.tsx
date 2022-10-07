@@ -26,26 +26,29 @@ const datatypes: RosDatatypes = new Map(
   }),
 );
 
-const messageEventFixtures = [
+const messageEventFixtures: MessageEvent<unknown>[] = [
   {
     topic: "/some/topic",
     receiveTime: { sec: 100, nsec: 0 },
     message: { index: 0 },
+    schemaName: "some/topic",
     sizeInBytes: 0,
   },
   {
     topic: "/some/topic",
     receiveTime: { sec: 101, nsec: 0 },
     message: { index: 1 },
+    schemaName: "some/topic",
     sizeInBytes: 0,
   },
   {
     topic: "/some/topic",
     receiveTime: { sec: 102, nsec: 0 },
     message: { index: 2 },
+    schemaName: "some/topic",
     sizeInBytes: 0,
   },
-] as const;
+];
 
 describe("useFrame", () => {
   it("should pass in a frame of messages", () => {
@@ -56,7 +59,7 @@ describe("useFrame", () => {
 
     const all: ReturnType<typeof useFrame>[] = [];
 
-    const messages = [messageEventFixtures[0]];
+    const messages = [messageEventFixtures[0]!];
     const { rerender } = renderHook(
       () => {
         const value = useFrame(["/some/topic"]);
@@ -74,7 +77,7 @@ describe("useFrame", () => {
       },
     );
 
-    expect(all).toEqual([
+    expect(all).toEqual<typeof all>([
       { reset: true, frame: {} },
       {
         reset: false,
@@ -84,6 +87,7 @@ describe("useFrame", () => {
               topic: "/some/topic",
               receiveTime: { sec: 100, nsec: 0 },
               message: { index: 0 },
+              schemaName: "some/topic",
               sizeInBytes: 0,
             },
           ],
@@ -92,7 +96,7 @@ describe("useFrame", () => {
     ]);
     // re-render keeps reset value since no new messages have been fed in
     rerender();
-    expect(all).toEqual([
+    expect(all).toEqual<typeof all>([
       { reset: true, frame: {} },
       {
         reset: false,
@@ -102,6 +106,7 @@ describe("useFrame", () => {
               topic: "/some/topic",
               receiveTime: { sec: 100, nsec: 0 },
               message: { index: 0 },
+              schemaName: "some/topic",
               sizeInBytes: 0,
             },
           ],
@@ -115,6 +120,7 @@ describe("useFrame", () => {
               topic: "/some/topic",
               receiveTime: { sec: 100, nsec: 0 },
               message: { index: 0 },
+              schemaName: "some/topic",
               sizeInBytes: 0,
             },
           ],
@@ -131,7 +137,7 @@ describe("useFrame", () => {
     ];
 
     const all: ReturnType<typeof useFrame>[] = [];
-    let messages: MessageEvent<unknown>[] = [messageEventFixtures[0]];
+    let messages: MessageEvent<unknown>[] = [messageEventFixtures[0]!];
     const { rerender } = renderHook(
       () => {
         const value = useFrame(["/some/topic"]);
@@ -148,7 +154,7 @@ describe("useFrame", () => {
         },
       },
     );
-    expect(all).toEqual([
+    expect(all).toEqual<typeof all>([
       { reset: true, frame: {} },
       {
         reset: false,
@@ -158,6 +164,7 @@ describe("useFrame", () => {
               topic: "/some/topic",
               receiveTime: { sec: 100, nsec: 0 },
               message: { index: 0 },
+              schemaName: "some/topic",
               sizeInBytes: 0,
             },
           ],
@@ -165,10 +172,10 @@ describe("useFrame", () => {
       },
     ]);
 
-    messages = [messageEventFixtures[1]];
+    messages = [messageEventFixtures[1]!];
     rerender();
 
-    expect(all).toEqual([
+    expect(all).toEqual<typeof all>([
       { reset: true, frame: {} },
       {
         reset: false,
@@ -178,6 +185,7 @@ describe("useFrame", () => {
               topic: "/some/topic",
               receiveTime: { sec: 100, nsec: 0 },
               message: { index: 0 },
+              schemaName: "some/topic",
               sizeInBytes: 0,
             },
           ],
@@ -191,6 +199,7 @@ describe("useFrame", () => {
               topic: "/some/topic",
               receiveTime: { sec: 100, nsec: 0 },
               message: { index: 0 },
+              schemaName: "some/topic",
               sizeInBytes: 0,
             },
           ],
@@ -205,6 +214,7 @@ describe("useFrame", () => {
               topic: "/some/topic",
               receiveTime: { sec: 101, nsec: 0 },
               message: { index: 1 },
+              schemaName: "some/topic",
               sizeInBytes: 0,
             },
           ],

@@ -524,6 +524,7 @@ export default class RosbridgePlayer implements Player {
               topic: topicName,
               receiveTime,
               message: innerMessage,
+              schemaName: datatype,
               sizeInBytes: bytes.byteLength,
             };
             this._parsedMessages.push(msg);

@@ -41,6 +41,7 @@ export function GeometryMsgs_PoseStamped(): JSX.Element {
         rotation: QUAT_IDENTITY,
       },
     },
+    schemaName: "geometry_msgs/TransformStamped",
     sizeInBytes: 0,
   };
   const tf2: MessageEvent<TransformStamped> = {
@@ -54,6 +55,7 @@ export function GeometryMsgs_PoseStamped(): JSX.Element {
         rotation: QUAT_IDENTITY,
       },
     },
+    schemaName: "geometry_msgs/TransformStamped",
     sizeInBytes: 0,
   };
 
@@ -67,6 +69,7 @@ export function GeometryMsgs_PoseStamped(): JSX.Element {
         orientation: QUAT_IDENTITY,
       },
     },
+    schemaName: "geometry_msgs/PoseStamped",
     sizeInBytes: 0,
   };
 
@@ -82,6 +85,7 @@ export function GeometryMsgs_PoseStamped(): JSX.Element {
         ),
       },
     },
+    schemaName: "geometry_msgs/PoseStamped",
     sizeInBytes: 0,
   };
 
@@ -97,6 +101,7 @@ export function GeometryMsgs_PoseStamped(): JSX.Element {
         ),
       },
     },
+    schemaName: "geometry_msgs/PoseStamped",
     sizeInBytes: 0,
   };
 

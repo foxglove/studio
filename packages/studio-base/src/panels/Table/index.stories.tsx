@@ -14,7 +14,7 @@
 import { storiesOf } from "@storybook/react";
 
 import Table from "@foxglove/studio-base/panels/Table";
-import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
+import PanelSetup, { Fixture } from "@foxglove/studio-base/stories/PanelSetup";
 
 const makeArrayData = ({
   length = 50,
@@ -36,7 +36,7 @@ const makeArrayData = ({
   });
 };
 
-const fixture = {
+const fixture: Fixture = {
   datatypes: new Map(
     Object.entries({
       my_arr: {
@@ -51,6 +51,7 @@ const fixture = {
         topic: "/my_arr",
         receiveTime: { sec: 1, nsec: 0 },
         message: { array: makeArrayData() },
+        schemaName: "my_arr",
         sizeInBytes: 0,
       },
     ],

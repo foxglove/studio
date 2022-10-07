@@ -14,7 +14,7 @@
 import { Fixture } from "@foxglove/studio-base/stories/PanelSetup";
 
 // ts-prune-ignore-next
-export const fixture = {
+export const fixture: Fixture = {
   topics: [
     { name: "/msgs/big_topic", datatype: "msgs/big_topic" },
     { name: "/foo", datatype: "std_msgs/String" },
@@ -54,6 +54,7 @@ export const fixture = {
           items: [],
           points: [],
         },
+        schemaName: "msgs/big_topic",
         sizeInBytes: 0,
       },
     ],
@@ -66,6 +67,7 @@ export const fixture = {
           some_deleted_key: "GONE",
           some_id_example_2: { some_id: 0 },
         },
+        schemaName: "std_msgs/String",
         sizeInBytes: 0,
       },
       {
@@ -75,6 +77,7 @@ export const fixture = {
           some_array: ["a", "b", "c", "d", "e", "f"],
           some_id_example_2: { some_id: 123 },
         },
+        schemaName: "std_msgs/String",
         sizeInBytes: 0,
       },
     ],
@@ -83,6 +86,7 @@ export const fixture = {
         topic: "/baz/num",
         receiveTime: { sec: 123, nsec: 456789012 },
         message: { value: 3425363211 },
+        schemaName: "baz/num",
         sizeInBytes: 0,
       },
     ],
@@ -91,12 +95,14 @@ export const fixture = {
         topic: "/baz/bigint",
         receiveTime: { sec: 123, nsec: 456789012 },
         message: { value: 18446744073709551615n },
+        schemaName: "baz/bigint",
         sizeInBytes: 0,
       },
       {
         topic: "/baz/bigint",
         receiveTime: { sec: 123, nsec: 456789013 },
         message: { value: 18446744073709551616n },
+        schemaName: "baz/bigint",
         sizeInBytes: 0,
       },
     ],
@@ -112,6 +118,7 @@ export const fixture = {
             .map((_, i) => `this is line ${i} of the text`)
             .join("\n"),
         },
+        schemaName: "baz/text",
         sizeInBytes: 0,
       },
     ],
@@ -120,6 +127,7 @@ export const fixture = {
         topic: "/baz/array",
         receiveTime: { sec: 123, nsec: 456789012 },
         message: { value: [false] },
+        schemaName: "baz/array",
         sizeInBytes: 0,
       },
     ],
@@ -128,6 +136,7 @@ export const fixture = {
         topic: "/baz/array/obj",
         receiveTime: { sec: 123, nsec: 456789012 },
         message: { value: [{ a: "b", c: "d", e: "f" }] },
+        schemaName: "baz/array/obj",
         sizeInBytes: 0,
       },
     ],
@@ -146,6 +155,7 @@ export const fixture = {
             z: 3.0,
           },
         },
+        schemaName: "geometry/types",
         sizeInBytes: 0,
       },
     ],
@@ -227,7 +237,7 @@ export const fixture = {
 
 // separate fixture so that we only need to define datatypes for small subset of types
 // ts-prune-ignore-next
-export const enumFixture = {
+export const enumFixture: Fixture = {
   datatypes: new Map(
     Object.entries({
       "baz/enum": {
@@ -250,6 +260,7 @@ export const enumFixture = {
         message: {
           value: 2,
         },
+        schemaName: "baz/enum",
         sizeInBytes: 0,
       },
     ],
@@ -266,7 +277,7 @@ const exampleMessage = {
 };
 
 // ts-prune-ignore-next
-export const enumAdvancedFixture = {
+export const enumAdvancedFixture: Fixture = {
   datatypes: new Map(
     Object.entries({
       "baz/enum_advanced": {
@@ -302,13 +313,14 @@ export const enumAdvancedFixture = {
         receiveTime: { sec: 123, nsec: 456789012 },
         message: exampleMessage,
         sizeInBytes: 0,
+        schemaName: "baz/enum_advanced",
       },
     ],
   },
 };
 
 // ts-prune-ignore-next
-export const withMissingData = {
+export const withMissingData: Fixture = {
   datatypes: new Map(
     Object.entries({
       "baz/missing_data": {
@@ -325,6 +337,7 @@ export const withMissingData = {
         message: {
           value: undefined,
         },
+        schemaName: "baz/missing_data",
         sizeInBytes: 0,
       },
     ],
@@ -348,13 +361,15 @@ export const topicsToDiffFixture: Fixture = {
           toBeDeletedVal: "Bye!",
           toBeDeletedObj: { a: 1, b: 2, c: 3 },
         },
+        schemaName: "baz/enum_advanced",
         sizeInBytes: 0,
       },
     ],
     "/another/baz/enum_advanced": [
       {
-        ...enumAdvancedFixture.frame["/baz/enum_advanced"][0]!,
+        ...enumAdvancedFixture.frame!["/baz/enum_advanced"]![0]!,
         topic: "/another/baz/enum_advanced",
+        schemaName: "baz/enum_advanced",
         message: {
           ...exampleMessage,
           state: 2,
@@ -368,7 +383,7 @@ export const topicsToDiffFixture: Fixture = {
 };
 
 // ts-prune-ignore-next
-export const topicsWithIdsToDiffFixture = {
+export const topicsWithIdsToDiffFixture: Fixture = {
   datatypes: enumAdvancedFixture.datatypes,
   topics: [
     { name: "/baz/enum_advanced_array", datatype: "baz/enum_advanced_array" },
@@ -377,7 +392,7 @@ export const topicsWithIdsToDiffFixture = {
   frame: {
     "/baz/enum_advanced_array": [
       {
-        receiveTime: enumAdvancedFixture.frame["/baz/enum_advanced"][0]!.receiveTime,
+        receiveTime: enumAdvancedFixture.frame!["/baz/enum_advanced"]![0]!.receiveTime,
         topic: "/baz/enum_advanced_array",
         message: {
           value: [
@@ -390,12 +405,13 @@ export const topicsWithIdsToDiffFixture = {
             { ...exampleMessage, id: 2 },
           ],
         },
+        schemaName: "baz/enum_advanced_array",
         sizeInBytes: 0,
       },
     ],
     "/another/baz/enum_advanced_array": [
       {
-        receiveTime: enumAdvancedFixture.frame["/baz/enum_advanced"][0]!.receiveTime,
+        receiveTime: enumAdvancedFixture.frame!["/baz/enum_advanced"]![0]!.receiveTime,
         topic: "/another/baz/enum_advanced_array",
         message: {
           value: [
@@ -403,6 +419,7 @@ export const topicsWithIdsToDiffFixture = {
             { ...exampleMessage, state: 2, color: 3, newField: "hello", id: 1 },
           ],
         },
+        schemaName: "baz/enum_advanced_array",
         sizeInBytes: 0,
       },
     ],
@@ -410,7 +427,7 @@ export const topicsWithIdsToDiffFixture = {
 };
 
 // ts-prune-ignore-next
-export const multipleNumberMessagesFixture = {
+export const multipleNumberMessagesFixture: Fixture = {
   datatypes: new Map(
     Object.entries({
       multiple_number_messages: {
@@ -425,18 +442,21 @@ export const multipleNumberMessagesFixture = {
         topic: "/multiple_number_messages",
         receiveTime: { sec: 123, nsec: 1 },
         message: { value: 1 },
+        schemaName: "multiple_number_messages",
         sizeInBytes: 0,
       },
       {
         topic: "/multiple_number_messages",
         receiveTime: { sec: 123, nsec: 2 },
         message: { value: 2 },
+        schemaName: "multiple_number_messages",
         sizeInBytes: 0,
       },
       {
         topic: "/multiple_number_messages",
         receiveTime: { sec: 123, nsec: 3 },
         message: { value: 3 },
+        schemaName: "multiple_number_messages",
         sizeInBytes: 0,
       },
     ],
@@ -444,7 +464,7 @@ export const multipleNumberMessagesFixture = {
 };
 
 // ts-prune-ignore-next
-export const multipleMessagesFilter = {
+export const multipleMessagesFilter: Fixture = {
   datatypes: new Map(
     Object.entries({
       custom_message: {
@@ -462,18 +482,21 @@ export const multipleMessagesFilter = {
         topic: "/foo",
         receiveTime: { sec: 123, nsec: 1 },
         message: { type: 2, status: "WAITING" },
+        schemaName: "custom_message",
         sizeInBytes: 0,
       },
       {
         topic: "/foo",
         receiveTime: { sec: 123, nsec: 2 },
         message: { type: 1, status: "FAIL" },
+        schemaName: "custom_message",
         sizeInBytes: 0,
       },
       {
         topic: "/foo",
         receiveTime: { sec: 123, nsec: 3 },
         message: { type: 2, status: "SUCCESS" },
+        schemaName: "custom_message",
         sizeInBytes: 0,
       },
     ],

@@ -108,6 +108,7 @@ export function Urdfs(): JSX.Element {
     message: {
       data: URDF,
     },
+    schemaName: "std_msgs/String",
     sizeInBytes: 0,
   };
 

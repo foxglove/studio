@@ -125,6 +125,7 @@ function PublishClickToolTemplate({ type }: { type: PublishClickType }): JSX.Ele
         rotation: QUAT_IDENTITY,
       },
     },
+    schemaName: "geometry_msgs/TransformStamped",
     sizeInBytes: 0,
   };
 

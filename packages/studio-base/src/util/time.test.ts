@@ -11,6 +11,8 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { MessageEvent } from "@foxglove/studio";
+
 import * as time from "./time";
 
 describe("time.formatTimeRaw", () => {
@@ -36,10 +38,11 @@ describe("time.formatTimeRaw", () => {
 
 describe("time.getTimestampForMessageEvent", () => {
   it("uses headerStamp when available", () => {
-    const messageBase = {
+    const messageBase: Omit<MessageEvent<unknown>, "message"> = {
       topic: "/foo",
       receiveTime: { sec: 1000, nsec: 0 },
       sizeInBytes: 0,
+      schemaName: "stamped",
     };
 
     expect(
@@ -55,7 +58,9 @@ describe("time.getTimestampForMessageEvent", () => {
       time.getTimestampForMessageEvent(
         {
           ...messageBase,
-          message: { header: { stamp: { sec: 0, nsec: 0 }, seq: 0, frame_id: "" } },
+          message: {
+            header: { stamp: { sec: 0, nsec: 0 }, seq: 0, frame_id: "" },
+          },
         },
         "headerStamp",
       ),

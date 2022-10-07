@@ -53,6 +53,7 @@ function Foxglove_PointCloud({ rgbaFieldName }: { rgbaFieldName: string }): JSX.
         rotation: QUAT_IDENTITY,
       },
     },
+    schemaName: "geometry_msgs/TransformStamped",
     sizeInBytes: 0,
   };
   const tf2: MessageEvent<TransformStamped> = {
@@ -66,6 +67,7 @@ function Foxglove_PointCloud({ rgbaFieldName }: { rgbaFieldName: string }): JSX.
         rotation: QUAT_IDENTITY,
       },
     },
+    schemaName: "geometry_msgs/TransformStamped",
     sizeInBytes: 0,
   };
 
@@ -111,6 +113,7 @@ function Foxglove_PointCloud({ rgbaFieldName }: { rgbaFieldName: string }): JSX.
       ],
       data,
     },
+    schemaName: "foxglove.PointCloud",
     sizeInBytes: 0,
   };
 
@@ -178,6 +181,7 @@ export function Foxglove_PointCloud_Intensity(): JSX.Element {
         rotation: QUAT_IDENTITY,
       },
     },
+    schemaName: "geometry_msgs/TransformStamped",
     sizeInBytes: 0,
   };
   const tf2: MessageEvent<TransformStamped> = {
@@ -191,6 +195,7 @@ export function Foxglove_PointCloud_Intensity(): JSX.Element {
         rotation: QUAT_IDENTITY,
       },
     },
+    schemaName: "geometry_msgs/TransformStamped",
     sizeInBytes: 0,
   };
 
@@ -282,6 +287,7 @@ export function Foxglove_PointCloud_Intensity(): JSX.Element {
       ],
       data,
     },
+    schemaName: "foxglove.PointCloud",
     sizeInBytes: 0,
   };
 
@@ -365,6 +371,7 @@ export function Foxglove_PointCloud_TwoDimensions(): JSX.Element {
       ],
       data,
     },
+    schemaName: "foxglove.PointCloud",
     sizeInBytes: 0,
   };
 

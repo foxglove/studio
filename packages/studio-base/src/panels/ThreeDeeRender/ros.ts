@@ -272,6 +272,14 @@ export type CompressedImage = {
   data: Uint8Array;
 };
 
+export type JointState = {
+  header: Header;
+  name: string[];
+  position: number[];
+  velocity: number[];
+  effort: number[];
+};
+
 export const TIME_ZERO = { sec: 0, nsec: 0 };
 
 export const TRANSFORM_STAMPED_DATATYPES = new Set<string>();
@@ -298,6 +306,9 @@ addRosDataType(POINTCLOUD_DATATYPES, "sensor_msgs/PointCloud2");
 export const LASERSCAN_DATATYPES = new Set<string>();
 addRosDataType(LASERSCAN_DATATYPES, "sensor_msgs/LaserScan");
 
+export const VELODYNE_SCAN_DATATYPES = new Set<string>();
+addRosDataType(VELODYNE_SCAN_DATATYPES, "velodyne_msgs/VelodyneScan");
+
 export const POSE_STAMPED_DATATYPES = new Set<string>();
 addRosDataType(POSE_STAMPED_DATATYPES, "geometry_msgs/PoseStamped");
 
@@ -321,6 +332,9 @@ addRosDataType(COMPRESSED_IMAGE_DATATYPES, "sensor_msgs/CompressedImage");
 
 export const POLYGON_STAMPED_DATATYPES = new Set<string>();
 addRosDataType(POLYGON_STAMPED_DATATYPES, "geometry_msgs/PolygonStamped");
+
+export const JOINTSTATE_DATATYPES = new Set<string>();
+addRosDataType(JOINTSTATE_DATATYPES, "sensor_msgs/JointState");
 
 // Expand a single ROS1 dataType into variations for ROS2 and protobufs,
 // then add them to the given output set
