@@ -285,9 +285,11 @@ declare module "@foxglove/studio" {
     subscribeAppSettings(settings: string[]): void;
 
     /**
-     * Indicate intent to advertise on a specific topic.
+     * Indicate intent to publish messages on a specific topic.
      *
-     * The options object is passed to the current data source for additional configuration.
+     * @param topic The topic on which the extension will publish messages.
+     * @param schemaName The name of the schema that the published messages will conform to.
+     * @param options Options passed to the current data source for additional configuration.
      */
     advertise?(topic: string, schemaName: string, options?: Record<string, unknown>): void;
 
