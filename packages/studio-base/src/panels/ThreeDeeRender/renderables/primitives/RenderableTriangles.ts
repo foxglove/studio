@@ -91,7 +91,7 @@ export class RenderableTriangles extends RenderablePrimitive {
         vertices.setXYZ(i, point.x, point.y, point.z);
 
         if (!singleColor && colors && primitive.colors.length > 0) {
-          const color = primitive.colors[i] ? primitive.colors[i]! : missingColor;
+          const color = primitive.colors[i] ?? missingColor;
           // only trigger on last point index
           if (i === primitive.points.length - 1 && color === missingColor) {
             // will only show 1st triMeshIdx of issue -- addError prevents the adding of errors with duplicate errorIds
