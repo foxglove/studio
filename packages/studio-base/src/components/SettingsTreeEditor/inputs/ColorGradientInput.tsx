@@ -66,7 +66,7 @@ export function ColorGradientInput({
         opacity: disabled ? 0.5 : 1,
         pointerEvents: disabled ? "none" : "auto",
         position: "relative",
-        backgroundImage: `linear-gradient(to right, ${safeLeftColor}, ${safeRightColor})`,
+        background: `linear-gradient(to right, ${safeLeftColor}, ${safeRightColor}), repeating-conic-gradient(white 0 90deg, gray 90deg 180deg) top left/10px 10px repeat`,
       }}
     >
       <ColorSwatch color={safeLeftColor} onClick={handleLeftClick} />
