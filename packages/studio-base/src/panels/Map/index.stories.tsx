@@ -108,17 +108,19 @@ SinglePoint.parameters = {
   },
   panelSetup: {
     fixture: {
-      topics: [{ name: "/gps", datatype: "sensor_msgs/NavSatFix" }],
+      topics: [{ name: "/gps", schemaName: "sensor_msgs/NavSatFix" }],
       frame: {
         "/gps": [
           {
             topic: "/gps",
+            schemaName: "sensor_msgs/NavSatFix",
+            sizeInBytes: 0,
             receiveTime: { sec: 123, nsec: 456 },
             message: EMPTY_MESSAGE,
           },
         ],
       },
-    },
+    } as Fixture,
   },
 };
 
@@ -152,13 +154,15 @@ MultipleTopics.parameters = {
   panelSetup: {
     fixture: {
       topics: [
-        { name: "/gps", datatype: "sensor_msgs/NavSatFix" },
-        { name: "/another-gps-topic", datatype: "sensor_msgs/NavSatFix" },
+        { name: "/gps", schemaName: "sensor_msgs/NavSatFix" },
+        { name: "/another-gps-topic", schemaName: "sensor_msgs/NavSatFix" },
       ],
       frame: {
         "/gps": [
           {
             topic: "/gps",
+            schemaName: "sensor_msgs/NavSatFix",
+            sizeInBytes: 0,
             receiveTime: { sec: 123, nsec: 456 },
             message: EMPTY_MESSAGE,
           },
@@ -166,12 +170,14 @@ MultipleTopics.parameters = {
         "/another-gps-topic": [
           {
             topic: "/another-gps-topic",
+            schemaName: "sensor_msgs/NavSatFix",
+            sizeInBytes: 0,
             receiveTime: { sec: 123, nsec: 456 },
             message: OFFSET_MESSAGE,
           },
         ],
       },
-    },
+    } as Fixture,
   },
 };
 
@@ -186,11 +192,13 @@ SinglePointNoFix.parameters = {
   decorators: [Wrapper],
   panelSetup: {
     fixture: {
-      topics: [{ name: "/gps", datatype: "sensor_msgs/NavSatFix" }],
+      topics: [{ name: "/gps", schemaName: "sensor_msgs/NavSatFix" }],
       frame: {
         "/gps": [
           {
             topic: "/gps",
+            schemaName: "sensor_msgs/NavSatFix",
+            sizeInBytes: 0,
             receiveTime: { sec: 123, nsec: 456 },
             message: {
               latitude: 0,
@@ -206,7 +214,7 @@ SinglePointNoFix.parameters = {
           },
         ],
       },
-    },
+    } as Fixture,
   },
 };
 
@@ -221,11 +229,13 @@ SinglePointDiagonalCovariance.parameters = {
   decorators: [Wrapper],
   panelSetup: {
     fixture: {
-      topics: [{ name: "/gps", datatype: "sensor_msgs/NavSatFix" }],
+      topics: [{ name: "/gps", schemaName: "sensor_msgs/NavSatFix" }],
       frame: {
         "/gps": [
           {
             topic: "/gps",
+            schemaName: "sensor_msgs/NavSatFix",
+            sizeInBytes: 0,
             receiveTime: { sec: 123, nsec: 456 },
             message: {
               latitude: 1,
@@ -239,7 +249,7 @@ SinglePointDiagonalCovariance.parameters = {
           },
         ],
       },
-    },
+    } as Fixture,
   },
 };
 
@@ -254,12 +264,14 @@ SinglePointFullCovariance.parameters = {
   decorators: [Wrapper],
   panelSetup: {
     fixture: {
-      topics: [{ name: "/gps", datatype: "sensor_msgs/NavSatFix" }],
+      topics: [{ name: "/gps", schemaName: "sensor_msgs/NavSatFix" }],
       frame: {
         "/gps": [
           {
             topic: "/gps",
             receiveTime: { sec: 123, nsec: 456 },
+            sizeInBytes: 0,
+            schemaName: "sensor_msgs/NavSatFix",
             message: {
               latitude: 1,
               longitude: 2,
@@ -274,7 +286,7 @@ SinglePointFullCovariance.parameters = {
           },
         ],
       },
-    },
+    } as Fixture,
   },
 };
 
