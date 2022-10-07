@@ -66,8 +66,8 @@
         },
         "/map": {
           "visible": true,
-          "colorField": "value",
-          "colorMode": "gradient",
+          "colorField": "color",
+          "colorMode": "rgba",
           "colorMap": "turbo",
           "gradient": ["#ffffff", "#000000"]
         },
