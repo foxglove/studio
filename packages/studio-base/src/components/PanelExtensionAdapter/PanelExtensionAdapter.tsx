@@ -269,8 +269,6 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
 
   const updatePanelSettingsTree = usePanelSettingsTreeUpdate();
 
-  // console.error("INIT", isMounted());
-
   type PartialPanelExtensionContext = Omit<PanelExtensionContext, "panelElement">;
   const partialExtensionContext = useMemo<PartialPanelExtensionContext>(() => {
     const layout: PanelExtensionContext["layout"] = {
@@ -362,7 +360,6 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
       },
 
       subscribe: (topics: ReadonlyArray<string | Subscription>) => {
-        // console.error({ m: isMounted(), topics });
         if (!isMounted()) {
           return;
         }
@@ -513,8 +510,6 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
         setRenderFn(() => renderFunction);
       },
     });
-
-    // console.error("AFTER INITPANEL", isMounted());
 
     return () => {
       panelElement.remove();
