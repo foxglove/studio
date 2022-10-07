@@ -3,8 +3,16 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { useTheme } from "@mui/material";
-import { CSSProperties, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { useLatest, useMountedState } from "react-use";
+import {
+  CSSProperties,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { useLatest } from "react-use";
 import { v4 as uuid } from "uuid";
 
 import { useValueChangedDebugLog } from "@foxglove/hooks";
@@ -46,6 +54,26 @@ import { assertNever } from "@foxglove/studio-base/util/assertNever";
 import { initRenderStateBuilder } from "./renderState";
 
 const log = Logger.getLogger(__filename);
+
+/**
+ * We have to use useLayoutEffect to track our mounted state because we use layout effects
+ * to initialize the panel and render. If we use useEffect this runs later in the react
+ * cycle and isMounted returns false for layout effects.
+ */
+function useLayoutMountedState(): () => boolean {
+  const mountedRef = useRef<boolean>(false);
+  const get = useCallback(() => mountedRef.current, []);
+
+  useLayoutEffect(() => {
+    mountedRef.current = true;
+
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  return get;
+}
 
 type PanelExtensionAdapterProps = {
   /** function that initializes the panel extension */
@@ -89,7 +117,7 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
   const { openSiblingPanel } = usePanelContext();
 
   const [panelId] = useState(() => uuid());
-  const isMounted = useMountedState();
+  const isMounted = useLayoutMountedState();
   const [error, setError] = useState<Error | undefined>();
   const [watchedFields, setWatchedFields] = useState(new Set<keyof RenderState>());
 
@@ -241,6 +269,8 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
 
   const updatePanelSettingsTree = usePanelSettingsTreeUpdate();
 
+  // console.error("INIT", isMounted());
+
   type PartialPanelExtensionContext = Omit<PanelExtensionContext, "panelElement">;
   const partialExtensionContext = useMemo<PartialPanelExtensionContext>(() => {
     const layout: PanelExtensionContext["layout"] = {
@@ -332,6 +362,7 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
       },
 
       subscribe: (topics: ReadonlyArray<string | Subscription>) => {
+        // console.error({ m: isMounted(), topics });
         if (!isMounted()) {
           return;
         }
@@ -482,6 +513,8 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
         setRenderFn(() => renderFunction);
       },
     });
+
+    // console.error("AFTER INITPANEL", isMounted());
 
     return () => {
       panelElement.remove();
