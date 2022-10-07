@@ -279,7 +279,7 @@ export type AdvertiseOptions = {
   topic: string;
 
   // The datatype name
-  datatype: string;
+  schemaName: string;
 
   // Additional advertise options
   options?: Record<string, unknown>;
