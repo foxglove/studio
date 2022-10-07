@@ -3,15 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { useTheme } from "@mui/material";
-import {
-  CSSProperties,
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { CSSProperties, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useLatest } from "react-use";
 import { v4 as uuid } from "uuid";
 
@@ -42,6 +34,7 @@ import {
   useSetHoverValue,
 } from "@foxglove/studio-base/context/TimelineInteractionStateContext";
 import useGlobalVariables from "@foxglove/studio-base/hooks/useGlobalVariables";
+import { useSynchronousMountedState } from "@foxglove/studio-base/hooks/useSynchronousMountedState";
 import {
   AdvertiseOptions,
   PlayerCapabilities,
@@ -54,26 +47,6 @@ import { assertNever } from "@foxglove/studio-base/util/assertNever";
 import { initRenderStateBuilder } from "./renderState";
 
 const log = Logger.getLogger(__filename);
-
-/**
- * We have to use useLayoutEffect to track our mounted state because we use layout effects
- * to initialize the panel and render. If we use useEffect this runs later in the react
- * cycle and isMounted returns false for layout effects.
- */
-function useSynchronousMountedState(): () => boolean {
-  const mountedRef = useRef<boolean>(false);
-  const get = useCallback(() => mountedRef.current, []);
-
-  useLayoutEffect(() => {
-    mountedRef.current = true;
-
-    return () => {
-      mountedRef.current = false;
-    };
-  }, []);
-
-  return get;
-}
 
 type PanelExtensionAdapterProps = {
   /** function that initializes the panel extension */
