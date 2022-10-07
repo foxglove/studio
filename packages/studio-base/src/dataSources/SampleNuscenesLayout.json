@@ -71,6 +71,16 @@
           "colorMap": "turbo",
           "gradient": ["#ffffff", "#000000"]
         },
+        "/drivable_area": {
+          "visible": false,
+          "minColor": "#ffffff",
+          "colorField": "drivable_area",
+          "colorMode": "gradient",
+          "colorMap": "turbo",
+          "gradient": ["#ffffff", "#ffffff00"],
+          "maxValue": 1,
+          "minValue": 0
+        },
         "/RADAR_FRONT": {
           "visible": true,
           "colorField": "x",

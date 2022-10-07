@@ -22,7 +22,7 @@ class SampleNuscenesDataSourceFactory implements IDataSourceFactory {
   public initialize(
     args: DataSourceFactoryInitializeArgs,
   ): ReturnType<IDataSourceFactory["initialize"]> {
-    const bagUrl = "https://assets.foxglove.dev/NuScenes-v1.0-mini-scene-0061-972fd59.mcap";
+    const bagUrl = "https://assets.foxglove.dev/NuScenes-v1.0-mini-scene-0061-f4fbf7b.mcap";
 
     const bagSource = new McapIterableSource({ type: "url", url: bagUrl });
     return new IterablePlayer({
