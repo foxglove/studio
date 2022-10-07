@@ -60,7 +60,7 @@ const log = Logger.getLogger(__filename);
  * to initialize the panel and render. If we use useEffect this runs later in the react
  * cycle and isMounted returns false for layout effects.
  */
-function useLayoutMountedState(): () => boolean {
+function useSynchronousMountedState(): () => boolean {
   const mountedRef = useRef<boolean>(false);
   const get = useCallback(() => mountedRef.current, []);
 
@@ -117,7 +117,7 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
   const { openSiblingPanel } = usePanelContext();
 
   const [panelId] = useState(() => uuid());
-  const isMounted = useLayoutMountedState();
+  const isMounted = useSynchronousMountedState();
   const [error, setError] = useState<Error | undefined>();
   const [watchedFields, setWatchedFields] = useState(new Set<keyof RenderState>());
 
