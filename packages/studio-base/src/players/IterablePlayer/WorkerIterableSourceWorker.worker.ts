@@ -4,7 +4,10 @@
 
 import * as Comlink from "comlink";
 
-import { iterableTransferHandler } from "@foxglove/comlink-transfer-handlers";
+import {
+  abortSignalTransferHandler,
+  iterableTransferHandler,
+} from "@foxglove/comlink-transfer-handlers";
 import { MessageEvent } from "@foxglove/studio";
 
 import type {
@@ -23,6 +26,10 @@ type SourceFn = () => Promise<{
 const RegisteredSourceModuleLoaders: Record<string, SourceFn> = {
   mcap: async () => await import("./Mcap/McapIterableSource"),
   rosbag: async () => await import("./BagIterableSource"),
+  rosdb3: async () => await import("./rosdb3/RosDb3IterableSource"),
+  ulog: async () => await import("./ulog/UlogIterableSource"),
+  foxgloveDataPlatform: async () =>
+    await import("./foxglove-data-platform/DataPlatformIterableSource"),
 };
 
 export type WorkerIterableSourceWorkerArgs = {
@@ -30,7 +37,7 @@ export type WorkerIterableSourceWorkerArgs = {
   initArgs: IterableSourceInitializeArgs;
 };
 
-export class WorkerIterableSourceWorker implements IIterableSource {
+export class WorkerIterableSourceWorker {
   private _source?: IIterableSource;
   private _args: WorkerIterableSourceWorkerArgs;
 
@@ -58,14 +65,21 @@ export class WorkerIterableSourceWorker implements IIterableSource {
   }
 
   public async getBackfillMessages(
-    args: GetBackfillMessagesArgs,
+    args: Omit<GetBackfillMessagesArgs, "abortSignal">,
+    // abortSignal is a separate argument so it can be proxied by comlink since AbortSignal is not
+    // clonable (and needs to signal across the worker boundary)
+    abortSignal?: AbortSignal,
   ): Promise<MessageEvent<unknown>[]> {
     if (!this._source) {
       throw new Error("uninitialized");
     }
-    return await this._source.getBackfillMessages(args);
+    return await this._source.getBackfillMessages({
+      ...args,
+      abortSignal,
+    });
   }
 }
 
 Comlink.transferHandlers.set("iterable", iterableTransferHandler);
+Comlink.transferHandlers.set("abortsignal", abortSignalTransferHandler);
 Comlink.expose(WorkerIterableSourceWorker);

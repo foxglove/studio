@@ -4,7 +4,10 @@
 
 import * as Comlink from "comlink";
 
-import { iterableTransferHandler } from "@foxglove/comlink-transfer-handlers";
+import {
+  abortSignalTransferHandler,
+  iterableTransferHandler,
+} from "@foxglove/comlink-transfer-handlers";
 import { MessageEvent } from "@foxglove/studio";
 
 import type {
@@ -20,6 +23,7 @@ import type {
 } from "./WorkerIterableSourceWorker.worker";
 
 Comlink.transferHandlers.set("iterable", iterableTransferHandler);
+Comlink.transferHandlers.set("abortsignal", abortSignalTransferHandler);
 
 export class WorkerIterableSource implements IIterableSource {
   private _args: WorkerIterableSourceWorkerArgs;
@@ -31,8 +35,6 @@ export class WorkerIterableSource implements IIterableSource {
   }
 
   public async initialize(): Promise<Initalization> {
-    // fixme - is there a terminate call? it seems like we don't have a "close" for our sources
-    // we do for the player
     // Note: this launches the worker.
     this._thread = new Worker(new URL("./WorkerIterableSourceWorker.worker", import.meta.url));
 
@@ -72,11 +74,14 @@ export class WorkerIterableSource implements IIterableSource {
       throw new Error(`WorkerIterableSource is not initialized`);
     }
 
-    // fixme - abort signal can't be cloned...
-    // so we have to strip it out...?
-    // can we make a handler for abort signal like we have for iterators?
-    const { abortSignal: _, ...rest } = args;
+    // An AbortSignal is not clonable, so we remove it from the args and send it as a separate argumet
+    // to our worker getBackfillMessages call. Our installed Comlink handler for AbortSignal handles
+    // making the abort signal available within the worker.
+    const { abortSignal, ...rest } = args;
+    return await this._worker.getBackfillMessages(rest, abortSignal);
+  }
 
-    return await this._worker.getBackfillMessages(rest);
+  public async terminate(): Promise<void> {
+    this._thread?.terminate();
   }
 }

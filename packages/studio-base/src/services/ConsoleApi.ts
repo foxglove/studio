@@ -111,11 +111,7 @@ export type ConsoleApiLayout = {
   data?: Record<string, unknown>;
 };
 
-export type DataPlatformSourceParameters =
-  | { type: "by-device"; deviceId: string; start: Time; end: Time }
-  | { type: "by-import"; importId: string; start?: Time; end?: Time };
-
-export type DataPlatformSourceRequest =
+export type DataPlatformRequestArgs =
   | { deviceId: string; start: string; end: string }
   | { importId: string; start?: string; end?: string };
 
@@ -130,8 +126,16 @@ class ConsoleApi {
     this._baseUrl = baseUrl;
   }
 
+  public getBaseUrl(): string {
+    return this._baseUrl;
+  }
+
   public setAuthHeader(header: string): void {
     this._authHeader = header;
+  }
+
+  public getAuthHeader(): string | undefined {
+    return this._authHeader;
   }
 
   public setResponseObserver(observer: undefined | ((response: Response) => void)): void {
@@ -265,12 +269,12 @@ class ConsoleApi {
     return (await this.delete(`/v1/layouts/${id}`)).status === 200;
   }
 
-  public async coverage(params: DataPlatformSourceRequest): Promise<CoverageResponse[]> {
+  public async coverage(params: DataPlatformRequestArgs): Promise<CoverageResponse[]> {
     return await this.get<CoverageResponse[]>("/v1/data/coverage", params);
   }
 
   public async topics(
-    params: DataPlatformSourceRequest & { includeSchemas?: boolean },
+    params: DataPlatformRequestArgs & { includeSchemas?: boolean },
   ): Promise<readonly TopicResponse[]> {
     return (
       await this.get<RawTopicResponse[]>("/v1/data/topics", {
@@ -288,7 +292,7 @@ class ConsoleApi {
   }
 
   public async stream(
-    params: DataPlatformSourceRequest & {
+    params: DataPlatformRequestArgs & {
       topics: readonly string[];
       outputFormat?: "bag1" | "mcap0";
       replayPolicy?: "lastPerChannel" | "";

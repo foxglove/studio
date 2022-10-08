@@ -7,7 +7,7 @@ import decompressLZ4 from "wasm-lz4";
 import { Bag, Filelike } from "@foxglove/rosbag";
 import { BlobReader } from "@foxglove/rosbag/web";
 import { parse as parseMessageDefinition } from "@foxglove/rosmsg";
-import { LazyMessageReader } from "@foxglove/rosmsg-serialization";
+import { MessageReader } from "@foxglove/rosmsg-serialization";
 import { compare } from "@foxglove/rostime";
 import {
   PlayerProblem,
@@ -35,7 +35,7 @@ type BagSource = { type: "file"; file: File } | { type: "remote"; url: string };
 export class BagIterableSource implements IIterableSource {
   private _source: BagSource;
   private _bag: Bag | undefined;
-  private _readersByConnectionId = new Map<number, LazyMessageReader>();
+  private _readersByConnectionId = new Map<number, MessageReader>();
   private _datatypesByConnectionId = new Map<number, string>();
 
   public constructor(source: BagSource) {
@@ -139,7 +139,7 @@ export class BagIterableSource implements IIterableSource {
       topicStats.set(connection.topic, { numMessages });
 
       const parsedDefinition = parseMessageDefinition(connection.messageDefinition);
-      const reader = new LazyMessageReader(parsedDefinition);
+      const reader = new MessageReader(parsedDefinition);
       this._readersByConnectionId.set(id, reader);
       this._datatypesByConnectionId.set(id, datatype);
 
@@ -215,7 +215,7 @@ export class BagIterableSource implements IIterableSource {
         // chunks (which will fill up memory space when we cache messages) when make a copy of the
         // data.
         const dataCopy = bagMsgEvent.data.slice();
-        const parsedMessage = reader.readMessage(dataCopy).toObject();
+        const parsedMessage = reader.readMessage(dataCopy);
 
         yield {
           connectionId,

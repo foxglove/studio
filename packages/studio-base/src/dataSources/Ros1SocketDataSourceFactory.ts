@@ -46,12 +46,12 @@ class Ros1SocketDataSourceFactory implements IDataSourceFactory {
   };
 
   public initialize(args: DataSourceFactoryInitializeArgs): Player | undefined {
-    const url = args.url;
+    const url = args.params?.url as string | undefined;
     if (!url) {
       return;
     }
 
-    const hostname = args.hostname;
+    const hostname = args.params?.hostname;
     if (!isUndefined(hostname) && !isString(hostname)) {
       throw new Error(`Unable to initialize Ros1. Invalid hostname ${hostname}`);
     }
