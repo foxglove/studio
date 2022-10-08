@@ -50,7 +50,7 @@ Note: All contributors must agree to our [Contributor License Agreement](https:/
 
 **Dependencies:**
 
-- [Node.js](https://nodejs.org/en/) v16+
+- [Node.js](https://nodejs.org/en/) v16.10+
 - [Git LFS](https://git-lfs.github.com/)
 - [Visual Studio Code](https://code.visualstudio.com/) – Recommended
 
