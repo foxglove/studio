@@ -4,7 +4,7 @@
 
 import * as base64 from "@protobufjs/base64";
 
-import { add, fromNanoSec, Time, toSec } from "@foxglove/rostime";
+import { add, fromNanoSec, Time, toRFC3339String, toSec } from "@foxglove/rostime";
 
 type User = {
   id: string;
@@ -112,8 +112,12 @@ export type ConsoleApiLayout = {
 };
 
 export type DataPlatformRequestArgs =
-  | { deviceId: string; start: string; end: string }
-  | { importId: string; start?: string; end?: string };
+  | { deviceId: string; start: Time; end: Time }
+  | { importId: string; start?: Time; end?: Time };
+
+function optionalToRFC3339String(time: Time | undefined): string | undefined {
+  return time ? toRFC3339String(time) : undefined;
+}
 
 type ApiResponse<T> = { status: number; json: T };
 
@@ -171,10 +175,23 @@ class ConsoleApi {
     });
   }
 
-  private async get<T>(apiPath: string, query?: Record<string, string>): Promise<T> {
+  private async get<T>(apiPath: string, query?: Record<string, string | undefined>): Promise<T> {
+    // Strip keys with undefined values from the final query
+    let queryWithoutUndefined: Record<string, string> | undefined;
+    if (query) {
+      queryWithoutUndefined = {};
+      for (const [key, value] of Object.entries(query)) {
+        if (value != undefined) {
+          queryWithoutUndefined[key] = value;
+        }
+      }
+    }
+
     return (
       await this.request<T>(
-        query == undefined ? apiPath : `${apiPath}?${new URLSearchParams(query).toString()}`,
+        query == undefined
+          ? apiPath
+          : `${apiPath}?${new URLSearchParams(queryWithoutUndefined).toString()}`,
         { method: "GET" },
       )
     ).json;
@@ -270,7 +287,11 @@ class ConsoleApi {
   }
 
   public async coverage(params: DataPlatformRequestArgs): Promise<CoverageResponse[]> {
-    return await this.get<CoverageResponse[]>("/v1/data/coverage", params);
+    return await this.get<CoverageResponse[]>("/v1/data/coverage", {
+      ...params,
+      start: optionalToRFC3339String(params.start),
+      end: optionalToRFC3339String(params.end),
+    });
   }
 
   public async topics(
@@ -279,6 +300,8 @@ class ConsoleApi {
     return (
       await this.get<RawTopicResponse[]>("/v1/data/topics", {
         ...params,
+        start: optionalToRFC3339String(params.start),
+        end: optionalToRFC3339String(params.end),
         includeSchemas: params.includeSchemas ?? false ? "true" : "false",
       })
     ).map((topic) => {
@@ -299,7 +322,11 @@ class ConsoleApi {
       replayLookbackSeconds?: number;
     },
   ): Promise<{ link: string }> {
-    return await this.post<{ link: string }>("/v1/data/stream", params);
+    return await this.post<{ link: string }>("/v1/data/stream", {
+      ...params,
+      start: optionalToRFC3339String(params.start),
+      end: optionalToRFC3339String(params.end),
+    });
   }
 
   /// ----- private

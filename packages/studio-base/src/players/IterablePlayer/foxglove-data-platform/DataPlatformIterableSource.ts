@@ -12,7 +12,6 @@ import {
   fromRFC3339String,
   isGreaterThan,
   isLessThan,
-  toRFC3339String,
   add as addTime,
   compare,
   Time,
@@ -86,13 +85,13 @@ export class DataPlatformIterableSource implements IIterableSource {
       params.type === "by-device"
         ? {
             deviceId: params.deviceId,
-            start: toRFC3339String(params.start),
-            end: toRFC3339String(params.end),
+            start: params.start,
+            end: params.end,
           }
         : {
             importId: params.importId,
-            start: params.start ? toRFC3339String(params.start) : undefined,
-            end: params.end ? toRFC3339String(params.end) : undefined,
+            start: params.start,
+            end: params.end,
           };
 
     const [coverage, rawTopics] = await Promise.all([
@@ -239,14 +238,14 @@ export class DataPlatformIterableSource implements IIterableSource {
           ? {
               deviceId: this._params.deviceId,
               topics: args.topics,
-              start: toRFC3339String(streamStart),
-              end: toRFC3339String(streamEnd),
+              start: streamStart,
+              end: streamEnd,
             }
           : {
               importId: this._params.importId,
               topics: args.topics,
-              start: toRFC3339String(streamStart),
-              end: toRFC3339String(streamEnd),
+              start: streamStart,
+              end: streamEnd,
             };
 
       const stream = streamMessages({
@@ -273,14 +272,14 @@ export class DataPlatformIterableSource implements IIterableSource {
           ? {
               deviceId: this._params.deviceId,
               topics: args.topics,
-              start: toRFC3339String(localStart),
-              end: toRFC3339String(localEnd),
+              start: localStart,
+              end: localEnd,
             }
           : {
               importId: this._params.importId,
               topics: args.topics,
-              start: toRFC3339String(localStart),
-              end: toRFC3339String(localEnd),
+              start: localStart,
+              end: localEnd,
             };
 
       const stream = streamMessages({
@@ -345,14 +344,14 @@ export class DataPlatformIterableSource implements IIterableSource {
         ? {
             deviceId: this._params.deviceId,
             topics,
-            start: toRFC3339String(time),
-            end: toRFC3339String(time),
+            start: time,
+            end: time,
           }
         : {
             importId: this._params.importId,
             topics,
-            start: toRFC3339String(time),
-            end: toRFC3339String(time),
+            start: time,
+            end: time,
           };
 
     streamByParams.replayPolicy = "lastPerChannel";
