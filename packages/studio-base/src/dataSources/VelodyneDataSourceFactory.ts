@@ -23,7 +23,7 @@ class VelodyneDataSourceFactory implements IDataSourceFactory {
   };
 
   public initialize(args: DataSourceFactoryInitializeArgs): Player | undefined {
-    const portStr = args.params?.portStr as string | undefined;
+    const portStr = args.params?.portStr;
     if (portStr == undefined) {
       return;
     }

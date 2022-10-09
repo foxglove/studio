@@ -40,7 +40,7 @@ class RosbridgeDataSourceFactory implements IDataSourceFactory {
   };
 
   public initialize(args: DataSourceFactoryInitializeArgs): Player | undefined {
-    const url = args.params?.url as string | undefined;
+    const url = args.params?.url;
     if (!url) {
       return;
     }

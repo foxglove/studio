@@ -19,7 +19,7 @@ export default class McapRemoteDataSourceFactory implements IDataSourceFactory {
   public docsLink = "https://foxglove.dev/docs/studio/connection/mcap";
 
   public initialize(args: DataSourceFactoryInitializeArgs): Player | undefined {
-    const url = args.params?.url as string | undefined;
+    const url = args.params?.url;
     if (!url) {
       return;
     }

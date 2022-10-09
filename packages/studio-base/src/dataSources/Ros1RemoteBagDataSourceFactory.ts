@@ -19,7 +19,7 @@ class Ros1RemoteBagDataSourceFactory implements IDataSourceFactory {
   public docsLink = "https://foxglove.dev/docs/studio/connection/ros1-bag";
 
   public initialize(args: DataSourceFactoryInitializeArgs): Player | undefined {
-    const url = args.params?.url as string | undefined;
+    const url = args.params?.url;
     if (!url) {
       return;
     }
@@ -34,7 +34,6 @@ class Ros1RemoteBagDataSourceFactory implements IDataSourceFactory {
       isSampleDataSource: true,
       name: url,
       metricsCollector: args.metricsCollector,
-      // fixme - source should provide this
       // Use blank url params so the data source is set in the url
       urlParams: {
         url,

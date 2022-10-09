@@ -33,7 +33,7 @@ class Ros2SocketDataSourceFactory implements IDataSourceFactory {
   };
 
   public initialize(args: DataSourceFactoryInitializeArgs): Player | undefined {
-    const domainIdStr = args.params?.domainId as string | undefined;
+    const domainIdStr = args.params?.domainId;
     if (!domainIdStr) {
       return;
     }
