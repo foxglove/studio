@@ -1,0 +1,40 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/
+
+import { Theme } from "@mui/material";
+
+import { disableBackgroundColorTransition } from "../common";
+import { OverrideComponentReturn } from "../types";
+
+export function filledInput(theme: Theme): OverrideComponentReturn<"MuiFilledInput"> {
+  return {
+    MuiFilledInput: {
+      defaultProps: {
+        disableUnderline: true,
+      },
+      styleOverrides: {
+        input: {
+          padding: theme.spacing(1, 1.25),
+        },
+        inputSizeSmall: {
+          padding: theme.spacing(0.75, 1),
+        },
+        root: {
+          borderRadius: theme.shape.borderRadius,
+
+          "&.Mui-focused": {
+            backgroundColor: theme.palette.action.focus,
+          },
+          "&.Mui-disabled": {
+            opacity: 0.5,
+          },
+          ".MuiAutocomplete-root &": {
+            paddingTop: 0,
+          },
+          ...disableBackgroundColorTransition,
+        },
+      },
+    },
+  };
+}

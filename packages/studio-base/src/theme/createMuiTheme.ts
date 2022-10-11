@@ -4,25 +4,28 @@
 
 import { createTheme, Theme } from "@mui/material/styles";
 
-import muiComponents from "./muiComponents";
 import typography from "./muiTypography";
+import { overrides } from "./overrides";
 import * as palette from "./palette";
 
 export type ThemePreference = "dark" | "light";
 
-export default function createMuiTheme(
-  themePreference: ThemePreference,
-): Theme & { name: ThemePreference } {
-  const theme = createTheme({
+const baseTheme = (themePreference: ThemePreference) =>
+  createTheme({
     palette: palette[themePreference],
     shape: { borderRadius: 2 },
     typography,
   });
 
+export default function createMuiTheme(
+  themePreference: ThemePreference,
+): Theme & { name: ThemePreference } {
+  const theme = baseTheme(themePreference);
+
   // add name for storybook
   return {
     ...theme,
     name: themePreference,
-    components: muiComponents(theme),
+    components: overrides(theme),
   };
 }
