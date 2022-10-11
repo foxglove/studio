@@ -8,11 +8,13 @@ import { useSynchronousMountedState } from "@foxglove/studio-base/hooks/useSynch
 
 describe("useSynchronousMountedState", () => {
   it("tracks mounted state", () => {
-    const { result, unmount } = renderHook(useSynchronousMountedState, {
+    const { result, unmount, rerender } = renderHook(useSynchronousMountedState, {
       wrapper({ children }) {
         return <div>{children}</div>;
       },
     });
+    expect(result.current()).toBeTruthy();
+    rerender();
     expect(result.current()).toBeTruthy();
     unmount();
     expect(result.current()).toBeFalsy();
