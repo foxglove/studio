@@ -13,7 +13,7 @@ export type ImmutableSettingsTree = DeepReadonly<SettingsTree>;
 
 export type PanelSettingsEditorStore = {
   /**
-   *  Used for forcing remounts on panels when fundamental properties change.
+   *  Used for forcing remounts on panels to make panels reload their saved configs.
    */
   sequenceNumbers: Record<string, number>;
 

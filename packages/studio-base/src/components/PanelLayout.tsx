@@ -13,23 +13,21 @@
 
 import { CircularProgress, Link, styled as muiStyled } from "@mui/material";
 import React, {
-  useCallback,
-  useMemo,
+  LazyExoticComponent,
   PropsWithChildren,
   Suspense,
-  useRef,
-  LazyExoticComponent,
+  useCallback,
   useEffect,
-  ReactNode,
-  Fragment,
+  useMemo,
+  useRef,
 } from "react";
 import { useDrop } from "react-dnd";
 import {
-  MosaicWithoutDragDropContext,
-  MosaicWindow,
   MosaicDragType,
   MosaicNode,
   MosaicPath,
+  MosaicWindow,
+  MosaicWithoutDragDropContext,
 } from "react-mosaic-component";
 import "react-mosaic-component/react-mosaic-component.css";
 
@@ -45,16 +43,13 @@ import {
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { useExtensionCatalog } from "@foxglove/studio-base/context/ExtensionCatalogContext";
 import { PanelComponent, usePanelCatalog } from "@foxglove/studio-base/context/PanelCatalogContext";
-import {
-  PanelSettingsEditorStore,
-  usePanelSettingsEditorStore,
-} from "@foxglove/studio-base/context/PanelSettingsEditorContext";
 import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
 import { MosaicDropResult, PanelConfig } from "@foxglove/studio-base/types/panels";
 import { getPanelIdForType, getPanelTypeFromId } from "@foxglove/studio-base/util/layout";
 
 import ErrorBoundary from "./ErrorBoundary";
 import { MosaicPathContext } from "./MosaicPathContext";
+import { PanelRemounter } from "./PanelRemounter";
 
 type Props = {
   layout?: MosaicNode<string>;
@@ -98,28 +93,6 @@ function TabMosaicWrapper({ tabId, children }: PropsWithChildren<{ tabId?: strin
       {children}
     </HideTopLevelDropTargets>
   );
-}
-
-/**
- * Wrapper component used to force-remount the panel when key properties like the tabId
- * or settings sequence number change.
- */
-function PanelRemounter({
-  children,
-  id,
-  tabId,
-}: {
-  children: ReactNode;
-  id: string;
-  tabId: undefined | string;
-}): JSX.Element {
-  const selector = useCallback(
-    (store: PanelSettingsEditorStore) => store.sequenceNumbers[id] ?? 0,
-    [id],
-  );
-  const sequenceNumber = usePanelSettingsEditorStore(selector);
-
-  return <Fragment key={`${id}${tabId ?? ""}${sequenceNumber}`}>{children}</Fragment>;
 }
 
 export function UnconnectedPanelLayout(props: Props): React.ReactElement {
