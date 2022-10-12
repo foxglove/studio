@@ -33,7 +33,8 @@ import {
 type BagSource = { type: "file"; file: File } | { type: "remote"; url: string };
 
 export class BagIterableSource implements IIterableSource {
-  private _source: BagSource;
+  private readonly _source: BagSource;
+
   private _bag: Bag | undefined;
   private _readersByConnectionId = new Map<number, MessageReader>();
   private _datatypesByConnectionId = new Map<number, string>();

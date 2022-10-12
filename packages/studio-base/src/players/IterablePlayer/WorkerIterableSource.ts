@@ -26,7 +26,8 @@ Comlink.transferHandlers.set("iterable", iterableTransferHandler);
 Comlink.transferHandlers.set("abortsignal", abortSignalTransferHandler);
 
 export class WorkerIterableSource implements IIterableSource {
-  private _args: WorkerIterableSourceWorkerArgs;
+  private readonly _args: WorkerIterableSourceWorkerArgs;
+
   private _thread?: Worker;
   private _worker?: Comlink.Remote<WorkerIterableSourceWorker>;
 

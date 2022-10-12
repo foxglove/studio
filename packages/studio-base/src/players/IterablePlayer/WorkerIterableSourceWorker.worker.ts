@@ -38,8 +38,9 @@ export type WorkerIterableSourceWorkerArgs = {
 };
 
 export class WorkerIterableSourceWorker {
+  private readonly _args: WorkerIterableSourceWorkerArgs;
+
   private _source?: IIterableSource;
-  private _args: WorkerIterableSourceWorkerArgs;
 
   public constructor(args: WorkerIterableSourceWorkerArgs) {
     this._args = args;
