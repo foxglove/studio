@@ -2,7 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { MessageEvent, Topic } from "@foxglove/studio";
+import { MessageEvent } from "@foxglove/studio";
+import { Topic } from "@foxglove/studio-base/players/types";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 
 import { DEFAULT_CAMERA_STATE } from "../camera";
@@ -24,8 +25,8 @@ export default {
 MeshMarkerOrientation.parameters = { colorScheme: "dark" };
 export function MeshMarkerOrientation(): JSX.Element {
   const topics: Topic[] = [
-    { name: "/markers", datatype: "visualization_msgs/Marker" },
-    { name: "/labels", datatype: "visualization_msgs/Marker" },
+    { name: "/markers", schemaName: "visualization_msgs/Marker" },
+    { name: "/labels", schemaName: "visualization_msgs/Marker" },
   ];
 
   const baseMeshMarker: MessageEvent<Marker> = {
@@ -51,6 +52,7 @@ export function MeshMarkerOrientation(): JSX.Element {
       mesh_use_embedded_materials: true,
       lifetime: { sec: 0, nsec: 0 },
     },
+    schemaName: "visualization_msgs/Marker",
     sizeInBytes: 0,
   };
 
@@ -77,6 +79,7 @@ export function MeshMarkerOrientation(): JSX.Element {
       mesh_use_embedded_materials: false,
       lifetime: { sec: 0, nsec: 0 },
     },
+    schemaName: "visualization_msgs/Marker",
     sizeInBytes: 0,
   };
 

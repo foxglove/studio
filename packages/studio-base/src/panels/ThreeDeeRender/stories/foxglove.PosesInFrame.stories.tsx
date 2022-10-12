@@ -5,7 +5,8 @@
 import { quat } from "gl-matrix";
 
 import { FrameTransform, PosesInFrame } from "@foxglove/schemas";
-import { MessageEvent, Topic } from "@foxglove/studio";
+import { MessageEvent } from "@foxglove/studio";
+import { Topic } from "@foxglove/studio-base/players/types";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 
 import ThreeDeeRender from "../index";
@@ -23,10 +24,10 @@ const vec4ToOrientation = ([x, y, z, w]: Vec4) => ({ x, y, z, w });
 Foxglove_PosesInFrame.parameters = { colorScheme: "dark" };
 export function Foxglove_PosesInFrame(): JSX.Element {
   const topics: Topic[] = [
-    { name: "/baselink_path", datatype: "foxglove.PosesInFrame" },
-    { name: "/sensor_path", datatype: "foxglove.PosesInFrame" },
-    { name: "/sensor_path2", datatype: "foxglove.PosesInFrame" },
-    { name: "/tf", datatype: "foxglove.FrameTransform" },
+    { name: "/baselink_path", schemaName: "foxglove.PosesInFrame" },
+    { name: "/sensor_path", schemaName: "foxglove.PosesInFrame" },
+    { name: "/sensor_path2", schemaName: "foxglove.PosesInFrame" },
+    { name: "/tf", schemaName: "foxglove.FrameTransform" },
   ];
   const tf1: MessageEvent<FrameTransform> = {
     topic: "/tf",
@@ -38,6 +39,7 @@ export function Foxglove_PosesInFrame(): JSX.Element {
       translation: { x: 1e7, y: 0, z: 0 },
       rotation: QUAT_IDENTITY,
     },
+    schemaName: "foxglove.FrameTransform",
     sizeInBytes: 0,
   };
   const tf2: MessageEvent<FrameTransform> = {
@@ -50,6 +52,7 @@ export function Foxglove_PosesInFrame(): JSX.Element {
       translation: { x: 0, y: 0, z: 1 },
       rotation: vec4ToOrientation(quat.rotateZ(quat.create(), quat.create(), Math.PI / 2) as Vec4),
     },
+    schemaName: "foxglove.FrameTransform",
     sizeInBytes: 0,
   };
   const tf3: MessageEvent<FrameTransform> = {
@@ -62,6 +65,7 @@ export function Foxglove_PosesInFrame(): JSX.Element {
       translation: { x: 0, y: 5, z: 1 },
       rotation: QUAT_IDENTITY,
     },
+    schemaName: "foxglove.FrameTransform",
     sizeInBytes: 0,
   };
 
@@ -83,6 +87,7 @@ export function Foxglove_PosesInFrame(): JSX.Element {
         orientation: makeOrientation(i),
       })),
     },
+    schemaName: "foxglove.PosesInFrame",
     sizeInBytes: 0,
   };
 
@@ -97,6 +102,7 @@ export function Foxglove_PosesInFrame(): JSX.Element {
         orientation: makeOrientation(i),
       })),
     },
+    schemaName: "foxglove.PosesInFrame",
     sizeInBytes: 0,
   };
 
@@ -111,6 +117,7 @@ export function Foxglove_PosesInFrame(): JSX.Element {
         orientation: makeOrientation(i),
       })),
     },
+    schemaName: "foxglove.PosesInFrame",
     sizeInBytes: 0,
   };
 

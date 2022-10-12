@@ -15,23 +15,26 @@
 import { renderHook } from "@testing-library/react-hooks";
 
 import MockMessagePipelineProvider from "@foxglove/studio-base/components/MessagePipeline/MockMessagePipelineProvider";
+import { MessageEvent, Topic } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 
 import * as PanelAPI from ".";
 
 describe("useDataSourceInfo", () => {
-  const topics = [{ name: "/foo", datatype: "Foo" }];
-  const messages = [
+  const topics: Topic[] = [{ name: "/foo", schemaName: "Foo" }];
+  const messages: MessageEvent<unknown>[] = [
     {
       topic: "/foo",
       receiveTime: { sec: 1, nsec: 2 },
       message: {},
+      schemaName: "foo",
       sizeInBytes: 0,
     },
     {
       topic: "/foo",
       receiveTime: { sec: 5, nsec: 6 },
       message: {},
+      schemaName: "foo",
       sizeInBytes: 0,
     },
   ];
@@ -55,8 +58,8 @@ describe("useDataSourceInfo", () => {
         </MockMessagePipelineProvider>
       ),
     });
-    expect(result.current).toEqual({
-      topics: [{ name: "/foo", datatype: "Foo" }],
+    expect(result.current).toEqual<typeof result.current>({
+      topics: [{ name: "/foo", schemaName: "Foo" }],
       datatypes: new Map(Object.entries({ Foo: { definitions: [] } })),
       capabilities: ["hello"],
       startTime: { sec: 0, nsec: 1 },
@@ -82,8 +85,8 @@ describe("useDataSourceInfo", () => {
         </MockMessagePipelineProvider>
       ),
     });
-    expect(result.current).toEqual({
-      topics: [{ name: "/foo", datatype: "Foo" }],
+    expect(result.current).toEqual<typeof result.current>({
+      topics: [{ name: "/foo", schemaName: "Foo" }],
       datatypes: new Map(Object.entries({ Foo: { definitions: [] } })),
       capabilities: ["hello"],
       startTime: { sec: 0, nsec: 1 },
@@ -94,12 +97,12 @@ describe("useDataSourceInfo", () => {
     rerender();
     expect(result.current).toBe(firstResult);
 
-    currentTopics = [...topics, { name: "/bar", datatype: "Bar" }];
+    currentTopics = [...topics, { name: "/bar", schemaName: "Bar" }];
     rerender();
-    expect(result.current).toEqual({
+    expect(result.current).toEqual<typeof result.current>({
       topics: [
-        { name: "/bar", datatype: "Bar" },
-        { name: "/foo", datatype: "Foo" },
+        { name: "/bar", schemaName: "Bar" },
+        { name: "/foo", schemaName: "Foo" },
       ],
       datatypes: new Map(Object.entries({ Foo: { definitions: [] } })),
       capabilities: ["hello"],

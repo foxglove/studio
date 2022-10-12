@@ -4,7 +4,7 @@
 
 import * as base64 from "@protobufjs/base64";
 
-import { add, fromNanoSec, Time, toSec } from "@foxglove/rostime";
+import { add, fromNanoSec, Time, toRFC3339String, toSec } from "@foxglove/rostime";
 
 type User = {
   id: string;
@@ -111,6 +111,14 @@ export type ConsoleApiLayout = {
   data?: Record<string, unknown>;
 };
 
+export type DataPlatformRequestArgs =
+  | { deviceId: string; start: Time; end: Time }
+  | { importId: string; start?: Time; end?: Time };
+
+function optionalToRFC3339String(time: Time | undefined): string | undefined {
+  return time ? toRFC3339String(time) : undefined;
+}
+
 type ApiResponse<T> = { status: number; json: T };
 
 class ConsoleApi {
@@ -122,8 +130,16 @@ class ConsoleApi {
     this._baseUrl = baseUrl;
   }
 
+  public getBaseUrl(): string {
+    return this._baseUrl;
+  }
+
   public setAuthHeader(header: string): void {
     this._authHeader = header;
+  }
+
+  public getAuthHeader(): string | undefined {
+    return this._authHeader;
   }
 
   public setResponseObserver(observer: undefined | ((response: Response) => void)): void {
@@ -159,10 +175,23 @@ class ConsoleApi {
     });
   }
 
-  private async get<T>(apiPath: string, query?: Record<string, string>): Promise<T> {
+  private async get<T>(apiPath: string, query?: Record<string, string | undefined>): Promise<T> {
+    // Strip keys with undefined values from the final query
+    let queryWithoutUndefined: Record<string, string> | undefined;
+    if (query) {
+      queryWithoutUndefined = {};
+      for (const [key, value] of Object.entries(query)) {
+        if (value != undefined) {
+          queryWithoutUndefined[key] = value;
+        }
+      }
+    }
+
     return (
       await this.request<T>(
-        query == undefined ? apiPath : `${apiPath}?${new URLSearchParams(query).toString()}`,
+        query == undefined
+          ? apiPath
+          : `${apiPath}?${new URLSearchParams(queryWithoutUndefined).toString()}`,
         { method: "GET" },
       )
     ).json;
@@ -194,6 +223,7 @@ class ConsoleApi {
     deviceId: string;
     start: string;
     end: string;
+    query?: string;
   }): Promise<EventsResponse> {
     const rawEvents = await this.get<EventsResponse>(`/beta/device-events`, params);
     return rawEvents.map((event) => {
@@ -256,23 +286,22 @@ class ConsoleApi {
     return (await this.delete(`/v1/layouts/${id}`)).status === 200;
   }
 
-  public async coverage(params: {
-    deviceId: string;
-    start: string;
-    end: string;
-  }): Promise<CoverageResponse[]> {
-    return await this.get<CoverageResponse[]>("/v1/data/coverage", params);
+  public async coverage(params: DataPlatformRequestArgs): Promise<CoverageResponse[]> {
+    return await this.get<CoverageResponse[]>("/v1/data/coverage", {
+      ...params,
+      start: optionalToRFC3339String(params.start),
+      end: optionalToRFC3339String(params.end),
+    });
   }
 
-  public async topics(params: {
-    deviceId: string;
-    start: string;
-    end: string;
-    includeSchemas?: boolean;
-  }): Promise<readonly TopicResponse[]> {
+  public async topics(
+    params: DataPlatformRequestArgs & { includeSchemas?: boolean },
+  ): Promise<readonly TopicResponse[]> {
     return (
       await this.get<RawTopicResponse[]>("/v1/data/topics", {
         ...params,
+        start: optionalToRFC3339String(params.start),
+        end: optionalToRFC3339String(params.end),
         includeSchemas: params.includeSchemas ?? false ? "true" : "false",
       })
     ).map((topic) => {
@@ -285,16 +314,19 @@ class ConsoleApi {
     });
   }
 
-  public async stream(params: {
-    deviceId: string;
-    start: string;
-    end: string;
-    topics: readonly string[];
-    outputFormat?: "bag1" | "mcap0";
-    replayPolicy?: "lastPerChannel" | "";
-    replayLookbackSeconds?: number;
-  }): Promise<{ link: string }> {
-    return await this.post<{ link: string }>("/v1/data/stream", params);
+  public async stream(
+    params: DataPlatformRequestArgs & {
+      topics: readonly string[];
+      outputFormat?: "bag1" | "mcap0";
+      replayPolicy?: "lastPerChannel" | "";
+      replayLookbackSeconds?: number;
+    },
+  ): Promise<{ link: string }> {
+    return await this.post<{ link: string }>("/v1/data/stream", {
+      ...params,
+      start: optionalToRFC3339String(params.start),
+      end: optionalToRFC3339String(params.end),
+    });
   }
 
   /// ----- private

@@ -17,7 +17,7 @@ import {
   toRFC3339String,
   compare,
 } from "@foxglove/rostime";
-import { Topic, MessageEvent } from "@foxglove/studio";
+import { MessageEvent } from "@foxglove/studio";
 import {
   GetBackfillMessagesArgs,
   IIterableSource,
@@ -25,7 +25,7 @@ import {
   IteratorResult,
   MessageIteratorArgs,
 } from "@foxglove/studio-base/players/IterablePlayer/IIterableSource";
-import { PlayerProblem, TopicStats } from "@foxglove/studio-base/players/types";
+import { PlayerProblem, Topic, TopicStats } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 
 const DURATION_YEAR_SEC = 365 * 24 * 60 * 60;
@@ -59,7 +59,7 @@ export class McapStreamingIterableSource implements IIterableSource {
     const schemasById = new Map<number, Mcap0Types.TypedMcapRecords["Schema"]>();
     const channelInfoById = new Map<
       number,
-      { channel: Mcap0Types.Channel; parsedChannel: ParsedChannel }
+      { channel: Mcap0Types.Channel; parsedChannel: ParsedChannel; schemaName: string }
     >();
 
     let startTime: Time | undefined;
@@ -111,7 +111,11 @@ export class McapStreamingIterableSource implements IIterableSource {
 
           try {
             const parsedChannel = parseChannel({ messageEncoding: record.messageEncoding, schema });
-            channelInfoById.set(record.id, { channel: record, parsedChannel });
+            channelInfoById.set(record.id, {
+              channel: record,
+              parsedChannel,
+              schemaName: schema.name,
+            });
             messagesByChannel.set(record.id, []);
           } catch (error) {
             channelIdsWithErrors.add(record.id);
@@ -148,6 +152,7 @@ export class McapStreamingIterableSource implements IIterableSource {
             publishTime: fromNanoSec(record.publishTime),
             message: channelInfo.parsedChannel.deserializer(record.data),
             sizeInBytes: record.data.byteLength,
+            schemaName: channelInfo.schemaName,
           });
           break;
         }
@@ -169,7 +174,7 @@ export class McapStreamingIterableSource implements IIterableSource {
     const datatypes: RosDatatypes = new Map();
 
     for (const { channel, parsedChannel } of channelInfoById.values()) {
-      topics.push({ name: channel.topic, datatype: parsedChannel.fullSchemaName });
+      topics.push({ name: channel.topic, schemaName: parsedChannel.fullSchemaName });
       const numMessages = messagesByChannel.get(channel.id)?.length;
       if (numMessages != undefined) {
         topicStats.set(channel.topic, { numMessages });

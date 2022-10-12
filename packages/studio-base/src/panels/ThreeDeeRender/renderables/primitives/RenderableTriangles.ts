@@ -5,11 +5,8 @@
 import * as THREE from "three";
 
 import { toNanoSec } from "@foxglove/rostime";
-import { SceneEntity, TriangleListPrimitive } from "@foxglove/schemas";
-import {
-  DynamicBufferGeometry,
-  DynamicFloatBufferGeometry,
-} from "@foxglove/studio-base/panels/ThreeDeeRender/DynamicBufferGeometry";
+import { Point3, SceneEntity, TriangleListPrimitive } from "@foxglove/schemas";
+import { DynamicBufferGeometry } from "@foxglove/studio-base/panels/ThreeDeeRender/DynamicBufferGeometry";
 import { emptyPose } from "@foxglove/studio-base/util/Pose";
 
 import type { Renderer } from "../../Renderer";
@@ -19,8 +16,12 @@ import { RenderablePrimitive } from "./RenderablePrimitive";
 
 const tempRgba = makeRgba();
 const tempColor = new THREE.Color();
+const missingColor = { r: 0, g: 1.0, b: 0, a: 1.0 };
 
-type TriangleMesh = THREE.Mesh<DynamicFloatBufferGeometry, THREE.MeshStandardMaterial>;
+const COLOR_LENGTH_ERROR_ID = "INVALID_COLOR_LENGTH";
+const INVALID_POINT_ERROR_ID = "INVALID_POINT";
+
+type TriangleMesh = THREE.Mesh<DynamicBufferGeometry, THREE.MeshStandardMaterial>;
 export class RenderableTriangles extends RenderablePrimitive {
   private _triangleMeshes: TriangleMesh[] = [];
   public constructor(renderer: Renderer) {
@@ -63,7 +64,10 @@ export class RenderableTriangles extends RenderablePrimitive {
       geometry.resize(primitive.points.length);
 
       if (!geometry.attributes.position) {
-        geometry.createAttribute("position", 3);
+        geometry.createAttribute("position", Float32Array, 3);
+      }
+      if (!geometry.attributes.normal) {
+        geometry.createAttribute("normal", Float32Array, 3);
       }
       const vertices = geometry.attributes.position!;
 
@@ -74,12 +78,19 @@ export class RenderableTriangles extends RenderablePrimitive {
         : undefined;
 
       if (!singleColor && !geometry.attributes.color) {
-        geometry.createAttribute("color", 4);
+        geometry.createAttribute("color", Uint8Array, 4, true);
       }
       const colors = geometry.attributes.color;
 
       for (let i = 0; i < primitive.points.length; i++) {
         const point = primitive.points[i]!;
+        if (!isPointValid(point)) {
+          this.addError(
+            `${this.name}-${INVALID_POINT_ERROR_ID}`,
+            `Entity: ${this.userData.entity?.id}.triangles[${triMeshIdx}](1st index) - Point definition at index ${i} is not finite`,
+          );
+          continue;
+        }
         vertChanged =
           vertChanged ||
           vertices.getX(i) !== point.x ||
@@ -88,11 +99,19 @@ export class RenderableTriangles extends RenderablePrimitive {
         vertices.setXYZ(i, point.x, point.y, point.z);
 
         if (!singleColor && colors && primitive.colors.length > 0) {
-          const color = primitive.colors[i]!;
-          const r = SRGBToLinear(color.r);
-          const g = SRGBToLinear(color.g);
-          const b = SRGBToLinear(color.b);
-          const a = SRGBToLinear(color.a);
+          const color = primitive.colors[i] ?? missingColor;
+          // only trigger on last point index
+          if (i === primitive.points.length - 1 && color === missingColor) {
+            // will only show 1st triMeshIdx of issue -- addError prevents the adding of errors with duplicate errorIds
+            this.addError(
+              `${this.name}-${COLOR_LENGTH_ERROR_ID}`,
+              `Entity: ${this.userData.entity?.id}.triangles[${triMeshIdx}](1st index) - Colors array should be same size as points array, showing #00ff00 instead`,
+            );
+          }
+          const r = (SRGBToLinear(color.r) * 255) | 0;
+          const g = (SRGBToLinear(color.g) * 255) | 0;
+          const b = (SRGBToLinear(color.b) * 255) | 0;
+          const a = (color.a * 255) | 0;
           colorChanged =
             colorChanged ||
             colors.getX(i) !== r ||
@@ -194,6 +213,7 @@ export class RenderableTriangles extends RenderablePrimitive {
     }
     this.clear();
     this._triangleMeshes.length = 0;
+    this.clearErrors();
   }
 
   public override update(
@@ -218,7 +238,7 @@ export class RenderableTriangles extends RenderablePrimitive {
 
 function makeTriangleMesh(): TriangleMesh {
   return new THREE.Mesh(
-    new DynamicBufferGeometry(Float32Array),
+    new DynamicBufferGeometry(),
     new THREE.MeshStandardMaterial({
       metalness: 0,
       roughness: 1,
@@ -226,4 +246,8 @@ function makeTriangleMesh(): TriangleMesh {
       side: THREE.DoubleSide,
     }),
   );
+}
+
+function isPointValid(pt: Point3): boolean {
+  return Number.isFinite(pt.x) && Number.isFinite(pt.y) && Number.isFinite(pt.z);
 }

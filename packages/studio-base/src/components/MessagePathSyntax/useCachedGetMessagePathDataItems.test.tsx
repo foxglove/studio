@@ -49,7 +49,7 @@ function addValuesWithPathsToItems(
 }
 
 describe("useCachedGetMessagePathDataItems", () => {
-  const initialTopics = [{ name: "/topic", datatype: "datatype" }];
+  const initialTopics: Topic[] = [{ name: "/topic", schemaName: "datatype" }];
   const initialDatatypes: RosDatatypes = new Map(
     Object.entries({
       datatype: {
@@ -110,6 +110,7 @@ describe("useCachedGetMessagePathDataItems", () => {
       topic: "/topic",
       receiveTime: { sec: 0, nsec: 0 },
       message: { an_array: [5, 10, 15, 20] },
+      schemaName: "datatype",
       sizeInBytes: 0,
     };
 
@@ -150,8 +151,8 @@ describe("useCachedGetMessagePathDataItems", () => {
     rerender({
       ...initialProps,
       topics: [
-        { name: "/topic", datatype: "datatype" },
-        { name: "/topic2", datatype: "datatype2" },
+        { name: "/topic", schemaName: "datatype" },
+        { name: "/topic2", schemaName: "datatype2" },
       ],
       datatypes: new Map([
         [
@@ -169,7 +170,7 @@ describe("useCachedGetMessagePathDataItems", () => {
     );
 
     // Invalidate cache with topics.
-    rerender({ ...initialProps, topics: [{ name: "/topic", datatype: "datatype2" }] });
+    rerender({ ...initialProps, topics: [{ name: "/topic", schemaName: "datatype2" }] });
     expect(result.current.getItems("/topic.an_array[0]", message)).not.toBe(
       data0BeforeProviderTopicsChange,
     );
@@ -199,6 +200,7 @@ describe("useCachedGetMessagePathDataItems", () => {
       topic: "/topic",
       receiveTime: { sec: 0, nsec: 0 },
       message: { an_array: [5, 10, 15, 20] },
+      schemaName: "datatype",
       sizeInBytes: 0,
     };
     const { result } = setup(["/topic.an_array[$foo]"], { foo: 0 });
@@ -221,7 +223,7 @@ describe("useCachedGetMessagePathDataItems", () => {
   });
 
   it("supports types with reference cycles (i.e. reference themselves within their children)", () => {
-    const topics = [{ name: "/topic", datatype: "datatype" }];
+    const topics: Topic[] = [{ name: "/topic", schemaName: "datatype" }];
     const datatypes: RosDatatypes = new Map(
       Object.entries({
         datatype: {
@@ -252,6 +254,7 @@ describe("useCachedGetMessagePathDataItems", () => {
       topic: "/topic",
       receiveTime: { sec: 0, nsec: 0 },
       message: { field: 0, self: { field: 1 } },
+      schemaName: "datatype",
       sizeInBytes: 0,
     };
 
@@ -271,6 +274,7 @@ describe("useCachedGetMessagePathDataItems", () => {
           topic: "/some/topic",
           receiveTime: { sec: 0, nsec: 0 },
           message: { some_array: [{ some_id: 10, some_message: { x: 10, y: 20 } }] },
+          schemaName: "datatype",
           sizeInBytes: 0,
         },
         {
@@ -282,10 +286,11 @@ describe("useCachedGetMessagePathDataItems", () => {
               { some_id: 50, some_message: { x: 50, y: 60 } },
             ],
           },
+          schemaName: "datatype",
           sizeInBytes: 0,
         },
       ];
-      const topics: Topic[] = [{ name: "/some/topic", datatype: "some_datatype" }];
+      const topics: Topic[] = [{ name: "/some/topic", schemaName: "some_datatype" }];
       const datatypes: RosDatatypes = new Map(
         Object.entries({
           some_datatype: {
@@ -342,16 +347,18 @@ describe("useCachedGetMessagePathDataItems", () => {
             topic: "/some/topic",
             receiveTime: { sec: 0, nsec: 0 },
             message: { someJson: { someId: 10 } },
+            schemaName: "datatype",
             sizeInBytes: 0,
           },
           {
             topic: "/some/topic",
             receiveTime: { sec: 0, nsec: 0 },
             message: { someJson: { someId: 11, anotherId: 12 } },
+            schemaName: "datatype",
             sizeInBytes: 0,
           },
         ];
-        const topics: Topic[] = [{ name: "/some/topic", datatype: "some_datatype" }];
+        const topics: Topic[] = [{ name: "/some/topic", schemaName: "some_datatype" }];
         const datatypes: RosDatatypes = new Map(
           Object.entries({
             some_datatype: { definitions: [{ name: "someJson", type: "json", isArray: false }] },
@@ -384,10 +391,11 @@ describe("useCachedGetMessagePathDataItems", () => {
             topic: "/some/topic",
             receiveTime: { sec: 0, nsec: 0 },
             message: { jsonArr: [{ foo: { bar: 42 } }] },
+            schemaName: "datatype",
             sizeInBytes: 0,
           },
         ];
-        const topics: Topic[] = [{ name: "/some/topic", datatype: "some_datatype" }];
+        const topics: Topic[] = [{ name: "/some/topic", schemaName: "some_datatype" }];
         const datatypes: RosDatatypes = new Map(
           Object.entries({
             some_datatype: { definitions: [{ name: "jsonArr", type: "json", isArray: false }] },
@@ -407,10 +415,11 @@ describe("useCachedGetMessagePathDataItems", () => {
             topic: "/some/topic",
             receiveTime: { sec: 0, nsec: 0 },
             message: { jsonArr: [{ id: 1, val: 42 }, { id: 2 }] },
+            schemaName: "datatype",
             sizeInBytes: 0,
           },
         ];
-        const topics: Topic[] = [{ name: "/some/topic", datatype: "some_datatype" }];
+        const topics: Topic[] = [{ name: "/some/topic", schemaName: "some_datatype" }];
         const datatypes: RosDatatypes = new Map(
           Object.entries({
             some_datatype: { definitions: [{ name: "jsonArr", type: "json", isArray: false }] },
@@ -428,10 +437,11 @@ describe("useCachedGetMessagePathDataItems", () => {
             topic: "/some/topic",
             receiveTime: { sec: 0, nsec: 0 },
             message: { jsonArr: [{ foo: 42 }] },
+            schemaName: "datatype",
             sizeInBytes: 0,
           },
         ];
-        const topics: Topic[] = [{ name: "/some/topic", datatype: "some_datatype" }];
+        const topics: Topic[] = [{ name: "/some/topic", schemaName: "some_datatype" }];
         const datatypes: RosDatatypes = new Map(
           Object.entries({
             some_datatype: { definitions: [{ name: "jsonArr", type: "json", isArray: true }] },
@@ -449,10 +459,11 @@ describe("useCachedGetMessagePathDataItems", () => {
             topic: "/some/topic",
             receiveTime: { sec: 0, nsec: 0 },
             message: { someJson: { someId: 11, anotherId: 12 } },
+            schemaName: "datatype",
             sizeInBytes: 0,
           },
         ];
-        const topics: Topic[] = [{ name: "/some/topic", datatype: "some_datatype" }];
+        const topics: Topic[] = [{ name: "/some/topic", schemaName: "some_datatype" }];
         const datatypes: RosDatatypes = new Map(
           Object.entries({
             some_datatype: { definitions: [{ name: "someJson", type: "json", isArray: false }] },
@@ -487,10 +498,11 @@ describe("useCachedGetMessagePathDataItems", () => {
           topic: "/some/topic",
           receiveTime: { sec: 0, nsec: 0 },
           message: { some_array: [1, 2, 3, 4, 5] },
+          schemaName: "datatype",
           sizeInBytes: 0,
         },
       ];
-      const topics: Topic[] = [{ name: "/some/topic", datatype: "some_datatype" }];
+      const topics: Topic[] = [{ name: "/some/topic", schemaName: "some_datatype" }];
       const datatypes: RosDatatypes = new Map(
         Object.entries({
           some_datatype: { definitions: [{ name: "some_array", type: "int32", isArray: true }] },
@@ -513,6 +525,7 @@ describe("useCachedGetMessagePathDataItems", () => {
           topic: "/some/topic",
           receiveTime: { sec: 0, nsec: 0 },
           message: { value: 1 },
+          schemaName: "datatype",
           sizeInBytes: 0,
         },
       ];
@@ -523,7 +536,7 @@ describe("useCachedGetMessagePathDataItems", () => {
     });
 
     it("handles fields inside times", () => {
-      const topics: Topic[] = [{ name: "/some/topic", datatype: "std_msgs/Header" }];
+      const topics: Topic[] = [{ name: "/some/topic", schemaName: "std_msgs/Header" }];
       const datatypes: RosDatatypes = new Map(
         Object.entries({
           "std_msgs/Header": { definitions: [{ name: "stamp", type: "time", isArray: false }] },
@@ -534,6 +547,7 @@ describe("useCachedGetMessagePathDataItems", () => {
           topic: "/some/topic",
           receiveTime: { sec: 0, nsec: 0 },
           message: { stamp: { sec: 1, nsec: 2 } },
+          schemaName: "datatype",
           sizeInBytes: 0,
         },
       ];
@@ -559,10 +573,11 @@ describe("useCachedGetMessagePathDataItems", () => {
               },
             ],
           },
+          schemaName: "datatype",
           sizeInBytes: 0,
         },
       ];
-      const topics: Topic[] = [{ name: "/some/topic", datatype: "some_datatype" }];
+      const topics: Topic[] = [{ name: "/some/topic", schemaName: "some_datatype" }];
       const datatypes: RosDatatypes = new Map(
         Object.entries({
           some_datatype: {
@@ -616,6 +631,7 @@ describe("useCachedGetMessagePathDataItems", () => {
             str_field: "A",
             num_field: 1,
           },
+          schemaName: "datatype",
           sizeInBytes: 0,
         },
         {
@@ -625,6 +641,7 @@ describe("useCachedGetMessagePathDataItems", () => {
             str_field: "A",
             num_field: 2,
           },
+          schemaName: "datatype",
           sizeInBytes: 0,
         },
         {
@@ -634,10 +651,11 @@ describe("useCachedGetMessagePathDataItems", () => {
             str_field: "B",
             num_field: 2,
           },
+          schemaName: "datatype",
           sizeInBytes: 0,
         },
       ];
-      const topics: Topic[] = [{ name: "/some/topic", datatype: "some_datatype" }];
+      const topics: Topic[] = [{ name: "/some/topic", schemaName: "some_datatype" }];
       const datatypes: RosDatatypes = new Map(
         Object.entries({
           some_datatype: {
@@ -721,6 +739,7 @@ describe("useCachedGetMessagePathDataItems", () => {
           message: {
             state: 0,
           },
+          schemaName: "datatype",
           sizeInBytes: 0,
         },
         {
@@ -729,10 +748,11 @@ describe("useCachedGetMessagePathDataItems", () => {
           message: {
             state: 1,
           },
+          schemaName: "datatype",
           sizeInBytes: 0,
         },
       ];
-      const topics: Topic[] = [{ name: "/some/topic", datatype: "some_datatype" }];
+      const topics: Topic[] = [{ name: "/some/topic", schemaName: "some_datatype" }];
       const datatypes: RosDatatypes = new Map(
         Object.entries({
           some_datatype: {
@@ -782,16 +802,18 @@ describe("useCachedGetMessagePathDataItems", () => {
           topic: "/some/topic",
           receiveTime: { sec: 0, nsec: 0 },
           message: { str_field: "A", num_field: 18446744073709551616n },
+          schemaName: "datatype",
           sizeInBytes: 0,
         },
         {
           topic: "/some/topic",
           receiveTime: { sec: 0, nsec: 0 },
           message: { str_field: "B", num_field: 18446744073709552020n },
+          schemaName: "datatype",
           sizeInBytes: 0,
         },
       ];
-      const topics: Topic[] = [{ name: "/some/topic", datatype: "some_datatype" }];
+      const topics: Topic[] = [{ name: "/some/topic", schemaName: "some_datatype" }];
       const datatypes: RosDatatypes = new Map(
         Object.entries({
           some_datatype: {
@@ -925,10 +947,10 @@ describe("fillInGlobalVariablesInPath", () => {
 
 describe("useDecodeMessagePathsForMessagesByTopic", () => {
   it("results in missing entries when no array is provided for a topic", () => {
-    const topics = [
-      { name: "/topic1", datatype: "datatype" },
-      { name: "/topic2", datatype: "datatype" },
-      { name: "/topic3", datatype: "datatype" },
+    const topics: Topic[] = [
+      { name: "/topic1", schemaName: "datatype" },
+      { name: "/topic2", schemaName: "datatype" },
+      { name: "/topic3", schemaName: "datatype" },
     ];
     const datatypes: RosDatatypes = new Map(
       Object.entries({
@@ -952,10 +974,11 @@ describe("useDecodeMessagePathsForMessagesByTopic", () => {
       },
     });
 
-    const message = {
+    const message: MessageEvent<unknown> = {
       topic: "/topic1",
       receiveTime: { sec: 0, nsec: 0 },
       message: { value: 1 },
+      schemaName: "datatype",
       sizeInBytes: 0,
     };
     const messagesByTopic = {

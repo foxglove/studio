@@ -2,15 +2,12 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { fromRFC3339String, toRFC3339String } from "@foxglove/rostime";
 import {
   IDataSourceFactory,
   DataSourceFactoryInitializeArgs,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
-import { IterablePlayer } from "@foxglove/studio-base/players/IterablePlayer";
-import { DataPlatformIterableSource } from "@foxglove/studio-base/players/IterablePlayer/foxglove-data-platform";
+import { IterablePlayer, WorkerIterableSource } from "@foxglove/studio-base/players/IterablePlayer";
 import { Player } from "@foxglove/studio-base/players/types";
-import { formatTimeRaw } from "@foxglove/studio-base/util/time";
 
 class FoxgloveDataPlatformDataSourceFactory implements IDataSourceFactory {
   public id = "foxglove-data-platform";
@@ -20,39 +17,36 @@ class FoxgloveDataPlatformDataSourceFactory implements IDataSourceFactory {
   public hidden = true;
 
   public initialize(args: DataSourceFactoryInitializeArgs): Player | undefined {
-    if (!args.consoleApi) {
+    const consoleApi = args.consoleApi;
+    if (!consoleApi) {
       return;
     }
 
-    // This could benefit from schema validation rather than casting
-    const start = args.start as string | undefined;
-    const end = args.end as string | undefined;
-    const deviceId = args.deviceId as string | undefined;
-    if (!start || !end || !deviceId) {
-      return;
-    }
-
-    const startTime = fromRFC3339String(start);
-    const endTime = fromRFC3339String(end);
-    if (!startTime || !endTime) {
-      return;
-    }
-    const source = new DataPlatformIterableSource({
-      api: args.consoleApi,
-      start: startTime,
-      end: endTime,
-      deviceId,
+    const source = new WorkerIterableSource({
+      sourceType: "foxgloveDataPlatform",
+      initArgs: {
+        api: {
+          baseUrl: consoleApi.getBaseUrl(),
+          auth: consoleApi.getAuthHeader(),
+        },
+        params: args.params,
+      },
     });
+
+    const definedParams: Record<string, string> = {};
+    if (args.params) {
+      for (const [key, value] of Object.entries(args.params)) {
+        if (value != undefined) {
+          definedParams[key] = value;
+        }
+      }
+    }
+
     return new IterablePlayer({
       metricsCollector: args.metricsCollector,
       source,
       sourceId: this.id,
-      urlParams: {
-        deviceId,
-        start: toRFC3339String(startTime),
-        end: toRFC3339String(endTime),
-      },
-      name: `${deviceId}, ${formatTimeRaw(startTime)} to ${formatTimeRaw(endTime)}`,
+      urlParams: definedParams,
     });
   }
 }

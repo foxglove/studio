@@ -483,6 +483,7 @@ export default class UserNodePlayer implements Player {
               topic: msgEvent.topic,
               receiveTime: msgEvent.receiveTime,
               message: maybePlainObject(msgEvent.message),
+              datatype: msgEvent.schemaName,
             },
             globalVariables,
           }),
@@ -538,6 +539,7 @@ export default class UserNodePlayer implements Player {
           receiveTime: msgEvent.receiveTime,
           message: result.message,
           sizeInBytes: msgEvent.sizeInBytes,
+          schemaName: outputDatatype,
         };
       };
     };
@@ -551,11 +553,11 @@ export default class UserNodePlayer implements Player {
       }
     };
 
-    const result = {
+    const result: NodeRegistration = {
       nodeId,
       nodeData,
       inputs: inputTopics,
-      output: { name: outputTopic, datatype: outputDatatype },
+      output: { name: outputTopic, schemaName: outputDatatype },
       processMessage: buildMessageProcessor(),
       processBlockMessage: buildMessageProcessor(),
       terminate,
