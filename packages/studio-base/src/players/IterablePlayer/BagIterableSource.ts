@@ -7,7 +7,7 @@ import decompressLZ4 from "wasm-lz4";
 import { Bag, Filelike } from "@foxglove/rosbag";
 import { BlobReader } from "@foxglove/rosbag/web";
 import { parse as parseMessageDefinition } from "@foxglove/rosmsg";
-import { LazyMessageReader } from "@foxglove/rosmsg-serialization";
+import { MessageReader } from "@foxglove/rosmsg-serialization";
 import { compare } from "@foxglove/rostime";
 import {
   PlayerProblem,
@@ -27,14 +27,16 @@ import {
   Initalization,
   MessageIteratorArgs,
   GetBackfillMessagesArgs,
+  IterableSourceInitializeArgs,
 } from "./IIterableSource";
 
 type BagSource = { type: "file"; file: File } | { type: "remote"; url: string };
 
 export class BagIterableSource implements IIterableSource {
-  private _source: BagSource;
+  private readonly _source: BagSource;
+
   private _bag: Bag | undefined;
-  private _readersByConnectionId = new Map<number, LazyMessageReader>();
+  private _readersByConnectionId = new Map<number, MessageReader>();
   private _datatypesByConnectionId = new Map<number, string>();
 
   public constructor(source: BagSource) {
@@ -106,8 +108,8 @@ export class BagIterableSource implements IIterableSource {
     const topicStats = new Map<string, TopicStats>();
     const publishersByTopic: Initalization["publishersByTopic"] = new Map();
     for (const [id, connection] of this._bag.connections) {
-      const datatype = connection.type;
-      if (!datatype) {
+      const schemaName = connection.type;
+      if (!schemaName) {
         continue;
       }
 
@@ -119,16 +121,16 @@ export class BagIterableSource implements IIterableSource {
       publishers.add(connection.callerid ?? String(connection.conn));
 
       const existingTopic = topics.get(connection.topic);
-      if (existingTopic && existingTopic.datatype !== datatype) {
+      if (existingTopic && existingTopic.schemaName !== schemaName) {
         problems.push({
           severity: "warn",
-          message: `Conflicting datatypes on topic (${connection.topic}): ${datatype}, ${existingTopic.datatype}`,
+          message: `Conflicting datatypes on topic (${connection.topic}): ${schemaName}, ${existingTopic.schemaName}`,
           tip: `Studio requires all connections on a topic to have the same datatype. Make sure all your nodes are publishing the same message on ${connection.topic}.`,
         });
       }
 
       if (!existingTopic) {
-        topics.set(connection.topic, { name: connection.topic, datatype });
+        topics.set(connection.topic, { name: connection.topic, schemaName });
       }
 
       // Update the message count for this topic
@@ -138,15 +140,15 @@ export class BagIterableSource implements IIterableSource {
       topicStats.set(connection.topic, { numMessages });
 
       const parsedDefinition = parseMessageDefinition(connection.messageDefinition);
-      const reader = new LazyMessageReader(parsedDefinition);
+      const reader = new MessageReader(parsedDefinition);
       this._readersByConnectionId.set(id, reader);
-      this._datatypesByConnectionId.set(id, datatype);
+      this._datatypesByConnectionId.set(id, schemaName);
 
       for (const definition of parsedDefinition) {
         // In parsed definitions, the first definition (root) does not have a name as is meant to
         // be the datatype of the topic.
         if (!definition.name) {
-          datatypes.set(datatype, definition);
+          datatypes.set(schemaName, definition);
         } else {
           datatypes.set(definition.name, definition);
         }
@@ -195,8 +197,8 @@ export class BagIterableSource implements IIterableSource {
         return;
       }
 
-      const datatype = this._datatypesByConnectionId.get(connectionId);
-      if (!datatype) {
+      const schemaName = this._datatypesByConnectionId.get(connectionId);
+      if (!schemaName) {
         yield {
           connectionId,
           msgEvent: undefined,
@@ -224,7 +226,7 @@ export class BagIterableSource implements IIterableSource {
             receiveTime: bagMsgEvent.timestamp,
             sizeInBytes: bagMsgEvent.data.byteLength,
             message: parsedMessage,
-            schemaName: datatype,
+            schemaName,
           },
         };
       } else {
@@ -264,4 +266,14 @@ export class BagIterableSource implements IIterableSource {
     messages.sort((a, b) => compare(a.receiveTime, b.receiveTime));
     return messages;
   }
+}
+
+export function initialize(args: IterableSourceInitializeArgs): BagIterableSource {
+  if (args.file) {
+    return new BagIterableSource({ type: "file", file: args.file });
+  } else if (args.url) {
+    return new BagIterableSource({ type: "remote", url: args.url });
+  }
+
+  throw new Error("file or url required");
 }

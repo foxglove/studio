@@ -139,7 +139,12 @@ function Publish(props: Props) {
     saveConfig,
   } = props;
 
-  const publish = usePublisher({ name: "Publish", topic: topicName, datatype, datatypes });
+  const publish = usePublisher({
+    name: "Publish",
+    topic: topicName,
+    schemaName: datatype,
+    datatypes,
+  });
 
   const datatypeNames = useMemo(() => Array.from(datatypes.keys()).sort(), [datatypes]);
   const { error, parsedObject } = useMemo(() => parseInput(value), [value]);
@@ -197,7 +202,7 @@ function Publish(props: Props) {
   // when a known topic is selected, also fill in its datatype
   const onSelectTopic = useCallback(
     (name: string, topic: Topic, autocomplete: IAutocomplete) => {
-      saveConfig({ topicName: name, datatype: topic.datatype });
+      saveConfig({ topicName: name, datatype: topic.schemaName });
       autocomplete.blur();
     },
     [saveConfig],
@@ -239,7 +244,7 @@ function Publish(props: Props) {
                 hasError={false}
                 onChange={onChangeTopic}
                 onSelect={onSelectTopic}
-                selectedItem={{ name: topicName, datatype: "" }}
+                selectedItem={{ name: topicName, schemaName: "" }}
                 getItemText={getTopicName}
                 getItemValue={getTopicName}
               />
