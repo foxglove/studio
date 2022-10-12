@@ -1255,7 +1255,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
         this.fixedFrameId = undefined;
         return;
       } else {
-        log.debug(`Setting display frame to ${this.renderFrameId}`);
+        log.debug(`Setting render frame to ${this.renderFrameId}`);
         this.settings.errors.remove(FOLLOW_TF_PATH, NO_FRAME_SELECTED);
       }
     }
