@@ -279,7 +279,7 @@ export default function PanelLayout(): JSX.Element {
   return (
     <EmptyState>
       <Typography display="block" variant="body1" color="text.primary">
-        You currently don&apos;t have a selected layout.
+        You don&apos;t currently have a layout selected.
       </Typography>
       <Link onClick={selectExistingLayout} underline="hover" color="primary" variant="body1">
         Select an existing layout
