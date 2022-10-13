@@ -45,7 +45,6 @@ import "react-mosaic-component/react-mosaic-component.css";
 import { useExtensionCatalog } from "@foxglove/studio-base/context/ExtensionCatalogContext";
 import { useLayoutManager } from "@foxglove/studio-base/context/LayoutManagerContext";
 import { PanelComponent, usePanelCatalog } from "@foxglove/studio-base/context/PanelCatalogContext";
-import { useUserProfileStorage } from "@foxglove/studio-base/context/UserProfileStorageContext";
 import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
 import { defaultLayout } from "@foxglove/studio-base/providers/CurrentLayoutProvider/defaultLayout";
 import { MosaicDropResult, PanelConfig } from "@foxglove/studio-base/types/panels";
@@ -223,7 +222,6 @@ export default function PanelLayout(): JSX.Element {
   const { changePanelLayout, setSelectedLayoutId } = useCurrentLayoutActions();
   const { openLayoutBrowser } = useWorkspace();
   const layoutManager = useLayoutManager();
-  const { getUserProfile } = useUserProfileStorage();
   const layoutExists = useCurrentLayoutSelector(selectedLayoutExistsSelector);
   const layoutLoading = useCurrentLayoutSelector(selectedLayoutLoadingSelector);
   const mosaicLayout = useCurrentLayoutSelector(selectedLayoutMosaicSelector);
@@ -236,7 +234,6 @@ export default function PanelLayout(): JSX.Element {
   });
 
   const createNewLayout = async () => {
-    openLayoutBrowser();
     const layout = await layoutManager.saveNewLayout({
       name: "Default",
       data: defaultLayout,
@@ -244,15 +241,16 @@ export default function PanelLayout(): JSX.Element {
     });
     setSelectedLayoutId(layout.id);
     dispatch({ type: "select-id", id: layout.id });
+    openLayoutBrowser();
   };
 
   const selectExistingLayout = async () => {
-    const { currentLayoutId } = await getUserProfile();
     const layouts = await layoutManager.getLayouts();
-    if (layouts[0] && layouts[0].id !== currentLayoutId) {
+    if (layouts[0]) {
       setSelectedLayoutId(layouts[0].id);
       dispatch({ type: "select-id", id: layouts[0].id });
     }
+    openLayoutBrowser();
   };
 
   const onChange = useCallback(
