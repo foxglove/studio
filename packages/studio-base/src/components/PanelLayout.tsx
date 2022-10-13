@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Button, CircularProgress, styled as muiStyled } from "@mui/material";
+import { Link, CircularProgress, Typography, styled as muiStyled } from "@mui/material";
 import React, {
   LazyExoticComponent,
   PropsWithChildren,
@@ -237,21 +237,21 @@ export default function PanelLayout(): JSX.Element {
 
   const createNewLayout = async () => {
     openLayoutBrowser();
+    const layout = await layoutManager.saveNewLayout({
+      name: "Default",
+      data: defaultLayout,
+      permission: "CREATOR_WRITE",
+    });
+    setSelectedLayoutId(layout.id);
+    dispatch({ type: "select-id", id: layout.id });
+  };
+
+  const selectExistingLayout = async () => {
     const { currentLayoutId } = await getUserProfile();
     const layouts = await layoutManager.getLayouts();
-    let layout = layouts[layouts.length - 1] ?? undefined;
-
-    if (layout == undefined) {
-      layout = await layoutManager.saveNewLayout({
-        name: "Default",
-        data: defaultLayout,
-        permission: "CREATOR_WRITE",
-      });
-    }
-
-    if (layout.id !== currentLayoutId) {
-      setSelectedLayoutId(layout.id);
-      dispatch({ type: "select-id", id: layout.id });
+    if (layouts[0] && layouts[0].id !== currentLayoutId) {
+      setSelectedLayoutId(layouts[0].id);
+      dispatch({ type: "select-id", id: layouts[0].id });
     }
   };
 
@@ -278,9 +278,18 @@ export default function PanelLayout(): JSX.Element {
 
   return (
     <EmptyState>
-      <Button variant="contained" size="large" onClick={createNewLayout}>
+      <Typography display="block" variant="body1" color="text.primary">
+        You currently don&apos;t have a selected layout.
+      </Typography>
+      <Link onClick={selectExistingLayout} underline="hover" color="primary" variant="body1">
+        Select an existing layout
+      </Link>{" "}
+      <Typography display="inline-flex" variant="body1" color="text.primary">
+        or
+      </Typography>{" "}
+      <Link onClick={createNewLayout} underline="hover" color="primary" variant="body1">
         Create new layout
-      </Button>
+      </Link>{" "}
     </EmptyState>
   );
 }
