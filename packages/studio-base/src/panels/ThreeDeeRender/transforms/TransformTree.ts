@@ -145,7 +145,7 @@ export class TransformTree {
     while (frame?.parent()) {
       if (frame.parent()?.id === frameId) {
         throw Error(
-          `Transform tree cycle detected: Cannot set parent frame "${parentFrameId}" to frame "${frameId}. Aborted adding of transform.`,
+          `Transform tree cycle detected: Cannot add parent frame "${parentFrameId}" to frame"${frameId}. Aborted adding of transform.`,
         );
       }
       frame = frame.parent();
