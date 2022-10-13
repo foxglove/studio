@@ -27,7 +27,6 @@ const tempVec4: vec4 = [0, 0, 0, 0];
 const tempTransform = Transform.Identity();
 const tempMatrix = mat4Identity();
 const temp2Matrix = mat4Identity();
-const visitedNodes = new Set<string>();
 
 /**
  * CoordinateFrame is a named 3D coordinate frame with an optional parent frame
@@ -70,16 +69,7 @@ export class CoordinateFrame {
   public root(): CoordinateFrame {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     let root: CoordinateFrame = this;
-
-    visitedNodes.clear();
     while (root._parent) {
-      if (visitedNodes.has(root._parent.id)) {
-        throw new Error(
-          `Frame "${this.id}" has no root frame. Frame "${root.id}" creates a cycle to frame "${root._parent.id}" in the transform tree.`,
-        );
-        break;
-      }
-      visitedNodes.add(root.id);
       root = root._parent;
     }
     return root;
