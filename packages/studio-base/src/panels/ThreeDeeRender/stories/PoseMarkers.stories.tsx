@@ -2,7 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { MessageEvent, Topic } from "@foxglove/studio";
+import { MessageEvent } from "@foxglove/studio";
+import { Topic } from "@foxglove/studio-base/players/types";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 
 import ThreeDeeRender from "../index";
@@ -24,11 +25,11 @@ export default {
 PoseMarkers.parameters = { colorScheme: "dark" };
 export function PoseMarkers(): JSX.Element {
   const topics: Topic[] = [
-    { name: "/tf", datatype: "geometry_msgs/TransformStamped" },
-    { name: "/pose", datatype: "geometry_msgs/PoseStamped" },
-    { name: "/pose_with_covariance", datatype: "geometry_msgs/PoseWithCovarianceStamped" },
-    { name: "/pose_with_hidden_covariance", datatype: "geometry_msgs/PoseWithCovarianceStamped" },
-    { name: "/pose_axis_with_covariance", datatype: "geometry_msgs/PoseWithCovarianceStamped" },
+    { name: "/tf", schemaName: "geometry_msgs/TransformStamped" },
+    { name: "/pose", schemaName: "geometry_msgs/PoseStamped" },
+    { name: "/pose_with_covariance", schemaName: "geometry_msgs/PoseWithCovarianceStamped" },
+    { name: "/pose_with_hidden_covariance", schemaName: "geometry_msgs/PoseWithCovarianceStamped" },
+    { name: "/pose_axis_with_covariance", schemaName: "geometry_msgs/PoseWithCovarianceStamped" },
   ];
 
   const tf1: MessageEvent<TransformStamped> = {
@@ -42,6 +43,7 @@ export function PoseMarkers(): JSX.Element {
         rotation: QUAT_IDENTITY,
       },
     },
+    schemaName: "geometry_msgs/TransformStamped",
     sizeInBytes: 0,
   };
   const tf2: MessageEvent<TransformStamped> = {
@@ -55,6 +57,7 @@ export function PoseMarkers(): JSX.Element {
         rotation: { x: 0.383, y: 0, z: 0, w: 0.924 },
       },
     },
+    schemaName: "geometry_msgs/TransformStamped",
     sizeInBytes: 0,
   };
 
@@ -68,6 +71,7 @@ export function PoseMarkers(): JSX.Element {
         orientation: { x: 0, y: -Math.SQRT1_2, z: 0, w: Math.SQRT1_2 },
       },
     },
+    schemaName: "geometry_msgs/PoseStamped",
     sizeInBytes: 0,
   };
 
@@ -92,6 +96,7 @@ export function PoseMarkers(): JSX.Element {
         ],
       },
     },
+    schemaName: "geometry_msgs/PoseWithCovarianceStamped",
     sizeInBytes: 0,
   };
 
@@ -116,6 +121,7 @@ export function PoseMarkers(): JSX.Element {
         ],
       },
     },
+    schemaName: "geometry_msgs/PoseWithCovarianceStamped",
     sizeInBytes: 0,
   };
 
@@ -140,6 +146,7 @@ export function PoseMarkers(): JSX.Element {
         ],
       },
     },
+    schemaName: "geometry_msgs/PoseWithCovarianceStamped",
     sizeInBytes: 0,
   };
 

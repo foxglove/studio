@@ -11,9 +11,9 @@ import { act } from "react-dom/test-utils";
 
 import { Condvar, signal } from "@foxglove/den/async";
 import { Time } from "@foxglove/rostime";
-import { PanelExtensionContext, RenderState } from "@foxglove/studio";
+import { PanelExtensionContext, RenderState, MessageEvent } from "@foxglove/studio";
 import MockPanelContextProvider from "@foxglove/studio-base/components/MockPanelContextProvider";
-import { PlayerCapabilities } from "@foxglove/studio-base/players/types";
+import { AdvertiseOptions, PlayerCapabilities } from "@foxglove/studio-base/players/types";
 import PanelSetup, { Fixture } from "@foxglove/studio-base/stories/PanelSetup";
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
 
@@ -76,7 +76,13 @@ describe("PanelExtensionAdapter", () => {
     const config = {};
     const saveConfig = () => {};
 
-    const message = { topic: "x", receiveTime: { sec: 0, nsec: 1 }, sizeInBytes: 0, message: 42 };
+    const message: MessageEvent<unknown> = {
+      topic: "x",
+      receiveTime: { sec: 0, nsec: 1 },
+      sizeInBytes: 0,
+      message: 42,
+      schemaName: "foo",
+    };
 
     const Wrapper = ({ lastSeekTime }: { lastSeekTime?: number }) => {
       return (
@@ -142,10 +148,10 @@ describe("PanelExtensionAdapter", () => {
                 }
                 expect(id).toBeDefined();
                 expect(advertisements).toEqual(
-                  expect.arrayContaining([
+                  expect.arrayContaining<AdvertiseOptions>([
                     {
                       topic: "/some/topic",
-                      datatype: "some_datatype",
+                      schemaName: "some_datatype",
                       options: undefined,
                     },
                   ]),
@@ -190,10 +196,10 @@ describe("PanelExtensionAdapter", () => {
                 if (count === 1) {
                   // eslint-disable-next-line jest/no-conditional-expect
                   expect(advertisements).toEqual(
-                    expect.arrayContaining([
+                    expect.arrayContaining<AdvertiseOptions>([
                       {
                         topic: "/some/topic",
-                        datatype: "some_datatype",
+                        schemaName: "some_datatype",
                         options: undefined,
                       },
                     ]),
@@ -201,15 +207,15 @@ describe("PanelExtensionAdapter", () => {
                 } else if (count === 2) {
                   // eslint-disable-next-line jest/no-conditional-expect
                   expect(advertisements).toEqual(
-                    expect.arrayContaining([
+                    expect.arrayContaining<AdvertiseOptions>([
                       {
                         topic: "/some/topic",
-                        datatype: "some_datatype",
+                        schemaName: "some_datatype",
                         options: undefined,
                       },
                       {
                         topic: "/another/topic",
-                        datatype: "another_datatype",
+                        schemaName: "another_datatype",
                         options: undefined,
                       },
                     ]),
@@ -257,10 +263,10 @@ describe("PanelExtensionAdapter", () => {
                 }
                 expect(id).toBeDefined();
                 expect(advertisements).toEqual(
-                  expect.arrayContaining([
+                  expect.arrayContaining<AdvertiseOptions>([
                     {
                       topic: "/some/topic",
-                      datatype: "some_datatype",
+                      schemaName: "some_datatype",
                       options: undefined,
                     },
                   ]),
@@ -314,10 +320,10 @@ describe("PanelExtensionAdapter", () => {
                 if (count === 1) {
                   // eslint-disable-next-line jest/no-conditional-expect
                   expect(advertisements).toEqual(
-                    expect.arrayContaining([
+                    expect.arrayContaining<AdvertiseOptions>([
                       {
                         topic: "/some/topic",
-                        datatype: "some_datatype",
+                        schemaName: "some_datatype",
                         options: undefined,
                       },
                     ]),
@@ -325,15 +331,15 @@ describe("PanelExtensionAdapter", () => {
                 } else if (count === 2) {
                   // eslint-disable-next-line jest/no-conditional-expect
                   expect(advertisements).toEqual(
-                    expect.arrayContaining([
+                    expect.arrayContaining<AdvertiseOptions>([
                       {
                         topic: "/some/topic",
-                        datatype: "some_datatype",
+                        schemaName: "some_datatype",
                         options: undefined,
                       },
                       {
                         topic: "/another/topic",
-                        datatype: "another_datatype",
+                        schemaName: "another_datatype",
                         options: undefined,
                       },
                     ]),
@@ -341,10 +347,10 @@ describe("PanelExtensionAdapter", () => {
                 } else if (count === 3) {
                   // eslint-disable-next-line jest/no-conditional-expect
                   expect(advertisements).toEqual(
-                    expect.arrayContaining([
+                    expect.arrayContaining<AdvertiseOptions>([
                       {
                         topic: "/another/topic",
-                        datatype: "another_datatype",
+                        schemaName: "another_datatype",
                         options: undefined,
                       },
                     ]),
@@ -387,10 +393,10 @@ describe("PanelExtensionAdapter", () => {
         if (count === 1) {
           // eslint-disable-next-line jest/no-conditional-expect
           expect(advertisements).toEqual(
-            expect.arrayContaining([
+            expect.arrayContaining<AdvertiseOptions>([
               {
                 topic: "/some/topic",
-                datatype: "some_datatype",
+                schemaName: "some_datatype",
                 options: undefined,
               },
             ]),

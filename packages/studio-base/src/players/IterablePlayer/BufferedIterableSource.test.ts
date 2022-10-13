@@ -87,6 +87,7 @@ describe("BufferedIterableSource", () => {
             receiveTime: { sec: i, nsec: 0 },
             message: undefined,
             sizeInBytes: 0,
+            schemaName: "foo",
           },
           problem: undefined,
           connectionId: undefined,
@@ -111,6 +112,7 @@ describe("BufferedIterableSource", () => {
             message: undefined,
             sizeInBytes: 0,
             topic: "a",
+            schemaName: "foo",
           },
         },
       });
@@ -146,6 +148,7 @@ describe("BufferedIterableSource", () => {
             receiveTime: { sec: i, nsec: 0 },
             message: undefined,
             sizeInBytes: 0,
+            schemaName: "foo",
           },
           problem: undefined,
           connectionId: undefined,
@@ -172,6 +175,7 @@ describe("BufferedIterableSource", () => {
               message: undefined,
               sizeInBytes: 0,
               topic: "a",
+              schemaName: "foo",
             },
           },
         });
@@ -205,6 +209,7 @@ describe("BufferedIterableSource", () => {
             receiveTime: { sec: i, nsec: 0 },
             message: undefined,
             sizeInBytes: 0,
+            schemaName: "foo",
           },
           problem: undefined,
           connectionId: undefined,
@@ -234,6 +239,7 @@ describe("BufferedIterableSource", () => {
             message: undefined,
             sizeInBytes: 0,
             topic: "a",
+            schemaName: "foo",
           },
         },
       });
@@ -265,6 +271,7 @@ describe("BufferedIterableSource", () => {
             receiveTime: { sec: i, nsec: 0 },
             message: undefined,
             sizeInBytes: 0,
+            schemaName: "foo",
           },
           problem: undefined,
           connectionId: undefined,
@@ -305,6 +312,7 @@ describe("BufferedIterableSource", () => {
             receiveTime: { sec: 5, nsec: 0 },
             message: undefined,
             sizeInBytes: 0,
+            schemaName: "foo",
           },
           problem: undefined,
           connectionId: undefined,
@@ -336,6 +344,7 @@ describe("BufferedIterableSource", () => {
             receiveTime: { sec: 1, nsec: 0 },
             message: undefined,
             sizeInBytes: 0,
+            schemaName: "foo",
           },
           problem: undefined,
           connectionId: undefined,
@@ -365,6 +374,7 @@ describe("BufferedIterableSource", () => {
                 message: undefined,
                 sizeInBytes: 0,
                 topic: "a",
+                schemaName: "foo",
               },
             },
           });
@@ -382,6 +392,7 @@ describe("BufferedIterableSource", () => {
                 message: undefined,
                 sizeInBytes: 0,
                 topic: "a",
+                schemaName: "foo",
               },
             },
           });
@@ -431,6 +442,7 @@ describe("BufferedIterableSource", () => {
             receiveTime: { sec: i, nsec: 0 },
             message: undefined,
             sizeInBytes: 0,
+            schemaName: "foo",
           },
           problem: undefined,
           connectionId: undefined,
@@ -458,5 +470,59 @@ describe("BufferedIterableSource", () => {
 
     // We should have called the messageIterator method only once
     expect(messageIteratorCount).toEqual(1);
+  });
+
+  it("should adjust buffer position when reading while buffering", async () => {
+    const source = new TestSource();
+    const bufferedSource = new BufferedIterableSource(source, {
+      readAheadDuration: { sec: 1, nsec: 0 },
+    });
+
+    await bufferedSource.initialize();
+
+    let count = 0;
+    const signal = waiter(1);
+
+    source.messageIterator = async function* messageIterator(
+      _args: MessageIteratorArgs,
+    ): AsyncIterableIterator<Readonly<IteratorResult>> {
+      for (let i = 0; i < 8; ++i) {
+        count += 1;
+        if (count === 4) {
+          signal.notify();
+        }
+
+        yield {
+          msgEvent: {
+            topic: "a",
+            receiveTime: { sec: i, nsec: 0 },
+            message: undefined,
+            sizeInBytes: 0,
+            schemaName: "foo",
+          },
+          problem: undefined,
+          connectionId: undefined,
+        };
+      }
+    };
+
+    const messageIterator = bufferedSource.messageIterator({
+      topics: ["a"],
+    });
+
+    {
+      // read the first message { sec: 0, nsec: 0 }
+      const iterResult = messageIterator.next();
+      void iterResult;
+    }
+
+    {
+      // read message { sec: 1, nsec: 0 }, which should set the read head to { sec: 2, nsec: 0 }
+      const iterResult = messageIterator.next();
+      void iterResult;
+    }
+
+    await signal.wait();
+    expect(count).toEqual(4);
   });
 });

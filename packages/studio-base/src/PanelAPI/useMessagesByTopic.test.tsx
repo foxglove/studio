@@ -15,6 +15,7 @@
 import { renderHook } from "@testing-library/react-hooks";
 
 import MockMessagePipelineProvider from "@foxglove/studio-base/components/MessagePipeline/MockMessagePipelineProvider";
+import { MessageEvent } from "@foxglove/studio-base/players/types";
 
 import * as PanelAPI from ".";
 
@@ -34,17 +35,19 @@ describe("useMessagesByTopic", () => {
   });
 
   it("add messages to their respective arrays", () => {
-    const message1 = {
+    const message1: MessageEvent<unknown> = {
       topic: "/foo",
       receiveTime: { sec: 0, nsec: 0 },
       message: { value: 1 },
+      schemaName: "foo",
       sizeInBytes: 0,
     };
 
-    const message2 = {
+    const message2: MessageEvent<unknown> = {
       topic: "/foo",
       receiveTime: { sec: 0, nsec: 0 },
       message: { value: 2 },
+      schemaName: "foo",
       sizeInBytes: 0,
     };
 
@@ -65,17 +68,19 @@ describe("useMessagesByTopic", () => {
   });
 
   it("remembers messages when changing props (both topics and historySize)", () => {
-    const message1 = {
+    const message1: MessageEvent<unknown> = {
       topic: "/foo",
       receiveTime: { sec: 0, nsec: 0 },
       message: { value: 1 },
+      schemaName: "foo",
       sizeInBytes: 0,
     };
 
-    const message2 = {
+    const message2: MessageEvent<unknown> = {
       topic: "/foo",
       receiveTime: { sec: 0, nsec: 0 },
       message: { value: 2 },
+      schemaName: "foo",
       sizeInBytes: 0,
     };
 

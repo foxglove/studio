@@ -13,7 +13,7 @@
 
 import { useCallback, useRef } from "react";
 
-import PanelSetup, { triggerWheel } from "@foxglove/studio-base/stories/PanelSetup";
+import PanelSetup, { Fixture, triggerWheel } from "@foxglove/studio-base/stories/PanelSetup";
 import { useReadySignal } from "@foxglove/studio-base/stories/ReadySignalContext";
 
 import TwoDimensionalPlot from "./index";
@@ -83,8 +83,8 @@ const example1 = {
   ],
 };
 
-const fixture = {
-  topics: [{ name: "/plot_a", datatype: "our_plot_type" }],
+const fixture: Fixture = {
+  topics: [{ name: "/plot_a", schemaName: "our_plot_type" }],
   datatypes: new Map(
     Object.entries({
       our_plot_type: {
@@ -101,6 +101,7 @@ const fixture = {
         message: {
           versions: [example0, example1],
         },
+        schemaName: "our_plot_type",
         sizeInBytes: 0,
       },
     ],

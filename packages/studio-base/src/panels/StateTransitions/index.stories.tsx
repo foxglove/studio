@@ -15,7 +15,7 @@ import { useCallback } from "react";
 import TestUtils from "react-dom/test-utils";
 
 import { BlockCache } from "@foxglove/studio-base/players/types";
-import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
+import PanelSetup, { Fixture } from "@foxglove/studio-base/stories/PanelSetup";
 import { useReadySignal } from "@foxglove/studio-base/stories/ReadySignalContext";
 import { expandedLineColors } from "@foxglove/studio-base/util/plotColors";
 
@@ -47,7 +47,7 @@ const systemStateMessages = [
   { header: { stamp: { sec: 1526191541, nsec: 789110904 } }, state: -1 },
 ];
 
-const fixture = {
+const fixture: Fixture = {
   datatypes: new Map(
     Object.entries({
       "msgs/SystemState": {
@@ -75,9 +75,9 @@ const fixture = {
     }),
   ),
   topics: [
-    { name: "/some/topic/with/state", datatype: "msgs/SystemState" },
-    { name: "/some/topic/with/string_state", datatype: "msgs/SystemState" },
-    { name: "/blocks", datatype: "msgs/SystemState" },
+    { name: "/some/topic/with/state", schemaName: "msgs/SystemState" },
+    { name: "/some/topic/with/string_state", schemaName: "msgs/SystemState" },
+    { name: "/blocks", schemaName: "msgs/SystemState" },
   ],
   activeData: {
     startTime: { sec: 1526191527, nsec: 202050 },
@@ -90,6 +90,8 @@ const fixture = {
       topic: "/some/topic/with/state",
       receiveTime: message.header.stamp,
       message: { ...message, data: { value: idx } },
+      schemaName: "msgs/SystemState",
+
       sizeInBytes: 0,
     })),
     "/some/topic/with/string_state": systemStateMessages.map((message, idx) => {
@@ -98,6 +100,7 @@ const fixture = {
         topic: "/some/topic/with/string_state",
         receiveTime: message.header.stamp,
         message: { ...message, data: { value: values[idx % values.length] } },
+        schemaName: "msgs/SystemState",
         sizeInBytes: 0,
       };
     }),
@@ -263,6 +266,8 @@ const messageCache: BlockCache = {
           topic: "/blocks",
           receiveTime: message.header.stamp,
           message: { ...message, data: { value: idx } },
+          schemaName: "msgs/SystemState",
+
           sizeInBytes: 0,
         })),
       },
@@ -274,6 +279,8 @@ const messageCache: BlockCache = {
           topic: "/blocks",
           receiveTime: message.header.stamp,
           message: { ...message, data: { value: idx } },
+          schemaName: "msgs/SystemState",
+
           sizeInBytes: 0,
         })),
       },
@@ -289,6 +296,7 @@ const messageCache: BlockCache = {
           topic: "/blocks",
           receiveTime: message.header.stamp,
           message: { ...message, data: { value: idx } },
+          schemaName: "msgs/SystemState",
           sizeInBytes: 0,
         })),
       },

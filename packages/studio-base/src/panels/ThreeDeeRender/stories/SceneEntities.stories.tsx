@@ -8,9 +8,10 @@ import { TeapotGeometry } from "three/examples/jsm/geometries/TeapotGeometry";
 import tinycolor from "tinycolor2";
 
 import { FrameTransform, LineType, SceneUpdate } from "@foxglove/schemas";
-import { MessageEvent, Topic } from "@foxglove/studio";
+import { MessageEvent } from "@foxglove/studio";
 import { ColorRGBA } from "@foxglove/studio-base/panels/ThreeDeeRender/ros";
 import { xyzrpyToPose } from "@foxglove/studio-base/panels/ThreeDeeRender/transforms";
+import { Topic } from "@foxglove/studio-base/players/types";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 
 import ThreeDeeRender from "../index";
@@ -302,6 +303,7 @@ function makeStoryScene({
         },
       ],
     },
+    schemaName: "foxglove.SceneUpdate",
     sizeInBytes: 0,
   };
 }
@@ -309,9 +311,9 @@ function makeStoryScene({
 BasicEntities.parameters = { colorScheme: "light", chromatic: { delay: 100 } };
 export function BasicEntities(): JSX.Element {
   const topics: Topic[] = [
-    { name: "transforms", datatype: "foxglove.FrameTransform" },
-    { name: "scene1", datatype: "foxglove.SceneUpdate" },
-    { name: "scene2", datatype: "foxglove.SceneUpdate" },
+    { name: "transforms", schemaName: "foxglove.FrameTransform" },
+    { name: "scene1", schemaName: "foxglove.SceneUpdate" },
+    { name: "scene2", schemaName: "foxglove.SceneUpdate" },
   ];
 
   const scene1 = makeStoryScene({ topic: "scene1", frameId: "frame1" });
@@ -327,6 +329,7 @@ export function BasicEntities(): JSX.Element {
       translation: { x: 1e7, y: 0, z: 0 },
       rotation: QUAT_IDENTITY,
     },
+    schemaName: "foxglove.FrameTransform",
     sizeInBytes: 0,
   };
   const tf2: MessageEvent<FrameTransform> = {
@@ -339,6 +342,7 @@ export function BasicEntities(): JSX.Element {
       translation: { x: -4, y: -4, z: 0 },
       rotation: QUAT_IDENTITY,
     },
+    schemaName: "foxglove.FrameTransform",
     sizeInBytes: 0,
   };
   const tf3: MessageEvent<FrameTransform> = {
@@ -351,6 +355,7 @@ export function BasicEntities(): JSX.Element {
       translation: { x: 0, y: -4, z: 0 },
       rotation: QUAT_IDENTITY,
     },
+    schemaName: "foxglove.FrameTransform",
     sizeInBytes: 0,
   };
 

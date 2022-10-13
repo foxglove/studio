@@ -23,6 +23,7 @@ import {
   Initalization,
   MessageIteratorArgs,
   GetBackfillMessagesArgs,
+  IterableSourceInitializeArgs,
 } from "../IIterableSource";
 import { messageIdToTopic, messageDefinitionToRos, logLevelToRosout } from "./support";
 
@@ -67,7 +68,7 @@ export class UlogIterableSource implements IIterableSource {
     const parsedMessageDefinitionsByTopic: ParsedMessageDefinitionsByTopic = {};
     const header = this.ulog.header!;
 
-    topics.push({ name: LOG_TOPIC, datatype: "rosgraph_msgs/Log" });
+    topics.push({ name: LOG_TOPIC, schemaName: "rosgraph_msgs/Log" });
     topicStats.set(LOG_TOPIC, { numMessages: this.ulog.logCount() ?? 0 });
     datatypes.set("rosgraph_msgs/Log", ros1["rosgraph_msgs/Log"]);
 
@@ -85,7 +86,7 @@ export class UlogIterableSource implements IIterableSource {
       const name = messageIdToTopic(msgId, this.ulog);
       if (name && !topicNames.has(name)) {
         topicNames.add(name);
-        topics.push({ name, datatype: msgDef.name });
+        topics.push({ name, schemaName: msgDef.name });
         topicStats.set(name, { numMessages: count });
         messageDefinitionsByTopic[name] = msgDef.format;
         const rosMsgDef = datatypes.get(msgDef.name);
@@ -143,7 +144,8 @@ export class UlogIterableSource implements IIterableSource {
       if (msg.type === MessageType.Data) {
         const timestamp = (msg.value as { timestamp: bigint }).timestamp;
         const receiveTime = fromMicros(Number(timestamp));
-        const topic = messageIdToTopic(msg.msgId, this.ulog);
+        const sub = this.ulog.subscriptions.get(msg.msgId);
+        const topic = sub?.name;
         if (topic && topics.includes(topic) && isTimeInRangeInclusive(receiveTime, start, end)) {
           yield {
             msgEvent: {
@@ -151,6 +153,7 @@ export class UlogIterableSource implements IIterableSource {
               receiveTime,
               message: msg.value,
               sizeInBytes: msg.data.byteLength,
+              schemaName: sub.name,
             },
             connectionId: undefined,
             problem: undefined,
@@ -172,6 +175,7 @@ export class UlogIterableSource implements IIterableSource {
                 msg: msg.message,
                 name: "",
               },
+              schemaName: "rosgraph_msgs/Log",
               sizeInBytes: msg.size,
             },
             connectionId: undefined,
@@ -187,4 +191,12 @@ export class UlogIterableSource implements IIterableSource {
   ): Promise<MessageEvent<unknown>[]> {
     return [];
   }
+}
+
+export function initialize(args: IterableSourceInitializeArgs): UlogIterableSource {
+  if (args.file) {
+    return new UlogIterableSource({ type: "file", file: args.file });
+  }
+
+  throw new Error("file required");
 }
