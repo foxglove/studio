@@ -10,8 +10,8 @@ if (process.env.COREPACK_ROOT == undefined) {
   console.error("");
   console.error("If you have run `corepack enable` and still see this error, you have likely");
   console.error("installed yarn globally or using your system package manager. Your installed");
-  console.error("version of yarn is superceding corepack's version. Delete or uninstall your");
-  console.error("version of yarn to use the corepack version");
+  console.error("version of yarn is superseding corepack's version. Delete or uninstall your");
+  console.error("version of yarn to use the corepack version.");
   process.exit(1);
 }
 
