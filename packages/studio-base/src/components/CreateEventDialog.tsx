@@ -167,7 +167,7 @@ export function CreateEventDialog(props: { deviceId: string; onClose: () => void
   const addRow = useCallback((index: number) => {
     setEvent(
       produce((draft) => {
-        draft.metadataEntries.splice(index, 0, { key: "", value: "" });
+        draft.metadataEntries.splice(index + 1, 0, { key: "", value: "" });
       }),
     );
   }, []);
