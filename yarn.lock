@@ -12787,6 +12787,7 @@ __metadata:
     tslib: 2.4.0
     typescript: 4.8.2
     typescript-plugin-css-modules: 3.4.0
+    use-immer: 0.7.0
     utif: 3.1.0
     webpack: 5.74.0
     webpack-cli: 4.10.0
@@ -24005,6 +24006,16 @@ __metadata:
     immer: ">=2.0.0"
     react: ^16.8.0 || ^17.0.1
   checksum: 5cb3e2f411cfaf0eeab8cce8919a83fdf82e10b3acfd2d4550d9c6a0afb105aace8c0406131126557a2eab6c4ef8aef87c24a82830b75140ec6b2cdffe818d76
+  languageName: node
+  linkType: hard
+
+"use-immer@npm:0.7.0":
+  version: 0.7.0
+  resolution: "use-immer@npm:0.7.0"
+  peerDependencies:
+    immer: ">=2.0.0"
+    react: ^16.8.0 || ^17.0.1 || ^18.0.0
+  checksum: 4711403fa2c3648c06b8e6795433eb43adb2c6e9bd00f45971ce6948ba8fc1c3e3cf73820a8d597b22979caa6445d0b791508e147975c3cc435a1ec1e5ce47db
   languageName: node
   linkType: hard
 
