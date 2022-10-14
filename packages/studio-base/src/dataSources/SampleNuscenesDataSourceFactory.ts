@@ -6,7 +6,8 @@ import {
   IDataSourceFactory,
   DataSourceFactoryInitializeArgs,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
-import { IterablePlayer, WorkerIterableSource } from "@foxglove/studio-base/players/IterablePlayer";
+import { IterablePlayer } from "@foxglove/studio-base/players/IterablePlayer";
+import { McapIterableSource } from "@foxglove/studio-base/players/IterablePlayer/Mcap/McapIterableSource";
 
 import SampleNuscenesLayout from "./SampleNuscenesLayout.json";
 
@@ -23,10 +24,7 @@ class SampleNuscenesDataSourceFactory implements IDataSourceFactory {
   ): ReturnType<IDataSourceFactory["initialize"]> {
     const bagUrl = "https://assets.foxglove.dev/NuScenes-v1.0-mini-scene-0061-f4fbf7b.mcap";
 
-    const source = new WorkerIterableSource({
-      sourceType: "mcap",
-      initArgs: { url: bagUrl },
-    });
+    const source = new McapIterableSource({ type: "url", url: bagUrl });
 
     return new IterablePlayer({
       source,
