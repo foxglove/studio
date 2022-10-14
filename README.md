@@ -1,5 +1,5 @@
 <picture>
-  <source media="(max-width: 640px)" srcset="https://user-images.githubusercontent.com/14011012/195944714-7b25b1b0-526d-41ff-8041-9ab92487784f.png">
+  <source media="(max-width: 640px)" srcset="https://user-images.githubusercontent.com/14011012/195951058-ac1e9c02-c0ee-42b7-82b9-378d43a38598.png">
   <source media="(min-width: 576px)" srcset="https://user-images.githubusercontent.com/14011012/195918769-5aaeedf3-5de2-48fb-951e-7399f2b9e190.png">
   <img alt="Foxglove repo header" src="https://user-images.githubusercontent.com/14011012/195918769-5aaeedf3-5de2-48fb-951e-7399f2b9e190.png">
 </picture>
