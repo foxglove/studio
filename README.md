@@ -1,4 +1,4 @@
-![Foxglove](https://user-images.githubusercontent.com/14011012/195717422-bfcc5a12-0281-4f30-b310-9322f6fdd660.png)
+![Foxglove](https://user-images.githubusercontent.com/14011012/195918769-5aaeedf3-5de2-48fb-951e-7399f2b9e190.png)
 
 <div align="center">
     <h1>Foxglove Studio</h1>
