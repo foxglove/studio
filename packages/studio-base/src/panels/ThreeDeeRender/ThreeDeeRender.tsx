@@ -403,11 +403,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
   const [parameters, setParameters] = useState<ReadonlyMap<string, ParameterValue> | undefined>();
   const [variables, setVariables] = useState<ReadonlyMap<string, VariableValue> | undefined>();
   const [messages, setMessages] = useState<ReadonlyArray<MessageEvent<unknown>> | undefined>();
-  const [preloadedMessages, setPreloadedMessages] = useState<
-    ReadonlyArray<MessageEvent<unknown>> | undefined
-  >();
-  const lastPreloadedMessageTimeRef = useRef<Time>(TIME_ZERO);
-  const [currentTime, setCurrentTime] = useState<bigint | undefined>();
+  const [currentTime, setCurrentTime] = useState<Time | undefined>();
   const [didSeek, setDidSeek] = useState<boolean>(false);
 
   const renderRef = useRef({ needsRender: false });
@@ -535,13 +531,12 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
     context.onRender = (renderState: RenderState, done) => {
       ReactDOM.unstable_batchedUpdates(() => {
         if (renderState.currentTime) {
-          setCurrentTime(toNanoSec(renderState.currentTime));
+          setCurrentTime(renderState.currentTime);
         }
 
         // Check if didSeek is set to true to reset the preloadedMessageTime and
         // trigger a state flush in Renderer
         if (renderState.didSeek === true) {
-          lastPreloadedMessageTimeRef.current = TIME_ZERO;
           setDidSeek(true);
         }
 
@@ -564,10 +559,6 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
         // currentFrame has messages on subscribed topics since the last render call
         deepParseMessageEvents(renderState.currentFrame);
         setMessages(renderState.currentFrame);
-
-        // allFrames has messages on preloaded topics across all frames (as they are loaded)
-        deepParseMessageEvents(renderState.allFrames);
-        setPreloadedMessages(renderState.allFrames);
       });
     };
 
@@ -649,7 +640,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
   // Keep the renderer currentTime up to date
   useEffect(() => {
     if (renderer && currentTime != undefined) {
-      renderer.currentTime = currentTime;
+      renderer.currentTime = toNanoSec(currentTime);
       renderRef.current.needsRender = true;
     }
   }, [currentTime, renderer]);
@@ -669,34 +660,6 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
       renderRef.current.needsRender = true;
     }
   }, [backgroundColor, colorScheme, renderer]);
-
-  // Handle preloaded messages and render a frame if new messages are available
-  useEffect(() => {
-    if (!renderer || !preloadedMessages) {
-      return;
-    }
-
-    for (const message of preloadedMessages) {
-      // Skip preloaded messages before the last receiveTime we've previously processed
-      if (isLessThan(message.receiveTime, lastPreloadedMessageTimeRef.current)) {
-        continue;
-      }
-
-      const datatype = topicsToDatatypes.get(message.topic);
-      if (!datatype) {
-        continue;
-      }
-
-      renderer.addMessageEvent(message, datatype);
-    }
-
-    const lastMessage = preloadedMessages[preloadedMessages.length - 1];
-    if (lastMessage) {
-      lastPreloadedMessageTimeRef.current = lastMessage.receiveTime;
-    }
-
-    renderRef.current.needsRender = true;
-  }, [preloadedMessages, renderer, topicsToDatatypes]);
 
   // Handle messages and render a frame if new messages are available
   useEffect(() => {
