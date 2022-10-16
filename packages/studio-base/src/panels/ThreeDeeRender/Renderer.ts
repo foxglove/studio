@@ -521,8 +521,9 @@ export class Renderer extends EventEmitter<RendererEvents> {
    * This is useful when seeking to a new playback position or when a new data source is loaded.
    */
   public clear(): void {
-    // This must be cleared before calling `SceneExtension#removeAllRenderables()` to allow
-    // extensions to add errors back afterward
+    // These must be cleared before calling `SceneExtension#removeAllRenderables()` to allow
+    // extensions to add transforms and errors back afterward
+    this.transformTree.clearAfter(this.currentTime);
     this.settings.errors.clear();
 
     for (const extension of this.sceneExtensions.values()) {
