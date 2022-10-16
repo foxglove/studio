@@ -852,7 +852,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     return this.config.cameraState.perspective ? this.perspectiveCamera : this.orthographicCamera;
   }
 
-  public addMessageEvent(messageEvent: Readonly<MessageEvent<unknown>>, datatype: string): void {
+  public addMessageEvent(messageEvent: Readonly<MessageEvent<unknown>>): void {
     const { message } = messageEvent;
 
     const maybeHasHeader = message as DeepPartial<{ header: Header }>;
@@ -883,7 +883,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     }
 
     handleMessage(messageEvent, this.topicHandlers.get(messageEvent.topic));
-    handleMessage(messageEvent, this.datatypeHandlers.get(datatype));
+    handleMessage(messageEvent, this.datatypeHandlers.get(messageEvent.schemaName));
   }
 
   /** Match the behavior of `tf::Transformer` by stripping leading slashes from

@@ -21,7 +21,7 @@ import { DeepPartial } from "ts-essentials";
 import { useDebouncedCallback } from "use-debounce";
 
 import Logger from "@foxglove/log";
-import { isLessThan, Time, toNanoSec } from "@foxglove/rostime";
+import { Time, toNanoSec } from "@foxglove/rostime";
 import {
   LayoutActions,
   MessageEvent,
@@ -69,7 +69,6 @@ const PANEL_STYLE: React.CSSProperties = {
   display: "flex",
   position: "relative",
 };
-const TIME_ZERO = { sec: 0, nsec: 0 };
 
 type SubscriptionWithOptions = Subscription & {
   preload: boolean;
@@ -437,18 +436,6 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
     return () => void renderer?.removeListener("cameraMove", listener);
   }, [renderer]);
 
-  // Build a map from topic name to datatype
-  const topicsToDatatypes = useMemo(() => {
-    const map = new Map<string, string>();
-    if (!topics) {
-      return map;
-    }
-    for (const topic of topics) {
-      map.set(topic.name, topic.schemaName);
-    }
-    return map;
-  }, [topics]);
-
   // Handle user changes in the settings sidebar
   const actionHandler = useCallback(
     (action: SettingsTreeAction) =>
@@ -668,16 +655,11 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
     }
 
     for (const message of messages) {
-      const datatype = topicsToDatatypes.get(message.topic);
-      if (!datatype) {
-        continue;
-      }
-
-      renderer.addMessageEvent(message, datatype);
+      renderer.addMessageEvent(message);
     }
 
     renderRef.current.needsRender = true;
-  }, [messages, renderer, topicsToDatatypes]);
+  }, [messages, renderer]);
 
   // Update the renderer when the camera moves
   useEffect(() => {
