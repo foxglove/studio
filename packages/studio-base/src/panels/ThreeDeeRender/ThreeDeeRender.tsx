@@ -392,10 +392,13 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
 
   const [canvas, setCanvas] = useState<HTMLCanvasElement | ReactNull>(ReactNull);
   const [renderer, setRenderer] = useState<Renderer | undefined>(undefined);
-  useEffect(
-    () => setRenderer(canvas ? new Renderer(canvas, configRef.current) : undefined),
-    [canvas, configRef, config.scene.transforms?.enablePreloading],
-  );
+  const rendererRef = useRef<Renderer | undefined>(undefined);
+  useEffect(() => {
+    const newRenderer = canvas ? new Renderer(canvas, configRef.current) : undefined;
+    setRenderer(newRenderer);
+    rendererRef.current = newRenderer;
+    return () => rendererRef.current?.dispose();
+  }, [canvas, configRef, config.scene.transforms?.enablePreloading]);
 
   const [colorScheme, setColorScheme] = useState<"dark" | "light" | undefined>();
   const [topics, setTopics] = useState<ReadonlyArray<Topic> | undefined>();
