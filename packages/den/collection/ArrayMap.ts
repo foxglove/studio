@@ -57,7 +57,7 @@ export class ArrayMap<K, V> {
   public removeAfter(key: K): void {
     const index = this.binarySearch(key);
     const greaterThanIndex = index >= 0 ? index + 1 : ~index;
-    this._list.splice(greaterThanIndex);
+    this._list.length = greaterThanIndex;
   }
 
   /** Access the first key/value tuple in the list, without modifying the list. */

@@ -397,7 +397,10 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
     const newRenderer = canvas ? new Renderer(canvas, configRef.current) : undefined;
     setRenderer(newRenderer);
     rendererRef.current = newRenderer;
-    return () => rendererRef.current?.dispose();
+    return () => {
+      rendererRef.current?.dispose();
+      rendererRef.current = undefined;
+    };
   }, [canvas, configRef, config.scene.transforms?.enablePreloading]);
 
   const [colorScheme, setColorScheme] = useState<"dark" | "light" | undefined>();
