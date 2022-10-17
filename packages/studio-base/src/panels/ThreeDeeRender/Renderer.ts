@@ -442,7 +442,8 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.addDatatypeSubscriptions(FRAME_TRANSFORM_DATATYPES, {
       handler: this.handleFrameTransform,
       forced: true,
-      // Disabled until we can efficiently preload transforms
+      // Disabled until we can efficiently preload transforms. See
+      // <https://github.com/foxglove/studio/issues/4657> for more details.
       // preload: config.scene.transforms?.enablePreloading ?? true,
     });
     this.addDatatypeSubscriptions(TF_DATATYPES, {
