@@ -13,7 +13,7 @@
     <a href="https://foxglove.dev/join-slack"><img src="https://img.shields.io/badge/chat-on%20slack-purple.svg" /></a>
     <br />
     <br />
-    <a href="https://studio.foxglove.dev/">Web App</a>
+    <a href="https://foxglove.dev/download">Download</a>
     <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
     <a href="https://foxglove.dev/docs/studio">Docs</a>
     <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
@@ -29,7 +29,7 @@
   <br />
   <br />
 
-[Foxglove Studio](https://foxglove.dev) is an integrated visualization and diagnosis tool for robotics, available [in your browser](https://studio.foxglove.dev/) or for [download](https://foxglove.dev/download) as a desktop app on Linux, Windows, and macOS.
+[Foxglove Studio](https://foxglove.dev) is an integrated visualization and diagnosis tool for robotics, available [in your browser](https://studio.foxglove.dev/) or [as a desktop app](https://foxglove.dev/download) on Linux, Windows, and macOS.
 
   <p align="center">
     <a href="https://foxglove.dev"><img alt="Foxglove Studio screenshot" src="/resources/screenshot.png"></a>
@@ -40,35 +40,29 @@
 
 To learn more, visit the following resources:
 
-<div align="left">
-    <a href="https://foxglove.dev/about">About</a>
-    <span>&nbsp;•&nbsp;</span>
-    <a href="https://foxglove.dev/docs">Documentation</a>
-    <span>&nbsp;•&nbsp;</span>
-    <a href="https://github.com/foxglove/studio/releases">Release notes</a>
-    <span>&nbsp;•&nbsp;</span>
-    <a href="http://wiki.ros.org/FoxgloveStudio">ROS Wiki page</a>
-    <span>&nbsp;•&nbsp;</span>
-    <a href="https://foxglove.dev/blog">Blog</a>
-  <br />
-  <br />
-</div>
+[About](https://foxglove.dev/about)
+&nbsp;•&nbsp;
+[Documentation](https://foxglove.dev/docs)
+&nbsp;•&nbsp;
+[Release notes](https://github.com/foxglove/studio/releases)
+&nbsp;•&nbsp;
+[ROS Wiki page](http://wiki.ros.org/FoxgloveStudio)
+&nbsp;•&nbsp;
+[Blog](https://foxglove.dev/blog)
 
 You can also join us on the following platforms to ask questions, share feedback, and stay up to date on what our team is working on:
 
-<div align="left">
-    <a href="https://github.com/foxglove/studio/discussions">GitHub Discussions</a>
-    <span>&nbsp;•&nbsp;</span>
-    <a href="https://foxglove.dev/join-slack">Slack</a>
-    <span>&nbsp;•&nbsp;</span>
-    <a href="https://www.getrevue.co/profile/foxglove">Newsletter</a>
-    <span>&nbsp;•&nbsp;</span>
-    <a href="https://twitter.com/foxglovedev">Twitter</a>
-    <span>&nbsp;•&nbsp;</span>
-    <a href="https://www.linkedin.com/company/foxglovedev">LinkedIn</a>
-  <br />
-  <br />
-</div>
+[GitHub Discussions](https://github.com/foxglove/studio/discussions)
+&nbsp;•&nbsp;
+[Slack](https://foxglove.dev/join-slack)
+&nbsp;•&nbsp;
+[Newsletter](https://www.getrevue.co/profile/foxglove)
+&nbsp;•&nbsp;
+[Twitter](https://twitter.com/foxglovedev)
+&nbsp;•&nbsp;
+[LinkedIn](https://www.linkedin.com/company/foxglovedev)
+
+<br />
 
 ## Installation
 
