@@ -151,7 +151,7 @@ export class RenderableLines extends RenderablePrimitive {
       ? primitive.points.length >>> 1
       : isLoop
       ? primitive.points.length
-      : primitive.points.length - 1;
+      : Math.max(primitive.points.length - 1, 0);
 
     line.userData.pickingMaterial = pickingMaterial;
     return line;
