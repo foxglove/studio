@@ -28,7 +28,7 @@ import { LabelMaterial, LabelPool } from "@foxglove/three-text";
 
 import { Input } from "./Input";
 import { LineMaterial } from "./LineMaterial";
-import { ModelCache } from "./ModelCache";
+import { ModelCache, MeshUpAxis, DEFAULT_MESH_UP_AXIS } from "./ModelCache";
 import { PickedRenderable, Picker } from "./Picker";
 import type { Renderable } from "./Renderable";
 import { SceneExtension } from "./SceneExtension";
@@ -118,6 +118,7 @@ export type RendererConfig = {
     labelScaleFactor?: number;
     /** Ignore the <up_axis> tag in COLLADA files (matching rviz behavior) */
     ignoreColladaUpAxis?: boolean;
+    meshUpAxis?: MeshUpAxis;
     transforms?: {
       /** Toggles translation and rotation offset controls for frames */
       editable?: boolean;
@@ -367,6 +368,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
     this.modelCache = new ModelCache({
       ignoreColladaUpAxis: config.scene.ignoreColladaUpAxis ?? false,
+      meshUpAxis: config.scene.meshUpAxis ?? DEFAULT_MESH_UP_AXIS,
       edgeMaterial: this.outlineMaterial,
     });
 
@@ -440,17 +442,21 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.addDatatypeSubscriptions(FRAME_TRANSFORM_DATATYPES, {
       handler: this.handleFrameTransform,
       forced: true,
-      preload: config.scene.transforms?.enablePreloading ?? true,
+      // Disabled until we can efficiently preload transforms. See
+      // <https://github.com/foxglove/studio/issues/4657> for more details.
+      // preload: config.scene.transforms?.enablePreloading ?? true,
     });
     this.addDatatypeSubscriptions(TF_DATATYPES, {
       handler: this.handleTFMessage,
       forced: true,
-      preload: config.scene.transforms?.enablePreloading ?? true,
+      // Disabled until we can efficiently preload transforms
+      // preload: config.scene.transforms?.enablePreloading ?? true,
     });
     this.addDatatypeSubscriptions(TRANSFORM_STAMPED_DATATYPES, {
       handler: this.handleTransformStamped,
       forced: true,
-      preload: config.scene.transforms?.enablePreloading ?? true,
+      // Disabled until we can efficiently preload transforms
+      // preload: config.scene.transforms?.enablePreloading ?? true,
     });
 
     this.addSceneExtension(this.coreSettings);
@@ -519,8 +525,9 @@ export class Renderer extends EventEmitter<RendererEvents> {
    * This is useful when seeking to a new playback position or when a new data source is loaded.
    */
   public clear(): void {
-    // This must be cleared before calling `SceneExtension#removeAllRenderables()` to allow
-    // extensions to add errors back afterward
+    // These must be cleared before calling `SceneExtension#removeAllRenderables()` to allow
+    // extensions to add transforms and errors back afterward
+    this.transformTree.clearAfter(this.currentTime);
     this.settings.errors.clear();
 
     for (const extension of this.sceneExtensions.values()) {
@@ -846,7 +853,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     return this.config.cameraState.perspective ? this.perspectiveCamera : this.orthographicCamera;
   }
 
-  public addMessageEvent(messageEvent: Readonly<MessageEvent<unknown>>, datatype: string): void {
+  public addMessageEvent(messageEvent: Readonly<MessageEvent<unknown>>): void {
     const { message } = messageEvent;
 
     const maybeHasHeader = message as DeepPartial<{ header: Header }>;
@@ -877,7 +884,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     }
 
     handleMessage(messageEvent, this.topicHandlers.get(messageEvent.topic));
-    handleMessage(messageEvent, this.datatypeHandlers.get(datatype));
+    handleMessage(messageEvent, this.datatypeHandlers.get(messageEvent.schemaName));
   }
 
   /** Match the behavior of `tf::Transformer` by stripping leading slashes from
