@@ -479,7 +479,11 @@ export class FoxgloveGrid extends SceneExtension<FoxgloveGridRenderable> {
     renderable.userData.messageTime = toNanoSec(foxgloveGrid.timestamp);
     renderable.userData.frameId = this.renderer.normalizeFrameId(foxgloveGrid.frame_id);
     if (foxgloveGrid.fields.length === 0) {
-      invalidFoxgloveGridError(this.renderer, renderable, `Grid has no fields to color by`);
+      invalidFoxgloveGridError(
+        this.renderer,
+        renderable,
+        `Foxglove grid from topic ${renderable.userData.topic} has no fields to color by`,
+      );
       return;
     }
     const { cell_stride, row_stride, column_count: cols } = foxgloveGrid;
