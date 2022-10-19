@@ -681,7 +681,7 @@ function createMaterial(texture: THREE.DataTexture, topic: string): THREE.Shader
         } else {
           float delta = max(maxValue - minValue, 0.00001);
           float colorValue = color.r;
-          float normalizedColorValue = clamp((colorValue - minValue) / delta, 0.0, 1.0);
+          float normalizedColorValue = (colorValue - minValue) / delta;
           if(colorMode == GRADIENT) {
             // weight each color by its alpha
             vec4 weightedMinColor = vec4(minGradientColor.rgb * minGradientColor.a, minGradientColor.a);
