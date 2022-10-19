@@ -2,7 +2,6 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { last } from "lodash";
 import { useCallback, useEffect, useLayoutEffect, useReducer, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 
@@ -203,9 +202,12 @@ export function Gauge({ context }: Props): JSX.Element {
         dispatch({ type: "seek" });
       }
 
-      const message = last(renderState.currentFrame);
-      if (message != undefined && message.topic === state.parsedPath?.topicName) {
-        dispatch({ type: "message", message });
+      if (renderState.currentFrame) {
+        for (const message of renderState.currentFrame) {
+          if (message.topic === state.parsedPath?.topicName) {
+            dispatch({ type: "message", message });
+          }
+        }
       }
     };
     context.watch("currentFrame");

@@ -3,7 +3,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Typography, useTheme } from "@mui/material";
-import { last } from "lodash";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useReducer, useState } from "react";
 import { withStyles } from "tss-react/mui";
 
@@ -169,9 +168,12 @@ export function Indicator({ context }: Props): JSX.Element {
         dispatch({ type: "seek" });
       }
 
-      const message = last(renderState.currentFrame);
-      if (message != undefined && message.topic === state.parsedPath?.topicName) {
-        dispatch({ type: "message", message });
+      if (renderState.currentFrame) {
+        for (const message of renderState.currentFrame) {
+          if (message.topic === state.parsedPath?.topicName) {
+            dispatch({ type: "message", message });
+          }
+        }
       }
     };
     context.watch("currentFrame");
