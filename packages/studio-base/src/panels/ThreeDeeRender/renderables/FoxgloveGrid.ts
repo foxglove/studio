@@ -266,9 +266,6 @@ export class FoxgloveGridRenderable extends Renderable<FoxgloveGridUserData> {
         }
         const colorConverter = getColorConverter(settings, 0, 1);
         const rgba = texture.image.data;
-        texture.format = THREE.RGBAFormat;
-        texture.type = THREE.UnsignedByteType;
-        texture.needsUpdate = true;
         for (let y = 0; y < rows; y++) {
           for (let x = 0; x < cols; x++) {
             const offset = y * foxgloveGrid.row_stride + x * foxgloveGrid.cell_stride;
@@ -309,6 +306,12 @@ export class FoxgloveGridRenderable extends Renderable<FoxgloveGridUserData> {
           }
         }
         texture.dispose();
+        /**
+         * It's necessary to create a new texture each image for value-DataTextures (vs RGBA)
+         *  - the source data from the image is only available in RGBA Uint8Clamped cols * rows * 4 length format to update
+         *    this doesn't allow us to write floats to the red channel to properly update the value in the shader
+         *  - RedFormat and FloatType DataTextures need to be initialized with a Float32Array otherwise they error
+         */
         texture = new THREE.DataTexture(
           valueData,
           cols,
