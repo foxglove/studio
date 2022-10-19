@@ -44,17 +44,17 @@ const DEFAULT_RGB_BYTE_ORDER = "rgba";
 
 const COLOR_MODE_TO_GLSL: Record<string, number> = {
   // need them to be floats for comparision (can't have colormode uniform as int)
-  FLAT: 0.1,
-  RGB: 1.1,
-  RGBA: 2.1,
-  GRADIENT: 3.1,
-  COLORMAP: 4.1,
+  FLAT: 0,
+  RGB: 1,
+  RGBA: 2,
+  GRADIENT: 3,
+  COLORMAP: 4,
 };
 
 const COLOR_MAP_TO_GLSL: Record<string, number> = {
   // need them to be floats for comparision (can't have colormode uniform as int)
-  TURBO: 0.1,
-  RAINBOW: 1.1,
+  TURBO: 0,
+  RAINBOW: 1,
 };
 
 const DEFAULT_SETTINGS: LayerSettingsFoxgloveGrid = {
@@ -618,11 +618,11 @@ function createMaterial(texture: THREE.DataTexture, topic: string): THREE.Shader
 
       uniform sampler2D map;
 
-      uniform float colorMode;
+      uniform int colorMode;
       uniform float minValue;
       uniform float maxValue;
 
-      uniform float colorMap;
+      uniform int colorMap;
       uniform float colorMapOpacity;
 
       uniform vec4 minGradientColor;
