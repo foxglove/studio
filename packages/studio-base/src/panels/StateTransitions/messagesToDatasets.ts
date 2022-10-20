@@ -35,7 +35,7 @@ type Args = {
 };
 
 export default function messagesToDatasets(args: Args): DatasetInfo {
-  const { path, startTime, y, blocks } = args;
+  const { path, pathIndex, startTime, y, blocks } = args;
 
   const info: DatasetInfo = {
     datasets: [],
@@ -135,7 +135,7 @@ export default function messagesToDatasets(args: Args): DatasetInfo {
           borderWidth: 10,
           borderColor: color,
           data: currentData,
-          label: info.datasets.length.toString(),
+          label: pathIndex.toString(),
           pointBackgroundColor: darkColor(color),
           pointBorderColor: "transparent",
           pointHoverRadius: 3,
