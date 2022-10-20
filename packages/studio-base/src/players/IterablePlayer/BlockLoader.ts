@@ -250,17 +250,22 @@ export class BlockLoader {
         }
 
         const messagesByTopic: Record<string, MessageEvent<unknown>[]> = {};
-        if (results.length === 0) {
-          // Set all topics to empty arrays since this block has no messages on these topics
-          for (const topic of topicsToFetch) {
-            messagesByTopic[topic] = [];
-          }
 
+        // Set all topics to empty arrays. Since our cursor requested all the topicsToFetch we either will
+        // have message on the topic or we don't have message on the topic. Either way the topic entry
+        // starts as an empty array.
+        for (const topic of topicsToFetch) {
+          messagesByTopic[topic] = [];
+        }
+
+        // Empty result set does not require further processing and does not change the size
+        if (results.length === 0) {
           const existingBlock = this.blocks[currentBlockId];
           this.blocks[currentBlockId] = {
             needTopics: new Set(),
             messagesByTopic: {
               ...existingBlock?.messagesByTopic,
+              // Any new topics override the same previous topic
               ...messagesByTopic,
             },
             sizeInBytes: existingBlock?.sizeInBytes ?? 0,
@@ -275,7 +280,21 @@ export class BlockLoader {
             continue;
           }
 
-          const arr = (messagesByTopic[iterResult.msgEvent.topic] ??= []);
+          const msgTopic = iterResult.msgEvent.topic;
+          const arr = messagesByTopic[msgTopic];
+
+          // Because we initialized all the topicsToFetch earlier we expect to have an array for each message
+          // topic in our results. If we don't, thats a problem.
+          const problemKey = `unexpected-topic-${msgTopic}`;
+          if (!arr) {
+            this.problemManager.addProblem(problemKey, {
+              severity: "error",
+              message: `Received a messaged on an unexpected topic: ${msgTopic}.`,
+            });
+
+            continue;
+          }
+          this.problemManager.removeProblem(problemKey);
 
           const messageSizeInBytes = iterResult.msgEvent.sizeInBytes;
           totalBlockSizeBytes += messageSizeInBytes;
@@ -308,6 +327,7 @@ export class BlockLoader {
           needTopics: new Set(),
           messagesByTopic: {
             ...existingBlock?.messagesByTopic,
+            // Any new topics override the same previous topic
             ...messagesByTopic,
           },
           sizeInBytes: (existingBlock?.sizeInBytes ?? 0) + sizeInBytes,
@@ -318,46 +338,6 @@ export class BlockLoader {
 
       await cursor.end();
       blockId = endBlockId + 1;
-
-      /* fixme
-       consider problem check for message on unexpected topic
-      const events = messagesByTopic[msgTopic];
-
-        const problemKey = `unexpected-topic-${msgTopic}`;
-        if (!events) {
-          this.problemManager.addProblem(problemKey, {
-            severity: "error",
-            message: `Received a messaged on an unexpected topic: ${msgTopic}.`,
-          });
-
-          continue;
-        }
-        this.problemManager.removeProblem(problemKey);
-        */
-
-      /* fixme
-        // When the active block id changes, we need to check whether the active block
-        // is loaded through where we are loading (or the end if active block is after currentBlockId)
-        if (beginBlockId !== this.activeBlockId) {
-          // minus one because the currentBlockIdx is now the next block we are loading
-          // we don't need to compare to that sine we know it hasn't loaded yet but is about to be
-          let scanToBlockIdx = currentBlockId - 1;
-
-          // If the active block id > the block we scan to, then we need to scan to end
-          if (this.activeBlockId > scanToBlockIdx) {
-            scanToBlockIdx = this.blocks.length - 1;
-          }
-
-          // scan from active to scanToBlockId
-          for (let scanIdx = this.activeBlockId; scanIdx <= scanToBlockIdx; ++scanIdx) {
-            // There's a block between active and current that needs loading, we bail and restart loading
-            const existingBlock = this.blocks[scanIdx];
-            if (!existingBlock || existingBlock.needTopics.size > 0) {
-              return;
-            }
-          }
-        }
-        */
     }
   }
 

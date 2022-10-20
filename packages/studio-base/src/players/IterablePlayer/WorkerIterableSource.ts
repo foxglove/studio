@@ -110,8 +110,11 @@ export class WorkerIterableSource implements IIterableSource {
 
       async end() {
         const messageCursor = await messageCursorPromise;
-        await messageCursor.end();
-        messageCursor[Comlink.releaseProxy]();
+        try {
+          await messageCursor.end();
+        } finally {
+          messageCursor[Comlink.releaseProxy]();
+        }
       },
     };
 

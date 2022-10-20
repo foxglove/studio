@@ -10,6 +10,10 @@ import type { IMessageCursor, IteratorResult } from "./IIterableSource";
 /// IteratorCursor implements a IMessageCursor interface on top of an AsyncIterable
 class IteratorCursor implements IMessageCursor {
   private _iter: AsyncIterableIterator<Readonly<IteratorResult>>;
+  // readUntil reads from the iterator inclusive of end time. To do this, it reads from the iterator
+  // until it receives a receiveTime after end time to signal it has received all the messages
+  // inclusive of end time. Since iterators are read once, this last result must be stored for the
+  // next readUntil call otherwise it would be lost.
   private _lastIteratorResult?: IteratorResult;
   private _abort?: AbortSignal;
 
