@@ -50,6 +50,7 @@ export default function messagesToDatasets(args: Args): DatasetInfo {
 
   for (const messages of blocks) {
     if (!messages) {
+      currentData.push({ x: NaN, y: NaN });
       lastDatasetIndex = undefined;
       previousTimestamp = undefined;
       continue;
