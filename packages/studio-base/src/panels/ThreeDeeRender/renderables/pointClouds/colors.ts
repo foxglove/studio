@@ -375,12 +375,11 @@ export function baseColorModeSettingsNode<Settings extends ColorModeSettings & B
       case "rgb":
         fields.rgbByteOrder = {
           label: "RGB byte order",
-          help: "Specifies how 32-bit packed RGB values are interpreted as three 8-bit values. For example, “BGR_” would mean the 32-bit value is interpreted as 0xBBGGRR__, where the high (most significant) byte is blue and the low (least significant) byte is ignored. (When the 32-bit value is packed in little-endian order, this would mean the bytes on the wire are actually [0x__, 0xRR, 0xGG, 0xBB].)",
           input: "select",
           options: [
-            { label: "RGB_", value: "rgba" },
-            { label: "BGR_", value: "bgra" },
-            { label: "_BGR", value: "abgr" },
+            { label: "RGB", value: "rgba" },
+            { label: "BGR", value: "bgra" },
+            { label: "XBGR", value: "abgr" },
           ],
           value: rgbByteOrder,
         };
@@ -388,7 +387,6 @@ export function baseColorModeSettingsNode<Settings extends ColorModeSettings & B
       case "rgba":
         fields.rgbByteOrder = {
           label: "RGBA byte order",
-          help: "Specifies how 32-bit packed RGB values are interpreted as four 8-bit values. For example, “BGRA” would mean the 32-bit value is interpreted as 0xBBGGRRAA, where the high (most significant) byte is blue and the low (least significant) byte is alpha. (When the 32-bit value is packed in little-endian order, this would mean the bytes on the wire are actually [0xAA, 0xRR, 0xGG, 0xBB].)",
           input: "select",
           options: [
             { label: "RGBA", value: "rgba" },
