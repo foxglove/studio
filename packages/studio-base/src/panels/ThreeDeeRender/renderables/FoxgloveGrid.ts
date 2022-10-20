@@ -14,6 +14,8 @@ import {
   getColorConverter,
   autoSelectColorField,
   NEEDS_MIN_MAX,
+  DEFAULT_RGB_WIRE_FORMAT,
+  getRgbWireFormat,
 } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/pointClouds/colors";
 import type { RosValue } from "@foxglove/studio-base/players/types";
 
@@ -40,7 +42,6 @@ const DEFAULT_COLOR_MAP = "turbo";
 const DEFAULT_FLAT_COLOR = { r: 1, g: 1, b: 1, a: 1 };
 const DEFAULT_MIN_COLOR = { r: 100 / 255, g: 47 / 255, b: 105 / 255, a: 1 };
 const DEFAULT_MAX_COLOR = { r: 227 / 255, g: 177 / 255, b: 135 / 255, a: 1 };
-const DEFAULT_RGB_BYTE_ORDER = "rgba";
 
 const DEFAULT_SETTINGS: LayerSettingsFoxgloveGrid = {
   visible: false,
@@ -53,8 +54,19 @@ const DEFAULT_SETTINGS: LayerSettingsFoxgloveGrid = {
   gradient: [rgbaToCssString(DEFAULT_MIN_COLOR), rgbaToCssString(DEFAULT_MAX_COLOR)],
   colorMap: DEFAULT_COLOR_MAP,
   explicitAlpha: 1,
-  rgbByteOrder: DEFAULT_RGB_BYTE_ORDER,
+  rgbWireFormat: DEFAULT_RGB_WIRE_FORMAT,
 };
+
+function mergeSettingsWithDefaults(
+  settings: Partial<LayerSettingsFoxgloveGrid> | undefined,
+): LayerSettingsFoxgloveGrid {
+  return {
+    ...DEFAULT_SETTINGS,
+    ...settings,
+    rgbByteOrder: undefined,
+    rgbWireFormat: settings ? getRgbWireFormat(settings) : DEFAULT_SETTINGS.rgbWireFormat,
+  };
+}
 
 export type FoxgloveGridUserData = BaseUserData & {
   settings: LayerSettingsFoxgloveGrid;
@@ -138,7 +150,7 @@ export class FoxgloveGrid extends SceneExtension<FoxgloveGridRenderable> {
       const settings = this.renderer.config.topics[topicName] as
         | Partial<LayerSettingsFoxgloveGrid>
         | undefined;
-      renderable.userData.settings = { ...DEFAULT_SETTINGS, ...settings };
+      renderable.userData.settings = mergeSettingsWithDefaults(settings);
 
       this._updateFoxgloveGridRenderable(
         renderable,
@@ -160,7 +172,7 @@ export class FoxgloveGrid extends SceneExtension<FoxgloveGridRenderable> {
       const userSettings = this.renderer.config.topics[topic] as
         | Partial<LayerSettingsFoxgloveGrid>
         | undefined;
-      const settings = { ...DEFAULT_SETTINGS, ...userSettings };
+      const settings = mergeSettingsWithDefaults(userSettings);
       if (settings.colorField == undefined) {
         autoSelectColorField(settings, foxgloveGrid.fields);
         // Update user settings with the newly selected color field
@@ -169,6 +181,8 @@ export class FoxgloveGrid extends SceneExtension<FoxgloveGridRenderable> {
           updatedUserSettings.colorField = settings.colorField;
           updatedUserSettings.colorMode = settings.colorMode;
           updatedUserSettings.colorMap = settings.colorMap;
+          updatedUserSettings.rgbWireFormat = settings.rgbWireFormat;
+          delete updatedUserSettings.rgbByteOrder;
           draft.topics[topic] = updatedUserSettings;
         });
       }

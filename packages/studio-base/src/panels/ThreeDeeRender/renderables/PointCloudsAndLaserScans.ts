@@ -49,8 +49,11 @@ import {
   colorHasTransparency,
   ColorModeSettings,
   COLOR_FIELDS,
+  DEFAULT_RGB_WIRE_FORMAT,
   getColorConverter,
+  getRgbWireFormat,
   INTENSITY_FIELDS,
+  NEEDS_MIN_MAX,
 } from "./pointClouds/colors";
 import { FieldReader, getReader } from "./pointClouds/fieldReaders";
 import { missingTransformMessage, MISSING_TRANSFORM } from "./transforms";
@@ -103,10 +106,8 @@ const DEFAULT_COLOR_MAP = "turbo";
 const DEFAULT_FLAT_COLOR = { r: 1, g: 1, b: 1, a: 1 };
 const DEFAULT_MIN_COLOR = { r: 100 / 255, g: 47 / 255, b: 105 / 255, a: 1 };
 const DEFAULT_MAX_COLOR = { r: 227 / 255, g: 177 / 255, b: 135 / 255, a: 1 };
-const DEFAULT_RGB_BYTE_ORDER = "rgba";
-const NEEDS_MIN_MAX = ["gradient", "colormap"];
 
-export const DEFAULT_SETTINGS: LayerSettingsPointCloudAndLaserScan = {
+const DEFAULT_SETTINGS: LayerSettingsPointCloudAndLaserScan = {
   visible: false,
   frameLocked: false,
   pointSize: DEFAULT_POINT_SIZE,
@@ -118,10 +119,22 @@ export const DEFAULT_SETTINGS: LayerSettingsPointCloudAndLaserScan = {
   gradient: [rgbaToCssString(DEFAULT_MIN_COLOR), rgbaToCssString(DEFAULT_MAX_COLOR)],
   colorMap: DEFAULT_COLOR_MAP,
   explicitAlpha: 1,
-  rgbByteOrder: DEFAULT_RGB_BYTE_ORDER,
+  rgbWireFormat: DEFAULT_RGB_WIRE_FORMAT,
   minValue: undefined,
   maxValue: undefined,
 };
+
+/** Add defaults and migrate outdated settings to new keys. */
+export function mergeSettingsWithDefaults(
+  settings: Partial<LayerSettingsPointCloudAndLaserScan> | undefined,
+): LayerSettingsPointCloudAndLaserScan {
+  return {
+    ...DEFAULT_SETTINGS,
+    ...settings,
+    rgbByteOrder: undefined,
+    rgbWireFormat: settings ? getRgbWireFormat(settings) : DEFAULT_SETTINGS.rgbWireFormat,
+  };
+}
 
 const ALL_POINTCLOUD_DATATYPES = new Set<string>([
   ...FOXGLOVE_POINTCLOUD_DATATYPES,
@@ -826,7 +839,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
       const prevSettings = this.renderer.config.topics[topicName] as
         | Partial<LayerSettingsPointCloudAndLaserScan>
         | undefined;
-      const settings = { ...DEFAULT_SETTINGS, ...prevSettings };
+      const settings = mergeSettingsWithDefaults(prevSettings);
       if (renderable.userData.pointCloud) {
         renderable.updatePointCloud(
           renderable.userData.pointCloud,
@@ -856,7 +869,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
       const userSettings = this.renderer.config.topics[topic] as
         | Partial<LayerSettingsPointCloudAndLaserScan>
         | undefined;
-      const settings = { ...DEFAULT_SETTINGS, ...userSettings };
+      const settings = mergeSettingsWithDefaults(userSettings);
       if (settings.colorField == undefined) {
         autoSelectColorField(settings, pointCloud);
 
@@ -866,7 +879,8 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
           updatedUserSettings.colorField = settings.colorField;
           updatedUserSettings.colorMode = settings.colorMode;
           updatedUserSettings.colorMap = settings.colorMap;
-          updatedUserSettings.rgbByteOrder = settings.rgbByteOrder;
+          updatedUserSettings.rgbWireFormat = settings.rgbWireFormat;
+          delete updatedUserSettings.rgbByteOrder;
           draft.topics[topic] = updatedUserSettings;
         });
       }
@@ -938,7 +952,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
       const userSettings = this.renderer.config.topics[topic] as
         | Partial<LayerSettingsPointCloudAndLaserScan>
         | undefined;
-      const settings = { ...DEFAULT_SETTINGS, ...userSettings };
+      const settings = mergeSettingsWithDefaults(userSettings);
       if (settings.colorField == undefined) {
         autoSelectColorField(settings, pointCloud);
 
@@ -948,7 +962,8 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
           updatedUserSettings.colorField = settings.colorField;
           updatedUserSettings.colorMode = settings.colorMode;
           updatedUserSettings.colorMap = settings.colorMap;
-          updatedUserSettings.rgbByteOrder = settings.rgbByteOrder;
+          updatedUserSettings.rgbWireFormat = settings.rgbWireFormat;
+          delete updatedUserSettings.rgbByteOrder;
           draft.topics[topic] = updatedUserSettings;
         });
       }
@@ -1025,7 +1040,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
       const userSettings = this.renderer.config.topics[topic] as
         | Partial<LayerSettingsPointCloudAndLaserScan>
         | undefined;
-      const settings = { ...DEFAULT_SETTINGS, ...userSettings };
+      const settings = mergeSettingsWithDefaults(userSettings);
       if (settings.colorField == undefined) {
         settings.colorField = "intensity";
         settings.colorMode = "colormap";
@@ -1037,7 +1052,8 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
           updatedUserSettings.colorField = settings.colorField;
           updatedUserSettings.colorMode = settings.colorMode;
           updatedUserSettings.colorMap = settings.colorMap;
-          updatedUserSettings.rgbByteOrder = settings.rgbByteOrder;
+          updatedUserSettings.rgbWireFormat = settings.rgbWireFormat;
+          delete updatedUserSettings.rgbByteOrder;
           draft.topics[topic] = updatedUserSettings;
         });
       }

@@ -29,8 +29,8 @@ import {
   createInstancePickingMaterial,
   createPickingMaterial,
   createPoints,
-  DEFAULT_SETTINGS,
   LayerSettingsPointCloudAndLaserScan,
+  mergeSettingsWithDefaults,
   PointCloudAndLaserScanRenderable,
   pointCloudMaterial,
   pointCloudSettingsNode,
@@ -163,7 +163,7 @@ export class VelodyneScans extends SceneExtension<PointCloudAndLaserScanRenderab
       const prevSettings = this.renderer.config.topics[topicName] as
         | Partial<LayerSettingsPointCloudAndLaserScan>
         | undefined;
-      const settings = { ...DEFAULT_SETTINGS, ...prevSettings };
+      const settings = mergeSettingsWithDefaults(prevSettings);
       if (renderable.userData.pointCloud) {
         renderable.updatePointCloud(
           renderable.userData.pointCloud,
@@ -204,7 +204,7 @@ export class VelodyneScans extends SceneExtension<PointCloudAndLaserScanRenderab
       const userSettings = this.renderer.config.topics[topic] as
         | Partial<LayerSettingsPointCloudAndLaserScan>
         | undefined;
-      const settings = { ...DEFAULT_SETTINGS, ...userSettings };
+      const settings = mergeSettingsWithDefaults(userSettings);
       if (settings.colorField == undefined) {
         autoSelectColorField(settings, pointCloud);
 

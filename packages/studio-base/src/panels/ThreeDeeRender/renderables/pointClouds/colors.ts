@@ -16,7 +16,9 @@ export type ColorConverter = (output: ColorRGBA, colorValue: number) => void;
 
 const tempColor1 = { r: 0, g: 0, b: 0, a: 0 };
 const tempColor2 = { r: 0, g: 0, b: 0, a: 0 };
+
 export const NEEDS_MIN_MAX = ["gradient", "colormap"];
+export const DEFAULT_RGB_WIRE_FORMAT = "abgr";
 
 export interface ColorModeSettings {
   colorMode: "flat" | "gradient" | "colormap" | "rgb" | "rgba";
@@ -25,7 +27,9 @@ export interface ColorModeSettings {
   gradient: [string, string];
   colorMap: "turbo" | "rainbow";
   explicitAlpha: number;
-  rgbByteOrder: "rgba" | "bgra" | "abgr";
+  /** @deprecated Old setting values that were in reverse order from the new rgbWireFormat */
+  rgbByteOrder?: "rgba" | "bgra" | "abgr";
+  rgbWireFormat: "abgr" | "argb" | "rgba";
   minValue?: number;
   maxValue?: number;
 }
@@ -76,39 +80,39 @@ export function getColorConverter<Settings extends ColorModeSettings>(
       throw new Error(`Unrecognized color map: ${settings.colorMap}`);
     }
     case "rgb":
-      switch (settings.rgbByteOrder) {
+      switch (settings.rgbWireFormat) {
         default:
-        case "rgba":
-          return (output: ColorRGBA, colorValue: number) => {
-            getColorRgb(output, colorValue);
-            output.a = settings.explicitAlpha;
-          };
-        case "bgra":
-          return (output: ColorRGBA, colorValue: number) => {
-            getColorBgr(output, colorValue);
-            output.a = settings.explicitAlpha;
-          };
         case "abgr":
           return (output: ColorRGBA, colorValue: number) => {
-            getColor0bgr(output, colorValue);
+            getColorXBGR(output, colorValue);
+            output.a = settings.explicitAlpha;
+          };
+        case "argb":
+          return (output: ColorRGBA, colorValue: number) => {
+            getColorXRGB(output, colorValue);
+            output.a = settings.explicitAlpha;
+          };
+        case "rgba":
+          return (output: ColorRGBA, colorValue: number) => {
+            getColorRGBX(output, colorValue);
             output.a = settings.explicitAlpha;
           };
       }
     case "rgba":
-      switch (settings.rgbByteOrder) {
+      switch (settings.rgbWireFormat) {
         default:
-        case "rgba":
-          return getColorRgba;
-        case "bgra":
-          return getColorBgra;
         case "abgr":
-          return getColorAbgr;
+          return getColorABGR;
+        case "argb":
+          return getColorARGB;
+        case "rgba":
+          return getColorRGBA;
       }
   }
 }
 
-// 0xrrggbb00
-function getColorRgb(output: ColorRGBA, colorValue: number): void {
+/** Little-endian wire order [0x__, 0xBB, 0xGG, 0xRR], or uint32 value 0xRRGGBB__ */
+function getColorXBGR(output: ColorRGBA, colorValue: number): void {
   const num = colorValue >>> 0;
   output.r = ((num & 0xff000000) >>> 24) / 255;
   output.g = ((num & 0x00ff0000) >>> 16) / 255;
@@ -116,8 +120,8 @@ function getColorRgb(output: ColorRGBA, colorValue: number): void {
   output.a = 1;
 }
 
-// 0xrrggbbaa
-function getColorRgba(output: ColorRGBA, colorValue: number): void {
+/** Little-endian wire order [0xAA, 0xBB, 0xGG, 0xRR], or uint32 value 0xRRGGBBAA */
+function getColorABGR(output: ColorRGBA, colorValue: number): void {
   const num = colorValue >>> 0;
   output.r = ((num & 0xff000000) >>> 24) / 255;
   output.g = ((num & 0x00ff0000) >>> 16) / 255;
@@ -125,8 +129,8 @@ function getColorRgba(output: ColorRGBA, colorValue: number): void {
   output.a = ((num & 0x000000ff) >>> 0) / 255;
 }
 
-// 0xbbggrr00
-function getColorBgr(output: ColorRGBA, colorValue: number): void {
+/** Little-endian wire order [0x__, 0xRR, 0xGG, 0xBB], or uint32 value 0xBBGGRR__ */
+function getColorXRGB(output: ColorRGBA, colorValue: number): void {
   const num = colorValue >>> 0;
   output.r = ((num & 0x0000ff00) >>> 8) / 255;
   output.g = ((num & 0x00ff0000) >>> 16) / 255;
@@ -134,8 +138,8 @@ function getColorBgr(output: ColorRGBA, colorValue: number): void {
   output.a = 1;
 }
 
-// 0xbbggrraa
-function getColorBgra(output: ColorRGBA, colorValue: number): void {
+/** Little-endian wire order [0xAA, 0xRR, 0xGG, 0xBB], or uint32 value 0xBBGGRRAA */
+function getColorARGB(output: ColorRGBA, colorValue: number): void {
   const num = colorValue >>> 0;
   output.r = ((num & 0x0000ff00) >>> 8) / 255;
   output.g = ((num & 0x00ff0000) >>> 16) / 255;
@@ -143,8 +147,8 @@ function getColorBgra(output: ColorRGBA, colorValue: number): void {
   output.a = ((num & 0x000000ff) >>> 0) / 255;
 }
 
-// 0x00bbggrr
-function getColor0bgr(output: ColorRGBA, colorValue: number): void {
+/** Little-endian wire order [0xRR, 0xGG, 0xBB, 0x__], or uint32 value 0x__BBGGRR */
+function getColorRGBX(output: ColorRGBA, colorValue: number): void {
   const num = colorValue >>> 0;
   output.r = ((num & 0x000000ff) >>> 0) / 255;
   output.g = ((num & 0x0000ff00) >>> 8) / 255;
@@ -152,8 +156,8 @@ function getColor0bgr(output: ColorRGBA, colorValue: number): void {
   output.a = 1;
 }
 
-// 0xaabbggrr
-function getColorAbgr(output: ColorRGBA, colorValue: number): void {
+/** Little-endian wire order [0xRR, 0xGG, 0xBB, 0xAA], or uint32 value 0xAABBGGRR */
+function getColorRGBA(output: ColorRGBA, colorValue: number): void {
   const num = colorValue >>> 0;
   output.r = ((num & 0x000000ff) >>> 0) / 255;
   output.g = ((num & 0x0000ff00) >>> 8) / 255;
@@ -258,24 +262,29 @@ export function autoSelectColorField<Settings extends ColorModeSettings>(
       switch (fieldNameLower) {
         case "rgb":
           output.colorMode = "rgb";
-          output.rgbByteOrder = "abgr";
+          output.rgbWireFormat = "rgba";
+          delete output.rgbByteOrder;
           break;
         default:
         case "rgba":
           output.colorMode = "rgba";
-          output.rgbByteOrder = "abgr";
+          output.rgbWireFormat = "rgba";
+          delete output.rgbByteOrder;
           break;
         case "bgr":
           output.colorMode = "rgb";
-          output.rgbByteOrder = "bgra";
+          output.rgbWireFormat = "argb";
+          delete output.rgbByteOrder;
           break;
         case "bgra":
           output.colorMode = "rgba";
-          output.rgbByteOrder = "bgra";
+          output.rgbWireFormat = "argb";
+          delete output.rgbByteOrder;
           break;
         case "abgr":
           output.colorMode = "rgba";
-          output.rgbByteOrder = "abgr";
+          output.rgbWireFormat = "rgba";
+          delete output.rgbByteOrder;
           break;
       }
       return;
@@ -306,6 +315,26 @@ export function bestColorByField(fields: string[]): string {
   return fields.find((field) => field === "x") || fields[0] ? fields[0]! : "";
 }
 
+/** Convert the deprecated rgbByteOrder value to rgbWireFormat */
+export function getRgbWireFormat(
+  config: Partial<ColorModeSettings>,
+): ColorModeSettings["rgbWireFormat"] {
+  if (config.rgbWireFormat != undefined) {
+    return config.rgbWireFormat;
+  }
+  if (config.rgbByteOrder != undefined) {
+    switch (config.rgbByteOrder) {
+      case "rgba":
+        return "abgr";
+      case "bgra":
+        return "argb";
+      case "abgr":
+        return "rgba";
+    }
+  }
+  return DEFAULT_RGB_WIRE_FORMAT;
+}
+
 export function baseColorModeSettingsNode<Settings extends ColorModeSettings & BaseSettings>(
   msgFields: string[],
   config: Partial<Settings>,
@@ -320,7 +349,7 @@ export function baseColorModeSettingsNode<Settings extends ColorModeSettings & B
   const gradient = config.gradient;
   const colorMap = config.colorMap ?? "turbo";
   const explicitAlpha = config.explicitAlpha ?? 1;
-  const rgbByteOrder = config.rgbByteOrder ?? "rgba";
+  const rgbWireFormat = getRgbWireFormat(config);
   const minValue = config.minValue;
   const maxValue = config.maxValue;
 
@@ -373,27 +402,29 @@ export function baseColorModeSettingsNode<Settings extends ColorModeSettings & B
         };
         break;
       case "rgb":
-        fields.rgbByteOrder = {
-          label: "RGB byte order",
+        fields.rgbWireFormat = {
+          label: "RGB wire format",
+          help: "Order of bytes in a 4-byte packed RGB field",
           input: "select",
           options: [
-            { label: "RGB", value: "rgba" },
-            { label: "BGR", value: "bgra" },
-            { label: "XBGR", value: "abgr" },
+            { label: "_BGR", value: "abgr" },
+            { label: "_RGB", value: "argb" },
+            { label: "RGB_", value: "rgba" },
           ],
-          value: rgbByteOrder,
+          value: rgbWireFormat,
         };
         break;
       case "rgba":
-        fields.rgbByteOrder = {
-          label: "RGBA byte order",
+        fields.rgbWireFormat = {
+          label: "RGBA wire format",
+          help: "Order of bytes in a 4-byte packed RGBA field",
           input: "select",
           options: [
-            { label: "RGBA", value: "rgba" },
-            { label: "BGRA", value: "bgra" },
             { label: "ABGR", value: "abgr" },
+            { label: "ARGB", value: "argb" },
+            { label: "RGBA", value: "rgba" },
           ],
-          value: rgbByteOrder,
+          value: rgbWireFormat,
         };
         break;
       default:
