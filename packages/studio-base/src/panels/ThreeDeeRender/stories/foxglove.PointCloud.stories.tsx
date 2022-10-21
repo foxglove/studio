@@ -5,7 +5,8 @@
 import { vec3 } from "gl-matrix";
 
 import type { PointCloud } from "@foxglove/schemas";
-import { MessageEvent, Topic } from "@foxglove/studio";
+import { MessageEvent } from "@foxglove/studio";
+import { Topic } from "@foxglove/studio-base/players/types";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 
 import ThreeDeeRender from "../index";
@@ -16,6 +17,9 @@ import useDelayedFixture from "./useDelayedFixture";
 export default {
   title: "panels/ThreeDeeRender",
   component: ThreeDeeRender,
+  parameters: {
+    colorScheme: "dark",
+  },
 };
 
 function rgba(r: number, g: number, b: number, a: number) {
@@ -30,17 +34,25 @@ function rgba(r: number, g: number, b: number, a: number) {
 export const Foxglove_PointCloud_RGBA = (): JSX.Element => (
   <Foxglove_PointCloud rgbaFieldName="rgba" />
 );
-Foxglove_PointCloud_RGBA.parameters = { colorScheme: "dark" };
 
 export const Foxglove_PointCloud_RGB = (): JSX.Element => (
   <Foxglove_PointCloud rgbaFieldName="rgb" />
 );
-Foxglove_PointCloud_RGB.parameters = { colorScheme: "dark" };
 
-function Foxglove_PointCloud({ rgbaFieldName }: { rgbaFieldName: string }): JSX.Element {
+export const Foxglove_PointCloud_RGB_Square = (): JSX.Element => (
+  <Foxglove_PointCloud rgbaFieldName="rgb" pointShape="square" />
+);
+
+function Foxglove_PointCloud({
+  rgbaFieldName,
+  pointShape = "circle",
+}: {
+  rgbaFieldName: string;
+  pointShape?: "circle" | "square";
+}): JSX.Element {
   const topics: Topic[] = [
-    { name: "/pointcloud", datatype: "foxglove.PointCloud" },
-    { name: "/tf", datatype: "geometry_msgs/TransformStamped" },
+    { name: "/pointcloud", schemaName: "foxglove.PointCloud" },
+    { name: "/tf", schemaName: "geometry_msgs/TransformStamped" },
   ];
   const tf1: MessageEvent<TransformStamped> = {
     topic: "/tf",
@@ -53,6 +65,7 @@ function Foxglove_PointCloud({ rgbaFieldName }: { rgbaFieldName: string }): JSX.
         rotation: QUAT_IDENTITY,
       },
     },
+    schemaName: "geometry_msgs/TransformStamped",
     sizeInBytes: 0,
   };
   const tf2: MessageEvent<TransformStamped> = {
@@ -66,6 +79,7 @@ function Foxglove_PointCloud({ rgbaFieldName }: { rgbaFieldName: string }): JSX.
         rotation: QUAT_IDENTITY,
       },
     },
+    schemaName: "geometry_msgs/TransformStamped",
     sizeInBytes: 0,
   };
 
@@ -111,6 +125,7 @@ function Foxglove_PointCloud({ rgbaFieldName }: { rgbaFieldName: string }): JSX.
       ],
       data,
     },
+    schemaName: "foxglove.PointCloud",
     sizeInBytes: 0,
   };
 
@@ -135,6 +150,7 @@ function Foxglove_PointCloud({ rgbaFieldName }: { rgbaFieldName: string }): JSX.
             "/pointcloud": {
               visible: true,
               pointSize: 10,
+              pointShape,
               colorMode: rgbaFieldName,
               colorField: rgbaFieldName,
               rgbByteOrder: "rgba",
@@ -161,11 +177,10 @@ function Foxglove_PointCloud({ rgbaFieldName }: { rgbaFieldName: string }): JSX.
   );
 }
 
-Foxglove_PointCloud_Intensity.parameters = { colorScheme: "dark" };
 export function Foxglove_PointCloud_Intensity(): JSX.Element {
   const topics: Topic[] = [
-    { name: "/pointcloud", datatype: "foxglove.PointCloud" },
-    { name: "/tf", datatype: "geometry_msgs/TransformStamped" },
+    { name: "/pointcloud", schemaName: "foxglove.PointCloud" },
+    { name: "/tf", schemaName: "geometry_msgs/TransformStamped" },
   ];
   const tf1: MessageEvent<TransformStamped> = {
     topic: "/tf",
@@ -178,6 +193,7 @@ export function Foxglove_PointCloud_Intensity(): JSX.Element {
         rotation: QUAT_IDENTITY,
       },
     },
+    schemaName: "geometry_msgs/TransformStamped",
     sizeInBytes: 0,
   };
   const tf2: MessageEvent<TransformStamped> = {
@@ -191,6 +207,7 @@ export function Foxglove_PointCloud_Intensity(): JSX.Element {
         rotation: QUAT_IDENTITY,
       },
     },
+    schemaName: "geometry_msgs/TransformStamped",
     sizeInBytes: 0,
   };
 
@@ -282,6 +299,7 @@ export function Foxglove_PointCloud_Intensity(): JSX.Element {
       ],
       data,
     },
+    schemaName: "foxglove.PointCloud",
     sizeInBytes: 0,
   };
 
@@ -330,9 +348,8 @@ export function Foxglove_PointCloud_Intensity(): JSX.Element {
 }
 
 // Render a flat plane if we only have two dimensions
-Foxglove_PointCloud_TwoDimensions.parameters = { colorScheme: "dark" };
 export function Foxglove_PointCloud_TwoDimensions(): JSX.Element {
-  const topics: Topic[] = [{ name: "/pointcloud", datatype: "foxglove.PointCloud" }];
+  const topics: Topic[] = [{ name: "/pointcloud", schemaName: "foxglove.PointCloud" }];
 
   const SCALE = 10 / 128;
 
@@ -365,6 +382,7 @@ export function Foxglove_PointCloud_TwoDimensions(): JSX.Element {
       ],
       data,
     },
+    schemaName: "foxglove.PointCloud",
     sizeInBytes: 0,
   };
 

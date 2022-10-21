@@ -158,6 +158,9 @@ export default class FoxgloveWebSocketPlayer implements Player {
             if (base64.decode(channel.schema, schemaData, 0) !== schemaData.byteLength) {
               throw new Error(`Failed to decode base64 schema on channel ${channel.id}`);
             }
+          } else if (channel.encoding === "ros1") {
+            schemaEncoding = "ros1msg";
+            schemaData = new TextEncoder().encode(channel.schema);
           } else {
             throw new Error(`Unsupported encoding ${channel.encoding}`);
           }
@@ -261,6 +264,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
           receiveTime,
           message: chanInfo.parsedChannel.deserializer(data),
           sizeInBytes: data.byteLength,
+          schemaName: chanInfo.channel.schemaName,
         });
 
         // Update the message count for this topic
@@ -289,9 +293,9 @@ export default class FoxgloveWebSocketPlayer implements Player {
 
   private _updateTopicsAndDatatypes() {
     // Build a new topics array from this._channelsById
-    const topics = Array.from(this._channelsById.values(), (chanInfo) => ({
+    const topics: Topic[] = Array.from(this._channelsById.values(), (chanInfo) => ({
       name: chanInfo.channel.topic,
-      datatype: chanInfo.parsedChannel.fullSchemaName,
+      schemaName: chanInfo.parsedChannel.fullSchemaName,
     }));
 
     // Remove stats entries for removed topics

@@ -119,6 +119,11 @@ const useStyles = makeStyles()((theme) => ({
   nodeHeaderToggleVisible: {
     opacity: 1,
   },
+  errorTooltip: {
+    whiteSpace: "pre-line",
+    maxHeight: "15vh",
+    overflowY: "auto",
+  },
 }));
 
 function ExpansionArrow({ expanded }: { expanded: boolean }): JSX.Element {
@@ -134,9 +139,34 @@ function ExpansionArrow({ expanded }: { expanded: boolean }): JSX.Element {
 
 const makeStablePath = memoizeWeak((path: readonly string[], key: string) => [...path, key]);
 
+type SelectVisibilityFilterValue = "all" | "visible" | "invisible";
+const SelectVisibilityFilterOptions: { label: string; value: SelectVisibilityFilterValue }[] = [
+  { label: "List all", value: "all" },
+  { label: "List visible", value: "visible" },
+  { label: "List invisible", value: "invisible" },
+];
+function showVisibleFilter(child: DeepReadonly<SettingsTreeNode>): boolean {
+  // want to show children with undefined visibility
+  return child.visible !== false;
+}
+function showInvisibleFilter(child: DeepReadonly<SettingsTreeNode>): boolean {
+  // want to show children with undefined visibility
+  return child.visible !== true;
+}
+const SelectVisibilityFilterField = {
+  input: "select",
+  label: "Filter list",
+  help: "Filter list by visibility",
+  options: SelectVisibilityFilterOptions,
+} as const;
+
 function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
   const { actionHandler, defaultOpen = true, filter, settings = {} } = props;
-  const [state, setState] = useImmer({ open: defaultOpen, editing: false });
+  const [state, setState] = useImmer({
+    open: defaultOpen,
+    editing: false,
+    visibilityFilter: "all",
+  });
 
   const { classes, cx } = useStyles();
 
@@ -144,6 +174,15 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
   const indent = props.path.length;
   const allowVisibilityToggle = props.settings?.visible != undefined;
   const visible = props.settings?.visible !== false;
+  const selectVisibilityFilterEnabled = props.settings?.enableVisibilityFilter === true;
+
+  const selectVisibilityFilter = (action: SettingsTreeAction) => {
+    if (action.action === "update" && action.payload.input === "select") {
+      setState((draft) => {
+        draft.visibilityFilter = action.payload.value as SelectVisibilityFilterValue;
+      });
+    }
+  };
 
   const toggleVisibility = () => {
     actionHandler({
@@ -157,7 +196,8 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
   };
 
   const { fields, children } = settings;
-  const hasProperties = fields != undefined || children != undefined;
+  const hasChildren = children != undefined && Object.keys(children).length > 0;
+  const hasProperties = fields != undefined || hasChildren;
 
   const fieldEditors = filterMap(Object.entries(fields ?? {}), ([key, field]) => {
     return field ? (
@@ -170,8 +210,14 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
     ) : undefined;
   });
 
-  const childNodes = prepareSettingsNodes(children ?? {}).map(([key, child]) => {
-    return (
+  const filterFn =
+    state.visibilityFilter === "visible"
+      ? showVisibleFilter
+      : state.visibilityFilter === "invisible"
+      ? showInvisibleFilter
+      : undefined;
+  const childNodes = filterMap(prepareSettingsNodes(children ?? {}), ([key, child]) => {
+    return !filterFn || filterFn(child) ? (
       <NodeEditor
         actionHandler={actionHandler}
         defaultOpen={child.defaultExpansionState === "collapsed" ? false : true}
@@ -180,7 +226,7 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
         settings={child}
         path={makeStablePath(props.path, key)}
       />
-    );
+    ) : undefined;
   });
 
   const IconComponent = settings.icon ? icons[settings.icon] : undefined;
@@ -310,7 +356,11 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
           {props.settings?.error && (
             <Tooltip
               arrow
-              title={<Typography variant="subtitle2">{props.settings.error}</Typography>}
+              title={
+                <Typography variant="subtitle2" className={classes.errorTooltip}>
+                  {props.settings.error}
+                </Typography>
+              }
             >
               <IconButton size="small" color="error">
                 <ErrorIcon fontSize="small" />
@@ -328,6 +378,14 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
           {fieldEditors}
           <div className={classes.fieldPadding} />
         </>
+      )}
+      {state.open && selectVisibilityFilterEnabled && hasChildren && (
+        <FieldEditor
+          key="visibilityFilter"
+          field={{ ...SelectVisibilityFilterField, value: state.visibilityFilter }}
+          path={makeStablePath(props.path, "visibilityFilter")}
+          actionHandler={selectVisibilityFilter}
+        />
       )}
       {state.open && childNodes}
       {indent === 1 && <Divider style={{ gridColumn: "span 2" }} />}

@@ -244,7 +244,7 @@ export default class RosbridgePlayer implements Player {
       this._problems.removeProblem("topicsAndRawTypesTimeout");
 
       const topicsMissingDatatypes: string[] = [];
-      const topics = [];
+      const topics: Topic[] = [];
       const datatypeDescriptions = [];
       const messageReaders: Record<string, LazyMessageReader | ROS2MessageReader> = {};
 
@@ -273,7 +273,7 @@ export default class RosbridgePlayer implements Player {
           topicsMissingDatatypes.push(topicName);
           continue;
         }
-        topics.push({ name: topicName, datatype: type });
+        topics.push({ name: topicName, schemaName: type });
         datatypeDescriptions.push({ type, messageDefinition });
         const parsedDefinition = parseMessageDefinition(messageDefinition, {
           ros2: this._rosVersion === 2,
@@ -467,8 +467,8 @@ export default class RosbridgePlayer implements Player {
         continue;
       }
 
-      const { datatype } = availTopic;
-      const messageReader = this._messageReadersByDatatype[datatype];
+      const { schemaName } = availTopic;
+      const messageReader = this._messageReadersByDatatype[schemaName];
       if (!messageReader) {
         continue;
       }
@@ -524,6 +524,7 @@ export default class RosbridgePlayer implements Player {
               topic: topicName,
               receiveTime,
               message: innerMessage,
+              schemaName,
               sizeInBytes: bytes.byteLength,
             };
             this._parsedMessages.push(msg);
@@ -671,7 +672,7 @@ export default class RosbridgePlayer implements Player {
       return;
     }
 
-    for (const { topic, datatype } of this._advertisements) {
+    for (const { topic, schemaName: datatype } of this._advertisements) {
       this._topicPublishers.set(
         topic,
         new roslib.Topic({

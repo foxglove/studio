@@ -19,12 +19,12 @@ import {
   IconButton,
   ButtonGroup,
 } from "@mui/material";
-import produce from "immer";
 import { countBy } from "lodash";
-import { KeyboardEvent, useCallback, useState } from "react";
+import { KeyboardEvent, useCallback } from "react";
 import { useAsyncFn } from "react-use";
 import { keyframes } from "tss-react";
 import { makeStyles } from "tss-react/mui";
+import { useImmer } from "use-immer";
 
 import Log from "@foxglove/log";
 import { toDate, toNanoSec } from "@foxglove/rostime";
@@ -90,7 +90,7 @@ export function CreateEventDialog(props: { deviceId: string; onClose: () => void
 
   const refreshEvents = useEvents(selectRefreshEvents);
   const currentTime = useMessagePipeline(selectCurrentTime);
-  const [event, setEvent] = useState<{
+  const [event, setEvent] = useImmer<{
     startTime: undefined | Date;
     duration: undefined | number;
     durationUnit: "sec" | "nsec";
@@ -102,9 +102,9 @@ export function CreateEventDialog(props: { deviceId: string; onClose: () => void
     metadataEntries: [{ key: "", value: "" }],
   });
 
-  const updateMetadata = useCallback((index: number, updateType: keyof KeyValue, value: string) => {
-    setEvent(
-      produce((draft) => {
+  const updateMetadata = useCallback(
+    (index: number, updateType: keyof KeyValue, value: string) => {
+      setEvent((draft) => {
         const keyval = draft.metadataEntries[index];
         if (keyval) {
           keyval[updateType] = value;
@@ -118,9 +118,10 @@ export function CreateEventDialog(props: { deviceId: string; onClose: () => void
             draft.metadataEntries.push({ key: "", value: "" });
           }
         }
-      }),
-    );
-  }, []);
+      });
+    },
+    [setEvent],
+  );
 
   const { formatTime } = useAppTimeFormat();
 
@@ -164,23 +165,25 @@ export function CreateEventDialog(props: { deviceId: string; onClose: () => void
     [createEvent],
   );
 
-  const addRow = useCallback((index: number) => {
-    setEvent(
-      produce((draft) => {
-        draft.metadataEntries.splice(index, 0, { key: "", value: "" });
-      }),
-    );
-  }, []);
+  const addRow = useCallback(
+    (index: number) => {
+      setEvent((draft) => {
+        draft.metadataEntries.splice(index + 1, 0, { key: "", value: "" });
+      });
+    },
+    [setEvent],
+  );
 
-  const removeRow = useCallback((index: number) => {
-    setEvent(
-      produce((draft) => {
+  const removeRow = useCallback(
+    (index: number) => {
+      setEvent((draft) => {
         if (draft.metadataEntries.length > 1) {
           draft.metadataEntries.splice(index, 1);
         }
-      }),
-    );
-  }, []);
+      });
+    },
+    [setEvent],
+  );
 
   const formattedStartTime = currentTime ? formatTime(currentTime) : "-";
 

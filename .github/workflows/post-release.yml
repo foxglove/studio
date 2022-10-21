@@ -61,10 +61,9 @@ jobs:
           token: ${{ secrets.FOXGLOVEBOT_GITHUB_TOKEN }}
           lfs: true
 
-      - uses: actions/setup-node@v3.5.0
+      - uses: actions/setup-node@v3.5.1
         with:
           node-version: 16.17
-          cache: yarn
       - run: corepack enable yarn
 
       - run: yarn install --immutable
@@ -120,11 +119,10 @@ jobs:
           ref: ${{ github.event.release.tag_name || github.event.inputs.tag_name }}
           lfs: true
 
-      - uses: actions/setup-node@v3.5.0
+      - uses: actions/setup-node@v3.5.1
         with:
           node-version: 16.17
           registry-url: https://registry.npmjs.org
-          cache: yarn
       - run: corepack enable yarn
 
       - run: yarn install --immutable
@@ -196,10 +194,9 @@ jobs:
           token: ${{ secrets.FOXGLOVEBOT_GITHUB_TOKEN }}
           lfs: true
 
-      - uses: actions/setup-node@v3.5.0
+      - uses: actions/setup-node@v3.5.1
         with:
           node-version: 16.17
-          cache: yarn
       - run: corepack enable yarn
 
       - run: yarn install --immutable
