@@ -2,9 +2,10 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { Story, StoryContext } from "@storybook/react";
+
 import Blank from "@foxglove/studio-base/panels/Blank";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
-import { Story, StoryContext } from "@storybook/react";
 
 export default {
   title: "panels/Blank",
@@ -20,21 +21,17 @@ export default {
   ],
 };
 
-export const Default = () => <Blank />;
+export function Default(): JSX.Element {
+  return <Blank />;
+}
+Default.parameters = { colorScheme: "both-column" };
 
-Default.parameters = {
-  colorScheme: "both-column",
-};
+export function NoLogo(): JSX.Element {
+  return <Blank />;
+}
+NoLogo.parameters = { colorScheme: "both-column" };
 
-export const NoLogo = () => <Blank />;
-
-NoLogo.parameters = {
-  colorScheme: "both-column",
-};
-
-export const WithSettings = () => <Blank />;
-
-WithSettings.parameters = {
-  colorScheme: "both-column",
-  includeSettings: true,
-};
+export function WithSettings(): JSX.Element {
+  return <Blank />;
+}
+WithSettings.parameters = { colorScheme: "both-column", includeSettings: true };
