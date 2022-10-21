@@ -47,7 +47,7 @@ function buildSettingsTree(config: Config): SettingsTreeNodes {
     label: "General",
     fields: {
       showLogo: {
-        label: "Show logo",
+        label: "Foxglove logo",
         input: "boolean",
         value: config.showLogo,
       },
