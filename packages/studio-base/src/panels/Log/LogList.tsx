@@ -14,6 +14,7 @@
 import DoubleArrowDownIcon from "@mui/icons-material/KeyboardDoubleArrowDown";
 import { Fab } from "@mui/material";
 import { CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useResizeDetector } from "react-resize-detector";
 import { useLatest } from "react-use";
 import { AutoSizer } from "react-virtualized";
 import { VariableSizeList as List } from "react-window";
@@ -120,20 +121,28 @@ function LogList({ items }: Props): JSX.Element {
     listRef.current?.resetAfterIndex(index);
   }, []);
 
+  const { width: resizedWidth, ref: resizeRootRef } = useResizeDetector({
+    refreshRate: 0,
+    refreshMode: "debounce",
+  });
+
   // This is passed to each row to tell it what to render.
   const itemData = useMemo(
     () => ({
       items,
       setRowHeight,
     }),
-    [items, setRowHeight],
+    // Add resized width as an extra dep here to force the list to recalculate
+    // everything when the width changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [items, setRowHeight, resizedWidth],
   );
 
   return (
     <AutoSizer>
       {({ width, height }) => {
         return (
-          <div style={{ position: "relative", width, height }} key={width}>
+          <div style={{ position: "relative", width, height }} ref={resizeRootRef}>
             <List
               ref={listRef}
               width={width}
