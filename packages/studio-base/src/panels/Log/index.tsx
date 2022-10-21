@@ -20,13 +20,11 @@ import { useDataSourceInfo, useMessagesByTopic } from "@foxglove/studio-base/Pan
 import Panel from "@foxglove/studio-base/components/Panel";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import Stack from "@foxglove/studio-base/components/Stack";
-import { useAppTimeFormat } from "@foxglove/studio-base/hooks";
 import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelSettingsEditorContextProvider";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 
 import FilterBar, { FilterBarProps } from "./FilterBar";
 import LogList from "./LogList";
-import LogMessage from "./LogMessage";
 import { normalizedLogMessage } from "./conversion";
 import filterMessages from "./filterMessages";
 import helpContent from "./index.help.md";
@@ -51,7 +49,6 @@ const SUPPORTED_DATATYPES = [
 const LogPanel = React.memo(({ config, saveConfig }: Props) => {
   const { topics } = useDataSourceInfo();
   const { minLogLevel, searchTerms } = config;
-  const { timeFormat, timeZone } = useAppTimeFormat();
 
   const updatePanelSettingsTree = usePanelSettingsTreeUpdate();
 
