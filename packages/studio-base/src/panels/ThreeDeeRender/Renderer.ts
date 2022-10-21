@@ -192,7 +192,7 @@ const MAX_SELECTIONS = 10;
 
 // NOTE: These do not use .convertSRGBToLinear() since background color is not
 // affected by gamma correction
-const LIGHT_BACKDROP = new THREE.Color(0xececec);
+const LIGHT_BACKDROP = new THREE.Color(0xf4f4f5);
 const DARK_BACKDROP = new THREE.Color(0x121217);
 
 // Define rendering layers for multipass rendering used for the selection effect
