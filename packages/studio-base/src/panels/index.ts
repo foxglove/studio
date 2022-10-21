@@ -4,6 +4,7 @@
 import { PanelInfo } from "@foxglove/studio-base/context/PanelCatalogContext";
 import { TAB_PANEL_TYPE } from "@foxglove/studio-base/util/globalConstants";
 
+import BlankHelp from "./Blank/index.help.md";
 import DataSourceInfoHelp from "./DataSourceInfo/index.help.md";
 import dataSourceInfoThumbnail from "./DataSourceInfo/thumbnail.png";
 import GaugeHelp from "./Gauge/index.help.md";
@@ -58,6 +59,13 @@ const builtin: PanelInfo[] = [
     thumbnail: threeDeeRenderThumbnail,
     module: async () => await import("./ThreeDeeRender"),
     settingsOnboardingTooltip: "Open settings to configure topics and layers.",
+  },
+  {
+    title: "Blank",
+    type: "BlankPanel",
+    description: "For when you need a little space.",
+    help: BlankHelp,
+    module: async () => await import("./Blank"),
   },
   {
     title: `Diagnostics – Detail (ROS)`,
