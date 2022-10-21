@@ -1405,6 +1405,10 @@ export function autoSelectColorField(
           output.colorMode = "rgba";
           output.rgbByteOrder = "abgr";
           break;
+        case "argb":
+          output.colorMode = "rgba";
+          output.rgbByteOrder = "argb";
+          break;
       }
       return;
     }

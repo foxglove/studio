@@ -13,7 +13,7 @@ export type RgbColorMode = {
    * while Studio/Webviz historically used ABGR for little-endian clouds (and did not support
    * big-endian clouds).
    */
-  rgbByteOrder?: "rgba" | "bgra" | "abgr";
+  rgbByteOrder?: "rgba" | "bgra" | "abgr" | "argb";
   flatColor?: never;
   colorField?: never;
   minColor?: never;
@@ -85,7 +85,7 @@ export function isMappedColorMode(mode: ColorMode): mode is MappedColorMode {
 export function isValidRgbByteOrder(
   value: string,
 ): value is NonNullable<RgbColorMode["rgbByteOrder"]> {
-  return value === "rgba" || value === "bgra" || value === "abgr";
+  return value === "rgba" || value === "bgra" || value === "abgr" || value === "argb";
 }
 
 /**

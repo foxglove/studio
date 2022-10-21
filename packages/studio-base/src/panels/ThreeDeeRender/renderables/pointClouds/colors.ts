@@ -25,7 +25,7 @@ export interface ColorModeSettings {
   gradient: [string, string];
   colorMap: "turbo" | "rainbow";
   explicitAlpha: number;
-  rgbByteOrder: "rgba" | "bgra" | "abgr";
+  rgbByteOrder: "rgba" | "bgra" | "abgr" | "argb";
   minValue?: number;
   maxValue?: number;
 }
@@ -303,6 +303,10 @@ export function autoSelectColorField<Settings extends ColorModeSettings>(
           output.colorMode = "rgba";
           output.rgbByteOrder = "abgr";
           break;
+        case "argb":
+          output.colorMode = "rgba";
+          output.rgbByteOrder = "argb";
+          break;
       }
       return;
     }
@@ -418,6 +422,7 @@ export function baseColorModeSettingsNode<Settings extends ColorModeSettings & B
             { label: "RGBA", value: "rgba" },
             { label: "BGRA", value: "bgra" },
             { label: "ABGR", value: "abgr" },
+            { label: "ARGB", value: "argb" },
           ],
           value: rgbByteOrder,
         };

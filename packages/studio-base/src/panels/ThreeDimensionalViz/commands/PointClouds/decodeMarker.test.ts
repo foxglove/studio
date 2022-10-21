@@ -87,7 +87,7 @@ describe("<PointClouds />", () => {
   });
 
   describe("rgb/rgba colors", () => {
-    it.each(["rgba", "bgra", "abgr"] as const)(
+    it.each(["rgba", "bgra", "abgr", "argb"] as const)(
       "builds color buffer by extracting RGB data as %s from PointCloud2",
       (rgbByteOrder) => {
         const result = decodeMarker({
@@ -118,6 +118,10 @@ describe("<PointClouds />", () => {
             // eslint-disable-next-line jest/no-conditional-expect
             expect(Array.from(buffer)).toEqual([230, 255, 10, alpha, 255, 255, 10, alpha]);
             break;
+          case "argb":
+            // eslint-disable-next-line jest/no-conditional-expect
+            expect(Array.from(buffer)).toEqual([255, 230, 127, alpha, 255, 255, 127, alpha]);
+            break;
         }
       },
     );
@@ -128,7 +132,7 @@ describe("<PointClouds />", () => {
         field.name === "rgb" ? { ...field, name: "rgba" } : field,
       ),
     };
-    it.each(["rgba", "bgra", "abgr"] as const)(
+    it.each(["rgba", "bgra", "abgr", "argb"] as const)(
       "builds color buffer by extracting RGBA data as %s from PointCloud2",
       (rgbByteOrder) => {
         const result = decodeMarker({
@@ -157,6 +161,10 @@ describe("<PointClouds />", () => {
           case "bgra":
             // eslint-disable-next-line jest/no-conditional-expect
             expect(Array.from(buffer)).toEqual([230, 255, 10, 127, 255, 255, 10, 127]);
+            break;
+          case "argb":
+            // eslint-disable-next-line jest/no-conditional-expect
+            expect(Array.from(buffer)).toEqual([255, 230, 127, 10, 255, 255, 127, 10]);
             break;
         }
       },

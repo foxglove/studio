@@ -183,6 +183,7 @@ export default function PointCloudSettingsEditor(
           <FormControlLabel value="rgba" control={<Radio />} label="Byte order RGBA" />
           <FormControlLabel value="abgr" control={<Radio />} label="Byte order ABGR" />
           <FormControlLabel value="bgra" control={<Radio />} label="Byte order BGRA (RViz/PCL)" />
+          <FormControlLabel value="argb" control={<Radio />} label="Byte order ARGB" />
         </RadioGroup>
       )}
 

@@ -234,6 +234,12 @@ export function createColorBuffer({
         gOffset = 2;
         rOffset = 3;
         break;
+      case "argb":
+        aOffset = 0;
+        rOffset = 1;
+        gOffset = 2;
+        bOffset = 3;
+        break;
     }
     const readers = [
       new Uint8Reader(data, rgbOffset + rOffset),
