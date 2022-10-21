@@ -45,7 +45,7 @@ export type ChartData = ChartJsChartData<"scatter", (ScatterDataPoint | typeof C
 type Props = {
   data: ChartData;
   options: ChartOptions;
-  resetBounds: boolean;
+  isBoundsReset: boolean;
   type: string;
   height: number;
   width: number;
@@ -109,7 +109,8 @@ function Chart(props: Props): JSX.Element {
   const zoomEnabled = props.options.plugins?.zoom?.zoom?.enabled ?? false;
   const panEnabled = props.options.plugins?.zoom?.pan?.enabled ?? false;
 
-  const { type, data, resetBounds, options, width, height, onStartRender, onFinishRender } = props;
+  const { type, data, isBoundsReset, options, width, height, onStartRender, onFinishRender } =
+    props;
 
   const sendWrapperRef = useRef<RpcSend | undefined>();
   const rpcSendRef = useRef<RpcSend | undefined>();
@@ -211,7 +212,7 @@ function Chart(props: Props): JSX.Element {
       prev.width = out.width = width;
     }
 
-    out.resetBounds = resetBounds;
+    out.isBoundsReset = isBoundsReset;
 
     // nothing to update
     if (Object.keys(out).length === 0) {
@@ -219,7 +220,7 @@ function Chart(props: Props): JSX.Element {
     }
 
     return out;
-  }, [data, height, options, resetBounds, width]);
+  }, [data, height, options, isBoundsReset, width]);
 
   const { error: updateError } = useAsync(async () => {
     if (!sendWrapperRef.current) {

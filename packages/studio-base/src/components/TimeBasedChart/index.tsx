@@ -813,7 +813,7 @@ export default function TimeBasedChart(props: Props): JSX.Element {
     type,
     width,
     height,
-    resetBounds: globalBounds == undefined,
+    isBoundsReset: globalBounds == undefined,
     options,
     data: downsampledData,
     onClick: props.onClick,

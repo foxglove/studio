@@ -182,13 +182,13 @@ export default class ChartJSManager {
     options,
     width,
     height,
-    resetBounds,
+    isBoundsReset,
     data,
   }: {
     options?: ChartOptions;
     width?: number;
     height?: number;
-    resetBounds: boolean;
+    isBoundsReset: boolean;
     data?: ChartData;
   }): RpcScales {
     const instance = this._chartInstance;
@@ -203,13 +203,13 @@ export default class ChartJSManager {
       // min and max have been specified.
       const scales = options.scales ?? {};
       if (
-        (resetBounds || (scales.x?.min != undefined && scales.x.max != undefined)) &&
+        (isBoundsReset || (scales.x?.min != undefined && scales.x.max != undefined)) &&
         instance.options.scales
       ) {
         instance.options.scales.x = scales.x;
       }
       if (
-        (resetBounds || (scales.y?.min != undefined && scales.y.max != undefined)) &&
+        (isBoundsReset || (scales.y?.min != undefined && scales.y.max != undefined)) &&
         instance.options.scales
       ) {
         instance.options.scales.y = scales.y;

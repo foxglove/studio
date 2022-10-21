@@ -43,7 +43,7 @@ export type ChartUpdateMessage = {
   data?: ChartData;
   height?: number;
   options?: ChartOptions;
-  resetBounds: boolean;
+  isBoundsReset: boolean;
   width?: number;
 };
 
