@@ -133,7 +133,7 @@ function LogList({ items }: Props): JSX.Element {
     <AutoSizer>
       {({ width, height }) => {
         return (
-          <div style={{ position: "relative", width, height }}>
+          <div style={{ position: "relative", width, height }} key={width}>
             <List
               ref={listRef}
               width={width}
