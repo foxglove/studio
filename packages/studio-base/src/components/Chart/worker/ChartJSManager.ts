@@ -214,13 +214,14 @@ export default class ChartJSManager {
         this._hasZoomed = false;
       }
 
-      // If the user manually zoomed or panned this chart we avoid updating the scales since they have updated.
-      if (!this._hasZoomed && !this._hasPanned && instance.options.scales) {
+      // Let the chart manage its own scales unless we've been told to reset or if an explicit
+      // min and max have been specified.
+      if (
+        (resetBounds || (scales.x?.min != undefined && scales.x.max != undefined)) &&
+        instance.options.scales
+      ) {
         instance.options.scales.x = scales.x;
       }
-
-      // Let the chart manage its own y scale unless we've been told to reset or if an explicit
-      // min and max have been specified.
       if (
         (resetBounds || (scales.y?.min != undefined && scales.y.max != undefined)) &&
         instance.options.scales
