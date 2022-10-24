@@ -34,6 +34,8 @@ function zeroReader(): number {
   return 0;
 }
 
+const floatTextureColorModes = new Set(["gradient", "colorMap"]);
+
 const INVALID_FOXGLOVE_GRID = "INVALID_FOXGLOVE_GRID";
 
 const DEFAULT_COLOR_MAP = "turbo";
@@ -260,7 +262,7 @@ export class FoxgloveGridRenderable extends Renderable<FoxgloveGridUserData> {
         ) {
           // The image dimensions changed, regenerate the texture
           texture.dispose();
-          texture = createTexture(foxgloveGrid);
+          texture = createRGBATexture(foxgloveGrid);
           this.userData.texture = texture;
           this.userData.material.uniforms.map.value = texture;
         }
@@ -294,7 +296,21 @@ export class FoxgloveGridRenderable extends Renderable<FoxgloveGridUserData> {
       }
       case "colormap":
       case "gradient": {
-        const valueData = new Float32Array(cols * rows);
+        if (
+          texture.format !== THREE.RedFormat ||
+          cols !== texture.image.width ||
+          rows !== texture.image.height
+        ) {
+          // The image dimensions changed, regenerate the texture
+          texture.dispose();
+          texture = createFloatTexture(foxgloveGrid);
+          texture.generateMipmaps = false;
+          this.userData.texture = texture;
+          this.userData.material.uniforms.map.value = texture;
+        }
+        // type of image.data is Uint8ClampedArray, but it is in fact the raw texture data even thought it's
+        // meant to be used as an RGBA image data array
+        const valueData = texture.image.data as unknown as Float32Array;
         const r32fView = new DataView(valueData.buffer, valueData.byteOffset, valueData.byteLength);
         for (let y = 0; y < rows; y++) {
           for (let x = 0; x < cols; x++) {
@@ -305,31 +321,6 @@ export class FoxgloveGridRenderable extends Renderable<FoxgloveGridUserData> {
             r32fView.setFloat32(r32fOffset, colorValue, true);
           }
         }
-        texture.dispose();
-        /**
-         * It's necessary to create a new texture each image for value-DataTextures (vs RGBA)
-         *  - the source data from the image is only available in RGBA Uint8Clamped cols * rows * 4 length format to update
-         *    this doesn't allow us to write floats to the red channel to properly update the value in the shader
-         *  - RedFormat and FloatType DataTextures need to be initialized with a Float32Array otherwise they error
-         */
-        texture = new THREE.DataTexture(
-          valueData,
-          cols,
-          rows,
-          THREE.RedFormat,
-          THREE.FloatType,
-          THREE.UVMapping,
-          THREE.ClampToEdgeWrapping,
-          THREE.ClampToEdgeWrapping,
-          THREE.NearestFilter,
-          THREE.LinearFilter,
-          1,
-          THREE.LinearEncoding, // FoxgloveGrid carries linear grayscale values, not sRGB
-        );
-        texture.generateMipmaps = false;
-        this.userData.texture = texture;
-        this.userData.material.uniforms.map.value = texture;
-        // new texture but it needs to know to update the material/renderer
         this.userData.material.uniforms.map.value.needsUpdate = true;
         break;
       }
@@ -429,7 +420,10 @@ export class FoxgloveGrid extends SceneExtension<FoxgloveGridRenderable> {
         });
       }
 
-      const texture = createTexture(foxgloveGrid);
+      // Check color
+      const texture = floatTextureColorModes.has(settings.colorMode)
+        ? createFloatTexture(foxgloveGrid)
+        : createRGBATexture(foxgloveGrid);
       const mesh = createMesh(topic, texture);
       const material = mesh.material as GridShaderMaterial;
       const pickingMaterial = mesh.userData.pickingMaterial as THREE.ShaderMaterial;
@@ -527,7 +521,7 @@ function invalidFoxgloveGridError(
   renderer.settings.errors.addToTopic(renderable.userData.topic, INVALID_FOXGLOVE_GRID, message);
 }
 
-function createTexture(foxgloveGrid: Grid): THREE.DataTexture {
+function createRGBATexture(foxgloveGrid: Grid): THREE.DataTexture {
   const { column_count: cols, row_stride } = foxgloveGrid;
   const rows = foxgloveGrid.data.byteLength / row_stride;
   const size = cols * rows;
@@ -538,6 +532,29 @@ function createTexture(foxgloveGrid: Grid): THREE.DataTexture {
     rows,
     THREE.RGBAFormat,
     THREE.UnsignedByteType,
+    THREE.UVMapping,
+    THREE.ClampToEdgeWrapping,
+    THREE.ClampToEdgeWrapping,
+    THREE.NearestFilter,
+    THREE.LinearFilter,
+    1,
+    THREE.LinearEncoding, // FoxgloveGrid carries linear grayscale values, not sRGB
+  );
+  texture.generateMipmaps = false;
+  return texture;
+}
+
+function createFloatTexture(foxgloveGrid: Grid): THREE.DataTexture {
+  const { column_count: cols, row_stride } = foxgloveGrid;
+  const rows = foxgloveGrid.data.byteLength / row_stride;
+  const size = cols * rows;
+  const data = new Float32Array(size);
+  const texture = new THREE.DataTexture(
+    data,
+    cols,
+    rows,
+    THREE.RedFormat,
+    THREE.FloatType,
     THREE.UVMapping,
     THREE.ClampToEdgeWrapping,
     THREE.ClampToEdgeWrapping,
