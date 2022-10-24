@@ -196,7 +196,7 @@ function Parameters(): ReactElement {
                     <TableCell>
                       <Typography
                         noWrap
-                        title={String(editValue)}
+                        title={displayValue}
                         variant="inherit"
                         color="text.secondary"
                       >
