@@ -79,7 +79,7 @@ const useStyles = makeStyles<void, "copyIcon">()((_theme, _params, classes) => (
   },
 }));
 
-function displayValue(value: unknown): string | number | boolean | unknown[] | object {
+function editableValue(value: unknown): string | number | boolean | unknown[] | object {
   if (
     typeof value === "string" ||
     typeof value === "number" ||
@@ -166,7 +166,8 @@ function Parameters(): ReactElement {
           </TableHead>
           <TableBody>
             {parameterNames.map((name) => {
-              const value = displayValue(parameters.get(name));
+              const displayValue = JSON.stringify(parameters.get(name)) ?? "";
+              const editValue = editableValue(parameters.get(name));
 
               return (
                 <TableRow
@@ -184,8 +185,8 @@ function Parameters(): ReactElement {
                   {canSetParams ? (
                     <TableCell padding="none">
                       <JsonInput
-                        dataTestId={`parameter-value-input-${value}`}
-                        value={value}
+                        dataTestId={`parameter-value-input-${editValue}`}
+                        value={editValue}
                         onChange={(newVal) => {
                           setParameter(name, newVal as ParameterValue);
                         }}
@@ -195,11 +196,11 @@ function Parameters(): ReactElement {
                     <TableCell>
                       <Typography
                         noWrap
-                        title={String(value)}
+                        title={String(editValue)}
                         variant="inherit"
                         color="text.secondary"
                       >
-                        {value}
+                        {displayValue}
                       </Typography>
                     </TableCell>
                   )}
@@ -210,7 +211,7 @@ function Parameters(): ReactElement {
                       edge="end"
                       size="small"
                       iconSize="small"
-                      getText={() => `${name}: ${value}`}
+                      getText={() => `${name}: ${editValue}`}
                     />
                   </TableCell>
                 </TableRow>
