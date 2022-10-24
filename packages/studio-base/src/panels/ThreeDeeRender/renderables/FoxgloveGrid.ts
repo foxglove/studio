@@ -250,81 +250,65 @@ export class FoxgloveGridRenderable extends Renderable<FoxgloveGridUserData> {
 
     const cols = foxgloveGrid.column_count;
     const rows = foxgloveGrid.data.length / foxgloveGrid.row_stride;
-    switch (settings.colorMode) {
-      case "flat":
-      case "rgb":
-      case "rgba": {
-        let hasTransparency = false;
-        if (
-          texture.format !== THREE.RGBAFormat ||
-          cols !== texture.image.width ||
-          rows !== texture.image.height
-        ) {
-          // The image dimensions changed, regenerate the texture
-          texture.dispose();
-          texture = createRGBATexture(foxgloveGrid);
-          this.userData.texture = texture;
-          this.userData.material.uniforms.map.value = texture;
-        }
-        const colorConverter = getColorConverter(settings, 0, 1);
-        const rgba = texture.image.data;
-        for (let y = 0; y < rows; y++) {
-          for (let x = 0; x < cols; x++) {
-            const offset = y * foxgloveGrid.row_stride + x * foxgloveGrid.cell_stride;
-            const colorValue = fieldReader(view, offset);
-            colorConverter(tempColor, colorValue);
-            const i = y * cols + x;
-            const rgbaOffset = i * 4;
-            rgba[rgbaOffset + 0] = Math.floor(tempColor.r * 255);
-            rgba[rgbaOffset + 1] = Math.floor(tempColor.g * 255);
-            rgba[rgbaOffset + 2] = Math.floor(tempColor.b * 255);
-            rgba[rgbaOffset + 3] = Math.floor(tempColor.a * 255);
+    const sizeChanged = cols !== texture.image.width || rows !== texture.image.height;
+    const floatMode = floatTextureColorModes.has(settings.colorMode);
+    const formatChanged = floatMode
+      ? texture.format !== THREE.RedFormat
+      : texture.format !== THREE.RGBAFormat;
+    if (formatChanged || sizeChanged) {
+      // The image dimensions or format changed, regenerate the texture
+      texture.dispose();
+      texture = floatMode ? createFloatTexture(foxgloveGrid) : createRGBATexture(foxgloveGrid);
+      texture.generateMipmaps = false;
+      this.userData.texture = texture;
+      this.userData.material.uniforms.map.value = texture;
+    }
 
-            // We cheat a little with transparency: alpha 0 will be handled by the alphaTest setting, so
-            // we don't need to set material.transparent = true.
-            if (tempColor.a !== 0 && tempColor.a !== 1) {
-              hasTransparency = true;
-            }
-          }
+    if (floatMode) {
+      // FLOAT texture handling
+      // type of image.data is Uint8ClampedArray, but it is in fact the raw texture data even thought it's
+      // meant to be used as an RGBA image data array
+      const valueData = texture.image.data as unknown as Float32Array;
+      const r32fView = new DataView(valueData.buffer, valueData.byteOffset, valueData.byteLength);
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+          const offset = y * foxgloveGrid.row_stride + x * foxgloveGrid.cell_stride;
+          const colorValue = fieldReader(view, offset);
+          const i = y * cols + x;
+          const r32fOffset = i * 4;
+          r32fView.setFloat32(r32fOffset, colorValue, true);
         }
-        texture.needsUpdate = true;
-        if (this.userData.material.transparent !== hasTransparency) {
-          this.userData.material.transparent = hasTransparency;
-          this.userData.material.needsUpdate = true;
-        }
-        break;
       }
-      case "colormap":
-      case "gradient": {
-        if (
-          texture.format !== THREE.RedFormat ||
-          cols !== texture.image.width ||
-          rows !== texture.image.height
-        ) {
-          // The image dimensions changed, regenerate the texture
-          texture.dispose();
-          texture = createFloatTexture(foxgloveGrid);
-          texture.generateMipmaps = false;
-          this.userData.texture = texture;
-          this.userData.material.uniforms.map.value = texture;
-        }
-        // type of image.data is Uint8ClampedArray, but it is in fact the raw texture data even thought it's
-        // meant to be used as an RGBA image data array
-        const valueData = texture.image.data as unknown as Float32Array;
-        const r32fView = new DataView(valueData.buffer, valueData.byteOffset, valueData.byteLength);
-        for (let y = 0; y < rows; y++) {
-          for (let x = 0; x < cols; x++) {
-            const offset = y * foxgloveGrid.row_stride + x * foxgloveGrid.cell_stride;
-            const colorValue = fieldReader(view, offset);
-            const i = y * cols + x;
-            const r32fOffset = i * 4;
-            r32fView.setFloat32(r32fOffset, colorValue, true);
+    } else {
+      // RGBA textures
+      let hasTransparency = false;
+      const colorConverter = getColorConverter(settings, 0, 1);
+      const rgba = texture.image.data;
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+          const offset = y * foxgloveGrid.row_stride + x * foxgloveGrid.cell_stride;
+          const colorValue = fieldReader(view, offset);
+          colorConverter(tempColor, colorValue);
+          const i = y * cols + x;
+          const rgbaOffset = i * 4;
+          rgba[rgbaOffset + 0] = Math.floor(tempColor.r * 255);
+          rgba[rgbaOffset + 1] = Math.floor(tempColor.g * 255);
+          rgba[rgbaOffset + 2] = Math.floor(tempColor.b * 255);
+          rgba[rgbaOffset + 3] = Math.floor(tempColor.a * 255);
+
+          // We cheat a little with transparency: alpha 0 will be handled by the alphaTest setting, so
+          // we don't need to set material.transparent = true.
+          if (tempColor.a !== 0 && tempColor.a !== 1) {
+            hasTransparency = true;
           }
         }
-        this.userData.material.uniforms.map.value.needsUpdate = true;
-        break;
+      }
+      if (this.userData.material.transparent !== hasTransparency) {
+        this.userData.material.transparent = hasTransparency;
+        this.userData.material.needsUpdate = true;
       }
     }
+    this.userData.material.uniforms.map.value = texture;
   }
 }
 
