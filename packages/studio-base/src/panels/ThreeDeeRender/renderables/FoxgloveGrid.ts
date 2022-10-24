@@ -119,6 +119,12 @@ export class FoxgloveGridRenderable extends Renderable<FoxgloveGridUserData> {
     return this.userData.foxgloveGrid;
   }
 
+  public syncPickingMaterial(): void {
+    const { pickingMaterial, material } = this.userData;
+    pickingMaterial.uniforms = material.uniforms;
+    pickingMaterial.needsUpdate = true;
+  }
+
   private _getFieldReader(
     output: { fieldReader: FieldReader },
     foxgloveGrid: Grid,
@@ -377,6 +383,7 @@ export class FoxgloveGrid extends SceneExtension<FoxgloveGridRenderable> {
         // technically it doesn't if it's going between gradient and colorMap, but since it's an infrequent user-action it's not a big hit
         renderable.updateTexture(renderable.userData.foxgloveGrid, renderable.userData.settings);
       }
+      renderable.syncPickingMaterial();
     }
   };
 
@@ -485,6 +492,8 @@ export class FoxgloveGrid extends SceneExtension<FoxgloveGridRenderable> {
     renderable.updateTexture(foxgloveGrid, settings);
 
     renderable.scale.set(foxgloveGrid.cell_size.x * cols, foxgloveGrid.cell_size.y * rows, 1);
+
+    renderable.syncPickingMaterial();
   }
 
   public static Geometry(): THREE.PlaneGeometry {
@@ -699,7 +708,7 @@ function createMaterial(texture: THREE.DataTexture, topic: string): THREE.Shader
           }
         }
         if(PICKING == 1) {
-          if(gl_FragColor.a == 0.0) {
+          if(gl_FragColor.a < 0.00001) {
             discard;
           }
           gl_FragColor = objectId;
