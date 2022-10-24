@@ -689,7 +689,8 @@ function createMaterial(texture: THREE.DataTexture, topic: string): THREE.Shader
       void main() {
         vec4 color = texture2D(map, vUv);
         if(colorMode == RGBA || colorMode == RGB || colorMode == FLAT) {
-          gl_FragColor = color;
+          // colors that are coming from CPU need to be converted
+          gl_FragColor = LinearTosRGB(color);
         } else {
           float delta = max(maxValue - minValue, 0.00001);
           float colorValue = color.r;
@@ -699,17 +700,17 @@ function createMaterial(texture: THREE.DataTexture, topic: string): THREE.Shader
             vec4 weightedMinColor = vec4(minGradientColor.rgb * minGradientColor.a, minGradientColor.a);
             vec4 weightedMaxColor = vec4(maxGradientColor.rgb * maxGradientColor.a, maxGradientColor.a);
             vec4 finalColor = mix(weightedMinColor, weightedMaxColor, normalizedColorValue);
-            gl_FragColor = finalColor;
-            gl_FragColor = LinearTosRGB(gl_FragColor);
+            // gradient computation takes place in linear colorspace and must be translated to sRGB
+            gl_FragColor = LinearTosRGB(finalColor);
           } else if(colorMode == COLORMAP) {
             // colormap
+            // don't need to go through LinearTosRGB because they are created in the shader
             if(colorMap == TURBO) {
               gl_FragColor = vec4(turbo(normalizedColorValue), colorMapOpacity);
             } else if(colorMap == RAINBOW) {
               gl_FragColor = vec4(rainbow(normalizedColorValue), colorMapOpacity);
             }
           }
-          // gl_FragColor = vec4(LinearTosRGB(gl_FragColor).rgb, gl_FragColor.a);
         }
         if(PICKING == 1) {
           if(gl_FragColor.a < 0.00001) {
