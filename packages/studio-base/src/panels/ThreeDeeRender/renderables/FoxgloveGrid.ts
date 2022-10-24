@@ -308,7 +308,7 @@ export class FoxgloveGridRenderable extends Renderable<FoxgloveGridUserData> {
         this.userData.material.needsUpdate = true;
       }
     }
-    this.userData.material.uniforms.map.value = texture;
+    this.userData.material.uniforms.map.value.needsUpdate = true;
   }
 }
 
