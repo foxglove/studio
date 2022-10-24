@@ -185,7 +185,7 @@ function Parameters(): ReactElement {
                   {canSetParams ? (
                     <TableCell padding="none">
                       <JsonInput
-                        dataTestId={`parameter-value-input-${editValue}`}
+                        dataTestId={`parameter-value-input-${displayValue}`}
                         value={editValue}
                         onChange={(newVal) => {
                           setParameter(name, newVal as ParameterValue);
