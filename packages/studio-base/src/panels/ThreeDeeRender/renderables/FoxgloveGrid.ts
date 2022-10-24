@@ -34,7 +34,7 @@ function zeroReader(): number {
   return 0;
 }
 
-const floatTextureColorModes = new Set<ColorModeSettings["colorMode"]>(["gradient", "colormap"]);
+const floatTextureColorModes: ColorModeSettings["colorMode"][] = ["gradient", "colormap"];
 
 const INVALID_FOXGLOVE_GRID = "INVALID_FOXGLOVE_GRID";
 
@@ -237,7 +237,7 @@ export class FoxgloveGridRenderable extends Renderable<FoxgloveGridUserData> {
     const maxColor = stringToRgba(tempColor, settings.gradient[1]);
     rgbaToLinear(maxColor, maxColor);
     maxGradientColor.value.set(maxColor.r, maxColor.g, maxColor.b, maxColor.a);
-    // material.needsUpdate = true uneccessary because all uniforms are sent to GPU every frame
+    // material.needsUpdate = true unnecessary because all uniforms are sent to GPU every frame
   }
 
   public updateTexture(foxgloveGrid: Grid, settings: LayerSettingsFoxgloveGrid): void {
@@ -256,7 +256,7 @@ export class FoxgloveGridRenderable extends Renderable<FoxgloveGridUserData> {
     const cols = foxgloveGrid.column_count;
     const rows = foxgloveGrid.data.length / foxgloveGrid.row_stride;
     const sizeChanged = cols !== texture.image.width || rows !== texture.image.height;
-    const floatMode = floatTextureColorModes.has(settings.colorMode);
+    const floatMode = floatTextureColorModes.includes(settings.colorMode);
     const formatChanged = floatMode
       ? texture.format !== THREE.RedFormat
       : texture.format !== THREE.RGBAFormat;
@@ -412,7 +412,7 @@ export class FoxgloveGrid extends SceneExtension<FoxgloveGridRenderable> {
       }
 
       // Check color
-      const texture = floatTextureColorModes.has(settings.colorMode)
+      const texture = floatTextureColorModes.includes(settings.colorMode)
         ? createFloatTexture(foxgloveGrid)
         : createRGBATexture(foxgloveGrid);
       const mesh = createMesh(topic, texture);
