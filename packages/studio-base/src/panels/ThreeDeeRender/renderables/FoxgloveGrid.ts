@@ -34,7 +34,7 @@ function zeroReader(): number {
   return 0;
 }
 
-const floatTextureColorModes = new Set(["gradient", "colorMap"]);
+const floatTextureColorModes = new Set<ColorModeSettings["colorMode"]>(["gradient", "colormap"]);
 
 const INVALID_FOXGLOVE_GRID = "INVALID_FOXGLOVE_GRID";
 
@@ -706,6 +706,7 @@ function createMaterial(texture: THREE.DataTexture, topic: string): THREE.Shader
               gl_FragColor = vec4(rainbow(normalizedColorValue), colorMapOpacity);
             }
           }
+          gl_FragColor = LinearTosRGB(gl_FragColor);
         }
         if(PICKING == 1) {
           if(gl_FragColor.a < 0.00001) {
