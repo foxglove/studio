@@ -20,7 +20,7 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
-import { union } from "lodash";
+import { isObject, union } from "lodash";
 import { ReactElement, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 import { useDebouncedCallback } from "use-debounce";
@@ -78,6 +78,20 @@ const useStyles = makeStyles<void, "copyIcon">()((_theme, _params, classes) => (
     },
   },
 }));
+
+function displayValue(value: unknown): string | number | boolean | unknown[] | object {
+  if (
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean" ||
+    Array.isArray(value) ||
+    isObject(value)
+  ) {
+    return value;
+  } else {
+    return JSON.stringify(value) ?? "";
+  }
+}
 
 function Parameters(): ReactElement {
   const { classes } = useStyles();
@@ -152,7 +166,7 @@ function Parameters(): ReactElement {
           </TableHead>
           <TableBody>
             {parameterNames.map((name) => {
-              const value = JSON.stringify(parameters.get(name)) ?? "";
+              const value = displayValue(parameters.get(name));
 
               return (
                 <TableRow
@@ -179,7 +193,12 @@ function Parameters(): ReactElement {
                     </TableCell>
                   ) : (
                     <TableCell>
-                      <Typography noWrap title={value} variant="inherit" color="text.secondary">
+                      <Typography
+                        noWrap
+                        title={String(value)}
+                        variant="inherit"
+                        color="text.secondary"
+                      >
                         {value}
                       </Typography>
                     </TableCell>
