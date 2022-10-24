@@ -192,6 +192,7 @@ export class FoxgloveGridRenderable extends Renderable<FoxgloveGridUserData> {
       transparent = settings.explicitAlpha < 1.0;
     }
     if (transparent !== material.transparent) {
+      material.depthWrite = !transparent;
       material.transparent = transparent;
       updated = true;
     }
@@ -311,6 +312,7 @@ export class FoxgloveGridRenderable extends Renderable<FoxgloveGridUserData> {
       }
       if (this.userData.material.transparent !== hasTransparency) {
         this.userData.material.transparent = hasTransparency;
+        this.userData.material.depthWrite = !hasTransparency;
         this.userData.material.needsUpdate = true;
       }
     }
@@ -599,7 +601,7 @@ function createMaterial(texture: THREE.DataTexture, topic: string): THREE.Shader
     alphaTest: 1e-4,
     side: THREE.DoubleSide,
     // needs to always be off to prevent z-fighting
-    depthWrite: false,
+    depthWrite: true,
     uniforms: {
       objectId: { value: [NaN, NaN, NaN, NaN] },
       colorMode: { value: COLOR_MODE_TO_GLSL.RGBA },
@@ -698,6 +700,7 @@ function createMaterial(texture: THREE.DataTexture, topic: string): THREE.Shader
             vec4 weightedMaxColor = vec4(maxGradientColor.rgb * maxGradientColor.a, maxGradientColor.a);
             vec4 finalColor = mix(weightedMinColor, weightedMaxColor, normalizedColorValue);
             gl_FragColor = finalColor;
+            gl_FragColor = LinearTosRGB(gl_FragColor);
           } else if(colorMode == COLORMAP) {
             // colormap
             if(colorMap == TURBO) {
@@ -706,7 +709,7 @@ function createMaterial(texture: THREE.DataTexture, topic: string): THREE.Shader
               gl_FragColor = vec4(rainbow(normalizedColorValue), colorMapOpacity);
             }
           }
-          gl_FragColor = LinearTosRGB(gl_FragColor);
+          // gl_FragColor = vec4(LinearTosRGB(gl_FragColor).rgb, gl_FragColor.a);
         }
         if(PICKING == 1) {
           if(gl_FragColor.a < 0.00001) {
