@@ -866,6 +866,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
           updatedUserSettings.colorField = settings.colorField;
           updatedUserSettings.colorMode = settings.colorMode;
           updatedUserSettings.colorMap = settings.colorMap;
+          updatedUserSettings.rgbByteOrder = settings.rgbByteOrder;
           draft.topics[topic] = updatedUserSettings;
         });
       }
@@ -947,6 +948,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
           updatedUserSettings.colorField = settings.colorField;
           updatedUserSettings.colorMode = settings.colorMode;
           updatedUserSettings.colorMap = settings.colorMap;
+          updatedUserSettings.rgbByteOrder = settings.rgbByteOrder;
           draft.topics[topic] = updatedUserSettings;
         });
       }
@@ -1035,6 +1037,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
           updatedUserSettings.colorField = settings.colorField;
           updatedUserSettings.colorMode = settings.colorMode;
           updatedUserSettings.colorMap = settings.colorMap;
+          updatedUserSettings.rgbByteOrder = settings.rgbByteOrder;
           draft.topics[topic] = updatedUserSettings;
         });
       }
@@ -1115,15 +1118,13 @@ export function pointCloudMaterial(
     const SEARCH = "#include <output_fragment>";
     if (shape === "circle") {
       // Patch the fragment shader to render points as circles
-      shader.fragmentShader =
-        FS_SRGB_TO_LINEAR + shader.fragmentShader.replace(SEARCH, FS_POINTCLOUD_CIRCLE + SEARCH);
+      shader.fragmentShader = shader.fragmentShader.replace(SEARCH, FS_POINTCLOUD_CIRCLE + SEARCH);
     }
     if (encoding === "srgb") {
       // Patch the fragment shader to add sRGB->linear color conversion
-      shader.fragmentShader = shader.fragmentShader.replace(
-        SEARCH,
-        FS_POINTCLOUD_SRGB_TO_LINEAR + SEARCH,
-      );
+      shader.fragmentShader =
+        FS_SRGB_TO_LINEAR +
+        shader.fragmentShader.replace(SEARCH, FS_POINTCLOUD_SRGB_TO_LINEAR + SEARCH);
     }
   };
 
