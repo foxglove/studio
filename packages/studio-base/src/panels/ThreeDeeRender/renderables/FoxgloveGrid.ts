@@ -45,7 +45,6 @@ const DEFAULT_MAX_COLOR = { r: 227 / 255, g: 177 / 255, b: 135 / 255, a: 1 };
 const DEFAULT_RGB_BYTE_ORDER = "rgba";
 
 const COLOR_MODE_TO_GLSL: Record<string, number> = {
-  // need them to be floats for comparision (can't have colormode uniform as int)
   FLAT: 0,
   RGB: 1,
   RGBA: 2,
@@ -54,7 +53,6 @@ const COLOR_MODE_TO_GLSL: Record<string, number> = {
 };
 
 const COLOR_MAP_TO_GLSL: Record<string, number> = {
-  // need them to be floats for comparision (can't have colormode uniform as int)
   TURBO: 0,
   RAINBOW: 1,
 };
@@ -600,8 +598,6 @@ function createMaterial(texture: THREE.DataTexture, topic: string): THREE.Shader
     // even when transparency is disabled
     alphaTest: 1e-4,
     side: THREE.DoubleSide,
-    // needs to always be off to prevent z-fighting
-    depthWrite: true,
     uniforms: {
       objectId: { value: [NaN, NaN, NaN, NaN] },
       colorMode: { value: COLOR_MODE_TO_GLSL.RGBA },
