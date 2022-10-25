@@ -237,7 +237,7 @@ export class FoxgloveGridRenderable extends Renderable<FoxgloveGridUserData> {
     const maxColor = stringToRgba(tempColor, settings.gradient[1]);
     rgbaToLinear(maxColor, maxColor);
     maxGradientColor.value.set(maxColor.r, maxColor.g, maxColor.b, maxColor.a);
-    // material.needsUpdate = true unnecessary because all uniforms are sent to GPU every frame
+    // unnecessary to update material because all uniforms are sent to GPU every frame
   }
 
   public updateTexture(foxgloveGrid: Grid, settings: LayerSettingsFoxgloveGrid): void {
