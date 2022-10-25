@@ -23,7 +23,6 @@ import {
 } from "@foxglove/studio-base";
 
 import Ros1UnavailableDataSourceFactory from "./dataSources/Ros1UnavailableDataSourceFactory";
-import Ros2UnavailableDataSourceFactory from "./dataSources/Ros2UnavailableDataSourceFactory";
 import VelodyneUnavailableDataSourceFactory from "./dataSources/VelodyneUnavailableDataSourceFactory";
 import { IdbLayoutStorage } from "./services/IdbLayoutStorage";
 
@@ -33,7 +32,6 @@ export function Root({ appConfiguration }: { appConfiguration: IAppConfiguration
       new Ros1UnavailableDataSourceFactory(),
       new Ros1LocalBagDataSourceFactory(),
       new Ros1RemoteBagDataSourceFactory(),
-      new Ros2UnavailableDataSourceFactory(),
       new Ros2LocalBagDataSourceFactory(),
       new RosbridgeDataSourceFactory(),
       new FoxgloveWebSocketDataSourceFactory(),

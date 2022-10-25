@@ -151,6 +151,12 @@ export interface IIterableSource {
   getMessageCursor?: (args: MessageIteratorArgs & { abort?: AbortSignal }) => IMessageCursor;
 
   /**
+   * Optional override of remote asset fetching. A source can override this to try retrieving assets
+   * from the source before falling back to `fetch()`.
+   */
+  fetchAsset?: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
+
+  /**
    * Optional method a data source can implement to cleanup resources. The player will call this
    * method when the source will no longer be used.
    */
