@@ -44,17 +44,21 @@ const DEFAULT_MIN_COLOR = { r: 100 / 255, g: 47 / 255, b: 105 / 255, a: 1 };
 const DEFAULT_MAX_COLOR = { r: 227 / 255, g: 177 / 255, b: 135 / 255, a: 1 };
 const DEFAULT_RGB_BYTE_ORDER = "rgba";
 
-const COLOR_MODE_TO_GLSL: Record<string, number> = {
-  FLAT: 0,
-  RGB: 1,
-  RGBA: 2,
-  GRADIENT: 3,
-  COLORMAP: 4,
+const COLOR_MODE_TO_GLSL: {
+  [K in ColorModeSettings["colorMode"] as `COLOR_MODE_${Uppercase<K>}`]: number;
+} = {
+  COLOR_MODE_FLAT: 0,
+  COLOR_MODE_RGB: 1,
+  COLOR_MODE_RGBA: 2,
+  COLOR_MODE_GRADIENT: 3,
+  COLOR_MODE_COLORMAP: 4,
 };
 
-const COLOR_MAP_TO_GLSL: Record<string, number> = {
-  TURBO: 0,
-  RAINBOW: 1,
+const COLOR_MAP_TO_GLSL: {
+  [K in ColorModeSettings["colorMap"] as `COLOR_MAP_${Uppercase<K>}`]: number;
+} = {
+  COLOR_MAP_TURBO: 0,
+  COLOR_MAP_RAINBOW: 1,
 };
 
 const DEFAULT_SETTINGS: LayerSettingsFoxgloveGrid = {
@@ -82,8 +86,8 @@ interface GridShaderMaterial extends THREE.ShaderMaterial {
     colorMap: THREE.IUniform<number>;
     colorMapOpacity: THREE.IUniform<number>;
 
-    minGradientColor: THREE.IUniform<THREE.Vector4>;
-    maxGradientColor: THREE.IUniform<THREE.Vector4>;
+    minGradientColorLinear: THREE.IUniform<THREE.Vector4>;
+    maxGradientColorLinear: THREE.IUniform<THREE.Vector4>;
   };
   defines: typeof COLOR_MODE_TO_GLSL &
     typeof COLOR_MAP_TO_GLSL & {
@@ -208,14 +212,14 @@ export class FoxgloveGridRenderable extends Renderable<FoxgloveGridUserData> {
         colorMapOpacity,
         minValue,
         maxValue,
-        minGradientColor,
-        maxGradientColor,
+        minGradientColorLinear,
+        maxGradientColorLinear,
       },
     } = material;
 
-    colorMode.value = COLOR_MODE_TO_GLSL[settings.colorMode.toUpperCase()]!;
+    colorMode.value = COLOR_MODE_TO_GLSL[`COLOR_MODE_${settings.colorMode.toUpperCase()}`]!;
 
-    colorMap.value = COLOR_MAP_TO_GLSL[settings.colorMap.toUpperCase()]!;
+    colorMap.value = COLOR_MAP_TO_GLSL[`COLOR_MAP_${settings.colorMap.toUpperCase()}`]!;
 
     colorMapOpacity.value = settings.explicitAlpha;
 
@@ -232,11 +236,11 @@ export class FoxgloveGridRenderable extends Renderable<FoxgloveGridUserData> {
 
     const minColor = stringToRgba(tempColor, settings.gradient[0]);
     rgbaToLinear(minColor, minColor);
-    minGradientColor.value.set(minColor.r, minColor.g, minColor.b, minColor.a);
+    minGradientColorLinear.value.set(minColor.r, minColor.g, minColor.b, minColor.a);
 
     const maxColor = stringToRgba(tempColor, settings.gradient[1]);
     rgbaToLinear(maxColor, maxColor);
-    maxGradientColor.value.set(maxColor.r, maxColor.g, maxColor.b, maxColor.a);
+    maxGradientColorLinear.value.set(maxColor.r, maxColor.g, maxColor.b, maxColor.a);
     // unnecessary to update material because all uniforms are sent to GPU every frame
   }
 
@@ -263,7 +267,7 @@ export class FoxgloveGridRenderable extends Renderable<FoxgloveGridUserData> {
     if (formatChanged || sizeChanged) {
       // The image dimensions or format changed, regenerate the texture
       texture.dispose();
-      texture = floatMode ? createFloatTexture(foxgloveGrid) : createRGBATexture(foxgloveGrid);
+      texture = createTexture(foxgloveGrid, settings.colorMode);
       texture.generateMipmaps = false;
       this.userData.texture = texture;
       this.userData.material.uniforms.map.value = texture;
@@ -274,14 +278,12 @@ export class FoxgloveGridRenderable extends Renderable<FoxgloveGridUserData> {
       // type of image.data is Uint8ClampedArray, but it is in fact the raw texture data even thought it's
       // meant to be used as an RGBA image data array
       const valueData = texture.image.data as unknown as Float32Array;
-      const r32fView = new DataView(valueData.buffer, valueData.byteOffset, valueData.byteLength);
       for (let y = 0; y < rows; y++) {
         for (let x = 0; x < cols; x++) {
           const offset = y * foxgloveGrid.row_stride + x * foxgloveGrid.cell_stride;
           const colorValue = fieldReader(view, offset);
           const i = y * cols + x;
-          const r32fOffset = i * 4;
-          r32fView.setFloat32(r32fOffset, colorValue, true);
+          valueData[i] = colorValue;
         }
       }
     } else {
@@ -412,9 +414,7 @@ export class FoxgloveGrid extends SceneExtension<FoxgloveGridRenderable> {
       }
 
       // Check color
-      const texture = floatTextureColorModes.includes(settings.colorMode)
-        ? createFloatTexture(foxgloveGrid)
-        : createRGBATexture(foxgloveGrid);
+      const texture = createTexture(foxgloveGrid, settings.colorMode);
       const mesh = createMesh(topic, texture);
       const material = mesh.material as GridShaderMaterial;
       const pickingMaterial = mesh.userData.pickingMaterial as THREE.ShaderMaterial;
@@ -514,40 +514,23 @@ function invalidFoxgloveGridError(
   renderer.settings.errors.addToTopic(renderable.userData.topic, INVALID_FOXGLOVE_GRID, message);
 }
 
-function createRGBATexture(foxgloveGrid: Grid): THREE.DataTexture {
+function createTexture(
+  foxgloveGrid: Grid,
+  colorMode: ColorModeSettings["colorMode"],
+): THREE.DataTexture {
   const { column_count: cols, row_stride } = foxgloveGrid;
   const rows = foxgloveGrid.data.byteLength / row_stride;
   const size = cols * rows;
-  const rgba = new Uint8ClampedArray(size * 4);
-  const texture = new THREE.DataTexture(
-    rgba,
-    cols,
-    rows,
-    THREE.RGBAFormat,
-    THREE.UnsignedByteType,
-    THREE.UVMapping,
-    THREE.ClampToEdgeWrapping,
-    THREE.ClampToEdgeWrapping,
-    THREE.NearestFilter,
-    THREE.LinearFilter,
-    1,
-    THREE.LinearEncoding, // FoxgloveGrid carries linear grayscale values, not sRGB
-  );
-  texture.generateMipmaps = false;
-  return texture;
-}
-
-function createFloatTexture(foxgloveGrid: Grid): THREE.DataTexture {
-  const { column_count: cols, row_stride } = foxgloveGrid;
-  const rows = foxgloveGrid.data.byteLength / row_stride;
-  const size = cols * rows;
-  const data = new Float32Array(size);
+  const isFloatType = floatTextureColorModes.includes(colorMode);
+  const data = isFloatType ? new Float32Array(size) : new Uint8ClampedArray(size * 4);
+  const format = isFloatType ? THREE.RedFormat : THREE.RGBAFormat;
+  const type = isFloatType ? THREE.FloatType : THREE.UnsignedByteType;
   const texture = new THREE.DataTexture(
     data,
     cols,
     rows,
-    THREE.RedFormat,
-    THREE.FloatType,
+    format,
+    type,
     THREE.UVMapping,
     THREE.ClampToEdgeWrapping,
     THREE.ClampToEdgeWrapping,
@@ -562,7 +545,7 @@ function createFloatTexture(foxgloveGrid: Grid): THREE.DataTexture {
 
 function createMesh(topic: string, texture: THREE.DataTexture): THREE.Mesh {
   // Create the texture, material, and mesh
-  const material = createMaterial(texture, topic) as GridShaderMaterial;
+  const material = createMaterial(texture, topic);
   const pickingMaterial = createPickingMaterial(material);
   const mesh = new THREE.Mesh(FoxgloveGrid.Geometry(), material);
   mesh.castShadow = true;
@@ -591,7 +574,7 @@ function numericTypeWidth(type: NumericType): number {
   }
 }
 
-function createMaterial(texture: THREE.DataTexture, topic: string): THREE.ShaderMaterial {
+function createMaterial(texture: THREE.DataTexture, topic: string): GridShaderMaterial {
   return new THREE.ShaderMaterial({
     name: `${topic}:Material`,
     // Enable alpha clipping. Fully transparent (alpha=0) pixels are skipped
@@ -600,13 +583,13 @@ function createMaterial(texture: THREE.DataTexture, topic: string): THREE.Shader
     side: THREE.DoubleSide,
     uniforms: {
       objectId: { value: [NaN, NaN, NaN, NaN] },
-      colorMode: { value: COLOR_MODE_TO_GLSL.RGBA },
-      colorMap: { value: COLOR_MAP_TO_GLSL.TURBO },
+      colorMode: { value: COLOR_MODE_TO_GLSL.COLOR_MODE_RGBA },
+      colorMap: { value: COLOR_MAP_TO_GLSL.COLOR_MAP_TURBO },
       colorMapOpacity: { value: 1.0 },
       minValue: { value: 0.0 },
       maxValue: { value: 1.0 },
-      minGradientColor: { value: new THREE.Vector4() },
-      maxGradientColor: { value: new THREE.Vector4() },
+      minGradientColorLinear: { value: new THREE.Vector4() },
+      maxGradientColorLinear: { value: new THREE.Vector4() },
       map: { value: texture },
     },
     vertexShader: /* glsl */ `
@@ -633,20 +616,32 @@ function createMaterial(texture: THREE.DataTexture, topic: string): THREE.Shader
       uniform int colorMap;
       uniform float colorMapOpacity;
 
-      uniform vec4 minGradientColor;
-      uniform vec4 maxGradientColor;
+      uniform vec4 minGradientColorLinear;
+      uniform vec4 maxGradientColorLinear;
 
       varying vec2 vUv;
 
-      // fifth-order polynomial approximation of Turbo based on:
-      // https://observablehq.com/@mbostock/turbo
+      // adapted from https://gist.github.com/mikhailov-work/0d177465a8151eb6ede1768d51d476c7
       vec3 turbo(float x) {
-        float r = 0.1357 + x * ( 4.5974 - x * ( 42.3277 - x * ( 130.5887 - x * ( 150.5666 - x * 58.1375 ))));
-        float g = 0.0914 + x * ( 2.1856 + x * ( 4.8052 - x * ( 14.0195 - x * ( 4.2109 + x * 2.7747 ))));
-        float b = 0.1067 + x * ( 12.5925 - x * ( 60.1097 - x * ( 109.0745 - x * ( 88.5066 - x * 26.8183 ))));
-        return vec3(r,g,b);
+        const vec4 kRedVec4 = vec4(0.13572138, 4.61539260, -42.66032258, 132.13108234);
+        const vec4 kGreenVec4 = vec4(0.09140261, 2.19418839, 4.84296658, -14.18503333);
+        const vec4 kBlueVec4 = vec4(0.10667330, 12.64194608, -60.58204836, 110.36276771);
+        const vec2 kRedVec2 = vec2(-152.94239396, 59.28637943);
+        const vec2 kGreenVec2 = vec2(4.27729857, 2.82956604);
+        const vec2 kBlueVec2 = vec2(-89.90310912, 27.34824973);
+
+        vec4 v4 = vec4(1.0, x, x * x, x * x * x);
+        vec2 v2 = v4.zw * v4.z;
+        return vec3(
+          (dot(v4, kRedVec4)   + dot(v2, kRedVec2)),
+          (dot(v4, kGreenVec4) + dot(v2, kGreenVec2)),
+          (dot(v4, kBlueVec4)  + dot(v2, kBlueVec2))
+        );
       }
 
+
+      // taken from http://docs.ros.org/jade/api/rviz/html/c++/point__cloud__transformers_8cpp_source.html
+      // line 47
       vec3 rainbow(float pct) {
         vec3 colorOut = vec3(0.0);
         float h = (1.0 - clamp(pct, 0.0, 1.0)) * 5.0 + 1.0;
@@ -684,26 +679,32 @@ function createMaterial(texture: THREE.DataTexture, topic: string): THREE.Shader
 
       void main() {
         vec4 color = texture2D(map, vUv);
-        if(colorMode == RGBA || colorMode == RGB || colorMode == FLAT) {
+        if(colorMode == COLOR_MODE_RGBA || colorMode == COLOR_MODE_RGB || colorMode == COLOR_MODE_FLAT) {
           // colors that are coming from CPU need to be converted
           gl_FragColor = LinearTosRGB(color);
         } else {
           float delta = max(maxValue - minValue, 0.00001);
           float colorValue = color.r;
           float normalizedColorValue = (colorValue - minValue) / delta;
-          if(colorMode == GRADIENT) {
-            // weight each color by its alpha
-            vec4 weightedMinColor = vec4(minGradientColor.rgb * minGradientColor.a, minGradientColor.a);
-            vec4 weightedMaxColor = vec4(maxGradientColor.rgb * maxGradientColor.a, maxGradientColor.a);
+          if(colorMode == COLOR_MODE_GRADIENT) {
+
+
+            /**
+            * Computes a gradient step from colors a to b using pre-multiplied alpha to
+            * match CSS linear gradients. The inputs are assumed to not have pre-multiplied
+            * alpha, and the output will have pre-multiplied alpha.
+            */
+            vec4 weightedMinColor = vec4(minGradientColorLinear.rgb * minGradientColorLinear.a, minGradientColorLinear.a);
+            vec4 weightedMaxColor = vec4(maxGradientColorLinear.rgb * maxGradientColorLinear.a, maxGradientColorLinear.a);
             vec4 finalColor = mix(weightedMinColor, weightedMaxColor, normalizedColorValue);
             // gradient computation takes place in linear colorspace and must be translated to sRGB
             gl_FragColor = LinearTosRGB(finalColor);
-          } else if(colorMode == COLORMAP) {
+          } else if(colorMode == COLOR_MODE_COLORMAP) {
             // colormap
             // don't need to go through LinearTosRGB because they are created in the shader
-            if(colorMap == TURBO) {
+            if(colorMap == COLOR_MAP_TURBO) {
               gl_FragColor = vec4(turbo(normalizedColorValue), colorMapOpacity);
-            } else if(colorMap == RAINBOW) {
+            } else if(colorMap == COLOR_MAP_RAINBOW) {
               gl_FragColor = vec4(rainbow(normalizedColorValue), colorMapOpacity);
             }
           }
@@ -716,7 +717,7 @@ function createMaterial(texture: THREE.DataTexture, topic: string): THREE.Shader
         }
       }
     `,
-  });
+  }) as GridShaderMaterial;
 }
 
 function createPickingMaterial(originalMaterial: GridShaderMaterial): THREE.ShaderMaterial {
