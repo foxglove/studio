@@ -42,6 +42,7 @@ type Props = {
   splitFraction: number | undefined;
   onChangeSplitFraction: (arg0: number) => void;
   topicToRender: string;
+  precision: number | undefined;
   openSiblingPanel: OpenSiblingPanel;
 };
 
@@ -169,6 +170,7 @@ export default function DiagnosticStatus(props: Props): JSX.Element {
     onChangeSplitFraction,
     info,
     topicToRender,
+    precision,
     openSiblingPanel,
     splitFraction = 0.5,
   } = props;
@@ -219,6 +221,15 @@ export default function DiagnosticStatus(props: Props): JSX.Element {
       if (html) {
         return <HTMLTableCell dangerouslySetInnerHTML={html} />;
       }
+
+      let strToRender = str;
+      if (precision != undefined) {
+        const maybeFloat = parseFloat(strToRender);
+        if (!isNaN(maybeFloat)) {
+          strToRender = maybeFloat.toFixed(precision);
+        }
+      }
+
       return (
         <>
           <TableCell padding="checkbox">
@@ -229,14 +240,14 @@ export default function DiagnosticStatus(props: Props): JSX.Element {
               flex="auto"
               justifyContent="space-between"
             >
-              {str ? str : "\xa0"}
+              {strToRender ? strToRender : "\xa0"}
               {openPlotPanelIconElem}
             </Stack>
           </TableCell>
         </>
       );
     },
-    [],
+    [precision],
   );
 
   const renderKeyValueSections = useCallback((): React.ReactNode => {
