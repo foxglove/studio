@@ -105,9 +105,6 @@ export type FoxgloveGridUserData = BaseUserData & {
   pickingMaterial: THREE.ShaderMaterial;
 };
 
-const tempFieldReader = {
-  fieldReader: zeroReader as FieldReader,
-};
 const tempColor = { r: 0, g: 0, b: 0, a: 1 };
 const tempMinMaxColor: THREE.Vector2Tuple = [0, 0];
 export class FoxgloveGridRenderable extends Renderable<FoxgloveGridUserData> {
@@ -128,10 +125,9 @@ export class FoxgloveGridRenderable extends Renderable<FoxgloveGridUserData> {
   }
 
   private _getFieldReader(
-    output: { fieldReader: FieldReader },
     foxgloveGrid: Grid,
     settings: LayerSettingsFoxgloveGrid,
-  ): boolean {
+  ): FieldReader | undefined {
     let colorReader: FieldReader | undefined;
 
     const stride = foxgloveGrid.cell_stride;
@@ -161,7 +157,7 @@ export class FoxgloveGridRenderable extends Renderable<FoxgloveGridUserData> {
           const typeName = NumericType[type];
           const message = `Grid field "${field.name}" is invalid. type=${typeName}, offset=${field.offset}, stride=${stride}`;
           invalidFoxgloveGridError(this.renderer, this, message);
-          return false;
+          return undefined;
         }
       }
     }
@@ -169,11 +165,10 @@ export class FoxgloveGridRenderable extends Renderable<FoxgloveGridUserData> {
     if (minBytesPerCell > stride) {
       const message = `Grid stride ${stride} is less than minimum bytes per cell ${minBytesPerCell}`;
       invalidFoxgloveGridError(this.renderer, this, message);
-      return false;
+      return undefined;
     }
 
-    output.fieldReader = colorReader ?? zeroReader;
-    return true;
+    return colorReader ?? zeroReader;
   }
 
   public updateMaterial(settings: LayerSettingsFoxgloveGrid): void {
@@ -246,11 +241,11 @@ export class FoxgloveGridRenderable extends Renderable<FoxgloveGridUserData> {
 
   public updateTexture(foxgloveGrid: Grid, settings: LayerSettingsFoxgloveGrid): void {
     let texture = this.userData.texture;
-    if (!this._getFieldReader(tempFieldReader, foxgloveGrid, settings)) {
+    const fieldReader = this._getFieldReader(foxgloveGrid, settings);
+    if (!fieldReader) {
       return;
     }
 
-    const { fieldReader } = tempFieldReader;
     const view = new DataView(
       foxgloveGrid.data.buffer,
       foxgloveGrid.data.byteOffset,
