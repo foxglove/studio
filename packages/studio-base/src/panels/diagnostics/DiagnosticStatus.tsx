@@ -42,7 +42,7 @@ type Props = {
   splitFraction: number | undefined;
   onChangeSplitFraction: (arg0: number) => void;
   topicToRender: string;
-  precision: number | undefined;
+  numericPrecision: number | undefined;
   openSiblingPanel: OpenSiblingPanel;
 };
 
@@ -170,7 +170,7 @@ export default function DiagnosticStatus(props: Props): JSX.Element {
     onChangeSplitFraction,
     info,
     topicToRender,
-    precision,
+    numericPrecision,
     openSiblingPanel,
     splitFraction = 0.5,
   } = props;
@@ -222,12 +222,11 @@ export default function DiagnosticStatus(props: Props): JSX.Element {
         return <HTMLTableCell dangerouslySetInnerHTML={html} />;
       }
 
+      // Apply numeric precision to the value if requested and it can be parsed
+      // as a float
       let strToRender = str;
-      if (precision != undefined) {
-        const maybeFloat = parseFloat(strToRender);
-        if (!isNaN(maybeFloat)) {
-          strToRender = maybeFloat.toFixed(precision);
-        }
+      if (numericPrecision != undefined && isFloatOrInteger(str)) {
+        strToRender = parseFloat(str).toFixed(numericPrecision);
       }
 
       return (
@@ -247,7 +246,7 @@ export default function DiagnosticStatus(props: Props): JSX.Element {
         </>
       );
     },
-    [precision],
+    [numericPrecision],
   );
 
   const renderKeyValueSections = useCallback((): React.ReactNode => {
@@ -378,4 +377,15 @@ export default function DiagnosticStatus(props: Props): JSX.Element {
       </StyledTable>
     </div>
   );
+}
+
+// Returns true if the input string can be parsed as a float or an integer using
+// parseFloat(). Hex and octal numbers will return false.
+function isFloatOrInteger(n: string): boolean {
+  if (n[0] === "0" && n.length > 1) {
+    if (n[1] === "x" || n[1] === "X" || n[1] === "o" || n[1] === "O") {
+      return false;
+    }
+  }
+  return !isNaN(parseFloat(n)) && isFinite(Number(n));
 }

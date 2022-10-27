@@ -38,7 +38,7 @@ export function buildSummarySettingsTree(
 
 export function buildStatusPanelSettingsTree(
   topicToRender: string,
-  precision: number | undefined,
+  numericPrecision: number | undefined,
   availableTopics: readonly string[],
 ): SettingsTreeNodes {
   const topicOptions = availableTopics.map((topic) => ({ label: topic, value: topic }));
@@ -60,14 +60,15 @@ export function buildStatusPanelSettingsTree(
           error: topicError,
           options: topicOptions,
         },
-        precision: {
+        numericPrecision: {
           label: "Numeric precision",
           input: "number",
           min: 0,
           max: 17,
           precision: 0,
           step: 1,
-          value: precision,
+          placeholder: "auto",
+          value: numericPrecision,
         },
       },
     },

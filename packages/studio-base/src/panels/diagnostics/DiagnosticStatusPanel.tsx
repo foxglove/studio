@@ -49,7 +49,8 @@ function DiagnosticStatusPanel(props: Props) {
   const { saveConfig, config } = props;
   const { topics } = useDataSourceInfo();
   const { openSiblingPanel } = usePanelContext();
-  const { selectedHardwareId, selectedName, splitFraction, topicToRender, precision } = config;
+  const { selectedHardwareId, selectedName, splitFraction, topicToRender, numericPrecision } =
+    config;
 
   const updatePanelSettingsTree = usePanelSettingsTreeUpdate();
 
@@ -140,9 +141,9 @@ function DiagnosticStatusPanel(props: Props) {
   useEffect(() => {
     updatePanelSettingsTree({
       actionHandler,
-      nodes: buildStatusPanelSettingsTree(topicToRender, precision, availableTopics),
+      nodes: buildStatusPanelSettingsTree(topicToRender, numericPrecision, availableTopics),
     });
-  }, [actionHandler, availableTopics, topicToRender, precision, updatePanelSettingsTree]);
+  }, [actionHandler, availableTopics, topicToRender, numericPrecision, updatePanelSettingsTree]);
 
   return (
     <Stack flex="auto" overflow="hidden">
@@ -191,7 +192,7 @@ function DiagnosticStatusPanel(props: Props) {
                 props.saveConfig({ splitFraction: newSplitFraction })
               }
               topicToRender={topicToRender}
-              precision={precision}
+              numericPrecision={numericPrecision}
               openSiblingPanel={openSiblingPanel}
             />
           ))}
