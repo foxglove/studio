@@ -171,7 +171,6 @@ if (dot(cxy, cxy) > 1.0) { discard; }
 `;
 
 const tempColor = { r: 0, g: 0, b: 0, a: 0 };
-const tempMinMaxColor: THREE.Vector2Tuple = [0, 0];
 const tempFieldReaders: PointCloudFieldReaders = {
   xReader: zeroReader,
   yReader: zeroReader,
@@ -189,6 +188,7 @@ export function createGeometry(topic: string, usage: THREE.Usage): DynamicBuffer
 
 export class PointCloudAndLaserScanRenderable extends Renderable<PointCloudAndLaserScanUserData> {
   public override pickableInstances = true;
+  public minMaxColor: THREE.Vector2Tuple = [0, 0];
 
   public override dispose(): void {
     this.userData.pointCloud = undefined;
@@ -518,11 +518,12 @@ export class PointCloudAndLaserScanRenderable extends Renderable<PointCloudAndLa
     pointStep: number,
     settings: LayerSettingsPointCloudAndLaserScan,
   ): void {
-    let minColorValue = settings.minValue ?? Number.POSITIVE_INFINITY;
-    let maxColorValue = settings.maxValue ?? Number.NEGATIVE_INFINITY;
+    let minColorValue = Number.POSITIVE_INFINITY;
+    let maxColorValue = Number.NEGATIVE_INFINITY;
+    const calcMinMax = settings.calcMinMax === true;
     if (
       NEEDS_MIN_MAX.includes(settings.colorMode) &&
-      (settings.minValue == undefined || settings.maxValue == undefined)
+      (settings.minValue == undefined || settings.maxValue == undefined || calcMinMax)
     ) {
       for (let i = 0; i < pointCount; i++) {
         const pointOffset = i * pointStep;
@@ -530,8 +531,10 @@ export class PointCloudAndLaserScanRenderable extends Renderable<PointCloudAndLa
         minColorValue = Math.min(minColorValue, colorValue);
         maxColorValue = Math.max(maxColorValue, colorValue);
       }
-      minColorValue = settings.minValue ?? minColorValue;
-      maxColorValue = settings.maxValue ?? maxColorValue;
+      // if only calculated b/c one of the settings was undefined (calMinMax disabled)
+      // use the found min/max value for the undefined
+      minColorValue = calcMinMax ? minColorValue : settings.minValue ?? minColorValue;
+      maxColorValue = calcMinMax ? maxColorValue : settings.maxValue ?? maxColorValue;
     }
 
     output[0] = minColorValue;
@@ -552,8 +555,8 @@ export class PointCloudAndLaserScanRenderable extends Renderable<PointCloudAndLa
     const { xReader, yReader, zReader, colorReader } = readers;
 
     // Iterate the point cloud data to determine min/max color values (if needed)
-    this._minMaxColorValues(tempMinMaxColor, colorReader, view, pointCount, pointStep, settings);
-    const [minColorValue, maxColorValue] = tempMinMaxColor;
+    this._minMaxColorValues(this.minMaxColor, colorReader, view, pointCount, pointStep, settings);
+    const [minColorValue, maxColorValue] = this.minMaxColor;
 
     // Build a method to convert raw color field values to RGBA
     const colorConverter = getColorConverter(settings, minColorValue, maxColorValue);
@@ -653,9 +656,15 @@ export class PointCloudAndLaserScanRenderable extends Renderable<PointCloudAndLa
     pickingMaterial.update(settings, laserScan);
 
     // Determine min/max color values (if needed) and max range
-    let minColorValue = settings.minValue ?? Number.POSITIVE_INFINITY;
-    let maxColorValue = settings.maxValue ?? Number.NEGATIVE_INFINITY;
-    if (settings.minValue == undefined || settings.maxValue == undefined) {
+    let minColorValue = Number.POSITIVE_INFINITY;
+    let maxColorValue = Number.NEGATIVE_INFINITY;
+    const calcMinMax = settings.calcMinMax === true;
+    // calculate min/max when setting is enabled or when min/max values are unknown
+    if (
+      settings.minValue == undefined ||
+      settings.maxValue == undefined ||
+      settings.calcMinMax === true
+    ) {
       let maxRange = 0;
 
       for (let i = 0; i < ranges.length; i++) {
@@ -670,20 +679,24 @@ export class PointCloudAndLaserScanRenderable extends Renderable<PointCloudAndLa
           maxColorValue = Math.max(maxColorValue, colorValue!);
         }
       }
-      minColorValue = settings.minValue ?? minColorValue;
-      maxColorValue = settings.maxValue ?? maxColorValue;
+
+      // if calcMinMax is disabled, we still want to calculate if min/max value in settings is undefined
+      this.minMaxColor[0] = calcMinMax ? minColorValue : settings.minValue ?? minColorValue;
+      this.minMaxColor[1] = calcMinMax ? maxColorValue : settings.maxValue ?? maxColorValue;
 
       // Update the LaserScan bounding sphere
       latestEntry.points.geometry.boundingSphere ??= new THREE.Sphere();
       latestEntry.points.geometry.boundingSphere.set(VEC3_ZERO, maxRange);
       latestEntry.points.frustumCulled = true;
     } else {
+      this.minMaxColor[0] = settings.minValue;
+      this.minMaxColor[1] = settings.maxValue;
       latestEntry.points.geometry.boundingSphere = ReactNull;
       latestEntry.points.frustumCulled = false;
     }
 
     // Build a method to convert raw color field values to RGBA
-    const colorConverter = getColorConverter(settings, minColorValue, maxColorValue);
+    const colorConverter = getColorConverter(settings, this.minMaxColor[0], this.minMaxColor[1]);
 
     // Iterate the point cloud data to update color attribute
     for (let i = 0; i < ranges.length; i++) {
@@ -811,6 +824,14 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     }
   }
 
+  private _updateMinMaxColorValues(renderable: PointCloudAndLaserScanRenderable): void {
+    const path = [...renderable.userData.settingsPath, "minValue"];
+    const [minValue, maxValue] = renderable.minMaxColor;
+    this.saveSetting(path, minValue);
+    path[2] = "maxValue";
+    this.saveSetting(path, maxValue);
+  }
+
   public override handleSettingsAction = (action: SettingsTreeAction): void => {
     const path = action.payload.path;
     if (action.action !== "update" || path.length !== 3) {
@@ -841,6 +862,9 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
           settings,
           renderable.userData.receiveTime,
         );
+      }
+      if (settings.calcMinMax === true) {
+        this._updateMinMaxColorValues(renderable);
       }
     }
   };
@@ -925,6 +949,9 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
       renderable.userData.settings,
       receiveTime,
     );
+    if (renderable.userData.settings.calcMinMax === true) {
+      this._updateMinMaxColorValues(renderable);
+    }
   };
 
   private handleRosPointCloud = (messageEvent: PartialMessageEvent<PointCloud2>): void => {
@@ -1007,6 +1034,9 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
       renderable.userData.settings,
       receiveTime,
     );
+    if (renderable.userData.settings.calcMinMax === true) {
+      this._updateMinMaxColorValues(renderable);
+    }
   };
 
   private handleLaserScan = (
@@ -1091,6 +1121,9 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
       renderable.userData.settings,
       receiveTime,
     );
+    if (renderable.userData.settings.calcMinMax === true) {
+      this._updateMinMaxColorValues(renderable);
+    }
   };
 }
 

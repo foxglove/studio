@@ -148,6 +148,14 @@ export class VelodyneScans extends SceneExtension<PointCloudAndLaserScanRenderab
     return entries;
   }
 
+  private _updateMinMaxColorValues(renderable: PointCloudAndLaserScanRenderable): void {
+    const path = [...renderable.userData.settingsPath, "minValue"];
+    const [minValue, maxValue] = renderable.minMaxColor;
+    this.saveSetting(path, minValue);
+    path[2] = "maxValue";
+    this.saveSetting(path, maxValue);
+  }
+
   public override handleSettingsAction = (action: SettingsTreeAction): void => {
     const path = action.payload.path;
     if (action.action !== "update" || path.length !== 3) {
@@ -171,6 +179,9 @@ export class VelodyneScans extends SceneExtension<PointCloudAndLaserScanRenderab
           settings,
           renderable.userData.receiveTime,
         );
+        if (settings.calcMinMax === true) {
+          this._updateMinMaxColorValues(renderable);
+        }
       }
     }
   };
