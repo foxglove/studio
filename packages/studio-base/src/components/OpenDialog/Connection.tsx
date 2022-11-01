@@ -131,6 +131,10 @@ export default function Connection(props: ConnectionProps): JSX.Element {
         </Stack>
         <Stack key={selectedSource?.id} flex="1 0" gap={2}>
           {selectedSource?.warning && <Alert severity="warning">{selectedSource.warning}</Alert>}
+          {selectedSource?.disabledReason != undefined && (
+            <Alert severity="warning">{selectedSource.disabledReason}</Alert>
+          )}
+
           {selectedSource?.description && <Typography>{selectedSource.description}</Typography>}
           {selectedSource?.formConfig != undefined && (
             <Stack flexGrow={1} justifyContent="space-between">
@@ -162,11 +166,6 @@ export default function Connection(props: ConnectionProps): JSX.Element {
                 ))}
               </Stack>
             </Stack>
-          )}
-          {selectedSource?.disabledReason != undefined && (
-            <Typography color="text.secondary" variant="body2">
-              {selectedSource.disabledReason}
-            </Typography>
           )}
           {selectedSource?.docsLink && (
             <Link color="primary" href={selectedSource.docsLink}>
