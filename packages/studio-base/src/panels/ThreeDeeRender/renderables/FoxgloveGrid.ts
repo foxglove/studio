@@ -30,9 +30,6 @@ export type LayerSettingsFoxgloveGrid = BaseSettings &
   ColorModeSettings & {
     frameLocked: boolean;
   };
-function zeroReader(): number {
-  return 0;
-}
 
 const floatTextureColorModes: ColorModeSettings["colorMode"][] = ["gradient", "colormap"];
 
@@ -108,6 +105,8 @@ export type FoxgloveGridUserData = BaseUserData & {
 const tempColor = { r: 0, g: 0, b: 0, a: 1 };
 const tempMinMaxColor: THREE.Vector2Tuple = [0, 0];
 export class FoxgloveGridRenderable extends Renderable<FoxgloveGridUserData> {
+  private fieldReader: FieldReader | undefined = undefined;
+
   public override dispose(): void {
     this.userData.texture.dispose();
     this.userData.material.dispose();
@@ -124,10 +123,7 @@ export class FoxgloveGridRenderable extends Renderable<FoxgloveGridUserData> {
     pickingMaterial.needsUpdate = true;
   }
 
-  private _getFieldReader(
-    foxgloveGrid: Grid,
-    settings: LayerSettingsFoxgloveGrid,
-  ): FieldReader | undefined {
+  public updateFieldReader(foxgloveGrid: Grid, settings: LayerSettingsFoxgloveGrid): void {
     let colorReader: FieldReader | undefined;
 
     const stride = foxgloveGrid.cell_stride;
@@ -167,10 +163,41 @@ export class FoxgloveGridRenderable extends Renderable<FoxgloveGridUserData> {
       invalidFoxgloveGridError(this.renderer, this, message);
       return undefined;
     }
-
-    return colorReader ?? zeroReader;
+    this.fieldReader = colorReader;
   }
 
+  /**
+   * Will return min/max color values for the passed foxglovegrid message
+   * @param output  - will contain [min, max]
+   * @param foxgloveGrid  -  necessary to get the data and rows/cols
+   */
+  public getMinMaxValue(output: THREE.Vector2Tuple, foxgloveGrid: Grid): void {
+    let minColorValue = Number.POSITIVE_INFINITY;
+    let maxColorValue = Number.NEGATIVE_INFINITY;
+
+    if (this.fieldReader) {
+      const view = new DataView(
+        foxgloveGrid.data.buffer,
+        foxgloveGrid.data.byteOffset,
+        foxgloveGrid.data.length,
+      );
+      const cols = foxgloveGrid.column_count;
+      const rows = foxgloveGrid.data.length / foxgloveGrid.row_stride;
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+          const offset = y * foxgloveGrid.row_stride + x * foxgloveGrid.cell_stride;
+          const colorValue = this.fieldReader(view, offset);
+          minColorValue = Math.min(minColorValue, colorValue);
+          maxColorValue = Math.max(maxColorValue, colorValue);
+        }
+      }
+    }
+
+    output[0] = minColorValue;
+    output[1] = maxColorValue;
+  }
+
+  /** Updates the Transparency of the material and any other necessary properties dependent on settings */
   public updateMaterial(settings: LayerSettingsFoxgloveGrid): void {
     const { colorMode } = settings;
     const { material } = this.userData;
@@ -198,6 +225,20 @@ export class FoxgloveGridRenderable extends Renderable<FoxgloveGridUserData> {
     }
   }
 
+  /**
+   *
+   * @param output  - holds the output min and max values contained in the uniform
+   */
+  public getMinMaxColorValues(output: THREE.Vector2Tuple): void {
+    output[0] = this.userData.material.uniforms.minValue.value;
+    output[1] = this.userData.material.uniforms.maxValue.value;
+  }
+
+  /**
+   *  Updates the uniforms on the material according to the message and settings
+   * @param foxgloveGrid - Grid Message
+   * @param settings - settings
+   */
   public updateUniforms(foxgloveGrid: Grid, settings: LayerSettingsFoxgloveGrid): void {
     const { material } = this.userData;
     const {
@@ -218,12 +259,16 @@ export class FoxgloveGridRenderable extends Renderable<FoxgloveGridUserData> {
 
     colorMapOpacity.value = settings.explicitAlpha;
 
-    minMaxColorValues(
-      tempMinMaxColor,
-      settings,
-      foxgloveGrid.fields.find((field) => settings.colorField === field.name)?.type ??
-        NumericType.UNKNOWN,
-    );
+    if (settings.calcMinMax === true) {
+      this.getMinMaxValue(tempMinMaxColor, foxgloveGrid);
+    } else {
+      minMaxNumericValues(
+        tempMinMaxColor,
+        settings,
+        foxgloveGrid.fields.find((field) => settings.colorField === field.name)?.type ??
+          NumericType.UNKNOWN,
+      );
+    }
 
     const [minColorValue, maxColorValue] = tempMinMaxColor;
     minValue.value = minColorValue;
@@ -239,9 +284,16 @@ export class FoxgloveGridRenderable extends Renderable<FoxgloveGridUserData> {
     // unnecessary to update material because all uniforms are sent to GPU every frame
   }
 
+  /**
+   * Updates the source array of the texture being passed to the shader based off of the current message
+   *
+   * @param foxgloveGrid - Grid message
+   * @param settings - settings config
+   * @returns
+   */
   public updateTexture(foxgloveGrid: Grid, settings: LayerSettingsFoxgloveGrid): void {
     let texture = this.userData.texture;
-    const fieldReader = this._getFieldReader(foxgloveGrid, settings);
+    const fieldReader = this.fieldReader;
     if (!fieldReader) {
       return;
     }
@@ -313,6 +365,50 @@ export class FoxgloveGridRenderable extends Renderable<FoxgloveGridUserData> {
     }
     this.userData.material.uniforms.map.value.needsUpdate = true;
   }
+
+  /**
+   * Updates the renderable in the proper order in response to a settings change
+   * @param settings - new settings to be applied to the renderable
+   */
+  public handleSettingsChange(settings: LayerSettingsFoxgloveGrid): void {
+    const colorModeChanged = this.userData.settings.colorMode !== settings.colorMode;
+    const colorFieldChanged = this.userData.settings.colorField !== settings.colorField;
+    this.userData.settings = settings;
+
+    this.updateMaterial(this.userData.settings);
+    if (colorModeChanged || colorFieldChanged) {
+      this.updateFieldReader(this.userData.foxgloveGrid, this.userData.settings);
+      // needs to recalculate texture when colorMode or colorField changes
+      // technically it doesn't if it's going between gradient and colorMap, but since it's an infrequent user-action it's not a big hit
+      this.updateTexture(this.userData.foxgloveGrid, this.userData.settings);
+    }
+    this.updateUniforms(this.userData.foxgloveGrid, this.userData.settings);
+    this.syncPickingMaterial();
+  }
+
+  /**
+   * Update the renderable to reflect a new Grid Message
+   * @param foxgloveGrid - new Foxglove grid message to update the renderable to
+   */
+  public handleMessage(foxgloveGrid: Grid): void {
+    this.userData.foxgloveGrid = foxgloveGrid;
+    this.userData.messageTime = toNanoSec(foxgloveGrid.timestamp);
+    this.userData.frameId = this.renderer.normalizeFrameId(foxgloveGrid.frame_id);
+    this.userData.foxgloveGrid = foxgloveGrid;
+    this.userData.pose = foxgloveGrid.pose;
+
+    this.updateMaterial(this.userData.settings);
+    this.updateFieldReader(this.userData.foxgloveGrid, this.userData.settings);
+    this.updateTexture(this.userData.foxgloveGrid, this.userData.settings);
+    this.updateUniforms(this.userData.foxgloveGrid, this.userData.settings);
+    const rows = foxgloveGrid.data.byteLength / foxgloveGrid.row_stride;
+    this.scale.set(
+      foxgloveGrid.cell_size.x * foxgloveGrid.column_count,
+      foxgloveGrid.cell_size.y * rows,
+      1,
+    );
+    this.syncPickingMaterial();
+  }
 }
 
 export class FoxgloveGrid extends SceneExtension<FoxgloveGridRenderable> {
@@ -371,18 +467,22 @@ export class FoxgloveGrid extends SceneExtension<FoxgloveGridRenderable> {
       const settings = this.renderer.config.topics[topicName] as
         | Partial<LayerSettingsFoxgloveGrid>
         | undefined;
-      renderable.userData.settings = { ...DEFAULT_SETTINGS, ...settings };
+      const fullSettings = { ...DEFAULT_SETTINGS, ...settings };
+      renderable.handleSettingsChange(fullSettings);
 
-      renderable.updateMaterial(renderable.userData.settings);
-      renderable.updateUniforms(renderable.userData.foxgloveGrid, renderable.userData.settings);
-      if (action.payload.path[2] === "colorMode" || action.payload.path[2] === "colorField") {
-        // needs to recalculate texture when colorMode or colorField changes
-        // technically it doesn't if it's going between gradient and colorMap, but since it's an infrequent user-action it's not a big hit
-        renderable.updateTexture(renderable.userData.foxgloveGrid, renderable.userData.settings);
+      if (settings?.calcMinMax === true) {
+        this.updateSettingsMinMaxFromRenderable(renderable);
       }
-      renderable.syncPickingMaterial();
     }
   };
+
+  private updateSettingsMinMaxFromRenderable(renderable: FoxgloveGridRenderable) {
+    const settingsPath = [...renderable.userData.settingsPath, "minValue"];
+    renderable.getMinMaxColorValues(tempMinMaxColor);
+    this.saveSetting(settingsPath, tempMinMaxColor[0]);
+    settingsPath[2] = "maxValue";
+    this.saveSetting(settingsPath, tempMinMaxColor[1]);
+  }
 
   private handleFoxgloveGrid = (messageEvent: PartialMessageEvent<Grid>): void => {
     const topic = messageEvent.topic;
@@ -442,28 +542,15 @@ export class FoxgloveGrid extends SceneExtension<FoxgloveGridRenderable> {
       this.updateSettingsTree();
     }
 
-    this._updateFoxgloveGridRenderable(
-      renderable,
-      foxgloveGrid,
-      receiveTime,
-      renderable.userData.settings,
-    );
+    if (this._validateMessage(renderable, foxgloveGrid)) {
+      this._updateFoxgloveGridRenderable(renderable, foxgloveGrid, receiveTime);
+    }
   };
 
-  private _updateFoxgloveGridRenderable(
-    renderable: FoxgloveGridRenderable,
-    foxgloveGrid: Grid,
-    receiveTime: bigint,
-    settings: LayerSettingsFoxgloveGrid,
-  ): void {
-    renderable.userData.foxgloveGrid = foxgloveGrid;
-    renderable.userData.pose = foxgloveGrid.pose;
-    renderable.userData.receiveTime = receiveTime;
-    renderable.userData.messageTime = toNanoSec(foxgloveGrid.timestamp);
-    renderable.userData.frameId = this.renderer.normalizeFrameId(foxgloveGrid.frame_id);
+  private _validateMessage(renderable: FoxgloveGridRenderable, foxgloveGrid: Grid): boolean {
     if (foxgloveGrid.fields.length === 0) {
       invalidFoxgloveGridError(this.renderer, renderable, `Grid has no fields to color by`);
-      return;
+      return false;
     }
     const { cell_stride, row_stride, column_count: cols } = foxgloveGrid;
     const rows = foxgloveGrid.data.byteLength / row_stride;
@@ -471,7 +558,7 @@ export class FoxgloveGrid extends SceneExtension<FoxgloveGridRenderable> {
     if (Math.floor(cols) !== cols || Math.floor(rows) !== rows) {
       const message = `Grid column count (${foxgloveGrid.column_count}) or row count (${rows} = data.byteLength ${foxgloveGrid.data.byteLength} / row_stride ${row_stride}) is not an integer.`;
       invalidFoxgloveGridError(this.renderer, renderable, message);
-      return;
+      return false;
     }
 
     if (cell_stride * cols > row_stride) {
@@ -479,16 +566,19 @@ export class FoxgloveGrid extends SceneExtension<FoxgloveGridRenderable> {
         cols * cell_stride
       }) `;
       invalidFoxgloveGridError(this.renderer, renderable, message);
-      return;
+      return false;
     }
+    return true;
+  }
 
-    renderable.updateMaterial(settings);
-    renderable.updateUniforms(foxgloveGrid, settings);
-    renderable.updateTexture(foxgloveGrid, settings);
+  private _updateFoxgloveGridRenderable(
+    renderable: FoxgloveGridRenderable,
+    foxgloveGrid: Grid,
+    receiveTime: bigint,
+  ): void {
+    renderable.userData.receiveTime = receiveTime;
 
-    renderable.scale.set(foxgloveGrid.cell_size.x * cols, foxgloveGrid.cell_size.y * rows, 1);
-
-    renderable.syncPickingMaterial();
+    renderable.handleMessage(foxgloveGrid);
   }
 
   public static Geometry(): THREE.PlaneGeometry {
@@ -752,7 +842,7 @@ function normalizeFoxgloveGrid(message: PartialMessage<Grid>): Grid {
   };
 }
 
-function minMaxColorValues(
+function minMaxNumericValues(
   output: THREE.Vector2Tuple,
   settings: LayerSettingsFoxgloveGrid,
   numericType: NumericType,

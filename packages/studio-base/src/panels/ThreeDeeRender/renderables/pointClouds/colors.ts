@@ -28,6 +28,7 @@ export interface ColorModeSettings {
   rgbByteOrder: "rgba" | "bgra" | "abgr";
   minValue?: number;
   maxValue?: number;
+  calcMinMax?: boolean;
 }
 
 export function getColorConverter<Settings extends ColorModeSettings>(
@@ -323,6 +324,7 @@ export function baseColorModeSettingsNode<Settings extends ColorModeSettings & B
   const rgbByteOrder = config.rgbByteOrder ?? "rgba";
   const minValue = config.minValue;
   const maxValue = config.maxValue;
+  const calcMinMax = config.calcMinMax;
 
   const fields: SettingsTreeFields = {};
 
@@ -414,12 +416,19 @@ export function baseColorModeSettingsNode<Settings extends ColorModeSettings & B
     }
 
     if (NEEDS_MIN_MAX.includes(colorMode)) {
+      fields.calcMinMax = {
+        label: "Calculate Min/Max Every Message",
+        input: "boolean",
+        value: calcMinMax,
+        help: "Will impact performance and will overwrite your existing min/max values. When enabled, the min/max values will be calculated and set for the current message and each new message.",
+      };
       fields.minValue = {
         label: "Value min",
         input: "number",
         placeholder: "auto",
         precision: 4,
         value: minValue,
+        disabled: calcMinMax,
       };
       fields.maxValue = {
         label: "Value max",
@@ -427,6 +436,7 @@ export function baseColorModeSettingsNode<Settings extends ColorModeSettings & B
         placeholder: "auto",
         precision: 4,
         value: maxValue,
+        disabled: calcMinMax,
       };
     }
   }
