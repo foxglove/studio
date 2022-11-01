@@ -471,12 +471,12 @@ export class FoxgloveGrid extends SceneExtension<FoxgloveGridRenderable> {
       renderable.handleSettingsChange(fullSettings);
 
       if (settings?.calcMinMax === true) {
-        this.updateSettingsMinMaxFromRenderable(renderable);
+        this._updateMinMaxValueSettings(renderable);
       }
     }
   };
 
-  private updateSettingsMinMaxFromRenderable(renderable: FoxgloveGridRenderable) {
+  private _updateMinMaxValueSettings(renderable: FoxgloveGridRenderable): void {
     const settingsPath = [...renderable.userData.settingsPath, "minValue"];
     renderable.getMinMaxColorValues(tempMinMaxColor);
     this.saveSetting(settingsPath, tempMinMaxColor[0]);

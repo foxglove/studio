@@ -824,7 +824,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     }
   }
 
-  private _updateMinMaxColorValues(renderable: PointCloudAndLaserScanRenderable): void {
+  private _updateMinMaxValueSettings(renderable: PointCloudAndLaserScanRenderable): void {
     const path = [...renderable.userData.settingsPath, "minValue"];
     const [minValue, maxValue] = renderable.minMaxColor;
     this.saveSetting(path, minValue);
@@ -864,7 +864,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
         );
       }
       if (settings.calcMinMax === true) {
-        this._updateMinMaxColorValues(renderable);
+        this._updateMinMaxValueSettings(renderable);
       }
     }
   };
@@ -950,7 +950,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
       receiveTime,
     );
     if (renderable.userData.settings.calcMinMax === true) {
-      this._updateMinMaxColorValues(renderable);
+      this._updateMinMaxValueSettings(renderable);
     }
   };
 
@@ -1035,7 +1035,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
       receiveTime,
     );
     if (renderable.userData.settings.calcMinMax === true) {
-      this._updateMinMaxColorValues(renderable);
+      this._updateMinMaxValueSettings(renderable);
     }
   };
 
@@ -1122,7 +1122,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
       receiveTime,
     );
     if (renderable.userData.settings.calcMinMax === true) {
-      this._updateMinMaxColorValues(renderable);
+      this._updateMinMaxValueSettings(renderable);
     }
   };
 }
