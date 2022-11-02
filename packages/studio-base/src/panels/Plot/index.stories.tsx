@@ -454,6 +454,7 @@ export function LineGraphWithLegendsHidden(): JSX.Element {
 }
 LineGraphWithLegendsHidden.parameters = {
   useReadySignal: true,
+  colorScheme: "light",
 };
 
 InALineGraphWithMultiplePlotsXAxesAreSynced.storyName =
