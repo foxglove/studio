@@ -45,6 +45,9 @@ export function getReader(
   stride: number,
   forceType?: PointFieldType | NumericType,
 ): FieldReader | undefined {
+  if ("count" in field && field.count !== 1) {
+    return undefined;
+  }
   const numericType = (field as Partial<PackedElementField>).type;
   if (numericType == undefined) {
     const type = forceType ?? (field as PointField).datatype;

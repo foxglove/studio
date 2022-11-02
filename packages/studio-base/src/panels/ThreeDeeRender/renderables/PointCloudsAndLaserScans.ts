@@ -4,6 +4,7 @@
 
 import * as THREE from "three";
 
+import { filterMap } from "@foxglove/den/collection";
 import { Time, toNanoSec } from "@foxglove/rostime";
 import {
   LaserScan as FoxgloveLaserScan,
@@ -220,7 +221,9 @@ export class PointCloudAndLaserScanRenderable extends Renderable<PointCloudAndLa
       for (const field of pointCloud.fields) {
         const pointOffset = instanceId * pointStep;
         const reader = getReader(field, stride);
-        details[field.name] = reader?.(view, pointOffset);
+        if (reader) {
+          details[field.name] = reader(view, pointOffset);
+        }
       }
 
       return details;
@@ -431,9 +434,8 @@ export class PointCloudAndLaserScanRenderable extends Renderable<PointCloudAndLa
           : (field as PointField).datatype;
 
       if (count != undefined && count !== 1) {
-        const message = `PointCloud field "${field.name}" has invalid count ${count}. Only 1 is supported`;
-        invalidPointCloudOrLaserScanError(this.renderer, renderable, message);
-        return false;
+        // Skip this field, we don't support counts other than 1
+        continue;
       } else if (field.offset < 0) {
         const message = `PointCloud field "${field.name}" has invalid offset ${field.offset}. Must be >= 0`;
         invalidPointCloudOrLaserScanError(this.renderer, renderable, message);
@@ -996,7 +998,10 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     // Update the mapping of topic to point cloud field names if necessary
     let fields = this.pointCloudFieldsByTopic.get(topic);
     if (!fields || fields.length !== pointCloud.fields.length) {
-      fields = pointCloud.fields.map((field) => field.name);
+      // Omit fields with count != 1
+      fields = filterMap(pointCloud.fields, (field) =>
+        field.count === 1 ? field.name : undefined,
+      );
       this.pointCloudFieldsByTopic.set(topic, fields);
       this.updateSettingsTree();
     }
@@ -1380,6 +1385,9 @@ export function autoSelectColorField(
 ): void {
   // Prefer color fields first
   for (const field of pointCloud.fields) {
+    if ("count" in field && field.count !== 1) {
+      continue;
+    }
     const fieldNameLower = field.name.toLowerCase();
     if (COLOR_FIELDS.has(fieldNameLower)) {
       output.colorField = field.name;
@@ -1412,6 +1420,9 @@ export function autoSelectColorField(
 
   // Intensity fields are second priority
   for (const field of pointCloud.fields) {
+    if ("count" in field && field.count !== 1) {
+      continue;
+    }
     if (INTENSITY_FIELDS.has(field.name)) {
       output.colorField = field.name;
       output.colorMode = "colormap";
@@ -1421,8 +1432,10 @@ export function autoSelectColorField(
   }
 
   // Fall back to using the first point cloud field
-  if (pointCloud.fields.length > 0) {
-    const firstField = pointCloud.fields[0]!;
+  const firstField = (pointCloud.fields as readonly (PackedElementField | PointField)[]).find(
+    (field) => !("count" in field) || field.count === 1,
+  );
+  if (firstField != undefined) {
     output.colorField = firstField.name;
     output.colorMode = "colormap";
     output.colorMap = "turbo";
