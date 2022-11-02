@@ -78,18 +78,16 @@ function buildSettingsTree(config: PlotConfig, enableSeries: boolean): SettingsT
       fields: {
         title: { label: "Title", input: "string", value: config.title, placeholder: "Plot" },
         isSynced: { label: "Sync with other plots", input: "boolean", value: config.isSynced },
-        legendDisplay: enableSeries
-          ? undefined
-          : {
-              label: "Legend position",
-              input: "select",
-              value: config.legendDisplay,
-              options: [
-                { value: "floating", label: "Floating" },
-                { value: "left", label: "Left" },
-                { value: "top", label: "Top" },
-              ],
-            },
+        legendDisplay: {
+          label: "Legend position",
+          input: "select",
+          value: config.legendDisplay,
+          options: [
+            { value: "floating", label: "Floating" },
+            { value: "left", label: "Left" },
+            { value: "top", label: "Top" },
+          ],
+        },
         showPlotValuesInLegend: enableSeries
           ? undefined
           : {
@@ -170,7 +168,11 @@ export function usePlotPanelSettings(config: PlotConfig, saveConfig: SaveConfig<
         saveConfig(
           produce((draft) => {
             if (path[0] === "paths") {
-              set(draft, path, value);
+              if (path[2] === "visible") {
+                set(draft, [...path.slice(0, 2), "enabled"], value);
+              } else {
+                set(draft, path, value);
+              }
             } else {
               set(draft, path.slice(1), value);
 
@@ -191,6 +193,7 @@ export function usePlotPanelSettings(config: PlotConfig, saveConfig: SaveConfig<
               draft.paths.push({
                 timestampMethod: "receiveTime",
                 value: "",
+                label: `Series ${draft.paths.length + 1}`,
                 enabled: true,
               });
             }),
