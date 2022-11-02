@@ -463,38 +463,41 @@ export function InALineGraphWithMultiplePlotsXAxesAreSynced(): JSX.Element {
   const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
   return (
-    <PanelSetup fixture={fixture} pauseFrame={pauseFrame}>
-      <Plot
-        overrideConfig={{
-          ...exampleConfig,
-          paths: [
-            {
-              value: "/some_topic/location.pose.acceleration",
-              enabled: true,
-              timestampMethod: "receiveTime",
-            },
-          ],
-        }}
-      />
-      <Plot
-        overrideConfig={{
-          ...exampleConfig,
-          paths: [
-            {
-              value: "/some_topic/location_subset.pose.velocity",
-              enabled: true,
-              timestampMethod: "receiveTime",
-            },
-          ],
-        }}
-      />
+    <PanelSetup fixture={fixture} pauseFrame={pauseFrame} style={{ flexDirection: "column" }}>
+      {/*minHeight necessary to get around otherwise flaky test because of layout */}
+      <div style={{ minHeight: "50%" }}>
+        <Plot
+          overrideConfig={{
+            ...exampleConfig,
+            paths: [
+              {
+                value: "/some_topic/location.pose.acceleration",
+                enabled: true,
+                timestampMethod: "receiveTime",
+              },
+            ],
+          }}
+        />
+      </div>
+      <div style={{ minHeight: "50%" }}>
+        <Plot
+          overrideConfig={{
+            ...exampleConfig,
+            paths: [
+              {
+                value: "/some_topic/location_subset.pose.velocity",
+                enabled: true,
+                timestampMethod: "receiveTime",
+              },
+            ],
+          }}
+        />
+      </div>
     </PanelSetup>
   );
 }
 InALineGraphWithMultiplePlotsXAxesAreSynced.parameters = {
   useReadySignal: true,
-  // Test has been flaky on layout and needs additional time to settle
-  chromatic: { delay: 300 },
 };
 
 LineGraphAfterZoom.storyName = "line graph after zoom";
