@@ -470,12 +470,11 @@ const useStyles = makeStyles()(() => ({
   },
 }));
 export function InALineGraphWithMultiplePlotsXAxesAreSynced(): JSX.Element {
-  const readySignal = useReadySignal({ count: 6 });
+  const readySignal = useReadySignal({ count: 7 });
   const pauseFrame = useCallback(() => readySignal, [readySignal]);
-  const { classes } = useStyles();
 
   return (
-    <PanelSetup fixture={fixture} pauseFrame={pauseFrame} className={classes.PanelSetup}>
+    <PanelSetup fixture={fixture} pauseFrame={pauseFrame} style={{ flexDirection: "row" }}>
       <Plot
         overrideConfig={{
           ...exampleConfig,
