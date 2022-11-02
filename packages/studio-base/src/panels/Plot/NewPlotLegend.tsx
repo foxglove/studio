@@ -8,6 +8,7 @@ import { ComponentProps, Fragment, useCallback } from "react";
 import { makeStyles } from "tss-react/mui";
 
 import TimeBasedChart from "@foxglove/studio-base/components/TimeBasedChart";
+import { NewPlotLegendRow } from "@foxglove/studio-base/panels/Plot/NewPlotLegendRow";
 import { PlotPath, BasePlotPath } from "@foxglove/studio-base/panels/Plot/internalTypes";
 import { PlotConfig, PlotXAxisVal } from "@foxglove/studio-base/panels/Plot/types";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
@@ -43,7 +44,7 @@ const useStyles = makeStyles()((theme) => ({
     alignItems: "center",
     display: "grid",
     gap: theme.spacing(1),
-    gridTemplateColumns: "auto 1fr",
+    gridTemplateColumns: "auto minmax(max-content, 1fr) minmax(max-content, 1fr) auto",
   },
 
   toggleButton: {
@@ -52,7 +53,15 @@ const useStyles = makeStyles()((theme) => ({
 }));
 
 export function NewPlotLegend(props: Props): JSX.Element {
-  const { paths, saveConfig } = props;
+  const {
+    paths,
+    saveConfig,
+    xAxisVal,
+    datasets,
+    currentTime,
+    pathsWithMismatchedDataLengths,
+    showPlotValuesInLegend,
+  } = props;
   const { classes, cx } = useStyles();
 
   const togglePath = useCallback(
@@ -67,6 +76,13 @@ export function NewPlotLegend(props: Props): JSX.Element {
     [paths, saveConfig],
   );
 
+  const savePaths = useCallback(
+    (newPaths: PlotPath[]) => {
+      saveConfig({ paths: newPaths });
+    },
+    [saveConfig],
+  );
+
   return (
     <div
       className={cx(classes.root, { [classes.rootFloating]: props.legendDisplay === "floating" })}
@@ -74,12 +90,24 @@ export function NewPlotLegend(props: Props): JSX.Element {
       <Typography>New Plot Legend</Typography>
       <div className={classes.container}>
         {paths.map((path, index) => (
-          <Fragment key={`${path}_${index}`}>
-            <IconButton onClick={() => togglePath(index)}>
-              <CircleIcon className={classes.toggleButton} style={{ color: path.color }} />
-            </IconButton>
-            {path.label ?? path.value}
-          </Fragment>
+          <NewPlotLegendRow
+            key={index}
+            index={index}
+            xAxisVal={xAxisVal}
+            path={path}
+            paths={paths}
+            hasMismatchedDataLength={pathsWithMismatchedDataLengths.includes(path.value)}
+            datasets={datasets}
+            currentTime={currentTime}
+            savePaths={savePaths}
+            showPlotValuesInLegend={showPlotValuesInLegend}
+          />
+          //   <Fragment key={`${path}_${index}`}>
+          //     <IconButton onClick={() => togglePath(index)}>
+          //       <CircleIcon className={classes.toggleButton} style={{ color: path.color }} />
+          //     </IconButton>
+          //     {path.label ?? path.value}
+          //   </Fragment>
         ))}
       </div>
     </div>

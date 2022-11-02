@@ -78,8 +78,13 @@ function buildSettingsTree(config: PlotConfig, enableSeries: boolean): SettingsT
       fields: {
         title: { label: "Title", input: "string", value: config.title, placeholder: "Plot" },
         isSynced: { label: "Sync with other plots", input: "boolean", value: config.isSynced },
+      },
+    },
+    legend: {
+      label: "Legend",
+      fields: {
         legendDisplay: {
-          label: "Legend position",
+          label: "Position",
           input: "select",
           value: config.legendDisplay,
           options: [
@@ -88,13 +93,11 @@ function buildSettingsTree(config: PlotConfig, enableSeries: boolean): SettingsT
             { value: "top", label: "Top" },
           ],
         },
-        showPlotValuesInLegend: enableSeries
-          ? undefined
-          : {
-              label: "Show plot values in legend",
-              input: "boolean",
-              value: config.showPlotValuesInLegend,
-            },
+        showPlotValuesInLegend: {
+          label: "Show plot values",
+          input: "boolean",
+          value: config.showPlotValuesInLegend,
+        },
       },
     },
     yAxis: {
