@@ -60,7 +60,7 @@ async function copySpotlightImporter(context: AfterPackContext) {
   const zipPath = path.join(outDir, "MCAPSpotlightImporter.mdimporter.zip");
   await fs.unlink(zipPath).catch(() => {});
   await downloadTool(
-    "https://github.com/foxglove/MCAPSpotlightImporter/releases/download/v1.0.1/MCAPSpotlightImporter.mdimporter.zip",
+    "https://github.com/foxglove/MCAPSpotlightImporter/releases/download/v1.0.2/MCAPSpotlightImporter.mdimporter.zip",
     zipPath,
   );
   try {
@@ -114,7 +114,7 @@ async function configureQuickLookExtension(context: AfterPackContext) {
     NSExtension: {
       ...(originalInfo.NSExtension as PlistObject),
       NSExtensionAttributes: {
-        QLSupportedContentTypes: ["org.ros.bag", "dev.foxglove.mcap"],
+        QLSupportedContentTypes: ["org.ros.bag", "dev.mcap.mcap"],
         QLSupportsSearchableItems: false,
       },
     },
