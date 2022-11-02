@@ -8,9 +8,13 @@ import {
   Remove as RemoveIcon,
   MoreVert as MoreVertIcon,
 } from "@mui/icons-material";
-import { IconButton, Tooltip, Typography, useTheme } from "@mui/material";
-import { ComponentProps, useCallback, useMemo, useState } from "react";
+import CheckIcon from "@mui/icons-material/Check";
+import EditIcon from "@mui/icons-material/Edit";
+import { IconButton, TextField, Tooltip, Typography, useTheme } from "@mui/material";
+import produce from "immer";
+import { ChangeEvent, ComponentProps, useCallback, useMemo, useState } from "react";
 import { makeStyles } from "tss-react/mui";
+import { useImmer } from "use-immer";
 import { v4 as uuidv4 } from "uuid";
 
 import MessagePathInput from "@foxglove/studio-base/components/MessagePathSyntax/MessagePathInput";
@@ -50,6 +54,22 @@ const useStyles = makeStyles()((theme) => ({
       },
     },
   },
+
+  editButton: {
+    padding: theme.spacing(0.5),
+  },
+
+  editNameField: {
+    font: "inherit",
+    gridColumn: "span 2",
+    width: "100%",
+
+    ".MuiInputBase-input": {
+      fontSize: "0.75rem",
+      padding: theme.spacing(0.75, 1),
+    },
+  },
+
   listIcon: {
     padding: theme.spacing(0.25),
     position: "sticky",
@@ -123,6 +143,8 @@ export function NewPlotLegendRow({
     isTimestampScale: true,
   });
 
+  const [state, setState] = useImmer<{ editing: boolean }>({ editing: false });
+
   const theme = useTheme();
 
   const currentDisplay = useMemo(() => {
@@ -170,6 +192,34 @@ export function NewPlotLegendRow({
     [paths, savePaths],
   );
 
+  const toggleEditing = useCallback(
+    () =>
+      setState((draft) => {
+        draft.editing = !draft.editing;
+      }),
+    [setState],
+  );
+
+  const onEditLabel = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      savePaths(
+        produce(paths, (draft) => {
+          draft[index]!.label = event.target.value;
+        }),
+      );
+    },
+    [index, paths, savePaths],
+  );
+
+  const onLabelKeyDown = useCallback(
+    (event: React.KeyboardEvent) => {
+      if (event.key === "Enter" || event.key === "Escape") {
+        toggleEditing();
+      }
+    },
+    [toggleEditing],
+  );
+
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
 
   const messagePathInputStyle = useMemo(() => {
@@ -209,17 +259,38 @@ export function NewPlotLegendRow({
         </IconButton>
       </div>
       <div className={classes.inputWrapper}>
-        <MessagePathInput
-          supportsMathModifiers
-          path={path.value}
-          onChange={onInputChange}
-          validTypes={plotableRosTypes}
-          placeholder="Enter a topic name or a number"
-          index={index}
-          autoSize
-          disableAutocomplete={isReferenceLinePlotPath}
-          inputStyle={messagePathInputStyle}
-        />
+        {state.editing ? (
+          <TextField
+            className={classes.editNameField}
+            autoFocus
+            variant="filled"
+            onChange={onEditLabel}
+            value={path.label}
+            onBlur={toggleEditing}
+            onKeyDown={onLabelKeyDown}
+            onFocus={(event) => event.target.select()}
+            InputProps={{
+              endAdornment: (
+                <IconButton
+                  className={classes.editButton}
+                  title="Rename"
+                  data-node-function="edit-label"
+                  color="primary"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    toggleEditing();
+                  }}
+                >
+                  <CheckIcon fontSize="small" />
+                </IconButton>
+              ),
+            }}
+          />
+        ) : (
+          <Typography noWrap={true} flex="auto" variant="subtitle2">
+            {path.label ?? path.value}
+          </Typography>
+        )}
         {hasMismatchedDataLength && (
           <Tooltip
             placement="top"
@@ -235,6 +306,20 @@ export function NewPlotLegendRow({
             {currentDisplay.value ?? ""}
           </Typography>
         </div>
+      )}
+      {!state.editing && (
+        <IconButton
+          className={classes.editButton}
+          title="Rename"
+          data-node-function="edit-label"
+          color="primary"
+          onClick={(event) => {
+            event.stopPropagation();
+            toggleEditing();
+          }}
+        >
+          <EditIcon fontSize="small" />
+        </IconButton>
       )}
       <div className={classes.actions}>
         <IconButton

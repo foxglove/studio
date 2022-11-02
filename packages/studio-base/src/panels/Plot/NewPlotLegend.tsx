@@ -87,7 +87,6 @@ export function NewPlotLegend(props: Props): JSX.Element {
     <div
       className={cx(classes.root, { [classes.rootFloating]: props.legendDisplay === "floating" })}
     >
-      <Typography>New Plot Legend</Typography>
       <div className={classes.container}>
         {paths.map((path, index) => (
           <NewPlotLegendRow
