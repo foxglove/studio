@@ -454,7 +454,6 @@ export function LineGraphWithLegendsHidden(): JSX.Element {
 }
 LineGraphWithLegendsHidden.parameters = {
   useReadySignal: true,
-  colorScheme: "light",
 };
 
 InALineGraphWithMultiplePlotsXAxesAreSynced.storyName =
@@ -495,6 +494,7 @@ export function InALineGraphWithMultiplePlotsXAxesAreSynced(): JSX.Element {
 }
 InALineGraphWithMultiplePlotsXAxesAreSynced.parameters = {
   useReadySignal: true,
+  colorScheme: "light",
 };
 
 LineGraphAfterZoom.storyName = "line graph after zoom";
