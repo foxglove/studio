@@ -474,7 +474,7 @@ export function InALineGraphWithMultiplePlotsXAxesAreSynced(): JSX.Element {
   const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
   return (
-    <PanelSetup fixture={fixture} pauseFrame={pauseFrame} style={{ flexDirection: "row" }}>
+    <PanelSetup fixture={fixture} pauseFrame={pauseFrame} style={{ flexDirection: "column" }}>
       <Plot
         overrideConfig={{
           ...exampleConfig,
