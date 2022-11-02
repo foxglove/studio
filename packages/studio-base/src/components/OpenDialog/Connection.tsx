@@ -130,7 +130,9 @@ export default function Connection(props: ConnectionProps): JSX.Element {
           </Tabs>
         </Stack>
         <Stack key={selectedSource?.id} flex="1 0" gap={2}>
-          {selectedSource?.warning && <Alert severity="warning">{selectedSource.warning}</Alert>}
+          {selectedSource?.disabledReason == undefined && selectedSource?.warning && (
+            <Alert severity="warning">{selectedSource.warning}</Alert>
+          )}
           {selectedSource?.disabledReason != undefined && (
             <Alert severity="warning">{selectedSource.disabledReason}</Alert>
           )}
