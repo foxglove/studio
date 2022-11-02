@@ -23,12 +23,13 @@ import {
   VariableValue,
 } from "@foxglove/studio";
 import { FoxgloveGrid } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/FoxgloveGrid";
+import { light, dark } from "@foxglove/studio-base/theme/palette";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 import { LabelMaterial, LabelPool } from "@foxglove/three-text";
 
 import { Input } from "./Input";
 import { LineMaterial } from "./LineMaterial";
-import { ModelCache } from "./ModelCache";
+import { ModelCache, MeshUpAxis, DEFAULT_MESH_UP_AXIS } from "./ModelCache";
 import { PickedRenderable, Picker } from "./Picker";
 import type { Renderable } from "./Renderable";
 import { SceneExtension } from "./SceneExtension";
@@ -71,7 +72,7 @@ import {
   Vector3,
 } from "./ros";
 import { BaseSettings, CustomLayerSettings, SelectEntry } from "./settings";
-import { makePose, Pose, Transform, TransformTree } from "./transforms";
+import { AddTransformResult, makePose, Pose, Transform, TransformTree } from "./transforms";
 
 const log = Logger.getLogger(__filename);
 
@@ -118,6 +119,7 @@ export type RendererConfig = {
     labelScaleFactor?: number;
     /** Ignore the <up_axis> tag in COLLADA files (matching rviz behavior) */
     ignoreColladaUpAxis?: boolean;
+    meshUpAxis?: MeshUpAxis;
     transforms?: {
       /** Toggles translation and rotation offset controls for frames */
       editable?: boolean;
@@ -191,8 +193,8 @@ const MAX_SELECTIONS = 10;
 
 // NOTE: These do not use .convertSRGBToLinear() since background color is not
 // affected by gamma correction
-const LIGHT_BACKDROP = new THREE.Color(0xececec);
-const DARK_BACKDROP = new THREE.Color(0x121217);
+const LIGHT_BACKDROP = new THREE.Color(light.background?.default);
+const DARK_BACKDROP = new THREE.Color(dark.background?.default);
 
 // Define rendering layers for multipass rendering used for the selection effect
 const LAYER_DEFAULT = 0;
@@ -209,6 +211,7 @@ const FOLLOW_TF_PATH = ["general", "followTf"];
 const NO_FRAME_SELECTED = "NO_FRAME_SELECTED";
 const FRAME_NOT_FOUND = "FRAME_NOT_FOUND";
 const TF_OVERFLOW = "TF_OVERFLOW";
+const CYCLE_DETECTED = "CYCLE_DETECTED";
 
 // An extensionId for creating the top-level settings nodes such as "Topics" and
 // "Custom Layers"
@@ -367,6 +370,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
     this.modelCache = new ModelCache({
       ignoreColladaUpAxis: config.scene.ignoreColladaUpAxis ?? false,
+      meshUpAxis: config.scene.meshUpAxis ?? DEFAULT_MESH_UP_AXIS,
       edgeMaterial: this.outlineMaterial,
     });
 
@@ -440,17 +444,21 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.addDatatypeSubscriptions(FRAME_TRANSFORM_DATATYPES, {
       handler: this.handleFrameTransform,
       forced: true,
-      preload: config.scene.transforms?.enablePreloading ?? true,
+      // Disabled until we can efficiently preload transforms. See
+      // <https://github.com/foxglove/studio/issues/4657> for more details.
+      // preload: config.scene.transforms?.enablePreloading ?? true,
     });
     this.addDatatypeSubscriptions(TF_DATATYPES, {
       handler: this.handleTFMessage,
       forced: true,
-      preload: config.scene.transforms?.enablePreloading ?? true,
+      // Disabled until we can efficiently preload transforms
+      // preload: config.scene.transforms?.enablePreloading ?? true,
     });
     this.addDatatypeSubscriptions(TRANSFORM_STAMPED_DATATYPES, {
       handler: this.handleTransformStamped,
       forced: true,
-      preload: config.scene.transforms?.enablePreloading ?? true,
+      // Disabled until we can efficiently preload transforms
+      // preload: config.scene.transforms?.enablePreloading ?? true,
     });
 
     this.addSceneExtension(this.coreSettings);
@@ -519,8 +527,9 @@ export class Renderer extends EventEmitter<RendererEvents> {
    * This is useful when seeking to a new playback position or when a new data source is loaded.
    */
   public clear(): void {
-    // This must be cleared before calling `SceneExtension#removeAllRenderables()` to allow
-    // extensions to add errors back afterward
+    // These must be cleared before calling `SceneExtension#removeAllRenderables()` to allow
+    // extensions to add transforms and errors back afterward
+    this.transformTree.clearAfter(this.currentTime);
     this.settings.errors.clear();
 
     for (const extension of this.sceneExtensions.values()) {
@@ -846,7 +855,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     return this.config.cameraState.perspective ? this.perspectiveCamera : this.orthographicCamera;
   }
 
-  public addMessageEvent(messageEvent: Readonly<MessageEvent<unknown>>, datatype: string): void {
+  public addMessageEvent(messageEvent: Readonly<MessageEvent<unknown>>): void {
     const { message } = messageEvent;
 
     const maybeHasHeader = message as DeepPartial<{ header: Header }>;
@@ -877,7 +886,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     }
 
     handleMessage(messageEvent, this.topicHandlers.get(messageEvent.topic));
-    handleMessage(messageEvent, this.datatypeHandlers.get(datatype));
+    handleMessage(messageEvent, this.datatypeHandlers.get(messageEvent.schemaName));
   }
 
   /** Match the behavior of `tf::Transformer` by stripping leading slashes from
@@ -930,16 +939,32 @@ export class Renderer extends EventEmitter<RendererEvents> {
     stamp: bigint,
     translation: Vector3,
     rotation: Quaternion,
+    errorSettingsPath?: string[],
   ): void {
     const t = translation;
     const q = rotation;
 
     const transform = new Transform([t.x, t.y, t.z], [q.x, q.y, q.z, q.w]);
-    const updated = this.transformTree.addTransform(childFrameId, parentFrameId, stamp, transform);
+    const status = this.transformTree.addTransform(childFrameId, parentFrameId, stamp, transform);
 
-    if (updated) {
+    if (status === AddTransformResult.UPDATED) {
       this.coordinateFrameList = this.transformTree.frameList();
       this.emit("transformTreeUpdated", this);
+    }
+
+    if (status === AddTransformResult.CYCLE_DETECTED) {
+      this.settings.errors.add(
+        ["transforms", `frame:${childFrameId}`],
+        CYCLE_DETECTED,
+        `Transform tree cycle detected: Received transform with parent "${parentFrameId}" and child "${childFrameId}", but "${childFrameId}" is already an ancestor of "${parentFrameId}". Transform message dropped.`,
+      );
+      if (errorSettingsPath) {
+        this.settings.errors.add(
+          errorSettingsPath,
+          CYCLE_DETECTED,
+          `Attempted to add cyclical transform: Frame "${parentFrameId}" cannot be the parent of frame "${childFrameId}". Transform message dropped.`,
+        );
+      }
     }
 
     // Check if the transform history for this frame is at capacity and show an error if so. This

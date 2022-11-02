@@ -9,6 +9,12 @@ import { Duration, Time } from "./time";
 
 const DEFAULT_MAX_CAPACITY_PER_FRAME = 50_000;
 
+export enum AddTransformResult {
+  NOT_UPDATED,
+  UPDATED,
+  CYCLE_DETECTED,
+}
+
 /**
  * TransformTree is a collection of coordinate frames with convenience methods
  * for getting and creating frames and adding transforms between frames.
@@ -31,23 +37,39 @@ export class TransformTree {
     parentFrameId: string,
     time: Time,
     transform: Transform,
-  ): boolean {
+  ): AddTransformResult {
     let updated = !this.hasFrame(frameId);
+    let cycleDetected = false;
     const frame = this.getOrCreateFrame(frameId);
     const curParentFrame = frame.parent();
     if (curParentFrame == undefined || curParentFrame.id !== parentFrameId) {
+      cycleDetected = this._checkParentForCycle(frameId, parentFrameId);
       // This frame was previously unparented but now we know its parent, or we
       // are reparenting this frame
-      frame.setParent(this.getOrCreateFrame(parentFrameId));
-      updated = true;
+      if (!cycleDetected) {
+        frame.setParent(this.getOrCreateFrame(parentFrameId));
+        updated = true;
+      }
     }
 
-    frame.addTransform(time, transform);
-    return updated;
+    if (!cycleDetected) {
+      frame.addTransform(time, transform);
+    }
+    return cycleDetected
+      ? AddTransformResult.CYCLE_DETECTED
+      : updated
+      ? AddTransformResult.UPDATED
+      : AddTransformResult.NOT_UPDATED;
   }
 
   public clear(): void {
     this._frames.clear();
+  }
+
+  public clearAfter(time: Time): void {
+    for (const frame of this._frames.values()) {
+      frame.removeTransformsAfter(time);
+    }
   }
 
   public hasFrame(id: string): boolean {
@@ -136,6 +158,17 @@ export class TransformTree {
     }
 
     return output;
+  }
+  private _checkParentForCycle(frameId: string, parentFrameId: string): boolean {
+    // walk up tree from parent Frame to check if it eventually crosses the frame
+    let frame = this.frame(parentFrameId);
+    while (frame?.parent()) {
+      if (frame.parent()?.id === frameId) {
+        return true;
+      }
+      frame = frame.parent();
+    }
+    return false;
   }
 
   public static Clone(tree: TransformTree): TransformTree {

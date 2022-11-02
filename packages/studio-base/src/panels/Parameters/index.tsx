@@ -20,7 +20,7 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
-import { union } from "lodash";
+import { isObject, union } from "lodash";
 import { ReactElement, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 import { useDebouncedCallback } from "use-debounce";
@@ -78,6 +78,43 @@ const useStyles = makeStyles<void, "copyIcon">()((_theme, _params, classes) => (
     },
   },
 }));
+
+/**
+ * Converts a parameter value into a value that can be edited in the JsonInput. Wraps
+ * any value JsonInput can't handle in JSON.stringify.
+ */
+function editableValue(value: unknown): string | number | boolean | unknown[] | object {
+  if (
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean" ||
+    Array.isArray(value) ||
+    isObject(value)
+  ) {
+    return value;
+  } else {
+    return JSON.stringify(value) ?? "";
+  }
+}
+
+/**
+ * Converts a parameter value into a string we can display value or use as a title.
+ */
+function displayableValue(value: unknown): string {
+  if (value == undefined) {
+    return "";
+  }
+
+  if (value instanceof Date) {
+    return value.toISOString();
+  }
+
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+    return String(value);
+  } else {
+    return JSON.stringify(value) ?? "";
+  }
+}
 
 function Parameters(): ReactElement {
   const { classes } = useStyles();
@@ -152,7 +189,8 @@ function Parameters(): ReactElement {
           </TableHead>
           <TableBody>
             {parameterNames.map((name) => {
-              const value = JSON.stringify(parameters.get(name)) ?? "";
+              const displayValue = displayableValue(parameters.get(name));
+              const editValue = editableValue(parameters.get(name));
 
               return (
                 <TableRow
@@ -170,8 +208,8 @@ function Parameters(): ReactElement {
                   {canSetParams ? (
                     <TableCell padding="none">
                       <JsonInput
-                        dataTestId={`parameter-value-input-${value}`}
-                        value={value}
+                        dataTestId={`parameter-value-input-${displayValue}`}
+                        value={editValue}
                         onChange={(newVal) => {
                           setParameter(name, newVal as ParameterValue);
                         }}
@@ -179,8 +217,13 @@ function Parameters(): ReactElement {
                     </TableCell>
                   ) : (
                     <TableCell>
-                      <Typography noWrap title={value} variant="inherit" color="text.secondary">
-                        {value}
+                      <Typography
+                        noWrap
+                        title={displayValue}
+                        variant="inherit"
+                        color="text.secondary"
+                      >
+                        {displayValue}
                       </Typography>
                     </TableCell>
                   )}
@@ -191,7 +234,7 @@ function Parameters(): ReactElement {
                       edge="end"
                       size="small"
                       iconSize="small"
-                      getText={() => `${name}: ${value}`}
+                      getText={() => `${name}: ${displayValue}`}
                     />
                   </TableCell>
                 </TableRow>
