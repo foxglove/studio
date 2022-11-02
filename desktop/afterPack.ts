@@ -6,6 +6,7 @@ import { exec } from "@actions/exec";
 import { downloadTool, extractZip } from "@actions/tool-cache";
 import type MacPackager from "app-builder-lib/out/macPackager";
 import { log, Arch } from "builder-util";
+import crypto from "crypto";
 import { AfterPackContext } from "electron-builder";
 import fs from "fs/promises";
 import path from "path";
@@ -59,10 +60,18 @@ async function copySpotlightImporter(context: AfterPackContext) {
   const spotlightDirPath = path.join(appPath, "Contents", "Library", "Spotlight");
   const zipPath = path.join(outDir, "MCAPSpotlightImporter.mdimporter.zip");
   await fs.unlink(zipPath).catch(() => {});
-  await downloadTool(
-    "https://github.com/foxglove/MCAPSpotlightImporter/releases/download/v1.0.2/MCAPSpotlightImporter.mdimporter.zip",
-    zipPath,
-  );
+
+  const zipURL =
+    "https://github.com/foxglove/MCAPSpotlightImporter/releases/download/v1.0.2/MCAPSpotlightImporter.mdimporter.zip";
+  const zipSHA = "26cafa3e3069fcbd294864ceeee1bc9899e94456e0d28079f966787b6f05c7a2";
+  await downloadTool(zipURL, zipPath);
+  const actualSHA = crypto
+    .createHash("sha256")
+    .update(await fs.readFile(zipPath))
+    .digest("hex");
+  if (actualSHA !== zipSHA) {
+    throw new Error(`SHA mismatch for ${zipURL}: expected ${zipSHA}, got ${actualSHA}`);
+  }
   try {
     await extractZip(zipPath, spotlightDirPath);
     const executablePath = path.join(
