@@ -15,6 +15,7 @@ import { screen } from "@testing-library/dom";
 import userEvent from "@testing-library/user-event";
 import { shuffle } from "lodash";
 import { useCallback, useRef } from "react";
+import { makeStyles } from "tss-react/mui";
 
 import { fromSec } from "@foxglove/rostime";
 import Plot, { PlotConfig } from "@foxglove/studio-base/panels/Plot";
@@ -459,12 +460,22 @@ LineGraphWithLegendsHidden.parameters = {
 InALineGraphWithMultiplePlotsXAxesAreSynced.storyName =
   "in a line graph with multiple plots, x-axes are synced";
 
+const useStyles = makeStyles()(() => ({
+  PanelSetup: {
+    flexDirection: "column",
+    "& > *": {
+      // minHeight necessary to get around otherwise flaky test because of layout
+      minHeight: "50%",
+    },
+  },
+}));
 export function InALineGraphWithMultiplePlotsXAxesAreSynced(): JSX.Element {
-  const readySignal = useReadySignal({ count: 8 });
+  const readySignal = useReadySignal({ count: 6 });
   const pauseFrame = useCallback(() => readySignal, [readySignal]);
+  const { classes } = useStyles();
 
   return (
-    <PanelSetup fixture={fixture} pauseFrame={pauseFrame} style={{ flexDirection: "column" }}>
+    <PanelSetup fixture={fixture} pauseFrame={pauseFrame} className={classes.PanelSetup}>
       <Plot
         overrideConfig={{
           ...exampleConfig,
@@ -494,7 +505,6 @@ export function InALineGraphWithMultiplePlotsXAxesAreSynced(): JSX.Element {
 }
 InALineGraphWithMultiplePlotsXAxesAreSynced.parameters = {
   useReadySignal: true,
-  colorScheme: "light",
 };
 
 LineGraphAfterZoom.storyName = "line graph after zoom";
