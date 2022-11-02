@@ -464,6 +464,7 @@ const useStyles = makeStyles()(() => ({
   PanelSetup: {
     flexDirection: "column",
     "& > *": {
+      // minHeight necessary to get around otherwise flaky test because of layout
       minHeight: "50%",
     },
   },
@@ -475,7 +476,6 @@ export function InALineGraphWithMultiplePlotsXAxesAreSynced(): JSX.Element {
 
   return (
     <PanelSetup fixture={fixture} pauseFrame={pauseFrame} className={classes.PanelSetup}>
-      {/*minHeight necessary to get around otherwise flaky test because of layout */}
       <Plot
         overrideConfig={{
           ...exampleConfig,
