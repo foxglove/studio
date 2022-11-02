@@ -493,6 +493,8 @@ export function InALineGraphWithMultiplePlotsXAxesAreSynced(): JSX.Element {
 }
 InALineGraphWithMultiplePlotsXAxesAreSynced.parameters = {
   useReadySignal: true,
+  // Test has been flaky on layout and needs additional time to settle
+  chromatic: { delay: 300 },
 };
 
 LineGraphAfterZoom.storyName = "line graph after zoom";
