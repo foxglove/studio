@@ -142,7 +142,8 @@ export class IterablePlayer implements Player {
   private _receivedBytes: number = 0;
   private _hasError = false;
   private _lastRangeMillis?: number;
-  private _lastMessage?: MessageEvent<unknown>;
+  private _lastMessageEvent?: MessageEvent<unknown>;
+  private _lastStamp?: Time;
   private _publishedTopics = new Map<string, Set<string>>();
   private _seekTarget?: Time;
   private _presence = PlayerPresence.INITIALIZING;
@@ -571,7 +572,7 @@ export class IterablePlayer implements Player {
       consumptionType: "partial",
     });
 
-    this._lastMessage = undefined;
+    this._lastMessageEvent = undefined;
     this._messages = [];
 
     const messageEvents: MessageEvent<unknown>[] = [];
@@ -601,8 +602,12 @@ export class IterablePlayer implements Player {
           continue;
         }
 
+        if (iterResult.stamp && compare(iterResult.stamp, stopTime) >= 0) {
+          break;
+        }
+
         if (compare(iterResult.msgEvent.receiveTime, stopTime) > 0) {
-          this._lastMessage = iterResult.msgEvent;
+          this._lastMessageEvent = iterResult.msgEvent;
           break;
         }
 
@@ -627,7 +632,7 @@ export class IterablePlayer implements Player {
       return;
     }
 
-    this._lastMessage = undefined;
+    this._lastMessageEvent = undefined;
 
     // If the backfill does not complete within 100 milliseconds, we emit a seek event with no messages.
     // This provides feedback to the user that we've acknowledged their seek request but haven't loaded the data.
@@ -776,13 +781,32 @@ export class IterablePlayer implements Player {
     const targetTime = add(this._currentTime, fromMillis(rangeMillis));
     const end: Time = clampTime(targetTime, this._start, this._untilTime ?? this._end);
 
+    if (this._lastStamp) {
+      // If the last message we saw is still ahead of the tick end time, we don't emit anything
+      if (compare(this._lastStamp, end) >= 0) {
+        // Wait for the previous render frame to finish
+        await this._queueEmitState.currentPromise;
+
+        this._currentTime = end;
+        this._messages = [];
+        this._queueEmitState();
+
+        if (this._untilTime && compare(this._currentTime, this._untilTime) >= 0) {
+          this.pausePlayback();
+        }
+        return;
+      }
+
+      this._lastStamp = undefined;
+    }
+
     const msgEvents: MessageEvent<unknown>[] = [];
 
     // When ending the previous tick, we might have already read a message from the iterator which
     // belongs to our tick. This logic brings that message into our current batch of message events.
-    if (this._lastMessage) {
+    if (this._lastMessageEvent) {
       // If the last message we saw is still ahead of the tick end time, we don't emit anything
-      if (compare(this._lastMessage.receiveTime, end) > 0) {
+      if (compare(this._lastMessageEvent.receiveTime, end) > 0) {
         // Wait for the previous render frame to finish
         await this._queueEmitState.currentPromise;
 
@@ -796,8 +820,8 @@ export class IterablePlayer implements Player {
         return;
       }
 
-      msgEvents.push(this._lastMessage);
-      this._lastMessage = undefined;
+      msgEvents.push(this._lastMessageEvent);
+      this._lastMessageEvent = undefined;
     }
 
     // If we take too long to read the tick data, we set the player into a BUFFERING presence. This
@@ -828,9 +852,14 @@ export class IterablePlayer implements Player {
           continue;
         }
 
+        if (iterResult.stamp && compare(iterResult.stamp, end) >= 0) {
+          this._lastStamp = iterResult.stamp;
+          break;
+        }
+
         // The message is past the tick end time, we need to save it for next tick
         if (compare(iterResult.msgEvent.receiveTime, end) > 0) {
-          this._lastMessage = iterResult.msgEvent;
+          this._lastMessageEvent = iterResult.msgEvent;
           break;
         }
 
@@ -924,7 +953,7 @@ export class IterablePlayer implements Player {
         // If subscriptions changed, update to the new subscriptions
         if (this._allTopics !== allTopics) {
           // Discard any last message event since the new iterator will repeat it
-          this._lastMessage = undefined;
+          this._lastMessageEvent = undefined;
 
           // Bail playback and reset the playback iterator when topics have changed so we can load
           // the new topics

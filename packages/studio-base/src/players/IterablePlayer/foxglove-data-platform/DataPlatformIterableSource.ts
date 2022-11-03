@@ -309,6 +309,8 @@ export class DataPlatformIterableSource implements IIterableSource {
         return;
       }
 
+      yield { stamp: localEnd, connectionId: undefined, msgEvent: undefined, problem: undefined };
+
       localStart = addTime(localEnd, { sec: 0, nsec: 1 });
 
       // Assumes coverage regions are sorted by start time

@@ -59,11 +59,19 @@ export type IteratorResult =
       connectionId: number | undefined;
       msgEvent: MessageEvent<unknown>;
       problem: undefined;
+      stamp: undefined;
     }
   | {
       connectionId: number | undefined;
       msgEvent: undefined;
       problem: PlayerProblem;
+      stamp: undefined;
+    }
+  | {
+      stamp: Time;
+      connectionId: undefined;
+      msgEvent: undefined;
+      problem: undefined;
     };
 
 export type GetBackfillMessagesArgs = {

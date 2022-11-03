@@ -103,9 +103,45 @@ class BufferedIterableSource implements IIterableSource {
         this.initResult.end,
       );
 
+      // fixme - We keep reading until we get a message _after_ the readUntil time
+      // that's when we know to stop
+      // however this creates a problem for us because if there are no messages in our window
+      // then we are doomed to make lots fo tiny requests for data platform
+      //
+      // fixme
+      // what if I create a result that is a _stamp_ to indicate ok we are here, but doesn't actually
+      // have a message
+      //
+      // this allows a data source that has some internal process to avoid constantly fetching until we get a
+      // message _after_ the time we want...
       for await (const result of sourceIterator) {
         if (this.aborted) {
           return;
+        }
+
+        if (result.stamp && compare(result.stamp, readUntil) >= 0) {
+          // we enqueue a stamp
+          // now what? we wait until what happens?
+          // nothing is going to read
+
+          // fixme - if cache is 0, the reader is going to wait for us to put something into the cache
+          // so we keep going until we have something in the cache, but we cannot because
+          // wait until the stamp is no longer beyond read until
+          while (compare(result.stamp, readUntil) >= 0) {
+            // enqueue the stamp and wakeup the reader
+            // but the reader might not be reading - cause it is not being read from
+            this.cache.enqueue(result);
+            this.readSignal.notifyAll();
+
+            // fixme - so we won't get notified that it got read from because...?
+            console.log("waiting", result.stamp, readUntil);
+            await this.writeSignal.wait();
+
+            readUntil = addTime(this.readHead, this.readAheadDuration);
+            console.log("next readUntil", readUntil);
+          }
+          console.log("pst wait");
+          continue;
         }
 
         this.cache.enqueue(result);
@@ -113,10 +149,14 @@ class BufferedIterableSource implements IIterableSource {
         // Indicate to the consumer that it can try reading again
         this.readSignal.notifyAll();
 
+        // fixme - the consumer will wake up the next tick, so we should be waiting so we can update the readHead correctly?
+
         // Update the target readUntil to be ahead of the latest readHead
         // Do this before checking whether whether we continue loading more data to keep the
         // readUntil constantly updated relative to the readHead
         readUntil = addTime(this.readHead, this.readAheadDuration);
+
+        console.log("more msg");
 
         // Keep reading while the messages we receive are <= the readUntil time
         if (result.msgEvent && compare(result.msgEvent.receiveTime, readUntil) <= 0) {
@@ -196,8 +236,15 @@ class BufferedIterableSource implements IIterableSource {
             }
 
             // Wait for more stuff to load
+            // fixme - but we won't load more stuff because our stamp is past the read head
+            // so there's no more to load until the read head moves forward more...
+            // but it isn't going to move forward more?
             await self.readSignal.wait();
             continue;
+          }
+
+          if (item.stamp) {
+            self.readHead = item.stamp;
           }
 
           // When there is a new message update the readHead for the producer to know where we are
@@ -209,6 +256,9 @@ class BufferedIterableSource implements IIterableSource {
           self.writeSignal.notifyAll();
 
           yield item;
+
+          // fixme - why? the readHead has not changed...
+          self.writeSignal.notifyAll();
         }
       } finally {
         log.debug("ending buffered message iterator");
