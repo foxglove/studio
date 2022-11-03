@@ -327,7 +327,7 @@ function RawMessages(props: Props) {
         {({ isHovering }: { isHovering: boolean }) => {
           const lastKeyPath = last(keyPath) as number;
           let valueAction: ValueAction | undefined;
-          if (isHovering && structureItem) {
+          if (structureItem) {
             valueAction = getValueActionForValue(
               data[lastKeyPath],
               structureItem,
@@ -360,6 +360,7 @@ function RawMessages(props: Props) {
 
           return (
             <Value
+              isHovering={isHovering}
               arrLabel={arrLabel}
               basePath={basePath}
               itemLabel={itemLabel}

@@ -10,7 +10,7 @@ import ScatterPlotIcon from "@mui/icons-material/ScatterPlot";
 import LineChartIcon from "@mui/icons-material/ShowChart";
 import { IconButtonProps, Tooltip, TooltipProps } from "@mui/material";
 import { useCallback, useMemo, useState } from "react";
-import { withStyles } from "tss-react/mui";
+import { withStyles, makeStyles } from "tss-react/mui";
 
 import HoverableIconButton from "@foxglove/studio-base/components/HoverableIconButton";
 import Stack from "@foxglove/studio-base/components/Stack";
@@ -37,8 +37,14 @@ const StyledIconButton = withStyles(HoverableIconButton, (theme) => ({
     },
   },
 }));
+const useStyles = makeStyles<{ isHovering?: boolean }>()((_theme, { isHovering }) => ({
+  actionContainer: {
+    visibility: isHovering === false ? "hidden" : "inherit",
+  },
+}));
 
 type ValueProps = {
+  isHovering?: boolean;
   arrLabel: string;
   basePath: string;
   itemLabel: string;
@@ -59,6 +65,7 @@ type ValueActionItem = {
 
 export default function Value(props: ValueProps): JSX.Element {
   const {
+    isHovering,
     arrLabel,
     basePath,
     itemLabel,
@@ -158,21 +165,25 @@ export default function Value(props: ValueProps): JSX.Element {
     valueAction,
   ]);
 
+  const { classes } = useStyles({ isHovering });
+
   return (
     <Stack inline flexWrap="wrap" direction="row" alignItems="center" gap={0.25}>
       <HighlightedValue itemLabel={itemLabel} />
       {arrLabel}
-      {availableActions.map((action) => (
-        <Tooltip key={action.key} arrow title={action.tooltip} placement="top">
-          <StyledIconButton
-            size="small"
-            activeColor={action.activeColor}
-            onClick={action.onClick}
-            color="inherit"
-            icon={action.icon}
-          />
-        </Tooltip>
-      ))}
+      <span className={classes.actionContainer}>
+        {availableActions.map((action) => (
+          <Tooltip key={action.key} arrow title={action.tooltip} placement="top">
+            <StyledIconButton
+              size="small"
+              activeColor={action.activeColor}
+              onClick={action.onClick}
+              color="inherit"
+              icon={action.icon}
+            />
+          </Tooltip>
+        ))}
+      </span>
     </Stack>
   );
 }
