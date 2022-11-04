@@ -1004,7 +1004,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     if (!fields || fields.length !== numSupportedFields) {
       // Omit fields with count != 1
       fields = filterMap(pointCloud.fields, (field) =>
-        field.count === 1 ? field.name : undefined,
+        isSupportedField(field) ? field.name : undefined,
       );
       this.pointCloudFieldsByTopic.set(topic, fields);
       this.updateSettingsTree();
