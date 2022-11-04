@@ -2,15 +2,23 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import {
-  Close as CloseIcon,
-  Error as ErrorIcon,
-  Remove as RemoveIcon,
-  MoreVert as MoreVertIcon,
-} from "@mui/icons-material";
 import CheckIcon from "@mui/icons-material/Check";
+import CloseIcon from "@mui/icons-material/Close";
 import EditIcon from "@mui/icons-material/Edit";
-import { IconButton, TextField, Tooltip, Typography, useTheme } from "@mui/material";
+import ErrorIcon from "@mui/icons-material/Error";
+import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import RemoveIcon from "@mui/icons-material/Remove";
+import StopRoundedIcon from "@mui/icons-material/StopRounded";
+import {
+  IconButton,
+  InputBase,
+  SvgIcon,
+  TextField,
+  Tooltip,
+  Typography,
+  useTheme,
+} from "@mui/material";
 import produce from "immer";
 import { ChangeEvent, ComponentProps, useCallback, useMemo, useState } from "react";
 import { makeStyles } from "tss-react/mui";
@@ -55,18 +63,14 @@ const useStyles = makeStyles()((theme) => ({
     },
   },
 
-  editButton: {
-    padding: theme.spacing(0.5),
-  },
-
   editNameField: {
     font: "inherit",
     gridColumn: "span 2",
     width: "100%",
+    fontSize: "0.75rem",
 
-    ".MuiInputBase-input": {
-      fontSize: "0.75rem",
-      padding: theme.spacing(0.75, 1),
+    input: {
+      height: "100%",
     },
   },
 
@@ -74,9 +78,6 @@ const useStyles = makeStyles()((theme) => ({
     padding: theme.spacing(0.25),
     position: "sticky",
     left: 0,
-    // creates an opaque background for the sticky element
-    backgroundImage: `linear-gradient(${theme.palette.background.paper}, ${theme.palette.background.paper})`,
-    backgroundBlendMode: "overlay",
   },
   legendIconButton: {
     padding: `${theme.spacing(0.125)} !important`,
@@ -86,6 +87,8 @@ const useStyles = makeStyles()((theme) => ({
     display: "flex",
     alignItems: "center",
     padding: theme.spacing(0.25),
+    height: 25,
+    minWidth: 140,
   },
   plotValue: {
     display: "flex",
@@ -109,9 +112,6 @@ const useStyles = makeStyles()((theme) => ({
     position: "sticky",
     right: 0,
     opacity: 0,
-    // creates an opaque background for the sticky element
-    backgroundImage: `linear-gradient(${theme.palette.background.paper}, ${theme.palette.background.paper})`,
-    backgroundBlendMode: "overlay",
 
     "&:hover": {
       opacity: 1,
@@ -255,36 +255,21 @@ export function NewPlotLegendRow({
             savePaths(newPaths);
           }}
         >
-          <RemoveIcon style={{ color: legendIconColor }} color="inherit" />
+          <SvgIcon style={{ color: legendIconColor }} color="inherit">
+            <circle cx={12} cy={12} r={6} />
+          </SvgIcon>
         </IconButton>
       </div>
       <div className={classes.inputWrapper}>
         {state.editing ? (
-          <TextField
+          <InputBase
             className={classes.editNameField}
             autoFocus
-            variant="filled"
             onChange={onEditLabel}
             value={path.label}
             onBlur={toggleEditing}
             onKeyDown={onLabelKeyDown}
             onFocus={(event) => event.target.select()}
-            InputProps={{
-              endAdornment: (
-                <IconButton
-                  className={classes.editButton}
-                  title="Rename"
-                  data-node-function="edit-label"
-                  color="primary"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    toggleEditing();
-                  }}
-                >
-                  <CheckIcon fontSize="small" />
-                </IconButton>
-              ),
-            }}
           />
         ) : (
           <Typography noWrap={true} flex="auto" variant="subtitle2">
@@ -307,21 +292,36 @@ export function NewPlotLegendRow({
           </Typography>
         </div>
       )}
-      {!state.editing && (
-        <IconButton
-          className={classes.editButton}
-          title="Rename"
-          data-node-function="edit-label"
-          color="primary"
-          onClick={(event) => {
-            event.stopPropagation();
-            toggleEditing();
-          }}
-        >
-          <EditIcon fontSize="small" />
-        </IconButton>
-      )}
       <div className={classes.actions}>
+        {state.editing ? (
+          <IconButton
+            className={classes.actionButton}
+            title="Rename"
+            data-node-function="edit-label"
+            color="primary"
+            size="small"
+            onClick={(event) => {
+              event.stopPropagation();
+              toggleEditing();
+            }}
+          >
+            <CheckIcon fontSize="small" />
+          </IconButton>
+        ) : (
+          <IconButton
+            className={classes.actionButton}
+            title="Rename"
+            size="small"
+            data-node-function="edit-label"
+            color="primary"
+            onClick={(event) => {
+              event.stopPropagation();
+              toggleEditing();
+            }}
+          >
+            <EditIcon fontSize="small" />
+          </IconButton>
+        )}
         <IconButton
           className={classes.actionButton}
           size="small"

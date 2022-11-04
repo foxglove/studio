@@ -5,6 +5,7 @@
 import CircleIcon from "@mui/icons-material/Circle";
 import { IconButton, Typography } from "@mui/material";
 import { ComponentProps, Fragment, useCallback } from "react";
+import tinycolor from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 
 import TimeBasedChart from "@foxglove/studio-base/components/TimeBasedChart";
@@ -30,23 +31,25 @@ type Props = {
 const useStyles = makeStyles()((theme) => ({
   root: {
     backgroundColor: theme.palette.background.paper,
-    padding: theme.spacing(2),
   },
-
   rootFloating: {
+    borderRadius: theme.shape.borderRadius,
     position: "absolute",
-    top: theme.spacing(4),
+    top: theme.spacing(5),
     left: theme.spacing(4),
+    backgroundImage: `linear-gradient(0deg, ${tinycolor(theme.palette.background.default)
+      .setAlpha(0.5)
+      .toHex8String()}, ${tinycolor(theme.palette.background.default)
+      .setAlpha(0.5)
+      .toHex8String()})`,
+    backgroundColor: tinycolor(theme.palette.background.paper).setAlpha(0.5).toHex8String(),
     zIndex: 1000,
   },
-
   container: {
     alignItems: "center",
     display: "grid",
-    gap: theme.spacing(1),
-    gridTemplateColumns: "auto minmax(max-content, 1fr) minmax(max-content, 1fr) auto",
+    gridTemplateColumns: "auto minmax(max-content, 1fr) auto",
   },
-
   toggleButton: {
     fontSize: 8,
   },
