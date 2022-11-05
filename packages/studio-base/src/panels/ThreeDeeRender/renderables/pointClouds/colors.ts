@@ -183,22 +183,25 @@ export const INTENSITY_FIELDS = new Set<string>(["intensity", "i"]);
 export function autoSelectColorField<Settings extends ColorModeSettings>(
   output: Settings,
   fields: PackedElementField[],
+  { supportsPackedRgbModes }: { supportsPackedRgbModes: boolean },
 ): void {
   // Prefer color fields first
-  for (const field of fields) {
-    const fieldNameLower = field.name.toLowerCase();
-    if (RGBA_PACKED_FIELDS.has(fieldNameLower)) {
-      output.colorField = field.name;
-      switch (fieldNameLower) {
-        case "rgb":
-          output.colorMode = "rgb";
-          break;
-        default:
-        case "rgba":
-          output.colorMode = "rgba";
-          break;
+  if (supportsPackedRgbModes) {
+    for (const field of fields) {
+      const fieldNameLower = field.name.toLowerCase();
+      if (RGBA_PACKED_FIELDS.has(fieldNameLower)) {
+        output.colorField = field.name;
+        switch (fieldNameLower) {
+          case "rgb":
+            output.colorMode = "rgb";
+            break;
+          default:
+          case "rgba":
+            output.colorMode = "rgba";
+            break;
+        }
+        return;
       }
-      return;
     }
   }
 
@@ -212,10 +215,15 @@ export function autoSelectColorField<Settings extends ColorModeSettings>(
   }
 }
 
-export function bestColorByField(fields: string[]): string {
-  for (const field of fields) {
-    if (RGBA_PACKED_FIELDS.has(field)) {
-      return field;
+function bestColorByField(
+  fields: string[],
+  { supportsPackedRgbModes }: { supportsPackedRgbModes: boolean },
+): string {
+  if (supportsPackedRgbModes) {
+    for (const field of fields) {
+      if (RGBA_PACKED_FIELDS.has(field)) {
+        return field;
+      }
     }
   }
   for (const field of fields) {
@@ -262,7 +270,7 @@ export function baseColorModeSettingsNode<Settings extends ColorModeSettings & B
 ): SettingsTreeNode & { fields: NonNullable<SettingsTreeNode["fields"]> } {
   const colorMode = config.colorMode ?? "flat";
   const flatColor = config.flatColor ?? "#ffffff";
-  const colorField = config.colorField ?? bestColorByField(msgFields);
+  const colorField = config.colorField ?? bestColorByField(msgFields, { supportsPackedRgbModes });
   const colorFieldOptions = msgFields.map((field) => ({ label: field, value: field }));
   const gradient = config.gradient;
   const colorMap = config.colorMap ?? "turbo";

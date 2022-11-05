@@ -908,7 +908,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
         | undefined;
       const settings = { ...DEFAULT_SETTINGS, ...userSettings };
       if (settings.colorField == undefined) {
-        autoSelectColorField(settings, pointCloud);
+        autoSelectColorField(settings, pointCloud, { supportsPackedRgbModes: false });
 
         // Update user settings with the newly selected color field
         this.renderer.updateConfig((draft) => {
@@ -989,7 +989,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
         | undefined;
       const settings = { ...DEFAULT_SETTINGS, ...userSettings };
       if (settings.colorField == undefined) {
-        autoSelectColorField(settings, pointCloud);
+        autoSelectColorField(settings, pointCloud, { supportsPackedRgbModes: true });
 
         // Update user settings with the newly selected color field
         this.renderer.updateConfig((draft) => {
@@ -1433,25 +1433,28 @@ function pointCloudColorEncoding(settings: LayerSettingsPointCloudAndLaserScan):
 export function autoSelectColorField(
   output: LayerSettingsPointCloudAndLaserScan,
   pointCloud: PointCloud | PointCloud2,
+  { supportsPackedRgbModes }: { supportsPackedRgbModes: boolean },
 ): void {
   // Prefer color fields first
-  for (const field of pointCloud.fields) {
-    if (!isSupportedField(field)) {
-      continue;
-    }
-    const fieldNameLower = field.name.toLowerCase();
-    if (RGBA_PACKED_FIELDS.has(fieldNameLower)) {
-      output.colorField = field.name;
-      switch (fieldNameLower) {
-        case "rgb":
-          output.colorMode = "rgb";
-          break;
-        default:
-        case "rgba":
-          output.colorMode = "rgba";
-          break;
+  if (supportsPackedRgbModes) {
+    for (const field of pointCloud.fields) {
+      if (!isSupportedField(field)) {
+        continue;
       }
-      return;
+      const fieldNameLower = field.name.toLowerCase();
+      if (RGBA_PACKED_FIELDS.has(fieldNameLower)) {
+        output.colorField = field.name;
+        switch (fieldNameLower) {
+          case "rgb":
+            output.colorMode = "rgb";
+            break;
+          default:
+          case "rgba":
+            output.colorMode = "rgba";
+            break;
+        }
+        return;
+      }
     }
   }
 
