@@ -154,7 +154,6 @@ export function Marker_PointCloud2_Alignment(): JSX.Element {
               pointSize: 30,
               colorMode: "rgba",
               colorField: "rgba",
-              rgbByteOrder: "rgba",
             },
           },
           followTf: "base_link",

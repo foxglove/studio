@@ -47,7 +47,7 @@ function Foxglove_PointCloud({
   rgbaFieldName,
   pointShape = "circle",
 }: {
-  rgbaFieldName: string;
+  rgbaFieldName: "rgb" | "rgba";
   pointShape?: "circle" | "square";
 }): JSX.Element {
   const topics: Topic[] = [
@@ -153,7 +153,6 @@ function Foxglove_PointCloud({
               pointShape,
               colorMode: rgbaFieldName,
               colorField: rgbaFieldName,
-              rgbByteOrder: "rgba",
             },
           },
           layers: {

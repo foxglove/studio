@@ -143,7 +143,6 @@ function SensorMsgs_PointCloud2({ rgbaFieldName }: { rgbaFieldName: string }): J
               pointSize: 10,
               colorMode: rgbaFieldName,
               colorField: rgbaFieldName,
-              rgbByteOrder: "rgba",
             },
           },
           layers: {
