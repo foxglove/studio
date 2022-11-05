@@ -597,21 +597,25 @@ export class IterablePlayer implements Player {
           return;
         }
 
-        if (iterResult.problem) {
+        if (iterResult.type === "problem") {
           this._problemManager.addProblem(`connid-${iterResult.connectionId}`, iterResult.problem);
           continue;
         }
 
-        if (iterResult.stamp && compare(iterResult.stamp, stopTime) >= 0) {
+        if (iterResult.type === "stamp" && compare(iterResult.stamp, stopTime) >= 0) {
+          this._lastStamp = iterResult.stamp;
           break;
         }
 
-        if (compare(iterResult.msgEvent.receiveTime, stopTime) > 0) {
-          this._lastMessageEvent = iterResult.msgEvent;
-          break;
-        }
+        if (iterResult.type === "message-event") {
+          // The message is past the tick end time, we need to save it for next tick
+          if (compare(iterResult.msgEvent.receiveTime, stopTime) > 0) {
+            this._lastMessageEvent = iterResult.msgEvent;
+            break;
+          }
 
-        messageEvents.push(iterResult.msgEvent);
+          messageEvents.push(iterResult.msgEvent);
+        }
       }
     } finally {
       clearTimeout(tickTimeout);
@@ -844,26 +848,26 @@ export class IterablePlayer implements Player {
           break;
         }
         const iterResult = result.value;
-        if (iterResult.problem) {
-          this._problemManager.addProblem(`connid-${iterResult.connectionId}`, iterResult.problem);
-        }
 
-        if (iterResult.problem) {
+        if (iterResult.type === "problem") {
+          this._problemManager.addProblem(`connid-${iterResult.connectionId}`, iterResult.problem);
           continue;
         }
 
-        if (iterResult.stamp && compare(iterResult.stamp, end) >= 0) {
+        if (iterResult.type === "stamp" && compare(iterResult.stamp, end) >= 0) {
           this._lastStamp = iterResult.stamp;
           break;
         }
 
-        // The message is past the tick end time, we need to save it for next tick
-        if (compare(iterResult.msgEvent.receiveTime, end) > 0) {
-          this._lastMessageEvent = iterResult.msgEvent;
-          break;
-        }
+        if (iterResult.type === "message-event") {
+          // The message is past the tick end time, we need to save it for next tick
+          if (compare(iterResult.msgEvent.receiveTime, end) > 0) {
+            this._lastMessageEvent = iterResult.msgEvent;
+            break;
+          }
 
-        msgEvents.push(iterResult.msgEvent);
+          msgEvents.push(iterResult.msgEvent);
+        }
       }
     } finally {
       clearTimeout(tickTimeout);

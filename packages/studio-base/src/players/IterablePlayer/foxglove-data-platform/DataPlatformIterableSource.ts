@@ -267,7 +267,7 @@ export class DataPlatformIterableSource implements IIterableSource {
 
       for await (const messages of stream) {
         for (const message of messages) {
-          yield { connectionId: undefined, msgEvent: message, problem: undefined };
+          yield { type: "message-event", msgEvent: message };
         }
       }
 
@@ -301,7 +301,7 @@ export class DataPlatformIterableSource implements IIterableSource {
 
       for await (const messages of stream) {
         for (const message of messages) {
-          yield { connectionId: undefined, msgEvent: message, problem: undefined };
+          yield { type: "message-event", msgEvent: message };
         }
       }
 
@@ -309,7 +309,7 @@ export class DataPlatformIterableSource implements IIterableSource {
         return;
       }
 
-      yield { stamp: localEnd, connectionId: undefined, msgEvent: undefined, problem: undefined };
+      yield { type: "stamp", stamp: localEnd };
 
       localStart = addTime(localEnd, { sec: 0, nsec: 1 });
 

@@ -238,7 +238,7 @@ class CachingIterableSource implements IIterableSource {
         }
 
         // If we have a message event, then we update our known time to this message event
-        if (iterResult.msgEvent) {
+        if (iterResult.type === "message-event") {
           const receiveTime = iterResult.msgEvent.receiveTime;
           const receiveTimeNs = toNanoSec(receiveTime);
 
@@ -247,7 +247,9 @@ class CachingIterableSource implements IIterableSource {
           if (receiveTimeNs > lastTime) {
             // write any pending messages to the block
             for (const pendingIterResult of pendingIterResults) {
-              const pendingSizeInBytes = pendingIterResult[1].msgEvent?.sizeInBytes ?? 0;
+              const item = pendingIterResult[1];
+              const pendingSizeInBytes =
+                item.type === "message-event" ? item.msgEvent.sizeInBytes : 0;
               block.items.push(pendingIterResult);
               block.size += pendingSizeInBytes;
             }
@@ -275,7 +277,8 @@ class CachingIterableSource implements IIterableSource {
           block = undefined;
         }
 
-        const sizeInBytes = iterResult.msgEvent?.sizeInBytes ?? 0;
+        const sizeInBytes =
+          iterResult.type === "message-event" ? iterResult.msgEvent.sizeInBytes : 0;
         if (this.maybePurgeCache({ activeBlock: block, sizeInBytes })) {
           this.recomputeLoadedRangeCache();
         }
@@ -298,7 +301,8 @@ class CachingIterableSource implements IIterableSource {
 
         // write any pending messages to the block
         for (const pendingIterResult of pendingIterResults) {
-          const pendingSizeInBytes = pendingIterResult[1].msgEvent?.sizeInBytes ?? 0;
+          const item = pendingIterResult[1];
+          const pendingSizeInBytes = item.type === "message-event" ? item.msgEvent.sizeInBytes : 0;
           block.items.push(pendingIterResult);
           block.size += pendingSizeInBytes;
         }
@@ -320,7 +324,8 @@ class CachingIterableSource implements IIterableSource {
         };
 
         for (const pendingIterResult of pendingIterResults) {
-          const pendingSizeInBytes = pendingIterResult[1].msgEvent?.sizeInBytes ?? 0;
+          const item = pendingIterResult[1];
+          const pendingSizeInBytes = item.type === "message-event" ? item.msgEvent.sizeInBytes : 0;
           newBlock.size += pendingSizeInBytes;
         }
 
@@ -393,7 +398,7 @@ class CachingIterableSource implements IIterableSource {
 
       for (let i = readIdx; i >= 0; --i) {
         const record = cacheBlock.items[i];
-        if (!record || !record[1].msgEvent) {
+        if (!record || record[1].type !== "message-event") {
           continue;
         }
 
