@@ -237,9 +237,11 @@ class CachingIterableSource implements IIterableSource {
           this.recomputeLoadedRangeCache();
         }
 
-        // If we have a message event, then we update our known time to this message event
-        if (iterResult.type === "message-event") {
-          const receiveTime = iterResult.msgEvent.receiveTime;
+        // When receiving a message event or stamp, we update our known time on the block to the
+        // stamp or receiveTime because we know we've received all the results up to this time
+        if (iterResult.type === "message-event" || iterResult.type === "stamp") {
+          const receiveTime =
+            iterResult.type === "stamp" ? iterResult.stamp : iterResult.msgEvent.receiveTime;
           const receiveTimeNs = toNanoSec(receiveTime);
 
           // There might be multiple messages at the same time, and since block end time
