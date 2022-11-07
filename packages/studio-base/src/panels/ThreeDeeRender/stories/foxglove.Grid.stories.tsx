@@ -265,7 +265,7 @@ function jet(x: number, a: number) {
   const r = Math.max(0, Math.min(255, 4 * (i - 96), 255 - 4 * (i - 224)));
   const g = Math.max(0, Math.min(255, 4 * (i - 32), 255 - 4 * (i - 160)));
   const b = Math.max(0, Math.min(255, 4 * i + 127, 255 - 4 * (i - 96)));
-  return { r, g, b, a };
+  return { r, g, b, a: (a * 255) | 0 };
 }
 function Foxglove_Grid_RGBA(): JSX.Element {
   const topics: Topic[] = [
@@ -372,6 +372,7 @@ function Foxglove_Grid_RGBA(): JSX.Element {
           topics: {
             "/grid": {
               visible: true,
+              colorField: "red",
               colorMode: "rgba-fields",
             } as LayerSettingsFoxgloveGrid,
           },
