@@ -38,8 +38,11 @@ const StyledIconButton = withStyles(HoverableIconButton, (theme) => ({
   },
 }));
 const useStyles = makeStyles<{ isHovering?: boolean }>()((_theme, { isHovering }) => ({
-  actionContainer: {
+  hideOnHover: {
     visibility: isHovering === false ? "hidden" : "inherit",
+    alignItems: "inherit",
+    display: "inherit",
+    gap: "inherit",
   },
 }));
 
@@ -61,6 +64,7 @@ type ValueActionItem = {
   onClick?: IconButtonProps["onClick"];
   activeColor?: IconButtonProps["color"];
   color?: IconButtonProps["color"];
+  isVisible?: boolean;
 };
 
 export default function Value(props: ValueProps): JSX.Element {
@@ -103,9 +107,9 @@ export default function Value(props: ValueProps): JSX.Element {
       .catch((e) => console.warn(e));
   }, []);
 
-  const availableActions = useMemo(() => {
+  // always visible actions
+  const immediateActions = useMemo(() => {
     const actions: ValueActionItem[] = [];
-
     if (arrLabel.length > 0) {
       actions.push({
         key: "Copy",
@@ -115,6 +119,12 @@ export default function Value(props: ValueProps): JSX.Element {
         onClick: () => handleCopy(JSON.stringify(itemValue, copyMessageReplacer, 2) ?? ""),
       });
     }
+    return actions;
+  }, [arrLabel.length, copied, handleCopy, itemValue]);
+
+  // hidden unless hovered
+  const onHoverActions = useMemo(() => {
+    const actions: ValueActionItem[] = [];
     if (valueAction != undefined) {
       const isPlotableType = plotableRosTypes.includes(valueAction.primitiveType);
       const isTransitionalType = transitionableRosTypes.includes(valueAction.primitiveType);
@@ -154,16 +164,7 @@ export default function Value(props: ValueProps): JSX.Element {
       }
     }
     return actions;
-  }, [
-    arrLabel,
-    copied,
-    handleCopy,
-    itemValue,
-    onFilter,
-    openPlotPanel,
-    openStateTransitionsPanel,
-    valueAction,
-  ]);
+  }, [onFilter, openPlotPanel, openStateTransitionsPanel, valueAction]);
 
   const { classes } = useStyles({ isHovering });
 
@@ -171,8 +172,19 @@ export default function Value(props: ValueProps): JSX.Element {
     <Stack inline flexWrap="wrap" direction="row" alignItems="center" gap={0.25}>
       <HighlightedValue itemLabel={itemLabel} />
       {arrLabel}
-      <span className={classes.actionContainer}>
-        {availableActions.map((action) => (
+      {immediateActions.map((action) => (
+        <Tooltip key={action.key} arrow title={action.tooltip} placement="top">
+          <StyledIconButton
+            size="small"
+            activeColor={action.activeColor}
+            onClick={action.onClick}
+            color="inherit"
+            icon={action.icon}
+          />
+        </Tooltip>
+      ))}
+      <span className={classes.hideOnHover}>
+        {onHoverActions.map((action) => (
           <Tooltip key={action.key} arrow title={action.tooltip} placement="top">
             <StyledIconButton
               size="small"
