@@ -461,13 +461,13 @@ export class PointCloudAndLaserScanRenderable extends Renderable<PointCloudAndLa
           return false;
         }
       } else if (field.name === "red") {
-        redReader = getReader(field, stride, undefined, /*normalize*/ true);
+        redReader = getReader(field, stride, /*normalize*/ true);
       } else if (field.name === "green") {
-        greenReader = getReader(field, stride, undefined, /*normalize*/ true);
+        greenReader = getReader(field, stride, /*normalize*/ true);
       } else if (field.name === "blue") {
-        blueReader = getReader(field, stride, undefined, /*normalize*/ true);
+        blueReader = getReader(field, stride, /*normalize*/ true);
       } else if (field.name === "alpha") {
-        alphaReader = getReader(field, stride, undefined, /*normalize*/ true);
+        alphaReader = getReader(field, stride, /*normalize*/ true);
       }
 
       const byteWidth = pointFieldWidth(type);
@@ -484,7 +484,7 @@ export class PointCloudAndLaserScanRenderable extends Renderable<PointCloudAndLa
               ? NumericType.UINT32
               : PointFieldType.UINT32
             : undefined;
-        packedColorReader = getReader(field, stride, forceType);
+        packedColorReader = getReader(field, stride, /*normalize*/ false, forceType);
         if (!packedColorReader) {
           const typeName = pointFieldTypeName(type);
           const message = `PointCloud field "${field.name}" is invalid. type=${typeName}, offset=${field.offset}, stride=${stride}`;

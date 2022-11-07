@@ -93,11 +93,11 @@ export function isSupportedField(field: PackedElementField | PointField): boolea
 export function getReader(
   field: PackedElementField | PointField,
   stride: number,
-  forceType?: PointFieldType | NumericType,
   /** @see https://www.khronos.org/opengl/wiki/Normalized_Integer */
   // Performance-sensitive: this code is called for every point cloud message
   // eslint-disable-next-line @foxglove/no-boolean-parameters
   normalize = false,
+  forceType?: PointFieldType | NumericType,
 ): FieldReader | undefined {
   if (!isSupportedField(field)) {
     return undefined;

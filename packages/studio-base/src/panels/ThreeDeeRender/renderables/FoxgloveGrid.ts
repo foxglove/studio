@@ -165,15 +165,13 @@ export class FoxgloveGridRenderable extends Renderable<FoxgloveGridUserData> {
     for (const field of foxgloveGrid.fields) {
       const { name } = field;
       if (name === "red") {
-        out.redReader = getReader(field, cell_stride, undefined, /*normalize*/ true) ?? zeroReader;
+        out.redReader = getReader(field, cell_stride, /*normalize*/ true) ?? zeroReader;
       } else if (name === "green") {
-        out.greenReader =
-          getReader(field, cell_stride, undefined, /*normalize*/ true) ?? zeroReader;
+        out.greenReader = getReader(field, cell_stride, /*normalize*/ true) ?? zeroReader;
       } else if (name === "blue") {
-        out.blueReader = getReader(field, cell_stride, undefined, /*normalize*/ true) ?? zeroReader;
+        out.blueReader = getReader(field, cell_stride, /*normalize*/ true) ?? zeroReader;
       } else if (name === "alpha") {
-        out.alphaReader =
-          getReader(field, cell_stride, undefined, /*normalize*/ true) ?? zeroReader;
+        out.alphaReader = getReader(field, cell_stride, /*normalize*/ true) ?? zeroReader;
       }
     }
   }
