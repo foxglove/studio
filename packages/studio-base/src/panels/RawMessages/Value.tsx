@@ -37,14 +37,17 @@ const StyledIconButton = withStyles(HoverableIconButton, (theme) => ({
     },
   },
 }));
-const useStyles = makeStyles<{ isHovering?: boolean }>()((_theme, { isHovering }) => ({
-  hideOnHover: {
-    visibility: isHovering === false ? "hidden" : "inherit",
+
+const useStyles = makeStyles()({
+  hidden: {
+    visibility: "hidden",
+  },
+  actionContainer: {
     alignItems: "inherit",
     display: "inherit",
     gap: "inherit",
   },
-}));
+});
 
 type ValueProps = {
   isHovering?: boolean;
@@ -166,7 +169,7 @@ export default function Value(props: ValueProps): JSX.Element {
     return actions;
   }, [onFilter, openPlotPanel, openStateTransitionsPanel, valueAction]);
 
-  const { classes } = useStyles({ isHovering });
+  const { classes, cx } = useStyles();
 
   return (
     <Stack inline flexWrap="wrap" direction="row" alignItems="center" gap={0.25}>
@@ -183,7 +186,7 @@ export default function Value(props: ValueProps): JSX.Element {
           />
         </Tooltip>
       ))}
-      <span className={classes.hideOnHover}>
+      <span className={cx(classes.actionContainer, { [classes.hidden]: isHovering === false })}>
         {onHoverActions.map((action) => (
           <Tooltip key={action.key} arrow title={action.tooltip} placement="top">
             <StyledIconButton
