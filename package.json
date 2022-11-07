@@ -62,6 +62,7 @@
   "devDependencies": {
     "@actions/core": "1.6.0",
     "@actions/exec": "1.1.0",
+    "@actions/tool-cache": "2.0.1",
     "@babel/core": "7.17.2",
     "@babel/preset-env": "7.16.11",
     "@babel/preset-typescript": "7.16.7",
@@ -89,7 +90,7 @@
     "@types/webpack-dev-server": "4.7.2",
     "@typescript-eslint/eslint-plugin": "5.36.1",
     "@typescript-eslint/parser": "5.36.1",
-    "@xmldom/xmldom": "0.8.1",
+    "@xmldom/xmldom": "0.8.3",
     "babel-jest": "27.5.1",
     "babel-plugin-transform-import-meta": "2.1.1",
     "clean-webpack-plugin": "4.0.0",
