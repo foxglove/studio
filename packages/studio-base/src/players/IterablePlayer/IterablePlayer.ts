@@ -785,8 +785,14 @@ export class IterablePlayer implements Player {
     const targetTime = add(this._currentTime, fromMillis(rangeMillis));
     const end: Time = clampTime(targetTime, this._start, this._untilTime ?? this._end);
 
+    // If a lastStamp is available from the previous tick we check the stamp against our current
+    // tick's end time. If this stamp is after our current tick's end time then we don't need to
+    // read any messages and can shortcut the rest of the logic to set the current time to the tick
+    // end time and queue an emit.
+    //
+    // If we have a lastStamp but it isn't after the tick end, then we clear it and proceed with the
+    // tick logic.
     if (this._lastStamp) {
-      // If the last message we saw is still ahead of the tick end time, we don't emit anything
       if (compare(this._lastStamp, end) >= 0) {
         // Wait for the previous render frame to finish
         await this._queueEmitState.currentPromise;

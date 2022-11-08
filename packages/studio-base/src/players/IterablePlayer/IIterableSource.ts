@@ -54,6 +54,18 @@ export type MessageIteratorArgs = {
   consumptionType?: "full" | "partial";
 };
 
+/**
+ * IteratorResult represents a single result from a message iterator or cursor. There are three
+ * types of results.
+ *
+ * - message-event: the result contains a MessageEvent
+ * - problem: the result contains a problem
+ * - stamp: the result is a timestamp
+ *
+ * Note: A stamp result acts as a marker indicating that the source has reached the specified stamp.
+ * The source may return stamp results to indicate to callers that it has read through some time
+ * when there are no message events available to indicate the time is reached.
+ */
 export type IteratorResult =
   | {
       type: "message-event";
