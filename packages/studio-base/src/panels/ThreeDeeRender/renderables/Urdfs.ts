@@ -48,6 +48,7 @@ const TOPIC_NAME = "/robot_description";
 
 /** ID of fake "topic" used to represent the /robot_description parameter */
 const PARAM_KEY = "param:/robot_description";
+/** Standard parameter name used for URDF data in ROS */
 const PARAM_NAME = "/robot_description";
 const PARAM_DISPLAY_NAME = "/robot_description (parameter)";
 
