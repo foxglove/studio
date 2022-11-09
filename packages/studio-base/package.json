@@ -1,6 +1,6 @@
 {
   "name": "@foxglove/studio-base",
-  "version": "1.30.0-dev",
+  "version": "1.31.0-dev",
   "description": "Core components of Foxglove Studio",
   "license": "MPL-2.0",
   "repository": {
@@ -81,7 +81,7 @@
     "@types/foxglove__roslibjs": "workspace:*",
     "@types/gl-matrix": "3.2.0",
     "@types/hammerjs": "2.0.41",
-    "@types/leaflet": "1.7.9",
+    "@types/leaflet": "1.9.0",
     "@types/memoize-weak": "workspace:*",
     "@types/moment-duration-format": "2.2.3",
     "@types/nearley": "2.11.2",
@@ -147,7 +147,7 @@
     "immer": "9.0.12",
     "intervals-fn": "3.0.3",
     "jszip": "3.10.0",
-    "leaflet": "1.7.1",
+    "leaflet": "1.9.2",
     "lodash": "4.17.21",
     "mathjs": "10.1.1",
     "memoize-weak": "1.0.2",
@@ -170,7 +170,7 @@
     "react-autocomplete": "https://github.com/foxglove/react-autocomplete/raw/9717d597d7c78c316fb7ad3c2c57060c243530c2/react-autocomplete-9.9.9.tgz",
     "react-colorful": "5.6.0",
     "react-dom": "patch:react-dom@npm:17.0.2#../../patches/react-dom.patch",
-    "react-highlight-words": "0.17.0",
+    "react-highlight-words": "0.18.0",
     "react-hover-observer": "2.1.1",
     "react-input-autosize": "3.0.0",
     "react-is": "17.0.2",
@@ -216,6 +216,6 @@
     "wasm-lz4": "2.0.0",
     "webpack": "5.74.0",
     "xacro-parser": "0.3.8",
-    "zustand": "4.1.1"
+    "zustand": "4.1.4"
   }
 }
