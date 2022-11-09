@@ -4,6 +4,7 @@
 
 import CheckIcon from "@mui/icons-material/Check";
 import CopyAllIcon from "@mui/icons-material/CopyAll";
+import ErrorIcon from "@mui/icons-material/Error";
 import FilterIcon from "@mui/icons-material/FilterAlt";
 import StateTransitionsIcon from "@mui/icons-material/PowerInput";
 import ScatterPlotIcon from "@mui/icons-material/ScatterPlot";
@@ -39,18 +40,16 @@ const StyledIconButton = withStyles(HoverableIconButton, (theme) => ({
 }));
 
 const useStyles = makeStyles()({
-  hidden: {
-    visibility: "hidden",
-  },
-  actionContainer: {
+  // always hidden, just used to keep space and prevent resizing on hover
+  placeholderActionContainer: {
     alignItems: "inherit",
     display: "inherit",
     gap: "inherit",
+    visibility: "hidden",
   },
 });
 
 type ValueProps = {
-  isHovering?: boolean;
   arrLabel: string;
   basePath: string;
   itemLabel: string;
@@ -67,12 +66,18 @@ type ValueActionItem = {
   onClick?: IconButtonProps["onClick"];
   activeColor?: IconButtonProps["color"];
   color?: IconButtonProps["color"];
-  isVisible?: boolean;
 };
+
+const emptyAction: ValueActionItem = {
+  key: "",
+  tooltip: "",
+  icon: <ErrorIcon fontSize="inherit" />,
+};
+
+const MAX_ACTION_ITEMS = 4;
 
 export default function Value(props: ValueProps): JSX.Element {
   const {
-    isHovering,
     arrLabel,
     basePath,
     itemLabel,
@@ -110,8 +115,7 @@ export default function Value(props: ValueProps): JSX.Element {
       .catch((e) => console.warn(e));
   }, []);
 
-  // always visible actions
-  const immediateActions = useMemo(() => {
+  const availableActions = useMemo(() => {
     const actions: ValueActionItem[] = [];
     if (arrLabel.length > 0) {
       actions.push({
@@ -122,12 +126,6 @@ export default function Value(props: ValueProps): JSX.Element {
         onClick: () => handleCopy(JSON.stringify(itemValue, copyMessageReplacer, 2) ?? ""),
       });
     }
-    return actions;
-  }, [arrLabel.length, copied, handleCopy, itemValue]);
-
-  // hidden unless hovered
-  const onHoverActions = useMemo(() => {
-    const actions: ValueActionItem[] = [];
     if (valueAction != undefined) {
       const isPlotableType = plotableRosTypes.includes(valueAction.primitiveType);
       const isTransitionalType = transitionableRosTypes.includes(valueAction.primitiveType);
@@ -166,16 +164,36 @@ export default function Value(props: ValueProps): JSX.Element {
         });
       }
     }
-    return actions;
-  }, [onFilter, openPlotPanel, openStateTransitionsPanel, valueAction]);
 
+    return actions;
+  }, [
+    arrLabel.length,
+    copied,
+    handleCopy,
+    itemValue,
+    onFilter,
+    openPlotPanel,
+    openStateTransitionsPanel,
+    valueAction,
+  ]);
+
+  // need to keep space to prevent resizing and wrapping on hover
+  const placeholderActionsForSpacing = useMemo(() => {
+    const actions: ValueActionItem[] = [];
+    let i = availableActions.length;
+    while (i < MAX_ACTION_ITEMS) {
+      actions.push({ ...emptyAction, key: `empty-${i}` });
+      i++;
+    }
+    return actions;
+  }, [availableActions.length]);
   const { classes, cx } = useStyles();
 
   return (
     <Stack inline flexWrap="wrap" direction="row" alignItems="center" gap={0.25}>
       <HighlightedValue itemLabel={itemLabel} />
       {arrLabel}
-      {immediateActions.map((action) => (
+      {availableActions.map((action) => (
         <Tooltip key={action.key} arrow title={action.tooltip} placement="top">
           <StyledIconButton
             size="small"
@@ -186,16 +204,10 @@ export default function Value(props: ValueProps): JSX.Element {
           />
         </Tooltip>
       ))}
-      <span className={cx(classes.actionContainer, { [classes.hidden]: isHovering === false })}>
-        {onHoverActions.map((action) => (
+      <span className={cx(classes.placeholderActionContainer)}>
+        {placeholderActionsForSpacing.map((action) => (
           <Tooltip key={action.key} arrow title={action.tooltip} placement="top">
-            <StyledIconButton
-              size="small"
-              activeColor={action.activeColor}
-              onClick={action.onClick}
-              color="inherit"
-              icon={action.icon}
-            />
+            <StyledIconButton size="small" color="inherit" icon={action.icon} />
           </Tooltip>
         ))}
       </span>
