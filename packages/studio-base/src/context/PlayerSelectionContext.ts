@@ -16,7 +16,7 @@ export type DataSourceFactoryInitializeArgs = {
   consoleApi?: ConsoleApi;
 };
 
-export type DataSourceFactoryType = "file" | "remote-file" | "connection" | "sample";
+export type DataSourceFactoryType = "file" | "connection" | "sample";
 
 export type Field = {
   id: string;
@@ -60,7 +60,7 @@ export interface IDataSourceFactory {
   supportsMultiFile?: boolean;
 
   // Initialize a player.
-  initialize: (args: DataSourceFactoryInitializeArgs) => Player | undefined;
+  initialize: (args: DataSourceFactoryInitializeArgs) => Player | Player[] | undefined;
 }
 
 /**

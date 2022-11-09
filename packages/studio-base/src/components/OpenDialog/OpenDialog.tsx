@@ -14,7 +14,6 @@ import {
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
 
 import Connection from "./Connection";
-import Remote from "./Remote";
 import Start from "./Start";
 import { OpenDialogViews } from "./types";
 import { useOpenFile } from "./useOpenFile";
@@ -81,15 +80,8 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
     return availableSources.filter((source) => source.type === "file");
   }, [availableSources]);
 
-  const remoteFileSources = useMemo(() => {
-    return availableSources.filter((source) => source.type === "remote-file");
-  }, [availableSources]);
-
   const view = useMemo(() => {
     const supportedLocalFileTypes = localFileSources.flatMap(
-      (source) => source.supportedFileTypes ?? [],
-    );
-    const supportedRemoteFileTypes = remoteFileSources.flatMap(
       (source) => source.supportedFileTypes ?? [],
     );
     switch (activeView) {
@@ -111,17 +103,6 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
             />
           ),
         };
-      case "remote":
-        return {
-          title: "Open a file from a remote location",
-          component: (
-            <Remote
-              onBack={() => onSelectView("start")}
-              onCancel={onDismiss}
-              availableSources={remoteFileSources}
-            />
-          ),
-        };
       default:
         return {
           title: "Get started",
@@ -129,20 +110,11 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
             <Start
               onSelectView={onSelectView}
               supportedLocalFileExtensions={supportedLocalFileTypes}
-              supportedRemoteFileExtensions={supportedRemoteFileTypes}
             />
           ),
         };
     }
-  }, [
-    activeDataSource,
-    activeView,
-    connectionSources,
-    localFileSources,
-    onDismiss,
-    onSelectView,
-    remoteFileSources,
-  ]);
+  }, [activeDataSource, activeView, connectionSources, localFileSources, onDismiss, onSelectView]);
 
   return (
     <Dialog
