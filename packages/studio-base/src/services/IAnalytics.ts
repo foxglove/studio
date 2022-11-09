@@ -4,7 +4,7 @@
 
 enum AppEventCategory {
   LIFECYCLE = "LIFECYCLE",
-  DATASOURCE = "DATASOURCE",
+  DIALOG = "DIALOG",
   PLAYERS = "PLAYERS",
   LAYOUTS = "LAYOUTS",
   PANELS = "PANELS",
@@ -14,8 +14,8 @@ enum AppEventCategory {
 enum AppEvent {
   APP_INIT = "APP_INIT",
 
-  // Data source events
-  DATASOURCE_CLICK = "DATASOURCE_CLICK",
+  // Dialog events
+  DIALOG_SELECT_DATASOURCE = "DIALOG_SELECT_DATASOURCE",
 
   // Player events
   PLAYER_CONSTRUCTED = "PLAYER_CONSTRUCTED",
@@ -68,8 +68,8 @@ export function getEventCategory(event: AppEvent): AppEventCategory {
     case AppEvent.APP_INIT:
       return AppEventCategory.LIFECYCLE;
 
-    case AppEvent.DATASOURCE_CLICK:
-      return AppEventCategory.DATASOURCE;
+    case AppEvent.DIALOG_SELECT_DATASOURCE:
+      return AppEventCategory.DIALOG;
 
     case AppEvent.PLAYER_CONSTRUCTED:
     case AppEvent.PLAYER_INITIALIZED:
@@ -109,7 +109,7 @@ export function getEventBreadcrumbType(event: AppEvent): SentryBreadcrumbType {
     case AppEvent.APP_INIT:
       return SentryBreadcrumbType.DEFAULT;
 
-    case AppEvent.DATASOURCE_CLICK:
+    case AppEvent.DIALOG_SELECT_DATASOURCE:
       return SentryBreadcrumbType.TRANSACTION;
 
     case AppEvent.PLAYER_CONSTRUCTED:
