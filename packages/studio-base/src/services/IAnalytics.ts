@@ -4,7 +4,7 @@
 
 enum AppEventCategory {
   LIFECYCLE = "LIFECYCLE",
-  DATA = "DATA",
+  DATASOURCE = "DATASOURCE",
   PLAYERS = "PLAYERS",
   LAYOUTS = "LAYOUTS",
   PANELS = "PANELS",
@@ -15,10 +15,7 @@ enum AppEvent {
   APP_INIT = "APP_INIT",
 
   // Data source events
-  DATA_LOCAL = "DATA_LOCAL",
-  DATA_REMOTE = "DATA_REMOTE",
-  DATA_LIVE = "DATA_LIVE",
-  DATA_DEMO = "DATA_DEMO",
+  DATASOURCE_CLICK = "DATASOURCE_CLICK",
 
   // Player events
   PLAYER_CONSTRUCTED = "PLAYER_CONSTRUCTED",
@@ -71,11 +68,8 @@ export function getEventCategory(event: AppEvent): AppEventCategory {
     case AppEvent.APP_INIT:
       return AppEventCategory.LIFECYCLE;
 
-    case AppEvent.DATA_LOCAL:
-    case AppEvent.DATA_REMOTE:
-    case AppEvent.DATA_LIVE:
-    case AppEvent.DATA_DEMO:
-      return AppEventCategory.DATA;
+    case AppEvent.DATASOURCE_CLICK:
+      return AppEventCategory.DATASOURCE;
 
     case AppEvent.PLAYER_CONSTRUCTED:
     case AppEvent.PLAYER_INITIALIZED:
@@ -115,10 +109,7 @@ export function getEventBreadcrumbType(event: AppEvent): SentryBreadcrumbType {
     case AppEvent.APP_INIT:
       return SentryBreadcrumbType.DEFAULT;
 
-    case AppEvent.DATA_LOCAL:
-    case AppEvent.DATA_REMOTE:
-    case AppEvent.DATA_LIVE:
-    case AppEvent.DATA_DEMO:
+    case AppEvent.DATASOURCE_CLICK:
       return SentryBreadcrumbType.TRANSACTION;
 
     case AppEvent.PLAYER_CONSTRUCTED:

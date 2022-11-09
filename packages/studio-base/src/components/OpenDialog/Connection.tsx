@@ -71,8 +71,9 @@ export default function Connection(props: ConnectionProps): JSX.Element {
   const [selectedConnectionIdx, setSelectedConnectionIdx] = useState<number>(() => {
     const foundIdx = availableSources.findIndex((source) => source === activeSource);
     const selectedIdx = foundIdx < 0 ? 0 : foundIdx;
-    void analytics.logEvent(AppEvent.DATA_LIVE, {
-      type: enabledSourcesFirst[selectedIdx]?.id,
+    void analytics.logEvent(AppEvent.DATASOURCE_CLICK, {
+      type: "live",
+      data: enabledSourcesFirst[selectedIdx]?.id,
     });
     return selectedIdx;
   });
@@ -122,8 +123,9 @@ export default function Connection(props: ConnectionProps): JSX.Element {
             orientation="vertical"
             onChange={(_event, newValue: number) => {
               setSelectedConnectionIdx(newValue);
-              void analytics.logEvent(AppEvent.DATA_LIVE, {
-                type: enabledSourcesFirst[newValue]?.id,
+              void analytics.logEvent(AppEvent.DATASOURCE_CLICK, {
+                type: "live",
+                data: enabledSourcesFirst[newValue]?.id,
               });
             }}
             value={selectedConnectionIdx}
