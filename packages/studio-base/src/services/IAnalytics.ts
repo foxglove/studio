@@ -15,7 +15,6 @@ enum AppEvent {
 
   // Player events
   PLAYER_CONSTRUCTED = "PLAYER_CONSTRUCTED",
-  PLAYER_INITIALIZED = "PLAYER_INITIALIZED",
   PLAYER_PLAY = "PLAYER_PLAY",
   PLAYER_SEEK = "PLAYER_SEEK",
   PLAYER_SET_SPEED = "PLAYER_SET_SPEED",
@@ -65,7 +64,6 @@ export function getEventCategory(event: AppEvent): AppEventCategory {
       return AppEventCategory.LIFECYCLE;
 
     case AppEvent.PLAYER_CONSTRUCTED:
-    case AppEvent.PLAYER_INITIALIZED:
     case AppEvent.PLAYER_PLAY:
     case AppEvent.PLAYER_SEEK:
     case AppEvent.PLAYER_SET_SPEED:
@@ -103,7 +101,6 @@ export function getEventBreadcrumbType(event: AppEvent): SentryBreadcrumbType {
       return SentryBreadcrumbType.DEFAULT;
 
     case AppEvent.PLAYER_CONSTRUCTED:
-    case AppEvent.PLAYER_INITIALIZED:
       return SentryBreadcrumbType.TRANSACTION;
 
     case AppEvent.PLAYER_PLAY:
