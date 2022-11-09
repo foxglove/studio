@@ -127,10 +127,10 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
     }
   }, [
     activeDataSource,
-    onModalClose,
     activeView,
     connectionSources,
     localFileSources,
+    onModalClose,
     onSelectView,
   ]);
 
