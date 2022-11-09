@@ -91,6 +91,14 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
 
   const [basePlayer, setBasePlayer] = useState<Player | undefined>();
 
+  const setPlayerOrPlayers = useCallback((playerOrPlayers: Player | Player[] | undefined) => {
+    if (Array.isArray(playerOrPlayers)) {
+      playerOrPlayers.forEach(setBasePlayer);
+    } else {
+      setBasePlayer(playerOrPlayers);
+    }
+  }, []);
+
   const userNodes = useCurrentLayoutSelector(userNodesSelector);
   const globalVariables = useCurrentLayoutSelector(globalVariablesSelector);
 
@@ -140,7 +148,7 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
           metricsCollector,
         });
 
-        setBasePlayer(newPlayer);
+        setPlayerOrPlayers(newPlayer);
 
         if (foundSource.sampleLayout) {
           try {
@@ -178,7 +186,7 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
               metricsCollector,
               params: args.params,
             });
-            setBasePlayer(newPlayer);
+            setPlayerOrPlayers(newPlayer);
 
             if (args.params?.url) {
               addRecent({
@@ -221,7 +229,7 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
                 void nativeWindow?.setRepresentedFilename((file as { path?: string }).path); // File.path is added by Electron
               }
 
-              setBasePlayer(newPlayer);
+              setPlayerOrPlayers(newPlayer);
               return;
             } else if (handle) {
               const permission = await handle.queryPermission({ mode: "read" });
@@ -250,7 +258,7 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
                 metricsCollector,
               });
 
-              setBasePlayer(newPlayer);
+              setPlayerOrPlayers(newPlayer);
               addRecent({
                 type: "file",
                 title: handle.name,

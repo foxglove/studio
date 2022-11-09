@@ -16,7 +16,6 @@ import {
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 
 import Connection from "./Connection";
-import Remote from "./Remote";
 import Start from "./Start";
 import { OpenDialogViews } from "./types";
 import { useOpenFile } from "./useOpenFile";
@@ -92,15 +91,8 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
     return availableSources.filter((source) => source.type === "file");
   }, [availableSources]);
 
-  const remoteFileSources = useMemo(() => {
-    return availableSources.filter((source) => source.type === "remote-file");
-  }, [availableSources]);
-
   const view = useMemo(() => {
     const supportedLocalFileTypes = localFileSources.flatMap(
-      (source) => source.supportedFileTypes ?? [],
-    );
-    const supportedRemoteFileTypes = remoteFileSources.flatMap(
       (source) => source.supportedFileTypes ?? [],
     );
     switch (activeView) {
@@ -122,6 +114,7 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
             />
           ),
         };
+<<<<<<< HEAD
       case "remote":
         return {
           title: "Open a file from a remote location",
@@ -133,6 +126,20 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
             />
           ),
         };
+||||||| parent of 4530a4add (Remove "Open file by URL" from Welcome dialog; Replace with callout to load data from Data Platform)
+      case "remote":
+        return {
+          title: "Open a file from a remote location",
+          component: (
+            <Remote
+              onBack={() => onSelectView("start")}
+              onCancel={onDismiss}
+              availableSources={remoteFileSources}
+            />
+          ),
+        };
+=======
+>>>>>>> 4530a4add (Remove "Open file by URL" from Welcome dialog; Replace with callout to load data from Data Platform)
       default:
         return {
           title: "Get started",
@@ -140,11 +147,11 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
             <Start
               onSelectView={onSelectView}
               supportedLocalFileExtensions={supportedLocalFileTypes}
-              supportedRemoteFileExtensions={supportedRemoteFileTypes}
             />
           ),
         };
     }
+<<<<<<< HEAD
   }, [
     activeDataSource,
     activeView,
@@ -154,6 +161,19 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
     remoteFileSources,
     onModalClose,
   ]);
+||||||| parent of 4530a4add (Remove "Open file by URL" from Welcome dialog; Replace with callout to load data from Data Platform)
+  }, [
+    activeDataSource,
+    activeView,
+    connectionSources,
+    localFileSources,
+    onDismiss,
+    onSelectView,
+    remoteFileSources,
+  ]);
+=======
+  }, [activeDataSource, activeView, connectionSources, localFileSources, onDismiss, onSelectView]);
+>>>>>>> 4530a4add (Remove "Open file by URL" from Welcome dialog; Replace with callout to load data from Data Platform)
 
   return (
     <Dialog

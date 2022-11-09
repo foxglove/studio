@@ -497,7 +497,7 @@ class StudioWindow {
 
     fileMenu.submenu?.append(
       new MenuItem({
-        label: "Open File…",
+        label: "Open Local File…",
         click: async () => {
           await simulateUserClick(browserWindow);
           browserWindow.webContents.send("open-file");
@@ -507,7 +507,7 @@ class StudioWindow {
 
     fileMenu.submenu?.append(
       new MenuItem({
-        label: "Open Remote File…",
+        label: "Open Remote Data…",
         click: async () => {
           await simulateUserClick(browserWindow);
           browserWindow.webContents.send("open-remote-file");
