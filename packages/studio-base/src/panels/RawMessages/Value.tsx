@@ -180,10 +180,8 @@ export default function Value(props: ValueProps): JSX.Element {
   // need to keep space to prevent resizing and wrapping on hover
   const placeholderActionsForSpacing = useMemo(() => {
     const actions: ValueActionItem[] = [];
-    let i = availableActions.length;
-    while (i < MAX_ACTION_ITEMS) {
+    for (let i = availableActions.length; i < MAX_ACTION_ITEMS; i++) {
       actions.push({ ...emptyAction, key: `empty-${i}` });
-      i++;
     }
     return actions;
   }, [availableActions.length]);
