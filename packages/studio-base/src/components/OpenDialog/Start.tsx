@@ -123,7 +123,7 @@ export default function Start(props: IStartProps): JSX.Element {
         ),
         onClick: () => {
           onSelectView("file");
-          void analytics.logEvent(AppEvent.DIALOG_SELECT_DATASOURCE, { type: "local" });
+          void analytics.logEvent(AppEvent.DIALOG_SELECT_VIEW, { type: "local" });
         },
       },
       {
@@ -138,7 +138,7 @@ export default function Start(props: IStartProps): JSX.Element {
         iconProps: { iconName: "FileASPX" },
         onClick: () => {
           onSelectView("remote");
-          void analytics.logEvent(AppEvent.DIALOG_SELECT_DATASOURCE, { type: "remote" });
+          void analytics.logEvent(AppEvent.DIALOG_SELECT_VIEW, { type: "remote" });
         },
       },
       {
@@ -152,7 +152,7 @@ export default function Start(props: IStartProps): JSX.Element {
         ),
         onClick: () => {
           onSelectView("connection");
-          void analytics.logEvent(AppEvent.DIALOG_SELECT_DATASOURCE, { type: "live" });
+          void analytics.logEvent(AppEvent.DIALOG_SELECT_VIEW, { type: "live" });
         },
       },
       {
@@ -167,7 +167,7 @@ export default function Start(props: IStartProps): JSX.Element {
         ),
         onClick: () => {
           onSelectView("demo");
-          void analytics.logEvent(AppEvent.DIALOG_SELECT_DATASOURCE, { type: "demo" });
+          void analytics.logEvent(AppEvent.DIALOG_SELECT_VIEW, { type: "demo" });
         },
       },
     ];
