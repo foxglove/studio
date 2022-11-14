@@ -10,10 +10,7 @@ import { DataPlatform } from "@foxglove/studio-base/components/OpenDialog/DataPl
 import { LocalFile } from "@foxglove/studio-base/components/OpenDialog/LocalFile";
 import { Samples } from "@foxglove/studio-base/components/OpenDialog/Samples";
 import Stack from "@foxglove/studio-base/components/Stack";
-import {
-  IDataSourceFactory,
-  usePlayerSelection,
-} from "@foxglove/studio-base/context/PlayerSelectionContext";
+import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
 
 type OpenDialogView = "file" | "demo" | "data-platform";
 
