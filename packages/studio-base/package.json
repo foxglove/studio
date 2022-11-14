@@ -63,7 +63,7 @@
     "@mui/x-data-grid": "5.15.1",
     "@protobufjs/base64": "1.1.2",
     "@sentry/core": "7.10.0",
-    "@sentry/types": "7.10.0",
+    "@sentry/types": "7.19.0",
     "@testing-library/dom": "8.11.3",
     "@testing-library/react": "12.1.2",
     "@testing-library/react-hooks": "7.0.2",

@@ -2506,7 +2506,7 @@ __metadata:
     "@mui/x-data-grid": 5.15.1
     "@protobufjs/base64": 1.1.2
     "@sentry/core": 7.10.0
-    "@sentry/types": 7.10.0
+    "@sentry/types": 7.19.0
     "@testing-library/dom": 8.11.3
     "@testing-library/react": 12.1.2
     "@testing-library/react-hooks": 7.0.2
@@ -3898,6 +3898,13 @@ __metadata:
   version: 7.10.0
   resolution: "@sentry/types@npm:7.10.0"
   checksum: f5b02c60b8c485a32221baa97d5bbf6a4ca3473464b71b7a7b58f81946d4135dd8e038791e999802c50b4f1da3ed303ddc62c4c889080e9835f6abc1415873b2
+  languageName: node
+  linkType: hard
+
+"@sentry/types@npm:7.19.0":
+  version: 7.19.0
+  resolution: "@sentry/types@npm:7.19.0"
+  checksum: e7a309ff0a23af003f8afbf2c8a7158ce8070e5e63015dc6d06cca11de846fc8c51bea29d9486af0c32191031e6bb42a3c4500f437afe61252fbd20f3c8bfa28
   languageName: node
   linkType: hard
 
