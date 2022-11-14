@@ -41,7 +41,7 @@ import {
   useMessagePipelineGetter,
 } from "@foxglove/studio-base/components/MessagePipeline";
 import MultiProvider from "@foxglove/studio-base/components/MultiProvider";
-import { OpenDialog, OpenDialogViews } from "@foxglove/studio-base/components/OpenDialog";
+import { AdvancedOpenDialog, OpenDialogViews } from "@foxglove/studio-base/components/OpenDialog";
 import PanelLayout from "@foxglove/studio-base/components/PanelLayout";
 import PanelList from "@foxglove/studio-base/components/PanelList";
 import panelsHelpContent from "@foxglove/studio-base/components/PanelList/index.help.md";
@@ -600,8 +600,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     >
       {showSignInForm && <SignInFormModal />}
       {showOpenDialog != undefined && (
-        <OpenDialog
-          activeView={showOpenDialog.view}
+        <AdvancedOpenDialog
           activeDataSource={showOpenDialog.activeDataSource}
           onDismiss={() => setShowOpenDialog(undefined)}
         />

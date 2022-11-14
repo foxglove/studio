@@ -209,6 +209,10 @@ class ConsoleApi {
     return await this.get<DeviceResponse>(`/v1/devices/${id}`);
   }
 
+  public async getDevices(): Promise<DeviceResponse[]> {
+    return await this.get<DeviceResponse[]>(`/v1/devices`);
+  }
+
   public async createEvent(params: {
     deviceId: string;
     timestamp: string;
@@ -220,9 +224,10 @@ class ConsoleApi {
   }
 
   public async getEvents(params: {
-    deviceId: string;
-    start: string;
-    end: string;
+    deviceId?: string;
+    dateRange?: string;
+    start?: string;
+    end?: string;
     query?: string;
   }): Promise<EventsResponse> {
     const rawEvents = await this.get<EventsResponse>(`/beta/device-events`, params);
