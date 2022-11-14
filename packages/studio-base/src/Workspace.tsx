@@ -600,10 +600,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     >
       {showSignInForm && <SignInFormModal />}
       {showOpenDialog != undefined && (
-        <AdvancedOpenDialog
-          activeDataSource={showOpenDialog.activeDataSource}
-          onDismiss={() => setShowOpenDialog(undefined)}
-        />
+        <AdvancedOpenDialog onDismiss={() => setShowOpenDialog(undefined)} />
       )}
       <DocumentDropListener onDrop={dropHandler} allowedExtensions={allowedDropExtensions} />
       <SyncAdapters />

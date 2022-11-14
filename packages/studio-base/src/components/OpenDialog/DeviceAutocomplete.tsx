@@ -15,7 +15,7 @@ export function DeviceAutocomplete(): JSX.Element {
     return await api.getDevices();
   }, [api]);
 
-  const [selectedDevice, setSelectedDevice] = useState(undefined);
+  const [selectedDevice] = useState(undefined);
 
   return (
     <Autocomplete
@@ -55,7 +55,7 @@ export function DeviceAutocomplete(): JSX.Element {
           }}
         />
       )}
-      onChange={(_, device) => {
+      onChange={(_, _device) => {
         // fixme
       }}
     />

@@ -18,7 +18,7 @@ function EventsView() {
 
   const [query, setQuery] = useState<string>("");
 
-  const { value: events, loading } = useAsync(async () => {
+  const { value: events } = useAsync(async () => {
     return await api.getEvents({
       query,
     });

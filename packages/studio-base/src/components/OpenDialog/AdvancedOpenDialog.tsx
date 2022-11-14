@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Dialog, List, ListItem, ListItemButton, ListItemText, Typography } from "@mui/material";
-import { useCallback, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 
 import { DataPlatform } from "@foxglove/studio-base/components/OpenDialog/DataPlatform";
@@ -18,7 +18,6 @@ import {
 type OpenDialogView = "file" | "demo" | "data-platform";
 
 type OpenDialogProps = {
-  activeDataSource?: IDataSourceFactory;
   onDismiss?: () => void;
 };
 
@@ -29,8 +28,8 @@ const useStyles = makeStyles()((_theme) => ({
 }));
 
 export function AdvancedOpenDialog(props: OpenDialogProps): JSX.Element {
-  const { onDismiss, activeDataSource } = props;
-  const { availableSources, selectSource } = usePlayerSelection();
+  const { onDismiss } = props;
+  const { availableSources } = usePlayerSelection();
 
   const [activeView, setActiveView] = useState<OpenDialogView>("file");
 
@@ -39,9 +38,6 @@ export function AdvancedOpenDialog(props: OpenDialogProps): JSX.Element {
   }, [availableSources]);
 
   const view = useMemo(() => {
-    const supportedRemoteFileTypes = remoteFileSources.flatMap(
-      (source) => source.supportedFileTypes ?? [],
-    );
     // fixme - use React.lazy to load heavy views like Data platform
     switch (activeView) {
       case "file": {
