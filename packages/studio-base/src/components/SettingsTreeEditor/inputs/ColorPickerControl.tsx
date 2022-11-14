@@ -107,7 +107,7 @@ export function ColorPickerControl(props: ColorPickerInputProps): JSX.Element {
         }}
         placeholder={alphaType === "alpha" ? "RRGGBBAA" : "RRGGBB"}
         value={editedValue}
-        onKeyDown={(event) => event.key === "Enter" && onEnterKey && onEnterKey()}
+        onKeyDown={(event) => event.key === "Enter" && onEnterKey?.()}
         onChange={(event) => updateEditedValue(event.target.value)}
       />
     </Stack>
