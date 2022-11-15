@@ -79,6 +79,7 @@
     "@storybook/addon-essentials": "6.5.10",
     "@storybook/builder-webpack5": "6.5.10",
     "@storybook/manager-webpack5": "6.5.10",
+    "@storybook/react": "6.5.10",
     "@types/babel__core": "^7.1.18",
     "@types/babel__preset-env": "^7.9.2",
     "@types/case-sensitive-paths-webpack-plugin": "2.1.6",
