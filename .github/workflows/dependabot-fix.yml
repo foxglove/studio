@@ -27,23 +27,25 @@ jobs:
       YARN_ENABLE_SCRIPTS: false
 
     steps:
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v3.1.0
         with:
           # Using a Personal Access Token here is required to trigger workflows on our new commit.
           # The default GitHub token doesn't trigger any workflows.
           # See: https://github.community/t/push-from-action-does-not-trigger-subsequent-action/16854/2
-          token: ${{ secrets.DEPENDABOT_FIX_GITHUB_TOKEN }}
+          token: ${{ secrets.FOXGLOVEBOT_GITHUB_TOKEN }}
           ref: ${{ github.event.pull_request.head.ref }}
 
       - run: git lfs pull --include .yarn/
 
       - name: Configure Node.js
-        uses: actions/setup-node@v2.2.0
+        uses: actions/setup-node@v3.5.1
         with:
           node-version: 16.17
 
+      - run: corepack enable yarn
+
       - name: Restore cache
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v3.0.11
         with:
           path: |
             .yarn/cache
@@ -51,7 +53,7 @@ jobs:
           key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
           restore-keys: ${{ runner.os }}-yarn-
 
-      - run: yarn install --skip-builds
+      - run: yarn install --mode skip-build
         env:
           # yarn runs in immutable mode "by default" in CI -- turning this off requires an
           # undocumented env var
@@ -64,5 +66,5 @@ jobs:
           git config user.name "dependabot[bot]"
           git config user.email "49699333+dependabot[bot]@users.noreply.github.com"
           git add yarn.lock
-          git commit -m '[dependabot skip] Fix yarn.lock'
+          git commit -m '[dependabot skip] Fix yarn.lock' --allow-empty
           git push

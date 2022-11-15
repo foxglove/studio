@@ -98,6 +98,8 @@ type UnconnectedProps = {
   ) => void;
   onFirstMount?: (arg0: HTMLDivElement) => void;
   style?: React.CSSProperties;
+  // Needed for functionality not in React.CSSProperties, like child selectors: "& > *"
+  className?: string;
 };
 
 function setNativeValue(element: unknown, value: unknown) {
@@ -270,6 +272,7 @@ function UnconnectedPanelSetup(props: UnconnectedProps): JSX.Element | ReactNull
   const inner = (
     <div
       style={{ width: "100%", height: "100%", display: "flex", ...props.style }}
+      className={props.className}
       ref={(el) => {
         const { onFirstMount, onMount } = props;
         if (el && onFirstMount && !hasMounted.current) {
