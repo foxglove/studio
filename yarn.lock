@@ -1609,7 +1609,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/runtime@npm:^7.0.0, @babel/runtime@npm:^7.1.2, @babel/runtime@npm:^7.12.5, @babel/runtime@npm:^7.13.10, @babel/runtime@npm:^7.16.7, @babel/runtime@npm:^7.17.0, @babel/runtime@npm:^7.17.8, @babel/runtime@npm:^7.18.6, @babel/runtime@npm:^7.3.1, @babel/runtime@npm:^7.3.4, @babel/runtime@npm:^7.5.0, @babel/runtime@npm:^7.5.5, @babel/runtime@npm:^7.7.2, @babel/runtime@npm:^7.7.6, @babel/runtime@npm:^7.8.4, @babel/runtime@npm:^7.8.7, @babel/runtime@npm:^7.9.2":
+"@babel/runtime@npm:^7.0.0, @babel/runtime@npm:^7.1.2, @babel/runtime@npm:^7.12.5, @babel/runtime@npm:^7.13.10, @babel/runtime@npm:^7.16.7, @babel/runtime@npm:^7.17.0, @babel/runtime@npm:^7.17.8, @babel/runtime@npm:^7.18.6, @babel/runtime@npm:^7.3.4, @babel/runtime@npm:^7.5.0, @babel/runtime@npm:^7.5.5, @babel/runtime@npm:^7.7.2, @babel/runtime@npm:^7.7.6, @babel/runtime@npm:^7.8.4, @babel/runtime@npm:^7.8.7, @babel/runtime@npm:^7.9.2":
   version: 7.18.9
   resolution: "@babel/runtime@npm:7.18.9"
   dependencies:
@@ -2186,30 +2186,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@foxglove/regl-worldview@npm:2.4.0":
-  version: 2.4.0
-  resolution: "@foxglove/regl-worldview@npm:2.4.0"
-  dependencies:
-    "@babel/runtime": ^7.3.1
-    "@mapbox/tiny-sdf": ^1.1.1
-    distance-to-line-segment: 0.2.0
-    draco3d: ^1.4.1
-    earcut: ^2.1.3
-    gl-matrix: ^2.8.1
-    lodash: ^4.17.11
-    memoize-one: ^5.1.1
-    memoize-weak: ^1.0.2
-    normalize-wheel: 1.0.1
-    regl: ^1.3.1
-    reselect: ^3.0.1
-    shallowequal: 1.1.0
-  peerDependencies:
-    react: 16.x
-    react-dom: 16.x
-  checksum: c509b5307845d436c182a3a6eaf6253ba449af3bfe40b1acd4938ebfc12bfb53fc9a037dee51a6e6bfd9c4b1d582b11eba4b82401b0f756505034b50758f2c2c
-  languageName: node
-  linkType: hard
-
 "@foxglove/ros1@npm:1.6.0":
   version: 1.6.0
   resolution: "@foxglove/ros1@npm:1.6.0"
@@ -2378,7 +2354,6 @@ __metadata:
     "@foxglove/hooks": "workspace:*"
     "@foxglove/log": "workspace:*"
     "@foxglove/mcap-support": "workspace:*"
-    "@foxglove/regl-worldview": 2.4.0
     "@foxglove/ros1": 1.6.0
     "@foxglove/ros2": 3.4.0
     "@foxglove/rosbag": 0.2.3
@@ -2997,13 +2972,6 @@ __metadata:
   version: 2.0.5
   resolution: "@mapbox/tiny-sdf@npm:2.0.5"
   checksum: 23fd158ea795592cf1f825fcac20d48230c54a6985a931f609af8b4e69cd99f1c798dc893baec63f4fd6f42ffc3e7292b39f4126966412edd4606eb3dbf86b54
-  languageName: node
-  linkType: hard
-
-"@mapbox/tiny-sdf@npm:^1.1.1":
-  version: 1.2.5
-  resolution: "@mapbox/tiny-sdf@npm:1.2.5"
-  checksum: d4cfd700c8ccd8b9183da78a943e314cada4184966a52758857cc7141391829a2da31b733046ee0a57e169396314533ffbde8445ce3476a193c6aefcc7bc883a
   languageName: node
   linkType: hard
 
@@ -5475,12 +5443,6 @@ __metadata:
   checksum: 12a2a0e6c4b993fc0854bec665906788aea0d8ee4392389d7a98a5de1eefdd33c9e1e40a91f3afd274011119c506f7b4126acb97fae62ae20b654974d44cba12
   languageName: node
   linkType: hard
-
-"@types/foxglove__regl-worldview@workspace:packages/@types/foxglove__regl-worldview":
-  version: 0.0.0-use.local
-  resolution: "@types/foxglove__regl-worldview@workspace:packages/@types/foxglove__regl-worldview"
-  languageName: unknown
-  linkType: soft
 
 "@types/foxglove__roslibjs@workspace:*, @types/foxglove__roslibjs@workspace:packages/@types/foxglove__roslibjs":
   version: 0.0.0-use.local
@@ -10455,13 +10417,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"distance-to-line-segment@npm:0.2.0":
-  version: 0.2.0
-  resolution: "distance-to-line-segment@npm:0.2.0"
-  checksum: 1ed2a0956b0e345500e0686a9263a3f9878cced735eac47ec905836d9fd492ca7ea410a8d3b27fbc7762d9b227e2dd30aa544741493c4a082edb5d8d9590a84d
-  languageName: node
-  linkType: hard
-
 "dmg-builder@npm:23.1.0":
   version: 23.1.0
   resolution: "dmg-builder@npm:23.1.0"
@@ -10738,13 +10693,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"draco3d@npm:^1.4.1":
-  version: 1.4.3
-  resolution: "draco3d@npm:1.4.3"
-  checksum: 46f3dad8a441ad3f123be45465307f5ee09a76d6bb3228cc37cd02883427a341efaf1612c1a4592a7ef2450f39feb870e040b04bb00d5e9788db6b75d1f5de33
-  languageName: node
-  linkType: hard
-
 "duplexer3@npm:^0.1.4":
   version: 0.1.4
   resolution: "duplexer3@npm:0.1.4"
@@ -10761,13 +10709,6 @@ __metadata:
     readable-stream: ^2.0.0
     stream-shift: ^1.0.0
   checksum: 3c2ed2223d956a5da713dae12ba8295acb61d9acd966ccbba938090d04f4574ca4dca75cca089b5077c2d7e66101f32e6ea9b36a78ca213eff574e7a8b8accf2
-  languageName: node
-  linkType: hard
-
-"earcut@npm:^2.1.3":
-  version: 2.2.3
-  resolution: "earcut@npm:2.2.3"
-  checksum: 4e3bab80366c49e0332a0bb061649a3b9354dcbfa636155c7eee250be0670d7139d53f2aebbcf90788507c71b76ec1713c20e36527f202b9abb79c9e5858ec35
   languageName: node
   linkType: hard
 
@@ -13039,13 +12980,6 @@ __metadata:
   version: 3.4.3
   resolution: "gl-matrix@npm:3.4.3"
   checksum: c47830ba727f3d0fab635c48135af96aef66274079a3e0afd6f68b68c98eae9fc1bcfdc7312fe2301e4fd22dd24c5e0f1b5d025960a208e50d07101ed8d940f9
-  languageName: node
-  linkType: hard
-
-"gl-matrix@npm:^2.8.1":
-  version: 2.8.1
-  resolution: "gl-matrix@npm:2.8.1"
-  checksum: 20d13fd428ea3021d625781e025132ff8ec264f4c05310bda9ad859535ab32fb505323486d2d5c51b5f715c2a9d059da588b66e8e2afdafdf1acc4f45629b7ff
   languageName: node
   linkType: hard
 
@@ -16438,7 +16372,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lodash@npm:4.17.21, lodash@npm:^4.17.10, lodash@npm:^4.17.11, lodash@npm:^4.17.15, lodash@npm:^4.17.19, lodash@npm:^4.17.20, lodash@npm:^4.17.21, lodash@npm:^4.17.4, lodash@npm:^4.7.0":
+"lodash@npm:4.17.21, lodash@npm:^4.17.10, lodash@npm:^4.17.15, lodash@npm:^4.17.19, lodash@npm:^4.17.20, lodash@npm:^4.17.21, lodash@npm:^4.17.4, lodash@npm:^4.7.0":
   version: 4.17.21
   resolution: "lodash@npm:4.17.21"
   checksum: eb835a2e51d381e561e508ce932ea50a8e5a68f4ebdd771ea240d3048244a8d13658acbd502cd4829768c56f2e16bdd4340b9ea141297d472517b83868e677f7
@@ -16844,14 +16778,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"memoize-one@npm:>=3.1.1 <6, memoize-one@npm:^5.1.1":
+"memoize-one@npm:>=3.1.1 <6":
   version: 5.2.1
   resolution: "memoize-one@npm:5.2.1"
   checksum: a3cba7b824ebcf24cdfcd234aa7f86f3ad6394b8d9be4c96ff756dafb8b51c7f71320785fbc2304f1af48a0467cbbd2a409efc9333025700ed523f254cb52e3d
   languageName: node
   linkType: hard
 
-"memoize-weak@npm:1.0.2, memoize-weak@npm:^1.0.2":
+"memoize-weak@npm:1.0.2":
   version: 1.0.2
   resolution: "memoize-weak@npm:1.0.2"
   checksum: f1823d457f22a04212a8d2fbe1344100badc08f7c9f91c397a57c2ee898d8e0aac5406a88ff25f61f07bbb5bf1f3deb93739d7511ef81d090191ea8b0324ee87
@@ -17914,13 +17848,6 @@ __metadata:
   version: 4.5.1
   resolution: "normalize-url@npm:4.5.1"
   checksum: 9a9dee01df02ad23e171171893e56e22d752f7cff86fb96aafeae074819b572ea655b60f8302e2d85dbb834dc885c972cc1c573892fea24df46b2765065dd05a
-  languageName: node
-  linkType: hard
-
-"normalize-wheel@npm:1.0.1":
-  version: 1.0.1
-  resolution: "normalize-wheel@npm:1.0.1"
-  checksum: 00b32efa040bad9438e732385a4ca27f8532fa2c8c06b54be43b9f75b2da6642bf41a0b4f81e542639dc8d682cde8b059b0a02ae0723fb8ebc3c8f036c8e51d8
   languageName: node
   linkType: hard
 
@@ -20487,13 +20414,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"regl@npm:^1.3.1":
-  version: 1.7.0
-  resolution: "regl@npm:1.7.0"
-  checksum: 93baff0b49d33709b95e7ad8ca689889498afd113bc212037c9b37e86aaa8547cd4e1a5e3d335a7a513d6db42946044dce7e3b1df2196726913247e9c6d1916a
-  languageName: node
-  linkType: hard
-
 "rehype-parse@npm:^8.0.0, rehype-parse@npm:^8.0.2":
   version: 8.0.4
   resolution: "rehype-parse@npm:8.0.4"
@@ -20752,13 +20672,6 @@ __metadata:
   version: 4.1.5
   resolution: "reselect@npm:4.1.5"
   checksum: 54c13c1e795b2ea70cba8384138aebe78adda00cbea303cc94b64da0a70d74c896cc9a03115ae38b8bff990e7a60dcd6452ab68cbec01b0b38c1afda70714cf0
-  languageName: node
-  linkType: hard
-
-"reselect@npm:^3.0.1":
-  version: 3.0.1
-  resolution: "reselect@npm:3.0.1"
-  checksum: c7ce544bae92db2dc6e768bc2dcc1248f9a21ada22ab5906c5e3c472e1dbc5f080889e5a715b8a2535e652d74c599dd090f5a68bcbe7e6f88053b7599ef4e8d3
   languageName: node
   linkType: hard
 
