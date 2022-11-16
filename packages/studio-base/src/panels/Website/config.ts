@@ -16,7 +16,7 @@ export function validateUrl(url: string): string | undefined {
   try {
     getFullUrl(url);
   } catch (_) {
-    return 'URL is not valid';
+    return "URL is not valid";
   }
   return undefined;
 }
@@ -31,7 +31,7 @@ export function buildSettingsTree(config: WebsiteConfig): SettingsTreeNodes {
           input: "string",
           label: "Website URL",
           value: config.url,
-          error: !!config.url && validateUrl(config.url) || undefined,
+          error: (!!config.url && validateUrl(config.url)) || undefined,
         },
       },
     },

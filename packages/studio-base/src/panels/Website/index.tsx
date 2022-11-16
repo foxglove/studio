@@ -9,12 +9,10 @@ import Panel from "@foxglove/studio-base/components/Panel";
 import { PanelExtensionAdapter } from "@foxglove/studio-base/components/PanelExtensionAdapter";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 
-import helpContent from "./index.help.md";
 import { buildSettingsTree, WebsiteConfig } from "./config";
+import helpContent from "./index.help.md";
 
-function WebsitePanel(props: {
-  context: PanelExtensionContext;
-}): JSX.Element {
+function WebsitePanel(props: { context: PanelExtensionContext }): JSX.Element {
   const { context } = props;
 
   const [config, setConfig] = useState<WebsiteConfig>(() => {
@@ -46,15 +44,9 @@ function WebsitePanel(props: {
       actionHandler,
       nodes: buildSettingsTree(config),
     });
-  }, [
-    config,
-    context,
-    actionHandler,
-  ]);
+  }, [config, context, actionHandler]);
 
-  return (
-    <>{!!config.url && (<iframe width="100%" height="100%" src={config.url}/>)}</>
-  );
+  return <>{!!config.url && (<iframe width="100%" height="100%" src={config.url}/>)}</>;
 }
 
 function initPanel(context: PanelExtensionContext) {
