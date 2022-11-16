@@ -45,6 +45,8 @@ import URDFViewerHelp from "./URDFViewer/index.help.md";
 import URDFViewerThumbnail from "./URDFViewer/thumbnail.png";
 import VariableSliderHelp from "./VariableSlider/index.help.md";
 import variableSliderThumbnail from "./VariableSlider/thumbnail.png";
+import WebsiteHelp from "./Website/index.help.md";
+import websiteThumbnail from "./Website/thumbnail.png";
 import DiagnosticStatusPanelHelp from "./diagnostics/DiagnosticStatusPanel.help.md";
 import DiagnosticSummaryHelp from "./diagnostics/DiagnosticSummary.help.md";
 import diagnosticStatusThumbnail from "./diagnostics/thumbnails/diagnostic-status.png";
@@ -220,6 +222,14 @@ const builtin: PanelInfo[] = [
     help: TabHelp,
     thumbnail: tabThumbnail,
     module: async () => await import("./Tab"),
+  },
+  {
+    title: "Website",
+    type: "website",
+    description: "Display a website as an embedded iframe.",
+    help: WebsiteHelp,
+    thumbnail: websiteThumbnail,
+    module: async () => await import("./Website"),
   },
 ];
 
