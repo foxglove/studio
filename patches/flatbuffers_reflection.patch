@@ -1,0 +1,61 @@
+diff --git a/src/reflection.ts b/src/reflection.ts
+index 6d946100786d9d207aa9a917ff946928a30af19d..eb468c3ad03ea0672d4067fa57416ccfdf965009 100644
+--- a/src/reflection.ts
++++ b/src/reflection.ts
+@@ -409,17 +409,14 @@ export class Parser {
+   }
+   // Reads a vector of scalars (like readScalar, may return a vector of BigInt's
+   // instead). Also, will return null if the vector is not set.
+-  // TODO(jkuszmaul): Allow this to return a slice into the underlying
+-  // ByteBuffer to avoid excessive memory allocation (at least for vectors of
+-  // bytes, which is a common way to transmit images).
+-  readVectorOfScalars(table: Table, fieldName: string): (number | BigInt)[] | null {
++  readVectorOfScalars(table: Table, fieldName: string): (number | BigInt)[] | Uint8Array | null {
+     return this.readVectorOfScalarsLambda(table.typeIndex, fieldName)(table);
+   }
+
+   readVectorOfScalarsLambda(
+     typeIndex: number,
+     fieldName: string,
+-  ): (t: Table) => (number | BigInt)[] | null {
++  ): (t: Table) => (number | BigInt)[] | Uint8Array | null {
+     const field = this.getField(fieldName, typeIndex);
+     const fieldType = field.type();
+     if (fieldType === null) {
+@@ -428,21 +425,32 @@ export class Parser {
+     if (fieldType.baseType() !== reflection.BaseType.Vector) {
+       throw new Error("Field " + fieldName + " is not an vector.");
+     }
+-    if (!isScalar(fieldType.element())) {
++    const elementType = fieldType.element();
++    if (!isScalar(elementType)) {
+       throw new Error("Field " + fieldName + " is not an vector of scalars.");
+     }
++    const isByteVector =
++      elementType === reflection.BaseType.UByte || elementType === reflection.BaseType.Byte;
+
+     return (table: Table) => {
+       const offsetToOffset = table.offset + table.bb.__offset(table.offset, field.offset());
+       if (offsetToOffset === table.offset) {
+         return null;
+       }
++
+       const numElements = table.bb.__vector_len(offsetToOffset);
+-      const result = [];
+       const baseOffset = table.bb.__vector(offsetToOffset);
+       const scalarSize = typeSize(fieldType.element());
+-      for (let ii = 0; ii < numElements; ++ii) {
+-        result.push(table.readScalar(fieldType.element(), baseOffset + scalarSize * ii));
++
++      let result: (number | BigInt)[] | Uint8Array;
++      // If the vector is a byte vector, we can return a slice into the buffer
++      if (isByteVector) {
++        result = new Uint8Array(table.bb.bytes().buffer, baseOffset, numElements);
++      } else {
++        result = [];
++        for (let ii = 0; ii < numElements; ++ii) {
++          result.push(table.readScalar(fieldType.element(), baseOffset + scalarSize * ii));
++        }
+       }
+       return result;
+     };

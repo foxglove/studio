@@ -2308,7 +2308,7 @@ __metadata:
     "@types/protobufjs": "workspace:*"
     "@types/zstd-codec": "workspace:*"
     flatbuffers: 2.0.6
-    flatbuffers_reflection: 0.0.1
+    flatbuffers_reflection: "patch:flatbuffers_reflection@0.0.1#../../patches/flatbuffers_reflection.patch"
     protobufjs: 7.1.2
     typescript: 4.8.2
     wasm-lz4: 2.0.0
@@ -12720,6 +12720,13 @@ __metadata:
   version: 0.0.1
   resolution: "flatbuffers_reflection@npm:0.0.1"
   checksum: 6ea9cceade8f25d4f7d564efe93c7c513869aa85c6d55884f6cc5462097e115d36d311a0acbeedd655c346721a5cc699676a20ea215cad07ab71d637e0b96227
+  languageName: node
+  linkType: hard
+
+"flatbuffers_reflection@patch:flatbuffers_reflection@0.0.1#../../patches/flatbuffers_reflection.patch::locator=%40foxglove%2Fmcap-support%40workspace%3Apackages%2Fmcap-support":
+  version: 0.0.1
+  resolution: "flatbuffers_reflection@patch:flatbuffers_reflection@npm%3A0.0.1#../../patches/flatbuffers_reflection.patch::version=0.0.1&hash=4e4600&locator=%40foxglove%2Fmcap-support%40workspace%3Apackages%2Fmcap-support"
+  checksum: 281e5eadd897f02a12beb024610656fa634165af15acf4d945a3ac099ecc3c1aee5e84ce033011b5bd5204695a924c6c0f51675a7eabca7f13e0648316c16fa6
   languageName: node
   linkType: hard
 
