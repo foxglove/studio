@@ -22,6 +22,7 @@ describe("migrateLegacyToNew3DPanels", () => {
         layout: "3D Panel!a",
         configById: { "3D Panel!a": {} },
         globalVariables: {},
+        linkedGlobalVariables: [],
         userNodes: {},
         playbackConfig: { speed: 1 },
       }),
@@ -73,6 +74,7 @@ describe("migrateLegacyToNew3DPanels", () => {
         },
         "globalVariables": Object {},
         "layout": "3D!1",
+        "linkedGlobalVariables": Array [],
         "playbackConfig": Object {
           "speed": 1,
         },
@@ -91,6 +93,7 @@ describe("migrateLegacyToNew3DPanels", () => {
         },
         configById: { "3D Panel!a": {}, "XXX!a": { foo: "bar" }, "XXX!b": { foo: "baz" } },
         globalVariables: {},
+        linkedGlobalVariables: [],
         userNodes: {},
         playbackConfig: { speed: 1 },
       }),
@@ -156,6 +159,7 @@ describe("migrateLegacyToNew3DPanels", () => {
           },
           "second": "XXX!b",
         },
+        "linkedGlobalVariables": Array [],
         "playbackConfig": Object {
           "speed": 1,
         },
@@ -196,6 +200,7 @@ describe("migrateLegacyToNew3DPanels", () => {
           "XXX!d": { foo: "quux" },
         },
         globalVariables: {},
+        linkedGlobalVariables: [],
         userNodes: {},
         playbackConfig: { speed: 1 },
       }),
@@ -293,6 +298,7 @@ describe("migrateLegacyToNew3DPanels", () => {
           "first": "Tab!a",
           "second": "XXX!b",
         },
+        "linkedGlobalVariables": Array [],
         "playbackConfig": Object {
           "speed": 1,
         },
