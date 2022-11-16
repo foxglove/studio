@@ -18,7 +18,7 @@ export function migratePanelsState(data: MarkOptional<PanelsState, "configById">
 
   // To be enabled when https://github.com/foxglove/studio/pull/4450 is merged.
   // result = migrateLegacyToNew3DPanels(result);
-  void migrateLegacyToNew3DPanels;
+  void migrateLegacyToNew3DPanels(result);
 
   return result;
 }
