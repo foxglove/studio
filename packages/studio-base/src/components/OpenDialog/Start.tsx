@@ -94,7 +94,7 @@ type DataSourceOptionProps = {
   text: string;
   secondaryText: string;
   icon: JSX.Element;
-  onClick?: () => void;
+  onClick: () => void;
 };
 
 function DataSourceOption(props: DataSourceOptionProps): JSX.Element {
