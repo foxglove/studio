@@ -4,18 +4,22 @@
 
 enum AppEventCategory {
   LIFECYCLE = "LIFECYCLE",
+  DIALOG = "DIALOG",
   PLAYERS = "PLAYERS",
   LAYOUTS = "LAYOUTS",
   PANELS = "PANELS",
+  VARIABLES = "VARIABLES",
   EXTENSIONS = "EXTENSIONS",
 }
 
 enum AppEvent {
   APP_INIT = "APP_INIT",
 
+  // Dialog events
+  DIALOG_SELECT_VIEW = "DIALOG_SELECT_VIEW",
+
   // Player events
   PLAYER_CONSTRUCTED = "PLAYER_CONSTRUCTED",
-  PLAYER_INITIALIZED = "PLAYER_INITIALIZED",
   PLAYER_PLAY = "PLAYER_PLAY",
   PLAYER_SEEK = "PLAYER_SEEK",
   PLAYER_SET_SPEED = "PLAYER_SET_SPEED",
@@ -39,6 +43,10 @@ enum AppEvent {
   // Panel events
   PANEL_ADD = "PANEL_ADD",
   PANEL_DELETE = "PANEL_DELETE",
+
+  // Variable events
+  VARIABLE_ADD = "VARIABLE_ADD",
+  VARIABLE_DELETE = "VARIABLE_DELETE",
 
   // Extension events
   EXTENSION_INSTALL = "EXTENSION_INSTALL",
@@ -64,8 +72,10 @@ export function getEventCategory(event: AppEvent): AppEventCategory {
     case AppEvent.APP_INIT:
       return AppEventCategory.LIFECYCLE;
 
+    case AppEvent.DIALOG_SELECT_VIEW:
+      return AppEventCategory.DIALOG;
+
     case AppEvent.PLAYER_CONSTRUCTED:
-    case AppEvent.PLAYER_INITIALIZED:
     case AppEvent.PLAYER_PLAY:
     case AppEvent.PLAYER_SEEK:
     case AppEvent.PLAYER_SET_SPEED:
@@ -91,6 +101,10 @@ export function getEventCategory(event: AppEvent): AppEventCategory {
     case AppEvent.PANEL_DELETE:
       return AppEventCategory.PANELS;
 
+    case AppEvent.VARIABLE_ADD:
+    case AppEvent.VARIABLE_DELETE:
+      return AppEventCategory.VARIABLES;
+
     case AppEvent.EXTENSION_INSTALL:
     case AppEvent.EXTENSION_UNINSTALL:
       return AppEventCategory.EXTENSIONS;
@@ -102,8 +116,10 @@ export function getEventBreadcrumbType(event: AppEvent): SentryBreadcrumbType {
     case AppEvent.APP_INIT:
       return SentryBreadcrumbType.DEFAULT;
 
+    case AppEvent.DIALOG_SELECT_VIEW:
+      return SentryBreadcrumbType.TRANSACTION;
+
     case AppEvent.PLAYER_CONSTRUCTED:
-    case AppEvent.PLAYER_INITIALIZED:
       return SentryBreadcrumbType.TRANSACTION;
 
     case AppEvent.PLAYER_PLAY:
@@ -129,6 +145,10 @@ export function getEventBreadcrumbType(event: AppEvent): SentryBreadcrumbType {
     case AppEvent.LAYOUT_MAKE_PERSONAL_COPY:
     case AppEvent.PANEL_ADD:
     case AppEvent.PANEL_DELETE:
+      return SentryBreadcrumbType.USER;
+
+    case AppEvent.VARIABLE_ADD:
+    case AppEvent.VARIABLE_DELETE:
       return SentryBreadcrumbType.USER;
 
     case AppEvent.EXTENSION_INSTALL:
