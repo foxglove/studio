@@ -46,7 +46,7 @@ function WebsitePanel(props: { context: PanelExtensionContext }): JSX.Element {
     });
   }, [config, context, actionHandler]);
 
-  return <>{!!config.url && (<iframe width="100%" height="100%" src={config.url}/>)}</>;
+  return <>{!!config.url && <iframe·width="100%"·height="100%"·src={config.url}·/>}</>;
 }
 
 function initPanel(context: PanelExtensionContext) {
