@@ -39,6 +39,20 @@ describe("parseChannel", () => {
     expect(deserialized.objects[0]!.name).toEqual("reflection.Enum");
   });
 
+  it("works with flatbuffers", () => {
+    const reflectionSchema = fs.readFileSync(`${__dirname}/fixtures/reflection.bfbs`);
+    const channel = parseChannel({
+      messageEncoding: "flatbuffers",
+      schema: { name: "reflection.Schema", encoding: "flatbuffers", data: reflectionSchema },
+    });
+    expect(channel.fullSchemaName).toEqual("reflection.Schema");
+    const deserialized = channel.deserializer(reflectionSchema) as {
+      objects: Record<string, unknown>[];
+    };
+    expect(deserialized.objects.length).toEqual(10);
+    expect(deserialized.objects[0]!.name).toEqual("reflection.Enum");
+  });
+
   it("works with protobuf", () => {
     const fds = FileDescriptorSet.encode(FileDescriptorSet.root.toDescriptor("proto3")).finish();
     const channel = parseChannel({
