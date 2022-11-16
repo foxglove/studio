@@ -2378,8 +2378,6 @@ __metadata:
     "@mdi/svg": 6.5.95
     "@mui/icons-material": 5.4.1
     "@mui/material": 5.4.1
-    "@mui/system": 5.4.1
-    "@mui/x-data-grid": 5.15.1
     "@popperjs/core": 2.11.0
     "@protobufjs/base64": 1.1.2
     "@sentry/core": 7.10.0
@@ -3161,7 +3159,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mui/system@npm:5.4.1, @mui/system@npm:^5.4.1":
+"@mui/system@npm:^5.4.1":
   version: 5.4.1
   resolution: "@mui/system@npm:5.4.1"
   dependencies:
@@ -3213,24 +3211,6 @@ __metadata:
   peerDependencies:
     react: ^17.0.0
   checksum: a617bcf365c49dfba9575b651177d408b9981a8cc9c2bdb165160e276accd51a66e7ff47368ca92d017728a0a3c0ab899b16e6d33f57640b88256bc87b44497c
-  languageName: node
-  linkType: hard
-
-"@mui/x-data-grid@npm:5.15.1":
-  version: 5.15.1
-  resolution: "@mui/x-data-grid@npm:5.15.1"
-  dependencies:
-    "@babel/runtime": ^7.18.6
-    "@mui/utils": ^5.4.1
-    clsx: ^1.2.1
-    prop-types: ^15.8.1
-    reselect: ^4.1.6
-  peerDependencies:
-    "@mui/material": ^5.4.1
-    "@mui/system": ^5.4.1
-    react: ^17.0.2 || ^18.0.0
-    react-dom: ^17.0.2 || ^18.0.0
-  checksum: 687b420942593e6a1eb3e1f51f806dd02b540b3f96e6e06586b5743a64ec36be2c7ce9c21a5ab05e1ca3e3edbe6e29835322624e295964ee706feace25723247
   languageName: node
   linkType: hard
 
@@ -8938,7 +8918,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"clsx@npm:^1.0.4, clsx@npm:^1.1.0, clsx@npm:^1.1.1, clsx@npm:^1.2.1":
+"clsx@npm:^1.0.4, clsx@npm:^1.1.0, clsx@npm:^1.1.1":
   version: 1.2.1
   resolution: "clsx@npm:1.2.1"
   checksum: 30befca8019b2eb7dbad38cff6266cf543091dae2825c856a62a8ccf2c3ab9c2907c4d12b288b73101196767f66812365400a227581484a05f968b0307cfaf12
@@ -20672,13 +20652,6 @@ __metadata:
   version: 4.1.5
   resolution: "reselect@npm:4.1.5"
   checksum: 54c13c1e795b2ea70cba8384138aebe78adda00cbea303cc94b64da0a70d74c896cc9a03115ae38b8bff990e7a60dcd6452ab68cbec01b0b38c1afda70714cf0
-  languageName: node
-  linkType: hard
-
-"reselect@npm:^4.1.6":
-  version: 4.1.6
-  resolution: "reselect@npm:4.1.6"
-  checksum: 3ea1058422904063ec93c8f4693fe33dcb2178bbf417ace8db5b2c797a5875cf357d9308d11ed3942ee22507dd34ecfbf1f3a21340a4f31c206cab1d36ceef31
   languageName: node
   linkType: hard
 
