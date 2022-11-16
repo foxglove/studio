@@ -4,19 +4,6 @@
 
 import * as THREE from "three";
 
-export type CameraState = {
-  distance: number;
-  perspective: boolean;
-  phi: number;
-  target: readonly [number, number, number];
-  targetOffset: readonly [number, number, number];
-  targetOrientation: readonly [number, number, number, number];
-  thetaOffset: number;
-  fovy: number;
-  near: number;
-  far: number;
-};
-
 export type EventTypes = {
   cameraMove: (center: THREE.Vector3) => void;
 };
