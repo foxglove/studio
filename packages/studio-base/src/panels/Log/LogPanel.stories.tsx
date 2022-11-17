@@ -16,7 +16,7 @@ import userEvent from "@testing-library/user-event";
 import { range } from "lodash";
 import TestUtils from "react-dom/test-utils";
 
-import Log from "@foxglove/studio-base/panels/Log";
+import Log from "@foxglove/studio-base/panels/Log/LogPanel";
 import PanelSetup, { Fixture } from "@foxglove/studio-base/stories/PanelSetup";
 
 const fixture: Fixture = {
