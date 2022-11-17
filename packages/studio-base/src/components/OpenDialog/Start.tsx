@@ -151,7 +151,7 @@ export default function Start(props: IStartProps): JSX.Element {
       },
       {
         key: "open-url",
-        text: "Open remote data...",
+        text: "Open remote data",
         secondaryText: "Load your team's data from Foxglove Data Platform.",
         icon: (
           <SvgIcon fontSize="large" color="primary" viewBox="0 0 2048 2048">
