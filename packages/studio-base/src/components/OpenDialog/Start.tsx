@@ -161,7 +161,7 @@ export default function Start(props: IStartProps): JSX.Element {
         iconProps: { iconName: "FileASPX" },
         href: "https://console.foxglove.dev/recordings",
         onClick: () => {
-          void analytics.logEvent(AppEvent.DIALOG_SELECT_VIEW, { type: "remote" });
+          void analytics.logEvent(AppEvent.DIALOG_SELECT_VIEW, { type: "data-platform" });
         },
       },
       {
