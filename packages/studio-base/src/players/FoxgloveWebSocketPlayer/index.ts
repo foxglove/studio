@@ -36,6 +36,14 @@ const ZERO_TIME = Object.freeze({ sec: 0, nsec: 0 });
 
 type ResolvedChannel = { channel: Channel; parsedChannel: ParsedChannel };
 
+function areChannelsEqual(channelA: Readonly<Channel>, channelB: Readonly<Channel>) {
+  return (
+    channelA.id === channelB.id &&
+    channelA.topic === channelB.topic &&
+    channelA.schemaName === channelB.schemaName
+  );
+}
+
 export default class FoxgloveWebSocketPlayer implements Player {
   private _url: string; // WebSocket URL.
   private _name: string;
@@ -190,7 +198,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
           continue;
         }
         const existingChannel = this._channelsByTopic.get(channel.topic);
-        if (existingChannel) {
+        if (existingChannel && !areChannelsEqual(channel, existingChannel.channel)) {
           this._problems.addProblem(`duplicate-topic:${channel.topic}`, {
             severity: "error",
             message: `Multiple channels advertise the same topic: ${channel.topic} (${existingChannel.channel.id} and ${channel.id})`,
