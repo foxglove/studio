@@ -159,16 +159,7 @@ export default function Start(props: IStartProps): JSX.Element {
           </SvgIcon>
         ),
         iconProps: { iconName: "FileASPX" },
-<<<<<<< HEAD
-        onClick: () => {
-          onSelectView("remote");
-          void analytics.logEvent(AppEvent.DIALOG_SELECT_VIEW, { type: "remote" });
-        },
-||||||| parent of 4530a4add (Remove "Open file by URL" from Welcome dialog; Replace with callout to load data from Data Platform)
-        onClick: () => onSelectView("remote"),
-=======
         href: "https://console.foxglove.dev/recordings",
->>>>>>> 4530a4add (Remove "Open file by URL" from Welcome dialog; Replace with callout to load data from Data Platform)
       },
       {
         key: "open-connection",
@@ -200,13 +191,7 @@ export default function Start(props: IStartProps): JSX.Element {
         },
       },
     ];
-<<<<<<< HEAD
-  }, [analytics, onSelectView, supportedLocalFileExtensions, supportedRemoteFileExtensions]);
-||||||| parent of 4530a4add (Remove "Open file by URL" from Welcome dialog; Replace with callout to load data from Data Platform)
-  }, [onSelectView, supportedLocalFileExtensions, supportedRemoteFileExtensions]);
-=======
   }, [onSelectView, supportedLocalFileExtensions]);
->>>>>>> 4530a4add (Remove "Open file by URL" from Welcome dialog; Replace with callout to load data from Data Platform)
 
   const recentItems: ActionListItem[] = useMemo(() => {
     return recentSources.map((recent) => {
