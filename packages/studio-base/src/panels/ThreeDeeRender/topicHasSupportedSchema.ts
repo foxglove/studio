@@ -1,8 +1,16 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/
+
 import { Topic } from "@foxglove/studio";
 
-export function topicHasSupportedSchema(topic: Topic, schemaNames: Set<string>) {
+/**
+ * Determines whether `topic` has a supported schema from the set of `supportedSchemaNames`, either
+ * as the original schema or one of the `additionalSchemaNames`.
+ */
+export function topicHasSupportedSchema(topic: Topic, supportedSchemaNames: Set<string>): boolean {
   return (
-    schemaNames.has(topic.schemaName) ||
-    (topic.additionalSchemaNames?.some((name) => schemaNames.has(name)) ?? false)
+    supportedSchemaNames.has(topic.schemaName) ||
+    (topic.additionalSchemaNames?.some((name) => supportedSchemaNames.has(name)) ?? false)
   );
 }
