@@ -138,6 +138,12 @@ declare module "@foxglove/studio" {
 
   export interface RenderState {
     /**
+     * Any custom events that were published by other panel instances. Events published by this
+     * panel instance are not included.
+     */
+    customEvents?: readonly { event: string; payload: unknown | undefined }[];
+
+    /**
      * The latest messages for the current render frame. These are new messages since the last render frame.
      */
     currentFrame?: readonly MessageEvent<unknown>[];
@@ -328,6 +334,17 @@ declare module "@foxglove/studio" {
      * the representation of the panel settings in the editor.
      */
     updatePanelSettingsEditor(settings: Readonly<SettingsTree>): void;
+
+    /**
+     * Broadcast a custom event to other extensions. Panel extension can listen for custom events by
+     * using `context.watch("customEvents")`.
+     *
+     * @param event The name of the event to broadcast. Must be prefixed with your extension name
+     * followed by a ".". For example, an extension named `my-extension` must use event names of the
+     * form `my-extension.custom-event`.
+     * @param payload Any custom data to be included with the event.
+     */
+    dispatchCustomEvent(event: string, payload?: unknown): void;
   };
 
   export type ExtensionPanelRegistration = {
