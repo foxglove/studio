@@ -7,7 +7,7 @@ import ReactDOM from "react-dom";
 import { createStore, StoreApi } from "zustand";
 
 import Logger from "@foxglove/log";
-import { ExtensionContext, ExtensionModule } from "@foxglove/studio";
+import { ExtensionContext, ExtensionModule, RegisterMessageConverterArgs } from "@foxglove/studio";
 import {
   ExtensionCatalog,
   ExtensionCatalogContext,
@@ -19,13 +19,20 @@ import { ExtensionInfo, ExtensionNamespace } from "@foxglove/studio-base/types/E
 
 const log = Logger.getLogger(__filename);
 
-async function registerExtensionPanels(
+type ActivateResult = {
+  panels: Record<string, RegisteredPanel>;
+  messageConverters: RegisterMessageConverterArgs[];
+};
+
+async function activateExtensions(
   extensions: ExtensionInfo[],
   loadExtension: ExtensionLoader["loadExtension"],
-): Promise<Record<string, RegisteredPanel>> {
+): Promise<ActivateResult> {
   // registered panels stored by their fully qualified id
   // the fully qualified id is the extension name + panel name
   const panels: Record<string, RegisteredPanel> = {};
+
+  const messageConverters: RegisterMessageConverterArgs[] = [];
 
   for (const extension of extensions) {
     log.debug(`Activating extension ${extension.qualifiedName}`);
@@ -60,6 +67,13 @@ async function registerExtensionPanels(
           registration: params,
         };
       },
+
+      registerMessageConverter(args: RegisterMessageConverterArgs) {
+        log.debug(
+          `Extension ${extension.qualifiedName} registering message converter from: ${args.fromSchemaName} to: ${args.toSchemaName}`,
+        );
+        messageConverters.push(args);
+      },
     };
 
     try {
@@ -78,7 +92,10 @@ async function registerExtensionPanels(
     }
   }
 
-  return panels;
+  return {
+    panels,
+    messageConverters,
+  };
 }
 
 export function createExtensionRegistryStore(
@@ -119,16 +136,22 @@ export function createExtensionRegistryStore(
         .flat()
         .sort();
       log.debug(`Found ${extensionList.length} extension(s)`);
-      const panels = await registerExtensionPanels(
+      const activateResult = await activateExtensions(
         extensionList,
         async (id: string) => await get().loadExtension(id),
       );
-      set({ installedExtensions: extensionList, installedPanels: panels });
+      set({
+        installedExtensions: extensionList,
+        installedPanels: activateResult.panels,
+        installedMessageConverters: activateResult.messageConverters,
+      });
     },
 
     installedExtensions: undefined,
 
     installedPanels: undefined,
+
+    installedMessageConverters: undefined,
 
     uninstallExtension: async (namespace: ExtensionNamespace, id: string) => {
       const namespacedLoader = loaders.find((loader) => loader.namespace === namespace);
