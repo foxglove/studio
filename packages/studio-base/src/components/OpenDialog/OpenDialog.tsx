@@ -60,7 +60,7 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
   const onModalClose = useCallback(() => {
     if (onDismiss) {
       onDismiss();
-      void analytics.logEvent(AppEvent.DIALOG_CLOSE, { view: activeView });
+      void analytics.logEvent(AppEvent.DIALOG_CLOSE, { activeView });
     }
   }, [analytics, activeView, onDismiss]);
 
