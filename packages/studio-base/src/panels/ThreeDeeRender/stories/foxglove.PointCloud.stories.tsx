@@ -181,7 +181,7 @@ function Foxglove_PointCloud({
   );
 }
 
-export function Foxglove_PointCloud_Intensity({
+function Foxglove_PointCloud_Intensity_Base({
   minValue,
   maxValue,
 }: {
@@ -359,10 +359,15 @@ export function Foxglove_PointCloud_Intensity({
   );
 }
 
-export const Foxglove_PointCloud_Intensity_Clamped = Foxglove_PointCloud_Intensity.bind(undefined, {
-  minValue: 80,
-  maxValue: 130,
-});
+export const Foxglove_PointCloud_Intensity = Foxglove_PointCloud_Intensity_Base.bind(undefined, {});
+
+export const Foxglove_PointCloud_Intensity_Clamped = Foxglove_PointCloud_Intensity_Base.bind(
+  undefined,
+  {
+    minValue: 80,
+    maxValue: 130,
+  },
+);
 
 // Render a flat plane if we only have two dimensions
 export function Foxglove_PointCloud_TwoDimensions(): JSX.Element {
