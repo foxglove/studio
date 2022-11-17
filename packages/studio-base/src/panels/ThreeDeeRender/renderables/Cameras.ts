@@ -83,8 +83,8 @@ export class Cameras extends SceneExtension<CameraInfoRenderable> {
   public constructor(renderer: Renderer) {
     super("foxglove.Cameras", renderer);
 
-    renderer.addDatatypeSubscriptions(ROS_CAMERA_INFO_DATATYPES, this.handleCameraInfo);
-    renderer.addDatatypeSubscriptions(CAMERA_CALIBRATION_DATATYPES, this.handleCameraInfo);
+    renderer.addSchemaSubscriptions(ROS_CAMERA_INFO_DATATYPES, this.handleCameraInfo);
+    renderer.addSchemaSubscriptions(CAMERA_CALIBRATION_DATATYPES, this.handleCameraInfo);
   }
 
   public override settingsNodes(): SettingsTreeEntry[] {

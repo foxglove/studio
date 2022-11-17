@@ -52,7 +52,7 @@ export class FoxgloveSceneEntities extends SceneExtension<TopicEntities> {
   public constructor(renderer: Renderer) {
     super("foxglove.SceneEntities", renderer);
 
-    renderer.addDatatypeSubscriptions(SCENE_UPDATE_DATATYPES, this.handleSceneUpdate);
+    renderer.addSchemaSubscriptions(SCENE_UPDATE_DATATYPES, this.handleSceneUpdate);
   }
 
   public override settingsNodes(): SettingsTreeEntry[] {

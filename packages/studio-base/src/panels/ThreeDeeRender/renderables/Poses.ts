@@ -103,9 +103,9 @@ export class Poses extends SceneExtension<PoseRenderable> {
   public constructor(renderer: Renderer) {
     super("foxglove.Poses", renderer);
 
-    renderer.addDatatypeSubscriptions(POSE_STAMPED_DATATYPES, this.handlePoseStamped);
-    renderer.addDatatypeSubscriptions(POSE_IN_FRAME_DATATYPES, this.handlePoseInFrame);
-    renderer.addDatatypeSubscriptions(
+    renderer.addSchemaSubscriptions(POSE_STAMPED_DATATYPES, this.handlePoseStamped);
+    renderer.addSchemaSubscriptions(POSE_IN_FRAME_DATATYPES, this.handlePoseInFrame);
+    renderer.addSchemaSubscriptions(
       POSE_WITH_COVARIANCE_STAMPED_DATATYPES,
       this.handlePoseWithCovariance,
     );

@@ -79,7 +79,7 @@ export class OccupancyGrids extends SceneExtension<OccupancyGridRenderable> {
   public constructor(renderer: Renderer) {
     super("foxglove.OccupancyGrids", renderer);
 
-    renderer.addDatatypeSubscriptions(OCCUPANCY_GRID_DATATYPES, this.handleOccupancyGrid);
+    renderer.addSchemaSubscriptions(OCCUPANCY_GRID_DATATYPES, this.handleOccupancyGrid);
   }
 
   public override settingsNodes(): SettingsTreeEntry[] {

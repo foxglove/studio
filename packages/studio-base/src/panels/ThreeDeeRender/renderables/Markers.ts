@@ -39,8 +39,8 @@ export class Markers extends SceneExtension<TopicMarkers> {
   public constructor(renderer: Renderer) {
     super("foxglove.Markers", renderer);
 
-    renderer.addDatatypeSubscriptions(MARKER_ARRAY_DATATYPES, this.handleMarkerArray);
-    renderer.addDatatypeSubscriptions(MARKER_DATATYPES, this.handleMarker);
+    renderer.addSchemaSubscriptions(MARKER_ARRAY_DATATYPES, this.handleMarkerArray);
+    renderer.addSchemaSubscriptions(MARKER_DATATYPES, this.handleMarker);
   }
 
   public override settingsNodes(): SettingsTreeEntry[] {

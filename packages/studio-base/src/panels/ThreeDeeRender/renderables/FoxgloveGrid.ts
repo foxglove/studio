@@ -389,7 +389,7 @@ export class FoxgloveGrid extends SceneExtension<FoxgloveGridRenderable> {
   public constructor(renderer: Renderer) {
     super("foxglove.Grid", renderer);
 
-    renderer.addDatatypeSubscriptions(GRID_DATATYPES, this.handleFoxgloveGrid);
+    renderer.addSchemaSubscriptions(GRID_DATATYPES, this.handleFoxgloveGrid);
   }
 
   public override settingsNodes(): SettingsTreeEntry[] {

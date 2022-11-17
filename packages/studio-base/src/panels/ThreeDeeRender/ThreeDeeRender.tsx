@@ -414,10 +414,10 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
   const renderRef = useRef({ needsRender: false });
   const [renderDone, setRenderDone] = useState<(() => void) | undefined>();
 
-  const datatypeHandlers = useRendererProperty(
+  const schemaHandlers = useRendererProperty(
     renderer,
-    "datatypeHandlers",
-    "datatypeHandlersChanged",
+    "schemaHandlers",
+    "schemaHandlersChanged",
     () => new Map(),
   );
   const topicHandlers = useRendererProperty(
@@ -594,7 +594,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
       for (const rendererSubscription of topicHandlers.get(topic.name) ?? []) {
         updateSubscriptions(topic.name, rendererSubscription);
       }
-      for (const rendererSubscription of datatypeHandlers.get(topic.schemaName) ?? []) {
+      for (const rendererSubscription of schemaHandlers.get(topic.schemaName) ?? []) {
         updateSubscriptions(topic.name, rendererSubscription);
       }
     }
@@ -605,7 +605,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
       // Sort the list to make comparisons stable
       .sort((a, b) => a.topic.localeCompare(b.topic));
     setTopicsToSubscribe((prev) => (areSubscriptionsEqual(prev, newTopics) ? prev : newTopics));
-  }, [topics, config.topics, datatypeHandlers, topicHandlers]);
+  }, [topics, config.topics, schemaHandlers, topicHandlers]);
 
   // Notify the extension context when our subscription list changes
   useEffect(() => {

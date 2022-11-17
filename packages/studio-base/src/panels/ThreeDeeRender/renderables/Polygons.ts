@@ -63,7 +63,7 @@ export class Polygons extends SceneExtension<PolygonRenderable> {
   public constructor(renderer: Renderer) {
     super("foxglove.Polygons", renderer);
 
-    renderer.addDatatypeSubscriptions(POLYGON_STAMPED_DATATYPES, this.handlePolygon);
+    renderer.addSchemaSubscriptions(POLYGON_STAMPED_DATATYPES, this.handlePolygon);
   }
 
   public override settingsNodes(): SettingsTreeEntry[] {

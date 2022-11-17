@@ -817,10 +817,10 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
   public constructor(renderer: Renderer) {
     super("foxglove.PointCloudsAndLaserScans", renderer);
 
-    renderer.addDatatypeSubscriptions(ROS_POINTCLOUD_DATATYPES, this.handleRosPointCloud);
-    renderer.addDatatypeSubscriptions(FOXGLOVE_POINTCLOUD_DATATYPES, this.handleFoxglovePointCloud);
-    renderer.addDatatypeSubscriptions(ROS_LASERSCAN_DATATYPES, this.handleLaserScan);
-    renderer.addDatatypeSubscriptions(FOXGLOVE_LASERSCAN_DATATYPES, this.handleLaserScan);
+    renderer.addSchemaSubscriptions(ROS_POINTCLOUD_DATATYPES, this.handleRosPointCloud);
+    renderer.addSchemaSubscriptions(FOXGLOVE_POINTCLOUD_DATATYPES, this.handleFoxglovePointCloud);
+    renderer.addSchemaSubscriptions(ROS_LASERSCAN_DATATYPES, this.handleLaserScan);
+    renderer.addSchemaSubscriptions(FOXGLOVE_LASERSCAN_DATATYPES, this.handleLaserScan);
   }
 
   public override settingsNodes(): SettingsTreeEntry[] {

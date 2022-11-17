@@ -142,9 +142,9 @@ export class PoseArrays extends SceneExtension<PoseArrayRenderable> {
   public constructor(renderer: Renderer) {
     super("foxglove.PoseArrays", renderer);
 
-    renderer.addDatatypeSubscriptions(POSE_ARRAY_DATATYPES, this.handlePoseArray);
-    renderer.addDatatypeSubscriptions(POSES_IN_FRAME_DATATYPES, this.handlePosesInFrame);
-    renderer.addDatatypeSubscriptions(NAV_PATH_DATATYPES, this.handleNavPath);
+    renderer.addSchemaSubscriptions(POSE_ARRAY_DATATYPES, this.handlePoseArray);
+    renderer.addSchemaSubscriptions(POSES_IN_FRAME_DATATYPES, this.handlePosesInFrame);
+    renderer.addSchemaSubscriptions(NAV_PATH_DATATYPES, this.handleNavPath);
   }
 
   public override settingsNodes(): SettingsTreeEntry[] {

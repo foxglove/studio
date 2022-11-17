@@ -110,22 +110,19 @@ export class Images extends SceneExtension<ImageRenderable> {
   public constructor(renderer: Renderer) {
     super("foxglove.Images", renderer);
 
-    renderer.addDatatypeSubscriptions(ROS_IMAGE_DATATYPES, this.handleRosRawImage);
-    renderer.addDatatypeSubscriptions(
-      ROS_COMPRESSED_IMAGE_DATATYPES,
-      this.handleRosCompressedImage,
-    );
+    renderer.addSchemaSubscriptions(ROS_IMAGE_DATATYPES, this.handleRosRawImage);
+    renderer.addSchemaSubscriptions(ROS_COMPRESSED_IMAGE_DATATYPES, this.handleRosCompressedImage);
     // Unconditionally subscribe to CameraInfo messages so the `foxglove.Cameras` extension will
     // always receive them and parse into camera models. This extension reuses the parsed camera
     // models from `foxglove.Cameras`
-    renderer.addDatatypeSubscriptions(CAMERA_INFO_DATATYPES, {
+    renderer.addSchemaSubscriptions(CAMERA_INFO_DATATYPES, {
       handler: this.handleRosCameraInfo,
       forced: true,
     });
 
-    renderer.addDatatypeSubscriptions(RAW_IMAGE_DATATYPES, this.handleRawImage);
-    renderer.addDatatypeSubscriptions(COMPRESSED_IMAGE_DATATYPES, this.handleCompressedImage);
-    renderer.addDatatypeSubscriptions(CAMERA_CALIBRATION_DATATYPES, {
+    renderer.addSchemaSubscriptions(RAW_IMAGE_DATATYPES, this.handleRawImage);
+    renderer.addSchemaSubscriptions(COMPRESSED_IMAGE_DATATYPES, this.handleCompressedImage);
+    renderer.addSchemaSubscriptions(CAMERA_CALIBRATION_DATATYPES, {
       handler: this.handleCameraCalibration,
       forced: true,
     });
