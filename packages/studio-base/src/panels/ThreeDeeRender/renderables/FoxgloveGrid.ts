@@ -17,6 +17,7 @@ import { SettingsTreeEntry, SettingsTreeNodeWithActionHandler } from "../Setting
 import { rgbaToCssString, rgbaToLinear, stringToRgba } from "../color";
 import { normalizePose, normalizeTime, normalizeByteArray } from "../normalizeMessages";
 import { BaseSettings } from "../settings";
+import { topicHasSupportedSchema } from "../topicHasSupportedSchema";
 import {
   baseColorModeSettingsNode,
   ColorModeSettings,
@@ -397,28 +398,29 @@ export class FoxgloveGrid extends SceneExtension<FoxgloveGridRenderable> {
     const handler = this.handleSettingsAction;
     const entries: SettingsTreeEntry[] = [];
     for (const topic of this.renderer.topics ?? []) {
-      if (GRID_DATATYPES.has(topic.schemaName)) {
-        const config = (configTopics[topic.name] ?? {}) as Partial<LayerSettingsFoxgloveGrid>;
-
-        const node = baseColorModeSettingsNode(
-          this.fieldsByTopic.get(topic.name) ?? [],
-          config,
-          topic,
-          DEFAULT_SETTINGS,
-          { supportsPackedRgbModes: false, supportsRgbaFieldsMode: true },
-        );
-        node.icon = "Cells";
-        node.fields.frameLocked = {
-          label: "Frame lock",
-          input: "boolean",
-          value: config.frameLocked ?? DEFAULT_SETTINGS.frameLocked,
-        };
-        (node as SettingsTreeNodeWithActionHandler).handler = handler;
-        entries.push({
-          path: ["topics", topic.name],
-          node,
-        });
+      if (!topicHasSupportedSchema(topic, GRID_DATATYPES)) {
+        continue;
       }
+      const config = (configTopics[topic.name] ?? {}) as Partial<LayerSettingsFoxgloveGrid>;
+
+      const node = baseColorModeSettingsNode(
+        this.fieldsByTopic.get(topic.name) ?? [],
+        config,
+        topic,
+        DEFAULT_SETTINGS,
+        { supportsPackedRgbModes: false, supportsRgbaFieldsMode: true },
+      );
+      node.icon = "Cells";
+      node.fields.frameLocked = {
+        label: "Frame lock",
+        input: "boolean",
+        value: config.frameLocked ?? DEFAULT_SETTINGS.frameLocked,
+      };
+      (node as SettingsTreeNodeWithActionHandler).handler = handler;
+      entries.push({
+        path: ["topics", topic.name],
+        node,
+      });
     }
     return entries;
   }

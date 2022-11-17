@@ -30,6 +30,7 @@ import {
   TIME_ZERO,
 } from "../ros";
 import { BaseSettings, fieldLineWidth, fieldSize } from "../settings";
+import { topicHasSupportedSchema } from "../topicHasSupportedSchema";
 import { makePose } from "../transforms";
 import { RenderableLineList } from "./markers/RenderableLineList";
 
@@ -93,29 +94,32 @@ export class Cameras extends SceneExtension<CameraInfoRenderable> {
     const entries: SettingsTreeEntry[] = [];
     for (const topic of this.renderer.topics ?? []) {
       if (
-        ROS_CAMERA_INFO_DATATYPES.has(topic.schemaName) ||
-        CAMERA_CALIBRATION_DATATYPES.has(topic.schemaName)
+        !(
+          topicHasSupportedSchema(topic, ROS_CAMERA_INFO_DATATYPES) ||
+          topicHasSupportedSchema(topic, CAMERA_CALIBRATION_DATATYPES)
+        )
       ) {
-        const config = (configTopics[topic.name] ?? {}) as Partial<LayerSettingsCameraInfo>;
-
-        // prettier-ignore
-        const fields: SettingsTreeFields = {
-          distance: fieldSize("Distance", config.distance, DEFAULT_DISTANCE),
-          width: fieldLineWidth("Line Width", config.width, DEFAULT_WIDTH),
-          color: { label: "Color", input: "rgba", value: config.color ?? DEFAULT_COLOR_STR },
-        };
-
-        entries.push({
-          path: ["topics", topic.name],
-          node: {
-            icon: "Camera",
-            fields,
-            visible: config.visible ?? DEFAULT_SETTINGS.visible,
-            handler,
-            order: topic.name.toLocaleLowerCase(),
-          },
-        });
+        continue;
       }
+      const config = (configTopics[topic.name] ?? {}) as Partial<LayerSettingsCameraInfo>;
+
+      // prettier-ignore
+      const fields: SettingsTreeFields = {
+        distance: fieldSize("Distance", config.distance, DEFAULT_DISTANCE),
+        width: fieldLineWidth("Line Width", config.width, DEFAULT_WIDTH),
+        color: { label: "Color", input: "rgba", value: config.color ?? DEFAULT_COLOR_STR },
+      };
+
+      entries.push({
+        path: ["topics", topic.name],
+        node: {
+          icon: "Camera",
+          fields,
+          visible: config.visible ?? DEFAULT_SETTINGS.visible,
+          handler,
+          order: topic.name.toLocaleLowerCase(),
+        },
+      });
     }
     return entries;
   }

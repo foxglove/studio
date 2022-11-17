@@ -33,6 +33,7 @@ import {
   normalizeByteArray,
 } from "../normalizeMessages";
 import { BaseSettings } from "../settings";
+import { topicHasSupportedSchema } from "../topicHasSupportedSchema";
 import { makePose } from "../transforms";
 import { TopicEntities } from "./TopicEntities";
 import { PrimitivePool } from "./primitives/PrimitivePool";
@@ -59,22 +60,23 @@ export class FoxgloveSceneEntities extends SceneExtension<TopicEntities> {
     const configTopics = this.renderer.config.topics;
     const entries: SettingsTreeEntry[] = [];
     for (const topic of this.renderer.topics ?? []) {
-      if (SCENE_UPDATE_DATATYPES.has(topic.schemaName)) {
-        const config = (configTopics[topic.name] ?? {}) as Partial<LayerSettingsEntity>;
-
-        const node: SettingsTreeNodeWithActionHandler = {
-          label: topic.name,
-          icon: "Shapes",
-          order: topic.name.toLocaleLowerCase(),
-          fields: {
-            color: { label: "Color", input: "rgba", value: config.color },
-          },
-          visible: config.visible ?? DEFAULT_SETTINGS.visible,
-          handler: this.handleSettingsAction,
-        };
-
-        entries.push({ path: ["topics", topic.name], node });
+      if (!topicHasSupportedSchema(topic, SCENE_UPDATE_DATATYPES)) {
+        continue;
       }
+      const config = (configTopics[topic.name] ?? {}) as Partial<LayerSettingsEntity>;
+
+      const node: SettingsTreeNodeWithActionHandler = {
+        label: topic.name,
+        icon: "Shapes",
+        order: topic.name.toLocaleLowerCase(),
+        fields: {
+          color: { label: "Color", input: "rgba", value: config.color },
+        },
+        visible: config.visible ?? DEFAULT_SETTINGS.visible,
+        handler: this.handleSettingsAction,
+      };
+
+      entries.push({ path: ["topics", topic.name], node });
     }
     return entries;
   }

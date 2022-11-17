@@ -576,13 +576,18 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
       return;
     }
 
-    const updateSubscriptions = (topic: string, rendererSubscription: RendererSubscription) => {
+    const updateSubscriptions = (
+      topic: string,
+      rendererSubscription: RendererSubscription,
+      convertTo?: string,
+    ) => {
       let topicSubscription = subscriptions.get(topic);
       if (!topicSubscription) {
         topicSubscription = {
           topic,
           forced: rendererSubscription.forced ?? false,
           preload: rendererSubscription.preload ?? false,
+          convertTo,
         };
         subscriptions.set(topic, topicSubscription);
       }
@@ -596,6 +601,11 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
       }
       for (const rendererSubscription of schemaHandlers.get(topic.schemaName) ?? []) {
         updateSubscriptions(topic.name, rendererSubscription);
+      }
+      for (const schemaName of topic.additionalSchemaNames ?? []) {
+        for (const rendererSubscription of schemaHandlers.get(schemaName) ?? []) {
+          updateSubscriptions(topic.name, rendererSubscription, schemaName);
+        }
       }
     }
 

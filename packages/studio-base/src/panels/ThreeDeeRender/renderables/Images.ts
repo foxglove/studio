@@ -46,6 +46,7 @@ import {
   CAMERA_INFO_DATATYPES,
 } from "../ros";
 import { BaseSettings, PRECISION_DISTANCE, SelectEntry } from "../settings";
+import { topicHasSupportedSchema } from "../topicHasSupportedSchema";
 import { makePose } from "../transforms";
 import { CameraInfoUserData } from "./Cameras";
 
@@ -134,43 +135,46 @@ export class Images extends SceneExtension<ImageRenderable> {
     const entries: SettingsTreeEntry[] = [];
     for (const topic of this.renderer.topics ?? []) {
       if (
-        ROS_IMAGE_DATATYPES.has(topic.schemaName) ||
-        ROS_COMPRESSED_IMAGE_DATATYPES.has(topic.schemaName) ||
-        RAW_IMAGE_DATATYPES.has(topic.schemaName) ||
-        COMPRESSED_IMAGE_DATATYPES.has(topic.schemaName)
+        !(
+          topicHasSupportedSchema(topic, ROS_IMAGE_DATATYPES) ||
+          topicHasSupportedSchema(topic, ROS_COMPRESSED_IMAGE_DATATYPES) ||
+          topicHasSupportedSchema(topic, RAW_IMAGE_DATATYPES) ||
+          topicHasSupportedSchema(topic, COMPRESSED_IMAGE_DATATYPES)
+        )
       ) {
-        const config = (configTopics[topic.name] ?? {}) as Partial<LayerSettingsImage>;
-
-        // Build a list of all matching CameraInfo topics
-        const bestCameraInfoOptions: SelectEntry[] = [];
-        const otherCameraInfoOptions: SelectEntry[] = [];
-        for (const cameraInfoTopic of this.cameraInfoTopics) {
-          if (cameraInfoTopicMatches(topic.name, cameraInfoTopic)) {
-            bestCameraInfoOptions.push({ label: cameraInfoTopic, value: cameraInfoTopic });
-          } else {
-            otherCameraInfoOptions.push({ label: cameraInfoTopic, value: cameraInfoTopic });
-          }
-        }
-        const cameraInfoOptions = [...bestCameraInfoOptions, ...otherCameraInfoOptions];
-
-        // prettier-ignore
-        const fields: SettingsTreeFields = {
-          cameraInfoTopic: { label: "Camera Info", input: "select", options: cameraInfoOptions, value: config.cameraInfoTopic },
-          distance: { label: "Distance", input: "number", placeholder: String(DEFAULT_DISTANCE), step: 0.1, precision: PRECISION_DISTANCE, value: config.distance },
-          color: { label: "Color", input: "rgba", value: config.color },
-        };
-
-        entries.push({
-          path: ["topics", topic.name],
-          node: {
-            icon: "ImageProjection",
-            fields,
-            visible: config.visible ?? DEFAULT_SETTINGS.visible,
-            order: topic.name.toLocaleLowerCase(),
-            handler,
-          },
-        });
+        continue;
       }
+      const config = (configTopics[topic.name] ?? {}) as Partial<LayerSettingsImage>;
+
+      // Build a list of all matching CameraInfo topics
+      const bestCameraInfoOptions: SelectEntry[] = [];
+      const otherCameraInfoOptions: SelectEntry[] = [];
+      for (const cameraInfoTopic of this.cameraInfoTopics) {
+        if (cameraInfoTopicMatches(topic.name, cameraInfoTopic)) {
+          bestCameraInfoOptions.push({ label: cameraInfoTopic, value: cameraInfoTopic });
+        } else {
+          otherCameraInfoOptions.push({ label: cameraInfoTopic, value: cameraInfoTopic });
+        }
+      }
+      const cameraInfoOptions = [...bestCameraInfoOptions, ...otherCameraInfoOptions];
+
+      // prettier-ignore
+      const fields: SettingsTreeFields = {
+        cameraInfoTopic: { label: "Camera Info", input: "select", options: cameraInfoOptions, value: config.cameraInfoTopic },
+        distance: { label: "Distance", input: "number", placeholder: String(DEFAULT_DISTANCE), step: 0.1, precision: PRECISION_DISTANCE, value: config.distance },
+        color: { label: "Color", input: "rgba", value: config.color },
+      };
+
+      entries.push({
+        path: ["topics", topic.name],
+        node: {
+          icon: "ImageProjection",
+          fields,
+          visible: config.visible ?? DEFAULT_SETTINGS.visible,
+          order: topic.name.toLocaleLowerCase(),
+          handler,
+        },
+      });
     }
     return entries;
   }

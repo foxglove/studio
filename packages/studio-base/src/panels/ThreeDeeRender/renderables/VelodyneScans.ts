@@ -22,6 +22,7 @@ import { Renderer } from "../Renderer";
 import { SceneExtension } from "../SceneExtension";
 import { SettingsTreeEntry, SettingsTreeNodeWithActionHandler } from "../SettingsManager";
 import { VELODYNE_SCAN_DATATYPES } from "../ros";
+import { topicHasSupportedSchema } from "../topicHasSupportedSchema";
 import { makePose } from "../transforms";
 import {
   autoSelectColorField,
@@ -132,18 +133,19 @@ export class VelodyneScans extends SceneExtension<PointCloudAndLaserScanRenderab
     const handler = this.handleSettingsAction;
     const entries: SettingsTreeEntry[] = [];
     for (const topic of this.renderer.topics ?? []) {
-      if (VELODYNE_SCAN_DATATYPES.has(topic.schemaName)) {
-        const config = (configTopics[topic.name] ??
-          {}) as Partial<LayerSettingsPointCloudAndLaserScan>;
-        const node: SettingsTreeNodeWithActionHandler = pointCloudSettingsNode(
-          this._pointCloudFieldsByTopic,
-          config,
-          topic,
-          "velodynescan",
-        );
-        node.handler = handler;
-        entries.push({ path: ["topics", topic.name], node });
+      if (!topicHasSupportedSchema(topic, VELODYNE_SCAN_DATATYPES)) {
+        continue;
       }
+      const config = (configTopics[topic.name] ??
+        {}) as Partial<LayerSettingsPointCloudAndLaserScan>;
+      const node: SettingsTreeNodeWithActionHandler = pointCloudSettingsNode(
+        this._pointCloudFieldsByTopic,
+        config,
+        topic,
+        "velodynescan",
+      );
+      node.handler = handler;
+      entries.push({ path: ["topics", topic.name], node });
     }
     return entries;
   }

@@ -43,6 +43,7 @@ import {
   PointFieldType,
 } from "../ros";
 import { BaseSettings } from "../settings";
+import { topicHasSupportedSchema } from "../topicHasSupportedSchema";
 import { makePose, MAX_DURATION, Pose } from "../transforms";
 import { updatePose } from "../updatePose";
 import {
@@ -828,20 +829,21 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     const handler = this.handleSettingsAction;
     const entries: SettingsTreeEntry[] = [];
     for (const topic of this.renderer.topics ?? []) {
-      const isPointCloud = ALL_POINTCLOUD_DATATYPES.has(topic.schemaName);
-      const isLaserScan = !isPointCloud && ALL_LASERSCAN_DATATYPES.has(topic.schemaName);
-      if (isPointCloud || isLaserScan) {
-        const config = (configTopics[topic.name] ??
-          {}) as Partial<LayerSettingsPointCloudAndLaserScan>;
-        const node: SettingsTreeNodeWithActionHandler = pointCloudSettingsNode(
-          this.pointCloudFieldsByTopic,
-          config,
-          topic,
-          isPointCloud ? "pointcloud" : "laserscan",
-        );
-        node.handler = handler;
-        entries.push({ path: ["topics", topic.name], node });
+      const isPointCloud = topicHasSupportedSchema(topic, ALL_POINTCLOUD_DATATYPES);
+      const isLaserScan = !isPointCloud && topicHasSupportedSchema(topic, ALL_LASERSCAN_DATATYPES);
+      if (!(isPointCloud || isLaserScan)) {
+        continue;
       }
+      const config = (configTopics[topic.name] ??
+        {}) as Partial<LayerSettingsPointCloudAndLaserScan>;
+      const node: SettingsTreeNodeWithActionHandler = pointCloudSettingsNode(
+        this.pointCloudFieldsByTopic,
+        config,
+        topic,
+        isPointCloud ? "pointcloud" : "laserscan",
+      );
+      node.handler = handler;
+      entries.push({ path: ["topics", topic.name], node });
     }
     return entries;
   }
