@@ -68,11 +68,11 @@ async function activateExtensions(
         };
       },
 
-      registerMessageConverter(args: RegisterMessageConverterArgs) {
+      registerMessageConverter<Src, Dest>(args: RegisterMessageConverterArgs<Src, Dest>) {
         log.debug(
           `Extension ${extension.qualifiedName} registering message converter from: ${args.fromSchemaName} to: ${args.toSchemaName}`,
         );
-        messageConverters.push(args);
+        messageConverters.push(args as RegisterMessageConverterArgs<unknown, unknown>);
       },
     };
 
