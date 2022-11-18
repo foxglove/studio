@@ -130,6 +130,10 @@ export function createExtensionRegistryStore(
     },
 
     refreshExtensions: async () => {
+      if (loaders.length === 0) {
+        return;
+      }
+
       const extensionList = (
         await Promise.all(loaders.map(async (loader) => await loader.getExtensions()))
       )
