@@ -86,12 +86,20 @@ function initRenderStateBuilder(): BuildRenderStateFn {
     if (subscriptions !== prevSubscriptions) {
       prevBlocks = undefined;
 
+      // Bin the subscriptions into two sets: those which want a conversion and those that do not.
+      //
+      // For the subscriptions that want a conversion, if the topic schemaName matches the requested
+      // convertTo, then we don't need to do a conversion.
       for (const subscription of subscriptions) {
-        // fixme - what if the convertTo is the same as the topic datatype?
-        // handle that here? elsewhere?
-        // maybe in the subscription logic?
         if (subscription.convertTo) {
-          topicConversions.set(subscription.topic, subscription.convertTo);
+          const noConversion = sortedTopics.find(
+            (topic) => topic.schemaName === subscription.convertTo,
+          );
+          if (noConversion) {
+            topicNoConversions.add(subscription.topic);
+          } else {
+            topicConversions.set(subscription.topic, subscription.convertTo);
+          }
         } else {
           topicNoConversions.add(subscription.topic);
         }

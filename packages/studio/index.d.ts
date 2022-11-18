@@ -364,10 +364,10 @@ declare module "@foxglove/studio" {
     initPanel: (context: PanelExtensionContext) => void;
   };
 
-  export type RegisterMessageConverterArgs = {
+  export type RegisterMessageConverterArgs<Src = unknown, Dest = unknown> = {
     fromSchemaName: string;
     toSchemaName: string;
-    converter: <Src = unknown, Dest = unknown>(msg: Src) => Dest;
+    converter: (msg: Src) => Dest;
   };
 
   export interface ExtensionContext {
@@ -376,7 +376,9 @@ declare module "@foxglove/studio" {
 
     registerPanel(params: ExtensionPanelRegistration): void;
 
-    registerMessageConverter(args: RegisterMessageConverterArgs): void;
+    registerMessageConverter<Src = unknown, Dest = unknown>(
+      args: RegisterMessageConverterArgs<Src, Dest>,
+    ): void;
   }
 
   export interface ExtensionActivate {
