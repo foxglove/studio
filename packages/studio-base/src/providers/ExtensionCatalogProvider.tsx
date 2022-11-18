@@ -151,7 +151,7 @@ export function createExtensionRegistryStore(
       });
     },
 
-    installedExtensions: [],
+    installedExtensions: undefined,
 
     installedPanels: {},
 
