@@ -3,23 +3,24 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import * as base64 from "@protobufjs/base64";
+import { isEqual } from "lodash";
 import { v4 as uuidv4 } from "uuid";
 
 import { debouncePromise } from "@foxglove/den/async";
 import Log from "@foxglove/log";
 import { parseChannel, ParsedChannel } from "@foxglove/mcap-support";
-import { Time, fromNanoSec, isLessThan, isGreaterThan } from "@foxglove/rostime";
+import { fromNanoSec, isGreaterThan, isLessThan, Time } from "@foxglove/rostime";
 import PlayerProblemManager from "@foxglove/studio-base/players/PlayerProblemManager";
 import {
+  AdvertiseOptions,
   MessageEvent,
   Player,
   PlayerCapabilities,
+  PlayerMetricsCollectorInterface,
+  PlayerPresence,
   PlayerState,
   SubscribePayload,
   Topic,
-  PlayerPresence,
-  PlayerMetricsCollectorInterface,
-  AdvertiseOptions,
   TopicStats,
 } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
@@ -190,7 +191,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
           continue;
         }
         const existingChannel = this._channelsByTopic.get(channel.topic);
-        if (existingChannel) {
+        if (existingChannel && !isEqual(channel, existingChannel.channel)) {
           this._problems.addProblem(`duplicate-topic:${channel.topic}`, {
             severity: "error",
             message: `Multiple channels advertise the same topic: ${channel.topic} (${existingChannel.channel.id} and ${channel.id})`,
@@ -399,10 +400,14 @@ export default class FoxgloveWebSocketPlayer implements Player {
   }
 
   public setSubscriptions(subscriptions: SubscribePayload[]): void {
+    const newTopics = new Set(subscriptions.map(({ topic }) => topic));
+
     if (!this._client || this._closed) {
+      // Remember requested subscriptions so we can retry subscribing when
+      // the client is available.
+      this._unresolvedSubscriptions = newTopics;
       return;
     }
-    const newTopics = new Set(subscriptions.map(({ topic }) => topic));
 
     for (const topic of newTopics) {
       if (!this._resolvedSubscriptionsByTopic.has(topic)) {
