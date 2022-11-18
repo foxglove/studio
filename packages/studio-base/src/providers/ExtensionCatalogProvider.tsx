@@ -19,7 +19,7 @@ import { ExtensionInfo, ExtensionNamespace } from "@foxglove/studio-base/types/E
 
 const log = Logger.getLogger(__filename);
 
-type ActivateResult = {
+type ContributionPoints = {
   panels: Record<string, RegisteredPanel>;
   messageConverters: RegisterMessageConverterArgs[];
 };
@@ -27,7 +27,7 @@ type ActivateResult = {
 async function activateExtensions(
   extensions: ExtensionInfo[],
   loadExtension: ExtensionLoader["loadExtension"],
-): Promise<ActivateResult> {
+): Promise<ContributionPoints> {
   // registered panels stored by their fully qualified id
   // the fully qualified id is the extension name + panel name
   const panels: Record<string, RegisteredPanel> = {};
@@ -140,18 +140,19 @@ export function createExtensionRegistryStore(
         .flat()
         .sort();
       log.debug(`Found ${extensionList.length} extension(s)`);
-      const activateResult = await activateExtensions(
+      const contributionPoints = await activateExtensions(
         extensionList,
         async (id: string) => await get().loadExtension(id),
       );
       set({
         installedExtensions: extensionList,
-        installedPanels: activateResult.panels,
-        installedMessageConverters: activateResult.messageConverters,
+        installedPanels: contributionPoints.panels,
+        installedMessageConverters: contributionPoints.messageConverters,
       });
     },
 
-    installedExtensions: undefined,
+    // If there are no loaders then we know there will not be any installed extensions
+    installedExtensions: loaders.length === 0 ? [] : undefined,
 
     installedPanels: {},
 
