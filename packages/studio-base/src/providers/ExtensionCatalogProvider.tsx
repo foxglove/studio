@@ -151,11 +151,11 @@ export function createExtensionRegistryStore(
       });
     },
 
-    installedExtensions: undefined,
+    installedExtensions: [],
 
-    installedPanels: undefined,
+    installedPanels: {},
 
-    installedMessageConverters: undefined,
+    installedMessageConverters: [],
 
     uninstallExtension: async (namespace: ExtensionNamespace, id: string) => {
       const namespacedLoader = loaders.find((loader) => loader.namespace === namespace);
