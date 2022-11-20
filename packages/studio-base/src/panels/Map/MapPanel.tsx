@@ -153,18 +153,24 @@ function MapPanel(props: MapPanelProps): JSX.Element {
 
   const [currentMap, setCurrentMap] = useState<LeafMap | undefined>(undefined);
 
-  const onResize = useCallback(() => {
-    currentMap?.invalidateSize();
-  }, [currentMap]);
-
   // Use a debounce and 0 refresh rate to avoid triggering a resize observation while handling
   // an existing resize observation.
   // https://github.com/maslianok/react-resize-detector/issues/45
-  const { ref: sizeRef } = useResizeDetector({
+  const {
+    width: mapWidth,
+    height: mapHeight,
+    ref: sizeRef,
+  } = useResizeDetector({
     refreshRate: 0,
     refreshMode: "debounce",
-    onResize,
   });
+
+  useEffect(() => {
+    // We depend on changes in the resized dimensions to tell the Leaflet map to
+    // recalculate its size.
+    void { mapWidth, mapHeight };
+    currentMap?.invalidateSize();
+  }, [mapWidth, mapHeight, currentMap]);
 
   // panel extensions must notify when they've completed rendering
   // onRender will setRenderDone to a done callback which we can invoke after we've rendered
