@@ -167,7 +167,9 @@ function MapPanel(props: MapPanelProps): JSX.Element {
 
   useEffect(() => {
     // We depend on changes in the resized panel dimensions to tell the Leaflet map to
-    // recalculate its size.
+    // recalculate its size. We do this inside a separate useEffect instead of directly
+    // in the map's change callbacks to avoid a react error from calling setState
+    // during a render.
     void { panelWidth, panelHeight };
     currentMap?.invalidateSize();
   }, [panelWidth, panelHeight, currentMap]);
