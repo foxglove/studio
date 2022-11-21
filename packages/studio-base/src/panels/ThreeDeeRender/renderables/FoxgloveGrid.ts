@@ -795,7 +795,7 @@ function createMaterial(texture: THREE.DataTexture, topic: string): GridShaderMa
           // input color was already converted to linear by getColorConverter
           float delta = max(maxValue - minValue, 0.00001);
           float colorValue = color.r;
-          float normalizedColorValue = (colorValue - minValue) / delta;
+          float normalizedColorValue = clamp((colorValue - minValue) / delta, 0.0, 1.0);
           if(colorMode == COLOR_MODE_GRADIENT) {
             /**
             * Computes a gradient step from colors a to b using pre-multiplied alpha to
@@ -816,10 +816,10 @@ function createMaterial(texture: THREE.DataTexture, topic: string): GridShaderMa
             }
           }
         }
+        if(gl_FragColor.a < 0.00001) {
+          discard;
+        }
         if(PICKING == 1) {
-          if(gl_FragColor.a < 0.00001) {
-            discard;
-          }
           gl_FragColor = objectId;
         } else {
           #include <encodings_fragment>
