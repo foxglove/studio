@@ -17,7 +17,7 @@ import { SettingsTreeEntry, SettingsTreeNodeWithActionHandler } from "../Setting
 import { rgbaToCssString, rgbaToLinear, stringToRgba } from "../color";
 import { normalizePose, normalizeTime, normalizeByteArray } from "../normalizeMessages";
 import { BaseSettings } from "../settings";
-import { topicHasSupportedSchema } from "../topicHasSupportedSchema";
+import { topicIsConvertibleToSchema } from "../topicIsConvertibleToSchema";
 import {
   baseColorModeSettingsNode,
   ColorModeSettings,
@@ -398,7 +398,7 @@ export class FoxgloveGrid extends SceneExtension<FoxgloveGridRenderable> {
     const handler = this.handleSettingsAction;
     const entries: SettingsTreeEntry[] = [];
     for (const topic of this.renderer.topics ?? []) {
-      if (!topicHasSupportedSchema(topic, GRID_DATATYPES)) {
+      if (!topicIsConvertibleToSchema(topic, GRID_DATATYPES)) {
         continue;
       }
       const config = (configTopics[topic.name] ?? {}) as Partial<LayerSettingsFoxgloveGrid>;

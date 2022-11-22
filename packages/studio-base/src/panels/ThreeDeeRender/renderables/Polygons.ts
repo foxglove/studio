@@ -22,7 +22,7 @@ import {
   TIME_ZERO,
 } from "../ros";
 import { BaseSettings } from "../settings";
-import { topicHasSupportedSchema } from "../topicHasSupportedSchema";
+import { topicIsConvertibleToSchema } from "../topicIsConvertibleToSchema";
 import { makePose } from "../transforms";
 import { RenderableLineStrip } from "./markers/RenderableLineStrip";
 
@@ -72,7 +72,7 @@ export class Polygons extends SceneExtension<PolygonRenderable> {
     const handler = this.handleSettingsAction;
     const entries: SettingsTreeEntry[] = [];
     for (const topic of this.renderer.topics ?? []) {
-      if (!topicHasSupportedSchema(topic, POLYGON_STAMPED_DATATYPES)) {
+      if (!topicIsConvertibleToSchema(topic, POLYGON_STAMPED_DATATYPES)) {
         continue;
       }
       const config = (configTopics[topic.name] ?? {}) as Partial<LayerSettingsPolygon>;

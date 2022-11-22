@@ -43,7 +43,7 @@ import {
   PointFieldType,
 } from "../ros";
 import { BaseSettings } from "../settings";
-import { topicHasSupportedSchema } from "../topicHasSupportedSchema";
+import { topicIsConvertibleToSchema } from "../topicIsConvertibleToSchema";
 import { makePose, MAX_DURATION, Pose } from "../transforms";
 import { updatePose } from "../updatePose";
 import {
@@ -829,8 +829,9 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     const handler = this.handleSettingsAction;
     const entries: SettingsTreeEntry[] = [];
     for (const topic of this.renderer.topics ?? []) {
-      const isPointCloud = topicHasSupportedSchema(topic, ALL_POINTCLOUD_DATATYPES);
-      const isLaserScan = !isPointCloud && topicHasSupportedSchema(topic, ALL_LASERSCAN_DATATYPES);
+      const isPointCloud = topicIsConvertibleToSchema(topic, ALL_POINTCLOUD_DATATYPES);
+      const isLaserScan =
+        !isPointCloud && topicIsConvertibleToSchema(topic, ALL_LASERSCAN_DATATYPES);
       if (!(isPointCloud || isLaserScan)) {
         continue;
       }

@@ -21,7 +21,7 @@ import {
 } from "../normalizeMessages";
 import { Marker, MarkerArray, MARKER_ARRAY_DATATYPES, MARKER_DATATYPES } from "../ros";
 import { BaseSettings } from "../settings";
-import { topicHasSupportedSchema } from "../topicHasSupportedSchema";
+import { topicIsConvertibleToSchema } from "../topicIsConvertibleToSchema";
 import { makePose } from "../transforms";
 import { LayerSettingsMarkerNamespace, TopicMarkers } from "./TopicMarkers";
 
@@ -50,8 +50,8 @@ export class Markers extends SceneExtension<TopicMarkers> {
     for (const topic of this.renderer.topics ?? []) {
       if (
         !(
-          topicHasSupportedSchema(topic, MARKER_ARRAY_DATATYPES) ||
-          topicHasSupportedSchema(topic, MARKER_DATATYPES)
+          topicIsConvertibleToSchema(topic, MARKER_ARRAY_DATATYPES) ||
+          topicIsConvertibleToSchema(topic, MARKER_DATATYPES)
         )
       ) {
         continue;

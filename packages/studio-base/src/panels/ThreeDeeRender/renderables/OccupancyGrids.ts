@@ -21,7 +21,7 @@ import {
 } from "../normalizeMessages";
 import { ColorRGBA, OccupancyGrid, OCCUPANCY_GRID_DATATYPES } from "../ros";
 import { BaseSettings } from "../settings";
-import { topicHasSupportedSchema } from "../topicHasSupportedSchema";
+import { topicIsConvertibleToSchema } from "../topicIsConvertibleToSchema";
 
 export type LayerSettingsOccupancyGrid = BaseSettings & {
   frameLocked: boolean;
@@ -88,7 +88,7 @@ export class OccupancyGrids extends SceneExtension<OccupancyGridRenderable> {
     const handler = this.handleSettingsAction;
     const entries: SettingsTreeEntry[] = [];
     for (const topic of this.renderer.topics ?? []) {
-      if (!topicHasSupportedSchema(topic, OCCUPANCY_GRID_DATATYPES)) {
+      if (!topicIsConvertibleToSchema(topic, OCCUPANCY_GRID_DATATYPES)) {
         continue;
       }
       const config = (configTopics[topic.name] ?? {}) as Partial<LayerSettingsOccupancyGrid>;

@@ -591,7 +591,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
       for (const rendererSubscription of schemaHandlers.get(topic.schemaName) ?? []) {
         addSubscription(topic.name, rendererSubscription);
       }
-      for (const schemaName of topic.additionalSchemaNames ?? []) {
+      for (const schemaName of topic.convertibleTo ?? []) {
         for (const rendererSubscription of schemaHandlers.get(schemaName) ?? []) {
           addSubscription(topic.name, rendererSubscription, schemaName);
         }

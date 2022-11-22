@@ -35,7 +35,7 @@ import {
   fieldSize,
   PRECISION_DISTANCE,
 } from "../settings";
-import { topicHasSupportedSchema } from "../topicHasSupportedSchema";
+import { topicIsConvertibleToSchema } from "../topicIsConvertibleToSchema";
 import { makePose, Pose } from "../transforms";
 import { Axis, AXIS_LENGTH } from "./Axis";
 import { createArrowMarker } from "./Poses";
@@ -155,9 +155,9 @@ export class PoseArrays extends SceneExtension<PoseArrayRenderable> {
     for (const topic of this.renderer.topics ?? []) {
       if (
         !(
-          topicHasSupportedSchema(topic, POSE_ARRAY_DATATYPES) ||
-          topicHasSupportedSchema(topic, NAV_PATH_DATATYPES) ||
-          topicHasSupportedSchema(topic, POSES_IN_FRAME_DATATYPES)
+          topicIsConvertibleToSchema(topic, POSE_ARRAY_DATATYPES) ||
+          topicIsConvertibleToSchema(topic, NAV_PATH_DATATYPES) ||
+          topicIsConvertibleToSchema(topic, POSES_IN_FRAME_DATATYPES)
         )
       ) {
         continue;
@@ -192,7 +192,7 @@ export class PoseArrays extends SceneExtension<PoseArrayRenderable> {
         path: ["topics", topic.name],
         node: {
           label: topic.name,
-          icon: topicHasSupportedSchema(topic, NAV_PATH_DATATYPES) ? "Timeline" : "Flag",
+          icon: topicIsConvertibleToSchema(topic, NAV_PATH_DATATYPES) ? "Timeline" : "Flag",
           fields,
           visible: config.visible ?? DEFAULT_SETTINGS.visible,
           handler,

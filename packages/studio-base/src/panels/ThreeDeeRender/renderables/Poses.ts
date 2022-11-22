@@ -35,7 +35,7 @@ import {
   ColorRGBA,
 } from "../ros";
 import { BaseSettings, PRECISION_DISTANCE } from "../settings";
-import { topicHasSupportedSchema } from "../topicHasSupportedSchema";
+import { topicIsConvertibleToSchema } from "../topicIsConvertibleToSchema";
 import { makePose } from "../transforms";
 import { Axis, AXIS_LENGTH } from "./Axis";
 import { RenderableArrow } from "./markers/RenderableArrow";
@@ -117,11 +117,11 @@ export class Poses extends SceneExtension<PoseRenderable> {
     const handler = this.handleSettingsAction;
     const entries: SettingsTreeEntry[] = [];
     for (const topic of this.renderer.topics ?? []) {
-      const isPoseStamped = topicHasSupportedSchema(topic, POSE_STAMPED_DATATYPES);
-      const isPoseInFrame = topicHasSupportedSchema(topic, POSE_IN_FRAME_DATATYPES);
+      const isPoseStamped = topicIsConvertibleToSchema(topic, POSE_STAMPED_DATATYPES);
+      const isPoseInFrame = topicIsConvertibleToSchema(topic, POSE_IN_FRAME_DATATYPES);
       const isPoseWithCovarianceStamped = isPoseStamped
         ? false
-        : topicHasSupportedSchema(topic, POSE_WITH_COVARIANCE_STAMPED_DATATYPES);
+        : topicIsConvertibleToSchema(topic, POSE_WITH_COVARIANCE_STAMPED_DATATYPES);
       if (!(isPoseStamped || isPoseWithCovarianceStamped || isPoseInFrame)) {
         continue;
       }

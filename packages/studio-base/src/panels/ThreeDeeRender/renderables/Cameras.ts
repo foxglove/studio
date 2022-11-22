@@ -30,7 +30,7 @@ import {
   TIME_ZERO,
 } from "../ros";
 import { BaseSettings, fieldLineWidth, fieldSize } from "../settings";
-import { topicHasSupportedSchema } from "../topicHasSupportedSchema";
+import { topicIsConvertibleToSchema } from "../topicIsConvertibleToSchema";
 import { makePose } from "../transforms";
 import { RenderableLineList } from "./markers/RenderableLineList";
 
@@ -95,8 +95,8 @@ export class Cameras extends SceneExtension<CameraInfoRenderable> {
     for (const topic of this.renderer.topics ?? []) {
       if (
         !(
-          topicHasSupportedSchema(topic, ROS_CAMERA_INFO_DATATYPES) ||
-          topicHasSupportedSchema(topic, CAMERA_CALIBRATION_DATATYPES)
+          topicIsConvertibleToSchema(topic, ROS_CAMERA_INFO_DATATYPES) ||
+          topicIsConvertibleToSchema(topic, CAMERA_CALIBRATION_DATATYPES)
         )
       ) {
         continue;

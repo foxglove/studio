@@ -46,7 +46,7 @@ import {
   CAMERA_INFO_DATATYPES,
 } from "../ros";
 import { BaseSettings, PRECISION_DISTANCE, SelectEntry } from "../settings";
-import { topicHasSupportedSchema } from "../topicHasSupportedSchema";
+import { topicIsConvertibleToSchema } from "../topicIsConvertibleToSchema";
 import { makePose } from "../transforms";
 import { CameraInfoUserData } from "./Cameras";
 
@@ -136,10 +136,10 @@ export class Images extends SceneExtension<ImageRenderable> {
     for (const topic of this.renderer.topics ?? []) {
       if (
         !(
-          topicHasSupportedSchema(topic, ROS_IMAGE_DATATYPES) ||
-          topicHasSupportedSchema(topic, ROS_COMPRESSED_IMAGE_DATATYPES) ||
-          topicHasSupportedSchema(topic, RAW_IMAGE_DATATYPES) ||
-          topicHasSupportedSchema(topic, COMPRESSED_IMAGE_DATATYPES)
+          topicIsConvertibleToSchema(topic, ROS_IMAGE_DATATYPES) ||
+          topicIsConvertibleToSchema(topic, ROS_COMPRESSED_IMAGE_DATATYPES) ||
+          topicIsConvertibleToSchema(topic, RAW_IMAGE_DATATYPES) ||
+          topicIsConvertibleToSchema(topic, COMPRESSED_IMAGE_DATATYPES)
         )
       ) {
         continue;

@@ -22,7 +22,7 @@ import { Renderer } from "../Renderer";
 import { SceneExtension } from "../SceneExtension";
 import { SettingsTreeEntry, SettingsTreeNodeWithActionHandler } from "../SettingsManager";
 import { VELODYNE_SCAN_DATATYPES } from "../ros";
-import { topicHasSupportedSchema } from "../topicHasSupportedSchema";
+import { topicIsConvertibleToSchema } from "../topicIsConvertibleToSchema";
 import { makePose } from "../transforms";
 import {
   autoSelectColorField,
@@ -133,7 +133,7 @@ export class VelodyneScans extends SceneExtension<PointCloudAndLaserScanRenderab
     const handler = this.handleSettingsAction;
     const entries: SettingsTreeEntry[] = [];
     for (const topic of this.renderer.topics ?? []) {
-      if (!topicHasSupportedSchema(topic, VELODYNE_SCAN_DATATYPES)) {
+      if (!topicIsConvertibleToSchema(topic, VELODYNE_SCAN_DATATYPES)) {
         continue;
       }
       const config = (configTopics[topic.name] ??

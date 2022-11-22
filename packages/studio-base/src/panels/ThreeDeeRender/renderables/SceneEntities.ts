@@ -33,7 +33,7 @@ import {
   normalizeByteArray,
 } from "../normalizeMessages";
 import { BaseSettings } from "../settings";
-import { topicHasSupportedSchema } from "../topicHasSupportedSchema";
+import { topicIsConvertibleToSchema } from "../topicIsConvertibleToSchema";
 import { makePose } from "../transforms";
 import { TopicEntities } from "./TopicEntities";
 import { PrimitivePool } from "./primitives/PrimitivePool";
@@ -60,7 +60,7 @@ export class FoxgloveSceneEntities extends SceneExtension<TopicEntities> {
     const configTopics = this.renderer.config.topics;
     const entries: SettingsTreeEntry[] = [];
     for (const topic of this.renderer.topics ?? []) {
-      if (!topicHasSupportedSchema(topic, SCENE_UPDATE_DATATYPES)) {
+      if (!topicIsConvertibleToSchema(topic, SCENE_UPDATE_DATATYPES)) {
         continue;
       }
       const config = (configTopics[topic.name] ?? {}) as Partial<LayerSettingsEntity>;
