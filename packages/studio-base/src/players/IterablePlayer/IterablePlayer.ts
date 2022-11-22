@@ -181,7 +181,6 @@ export class IterablePlayer implements Player {
     this._urlParams = urlParams;
     this._metricsCollector = metricsCollector ?? new NoopMetricsCollector();
 
-    console.log("esther constructed");
     this._metricsCollector.playerConstructed();
     this._enablePreload = enablePreload ?? true;
     this._sourceId = sourceId;
@@ -442,8 +441,6 @@ export class IterablePlayer implements Player {
         datatypes,
         name,
       } = result;
-
-      console.log(result, "iterable esther initializing");
 
       this._profile = profile;
       this._start = this._currentTime = start;
