@@ -1970,16 +1970,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@fluentui/dom-utilities@npm:^2.1.5":
-  version: 2.1.5
-  resolution: "@fluentui/dom-utilities@npm:2.1.5"
-  dependencies:
-    "@fluentui/set-version": ^8.1.5
-    tslib: ^2.1.0
-  checksum: 77b852a9f5c862db59d69fd504ada9836ccb9448c399b96856880217d5715e99f071ed72940e297175cb59e582ce1150936254c276d7f666e37d3876cfc53152
-  languageName: node
-  linkType: hard
-
 "@fluentui/dom-utilities@npm:^2.2.3":
   version: 2.2.3
   resolution: "@fluentui/dom-utilities@npm:2.2.3"
@@ -2027,17 +2017,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@fluentui/merge-styles@npm:^8.3.0":
-  version: 8.3.0
-  resolution: "@fluentui/merge-styles@npm:8.3.0"
-  dependencies:
-    "@fluentui/set-version": ^8.1.5
-    tslib: ^2.1.0
-  checksum: 8d810e5f9cedad3d4c8f98f92a2b29fcf9045ca5a4c681ea5f66aedc8d61cbeaba431942238725f661ce3b8de8b3db9c6151c8765752c52d394bd96f335f1380
-  languageName: node
-  linkType: hard
-
-"@fluentui/merge-styles@npm:^8.5.4":
+"@fluentui/merge-styles@npm:^8.3.0, @fluentui/merge-styles@npm:^8.5.4":
   version: 8.5.4
   resolution: "@fluentui/merge-styles@npm:8.5.4"
   dependencies:
@@ -2169,16 +2149,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@fluentui/set-version@npm:^8.1.5":
-  version: 8.1.5
-  resolution: "@fluentui/set-version@npm:8.1.5"
-  dependencies:
-    tslib: ^2.1.0
-  checksum: ada6f0891bb423ab25aacc8420e52377d4f31d2aa913b109389d931b5779f11632a6019b209808d9c202df1e6fb2d21d5a8022a0c39025102d13540cf9a47a09
-  languageName: node
-  linkType: hard
-
-"@fluentui/set-version@npm:^8.2.3":
+"@fluentui/set-version@npm:^8.1.5, @fluentui/set-version@npm:^8.2.3":
   version: 8.2.3
   resolution: "@fluentui/set-version@npm:8.2.3"
   dependencies:
@@ -2187,7 +2158,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@fluentui/style-utilities@npm:8.5.4, @fluentui/style-utilities@npm:^8.5.4":
+"@fluentui/style-utilities@npm:8.5.4":
   version: 8.5.4
   resolution: "@fluentui/style-utilities@npm:8.5.4"
   dependencies:
@@ -2201,7 +2172,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@fluentui/style-utilities@npm:^8.8.3":
+"@fluentui/style-utilities@npm:^8.5.4, @fluentui/style-utilities@npm:^8.8.3":
   version: 8.8.3
   resolution: "@fluentui/style-utilities@npm:8.8.3"
   dependencies:
@@ -2215,22 +2186,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@fluentui/theme@npm:^2.4.8":
-  version: 2.4.8
-  resolution: "@fluentui/theme@npm:2.4.8"
-  dependencies:
-    "@fluentui/merge-styles": ^8.3.0
-    "@fluentui/set-version": ^8.1.5
-    "@fluentui/utilities": ^8.4.0
-    tslib: ^2.1.0
-  peerDependencies:
-    "@types/react": ">=16.8.0 <18.0.0"
-    react: ">=16.8.0 <18.0.0"
-  checksum: 46ae96517ab4b2be7914cfa1bf3af4bc9daa8d38a0f338ea2752a48ad31f335bf2a0f58d75a218e7e621785e3f683726aa5762094c12a3df5cb869f6bb347fc0
-  languageName: node
-  linkType: hard
-
-"@fluentui/theme@npm:^2.6.19":
+"@fluentui/theme@npm:^2.4.8, @fluentui/theme@npm:^2.6.19":
   version: 2.6.19
   resolution: "@fluentui/theme@npm:2.6.19"
   dependencies:
@@ -2245,7 +2201,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@fluentui/utilities@npm:^8.13.4":
+"@fluentui/utilities@npm:^8.13.4, @fluentui/utilities@npm:^8.4.0":
   version: 8.13.4
   resolution: "@fluentui/utilities@npm:8.13.4"
   dependencies:
@@ -2257,21 +2213,6 @@ __metadata:
     "@types/react": ">=16.8.0 <19.0.0"
     react: ">=16.8.0 <19.0.0"
   checksum: 840f86ba67dd72d6a98c37950d19793eb5ee9d8bc660dbf1616a9be13ec7d0c54415555dc6f781500bc421f1287e1ef1fa4ec87a4bcc8d6d335fd76af8598193
-  languageName: node
-  linkType: hard
-
-"@fluentui/utilities@npm:^8.4.0":
-  version: 8.4.0
-  resolution: "@fluentui/utilities@npm:8.4.0"
-  dependencies:
-    "@fluentui/dom-utilities": ^2.1.5
-    "@fluentui/merge-styles": ^8.3.0
-    "@fluentui/set-version": ^8.1.5
-    tslib: ^2.1.0
-  peerDependencies:
-    "@types/react": ">=16.8.0 <18.0.0"
-    react: ">=16.8.0 <18.0.0"
-  checksum: d922ac1f983f2ae1383da95231ae546572e477c2b60a30bfcc9ba40a248a9631a9377c89a82933f619d315ef389ed3fb0d07778fbfb60aedd532ce4d7342ef89
   languageName: node
   linkType: hard
 
