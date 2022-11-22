@@ -20,7 +20,7 @@ const log = Logger.getLogger(__filename);
 
 type ContributionPoints = {
   panels: Record<string, RegisteredPanel>;
-  messageConverters: RegisterMessageConverterArgs[];
+  messageConverters: RegisterMessageConverterArgs<unknown>[];
 };
 
 async function activateExtensions(
@@ -31,7 +31,7 @@ async function activateExtensions(
   // the fully qualified id is the extension name + panel name
   const panels: Record<string, RegisteredPanel> = {};
 
-  const messageConverters: RegisterMessageConverterArgs[] = [];
+  const messageConverters: RegisterMessageConverterArgs<unknown>[] = [];
 
   for (const extension of extensions) {
     log.debug(`Activating extension ${extension.qualifiedName}`);
@@ -67,11 +67,11 @@ async function activateExtensions(
         };
       },
 
-      registerMessageConverter<Src, Dest>(args: RegisterMessageConverterArgs<Src, Dest>) {
+      registerMessageConverter<Src>(args: RegisterMessageConverterArgs<Src>) {
         log.debug(
           `Extension ${extension.qualifiedName} registering message converter from: ${args.fromSchemaName} to: ${args.toSchemaName}`,
         );
-        messageConverters.push(args as RegisterMessageConverterArgs<unknown, unknown>);
+        messageConverters.push(args as RegisterMessageConverterArgs<unknown>);
       },
     };
 

@@ -31,7 +31,7 @@ type BuilderRenderStateInput = {
   hoverValue: HoverValue | undefined;
   sortedTopics: readonly PlayerTopic[];
   subscriptions: Subscription[];
-  messageConverters?: RegisterMessageConverterArgs[];
+  messageConverters?: RegisterMessageConverterArgs<unknown>[];
 };
 
 type BuildRenderStateFn = (input: BuilderRenderStateInput) => Readonly<RenderState> | undefined;
@@ -61,7 +61,7 @@ function initRenderStateBuilder(): BuildRenderStateFn {
   const topicConversions: Map<string, string> = new Map();
 
   // from + to -> converter mapping. Allows for quick lookup of a converter by its from and to schema names
-  const convertersByKey: Map<string, RegisterMessageConverterArgs> = new Map();
+  const convertersByKey: Map<string, RegisterMessageConverterArgs<unknown>> = new Map();
 
   const prevRenderState: RenderState = {};
 
