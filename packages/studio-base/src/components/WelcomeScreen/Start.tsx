@@ -186,48 +186,73 @@ export default function Start(props: IStartProps): JSX.Element {
             )}
           </Stack>
         </Stack>
-        <Stack gap={2}>
-          <Typography variant="h5" color="text.secondary">
-            Get started with Studio
-          </Typography>
+        <Stack gap={2} justifyContent="space-between">
+          <Stack gap={1}>
+            <Typography variant="h5" color="text.secondary">
+              Get started with Studio
+            </Typography>
 
-          <Typography variant="h6" color="text.secondary">
-            First time?
-          </Typography>
+            <Typography variant="h6" color="text.secondary">
+              First time?
+            </Typography>
 
-          <Typography variant="body1" color="text.secondary">
-            If you're new to Foxglove Studio, start exploring with an example layout and a sample
-            self-driving dataset.
-          </Typography>
+            <Typography variant="body1" color="text.secondary">
+              If you're new to Foxglove Studio, start exploring with an example layout and a sample
+              self-driving dataset.
+            </Typography>
 
-          <Stack direction="row">
-            <StyledButton
-              color="inherit"
-              variant="outlined"
-              size="small"
-              style={{ padding: "4px 8px", marginRight: "10px" }}
-              onClick={() => {
-                onSelectView("demo");
-                void analytics.logEvent(AppEvent.DIALOG_SELECT_VIEW, { type: "demo" });
-              }}
-            >
-              <Typography component="div" variant="subtitle1" color="text.primary">
-                Tour with sample data
-              </Typography>
-            </StyledButton>
+            <Stack direction="row" paddingBottom={5}>
+              <StyledButton
+                color="inherit"
+                variant="outlined"
+                size="small"
+                style={{ padding: "4px 8px", marginRight: "10px" }}
+                onClick={() => {
+                  onSelectView("demo");
+                  void analytics.logEvent(AppEvent.DIALOG_SELECT_VIEW, { type: "demo" });
+                }}
+              >
+                <Typography component="div" variant="subtitle1" color="text.primary">
+                  Tour with sample data
+                </Typography>
+              </StyledButton>
+              <StyledButton
+                color="inherit"
+                variant="outlined"
+                size="small"
+                style={{ padding: "4px 8px" }}
+              >
+                <Typography component="div" variant="subtitle1" color="text.primary">
+                  View docs
+                </Typography>
+              </StyledButton>
+            </Stack>
+          </Stack>
+          <Stack gap={1}>
+            <Typography variant="h6" color="text.secondary">
+              Try our data solution
+            </Typography>
+
+            <Typography variant="body1" color="text.secondary">
+              Index, organize, and tag your robotics data with your teammates using Foxglove Data
+              Platform.
+            </Typography>
+
             <StyledButton
               color="inherit"
               variant="outlined"
               size="small"
               style={{ padding: "4px 8px" }}
+              onClick={() => {}}
             >
               <Typography component="div" variant="subtitle1" color="text.primary">
-                View docs
+                Create a free account
               </Typography>
             </StyledButton>
           </Stack>
         </Stack>
       </Grid>
+
       <Stack direction="row">
         {footerLinks.map((link) => (
           <Link style={{ marginRight: "15px" }} color="primary" key={link.text} href={link.href}>

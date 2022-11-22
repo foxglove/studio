@@ -596,8 +596,6 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     [getMessagePipeline],
   );
 
-  console.log("showWelcomeScreen", showWelcomeScreen);
-
   return (
     <MultiProvider
       providers={[
