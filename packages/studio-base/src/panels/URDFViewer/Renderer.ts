@@ -52,14 +52,9 @@ export class Renderer extends EventEmitter<EventTypes> {
 
     this.camera.position.setFromSpherical(new THREE.Spherical(5, Math.PI / 3, Math.PI / 4));
     this.camera.lookAt(0, 0, 0);
-
-    // this.centerCamera();
   }
 
   public centerCamera(): void {
-    // this.camera.position.setFromSpherical(new THREE.Spherical(5, Math.PI / 3, Math.PI / 4));
-    // this.camera.lookAt(0, 0, 0);
-    // this.controls?.update();
     this.controls?.reset();
   }
 
