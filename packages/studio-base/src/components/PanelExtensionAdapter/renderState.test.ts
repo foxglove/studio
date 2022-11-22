@@ -94,8 +94,8 @@ describe("renderState", () => {
       globalVariables: {},
       hoverValue: undefined,
       sortedTopics: [
-        { name: "test", schemaName: "schema" },
         { name: "another", schemaName: "schema" },
+        { name: "test", schemaName: "schema" },
       ],
       subscriptions: [{ topic: "test", convertTo: "schema" }],
       messageConverters: [],
