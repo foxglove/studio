@@ -117,4 +117,65 @@ describe("renderState", () => {
       ],
     });
   });
+
+  it("should support subscribing to original and converted schemas", () => {
+    const buildRenderState = initRenderStateBuilder();
+    const state = buildRenderState({
+      watchedFields: new Set(["topics", "currentFrame"]),
+      playerState: undefined,
+      appSettings: undefined,
+      currentFrame: [
+        {
+          topic: "test",
+          schemaName: "schema",
+          receiveTime: { sec: 0, nsec: 0 },
+          sizeInBytes: 1,
+          message: {},
+        },
+      ],
+      colorScheme: undefined,
+      globalVariables: {},
+      hoverValue: undefined,
+      sortedTopics: [{ name: "test", schemaName: "schema" }],
+      subscriptions: [{ topic: "test" }, { topic: "test", convertTo: "otherSchema" }],
+      messageConverters: [
+        {
+          fromSchemaName: "schema",
+          toSchemaName: "otherSchema",
+          converter: () => {
+            return 1;
+          },
+        },
+      ],
+    });
+
+    expect(state).toEqual({
+      topics: [
+        { name: "test", schemaName: "schema", datatype: "schema", convertibleTo: ["otherSchema"] },
+      ],
+      currentFrame: [
+        {
+          topic: "test",
+          schemaName: "schema",
+          message: {},
+          receiveTime: { sec: 0, nsec: 0 },
+          sizeInBytes: 1,
+        },
+        {
+          topic: "test",
+          schemaName: "otherSchema",
+          message: 1,
+          receiveTime: { sec: 0, nsec: 0 },
+          sizeInBytes: 1,
+          originalMessageEvent: {
+            topic: "test",
+            schemaName: "schema",
+            message: {},
+            receiveTime: { sec: 0, nsec: 0 },
+            sizeInBytes: 1,
+          },
+        },
+      ],
+    });
+  });
 });
