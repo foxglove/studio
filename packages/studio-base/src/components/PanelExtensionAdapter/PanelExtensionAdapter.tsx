@@ -67,7 +67,7 @@ function selectContext(ctx: MessagePipelineContext) {
   return ctx;
 }
 
-function selectinstalledMessageConverters(state: ExtensionCatalog) {
+function selectInstalledMessageConverters(state: ExtensionCatalog) {
   return state.installedMessageConverters;
 }
 
@@ -100,7 +100,7 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
   const isMounted = useSynchronousMountedState();
   const [error, setError] = useState<Error | undefined>();
   const [watchedFields, setWatchedFields] = useState(new Set<keyof RenderState>());
-  const messageConverters = useExtensionCatalog(selectinstalledMessageConverters);
+  const messageConverters = useExtensionCatalog(selectInstalledMessageConverters);
 
   const [localSubscriptions, setLocalSubscriptions] = useState<Subscription[]>([]);
 
