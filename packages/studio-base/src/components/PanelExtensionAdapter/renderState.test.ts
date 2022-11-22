@@ -67,4 +67,54 @@ describe("renderState", () => {
       ],
     });
   });
+
+  it("should subscribe to only the specified topic when using convertTo", () => {
+    const buildRenderState = initRenderStateBuilder();
+    const state = buildRenderState({
+      watchedFields: new Set(["topics", "currentFrame"]),
+      playerState: undefined,
+      appSettings: undefined,
+      currentFrame: [
+        {
+          topic: "another",
+          schemaName: "schema",
+          receiveTime: { sec: 0, nsec: 0 },
+          sizeInBytes: 0,
+          message: {},
+        },
+        {
+          topic: "test",
+          schemaName: "schema",
+          receiveTime: { sec: 0, nsec: 0 },
+          sizeInBytes: 1,
+          message: {},
+        },
+      ],
+      colorScheme: undefined,
+      globalVariables: {},
+      hoverValue: undefined,
+      sortedTopics: [
+        { name: "test", schemaName: "schema" },
+        { name: "another", schemaName: "schema" },
+      ],
+      subscriptions: [{ topic: "test", convertTo: "schema" }],
+      messageConverters: [],
+    });
+
+    expect(state).toEqual({
+      topics: [
+        { name: "test", schemaName: "schema", datatype: "schema" },
+        { name: "another", schemaName: "schema", datatype: "schema" },
+      ],
+      currentFrame: [
+        {
+          topic: "test",
+          schemaName: "schema",
+          message: {},
+          receiveTime: { sec: 0, nsec: 0 },
+          sizeInBytes: 1,
+        },
+      ],
+    });
+  });
 });
