@@ -28,7 +28,7 @@
     "@emotion/cache": "11.10.5",
     "@emotion/react": "11.7.1",
     "@emotion/styled": "11.6.0",
-    "@fluentui/react": "8.55.0",
+    "@fluentui/react": "8.102.0",
     "@fluentui/react-icons": "1.1.145",
     "@fluentui/react-icons-mdl2": "1.2.14",
     "@fluentui/style-utilities": "8.5.4",
