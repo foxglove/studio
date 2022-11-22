@@ -145,9 +145,7 @@ function initRenderStateBuilder(): BuildRenderStateFn {
       if (sortedTopics !== prevSortedTopics || prevMessageConverters !== messageConverters) {
         shouldRender = true;
 
-        const topics: Topic[] = [];
-
-        for (const topic of sortedTopics) {
+        const topics = sortedTopics.map<Topic>((topic) => {
           const newTopic: Topic = {
             name: topic.name,
             datatype: topic.schemaName,
@@ -172,8 +170,8 @@ function initRenderStateBuilder(): BuildRenderStateFn {
             }
           }
 
-          topics.push(newTopic);
-        }
+          return newTopic;
+        });
 
         renderState.topics = topics;
         prevSortedTopics = sortedTopics;
