@@ -6,12 +6,12 @@ import PlayerSelectionContext, {
   PlayerSelection,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
 
-import OpenDialog from "./OpenDialog";
+import WelcomeScreen from "./WelcomeScreen";
 
 export default {
   colorScheme: "light",
-  title: "components/OpenDialog",
-  component: OpenDialog,
+  title: "components/WelcomeScreen",
+  component: WelcomeScreen,
 };
 
 // Connection
@@ -57,60 +57,60 @@ const playerSelection: PlayerSelection = {
 
 export const StartLight = (): JSX.Element => (
   <PlayerSelectionContext.Provider value={playerSelection}>
-    <OpenDialog />
+    <WelcomeScreen />
   </PlayerSelectionContext.Provider>
 );
 
 StartLight.parameters = {
   colorScheme: "light",
-  title: "components/OpenDialog/Start/Light",
+  title: "components/WelcomeScreen/Start/Light",
 };
 
 export const StartDark = (): JSX.Element => (
   <PlayerSelectionContext.Provider value={playerSelection}>
-    <OpenDialog />
+    <WelcomeScreen />
   </PlayerSelectionContext.Provider>
 );
 
 StartDark.parameters = {
   colorScheme: "dark",
-  title: "components/OpenDialog/Start/Dark",
+  title: "components/WelcomeScreen/Start/Dark",
 };
 
 // Remote
 
-export const RemoteLight = (): JSX.Element => <OpenDialog activeView="remote" />;
+export const RemoteLight = (): JSX.Element => <WelcomeScreen activeView="remote" />;
 
 RemoteLight.parameters = {
   colorScheme: "light",
-  title: "components/OpenDialog/Remote/Light",
+  title: "components/WelcomeScreen/Remote/Light",
 };
 
-export const RemoteDark = (): JSX.Element => <OpenDialog activeView="remote" />;
+export const RemoteDark = (): JSX.Element => <WelcomeScreen activeView="remote" />;
 
 RemoteDark.parameters = {
   colorScheme: "dark",
-  title: "components/OpenDialog/Remote/Dark",
+  title: "components/WelcomeScreen/Remote/Dark",
 };
 
 export const ConnectionLight = (): JSX.Element => (
   <PlayerSelectionContext.Provider value={playerSelection}>
-    <OpenDialog activeView="connection" />
+    <WelcomeScreen activeView="connection" />
   </PlayerSelectionContext.Provider>
 );
 
 ConnectionLight.parameters = {
   colorScheme: "light",
-  title: "components/OpenDialog/Connection/Light",
+  title: "components/WelcomeScreen/Connection/Light",
 };
 
 export const ConnectionDark = (): JSX.Element => (
   <PlayerSelectionContext.Provider value={playerSelection}>
-    <OpenDialog activeView="connection" />
+    <WelcomeScreen activeView="connection" />
   </PlayerSelectionContext.Provider>
 );
 
 ConnectionDark.parameters = {
   colorScheme: "dark",
-  title: "components/OpenDialog/Connection/Dark",
+  title: "components/WelcomeScreen/Connection/Dark",
 };

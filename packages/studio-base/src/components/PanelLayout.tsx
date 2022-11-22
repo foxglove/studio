@@ -10,6 +10,8 @@
 //   This source code is licensed under the Apache License, Version 2.0,
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
+import { WelcomeScreenViews } from "@foxglove/studio-base/components/WelcomeScreen";
+import { IDataSourceFactory } from "@foxglove/studio-base/context/PlayerSelectionContext";
 
 import { CircularProgress, Link, styled as muiStyled } from "@mui/material";
 import React, {

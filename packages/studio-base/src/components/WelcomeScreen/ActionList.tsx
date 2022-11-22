@@ -23,6 +23,7 @@ type ActionListProps = {
 
 export default function ActionList(props: ActionListProps): JSX.Element {
   const { items, title, gridColumn } = props;
+
   return (
     <Stack gap={1} overflow="hidden" style={{ gridColumn }}>
       {title != undefined && (

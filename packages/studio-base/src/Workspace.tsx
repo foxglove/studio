@@ -41,7 +41,6 @@ import {
   useMessagePipelineGetter,
 } from "@foxglove/studio-base/components/MessagePipeline";
 import MultiProvider from "@foxglove/studio-base/components/MultiProvider";
-import { OpenDialog, OpenDialogViews } from "@foxglove/studio-base/components/OpenDialog";
 import PanelLayout from "@foxglove/studio-base/components/PanelLayout";
 import PanelList from "@foxglove/studio-base/components/PanelList";
 import panelsHelpContent from "@foxglove/studio-base/components/PanelList/index.help.md";
@@ -56,6 +55,7 @@ import Stack from "@foxglove/studio-base/components/Stack";
 import { StudioLogsSettingsSidebar } from "@foxglove/studio-base/components/StudioLogsSettingsSidebar";
 import { SyncAdapters } from "@foxglove/studio-base/components/SyncAdapters";
 import VariablesSidebar from "@foxglove/studio-base/components/VariablesSidebar";
+import { WelcomeScreen, WelcomeScreenViews } from "@foxglove/studio-base/components/WelcomeScreen";
 import { useAssets } from "@foxglove/studio-base/context/AssetsContext";
 import ConsoleApiContext from "@foxglove/studio-base/context/ConsoleApiContext";
 import {
@@ -200,7 +200,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
 
   useDefaultWebLaunchPreference();
 
-  const [showOpenDialogOnStartup = true] = useAppConfigurationValue<boolean>(
+  const [showWelcomeScreenOnStartup = true] = useAppConfigurationValue<boolean>(
     AppSetting.SHOW_OPEN_DIALOG_ON_STARTUP,
   );
 
@@ -210,9 +210,13 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
 
   const showSignInForm = currentUserRequired && currentUser == undefined;
 
-  const [showOpenDialog, setShowOpenDialog] = useState<
-    { view: OpenDialogViews; activeDataSource?: IDataSourceFactory } | undefined
-  >(isPlayerPresent || !showOpenDialogOnStartup || showSignInForm ? undefined : { view: "start" });
+  const [showWelcomeScreen, setShowWelcomeScreen] = useState<
+    { view: WelcomeScreenViews; activeDataSource?: IDataSourceFactory } | undefined
+  >(
+    isPlayerPresent || !showWelcomeScreenOnStartup || showSignInForm
+      ? undefined
+      : { view: "start" },
+  );
 
   const [selectedSidebarItem, setSelectedSidebarItem] = useState<SidebarItemKey | undefined>(
     "connection",
@@ -233,7 +237,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
       playerPresence === PlayerPresence.PRESENT ||
       playerPresence === PlayerPresence.INITIALIZING
     ) {
-      setShowOpenDialog(undefined);
+      setShowWelcomeScreen(undefined);
     }
   }, [playerPresence]);
 
@@ -311,21 +315,21 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
   useNativeAppMenuEvent(
     "open-file",
     useCallback(() => {
-      setShowOpenDialog({ view: "file" });
+      setShowWelcomeScreen({ view: "file" });
     }, []),
   );
 
   useNativeAppMenuEvent(
     "open-remote-file",
     useCallback(() => {
-      setShowOpenDialog({ view: "remote" });
+      setShowWelcomeScreen({ view: "remote" });
     }, []),
   );
 
   useNativeAppMenuEvent(
     "open-sample-data",
     useCallback(() => {
-      setShowOpenDialog({ view: "demo" });
+      setShowWelcomeScreen({ view: "demo" });
     }, []),
   );
 
@@ -342,7 +346,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
 
     for (const item of connectionSources) {
       nativeAppMenu.addFileEntry(item.displayName, () => {
-        setShowOpenDialog({ view: "connection", activeDataSource: item });
+        setShowWelcomeScreen({ view: "connection", activeDataSource: item });
       });
     }
 
@@ -497,7 +501,9 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
   const DataSourceSidebarItem = useMemo(() => {
     return function DataSourceSidebarItemImpl() {
       return (
-        <DataSourceSidebar onSelectDataSourceAction={() => setShowOpenDialog({ view: "start" })} />
+        <DataSourceSidebar
+          onSelectDataSourceAction={() => setShowWelcomeScreen({ view: "start" })}
+        />
       );
     };
   }, []);
@@ -590,6 +596,8 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     [getMessagePipeline],
   );
 
+  console.log("showWelcomeScreen", showWelcomeScreen);
+
   return (
     <MultiProvider
       providers={[
@@ -601,13 +609,6 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
       ]}
     >
       {showSignInForm && <SignInFormModal />}
-      {showOpenDialog != undefined && (
-        <OpenDialog
-          activeView={showOpenDialog.view}
-          activeDataSource={showOpenDialog.activeDataSource}
-          onDismiss={() => setShowOpenDialog(undefined)}
-        />
-      )}
       <DocumentDropListener onDrop={dropHandler} allowedExtensions={allowedDropExtensions} />
       <SyncAdapters />
       <KeyListener global keyDownHandlers={keyDownHandlers} />
@@ -621,7 +622,15 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
           {/* To ensure no stale player state remains, we unmount all panels when players change */}
           <RemountOnValueChange value={playerId}>
             <Stack>
-              <PanelLayout />
+              {showWelcomeScreen != undefined ? (
+                <WelcomeScreen
+                  activeView={showWelcomeScreen.view}
+                  activeDataSource={showWelcomeScreen.activeDataSource}
+                  onDismiss={() => setShowWelcomeScreen(undefined)}
+                />
+              ) : (
+                <PanelLayout />
+              )}
               {play && pause && seek && (
                 <div style={{ flexShrink: 0 }}>
                   <PlaybackControls

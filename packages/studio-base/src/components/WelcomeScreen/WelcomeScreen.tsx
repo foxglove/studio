@@ -2,8 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import CloseIcon from "@mui/icons-material/Close";
-import { Dialog, DialogTitle, IconButton, styled as muiStyled } from "@mui/material";
+import { Typography, styled as muiStyled } from "@mui/material";
 import { useCallback, useLayoutEffect, useMemo, useState } from "react";
 import { useMountedState } from "react-use";
 
@@ -18,28 +17,28 @@ import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 import Connection from "./Connection";
 import Remote from "./Remote";
 import Start from "./Start";
-import { OpenDialogViews } from "./types";
+import { WelcomeScreenViews } from "./types";
 import { useOpenFile } from "./useOpenFile";
 
-type OpenDialogProps = {
-  activeView?: OpenDialogViews;
+const Root = muiStyled("div")(({ theme }) => ({
+  backgroundColor: theme.palette.background.paper,
+  width: "100%",
+  height: "100%",
+  overflowY: "auto",
+}));
+
+type WelcomeScreenProps = {
+  activeView?: WelcomeScreenViews;
   activeDataSource?: IDataSourceFactory;
   onDismiss?: () => void;
 };
 
-const StyledDialogTitle = muiStyled(DialogTitle)(({ theme }) => ({
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-  padding: theme.spacing(4, 5, 0, 5),
-}));
-
-export default function OpenDialog(props: OpenDialogProps): JSX.Element {
+export default function WelcomeScreen(props: WelcomeScreenProps): JSX.Element {
   const { activeView: defaultActiveView, onDismiss, activeDataSource } = props;
   const { availableSources, selectSource } = usePlayerSelection();
 
   const isMounted = useMountedState();
-  const [activeView, setActiveView] = useState<OpenDialogViews>(defaultActiveView ?? "start");
+  const [activeView, setActiveView] = useState<WelcomeScreenViews>(defaultActiveView ?? "start");
 
   const openFile = useOpenFile(availableSources);
 
@@ -51,13 +50,13 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
     setActiveView(defaultActiveView ?? "start");
   }, [defaultActiveView]);
 
-  const onSelectView = useCallback((view: OpenDialogViews) => {
+  const onSelectView = useCallback((view: WelcomeScreenViews) => {
     setActiveView(view);
   }, []);
 
   const analytics = useAnalytics();
 
-  const onModalClose = useCallback(() => {
+  const onScreenClose = useCallback(() => {
     if (onDismiss) {
       onDismiss();
       void analytics.logEvent(AppEvent.DIALOG_CLOSE, { activeView });
@@ -116,7 +115,7 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
           component: (
             <Connection
               onBack={() => onSelectView("start")}
-              onCancel={onModalClose}
+              onCancel={onScreenClose}
               availableSources={connectionSources}
               activeSource={activeDataSource}
             />
@@ -128,14 +127,14 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
           component: (
             <Remote
               onBack={() => onSelectView("start")}
-              onCancel={onModalClose}
+              onCancel={onScreenClose}
               availableSources={remoteFileSources}
             />
           ),
         };
       default:
         return {
-          title: "Get started",
+          title: "Open data sources",
           component: (
             <Start
               onSelectView={onSelectView}
@@ -152,37 +151,19 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
     localFileSources,
     onSelectView,
     remoteFileSources,
-    onModalClose,
+    onScreenClose,
   ]);
 
   return (
-    <Dialog
-      open
-      onClose={onModalClose}
-      fullWidth
-      maxWidth="md"
-      PaperProps={{
-        elevation: 4,
-        style: { maxWidth: "calc(min(768px, 100% - 32px))" },
-      }}
-    >
-      <StyledDialogTitle>
-        {view.title}
-        <IconButton onClick={onModalClose} edge="end">
-          <CloseIcon />
-        </IconButton>
-      </StyledDialogTitle>
-      <Stack
-        flexGrow={1}
-        flexBasis={450}
-        fullHeight
-        justifyContent="space-between"
-        gap={2}
-        paddingX={5}
-        paddingY={3}
-      >
-        {view.component}
+    <Root>
+      <Stack fullHeight flexGrow={1} justifyContent="space-around" paddingX={5}>
+        <Stack flexBasis={450}>
+          <Typography variant="h3" pb={3}>
+            {view.title}
+          </Typography>
+          {view.component}
+        </Stack>
       </Stack>
-    </Dialog>
+    </Root>
   );
 }
