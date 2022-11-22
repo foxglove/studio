@@ -103,8 +103,8 @@ describe("renderState", () => {
 
     expect(state).toEqual({
       topics: [
-        { name: "test", schemaName: "schema", datatype: "schema" },
         { name: "another", schemaName: "schema", datatype: "schema" },
+        { name: "test", schemaName: "schema", datatype: "schema" },
       ],
       currentFrame: [
         {
@@ -170,6 +170,83 @@ describe("renderState", () => {
           originalMessageEvent: {
             topic: "test",
             schemaName: "schema",
+            message: {},
+            receiveTime: { sec: 0, nsec: 0 },
+            sizeInBytes: 1,
+          },
+        },
+      ],
+    });
+  });
+
+  // Test that the correct converter is run when fromSchema + toSchema produce the same string
+  // for two different converters.
+  it("should run the correct converter", () => {
+    const buildRenderState = initRenderStateBuilder();
+    const state = buildRenderState({
+      watchedFields: new Set(["topics", "currentFrame"]),
+      playerState: undefined,
+      appSettings: undefined,
+      currentFrame: [
+        {
+          topic: "another",
+          schemaName: "srcschema",
+          receiveTime: { sec: 0, nsec: 0 },
+          sizeInBytes: 1,
+          message: {},
+        },
+      ],
+      colorScheme: undefined,
+      globalVariables: {},
+      hoverValue: undefined,
+      sortedTopics: [
+        { name: "another", schemaName: "srcschema" },
+        { name: "test", schemaName: "srcschemade" },
+      ],
+      subscriptions: [{ topic: "another", convertTo: "destschema" }],
+      messageConverters: [
+        {
+          fromSchemaName: "srcschema",
+          toSchemaName: "destschema",
+          converter: () => {
+            return "srcschema-destschema";
+          },
+        },
+        {
+          fromSchemaName: "srcschemade",
+          toSchemaName: "stschema",
+          converter: () => {
+            return "srcschemade-stschema";
+          },
+        },
+      ],
+    });
+
+    expect(state).toEqual({
+      topics: [
+        {
+          name: "another",
+          schemaName: "srcschema",
+          datatype: "srcschema",
+          convertibleTo: ["destschema"],
+        },
+        {
+          name: "test",
+          schemaName: "srcschemade",
+          datatype: "srcschemade",
+          convertibleTo: ["stschema"],
+        },
+      ],
+      currentFrame: [
+        {
+          topic: "another",
+          schemaName: "destschema",
+          message: "srcschema-destschema",
+          receiveTime: { sec: 0, nsec: 0 },
+          sizeInBytes: 1,
+          originalMessageEvent: {
+            topic: "another",
+            schemaName: "srcschema",
             message: {},
             receiveTime: { sec: 0, nsec: 0 },
             sizeInBytes: 1,

@@ -93,10 +93,11 @@ function initRenderStateBuilder(): BuildRenderStateFn {
       for (const subscription of subscriptions) {
         if (subscription.convertTo) {
           const noConversion = sortedTopics.find(
-            (topic) => topic.schemaName === subscription.convertTo,
+            (topic) =>
+              topic.name === subscription.topic && topic.schemaName === subscription.convertTo,
           );
           if (noConversion) {
-            topicNoConversions.add(subscription.topic);
+            topicNoConversions.add(noConversion.name);
           } else {
             topicConversions.set(subscription.topic, subscription.convertTo);
           }
@@ -193,7 +194,7 @@ function initRenderStateBuilder(): BuildRenderStateFn {
 
       if (messageConverters) {
         for (const converter of messageConverters) {
-          const key = converter.fromSchemaName + converter.toSchemaName;
+          const key = converter.fromSchemaName + "." + converter.toSchemaName;
           convertersByKey.set(key, converter);
         }
       }
@@ -223,7 +224,7 @@ function initRenderStateBuilder(): BuildRenderStateFn {
             // Lookup any subscriptions for this topic which want a conversion
             const subConvertTo = topicConversions.get(messageEvent.topic);
             if (subConvertTo) {
-              const convertKey = messageEvent.schemaName + subConvertTo;
+              const convertKey = messageEvent.schemaName + "." + subConvertTo;
               const converter = convertersByKey.get(convertKey);
               if (converter) {
                 const convertedMessage = converter.converter(messageEvent.message);
