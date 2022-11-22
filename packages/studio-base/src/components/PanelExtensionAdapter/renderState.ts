@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import Log from "@foxglove/log";
 import { toSec } from "@foxglove/rostime";
 import {
   AppSettingValue,
@@ -19,6 +20,8 @@ import {
 import { PlayerState, Topic as PlayerTopic } from "@foxglove/studio-base/players/types";
 import { HoverValue } from "@foxglove/studio-base/types/hoverValue";
 
+const log = Log.getLogger(__filename);
+
 const EmptyParameters = new Map<string, ParameterValue>();
 
 type BuilderRenderStateInput = {
@@ -35,6 +38,14 @@ type BuilderRenderStateInput = {
 };
 
 type BuildRenderStateFn = (input: BuilderRenderStateInput) => Readonly<RenderState> | undefined;
+
+// Create a string lookup key using fromSchemaName and toSchemaName.
+//
+// The string key uses a newline delimeter to avoid producting the same key for from/to name values
+// that might concatenate to the same string. i.e. "fromName" "toName" and "fromNameto" "Name".
+function converterKey(fromSchemaName: string, toSchemaName: string): string {
+  return fromSchemaName + "\n" + toSchemaName;
+}
 
 /**
  * initRenderStateBuilder creates a function that transforms render state input into a new
@@ -192,7 +203,12 @@ function initRenderStateBuilder(): BuildRenderStateFn {
 
       if (messageConverters) {
         for (const converter of messageConverters) {
-          const key = converter.fromSchemaName + "." + converter.toSchemaName;
+          const key = converterKey(converter.fromSchemaName, converter.toSchemaName);
+          if (convertersByKey.has(key)) {
+            log.error(
+              `A message converter from (${converter.fromSchemaName}) to (${converter.toSchemaName}) already exists.`,
+            );
+          }
           convertersByKey.set(key, converter);
         }
       }
@@ -222,7 +238,7 @@ function initRenderStateBuilder(): BuildRenderStateFn {
             // Lookup any subscriptions for this topic which want a conversion
             const subConvertTo = topicConversions.get(messageEvent.topic);
             if (subConvertTo) {
-              const convertKey = messageEvent.schemaName + "." + subConvertTo;
+              const convertKey = converterKey(messageEvent.schemaName, subConvertTo);
               const converter = convertersByKey.get(convertKey);
               if (converter) {
                 const convertedMessage = converter.converter(messageEvent.message);

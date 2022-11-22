@@ -179,7 +179,7 @@ describe("renderState", () => {
     });
   });
 
-  // Test that the correct converter is run when fromSchema + toSchema produce the same string
+  // Test that the correct converter is run when fromSchema and toSchema produce the same string
   // for two different converters.
   it("should run the correct converter", () => {
     const buildRenderState = initRenderStateBuilder();
