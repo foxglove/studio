@@ -182,6 +182,12 @@ function initRenderStateBuilder(): BuildRenderStateFn {
     // Update the mapping of converters.
     // This needs to happen _after_ the above topics processing which re-runs if the message converters have changed,
     // and _before_ currentFrame and _allFrames_ processing which use this cache.
+    //
+    // If setting `prevMessageConverters` runs before the above topics handling then topics won't
+    // run again if the message converters have changed.
+    //
+    // And if this runs after the currentFrame and allFrames handling then convertersByKey will be
+    // from the previous converters.
     if (messageConverters !== prevMessageConverters) {
       convertersByKey.clear();
 
