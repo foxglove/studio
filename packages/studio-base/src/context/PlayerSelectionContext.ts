@@ -60,7 +60,7 @@ export interface IDataSourceFactory {
   supportsMultiFile?: boolean;
 
   // Initialize a player.
-  initialize: (args: DataSourceFactoryInitializeArgs) => Player | Player[] | undefined;
+  initialize: (args: DataSourceFactoryInitializeArgs) => Player | undefined;
 }
 
 /**

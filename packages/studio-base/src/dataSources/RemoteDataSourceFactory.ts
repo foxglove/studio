@@ -52,42 +52,26 @@ class RemoteDataSourceFactory implements IDataSourceFactory {
     ],
   };
 
-  public initialize(args: DataSourceFactoryInitializeArgs): Player[] | undefined {
+  public initialize(args: DataSourceFactoryInitializeArgs): Player | undefined {
     const url = args.params?.url;
     if (!url) {
       return;
     }
 
-    const bagSource = new WorkerIterableSource({
-      sourceType: "rosbag",
-      initArgs: { url },
-    });
+    const urlParts = url.split(".");
+    const fileExtension = urlParts[urlParts.length - 1];
 
-    const mcapSource = new WorkerIterableSource({
-      sourceType: "mcap",
-      initArgs: { url },
-    });
+    const sourceType = { bag: "rosbag", mcap: "mcap" }[fileExtension ?? ""] ?? "";
+    const source = new WorkerIterableSource({ sourceType, initArgs: { url } });
 
-    const bagPlayer = new IterablePlayer({
-      source: bagSource,
-      isSampleDataSource: true,
+    return new IterablePlayer({
+      source,
       name: url,
       metricsCollector: args.metricsCollector,
       // Use blank url params so the data source is set in the url
-      urlParams: {
-        url,
-      },
+      urlParams: { url },
       sourceId: this.id,
     });
-
-    const mcapPlayer = new IterablePlayer({
-      metricsCollector: args.metricsCollector,
-      source: mcapSource,
-      name: url,
-      sourceId: this.id,
-    });
-
-    return [bagPlayer, mcapPlayer];
   }
 }
 
