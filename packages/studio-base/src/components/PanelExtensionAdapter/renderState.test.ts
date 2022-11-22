@@ -5,7 +5,7 @@
 import { initRenderStateBuilder } from "./renderState";
 
 describe("renderState", () => {
-  it("should include additionalSchemaNames when there are message converters", () => {
+  it("should include convertibleTo when there are message converters", () => {
     const buildRenderState = initRenderStateBuilder();
     const state = buildRenderState({
       watchedFields: new Set(["topics"]),
@@ -27,9 +27,7 @@ describe("renderState", () => {
     });
 
     expect(state).toEqual({
-      topics: [
-        { name: "test", schemaName: "schema", datatype: "schema", additionalSchemaNames: ["more"] },
-      ],
+      topics: [{ name: "test", schemaName: "schema", datatype: "schema", convertibleTo: ["more"] }],
     });
   });
 

@@ -189,8 +189,8 @@ function MapPanel(props: MapPanelProps): JSX.Element {
         return topic;
       }
 
-      if (topic.additionalSchemaNames) {
-        for (const schemaName of topic.additionalSchemaNames) {
+      if (topic.convertibleTo) {
+        for (const schemaName of topic.convertibleTo) {
           if (isSupportedSchema(schemaName)) {
             return { name: topic.name, schemaName, datatype: schemaName };
           }

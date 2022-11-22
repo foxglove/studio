@@ -59,9 +59,9 @@ declare module "@foxglove/studio" {
     /**
      * Lists any additional schema names available for subscribers on the topic. When subscribing to
      * a topic, the panel can request messages be automatically converted from schemaName into one
-     * of the additionalSchemaNames.
+     * of the convertibleTo schemas using the convertTo option.
      */
-    additionalSchemaNames?: string[];
+    convertibleTo?: readonly string[];
   };
 
   export type Subscription = {

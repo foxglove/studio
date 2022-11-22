@@ -154,20 +154,20 @@ function initRenderStateBuilder(): BuildRenderStateFn {
           };
 
           if (messageConverters) {
-            const additionalSchemaNames: string[] = [];
+            const convertibleTo: string[] = [];
 
             // find any converters that can convert _from_ the schema name of the topic
             // the _to_ names of the converter become additional schema names for the topic entry
             for (const converter of messageConverters) {
               if (converter.fromSchemaName === topic.schemaName) {
-                if (!additionalSchemaNames.includes(converter.toSchemaName)) {
-                  additionalSchemaNames.push(converter.toSchemaName);
+                if (!convertibleTo.includes(converter.toSchemaName)) {
+                  convertibleTo.push(converter.toSchemaName);
                 }
               }
             }
 
-            if (additionalSchemaNames.length > 0) {
-              newTopic.additionalSchemaNames = additionalSchemaNames;
+            if (convertibleTo.length > 0) {
+              newTopic.convertibleTo = convertibleTo;
             }
           }
 
