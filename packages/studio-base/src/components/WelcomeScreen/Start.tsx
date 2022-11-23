@@ -63,9 +63,9 @@ export default function Start(props: IStartProps): JSX.Element {
   const { recentSources, selectRecent } = usePlayerSelection();
   const analytics = useAnalytics();
 
-  const [showOnStartup = true, setShowOnStartup] = useAppConfigurationValue<boolean>(
-    AppSetting.SHOW_OPEN_DIALOG_ON_STARTUP,
-  );
+  // const [showOnStartup = true, setShowOnStartup] = useAppConfigurationValue<boolean>(
+  //   AppSetting.SHOW_OPEN_DIALOG_ON_STARTUP,
+  // );
 
   const startItems = useMemo(() => {
     const formatter = new Intl.ListFormat("en-US", { style: "long" });
@@ -133,7 +133,7 @@ export default function Start(props: IStartProps): JSX.Element {
                 {recent.label}
               </Typography>
             )}{" "}
-            – 
+            &mdash;
             <Typography variant="body2" color="inherit" component="div" noWrap overflow="hidden">
               <TextMiddleTruncate text={recent.title} />
             </Typography>
@@ -197,8 +197,8 @@ export default function Start(props: IStartProps): JSX.Element {
             </Typography>
 
             <Typography variant="body1" color="text.secondary">
-              If you're new to Foxglove Studio, start exploring with an example layout and a sample
-              self-driving dataset.
+              If you&apos;re new to Foxglove Studio, start exploring with an example layout and a
+              sample self-driving dataset.
             </Typography>
 
             <Stack direction="row" paddingBottom={5}>
