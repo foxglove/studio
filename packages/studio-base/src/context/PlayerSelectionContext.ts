@@ -41,7 +41,7 @@ export interface IDataSourceFactory {
   displayName: string;
   iconName?: RegisteredIconNames;
   description?: string;
-  docsLink?: string;
+  docsLinks?: { label?: string; url: string }[];
   disabledReason?: string | JSX.Element;
   badgeText?: string;
   hidden?: boolean;

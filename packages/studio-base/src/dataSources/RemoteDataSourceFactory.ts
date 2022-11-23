@@ -19,7 +19,10 @@ class RemoteDataSourceFactory implements IDataSourceFactory {
   public supportedFileTypes = [".bag", ".mcap"];
   public description =
     "Fetch and load pre-recorded ROS 1 (.bag) or MCAP (.mcap) files from a remote location.";
-  public docsLink = "https://foxglove.dev/docs/studio/connection/ros1-bag";
+  public docsLinks = [
+    { label: "ROS 1", url: "https://foxglove.dev/docs/studio/connection/ros1#cloud-data" },
+    { label: "MCAP", url: "https://foxglove.dev/docs/studio/connection/mcap#cloud-data" },
+  ];
 
   public formConfig = {
     fields: [
@@ -58,10 +61,8 @@ class RemoteDataSourceFactory implements IDataSourceFactory {
       return;
     }
 
-    const urlParts = url.split(".");
-    const fileExtension = urlParts[urlParts.length - 1];
-
-    const sourceType = { bag: "rosbag", mcap: "mcap" }[fileExtension ?? ""] ?? "";
+    const extension = path.extname(new URL(url).pathname);
+    const sourceType = { bag: "rosbag", mcap: "mcap" }[extension] ?? "";
     const source = new WorkerIterableSource({ sourceType, initArgs: { url } });
 
     return new IterablePlayer({

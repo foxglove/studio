@@ -180,7 +180,6 @@ export class IterablePlayer implements Player {
     this._name = name;
     this._urlParams = urlParams;
     this._metricsCollector = metricsCollector ?? new NoopMetricsCollector();
-
     this._metricsCollector.playerConstructed();
     this._enablePreload = enablePreload ?? true;
     this._sourceId = sourceId;
@@ -429,7 +428,6 @@ export class IterablePlayer implements Player {
     this._queueEmitState();
 
     try {
-      const result = await this._bufferedSource.initialize();
       const {
         start,
         end,
@@ -440,7 +438,7 @@ export class IterablePlayer implements Player {
         publishersByTopic,
         datatypes,
         name,
-      } = result;
+      } = await this._bufferedSource.initialize();
 
       this._profile = profile;
       this._start = this._currentTime = start;
