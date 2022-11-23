@@ -47,6 +47,7 @@ export function FormField(props: Props): JSX.Element {
         placeholder={field.placeholder}
         defaultValue={field.defaultValue}
         onChange={onChange}
+        InputLabelProps={{ shrink: true }}
       />
       <FormHelperText>{field.description}</FormHelperText>
     </div>

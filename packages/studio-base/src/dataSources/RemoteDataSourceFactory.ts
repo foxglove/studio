@@ -29,7 +29,7 @@ class RemoteDataSourceFactory implements IDataSourceFactory {
       {
         id: "url",
         label: "Remote file URL",
-        defaultValue: "https://example.com/file.bag",
+        placeholder: "https://example.com/file.bag",
         validate: (newValue: string): Error | undefined => {
           try {
             const url = new URL(newValue);

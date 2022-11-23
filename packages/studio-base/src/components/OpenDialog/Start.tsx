@@ -240,7 +240,7 @@ export default function Start(props: IStartProps): JSX.Element {
           </Typography>
           <Stack gap={1.5}>
             {startItems.map((item) => (
-              <DataSourceOption {...item} />
+              <DataSourceOption key={item.key} {...item} />
             ))}
           </Stack>
         </Stack>
