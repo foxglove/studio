@@ -2,15 +2,14 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Button, styled as muiStyled, SvgIcon, Typography, Link } from "@mui/material";
+import { Button, Link, SvgIcon, Typography } from "@mui/material";
 import { useMemo } from "react";
+import { makeStyles } from "tss-react/mui";
 
-import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import Stack from "@foxglove/studio-base/components/Stack";
 import TextMiddleTruncate from "@foxglove/studio-base/components/TextMiddleTruncate";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
-import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 
 import ActionList, { ActionListItem } from "./ActionList";
@@ -22,28 +21,28 @@ export type IStartProps = {
   onSelectView: (newValue: WelcomeScreenViews) => void;
 };
 
-const StyledButton = muiStyled(Button)(({ theme }) => ({
-  textAlign: "left",
-  justifyContent: "flex-start",
-  padding: theme.spacing(2, 3),
-  gap: theme.spacing(1.5),
-  borderColor: theme.palette.divider,
-
-  ".MuiButton-startIcon .MuiSvgIcon-fontSizeLarge": {
-    fontSize: 28,
+const useStyles = makeStyles()((theme) => ({
+  button: {
+    textAlign: "left",
+    justifyContent: "flex-start",
+    padding: theme.spacing(2, 3),
+    gap: theme.spacing(1.5),
+    borderColor: theme.palette.divider,
+    ".MuiButton-startIcon .MuiSvgIcon-fontSizeLarge": {
+      fontSize: 28,
+    },
   },
-}));
+  grid: {
+    // See comment below for explanation of grid properties
+    display: "grid",
+    gap: theme.spacing(2.5, 4),
+    gridTemplateRows: "repeat(2, auto) 1fr",
+    gridTemplateColumns: `minmax(${(7 / 12) * 100}%, auto) 1fr`,
 
-const Grid = muiStyled("div")(({ theme }) => ({
-  // See comment below for explanation of grid properties
-  display: "grid",
-  gap: theme.spacing(2.5, 4),
-  gridTemplateRows: "repeat(2, auto) 1fr",
-  gridTemplateColumns: `minmax(${(7 / 12) * 100}%, auto) 1fr`,
-
-  "@media(max-width: 800px)": {
-    display: "flex",
-    flexDirection: "column",
+    "@media(max-width: 800px)": {
+      display: "flex",
+      flexDirection: "column",
+    },
   },
 }));
 
@@ -62,6 +61,8 @@ export default function Start(props: IStartProps): JSX.Element {
   } = props;
   const { recentSources, selectRecent } = usePlayerSelection();
   const analytics = useAnalytics();
+
+  const { classes } = useStyles();
 
   // const [showOnStartup = true, setShowOnStartup] = useAppConfigurationValue<boolean>(
   //   AppSetting.SHOW_OPEN_DIALOG_ON_STARTUP,
@@ -127,7 +128,13 @@ export default function Start(props: IStartProps): JSX.Element {
       return {
         id: recent.id,
         children: (
-          <StyledButton fullWidth color="inherit" variant="outlined" style={{ padding: "4px 8px" }}>
+          <Button
+            className={classes.button}
+            fullWidth
+            color="inherit"
+            variant="outlined"
+            style={{ padding: "4px 8px" }}
+          >
             {recent.label && (
               <Typography component="div" variant="body2" color="text.secondary" noWrap>
                 {recent.label}
@@ -137,12 +144,12 @@ export default function Start(props: IStartProps): JSX.Element {
             <Typography variant="body2" color="inherit" component="div" noWrap overflow="hidden">
               <TextMiddleTruncate text={recent.title} />
             </Typography>
-          </StyledButton>
+          </Button>
         ),
         onClick: () => selectRecent(recent.id),
       };
     });
-  }, [recentSources, selectRecent]);
+  }, [classes.button, recentSources, selectRecent]);
 
   // This layout uses `display: grid` at large widths, and `display: flex` at small widths. When
   // using flex, the elements flow in source order within the column.
@@ -153,14 +160,15 @@ export default function Start(props: IStartProps): JSX.Element {
   // section doesn't affect the heights of the Recent and Help sections.
   return (
     <Stack gap={2.5}>
-      <Grid>
+      <div className={classes.grid}>
         <Stack flex="1 1 0" gap={1.5} style={{ gridRow: "1 / 4" }}>
           <Typography variant="h5" color="text.secondary">
             Connect new data
           </Typography>
           <Stack gap={1.5} paddingBottom={2}>
             {startItems.map((item) => (
-              <StyledButton
+              <Button
+                className={classes.button}
                 fullWidth
                 color="inherit"
                 variant="outlined"
@@ -177,7 +185,7 @@ export default function Start(props: IStartProps): JSX.Element {
                     {item.secondaryText}
                   </Typography>
                 </Stack>
-              </StyledButton>
+              </Button>
             ))}
           </Stack>
           <Stack gap={1.5} paddingY={2}>
@@ -202,7 +210,8 @@ export default function Start(props: IStartProps): JSX.Element {
             </Typography>
 
             <Stack direction="row" paddingBottom={5}>
-              <StyledButton
+              <Button
+                className={classes.button}
                 color="inherit"
                 variant="outlined"
                 size="small"
@@ -215,8 +224,9 @@ export default function Start(props: IStartProps): JSX.Element {
                 <Typography component="div" variant="subtitle1" color="text.primary">
                   Tour with sample data
                 </Typography>
-              </StyledButton>
-              <StyledButton
+              </Button>
+              <Button
+                className={classes.button}
                 color="inherit"
                 variant="outlined"
                 size="small"
@@ -225,7 +235,7 @@ export default function Start(props: IStartProps): JSX.Element {
                 <Typography component="div" variant="subtitle1" color="text.primary">
                   View docs
                 </Typography>
-              </StyledButton>
+              </Button>
             </Stack>
           </Stack>
           <Stack gap={1}>
@@ -238,7 +248,8 @@ export default function Start(props: IStartProps): JSX.Element {
               Platform.
             </Typography>
 
-            <StyledButton
+            <Button
+              className={classes.button}
               color="inherit"
               variant="outlined"
               size="small"
@@ -248,10 +259,10 @@ export default function Start(props: IStartProps): JSX.Element {
               <Typography component="div" variant="subtitle1" color="text.primary">
                 Create a free account
               </Typography>
-            </StyledButton>
+            </Button>
           </Stack>
         </Stack>
-      </Grid>
+      </div>
 
       <Stack direction="row">
         {footerLinks.map((link) => (

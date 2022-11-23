@@ -2,9 +2,10 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Typography, styled as muiStyled } from "@mui/material";
+import { Typography } from "@mui/material";
 import { useCallback, useLayoutEffect, useMemo, useState } from "react";
 import { useMountedState } from "react-use";
+import { makeStyles } from "tss-react/mui";
 
 import Stack from "@foxglove/studio-base/components/Stack";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
@@ -20,11 +21,13 @@ import Start from "./Start";
 import { WelcomeScreenViews } from "./types";
 import { useOpenFile } from "./useOpenFile";
 
-const Root = muiStyled("div")(({ theme }) => ({
-  backgroundColor: theme.palette.background.paper,
-  width: "100%",
-  height: "100%",
-  overflowY: "auto",
+const useStyles = makeStyles()((theme) => ({
+  root: {
+    backgroundColor: theme.palette.background.paper,
+    width: "100%",
+    height: "100%",
+    overflowY: "auto",
+  },
 }));
 
 type WelcomeScreenProps = {
@@ -36,6 +39,8 @@ type WelcomeScreenProps = {
 export default function WelcomeScreen(props: WelcomeScreenProps): JSX.Element {
   const { activeView: defaultActiveView, onDismiss, activeDataSource } = props;
   const { availableSources, selectSource } = usePlayerSelection();
+
+  const { classes } = useStyles();
 
   const isMounted = useMountedState();
   const [activeView, setActiveView] = useState<WelcomeScreenViews>(defaultActiveView ?? "start");
@@ -155,7 +160,7 @@ export default function WelcomeScreen(props: WelcomeScreenProps): JSX.Element {
   ]);
 
   return (
-    <Root>
+    <div className={classes.root}>
       <Stack fullHeight flexGrow={1} justifyContent="space-around" paddingX={5}>
         <Stack flexBasis={450}>
           <Typography variant="h3" pb={3}>
@@ -164,6 +169,6 @@ export default function WelcomeScreen(props: WelcomeScreenProps): JSX.Element {
           {view.component}
         </Stack>
       </Stack>
-    </Root>
+    </div>
   );
 }

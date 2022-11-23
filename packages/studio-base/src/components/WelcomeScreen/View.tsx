@@ -3,8 +3,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import { Button, styled as muiStyled } from "@mui/material";
+import { Button } from "@mui/material";
 import { PropsWithChildren } from "react";
+import { makeStyles } from "tss-react/mui";
 
 import Stack from "@foxglove/studio-base/components/Stack";
 
@@ -14,18 +15,28 @@ type ViewProps = {
   onOpen?: () => void;
 };
 
-const ViewStack = muiStyled(Stack)({
-  "@media (min-height: 512px)": { overflow: "hidden" },
+const useStyles = makeStyles()({
+  viewStack: {
+    "@media (min-height: 512px)": { overflow: "hidden" },
+  },
 });
 
 export default function View(props: PropsWithChildren<ViewProps>): JSX.Element {
   const { onCancel, onOpen, onBack } = props;
 
+  const { classes } = useStyles();
+
   return (
     <>
-      <ViewStack flexGrow={1} fullHeight justifyContent="space-between" gap={2}>
+      <Stack
+        className={classes.viewStack}
+        flexGrow={1}
+        fullHeight
+        justifyContent="space-between"
+        gap={2}
+      >
         {props.children}
-      </ViewStack>
+      </Stack>
       <Stack direction="row" justifyContent="space-between" alignItems="center">
         <Button startIcon={<ChevronLeftIcon fontSize="large" />} onClick={onBack} size="large">
           Back
@@ -42,6 +53,4 @@ export default function View(props: PropsWithChildren<ViewProps>): JSX.Element {
       </Stack>
     </>
   );
-
-  return <>{props.children}</>;
 }
