@@ -419,17 +419,12 @@ function Plot(props: Props) {
     ],
   );
 
-  // The extra useShallowMemo is useful when seeking. Without it, the reduced value will be reset,
-  // and trigger the plot to re-render even if the old value and new value were both empty ({})
-  // which happens for fully pre-loaded data coming from blocks.
-  const plotDataByPath = useShallowMemo(
-    useMessageReducer<PlotDataByPath>({
-      topics: subscribeTopics,
-      preloadType: "full",
-      restore,
-      addMessages,
-    }),
-  );
+  const plotDataByPath = useMessageReducer<PlotDataByPath>({
+    topics: subscribeTopics,
+    preloadType: "full",
+    restore,
+    addMessages,
+  });
 
   // Keep disabled paths when passing into getDatasets, because we still want
   // easy access to the history when turning the disabled paths back on.
