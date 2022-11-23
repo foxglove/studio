@@ -407,10 +407,15 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
       styleOverrides: {
         input: {
           boxSizing: "content-box",
-          padding: theme.spacing(1, 1.25),
+          padding: theme.spacing(1, 1.25, 1.25),
         },
         inputSizeSmall: {
-          padding: theme.spacing(0.75, 1),
+          padding: theme.spacing(0.75, 1, 1),
+        },
+        root: {
+          "& legend": {
+            display: "none",
+          },
         },
       },
       defaultProps: {
