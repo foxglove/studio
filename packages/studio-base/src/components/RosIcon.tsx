@@ -7,7 +7,7 @@ import { SvgIcon, SvgIconProps } from "@mui/material";
 export default function RosIcon(props: SvgIconProps): JSX.Element {
   return (
     <SvgIcon {...props} viewBox="0 0 60 60">
-      <g>
+      <g fill="currentColor">
         <circle cx={10} cy={10} r={6} />
         <circle cx={10} cy={30} r={6} />
         <circle cx={10} cy={50} r={6} />
