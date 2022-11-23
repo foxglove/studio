@@ -95,11 +95,12 @@ type DataSourceOptionProps = {
   secondaryText: string;
   icon: JSX.Element;
   onClick: () => void;
+  href?: string;
 };
 
 function DataSourceOption(props: DataSourceOptionProps): JSX.Element {
-  const { icon, onClick, text, secondaryText } = props;
-  return (
+  const { icon, onClick, text, secondaryText, href } = props;
+  const button = (
     <StyledButton
       fullWidth
       color="inherit"
@@ -117,6 +118,14 @@ function DataSourceOption(props: DataSourceOptionProps): JSX.Element {
         </Typography>
       </Stack>
     </StyledButton>
+  );
+
+  return href ? (
+    <Link href={href} target="_blank" style={{ textDecoration: "none" }}>
+      {button}
+    </Link>
+  ) : (
+    button
   );
 }
 
@@ -233,20 +242,9 @@ export default function Start(props: IStartProps): JSX.Element {
             Open data source
           </Typography>
           <Stack gap={1.5}>
-            {startItems.map((item) =>
-              item.href ? (
-                <Link
-                  key={item.key}
-                  href={item.href}
-                  target="_blank"
-                  style={{ textDecoration: "none" }}
-                >
-                  <DataSourceOption {...item} />
-                </Link>
-              ) : (
-                <DataSourceOption {...item} />
-              ),
-            )}
+            {startItems.map((item) => (
+              <DataSourceOption {...item} />
+            ))}
           </Stack>
         </Stack>
         <ActionList gridColumn={2} title="Help" items={HELP_ITEMS} />
