@@ -45,8 +45,8 @@ const useStyles = makeStyles()((theme) => ({
       display: "flex",
       color: theme.palette.primary.main,
       marginRight: theme.spacing(1.5),
-      height: theme.typography.pxToRem(20),
-      width: theme.typography.pxToRem(20),
+      height: theme.typography.pxToRem(21),
+      width: theme.typography.pxToRem(21),
     },
     svg: {
       fontSize: "inherit",
