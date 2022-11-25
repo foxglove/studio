@@ -54,11 +54,13 @@ export class WorkerIterableSource implements IIterableSource {
     const cursor = this.getMessageCursor(args);
     try {
       for (;;) {
-        const result = await cursor.next();
-        if (!result) {
+        const results = await cursor.nextBatch(16);
+        if (!results || results.length === 0) {
           break;
         }
-        yield result;
+        for (const result of results) {
+          yield result;
+        }
       }
     } finally {
       await cursor.end();
@@ -94,6 +96,11 @@ export class WorkerIterableSource implements IIterableSource {
       async next() {
         const messageCursor = await messageCursorPromise;
         return await messageCursor.next();
+      },
+
+      async nextBatch(durationMs: number) {
+        const messageCursor = await messageCursorPromise;
+        return await messageCursor.nextBatch(durationMs);
       },
 
       async readUntil(end: Time) {

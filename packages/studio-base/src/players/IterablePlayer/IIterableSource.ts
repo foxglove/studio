@@ -106,6 +106,10 @@ export interface IMessageCursor {
    */
   next(): Promise<IteratorResult | undefined>;
 
+  // fixme - comment
+  // fixme - change durationMs to Time?
+  nextBatch(durationMs: number): Promise<IteratorResult[] | undefined>;
+
   /**
    * Read a batch of messages through end time (inclusive) or end of cursor
    *
