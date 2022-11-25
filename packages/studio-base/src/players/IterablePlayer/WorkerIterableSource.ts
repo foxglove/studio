@@ -51,24 +51,17 @@ export class WorkerIterableSource implements IIterableSource {
       throw new Error(`WorkerIterableSource is not initialized`);
     }
 
-    const iter = await this._worker.messageIterator(args);
-    const ret = iter.return;
-
+    const cursor = this.getMessageCursor(args);
     try {
       for (;;) {
-        const iterResult = await iter.next();
-        if (iterResult.done === true) {
-          return iterResult.value;
+        const result = await cursor.next();
+        if (!result) {
+          break;
         }
-        yield iterResult.value;
+        yield result;
       }
     } finally {
-      // Note: typescript types for iter.return don't narrow this to a function so we have this
-      // check in place to appease the types. This is not on a hot-path.
-      if (typeof ret === "function") {
-        await ret();
-      }
-      iter[Comlink.releaseProxy]();
+      await cursor.end();
     }
   }
 
