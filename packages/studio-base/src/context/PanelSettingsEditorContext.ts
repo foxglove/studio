@@ -22,7 +22,7 @@ export type PanelSettingsEditorStore = {
   /**
    * Per-panel settings UI trees.
    */
-  settingsTrees: Record<string, ImmutableSettingsTree>;
+  settingsTrees: Record<string, ImmutableSettingsTree | undefined>;
 
   /**
    * Increments the sequence number for the panel, forcing a remount.
@@ -32,7 +32,7 @@ export type PanelSettingsEditorStore = {
   /**
    * Updates the settings UI for the given panel.
    */
-  updateSettingsTree: (panelId: string, settingsTree: ImmutableSettingsTree) => void;
+  updateSettingsTree: (panelId: string, settingsTree: ImmutableSettingsTree | undefined) => void;
 };
 
 export const PanelSettingsEditorContext = createContext<

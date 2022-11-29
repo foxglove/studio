@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { ReactNode, useCallback, useState } from "react";
+import { ReactNode, useCallback, useEffect, useState } from "react";
 import { createStore, StoreApi } from "zustand";
 
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
@@ -57,6 +57,14 @@ export function usePanelSettingsTreeUpdate(): (newTree: ImmutableSettingsTree) =
     },
     [id, updateStoreTree],
   );
+
+  // cleanup disconnected panels
+  // prevents it from keeping a reference to panel context via actionHandler
+  useEffect(() => {
+    return () => {
+      updateStoreTree(id, undefined);
+    };
+  }, [id, updateStoreTree]);
 
   return updateSettingsTree;
 }
