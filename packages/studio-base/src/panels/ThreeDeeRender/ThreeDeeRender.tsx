@@ -37,7 +37,6 @@ import {
 import PublishGoalIcon from "@foxglove/studio-base/components/PublishGoalIcon";
 import PublishPointIcon from "@foxglove/studio-base/components/PublishPointIcon";
 import PublishPoseEstimateIcon from "@foxglove/studio-base/components/PublishPoseEstimateIcon";
-import useCleanup from "@foxglove/studio-base/hooks/useCleanup";
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
 
 import { DebugGui } from "./DebugGui";
@@ -331,6 +330,13 @@ function RendererOverlay(props: {
   );
 }
 
+function updateRendererState(newRenderer: Renderer | undefined) {
+  return (oldRenderer: Renderer | undefined) => {
+    oldRenderer?.dispose();
+    return newRenderer;
+  };
+}
+
 function useRendererProperty<K extends keyof Renderer>(
   renderer: Renderer | undefined,
   key: K,
@@ -392,14 +398,11 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
 
   const [canvas, setCanvas] = useState<HTMLCanvasElement | ReactNull>(ReactNull);
   const [renderer, setRenderer] = useState<Renderer | undefined>(undefined);
-  const rendererRef = useRef<Renderer | undefined>(undefined);
   useEffect(() => {
     const newRenderer = canvas ? new Renderer(canvas, configRef.current) : undefined;
-    setRenderer(newRenderer);
-    rendererRef.current = newRenderer;
+    setRenderer(updateRendererState(newRenderer));
     return () => {
-      rendererRef.current?.dispose();
-      rendererRef.current = undefined;
+      newRenderer?.dispose();
     };
   }, [canvas, configRef, config.scene.transforms?.enablePreloading]);
 
@@ -455,10 +458,8 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
 
   // Maintain the settings tree
   const [settingsTree, setSettingsTree] = useState<SettingsTreeNodes | undefined>(undefined);
-  const updateSettingsTree = useCallback(
-    (curRenderer: Renderer) => setSettingsTree(curRenderer.settings.tree()),
-    [],
-  );
+  const updateSettingsTree = (curRenderer: Renderer) =>
+    setSettingsTree(curRenderer.settings.tree());
   useRendererEvent("settingsTreeChange", updateSettingsTree, renderer);
 
   // Save the panel configuration when it changes
@@ -516,9 +517,6 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
   );
   useEffect(() => throttledSave(config), [config, throttledSave]);
 
-  // Dispose of the renderer (and associated GPU resources) on teardown
-  useCleanup(() => renderer?.dispose());
-
   // Establish a connection to the message pipeline with context.watch and context.onRender
   useLayoutEffect(() => {
     context.onRender = (renderState: RenderState, done) => {
@@ -563,6 +561,11 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
     context.watch("parameters");
     context.watch("variables");
     context.watch("topics");
+    return () => {
+      // release panel extension adapter from old panel
+      context.onRender = undefined;
+      context.unsubscribeAll();
+    };
   }, [context]);
 
   // Build a list of topics to subscribe to

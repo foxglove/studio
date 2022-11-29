@@ -325,10 +325,10 @@ export class Renderer extends EventEmitter<RendererEvents> {
   private _pickingEnabled = false;
   private _isUpdatingCameraState = false;
   private _animationFrame?: number;
+  private _devicePixelRatioMediaQuery?: MediaQueryList;
 
   public constructor(canvas: HTMLCanvasElement, config: RendererConfig) {
     super();
-
     // NOTE: Global side effect
     THREE.Object3D.DefaultUp = new THREE.Vector3(0, 0, 1);
 
@@ -479,31 +479,41 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.addSceneExtension(this.measurementTool);
     this.addSceneExtension(this.publishClickTool);
 
+    this._devicePixelRatioMediaQuery = window.matchMedia(
+      `(resolution: ${window.devicePixelRatio}dppx)`,
+    );
     this._watchDevicePixelRatio();
 
     this._updateCameras(config.cameraState);
     this.animationFrame();
   }
 
-  private _watchDevicePixelRatio() {
-    window.matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`).addEventListener(
-      "change",
-      () => {
-        log.debug(`devicePixelRatio changed to ${window.devicePixelRatio}`);
-        this.resizeHandler(this.input.canvasSize);
-        this._watchDevicePixelRatio();
-      },
-      { once: true },
+  private _onDevicePixelRatioChange = () => {
+    log.debug(`devicePixelRatio changed to ${window.devicePixelRatio}`);
+    this.resizeHandler(this.input.canvasSize);
+    this._devicePixelRatioMediaQuery?.removeEventListener("change", this._onDevicePixelRatioChange);
+    this._devicePixelRatioMediaQuery = window.matchMedia(
+      `(resolution: ${window.devicePixelRatio}dppx)`,
     );
+    this._watchDevicePixelRatio();
+  };
+
+  private _watchDevicePixelRatio() {
+    this._devicePixelRatioMediaQuery?.addEventListener("change", this._onDevicePixelRatioChange, {
+      once: true,
+    });
   }
 
   public dispose(): void {
     log.warn(`Disposing renderer`);
+    this._devicePixelRatioMediaQuery?.removeEventListener("change", this._onDevicePixelRatioChange);
     this.removeAllListeners();
 
     this.settings.off("update");
+    this.settings.removeAllListeners();
     this.input.off("resize", this.resizeHandler);
     this.input.off("click", this.clickHandler);
+    this.input.removeAllListeners();
     this.controls.dispose();
 
     for (const extension of this.sceneExtensions.values()) {

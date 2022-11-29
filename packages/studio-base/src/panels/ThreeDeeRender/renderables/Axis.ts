@@ -43,13 +43,24 @@ export class Axis extends THREE.Object3D {
 
     // Create three arrow shafts
     const shaftGeometry = Axis.ShaftGeometry(this.renderer.maxLod);
-    this.shaftMesh = new THREE.InstancedMesh(shaftGeometry, standardMaterial(COLOR_WHITE), 3);
+    this.shaftMesh = new THREE.InstancedMesh(
+      // necessary to copy for disposing
+      // if we dispose the static geometry, then it will affect all instances
+      // we can't let the static geometry be attached to meshes because it will keep them in memory after they are disposed
+      new THREE.BufferGeometry().copy(shaftGeometry),
+      standardMaterial(COLOR_WHITE),
+      3,
+    );
     this.shaftMesh.castShadow = true;
     this.shaftMesh.receiveShadow = true;
 
     // Create three arrow heads
     const headGeometry = Axis.HeadGeometry(this.renderer.maxLod);
-    this.headMesh = new THREE.InstancedMesh(headGeometry, standardMaterial(COLOR_WHITE), 3);
+    this.headMesh = new THREE.InstancedMesh(
+      new THREE.BufferGeometry().copy(headGeometry),
+      standardMaterial(COLOR_WHITE),
+      3,
+    );
     this.headMesh.castShadow = true;
     this.headMesh.receiveShadow = true;
 
@@ -60,8 +71,10 @@ export class Axis extends THREE.Object3D {
   }
 
   public dispose(): void {
+    this.shaftMesh.geometry.dispose();
     this.shaftMesh.material.dispose();
     this.shaftMesh.dispose();
+    this.headMesh.geometry.dispose();
     this.headMesh.material.dispose();
     this.headMesh.dispose();
   }
@@ -103,6 +116,9 @@ export class Axis extends THREE.Object3D {
 
   private static ShaftGeometry(lod: DetailLevel): THREE.CylinderGeometry {
     if (!Axis.shaftGeometry || lod !== Axis.shaftLod) {
+      if (Axis.shaftGeometry) {
+        Axis.shaftGeometry.dispose();
+      }
       const subdivs = arrowShaftSubdivisions(lod);
       Axis.shaftGeometry = new THREE.CylinderGeometry(0.5, 0.5, 1, subdivs, 1, false);
       Axis.shaftGeometry.rotateZ(-PI_2);
@@ -115,6 +131,9 @@ export class Axis extends THREE.Object3D {
 
   private static HeadGeometry(lod: DetailLevel): THREE.ConeGeometry {
     if (!Axis.headGeometry || lod !== Axis.headLod) {
+      if (Axis.shaftGeometry) {
+        Axis.shaftGeometry.dispose();
+      }
       const subdivs = arrowHeadSubdivisions(lod);
       Axis.headGeometry = new THREE.ConeGeometry(0.5, 1, subdivs, 1, false);
       Axis.headGeometry.rotateZ(-PI_2);

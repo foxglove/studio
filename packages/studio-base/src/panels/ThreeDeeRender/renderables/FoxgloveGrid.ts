@@ -392,6 +392,14 @@ export class FoxgloveGrid extends SceneExtension<FoxgloveGridRenderable> {
     renderer.addDatatypeSubscriptions(GRID_DATATYPES, this.handleFoxgloveGrid);
   }
 
+  public override dispose(): void {
+    // keeps reference to parent and renderer otherwise
+    // will be reinstantiated for new scene extension
+    FoxgloveGrid.geometry?.dispose();
+    FoxgloveGrid.geometry = undefined;
+    super.dispose();
+  }
+
   public override settingsNodes(): SettingsTreeEntry[] {
     const configTopics = this.renderer.config.topics;
     const handler = this.handleSettingsAction;

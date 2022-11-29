@@ -107,6 +107,10 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
 
   public override dispose(): void {
     this.renderer.off("transformTreeUpdated", this.handleTransformTreeUpdated);
+    // This keeps memory of parent lines across different renderers
+    // setting it to undefined after disposing will cause it to be reinstantiated for the next extension
+    FrameAxes.lineGeometry?.dispose();
+    FrameAxes.lineGeometry = undefined;
     this.lineMaterial.dispose();
     this.linePickingMaterial.dispose();
     super.dispose();

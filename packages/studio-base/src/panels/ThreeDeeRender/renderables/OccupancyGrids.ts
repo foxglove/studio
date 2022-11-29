@@ -81,6 +81,13 @@ export class OccupancyGrids extends SceneExtension<OccupancyGridRenderable> {
 
     renderer.addDatatypeSubscriptions(OCCUPANCY_GRID_DATATYPES, this.handleOccupancyGrid);
   }
+  // keeps reference to parent and renderer otherwise
+  // will be reinstantiated for new scene extension
+  public override dispose(): void {
+    OccupancyGrids.geometry?.dispose();
+    OccupancyGrids.geometry = undefined;
+    super.dispose();
+  }
 
   public override settingsNodes(): SettingsTreeEntry[] {
     const configTopics = this.renderer.config.topics;
