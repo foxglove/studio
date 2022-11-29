@@ -24,7 +24,10 @@ import { makeStyles } from "tss-react/mui";
 
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import ExpandingToolbar, { ToolGroup } from "@foxglove/studio-base/components/ExpandingToolbar";
-import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
+import {
+  MessagePipelineContext,
+  useMessagePipeline,
+} from "@foxglove/studio-base/components/MessagePipeline";
 import Panel from "@foxglove/studio-base/components/Panel";
 import PanelToolbar, {
   PANEL_TOOLBAR_MIN_HEIGHT,
@@ -170,21 +173,21 @@ function unionInto<T>(dest: Set<T>, ...iterables: Set<T>[]): void {
   }
 }
 
+const selectPublishedTopics = (ctx: MessagePipelineContext) =>
+  ctx.playerState.activeData?.publishedTopics;
+const selectSubscribedTopics = (ctx: MessagePipelineContext) =>
+  ctx.playerState.activeData?.subscribedTopics;
+const selectServices = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.services;
+
 function TopicGraph() {
   const { classes, cx } = useStyles();
   const [selectedTab, setSelectedTab] = useState<"Topics" | undefined>(undefined);
 
-  const publishedTopics = useMessagePipeline(
-    useCallback((ctx) => ctx.playerState.activeData?.publishedTopics, []),
-  );
+  const publishedTopics = useMessagePipeline(selectPublishedTopics);
 
-  const subscribedTopics = useMessagePipeline(
-    useCallback((ctx) => ctx.playerState.activeData?.subscribedTopics, []),
-  );
+  const subscribedTopics = useMessagePipeline(selectSubscribedTopics);
 
-  const services = useMessagePipeline(
-    useCallback((ctx) => ctx.playerState.activeData?.services, []),
-  );
+  const services = useMessagePipeline(selectServices);
 
   const [lrOrientation, setLROrientation] = useState<boolean>(false);
   const [showServices, setShowServices] = useState<boolean>(true);

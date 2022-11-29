@@ -34,7 +34,10 @@ import Logger from "@foxglove/log";
 import ChartComponent from "@foxglove/studio-base/components/Chart/index";
 import { RpcElement, RpcScales } from "@foxglove/studio-base/components/Chart/types";
 import KeyListener from "@foxglove/studio-base/components/KeyListener";
-import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
+import {
+  MessagePipelineContext,
+  useMessagePipeline,
+} from "@foxglove/studio-base/components/MessagePipeline";
 import Stack from "@foxglove/studio-base/components/Stack";
 import TimeBasedChartLegend from "@foxglove/studio-base/components/TimeBasedChart/TimeBasedChartLegend";
 import {
@@ -101,6 +104,7 @@ const ChartNull = null;
 
 const selectGlobalBounds = (store: TimelineInteractionStateStore) => store.globalBounds;
 const selectSetGlobalBounds = (store: TimelineInteractionStateStore) => store.setGlobalBounds;
+const selectPauseFrame = (ctx: MessagePipelineContext) => ctx.pauseFrame;
 
 // Calculation mode for the "reset view" view.
 export type ChartDefaultView =
@@ -169,9 +173,7 @@ export default function TimeBasedChart(props: Props): JSX.Element {
 
   const [hasUserPannedOrZoomed, setHasUserPannedOrZoomed] = useState<boolean>(false);
 
-  const pauseFrame = useMessagePipeline(
-    useCallback((messagePipeline) => messagePipeline.pauseFrame, []),
-  );
+  const pauseFrame = useMessagePipeline(selectPauseFrame);
 
   const resumeFrame = useRef<() => void | undefined>();
 

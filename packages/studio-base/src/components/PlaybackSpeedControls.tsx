@@ -14,7 +14,10 @@ import {
 } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
 
-import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
+import {
+  MessagePipelineContext,
+  useMessagePipeline,
+} from "@foxglove/studio-base/components/MessagePipeline";
 import {
   LayoutState,
   useCurrentLayoutActions,
@@ -37,14 +40,15 @@ const StyledButton = muiStyled(Button)(({ theme }) => ({
   },
 }));
 
+const selectSpeed = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.speed;
+const selectSetPlaybackSpeed = (ctx: MessagePipelineContext) => ctx.setPlaybackSpeed;
+
 export default function PlaybackSpeedControls(): JSX.Element {
   const [anchorEl, setAnchorEl] = useState<undefined | HTMLElement>(undefined);
   const open = Boolean(anchorEl);
   const configSpeed = useCurrentLayoutSelector(configSpeedSelector);
-  const speed = useMessagePipeline(
-    useCallback(({ playerState }) => playerState.activeData?.speed, []),
-  );
-  const setPlaybackSpeed = useMessagePipeline(useCallback((state) => state.setPlaybackSpeed, []));
+  const speed = useMessagePipeline(selectSpeed);
+  const setPlaybackSpeed = useMessagePipeline(selectSetPlaybackSpeed);
   const { setPlaybackConfig } = useCurrentLayoutActions();
   const setSpeed = useCallback(
     (newSpeed: number) => {

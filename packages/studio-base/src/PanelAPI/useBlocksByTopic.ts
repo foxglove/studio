@@ -12,7 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import memoizeWeak from "memoize-weak";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 
 import { useShallowMemo } from "@foxglove/hooks";
@@ -56,23 +56,20 @@ const filterBlockByTopics = memoizeWeak(
   },
 );
 
+const selectSetSubscriptions = (ctx: MessagePipelineContext) => ctx.setSubscriptions;
+
 const useSubscribeToTopicsForBlocks = (topics: readonly string[]) => {
   const [id] = useState(() => uuidv4());
 
-  const setSubscriptions = useMessagePipeline(
-    useCallback(
-      ({ setSubscriptions: pipelineSetSubscriptions }: MessagePipelineContext) =>
-        pipelineSetSubscriptions,
-      [],
-    ),
-  );
+  const setSubscriptions = useMessagePipeline(selectSetSubscriptions);
   const subscriptions: SubscribePayload[] = useMemo(() => {
     return topics.map((topic) => ({ topic, preloadType: "full" }));
   }, [topics]);
   useEffect(() => setSubscriptions(id, subscriptions), [id, setSubscriptions, subscriptions]);
   useCleanup(() => setSubscriptions(id, []));
 };
-
+const selectAllBlocks = (ctx: MessagePipelineContext) =>
+  ctx.playerState.progress.messageCache?.blocks;
 // A note: for the moment,
 //  - not all players provide blocks, and
 //  - topics for nodes are not available in blocks when blocks _are_ provided,
@@ -90,7 +87,7 @@ export function useBlocksByTopic(topics: readonly string[]): readonly MessageBlo
   useSubscribeToTopicsForBlocks(requestedTopics);
 
   const allBlocks = useMessagePipeline<readonly (PlayerMessageBlock | undefined)[] | undefined>(
-    useCallback((ctx) => ctx.playerState.progress.messageCache?.blocks, []),
+    selectAllBlocks,
   );
 
   const blocks = useMemo(() => {

@@ -5,7 +5,12 @@
 import { useCallback } from "react";
 
 import { ParameterValue } from "@foxglove/studio";
-import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
+import {
+  MessagePipelineContext,
+  useMessagePipeline,
+} from "@foxglove/studio-base/components/MessagePipeline";
+
+const selectSetParameter = (ctx: MessagePipelineContext) => ctx.setParameter;
 
 export default function useParameter<T extends ParameterValue>(
   key: string,
@@ -13,7 +18,7 @@ export default function useParameter<T extends ParameterValue>(
   const value = useMessagePipeline(
     useCallback((context) => context.playerState.activeData?.parameters?.get(key), [key]),
   );
-  const setParameter = useMessagePipeline(useCallback((context) => context.setParameter, []));
+  const setParameter = useMessagePipeline(selectSetParameter);
   const setValue = useCallback(
     (newValue: T) => {
       setParameter(key, newValue);

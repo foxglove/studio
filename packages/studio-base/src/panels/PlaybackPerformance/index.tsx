@@ -16,7 +16,10 @@ import { last, sumBy } from "lodash";
 import { ReactElement } from "react";
 
 import { subtract as subtractTimes, toSec } from "@foxglove/rostime";
-import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
+import {
+  MessagePipelineContext,
+  useMessagePipeline,
+} from "@foxglove/studio-base/components/MessagePipeline";
 import Panel from "@foxglove/studio-base/components/Panel";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import { Sparkline, SparklinePoint } from "@foxglove/studio-base/components/Sparkline";
@@ -151,12 +154,11 @@ export function UnconnectedPlaybackPerformance({
     </Stack>
   );
 }
+const selectActiveData = ({ playerState }: MessagePipelineContext) => playerState.activeData;
 
 function PlaybackPerformance() {
   const timestamp = Date.now();
-  const activeData = useMessagePipeline(
-    React.useCallback(({ playerState }) => playerState.activeData, []),
-  );
+  const activeData = useMessagePipeline(selectActiveData);
   return <UnconnectedPlaybackPerformance timestamp={timestamp} activeData={activeData} />;
 }
 

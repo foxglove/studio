@@ -19,7 +19,10 @@ import { useUpdateEffect } from "react-use";
 
 import { SettingsTreeAction } from "@foxglove/studio";
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
-import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
+import {
+  MessagePipelineContext,
+  useMessagePipeline,
+} from "@foxglove/studio-base/components/MessagePipeline";
 import Panel from "@foxglove/studio-base/components/Panel";
 import {
   PanelContextMenu,
@@ -69,7 +72,7 @@ const Timestamp = muiStyled(Typography, {
     opacity: 1,
   }),
 }));
-
+const selectPauseFrame = (ctx: MessagePipelineContext) => ctx.pauseFrame;
 function ImageView(props: Props) {
   const { config, saveConfig } = props;
   const { cameraTopic, enabledMarkerTopics, transformMarkers } = config;
@@ -240,9 +243,7 @@ function ImageView(props: Props) {
     [config.flipHorizontal, config.flipVertical, config.rotation, doDownloadImage, saveConfig],
   );
 
-  const pauseFrame = useMessagePipeline(
-    useCallback((messagePipeline) => messagePipeline.pauseFrame, []),
-  );
+  const pauseFrame = useMessagePipeline(selectPauseFrame);
   const onStartRenderImage = useCallback(() => {
     const resumeFrame = pauseFrame("ImageView");
     const onFinishRenderImage = () => {
