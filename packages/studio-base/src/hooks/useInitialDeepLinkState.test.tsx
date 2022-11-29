@@ -16,6 +16,7 @@ import { useInitialDeepLinkState } from "@foxglove/studio-base/hooks/useInitialD
 import { useSessionStorageValue } from "@foxglove/studio-base/hooks/useSessionStorageValue";
 import EventsProvider from "@foxglove/studio-base/providers/EventsProvider";
 import { LaunchPreferenceValue } from "@foxglove/studio-base/types/LaunchPreferenceValue";
+import { parseAppURLState } from "@foxglove/studio-base/util/appURLState";
 
 jest.mock("@foxglove/studio-base/hooks/useSessionStorageValue");
 jest.mock("@foxglove/studio-base/context/CurrentLayoutContext");
@@ -78,18 +79,32 @@ describe("Initial deep link state", () => {
 
   it("doesn't select a source without ds params", () => {
     const { wrapper } = makeWrapper({ playerSelection: emptyPlayerSelection });
-    renderHook(() => useInitialDeepLinkState(["https://studio.foxglove.dev/?foo=bar"]), {
-      wrapper,
-    });
+    renderHook(
+      () =>
+        useInitialDeepLinkState(
+          parseAppURLState(new URL("https://studio.foxglove.dev/?foo=bar")),
+          false,
+        ),
+      {
+        wrapper,
+      },
+    );
 
     expect(selectSource).not.toHaveBeenCalled();
   });
 
   it("selects the sample datasource from the link", () => {
     const { wrapper } = makeWrapper({ playerSelection: emptyPlayerSelection });
-    renderHook(() => useInitialDeepLinkState(["https://studio.foxglove.dev/?ds=sample-nuscenes"]), {
-      wrapper,
-    });
+    renderHook(
+      () =>
+        useInitialDeepLinkState(
+          parseAppURLState(new URL("https://studio.foxglove.dev/?ds=sample-nuscenes")),
+          false,
+        ),
+      {
+        wrapper,
+      },
+    );
 
     expect(selectSource).toHaveBeenCalledWith("sample-nuscenes", {
       params: undefined,
@@ -102,9 +117,14 @@ describe("Initial deep link state", () => {
     const { wrapper } = makeWrapper({ playerSelection: emptyPlayerSelection });
     renderHook(
       () =>
-        useInitialDeepLinkState([
-          "http://localhost:8080/?ds=rosbridge-websocket&ds.url=ws%3A%2F%2Flocalhost%3A9090&layoutId=a288e116-d177-4b57-8f30-6ada61919638",
-        ]),
+        useInitialDeepLinkState(
+          parseAppURLState(
+            new URL(
+              "http://localhost:8080/?ds=rosbridge-websocket&ds.url=ws%3A%2F%2Flocalhost%3A9090&layoutId=a288e116-d177-4b57-8f30-6ada61919638",
+            ),
+          ),
+          false,
+        ),
       { wrapper },
     );
 
@@ -120,15 +140,18 @@ describe("Initial deep link state", () => {
       currentUser: undefined,
       playerSelection: emptyPlayerSelection,
     });
-    const { result, rerender } = renderHook(
+    const { rerender } = renderHook(
       () =>
-        useInitialDeepLinkState([
-          "https://studio.foxglove.dev/?ds=foxglove-data-platform&ds.deviceId=dev&layoutId=12345",
-        ]),
+        useInitialDeepLinkState(
+          parseAppURLState(
+            new URL(
+              "https://studio.foxglove.dev/?ds=foxglove-data-platform&ds.deviceId=dev&layoutId=12345",
+            ),
+          ),
+          true,
+        ),
       { wrapper },
     );
-
-    expect(result.current.currentUserRequired).toBeTruthy();
 
     expect(selectSource).not.toHaveBeenCalled();
 

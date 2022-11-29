@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import Log from "@foxglove/log";
 import {
@@ -14,7 +14,7 @@ import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext
 import { EventsStore, useEvents } from "@foxglove/studio-base/context/EventsContext";
 import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
-import { parseAppURLState } from "@foxglove/studio-base/util/appURLState";
+import { AppURLState } from "@foxglove/studio-base/util/appURLState";
 
 const selectPlayerPresence = (ctx: MessagePipelineContext) => ctx.playerState.presence;
 const selectSeek = (ctx: MessagePipelineContext) => ctx.seekPlayback;
@@ -22,34 +22,23 @@ const selectSelectEvent = (store: EventsStore) => store.selectEvent;
 
 const log = Log.getLogger(__filename);
 
-/**
- * Restores our session state from any deep link we were passed on startup.
+/*
+ * Sync functions necessary to keep separate to prevent memory leak from context kept in
+ * useEffect closures. Notably `seekPlayback` being attached to other `useEffect` closures
+ * and that keeping the initial player in memory.
  */
-export function useInitialDeepLinkState(deepLinks: readonly string[]): {
-  currentUserRequired: boolean;
-} {
-  const { selectSource } = usePlayerSelection();
-  const { setSelectedLayoutId } = useCurrentLayoutActions();
 
-  const seekPlayback = useMessagePipeline(selectSeek);
-  const playerPresence = useMessagePipeline(selectPlayerPresence);
-  const { currentUser } = useCurrentUser();
-  const selectEvent = useEvents(selectSelectEvent);
-
-  const targetUrlState = useMemo(
-    () => (deepLinks[0] ? parseAppURLState(new URL(deepLinks[0])) : undefined),
-    [deepLinks],
-  );
-
-  // Maybe this should be abstracted somewhere but that would require a
-  // more intimate interface with this hook and the player selection logic.
-  const currentUserRequired = targetUrlState?.ds === "foxglove-data-platform";
-
-  // Tracks what portions of the URL state we have yet to apply to the current session.
+function useSyncSourceFromUrl(
+  targetUrlState: AppURLState | undefined,
+  // eslint-disable-next-line @foxglove/no-boolean-parameters
+  currentUserRequired: boolean,
+) {
   const [unappliedUrlState, setUnappliedUrlState] = useState(
-    targetUrlState ? { ...targetUrlState } : undefined,
+    targetUrlState ? { ds: targetUrlState.ds, dsParams: targetUrlState.dsParams } : undefined,
   );
-
+  const { selectSource } = usePlayerSelection();
+  const selectEvent = useEvents(selectSelectEvent);
+  const { currentUser } = useCurrentUser();
   // Load data source from URL.
   useEffect(() => {
     if (!unappliedUrlState) {
@@ -69,10 +58,27 @@ export function useInitialDeepLinkState(deepLinks: readonly string[]): {
         params: unappliedUrlState.dsParams,
       });
       selectEvent(unappliedUrlState.dsParams?.eventId);
-      setUnappliedUrlState((oldState) => ({ ...oldState, ds: undefined, dsParams: undefined }));
+      setUnappliedUrlState({ ds: undefined, dsParams: undefined });
     }
-  }, [currentUser, currentUserRequired, selectEvent, selectSource, unappliedUrlState]);
-
+  }, [
+    currentUser,
+    currentUserRequired,
+    selectEvent,
+    selectSource,
+    unappliedUrlState,
+    setUnappliedUrlState,
+  ]);
+}
+function useSyncLayoutFromUrl(
+  targetUrlState: AppURLState | undefined,
+  // eslint-disable-next-line @foxglove/no-boolean-parameters
+  currentUserRequired: boolean,
+) {
+  const { setSelectedLayoutId } = useCurrentLayoutActions();
+  const playerPresence = useMessagePipeline(selectPlayerPresence);
+  const [unappliedUrlState, setUnappliedUrlState] = useState(
+    targetUrlState ? { layoutId: targetUrlState.layoutId } : undefined,
+  );
   // Select layout from URL.
   useEffect(() => {
     if (!unappliedUrlState?.layoutId) {
@@ -88,9 +94,16 @@ export function useInitialDeepLinkState(deepLinks: readonly string[]): {
 
     log.debug(`Initializing layout from url: ${unappliedUrlState.layoutId}`);
     setSelectedLayoutId(unappliedUrlState.layoutId);
-    setUnappliedUrlState((oldState) => ({ ...oldState, layoutId: undefined }));
+    setUnappliedUrlState({ layoutId: undefined });
   }, [currentUserRequired, playerPresence, setSelectedLayoutId, unappliedUrlState?.layoutId]);
+}
 
+function useSyncTimeFromUrl(targetUrlState: AppURLState | undefined) {
+  const seekPlayback = useMessagePipeline(selectSeek);
+  const playerPresence = useMessagePipeline(selectPlayerPresence);
+  const [unappliedUrlState, setUnappliedUrlState] = useState(
+    targetUrlState ? { time: targetUrlState.time } : undefined,
+  );
   // Seek to time in URL.
   useEffect(() => {
     if (unappliedUrlState?.time == undefined || !seekPlayback) {
@@ -104,8 +117,19 @@ export function useInitialDeepLinkState(deepLinks: readonly string[]): {
 
     log.debug(`Seeking to url time:`, unappliedUrlState.time);
     seekPlayback(unappliedUrlState.time);
-    setUnappliedUrlState((oldState) => ({ ...oldState, time: undefined }));
+    setUnappliedUrlState({ time: undefined });
   }, [playerPresence, seekPlayback, unappliedUrlState]);
+}
 
-  return useMemo(() => ({ currentUserRequired }), [currentUserRequired]);
+/**
+ * Restores our session state from any deep link we were passed on startup.
+ */
+export function useInitialDeepLinkState(
+  targetUrlState: AppURLState | undefined,
+  // eslint-disable-next-line @foxglove/no-boolean-parameters
+  currentUserRequired: boolean,
+): void {
+  useSyncSourceFromUrl(targetUrlState, currentUserRequired);
+  useSyncLayoutFromUrl(targetUrlState, currentUserRequired);
+  useSyncTimeFromUrl(targetUrlState);
 }
