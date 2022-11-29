@@ -4,6 +4,7 @@
 
 import { useTheme } from "@mui/material";
 import { CSSProperties, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import ReactDOM from "react-dom";
 import { useLatest } from "react-use";
 import { v4 as uuid } from "uuid";
 
@@ -484,7 +485,9 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
     });
 
     return () => {
+      ReactDOM.unmountComponentAtNode(panelElement);
       panelElement.remove();
+      setRenderFn(undefined);
       getMessagePipelineContext().setSubscriptions(panelId, []);
       getMessagePipelineContext().setPublishers(panelId, []);
     };
