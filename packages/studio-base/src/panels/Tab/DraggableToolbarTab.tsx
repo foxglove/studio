@@ -10,7 +10,7 @@
 //   This source code is licensed under the Apache License, Version 2.0,
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useDrag, useDrop, DropTargetMonitor } from "react-dnd";
 
 import { useCurrentLayoutActions } from "@foxglove/studio-base/context/CurrentLayoutContext";
@@ -62,6 +62,15 @@ export function DraggableToolbarTab(props: Props): JSX.Element {
       moveTab({ source, target });
     },
   });
+
+  // Necessary to prevent react-dnd from holding on and updating these refs after unmounting.
+  // cause of memory leak across sources
+  useEffect(() => {
+    return () => {
+      dragRef(ReactNull);
+      dropRef(ReactNull);
+    };
+  }, [dragRef, dropRef]);
 
   dragRef(dropRef(ref)); // Combine drag and drop refs
 
