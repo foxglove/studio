@@ -129,7 +129,7 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
     (selectedKey != undefined && allItems.get(selectedKey)?.component) || Noop;
 
   const onClickTabAction = useCallback(
-    (key: K) => {
+    (key: K) => () => {
       // toggle tab selected/unselected on click
       if (selectedKey === key) {
         onSelectKey(undefined);
@@ -148,7 +148,7 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
         value={key}
         key={key}
         title={item.title}
-        onClick={() => onClickTabAction(key)}
+        onClick={onClickTabAction(key)}
         icon={
           <Badge
             className={classes.badge}
@@ -174,7 +174,7 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
         value={key}
         key={key}
         title={item.title}
-        onClick={() => onClickTabAction(key)}
+        onClick={onClickTabAction(key)}
         icon={
           <Badge
             className={classes.badge}

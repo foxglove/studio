@@ -10,7 +10,7 @@ import {
   SvgIcon,
   Typography,
 } from "@mui/material";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import Stack from "@foxglove/studio-base/components/Stack";
@@ -194,6 +194,15 @@ export default function Start(props: IStartProps): JSX.Element {
     });
   }, [recentSources, selectRecent]);
 
+  const onSetShowOnStartup = useCallback(
+    // used for checkbox callback
+    // eslint-disable-next-line @foxglove/no-boolean-parameters
+    async (_: unknown, checked: boolean) => {
+      await setShowOnStartup(checked);
+    },
+    [setShowOnStartup],
+  );
+
   // This layout uses `display: grid` at large widths, and `display: flex` at small widths. When
   // using flex, the elements flow in source order within the column.
   //
@@ -237,15 +246,7 @@ export default function Start(props: IStartProps): JSX.Element {
       </Grid>
       <FormControlLabel
         label="Show on startup"
-        control={
-          <Checkbox
-            color="primary"
-            checked={showOnStartup}
-            onChange={async (_, checked) => {
-              await setShowOnStartup(checked);
-            }}
-          />
-        }
+        control={<Checkbox color="primary" checked={showOnStartup} onChange={onSetShowOnStartup} />}
       />
     </Stack>
   );

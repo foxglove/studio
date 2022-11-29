@@ -81,6 +81,7 @@ import useNativeAppMenuEvent from "@foxglove/studio-base/hooks/useNativeAppMenuE
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
 import { HelpInfoStore, useHelpInfo } from "@foxglove/studio-base/providers/HelpInfoProvider";
 import { PanelSettingsEditorContextProvider } from "@foxglove/studio-base/providers/PanelSettingsEditorContextProvider";
+import { parseAppURLState } from "@foxglove/studio-base/util/appURLState";
 
 const log = Logger.getLogger(__filename);
 
@@ -148,6 +149,18 @@ function AddPanel() {
   );
 }
 
+function DataSourceSidebarItemHoc(
+  setShowOpenDialog: (
+    state: { view: OpenDialogViews; activeDataSource?: IDataSourceFactory } | undefined,
+  ) => void,
+) {
+  return function DataSourceSidebarItemImpl() {
+    return (
+      <DataSourceSidebar onSelectDataSourceAction={() => setShowOpenDialog({ view: "start" })} />
+    );
+  };
+}
+
 type WorkspaceProps = {
   deepLinks?: string[];
   disableSignin?: boolean;
@@ -196,7 +209,17 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
 
   const { currentUser } = useCurrentUser();
 
-  const { currentUserRequired } = useInitialDeepLinkState(props.deepLinks ?? DEFAULT_DEEPLINKS);
+  const deepLinks = props.deepLinks ?? DEFAULT_DEEPLINKS;
+  const targetUrlState = useMemo(
+    () => (deepLinks[0] ? parseAppURLState(new URL(deepLinks[0])) : undefined),
+    [deepLinks],
+  );
+
+  // Maybe this should be abstracted somewhere but that would require a
+  // more intimate interface with this hook and the player selection logic.
+  const currentUserRequired = targetUrlState?.ds === "foxglove-data-platform";
+
+  useInitialDeepLinkState(targetUrlState, currentUserRequired);
 
   useDefaultWebLaunchPreference();
 
@@ -491,17 +514,6 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     [selectedSidebarItem, supportsAccountSettings],
   );
 
-  // Since the _component_ field of a sidebar item entry is a component and accepts no additional
-  // props we need to wrap our DataSourceSidebar component to connect the open data source action to
-  // open the data source dialog.
-  const DataSourceSidebarItem = useMemo(() => {
-    return function DataSourceSidebarItemImpl() {
-      return (
-        <DataSourceSidebar onSelectDataSourceAction={() => setShowOpenDialog({ view: "start" })} />
-      );
-    };
-  }, []);
-
   const [sidebarItems, sidebarBottomItems] = useMemo(() => {
     const topItems = new Map<SidebarItemKey, SidebarItem>([
       [
@@ -509,7 +521,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
         {
           iconName: "DatabaseSettings",
           title: "Data source",
-          component: DataSourceSidebarItem,
+          component: DataSourceSidebarItemHoc(setShowOpenDialog),
           badge:
             playerProblems && playerProblems.length > 0
               ? { count: playerProblems.length }
@@ -553,13 +565,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     });
 
     return [topItems, bottomItems];
-  }, [
-    DataSourceSidebarItem,
-    playerProblems,
-    enableStudioLogsSidebar,
-    supportsAccountSettings,
-    currentUser,
-  ]);
+  }, [playerProblems, enableStudioLogsSidebar, supportsAccountSettings, currentUser]);
 
   const keyDownHandlers = useMemo(
     () => ({

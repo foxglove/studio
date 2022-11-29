@@ -41,7 +41,7 @@ import PlayerSelectionContext, {
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import { useUserNodeState } from "@foxglove/studio-base/context/UserNodeStateContext";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
-import useIndexedDbRecents from "@foxglove/studio-base/hooks/useIndexedDbRecents";
+import useIndexedDbRecents, { RecentRecord } from "@foxglove/studio-base/hooks/useIndexedDbRecents";
 import useWarnImmediateReRender from "@foxglove/studio-base/hooks/useWarnImmediateReRender";
 import AnalyticsMetricsCollector from "@foxglove/studio-base/players/AnalyticsMetricsCollector";
 import UserNodePlayer from "@foxglove/studio-base/players/UserNodePlayer";
@@ -282,31 +282,9 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
   );
 
   // Select a recent entry by id
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const selectRecent = useCallback(
-    (recentId: string) => {
-      // find the recent from the list and initialize
-      const foundRecent = recents.find((value) => value.id === recentId);
-      if (!foundRecent) {
-        enqueueSnackbar(`Failed to restore recent: ${recentId}`, { variant: "error" });
-        return;
-      }
-
-      switch (foundRecent.type) {
-        case "connection": {
-          void selectSource(foundRecent.sourceId, {
-            type: "connection",
-            params: foundRecent.extra,
-          });
-          break;
-        }
-        case "file": {
-          void selectSource(foundRecent.sourceId, {
-            type: "file",
-            handle: foundRecent.handle,
-          });
-        }
-      }
-    },
+    createSelectRecentCallback(recents, selectSource, enqueueSnackbar),
     [recents, enqueueSnackbar, selectSource],
   );
 
@@ -333,4 +311,36 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
       </PlayerSelectionContext.Provider>
     </>
   );
+}
+
+// fixes memory leak across > 2 data sources without reloading
+function createSelectRecentCallback(
+  recents: RecentRecord[],
+  selectSource: (sourceId: string, dataSourceArgs: DataSourceArgs) => Promise<void>,
+  enqueueSnackbar: ReturnType<typeof useSnackbar>["enqueueSnackbar"],
+) {
+  return (recentId: string) => {
+    // find the recent from the list and initialize
+    const foundRecent = recents.find((value) => value.id === recentId);
+    if (!foundRecent) {
+      enqueueSnackbar(`Failed to restore recent: ${recentId}`, { variant: "error" });
+      return;
+    }
+
+    switch (foundRecent.type) {
+      case "connection": {
+        void selectSource(foundRecent.sourceId, {
+          type: "connection",
+          params: foundRecent.extra,
+        });
+        break;
+      }
+      case "file": {
+        void selectSource(foundRecent.sourceId, {
+          type: "file",
+          handle: foundRecent.handle,
+        });
+      }
+    }
+  };
 }
