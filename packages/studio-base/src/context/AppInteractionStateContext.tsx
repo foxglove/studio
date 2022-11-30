@@ -31,10 +31,10 @@ export type SyncBounds = {
 };
 
 /**
- * The TimelineInteractionStateStore manages state related to dynamic user interactions with data in the app.
+ * The AppInteractionStateStore manages state related to dynamic user interactions with data in the app.
  * Things like the hovered time value and global bounds for plots are managed here.
  */
-export type TimelineInteractionStateStore = DeepReadonly<{
+export type AppInteractionStateStore = DeepReadonly<{
   /** The events overlapping the current hover time, if any. */
   eventsAtHoverValue: Record<string, TimelinePositionedEvent>;
 
@@ -68,21 +68,21 @@ export type TimelineInteractionStateStore = DeepReadonly<{
   setHoverValue: (value: HoverValue) => void;
 }>;
 
-export const TimelineInteractionStateContext = createContext<
-  undefined | StoreApi<TimelineInteractionStateStore>
+export const AppInteractionStateContext = createContext<
+  undefined | StoreApi<AppInteractionStateStore>
 >(undefined);
-const selectClearHoverValue = (store: TimelineInteractionStateStore) => store.clearHoverValue;
+const selectClearHoverValue = (store: AppInteractionStateStore) => store.clearHoverValue;
 
-export function useClearHoverValue(): TimelineInteractionStateStore["clearHoverValue"] {
-  return useTimelineInteractionState(selectClearHoverValue);
+export function useClearHoverValue(): AppInteractionStateStore["clearHoverValue"] {
+  return useAppInteractionState(selectClearHoverValue);
 }
 
-const selectSetHoverValue = (store: TimelineInteractionStateStore) => {
+const selectSetHoverValue = (store: AppInteractionStateStore) => {
   return store.setHoverValue;
 };
 
-export function useSetHoverValue(): TimelineInteractionStateStore["setHoverValue"] {
-  return useTimelineInteractionState(selectSetHoverValue);
+export function useSetHoverValue(): AppInteractionStateStore["setHoverValue"] {
+  return useAppInteractionState(selectSetHoverValue);
 }
 
 /**
@@ -98,7 +98,7 @@ export function useHoverValue(args?: {
   const isTimestampScale = args?.isTimestampScale ?? false;
 
   const selector = useCallback(
-    (store: TimelineInteractionStateStore) => {
+    (store: AppInteractionStateStore) => {
       if (!hasArgs) {
         // Raw form -- user needs to check that the value should be shown.
         return store.hoverValue;
@@ -116,17 +116,17 @@ export function useHoverValue(args?: {
     [hasArgs, componentId, isTimestampScale],
   );
 
-  return useTimelineInteractionState(selector);
+  return useAppInteractionState(selector);
 }
 
 /**
  * This hook wraps all access to the interaction state store. Pass selectors
  * to access parts of the store.
  */
-export function useTimelineInteractionState<T>(
-  selector: (store: TimelineInteractionStateStore) => T,
+export function useAppInteractionState<T>(
+  selector: (store: AppInteractionStateStore) => T,
   equalityFn?: (a: T, b: T) => boolean,
 ): T {
-  const context = useGuaranteedContext(TimelineInteractionStateContext);
+  const context = useGuaranteedContext(AppInteractionStateContext);
   return useStore(context, selector, equalityFn);
 }

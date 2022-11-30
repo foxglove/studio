@@ -19,8 +19,8 @@ import MockMessagePipelineProvider from "@foxglove/studio-base/components/Messag
 import AppConfigurationContext, {
   IAppConfiguration,
 } from "@foxglove/studio-base/context/AppConfigurationContext";
+import { useSetHoverValue } from "@foxglove/studio-base/context/AppInteractionStateContext";
 import { useEvents } from "@foxglove/studio-base/context/EventsContext";
-import { useSetHoverValue } from "@foxglove/studio-base/context/TimelineInteractionStateContext";
 import {
   PlayerCapabilities,
   PlayerPresence,

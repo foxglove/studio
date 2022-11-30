@@ -38,11 +38,11 @@ import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipe
 import Stack from "@foxglove/studio-base/components/Stack";
 import TimeBasedChartLegend from "@foxglove/studio-base/components/TimeBasedChart/TimeBasedChartLegend";
 import {
-  TimelineInteractionStateStore,
+  AppInteractionStateStore,
   useClearHoverValue,
-  useTimelineInteractionState,
+  useAppInteractionState,
   useSetHoverValue,
-} from "@foxglove/studio-base/context/TimelineInteractionStateContext";
+} from "@foxglove/studio-base/context/AppInteractionStateContext";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import HoverBar from "./HoverBar";
@@ -103,8 +103,8 @@ type ChartComponentProps = ComponentProps<typeof ChartComponent>;
 // eslint-disable-next-line no-restricted-syntax
 const ChartNull = null;
 
-const selectGlobalBounds = (store: TimelineInteractionStateStore) => store.globalBounds;
-const selectSetGlobalBounds = (store: TimelineInteractionStateStore) => store.setGlobalBounds;
+const selectGlobalBounds = (store: AppInteractionStateStore) => store.globalBounds;
+const selectSetGlobalBounds = (store: AppInteractionStateStore) => store.setGlobalBounds;
 
 // Calculation mode for the "reset view" view.
 export type ChartDefaultView =
@@ -209,8 +209,8 @@ export default function TimeBasedChart(props: Props): JSX.Element {
     };
   }, [pauseFrame, onFinishRender]);
 
-  const globalBounds = useTimelineInteractionState(selectGlobalBounds);
-  const setGlobalBounds = useTimelineInteractionState(selectSetGlobalBounds);
+  const globalBounds = useAppInteractionState(selectGlobalBounds);
+  const setGlobalBounds = useAppInteractionState(selectSetGlobalBounds);
 
   // Ignore global bounds if we're not synced.
   const syncedGlobalBounds = useMemo(

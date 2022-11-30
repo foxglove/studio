@@ -24,7 +24,7 @@ import Stack from "@foxglove/studio-base/components/Stack";
 import {
   useClearHoverValue,
   useSetHoverValue,
-} from "@foxglove/studio-base/context/TimelineInteractionStateContext";
+} from "@foxglove/studio-base/context/AppInteractionStateContext";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
 
 import { EventsOverlay } from "./EventsOverlay";

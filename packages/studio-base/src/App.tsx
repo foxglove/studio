@@ -6,9 +6,9 @@ import { useState, Suspense, Fragment, useEffect } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
+import AppInteractionStateProvider from "@foxglove/studio-base/providers/AppInteractionStateProvider";
 import EventsProvider from "@foxglove/studio-base/providers/EventsProvider";
 import { StudioLogsSettingsProvider } from "@foxglove/studio-base/providers/StudioLogsSettingsProvider";
-import TimelineInteractionStateProvider from "@foxglove/studio-base/providers/TimelineInteractionStateProvider";
 
 import Workspace from "./Workspace";
 import { ColorSchemeThemeProvider } from "./components/ColorSchemeThemeProvider";
@@ -106,7 +106,7 @@ export function App(props: AppProps): JSX.Element {
     <ModalHost />, // render modal elements inside the ThemeProvider
     <AssetsProvider loaders={assetLoaders} />,
     <HelpInfoProvider />,
-    <TimelineInteractionStateProvider />,
+    <AppInteractionStateProvider />,
     <UserNodeStateProvider />,
     <CurrentLayoutProvider />,
     <ExtensionMarketplaceProvider />,

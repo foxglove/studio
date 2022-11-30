@@ -14,14 +14,14 @@ import {
 } from "@foxglove/studio-base/components/MessagePipeline";
 import Stack from "@foxglove/studio-base/components/Stack";
 import {
+  AppInteractionStateStore,
+  useAppInteractionState,
+} from "@foxglove/studio-base/context/AppInteractionStateContext";
+import {
   EventsStore,
   TimelinePositionedEvent,
   useEvents,
 } from "@foxglove/studio-base/context/EventsContext";
-import {
-  TimelineInteractionStateStore,
-  useTimelineInteractionState,
-} from "@foxglove/studio-base/context/TimelineInteractionStateContext";
 import { useAppTimeFormat } from "@foxglove/studio-base/hooks";
 
 import { EventView } from "./EventView";
@@ -54,9 +54,9 @@ const selectSeek = (ctx: MessagePipelineContext) => ctx.seekPlayback;
 const selectEventFilter = (store: EventsStore) => store.filter;
 const selectSetEventFilter = (store: EventsStore) => store.setFilter;
 const selectEvents = (store: EventsStore) => store.events;
-const selectHoveredEvent = (store: TimelineInteractionStateStore) => store.hoveredEvent;
-const selectSetHoveredEvent = (store: TimelineInteractionStateStore) => store.setHoveredEvent;
-const selectEventsAtHoverValue = (store: TimelineInteractionStateStore) => store.eventsAtHoverValue;
+const selectHoveredEvent = (store: AppInteractionStateStore) => store.hoveredEvent;
+const selectSetHoveredEvent = (store: AppInteractionStateStore) => store.setHoveredEvent;
+const selectEventsAtHoverValue = (store: AppInteractionStateStore) => store.eventsAtHoverValue;
 const selectSelectedEventId = (store: EventsStore) => store.selectedEventId;
 const selectSelectEvent = (store: EventsStore) => store.selectEvent;
 
@@ -66,9 +66,9 @@ export function EventsList(): JSX.Element {
   const selectEvent = useEvents(selectSelectEvent);
   const { formatTime } = useAppTimeFormat();
   const seek = useMessagePipeline(selectSeek);
-  const eventsAtHoverValue = useTimelineInteractionState(selectEventsAtHoverValue);
-  const hoveredEvent = useTimelineInteractionState(selectHoveredEvent);
-  const setHoveredEvent = useTimelineInteractionState(selectSetHoveredEvent);
+  const eventsAtHoverValue = useAppInteractionState(selectEventsAtHoverValue);
+  const hoveredEvent = useAppInteractionState(selectHoveredEvent);
+  const setHoveredEvent = useAppInteractionState(selectSetHoveredEvent);
   const filter = useEvents(selectEventFilter);
   const setFilter = useEvents(selectSetEventFilter);
 

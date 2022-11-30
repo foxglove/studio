@@ -6,15 +6,15 @@ import { isEqual, keyBy } from "lodash";
 import { ReactNode, useState } from "react";
 import { createStore, StoreApi } from "zustand";
 
-import { TimelinePositionedEvent } from "@foxglove/studio-base/context/EventsContext";
 import {
-  TimelineInteractionStateContext,
-  TimelineInteractionStateStore,
+  AppInteractionStateContext,
+  AppInteractionStateStore,
   SyncBounds,
-} from "@foxglove/studio-base/context/TimelineInteractionStateContext";
+} from "@foxglove/studio-base/context/AppInteractionStateContext";
+import { TimelinePositionedEvent } from "@foxglove/studio-base/context/EventsContext";
 import { HoverValue } from "@foxglove/studio-base/types/hoverValue";
 
-function createTimelineInteractionStateStore(): StoreApi<TimelineInteractionStateStore> {
+function createAppInteractionStateStore(): StoreApi<AppInteractionStateStore> {
   return createStore((set) => {
     return {
       eventsAtHoverValue: {},
@@ -66,16 +66,16 @@ function createTimelineInteractionStateStore(): StoreApi<TimelineInteractionStat
   });
 }
 
-export default function TimelineInteractionStateProvider({
+export default function AppInteractionStateProvider({
   children,
 }: {
   children?: ReactNode;
 }): JSX.Element {
-  const [store] = useState(createTimelineInteractionStateStore());
+  const [store] = useState(createAppInteractionStateStore());
 
   return (
-    <TimelineInteractionStateContext.Provider value={store}>
+    <AppInteractionStateContext.Provider value={store}>
       {children}
-    </TimelineInteractionStateContext.Provider>
+    </AppInteractionStateContext.Provider>
   );
 }

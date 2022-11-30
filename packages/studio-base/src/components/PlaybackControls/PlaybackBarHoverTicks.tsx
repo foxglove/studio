@@ -15,7 +15,7 @@ import {
 } from "@foxglove/studio-base/components/MessagePipeline";
 import Stack from "@foxglove/studio-base/components/Stack";
 import HoverBar from "@foxglove/studio-base/components/TimeBasedChart/HoverBar";
-import { useHoverValue } from "@foxglove/studio-base/context/TimelineInteractionStateContext";
+import { useHoverValue } from "@foxglove/studio-base/context/AppInteractionStateContext";
 import { useAppTimeFormat } from "@foxglove/studio-base/hooks";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 

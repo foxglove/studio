@@ -29,14 +29,14 @@ import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import { useAppConfiguration } from "@foxglove/studio-base/context/AppConfigurationContext";
 import {
-  ExtensionCatalog,
-  useExtensionCatalog,
-} from "@foxglove/studio-base/context/ExtensionCatalogContext";
-import {
   useClearHoverValue,
   useHoverValue,
   useSetHoverValue,
-} from "@foxglove/studio-base/context/TimelineInteractionStateContext";
+} from "@foxglove/studio-base/context/AppInteractionStateContext";
+import {
+  ExtensionCatalog,
+  useExtensionCatalog,
+} from "@foxglove/studio-base/context/ExtensionCatalogContext";
 import useGlobalVariables from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { useSynchronousMountedState } from "@foxglove/studio-base/hooks/useSynchronousMountedState";
 import {

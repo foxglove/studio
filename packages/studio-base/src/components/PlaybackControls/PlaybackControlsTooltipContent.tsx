@@ -13,9 +13,9 @@ import {
   useMessagePipeline,
 } from "@foxglove/studio-base/components/MessagePipeline";
 import {
-  TimelineInteractionStateStore,
-  useTimelineInteractionState,
-} from "@foxglove/studio-base/context/TimelineInteractionStateContext";
+  AppInteractionStateStore,
+  useAppInteractionState,
+} from "@foxglove/studio-base/context/AppInteractionStateContext";
 import { useAppTimeFormat } from "@foxglove/studio-base/hooks";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
@@ -47,13 +47,13 @@ const useStyles = makeStyles()((theme) => ({
   },
 }));
 
-const selectHoveredEvents = (store: TimelineInteractionStateStore) => store.eventsAtHoverValue;
+const selectHoveredEvents = (store: AppInteractionStateStore) => store.eventsAtHoverValue;
 const selectStartTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.startTime;
 
 export function PlaybackControlsTooltipContent(params: { stamp: Time }): ReactNull | JSX.Element {
   const { stamp } = params;
   const { formatTime, timeFormat } = useAppTimeFormat();
-  const hoveredEvents = useTimelineInteractionState(selectHoveredEvents);
+  const hoveredEvents = useAppInteractionState(selectHoveredEvents);
   const startTime = useMessagePipeline(selectStartTime);
   const { classes } = useStyles();
 

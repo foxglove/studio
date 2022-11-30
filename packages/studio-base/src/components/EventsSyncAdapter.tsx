@@ -13,6 +13,11 @@ import {
   MessagePipelineContext,
   useMessagePipeline,
 } from "@foxglove/studio-base/components/MessagePipeline";
+import {
+  AppInteractionStateStore,
+  useHoverValue,
+  useAppInteractionState,
+} from "@foxglove/studio-base/context/AppInteractionStateContext";
 import { useConsoleApi } from "@foxglove/studio-base/context/ConsoleApiContext";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
 import {
@@ -20,11 +25,6 @@ import {
   TimelinePositionedEvent,
   useEvents,
 } from "@foxglove/studio-base/context/EventsContext";
-import {
-  TimelineInteractionStateStore,
-  useHoverValue,
-  useTimelineInteractionState,
-} from "@foxglove/studio-base/context/TimelineInteractionStateContext";
 import { ConsoleEvent } from "@foxglove/studio-base/services/ConsoleApi";
 
 const HOVER_TOLERANCE = 0.01;
@@ -57,7 +57,7 @@ const selectEventFilter = (store: EventsStore) => store.filter;
 const selectEvents = (store: EventsStore) => store.events;
 const selectUrlState = (ctx: MessagePipelineContext) => ctx.playerState.urlState;
 const selectSetEvents = (store: EventsStore) => store.setEvents;
-const selectSetEventsAtHoverValue = (store: TimelineInteractionStateStore) =>
+const selectSetEventsAtHoverValue = (store: AppInteractionStateStore) =>
   store.setEventsAtHoverValue;
 const selectStartTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.startTime;
 const selectEndTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.endTime;
@@ -70,7 +70,7 @@ export function EventsSyncAdapter(): ReactNull {
   const urlState = useMessagePipeline(selectUrlState);
   const consoleApi = useConsoleApi();
   const setEvents = useEvents(selectSetEvents);
-  const setEventsAtHoverValue = useTimelineInteractionState(selectSetEventsAtHoverValue);
+  const setEventsAtHoverValue = useAppInteractionState(selectSetEventsAtHoverValue);
   const hoverValue = useHoverValue();
   const startTime = useMessagePipeline(selectStartTime);
   const endTime = useMessagePipeline(selectEndTime);

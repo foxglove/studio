@@ -7,14 +7,14 @@ import { clamp } from "lodash";
 import { makeStyles } from "tss-react/mui";
 
 import {
+  AppInteractionStateStore,
+  useAppInteractionState,
+} from "@foxglove/studio-base/context/AppInteractionStateContext";
+import {
   EventsStore,
   TimelinePositionedEvent,
   useEvents,
 } from "@foxglove/studio-base/context/EventsContext";
-import {
-  TimelineInteractionStateStore,
-  useTimelineInteractionState,
-} from "@foxglove/studio-base/context/TimelineInteractionStateContext";
 
 const useStyles = makeStyles()(({ transitions, palette }) => ({
   root: {
@@ -47,13 +47,13 @@ const useStyles = makeStyles()(({ transitions, palette }) => ({
 }));
 
 const selectEvents = (store: EventsStore) => store.events;
-const selectHoveredEvent = (store: TimelineInteractionStateStore) => store.hoveredEvent;
-const selectEventsAtHoverValue = (store: TimelineInteractionStateStore) => store.eventsAtHoverValue;
+const selectHoveredEvent = (store: AppInteractionStateStore) => store.hoveredEvent;
+const selectEventsAtHoverValue = (store: AppInteractionStateStore) => store.eventsAtHoverValue;
 const selectSelectedEventId = (store: EventsStore) => store.selectedEventId;
 
 function EventTick({ event }: { event: TimelinePositionedEvent }): JSX.Element {
-  const eventsAtHoverValue = useTimelineInteractionState(selectEventsAtHoverValue);
-  const hoveredEvent = useTimelineInteractionState(selectHoveredEvent);
+  const eventsAtHoverValue = useAppInteractionState(selectEventsAtHoverValue);
+  const hoveredEvent = useAppInteractionState(selectHoveredEvent);
   const selectedEventId = useEvents(selectSelectedEventId);
   const { classes, cx } = useStyles();
 

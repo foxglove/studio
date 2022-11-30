@@ -12,7 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { RpcScales } from "@foxglove/studio-base/components/Chart/types";
-import { useHoverValue } from "@foxglove/studio-base/context/TimelineInteractionStateContext";
+import { useHoverValue } from "@foxglove/studio-base/context/AppInteractionStateContext";
 
 import { VerticalBarWrapper } from "./VerticalBarWrapper";
 
