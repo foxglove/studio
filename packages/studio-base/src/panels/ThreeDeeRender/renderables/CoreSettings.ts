@@ -150,6 +150,11 @@ export class CoreSettings extends SceneExtension {
                   ? "This setting requires a restart to take effect"
                   : undefined,
             },
+            syncCamera: {
+              label: "Sync camera",
+              input: "boolean",
+              value: config.scene.syncCamera ?? false,
+            },
             meshUpAxis: {
               label: "Mesh up axis",
               help: "The direction to use as “up” when loading meshes without orientation info (STL and OBJ)",

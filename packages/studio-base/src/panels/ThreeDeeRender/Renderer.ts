@@ -136,6 +136,8 @@ export type RendererConfig = {
       /** Enable transform preloading */
       enablePreloading?: boolean;
     };
+    /** Sync camera with other 3d panels */
+    syncCamera?: boolean;
     /** Toggles visibility of all topics */
     topicsVisible?: boolean;
   };

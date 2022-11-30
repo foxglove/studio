@@ -2,7 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { ReactNode, useCallback, useState } from "react";
+import { ReactNode, useCallback, useMemo, useState } from "react";
+import { DeepReadonly } from "ts-essentials";
 import { createStore, StoreApi } from "zustand";
 
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
@@ -10,14 +11,17 @@ import {
   ImmutableSettingsTree,
   PanelStateContext,
   PanelStateStore,
+  SharedPanelState,
   usePanelStateStore,
 } from "@foxglove/studio-base/context/PanelStateContext";
+import { getPanelTypeFromId } from "@foxglove/studio-base/util/layout";
 
 function createPanelStateStore(): StoreApi<PanelStateStore> {
   return createStore((set) => {
     return {
       sequenceNumbers: {},
       settingsTrees: {},
+      sharedPanelState: {},
 
       incrementSequenceNumber: (panelId: string) => {
         set((state) => {
@@ -37,6 +41,10 @@ function createPanelStateStore(): StoreApi<PanelStateStore> {
             [panelId]: settingsTree,
           },
         }));
+      },
+
+      updateSharedPanelState: (type: string, data: SharedPanelState) => {
+        set((old) => ({ sharedPanelState: { ...old.sharedPanelState, [type]: data } }));
       },
     };
   });
@@ -59,6 +67,27 @@ export function usePanelSettingsTreeUpdate(): (newTree: ImmutableSettingsTree) =
   );
 
   return updateSettingsTree;
+}
+
+const sharedDataSelector = (store: PanelStateStore) => store.sharedPanelState;
+const updateSharedDataSelector = (store: PanelStateStore) => store.updateSharedPanelState;
+
+export function useSharedPanelState(): [
+  DeepReadonly<SharedPanelState>,
+  (data: DeepReadonly<SharedPanelState>) => void,
+] {
+  const updateSharedData = usePanelStateStore(updateSharedDataSelector);
+  const sharedData = usePanelStateStore(sharedDataSelector);
+  const panelId = usePanelContext().id;
+  const panelType = useMemo(() => getPanelTypeFromId(panelId), [panelId]);
+  const update = useCallback(
+    (data: DeepReadonly<SharedPanelState>) => {
+      updateSharedData(panelType, data);
+    },
+    [panelType, updateSharedData],
+  );
+
+  return [sharedData[panelType], update];
 }
 
 export function PanelStateContextProvider({ children }: { children?: ReactNode }): JSX.Element {
