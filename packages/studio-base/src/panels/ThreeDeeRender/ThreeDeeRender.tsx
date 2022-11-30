@@ -37,7 +37,6 @@ import {
 import PublishGoalIcon from "@foxglove/studio-base/components/PublishGoalIcon";
 import PublishPointIcon from "@foxglove/studio-base/components/PublishPointIcon";
 import PublishPoseEstimateIcon from "@foxglove/studio-base/components/PublishPoseEstimateIcon";
-import { SharedPanelState } from "@foxglove/studio-base/context/PanelStateContext";
 import useCleanup from "@foxglove/studio-base/hooks/useCleanup";
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
 
@@ -45,7 +44,13 @@ import { DebugGui } from "./DebugGui";
 import { InteractionContextMenu, Interactions, SelectionObject, TabType } from "./Interactions";
 import type { PickedRenderable } from "./Picker";
 import type { Renderable } from "./Renderable";
-import { Renderer, RendererConfig, RendererEvents, RendererSubscription } from "./Renderer";
+import {
+  FollowMode,
+  Renderer,
+  RendererConfig,
+  RendererEvents,
+  RendererSubscription,
+} from "./Renderer";
 import { RendererContext, useRenderer, useRendererEvent } from "./RendererContext";
 import { Stats } from "./Stats";
 import { CameraState, DEFAULT_CAMERA_STATE, MouseEventObject } from "./camera";
@@ -61,6 +66,12 @@ import type { LayerSettingsTransform } from "./renderables/FrameAxes";
 import { PublishClickEvent, PublishClickType } from "./renderables/PublishClickTool";
 
 const log = Logger.getLogger(__filename);
+
+type Shared3DPanelState = {
+  cameraState: CameraState;
+  followMode: FollowMode;
+  followTf: undefined | string;
+};
 
 const SHOW_DEBUG: true | false = false;
 const SELECTED_ID_VARIABLE = "selected_id";
@@ -406,7 +417,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
   const [messages, setMessages] = useState<ReadonlyArray<MessageEvent<unknown>> | undefined>();
   const [currentTime, setCurrentTime] = useState<Time | undefined>();
   const [didSeek, setDidSeek] = useState<boolean>(false);
-  const [sharedPanelState, setSharedPanelState] = useState<SharedPanelState>();
+  const [sharedPanelState, setSharedPanelState] = useState<undefined | Shared3DPanelState>();
 
   const renderRef = useRef({ needsRender: false });
   const [renderDone, setRenderDone] = useState<(() => void) | undefined>();
@@ -435,7 +446,11 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
         setConfig((prevConfig) => ({ ...prevConfig, cameraState: newCameraState }));
 
         if (config.scene.syncCamera === true) {
-          context.setSharedPanelState(newCameraState);
+          context.setSharedPanelState({
+            cameraState: newCameraState,
+            followMode: renderer.followMode,
+            followTf: renderer.followFrameId,
+          });
         }
       }
     };
@@ -451,12 +466,18 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
       // renderer.updateConfig to read out the new config value and configure their renderables
       // before the render occurs.
       ReactDOM.unstable_batchedUpdates(() => {
-        const initialCameraState = renderer?.getCameraState();
-        renderer?.settings.handleAction(action);
-        const updatedCameraState = renderer?.getCameraState();
-        // Communicate camera changes from settings to the global state if syncing.
-        if (updatedCameraState !== initialCameraState && config.scene.syncCamera === true) {
-          context.setSharedPanelState(updatedCameraState);
+        if (renderer) {
+          const initialCameraState = renderer.getCameraState();
+          renderer.settings.handleAction(action);
+          const updatedCameraState = renderer.getCameraState();
+          // Communicate camera changes from settings to the global state if syncing.
+          if (updatedCameraState !== initialCameraState && config.scene.syncCamera === true) {
+            context.setSharedPanelState({
+              cameraState: updatedCameraState,
+              followMode: renderer.followMode,
+              followTf: renderer.followFrameId,
+            });
+          }
         }
       }),
     [config.scene.syncCamera, context, renderer],
@@ -552,7 +573,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
         // the current frame, topics may not have changed
         setTopics(renderState.topics);
 
-        setSharedPanelState(renderState.sharedPanelState);
+        setSharedPanelState(renderState.sharedPanelState as Shared3DPanelState);
 
         // Watch for any changes in the map of observed parameters
         setParameters(renderState.parameters);
@@ -688,15 +709,27 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
     }
   }, [cameraState, renderer]);
 
+  // Sync camera with shared state, if enabled.
   useEffect(() => {
-    if (sharedPanelState != undefined && config.scene.syncCamera === true) {
-      const newCameraState = sharedPanelState as CameraState;
-      renderer?.setCameraState(newCameraState);
+    if (!renderer || sharedPanelState == undefined || config.scene.syncCamera === false) {
+      return;
+    }
+
+    if (sharedPanelState.followMode !== renderer.followMode) {
+      renderer.setCameraSyncError(`Follow mode must be ${renderer.followMode} to sync camera.`);
+    } else if (sharedPanelState.followTf !== renderer.followFrameId) {
+      renderer.setCameraSyncError(
+        `Display frame must be ${renderer.followFrameId} to sync camera.`,
+      );
+    } else {
+      const newCameraState = sharedPanelState.cameraState;
+      renderer.setCameraState(newCameraState);
       renderRef.current.needsRender = true;
       setConfig((prevConfig) => ({
         ...prevConfig,
         cameraState: newCameraState,
       }));
+      renderer.setCameraSyncError(undefined);
     }
   }, [config.scene.syncCamera, renderer, sharedPanelState]);
 
@@ -848,11 +881,6 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
   }, [publishActive, renderer]);
 
   const onTogglePerspective = useCallback(() => {
-    // setConfig((prevConfig) => ({
-    //   ...prevConfig,
-    //   cameraState: { ...prevConfig.cameraState, perspective: !prevConfig.cameraState.perspective },
-    // }));
-    // Wait for the setConfig to propagate to the renderer before updating the settings tree
     const currentState = renderer?.getCameraState().perspective ?? false;
     actionHandler({
       action: "update",

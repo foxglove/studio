@@ -153,6 +153,7 @@ export class CoreSettings extends SceneExtension {
             syncCamera: {
               label: "Sync camera",
               input: "boolean",
+              error: this.renderer.cameraSyncError(),
               value: config.scene.syncCamera ?? false,
             },
             meshUpAxis: {
