@@ -18,6 +18,7 @@ type ViewProps = {
 const useStyles = makeStyles()((theme) => ({
   content: {
     display: "flex",
+    flexDirection: "column",
     flexGrow: 1,
     height: "100%",
     justifyContent: "space-between",
