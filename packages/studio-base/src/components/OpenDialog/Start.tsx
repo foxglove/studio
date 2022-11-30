@@ -2,91 +2,62 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import {
-  Button,
-  Checkbox,
-  FormControlLabel,
-  Link,
-  styled as muiStyled,
-  SvgIcon,
-  Typography,
-} from "@mui/material";
+import { Button, Link, SvgIcon, Typography } from "@mui/material";
 import { useMemo } from "react";
+import { makeStyles } from "tss-react/mui";
 
-import { AppSetting } from "@foxglove/studio-base/AppSetting";
+// import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import Stack from "@foxglove/studio-base/components/Stack";
 import TextMiddleTruncate from "@foxglove/studio-base/components/TextMiddleTruncate";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
-import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
+// import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 
-import ActionList, { ActionListItem } from "./ActionList";
 import { OpenDialogViews } from "./types";
-
-const HELP_ITEMS: ActionListItem[] = [
-  {
-    id: "slack",
-    href: "https://foxglove.dev/slack?utm_source=studio&utm_medium=open-dialog",
-    target: "_blank",
-    children: "Join our Slack community",
-  },
-  {
-    id: "docs",
-    href: "https://foxglove.dev/docs?utm_source=studio&utm_medium=open-dialog",
-    target: "_blank",
-    children: "Browse docs",
-  },
-  {
-    id: "github",
-    href: "https://github.com/foxglove/studio/issues/",
-    target: "_blank",
-    children: "Report a bug or request a feature",
-  },
-];
-
-const CONTACT_ITEMS = [
-  {
-    id: "feedback",
-    href: "https://foxglove.dev/contact/",
-    target: "_blank",
-    children: "Give feedback",
-  },
-  {
-    id: "demo",
-    href: "https://foxglove.dev/demo/",
-    target: "_blank",
-    children: "Schedule a demo",
-  },
-];
 
 export type IStartProps = {
   supportedLocalFileExtensions?: string[];
   onSelectView: (newValue: OpenDialogViews) => void;
 };
 
-const StyledButton = muiStyled(Button)(({ theme }) => ({
-  textAlign: "left",
-  justifyContent: "flex-start",
-  padding: theme.spacing(2, 3),
-  gap: theme.spacing(1.5),
-  borderColor: theme.palette.divider,
+const useStyles = makeStyles()((theme) => ({
+  grid: {
+    // See comment below for explanation of grid properties
+    display: "grid",
+    gridTemplateRows: "auto",
+    gridTemplateColumns: `minmax(${(7 / 12) * 100}%, auto) 1fr`,
 
-  ".MuiButton-startIcon .MuiSvgIcon-fontSizeLarge": {
-    fontSize: 28,
+    [theme.breakpoints.down("md")]: {
+      display: "flex",
+      flexDirection: "column",
+    },
   },
-}));
+  sidebar: {
+    backgroundColor: theme.palette.background.default,
+    padding: theme.spacing(12, 6, 6),
+  },
+  connectionButton: {
+    textAlign: "left",
+    justifyContent: "flex-start",
+    padding: theme.spacing(2, 3),
+    gap: theme.spacing(1.5),
+    borderColor: theme.palette.divider,
 
-const Grid = muiStyled("div")(({ theme }) => ({
-  // See comment below for explanation of grid properties
-  display: "grid",
-  gap: theme.spacing(2.5, 4),
-  gridTemplateRows: "repeat(2, auto) 1fr",
-  gridTemplateColumns: `minmax(${(7 / 12) * 100}%, auto) 1fr`,
+    ".MuiButton-startIcon .MuiSvgIcon-fontSizeLarge": {
+      fontSize: 28,
+    },
+  },
+  recentButton: {
+    textAlign: "left",
+    justifyContent: "flex-start",
+    padding: theme.spacing(1.5, 2.5),
+    gap: theme.spacing(1.5),
+    borderColor: theme.palette.divider,
 
-  "@media(max-width: 800px)": {
-    display: "flex",
-    flexDirection: "column",
+    ".MuiButton-startIcon .MuiSvgIcon-fontSizeLarge": {
+      fontSize: 28,
+    },
   },
 }));
 
@@ -100,8 +71,10 @@ type DataSourceOptionProps = {
 
 function DataSourceOption(props: DataSourceOptionProps): JSX.Element {
   const { icon, onClick, text, secondaryText, href } = props;
+  const { classes } = useStyles();
   const button = (
-    <StyledButton
+    <Button
+      className={classes.connectionButton}
       fullWidth
       color="inherit"
       variant="outlined"
@@ -117,7 +90,7 @@ function DataSourceOption(props: DataSourceOptionProps): JSX.Element {
           {secondaryText}
         </Typography>
       </Stack>
-    </StyledButton>
+    </Button>
   );
 
   return href ? (
@@ -132,11 +105,12 @@ function DataSourceOption(props: DataSourceOptionProps): JSX.Element {
 export default function Start(props: IStartProps): JSX.Element {
   const { supportedLocalFileExtensions = [], onSelectView } = props;
   const { recentSources, selectRecent } = usePlayerSelection();
+  const { classes } = useStyles();
   const analytics = useAnalytics();
 
-  const [showOnStartup = true, setShowOnStartup] = useAppConfigurationValue<boolean>(
-    AppSetting.SHOW_OPEN_DIALOG_ON_STARTUP,
-  );
+  // const [showOnStartup = true, setShowOnStartup] = useAppConfigurationValue<boolean>(
+  //   AppSetting.SHOW_OPEN_DIALOG_ON_STARTUP,
+  // );
 
   const startItems = useMemo(() => {
     const formatter = new Intl.ListFormat("en-US", { style: "long" });
@@ -187,61 +161,20 @@ export default function Start(props: IStartProps): JSX.Element {
           void analytics.logEvent(AppEvent.DIALOG_SELECT_VIEW, { type: "live" });
         },
       },
-      {
-        key: "sample-data",
-        text: "Explore sample data",
-        secondaryText: "New to Foxglove Studio? Start here!",
-        icon: (
-          <SvgIcon fontSize="large" color="primary" viewBox="0 0 24 24">
-            <path d="M10.54 8.6l1.1-2.22c.25-.5.97-.5 1.22 0l1.1 2.23 2.46.36c.56.08.78.76.37 1.15l-1.78 1.74.42 2.45c.1.55-.48.97-.98.71l-2.2-1.15-2.2 1.15a.68.68 0 01-.98-.71l.42-2.45-1.78-1.74a.68.68 0 01.37-1.15l2.46-.36zm1.06.93c-.1.2-.29.34-.51.37l-1.45.21 1.05 1.02c.16.16.23.39.2.6l-.26 1.45 1.3-.68c.2-.1.44-.1.64 0l1.3.68-.25-1.44a.68.68 0 01.2-.6l1.04-1.03-1.45-.21a.68.68 0 01-.51-.37l-.65-1.32-.65 1.32z"></path>
-            <path d="M6.5 2A2.5 2.5 0 004 4.5v15A2.5 2.5 0 006.5 22h13.25a.75.75 0 000-1.5H6.5a1 1 0 01-1-1h14.25c.41 0 .75-.34.75-.75V4.5A2.5 2.5 0 0018 2H6.5zM19 18H5.5V4.5a1 1 0 011-1H18a1 1 0 011 1V18z" />
-          </SvgIcon>
-        ),
-        onClick: () => {
-          onSelectView("demo");
-          void analytics.logEvent(AppEvent.DIALOG_SELECT_VIEW, { type: "demo" });
-        },
-      },
     ];
   }, [analytics, onSelectView, supportedLocalFileExtensions]);
 
-  const recentItems: ActionListItem[] = useMemo(() => {
-    return recentSources.map((recent) => {
-      return {
-        id: recent.id,
-        children: (
-          <Stack overflow="hidden" direction="row" gap={1}>
-            <Typography variant="body2" color="inherit" component="div" noWrap overflow="hidden">
-              <TextMiddleTruncate text={recent.title} />
-            </Typography>
-            {recent.label && (
-              <Typography component="div" variant="body2" color="text.secondary" noWrap>
-                {recent.label}
-              </Typography>
-            )}
-          </Stack>
-        ),
-        onClick: () => selectRecent(recent.id),
-      };
-    });
-  }, [recentSources, selectRecent]);
-
-  // This layout uses `display: grid` at large widths, and `display: flex` at small widths. When
-  // using flex, the elements flow in source order within the column.
-  //
-  // At the larger width (when using grid), `gridColumn: 2` makes the Recent, Help, and Contact
-  // items go in the 2nd column, while the larger "Open data source" section occupies the first
-  // column. `gridTemplateRows: "repeat(2, auto) 1fr"` and `gridRow: "1 / 4"` makes it so the Open
-  // section doesn't affect the heights of the Recent and Help sections.
   return (
-    <Stack gap={2.5}>
-      <Grid>
-        {recentItems.length > 0 && <ActionList gridColumn={2} title="Recent" items={recentItems} />}
-        <Stack flex="1 1 0" gap={2} style={{ gridRow: "1 / 4" }}>
-          <Typography variant="h5" color="text.secondary">
-            Open data source
-          </Typography>
-          <Stack gap={1.5}>
+    <div className={classes.grid}>
+      <Stack padding={6}>
+        <Typography variant="h3" fontWeight={600} gutterBottom>
+          Welcome to Foxglove Studio
+        </Typography>
+        <Stack gap={4} paddingTop={1}>
+          <Stack gap={1}>
+            <Typography variant="h5" color="text.secondary" gutterBottom>
+              Open data source
+            </Typography>
             {startItems.map((item) => (
               <DataSourceOption
                 key={item.key}
@@ -253,22 +186,102 @@ export default function Start(props: IStartProps): JSX.Element {
               />
             ))}
           </Stack>
+          <Stack gap={1}>
+            <Typography variant="h5" color="text.secondary" gutterBottom>
+              Recent data sources
+            </Typography>
+            {recentSources.map((recent) => (
+              <Button
+                onClick={() => selectRecent(recent.id)}
+                className={classes.recentButton}
+                size="small"
+                variant="outlined"
+                color="inherit"
+                key={recent.id}
+                id={recent.id}
+              >
+                <Stack direction="row" overflow="hidden" gap={1}>
+                  {recent.label && (
+                    <>
+                      <Typography component="div" variant="body2" color="text.secondary" noWrap>
+                        {recent.label}
+                      </Typography>
+                      {" — "}
+                    </>
+                  )}
+                  <Typography
+                    variant="body2"
+                    color="inherit"
+                    component="div"
+                    noWrap
+                    overflow="hidden"
+                  >
+                    <TextMiddleTruncate text={recent.title} />
+                  </Typography>
+                </Stack>
+              </Button>
+            ))}
+          </Stack>
+          {/* <FormControlLabel
+            label="Show on startup"
+            control={
+              <Checkbox
+                color="primary"
+                checked={showOnStartup}
+                onChange={async (_, checked) => {
+                  await setShowOnStartup(checked);
+                }}
+              />
+            }
+          /> */}
         </Stack>
-        <ActionList gridColumn={2} title="Help" items={HELP_ITEMS} />
-        <ActionList gridColumn={2} title="Contact" items={CONTACT_ITEMS} />
-      </Grid>
-      <FormControlLabel
-        label="Show on startup"
-        control={
-          <Checkbox
-            color="primary"
-            checked={showOnStartup}
-            onChange={async (_, checked) => {
-              await setShowOnStartup(checked);
-            }}
-          />
-        }
-      />
-    </Stack>
+      </Stack>
+      <Stack gap={4} className={classes.sidebar}>
+        <Stack gap={1}>
+          <Typography variant="h5" color="text.secondary" gutterBottom>
+            New to Studio?
+          </Typography>
+          <Typography variant="body2">
+            Start exploring with an example layout and a sample self-driving dataset
+          </Typography>
+          <Stack direction="row" gap={1}>
+            <Button
+              variant="outlined"
+              color="primary"
+              onClick={() => {
+                onSelectView("demo");
+                void analytics.logEvent(AppEvent.DIALOG_SELECT_VIEW, { type: "demo" });
+              }}
+            >
+              Explore sample data
+            </Button>
+            <Button href="https://foxglove.dev/docs/studio" color="primary" target="_blank">
+              View docs
+            </Button>
+          </Stack>
+        </Stack>
+        <Stack gap={1}>
+          <Typography variant="h5" color="text.secondary" gutterBottom>
+            Store, explore, and stream your data
+          </Typography>
+          <Typography variant="body2">
+            Manage your robotics data with Foxglove Data Platform. Securely store petabytes of
+            indexed and tagged data for easy discovery and analysis.
+          </Typography>
+          <Stack direction="row" gap={1}>
+            <Button
+              variant="outlined"
+              color="primary"
+              onClick={() => {
+                onSelectView("demo");
+                void analytics.logEvent(AppEvent.DIALOG_SELECT_VIEW, { type: "demo" });
+              }}
+            >
+              Create a free account
+            </Button>
+          </Stack>
+        </Stack>
+      </Stack>
+    </div>
   );
 }
