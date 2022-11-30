@@ -23,17 +23,18 @@ const selectSelectEvent = (store: EventsStore) => store.selectEvent;
 const log = Log.getLogger(__filename);
 
 /*
- * Sync functions necessary to keep separate to prevent memory leak from context kept in
- * useEffect closures. Notably `seekPlayback` being attached to the context of the `useEffect` closures
- * and that keeping the initial player in memory because the context is never updated because it doesn't depend
- * on the player.
+ * Separation of sync functions is necessary to prevent memory leak from context kept in
+ * useEffect closures. Notably `seekPlayback` being attached to the context of the `useEffect`
+ * closures that don't use it and aren't updated when it changes. Otherwise the old memoized callbacks
+ * of these functions are kept in React state with the context that includes the old player, preventing
+ * garbage collection of the old player.
  */
 
 function useSyncSourceFromUrl(
   targetUrlState: AppURLState | undefined,
   { currentUserRequired }: { currentUserRequired: boolean },
 ) {
-  const [unappliedUrlState, setUnappliedUrlState] = useState(
+  const [unappliedSourceArgs, setUnappliedSourceArgs] = useState(
     targetUrlState ? { ds: targetUrlState.ds, dsParams: targetUrlState.dsParams } : undefined,
   );
   const { selectSource } = usePlayerSelection();
@@ -41,7 +42,7 @@ function useSyncSourceFromUrl(
   const { currentUser } = useCurrentUser();
   // Load data source from URL.
   useEffect(() => {
-    if (!unappliedUrlState) {
+    if (!unappliedSourceArgs) {
       return;
     }
 
@@ -51,22 +52,22 @@ function useSyncSourceFromUrl(
     }
 
     // Apply any available datasource args
-    if (unappliedUrlState.ds) {
-      log.debug("Initialising source from url", unappliedUrlState);
-      selectSource(unappliedUrlState.ds, {
+    if (unappliedSourceArgs.ds) {
+      log.debug("Initialising source from url", unappliedSourceArgs);
+      selectSource(unappliedSourceArgs.ds, {
         type: "connection",
-        params: unappliedUrlState.dsParams,
+        params: unappliedSourceArgs.dsParams,
       });
-      selectEvent(unappliedUrlState.dsParams?.eventId);
-      setUnappliedUrlState({ ds: undefined, dsParams: undefined });
+      selectEvent(unappliedSourceArgs.dsParams?.eventId);
+      setUnappliedSourceArgs({ ds: undefined, dsParams: undefined });
     }
   }, [
     currentUser,
     currentUserRequired,
     selectEvent,
     selectSource,
-    unappliedUrlState,
-    setUnappliedUrlState,
+    unappliedSourceArgs,
+    setUnappliedSourceArgs,
   ]);
 }
 function useSyncLayoutFromUrl(
@@ -75,12 +76,12 @@ function useSyncLayoutFromUrl(
 ) {
   const { setSelectedLayoutId } = useCurrentLayoutActions();
   const playerPresence = useMessagePipeline(selectPlayerPresence);
-  const [unappliedUrlState, setUnappliedUrlState] = useState(
+  const [unappliedLayoutArgs, setUnappliedLayoutArgs] = useState(
     targetUrlState ? { layoutId: targetUrlState.layoutId } : undefined,
   );
   // Select layout from URL.
   useEffect(() => {
-    if (!unappliedUrlState?.layoutId) {
+    if (!unappliedLayoutArgs?.layoutId) {
       return;
     }
 
@@ -91,21 +92,21 @@ function useSyncLayoutFromUrl(
       return;
     }
 
-    log.debug(`Initializing layout from url: ${unappliedUrlState.layoutId}`);
-    setSelectedLayoutId(unappliedUrlState.layoutId);
-    setUnappliedUrlState({ layoutId: undefined });
-  }, [currentUserRequired, playerPresence, setSelectedLayoutId, unappliedUrlState?.layoutId]);
+    log.debug(`Initializing layout from url: ${unappliedLayoutArgs.layoutId}`);
+    setSelectedLayoutId(unappliedLayoutArgs.layoutId);
+    setUnappliedLayoutArgs({ layoutId: undefined });
+  }, [currentUserRequired, playerPresence, setSelectedLayoutId, unappliedLayoutArgs?.layoutId]);
 }
 
 function useSyncTimeFromUrl(targetUrlState: AppURLState | undefined) {
   const seekPlayback = useMessagePipeline(selectSeek);
   const playerPresence = useMessagePipeline(selectPlayerPresence);
-  const [unappliedUrlState, setUnappliedUrlState] = useState(
+  const [unappliedTime, setUnappliedTime] = useState(
     targetUrlState ? { time: targetUrlState.time } : undefined,
   );
   // Seek to time in URL.
   useEffect(() => {
-    if (unappliedUrlState?.time == undefined || !seekPlayback) {
+    if (unappliedTime?.time == undefined || !seekPlayback) {
       return;
     }
 
@@ -114,10 +115,10 @@ function useSyncTimeFromUrl(targetUrlState: AppURLState | undefined) {
       return;
     }
 
-    log.debug(`Seeking to url time:`, unappliedUrlState.time);
-    seekPlayback(unappliedUrlState.time);
-    setUnappliedUrlState({ time: undefined });
-  }, [playerPresence, seekPlayback, unappliedUrlState]);
+    log.debug(`Seeking to url time:`, unappliedTime.time);
+    seekPlayback(unappliedTime.time);
+    setUnappliedTime({ time: undefined });
+  }, [playerPresence, seekPlayback, unappliedTime]);
 }
 
 /**
