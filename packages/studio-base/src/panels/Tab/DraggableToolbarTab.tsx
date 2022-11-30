@@ -32,7 +32,7 @@ export function DraggableToolbarTab(props: Props): JSX.Element {
   const { moveTab } = useCurrentLayoutActions();
 
   const ref = useRef<HTMLDivElement>(ReactNull);
-  const [{ isDragging }, dragRef] = useDrag<TabLocation, void, { isDragging: boolean }>({
+  const [{ isDragging }, connectDragRef] = useDrag<TabLocation, void, { isDragging: boolean }>({
     type: TAB_DRAG_TYPE,
     item: { panelId, tabIndex },
     collect: (monitor) => ({
@@ -40,7 +40,7 @@ export function DraggableToolbarTab(props: Props): JSX.Element {
     }),
   });
 
-  const [{ highlight }, dropRef] = useDrop<
+  const [{ highlight }, connectDropRef] = useDrop<
     TabLocation,
     void,
     { highlight: "before" | "after" | undefined }
@@ -63,8 +63,6 @@ export function DraggableToolbarTab(props: Props): JSX.Element {
     },
   });
 
-  dragRef(dropRef(ref)); // Combine drag and drop refs
-
   const tabProps = {
     tabTitle,
     tabIndex,
@@ -72,7 +70,7 @@ export function DraggableToolbarTab(props: Props): JSX.Element {
     tabCount,
     actions,
     isDragging,
-    innerRef: ref,
+    innerRef: () => connectDragRef(connectDropRef(ref)), // Combine drag and drop refs
     hidden: isDragging,
     highlight,
   };
