@@ -13,7 +13,12 @@ import { SaveConfig } from "@foxglove/studio-base/types/panels";
 import { ThreeDeeRender } from "./ThreeDeeRender";
 import helpContent from "./index.help.md";
 
+function unmountPanelFn(panelElement: HTMLElement) {
+  return () => ReactDOM.unmountComponentAtNode(panelElement);
+}
+
 function initPanel(context: PanelExtensionContext) {
+  context.onUnmount = unmountPanelFn(context.panelElement);
   ReactDOM.render(
     <StrictMode>
       <ThreeDeeRender context={context} />

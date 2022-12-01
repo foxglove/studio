@@ -350,6 +350,13 @@ declare module "@foxglove/studio" {
      * the representation of the panel settings in the editor.
      */
     updatePanelSettingsEditor(settings: Readonly<SettingsTree>): void;
+
+    /**
+     * Put necessary cleanup code here. Called before removing parent panelElement.
+     * NOTE: useEffect cleanup functions will not activate in react extension panels by default.
+     * You must activate those cleanup effects through this callback.
+     */
+    onUnmount?: () => void;
   };
 
   export type ExtensionPanelRegistration = {
