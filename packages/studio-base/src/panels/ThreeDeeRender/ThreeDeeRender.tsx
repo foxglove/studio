@@ -716,10 +716,12 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
     }
 
     if (sharedPanelState.followMode !== renderer.followMode) {
-      renderer.setCameraSyncError(`Follow mode must be ${renderer.followMode} to sync camera.`);
+      renderer.setCameraSyncError(
+        `Follow mode must be ${sharedPanelState.followMode} to sync camera.`,
+      );
     } else if (sharedPanelState.followTf !== renderer.followFrameId) {
       renderer.setCameraSyncError(
-        `Display frame must be ${renderer.followFrameId} to sync camera.`,
+        `Display frame must be ${sharedPanelState.followTf} to sync camera.`,
       );
     } else {
       const newCameraState = sharedPanelState.cameraState;
