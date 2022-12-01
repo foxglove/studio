@@ -711,7 +711,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
 
   // Sync camera with shared state, if enabled.
   useEffect(() => {
-    if (!renderer || sharedPanelState == undefined || config.scene.syncCamera === false) {
+    if (!renderer || sharedPanelState == undefined || config.scene.syncCamera !== true) {
       return;
     }
 
