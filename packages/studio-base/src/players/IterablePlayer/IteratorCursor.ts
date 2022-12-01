@@ -7,6 +7,8 @@ import { Time } from "@foxglove/studio";
 
 import type { IMessageCursor, IteratorResult } from "./IIterableSource";
 
+const TIME_ZERO = Object.freeze({ sec: 0, nsec: 0 });
+
 /// IteratorCursor implements a IMessageCursor interface on top of an AsyncIterable
 class IteratorCursor implements IMessageCursor {
   private _iter: AsyncIterableIterator<Readonly<IteratorResult>>;
@@ -46,7 +48,7 @@ class IteratorCursor implements IMessageCursor {
 
     const results: IteratorResult[] = [firstResult];
 
-    let cutoffTime = { sec: 0, nsec: 0 };
+    let cutoffTime: Time = TIME_ZERO;
     switch (firstResult.type) {
       case "stamp":
         cutoffTime = addTime(firstResult.stamp, { sec: 0, nsec: durationMs * 1e6 });

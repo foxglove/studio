@@ -54,13 +54,15 @@ export class WorkerIterableSource implements IIterableSource {
     const cursor = this.getMessageCursor(args);
     try {
       for (;;) {
-        const results = await cursor.nextBatch(16);
+        // The fastest framerate that studio renders at is 60fps. So to render a frame studio needs
+        // at minimum ~16 milliseconds of messages before it will render a frame. Here we fetch
+        // batches of 17 milliseconds so that one batch fetch could result in one frame render.
+        // Fetching too much in a batch means we cannot render until the batch is returned.
+        const results = await cursor.nextBatch(17 /* milliseconds */);
         if (!results || results.length === 0) {
           break;
         }
-        for (const result of results) {
-          yield result;
-        }
+        yield* results;
       }
     } finally {
       await cursor.end();
