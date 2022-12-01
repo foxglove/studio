@@ -123,7 +123,15 @@ export default function Connection(props: ConnectionProps): JSX.Element {
           Open a new connection
         </Typography>
       </Stack>
-      <Stack direction="row" flexGrow={1} flexWrap="wrap" fullHeight gap={4} paddingX={6}>
+      <Stack
+        direction="row"
+        flexGrow={1}
+        flexWrap="wrap"
+        fullHeight
+        gap={4}
+        paddingX={6}
+        style={{ minHeight: 440 }}
+      >
         <Stack flexBasis={240}>
           <Tabs
             classes={{ root: classes.tabs, indicator: classes.indicator }}

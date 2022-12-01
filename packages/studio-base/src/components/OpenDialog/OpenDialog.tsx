@@ -150,7 +150,7 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
       PaperProps={{
         square: false,
         elevation: 4,
-        style: { maxWidth: "calc(min(1024px, 100% - 32px))", minHeight: 740 },
+        style: { maxWidth: "calc(min(960px, 100% - 32px))" },
       }}
     >
       <IconButton className={classes.closeButton} onClick={onModalClose} edge="end">

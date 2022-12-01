@@ -2,11 +2,13 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Button, Link, SvgIcon, Typography } from "@mui/material";
+import { Button, Link, List, ListItem, ListItemButton, SvgIcon, Typography } from "@mui/material";
 import { useMemo } from "react";
+import tinycolor from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 
 // import { AppSetting } from "@foxglove/studio-base/AppSetting";
+import FoxgloveLogoText from "@foxglove/studio-base/components/FoxgloveLogoText";
 import Stack from "@foxglove/studio-base/components/Stack";
 import TextMiddleTruncate from "@foxglove/studio-base/components/TextMiddleTruncate";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
@@ -22,11 +24,15 @@ export type IStartProps = {
 };
 
 const useStyles = makeStyles()((theme) => ({
+  logo: {
+    width: 200,
+    height: "auto",
+  },
   grid: {
     // See comment below for explanation of grid properties
     display: "grid",
     gridTemplateRows: "auto",
-    gridTemplateColumns: `minmax(${(7 / 12) * 100}%, auto) 1fr`,
+    gridTemplateColumns: `1fr 375px`,
 
     [theme.breakpoints.down("md")]: {
       display: "flex",
@@ -34,8 +40,12 @@ const useStyles = makeStyles()((theme) => ({
     },
   },
   sidebar: {
-    backgroundColor: theme.palette.background.default,
-    padding: theme.spacing(12, 6, 6),
+    backgroundColor: tinycolor(theme.palette.text.primary).setAlpha(0.04).toRgbString(),
+    padding: theme.spacing(16.5, 6, 6),
+
+    [theme.breakpoints.down("md")]: {
+      padding: theme.spacing(6),
+    },
   },
   connectionButton: {
     textAlign: "left",
@@ -48,16 +58,22 @@ const useStyles = makeStyles()((theme) => ({
       fontSize: 28,
     },
   },
-  recentButton: {
-    textAlign: "left",
-    justifyContent: "flex-start",
-    padding: theme.spacing(1.5, 2.5),
-    gap: theme.spacing(1.5),
-    borderColor: theme.palette.divider,
+  recentListItemButton: {
+    overflow: "hidden",
+    color: theme.palette.text.secondary,
 
-    ".MuiButton-startIcon .MuiSvgIcon-fontSizeLarge": {
-      fontSize: 28,
+    "&:hover": {
+      backgroundColor: "transparent",
+      color: theme.palette.text.primary,
     },
+  },
+  recentSourcePrimary: {
+    fontWeight: 600,
+    whiteSpace: "nowrap",
+    color: theme.palette.primary.main,
+  },
+  recentSourceSecondary: {
+    color: "inherit",
   },
 }));
 
@@ -167,12 +183,10 @@ export default function Start(props: IStartProps): JSX.Element {
   return (
     <div className={classes.grid}>
       <Stack padding={6}>
-        <Typography variant="h3" fontWeight={600} gutterBottom>
-          Welcome to Foxglove Studio
-        </Typography>
         <Stack gap={4} paddingTop={1}>
+          <FoxgloveLogoText color="primary" className={classes.logo} />
           <Stack gap={1}>
-            <Typography variant="h5" color="text.secondary" gutterBottom>
+            <Typography variant="h5" gutterBottom>
               Open data source
             </Typography>
             {startItems.map((item) => (
@@ -187,40 +201,31 @@ export default function Start(props: IStartProps): JSX.Element {
             ))}
           </Stack>
           <Stack gap={1}>
-            <Typography variant="h5" color="text.secondary" gutterBottom>
+            <Typography variant="h5" gutterBottom>
               Recent data sources
             </Typography>
-            {recentSources.map((recent) => (
-              <Button
-                onClick={() => selectRecent(recent.id)}
-                className={classes.recentButton}
-                size="small"
-                variant="outlined"
-                color="inherit"
-                key={recent.id}
-                id={recent.id}
-              >
-                <Stack direction="row" overflow="hidden" gap={1}>
-                  {recent.label && (
-                    <>
-                      <Typography component="div" variant="body2" color="text.secondary" noWrap>
-                        {recent.label}
-                      </Typography>
-                      {" — "}
-                    </>
-                  )}
-                  <Typography
-                    variant="body2"
-                    color="inherit"
-                    component="div"
-                    noWrap
-                    overflow="hidden"
+            <List disablePadding>
+              {recentSources.map((recent) => (
+                <ListItem disablePadding key={recent.id} id={recent.id}>
+                  <ListItemButton
+                    disableGutters
+                    onClick={() => selectRecent(recent.id)}
+                    className={classes.recentListItemButton}
                   >
-                    <TextMiddleTruncate text={recent.title} />
-                  </Typography>
-                </Stack>
-              </Button>
-            ))}
+                    <Stack direction="row" alignItems="center" gap={1} overflow="hidden">
+                      <div className={classes.recentSourcePrimary}>
+                        {recent.label ?? "Local file"}
+                      </div>
+                      {" – "}
+                      <TextMiddleTruncate
+                        className={classes.recentSourceSecondary}
+                        text={recent.title}
+                      />
+                    </Stack>
+                  </ListItemButton>
+                </ListItem>
+              ))}
+            </List>
           </Stack>
           {/* <FormControlLabel
             label="Show on startup"
@@ -237,14 +242,14 @@ export default function Start(props: IStartProps): JSX.Element {
         </Stack>
       </Stack>
       <Stack gap={4} className={classes.sidebar}>
-        <Stack gap={1}>
-          <Typography variant="h5" color="text.secondary" gutterBottom>
+        <div>
+          <Typography variant="h5" gutterBottom>
             New to Studio?
           </Typography>
-          <Typography variant="body2">
+          <Typography variant="body2" color="text.secondary">
             Start exploring with an example layout and a sample self-driving dataset
           </Typography>
-          <Stack direction="row" gap={1}>
+          <Stack direction="row" gap={1} paddingTop={2}>
             <Button
               variant="outlined"
               color="primary"
@@ -259,16 +264,16 @@ export default function Start(props: IStartProps): JSX.Element {
               View docs
             </Button>
           </Stack>
-        </Stack>
-        <Stack gap={1}>
-          <Typography variant="h5" color="text.secondary" gutterBottom>
+        </div>
+        <div>
+          <Typography variant="h5" gutterBottom>
             Store, explore, and stream your data
           </Typography>
-          <Typography variant="body2">
+          <Typography variant="body2" color="text.secondary">
             Manage your robotics data with Foxglove Data Platform. Securely store petabytes of
             indexed and tagged data for easy discovery and analysis.
           </Typography>
-          <Stack direction="row" gap={1}>
+          <Stack direction="row" gap={1} paddingTop={2}>
             <Button
               variant="outlined"
               color="primary"
@@ -280,7 +285,7 @@ export default function Start(props: IStartProps): JSX.Element {
               Create a free account
             </Button>
           </Stack>
-        </Stack>
+        </div>
       </Stack>
     </div>
   );
