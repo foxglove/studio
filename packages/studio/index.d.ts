@@ -269,6 +269,7 @@ declare module "@foxglove/studio" {
 
     /**
      * Set the transient state shared by panels of the same type as the caller of this function.
+     * This will not be persisted in the layout.
      */
     setSharedPanelState: (state: undefined | Readonly<string, unknown>) => void;
 
