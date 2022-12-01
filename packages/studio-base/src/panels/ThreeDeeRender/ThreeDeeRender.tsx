@@ -435,6 +435,9 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
     () => new Map(),
   );
 
+  // The frame we care about for syncing purposes can be either of these.
+  const effectiveRendererFrameId = renderer?.followFrameId ?? renderer?.renderFrameId;
+
   // Config cameraState
   useEffect(() => {
     const listener = () => {
@@ -449,14 +452,14 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
           context.setSharedPanelState({
             cameraState: newCameraState,
             followMode: renderer.followMode,
-            followTf: renderer.followFrameId,
+            followTf: effectiveRendererFrameId,
           });
         }
       }
     };
     renderer?.addListener("cameraMove", listener);
     return () => void renderer?.removeListener("cameraMove", listener);
-  }, [config.scene.syncCamera, context, renderer]);
+  }, [config.scene.syncCamera, context, effectiveRendererFrameId, renderer]);
 
   // Handle user changes in the settings sidebar
   const actionHandler = useCallback(
@@ -719,7 +722,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
       renderer.setCameraSyncError(
         `Follow mode must be ${sharedPanelState.followMode} to sync camera.`,
       );
-    } else if (sharedPanelState.followTf !== renderer.followFrameId) {
+    } else if (sharedPanelState.followTf !== effectiveRendererFrameId) {
       renderer.setCameraSyncError(
         `Display frame must be ${sharedPanelState.followTf} to sync camera.`,
       );
@@ -733,7 +736,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
       }));
       renderer.setCameraSyncError(undefined);
     }
-  }, [config.scene.syncCamera, renderer, sharedPanelState]);
+  }, [config.scene.syncCamera, effectiveRendererFrameId, renderer, sharedPanelState]);
 
   // Render a new frame if requested
   useEffect(() => {
