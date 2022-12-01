@@ -73,7 +73,6 @@ export function usePanelSettingsTreeUpdate(): (newTree: ImmutableSettingsTree) =
   return updateSettingsTree;
 }
 
-const sharedDataSelector = (store: PanelStateStore) => store.sharedPanelState;
 const updateSharedDataSelector = (store: PanelStateStore) => store.updateSharedPanelState;
 
 /**
@@ -84,10 +83,18 @@ export function useSharedPanelState(): [
   DeepReadonly<SharedPanelState>,
   (data: DeepReadonly<SharedPanelState>) => void,
 ] {
-  const updateSharedData = usePanelStateStore(updateSharedDataSelector);
-  const sharedData = usePanelStateStore(sharedDataSelector);
   const panelId = usePanelContext().id;
   const panelType = useMemo(() => getPanelTypeFromId(panelId), [panelId]);
+
+  const selector = useCallback(
+    (store: PanelStateStore) => {
+      return store.sharedPanelState[panelType];
+    },
+    [panelType],
+  );
+
+  const updateSharedData = usePanelStateStore(updateSharedDataSelector);
+  const sharedData = usePanelStateStore(selector);
   const update = useCallback(
     (data: DeepReadonly<SharedPanelState>) => {
       updateSharedData(panelType, data);
@@ -95,7 +102,7 @@ export function useSharedPanelState(): [
     [panelType, updateSharedData],
   );
 
-  return [sharedData[panelType], update];
+  return [sharedData, update];
 }
 
 const selectCurrentLayoutId = (state: LayoutState) => state.selectedLayout?.id;
