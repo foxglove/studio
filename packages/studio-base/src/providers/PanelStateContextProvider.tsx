@@ -2,10 +2,12 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { pick, uniq } from "lodash";
 import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { DeepReadonly } from "ts-essentials";
 import { createStore, StoreApi } from "zustand";
 
+import { useShallowMemo } from "@foxglove/hooks";
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import {
   LayoutState,
@@ -106,13 +108,24 @@ export function useSharedPanelState(): [
 }
 
 const selectCurrentLayoutId = (state: LayoutState) => state.selectedLayout?.id;
+const selectLayoutData = (state: LayoutState) => state.selectedLayout?.data?.configById;
 
 export function PanelStateContextProvider({ children }: { children?: ReactNode }): JSX.Element {
   const [store] = useState(createPanelStateStore());
 
-  const currentLayoutId = useCurrentLayoutSelector(selectCurrentLayoutId);
+  // discared shared panel state for panel types that are no longer in the layout
+  const layoutData = useCurrentLayoutSelector(selectLayoutData);
+  const memoPanelData = useShallowMemo(layoutData);
+  const panelTypesInUse = useMemo(
+    () => uniq(Object.keys(memoPanelData ?? {}).map(getPanelTypeFromId)),
+    [memoPanelData],
+  );
+  useEffect(() => {
+    store.setState((old) => ({ sharedPanelState: pick(old.sharedPanelState, panelTypesInUse) }));
+  }, [panelTypesInUse, store]);
 
   // clear shared panel state on layout change
+  const currentLayoutId = useCurrentLayoutSelector(selectCurrentLayoutId);
   useEffect(() => {
     void currentLayoutId;
     store.setState({ sharedPanelState: {} });
