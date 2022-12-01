@@ -2,11 +2,15 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { ReactNode, useCallback, useMemo, useState } from "react";
+import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { DeepReadonly } from "ts-essentials";
 import { createStore, StoreApi } from "zustand";
 
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
+import {
+  LayoutState,
+  useCurrentLayoutSelector,
+} from "@foxglove/studio-base/context/CurrentLayoutContext";
 import {
   ImmutableSettingsTree,
   PanelStateContext,
@@ -90,8 +94,18 @@ export function useSharedPanelState(): [
   return [sharedData[panelType], update];
 }
 
+const selectCurrentLayoutId = (state: LayoutState) => state.selectedLayout?.id;
+
 export function PanelStateContextProvider({ children }: { children?: ReactNode }): JSX.Element {
   const [store] = useState(createPanelStateStore());
+
+  const currentLayoutId = useCurrentLayoutSelector(selectCurrentLayoutId);
+
+  // clear shared panel state on layout change
+  useEffect(() => {
+    void currentLayoutId;
+    store.setState({ sharedPanelState: {} });
+  }, [currentLayoutId, store]);
 
   return <PanelStateContext.Provider value={store}>{children}</PanelStateContext.Provider>;
 }
