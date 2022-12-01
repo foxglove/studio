@@ -29,7 +29,7 @@ export type PanelStateStore = {
   settingsTrees: Record<string, ImmutableSettingsTree>;
 
   /**
-   * Transient state shared between panels of the same type.
+   * Transient state shared between panels, keyed by panel type.
    */
   sharedPanelState: Record<PanelType, SharedPanelState>;
 

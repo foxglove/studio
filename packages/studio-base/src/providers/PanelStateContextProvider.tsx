@@ -76,6 +76,10 @@ export function usePanelSettingsTreeUpdate(): (newTree: ImmutableSettingsTree) =
 const sharedDataSelector = (store: PanelStateStore) => store.sharedPanelState;
 const updateSharedDataSelector = (store: PanelStateStore) => store.updateSharedPanelState;
 
+/**
+ * Returns a [state, setState] pair that can be used to read and update shared transient
+ * panel state.
+ */
 export function useSharedPanelState(): [
   DeepReadonly<SharedPanelState>,
   (data: DeepReadonly<SharedPanelState>) => void,
