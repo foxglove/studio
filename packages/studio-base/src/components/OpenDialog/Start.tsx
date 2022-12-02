@@ -119,16 +119,26 @@ function DataSourceOption(props: DataSourceOptionProps): JSX.Element {
   );
 }
 
-type UserType = "unauthenticated" | "authenticated-free" | "authenticated-paid";
+type UserType =
+  | "unauthenticated"
+  | "authenticated-free"
+  | "authenticated-paid"
+  | "authenticated-enterprise";
 
 function useCurrentUserType(): UserType {
   const user = useCurrentUser();
   if (user.currentUser == undefined) {
     return "unauthenticated";
   }
+
+  if (user.currentUser.org.isEnterprise) {
+    return "authenticated-enterprise";
+  }
+
   if (user.currentUser.orgPaid === true) {
     return "authenticated-paid";
   }
+
   return "authenticated-free";
 }
 
