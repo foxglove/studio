@@ -18,13 +18,13 @@ function unmountPanelFn(panelElement: HTMLElement) {
 }
 
 function initPanel(context: PanelExtensionContext) {
-  context.onUnmount = unmountPanelFn(context.panelElement);
   ReactDOM.render(
     <StrictMode>
       <ThreeDeeRender context={context} />
     </StrictMode>,
     context.panelElement,
   );
+  return unmountPanelFn(context.panelElement);
 }
 
 type Props = {

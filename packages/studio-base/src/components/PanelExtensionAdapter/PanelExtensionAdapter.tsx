@@ -108,7 +108,6 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
   const [subscribedAppSettings, setSubscribedAppSettings] = useState<string[]>([]);
 
   const [renderFn, setRenderFn] = useState<RenderFn | undefined>();
-  const unmountFn = useRef<() => void | undefined>();
 
   const [slowRender, setSlowRender] = useState(false);
 
@@ -483,7 +482,7 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
     panelContainerRef.current.appendChild(panelElement);
 
     log.info(`Init panel ${panelId}`);
-    initPanel({
+    const onUnmount = initPanel({
       panelElement,
       ...partialExtensionContext,
 
@@ -491,16 +490,11 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
       set onRender(renderFunction: RenderFn | undefined) {
         setRenderFn(() => renderFunction);
       },
-      // eslint-disable-next-line no-restricted-syntax
-      set onUnmount(onUnmountFn: () => void | undefined) {
-        unmountFn.current = onUnmountFn;
-      },
     });
 
     return () => {
-      if (unmountFn.current != undefined) {
-        unmountFn.current();
-        unmountFn.current = undefined;
+      if (onUnmount) {
+        onUnmount();
       }
       panelElement.remove();
       getMessagePipelineContext().setSubscriptions(panelId, []);

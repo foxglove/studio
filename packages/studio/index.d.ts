@@ -350,13 +350,6 @@ declare module "@foxglove/studio" {
      * the representation of the panel settings in the editor.
      */
     updatePanelSettingsEditor(settings: Readonly<SettingsTree>): void;
-
-    /**
-     * Put necessary cleanup code here. Called before removing parent panelElement.
-     * NOTE: useEffect cleanup functions will not activate in react extension panels by default.
-     * You must activate those cleanup effects through this callback.
-     */
-    onUnmount?: () => void;
   };
 
   export type ExtensionPanelRegistration = {
@@ -367,8 +360,13 @@ declare module "@foxglove/studio" {
     // your panel.
     name: string;
 
-    // This function is invoked when your panel is initialized
-    initPanel: (context: PanelExtensionContext) => void;
+    /**
+     * This function is invoked when your panel is initialized
+     * @return: (optional) Put necessary cleanup code here. Called before removing parent panelElement.
+     *   NOTE: useEffect cleanup functions will not activate in react extension panels by default.
+     *   You must activate those cleanup effects through this callback.
+     */
+    initPanel: (context: PanelExtensionContext) => void | (() => void);
   };
 
   export type RegisterMessageConverterArgs<Src> = {
