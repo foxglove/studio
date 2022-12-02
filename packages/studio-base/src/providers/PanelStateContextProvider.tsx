@@ -4,10 +4,10 @@
 
 import { pick, uniq } from "lodash";
 import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
+import { createSelector, createSelectorCreator, defaultMemoize } from "reselect";
 import { DeepReadonly } from "ts-essentials";
 import { createStore, StoreApi } from "zustand";
 
-import { useShallowMemo } from "@foxglove/hooks";
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import {
   LayoutState,
@@ -107,19 +107,59 @@ export function useSharedPanelState(): [
   return [sharedData, update];
 }
 
+/**
+ * True if both objects have the same keys, ignoring values.
+ */
+function hasSameKeys(
+  a: undefined | Record<string, unknown>,
+  b: undefined | Record<string, unknown>,
+) {
+  if (a === b) {
+    return true;
+  }
+
+  if (a == undefined && b != undefined) {
+    return false;
+  }
+  if (a != undefined && b == undefined) {
+    return false;
+  }
+
+  if (a != undefined && b != undefined) {
+    for (const keyA in a) {
+      if (!Object.prototype.hasOwnProperty.call(b, keyA)) {
+        return false;
+      }
+    }
+
+    for (const keyB in b) {
+      if (!Object.prototype.hasOwnProperty.call(a, keyB)) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
+const createHasSameKeySelector = createSelectorCreator(defaultMemoize, hasSameKeys);
+
 const selectCurrentLayoutId = (state: LayoutState) => state.selectedLayout?.id;
-const selectLayoutData = (state: LayoutState) => state.selectedLayout?.data?.configById;
+
+const selectLayoutConfigById = createHasSameKeySelector(
+  (state: LayoutState) => state.selectedLayout?.data?.configById,
+  (config) => config,
+);
+
+const selectPanelTypesInUse = createSelector(selectLayoutConfigById, (config) => {
+  return uniq(Object.keys(config ?? {}).map(getPanelTypeFromId));
+});
 
 export function PanelStateContextProvider({ children }: { children?: ReactNode }): JSX.Element {
   const [store] = useState(createPanelStateStore());
 
   // discared shared panel state for panel types that are no longer in the layout
-  const layoutData = useCurrentLayoutSelector(selectLayoutData);
-  const memoPanelData = useShallowMemo(layoutData);
-  const panelTypesInUse = useMemo(
-    () => uniq(Object.keys(memoPanelData ?? {}).map(getPanelTypeFromId)),
-    [memoPanelData],
-  );
+  const panelTypesInUse = useCurrentLayoutSelector(selectPanelTypesInUse);
   useEffect(() => {
     store.setState((old) => ({ sharedPanelState: pick(old.sharedPanelState, panelTypesInUse) }));
   }, [panelTypesInUse, store]);
