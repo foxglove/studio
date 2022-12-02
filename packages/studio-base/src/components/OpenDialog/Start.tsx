@@ -12,6 +12,7 @@ import FoxgloveLogoText from "@foxglove/studio-base/components/FoxgloveLogoText"
 import Stack from "@foxglove/studio-base/components/Stack";
 import TextMiddleTruncate from "@foxglove/studio-base/components/TextMiddleTruncate";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
+import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
 import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
 // import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
@@ -118,6 +119,19 @@ function DataSourceOption(props: DataSourceOptionProps): JSX.Element {
   );
 }
 
+type UserType = "unauthenticated" | "authenticated-free" | "authenticated-paid";
+
+function useCurrentUserType(): UserType {
+  const user = useCurrentUser();
+  if (user.currentUser == undefined) {
+    return "unauthenticated";
+  }
+  if (user.currentUser.orgPaid === true) {
+    return "authenticated-paid";
+  }
+  return "authenticated-free";
+}
+
 export default function Start(props: IStartProps): JSX.Element {
   const { supportedLocalFileExtensions = [], onSelectView } = props;
   const { recentSources, selectRecent } = usePlayerSelection();
@@ -127,6 +141,8 @@ export default function Start(props: IStartProps): JSX.Element {
   // const [showOnStartup = true, setShowOnStartup] = useAppConfigurationValue<boolean>(
   //   AppSetting.SHOW_OPEN_DIALOG_ON_STARTUP,
   // );
+
+  const currentUserType = useCurrentUserType();
 
   const startItems = useMemo(() => {
     const formatter = new Intl.ListFormat("en-US", { style: "long" });
