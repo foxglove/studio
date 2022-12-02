@@ -108,6 +108,7 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
   const [subscribedAppSettings, setSubscribedAppSettings] = useState<string[]>([]);
 
   const [renderFn, setRenderFn] = useState<RenderFn | undefined>();
+  const isPanelInitializedRef = useRef(false);
 
   const [slowRender, setSlowRender] = useState(false);
 
@@ -183,7 +184,7 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
   // updates.
   const renderingRef = useRef<boolean>(false);
   useLayoutEffect(() => {
-    if (!renderFn) {
+    if (!renderFn || !isPanelInitializedRef.current) {
       return;
     }
 
@@ -491,11 +492,13 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
         setRenderFn(() => renderFunction);
       },
     });
+    isPanelInitializedRef.current = true;
 
     return () => {
       if (onUnmount) {
         onUnmount();
       }
+      isPanelInitializedRef.current = false;
       panelElement.remove();
       getMessagePipelineContext().setSubscriptions(panelId, []);
       getMessagePipelineContext().setPublishers(panelId, []);
