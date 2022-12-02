@@ -26,8 +26,9 @@ export type IStartProps = {
 
 const useStyles = makeStyles()((theme) => ({
   logo: {
-    width: 200,
+    width: 212,
     height: "auto",
+    marginLeft: theme.spacing(-1),
   },
   grid: {
     // See comment below for explanation of grid properties
@@ -42,7 +43,7 @@ const useStyles = makeStyles()((theme) => ({
   },
   sidebar: {
     backgroundColor: tinycolor(theme.palette.text.primary).setAlpha(0.04).toRgbString(),
-    padding: theme.spacing(16.5, 6, 6),
+    padding: theme.spacing(16, 6, 6),
 
     [theme.breakpoints.down("md")]: {
       padding: theme.spacing(6),
@@ -209,7 +210,7 @@ export default function Start(props: IStartProps): JSX.Element {
   return (
     <div className={classes.grid}>
       <Stack padding={6}>
-        <Stack gap={4} paddingTop={1}>
+        <Stack gap={4}>
           <FoxgloveLogoText color="primary" className={classes.logo} />
           <Stack gap={1}>
             <Typography variant="h5" gutterBottom>

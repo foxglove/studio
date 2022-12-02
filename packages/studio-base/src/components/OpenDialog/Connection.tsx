@@ -130,7 +130,7 @@ export default function Connection(props: ConnectionProps): JSX.Element {
         fullHeight
         gap={4}
         paddingX={6}
-        style={{ minHeight: 440 }}
+        style={{ minHeight: 452 }}
       >
         <Stack flexBasis={240}>
           <Tabs
