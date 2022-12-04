@@ -151,7 +151,7 @@ function initRenderStateBuilder(): BuildRenderStateFn {
       if (sharedPanelState !== prevSharedPanelState) {
         shouldRender = true;
         prevSharedPanelState = sharedPanelState;
-        renderState.sharedPanelState = { ...sharedPanelState };
+        renderState.sharedPanelState = sharedPanelState;
       }
     }
 

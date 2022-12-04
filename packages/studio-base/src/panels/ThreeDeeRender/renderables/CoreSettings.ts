@@ -155,6 +155,7 @@ export class CoreSettings extends SceneExtension {
               input: "boolean",
               error: this.renderer.cameraSyncError(),
               value: config.scene.syncCamera ?? false,
+              help: "Sync the camera with other panels that also have this setting enabled.",
             },
             meshUpAxis: {
               label: "Mesh up axis",
