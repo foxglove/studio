@@ -44,7 +44,10 @@ import {
   PlayerCapabilities,
   SubscribePayload,
 } from "@foxglove/studio-base/players/types";
-import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelStateContextProvider";
+import {
+  usePanelSettingsTreeUpdate,
+  useSharedPanelState,
+} from "@foxglove/studio-base/providers/PanelStateContextProvider";
 import { PanelConfig, SaveConfig } from "@foxglove/studio-base/types/panels";
 import { assertNever } from "@foxglove/studio-base/util/assertNever";
 
@@ -142,6 +145,8 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
   // Spiritually its like a reducer
   const [buildRenderState, setBuildRenderState] = useState(() => initRenderStateBuilder());
 
+  const [sharedPanelState, setSharedPanelState] = useSharedPanelState();
+
   // Register handlers to update the app settings we subscribe to
   useEffect(() => {
     const handlers = new Map<string, (newValue: AppSettingValue) => void>();
@@ -189,16 +194,17 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
     }
 
     const renderState = buildRenderState({
-      watchedFields,
+      appSettings,
+      colorScheme,
+      currentFrame: messageEvents,
       globalVariables,
       hoverValue,
-      playerState,
-      colorScheme,
-      appSettings,
-      subscriptions: localSubscriptions,
-      currentFrame: messageEvents,
-      sortedTopics,
       messageConverters,
+      playerState,
+      sharedPanelState,
+      sortedTopics,
+      subscriptions: localSubscriptions,
+      watchedFields,
     });
 
     if (!renderState) {
@@ -232,20 +238,21 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
       setError(err);
     }
   }, [
+    appSettings,
+    buildRenderState,
+    colorScheme,
+    globalVariables,
+    hoverValue,
+    localSubscriptions,
+    messageConverters,
+    messageEvents,
     panelId,
     pauseFrame,
-    localSubscriptions,
-    watchedFields,
-    appSettings,
-    hoverValue,
     playerState,
-    messageEvents,
-    messageConverters,
     renderFn,
-    colorScheme,
-    buildRenderState,
-    globalVariables,
+    sharedPanelState,
     sortedTopics,
+    watchedFields,
   ]);
 
   const updatePanelSettingsTree = usePanelSettingsTreeUpdate();
@@ -329,6 +336,8 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
           });
         }
       },
+
+      setSharedPanelState,
 
       watch: (field: keyof RenderState) => {
         if (!isMounted()) {
@@ -450,6 +459,7 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
     seekPlayback,
     setGlobalVariables,
     setHoverValue,
+    setSharedPanelState,
     setSubscriptions,
     updatePanelSettingsTree,
   ]);
