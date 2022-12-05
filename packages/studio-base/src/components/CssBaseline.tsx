@@ -29,7 +29,6 @@ const useStyles = makeStyles()(({ palette, typography }) => ({
     fontFamily: typography.body2.fontFamily,
     fontWeight: typography.body2.fontWeight,
     zIndex: 0,
-    boxSizing: "border-box",
 
     // Prevent scroll "bouncing" since the app workspace is not scrollable. Allows individual
     // scrollable elements to be scrolled without the whole page moving (even if they don't
@@ -40,11 +39,6 @@ const useStyles = makeStyles()(({ palette, typography }) => ({
     lineHeight: 1.15,
 
     /// --- child and element styling follows ---
-
-    "*, *:before, *:after": {
-      boxSizing: "inherit",
-    },
-
     "code, pre, tt": {
       fontFamily: fonts.MONOSPACE,
       overflowWrap: "break-word",
