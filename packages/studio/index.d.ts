@@ -363,8 +363,6 @@ declare module "@foxglove/studio" {
     /**
      * This function is invoked when your panel is initialized
      * @return: (optional) Put necessary cleanup code here. Called before removing parent panelElement.
-     *   NOTE: useEffect cleanup functions will not activate in react extension panels by default.
-     *   You must activate those cleanup effects through this callback.
      */
     initPanel: (context: PanelExtensionContext) => void | (() => void);
   };
