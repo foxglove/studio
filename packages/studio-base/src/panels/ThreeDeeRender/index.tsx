@@ -13,10 +13,6 @@ import { SaveConfig } from "@foxglove/studio-base/types/panels";
 import { ThreeDeeRender } from "./ThreeDeeRender";
 import helpContent from "./index.help.md";
 
-function unmountPanelFn(panelElement: HTMLElement) {
-  return () => ReactDOM.unmountComponentAtNode(panelElement);
-}
-
 function initPanel(context: PanelExtensionContext) {
   ReactDOM.render(
     <StrictMode>
@@ -24,7 +20,9 @@ function initPanel(context: PanelExtensionContext) {
     </StrictMode>,
     context.panelElement,
   );
-  return unmountPanelFn(context.panelElement);
+  return () => {
+    ReactDOM.unmountComponentAtNode(context.panelElement);
+  };
 }
 
 type Props = {

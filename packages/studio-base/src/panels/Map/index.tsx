@@ -39,6 +39,9 @@ function initPanel(context: PanelExtensionContext) {
     </StrictMode>,
     context.panelElement,
   );
+  return () => {
+    ReactDOM.unmountComponentAtNode(context.panelElement);
+  };
 }
 
 type Props = {
