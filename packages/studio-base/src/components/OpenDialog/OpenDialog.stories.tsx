@@ -2,6 +2,12 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { ReactNode } from "react";
+
+import CurrentUserContext, {
+  CurrentUser,
+  User,
+} from "@foxglove/studio-base/context/CurrentUserContext";
 import PlayerSelectionContext, {
   PlayerSelection,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
@@ -13,6 +19,26 @@ export default {
   title: "components/OpenDialog",
   component: OpenDialog,
 };
+
+function fakeUser(type: "free" | "paid" | "enterprise"): User {
+  return {
+    id: "user-1",
+    email: "user@example.com",
+    orgId: "org_id",
+    orgDisplayName: "Orgalorg",
+    orgSlug: "org",
+    orgPaid: type === "paid" || type === "enterprise",
+    org: {
+      id: "org_id",
+      slug: "org",
+      displayName: "Orgalorg",
+      isEnterprise: type === "enterprise",
+      hasStripeSubscription: type === "paid" || type === "enterprise",
+      allowsUploads: true,
+      supportsEdgeSites: type === "enterprise",
+    },
+  };
+}
 
 // Connection
 const playerSelection: PlayerSelection = {
@@ -52,6 +78,15 @@ const playerSelection: PlayerSelection = {
     },
   ],
 };
+
+function CurrentUserWrapper(props: { children: ReactNode; user?: User }): JSX.Element {
+  const value: CurrentUser = {
+    currentUser: props.user,
+    signIn: () => undefined,
+    signOut: async () => undefined,
+  };
+  return <CurrentUserContext.Provider value={value}>{props.children}</CurrentUserContext.Provider>;
+}
 
 // Start
 
@@ -98,3 +133,47 @@ ConnectionDark.parameters = {
   colorScheme: "dark",
   title: "components/OpenDialog/Connection/Dark",
 };
+
+export function StartWithNoUser(): JSX.Element {
+  return (
+    <PlayerSelectionContext.Provider value={playerSelection}>
+      <OpenDialog />
+    </PlayerSelectionContext.Provider>
+  );
+}
+
+export function StartWithFreeUser(): JSX.Element {
+  const freeUser = fakeUser("free");
+
+  return (
+    <CurrentUserWrapper user={freeUser}>
+      <PlayerSelectionContext.Provider value={playerSelection}>
+        <OpenDialog />
+      </PlayerSelectionContext.Provider>
+    </CurrentUserWrapper>
+  );
+}
+
+export function StartWithPaidUser(): JSX.Element {
+  const freeUser = fakeUser("paid");
+
+  return (
+    <CurrentUserWrapper user={freeUser}>
+      <PlayerSelectionContext.Provider value={playerSelection}>
+        <OpenDialog />
+      </PlayerSelectionContext.Provider>
+    </CurrentUserWrapper>
+  );
+}
+
+export function StartWithEnterpriseUser(): JSX.Element {
+  const freeUser = fakeUser("enterprise");
+
+  return (
+    <CurrentUserWrapper user={freeUser}>
+      <PlayerSelectionContext.Provider value={playerSelection}>
+        <OpenDialog />
+      </PlayerSelectionContext.Provider>
+    </CurrentUserWrapper>
+  );
+}
