@@ -189,6 +189,13 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
   // updates.
   const renderingRef = useRef<boolean>(false);
   useLayoutEffect(() => {
+    /**
+     * We need to check that the panel has been initialized because the renderFn function is being
+     * called between the initPanel's useLayoutEffect cleanup and initPanel being called
+     * again even if setRenderFn(undefined) is called in the cleanup function. This causes
+     * the old renderFn to be called in this effect and pauseFrame to happen, but it is never
+     * resumed, thus causing a 5 second delay in all panels in the layout to be loaded.
+     */
     if (!renderFn || !isPanelInitializedRef.current) {
       return;
     }
