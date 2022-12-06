@@ -142,7 +142,7 @@ function useCurrentUserType(): UserType {
     return "unauthenticated";
   }
 
-  if (user.currentUser.org.isEnterprise === true) {
+  if (user.currentUser.org.isEnterprise) {
     return "authenticated-enterprise";
   }
 
