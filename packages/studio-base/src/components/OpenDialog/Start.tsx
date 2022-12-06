@@ -94,7 +94,7 @@ type DataSourceOptionProps = {
   text: string;
   secondaryText: string;
   icon: JSX.Element;
-  onClick: () => void;
+  onClick?: () => void;
   href?: string;
 };
 
@@ -200,7 +200,7 @@ export default function Start(props: IStartProps): JSX.Element {
         },
       },
     ];
-  }, [onSelectView, supportedLocalFileExtensions]);
+  }, [analytics, onSelectView, supportedLocalFileExtensions]);
 
   const recentItems: ActionListItem[] = useMemo(() => {
     return recentSources.map((recent) => {

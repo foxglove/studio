@@ -114,32 +114,6 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
             />
           ),
         };
-<<<<<<< HEAD
-      case "remote":
-        return {
-          title: "Open a file from a remote location",
-          component: (
-            <Remote
-              onBack={() => onSelectView("start")}
-              onCancel={onModalClose}
-              availableSources={remoteFileSources}
-            />
-          ),
-        };
-||||||| parent of 4530a4add (Remove "Open file by URL" from Welcome dialog; Replace with callout to load data from Data Platform)
-      case "remote":
-        return {
-          title: "Open a file from a remote location",
-          component: (
-            <Remote
-              onBack={() => onSelectView("start")}
-              onCancel={onDismiss}
-              availableSources={remoteFileSources}
-            />
-          ),
-        };
-=======
->>>>>>> 4530a4add (Remove "Open file by URL" from Welcome dialog; Replace with callout to load data from Data Platform)
       default:
         return {
           title: "Get started",
@@ -151,29 +125,14 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
           ),
         };
     }
-<<<<<<< HEAD
   }, [
     activeDataSource,
-    activeView,
-    connectionSources,
-    localFileSources,
-    onSelectView,
-    remoteFileSources,
     onModalClose,
-  ]);
-||||||| parent of 4530a4add (Remove "Open file by URL" from Welcome dialog; Replace with callout to load data from Data Platform)
-  }, [
-    activeDataSource,
     activeView,
     connectionSources,
     localFileSources,
-    onDismiss,
     onSelectView,
-    remoteFileSources,
   ]);
-=======
-  }, [activeDataSource, activeView, connectionSources, localFileSources, onDismiss, onSelectView]);
->>>>>>> 4530a4add (Remove "Open file by URL" from Welcome dialog; Replace with callout to load data from Data Platform)
 
   return (
     <Dialog

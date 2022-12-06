@@ -50,11 +50,11 @@ export default function Root({
       new Ros2SocketDataSourceFactory(),
       new Ros2LocalBagDataSourceFactory(),
       new UlogLocalDataSourceFactory(),
-      new RemoteDataSourceFactory(),
       new VelodyneDataSourceFactory(),
       new FoxgloveDataPlatformDataSourceFactory(),
       new SampleNuscenesDataSourceFactory(),
       new McapLocalDataSourceFactory(),
+      new RemoteDataSourceFactory(),
     ];
 
     return sources;

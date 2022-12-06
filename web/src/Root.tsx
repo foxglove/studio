@@ -37,11 +37,11 @@ export function Root({ appConfiguration }: { appConfiguration: IAppConfiguration
       new RosbridgeDataSourceFactory(),
       new FoxgloveWebSocketDataSourceFactory(),
       new UlogLocalDataSourceFactory(),
-      new RemoteDataSourceFactory(),
       new VelodyneUnavailableDataSourceFactory(),
       new FoxgloveDataPlatformDataSourceFactory(),
       new SampleNuscenesDataSourceFactory(),
       new McapLocalDataSourceFactory(),
+      new RemoteDataSourceFactory(),
     ];
 
     return sources;
