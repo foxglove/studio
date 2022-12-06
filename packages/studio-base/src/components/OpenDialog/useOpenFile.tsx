@@ -39,7 +39,7 @@ export function useOpenFile(sources: IDataSourceFactory[]): () => Promise<void> 
 
     const file = await fileHandle.getFile();
     // Find the first _file_ source which can load our extension
-    const foundSource = sources.find((source) => {
+    const matchingSources = sources.filter((source) => {
       // Only consider _file_ type sources that have a list of supported file types
       if (!source.supportedFileTypes || source.type !== "file") {
         return false;
@@ -48,6 +48,12 @@ export function useOpenFile(sources: IDataSourceFactory[]): () => Promise<void> 
       const extension = path.extname(file.name);
       return source.supportedFileTypes.includes(extension);
     });
+
+    if (matchingSources.length > 1) {
+      throw new Error(`Multiple source matched ${file.name}. This is not supported.`);
+    }
+
+    const foundSource = matchingSources[0];
     if (!foundSource) {
       throw new Error(`Cannot find source to handle ${file.name}`);
     }
