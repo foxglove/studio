@@ -374,7 +374,7 @@ declare module "@foxglove/studio" {
 
     /**
      * This function is invoked when your panel is initialized
-     * @return: (optional) Put necessary cleanup code here. Called before removing parent panelElement.
+     * @return: (optional) A function which is called when the panel is removed or replaced. Typically intended for cleanup logic to gracefully teardown your panel.
      */
     initPanel: (context: PanelExtensionContext) => void | (() => void);
   };
