@@ -4,12 +4,12 @@
 
 import * as THREE from "three";
 
+/**
+ * Class for storing a single instance of each geometry to reuse across scene extensions
+ * Callers of `getGeometry` will need to specify a unique key from which to extract the
+ * singleton geometry.
+ */
 export class SharedGeometry {
-  /**
-   * Store a single instance of each geometry to reuse across scene extensions
-   * Callers of `getGeometry` will need to specify a unique key from which to extract the
-   * singleton geometry.
-   */
   private _geometryMap = new Map<string, THREE.BufferGeometry>();
 
   /**
