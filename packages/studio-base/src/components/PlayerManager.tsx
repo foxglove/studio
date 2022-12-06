@@ -282,7 +282,7 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
   );
 
   // Select a recent entry by id
-  // necessary to pull out callback creation to avoid capturing the initial player in context
+  // necessary to pull out callback creation to avoid capturing the initial player in closure context
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const selectRecent = useCallback(
     createSelectRecentCallback(recents, selectSource, enqueueSnackbar),
@@ -314,8 +314,15 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
   );
 }
 
-// fixes memory leak across > 2 data sources without reloading
-// otherwise we would get memory leak from keeping initial player around
+/**
+ * This was moved out of the PlayerManager function due to a memory leak occurring in memoized state of Start.tsx
+ * that was retaining old player instances. Having this callback be defined within the PlayerManager makes it store the
+ * player at instantiation within the closure context. That callback is then stored in the memoized state with its closure context.
+ * The callback is updated when the player changes but part of the `Start.tsx` holds onto the formerly memoized state for an
+ * unknown reason.
+ * To make this function safe from storing old closure contexts in old memoized state in components where it
+ * is used, it has been moved out of the PlayerManager function.
+ */
 function createSelectRecentCallback(
   recents: RecentRecord[],
   selectSource: (sourceId: string, dataSourceArgs: DataSourceArgs) => Promise<void>,
