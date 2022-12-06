@@ -484,9 +484,6 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.addSceneExtension(this.measurementTool);
     this.addSceneExtension(this.publishClickTool);
 
-    this._devicePixelRatioMediaQuery = window.matchMedia(
-      `(resolution: ${window.devicePixelRatio}dppx)`,
-    );
     this._watchDevicePixelRatio();
 
     this._updateCameras(config.cameraState);
@@ -496,14 +493,14 @@ export class Renderer extends EventEmitter<RendererEvents> {
   private _onDevicePixelRatioChange = () => {
     log.debug(`devicePixelRatio changed to ${window.devicePixelRatio}`);
     this.resizeHandler(this.input.canvasSize);
-    this._devicePixelRatioMediaQuery = window.matchMedia(
-      `(resolution: ${window.devicePixelRatio}dppx)`,
-    );
     this._watchDevicePixelRatio();
   };
 
   private _watchDevicePixelRatio() {
-    this._devicePixelRatioMediaQuery?.addEventListener("change", this._onDevicePixelRatioChange, {
+    this._devicePixelRatioMediaQuery = window.matchMedia(
+      `(resolution: ${window.devicePixelRatio}dppx)`,
+    );
+    this._devicePixelRatioMediaQuery.addEventListener("change", this._onDevicePixelRatioChange, {
       once: true,
     });
   }
