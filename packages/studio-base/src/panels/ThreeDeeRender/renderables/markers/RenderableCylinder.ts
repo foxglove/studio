@@ -26,7 +26,7 @@ export class RenderableCylinder extends RenderableMarker {
     // Cylinder mesh
     const material = makeStandardMaterial(marker.color);
     const cylinderGeometry = renderer.sharedGeometry.getGeometry(
-      `${this.constructor.name}-${renderer.maxLod}`,
+      `${this.constructor.name}-cylinder-${renderer.maxLod}`,
       () => createGeometry(renderer.maxLod),
     );
     this.mesh = new THREE.Mesh(cylinderGeometry, material);
@@ -36,7 +36,7 @@ export class RenderableCylinder extends RenderableMarker {
 
     // Cylinder outline
     const edgesGeometry = renderer.sharedGeometry.getGeometry(
-      `${this.constructor.name}-${renderer.maxLod}`,
+      `${this.constructor.name}-edges-${renderer.maxLod}`,
       () => createEdgesGeometry(cylinderGeometry),
     );
     this.outline = new THREE.LineSegments(edgesGeometry, renderer.outlineMaterial);
