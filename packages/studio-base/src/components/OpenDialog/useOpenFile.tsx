@@ -38,8 +38,10 @@ export function useOpenFile(sources: IDataSourceFactory[]): () => Promise<void> 
     }
 
     const file = await fileHandle.getFile();
+    // Find the first _file_ source which can load our extension
     const foundSource = sources.find((source) => {
-      if (!source.supportedFileTypes) {
+      // Only consider _file_ type sources that have a list of supported file types
+      if (!source.supportedFileTypes || source.type !== "file") {
         return false;
       }
 
