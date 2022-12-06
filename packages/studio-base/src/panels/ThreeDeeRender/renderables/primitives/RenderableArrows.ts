@@ -22,13 +22,17 @@ const tempQuat = new THREE.Quaternion();
 const tempRgba = makeRgba();
 
 export class RenderableArrows extends RenderablePrimitive {
-  // Each needs its own geometry because we attach additional custom attributes to it.
+  // Each needs its own geometries because we attach additional custom attributes to them.
+  // so we will need to clone or copy when assigning from shared geometry
   private shaftGeometry: THREE.CylinderGeometry;
+  private headGeometry: THREE.ConeGeometry;
+  private shaftOutlineGeometry: THREE.InstancedBufferGeometry;
+  private headOutlineGeometry: THREE.InstancedBufferGeometry;
+
   private shaftMesh: THREE.InstancedMesh<
     THREE.CylinderGeometry,
     MeshStandardMaterialWithInstanceOpacity
   >;
-  private headGeometry: THREE.ConeGeometry;
   private headMesh: THREE.InstancedMesh<
     THREE.ConeGeometry,
     MeshStandardMaterialWithInstanceOpacity
@@ -46,9 +50,7 @@ export class RenderableArrows extends RenderablePrimitive {
    */
   private maxInstances: number;
 
-  private shaftOutlineGeometry: THREE.InstancedBufferGeometry;
   private shaftOutline: THREE.LineSegments;
-  private headOutlineGeometry: THREE.InstancedBufferGeometry;
   private headOutline: THREE.LineSegments;
 
   public constructor(renderer: Renderer) {
@@ -68,7 +70,6 @@ export class RenderableArrows extends RenderablePrimitive {
       1,
     );
 
-    // because we are adding a attributes to these geometries we will need to clone it
     this.shaftGeometry = renderer.sharedGeometry
       .getGeometry(`${this.constructor.name}-shaft`, createShaftGeometry)
       .clone() as THREE.CylinderGeometry;
