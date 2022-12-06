@@ -2,19 +2,29 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Button, Link, List, ListItem, ListItemButton, SvgIcon, Typography } from "@mui/material";
-import { useMemo } from "react";
+import {
+  Button,
+  Checkbox,
+  FormControlLabel,
+  Link,
+  List,
+  ListItem,
+  ListItemButton,
+  SvgIcon,
+  Typography,
+} from "@mui/material";
+import { ReactNode, useMemo } from "react";
 import tinycolor from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 
-// import { AppSetting } from "@foxglove/studio-base/AppSetting";
+import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import FoxgloveLogoText from "@foxglove/studio-base/components/FoxgloveLogoText";
 import Stack from "@foxglove/studio-base/components/Stack";
 import TextMiddleTruncate from "@foxglove/studio-base/components/TextMiddleTruncate";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
 import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
-// import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
+import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 
 import { OpenDialogViews } from "./types";
@@ -132,7 +142,7 @@ function useCurrentUserType(): UserType {
     return "unauthenticated";
   }
 
-  if (user.currentUser.org.isEnterprise) {
+  if (user.currentUser.org.isEnterprise === true) {
     return "authenticated-enterprise";
   }
 
@@ -143,17 +153,100 @@ function useCurrentUserType(): UserType {
   return "authenticated-free";
 }
 
+type SidebarItems = {
+  id: string;
+  title: string;
+  text: ReactNode;
+  actions?: ReactNode;
+};
+
 export default function Start(props: IStartProps): JSX.Element {
   const { supportedLocalFileExtensions = [], onSelectView } = props;
   const { recentSources, selectRecent } = usePlayerSelection();
   const { classes } = useStyles();
   const analytics = useAnalytics();
 
-  // const [showOnStartup = true, setShowOnStartup] = useAppConfigurationValue<boolean>(
-  //   AppSetting.SHOW_OPEN_DIALOG_ON_STARTUP,
-  // );
+  const [showOnStartup = true, setShowOnStartup] = useAppConfigurationValue<boolean>(
+    AppSetting.SHOW_OPEN_DIALOG_ON_STARTUP,
+  );
 
   const currentUserType = useCurrentUserType();
+
+  const sidebarItems: SidebarItems[] = useMemo(
+    () =>
+      ({
+        unauthenticated: [
+          {
+            id: "new",
+            title: "New to Foxglove Studio?",
+            text: "Start by exploring a sample dataset or checking out our how-to guides.",
+            actions: (
+              <>
+                <Button variant="outlined">Tour with sample data</Button>
+                <Button>View our guides</Button>
+              </>
+            ),
+          },
+          {
+            id: "store-and-collaborate",
+            title: "Store and collaborate on your data",
+            text: "Securely store petabytes of indexed data for easy discovery and analysis in Foxglove Data Platform.",
+            actions: <Button variant="outlined">Create a free account</Button>,
+          },
+        ],
+        "authenticated-free": [
+          {
+            id: "start-collaborating",
+            title: "Start collaborating with your Foxglove organization",
+            text: "Make the most of your Foxglove account – whether you want to dive deep on your data or share tools with your teammates.",
+            actions: (
+              <>
+                <Button> Upload to Data Platform </Button>
+                <Button>Share team layouts</Button>
+              </>
+            ),
+          },
+          {
+            id: "new",
+            title: "New to Foxglove Studio?",
+            text: "Start by exploring a sample dataset or checking out our how-to guides.",
+            actions: (
+              <>
+                <Button variant="outlined">Tour with sample data</Button>
+                <Button>View our guides</Button>
+              </>
+            ),
+          },
+        ],
+        "authenticated-paid": [
+          {
+            id: "need-help",
+            title: "Need help?",
+            text: "Reach out directly to the Foxglove team to get help, make feature requests, and report bugs.",
+            actions: (
+              <>
+                <Button variant="outlined">Tour with sample data</Button>
+                <Button>View our guides</Button>
+              </>
+            ),
+          },
+        ],
+        "authenticated-enterprise": [
+          {
+            id: "need-help",
+            title: "Need help?",
+            text: "Reach out directly to the Foxglove team to get help, make feature requests, and report bugs.",
+            actions: (
+              <>
+                <Button variant="outlined">Tour with sample data</Button>
+                <Button>View our guides</Button>
+              </>
+            ),
+          },
+        ],
+      }[currentUserType]),
+    [currentUserType],
+  );
 
   const startItems = useMemo(() => {
     const formatter = new Intl.ListFormat("en-US", { style: "long" });
@@ -209,7 +302,7 @@ export default function Start(props: IStartProps): JSX.Element {
 
   return (
     <div className={classes.grid}>
-      <Stack padding={6}>
+      <Stack padding={6} overflow="hidden">
         <Stack gap={4}>
           <FoxgloveLogoText color="primary" className={classes.logo} />
           <Stack gap={1}>
@@ -254,7 +347,7 @@ export default function Start(props: IStartProps): JSX.Element {
               ))}
             </List>
           </Stack>
-          {/* <FormControlLabel
+          <FormControlLabel
             label="Show on startup"
             control={
               <Checkbox
@@ -265,54 +358,25 @@ export default function Start(props: IStartProps): JSX.Element {
                 }}
               />
             }
-          /> */}
+          />
         </Stack>
       </Stack>
       <Stack gap={4} className={classes.sidebar}>
-        <div>
-          <Typography variant="h5" gutterBottom>
-            New to Studio?
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Start exploring with an example layout and a sample self-driving dataset
-          </Typography>
-          <Stack direction="row" gap={1} paddingTop={2}>
-            <Button
-              variant="outlined"
-              color="primary"
-              onClick={() => {
-                onSelectView("demo");
-                void analytics.logEvent(AppEvent.DIALOG_SELECT_VIEW, { type: "demo" });
-              }}
-            >
-              Explore sample data
-            </Button>
-            <Button href="https://foxglove.dev/docs/studio" color="primary" target="_blank">
-              View docs
-            </Button>
+        {sidebarItems.map((item) => (
+          <Stack key={item.id}>
+            <Typography variant="h5" gutterBottom>
+              {item.title}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {item.text}
+            </Typography>
+            {item.actions != undefined && (
+              <Stack direction="row" alignItems="center" gap={1}>
+                {item.actions}
+              </Stack>
+            )}
           </Stack>
-        </div>
-        <div>
-          <Typography variant="h5" gutterBottom>
-            Store, explore, and stream your data
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Manage your robotics data with Foxglove Data Platform. Securely store petabytes of
-            indexed and tagged data for easy discovery and analysis.
-          </Typography>
-          <Stack direction="row" gap={1} paddingTop={2}>
-            <Button
-              variant="outlined"
-              color="primary"
-              onClick={() => {
-                onSelectView("demo");
-                void analytics.logEvent(AppEvent.DIALOG_SELECT_VIEW, { type: "demo" });
-              }}
-            >
-              Create a free account
-            </Button>
-          </Stack>
-        </div>
+        ))}
       </Stack>
     </div>
   );
