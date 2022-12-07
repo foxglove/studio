@@ -15,8 +15,7 @@ import PlayerSelectionContext, {
 import OpenDialog from "./OpenDialog";
 
 export default {
-  colorScheme: "light",
-  title: "components/OpenDialog",
+  title: "components/OpenDialog/Start",
   component: OpenDialog,
 };
 
@@ -51,12 +50,28 @@ const playerSelection: PlayerSelection = {
     },
     {
       id: "2222",
-      title: "NuScenes-v1.0-mini-scene-0656.bag",
+      title: "http://localhost:11311",
+      label: "ROS 1",
     },
     {
       id: "3333",
       title: "ws://localhost:9090/",
       label: "Rosbridge (ROS 1 & 2)",
+    },
+    {
+      id: "4444",
+      title: "ws://localhost:8765",
+      label: "Foxglove WebSocket",
+    },
+    {
+      id: "5555",
+      title: "2369",
+      label: "Velodyne Lidar",
+    },
+    {
+      id: "6666",
+      title: "THIS ITEM SHOULD BE HIDDEN IN STORYBOOKS",
+      label: "!!!!!!!!!!!!",
     },
   ],
   availableSources: [
@@ -88,61 +103,30 @@ function CurrentUserWrapper(props: { children: ReactNode; user?: User }): JSX.El
   return <CurrentUserContext.Provider value={value}>{props.children}</CurrentUserContext.Provider>;
 }
 
-// Start
+// Default
 
-export const StartLight = (): JSX.Element => (
-  <PlayerSelectionContext.Provider value={playerSelection}>
-    <OpenDialog />
-  </PlayerSelectionContext.Provider>
-);
+export const DefaultLight = (): JSX.Element => <OpenDialog />;
+DefaultLight.storyName = "Default (light)";
+DefaultLight.parameters = { colorScheme: "light" };
 
-StartLight.parameters = {
-  colorScheme: "light",
-  title: "components/OpenDialog/Start/Light",
-};
+export const DefaultDark = (): JSX.Element => <OpenDialog />;
+DefaultDark.storyName = "Default (dark)";
+DefaultDark.parameters = { colorScheme: "dark" };
 
-export const StartDark = (): JSX.Element => (
-  <PlayerSelectionContext.Provider value={playerSelection}>
-    <OpenDialog />
-  </PlayerSelectionContext.Provider>
-);
-
-StartDark.parameters = {
-  colorScheme: "dark",
-  title: "components/OpenDialog/Start/Dark",
-};
-
-export const ConnectionLight = (): JSX.Element => (
-  <PlayerSelectionContext.Provider value={playerSelection}>
-    <OpenDialog activeView="connection" />
-  </PlayerSelectionContext.Provider>
-);
-
-ConnectionLight.parameters = {
-  colorScheme: "light",
-  title: "components/OpenDialog/Connection/Light",
-};
-
-export const ConnectionDark = (): JSX.Element => (
-  <PlayerSelectionContext.Provider value={playerSelection}>
-    <OpenDialog activeView="connection" />
-  </PlayerSelectionContext.Provider>
-);
-
-ConnectionDark.parameters = {
-  colorScheme: "dark",
-  title: "components/OpenDialog/Connection/Dark",
-};
-
-export function StartWithNoUser(): JSX.Element {
+// No user
+export function UserNoAuth(): JSX.Element {
   return (
     <PlayerSelectionContext.Provider value={playerSelection}>
       <OpenDialog />
     </PlayerSelectionContext.Provider>
   );
 }
+UserNoAuth.storyName = "User not authenticated";
+UserNoAuth.parameters = { colorScheme: "dark" };
 
-export function StartWithFreeUser(): JSX.Element {
+// Free user
+
+export function UserAuthedFree(): JSX.Element {
   const freeUser = fakeUser("free");
 
   return (
@@ -153,8 +137,12 @@ export function StartWithFreeUser(): JSX.Element {
     </CurrentUserWrapper>
   );
 }
+UserAuthedFree.storyName = "User Authenticated with Free Account";
+UserAuthedFree.parameters = { colorScheme: "dark" };
 
-export function StartWithPaidUser(): JSX.Element {
+// Paid user
+
+export function UserAuthedPaid(): JSX.Element {
   const freeUser = fakeUser("paid");
 
   return (
@@ -165,15 +153,5 @@ export function StartWithPaidUser(): JSX.Element {
     </CurrentUserWrapper>
   );
 }
-
-export function StartWithEnterpriseUser(): JSX.Element {
-  const freeUser = fakeUser("enterprise");
-
-  return (
-    <CurrentUserWrapper user={freeUser}>
-      <PlayerSelectionContext.Provider value={playerSelection}>
-        <OpenDialog />
-      </PlayerSelectionContext.Provider>
-    </CurrentUserWrapper>
-  );
-}
+UserAuthedPaid.storyName = "User Authenticated with Paid Account";
+UserAuthedPaid.parameters = { colorScheme: "dark" };

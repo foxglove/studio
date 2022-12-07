@@ -40,6 +40,11 @@ const useStyles = makeStyles()((theme) => ({
     height: "auto",
     marginLeft: theme.spacing(-1),
   },
+  button: {
+    whiteSpace: "nowrap",
+    textOverflow: "ellipsis",
+    overflow: "hidden",
+  },
   grid: {
     // See comment below for explanation of grid properties
     display: "grid",
@@ -172,81 +177,111 @@ export default function Start(props: IStartProps): JSX.Element {
 
   const currentUserType = useCurrentUserType();
 
-  const sidebarItems: SidebarItems[] = useMemo(
-    () =>
-      ({
-        unauthenticated: [
-          {
-            id: "new",
-            title: "New to Foxglove Studio?",
-            text: "Start by exploring a sample dataset or checking out our how-to guides.",
-            actions: (
-              <>
-                <Button variant="outlined">Tour with sample data</Button>
-                <Button>View our guides</Button>
-              </>
-            ),
-          },
-          {
-            id: "store-and-collaborate",
-            title: "Store and collaborate on your data",
-            text: "Securely store petabytes of indexed data for easy discovery and analysis in Foxglove Data Platform.",
-            actions: <Button variant="outlined">Create a free account</Button>,
-          },
-        ],
-        "authenticated-free": [
-          {
-            id: "start-collaborating",
-            title: "Start collaborating with your Foxglove organization",
-            text: "Make the most of your Foxglove account – whether you want to dive deep on your data or share tools with your teammates.",
-            actions: (
-              <>
-                <Button> Upload to Data Platform </Button>
-                <Button>Share team layouts</Button>
-              </>
-            ),
-          },
-          {
-            id: "new",
-            title: "New to Foxglove Studio?",
-            text: "Start by exploring a sample dataset or checking out our how-to guides.",
-            actions: (
-              <>
-                <Button variant="outlined">Tour with sample data</Button>
-                <Button>View our guides</Button>
-              </>
-            ),
-          },
-        ],
-        "authenticated-paid": [
-          {
-            id: "need-help",
-            title: "Need help?",
-            text: "Reach out directly to the Foxglove team to get help, make feature requests, and report bugs.",
-            actions: (
-              <>
-                <Button variant="outlined">Tour with sample data</Button>
-                <Button>View our guides</Button>
-              </>
-            ),
-          },
-        ],
-        "authenticated-enterprise": [
-          {
-            id: "need-help",
-            title: "Need help?",
-            text: "Reach out directly to the Foxglove team to get help, make feature requests, and report bugs.",
-            actions: (
-              <>
-                <Button variant="outlined">Tour with sample data</Button>
-                <Button>View our guides</Button>
-              </>
-            ),
-          },
-        ],
-      }[currentUserType]),
-    [currentUserType],
-  );
+  const sidebarItems: SidebarItems[] = useMemo(() => {
+    // Currently the copy is the same but may change in the future
+    const paidOrEnterpriseUser = [
+      {
+        id: "need-help",
+        title: "Need help?",
+        text: "Reach out directly to the Foxglove team to get help, make feature requests, and report bugs.",
+        actions: (
+          <>
+            <Button href="https://foxglove.dev/slack" className={classes.button} variant="outlined">
+              Join our slack
+            </Button>
+            <Button
+              href="https://github.com/foxglove/studio/issues/new/choose"
+              className={classes.button}
+            >
+              Open an issue on Github
+            </Button>
+          </>
+        ),
+      },
+    ];
+
+    return {
+      unauthenticated: [
+        {
+          id: "new",
+          title: "New to Foxglove Studio?",
+          text: "Start by exploring a sample dataset or checking out our how-to guides.",
+          actions: (
+            <>
+              <Button
+                onClick={() => {
+                  onSelectView("demo");
+                  void analytics.logEvent(AppEvent.DIALOG_SELECT_VIEW, { type: "demo" });
+                }}
+                className={classes.button}
+                variant="outlined"
+              >
+                Explore sample data
+              </Button>
+              <Button className={classes.button}>View our guides</Button>
+            </>
+          ),
+        },
+        {
+          id: "store-and-collaborate",
+          title: "Store and collaborate",
+          text: "Securely store petabytes of indexed data for easy discovery and analysis in Foxglove Data Platform.",
+          actions: (
+            <Button
+              href="https://console.foxglove.dev/signin"
+              className={classes.button}
+              variant="outlined"
+            >
+              Create a free account
+            </Button>
+          ),
+        },
+      ],
+      "authenticated-free": [
+        {
+          id: "start-collaborating",
+          title: "Start collaborating with your Foxglove organization",
+          text: "Make the most of your Foxglove account – whether you want to dive deep on your data or share tools with your teammates.",
+          actions: (
+            <>
+              <Button
+                href="https://console.foxglove.dev"
+                variant="outlined"
+                className={classes.button}
+              >
+                Upload to Data Platform
+              </Button>
+              <Button className={classes.button}>Share team layouts</Button>
+            </>
+          ),
+        },
+        {
+          id: "new",
+          title: "New to Foxglove Studio?",
+          text: "Start by exploring a sample dataset or checking out our how-to guides.",
+          actions: (
+            <>
+              <Button
+                onClick={() => {
+                  onSelectView("demo");
+                  void analytics.logEvent(AppEvent.DIALOG_SELECT_VIEW, { type: "demo" });
+                }}
+                className={classes.button}
+                variant="outlined"
+              >
+                Explore sample data
+              </Button>
+              <Button href="https://foxglove.dev/docs/studio" className={classes.button}>
+                View our guides
+              </Button>
+            </>
+          ),
+        },
+      ],
+      "authenticated-paid": paidOrEnterpriseUser,
+      "authenticated-enterprise": paidOrEnterpriseUser,
+    }[currentUserType];
+  }, [analytics, classes.button, currentUserType, onSelectView]);
 
   const startItems = useMemo(() => {
     const formatter = new Intl.ListFormat("en-US", { style: "long" });
@@ -320,33 +355,35 @@ export default function Start(props: IStartProps): JSX.Element {
               />
             ))}
           </Stack>
-          <Stack gap={1}>
-            <Typography variant="h5" gutterBottom>
-              Recent data sources
-            </Typography>
-            <List disablePadding>
-              {recentSources.map((recent) => (
-                <ListItem disablePadding key={recent.id} id={recent.id}>
-                  <ListItemButton
-                    disableGutters
-                    onClick={() => selectRecent(recent.id)}
-                    className={classes.recentListItemButton}
-                  >
-                    <Stack direction="row" alignItems="center" gap={1} overflow="hidden">
-                      <div className={classes.recentSourcePrimary}>
-                        {recent.label ?? "Local file"}
-                      </div>
-                      {" – "}
-                      <TextMiddleTruncate
-                        className={classes.recentSourceSecondary}
-                        text={recent.title}
-                      />
-                    </Stack>
-                  </ListItemButton>
-                </ListItem>
-              ))}
-            </List>
-          </Stack>
+          {recentSources.length > 0 && (
+            <Stack gap={1}>
+              <Typography variant="h5" gutterBottom>
+                Recent data sources
+              </Typography>
+              <List disablePadding>
+                {recentSources.slice(0, 5).map((recent) => (
+                  <ListItem disablePadding key={recent.id} id={recent.id}>
+                    <ListItemButton
+                      disableGutters
+                      onClick={() => selectRecent(recent.id)}
+                      className={classes.recentListItemButton}
+                    >
+                      <Stack direction="row" alignItems="center" gap={1} overflow="hidden">
+                        <div className={classes.recentSourcePrimary}>
+                          {recent.label ?? "Local file"}
+                        </div>
+                        {" – "}
+                        <TextMiddleTruncate
+                          className={classes.recentSourceSecondary}
+                          text={recent.title}
+                        />
+                      </Stack>
+                    </ListItemButton>
+                  </ListItem>
+                ))}
+              </List>
+            </Stack>
+          )}
           <FormControlLabel
             label="Show on startup"
             control={
@@ -371,7 +408,7 @@ export default function Start(props: IStartProps): JSX.Element {
               {item.text}
             </Typography>
             {item.actions != undefined && (
-              <Stack direction="row" alignItems="center" gap={1}>
+              <Stack direction="row" alignItems="center" gap={1} paddingTop={1.5}>
                 {item.actions}
               </Stack>
             )}
