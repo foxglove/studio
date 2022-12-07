@@ -194,6 +194,12 @@ export default function Start(props: IStartProps): JSX.Element {
               target="_blank"
               className={classes.button}
               variant="outlined"
+              onClick={() => {
+                void analytics.logEvent(AppEvent.DIALOG_CLICK_CTA, {
+                  user: currentUserType,
+                  cta: "join-slack",
+                });
+              }}
             >
               Join our Slack
             </Button>
@@ -201,6 +207,12 @@ export default function Start(props: IStartProps): JSX.Element {
               href="https://github.com/foxglove/studio/issues/new/choose"
               target="_blank"
               className={classes.button}
+              onClick={() => {
+                void analytics.logEvent(AppEvent.DIALOG_CLICK_CTA, {
+                  user: currentUserType,
+                  cta: "go-to-github",
+                });
+              }}
             >
               Open an issue on GitHub
             </Button>
@@ -222,6 +234,10 @@ export default function Start(props: IStartProps): JSX.Element {
                   onClick={() => {
                     onSelectView("demo");
                     void analytics.logEvent(AppEvent.DIALOG_SELECT_VIEW, { type: "demo" });
+                    void analytics.logEvent(AppEvent.DIALOG_CLICK_CTA, {
+                      user: currentUserType,
+                      cta: "demo",
+                    });
                   }}
                   className={classes.button}
                   variant="outlined"
@@ -231,6 +247,12 @@ export default function Start(props: IStartProps): JSX.Element {
                 <Button
                   href="https://foxglove.dev/docs/studio"
                   target="_blank"
+                  onClick={() => {
+                    void analytics.logEvent(AppEvent.DIALOG_CLICK_CTA, {
+                      user: currentUserType,
+                      cta: "guides",
+                    });
+                  }}
                   className={classes.button}
                 >
                   View our guides
@@ -248,6 +270,12 @@ export default function Start(props: IStartProps): JSX.Element {
                 target="_blank"
                 className={classes.button}
                 variant="outlined"
+                onClick={() => {
+                  void analytics.logEvent(AppEvent.DIALOG_CLICK_CTA, {
+                    user: currentUserType,
+                    cta: "create-account",
+                  });
+                }}
               >
                 Create a free account
               </Button>
@@ -267,6 +295,12 @@ export default function Start(props: IStartProps): JSX.Element {
                   target="_blank"
                   variant="outlined"
                   className={classes.button}
+                  onClick={() => {
+                    void analytics.logEvent(AppEvent.DIALOG_CLICK_CTA, {
+                      user: currentUserType,
+                      cta: "upload-to-dp",
+                    });
+                  }}
                 >
                   Upload to Data Platform
                 </Button>
@@ -284,6 +318,10 @@ export default function Start(props: IStartProps): JSX.Element {
                   onClick={() => {
                     onSelectView("demo");
                     void analytics.logEvent(AppEvent.DIALOG_SELECT_VIEW, { type: "demo" });
+                    void analytics.logEvent(AppEvent.DIALOG_CLICK_CTA, {
+                      user: currentUserType,
+                      cta: "demo",
+                    });
                   }}
                   className={classes.button}
                   variant="outlined"
@@ -294,6 +332,12 @@ export default function Start(props: IStartProps): JSX.Element {
                   href="https://foxglove.dev/docs/studio"
                   target="_blank"
                   className={classes.button}
+                  onClick={() => {
+                    void analytics.logEvent(AppEvent.DIALOG_CLICK_CTA, {
+                      user: currentUserType,
+                      cta: "guides",
+                    });
+                  }}
                 >
                   View our guides
                 </Button>
