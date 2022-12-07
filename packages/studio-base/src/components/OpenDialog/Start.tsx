@@ -162,104 +162,106 @@ function useCurrentUserType(): UserType {
   return "authenticated-free";
 }
 
-type SidebarItems = {
+type SidebarItem = {
   id: string;
   title: string;
   text: ReactNode;
   actions?: ReactNode;
 };
 
-export default function Start(props: IStartProps): JSX.Element {
-  const { supportedLocalFileExtensions = [], onSelectView } = props;
-  const { recentSources, selectRecent } = usePlayerSelection();
-  const { classes } = useStyles();
+function SidebarItems(props: { onSelectView: (newValue: OpenDialogViews) => void }): JSX.Element {
+  const { onSelectView } = props;
+  const currentUserType = useCurrentUserType();
   const analytics = useAnalytics();
+  const { classes } = useStyles();
 
-  const [showOnStartup = true, setShowOnStartup] = useAppConfigurationValue<boolean>(
-    AppSetting.SHOW_OPEN_DIALOG_ON_STARTUP,
+  const { freeUser, teamOrEnterpriseUser } = useMemo(
+    () => ({
+      freeUser: [
+        {
+          id: "new",
+          title: "New to Foxglove Studio?",
+          text: "Start by exploring a sample dataset or checking out our how-to guides.",
+          actions: (
+            <>
+              <Button
+                onClick={() => {
+                  onSelectView("demo");
+                  void analytics.logEvent(AppEvent.DIALOG_SELECT_VIEW, { type: "demo" });
+                  void analytics.logEvent(AppEvent.DIALOG_CLICK_CTA, {
+                    user: currentUserType,
+                    cta: "demo",
+                  });
+                }}
+                className={classes.button}
+                variant="outlined"
+              >
+                Explore sample data
+              </Button>
+              <Button
+                href="https://foxglove.dev/docs/studio"
+                target="_blank"
+                className={classes.button}
+                onClick={() => {
+                  void analytics.logEvent(AppEvent.DIALOG_CLICK_CTA, {
+                    user: currentUserType,
+                    cta: "guides",
+                  });
+                }}
+              >
+                View our guides
+              </Button>
+            </>
+          ),
+        },
+      ],
+      teamOrEnterpriseUser: [
+        {
+          id: "need-help",
+          title: "Need help?",
+          text: "Reach out directly to the Foxglove team to get help, make feature requests, and report bugs.",
+          actions: (
+            <>
+              <Button
+                href="https://foxglove.dev/slack"
+                target="_blank"
+                className={classes.button}
+                variant="outlined"
+                onClick={() => {
+                  void analytics.logEvent(AppEvent.DIALOG_CLICK_CTA, {
+                    user: currentUserType,
+                    cta: "join-slack",
+                  });
+                }}
+              >
+                Join our Slack
+              </Button>
+              <Button
+                href="https://github.com/foxglove/studio/issues/new/choose"
+                target="_blank"
+                className={classes.button}
+                onClick={() => {
+                  void analytics.logEvent(AppEvent.DIALOG_CLICK_CTA, {
+                    user: currentUserType,
+                    cta: "go-to-github",
+                  });
+                }}
+              >
+                Open an issue on GitHub
+              </Button>
+            </>
+          ),
+        },
+      ],
+    }),
+    [analytics, classes.button, currentUserType, onSelectView],
   );
 
-  const currentUserType = useCurrentUserType();
-
-  const sidebarItems: SidebarItems[] = useMemo(() => {
-    const teamOrEnterpriseUser = [
-      {
-        id: "need-help",
-        title: "Need help?",
-        text: "Reach out directly to the Foxglove team to get help, make feature requests, and report bugs.",
-        actions: (
-          <>
-            <Button
-              href="https://foxglove.dev/slack"
-              target="_blank"
-              className={classes.button}
-              variant="outlined"
-              onClick={() => {
-                void analytics.logEvent(AppEvent.DIALOG_CLICK_CTA, {
-                  user: currentUserType,
-                  cta: "join-slack",
-                });
-              }}
-            >
-              Join our Slack
-            </Button>
-            <Button
-              href="https://github.com/foxglove/studio/issues/new/choose"
-              target="_blank"
-              className={classes.button}
-              onClick={() => {
-                void analytics.logEvent(AppEvent.DIALOG_CLICK_CTA, {
-                  user: currentUserType,
-                  cta: "go-to-github",
-                });
-              }}
-            >
-              Open an issue on GitHub
-            </Button>
-          </>
-        ),
-      },
-    ];
-
+  const sidebarItems: SidebarItem[] = useMemo(() => {
     switch (currentUserType) {
       case "unauthenticated":
         return [
-          {
-            id: "new",
-            title: "New to Foxglove Studio?",
-            text: "Start by exploring a sample dataset or checking out our how-to guides.",
-            actions: (
-              <>
-                <Button
-                  onClick={() => {
-                    onSelectView("demo");
-                    void analytics.logEvent(AppEvent.DIALOG_SELECT_VIEW, { type: "demo" });
-                    void analytics.logEvent(AppEvent.DIALOG_CLICK_CTA, {
-                      user: currentUserType,
-                      cta: "demo",
-                    });
-                  }}
-                  className={classes.button}
-                  variant="outlined"
-                >
-                  Explore sample data
-                </Button>
-                <Button
-                  href="https://foxglove.dev/docs/studio"
-                  target="_blank"
-                  onClick={() => {
-                    void analytics.logEvent(AppEvent.DIALOG_CLICK_CTA, {
-                      user: currentUserType,
-                      cta: "guides",
-                    });
-                  }}
-                  className={classes.button}
-                >
-                  View our guides
-                </Button>
-              </>
-            ),
-          },
+          ...freeUser,
           {
             id: "store-and-collaborate",
             title: "Store and collaborate",
@@ -308,49 +310,45 @@ export default function Start(props: IStartProps): JSX.Element {
               </>
             ),
           },
-          {
-            id: "new",
-            title: "New to Foxglove Studio?",
-            text: "Start by exploring a sample dataset or checking out our how-to guides.",
-            actions: (
-              <>
-                <Button
-                  onClick={() => {
-                    onSelectView("demo");
-                    void analytics.logEvent(AppEvent.DIALOG_SELECT_VIEW, { type: "demo" });
-                    void analytics.logEvent(AppEvent.DIALOG_CLICK_CTA, {
-                      user: currentUserType,
-                      cta: "demo",
-                    });
-                  }}
-                  className={classes.button}
-                  variant="outlined"
-                >
-                  Explore sample data
-                </Button>
-                <Button
-                  href="https://foxglove.dev/docs/studio"
-                  target="_blank"
-                  className={classes.button}
-                  onClick={() => {
-                    void analytics.logEvent(AppEvent.DIALOG_CLICK_CTA, {
-                      user: currentUserType,
-                      cta: "guides",
-                    });
-                  }}
-                >
-                  View our guides
-                </Button>
-              </>
-            ),
-          },
+          ...freeUser,
         ];
       case "authenticated-team":
         return teamOrEnterpriseUser;
       case "authenticated-enterprise":
         return teamOrEnterpriseUser;
     }
-  }, [analytics, classes.button, currentUserType, onSelectView]);
+  }, [analytics, classes.button, currentUserType, freeUser, teamOrEnterpriseUser]);
+
+  return (
+    <>
+      {sidebarItems.map((item) => (
+        <Stack key={item.id}>
+          <Typography variant="h5" gutterBottom>
+            {item.title}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {item.text}
+          </Typography>
+          {item.actions != undefined && (
+            <Stack direction="row" alignItems="center" gap={1} paddingTop={1.5}>
+              {item.actions}
+            </Stack>
+          )}
+        </Stack>
+      ))}
+    </>
+  );
+}
+
+export default function Start(props: IStartProps): JSX.Element {
+  const { supportedLocalFileExtensions = [], onSelectView } = props;
+  const { recentSources, selectRecent } = usePlayerSelection();
+  const { classes } = useStyles();
+  const analytics = useAnalytics();
+
+  const [showOnStartup = true, setShowOnStartup] = useAppConfigurationValue<boolean>(
+    AppSetting.SHOW_OPEN_DIALOG_ON_STARTUP,
+  );
 
   const startItems = useMemo(() => {
     const formatter = new Intl.ListFormat("en-US", { style: "long" });
@@ -468,21 +466,7 @@ export default function Start(props: IStartProps): JSX.Element {
         </Stack>
       </Stack>
       <Stack gap={4} className={classes.sidebar}>
-        {sidebarItems.map((item) => (
-          <Stack key={item.id}>
-            <Typography variant="h5" gutterBottom>
-              {item.title}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {item.text}
-            </Typography>
-            {item.actions != undefined && (
-              <Stack direction="row" alignItems="center" gap={1} paddingTop={1.5}>
-                {item.actions}
-              </Stack>
-            )}
-          </Stack>
-        ))}
+        <SidebarItems onSelectView={onSelectView} />
       </Stack>
     </div>
   );
