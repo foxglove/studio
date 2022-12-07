@@ -18,7 +18,6 @@ export type User = {
     slug: string;
     displayName: string;
     isEnterprise: boolean;
-    hasStripeSubscription: boolean;
     allowsUploads: boolean;
     supportsEdgeSites: boolean;
   };

@@ -137,7 +137,6 @@ describe("Initial deep link state", () => {
       slug: "fake-org",
       displayName: "Fake Org",
       isEnterprise: false,
-      hasStripeSubscription: false,
       allowsUploads: false,
       supportsEdgeSites: false,
     };

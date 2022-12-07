@@ -32,7 +32,6 @@ function fakeUser(type: "free" | "paid" | "enterprise"): User {
       slug: "org",
       displayName: "Orgalorg",
       isEnterprise: type === "enterprise",
-      hasStripeSubscription: type === "paid" || type === "enterprise",
       allowsUploads: true,
       supportsEdgeSites: type === "enterprise",
     },

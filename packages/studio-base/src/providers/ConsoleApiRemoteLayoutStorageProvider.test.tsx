@@ -26,7 +26,6 @@ describe("ConsoleApiRemoteLayoutStorageProvider", () => {
       slug: "fake-org",
       displayName: "Fake Org",
       isEnterprise: false,
-      hasStripeSubscription: false,
       allowsUploads: false,
       supportsEdgeSites: false,
     };
