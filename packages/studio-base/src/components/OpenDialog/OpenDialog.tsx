@@ -28,6 +28,9 @@ type OpenDialogProps = {
 };
 
 const useStyles = makeStyles()((theme) => ({
+  paper: {
+    maxWidth: `calc(min(${theme.breakpoints.values.md}px, 100% - 32px))`,
+  },
   closeButton: {
     position: "absolute",
     right: 0,
@@ -147,7 +150,7 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
       PaperProps={{
         square: false,
         elevation: 4,
-        style: { maxWidth: "calc(min(960px, 100% - 32px))" },
+        className: classes.paper,
       }}
     >
       <IconButton className={classes.closeButton} onClick={onModalClose} edge="end">
