@@ -72,7 +72,7 @@ export function Root({ appConfiguration }: { appConfiguration: IAppConfiguration
         layoutStorage={layoutStorage}
         consoleApi={consoleApi}
         extensionLoaders={extensionLoaders}
-        enableGlobalCss={true}
+        enableGlobalCss
       />
     </>
   );
