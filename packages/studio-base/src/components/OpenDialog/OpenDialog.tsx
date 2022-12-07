@@ -28,9 +28,6 @@ type OpenDialogProps = {
 };
 
 const useStyles = makeStyles()((theme) => ({
-  // dialogTitle: {
-  //   padding: theme.spacing(4, 5, 0, 5),
-  // },
   closeButton: {
     position: "absolute",
     right: 0,
