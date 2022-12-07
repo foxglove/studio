@@ -106,7 +106,11 @@ function newStudioWindow(deepLinks: string[] = []): BrowserWindow {
       additionalArguments: [
         `--allowCrashReporting=${crashReportingEnabled ? "1" : "0"}`,
         `--allowTelemetry=${telemetryEnabled ? "1" : "0"}`,
-        ...deepLinks,
+        // Encode using base64 to avoid breaking on Windows when the values contain special characters like ":".
+        // https://github.com/foxglove/studio/issues/4896
+        // https://github.com/electron/electron/issues/32064
+        // https://github.com/electron/electron/issues/31168
+        `--deepLinks=${btoa(JSON.stringify(deepLinks))}`,
       ],
       // Disable webSecurity in development so we can make XML-RPC calls, load
       // remote data, etc. In production, the app is served from file:// URLs so

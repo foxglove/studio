@@ -104,7 +104,11 @@ const desktopBridge: Desktop = {
     await ipcRenderer.invoke("updateNativeColorScheme");
   },
   getDeepLinks(): string[] {
-    return window.process.argv.filter((arg) => arg.startsWith("foxglove://"));
+    const deepLinksArg = window.process.argv
+      .find((arg) => arg.startsWith("--deepLinks="))
+      ?.replace(/^--deepLinks=/, "");
+    // See comment in StudioWindow.ts
+    return deepLinksArg ? JSON.parse(atob(deepLinksArg)) : undefined;
   },
   async getExtensions() {
     const homePath = (await ipcRenderer.invoke("getHomePath")) as string;
