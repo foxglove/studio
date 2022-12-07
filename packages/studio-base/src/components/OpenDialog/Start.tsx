@@ -34,7 +34,7 @@ export type IStartProps = {
   onSelectView: (newValue: OpenDialogViews) => void;
 };
 
-const useStyles = makeStyles()((theme) => ({
+const useStyles = makeStyles<void, "recentSourcePrimary">()((theme, _params, classes) => ({
   logo: {
     width: 212,
     height: "auto",
@@ -82,6 +82,10 @@ const useStyles = makeStyles()((theme) => ({
     "&:hover": {
       backgroundColor: "transparent",
       color: theme.palette.text.primary,
+
+      [`.${classes.recentSourcePrimary}`]: {
+        color: theme.palette.primary[theme.palette.mode === "dark" ? "light" : "dark"],
+      },
     },
   },
   recentSourcePrimary: {
