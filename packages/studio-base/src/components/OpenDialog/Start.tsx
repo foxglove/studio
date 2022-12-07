@@ -182,7 +182,6 @@ export default function Start(props: IStartProps): JSX.Element {
   const currentUserType = useCurrentUserType();
 
   const sidebarItems: SidebarItems[] = useMemo(() => {
-    // Currently the copy is the same but may change in the future
     const paidOrEnterpriseUser = [
       {
         id: "need-help",
@@ -210,99 +209,103 @@ export default function Start(props: IStartProps): JSX.Element {
       },
     ];
 
-    return {
-      unauthenticated: [
-        {
-          id: "new",
-          title: "New to Foxglove Studio?",
-          text: "Start by exploring a sample dataset or checking out our how-to guides.",
-          actions: (
-            <>
+    switch (currentUserType) {
+      case "unauthenticated":
+        return [
+          {
+            id: "new",
+            title: "New to Foxglove Studio?",
+            text: "Start by exploring a sample dataset or checking out our how-to guides.",
+            actions: (
+              <>
+                <Button
+                  onClick={() => {
+                    onSelectView("demo");
+                    void analytics.logEvent(AppEvent.DIALOG_SELECT_VIEW, { type: "demo" });
+                  }}
+                  className={classes.button}
+                  variant="outlined"
+                >
+                  Explore sample data
+                </Button>
+                <Button
+                  href="https://foxglove.dev/docs/studio"
+                  target="_blank"
+                  className={classes.button}
+                >
+                  View our guides
+                </Button>
+              </>
+            ),
+          },
+          {
+            id: "store-and-collaborate",
+            title: "Store and collaborate",
+            text: "Securely store petabytes of indexed data for easy discovery and analysis in Foxglove Data Platform.",
+            actions: (
               <Button
-                onClick={() => {
-                  onSelectView("demo");
-                  void analytics.logEvent(AppEvent.DIALOG_SELECT_VIEW, { type: "demo" });
-                }}
+                href="https://console.foxglove.dev/signin"
+                target="_blank"
                 className={classes.button}
                 variant="outlined"
               >
-                Explore sample data
+                Create a free account
               </Button>
-              <Button
-                href="https://foxglove.dev/docs/studio"
-                target="_blank"
-                className={classes.button}
-              >
-                View our guides
-              </Button>
-            </>
-          ),
-        },
-        {
-          id: "store-and-collaborate",
-          title: "Store and collaborate",
-          text: "Securely store petabytes of indexed data for easy discovery and analysis in Foxglove Data Platform.",
-          actions: (
-            <Button
-              href="https://console.foxglove.dev/signin"
-              target="_blank"
-              className={classes.button}
-              variant="outlined"
-            >
-              Create a free account
-            </Button>
-          ),
-        },
-      ],
-      "authenticated-free": [
-        {
-          id: "start-collaborating",
-          title: "Start collaborating with your Foxglove organization",
-          text: "Make the most of your Foxglove account – whether you want to dive deep on your data or share tools with your teammates.",
-          actions: (
-            <>
-              <Button
-                href="https://console.foxglove.dev"
-                target="_blank"
-                variant="outlined"
-                className={classes.button}
-              >
-                Upload to Data Platform
-              </Button>
-              <Button className={classes.button}>Share team layouts</Button>
-            </>
-          ),
-        },
-        {
-          id: "new",
-          title: "New to Foxglove Studio?",
-          text: "Start by exploring a sample dataset or checking out our how-to guides.",
-          actions: (
-            <>
-              <Button
-                onClick={() => {
-                  onSelectView("demo");
-                  void analytics.logEvent(AppEvent.DIALOG_SELECT_VIEW, { type: "demo" });
-                }}
-                className={classes.button}
-                variant="outlined"
-              >
-                Explore sample data
-              </Button>
-              <Button
-                href="https://foxglove.dev/docs/studio"
-                target="_blank"
-                className={classes.button}
-              >
-                View our guides
-              </Button>
-            </>
-          ),
-        },
-      ],
-      "authenticated-paid": paidOrEnterpriseUser,
-      "authenticated-enterprise": paidOrEnterpriseUser,
-    }[currentUserType];
+            ),
+          },
+        ];
+      case "authenticated-free":
+        return [
+          {
+            id: "start-collaborating",
+            title: "Start collaborating with your Foxglove organization",
+            text: "Make the most of your Foxglove account – whether you want to dive deep on your data or share tools with your teammates.",
+            actions: (
+              <>
+                <Button
+                  href="https://console.foxglove.dev"
+                  target="_blank"
+                  variant="outlined"
+                  className={classes.button}
+                >
+                  Upload to Data Platform
+                </Button>
+                <Button className={classes.button}>Share team layouts</Button>
+              </>
+            ),
+          },
+          {
+            id: "new",
+            title: "New to Foxglove Studio?",
+            text: "Start by exploring a sample dataset or checking out our how-to guides.",
+            actions: (
+              <>
+                <Button
+                  onClick={() => {
+                    onSelectView("demo");
+                    void analytics.logEvent(AppEvent.DIALOG_SELECT_VIEW, { type: "demo" });
+                  }}
+                  className={classes.button}
+                  variant="outlined"
+                >
+                  Explore sample data
+                </Button>
+                <Button
+                  href="https://foxglove.dev/docs/studio"
+                  target="_blank"
+                  className={classes.button}
+                >
+                  View our guides
+                </Button>
+              </>
+            ),
+          },
+        ];
+      case "authenticated-paid":
+        return paidOrEnterpriseUser;
+      case "authenticated-enterprise":
+        return paidOrEnterpriseUser;
+    }
   }, [analytics, classes.button, currentUserType, onSelectView]);
 
   const startItems = useMemo(() => {
