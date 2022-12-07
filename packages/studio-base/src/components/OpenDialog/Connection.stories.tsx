@@ -17,21 +17,7 @@ export default {
 const playerSelection: PlayerSelection = {
   selectSource: () => {},
   selectRecent: () => {},
-  recentSources: [
-    {
-      id: "1111",
-      title: "NuScenes-v1.0-mini-scene-0655-reallllllllly-long-name-8829908290831091.bag",
-    },
-    {
-      id: "2222",
-      title: "NuScenes-v1.0-mini-scene-0656.bag",
-    },
-    {
-      id: "3333",
-      title: "ws://localhost:9090/",
-      label: "Rosbridge (ROS 1 & 2)",
-    },
-  ],
+  recentSources: [],
   availableSources: [
     {
       id: "foo",
@@ -65,5 +51,5 @@ export const Dark = (): JSX.Element => (
     <OpenDialog activeView="connection" />
   </PlayerSelectionContext.Provider>
 );
-Light.storyName = "Default (dark)";
+Dark.storyName = "Default (dark)";
 Dark.parameters = { colorScheme: "dark" };

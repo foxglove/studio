@@ -186,11 +186,17 @@ export default function Start(props: IStartProps): JSX.Element {
         text: "Reach out directly to the Foxglove team to get help, make feature requests, and report bugs.",
         actions: (
           <>
-            <Button href="https://foxglove.dev/slack" className={classes.button} variant="outlined">
-              Join our slack
+            <Button
+              href="https://foxglove.dev/slack"
+              target="_blank"
+              className={classes.button}
+              variant="outlined"
+            >
+              Join our Slack
             </Button>
             <Button
               href="https://github.com/foxglove/studio/issues/new/choose"
+              target="_blank"
               className={classes.button}
             >
               Open an issue on GitHub
@@ -218,7 +224,13 @@ export default function Start(props: IStartProps): JSX.Element {
               >
                 Explore sample data
               </Button>
-              <Button className={classes.button}>View our guides</Button>
+              <Button
+                href="https://foxglove.dev/docs/studio"
+                target="_blank"
+                className={classes.button}
+              >
+                View our guides
+              </Button>
             </>
           ),
         },
@@ -229,6 +241,7 @@ export default function Start(props: IStartProps): JSX.Element {
           actions: (
             <Button
               href="https://console.foxglove.dev/signin"
+              target="_blank"
               className={classes.button}
               variant="outlined"
             >
@@ -246,6 +259,7 @@ export default function Start(props: IStartProps): JSX.Element {
             <>
               <Button
                 href="https://console.foxglove.dev"
+                target="_blank"
                 variant="outlined"
                 className={classes.button}
               >
@@ -271,7 +285,11 @@ export default function Start(props: IStartProps): JSX.Element {
               >
                 Explore sample data
               </Button>
-              <Button href="https://foxglove.dev/docs/studio" className={classes.button}>
+              <Button
+                href="https://foxglove.dev/docs/studio"
+                target="_blank"
+                className={classes.button}
+              >
                 View our guides
               </Button>
             </>

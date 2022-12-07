@@ -103,8 +103,6 @@ function CurrentUserWrapper(props: { children: ReactNode; user?: User }): JSX.El
   return <CurrentUserContext.Provider value={value}>{props.children}</CurrentUserContext.Provider>;
 }
 
-// Default
-
 export const DefaultLight = (): JSX.Element => <OpenDialog />;
 DefaultLight.storyName = "Default (light)";
 DefaultLight.parameters = { colorScheme: "light" };
@@ -113,7 +111,6 @@ export const DefaultDark = (): JSX.Element => <OpenDialog />;
 DefaultDark.storyName = "Default (dark)";
 DefaultDark.parameters = { colorScheme: "dark" };
 
-// No user
 export function UserNoAuth(): JSX.Element {
   return (
     <PlayerSelectionContext.Provider value={playerSelection}>
@@ -123,8 +120,6 @@ export function UserNoAuth(): JSX.Element {
 }
 UserNoAuth.storyName = "User not authenticated";
 UserNoAuth.parameters = { colorScheme: "dark" };
-
-// Free user
 
 export function UserAuthedFree(): JSX.Element {
   const freeUser = fakeUser("free");
@@ -139,8 +134,6 @@ export function UserAuthedFree(): JSX.Element {
 }
 UserAuthedFree.storyName = "User Authenticated with Free Account";
 UserAuthedFree.parameters = { colorScheme: "dark" };
-
-// Paid user
 
 export function UserAuthedPaid(): JSX.Element {
   const freeUser = fakeUser("paid");
