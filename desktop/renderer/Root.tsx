@@ -106,7 +106,7 @@ export default function Root({
         extensionLoaders={extensionLoaders}
         nativeAppMenu={nativeAppMenu}
         nativeWindow={nativeWindow}
-        enableGlobalCss={true}
+        enableGlobalCss
       />
     </>
   );
