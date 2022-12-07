@@ -142,7 +142,7 @@ function DataSourceOption(props: DataSourceOptionProps): JSX.Element {
 type UserType =
   | "unauthenticated"
   | "authenticated-free"
-  | "authenticated-paid"
+  | "authenticated-team"
   | "authenticated-enterprise";
 
 function useCurrentUserType(): UserType {
@@ -156,7 +156,7 @@ function useCurrentUserType(): UserType {
   }
 
   if (user.currentUser.orgPaid === true) {
-    return "authenticated-paid";
+    return "authenticated-team";
   }
 
   return "authenticated-free";
@@ -182,7 +182,7 @@ export default function Start(props: IStartProps): JSX.Element {
   const currentUserType = useCurrentUserType();
 
   const sidebarItems: SidebarItems[] = useMemo(() => {
-    const paidOrEnterpriseUser = [
+    const teamOrEnterpriseUser = [
       {
         id: "need-help",
         title: "Need help?",
@@ -345,10 +345,10 @@ export default function Start(props: IStartProps): JSX.Element {
             ),
           },
         ];
-      case "authenticated-paid":
-        return paidOrEnterpriseUser;
+      case "authenticated-team":
+        return teamOrEnterpriseUser;
       case "authenticated-enterprise":
-        return paidOrEnterpriseUser;
+        return teamOrEnterpriseUser;
     }
   }, [analytics, classes.button, currentUserType, onSelectView]);
 
