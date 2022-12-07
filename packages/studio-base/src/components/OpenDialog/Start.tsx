@@ -217,9 +217,9 @@ function SidebarItems(props: { onSelectView: (newValue: OpenDialogViews) => void
       ],
       teamOrEnterpriseUser: [
         {
-          id: "need-help",
-          title: "Need help?",
-          text: "Reach out directly to the Foxglove team to get help, make feature requests, and report bugs.",
+          id: "join-community",
+          title: "Join our community",
+          text: "Join us on Slack or GitHub to get help, make feature requests, and report bugs.",
           actions: (
             <>
               <Button
@@ -247,7 +247,42 @@ function SidebarItems(props: { onSelectView: (newValue: OpenDialogViews) => void
                   });
                 }}
               >
-                Open an issue on GitHub
+                Open a GitHub issue
+              </Button>
+            </>
+          ),
+        },
+        {
+          id: "need-help",
+          title: "Need help?",
+          text: "View our documentation, or check out the tutorials on the Foxglove blog.",
+          actions: (
+            <>
+              <Button
+                href="https://foxglove.dev/docs/studio"
+                target="_blank"
+                className={classes.button}
+                variant="outlined"
+                onClick={() => {
+                  void analytics.logEvent(AppEvent.DIALOG_CLICK_CTA, {
+                    user: currentUserType,
+                    cta: "docs",
+                  });
+                }}
+              >
+                View our docs
+              </Button>
+              <Button
+                href="https://foxglove.dev/tutorials"
+                className={classes.button}
+                onClick={() => {
+                  void analytics.logEvent(AppEvent.DIALOG_CLICK_CTA, {
+                    user: currentUserType,
+                    cta: "tutorials",
+                  });
+                }}
+              >
+                See tutorials
               </Button>
             </>
           ),
