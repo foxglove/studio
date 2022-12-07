@@ -181,7 +181,7 @@ function SidebarItems(props: { onSelectView: (newValue: OpenDialogViews) => void
         {
           id: "new",
           title: "New to Foxglove Studio?",
-          text: "Start by exploring a sample dataset or checking out our how-to guides.",
+          text: "Start by exploring a sample dataset or checking out our documentation.",
           actions: (
             <>
               <Button
@@ -205,11 +205,11 @@ function SidebarItems(props: { onSelectView: (newValue: OpenDialogViews) => void
                 onClick={() => {
                   void analytics.logEvent(AppEvent.DIALOG_CLICK_CTA, {
                     user: currentUserType,
-                    cta: "guides",
+                    cta: "docs",
                   });
                 }}
               >
-                View our guides
+                View our docs
               </Button>
             </>
           ),
@@ -293,7 +293,7 @@ function SidebarItems(props: { onSelectView: (newValue: OpenDialogViews) => void
             actions: (
               <>
                 <Button
-                  href="https://console.foxglove.dev"
+                  href="https://console.foxglove.dev/recordings"
                   target="_blank"
                   variant="outlined"
                   className={classes.button}
@@ -306,7 +306,13 @@ function SidebarItems(props: { onSelectView: (newValue: OpenDialogViews) => void
                 >
                   Upload to Data Platform
                 </Button>
-                <Button className={classes.button}>Share team layouts</Button>
+                <Button
+                  href="https://foxglove.dev/docs/studio/layouts#team-layouts"
+                  target="_blank"
+                  className={classes.button}
+                >
+                  Share team layouts
+                </Button>
               </>
             ),
           },
