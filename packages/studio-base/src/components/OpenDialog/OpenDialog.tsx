@@ -29,7 +29,7 @@ type OpenDialogProps = {
 
 const useStyles = makeStyles()((theme) => ({
   paper: {
-    maxWidth: `calc(min(${theme.breakpoints.values.md}px, 100% - 32px))`,
+    maxWidth: `calc(min(${theme.breakpoints.values.md}px, 100% - ${theme.spacing(4)}))`,
   },
   closeButton: {
     position: "absolute",
