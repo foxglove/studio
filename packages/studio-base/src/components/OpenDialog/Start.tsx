@@ -193,7 +193,7 @@ export default function Start(props: IStartProps): JSX.Element {
               href="https://github.com/foxglove/studio/issues/new/choose"
               className={classes.button}
             >
-              Open an issue on Github
+              Open an issue on GitHub
             </Button>
           </>
         ),
