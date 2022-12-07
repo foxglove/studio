@@ -267,20 +267,35 @@ function SidebarItems(props: { onSelectView: (newValue: OpenDialogViews) => void
             title: "Store and collaborate",
             text: "Securely store petabytes of indexed data for easy discovery and analysis in Foxglove Data Platform.",
             actions: (
-              <Button
-                href="https://console.foxglove.dev/signin"
-                target="_blank"
-                className={classes.button}
-                variant="outlined"
-                onClick={() => {
-                  void analytics.logEvent(AppEvent.DIALOG_CLICK_CTA, {
-                    user: currentUserType,
-                    cta: "create-account",
-                  });
-                }}
-              >
-                Create a free account
-              </Button>
+              <>
+                <Button
+                  href="https://console.foxglove.dev/signin"
+                  target="_blank"
+                  className={classes.button}
+                  variant="outlined"
+                  onClick={() => {
+                    void analytics.logEvent(AppEvent.DIALOG_CLICK_CTA, {
+                      user: currentUserType,
+                      cta: "create-account",
+                    });
+                  }}
+                >
+                  Create a free account
+                </Button>
+                <Button
+                  href="https://console.foxglove.dev/signin"
+                  target="_blank"
+                  className={classes.button}
+                  onClick={() => {
+                    void analytics.logEvent(AppEvent.DIALOG_CLICK_CTA, {
+                      user: currentUserType,
+                      cta: "sign-in",
+                    });
+                  }}
+                >
+                  Sign in
+                </Button>
+              </>
             ),
           },
         ];
