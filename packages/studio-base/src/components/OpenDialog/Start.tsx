@@ -308,9 +308,20 @@ function SidebarItems(props: { onSelectView: (newValue: OpenDialogViews) => void
         return [
           ...freeUser,
           {
-            id: "store-and-collaborate",
-            title: "Store and collaborate",
-            text: "Securely store petabytes of indexed data for easy discovery and analysis in Foxglove Data Platform.",
+            id: "collaborate",
+            title: "Accelerate   development with Foxglove Data Platform",
+            text: (
+              <ul style={{ padding: "0px" }}>
+                <li>Securely store petabytes of ROS or custom data</li>
+                <li>
+                  Use a convenient web interface to search and retrieve data at lightning speed
+                </li>
+                <li>
+                  Share data files, visualization layouts, and custom extensions with teammates
+                </li>
+                <li>Add custom metadata to enrich how you explore and analyze your data</li>
+              </ul>
+            ),
             actions: (
               <>
                 <Button
