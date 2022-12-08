@@ -2,29 +2,17 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import {
-  Button,
-  Checkbox,
-  FormControlLabel,
-  Link,
-  List,
-  ListItem,
-  ListItemButton,
-  SvgIcon,
-  Typography,
-} from "@mui/material";
+import { Button, Link, List, ListItem, ListItemButton, SvgIcon, Typography } from "@mui/material";
 import { ReactNode, useMemo } from "react";
 import tinycolor from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 
-import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import FoxgloveLogoText from "@foxglove/studio-base/components/FoxgloveLogoText";
 import Stack from "@foxglove/studio-base/components/Stack";
 import TextMiddleTruncate from "@foxglove/studio-base/components/TextMiddleTruncate";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
 import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
-import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 
 import { OpenDialogViews } from "./types";
@@ -40,29 +28,51 @@ const useStyles = makeStyles<void, "recentSourcePrimary">()((theme, _params, cla
     height: "auto",
     marginLeft: theme.spacing(-1),
   },
+  grid: {
+    [theme.breakpoints.up("md")]: {
+      display: "grid",
+      gridTemplateAreas: `
+      "OpenDialog-header OpenDialog-spacer"
+      "OpenDialog-content OpenDialog-sidebar"
+    `,
+      gridTemplateRows: `content auto`,
+      gridTemplateColumns: `1fr 375px`,
+    },
+  },
+  header: {
+    padding: theme.spacing(6),
+    gridArea: "OpenDialog-header",
+
+    [theme.breakpoints.down("md")]: {
+      padding: theme.spacing(4),
+    },
+  },
+  content: {
+    padding: theme.spacing(0, 6, 6),
+    overflow: "hidden",
+    gridArea: "OpenDialog-content",
+
+    [theme.breakpoints.down("md")]: {
+      padding: theme.spacing(0, 4, 4),
+    },
+  },
+  spacer: {
+    gridArea: "OpenDialog-spacer",
+    backgroundColor: tinycolor(theme.palette.text.primary).setAlpha(0.04).toRgbString(),
+  },
+  sidebar: {
+    gridArea: "OpenDialog-sidebar",
+    backgroundColor: tinycolor(theme.palette.text.primary).setAlpha(0.04).toRgbString(),
+    padding: theme.spacing(0, 5, 5),
+
+    [theme.breakpoints.down("md")]: {
+      padding: theme.spacing(4),
+    },
+  },
   button: {
     whiteSpace: "nowrap",
     textOverflow: "ellipsis",
     overflow: "hidden",
-  },
-  grid: {
-    // See comment below for explanation of grid properties
-    display: "grid",
-    gridTemplateRows: "auto",
-    gridTemplateColumns: `1fr 375px`,
-
-    [theme.breakpoints.down("md")]: {
-      display: "flex",
-      flexDirection: "column",
-    },
-  },
-  sidebar: {
-    backgroundColor: tinycolor(theme.palette.text.primary).setAlpha(0.04).toRgbString(),
-    padding: theme.spacing(16, 6, 6),
-
-    [theme.breakpoints.down("md")]: {
-      padding: theme.spacing(6),
-    },
   },
   connectionButton: {
     textAlign: "left",
@@ -402,10 +412,6 @@ export default function Start(props: IStartProps): JSX.Element {
   const { classes } = useStyles();
   const analytics = useAnalytics();
 
-  const [showOnStartup = true, setShowOnStartup] = useAppConfigurationValue<boolean>(
-    AppSetting.SHOW_OPEN_DIALOG_ON_STARTUP,
-  );
-
   const startItems = useMemo(() => {
     const formatter = new Intl.ListFormat("en-US", { style: "long" });
     const supportedLocalFiles = formatter.format(
@@ -459,10 +465,12 @@ export default function Start(props: IStartProps): JSX.Element {
   }, [analytics, onSelectView, supportedLocalFileExtensions]);
 
   return (
-    <div className={classes.grid}>
-      <Stack padding={6} overflow="hidden">
+    <Stack className={classes.grid}>
+      <header className={classes.header}>
+        <FoxgloveLogoText color="primary" className={classes.logo} />
+      </header>
+      <Stack className={classes.content}>
         <Stack gap={4}>
-          <FoxgloveLogoText color="primary" className={classes.logo} />
           <Stack gap={1}>
             <Typography variant="h5" gutterBottom>
               Open data source
@@ -507,23 +515,12 @@ export default function Start(props: IStartProps): JSX.Element {
               </List>
             </Stack>
           )}
-          <FormControlLabel
-            label="Show on startup"
-            control={
-              <Checkbox
-                color="primary"
-                checked={showOnStartup}
-                onChange={async (_, checked) => {
-                  await setShowOnStartup(checked);
-                }}
-              />
-            }
-          />
         </Stack>
       </Stack>
+      <div className={classes.spacer} />
       <Stack gap={4} className={classes.sidebar}>
         <SidebarItems onSelectView={onSelectView} />
       </Stack>
-    </div>
+    </Stack>
   );
 }
