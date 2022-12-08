@@ -32,8 +32,8 @@ const useStyles = makeStyles<void, "recentSourcePrimary">()((theme, _params, cla
     [theme.breakpoints.up("md")]: {
       display: "grid",
       gridTemplateAreas: `
-      "OpenDialog-header OpenDialog-spacer"
-      "OpenDialog-content OpenDialog-sidebar"
+      "header spacer"
+      "content sidebar"
     `,
       gridTemplateRows: `content auto`,
       gridTemplateColumns: `1fr 375px`,
@@ -41,7 +41,7 @@ const useStyles = makeStyles<void, "recentSourcePrimary">()((theme, _params, cla
   },
   header: {
     padding: theme.spacing(6),
-    gridArea: "OpenDialog-header",
+    gridArea: "header",
 
     [theme.breakpoints.down("md")]: {
       padding: theme.spacing(4),
@@ -50,18 +50,18 @@ const useStyles = makeStyles<void, "recentSourcePrimary">()((theme, _params, cla
   content: {
     padding: theme.spacing(0, 6, 6),
     overflow: "hidden",
-    gridArea: "OpenDialog-content",
+    gridArea: "content",
 
     [theme.breakpoints.down("md")]: {
       padding: theme.spacing(0, 4, 4),
     },
   },
   spacer: {
-    gridArea: "OpenDialog-spacer",
+    gridArea: "spacer",
     backgroundColor: tinycolor(theme.palette.text.primary).setAlpha(0.04).toRgbString(),
   },
   sidebar: {
-    gridArea: "OpenDialog-sidebar",
+    gridArea: "sidebar",
     backgroundColor: tinycolor(theme.palette.text.primary).setAlpha(0.04).toRgbString(),
     padding: theme.spacing(0, 5, 5),
 
