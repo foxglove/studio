@@ -17,6 +17,7 @@ import path from "path";
 import Logger from "@foxglove/log";
 
 import pkgInfo from "../../package.json";
+import { encodeRendererArg } from "../common/rendererArgs";
 import getDevModeIcon from "./getDevModeIcon";
 import { simulateUserClick } from "./simulateUserClick";
 import { getTelemetrySettings } from "./telemetry";
@@ -106,11 +107,7 @@ function newStudioWindow(deepLinks: string[] = []): BrowserWindow {
       additionalArguments: [
         `--allowCrashReporting=${crashReportingEnabled ? "1" : "0"}`,
         `--allowTelemetry=${telemetryEnabled ? "1" : "0"}`,
-        // Encode using base64 to avoid breaking on Windows when the values contain special characters like ":".
-        // https://github.com/foxglove/studio/issues/4896
-        // https://github.com/electron/electron/issues/32064
-        // https://github.com/electron/electron/issues/31168
-        `--deepLinks=${btoa(JSON.stringify(deepLinks))}`,
+        encodeRendererArg("deepLinks", deepLinks),
       ],
       // Disable webSecurity in development so we can make XML-RPC calls, load
       // remote data, etc. In production, the app is served from file:// URLs so
