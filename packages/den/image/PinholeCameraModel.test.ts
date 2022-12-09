@@ -10,6 +10,45 @@ const D1 = [
   -0.363528858080088, 0.16117037733986861, -8.1109585007538829e-5, -0.00044776712298447841, 0.0,
 ];
 
+// The values in these tests are taken from the ROS Noetic Python implementation of image_geometry
+// using the following script:
+// ```python
+// from image_geometry import PinholeCameraModel
+// from sensor_msgs.msg import CameraInfo
+
+// import math
+
+// width = 640.0
+// height = 480.0
+// fov = 60
+// cx = width / 2.0
+// cy = height / 2.0
+// fx = width / (2.0 * math.tan((fov * math.pi) / 360.0))
+// fy = fx
+
+// msg = CameraInfo()
+// msg.height = height
+// msg.width = width
+// msg.distortion_model = ''
+// msg.K = [fx,  0.0, cx, 0.0, fy,  cy, 0.0, 0.0, 1.0]
+// msg.R = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
+// msg.P = [fx,  0.0, cx,  0.0, 0.0, fx,  cy,  0.0, 0.0, 0.0, 1.0, 0.0]
+
+// model = PinholeCameraModel()
+// model.fromCameraInfo(msg)
+// print("projectPixelTo3dRay((100.0, 100.0))", model.projectPixelTo3dRay((100.0, 100.0)))
+// print("projectPixelTo3dRay((0.0, 0.0))", model.projectPixelTo3dRay((0.0, 0.0)))
+// print("rectifyPoint((320.0, 240.0))", model.rectifyPoint((320.0, 240.0)))
+// print("rectifyPoint((100.0, 100.0))", model.rectifyPoint((100.0, 100.0)))
+
+// msg.distortion_model = "plumb_bob"
+// msg.D = [-0.363528858080088, 0.16117037733986861, -8.1109585007538829e-05, -0.00044776712298447841, 0.0]
+// model.fromCameraInfo(msg)
+// print("projectPixelTo3dRay((100.0, 100.0))", model.projectPixelTo3dRay((100.0, 100.0)))
+// print("rectifyPoint((320.0, 240.0))", model.rectifyPoint((320.0, 240.0)))
+// print("rectifyPoint((0.0, 0.0))", model.rectifyPoint((0.0, 0.0)))
+// ```
+
 const closeTo = (expected: number, precision = 2) => ({
   asymmetricMatch: (actual: number) => Math.abs(expected - actual) < Math.pow(10, -precision) / 2,
 });
