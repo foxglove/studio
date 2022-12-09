@@ -49,7 +49,7 @@ const D1 = [
 // print("rectifyPoint((0.0, 0.0))", model.rectifyPoint((0.0, 0.0)))
 // ```
 
-const closeTo = (expected: number, precision = 2) => ({
+const closeTo = (expected: number, precision = 8) => ({
   asymmetricMatch: (actual: number) => Math.abs(expected - actual) < Math.pow(10, -precision) / 2,
 });
 

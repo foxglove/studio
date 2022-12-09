@@ -240,7 +240,7 @@ export class PinholeCameraModel {
     const count = k1 !== 0 || k2 !== 0 || p1 !== 0 || p2 !== 0 || k3 !== 0 ? iterations : 1;
     for (let i = 0; i < count; i++) {
       const r2 = x * x + y * y; // squared distance in the image projected by the pinhole model
-      const k_inv = 1 / (1 + k1 * r2 + k2 * r2 ** 2 + k3 * r2 ** 3);
+      const k_inv = 1 / (1 + k1 * r2 + k2 * r2 * r2 + k3 * r2 * r2 * r2);
       const delta_x = 2 * p1 * x * y + p2 * (r2 + 2 * x * x);
       const delta_y = p1 * (r2 + 2 * y * y) + 2 * p2 * x * y;
       x = (x0 - delta_x) * k_inv;
