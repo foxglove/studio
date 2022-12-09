@@ -221,8 +221,8 @@ export class PinholeCameraModel {
     for (let i = 0; i < count; i++) {
       const r2 = x * x + y * y; // squared distance in the image projected by the pinhole model
       const k_inv = 1 / (1 + k1 * r2 + k2 * r2 ** 2 + k3 * r2 ** 3);
-      const delta_x = 2 * p1 * x * y + p2 * (r2 + 2 * x ** 2);
-      const delta_y = p1 * (r2 + 2 * y ** 2) + 2 * p2 * x * y;
+      const delta_x = 2 * p1 * x * y + p2 * (r2 + 2 * x * x);
+      const delta_y = p1 * (r2 + 2 * y * y) + 2 * p2 * x * y;
       x = (x0 - delta_x) * k_inv;
       y = (y0 - delta_y) * k_inv;
     }
@@ -255,7 +255,7 @@ export class PinholeCameraModel {
     const ty = P[7];
 
     // Formulae from docs for cv::initUndistortRectifyMap,
-    // http://opencv.willowgarage.com/documentation/cpp/camera_calibration_and_3d_reconstruction.html
+    // <https://docs.opencv.org/2.4/modules/calib3d/doc/camera_calibration_and_3d_reconstruction.html>
 
     // x <- (u - c'x) / f'x
     // y <- (v - c'y) / f'y
