@@ -154,6 +154,13 @@ export class PinholeCameraModel {
     out.x = (pixel.x - cx - tx) / fx;
     out.y = (pixel.y - cy - ty) / fy;
     out.z = 1.0;
+
+    // Normalize the ray direction
+    const invNorm = 1.0 / Math.sqrt(out.x * out.x + out.y * out.y + out.z * out.z);
+    out.x *= invNorm;
+    out.y *= invNorm;
+    out.z *= invNorm;
+
     return true;
   }
 
