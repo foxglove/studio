@@ -165,7 +165,7 @@ export class PinholeCameraModel {
    * @param iterations - The number of iterations to use in the iterative optimization.
    * @returns The rectified pixel, a reference to `out`.
    */
-  public rectifyPixel(out: Vector2, point: Readonly<Vector2>, iterations = 3): Vector2 {
+  public rectifyPixel(out: Vector2, point: Readonly<Vector2>, iterations = 5): Vector2 {
     if (!this.P) {
       out.x = point.x;
       out.y = point.y;
@@ -210,8 +210,9 @@ export class PinholeCameraModel {
 
     const x0 = x;
     const y0 = y;
-    for (let i = 0; i < iterations; i++) {
-      const r2 = x ** 2 + y ** 2; // squared distance in the image projected by the pinhole model
+    const count = k1 !== 0 || k2 !== 0 || p1 !== 0 || p2 !== 0 || k3 !== 0 ? iterations : 1;
+    for (let i = 0; i < count; i++) {
+      const r2 = x * x + y * y; // squared distance in the image projected by the pinhole model
       const k_inv = 1 / (1 + k1 * r2 + k2 * r2 ** 2 + k3 * r2 ** 3);
       const delta_x = 2 * p1 * x * y + p2 * (r2 + 2 * x ** 2);
       const delta_y = p1 * (r2 + 2 * y ** 2) + 2 * p2 * x * y;
