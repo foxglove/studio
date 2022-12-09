@@ -131,14 +131,16 @@ export class PinholeCameraModel {
   }
 
   /**
-   * Projects a 2D image pixel into a 3D ray in world coordinates.
+   * Projects a 2D image pixel to a point on a plane in 3D world coordinates a
+   * unit distance along the Z axis. This is equivalent to `projectPixelTo3dRay`
+   * before normalizing.
    *
-   * @param out - The output vector to receive the 3D ray direction.
+   * @param out - The output vector to receive the 3D point.
    * @param pixel - The 2D image pixel coordinate.
    * @returns `true` if the projection was successful, or `false` if the camera
    *   projection matrix `P` is not set.
    */
-  public projectPixelTo3dRay(out: Vector3, pixel: Readonly<Vector2>): boolean {
+  public projectPixelTo3dPlane(out: Vector3, pixel: Readonly<Vector2>): boolean {
     const P = this.P;
     if (!P) {
       return false;
@@ -154,6 +156,24 @@ export class PinholeCameraModel {
     out.x = (pixel.x - cx - tx) / fx;
     out.y = (pixel.y - cy - ty) / fy;
     out.z = 1.0;
+
+    return true;
+  }
+
+  /**
+   * Projects a 2D image pixel into a 3D ray in world coordinates. This is
+   * equivalent to normalizing the result of `projectPixelTo3dPlane` to get a
+   * direction vector.
+   *
+   * @param out - The output vector to receive the 3D ray direction.
+   * @param pixel - The 2D image pixel coordinate.
+   * @returns `true` if the projection was successful, or `false` if the camera
+   *   projection matrix `P` is not set.
+   */
+  public projectPixelTo3dRay(out: Vector3, pixel: Readonly<Vector2>): boolean {
+    if (!this.projectPixelTo3dPlane(out, pixel)) {
+      return false;
+    }
 
     // Normalize the ray direction
     const invNorm = 1.0 / Math.sqrt(out.x * out.x + out.y * out.y + out.z * out.z);
