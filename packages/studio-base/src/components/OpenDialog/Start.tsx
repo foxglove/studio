@@ -22,7 +22,7 @@ export type IStartProps = {
   onSelectView: (newValue: OpenDialogViews) => void;
 };
 
-const useStyles = makeStyles()((theme, _params, classes) => ({
+const useStyles = makeStyles()((theme) => ({
   logo: {
     width: 212,
     height: "auto",
