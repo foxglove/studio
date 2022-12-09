@@ -51,7 +51,7 @@ function makeCameraInfo(
 
 describe("PinholeCameraModel", () => {
   it("projectPixelTo3dRay", () => {
-    const model = new PinholeCameraModel(makeCameraInfo(640, 480, 90));
+    let model = new PinholeCameraModel(makeCameraInfo(640, 480, 90));
     const ray = { x: 0, y: 0, z: 0 };
 
     expect(model.projectPixelTo3dRay(ray, { x: 320, y: 240 })).toBe(true);
@@ -62,6 +62,14 @@ describe("PinholeCameraModel", () => {
       x: closeTo(-0.5329517414226601),
       y: closeTo(-0.33915110817805644),
       z: closeTo(0.7752025329784149),
+    });
+
+    model = new PinholeCameraModel(makeCameraInfo(640, 480, 60));
+    expect(model.projectPixelTo3dRay(ray, { x: 0, y: 0 })).toBe(true);
+    expect(ray).toMatchObject({
+      x: closeTo(-0.4681645887845223),
+      y: closeTo(-0.3511234415883917),
+      z: closeTo(0.8108848540793832),
     });
   });
 
