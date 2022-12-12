@@ -2,7 +2,6 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { TheatersOutlined } from "@mui/icons-material";
 import { Alert, Link, Tab, Tabs, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { useState, useMemo, useCallback, useLayoutEffect } from "react";
 import { makeStyles } from "tss-react/mui";
