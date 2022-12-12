@@ -66,7 +66,7 @@ const useStyles = makeStyles()((theme) => ({
     gridArea: "spacer",
     backgroundColor: tinycolor(theme.palette.text.primary).setAlpha(0.04).toRgbString(),
 
-    ["@media (max-height: 512px)"]: {
+    [`@media (max-height: ${theme.breakpoints.values.sm})`]: {
       display: "none",
     },
   },

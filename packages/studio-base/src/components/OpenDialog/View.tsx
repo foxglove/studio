@@ -24,8 +24,6 @@ const useStyles = makeStyles()((theme) => ({
     justifyContent: "space-between",
     gap: theme.spacing(2),
     overflowY: "auto",
-
-    // "@media (min-height: 512px)": { overflow: "hidden" },
   },
 }));
 
