@@ -23,8 +23,9 @@ const useStyles = makeStyles()((theme) => ({
     height: "100%",
     justifyContent: "space-between",
     gap: theme.spacing(2),
+    overflowY: "auto",
 
-    "@media (min-height: 512px)": { overflow: "hidden" },
+    // "@media (min-height: 512px)": { overflow: "hidden" },
   },
 }));
 
@@ -35,7 +36,14 @@ export default function View(props: PropsWithChildren<ViewProps>): JSX.Element {
   return (
     <>
       <div className={classes.content}>{props.children}</div>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" padding={4}>
+      <Stack
+        direction="row"
+        justifyContent="space-between"
+        alignItems="center"
+        paddingX={4}
+        paddingBottom={4}
+        paddingTop={2}
+      >
         <Button startIcon={<ChevronLeftIcon fontSize="large" />} onClick={onBack} size="large">
           Back
         </Button>
