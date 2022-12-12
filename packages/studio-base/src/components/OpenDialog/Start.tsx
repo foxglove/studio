@@ -304,22 +304,24 @@ function SidebarItems(props: { onSelectView: (newValue: OpenDialogViews) => void
 
   const sidebarItems: SidebarItem[] = useMemo(() => {
     switch (currentUserType) {
-      case "unauthenticated":
+      case "unauthenticated": {
+        const ulStyle = { padding: "0px" };
+        const liStyle = { margin: "0px 0px 5px 10px" };
         return [
           ...freeUser,
           {
             id: "collaborate",
-            title: "Accelerate   development with Foxglove Data Platform",
+            title: "Accelerate development with Foxglove Data Platform",
             text: (
-              <ul style={{ padding: "0px" }}>
-                <li>Securely store petabytes of ROS or custom data</li>
-                <li>
-                  Use a convenient web interface to search and retrieve data at lightning speed
+              <ul style={ulStyle}>
+                <li style={liStyle}>Securely store petabytes of ROS or custom data</li>
+                <li style={liStyle}>
+                  Use a convenient web interface to tag, search, and retrieve data at lightning
+                  speed
                 </li>
-                <li>
+                <li style={liStyle}>
                   Share data files, visualization layouts, and custom extensions with teammates
                 </li>
-                <li>Add custom metadata to enrich how you explore and analyze your data</li>
               </ul>
             ),
             actions: (
@@ -355,6 +357,7 @@ function SidebarItems(props: { onSelectView: (newValue: OpenDialogViews) => void
             ),
           },
         ];
+      }
       case "authenticated-free":
         return [
           {
