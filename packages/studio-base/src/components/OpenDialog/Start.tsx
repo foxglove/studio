@@ -106,6 +106,8 @@ const useStyles = makeStyles<void, "recentSourcePrimary">()((theme, _params, cla
   recentSourceSecondary: {
     color: "inherit",
   },
+  accountList: { padding: "0px" },
+  accountListItem: { margin: "0px 0px 5px 10px" },
 }));
 
 type DataSourceOptionProps = {
@@ -304,22 +306,22 @@ function SidebarItems(props: { onSelectView: (newValue: OpenDialogViews) => void
 
   const sidebarItems: SidebarItem[] = useMemo(() => {
     switch (currentUserType) {
-      case "unauthenticated": {
-        const ulStyle = { padding: "0px" };
-        const liStyle = { margin: "0px 0px 5px 10px" };
+      case "unauthenticated":
         return [
           ...freeUser,
           {
             id: "collaborate",
             title: "Accelerate development with Foxglove Data Platform",
             text: (
-              <ul style={ulStyle}>
-                <li style={liStyle}>Securely store petabytes of ROS or custom data</li>
-                <li style={liStyle}>
+              <ul className={classes.accountList}>
+                <li className={classes.accountListItem}>
+                  Securely store petabytes of ROS or custom data
+                </li>
+                <li className={classes.accountListItem}>
                   Use a convenient web interface to tag, search, and retrieve data at lightning
                   speed
                 </li>
-                <li style={liStyle}>
+                <li className={classes.accountListItem}>
                   Share data files, visualization layouts, and custom extensions with teammates
                 </li>
               </ul>
@@ -357,7 +359,6 @@ function SidebarItems(props: { onSelectView: (newValue: OpenDialogViews) => void
             ),
           },
         ];
-      }
       case "authenticated-free":
         return [
           {
@@ -397,7 +398,15 @@ function SidebarItems(props: { onSelectView: (newValue: OpenDialogViews) => void
       case "authenticated-enterprise":
         return teamOrEnterpriseUser;
     }
-  }, [analytics, classes.button, currentUserType, freeUser, teamOrEnterpriseUser]);
+  }, [
+    analytics,
+    classes.accountList,
+    classes.accountListItem,
+    classes.button,
+    currentUserType,
+    freeUser,
+    teamOrEnterpriseUser,
+  ]);
 
   return (
     <>
