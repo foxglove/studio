@@ -29,7 +29,7 @@ import {
   LayerSettingsPointExtension,
   pointSettingsNode,
   PointsAtTime,
-} from "./pointScanUtils";
+} from "./pointExtensionUtils";
 import { missingTransformMessage, MISSING_TRANSFORM } from "./transforms";
 
 type LayerSettingsLaserScan = LayerSettingsPointExtension;
@@ -288,8 +288,6 @@ class LaserScanRenderable extends Renderable<LaserScanUserData> {
 }
 
 export class LaserScans extends SceneExtension<LaserScanRenderable> {
-  private fieldsByTopic = new Map<string, string[]>();
-
   public constructor(renderer: Renderer) {
     super("foxglove.LaserScans", renderer);
 

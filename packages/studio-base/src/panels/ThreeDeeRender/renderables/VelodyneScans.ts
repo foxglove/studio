@@ -36,7 +36,7 @@ import {
   pointSettingsNode,
   pointCloudMaterial,
   POINT_CLOUD_REQUIRED_FIELDS,
-} from "./pointScanUtils";
+} from "./pointExtensionUtils";
 
 type LayerSettingsVelodyneScans = LayerSettingsPointExtension;
 const DEFAULT_SETTINGS = DEFAULT_POINT_SETTINGS;
