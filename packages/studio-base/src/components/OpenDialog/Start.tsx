@@ -46,7 +46,7 @@ const useStyles = makeStyles()((theme) => ({
     [theme.breakpoints.down("md")]: {
       padding: theme.spacing(4),
     },
-    ["@media (max-height: 512px)"]: {
+    [`@media (max-height: ${theme.breakpoints.values.sm})`]: {
       display: "none",
     },
   },
@@ -58,7 +58,7 @@ const useStyles = makeStyles()((theme) => ({
     [theme.breakpoints.down("md")]: {
       padding: theme.spacing(0, 4, 4),
     },
-    ["@media (max-height: 512px)"]: {
+    [`@media (max-height: ${theme.breakpoints.values.sm})`]: {
       paddingTop: theme.spacing(6),
     },
   },
@@ -78,7 +78,7 @@ const useStyles = makeStyles()((theme) => ({
     [theme.breakpoints.down("md")]: {
       padding: theme.spacing(4),
     },
-    ["@media (max-height: 512px)"]: {
+    [`@media (max-height: ${theme.breakpoints.values.sm})`]: {
       paddingTop: theme.spacing(6),
     },
   },
