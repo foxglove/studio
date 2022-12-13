@@ -7,6 +7,7 @@ import * as THREE from "three";
 import { toNanoSec, toSec } from "@foxglove/rostime";
 import { NumericType, PointCloud as FoxglovePointCloud } from "@foxglove/schemas";
 import { MessageEvent, SettingsTreeAction } from "@foxglove/studio";
+import { PointCloudRenderable } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/PointClouds";
 import type { RosObject } from "@foxglove/studio-base/players/types";
 import { VelodynePacket, VelodyneScan } from "@foxglove/studio-base/types/Messages";
 import {
@@ -30,12 +31,14 @@ import {
   createInstancePickingMaterial,
   createPickingMaterial,
   createPoints,
-  DEFAULT_SETTINGS,
-  LayerSettingsPointCloudAndLaserScan,
-  PointCloudAndLaserScanRenderable,
+  DEFAULT_POINT_SCAN_SETTINGS,
+  LayerSettingsPointScan,
+  pointScansSettingsNode,
   pointCloudMaterial,
-  pointCloudSettingsNode,
-} from "./PointCloudsAndLaserScans";
+} from "./pointScanUtils";
+
+type LayerSettingsVelodyneScans = LayerSettingsPointScan;
+const DEFAULT_SETTINGS = DEFAULT_POINT_SCAN_SETTINGS;
 
 export function pointFieldDataTypeToNumericType(type: PointFieldDataType): NumericType {
   switch (type) {
@@ -118,7 +121,7 @@ class VelodyneCloudConverter {
   }
 }
 
-export class VelodyneScans extends SceneExtension<PointCloudAndLaserScanRenderable> {
+export class VelodyneScans extends SceneExtension<PointCloudRenderable> {
   private _pointCloudFieldsByTopic = new Map<string, string[]>();
   private _velodyneCloudConverter = new VelodyneCloudConverter();
 
@@ -136,9 +139,8 @@ export class VelodyneScans extends SceneExtension<PointCloudAndLaserScanRenderab
       if (!topicIsConvertibleToSchema(topic, VELODYNE_SCAN_DATATYPES)) {
         continue;
       }
-      const config = (configTopics[topic.name] ??
-        {}) as Partial<LayerSettingsPointCloudAndLaserScan>;
-      const node: SettingsTreeNodeWithActionHandler = pointCloudSettingsNode(
+      const config = (configTopics[topic.name] ?? {}) as Partial<LayerSettingsVelodyneScans>;
+      const node: SettingsTreeNodeWithActionHandler = pointScansSettingsNode(
         this._pointCloudFieldsByTopic,
         config,
         topic,
@@ -163,7 +165,7 @@ export class VelodyneScans extends SceneExtension<PointCloudAndLaserScanRenderab
     const renderable = this.renderables.get(topicName);
     if (renderable) {
       const prevSettings = this.renderer.config.topics[topicName] as
-        | Partial<LayerSettingsPointCloudAndLaserScan>
+        | Partial<LayerSettingsVelodyneScans>
         | undefined;
       const settings = { ...DEFAULT_SETTINGS, ...prevSettings };
       if (renderable.userData.pointCloud) {
@@ -204,7 +206,7 @@ export class VelodyneScans extends SceneExtension<PointCloudAndLaserScanRenderab
     if (!renderable) {
       // Set the initial settings from default values merged with any user settings
       const userSettings = this.renderer.config.topics[topic] as
-        | Partial<LayerSettingsPointCloudAndLaserScan>
+        | Partial<LayerSettingsVelodyneScans>
         | undefined;
       const settings = { ...DEFAULT_SETTINGS, ...userSettings };
       if (settings.colorField == undefined) {
@@ -239,7 +241,7 @@ export class VelodyneScans extends SceneExtension<PointCloudAndLaserScanRenderab
       );
 
       const messageTime = toNanoSec(pointCloud.timestamp);
-      renderable = new PointCloudAndLaserScanRenderable(topic, this.renderer, {
+      renderable = new PointCloudRenderable(topic, this.renderer, {
         receiveTime,
         messageTime,
         frameId: this.renderer.normalizeFrameId(pointCloud.frame_id),
