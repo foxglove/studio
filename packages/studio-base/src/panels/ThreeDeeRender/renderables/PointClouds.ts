@@ -21,10 +21,11 @@ import {
   pointCloudMaterial,
   pointCloudColorEncoding,
   POINT_CLOUD_REQUIRED_FIELDS,
+  PointsHistoryRenderable,
 } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/pointExtensionUtils";
 import type { RosObject, RosValue } from "@foxglove/studio-base/players/types";
 
-import { BaseUserData, Renderable } from "../Renderable";
+import { BaseUserData } from "../Renderable";
 import { Renderer } from "../Renderer";
 import { PartialMessage, PartialMessageEvent, SceneExtension } from "../SceneExtension";
 import { SettingsTreeEntry, SettingsTreeNodeWithActionHandler } from "../SettingsManager";
@@ -43,11 +44,9 @@ import {
   PointFieldType,
 } from "../ros";
 import { topicIsConvertibleToSchema } from "../topicIsConvertibleToSchema";
-import { makePose, MAX_DURATION, Pose } from "../transforms";
-import { updatePose } from "../updatePose";
+import { makePose, Pose } from "../transforms";
 import { colorHasTransparency, getColorConverter } from "./pointClouds/colors";
 import { FieldReader, getReader, isSupportedField } from "./pointClouds/fieldReaders";
-import { missingTransformMessage, MISSING_TRANSFORM } from "./transforms";
 
 type PointCloudFieldReaders = {
   xReader: FieldReader;
@@ -96,15 +95,11 @@ const tempFieldReaders: PointCloudFieldReaders = {
   alphaReader: zeroReader,
 };
 
-export class PointCloudRenderable extends Renderable<PointCloudUserData> {
+export class PointCloudRenderable extends PointsHistoryRenderable<PointCloudUserData> {
   public override pickableInstances = true;
 
   public override dispose(): void {
     this.userData.originalMessage = undefined;
-    for (const entry of this.userData.pointsHistory) {
-      entry.points.geometry.dispose();
-    }
-    this.userData.pointsHistory.length = 0;
     this.userData.material.dispose();
     this.userData.pickingMaterial.dispose();
     this.userData.instancePickingMaterial.dispose();
@@ -525,58 +520,6 @@ export class PointCloudRenderable extends Renderable<PointCloudUserData> {
 
     positionAttribute.needsUpdate = true;
     colorAttribute.needsUpdate = true;
-  }
-
-  // NOTE: This method's implementation also exists in LaserScans.ts renderable
-  public startFrame(currentTime: bigint, renderFrameId: string, fixedFrameId: string): void {
-    const path = this.userData.settingsPath;
-
-    this.visible = this.userData.settings.visible;
-    if (!this.visible) {
-      this.renderer.settings.errors.clearPath(path);
-      const pointsHistory = this.userData.pointsHistory;
-      for (const entry of pointsHistory.splice(0, pointsHistory.length - 1)) {
-        entry.points.geometry.dispose();
-        this.remove(entry.points);
-      }
-      return;
-    }
-
-    // Remove expired entries from the history of points when decayTime is enabled
-    const pointsHistory = this.userData.pointsHistory;
-    const decayTime = this.userData.settings.decayTime;
-    const expireTime =
-      decayTime > 0 ? currentTime - BigInt(Math.round(decayTime * 1e9)) : MAX_DURATION;
-    while (pointsHistory.length > 1 && pointsHistory[0]!.receiveTime < expireTime) {
-      const entry = this.userData.pointsHistory.shift()!;
-      this.remove(entry.points);
-      entry.points.geometry.dispose();
-    }
-
-    // Update the pose on each THREE.Points entry
-    let hadTfError = false;
-    for (const entry of pointsHistory) {
-      const srcTime = entry.messageTime;
-      const frameId = this.userData.frameId;
-      const updated = updatePose(
-        entry.points,
-        this.renderer.transformTree,
-        renderFrameId,
-        fixedFrameId,
-        frameId,
-        currentTime,
-        srcTime,
-      );
-      if (!updated && !hadTfError) {
-        const message = missingTransformMessage(renderFrameId, fixedFrameId, frameId);
-        this.renderer.settings.errors.add(path, MISSING_TRANSFORM, message);
-        hadTfError = true;
-      }
-    }
-
-    if (!hadTfError) {
-      this.renderer.settings.errors.remove(path, MISSING_TRANSFORM);
-    }
   }
 }
 

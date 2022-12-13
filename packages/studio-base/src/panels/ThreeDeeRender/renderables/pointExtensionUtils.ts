@@ -7,10 +7,16 @@ import * as THREE from "three";
 import { PackedElementField, PointCloud } from "@foxglove/schemas";
 import { SettingsTreeNode, Topic } from "@foxglove/studio";
 import { DynamicBufferGeometry } from "@foxglove/studio-base/panels/ThreeDeeRender/DynamicBufferGeometry";
+import { BaseUserData, Renderable } from "@foxglove/studio-base/panels/ThreeDeeRender/Renderable";
 import { rgbaToCssString } from "@foxglove/studio-base/panels/ThreeDeeRender/color";
 import { isSupportedField } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/pointClouds/fieldReaders";
+import {
+  missingTransformMessage,
+  MISSING_TRANSFORM,
+} from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/transforms";
 import { BaseSettings } from "@foxglove/studio-base/panels/ThreeDeeRender/settings";
-import { Pose } from "@foxglove/studio-base/panels/ThreeDeeRender/transforms";
+import { MAX_DURATION, Pose } from "@foxglove/studio-base/panels/ThreeDeeRender/transforms";
+import { updatePose } from "@foxglove/studio-base/panels/ThreeDeeRender/updatePose";
 
 import { POINTCLOUD_DATATYPES as FOXGLOVE_POINTCLOUD_DATATYPES } from "../foxglove";
 import { PointCloud2, POINTCLOUD_DATATYPES as ROS_POINTCLOUD_DATATYPES, PointField } from "../ros";
@@ -332,4 +338,80 @@ export function createInstancePickingMaterial<T extends LayerSettingsPointExtens
     side: THREE.DoubleSide,
     uniforms: { pointSize: { value: pointSize } },
   });
+}
+
+type PointHistoryUserData = BaseUserData & {
+  topic: string;
+  settings: LayerSettingsPointExtension;
+  pointsHistory: PointsAtTime[];
+  material: THREE.Material;
+  pickingMaterial: THREE.Material;
+};
+
+/**
+ * Parent class renderable that handles rendering of points a decay time
+ * The
+ */
+export class PointsHistoryRenderable<
+  UserData extends PointHistoryUserData,
+> extends Renderable<UserData> {
+  public override dispose(): void {
+    for (const entry of this.userData.pointsHistory) {
+      entry.points.geometry.dispose();
+    }
+    this.userData.pointsHistory.length = 0;
+
+    super.dispose();
+  }
+
+  public startFrame(currentTime: bigint, renderFrameId: string, fixedFrameId: string): void {
+    const path = this.userData.settingsPath;
+
+    this.visible = this.userData.settings.visible;
+    if (!this.visible) {
+      this.renderer.settings.errors.clearPath(path);
+      const pointsHistory = this.userData.pointsHistory;
+      for (const entry of pointsHistory.splice(0, pointsHistory.length - 1)) {
+        entry.points.geometry.dispose();
+        this.remove(entry.points);
+      }
+      return;
+    }
+
+    // Remove expired entries from the history of points when decayTime is enabled
+    const pointsHistory = this.userData.pointsHistory;
+    const decayTime = this.userData.settings.decayTime;
+    const expireTime =
+      decayTime > 0 ? currentTime - BigInt(Math.round(decayTime * 1e9)) : MAX_DURATION;
+    while (pointsHistory.length > 1 && pointsHistory[0]!.receiveTime < expireTime) {
+      const entry = this.userData.pointsHistory.shift()!;
+      this.remove(entry.points);
+      entry.points.geometry.dispose();
+    }
+
+    // Update the pose on each THREE.Points entry
+    let hadTfError = false;
+    for (const entry of pointsHistory) {
+      const srcTime = entry.messageTime;
+      const frameId = this.userData.frameId;
+      const updated = updatePose(
+        entry.points,
+        this.renderer.transformTree,
+        renderFrameId,
+        fixedFrameId,
+        frameId,
+        currentTime,
+        srcTime,
+      );
+      if (!updated && !hadTfError) {
+        const message = missingTransformMessage(renderFrameId, fixedFrameId, frameId);
+        this.renderer.settings.errors.add(path, MISSING_TRANSFORM, message);
+        hadTfError = true;
+      }
+    }
+
+    if (!hadTfError) {
+      this.renderer.settings.errors.remove(path, MISSING_TRANSFORM);
+    }
+  }
 }

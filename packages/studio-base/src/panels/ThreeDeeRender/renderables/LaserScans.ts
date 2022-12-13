@@ -11,7 +11,7 @@ import type { RosObject, RosValue } from "@foxglove/studio-base/players/types";
 import { emptyPose } from "@foxglove/studio-base/util/Pose";
 
 import { DynamicBufferGeometry } from "../DynamicBufferGeometry";
-import { BaseUserData, Renderable } from "../Renderable";
+import { BaseUserData } from "../Renderable";
 import { Renderer } from "../Renderer";
 import { PartialMessage, PartialMessageEvent, SceneExtension } from "../SceneExtension";
 import { SettingsTreeEntry, SettingsTreeNodeWithActionHandler } from "../SettingsManager";
@@ -19,8 +19,7 @@ import { LASERSCAN_DATATYPES as FOXGLOVE_LASERSCAN_DATATYPES } from "../foxglove
 import { normalizeFloat32Array, normalizeTime, normalizePose } from "../normalizeMessages";
 import { LASERSCAN_DATATYPES as ROS_LASERSCAN_DATATYPES, LaserScan as RosLaserScan } from "../ros";
 import { topicIsConvertibleToSchema } from "../topicIsConvertibleToSchema";
-import { MAX_DURATION, Pose } from "../transforms";
-import { updatePose } from "../updatePose";
+import { Pose } from "../transforms";
 import { colorHasTransparency, getColorConverter } from "./pointClouds/colors";
 import {
   createGeometry,
@@ -29,8 +28,8 @@ import {
   LayerSettingsPointExtension,
   pointSettingsNode,
   PointsAtTime,
+  PointsHistoryRenderable,
 } from "./pointExtensionUtils";
-import { missingTransformMessage, MISSING_TRANSFORM } from "./transforms";
 
 type LayerSettingsLaserScan = LayerSettingsPointExtension;
 const DEFAULT_SETTINGS = DEFAULT_POINT_SETTINGS;
@@ -71,15 +70,11 @@ const VEC3_ZERO = new THREE.Vector3();
 
 const tempColor = { r: 0, g: 0, b: 0, a: 0 };
 
-class LaserScanRenderable extends Renderable<LaserScanUserData> {
+class LaserScanRenderable extends PointsHistoryRenderable<LaserScanUserData> {
   public override pickableInstances = true;
 
   public override dispose(): void {
     this.userData.originalMessage = undefined;
-    for (const entry of this.userData.pointsHistory) {
-      entry.points.geometry.dispose();
-    }
-    this.userData.pointsHistory.length = 0;
     this.userData.material.dispose();
     this.userData.pickingMaterial.dispose();
     this.userData.instancePickingMaterial.dispose();
@@ -227,58 +222,7 @@ class LaserScanRenderable extends Renderable<LaserScanUserData> {
     colorAttribute.needsUpdate = true;
   }
 
-  // NOTE: this method's implementation also exists in PointClouds.ts renderable
-  public startFrame(currentTime: bigint, renderFrameId: string, fixedFrameId: string): void {
-    const path = this.userData.settingsPath;
-
-    this.visible = this.userData.settings.visible;
-    if (!this.visible) {
-      this.renderer.settings.errors.clearPath(path);
-      const pointsHistory = this.userData.pointsHistory;
-      for (const entry of pointsHistory.splice(0, pointsHistory.length - 1)) {
-        entry.points.geometry.dispose();
-        this.remove(entry.points);
-      }
-      return;
-    }
-
-    // Remove expired entries from the history of points when decayTime is enabled
-    const pointsHistory = this.userData.pointsHistory;
-    const decayTime = this.userData.settings.decayTime;
-    const expireTime =
-      decayTime > 0 ? currentTime - BigInt(Math.round(decayTime * 1e9)) : MAX_DURATION;
-    while (pointsHistory.length > 1 && pointsHistory[0]!.receiveTime < expireTime) {
-      const entry = this.userData.pointsHistory.shift()!;
-      this.remove(entry.points);
-      entry.points.geometry.dispose();
-    }
-
-    // Update the pose on each THREE.Points entry
-    let hadTfError = false;
-    for (const entry of pointsHistory) {
-      const srcTime = entry.messageTime;
-      const frameId = this.userData.frameId;
-      const updated = updatePose(
-        entry.points,
-        this.renderer.transformTree,
-        renderFrameId,
-        fixedFrameId,
-        frameId,
-        currentTime,
-        srcTime,
-      );
-      if (!updated && !hadTfError) {
-        const message = missingTransformMessage(renderFrameId, fixedFrameId, frameId);
-        this.renderer.settings.errors.add(path, MISSING_TRANSFORM, message);
-        hadTfError = true;
-      }
-    }
-
-    if (!hadTfError) {
-      this.renderer.settings.errors.remove(path, MISSING_TRANSFORM);
-    }
-
-    // Update the pixeRatio uniform if the current material is a LaserScanMaterial
+  public updateUniforms(): void {
     const material = this.userData.material as Partial<LaserScanMaterial>;
     const pixelRatio = material.uniforms?.pixelRatio;
     if (pixelRatio) {
@@ -330,6 +274,7 @@ export class LaserScans extends SceneExtension<LaserScanRenderable> {
 
     for (const renderable of this.renderables.values()) {
       renderable.startFrame(currentTime, renderFrameId, fixedFrameId);
+      renderable.updateUniforms();
     }
   }
 
