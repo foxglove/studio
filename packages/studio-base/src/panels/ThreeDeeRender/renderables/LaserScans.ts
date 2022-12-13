@@ -25,15 +25,15 @@ import { colorHasTransparency, getColorConverter } from "./pointClouds/colors";
 import {
   createGeometry,
   createPoints,
-  DEFAULT_POINT_SCAN_SETTINGS,
-  LayerSettingsPointScan,
-  pointScansSettingsNode,
+  DEFAULT_POINT_SETTINGS,
+  LayerSettingsPointExtension,
+  pointSettingsNode,
   PointsAtTime,
 } from "./pointScanUtils";
 import { missingTransformMessage, MISSING_TRANSFORM } from "./transforms";
 
-type LayerSettingsLaserScan = LayerSettingsPointScan;
-const DEFAULT_SETTINGS = DEFAULT_POINT_SCAN_SETTINGS;
+type LayerSettingsLaserScan = LayerSettingsPointExtension;
+const DEFAULT_SETTINGS = DEFAULT_POINT_SETTINGS;
 
 type NormalizedLaserScan = {
   timestamp: Time;
@@ -50,13 +50,15 @@ type NormalizedLaserScan = {
 type LaserScanUserData = BaseUserData & {
   settings: LayerSettingsLaserScan;
   topic: string;
-  laserScan?: NormalizedLaserScan;
+  laserScan: NormalizedLaserScan;
   originalMessage: Record<string, RosValue> | undefined;
   pointsHistory: PointsAtTime[];
   material: LaserScanMaterial;
   pickingMaterial: LaserScanMaterial;
   instancePickingMaterial: LaserScanInstancePickingMaterial;
 };
+
+const LASERSCAN_FIELDS = ["range", "intensity"];
 
 const ALL_LASERSCAN_DATATYPES = new Set<string>([
   ...FOXGLOVE_LASERSCAN_DATATYPES,
@@ -69,11 +71,10 @@ const VEC3_ZERO = new THREE.Vector3();
 
 const tempColor = { r: 0, g: 0, b: 0, a: 0 };
 
-export class LaserScanRenderable extends Renderable<LaserScanUserData> {
+class LaserScanRenderable extends Renderable<LaserScanUserData> {
   public override pickableInstances = true;
 
   public override dispose(): void {
-    this.userData.laserScan = undefined;
     this.userData.originalMessage = undefined;
     for (const entry of this.userData.pointsHistory) {
       entry.points.geometry.dispose();
@@ -90,9 +91,6 @@ export class LaserScanRenderable extends Renderable<LaserScanUserData> {
   }
 
   public override instanceDetails(instanceId: number): Record<string, RosValue> | undefined {
-    if (!this.userData.laserScan) {
-      return undefined;
-    }
     const range =
       instanceId >= 0 && instanceId < this.userData.laserScan.ranges.length
         ? this.userData.laserScan.ranges[instanceId]
@@ -229,6 +227,7 @@ export class LaserScanRenderable extends Renderable<LaserScanUserData> {
     colorAttribute.needsUpdate = true;
   }
 
+  // NOTE: this method's implementation also exists in PointClouds.ts renderable
   public startFrame(currentTime: bigint, renderFrameId: string, fixedFrameId: string): void {
     const path = this.userData.settingsPath;
 
@@ -308,13 +307,14 @@ export class LaserScans extends SceneExtension<LaserScanRenderable> {
         continue;
       }
       const config = (configTopics[topic.name] ?? {}) as Partial<LayerSettingsLaserScan>;
-      const node: SettingsTreeNodeWithActionHandler = pointScansSettingsNode(
-        this.fieldsByTopic,
-        config,
+      const messageFields = LASERSCAN_FIELDS;
+      const node: SettingsTreeNodeWithActionHandler = pointSettingsNode(
         topic,
-        "laserscan",
+        messageFields,
+        config,
       );
       node.handler = handler;
+      node.icon = "Radar";
       entries.push({ path: ["topics", topic.name], node });
     }
     return entries;
@@ -352,14 +352,12 @@ export class LaserScans extends SceneExtension<LaserScanRenderable> {
         | undefined;
       const settings = { ...DEFAULT_SETTINGS, ...prevSettings };
 
-      if (renderable.userData.laserScan) {
-        renderable.updateLaserScan(
-          renderable.userData.laserScan,
-          renderable.userData.originalMessage,
-          settings,
-          renderable.userData.receiveTime,
-        );
-      }
+      renderable.updateLaserScan(
+        renderable.userData.laserScan,
+        renderable.userData.originalMessage,
+        settings,
+        renderable.userData.receiveTime,
+      );
     }
   };
 
@@ -452,7 +450,7 @@ export class LaserScanMaterial extends THREE.RawShaderMaterial {
 
   public constructor({ picking = false }: { picking?: boolean } = {}) {
     super({
-      vertexShader: `\
+      vertexShader: /*glsl*/ `\
         #version 300 es
         precision highp float;
         precision highp int;
@@ -476,7 +474,7 @@ export class LaserScanMaterial extends THREE.RawShaderMaterial {
           gl_Position = projectionMatrix * modelViewMatrix * pos;
           ${
             picking
-              ? `gl_PointSize = pixelRatio * max(pointSize, ${LaserScanMaterial.MIN_PICKING_POINT_SIZE.toFixed(
+              ? /* glsl */ `gl_PointSize = pixelRatio * max(pointSize, ${LaserScanMaterial.MIN_PICKING_POINT_SIZE.toFixed(
                   1,
                 )});`
               : "gl_PointSize = pixelRatio * pointSize;"
@@ -545,7 +543,7 @@ class LaserScanInstancePickingMaterial extends THREE.RawShaderMaterial {
   public constructor() {
     const minPointSize = LaserScanInstancePickingMaterial.MIN_PICKING_POINT_SIZE.toFixed(1);
     super({
-      vertexShader: `\
+      vertexShader: /* glsl */ `\
         #version 300 es
         precision highp float;
         precision highp int;
@@ -573,7 +571,7 @@ class LaserScanInstancePickingMaterial extends THREE.RawShaderMaterial {
           gl_PointSize = pixelRatio * max(pointSize, ${minPointSize});
         }
       `,
-      fragmentShader: `\
+      fragmentShader: /* glsl */ `\
         #version 300 es
         #ifdef GL_FRAGMENT_PRECISION_HIGH
           precision highp float;

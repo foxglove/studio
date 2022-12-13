@@ -24,7 +24,7 @@ import {
   RGBA_PACKED_FIELDS,
 } from "./pointClouds/colors";
 
-export type LayerSettingsPointScan = BaseSettings &
+export type LayerSettingsPointExtension = BaseSettings &
   ColorModeSettings & {
     pointSize: number;
     pointShape: "circle" | "square";
@@ -39,7 +39,7 @@ const DEFAULT_MIN_COLOR = { r: 100 / 255, g: 47 / 255, b: 105 / 255, a: 1 };
 const DEFAULT_MAX_COLOR = { r: 227 / 255, g: 177 / 255, b: 135 / 255, a: 1 };
 
 // used by LaserScans, VelodyneScans, and PointClouds
-export const DEFAULT_POINT_SCAN_SETTINGS: LayerSettingsPointScan = {
+export const DEFAULT_POINT_SETTINGS: LayerSettingsPointExtension = {
   visible: false,
   frameLocked: false,
   pointSize: DEFAULT_POINT_SIZE,
@@ -55,8 +55,7 @@ export const DEFAULT_POINT_SCAN_SETTINGS: LayerSettingsPointScan = {
   maxValue: undefined,
 };
 
-export const LASERSCAN_FIELDS = ["range", "intensity"];
-const POINTCLOUD_REQUIRED_FIELDS = ["x", "y", "z"];
+export const POINT_CLOUD_REQUIRED_FIELDS = ["x", "y", "z"];
 export const POINT_SHAPE_OPTIONS = [
   { label: "Circle", value: "circle" },
   { label: "Square", value: "square" },
@@ -64,29 +63,23 @@ export const POINT_SHAPE_OPTIONS = [
 
 /**
  * Creates settings node for Point cloud and scan topics
- * @param fieldsByTopic - fields by topic
+ * @param topic - topic to get settings node for
+ * @param messageFields - message fields or required fields for the topic
  * @param config - current topic settings
- * @param topic - topic string to get settings node for
- * @param kind - pointcloud, laserscan, or velodynescan
  * @param defaultSettings - (optional) default settings to use
  * @returns  - settings node for the topic
  */
-export function pointScansSettingsNode(
-  fieldsByTopic: Map<string, string[]>,
-  config: Partial<LayerSettingsPointScan>,
+export function pointSettingsNode(
   topic: Topic,
-  kind: "pointcloud" | "laserscan" | "velodynescan",
-  defaultSettings: LayerSettingsPointScan = DEFAULT_POINT_SCAN_SETTINGS,
+  messageFields: string[],
+  config: Partial<LayerSettingsPointExtension>,
+  defaultSettings: LayerSettingsPointExtension = DEFAULT_POINT_SETTINGS,
 ): SettingsTreeNode {
-  const msgFields =
-    kind === "laserscan"
-      ? LASERSCAN_FIELDS
-      : fieldsByTopic.get(topic.name) ?? POINTCLOUD_REQUIRED_FIELDS;
   const pointSize = config.pointSize;
   const pointShape = config.pointShape ?? "circle";
   const decayTime = config.decayTime;
 
-  const node = baseColorModeSettingsNode(msgFields, config, topic, defaultSettings, {
+  const node = baseColorModeSettingsNode(messageFields, config, topic, defaultSettings, {
     supportsPackedRgbModes: ROS_POINTCLOUD_DATATYPES.has(topic.schemaName),
     supportsRgbaFieldsMode: FOXGLOVE_POINTCLOUD_DATATYPES.has(topic.schemaName),
   });
@@ -117,19 +110,18 @@ export function pointScansSettingsNode(
     ...node.fields,
   };
 
-  node.icon = kind === "laserscan" ? "Radar" : "Points";
   return node;
 }
 
 /**
- * Selects optimal color field for settings given message
+ * Selects optimal color field for settings given point cloud message
  * @param output - settings object to apply auto selection of colorfield to
  * @param pointCloud - point cloud message
  * @param { supportsPackedRgbModes } - whether or not the point cloud message supports packed rgb modes
  * @returns - changes output object to have desired color field selected
  */
 export function autoSelectColorField(
-  output: LayerSettingsPointScan,
+  output: LayerSettingsPointExtension,
   pointCloud: PointCloud | PointCloud2,
   { supportsPackedRgbModes }: { supportsPackedRgbModes: boolean },
 ): void {
@@ -198,7 +190,7 @@ type Material = THREE.PointsMaterial | LaserScanMaterial;
 type Points = THREE.Points<DynamicBufferGeometry, Material>;
 export type PointsAtTime = { receiveTime: bigint; messageTime: bigint; points: Points };
 
-export function pointCloudColorEncoding<T extends LayerSettingsPointScan>(
+export function pointCloudColorEncoding<T extends LayerSettingsPointExtension>(
   settings: T,
 ): "srgb" | "linear" {
   switch (settings.colorMode) {
@@ -245,7 +237,7 @@ vec2 cxy = 2.0 * gl_PointCoord - 1.0;
 if (dot(cxy, cxy) > 1.0) { discard; }
 `;
 
-export function pointCloudMaterial<T extends LayerSettingsPointScan>(
+export function pointCloudMaterial<T extends LayerSettingsPointExtension>(
   settings: T,
 ): THREE.PointsMaterial {
   const transparent = colorHasTransparency(settings);
@@ -282,7 +274,7 @@ export function pointCloudMaterial<T extends LayerSettingsPointScan>(
   return material;
 }
 
-export function createPickingMaterial<T extends LayerSettingsPointScan>(
+export function createPickingMaterial<T extends LayerSettingsPointExtension>(
   settings: T,
 ): THREE.ShaderMaterial {
   const MIN_PICKING_POINT_SIZE = 8;
@@ -309,7 +301,7 @@ export function createPickingMaterial<T extends LayerSettingsPointScan>(
   });
 }
 
-export function createInstancePickingMaterial<T extends LayerSettingsPointScan>(
+export function createInstancePickingMaterial<T extends LayerSettingsPointExtension>(
   settings: T,
 ): THREE.ShaderMaterial {
   const MIN_PICKING_POINT_SIZE = 8;

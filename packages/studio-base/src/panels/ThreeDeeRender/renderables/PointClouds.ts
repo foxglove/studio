@@ -14,12 +14,13 @@ import {
   createInstancePickingMaterial,
   createPickingMaterial,
   createPoints,
-  DEFAULT_POINT_SCAN_SETTINGS,
-  LayerSettingsPointScan,
-  pointScansSettingsNode,
+  DEFAULT_POINT_SETTINGS,
+  LayerSettingsPointExtension,
+  pointSettingsNode,
   PointsAtTime,
   pointCloudMaterial,
   pointCloudColorEncoding,
+  POINT_CLOUD_REQUIRED_FIELDS,
 } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/pointScanUtils";
 import type { RosObject, RosValue } from "@foxglove/studio-base/players/types";
 
@@ -59,13 +60,13 @@ type PointCloudFieldReaders = {
   alphaReader: FieldReader;
 };
 
-type LayerSettingsPointClouds = LayerSettingsPointScan;
-const DEFAULT_SETTINGS = DEFAULT_POINT_SCAN_SETTINGS;
+type LayerSettingsPointClouds = LayerSettingsPointExtension;
+const DEFAULT_SETTINGS = DEFAULT_POINT_SETTINGS;
 
 type PointCloudUserData = BaseUserData & {
-  settings: LayerSettingsPointScan;
+  settings: LayerSettingsPointClouds;
   topic: string;
-  pointCloud?: PointCloud | PointCloud2;
+  pointCloud: PointCloud | PointCloud2;
   originalMessage: Record<string, RosValue> | undefined;
   pointsHistory: PointsAtTime[];
   material: THREE.PointsMaterial;
@@ -99,7 +100,6 @@ export class PointCloudRenderable extends Renderable<PointCloudUserData> {
   public override pickableInstances = true;
 
   public override dispose(): void {
-    this.userData.pointCloud = undefined;
     this.userData.originalMessage = undefined;
     for (const entry of this.userData.pointsHistory) {
       entry.points.geometry.dispose();
@@ -116,9 +116,6 @@ export class PointCloudRenderable extends Renderable<PointCloudUserData> {
   }
 
   public override instanceDetails(instanceId: number): Record<string, RosValue> | undefined {
-    if (!this.userData.pointCloud) {
-      return undefined;
-    }
     const pointCloud = this.userData.pointCloud;
     const data = pointCloud.data;
     const stride = getStride(pointCloud);
@@ -530,6 +527,7 @@ export class PointCloudRenderable extends Renderable<PointCloudUserData> {
     colorAttribute.needsUpdate = true;
   }
 
+  // NOTE: This method's implementation also exists in LaserScans.ts renderable
   public startFrame(currentTime: bigint, renderFrameId: string, fixedFrameId: string): void {
     const path = this.userData.settingsPath;
 
@@ -583,7 +581,7 @@ export class PointCloudRenderable extends Renderable<PointCloudUserData> {
 }
 
 export class PointClouds extends SceneExtension<PointCloudRenderable> {
-  private pointCloudFieldsByTopic = new Map<string, string[]>();
+  private fieldsByTopic = new Map<string, string[]>();
 
   public constructor(renderer: Renderer) {
     super("foxglove.PointClouds", renderer);
@@ -602,13 +600,14 @@ export class PointClouds extends SceneExtension<PointCloudRenderable> {
         continue;
       }
       const config = (configTopics[topic.name] ?? {}) as Partial<LayerSettingsPointClouds>;
-      const node: SettingsTreeNodeWithActionHandler = pointScansSettingsNode(
-        this.pointCloudFieldsByTopic,
-        config,
+      const messageFields = this.fieldsByTopic.get(topic.name) ?? POINT_CLOUD_REQUIRED_FIELDS;
+      const node: SettingsTreeNodeWithActionHandler = pointSettingsNode(
         topic,
-        "pointcloud",
+        messageFields,
+        config,
       );
       node.handler = handler;
+      node.icon = "Points";
       entries.push({ path: ["topics", topic.name], node });
     }
     return entries;
@@ -646,14 +645,12 @@ export class PointClouds extends SceneExtension<PointCloudRenderable> {
         | undefined;
       const settings = { ...DEFAULT_SETTINGS, ...prevSettings };
       // make more sense
-      if (renderable.userData.pointCloud) {
-        renderable.updatePointCloud(
-          renderable.userData.pointCloud,
-          renderable.userData.originalMessage,
-          settings,
-          renderable.userData.receiveTime,
-        );
-      }
+      renderable.updatePointCloud(
+        renderable.userData.pointCloud,
+        renderable.userData.originalMessage,
+        settings,
+        renderable.userData.receiveTime,
+      );
     }
   };
 
@@ -723,10 +720,10 @@ export class PointClouds extends SceneExtension<PointCloudRenderable> {
     }
 
     // Update the mapping of topic to point cloud field names if necessary
-    let fields = this.pointCloudFieldsByTopic.get(topic);
+    let fields = this.fieldsByTopic.get(topic);
     if (!fields || fields.length !== pointCloud.fields.length) {
       fields = pointCloud.fields.map((field) => field.name);
-      this.pointCloudFieldsByTopic.set(topic, fields);
+      this.fieldsByTopic.set(topic, fields);
       this.updateSettingsTree();
     }
 
@@ -804,7 +801,7 @@ export class PointClouds extends SceneExtension<PointCloudRenderable> {
     }
 
     // Update the mapping of topic to point cloud field names if necessary
-    let fields = this.pointCloudFieldsByTopic.get(topic);
+    let fields = this.fieldsByTopic.get(topic);
     // filter count to compare only supported fields
     const numSupportedFields = pointCloud.fields.reduce((numSupported, field) => {
       return numSupported + (isSupportedField(field) ? 1 : 0);
@@ -814,7 +811,7 @@ export class PointClouds extends SceneExtension<PointCloudRenderable> {
       fields = filterMap(pointCloud.fields, (field) =>
         isSupportedField(field) ? field.name : undefined,
       );
-      this.pointCloudFieldsByTopic.set(topic, fields);
+      this.fieldsByTopic.set(topic, fields);
       this.updateSettingsTree();
     }
 

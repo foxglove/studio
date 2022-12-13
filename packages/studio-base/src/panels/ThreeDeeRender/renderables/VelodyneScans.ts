@@ -31,14 +31,15 @@ import {
   createInstancePickingMaterial,
   createPickingMaterial,
   createPoints,
-  DEFAULT_POINT_SCAN_SETTINGS,
-  LayerSettingsPointScan,
-  pointScansSettingsNode,
+  DEFAULT_POINT_SETTINGS,
+  LayerSettingsPointExtension,
+  pointSettingsNode,
   pointCloudMaterial,
+  POINT_CLOUD_REQUIRED_FIELDS,
 } from "./pointScanUtils";
 
-type LayerSettingsVelodyneScans = LayerSettingsPointScan;
-const DEFAULT_SETTINGS = DEFAULT_POINT_SCAN_SETTINGS;
+type LayerSettingsVelodyneScans = LayerSettingsPointExtension;
+const DEFAULT_SETTINGS = DEFAULT_POINT_SETTINGS;
 
 export function pointFieldDataTypeToNumericType(type: PointFieldDataType): NumericType {
   switch (type) {
@@ -140,13 +141,15 @@ export class VelodyneScans extends SceneExtension<PointCloudRenderable> {
         continue;
       }
       const config = (configTopics[topic.name] ?? {}) as Partial<LayerSettingsVelodyneScans>;
-      const node: SettingsTreeNodeWithActionHandler = pointScansSettingsNode(
-        this._pointCloudFieldsByTopic,
-        config,
+      const messageFields =
+        this._pointCloudFieldsByTopic.get(topic.name) ?? POINT_CLOUD_REQUIRED_FIELDS;
+      const node: SettingsTreeNodeWithActionHandler = pointSettingsNode(
         topic,
-        "velodynescan",
+        messageFields,
+        config,
       );
       node.handler = handler;
+      node.icon = "Points";
       entries.push({ path: ["topics", topic.name], node });
     }
     return entries;
@@ -168,14 +171,12 @@ export class VelodyneScans extends SceneExtension<PointCloudRenderable> {
         | Partial<LayerSettingsVelodyneScans>
         | undefined;
       const settings = { ...DEFAULT_SETTINGS, ...prevSettings };
-      if (renderable.userData.pointCloud) {
-        renderable.updatePointCloud(
-          renderable.userData.pointCloud,
-          renderable.userData.originalMessage,
-          settings,
-          renderable.userData.receiveTime,
-        );
-      }
+      renderable.updatePointCloud(
+        renderable.userData.pointCloud,
+        renderable.userData.originalMessage,
+        settings,
+        renderable.userData.receiveTime,
+      );
     }
   };
 
