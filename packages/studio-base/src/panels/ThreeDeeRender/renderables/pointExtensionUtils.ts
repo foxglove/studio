@@ -349,8 +349,10 @@ type PointHistoryUserData = BaseUserData & {
 };
 
 /**
- * Parent class renderable that handles rendering of points a decay time
- * The
+ * Parent class renderable that handles lifecycle of points history over the decay time
+ * This class only handles updating, and end of life of the points history and its geometry.
+ * Creation of new points in the history is handled by the child Renderable classes.
+ * See LaserScansRenderable and PointCloudsRenderable for examples.
  */
 export class PointsHistoryRenderable<
   UserData extends PointHistoryUserData,
@@ -371,6 +373,7 @@ export class PointsHistoryRenderable<
     if (!this.visible) {
       this.renderer.settings.errors.clearPath(path);
       const pointsHistory = this.userData.pointsHistory;
+      // removes all but the last element of the array, which would be the current point
       for (const entry of pointsHistory.splice(0, pointsHistory.length - 1)) {
         entry.points.geometry.dispose();
         this.remove(entry.points);
