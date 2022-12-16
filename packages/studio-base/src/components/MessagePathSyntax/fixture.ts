@@ -11,9 +11,9 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { MessageEvent } from "@foxglove/studio-base/players/types";
 import { Fixture } from "@foxglove/studio-base/stories/PanelSetup";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
-
 // ts-prune-ignore-next
 export const datatypes: RosDatatypes = new Map(
   Object.entries({
@@ -22,26 +22,29 @@ export const datatypes: RosDatatypes = new Map(
 );
 
 // ts-prune-ignore-next
-export const messages = Object.freeze([
+export const messages = Object.freeze<MessageEvent<unknown>>([
   {
     topic: "/some/topic",
     receiveTime: { sec: 100, nsec: 0 },
     message: { index: 0 },
+    schemaName: "msgs/PoseDebug",
     sizeInBytes: 0,
   },
   {
     topic: "/some/topic",
     receiveTime: { sec: 101, nsec: 0 },
     message: { index: 1 },
+    schemaName: "msgs/PoseDebug",
     sizeInBytes: 0,
   },
   {
     topic: "/some/topic",
     receiveTime: { sec: 102, nsec: 0 },
     message: { index: 2 },
+    schemaName: "msgs/PoseDebug",
     sizeInBytes: 0,
   },
-] as const);
+]);
 
 // ts-prune-ignore-next
 export const MessagePathInputStoryFixture: Fixture = {
@@ -100,13 +103,13 @@ export const MessagePathInputStoryFixture: Fixture = {
     }),
   ),
   topics: [
-    { name: "/some_topic/location", datatype: "msgs/PoseDebug" },
-    { name: "/some_topic/state", datatype: "msgs/State" },
+    { name: "/some_topic/location", schemaName: "msgs/PoseDebug" },
+    { name: "/some_topic/state", schemaName: "msgs/State" },
     {
       name: "/very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_long_topic_name/state",
-      datatype: "msgs/State",
+      schemaName: "msgs/State",
     },
-    { name: "/some_logs_topic", datatype: "msgs/Log" },
+    { name: "/some_logs_topic", schemaName: "msgs/Log" },
   ],
   frame: {},
   globalVariables: { global_var_1: 42, global_var_2: 10 },

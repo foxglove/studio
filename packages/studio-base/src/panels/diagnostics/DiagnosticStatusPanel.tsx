@@ -23,7 +23,7 @@ import Panel from "@foxglove/studio-base/components/Panel";
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import Stack from "@foxglove/studio-base/components/Stack";
-import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelSettingsEditorContextProvider";
+import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelStateContextProvider";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 
 import DiagnosticStatus from "./DiagnosticStatus";
@@ -49,14 +49,15 @@ function DiagnosticStatusPanel(props: Props) {
   const { saveConfig, config } = props;
   const { topics } = useDataSourceInfo();
   const { openSiblingPanel } = usePanelContext();
-  const { selectedHardwareId, selectedName, splitFraction, topicToRender } = config;
+  const { selectedHardwareId, selectedName, splitFraction, topicToRender, numericPrecision } =
+    config;
 
   const updatePanelSettingsTree = usePanelSettingsTreeUpdate();
 
   // Filter down all topics to those that conform to our supported datatypes
   const availableTopics = useMemo(() => {
     const filtered = topics
-      .filter((topic) => ALLOWED_DATATYPES.includes(topic.datatype))
+      .filter((topic) => ALLOWED_DATATYPES.includes(topic.schemaName))
       .map((topic) => topic.name);
 
     // Keeps only the first occurrence of each topic.
@@ -140,9 +141,9 @@ function DiagnosticStatusPanel(props: Props) {
   useEffect(() => {
     updatePanelSettingsTree({
       actionHandler,
-      nodes: buildStatusPanelSettingsTree(topicToRender, availableTopics),
+      nodes: buildStatusPanelSettingsTree(topicToRender, numericPrecision, availableTopics),
     });
-  }, [actionHandler, availableTopics, topicToRender, updatePanelSettingsTree]);
+  }, [actionHandler, availableTopics, topicToRender, numericPrecision, updatePanelSettingsTree]);
 
   return (
     <Stack flex="auto" overflow="hidden">
@@ -191,6 +192,7 @@ function DiagnosticStatusPanel(props: Props) {
                 props.saveConfig({ splitFraction: newSplitFraction })
               }
               topicToRender={topicToRender}
+              numericPrecision={numericPrecision}
               openSiblingPanel={openSiblingPanel}
             />
           ))}

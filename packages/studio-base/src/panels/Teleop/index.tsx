@@ -7,7 +7,7 @@ import { createRoot } from "react-dom/client";
 
 import { PanelExtensionContext } from "@foxglove/studio";
 import Panel from "@foxglove/studio-base/components/Panel";
-import PanelExtensionAdapter from "@foxglove/studio-base/components/PanelExtensionAdapter";
+import { PanelExtensionAdapter } from "@foxglove/studio-base/components/PanelExtensionAdapter";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 
 import TeleopPanel from "./TeleopPanel";
@@ -19,6 +19,9 @@ function initPanel(context: PanelExtensionContext) {
       <TeleopPanel context={context} />
     </StrictMode>,
   );
+  return () => {
+    ReactDOM.unmountComponentAtNode(context.panelElement);
+  };
 }
 
 type Props = {

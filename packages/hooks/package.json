@@ -20,6 +20,14 @@
     "prepack": "tsc -b"
   },
   "devDependencies": {
-    "typescript": "4.6.2"
+    "@testing-library/react": "13.4.0",
+    "typescript": "4.8.2"
+  },
+  "dependencies": {
+    "@foxglove/log": "workspace:*",
+    "shallowequal": "1.1.0"
+  },
+  "peerDependencies": {
+    "react": "^18.2.0"
   }
 }

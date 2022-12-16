@@ -11,15 +11,21 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Layer } from "@fluentui/react";
+import { useSnackbar } from "notistack";
 import { extname } from "path";
 import { useCallback, useLayoutEffect, useState } from "react";
-import { useToasts } from "react-toast-notifications";
+
+import Logger from "@foxglove/log";
+import DropOverlay from "@foxglove/studio-base/components/DropOverlay";
+
+const log = Logger.getLogger(__filename);
 
 type Props = {
-  children: React.ReactNode; // Shown when dragging in a file.
   allowedExtensions?: string[];
-  onDrop?: (event: { files?: File[]; handles?: FileSystemFileHandle[] }) => void;
+  onDrop?: (event: {
+    files?: File[];
+    handles?: FileSystemFileHandle[]; // foxglove-depcheck-used: @types/wicg-file-system-access
+  }) => void;
 };
 
 export default function DocumentDropListener(props: Props): JSX.Element {
@@ -27,7 +33,7 @@ export default function DocumentDropListener(props: Props): JSX.Element {
 
   const { onDrop: onDropProp, allowedExtensions } = props;
 
-  const { addToast } = useToasts();
+  const { enqueueSnackbar } = useSnackbar();
 
   const onDrop = useCallback(
     async (ev: DragEvent) => {
@@ -43,15 +49,28 @@ export default function DocumentDropListener(props: Props): JSX.Element {
       const directories: FileSystemDirectoryEntry[] = [];
       const dataItems = ev.dataTransfer.items;
       for (const item of Array.from(dataItems)) {
-        const entry = item.webkitGetAsEntry();
-
         // Attempt to grab the filesystem handle if the feature is available.
         // A file system handle is more versatile than File instances.
         // Note: awaiting on the fileSystemHandle function triggered a (bug?) where all other
         // dataTransfer items were ignored
-        if ("getAsFileSystemHandle" in item) {
+        //
+        // getAsFileSystemHandle is only available in a secure context. If called outside a secure
+        // context the observed behavior is a browser (tab) crash. To avoid the crash we check that
+        // we are in a secure context and only call the api if available.
+        //
+        // Handles power features like recents which require saving handles in indexeddb. This check
+        // allows us to gracefully degrade away from this feature if the user deploys Studio in an
+        // unsecure context.
+        if (window.isSecureContext && "getAsFileSystemHandle" in item) {
           handlePromises.push(item.getAsFileSystemHandle());
+        } else {
+          log.info(
+            "getAsFileSystemHandle not available on a dropped item. Features requiring handles will not be available for the item",
+            item,
+          );
         }
+
+        const entry = item.webkitGetAsEntry();
 
         // Keep track of all File and Directory instaces
         if (entry?.isFile === true) {
@@ -112,9 +131,7 @@ export default function DocumentDropListener(props: Props): JSX.Element {
 
       // Check for no supported files
       if (filteredFiles.length === 0 && filteredHandles?.length === 0) {
-        addToast("The file format is unsupported.", {
-          appearance: "error",
-        });
+        enqueueSnackbar("The file format is unsupported.", { variant: "error" });
         return;
       }
 
@@ -123,7 +140,7 @@ export default function DocumentDropListener(props: Props): JSX.Element {
 
       onDropProp?.({ files: filteredFiles, handles: filteredHandles });
     },
-    [addToast, onDropProp, allowedExtensions],
+    [enqueueSnackbar, onDropProp, allowedExtensions],
   );
 
   const onDragOver = useCallback(
@@ -171,7 +188,7 @@ export default function DocumentDropListener(props: Props): JSX.Element {
         data-puppeteer-file-upload
         multiple
       />
-      {hovering && <Layer>{props.children}</Layer>}
+      <DropOverlay open={hovering}>Drop a file here</DropOverlay>
     </>
   );
 }

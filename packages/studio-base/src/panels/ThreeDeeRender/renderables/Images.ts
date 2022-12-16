@@ -21,34 +21,44 @@ import {
 } from "@foxglove/den/image";
 import Logger from "@foxglove/log";
 import { toNanoSec } from "@foxglove/rostime";
+import { CameraCalibration, CompressedImage, RawImage } from "@foxglove/schemas";
 import { SettingsTreeAction, SettingsTreeFields } from "@foxglove/studio";
 import type { RosValue } from "@foxglove/studio-base/players/types";
-import { MutablePoint } from "@foxglove/studio-base/types/Messages";
 
 import { BaseUserData, Renderable } from "../Renderable";
-import { Renderer } from "../Renderer";
+import type { Renderer } from "../Renderer";
 import { PartialMessage, PartialMessageEvent, SceneExtension } from "../SceneExtension";
 import { SettingsTreeEntry } from "../SettingsManager";
 import { stringToRgba } from "../color";
-import { normalizeByteArray, normalizeHeader } from "../normalizeMessages";
+import {
+  CAMERA_CALIBRATION_DATATYPES,
+  COMPRESSED_IMAGE_DATATYPES,
+  RAW_IMAGE_DATATYPES,
+} from "../foxglove";
+import { normalizeByteArray, normalizeHeader, normalizeTime } from "../normalizeMessages";
 import {
   CameraInfo,
-  Image,
-  CompressedImage,
-  IMAGE_DATATYPES,
-  COMPRESSED_IMAGE_DATATYPES,
+  Image as RosImage,
+  CompressedImage as RosCompressedImage,
+  IMAGE_DATATYPES as ROS_IMAGE_DATATYPES,
+  COMPRESSED_IMAGE_DATATYPES as ROS_COMPRESSED_IMAGE_DATATYPES,
   CAMERA_INFO_DATATYPES,
 } from "../ros";
 import { BaseSettings, PRECISION_DISTANCE, SelectEntry } from "../settings";
+import { topicIsConvertibleToSchema } from "../topicIsConvertibleToSchema";
 import { makePose } from "../transforms";
 import { CameraInfoUserData } from "./Cameras";
+import { projectPixel } from "./projections";
 
 const log = Logger.getLogger(__filename);
 void log;
 
+type AnyImage = RosImage | RosCompressedImage | RawImage | CompressedImage;
+
 export type LayerSettingsImage = BaseSettings & {
   cameraInfoTopic: string | undefined;
   distance: number;
+  planarProjectionFactor: number;
   color: string;
 };
 
@@ -57,19 +67,21 @@ const CREATE_BITMAP_ERR = "CreateBitmap";
 
 const DEFAULT_IMAGE_WIDTH = 512;
 const DEFAULT_DISTANCE = 1;
+const DEFAULT_PLANAR_PROJECTION_FACTOR = 0;
 
 const DEFAULT_SETTINGS: LayerSettingsImage = {
   visible: false,
   frameLocked: true,
   cameraInfoTopic: undefined,
   distance: DEFAULT_DISTANCE,
+  planarProjectionFactor: DEFAULT_PLANAR_PROJECTION_FACTOR,
   color: "#ffffff",
 };
 
 export type ImageUserData = BaseUserData & {
   topic: string;
   settings: LayerSettingsImage;
-  image: Image | CompressedImage;
+  image: AnyImage;
   texture: THREE.Texture | undefined;
   material: THREE.MeshBasicMaterial | undefined;
   geometry: THREE.PlaneGeometry | undefined;
@@ -77,14 +89,14 @@ export type ImageUserData = BaseUserData & {
 };
 
 export class ImageRenderable extends Renderable<ImageUserData> {
-  override dispose(): void {
+  public override dispose(): void {
     this.userData.texture?.dispose();
     this.userData.material?.dispose();
     this.userData.geometry?.dispose();
     super.dispose();
   }
 
-  override details(): Record<string, RosValue> {
+  public override details(): Record<string, RosValue> {
     const cameraInfoTopic = this.userData.settings.cameraInfoTopic;
     const cameraInfoRenderable = cameraInfoTopic
       ? camerasExtension(this.renderer)?.renderables.get(cameraInfoTopic)
@@ -97,59 +109,81 @@ export class ImageRenderable extends Renderable<ImageUserData> {
 }
 
 export class Images extends SceneExtension<ImageRenderable> {
-  cameraInfoTopics = new Set<string>();
+  private cameraInfoTopics = new Set<string>();
 
-  constructor(renderer: Renderer) {
+  public constructor(renderer: Renderer) {
     super("foxglove.Images", renderer);
 
-    renderer.addDatatypeSubscriptions(IMAGE_DATATYPES, this.handleRawImage);
-    renderer.addDatatypeSubscriptions(COMPRESSED_IMAGE_DATATYPES, this.handleCompressedImage);
-    renderer.addDatatypeSubscriptions(CAMERA_INFO_DATATYPES, this.handleCameraInfo);
+    renderer.addSchemaSubscriptions(ROS_IMAGE_DATATYPES, this.handleRosRawImage);
+    renderer.addSchemaSubscriptions(ROS_COMPRESSED_IMAGE_DATATYPES, this.handleRosCompressedImage);
+    // Unconditionally subscribe to CameraInfo messages so the `foxglove.Cameras` extension will
+    // always receive them and parse into camera models. This extension reuses the parsed camera
+    // models from `foxglove.Cameras`
+    renderer.addSchemaSubscriptions(CAMERA_INFO_DATATYPES, {
+      handler: this.handleRosCameraInfo,
+      forced: true,
+    });
+
+    renderer.addSchemaSubscriptions(RAW_IMAGE_DATATYPES, this.handleRawImage);
+    renderer.addSchemaSubscriptions(COMPRESSED_IMAGE_DATATYPES, this.handleCompressedImage);
+    renderer.addSchemaSubscriptions(CAMERA_CALIBRATION_DATATYPES, {
+      handler: this.handleCameraCalibration,
+      forced: true,
+    });
   }
 
-  override settingsNodes(): SettingsTreeEntry[] {
+  public override settingsNodes(): SettingsTreeEntry[] {
     const configTopics = this.renderer.config.topics;
     const handler = this.handleSettingsAction;
     const entries: SettingsTreeEntry[] = [];
     for (const topic of this.renderer.topics ?? []) {
-      if (IMAGE_DATATYPES.has(topic.datatype) || COMPRESSED_IMAGE_DATATYPES.has(topic.datatype)) {
-        const config = (configTopics[topic.name] ?? {}) as Partial<LayerSettingsImage>;
-
-        // Build a list of all matching CameraInfo topics
-        const bestCameraInfoOptions: SelectEntry[] = [];
-        const otherCameraInfoOptions: SelectEntry[] = [];
-        for (const cameraInfoTopic of this.cameraInfoTopics) {
-          if (cameraInfoTopicMatches(topic.name, cameraInfoTopic)) {
-            bestCameraInfoOptions.push({ label: cameraInfoTopic, value: cameraInfoTopic });
-          } else {
-            otherCameraInfoOptions.push({ label: cameraInfoTopic, value: cameraInfoTopic });
-          }
-        }
-        const cameraInfoOptions = [...bestCameraInfoOptions, ...otherCameraInfoOptions];
-
-        // prettier-ignore
-        const fields: SettingsTreeFields = {
-          cameraInfoTopic: { label: "Camera Info", input: "select", options: cameraInfoOptions, value: config.cameraInfoTopic },
-          distance: { label: "Distance", input: "number", placeholder: String(DEFAULT_DISTANCE), step: 0.1, precision: PRECISION_DISTANCE, value: config.distance },
-          color: { label: "Color", input: "rgba", value: config.color },
-        };
-
-        entries.push({
-          path: ["topics", topic.name],
-          node: {
-            icon: "ImageProjection",
-            fields,
-            visible: config.visible ?? DEFAULT_SETTINGS.visible,
-            order: topic.name.toLocaleLowerCase(),
-            handler,
-          },
-        });
+      if (
+        !(
+          topicIsConvertibleToSchema(topic, ROS_IMAGE_DATATYPES) ||
+          topicIsConvertibleToSchema(topic, ROS_COMPRESSED_IMAGE_DATATYPES) ||
+          topicIsConvertibleToSchema(topic, RAW_IMAGE_DATATYPES) ||
+          topicIsConvertibleToSchema(topic, COMPRESSED_IMAGE_DATATYPES)
+        )
+      ) {
+        continue;
       }
+      const config = (configTopics[topic.name] ?? {}) as Partial<LayerSettingsImage>;
+
+      // Build a list of all matching CameraInfo topics
+      const bestCameraInfoOptions: SelectEntry[] = [];
+      const otherCameraInfoOptions: SelectEntry[] = [];
+      for (const cameraInfoTopic of this.cameraInfoTopics) {
+        if (cameraInfoTopicMatches(topic.name, cameraInfoTopic)) {
+          bestCameraInfoOptions.push({ label: cameraInfoTopic, value: cameraInfoTopic });
+        } else {
+          otherCameraInfoOptions.push({ label: cameraInfoTopic, value: cameraInfoTopic });
+        }
+      }
+      const cameraInfoOptions = [...bestCameraInfoOptions, ...otherCameraInfoOptions];
+
+      // prettier-ignore
+      const fields: SettingsTreeFields = {
+        cameraInfoTopic: { label: "Camera Info", input: "select", options: cameraInfoOptions, value: config.cameraInfoTopic },
+        distance: { label: "Distance", input: "number", placeholder: String(DEFAULT_DISTANCE), step: 0.1, precision: PRECISION_DISTANCE, value: config.distance },
+        planarProjectionFactor: { label: "Planar Projection Factor", input: "number", placeholder: String(DEFAULT_PLANAR_PROJECTION_FACTOR), min: 0, max: 1, step: 0.1, precision: 2, value: config.planarProjectionFactor },
+        color: { label: "Color", input: "rgba", value: config.color },
+      };
+
+      entries.push({
+        path: ["topics", topic.name],
+        node: {
+          icon: "ImageProjection",
+          fields,
+          visible: config.visible ?? DEFAULT_SETTINGS.visible,
+          order: topic.name.toLocaleLowerCase(),
+          handler,
+        },
+      });
     }
     return entries;
   }
 
-  override handleSettingsAction = (action: SettingsTreeAction): void => {
+  public override handleSettingsAction = (action: SettingsTreeAction): void => {
     const path = action.payload.path;
     if (action.action !== "update" || path.length !== 3) {
       return;
@@ -169,18 +203,25 @@ export class Images extends SceneExtension<ImageRenderable> {
     }
   };
 
-  handleRawImage = (messageEvent: PartialMessageEvent<Image>): void => {
-    this.handleImage(messageEvent, normalizeImage(messageEvent.message));
+  private handleRosRawImage = (messageEvent: PartialMessageEvent<RosImage>): void => {
+    this.handleImage(messageEvent, normalizeRosImage(messageEvent.message));
   };
 
-  handleCompressedImage = (messageEvent: PartialMessageEvent<CompressedImage>): void => {
+  private handleRosCompressedImage = (
+    messageEvent: PartialMessageEvent<RosCompressedImage>,
+  ): void => {
+    this.handleImage(messageEvent, normalizeRosCompressedImage(messageEvent.message));
+  };
+
+  private handleRawImage = (messageEvent: PartialMessageEvent<RawImage>): void => {
+    this.handleImage(messageEvent, normalizeRawImage(messageEvent.message));
+  };
+
+  private handleCompressedImage = (messageEvent: PartialMessageEvent<CompressedImage>): void => {
     this.handleImage(messageEvent, normalizeCompressedImage(messageEvent.message));
   };
 
-  handleImage = (
-    messageEvent: PartialMessageEvent<Image | CompressedImage>,
-    image: Image | CompressedImage,
-  ): void => {
+  private handleImage = (messageEvent: PartialMessageEvent<AnyImage>, image: AnyImage): void => {
     const topic = messageEvent.topic;
     const receiveTime = toNanoSec(messageEvent.receiveTime);
 
@@ -193,8 +234,10 @@ export class Images extends SceneExtension<ImageRenderable> {
     if (!renderable) {
       renderable = new ImageRenderable(topic, this.renderer, {
         receiveTime,
-        messageTime: toNanoSec(image.header.stamp),
-        frameId: this.renderer.normalizeFrameId(image.header.frame_id),
+        messageTime: toNanoSec("header" in image ? image.header.stamp : image.timestamp),
+        frameId: this.renderer.normalizeFrameId(
+          "header" in image ? image.header.frame_id : image.frame_id,
+        ),
         pose: makePose(),
         settingsPath: ["topics", topic],
         topic,
@@ -235,7 +278,25 @@ export class Images extends SceneExtension<ImageRenderable> {
     this._updateImageRenderable(renderable, image, receiveTime, renderable.userData.settings);
   };
 
-  handleCameraInfo = (messageEvent: PartialMessageEvent<CameraInfo>): void => {
+  private handleRosCameraInfo = (messageEvent: PartialMessageEvent<CameraInfo>): void => {
+    const topic = messageEvent.topic;
+    const updated = !this.cameraInfoTopics.has(topic);
+    this.cameraInfoTopics.add(topic);
+
+    const renderable = this.renderables.get(topic);
+    if (renderable) {
+      const { image, settings } = renderable.userData;
+      this._updateImageRenderable(renderable, image, renderable.userData.receiveTime, settings);
+    }
+
+    if (updated) {
+      this.updateSettingsTree();
+    }
+  };
+
+  private handleCameraCalibration = (
+    messageEvent: PartialMessageEvent<CameraCalibration>,
+  ): void => {
     const topic = messageEvent.topic;
     const updated = !this.cameraInfoTopics.has(topic);
     this.cameraInfoTopics.add(topic);
@@ -253,7 +314,7 @@ export class Images extends SceneExtension<ImageRenderable> {
 
   private _updateImageRenderable(
     renderable: ImageRenderable,
-    image: Image | CompressedImage,
+    image: AnyImage,
     receiveTime: bigint,
     settings: Partial<LayerSettingsImage> | undefined,
   ): void {
@@ -261,14 +322,19 @@ export class Images extends SceneExtension<ImageRenderable> {
     const newSettings = { ...DEFAULT_SETTINGS, ...settings };
     const geometrySettingsEqual =
       newSettings.cameraInfoTopic === prevSettings.cameraInfoTopic &&
-      newSettings.distance === prevSettings.distance;
+      newSettings.distance === prevSettings.distance &&
+      newSettings.planarProjectionFactor === prevSettings.planarProjectionFactor;
     const materialSettingsEqual = newSettings.color === prevSettings.color;
     const topic = renderable.userData.topic;
 
     renderable.userData.image = image;
-    renderable.userData.frameId = this.renderer.normalizeFrameId(image.header.frame_id);
+    renderable.userData.frameId = this.renderer.normalizeFrameId(
+      "header" in image ? image.header.frame_id : image.frame_id,
+    );
     renderable.userData.receiveTime = receiveTime;
-    renderable.userData.messageTime = toNanoSec(image.header.stamp);
+    renderable.userData.messageTime = toNanoSec(
+      "header" in image ? image.header.stamp : image.timestamp,
+    );
     renderable.userData.settings = newSettings;
 
     // Dispose of the current geometry if the settings have changed
@@ -296,8 +362,7 @@ export class Images extends SceneExtension<ImageRenderable> {
         // log.debug(
         //   `Constructing geometry for ${cameraModel.width}x${cameraModel.height} camera image on "${topic}"`,
         // );
-        const distance = renderable.userData.settings.distance;
-        const geometry = createGeometry(cameraModel, distance);
+        const geometry = createGeometry(cameraModel, renderable.userData.settings);
         renderable.userData.geometry = geometry;
         if (renderable.userData.mesh) {
           renderable.remove(renderable.userData.mesh);
@@ -307,9 +372,8 @@ export class Images extends SceneExtension<ImageRenderable> {
     }
 
     // Create or update the bitmap texture
-    if ((image as Partial<CompressedImage>).format) {
-      const compressed = image as CompressedImage;
-      const bitmapData = new Blob([image.data], { type: `image/${compressed.format}` });
+    if ("format" in image) {
+      const bitmapData = new Blob([image.data], { type: `image/${image.format}` });
       self
         .createImageBitmap(bitmapData, { resizeWidth: DEFAULT_IMAGE_WIDTH })
         .then((bitmap) => {
@@ -336,8 +400,7 @@ export class Images extends SceneExtension<ImageRenderable> {
           );
         });
     } else {
-      const raw = image as Image;
-      const { width, height } = raw;
+      const { width, height } = image;
       const prevTexture = renderable.userData.texture as THREE.DataTexture | undefined;
       if (
         prevTexture == undefined ||
@@ -354,7 +417,7 @@ export class Images extends SceneExtension<ImageRenderable> {
       }
 
       const texture = renderable.userData.texture as THREE.DataTexture;
-      rawImageToDataTexture(raw, {}, texture);
+      rawImageToDataTexture(image, {}, texture);
       texture.needsUpdate = true;
     }
 
@@ -451,7 +514,10 @@ function createMaterial(
   });
 }
 
-function createGeometry(cameraModel: PinholeCameraModel, depth: number): THREE.PlaneGeometry {
+function createGeometry(
+  cameraModel: PinholeCameraModel,
+  settings: LayerSettingsImage,
+): THREE.PlaneGeometry {
   const WIDTH_SEGMENTS = 10;
   const HEIGHT_SEGMENTS = 10;
 
@@ -484,8 +550,7 @@ function createGeometry(cameraModel: PinholeCameraModel, depth: number): THREE.P
 
       pixel.x = ix * segmentWidth;
       pixel.y = iy * segmentHeight;
-      cameraModel.projectPixelTo3dRay(p, cameraModel.rectifyPixel(pixel, pixel));
-      multiplyScalar(p, depth);
+      projectPixel(p, pixel, cameraModel, settings);
 
       vertices[vOffset + 0] = p.x;
       vertices[vOffset + 1] = p.y;
@@ -502,12 +567,6 @@ function createGeometry(cameraModel: PinholeCameraModel, depth: number): THREE.P
   geometry.attributes.uv!.needsUpdate = true;
 
   return geometry;
-}
-
-function multiplyScalar(vec: MutablePoint, scalar: number): void {
-  vec.x *= scalar;
-  vec.y *= scalar;
-  vec.z *= scalar;
 }
 
 export function cameraInfoTopicMatches(topic: string, cameraInfoTopic: string): boolean {
@@ -545,11 +604,12 @@ function autoSelectCameraInfoTopic(
 }
 
 function rawImageToDataTexture(
-  image: Image,
+  image: RosImage | RawImage,
   options: RawImageOptions,
   output: THREE.DataTexture,
 ): void {
-  const { encoding, width, height, is_bigendian } = image;
+  const { encoding, width, height } = image;
+  const is_bigendian = "is_bigendian" in image ? image.is_bigendian : false;
   const rawData = image.data as Uint8Array;
   switch (encoding) {
     case "yuv422":
@@ -596,6 +656,9 @@ function rawImageToDataTexture(
   }
 }
 
+function normalizeImageData(data: Int8Array): Int8Array;
+function normalizeImageData(data: PartialMessage<Uint8Array> | undefined): Uint8Array;
+function normalizeImageData(data: unknown): Int8Array | Uint8Array;
 function normalizeImageData(data: unknown): Int8Array | Uint8Array {
   if (data == undefined) {
     return new Uint8Array(0);
@@ -606,7 +669,7 @@ function normalizeImageData(data: unknown): Int8Array | Uint8Array {
   }
 }
 
-function normalizeImage(message: PartialMessage<Image>): Image {
+function normalizeRosImage(message: PartialMessage<RosImage>): RosImage {
   return {
     header: normalizeHeader(message.header),
     height: message.height ?? 0,
@@ -618,9 +681,32 @@ function normalizeImage(message: PartialMessage<Image>): Image {
   };
 }
 
-function normalizeCompressedImage(message: PartialMessage<CompressedImage>): CompressedImage {
+function normalizeRosCompressedImage(
+  message: PartialMessage<RosCompressedImage>,
+): RosCompressedImage {
   return {
     header: normalizeHeader(message.header),
+    format: message.format ?? "",
+    data: normalizeByteArray(message.data),
+  };
+}
+
+function normalizeRawImage(message: PartialMessage<RawImage>): RawImage {
+  return {
+    timestamp: normalizeTime(message.timestamp),
+    frame_id: message.frame_id ?? "",
+    height: message.height ?? 0,
+    width: message.width ?? 0,
+    encoding: message.encoding ?? "",
+    step: message.step ?? 0,
+    data: normalizeImageData(message.data),
+  };
+}
+
+function normalizeCompressedImage(message: PartialMessage<CompressedImage>): CompressedImage {
+  return {
+    timestamp: normalizeTime(message.timestamp),
+    frame_id: message.frame_id ?? "",
     format: message.format ?? "",
     data: normalizeByteArray(message.data),
   };

@@ -6,23 +6,29 @@ import * as THREE from "three";
 
 import type { Renderer } from "../../Renderer";
 import { rgbaToLinear } from "../../color";
-import { Marker } from "../../ros";
+import { Marker, Vector3 } from "../../ros";
 import { RenderableMarker } from "./RenderableMarker";
 import { markerHasTransparency, makeStandardVertexColorMaterial } from "./materials";
 
 const NOT_DIVISIBLE_ERR = "NOT_DIVISIBLE";
 const EMPTY_ERR = "EMPTY";
 const COLORS_MISMATCH_ERR = "COLORS_MISMATCH";
+const INVALID_POINT_ERR = "INVALID_POINT";
 const EMPTY_FLOAT32 = new Float32Array();
 
 const tempColor = { r: 0, g: 0, b: 0, a: 0 };
 
 export class RenderableTriangleList extends RenderableMarker {
-  mesh: THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>;
-  vertices: Float32Array;
-  colors: Float32Array;
+  private mesh: THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>;
+  private vertices: Float32Array;
+  private colors: Float32Array;
 
-  constructor(topic: string, marker: Marker, receiveTime: bigint | undefined, renderer: Renderer) {
+  public constructor(
+    topic: string,
+    marker: Marker,
+    receiveTime: bigint | undefined,
+    renderer: Renderer,
+  ) {
     super(topic, marker, receiveTime, renderer);
 
     this.vertices = new Float32Array(marker.points.length * 3);
@@ -36,16 +42,17 @@ export class RenderableTriangleList extends RenderableMarker {
     this.update(marker, receiveTime);
   }
 
-  override dispose(): void {
+  public override dispose(): void {
     this.mesh.material.dispose();
     this.mesh.geometry.dispose();
     this.vertices = new Float32Array();
     this.colors = new Float32Array();
   }
 
-  override update(marker: Marker, receiveTime: bigint | undefined): void {
+  public override update(newMarker: Marker, receiveTime: bigint | undefined): void {
     const prevMarker = this.userData.marker;
-    super.update(marker, receiveTime);
+    super.update(newMarker, receiveTime);
+    const marker = this.userData.marker;
 
     let vertexCount = marker.points.length;
     if (vertexCount === 0) {
@@ -99,6 +106,14 @@ export class RenderableTriangleList extends RenderableMarker {
     // Update position/color buffers with the new marker data
     for (let i = 0; i < vertexCount; i++) {
       const point = marker.points[i]!;
+      if (!isPointValid(point)) {
+        this.renderer.settings.errors.addToTopic(
+          this.userData.topic,
+          INVALID_POINT_ERR,
+          `TRIANGLE_LIST: point at index ${i} is not finite`,
+        );
+        continue;
+      }
       dataChanged =
         dataChanged ||
         vertices[i * 3] !== point.x ||
@@ -133,4 +148,8 @@ export class RenderableTriangleList extends RenderableMarker {
       geometry.computeBoundingSphere();
     }
   }
+}
+
+function isPointValid(pt: Vector3): boolean {
+  return Number.isFinite(pt.x) && Number.isFinite(pt.y) && Number.isFinite(pt.z);
 }

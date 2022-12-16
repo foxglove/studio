@@ -29,8 +29,8 @@ const playerStateWithMessages = (messages: any): PlayerState => ({
   profile: undefined,
   activeData: {
     topics: [
-      { name: "/foo", datatype: "visualization_msgs/Marker" },
-      { name: "/bar", datatype: "visualization_msgs/Marker" },
+      { name: "/foo", schemaName: "visualization_msgs/Marker" },
+      { name: "/bar", schemaName: "visualization_msgs/Marker" },
     ],
     topicStats: new Map(),
     datatypes: new Map(),
@@ -59,6 +59,7 @@ const message = (
     header:
       headerStampSeconds == undefined ? undefined : { stamp: { sec: headerStampSeconds, nsec: 1 } },
   },
+  schemaName: "visualization_msgs/Marker",
   sizeInBytes: 0,
 });
 

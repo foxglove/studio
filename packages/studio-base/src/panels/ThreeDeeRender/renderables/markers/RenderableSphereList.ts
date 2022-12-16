@@ -8,17 +8,25 @@ import { DynamicInstancedMesh } from "../../DynamicInstancedMesh";
 import type { Renderer } from "../../Renderer";
 import { Marker } from "../../ros";
 import { RenderableMarker } from "./RenderableMarker";
-import { RenderableSphere } from "./RenderableSphere";
+import { createGeometry as createSphereGeometry } from "./RenderableSphere";
 import { markerHasTransparency, makeStandardInstancedMaterial } from "./materials";
 
 export class RenderableSphereList extends RenderableMarker {
-  mesh: DynamicInstancedMesh<THREE.SphereGeometry, THREE.MeshStandardMaterial>;
+  private mesh: DynamicInstancedMesh<THREE.SphereGeometry, THREE.MeshStandardMaterial>;
 
-  constructor(topic: string, marker: Marker, receiveTime: bigint | undefined, renderer: Renderer) {
+  public constructor(
+    topic: string,
+    marker: Marker,
+    receiveTime: bigint | undefined,
+    renderer: Renderer,
+  ) {
     super(topic, marker, receiveTime, renderer);
 
     // Sphere instanced mesh
-    const geometry = RenderableSphere.Geometry(renderer.maxLod);
+    const geometry = renderer.sharedGeometry.getGeometry(
+      `RenderableSphere-${renderer.maxLod}`,
+      () => createSphereGeometry(renderer.maxLod),
+    );
     const material = makeStandardInstancedMaterial(marker);
     this.mesh = new DynamicInstancedMesh(geometry, material, marker.points.length);
     this.mesh.castShadow = true;
@@ -28,13 +36,14 @@ export class RenderableSphereList extends RenderableMarker {
     this.update(marker, receiveTime);
   }
 
-  override dispose(): void {
+  public override dispose(): void {
     this.mesh.material.dispose();
   }
 
-  override update(marker: Marker, receiveTime: bigint | undefined): void {
+  public override update(newMarker: Marker, receiveTime: bigint | undefined): void {
     const prevMarker = this.userData.marker;
-    super.update(marker, receiveTime);
+    super.update(newMarker, receiveTime);
+    const marker = this.userData.marker;
 
     const transparent = markerHasTransparency(marker);
     if (transparent !== markerHasTransparency(prevMarker)) {

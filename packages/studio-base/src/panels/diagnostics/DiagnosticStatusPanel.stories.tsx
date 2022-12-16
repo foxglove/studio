@@ -4,14 +4,14 @@
 import DiagnosticStatusPanel from "@foxglove/studio-base/panels/diagnostics/DiagnosticStatusPanel";
 import { makeDiagnosticMessage } from "@foxglove/studio-base/panels/diagnostics/DiagnosticSummary.stories";
 import { LEVELS } from "@foxglove/studio-base/panels/diagnostics/util";
-import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
+import PanelSetup, { Fixture } from "@foxglove/studio-base/stories/PanelSetup";
 
 export default {
   title: "panels/diagnostics/DiagnosticStatusPanel",
 };
 
-const fixture = {
-  topics: [{ name: "/diagnostics", datatype: "diagnostic_msgs/DiagnosticArray" }],
+const fixture: Fixture = {
+  topics: [{ name: "/diagnostics", schemaName: "diagnostic_msgs/DiagnosticArray" }],
   frame: {
     "/diagnostics": [
       makeDiagnosticMessage(LEVELS.OK, "name1", "hardware_id1", ["message 1", "message 2"]),
@@ -25,6 +25,10 @@ const fixture = {
           { key: "key <b>with html</b>", value: "value <tt>with html</tt>" },
         ],
       ),
+      makeDiagnosticMessage(LEVELS.ERROR, "name1", "levels_id", ["error message"]),
+      makeDiagnosticMessage(LEVELS.OK, "name2", "levels_id", ["ok message"]),
+      makeDiagnosticMessage(LEVELS.STALE, "name3", "levels_id", ["stale message"]),
+      makeDiagnosticMessage(LEVELS.WARN, "name4", "levels_id", ["warn message"]),
     ],
   },
 };
@@ -33,6 +37,19 @@ export function Empty(): JSX.Element {
   return (
     <PanelSetup fixture={fixture}>
       <DiagnosticStatusPanel />
+    </PanelSetup>
+  );
+}
+
+export function Default(): JSX.Element {
+  return (
+    <PanelSetup fixture={fixture}>
+      <DiagnosticStatusPanel
+        overrideConfig={{
+          topicToRender: "/diagnostics",
+          selectedHardwareId: "levels_id",
+        }}
+      />
     </PanelSetup>
   );
 }
@@ -50,6 +67,9 @@ export function WithSettings(): JSX.Element {
     </PanelSetup>
   );
 }
+WithSettings.parameters = {
+  colorScheme: "light",
+};
 
 export function SelectedHardwareIDOnly(): JSX.Element {
   return (

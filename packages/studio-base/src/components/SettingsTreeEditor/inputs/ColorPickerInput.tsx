@@ -42,10 +42,11 @@ type ColorPickerInputProps = {
   onChange: (value: undefined | string) => void;
   placeholder?: string;
   readOnly?: boolean;
+  hideClearButton?: boolean;
 };
 
 export function ColorPickerInput(props: ColorPickerInputProps): JSX.Element {
-  const { alphaType, disabled, onChange, readOnly, value } = props;
+  const { alphaType, disabled, onChange, readOnly, hideClearButton, value } = props;
 
   const { classes, cx } = useStyles();
 
@@ -70,6 +71,7 @@ export function ColorPickerInput(props: ColorPickerInputProps): JSX.Element {
 
   const open = Boolean(anchorElement);
 
+  const shouldHideClearButton = (displayValue ?? "") === "" || (hideClearButton ?? false);
   return (
     <Stack
       className={cx(classes.root, {
@@ -87,8 +89,8 @@ export function ColorPickerInput(props: ColorPickerInputProps): JSX.Element {
         InputProps={{
           readOnly: true,
           startAdornment: <ColorSwatch color={swatchColor} onClick={handleClick} />,
-          endAdornment: (
-            <IconButton onClick={clearValue} size="small" color="primary">
+          endAdornment: !shouldHideClearButton && (
+            <IconButton onClick={clearValue} size="small" disabled={disabled}>
               <ClearIcon />
             </IconButton>
           ),
@@ -107,7 +109,12 @@ export function ColorPickerInput(props: ColorPickerInputProps): JSX.Element {
           horizontal: "center",
         }}
       >
-        <ColorPickerControl alphaType={alphaType} value={value} onChange={onChange} />
+        <ColorPickerControl
+          alphaType={alphaType}
+          value={value}
+          onChange={onChange}
+          onEnterKey={handleClose}
+        />
       </Popover>
     </Stack>
   );

@@ -20,7 +20,7 @@ import {
 
 const log = Log.getLogger(__filename);
 
-const DEFAULT_READ_AHEAD_DURATION = { sec: 5, nsec: 0 };
+const DEFAULT_READ_AHEAD_DURATION = { sec: 10, nsec: 0 };
 
 type Options = {
   // How far ahead to buffer
@@ -62,12 +62,12 @@ class BufferedIterableSource implements IIterableSource {
   // How far ahead of the read head we should try to keep buffering
   private readAheadDuration: Time;
 
-  constructor(source: IIterableSource, opt?: Options) {
+  public constructor(source: IIterableSource, opt?: Options) {
     this.readAheadDuration = opt?.readAheadDuration ?? DEFAULT_READ_AHEAD_DURATION;
     this.source = new CachingIterableSource(source);
   }
 
-  async initialize(): Promise<Initalization> {
+  public async initialize(): Promise<Initalization> {
     this.initResult = await this.source.initialize();
     return this.initResult;
   }
@@ -88,65 +88,66 @@ class BufferedIterableSource implements IIterableSource {
     // the start of the array.
     this.cache.clear();
 
-    // Streaming starts where the read head is and adjust as data is buffered and read
-    let streamStart = this.readHead;
-
     try {
-      for (;;) {
+      const sourceIterator = this.source.messageIterator({
+        topics: args.topics,
+        start: this.readHead,
+        consumptionType: "partial",
+      });
+
+      // Messages are read from the source until reaching the readUntil time. Then we wait for the read head
+      // to move forward and adjust readUntil
+      let readUntil = clampTime(
+        addTime(this.readHead, this.readAheadDuration),
+        this.initResult.start,
+        this.initResult.end,
+      );
+
+      for await (const result of sourceIterator) {
         if (this.aborted) {
-          break;
-        }
-
-        const readUntil = addTime(
-          streamStart,
-          addTime(this.readAheadDuration, this.readAheadDuration),
-        );
-        const streamEnd = clampTime(readUntil, this.initResult.start, this.initResult.end);
-
-        const sourceIterator = this.source.messageIterator({
-          topics: args.topics,
-          start: streamStart,
-          end: streamEnd,
-        });
-
-        for await (const result of sourceIterator) {
-          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-          if (this.aborted) {
-            break;
-          }
-
-          if (result.msgEvent && compare(result.msgEvent.receiveTime, streamEnd) > 0) {
-            throw new Error("Invariant: out of bounds result");
-          }
-
-          this.cache.enqueue(result);
-
-          // Indicate to the consumer that it can try reading again
-          this.readSignal.notifyAll();
-        }
-
-        // We've streamed through the end of our data source
-        if (compare(streamEnd, this.initResult.end) >= 0) {
           return;
         }
 
-        // Wait until we've consumed enough data that we should read more
-        for (;;) {
-          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-          if (this.aborted) {
-            break;
-          }
+        // Update the target readUntil to be ahead of the latest readHead
+        //
+        // Since reading a result from the iterator is async, we update the readUntil after we have
+        // the result so we can have the latest readHead
+        readUntil = addTime(this.readHead, this.readAheadDuration);
 
-          // If this.readHead + readAheadTime > streamEnd, we start another stream for buffering
-          // otherwise we wait
-          const targetUntil = addTime(this.readHead, this.readAheadDuration);
-          if (compare(targetUntil, streamEnd) > 0 || this.cache.size() === 0) {
-            streamStart = addTime(streamEnd, { sec: 0, nsec: 1 });
-            break;
-          }
+        // When receiving a stamp result we enqueue the result into the cache and notify a reader.
+        if (result.type === "stamp" && compare(result.stamp, readUntil) >= 0) {
+          while (compare(result.stamp, readUntil) >= 0) {
+            // enqueue the stamp and wakeup the reader
+            // but the reader might not be reading - cause it is not being read from
+            this.cache.enqueue(result);
+            this.readSignal.notifyAll();
 
-          await this.writeSignal.wait();
+            await this.writeSignal.wait();
+            readUntil = addTime(this.readHead, this.readAheadDuration);
+          }
+          continue;
         }
+
+        this.cache.enqueue(result);
+
+        // Indicate to the consumer that it can try reading again
+        this.readSignal.notifyAll();
+
+        // Keep reading while the messages we receive are <= the readUntil time.
+        if (
+          result.type === "message-event" &&
+          compare(result.msgEvent.receiveTime, readUntil) <= 0
+        ) {
+          continue;
+        }
+
+        // If we didn't load anything into the cache keep reading
+        if (this.cache.size() === 0) {
+          continue;
+        }
+
+        // Wait for consumer thread to read something before trying to load more data
+        await this.writeSignal.wait();
       }
     } finally {
       // Indicate to the consumer that it can try reading again
@@ -157,18 +158,25 @@ class BufferedIterableSource implements IIterableSource {
     log.debug("producer done");
   }
 
-  async stopProducer(): Promise<void> {
+  public async terminate(): Promise<void> {
+    this.cache.clear();
+    await this.source.terminate();
+  }
+
+  public async stopProducer(): Promise<void> {
     this.aborted = true;
     this.writeSignal.notifyAll();
     await this.producer;
     this.producer = undefined;
   }
 
-  loadedRanges(): Range[] {
+  public loadedRanges(): Range[] {
     return this.source.loadedRanges();
   }
 
-  messageIterator(args: MessageIteratorArgs): AsyncIterableIterator<Readonly<IteratorResult>> {
+  public messageIterator(
+    args: MessageIteratorArgs,
+  ): AsyncIterableIterator<Readonly<IteratorResult>> {
     if (!this.initResult) {
       throw new Error("Invariant: uninitialized");
     }
@@ -215,12 +223,18 @@ class BufferedIterableSource implements IIterableSource {
             continue;
           }
 
+          if (item.type === "stamp") {
+            self.readHead = item.stamp;
+          }
+
           // When there is a new message update the readHead for the producer to know where we are
           // currently reading
-          if (item.msgEvent) {
+          if (item.type === "message-event") {
             self.readHead = item.msgEvent.receiveTime;
           }
 
+          // Notify the producer thread that it can load more data. Since our producer and consumer are on the same _thread_
+          // this notification is picked up on the next tick.
           self.writeSignal.notifyAll();
 
           yield item;
@@ -232,7 +246,9 @@ class BufferedIterableSource implements IIterableSource {
     })();
   }
 
-  async getBackfillMessages(args: GetBackfillMessagesArgs): Promise<MessageEvent<unknown>[]> {
+  public async getBackfillMessages(
+    args: GetBackfillMessagesArgs,
+  ): Promise<MessageEvent<unknown>[]> {
     return await this.source.getBackfillMessages(args);
   }
 }

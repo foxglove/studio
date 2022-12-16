@@ -7,7 +7,7 @@
 
 import * as Sentry from "@sentry/electron/renderer";
 import { BrowserTracing } from "@sentry/tracing";
-import { StrictMode, useEffect } from "react";
+import { useEffect } from "react";
 import { createRoot } from "react-dom/client";
 
 import { Sockets } from "@foxglove/electron-socket/renderer";
@@ -66,6 +66,7 @@ const isDevelopment = process.env.NODE_ENV === "development";
 function LogAfterRender(props: React.PropsWithChildren<unknown>): JSX.Element {
   useEffect(() => {
     // Integration tests look for this console log to indicate the app has rendered once
+    log.setLevel("debug");
     log.debug("App rendered");
   }, []);
   return <>{props.children}</>;
@@ -84,20 +85,16 @@ async function main() {
     (global as { storageBridge?: Storage }).storageBridge!,
     {
       defaults: {
-        [AppSetting.ENABLE_REACT_STRICT_MODE]: isDevelopment,
-        [AppSetting.EXPERIMENTAL_LATCHING]: true,
+        [AppSetting.SHOW_DEBUG_PANELS]: isDevelopment,
       },
     },
   );
 
-  const enableStrictMode = appConfiguration.get(AppSetting.ENABLE_REACT_STRICT_MODE) as boolean;
-  const root = (
+  createRoot(rootEl!).render(
     <LogAfterRender>
-      {" "}
       <Root appConfiguration={appConfiguration} />
-    </LogAfterRender>
+    </LogAfterRender>,
   );
-  createRoot(rootEl!).render(enableStrictMode ? <StrictMode>{root}</StrictMode> : root);
 }
 
 void main();

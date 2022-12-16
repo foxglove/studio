@@ -7,7 +7,13 @@ import { Transform } from "./Transform";
 import { Pose } from "./geometry";
 import { Duration, Time } from "./time";
 
-const DEFAULT_MAX_CAPACITY_PER_FRAME = 10_000;
+const DEFAULT_MAX_CAPACITY_PER_FRAME = 50_000;
+
+export enum AddTransformResult {
+  NOT_UPDATED,
+  UPDATED,
+  CYCLE_DETECTED,
+}
 
 /**
  * TransformTree is a collection of coordinate frames with convenience methods
@@ -18,39 +24,63 @@ export class TransformTree {
   private _maxStorageTime: Duration;
   private _maxCapacityPerFrame: number;
 
-  constructor(maxStorageTime = MAX_DURATION, maxCapacityPerFrame = DEFAULT_MAX_CAPACITY_PER_FRAME) {
+  public constructor(
+    maxStorageTime = MAX_DURATION,
+    maxCapacityPerFrame = DEFAULT_MAX_CAPACITY_PER_FRAME,
+  ) {
     this._maxStorageTime = maxStorageTime;
     this._maxCapacityPerFrame = maxCapacityPerFrame;
   }
 
-  addTransform(frameId: string, parentFrameId: string, time: Time, transform: Transform): boolean {
+  public addTransform(
+    frameId: string,
+    parentFrameId: string,
+    time: Time,
+    transform: Transform,
+  ): AddTransformResult {
     let updated = !this.hasFrame(frameId);
+    let cycleDetected = false;
     const frame = this.getOrCreateFrame(frameId);
     const curParentFrame = frame.parent();
     if (curParentFrame == undefined || curParentFrame.id !== parentFrameId) {
+      cycleDetected = this._checkParentForCycle(frameId, parentFrameId);
       // This frame was previously unparented but now we know its parent, or we
       // are reparenting this frame
-      frame.setParent(this.getOrCreateFrame(parentFrameId));
-      updated = true;
+      if (!cycleDetected) {
+        frame.setParent(this.getOrCreateFrame(parentFrameId));
+        updated = true;
+      }
     }
 
-    frame.addTransform(time, transform);
-    return updated;
+    if (!cycleDetected) {
+      frame.addTransform(time, transform);
+    }
+    return cycleDetected
+      ? AddTransformResult.CYCLE_DETECTED
+      : updated
+      ? AddTransformResult.UPDATED
+      : AddTransformResult.NOT_UPDATED;
   }
 
-  clear(): void {
+  public clear(): void {
     this._frames.clear();
   }
 
-  hasFrame(id: string): boolean {
+  public clearAfter(time: Time): void {
+    for (const frame of this._frames.values()) {
+      frame.removeTransformsAfter(time);
+    }
+  }
+
+  public hasFrame(id: string): boolean {
     return this._frames.has(id);
   }
 
-  frame(id: string): CoordinateFrame | undefined {
+  public frame(id: string): CoordinateFrame | undefined {
     return this._frames.get(id);
   }
 
-  getOrCreateFrame(id: string): CoordinateFrame {
+  public getOrCreateFrame(id: string): CoordinateFrame {
     let frame = this._frames.get(id);
     if (!frame) {
       frame = new CoordinateFrame(id, undefined, this._maxStorageTime, this._maxCapacityPerFrame);
@@ -59,11 +89,11 @@ export class TransformTree {
     return frame;
   }
 
-  frames(): ReadonlyMap<string, CoordinateFrame> {
+  public frames(): ReadonlyMap<string, CoordinateFrame> {
     return this._frames;
   }
 
-  apply(
+  public apply(
     output: Pose,
     input: Readonly<Pose>,
     frameId: string,
@@ -83,7 +113,7 @@ export class TransformTree {
     return frame.apply(output, input, rootFrame, srcFrame, dstTime, srcTime, maxDelta);
   }
 
-  frameList(): { label: string; value: string }[] {
+  public frameList(): { label: string; value: string }[] {
     type FrameEntry = { id: string; children: FrameEntry[] };
 
     const frames = Array.from(this._frames.values());
@@ -129,8 +159,19 @@ export class TransformTree {
 
     return output;
   }
+  private _checkParentForCycle(frameId: string, parentFrameId: string): boolean {
+    // walk up tree from parent Frame to check if it eventually crosses the frame
+    let frame = this.frame(parentFrameId);
+    while (frame?.parent()) {
+      if (frame.parent()?.id === frameId) {
+        return true;
+      }
+      frame = frame.parent();
+    }
+    return false;
+  }
 
-  static Clone(tree: TransformTree): TransformTree {
+  public static Clone(tree: TransformTree): TransformTree {
     // eslint-disable-next-line no-underscore-dangle
     const newTree = new TransformTree(tree._maxStorageTime, tree._maxCapacityPerFrame);
     // eslint-disable-next-line no-underscore-dangle

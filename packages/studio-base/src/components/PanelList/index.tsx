@@ -14,31 +14,30 @@
 import CloseIcon from "@mui/icons-material/Close";
 import SearchIcon from "@mui/icons-material/Search";
 import {
-  Theme,
   Card,
   CardActionArea,
   CardContent,
   CardMedia,
   Container,
+  Fade,
+  IconButton,
   List,
   ListItem,
   ListItemButton,
   ListItemText,
-  Typography,
-  styled as muiStyled,
   TextField,
-  IconButton,
+  Tooltip,
+  Typography,
 } from "@mui/material";
-import { makeStyles } from "@mui/styles";
 import fuzzySort from "fuzzysort";
 import { countBy, isEmpty } from "lodash";
 import { useCallback, useEffect, useMemo } from "react";
 import { useDrag } from "react-dnd";
 import { MosaicDragType, MosaicPath } from "react-mosaic-component";
+import { makeStyles } from "tss-react/mui";
 
 import Stack from "@foxglove/studio-base/components/Stack";
 import TextHighlight from "@foxglove/studio-base/components/TextHighlight";
-import { useTooltip } from "@foxglove/studio-base/components/Tooltip";
 import {
   useCurrentLayoutActions,
   usePanelMosaicId,
@@ -53,7 +52,7 @@ import {
 } from "@foxglove/studio-base/types/panels";
 import { mightActuallyBePartial } from "@foxglove/studio-base/util/mightActuallyBePartial";
 
-const useStyles = makeStyles((theme: Theme) => {
+const useStyles = makeStyles()((theme) => {
   return {
     fullHeight: {
       height: "100%",
@@ -73,20 +72,19 @@ const useStyles = makeStyles((theme: Theme) => {
       gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
       gap: theme.spacing(2),
     },
+    toolbar: {
+      position: "sticky",
+      top: -0.5, // yep that's a half pixel to avoid a gap between the appbar and panel top
+      zIndex: 100,
+      display: "flex",
+      padding: theme.spacing(2),
+      justifyContent: "stretch",
+      backgroundImage: `linear-gradient(to top, transparent, ${
+        theme.palette.background.paper
+      } ${theme.spacing(1.5)}) !important`,
+    },
   };
 });
-
-const StickyToolbar = muiStyled("div")(({ theme }) => ({
-  position: "sticky",
-  top: -0.5, // yep that's a half pixel to avoid a gap between the appbar and panel top
-  zIndex: 100,
-  display: "flex",
-  padding: theme.spacing(2),
-  justifyContent: "stretch",
-  backgroundImage: `linear-gradient(to top, transparent, ${
-    theme.palette.background.paper
-  } ${theme.spacing(1.5)}) !important`,
-}));
 
 type DropDescription = {
   type: string;
@@ -134,7 +132,7 @@ function DraggablePanelItem({
   highlighted = false,
   mosaicId,
 }: PanelItemProps) {
-  const classes = useStyles({});
+  const { classes } = useStyles();
   const scrollRef = React.useRef<HTMLElement>(ReactNull);
   const [, connectDragSource] = useDrag<unknown, MosaicDropResult, never>({
     type: MosaicDragType.WINDOW,
@@ -176,33 +174,12 @@ function DraggablePanelItem({
     }
   }, [highlighted]);
 
-  const { ref: tooltipRef, tooltip } = useTooltip({
-    contents:
-      mode === "grid" ? (
-        panel.description
-      ) : (
-        <Stack style={{ width: 200 }}>
-          {panel.thumbnail != undefined && <img src={panel.thumbnail} alt={panel.title} />}
-          <Stack padding={1} gap={0.5}>
-            <Typography variant="body2" style={{ fontWeight: "bold" }}>
-              {panel.title}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {panel.description}
-            </Typography>
-          </Stack>
-        </Stack>
-      ),
-    placement: mode === "grid" ? undefined : "right",
-    delay: 200,
-  });
   const mergedRef = useCallback(
     (el: HTMLElement | ReactNull) => {
       connectDragSource(el);
-      tooltipRef(el);
       scrollRef.current = el;
     },
-    [connectDragSource, tooltipRef, scrollRef],
+    [connectDragSource, scrollRef],
   );
 
   const targetString = panel.extensionNamespace
@@ -237,24 +214,42 @@ function DraggablePanelItem({
 
     case "list":
       return (
-        <ListItem disableGutters disablePadding selected={highlighted}>
-          {tooltip}
-          <ListItemButton
-            className={classes.grab}
-            disabled={checked}
-            ref={mergedRef}
-            onClick={onClick}
-          >
-            <ListItemText
-              primary={
-                <span data-testid={`panel-menu-item ${panel.title}`}>
-                  <TextHighlight targetStr={targetString} searchText={searchQuery} />
-                </span>
-              }
-              primaryTypographyProps={{ fontWeight: checked ? "bold" : undefined }}
-            />
-          </ListItemButton>
-        </ListItem>
+        <Tooltip
+          placement="right"
+          enterDelay={200}
+          TransitionComponent={Fade}
+          title={
+            <Stack paddingTop={0.25} style={{ width: 200 }}>
+              {panel.thumbnail != undefined && <img src={panel.thumbnail} alt={panel.title} />}
+              <Stack padding={1} gap={0.5}>
+                <Typography variant="body2" fontWeight="bold">
+                  {panel.title}
+                </Typography>
+                <Typography variant="body2" style={{ opacity: 0.6 }}>
+                  {panel.description}
+                </Typography>
+              </Stack>
+            </Stack>
+          }
+        >
+          <ListItem disableGutters disablePadding selected={highlighted}>
+            <ListItemButton
+              className={classes.grab}
+              disabled={checked}
+              ref={mergedRef}
+              onClick={onClick}
+            >
+              <ListItemText
+                primary={
+                  <span data-testid={`panel-menu-item ${panel.title}`}>
+                    <TextHighlight targetStr={targetString} searchText={searchQuery} />
+                  </span>
+                }
+                primaryTypographyProps={{ fontWeight: checked ? "bold" : undefined }}
+              />
+            </ListItemButton>
+          </ListItem>
+        </Tooltip>
       );
   }
 }
@@ -271,7 +266,6 @@ type Props = {
   mode?: "grid" | "list";
   onPanelSelect: (arg0: PanelSelection) => void;
   selectedPanelType?: string;
-  backgroundColor?: string;
 };
 
 // sanity checks to help panel authors debug issues
@@ -297,11 +291,11 @@ function verifyPanels(panels: readonly PanelInfo[]) {
   }
 }
 
-function PanelList(props: Props): JSX.Element {
+const PanelList = React.forwardRef<HTMLDivElement, Props>((props: Props, ref) => {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [highlightedPanelIdx, setHighlightedPanelIdx] = React.useState<number | undefined>();
-  const { mode, onPanelSelect, selectedPanelType, backgroundColor } = props;
-  const classes = useStyles({ backgroundColor });
+  const { mode, onPanelSelect, selectedPanelType } = props;
+  const { classes } = useStyles();
 
   const { dropPanel } = useCurrentLayoutActions();
   const mosaicId = usePanelMosaicId();
@@ -401,6 +395,11 @@ function PanelList(props: Props): JSX.Element {
 
   const onKeyDown = React.useCallback(
     (e: React.KeyboardEvent) => {
+      // Prevent key down events from triggering the parent menu, if any.
+      if (e.key !== "Escape") {
+        e.stopPropagation();
+      }
+
       if (mode === "grid") {
         return;
       }
@@ -466,8 +465,8 @@ function PanelList(props: Props): JSX.Element {
   );
 
   return (
-    <div className={classes.fullHeight}>
-      <StickyToolbar>
+    <div className={classes.fullHeight} ref={ref}>
+      <div className={classes.toolbar}>
         <TextField
           fullWidth
           placeholder="Search panels"
@@ -485,7 +484,7 @@ function PanelList(props: Props): JSX.Element {
             ),
           }}
         />
-      </StickyToolbar>
+      </div>
       {mode === "grid" ? (
         <Container className={classes.grid} maxWidth={false}>
           {allFilteredPanels.map(displayPanelListItem)}
@@ -504,6 +503,7 @@ function PanelList(props: Props): JSX.Element {
       )}
     </div>
   );
-}
+});
+PanelList.displayName = "Panel List";
 
 export default PanelList;

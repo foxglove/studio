@@ -10,6 +10,8 @@ import type { Renderer } from "./Renderer";
 import type { BaseSettings } from "./settings";
 import type { Pose } from "./transforms";
 
+export const SELECTED_ID_VARIABLE = "selected_id";
+
 export type BaseUserData = {
   /** Timestamp when the associated `MessageEvent` was received */
   receiveTime: bigint;
@@ -32,15 +34,20 @@ export type BaseUserData = {
  */
 export class Renderable<TUserData extends BaseUserData = BaseUserData> extends THREE.Object3D {
   /** Identifies this class as inheriting from `Renderable` */
-  readonly isRenderable = true;
-  /** Allow this object to be selected during picking and shown in the Object Details view */
-  readonly pickable: boolean = true;
+  public readonly isRenderable = true;
+  /** Allow this Renderable to be selected during picking and shown in the Object Details view */
+  public readonly pickable: boolean = true;
+  /**
+   * Use a second picking pass for this Renderable to select a single numeric instanceId. This
+   * instanceId can be passed to `instanceDetails()` to get more information about the instance.
+   */
+  public readonly pickableInstances: boolean = false;
   /** A reference to the parent `Renderer` that owns the scene graph containing this object */
-  readonly renderer: Renderer;
+  protected readonly renderer: Renderer;
   /** Additional data associated with this entity */
-  override userData: TUserData;
+  public override userData: TUserData;
 
-  constructor(name: string, renderer: Renderer, userData: TUserData) {
+  public constructor(name: string, renderer: Renderer, userData: TUserData) {
     super();
     this.name = name;
     this.renderer = renderer;
@@ -51,11 +58,37 @@ export class Renderable<TUserData extends BaseUserData = BaseUserData> extends T
    * Dispose of any unmanaged resources uniquely associated with this Renderable
    * such as GPU buffers.
    */
-  dispose(): void {
+  public dispose(): void {
     this.children.length = 0;
   }
 
-  details(): Record<string, RosValue> {
+  /**
+   * A unique identifier for this Renderable, taken from the associated message.
+   */
+  public idFromMessage(): number | string | undefined {
+    return undefined;
+  }
+
+  /**
+   * The name of the variable that will be set to `idFromMessage()` on user selection.
+   */
+  public selectedIdVariable(): string | undefined {
+    return undefined;
+  }
+
+  /**
+   * Return a Plain Old JavaScript Object (POJO) representation of this Renderable.
+   */
+  public details(): Record<string, RosValue> {
     return {};
+  }
+
+  /**
+   * Return a Plain Old JavaScript Object (POJO) representation of a specific
+   * visual instance rendered by this Renderable.
+   */
+  public instanceDetails(instanceId: number): Record<string, RosValue> | undefined {
+    void instanceId;
+    return undefined;
   }
 }

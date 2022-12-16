@@ -2,12 +2,13 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { MessageEvent, Topic } from "@foxglove/studio";
+import { MessageEvent } from "@foxglove/studio";
+import { Topic } from "@foxglove/studio-base/players/types";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 
 import ThreeDeeRender from "../index";
 import { Marker, MarkerType, PointCloud2, TransformStamped } from "../ros";
-import { makeColor, QUAT_IDENTITY, rad2deg, rgba, VEC3_ZERO } from "./common";
+import { makeColor, QUAT_IDENTITY, rad2deg, packRvizRgba, VEC3_ZERO } from "./common";
 import useDelayedFixture from "./useDelayedFixture";
 
 export default {
@@ -18,9 +19,9 @@ export default {
 Marker_PointCloud2_Alignment.parameters = { colorScheme: "dark" };
 export function Marker_PointCloud2_Alignment(): JSX.Element {
   const topics: Topic[] = [
-    { name: "/markers", datatype: "visualization_msgs/Marker" },
-    { name: "/pointcloud", datatype: "sensor_msgs/PointCloud2" },
-    { name: "/tf", datatype: "geometry_msgs/TransformStamped" },
+    { name: "/markers", schemaName: "visualization_msgs/Marker" },
+    { name: "/pointcloud", schemaName: "sensor_msgs/PointCloud2" },
+    { name: "/tf", schemaName: "geometry_msgs/TransformStamped" },
   ];
   const tf1: MessageEvent<TransformStamped> = {
     topic: "/tf",
@@ -33,6 +34,7 @@ export function Marker_PointCloud2_Alignment(): JSX.Element {
         rotation: QUAT_IDENTITY,
       },
     },
+    schemaName: "geometry_msgs/TransformStamped",
     sizeInBytes: 0,
   };
   const tf2: MessageEvent<TransformStamped> = {
@@ -46,6 +48,7 @@ export function Marker_PointCloud2_Alignment(): JSX.Element {
         rotation: { x: 0.010471, y: 0.008726, z: -0.000091, w: 0.999907 },
       },
     },
+    schemaName: "geometry_msgs/TransformStamped",
     sizeInBytes: 0,
   };
 
@@ -77,6 +80,7 @@ export function Marker_PointCloud2_Alignment(): JSX.Element {
       mesh_resource: "",
       mesh_use_embedded_materials: false,
     },
+    schemaName: "visualization_msgs/Marker",
     sizeInBytes: 0,
   };
 
@@ -93,7 +97,7 @@ export function Marker_PointCloud2_Alignment(): JSX.Element {
     view.setFloat32(offset + 0, x, true);
     view.setFloat32(offset + 4, y, true);
     view.setFloat32(offset + 8, z, true);
-    view.setUint32(offset + 12, rgba(c.r, c.g, c.b, c.a), true);
+    view.setUint32(offset + 12, packRvizRgba(c.r, c.g, c.b, c.a), true);
   }
 
   const data = new Uint8Array(3 * 16);
@@ -121,6 +125,7 @@ export function Marker_PointCloud2_Alignment(): JSX.Element {
       data,
       is_dense: true,
     },
+    schemaName: "sensor_msgs/PointCloud2",
     sizeInBytes: 0,
   };
 
@@ -149,7 +154,6 @@ export function Marker_PointCloud2_Alignment(): JSX.Element {
               pointSize: 30,
               colorMode: "rgba",
               colorField: "rgba",
-              rgbByteOrder: "rgba",
             },
           },
           followTf: "base_link",

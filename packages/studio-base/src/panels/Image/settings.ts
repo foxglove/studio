@@ -6,7 +6,8 @@ import { Immutable } from "immer";
 import { chain } from "lodash";
 import memoizeWeak from "memoize-weak";
 
-import { SettingsTreeNode, SettingsTreeNodes, Topic } from "@foxglove/studio";
+import { SettingsTreeNode, SettingsTreeNodes } from "@foxglove/studio";
+import { Topic } from "@foxglove/studio-base/players/types";
 
 import { Config } from "./types";
 
@@ -56,11 +57,16 @@ export function buildSettingsTree({
         },
         transformMarkers: {
           input: "boolean",
-          label: "Synchronize Markers",
+          label: "Transform Markers",
           value: config.transformMarkers,
           help: config.transformMarkers
             ? "Markers are being transformed by Foxglove Studio based on the camera model. Click to turn it off."
             : `Markers can be transformed by Foxglove Studio based on the camera model. Click to turn it on.`,
+        },
+        synchronize: {
+          input: "boolean",
+          label: "Synchronize Timestamps",
+          value: config.synchronize,
         },
         smooth: {
           input: "boolean",

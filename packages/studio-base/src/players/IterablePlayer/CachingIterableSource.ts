@@ -81,22 +81,27 @@ class CachingIterableSource implements IIterableSource {
   // Maximum size per block
   private maxBlockSizeBytes: number;
 
-  constructor(source: IIterableSource, opt?: Options) {
+  public constructor(source: IIterableSource, opt?: Options) {
     this.source = source;
     this.maxTotalSizeBytes = opt?.maxTotalSize ?? 1073741824; // 1GB
     this.maxBlockSizeBytes = opt?.maxBlockSize ?? 52428800; // 50MB
   }
 
-  async initialize(): Promise<Initalization> {
+  public async initialize(): Promise<Initalization> {
     this.initResult = await this.source.initialize();
     return this.initResult;
   }
 
-  loadedRanges(): Range[] {
+  public async terminate(): Promise<void> {
+    this.cache.length = 0;
+    this.cachedTopics.length = 0;
+  }
+
+  public loadedRanges(): Range[] {
     return this.loadedRangesCache;
   }
 
-  async *messageIterator(
+  public async *messageIterator(
     args: MessageIteratorArgs,
   ): AsyncIterableIterator<Readonly<IteratorResult>> {
     if (!this.initResult) {
@@ -207,6 +212,7 @@ class CachingIterableSource implements IIterableSource {
         topics: this.cachedTopics,
         start: sourceReadStart,
         end: sourceReadEnd,
+        consumptionType: args.consumptionType,
       });
 
       // The cache is indexed on time, but iterator results that are problems might not have a time.
@@ -236,9 +242,11 @@ class CachingIterableSource implements IIterableSource {
           this.recomputeLoadedRangeCache();
         }
 
-        // If we have a message event, then we update our known time to this message event
-        if (iterResult.msgEvent) {
-          const receiveTime = iterResult.msgEvent.receiveTime;
+        // When receiving a message event or stamp, we update our known time on the block to the
+        // stamp or receiveTime because we know we've received all the results up to this time
+        if (iterResult.type === "message-event" || iterResult.type === "stamp") {
+          const receiveTime =
+            iterResult.type === "stamp" ? iterResult.stamp : iterResult.msgEvent.receiveTime;
           const receiveTimeNs = toNanoSec(receiveTime);
 
           // There might be multiple messages at the same time, and since block end time
@@ -246,7 +254,9 @@ class CachingIterableSource implements IIterableSource {
           if (receiveTimeNs > lastTime) {
             // write any pending messages to the block
             for (const pendingIterResult of pendingIterResults) {
-              const pendingSizeInBytes = pendingIterResult[1].msgEvent?.sizeInBytes ?? 0;
+              const item = pendingIterResult[1];
+              const pendingSizeInBytes =
+                item.type === "message-event" ? item.msgEvent.sizeInBytes : 0;
               block.items.push(pendingIterResult);
               block.size += pendingSizeInBytes;
             }
@@ -274,7 +284,8 @@ class CachingIterableSource implements IIterableSource {
           block = undefined;
         }
 
-        const sizeInBytes = iterResult.msgEvent?.sizeInBytes ?? 0;
+        const sizeInBytes =
+          iterResult.type === "message-event" ? iterResult.msgEvent.sizeInBytes : 0;
         if (this.maybePurgeCache({ activeBlock: block, sizeInBytes })) {
           this.recomputeLoadedRangeCache();
         }
@@ -297,7 +308,8 @@ class CachingIterableSource implements IIterableSource {
 
         // write any pending messages to the block
         for (const pendingIterResult of pendingIterResults) {
-          const pendingSizeInBytes = pendingIterResult[1].msgEvent?.sizeInBytes ?? 0;
+          const item = pendingIterResult[1];
+          const pendingSizeInBytes = item.type === "message-event" ? item.msgEvent.sizeInBytes : 0;
           block.items.push(pendingIterResult);
           block.size += pendingSizeInBytes;
         }
@@ -319,7 +331,8 @@ class CachingIterableSource implements IIterableSource {
         };
 
         for (const pendingIterResult of pendingIterResults) {
-          const pendingSizeInBytes = pendingIterResult[1].msgEvent?.sizeInBytes ?? 0;
+          const item = pendingIterResult[1];
+          const pendingSizeInBytes = item.type === "message-event" ? item.msgEvent.sizeInBytes : 0;
           newBlock.size += pendingSizeInBytes;
         }
 
@@ -337,7 +350,9 @@ class CachingIterableSource implements IIterableSource {
     }
   }
 
-  async getBackfillMessages(args: GetBackfillMessagesArgs): Promise<MessageEvent<unknown>[]> {
+  public async getBackfillMessages(
+    args: GetBackfillMessagesArgs,
+  ): Promise<MessageEvent<unknown>[]> {
     if (!this.initResult) {
       throw new Error("Invariant: uninitialized");
     }
@@ -364,7 +379,8 @@ class CachingIterableSource implements IIterableSource {
         break;
       }
 
-      let readIdx = sortedIndexByTuple(cacheBlock.items, toNanoSec(args.time));
+      const targetTime = toNanoSec(args.time);
+      let readIdx = sortedIndexByTuple(cacheBlock.items, targetTime);
 
       // If readIdx is negative then we don't have an exact match, but readIdx does tell us what that is
       // See the findCacheItem documentation for how to interpret it.
@@ -374,11 +390,22 @@ class CachingIterableSource implements IIterableSource {
         // readIdx will point to the element after our time (or 1 past the end of the array)
         // We subtract 1 to start reading from before that element or end of array
         readIdx -= 1;
+      } else {
+        // When readIdx is an exact match we get a positive value. For an exact match we traverse
+        // forward linearly to find the last occurrence of the matching timestamp in our cache
+        // block. We can then read backwards in the block to find the last messages on all requested
+        // topics.
+        for (let i = readIdx + 1; i < cacheBlock.items.length; ++i) {
+          if (cacheBlock.items[i]?.[0] !== targetTime) {
+            break;
+          }
+          readIdx = i;
+        }
       }
 
       for (let i = readIdx; i >= 0; --i) {
         const record = cacheBlock.items[i];
-        if (!record || !record[1].msgEvent) {
+        if (!record || record[1].type !== "message-event") {
           continue;
         }
 

@@ -11,6 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { signal } from "@foxglove/den/async";
 import { Time } from "@foxglove/rostime";
 import NoopMetricsCollector from "@foxglove/studio-base/players/NoopMetricsCollector";
 import RosbridgePlayer from "@foxglove/studio-base/players/RosbridgePlayer";
@@ -42,7 +43,8 @@ const textMessage = ({ text }: { text: string }) => {
 
 let workerInstance: MockRosClient;
 class MockRosClient {
-  constructor() {
+  public constructor() {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     workerInstance = this;
   }
 
@@ -52,7 +54,7 @@ class MockRosClient {
   private _connectCallback?: () => void;
   private _messages: any[] = [];
 
-  setup({
+  public setup({
     topics = [],
     types = [],
     typedefs = [],
@@ -71,17 +73,17 @@ class MockRosClient {
     this._connectCallback?.();
   }
 
-  on(op: string, callback: () => void) {
+  public on(op: string, callback: () => void) {
     if (op === "connection") {
       this._connectCallback = callback;
     }
   }
 
-  close() {
+  public close() {
     // no-op
   }
 
-  getTopicsAndRawTypes(callback: (...args: unknown[]) => void) {
+  public getTopicsAndRawTypes(callback: (...args: unknown[]) => void) {
     callback({
       topics: this._topics,
       types: this._types,
@@ -89,15 +91,15 @@ class MockRosClient {
     });
   }
 
-  getMessagesByTopicName(topicName: string): { message: unknown }[] {
+  public getMessagesByTopicName(topicName: string): { message: unknown }[] {
     return this._messages.filter(({ topic }) => topic === topicName);
   }
 
-  getNodes(callback: (nodes: string[]) => void, _errCb: (error: Error) => void) {
+  public getNodes(callback: (nodes: string[]) => void, _errCb: (error: Error) => void) {
     callback([]);
   }
 
-  getNodeDetails(
+  public getNodeDetails(
     _node: string,
     callback: (subscriptions: string[], publications: string[], services: string[]) => void,
     _errCb: (error: Error) => void,
@@ -109,16 +111,16 @@ class MockRosClient {
 class MockRosTopic {
   private _name: string = "";
 
-  constructor({ name }: { name: string }) {
+  public constructor({ name }: { name: string }) {
     this._name = name;
   }
 
-  subscribe(callback: (arg: unknown) => void) {
+  public subscribe(callback: (arg: unknown) => void) {
     workerInstance.getMessagesByTopicName(this._name).forEach(({ message }) => callback(message));
   }
 }
 
-jest.mock("roslib", () => {
+jest.mock("@foxglove/roslibjs", () => {
   return {
     __esModule: true,
     default: {
@@ -143,7 +145,7 @@ describe("RosbridgePlayer", () => {
     player.close();
   });
 
-  it("subscribes to topics without errors", (done) => {
+  it("subscribes to topics without errors", async () => {
     workerInstance.setup({
       topics: ["/topic/A"],
       types: ["/std_msgs/Header", "rosgraph_msgs/Log"],
@@ -158,6 +160,7 @@ describe("RosbridgePlayer", () => {
       ],
     });
 
+    const sig = signal();
     player.setSubscriptions([{ topic: "/topic/A" }]);
     player.setListener(async ({ activeData }) => {
       const { topics } = activeData ?? {};
@@ -165,9 +168,13 @@ describe("RosbridgePlayer", () => {
         return;
       }
 
-      expect(topics).toStrictEqual([{ name: "/topic/A", datatype: "/std_msgs/Header" }]);
-      done();
+      expect(topics).toStrictEqual<typeof topics>([
+        { name: "/topic/A", schemaName: "/std_msgs/Header" },
+      ]);
+      sig.resolve();
     });
+
+    await sig;
   });
 
   describe("parsedMessages", () => {
@@ -204,9 +211,10 @@ describe("RosbridgePlayer", () => {
       });
     });
 
-    it("returns parsedMessages with complex type", (done) => {
+    it("returns parsedMessages with complex type", async () => {
       player.setSubscriptions([{ topic: "/topic/A" }]);
 
+      const sig = signal();
       player.setListener(async ({ activeData }) => {
         const { messages } = activeData ?? {};
         if (!messages) {
@@ -222,13 +230,15 @@ describe("RosbridgePlayer", () => {
           },
         });
 
-        done();
+        sig.resolve();
       });
+      await sig;
     });
 
-    it("returns parsedMessages with basic types", (done) => {
+    it("returns parsedMessages with basic types", async () => {
       player.setSubscriptions([{ topic: "/topic/B" }]);
 
+      const sig = signal();
       player.setListener(async ({ activeData }) => {
         const { messages } = activeData ?? {};
         if (!messages) {
@@ -240,8 +250,9 @@ describe("RosbridgePlayer", () => {
           text: "some text",
         });
 
-        done();
+        sig.resolve();
       });
+      await sig;
     });
   });
 });

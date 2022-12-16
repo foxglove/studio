@@ -53,7 +53,7 @@ const baseNodeData: NodeData = {
   sourceFile: undefined,
   typeChecker: undefined,
   rosLib: generateRosLib({
-    topics: [{ name: "/some_topic", datatype: "std_msgs/ColorRGBA" }],
+    topics: [{ name: "/some_topic", schemaName: "std_msgs/ColorRGBA" }],
     datatypes: exampleDatatypes,
   }),
   typesLib: generateEmptyTypesLib(),
@@ -169,7 +169,7 @@ describe("pipeline", () => {
     ])("returns a  error when an input topic is not yet available", (inputTopics, topics) => {
       const { diagnostics } = validateInputTopics(
         { ...baseNodeData, inputTopics },
-        topics.map((name) => ({ name, datatype: "" })),
+        topics.map((name) => ({ name, schemaName: "" })),
       );
       expect(diagnostics.length).toEqual(1);
       expect(diagnostics[0]?.severity).toEqual(DiagnosticSeverity.Error);
@@ -220,7 +220,7 @@ describe("pipeline", () => {
         "log({ 'a': { 'a': undefined } })",
         "log({ 1: { 'a': undefined } })",
         "const x: [number, number] = [ 1, 1, ]; log({ 'a': x })",
-        "const y: any = {}; log({ 'a': y })", // TODO: Add back in after updating Typescript to support enums
+        "const y: any = {}; log({ 'a': y })",
         // "enum Enums { Red, Green, Blue }; log({ 'a': Enums })",
       ])("can compile logs", (sourceCode) => {
         const { diagnostics } = compile({ ...baseNodeData, sourceCode });
@@ -303,7 +303,7 @@ describe("pipeline", () => {
         `;
 
         const rosLib = generateRosLib({
-          topics: [{ name: "/tick_information", datatype: "std_msgs/TickInfo" }],
+          topics: [{ name: "/tick_information", schemaName: "std_msgs/TickInfo" }],
           datatypes: new Map(
             Object.entries({
               "std_msgs/TickInfo": tickInfoDatatype,
@@ -717,7 +717,7 @@ describe("pipeline", () => {
             return {position: { x: 1, y: 2, z: 3 }, orientation: { x: 4, y: 5, z: 6, w: 7}};
           };`,
         datatypes: poseDataType,
-      }, // TODO: add a test for an import interface type in the return type
+      },
       {
         description: "Type reference as return type",
         sourceCode: `

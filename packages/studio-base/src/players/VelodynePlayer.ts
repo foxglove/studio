@@ -33,7 +33,7 @@ export const DEFAULT_VELODYNE_PORT = 2369;
 const RPM = 600;
 const PROBLEM_SOCKET_ERROR = "SOCKET_ERROR";
 const TOPIC_NAME = "/velodyne_points";
-const TOPIC: Topic = { name: TOPIC_NAME, datatype: "velodyne_msgs/VelodyneScan" };
+const TOPIC: Topic = { name: TOPIC_NAME, schemaName: "velodyne_msgs/VelodyneScan" };
 const DATATYPES: RosDatatypes = new Map(
   Object.entries({
     "velodyne_msgs/VelodyneScan": {
@@ -89,7 +89,7 @@ export default class VelodynePlayer implements Player {
   private _problems: PlayerProblem[] = [];
   private _problemsById = new Map<string, PlayerProblem>();
 
-  constructor({ port, metricsCollector }: VelodynePlayerOpts) {
+  public constructor({ port, metricsCollector }: VelodynePlayerOpts) {
     this._port = port ?? DEFAULT_VELODYNE_PORT;
     log.info(`initializing VelodynePlayer on port ${this._port}`);
     this._metricsCollector = metricsCollector;
@@ -102,7 +102,8 @@ export default class VelodynePlayer implements Player {
     if (this._closed) {
       return;
     }
-    this._presence = PlayerPresence.INITIALIZING;
+    this._presence = PlayerPresence.PRESENT;
+    this._emitState();
 
     if (this._socket == undefined) {
       const net = await Sockets.Create();
@@ -148,7 +149,6 @@ export default class VelodynePlayer implements Player {
     this._clearProblem(PROBLEM_SOCKET_ERROR, { skipEmit: true });
 
     if (this._seq === 0) {
-      this._metricsCollector.initialized();
       this._metricsCollector.recordTimeToFirstMsgs();
     }
 
@@ -169,7 +169,13 @@ export default class VelodynePlayer implements Player {
       };
 
       const sizeInBytes = this._packets.reduce((acc, packet) => acc + packet.data.byteLength, 0);
-      const msg: MessageEvent<unknown> = { topic: TOPIC_NAME, receiveTime, message, sizeInBytes };
+      const msg: MessageEvent<unknown> = {
+        topic: TOPIC_NAME,
+        receiveTime,
+        message,
+        sizeInBytes,
+        schemaName: TOPIC.schemaName,
+      };
       this._parsedMessages.push(msg);
       this._packets = [];
 
@@ -259,12 +265,12 @@ export default class VelodynePlayer implements Player {
     });
   });
 
-  setListener(listener: (arg0: PlayerState) => Promise<void>): void {
+  public setListener(listener: (arg0: PlayerState) => Promise<void>): void {
     this._listener = listener;
     this._emitState();
   }
 
-  close(): void {
+  public close(): void {
     this._closed = true;
     if (this._socket) {
       void this._socket.dispose();
@@ -281,30 +287,26 @@ export default class VelodynePlayer implements Player {
     this._parsedMessages = [];
   }
 
-  setSubscriptions(_subscriptions: SubscribePayload[]): void {}
+  public setSubscriptions(_subscriptions: SubscribePayload[]): void {}
 
-  setPublishers(_publishers: AdvertiseOptions[]): void {
+  public setPublishers(_publishers: AdvertiseOptions[]): void {
     // no-op
   }
 
   // Modify a remote parameter such as a rosparam.
-  setParameter(_key: string, _value: ParameterValue): void {
+  public setParameter(_key: string, _value: ParameterValue): void {
     throw new Error(`Parameter modification is not supported for VelodynePlayer`);
   }
 
-  publish(_request: PublishPayload): void {
+  public publish(_request: PublishPayload): void {
     throw new Error(`Publishing is not supported for VelodynePlayer`);
   }
 
-  async callService(): Promise<unknown> {
+  public async callService(): Promise<unknown> {
     throw new Error("Service calls are not supported for VelodynePlayer");
   }
 
-  requestBackfill(): void {
-    // no-op
-  }
-
-  setGlobalVariables(_globalVariables: GlobalVariables): void {
+  public setGlobalVariables(_globalVariables: GlobalVariables): void {
     // no-op
   }
 }

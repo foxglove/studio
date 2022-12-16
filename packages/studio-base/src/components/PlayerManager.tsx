@@ -11,6 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { useSnackbar } from "notistack";
 import {
   PropsWithChildren,
   useCallback,
@@ -19,7 +20,6 @@ import {
   useMemo,
   useState,
 } from "react";
-import { useToasts } from "react-toast-notifications";
 import { useLatest, useMountedState } from "react-use";
 
 import { useShallowMemo } from "@foxglove/hooks";
@@ -33,6 +33,7 @@ import {
   useCurrentLayoutSelector,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { useLayoutManager } from "@foxglove/studio-base/context/LayoutManagerContext";
+import { useNativeWindow } from "@foxglove/studio-base/context/NativeWindowContext";
 import PlayerSelectionContext, {
   DataSourceArgs,
   IDataSourceFactory,
@@ -40,7 +41,7 @@ import PlayerSelectionContext, {
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import { useUserNodeState } from "@foxglove/studio-base/context/UserNodeStateContext";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
-import useIndexedDbRecents from "@foxglove/studio-base/hooks/useIndexedDbRecents";
+import useIndexedDbRecents, { RecentRecord } from "@foxglove/studio-base/hooks/useIndexedDbRecents";
 import useWarnImmediateReRender from "@foxglove/studio-base/hooks/useWarnImmediateReRender";
 import AnalyticsMetricsCollector from "@foxglove/studio-base/players/AnalyticsMetricsCollector";
 import UserNodePlayer from "@foxglove/studio-base/players/UserNodePlayer";
@@ -74,6 +75,8 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
     setUserNodeRosLib,
     setUserNodeTypesLib,
   });
+
+  const nativeWindow = useNativeWindow();
 
   const isMounted = useMountedState();
 
@@ -113,17 +116,20 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
 
   useLayoutEffect(() => void player?.setUserNodes(userNodes), [player, userNodes]);
 
-  const { addToast } = useToasts();
+  const { enqueueSnackbar } = useSnackbar();
 
   const selectSource = useCallback(
     async (sourceId: string, args?: DataSourceArgs) => {
       log.debug(`Select Source: ${sourceId}`);
 
-      const foundSource = playerSources.find((source) => source.id === sourceId);
+      // Clear any previous represented filename
+      void nativeWindow?.setRepresentedFilename(undefined);
+
+      const foundSource = playerSources.find(
+        (source) => source.id === sourceId || source.legacyIds?.includes(sourceId),
+      );
       if (!foundSource) {
-        addToast(`Unknown data source: ${sourceId}`, {
-          appearance: "warning",
-        });
+        enqueueSnackbar(`Unknown data source: ${sourceId}`, { variant: "warning" });
         return;
       }
 
@@ -154,7 +160,7 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
               setSelectedLayoutId(sourceLayout.id);
             }
           } catch (err) {
-            addToast((err as Error).message, { appearance: "error" });
+            enqueueSnackbar((err as Error).message, { variant: "error" });
           }
         }
 
@@ -162,7 +168,7 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
       }
 
       if (!args) {
-        addToast("Unable to initialize player: no args", { appearance: "error" });
+        enqueueSnackbar("Unable to initialize player: no args", { variant: "error" });
         return;
       }
 
@@ -170,9 +176,9 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
         switch (args.type) {
           case "connection": {
             const newPlayer = foundSource.initialize({
-              ...args.params,
               consoleApi,
               metricsCollector,
+              params: args.params,
             });
             setBasePlayer(newPlayer);
 
@@ -211,6 +217,12 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
                 metricsCollector,
               });
 
+              // If we are selecting a single file, the desktop environment might have features to
+              // show the user which file they've selected (i.e. macOS proxy icon)
+              if (file) {
+                void nativeWindow?.setRepresentedFilename((file as { path?: string }).path); // File.path is added by Electron
+              }
+
               setBasePlayer(newPlayer);
               return;
             } else if (handle) {
@@ -231,6 +243,10 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
                 return;
               }
 
+              // If we are selecting a single file, the desktop environment might have features to
+              // show the user which file they've selected (i.e. macOS proxy icon)
+              void nativeWindow?.setRepresentedFilename((file as { path?: string }).path); // File.path is added by Electron
+
               const newPlayer = foundSource.initialize({
                 file,
                 metricsCollector,
@@ -249,52 +265,30 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
           }
         }
 
-        addToast("Unable to initialize player", { appearance: "error" });
+        enqueueSnackbar("Unable to initialize player", { variant: "error" });
       } catch (error) {
-        addToast((error as Error).message, { appearance: "error" });
+        enqueueSnackbar((error as Error).message, { variant: "error" });
       }
     },
     [
-      addRecent,
-      addToast,
-      consoleApi,
-      isMounted,
-      layoutStorage,
-      metricsCollector,
       playerSources,
+      metricsCollector,
+      enqueueSnackbar,
+      consoleApi,
+      layoutStorage,
+      isMounted,
       setSelectedLayoutId,
+      addRecent,
+      nativeWindow,
     ],
   );
 
   // Select a recent entry by id
+  // necessary to pull out callback creation to avoid capturing the initial player in closure context
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const selectRecent = useCallback(
-    (recentId: string) => {
-      // find the recent from the list and initialize
-      const foundRecent = recents.find((value) => value.id === recentId);
-      if (!foundRecent) {
-        addToast(`Failed to restore recent: ${recentId}`, {
-          appearance: "error",
-        });
-        return;
-      }
-
-      switch (foundRecent.type) {
-        case "connection": {
-          void selectSource(foundRecent.sourceId, {
-            type: "connection",
-            params: foundRecent.extra,
-          });
-          break;
-        }
-        case "file": {
-          void selectSource(foundRecent.sourceId, {
-            type: "file",
-            handle: foundRecent.handle,
-          });
-        }
-      }
-    },
-    [recents, addToast, selectSource],
+    createSelectRecentCallback(recents, selectSource, enqueueSnackbar),
+    [recents, enqueueSnackbar, selectSource],
   );
 
   // Make a RecentSources array for the PlayerSelectionContext
@@ -320,4 +314,44 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
       </PlayerSelectionContext.Provider>
     </>
   );
+}
+
+/**
+ * This was moved out of the PlayerManager function due to a memory leak occurring in memoized state of Start.tsx
+ * that was retaining old player instances. Having this callback be defined within the PlayerManager makes it store the
+ * player at instantiation within the closure context. That callback is then stored in the memoized state with its closure context.
+ * The callback is updated when the player changes but part of the `Start.tsx` holds onto the formerly memoized state for an
+ * unknown reason.
+ * To make this function safe from storing old closure contexts in old memoized state in components where it
+ * is used, it has been moved out of the PlayerManager function.
+ */
+function createSelectRecentCallback(
+  recents: RecentRecord[],
+  selectSource: (sourceId: string, dataSourceArgs: DataSourceArgs) => Promise<void>,
+  enqueueSnackbar: ReturnType<typeof useSnackbar>["enqueueSnackbar"],
+) {
+  return (recentId: string) => {
+    // find the recent from the list and initialize
+    const foundRecent = recents.find((value) => value.id === recentId);
+    if (!foundRecent) {
+      enqueueSnackbar(`Failed to restore recent: ${recentId}`, { variant: "error" });
+      return;
+    }
+
+    switch (foundRecent.type) {
+      case "connection": {
+        void selectSource(foundRecent.sourceId, {
+          type: "connection",
+          params: foundRecent.extra,
+        });
+        break;
+      }
+      case "file": {
+        void selectSource(foundRecent.sourceId, {
+          type: "file",
+          handle: foundRecent.handle,
+        });
+      }
+    }
+  };
 }

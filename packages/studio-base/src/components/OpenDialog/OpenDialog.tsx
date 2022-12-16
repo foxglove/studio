@@ -3,18 +3,20 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import CloseIcon from "@mui/icons-material/Close";
-import { Dialog, DialogTitle, IconButton, styled as muiStyled } from "@mui/material";
+import { Dialog, IconButton } from "@mui/material";
 import { useCallback, useLayoutEffect, useMemo, useState } from "react";
 import { useMountedState } from "react-use";
+import { makeStyles } from "tss-react/mui";
 
 import Stack from "@foxglove/studio-base/components/Stack";
+import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 import {
   IDataSourceFactory,
   usePlayerSelection,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
+import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 
 import Connection from "./Connection";
-import Remote from "./Remote";
 import Start from "./Start";
 import { OpenDialogViews } from "./types";
 import { useOpenFile } from "./useOpenFile";
@@ -25,15 +27,21 @@ type OpenDialogProps = {
   onDismiss?: () => void;
 };
 
-const StyledDialogTitle = muiStyled(DialogTitle)(({ theme }) => ({
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-  padding: theme.spacing(4, 5, 0, 5),
+const useStyles = makeStyles()((theme) => ({
+  paper: {
+    maxWidth: `calc(min(${theme.breakpoints.values.md}px, 100% - ${theme.spacing(4)}))`,
+  },
+  closeButton: {
+    position: "absolute",
+    right: 0,
+    top: 0,
+    margin: theme.spacing(3),
+  },
 }));
 
 export default function OpenDialog(props: OpenDialogProps): JSX.Element {
   const { activeView: defaultActiveView, onDismiss, activeDataSource } = props;
+  const { classes } = useStyles();
   const { availableSources, selectSource } = usePlayerSelection();
 
   const isMounted = useMountedState();
@@ -52,6 +60,15 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
   const onSelectView = useCallback((view: OpenDialogViews) => {
     setActiveView(view);
   }, []);
+
+  const analytics = useAnalytics();
+
+  const onModalClose = useCallback(() => {
+    if (onDismiss) {
+      onDismiss();
+      void analytics.logEvent(AppEvent.DIALOG_CLOSE, { activeView });
+    }
+  }, [analytics, activeView, onDismiss]);
 
   useLayoutEffect(() => {
     if (activeView === "file") {
@@ -81,15 +98,8 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
     return availableSources.filter((source) => source.type === "file");
   }, [availableSources]);
 
-  const remoteFileSources = useMemo(() => {
-    return availableSources.filter((source) => source.type === "remote-file");
-  }, [availableSources]);
-
   const view = useMemo(() => {
     const supportedLocalFileTypes = localFileSources.flatMap(
-      (source) => source.supportedFileTypes ?? [],
-    );
-    const supportedRemoteFileTypes = remoteFileSources.flatMap(
       (source) => source.supportedFileTypes ?? [],
     );
     switch (activeView) {
@@ -105,20 +115,9 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
           component: (
             <Connection
               onBack={() => onSelectView("start")}
-              onCancel={onDismiss}
+              onCancel={onModalClose}
               availableSources={connectionSources}
               activeSource={activeDataSource}
-            />
-          ),
-        };
-      case "remote":
-        return {
-          title: "Open a file from a remote location",
-          component: (
-            <Remote
-              onBack={() => onSelectView("start")}
-              onCancel={onDismiss}
-              availableSources={remoteFileSources}
             />
           ),
         };
@@ -129,7 +128,6 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
             <Start
               onSelectView={onSelectView}
               supportedLocalFileExtensions={supportedLocalFileTypes}
-              supportedRemoteFileExtensions={supportedRemoteFileTypes}
             />
           ),
         };
@@ -139,36 +137,30 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
     activeView,
     connectionSources,
     localFileSources,
-    onDismiss,
+    onModalClose,
     onSelectView,
-    remoteFileSources,
   ]);
 
   return (
     <Dialog
       open
-      onClose={onDismiss}
+      onClose={onModalClose}
       fullWidth
-      maxWidth="md"
+      maxWidth="lg"
       PaperProps={{
+        square: false,
         elevation: 4,
-        style: { maxWidth: "calc(min(768px, 100% - 32px))" },
+        className: classes.paper,
       }}
     >
-      <StyledDialogTitle>
-        {view.title}
-        <IconButton onClick={onDismiss} edge="end">
-          <CloseIcon />
-        </IconButton>
-      </StyledDialogTitle>
+      <IconButton className={classes.closeButton} onClick={onModalClose} edge="end">
+        <CloseIcon />
+      </IconButton>
       <Stack
         flexGrow={1}
-        flexBasis={450}
         fullHeight
         justifyContent="space-between"
-        gap={2}
-        paddingX={5}
-        paddingY={3}
+        overflow={activeView === "connection" ? "hidden" : undefined}
       >
         {view.component}
       </Stack>

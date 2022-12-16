@@ -53,7 +53,8 @@ import { TimestampMethod } from "@foxglove/studio-base/util/time";
 
 import helpContent from "./index.help.md";
 import messagesToDatasets from "./messagesToDatasets";
-import { StateTransitionPath } from "./types";
+import { useStateTransitionsPanelSettings } from "./settings";
+import { StateTransitionConfig } from "./types";
 
 export const transitionableRosTypes = [
   "bool",
@@ -145,8 +146,6 @@ const plugins: ChartOptions["plugins"] = {
   },
 };
 
-export type StateTransitionConfig = { paths: StateTransitionPath[] };
-
 export function openSiblingStateTransitionsPanel(
   openSiblingPanel: OpenSiblingPanel,
   topicName: string,
@@ -236,8 +235,8 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
   const { datasets, tooltips, minY } = useMemo(() => {
     let outMinY: number | undefined;
 
-    const outTooltips: TimeBasedChartTooltipData[] = [];
-    const outDatasets: ChartData["datasets"] = [];
+    let outTooltips: TimeBasedChartTooltipData[] = [];
+    let outDatasets: ChartData["datasets"] = [];
 
     // ignore all data when we don't have a start time
     if (!startTime) {
@@ -265,8 +264,8 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
           blocks: blocksForPath,
         });
 
-        outDatasets.push(...newDataSets);
-        outTooltips.push(...newTooltips);
+        outDatasets = outDatasets.concat(newDataSets);
+        outTooltips = outTooltips.concat(newTooltips);
       }
 
       // If we have have messages in blocks for this path, we ignore streamed messages and only
@@ -285,8 +284,8 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
           pathIndex,
           blocks: [items],
         });
-        outDatasets.push(...newDataSets);
-        outTooltips.push(...newTooltips);
+        outDatasets = outDatasets.concat(newDataSets);
+        outTooltips = outTooltips.concat(newTooltips);
       }
     });
 
@@ -344,6 +343,8 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
   const rootRef = useRef<HTMLDivElement>(ReactNull);
   const mousePresent = usePanelMousePresence(rootRef);
 
+  useStateTransitionsPanelSettings(config, saveConfig);
+
   return (
     <Stack ref={rootRef} flexGrow={1} overflow="hidden" style={{ zIndex: 0 }}>
       <PanelToolbar helpContent={helpContent} />
@@ -369,7 +370,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
         <div className={classes.chartWrapper} style={{ height }} ref={sizeRef}>
           <TimeBasedChart
             zoom
-            isSynced
+            isSynced={config.isSynced}
             showXAxisLabels
             width={width ?? 0}
             height={height}
@@ -408,7 +409,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
               <TimestampMethodDropdown
                 path={path}
                 index={index}
-                iconButtonProps={{ disabled: !path }}
+                iconButtonProps={{ disabled: path !== "" }}
                 timestampMethod={timestampMethod}
                 onTimestampMethodChange={onInputTimestampMethodChange}
               />
@@ -420,7 +421,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
   );
 });
 
-const defaultConfig: PanelConfig = { paths: [] };
+const defaultConfig: StateTransitionConfig = { paths: [], isSynced: true };
 export default Panel(
   Object.assign(StateTransitions, {
     panelType: "StateTransitions",

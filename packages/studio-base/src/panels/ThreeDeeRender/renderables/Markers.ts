@@ -7,6 +7,7 @@ import { set } from "lodash";
 import { toNanoSec } from "@foxglove/rostime";
 import { SettingsTreeAction } from "@foxglove/studio";
 
+import { SELECTED_ID_VARIABLE } from "../Renderable";
 import { Renderer } from "../Renderer";
 import { PartialMessage, PartialMessageEvent, SceneExtension } from "../SceneExtension";
 import { SettingsTreeEntry, SettingsTreeNodeWithActionHandler } from "../SettingsManager";
@@ -21,67 +22,92 @@ import {
 } from "../normalizeMessages";
 import { Marker, MarkerArray, MARKER_ARRAY_DATATYPES, MARKER_DATATYPES } from "../ros";
 import { BaseSettings } from "../settings";
+import { topicIsConvertibleToSchema } from "../topicIsConvertibleToSchema";
 import { makePose } from "../transforms";
 import { LayerSettingsMarkerNamespace, TopicMarkers } from "./TopicMarkers";
 
 export type LayerSettingsMarker = BaseSettings & {
+  color: string | undefined;
+  selectedIdVariable: string | undefined;
   namespaces: Record<string, LayerSettingsMarkerNamespace>;
 };
 
 const DEFAULT_SETTINGS: LayerSettingsMarker = {
   visible: false,
+  color: undefined,
+  selectedIdVariable: undefined,
   namespaces: {},
 };
 
 export class Markers extends SceneExtension<TopicMarkers> {
-  constructor(renderer: Renderer) {
+  public constructor(renderer: Renderer) {
     super("foxglove.Markers", renderer);
 
-    renderer.addDatatypeSubscriptions(MARKER_ARRAY_DATATYPES, this.handleMarkerArray);
-    renderer.addDatatypeSubscriptions(MARKER_DATATYPES, this.handleMarker);
+    renderer.addSchemaSubscriptions(MARKER_ARRAY_DATATYPES, this.handleMarkerArray);
+    renderer.addSchemaSubscriptions(MARKER_DATATYPES, this.handleMarker);
   }
 
-  override settingsNodes(): SettingsTreeEntry[] {
+  public override settingsNodes(): SettingsTreeEntry[] {
     const configTopics = this.renderer.config.topics;
     const entries: SettingsTreeEntry[] = [];
     for (const topic of this.renderer.topics ?? []) {
-      if (MARKER_ARRAY_DATATYPES.has(topic.datatype) || MARKER_DATATYPES.has(topic.datatype)) {
-        const config = (configTopics[topic.name] ?? {}) as Partial<LayerSettingsMarker>;
-
-        const node: SettingsTreeNodeWithActionHandler = {
-          label: topic.name,
-          icon: "Shapes",
-          order: topic.name.toLocaleLowerCase(),
-          visible: config.visible ?? DEFAULT_SETTINGS.visible,
-          handler: this.handleSettingsAction,
-        };
-
-        // Create a list of all the namespaces for this topic
-        const topicMarkers = this.renderables.get(topic.name);
-        const namespaces = Array.from(topicMarkers?.namespaces.values() ?? [])
-          .filter((ns) => ns.namespace !== "")
-          .sort((a, b) => a.namespace.localeCompare(b.namespace));
-        if (namespaces.length > 0) {
-          node.children = {};
-          for (const ns of namespaces) {
-            const child: SettingsTreeNodeWithActionHandler = {
-              label: ns.namespace,
-              icon: "Shapes",
-              visible: ns.settings.visible,
-              defaultExpansionState: namespaces.length > 1 ? "collapsed" : "expanded",
-              handler: this.handleSettingsActionNamespace,
-            };
-            node.children[`ns:${ns.namespace}`] = child;
-          }
-        }
-
-        entries.push({ path: ["topics", topic.name], node });
+      if (
+        !(
+          topicIsConvertibleToSchema(topic, MARKER_ARRAY_DATATYPES) ||
+          topicIsConvertibleToSchema(topic, MARKER_DATATYPES)
+        )
+      ) {
+        continue;
       }
+      const config = (configTopics[topic.name] ?? {}) as Partial<LayerSettingsMarker>;
+
+      const node: SettingsTreeNodeWithActionHandler = {
+        label: topic.name,
+        icon: "Shapes",
+        order: topic.name.toLocaleLowerCase(),
+        fields: {
+          color: { label: "Color", input: "rgba", value: config.color },
+          selectedIdVariable: {
+            label: "Selection Variable",
+            input: "string",
+            help: "When selecting a marker, this global variable will be set to the marker ID",
+            value: config.selectedIdVariable,
+            placeholder: SELECTED_ID_VARIABLE,
+          },
+        },
+        visible: config.visible ?? DEFAULT_SETTINGS.visible,
+        handler: this.handleSettingsAction,
+      };
+
+      // Create a list of all the namespaces for this topic
+      const topicMarkers = this.renderables.get(topic.name);
+      const namespaces = Array.from(topicMarkers?.namespaces.values() ?? []).sort((a, b) =>
+        a.namespace.localeCompare(b.namespace),
+      );
+      if (namespaces.length > 1 || (namespaces.length === 1 && namespaces[0]!.namespace !== "")) {
+        node.children = {};
+        for (const ns of namespaces) {
+          const child: SettingsTreeNodeWithActionHandler = {
+            label: ns.namespace !== "" ? ns.namespace : `""`,
+            icon: "Shapes",
+            visible: ns.settings.visible,
+            defaultExpansionState: namespaces.length > 1 ? "collapsed" : "expanded",
+            handler: this.handleSettingsActionNamespace,
+          };
+          node.children[`ns:${ns.namespace}`] = child;
+        }
+      }
+
+      entries.push({ path: ["topics", topic.name], node });
     }
     return entries;
   }
 
-  override startFrame(currentTime: bigint, renderFrameId: string, fixedFrameId: string): void {
+  public override startFrame(
+    currentTime: bigint,
+    renderFrameId: string,
+    fixedFrameId: string,
+  ): void {
     // Don't use SceneExtension#startFrame() because our renderables represent one topic each with
     // many markers. Instead, call startFrame on each renderable
     for (const renderable of this.renderables.values()) {
@@ -89,7 +115,7 @@ export class Markers extends SceneExtension<TopicMarkers> {
     }
   }
 
-  override handleSettingsAction = (action: SettingsTreeAction): void => {
+  public override handleSettingsAction = (action: SettingsTreeAction): void => {
     const path = action.payload.path;
     if (action.action !== "update" || path.length !== 3) {
       return;
@@ -99,16 +125,17 @@ export class Markers extends SceneExtension<TopicMarkers> {
 
     // Update the TopicMarkers settings
     const topicName = path[1]!;
-    const renderable = this.renderables.get(topicName);
-    if (renderable) {
+    const topicMarkers = this.renderables.get(topicName);
+    if (topicMarkers) {
       const settings = this.renderer.config.topics[topicName] as
         | Partial<LayerSettingsMarker>
         | undefined;
-      renderable.userData.settings = { ...renderable.userData.settings, ...settings };
+      topicMarkers.userData.settings = { ...DEFAULT_SETTINGS, ...settings };
+      topicMarkers.update();
     }
   };
 
-  handleSettingsActionNamespace = (action: SettingsTreeAction): void => {
+  private handleSettingsActionNamespace = (action: SettingsTreeAction): void => {
     const path = action.payload.path;
     if (action.action !== "update" || path.length !== 4) {
       return;
@@ -147,7 +174,7 @@ export class Markers extends SceneExtension<TopicMarkers> {
     this.updateSettingsTree();
   };
 
-  handleMarkerArray = (messageEvent: PartialMessageEvent<MarkerArray>): void => {
+  private handleMarkerArray = (messageEvent: PartialMessageEvent<MarkerArray>): void => {
     const topic = messageEvent.topic;
     const markerArray = messageEvent.message;
     const receiveTime = toNanoSec(messageEvent.receiveTime);
@@ -158,7 +185,7 @@ export class Markers extends SceneExtension<TopicMarkers> {
     }
   };
 
-  handleMarker = (messageEvent: PartialMessageEvent<Marker>): void => {
+  private handleMarker = (messageEvent: PartialMessageEvent<Marker>): void => {
     const topic = messageEvent.topic;
     const marker = normalizeMarker(messageEvent.message);
     const receiveTime = toNanoSec(messageEvent.receiveTime);
@@ -166,7 +193,7 @@ export class Markers extends SceneExtension<TopicMarkers> {
     this.addMarker(topic, marker, receiveTime);
   };
 
-  addMarker(topic: string, marker: Marker, receiveTime: bigint): void {
+  private addMarker(topic: string, marker: Marker, receiveTime: bigint): void {
     const topicMarkers = this._getTopicMarkers(topic, marker, receiveTime);
     const prevNsCount = topicMarkers.namespaces.size;
     topicMarkers.addMarkerMessage(marker, receiveTime);
@@ -177,7 +204,7 @@ export class Markers extends SceneExtension<TopicMarkers> {
     }
   }
 
-  addMarkerArray(topic: string, markerArray: Marker[], receiveTime: bigint): void {
+  public addMarkerArray(topic: string, markerArray: Marker[], receiveTime: bigint): void {
     const firstMarker = markerArray[0];
     if (!firstMarker) {
       return;

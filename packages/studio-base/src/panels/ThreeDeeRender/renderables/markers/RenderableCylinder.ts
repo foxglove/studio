@@ -12,26 +12,33 @@ import { RenderableMarker } from "./RenderableMarker";
 import { makeStandardMaterial } from "./materials";
 
 export class RenderableCylinder extends RenderableMarker {
-  private static lod: DetailLevel | undefined;
-  private static cylinderGeometry: THREE.CylinderGeometry | undefined;
-  private static cylinderEdgesGeometry: THREE.EdgesGeometry | undefined;
+  private mesh: THREE.Mesh<THREE.CylinderGeometry, THREE.MeshStandardMaterial>;
+  private outline: THREE.LineSegments | undefined;
 
-  mesh: THREE.Mesh<THREE.CylinderGeometry, THREE.MeshStandardMaterial>;
-  outline: THREE.LineSegments | undefined;
-
-  constructor(topic: string, marker: Marker, receiveTime: bigint | undefined, renderer: Renderer) {
+  public constructor(
+    topic: string,
+    marker: Marker,
+    receiveTime: bigint | undefined,
+    renderer: Renderer,
+  ) {
     super(topic, marker, receiveTime, renderer);
 
     // Cylinder mesh
     const material = makeStandardMaterial(marker.color);
-    const cylinderGeometry = RenderableCylinder.Geometry(renderer.maxLod);
+    const cylinderGeometry = renderer.sharedGeometry.getGeometry(
+      `${this.constructor.name}-cylinder-${renderer.maxLod}`,
+      () => createGeometry(renderer.maxLod),
+    );
     this.mesh = new THREE.Mesh(cylinderGeometry, material);
     this.mesh.castShadow = true;
     this.mesh.receiveShadow = true;
     this.add(this.mesh);
 
     // Cylinder outline
-    const edgesGeometry = RenderableCylinder.EdgesGeometry(renderer.maxLod);
+    const edgesGeometry = renderer.sharedGeometry.getGeometry(
+      `${this.constructor.name}-edges-${renderer.maxLod}`,
+      () => createEdgesGeometry(cylinderGeometry),
+    );
     this.outline = new THREE.LineSegments(edgesGeometry, renderer.outlineMaterial);
     this.outline.userData.picking = false;
     this.mesh.add(this.outline);
@@ -39,12 +46,13 @@ export class RenderableCylinder extends RenderableMarker {
     this.update(marker, receiveTime);
   }
 
-  override dispose(): void {
+  public override dispose(): void {
     this.mesh.material.dispose();
   }
 
-  override update(marker: Marker, receiveTime: bigint | undefined): void {
-    super.update(marker, receiveTime);
+  public override update(newMarker: Marker, receiveTime: bigint | undefined): void {
+    super.update(newMarker, receiveTime);
+    const marker = this.userData.marker;
 
     const transparent = marker.color.a < 1;
     if (transparent !== this.mesh.material.transparent) {
@@ -58,24 +66,17 @@ export class RenderableCylinder extends RenderableMarker {
 
     this.scale.set(marker.scale.x, marker.scale.y, marker.scale.z);
   }
+}
+function createGeometry(lod: DetailLevel): THREE.CylinderGeometry {
+  const subdivisions = cylinderSubdivisions(lod);
+  const cylinderGeometry = new THREE.CylinderGeometry(0.5, 0.5, 1, subdivisions);
+  cylinderGeometry.rotateX(Math.PI / 2); // Make the cylinder geometry stand upright
+  cylinderGeometry.computeBoundingSphere();
+  return cylinderGeometry;
+}
 
-  static Geometry(lod: DetailLevel): THREE.CylinderGeometry {
-    if (!RenderableCylinder.cylinderGeometry || lod !== RenderableCylinder.lod) {
-      const subdivisions = cylinderSubdivisions(lod);
-      RenderableCylinder.cylinderGeometry = new THREE.CylinderGeometry(0.5, 0.5, 1, subdivisions);
-      RenderableCylinder.cylinderGeometry.rotateX(Math.PI / 2); // Make the cylinder geometry stand upright
-      RenderableCylinder.cylinderGeometry.computeBoundingSphere();
-      RenderableCylinder.lod = lod;
-    }
-    return RenderableCylinder.cylinderGeometry;
-  }
-
-  static EdgesGeometry(lod: DetailLevel): THREE.EdgesGeometry {
-    if (!RenderableCylinder.cylinderEdgesGeometry) {
-      const geometry = RenderableCylinder.Geometry(lod);
-      RenderableCylinder.cylinderEdgesGeometry = new THREE.EdgesGeometry(geometry, 40);
-      RenderableCylinder.cylinderEdgesGeometry.computeBoundingSphere();
-    }
-    return RenderableCylinder.cylinderEdgesGeometry;
-  }
+function createEdgesGeometry(geometry: THREE.CylinderGeometry): THREE.EdgesGeometry {
+  const cylinderEdgesGeometry = new THREE.EdgesGeometry(geometry, 40);
+  cylinderEdgesGeometry.computeBoundingSphere();
+  return cylinderEdgesGeometry;
 }

@@ -8,15 +8,16 @@ import { ReactElement, useEffect } from "react";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import Stack from "@foxglove/studio-base/components/Stack";
 import { useSessionStorageValue } from "@foxglove/studio-base/hooks/useSessionStorageValue";
+import { LaunchPreferenceValue } from "@foxglove/studio-base/types/LaunchPreferenceValue";
 
 export function LaunchingInDesktopScreen(): ReactElement {
   const [, setLaunchPreference] = useSessionStorageValue(AppSetting.LAUNCH_PREFERENCE);
 
   const cleanWebURL = new URL(window.location.href);
-  cleanWebURL.searchParams.delete("launch");
+  cleanWebURL.searchParams.delete("openIn");
 
   function openWeb() {
-    setLaunchPreference("web");
+    setLaunchPreference(LaunchPreferenceValue.WEB);
     window.location.href = cleanWebURL.href;
   }
 
@@ -34,6 +35,9 @@ export function LaunchingInDesktopScreen(): ReactElement {
             break;
           case "ds.deviceId":
             desktopURL.searchParams.set("deviceId", v);
+            break;
+          case "ds.importId":
+            desktopURL.searchParams.set("importId", v);
             break;
           case "ds.end":
             desktopURL.searchParams.set("end", v);

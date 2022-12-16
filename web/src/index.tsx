@@ -90,19 +90,16 @@ async function main() {
 
   const appConfiguration = new LocalStorageAppConfiguration({
     defaults: {
-      [AppSetting.ENABLE_REACT_STRICT_MODE]: isDevelopment,
-      [AppSetting.EXPERIMENTAL_LATCHING]: true,
+      [AppSetting.SHOW_DEBUG_PANELS]: isDevelopment,
     },
   });
-  const enableStrictMode = appConfiguration.get(AppSetting.ENABLE_REACT_STRICT_MODE) as boolean;
 
-  const root = (
+  createRoot(rootEl!).render(
     <LogAfterRender>
       {banner}
       <Root appConfiguration={appConfiguration} />
-    </LogAfterRender>
+    </LogAfterRender>,
   );
-  createRoot(rootEl!).render(enableStrictMode ? <StrictMode>{root}</StrictMode> : root);
 }
 
 void main();

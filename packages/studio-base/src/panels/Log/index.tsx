@@ -11,31 +11,25 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { IconButton, IList, List } from "@fluentui/react";
-import { Box } from "@mui/material";
-import { makeStyles } from "@mui/styles";
 import produce from "immer";
 import { set } from "lodash";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 
 import { SettingsTreeAction } from "@foxglove/studio";
 import { useDataSourceInfo, useMessagesByTopic } from "@foxglove/studio-base/PanelAPI";
 import Panel from "@foxglove/studio-base/components/Panel";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import Stack from "@foxglove/studio-base/components/Stack";
-import { useAppTimeFormat } from "@foxglove/studio-base/hooks";
-import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelSettingsEditorContextProvider";
+import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelStateContextProvider";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 
 import FilterBar, { FilterBarProps } from "./FilterBar";
-import LogMessage from "./LogMessage";
+import LogList from "./LogList";
 import { normalizedLogMessage } from "./conversion";
 import filterMessages from "./filterMessages";
 import helpContent from "./index.help.md";
 import { buildSettingsTree } from "./settings";
 import { Config, LogMessageEvent } from "./types";
-
-type ArrayElementType<T extends readonly unknown[]> = T extends readonly (infer E)[] ? E : never;
 
 type Props = {
   config: Config;
@@ -43,29 +37,18 @@ type Props = {
 };
 
 const SUPPORTED_DATATYPES = [
-  "rosgraph_msgs/Log",
-  "rcl_interfaces/msg/Log",
-  "ros.rosgraph_msgs.Log",
-  "ros.rcl_interfaces.Log",
   "foxglove_msgs/Log",
   "foxglove_msgs/msg/Log",
   "foxglove.Log",
+  "rcl_interfaces/msg/Log",
+  "ros.rcl_interfaces.Log",
+  "ros.rosgraph_msgs.Log",
+  "rosgraph_msgs/Log",
 ];
 
-const useStyles = makeStyles({
-  scrollArea: {
-    height: "100%",
-    overflow: "auto",
-    display: "flex",
-    flexDirection: "column-reverse",
-  },
-});
-
 const LogPanel = React.memo(({ config, saveConfig }: Props) => {
-  const classes = useStyles();
   const { topics } = useDataSourceInfo();
   const { minLogLevel, searchTerms } = config;
-  const { timeFormat, timeZone } = useAppTimeFormat();
 
   const updatePanelSettingsTree = usePanelSettingsTreeUpdate();
 
@@ -76,29 +59,16 @@ const LogPanel = React.memo(({ config, saveConfig }: Props) => {
     [saveConfig],
   );
 
-  // Get the topics that have our supported datatypes
-  // Users can select any of these topics for display in the panel
   const availableTopics = useMemo(
-    () => topics.filter((topic) => SUPPORTED_DATATYPES.includes(topic.datatype)),
+    () => topics.filter((topic) => SUPPORTED_DATATYPES.includes(topic.schemaName)),
     [topics],
   );
 
-  const datatypeByTopic = useMemo(() => {
-    const out = new Map<string, string>();
-
-    for (const topic of topics) {
-      out.set(topic.name, topic.datatype);
-    }
-    return out;
-  }, [topics]);
-
-  // Pick the first available topic, if there are not available topics, then we inform the user
-  // nothing is publishing log messages
   const defaultTopicToRender = useMemo(() => availableTopics[0]?.name, [availableTopics]);
 
   const topicToRender = config.topicToRender ?? defaultTopicToRender ?? "/rosout";
 
-  const { [topicToRender]: msgEvents = [] } = useMessagesByTopic({
+  const { [topicToRender]: messages = [] } = useMessagesByTopic({
     topics: [topicToRender],
     historySize: 100000,
   }) as { [key: string]: LogMessageEvent[] };
@@ -123,11 +93,12 @@ const LogPanel = React.memo(({ config, saveConfig }: Props) => {
   }, [actionHandler, availableTopics, topicToRender, updatePanelSettingsTree]);
 
   // avoid making new sets for node names
+  // the filter bar uess the node names during on-demand filtering
   // the filter bar uses the node names during on-demand filtering
   const seenNodeNamesCache = useRef(new Set<string>());
 
   const seenNodeNames = useMemo(() => {
-    for (const msgEvent of msgEvents) {
+    for (const msgEvent of messages) {
       const name = msgEvent.message.name;
       if (name != undefined) {
         seenNodeNamesCache.current.add(name);
@@ -135,52 +106,19 @@ const LogPanel = React.memo(({ config, saveConfig }: Props) => {
     }
 
     return seenNodeNamesCache.current;
-  }, [msgEvents]);
+  }, [messages]);
 
   const searchTermsSet = useMemo(() => new Set(searchTerms), [searchTerms]);
 
-  const topicDatatype = useMemo(
-    () => availableTopics.find((topic) => topic.name === topicToRender)?.datatype,
-    [availableTopics, topicToRender],
-  );
-
   const filteredMessages = useMemo(
-    () =>
-      topicDatatype ? filterMessages(msgEvents, { minLogLevel, searchTerms, topicDatatype }) : [],
-    [msgEvents, minLogLevel, searchTerms, topicDatatype],
+    () => filterMessages(messages, { minLogLevel, searchTerms }),
+    [messages, minLogLevel, searchTerms],
   );
 
-  const listRef = useRef<IList>(ReactNull);
-
-  const [hasUserScrolled, setHasUserScrolled] = useState(false);
-  const divRef = useRef<HTMLDivElement>(ReactNull);
-
-  const scrollToBottomAction = useCallback(() => {
-    const div = divRef.current;
-    if (!div) {
-      return;
-    }
-
-    setHasUserScrolled(false);
-    // With column-reverse flex direction, 0 scroll top is the bottom (latest) message
-    div.scrollTop = 0;
-  }, []);
-
-  useLayoutEffect(() => {
-    const div = divRef.current;
-    if (!div) {
-      return;
-    }
-
-    const listener = () => {
-      setHasUserScrolled(div.scrollTop !== 0);
-    };
-
-    div.addEventListener("scroll", listener);
-    return () => {
-      div.removeEventListener("scroll", listener);
-    };
-  }, []);
+  const normalizedMessages = useMemo(
+    () => filteredMessages.map((msg) => normalizedLogMessage(msg.schemaName, msg["message"])),
+    [filteredMessages],
+  );
 
   return (
     <Stack fullHeight>
@@ -193,43 +131,9 @@ const LogPanel = React.memo(({ config, saveConfig }: Props) => {
           onFilterChange={onFilterChange}
         />
       </PanelToolbar>
-      <Stack flexGrow={1} overflow="hidden">
-        <div ref={divRef} className={classes.scrollArea}>
-          {/* items property wants a mutable array but filteredMessages is readonly */}
-          <List
-            componentRef={listRef}
-            items={filteredMessages as ArrayElementType<typeof filteredMessages>[]}
-            onRenderCell={(item) => {
-              if (!item) {
-                return;
-              }
-
-              const datatype = datatypeByTopic.get(item.topic);
-              if (!datatype) {
-                return;
-              }
-
-              const normalizedLog = normalizedLogMessage(datatype, item["message"]);
-              return (
-                <LogMessage
-                  value={normalizedLog}
-                  timestampFormat={timeFormat}
-                  timeZone={timeZone}
-                />
-              );
-            }}
-          />
-        </div>
+      <Stack flexGrow={1}>
+        <LogList items={normalizedMessages} />
       </Stack>
-      {hasUserScrolled && (
-        <Box position="absolute" bottom={10} right={10}>
-          <IconButton
-            iconProps={{ iconName: "DoubleChevronDown" }}
-            title="Scroll to bottom"
-            onClick={scrollToBottomAction}
-          />
-        </Box>
-      )}
     </Stack>
   );
 });

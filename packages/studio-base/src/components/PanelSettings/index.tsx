@@ -19,8 +19,11 @@ import {
   useSelectedPanels,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { usePanelCatalog } from "@foxglove/studio-base/context/PanelCatalogContext";
+import {
+  PanelStateStore,
+  usePanelStateStore,
+} from "@foxglove/studio-base/context/PanelStateContext";
 import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
-import { usePanelSettingsEditorStore } from "@foxglove/studio-base/providers/PanelSettingsEditorContextProvider";
 import { PanelConfig } from "@foxglove/studio-base/types/panels";
 import { TAB_PANEL_TYPE } from "@foxglove/studio-base/util/globalConstants";
 import { getPanelTypeFromId } from "@foxglove/studio-base/util/layout";
@@ -31,6 +34,8 @@ const singlePanelIdSelector = (state: LayoutState) =>
   typeof state.selectedLayout?.data?.layout === "string"
     ? state.selectedLayout.data.layout
     : undefined;
+
+const selectIncrementSequenceNumber = (store: PanelStateStore) => store.incrementSequenceNumber;
 
 export default function PanelSettings({
   selectedPanelIdsForTests,
@@ -77,6 +82,8 @@ export default function PanelSettings({
     [panelCatalog, panelType],
   );
 
+  const incrementSequenceNumber = usePanelStateStore(selectIncrementSequenceNumber);
+
   const [showShareModal, setShowShareModal] = useState(false);
   const shareModal = useMemo(() => {
     const panelConfigById = getCurrentLayout().selectedLayout?.data?.configById;
@@ -87,20 +94,27 @@ export default function PanelSettings({
       <ShareJsonModal
         onRequestClose={() => setShowShareModal(false)}
         initialValue={panelConfigById[selectedPanelId] ?? {}}
-        onChange={(config) =>
+        onChange={(config) => {
           savePanelConfigs({
             configs: [{ id: selectedPanelId, config: config as PanelConfig, override: true }],
-          })
-        }
+          });
+          incrementSequenceNumber(selectedPanelId);
+        }}
         title="Import/export settings"
         noun="panel settings"
       />
     );
-  }, [selectedPanelId, showShareModal, getCurrentLayout, savePanelConfigs]);
+  }, [
+    getCurrentLayout,
+    selectedPanelId,
+    showShareModal,
+    savePanelConfigs,
+    incrementSequenceNumber,
+  ]);
 
   const [config] = useConfigById(selectedPanelId);
 
-  const settingsTree = usePanelSettingsEditorStore((state) =>
+  const settingsTree = usePanelStateStore((state) =>
     selectedPanelId ? state.settingsTrees[selectedPanelId] : undefined,
   );
 
@@ -109,8 +123,9 @@ export default function PanelSettings({
       savePanelConfigs({
         configs: [{ id: selectedPanelId, config: {}, override: true }],
       });
+      incrementSequenceNumber(selectedPanelId);
     }
-  }, [savePanelConfigs, selectedPanelId]);
+  }, [incrementSequenceNumber, savePanelConfigs, selectedPanelId]);
 
   if (selectedLayoutId == undefined) {
     return (

@@ -28,10 +28,7 @@ function LogAfterRender(props: React.PropsWithChildren<unknown>): JSX.Element {
 }
 
 async function main() {
-  const { installDevtoolsFormatters, overwriteFetch, waitForFonts } = await import(
-    "@foxglove/studio-base"
-  );
-  installDevtoolsFormatters();
+  const { overwriteFetch, waitForFonts } = await import("@foxglove/studio-base");
   overwriteFetch();
   // consider moving waitForFonts into App to display an app loading screen
   await waitForFonts();

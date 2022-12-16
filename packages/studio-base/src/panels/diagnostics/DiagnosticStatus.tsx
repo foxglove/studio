@@ -33,7 +33,7 @@ import { openSiblingPlotPanel } from "@foxglove/studio-base/panels/Plot";
 import { openSiblingStateTransitionsPanel } from "@foxglove/studio-base/panels/StateTransitions";
 import { OpenSiblingPanel } from "@foxglove/studio-base/types/panels";
 
-import { DiagnosticInfo, KeyValue, DiagnosticStatusMessage } from "./util";
+import { DiagnosticInfo, KeyValue, DiagnosticStatusMessage, LEVELS } from "./util";
 
 const MIN_SPLIT_FRACTION = 0.1;
 
@@ -42,6 +42,7 @@ type Props = {
   splitFraction: number | undefined;
   onChangeSplitFraction: (arg0: number) => void;
   topicToRender: string;
+  numericPrecision: number | undefined;
   openSiblingPanel: OpenSiblingPanel;
 };
 
@@ -169,6 +170,7 @@ export default function DiagnosticStatus(props: Props): JSX.Element {
     onChangeSplitFraction,
     info,
     topicToRender,
+    numericPrecision,
     openSiblingPanel,
     splitFraction = 0.5,
   } = props;
@@ -219,6 +221,14 @@ export default function DiagnosticStatus(props: Props): JSX.Element {
       if (html) {
         return <HTMLTableCell dangerouslySetInnerHTML={html} />;
       }
+
+      // Apply numeric precision to the value if requested and it can be parsed
+      // as a float
+      let strToRender = str;
+      if (numericPrecision != undefined && isFloatOrInteger(str)) {
+        strToRender = parseFloat(str).toFixed(numericPrecision);
+      }
+
       return (
         <>
           <TableCell padding="checkbox">
@@ -229,14 +239,14 @@ export default function DiagnosticStatus(props: Props): JSX.Element {
               flex="auto"
               justifyContent="space-between"
             >
-              {str ? str : "\xa0"}
+              {strToRender ? strToRender : "\xa0"}
               {openPlotPanelIconElem}
             </Stack>
           </TableCell>
         </>
       );
     },
-    [],
+    [numericPrecision],
   );
 
   const renderKeyValueSections = useCallback((): React.ReactNode => {
@@ -279,11 +289,11 @@ export default function DiagnosticStatus(props: Props): JSX.Element {
     });
   }, [info.status, openSiblingPanel, renderKeyValueCell, topicToRender]);
 
-  const STATUS_COLORS: { [key: number]: string } = {
-    0: "success.main",
-    1: "error.main",
-    2: "warning.main",
-    3: "info.main",
+  const STATUS_COLORS: Record<number, string> = {
+    [LEVELS.OK]: "success.main",
+    [LEVELS.ERROR]: "error.main",
+    [LEVELS.WARN]: "warning.main",
+    [LEVELS.STALE]: "info.main",
   };
 
   return (
@@ -367,4 +377,15 @@ export default function DiagnosticStatus(props: Props): JSX.Element {
       </StyledTable>
     </div>
   );
+}
+
+// Returns true if the input string can be parsed as a float or an integer using
+// parseFloat(). Hex and octal numbers will return false.
+function isFloatOrInteger(n: string): boolean {
+  if (n[0] === "0" && n.length > 1) {
+    if (n[1] === "x" || n[1] === "X" || n[1] === "o" || n[1] === "O") {
+      return false;
+    }
+  }
+  return !isNaN(parseFloat(n)) && isFinite(Number(n));
 }

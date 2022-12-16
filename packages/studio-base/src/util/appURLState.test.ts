@@ -59,8 +59,10 @@ describe("app state url parser", () => {
       url.searchParams.append("layoutId", "1234");
       url.searchParams.append("time", time);
       url.searchParams.append("ds.deviceId", "dummy");
+      url.searchParams.append("ds.importId", "dummyImportId");
       url.searchParams.append("ds.start", start);
       url.searchParams.append("ds.end", end);
+      url.searchParams.append("ds.eventId", "dummyEventId");
 
       const parsed = parseAppURLState(url);
       expect(parsed).toMatchObject({
@@ -69,8 +71,10 @@ describe("app state url parser", () => {
         time: { sec: now.sec + 500, nsec: 0 },
         dsParams: {
           deviceId: "dummy",
+          importId: "dummyImportId",
           start,
           end,
+          eventId: "dummyEventId",
         },
       });
     });
@@ -97,27 +101,38 @@ describe("app state encoding", () => {
 
   describe("url states", () => {
     const layoutId = "123" as LayoutID;
+    const eventId = "dummyEventId";
     const time = undefined;
     it.each<AppURLState>([
-      { layoutId, time, ds: "ros1", dsParams: { url: "http://example.com:11311/test.bag" } },
-      { layoutId, time, ds: "ros2", dsParams: { url: "http://example.com:11311/test.bag" } },
+      {
+        layoutId,
+        time,
+        ds: "ros1",
+        dsParams: { url: "http://example.com:11311/test.bag", eventId },
+      },
+      {
+        layoutId,
+        time,
+        ds: "ros2",
+        dsParams: { url: "http://example.com:11311/test.bag", eventId },
+      },
       {
         layoutId,
         time,
         ds: "ros1-remote-bagfile",
-        dsParams: { url: "http://example.com/test.bag" },
+        dsParams: { url: "http://example.com/test.bag", eventId },
       },
       {
         layoutId,
         time,
         ds: "rosbridge-websocket",
-        dsParams: { url: "ws://foxglove.dev:9090/test.bag" },
+        dsParams: { url: "ws://foxglove.dev:9090/test.bag", eventId },
       },
     ])("encodes url state", (state) => {
       const url = state.dsParams?.url;
       const encodededURL = updateAppURLState(baseURL(), state).href;
       expect(encodededURL).toEqual(
-        `http://example.com/?ds=${state.ds}&ds.url=${encodeURIComponent(
+        `http://example.com/?ds=${state.ds}&ds.eventId=${eventId}&ds.url=${encodeURIComponent(
           url ?? "",
         )}&layoutId=${layoutId}`,
       );

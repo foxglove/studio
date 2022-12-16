@@ -27,9 +27,7 @@ import { InteractionData } from "./types";
 
 // ts-prune-ignore-next
 export const OBJECT_TAB_TYPE = "Selected object";
-// ts-prune-ignore-next
-export const LINKED_VARIABLES_TAB_TYPE = "Linked variables";
-export type TabType = typeof OBJECT_TAB_TYPE | typeof LINKED_VARIABLES_TAB_TYPE;
+export type TabType = typeof OBJECT_TAB_TYPE;
 
 export type SelectionObject = {
   object: {
@@ -54,6 +52,7 @@ const InteractionsBaseComponent = React.memo<Props>(function InteractionsBaseCom
 }: Props) {
   const selectedInteractionData = selectedObject?.object.interactionData;
   const originalMessage = selectedInteractionData?.originalMessage;
+  const instanceDetails = selectedInteractionData?.instanceDetails;
 
   return (
     <ExpandingToolbar
@@ -69,6 +68,7 @@ const InteractionsBaseComponent = React.memo<Props>(function InteractionsBaseCom
               {selectedInteractionData.topic && (
                 <TopicLink addPanel={addPanel} topic={selectedInteractionData.topic} />
               )}
+              {instanceDetails ? <ObjectDetails selectedObject={instanceDetails} /> : <></>}
               <ObjectDetails
                 selectedObject={originalMessage}
                 interactionData={selectedInteractionData}

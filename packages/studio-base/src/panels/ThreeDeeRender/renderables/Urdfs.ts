@@ -2,11 +2,14 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { vec3 } from "gl-matrix";
 import { maxBy } from "lodash";
+import * as THREE from "three";
 
-import { UrdfGeometryMesh, UrdfRobot, UrdfVisual, parseRobot } from "@foxglove/den/urdf";
+import { UrdfGeometryMesh, UrdfRobot, UrdfVisual, parseRobot, UrdfJoint } from "@foxglove/den/urdf";
 import Logger from "@foxglove/log";
-import { SettingsTreeAction, SettingsTreeFields } from "@foxglove/studio";
+import { toNanoSec } from "@foxglove/rostime";
+import { SettingsTreeAction, SettingsTreeChildren, SettingsTreeFields } from "@foxglove/studio";
 import { eulerToQuaternion } from "@foxglove/studio-base/util/geometry";
 import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
 
@@ -14,9 +17,23 @@ import { BaseUserData, Renderable } from "../Renderable";
 import { Renderer } from "../Renderer";
 import { PartialMessageEvent, SceneExtension } from "../SceneExtension";
 import { SettingsTreeEntry } from "../SettingsManager";
-import { ColorRGBA, Marker, MarkerAction, MarkerType, Quaternion, Vector3 } from "../ros";
-import { BaseSettings, CustomLayerSettings } from "../settings";
-import { Pose, makePose } from "../transforms";
+import {
+  ColorRGBA,
+  JointState,
+  JOINTSTATE_DATATYPES,
+  Marker,
+  MarkerAction,
+  MarkerType,
+  Quaternion,
+  Vector3,
+} from "../ros";
+import {
+  BaseSettings,
+  CustomLayerSettings,
+  PRECISION_DEGREES,
+  PRECISION_DISTANCE,
+} from "../settings";
+import { Pose, makePose, TransformTree } from "../transforms";
 import { updatePose } from "../updatePose";
 import { RenderableCube } from "./markers/RenderableCube";
 import { RenderableCylinder } from "./markers/RenderableCylinder";
@@ -27,14 +44,24 @@ import { missingTransformMessage, MISSING_TRANSFORM } from "./transforms";
 const log = Logger.getLogger(__filename);
 
 const LAYER_ID = "foxglove.Urdf";
-const TOPIC_NAME = "/robot_description"; // Also doubles as the ROS parameter name
+const TOPIC_NAME = "/robot_description";
+
+/** ID of fake "topic" used to represent the /robot_description parameter */
+const PARAM_KEY = "param:/robot_description";
+/** Standard parameter name used for URDF data in ROS */
+const PARAM_NAME = "/robot_description";
+const PARAM_DISPLAY_NAME = "/robot_description (parameter)";
 
 const VALID_URL_ERR = "ValidUrl";
 const FETCH_URDF_ERR = "FetchUrdf";
 const PARSE_URDF_ERR = "ParseUrdf";
 
+const DEG2RAD = Math.PI / 180;
+const RAD2DEG = 180 / Math.PI;
 const DEFAULT_COLOR = { r: 1, g: 1, b: 1, a: 1 };
 const VEC3_ONE = { x: 1, y: 1, z: 1 };
+const XYZ_LABEL: [string, string, string] = ["X", "Y", "Z"];
+const RPY_LABEL: [string, string, string] = ["R", "P", "Y"];
 
 export type LayerSettingsUrdf = BaseSettings & {
   instanceId: string; // This will be set to the topic name
@@ -60,6 +87,12 @@ const DEFAULT_CUSTOM_SETTINGS: LayerSettingsCustomUrdf = {
   url: "",
 };
 
+const tempVec3a = new THREE.Vector3();
+const tempVec3b = new THREE.Vector3();
+const tempQuaternion1 = new THREE.Quaternion();
+const tempQuaternion2 = new THREE.Quaternion();
+const tempEuler = new THREE.Euler();
+
 export type UrdfUserData = BaseUserData & {
   settings: LayerSettingsUrdf | LayerSettingsCustomUrdf;
   fetching?: { url: string; control: AbortController };
@@ -78,11 +111,18 @@ type TransformData = {
   child: string;
   translation: Vector3;
   rotation: Quaternion;
+  joint: UrdfJoint;
 };
 
 type ParsedUrdf = {
   robot: UrdfRobot;
+  frames: string[];
   transforms: TransformData[];
+};
+
+type JointPosition = {
+  timestamp: bigint;
+  position: number;
 };
 
 // One day we can think about using feature detection. Until that day comes we acknowledge the
@@ -90,13 +130,13 @@ type ParsedUrdf = {
 const supportsPackageUrl = isDesktopApp();
 
 export class UrdfRenderable extends Renderable<UrdfUserData> {
-  override dispose(): void {
+  public override dispose(): void {
     this.removeChildren();
     this.userData.urdf = undefined;
     super.dispose();
   }
 
-  removeChildren(): void {
+  public removeChildren(): void {
     for (const childRenderable of this.userData.renderables.values()) {
       childRenderable.dispose();
     }
@@ -106,10 +146,18 @@ export class UrdfRenderable extends Renderable<UrdfUserData> {
 }
 
 export class Urdfs extends SceneExtension<UrdfRenderable> {
-  constructor(renderer: Renderer) {
+  private framesByInstanceId = new Map<string, string[]>();
+  private transformsByInstanceId = new Map<string, TransformData[]>();
+  private jointStates = new Map<string, JointPosition>();
+
+  public constructor(renderer: Renderer) {
     super("foxglove.Urdfs", renderer);
 
     renderer.addTopicSubscription(TOPIC_NAME, this.handleRobotDescription);
+    // Note that this subscription will never happen because it does not appear as a topic in the
+    // topic list that can have its visibility toggled on. The ThreeDeeRender subscription logic
+    // needs to become more flexible to make this possible
+    renderer.addSchemaSubscriptions(JOINTSTATE_DATATYPES, this.handleJointState);
     renderer.on("parametersChange", this.handleParametersChange);
     renderer.addCustomLayerAction({
       layerId: LAYER_ID,
@@ -126,28 +174,49 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     }
   }
 
-  override settingsNodes(): SettingsTreeEntry[] {
-    const configTopics = this.renderer.config.topics;
-    const topicHandler = this.handleTopicSettingsAction;
-    const layerHandler = this.handleLayerSettingsAction;
+  public override settingsNodes(): SettingsTreeEntry[] {
     const entries: SettingsTreeEntry[] = [];
 
-    // Topic entry (also used for `/robot_description` parameter)
+    // /robot_description topic entry
     const topic = this.renderer.topicsByName?.get(TOPIC_NAME);
-    const parameter = this.renderer.parameters?.get(TOPIC_NAME);
-    if (topic != undefined || parameter != undefined) {
-      const config = (configTopics[TOPIC_NAME] ?? {}) as Partial<LayerSettingsUrdf>;
-
-      const fields: SettingsTreeFields = {};
-
+    if (topic != undefined) {
+      const config = (this.renderer.config.topics[TOPIC_NAME] ?? {}) as Partial<LayerSettingsUrdf>;
       entries.push({
         path: ["topics", TOPIC_NAME],
         node: {
           label: TOPIC_NAME,
           icon: "PrecisionManufacturing",
+          visible: config.visible ?? DEFAULT_SETTINGS.visible,
+          handler: this.handleTopicSettingsAction,
+          children: urdfChildren(
+            this.transformsByInstanceId.get(TOPIC_NAME),
+            this.renderer.transformTree,
+            this.jointStates,
+          ),
+        },
+      });
+    }
+
+    // /robot_description parameter entry
+    const parameter = this.renderer.parameters?.get(PARAM_NAME);
+    if (parameter != undefined) {
+      const config = (this.renderer.config.topics[PARAM_KEY] ?? {}) as Partial<LayerSettingsUrdf>;
+
+      const fields: SettingsTreeFields = {};
+
+      entries.push({
+        path: ["topics", PARAM_KEY],
+        node: {
+          label: PARAM_DISPLAY_NAME,
+          icon: "PrecisionManufacturing",
           fields,
           visible: config.visible ?? DEFAULT_SETTINGS.visible,
-          handler: topicHandler,
+          handler: this.handleTopicSettingsAction,
+          children: urdfChildren(
+            this.transformsByInstanceId.get(PARAM_KEY),
+            this.renderer.transformTree,
+            this.jointStates,
+          ),
         },
       });
     }
@@ -174,7 +243,12 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
             visible: config.visible ?? DEFAULT_CUSTOM_SETTINGS.visible,
             actions: [{ type: "action", id: "delete", label: "Delete" }],
             order: layerConfig.order,
-            handler: layerHandler,
+            handler: this.handleLayerSettingsAction,
+            children: urdfChildren(
+              this.transformsByInstanceId.get(instanceId),
+              this.renderer.transformTree,
+              this.jointStates,
+            ),
           },
         });
       }
@@ -183,11 +257,21 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     return entries;
   }
 
-  override removeAllRenderables(): void {
-    // no-op
+  public override removeAllRenderables(): void {
+    // Re-add coordinate frames and transforms since the scene has been cleared
+    for (const [instanceId, frames] of this.framesByInstanceId) {
+      this._loadFrames(instanceId, frames);
+    }
+    for (const [instanceId, transforms] of this.transformsByInstanceId) {
+      this._loadTransforms(instanceId, transforms);
+    }
   }
 
-  override startFrame(currentTime: bigint, renderFrameId: string, fixedFrameId: string): void {
+  public override startFrame(
+    currentTime: bigint,
+    renderFrameId: string,
+    fixedFrameId: string,
+  ): void {
     for (const renderable of this.renderables.values()) {
       const path = renderable.userData.settingsPath;
       let hasTfError = false;
@@ -225,11 +309,14 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     }
   }
 
-  handleTopicSettingsAction = (_action: SettingsTreeAction): void => {
-    // no-op until there are editable fields for URDF topics
+  private handleTopicSettingsAction = (action: SettingsTreeAction): void => {
+    if (action.action === "update") {
+      this.handleSettingsUpdate(action);
+      return;
+    }
   };
 
-  handleLayerSettingsAction = (action: SettingsTreeAction): void => {
+  private handleLayerSettingsAction = (action: SettingsTreeAction): void => {
     const path = action.payload.path;
 
     // Handle menu actions (delete)
@@ -255,19 +342,59 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
         this.renderer.updateCustomLayersCount();
       }
       return;
+    } /* if (action.action === "update") */ else {
+      this.handleSettingsUpdate(action);
     }
-
-    if (path.length !== 3) {
-      return; // Doesn't match the pattern of ["layers", instanceId, field]
-    }
-
-    this.saveSetting(path, action.payload.value);
-
-    const instanceId = path[1]!;
-    this._loadUrdf(instanceId, undefined);
   };
 
-  handleRobotDescription = (messageEvent: PartialMessageEvent<{ data: string }>): void => {
+  private handleSettingsUpdate = (action: { action: "update" } & SettingsTreeAction): void => {
+    const path = action.payload.path;
+
+    if (path.length === 5 && path[2] === "joints") {
+      // ["layers", instanceId, "joints", jointName, "manual"]
+      const instanceId = path[1]!;
+      const jointName = path[3]!;
+      const transforms = this.transformsByInstanceId.get(instanceId);
+      if (!transforms) {
+        return;
+      }
+
+      const transformData = transforms.find((t) => t.joint.name === jointName);
+      if (!transformData) {
+        return;
+      }
+
+      const joint = transformData.joint;
+      const frame = this.renderer.transformTree.getOrCreateFrame(transformData.child);
+      const frameKey = `frame:${frame.id}`;
+      const isAngular = joint.jointType === "revolute" || joint.jointType === "continuous";
+      const axis = tempVec3a.set(joint.axis.x, joint.axis.y, joint.axis.z);
+
+      if (isAngular) {
+        const degrees = action.payload.value as number;
+        const quaternion = tempQuaternion1.setFromAxisAngle(axis, degrees * DEG2RAD);
+        const euler = tempEuler.setFromQuaternion(quaternion);
+        frame.offsetEulerDegrees = [euler.x * RAD2DEG, euler.y * RAD2DEG, euler.z * RAD2DEG];
+        this.saveSetting(["transforms", frameKey, "rpyOffset"], frame.offsetEulerDegrees);
+      } else {
+        const scale = action.payload.value as number;
+        axis.multiplyScalar(scale);
+        frame.offsetPosition = [axis.x, axis.y, axis.z];
+        this.saveSetting(["transforms", frameKey, "xyzOffset"], frame.offsetPosition);
+      }
+    } else if (path.length === 3) {
+      // ["layers", instanceId, field]
+      this.saveSetting(path, action.payload.value);
+      const instanceId = path[1]!;
+      if (path[1] === PARAM_KEY) {
+        this._loadUrdf(instanceId, this.renderer.parameters?.get(PARAM_NAME) as string | undefined);
+      } else {
+        this._loadUrdf(instanceId, undefined);
+      }
+    }
+  };
+
+  private handleRobotDescription = (messageEvent: PartialMessageEvent<{ data: string }>): void => {
     const robotDescription = messageEvent.message.data;
     if (typeof robotDescription !== "string") {
       return;
@@ -275,15 +402,32 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     this._loadUrdf(TOPIC_NAME, robotDescription);
   };
 
-  handleParametersChange = (parameters: ReadonlyMap<string, unknown> | undefined): void => {
-    const robotDescription = parameters?.get(TOPIC_NAME);
+  private handleJointState = (messageEvent: PartialMessageEvent<JointState>): void => {
+    const msg = messageEvent.message;
+    const names = msg.name ?? [];
+    const positions = msg.position ?? [];
+    const timestamp = toNanoSec(messageEvent.receiveTime);
+
+    for (let i = 0; i < names.length; i++) {
+      const name = names[i]!;
+      const position = positions[i] ?? 0;
+
+      const prevTimestamp = this.jointStates.get(name)?.timestamp;
+      if (prevTimestamp == undefined || timestamp >= prevTimestamp) {
+        this.jointStates.set(name, { timestamp, position });
+      }
+    }
+  };
+
+  private handleParametersChange = (parameters: ReadonlyMap<string, unknown> | undefined): void => {
+    const robotDescription = parameters?.get(PARAM_NAME);
     if (typeof robotDescription !== "string") {
       return;
     }
-    this._loadUrdf(TOPIC_NAME, robotDescription);
+    this._loadUrdf(PARAM_KEY, robotDescription);
   };
 
-  handleAddUrdf = (instanceId: string): void => {
+  private handleAddUrdf = (instanceId: string): void => {
     log.info(`Creating ${LAYER_ID} layer ${instanceId}`);
 
     const config: LayerSettingsCustomUrdf = { ...DEFAULT_CUSTOM_SETTINGS, instanceId };
@@ -349,20 +493,33 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
       });
   }
 
-  private _loadUrdf(instanceId: string, urdf: string | undefined): void {
-    let renderable = this.renderables.get(instanceId);
-    if (renderable && urdf != undefined && renderable.userData.urdf === urdf) {
-      return;
-    }
-
-    const isTopic = instanceId === TOPIC_NAME;
-    const frameId = this.renderer.fixedFrameId ?? ""; // Unused
-    const settingsPath = isTopic ? ["topics", TOPIC_NAME] : ["layers", instanceId];
-    const baseSettings = isTopic ? DEFAULT_SETTINGS : DEFAULT_CUSTOM_SETTINGS;
-    const userSettings = isTopic
+  private _getCurrentSettings(instanceId: string) {
+    const isTopicOrParam = instanceId === TOPIC_NAME || instanceId === PARAM_KEY;
+    const baseSettings = isTopicOrParam ? DEFAULT_SETTINGS : DEFAULT_CUSTOM_SETTINGS;
+    const userSettings = isTopicOrParam
       ? this.renderer.config.topics[instanceId]
       : this.renderer.config.layers[instanceId];
     const settings = { ...baseSettings, ...userSettings, instanceId };
+    return settings;
+  }
+
+  private _loadUrdf(instanceId: string, urdf: string | undefined): void {
+    let renderable = this.renderables.get(instanceId);
+    if (renderable && urdf != undefined && renderable.userData.urdf === urdf) {
+      const settings = this._getCurrentSettings(instanceId);
+      renderable.userData.settings = settings;
+      return;
+    }
+
+    // Clear any previous parsed data for this instanceId
+    this.transformsByInstanceId.delete(instanceId);
+    this.framesByInstanceId.delete(instanceId);
+    this.updateSettingsTree();
+
+    const isTopicOrParam = instanceId === TOPIC_NAME || instanceId === PARAM_KEY;
+    const frameId = this.renderer.fixedFrameId ?? ""; // Unused
+    const settingsPath = isTopicOrParam ? ["topics", instanceId] : ["layers", instanceId];
+    const settings = this._getCurrentSettings(instanceId);
     const url = (settings as Partial<LayerSettingsCustomUrdf>).url;
 
     // Create a UrdfRenderable if it does not already exist
@@ -413,13 +570,13 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
       });
   }
 
-  private _loadRobot(renderable: UrdfRenderable, { robot, transforms }: ParsedUrdf): void {
+  private _loadRobot(renderable: UrdfRenderable, { robot, frames, transforms }: ParsedUrdf): void {
     const renderer = this.renderer;
+    const instanceId = renderable.userData.settings.instanceId;
 
-    // Import all transforms from the URDF into the scene
-    for (const { parent, child, translation, rotation } of transforms) {
-      renderer.addTransform(parent, child, 0n, translation, rotation);
-    }
+    this._loadFrames(instanceId, frames);
+    this._loadTransforms(instanceId, transforms);
+    this.updateSettingsTree();
 
     // Dispose any existing renderables
     renderable.removeChildren();
@@ -448,15 +605,36 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
       }
     }
   }
+
+  private _loadFrames(instanceId: string, frames: string[]): void {
+    this.framesByInstanceId.set(instanceId, frames);
+
+    // Import all coordinate frames from the URDF into the scene
+    for (const frameId of frames) {
+      this.renderer.addCoordinateFrame(frameId);
+    }
+  }
+
+  private _loadTransforms(instanceId: string, transforms: TransformData[]): void {
+    this.transformsByInstanceId.set(instanceId, transforms);
+
+    // Import all transforms from the URDF into the scene
+    const isTopicOrParam = instanceId === TOPIC_NAME || instanceId === PARAM_KEY;
+    const settingsPath = isTopicOrParam ? ["topics", instanceId] : ["layers", instanceId];
+    for (const { parent, child, translation, rotation } of transforms) {
+      this.renderer.addTransform(parent, child, 0n, translation, rotation, settingsPath);
+    }
+  }
 }
 
-async function parseUrdf(text: string): Promise<{ robot: UrdfRobot; transforms: TransformData[] }> {
+async function parseUrdf(text: string): Promise<ParsedUrdf> {
   const fileFetcher = getFileFetch();
 
   try {
     log.debug(`Parsing ${text.length} byte URDF`);
     const robot = await parseRobot(text, fileFetcher);
 
+    const frames = Array.from(robot.links.values(), (link) => link.name);
     const transforms = Array.from(robot.joints.values(), (joint) => {
       const translation = joint.origin.xyz;
       const rotation = eulerToQuaternion(joint.origin.rpy);
@@ -465,11 +643,12 @@ async function parseUrdf(text: string): Promise<{ robot: UrdfRobot; transforms: 
         child: joint.child,
         translation,
         rotation,
+        joint,
       };
       return transform;
     });
 
-    return { robot, transforms };
+    return { robot, frames, transforms };
   } catch (err) {
     throw new Error(`Failed to parse ${text.length} byte URDF: ${err}`);
   }
@@ -605,4 +784,303 @@ function isValidUrl(str: string): boolean {
   } catch (_) {
     return false;
   }
+}
+
+function urdfChildren(
+  transforms: TransformData[] | undefined,
+  transformTree: TransformTree,
+  jointStates: Map<string, JointPosition>,
+): SettingsTreeChildren {
+  if (!transforms) {
+    return {};
+  }
+
+  const jointChildren: SettingsTreeChildren = {};
+  for (const { joint } of transforms) {
+    const frameId = joint.child;
+    const frame = transformTree.getOrCreateFrame(frameId);
+
+    const { x, y, z } = joint.origin.xyz;
+    const { x: roll, y: pitch, z: yaw } = joint.origin.rpy;
+    const { x: aX, y: aY, z: aZ } = joint.axis;
+    const fields: SettingsTreeFields = {};
+    fields.jointType = {
+      label: "Type",
+      input: "string",
+      readonly: true,
+      value: joint.jointType,
+    };
+
+    switch (joint.jointType) {
+      case "fixed":
+        break;
+      case "continuous":
+      case "revolute": {
+        const min = joint.limit ? joint.limit.lower * RAD2DEG : -180;
+        const max = joint.limit ? joint.limit.upper * RAD2DEG : 180;
+        let manualDegrees: number | undefined;
+        const jointStateRadians = jointStates.get(joint.name)?.position;
+
+        if (frame.offsetEulerDegrees) {
+          // Convert the Euler degrees to a quaternion
+          const quaternion = eulerDegreesToQuaternion(frame.offsetEulerDegrees);
+          const radians = signedAngleAroundAxis(quaternion, joint.axis);
+          manualDegrees = radians * RAD2DEG;
+        }
+
+        fields.manual = {
+          label: "Manual angle",
+          input: "number",
+          precision: PRECISION_DEGREES,
+          step: 1,
+          min,
+          max,
+          value: manualDegrees,
+        };
+
+        if (jointStateRadians != undefined) {
+          fields.jointState = {
+            label: "JointState angle",
+            input: "number",
+            precision: PRECISION_DEGREES,
+            min,
+            max,
+            readonly: true,
+            value: jointStateRadians * RAD2DEG,
+          };
+        }
+        break;
+      }
+      case "prismatic": {
+        const min = joint.limit?.lower;
+        const max = joint.limit?.upper;
+        const manualPosition = frame.offsetPosition
+          ? signedDistanceAlongAxis(frame.offsetPosition, joint.axis)
+          : undefined;
+        const jointStatePosition = jointStates.get(joint.name)?.position;
+
+        fields.manual = {
+          label: "Manual position",
+          input: "number",
+          precision: PRECISION_DISTANCE,
+          step: 0.01,
+          min,
+          max,
+          value: manualPosition,
+        };
+        if (jointStatePosition != undefined) {
+          fields.jointState = {
+            label: "JointState position",
+            input: "number",
+            precision: PRECISION_DISTANCE,
+            min,
+            max,
+            readonly: true,
+            value: jointStatePosition,
+          };
+        }
+        break;
+      }
+      case "floating":
+      case "planar":
+        // Motion could be supported for these types in the future
+        break;
+    }
+
+    fields.position = {
+      label: "Position",
+      input: "vec3",
+      labels: XYZ_LABEL,
+      precision: PRECISION_DISTANCE,
+      readonly: true,
+      value: [x, y, z],
+    };
+    fields.rotation = {
+      label: "Rotation",
+      input: "vec3",
+      labels: RPY_LABEL,
+      precision: PRECISION_DEGREES,
+      readonly: true,
+      value: [roll * RAD2DEG, pitch * RAD2DEG, yaw * RAD2DEG],
+    };
+    fields.parent = {
+      label: "Parent",
+      input: "string",
+      readonly: true,
+      value: joint.parent,
+    };
+    fields.child = {
+      label: "Child",
+      input: "string",
+      readonly: true,
+      value: joint.child,
+    };
+    if (joint.jointType !== "fixed") {
+      fields.axis = {
+        label: "Axis",
+        input: "vec3",
+        labels: XYZ_LABEL,
+        precision: PRECISION_DISTANCE,
+        readonly: true,
+        value: [aX, aY, aZ],
+      };
+    }
+    if (joint.calibration) {
+      const { rising, falling } = joint.calibration;
+      fields.calibration = {
+        label: "Calibration",
+        input: "vec2",
+        labels: ["↑", "↓"],
+        readonly: true,
+        value: [rising, falling],
+      };
+    }
+    if (joint.dynamics) {
+      const { damping, friction } = joint.dynamics;
+      fields.damping = {
+        label: "Damping",
+        input: "number",
+        precision: PRECISION_DISTANCE,
+        readonly: true,
+        value: damping,
+      };
+      fields.friction = {
+        label: "Friction",
+        input: "number",
+        precision: PRECISION_DISTANCE,
+        readonly: true,
+        value: friction,
+      };
+    }
+    if (joint.limit) {
+      const { effort, velocity } = joint.limit;
+      if (joint.jointType !== "continuous" && joint.jointType !== "fixed") {
+        const { upper, lower } = joint.limit;
+        const isAngular = joint.jointType === "revolute";
+        const upperValue = isAngular ? upper * RAD2DEG : upper;
+        const lowerValue = isAngular ? lower * RAD2DEG : lower;
+        fields.limit = {
+          label: "Limit",
+          input: "vec2",
+          labels: ["↑", "↓"],
+          readonly: true,
+          precision: isAngular ? PRECISION_DEGREES : PRECISION_DISTANCE,
+          value: [upperValue, lowerValue],
+        };
+      }
+      fields.effort = {
+        label: "Limit effort",
+        input: "number",
+        precision: PRECISION_DISTANCE,
+        readonly: true,
+        value: effort,
+      };
+      fields.velocity = {
+        label: "Limit velocity",
+        input: "number",
+        precision: PRECISION_DISTANCE,
+        readonly: true,
+        value: velocity,
+      };
+    }
+    if (joint.mimic) {
+      const { joint: mimicJoint, multiplier, offset } = joint.mimic;
+      fields.mimicJoint = {
+        label: "Mimic joint",
+        input: "string",
+        readonly: true,
+        value: mimicJoint,
+      };
+      fields.mimicMultiplier = {
+        label: "Mimic multiplier",
+        input: "number",
+        precision: PRECISION_DISTANCE,
+        readonly: true,
+        value: multiplier,
+      };
+      fields.mimicOffset = {
+        label: "Mimic offset",
+        input: "number",
+        precision: PRECISION_DISTANCE,
+        readonly: true,
+        value: offset,
+      };
+    }
+    if (joint.safetyController) {
+      const { softUpperLimit, softLowerLimit, kPosition, kVelocity } = joint.safetyController;
+      fields.softLimit = {
+        label: "Soft limit",
+        input: "vec2",
+        labels: ["↑", "↓"],
+        readonly: true,
+        value: [softUpperLimit, softLowerLimit],
+      };
+      fields.kPosition = {
+        label: "k_position",
+        input: "number",
+        precision: PRECISION_DISTANCE,
+        readonly: true,
+        value: kPosition,
+      };
+      fields.kVelocity = {
+        label: "k_velocity",
+        input: "number",
+        precision: PRECISION_DISTANCE,
+        readonly: true,
+        value: kVelocity,
+      };
+    }
+    jointChildren[joint.name] = { label: joint.name, fields, defaultExpansionState: "collapsed" };
+  }
+
+  const children: SettingsTreeChildren = {
+    joints: {
+      label: "Joints",
+      defaultExpansionState: "collapsed",
+      children: jointChildren,
+    },
+  };
+  return children;
+}
+
+function eulerDegreesToQuaternion(eulerDegrees: vec3): THREE.Quaternion {
+  tempEuler.set(eulerDegrees[0] * DEG2RAD, eulerDegrees[1] * DEG2RAD, eulerDegrees[2] * DEG2RAD);
+  return tempQuaternion1.setFromEuler(tempEuler);
+}
+
+function signedDistanceAlongAxis(position: Readonly<vec3>, axis: Readonly<Vector3>): number {
+  const p = tempVec3a.set(position[0], position[1], position[2]);
+  const targetAxis = tempVec3b.set(axis.x, axis.y, axis.z);
+
+  // Project the position on to axis
+  p.projectOnVector(targetAxis);
+  const distance = p.length();
+
+  // Calculate the sign
+  const dotProduct = p.dot(targetAxis);
+  const sign = dotProduct < 0 ? -1 : 1;
+
+  return sign * distance;
+}
+
+// Find the signed angle of a rotation around a given axis
+function signedAngleAroundAxis(rotation: Readonly<Quaternion>, axis: Readonly<Vector3>): number {
+  const rotationAxis = tempVec3a.set(rotation.x, rotation.y, rotation.z);
+  const targetAxis = tempVec3b.set(axis.x, axis.y, axis.z);
+
+  // Project the rotation axis onto the given axis
+  const p = rotationAxis.projectOnVector(targetAxis);
+
+  // Create a twist quaternion from the projected axis and original rotation angle
+  const twist = tempQuaternion2.set(p.x, p.y, p.z, rotation.w);
+  twist.normalize();
+
+  // Calculate the twist angle ([0, PI])
+  const angle = 2 * Math.acos(twist.w);
+
+  // Calculate the sign of the twist angle
+  const dotProduct = tempVec3a.set(twist.x, twist.y, twist.z).dot(targetAxis);
+  const sign = dotProduct < 0 ? -1 : 1;
+
+  return sign * angle;
 }

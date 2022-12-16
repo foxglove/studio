@@ -25,7 +25,7 @@ import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import Stack from "@foxglove/studio-base/components/Stack";
 import usePublisher from "@foxglove/studio-base/hooks/usePublisher";
 import { PlayerCapabilities, Topic } from "@foxglove/studio-base/players/types";
-import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelSettingsEditorContextProvider";
+import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelStateContextProvider";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
@@ -139,7 +139,12 @@ function Publish(props: Props) {
     saveConfig,
   } = props;
 
-  const publish = usePublisher({ name: "Publish", topic: topicName, datatype, datatypes });
+  const publish = usePublisher({
+    name: "Publish",
+    topic: topicName,
+    schemaName: datatype,
+    datatypes,
+  });
 
   const datatypeNames = useMemo(() => Array.from(datatypes.keys()).sort(), [datatypes]);
   const { error, parsedObject } = useMemo(() => parseInput(value), [value]);
@@ -197,7 +202,7 @@ function Publish(props: Props) {
   // when a known topic is selected, also fill in its datatype
   const onSelectTopic = useCallback(
     (name: string, topic: Topic, autocomplete: IAutocomplete) => {
-      saveConfig({ topicName: name, datatype: topic.datatype });
+      saveConfig({ topicName: name, datatype: topic.schemaName });
       autocomplete.blur();
     },
     [saveConfig],
@@ -239,7 +244,7 @@ function Publish(props: Props) {
                 hasError={false}
                 onChange={onChangeTopic}
                 onSelect={onSelectTopic}
-                selectedItem={{ name: topicName, datatype: "" }}
+                selectedItem={{ name: topicName, schemaName: "" }}
                 getItemText={getTopicName}
                 getItemValue={getTopicName}
               />

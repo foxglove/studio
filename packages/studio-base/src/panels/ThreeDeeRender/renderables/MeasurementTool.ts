@@ -11,13 +11,20 @@ import { SceneExtension } from "../SceneExtension";
 
 type MeasurementState = "idle" | "place-first-point" | "place-second-point";
 
+/** A renderOrder value that should result in rendering after most/all other objects in the scene */
+const LATE_RENDER_ORDER = 9999999;
+
 /**
  * A material that interprets the input mesh coordinates in pixel space, regardless of the camera
  * perspective/zoom level.
  */
 class FixedSizeMeshMaterial extends THREE.ShaderMaterial {
-  constructor({ color }: { color: THREE.ColorRepresentation }) {
+  public constructor({
+    color,
+    ...params
+  }: { color: THREE.ColorRepresentation } & THREE.MaterialParameters) {
     super({
+      ...params,
       vertexShader: /* glsl */ `
         #include <common>
         uniform vec2 canvasSize;
@@ -53,7 +60,11 @@ type MeasurementEvent = { type: "foxglove.measure-start" } | { type: "foxglove.m
 
 export class MeasurementTool extends SceneExtension<Renderable<BaseUserData>, MeasurementEvent> {
   private circleGeometry = new THREE.CircleGeometry(5, 16);
-  private circleMaterial = new FixedSizeMeshMaterial({ color: 0xff0000 });
+  private circleMaterial = new FixedSizeMeshMaterial({
+    color: 0xff0000,
+    depthTest: false,
+    depthWrite: false,
+  });
   private circle1 = new THREE.Mesh(this.circleGeometry, this.circleMaterial);
   private circle2 = new THREE.Mesh(this.circleGeometry, this.circleMaterial);
 
@@ -62,21 +73,36 @@ export class MeasurementTool extends SceneExtension<Renderable<BaseUserData>, Me
     new THREE.BufferGeometry(),
     new THREE.LineBasicMaterial({ color: 0xff0000 }),
   );
+  /**
+   * A dashed copy of the line drawn with inverse depth test so the line can still be visible when
+   * it's occluded
+   */
+  private lineOccluded = new THREE.Line(
+    new THREE.BufferGeometry(),
+    new THREE.LineDashedMaterial({
+      color: 0xff0000,
+      dashSize: 1,
+      gapSize: 1,
+      depthWrite: false,
+      depthFunc: THREE.GreaterDepth, // opposite of default THREE.LessEqualDepth
+    }),
+  );
 
   private label: Label;
 
   private point1NeedsUpdate = false;
   private point2NeedsUpdate = false;
 
-  point1?: THREE.Vector3;
-  point2?: THREE.Vector3;
+  private point1?: THREE.Vector3;
+  private point2?: THREE.Vector3;
 
-  state: MeasurementState = "idle";
+  public state: MeasurementState = "idle";
 
-  constructor(renderer: Renderer) {
+  public constructor(renderer: Renderer) {
     super("foxglove.MeasurementTool", renderer);
 
     this.line.userData.picking = false;
+    this.lineOccluded.userData.picking = false;
     this.circle1.userData.picking = false;
     this.circle2.userData.picking = false;
 
@@ -88,43 +114,56 @@ export class MeasurementTool extends SceneExtension<Renderable<BaseUserData>, Me
     this.label.setColor(1, 0, 0);
 
     // Make the label appear on top of other objects in the scene so it doesn't get clipped/occluded
-    this.label.renderOrder = 9999999;
+    this.label.renderOrder = LATE_RENDER_ORDER;
     this.label.material.depthTest = false;
     this.label.material.depthWrite = false;
     this.label.material.transparent = true;
 
+    this.lineOccluded.renderOrder = LATE_RENDER_ORDER;
+    this.circle1.renderOrder = LATE_RENDER_ORDER;
+    this.circle2.renderOrder = LATE_RENDER_ORDER;
+
     this.line.frustumCulled = false;
+    this.lineOccluded.frustumCulled = false;
     this.line.geometry.setAttribute("position", this.linePositionAttribute);
+    this.lineOccluded.geometry.setAttribute("position", this.linePositionAttribute);
     this.circle1.visible = false;
     this.circle2.visible = false;
     this.add(this.circle1);
     this.add(this.circle2);
     this.add(this.line);
+    this.add(this.lineOccluded);
     this.add(this.label);
     this._setState("idle");
   }
 
-  override dispose(): void {
+  public override dispose(): void {
     super.dispose();
     this.renderer.labelPool.release(this.label);
     this.circleGeometry.dispose();
     this.circleMaterial.dispose();
     this.line.geometry.dispose();
     this.line.material.dispose();
+    this.lineOccluded.geometry.dispose();
+    this.lineOccluded.material.dispose();
     this.renderer.input.removeListener("click", this._handleClick);
     this.renderer.input.removeListener("mousemove", this._handleMouseMove);
   }
 
-  startMeasuring(): void {
+  public startMeasuring(): void {
     this._setState("place-first-point");
   }
 
-  stopMeasuring(): void {
+  public stopMeasuring(): void {
     this.point1 = this.point2 = undefined;
     this._setState("idle");
   }
 
-  override startFrame(currentTime: bigint, renderFrameId: string, fixedFrameId: string): void {
+  public override startFrame(
+    currentTime: bigint,
+    renderFrameId: string,
+    fixedFrameId: string,
+  ): void {
     super.startFrame(currentTime, renderFrameId, fixedFrameId);
     this.circleMaterial.uniforms.canvasSize!.value[0] = this.renderer.input.canvasSize.x;
     this.circleMaterial.uniforms.canvasSize!.value[1] = this.renderer.input.canvasSize.y;
@@ -214,6 +253,7 @@ export class MeasurementTool extends SceneExtension<Renderable<BaseUserData>, Me
       if (this.point1NeedsUpdate) {
         this.linePositionAttribute.setXYZ(0, this.point1.x, this.point1.y, this.point1.z);
         this.linePositionAttribute.needsUpdate = true;
+        this.lineOccluded.computeLineDistances();
         this.point1NeedsUpdate = false;
       }
     } else {
@@ -227,6 +267,7 @@ export class MeasurementTool extends SceneExtension<Renderable<BaseUserData>, Me
       if (this.point2NeedsUpdate) {
         this.linePositionAttribute.setXYZ(1, this.point2.x, this.point2.y, this.point2.z);
         this.linePositionAttribute.needsUpdate = true;
+        this.lineOccluded.computeLineDistances();
         this.point2NeedsUpdate = false;
       }
     } else {
@@ -235,10 +276,12 @@ export class MeasurementTool extends SceneExtension<Renderable<BaseUserData>, Me
 
     if (this.point1 && this.point2) {
       this.line.visible = true;
+      this.lineOccluded.visible = true;
       this.label.visible = true;
       this.label.position.copy(this.point1).lerp(this.point2, 0.5);
     } else {
       this.line.visible = false;
+      this.lineOccluded.visible = false;
       this.label.visible = false;
     }
 

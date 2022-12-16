@@ -11,8 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Layer } from "@fluentui/react";
-import { alpha, Paper, useTheme } from "@mui/material";
+import { alpha, Paper, useTheme, Modal } from "@mui/material";
 import { Fzf, FzfResultItem } from "fzf";
 import { maxBy } from "lodash";
 import React, {
@@ -30,7 +29,7 @@ import { makeStyles } from "tss-react/mui";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 // react-autocomplete tries to auto-scroll as soon as the menu is rendered, which is not compatible
-// with fluentui's Layer because the Layer takes a couple of react render cycles before elements are
+// with mui's Modal because the Modal takes a couple of react render cycles before elements are
 // actually mounted.
 Object.assign(ReactAutocomplete.prototype, { maybeScrollItemIntoView: () => {} });
 
@@ -229,7 +228,7 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
     selectedItem,
     // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
     value = stateValue ?? (selectedItem ? getItemText(selectedItem) : undefined),
-    filterText = value,
+    filterText = value ?? "",
     sortWhenFiltering = true,
     clearOnFocus = false,
     minWidth = 100,
@@ -243,19 +242,23 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
     readOnly,
   }: AutocompleteProps<T> = props;
 
-  const autocompleteItems: FzfResultItem<T>[] = useMemo(
-    () =>
-      filterText
-        ? // @ts-expect-error Fzf selector TS type seems to be wrong?
-          new Fzf(items, {
-            fuzzy: filterText.length > 2 ? "v2" : false,
-            sort: sortWhenFiltering,
-            limit: MAX_ITEMS,
-            selector: getItemText,
-          }).find(filterText)
-        : items.map((item) => itemToFzfResult(item)),
-    [filterText, getItemText, items, sortWhenFiltering],
-  );
+  const fzfUnfiltered = useMemo(() => {
+    return items.map((item) => itemToFzfResult(item));
+  }, [items]);
+
+  const fzf = useMemo(() => {
+    // @ts-expect-error Fzf selector TS type seems to be wrong?
+    return new Fzf(items, {
+      fuzzy: "v2",
+      sort: sortWhenFiltering,
+      limit: MAX_ITEMS,
+      selector: getItemText,
+    });
+  }, [getItemText, items, sortWhenFiltering]);
+
+  const autocompleteItems: FzfResultItem<T>[] = useMemo(() => {
+    return filterText ? fzf.find(filterText) : fzfUnfiltered;
+  }, [filterText, fzf, fzfUnfiltered]);
 
   const hasError = Boolean(props.hasError ?? (autocompleteItems.length === 0 && value?.length));
 
@@ -516,7 +519,11 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
         );
       }}
       // @ts-expect-error renderMenuWrapper added in the fork but we don't have typings for it
-      renderMenuWrapper={(menu: React.ReactNode) => <Layer>{menu}</Layer>}
+      renderMenuWrapper={(menu) => (
+        <Modal disableAutoFocus open={open} hideBackdrop>
+          {menu}
+        </Modal>
+      )}
       ref={autocomplete}
       wrapperStyle={{
         display: "flex",

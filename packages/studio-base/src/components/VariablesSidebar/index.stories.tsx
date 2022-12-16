@@ -3,7 +3,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { fireEvent, screen } from "@testing-library/dom";
-import { last } from "lodash";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
@@ -19,15 +18,7 @@ export default {
 const initialState = {
   globalVariables: {
     selected_id: 1234,
-    linked_variable: { seq: 0, stamp: { sec: 1535385092, nsec: 150099000 }, frame_id: "map" },
   },
-  linkedGlobalVariables: [
-    {
-      topic: "linked_variable",
-      markerKeyPath: ["", ""],
-      name: "linked_variable",
-    },
-  ],
 };
 
 export function Default(): JSX.Element {
@@ -50,7 +41,7 @@ export function Interactive(): JSX.Element {
   );
 }
 Interactive.play = async () => {
-  const addButton = (await screen.findAllByTestId("add-variable-button"))[0]!;
+  const addButton = await screen.findByTestId("add-variable-button");
   fireEvent.click(addButton);
 
   const input = await screen.findByPlaceholderText("variable_name");
@@ -59,14 +50,19 @@ Interactive.play = async () => {
   const valueInput = await screen.findByDisplayValue('""');
   fireEvent.change(valueInput, { target: { value: '"edited value"' } });
 
-  fireEvent.click(addButton);
-
-  const menuButton = last(await screen.findAllByTestId("variable-action-button"))!;
+  const menuButton = await screen.findByTestId("variable-action-button");
   fireEvent.click(menuButton);
+
+  await screen.findByTestId("global-variable-key-input-new_variable_name");
+
+  const menuButton2 = await screen.findByTestId("variable-action-button");
+  fireEvent.click(menuButton2);
 
   const deleteButton = await screen.findByText("Delete variable");
   fireEvent.click(deleteButton);
 };
+
+Interactive.parameters = { colorScheme: "light" };
 
 export function WithVariablesLight(): JSX.Element {
   return (

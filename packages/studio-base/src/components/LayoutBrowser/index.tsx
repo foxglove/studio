@@ -16,9 +16,9 @@ import {
 } from "@mui/material";
 import { partition } from "lodash";
 import moment from "moment";
+import { useSnackbar } from "notistack";
 import path from "path";
-import { MouseEvent, useCallback, useContext, useEffect, useLayoutEffect } from "react";
-import { useToasts } from "react-toast-notifications";
+import { MouseEvent, useCallback, useContext, useEffect, useLayoutEffect, useMemo } from "react";
 import { useMountedState } from "react-use";
 import useAsyncFn from "react-use/lib/useAsyncFn";
 
@@ -35,7 +35,7 @@ import {
   useCurrentLayoutActions,
   useCurrentLayoutSelector,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
-import { PanelsState } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
+import { LayoutData } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
 import { useLayoutManager } from "@foxglove/studio-base/context/LayoutManagerContext";
 import LayoutStorageDebuggingContext from "@foxglove/studio-base/context/LayoutStorageDebuggingContext";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
@@ -64,7 +64,7 @@ export default function LayoutBrowser({
 }>): JSX.Element {
   const theme = useTheme();
   const isMounted = useMountedState();
-  const { addToast } = useToasts();
+  const { enqueueSnackbar } = useSnackbar();
   const layoutManager = useLayoutManager();
   const prompt = usePrompt();
   const analytics = useAnalytics();
@@ -150,14 +150,14 @@ export default function LayoutBrowser({
               break;
           }
         } catch (err) {
-          addToast(`Error processing layouts: ${err.message}`, { appearance: "error" });
+          enqueueSnackbar(`Error processing layouts: ${err.message}`, { variant: "error" });
           dispatch({ type: "clear-multi-action" });
         }
       }
     };
 
     processAction().catch((err) => log.error(err));
-  }, [addToast, dispatch, layoutManager, state.multiAction]);
+  }, [dispatch, enqueueSnackbar, layoutManager, state.multiAction]);
 
   useEffect(() => {
     const listener = () => void reloadLayouts();
@@ -330,16 +330,15 @@ export default function LayoutBrowser({
     const name = `Unnamed layout ${moment(currentDateForStorybook).format("l")} at ${moment(
       currentDateForStorybook,
     ).format("LT")}`;
-    const panelState: Omit<PanelsState, "name" | "id"> = {
+    const layoutData: Omit<LayoutData, "name" | "id"> = {
       configById: {},
       globalVariables: {},
       userNodes: {},
-      linkedGlobalVariables: [],
       playbackConfig: defaultPlaybackConfig,
     };
     const newLayout = await layoutManager.saveNewLayout({
       name,
-      data: panelState as PanelsState,
+      data: layoutData as LayoutData,
       permission: "CREATOR_WRITE",
     });
     void onSelectLayout(newLayout);
@@ -466,16 +465,18 @@ export default function LayoutBrowser({
         try {
           parsedState = JSON.parse(content);
         } catch (err) {
-          addToast(`${file.name} is not a valid layout: ${err.message}`, { appearance: "error" });
+          enqueueSnackbar(`${file.name} is not a valid layout: ${err.message}`, {
+            variant: "error",
+          });
           return;
         }
 
         if (typeof parsedState !== "object" || !parsedState) {
-          addToast(`${file.name} is not a valid layout`, { appearance: "error" });
+          enqueueSnackbar(`${file.name} is not a valid layout`, { variant: "error" });
           return;
         }
 
-        const data = parsedState as PanelsState;
+        const data = parsedState as LayoutData;
         const newLayout = await layoutManager.saveNewLayout({
           name: layoutName,
           data,
@@ -493,7 +494,14 @@ export default function LayoutBrowser({
       void onSelectLayout(newLayout);
     }
     void analytics.logEvent(AppEvent.LAYOUT_IMPORT, { numLayouts: fileHandles.length });
-  }, [promptForUnsavedChanges, isMounted, layoutManager, onSelectLayout, analytics, addToast]);
+  }, [
+    analytics,
+    enqueueSnackbar,
+    isMounted,
+    layoutManager,
+    onSelectLayout,
+    promptForUnsavedChanges,
+  ]);
 
   const layoutDebug = useContext(LayoutStorageDebuggingContext);
   const supportsSignIn = useContext(ConsoleApiContext) != undefined;
@@ -505,6 +513,12 @@ export default function LayoutBrowser({
   const showSignInPrompt = supportsSignIn && !layoutManager.supportsSharing && !hideSignInPrompt;
 
   const pendingMultiAction = state.multiAction?.ids != undefined;
+
+  const anySelectedModifiedLayouts = useMemo(() => {
+    return [layouts.value?.personal ?? [], layouts.value?.shared ?? []]
+      .flat()
+      .some((layout) => layout.working != undefined && state.selectedIds.includes(layout.id));
+  }, [layouts, state.selectedIds]);
 
   return (
     <SidebarContent
@@ -549,6 +563,7 @@ export default function LayoutBrowser({
           title={layoutManager.supportsSharing ? "Personal" : undefined}
           emptyText="Add a new layout to get started with Foxglove Studio!"
           items={layouts.value?.personal}
+          anySelectedModifiedLayouts={anySelectedModifiedLayouts}
           multiSelectedIds={state.selectedIds}
           selectedId={currentLayoutId}
           onSelect={onSelectLayout}
@@ -566,6 +581,7 @@ export default function LayoutBrowser({
             title="Team"
             emptyText="Your organization doesn’t have any shared layouts yet. Share a personal layout to collaborate with other team members."
             items={layouts.value?.shared}
+            anySelectedModifiedLayouts={anySelectedModifiedLayouts}
             multiSelectedIds={state.selectedIds}
             selectedId={currentLayoutId}
             onSelect={onSelectLayout}

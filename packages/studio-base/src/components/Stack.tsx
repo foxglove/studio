@@ -5,7 +5,7 @@
 import { CSSProperties, PropsWithChildren, forwardRef } from "react";
 import { makeStyles } from "tss-react/mui";
 
-const useStyles = makeStyles<StackProps>()((theme, props) => ({
+const useStyles = makeStyles<StackProps>({ name: "FoxgloveStack" })((theme, props) => ({
   root: {
     display: props.inline === true ? "inline-flex" : "flex",
     flexDirection: props.direction,
@@ -241,4 +241,12 @@ export type StackProps = {
 
   /** CSS styles to apply to the component. */
   style?: CSSProperties;
+
+  /** Standard pointer events. */
+  onPointerDown?: React.DOMAttributes<HTMLDivElement>["onPointerDown"];
+  onPointerEnter?: React.DOMAttributes<HTMLDivElement>["onPointerEnter"];
+  onPointerLeave?: React.DOMAttributes<HTMLDivElement>["onPointerLeave"];
+  onPointerMove?: React.DOMAttributes<HTMLDivElement>["onPointerMove"];
+  onPointerOver?: React.DOMAttributes<HTMLDivElement>["onPointerOver"];
+  onPointerUp?: React.DOMAttributes<HTMLDivElement>["onPointerUp"];
 };

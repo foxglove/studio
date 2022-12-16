@@ -44,17 +44,36 @@ declare module "@foxglove/studio" {
      */
     name: string;
     /**
-     * The datatype is an identifier for the types of messages on this topic. Typically this is the
-     * fully-qualified name of the message type. The fully-qualified name depends on the data source
-     * and data loaded by the data source.
-     *
-     * i.e. package.Message in protobuf-like serialization or pkg/Msg in ROS systems.
+     * @deprecated Renamed to `schemaName`. `datatype` will be removed in a future release.
      */
     datatype: string;
+    /**
+     * The schema name is an identifier for the types of messages on this topic. Typically this is the
+     * fully-qualified name of the message schema. The fully-qualified name depends on the data source
+     * and data loaded by the data source.
+     *
+     * i.e. `package.Message` in protobuf-like serialization or `pkg/Msg` in ROS systems.
+     */
+    schemaName: string;
+
+    /**
+     * Lists any additional schema names available for subscribers on the topic. When subscribing to
+     * a topic, the panel can request messages be automatically converted from schemaName into one
+     * of the convertibleTo schemas using the convertTo option.
+     */
+    convertibleTo?: readonly string[];
   };
 
   export type Subscription = {
     topic: string;
+
+    /**
+     * If a topic as additional schema names, specifying a schema name will convert messages on that
+     * topic to the convertTo schema using a registered message converter. MessageEvents for the
+     * subscription will contain the converted message and an originalMessageEvent field with the
+     * original message event.
+     */
+    convertTo?: string;
 
     /**
      * Setting preload to _true_ hints to the data source that it should attempt to load all available
@@ -71,6 +90,10 @@ declare module "@foxglove/studio" {
   export type MessageEvent<T> = Readonly<{
     /** The topic name this message was received on, i.e. "/some/topic" */
     topic: string;
+    /**
+     * The schema name is an identifier for the schema of the message within the message event.
+     */
+    schemaName: string;
     /**
      * The time in nanoseconds this message was received. This may be set by the
      * local system clock or the data source, depending on the data source used
@@ -94,6 +117,13 @@ declare module "@foxglove/studio" {
      * useful for statistics tracking and cache eviction.
      */
     sizeInBytes: number;
+
+    /**
+     * When subscribing to a topic using the `convertTo` option, the message event `message`
+     * contains the converted message and the originalMessageEvent field contains the original
+     * un-converted message event.
+     */
+    originalMessageEvent?: MessageEvent<unknown>;
   }>;
 
   export interface LayoutActions {
@@ -152,6 +182,12 @@ declare module "@foxglove/studio" {
      * support parameters through the Parameter Server <http://wiki.ros.org/Parameter%20Server>.
      */
     parameters?: ReadonlyMap<string, ParameterValue>;
+
+    /**
+     * Transient panel state shared between panels of the same type. This can be any data a
+     * panel author wishes to share between panels.
+     */
+    sharedPanelState?: Readonly<Record<string, unknown>>;
 
     /**
      * Map of current Studio variables. Variables are key/value pairs that are globally accessible
@@ -232,6 +268,12 @@ declare module "@foxglove/studio" {
     setParameter: (name: string, value: ParameterValue) => void;
 
     /**
+     * Set the transient state shared by panels of the same type as the caller of this function.
+     * This will not be persisted in the layout.
+     */
+    setSharedPanelState: (state: undefined | Readonly<string, unknown>) => void;
+
+    /**
      * Set the value of variable name to value.
      *
      * @param name The name of the variable to set.
@@ -277,11 +319,13 @@ declare module "@foxglove/studio" {
     subscribeAppSettings(settings: string[]): void;
 
     /**
-     * Indicate intent to advertise on a specific topic and datatype.
+     * Indicate intent to publish messages on a specific topic.
      *
-     * The options object is passed to the current data source for additional configuration.
+     * @param topic The topic on which the extension will publish messages.
+     * @param schemaName The name of the schema that the published messages will conform to.
+     * @param options Options passed to the current data source for additional configuration.
      */
-    advertise?(topic: string, datatype: string, options?: Record<string, unknown>): void;
+    advertise?(topic: string, schemaName: string, options?: Record<string, unknown>): void;
 
     /**
      * Indicate that you no longer want to advertise on this topic.
@@ -328,8 +372,17 @@ declare module "@foxglove/studio" {
     // your panel.
     name: string;
 
-    // This function is invoked when your panel is initialized
-    initPanel: (context: PanelExtensionContext) => void;
+    /**
+     * This function is invoked when your panel is initialized
+     * @return: (optional) A function which is called when the panel is removed or replaced. Typically intended for cleanup logic to gracefully teardown your panel.
+     */
+    initPanel: (context: PanelExtensionContext) => void | (() => void);
+  };
+
+  export type RegisterMessageConverterArgs<Src> = {
+    fromSchemaName: string;
+    toSchemaName: string;
+    converter: (msg: Src) => unknown;
   };
 
   export interface ExtensionContext {
@@ -337,6 +390,8 @@ declare module "@foxglove/studio" {
     readonly mode: "production" | "development" | "test";
 
     registerPanel(params: ExtensionPanelRegistration): void;
+
+    registerMessageConverter<Src>(args: RegisterMessageConverterArgs<Src>): void;
   }
 
   export interface ExtensionActivate {
@@ -402,6 +457,11 @@ declare module "@foxglove/studio" {
          * Optional placeholder text displayed in the field input when value is undefined
          */
         placeholder?: string;
+
+        /**
+         * Optional field that's true if the clear button should be hidden.
+         */
+        hideClearButton?: boolean;
       }
     | {
         input: "rgba";
@@ -411,6 +471,11 @@ declare module "@foxglove/studio" {
          * Optional placeholder text displayed in the field input when value is undefined
          */
         placeholder?: string;
+
+        /**
+         * Optional field that's true if the clear button should be hidden.
+         */
+        hideClearButton?: boolean;
       }
     | { input: "gradient"; value?: [string, string] }
     | { input: "messagepath"; value?: string; validTypes?: string[] }
@@ -446,7 +511,11 @@ declare module "@foxglove/studio" {
          */
         placeholder?: string;
       }
-    | { input: "toggle"; value?: string; options: string[] }
+    | {
+        input: "toggle";
+        value?: string;
+        options: string[] | Array<{ label: string; value: undefined | string }>;
+      }
     | {
         input: "vec3";
         value?: [undefined | number, undefined | number, undefined | number];
@@ -583,6 +652,11 @@ declare module "@foxglove/studio" {
      * to the action handler.
      **/
     visible?: boolean;
+
+    /**
+     * Filter Children by visibility status
+     */
+    enableVisibilityFilter?: boolean;
   };
 
   /**

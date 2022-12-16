@@ -21,7 +21,7 @@ export type {
   ChangeHandler,
 } from "./context/AppConfigurationContext";
 export type { Layout, LayoutID, ISO8601Timestamp, ILayoutStorage } from "./services/ILayoutStorage";
-export { migrateLayout } from "./services/ILayoutStorage";
+export { migrateLayout } from "./services/migrateLayout";
 export type { INativeAppMenu, NativeAppMenuEvent } from "./context/NativeAppMenuContext";
 export { default as NativeWindowContext } from "./context/NativeWindowContext";
 export type { INativeWindow } from "./context/NativeWindowContext";
@@ -36,13 +36,13 @@ export { AppSetting } from "./AppSetting";
 export { default as FoxgloveDataPlatformDataSourceFactory } from "./dataSources/FoxgloveDataPlatformDataSourceFactory";
 export { default as FoxgloveWebSocketDataSourceFactory } from "./dataSources/FoxgloveWebSocketDataSourceFactory";
 export { default as Ros1LocalBagDataSourceFactory } from "./dataSources/Ros1LocalBagDataSourceFactory";
-export { default as Ros1RemoteBagDataSourceFactory } from "./dataSources/Ros1RemoteBagDataSourceFactory";
 export { default as Ros1SocketDataSourceFactory } from "./dataSources/Ros1SocketDataSourceFactory";
 export { default as Ros2LocalBagDataSourceFactory } from "./dataSources/Ros2LocalBagDataSourceFactory";
 export { default as Ros2SocketDataSourceFactory } from "./dataSources/Ros2SocketDataSourceFactory";
 export { default as RosbridgeDataSourceFactory } from "./dataSources/RosbridgeDataSourceFactory";
 export { default as UlogLocalDataSourceFactory } from "./dataSources/UlogLocalDataSourceFactory";
+export { default as RemoteDataSourceFactory } from "./dataSources/RemoteDataSourceFactory";
 export { default as VelodyneDataSourceFactory } from "./dataSources/VelodyneDataSourceFactory";
 export { default as McapLocalDataSourceFactory } from "./dataSources/McapLocalDataSourceFactory";
-export { default as McapRemoteDataSourceFactory } from "./dataSources/McapRemoteDataSourceFactory";
 export { default as SampleNuscenesDataSourceFactory } from "./dataSources/SampleNuscenesDataSourceFactory";
+export { LaunchPreferenceValue } from "@foxglove/studio-base/types/LaunchPreferenceValue";

@@ -10,8 +10,8 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Box, Link, Typography, useTheme } from "@mui/material";
-import { makeStyles } from "@mui/styles";
+import { Link, Typography } from "@mui/material";
+import { useSnackbar } from "notistack";
 import { extname } from "path";
 import {
   useState,
@@ -22,14 +22,13 @@ import {
   useLayoutEffect,
   useContext,
 } from "react";
-import { useToasts } from "react-toast-notifications";
+import { makeStyles } from "tss-react/mui";
 
 import Logger from "@foxglove/log";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import AccountSettings from "@foxglove/studio-base/components/AccountSettingsSidebar/AccountSettings";
 import { DataSourceSidebar } from "@foxglove/studio-base/components/DataSourceSidebar";
 import DocumentDropListener from "@foxglove/studio-base/components/DocumentDropListener";
-import DropOverlay from "@foxglove/studio-base/components/DropOverlay";
 import ExtensionsSidebar from "@foxglove/studio-base/components/ExtensionsSidebar";
 import HelpSidebar, {
   MESSAGE_PATH_SYNTAX_HELP_INFO,
@@ -43,7 +42,6 @@ import {
 } from "@foxglove/studio-base/components/MessagePipeline";
 import MultiProvider from "@foxglove/studio-base/components/MultiProvider";
 import { OpenDialog, OpenDialogViews } from "@foxglove/studio-base/components/OpenDialog";
-import { OrgExtensionRegistrySyncAdapter } from "@foxglove/studio-base/components/OrgExtensionRegistrySyncAdapter";
 import PanelLayout from "@foxglove/studio-base/components/PanelLayout";
 import PanelList from "@foxglove/studio-base/components/PanelList";
 import panelsHelpContent from "@foxglove/studio-base/components/PanelList/index.help.md";
@@ -55,7 +53,8 @@ import Sidebar, { SidebarItem } from "@foxglove/studio-base/components/Sidebar";
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
 import { SignInFormModal } from "@foxglove/studio-base/components/SignInFormModal";
 import Stack from "@foxglove/studio-base/components/Stack";
-import { URLStateSyncAdapter } from "@foxglove/studio-base/components/URLStateSyncAdapter";
+import { StudioLogsSettingsSidebar } from "@foxglove/studio-base/components/StudioLogsSettingsSidebar";
+import { SyncAdapters } from "@foxglove/studio-base/components/SyncAdapters";
 import VariablesSidebar from "@foxglove/studio-base/components/VariablesSidebar";
 import { useAssets } from "@foxglove/studio-base/context/AssetsContext";
 import ConsoleApiContext from "@foxglove/studio-base/context/ConsoleApiContext";
@@ -81,11 +80,11 @@ import { useInitialDeepLinkState } from "@foxglove/studio-base/hooks/useInitialD
 import useNativeAppMenuEvent from "@foxglove/studio-base/hooks/useNativeAppMenuEvent";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
 import { HelpInfoStore, useHelpInfo } from "@foxglove/studio-base/providers/HelpInfoProvider";
-import { PanelSettingsEditorContextProvider } from "@foxglove/studio-base/providers/PanelSettingsEditorContextProvider";
+import { PanelStateContextProvider } from "@foxglove/studio-base/providers/PanelStateContextProvider";
 
 const log = Logger.getLogger(__filename);
 
-const useStyles = makeStyles({
+const useStyles = makeStyles()({
   container: {
     width: "100%",
     height: "100%",
@@ -95,10 +94,6 @@ const useStyles = makeStyles({
     flex: "1 1 100%",
     outline: "none",
     overflow: "hidden",
-  },
-  dropzone: {
-    fontSize: "4em",
-    marginBottom: "1em",
   },
 });
 
@@ -111,7 +106,8 @@ type SidebarItemKey =
   | "account"
   | "layouts"
   | "preferences"
-  | "help";
+  | "help"
+  | "studio-logs-settings";
 
 const selectedLayoutIdSelector = (state: LayoutState) => state.selectedLayout?.id;
 
@@ -133,7 +129,6 @@ function keyboardEventHasModifier(event: KeyboardEvent) {
 function AddPanel() {
   const addPanel = useAddPanel();
   const { openLayoutBrowser } = useWorkspace();
-  const theme = useTheme();
   const selectedLayoutId = useCurrentLayoutSelector(selectedLayoutIdSelector);
 
   return (
@@ -147,7 +142,7 @@ function AddPanel() {
           <Link onClick={openLayoutBrowser}>Select a layout</Link> to get started!
         </Typography>
       ) : (
-        <PanelList onPanelSelect={addPanel} backgroundColor={theme.palette.background.default} />
+        <PanelList onPanelSelect={addPanel} />
       )}
     </SidebarContent>
   );
@@ -155,12 +150,12 @@ function AddPanel() {
 
 type WorkspaceProps = {
   deepLinks?: string[];
+  disableSignin?: boolean;
 };
 
 const DEFAULT_DEEPLINKS = Object.freeze([]);
 
 const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => playerState.presence;
-const selectRequestBackfill = ({ requestBackfill }: MessagePipelineContext) => requestBackfill;
 const selectPlayerProblems = ({ playerState }: MessagePipelineContext) => playerState.problems;
 const selectIsPlaying = (ctx: MessagePipelineContext) =>
   ctx.playerState.activeData?.isPlaying === true;
@@ -168,11 +163,12 @@ const selectPause = (ctx: MessagePipelineContext) => ctx.pausePlayback;
 const selectPlay = (ctx: MessagePipelineContext) => ctx.startPlayback;
 const selectSeek = (ctx: MessagePipelineContext) => ctx.seekPlayback;
 const selectPlayUntil = (ctx: MessagePipelineContext) => ctx.playUntil;
+const selectPlayerId = (ctx: MessagePipelineContext) => ctx.playerState.playerId;
 
 const selectSetHelpInfo = (store: HelpInfoStore) => store.setHelpInfo;
 
 export default function Workspace(props: WorkspaceProps): JSX.Element {
-  const classes = useStyles();
+  const { classes } = useStyles();
   const containerRef = useRef<HTMLDivElement>(ReactNull);
   const { availableSources, selectSource } = usePlayerSelection();
   const playerPresence = useMessagePipeline(selectPlayerPresence);
@@ -189,11 +185,12 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     return extensions;
   }, [availableSources]);
 
-  const supportsAccountSettings = useContext(ConsoleApiContext) != undefined;
+  const supportsAccountSettings =
+    useContext(ConsoleApiContext) != undefined && props.disableSignin !== true;
 
-  // we use requestBackfill to signal when a player changes for RemountOnValueChange below
+  // We use playerId to detect when a player changes for RemountOnValueChange below
   // see comment below above the RemountOnValueChange component
-  const requestBackfill = useMessagePipeline(selectRequestBackfill);
+  const playerId = useMessagePipeline(selectPlayerId);
 
   const isPlayerPresent = playerPresence !== PlayerPresence.NOT_PRESENT;
 
@@ -205,6 +202,10 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
 
   const [showOpenDialogOnStartup = true] = useAppConfigurationValue<boolean>(
     AppSetting.SHOW_OPEN_DIALOG_ON_STARTUP,
+  );
+
+  const [enableStudioLogsSidebar = false] = useAppConfigurationValue<boolean>(
+    AppSetting.SHOW_DEBUG_PANELS,
   );
 
   const showSignInForm = currentUserRequired && currentUser == undefined;
@@ -352,14 +353,16 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     };
   }, [connectionSources, nativeAppMenu, selectSource]);
 
-  const { addToast } = useToasts();
+  const { enqueueSnackbar } = useSnackbar();
 
   const { loadFromFile } = useAssets();
 
   const installExtension = useExtensionCatalog((state) => state.installExtension);
 
   const openHandle = useCallback(
-    async (handle: FileSystemFileHandle) => {
+    async (
+      handle: FileSystemFileHandle /* foxglove-depcheck-used: @types/wicg-file-system-access */,
+    ) => {
       log.debug("open handle", handle);
       const file = await handle.getFile();
       // electron extends File with a `path` field which is not available in browsers
@@ -371,14 +374,11 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
           const arrayBuffer = await file.arrayBuffer();
           const data = new Uint8Array(arrayBuffer);
           const extension = await installExtension("local", data);
-          addToast(`Installed extension ${extension.id}`, {
-            appearance: "success",
-            autoDismiss: true,
-          });
+          enqueueSnackbar(`Installed extension ${extension.id}`, { variant: "success" });
         } catch (err) {
           log.error(err);
-          addToast(`Failed to install extension ${file.name}: ${err.message}`, {
-            appearance: "error",
+          enqueueSnackbar(`Failed to install extension ${file.name}: ${err.message}`, {
+            variant: "error",
           });
         }
       } else {
@@ -388,9 +388,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
           }
         } catch (err) {
           log.error(err);
-          addToast(`Failed to load ${file.name}: ${err.message}`, {
-            appearance: "error",
-          });
+          enqueueSnackbar(`Failed to load ${file.name}: ${err.message}`, { variant: "error" });
         }
       }
 
@@ -403,7 +401,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
         selectSource(matchedSource.id, { type: "file", handle });
       }
     },
-    [addToast, availableSources, installExtension, loadFromFile, selectSource],
+    [availableSources, enqueueSnackbar, installExtension, loadFromFile, selectSource],
   );
 
   const openFiles = useCallback(
@@ -421,14 +419,11 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
             const arrayBuffer = await file.arrayBuffer();
             const data = new Uint8Array(arrayBuffer);
             const extension = await installExtension("local", data);
-            addToast(`Installed extension ${extension.id}`, {
-              appearance: "success",
-              autoDismiss: true,
-            });
+            enqueueSnackbar(`Installed extension ${extension.id}`, { variant: "success" });
           } catch (err) {
             log.error(err);
-            addToast(`Failed to install extension ${file.name}: ${err.message}`, {
-              appearance: "error",
+            enqueueSnackbar(`Failed to install extension ${file.name}: ${err.message}`, {
+              variant: "error",
             });
           }
         } else {
@@ -438,9 +433,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
             }
           } catch (err) {
             log.error(err);
-            addToast(`Failed to load ${file.name}: ${err.message}`, {
-              appearance: "error",
-            });
+            enqueueSnackbar(`Failed to load ${file.name}: ${err.message}`, { variant: "error" });
           }
         }
       }
@@ -461,7 +454,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
         }
       }
     },
-    [addToast, availableSources, installExtension, loadFromFile, selectSource],
+    [availableSources, enqueueSnackbar, installExtension, loadFromFile, selectSource],
   );
 
   // files the main thread told us to open
@@ -509,8 +502,8 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     };
   }, []);
 
-  const sidebarItems = useMemo<Map<SidebarItemKey, SidebarItem>>(() => {
-    const SIDEBAR_ITEMS = new Map<SidebarItemKey, SidebarItem>([
+  const [sidebarItems, sidebarBottomItems] = useMemo(() => {
+    const topItems = new Map<SidebarItemKey, SidebarItem>([
       [
         "connection",
         {
@@ -530,29 +523,43 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
         { iconName: "PanelSettings", title: "Panel settings", component: PanelSettings },
       ],
       ["variables", { iconName: "Variable2", title: "Variables", component: VariablesSidebar }],
-      ["preferences", { iconName: "Settings", title: "Preferences", component: Preferences }],
       ["extensions", { iconName: "AddIn", title: "Extensions", component: ExtensionsSidebar }],
+    ]);
+
+    if (enableStudioLogsSidebar) {
+      topItems.set("studio-logs-settings", {
+        iconName: "BacklogList",
+        title: "Studio Logs Settings",
+        component: StudioLogsSettingsSidebar,
+      });
+    }
+
+    const bottomItems = new Map<SidebarItemKey, SidebarItem>([
       ["help", { iconName: "QuestionCircle", title: "Help", component: HelpSidebar }],
     ]);
 
-    return supportsAccountSettings
-      ? new Map([
-          ...SIDEBAR_ITEMS,
-          [
-            "account",
-            {
-              iconName: currentUser != undefined ? "BlockheadFilled" : "Blockhead",
-              title: currentUser != undefined ? `Signed in as ${currentUser.email}` : "Account",
-              component: AccountSettings,
-            },
-          ],
-        ])
-      : SIDEBAR_ITEMS;
-  }, [DataSourceSidebarItem, playerProblems, supportsAccountSettings, currentUser]);
+    if (supportsAccountSettings) {
+      bottomItems.set("account", {
+        iconName: currentUser != undefined ? "BlockheadFilled" : "Blockhead",
+        title: currentUser != undefined ? `Signed in as ${currentUser.email}` : "Account",
+        component: AccountSettings,
+      });
+    }
 
-  const sidebarBottomItems: readonly SidebarItemKey[] = useMemo(() => {
-    return supportsAccountSettings ? ["help", "account", "preferences"] : ["help", "preferences"];
-  }, [supportsAccountSettings]);
+    bottomItems.set("preferences", {
+      iconName: "Settings",
+      title: "Preferences",
+      component: Preferences,
+    });
+
+    return [topItems, bottomItems];
+  }, [
+    DataSourceSidebarItem,
+    playerProblems,
+    enableStudioLogsSidebar,
+    supportsAccountSettings,
+    currentUser,
+  ]);
 
   const keyDownHandlers = useMemo(
     () => ({
@@ -589,7 +596,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
         /* eslint-disable react/jsx-key */
         <LinkHandlerContext.Provider value={handleInternalLink} />,
         <WorkspaceContext.Provider value={workspaceActions} />,
-        <PanelSettingsEditorContextProvider />,
+        <PanelStateContextProvider />,
         /* eslint-enable react/jsx-key */
       ]}
     >
@@ -601,13 +608,8 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
           onDismiss={() => setShowOpenDialog(undefined)}
         />
       )}
-      <DocumentDropListener onDrop={dropHandler} allowedExtensions={allowedDropExtensions}>
-        <DropOverlay>
-          <div className={classes.dropzone}>Drop a file here</div>
-        </DropOverlay>
-      </DocumentDropListener>
-      <OrgExtensionRegistrySyncAdapter />
-      <URLStateSyncAdapter />
+      <DocumentDropListener onDrop={dropHandler} allowedExtensions={allowedDropExtensions} />
+      <SyncAdapters />
       <KeyListener global keyDownHandlers={keyDownHandlers} />
       <div className={classes.container} ref={containerRef} tabIndex={0}>
         <Sidebar
@@ -617,11 +619,11 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
           onSelectKey={selectSidebarItem}
         >
           {/* To ensure no stale player state remains, we unmount all panels when players change */}
-          <RemountOnValueChange value={requestBackfill}>
+          <RemountOnValueChange value={playerId}>
             <Stack>
               <PanelLayout />
               {play && pause && seek && (
-                <Box flexShrink={0}>
+                <div style={{ flexShrink: 0 }}>
                   <PlaybackControls
                     play={play}
                     pause={pause}
@@ -630,7 +632,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
                     isPlaying={isPlaying}
                     getTimeInfo={getTimeInfo}
                   />
-                </Box>
+                </div>
               )}
             </Stack>
           </RemountOnValueChange>

@@ -11,7 +11,7 @@ import CurrentLayoutContext, {
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import {
   PanelsActions,
-  PanelsState,
+  LayoutData,
 } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
 import { defaultPlaybackConfig } from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
 import { LayoutID } from "@foxglove/studio-base/services/ConsoleApi";
@@ -28,7 +28,7 @@ export default function MockCurrentLayoutProvider({
   initialState,
   onAction,
 }: React.PropsWithChildren<{
-  initialState?: Partial<PanelsState>;
+  initialState?: Partial<LayoutData>;
   onAction?: (action: PanelsActions) => void;
 }>): JSX.Element {
   const layoutStateListeners = useRef(new Set<(_: LayoutState) => void>());
@@ -46,7 +46,6 @@ export default function MockCurrentLayoutProvider({
         configById: {},
         globalVariables: {},
         userNodes: {},
-        linkedGlobalVariables: [],
         playbackConfig: defaultPlaybackConfig,
         ...initialState,
       },
@@ -94,8 +93,6 @@ export default function MockCurrentLayoutProvider({
         performAction({ type: "OVERWRITE_GLOBAL_DATA", payload }),
       setGlobalVariables: (payload) => performAction({ type: "SET_GLOBAL_DATA", payload }),
       setUserNodes: (payload) => performAction({ type: "SET_USER_NODES", payload }),
-      setLinkedGlobalVariables: (payload) =>
-        performAction({ type: "SET_LINKED_GLOBAL_VARIABLES", payload }),
       setPlaybackConfig: (payload) => performAction({ type: "SET_PLAYBACK_CONFIG", payload }),
       closePanel: (payload) => performAction({ type: "CLOSE_PANEL", payload }),
       splitPanel: (payload) => performAction({ type: "SPLIT_PANEL", payload }),

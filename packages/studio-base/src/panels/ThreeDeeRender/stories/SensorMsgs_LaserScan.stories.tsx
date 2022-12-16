@@ -5,7 +5,8 @@
 import * as THREE from "three";
 
 import { fromSec } from "@foxglove/rostime";
-import { MessageEvent, Topic } from "@foxglove/studio";
+import { MessageEvent } from "@foxglove/studio";
+import { Topic } from "@foxglove/studio-base/players/types";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 
 import ThreeDeeRender from "../index";
@@ -31,8 +32,8 @@ function SensorMsgs_LaserScan({
   settings: Record<string, unknown>;
 }): JSX.Element {
   const topics: Topic[] = [
-    { name: "/scan", datatype: "sensor_msgs/LaserScan" },
-    { name: "/tf", datatype: "geometry_msgs/TransformStamped" },
+    { name: "/scan", schemaName: "sensor_msgs/LaserScan" },
+    { name: "/tf", schemaName: "geometry_msgs/TransformStamped" },
   ];
   const tf1: MessageEvent<TransformStamped> = {
     topic: "/tf",
@@ -45,6 +46,7 @@ function SensorMsgs_LaserScan({
         rotation: QUAT_IDENTITY,
       },
     },
+    schemaName: "geometry_msgs/TransformStamped",
     sizeInBytes: 0,
   };
   const tf2: MessageEvent<TransformStamped> = {
@@ -58,6 +60,7 @@ function SensorMsgs_LaserScan({
         rotation: new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), Math.PI / 2),
       },
     },
+    schemaName: "geometry_msgs/TransformStamped",
     sizeInBytes: 0,
   };
   const tf3: MessageEvent<TransformStamped> = {
@@ -71,6 +74,7 @@ function SensorMsgs_LaserScan({
         rotation: QUAT_IDENTITY,
       },
     },
+    schemaName: "geometry_msgs/TransformStamped",
     sizeInBytes: 0,
   };
 
@@ -99,6 +103,7 @@ function SensorMsgs_LaserScan({
       ranges,
       intensities,
     },
+    schemaName: "sensor_msgs/LaserScan",
     sizeInBytes: 0,
   };
 
@@ -212,9 +217,9 @@ export const Time10 = Object.assign(SensorMsgs_LaserScan.bind({}), {
 
 export function ComparisonWithPointCloudColors(): JSX.Element {
   const topics: Topic[] = [
-    { name: "/scan", datatype: "sensor_msgs/LaserScan" },
-    { name: "/cloud", datatype: "sensor_msgs/PointCloud2" },
-    { name: "/tf", datatype: "geometry_msgs/TransformStamped" },
+    { name: "/scan", schemaName: "sensor_msgs/LaserScan" },
+    { name: "/cloud", schemaName: "sensor_msgs/PointCloud2" },
+    { name: "/tf", schemaName: "geometry_msgs/TransformStamped" },
   ];
   const tf1: MessageEvent<TransformStamped> = {
     topic: "/tf",
@@ -227,6 +232,7 @@ export function ComparisonWithPointCloudColors(): JSX.Element {
         rotation: QUAT_IDENTITY,
       },
     },
+    schemaName: "geometry_msgs/TransformStamped",
     sizeInBytes: 0,
   };
 
@@ -263,6 +269,7 @@ export function ComparisonWithPointCloudColors(): JSX.Element {
       ranges,
       intensities,
     },
+    schemaName: "sensor_msgs/LaserScan",
     sizeInBytes: 0,
   };
 
@@ -289,6 +296,7 @@ export function ComparisonWithPointCloudColors(): JSX.Element {
       ),
       is_dense: true,
     },
+    schemaName: "sensor_msgs/PointCloud2",
     sizeInBytes: 0,
   };
 

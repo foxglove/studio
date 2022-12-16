@@ -6,11 +6,10 @@ import { useMemo, useState } from "react";
 
 import {
   IDataSourceFactory,
-  AppSetting,
   Ros1LocalBagDataSourceFactory,
   Ros2LocalBagDataSourceFactory,
   RosbridgeDataSourceFactory,
-  Ros1RemoteBagDataSourceFactory,
+  RemoteDataSourceFactory,
   FoxgloveDataPlatformDataSourceFactory,
   FoxgloveWebSocketDataSourceFactory,
   UlogLocalDataSourceFactory,
@@ -18,7 +17,6 @@ import {
   SampleNuscenesDataSourceFactory,
   IAppConfiguration,
   IdbExtensionLoader,
-  McapRemoteDataSourceFactory,
   App,
   ConsoleApi,
 } from "@foxglove/studio-base";
@@ -29,30 +27,24 @@ import VelodyneUnavailableDataSourceFactory from "./dataSources/VelodyneUnavaila
 import { IdbLayoutStorage } from "./services/IdbLayoutStorage";
 
 export function Root({ appConfiguration }: { appConfiguration: IAppConfiguration }): JSX.Element {
-  const enableExperimentalLatching: boolean =
-    (appConfiguration.get(AppSetting.EXPERIMENTAL_LATCHING) as boolean | undefined) ?? true;
-
   const dataSources: IDataSourceFactory[] = useMemo(() => {
     const sources = [
       new Ros1UnavailableDataSourceFactory(),
-      new Ros1LocalBagDataSourceFactory({ useIterablePlayer: enableExperimentalLatching }),
-      new Ros1RemoteBagDataSourceFactory({ useIterablePlayer: enableExperimentalLatching }),
+      new Ros1LocalBagDataSourceFactory(),
       new Ros2UnavailableDataSourceFactory(),
-      new Ros2LocalBagDataSourceFactory({ useIterablePlayer: enableExperimentalLatching }),
+      new Ros2LocalBagDataSourceFactory(),
       new RosbridgeDataSourceFactory(),
       new FoxgloveWebSocketDataSourceFactory(),
       new UlogLocalDataSourceFactory(),
       new VelodyneUnavailableDataSourceFactory(),
-      new FoxgloveDataPlatformDataSourceFactory({
-        useIterablePlayer: enableExperimentalLatching,
-      }),
-      new SampleNuscenesDataSourceFactory({ useIterablePlayer: enableExperimentalLatching }),
-      new McapLocalDataSourceFactory({ useIterablePlayer: enableExperimentalLatching }),
-      new McapRemoteDataSourceFactory({ useIterablePlayer: enableExperimentalLatching }),
+      new FoxgloveDataPlatformDataSourceFactory(),
+      new SampleNuscenesDataSourceFactory(),
+      new McapLocalDataSourceFactory(),
+      new RemoteDataSourceFactory(),
     ];
 
     return sources;
-  }, [enableExperimentalLatching]);
+  }, []);
 
   const layoutStorage = useMemo(() => new IdbLayoutStorage(), []);
   const [extensionLoaders] = useState(() => [
@@ -63,18 +55,25 @@ export function Root({ appConfiguration }: { appConfiguration: IAppConfiguration
 
   // Enable dialog auth in development since using cookie auth does not work between
   // localhost and the hosted dev deployment due to browser cookie/host security.
-  const enableDialogAuth = process.env.NODE_ENV === "development";
+  const enableDialogAuth =
+    process.env.NODE_ENV === "development" || process.env.FOXGLOVE_ENABLE_DIALOG_AUTH != undefined;
+
+  const disableSignin = process.env.FOXGLOVE_DISABLE_SIGN_IN != undefined;
 
   return (
-    <App
-      enableDialogAuth={enableDialogAuth}
-      enableLaunchPreferenceScreen
-      deepLinks={[window.location.href]}
-      dataSources={dataSources}
-      appConfiguration={appConfiguration}
-      layoutStorage={layoutStorage}
-      consoleApi={consoleApi}
-      extensionLoaders={extensionLoaders}
-    />
+    <>
+      <App
+        disableSignin={disableSignin}
+        enableDialogAuth={enableDialogAuth}
+        enableLaunchPreferenceScreen
+        deepLinks={[window.location.href]}
+        dataSources={dataSources}
+        appConfiguration={appConfiguration}
+        layoutStorage={layoutStorage}
+        consoleApi={consoleApi}
+        extensionLoaders={extensionLoaders}
+        enableGlobalCss
+      />
+    </>
   );
 }

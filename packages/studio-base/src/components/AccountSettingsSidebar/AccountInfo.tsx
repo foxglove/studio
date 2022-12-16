@@ -3,8 +3,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Button, CircularProgress, Typography } from "@mui/material";
+import { useSnackbar } from "notistack";
 import { useCallback } from "react";
-import { useToasts } from "react-toast-notifications";
 import { useAsyncFn } from "react-use";
 import { makeStyles } from "tss-react/mui";
 
@@ -27,7 +27,7 @@ const useStyles = makeStyles()((theme) => ({
 
 export default function AccountInfo(props: { currentUser?: User }): JSX.Element {
   const { signOut } = useCurrentUser();
-  const { addToast } = useToasts();
+  const { enqueueSnackbar } = useSnackbar();
   const confirm = useConfirm();
   const { classes } = useStyles();
 
@@ -36,9 +36,9 @@ export default function AccountInfo(props: { currentUser?: User }): JSX.Element 
       await signOut();
     } catch (error) {
       log.error(error);
-      addToast((error as Error).toString(), { appearance: "error" });
+      enqueueSnackbar((error as Error).toString(), { variant: "error" });
     }
-  }, [addToast, signOut]);
+  }, [enqueueSnackbar, signOut]);
 
   const onSignoutClick = useCallback(() => {
     void confirm({
@@ -62,7 +62,7 @@ export default function AccountInfo(props: { currentUser?: User }): JSX.Element 
   return (
     <Stack fullHeight justifyContent="space-between">
       <Stack gap={2}>
-        <Stack direction="row" alignItems="center" gap={1}>
+        <Stack direction="row" alignItems="center" gap={1} flexWrap="wrap">
           <BlockheadFilledIcon className={classes.icon} />
           <Stack justifyContent="center">
             <Typography variant="subtitle1">{props.currentUser.email}</Typography>

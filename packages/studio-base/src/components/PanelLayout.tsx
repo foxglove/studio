@@ -13,21 +13,21 @@
 
 import { CircularProgress, Link, styled as muiStyled } from "@mui/material";
 import React, {
-  useCallback,
-  useMemo,
+  LazyExoticComponent,
   PropsWithChildren,
   Suspense,
-  useRef,
-  LazyExoticComponent,
+  useCallback,
   useEffect,
+  useMemo,
+  useRef,
 } from "react";
 import { useDrop } from "react-dnd";
 import {
-  MosaicWithoutDragDropContext,
-  MosaicWindow,
   MosaicDragType,
   MosaicNode,
   MosaicPath,
+  MosaicWindow,
+  MosaicWithoutDragDropContext,
 } from "react-mosaic-component";
 import "react-mosaic-component/react-mosaic-component.css";
 
@@ -48,6 +48,8 @@ import { MosaicDropResult, PanelConfig } from "@foxglove/studio-base/types/panel
 import { getPanelIdForType, getPanelTypeFromId } from "@foxglove/studio-base/util/layout";
 
 import ErrorBoundary from "./ErrorBoundary";
+import { MosaicPathContext } from "./MosaicPathContext";
+import { PanelRemounter } from "./PanelRemounter";
 
 type Props = {
   layout?: MosaicNode<string>;
@@ -149,10 +151,6 @@ export function UnconnectedPanelLayout(props: Props): React.ReactElement {
         }
       }
 
-      // When a panel changes from being the only panel to one of many in a layout and
-      // is no longer the top level panel we need to force it to update to recalculate
-      // whether it should be draggable or not. Since the panel component is memoized we use
-      // a key to break through the memoization when the panel's layout path changes.
       const mosaicWindow = (
         <MosaicWindow
           title=""
@@ -168,7 +166,11 @@ export function UnconnectedPanelLayout(props: Props): React.ReactElement {
               </EmptyState>
             }
           >
-            <Panel childId={id} tabId={tabId} key={`${id}${tabId}${path.length}`} />
+            <MosaicPathContext.Provider value={path}>
+              <PanelRemounter id={id} tabId={tabId}>
+                <Panel childId={id} tabId={tabId} />
+              </PanelRemounter>
+            </MosaicPathContext.Provider>
           </Suspense>
         </MosaicWindow>
       );

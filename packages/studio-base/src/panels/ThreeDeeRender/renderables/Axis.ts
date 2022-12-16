@@ -27,28 +27,30 @@ const tempMat4 = new THREE.Matrix4();
 const tempVec = new THREE.Vector3();
 
 export class Axis extends THREE.Object3D {
-  private static shaftLod: DetailLevel | undefined;
-  private static headLod: DetailLevel | undefined;
-  private static shaftGeometry: THREE.CylinderGeometry | undefined;
-  private static headGeometry: THREE.ConeGeometry | undefined;
+  private readonly renderer: Renderer;
+  private shaftMesh: THREE.InstancedMesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>;
+  private headMesh: THREE.InstancedMesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>;
 
-  readonly renderer: Renderer;
-  shaftMesh: THREE.InstancedMesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>;
-  headMesh: THREE.InstancedMesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>;
-
-  constructor(name: string, renderer: Renderer) {
+  public constructor(name: string, renderer: Renderer) {
     super();
     this.name = name;
     this.renderer = renderer;
 
     // Create three arrow shafts
-    const shaftGeometry = Axis.ShaftGeometry(this.renderer.maxLod);
+    const shaftGeometry = this.renderer.sharedGeometry.getGeometry(
+      `${this.constructor.name}-shaft-${this.renderer.maxLod}`,
+      () => createShaftGeometry(this.renderer.maxLod),
+    );
     this.shaftMesh = new THREE.InstancedMesh(shaftGeometry, standardMaterial(COLOR_WHITE), 3);
     this.shaftMesh.castShadow = true;
     this.shaftMesh.receiveShadow = true;
 
     // Create three arrow heads
-    const headGeometry = Axis.HeadGeometry(this.renderer.maxLod);
+    const headGeometry = this.renderer.sharedGeometry.getGeometry(
+      `${this.constructor.name}-head-${this.renderer.maxLod}`,
+      () => createHeadGeometry(this.renderer.maxLod),
+    );
+
     this.headMesh = new THREE.InstancedMesh(headGeometry, standardMaterial(COLOR_WHITE), 3);
     this.headMesh.castShadow = true;
     this.headMesh.receiveShadow = true;
@@ -59,14 +61,14 @@ export class Axis extends THREE.Object3D {
     this.add(this.headMesh);
   }
 
-  dispose(): void {
+  public dispose(): void {
     this.shaftMesh.material.dispose();
     this.shaftMesh.dispose();
     this.headMesh.material.dispose();
     this.headMesh.dispose();
   }
 
-  static UpdateInstances(
+  private static UpdateInstances(
     shaft: THREE.InstancedMesh,
     head: THREE.InstancedMesh,
     axisIndex: number,
@@ -100,32 +102,25 @@ export class Axis extends THREE.Object3D {
     head.setColorAt(indexY, GREEN_COLOR);
     head.setColorAt(indexZ, BLUE_COLOR);
   }
-
-  static ShaftGeometry(lod: DetailLevel): THREE.CylinderGeometry {
-    if (!Axis.shaftGeometry || lod !== Axis.shaftLod) {
-      const subdivs = arrowShaftSubdivisions(lod);
-      Axis.shaftGeometry = new THREE.CylinderGeometry(0.5, 0.5, 1, subdivs, 1, false);
-      Axis.shaftGeometry.rotateZ(-PI_2);
-      Axis.shaftGeometry.translate(0.5, 0, 0);
-      Axis.shaftGeometry.computeBoundingSphere();
-      Axis.shaftLod = lod;
-    }
-    return Axis.shaftGeometry;
-  }
-
-  static HeadGeometry(lod: DetailLevel): THREE.ConeGeometry {
-    if (!Axis.headGeometry || lod !== Axis.headLod) {
-      const subdivs = arrowHeadSubdivisions(lod);
-      Axis.headGeometry = new THREE.ConeGeometry(0.5, 1, subdivs, 1, false);
-      Axis.headGeometry.rotateZ(-PI_2);
-      Axis.headGeometry.translate(0.5, 0, 0);
-      Axis.headGeometry.computeBoundingSphere();
-      Axis.headLod = lod;
-    }
-    return Axis.headGeometry;
-  }
 }
 
+function createShaftGeometry(lod: DetailLevel): THREE.CylinderGeometry {
+  const subdivs = arrowShaftSubdivisions(lod);
+  const shaftGeometry = new THREE.CylinderGeometry(0.5, 0.5, 1, subdivs, 1, false);
+  shaftGeometry.rotateZ(-PI_2);
+  shaftGeometry.translate(0.5, 0, 0);
+  shaftGeometry.computeBoundingSphere();
+  return shaftGeometry;
+}
+
+function createHeadGeometry(lod: DetailLevel): THREE.ConeGeometry {
+  const subdivs = arrowHeadSubdivisions(lod);
+  const headGeometry = new THREE.ConeGeometry(0.5, 1, subdivs, 1, false);
+  headGeometry.rotateZ(-PI_2);
+  headGeometry.translate(0.5, 0, 0);
+  headGeometry.computeBoundingSphere();
+  return headGeometry;
+}
 function standardMaterial(color: ColorRGBA): THREE.MeshStandardMaterial {
   return new THREE.MeshStandardMaterial({
     color: new THREE.Color(color.r, color.g, color.b).convertSRGBToLinear(),

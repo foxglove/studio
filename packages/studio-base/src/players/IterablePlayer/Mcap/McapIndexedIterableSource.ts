@@ -7,7 +7,7 @@ import { Mcap0IndexedReader, Mcap0Types } from "@mcap/core";
 import Logger from "@foxglove/log";
 import { ParsedChannel, parseChannel } from "@foxglove/mcap-support";
 import { Time, fromNanoSec, toNanoSec, compare } from "@foxglove/rostime";
-import { Topic, MessageEvent } from "@foxglove/studio";
+import { MessageEvent } from "@foxglove/studio";
 import {
   GetBackfillMessagesArgs,
   IIterableSource,
@@ -15,7 +15,7 @@ import {
   IteratorResult,
   MessageIteratorArgs,
 } from "@foxglove/studio-base/players/IterablePlayer/IIterableSource";
-import { PlayerProblem, TopicStats } from "@foxglove/studio-base/players/types";
+import { PlayerProblem, Topic, TopicStats } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 
 const log = Logger.getLogger(__filename);
@@ -24,16 +24,16 @@ export class McapIndexedIterableSource implements IIterableSource {
   private reader: Mcap0IndexedReader;
   private channelInfoById = new Map<
     number,
-    { channel: Mcap0Types.Channel; parsedChannel: ParsedChannel }
+    { channel: Mcap0Types.Channel; parsedChannel: ParsedChannel; schemaName: string }
   >();
   private start?: Time;
   private end?: Time;
 
-  constructor(reader: Mcap0IndexedReader) {
+  public constructor(reader: Mcap0IndexedReader) {
     this.reader = reader;
   }
 
-  async initialize(): Promise<Initalization> {
+  public async initialize(): Promise<Initalization> {
     let startTime: bigint | undefined;
     let endTime: bigint | undefined;
     for (const chunk of this.reader.chunkIndexes) {
@@ -78,11 +78,11 @@ export class McapIndexedIterableSource implements IIterableSource {
         });
         continue;
       }
-      this.channelInfoById.set(channel.id, { channel, parsedChannel });
+      this.channelInfoById.set(channel.id, { channel, parsedChannel, schemaName: schema.name });
 
       let topic = topicsByName.get(channel.topic);
       if (!topic) {
-        topic = { name: channel.topic, datatype: parsedChannel.fullSchemaName };
+        topic = { name: channel.topic, schemaName: schema.name };
         topicsByName.set(channel.topic, topic);
 
         const numMessages = this.reader.statistics?.channelMessageCounts.get(channel.id);
@@ -111,7 +111,7 @@ export class McapIndexedIterableSource implements IIterableSource {
     };
   }
 
-  async *messageIterator(
+  public async *messageIterator(
     args: MessageIteratorArgs,
   ): AsyncIterableIterator<Readonly<IteratorResult>> {
     const topics = args.topics;
@@ -130,42 +130,42 @@ export class McapIndexedIterableSource implements IIterableSource {
       const channelInfo = this.channelInfoById.get(message.channelId);
       if (!channelInfo) {
         yield {
-          connectionId: undefined,
+          type: "problem",
           problem: {
             message: `Received message on channel ${message.channelId} without prior channel info`,
             severity: "error",
           },
-          msgEvent: undefined,
         };
         continue;
       }
       try {
         yield {
-          connectionId: undefined,
-          problem: undefined,
+          type: "message-event",
           msgEvent: {
             topic: channelInfo.channel.topic,
             receiveTime: fromNanoSec(message.logTime),
             publishTime: fromNanoSec(message.publishTime),
             message: channelInfo.parsedChannel.deserializer(message.data),
             sizeInBytes: message.data.byteLength,
+            schemaName: channelInfo.schemaName,
           },
         };
       } catch (error) {
         yield {
-          connectionId: undefined,
+          type: "problem",
           problem: {
             message: `Error decoding message on ${channelInfo.channel.topic}`,
             error,
             severity: "error",
           },
-          msgEvent: undefined,
         };
       }
     }
   }
 
-  async getBackfillMessages(args: GetBackfillMessagesArgs): Promise<MessageEvent<unknown>[]> {
+  public async getBackfillMessages(
+    args: GetBackfillMessagesArgs,
+  ): Promise<MessageEvent<unknown>[]> {
     const { topics, time } = args;
 
     const messages: MessageEvent<unknown>[] = [];
@@ -191,6 +191,7 @@ export class McapIndexedIterableSource implements IIterableSource {
             publishTime: fromNanoSec(message.publishTime),
             message: channelInfo.parsedChannel.deserializer(message.data),
             sizeInBytes: message.data.byteLength,
+            schemaName: channelInfo.schemaName,
           });
         } catch (err) {
           log.error(err);

@@ -7,25 +7,31 @@ import ReactDOM from "react-dom";
 import { createStore, StoreApi } from "zustand";
 
 import Logger from "@foxglove/log";
-import { ExtensionContext, ExtensionModule } from "@foxglove/studio";
+import { ExtensionContext, ExtensionModule, RegisterMessageConverterArgs } from "@foxglove/studio";
 import {
   ExtensionCatalog,
   ExtensionCatalogContext,
   RegisteredPanel,
-  useExtensionCatalog,
 } from "@foxglove/studio-base/context/ExtensionCatalogContext";
 import { ExtensionLoader } from "@foxglove/studio-base/services/ExtensionLoader";
 import { ExtensionInfo, ExtensionNamespace } from "@foxglove/studio-base/types/Extensions";
 
 const log = Logger.getLogger(__filename);
 
-async function registerExtensionPanels(
+type ContributionPoints = {
+  panels: Record<string, RegisteredPanel>;
+  messageConverters: RegisterMessageConverterArgs<unknown>[];
+};
+
+async function activateExtensions(
   extensions: ExtensionInfo[],
   loadExtension: ExtensionLoader["loadExtension"],
-): Promise<Record<string, RegisteredPanel>> {
+): Promise<ContributionPoints> {
   // registered panels stored by their fully qualified id
   // the fully qualified id is the extension name + panel name
   const panels: Record<string, RegisteredPanel> = {};
+
+  const messageConverters: RegisterMessageConverterArgs<unknown>[] = [];
 
   for (const extension of extensions) {
     log.debug(`Activating extension ${extension.qualifiedName}`);
@@ -60,6 +66,13 @@ async function registerExtensionPanels(
           registration: params,
         };
       },
+
+      registerMessageConverter<Src>(args: RegisterMessageConverterArgs<Src>) {
+        log.debug(
+          `Extension ${extension.qualifiedName} registering message converter from: ${args.fromSchemaName} to: ${args.toSchemaName}`,
+        );
+        messageConverters.push(args as RegisterMessageConverterArgs<unknown>);
+      },
     };
 
     try {
@@ -78,7 +91,10 @@ async function registerExtensionPanels(
     }
   }
 
-  return panels;
+  return {
+    panels,
+    messageConverters,
+  };
 }
 
 export function createExtensionRegistryStore(
@@ -113,22 +129,33 @@ export function createExtensionRegistryStore(
     },
 
     refreshExtensions: async () => {
+      if (loaders.length === 0) {
+        return;
+      }
+
       const extensionList = (
         await Promise.all(loaders.map(async (loader) => await loader.getExtensions()))
       )
         .flat()
         .sort();
       log.debug(`Found ${extensionList.length} extension(s)`);
-      const panels = await registerExtensionPanels(
+      const contributionPoints = await activateExtensions(
         extensionList,
         async (id: string) => await get().loadExtension(id),
       );
-      set({ installedExtensions: extensionList, installedPanels: panels });
+      set({
+        installedExtensions: extensionList,
+        installedPanels: contributionPoints.panels,
+        installedMessageConverters: contributionPoints.messageConverters,
+      });
     },
 
-    installedExtensions: undefined,
+    // If there are no loaders then we know there will not be any installed extensions
+    installedExtensions: loaders.length === 0 ? [] : undefined,
 
-    installedPanels: undefined,
+    installedPanels: {},
+
+    installedMessageConverters: [],
 
     uninstallExtension: async (namespace: ExtensionNamespace, id: string) => {
       const namespacedLoader = loaders.find((loader) => loader.namespace === namespace);
@@ -141,25 +168,19 @@ export function createExtensionRegistryStore(
   }));
 }
 
-function InitialRefreshAdapter(): ReactNull {
-  const refreshExtensions = useExtensionCatalog((state) => state.refreshExtensions);
-  useEffect(() => {
-    refreshExtensions().catch((err) => log.error(err));
-  }, [refreshExtensions]);
-
-  return ReactNull;
-}
-
 export default function ExtensionCatalogProvider({
   children,
   loaders,
 }: PropsWithChildren<{ loaders: readonly ExtensionLoader[] }>): JSX.Element {
   const [store] = useState(createExtensionRegistryStore(loaders));
 
+  // Request an initial refresh on first mount
+  const refreshExtensions = store.getState().refreshExtensions;
+  useEffect(() => {
+    refreshExtensions().catch((err) => log.error(err));
+  }, [refreshExtensions]);
+
   return (
-    <ExtensionCatalogContext.Provider value={store}>
-      <InitialRefreshAdapter />
-      {children}
-    </ExtensionCatalogContext.Provider>
+    <ExtensionCatalogContext.Provider value={store}>{children}</ExtensionCatalogContext.Provider>
   );
 }

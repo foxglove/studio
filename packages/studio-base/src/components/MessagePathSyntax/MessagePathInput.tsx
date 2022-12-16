@@ -58,7 +58,13 @@ function getFieldPaths(
 ): Map<string, RosMsgField> {
   const output = new Map<string, RosMsgField>();
   for (const topic of topics) {
-    addFieldPathsForType(quoteTopicNameIfNeeded(topic.name), topic.datatype, datatypes, [], output);
+    addFieldPathsForType(
+      quoteTopicNameIfNeeded(topic.name),
+      topic.schemaName,
+      datatypes,
+      [],
+      output,
+    );
   }
   return output;
 }
@@ -271,7 +277,10 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
       return undefined;
     }
 
-    return traverseStructure(messagePathStructuresForDataype[topic.datatype], rosPath.messagePath);
+    return traverseStructure(
+      messagePathStructuresForDataype[topic.schemaName],
+      rosPath.messagePath,
+    );
   }, [messagePathStructuresForDataype, rosPath?.messagePath, topic]);
 
   const invalidGlobalVariablesVariable = useMemo(() => {
@@ -341,7 +350,6 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
 
         // Provide filter suggestions for primitive values, since they're the only kinds of values
         // that can be filtered on.
-        // TODO: add support for nested paths to primitives, such as "/some_topic{foo.bar==3}".
         for (const name of Object.keys(structureTraversalResult.structureItem.nextByName)) {
           const item = structureTraversalResult.structureItem.nextByName[name];
           if (item?.structureType === "primitive") {
@@ -366,7 +374,7 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
           rosPath.messagePath[0]?.type === "filter" ? rosPath.messagePath[0].repr.length + 2 : 0;
 
         return {
-          autocompleteItems: messagePathsForDatatype(topic.datatype, datatypes, {
+          autocompleteItems: messagePathsForDatatype(topic.schemaName, datatypes, {
             validTypes,
             noMultiSlices,
             messagePath: rosPath.messagePath,
@@ -432,7 +440,7 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
     return flatten(
       partition(
         autocompleteItems,
-        (item) => getTopicsByTopicName(topics)[item]?.datatype === prioritizedDatatype,
+        (item) => getTopicsByTopicName(topics)[item]?.schemaName === prioritizedDatatype,
       ),
     );
   }, [autocompleteItems, prioritizedDatatype, topics]);

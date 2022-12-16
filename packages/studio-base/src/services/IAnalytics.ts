@@ -4,18 +4,25 @@
 
 enum AppEventCategory {
   LIFECYCLE = "LIFECYCLE",
+  DIALOG = "DIALOG",
   PLAYERS = "PLAYERS",
   LAYOUTS = "LAYOUTS",
   PANELS = "PANELS",
+  VARIABLES = "VARIABLES",
   EXTENSIONS = "EXTENSIONS",
+  EXPERIMENTAL_FEATURES = "EXPERIMENTAL_FEATURES",
 }
 
 enum AppEvent {
   APP_INIT = "APP_INIT",
 
+  // Dialog events
+  DIALOG_SELECT_VIEW = "DIALOG_SELECT_VIEW",
+  DIALOG_CLOSE = "DIALOG_CLOSE",
+  DIALOG_CLICK_CTA = "DIALOG_CLICK_CTA",
+
   // Player events
   PLAYER_CONSTRUCTED = "PLAYER_CONSTRUCTED",
-  PLAYER_INITIALIZED = "PLAYER_INITIALIZED",
   PLAYER_PLAY = "PLAYER_PLAY",
   PLAYER_SEEK = "PLAYER_SEEK",
   PLAYER_SET_SPEED = "PLAYER_SET_SPEED",
@@ -40,9 +47,16 @@ enum AppEvent {
   PANEL_ADD = "PANEL_ADD",
   PANEL_DELETE = "PANEL_DELETE",
 
+  // Variable events
+  VARIABLE_ADD = "VARIABLE_ADD",
+  VARIABLE_DELETE = "VARIABLE_DELETE",
+
   // Extension events
   EXTENSION_INSTALL = "EXTENSION_INSTALL",
   EXTENSION_UNINSTALL = "EXTENSION_UNINSTALL",
+
+  // Experimental features
+  EXPERIMENTAL_FEATURE_TOGGLE = "EXPERIMENTAL_FEATURE_TOGGLE",
 }
 
 /** https://develop.sentry.dev/sdk/event-payloads/breadcrumbs/#breadcrumb-types */
@@ -64,8 +78,12 @@ export function getEventCategory(event: AppEvent): AppEventCategory {
     case AppEvent.APP_INIT:
       return AppEventCategory.LIFECYCLE;
 
+    case AppEvent.DIALOG_SELECT_VIEW:
+    case AppEvent.DIALOG_CLOSE:
+    case AppEvent.DIALOG_CLICK_CTA:
+      return AppEventCategory.DIALOG;
+
     case AppEvent.PLAYER_CONSTRUCTED:
-    case AppEvent.PLAYER_INITIALIZED:
     case AppEvent.PLAYER_PLAY:
     case AppEvent.PLAYER_SEEK:
     case AppEvent.PLAYER_SET_SPEED:
@@ -91,9 +109,16 @@ export function getEventCategory(event: AppEvent): AppEventCategory {
     case AppEvent.PANEL_DELETE:
       return AppEventCategory.PANELS;
 
+    case AppEvent.VARIABLE_ADD:
+    case AppEvent.VARIABLE_DELETE:
+      return AppEventCategory.VARIABLES;
+
     case AppEvent.EXTENSION_INSTALL:
     case AppEvent.EXTENSION_UNINSTALL:
       return AppEventCategory.EXTENSIONS;
+
+    case AppEvent.EXPERIMENTAL_FEATURE_TOGGLE:
+      return AppEventCategory.EXPERIMENTAL_FEATURES;
   }
 }
 
@@ -102,8 +127,12 @@ export function getEventBreadcrumbType(event: AppEvent): SentryBreadcrumbType {
     case AppEvent.APP_INIT:
       return SentryBreadcrumbType.DEFAULT;
 
+    case AppEvent.DIALOG_SELECT_VIEW:
+    case AppEvent.DIALOG_CLOSE:
+    case AppEvent.DIALOG_CLICK_CTA:
+      return SentryBreadcrumbType.USER;
+
     case AppEvent.PLAYER_CONSTRUCTED:
-    case AppEvent.PLAYER_INITIALIZED:
       return SentryBreadcrumbType.TRANSACTION;
 
     case AppEvent.PLAYER_PLAY:
@@ -131,8 +160,15 @@ export function getEventBreadcrumbType(event: AppEvent): SentryBreadcrumbType {
     case AppEvent.PANEL_DELETE:
       return SentryBreadcrumbType.USER;
 
+    case AppEvent.VARIABLE_ADD:
+    case AppEvent.VARIABLE_DELETE:
+      return SentryBreadcrumbType.USER;
+
     case AppEvent.EXTENSION_INSTALL:
     case AppEvent.EXTENSION_UNINSTALL:
+      return SentryBreadcrumbType.USER;
+
+    case AppEvent.EXPERIMENTAL_FEATURE_TOGGLE:
       return SentryBreadcrumbType.USER;
   }
 }

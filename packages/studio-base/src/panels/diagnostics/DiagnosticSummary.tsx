@@ -37,7 +37,7 @@ import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import Stack from "@foxglove/studio-base/components/Stack";
 import helpContent from "@foxglove/studio-base/panels/diagnostics/DiagnosticSummary.help.md";
 import useDiagnostics from "@foxglove/studio-base/panels/diagnostics/useDiagnostics";
-import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelSettingsEditorContextProvider";
+import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelStateContextProvider";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 import toggle from "@foxglove/studio-base/util/toggle";
 
@@ -199,7 +199,7 @@ function DiagnosticSummary(props: Props): JSX.Element {
   // Filter down all topics to those that conform to our supported datatypes
   const availableTopics = useMemo(() => {
     const filtered = topics
-      .filter((topic) => ALLOWED_DATATYPES.includes(topic.datatype))
+      .filter((topic) => ALLOWED_DATATYPES.includes(topic.schemaName))
       .map((topic) => topic.name);
 
     // Keeps only the first occurrence of each topic.

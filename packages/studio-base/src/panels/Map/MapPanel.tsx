@@ -4,33 +4,39 @@
 
 import produce from "immer";
 import {
-  Map as LeafMap,
-  TileLayer,
-  LatLngBounds,
   CircleMarker,
   FeatureGroup,
-  LayerGroup,
   geoJSON,
+  LatLngBounds,
   Layer,
+  LayerGroup,
+  Map as LeafMap,
+  TileLayer,
 } from "leaflet";
-import { difference, minBy, partition, union } from "lodash";
+import { difference, groupBy, isEqual, minBy, partition, union } from "lodash";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
 import { useDebouncedCallback } from "use-debounce";
 
+import { filterMap } from "@foxglove/den/collection";
 import { toSec } from "@foxglove/rostime";
-import { PanelExtensionContext, MessageEvent, SettingsTreeAction } from "@foxglove/studio";
+import {
+  PanelExtensionContext,
+  MessageEvent,
+  SettingsTreeAction,
+  Topic,
+  Subscription,
+} from "@foxglove/studio";
 import Stack from "@foxglove/studio-base/components/Stack";
 import FilteredPointLayer, {
   POINT_MARKER_RADIUS,
 } from "@foxglove/studio-base/panels/Map/FilteredPointLayer";
-import { Topic } from "@foxglove/studio-base/players/types";
 import { FoxgloveMessages } from "@foxglove/studio-base/types/FoxgloveMessages";
 import { darkColor, lightColor, lineColors } from "@foxglove/studio-base/util/plotColors";
 
-import { Config, validateCustomUrl, buildSettingsTree } from "./config";
+import { buildSettingsTree, Config, validateCustomUrl } from "./config";
 import { hasFix } from "./support";
-import { MapPanelMessage, Point } from "./types";
+import { MapPanelMessage, NavSatFixMsg, NavSatFixStatus, Point } from "./types";
 
 type GeoJsonMessage = MessageEvent<FoxgloveMessages["foxglove.GeoJSON"]>;
 
@@ -38,29 +44,48 @@ type MapPanelProps = {
   context: PanelExtensionContext;
 };
 
-function isGeoJSONMessage(message: MessageEvent<unknown>): message is GeoJsonMessage {
+function isGeoJSONMessage(msgEvent: MessageEvent<unknown>): msgEvent is GeoJsonMessage {
+  const datatype = msgEvent.schemaName;
   return (
-    typeof message.message === "object" &&
-    message.message != undefined &&
-    "geojson" in message.message
+    datatype === "foxglove_msgs/GeoJSON" ||
+    datatype === "foxglove_msgs/msg/GeoJSON" ||
+    datatype === "foxglove.GeoJSON"
   );
 }
 
-function topicMessageType(topic: Topic) {
-  switch (topic.datatype) {
+/**
+ * Verify that the message is either a GeoJSON message or a NavSatFix message with a
+ * position fix and finite latitude and longitude so we can actually display it.
+ */
+function isValidMapMessage(msgEvent: MessageEvent<unknown>): msgEvent is MapPanelMessage {
+  if (isGeoJSONMessage(msgEvent)) {
+    return true;
+  }
+
+  const message = msgEvent.message as Partial<NavSatFixMsg>;
+  return (
+    message.latitude != undefined &&
+    isFinite(message.latitude) &&
+    message.longitude != undefined &&
+    isFinite(message.longitude) &&
+    message.status?.status !== NavSatFixStatus.STATUS_NO_FIX
+  );
+}
+
+function isSupportedSchema(schemaName: string) {
+  switch (schemaName) {
     case "sensor_msgs/NavSatFix":
     case "sensor_msgs/msg/NavSatFix":
     case "ros.sensor_msgs.NavSatFix":
     case "foxglove_msgs/LocationFix":
     case "foxglove_msgs/msg/LocationFix":
     case "foxglove.LocationFix":
-      return "navsat";
     case "foxglove_msgs/GeoJSON":
     case "foxglove_msgs/msg/GeoJSON":
     case "foxglove.GeoJSON":
-      return "geojson";
+      return true;
     default:
-      return undefined;
+      return false;
   }
 }
 
@@ -72,11 +97,13 @@ function MapPanel(props: MapPanelProps): JSX.Element {
   const [config, setConfig] = useState<Config>(() => {
     const initialConfig = props.context.initialState as Partial<Config>;
     return {
-      disabledTopics: initialConfig.disabledTopics ?? [],
-      layer: initialConfig.layer ?? "map",
+      center: initialConfig.center,
       customTileUrl: initialConfig.customTileUrl ?? "",
+      disabledTopics: initialConfig.disabledTopics ?? [],
       followTopic: initialConfig.followTopic ?? "",
+      layer: initialConfig.layer ?? "map",
       topicColors: initialConfig.topicColors ?? {},
+      zoomLevel: initialConfig.zoomLevel,
     };
   });
 
@@ -131,25 +158,46 @@ function MapPanel(props: MapPanelProps): JSX.Element {
 
   const [currentMap, setCurrentMap] = useState<LeafMap | undefined>(undefined);
 
-  const onResize = useCallback(() => {
-    currentMap?.invalidateSize();
-  }, [currentMap]);
-
   // Use a debounce and 0 refresh rate to avoid triggering a resize observation while handling
   // an existing resize observation.
   // https://github.com/maslianok/react-resize-detector/issues/45
-  const { ref: sizeRef } = useResizeDetector({
+  const {
+    width: panelWidth,
+    height: panelHeight,
+    ref: sizeRef,
+  } = useResizeDetector({
     refreshRate: 0,
     refreshMode: "debounce",
-    onResize,
   });
+
+  useEffect(() => {
+    // We depend on changes in the resized panel dimensions to tell the Leaflet map to
+    // recalculate its size. We do this inside a separate useEffect instead of directly
+    // in the map's change callbacks to avoid a react error from calling setState
+    // during a render.
+    void { panelWidth, panelHeight };
+    currentMap?.invalidateSize();
+  }, [panelWidth, panelHeight, currentMap]);
 
   // panel extensions must notify when they've completed rendering
   // onRender will setRenderDone to a done callback which we can invoke after we've rendered
   const [renderDone, setRenderDone] = useState<() => void>(() => () => {});
 
   const eligibleTopics = useMemo(() => {
-    return topics.filter(topicMessageType).map((topic) => topic.name);
+    return filterMap(topics, (topic) => {
+      if (isSupportedSchema(topic.schemaName)) {
+        return topic;
+      }
+
+      if (topic.convertibleTo) {
+        for (const schemaName of topic.convertibleTo) {
+          if (isSupportedSchema(schemaName)) {
+            return { name: topic.name, schemaName };
+          }
+        }
+      }
+      return undefined;
+    });
   }, [topics]);
 
   const settingsActionHandler = useCallback((action: SettingsTreeAction) => {
@@ -248,8 +296,20 @@ function MapPanel(props: MapPanelProps): JSX.Element {
 
   // Subscribe to eligible and enabled topics
   useEffect(() => {
-    const eligibleEnabled = difference(eligibleTopics, config.disabledTopics);
-    context.subscribe(eligibleEnabled);
+    const subscriptions: Subscription[] = [];
+    for (const topic of eligibleTopics) {
+      if (config.disabledTopics.includes(topic.name)) {
+        continue;
+      }
+
+      subscriptions.push({
+        topic: topic.name,
+        convertTo: topic.schemaName,
+        preload: true,
+      });
+    }
+
+    context.subscribe(subscriptions);
 
     const tree = buildSettingsTree(config, eligibleTopics);
     context.updatePanelSettingsEditor({
@@ -278,11 +338,11 @@ function MapPanel(props: MapPanelProps): JSX.Element {
       const allFrames = new FeatureGroup();
       const currentFrame = new FeatureGroup();
       const topicGroup = new LayerGroup([allFrames, currentFrame]);
-      topicLayerMap.set(topic, {
+      topicLayerMap.set(topic.name, {
         topicGroup,
         allFrames,
         currentFrame,
-        baseColor: config.topicColors[topic] ?? lineColors[i]!,
+        baseColor: config.topicColors[topic.name] ?? lineColors[i]!,
       });
       i = (i + 1) % lineColors.length;
     }
@@ -317,8 +377,14 @@ function MapPanel(props: MapPanelProps): JSX.Element {
 
     const map = new LeafMap(mapContainerRef.current);
 
+    // Remove default prefix from the attribution control
+    map.attributionControl.setPrefix(false);
+
     // the map must be initialized with some view before other features work
-    map.setView([0, 0], 10);
+    map.setView(
+      config.center ? [config.center.lat, config.center.lon] : [0, 0],
+      config.zoomLevel ?? 10,
+    );
 
     setCurrentMap(map);
 
@@ -337,16 +403,20 @@ function MapPanel(props: MapPanelProps): JSX.Element {
       setPreviewTime(renderState.previewTime);
 
       if (renderState.topics) {
-        setTopics(renderState.topics);
+        // Changing the topic list clears all map layers so we try to preserve reference identity
+        // if the contents of the topic list haven't changed.
+        setTopics((oldTopics) => {
+          return isEqual(oldTopics, renderState.topics) ? oldTopics : renderState.topics ?? [];
+        });
       }
 
       if (renderState.allFrames) {
-        setAllMapMessages(renderState.allFrames as MapPanelMessage[]);
+        setAllMapMessages(renderState.allFrames.filter(isValidMapMessage));
       }
 
       // Only update the current frame if we have new messages.
       if (renderState.currentFrame && renderState.currentFrame.length > 0) {
-        setCurrentMapMessages(renderState.currentFrame as MapPanelMessage[]);
+        setCurrentMapMessages(renderState.currentFrame.filter(isValidMapMessage));
       }
     };
 
@@ -354,7 +424,7 @@ function MapPanel(props: MapPanelProps): JSX.Element {
       map.remove();
       context.onRender = undefined;
     };
-  }, [context]);
+  }, [config.center, config.zoomLevel, context]);
 
   const onHover = useCallback(
     (messageEvent?: MessageEvent<unknown>) => {
@@ -374,7 +444,7 @@ function MapPanel(props: MapPanelProps): JSX.Element {
 
   /// --- the remaining code is unrelated to the extension api ----- ///
 
-  const [center, setCenter] = useState<Point | undefined>();
+  const [center, setCenter] = useState<Point | undefined>(config.center);
   const [filterBounds, setFilterBounds] = useState<LatLngBounds | undefined>();
 
   const addGeoFeatureEventHandlers = useCallback(
@@ -393,14 +463,14 @@ function MapPanel(props: MapPanelProps): JSX.Element {
   );
 
   const addGeoJsonMessage = useCallback(
-    (message: GeoJsonMessage, topicLayer: TopicGroups) => {
+    (message: GeoJsonMessage, group: FeatureGroup) => {
       const parsed = JSON.parse(message.message.geojson) as Parameters<typeof geoJSON>[0];
       geoJSON(parsed, {
         onEachFeature: (_feature, layer) => addGeoFeatureEventHandlers(message, layer),
         style: config.topicColors[message.topic]
           ? { color: config.topicColors[message.topic] }
           : {},
-      }).addTo(topicLayer.allFrames);
+      }).addTo(group);
     },
     [addGeoFeatureEventHandlers, config.topicColors],
   );
@@ -457,7 +527,7 @@ function MapPanel(props: MapPanelProps): JSX.Element {
 
       allGeoMessages
         .filter((message) => message.topic === topic)
-        .forEach((message) => addGeoJsonMessage(message, topicLayer));
+        .forEach((message) => addGeoJsonMessage(message, topicLayer.allFrames));
     }
   }, [
     addGeoJsonMessage,
@@ -477,11 +547,15 @@ function MapPanel(props: MapPanelProps): JSX.Element {
       return;
     }
 
-    for (const [topic, topicLayer] of topicLayers) {
-      topicLayer.currentFrame.clearLayers();
+    const navByTopic = groupBy(currentNavMessages, (msg) => msg.topic);
+    for (const [topic, messages] of Object.entries(navByTopic)) {
+      const topicLayer = topicLayers.get(topic);
+      if (!topicLayer) {
+        continue;
+      }
 
-      const navMessages = currentNavMessages.filter((message) => message.topic === topic);
-      const [fixEvents, noFixEvents] = partition(navMessages, hasFix);
+      topicLayer.currentFrame.clearLayers();
+      const [fixEvents, noFixEvents] = partition(messages, hasFix);
 
       const pointLayerNoFix = FilteredPointLayer({
         map: currentMap,
@@ -503,10 +577,17 @@ function MapPanel(props: MapPanelProps): JSX.Element {
 
       topicLayer.currentFrame.addLayer(pointLayerNoFix);
       topicLayer.currentFrame.addLayer(pointLayerFix);
+    }
 
-      currentGeoMessages
-        .filter((message) => message.topic === topic)
-        .forEach((message) => addGeoJsonMessage(message, topicLayer));
+    const geoByTopic = groupBy(currentGeoMessages, (msg) => msg.topic);
+    for (const [topic, messages] of Object.entries(geoByTopic)) {
+      const topicLayer = topicLayers.get(topic);
+      if (topicLayer) {
+        topicLayer.currentFrame.clearLayers();
+        for (const message of messages) {
+          addGeoJsonMessage(message, topicLayer.currentFrame);
+        }
+      }
     }
   }, [
     addGeoJsonMessage,
@@ -554,14 +635,20 @@ function MapPanel(props: MapPanelProps): JSX.Element {
       return;
     }
 
-    const zoomChange = () => {
+    const moveChange = () => {
       context.saveState({
-        zoomLevel: currentMap.getZoom(),
+        center: { lat: currentMap.getCenter().lat, lon: currentMap.getCenter().lng },
       });
     };
 
+    const zoomChange = () => {
+      context.saveState({ zoomLevel: currentMap.getZoom() });
+    };
+
+    currentMap.on("move", moveChange);
     currentMap.on("zoom", zoomChange);
     return () => {
+      currentMap.off("move", moveChange);
       currentMap.off("zoom", zoomChange);
     };
   }, [context, currentMap]);
@@ -631,10 +718,8 @@ function MapPanel(props: MapPanelProps): JSX.Element {
         position="absolute"
         ref={mapContainerRef}
         style={{
-          top: 0,
-          right: 0,
-          bottom: 0,
-          left: 0,
+          inset: 0,
+          cursor: "auto",
           visibility: center ? "visible" : "hidden",
         }}
       />

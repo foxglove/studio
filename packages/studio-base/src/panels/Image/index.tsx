@@ -27,7 +27,7 @@ import {
 } from "@foxglove/studio-base/components/PanelContextMenu";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import Stack from "@foxglove/studio-base/components/Stack";
-import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelSettingsEditorContextProvider";
+import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelStateContextProvider";
 import inScreenshotTests from "@foxglove/studio-base/stories/inScreenshotTests";
 import { CameraInfo } from "@foxglove/studio-base/types/Messages";
 import { mightActuallyBePartial } from "@foxglove/studio-base/util/mightActuallyBePartial";
@@ -56,7 +56,7 @@ const Timestamp = muiStyled(Typography, {
   margin: theme.spacing(0.5),
   right: 0,
   bottom: 0,
-  zIndex: theme.zIndex.tooltip,
+  zIndex: theme.zIndex.appBar - 1,
   transition: "opacity 0.1s ease-in-out",
   opacity: 0,
   padding: theme.spacing(0.25, 0.5),
@@ -82,7 +82,7 @@ function ImageView(props: Props) {
   const updatePanelSettingsTree = usePanelSettingsTreeUpdate();
 
   const imageTopics = useMemo(() => {
-    return topics.filter(({ datatype }) => NORMALIZABLE_IMAGE_DATATYPES.includes(datatype));
+    return topics.filter(({ schemaName }) => NORMALIZABLE_IMAGE_DATATYPES.includes(schemaName));
   }, [topics]);
 
   // If no cameraTopic is selected, automatically select the first available image topic
@@ -152,7 +152,7 @@ function ImageView(props: Props) {
 
   const markerTopics = useMemo(() => {
     return topics
-      .filter((topic) => (ANNOTATION_DATATYPES as readonly string[]).includes(topic.datatype))
+      .filter((topic) => (ANNOTATION_DATATYPES as readonly string[]).includes(topic.schemaName))
       .map((topic) => topic.name);
   }, [topics]);
 

@@ -4,7 +4,7 @@
 
 import { AVLTree } from "@foxglove/avl";
 import { Time, compare as compareTime, toNanoSec } from "@foxglove/rostime";
-import { ImageAnnotations } from "@foxglove/schemas/schemas/typescript";
+import { ImageAnnotations } from "@foxglove/schemas";
 import { FoxgloveMessages } from "@foxglove/studio-base/types/FoxgloveMessages";
 
 import { synchronizedAddMessage, SynchronizationItem } from "./useImagePanelMessages";
@@ -49,6 +49,7 @@ describe("synchronizedAddMessage", () => {
         topic: "/foo",
         receiveTime: { sec: 0, nsec: 0 },
         message: {},
+        schemaName: "dummy",
         sizeInBytes: 0,
       },
       annotationTopics: [],
@@ -66,6 +67,7 @@ describe("synchronizedAddMessage", () => {
         topic: "/foo",
         receiveTime: { sec: 0, nsec: 0 },
         message: image,
+        schemaName: "foxglove.CompressedImage",
         sizeInBytes: 0,
       },
       annotationTopics: ["/annotation"],
@@ -88,6 +90,7 @@ describe("synchronizedAddMessage", () => {
           topic: "/foo",
           receiveTime: { sec: 0, nsec: 0 },
           message: image,
+          schemaName: "foxglove.CompressedImage",
           sizeInBytes: 0,
         },
         annotationTopics: ["/annotation"],
@@ -107,6 +110,7 @@ describe("synchronizedAddMessage", () => {
           topic: "/annotation",
           receiveTime: { sec: 0, nsec: 0 },
           message: annotations,
+          schemaName: "foxglove.ImageAnnotations",
           sizeInBytes: 0,
         },
         annotationTopics: ["/annotation"],
@@ -130,6 +134,7 @@ describe("synchronizedAddMessage", () => {
           topic: "/foo",
           receiveTime: { sec: 0, nsec: 0 },
           message: image,
+          schemaName: "foxglove.CompressedImage",
           sizeInBytes: 0,
         },
         annotationTopics: ["/annotation"],
@@ -146,6 +151,7 @@ describe("synchronizedAddMessage", () => {
           topic: "/annotation",
           receiveTime: { sec: 0, nsec: 0 },
           message: annotations,
+          schemaName: "foxglove.ImageAnnotations",
           sizeInBytes: 0,
         },
         annotationTopics: ["/annotation"],
@@ -162,6 +168,7 @@ describe("synchronizedAddMessage", () => {
           topic: "/foo",
           receiveTime: { sec: 0, nsec: 0 },
           message: image,
+          schemaName: "foxglove.CompressedImage",
           sizeInBytes: 0,
         },
         annotationTopics: ["/annotation"],

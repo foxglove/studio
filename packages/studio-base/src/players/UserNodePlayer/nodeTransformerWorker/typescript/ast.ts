@@ -58,8 +58,8 @@ const MAX_DEPTH = 100;
 // error class, just throw a regular error. This error will be reported in the notification tab
 // as a true error, so that users can inform us when things are truly broken.
 export class DatatypeExtractionError extends Error {
-  diagnostic: Diagnostic;
-  constructor(diagnostic: Diagnostic) {
+  public diagnostic: Diagnostic;
+  public constructor(diagnostic: Diagnostic) {
     super();
     this.diagnostic = diagnostic;
   }
@@ -344,9 +344,6 @@ export const constructDatatypes = (
             secField.isArray !== true &&
             nsecField.isArray !== true
           ) {
-            // TODO(JP): Might want to do some extra checks for types here. But then again,
-            // "time" is just pretty awkward of a field in general; maybe we should instead
-            // just get rid of it throughout our application and treat it as a regular nested object?
             return {
               name,
               type: "time",

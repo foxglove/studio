@@ -15,38 +15,37 @@ interface TypedArrayConstructor<T extends TypedArray> {
   new (length: number): T;
 }
 
-export type DynamicFloatBufferGeometry = DynamicBufferGeometry<
-  Float32Array,
-  Float32ArrayConstructor
->;
+interface ArrayConstructor {
+  new (length: number): ArrayLike<number>;
+}
 
-export class DynamicBufferGeometry<
-  T extends TypedArray,
-  C extends TypedArrayConstructor<T>,
-> extends THREE.BufferGeometry {
-  override attributes: { [name: string]: THREE.BufferAttribute } = {};
+export class DynamicBufferGeometry extends THREE.BufferGeometry {
+  public override attributes: { [name: string]: THREE.BufferAttribute } = {};
 
-  private _dataConstructor: C;
+  private _attributeConstructors = new Map<string, ArrayConstructor>();
   private _usage: THREE.Usage;
   private _itemCapacity = 0;
 
-  constructor(arrayConstructor: C, usage: THREE.Usage = THREE.DynamicDrawUsage) {
+  public constructor(usage: THREE.Usage = THREE.DynamicDrawUsage) {
     super();
-    this._dataConstructor = arrayConstructor;
     this._usage = usage;
   }
 
-  createAttribute(
+  public createAttribute<T extends TypedArray, C extends TypedArrayConstructor<T>>(
     name: THREE.BuiltinShaderAttributeName | string,
+    arrayConstructor: C,
     itemSize: number,
+    // eslint-disable-next-line @foxglove/no-boolean-parameters
+    normalized?: boolean,
   ): THREE.BufferGeometry {
-    const data = new this._dataConstructor(this._itemCapacity * itemSize);
-    const attribute = new THREE.BufferAttribute(data, itemSize);
+    const data = new arrayConstructor(this._itemCapacity * itemSize);
+    const attribute = new THREE.BufferAttribute(data, itemSize, normalized);
     attribute.setUsage(this._usage);
+    this._attributeConstructors.set(name, arrayConstructor);
     return this.setAttribute(name, attribute);
   }
 
-  resize(itemCount: number): void {
+  public resize(itemCount: number): void {
     this.setDrawRange(0, itemCount);
 
     if (itemCount <= this._itemCapacity) {
@@ -56,12 +55,17 @@ export class DynamicBufferGeometry<
       return;
     }
 
-    for (const attributeName of Object.keys(this.attributes)) {
-      const attribute = this.attributes[attributeName]!;
-      const data = new this._dataConstructor(itemCount * attribute.itemSize);
+    for (const [attributeName, attribute] of Object.entries(this.attributes)) {
+      const dataConstructor = this._attributeConstructors.get(attributeName);
+      if (!dataConstructor) {
+        throw new Error(
+          `DynamicBufferGeometry resize(${itemCount}) failed, missing data constructor for attribute "${attributeName}". Attributes must be created using createAttribute().`,
+        );
+      }
+      const data = new dataConstructor(itemCount * attribute.itemSize);
       const newAttrib = new THREE.BufferAttribute(data, attribute.itemSize, attribute.normalized);
       newAttrib.setUsage(this._usage);
-      this.attributes[attributeName] = newAttrib;
+      this.setAttribute(attributeName, newAttrib);
     }
 
     this._itemCapacity = itemCount;

@@ -13,13 +13,14 @@
 
 import { screen } from "@testing-library/dom";
 import userEvent from "@testing-library/user-event";
+import { range } from "lodash";
 import TestUtils from "react-dom/test-utils";
 
 import Log from "@foxglove/studio-base/panels/Log";
-import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
+import PanelSetup, { Fixture } from "@foxglove/studio-base/stories/PanelSetup";
 
-const fixture = {
-  topics: [{ name: "/rosout", datatype: "rosgraph_msgs/Log" }],
+const fixture: Fixture = {
+  topics: [{ name: "/rosout", schemaName: "rosgraph_msgs/Log" }],
   frame: {
     "/rosout": [
       {
@@ -34,6 +35,7 @@ const fixture = {
           msg: "Couldn't find int 83757.",
           name: "/some_topic",
         },
+        schemaName: "rosgraph_msgs/Log",
         sizeInBytes: 0,
       },
       {
@@ -48,6 +50,7 @@ const fixture = {
           msg: "Couldn't find int 2121.",
           name: "/other_node",
         },
+        schemaName: "rosgraph_msgs/Log",
         sizeInBytes: 0,
       },
       {
@@ -62,6 +65,7 @@ const fixture = {
           msg: "Lorem ipsum blah blah. This message should\nshow up as multiple lines",
           name: "/other_node",
         },
+        schemaName: "rosgraph_msgs/Log",
         sizeInBytes: 0,
       },
       {
@@ -77,6 +81,7 @@ const fixture = {
           line: 491,
           topics: [],
         },
+        schemaName: "rosgraph_msgs/Log",
         sizeInBytes: 0,
       },
       {
@@ -92,11 +97,37 @@ const fixture = {
           line: 491,
           topics: [],
         },
+        schemaName: "rosgraph_msgs/Log",
         sizeInBytes: 0,
       },
     ],
   },
 };
+
+function makeLongFixture(): Fixture {
+  const levels = [1, 2, 4, 8, 16];
+
+  return {
+    topics: [{ name: "/rosout", schemaName: "rosgraph_msgs/Log" }],
+    frame: {
+      "/rosout": range(200).map((idx) => ({
+        topic: "/rosout",
+        receiveTime: { sec: 10 * idx, nsec: 0 },
+        message: {
+          file: "some_topic_utils/src/foo.cpp",
+          function: "vector<int> some_topic::findInt",
+          header: { stamp: { sec: 123, nsec: 0 } },
+          level: levels[idx % levels.length],
+          line: 242,
+          msg: `Couldn't find int ${idx + 1}.`,
+          name: "/some_topic",
+        },
+        schemaName: "rosgraph_msgs/Log",
+        sizeInBytes: 0,
+      })),
+    },
+  };
+}
 
 export default {
   title: "panels/Log",
@@ -106,6 +137,14 @@ export default {
 export const Simple = (): JSX.Element => {
   return (
     <PanelSetup fixture={fixture}>
+      <Log />
+    </PanelSetup>
+  );
+};
+
+export const Scrolled = (): JSX.Element => {
+  return (
+    <PanelSetup fixture={makeLongFixture()}>
       <Log />
     </PanelSetup>
   );
@@ -121,7 +160,7 @@ export const WithSettings = (): JSX.Element => {
 
 export const TopicToRender = (): JSX.Element => {
   function makeMessages(topic: any) {
-    return fixture.frame["/rosout"].map((msg) => ({
+    return fixture.frame!["/rosout"]!.map((msg: any) => ({
       ...msg,
       topic,
       message: { ...msg.message, name: `${topic}${msg.message.name}` },
@@ -131,9 +170,9 @@ export const TopicToRender = (): JSX.Element => {
     <PanelSetup
       fixture={{
         topics: [
-          { name: "/rosout", datatype: "rosgraph_msgs/Log" },
-          { name: "/foo/rosout", datatype: "rosgraph_msgs/Log" },
-          { name: "/studio_source_2/rosout", datatype: "rosgraph_msgs/Log" },
+          { name: "/rosout", schemaName: "rosgraph_msgs/Log" },
+          { name: "/foo/rosout", schemaName: "rosgraph_msgs/Log" },
+          { name: "/studio_source_2/rosout", schemaName: "rosgraph_msgs/Log" },
         ],
         frame: {
           "/rosout": makeMessages("/rosout"),
@@ -208,8 +247,8 @@ AutoCompleteItems.play = async () => {
 };
 
 export const FoxgloveLog = (): JSX.Element => {
-  const foxgloveLogFixture = {
-    topics: [{ name: "/log", datatype: "foxglove.Log" }],
+  const foxgloveLogFixture: Fixture = {
+    topics: [{ name: "/log", schemaName: "foxglove.Log" }],
     frame: {
       "/log": [
         {
@@ -222,6 +261,7 @@ export const FoxgloveLog = (): JSX.Element => {
             line: 242,
             message: "Couldn't find int 83757.",
           },
+          schemaName: "foxglove.Log",
           sizeInBytes: 0,
         },
         {
@@ -235,6 +275,7 @@ export const FoxgloveLog = (): JSX.Element => {
             line: 242,
             message: "Couldn't find int 2121.",
           },
+          schemaName: "foxglove.Log",
           sizeInBytes: 0,
         },
         {
@@ -248,6 +289,7 @@ export const FoxgloveLog = (): JSX.Element => {
             line: 242,
             message: "Lorem ipsum blah blah. This message should\nshow up as multiple lines",
           },
+          schemaName: "foxglove.Log",
           sizeInBytes: 0,
         },
         {
@@ -261,6 +303,7 @@ export const FoxgloveLog = (): JSX.Element => {
             file: "somefile.cpp",
             line: 491,
           },
+          schemaName: "foxglove.Log",
           sizeInBytes: 0,
         },
         {
@@ -273,6 +316,7 @@ export const FoxgloveLog = (): JSX.Element => {
             file: "somefile.cpp",
             line: 491,
           },
+          schemaName: "foxglove.Log",
           sizeInBytes: 0,
         },
       ],

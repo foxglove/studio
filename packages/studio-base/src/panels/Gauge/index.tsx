@@ -7,7 +7,7 @@ import { createRoot } from "react-dom/client";
 
 import { PanelExtensionContext } from "@foxglove/studio";
 import Panel from "@foxglove/studio-base/components/Panel";
-import PanelExtensionAdapter from "@foxglove/studio-base/components/PanelExtensionAdapter";
+import { PanelExtensionAdapter } from "@foxglove/studio-base/components/PanelExtensionAdapter";
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 
@@ -23,6 +23,9 @@ function initPanel(context: PanelExtensionContext) {
       </ThemeProvider>
     </StrictMode>,
   );
+  return () => {
+    ReactDOM.unmountComponentAtNode(context.panelElement);
+  };
 }
 
 type Props = {

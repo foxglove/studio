@@ -11,12 +11,14 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Checkbox, FormControlLabel, Link, Typography } from "@mui/material";
+import { Checkbox, FormControlLabel, Typography } from "@mui/material";
 import { makeStyles } from "tss-react/mui";
 
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import Stack from "@foxglove/studio-base/components/Stack";
+import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
+import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 
 const useStyles = makeStyles()({
   checkbox: {
@@ -49,14 +51,14 @@ const features: Feature[] = [
     description: <>Enable the Legacy Plot panel.</>,
   },
   {
-    key: AppSetting.EXPERIMENTAL_LATCHING,
-    name: "Latching",
-    description: <>Enable message latching for bag, mcap, and data platform sources.</>,
-  },
-  {
     key: AppSetting.ENABLE_MEMORY_USE_INDICATOR,
     name: "Memory use indicator",
     description: <>Show the app memory use in the sidebar.</>,
+  },
+  {
+    key: AppSetting.ENABLE_PLOT_PANEL_SERIES_SETTINGS,
+    name: "Plot panel series in settings",
+    description: <>Allow editing plot panel data series in the sidebar.</>,
   },
 ];
 if (process.env.NODE_ENV === "development") {
@@ -65,24 +67,12 @@ if (process.env.NODE_ENV === "development") {
     name: "Layout debugging",
     description: <>Show extra controls for developing and debugging layout storage.</>,
   });
-  features.push({
-    key: AppSetting.ENABLE_REACT_STRICT_MODE,
-    name: "React Strict Mode",
-    description: (
-      <>
-        Enable React{" "}
-        <Link href="https://reactjs.org/docs/strict-mode.html" target="_blank" rel="noreferrer">
-          Strict Mode
-        </Link>
-        . Changing this setting requires a restart.
-      </>
-    ),
-  });
 }
 
 function ExperimentalFeatureItem(props: { feature: Feature }) {
   const { feature } = props;
   const { classes } = useStyles();
+  const analytics = useAnalytics();
 
   const [enabled, setEnabled] = useAppConfigurationValue<boolean>(feature.key);
   return (
@@ -92,7 +82,13 @@ function ExperimentalFeatureItem(props: { feature: Feature }) {
         <Checkbox
           className={classes.checkbox}
           checked={enabled ?? false}
-          onChange={(_, checked) => void setEnabled(checked)}
+          onChange={(_, checked) => {
+            void setEnabled(checked);
+            void analytics.logEvent(AppEvent.EXPERIMENTAL_FEATURE_TOGGLE, {
+              feature: feature.key,
+              checked,
+            });
+          }}
         />
       }
       label={

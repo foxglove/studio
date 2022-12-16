@@ -2,8 +2,10 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { MessageEvent, Topic } from "@foxglove/studio";
-import { PlayerCapabilities } from "@foxglove/studio-base/players/types";
+import { screen } from "@testing-library/react";
+
+import { MessageEvent } from "@foxglove/studio";
+import { PlayerCapabilities, Topic } from "@foxglove/studio-base/players/types";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 import delay from "@foxglove/studio-base/util/delay";
 
@@ -22,7 +24,7 @@ export const Point = Object.assign(PublishClickToolTemplate.bind({}), {
   parameters: { colorScheme: "dark" },
   args: { type: "point" },
   play: async () => {
-    document.querySelector<HTMLElement>("[data-testid=publish-button]")!.click();
+    (await screen.findByTestId("publish-button")).click();
     await delay(100);
     const canvas = document.querySelector("canvas")!;
     for (let tries = 0; tries < 10 && (canvas.offsetWidth === 0 || canvas.offsetHeight === 0); ) {
@@ -38,7 +40,7 @@ export const PosePosition = Object.assign(PublishClickToolTemplate.bind({}), {
   parameters: { colorScheme: "dark" },
   args: { type: "pose" },
   play: async () => {
-    document.querySelector<HTMLElement>("[data-testid=publish-button]")!.click();
+    (await screen.findByTestId("publish-button")).click();
     await delay(100);
     const canvas = document.querySelector("canvas")!;
     for (let tries = 0; tries < 10 && (canvas.offsetWidth === 0 || canvas.offsetHeight === 0); ) {
@@ -54,7 +56,7 @@ export const PoseComplete = Object.assign(PublishClickToolTemplate.bind({}), {
   parameters: { colorScheme: "dark" },
   args: { type: "pose" },
   play: async () => {
-    document.querySelector<HTMLElement>("[data-testid=publish-button]")!.click();
+    (await screen.findByTestId("publish-button")).click();
     await delay(100);
     const canvas = document.querySelector("canvas")!;
     for (let tries = 0; tries < 10 && (canvas.offsetWidth === 0 || canvas.offsetHeight === 0); ) {
@@ -76,7 +78,7 @@ export const PoseEstimatePosition = Object.assign(PublishClickToolTemplate.bind(
   parameters: { colorScheme: "dark" },
   args: { type: "pose_estimate" },
   play: async () => {
-    document.querySelector<HTMLElement>("[data-testid=publish-button]")!.click();
+    (await screen.findByTestId("publish-button")).click();
     await delay(100);
     const canvas = document.querySelector("canvas")!;
     for (let tries = 0; tries < 10 && (canvas.offsetWidth === 0 || canvas.offsetHeight === 0); ) {
@@ -92,7 +94,7 @@ export const PoseEstimateComplete = Object.assign(PublishClickToolTemplate.bind(
   parameters: { colorScheme: "dark" },
   args: { type: "pose_estimate" },
   play: async () => {
-    document.querySelector<HTMLElement>("[data-testid=publish-button]")!.click();
+    (await screen.findByTestId("publish-button")).click();
     await delay(100);
     const canvas = document.querySelector("canvas")!;
     for (let tries = 0; tries < 10 && (canvas.offsetWidth === 0 || canvas.offsetHeight === 0); ) {
@@ -111,7 +113,7 @@ export const PoseEstimateComplete = Object.assign(PublishClickToolTemplate.bind(
 });
 
 function PublishClickToolTemplate({ type }: { type: PublishClickType }): JSX.Element {
-  const topics: Topic[] = [{ name: "/tf", datatype: "geometry_msgs/TransformStamped" }];
+  const topics: Topic[] = [{ name: "/tf", schemaName: "geometry_msgs/TransformStamped" }];
   const tf1: MessageEvent<TransformStamped> = {
     topic: "/tf",
     receiveTime: { sec: 10, nsec: 0 },
@@ -123,6 +125,7 @@ function PublishClickToolTemplate({ type }: { type: PublishClickType }): JSX.Ele
         rotation: QUAT_IDENTITY,
       },
     },
+    schemaName: "geometry_msgs/TransformStamped",
     sizeInBytes: 0,
   };
 
@@ -130,6 +133,7 @@ function PublishClickToolTemplate({ type }: { type: PublishClickType }): JSX.Ele
     topics,
     frame: { "/tf": [tf1] },
     capabilities: [PlayerCapabilities.advertise],
+    profile: "ros1",
     activeData: {
       currentTime: { sec: 0, nsec: 0 },
     },

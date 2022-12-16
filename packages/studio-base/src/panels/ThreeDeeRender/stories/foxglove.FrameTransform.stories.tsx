@@ -3,8 +3,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { fromSec } from "@foxglove/rostime";
-import type { FrameTransform } from "@foxglove/schemas/schemas/typescript";
-import { MessageEvent, Topic } from "@foxglove/studio";
+import type { FrameTransform } from "@foxglove/schemas";
+import { MessageEvent } from "@foxglove/studio";
+import { Topic } from "@foxglove/studio-base/players/types";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 
 import ThreeDeeRender from "../index";
@@ -22,8 +23,8 @@ export default {
 FoxgloveFrameTransform.parameters = { colorScheme: "dark" };
 export function FoxgloveFrameTransform(): JSX.Element {
   const topics: Topic[] = [
-    { name: "/markers", datatype: "visualization_msgs/Marker" },
-    { name: "/tf", datatype: "foxglove.FrameTransform" },
+    { name: "/markers", schemaName: "visualization_msgs/Marker" },
+    { name: "/tf", schemaName: "foxglove.FrameTransform" },
   ];
   const tf_t1: MessageEvent<FrameTransform> = {
     topic: "/tf",
@@ -35,6 +36,7 @@ export function FoxgloveFrameTransform(): JSX.Element {
       translation: VEC3_ZERO,
       rotation: QUAT_IDENTITY,
     },
+    schemaName: "foxglove.FrameTransform",
     sizeInBytes: 0,
   };
   // backwards compatibility with legacy message format
@@ -51,6 +53,7 @@ export function FoxgloveFrameTransform(): JSX.Element {
         rotation: QUAT_IDENTITY,
       },
     },
+    schemaName: "foxglove.FrameTransform",
     sizeInBytes: 0,
   };
   const pass1 = makePass({

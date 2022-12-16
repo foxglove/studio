@@ -11,25 +11,18 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { screen } from "@testing-library/dom";
+import userEvent from "@testing-library/user-event";
 import { shuffle } from "lodash";
 import { useCallback, useRef } from "react";
+import { makeStyles } from "tss-react/mui";
 
-import { parse as parseMessageDefinition } from "@foxglove/rosmsg";
 import { fromSec } from "@foxglove/rostime";
 import Plot, { PlotConfig } from "@foxglove/studio-base/panels/Plot";
-import { BlockCache } from "@foxglove/studio-base/players/types";
+import { BlockCache, MessageEvent } from "@foxglove/studio-base/players/types";
 import PanelSetup, { Fixture, triggerWheel } from "@foxglove/studio-base/stories/PanelSetup";
 import { useReadySignal } from "@foxglove/studio-base/stories/ReadySignalContext";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
-
-const float64StampedDefinition = `std_msgs/Header header
-float64 data
-
-================================================================================
-MSG: std_msgs/Header
-uint32 seq
-time stamp
-string frame_id`;
 
 const locationMessages = [
   {
@@ -249,52 +242,59 @@ const messageCache: BlockCache = {
   startTime: fromSec(0.6),
 };
 
-const fixture = {
+const fixture: Fixture = {
   datatypes,
   topics: [
-    { name: "/some_topic/location", datatype: "msgs/PoseDebug" },
-    { name: "/some_topic/location_subset", datatype: "msgs/PoseDebug" },
-    { name: "/some_topic/location_shuffled", datatype: "msgs/PoseDebug" },
-    { name: "/some_topic/state", datatype: "msgs/State" },
-    { name: "/boolean_topic", datatype: "std_msgs/Bool" },
-    { name: "/preloaded_topic", datatype: "nonstd_msgs/Float64Stamped" },
+    { name: "/some_topic/location", schemaName: "msgs/PoseDebug" },
+    { name: "/some_topic/location_subset", schemaName: "msgs/PoseDebug" },
+    { name: "/some_topic/location_shuffled", schemaName: "msgs/PoseDebug" },
+    { name: "/some_topic/state", schemaName: "msgs/State" },
+    { name: "/boolean_topic", schemaName: "std_msgs/Bool" },
+    { name: "/preloaded_topic", schemaName: "nonstd_msgs/Float64Stamped" },
   ],
   activeData: {
     startTime: { sec: 0, nsec: 202050 },
     endTime: { sec: 24, nsec: 999997069 },
     currentTime: { sec: 0, nsec: 750000000 },
     isPlaying: false,
-    parsedMessageDefinitionsByTopic: {
-      "/preloaded_topic": parseMessageDefinition(float64StampedDefinition),
-    },
     speed: 0.2,
   },
   frame: {
-    "/some_topic/location": locationMessages.map((message) => ({
-      topic: "/some_topic/location",
-      receiveTime: message.header.stamp,
-      message,
-      sizeInBytes: 0,
-    })),
-    "/some_topic/location_subset": locationMessages
-      .slice(locationMessages.length / 3, (locationMessages.length * 2) / 3)
-      .map((message) => ({
-        topic: "/some_topic/location_subset",
+    "/some_topic/location": locationMessages.map(
+      (message): MessageEvent<unknown> => ({
+        topic: "/some_topic/location",
         receiveTime: message.header.stamp,
         message,
+        schemaName: "msgs/PoseDebug",
         sizeInBytes: 0,
-      })),
-    "/some_topic/state": otherStateMessages.map((message) => ({
-      topic: "/some_topic/state",
-      receiveTime: message.header.stamp,
-      message,
-      sizeInBytes: 0,
-    })),
+      }),
+    ),
+    "/some_topic/location_subset": locationMessages
+      .slice(locationMessages.length / 3, (locationMessages.length * 2) / 3)
+      .map(
+        (message): MessageEvent<unknown> => ({
+          topic: "/some_topic/location_subset",
+          receiveTime: message.header.stamp,
+          message,
+          schemaName: "msgs/PoseDebug",
+          sizeInBytes: 0,
+        }),
+      ),
+    "/some_topic/state": otherStateMessages.map(
+      (message): MessageEvent<unknown> => ({
+        topic: "/some_topic/state",
+        receiveTime: message.header.stamp,
+        message,
+        schemaName: "msgs/State",
+        sizeInBytes: 0,
+      }),
+    ),
     "/boolean_topic": [
       {
         topic: "/boolean_topic",
         receiveTime: { sec: 1, nsec: 0 },
         message: { data: true },
+        schemaName: "std_msgs/Bool",
         sizeInBytes: 0,
       },
     ],
@@ -302,12 +302,15 @@ const fixture = {
     // This is used in the headerStamp series test to check that the dataset is sorted
     // prior to rendering. If the dataset is not sorted properly, the plot is jumbled.
     "/some_topic/location_shuffled": shuffle(
-      locationMessages.map((message) => ({
-        topic: "/some_topic/location_shuffled",
-        receiveTime: message.header.stamp,
-        message,
-        sizeInBytes: 0,
-      })),
+      locationMessages.map(
+        (message): MessageEvent<unknown> => ({
+          topic: "/some_topic/location_shuffled",
+          receiveTime: message.header.stamp,
+          message,
+          schemaName: "msgs/PoseDebug",
+          sizeInBytes: 0,
+        }),
+      ),
     ),
   },
   progress: { messageCache },
@@ -379,6 +382,39 @@ LineGraph.parameters = {
   useReadySignal: true,
 };
 
+LineGraphWithXMinMax.storyName = "line graph with x min & max";
+export function LineGraphWithXMinMax(): JSX.Element {
+  const readySignal = useReadySignal({ count: 3 });
+  const pauseFrame = useCallback(() => readySignal, [readySignal]);
+  return (
+    <PlotWrapper
+      pauseFrame={pauseFrame}
+      config={{ ...exampleConfig, minXValue: 1, maxXValue: 2 }}
+    />
+  );
+}
+LineGraphWithXMinMax.parameters = {
+  colorScheme: "light",
+  useReadySignal: true,
+};
+
+export function LineGraphWithXRange(): JSX.Element {
+  const readySignal = useReadySignal({ count: 3 });
+  const pauseFrame = useCallback(() => readySignal, [readySignal]);
+  return (
+    <PlotWrapper
+      pauseFrame={pauseFrame}
+      config={{ ...exampleConfig, followingViewWidth: 3 }}
+      includeSettings
+    />
+  );
+}
+LineGraphWithXRange.parameters = {
+  colorScheme: "light",
+  useReadySignal: true,
+};
+LineGraphWithXRange.storyName = "line graph with x range";
+
 LineGraphWithNoTitle.storyName = "line graph with no title";
 export function LineGraphWithNoTitle(): JSX.Element {
   const readySignal = useReadySignal({ count: 3 });
@@ -396,13 +432,19 @@ export function LineGraphWithSettings(): JSX.Element {
   return (
     <PlotWrapper
       pauseFrame={pauseFrame}
-      config={{ ...exampleConfig, minYValue: 1, maxYValue: -1 }}
+      config={{ ...exampleConfig, minYValue: -1, maxYValue: 1, minXValue: 0, maxXValue: 3 }}
       includeSettings
     />
   );
 }
 LineGraphWithSettings.parameters = {
+  colorScheme: "light",
   useReadySignal: true,
+};
+LineGraphWithSettings.play = async () => {
+  const user = userEvent.setup();
+  const label = await screen.findByText("Y Axis");
+  await user.click(label);
 };
 
 LineGraphWithLegendsHidden.storyName = "line graph with legends hidden";
@@ -417,12 +459,23 @@ LineGraphWithLegendsHidden.parameters = {
 
 InALineGraphWithMultiplePlotsXAxesAreSynced.storyName =
   "in a line graph with multiple plots, x-axes are synced";
+
+const useStyles = makeStyles()(() => ({
+  PanelSetup: {
+    flexDirection: "column",
+    "& > *": {
+      // minHeight necessary to get around otherwise flaky test because of layout
+      minHeight: "50%",
+    },
+  },
+}));
 export function InALineGraphWithMultiplePlotsXAxesAreSynced(): JSX.Element {
   const readySignal = useReadySignal({ count: 6 });
   const pauseFrame = useCallback(() => readySignal, [readySignal]);
+  const { classes } = useStyles();
 
   return (
-    <PanelSetup fixture={fixture} pauseFrame={pauseFrame} style={{ flexDirection: "column" }}>
+    <PanelSetup fixture={fixture} pauseFrame={pauseFrame} className={classes.PanelSetup}>
       <Plot
         overrideConfig={{
           ...exampleConfig,
@@ -610,6 +663,7 @@ export function WithMinAndMaxYValues(): JSX.Element {
 
   return (
     <PlotWrapper
+      includeSettings
       pauseFrame={pauseFrame}
       config={{
         ...exampleConfig,
@@ -627,7 +681,13 @@ export function WithMinAndMaxYValues(): JSX.Element {
   );
 }
 WithMinAndMaxYValues.parameters = {
+  colorScheme: "light",
   useReadySignal: true,
+};
+WithMinAndMaxYValues.play = async () => {
+  const user = userEvent.setup();
+  const label = await screen.findByText("Y Axis");
+  await user.click(label);
 };
 
 WithJustMinYValueLessThanMinimumValue.storyName = "with just min Y value less than minimum value";
@@ -872,6 +932,36 @@ CustomXAxisTopic.parameters = {
   useReadySignal: true,
 };
 
+export function CustomXAxisTopicWithXLimits(): JSX.Element {
+  const readySignal = useReadySignal({ count: 3 });
+  const pauseFrame = useCallback(() => readySignal, [readySignal]);
+
+  return (
+    <PlotWrapper
+      pauseFrame={pauseFrame}
+      config={{
+        ...exampleConfig,
+        xAxisVal: "custom",
+        minXValue: 1.3,
+        maxXValue: 1.8,
+        paths: [
+          {
+            value: "/some_topic/location.pose.acceleration",
+            enabled: true,
+            timestampMethod: "receiveTime",
+          },
+        ],
+        xAxisPath: { value: "/some_topic/location.pose.velocity", enabled: true },
+      }}
+    />
+  );
+}
+CustomXAxisTopicWithXLimits.parameters = {
+  colorScheme: "light",
+  useReadySignal: true,
+};
+CustomXAxisTopicWithXLimits.storyName = "custom x-axis topic with x limits";
+
 CurrentCustomXAxisTopic.storyName = "current custom x-axis topic";
 export function CurrentCustomXAxisTopic(): JSX.Element {
   const readySignal = useReadySignal({ count: 3 });
@@ -955,7 +1045,7 @@ export function SuperCloseValues(): JSX.Element {
             },
           }),
         ),
-        topics: [{ name: "/some_number", datatype: "std_msgs/Float32" }],
+        topics: [{ name: "/some_number", schemaName: "std_msgs/Float32" }],
         activeData: {
           startTime: { sec: 0, nsec: 0 },
           endTime: { sec: 10, nsec: 0 },
@@ -968,12 +1058,14 @@ export function SuperCloseValues(): JSX.Element {
               topic: "/some_number",
               receiveTime: { sec: 0, nsec: 0 },
               message: { data: 1.8548483304974972 },
+              schemaName: "std_msgs/Float32",
               sizeInBytes: 0,
             },
             {
               topic: "/some_number",
               receiveTime: { sec: 1, nsec: 0 },
               message: { data: 1.8548483304974974 },
+              schemaName: "std_msgs/Float32",
               sizeInBytes: 0,
             },
           ],

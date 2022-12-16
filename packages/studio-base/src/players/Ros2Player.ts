@@ -10,10 +10,10 @@ import { Sockets } from "@foxglove/electron-socket/renderer";
 import Logger from "@foxglove/log";
 import { RosNode } from "@foxglove/ros2";
 import { RosMsgDefinition } from "@foxglove/rosmsg";
-import { definitions as commonDefs } from "@foxglove/rosmsg-msgs-common";
+import { ros2galactic } from "@foxglove/rosmsg-msgs-common";
 import { Time, fromMillis, toSec, isGreaterThan } from "@foxglove/rostime";
 import { Durability, Reliability } from "@foxglove/rtps";
-import { foxgloveMessageSchemas, generateRosMsgDefinition } from "@foxglove/schemas";
+import { foxgloveMessageSchemas, generateRosMsgDefinition } from "@foxglove/schemas/internal";
 import { ParameterValue } from "@foxglove/studio";
 import OsContextSingleton from "@foxglove/studio-base/OsContextSingleton";
 import PlayerProblemManager from "@foxglove/studio-base/players/PlayerProblemManager";
@@ -77,7 +77,7 @@ export default class Ros2Player implements Player {
   private _emitTimer?: ReturnType<typeof setTimeout>;
   private readonly _sourceId: string;
 
-  constructor({ domainId, metricsCollector, sourceId }: Ros2PlayerOpts) {
+  public constructor({ domainId, metricsCollector, sourceId }: Ros2PlayerOpts) {
     log.info(`initializing Ros2Player (domainId=${domainId})`);
     this._domainId = domainId;
     this._metricsCollector = metricsCollector;
@@ -85,19 +85,20 @@ export default class Ros2Player implements Player {
     this._metricsCollector.playerConstructed();
     this._sourceId = sourceId;
 
-    // The ros1ToRos2Type() hack can be removed when @foxglove/rosmsg-msgs-* packages are updated to
-    // natively support ROS 2
-    this._fixRos2MsgDefs();
+    this._importRos2MsgDefs();
 
     void this._open();
   }
 
-  private _fixRos2MsgDefs(): void {
-    for (const dataType in commonDefs) {
-      const msgDef = (commonDefs as Record<string, RosMsgDefinition>)[dataType]!;
+  private _importRos2MsgDefs(): void {
+    // Add common message definitions from ROS2 (rcl_interfaces, common_interfaces, etc)
+    for (const dataType in ros2galactic) {
+      const msgDef = (ros2galactic as Record<string, RosMsgDefinition>)[dataType]!;
       this._providerDatatypes.set(dataType, msgDef);
-      this._providerDatatypes.set(ros1ToRos2Type(dataType), msgDef);
+      this._providerDatatypes.set(dataTypeToFullName(dataType), msgDef);
     }
+
+    // Add message definitions from foxglove schemas
     for (const schema of Object.values(foxgloveMessageSchemas)) {
       const { fields, rosMsgInterfaceName, rosFullInterfaceName } = generateRosMsgDefinition(
         schema,
@@ -107,6 +108,8 @@ export default class Ros2Player implements Player {
       this._providerDatatypes.set(rosMsgInterfaceName, msgDef);
       this._providerDatatypes.set(rosFullInterfaceName, msgDef);
     }
+
+    // Add the legacy foxglove_msgs/ImageMarkerArray message definition
     this._providerDatatypes.set("foxglove_msgs/ImageMarkerArray", {
       definitions: [
         { name: "markers", type: "visualization_msgs/ImageMarker", isComplex: true, isArray: true },
@@ -115,35 +118,6 @@ export default class Ros2Player implements Player {
     this._providerDatatypes.set("foxglove_msgs/msg/ImageMarkerArray", {
       definitions: [
         { name: "markers", type: "visualization_msgs/ImageMarker", isComplex: true, isArray: true },
-      ],
-    });
-
-    // Fix std_msgs/Header, which changed in ROS 2
-    const definitions = [
-      // "seq" was removed
-      { name: "stamp", type: "time" },
-      { name: "frame_id", type: "string" },
-    ];
-    this._providerDatatypes.set("std_msgs/Header", { name: "std_msgs/Header", definitions });
-    this._providerDatatypes.set("std_msgs/msg/Header", {
-      name: "std_msgs/msg/Header",
-      definitions,
-    });
-
-    // Add Time and Duration builtin interfaces
-    this._providerDatatypes.set("builtin_interfaces/Time", {
-      name: "builtin_interfaces/Time",
-      definitions: [
-        { name: "sec", type: "int32" },
-        { name: "nanosec", type: "uint32" },
-      ],
-    });
-
-    this._providerDatatypes.set("builtin_interfaces/Duration", {
-      name: "builtin_interfaces/Duration",
-      definitions: [
-        { name: "sec", type: "int32" },
-        { name: "nanosec", type: "uint32" },
       ],
     });
   }
@@ -236,15 +210,11 @@ export default class Ros2Player implements Player {
           });
         }
 
-        topics.push({ name: topic, datatype: dataType });
+        topics.push({ name: topic, schemaName: dataType });
       }
 
       // Sort them for easy comparison
       const sortedTopics: Topic[] = sortBy(topics, "name");
-
-      if (this._providerTopics == undefined) {
-        this._metricsCollector.initialized();
-      }
 
       if (this._topicsChanged(sortedTopics)) {
         // Remove stats entries for removed topics
@@ -370,12 +340,12 @@ export default class Ros2Player implements Player {
     });
   });
 
-  setListener(listener: (arg0: PlayerState) => Promise<void>): void {
+  public setListener(listener: (arg0: PlayerState) => Promise<void>): void {
     this._listener = listener;
     this._emitState();
   }
 
-  close(): void {
+  public close(): void {
     this._closed = true;
     if (this._rosNode) {
       void this._rosNode.shutdown();
@@ -388,7 +358,7 @@ export default class Ros2Player implements Player {
     this._hasReceivedMessage = false;
   }
 
-  setSubscriptions(subscriptions: SubscribePayload[]): void {
+  public setSubscriptions(subscriptions: SubscribePayload[]): void {
     this._requestedSubscriptions = subscriptions;
 
     if (!this._rosNode || this._closed) {
@@ -412,7 +382,7 @@ export default class Ros2Player implements Player {
       if (!availableTopic || this._rosNode.subscriptions.has(topicName)) {
         continue;
       }
-      const dataType = availableTopic.datatype;
+      const dataType = availableTopic.schemaName;
 
       // Find the first publisher for this topic to mimic its QoS history settings
       const rosEndpoint = publishedTopics.get(topicName)?.[0];
@@ -468,7 +438,7 @@ export default class Ros2Player implements Player {
       });
 
       subscription.on("message", (timestamp, message, data, _pub) => {
-        this._handleMessage(topicName, timestamp, message, data.byteLength, true);
+        this._handleMessage(topicName, timestamp, message, dataType, data.byteLength, true);
         // Clear any existing subscription problems for this topic if we're receiving messages again.
         this._problems.removeProblem(`subscription:${topicName}`);
       });
@@ -498,6 +468,7 @@ export default class Ros2Player implements Player {
     topic: string,
     timestamp: Time,
     message: unknown,
+    schemaName: string,
     sizeInBytes: number,
     // This is a hot path so we avoid extra object allocation from a parameters struct
     // eslint-disable-next-line @foxglove/no-boolean-parameters
@@ -516,7 +487,14 @@ export default class Ros2Player implements Player {
     }
 
     if (message != undefined) {
-      const msg: MessageEvent<unknown> = { topic, receiveTime, publishTime, message, sizeInBytes };
+      const msg: MessageEvent<unknown> = {
+        topic,
+        receiveTime,
+        publishTime,
+        message,
+        sizeInBytes,
+        schemaName,
+      };
       this._parsedMessages.push(msg);
       this._handleInternalMessage(msg);
     }
@@ -540,105 +518,30 @@ export default class Ros2Player implements Player {
     this._emitState();
   };
 
-  setPublishers(_publishers: AdvertiseOptions[]): void {
+  public setPublishers(_publishers: AdvertiseOptions[]): void {
     if (!this._rosNode || this._closed) {
       return;
     }
 
-    // const validPublishers = publishers.filter(({ topic }) => topic.length > 0 && topic !== "/");
-    // const topics = new Set<string>(validPublishers.map(({ topic }) => topic));
-
     // Clear all problems related to publishing
     this._clearPublishProblems({ skipEmit: false });
-
-    // Unadvertise any topics that were previously published and no longer appear in the list
-    // for (const topic of this._rosNode.publications.keys()) {
-    //   if (!topics.has(topic)) {
-    //     this._rosNode.unadvertise(topic);
-    //   }
-    // }
-
-    // // Unadvertise any topics where the dataType changed
-    // for (const { topic, datatype } of validPublishers) {
-    //   const existingPub = this._rosNode.publications.get(topic);
-    //   if (existingPub != undefined && existingPub.dataType !== datatype) {
-    //     this._rosNode.unadvertise(topic);
-    //   }
-    // }
-
-    // // Advertise new topics
-    // for (const { topic, datatype: dataType, datatypes } of validPublishers) {
-    //   if (this._rosNode.publications.has(topic)) {
-    //     continue;
-    //   }
-
-    //   const msgdefProblemId = `msgdef:${topic}`;
-    //   const advertiseProblemId = `advertise:${topic}`;
-
-    //   // Try to retrieve the ROS message definition for this topic
-    //   let msgdef: RosMsgDefinition[];
-    //   try {
-    //     msgdef = rosDatatypesToMessageDefinition(datatypes, dataType);
-    //   } catch (error) {
-    //     this._addProblem(msgdefProblemId, {
-    //       severity: "warn",
-    //       message: `Unknown message definition for "${topic}"`,
-    //       tip: `Try subscribing to the topic "${topic} before publishing to it`,
-    //     });
-    //     continue;
-    //   }
-
-    //   // Advertise this topic to ROS as being published by us
-    //   this._rosNode.advertise({ topic, dataType, messageDefinition: msgdef }).catch((error) =>
-    //     this._addProblem(advertiseProblemId, {
-    //       severity: "error",
-    //       message: `Failed to advertise "${topic}"`,
-    //       error,
-    //     }),
-    //   );
-    // }
-
     this._emitState();
   }
 
-  setParameter(_key: string, _value: ParameterValue): void {
-    // log.debug(`Ros1Player.setParameter(key=${key}, value=${value})`);
-    // this._rosNode?.setParameter(key, value);
+  public setParameter(_key: string, _value: ParameterValue): void {
+    throw new Error("Parameter editing is not supported by this data source");
   }
 
-  publish(_payload: PublishPayload): void {
-    // const problemId = `publish:${topic}`;
-    // if (this._rosNode != undefined) {
-    //   if (this._rosNode.isAdvertising(topic)) {
-    //     this._rosNode
-    //       .publish(topic, msg)
-    //       .then(() => this._clearProblem(problemId))
-    //       .catch((error) =>
-    //         this._addProblem(problemId, {
-    //           severity: "error",
-    //           message: `Publishing to ${topic} failed`,
-    //           error,
-    //         }),
-    //       );
-    //   } else {
-    //     this._addProblem(problemId, {
-    //       severity: "warn",
-    //       message: `Unable to publish to "${topic}"`,
-    //       tip: `ROS1 may be disconnected. Please try again in a moment`,
-    //     });
-    //   }
-    // }
+  public publish(_payload: PublishPayload): void {
+    throw new Error("Publishing is not supported");
   }
 
-  async callService(): Promise<unknown> {
+  public async callService(): Promise<unknown> {
     throw new Error("Service calls are not supported by this data source");
   }
 
   // Bunch of unsupported stuff. Just don't do anything for these.
-  requestBackfill(): void {
-    // no-op
-  }
-  setGlobalVariables(): void {
+  public setGlobalVariables(): void {
     // no-op
   }
 
@@ -705,7 +608,7 @@ export default class Ros2Player implements Player {
   }
 }
 
-function ros1ToRos2Type(dataType: string): string {
+function dataTypeToFullName(dataType: string): string {
   const parts = dataType.split("/");
   if (parts.length === 2) {
     return `${parts[0]}/msg/${parts[1]}`;

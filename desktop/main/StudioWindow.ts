@@ -17,6 +17,7 @@ import path from "path";
 import Logger from "@foxglove/log";
 
 import pkgInfo from "../../package.json";
+import { encodeRendererArg } from "../common/rendererArgs";
 import getDevModeIcon from "./getDevModeIcon";
 import { simulateUserClick } from "./simulateUserClick";
 import { getTelemetrySettings } from "./telemetry";
@@ -106,7 +107,7 @@ function newStudioWindow(deepLinks: string[] = []): BrowserWindow {
       additionalArguments: [
         `--allowCrashReporting=${crashReportingEnabled ? "1" : "0"}`,
         `--allowTelemetry=${telemetryEnabled ? "1" : "0"}`,
-        ...deepLinks,
+        encodeRendererArg("deepLinks", deepLinks),
       ],
       // Disable webSecurity in development so we can make XML-RPC calls, load
       // remote data, etc. In production, the app is served from file:// URLs so
@@ -366,7 +367,7 @@ class StudioWindow {
 
   private _inputSources = new Set<string>();
 
-  constructor(deepLinks: string[] = []) {
+  public constructor(deepLinks: string[] = []) {
     const browserWindow = newStudioWindow(deepLinks);
     this._window = browserWindow;
     this._menu = buildMenu(browserWindow);
@@ -407,7 +408,7 @@ class StudioWindow {
     });
   }
 
-  load(): void {
+  public load(): void {
     // load after setting windowsById so any ipc handlers with id lookup work
     log.info(`window.loadURL(${rendererPath})`);
     this._window
@@ -420,7 +421,7 @@ class StudioWindow {
       });
   }
 
-  addInputSource(name: string): void {
+  public addInputSource(name: string): void {
     // A "Foxglove Data Platform" connection is triggered by opening a URL from console
     // Not currently a connection that can be started from inside Foxglove Studio
     const unsupportedInputSourceNames = ["Foxglove Data Platform"];
@@ -449,7 +450,7 @@ class StudioWindow {
     this._window.setMenu(this._menu);
   }
 
-  removeInputSource(name: string): void {
+  public removeInputSource(name: string): void {
     this._inputSources.delete(name);
 
     const fileMenu = this._menu.getMenuItemById("fileMenu");
@@ -461,15 +462,15 @@ class StudioWindow {
     this._window.setMenu(this._menu);
   }
 
-  getBrowserWindow(): BrowserWindow {
+  public getBrowserWindow(): BrowserWindow {
     return this._window;
   }
 
-  getMenu(): Menu {
+  public getMenu(): Menu {
     return this._menu;
   }
 
-  static fromWebContentsId(id: number): StudioWindow | undefined {
+  public static fromWebContentsId(id: number): StudioWindow | undefined {
     return StudioWindow.windowsByContentId.get(id);
   }
 

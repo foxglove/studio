@@ -4,14 +4,14 @@
 
 import * as THREE from "three";
 
+import { Renderer } from "./Renderer";
+
 type vec4 = [number, number, number, number];
 
 export class ScreenOverlay extends THREE.Object3D {
-  private static geometry: THREE.PlaneGeometry | undefined;
+  private material: THREE.ShaderMaterial;
 
-  material: THREE.ShaderMaterial;
-
-  constructor() {
+  public constructor(renderer: Renderer) {
     super();
 
     this.material = new THREE.ShaderMaterial({
@@ -29,23 +29,22 @@ export class ScreenOverlay extends THREE.Object3D {
       `,
     });
 
-    const mesh = new THREE.Mesh(ScreenOverlay.Geometry(), this.material);
+    const geometry = renderer.sharedGeometry.getGeometry(this.constructor.name, createGeometry);
+    const mesh = new THREE.Mesh(geometry, this.material);
     mesh.frustumCulled = false;
     this.add(mesh);
   }
 
-  setColor(color: THREE.Color, opacity: number): void {
+  public setColor(color: THREE.Color, opacity: number): void {
     const colorUniform = this.material.uniforms.color!.value as vec4;
     colorUniform[0] = color.r;
     colorUniform[1] = color.g;
     colorUniform[2] = color.b;
     colorUniform[3] = opacity;
   }
+}
 
-  static Geometry(): THREE.PlaneGeometry {
-    if (!ScreenOverlay.geometry) {
-      ScreenOverlay.geometry = new THREE.PlaneGeometry(2, 2, 1, 1);
-    }
-    return ScreenOverlay.geometry;
-  }
+function createGeometry(): THREE.PlaneGeometry {
+  const geometry = new THREE.PlaneGeometry(2, 2, 1, 1);
+  return geometry;
 }

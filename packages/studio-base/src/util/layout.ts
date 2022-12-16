@@ -61,7 +61,7 @@ export function isTabPanel(panelId: string): boolean {
 }
 
 export function isTabPanelConfig(config: PanelConfig | undefined): config is TabPanelConfig {
-  return config != undefined && "tabs" in config && "activeTabIndex" in config;
+  return config != undefined && "tabs" in config && "activeTabIdx" in config;
 }
 
 // Traverses `tree` to find the path to the specified `node`
@@ -122,7 +122,6 @@ function getLayoutWithNewPanelIds(
       newLayout[key] = layout[key];
     }
   }
-  // TODO: Refactor above to allow for better typing here.
   return newLayout as unknown as MosaicNode<string>;
 }
 

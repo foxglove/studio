@@ -20,6 +20,22 @@ export interface IMarker {
 
 export type IRosMarker = IMarker;
 
+export interface ImageMarker {
+  header: Header;
+  ns: string;
+  id: number;
+  type: number;
+  action: number;
+  position: Point;
+  scale: number;
+  outline_color: RGBA;
+  filled: boolean;
+  fill_color: RGBA;
+  lifetime: Time;
+  points: Point[];
+  outline_colors: RGBA[];
+}
+
 /**
  * buildRosMarker builds a complete Marker message from an optional set of args.
  *
@@ -86,12 +102,65 @@ export function buildRosMarker(args?: Partial<IRosMarker>): IRosMarker {
 }
 
 /**
+ * buildImageMarker builds a complete Marker message from an optional set of args.
+ *
+ * See https://foxglove.dev/docs/studio/panels/image for a list of supported Marker types
+ *
+ * @param args override any defaults in the marker fields
+ * @returns an ImageMarker instance with default values for any omitted args
+ */
+export function buildImageMarker(args?: Partial<ImageMarker>): ImageMarker {
+  const {
+    header,
+    ns,
+    id,
+    type,
+    action,
+    lifetime,
+    points,
+    outline_color,
+    outline_colors,
+    filled,
+    fill_color,
+    position,
+    scale,
+  } = args ?? {};
+
+  return {
+    header: header ?? {
+      frame_id: "",
+      stamp: {
+        sec: 0,
+        nsec: 0,
+      },
+      seq: 0,
+    },
+    ns: ns ?? "",
+    id: id ?? 0,
+    type: type ?? 0,
+    action: action ?? 0,
+    position: position ?? {
+      x: 0,
+      y: 0,
+      z: 0,
+    },
+    scale: scale ?? 1,
+    outline_color: outline_color ?? { r: 0, g: 0, b: 0, a: 0 },
+    lifetime: lifetime ?? { sec: 0, nsec: 0 },
+    points: points ?? [],
+    outline_colors: outline_colors ?? [],
+    filled: filled ?? false,
+    fill_color: fill_color ?? { r: 0, g: 0, b: 0, a: 0 },
+  };
+}
+
+/**
  * Use this class to instantiate marker-like objects with defaulted values.
  *
  * @deprecated prefer `buildRosMarker({ ... })` instead
  */
 export class Marker implements IMarker {
-  header: Header = {
+  public header: Header = {
     frame_id: "",
     stamp: {
       sec: 0,
@@ -99,11 +168,11 @@ export class Marker implements IMarker {
     },
     seq: 0,
   };
-  ns = "";
-  id = 0;
-  type = 0;
-  action = 0;
-  pose: Pose = {
+  public ns = "";
+  public id = 0;
+  public type = 0;
+  public action = 0;
+  public pose: Pose = {
     position: {
       x: 0,
       y: 0,
@@ -116,21 +185,21 @@ export class Marker implements IMarker {
       w: 0,
     },
   };
-  scale: Point = {
+  public scale: Point = {
     x: 0,
     y: 0,
     z: 0,
   };
-  color: RGBA = { r: 0, g: 0, b: 0, a: 0 };
-  lifetime: Time = { sec: 0, nsec: 0 };
-  frame_locked = false;
-  points: Point[] = [];
-  colors: RGBA[] = [];
-  text = "";
-  mesh_resource = "";
-  mesh_use_embedded_materials = false;
+  public color: RGBA = { r: 0, g: 0, b: 0, a: 0 };
+  public lifetime: Time = { sec: 0, nsec: 0 };
+  public frame_locked = false;
+  public points: Point[] = [];
+  public colors: RGBA[] = [];
+  public text = "";
+  public mesh_resource = "";
+  public mesh_use_embedded_materials = false;
 
-  constructor({
+  public constructor({
     header,
     ns,
     id,

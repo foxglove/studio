@@ -77,13 +77,14 @@ export function JointPositionFromTopic(): JSX.Element {
       velocity: [0],
       effort: [0],
     },
+    schemaName: "sensor_msgs/JointState",
     sizeInBytes: 0,
   };
   return (
     <ExampleAssetsProvider>
       <PanelSetup
         fixture={{
-          topics: [{ name: "/joint_states", datatype: "sensor_msgs/JointState" }],
+          topics: [{ name: "/joint_states", schemaName: "sensor_msgs/JointState" }],
           frame: { "/joint_states": [jointStates] },
         }}
       >
@@ -102,6 +103,16 @@ export function ManualJointPosition(): JSX.Element {
         />
       </PanelSetup>
     </ExampleAssetsProvider>
+  );
+}
+
+export function WithError(): JSX.Element {
+  return (
+    <PanelSetup
+      fixture={{ activeData: { parameters: new Map([["/robot_description", "hello"]]) } }}
+    >
+      <URDFViewer />
+    </PanelSetup>
   );
 }
 

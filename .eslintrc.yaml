@@ -13,6 +13,7 @@ ignorePatterns:
 
 plugins:
   - file-progress
+  - tss-unused-classes
 
 extends:
   - plugin:@foxglove/base
@@ -24,6 +25,8 @@ settings:
 
 rules:
   "@foxglove/license-header": error
+
+  tss-unused-classes/unused-classes: error
 
   # show progress while linting
   file-progress/activate: warn
@@ -56,16 +59,24 @@ rules:
 
   no-warning-comments:
     - error
-    - terms: ["fixme", "xxx"]
+    - terms: ["fixme", "xxx", "todo"]
       location: anywhere
 
   no-restricted-imports:
     - error
     - paths:
-        - name: lodash
+        - name: "@mui/material"
+          importNames: [styled]
+          message: "@mui/styled has performance implications. Use tss-react/mui instead."
+        - name: "@mui/material/styles/styled"
+          message: "@mui/styled has performance implications. Use tss-react/mui instead."
+        - name: "@emotion/styled"
+          message: "@emotion/styled has performance implications. Use tss-react/mui instead."
+
+        - name: "lodash"
           importNames: [get]
           message: "Use optional chaining instead of lodash.get."
-        - name: lodash/get
+        - name: "lodash/get"
           message: "Use optional chaining instead of lodash.get."
 
   no-restricted-syntax:
@@ -86,7 +97,6 @@ rules:
         `// eslint-disable-next-line no-restricted-syntax`. For rationale, see:
         https://github.com/sindresorhus/meta/discussions/7"
 
-  jest/no-done-callback: off # Can be a useful alternative to promises
   jest/expect-expect:
     [error, { assertFunctionNames: [expect*, sendNotification.expectCalledDuringTest] }]
 
@@ -100,6 +110,8 @@ overrides:
       "@typescript-eslint/ban-ts-comment":
         - error
         - ts-expect-error: allow-with-description
+
+      "@typescript-eslint/explicit-member-accessibility": error
 
       "@typescript-eslint/no-inferrable-types": off # It's sometimes useful to explicitly name to guard against future changes
       "@typescript-eslint/no-empty-function": off
@@ -127,3 +139,57 @@ overrides:
       - "**/*.stories.tsx"
       - "**/*.test.tsx"
       - "**/*.test.ts"
+
+  - rules:
+      react/forbid-component-props: off
+    files:
+      - "**/*.stories.tsx"
+
+  - rules:
+      no-restricted-imports: off
+    files:
+      # Ignore existing implementations of @mui/styled
+      - "web/src/VersionBanner.tsx"
+      - "packages/studio-base/src/components/DataSourceSidebar/DataSourceSidebar.tsx"
+      - "packages/studio-base/src/components/DataSourceSidebar/TopicList.tsx"
+      - "packages/studio-base/src/components/EmptyPanelLayout.tsx"
+      - "packages/studio-base/src/components/EmptyState.tsx"
+      - "packages/studio-base/src/components/ExpandingToolbar.tsx"
+      - "packages/studio-base/src/components/ExtensionDetails.tsx"
+      - "packages/studio-base/src/components/ExtensionsSidebar/index.tsx"
+      - "packages/studio-base/src/components/LayoutBrowser/LayoutRow.tsx"
+      - "packages/studio-base/src/components/LayoutBrowser/SignInPrompt.tsx"
+      - "packages/studio-base/src/components/OpenDialog/OpenDialog.tsx"
+      - "packages/studio-base/src/components/OpenDialog/Start.tsx"
+      - "packages/studio-base/src/components/OpenDialog/View.tsx"
+      - "packages/studio-base/src/components/Panel.tsx"
+      - "packages/studio-base/src/components/PanelLayout.tsx"
+      - "packages/studio-base/src/components/PanelToolbar/ToolbarIconButton.tsx"
+      - "packages/studio-base/src/components/PanelToolbar/index.tsx"
+      - "packages/studio-base/src/components/PlaybackControls/PlaybackTimeDisplayMethod.tsx"
+      - "packages/studio-base/src/components/PlaybackControls/Slider.stories.tsx"
+      - "packages/studio-base/src/components/PlaybackSpeedControls.tsx"
+      - "packages/studio-base/src/components/SettingsTreeEditor/VisibilityToggle.tsx"
+      - "packages/studio-base/src/components/SettingsTreeEditor/inputs/ColorScalePicker.tsx"
+      - "packages/studio-base/src/components/SettingsTreeEditor/inputs/ColorSwatch.tsx"
+      - "packages/studio-base/src/components/ShareJsonModal.tsx"
+      - "packages/studio-base/src/components/TextHighlight.tsx"
+      - "packages/studio-base/src/panels/Image/components/Toolbar.tsx"
+      - "packages/studio-base/src/panels/Image/components/TopicDropdown.tsx"
+      - "packages/studio-base/src/panels/Image/components/ZoomMenu.tsx"
+      - "packages/studio-base/src/panels/Image/index.tsx"
+      - "packages/studio-base/src/panels/NodePlayground/BottomBar/DiagnosticsSection.tsx"
+      - "packages/studio-base/src/panels/NodePlayground/BottomBar/index.tsx"
+      - "packages/studio-base/src/panels/NodePlayground/Sidebar.tsx"
+      - "packages/studio-base/src/panels/NodePlayground/index.tsx"
+      - "packages/studio-base/src/panels/Plot/PathSettingsModal.tsx"
+      - "packages/studio-base/src/panels/Publish/index.tsx"
+      - "packages/studio-base/src/panels/RawMessages/DiffSpan.tsx"
+      - "packages/studio-base/src/panels/Tab/TabbedToolbar.tsx"
+      - "packages/studio-base/src/panels/Tab/ToolbarTab.tsx"
+      - "packages/studio-base/src/panels/Tab/index.tsx"
+      - "packages/studio-base/src/panels/Table/Table.tsx"
+      - "packages/studio-base/src/panels/Table/TableCell.tsx"
+      - "packages/studio-base/src/panels/diagnostics/DiagnosticStatus.tsx"
+      - "packages/studio-base/src/panels/diagnostics/DiagnosticSummary.tsx"
+      - "packages/studio-base/src/stories/storyHelpers.tsx"

@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Button, useTheme, styled as muiStyled } from "@mui/material";
+import { Tooltip, Button, useTheme, Fade } from "@mui/material";
 import { ChartOptions, ScaleOptions } from "chart.js";
 import { AnnotationOptions } from "chartjs-plugin-annotation";
 import React, {
@@ -24,6 +24,7 @@ import React, {
   MouseEvent,
 } from "react";
 import { useMountedState } from "react-use";
+import { makeStyles } from "tss-react/mui";
 import { useDebouncedCallback } from "use-debounce";
 import { v4 as uuidv4 } from "uuid";
 
@@ -34,17 +35,19 @@ import ChartComponent from "@foxglove/studio-base/components/Chart/index";
 import { RpcElement, RpcScales } from "@foxglove/studio-base/components/Chart/types";
 import KeyListener from "@foxglove/studio-base/components/KeyListener";
 import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
+import Stack from "@foxglove/studio-base/components/Stack";
 import TimeBasedChartLegend from "@foxglove/studio-base/components/TimeBasedChart/TimeBasedChartLegend";
-import makeGlobalState from "@foxglove/studio-base/components/TimeBasedChart/makeGlobalState";
-import Tooltip from "@foxglove/studio-base/components/Tooltip";
 import {
+  TimelineInteractionStateStore,
   useClearHoverValue,
+  useTimelineInteractionState,
   useSetHoverValue,
-} from "@foxglove/studio-base/context/HoverValueContext";
+} from "@foxglove/studio-base/context/TimelineInteractionStateContext";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import HoverBar from "./HoverBar";
 import TimeBasedChartTooltipContent from "./TimeBasedChartTooltipContent";
+import { VerticalBarWrapper } from "./VerticalBarWrapper";
 import { downsampleTimeseries, downsampleScatter } from "./downsample";
 
 const log = Logger.getLogger(__filename);
@@ -57,39 +60,41 @@ export type TimeBasedChartTooltipData = {
   constantName?: string;
 };
 
-const SRoot = muiStyled("div")({
-  position: "relative",
-});
-
-const SResetZoom = muiStyled("div")(({ theme }) => ({
-  position: "absolute",
-  bottom: theme.spacing(4),
-  right: theme.spacing(1),
-}));
-
-const SLegend = muiStyled("div")(({ theme }) => ({
-  display: "flex",
-  width: "10%",
-  minWidth: 90,
-  overflowY: "auto",
-  flexDirection: "column",
-  alignItems: "flex-start",
-  justifyContent: "start",
-  padding: theme.spacing(4, 0, 1, 0),
-}));
-
-const SBar = muiStyled("div", {
-  shouldForwardProp: (prop) => prop !== "xAxisIsPlaybackTime",
-})<{
-  xAxisIsPlaybackTime: boolean;
-}>(({ xAxisIsPlaybackTime, theme }) => ({
-  position: "absolute",
-  top: 0,
-  bottom: 0,
-  width: 1,
-  marginLeft: -1,
-  display: "block",
-  backgroundColor: xAxisIsPlaybackTime ? theme.palette.warning.main : theme.palette.info.main,
+const useStyles = makeStyles()((theme) => ({
+  root: {
+    position: "relative",
+  },
+  resetZoomButton: {
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    marginBottom: theme.spacing(4),
+    marginRight: theme.spacing(1),
+  },
+  legend: {
+    display: "flex",
+    width: "10%",
+    minWidth: 90,
+    overflowY: "auto",
+    flexDirection: "column",
+    alignItems: "flex-start",
+    justifyContent: "start",
+    padding: theme.spacing(4, 0, 1, 0),
+  },
+  tooltip: {
+    maxWidth: "none",
+  },
+  bar: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    width: 1,
+    marginLeft: -1,
+    display: "block",
+  },
+  playbackBar: {
+    backgroundColor: "#aaa",
+  },
 }));
 
 type ChartComponentProps = ComponentProps<typeof ChartComponent>;
@@ -98,9 +103,8 @@ type ChartComponentProps = ComponentProps<typeof ChartComponent>;
 // eslint-disable-next-line no-restricted-syntax
 const ChartNull = null;
 
-// only sync the x axis and allow y-axis scales to auto-calculate
-type SyncBounds = { min: number; max: number; sourceId: string; userInteraction: boolean };
-const useGlobalXBounds = makeGlobalState<SyncBounds>();
+const selectGlobalBounds = (store: TimelineInteractionStateStore) => store.globalBounds;
+const selectSetGlobalBounds = (store: TimelineInteractionStateStore) => store.setGlobalBounds;
 
 // Calculation mode for the "reset view" view.
 export type ChartDefaultView =
@@ -162,6 +166,7 @@ export default function TimeBasedChart(props: Props): JSX.Element {
   const { labels, datasets } = data;
 
   const theme = useTheme();
+  const { classes, cx } = useStyles();
   const componentId = useMemo(() => uuidv4(), []);
   const isMounted = useMountedState();
   const canvasContainer = useRef<HTMLDivElement>(ReactNull);
@@ -204,9 +209,14 @@ export default function TimeBasedChart(props: Props): JSX.Element {
     };
   }, [pauseFrame, onFinishRender]);
 
-  const hoverBar = useRef<HTMLDivElement>(ReactNull);
+  const globalBounds = useTimelineInteractionState(selectGlobalBounds);
+  const setGlobalBounds = useTimelineInteractionState(selectSetGlobalBounds);
 
-  const [globalBounds, setGlobalBounds] = useGlobalXBounds({ enabled: isSynced });
+  // Ignore global bounds if we're not synced.
+  const syncedGlobalBounds = useMemo(
+    () => (isSynced ? globalBounds : undefined),
+    [globalBounds, isSynced],
+  );
 
   const linesToHide = useMemo(() => props.linesToHide ?? {}, [props.linesToHide]);
 
@@ -402,19 +412,6 @@ export default function TimeBasedChart(props: Props): JSX.Element {
   );
 
   const plugins = useMemo<ChartOptions["plugins"]>(() => {
-    const annotations: AnnotationOptions[] = [...(props.annotations ?? [])];
-
-    if (currentTime != undefined) {
-      annotations.push({
-        type: "line",
-        drawTime: "beforeDatasetsDraw",
-        scaleID: "x",
-        borderColor: "#aaa",
-        borderWidth: 1,
-        value: currentTime,
-      });
-    }
-
     return {
       decimation: {
         enabled: true,
@@ -444,21 +441,21 @@ export default function TimeBasedChart(props: Props): JSX.Element {
         },
       },
       ...props.plugins,
-      annotation: { annotations },
+      annotation: { annotations: props.annotations },
     } as ChartOptions["plugins"];
-  }, [currentTime, props.annotations, props.plugins, props.zoom, zoomMode]);
+  }, [props.annotations, props.plugins, props.zoom, zoomMode]);
 
   // To avoid making a new xScale identity on all updates that might change the min/max
   // we memo the min/max X values so only when the values change is the scales object re-made
   const { min: minX, max: maxX } = useMemo(() => {
     // when unlocking sync keep the last manually panned/zoomed chart state
-    if (!globalBounds && hasUserPannedOrZoomed) {
+    if (!syncedGlobalBounds && hasUserPannedOrZoomed) {
       return { min: undefined, max: undefined };
     }
 
     // If we're the source of global bounds then use our current values
     // to avoid scale feedback jitter.
-    if (globalBounds?.sourceId === componentId && globalBounds.userInteraction) {
+    if (syncedGlobalBounds?.sourceId === componentId && syncedGlobalBounds.userInteraction) {
       return { min: undefined, max: undefined };
     }
 
@@ -477,18 +474,10 @@ export default function TimeBasedChart(props: Props): JSX.Element {
       max = datasetBounds.x.max;
     }
 
-    // if we are syncing and have global bounds there are two possibilities
-    // 1. the global bounds are from user interaction, we use that unconditionally
-    // 2. the global bounds are min/max with our dataset bounds
-    if (globalBounds) {
-      if (globalBounds.userInteraction) {
-        min = globalBounds.min;
-        max = globalBounds.max;
-      } else if (defaultView?.type !== "following") {
-        // if following and no user interaction - we leave our bounds as they are
-        min = Math.min(min ?? globalBounds.min, globalBounds.min);
-        max = Math.max(max ?? globalBounds.max, globalBounds.max);
-      }
+    // If the global bounds are from user interaction, we use that unconditionally.
+    if (syncedGlobalBounds?.userInteraction === true) {
+      min = syncedGlobalBounds.min;
+      max = syncedGlobalBounds.max;
     }
 
     // if the min/max are the same, use undefined to fall-back to chart component auto-scales
@@ -504,7 +493,7 @@ export default function TimeBasedChart(props: Props): JSX.Element {
     datasetBounds.x.max,
     datasetBounds.x.min,
     defaultView,
-    globalBounds,
+    syncedGlobalBounds,
     hasUserPannedOrZoomed,
   ]);
 
@@ -800,8 +789,8 @@ export default function TimeBasedChart(props: Props): JSX.Element {
   // The reason we check for pan lock is to remove reset display from all sync'd plots once
   // the range has been reset.
   const showReset = useMemo(() => {
-    return isSynced ? globalBounds?.userInteraction === true : hasUserPannedOrZoomed;
-  }, [globalBounds?.userInteraction, hasUserPannedOrZoomed, isSynced]);
+    return isSynced ? syncedGlobalBounds?.userInteraction === true : hasUserPannedOrZoomed;
+  }, [syncedGlobalBounds?.userInteraction, hasUserPannedOrZoomed, isSynced]);
 
   // We don't memo this since each option itself is memo'd and this is just convenience to pass to
   // the component.
@@ -809,6 +798,7 @@ export default function TimeBasedChart(props: Props): JSX.Element {
     type,
     width,
     height,
+    isBoundsReset: globalBounds == undefined,
     options,
     data: downsampledData,
     onClick: props.onClick,
@@ -825,31 +815,47 @@ export default function TimeBasedChart(props: Props): JSX.Element {
   }
 
   return (
-    <div style={{ display: "flex", width: "100%" }}>
+    <Stack direction="row" fullWidth>
       <Tooltip
-        shown
-        noPointerEvents={true}
+        arrow={false}
+        classes={{ tooltip: classes.tooltip }}
+        open={activeTooltip != undefined}
         placement="right"
-        targetPosition={{ x: activeTooltip?.x ?? 0, y: activeTooltip?.y ?? 0 }}
-        contents={tooltipContent}
-      />
-      <div style={{ display: "flex", width }}>
-        <SRoot onDoubleClick={onResetZoom}>
-          <HoverBar
-            componentId={componentId}
-            isTimestampScale={xAxisIsPlaybackTime}
-            scales={currentScalesRef.current}
-          >
-            <SBar xAxisIsPlaybackTime={xAxisIsPlaybackTime} ref={hoverBar} />
-          </HoverBar>
+        title={tooltipContent ?? <></>}
+        disableInteractive
+        followCursor
+        TransitionComponent={Fade}
+        TransitionProps={{ timeout: 0 }}
+      >
+        <Stack direction="row" style={{ width }}>
+          <div className={classes.root} onDoubleClick={onResetZoom}>
+            <HoverBar
+              componentId={componentId}
+              isTimestampScale={xAxisIsPlaybackTime}
+              scales={currentScalesRef.current}
+            >
+              <div
+                className={classes.bar}
+                style={{
+                  backgroundColor: xAxisIsPlaybackTime
+                    ? theme.palette.warning.main
+                    : theme.palette.info.main,
+                }}
+              />
+            </HoverBar>
+            {xAxisIsPlaybackTime && (
+              <VerticalBarWrapper scales={currentScalesRef.current} xValue={currentTime}>
+                <div className={cx(classes.bar, classes.playbackBar)} />
+              </VerticalBarWrapper>
+            )}
 
-          <div ref={canvasContainer} onMouseMove={onMouseMove} onMouseOut={onMouseOut}>
-            <ChartComponent {...chartProps} />
-          </div>
+            <div ref={canvasContainer} onMouseMove={onMouseMove} onMouseOut={onMouseOut}>
+              <ChartComponent {...chartProps} />
+            </div>
 
-          <SResetZoom>
             {showReset && (
               <Button
+                className={classes.resetZoomButton}
                 variant="contained"
                 color="inherit"
                 title="(shortcut: double-click)"
@@ -858,12 +864,12 @@ export default function TimeBasedChart(props: Props): JSX.Element {
                 Reset view
               </Button>
             )}
-          </SResetZoom>
-          <KeyListener global keyDownHandlers={keyDownHandlers} keyUpHandlers={keyUphandlers} />
-        </SRoot>
-      </div>
+            <KeyListener global keyDownHandlers={keyDownHandlers} keyUpHandlers={keyUphandlers} />
+          </div>
+        </Stack>
+      </Tooltip>
       {drawLegend === true && (
-        <SLegend>
+        <div className={classes.legend}>
           <TimeBasedChartLegend
             datasetId={datasetId}
             canToggleLines={canToggleLines}
@@ -871,8 +877,8 @@ export default function TimeBasedChart(props: Props): JSX.Element {
             linesToHide={linesToHide}
             toggleLine={toggleLine}
           />
-        </SLegend>
+        </div>
       )}
-    </div>
+    </Stack>
   );
 }

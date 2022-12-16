@@ -30,14 +30,14 @@ export type CameraState = {
 };
 
 export const DEFAULT_CAMERA_STATE: CameraState = {
-  distance: 75,
+  distance: 20,
   perspective: true,
-  phi: 45,
+  phi: 60,
   target: [0, 0, 0],
   targetOffset: [0, 0, 0],
   targetOrientation: [0, 0, 0, 1],
-  thetaOffset: 0,
+  thetaOffset: 45,
   fovy: 45,
-  near: 0.01,
+  near: 0.5,
   far: 5000,
 };

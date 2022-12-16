@@ -4,20 +4,20 @@
 
 import { createContext, useContext } from "react";
 
-import { PanelsState } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
+import { LayoutData } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
 import { Player, PlayerMetricsCollectorInterface } from "@foxglove/studio-base/players/types";
 import ConsoleApi from "@foxglove/studio-base/services/ConsoleApi";
+import { RegisteredIconNames } from "@foxglove/studio-base/types/Icons";
 
 export type DataSourceFactoryInitializeArgs = {
   metricsCollector: PlayerMetricsCollectorInterface;
-  folder?: FileSystemDirectoryHandle;
   file?: File;
   files?: File[];
-  url?: string;
+  params?: Record<string, string | undefined>;
   consoleApi?: ConsoleApi;
-} & Record<string, unknown>;
+};
 
-export type DataSourceFactoryType = "file" | "remote-file" | "connection" | "sample";
+export type DataSourceFactoryType = "file" | "connection" | "sample";
 
 export type Field = {
   id: string;
@@ -37,17 +37,22 @@ export type Field = {
 
 export interface IDataSourceFactory {
   id: string;
+
+  // A list of alternate ids used to identify this factory
+  // https://github.com/foxglove/studio/issues/4937
+  legacyIds?: string[];
+
   type: DataSourceFactoryType;
   displayName: string;
   iconName?: RegisteredIconNames;
   description?: string;
-  docsLink?: string;
+  docsLinks?: { label?: string; url: string }[];
   disabledReason?: string | JSX.Element;
   badgeText?: string;
   hidden?: boolean;
   warning?: string;
 
-  sampleLayout?: PanelsState;
+  sampleLayout?: LayoutData;
 
   formConfig?: {
     // Initialization args are populated with keys of the _id_ field
@@ -79,7 +84,7 @@ export type RecentSource = {
 type FileDataSourceArgs = {
   type: "file";
   files?: File[];
-  handle?: FileSystemFileHandle;
+  handle?: FileSystemFileHandle; // foxglove-depcheck-used: @types/wicg-file-system-access
 };
 
 type ConnectionDataSourceArgs = {

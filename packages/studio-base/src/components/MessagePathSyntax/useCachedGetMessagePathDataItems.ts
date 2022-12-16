@@ -37,10 +37,6 @@ import parseRosPath, { quoteTopicNameIfNeeded } from "./parseRosPath";
 
 export type MessagePathDataItem = {
   value: unknown; // The actual value.
-  // TODO(JP): Maybe this should just be a simple path without nice ids, and then have a separate function
-  // to generate "nice ids". Because they might not always be reliable and we might want to use different
-  // kinds of "nice ids" for different purposes, e.g. `[10]{id==5}{other_id=123}` for tooltips (more information)
-  // but `[:]{other_id==123}` for line graphs (more likely to match values).
   path: string; // The path to get to this value. Tries to use "nice ids" like `[:]{some_id==123}` wherever possible.
   constantName?: string; // The name of the constant that the value matches up with, if any.
 };
@@ -118,8 +114,8 @@ export function useCachedGetMessagePathDataItems(
         }
       }
     }
-    for (const { datatype } of relevantTopics.values()) {
-      addRelevantDatatype(datatype, []);
+    for (const { schemaName } of relevantTopics.values()) {
+      addRelevantDatatype(schemaName, []);
     }
     return relevantDatatypes;
   }, [datatypes, relevantTopics]);
@@ -357,7 +353,7 @@ export function getMessagePathDataItems(
       );
     }
   }
-  const structure = structures[topic.datatype];
+  const structure = structures[topic.schemaName];
   if (structure) {
     traverse(message.message, 0, quoteTopicNameIfNeeded(filledInPath.topicName), structure);
   }
