@@ -2394,9 +2394,9 @@ __metadata:
     "@sentry/types": 7.10.0
     "@storybook/addon-actions": 6.5.10
     "@storybook/react": 6.5.10
-    "@testing-library/dom": 8.11.3
+    "@testing-library/dom": 8.19.0
     "@testing-library/react": 13.4.0
-    "@testing-library/user-event": 14.3.0
+    "@testing-library/user-event": 14.4.3
     "@types/amplitude-js": 8.16.2
     "@types/base16": ^1
     "@types/circular-dependency-plugin": 5.0.5
@@ -5087,23 +5087,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@testing-library/dom@npm:8.11.3":
-  version: 8.11.3
-  resolution: "@testing-library/dom@npm:8.11.3"
-  dependencies:
-    "@babel/code-frame": ^7.10.4
-    "@babel/runtime": ^7.12.5
-    "@types/aria-query": ^4.2.0
-    aria-query: ^5.0.0
-    chalk: ^4.1.0
-    dom-accessibility-api: ^0.5.9
-    lz-string: ^1.4.4
-    pretty-format: ^27.0.2
-  checksum: 2245d254b6058590e25de86fb7b3c75e4a31096901a191f80d3efb9fa7e1e273043416f370c8770feb9f3ccc73a1550a877a3b003b593f1728ae828fcb52cd62
-  languageName: node
-  linkType: hard
-
-"@testing-library/dom@npm:^8.5.0":
+"@testing-library/dom@npm:8.19.0, @testing-library/dom@npm:^8.5.0":
   version: 8.19.0
   resolution: "@testing-library/dom@npm:8.19.0"
   dependencies:
@@ -5133,12 +5117,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@testing-library/user-event@npm:14.3.0":
-  version: 14.3.0
-  resolution: "@testing-library/user-event@npm:14.3.0"
+"@testing-library/user-event@npm:14.4.3":
+  version: 14.4.3
+  resolution: "@testing-library/user-event@npm:14.4.3"
   peerDependencies:
     "@testing-library/dom": ">=7.21.4"
-  checksum: cbd5954460496519cb2ff3fa506ca598d7e4c2e3d2f2e129b21909758f5ec87573aad7d6c79aebffd4bd0ea843315b3064a2a76e545f196bd4c82489cb3afc1d
+  checksum: 852c48ea6db1c9471b18276617c84fec4320771e466cd58339a732ca3fd73ad35e5a43ae14f51af51a8d0a150dcf60fcaab049ef367871207bea8f92c4b8195e
   languageName: node
   linkType: hard
 

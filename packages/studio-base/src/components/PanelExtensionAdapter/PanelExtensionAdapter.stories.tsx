@@ -16,6 +16,7 @@ import PanelExtensionAdapter from "./PanelExtensionAdapter";
 export default {
   title: "PanelExtensionAdapter",
   component: PanelExtensionAdapter,
+  parameters: { colorScheme: "light" },
 };
 
 export const CatchRenderError = (): JSX.Element => {
@@ -63,7 +64,9 @@ function SimplePanel({ context }: { context: PanelExtensionContext }) {
     context.watch("currentTime");
     context.watch("parameters");
     context.onRender = (renderState: RenderState, done) => {
-      setCurrentTime(renderState.currentTime);
+      if (renderState.currentTime != undefined) {
+        setCurrentTime(renderState.currentTime);
+      }
       if (renderState.parameters != undefined) {
         setParameters(renderState.parameters);
       }
@@ -84,7 +87,9 @@ function SimplePanel({ context }: { context: PanelExtensionContext }) {
 
 export const SimplePanelRender = (): ReactElement => {
   function initPanel(context: PanelExtensionContext) {
-    createRoot(context.panelElement).render(<SimplePanel context={context} />);
+    const root = createRoot(context.panelElement);
+    root.render(<SimplePanel context={context} />);
+    return () => root.unmount();
   }
 
   return (
