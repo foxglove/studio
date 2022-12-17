@@ -14,13 +14,14 @@ import { ThreeDeeRender } from "./ThreeDeeRender";
 import helpContent from "./index.help.md";
 
 function initPanel(context: PanelExtensionContext) {
-  createRoot(context.panelElement).render(
+  const root = createRoot(context.panelElement);
+  root.render(
     <StrictMode>
       <ThreeDeeRender context={context} />
     </StrictMode>,
   );
   return () => {
-    ReactDOM.unmountComponentAtNode(context.panelElement);
+    root.unmount();
   };
 }
 
