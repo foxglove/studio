@@ -61,7 +61,7 @@
   "resolutions": {
     "@types/node": "15.3.0",
     "react-dnd": "14.0.2",
-    "@storybook/react": "patch:@storybook/react@6.5.10#./patches/storybook-react.patch",
+    "@storybook/react": "patch:@storybook/react@6.5.14#./patches/storybook-react.patch",
     "react-use": "patch:react-use@17.3.1#./patches/react-use.patch"
   },
   "devDependencies": {
