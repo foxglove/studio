@@ -7,13 +7,13 @@ import LeafletRetinaIconUrl from "leaflet/dist/images/marker-icon-2x.png";
 import LeafletIconUrl from "leaflet/dist/images/marker-icon.png";
 import LeafletShadowIconUrl from "leaflet/dist/images/marker-shadow.png";
 import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
 
 import { PanelExtensionContext } from "@foxglove/studio";
 
 import MapPanel from "./MapPanel";
 
 import "leaflet/dist/leaflet.css";
-import { createRoot } from "react-dom/client";
 
 // Webpack and leaflet don't work well out of the box without manually
 // overriding the default icon and its asset paths.
