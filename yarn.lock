@@ -4880,7 +4880,7 @@ __metadata:
 
 "@storybook/react@patch:@storybook/react@6.5.14#./patches/storybook-react.patch::locator=foxglove-studio%40workspace%3A.":
   version: 6.5.14
-  resolution: "@storybook/react@patch:@storybook/react@npm%3A6.5.14#./patches/storybook-react.patch::version=6.5.14&hash=b2c9c6&locator=foxglove-studio%40workspace%3A."
+  resolution: "@storybook/react@patch:@storybook/react@npm%3A6.5.14#./patches/storybook-react.patch::version=6.5.14&hash=42abdd&locator=foxglove-studio%40workspace%3A."
   dependencies:
     "@babel/preset-flow": ^7.12.1
     "@babel/preset-react": ^7.12.10
@@ -4939,7 +4939,7 @@ __metadata:
     build-storybook: bin/build.js
     start-storybook: bin/index.js
     storybook-server: bin/index.js
-  checksum: 9c25e05dde224095b44c6dbff5df0b7c3198d790db3c135a55089a9327aab2eb64602c4f4f3f132a920be809cf5deb39feaa57110ccec42747554b97f288b086
+  checksum: 4be2c516a91f2338fff52ce39f223e0259db2e9092f7f77315b522edcbf0dbe50af3322191677f516b170f0c996a2dc050d8f2d9f4fd7540d173dc7afb9ad0d4
   languageName: node
   linkType: hard
 
