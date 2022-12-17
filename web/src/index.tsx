@@ -95,10 +95,12 @@ async function main() {
   });
 
   createRoot(rootEl!).render(
-    <LogAfterRender>
-      {banner}
-      <Root appConfiguration={appConfiguration} />
-    </LogAfterRender>,
+    <StrictMode>
+      <LogAfterRender>
+        {banner}
+        <Root appConfiguration={appConfiguration} />
+      </LogAfterRender>
+    </StrictMode>,
   );
 }
 

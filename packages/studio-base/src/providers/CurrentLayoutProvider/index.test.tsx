@@ -140,7 +140,6 @@ describe("CurrentLayoutProvider", () => {
     expect(mockLayoutManager.getLayout.mock.calls).toEqual([["example"], ["example"]]);
     expect(all.map((item) => (item instanceof Error ? undefined : item.layoutState))).toEqual([
       { selectedLayout: undefined },
-      // { selectedLayout: { loading: true, id: "example", data: undefined } },
       { selectedLayout: { loading: false, id: "example", data: expectedState } },
     ]);
     (console.warn as jest.Mock).mockClear();
@@ -186,9 +185,7 @@ describe("CurrentLayoutProvider", () => {
     expect(mockUserProfile.setUserProfile.mock.calls).toEqual([[{ currentLayoutId: "example2" }]]);
     expect(all.map((item) => (item instanceof Error ? undefined : item.layoutState))).toEqual([
       { selectedLayout: undefined },
-      // { selectedLayout: { loading: true, id: "example", data: undefined } },
       { selectedLayout: { loading: false, id: "example", data: TEST_LAYOUT } },
-      // { selectedLayout: { loading: true, id: "example2", data: undefined } },
       { selectedLayout: { loading: false, id: "example2", data: newLayout } },
     ]);
     (console.warn as jest.Mock).mockClear();
@@ -232,7 +229,6 @@ describe("CurrentLayoutProvider", () => {
     ]);
     expect(all.map((item) => (item instanceof Error ? undefined : item.layoutState))).toEqual([
       { selectedLayout: undefined },
-      // { selectedLayout: { loading: true, id: "example", data: undefined } },
       { selectedLayout: { loading: false, id: "example", data: TEST_LAYOUT } },
       { selectedLayout: { loading: false, id: "example", data: newState } },
     ]);
