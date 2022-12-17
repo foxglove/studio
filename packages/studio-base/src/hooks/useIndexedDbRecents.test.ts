@@ -20,7 +20,7 @@ describe("useIndexedDbRecents", () => {
       const { result, unmount } = renderHook(() => useIndexedDbRecents());
       expect(result.current.recents).toEqual([]);
 
-      act(() => {
+      await act(() => {
         result.current.addRecent({
           sourceId: "foo",
           title: "my-title",

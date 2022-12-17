@@ -258,7 +258,7 @@ describe("useMessageReducer", () => {
     expect(result.current).toEqual(4);
   });
 
-  it("does not filter out non-existing topics", () => {
+  it("does not filter out non-existing topics", async () => {
     // Initial mount. Note that we haven't received any topics yet.
     const setSubscriptions = jest.fn();
 
@@ -286,7 +286,7 @@ describe("useMessageReducer", () => {
     rerender({ topics: ["/foo", "/bar"] });
 
     // And unsubscribes properly, too.
-    act(() => {
+    await act(() => {
       unmount();
     });
     expect(setSubscriptions.mock.calls).toEqual([
@@ -402,7 +402,7 @@ describe("useMessageReducer", () => {
     expect(result.current).toEqual(0);
 
     let promise: Promise<void>;
-    act(
+    await act(
       () =>
         void (promise = player.emit({
           activeData: {
@@ -441,7 +441,7 @@ describe("useMessageReducer", () => {
     expect(result.current).toEqual(2);
 
     let promise2: Promise<void>;
-    act(
+    await act(
       () =>
         void (promise2 = player.emit({
           activeData: {

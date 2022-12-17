@@ -9,7 +9,7 @@ import * as React from "react";
 import useRethrow from "./useRethrow";
 
 describe("useRethrow", () => {
-  it("should catch errors thrown", () => {
+  it("should catch errors thrown", async () => {
     let error: Error | undefined;
     const { result } = renderHook(
       () => {
@@ -29,7 +29,7 @@ describe("useRethrow", () => {
       },
     );
 
-    act(() => {
+    await act(() => {
       result.current();
     });
     expect(error?.message).toEqual("foobar");

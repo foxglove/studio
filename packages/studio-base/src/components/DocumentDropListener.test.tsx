@@ -43,7 +43,7 @@ describe("<DocumentDropListener>", () => {
 
   it("allows the event to bubble if the dataTransfer has no files", async () => {
     // The event should bubble up from the document to the window
-    act(() => {
+    await act(() => {
       document.dispatchEvent(new CustomEvent("dragover", { bubbles: true, cancelable: true }));
     });
     expect(windowDragoverHandler).toHaveBeenCalled();

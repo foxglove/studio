@@ -161,7 +161,7 @@ describe("Panel", () => {
     ]);
   });
 
-  it("does not rerender when another panel changes", () => {
+  it("does not rerender when another panel changes", async () => {
     const renderFn = jest.fn();
     const DummyPanel = getDummyPanel(renderFn);
     const childId = "Dummy!1my2ydk";
@@ -178,7 +178,9 @@ describe("Panel", () => {
     });
 
     expect(renderFn.mock.calls.length).toEqual(3);
-    act(() => actions.current.savePanelConfigs({ configs: [{ id: "someOtherId", config: {} }] }));
+    await act(() =>
+      actions.current.savePanelConfigs({ configs: [{ id: "someOtherId", config: {} }] }),
+    );
     expect(renderFn.mock.calls.length).toEqual(3);
   });
 });

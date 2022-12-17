@@ -10,7 +10,7 @@ import MockCurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLa
 import { LayoutState, useCurrentLayoutActions, useCurrentLayoutSelector } from "./index";
 
 describe("useCurrentLayoutSelector", () => {
-  it("updates when layout changes", () => {
+  it("updates when layout changes", async () => {
     const { result } = renderHook(
       ({ selector }) => ({
         actions: useCurrentLayoutActions(),
@@ -33,7 +33,7 @@ describe("useCurrentLayoutSelector", () => {
 
     expect(result.current.value).toEqual({ value: 42 });
 
-    act(() => {
+    await act(() => {
       result.current.actions.savePanelConfigs({ configs: [{ id: "foo", config: { value: 1 } }] });
     });
     expect(result.current.value).toEqual({ value: 1 });
