@@ -16,7 +16,8 @@ import helpContent from "./index.help.md";
 import { Config } from "./types";
 
 function initPanel(context: PanelExtensionContext) {
-  createRoot(context.panelElement).render(
+  const root = createRoot(context.panelElement);
+  root.render(
     <StrictMode>
       <ThemeProvider isDark>
         <Indicator context={context} />
@@ -24,7 +25,7 @@ function initPanel(context: PanelExtensionContext) {
     </StrictMode>,
   );
   return () => {
-    ReactDOM.unmountComponentAtNode(context.panelElement);
+    root.unmount();
   };
 }
 
