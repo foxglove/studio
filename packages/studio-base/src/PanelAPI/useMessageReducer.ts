@@ -91,8 +91,10 @@ export function useMessageReducer<T>(props: Params<T>): T {
   const setSubscriptions = useMessagePipeline(selectSetSubscriptions);
   useEffect(() => setSubscriptions(id, subscriptions), [id, setSubscriptions, subscriptions]);
   useEffect(() => {
-    setSubscriptions(id, subscriptions);
-  }, [id, setSubscriptions, subscriptions]);
+    return () => {
+      setSubscriptions(id, []);
+    };
+  }, [id, setSubscriptions]);
 
   const state = useRef<
     | Readonly<{
