@@ -2393,7 +2393,7 @@ __metadata:
     "@sentry/core": 7.10.0
     "@sentry/types": 7.10.0
     "@storybook/addon-actions": 6.5.10
-    "@storybook/react": 6.5.10
+    "@storybook/react": 6.5.14
     "@testing-library/dom": 8.11.3
     "@testing-library/react": 12.1.2
     "@testing-library/react-hooks": 7.0.2
@@ -10233,7 +10233,7 @@ __metadata:
     "@sentry/electron": 4.0.0
     "@sentry/tracing": 7.10.0
     "@sentry/webpack-plugin": 1.18.8
-    "@storybook/react": 6.5.10
+    "@storybook/react": 6.5.14
     "@types/electron-devtools-installer": 2.2.2
     "@types/plist": ^3.0.2
     "@types/pngjs": ^6.0.1
@@ -12583,7 +12583,7 @@ __metadata:
     "@storybook/addon-essentials": 6.5.10
     "@storybook/builder-webpack5": 6.5.10
     "@storybook/manager-webpack5": 6.5.10
-    "@storybook/react": 6.5.10
+    "@storybook/react": 6.5.14
     "@types/babel__core": ^7.1.20
     "@types/babel__preset-env": ^7.9.2
     "@types/case-sensitive-paths-webpack-plugin": 2.1.6
