@@ -18,7 +18,6 @@ import LayoutManagerProvider from "@foxglove/studio-base/providers/LayoutManager
 import { ISO8601Timestamp, Layout, LayoutID } from "@foxglove/studio-base/services/ILayoutStorage";
 import LayoutManager from "@foxglove/studio-base/services/LayoutManager/LayoutManager";
 import MockLayoutStorage from "@foxglove/studio-base/services/MockLayoutStorage";
-import delay from "@foxglove/studio-base/util/delay";
 
 import LayoutBrowser from "./index";
 
@@ -91,20 +90,15 @@ async function deleteLayoutInteraction(index: number) {
 
   const deleteButton = await screen.findByText("Delete");
   await userEvent.click(deleteButton);
-  await delay(30);
   const confirmButton = await screen.findByText("Delete");
   await userEvent.click(confirmButton);
-  await delay(30);
 }
 
 async function doMultiAction(action: string) {
   await selectAllAction();
-  await delay(30);
   await clickMenuButtonAction(0);
-  await delay(30);
   const button = await screen.findByText(action);
   await userEvent.click(button);
-  await delay(30);
 }
 
 async function selectAllAction() {
@@ -155,11 +149,6 @@ export default {
   title: "components/LayoutBrowser",
   component: LayoutBrowser,
   decorators: [WithSetup],
-  parameters: {
-    chromatic: {
-      delay: 2000,
-    },
-  },
 };
 
 export function Empty(): JSX.Element {
@@ -207,7 +196,10 @@ MultiSelect.play = async () => {
 export function MultiDelete(): JSX.Element {
   return <LayoutBrowser />;
 }
-MultiDelete.parameters = { colorScheme: "dark" };
+MultiDelete.parameters = {
+  colorScheme: "dark",
+  chromatic: { disableSnapshot: true },
+};
 MultiDelete.play = async () => {
   await doMultiAction("Delete");
 
@@ -221,6 +213,7 @@ export function MultiDuplicate(): JSX.Element {
 MultiDuplicate.parameters = {
   colorScheme: "dark",
   mockLayouts: [exampleCurrentLayout, makeUnsavedLayout(1), shortLayout],
+  chromatic: { disableSnapshot: true },
 };
 MultiDuplicate.play = async () => {
   await doMultiAction("Duplicate");
@@ -232,10 +225,10 @@ export function MultiRevert(): JSX.Element {
 MultiRevert.parameters = {
   colorScheme: "dark",
   mockLayouts: [makeUnsavedLayout(1), makeUnsavedLayout(2), makeUnsavedLayout(3)],
+  chromatic: { disableSnapshot: true },
 };
 MultiRevert.play = async () => {
   await doMultiAction("Revert");
-  await delay(30);
   const revertButton = await screen.findByText("Discard changes");
   await userEvent.click(revertButton);
 };
@@ -368,7 +361,10 @@ Duplicate.play = async () => {
 export function DeleteLayout(_args: unknown): JSX.Element {
   return <LayoutBrowser />;
 }
-DeleteLayout.parameters = { colorScheme: "dark" };
+DeleteLayout.parameters = {
+  colorScheme: "dark",
+  chromatic: { disableSnapshot: true },
+};
 DeleteLayout.play = async () => await deleteLayoutInteraction(0);
 
 export function DeleteSelectedLayout(_args: unknown): JSX.Element {
@@ -384,7 +380,10 @@ DeleteSelectedLayout.play = async () => {
     await userEvent.click(layouts[0]);
   }
 };
-DeleteSelectedLayout.parameters = { colorScheme: "dark" };
+DeleteSelectedLayout.parameters = {
+  colorScheme: "dark",
+  chromatic: { disableSnapshot: true },
+};
 
 export function DeleteLastLayout(_args: unknown): JSX.Element {
   return <LayoutBrowser />;
@@ -392,5 +391,6 @@ export function DeleteLastLayout(_args: unknown): JSX.Element {
 DeleteLastLayout.parameters = {
   mockLayouts: [exampleCurrentLayout],
   colorScheme: "dark",
+  chromatic: { disableSnapshot: true },
 };
 DeleteLastLayout.play = async () => await deleteLayoutInteraction(0);
