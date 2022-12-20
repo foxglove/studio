@@ -38,7 +38,8 @@ import { MAX_PROMISE_TIMEOUT_TIME_MS } from "./pauseFrameForPromise";
 
 jest.setTimeout(MAX_PROMISE_TIMEOUT_TIME_MS * 3);
 
-// We require two state updates for each player emit() to take effect, because we  React 18 / @testing-library/react,
+// We require two act() calls for each player emit() to take effect because of some quirks with
+// React 18 / @testing-library/react.
 async function doubleAct(fn: () => Promise<void>) {
   let promise: Promise<void> | undefined;
   await act(() => void (promise = fn()));
