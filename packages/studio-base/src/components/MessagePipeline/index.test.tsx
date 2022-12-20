@@ -61,7 +61,6 @@ function makeTestHook({
   let currentPlayer = player;
   function Wrapper({ children }: PropsWithChildren<unknown>) {
     const [config] = useState(() => makeMockAppConfiguration());
-    console.log("render wrapper with player", currentPlayer);
     return (
       <AppConfigurationContext.Provider value={config}>
         <MessagePipelineProvider
@@ -368,7 +367,7 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
   });
 
   // https://github.com/foxglove/studio/issues/4694
-  it.skip("does not inject the last message when the player changes", async () => {
+  it("does not inject the last message when the player changes", async () => {
     const player = new FakePlayer();
     const { Hook, Wrapper, setPlayer } = makeTestHook({ player });
     const { result, rerender } = renderHook(Hook, { wrapper: Wrapper });
@@ -434,8 +433,7 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
       result.current.setSubscriptions("custom-id", [{ topic: "/input/foo" }]);
     });
     expect(result.current.subscriptions).toEqual([{ topic: "/input/foo" }]);
-
-    await act(
+    await doubleAct(
       async () =>
         await player2.emit({
           activeData: {
