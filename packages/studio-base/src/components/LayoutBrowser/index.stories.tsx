@@ -81,7 +81,7 @@ function makeUnsavedLayout(id: number): Layout {
 async function clickMenuButtonAction(index: number) {
   const actions = await screen.findAllByTestId("layout-actions");
   if (actions[index]) {
-    fireEvent.click(actions[index]!);
+    await userEvent.click(actions[index]!);
   }
 }
 
@@ -89,16 +89,16 @@ async function deleteLayoutInteraction(index: number) {
   await clickMenuButtonAction(index);
 
   const deleteButton = await screen.findByText("Delete");
-  fireEvent.click(deleteButton);
+  await userEvent.click(deleteButton);
   const confirmButton = await screen.findByText("Delete");
-  fireEvent.click(confirmButton);
+  await userEvent.click(confirmButton);
 }
 
 async function doMultiAction(action: string) {
   await selectAllAction();
   await clickMenuButtonAction(0);
   const button = await screen.findByText(action);
-  fireEvent.click(button);
+  await userEvent.click(button);
 }
 
 async function selectAllAction() {
@@ -201,7 +201,7 @@ MultiDelete.play = async () => {
   await doMultiAction("Delete");
 
   const confirmButton = await screen.findByText("Delete");
-  fireEvent.click(confirmButton);
+  await userEvent.click(confirmButton);
 };
 
 export function MultiDuplicate(): JSX.Element {
@@ -226,7 +226,7 @@ MultiRevert.play = async () => {
   await doMultiAction("Revert");
 
   const revertButton = await screen.findByText("Discard changes");
-  fireEvent.click(revertButton);
+  await userEvent.click(revertButton);
 };
 
 export function MultiSave(): JSX.Element {
@@ -276,7 +276,7 @@ export function AddLayout(_args: unknown): JSX.Element {
 AddLayout.parameters = { colorScheme: "dark" };
 AddLayout.play = async () => {
   const button = await screen.findByTestId("add-layout");
-  fireEvent.click(button);
+  await userEvent.click(button);
 };
 
 export function MenuOpen(_args: unknown): JSX.Element {
@@ -286,7 +286,7 @@ MenuOpen.parameters = { colorScheme: "dark" };
 MenuOpen.play = async () => {
   const actions = await screen.findAllByTestId("layout-actions");
   if (actions[1]) {
-    fireEvent.click(actions[1]);
+    await userEvent.click(actions[1]);
   }
 };
 
@@ -295,7 +295,7 @@ MenuOpenLight.parameters = { colorScheme: "light" };
 MenuOpenLight.play = async () => {
   const actions = await screen.findAllByTestId("layout-actions");
   if (actions[1]) {
-    fireEvent.click(actions[1]);
+    await userEvent.click(actions[1]);
   }
 };
 
@@ -306,10 +306,10 @@ EditingName.parameters = { colorScheme: "dark" };
 EditingName.play = async () => {
   const actions = await screen.findAllByTestId("layout-actions");
   if (actions[1]) {
-    fireEvent.click(actions[1]);
+    await userEvent.click(actions[1]);
   }
   const button = await screen.findByText("Rename");
-  fireEvent.click(button);
+  await userEvent.click(button);
 };
 
 export function CancelRenameWithEscape(_args: unknown): JSX.Element {
@@ -319,10 +319,10 @@ CancelRenameWithEscape.parameters = { colorScheme: "dark" };
 CancelRenameWithEscape.play = async () => {
   const actions = await screen.findAllByTestId("layout-actions");
   if (actions[1]) {
-    fireEvent.click(actions[1]);
+    await userEvent.click(actions[1]);
   }
   const button = await screen.findByText("Rename");
-  fireEvent.click(button);
+  await userEvent.click(button);
   fireEvent.keyDown(document.activeElement!, { key: "Escape" });
 };
 
@@ -333,12 +333,12 @@ CommitRenameWithTab.parameters = { colorScheme: "dark" };
 CommitRenameWithTab.play = async () => {
   const actions = await screen.findAllByTestId("layout-actions");
   if (actions[1]) {
-    fireEvent.click(actions[1]);
+    await userEvent.click(actions[1]);
   }
   const button = await screen.findByText("Rename");
-  fireEvent.click(button);
-  fireEvent.change(document.activeElement!, { target: { value: "New name" } });
-  fireEvent.focusOut(document.activeElement!);
+  await userEvent.click(button);
+  await userEvent.keyboard("New name");
+  await userEvent.tab();
 };
 
 export function Duplicate(_args: unknown): JSX.Element {
@@ -348,10 +348,10 @@ Duplicate.parameters = { colorScheme: "dark" };
 Duplicate.play = async () => {
   const actions = await screen.findAllByTestId("layout-actions");
   if (actions[1]) {
-    fireEvent.click(actions[1]);
+    await userEvent.click(actions[1]);
   }
   const button = await screen.findByText("Duplicate");
-  fireEvent.click(button);
+  await userEvent.click(button);
 };
 
 export function DeleteLayout(_args: unknown): JSX.Element {
@@ -366,11 +366,11 @@ export function DeleteSelectedLayout(_args: unknown): JSX.Element {
 DeleteSelectedLayout.play = async () => {
   const layouts = await screen.findAllByTestId("layout-list-item");
   if (layouts[1]) {
-    fireEvent.click(layouts[1]);
+    await userEvent.click(layouts[1]);
   }
   await deleteLayoutInteraction(1);
   if (layouts[0]) {
-    fireEvent.click(layouts[0]);
+    await userEvent.click(layouts[0]);
   }
 };
 DeleteSelectedLayout.parameters = { colorScheme: "dark" };
