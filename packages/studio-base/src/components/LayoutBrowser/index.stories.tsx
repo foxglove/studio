@@ -157,7 +157,7 @@ export default {
   decorators: [WithSetup],
   parameters: {
     chromatic: {
-      delay: 1000,
+      delay: 2000,
     },
   },
 };
