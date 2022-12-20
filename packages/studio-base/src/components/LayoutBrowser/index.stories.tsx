@@ -149,6 +149,11 @@ export default {
   title: "components/LayoutBrowser",
   component: LayoutBrowser,
   decorators: [WithSetup],
+  parameters: {
+    chromatic: {
+      delay: 1000,
+    },
+  },
 };
 
 export function Empty(): JSX.Element {
