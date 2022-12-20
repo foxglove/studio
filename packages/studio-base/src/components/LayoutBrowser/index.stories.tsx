@@ -198,7 +198,7 @@ export function MultiDelete(): JSX.Element {
 }
 MultiDelete.parameters = {
   colorScheme: "dark",
-  chromatic: { disableSnapshot: true },
+  chromatic: { disableSnapshot: true }, // FG-1083
 };
 MultiDelete.play = async () => {
   await doMultiAction("Delete");
@@ -213,7 +213,7 @@ export function MultiDuplicate(): JSX.Element {
 MultiDuplicate.parameters = {
   colorScheme: "dark",
   mockLayouts: [exampleCurrentLayout, makeUnsavedLayout(1), shortLayout],
-  chromatic: { disableSnapshot: true },
+  chromatic: { disableSnapshot: true }, // FG-1083
 };
 MultiDuplicate.play = async () => {
   await doMultiAction("Duplicate");
@@ -225,7 +225,7 @@ export function MultiRevert(): JSX.Element {
 MultiRevert.parameters = {
   colorScheme: "dark",
   mockLayouts: [makeUnsavedLayout(1), makeUnsavedLayout(2), makeUnsavedLayout(3)],
-  chromatic: { disableSnapshot: true },
+  chromatic: { disableSnapshot: true }, // FG-1083
 };
 MultiRevert.play = async () => {
   await doMultiAction("Revert");
@@ -363,7 +363,7 @@ export function DeleteLayout(_args: unknown): JSX.Element {
 }
 DeleteLayout.parameters = {
   colorScheme: "dark",
-  chromatic: { disableSnapshot: true },
+  chromatic: { disableSnapshot: true }, // FG-1083
 };
 DeleteLayout.play = async () => await deleteLayoutInteraction(0);
 
@@ -382,7 +382,7 @@ DeleteSelectedLayout.play = async () => {
 };
 DeleteSelectedLayout.parameters = {
   colorScheme: "dark",
-  chromatic: { disableSnapshot: true },
+  chromatic: { disableSnapshot: true }, // FG-1083
 };
 
 export function DeleteLastLayout(_args: unknown): JSX.Element {
@@ -391,6 +391,6 @@ export function DeleteLastLayout(_args: unknown): JSX.Element {
 DeleteLastLayout.parameters = {
   mockLayouts: [exampleCurrentLayout],
   colorScheme: "dark",
-  chromatic: { disableSnapshot: true },
+  chromatic: { disableSnapshot: true }, // FG-1083
 };
 DeleteLastLayout.play = async () => await deleteLayoutInteraction(0);
