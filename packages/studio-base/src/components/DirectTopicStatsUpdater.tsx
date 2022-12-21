@@ -18,8 +18,8 @@ const EMPTY_TOPIC_STATS = new Map<string, TopicStats>();
 
 // Empirically this seems to strike a good balance between stable values
 // and reasonably quick reactions to change.
-function smoothValues(oldValue: number, newValue: number): number {
-  return 0.8 * oldValue + 0.2 * newValue;
+function smoothValues(oldValue: undefined | number, newValue: number): number {
+  return 0.7 * (oldValue ?? newValue) + 0.3 * newValue;
 }
 
 function calculateStaticItemFrequency(
@@ -67,6 +67,12 @@ const selectTopicStats = (ctx: MessagePipelineContext) =>
 const selectPlayerId = (ctx: MessagePipelineContext) => ctx.playerState.playerId;
 const selectPlayerCapabilities = (ctx: MessagePipelineContext) => ctx.playerState.capabilities;
 
+type StatSample = {
+  time: Time;
+  count: number;
+  frequency: undefined | number;
+};
+
 /**
  * Encapsulates logic for directly updating topic stats DOM elements, bypassing
  * react for performance. To use this component mount it directly under your component
@@ -84,14 +90,12 @@ export function DirectTopicStatsUpdater({ interval = 1 }: { interval?: number })
   const playerId = useMessagePipeline(selectPlayerId);
   const duration = endTime && startTime ? subtractTimes(endTime, startTime) : { sec: 0, nsec: 0 };
 
-  const previousCurrentTime = useRef(currentTime);
   const latestCurrentTime = useLatest(currentTime);
   const latestDuration = useLatest(duration);
   const latestStats = useLatest(topicStats);
   const updateCount = useRef(0);
   const rootRef = useRef<HTMLDivElement>(ReactNull);
-  const previousMessageCounts = useRef<Record<string, number>>({});
-  const previousMessageFrequencies = useRef<Record<string, undefined | number>>({});
+  const samples = useRef<Record<string, StatSample>>({});
 
   const playerIsStaticSource = useMemo(
     () => playerCapabilities.includes(PlayerCapabilities.playbackControl),
@@ -104,20 +108,31 @@ export function DirectTopicStatsUpdater({ interval = 1 }: { interval?: number })
     }
 
     rootRef.current.parentElement?.querySelectorAll("[data-topic]").forEach((field) => {
-      if (field instanceof HTMLElement && field.dataset.topic) {
-        const topic = field.dataset.topic;
-        const stat = latestStats.current.get(topic);
-        if (field.dataset.topicStat === "count") {
-          if (stat) {
-            field.innerText = stat.numMessages.toLocaleString();
-          } else {
-            field.innerText = EM_DASH;
-          }
-        }
+      if (!(field instanceof HTMLElement) || !field.dataset.topic) {
+        return;
+      }
 
-        if (field.dataset.topicStat === "frequency") {
-          if (stat && playerIsStaticSource) {
-            // For a static source we calculate frequency across all messages.
+      const topic = field.dataset.topic;
+      const stat = latestStats.current.get(topic);
+      if (field.dataset.topicStat === "count") {
+        if (stat) {
+          field.innerText = stat.numMessages.toLocaleString();
+        } else {
+          field.innerText = EM_DASH;
+        }
+      }
+
+      const thisCurrentTime = latestCurrentTime.current;
+      if (!thisCurrentTime) {
+        return;
+      }
+
+      if (field.dataset.topicStat === "frequency") {
+        if (playerIsStaticSource) {
+          // For a static source we calculate frequency across all messages.
+          if (stat == undefined) {
+            field.innerText = EM_DASH;
+          } else {
             const frequency = calculateStaticItemFrequency(
               stat.numMessages,
               stat.firstMessageTime,
@@ -125,46 +140,37 @@ export function DirectTopicStatsUpdater({ interval = 1 }: { interval?: number })
               latestDuration.current,
             );
             field.innerText = frequency != undefined ? `${frequency.toFixed(2)} Hz` : EM_DASH;
-          } else if (
-            stat &&
-            !playerIsStaticSource &&
-            latestCurrentTime.current != undefined &&
-            previousCurrentTime.current != undefined
-          ) {
-            // For a live source we calculate a running average of frequency.
-            const messageDelta = stat.numMessages - (previousMessageCounts.current[topic] ?? 0);
-            const timeDelta = subtractTimes(latestCurrentTime.current, previousCurrentTime.current);
-            const newFrequency = calculateLiveitemFrequency(messageDelta, timeDelta);
-            const oldFrequency = previousMessageFrequencies.current[topic];
-            console.log(
-              topic,
-              oldFrequency?.toFixed(1),
-              newFrequency?.toFixed(2),
-              timeDelta,
-              stat.numMessages,
-            );
-            if (newFrequency != undefined && oldFrequency != undefined) {
-              // If we have a new and old value, interpolate and update display.
-              const smoothedFrequency = smoothValues(oldFrequency, newFrequency);
-              previousMessageFrequencies.current[topic] = smoothedFrequency;
-              previousMessageCounts.current[topic] = stat.numMessages;
-              previousCurrentTime.current = latestCurrentTime.current;
-              field.innerText = `${smoothedFrequency.toFixed(2)} Hz`;
-            } else if (newFrequency != undefined) {
-              // If only a new value store it for the next update.
-              previousMessageFrequencies.current[topic] = newFrequency;
-              previousMessageCounts.current[topic] = stat.numMessages;
-              previousCurrentTime.current = latestCurrentTime.current;
-            } else {
-              field.innerText = EM_DASH;
-            }
-          } else {
+          }
+        } else {
+          // For a live source we calculate a running average of frequency.
+          const sample = samples.current[topic];
+          if (stat == undefined) {
             field.innerText = EM_DASH;
+          } else if (sample == undefined) {
+            samples.current[topic] = {
+              time: thisCurrentTime,
+              count: stat.numMessages,
+              frequency: undefined,
+            };
+          } else {
+            const messageDelta = stat.numMessages - sample.count;
+            if (messageDelta > 0) {
+              const timeDelta = subtractTimes(thisCurrentTime, sample.time);
+              const newFrequency = calculateLiveitemFrequency(messageDelta, timeDelta);
+              if (newFrequency != undefined) {
+                const smoothedFrequency = smoothValues(sample.frequency, newFrequency);
+                sample.frequency = smoothedFrequency;
+                sample.count = stat.numMessages;
+                sample.time = thisCurrentTime;
+              }
+            }
+            field.innerText =
+              sample.frequency != undefined ? `${sample.frequency.toFixed(2)} Hz` : EM_DASH;
           }
         }
       }
     });
-  }, [latestCurrentTime, latestDuration, latestStats, playerIsStaticSource, previousCurrentTime]);
+  }, [latestCurrentTime, latestDuration, latestStats, playerIsStaticSource]);
 
   useEffect(() => {
     if (updateCount.current++ % interval === 0) {
@@ -172,11 +178,10 @@ export function DirectTopicStatsUpdater({ interval = 1 }: { interval?: number })
     }
   }, [updateStats, interval, topicStats, playerIsStaticSource]);
 
-  // Clear previous sample on player change.
+  // Clear previous samples on player change.
   useEffect(() => {
     void playerId;
-    previousMessageCounts.current = {};
-    previousMessageFrequencies.current = {};
+    samples.current = {};
   }, [playerId]);
 
   useLayoutEffect(() => {
