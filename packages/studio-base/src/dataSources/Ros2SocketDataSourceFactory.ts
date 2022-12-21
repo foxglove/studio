@@ -12,13 +12,13 @@ import { Player } from "@foxglove/studio-base/players/types";
 class Ros2SocketDataSourceFactory implements IDataSourceFactory {
   public id = "ros2-socket";
   public type: IDataSourceFactory["type"] = "connection";
-  public displayName = "ROS 2";
+  public displayName = "ROS 2 (deprecated)";
   public iconName: IDataSourceFactory["iconName"] = "ROS";
   public description =
     "Connect to a running ROS 2 system via a native TCP connection that accesses your ROS nodes directly.";
   public docsLinks = [{ url: "https://foxglove.dev/docs/studio/connection/ros2" }];
   public warning =
-    "Limitations of ROS 2 prevent Studio from having access to your custom messages. We recommend using the Rosbridge connection for a better experience.";
+    "Limitations of ROS 2 prevent Studio from having access to your custom messages. We recommend using the Foxglove WebSocket connection for a better experience. Please note that this connection will be deprecated soon.";
 
   public formConfig = {
     fields: [
