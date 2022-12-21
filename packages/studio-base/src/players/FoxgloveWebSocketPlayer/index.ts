@@ -305,7 +305,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
 
       const time = fromNanoSec(timestamp);
       if (this._clockTime != undefined && isLessThan(time, this._clockTime)) {
-        ++this._lastSeekTime;
+        this._lastSeekTime = time.sec;
         this._parsedMessages = [];
       }
 
