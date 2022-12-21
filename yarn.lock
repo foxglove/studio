@@ -20571,9 +20571,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-use@npm:17.3.1":
-  version: 17.3.1
-  resolution: "react-use@npm:17.3.1"
+"react-use@npm:17.4.0":
+  version: 17.4.0
+  resolution: "react-use@npm:17.4.0"
   dependencies:
     "@types/js-cookie": ^2.2.6
     "@xobotyi/scrollbar-width": ^1.9.5
@@ -20590,15 +20590,15 @@ __metadata:
     ts-easing: ^0.2.0
     tslib: ^2.1.0
   peerDependencies:
-    react: ^16.8.0  || ^17.0.0
-    react-dom: ^16.8.0  || ^17.0.0
-  checksum: 0489a2603dc1a5e2666ae7643b42ec82d747a70476087b0965ee67048940a8dee912cd982d568ff97af703365914c8d8208216301b8489082be61d86561fb858
+    react: ^16.8.0  || ^17.0.0 || ^18.0.0
+    react-dom: ^16.8.0  || ^17.0.0 || ^18.0.0
+  checksum: 0889da919b49a186de375ec15d2778b954ae981c523acd17dd496e4a4da7b6190efe7993491e1b85fdd6de3e745d08a4eaba4caa35408d570b5f1de550f35d11
   languageName: node
   linkType: hard
 
-"react-use@patch:react-use@17.3.1#./patches/react-use.patch::locator=foxglove-studio%40workspace%3A.":
-  version: 17.3.1
-  resolution: "react-use@patch:react-use@npm%3A17.3.1#./patches/react-use.patch::version=17.3.1&hash=95d442&locator=foxglove-studio%40workspace%3A."
+"react-use@patch:react-use@17.4.0#./patches/react-use.patch::locator=foxglove-studio%40workspace%3A.":
+  version: 17.4.0
+  resolution: "react-use@patch:react-use@npm%3A17.4.0#./patches/react-use.patch::version=17.4.0&hash=95d442&locator=foxglove-studio%40workspace%3A."
   dependencies:
     "@types/js-cookie": ^2.2.6
     "@xobotyi/scrollbar-width": ^1.9.5
@@ -20615,9 +20615,9 @@ __metadata:
     ts-easing: ^0.2.0
     tslib: ^2.1.0
   peerDependencies:
-    react: ^16.8.0  || ^17.0.0
-    react-dom: ^16.8.0  || ^17.0.0
-  checksum: 40ad4f4c16883d9a42f64fbd1c9d7adae63a392f9b336d7361b936d219d6edbec97548a0bcf512aa49b5a3e955db3e76714f571ffd479f40cf794dc62f4dbe7c
+    react: ^16.8.0  || ^17.0.0 || ^18.0.0
+    react-dom: ^16.8.0  || ^17.0.0 || ^18.0.0
+  checksum: 1f7268aa7948f9099935d458533bf8e5e059c8592ec98acb4a68c162455e54b04572287aa05ba7e248e39e9ef952264a4a5fb14dcbf2fd764b210ad02c59a037
   languageName: node
   linkType: hard
 
@@ -23154,15 +23154,15 @@ __metadata:
   linkType: hard
 
 "terser@npm:^4.1.2, terser@npm:^4.6.3":
-  version: 4.8.0
-  resolution: "terser@npm:4.8.0"
+  version: 4.8.1
+  resolution: "terser@npm:4.8.1"
   dependencies:
     commander: ^2.20.0
     source-map: ~0.6.1
     source-map-support: ~0.5.12
   bin:
     terser: bin/terser
-  checksum: f980789097d4f856c1ef4b9a7ada37beb0bb022fb8aa3057968862b5864ad7c244253b3e269c9eb0ab7d0caf97b9521273f2d1cf1e0e942ff0016e0583859c71
+  checksum: b342819bf7e82283059aaa3f22bb74deb1862d07573ba5a8947882190ad525fd9b44a15074986be083fd379c58b9a879457a330b66dcdb77b485c44267f9a55a
   languageName: node
   linkType: hard
 
