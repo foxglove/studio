@@ -51,7 +51,7 @@ function calculateStaticItemFrequency(
   }
 }
 
-function calculateLiveitemFrequency(numMessages: number, duration: Time) {
+function calculateLiveItemFrequency(numMessages: number, duration: Time) {
   const durationSec = toSec(duration);
 
   return durationSec > 0 ? numMessages / durationSec : undefined;
@@ -95,7 +95,7 @@ export function DirectTopicStatsUpdater({ interval = 1 }: { interval?: number })
   const latestStats = useLatest(topicStats);
   const updateCount = useRef(0);
   const rootRef = useRef<HTMLDivElement>(ReactNull);
-  const samples = useRef<Record<string, StatSample>>({});
+  const samplesByTopic = useRef<Record<string, StatSample>>({});
 
   const playerIsStaticSource = useMemo(
     () => playerCapabilities.includes(PlayerCapabilities.playbackControl),
@@ -143,11 +143,11 @@ export function DirectTopicStatsUpdater({ interval = 1 }: { interval?: number })
           }
         } else {
           // For a live source we calculate a running average of frequency.
-          const sample = samples.current[topic];
+          const sample = samplesByTopic.current[topic];
           if (stat == undefined) {
             field.innerText = EM_DASH;
           } else if (sample == undefined) {
-            samples.current[topic] = {
+            samplesByTopic.current[topic] = {
               time: thisCurrentTime,
               count: stat.numMessages,
               frequency: undefined,
@@ -156,7 +156,7 @@ export function DirectTopicStatsUpdater({ interval = 1 }: { interval?: number })
             const messageDelta = stat.numMessages - sample.count;
             if (messageDelta > 0) {
               const timeDelta = subtractTimes(thisCurrentTime, sample.time);
-              const newFrequency = calculateLiveitemFrequency(messageDelta, timeDelta);
+              const newFrequency = calculateLiveItemFrequency(messageDelta, timeDelta);
               if (newFrequency != undefined) {
                 const smoothedFrequency = smoothValues(sample.frequency, newFrequency);
                 sample.frequency = smoothedFrequency;
@@ -181,7 +181,7 @@ export function DirectTopicStatsUpdater({ interval = 1 }: { interval?: number })
   // Clear previous samples on player change.
   useEffect(() => {
     void playerId;
-    samples.current = {};
+    samplesByTopic.current = {};
   }, [playerId]);
 
   useLayoutEffect(() => {
