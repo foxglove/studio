@@ -4,8 +4,8 @@
 
 <div align="center">
     <h1>Foxglove Studio</h1>
+    <a href="https://github.com/foxglove/studio/releases"><img src="https://img.shields.io/github/v/release/foxglove/studio?label=version" /></a>
     <a href="https://github.com/foxglove/studio/blob/main/LICENSE"><img src="https://img.shields.io/github/license/foxglove/studio" /></a>
-    <a href="https://foxglove.dev/ros"><img src="https://img.shields.io/badge/ROS-1%20%26%202%20supported-495675?logo=ros" /></a>
     <a href="https://github.com/orgs/foxglove/discussions"><img src="https://img.shields.io/github/discussions/foxglove/community.svg?logo=github" /></a>
     <a href="https://foxglove.dev/join-slack"><img src="https://img.shields.io/badge/chat-on%20slack-purple.svg?logo=slack" /></a>
     <br />
