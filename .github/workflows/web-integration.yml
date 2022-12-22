@@ -1,0 +1,38 @@
+# We are using Playwright but you may use your E2E framework of choice
+name: Web Integration Tests
+
+on:
+  deployment_status:
+
+jobs:
+  run-e2es:
+    if: github.event_name == 'deployment_status' && github.event.deployment_status.state == 'success'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-20.04]
+    steps:
+      - uses: actions/checkout@v3.2.0
+        with:
+          lfs: true
+
+      - uses: actions/setup-node@v3.5.1
+        with:
+          node-version: 16.17
+      - run: corepack enable yarn
+
+      - name: Restore cache
+        uses: actions/cache@v3.0.11
+        with:
+          path: |
+            .yarn/cache
+            **/node_modules
+          key: v5-${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: v5-${{ runner.os }}-yarn-
+
+      - run: yarn install --immutable
+      - name: Run tests
+        run: yarn test:web-integration
+        env:
+          BASE_URL: ${{ github.event.deployment_status.target_url }}
