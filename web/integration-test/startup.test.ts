@@ -34,5 +34,5 @@ describe("startup", () => {
     } else {
       throw new Error("BASE_URL is not set");
     }
-  }, 60_000);
+  }, 15_000);
 });
