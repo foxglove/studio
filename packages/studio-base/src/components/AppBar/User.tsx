@@ -12,10 +12,16 @@ import {
   Menu,
   MenuItem,
 } from "@mui/material";
-import { forwardRef } from "react";
+import { useSnackbar } from "notistack";
+import { forwardRef, useCallback } from "react";
+import { useAsyncFn } from "react-use";
 import { makeStyles } from "tss-react/mui";
 
-// import { useMe } from "~/context/MeContext";
+import Logger from "@foxglove/log";
+import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
+import { useConfirm } from "@foxglove/studio-base/hooks/useConfirm";
+
+const log = Logger.getLogger(__filename);
 
 const useStyles = makeStyles()((theme) => ({
   avatar: {
@@ -51,7 +57,33 @@ export function UserMenu({
   anchorEl?: HTMLElement;
   open: boolean;
 }): JSX.Element {
-  // const [me] = useMe();
+  const { currentUser, signOut } = useCurrentUser();
+  const { enqueueSnackbar } = useSnackbar();
+  const confirm = useConfirm();
+
+  const [_, beginSignOut] = useAsyncFn(async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      log.error(error);
+      enqueueSnackbar((error as Error).toString(), { variant: "error" });
+    }
+  }, [enqueueSnackbar, signOut]);
+
+  const onSignoutClick = useCallback(() => {
+    void confirm({
+      title: "Are you sure you want to sign out?",
+      ok: "Sign out",
+    }).then((response) => {
+      if (response === "ok") {
+        void beginSignOut();
+      }
+    });
+  }, [beginSignOut, confirm]);
+
+  const onSettingsClick = useCallback(() => {
+    window.open(process.env.FOXGLOVE_ACCOUNT_DASHBOARD_URL, "_blank");
+  }, []);
 
   return (
     <Menu
@@ -67,13 +99,13 @@ export function UserMenu({
       }}
     >
       <MenuItem href="#profile">
-        {/* <ListItemText primary={me.displayName} secondary={me.email} /> */}
+        <ListItemText primary={currentUser.displayName} secondary={currentUser?.email} />
       </MenuItem>
-      <MenuItem href="#profile">
+      <MenuItem onClick={onSettingsClick}>
         <ListItemText>User settings</ListItemText>
       </MenuItem>
       <Divider />
-      <MenuItem href="#signout">
+      <MenuItem onClick={onSignoutClick}>
         <ListItemText>Log out</ListItemText>
       </MenuItem>
     </Menu>

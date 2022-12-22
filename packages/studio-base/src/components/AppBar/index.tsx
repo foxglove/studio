@@ -2,12 +2,16 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { AppBar as MuiAppBar, IconButton, Toolbar, Typography } from "@mui/material";
+import { AppBar as MuiAppBar, Button, IconButton, Toolbar, Typography } from "@mui/material";
 import { MouseEvent, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 
 import { FoxgloveLogo } from "@foxglove/studio-base/components/FoxgloveLogo";
-import Stack from "@foxglove/studio-base/components/Stack";
+import {
+  MessagePipelineContext,
+  useMessagePipeline,
+} from "@foxglove/studio-base/components/MessagePipeline";
+import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
 
 import { HelpIconButton, HelpMenu } from "./Help";
 import { UserIconButton, UserMenu } from "./User";
@@ -43,8 +47,17 @@ const useStyles = makeStyles()((theme) => ({
   },
 }));
 
+const selectStartTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.startTime;
+const selectEndTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.endTime;
+const selectPlayerName = (ctx: MessagePipelineContext) => ctx.playerState.name;
+const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => playerState.presence;
+
 export function AppBar(): JSX.Element {
   const { classes, cx } = useStyles();
+  const { currentUser } = useCurrentUser();
+  const playerName = useMessagePipeline(selectPlayerName);
+  const startTime = useMessagePipeline(selectStartTime);
+  const endTime = useMessagePipeline(selectEndTime);
   // const [currentUser] = useMe({ requireAuth: false });
 
   const [helpAnchorEl, setHelAnchorEl] = useState<undefined | HTMLElement>(undefined);
@@ -76,25 +89,25 @@ export function AppBar(): JSX.Element {
               <FoxgloveLogo fontSize="inherit" color="inherit" />
             </IconButton>
             <Typography noWrap variant="h5" color="inherit" component="div">
-              Org name?
-              {/* {currentUser?.org.displayName} */}
+              {currentUser?.org.displayName ?? "foxglove"}
             </Typography>
           </div>
-          <Stack direction="row" justifyContent="center" alignItems="center">
-            <Typography>Data Source Name</Typography>
-            <Typography>Secondary Info</Typography>
-          </Stack>
+          {playerName && <Typography variant="body2">{playerName}</Typography>}
           <div className={cx(classes.toolbarGroup, classes.end)}>
-            <UserIconButton
-              aria-label="User profile menu button"
-              color="inherit"
-              id="user-profile-button"
-              aria-controls={userMenuOpen ? "user-profile-menu" : undefined}
-              aria-haspopup="true"
-              aria-expanded={userMenuOpen ? "true" : undefined}
-              onClick={handleUserMenuClick}
-              size="small"
-            />
+            {currentUser ? (
+              <UserIconButton
+                aria-label="User profile menu button"
+                color="inherit"
+                id="user-profile-button"
+                aria-controls={userMenuOpen ? "user-profile-menu" : undefined}
+                aria-haspopup="true"
+                aria-expanded={userMenuOpen ? "true" : undefined}
+                onClick={handleUserMenuClick}
+                size="small"
+              />
+            ) : (
+              <Button>Sign up</Button>
+            )}
             <HelpIconButton
               aria-label="Help menu button"
               color="inherit"
