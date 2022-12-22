@@ -197,6 +197,8 @@ export class Images extends SceneExtension<ImageRenderable> {
   };
 
   private shouldSubscribe = (cameraInfoTopic: string): boolean => {
+    // Iterate over each configured topic and check if it has a `cameraInfoTopic` setting
+    // that matches the given CameraInfo topic name
     for (const topicConfig of Object.values(this.renderer.config.topics)) {
       const maybeImageConfig = topicConfig as Partial<LayerSettingsImage>;
       if (maybeImageConfig.cameraInfoTopic === cameraInfoTopic) {
