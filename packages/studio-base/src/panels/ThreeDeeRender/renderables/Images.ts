@@ -47,8 +47,7 @@ import {
 import { BaseSettings, PRECISION_DISTANCE, SelectEntry } from "../settings";
 import { topicIsConvertibleToSchema } from "../topicIsConvertibleToSchema";
 import { makePose } from "../transforms";
-import { CameraInfoUserData } from "./Cameras";
-import { projectPixel } from "./projections";
+import { cameraInfosEqual, normalizeCameraInfo, projectPixel } from "./projections";
 
 const log = Logger.getLogger(__filename);
 void log;
@@ -81,7 +80,9 @@ const DEFAULT_SETTINGS: LayerSettingsImage = {
 export type ImageUserData = BaseUserData & {
   topic: string;
   settings: LayerSettingsImage;
-  image: AnyImage;
+  cameraInfo: CameraInfo | undefined;
+  cameraModel: PinholeCameraModel | undefined;
+  image: AnyImage | undefined;
   texture: THREE.Texture | undefined;
   material: THREE.MeshBasicMaterial | undefined;
   geometry: THREE.PlaneGeometry | undefined;
@@ -97,14 +98,7 @@ export class ImageRenderable extends Renderable<ImageUserData> {
   }
 
   public override details(): Record<string, RosValue> {
-    const cameraInfoTopic = this.userData.settings.cameraInfoTopic;
-    const cameraInfoRenderable = cameraInfoTopic
-      ? camerasExtension(this.renderer)?.renderables.get(cameraInfoTopic)
-      : undefined;
-    return {
-      image: this.userData.image,
-      camera_info: cameraInfoRenderable?.userData.cameraInfo,
-    };
+    return { image: this.userData.image, camera_info: this.userData.cameraInfo };
   }
 }
 
@@ -116,19 +110,16 @@ export class Images extends SceneExtension<ImageRenderable> {
 
     renderer.addSchemaSubscriptions(ROS_IMAGE_DATATYPES, this.handleRosRawImage);
     renderer.addSchemaSubscriptions(ROS_COMPRESSED_IMAGE_DATATYPES, this.handleRosCompressedImage);
-    // Unconditionally subscribe to CameraInfo messages so the `foxglove.Cameras` extension will
-    // always receive them and parse into camera models. This extension reuses the parsed camera
-    // models from `foxglove.Cameras`
     renderer.addSchemaSubscriptions(CAMERA_INFO_DATATYPES, {
-      handler: this.handleRosCameraInfo,
-      forced: true,
+      handler: this.handleCameraInfo,
+      shouldSubscribe: this.shouldSubscribe,
     });
 
     renderer.addSchemaSubscriptions(RAW_IMAGE_DATATYPES, this.handleRawImage);
     renderer.addSchemaSubscriptions(COMPRESSED_IMAGE_DATATYPES, this.handleCompressedImage);
     renderer.addSchemaSubscriptions(CAMERA_CALIBRATION_DATATYPES, {
-      handler: this.handleCameraCalibration,
-      forced: true,
+      handler: this.handleCameraInfo,
+      shouldSubscribe: this.shouldSubscribe,
     });
   }
 
@@ -194,13 +185,25 @@ export class Images extends SceneExtension<ImageRenderable> {
     // Update the renderable
     const topicName = path[1]!;
     const renderable = this.renderables.get(topicName);
-    if (renderable) {
-      const { image, receiveTime } = renderable.userData;
+    const image = renderable?.userData.image;
+    const cameraModel = renderable?.userData.cameraModel;
+    if (image && cameraModel) {
+      const receiveTime = renderable.userData.receiveTime;
       const settings = this.renderer.config.topics[topicName] as
         | Partial<LayerSettingsImage>
         | undefined;
-      this._updateImageRenderable(renderable, image, receiveTime, settings);
+      this._updateImageRenderable(renderable, image, cameraModel, receiveTime, settings);
     }
+  };
+
+  private shouldSubscribe = (cameraInfoTopic: string): boolean => {
+    for (const topicConfig of Object.values(this.renderer.config.topics)) {
+      const maybeImageConfig = topicConfig as Partial<LayerSettingsImage>;
+      if (maybeImageConfig.cameraInfoTopic === cameraInfoTopic) {
+        return maybeImageConfig.visible ?? false;
+      }
+    }
+    return false;
   };
 
   private handleRosRawImage = (messageEvent: PartialMessageEvent<RosImage>): void => {
@@ -224,34 +227,13 @@ export class Images extends SceneExtension<ImageRenderable> {
   private handleImage = (messageEvent: PartialMessageEvent<AnyImage>, image: AnyImage): void => {
     const topic = messageEvent.topic;
     const receiveTime = toNanoSec(messageEvent.receiveTime);
-
+    const frameId = "header" in image ? image.header.frame_id : image.frame_id;
     const userSettings = this.renderer.config.topics[topic] as
       | Partial<LayerSettingsImage>
       | undefined;
 
     // Create an ImageRenderable for this topic if it doesn't already exist
-    let renderable = this.renderables.get(topic);
-    if (!renderable) {
-      renderable = new ImageRenderable(topic, this.renderer, {
-        receiveTime,
-        messageTime: toNanoSec("header" in image ? image.header.stamp : image.timestamp),
-        frameId: this.renderer.normalizeFrameId(
-          "header" in image ? image.header.frame_id : image.frame_id,
-        ),
-        pose: makePose(),
-        settingsPath: ["topics", topic],
-        topic,
-        settings: { ...DEFAULT_SETTINGS, ...userSettings },
-        image,
-        texture: undefined,
-        material: undefined,
-        geometry: undefined,
-        mesh: undefined,
-      });
-
-      this.add(renderable);
-      this.renderables.set(topic, renderable);
-    }
+    const renderable = this._getImageRenderable(topic, receiveTime, image, frameId, userSettings);
 
     // Auto-select settings.cameraInfoTopic if it's not already set
     const settings = renderable.userData.settings;
@@ -275,39 +257,47 @@ export class Images extends SceneExtension<ImageRenderable> {
       }
     }
 
-    this._updateImageRenderable(renderable, image, receiveTime, renderable.userData.settings);
-  };
-
-  private handleRosCameraInfo = (messageEvent: PartialMessageEvent<CameraInfo>): void => {
-    const topic = messageEvent.topic;
-    const updated = !this.cameraInfoTopics.has(topic);
-    this.cameraInfoTopics.add(topic);
-
-    const renderable = this.renderables.get(topic);
-    if (renderable) {
-      const { image, settings } = renderable.userData;
-      this._updateImageRenderable(renderable, image, renderable.userData.receiveTime, settings);
-    }
-
-    if (updated) {
-      this.updateSettingsTree();
+    const cameraModel = renderable.userData.cameraModel;
+    if (cameraModel) {
+      this._updateImageRenderable(renderable, image, cameraModel, receiveTime, settings);
     }
   };
 
-  private handleCameraCalibration = (
-    messageEvent: PartialMessageEvent<CameraCalibration>,
+  private handleCameraInfo = (
+    messageEvent: PartialMessageEvent<CameraInfo> & PartialMessageEvent<CameraCalibration>,
   ): void => {
     const topic = messageEvent.topic;
-    const updated = !this.cameraInfoTopics.has(topic);
-    this.cameraInfoTopics.add(topic);
+    const receiveTime = toNanoSec(messageEvent.receiveTime);
 
-    const renderable = this.renderables.get(topic);
-    if (renderable) {
-      const { image, settings } = renderable.userData;
-      this._updateImageRenderable(renderable, image, renderable.userData.receiveTime, settings);
+    const topicsUpdated = !this.cameraInfoTopics.has(topic);
+    const cameraInfo = normalizeCameraInfo(messageEvent.message);
+    const frameId = cameraInfo.header.frame_id;
+    const userSettings = this.renderer.config.topics[topic] as
+      | Partial<LayerSettingsImage>
+      | undefined;
+
+    // Create an ImageRenderable for this topic if it doesn't already exist
+    const renderable = this._getImageRenderable(
+      topic,
+      receiveTime,
+      undefined,
+      frameId,
+      userSettings,
+    );
+
+    const dataEqual = cameraInfosEqual(renderable.userData.cameraInfo, cameraInfo);
+    if (dataEqual) {
+      return;
     }
 
-    if (updated) {
+    const cameraModel = new PinholeCameraModel(cameraInfo);
+    renderable.userData.cameraModel = cameraModel;
+    if (renderable.userData.image) {
+      const { image, settings } = renderable.userData;
+      this._updateImageRenderable(renderable, image, cameraModel, receiveTime, settings);
+    }
+
+    if (topicsUpdated) {
       this.updateSettingsTree();
     }
   };
@@ -315,6 +305,7 @@ export class Images extends SceneExtension<ImageRenderable> {
   private _updateImageRenderable(
     renderable: ImageRenderable,
     image: AnyImage,
+    cameraModel: PinholeCameraModel,
     receiveTime: bigint,
     settings: Partial<LayerSettingsImage> | undefined,
   ): void {
@@ -328,6 +319,7 @@ export class Images extends SceneExtension<ImageRenderable> {
     const topic = renderable.userData.topic;
 
     renderable.userData.image = image;
+    renderable.userData.cameraModel = cameraModel;
     renderable.userData.frameId = this.renderer.normalizeFrameId(
       "header" in image ? image.header.frame_id : image.frame_id,
     );
@@ -354,20 +346,14 @@ export class Images extends SceneExtension<ImageRenderable> {
 
     // Create the plane geometry if needed
     if (hasCameraInfo && renderable.userData.geometry == undefined) {
-      const cameraRenderable = camerasExtension(this.renderer)?.renderables.get(
-        settings.cameraInfoTopic!,
-      );
-      const cameraModel = cameraRenderable?.userData.cameraModel;
-      if (cameraModel) {
-        // log.debug(
-        //   `Constructing geometry for ${cameraModel.width}x${cameraModel.height} camera image on "${topic}"`,
-        // );
-        const geometry = createGeometry(cameraModel, renderable.userData.settings);
-        renderable.userData.geometry = geometry;
-        if (renderable.userData.mesh) {
-          renderable.remove(renderable.userData.mesh);
-          renderable.userData.mesh = undefined;
-        }
+      // log.debug(
+      //   `Constructing geometry for ${cameraModel.width}x${cameraModel.height} camera image on "${topic}"`,
+      // );
+      const geometry = createGeometry(cameraModel, renderable.userData.settings);
+      renderable.userData.geometry = geometry;
+      if (renderable.userData.mesh) {
+        renderable.remove(renderable.userData.mesh);
+        renderable.userData.mesh = undefined;
       }
     }
 
@@ -428,6 +414,41 @@ export class Images extends SceneExtension<ImageRenderable> {
 
     // Create/recreate the mesh if needed
     tryCreateMesh(renderable, this.renderer);
+  }
+
+  private _getImageRenderable(
+    topic: string,
+    receiveTime: bigint,
+    image: AnyImage | undefined,
+    frameId: string,
+    userSettings: Partial<LayerSettingsImage> | undefined,
+  ): ImageRenderable {
+    let renderable = this.renderables.get(topic);
+    if (renderable) {
+      return renderable;
+    }
+
+    renderable = new ImageRenderable(topic, this.renderer, {
+      receiveTime,
+      messageTime: image ? toNanoSec("header" in image ? image.header.stamp : image.timestamp) : 0n,
+      frameId: this.renderer.normalizeFrameId(frameId),
+      pose: makePose(),
+      settingsPath: ["topics", topic],
+      topic,
+      settings: { ...DEFAULT_SETTINGS, ...userSettings },
+      cameraInfo: undefined,
+      cameraModel: undefined,
+      image,
+      texture: undefined,
+      material: undefined,
+      geometry: undefined,
+      mesh: undefined,
+    });
+
+    this.add(renderable);
+    this.renderables.set(topic, renderable);
+    this.cameraInfoTopics.add(topic);
+    return renderable;
   }
 }
 
@@ -580,12 +601,6 @@ export function cameraInfoTopicMatches(topic: string, cameraInfoTopic: string): 
   }
 
   return true;
-}
-
-function camerasExtension(renderer: Renderer) {
-  return renderer.sceneExtensions.get("foxglove.Cameras") as
-    | SceneExtension<Renderable<CameraInfoUserData>>
-    | undefined;
 }
 
 function autoSelectCameraInfoTopic(
