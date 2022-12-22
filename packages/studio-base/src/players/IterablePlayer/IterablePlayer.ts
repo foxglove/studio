@@ -113,8 +113,8 @@ export class IterablePlayer implements Player {
   private _isPlaying: boolean = false;
   private _listener?: (playerState: PlayerState) => Promise<void>;
   private _speed: number = 1.0;
-  private _start: Time | undefined;
-  private _end: Time | undefined;
+  private _start?: Time;
+  private _end?: Time;
   private _enablePreload = true;
 
   // next read start time indicates where to start reading for the next tick
