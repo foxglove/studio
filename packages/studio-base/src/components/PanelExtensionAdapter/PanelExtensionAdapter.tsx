@@ -351,8 +351,12 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
           return;
         }
         setWatchedFields((old) => {
-          old.add(field);
-          return new Set(old);
+          if (old.has(field)) {
+            return old;
+          }
+          const newWatchedFields = new Set(old);
+          newWatchedFields.add(field);
+          return newWatchedFields;
         });
       },
 
