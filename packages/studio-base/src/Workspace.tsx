@@ -26,6 +26,7 @@ import { makeStyles } from "tss-react/mui";
 
 import Logger from "@foxglove/log";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
+import AccountSettings from "@foxglove/studio-base/components/AccountSettingsSidebar/AccountSettings";
 import { AppBar } from "@foxglove/studio-base/components/AppBar";
 import { DataSourceSidebar } from "@foxglove/studio-base/components/DataSourceSidebar";
 import DocumentDropListener from "@foxglove/studio-base/components/DocumentDropListener";
@@ -47,6 +48,7 @@ import PanelList from "@foxglove/studio-base/components/PanelList";
 import panelsHelpContent from "@foxglove/studio-base/components/PanelList/index.help.md";
 import PanelSettings from "@foxglove/studio-base/components/PanelSettings";
 import PlaybackControls from "@foxglove/studio-base/components/PlaybackControls";
+import Preferences from "@foxglove/studio-base/components/Preferences";
 import RemountOnValueChange from "@foxglove/studio-base/components/RemountOnValueChange";
 import Sidebar, { SidebarItem } from "@foxglove/studio-base/components/Sidebar";
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
@@ -82,6 +84,9 @@ import { HelpInfoStore, useHelpInfo } from "@foxglove/studio-base/providers/Help
 import { PanelStateContextProvider } from "@foxglove/studio-base/providers/PanelStateContextProvider";
 
 const log = Logger.getLogger(__filename);
+
+// FIXME: Make this into feature flag
+const betaUI = true;
 
 const useStyles = makeStyles()({
   container: {
@@ -537,8 +542,30 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
       ["help", { iconName: "QuestionCircle", title: "Help", component: HelpSidebar }],
     ]);
 
+    if (!betaUI) {
+      if (supportsAccountSettings) {
+        bottomItems.set("account", {
+          iconName: currentUser != undefined ? "BlockheadFilled" : "Blockhead",
+          title: currentUser != undefined ? `Signed in as ${currentUser.email}` : "Account",
+          component: AccountSettings,
+        });
+      }
+
+      bottomItems.set("preferences", {
+        iconName: "Settings",
+        title: "Preferences",
+        component: Preferences,
+      });
+    }
+
     return [topItems, bottomItems];
-  }, [DataSourceSidebarItem, playerProblems, enableStudioLogsSidebar]);
+  }, [
+    DataSourceSidebarItem,
+    playerProblems,
+    enableStudioLogsSidebar,
+    supportsAccountSettings,
+    currentUser,
+  ]);
 
   const keyDownHandlers = useMemo(
     () => ({
@@ -591,7 +618,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
       <SyncAdapters />
       <KeyListener global keyDownHandlers={keyDownHandlers} />
       <div className={classes.container} ref={containerRef} tabIndex={0}>
-        <AppBar disableSignin={props.disableSignin} />
+        {betaUI && <AppBar disableSignin={props.disableSignin} />}
         <Sidebar
           items={sidebarItems}
           bottomItems={sidebarBottomItems}
