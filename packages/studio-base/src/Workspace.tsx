@@ -85,8 +85,6 @@ import { PanelStateContextProvider } from "@foxglove/studio-base/providers/Panel
 
 const log = Logger.getLogger(__filename);
 
-const USE_BETA_UI = true;
-
 const useStyles = makeStyles()({
   container: {
     width: "100%",
@@ -210,6 +208,8 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
   const [enableStudioLogsSidebar = false] = useAppConfigurationValue<boolean>(
     AppSetting.SHOW_DEBUG_PANELS,
   );
+
+  const [enableNewUI = false] = useAppConfigurationValue<boolean>(AppSetting.ENABLE_NEW_UI);
 
   const showSignInForm = currentUserRequired && currentUser == undefined;
 
@@ -541,7 +541,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
       ["help", { iconName: "QuestionCircle", title: "Help", component: HelpSidebar }],
     ]);
 
-    if (!USE_BETA_UI) {
+    if (!enableNewUI) {
       if (supportsAccountSettings) {
         bottomItems.set("account", {
           iconName: currentUser != undefined ? "BlockheadFilled" : "Blockhead",
@@ -562,6 +562,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     DataSourceSidebarItem,
     playerProblems,
     enableStudioLogsSidebar,
+    enableNewUI,
     supportsAccountSettings,
     currentUser,
   ]);
@@ -617,7 +618,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
       <SyncAdapters />
       <KeyListener global keyDownHandlers={keyDownHandlers} />
       <div className={classes.container} ref={containerRef} tabIndex={0}>
-        {USE_BETA_UI && <AppBar disableSignin={props.disableSignin} />}
+        {enableNewUI && <AppBar disableSignin={props.disableSignin} />}
         <Sidebar
           items={sidebarItems}
           bottomItems={sidebarBottomItems}

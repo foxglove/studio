@@ -60,6 +60,13 @@ const features: Feature[] = [
     name: "Plot panel series in settings",
     description: <>Allow editing plot panel data series in the sidebar.</>,
   },
+  {
+    key: AppSetting.ENABLE_NEW_UI,
+    name: "Enable new user interface",
+    description: (
+      <>Try out redesigned navigation and layout. Warning: We’re still figuring it our</>
+    ),
+  },
 ];
 if (process.env.NODE_ENV === "development") {
   features.push({
