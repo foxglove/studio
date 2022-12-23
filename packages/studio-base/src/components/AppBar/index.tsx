@@ -20,7 +20,7 @@ import ConsoleApiContext from "@foxglove/studio-base/context/ConsoleApiContext";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
-import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
+// USEME: import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
 
 import { HelpIconButton, HelpMenu } from "./Help";
 import { UserIconButton, UserMenu } from "./User";
