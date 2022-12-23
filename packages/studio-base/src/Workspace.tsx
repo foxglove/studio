@@ -85,8 +85,7 @@ import { PanelStateContextProvider } from "@foxglove/studio-base/providers/Panel
 
 const log = Logger.getLogger(__filename);
 
-// FIXME: Make this into feature flag
-const betaUI = true;
+const USE_BETA_UI = true;
 
 const useStyles = makeStyles()({
   container: {
@@ -542,7 +541,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
       ["help", { iconName: "QuestionCircle", title: "Help", component: HelpSidebar }],
     ]);
 
-    if (!betaUI) {
+    if (!USE_BETA_UI) {
       if (supportsAccountSettings) {
         bottomItems.set("account", {
           iconName: currentUser != undefined ? "BlockheadFilled" : "Blockhead",
@@ -618,7 +617,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
       <SyncAdapters />
       <KeyListener global keyDownHandlers={keyDownHandlers} />
       <div className={classes.container} ref={containerRef} tabIndex={0}>
-        {betaUI && <AppBar disableSignin={props.disableSignin} />}
+        {USE_BETA_UI && <AppBar disableSignin={props.disableSignin} />}
         <Sidebar
           items={sidebarItems}
           bottomItems={sidebarBottomItems}
