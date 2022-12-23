@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { AppBar as MuiAppBar, Button, IconButton, Toolbar, Typography } from "@mui/material";
-import { MouseEvent, useState } from "react";
+import { MouseEvent, useContext, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 
 import {
@@ -15,7 +15,10 @@ import {
   MessagePipelineContext,
   useMessagePipeline,
 } from "@foxglove/studio-base/components/MessagePipeline";
+import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
+import ConsoleApiContext from "@foxglove/studio-base/context/ConsoleApiContext";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
+import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
 import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
 
@@ -30,13 +33,10 @@ const useStyles = makeStyles()((theme) => ({
     color: theme.palette.common.white,
   },
   toolbar: {
-    justifyContent: "space-evenly",
-  },
-  toolbarGroup: {
-    display: "flex",
-    flex: 1,
-    alignItems: "center",
-    gap: theme.spacing(0.5),
+    display: "grid",
+    width: "100%",
+    gridTemplateAreas: `"start middle end"`,
+    gridTemplateColumns: "1fr auto 1fr",
   },
   logo: {
     padding: 0,
@@ -44,12 +44,25 @@ const useStyles = makeStyles()((theme) => ({
     color: "#9480ed",
   },
   start: {
+    gridArea: "start",
     marginInlineStart: theme.spacing(-2),
-    justifySelf: "flex-start",
+    display: "flex",
+    flex: 1,
+    alignItems: "center",
+    gap: theme.spacing(0.5),
+  },
+  middle: {
+    gridArea: "middle",
+    justifySelf: "center",
   },
   end: {
+    gridArea: "end",
+    display: "flex",
     flexDirection: "row-reverse",
     marginInlineEnd: theme.spacing(-2),
+    flex: 1,
+    alignItems: "center",
+    gap: theme.spacing(0.5),
   },
 }));
 
@@ -58,13 +71,17 @@ const useStyles = makeStyles()((theme) => ({
 const selectPlayerName = (ctx: MessagePipelineContext) => ctx.playerState.name;
 // const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => playerState.presence;
 
-export function AppBar(): JSX.Element {
-  const { classes, cx } = useStyles();
+export function AppBar(props: { disableSignin?: boolean }): JSX.Element {
+  const { classes } = useStyles();
   const { currentUser } = useCurrentUser();
   const playerName = useMessagePipeline(selectPlayerName);
   // const startTime = useMessagePipeline(selectStartTime);
   // const endTime = useMessagePipeline(selectEndTime);
   // const [currentUser] = useMe({ requireAuth: false });
+  const analytics = useAnalytics();
+
+  const supportsAccountSettings =
+    useContext(ConsoleApiContext) != undefined && props.disableSignin !== true;
 
   const [helpAnchorEl, setHelAnchorEl] = useState<undefined | HTMLElement>(undefined);
   const [userAnchorEl, setUserAnchorEl] = useState<undefined | HTMLElement>(undefined);
@@ -99,17 +116,23 @@ export function AppBar(): JSX.Element {
       <ThemeProvider isDark>
         <MuiAppBar className={classes.appBar} position="sticky" color="inherit" elevation={0}>
           <Toolbar variant="dense" className={classes.toolbar}>
-            <div className={cx(classes.toolbarGroup, classes.start)}>
+            <div className={classes.start}>
               <IconButton className={classes.logo} size="large" color="inherit">
                 <FoxgloveLogo fontSize="inherit" color="inherit" />
               </IconButton>
               <Typography noWrap variant="h5" color="inherit" component="div">
-                {currentUser?.org.displayName ?? "foxglove"}
+                {currentUser?.org.displayName}
               </Typography>
             </div>
-            {playerName && <Typography variant="body2">{playerName}</Typography>}
-            <div className={cx(classes.toolbarGroup, classes.end)}>
-              {currentUser ? (
+
+            {playerName && (
+              <Typography className={classes.middle} variant="body2">
+                {playerName}
+              </Typography>
+            )}
+
+            <div className={classes.end}>
+              {supportsAccountSettings && currentUser ? (
                 <UserIconButton
                   aria-label="User profile menu button"
                   color="inherit"
@@ -121,7 +144,18 @@ export function AppBar(): JSX.Element {
                   size="small"
                 />
               ) : (
-                <Button variant="contained" color="primary">
+                <Button
+                  href="https://console.foxglove.dev/signin"
+                  target="_blank"
+                  variant="contained"
+                  color="primary"
+                  onClick={() => {
+                    void analytics.logEvent(AppEvent.DIALOG_CLICK_CTA, {
+                      user: "unauthenticated",
+                      cta: "create-account",
+                    });
+                  }}
+                >
                   Sign up
                 </Button>
               )}
