@@ -85,6 +85,9 @@ export function UserMenu({
     window.open(process.env.FOXGLOVE_ACCOUNT_DASHBOARD_URL, "_blank");
   }, []);
 
+  if (currentUser == undefined) {
+    return <></>;
+  }
   return (
     <Menu
       anchorEl={anchorEl}
@@ -98,8 +101,8 @@ export function UserMenu({
         },
       }}
     >
-      <MenuItem href="#profile">
-        <ListItemText primary={currentUser.displayName} secondary={currentUser?.email} />
+      <MenuItem onClick={onSettingsClick}>
+        <ListItemText primary={currentUser.email} />
       </MenuItem>
       <MenuItem onClick={onSettingsClick}>
         <ListItemText>User settings</ListItemText>

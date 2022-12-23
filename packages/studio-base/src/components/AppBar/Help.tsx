@@ -33,7 +33,7 @@ const useStyles = makeStyles()((theme) => ({
     whiteSpace: "normal",
   },
   iconButton: {
-    padding: theme.spacing(1.25),
+    padding: theme.spacing(0.75),
   },
 }));
 
