@@ -32,7 +32,7 @@ enum AppEvent {
   // Layout events
   LAYOUT_UPDATE = "Studio: Layout updated",
   LAYOUT_CREATE = "Studio: Layout created",
-  LAYOUT_DUPLICATE = "Studio: Layout duplicataed",
+  LAYOUT_DUPLICATE = "Studio: Layout duplicated",
   LAYOUT_RENAME = "Studio: Layout renamed",
   LAYOUT_DELETE = "Studio: Layout deleted",
   LAYOUT_SELECT = "Studio: Layout selected",
