@@ -24,7 +24,7 @@ enum AppEvent {
   // Player events
   PLAYER_CONSTRUCTED = "Studio: Player constructed",
   PLAYER_PLAY = "Studio: Player played",
-  PLAYER_SEEK = "Studio: Player seek",
+  PLAYER_SEEK = "Studio: Player seeked",
   PLAYER_SET_SPEED = "Studio: Player speed set",
   PLAYER_PAUSE = "Studio: Player paused",
   PLAYER_CLOSE = "Studio: Player closed",
@@ -56,7 +56,7 @@ enum AppEvent {
   EXTENSION_UNINSTALL = "Studio: Extension uninstalled",
 
   // Experimental features
-  EXPERIMENTAL_FEATURE_TOGGLE = "Studio: Experimental Feature toggled",
+  EXPERIMENTAL_FEATURE_TOGGLE = "Studio: Experimental feature toggled",
 }
 
 /** https://develop.sentry.dev/sdk/event-payloads/breadcrumbs/#breadcrumb-types */
