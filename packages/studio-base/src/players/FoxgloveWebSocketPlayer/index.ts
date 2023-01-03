@@ -59,7 +59,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
   private _hasReceivedMessage = false;
   private _presence: PlayerPresence = PlayerPresence.NOT_PRESENT;
   private _problems = new PlayerProblemManager();
-  private _lastSeekTime = 0;
+  private _numTimeSeeks = 0;
 
   /** Earliest time seen */
   private _startTime?: Time;
@@ -305,7 +305,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
 
       const time = fromNanoSec(timestamp);
       if (this._clockTime != undefined && isLessThan(time, this._clockTime)) {
-        this._lastSeekTime = time.sec;
+        this._numTimeSeeks++;
         this._parsedMessages = [];
       }
 
@@ -393,7 +393,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
         currentTime,
         isPlaying: true,
         speed: 1,
-        lastSeekTime: this._lastSeekTime,
+        lastSeekTime: this._numTimeSeeks,
         topics: _topics,
         // Always copy topic stats since message counts and timestamps are being updated
         topicStats: new Map(this._topicsStats),
