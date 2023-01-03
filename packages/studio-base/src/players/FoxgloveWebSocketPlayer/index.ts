@@ -9,7 +9,7 @@ import { v4 as uuidv4 } from "uuid";
 import { debouncePromise } from "@foxglove/den/async";
 import Log from "@foxglove/log";
 import { parseChannel, ParsedChannel } from "@foxglove/mcap-support";
-import { fromMillis, fromNanoSec, isGreaterThan, isLessThan, Time, toSec } from "@foxglove/rostime";
+import { fromMillis, fromNanoSec, isGreaterThan, isLessThan, Time } from "@foxglove/rostime";
 import PlayerProblemManager from "@foxglove/studio-base/players/PlayerProblemManager";
 import {
   AdvertiseOptions,
@@ -305,7 +305,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
 
       const time = fromNanoSec(timestamp);
       if (this._clockTime != undefined && isLessThan(time, this._clockTime)) {
-        this._lastSeekTime = toSec(time);
+        this._lastSeekTime = time.sec;
         this._parsedMessages = [];
       }
 
