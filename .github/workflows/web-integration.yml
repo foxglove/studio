@@ -1,16 +1,14 @@
 name: Web Integration Tests
 
 on:
+  # runs on a preview deployment (vercel or otherwise)
   deployment_status:
 
 jobs:
-  run-e2es:
+  test:
+    # run only on a successful deployment
     if: github.event_name == 'deployment_status' && github.event.deployment_status.state == 'success'
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-20.04]
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3.2.0
         with:
