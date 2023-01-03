@@ -1,6 +1,6 @@
 {
   "name": "foxglove-studio",
-  "version": "1.35.1-dev",
+  "version": "1.35.2-dev",
   "description": "Integrated robotics visualization and debugging.",
   "productName": "Foxglove Studio",
   "productDescription": "Foxglove Studio is a highly customizable and extensible visualization and display tool for robotics.",
@@ -64,11 +64,12 @@
     "@types/node": "15.3.0",
     "react-dnd": "14.0.2",
     "@storybook/react": "patch:@storybook/react@6.5.15#./patches/storybook-react.patch",
+    "react-dom": "patch:react-dom@npm:17.0.2#./patches/react-dom.patch",
     "react-use": "patch:react-use@17.4.0#./patches/react-use.patch"
   },
   "devDependencies": {
     "@actions/core": "1.9.1",
-    "@actions/exec": "1.1.0",
+    "@actions/exec": "1.1.1",
     "@actions/tool-cache": "2.0.1",
     "@babel/core": "7.20.5",
     "@babel/preset-env": "7.16.11",
@@ -95,7 +96,7 @@
     "electron": "19.1.8",
     "electron-builder": "23.1.0",
     "electron-notarize": "1.2.1",
-    "eslint": "8.8.0",
+    "eslint": "8.30.0",
     "eslint-config-prettier": "8.5.0",
     "eslint-import-resolver-webpack": "0.13.2",
     "eslint-plugin-es": "4.1.0",
