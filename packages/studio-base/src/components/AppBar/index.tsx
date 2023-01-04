@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { AppBar as MuiAppBar, Button, IconButton, Toolbar, Typography } from "@mui/material";
-import { MouseEvent, useContext, useState } from "react";
+import { MouseEvent, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 
 import {
@@ -11,14 +11,14 @@ import {
   PreferencesIconButton,
 } from "@foxglove/studio-base/components/AppBar/Preferences";
 import { FoxgloveLogo } from "@foxglove/studio-base/components/FoxgloveLogo";
-import {
-  MessagePipelineContext,
-  useMessagePipeline,
-} from "@foxglove/studio-base/components/MessagePipeline";
-import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
-import ConsoleApiContext from "@foxglove/studio-base/context/ConsoleApiContext";
-import { User } from "@foxglove/studio-base/context/CurrentUserContext";
-import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
+// import {
+//   MessagePipelineContext,
+//   useMessagePipeline,
+// } from "@foxglove/studio-base/components/MessagePipeline";
+// import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
+// import ConsoleApiContext from "@foxglove/studio-base/context/ConsoleApiContext";
+import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
+// import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
 // USEME: import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
 
@@ -29,7 +29,8 @@ const useStyles = makeStyles()((theme) => ({
   appBar: {
     gridArea: "appbar",
     boxShadow: "none",
-    backgroundColor: theme.palette.common.black,
+    backgroundColor: "#27272b",
+    borderBottom: `${theme.palette.divider} 1px solid`,
     color: theme.palette.common.white,
   },
   toolbar: {
@@ -51,10 +52,10 @@ const useStyles = makeStyles()((theme) => ({
     alignItems: "center",
     gap: theme.spacing(0.5),
   },
-  middle: {
-    gridArea: "middle",
-    justifySelf: "center",
-  },
+  // middle: {
+  //   gridArea: "middle",
+  //   justifySelf: "center",
+  // },
   end: {
     gridArea: "end",
     display: "flex",
@@ -73,16 +74,15 @@ const useStyles = makeStyles()((theme) => ({
 
 type AppBarProps = {
   // disableSignin?: boolean;
-  currentUser?: User;
 };
 
 export function AppBar(props: AppBarProps): JSX.Element {
-  const { currentUser } = props;
+  const { currentUser, signIn } = useCurrentUser();
   const { classes } = useStyles();
   // const playerName = useMessagePipeline(selectPlayerName);
   // const startTime = useMessagePipeline(selectStartTime);
   // const endTime = useMessagePipeline(selectEndTime);
-  const analytics = useAnalytics();
+  // const analytics = useAnalytics();
 
   // const supportsAccountSettings =
   //   useContext(ConsoleApiContext) != undefined && disableSignin !== true;
@@ -150,20 +150,25 @@ export function AppBar(props: AppBarProps): JSX.Element {
                   size="small"
                 />
               ) : (
-                <Button
-                  href="https://console.foxglove.dev/signin"
-                  target="_blank"
-                  variant="contained"
-                  color="primary"
-                  onClick={() => {
-                    void analytics.logEvent(AppEvent.DIALOG_CLICK_CTA, {
-                      user: "unauthenticated",
-                      cta: "create-account",
-                    });
-                  }}
-                >
-                  Sign up
-                </Button>
+                <>
+                  {/* <Button
+                    href="https://console.foxglove.dev/signin"
+                    target="_blank"
+                    variant="contained"
+                    color="primary"
+                    onClick={() => {
+                      void analytics.logEvent(AppEvent.DIALOG_CLICK_CTA, {
+                        user: "unauthenticated",
+                        cta: "create-account",
+                      });
+                    }}
+                  >
+                    Sign up
+                  </Button> */}
+                  <Button variant="contained" color="primary" onClick={signIn}>
+                    Sign in
+                  </Button>
+                </>
               )}
               <PreferencesIconButton
                 color="inherit"
