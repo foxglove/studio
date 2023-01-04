@@ -347,6 +347,8 @@ export default class UserNodePlayer implements Player {
   // Called when userNode state is updated.
   public async setUserNodes(userNodes: UserNodes): Promise<void> {
     await this._protectedState.runExclusive(async (state) => {
+      const isUpdate = Object.keys(state.userNodes).length === Object.keys(userNodes).length;
+
       state.userNodes = userNodes;
 
       // Prune the node registration cache so it doesn't grow forever.
@@ -356,6 +358,11 @@ export default class UserNodePlayer implements Player {
       // This code causes us to reset workers twice because the seeking resets the workers too
       await this._resetWorkersUnlocked(state);
       this._setSubscriptionsUnlocked(this._subscriptions, state);
+      // request backfill refresh to update output topics shown in panels
+      //  only when a script is updated due to potential perf reasons
+      if (isUpdate && this._player.requestBackfill) {
+        this._player.requestBackfill();
+      }
     });
   }
 
