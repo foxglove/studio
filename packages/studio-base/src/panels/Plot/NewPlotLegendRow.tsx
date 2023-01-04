@@ -3,6 +3,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import CheckIcon from "@mui/icons-material/Check";
+import CircleIcon from "@mui/icons-material/Circle";
+import CircleOutlinedIcon from "@mui/icons-material/CircleOutlined";
 import CloseIcon from "@mui/icons-material/Close";
 import EditIcon from "@mui/icons-material/Edit";
 import ErrorIcon from "@mui/icons-material/Error";
@@ -39,9 +41,6 @@ const useStyles = makeStyles()((theme) => ({
     display: "contents",
 
     "&:hover, &:focus-within": {
-      "& .MuiIconButton-root": {
-        backgroundColor: theme.palette.action.hover,
-      },
       "& > *:last-child": {
         opacity: 1,
       },
@@ -50,32 +49,34 @@ const useStyles = makeStyles()((theme) => ({
       },
     },
   },
-
   editNameField: {
     font: "inherit",
     gridColumn: "span 2",
     width: "100%",
-    fontSize: "0.75rem",
+    fontSize: theme.typography.pxToRem(16),
 
     input: {
       height: "100%",
     },
   },
-
   listIcon: {
-    padding: theme.spacing(0.25),
+    display: "flex",
+    alignItems: "center",
     position: "sticky",
     left: 0,
+    padding: theme.spacing(0, 0.25),
+    height: 28,
   },
   legendIconButton: {
-    padding: `${theme.spacing(0.125)} !important`,
-    marginLeft: theme.spacing(0.25),
+    padding: `${theme.spacing(0.75)} !important`,
+    marginLeft: theme.spacing(0.125),
+    fontSize: theme.typography.pxToRem(14),
   },
   inputWrapper: {
     display: "flex",
     alignItems: "center",
-    padding: theme.spacing(0.25),
-    height: 25,
+    height: 28,
+    padding: theme.spacing(0, 0.25),
     minWidth: 140,
   },
   plotValue: {
@@ -92,11 +93,12 @@ const useStyles = makeStyles()((theme) => ({
     },
   },
   actions: {
+    height: 28,
     display: "flex",
     flexDirection: "row",
     alignItems: "center",
-    padding: theme.spacing(0.25),
     gap: theme.spacing(0.25),
+    padding: theme.spacing(0.25),
     position: "sticky",
     right: 0,
     opacity: 0,
@@ -120,6 +122,8 @@ export function NewPlotLegendRow({
   const { openPanelSettings } = useWorkspace();
   const { id: panelId } = usePanelContext();
   const { setSelectedPanelIds } = useSelectedPanels();
+  const theme = useTheme();
+  const { classes } = useStyles();
 
   const correspondingData = useMemo(() => {
     if (!showPlotValuesInLegend) {
@@ -135,8 +139,6 @@ export function NewPlotLegendRow({
   });
 
   const [state, setState] = useImmer<{ editing: boolean }>({ editing: false });
-
-  const theme = useTheme();
 
   const currentDisplay = useMemo(() => {
     if (!showPlotValuesInLegend) {
@@ -159,12 +161,6 @@ export function NewPlotLegendRow({
       color: hoverValue?.value != undefined ? theme.palette.warning.main : "inherit",
     };
   }, [showPlotValuesInLegend, hoverValue?.value, currentTime, theme.palette, correspondingData]);
-
-  const legendIconColor = path.enabled
-    ? getLineColor(path.color, index)
-    : theme.palette.text.secondary;
-
-  const { classes } = useStyles();
 
   const toggleEditing = useCallback(
     () =>
@@ -210,10 +206,13 @@ export function NewPlotLegendRow({
             }
             savePaths(newPaths);
           }}
+          style={{ color: getLineColor(path.color, index) }}
         >
-          <SvgIcon style={{ color: legendIconColor }} color="inherit">
-            <circle cx={12} cy={12} r={6} />
-          </SvgIcon>
+          {path.enabled ? (
+            <CircleIcon fontSize="inherit" />
+          ) : (
+            <CircleOutlinedIcon fontSize="inherit" />
+          )}
         </IconButton>
       </div>
       <div className={classes.inputWrapper}>
