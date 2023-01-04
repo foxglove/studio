@@ -6,37 +6,25 @@ import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 import EditIcon from "@mui/icons-material/Edit";
 import ErrorIcon from "@mui/icons-material/Error";
-import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import RemoveIcon from "@mui/icons-material/Remove";
-import StopRoundedIcon from "@mui/icons-material/StopRounded";
-import {
-  IconButton,
-  InputBase,
-  SvgIcon,
-  TextField,
-  Tooltip,
-  Typography,
-  useTheme,
-} from "@mui/material";
+import { IconButton, InputBase, SvgIcon, Tooltip, Typography, useTheme } from "@mui/material";
 import produce from "immer";
 import { ChangeEvent, ComponentProps, useCallback, useMemo, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 import { useImmer } from "use-immer";
 import { v4 as uuidv4 } from "uuid";
 
-import MessagePathInput from "@foxglove/studio-base/components/MessagePathSyntax/MessagePathInput";
+import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import TimeBasedChart from "@foxglove/studio-base/components/TimeBasedChart";
+import { useSelectedPanels } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { useHoverValue } from "@foxglove/studio-base/context/TimelineInteractionStateContext";
+import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
 import { getLineColor } from "@foxglove/studio-base/util/plotColors";
 
-import PathSettingsModal from "./PathSettingsModal";
-import { PlotPath, isReferenceLinePlotPathType } from "./internalTypes";
-import { plotableRosTypes, PlotXAxisVal } from "./types";
+import { PlotPath } from "./internalTypes";
 
 type PlotLegendRowProps = {
   index: number;
-  xAxisVal: PlotXAxisVal;
   path: PlotPath;
   paths: PlotPath[];
   hasMismatchedDataLength: boolean;
@@ -121,7 +109,6 @@ const useStyles = makeStyles()((theme) => ({
 
 export function NewPlotLegendRow({
   index,
-  xAxisVal,
   path,
   paths,
   hasMismatchedDataLength,
@@ -130,6 +117,10 @@ export function NewPlotLegendRow({
   savePaths,
   showPlotValuesInLegend,
 }: PlotLegendRowProps): JSX.Element {
+  const { openPanelSettings } = useWorkspace();
+  const { id: panelId } = usePanelContext();
+  const { setSelectedPanelIds } = useSelectedPanels();
+
   const correspondingData = useMemo(() => {
     if (!showPlotValuesInLegend) {
       return [];
@@ -175,23 +166,6 @@ export function NewPlotLegendRow({
 
   const { classes } = useStyles();
 
-  const isReferenceLinePlotPath = isReferenceLinePlotPathType(path);
-
-  const onInputChange = useCallback(
-    (value: string, idx?: number) => {
-      if (idx == undefined) {
-        throw new Error("index not set");
-      }
-      const newPaths = paths.slice();
-      const newPath = newPaths[idx];
-      if (newPath) {
-        newPaths[idx] = { ...newPath, value: value.trim() };
-      }
-      savePaths(newPaths);
-    },
-    [paths, savePaths],
-  );
-
   const toggleEditing = useCallback(
     () =>
       setState((draft) => {
@@ -220,26 +194,8 @@ export function NewPlotLegendRow({
     [toggleEditing],
   );
 
-  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
-
-  const messagePathInputStyle = useMemo(() => {
-    return { textDecoration: !path.enabled ? "line-through" : undefined };
-  }, [path.enabled]);
-
   return (
     <div className={classes.root}>
-      <div style={{ position: "absolute" }}>
-        {settingsModalOpen && (
-          <PathSettingsModal
-            xAxisVal={xAxisVal}
-            path={path}
-            paths={paths}
-            index={index}
-            savePaths={savePaths}
-            onDismiss={() => setSettingsModalOpen(false)}
-          />
-        )}
-      </div>
       <div className={classes.listIcon}>
         <IconButton
           className={classes.legendIconButton}
@@ -326,7 +282,10 @@ export function NewPlotLegendRow({
           className={classes.actionButton}
           size="small"
           title="Edit settings"
-          onClick={() => setSettingsModalOpen(true)}
+          onClick={() => {
+            setSelectedPanelIds([panelId]);
+            openPanelSettings();
+          }}
         >
           <MoreVertIcon fontSize="small" />
         </IconButton>

@@ -2,16 +2,14 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import CircleIcon from "@mui/icons-material/Circle";
-import { IconButton, Typography } from "@mui/material";
-import { ComponentProps, Fragment, useCallback } from "react";
+import { ComponentProps, useCallback } from "react";
 import tinycolor from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 
 import TimeBasedChart from "@foxglove/studio-base/components/TimeBasedChart";
 import { NewPlotLegendRow } from "@foxglove/studio-base/panels/Plot/NewPlotLegendRow";
-import { PlotPath, BasePlotPath } from "@foxglove/studio-base/panels/Plot/internalTypes";
-import { PlotConfig, PlotXAxisVal } from "@foxglove/studio-base/panels/Plot/types";
+import { PlotPath } from "@foxglove/studio-base/panels/Plot/internalTypes";
+import { PlotConfig } from "@foxglove/studio-base/panels/Plot/types";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 
 type Props = {
@@ -19,11 +17,7 @@ type Props = {
   datasets: ComponentProps<typeof TimeBasedChart>["data"]["datasets"];
   currentTime?: number;
   saveConfig: SaveConfig<PlotConfig>;
-  showLegend: boolean;
-  xAxisVal: PlotXAxisVal;
-  xAxisPath?: BasePlotPath;
   pathsWithMismatchedDataLengths: string[];
-  sidebarDimension: number;
   legendDisplay: "floating" | "top" | "left";
   showPlotValuesInLegend: boolean;
 };
@@ -50,34 +44,18 @@ const useStyles = makeStyles()((theme) => ({
     display: "grid",
     gridTemplateColumns: "auto minmax(max-content, 1fr) auto",
   },
-  toggleButton: {
-    fontSize: 8,
-  },
 }));
 
 export function NewPlotLegend(props: Props): JSX.Element {
   const {
     paths,
     saveConfig,
-    xAxisVal,
     datasets,
     currentTime,
     pathsWithMismatchedDataLengths,
     showPlotValuesInLegend,
   } = props;
   const { classes, cx } = useStyles();
-
-  const togglePath = useCallback(
-    (index: number) => {
-      const newPaths = paths.slice();
-      const newPath = newPaths[index];
-      if (newPath) {
-        newPaths[index] = { ...newPath, enabled: !newPath.enabled };
-      }
-      saveConfig({ paths: newPaths });
-    },
-    [paths, saveConfig],
-  );
 
   const savePaths = useCallback(
     (newPaths: PlotPath[]) => {
@@ -95,7 +73,6 @@ export function NewPlotLegend(props: Props): JSX.Element {
           <NewPlotLegendRow
             key={index}
             index={index}
-            xAxisVal={xAxisVal}
             path={path}
             paths={paths}
             hasMismatchedDataLength={pathsWithMismatchedDataLengths.includes(path.value)}
