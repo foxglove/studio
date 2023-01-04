@@ -9,7 +9,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import EditIcon from "@mui/icons-material/Edit";
 import ErrorIcon from "@mui/icons-material/Error";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import { IconButton, InputBase, SvgIcon, Tooltip, Typography, useTheme } from "@mui/material";
+import { IconButton, InputBase, Tooltip, Typography, useTheme } from "@mui/material";
 import produce from "immer";
 import { ChangeEvent, ComponentProps, useCallback, useMemo, useState } from "react";
 import { makeStyles } from "tss-react/mui";
@@ -138,6 +138,7 @@ export function NewPlotLegendRow({
     isTimestampScale: true,
   });
 
+  const [hover, setHover] = useState(false);
   const [state, setState] = useImmer<{ editing: boolean }>({ editing: false });
 
   const currentDisplay = useMemo(() => {
@@ -198,6 +199,8 @@ export function NewPlotLegendRow({
           centerRipple={false}
           size="small"
           title="Toggle visibility"
+          onMouseEnter={() => setHover(true)}
+          onMouseLeave={() => setHover(false)}
           onClick={() => {
             const newPaths = paths.slice();
             const newPath = newPaths[index];
@@ -208,7 +211,7 @@ export function NewPlotLegendRow({
           }}
           style={{ color: getLineColor(path.color, index) }}
         >
-          {path.enabled ? (
+          {path.enabled || hover ? (
             <CircleIcon fontSize="inherit" />
           ) : (
             <CircleOutlinedIcon fontSize="inherit" />
