@@ -542,9 +542,11 @@ function Plot(props: Props) {
             datasets={datasets}
             currentTime={currentTimeSinceStart}
             saveConfig={saveConfig}
+            showLegend={showLegend}
             pathsWithMismatchedDataLengths={pathsWithMismatchedDataLengths}
             legendDisplay={legendDisplay}
             showPlotValuesInLegend={showPlotValuesInLegend}
+            sidebarDimension={sidebarDimension}
           />
         )}
         <Stack flex="auto" alignItems="center" justifyContent="center" overflow="hidden">

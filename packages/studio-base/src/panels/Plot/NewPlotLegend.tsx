@@ -9,7 +9,9 @@ import ArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import ArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import ListIcon from "@mui/icons-material/List";
 import { Button, Divider, SvgIconProps, ToggleButton } from "@mui/material";
+import { clamp } from "lodash";
 import { ComponentProps, useCallback, useMemo } from "react";
+import { useLatest } from "react-use";
 import tinycolor from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 
@@ -21,6 +23,9 @@ import { PlotPath } from "@foxglove/studio-base/panels/Plot/internalTypes";
 import { PlotConfig } from "@foxglove/studio-base/panels/Plot/types";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 
+const minLegendWidth = 25;
+const maxLegendWidth = 800;
+
 type Props = {
   paths: PlotPath[];
   datasets: ComponentProps<typeof TimeBasedChart>["data"]["datasets"];
@@ -30,91 +35,129 @@ type Props = {
   pathsWithMismatchedDataLengths: string[];
   legendDisplay: "floating" | "top" | "left";
   showPlotValuesInLegend: boolean;
+  sidebarDimension: number;
 };
 
-const useStyles = makeStyles<void, "container" | "toggleButton">()((theme, _params, classes) => ({
-  root: {
-    display: "flex",
-    overflow: "hidden",
-  },
-  rootFloating: {
-    gap: theme.spacing(0.5),
-    height: `calc(100% - ${PANEL_TOOLBAR_MIN_HEIGHT}px)`,
-    borderRadius: theme.shape.borderRadius,
-    position: "absolute",
-    top: theme.spacing(5.25),
-    left: theme.spacing(4),
-    zIndex: 1000,
-    backgroundColor: "transparent",
-    alignItems: "flex-start",
+type StyleProps = {
+  legendDisplay: Props["legendDisplay"];
+  sidebarDimension: Props["sidebarDimension"];
+};
 
-    [`.${classes.container}`]: {
-      backgroundImage: `linear-gradient(${[
-        "0deg",
-        tinycolor(theme.palette.background.default).setAlpha(0.2).toHex8String(),
-        tinycolor(theme.palette.background.default).setAlpha(0.2).toHex8String(),
-      ].join(" ,")})`,
-      backgroundColor: tinycolor(theme.palette.background.paper).setAlpha(0.8).toHex8String(),
+const useStyles = makeStyles<StyleProps, "container" | "toggleButton">()(
+  (theme, { legendDisplay, sidebarDimension }, classes) => ({
+    root: {
+      display: "flex",
+      overflow: "hidden",
     },
+    rootFloating: {
+      gap: theme.spacing(0.5),
+      height: `calc(100% - ${PANEL_TOOLBAR_MIN_HEIGHT}px)`,
+      borderRadius: theme.shape.borderRadius,
+      position: "absolute",
+      top: theme.spacing(5.25),
+      left: theme.spacing(4),
+      zIndex: 1000,
+      backgroundColor: "transparent",
+      alignItems: "flex-start",
 
-    [`.${classes.toggleButton}`]: {
-      backgroundColor: tinycolor(theme.palette.background.paper).setAlpha(0.8).toHex8String(),
-      backgroundImage: `linear-gradient(${[
-        "0deg",
-        tinycolor(theme.palette.background.default).setAlpha(0.2).toHex8String(),
-        tinycolor(theme.palette.background.default).setAlpha(0.2).toHex8String(),
-      ].join(" ,")})`,
+      [`.${classes.container}`]: {
+        backgroundImage: `linear-gradient(${[
+          "0deg",
+          tinycolor(theme.palette.background.default).setAlpha(0.2).toHex8String(),
+          tinycolor(theme.palette.background.default).setAlpha(0.2).toHex8String(),
+        ].join(" ,")})`,
+        backgroundColor: tinycolor(theme.palette.background.paper).setAlpha(0.8).toHex8String(),
+      },
 
-      "&:hover":
-        theme.palette.mode === "dark"
-          ? {
-              backgroundImage: `linear-gradient(0deg, ${[
-                tinycolor(theme.palette.background.default).setAlpha(0.2).toHex8String(),
-                tinycolor(theme.palette.background.default).setAlpha(0.2).toHex8String(),
-              ].join(",")}),
+      [`.${classes.toggleButton}`]: {
+        backgroundColor: tinycolor(theme.palette.background.paper).setAlpha(0.8).toHex8String(),
+        backgroundImage: `linear-gradient(${[
+          "0deg",
+          tinycolor(theme.palette.background.default).setAlpha(0.2).toHex8String(),
+          tinycolor(theme.palette.background.default).setAlpha(0.2).toHex8String(),
+        ].join(" ,")})`,
+
+        "&:hover":
+          theme.palette.mode === "dark"
+            ? {
+                backgroundImage: `linear-gradient(0deg, ${[
+                  tinycolor(theme.palette.background.default).setAlpha(0.2).toHex8String(),
+                  tinycolor(theme.palette.background.default).setAlpha(0.2).toHex8String(),
+                ].join(",")}),
                 linear-gradient(0deg, ${[
                   theme.palette.action.hover,
                   theme.palette.action.hover,
                 ].join(",")})`,
-              backgroundColor: tinycolor(theme.palette.background.paper)
-                .setAlpha(0.8)
-                .toHex8String(),
-            }
-          : {
-              backgroundColor: theme.palette.background.paper,
-            },
+                backgroundColor: tinycolor(theme.palette.background.paper)
+                  .setAlpha(0.8)
+                  .toHex8String(),
+              }
+            : {
+                backgroundColor: theme.palette.background.paper,
+              },
+      },
     },
-  },
-  rootLeft: {
-    alignItems: "flex-start",
+    rootLeft: {
+      alignItems: "flex-start",
 
-    [`.${classes.toggleButton}`]: {
-      height: "100%",
+      [`.${classes.toggleButton}`]: {
+        height: "100%",
+      },
     },
-  },
-  rootTop: {
-    flexDirection: "column",
-  },
-  container: {
-    alignItems: "center",
-    overflow: "auto",
-    display: "grid",
-    gridTemplateColumns: "auto minmax(max-content, 1fr) auto",
-  },
-  footer: {
-    gridColumn: "span 3",
-    padding: theme.spacing(0.5),
-  },
-  addButton: {
-    minWidth: 100,
-    backgroundColor: `${theme.palette.action.hover} !important`,
-  },
-  toggleButton: {
-    fontSize: theme.typography.pxToRem(20),
-    padding: theme.spacing(0.5),
-    border: "none",
-  },
-}));
+    rootTop: {
+      flexDirection: "column",
+    },
+    container: {
+      alignItems: "center",
+      overflow: "auto",
+      display: "grid",
+      gridTemplateColumns: "auto minmax(max-content, 1fr) auto",
+    },
+    dragHandle: {
+      userSelect: "none",
+      border: `0px solid ${theme.palette.action.hover}`,
+      ...(legendDisplay === "left"
+        ? {
+            cursor: "ew-resize",
+            borderRightWidth: 2,
+            height: "100%",
+            width: theme.spacing(0.5),
+          }
+        : {
+            cursor: "ns-resize",
+            borderBottomWidth: 2,
+            height: theme.spacing(0.5),
+            width: "100%",
+          }),
+
+      "&:hover": {
+        borderColor: theme.palette.action.selected,
+      },
+    },
+    wrapperContent: {
+      display: "flex",
+      flexDirection: "column",
+      flexGrow: 1,
+      gap: theme.spacing(0.5),
+      overflow: "auto",
+      height: legendDisplay === "top" ? Math.round(sidebarDimension) : "auto",
+      width: legendDisplay === "left" ? Math.round(sidebarDimension) : "auto",
+    },
+    footer: {
+      gridColumn: "span 3",
+      padding: theme.spacing(0.5),
+    },
+    addButton: {
+      minWidth: 100,
+      backgroundColor: `${theme.palette.action.hover} !important`,
+    },
+    toggleButton: {
+      fontSize: theme.typography.pxToRem(20),
+      padding: theme.spacing(0.5),
+      border: "none",
+    },
+  }),
+);
 
 export function NewPlotLegend(props: Props): JSX.Element {
   const {
@@ -128,7 +171,7 @@ export function NewPlotLegend(props: Props): JSX.Element {
     showLegend,
     showPlotValuesInLegend,
   } = props;
-  const { classes, cx } = useStyles();
+  const { classes, cx } = useStyles({ legendDisplay, sidebarDimension });
 
   const toggleLegend = useCallback(
     () => saveConfig({ showLegend: !showLegend }),
@@ -162,6 +205,29 @@ export function NewPlotLegend(props: Props): JSX.Element {
     [paths, saveConfig],
   );
 
+  const latestDimension = useLatest(sidebarDimension);
+
+  const handlePointerMove = useCallback(
+    (event: React.PointerEvent) => {
+      if (legendDisplay === "floating" || event.buttons !== 1) {
+        return;
+      }
+
+      const delta = legendDisplay === "left" ? event.movementX : event.movementY;
+      const newDimension = clamp(latestDimension.current + delta, minLegendWidth, maxLegendWidth);
+      saveConfig({ sidebarDimension: newDimension });
+    },
+    [latestDimension, legendDisplay, saveConfig],
+  );
+
+  const handlePointerDown = useCallback((event: React.PointerEvent) => {
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }, []);
+
+  const handlePointerUp = useCallback((event: React.PointerEvent) => {
+    event.currentTarget.releasePointerCapture(event.pointerId);
+  }, []);
+
   const savePaths = useCallback(
     (newPaths: PlotPath[]) => {
       saveConfig({ paths: newPaths });
@@ -176,9 +242,6 @@ export function NewPlotLegend(props: Props): JSX.Element {
         [classes.rootLeft]: legendDisplay === "left",
         [classes.rootTop]: legendDisplay === "top",
       })}
-      // style={{
-      //   [legendDisplay === "left" ? "width" : "height"]: sidebarDimension,
-      // }}
     >
       <ToggleButton
         className={classes.toggleButton}
@@ -190,44 +253,56 @@ export function NewPlotLegend(props: Props): JSX.Element {
         {toggleIcon}
       </ToggleButton>
       {showLegend && (
-        <Stack
-          flex="auto"
-          fullWidth
-          style={{
-            height:
-              legendDisplay === "floating" ? `calc(100% - ${PANEL_TOOLBAR_MIN_HEIGHT}px)` : "100%",
-          }}
-        >
-          <div className={classes.container}>
-            {paths.map((path, index) => (
-              <NewPlotLegendRow
-                key={index}
-                index={index}
-                path={path}
-                paths={paths}
-                hasMismatchedDataLength={pathsWithMismatchedDataLengths.includes(path.value)}
-                datasets={datasets}
-                currentTime={currentTime}
-                savePaths={savePaths}
-                showPlotValuesInLegend={showPlotValuesInLegend}
-              />
-            ))}
-            <footer className={classes.footer}>
-              <Button
-                className={classes.addButton}
-                size="small"
-                startIcon={<AddIcon />}
-                fullWidth
-                onClick={() => {}}
-              >
-                Add line
-              </Button>
-            </footer>
-          </div>
-        </Stack>
+        <div className={classes.wrapperContent}>
+          <Stack
+            flex="auto"
+            fullWidth
+            style={{
+              height:
+                legendDisplay === "floating"
+                  ? `calc(100% - ${PANEL_TOOLBAR_MIN_HEIGHT}px)`
+                  : "100%",
+            }}
+          >
+            <div className={classes.container}>
+              {paths.map((path, index) => (
+                <NewPlotLegendRow
+                  key={index}
+                  index={index}
+                  path={path}
+                  paths={paths}
+                  hasMismatchedDataLength={pathsWithMismatchedDataLengths.includes(path.value)}
+                  datasets={datasets}
+                  currentTime={currentTime}
+                  savePaths={savePaths}
+                  showPlotValuesInLegend={showPlotValuesInLegend}
+                />
+              ))}
+              <footer className={classes.footer}>
+                <Button
+                  className={classes.addButton}
+                  size="small"
+                  startIcon={<AddIcon />}
+                  fullWidth
+                  onClick={() => {}}
+                >
+                  Add line
+                </Button>
+              </footer>
+            </div>
+          </Stack>
+          {legendDisplay !== "floating" && (
+            <Divider flexItem orientation={legendDisplay === "left" ? "vertical" : "horizontal"} />
+          )}
+        </div>
       )}
       {legendDisplay !== "floating" && (
-        <Divider flexItem orientation={legendDisplay === "left" ? "vertical" : "horizontal"} />
+        <div
+          className={classes.dragHandle}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+        />
       )}
     </div>
   );
