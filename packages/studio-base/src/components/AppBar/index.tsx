@@ -11,13 +11,13 @@ import {
   PreferencesIconButton,
 } from "@foxglove/studio-base/components/AppBar/Preferences";
 import { FoxgloveLogo } from "@foxglove/studio-base/components/FoxgloveLogo";
-// import {
-//   MessagePipelineContext,
-//   useMessagePipeline,
-// } from "@foxglove/studio-base/components/MessagePipeline";
+import {
+  MessagePipelineContext,
+  useMessagePipeline,
+} from "@foxglove/studio-base/components/MessagePipeline";
 // import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 // import ConsoleApiContext from "@foxglove/studio-base/context/ConsoleApiContext";
-import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
+import { CurrentUser, User } from "@foxglove/studio-base/context/CurrentUserContext";
 // import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
 // USEME: import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
@@ -51,11 +51,19 @@ const useStyles = makeStyles()((theme) => ({
     flex: 1,
     alignItems: "center",
     gap: theme.spacing(0.5),
+
+    [theme.breakpoints.down("sm")]: {
+      marginInlineStart: theme.spacing(-1),
+    },
   },
-  // middle: {
-  //   gridArea: "middle",
-  //   justifySelf: "center",
-  // },
+  middle: {
+    gridArea: "middle",
+    justifySelf: "center",
+
+    [theme.breakpoints.down("md")]: {
+      display: "none",
+    },
+  },
   end: {
     gridArea: "end",
     display: "flex",
@@ -64,22 +72,28 @@ const useStyles = makeStyles()((theme) => ({
     flex: 1,
     alignItems: "center",
     gap: theme.spacing(0.5),
+
+    [theme.breakpoints.down("sm")]: {
+      marginInlineEnd: theme.spacing(-1),
+    },
   },
 }));
 
 // const selectStartTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.startTime;
 // const selectEndTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.endTime;
-// const selectPlayerName = (ctx: MessagePipelineContext) => ctx.playerState.name;
+const selectPlayerName = (ctx: MessagePipelineContext) => ctx.playerState.name;
 // const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => playerState.presence;
 
 type AppBarProps = {
-  // disableSignin?: boolean;
+  currentUser?: User;
+  disableSignin?: boolean;
+  signIn: CurrentUser["signIn"];
 };
 
 export function AppBar(props: AppBarProps): JSX.Element {
-  const { currentUser, signIn } = useCurrentUser();
+  const { currentUser, disableSignin, signIn } = props;
   const { classes } = useStyles();
-  // const playerName = useMessagePipeline(selectPlayerName);
+  const playerName = useMessagePipeline(selectPlayerName);
   // const startTime = useMessagePipeline(selectStartTime);
   // const endTime = useMessagePipeline(selectEndTime);
   // const analytics = useAnalytics();
@@ -87,7 +101,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
   // const supportsAccountSettings =
   //   useContext(ConsoleApiContext) != undefined && disableSignin !== true;
 
-  const [helpAnchorEl, setHelAnchorEl] = useState<undefined | HTMLElement>(undefined);
+  const [helpAnchorEl, setHelpAnchorEl] = useState<undefined | HTMLElement>(undefined);
   const [userAnchorEl, setUserAnchorEl] = useState<undefined | HTMLElement>(undefined);
   const [prefsDialogOpen, setPrefsDialogOpen] = useState(false);
 
@@ -95,10 +109,10 @@ export function AppBar(props: AppBarProps): JSX.Element {
   const userMenuOpen = Boolean(userAnchorEl);
 
   const handleHelpClick = (event: MouseEvent<HTMLElement>) => {
-    setHelAnchorEl(event.currentTarget);
+    setHelpAnchorEl(event.currentTarget);
   };
   const handleHelpClose = () => {
-    setHelAnchorEl(undefined);
+    setHelpAnchorEl(undefined);
   };
 
   const handleUserMenuClick = (event: MouseEvent<HTMLElement>) => {
@@ -125,51 +139,36 @@ export function AppBar(props: AppBarProps): JSX.Element {
                 <FoxgloveLogo fontSize="inherit" color="inherit" />
               </IconButton>
               {currentUser != undefined && (
-                <Typography noWrap variant="h5" color="inherit" component="div">
+                <Typography noWrap variant="h5" fontWeight={800} color="inherit" component="div">
                   {currentUser.org.displayName}
                 </Typography>
               )}
             </div>
 
-            {/* {playerName && (
+            {playerName && (
               <Typography className={classes.middle} variant="body2">
                 {playerName}
               </Typography>
-            )} */}
+            )}
 
             <div className={classes.end}>
-              {currentUser ? (
-                <UserIconButton
-                  aria-label="User profile menu button"
-                  color="inherit"
-                  id="user-profile-button"
-                  aria-controls={userMenuOpen ? "user-profile-menu" : undefined}
-                  aria-haspopup="true"
-                  aria-expanded={userMenuOpen ? "true" : undefined}
-                  onClick={handleUserMenuClick}
-                  size="small"
-                />
-              ) : (
-                <>
-                  {/* <Button
-                    href="https://console.foxglove.dev/signin"
-                    target="_blank"
-                    variant="contained"
-                    color="primary"
-                    onClick={() => {
-                      void analytics.logEvent(AppEvent.DIALOG_CLICK_CTA, {
-                        user: "unauthenticated",
-                        cta: "create-account",
-                      });
-                    }}
-                  >
-                    Sign up
-                  </Button> */}
+              {disableSignin !== true &&
+                (currentUser ? (
+                  <UserIconButton
+                    aria-label="User profile menu button"
+                    color="inherit"
+                    id="user-profile-button"
+                    aria-controls={userMenuOpen ? "user-profile-menu" : undefined}
+                    aria-haspopup="true"
+                    aria-expanded={userMenuOpen ? "true" : undefined}
+                    onClick={handleUserMenuClick}
+                    size="small"
+                  />
+                ) : (
                   <Button variant="contained" color="primary" onClick={signIn}>
                     Sign in
                   </Button>
-                </>
-              )}
+                ))}
               <PreferencesIconButton
                 color="inherit"
                 aria-label="Preferences dialog button"

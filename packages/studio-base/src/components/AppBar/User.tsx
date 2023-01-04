@@ -14,7 +14,6 @@ import {
 } from "@mui/material";
 import { useSnackbar } from "notistack";
 import { forwardRef, useCallback } from "react";
-import { useAsyncFn } from "react-use";
 import { makeStyles } from "tss-react/mui";
 
 import Logger from "@foxglove/log";
@@ -59,9 +58,9 @@ export function UserMenu({
 }): JSX.Element {
   const { currentUser, signOut } = useCurrentUser();
   const { enqueueSnackbar } = useSnackbar();
-  const confirm = useConfirm();
+  const [confirm, confirmModal] = useConfirm();
 
-  const [_, beginSignOut] = useAsyncFn(async () => {
+  const beginSignOut = useCallback(async () => {
     try {
       await signOut();
     } catch (error) {
@@ -89,28 +88,31 @@ export function UserMenu({
     return <></>;
   }
   return (
-    <Menu
-      anchorEl={anchorEl}
-      id="account-menu"
-      open={open}
-      onClose={handleClose}
-      onClick={handleClose}
-      MenuListProps={{
-        sx: {
-          minWidth: 200,
-        },
-      }}
-    >
-      <MenuItem onClick={onSettingsClick}>
-        <ListItemText primary={currentUser.email} />
-      </MenuItem>
-      <MenuItem onClick={onSettingsClick}>
-        <ListItemText>User settings</ListItemText>
-      </MenuItem>
-      <Divider />
-      <MenuItem onClick={onSignoutClick}>
-        <ListItemText>Log out</ListItemText>
-      </MenuItem>
-    </Menu>
+    <>
+      <Menu
+        anchorEl={anchorEl}
+        id="account-menu"
+        open={open}
+        onClose={handleClose}
+        onClick={handleClose}
+        MenuListProps={{
+          sx: {
+            minWidth: 200,
+          },
+        }}
+      >
+        <MenuItem onClick={onSettingsClick}>
+          <ListItemText primary={currentUser.email} />
+        </MenuItem>
+        <MenuItem onClick={onSettingsClick}>
+          <ListItemText>User settings</ListItemText>
+        </MenuItem>
+        <Divider />
+        <MenuItem onClick={onSignoutClick}>
+          <ListItemText>Log out</ListItemText>
+        </MenuItem>
+      </Menu>
+      {confirmModal}
+    </>
   );
 }

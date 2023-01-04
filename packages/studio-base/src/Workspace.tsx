@@ -195,7 +195,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
 
   const isPlayerPresent = playerPresence !== PlayerPresence.NOT_PRESENT;
 
-  const { currentUser } = useCurrentUser();
+  const { currentUser, signIn } = useCurrentUser();
 
   const { currentUserRequired } = useInitialDeepLinkState(props.deepLinks ?? DEFAULT_DEEPLINKS);
 
@@ -618,7 +618,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
       <SyncAdapters />
       <KeyListener global keyDownHandlers={keyDownHandlers} />
       <div className={classes.container} ref={containerRef} tabIndex={0}>
-        {enableNewUI && <AppBar disableSignin={props.disableSignin} />}
+        {enableNewUI && <AppBar currentUser={currentUser} disableSignin={props.disableSignin} />}
         <Sidebar
           items={sidebarItems}
           bottomItems={sidebarBottomItems}
