@@ -10,8 +10,7 @@ import ArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import ListIcon from "@mui/icons-material/List";
 import { Button, Divider, SvgIconProps, ToggleButton } from "@mui/material";
 import { clamp } from "lodash";
-import { ComponentProps, useCallback, useMemo } from "react";
-import { useLatest } from "react-use";
+import { ComponentProps, useCallback, useMemo, useRef } from "react";
 import tinycolor from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 
@@ -205,24 +204,34 @@ export function NewPlotLegend(props: Props): JSX.Element {
     [paths, saveConfig],
   );
 
-  const latestDimension = useLatest(sidebarDimension);
+  const dragStart = useRef({ x: 0, y: 0, sidebarDimension: 0 });
 
   const handlePointerMove = useCallback(
     (event: React.PointerEvent) => {
       if (legendDisplay === "floating" || event.buttons !== 1) {
         return;
       }
-
-      const delta = legendDisplay === "left" ? event.movementX : event.movementY;
-      const newDimension = clamp(latestDimension.current + delta, minLegendWidth, maxLegendWidth);
+      const delta =
+        legendDisplay === "left"
+          ? event.clientX - dragStart.current.x
+          : event.clientY - dragStart.current.y;
+      const newDimension = clamp(
+        dragStart.current.sidebarDimension + delta,
+        minLegendWidth,
+        maxLegendWidth,
+      );
       saveConfig({ sidebarDimension: newDimension });
     },
-    [latestDimension, legendDisplay, saveConfig],
+    [legendDisplay, saveConfig],
   );
 
-  const handlePointerDown = useCallback((event: React.PointerEvent) => {
-    event.currentTarget.setPointerCapture(event.pointerId);
-  }, []);
+  const handlePointerDown = useCallback(
+    (event: React.PointerEvent) => {
+      event.currentTarget.setPointerCapture(event.pointerId);
+      dragStart.current = { x: event.clientX, y: event.clientY, sidebarDimension };
+    },
+    [sidebarDimension],
+  );
 
   const handlePointerUp = useCallback((event: React.PointerEvent) => {
     event.currentTarget.releasePointerCapture(event.pointerId);
