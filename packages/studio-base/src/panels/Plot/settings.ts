@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import produce from "immer";
-import { isNumber, set } from "lodash";
+import { isEqual, isNumber, set } from "lodash";
 import memoizeWeak from "memoize-weak";
 import { useCallback, useEffect } from "react";
 
@@ -128,6 +128,26 @@ function buildSettingsTree(config: PlotConfig, enableSeries: boolean): SettingsT
       label: "X Axis",
       defaultExpansionState: "collapsed",
       fields: {
+        xAxisVal: {
+          label: "Value",
+          input: "select",
+          value: config.xAxisVal,
+          options: [
+            { label: "Timestamp", value: "timestamp" },
+            { label: "Index", value: "index" },
+            { label: "Path (current)", value: "currentCustom" },
+            { label: "Path (accumulated)", value: "custom" },
+          ],
+        },
+        xAxisPath:
+          config.xAxisVal === "currentCustom" || config.xAxisVal === "custom"
+            ? {
+                input: "messagepath",
+                label: "Path",
+                value: config.xAxisPath?.value ?? "",
+                validTypes: plotableRosTypes,
+              }
+            : undefined,
         showXAxisLabels: {
           label: "Show labels",
           input: "boolean",
@@ -176,6 +196,8 @@ export function usePlotPanelSettings(config: PlotConfig, saveConfig: SaveConfig<
               } else {
                 set(draft, path, value);
               }
+            } else if (isEqual(path, ["xAxis", "xAxisPath"])) {
+              set(draft, ["xAxisPath", "value"], value);
             } else {
               set(draft, path.slice(1), value);
 
