@@ -618,7 +618,9 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
       <SyncAdapters />
       <KeyListener global keyDownHandlers={keyDownHandlers} />
       <div className={classes.container} ref={containerRef} tabIndex={0}>
-        {enableNewUI && <AppBar currentUser={currentUser} disableSignin={props.disableSignin} />}
+        {enableNewUI && (
+          <AppBar currentUser={currentUser} disableSignin={props.disableSignin} signIn={signIn} />
+        )}
         <Sidebar
           items={sidebarItems}
           bottomItems={sidebarBottomItems}
