@@ -281,11 +281,6 @@ export class IterablePlayer implements Player {
     this._setState("seek-backfill");
   }
 
-  public requestBackfill(): void {
-    this._seekTarget = this._currentTime;
-    this._setState("seek-backfill");
-  }
-
   public setSubscriptions(newSubscriptions: SubscribePayload[]): void {
     log.debug("set subscriptions", newSubscriptions);
     this._subscriptions = newSubscriptions;

@@ -61,10 +61,6 @@ export interface Player {
   pausePlayback?(): void;
   seekPlayback?(time: Time, backfillDuration?: Time): void;
   playUntil?(time: Time): void;
-  // Optional method for players that support backfilling.
-  // This should refresh backfilled messages for current subscribed topics at the current time.
-  // Note -- may be performance sensitive
-  requestBackfill?(): void;
   // Seek to a particular time. Might trigger backfilling.
   // If the Player supports non-real-time speeds (i.e. PlayerState#capabilities contains
   // PlayerCapabilities.setSpeed), set that speed. E.g. 1.0 is real time, 0.2 is 20% of real time.

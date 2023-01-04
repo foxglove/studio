@@ -131,6 +131,9 @@ export default class UserNodePlayer implements Player {
   // a node may set its own problem or clear its problem
   private _problemStore = new Map<string, PlayerProblem>();
 
+  // keep track of last message on all topics to recompute output topic messages when user nodes change
+  private _lastMessageByInputTopic = new Map<string, MessageEvent<unknown>>();
+
   private _protectedState = new MutexLocked<ProtectedState>({
     userNodes: {},
     nodeRegistrations: [],
@@ -229,10 +232,16 @@ export default class UserNodePlayer implements Player {
     parsedMessages: readonly MessageEvent<unknown>[],
     globalVariables: GlobalVariables,
     nodeRegistrations: readonly NodeRegistration[],
+    { forceRecompute }: { forceRecompute: boolean } = { forceRecompute: false },
   ): Promise<{
     parsedMessages: readonly MessageEvent<unknown>[];
   }> {
+    // prevents from memoizing results for empty requests
+    if (parsedMessages.length === 0) {
+      return { parsedMessages };
+    }
     if (
+      !forceRecompute &&
       shallowequal(this._lastGetMessagesInput, {
         parsedMessages,
         globalVariables,
@@ -346,9 +355,8 @@ export default class UserNodePlayer implements Player {
 
   // Called when userNode state is updated.
   public async setUserNodes(userNodes: UserNodes): Promise<void> {
-    await this._protectedState.runExclusive(async (state) => {
+    const newPlayerState = await this._protectedState.runExclusive(async (state) => {
       const isUpdate = Object.keys(state.userNodes).length === Object.keys(userNodes).length;
-
       state.userNodes = userNodes;
 
       // Prune the node registration cache so it doesn't grow forever.
@@ -358,12 +366,42 @@ export default class UserNodePlayer implements Player {
       // This code causes us to reset workers twice because the seeking resets the workers too
       await this._resetWorkersUnlocked(state);
       this._setSubscriptionsUnlocked(this._subscriptions, state);
-      // request backfill refresh to update output topics shown in panels
-      //  only when a script is updated due to potential perf reasons
-      if (isUpdate && this._player.requestBackfill) {
-        this._player.requestBackfill();
+
+      // no need to re-process messages in these cases, setSubscription will handle non-update case
+      if (!isUpdate || !this._playerState?.activeData) {
+        return;
       }
+      // Need re-process last message from all active input topics to make sure output topics are updated
+      // with new messages when user nodes are saved
+      const lastMessages: MessageEvent<unknown>[] = [];
+      for (const topic of this._playerState.activeData.topics) {
+        const message = this._lastMessageByInputTopic.get(topic.name);
+        if (message) {
+          lastMessages.push(message);
+        }
+      }
+
+      const { parsedMessages } = await this._getMessages(
+        lastMessages,
+        this._globalVariables,
+        state.nodeRegistrations,
+        // need to force recompute in case message array is same as previous, otherwise it will return memoized value
+        { forceRecompute: true },
+      );
+
+      state.lastPlayerStateActiveData = this._playerState.activeData;
+      return {
+        ...this._playerState,
+        activeData: {
+          ...this._playerState.activeData,
+          messages: parsedMessages,
+        },
+      };
     });
+    if (newPlayerState) {
+      this._playerState = newPlayerState;
+      await this._emitState();
+    }
   }
 
   // Defines the inputs/outputs and worker interface of a user node.
@@ -802,6 +840,10 @@ export default class UserNodePlayer implements Player {
         }
 
         const allDatatypes = this._getDatatypes(datatypes, this._memoizedNodeDatatypes);
+
+        for (const message of messages) {
+          this._lastMessageByInputTopic.set(message.topic, message);
+        }
 
         const { parsedMessages } = await this._getMessages(
           messages,
