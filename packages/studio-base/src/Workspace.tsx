@@ -307,8 +307,10 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
   useNativeAppMenuEvent(
     "open-preferences",
     useCallback(() => {
-      setSelectedSidebarItem("preferences");
-    }, []),
+      if (!enableNewUI) {
+        setSelectedSidebarItem("preferences");
+      }
+    }, [enableNewUI]),
   );
 
   useNativeAppMenuEvent(

@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { AppBar as MuiAppBar, Button, IconButton, Toolbar, Typography } from "@mui/material";
-import { MouseEvent, useState } from "react";
+import { MouseEvent, useCallback, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 
 import {
@@ -19,6 +19,7 @@ import {
 // import ConsoleApiContext from "@foxglove/studio-base/context/ConsoleApiContext";
 import { CurrentUser, User } from "@foxglove/studio-base/context/CurrentUserContext";
 // import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
+import useNativeAppMenuEvent from "@foxglove/studio-base/hooks/useNativeAppMenuEvent";
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
 // USEME: import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
 
@@ -128,6 +129,13 @@ export function AppBar(props: AppBarProps): JSX.Element {
   const closePreferences = () => {
     setPrefsDialogOpen(false);
   };
+
+  useNativeAppMenuEvent(
+    "open-preferences",
+    useCallback(() => {
+      setPrefsDialogOpen((open) => !open);
+    }, []),
+  );
 
   return (
     <>
