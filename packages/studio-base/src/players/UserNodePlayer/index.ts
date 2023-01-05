@@ -227,8 +227,8 @@ export default class UserNodePlayer implements Player {
     parsedMessages: [],
   };
 
-  // When updating nodes while paused, we seek to the current time
-  // (i.e. invoke _getMessages with an empty array) to refresh messages
+  // Processes input messages through nodes to create messages on output topics
+  // Memoized to prevent reprocessing on same input
   private async _getMessages(
     parsedMessages: readonly MessageEvent<unknown>[],
     globalVariables: GlobalVariables,
@@ -355,14 +355,12 @@ export default class UserNodePlayer implements Player {
   // Called when userNode state is updated.
   public async setUserNodes(userNodes: UserNodes): Promise<void> {
     await this._protectedState.runExclusive(async (state) => {
-      const isUpdate = Object.keys(state.userNodes).length === Object.keys(userNodes).length;
-      if (isUpdate) {
-        for (const nodeId of Object.keys(userNodes)) {
-          const prevNode = state.userNodes[nodeId];
-          const newNode = userNodes[nodeId];
-          if (prevNode && newNode && prevNode.sourceCode !== newNode.sourceCode) {
-            this._userNodeIdsNeedUpdate.add(nodeId);
-          }
+      for (const nodeId of Object.keys(userNodes)) {
+        const prevNode = state.userNodes[nodeId];
+        const newNode = userNodes[nodeId];
+        if (prevNode && newNode && prevNode.sourceCode !== newNode.sourceCode) {
+          // if source code of a userNode changed then we need to mark it for re-processing input messages
+          this._userNodeIdsNeedUpdate.add(nodeId);
         }
       }
       state.userNodes = userNodes;
@@ -841,7 +839,8 @@ export default class UserNodePlayer implements Player {
           this._lastMessageByInputTopic.set(message.topic, message);
         }
 
-        const messagesToBeParsed = messages.concat(messagesForRecompute);
+        const messagesToBeParsed =
+          messagesForRecompute.length > 0 ? messages.concat(messagesForRecompute) : messages;
         const { parsedMessages } = await this._getMessages(
           messagesToBeParsed,
           globalVariables,
