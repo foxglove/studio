@@ -133,7 +133,7 @@ export default class UserNodePlayer implements Player {
 
   // keep track of last message on all topics to recompute output topic messages when user nodes change
   private _lastMessageByInputTopic = new Map<string, MessageEvent<unknown>>();
-  private _userNodeIdsNeedUpdate: string[] = [];
+  private _userNodeIdsNeedUpdate = new Set<string>();
 
   private _protectedState = new MutexLocked<ProtectedState>({
     userNodes: {},
@@ -363,7 +363,7 @@ export default class UserNodePlayer implements Player {
           const prevNode = state.userNodes[nodeId];
           const newNode = userNodes[nodeId];
           if (prevNode && newNode && prevNode.sourceCode !== newNode.sourceCode) {
-            this._userNodeIdsNeedUpdate.push(nodeId);
+            this._userNodeIdsNeedUpdate.add(nodeId);
           }
         }
       }
@@ -837,6 +837,7 @@ export default class UserNodePlayer implements Player {
             }
           }
         }
+        this._userNodeIdsNeedUpdate.clear();
 
         for (const message of messages) {
           this._lastMessageByInputTopic.set(message.topic, message);
