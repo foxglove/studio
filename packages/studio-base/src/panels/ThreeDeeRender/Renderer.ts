@@ -175,7 +175,9 @@ export type RendererSubscription<T = unknown> = {
   /**
    * By default, topic subscriptions are only created when the topic visibility
    * has been toggled on by the user in the settings sidebar. Override this
-   * behavior with a custom shouldSubscribe callback.
+   * behavior with a custom shouldSubscribe callback. This callback will be
+   * called whenever the list of available topics changes or when 3D panel
+   * settings are changed.
    */
   shouldSubscribe?: (topic: string) => boolean;
   /** Callback that will be fired for each matching incoming message */

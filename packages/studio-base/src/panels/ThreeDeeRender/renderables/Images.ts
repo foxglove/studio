@@ -104,6 +104,7 @@ export class ImageRenderable extends Renderable<ImageUserData> {
 
 export class Images extends SceneExtension<ImageRenderable> {
   private cameraInfoTopics = new Set<string>();
+  private cameraInfoToImageTopics = new BiMap<string, string>();
 
   public constructor(renderer: Renderer) {
     super("foxglove.Images", renderer);
@@ -123,6 +124,12 @@ export class Images extends SceneExtension<ImageRenderable> {
     });
   }
 
+  public override removeAllRenderables(): void {
+    super.removeAllRenderables();
+    this.cameraInfoTopics.clear();
+    this.cameraInfoToImageTopics.clear();
+  }
+
   public override settingsNodes(): SettingsTreeEntry[] {
     const configTopics = this.renderer.config.topics;
     const handler = this.handleSettingsAction;
@@ -138,13 +145,14 @@ export class Images extends SceneExtension<ImageRenderable> {
       ) {
         continue;
       }
-      const config = (configTopics[topic.name] ?? {}) as Partial<LayerSettingsImage>;
+      const imageTopic = topic.name;
+      const config = (configTopics[imageTopic] ?? {}) as Partial<LayerSettingsImage>;
 
       // Build a list of all matching CameraInfo topics
       const bestCameraInfoOptions: SelectEntry[] = [];
       const otherCameraInfoOptions: SelectEntry[] = [];
       for (const cameraInfoTopic of this.cameraInfoTopics) {
-        if (cameraInfoTopicMatches(topic.name, cameraInfoTopic)) {
+        if (cameraInfoTopicMatches(imageTopic, cameraInfoTopic)) {
           bestCameraInfoOptions.push({ label: cameraInfoTopic, value: cameraInfoTopic });
         } else {
           otherCameraInfoOptions.push({ label: cameraInfoTopic, value: cameraInfoTopic });
@@ -161,12 +169,12 @@ export class Images extends SceneExtension<ImageRenderable> {
       };
 
       entries.push({
-        path: ["topics", topic.name],
+        path: ["topics", imageTopic],
         node: {
           icon: "ImageProjection",
           fields,
           visible: config.visible ?? DEFAULT_SETTINGS.visible,
-          order: topic.name.toLocaleLowerCase(),
+          order: imageTopic.toLocaleLowerCase(),
           handler,
         },
       });
@@ -182,16 +190,25 @@ export class Images extends SceneExtension<ImageRenderable> {
 
     this.saveSetting(path, action.payload.value);
 
+    const imageTopic = path[1]!;
+    const settings = this.renderer.config.topics[imageTopic] as
+      | Partial<LayerSettingsImage>
+      | undefined;
+
+    // Update the camera info topic <-> image topic mapping
+    if (settings?.cameraInfoTopic != undefined) {
+      this.cameraInfoToImageTopics.set(settings.cameraInfoTopic, imageTopic);
+    } else {
+      this.cameraInfoToImageTopics.deleteByValue(imageTopic);
+    }
+
     // Update the renderable
-    const topicName = path[1]!;
-    const renderable = this.renderables.get(topicName);
+    const renderable = this.renderables.get(imageTopic);
     const image = renderable?.userData.image;
     const cameraModel = renderable?.userData.cameraModel;
     if (image && cameraModel) {
       const receiveTime = renderable.userData.receiveTime;
-      const settings = this.renderer.config.topics[topicName] as
-        | Partial<LayerSettingsImage>
-        | undefined;
+
       this._updateImageRenderable(renderable, image, cameraModel, receiveTime, settings);
     }
   };
@@ -227,32 +244,40 @@ export class Images extends SceneExtension<ImageRenderable> {
   };
 
   private handleImage = (messageEvent: PartialMessageEvent<AnyImage>, image: AnyImage): void => {
-    const topic = messageEvent.topic;
+    const imageTopic = messageEvent.topic;
     const receiveTime = toNanoSec(messageEvent.receiveTime);
     const frameId = "header" in image ? image.header.frame_id : image.frame_id;
-    const userSettings = this.renderer.config.topics[topic] as
+    const userSettings = this.renderer.config.topics[imageTopic] as
       | Partial<LayerSettingsImage>
       | undefined;
 
     // Create an ImageRenderable for this topic if it doesn't already exist
-    const renderable = this._getImageRenderable(topic, receiveTime, image, frameId, userSettings);
+    const renderable = this._getImageRenderable(
+      imageTopic,
+      receiveTime,
+      image,
+      frameId,
+      userSettings,
+    );
 
     // Auto-select settings.cameraInfoTopic if it's not already set
     const settings = renderable.userData.settings;
     if (settings.cameraInfoTopic == undefined) {
-      autoSelectCameraInfoTopic(settings, topic, this.cameraInfoTopics);
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-      if (settings.cameraInfoTopic != undefined) {
+      autoSelectCameraInfoTopic(settings, imageTopic, this.cameraInfoTopics);
+      const newCameraInfoTopic = settings.cameraInfoTopic as string | undefined;
+      if (newCameraInfoTopic != undefined) {
+        this.cameraInfoToImageTopics.set(newCameraInfoTopic, imageTopic);
         // Update user settings with the newly selected CameraInfo topic
         this.renderer.updateConfig((draft) => {
           const updatedUserSettings = { ...userSettings };
-          updatedUserSettings.cameraInfoTopic = settings.cameraInfoTopic;
-          draft.topics[topic] = updatedUserSettings;
+          updatedUserSettings.cameraInfoTopic = newCameraInfoTopic;
+          draft.topics[imageTopic] = updatedUserSettings;
         });
         this.updateSettingsTree();
       } else {
+        this.cameraInfoToImageTopics.deleteByValue(imageTopic);
         this.renderer.settings.errors.addToTopic(
-          topic,
+          imageTopic,
           NO_CAMERA_INFO_ERR,
           "No CameraInfo topic found",
         );
@@ -268,35 +293,40 @@ export class Images extends SceneExtension<ImageRenderable> {
   private handleCameraInfo = (
     messageEvent: PartialMessageEvent<CameraInfo> & PartialMessageEvent<CameraCalibration>,
   ): void => {
-    const topic = messageEvent.topic;
+    const infoTopic = messageEvent.topic;
     const receiveTime = toNanoSec(messageEvent.receiveTime);
 
-    const topicsUpdated = !this.cameraInfoTopics.has(topic);
+    const topicsUpdated = !this.cameraInfoTopics.has(infoTopic);
+    if (topicsUpdated) {
+      this.cameraInfoTopics.add(infoTopic);
+    }
     const cameraInfo = normalizeCameraInfo(messageEvent.message);
     const frameId = cameraInfo.header.frame_id;
-    const userSettings = this.renderer.config.topics[topic] as
+    const userSettings = this.renderer.config.topics[infoTopic] as
       | Partial<LayerSettingsImage>
       | undefined;
 
-    // Create an ImageRenderable for this topic if it doesn't already exist
-    const renderable = this._getImageRenderable(
-      topic,
-      receiveTime,
-      undefined,
-      frameId,
-      userSettings,
-    );
+    // Check if we have a mapping from this CameraInfo topic to an Image topic
+    const imageTopic = this.cameraInfoToImageTopics.get(infoTopic);
+    if (imageTopic != undefined) {
+      // Get the ImageRenderable for the image topic
+      const renderable = this._getImageRenderable(
+        imageTopic,
+        receiveTime,
+        undefined,
+        frameId,
+        userSettings,
+      );
 
-    const dataEqual = cameraInfosEqual(renderable.userData.cameraInfo, cameraInfo);
-    if (dataEqual) {
-      return;
-    }
-
-    const cameraModel = new PinholeCameraModel(cameraInfo);
-    renderable.userData.cameraModel = cameraModel;
-    if (renderable.userData.image) {
-      const { image, settings } = renderable.userData;
-      this._updateImageRenderable(renderable, image, cameraModel, receiveTime, settings);
+      const dataEqual = cameraInfosEqual(renderable.userData.cameraInfo, cameraInfo);
+      if (!dataEqual) {
+        const cameraModel = new PinholeCameraModel(cameraInfo);
+        renderable.userData.cameraModel = cameraModel;
+        if (renderable.userData.image) {
+          const { image, settings } = renderable.userData;
+          this._updateImageRenderable(renderable, image, cameraModel, receiveTime, settings);
+        }
+      }
     }
 
     if (topicsUpdated) {
@@ -419,24 +449,24 @@ export class Images extends SceneExtension<ImageRenderable> {
   }
 
   private _getImageRenderable(
-    topic: string,
+    imageTopic: string,
     receiveTime: bigint,
     image: AnyImage | undefined,
     frameId: string,
     userSettings: Partial<LayerSettingsImage> | undefined,
   ): ImageRenderable {
-    let renderable = this.renderables.get(topic);
+    let renderable = this.renderables.get(imageTopic);
     if (renderable) {
       return renderable;
     }
 
-    renderable = new ImageRenderable(topic, this.renderer, {
+    renderable = new ImageRenderable(imageTopic, this.renderer, {
       receiveTime,
       messageTime: image ? toNanoSec("header" in image ? image.header.stamp : image.timestamp) : 0n,
       frameId: this.renderer.normalizeFrameId(frameId),
       pose: makePose(),
-      settingsPath: ["topics", topic],
-      topic,
+      settingsPath: ["topics", imageTopic],
+      topic: imageTopic,
       settings: { ...DEFAULT_SETTINGS, ...userSettings },
       cameraInfo: undefined,
       cameraModel: undefined,
@@ -448,8 +478,7 @@ export class Images extends SceneExtension<ImageRenderable> {
     });
 
     this.add(renderable);
-    this.renderables.set(topic, renderable);
-    this.cameraInfoTopics.add(topic);
+    this.renderables.set(imageTopic, renderable);
     return renderable;
   }
 }
@@ -592,8 +621,8 @@ function createGeometry(
   return geometry;
 }
 
-export function cameraInfoTopicMatches(topic: string, cameraInfoTopic: string): boolean {
-  const imageParts = topic.split("/");
+export function cameraInfoTopicMatches(imageTopic: string, cameraInfoTopic: string): boolean {
+  const imageParts = imageTopic.split("/");
   const infoParts = cameraInfoTopic.split("/");
 
   for (let i = 0; i < imageParts.length - 1 && i < infoParts.length - 1; i++) {
@@ -727,4 +756,43 @@ function normalizeCompressedImage(message: PartialMessage<CompressedImage>): Com
     format: message.format ?? "",
     data: normalizeByteArray(message.data),
   };
+}
+
+class BiMap<TKey1, TKey2> {
+  private map1 = new Map<TKey1, TKey2>();
+  private map2 = new Map<TKey2, TKey1>();
+
+  public get(key: TKey1): TKey2 | undefined {
+    return this.map1.get(key);
+  }
+
+  public getByValue(key: TKey2): TKey1 | undefined {
+    return this.map2.get(key);
+  }
+
+  public set(key1: TKey1, key2: TKey2): void {
+    this.map1.set(key1, key2);
+    this.map2.set(key2, key1);
+  }
+
+  public delete(key: TKey1): void {
+    const value = this.map1.get(key);
+    if (value != undefined) {
+      this.map1.delete(key);
+      this.map2.delete(value);
+    }
+  }
+
+  public deleteByValue(key: TKey2): void {
+    const value = this.map2.get(key);
+    if (value != undefined) {
+      this.map2.delete(key);
+      this.map1.delete(value);
+    }
+  }
+
+  public clear(): void {
+    this.map1.clear();
+    this.map2.clear();
+  }
 }
