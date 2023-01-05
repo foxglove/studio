@@ -8,7 +8,7 @@ import ArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
 import ArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import ArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import ListIcon from "@mui/icons-material/List";
-import { Button, Divider, SvgIconProps, ToggleButton } from "@mui/material";
+import { Button, SvgIconProps, ToggleButton } from "@mui/material";
 import { clamp } from "lodash";
 import { ComponentProps, useCallback, useMemo, useRef } from "react";
 import tinycolor from "tinycolor2";
@@ -291,12 +291,6 @@ export function NewPlotLegend(props: Props): JSX.Element {
                 </footer>
               </div>
             </Stack>
-            {legendDisplay !== "floating" && (
-              <Divider
-                flexItem
-                orientation={legendDisplay === "left" ? "vertical" : "horizontal"}
-              />
-            )}
           </Stack>
         )}
         {legendDisplay !== "floating" && (
@@ -308,12 +302,14 @@ export function NewPlotLegend(props: Props): JSX.Element {
             style={
               legendDisplay === "left"
                 ? {
+                    marginLeft: -6,
                     cursor: "ew-resize",
                     borderRightWidth: 2,
                     height: "100%",
                     width: 4,
                   }
                 : {
+                    marginTop: -6,
                     cursor: "ns-resize",
                     borderBottomWidth: 2,
                     width: "100%",
