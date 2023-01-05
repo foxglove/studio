@@ -54,5 +54,12 @@ export function UserPresent(): JSX.Element {
     org,
   };
 
-  return <AppBar currentUser={me} />;
+  return (
+    <AppBar
+      currentUser={me}
+      signIn={() => {
+        // noop
+      }}
+    />
+  );
 }

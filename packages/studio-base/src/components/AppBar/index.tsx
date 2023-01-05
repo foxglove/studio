@@ -88,7 +88,7 @@ const selectPlayerName = (ctx: MessagePipelineContext) => ctx.playerState.name;
 type AppBarProps = {
   currentUser?: User;
   disableSignin?: boolean;
-  signIn: CurrentUser["signIn"];
+  signIn?: CurrentUser["signIn"];
 };
 
 export function AppBar(props: AppBarProps): JSX.Element {
