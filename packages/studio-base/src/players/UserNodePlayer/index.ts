@@ -817,7 +817,8 @@ export default class UserNodePlayer implements Player {
          * to our list of messages to be parsed so that subscribers can refresh with
          * the new output topic messages
          */
-        const messagesForRecompute: MessageEvent<unknown>[] = [];
+        const inputTopicsForRecompute = new Set<string>();
+
         for (const userNodeId of this._userNodeIdsNeedUpdate) {
           const nodeRegistration = state.nodeRegistrations.find(
             ({ nodeId }) => nodeId === userNodeId,
@@ -825,14 +826,29 @@ export default class UserNodePlayer implements Player {
           if (!nodeRegistration) {
             continue;
           }
-          const inputTopicsNeedsRecompute = nodeRegistration.inputs;
-          for (const topic of inputTopicsNeedsRecompute) {
-            const messageForRecompute = this._lastMessageByInputTopic.get(topic);
-            if (messageForRecompute) {
-              messagesForRecompute.push(messageForRecompute);
-            }
+          const inputTopics = nodeRegistration.inputs;
+
+          for (const topic of inputTopics) {
+            inputTopicsForRecompute.add(topic);
           }
         }
+
+        // remove topics that already have messages in state, because we won't need to take their last message to process
+        // this also removes possible duplicate messages to be parsed
+        for (const message of messages) {
+          if (inputTopicsForRecompute.has(message.topic)) {
+            inputTopicsForRecompute.delete(message.topic);
+          }
+        }
+
+        const messagesForRecompute: MessageEvent<unknown>[] = [];
+        for (const topic of inputTopicsForRecompute) {
+          const messageForRecompute = this._lastMessageByInputTopic.get(topic);
+          if (messageForRecompute) {
+            messagesForRecompute.push(messageForRecompute);
+          }
+        }
+
         this._userNodeIdsNeedUpdate.clear();
 
         for (const message of messages) {
