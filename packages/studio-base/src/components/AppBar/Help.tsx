@@ -148,7 +148,7 @@ export function HelpMenu({
         <ForumOutlinedIcon color="primary" />
         <ListItemText
           primary="Join us on Slack"
-          secondary=" Give us feedback, ask questions, and collaborate with other users."
+          secondary="Give us feedback, ask questions, and collaborate with other users."
           secondaryTypographyProps={{ className: classes.menuText }}
         />
       </MenuItem>
