@@ -15,8 +15,11 @@ import {
   IconButton,
   IconButtonProps,
 } from "@mui/material";
-// import Link from "next/link";
 import { makeStyles } from "tss-react/mui";
+
+import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
+import { useCurrentUserType } from "@foxglove/studio-base/context/CurrentUserContext";
+import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 
 const useStyles = makeStyles()((theme) => ({
   subheader: {
@@ -57,6 +60,8 @@ export function HelpMenu({
   open: boolean;
 }): JSX.Element {
   const { classes } = useStyles();
+  const currentUserType = useCurrentUserType();
+  const analytics = useAnalytics();
 
   return (
     <Menu
@@ -88,7 +93,13 @@ export function HelpMenu({
         className={classes.menuItem}
         component="a"
         target="_blank"
-        onClick={handleClose}
+        onClick={() => {
+          void analytics.logEvent(AppEvent.HELPMENU_CLICK_CTA, {
+            user: currentUserType,
+            cta: "docs-studio",
+          });
+          handleClose();
+        }}
       >
         <VisibilityOutlinedIcon color="primary" />
         <ListItemText
@@ -102,7 +113,13 @@ export function HelpMenu({
         className={classes.menuItem}
         component="a"
         target="_blank"
-        onClick={handleClose}
+        onClick={() => {
+          void analytics.logEvent(AppEvent.HELPMENU_CLICK_CTA, {
+            user: currentUserType,
+            cta: "docs-data-platform",
+          });
+          handleClose();
+        }}
       >
         <CloudOutlinedIcon color="primary" />
         <ListItemText
@@ -120,7 +137,13 @@ export function HelpMenu({
         className={classes.menuItem}
         component="a"
         target="_blank"
-        onClick={handleClose}
+        onClick={() => {
+          void analytics.logEvent(AppEvent.HELPMENU_CLICK_CTA, {
+            user: currentUserType,
+            cta: "join-slack",
+          });
+          handleClose();
+        }}
       >
         <ForumOutlinedIcon color="primary" />
         <ListItemText

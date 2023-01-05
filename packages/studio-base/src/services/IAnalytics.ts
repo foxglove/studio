@@ -5,6 +5,8 @@
 enum AppEventCategory {
   LIFECYCLE = "LIFECYCLE",
   DIALOG = "DIALOG",
+  APPBAR = "APPBAR",
+  HELPMENU = "HELP_MENU",
   PLAYERS = "PLAYERS",
   LAYOUTS = "LAYOUTS",
   PANELS = "PANELS",
@@ -20,6 +22,12 @@ enum AppEvent {
   DIALOG_SELECT_VIEW = "Studio: Dialog View Selected",
   DIALOG_CLOSE = "Studio: Dialog Closed",
   DIALOG_CLICK_CTA = "Studio: Dialog CTA Clicked",
+
+  // App Bar events
+  APPBAR_CLICK_CTA = "Studio: App Bar CTA CLicked",
+
+  // Help Menu events
+  HELPMENU_CLICK_CTA = "Studio: Help Menu CTA Clicked",
 
   // Player events
   PLAYER_CONSTRUCTED = "Studio: Player Constructed",
@@ -83,6 +91,12 @@ export function getEventCategory(event: AppEvent): AppEventCategory {
     case AppEvent.DIALOG_CLICK_CTA:
       return AppEventCategory.DIALOG;
 
+    case AppEvent.APPBAR_CLICK_CTA:
+      return AppEventCategory.APPBAR;
+
+    case AppEvent.HELPMENU_CLICK_CTA:
+      return AppEventCategory.HELPMENU;
+
     case AppEvent.PLAYER_CONSTRUCTED:
     case AppEvent.PLAYER_PLAY:
     case AppEvent.PLAYER_SEEK:
@@ -130,6 +144,12 @@ export function getEventBreadcrumbType(event: AppEvent): SentryBreadcrumbType {
     case AppEvent.DIALOG_SELECT_VIEW:
     case AppEvent.DIALOG_CLOSE:
     case AppEvent.DIALOG_CLICK_CTA:
+      return SentryBreadcrumbType.USER;
+
+    case AppEvent.APPBAR_CLICK_CTA:
+      return SentryBreadcrumbType.USER;
+
+    case AppEvent.HELPMENU_CLICK_CTA:
       return SentryBreadcrumbType.USER;
 
     case AppEvent.PLAYER_CONSTRUCTED:

@@ -15,11 +15,15 @@ import {
   MessagePipelineContext,
   useMessagePipeline,
 } from "@foxglove/studio-base/components/MessagePipeline";
-// import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
+import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 import ConsoleApiContext from "@foxglove/studio-base/context/ConsoleApiContext";
-import { CurrentUser, User } from "@foxglove/studio-base/context/CurrentUserContext";
-// import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
+import {
+  CurrentUser,
+  useCurrentUserType,
+  User,
+} from "@foxglove/studio-base/context/CurrentUserContext";
 import useNativeAppMenuEvent from "@foxglove/studio-base/hooks/useNativeAppMenuEvent";
+import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
 
 import { HelpIconButton, HelpMenu } from "./Help";
@@ -91,7 +95,8 @@ export function AppBar(props: AppBarProps): JSX.Element {
   const { currentUser, disableSignin, signIn } = props;
   const { classes } = useStyles();
   const playerName = useMessagePipeline(selectPlayerName);
-  // const analytics = useAnalytics();
+  const currentUserType = useCurrentUserType();
+  const analytics = useAnalytics();
 
   const supportsAccountSettings =
     useContext(ConsoleApiContext) != undefined && disableSignin !== true;
@@ -167,28 +172,52 @@ export function AppBar(props: AppBarProps): JSX.Element {
                     size="small"
                   />
                 ) : (
-                  <Button variant="contained" color="primary" onClick={signIn}>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={() => {
+                      if (signIn) {
+                        signIn();
+                        void analytics.logEvent(AppEvent.APPBAR_CLICK_CTA, {
+                          user: "unauthenticated",
+                          cta: "sign-in",
+                        });
+                      }
+                    }}
+                  >
                     Sign in
                   </Button>
                 ))}
               <PreferencesIconButton
                 color="inherit"
-                aria-label="Preferences dialog button"
                 id="preferences-button"
+                aria-label="Preferences dialog button"
                 aria-controls={prefsDialogOpen ? "preferences-dialog" : undefined}
                 aria-haspopup="true"
                 aria-expanded={prefsDialogOpen ? "true" : undefined}
-                onClick={openPreferences}
+                onClick={() => {
+                  void analytics.logEvent(AppEvent.APPBAR_CLICK_CTA, {
+                    user: currentUserType,
+                    cta: "preferences-dialog",
+                  });
+                  openPreferences();
+                }}
               />
               <HelpIconButton
-                aria-label="Help menu button"
                 color="inherit"
                 id="help-button"
+                aria-label="Help menu button"
                 aria-controls={helpMenuOpen ? "help-menu" : undefined}
                 aria-haspopup="true"
                 aria-expanded={helpMenuOpen ? "true" : undefined}
-                onClick={handleHelpClick}
                 size="large"
+                onClick={(event) => {
+                  void analytics.logEvent(AppEvent.APPBAR_CLICK_CTA, {
+                    user: currentUserType,
+                    cta: "help-menu",
+                  });
+                  handleHelpClick(event);
+                }}
               />
             </div>
           </Toolbar>
