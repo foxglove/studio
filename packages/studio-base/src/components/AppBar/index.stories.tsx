@@ -37,6 +37,10 @@ export function Default(): JSX.Element {
   return <AppBar />;
 }
 
+export function SignInDisabled(): JSX.Element {
+  return <AppBar disableSignin />;
+}
+
 export function UserPresent(): JSX.Element {
   const org: User["org"] = {
     id: "fake-orgid",

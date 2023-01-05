@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { AppBar as MuiAppBar, Button, IconButton, Toolbar, Typography } from "@mui/material";
-import { MouseEvent, useCallback, useState } from "react";
+import { MouseEvent, useCallback, useContext, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 
 import {
@@ -16,12 +16,11 @@ import {
   useMessagePipeline,
 } from "@foxglove/studio-base/components/MessagePipeline";
 // import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
-// import ConsoleApiContext from "@foxglove/studio-base/context/ConsoleApiContext";
+import ConsoleApiContext from "@foxglove/studio-base/context/ConsoleApiContext";
 import { CurrentUser, User } from "@foxglove/studio-base/context/CurrentUserContext";
 // import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 import useNativeAppMenuEvent from "@foxglove/studio-base/hooks/useNativeAppMenuEvent";
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
-// USEME: import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
 
 import { HelpIconButton, HelpMenu } from "./Help";
 import { UserIconButton, UserMenu } from "./User";
@@ -80,10 +79,7 @@ const useStyles = makeStyles()((theme) => ({
   },
 }));
 
-// const selectStartTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.startTime;
-// const selectEndTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.endTime;
 const selectPlayerName = (ctx: MessagePipelineContext) => ctx.playerState.name;
-// const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => playerState.presence;
 
 type AppBarProps = {
   currentUser?: User;
@@ -95,12 +91,10 @@ export function AppBar(props: AppBarProps): JSX.Element {
   const { currentUser, disableSignin, signIn } = props;
   const { classes } = useStyles();
   const playerName = useMessagePipeline(selectPlayerName);
-  // const startTime = useMessagePipeline(selectStartTime);
-  // const endTime = useMessagePipeline(selectEndTime);
   // const analytics = useAnalytics();
 
-  // const supportsAccountSettings =
-  //   useContext(ConsoleApiContext) != undefined && disableSignin !== true;
+  const supportsAccountSettings =
+    useContext(ConsoleApiContext) != undefined && disableSignin !== true;
 
   const [helpAnchorEl, setHelpAnchorEl] = useState<undefined | HTMLElement>(undefined);
   const [userAnchorEl, setUserAnchorEl] = useState<undefined | HTMLElement>(undefined);
@@ -160,7 +154,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
             )}
 
             <div className={classes.end}>
-              {disableSignin !== true &&
+              {supportsAccountSettings &&
                 (currentUser ? (
                   <UserIconButton
                     aria-label="User profile menu button"
