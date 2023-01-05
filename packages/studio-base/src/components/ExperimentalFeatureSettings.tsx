@@ -63,9 +63,7 @@ const features: Feature[] = [
   {
     key: AppSetting.ENABLE_NEW_UI,
     name: "Enable new user interface",
-    description: (
-      <>Try out redesigned navigation and layout. Warning: We’re still figuring it our</>
-    ),
+    description: <>Try our redesigned navigation and layout.</>,
   },
 ];
 if (process.env.NODE_ENV === "development") {
