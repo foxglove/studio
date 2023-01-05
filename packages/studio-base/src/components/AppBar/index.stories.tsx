@@ -5,13 +5,14 @@
 import { Story } from "@storybook/react";
 
 import { AppBar } from "@foxglove/studio-base/components/AppBar";
+import MockMessagePipelineProvider from "@foxglove/studio-base/components/MessagePipeline/MockMessagePipelineProvider";
 import ConsoleApiContext from "@foxglove/studio-base/context/ConsoleApiContext";
 import ConsoleApi, { User } from "@foxglove/studio-base/services/ConsoleApi";
 
 export default {
   title: "components/AppBar",
   component: AppBar,
-  decorator: [Wrapper],
+  decorators: [Wrapper],
 };
 
 class FakeConsoleApi extends ConsoleApi {
@@ -24,9 +25,11 @@ const fakeConsoleApi = new FakeConsoleApi();
 
 function Wrapper(StoryFn: Story): JSX.Element {
   return (
-    <ConsoleApiContext.Provider value={fakeConsoleApi}>
-      <StoryFn />
-    </ConsoleApiContext.Provider>
+    <MockMessagePipelineProvider>
+      <ConsoleApiContext.Provider value={fakeConsoleApi}>
+        <StoryFn />
+      </ConsoleApiContext.Provider>
+    </MockMessagePipelineProvider>
   );
 }
 
