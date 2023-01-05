@@ -233,7 +233,6 @@ export default class UserNodePlayer implements Player {
     parsedMessages: readonly MessageEvent<unknown>[],
     globalVariables: GlobalVariables,
     nodeRegistrations: readonly NodeRegistration[],
-    { forceRecompute }: { forceRecompute: boolean } = { forceRecompute: false },
   ): Promise<{
     parsedMessages: readonly MessageEvent<unknown>[];
   }> {
@@ -242,7 +241,6 @@ export default class UserNodePlayer implements Player {
       return { parsedMessages };
     }
     if (
-      !forceRecompute &&
       shallowequal(this._lastGetMessagesInput, {
         parsedMessages,
         globalVariables,
