@@ -151,6 +151,21 @@ export function NewPlotLegend(props: Props): JSX.Element {
     [showLegend, saveConfig],
   );
 
+  const addSeries = useCallback(() => {
+    saveConfig((old) => ({
+      ...old,
+      paths: [
+        ...old.paths,
+        {
+          timestampMethod: "receiveTime",
+          value: "",
+          label: `Series ${old.paths.length + 1}`,
+          enabled: true,
+        },
+      ],
+    }));
+  }, [saveConfig]);
+
   const toggleIcon = useMemo(() => {
     const iconProps = {
       fontSize: "inherit",
@@ -263,7 +278,7 @@ export function NewPlotLegend(props: Props): JSX.Element {
                   size="small"
                   startIcon={<AddIcon />}
                   fullWidth
-                  onClick={() => {}}
+                  onClick={() => addSeries()}
                 >
                   Add series
                 </Button>
