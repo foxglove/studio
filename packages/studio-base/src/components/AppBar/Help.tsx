@@ -94,7 +94,7 @@ export function HelpMenu({
         component="a"
         target="_blank"
         onClick={() => {
-          void analytics.logEvent(AppEvent.HELPMENU_CLICK_CTA, {
+          void analytics.logEvent(AppEvent.HELP_MENU_CLICK_CTA, {
             user: currentUserType,
             cta: "docs-studio",
           });
@@ -114,7 +114,7 @@ export function HelpMenu({
         component="a"
         target="_blank"
         onClick={() => {
-          void analytics.logEvent(AppEvent.HELPMENU_CLICK_CTA, {
+          void analytics.logEvent(AppEvent.HELP_MENU_CLICK_CTA, {
             user: currentUserType,
             cta: "docs-data-platform",
           });
@@ -138,7 +138,7 @@ export function HelpMenu({
         component="a"
         target="_blank"
         onClick={() => {
-          void analytics.logEvent(AppEvent.HELPMENU_CLICK_CTA, {
+          void analytics.logEvent(AppEvent.HELP_MENU_CLICK_CTA, {
             user: currentUserType,
             cta: "join-slack",
           });

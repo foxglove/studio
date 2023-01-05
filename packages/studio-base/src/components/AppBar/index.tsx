@@ -178,7 +178,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
                     onClick={() => {
                       if (signIn) {
                         signIn();
-                        void analytics.logEvent(AppEvent.APPBAR_CLICK_CTA, {
+                        void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
                           user: "unauthenticated",
                           cta: "sign-in",
                         });
@@ -196,7 +196,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
                 aria-haspopup="true"
                 aria-expanded={prefsDialogOpen ? "true" : undefined}
                 onClick={() => {
-                  void analytics.logEvent(AppEvent.APPBAR_CLICK_CTA, {
+                  void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
                     user: currentUserType,
                     cta: "preferences-dialog",
                   });
@@ -212,7 +212,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
                 aria-expanded={helpMenuOpen ? "true" : undefined}
                 size="large"
                 onClick={(event) => {
-                  void analytics.logEvent(AppEvent.APPBAR_CLICK_CTA, {
+                  void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
                     user: currentUserType,
                     cta: "help-menu",
                   });
