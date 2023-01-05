@@ -43,18 +43,19 @@ type StyleProps = {
 };
 
 const useStyles = makeStyles<StyleProps, "container" | "toggleButton">()(
-  (theme, { legendDisplay, sidebarDimension }, classes) => ({
+  ({ palette, shape, spacing, typography }, _params, classes) => ({
     root: {
       display: "flex",
       overflow: "hidden",
     },
     rootFloating: {
-      gap: theme.spacing(0.5),
+      gap: spacing(0.5),
       height: `calc(100% - ${PANEL_TOOLBAR_MIN_HEIGHT}px)`,
-      borderRadius: theme.shape.borderRadius,
+      borderRadius: shape.borderRadius,
       position: "absolute",
-      top: theme.spacing(5.25),
-      left: theme.spacing(4),
+      top: spacing(5.25),
+      left: spacing(4),
+      bottom: spacing(6),
       zIndex: 1000,
       backgroundColor: "transparent",
       alignItems: "flex-start",
@@ -62,37 +63,32 @@ const useStyles = makeStyles<StyleProps, "container" | "toggleButton">()(
       [`.${classes.container}`]: {
         backgroundImage: `linear-gradient(${[
           "0deg",
-          tinycolor(theme.palette.background.default).setAlpha(0.2).toHex8String(),
-          tinycolor(theme.palette.background.default).setAlpha(0.2).toHex8String(),
+          tinycolor(palette.background.default).setAlpha(0.2).toHex8String(),
+          tinycolor(palette.background.default).setAlpha(0.2).toHex8String(),
         ].join(" ,")})`,
-        backgroundColor: tinycolor(theme.palette.background.paper).setAlpha(0.8).toHex8String(),
+        backgroundColor: tinycolor(palette.background.paper).setAlpha(0.8).toHex8String(),
       },
 
       [`.${classes.toggleButton}`]: {
-        backgroundColor: tinycolor(theme.palette.background.paper).setAlpha(0.8).toHex8String(),
+        backgroundColor: tinycolor(palette.background.paper).setAlpha(0.8).toHex8String(),
         backgroundImage: `linear-gradient(${[
           "0deg",
-          tinycolor(theme.palette.background.default).setAlpha(0.2).toHex8String(),
-          tinycolor(theme.palette.background.default).setAlpha(0.2).toHex8String(),
+          tinycolor(palette.background.default).setAlpha(0.2).toHex8String(),
+          tinycolor(palette.background.default).setAlpha(0.2).toHex8String(),
         ].join(" ,")})`,
 
         "&:hover":
-          theme.palette.mode === "dark"
+          palette.mode === "dark"
             ? {
                 backgroundImage: `linear-gradient(0deg, ${[
-                  tinycolor(theme.palette.background.default).setAlpha(0.2).toHex8String(),
-                  tinycolor(theme.palette.background.default).setAlpha(0.2).toHex8String(),
+                  tinycolor(palette.background.default).setAlpha(0.2).toHex8String(),
+                  tinycolor(palette.background.default).setAlpha(0.2).toHex8String(),
                 ].join(",")}),
-                linear-gradient(0deg, ${[
-                  theme.palette.action.hover,
-                  theme.palette.action.hover,
-                ].join(",")})`,
-                backgroundColor: tinycolor(theme.palette.background.paper)
-                  .setAlpha(0.8)
-                  .toHex8String(),
+                linear-gradient(0deg, ${[palette.action.hover, palette.action.hover].join(",")})`,
+                backgroundColor: tinycolor(palette.background.paper).setAlpha(0.8).toHex8String(),
               }
             : {
-                backgroundColor: theme.palette.background.paper,
+                backgroundColor: palette.background.paper,
               },
       },
     },
@@ -110,49 +106,27 @@ const useStyles = makeStyles<StyleProps, "container" | "toggleButton">()(
       alignItems: "center",
       overflow: "auto",
       display: "grid",
-      gridTemplateColumns: "auto minmax(max-content, 1fr) auto",
+      gridTemplateColumns: "auto minmax(max-content, 1fr) minmax(max-content, 1fr) auto",
     },
     dragHandle: {
       userSelect: "none",
-      border: `0px solid ${theme.palette.action.hover}`,
-      ...(legendDisplay === "left"
-        ? {
-            cursor: "ew-resize",
-            borderRightWidth: 2,
-            height: "100%",
-            width: theme.spacing(0.5),
-          }
-        : {
-            cursor: "ns-resize",
-            borderBottomWidth: 2,
-            height: theme.spacing(0.5),
-            width: "100%",
-          }),
+      border: `0px solid ${palette.action.hover}`,
 
       "&:hover": {
-        borderColor: theme.palette.action.selected,
+        borderColor: palette.action.selected,
       },
     },
-    wrapperContent: {
-      display: "flex",
-      flexDirection: "column",
-      flexGrow: 1,
-      gap: theme.spacing(0.5),
-      overflow: "auto",
-      height: legendDisplay === "top" ? Math.round(sidebarDimension) : "auto",
-      width: legendDisplay === "left" ? Math.round(sidebarDimension) : "auto",
-    },
     footer: {
-      gridColumn: "span 3",
-      padding: theme.spacing(0.5),
+      gridColumn: "1/-1",
+      padding: spacing(0.5),
     },
     addButton: {
       minWidth: 100,
-      backgroundColor: `${theme.palette.action.hover} !important`,
+      backgroundColor: `${palette.action.hover} !important`,
     },
     toggleButton: {
-      fontSize: theme.typography.pxToRem(20),
-      padding: theme.spacing(0.5),
+      fontSize: typography.pxToRem(20),
+      padding: spacing(0.5),
       border: "none",
     },
   }),
@@ -191,18 +165,6 @@ export function NewPlotLegend(props: Props): JSX.Element {
         return showLegend ? <ArrowUpIcon {...iconProps} /> : <ArrowDownIcon {...iconProps} />;
     }
   }, [legendDisplay, showLegend]);
-
-  const togglePath = useCallback(
-    (index: number) => {
-      const newPaths = paths.slice();
-      const newPath = newPaths[index];
-      if (newPath) {
-        newPaths[index] = { ...newPath, enabled: !newPath.enabled };
-      }
-      saveConfig({ paths: newPaths });
-    },
-    [paths, saveConfig],
-  );
 
   const dragStart = useRef({ x: 0, y: 0, sidebarDimension: 0 });
 
@@ -262,7 +224,15 @@ export function NewPlotLegend(props: Props): JSX.Element {
         {toggleIcon}
       </ToggleButton>
       {showLegend && (
-        <div className={classes.wrapperContent}>
+        <Stack
+          flexGrow={1}
+          gap={0.5}
+          overflow="auto"
+          style={{
+            height: legendDisplay === "top" ? Math.round(sidebarDimension) : "auto",
+            width: legendDisplay === "left" ? Math.round(sidebarDimension) : "auto",
+          }}
+        >
           <Stack
             flex="auto"
             fullWidth
@@ -295,7 +265,7 @@ export function NewPlotLegend(props: Props): JSX.Element {
                   fullWidth
                   onClick={() => {}}
                 >
-                  Add line
+                  Add series
                 </Button>
               </footer>
             </div>
@@ -303,7 +273,7 @@ export function NewPlotLegend(props: Props): JSX.Element {
           {legendDisplay !== "floating" && (
             <Divider flexItem orientation={legendDisplay === "left" ? "vertical" : "horizontal"} />
           )}
-        </div>
+        </Stack>
       )}
       {legendDisplay !== "floating" && (
         <div
@@ -311,6 +281,21 @@ export function NewPlotLegend(props: Props): JSX.Element {
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
+          style={
+            legendDisplay === "left"
+              ? {
+                  cursor: "ew-resize",
+                  borderRightWidth: 2,
+                  height: "100%",
+                  width: 4,
+                }
+              : {
+                  cursor: "ns-resize",
+                  borderBottomWidth: 2,
+                  width: "100%",
+                  height: 4,
+                }
+          }
         />
       )}
     </div>

@@ -2,18 +2,15 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import CheckIcon from "@mui/icons-material/Check";
 import CircleIcon from "@mui/icons-material/Circle";
 import CircleOutlinedIcon from "@mui/icons-material/CircleOutlined";
+import CircleTwoToneIcon from "@mui/icons-material/CircleTwoTone";
 import CloseIcon from "@mui/icons-material/Close";
-import EditIcon from "@mui/icons-material/Edit";
 import ErrorIcon from "@mui/icons-material/Error";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-import { IconButton, InputBase, Tooltip, Typography, useTheme } from "@mui/material";
-import produce from "immer";
-import { ChangeEvent, ComponentProps, useCallback, useMemo, useState } from "react";
+import { IconButton, Tooltip, Typography } from "@mui/material";
+import { ComponentProps, useMemo, useState } from "react";
+import tinycolor from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
-import { useImmer } from "use-immer";
 import { v4 as uuidv4 } from "uuid";
 
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
@@ -36,7 +33,9 @@ type PlotLegendRowProps = {
   showPlotValuesInLegend: boolean;
 };
 
-const useStyles = makeStyles()((theme) => ({
+const ROW_HEIGHT = 28;
+
+const useStyles = makeStyles<void, "plotName">()((theme, _params, classes) => ({
   root: {
     display: "contents",
 
@@ -45,18 +44,18 @@ const useStyles = makeStyles()((theme) => ({
         opacity: 1,
       },
       "& > *": {
-        backgroundColor: theme.palette.action.hover,
+        backgroundColor: theme.palette.background.paper,
+        backgroundImage: `linear-gradient(${[
+          "0deg",
+          tinycolor(theme.palette.action.hover).setAlpha(0.2).toHex8String(),
+          tinycolor(theme.palette.action.hover).setAlpha(0.2).toHex8String(),
+        ].join(" ,")})`,
       },
     },
   },
-  editNameField: {
-    font: "inherit",
-    gridColumn: "span 2",
-    width: "100%",
-    fontSize: theme.typography.pxToRem(16),
-
-    input: {
-      height: "100%",
+  showPlotValue: {
+    [`.${classes.plotName}`]: {
+      gridColumn: "span 1",
     },
   },
   listIcon: {
@@ -65,23 +64,25 @@ const useStyles = makeStyles()((theme) => ({
     position: "sticky",
     left: 0,
     padding: theme.spacing(0, 0.25),
-    height: 28,
+    height: ROW_HEIGHT,
   },
   legendIconButton: {
     padding: `${theme.spacing(0.75)} !important`,
     marginLeft: theme.spacing(0.125),
     fontSize: theme.typography.pxToRem(14),
   },
-  inputWrapper: {
+  plotName: {
     display: "flex",
     alignItems: "center",
-    height: 28,
+    height: ROW_HEIGHT,
     padding: theme.spacing(0, 0.25),
     minWidth: 140,
+    gridColumn: "span 2",
   },
   plotValue: {
     display: "flex",
     alignItems: "center",
+    height: ROW_HEIGHT,
     padding: theme.spacing(0.25),
   },
   actionButton: {
@@ -93,7 +94,7 @@ const useStyles = makeStyles()((theme) => ({
     },
   },
   actions: {
-    height: 28,
+    height: ROW_HEIGHT,
     display: "flex",
     flexDirection: "row",
     alignItems: "center",
@@ -122,8 +123,7 @@ export function NewPlotLegendRow({
   const { openPanelSettings } = useWorkspace();
   const { id: panelId } = usePanelContext();
   const { setSelectedPanelIds } = useSelectedPanels();
-  const theme = useTheme();
-  const { classes } = useStyles();
+  const { classes, cx } = useStyles();
 
   const correspondingData = useMemo(() => {
     if (!showPlotValuesInLegend) {
@@ -139,14 +139,10 @@ export function NewPlotLegendRow({
   });
 
   const [hover, setHover] = useState(false);
-  const [state, setState] = useImmer<{ editing: boolean }>({ editing: false });
 
-  const currentDisplay = useMemo(() => {
+  const currentValue = useMemo(() => {
     if (!showPlotValuesInLegend) {
-      return {
-        value: undefined,
-        color: "inherit",
-      };
+      return undefined;
     }
     const timeToCompare = hoverValue?.value ?? currentTime;
 
@@ -157,42 +153,19 @@ export function NewPlotLegendRow({
       }
       value = pt.y;
     }
-    return {
-      value,
-      color: hoverValue?.value != undefined ? theme.palette.warning.main : "inherit",
-    };
-  }, [showPlotValuesInLegend, hoverValue?.value, currentTime, theme.palette, correspondingData]);
-
-  const toggleEditing = useCallback(
-    () =>
-      setState((draft) => {
-        draft.editing = !draft.editing;
-      }),
-    [setState],
-  );
-
-  const onEditLabel = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => {
-      savePaths(
-        produce(paths, (draft) => {
-          draft[index]!.label = event.target.value;
-        }),
-      );
-    },
-    [index, paths, savePaths],
-  );
-
-  const onLabelKeyDown = useCallback(
-    (event: React.KeyboardEvent) => {
-      if (event.key === "Enter" || event.key === "Escape") {
-        toggleEditing();
-      }
-    },
-    [toggleEditing],
-  );
+    return value;
+  }, [showPlotValuesInLegend, hoverValue?.value, currentTime, correspondingData]);
 
   return (
-    <div className={classes.root}>
+    <div
+      className={cx(classes.root, {
+        [classes.showPlotValue]: showPlotValuesInLegend,
+      })}
+      onClick={() => {
+        setSelectedPanelIds([panelId]);
+        openPanelSettings();
+      }}
+    >
       <div className={classes.listIcon}>
         <IconButton
           className={classes.legendIconButton}
@@ -201,9 +174,12 @@ export function NewPlotLegendRow({
           title="Toggle visibility"
           onMouseEnter={() => setHover(true)}
           onMouseLeave={() => setHover(false)}
-          onClick={() => {
+          onClick={(event) => {
+            event.stopPropagation();
+
             const newPaths = paths.slice();
             const newPath = newPaths[index];
+
             if (newPath) {
               newPaths[index] = { ...newPath, enabled: !newPath.enabled };
             }
@@ -211,29 +187,22 @@ export function NewPlotLegendRow({
           }}
           style={{ color: getLineColor(path.color, index) }}
         >
-          {path.enabled || hover ? (
+          {path.enabled ? (
             <CircleIcon fontSize="inherit" />
+          ) : hover ? (
+            <CircleTwoToneIcon fontSize="inherit" />
           ) : (
             <CircleOutlinedIcon fontSize="inherit" />
           )}
         </IconButton>
       </div>
-      <div className={classes.inputWrapper}>
-        {state.editing ? (
-          <InputBase
-            className={classes.editNameField}
-            autoFocus
-            onChange={onEditLabel}
-            value={path.label}
-            onBlur={toggleEditing}
-            onKeyDown={onLabelKeyDown}
-            onFocus={(event) => event.target.select()}
-          />
-        ) : (
-          <Typography noWrap={true} flex="auto" variant="subtitle2">
-            {path.label ?? path.value}
-          </Typography>
-        )}
+      <div
+        className={classes.plotName}
+        style={{ gridColumn: !showPlotValuesInLegend ? "span 2" : undefined }}
+      >
+        <Typography noWrap={true} flex="auto" variant="subtitle2">
+          {path.label ?? `Series ${index + 1}`}
+        </Typography>
         {hasMismatchedDataLength && (
           <Tooltip
             placement="top"
@@ -244,53 +213,18 @@ export function NewPlotLegendRow({
         )}
       </div>
       {showPlotValuesInLegend && (
-        <div className={classes.plotValue} style={{ color: currentDisplay.color }}>
-          <Typography component="div" variant="body2" align="right" color="inherit">
-            {currentDisplay.value ?? ""}
+        <div className={classes.plotValue}>
+          <Typography
+            component="div"
+            variant="body2"
+            align="right"
+            color={hoverValue?.value != undefined ? "warning.main" : "inherit"}
+          >
+            {currentValue ?? ""}
           </Typography>
         </div>
       )}
       <div className={classes.actions}>
-        {state.editing ? (
-          <IconButton
-            className={classes.actionButton}
-            title="Rename"
-            data-node-function="edit-label"
-            color="primary"
-            size="small"
-            onClick={(event) => {
-              event.stopPropagation();
-              toggleEditing();
-            }}
-          >
-            <CheckIcon fontSize="small" />
-          </IconButton>
-        ) : (
-          <IconButton
-            className={classes.actionButton}
-            title="Rename"
-            size="small"
-            data-node-function="edit-label"
-            color="primary"
-            onClick={(event) => {
-              event.stopPropagation();
-              toggleEditing();
-            }}
-          >
-            <EditIcon fontSize="small" />
-          </IconButton>
-        )}
-        <IconButton
-          className={classes.actionButton}
-          size="small"
-          title="Edit settings"
-          onClick={() => {
-            setSelectedPanelIds([panelId]);
-            openPanelSettings();
-          }}
-        >
-          <MoreVertIcon fontSize="small" />
-        </IconButton>
         <IconButton
           className={classes.actionButton}
           size="small"
