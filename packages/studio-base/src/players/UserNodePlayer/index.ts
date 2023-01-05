@@ -133,6 +133,7 @@ export default class UserNodePlayer implements Player {
 
   // keep track of last message on all topics to recompute output topic messages when user nodes change
   private _lastMessageByInputTopic = new Map<string, MessageEvent<unknown>>();
+  private _userNodeIdsNeedUpdate: string[] = [];
 
   private _protectedState = new MutexLocked<ProtectedState>({
     userNodes: {},
@@ -355,8 +356,17 @@ export default class UserNodePlayer implements Player {
 
   // Called when userNode state is updated.
   public async setUserNodes(userNodes: UserNodes): Promise<void> {
-    const newPlayerState = await this._protectedState.runExclusive(async (state) => {
+    await this._protectedState.runExclusive(async (state) => {
       const isUpdate = Object.keys(state.userNodes).length === Object.keys(userNodes).length;
+      if (isUpdate) {
+        for (const nodeId of Object.keys(userNodes)) {
+          const prevNode = state.userNodes[nodeId];
+          const newNode = userNodes[nodeId];
+          if (prevNode && newNode && prevNode.sourceCode !== newNode.sourceCode) {
+            this._userNodeIdsNeedUpdate.push(nodeId);
+          }
+        }
+      }
       state.userNodes = userNodes;
 
       // Prune the node registration cache so it doesn't grow forever.
@@ -366,42 +376,7 @@ export default class UserNodePlayer implements Player {
       // This code causes us to reset workers twice because the seeking resets the workers too
       await this._resetWorkersUnlocked(state);
       this._setSubscriptionsUnlocked(this._subscriptions, state);
-
-      // no need to re-process messages in these cases, setSubscription will handle non-update case
-      if (!isUpdate || !this._playerState?.activeData) {
-        return;
-      }
-      // Need re-process last message from all active input topics to make sure output topics are updated
-      // with new messages when user nodes are saved
-      const lastMessages: MessageEvent<unknown>[] = [];
-      for (const topic of this._playerState.activeData.topics) {
-        const message = this._lastMessageByInputTopic.get(topic.name);
-        if (message) {
-          lastMessages.push(message);
-        }
-      }
-
-      const { parsedMessages } = await this._getMessages(
-        lastMessages,
-        this._globalVariables,
-        state.nodeRegistrations,
-        // need to force recompute in case message array is same as previous, otherwise it will return memoized value
-        { forceRecompute: true },
-      );
-
-      state.lastPlayerStateActiveData = this._playerState.activeData;
-      return {
-        ...this._playerState,
-        activeData: {
-          ...this._playerState.activeData,
-          messages: parsedMessages,
-        },
-      };
     });
-    if (newPlayerState) {
-      this._playerState = newPlayerState;
-      await this._emitState();
-    }
   }
 
   // Defines the inputs/outputs and worker interface of a user node.
@@ -841,12 +816,35 @@ export default class UserNodePlayer implements Player {
 
         const allDatatypes = this._getDatatypes(datatypes, this._memoizedNodeDatatypes);
 
+        /**
+         * if nodes have been updated we need to add their previous input messages
+         * to our list of messages to be parsed so that subscribers can refresh with
+         * the new output topic messages
+         */
+        const messagesForRecompute: MessageEvent<unknown>[] = [];
+        for (const userNodeId of this._userNodeIdsNeedUpdate) {
+          const nodeRegistration = state.nodeRegistrations.find(
+            ({ nodeId }) => nodeId === userNodeId,
+          );
+          if (!nodeRegistration) {
+            continue;
+          }
+          const inputTopicsNeedsRecompute = nodeRegistration.inputs;
+          for (const topic of inputTopicsNeedsRecompute) {
+            const messageForRecompute = this._lastMessageByInputTopic.get(topic);
+            if (messageForRecompute) {
+              messagesForRecompute.push(messageForRecompute);
+            }
+          }
+        }
+
         for (const message of messages) {
           this._lastMessageByInputTopic.set(message.topic, message);
         }
 
+        const messagesToBeParsed = messages.concat(messagesForRecompute);
         const { parsedMessages } = await this._getMessages(
-          messages,
+          messagesToBeParsed,
           globalVariables,
           state.nodeRegistrations,
         );

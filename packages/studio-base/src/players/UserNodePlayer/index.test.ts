@@ -434,7 +434,7 @@ describe("UserNodePlayer", () => {
       const { messages: newMessages }: any = await nextDone;
 
       expect(mockAddUserNodeLogs).toHaveBeenCalledTimes(1);
-      expect(messages).toBe(newMessages);
+      expect(messages).toEqual(newMessages);
     });
 
     it("subscribes to underlying topics when nodeInfo is added", async () => {
