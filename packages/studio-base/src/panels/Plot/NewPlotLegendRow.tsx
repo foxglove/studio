@@ -9,7 +9,6 @@ import CloseIcon from "@mui/icons-material/Close";
 import ErrorIcon from "@mui/icons-material/Error";
 import { IconButton, Tooltip, Typography } from "@mui/material";
 import { ComponentProps, useMemo, useState } from "react";
-import tinycolor from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 import { v4 as uuidv4 } from "uuid";
 
@@ -47,8 +46,8 @@ const useStyles = makeStyles<void, "plotName">()((theme, _params, classes) => ({
         backgroundColor: theme.palette.background.paper,
         backgroundImage: `linear-gradient(${[
           "0deg",
-          tinycolor(theme.palette.action.hover).setAlpha(0.2).toHex8String(),
-          tinycolor(theme.palette.action.hover).setAlpha(0.2).toHex8String(),
+          theme.palette.action.focus,
+          theme.palette.action.focus,
         ].join(" ,")})`,
       },
     },
@@ -62,9 +61,9 @@ const useStyles = makeStyles<void, "plotName">()((theme, _params, classes) => ({
     display: "flex",
     alignItems: "center",
     position: "sticky",
-    left: 0,
     padding: theme.spacing(0, 0.25),
     height: ROW_HEIGHT,
+    left: 0,
   },
   legendIconButton: {
     padding: `${theme.spacing(0.75)} !important`,
@@ -75,8 +74,7 @@ const useStyles = makeStyles<void, "plotName">()((theme, _params, classes) => ({
     display: "flex",
     alignItems: "center",
     height: ROW_HEIGHT,
-    padding: theme.spacing(0, 0.25),
-    minWidth: 140,
+    padding: theme.spacing(0, 1, 0, 0.25),
     gridColumn: "span 2",
   },
   plotValue: {

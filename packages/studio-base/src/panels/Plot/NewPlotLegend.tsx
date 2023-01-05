@@ -49,18 +49,20 @@ const useStyles = makeStyles<StyleProps, "container" | "toggleButton">()(
       overflow: "hidden",
     },
     rootFloating: {
+      pointerEvents: "none",
       gap: spacing(0.5),
-      height: `calc(100% - ${PANEL_TOOLBAR_MIN_HEIGHT}px)`,
       borderRadius: shape.borderRadius,
       position: "absolute",
       top: spacing(5.25),
       left: spacing(4),
-      bottom: spacing(6),
       zIndex: 1000,
       backgroundColor: "transparent",
       alignItems: "flex-start",
+      height: `calc(100% - ${PANEL_TOOLBAR_MIN_HEIGHT}px - ${spacing(5.25)})`,
+      overflow: "hidden",
 
       [`.${classes.container}`]: {
+        pointerEvents: "auto",
         backgroundImage: `linear-gradient(${[
           "0deg",
           tinycolor(palette.background.default).setAlpha(0.2).toHex8String(),
@@ -70,6 +72,7 @@ const useStyles = makeStyles<StyleProps, "container" | "toggleButton">()(
       },
 
       [`.${classes.toggleButton}`]: {
+        pointerEvents: "auto",
         backgroundColor: tinycolor(palette.background.paper).setAlpha(0.8).toHex8String(),
         backgroundImage: `linear-gradient(${[
           "0deg",
@@ -106,7 +109,7 @@ const useStyles = makeStyles<StyleProps, "container" | "toggleButton">()(
       alignItems: "center",
       overflow: "auto",
       display: "grid",
-      gridTemplateColumns: "auto minmax(max-content, 1fr) minmax(max-content, 1fr) auto",
+      gridTemplateColumns: "auto minmax(max-content, 1fr) max-content auto",
     },
     dragHandle: {
       userSelect: "none",
@@ -229,90 +232,97 @@ export function NewPlotLegend(props: Props): JSX.Element {
         [classes.rootTop]: legendDisplay === "top",
       })}
     >
-      <ToggleButton
-        className={classes.toggleButton}
-        aria-label={showLegend ? "Show legend" : "Hide legend"}
-        value={showLegend ? "show" : "hide"}
-        onClick={toggleLegend}
-        size="small"
+      <Stack
+        direction={legendDisplay === "top" ? "column" : "row"}
+        alignItems={legendDisplay === "floating" ? "flex-start" : undefined}
+        gap={0.5}
+        fullHeight
       >
-        {toggleIcon}
-      </ToggleButton>
-      {showLegend && (
-        <Stack
-          flexGrow={1}
-          gap={0.5}
-          overflow="auto"
-          style={{
-            height: legendDisplay === "top" ? Math.round(sidebarDimension) : "auto",
-            width: legendDisplay === "left" ? Math.round(sidebarDimension) : "auto",
-          }}
+        <ToggleButton
+          className={classes.toggleButton}
+          aria-label={showLegend ? "Show legend" : "Hide legend"}
+          value={showLegend ? "show" : "hide"}
+          onClick={toggleLegend}
+          size="small"
         >
+          {toggleIcon}
+        </ToggleButton>
+        {showLegend && (
           <Stack
-            flex="auto"
-            fullWidth
+            flexGrow={1}
+            gap={0.5}
+            overflow="auto"
+            fullHeight={legendDisplay === "floating"}
             style={{
-              height:
-                legendDisplay === "floating"
-                  ? `calc(100% - ${PANEL_TOOLBAR_MIN_HEIGHT}px)`
-                  : "100%",
+              height: legendDisplay === "top" ? Math.round(sidebarDimension) : undefined,
+              width: legendDisplay === "left" ? Math.round(sidebarDimension) : undefined,
             }}
           >
-            <div className={classes.container}>
-              {paths.map((path, index) => (
-                <NewPlotLegendRow
-                  key={index}
-                  index={index}
-                  path={path}
-                  paths={paths}
-                  hasMismatchedDataLength={pathsWithMismatchedDataLengths.includes(path.value)}
-                  datasets={datasets}
-                  currentTime={currentTime}
-                  savePaths={savePaths}
-                  showPlotValuesInLegend={showPlotValuesInLegend}
-                />
-              ))}
-              <footer className={classes.footer}>
-                <Button
-                  className={classes.addButton}
-                  size="small"
-                  startIcon={<AddIcon />}
-                  fullWidth
-                  onClick={() => addSeries()}
-                >
-                  Add series
-                </Button>
-              </footer>
-            </div>
+            <Stack
+              flex="auto"
+              fullWidth
+              fullHeight={legendDisplay === "floating"}
+              overflow={legendDisplay === "floating" ? "auto" : undefined}
+            >
+              <div className={classes.container}>
+                {paths.map((path, index) => (
+                  <NewPlotLegendRow
+                    key={index}
+                    index={index}
+                    path={path}
+                    paths={paths}
+                    hasMismatchedDataLength={pathsWithMismatchedDataLengths.includes(path.value)}
+                    datasets={datasets}
+                    currentTime={currentTime}
+                    savePaths={savePaths}
+                    showPlotValuesInLegend={showPlotValuesInLegend}
+                  />
+                ))}
+                <footer className={classes.footer}>
+                  <Button
+                    className={classes.addButton}
+                    size="small"
+                    startIcon={<AddIcon />}
+                    fullWidth
+                    onClick={() => addSeries()}
+                  >
+                    Add series
+                  </Button>
+                </footer>
+              </div>
+            </Stack>
+            {legendDisplay !== "floating" && (
+              <Divider
+                flexItem
+                orientation={legendDisplay === "left" ? "vertical" : "horizontal"}
+              />
+            )}
           </Stack>
-          {legendDisplay !== "floating" && (
-            <Divider flexItem orientation={legendDisplay === "left" ? "vertical" : "horizontal"} />
-          )}
-        </Stack>
-      )}
-      {legendDisplay !== "floating" && (
-        <div
-          className={classes.dragHandle}
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          style={
-            legendDisplay === "left"
-              ? {
-                  cursor: "ew-resize",
-                  borderRightWidth: 2,
-                  height: "100%",
-                  width: 4,
-                }
-              : {
-                  cursor: "ns-resize",
-                  borderBottomWidth: 2,
-                  width: "100%",
-                  height: 4,
-                }
-          }
-        />
-      )}
+        )}
+        {legendDisplay !== "floating" && (
+          <div
+            className={classes.dragHandle}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            style={
+              legendDisplay === "left"
+                ? {
+                    cursor: "ew-resize",
+                    borderRightWidth: 2,
+                    height: "100%",
+                    width: 4,
+                  }
+                : {
+                    cursor: "ns-resize",
+                    borderBottomWidth: 2,
+                    width: "100%",
+                    height: 4,
+                  }
+            }
+          />
+        )}
+      </Stack>
     </div>
   );
 }
