@@ -103,7 +103,13 @@ export class ImageRenderable extends Renderable<ImageUserData> {
 }
 
 export class Images extends SceneExtension<ImageRenderable> {
+  /* All of the CameraInfo topics we have received at least one message on. */
   private cameraInfoTopics = new Set<string>();
+  /**
+   * A bi-directional mapping between cameraInfo topics and image topics. This
+   * is used for retrieving an image renderable, which is indexed by image
+   * topic, when receiving a camera info message.
+   */
   private cameraInfoToImageTopics = new BiMap<string, string>();
 
   public constructor(renderer: Renderer) {
@@ -122,12 +128,6 @@ export class Images extends SceneExtension<ImageRenderable> {
       handler: this.handleCameraInfo,
       shouldSubscribe: this.shouldSubscribe,
     });
-  }
-
-  public override removeAllRenderables(): void {
-    super.removeAllRenderables();
-    this.cameraInfoTopics.clear();
-    this.cameraInfoToImageTopics.clear();
   }
 
   public override settingsNodes(): SettingsTreeEntry[] {
