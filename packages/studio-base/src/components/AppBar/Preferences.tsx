@@ -22,13 +22,17 @@ import {
   DialogActions,
   Button,
   Typography,
+  Link,
 } from "@mui/material";
 import { MouseEvent, SyntheticEvent, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import OsContextSingleton from "@foxglove/studio-base/OsContextSingleton";
+import CopyButton from "@foxglove/studio-base/components/CopyButton";
 import { ExperimentalFeatureSettings } from "@foxglove/studio-base/components/ExperimentalFeatureSettings";
+import FoxgloveLogoText from "@foxglove/studio-base/components/FoxgloveLogoText";
+import { helpMenuItems } from "@foxglove/studio-base/components/HelpSidebar";
 import {
   AutoUpdate,
   ColorSchemeSettings,
@@ -43,6 +47,11 @@ import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
 
 const useStyles = makeStyles()((theme) => ({
+  logo: {
+    width: 212,
+    height: "auto",
+    marginLeft: theme.spacing(-1),
+  },
   tabPanel: {
     visibility: "hidden",
     marginRight: "-100%",
@@ -64,7 +73,7 @@ const useStyles = makeStyles()((theme) => ({
     position: "sticky",
     backgroundColor: theme.palette.background.paper,
     borderTop: `${theme.palette.divider} 1px solid`,
-    padding: theme.spacing(2),
+    padding: theme.spacing(1),
     bottom: 0,
   },
   formControlLabel: {
@@ -113,10 +122,11 @@ export function PreferencesIconButton(props: IconButtonProps): JSX.Element {
   );
 }
 
-type TabOption = "general" | "privacy" | "lab";
+type TabOption = "general" | "privacy" | "lab" | "about";
 
-export function PreferencesDialog(props: DialogProps): JSX.Element {
-  const [activeTab, setActiveTab] = useState<TabOption>("general");
+export function PreferencesDialog(props: DialogProps & { activeTab?: TabOption }): JSX.Element {
+  const { activeTab: _activeTab } = props;
+  const [activeTab, setActiveTab] = useState<TabOption>(_activeTab ?? "general");
   const [crashReportingEnabled, setCrashReportingEnabled] = useAppConfigurationValue<boolean>(
     AppSetting.CRASH_REPORTING_ENABLED,
   );
@@ -171,6 +181,7 @@ export function PreferencesDialog(props: DialogProps): JSX.Element {
             <Tab className={classes.tab} label="General" value="general" />
             <Tab className={classes.tab} label="Privacy" value="privacy" />
             <Tab className={classes.tab} label="Experimental features" value="lab" />
+            <Tab className={classes.tab} label="About" value="about" />
           </Tabs>
         </Grid>
         <Grid item xs={12} md={9} paddingTop={{ xs: 4, md: 0 }}>
@@ -237,6 +248,47 @@ export function PreferencesDialog(props: DialogProps): JSX.Element {
                 <Stack paddingLeft={2}>
                   <ExperimentalFeatureSettings />
                 </Stack>
+              </Stack>
+            </section>
+
+            <section
+              className={cx(classes.tabPanel, { [classes.tabPanelActive]: activeTab === "about" })}
+            >
+              <Stack gap={2} alignItems="flex-start">
+                <header>
+                  <FoxgloveLogoText color="primary" className={classes.logo} />
+                </header>
+                <Stack direction="row" alignItems="center" gap={1}>
+                  <Typography variant="body2">
+                    Foxglove Studio version {FOXGLOVE_STUDIO_VERSION}
+                  </Typography>
+                  <CopyButton
+                    size="small"
+                    getText={() => {
+                      if (FOXGLOVE_STUDIO_VERSION != undefined) {
+                        return FOXGLOVE_STUDIO_VERSION.toString();
+                      }
+                      return "";
+                    }}
+                  />
+                </Stack>
+                {[
+                  helpMenuItems.get("resources"),
+                  helpMenuItems.get("products"),
+                  helpMenuItems.get("contact"),
+                  helpMenuItems.get("legal"),
+                ].map((item) => {
+                  return (
+                    <Stack key={item?.subheader} gap={1}>
+                      {item?.subheader && <Typography>{item.subheader}</Typography>}
+                      {item?.links.map((link) => (
+                        <Link href={link.url} key={link.url}>
+                          {link.title}
+                        </Link>
+                      ))}
+                    </Stack>
+                  );
+                })}
               </Stack>
             </section>
           </Stack>

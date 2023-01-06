@@ -36,10 +36,12 @@ function Wrapper(StoryFn: Story): JSX.Element {
 export function Default(): JSX.Element {
   return <AppBar />;
 }
+Default.parameters = { colorScheme: "both-column" };
 
 export function SignInDisabled(): JSX.Element {
   return <AppBar disableSignin />;
 }
+SignInDisabled.parameters = { colorScheme: "both-column" };
 
 export function UserPresent(): JSX.Element {
   const org: User["org"] = {
@@ -70,3 +72,4 @@ export function UserPresent(): JSX.Element {
     />
   );
 }
+UserPresent.parameters = { colorScheme: "both-column" };
