@@ -8,7 +8,7 @@
     <a href="https://github.com/foxglove/studio/blob/main/LICENSE"><img src="https://img.shields.io/github/license/foxglove/studio" /></a>
     <a href="https://github.com/orgs/foxglove/discussions"><img src="https://img.shields.io/github/discussions/foxglove/community.svg?logo=github" /></a>
     <a href="https://foxglove.dev/join-slack"><img src="https://img.shields.io/badge/chat-on%20slack-purple.svg?logo=slack" /></a>
-    <a href="https://robotics.stackexchange.com/questions/ask?tags=foxglove-studio"><img src="https://img.shields.io/badge/ask-robotics%20stack%20exchange-blueviolet.svg?logo=stackexchange" /></a>
+    <a href="https://robotics.stackexchange.com/questions/tagged/foxglove-studio"><img src="https://img.shields.io/badge/ask-robotics%20stack%20exchange-blueviolet.svg?logo=stackexchange" /></a>
     <br />
     <br />
     <a href="https://foxglove.dev/download">Download</a>
