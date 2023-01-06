@@ -370,6 +370,7 @@ export default {
   parameters: {
     chromatic: { delay: 50 },
   },
+  excludeStories: ["paths", "fixture"],
 };
 
 LineGraph.storyName = "line graph";
