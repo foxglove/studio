@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Story } from "@storybook/react";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import Stack from "@foxglove/studio-base/components/Stack";
@@ -42,16 +42,16 @@ const exampleConfig: PlotConfig = {
 function Wrapper(StoryFn: Story): JSX.Element {
   const readySignal = useReadySignal({ count: 3 });
   const pauseFrame = useCallback(() => readySignal, [readySignal]);
-  const appConfig = makeMockAppConfiguration([
-    [AppSetting.ENABLE_PLOT_PANEL_SERIES_SETTINGS, true],
-  ]);
+  const [appConfig] = useState(() =>
+    makeMockAppConfiguration([[AppSetting.ENABLE_PLOT_PANEL_SERIES_SETTINGS, true]]),
+  );
 
   return (
-    <AppConfigurationContext.Provider value={appConfig}>
-      <PanelSetup fixture={fixture} pauseFrame={pauseFrame}>
+    <PanelSetup fixture={fixture} pauseFrame={pauseFrame}>
+      <AppConfigurationContext.Provider value={appConfig}>
         <StoryFn />
-      </PanelSetup>
-    </AppConfigurationContext.Provider>
+      </AppConfigurationContext.Provider>
+    </PanelSetup>
   );
 }
 
