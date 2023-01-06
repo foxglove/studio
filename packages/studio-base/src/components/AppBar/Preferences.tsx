@@ -282,7 +282,15 @@ export function PreferencesDialog(props: DialogProps & { activeTab?: TabOption }
                     <Stack key={item?.subheader} gap={1}>
                       {item?.subheader && <Typography>{item.subheader}</Typography>}
                       {item?.links.map((link) => (
-                        <Link href={link.url} key={link.url}>
+                        <Link
+                          color="inherit"
+                          variant="body2"
+                          underline="hover"
+                          key={link.title}
+                          data-testid={link.title}
+                          href={link.url}
+                          target="_blank"
+                        >
                           {link.title}
                         </Link>
                       ))}
