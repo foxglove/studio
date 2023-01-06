@@ -283,7 +283,6 @@ export function PreferencesDialog(props: DialogProps & { activeTab?: TabOption }
                       {item?.subheader && <Typography>{item.subheader}</Typography>}
                       {item?.links.map((link) => (
                         <Link
-                          color="inherit"
                           variant="body2"
                           underline="hover"
                           key={link.title}
