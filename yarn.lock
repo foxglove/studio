@@ -6408,7 +6408,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/utils@npm:5.36.1, @typescript-eslint/utils@npm:^5.10.0":
+"@typescript-eslint/utils@npm:5.36.1":
   version: 5.36.1
   resolution: "@typescript-eslint/utils@npm:5.36.1"
   dependencies:
@@ -6424,7 +6424,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/utils@npm:^5":
+"@typescript-eslint/utils@npm:^5, @typescript-eslint/utils@npm:^5.10.0":
   version: 5.48.0
   resolution: "@typescript-eslint/utils@npm:5.48.0"
   dependencies:
