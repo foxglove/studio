@@ -109,7 +109,7 @@ const useStyles = makeStyles<StyleProps, "container" | "toggleButton">()(
       alignItems: "center",
       overflow: "auto",
       display: "grid",
-      gridTemplateColumns: "auto minmax(max-content, 1fr) max-content auto",
+      gridTemplateColumns: "auto minmax(max-content, 1fr) 1fr auto",
     },
     dragHandle: {
       userSelect: "none",
@@ -224,6 +224,20 @@ export function NewPlotLegend(props: Props): JSX.Element {
     [saveConfig],
   );
 
+  const addSeriesFooter = (
+    <footer className={classes.footer}>
+      <Button
+        className={classes.addButton}
+        size="small"
+        startIcon={<AddIcon />}
+        fullWidth
+        onClick={() => addSeries()}
+      >
+        Add series
+      </Button>
+    </footer>
+  );
+
   return (
     <div
       className={cx(classes.root, {
@@ -278,18 +292,9 @@ export function NewPlotLegend(props: Props): JSX.Element {
                     showPlotValuesInLegend={showPlotValuesInLegend}
                   />
                 ))}
-                <footer className={classes.footer}>
-                  <Button
-                    className={classes.addButton}
-                    size="small"
-                    startIcon={<AddIcon />}
-                    fullWidth
-                    onClick={() => addSeries()}
-                  >
-                    Add series
-                  </Button>
-                </footer>
+                {legendDisplay === "floating" && addSeriesFooter}
               </div>
+              {legendDisplay !== "floating" && addSeriesFooter}
             </Stack>
           </Stack>
         )}

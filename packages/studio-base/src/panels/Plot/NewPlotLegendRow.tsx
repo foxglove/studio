@@ -216,7 +216,7 @@ export function NewPlotLegendRow({
             component="div"
             variant="body2"
             align="right"
-            color={hoverValue?.value != undefined ? "warning.main" : "inherit"}
+            color={hoverValue?.value != undefined ? "warning.main" : "text.secondary"}
           >
             {currentValue ?? ""}
           </Typography>

@@ -64,10 +64,10 @@ function Default(): JSX.Element {
         display: "grid",
         gap: 4,
         gridTemplateAreas: `
-            "floating top"
-            "left left"
+            "floating floating top top"
+            "left left left squished"
           `,
-        gridTemplateColumns: "1fr 1fr",
+        gridTemplateColumns: "1fr 1fr 1fr 1fr",
         gridTemplateRows: "1fr 1fr",
       }}
     >
@@ -80,12 +80,29 @@ function Default(): JSX.Element {
             ...exampleConfig,
             legendDisplay: "left",
             showPlotValuesInLegend: true,
-            sidebarDimension: 500,
+            sidebarDimension: 440,
           }}
         />
       </Stack>
       <Stack style={{ gridArea: "top" }}>
-        <Plot overrideConfig={{ ...exampleConfig, legendDisplay: "top", sidebarDimension: 220 }} />
+        <Plot
+          overrideConfig={{
+            ...exampleConfig,
+            legendDisplay: "top",
+            sidebarDimension: 205,
+            showPlotValuesInLegend: true,
+          }}
+        />
+      </Stack>
+      <Stack style={{ gridArea: "squished" }}>
+        <Plot
+          overrideConfig={{
+            ...exampleConfig,
+            legendDisplay: "left",
+            sidebarDimension: 150,
+            showPlotValuesInLegend: true,
+          }}
+        />
       </Stack>
     </div>
   );
