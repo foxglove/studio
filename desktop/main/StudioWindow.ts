@@ -18,6 +18,7 @@ import Logger from "@foxglove/log";
 
 import pkgInfo from "../../package.json";
 import { encodeRendererArg } from "../common/rendererArgs";
+import StudioAppUpdater from "./StudioAppUpdater";
 import getDevModeIcon from "./getDevModeIcon";
 import { simulateUserClick } from "./simulateUserClick";
 import { getTelemetrySettings } from "./telemetry";
@@ -165,12 +166,19 @@ function newStudioWindow(deepLinks: string[] = []): BrowserWindow {
 function buildMenu(browserWindow: BrowserWindow): Menu {
   const menuTemplate: MenuItemConstructorOptions[] = [];
 
+  const checkForUpdatesItem: MenuItemConstructorOptions = {
+    label: "Check for Updates…",
+    click: () => void StudioAppUpdater.Instance().checkNow(),
+    enabled: StudioAppUpdater.Instance().canCheckForUpdates(),
+  };
+
   if (isMac) {
     menuTemplate.push({
       role: "appMenu",
       label: app.name,
       submenu: [
         { role: "about" },
+        checkForUpdatesItem,
         { type: "separator" },
 
         {
@@ -348,6 +356,7 @@ function buildMenu(browserWindow: BrowserWindow): Menu {
                 showAboutDialog();
               },
             },
+            checkForUpdatesItem,
           ]),
     ],
   });
