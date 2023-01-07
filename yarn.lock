@@ -2391,7 +2391,7 @@ __metadata:
     "@mui/material": 5.4.1
     "@popperjs/core": 2.11.0
     "@protobufjs/base64": 1.1.2
-    "@sentry/core": 7.10.0
+    "@sentry/core": 7.29.0
     "@sentry/types": 7.10.0
     "@storybook/addon-actions": 6.5.15
     "@storybook/react": 6.5.15
@@ -3709,15 +3709,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sentry/core@npm:7.10.0":
-  version: 7.10.0
-  resolution: "@sentry/core@npm:7.10.0"
+"@sentry/core@npm:7.29.0":
+  version: 7.29.0
+  resolution: "@sentry/core@npm:7.29.0"
   dependencies:
-    "@sentry/hub": 7.10.0
-    "@sentry/types": 7.10.0
-    "@sentry/utils": 7.10.0
+    "@sentry/types": 7.29.0
+    "@sentry/utils": 7.29.0
     tslib: ^1.9.3
-  checksum: e99627e7c863619f8698cced5d4aa518ca456ad10084f53325bdaa3645e355e5e1cb029438ddab480801b578d3b1f0a44b0fb9dba9240fd7eced6d7bc7e407ca
+  checksum: d9330ed3528f2328b524cb237e400368dcb6c36b8afb791d28141e98ab5c0b56dc306a65cfc7164108cb5616346dabe793a39a140257f723906dc25a03b7ebcd
   languageName: node
   linkType: hard
 
@@ -3806,6 +3805,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@sentry/types@npm:7.29.0":
+  version: 7.29.0
+  resolution: "@sentry/types@npm:7.29.0"
+  checksum: 53815b66662a193cfd7024b9fb2477afb8178a771aa59f3bef10578cc940a9d7207722f9f04e2ca65a8e118cef012ac42f4936aa921aacdfc00a914bec88b009
+  languageName: node
+  linkType: hard
+
 "@sentry/types@npm:7.8.1":
   version: 7.8.1
   resolution: "@sentry/types@npm:7.8.1"
@@ -3820,6 +3826,16 @@ __metadata:
     "@sentry/types": 7.10.0
     tslib: ^1.9.3
   checksum: 9006835d150c2a47ba5240c257192ea42d5961f99e8f0952edf8870f431ff6430de6e86b7588aa9c495ca29c5e3a083548099cfff8602c9df5c32524f2662087
+  languageName: node
+  linkType: hard
+
+"@sentry/utils@npm:7.29.0":
+  version: 7.29.0
+  resolution: "@sentry/utils@npm:7.29.0"
+  dependencies:
+    "@sentry/types": 7.29.0
+    tslib: ^1.9.3
+  checksum: 9914a2129692a5713453437d75b957a18ad5a4ef8085776e5499208ad329dea8da27ee2e2b74fdc089a3831b4e2929f8e6c0f3bc75528f41023d85de5077f462
   languageName: node
   linkType: hard
 
