@@ -2486,7 +2486,7 @@ __metadata:
     react-autocomplete: "https://github.com/foxglove/react-autocomplete/raw/9717d597d7c78c316fb7ad3c2c57060c243530c2/react-autocomplete-9.9.9.tgz"
     react-colorful: 5.6.0
     react-dnd: 14.0.2
-    react-dnd-html5-backend: 14.0.2
+    react-dnd-html5-backend: 16.0.1
     react-dom: 17.0.2
     react-hover-observer: 2.1.1
     react-json-tree: "patch:react-json-tree@npm:0.15.1#../../patches/react-json-tree.patch"
@@ -3669,10 +3669,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@react-dnd/asap@npm:^5.0.1":
+  version: 5.0.2
+  resolution: "@react-dnd/asap@npm:5.0.2"
+  checksum: 18f040e53512983f11c542ef21e6e4cac605d585a10cd764b13bc1b2f3ac7490e0fa40503adc348d8387aa45bc8e7eebe9cb33003b960a30bb5fde666ff2adde
+  languageName: node
+  linkType: hard
+
 "@react-dnd/invariant@npm:^2.0.0":
   version: 2.0.0
   resolution: "@react-dnd/invariant@npm:2.0.0"
   checksum: ef1e989920d70b15c80dccb01af9b598081d76993311aa22d2e9a3ec41d10a88540eeec4b4de7a8b2a2ea52dfc3495ab45e39192c2d27795a9258bd6b79d000e
+  languageName: node
+  linkType: hard
+
+"@react-dnd/invariant@npm:^4.0.1":
+  version: 4.0.2
+  resolution: "@react-dnd/invariant@npm:4.0.2"
+  checksum: 594f6d78896c19bb8f023e101334fd91a9fdff686117bd8e830ba53737ec0a6042dab66971d3d63c7afbc622103909aff7a64c5c6767e0aa8d9561fd42705016
   languageName: node
   linkType: hard
 
@@ -10960,6 +10974,17 @@ __metadata:
     "@react-dnd/invariant": ^2.0.0
     redux: ^4.1.1
   checksum: dbc50727f53baad1cb1e0430a2a1b81c5c291389322f90fdc46edeb2fd49cc206ce4fa30a95afb53d88238945228e34866d7465f7ea49285c296baf883551301
+  languageName: node
+  linkType: hard
+
+"dnd-core@npm:^16.0.1":
+  version: 16.0.1
+  resolution: "dnd-core@npm:16.0.1"
+  dependencies:
+    "@react-dnd/asap": ^5.0.1
+    "@react-dnd/invariant": ^4.0.1
+    redux: ^4.2.0
+  checksum: b7d3ef4664f433af796f440ddd27ad9d7fef0205f26c4b7c0af6ebf612ffa9b33e64d095d3e79190c4baaed34aa36570f321ebe0d2cc8ff1031ff158a0907b3f
   languageName: node
   linkType: hard
 
@@ -20489,12 +20514,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-dnd-html5-backend@npm:14.0.2":
-  version: 14.0.2
-  resolution: "react-dnd-html5-backend@npm:14.0.2"
+"react-dnd-html5-backend@npm:16.0.1":
+  version: 16.0.1
+  resolution: "react-dnd-html5-backend@npm:16.0.1"
   dependencies:
-    dnd-core: 14.0.1
-  checksum: c11dca3dcb9218d696d3d8b9a334e9b96952c399ceda159a164a61f44303be0603284e133729ff9a77901023500e92e5539f9b626100907c868ad858ea7c2d23
+    dnd-core: ^16.0.1
+  checksum: e2368bf85d5632a5cd867b743feb54c9052d909ea5331608860fa455edf3c633ac791f5b338e3db29b19ea8670c0ba5fb43c9c1c2510760bea030811d726cdfa
   languageName: node
   linkType: hard
 
@@ -21142,7 +21167,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"redux@npm:^4.0.5, redux@npm:^4.1.1":
+"redux@npm:^4.0.5, redux@npm:^4.1.1, redux@npm:^4.2.0":
   version: 4.2.0
   resolution: "redux@npm:4.2.0"
   dependencies:
