@@ -69,10 +69,8 @@ class StudioAppUpdater {
       });
     };
     const onError = (error: Error) => {
-      dialog.showErrorBox(
-        "An error occurred while checking for updates.",
-        error.stack ?? error.message,
-      );
+      log.error(error);
+      dialog.showErrorBox("An error occurred while checking for updates.", error.message);
     };
 
     if (!autoUpdater.isUpdaterActive()) {
