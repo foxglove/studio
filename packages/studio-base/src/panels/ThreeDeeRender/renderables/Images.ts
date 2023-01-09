@@ -4,6 +4,7 @@
 
 import * as THREE from "three";
 
+import { BiMap } from "@foxglove/den/collection";
 import {
   PinholeCameraModel,
   decodeYUV,
@@ -756,43 +757,4 @@ function normalizeCompressedImage(message: PartialMessage<CompressedImage>): Com
     format: message.format ?? "",
     data: normalizeByteArray(message.data),
   };
-}
-
-class BiMap<TKey1, TKey2> {
-  private map1 = new Map<TKey1, TKey2>();
-  private map2 = new Map<TKey2, TKey1>();
-
-  public get(key: TKey1): TKey2 | undefined {
-    return this.map1.get(key);
-  }
-
-  public getByValue(key: TKey2): TKey1 | undefined {
-    return this.map2.get(key);
-  }
-
-  public set(key1: TKey1, key2: TKey2): void {
-    this.map1.set(key1, key2);
-    this.map2.set(key2, key1);
-  }
-
-  public delete(key: TKey1): void {
-    const value = this.map1.get(key);
-    if (value != undefined) {
-      this.map1.delete(key);
-      this.map2.delete(value);
-    }
-  }
-
-  public deleteByValue(key: TKey2): void {
-    const value = this.map2.get(key);
-    if (value != undefined) {
-      this.map2.delete(key);
-      this.map1.delete(value);
-    }
-  }
-
-  public clear(): void {
-    this.map1.clear();
-    this.map2.clear();
-  }
 }

@@ -4,6 +4,7 @@
 
 export { default as filterMap } from "./filterMap";
 export * from "./ArrayMap";
-export * from "./minIndexBy";
+export * from "./BiMap";
 export * from "./binarySearch";
+export * from "./minIndexBy";
 export * from "./VecQueue";
