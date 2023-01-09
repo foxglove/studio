@@ -518,12 +518,9 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
       ],
       ["layouts", { iconName: "FiveTileGrid", title: "Layouts", component: LayoutBrowser }],
       ["add-panel", { iconName: "RectangularClipping", title: "Add panel", component: AddPanel }],
-      [
-        "panel-settings",
-        { iconName: "PanelSettings", title: "Panel settings", component: PanelSettings },
-      ],
+      ["panel-settings", { iconName: "Edit", title: "Panel settings", component: PanelSettings }],
       ["variables", { iconName: "Variable2", title: "Variables", component: VariablesSidebar }],
-      ["extensions", { iconName: "AddIn", title: "Extensions", component: ExtensionsSidebar }],
+      ["extensions", { iconName: "Puzzle", title: "Extensions", component: ExtensionsSidebar }],
     ]);
 
     if (enableStudioLogsSidebar) {

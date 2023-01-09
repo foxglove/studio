@@ -37,6 +37,7 @@ export type RegisteredIconNames =
   | "MoreVertical"
   | "OpenFile"
   | "PanelSettings"
+  | "Puzzle"
   | "QuestionCircle"
   | "RectangularClipping"
   | "Search"

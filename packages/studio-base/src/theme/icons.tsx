@@ -40,6 +40,7 @@ import {
   InfoIcon,
   MoreVerticalIcon,
   OpenFileIcon,
+  PuzzleIcon,
   RectangularClippingIcon,
   Variable2Icon,
 } from "@fluentui/react-icons-mdl2";
@@ -95,6 +96,7 @@ const icons: {
   MoreVertical: <MoreVerticalIcon />,
   OpenFile: <OpenFileIcon />,
   PanelSettings: <PanelSettings />,
+  Puzzle: <PuzzleIcon />,
   QuestionCircle: <QuestionCircle20Regular />,
   RectangularClipping: <RectangularClippingIcon />,
   Search: <SearchIcon />,
