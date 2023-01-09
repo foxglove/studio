@@ -16,7 +16,9 @@ import { makeStyles } from "tss-react/mui";
 
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import Stack from "@foxglove/studio-base/components/Stack";
+import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
+import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 
 const useStyles = makeStyles()({
   checkbox: {
@@ -58,6 +60,11 @@ const features: Feature[] = [
     name: "Plot panel series in settings",
     description: <>Allow editing plot panel data series in the sidebar.</>,
   },
+  {
+    key: AppSetting.ENABLE_NEW_UI,
+    name: "Enable new user interface",
+    description: <>Try our redesigned navigation and layout.</>,
+  },
 ];
 if (process.env.NODE_ENV === "development") {
   features.push({
@@ -70,6 +77,7 @@ if (process.env.NODE_ENV === "development") {
 function ExperimentalFeatureItem(props: { feature: Feature }) {
   const { feature } = props;
   const { classes } = useStyles();
+  const analytics = useAnalytics();
 
   const [enabled, setEnabled] = useAppConfigurationValue<boolean>(feature.key);
   return (
@@ -79,7 +87,13 @@ function ExperimentalFeatureItem(props: { feature: Feature }) {
         <Checkbox
           className={classes.checkbox}
           checked={enabled ?? false}
-          onChange={(_, checked) => void setEnabled(checked)}
+          onChange={(_, checked) => {
+            void setEnabled(checked);
+            void analytics.logEvent(AppEvent.EXPERIMENTAL_FEATURE_TOGGLE, {
+              feature: feature.key,
+              checked,
+            });
+          }}
         />
       }
       label={

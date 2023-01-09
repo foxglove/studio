@@ -27,7 +27,7 @@ jobs:
       YARN_ENABLE_SCRIPTS: false
 
     steps:
-      - uses: actions/checkout@v3.1.0
+      - uses: actions/checkout@v3.3.0
         with:
           # Using a Personal Access Token here is required to trigger workflows on our new commit.
           # The default GitHub token doesn't trigger any workflows.
@@ -38,14 +38,14 @@ jobs:
       - run: git lfs pull --include .yarn/
 
       - name: Configure Node.js
-        uses: actions/setup-node@v3.5.1
+        uses: actions/setup-node@v3.6.0
         with:
           node-version: 16.17
 
       - run: corepack enable yarn
 
       - name: Restore cache
-        uses: actions/cache@v3.0.11
+        uses: actions/cache@v3.2.2
         with:
           path: |
             .yarn/cache

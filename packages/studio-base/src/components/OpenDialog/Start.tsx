@@ -11,7 +11,7 @@ import FoxgloveLogoText from "@foxglove/studio-base/components/FoxgloveLogoText"
 import Stack from "@foxglove/studio-base/components/Stack";
 import TextMiddleTruncate from "@foxglove/studio-base/components/TextMiddleTruncate";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
-import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
+import { useCurrentUserType } from "@foxglove/studio-base/context/CurrentUserContext";
 import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 
@@ -22,7 +22,7 @@ export type IStartProps = {
   onSelectView: (newValue: OpenDialogViews) => void;
 };
 
-const useStyles = makeStyles<void, "recentSourcePrimary">()((theme, _params, classes) => ({
+const useStyles = makeStyles()((theme) => ({
   logo: {
     width: 212,
     height: "auto",
@@ -32,9 +32,9 @@ const useStyles = makeStyles<void, "recentSourcePrimary">()((theme, _params, cla
     [theme.breakpoints.up("md")]: {
       display: "grid",
       gridTemplateAreas: `
-      "header spacer"
-      "content sidebar"
-    `,
+        "header spacer"
+        "content sidebar"
+      `,
       gridTemplateRows: `content auto`,
       gridTemplateColumns: `1fr 375px`,
     },
@@ -46,6 +46,9 @@ const useStyles = makeStyles<void, "recentSourcePrimary">()((theme, _params, cla
     [theme.breakpoints.down("md")]: {
       padding: theme.spacing(4),
     },
+    [`@media (max-height: ${theme.breakpoints.values.sm})`]: {
+      display: "none",
+    },
   },
   content: {
     padding: theme.spacing(0, 6, 6),
@@ -55,10 +58,17 @@ const useStyles = makeStyles<void, "recentSourcePrimary">()((theme, _params, cla
     [theme.breakpoints.down("md")]: {
       padding: theme.spacing(0, 4, 4),
     },
+    [`@media (max-height: ${theme.breakpoints.values.sm})`]: {
+      paddingTop: theme.spacing(6),
+    },
   },
   spacer: {
     gridArea: "spacer",
     backgroundColor: tinycolor(theme.palette.text.primary).setAlpha(0.04).toRgbString(),
+
+    [`@media (max-height: ${theme.breakpoints.values.sm})`]: {
+      display: "none",
+    },
   },
   sidebar: {
     gridArea: "sidebar",
@@ -67,6 +77,9 @@ const useStyles = makeStyles<void, "recentSourcePrimary">()((theme, _params, cla
 
     [theme.breakpoints.down("md")]: {
       padding: theme.spacing(4),
+    },
+    [`@media (max-height: ${theme.breakpoints.values.sm})`]: {
+      paddingTop: theme.spacing(6),
     },
   },
   button: {
@@ -87,25 +100,18 @@ const useStyles = makeStyles<void, "recentSourcePrimary">()((theme, _params, cla
   },
   recentListItemButton: {
     overflow: "hidden",
-    color: theme.palette.text.secondary,
+    color: theme.palette.primary.main,
 
     "&:hover": {
       backgroundColor: "transparent",
-      color: theme.palette.text.primary,
-
-      [`.${classes.recentSourcePrimary}`]: {
-        color: theme.palette.primary[theme.palette.mode === "dark" ? "light" : "dark"],
-      },
+      color: theme.palette.primary[theme.palette.mode === "dark" ? "light" : "dark"],
     },
-  },
-  recentSourcePrimary: {
-    fontWeight: 600,
-    whiteSpace: "nowrap",
-    color: theme.palette.primary.main,
   },
   recentSourceSecondary: {
     color: "inherit",
   },
+  accountList: { padding: "0px" },
+  accountListItem: { margin: "0px 0px 5px 10px" },
 }));
 
 type DataSourceOptionProps = {
@@ -149,29 +155,6 @@ function DataSourceOption(props: DataSourceOptionProps): JSX.Element {
   );
 }
 
-type UserType =
-  | "unauthenticated"
-  | "authenticated-free"
-  | "authenticated-team"
-  | "authenticated-enterprise";
-
-function useCurrentUserType(): UserType {
-  const user = useCurrentUser();
-  if (user.currentUser == undefined) {
-    return "unauthenticated";
-  }
-
-  if (user.currentUser.org.isEnterprise) {
-    return "authenticated-enterprise";
-  }
-
-  if (user.currentUser.orgPaid === true) {
-    return "authenticated-team";
-  }
-
-  return "authenticated-free";
-}
-
 type SidebarItem = {
   id: string;
   title: string;
@@ -185,47 +168,47 @@ function SidebarItems(props: { onSelectView: (newValue: OpenDialogViews) => void
   const analytics = useAnalytics();
   const { classes } = useStyles();
 
-  const { freeUser, teamOrEnterpriseUser } = useMemo(
-    () => ({
-      freeUser: [
-        {
-          id: "new",
-          title: "New to Foxglove Studio?",
-          text: "Start by exploring a sample dataset or checking out our documentation.",
-          actions: (
-            <>
-              <Button
-                onClick={() => {
-                  onSelectView("demo");
-                  void analytics.logEvent(AppEvent.DIALOG_SELECT_VIEW, { type: "demo" });
-                  void analytics.logEvent(AppEvent.DIALOG_CLICK_CTA, {
-                    user: currentUserType,
-                    cta: "demo",
-                  });
-                }}
-                className={classes.button}
-                variant="outlined"
-              >
-                Explore sample data
-              </Button>
-              <Button
-                href="https://foxglove.dev/docs/studio"
-                target="_blank"
-                className={classes.button}
-                onClick={() => {
-                  void analytics.logEvent(AppEvent.DIALOG_CLICK_CTA, {
-                    user: currentUserType,
-                    cta: "docs",
-                  });
-                }}
-              >
-                View our docs
-              </Button>
-            </>
-          ),
-        },
-      ],
+  const { freeUser, teamOrEnterpriseUser } = useMemo(() => {
+    const demoItem = {
+      id: "new",
+      title: "New to Foxglove Studio?",
+      text: "Start by exploring a sample dataset or checking out our documentation.",
+      actions: (
+        <>
+          <Button
+            onClick={() => {
+              onSelectView("demo");
+              void analytics.logEvent(AppEvent.DIALOG_SELECT_VIEW, { type: "demo" });
+              void analytics.logEvent(AppEvent.DIALOG_CLICK_CTA, {
+                user: currentUserType,
+                cta: "demo",
+              });
+            }}
+            className={classes.button}
+            variant="outlined"
+          >
+            Explore sample data
+          </Button>
+          <Button
+            href="https://foxglove.dev/docs/studio/connection/data-sources"
+            target="_blank"
+            className={classes.button}
+            onClick={() => {
+              void analytics.logEvent(AppEvent.DIALOG_CLICK_CTA, {
+                user: currentUserType,
+                cta: "docs",
+              });
+            }}
+          >
+            View our docs
+          </Button>
+        </>
+      ),
+    };
+    return {
+      freeUser: [demoItem],
       teamOrEnterpriseUser: [
+        demoItem,
         {
           id: "join-community",
           title: "Join our community",
@@ -298,9 +281,8 @@ function SidebarItems(props: { onSelectView: (newValue: OpenDialogViews) => void
           ),
         },
       ],
-    }),
-    [analytics, classes.button, currentUserType, onSelectView],
-  );
+    };
+  }, [analytics, classes.button, currentUserType, onSelectView]);
 
   const sidebarItems: SidebarItem[] = useMemo(() => {
     switch (currentUserType) {
@@ -308,9 +290,22 @@ function SidebarItems(props: { onSelectView: (newValue: OpenDialogViews) => void
         return [
           ...freeUser,
           {
-            id: "store-and-collaborate",
-            title: "Store and collaborate",
-            text: "Securely store petabytes of indexed data for easy discovery and analysis in Foxglove Data Platform.",
+            id: "collaborate",
+            title: "Accelerate development with Foxglove Data Platform",
+            text: (
+              <ul className={classes.accountList}>
+                <li className={classes.accountListItem}>
+                  Securely store petabytes of ROS or custom data
+                </li>
+                <li className={classes.accountListItem}>
+                  Use a convenient web interface to tag, search, and retrieve data at lightning
+                  speed
+                </li>
+                <li className={classes.accountListItem}>
+                  Share data files, visualization layouts, and custom extensions with teammates
+                </li>
+              </ul>
+            ),
             actions: (
               <>
                 <Button
@@ -371,7 +366,7 @@ function SidebarItems(props: { onSelectView: (newValue: OpenDialogViews) => void
                   target="_blank"
                   className={classes.button}
                 >
-                  Share team layouts
+                  Share layouts
                 </Button>
               </>
             ),
@@ -383,7 +378,15 @@ function SidebarItems(props: { onSelectView: (newValue: OpenDialogViews) => void
       case "authenticated-enterprise":
         return teamOrEnterpriseUser;
     }
-  }, [analytics, classes.button, currentUserType, freeUser, teamOrEnterpriseUser]);
+  }, [
+    analytics,
+    classes.accountList,
+    classes.accountListItem,
+    classes.button,
+    currentUserType,
+    freeUser,
+    teamOrEnterpriseUser,
+  ]);
 
   return (
     <>
@@ -499,16 +502,10 @@ export default function Start(props: IStartProps): JSX.Element {
                       onClick={() => selectRecent(recent.id)}
                       className={classes.recentListItemButton}
                     >
-                      <Stack direction="row" alignItems="center" gap={1} overflow="hidden">
-                        <div className={classes.recentSourcePrimary}>
-                          {recent.label ?? "Local file"}
-                        </div>
-                        {" – "}
-                        <TextMiddleTruncate
-                          className={classes.recentSourceSecondary}
-                          text={recent.title}
-                        />
-                      </Stack>
+                      <TextMiddleTruncate
+                        className={classes.recentSourceSecondary}
+                        text={recent.title}
+                      />
                     </ListItemButton>
                   </ListItem>
                 ))}

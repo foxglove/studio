@@ -196,6 +196,7 @@ describe("PanelExtensionAdapter", () => {
                 if (count === 1) {
                   // eslint-disable-next-line jest/no-conditional-expect
                   expect(advertisements).toEqual(
+                    // eslint-disable-next-line jest/no-conditional-expect
                     expect.arrayContaining<AdvertiseOptions>([
                       {
                         topic: "/some/topic",
@@ -207,6 +208,7 @@ describe("PanelExtensionAdapter", () => {
                 } else if (count === 2) {
                   // eslint-disable-next-line jest/no-conditional-expect
                   expect(advertisements).toEqual(
+                    // eslint-disable-next-line jest/no-conditional-expect
                     expect.arrayContaining<AdvertiseOptions>([
                       {
                         topic: "/some/topic",
@@ -320,6 +322,7 @@ describe("PanelExtensionAdapter", () => {
                 if (count === 1) {
                   // eslint-disable-next-line jest/no-conditional-expect
                   expect(advertisements).toEqual(
+                    // eslint-disable-next-line jest/no-conditional-expect
                     expect.arrayContaining<AdvertiseOptions>([
                       {
                         topic: "/some/topic",
@@ -331,6 +334,7 @@ describe("PanelExtensionAdapter", () => {
                 } else if (count === 2) {
                   // eslint-disable-next-line jest/no-conditional-expect
                   expect(advertisements).toEqual(
+                    // eslint-disable-next-line jest/no-conditional-expect
                     expect.arrayContaining<AdvertiseOptions>([
                       {
                         topic: "/some/topic",
@@ -347,6 +351,7 @@ describe("PanelExtensionAdapter", () => {
                 } else if (count === 3) {
                   // eslint-disable-next-line jest/no-conditional-expect
                   expect(advertisements).toEqual(
+                    // eslint-disable-next-line jest/no-conditional-expect
                     expect.arrayContaining<AdvertiseOptions>([
                       {
                         topic: "/another/topic",
@@ -393,6 +398,7 @@ describe("PanelExtensionAdapter", () => {
         if (count === 1) {
           // eslint-disable-next-line jest/no-conditional-expect
           expect(advertisements).toEqual(
+            // eslint-disable-next-line jest/no-conditional-expect
             expect.arrayContaining<AdvertiseOptions>([
               {
                 topic: "/some/topic",

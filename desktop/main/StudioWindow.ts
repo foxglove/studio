@@ -15,10 +15,13 @@ import {
 import path from "path";
 
 import Logger from "@foxglove/log";
+import { AppSetting } from "@foxglove/studio-base/src/AppSetting";
+import { APP_BAR_HEIGHT } from "@foxglove/studio-base/src/components/AppBar/constants";
 
 import pkgInfo from "../../package.json";
 import { encodeRendererArg } from "../common/rendererArgs";
 import getDevModeIcon from "./getDevModeIcon";
+import { getAppSetting } from "./settings";
 import { simulateUserClick } from "./simulateUserClick";
 import { getTelemetrySettings } from "./telemetry";
 
@@ -90,8 +93,12 @@ type ClearableMenu = Menu & { clear: () => void };
 
 function newStudioWindow(deepLinks: string[] = []): BrowserWindow {
   const { crashReportingEnabled, telemetryEnabled } = getTelemetrySettings();
+  const enableNewUI = getAppSetting<boolean>(AppSetting.ENABLE_NEW_UI) ?? false;
 
   const preloadPath = path.join(app.getAppPath(), "main", "preload.js");
+
+  const macTrafficLightInset =
+    Math.floor((APP_BAR_HEIGHT - /*button size*/ 12) / 2) - /*for good measure*/ 1;
 
   const windowOptions: BrowserWindowConstructorOptions = {
     height: 800,
@@ -100,8 +107,12 @@ function newStudioWindow(deepLinks: string[] = []): BrowserWindow {
     minHeight: 250,
     autoHideMenuBar: true,
     title: pkgInfo.productName,
+    titleBarStyle: isMac && enableNewUI ? "hidden" : "default",
+    trafficLightPosition:
+      isMac && enableNewUI ? { x: macTrafficLightInset, y: macTrafficLightInset } : undefined,
     webPreferences: {
       contextIsolation: true,
+      sandbox: false, // Allow preload script to access Node builtins
       preload: preloadPath,
       nodeIntegration: false,
       additionalArguments: [
@@ -141,11 +152,9 @@ function newStudioWindow(deepLinks: string[] = []): BrowserWindow {
   });
 
   // Open all new windows in an external browser
-  // Note: this API is supposed to be superseded by webContents.setWindowOpenHandler,
-  // but using that causes the app to freeze when a new window is opened.
-  browserWindow.webContents.on("new-window", (event, url) => {
-    event.preventDefault();
+  browserWindow.webContents.setWindowOpenHandler(({ url }) => {
     void shell.openExternal(url);
+    return { action: "deny" };
   });
 
   browserWindow.webContents.on("will-navigate", (event, reqUrl) => {

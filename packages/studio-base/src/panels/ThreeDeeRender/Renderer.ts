@@ -50,10 +50,11 @@ import { CoreSettings } from "./renderables/CoreSettings";
 import { FrameAxes, LayerSettingsTransform } from "./renderables/FrameAxes";
 import { Grids } from "./renderables/Grids";
 import { Images } from "./renderables/Images";
+import { LaserScans } from "./renderables/LaserScans";
 import { Markers } from "./renderables/Markers";
 import { MeasurementTool } from "./renderables/MeasurementTool";
 import { OccupancyGrids } from "./renderables/OccupancyGrids";
-import { PointCloudsAndLaserScans } from "./renderables/PointCloudsAndLaserScans";
+import { PointClouds } from "./renderables/PointClouds";
 import { Polygons } from "./renderables/Polygons";
 import { PoseArrays } from "./renderables/PoseArrays";
 import { Poses } from "./renderables/Poses";
@@ -476,13 +477,14 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.addSceneExtension(new Markers(this));
     this.addSceneExtension(new FoxgloveSceneEntities(this));
     this.addSceneExtension(new FoxgloveGrid(this));
+    this.addSceneExtension(new LaserScans(this));
     this.addSceneExtension(new OccupancyGrids(this));
-    this.addSceneExtension(new PointCloudsAndLaserScans(this));
-    this.addSceneExtension(new VelodyneScans(this));
+    this.addSceneExtension(new PointClouds(this));
     this.addSceneExtension(new Polygons(this));
     this.addSceneExtension(new Poses(this));
     this.addSceneExtension(new PoseArrays(this));
     this.addSceneExtension(new Urdfs(this));
+    this.addSceneExtension(new VelodyneScans(this));
     this.addSceneExtension(this.measurementTool);
     this.addSceneExtension(this.publishClickTool);
 
@@ -522,6 +524,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     }
     this.sceneExtensions.clear();
     this.sharedGeometry.dispose();
+    this.modelCache.dispose();
 
     this.labelPool.dispose();
     this.markerPool.dispose();
@@ -892,14 +895,18 @@ export class Renderer extends EventEmitter<RendererEvents> {
     } else if (Array.isArray(maybeHasMarkers.markers)) {
       // If this message has an array called markers, scrape frame_id from all markers
       for (const marker of maybeHasMarkers.markers) {
-        const frameId = marker.header?.frame_id ?? "";
-        this.addCoordinateFrame(frameId);
+        if (marker) {
+          const frameId = marker.header?.frame_id ?? "";
+          this.addCoordinateFrame(frameId);
+        }
       }
     } else if (Array.isArray(maybeHasEntities.entities)) {
       // If this message has an array called entities, scrape frame_id from all entities
       for (const entity of maybeHasEntities.entities) {
-        const frameId = entity.frame_id ?? "";
-        this.addCoordinateFrame(frameId);
+        if (entity) {
+          const frameId = entity.frame_id ?? "";
+          this.addCoordinateFrame(frameId);
+        }
       }
     } else if (typeof maybeHasFrameId.frame_id === "string") {
       // If this message has a top-level frame_id, scrape it
