@@ -19,7 +19,6 @@ import { Mosaic, MosaicWindow } from "react-mosaic-component";
 import MockPanelContextProvider from "@foxglove/studio-base/components/MockPanelContextProvider";
 import ToolbarIconButton from "@foxglove/studio-base/components/PanelToolbar/ToolbarIconButton";
 import MockCurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider/MockCurrentLayoutProvider";
-import HelpInfoProvider from "@foxglove/studio-base/providers/HelpInfoProvider";
 import { PanelStateContextProvider } from "@foxglove/studio-base/providers/PanelStateContextProvider";
 
 import PanelToolbar from "./index";
@@ -42,19 +41,15 @@ class MosaicWrapper extends React.Component<{
             renderPreview={() => undefined as any}
           >
             <PanelStateContextProvider>
-              <HelpInfoProvider>
-                <Box
-                  width="100%"
-                  height="100%"
-                  padding={3}
-                  position="relative"
-                  bgcolor="background.default"
-                >
-                  <Box width={width}>
-                    {id === "Sibling" ? "Sibling Panel" : this.props.children}
-                  </Box>
-                </Box>
-              </HelpInfoProvider>
+              <Box
+                width="100%"
+                height="100%"
+                padding={3}
+                position="relative"
+                bgcolor="background.default"
+              >
+                <Box width={width}>{id === "Sibling" ? "Sibling Panel" : this.props.children}</Box>
+              </Box>
             </PanelStateContextProvider>
           </MosaicWindow>
         )}

@@ -32,7 +32,6 @@ import OsContextSingleton from "@foxglove/studio-base/OsContextSingleton";
 import CopyButton from "@foxglove/studio-base/components/CopyButton";
 import { ExperimentalFeatureSettings } from "@foxglove/studio-base/components/ExperimentalFeatureSettings";
 import FoxgloveLogoText from "@foxglove/studio-base/components/FoxgloveLogoText";
-import { helpMenuItems } from "@foxglove/studio-base/components/HelpSidebar";
 import {
   AutoUpdate,
   ColorSchemeSettings,
@@ -111,6 +110,62 @@ const useStyles = makeStyles()((theme) => ({
     },
   },
 }));
+
+type SectionKey = "app" | "panels" | "resources" | "products" | "contact" | "legal";
+
+export const helpMenuItems: Map<
+  SectionKey,
+  {
+    subheader: string;
+    links: {
+      title: string;
+      content?: React.ReactNode;
+      url?: string;
+    }[];
+  }
+> = new Map([
+  [
+    "resources",
+    {
+      subheader: "External resources",
+      links: [
+        ...(isDesktopApp() ? [] : [{ title: "Desktop app", url: "https://foxglove.dev/download" }]),
+        { title: "Browse docs", url: "https://foxglove.dev/docs" },
+        { title: "Join our community", url: "https://foxglove.dev/community" },
+      ],
+    },
+  ],
+  [
+    "products",
+    {
+      subheader: "Products",
+      links: [
+        { title: "Foxglove Studio", url: "https://foxglove.dev/studio" },
+        { title: "Foxglove Data Platform", url: "https://foxglove.dev/data-platform" },
+      ],
+    },
+  ],
+  [
+    "contact",
+    {
+      subheader: "Contact",
+      links: [
+        { title: "Give feedback", url: "https://foxglove.dev/contact" },
+        { title: "Schedule a demo", url: "https://foxglove.dev/demo" },
+      ],
+    },
+  ],
+  [
+    "legal",
+    {
+      subheader: "Legal",
+      links: [
+        { title: "License terms", url: "https://foxglove.dev/legal/studio-license" },
+        { title: "Privacy policy", url: "https://foxglove.dev/legal/privacy" },
+      ],
+    },
+  ],
+]);
 
 export function PreferencesIconButton(props: IconButtonProps): JSX.Element {
   const { classes } = useStyles();
