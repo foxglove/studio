@@ -48,7 +48,7 @@ if (!rootEl) {
 const isDevelopment = process.env.NODE_ENV === "development";
 
 function LogAfterRender(props: React.PropsWithChildren<unknown>): JSX.Element {
-  thisShouldNotCompile;
+  thisShouldNotCompile();
   useEffect(() => {
     // Integration tests look for this console log to indicate the app has rendered once
     const level = log.getLevel();

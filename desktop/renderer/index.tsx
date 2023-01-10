@@ -27,7 +27,7 @@ import NativeStorageAppConfiguration from "./services/NativeStorageAppConfigurat
 const log = Logger.getLogger(__filename);
 
 log.debug("initializing renderer");
-thisShouldNotCompile;
+thisShouldNotCompile();
 
 // preload injects the crash reporting global based on app settings received from the main process
 const isCrashReportingEnabled =

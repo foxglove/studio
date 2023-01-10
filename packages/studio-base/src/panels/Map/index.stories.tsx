@@ -18,7 +18,7 @@ import PanelSetup, { Fixture } from "@foxglove/studio-base/stories/PanelSetup";
 
 import MapPanel from "./index";
 
-thisShouldNotCompile;
+thisShouldNotCompile();
 
 const EMPTY_MESSAGE: NavSatFixMsg = {
   latitude: 0,
