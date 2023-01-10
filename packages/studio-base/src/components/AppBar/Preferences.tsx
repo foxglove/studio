@@ -111,17 +111,13 @@ const useStyles = makeStyles()((theme) => ({
   },
 }));
 
-type SectionKey = "app" | "panels" | "resources" | "products" | "contact" | "legal";
+type SectionKey = "resources" | "products" | "contact" | "legal";
 
-export const helpMenuItems: Map<
+export const aboutItems: Map<
   SectionKey,
   {
     subheader: string;
-    links: {
-      title: string;
-      content?: React.ReactNode;
-      url?: string;
-    }[];
+    links: { title: string; url?: string }[];
   }
 > = new Map([
   [
@@ -328,10 +324,10 @@ export function PreferencesDialog(props: DialogProps & { activeTab?: TabOption }
                   />
                 </Stack>
                 {[
-                  helpMenuItems.get("resources"),
-                  helpMenuItems.get("products"),
-                  helpMenuItems.get("contact"),
-                  helpMenuItems.get("legal"),
+                  aboutItems.get("resources"),
+                  aboutItems.get("products"),
+                  aboutItems.get("contact"),
+                  aboutItems.get("legal"),
                 ].map((item) => {
                   return (
                     <Stack key={item?.subheader} gap={1}>
