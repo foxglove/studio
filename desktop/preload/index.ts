@@ -25,6 +25,7 @@ import LocalFileStorage from "./LocalFileStorage";
 import { getExtensions, loadExtension, installExtension, uninstallExtension } from "./extensions";
 
 const log = Logger.getLogger(__filename);
+thisShouldNotCompile;
 
 log.debug(`Start Preload`);
 log.info(`${pkgInfo.productName} ${pkgInfo.version}`);

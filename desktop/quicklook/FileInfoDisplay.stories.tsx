@@ -15,6 +15,7 @@ export default {
     },
   },
 };
+thisShouldNotCompile;
 
 export function Bag(): JSX.Element {
   return <FileInfoDisplay fileStats={{ name: "name.bag", size: 0 }} />;
