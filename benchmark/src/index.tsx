@@ -20,7 +20,6 @@ if (!rootEl) {
 }
 
 function LogAfterRender(props: React.PropsWithChildren<unknown>): JSX.Element {
-  thisShouldNotCompile();
   useEffect(() => {
     // Integration tests look for this console log to indicate the app has rendered once
     log.debug("App rendered");
