@@ -120,14 +120,14 @@ export class Images extends SceneExtension<ImageRenderable> {
     renderer.addSchemaSubscriptions(ROS_COMPRESSED_IMAGE_DATATYPES, this.handleRosCompressedImage);
     renderer.addSchemaSubscriptions(CAMERA_INFO_DATATYPES, {
       handler: this.handleCameraInfo,
-      shouldSubscribe: this.shouldSubscribe,
+      shouldSubscribe: this.cameraInfoShouldSubscribe,
     });
 
     renderer.addSchemaSubscriptions(RAW_IMAGE_DATATYPES, this.handleRawImage);
     renderer.addSchemaSubscriptions(COMPRESSED_IMAGE_DATATYPES, this.handleCompressedImage);
     renderer.addSchemaSubscriptions(CAMERA_CALIBRATION_DATATYPES, {
       handler: this.handleCameraInfo,
-      shouldSubscribe: this.shouldSubscribe,
+      shouldSubscribe: this.cameraInfoShouldSubscribe,
     });
   }
 
@@ -223,7 +223,7 @@ export class Images extends SceneExtension<ImageRenderable> {
     }
   };
 
-  private shouldSubscribe = (cameraInfoTopic: string): boolean => {
+  private cameraInfoShouldSubscribe = (cameraInfoTopic: string): boolean => {
     // Iterate over each configured topic and check if it has a `cameraInfoTopic` setting
     // that matches the given CameraInfo topic name
     for (const topicConfig of Object.values(this.renderer.config.topics)) {
@@ -389,9 +389,6 @@ export class Images extends SceneExtension<ImageRenderable> {
 
     // Create the plane geometry if needed
     if (hasCameraInfo && renderable.userData.geometry == undefined) {
-      // log.debug(
-      //   `Constructing geometry for ${cameraModel.width}x${cameraModel.height} camera image on "${topic}"`,
-      // );
       const geometry = createGeometry(cameraModel, renderable.userData.settings);
       renderable.userData.geometry = geometry;
       if (renderable.userData.mesh) {
@@ -407,9 +404,6 @@ export class Images extends SceneExtension<ImageRenderable> {
         .createImageBitmap(bitmapData, { resizeWidth: DEFAULT_IMAGE_WIDTH })
         .then((bitmap) => {
           if (renderable.userData.texture == undefined) {
-            // log.debug(
-            //   `Creating texture for ${bitmap.width}x${bitmap.height} "${compressed.format}" camera image on "${topic}"`,
-            // );
             renderable.userData.texture = createCanvasTexture(bitmap);
             rebuildMaterial(renderable);
             tryCreateMesh(renderable, this.renderer);
@@ -437,9 +431,6 @@ export class Images extends SceneExtension<ImageRenderable> {
         prevTexture.image.height !== height
       ) {
         prevTexture?.dispose();
-        // log.debug(
-        //   `Creating data texture for ${width}x${height} "${raw.encoding}" camera image on "${topic}"`,
-        // );
         renderable.userData.texture = createDataTexture(width, height);
         rebuildMaterial(renderable);
         tryCreateMesh(renderable, this.renderer);
@@ -504,7 +495,6 @@ const tempColor = { r: 0, g: 0, b: 0, a: 0 };
 function tryCreateMesh(renderable: ImageRenderable, renderer: Renderer): void {
   const { mesh, geometry, material } = renderable.userData;
   if (!mesh && geometry && material) {
-    // log.debug(`Building mesh for camera image on "${renderable.userData.topic}"`);
     renderable.userData.mesh = new THREE.Mesh(geometry, renderable.userData.material);
     renderable.add(renderable.userData.mesh);
     renderer.queueAnimationFrame();
