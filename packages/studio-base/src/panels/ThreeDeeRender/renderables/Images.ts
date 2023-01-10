@@ -4,7 +4,7 @@
 
 import * as THREE from "three";
 
-import { BiMap } from "@foxglove/den/collection";
+import { MultiMap } from "@foxglove/den/collection";
 import {
   PinholeCameraModel,
   decodeYUV,
@@ -111,7 +111,7 @@ export class Images extends SceneExtension<ImageRenderable> {
    * is used for retrieving an image renderable, which is indexed by image
    * topic, when receiving a camera info message.
    */
-  private cameraInfoToImageTopics = new BiMap<string, string>();
+  private cameraInfoToImageTopics = new MultiMap<string, string>();
 
   public constructor(renderer: Renderer) {
     super("foxglove.Images", renderer);
@@ -189,18 +189,27 @@ export class Images extends SceneExtension<ImageRenderable> {
       return;
     }
 
+    const imageTopic = path[1]!;
+    const prevSettings = this.renderer.config.topics[imageTopic] as
+      | Partial<LayerSettingsImage>
+      | undefined;
+    const prevCameraInfoTopic = prevSettings?.cameraInfoTopic;
+
     this.saveSetting(path, action.payload.value);
 
-    const imageTopic = path[1]!;
     const settings = this.renderer.config.topics[imageTopic] as
       | Partial<LayerSettingsImage>
       | undefined;
+    const cameraInfoTopic = settings?.cameraInfoTopic;
 
-    // Update the camera info topic <-> image topic mapping
-    if (settings?.cameraInfoTopic != undefined) {
-      this.cameraInfoToImageTopics.set(settings.cameraInfoTopic, imageTopic);
-    } else {
-      this.cameraInfoToImageTopics.deleteByValue(imageTopic);
+    if (prevCameraInfoTopic != undefined && cameraInfoTopic !== prevCameraInfoTopic) {
+      // Remove the previous camera_info_topic -> image_topic mapping
+      this.cameraInfoToImageTopics.delete(prevCameraInfoTopic, imageTopic);
+    }
+
+    // Add this camera_info_topic -> image_topic mapping
+    if (cameraInfoTopic != undefined) {
+      this.cameraInfoToImageTopics.set(cameraInfoTopic, imageTopic);
     }
 
     // Update the renderable
@@ -276,7 +285,6 @@ export class Images extends SceneExtension<ImageRenderable> {
         });
         this.updateSettingsTree();
       } else {
-        this.cameraInfoToImageTopics.deleteByValue(imageTopic);
         this.renderer.settings.errors.addToTopic(
           imageTopic,
           NO_CAMERA_INFO_ERR,
@@ -294,38 +302,40 @@ export class Images extends SceneExtension<ImageRenderable> {
   private handleCameraInfo = (
     messageEvent: PartialMessageEvent<CameraInfo> & PartialMessageEvent<CameraCalibration>,
   ): void => {
-    const infoTopic = messageEvent.topic;
+    const cameraInfoTopic = messageEvent.topic;
     const receiveTime = toNanoSec(messageEvent.receiveTime);
 
-    const topicsUpdated = !this.cameraInfoTopics.has(infoTopic);
+    const topicsUpdated = !this.cameraInfoTopics.has(cameraInfoTopic);
     if (topicsUpdated) {
-      this.cameraInfoTopics.add(infoTopic);
+      this.cameraInfoTopics.add(cameraInfoTopic);
     }
     const cameraInfo = normalizeCameraInfo(messageEvent.message);
     const frameId = cameraInfo.header.frame_id;
-    const userSettings = this.renderer.config.topics[infoTopic] as
+    const userSettings = this.renderer.config.topics[cameraInfoTopic] as
       | Partial<LayerSettingsImage>
       | undefined;
 
     // Check if we have a mapping from this CameraInfo topic to an Image topic
-    const imageTopic = this.cameraInfoToImageTopics.get(infoTopic);
-    if (imageTopic != undefined) {
-      // Get the ImageRenderable for the image topic
-      const renderable = this._getImageRenderable(
-        imageTopic,
-        receiveTime,
-        undefined,
-        frameId,
-        userSettings,
-      );
+    const imageTopics = this.cameraInfoToImageTopics.get(cameraInfoTopic);
+    if (imageTopics && imageTopics.length > 0) {
+      for (const imageTopic of imageTopics) {
+        // Get the ImageRenderable for the image topic
+        const renderable = this._getImageRenderable(
+          imageTopic,
+          receiveTime,
+          undefined,
+          frameId,
+          userSettings,
+        );
 
-      const dataEqual = cameraInfosEqual(renderable.userData.cameraInfo, cameraInfo);
-      if (!dataEqual) {
-        const cameraModel = new PinholeCameraModel(cameraInfo);
-        renderable.userData.cameraModel = cameraModel;
-        if (renderable.userData.image) {
-          const { image, settings } = renderable.userData;
-          this._updateImageRenderable(renderable, image, cameraModel, receiveTime, settings);
+        const dataEqual = cameraInfosEqual(renderable.userData.cameraInfo, cameraInfo);
+        if (!dataEqual) {
+          const cameraModel = new PinholeCameraModel(cameraInfo);
+          renderable.userData.cameraModel = cameraModel;
+          if (renderable.userData.image) {
+            const { image, settings } = renderable.userData;
+            this._updateImageRenderable(renderable, image, cameraModel, receiveTime, settings);
+          }
         }
       }
     }
