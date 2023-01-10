@@ -24,7 +24,6 @@ const rootEl = document.getElementById("root");
 if (!rootEl) {
   throw new Error("missing #root element");
 }
-thisShouldNotCompile();
 
 function Root(): JSX.Element {
   const [previewedFile, setPreviewedFile] = useState<File | undefined>();
