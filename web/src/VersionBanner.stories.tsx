@@ -8,6 +8,7 @@ export default {
   title: "web/VersionBanner",
   component: VersionBanner,
 };
+
 export function OldChrome(): JSX.Element {
   return <VersionBanner isChrome currentVersion={42} isDismissable />;
 }
