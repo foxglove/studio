@@ -14,8 +14,6 @@ export class MultiMap<TKey, TValue> {
 
   public set(key: TKey, value: TValue): void {
     const values = this.#map.get(key);
-    // If the key does not exist add the value to the map.
-    // Otherwise, check if the value is not already present before adding to the existing array.
     if (values == undefined) {
       this.#map.set(key, [value]);
     } else if (!values.includes(value)) {
