@@ -74,7 +74,7 @@ class PanelToolbarWithOpenMenu extends React.PureComponent {
           }
         }}
       >
-        <PanelToolbar helpContent={<div />}>
+        <PanelToolbar>
           <div style={{ width: "100%", lineHeight: "22px", paddingLeft: 5 }}>
             Some controls here
           </div>
@@ -96,7 +96,7 @@ storiesOf("components/PanelToolbar", module)
   .add("non-floating (narrow)", () => {
     return (
       <MosaicWrapper width={268}>
-        <PanelToolbar helpContent={<div />}>
+        <PanelToolbar>
           <div style={{ width: "100%", lineHeight: "22px", paddingLeft: 5 }}>
             Some controls here
           </div>
@@ -107,7 +107,7 @@ storiesOf("components/PanelToolbar", module)
   .add("non-floating (wide with panel name)", () => {
     return (
       <MosaicWrapper width={468}>
-        <PanelToolbar helpContent={<div />}>
+        <PanelToolbar>
           <div style={{ width: "100%", lineHeight: "22px", paddingLeft: 5 }}>
             Some controls here
           </div>
@@ -123,7 +123,7 @@ storiesOf("components/PanelToolbar", module)
     );
     return (
       <MosaicWrapper width={468}>
-        <PanelToolbar helpContent={<div />} additionalIcons={additionalIcons}>
+        <PanelToolbar additionalIcons={additionalIcons}>
           <div style={{ width: "100%", lineHeight: "22px", paddingLeft: 5 }}>
             Some controls here
           </div>
