@@ -25,15 +25,14 @@ const useStyles = makeStyles()((theme) => ({
   },
 }));
 
-export function SidebarContent(props: PropsWithChildren<SidebarContentProps>): JSX.Element {
-  const {
-    disablePadding = false,
-    title,
-    children,
-    leadingItems,
-    overflow = "auto",
-    trailingItems,
-  } = props;
+export function SidebarContent({
+  disablePadding = false,
+  title,
+  children,
+  leadingItems,
+  overflow = "auto",
+  trailingItems,
+}: PropsWithChildren<SidebarContentProps>): JSX.Element {
   const { classes } = useStyles();
 
   return (
