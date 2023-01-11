@@ -166,7 +166,7 @@ class MockPanelCatalog implements PanelCatalog {
 
 function PanelWrapper({
   children,
-  includeSettings,
+  includeSettings = false,
 }: {
   children?: ReactNode;
   includeSettings?: boolean;
