@@ -76,6 +76,7 @@ import { useInitialDeepLinkState } from "@foxglove/studio-base/hooks/useInitialD
 import useNativeAppMenuEvent from "@foxglove/studio-base/hooks/useNativeAppMenuEvent";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
 import { PanelStateContextProvider } from "@foxglove/studio-base/providers/PanelStateContextProvider";
+import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
 
 const log = Logger.getLogger(__filename);
 
@@ -198,7 +199,11 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     AppSetting.SHOW_DEBUG_PANELS,
   );
 
-  const [enableNewUI = false] = useAppConfigurationValue<boolean>(AppSetting.ENABLE_NEW_UI);
+  // Since we can't toggle the title bar on an electron window, keep the setting at its initial
+  // value until the app is reloaded/relaunched.
+  const [currentEnableNewUI = false] = useAppConfigurationValue<boolean>(AppSetting.ENABLE_NEW_UI);
+  const [initialEnableNewUI] = useState(currentEnableNewUI);
+  const enableNewUI = isDesktopApp() ? initialEnableNewUI : currentEnableNewUI;
 
   const showSignInForm = currentUserRequired && currentUser == undefined;
 

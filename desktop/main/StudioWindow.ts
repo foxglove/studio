@@ -16,7 +16,11 @@ import path from "path";
 
 import Logger from "@foxglove/log";
 import { AppSetting } from "@foxglove/studio-base/src/AppSetting";
-import { APP_BAR_HEIGHT } from "@foxglove/studio-base/src/components/AppBar/constants";
+import {
+  APP_BAR_BACKGROUND_COLOR,
+  APP_BAR_HEIGHT,
+  APP_BAR_FOREGROUND_COLOR,
+} from "@foxglove/studio-base/src/components/AppBar/constants";
 
 import pkgInfo from "../../package.json";
 import { encodeRendererArg } from "../common/rendererArgs";
@@ -30,6 +34,7 @@ declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 
 const isMac = process.platform === "darwin";
 const isLinux = process.platform === "linux";
+const isWindows = process.platform === "win32";
 const isProduction = process.env.NODE_ENV === "production";
 const rendererPath = MAIN_WINDOW_WEBPACK_ENTRY;
 
@@ -113,6 +118,13 @@ function newStudioWindow(deepLinks: string[] = []): BrowserWindow {
     titleBarStyle: enableNewUI ? "hidden" : "default",
     trafficLightPosition:
       isMac && enableNewUI ? { x: macTrafficLightInset, y: macTrafficLightInset } : undefined,
+    titleBarOverlay: isWindows
+      ? {
+          height: APP_BAR_HEIGHT,
+          color: APP_BAR_BACKGROUND_COLOR,
+          symbolColor: APP_BAR_FOREGROUND_COLOR,
+        }
+      : undefined,
     webPreferences: {
       contextIsolation: true,
       sandbox: false, // Allow preload script to access Node builtins

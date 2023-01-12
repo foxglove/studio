@@ -44,6 +44,10 @@ export function CustomWindowControls(): JSX.Element {
   return <AppBar showCustomWindowControls />;
 }
 
+export function CustomWindowControlsDragRegion(): JSX.Element {
+  return <AppBar showCustomWindowControls debugDragRegion />;
+}
+
 export function SignInDisabled(): JSX.Element {
   return <AppBar disableSignin />;
 }

@@ -135,7 +135,7 @@ export default function Root({
         nativeWindow={nativeWindow}
         enableGlobalCss
         appBarLeftInset={ctxbridge?.platform === "darwin" && !isFullScreen ? 72 : undefined}
-        showCustomWindowControls={ctxbridge?.platform !== "darwin"}
+        showCustomWindowControls={ctxbridge?.platform === "linux"}
         isMaximized={isMaximized}
         onMinimizeWindow={onMinimizeWindow}
         onMaximizeWindow={onMaximizeWindow}

@@ -32,76 +32,97 @@ import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
 
 import { HelpIconButton, HelpMenu } from "./Help";
 import { UserIconButton, UserMenu } from "./User";
-import { APP_BAR_HEIGHT } from "./constants";
+import { APP_BAR_HEIGHT, APP_BAR_BACKGROUND_COLOR, APP_BAR_FOREGROUND_COLOR } from "./constants";
 
-const useStyles = makeStyles<{ leftInset?: number }>()((theme, { leftInset }) => ({
-  appBar: {
-    gridArea: "appbar",
-    boxShadow: "none",
-    backgroundColor: "#27272b",
-    borderBottom: `${theme.palette.divider} 1px solid`,
-    color: theme.palette.common.white,
-    height: APP_BAR_HEIGHT,
-    paddingLeft: leftInset,
-    WebkitAppRegion: "drag", // make custom window title bar draggable for desktop app
-  },
-  toolbar: {
-    display: "grid",
-    width: "100%",
-    gridTemplateAreas: `"start middle end"`,
-    gridTemplateColumns: "1fr auto 1fr",
-  },
-  logo: {
-    padding: 0,
-    fontSize: "2.25rem",
-    color: "#9480ed",
-  },
-  start: {
-    gridArea: "start",
-    marginInlineStart: theme.spacing(-2),
-    display: "flex",
-    flex: 1,
-    alignItems: "center",
-    gap: theme.spacing(0.5),
+const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }>()(
+  (theme, { leftInset, debugDragRegion = false }) => {
+    const DRAGGABLE_STYLE: Record<string, string> = { WebkitAppRegion: "drag" };
+    const NOT_DRAGGABLE_STYLE: Record<string, string> = { WebkitAppRegion: "no-drag" };
+    if (debugDragRegion) {
+      DRAGGABLE_STYLE.backgroundColor = "green";
+      NOT_DRAGGABLE_STYLE.backgroundColor = "red";
+    }
+    return {
+      appBar: {
+        gridArea: "appbar",
+        boxShadow: "none",
+        backgroundColor: APP_BAR_BACKGROUND_COLOR,
+        borderBottom: `${theme.palette.divider} 1px solid`,
+        color: APP_BAR_FOREGROUND_COLOR,
+        height: APP_BAR_HEIGHT + 1 /*border*/,
 
-    [theme.breakpoints.down("sm")]: {
-      marginInlineStart: theme.spacing(-1),
-    },
-  },
-  middle: {
-    gridArea: "middle",
-    justifySelf: "center",
+        // Leave space for system window controls on the right on Windows.
+        // Use hard-coded padding for Mac because it looks better than env(titlebar-area-x).
+        paddingLeft: leftInset,
+        paddingRight: "calc(100% - env(titlebar-area-x) - env(titlebar-area-width))",
+        ...DRAGGABLE_STYLE, // make custom window title bar draggable for desktop app
+      },
 
-    [theme.breakpoints.down("md")]: {
-      display: "none",
-    },
-  },
-  end: {
-    gridArea: "end",
-    flex: 1,
-    display: "flex",
-    justifyContent: "flex-end",
-    marginInlineEnd: theme.spacing(-2),
-    [theme.breakpoints.down("sm")]: {
-      marginInlineEnd: theme.spacing(-1),
-    },
-  },
-  endInner: {
-    display: "flex",
-    alignItems: "center",
-    gap: theme.spacing(0.5),
-    WebkitAppRegion: "no-drag", // make buttons clickable for desktop app
-  },
-  noDrag: {
-    WebkitAppRegion: "no-drag", // make buttons clickable for desktop app
-  },
+      toolbar: {
+        display: "grid",
+        width: "100%",
+        gridTemplateAreas: `"start middle end"`,
+        gridTemplateColumns: "1fr auto 1fr",
+      },
 
-  closeButton: {
-    ":hover": {
-      backgroundColor: theme.palette.error.main,
-    },
+      logo: {
+        padding: 0,
+        fontSize: "2.25rem",
+        color: "#9480ed",
+      },
+
+      start: {
+        gridArea: "start",
+        marginInlineStart: theme.spacing(-2),
+        display: "flex",
+        flex: 1,
+        alignItems: "center",
+        gap: theme.spacing(0.5),
+
+        [theme.breakpoints.down("sm")]: {
+          marginInlineStart: theme.spacing(-1),
+        },
+      },
+
+      middle: {
+        gridArea: "middle",
+        justifySelf: "center",
+
+        [theme.breakpoints.down("md")]: {
+          display: "none",
+        },
+      },
+
+      end: {
+        gridArea: "end",
+        flex: 1,
+        display: "flex",
+        justifyContent: "flex-end",
+        marginInlineEnd: theme.spacing(-2),
+        [theme.breakpoints.down("sm")]: {
+          marginInlineEnd: theme.spacing(-1),
+        },
+      },
+
+      endInner: {
+        display: "flex",
+        alignItems: "center",
+        gap: theme.spacing(0.5),
+        ...NOT_DRAGGABLE_STYLE, // make buttons clickable for desktop app
+      },
+
+      noDrag: {
+        ...NOT_DRAGGABLE_STYLE, // make buttons clickable for desktop app
+      },
+
+      closeButton: {
+        ":hover": {
+          backgroundColor: theme.palette.error.main,
+        },
+      },
+    };
   },
-}));
+);
 
 const selectPlayerName = (ctx: MessagePipelineContext) => ctx.playerState.name;
 
@@ -119,6 +140,7 @@ type AppBarProps = CustomWindowControlsProps & {
   disableSignin?: boolean;
   signIn?: CurrentUser["signIn"];
   leftInset?: number;
+  debugDragRegion?: boolean;
 };
 
 export function AppBar(props: AppBarProps): JSX.Element {
@@ -133,8 +155,9 @@ export function AppBar(props: AppBarProps): JSX.Element {
     onMaximizeWindow,
     onUnmaximizeWindow,
     onCloseWindow,
+    debugDragRegion,
   } = props;
-  const { classes, cx } = useStyles({ leftInset });
+  const { classes, cx } = useStyles({ leftInset, debugDragRegion });
   const playerName = useMessagePipeline(selectPlayerName);
   const currentUserType = useCurrentUserType();
   const analytics = useAnalytics();
