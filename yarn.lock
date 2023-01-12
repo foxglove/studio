@@ -2401,7 +2401,7 @@ __metadata:
     "@foxglove/ulog": 2.1.2
     "@foxglove/velodyne-cloud": 1.0.1
     "@foxglove/wasm-bz2": 0.1.1
-    "@foxglove/ws-protocol": 0.3.1
+    "@foxglove/ws-protocol": 0.3.3
     "@foxglove/xmlrpc": 1.3.0
     "@mcap/core": 0.3.0
     "@mdi/svg": 7.1.96
@@ -2603,14 +2603,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@foxglove/ws-protocol@npm:0.3.1":
-  version: 0.3.1
-  resolution: "@foxglove/ws-protocol@npm:0.3.1"
+"@foxglove/ws-protocol@npm:0.3.3":
+  version: 0.3.3
+  resolution: "@foxglove/ws-protocol@npm:0.3.3"
   dependencies:
     debug: ^4
     eventemitter3: ^5.0.0
     tslib: ^2
-  checksum: f6bbbc120e998504e83bd2bc0609720a645ade4770ddb0e047385bfbac761e486bd531c028c2a8a5bdb52706ff38bfb494a2a5f40543f6a045787d305c60d072
+  checksum: 9401d167ae66b0209e1cc9d47c003812e871777d50a071737bce19ba1ac070148dccc78b99c345d3a927993ae43d29433c23b42544d94f384d29394c91476e72
   languageName: node
   linkType: hard
 

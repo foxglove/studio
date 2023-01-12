@@ -10,6 +10,7 @@ import { debouncePromise } from "@foxglove/den/async";
 import Log from "@foxglove/log";
 import { parseChannel, ParsedChannel } from "@foxglove/mcap-support";
 import { RosMsgDefinition } from "@foxglove/rosmsg";
+import CommonRosTypes from "@foxglove/rosmsg-msgs-common";
 import { MessageWriter as Ros1MessageWriter } from "@foxglove/rosmsg-serialization";
 import { MessageWriter as Ros2MessageWriter } from "@foxglove/rosmsg2-serialization";
 import { fromMillis, fromNanoSec, isGreaterThan, isLessThan, Time } from "@foxglove/rostime";
@@ -36,6 +37,7 @@ import {
   ClientChannel,
   FoxgloveClient,
   ServerCapability,
+  ServerInfo,
   SubscriptionId,
 } from "@foxglove/ws-protocol";
 
@@ -154,6 +156,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
       this._serverCapabilities = [];
       this._playerCapabilities = [];
       this._supportedEncodings = undefined;
+      this._datatypes = undefined;
 
       for (const topic of this._resolvedSubscriptionsByTopic.keys()) {
         this._unresolvedSubscriptions.add(topic);
@@ -183,6 +186,23 @@ export default class FoxgloveWebSocketPlayer implements Player {
       this._serverCapabilities = event.capabilities;
       this._serverPublishesTime = event.capabilities.includes(ServerCapability.time);
       this._supportedEncodings = event.supportedEncodings;
+      this._datatypes = new Map();
+
+      if (event.metadata != undefined && Object.keys(event.metadata).includes("ROS_DISTRO")) {
+        // Add common ROS message definitions
+        const rosDistro = event.metadata["ROS_DISTRO"] as string;
+        const rosDataTypes = ["melodic", "noetic"].includes(rosDistro)
+          ? CommonRosTypes.ros1
+          : rosDistro === "galactic"
+          ? CommonRosTypes.ros2galactic
+          : CommonRosTypes.ros2humble;
+
+        for (const dataType in rosDataTypes) {
+          const msgDef = (rosDataTypes as Record<string, RosMsgDefinition>)[dataType]!;
+          this._datatypes.set(dataType, msgDef);
+          this._datatypes.set(dataTypeToFullName(dataType), msgDef);
+        }
+      }
 
       if (event.capabilities.includes(ServerCapability.clientPublish)) {
         this._playerCapabilities.push(PlayerCapabilities.advertise);
@@ -401,11 +421,10 @@ export default class FoxgloveWebSocketPlayer implements Player {
 
     this._topics = topics;
 
-    // Rebuild the _datatypes map
-    this._datatypes = new Map();
+    // Update the _datatypes map;
     for (const { parsedChannel } of this._channelsById.values()) {
       for (const [name, types] of parsedChannel.datatypes) {
-        this._datatypes.set(name, types);
+        this._datatypes?.set(name, types);
       }
     }
     this._emitState();
@@ -665,4 +684,12 @@ export default class FoxgloveWebSocketPlayer implements Player {
     this._unresolvedPublications = [];
     this._emitState();
   }
+}
+
+function dataTypeToFullName(dataType: string): string {
+  const parts = dataType.split("/");
+  if (parts.length === 2) {
+    return `${parts[0]}/msg/${parts[1]}`;
+  }
+  return dataType;
 }
