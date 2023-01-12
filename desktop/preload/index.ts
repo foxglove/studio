@@ -103,6 +103,12 @@ const ctx: OsContext = {
   },
 };
 
+// Keep track of maximized state in the preload script because the initial ipc event sent from main
+// may occur before the app is fully rendered.
+let isMaximized = false;
+ipcRenderer.on("maximize", () => (isMaximized = true));
+ipcRenderer.on("unmaximize", () => (isMaximized = false));
+
 const desktopBridge: Desktop = {
   addIpcEventListener(eventName: ForwardedWindowEvent, handler: () => void) {
     ipcRenderer.on(eventName, () => handler());
@@ -139,6 +145,21 @@ const desktopBridge: Desktop = {
     const homePath = (await ipcRenderer.invoke("getHomePath")) as string;
     const userExtensionRoot = pathJoin(homePath, ".foxglove-studio", "extensions");
     return await uninstallExtension(id, userExtensionRoot);
+  },
+  isMaximized() {
+    return isMaximized;
+  },
+  minimizeWindow() {
+    ipcRenderer.send("minimizeWindow");
+  },
+  maximizeWindow() {
+    ipcRenderer.send("maximizeWindow");
+  },
+  unmaximizeWindow() {
+    ipcRenderer.send("unmaximizeWindow");
+  },
+  closeWindow() {
+    ipcRenderer.send("closeWindow");
   },
 };
 

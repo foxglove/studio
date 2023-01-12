@@ -29,6 +29,7 @@ import { getTelemetrySettings } from "./telemetry";
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 
 const isMac = process.platform === "darwin";
+const isLinux = process.platform === "linux";
 const isProduction = process.env.NODE_ENV === "production";
 const rendererPath = MAIN_WINDOW_WEBPACK_ENTRY;
 
@@ -108,7 +109,8 @@ function newStudioWindow(deepLinks: string[] = []): BrowserWindow {
     minHeight: 250,
     autoHideMenuBar: true,
     title: pkgInfo.productName,
-    titleBarStyle: isMac && enableNewUI ? "hidden" : "default",
+    frame: enableNewUI && isLinux ? false : true,
+    titleBarStyle: enableNewUI ? "hidden" : "default",
     trafficLightPosition:
       isMac && enableNewUI ? { x: macTrafficLightInset, y: macTrafficLightInset } : undefined,
     webPreferences: {
@@ -141,15 +143,18 @@ function newStudioWindow(deepLinks: string[] = []): BrowserWindow {
   browserWindow.addListener("enter-full-screen", () =>
     browserWindow.webContents.send("enter-full-screen"),
   );
-
   browserWindow.addListener("leave-full-screen", () =>
     browserWindow.webContents.send("leave-full-screen"),
   );
+  browserWindow.addListener("maximize", () => browserWindow.webContents.send("maximize"));
+
+  browserWindow.addListener("unmaximize", () => browserWindow.webContents.send("unmaximize"));
 
   browserWindow.webContents.once("dom-ready", () => {
     if (!isProduction) {
       browserWindow.webContents.openDevTools();
     }
+    browserWindow.webContents.send(browserWindow.isMaximized() ? "maximize" : "unmaximize");
   });
 
   // Open all new windows in an external browser
@@ -167,6 +172,25 @@ function newStudioWindow(deepLinks: string[] = []): BrowserWindow {
     if (isExternal) {
       event.preventDefault();
       void shell.openExternal(reqUrl);
+    }
+  });
+
+  browserWindow.webContents.on("ipc-message", (_event, channel) => {
+    switch (channel) {
+      case "minimizeWindow":
+        browserWindow.minimize();
+        break;
+      case "maximizeWindow":
+        browserWindow.maximize();
+        break;
+      case "unmaximizeWindow":
+        browserWindow.unmaximize();
+        break;
+      case "closeWindow":
+        browserWindow.close();
+        break;
+      default:
+        break;
     }
   });
 

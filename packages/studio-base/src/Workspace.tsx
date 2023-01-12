@@ -27,7 +27,7 @@ import { makeStyles } from "tss-react/mui";
 import Logger from "@foxglove/log";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import AccountSettings from "@foxglove/studio-base/components/AccountSettingsSidebar/AccountSettings";
-import { AppBar } from "@foxglove/studio-base/components/AppBar";
+import { AppBar, CustomWindowControlsProps } from "@foxglove/studio-base/components/AppBar";
 import { DataSourceSidebar } from "@foxglove/studio-base/components/DataSourceSidebar";
 import DocumentDropListener from "@foxglove/studio-base/components/DocumentDropListener";
 import ExtensionsSidebar from "@foxglove/studio-base/components/ExtensionsSidebar";
@@ -139,7 +139,7 @@ function AddPanel() {
   );
 }
 
-type WorkspaceProps = {
+type WorkspaceProps = CustomWindowControlsProps & {
   deepLinks?: string[];
   disableSignin?: boolean;
   appBarLeftInset?: number;
@@ -599,6 +599,12 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
             disableSignin={props.disableSignin}
             signIn={signIn}
             leftInset={props.appBarLeftInset}
+            showCustomWindowControls={props.showCustomWindowControls}
+            isMaximized={props.isMaximized}
+            onMinimizeWindow={props.onMinimizeWindow}
+            onMaximizeWindow={props.onMaximizeWindow}
+            onUnmaximizeWindow={props.onUnmaximizeWindow}
+            onCloseWindow={props.onCloseWindow}
           />
         )}
         <Sidebar

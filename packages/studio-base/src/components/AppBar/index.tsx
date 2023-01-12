@@ -2,6 +2,10 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
+import CloseIcon from "@mui/icons-material/Close";
+import FilterNoneIcon from "@mui/icons-material/FilterNone";
+import MinimizeIcon from "@mui/icons-material/Minimize";
 import { AppBar as MuiAppBar, Button, IconButton, Toolbar, Typography } from "@mui/material";
 import { MouseEvent, useCallback, useContext, useState } from "react";
 import { makeStyles } from "tss-react/mui";
@@ -39,7 +43,7 @@ const useStyles = makeStyles<{ leftInset?: number }>()((theme, { leftInset }) =>
     color: theme.palette.common.white,
     height: APP_BAR_HEIGHT,
     paddingLeft: leftInset,
-    "-webkit-app-region": "drag", // make custom window title bar draggable for desktop app
+    WebkitAppRegion: "drag", // make custom window title bar draggable for desktop app
   },
   toolbar: {
     display: "grid",
@@ -74,22 +78,43 @@ const useStyles = makeStyles<{ leftInset?: number }>()((theme, { leftInset }) =>
   },
   end: {
     gridArea: "end",
-    display: "flex",
-    flexDirection: "row-reverse",
-    marginInlineEnd: theme.spacing(-2),
     flex: 1,
-    alignItems: "center",
-    gap: theme.spacing(0.5),
-
+    display: "flex",
+    justifyContent: "flex-end",
+    marginInlineEnd: theme.spacing(-2),
     [theme.breakpoints.down("sm")]: {
       marginInlineEnd: theme.spacing(-1),
+    },
+  },
+  endInner: {
+    display: "flex",
+    alignItems: "center",
+    gap: theme.spacing(0.5),
+    WebkitAppRegion: "no-drag", // make buttons clickable for desktop app
+  },
+  noDrag: {
+    WebkitAppRegion: "no-drag", // make buttons clickable for desktop app
+  },
+
+  closeButton: {
+    ":hover": {
+      backgroundColor: theme.palette.error.main,
     },
   },
 }));
 
 const selectPlayerName = (ctx: MessagePipelineContext) => ctx.playerState.name;
 
-type AppBarProps = {
+export type CustomWindowControlsProps = {
+  showCustomWindowControls?: boolean;
+  isMaximized?: boolean;
+  onMinimizeWindow?: () => void;
+  onMaximizeWindow?: () => void;
+  onUnmaximizeWindow?: () => void;
+  onCloseWindow?: () => void;
+};
+
+type AppBarProps = CustomWindowControlsProps & {
   currentUser?: User;
   disableSignin?: boolean;
   signIn?: CurrentUser["signIn"];
@@ -97,8 +122,19 @@ type AppBarProps = {
 };
 
 export function AppBar(props: AppBarProps): JSX.Element {
-  const { currentUser, disableSignin, signIn } = props;
-  const { classes } = useStyles({ leftInset: props.leftInset });
+  const {
+    currentUser,
+    disableSignin,
+    signIn,
+    leftInset,
+    showCustomWindowControls = false,
+    isMaximized = false,
+    onMinimizeWindow,
+    onMaximizeWindow,
+    onUnmaximizeWindow,
+    onCloseWindow,
+  } = props;
+  const { classes, cx } = useStyles({ leftInset });
   const playerName = useMessagePipeline(selectPlayerName);
   const currentUserType = useCurrentUserType();
   const analytics = useAnalytics();
@@ -147,7 +183,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
         <MuiAppBar className={classes.appBar} position="sticky" color="inherit" elevation={0}>
           <Toolbar variant="dense" className={classes.toolbar}>
             <div className={classes.start}>
-              <IconButton className={classes.logo} size="large" color="inherit">
+              <IconButton className={cx(classes.logo, classes.noDrag)} size="large" color="inherit">
                 <FoxgloveLogo fontSize="inherit" color="inherit" />
               </IconButton>
               {currentUser != undefined && (
@@ -164,66 +200,103 @@ export function AppBar(props: AppBarProps): JSX.Element {
             )}
 
             <div className={classes.end}>
-              {supportsAccountSettings &&
-                (currentUser ? (
-                  <UserIconButton
-                    aria-label="User profile menu button"
-                    color="inherit"
-                    id="user-profile-button"
-                    aria-controls={userMenuOpen ? "user-profile-menu" : undefined}
-                    aria-haspopup="true"
-                    aria-expanded={userMenuOpen ? "true" : undefined}
-                    onClick={handleUserMenuClick}
-                    size="small"
-                  />
-                ) : (
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={() => {
-                      if (signIn) {
-                        signIn();
-                        void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
-                          user: "unauthenticated",
-                          cta: "sign-in",
-                        });
-                      }
-                    }}
-                  >
-                    Sign in
-                  </Button>
-                ))}
-              <PreferencesIconButton
-                color="inherit"
-                id="preferences-button"
-                aria-label="Preferences dialog button"
-                aria-controls={prefsDialogOpen ? "preferences-dialog" : undefined}
-                aria-haspopup="true"
-                aria-expanded={prefsDialogOpen ? "true" : undefined}
-                onClick={() => {
-                  void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
-                    user: currentUserType,
-                    cta: "preferences-dialog",
-                  });
-                  openPreferences();
-                }}
-              />
-              <HelpIconButton
-                color="inherit"
-                id="help-button"
-                aria-label="Help menu button"
-                aria-controls={helpMenuOpen ? "help-menu" : undefined}
-                aria-haspopup="true"
-                aria-expanded={helpMenuOpen ? "true" : undefined}
-                size="large"
-                onClick={(event) => {
-                  void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
-                    user: currentUserType,
-                    cta: "help-menu",
-                  });
-                  handleHelpClick(event);
-                }}
-              />
+              <div className={classes.endInner}>
+                <HelpIconButton
+                  color="inherit"
+                  id="help-button"
+                  aria-label="Help menu button"
+                  aria-controls={helpMenuOpen ? "help-menu" : undefined}
+                  aria-haspopup="true"
+                  aria-expanded={helpMenuOpen ? "true" : undefined}
+                  size="large"
+                  onClick={(event) => {
+                    void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
+                      user: currentUserType,
+                      cta: "help-menu",
+                    });
+                    handleHelpClick(event);
+                  }}
+                />
+                <PreferencesIconButton
+                  color="inherit"
+                  id="preferences-button"
+                  aria-label="Preferences dialog button"
+                  aria-controls={prefsDialogOpen ? "preferences-dialog" : undefined}
+                  aria-haspopup="true"
+                  aria-expanded={prefsDialogOpen ? "true" : undefined}
+                  onClick={() => {
+                    void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
+                      user: currentUserType,
+                      cta: "preferences-dialog",
+                    });
+                    openPreferences();
+                  }}
+                />
+                {supportsAccountSettings &&
+                  (currentUser ? (
+                    <UserIconButton
+                      aria-label="User profile menu button"
+                      color="inherit"
+                      id="user-profile-button"
+                      aria-controls={userMenuOpen ? "user-profile-menu" : undefined}
+                      aria-haspopup="true"
+                      aria-expanded={userMenuOpen ? "true" : undefined}
+                      onClick={handleUserMenuClick}
+                      size="small"
+                    />
+                  ) : (
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={() => {
+                        if (signIn) {
+                          signIn();
+                          void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
+                            user: "unauthenticated",
+                            cta: "sign-in",
+                          });
+                        }
+                      }}
+                    >
+                      Sign in
+                    </Button>
+                  ))}
+                {showCustomWindowControls && (
+                  <>
+                    <IconButton
+                      size="small"
+                      color="inherit"
+                      onClick={onMinimizeWindow}
+                      data-testid="win-minimize"
+                    >
+                      <MinimizeIcon fontSize="inherit" color="inherit" />
+                    </IconButton>
+
+                    <IconButton
+                      size="small"
+                      color="inherit"
+                      onClick={isMaximized ? onUnmaximizeWindow : onMaximizeWindow}
+                      data-testid="win-maximize"
+                    >
+                      {isMaximized ? (
+                        <FilterNoneIcon fontSize="inherit" color="inherit" />
+                      ) : (
+                        <CheckBoxOutlineBlankIcon fontSize="inherit" color="inherit" />
+                      )}
+                    </IconButton>
+
+                    <IconButton
+                      className={classes.closeButton}
+                      size="small"
+                      color="inherit"
+                      onClick={onCloseWindow}
+                      data-testid="win-close"
+                    >
+                      <CloseIcon fontSize="inherit" color="inherit" />
+                    </IconButton>
+                  </>
+                )}
+              </div>
             </div>
           </Toolbar>
         </MuiAppBar>
