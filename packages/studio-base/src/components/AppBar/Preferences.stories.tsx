@@ -7,29 +7,29 @@ import { PreferencesDialog } from "@foxglove/studio-base/components/AppBar/Prefe
 export default {
   title: "components/PreferencesDialog",
   component: PreferencesDialog,
+  parameters: { colorScheme: "light" },
 };
 
 export function Default(): JSX.Element {
   return <PreferencesDialog open />;
 }
-Default.parameters = { colorScheme: "light" };
 
 export function General(): JSX.Element {
   return <PreferencesDialog open activeTab="general" />;
 }
-General.parameters = { colorScheme: "light" };
 
 export function Privacy(): JSX.Element {
   return <PreferencesDialog open activeTab="privacy" />;
 }
-Privacy.parameters = { colorScheme: "light" };
+
+export function Extensions(): JSX.Element {
+  return <PreferencesDialog open activeTab="extensions" />;
+}
 
 export function Experimental(): JSX.Element {
-  return <PreferencesDialog open activeTab="lab" />;
+  return <PreferencesDialog open activeTab="experimental-features" />;
 }
-Experimental.parameters = { colorScheme: "light" };
 
 export function About(): JSX.Element {
   return <PreferencesDialog open activeTab="about" />;
 }
-About.parameters = { colorScheme: "light" };
