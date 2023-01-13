@@ -150,7 +150,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
     signIn,
     leftInset,
     showCustomWindowControls = false,
-    isMaximized = false,
+    isMaximized,
     onMinimizeWindow,
     onMaximizeWindow,
     onUnmaximizeWindow,
@@ -285,39 +285,13 @@ export function AppBar(props: AppBarProps): JSX.Element {
                     </Button>
                   ))}
                 {showCustomWindowControls && (
-                  <>
-                    <IconButton
-                      size="small"
-                      color="inherit"
-                      onClick={onMinimizeWindow}
-                      data-testid="win-minimize"
-                    >
-                      <MinimizeIcon fontSize="inherit" color="inherit" />
-                    </IconButton>
-
-                    <IconButton
-                      size="small"
-                      color="inherit"
-                      onClick={isMaximized ? onUnmaximizeWindow : onMaximizeWindow}
-                      data-testid="win-maximize"
-                    >
-                      {isMaximized ? (
-                        <FilterNoneIcon fontSize="inherit" color="inherit" />
-                      ) : (
-                        <CheckBoxOutlineBlankIcon fontSize="inherit" color="inherit" />
-                      )}
-                    </IconButton>
-
-                    <IconButton
-                      className={classes.closeButton}
-                      size="small"
-                      color="inherit"
-                      onClick={onCloseWindow}
-                      data-testid="win-close"
-                    >
-                      <CloseIcon fontSize="inherit" color="inherit" />
-                    </IconButton>
-                  </>
+                  <CustomWindowControls
+                    onMinimizeWindow={onMinimizeWindow}
+                    isMaximized={isMaximized}
+                    onUnmaximizeWindow={onUnmaximizeWindow}
+                    onMaximizeWindow={onMaximizeWindow}
+                    onCloseWindow={onCloseWindow}
+                  />
                 )}
               </div>
             </div>
@@ -343,6 +317,51 @@ export function AppBar(props: AppBarProps): JSX.Element {
         open={prefsDialogOpen}
         onClose={closePreferences}
       />
+    </>
+  );
+}
+
+function CustomWindowControls({
+  isMaximized = false,
+  onMinimizeWindow,
+  onMaximizeWindow,
+  onUnmaximizeWindow,
+  onCloseWindow,
+}: Omit<CustomWindowControlsProps, "showCustomWindowControls">) {
+  const { classes } = useStyles({});
+  return (
+    <>
+      <IconButton
+        size="small"
+        color="inherit"
+        onClick={onMinimizeWindow}
+        data-testid="win-minimize"
+      >
+        <MinimizeIcon fontSize="inherit" color="inherit" />
+      </IconButton>
+
+      <IconButton
+        size="small"
+        color="inherit"
+        onClick={isMaximized ? onUnmaximizeWindow : onMaximizeWindow}
+        data-testid="win-maximize"
+      >
+        {isMaximized ? (
+          <FilterNoneIcon fontSize="inherit" color="inherit" />
+        ) : (
+          <CheckBoxOutlineBlankIcon fontSize="inherit" color="inherit" />
+        )}
+      </IconButton>
+
+      <IconButton
+        className={classes.closeButton}
+        size="small"
+        color="inherit"
+        onClick={onCloseWindow}
+        data-testid="win-close"
+      >
+        <CloseIcon fontSize="inherit" color="inherit" />
+      </IconButton>
     </>
   );
 }
