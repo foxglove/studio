@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Link, CircularProgress, Typography, styled as muiStyled } from "@mui/material";
+import { CircularProgress, Link, styled as muiStyled, Typography } from "@mui/material";
 import React, {
   LazyExoticComponent,
   PropsWithChildren,
@@ -32,16 +32,14 @@ import {
 
 import { EmptyPanelLayout } from "@foxglove/studio-base/components/EmptyPanelLayout";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
-import { useLayoutBrowserReducer } from "@foxglove/studio-base/components/LayoutBrowser/reducer";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import Stack from "@foxglove/studio-base/components/Stack";
 import {
   LayoutState,
+  useCurrentLayoutActions,
   useCurrentLayoutSelector,
   usePanelMosaicId,
-  useCurrentLayoutActions,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
-import "react-mosaic-component/react-mosaic-component.css";
 import { useExtensionCatalog } from "@foxglove/studio-base/context/ExtensionCatalogContext";
 import { useLayoutManager } from "@foxglove/studio-base/context/LayoutManagerContext";
 import { PanelComponent, usePanelCatalog } from "@foxglove/studio-base/context/PanelCatalogContext";
@@ -49,6 +47,7 @@ import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
 import { defaultLayout } from "@foxglove/studio-base/providers/CurrentLayoutProvider/defaultLayout";
 import { MosaicDropResult, PanelConfig } from "@foxglove/studio-base/types/panels";
 import { getPanelIdForType, getPanelTypeFromId } from "@foxglove/studio-base/util/layout";
+import "react-mosaic-component/react-mosaic-component.css";
 
 import ErrorBoundary from "./ErrorBoundary";
 import { MosaicPathContext } from "./MosaicPathContext";
@@ -227,12 +226,6 @@ export default function PanelLayout(): JSX.Element {
   const mosaicLayout = useCurrentLayoutSelector(selectedLayoutMosaicSelector);
   const registeredExtensions = useExtensionCatalog((state) => state.installedExtensions);
 
-  const [, dispatch] = useLayoutBrowserReducer({
-    busy: layoutManager.isBusy,
-    error: layoutManager.error,
-    online: layoutManager.isOnline,
-  });
-
   const createNewLayout = async () => {
     const layout = await layoutManager.saveNewLayout({
       name: "Default",
@@ -240,7 +233,6 @@ export default function PanelLayout(): JSX.Element {
       permission: "CREATOR_WRITE",
     });
     setSelectedLayoutId(layout.id);
-    dispatch({ type: "select-id", id: layout.id });
     openLayoutBrowser();
   };
 
@@ -248,7 +240,6 @@ export default function PanelLayout(): JSX.Element {
     const layouts = await layoutManager.getLayouts();
     if (layouts[0]) {
       setSelectedLayoutId(layouts[0].id);
-      dispatch({ type: "select-id", id: layouts[0].id });
     }
     openLayoutBrowser();
   };
@@ -286,8 +277,8 @@ export default function PanelLayout(): JSX.Element {
         or
       </Typography>{" "}
       <Link onClick={createNewLayout} underline="hover" color="primary" variant="body1">
-        Create new layout
-      </Link>{" "}
+        Create a new layout
+      </Link>
     </EmptyState>
   );
 }
