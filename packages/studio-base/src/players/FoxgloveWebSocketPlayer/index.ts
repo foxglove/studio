@@ -37,7 +37,6 @@ import {
   ClientChannel,
   FoxgloveClient,
   ServerCapability,
-  ServerInfo,
   SubscriptionId,
 } from "@foxglove/ws-protocol";
 
@@ -193,7 +192,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
         const rosDistro = event.metadata["ROS_DISTRO"] as string;
         const rosDataTypes = ["melodic", "noetic"].includes(rosDistro)
           ? CommonRosTypes.ros1
-          : rosDistro === "galactic"
+          : ["foxy", "galactic"].includes(rosDistro)
           ? CommonRosTypes.ros2galactic
           : CommonRosTypes.ros2humble;
 
@@ -421,10 +420,12 @@ export default class FoxgloveWebSocketPlayer implements Player {
 
     this._topics = topics;
 
-    // Update the _datatypes map;
-    for (const { parsedChannel } of this._channelsById.values()) {
-      for (const [name, types] of parsedChannel.datatypes) {
-        this._datatypes?.set(name, types);
+    if (this._datatypes) {
+      // Update the _datatypes map;
+      for (const { parsedChannel } of this._channelsById.values()) {
+        for (const [name, types] of parsedChannel.datatypes) {
+          this._datatypes.set(name, types);
+        }
       }
     }
     this._emitState();
