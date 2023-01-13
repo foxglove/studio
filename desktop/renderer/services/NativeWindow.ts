@@ -25,6 +25,10 @@ export class NativeWindow implements INativeWindow {
     this.bridge?.removeIpcEventListener(name, listener);
   }
 
+  public handleTitleBarDoubleClick(): void {
+    this.bridge?.handleTitleBarDoubleClick();
+  }
+
   public isMaximized(): boolean {
     return this.bridge?.isMaximized() ?? false;
   }

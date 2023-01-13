@@ -10,10 +10,6 @@ import { AppBar as MuiAppBar, Button, IconButton, Toolbar, Typography } from "@m
 import { MouseEvent, useCallback, useContext, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 
-import {
-  PreferencesDialog,
-  PreferencesIconButton,
-} from "@foxglove/studio-base/components/AppBar/Preferences";
 import { FoxgloveLogo } from "@foxglove/studio-base/components/FoxgloveLogo";
 import {
   MessagePipelineContext,
@@ -31,6 +27,7 @@ import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
 
 import { HelpIconButton, HelpMenu } from "./Help";
+import { PreferencesDialog, PreferencesIconButton } from "./Preferences";
 import { UserIconButton, UserMenu } from "./User";
 import { APP_BAR_HEIGHT, APP_BAR_BACKGROUND_COLOR, APP_BAR_FOREGROUND_COLOR } from "./constants";
 
@@ -140,6 +137,7 @@ type AppBarProps = CustomWindowControlsProps & {
   disableSignin?: boolean;
   signIn?: CurrentUser["signIn"];
   leftInset?: number;
+  onDoubleClick?: () => void;
   debugDragRegion?: boolean;
 };
 
@@ -150,6 +148,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
     signIn,
     leftInset,
     showCustomWindowControls = false,
+    onDoubleClick,
     isMaximized,
     onMinimizeWindow,
     onMaximizeWindow,
@@ -193,6 +192,15 @@ export function AppBar(props: AppBarProps): JSX.Element {
     setPrefsDialogOpen(false);
   };
 
+  const handleDoubleClick = useCallback(
+    (event: React.MouseEvent) => {
+      event.stopPropagation();
+      event.preventDefault();
+      onDoubleClick?.();
+    },
+    [onDoubleClick],
+  );
+
   useNativeAppMenuEvent(
     "open-preferences",
     useCallback(() => {
@@ -203,7 +211,13 @@ export function AppBar(props: AppBarProps): JSX.Element {
   return (
     <>
       <ThemeProvider isDark>
-        <MuiAppBar className={classes.appBar} position="sticky" color="inherit" elevation={0}>
+        <MuiAppBar
+          className={classes.appBar}
+          position="sticky"
+          color="inherit"
+          elevation={0}
+          onDoubleClick={handleDoubleClick}
+        >
           <Toolbar variant="dense" className={classes.toolbar}>
             <div className={classes.start}>
               <IconButton className={cx(classes.logo, classes.noDrag)} size="large" color="inherit">

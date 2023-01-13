@@ -90,6 +90,9 @@ interface Desktop {
   // was not found (i.e. already uninstalled)
   uninstallExtension: (id: string) => Promise<boolean>;
 
+  /** Handle a double-click on the custom title bar */
+  handleTitleBarDoubleClick(): void;
+
   isMaximized(): boolean;
   minimizeWindow(): void;
   maximizeWindow(): void;

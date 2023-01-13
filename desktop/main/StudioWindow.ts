@@ -11,6 +11,7 @@ import {
   MenuItemConstructorOptions,
   shell,
   MenuItem,
+  systemPreferences,
 } from "electron";
 import path from "path";
 
@@ -189,6 +190,22 @@ function newStudioWindow(deepLinks: string[] = []): BrowserWindow {
 
   browserWindow.webContents.on("ipc-message", (_event, channel) => {
     switch (channel) {
+      case "titleBarDoubleClicked": {
+        const action: string =
+          systemPreferences.getUserDefault("AppleActionOnDoubleClick", "string") || "Maximize";
+        if (action === "Minimize") {
+          browserWindow.minimize();
+        } else if (action === "Maximize") {
+          if (browserWindow.isMaximized()) {
+            browserWindow.unmaximize();
+          } else {
+            browserWindow.maximize();
+          }
+        } else {
+          // "None"
+        }
+        break;
+      }
       case "minimizeWindow":
         browserWindow.minimize();
         break;
