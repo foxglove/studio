@@ -2391,8 +2391,8 @@ __metadata:
     "@mui/material": 5.4.1
     "@popperjs/core": 2.11.6
     "@protobufjs/base64": 1.1.2
-    "@sentry/core": 7.16.0
-    "@sentry/types": 7.16.0
+    "@sentry/core": 7.30.0
+    "@sentry/types": 7.30.0
     "@storybook/addon-actions": 6.5.15
     "@storybook/react": 6.5.15
     "@testing-library/dom": 8.11.3
@@ -3643,15 +3643,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sentry/browser@npm:7.16.0":
-  version: 7.16.0
-  resolution: "@sentry/browser@npm:7.16.0"
+"@sentry/browser@npm:7.30.0":
+  version: 7.30.0
+  resolution: "@sentry/browser@npm:7.30.0"
   dependencies:
-    "@sentry/core": 7.16.0
-    "@sentry/types": 7.16.0
-    "@sentry/utils": 7.16.0
+    "@sentry/core": 7.30.0
+    "@sentry/replay": 7.30.0
+    "@sentry/types": 7.30.0
+    "@sentry/utils": 7.30.0
     tslib: ^1.9.3
-  checksum: 7de86fe6821bee8de5bace073dd49f2f621a87b2fee57825f01365538d1533170e0c96f15a99ac82abf01f7cd7f881c97543d3c5ea7cae006e16d045e5edf3b9
+  checksum: 7c227d944391c27fe1cae32c78e9ea99a24f0bf491297e11ccadcbd848a8ba4a280eb0ad68c9b1d493ed0dde69609916f5ad43bebdee481b3c7564af92641292
   languageName: node
   linkType: hard
 
@@ -3672,17 +3673,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sentry/core@npm:7.16.0":
-  version: 7.16.0
-  resolution: "@sentry/core@npm:7.16.0"
-  dependencies:
-    "@sentry/types": 7.16.0
-    "@sentry/utils": 7.16.0
-    tslib: ^1.9.3
-  checksum: 033c775f9e4411dc4506617cea3d780b0696367ded01052d398e4a2e4752bb29de3ad15731cde07115995ed8c3ded2fea1b65231502eba87703cdfb35699d8b0
-  languageName: node
-  linkType: hard
-
 "@sentry/core@npm:7.30.0":
   version: 7.30.0
   resolution: "@sentry/core@npm:7.30.0"
@@ -3694,33 +3684,46 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sentry/electron@npm:4.1.2":
-  version: 4.1.2
-  resolution: "@sentry/electron@npm:4.1.2"
+"@sentry/electron@npm:4.2.0":
+  version: 4.2.0
+  resolution: "@sentry/electron@npm:4.2.0"
   dependencies:
-    "@sentry/browser": 7.16.0
-    "@sentry/core": 7.16.0
-    "@sentry/node": 7.16.0
-    "@sentry/types": 7.16.0
-    "@sentry/utils": 7.16.0
+    "@sentry/browser": 7.30.0
+    "@sentry/core": 7.30.0
+    "@sentry/node": 7.30.0
+    "@sentry/types": 7.30.0
+    "@sentry/utils": 7.30.0
     deepmerge: 4.2.2
     tslib: ^2.3.1
-  checksum: d5e413fd019d38894c8ec91ba5dcb8cf76891abdf55a0162cda783c592525aa6d3db32cd85013ce5365ab2e0de4a3e5fba6db60f752a403768d2451686c3c122
+  checksum: 4267326871fd3b1e6f48cf7f24a11511d437c567a880e1c94fe8d73944b83bcaac2787de96e9386cb61cbe3a5d4843985a17906fd2ff0ee04b486afd9c34903b
   languageName: node
   linkType: hard
 
-"@sentry/node@npm:7.16.0":
-  version: 7.16.0
-  resolution: "@sentry/node@npm:7.16.0"
+"@sentry/node@npm:7.30.0":
+  version: 7.30.0
+  resolution: "@sentry/node@npm:7.30.0"
   dependencies:
-    "@sentry/core": 7.16.0
-    "@sentry/types": 7.16.0
-    "@sentry/utils": 7.16.0
+    "@sentry/core": 7.30.0
+    "@sentry/types": 7.30.0
+    "@sentry/utils": 7.30.0
     cookie: ^0.4.1
     https-proxy-agent: ^5.0.0
     lru_map: ^0.3.3
     tslib: ^1.9.3
-  checksum: 2bd68ec5cbf73b15e479c6a10620bb52046b4400c2906b08891ab440df2d5995c0e7ffff7f35483e4ee98f853ccf0152e2fa42380a331e5ccb3b7918d99a861a
+  checksum: baa94c4fe7ce01d810847f0fa3ac2c31367b321c25e0c8a706e21f295c7cbe6d0f651b01e2ffce6e6ec6e83696e508f54e270141c784498a34f29678b21f06dc
+  languageName: node
+  linkType: hard
+
+"@sentry/replay@npm:7.30.0":
+  version: 7.30.0
+  resolution: "@sentry/replay@npm:7.30.0"
+  dependencies:
+    "@sentry/core": 7.30.0
+    "@sentry/types": 7.30.0
+    "@sentry/utils": 7.30.0
+  peerDependencies:
+    "@sentry/browser": ">=7.24.0"
+  checksum: da7f545ddad9e7584a155382d210e9f8bf2479651dae1c94196075be5d973ceed1d74d49745377ffd0a736c6e3654da98c36ede67c5c18f6f125c191416bb1f3
   languageName: node
   linkType: hard
 
@@ -3736,27 +3739,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sentry/types@npm:7.16.0":
-  version: 7.16.0
-  resolution: "@sentry/types@npm:7.16.0"
-  checksum: 5474085db149c80c23102ba12063fef27ac873a238963598eb3ca6dfd956672ecd25783f9f38b8a8ba905473e14f9af97e900749778957671861c1ef6d33f81a
-  languageName: node
-  linkType: hard
-
 "@sentry/types@npm:7.30.0":
   version: 7.30.0
   resolution: "@sentry/types@npm:7.30.0"
   checksum: be228ae65f8750513371b6692821aa0d92d15354aa9fd7f1f1b497c2a53d20769fd56f89a1516d80e416ab73596609e805a6fae2b51510018338eedf5a0dd260
-  languageName: node
-  linkType: hard
-
-"@sentry/utils@npm:7.16.0":
-  version: 7.16.0
-  resolution: "@sentry/utils@npm:7.16.0"
-  dependencies:
-    "@sentry/types": 7.16.0
-    tslib: ^1.9.3
-  checksum: decff9f82e7b6b431b1d226f6567762bd2189357ceacb304be20413fcb07be62fad17433979f750e717a07e92625b250bf7493591550f6e146d8adc8d06d6721
   languageName: node
   linkType: hard
 
@@ -10465,7 +10451,7 @@ __metadata:
     "@foxglove/studio-base": "workspace:*"
     "@mcap/core": 0.3.0
     "@pmmmwh/react-refresh-webpack-plugin": 0.5.10
-    "@sentry/electron": 4.1.2
+    "@sentry/electron": 4.2.0
     "@sentry/tracing": 7.30.0
     "@sentry/webpack-plugin": 1.20.0
     "@storybook/react": 6.5.15
@@ -12841,7 +12827,7 @@ __metadata:
     eslint-plugin-react-hooks: 4.6.0
     eslint-plugin-tss-unused-classes: 0.0.4
     jest: 27.5.1
-    jest-canvas-mock: 2.3.1
+    jest-canvas-mock: 2.4.0
     license-checker: 25.0.1
     prettier: 2.5.1
     rimraf: 3.0.2
@@ -15268,13 +15254,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jest-canvas-mock@npm:2.3.1":
-  version: 2.3.1
-  resolution: "jest-canvas-mock@npm:2.3.1"
+"jest-canvas-mock@npm:2.4.0":
+  version: 2.4.0
+  resolution: "jest-canvas-mock@npm:2.4.0"
   dependencies:
     cssfontparser: ^1.2.1
     moo-color: ^1.0.2
-  checksum: 82606d348cf4f671af098dcebac19c98643fc5896c6e1af24b572b8e477e7bee18e4c65e0aee8d72d3af88511eba265e12001c6fb72c319d7efe15a6ba23b58b
+  checksum: feda3c9a3301dc8f1ce3eee3d6cd944d3e2f50d713f1a3f159bdd85b88b275871c400dc0a4a50d14b36eef347dde2d7223e50d1109501b80668d87253712675e
   languageName: node
   linkType: hard
 
@@ -24492,7 +24478,7 @@ __metadata:
     "@mui/icons-material": 5.11.0
     "@mui/material": 5.4.1
     "@pmmmwh/react-refresh-webpack-plugin": 0.5.10
-    "@sentry/browser": 7.16.0
+    "@sentry/browser": 7.30.0
     "@sentry/tracing": 7.30.0
     "@sentry/webpack-plugin": 1.20.0
     "@types/copy-webpack-plugin": 10.1.0
