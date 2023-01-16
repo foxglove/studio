@@ -40,6 +40,8 @@ import {
   SubscriptionId,
 } from "@foxglove/ws-protocol";
 
+import WorkerSocketAdaptor from "./WorkerSocketAdaptor";
+
 const log = Log.getLogger(__dirname);
 
 /** Suppress warnings about messages on unknown subscriptions if the susbscription was recently canceled. */
@@ -126,7 +128,10 @@ export default class FoxgloveWebSocketPlayer implements Player {
     log.info(`Opening connection to ${this._url}`);
 
     this._client = new FoxgloveClient({
-      ws: new WebSocket(this._url, [FoxgloveClient.SUPPORTED_SUBPROTOCOL]),
+      ws:
+        typeof Worker !== "undefined"
+          ? new WorkerSocketAdaptor(this._url, [FoxgloveClient.SUPPORTED_SUBPROTOCOL])
+          : new WebSocket(this._url, [FoxgloveClient.SUPPORTED_SUBPROTOCOL]),
     });
 
     this._client.on("open", () => {
