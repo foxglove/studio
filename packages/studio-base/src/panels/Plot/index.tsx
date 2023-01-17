@@ -124,6 +124,10 @@ const ZERO_TIME = { sec: 0, nsec: 0 };
 
 const performance = window.performance;
 
+/**
+ * Builds a lookup map of a compound x:y:index key to a datum, used to map hovered positions
+ * on screen to a data point for tooltip display.
+ */
 function buildTooltipLookupMap(datasets: DataSet[]): Map<string, TimeBasedChartTooltipData> {
   const lookup = new Map<string, TimeBasedChartTooltipData>();
   for (const [index, dataset] of datasets.entries()) {

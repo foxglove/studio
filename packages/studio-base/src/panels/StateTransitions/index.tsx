@@ -344,7 +344,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
 
   useStateTransitionsPanelSettings(config, saveConfig);
 
-  const tooltipLookup = useMemo(() => {
+  const pointToDatumTooltipMap = useMemo(() => {
     const lookup = new Map<string, TimeBasedChartTooltipData>();
     for (const tip of tooltips) {
       lookup.set(`${tip.x}:${tip.y}:${tip.datasetIndex}`, tip);
@@ -387,7 +387,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
             xAxisIsPlaybackTime
             yAxes={yScale}
             plugins={plugins}
-            tooltips={tooltipLookup}
+            tooltips={pointToDatumTooltipMap}
             onClick={onClick}
             currentTime={currentTimeSinceStart}
           />

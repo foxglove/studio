@@ -103,6 +103,7 @@ export default function TimeBasedChartTooltipContent(
     );
   }
 
+  // Sort items by their dataset index to maintain the same ordering as the series in the legend.
   const sortedItems = sortBy(
     [...itemsByPath.out.entries()],
     ([_, items]) => items[0]?.datasetIndex ?? 0,
