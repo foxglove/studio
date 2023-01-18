@@ -3,28 +3,29 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { AVLTree } from "@foxglove/avl";
-import { Time, compare as compareTime, toNanoSec } from "@foxglove/rostime";
-import { ImageAnnotations } from "@foxglove/schemas";
-import { FoxgloveMessages } from "@foxglove/studio-base/types/FoxgloveMessages";
+import { Time, compare as compareTime } from "@foxglove/rostime";
+import { CompressedImage, ImageAnnotations } from "@foxglove/schemas";
 
-import { synchronizedAddMessage, SynchronizationItem } from "./useImagePanelMessages";
+import { synchronizedAddMessages } from "./synchronizedAddMessages";
+import { SynchronizationItem, ImagePanelState } from "./useImagePanelMessages";
 
-function EmptyState() {
+function emptyState(): Parameters<typeof synchronizedAddMessages>[0] {
   return {
-    annotationsByTopic: new Map(),
     tree: new AVLTree<Time, SynchronizationItem>(compareTime),
+    annotationTopics: [],
   };
 }
 
-function GenerateImage(stamp: Time): FoxgloveMessages["foxglove.CompressedImage"] {
+function generateImage(stamp: Time): CompressedImage {
   return {
-    timestamp: toNanoSec(stamp),
+    timestamp: stamp,
+    frame_id: "",
     format: "format",
     data: new Uint8Array(0),
   };
 }
 
-function GenerateAnnotations(stamp: Time): ImageAnnotations {
+function generateAnnotations(stamp: Time): ImageAnnotations {
   return {
     circles: [
       {
@@ -40,139 +41,133 @@ function GenerateAnnotations(stamp: Time): ImageAnnotations {
   };
 }
 
-describe("synchronizedAddMessage", () => {
+describe("synchronizedAddMessages", () => {
   it("should return the same state when no images or annotations provided", () => {
-    const state = EmptyState();
-    const newState = synchronizedAddMessage(state, {
-      datatype: "dummy",
-      event: {
+    const state = emptyState();
+    const newState = synchronizedAddMessages(state, [
+      {
         topic: "/foo",
         receiveTime: { sec: 0, nsec: 0 },
         message: {},
         schemaName: "dummy",
         sizeInBytes: 0,
       },
-      annotationTopics: [],
-    });
+    ]);
     expect(newState).toEqual(state);
   });
 
   it("stores unsynchronized image message", () => {
-    const state = EmptyState();
+    const state = { ...emptyState(), annotationTopics: ["/annotation"] };
 
-    const image = GenerateImage({ sec: 1, nsec: 0 });
-    const newState = synchronizedAddMessage(state, {
-      datatype: "foxglove.CompressedImage",
-      event: {
+    const image = generateImage({ sec: 1, nsec: 0 });
+    const newState = synchronizedAddMessages(state, [
+      {
         topic: "/foo",
         receiveTime: { sec: 0, nsec: 0 },
         message: image,
         schemaName: "foxglove.CompressedImage",
         sizeInBytes: 0,
       },
-      annotationTopics: ["/annotation"],
-    });
+    ]);
 
     // There's no synchronization, so we return the same state
-    expect(newState).toEqual(state);
+    expect(newState).toEqual<Partial<ImagePanelState>>({
+      annotationTopics: state.annotationTopics,
+      tree: state.tree,
+      image: undefined,
+    });
 
-    expect(newState.tree.minKey()).toEqual({ sec: 1, nsec: 0 });
+    expect(newState.tree?.minKey()).toEqual({ sec: 1, nsec: 0 });
   });
 
   it("stores unsynchronized image message and unsynchronized annotations", () => {
-    const state = EmptyState();
+    const state = { ...emptyState(), annotationTopics: ["/annotation"] };
 
     {
-      const image = GenerateImage({ sec: 1, nsec: 0 });
-      const newState = synchronizedAddMessage(state, {
-        datatype: "foxglove.CompressedImage",
-        event: {
+      const image = generateImage({ sec: 1, nsec: 0 });
+      const newState = synchronizedAddMessages(state, [
+        {
           topic: "/foo",
           receiveTime: { sec: 0, nsec: 0 },
           message: image,
           schemaName: "foxglove.CompressedImage",
           sizeInBytes: 0,
         },
-        annotationTopics: ["/annotation"],
-      });
+      ]);
       // There's no synchronization, so we return the same state
-      expect(newState).toEqual(state);
+      expect(newState).toEqual<Partial<ImagePanelState>>({
+        tree: state.tree,
+        annotationTopics: state.annotationTopics,
+        image: undefined,
+      });
 
-      expect(newState.tree.minKey()).toEqual({ sec: 1, nsec: 0 });
-      expect(newState.tree.maxKey()).toEqual({ sec: 1, nsec: 0 });
+      expect(newState.tree?.minKey()).toEqual({ sec: 1, nsec: 0 });
+      expect(newState.tree?.maxKey()).toEqual({ sec: 1, nsec: 0 });
     }
 
     {
-      const annotations = GenerateAnnotations({ sec: 2, nsec: 0 });
-      const newState = synchronizedAddMessage(state, {
-        datatype: "foxglove.ImageAnnotations",
-        event: {
+      const annotations = generateAnnotations({ sec: 2, nsec: 0 });
+      const newState = synchronizedAddMessages(state, [
+        {
           topic: "/annotation",
           receiveTime: { sec: 0, nsec: 0 },
           message: annotations,
           schemaName: "foxglove.ImageAnnotations",
           sizeInBytes: 0,
         },
-        annotationTopics: ["/annotation"],
-      });
+      ]);
       // There's no synchronization, so we return the same state
       expect(newState).toEqual(state);
 
-      expect(newState.tree.minKey()).toEqual({ sec: 1, nsec: 0 });
-      expect(newState.tree.maxKey()).toEqual({ sec: 2, nsec: 0 });
+      expect(newState.tree?.minKey()).toEqual({ sec: 1, nsec: 0 });
+      expect(newState.tree?.maxKey()).toEqual({ sec: 2, nsec: 0 });
     }
   });
 
   it("produces results when getting synchronized messages and removes old messages", () => {
-    const state = EmptyState();
+    const state = { ...emptyState(), annotationTopics: ["/annotation"] };
 
     {
-      const image = GenerateImage({ sec: 1, nsec: 0 });
-      const newState = synchronizedAddMessage(state, {
-        datatype: "foxglove.CompressedImage",
-        event: {
+      const image = generateImage({ sec: 1, nsec: 0 });
+      const newState = synchronizedAddMessages(state, [
+        {
           topic: "/foo",
           receiveTime: { sec: 0, nsec: 0 },
           message: image,
           schemaName: "foxglove.CompressedImage",
           sizeInBytes: 0,
         },
-        annotationTopics: ["/annotation"],
-      });
+      ]);
       // There's no synchronization, so we return the same state
       expect(newState).toEqual(state);
     }
 
     {
-      const annotations = GenerateAnnotations({ sec: 2, nsec: 0 });
-      const newState = synchronizedAddMessage(state, {
-        datatype: "foxglove.ImageAnnotations",
-        event: {
+      const annotations = generateAnnotations({ sec: 2, nsec: 0 });
+      const newState = synchronizedAddMessages(state, [
+        {
           topic: "/annotation",
           receiveTime: { sec: 0, nsec: 0 },
           message: annotations,
           schemaName: "foxglove.ImageAnnotations",
           sizeInBytes: 0,
         },
-        annotationTopics: ["/annotation"],
-      });
+      ]);
       // There's no synchronization, so we return the same state
       expect(newState).toEqual(state);
     }
 
     {
-      const image = GenerateImage({ sec: 2, nsec: 0 });
-      const newState = synchronizedAddMessage(state, {
-        datatype: "foxglove.CompressedImage",
-        event: {
+      const image = generateImage({ sec: 2, nsec: 0 });
+      const newState = synchronizedAddMessages(state, [
+        {
           topic: "/foo",
           receiveTime: { sec: 0, nsec: 0 },
           message: image,
           schemaName: "foxglove.CompressedImage",
           sizeInBytes: 0,
         },
-        annotationTopics: ["/annotation"],
-      });
+      ]);
 
       expect(newState.image).toEqual({
         data: new Uint8Array(),
@@ -201,8 +196,8 @@ describe("synchronizedAddMessage", () => {
         ),
       );
 
-      expect(newState.tree.minKey()).toEqual({ sec: 2, nsec: 0 });
-      expect(newState.tree.maxKey()).toEqual({ sec: 2, nsec: 0 });
+      expect(newState.tree?.minKey()).toEqual({ sec: 2, nsec: 0 });
+      expect(newState.tree?.maxKey()).toEqual({ sec: 2, nsec: 0 });
     }
   });
 });
