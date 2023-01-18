@@ -2420,7 +2420,7 @@ __metadata:
     "@types/nearley": 2.11.2
     "@types/offscreencanvas": 2019.6.4
     "@types/prettier": 2.7.2
-    "@types/react": 17.0.39
+    "@types/react": 17.0.53
     "@types/react-autocomplete": 1.8.6
     "@types/react-dom": 17.0.13
     "@types/react-hover-observer": "workspace:*"
@@ -5954,14 +5954,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react@npm:*, @types/react@npm:17.0.39, @types/react@npm:>=16.9.0":
-  version: 17.0.39
-  resolution: "@types/react@npm:17.0.39"
+"@types/react@npm:*, @types/react@npm:17.0.53, @types/react@npm:>=16.9.0":
+  version: 17.0.53
+  resolution: "@types/react@npm:17.0.53"
   dependencies:
     "@types/prop-types": "*"
     "@types/scheduler": "*"
     csstype: ^3.0.2
-  checksum: bf04d3c2894559012710d595553e12b422d3b91cd8f4f7e122d8cb044ba9c2ba17f6e8a4e09581359cc5509ddc59cd8c8fabd6774f3505a40a45393f074d6e6e
+  checksum: dacfde02c260fd98bed2eb775ed0c7ce1397be4c0844f907a50763b081a4008f81f57071889a16eb1350ddcf0927f3cf1a6541702c8ad03de3c70383ef931e3f
   languageName: node
   linkType: hard
 
@@ -8121,7 +8121,7 @@ __metadata:
     "@foxglove/studio": "workspace:*"
     "@foxglove/studio-base": "workspace:*"
     "@pmmmwh/react-refresh-webpack-plugin": 0.5.10
-    "@types/react": 17.0.39
+    "@types/react": 17.0.53
     "@types/react-dom": 17.0.13
     clean-webpack-plugin: 4.0.0
     html-webpack-plugin: 5.5.0
