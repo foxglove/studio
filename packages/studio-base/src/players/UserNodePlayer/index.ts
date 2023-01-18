@@ -134,6 +134,7 @@ export default class UserNodePlayer implements Player {
   // keep track of last message on all topics to recompute output topic messages when user nodes change
   private _lastMessageByInputTopic = new Map<string, MessageEvent<unknown>>();
   private _userNodeIdsNeedUpdate = new Set<string>();
+  private _globalVariablesChanged = false;
 
   private _protectedState = new MutexLocked<ProtectedState>({
     userNodes: {},
@@ -348,8 +349,9 @@ export default class UserNodePlayer implements Player {
     return outputBlocks;
   }
 
-  public setGlobalVariables(globalVariables: GlobalVariables): void {
+  public async setGlobalVariables(globalVariables: GlobalVariables): Promise<void> {
     this._globalVariables = globalVariables;
+    this._globalVariablesChanged = true;
   }
 
   // Called when userNode state is updated.
@@ -413,7 +415,6 @@ export default class UserNodePlayer implements Player {
     // a specific node. A node may have a problem that may later clear. Using the key we can add/remove
     // problems for specific userspace nodes independently of other userspace nodes.
     const problemKey = `node-id-${nodeId}`;
-
     const buildMessageProcessor = (): NodeRegistration["processMessage"] => {
       return async (msgEvent: MessageEvent<unknown>, globalVariables: GlobalVariables) => {
         const terminateSignal = terminateCondvar.wait();
@@ -830,6 +831,15 @@ export default class UserNodePlayer implements Player {
 
           for (const topic of inputTopics) {
             inputTopicsForRecompute.add(topic);
+          }
+        }
+
+        // if the globalVariables have changed recompute all last messages for the current frame
+        // there's no way to know which nodes are affected by the globalVariables change to make this more specific
+        if (this._globalVariablesChanged) {
+          this._globalVariablesChanged = false;
+          for (const inputTopic of this._lastMessageByInputTopic.keys()) {
+            inputTopicsForRecompute.add(inputTopic);
           }
         }
 
