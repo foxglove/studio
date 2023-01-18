@@ -349,7 +349,7 @@ export default class UserNodePlayer implements Player {
     return outputBlocks;
   }
 
-  public async setGlobalVariables(globalVariables: GlobalVariables): Promise<void> {
+  public setGlobalVariables(globalVariables: GlobalVariables): void {
     this._globalVariables = globalVariables;
     this._globalVariablesChanged = true;
   }
