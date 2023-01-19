@@ -61,7 +61,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
   private _client?: FoxgloveClient; // The client when we're connected.
   private _id: string = uuidv4(); // Unique ID for this player.
   private _serverCapabilities: string[] = [];
-  private _playerCapabilities: typeof PlayerCapabilities[keyof typeof PlayerCapabilities][] = [];
+  private _playerCapabilities: (typeof PlayerCapabilities)[keyof typeof PlayerCapabilities][] = [];
   private _supportedEncodings?: string[];
   private _listener?: (arg0: PlayerState) => Promise<void>; // Listener for _emitState().
   private _closed: boolean = false; // Whether the player has been completely closed using close().
@@ -187,7 +187,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
       this._supportedEncodings = event.supportedEncodings;
       this._datatypes = new Map();
 
-      if (event.metadata != undefined && Object.keys(event.metadata).includes("ROS_DISTRO")) {
+      if (event.metadata != undefined && "ROS_DISTRO" in event.metadata) {
         // Add common ROS message definitions
         const rosDistro = event.metadata["ROS_DISTRO"] as string;
         const rosDataTypes = ["melodic", "noetic"].includes(rosDistro)
@@ -599,7 +599,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
     }
 
     if (clientChannel.encoding === "json") {
-      const message = new Uint8Array(Buffer.from(JSON.stringify(msg) ?? ""));
+      const message = Buffer.from(JSON.stringify(msg) ?? "");
       this._client.sendMessage(clientChannel.id, message);
     } else if (
       ROS_ENCODINGS.includes(clientChannel.encoding) &&

@@ -2178,7 +2178,7 @@ __metadata:
   dependencies:
     "@foxglove/rosmsg": 3.1.0
     "@foxglove/rosmsg-serialization": 1.5.3
-    "@foxglove/rosmsg2-serialization": 1.0.7
+    "@foxglove/rosmsg2-serialization": 1.1.1
     "@foxglove/schemas": 0.7.3
     "@foxglove/wasm-bz2": 0.1.1
     "@mcap/core": 0.3.0
@@ -2296,17 +2296,6 @@ __metadata:
   dependencies:
     "@foxglove/rosmsg": ^3.1.0
   checksum: fdb665763b84f9af30d5161368aaf8ad662615cbb65ee648a7398c940f679baaeaca2eb569f573d2cedbdb171a0a1dabbdad14d0f2b70eff5c1afc337e58752b
-  languageName: node
-  linkType: hard
-
-"@foxglove/rosmsg2-serialization@npm:1.0.7":
-  version: 1.0.7
-  resolution: "@foxglove/rosmsg2-serialization@npm:1.0.7"
-  dependencies:
-    "@foxglove/cdr": ^2.0.0
-    "@foxglove/rosmsg": ^3.1.0
-    "@foxglove/rostime": ^1.1.2
-  checksum: fddb256ae6a6da5a34be4cb45261fe24d0bece667d674ba73f84416f7b42190b94172c699bffd3a9e57b9efc311b1c845e33caaffdccb3e9ac0e5f4cb3756592
   languageName: node
   linkType: hard
 
