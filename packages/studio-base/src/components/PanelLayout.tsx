@@ -40,13 +40,15 @@ import {
   useCurrentLayoutSelector,
   usePanelMosaicId,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
+import { LayoutData } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
 import { useExtensionCatalog } from "@foxglove/studio-base/context/ExtensionCatalogContext";
 import { useLayoutManager } from "@foxglove/studio-base/context/LayoutManagerContext";
 import { PanelComponent, usePanelCatalog } from "@foxglove/studio-base/context/PanelCatalogContext";
 import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
-import { defaultLayout } from "@foxglove/studio-base/providers/CurrentLayoutProvider/defaultLayout";
+import { defaultPlaybackConfig } from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
 import { MosaicDropResult, PanelConfig } from "@foxglove/studio-base/types/panels";
 import { getPanelIdForType, getPanelTypeFromId } from "@foxglove/studio-base/util/layout";
+
 import "react-mosaic-component/react-mosaic-component.css";
 
 import ErrorBoundary from "./ErrorBoundary";
@@ -227,9 +229,16 @@ export default function PanelLayout(): JSX.Element {
   const registeredExtensions = useExtensionCatalog((state) => state.installedExtensions);
 
   const createNewLayout = async () => {
+    const layoutData: Omit<LayoutData, "name" | "id"> = {
+      configById: {},
+      globalVariables: {},
+      userNodes: {},
+      playbackConfig: defaultPlaybackConfig,
+    };
+
     const layout = await layoutManager.saveNewLayout({
       name: "Default",
-      data: defaultLayout,
+      data: layoutData,
       permission: "CREATOR_WRITE",
     });
     setSelectedLayoutId(layout.id);
