@@ -63,10 +63,10 @@ const features: Feature[] = [
   },
   {
     key: AppSetting.ENABLE_NEW_TOPNAV,
-    name: "New navigation UI",
+    name: "New navigation",
     description: (
       <>
-        Enable experimental new user interface.
+        New top navigation bar.
         {isDesktopApp() && " Restart the app for changes to take effect."}
       </>
     ),
