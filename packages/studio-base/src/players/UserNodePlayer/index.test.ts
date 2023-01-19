@@ -691,6 +691,112 @@ describe("UserNodePlayer", () => {
       });
     });
 
+    it("does not duplicate output messages in blocks after multiple readings", async () => {
+      const fakePlayer = new FakePlayer();
+      const userNodePlayer = new UserNodePlayer(fakePlayer, defaultUserNodeActions);
+
+      const [done1, done2] = setListenerHelper(userNodePlayer, 2);
+
+      userNodePlayer.setSubscriptions([
+        { topic: `${DEFAULT_STUDIO_NODE_PREFIX}1`, preloadType: "full" },
+      ]);
+      await userNodePlayer.setUserNodes({
+        [nodeId]: { name: `${DEFAULT_STUDIO_NODE_PREFIX}1`, sourceCode: nodeUserCode },
+      });
+
+      await fakePlayer.emit({
+        activeData: {
+          ...basicPlayerState,
+          messages: [upstreamFirst],
+          currentTime: upstreamFirst.receiveTime,
+          topics: [{ name: "/np_input", schemaName: "std_msgs/Header" }],
+          datatypes: new Map(Object.entries({ foo: { definitions: [] } })),
+        },
+        progress: {
+          fullyLoadedFractionRanges: [{ start: 0, end: 1 }],
+          messageCache: {
+            blocks: [
+              { messagesByTopic: { [upstreamFirst.topic]: [upstreamFirst] }, sizeInBytes: 1 },
+              undefined,
+            ],
+            startTime: upstreamFirst.receiveTime,
+          },
+        },
+      });
+
+      const { progress: prevProgress } = (await done1)!;
+
+      // Current behavior dictates that it could be passed previous blocks that have already received user script output messages
+      prevProgress!.messageCache!.blocks = [
+        prevProgress!.messageCache!.blocks[0],
+        { messagesByTopic: { [upstreamFirst.topic]: [upstreamFirst] }, sizeInBytes: 1 },
+      ];
+
+      await fakePlayer.emit({
+        activeData: {
+          ...basicPlayerState,
+          messages: [upstreamFirst],
+          currentTime: upstreamFirst.receiveTime,
+          topics: [{ name: "/np_input", schemaName: "std_msgs/Header" }],
+          datatypes: new Map(Object.entries({ foo: { definitions: [] } })),
+        },
+        progress: prevProgress,
+      });
+
+      const { progress } = (await done2)!;
+
+      expect(progress).toEqual({
+        fullyLoadedFractionRanges: [{ start: 0, end: 1 }],
+        messageCache: {
+          startTime: { sec: 0, nsec: 1 },
+          blocks: [
+            {
+              messagesByTopic: {
+                "/np_input": [upstreamFirst],
+                [`${DEFAULT_STUDIO_NODE_PREFIX}1`]: [
+                  {
+                    topic: `${DEFAULT_STUDIO_NODE_PREFIX}1`,
+                    receiveTime: {
+                      sec: 0,
+                      nsec: 1,
+                    },
+                    message: {
+                      custom_np_field: "abc",
+                      value: "bar",
+                    },
+                    schemaName: "/studio_script/1",
+                    sizeInBytes: 0,
+                  },
+                ],
+              },
+              sizeInBytes: 1,
+            },
+            {
+              messagesByTopic: {
+                "/np_input": [upstreamFirst],
+                [`${DEFAULT_STUDIO_NODE_PREFIX}1`]: [
+                  {
+                    topic: `${DEFAULT_STUDIO_NODE_PREFIX}1`,
+                    receiveTime: {
+                      sec: 0,
+                      nsec: 1,
+                    },
+                    message: {
+                      custom_np_field: "abc",
+                      value: "bar",
+                    },
+                    schemaName: "/studio_script/1",
+                    sizeInBytes: 0,
+                  },
+                ],
+              },
+              sizeInBytes: 1,
+            },
+          ],
+        },
+      });
+    });
+
     it("does not add to logs when there is no 'log' invocation in the user code", async () => {
       const fakePlayer = new FakePlayer();
       const mockAddUserNodeLogs = jest.fn();
@@ -1546,6 +1652,57 @@ describe("UserNodePlayer", () => {
         ]);
 
         userNodePlayer.setGlobalVariables({ globalValue: "bbb" });
+        await fakePlayer.emit({ activeData });
+
+        const { messages: messages2 } = (await done2)!;
+        expect(messages2).toEqual([
+          upstreamFirst,
+          {
+            topic: `${DEFAULT_STUDIO_NODE_PREFIX}1`,
+            receiveTime: upstreamFirst.receiveTime,
+            message: { custom_np_field: "bbb", value: "bbb" },
+            schemaName: "/studio_script/1",
+            sizeInBytes: 0,
+          },
+        ]);
+      });
+      it("should re-compute message after global variable change with no new messages in active data", async () => {
+        const fakePlayer = new FakePlayer();
+        const userNodePlayer = new UserNodePlayer(fakePlayer, defaultUserNodeActions);
+        const [done, done2] = setListenerHelper(userNodePlayer, 2);
+
+        userNodePlayer.setGlobalVariables({ globalValue: "aaa" });
+        userNodePlayer.setSubscriptions([{ topic: `${DEFAULT_STUDIO_NODE_PREFIX}1` }]);
+        await userNodePlayer.setUserNodes({
+          [nodeId]: {
+            name: `${DEFAULT_STUDIO_NODE_PREFIX}1`,
+            sourceCode: nodeUserCodeWithGlobalVars,
+          },
+        });
+
+        const activeData: PlayerStateActiveData = {
+          ...basicPlayerState,
+          messages: [upstreamFirst],
+          currentTime: upstreamFirst.receiveTime,
+          topics: [{ name: "/np_input", schemaName: "std_msgs/Header" }],
+          datatypes: new Map(Object.entries({ foo: { definitions: [] } })),
+        };
+        await fakePlayer.emit({ activeData });
+
+        const { messages } = (await done)!;
+        expect(messages).toEqual([
+          upstreamFirst,
+          {
+            topic: `${DEFAULT_STUDIO_NODE_PREFIX}1`,
+            receiveTime: upstreamFirst.receiveTime,
+            message: { custom_np_field: "aaa", value: "aaa" },
+            schemaName: "/studio_script/1",
+            sizeInBytes: 0,
+          },
+        ]);
+
+        userNodePlayer.setGlobalVariables({ globalValue: "bbb" });
+        activeData.messages = [];
         await fakePlayer.emit({ activeData });
 
         const { messages: messages2 } = (await done2)!;
