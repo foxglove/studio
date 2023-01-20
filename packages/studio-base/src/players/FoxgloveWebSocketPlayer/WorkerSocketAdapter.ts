@@ -6,7 +6,7 @@ import { IWebSocket } from "@foxglove/ws-protocol";
 
 import { FromWorkerMessage, ToWorkerMessage } from "./worker";
 
-export default class WorkerSocketAdaptor implements IWebSocket {
+export default class WorkerSocketAdapter implements IWebSocket {
   private worker: Worker;
   public binaryType: string = "";
   public protocol: string = "";

@@ -40,7 +40,7 @@ import {
   SubscriptionId,
 } from "@foxglove/ws-protocol";
 
-import WorkerSocketAdaptor from "./WorkerSocketAdaptor";
+import WorkerSocketAdapter from "./WorkerSocketAdapter";
 
 const log = Log.getLogger(__dirname);
 
@@ -130,7 +130,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
     this._client = new FoxgloveClient({
       ws:
         typeof Worker !== "undefined"
-          ? new WorkerSocketAdaptor(this._url, [FoxgloveClient.SUPPORTED_SUBPROTOCOL])
+          ? new WorkerSocketAdapter(this._url, [FoxgloveClient.SUPPORTED_SUBPROTOCOL])
           : new WebSocket(this._url, [FoxgloveClient.SUPPORTED_SUBPROTOCOL]),
     });
 
