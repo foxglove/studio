@@ -2515,7 +2515,7 @@ __metadata:
     string-replace-loader: 3.1.0
     style-loader: 3.3.1
     text-metrics: 3.0.0
-    three: "patch:three@0.140.2#../../patches/three.patch"
+    three: "patch:three@0.148.0#../../patches/three.patch"
     tinycolor2: 1.4.2
     ts-essentials: 9.3.0
     ts-key-enum: 2.0.12
@@ -22963,17 +22963,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"three@npm:0.140.2":
-  version: 0.140.2
-  resolution: "three@npm:0.140.2"
-  checksum: 67b2733c4177ba0555a16a99e833340586d7a5b1dc4ac2ce7a376c55542cbc6acf72d785ce55b887597551bcf6e209213bcacb0b2c990db66f56ba4991601acb
+"three@npm:0.148.0":
+  version: 0.148.0
+  resolution: "three@npm:0.148.0"
+  checksum: 3f6359585c006c6f78b2fc1adeb90559d9b7cd6daf5cf916e81494ff228f4a9beffe37136bd8d5b0afbf377ac070b70624245bec2e9ee557035e2c485ce05197
   languageName: node
   linkType: hard
 
-"three@patch:three@0.140.2#../../patches/three.patch::locator=%40foxglove%2Fstudio-base%40workspace%3Apackages%2Fstudio-base":
-  version: 0.140.2
-  resolution: "three@patch:three@npm%3A0.140.2#../../patches/three.patch::version=0.140.2&hash=51dd4b&locator=%40foxglove%2Fstudio-base%40workspace%3Apackages%2Fstudio-base"
-  checksum: 3a2aec5ac91551e4675c6b13c14e89eb0b8725efa5c74906b0064b4d2bfef603972089633f842dbf81185eaa5a98e3c224faa9073396d77bf63080665d1b1c30
+"three@patch:three@0.148.0#../../patches/three.patch::locator=%40foxglove%2Fstudio-base%40workspace%3Apackages%2Fstudio-base":
+  version: 0.148.0
+  resolution: "three@patch:three@npm%3A0.148.0#../../patches/three.patch::version=0.148.0&hash=1ca5de&locator=%40foxglove%2Fstudio-base%40workspace%3Apackages%2Fstudio-base"
+  checksum: e28bed988c499e690a79f9a8245daa474390a2fc081ea0387f7059bfbdacb375c96b1e892ddfeb1832e4c73dc41771cb545e26176759696b29a75d3f60be08bf
   languageName: node
   linkType: hard
 
