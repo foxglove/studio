@@ -3,42 +3,52 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { useState } from "react";
+import { useUpdateEffect } from "react-use";
 import { createStore, useStore } from "zustand";
 
 import { AVLTree } from "@foxglove/avl";
+import { useShallowMemo } from "@foxglove/hooks";
 import { Time, compare as compareTime } from "@foxglove/rostime";
 import { MessageEvent, RenderState } from "@foxglove/studio";
+import { CameraInfo } from "@foxglove/studio-base/types/Messages";
 
 import { normalizeAnnotations } from "../lib/normalizeAnnotations";
 import { normalizeImageMessage } from "../lib/normalizeMessage";
 import { Annotation, NormalizedImageMessage } from "../types";
+import { normalizeCameraInfo } from "./normalizeCameraInfo";
 import { synchronizedAddMessages } from "./synchronizedAddMessages";
 
-export type ImagePanelState = {
-  imageTopic?: string;
+type UseImagePanelMessagesParams = {
+  imageTopic: string;
+  cameraInfoTopic: string | undefined;
   annotationTopics: string[];
+  synchronize: boolean;
+};
+
+export type ImagePanelState = UseImagePanelMessagesParams & {
   image?: NormalizedImageMessage;
+  cameraInfo?: CameraInfo;
   annotationsByTopic: Map<string, Annotation[]>;
   tree: AVLTree<Time, SynchronizationItem>;
-  synchronize: boolean;
 
   actions: {
     setCurrentFrame(currentFrame: NonNullable<RenderState["currentFrame"]>): void;
     clear(): void;
-    setSynchronize(synchronize: boolean): void;
-    setImageTopic(newTopic: string): void;
-    setAnnotationTopics(newTopics: string[]): void;
+    setParams(newParams: UseImagePanelMessagesParams): void;
   };
 };
 
 type PublicState = {
-  image?: NormalizedImageMessage;
+  image: NormalizedImageMessage | undefined;
+  cameraInfo: CameraInfo | undefined;
   annotations: readonly Annotation[];
-} & ImagePanelState["actions"];
+  actions: ImagePanelState["actions"];
+};
 
 const selectPublicState = (state: ImagePanelState): PublicState => ({
-  ...state.actions,
+  actions: state.actions,
   image: state.image,
+  cameraInfo: state.cameraInfo,
   annotations: ([] as Annotation[]).concat(...state.annotationsByTopic.values()),
 });
 
@@ -76,21 +86,32 @@ function addMessages(
     return synchronizedAddMessages(state, messageEvents);
   }
 
-  let newState: Pick<ImagePanelState, "image" | "annotationsByTopic"> | undefined;
+  let newState: Pick<ImagePanelState, "image" | "annotationsByTopic" | "cameraInfo"> | undefined;
   for (const event of messageEvents) {
-    const normalizedImage = normalizeImageMessage(event.message, event.schemaName);
+    const normalizedCameraInfo =
+      event.topic === state.cameraInfoTopic
+        ? normalizeCameraInfo(event.message, event.schemaName)
+        : undefined;
+    const normalizedImage =
+      event.topic === state.imageTopic
+        ? normalizeImageMessage(event.message, event.schemaName)
+        : undefined;
     const normalizedAnnotations = normalizeAnnotations(event.message, event.schemaName);
-    if (!normalizedImage && !normalizedAnnotations) {
+    if (!normalizedCameraInfo && !normalizedImage && !normalizedAnnotations) {
       continue;
     }
 
     if (!newState) {
       newState = {
         image: state.image,
+        cameraInfo: state.cameraInfo,
         annotationsByTopic: new Map(state.annotationsByTopic),
       };
     }
 
+    if (normalizedCameraInfo) {
+      newState.cameraInfo = normalizedCameraInfo;
+    }
     if (normalizedImage) {
       newState.image = normalizedImage;
     }
@@ -102,45 +123,36 @@ function addMessages(
   return newState ?? state;
 }
 
-export function useImagePanelMessages(initialState: {
-  imageTopic: string;
-  annotationTopics: string[];
-  synchronize: boolean;
-}): ImagePanelState["actions"] {
+export function useImagePanelMessages(params: UseImagePanelMessagesParams): PublicState {
   const [store] = useState(() =>
     createStore<ImagePanelState>((set) => ({
-      imageTopic: initialState.imageTopic,
-      annotationTopics: initialState.annotationTopics,
+      imageTopic: params.imageTopic,
+      cameraInfoTopic: params.cameraInfoTopic,
+      annotationTopics: params.annotationTopics,
+      synchronize: params.synchronize,
+
+      image: undefined,
+      cameraInfo: undefined,
       annotationsByTopic: new Map(),
       tree: new AVLTree(compareTime),
-      synchronize: initialState.synchronize,
 
       actions: {
-        setImageTopic(imageTopic) {
-          // When changing image topics, clear the image and any annotations
-          set((old) =>
-            old.imageTopic !== imageTopic
-              ? {
-                  annotationsByTopic: new Map(),
-                  tree: new AVLTree(compareTime),
-                }
-              : old,
-          );
-        },
-        setAnnotationTopics(annotationTopics) {
+        setParams(newParams: UseImagePanelMessagesParams) {
+          // When changing params topics, clear the image and any annotations
+          //FIXME: more intelligent clearing based on what changed and whether synchronized=true?
           set({
-            annotationTopics,
-            // FIXME - what if synchronize is enabled?
-          });
-        },
-        setSynchronize(synchronize) {
-          set({
-            synchronize,
-            // FIXME - how to switch modes?
+            image: undefined,
+            cameraInfo: undefined,
+            annotationsByTopic: new Map(),
+            tree: new AVLTree(compareTime),
+
+            ...newParams,
           });
         },
         clear() {
           set({
+            image: undefined,
+            cameraInfo: undefined,
             annotationsByTopic: new Map(),
             tree: new AVLTree(compareTime),
           });
@@ -151,6 +163,11 @@ export function useImagePanelMessages(initialState: {
       },
     })),
   );
+
+  const memoizedParams = useShallowMemo(params);
+  useUpdateEffect(() => {
+    store.getState().actions.setParams(memoizedParams);
+  }, [memoizedParams]);
 
   return useStore(store, selectPublicState);
 }

@@ -24,20 +24,20 @@ import {
   PanelContextMenu,
   PanelContextMenuItem,
 } from "@foxglove/studio-base/components/PanelContextMenu";
-import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import Stack from "@foxglove/studio-base/components/Stack";
 import inScreenshotTests from "@foxglove/studio-base/stories/inScreenshotTests";
+import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
 import { CameraInfo } from "@foxglove/studio-base/types/Messages";
 import { mightActuallyBePartial } from "@foxglove/studio-base/util/mightActuallyBePartial";
 import { getTopicsByTopicName } from "@foxglove/studio-base/util/selectors";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 import { formatTimeRaw } from "@foxglove/studio-base/util/time";
 
-import { ImageCanvas, ImageEmptyState, Toolbar, TopicDropdown } from "./components";
-import { useCameraInfo, ANNOTATION_DATATYPES, useImagePanelMessages } from "./hooks";
+import { ImageCanvas, ImageEmptyState, Toolbar } from "./components";
+import { ANNOTATION_DATATYPES, useImagePanelMessages } from "./hooks";
 import { downloadImage } from "./lib/downloadImage";
 import { NORMALIZABLE_IMAGE_DATATYPES } from "./lib/normalizeMessage";
-import { getRelatedMarkerTopics, getMarkerOptions } from "./lib/util";
+import { getRelatedMarkerTopics, getMarkerOptions, getCameraInfoTopic } from "./lib/util";
 import { buildSettingsTree } from "./settings";
 import type { Config, PixelData } from "./types";
 
@@ -82,6 +82,7 @@ export function ImageView({ context }: Props): JSX.Element {
       },
     };
   });
+  //FIXME: ensure we save config to context when config changes
   const { cameraTopic, enabledMarkerTopics, transformMarkers } = config;
   const cameraTopicFullObject = useMemo(
     () => getTopicsByTopicName(topics)[cameraTopic],
@@ -89,20 +90,32 @@ export function ImageView({ context }: Props): JSX.Element {
   );
   const [activePixelData, setActivePixelData] = useState<PixelData | undefined>();
 
-  const cameraInfo = useCameraInfo(cameraTopic);
-
   const shouldSynchronize = config.synchronize && enabledMarkerTopics.length > 0;
 
-  const subscriptions = useMemo(
-    () => [cameraTopic, ...enabledMarkerTopics],
-    [cameraTopic, enabledMarkerTopics],
-  );
+  const cameraInfoTopic = useMemo(() => getCameraInfoTopic(cameraTopic), [cameraTopic]);
+  const subscriptions = useMemo(() => {
+    const subs = [cameraTopic, ...enabledMarkerTopics];
+    if (cameraInfoTopic != undefined) {
+      subs.push(cameraInfoTopic);
+    }
+    return subs;
+  }, [cameraTopic, cameraInfoTopic, enabledMarkerTopics]);
+
+  const [colorScheme, setColorScheme] = useState<"dark" | "light">("light");
+
+  useEffect(() => {
+    context.watch("topics");
+    context.watch("didSeek");
+    context.watch("currentFrame");
+    context.watch("colorScheme"); // FIXME: support
+  }, [context]);
   useEffect(() => {
     context.subscribe(subscriptions);
   }, [context, subscriptions]);
 
-  const store = useImagePanelMessages({
+  const { image, annotations, cameraInfo, actions } = useImagePanelMessages({
     imageTopic: cameraTopic,
+    cameraInfoTopic,
     annotationTopics: enabledMarkerTopics,
     synchronize: shouldSynchronize,
   });
@@ -115,14 +128,17 @@ export function ImageView({ context }: Props): JSX.Element {
         }
         setRenderDone(() => done);
         if (renderState.didSeek ?? false) {
-          store.clear();
+          actions.clear();
         }
         if (renderState.currentFrame) {
-          store.setCurrentFrame(renderState.currentFrame);
+          actions.setCurrentFrame(renderState.currentFrame);
+        }
+        if (renderState.colorScheme) {
+          setColorScheme(renderState.colorScheme);
         }
       });
     };
-  }, [context, store]);
+  }, [context, actions]);
 
   useEffect(() => {
     context.subscribe([cameraTopic]);
@@ -302,16 +318,22 @@ export function ImageView({ context }: Props): JSX.Element {
 
   const rawMarkerData = useMemo(() => {
     return {
-      markers: annotations ?? [],
+      markers: annotations,
       transformMarkers,
       // Convert to plain object before sending to web worker
       cameraInfo:
         (cameraInfo as { toJSON?: () => CameraInfo } | undefined)?.toJSON?.() ?? cameraInfo,
     };
   }, [annotations, cameraInfo, transformMarkers]);
-
+  const saveConfigWithMerging = useCallback(
+    (newConfig: Partial<Config>) => setConfig((oldConfig) => ({ ...oldConfig, ...newConfig })),
+    [setConfig],
+  );
   return (
-    <Stack flex="auto" overflow="hidden" position="relative">
+    <ThemeProvider isDark={colorScheme === "dark"}>
+      <Stack flex="auto" overflow="hidden" fullWidth fullHeight position="relative">
+        {/*
+      // FIXME: move toolbar settings to sidebar
       <PanelToolbar>
         <Stack direction="row" flex="auto" alignItems="center" overflow="hidden">
           <TopicDropdown
@@ -320,42 +342,41 @@ export function ImageView({ context }: Props): JSX.Element {
             onChange={(value) => setConfig((oldConfig) => ({ ...oldConfig, cameraTopic: value }))}
           />
         </Stack>
-      </PanelToolbar>
-      <PanelContextMenu itemsForClickPosition={contextMenuItemsForClickPosition} />
-      <Stack fullWidth fullHeight>
-        {/* Always render the ImageCanvas because it's expensive to unmount and start up. */}
-        {imageMessageToRender && (
+      </PanelToolbar> */}
+        <PanelContextMenu itemsForClickPosition={contextMenuItemsForClickPosition} />
+        <Stack fullWidth fullHeight>
+          {/* Always render the ImageCanvas because it's expensive to unmount and start up. */}
           <ImageCanvas
             topic={cameraTopicFullObject}
             image={imageMessageToRender}
             rawMarkerData={rawMarkerData}
             config={config}
-            saveConfig={(newConfig) => setConfig((oldConfig) => ({ ...oldConfig, ...newConfig }))}
+            saveConfig={saveConfigWithMerging}
             onStartRenderImage={onStartRenderImage}
             setActivePixelData={setActivePixelData}
           />
-        )}
-        {/* If rendered, EmptyState will hide the always-present ImageCanvas */}
-        {!image && (
-          <ImageEmptyState
-            cameraTopic={cameraTopic}
-            markerTopics={enabledMarkerTopics}
-            shouldSynchronize={shouldSynchronize}
-          />
-        )}
-        {image && (
-          <Timestamp
-            fontFamily={fonts.MONOSPACE}
-            variant="caption"
-            align="right"
-            screenshotTest={inScreenshotTests()}
-          >
-            {formatTimeRaw(image.stamp)}
-          </Timestamp>
-        )}
+          {/* If rendered, EmptyState will hide the always-present ImageCanvas */}
+          {!image && (
+            <ImageEmptyState
+              cameraTopic={cameraTopic}
+              markerTopics={enabledMarkerTopics}
+              shouldSynchronize={shouldSynchronize}
+            />
+          )}
+          {image && (
+            <Timestamp
+              fontFamily={fonts.MONOSPACE}
+              variant="caption"
+              align="right"
+              screenshotTest={inScreenshotTests()}
+            >
+              {formatTimeRaw(image.stamp)}
+            </Timestamp>
+          )}
+        </Stack>
+        <Toolbar pixelData={activePixelData} />
       </Stack>
-      <Toolbar pixelData={activePixelData} />
-    </Stack>
+    </ThemeProvider>
   );
 }
 

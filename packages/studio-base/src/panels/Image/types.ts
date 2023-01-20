@@ -37,7 +37,7 @@ export type ZoomMode = "fit" | "fill" | "other";
 export type Dimensions = { width: number; height: number };
 
 export type RawMarkerData = {
-  markers: Annotation[];
+  markers: readonly Annotation[];
   transformMarkers: boolean;
   cameraInfo?: CameraInfo;
 };

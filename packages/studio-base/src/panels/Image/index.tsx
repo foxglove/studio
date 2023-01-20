@@ -8,7 +8,6 @@ import ReactDOM from "react-dom";
 import { PanelExtensionContext } from "@foxglove/studio";
 import Panel from "@foxglove/studio-base/components/Panel";
 import { PanelExtensionAdapter } from "@foxglove/studio-base/components/PanelExtensionAdapter";
-import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 
 import { defaultConfig, ImageView } from "./ImageView";
@@ -17,9 +16,7 @@ import { Config } from "./types";
 function initPanel(context: PanelExtensionContext) {
   ReactDOM.render(
     <StrictMode>
-      <ThemeProvider isDark>
-        <ImageView context={context} />
-      </ThemeProvider>
+      <ImageView context={context} />
     </StrictMode>,
     context.panelElement,
   );

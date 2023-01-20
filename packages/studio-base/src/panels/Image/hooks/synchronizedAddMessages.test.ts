@@ -200,4 +200,6 @@ describe("synchronizedAddMessages", () => {
       expect(newState.tree?.maxKey()).toEqual({ sec: 2, nsec: 0 });
     }
   });
+
+  // TODO: test that when multiple messages received, a synchronized set can be produced and the newer messages are still kept for future syncing
 });
