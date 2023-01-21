@@ -429,7 +429,7 @@ export default function TimeBasedChart(props: Props): JSX.Element {
       },
       ...props.plugins,
       annotation: { annotations: props.annotations },
-    } as ChartOptions["plugins"];
+    };
   }, [props.annotations, props.plugins, props.zoom, zoomMode]);
 
   // To avoid making a new xScale identity on all updates that might change the min/max
