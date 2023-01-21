@@ -84,7 +84,6 @@
     "@types/memoize-weak": "workspace:*",
     "@types/moment-duration-format": "2.2.3",
     "@types/nearley": "2.11.2",
-    "@types/offscreencanvas": "2019.6.4",
     "@types/prettier": "2.7.2",
     "@types/react": "17.0.53",
     "@types/react-autocomplete": "1.8.6",
