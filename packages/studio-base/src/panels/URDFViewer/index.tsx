@@ -186,7 +186,7 @@ function URDFViewer({ config, saveConfig }: Props) {
     <div className={classes.root}>
       <PanelToolbar />
       <Alert severity="warning">
-        The URDF Viewer panel is now deprecated. See the{" "}
+        The URDF Viewer panel is deprecated. See the{" "}
         <Link
           href="https://foxglove.dev/docs/studio/panels/3d#add-unified-robot-description-format-urdf"
           target="_blank"
