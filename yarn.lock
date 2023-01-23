@@ -2398,7 +2398,7 @@ __metadata:
     "@mui/material": 5.11.5
     "@popperjs/core": 2.11.6
     "@protobufjs/base64": 1.1.2
-    "@sentry/core": 7.30.0
+    "@sentry/core": 7.32.1
     "@sentry/types": 7.30.0
     "@storybook/addon-actions": 6.5.15
     "@storybook/react": 6.5.15
@@ -3682,6 +3682,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@sentry/core@npm:7.32.1":
+  version: 7.32.1
+  resolution: "@sentry/core@npm:7.32.1"
+  dependencies:
+    "@sentry/types": 7.32.1
+    "@sentry/utils": 7.32.1
+    tslib: ^1.9.3
+  checksum: 74ce787414d5993efe74ad5e8d47824b57d258cc4374259bbaaaab337ff4981f8c4d40bfb617b33a4733dc6890d12728aa6a75fb8ddab5a844cb82165963f451
+  languageName: node
+  linkType: hard
+
 "@sentry/electron@npm:4.2.0":
   version: 4.2.0
   resolution: "@sentry/electron@npm:4.2.0"
@@ -3744,6 +3755,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@sentry/types@npm:7.32.1":
+  version: 7.32.1
+  resolution: "@sentry/types@npm:7.32.1"
+  checksum: f543a315ad818546fd97c97b0bdb010e101a8757c901b95f46e6e9f122ba1034ddd656c38e2359cb0892c90734d17513fb5f66247d7dda4598e879c36f4023c0
+  languageName: node
+  linkType: hard
+
 "@sentry/utils@npm:7.30.0":
   version: 7.30.0
   resolution: "@sentry/utils@npm:7.30.0"
@@ -3751,6 +3769,16 @@ __metadata:
     "@sentry/types": 7.30.0
     tslib: ^1.9.3
   checksum: df99b77706dc38a206ba4a27da2226c73c5a465a39591dde66455a8ca52b070830ad3fa3cbc803d4e45bd0e4e4fad74552f3d92d681a8dd4c95c4733cc9ff4cc
+  languageName: node
+  linkType: hard
+
+"@sentry/utils@npm:7.32.1":
+  version: 7.32.1
+  resolution: "@sentry/utils@npm:7.32.1"
+  dependencies:
+    "@sentry/types": 7.32.1
+    tslib: ^1.9.3
+  checksum: 1b0d82cbccb9dfd80f5bc8a7deec59db15f5bb5718da4184d5e70f7765fb4ca90d4489387cec7a384872f7a8742fc9ba4e21c41607adbbd68fce1c1935b67bf8
   languageName: node
   linkType: hard
 
