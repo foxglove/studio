@@ -69,7 +69,7 @@
     "@storybook/addon-actions": "6.5.15",
     "@storybook/react": "6.5.15",
     "@testing-library/dom": "8.11.3",
-    "@testing-library/react": "12.1.2",
+    "@testing-library/react": "13.4.0",
     "@testing-library/react-hooks": "7.0.2",
     "@testing-library/user-event": "14.4.3",
     "@types/amplitude-js": "8.16.2",
