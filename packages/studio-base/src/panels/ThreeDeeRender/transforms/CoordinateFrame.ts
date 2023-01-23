@@ -40,6 +40,7 @@ export class CoordinateFrame {
   public maxStorageTime: Duration;
   public maxCapacity: number;
   // The percentage of maxCapacity that can be exceeded before overfilled frames in history are cleared
+  // allows for better perf by amortizing trimming of frames every few thousand transforms rather than every new transform
   public capacityOverfillPercentage: number;
   public offsetPosition: vec3 | undefined;
   public offsetEulerDegrees: vec3 | undefined;
