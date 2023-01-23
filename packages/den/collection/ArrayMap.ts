@@ -60,6 +60,12 @@ export class ArrayMap<K, V> {
     this._list.length = greaterThanIndex;
   }
 
+  /** Removes all elements with keys less than the given key. */
+  public removeBefore(key: K): void {
+    const index = this.binarySearch(key);
+    this._list.splice(0, index);
+  }
+
   /** Access the first key/value tuple in the list, without modifying the list. */
   public minEntry(): [K, V] | undefined {
     return this._list[0];
