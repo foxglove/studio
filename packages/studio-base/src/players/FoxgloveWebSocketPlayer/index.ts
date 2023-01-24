@@ -63,7 +63,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
   private _client?: FoxgloveClient; // The client when we're connected.
   private _id: string = uuidv4(); // Unique ID for this player.
   private _serverCapabilities: string[] = [];
-  private _playerCapabilities: typeof PlayerCapabilities[keyof typeof PlayerCapabilities][] = [];
+  private _playerCapabilities: (typeof PlayerCapabilities)[keyof typeof PlayerCapabilities][] = [];
   private _supportedEncodings?: string[];
   private _listener?: (arg0: PlayerState) => Promise<void>; // Listener for _emitState().
   private _closed: boolean = false; // Whether the player has been completely closed using close().
