@@ -96,13 +96,13 @@ export function buildSettingsTree({
         },
         minValue: {
           input: "number",
-          label: "Minimum (depth images)",
+          label: "Min (depth images)",
           placeholder: "0",
           value: config.minValue,
         },
         maxValue: {
           input: "number",
-          label: "Maximum (depth images)",
+          label: "Max (depth images)",
           placeholder: "10000",
           value: config.maxValue,
         },
