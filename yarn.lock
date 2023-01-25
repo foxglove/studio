@@ -2399,7 +2399,7 @@ __metadata:
     "@popperjs/core": 2.11.6
     "@protobufjs/base64": 1.1.2
     "@sentry/core": 7.30.0
-    "@sentry/types": 7.30.0
+    "@sentry/types": 7.33.0
     "@storybook/addon-actions": 6.5.15
     "@storybook/react": 6.5.15
     "@testing-library/dom": 8.11.3
@@ -3748,6 +3748,13 @@ __metadata:
   version: 7.30.0
   resolution: "@sentry/types@npm:7.30.0"
   checksum: be228ae65f8750513371b6692821aa0d92d15354aa9fd7f1f1b497c2a53d20769fd56f89a1516d80e416ab73596609e805a6fae2b51510018338eedf5a0dd260
+  languageName: node
+  linkType: hard
+
+"@sentry/types@npm:7.33.0":
+  version: 7.33.0
+  resolution: "@sentry/types@npm:7.33.0"
+  checksum: add24c08e46567df21d98a84404a9dfde92ff9253b1c6331334543a76062ebea61f7e7adbb4f9b3410ee1ea276368a2cc62321958f0641a11e879f18cb457eea
   languageName: node
   linkType: hard
 
