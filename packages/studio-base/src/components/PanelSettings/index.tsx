@@ -34,7 +34,7 @@ import { getPanelTypeFromId } from "@foxglove/studio-base/util/layout";
 const useStyles = makeStyles()((theme) => ({
   fieldGrid: {
     display: "grid",
-    // gridTemplateColumns: "minmax(20%, 20ch) auto",
+    gridTemplateColumns: "minmax(20%, 20ch) auto",
     columnGap: theme.spacing(1),
   },
 }));
