@@ -32,7 +32,7 @@ export function DataSource({
 }: {
   onSelectDataSourceAction: () => void;
 }): JSX.Element {
-  const playerName = useMessagePipeline(selectPlayerName);
+  const playerName = useMessagePipeline(selectPlayerName) ?? "<unknown>";
   const playerPresence = useMessagePipeline(selectPlayerPresence);
   // const playerProfile = useMessagePipeline(selectProfile);
   // const playerProblems = useMessagePipeline(selectPlayerProblems) ?? [];
@@ -80,14 +80,13 @@ export function DataSource({
   if (playerPresence === PlayerPresence.NOT_PRESENT) {
     return <></>;
   }
-  if (playerName == undefined) {
-    return <></>;
-  }
 
   if (playerPresence === PlayerPresence.INITIALIZING) {
-    <Typography variant="inherit" component="span">
-      Initializing connection
-    </Typography>;
+    return (
+      <Typography variant="inherit" component="span">
+        Initializing connection
+      </Typography>
+    );
   }
 
   if (playerPresence === PlayerPresence.RECONNECTING) {

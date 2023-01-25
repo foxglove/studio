@@ -205,7 +205,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
       <ThemeProvider isDark>
         <MuiAppBar
           className={classes.appBar}
-          position="sticky"
+          position="relative"
           color="inherit"
           elevation={0}
           onDoubleClick={handleDoubleClick}
