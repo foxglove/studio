@@ -19,13 +19,13 @@ function buildSettingsTree(config: VariableSliderConfig): SettingsTreeNodes {
       icon: "Settings",
       fields: {
         min: {
-          label: "Min",
+          label: "Minimum",
           input: "number",
           placeholder: "min",
           value: config.sliderProps.min,
         },
         max: {
-          label: "Max",
+          label: "Maximum",
           input: "number",
           placeholder: "max",
           value: config.sliderProps.max,

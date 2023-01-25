@@ -110,13 +110,13 @@ function buildSettingsTree(config: PlotConfig, enableSeries: boolean): SettingsT
           value: config.showYAxisLabels,
         },
         minYValue: {
-          label: "Min",
+          label: "Minimum",
           input: "number",
           value: config.minYValue != undefined ? Number(config.minYValue) : undefined,
           placeholder: "auto",
         },
         maxYValue: {
-          label: "Max",
+          label: "Maximum",
           input: "number",
           error: maxYError,
           value: config.maxYValue != undefined ? Number(config.maxYValue) : undefined,
@@ -154,13 +154,13 @@ function buildSettingsTree(config: PlotConfig, enableSeries: boolean): SettingsT
           value: config.showXAxisLabels,
         },
         minXValue: {
-          label: "Min",
+          label: "Minimum",
           input: "number",
           value: config.minXValue != undefined ? Number(config.minXValue) : undefined,
           placeholder: "auto",
         },
         maxXValue: {
-          label: "Max",
+          label: "Maximum",
           input: "number",
           error: maxXError,
           value: config.maxXValue != undefined ? Number(config.maxXValue) : undefined,
