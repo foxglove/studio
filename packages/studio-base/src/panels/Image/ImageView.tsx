@@ -39,7 +39,7 @@ import { downloadImage } from "./lib/downloadImage";
 import { NORMALIZABLE_IMAGE_DATATYPES } from "./lib/normalizeMessage";
 import { getRelatedMarkerTopics, getMarkerOptions, getCameraInfoTopic } from "./lib/util";
 import { buildSettingsTree } from "./settings";
-import type { Config, PixelData } from "./types";
+import type { Config, PixelData, RawMarkerData } from "./types";
 
 type Props = {
   context: PanelExtensionContext;
@@ -82,7 +82,7 @@ export function ImageView({ context }: Props): JSX.Element {
       },
     };
   });
-  //FIXME: ensure we save config to context when config changes
+
   const { cameraTopic, enabledMarkerTopics, transformMarkers } = config;
   const cameraTopicFullObject = useMemo(
     () => getTopicsByTopicName(topics)[cameraTopic],
@@ -104,10 +104,13 @@ export function ImageView({ context }: Props): JSX.Element {
   const [colorScheme, setColorScheme] = useState<"dark" | "light">("light");
 
   useEffect(() => {
+    context.saveState(config);
+  }, [config, context]);
+  useEffect(() => {
     context.watch("topics");
     context.watch("didSeek");
     context.watch("currentFrame");
-    context.watch("colorScheme"); // FIXME: support
+    context.watch("colorScheme");
   }, [context]);
   useEffect(() => {
     context.subscribe(subscriptions);
@@ -139,15 +142,6 @@ export function ImageView({ context }: Props): JSX.Element {
       });
     };
   }, [context, actions]);
-
-  useEffect(() => {
-    context.subscribe([cameraTopic]);
-  }, [context, cameraTopic]);
-
-  // Indicate render is complete - the effect runs after the dom is updated
-  useEffect(() => {
-    renderDone();
-  }, [renderDone]);
 
   const imageTopics = useMemo(() => {
     return topics.filter(({ schemaName }) => NORMALIZABLE_IMAGE_DATATYPES.includes(schemaName));
@@ -312,11 +306,7 @@ export function ImageView({ context }: Props): JSX.Element {
     [doDownloadImage],
   );
 
-  const onStartRenderImage = useCallback(() => {
-    return renderDone;
-  }, [renderDone]);
-
-  const rawMarkerData = useMemo(() => {
+  const rawMarkerData: RawMarkerData = useMemo(() => {
     return {
       markers: annotations,
       transformMarkers,
@@ -329,20 +319,21 @@ export function ImageView({ context }: Props): JSX.Element {
     (newConfig: Partial<Config>) => setConfig((oldConfig) => ({ ...oldConfig, ...newConfig })),
     [setConfig],
   );
+
+  // Indicate render is complete - the effect runs after the dom is updated. It would be more
+  // correct to call this inside the render callback from ImageCanvas (using onStartRenderImage).
+  // However, the complexity of managing new frames (and new renderDone functions) coming in before
+  // the old one finishes is pretty high and this is good enough for now.
+  useEffect(() => {
+    renderDone();
+  }, [renderDone]);
+  const onStartRenderImage = useCallback(() => {
+    return () => {};
+  }, []);
+
   return (
     <ThemeProvider isDark={colorScheme === "dark"}>
       <Stack flex="auto" overflow="hidden" fullWidth fullHeight position="relative">
-        {/*
-      // FIXME: move toolbar settings to sidebar
-      <PanelToolbar>
-        <Stack direction="row" flex="auto" alignItems="center" overflow="hidden">
-          <TopicDropdown
-            topics={imageTopics}
-            currentTopic={cameraTopic}
-            onChange={(value) => setConfig((oldConfig) => ({ ...oldConfig, cameraTopic: value }))}
-          />
-        </Stack>
-      </PanelToolbar> */}
         <PanelContextMenu itemsForClickPosition={contextMenuItemsForClickPosition} />
         <Stack fullWidth fullHeight>
           {/* Always render the ImageCanvas because it's expensive to unmount and start up. */}

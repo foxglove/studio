@@ -81,7 +81,7 @@ export type RenderableCanvas = HTMLCanvasElement | OffscreenCanvas;
 export type RenderDimensions = Dimensions & { transform: DOMMatrix };
 
 export type MarkerData = {
-  markers: Annotation[];
+  markers: readonly Annotation[];
   originalWidth?: number; // undefined means no scaling is needed (use the image's size)
   originalHeight?: number; // undefined means no scaling is needed (use the image's size)
   cameraModel?: PinholeCameraModel; // undefined means no transformation is needed

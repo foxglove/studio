@@ -138,8 +138,7 @@ export function useImagePanelMessages(params: UseImagePanelMessagesParams): Publ
 
       actions: {
         setParams(newParams: UseImagePanelMessagesParams) {
-          // When changing params topics, clear the image and any annotations
-          //FIXME: more intelligent clearing based on what changed and whether synchronized=true?
+          // When changing params, clear the image and any annotations
           set({
             image: undefined,
             cameraInfo: undefined,
