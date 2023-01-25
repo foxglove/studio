@@ -5,7 +5,6 @@
 import type { PinholeCameraModel } from "@foxglove/den/image";
 import type { Time } from "@foxglove/studio";
 import type { CameraInfo, Color, ImageMarker, Point2D } from "@foxglove/studio-base/types/Messages";
-import type { SaveConfig } from "@foxglove/studio-base/types/panels";
 
 export type DefaultConfig = {
   cameraTopic: string;
@@ -27,8 +26,6 @@ export type Config = DefaultConfig & {
   zoom?: number;
   zoomPercentage?: number;
 };
-
-export type SaveImagePanelConfig = SaveConfig<Config>;
 
 export type PanZoom = { x: number; y: number; scale: number };
 
