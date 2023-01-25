@@ -27,6 +27,8 @@ type Props = {
   backgroundColor?: CSSProperties["backgroundColor"];
   children?: React.ReactNode;
   isUnknownPanel?: boolean;
+  /** Optional override of the default title */
+  title?: string;
 };
 
 const PanelToolbarRoot = muiStyled("div", {
@@ -56,6 +58,7 @@ export default React.memo<Props>(function PanelToolbar({
   backgroundColor,
   children,
   isUnknownPanel = false,
+  title: customTitle,
 }: Props) {
   const { isFullscreen, exitFullscreen } = useContext(PanelContext) ?? {};
 
@@ -88,6 +91,7 @@ export default React.memo<Props>(function PanelToolbar({
   const controlsDragRef =
     isUnknownPanel || children == undefined ? undefined : panelContext?.connectToolbarDragHandle;
 
+  const title = customTitle ?? panelContext?.title;
   return (
     <PanelToolbarRoot
       backgroundColor={backgroundColor}
@@ -96,9 +100,9 @@ export default React.memo<Props>(function PanelToolbar({
       ref={rootDragRef}
     >
       {children ??
-        (panelContext != undefined && (
+        (title && (
           <Typography noWrap variant="body2" color="text.secondary" flex="auto">
-            {panelContext.title}
+            {title}
           </Typography>
         ))}
       <PanelToolbarControls

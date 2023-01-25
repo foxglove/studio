@@ -47,6 +47,7 @@ import {
 import {
   usePanelSettingsTreeUpdate,
   useSharedPanelState,
+  useDefaultPanelTitle,
 } from "@foxglove/studio-base/providers/PanelStateContextProvider";
 import { PanelConfig, SaveConfig } from "@foxglove/studio-base/types/panels";
 import { assertNever } from "@foxglove/studio-base/util/assertNever";
@@ -111,6 +112,15 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
   const isPanelInitializedRef = useRef(false);
 
   const [slowRender, setSlowRender] = useState(false);
+  const [defaultPanelTitle, setDefaultPanelTitle] = useDefaultPanelTitle();
+  const customPanelTitle =
+    config != undefined &&
+    typeof config === "object" &&
+    "foxglove.panel-title" in config &&
+    typeof config["foxglove.panel-title"] === "string" &&
+    config["foxglove.panel-title"].length > 0
+      ? config["foxglove.panel-title"]
+      : defaultPanelTitle;
 
   const { globalVariables, setGlobalVariables } = useGlobalVariables();
 
@@ -456,6 +466,13 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
         }
         updatePanelSettingsTree(settings);
       },
+
+      setDefaultPanelTitle: (title: string) => {
+        if (!isMounted()) {
+          return;
+        }
+        setDefaultPanelTitle(title);
+      },
     };
   }, [
     capabilities,
@@ -468,6 +485,7 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
     panelId,
     saveConfig,
     seekPlayback,
+    setDefaultPanelTitle,
     setGlobalVariables,
     setHoverValue,
     setSharedPanelState,
@@ -550,7 +568,7 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
         ...style,
       }}
     >
-      <PanelToolbar />
+      <PanelToolbar title={customPanelTitle} />
       <div style={{ flex: 1, overflow: "hidden" }} ref={panelContainerRef} />
     </div>
   );
