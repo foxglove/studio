@@ -87,64 +87,72 @@ export function UserPresent(): JSX.Element {
 
 function LabeledAppBar({ label }: React.PropsWithChildren<{ label: string }>) {
   return (
-    <Stack direction="row" alignItems="center">
-      <div style={{ flex: "0 0 100px" }}>{label}</div>
-      <div style={{ flex: "1 0 auto" }}>
+    <>
+      <div style={{ padding: 8 }}>{label}</div>
+      <div>
         <AppBar {...actions} />
       </div>
-    </Stack>
+    </>
   );
 }
 
 export function DataSources(): JSX.Element {
   return (
     <Stack overflowY="auto">
-      {[
-        PlayerPresence.NOT_PRESENT,
-        PlayerPresence.INITIALIZING,
-        PlayerPresence.RECONNECTING,
-        PlayerPresence.BUFFERING,
-        PlayerPresence.PRESENT,
-        PlayerPresence.ERROR,
-      ].map((presence) => (
-        <MockMessagePipelineProvider key={presence} name="example" presence={presence}>
-          <LabeledAppBar label={presence} {...actions} />
-        </MockMessagePipelineProvider>
-      ))}
-      {[
-        "foxglove-data-platform",
-        "mcap-local-file",
-        "ros1-local-bagfile",
-        "ros2-local-bagfile",
-        "ulog-local-file",
-        "sample-nuscenes",
-        "remote-file",
-        "ros1-socket",
-        "ros2-socket",
-        "rosbridge-websocket",
-        "foxglove-websocket",
-        "velodyne-device",
-        "some other source type",
-      ].map((sourceId) => (
-        <MockMessagePipelineProvider
-          key={sourceId}
-          name="example"
-          presence={PlayerPresence.ERROR}
-          urlState={{ sourceId }}
-        >
-          <LabeledAppBar label={sourceId} {...actions} />
-        </MockMessagePipelineProvider>
-      ))}
-      <MockMessagePipelineProvider
-        name="example"
-        presence={PlayerPresence.PRESENT}
-        problems={[
-          { severity: "error", message: "example error" },
-          { severity: "warn", message: "example warn" },
-        ]}
+      <div
+        style={{ display: "grid", gridTemplateColumns: "max-content auto", alignItems: "center" }}
       >
-        <LabeledAppBar label="with problems" {...actions} />
-      </MockMessagePipelineProvider>
+        {[
+          PlayerPresence.NOT_PRESENT,
+          PlayerPresence.INITIALIZING,
+          PlayerPresence.RECONNECTING,
+          PlayerPresence.BUFFERING,
+          PlayerPresence.PRESENT,
+          PlayerPresence.ERROR,
+        ].map((presence) => (
+          <MockMessagePipelineProvider
+            key={presence}
+            name="https://exampleurl:2002"
+            presence={presence}
+          >
+            <LabeledAppBar label={presence} {...actions} />
+          </MockMessagePipelineProvider>
+        ))}
+        {[
+          "foxglove-data-platform",
+          "mcap-local-file",
+          "ros1-local-bagfile",
+          "ros2-local-bagfile",
+          "ulog-local-file",
+          "sample-nuscenes",
+          "remote-file",
+          "ros1-socket",
+          "ros2-socket",
+          "rosbridge-websocket",
+          "foxglove-websocket",
+          "velodyne-device",
+          "some other source type",
+        ].map((sourceId) => (
+          <MockMessagePipelineProvider
+            key={sourceId}
+            name="https://longexampleurlwith_specialcharaters-and-portnumber:3030"
+            presence={PlayerPresence.ERROR}
+            urlState={{ sourceId }}
+          >
+            <LabeledAppBar label={sourceId} {...actions} />
+          </MockMessagePipelineProvider>
+        ))}
+        <MockMessagePipelineProvider
+          name="example"
+          presence={PlayerPresence.PRESENT}
+          problems={[
+            { severity: "error", message: "example error" },
+            { severity: "warn", message: "example warn" },
+          ]}
+        >
+          <LabeledAppBar label="with problems" {...actions} />
+        </MockMessagePipelineProvider>
+      </div>
     </Stack>
   );
 }

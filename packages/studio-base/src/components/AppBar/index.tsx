@@ -55,7 +55,7 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }>(
         display: "grid",
         width: "100%",
         gridTemplateAreas: `"start middle end"`,
-        gridTemplateColumns: "1fr auto 1fr",
+        gridTemplateColumns: "auto 1fr auto",
       },
 
       logo: {
@@ -65,25 +65,21 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }>(
       },
 
       start: {
+        marginInlineStart: theme.spacing(-1),
         gridArea: "start",
-        marginInlineStart: theme.spacing(-2),
         display: "flex",
         flex: 1,
         alignItems: "center",
         gap: theme.spacing(0.5),
 
-        [theme.breakpoints.down("sm")]: {
-          marginInlineStart: theme.spacing(-1),
+        [theme.breakpoints.up("sm")]: {
+          marginInlineStart: theme.spacing(-2),
         },
       },
 
       middle: {
         gridArea: "middle",
         justifySelf: "center",
-
-        [theme.breakpoints.down("md")]: {
-          display: "none",
-        },
       },
 
       end: {
@@ -91,9 +87,10 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }>(
         flex: 1,
         display: "flex",
         justifyContent: "flex-end",
-        marginInlineEnd: theme.spacing(-2),
-        [theme.breakpoints.down("sm")]: {
-          marginInlineEnd: theme.spacing(-1),
+        marginInlineEnd: theme.spacing(-1),
+
+        [theme.breakpoints.up("sm")]: {
+          marginInlineEnd: theme.spacing(-2),
         },
       },
 

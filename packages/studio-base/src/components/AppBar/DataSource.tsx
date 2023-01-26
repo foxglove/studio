@@ -4,7 +4,7 @@
 
 import {
   BarcodeScanner20Regular,
-  Cloud16Regular,
+  Cloud20Regular,
   Document16Regular,
   Flow16Regular,
 } from "@fluentui/react-icons";
@@ -12,12 +12,13 @@ import { FileASPXIcon } from "@fluentui/react-icons-mdl2";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import { ButtonBase, Typography } from "@mui/material";
 import { useMemo } from "react";
+import { makeStyles } from "tss-react/mui";
 
 import {
   MessagePipelineContext,
   useMessagePipeline,
 } from "@foxglove/studio-base/components/MessagePipeline";
-import Stack from "@foxglove/studio-base/components/Stack";
+import TextMiddleTruncate from "@foxglove/studio-base/components/TextMiddleTruncate";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
 
 const selectPlayerName = ({ playerState }: MessagePipelineContext) => playerState.name;
@@ -27,11 +28,53 @@ const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => player
 const selectPlayerSourceId = ({ playerState }: MessagePipelineContext) =>
   playerState.urlState?.sourceId;
 
+const useStyles = makeStyles()((theme) => ({
+  sourceLabel: {
+    gridArea: "sourceLabel",
+
+    [theme.breakpoints.down("md")]: {
+      display: "none",
+    },
+  },
+  icon: {
+    gridArea: "icon",
+
+    ".root-span": {
+      display: "flex",
+    },
+    [theme.breakpoints.down("md")]: {
+      display: "none",
+    },
+  },
+  sourceInfo: {
+    gridArea: "sourceInfo",
+  },
+  grid: {
+    display: "flex",
+    alignItems: "center",
+    gap: theme.spacing(1),
+
+    [theme.breakpoints.up("md")]: {
+      display: "grid",
+      gridTemplateAreas: `"icon sourceLabel separator sourceInfo"`,
+      gridTemplateColumns: "auto auto auto 1fr",
+    },
+  },
+  separator: {
+    gridArea: "separator",
+
+    [theme.breakpoints.down("md")]: {
+      display: "none",
+    },
+  },
+}));
+
 export function DataSource({
   onSelectDataSourceAction,
 }: {
   onSelectDataSourceAction: () => void;
 }): JSX.Element {
+  const { classes } = useStyles();
   const playerName = useMessagePipeline(selectPlayerName) ?? "<unknown>";
   const playerPresence = useMessagePipeline(selectPlayerPresence);
   // const playerProfile = useMessagePipeline(selectProfile);
@@ -42,7 +85,7 @@ export function DataSource({
     switch (playerSourceId) {
       // Data platform
       case "foxglove-data-platform":
-        return { label: "Data Platform", icon: <Cloud16Regular /> };
+        return { label: "Data Platform", icon: <Cloud20Regular /> };
 
       // Files
       case "mcap-local-file":
@@ -92,8 +135,8 @@ export function DataSource({
   if (playerPresence === PlayerPresence.RECONNECTING) {
     return (
       <ButtonBase onClick={onSelectDataSourceAction}>
-        <Typography variant="inherit" component="span">
-          Listening on {playerName}
+        <Typography noWrap variant="inherit" component="span">
+          <TextMiddleTruncate text={`Listening on ${playerName}`} />
         </Typography>
       </ButtonBase>
     );
@@ -101,18 +144,18 @@ export function DataSource({
 
   return (
     <ButtonBase onClick={onSelectDataSourceAction}>
-      <Stack direction="row" alignItems="center" gap={1}>
+      <div className={classes.grid}>
         {currentSource != undefined && (
-          <Stack direction="row" alignItems="center" gap={0.5}>
-            {currentSource.icon}
-            {currentSource.label}
-            <ArrowRightIcon color="inherit" />
-          </Stack>
+          <>
+            <div className={classes.icon}>{currentSource.icon}</div>
+            <div className={classes.sourceLabel}>{currentSource.label}</div>
+            <ArrowRightIcon className={classes.separator} color="inherit" />
+          </>
         )}
-        <Typography variant="inherit" component="span">
-          {playerName}
+        <Typography noWrap className={classes.sourceInfo} variant="inherit" component="span">
+          <TextMiddleTruncate text={playerName} />
         </Typography>
-      </Stack>
+      </div>
     </ButtonBase>
   );
 }
