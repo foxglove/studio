@@ -15,12 +15,12 @@ import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/Pane
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 import { lineColors } from "@foxglove/studio-base/util/plotColors";
 
-import { plotableRosTypes, PlotConfig } from "./types";
+import { plotableRosTypes, PlotConfig, plotPathDisplayName } from "./types";
 
 const makeSeriesNode = memoizeWeak((path: PlotPath, index: number): SettingsTreeNode => {
   return {
     actions: [{ type: "action", id: "delete-series", label: "Delete" }],
-    label: path.label ?? `Series ${index + 1}`,
+    label: plotPathDisplayName(path, index),
     visible: path.enabled,
     fields: {
       label: {

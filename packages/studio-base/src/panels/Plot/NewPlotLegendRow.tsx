@@ -16,6 +16,7 @@ import TimeBasedChart from "@foxglove/studio-base/components/TimeBasedChart";
 import { useSelectedPanels } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { useHoverValue } from "@foxglove/studio-base/context/TimelineInteractionStateContext";
 import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
+import { plotPathDisplayName } from "@foxglove/studio-base/panels/Plot/types";
 import { getLineColor } from "@foxglove/studio-base/util/plotColors";
 
 import { PlotPath } from "./internalTypes";
@@ -30,17 +31,6 @@ type PlotLegendRowProps = {
   savePaths: (paths: PlotPath[]) => void;
   showPlotValuesInLegend: boolean;
 };
-
-/**
- * Coalesces null, undefined and empty string to undefined.
- */
-function presence<T>(value: undefined | T): undefined | T {
-  if (value === "") {
-    return undefined;
-  }
-
-  return value == undefined ? undefined : value;
-}
 
 const ROW_HEIGHT = 28;
 
@@ -195,7 +185,7 @@ export function NewPlotLegendRow({
           variant="subtitle2"
           className={cx({ [classes.disabledPathLabel]: !path.enabled })}
         >
-          {presence(path.label) ?? presence(path.value) ?? `Series ${index + 1}`}
+          {plotPathDisplayName(path, index)}
         </Typography>
         {hasMismatchedDataLength && (
           <Tooltip
