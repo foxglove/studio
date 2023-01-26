@@ -21,9 +21,13 @@ const makeSeriesNode = memoizeWeak((path: PlotPath, index: number): SettingsTree
   return {
     actions: [{ type: "action", id: "delete-series", label: "Delete" }],
     label: path.label ?? `Series ${index + 1}`,
-    renamable: true,
     visible: path.enabled,
     fields: {
+      label: {
+        input: "string",
+        label: "Label",
+        value: path.label,
+      },
       value: {
         input: "messagepath",
         label: "Path",
@@ -93,8 +97,13 @@ function buildSettingsTree(config: PlotConfig, enableSeries: boolean): SettingsT
             { value: "top", label: "Top" },
           ],
         },
+        showLegend: {
+          label: "Show legend",
+          input: "boolean",
+          value: config.showLegend,
+        },
         showPlotValuesInLegend: {
-          label: "Show plot values",
+          label: "Show values",
           input: "boolean",
           value: config.showPlotValuesInLegend,
         },
