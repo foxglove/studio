@@ -76,7 +76,6 @@ function buildSettingsTree(config: PlotConfig, enableSeries: boolean): SettingsT
       label: "General",
       icon: "Settings",
       fields: {
-        title: { label: "Title", input: "string", value: config.title, placeholder: "Plot" },
         isSynced: { label: "Sync with other plots", input: "boolean", value: config.isSynced },
       },
     },

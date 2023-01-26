@@ -29,7 +29,7 @@ import {
 import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
 import { PanelConfig } from "@foxglove/studio-base/types/panels";
 import { TAB_PANEL_TYPE } from "@foxglove/studio-base/util/globalConstants";
-import { getPanelTypeFromId } from "@foxglove/studio-base/util/layout";
+import { getPanelTypeFromId, PANEL_TITLE_CONFIG_KEY } from "@foxglove/studio-base/util/layout";
 
 const useStyles = makeStyles()((theme) => ({
   fieldGrid: {
@@ -143,8 +143,8 @@ export default function PanelSettings({
   );
   const { classes } = useStyles();
   const customPanelTitle =
-    typeof config?.["foxglove.panel-title"] === "string"
-      ? config["foxglove.panel-title"]
+    typeof config?.[PANEL_TITLE_CONFIG_KEY] === "string"
+      ? config[PANEL_TITLE_CONFIG_KEY]
       : undefined;
   const panelNameField = useMemo<SettingsTreeField>(
     () => ({
@@ -157,8 +157,8 @@ export default function PanelSettings({
   );
   const handleTitleChange = useCallback(
     (action: SettingsTreeAction) => {
-      if (action.action === "update" && action.payload.path[0] === "foxglove.panel-title") {
-        saveConfig({ "foxglove.panel-title": action.payload.value });
+      if (action.action === "update" && action.payload.path[0] === PANEL_TITLE_CONFIG_KEY) {
+        saveConfig({ [PANEL_TITLE_CONFIG_KEY]: action.payload.value });
       }
     },
     [saveConfig],
@@ -217,7 +217,7 @@ export default function PanelSettings({
           <div className={classes.fieldGrid}>
             <FieldEditor
               field={panelNameField}
-              path={["foxglove.panel-title"]}
+              path={[PANEL_TITLE_CONFIG_KEY]}
               actionHandler={handleTitleChange}
             />
           </div>

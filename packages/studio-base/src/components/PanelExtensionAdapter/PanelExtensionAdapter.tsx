@@ -112,15 +112,7 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
   const isPanelInitializedRef = useRef(false);
 
   const [slowRender, setSlowRender] = useState(false);
-  const [defaultPanelTitle, setDefaultPanelTitle] = useDefaultPanelTitle();
-  const customPanelTitle =
-    config != undefined &&
-    typeof config === "object" &&
-    "foxglove.panel-title" in config &&
-    typeof config["foxglove.panel-title"] === "string" &&
-    config["foxglove.panel-title"].length > 0
-      ? config["foxglove.panel-title"]
-      : defaultPanelTitle;
+  const [, setDefaultPanelTitle] = useDefaultPanelTitle();
 
   const { globalVariables, setGlobalVariables } = useGlobalVariables();
 
@@ -568,7 +560,7 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
         ...style,
       }}
     >
-      <PanelToolbar title={customPanelTitle} />
+      <PanelToolbar />
       <div style={{ flex: 1, overflow: "hidden" }} ref={panelContainerRef} />
     </div>
   );

@@ -17,6 +17,8 @@ import { useContext, useMemo, CSSProperties } from "react";
 
 import PanelContext from "@foxglove/studio-base/components/PanelContext";
 import ToolbarIconButton from "@foxglove/studio-base/components/PanelToolbar/ToolbarIconButton";
+import { useDefaultPanelTitle } from "@foxglove/studio-base/providers/PanelStateContextProvider";
+import { PANEL_TITLE_CONFIG_KEY } from "@foxglove/studio-base/util/layout";
 
 import { PanelToolbarControls } from "./PanelToolbarControls";
 
@@ -27,8 +29,6 @@ type Props = {
   backgroundColor?: CSSProperties["backgroundColor"];
   children?: React.ReactNode;
   isUnknownPanel?: boolean;
-  /** Optional override of the default title */
-  title?: string;
 };
 
 const PanelToolbarRoot = muiStyled("div", {
@@ -58,9 +58,12 @@ export default React.memo<Props>(function PanelToolbar({
   backgroundColor,
   children,
   isUnknownPanel = false,
-  title: customTitle,
 }: Props) {
-  const { isFullscreen, exitFullscreen } = useContext(PanelContext) ?? {};
+  const {
+    isFullscreen,
+    exitFullscreen,
+    config: { [PANEL_TITLE_CONFIG_KEY]: customTitle = undefined } = {},
+  } = useContext(PanelContext) ?? {};
 
   const panelContext = useContext(PanelContext);
 
@@ -91,7 +94,13 @@ export default React.memo<Props>(function PanelToolbar({
   const controlsDragRef =
     isUnknownPanel || children == undefined ? undefined : panelContext?.connectToolbarDragHandle;
 
-  const title = customTitle ?? panelContext?.title;
+  const [defaultPanelTitle] = useDefaultPanelTitle();
+  const customPanelTitle =
+    customTitle != undefined && typeof customTitle === "string" && customTitle.length > 0
+      ? customTitle
+      : defaultPanelTitle;
+
+  const title = customPanelTitle ?? panelContext?.title;
   return (
     <PanelToolbarRoot
       backgroundColor={backgroundColor}
