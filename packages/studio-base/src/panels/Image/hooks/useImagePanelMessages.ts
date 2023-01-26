@@ -12,11 +12,11 @@ import { Time, compare as compareTime } from "@foxglove/rostime";
 import { MessageEvent, RenderState } from "@foxglove/studio";
 import { CameraInfo } from "@foxglove/studio-base/types/Messages";
 
+import { normalizeCameraInfo } from "./normalizeCameraInfo";
+import { synchronizedAddMessages } from "./synchronizedAddMessages";
 import { normalizeAnnotations } from "../lib/normalizeAnnotations";
 import { normalizeImageMessage } from "../lib/normalizeMessage";
 import { Annotation, NormalizedImageMessage } from "../types";
-import { normalizeCameraInfo } from "./normalizeCameraInfo";
-import { synchronizedAddMessages } from "./synchronizedAddMessages";
 
 type UseImagePanelMessagesParams = {
   imageTopic: string;
