@@ -105,6 +105,7 @@ export function ImageView({ context }: Props): JSX.Element {
 
   useEffect(() => {
     context.saveState(config);
+    context.setDefaultPanelTitle(config.cameraTopic === "" ? undefined : config.cameraTopic);
   }, [config, context]);
   useEffect(() => {
     context.watch("topics");
