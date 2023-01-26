@@ -1803,6 +1803,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@emotion/hash@npm:^0.8.0":
+  version: 0.8.0
+  resolution: "@emotion/hash@npm:0.8.0"
+  checksum: 4b35d88a97e67275c1d990c96d3b0450451d089d1508619488fc0acb882cb1ac91e93246d471346ebd1b5402215941ef4162efe5b51534859b39d8b3a0e3ffaa
+  languageName: node
+  linkType: hard
+
 "@emotion/hash@npm:^0.9.0":
   version: 0.9.0
   resolution: "@emotion/hash@npm:0.9.0"
@@ -2145,10 +2152,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@fluentui/react-icons@npm:1.1.145":
-  version: 1.1.145
-  resolution: "@fluentui/react-icons@npm:1.1.145"
-  checksum: 5f908e8627f20c2228dd85daf00ff0da79eed6612f06cfbbcc340b98410fb042705fcccff890f6730779715ad05245a2350a2f34a0058cc5c70475bc00439045
+"@fluentui/react-icons@npm:2.0.192":
+  version: 2.0.192
+  resolution: "@fluentui/react-icons@npm:2.0.192"
+  dependencies:
+    "@griffel/react": ^1.0.0
+    tslib: ^2.1.0
+  peerDependencies:
+    react: ">=16.8.0 <19.0.0"
+  checksum: dc96d1fc45944b9f2dd6c6dfef74df32eae2c07462dd2413d895f42a7af3a324f61a4f0b761ef8769138b127d890d00bc98dd836966465767843fc4593c899b4
   languageName: node
   linkType: hard
 
@@ -2506,7 +2518,7 @@ __metadata:
     "@emotion/cache": 11.10.5
     "@emotion/react": 11.10.5
     "@emotion/styled": 11.10.5
-    "@fluentui/react-icons": 1.1.145
+    "@fluentui/react-icons": 2.0.192
     "@fluentui/react-icons-mdl2": 1.3.29
     "@foxglove/avl": 1.0.0
     "@foxglove/chartjs-plugin-zoom": 2.0.4
@@ -2762,6 +2774,31 @@ __metadata:
   version: 1.1.3
   resolution: "@gar/promisify@npm:1.1.3"
   checksum: 4059f790e2d07bf3c3ff3e0fec0daa8144fe35c1f6e0111c9921bd32106adaa97a4ab096ad7dab1e28ee6a9060083c4d1a4ada42a7f5f3f7a96b8812e2b757c1
+  languageName: node
+  linkType: hard
+
+"@griffel/core@npm:^1.9.0":
+  version: 1.9.0
+  resolution: "@griffel/core@npm:1.9.0"
+  dependencies:
+    "@emotion/hash": ^0.8.0
+    csstype: ^3.0.10
+    rtl-css-js: ^1.16.0
+    stylis: ^4.0.13
+    tslib: ^2.1.0
+  checksum: 96064f4b9572637f79a41971af04ce87b162b24c1c11bb3a6348ee5896de53da2f5fcf16fe6562fe76212a1d179ab4c25b81674c1339737b790a249eb21f23fe
+  languageName: node
+  linkType: hard
+
+"@griffel/react@npm:^1.0.0":
+  version: 1.5.2
+  resolution: "@griffel/react@npm:1.5.2"
+  dependencies:
+    "@griffel/core": ^1.9.0
+    tslib: ^2.1.0
+  peerDependencies:
+    react: ">=16.8.0 <19.0.0"
+  checksum: 4eb6611b65da0db3f643d2df54f97bf7566efd25ba29065a23580d199ee00f85be47a76b8a94a34e62a0e6dceb0b5931926fe6e8858acd13d85ae77467c2fa9a
   languageName: node
   linkType: hard
 
@@ -10196,7 +10233,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"csstype@npm:^3.0.2, csstype@npm:^3.0.6, csstype@npm:^3.0.9, csstype@npm:^3.1.1":
+"csstype@npm:^3.0.10, csstype@npm:^3.0.2, csstype@npm:^3.0.6, csstype@npm:^3.0.9, csstype@npm:^3.1.1":
   version: 3.1.1
   resolution: "csstype@npm:3.1.1"
   checksum: 1f7b4f5fdd955b7444b18ebdddf3f5c699159f13e9cf8ac9027ae4a60ae226aef9bbb14a6e12ca7dba3358b007cee6354b116e720262867c398de6c955ea451d
@@ -21261,6 +21298,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"rtl-css-js@npm:^1.16.0":
+  version: 1.16.1
+  resolution: "rtl-css-js@npm:1.16.1"
+  dependencies:
+    "@babel/runtime": ^7.1.2
+  checksum: 7d9ab942098eee565784ccf957f6b7dfa78ea1eec7c6bffedc6641575d274189e90752537c7bdba1f43ae6534648144f467fd6d581527455ba626a4300e62c7a
+  languageName: node
+  linkType: hard
+
 "run-parallel@npm:^1.1.9":
   version: 1.2.0
   resolution: "run-parallel@npm:1.2.0"
@@ -22699,7 +22745,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"stylis@npm:4.1.3, stylis@npm:^4.0.6":
+"stylis@npm:4.1.3, stylis@npm:^4.0.13, stylis@npm:^4.0.6":
   version: 4.1.3
   resolution: "stylis@npm:4.1.3"
   checksum: d04dbffcb9bf2c5ca8d8dc09534203c75df3bf711d33973ea22038a99cc475412a350b661ebd99cbc01daa50d7eedcf0d130d121800eb7318759a197023442a6
