@@ -21289,16 +21289,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"rtl-css-js@npm:^1.14.0":
-  version: 1.14.5
-  resolution: "rtl-css-js@npm:1.14.5"
-  dependencies:
-    "@babel/runtime": ^7.1.2
-  checksum: 83ff0b9d28e705c45869a2e90097028df0bd2f209e5a9949302d0d60756cd1dc0fa6a5e58fdba57e7cc247cece21b93a1509cee7ca76983a73b50feb0e4a6b8b
-  languageName: node
-  linkType: hard
-
-"rtl-css-js@npm:^1.16.0":
+"rtl-css-js@npm:^1.14.0, rtl-css-js@npm:^1.16.0":
   version: 1.16.1
   resolution: "rtl-css-js@npm:1.16.1"
   dependencies:
