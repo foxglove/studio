@@ -15,18 +15,22 @@ import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/Pane
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 import { lineColors } from "@foxglove/studio-base/util/plotColors";
 
-import { plotableRosTypes, PlotConfig } from "./types";
+import { plotableRosTypes, PlotConfig, plotPathDisplayName } from "./types";
 
 const makeSeriesNode = memoizeWeak((path: PlotPath, index: number): SettingsTreeNode => {
   return {
     actions: [{ type: "action", id: "delete-series", label: "Delete" }],
-    label: path.label ?? `Series ${index + 1}`,
-    renamable: true,
+    label: plotPathDisplayName(path, index),
     visible: path.enabled,
     fields: {
+      label: {
+        input: "string",
+        label: "Label",
+        value: path.label,
+      },
       value: {
+        label: "Message path",
         input: "messagepath",
-        label: "Path",
         value: path.value,
         validTypes: plotableRosTypes,
       },
@@ -74,9 +78,7 @@ function buildSettingsTree(config: PlotConfig, enableSeries: boolean): SettingsT
   return {
     general: {
       label: "General",
-      icon: "Settings",
       fields: {
-        title: { label: "Title", input: "string", value: config.title, placeholder: "Plot" },
         isSynced: { label: "Sync with other plots", input: "boolean", value: config.isSynced },
       },
     },
@@ -93,8 +95,13 @@ function buildSettingsTree(config: PlotConfig, enableSeries: boolean): SettingsT
             { value: "top", label: "Top" },
           ],
         },
+        showLegend: {
+          label: "Show legend",
+          input: "boolean",
+          value: config.showLegend,
+        },
         showPlotValuesInLegend: {
-          label: "Show plot values",
+          label: "Show values",
           input: "boolean",
           value: config.showPlotValuesInLegend,
         },
@@ -142,8 +149,8 @@ function buildSettingsTree(config: PlotConfig, enableSeries: boolean): SettingsT
         xAxisPath:
           config.xAxisVal === "currentCustom" || config.xAxisVal === "custom"
             ? {
+                label: "Message path",
                 input: "messagepath",
-                label: "Path",
                 value: config.xAxisPath?.value ?? "",
                 validTypes: plotableRosTypes,
               }

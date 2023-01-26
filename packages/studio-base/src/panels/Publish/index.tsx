@@ -49,7 +49,6 @@ type Props = {
 function buildSettingsTree(config: Config): SettingsTreeNodes {
   return {
     general: {
-      icon: "Settings",
       fields: {
         advancedView: { label: "Editing mode", input: "boolean", value: config.advancedView },
         buttonText: { label: "Button title", input: "string", value: config.buttonText },
