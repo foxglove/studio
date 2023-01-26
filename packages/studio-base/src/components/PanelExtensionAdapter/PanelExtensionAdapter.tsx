@@ -47,6 +47,7 @@ import {
 import {
   usePanelSettingsTreeUpdate,
   useSharedPanelState,
+  useDefaultPanelTitle,
 } from "@foxglove/studio-base/providers/PanelStateContextProvider";
 import { PanelConfig, SaveConfig } from "@foxglove/studio-base/types/panels";
 import { assertNever } from "@foxglove/studio-base/util/assertNever";
@@ -111,6 +112,7 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
   const isPanelInitializedRef = useRef(false);
 
   const [slowRender, setSlowRender] = useState(false);
+  const [, setDefaultPanelTitle] = useDefaultPanelTitle();
 
   const { globalVariables, setGlobalVariables } = useGlobalVariables();
 
@@ -378,7 +380,16 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
           };
         });
 
-        setLocalSubscriptions(subscribePayloads);
+        // ExtensionPanel-Facing subscription type
+        const localSubs = topics.map<Subscription>((item) => {
+          if (typeof item === "string") {
+            return { topic: item, preload: true };
+          }
+
+          return item;
+        });
+
+        setLocalSubscriptions(localSubs);
         setSubscriptions(panelId, subscribePayloads);
       },
 
@@ -456,6 +467,13 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
         }
         updatePanelSettingsTree(settings);
       },
+
+      setDefaultPanelTitle: (title: string) => {
+        if (!isMounted()) {
+          return;
+        }
+        setDefaultPanelTitle(title);
+      },
     };
   }, [
     capabilities,
@@ -468,6 +486,7 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
     panelId,
     saveConfig,
     seekPlayback,
+    setDefaultPanelTitle,
     setGlobalVariables,
     setHoverValue,
     setSharedPanelState,
