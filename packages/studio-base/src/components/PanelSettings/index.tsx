@@ -5,13 +5,10 @@
 import { Link, Typography } from "@mui/material";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useUnmount } from "react-use";
-import { makeStyles } from "tss-react/mui";
 
-import { SettingsTreeAction, SettingsTreeField } from "@foxglove/studio";
 import { useConfigById } from "@foxglove/studio-base/PanelAPI";
 import { ActionMenu } from "@foxglove/studio-base/components/PanelSettings/ActionMenu";
 import SettingsTreeEditor from "@foxglove/studio-base/components/SettingsTreeEditor";
-import { FieldEditor } from "@foxglove/studio-base/components/SettingsTreeEditor/FieldEditor";
 import ShareJsonModal from "@foxglove/studio-base/components/ShareJsonModal";
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
 import Stack from "@foxglove/studio-base/components/Stack";
@@ -29,15 +26,7 @@ import {
 import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
 import { PanelConfig } from "@foxglove/studio-base/types/panels";
 import { TAB_PANEL_TYPE } from "@foxglove/studio-base/util/globalConstants";
-import { getPanelTypeFromId, PANEL_TITLE_CONFIG_KEY } from "@foxglove/studio-base/util/layout";
-
-const useStyles = makeStyles()((theme) => ({
-  fieldGrid: {
-    display: "grid",
-    gridTemplateColumns: "minmax(20%, 20ch) auto",
-    columnGap: theme.spacing(1),
-  },
-}));
+import { getPanelTypeFromId } from "@foxglove/studio-base/util/layout";
 
 const selectedLayoutIdSelector = (state: LayoutState) => state.selectedLayout?.id;
 
@@ -123,7 +112,7 @@ export default function PanelSettings({
     incrementSequenceNumber,
   ]);
 
-  const [config, saveConfig] = useConfigById(selectedPanelId);
+  const [config] = useConfigById(selectedPanelId);
 
   const settingsTree = usePanelStateStore((state) =>
     selectedPanelId ? state.settingsTrees[selectedPanelId] : undefined,
@@ -137,32 +126,6 @@ export default function PanelSettings({
       incrementSequenceNumber(selectedPanelId);
     }
   }, [incrementSequenceNumber, savePanelConfigs, selectedPanelId]);
-
-  const defaultPanelTitle = usePanelStateStore((state) =>
-    selectedPanelId ? state.defaultTitles[selectedPanelId] : undefined,
-  );
-  const { classes } = useStyles();
-  const customPanelTitle =
-    typeof config?.[PANEL_TITLE_CONFIG_KEY] === "string"
-      ? config[PANEL_TITLE_CONFIG_KEY]
-      : undefined;
-  const panelNameField = useMemo<SettingsTreeField>(
-    () => ({
-      input: "string",
-      label: "Title",
-      placeholder: defaultPanelTitle ?? panelInfo?.title,
-      value: customPanelTitle,
-    }),
-    [customPanelTitle, defaultPanelTitle, panelInfo?.title],
-  );
-  const handleTitleChange = useCallback(
-    (action: SettingsTreeAction) => {
-      if (action.action === "update" && action.payload.path[0] === PANEL_TITLE_CONFIG_KEY) {
-        saveConfig({ [PANEL_TITLE_CONFIG_KEY]: action.payload.value });
-      }
-    },
-    [saveConfig],
-  );
 
   if (selectedLayoutId == undefined) {
     return (
@@ -214,13 +177,6 @@ export default function PanelSettings({
       {shareModal}
       <Stack gap={2} justifyContent="flex-start">
         <div>
-          <div className={classes.fieldGrid}>
-            <FieldEditor
-              field={panelNameField}
-              path={[PANEL_TITLE_CONFIG_KEY]}
-              actionHandler={handleTitleChange}
-            />
-          </div>
           {settingsTree && <SettingsTreeEditor key={selectedPanelId} settings={settingsTree} />}
           {!settingsTree && (
             <Typography color="text.secondary">No additional settings available.</Typography>
