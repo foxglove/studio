@@ -33,7 +33,7 @@ const useStyles = makeStyles()((theme) => ({
   grid: {
     display: "flex",
     alignItems: "center",
-    gap: theme.spacing(0.5),
+    gap: theme.spacing(0.25),
 
     [theme.breakpoints.up("md")]: {
       display: "grid",

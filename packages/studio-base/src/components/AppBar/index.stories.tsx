@@ -141,7 +141,7 @@ export function DataSources(): JSX.Element {
         ].map((sourceId) => (
           <MockMessagePipelineProvider
             key={sourceId}
-            name="https://longexampleurlwith_specialcharaters-and-portnumber:3030"
+            name="longexampleurlwith_specialcharaters-and-portnumber.ext"
             presence={PlayerPresence.ERROR}
             urlState={{ sourceId }}
           >
