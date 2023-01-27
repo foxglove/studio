@@ -189,7 +189,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
       if (!Array.isArray(event.capabilities)) {
         this._problems.addProblem("ws:invalid-capabilities", {
           severity: "warn",
-          message: `Server capabilities communicated by server must be an array (server sent '${event.capabilities}')`,
+          message: `Server sent an invalid or missing capabilities field: '${event.capabilities}'`,
         });
       }
       this._name = `${this._url}\n${event.name}`;
