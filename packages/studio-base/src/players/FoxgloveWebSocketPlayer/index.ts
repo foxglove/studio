@@ -38,6 +38,10 @@ import {
   FoxgloveClient,
   ServerCapability,
   SubscriptionId,
+  Service,
+  ServiceCallPayload,
+  ServiceCallRequest,
+  ServiceCallResponse,
 } from "@foxglove/ws-protocol";
 
 import WorkerSocketAdapter from "./WorkerSocketAdapter";
@@ -53,6 +57,8 @@ const GET_ALL_PARAMS_PERIOD_MS = 15000;
 const ROS_ENCODINGS = ["ros1", "cdr"];
 const SUPPORTED_PUBLICATION_ENCODINGS = ["json", ...ROS_ENCODINGS];
 const FALLBACK_PUBLICATION_ENCODING = "json";
+const SUPPORTED_SERVICE_ENCODINGS = ["json", ...ROS_ENCODINGS];
+const FALLBACK_SERVICE_ENCODING = "json";
 
 type ResolvedChannel = { channel: Channel; parsedChannel: ParsedChannel };
 type Publication = ClientChannel & { messageWriter?: Ros1MessageWriter | Ros2MessageWriter };
@@ -100,6 +106,12 @@ export default class FoxgloveWebSocketPlayer implements Player {
   private _getParameterInterval?: ReturnType<typeof setInterval>;
   private _unresolvedPublications: AdvertiseOptions[] = [];
   private _publicationsByTopic = new Map<string, Publication>();
+  private _services = new Map<string, Set<string>>();
+  private _servicesByName = new Map<string, Service>();
+  private _serviceResponseCbs = new Map<
+    ServiceCallRequest["callId"],
+    (response: ServiceCallResponse) => void
+  >();
 
   public constructor({
     url,
@@ -144,6 +156,9 @@ export default class FoxgloveWebSocketPlayer implements Player {
       this._channelsById.clear();
       this._channelsByTopic.clear();
       this._setupPublishers();
+      this._services.clear();
+      this._servicesByName.clear();
+      this._serviceResponseCbs.clear();
       this._profile = undefined;
     });
 
@@ -210,8 +225,8 @@ export default class FoxgloveWebSocketPlayer implements Player {
         const rosDataTypes = isRos1
           ? CommonRosTypes.ros1
           : ["foxy", "galactic"].includes(rosDistro)
-          ? CommonRosTypes.ros2galactic
-          : CommonRosTypes.ros2humble;
+            ? CommonRosTypes.ros2galactic
+            : CommonRosTypes.ros2humble;
 
         for (const dataType in rosDataTypes) {
           const msgDef = (rosDataTypes as Record<string, RosMsgDefinition>)[dataType]!;
@@ -222,6 +237,9 @@ export default class FoxgloveWebSocketPlayer implements Player {
 
       if (event.capabilities.includes(ServerCapability.clientPublish)) {
         this._playerCapabilities.push(PlayerCapabilities.advertise);
+      }
+      if (event.capabilities.includes(ServerCapability.services)) {
+        this._playerCapabilities.push(PlayerCapabilities.callServices);
       }
 
       if (event.capabilities.includes(ServerCapability.parameters)) {
@@ -418,6 +436,27 @@ export default class FoxgloveWebSocketPlayer implements Player {
         this._client?.subscribeParameterUpdates(newParameters.map((p) => p.name));
       }
     });
+
+    this._client.on("advertiseServices", (services) => {
+      for (const service of services) {
+        this._servicesByName.set(service.name, service);
+        this._services.set(service.name, new Set([service.name]));
+      }
+      this._emitState();
+    });
+
+    this._client.on("serviceCallResponse", (response) => {
+      const responseCallback = this._serviceResponseCbs.get(response.callId);
+      if (!responseCallback) {
+        this._problems.addProblem(`callService:${response.callId}`, {
+          severity: "error",
+          message: `Received a response for a service for which no callback was registered`,
+        });
+        return;
+      }
+      responseCallback(response);
+      this._serviceResponseCbs.delete(response.callId);
+    });
   };
 
   private _updateTopicsAndDatatypes() {
@@ -506,6 +545,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
         topicStats: new Map(this._topicsStats),
         datatypes: _datatypes,
         parameters: new Map(this._parameters),
+        services: new Map(this._services),
       },
     });
   });
@@ -627,11 +667,103 @@ export default class FoxgloveWebSocketPlayer implements Player {
     }
   }
 
-  public async callService(): Promise<unknown> {
-    throw new Error("Service calls are not supported by the Foxglove WebSocket connection");
+  public async callService(serviceName: string, request: unknown): Promise<unknown> {
+    if (!this._client) {
+      throw new Error(
+        `Attempted to call service ${serviceName} without a valid Foxglove WebSocket connection.`,
+      );
+    }
+
+    if (request == undefined || typeof request !== "object") {
+      throw new Error("FoxgloveWebSocketPlayer#callService request must be an object.");
+    }
+
+    const service = this._servicesByName.get(serviceName);
+    if (!service) {
+      throw new Error(
+        `Tried to call service '${serviceName}' that has not been advertised before.`,
+      );
+    }
+
+    const encoding = this._supportedEncodings
+      ? this._supportedEncodings.find((e) => SUPPORTED_SERVICE_ENCODINGS.includes(e))
+      : FALLBACK_SERVICE_ENCODING;
+    if (!encoding) {
+      throw new Error(`Can not call service '${serviceName}': No supported encoding.`);
+    }
+
+    const serviceCallRequest: ServiceCallPayload = {
+      serviceId: service.id,
+      callId: Date.now(),
+      encoding,
+      data: new DataView(new Uint8Array().buffer),
+    };
+
+    if (encoding === "json") {
+      const message = new Uint8Array(Buffer.from(JSON.stringify(request) ?? ""));
+      serviceCallRequest.data = new DataView(message.buffer);
+    } else if (ROS_ENCODINGS.includes(encoding)) {
+      try {
+        const datatypes: RosDatatypes = new Map();
+        const msgdef = rosDatatypesToMessageDefinition(datatypes, service.requestSchema);
+        const messageWriter =
+          encoding === "ros1" ? new Ros1MessageWriter(msgdef) : new Ros2MessageWriter(msgdef);
+        const message = messageWriter.writeMessage(request);
+        serviceCallRequest.data = new DataView(message);
+      } catch (error) {
+        log.debug(error);
+        this._problems.addProblem(`serviceCall:msgdef:${service.name}`, {
+          severity: "error",
+          message: `Unknown message definition for "${service.name}"`,
+          tip: `Try subscribing to the topic "${service.name}" before publishing to it`,
+        });
+      }
+    } else {
+      throw new Error(`Failed to encode service call request for service '${serviceName}'.`);
+    }
+    this._client.sendCallServiceRequest(serviceCallRequest);
+
+    return await new Promise<Record<string, unknown>>((resolve, reject) => {
+      this._serviceResponseCbs.set(serviceCallRequest.callId, (response: ServiceCallResponse) => {
+        console.assert(
+          response.callId === serviceCallRequest.callId,
+          "Service request/response call id mismatch",
+        );
+        try {
+          let schemaEncoding;
+          let schemaData;
+          if (response.encoding === "json") {
+            schemaEncoding = "jsonschema";
+            schemaData = new TextEncoder().encode(service.responseSchema);
+          } else if (response.encoding === "ros1") {
+            schemaEncoding = "ros1msg";
+            schemaData = new TextEncoder().encode(service.responseSchema);
+          } else if (response.encoding === "cdr") {
+            schemaEncoding = "ros2msg";
+            schemaData = new TextEncoder().encode(service.responseSchema);
+          } else {
+            throw new Error(`Unsupported encoding ${response.encoding}`);
+          }
+          const parsedResponse = parseChannel({
+            messageEncoding: response.encoding,
+            schema: { name: service.type, encoding: schemaEncoding, data: schemaData },
+          });
+
+          const data = parsedResponse.deserializer(response.data);
+          resolve(data as Record<string, unknown>);
+        } catch (error) {
+          this._problems.addProblem(`schema:${service.type}`, {
+            severity: "error",
+            message: `Failed to parse service response for service "${service.name}"`,
+            error,
+          });
+          reject(error);
+        }
+      });
+    });
   }
 
-  public setGlobalVariables(): void {}
+  public setGlobalVariables(): void { }
 
   private _getCurrentTime(): Time {
     return this._serverPublishesTime ? this._clockTime ?? ZERO_TIME : fromMillis(Date.now());
