@@ -2,8 +2,6 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Cloud24Regular, BookStar24Regular } from "@fluentui/react-icons";
-import { FlowIcon, FileASPXIcon, GenericScanIcon, PageIcon } from "@fluentui/react-icons-mdl2";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import ErrorIcon from "@mui/icons-material/Error";
 import { ButtonBase, Typography } from "@mui/material";
@@ -39,17 +37,6 @@ const useStyles = makeStyles()((theme) => ({
       display: "grid",
       gridTemplateAreas: `"icon sourceLabel separator sourceInfo"`,
       gridTemplateColumns: "auto auto auto 1fr",
-    },
-  },
-  icon: {
-    gridArea: "icon",
-    marginRight: theme.spacing(0.25),
-
-    ".root-span": {
-      display: "flex",
-    },
-    [theme.breakpoints.down("md")]: {
-      display: "none",
     },
   },
   sourceInfo: {
@@ -92,37 +79,37 @@ export function DataSource({
     switch (playerSourceId) {
       // Data platform
       case "foxglove-data-platform":
-        return { label: "Data Platform", icon: <Cloud24Regular /> };
+        return "Data Platform";
 
       // Files
       case "mcap-local-file":
-        return { label: "MCAP", icon: <PageIcon /> };
+        return "MCAP";
       case "ros1-local-bagfile":
-        return { label: "ROS1", icon: <PageIcon /> };
+        return "ROS1";
       case "ros2-local-bagfile":
-        return { label: "ROS2", icon: <PageIcon /> };
+        return "ROS2";
       case "ulog-local-file":
-        return { label: "uLog", icon: <PageIcon /> };
-      case "sample-nuscenes":
-        return { label: "Example Dataset", icon: <BookStar24Regular /> };
+        return "uLog";
 
       // Remote file
       case "remote-file":
-        return { label: "Remote URL", icon: <FileASPXIcon /> };
+        return "Remote URL";
 
       // Socket too me
       case "ros1-socket":
-        return { label: "ROS1 Websocket", icon: <FlowIcon /> };
+        return "ROS1 Websocket";
       case "ros2-socket":
-        return { label: "ROS2 Websocket", icon: <FlowIcon /> };
+        return "ROS2 Websocket";
       case "rosbridge-websocket":
-        return { label: "Rosbridge", icon: <FlowIcon /> };
+        return "Rosbridge";
       case "foxglove-websocket":
-        return { label: "Foxglove Websocket", icon: <FlowIcon /> };
+        return "Foxglove Websocket";
 
       // Other
       case "velodyne-device":
-        return { label: "Velodyne LIDAR", icon: <GenericScanIcon /> };
+        return "Velodyne LIDAR";
+      case "sample-nuscenes":
+        return "Example Dataset";
 
       // Fallback
       default:
@@ -155,10 +142,9 @@ export function DataSource({
   return (
     <ButtonBase className={classes.root} onClick={onSelectDataSourceAction}>
       <div className={classes.grid}>
-        {currentSource != undefined && (
+        {currentSource != undefined && playerSourceId !== "sample-nuscenes" && (
           <>
-            <div className={classes.icon}>{currentSource.icon}</div>
-            <div className={classes.sourceLabel}>{currentSource.label}</div>
+            <div className={classes.sourceLabel}>{currentSource}</div>
             <ArrowRightIcon className={classes.separator} color="inherit" />
           </>
         )}
