@@ -280,11 +280,12 @@ function initRenderStateBuilder(): BuildRenderStateFn {
         shouldRender = true;
         const frames: MessageEvent<unknown>[] = (renderState.allFrames = []);
         // only populate allFrames with topics that the panel wants to preload
-        const topicsToPreloadForPanel = new Set<string>(
-          Array.from(
+        const topicsToPreloadForPanel = Array.from(
+          new Set<string>(
             filterMap(subscriptions, (sub) => (sub.preload === true ? sub.topic : undefined)),
           ),
         );
+
         for (const block of newBlocks) {
           if (!block) {
             continue;
@@ -293,7 +294,7 @@ function initRenderStateBuilder(): BuildRenderStateFn {
           // Given that messagesByTopic should be in order by receiveTime
           // We need to combine all of the messages into a single array and sorted by receive time
           forEachSortedArrays(
-            Array.from(topicsToPreloadForPanel).map((topic) => block.messagesByTopic[topic] ?? []),
+            topicsToPreloadForPanel.map((topic) => block.messagesByTopic[topic] ?? []),
             (a, b) => compare(a.receiveTime, b.receiveTime),
             (messageEvent) => {
               // Message blocks may contain topics that we are not subscribed to so we need to filter those out.
