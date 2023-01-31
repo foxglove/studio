@@ -46,45 +46,39 @@ type Props = {
   context: PanelExtensionContext;
 };
 
-const useStyles = makeStyles()((theme) => ({
+const useStyles = makeStyles<void, "timestamp">()((theme, _params, classes) => ({
   timestamp: {
     position: "absolute",
     margin: theme.spacing(0.5),
     right: 0,
     bottom: 0,
     fontFamily: fonts.MONOSPACE,
+    color: theme.palette.common.white,
     zIndex: theme.zIndex.appBar - 1,
     transition: "opacity 0.1s ease-in-out",
-    opacity: 0,
     padding: theme.spacing(0.25, 0.5),
     userSelect: "all",
+    textShadow: `0 1px 4px ${theme.palette.common.black}`,
+
+    "@media (hover: hover)": {
+      // only hide if the current device supports hover
+      opacity: 0,
+    },
   },
-  mosaicWindowHover: {
-    opacity: 1,
+  root: {
+    [`&:hover .${classes.timestamp}`]: {
+      opacity: 1,
+    },
   },
   screenshotTest: {
-    opacity: 1,
+    [`.${classes.timestamp}`]: {
+      opacity: 1,
+    },
   },
 }));
 
-const Timestamp: React.FC<{
-  fontFamily: string;
-  variant: string;
-  align: string;
-  screenshotTest: boolean;
-}> = ({ screenshotTest }) => {
-  const { classes } = useStyles();
-
-  return (
-    <Typography
-      className={`${classes.timestamp} ${
-        screenshotTest ? classes.screenshotTest : ""
-      } .mosaic-window:hover & ${classes.mosaicWindowHover}`}
-    ></Typography>
-  );
-};
-
 export function ImageView({ context }: Props): JSX.Element {
+  const { classes, cx } = useStyles();
   const [renderDone, setRenderDone] = useState(() => () => {});
   const [topics, setTopics] = useState<readonly Topic[]>([]);
   const [config, setConfig] = useState<Config>(() => {
@@ -352,7 +346,16 @@ export function ImageView({ context }: Props): JSX.Element {
 
   return (
     <ThemeProvider isDark={colorScheme === "dark"}>
-      <Stack flex="auto" overflow="hidden" fullWidth fullHeight position="relative">
+      <Stack
+        flex="auto"
+        overflow="hidden"
+        fullWidth
+        fullHeight
+        position="relative"
+        className={cx(classes.root, {
+          [classes.screenshotTest]: inScreenshotTests(),
+        })}
+      >
         <PanelContextMenu itemsForClickPosition={contextMenuItemsForClickPosition} />
         <Stack fullWidth fullHeight>
           {/* Always render the ImageCanvas because it's expensive to unmount and start up. */}
@@ -374,14 +377,14 @@ export function ImageView({ context }: Props): JSX.Element {
             />
           )}
           {image && (
-            <Timestamp
+            <Typography
+              className={classes.timestamp}
               fontFamily={fonts.MONOSPACE}
               variant="caption"
               align="right"
-              screenshotTest={inScreenshotTests()}
             >
               {formatTimeRaw(image.stamp)}
-            </Timestamp>
+            </Typography>
           )}
         </Stack>
         <Toolbar pixelData={activePixelData} />
