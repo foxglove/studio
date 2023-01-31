@@ -58,10 +58,17 @@ const ROS_ENCODINGS = ["ros1", "cdr"];
 const SUPPORTED_PUBLICATION_ENCODINGS = ["json", ...ROS_ENCODINGS];
 const FALLBACK_PUBLICATION_ENCODING = "json";
 const SUPPORTED_SERVICE_ENCODINGS = ["json", ...ROS_ENCODINGS];
-const FALLBACK_SERVICE_ENCODING = "json";
 
+interface MessageWriter {
+  writeMessage(message: unknown): Uint8Array;
+}
 type ResolvedChannel = { channel: Channel; parsedChannel: ParsedChannel };
 type Publication = ClientChannel & { messageWriter?: Ros1MessageWriter | Ros2MessageWriter };
+type ResolvedService = {
+  service: Service;
+  parsedResponse: ParsedChannel;
+  requestMessageWriter: MessageWriter;
+};
 
 export default class FoxgloveWebSocketPlayer implements Player {
   private _url: string; // WebSocket URL.
@@ -106,12 +113,14 @@ export default class FoxgloveWebSocketPlayer implements Player {
   private _getParameterInterval?: ReturnType<typeof setInterval>;
   private _unresolvedPublications: AdvertiseOptions[] = [];
   private _publicationsByTopic = new Map<string, Publication>();
+  private _serviceCallEncoding?: string;
   private _services = new Map<string, Set<string>>();
-  private _servicesByName = new Map<string, Service>();
+  private _servicesByName = new Map<string, ResolvedService>();
   private _serviceResponseCbs = new Map<
     ServiceCallRequest["callId"],
     (response: ServiceCallResponse) => void
   >();
+  private _nextServiceCallId = 0;
 
   public constructor({
     url,
@@ -239,7 +248,20 @@ export default class FoxgloveWebSocketPlayer implements Player {
         this._playerCapabilities.push(PlayerCapabilities.advertise);
       }
       if (event.capabilities.includes(ServerCapability.services)) {
-        this._playerCapabilities.push(PlayerCapabilities.callServices);
+        this._serviceCallEncoding = event.supportedEncodings?.find((e) =>
+          SUPPORTED_SERVICE_ENCODINGS.includes(e),
+        );
+
+        const problemId = "callService:unsupportedEncoding";
+        if (this._serviceCallEncoding) {
+          this._playerCapabilities.push(PlayerCapabilities.callServices);
+          this._problems.removeProblem(problemId);
+        } else {
+          this._problems.addProblem(problemId, {
+            severity: "warn",
+            message: `calling services is disabled as no compatible encoding could be found`,
+          });
+        }
       }
 
       if (event.capabilities.includes(ServerCapability.parameters)) {
@@ -438,11 +460,73 @@ export default class FoxgloveWebSocketPlayer implements Player {
     });
 
     this._client.on("advertiseServices", (services) => {
+      if (!this._serviceCallEncoding) {
+        return;
+      }
+
+      let schemaEncoding: string;
+      if (this._serviceCallEncoding === "json") {
+        schemaEncoding = "jsonschema";
+      } else if (this._serviceCallEncoding === "ros1") {
+        schemaEncoding = "ros1msg";
+      } else if (this._serviceCallEncoding === "cdr") {
+        schemaEncoding = "ros2msg";
+      } else {
+        throw new Error(`Unsupported encoding ${this._serviceCallEncoding}`);
+      }
+
       for (const service of services) {
-        this._servicesByName.set(service.name, service);
+        const requestType = `${service.type}_Request`;
+        const responseType = `${service.type}_Response`;
+        const parsedRequest = parseChannel({
+          messageEncoding: this._serviceCallEncoding,
+          schema: {
+            name: requestType,
+            encoding: schemaEncoding,
+            data: new TextEncoder().encode(service.requestSchema),
+          },
+        });
+        const parsedResponse = parseChannel({
+          messageEncoding: this._serviceCallEncoding,
+          schema: {
+            name: responseType,
+            encoding: schemaEncoding,
+            data: new TextEncoder().encode(service.responseSchema),
+          },
+        });
+        const requestMsgDef = rosDatatypesToMessageDefinition(parsedRequest.datatypes, requestType);
+        const requestMessageWriter = ROS_ENCODINGS.includes(this._serviceCallEncoding)
+          ? this._serviceCallEncoding === "ros1"
+            ? new Ros1MessageWriter(requestMsgDef)
+            : new Ros2MessageWriter(requestMsgDef)
+          : new JsonMessageWriter();
+
+        // Add type definitions for service response and request
+        for (const [name, types] of [...parsedRequest.datatypes, ...parsedResponse.datatypes]) {
+          this._datatypes?.set(name, types);
+        }
+
+        const resolvedService: ResolvedService = {
+          service,
+          parsedResponse,
+          requestMessageWriter,
+        };
+        this._servicesByName.set(service.name, resolvedService);
         this._services.set(service.name, new Set([service.name]));
       }
       this._emitState();
+    });
+
+    this._client.on("unadvertiseServices", (serviceIds) => {
+      for (const serviceId of serviceIds) {
+        const service: ResolvedService | undefined = Object.values(this._servicesByName).find(
+          (s) => s.service.id === serviceId,
+        );
+        if (service) {
+          this._servicesByName.delete(service.service.name);
+          this._services.delete(service.service.name);
+        }
+      }
     });
 
     this._client.on("serviceCallResponse", (response) => {
@@ -678,85 +762,32 @@ export default class FoxgloveWebSocketPlayer implements Player {
       throw new Error("FoxgloveWebSocketPlayer#callService request must be an object.");
     }
 
-    const service = this._servicesByName.get(serviceName);
-    if (!service) {
+    const resolvedService = this._servicesByName.get(serviceName);
+    if (!resolvedService) {
       throw new Error(
         `Tried to call service '${serviceName}' that has not been advertised before.`,
       );
     }
 
-    const encoding = this._supportedEncodings
-      ? this._supportedEncodings.find((e) => SUPPORTED_SERVICE_ENCODINGS.includes(e))
-      : FALLBACK_SERVICE_ENCODING;
-    if (!encoding) {
-      throw new Error(`Can not call service '${serviceName}': No supported encoding.`);
-    }
+    const { service, parsedResponse, requestMessageWriter } = resolvedService;
 
     const serviceCallRequest: ServiceCallPayload = {
       serviceId: service.id,
-      callId: Date.now(),
-      encoding,
+      callId: ++this._nextServiceCallId,
+      encoding: this._serviceCallEncoding!,
       data: new DataView(new Uint8Array().buffer),
     };
 
-    if (encoding === "json") {
-      const message = new Uint8Array(Buffer.from(JSON.stringify(request) ?? ""));
-      serviceCallRequest.data = new DataView(message.buffer);
-    } else if (ROS_ENCODINGS.includes(encoding)) {
-      try {
-        const datatypes: RosDatatypes = new Map();
-        const msgdef = rosDatatypesToMessageDefinition(datatypes, service.requestSchema);
-        const messageWriter =
-          encoding === "ros1" ? new Ros1MessageWriter(msgdef) : new Ros2MessageWriter(msgdef);
-        const message = messageWriter.writeMessage(request);
-        serviceCallRequest.data = new DataView(message);
-      } catch (error) {
-        log.debug(error);
-        this._problems.addProblem(`serviceCall:msgdef:${service.name}`, {
-          severity: "error",
-          message: `Unknown message definition for "${service.name}"`,
-          tip: `Try subscribing to the topic "${service.name}" before publishing to it`,
-        });
-      }
-    } else {
-      throw new Error(`Failed to encode service call request for service '${serviceName}'.`);
-    }
+    const message = requestMessageWriter.writeMessage(request);
+    serviceCallRequest.data = new DataView(message.buffer);
     this._client.sendCallServiceRequest(serviceCallRequest);
 
     return await new Promise<Record<string, unknown>>((resolve, reject) => {
       this._serviceResponseCbs.set(serviceCallRequest.callId, (response: ServiceCallResponse) => {
-        console.assert(
-          response.callId === serviceCallRequest.callId,
-          "Service request/response call id mismatch",
-        );
         try {
-          let schemaEncoding;
-          let schemaData;
-          if (response.encoding === "json") {
-            schemaEncoding = "jsonschema";
-            schemaData = new TextEncoder().encode(service.responseSchema);
-          } else if (response.encoding === "ros1") {
-            schemaEncoding = "ros1msg";
-            schemaData = new TextEncoder().encode(service.responseSchema);
-          } else if (response.encoding === "cdr") {
-            schemaEncoding = "ros2msg";
-            schemaData = new TextEncoder().encode(service.responseSchema);
-          } else {
-            throw new Error(`Unsupported encoding ${response.encoding}`);
-          }
-          const parsedResponse = parseChannel({
-            messageEncoding: response.encoding,
-            schema: { name: service.type, encoding: schemaEncoding, data: schemaData },
-          });
-
           const data = parsedResponse.deserializer(response.data);
           resolve(data as Record<string, unknown>);
         } catch (error) {
-          this._problems.addProblem(`schema:${service.type}`, {
-            severity: "error",
-            message: `Failed to parse service response for service "${service.name}"`,
-            error,
-          });
           reject(error);
         }
       });
@@ -842,4 +873,10 @@ function dataTypeToFullName(dataType: string): string {
     return `${parts[0]}/msg/${parts[1]}`;
   }
   return dataType;
+}
+
+class JsonMessageWriter implements MessageWriter {
+  public writeMessage(message: unknown): Uint8Array {
+    return new Uint8Array(Buffer.from(JSON.stringify(message) ?? ""));
+  }
 }
