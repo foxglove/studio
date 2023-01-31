@@ -18,6 +18,7 @@ import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext
 import {
   EventsStore,
   TimelinePositionedEvent,
+  Event,
   useEvents,
 } from "@foxglove/studio-base/context/EventsContext";
 import {
@@ -25,14 +26,13 @@ import {
   useHoverValue,
   useTimelineInteractionState,
 } from "@foxglove/studio-base/context/TimelineInteractionStateContext";
-import { ConsoleEvent } from "@foxglove/studio-base/services/ConsoleApi";
 
 const HOVER_TOLERANCE = 0.01;
 
 const log = Logger.getLogger(__filename);
 
 function positionEvents(
-  events: ConsoleEvent[],
+  events: Event[],
   startTime: Time,
   endTime: Time,
 ): TimelinePositionedEvent[] {
