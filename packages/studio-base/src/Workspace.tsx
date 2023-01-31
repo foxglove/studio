@@ -516,7 +516,6 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
         "panel-settings",
         { iconName: "PanelSettings", title: "Panel settings", component: PanelSettings },
       ],
-      ["variables", { iconName: "Variable2", title: "Variables", component: VariablesSidebar }],
     ]);
 
     if (enableStudioLogsSidebar) {
@@ -531,6 +530,12 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
 
     if (!enableNewTopNav) {
       topItems.set("extensions", {
+        iconName: "Variable2",
+        title: "Variables",
+        component: VariablesSidebar,
+      });
+
+      topItems.set("variables", {
         iconName: "AddIn",
         title: "Extensions",
         component: ExtensionsSidebar,

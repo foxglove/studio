@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import AddIcon from "@mui/icons-material/Add";
-import { Divider, IconButton } from "@mui/material";
+import { Button, Divider, IconButton, Tab, Tabs } from "@mui/material";
 import { union } from "lodash";
 import { useMemo, useRef, useState, ReactElement, useEffect } from "react";
 
@@ -56,35 +56,31 @@ export default function VariablesSidebar(): ReactElement {
   }, [globalVariables, skipAnimation]);
 
   return (
-    <SidebarContent
-      title="Variables"
-      disablePadding
-      trailingItems={[
-        <IconButton
+    <Stack flex="auto" style={{ width: 300 }}>
+      {globalVariableNames.map((name, idx) => (
+        <Variable
+          key={name}
+          name={name}
+          selected={!skipAnimation.current && changedVariables.includes(name)}
+          index={idx}
+        />
+      ))}
+      <Stack direction="row" padding={1}>
+        <Button
+          color="inherit"
+          fullWidth
           data-testid="add-variable-button"
+          variant="contained"
           key="add-global-variable"
-          color="primary"
           disabled={globalVariables[""] != undefined}
           onClick={() => {
             setGlobalVariables({ "": '""' });
             void analytics.logEvent(AppEvent.VARIABLE_ADD);
           }}
         >
-          <AddIcon />
-        </IconButton>,
-      ]}
-    >
-      <Stack flex="auto">
-        <Divider />
-        {globalVariableNames.map((name, idx) => (
-          <Variable
-            key={name}
-            name={name}
-            selected={!skipAnimation.current && changedVariables.includes(name)}
-            index={idx}
-          />
-        ))}
+          Add variable
+        </Button>
       </Stack>
-    </SidebarContent>
+    </Stack>
   );
 }

@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
-import { Badge, Paper, Tab, Tabs } from "@mui/material";
+import { Badge, Divider, Paper, Tab, Tabs } from "@mui/material";
 import {
   ComponentProps,
   MouseEvent,
@@ -23,7 +23,9 @@ import { BuiltinIcon } from "@foxglove/studio-base/components/BuiltinIcon";
 import ErrorBoundary from "@foxglove/studio-base/components/ErrorBoundary";
 import { MemoryUseIndicator } from "@foxglove/studio-base/components/MemoryUseIndicator";
 import Stack from "@foxglove/studio-base/components/Stack";
+import VariablesSidebar from "@foxglove/studio-base/components/VariablesSidebar";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
+import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
 
 import { TabSpacer } from "./TabSpacer";
 
@@ -40,13 +42,19 @@ export type SidebarItem = {
 };
 
 const useStyles = makeStyles()((theme) => ({
-  nav: {
+  leftNav: {
     boxSizing: "content-box",
     borderRight: `1px solid ${theme.palette.divider}`,
     backgroundColor: theme.palette.background.paper,
   },
+  rightNav: {
+    boxSizing: "content-box",
+    borderLeft: `1px solid ${theme.palette.divider}`,
+    backgroundColor: theme.palette.background.paper,
+  },
   tabs: {
     flexGrow: 1,
+
     ".MuiTabs-flexContainerVertical": {
       height: "100%",
     },
@@ -69,6 +77,24 @@ const useStyles = makeStyles()((theme) => ({
         fontSize: "inherit",
         width: "auto",
         height: "auto",
+      },
+    },
+  },
+  miniTabs: {
+    minHeight: "auto",
+
+    ".MuiTabs-indicator": {
+      transform: "scaleX(0.5)",
+      height: 2,
+    },
+    ".MuiTab-root": {
+      minHeight: "auto",
+      minWidth: theme.spacing(8),
+      padding: theme.spacing(1.5, 2),
+      color: theme.palette.text.secondary,
+
+      "&.Mui-selected": {
+        color: theme.palette.text.primary,
       },
     },
   },
@@ -104,7 +130,14 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
   const [enableMemoryUseIndicator = false] = useAppConfigurationValue<boolean>(
     AppSetting.ENABLE_MEMORY_USE_INDICATOR,
   );
-  const [enableNewTopNav = false] = useAppConfigurationValue<boolean>(AppSetting.ENABLE_NEW_TOPNAV);
+  // Since we can't toggle the title bar on an electron window, keep the setting at its initial
+  // value until the app is reloaded/relaunched.
+  const [currentEnableNewTopNav = false] = useAppConfigurationValue<boolean>(
+    AppSetting.ENABLE_NEW_TOPNAV,
+  );
+  const [initialEnableNewTopNav] = useState(currentEnableNewTopNav);
+  const enableNewTopNav = isDesktopApp() ? initialEnableNewTopNav : currentEnableNewTopNav;
+
   const [mosaicValue, setMosaicValue] = useState<MosaicNode<"sidebar" | "children">>("children");
   const { classes } = useStyles();
   const prevSelectedKey = useRef<string | undefined>(undefined);
@@ -221,7 +254,7 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
 
   return (
     <Stack direction="row" fullHeight overflow="hidden">
-      <Stack className={classes.nav} flexShrink={0} justifyContent="space-between">
+      <Stack className={classes.leftNav} flexShrink={0} justifyContent="space-between">
         <Tabs
           className={classes.tabs}
           orientation="vertical"
@@ -286,6 +319,17 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
           resize={{ minimumPaneSizePercentage: 10 }}
         />
       </div>
+
+      {enableNewTopNav && (
+        <Stack className={classes.rightNav} flexShrink={0} justifyContent="space-between">
+          <Tabs className={classes.miniTabs} value="variables" textColor="inherit">
+            {/* <Tab label="Selected object" value="selectedObject" /> */}
+            <Tab label="Variables" value="variables" />
+          </Tabs>
+          <Divider />
+          <VariablesSidebar />
+        </Stack>
+      )}
     </Stack>
   );
 }
