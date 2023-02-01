@@ -9,10 +9,9 @@ import {
   Tabs,
   styled as muiStyled,
   Divider,
-  Box,
   CircularProgress,
 } from "@mui/material";
-import { useState, PropsWithChildren, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 import { EventsList } from "@foxglove/studio-base/components/DataSourceSidebar/EventsList";
 import {
@@ -21,6 +20,7 @@ import {
 } from "@foxglove/studio-base/components/MessagePipeline";
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
 import Stack from "@foxglove/studio-base/components/Stack";
+import { TabPanel } from "@foxglove/studio-base/components/TabPanel";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
 import { EventsStore, useEvents } from "@foxglove/studio-base/context/EventsContext";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
@@ -61,28 +61,6 @@ const ProblemCount = muiStyled("div")(({ theme }) => ({
   padding: theme.spacing(0.125, 0.75),
   borderRadius: 8,
 }));
-
-const TabPanel = (
-  props: PropsWithChildren<{
-    index: number;
-    value: number;
-  }>,
-): JSX.Element => {
-  const { children, value, index, ...other } = props;
-
-  return (
-    <Box
-      role="tabpanel"
-      hidden={value !== index}
-      id={`tabpanel-${index}`}
-      aria-labelledby={`tab-${index}`}
-      flex="auto"
-      {...other}
-    >
-      {value === index && <>{children}</>}
-    </Box>
-  );
-};
 
 const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => playerState.presence;
 const selectPlayerProblems = ({ playerState }: MessagePipelineContext) => playerState.problems;

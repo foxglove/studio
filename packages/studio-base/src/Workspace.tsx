@@ -642,21 +642,21 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
           <RemountOnValueChange value={playerId}>
             <Stack>
               <PanelLayout />
-              {play && pause && seek && (
-                <div style={{ flexShrink: 0 }}>
-                  <PlaybackControls
-                    play={play}
-                    pause={pause}
-                    seek={seek}
-                    playUntil={playUntil}
-                    isPlaying={isPlaying}
-                    getTimeInfo={getTimeInfo}
-                  />
-                </div>
-              )}
             </Stack>
           </RemountOnValueChange>
         </Sidebar>
+        {play && pause && seek && (
+          <div style={{ flexShrink: 0 }}>
+            <PlaybackControls
+              play={play}
+              pause={pause}
+              seek={seek}
+              playUntil={playUntil}
+              isPlaying={isPlaying}
+              getTimeInfo={getTimeInfo}
+            />
+          </div>
+        )}
       </div>
     </MultiProvider>
   );

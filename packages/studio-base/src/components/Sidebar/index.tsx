@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
-import { Badge, Divider, Paper, Tab, Tabs } from "@mui/material";
+import { Badge, Paper, Tab, Tabs } from "@mui/material";
 import {
   ComponentProps,
   MouseEvent,
@@ -22,8 +22,8 @@ import { HelpMenu } from "@foxglove/studio-base/components/AppBar/Help";
 import { BuiltinIcon } from "@foxglove/studio-base/components/BuiltinIcon";
 import ErrorBoundary from "@foxglove/studio-base/components/ErrorBoundary";
 import { MemoryUseIndicator } from "@foxglove/studio-base/components/MemoryUseIndicator";
+import { SecondarySidebar } from "@foxglove/studio-base/components/SecondarySidebar";
 import Stack from "@foxglove/studio-base/components/Stack";
-import VariablesSidebar from "@foxglove/studio-base/components/VariablesSidebar";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
 
@@ -45,11 +45,6 @@ const useStyles = makeStyles()((theme) => ({
   leftNav: {
     boxSizing: "content-box",
     borderRight: `1px solid ${theme.palette.divider}`,
-    backgroundColor: theme.palette.background.paper,
-  },
-  rightNav: {
-    boxSizing: "content-box",
-    borderLeft: `1px solid ${theme.palette.divider}`,
     backgroundColor: theme.palette.background.paper,
   },
   tabs: {
@@ -77,24 +72,6 @@ const useStyles = makeStyles()((theme) => ({
         fontSize: "inherit",
         width: "auto",
         height: "auto",
-      },
-    },
-  },
-  miniTabs: {
-    minHeight: "auto",
-
-    ".MuiTabs-indicator": {
-      transform: "scaleX(0.5)",
-      height: 2,
-    },
-    ".MuiTab-root": {
-      minHeight: "auto",
-      minWidth: theme.spacing(8),
-      padding: theme.spacing(1.5, 2),
-      color: theme.palette.text.secondary,
-
-      "&.Mui-selected": {
-        color: theme.palette.text.primary,
       },
     },
   },
@@ -127,6 +104,7 @@ type SidebarProps<K> = PropsWithChildren<{
 
 export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.Element {
   const { children, items, bottomItems, selectedKey, onSelectKey } = props;
+
   const [enableMemoryUseIndicator = false] = useAppConfigurationValue<boolean>(
     AppSetting.ENABLE_MEMORY_USE_INDICATOR,
   );
@@ -320,16 +298,7 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
         />
       </div>
 
-      {enableNewTopNav && (
-        <Stack className={classes.rightNav} flexShrink={0} justifyContent="space-between">
-          <Tabs className={classes.miniTabs} value="variables" textColor="inherit">
-            {/* <Tab label="Selected object" value="selectedObject" /> */}
-            <Tab label="Variables" value="variables" />
-          </Tabs>
-          <Divider />
-          <VariablesSidebar />
-        </Stack>
-      )}
+      {enableNewTopNav && <SecondarySidebar />}
     </Stack>
   );
 }

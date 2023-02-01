@@ -2,12 +2,10 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import AddIcon from "@mui/icons-material/Add";
-import { Button, Divider, IconButton, Tab, Tabs } from "@mui/material";
+import { Button } from "@mui/material";
 import { union } from "lodash";
 import { useMemo, useRef, useState, ReactElement, useEffect } from "react";
 
-import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
 import Stack from "@foxglove/studio-base/components/Stack";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 import useGlobalVariables, {
