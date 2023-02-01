@@ -38,6 +38,7 @@ const useStyles = makeStyles()((theme) => ({
       minWidth: theme.spacing(8),
       padding: theme.spacing(0, 1.5),
       color: theme.palette.text.secondary,
+      fontSize: "0.6875rem",
 
       "&.Mui-selected": {
         color: theme.palette.text.primary,
