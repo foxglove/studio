@@ -2,7 +2,9 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Divider, Tab, Tabs } from "@mui/material";
+import ArrowLeftIcon from "@mui/icons-material/ArrowLeft";
+import ArrowRightIcon from "@mui/icons-material/ArrowRight";
+import { Divider, IconButton, Tab, Tabs } from "@mui/material";
 import { useState } from "react";
 import JsonTree from "react-json-tree";
 import { makeStyles } from "tss-react/mui";
@@ -23,7 +25,6 @@ const useStyles = makeStyles()((theme) => ({
     boxSizing: "content-box",
     borderLeft: `1px solid ${theme.palette.divider}`,
     backgroundColor: theme.palette.background.paper,
-    width: 300,
   },
   tabs: {
     minHeight: "auto",
@@ -45,6 +46,12 @@ const useStyles = makeStyles()((theme) => ({
       },
     },
   },
+  tabPanel: {
+    width: 300,
+  },
+  collapseButton: {
+    fontSize: 20,
+  },
 }));
 
 const selectPlayerSourceId = ({ playerState }: MessagePipelineContext) =>
@@ -55,38 +62,55 @@ export function SecondarySidebar(): JSX.Element {
   const { currentUser } = useCurrentUser();
   const jsonTreeTheme = useJsonTreeTheme();
   const [activeTab, setActiveTab] = useState(0);
+  const [collapsed, setCollapsed] = useState(true);
 
   const playerSourceId = useMessagePipeline(selectPlayerSourceId);
 
   const showEventsTab = currentUser != undefined && playerSourceId === "foxglove-data-platform";
 
+  const toggleCollapsed = () => {
+    setCollapsed(!collapsed);
+  };
+
   return (
-    <Stack className={classes.root} flexShrink={0} justifyContent="space-between">
-      <Tabs
-        className={classes.tabs}
-        textColor="inherit"
-        value={activeTab}
-        onChange={(_ev, newValue: number) => {
-          if (newValue !== activeTab) {
-            setActiveTab(newValue);
-          }
-        }}
-      >
-        <Tab label="Selected object" value={0} />
-        <Tab label="Variables" value={1} />
-        {showEventsTab && <Tab label="Events" value={2} />}
-      </Tabs>
+    <Stack className={classes.root} flexShrink={0}>
+      <Stack direction="row" justifyContent="space-between">
+        {!collapsed && (
+          <Tabs
+            className={classes.tabs}
+            textColor="inherit"
+            value={activeTab}
+            onChange={(_ev, newValue: number) => {
+              if (newValue !== activeTab) {
+                setActiveTab(newValue);
+              }
+            }}
+          >
+            <Tab label="Selected object" value={0} />
+            <Tab label="Variables" value={1} />
+            {showEventsTab && <Tab label="Events" value={2} />}
+          </Tabs>
+        )}
+
+        <IconButton className={classes.collapseButton} size="small" onClick={toggleCollapsed}>
+          {collapsed ? <ArrowLeftIcon fontSize="inherit" /> : <ArrowRightIcon fontSize="inherit" />}
+        </IconButton>
+      </Stack>
       <Divider />
-      <TabPanel value={activeTab} index={0}>
-        <JsonTree theme={jsonTreeTheme} />
-      </TabPanel>
-      <TabPanel value={activeTab} index={1}>
-        <VariablesSidebar />
-      </TabPanel>
-      {showEventsTab && (
-        <TabPanel value={activeTab} index={2}>
-          <EventsList />
-        </TabPanel>
+      {!collapsed && (
+        <>
+          <TabPanel className={classes.tabPanel} value={activeTab} index={0}>
+            <JsonTree theme={jsonTreeTheme} />
+          </TabPanel>
+          <TabPanel className={classes.tabPanel} value={activeTab} index={1}>
+            <VariablesSidebar />
+          </TabPanel>
+          {showEventsTab && (
+            <TabPanel className={classes.tabPanel} value={activeTab} index={2}>
+              <EventsList />
+            </TabPanel>
+          )}
+        </>
       )}
     </Stack>
   );
