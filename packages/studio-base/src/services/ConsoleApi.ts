@@ -5,7 +5,7 @@
 import * as base64 from "@protobufjs/base64";
 
 import { add, fromNanoSec, Time, toRFC3339String, toSec } from "@foxglove/rostime";
-import { LayoutID, ISO8601Timestamp } from "@foxglove/studio-base";
+import { LayoutID, ISO8601Timestamp } from "@foxglove/studio-base/services/ILayoutStorage";
 
 export type User = {
   id: string;
