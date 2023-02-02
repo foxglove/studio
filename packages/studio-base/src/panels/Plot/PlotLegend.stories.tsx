@@ -3,16 +3,13 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Story } from "@storybook/react";
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 
-import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import Stack from "@foxglove/studio-base/components/Stack";
-import AppConfigurationContext from "@foxglove/studio-base/context/AppConfigurationContext";
 import Plot, { PlotConfig } from "@foxglove/studio-base/panels/Plot";
 import { fixture, paths } from "@foxglove/studio-base/panels/Plot/index.stories";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 import { useReadySignal } from "@foxglove/studio-base/stories/ReadySignalContext";
-import { makeMockAppConfiguration } from "@foxglove/studio-base/util/makeMockAppConfiguration";
 
 export default {
   title: "panels/Plot/PlotLegend",
@@ -50,15 +47,10 @@ const exampleConfig: PlotConfig = {
 function Wrapper(StoryFn: Story): JSX.Element {
   const readySignal = useReadySignal({ count: 3 });
   const pauseFrame = useCallback(() => readySignal, [readySignal]);
-  const [appConfig] = useState(() =>
-    makeMockAppConfiguration([[AppSetting.ENABLE_PLOT_PANEL_SERIES_SETTINGS, true]]),
-  );
 
   return (
     <PanelSetup fixture={fixture} pauseFrame={pauseFrame}>
-      <AppConfigurationContext.Provider value={appConfig}>
-        <StoryFn />
-      </AppConfigurationContext.Provider>
+      <StoryFn />
     </PanelSetup>
   );
 }
