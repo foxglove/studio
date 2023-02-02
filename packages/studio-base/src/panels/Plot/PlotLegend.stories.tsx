@@ -15,7 +15,7 @@ import { useReadySignal } from "@foxglove/studio-base/stories/ReadySignalContext
 import { makeMockAppConfiguration } from "@foxglove/studio-base/util/makeMockAppConfiguration";
 
 export default {
-  title: "panels/Plot/NewPlotLegend",
+  title: "panels/Plot/PlotLegend",
   component: Plot,
   parameters: {
     chromatic: { delay: 50 },
@@ -119,11 +119,11 @@ function Default(): JSX.Element {
 export function Light(): JSX.Element {
   return <Default />;
 }
-Light.storyName = "New Plot Legend (Light)";
+Light.storyName = "Plot Legend (Light)";
 Light.parameters = { useReadySignal: true, colorScheme: "light" };
 
 export function Dark(): JSX.Element {
   return <Default />;
 }
-Dark.storyName = "New Plot Legend (Dark)";
+Dark.storyName = "Plot Legend (Dark)";
 Dark.parameters = { useReadySignal: true, colorScheme: "dark" };

@@ -8,8 +8,6 @@ import memoizeWeak from "memoize-weak";
 import { useCallback, useEffect } from "react";
 
 import { SettingsTreeAction, SettingsTreeNode, SettingsTreeNodes } from "@foxglove/studio";
-import { AppSetting } from "@foxglove/studio-base/AppSetting";
-import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import { PlotPath } from "@foxglove/studio-base/panels/Plot/internalTypes";
 import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelStateContextProvider";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
@@ -79,8 +77,7 @@ const makeRootSeriesNode = memoizeWeak((paths: PlotPath[]): SettingsTreeNode => 
   };
 });
 
-// eslint-disable-next-line @foxglove/no-boolean-parameters
-function buildSettingsTree(config: PlotConfig, enableSeries: boolean): SettingsTreeNodes {
+function buildSettingsTree(config: PlotConfig): SettingsTreeNodes {
   const maxYError =
     isNumber(config.minYValue) && isNumber(config.maxYValue) && config.minYValue >= config.maxYValue
       ? "Y max must be greater than Y min."
@@ -197,7 +194,7 @@ function buildSettingsTree(config: PlotConfig, enableSeries: boolean): SettingsT
         },
       },
     },
-    paths: enableSeries ? makeRootSeriesNode(config.paths) : undefined,
+    paths: makeRootSeriesNode(config.paths),
   };
 }
 
@@ -207,9 +204,6 @@ export function usePlotPanelSettings(
   focusedPath?: readonly string[],
 ): void {
   const updatePanelSettingsTree = usePanelSettingsTreeUpdate();
-  const [enableSeries = false] = useAppConfigurationValue<boolean>(
-    AppSetting.ENABLE_PLOT_PANEL_SERIES_SETTINGS,
-  );
 
   const actionHandler = useCallback(
     (action: SettingsTreeAction) => {
@@ -267,7 +261,7 @@ export function usePlotPanelSettings(
     updatePanelSettingsTree({
       actionHandler,
       focusedPath,
-      nodes: buildSettingsTree(config, enableSeries),
+      nodes: buildSettingsTree(config),
     });
-  }, [actionHandler, config, enableSeries, focusedPath, updatePanelSettingsTree]);
+  }, [actionHandler, config, focusedPath, updatePanelSettingsTree]);
 }
