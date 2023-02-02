@@ -4,14 +4,17 @@
 
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import ErrorIcon from "@mui/icons-material/Error";
-import { ButtonBase, Typography } from "@mui/material";
+import { ButtonBase, CircularProgress, Tooltip, Typography } from "@mui/material";
 import { useMemo } from "react";
 import { makeStyles } from "tss-react/mui";
 
+import { DataSourceInfoView } from "@foxglove/studio-base/components/DataSourceInfoView";
+import { ProblemsList } from "@foxglove/studio-base/components/DataSourceSidebar/ProblemsList";
 import {
   MessagePipelineContext,
   useMessagePipeline,
 } from "@foxglove/studio-base/components/MessagePipeline";
+import Stack from "@foxglove/studio-base/components/Stack";
 import TextMiddleTruncate from "@foxglove/studio-base/components/TextMiddleTruncate";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
 
@@ -123,9 +126,12 @@ export function DataSource({
 
   if (playerPresence === PlayerPresence.INITIALIZING) {
     return (
-      <Typography variant="inherit" component="span">
-        Initializing connection
-      </Typography>
+      <Stack direction="row" alignItems="center" gap={1}>
+        <Typography variant="inherit" component="span">
+          Initializing connection
+        </Typography>
+        <CircularProgress size={16} variant="indeterminate" />
+      </Stack>
     );
   }
 
@@ -140,21 +146,32 @@ export function DataSource({
   }
 
   return (
-    <ButtonBase className={classes.root} onClick={onSelectDataSourceAction}>
-      <div className={classes.grid}>
-        {currentSource != undefined && playerSourceId !== "sample-nuscenes" && (
-          <>
-            <div className={classes.sourceLabel}>{currentSource}</div>
-            <ArrowRightIcon className={classes.separator} color="inherit" />
-          </>
-        )}
-        <div className={classes.sourceInfo}>
-          <Typography noWrap variant="inherit" component="span">
-            <TextMiddleTruncate text={playerName} />
-          </Typography>
-          {playerProblems.length > 0 && <ErrorIcon color="error" fontSize="small" />}
+    <Tooltip
+      title={
+        <>
+          <Stack gap={1} paddingTop={1}>
+            <DataSourceInfoView />
+            {playerProblems.length > 0 && <ProblemsList problems={playerProblems} />}
+          </Stack>
+        </>
+      }
+    >
+      <ButtonBase className={classes.root} onClick={onSelectDataSourceAction}>
+        <div className={classes.grid}>
+          {currentSource != undefined && playerSourceId !== "sample-nuscenes" && (
+            <>
+              <div className={classes.sourceLabel}>{currentSource}</div>
+              <ArrowRightIcon className={classes.separator} color="inherit" />
+            </>
+          )}
+          <div className={classes.sourceInfo}>
+            <Typography noWrap variant="inherit" component="span">
+              <TextMiddleTruncate text={playerName} />
+            </Typography>
+            {playerProblems.length > 0 && <ErrorIcon color="error" fontSize="small" />}
+          </div>
         </div>
-      </div>
-    </ButtonBase>
+      </ButtonBase>
+    </Tooltip>
   );
 }
