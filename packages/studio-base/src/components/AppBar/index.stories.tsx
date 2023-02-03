@@ -122,7 +122,7 @@ export function PlayerStates(): JSX.Element {
     </Stack>
   );
 }
-DataSources.parameters = { colorScheme: "light" };
+PlayerStates.parameters = { colorScheme: "light" };
 
 export function DataSources(): JSX.Element {
   return (
