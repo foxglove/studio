@@ -838,12 +838,16 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
   // Render a new frame if requested
   useEffect(() => {
     const { cursorTimeReached } = allFramesCursorRef.current;
+    const cursorActive = cursorTimeReached != undefined;
+    const cursorTimeReachedCurrentTime =
+      cursorActive && currentTime != undefined && compare(cursorTimeReached, currentTime) === 0;
+
     if (
       renderer &&
       renderRef.current.needsRender &&
-      (cursorTimeReached != undefined && currentTime != undefined
-        ? compare(cursorTimeReached, currentTime) === 0
-        : true)
+      // if the allFrames cursor is active (time is defined), and has a reached time equal to the current time, then render
+      // if the allFrames cursor is not active, then render on usual `needsRender` condition
+      (cursorActive ? cursorTimeReachedCurrentTime : true)
     ) {
       renderer.animationFrame();
       renderRef.current.needsRender = false;
