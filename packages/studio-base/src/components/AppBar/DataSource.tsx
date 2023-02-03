@@ -27,14 +27,19 @@ const selectPlayerSourceId = ({ playerState }: MessagePipelineContext) =>
 
 const useStyles = makeStyles()((theme) => ({
   root: {
+    overflow: "hidden",
+    maxWidth: "100%",
+
     "&:not(:hover)": {
       opacity: 0.8,
     },
   },
   grid: {
-    display: "flex",
+    display: "grid",
     alignItems: "center",
     gap: theme.spacing(0.25),
+    gridTemplateAreas: `"sourceInfo"`,
+    gridTemplateColumns: "1fr",
 
     [theme.breakpoints.up("md")]: {
       display: "grid",
@@ -48,6 +53,7 @@ const useStyles = makeStyles()((theme) => ({
     alignItems: "center",
     gap: theme.spacing(0.5),
     whiteSpace: "nowrap",
+    overflow: "hidden",
   },
   sourceLabel: {
     gridArea: "sourceLabel",
@@ -63,6 +69,9 @@ const useStyles = makeStyles()((theme) => ({
     [theme.breakpoints.down("md")]: {
       display: "none",
     },
+  },
+  playerName: {
+    minWidth: 0,
   },
 }));
 
@@ -166,7 +175,7 @@ export function DataSource({
           )}
           <div className={classes.sourceInfo}>
             <Typography noWrap variant="inherit" component="span">
-              <TextMiddleTruncate text={playerName} />
+              <TextMiddleTruncate className={classes.playerName} text={playerName} />
             </Typography>
             {playerProblems.length > 0 && <ErrorIcon color="error" fontSize="small" />}
           </div>
