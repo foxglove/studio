@@ -85,7 +85,7 @@ const useStyles = makeStyles<void, "plotName">()((theme, _params, classes) => ({
     display: "flex",
     alignItems: "center",
     height: ROW_HEIGHT,
-    padding: theme.spacing(0.25),
+    padding: theme.spacing(0.25, 1, 0.25, 0.25),
   },
 }));
 

@@ -102,7 +102,7 @@ const useStyles = makeStyles<StyleProps, "container" | "toggleButton">()(
       alignItems: "center",
       overflow: "auto",
       display: "grid",
-      gridTemplateColumns: "auto minmax(max-content, 1fr) 1fr",
+      gridTemplateColumns: "auto minmax(0, 1fr) auto",
     },
     dragHandle: {
       userSelect: "none",
