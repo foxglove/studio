@@ -11,9 +11,9 @@ import { Time } from "@foxglove/rostime";
 import useGuaranteedContext from "@foxglove/studio-base/hooks/useGuaranteedContext";
 
 /**
- * A single event
+ * DataSourceEvent representings a single event within a data source.
  */
-export type Event = {
+export type DataSourceEvent = {
   id: string;
   createdAt: string;
   deviceId: string;
@@ -32,7 +32,7 @@ export type Event = {
  */
 export type TimelinePositionedEvent = {
   /** The event. */
-  event: Event;
+  event: DataSourceEvent;
 
   /** The end position of the event, as a value 0-1 relative to the timeline. */
   endPosition: number;

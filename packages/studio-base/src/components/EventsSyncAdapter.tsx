@@ -18,7 +18,7 @@ import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext
 import {
   EventsStore,
   TimelinePositionedEvent,
-  Event,
+  DataSourceEvent,
   useEvents,
 } from "@foxglove/studio-base/context/EventsContext";
 import {
@@ -32,7 +32,7 @@ const HOVER_TOLERANCE = 0.01;
 const log = Logger.getLogger(__filename);
 
 function positionEvents(
-  events: Event[],
+  events: DataSourceEvent[],
   startTime: Time,
   endTime: Time,
 ): TimelinePositionedEvent[] {
