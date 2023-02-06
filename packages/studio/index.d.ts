@@ -715,6 +715,11 @@ declare module "@foxglove/studio" {
     enableFilter?: boolean;
 
     /**
+     * If set the editor will scroll to and highlight the node at this path.
+     */
+    focusedPath?: readonly string[];
+
+    /**
      * The settings tree root nodes. Updates to these will automatically be reflected in the
      * editor UI.
      */
