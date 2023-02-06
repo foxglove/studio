@@ -19,6 +19,7 @@ import {
 import { isEqual, partition } from "lodash";
 import memoizeWeak from "memoize-weak";
 import { ChangeEvent, useCallback, useEffect, useMemo, useRef } from "react";
+import tinycolor from "tinycolor2";
 import { DeepReadonly } from "ts-essentials";
 import { keyframes } from "tss-react";
 import { makeStyles } from "tss-react/mui";
@@ -46,15 +47,6 @@ export type NodeEditorProps = {
 
 export const NODE_HEADER_MIN_HEIGHT = 35;
 
-const focusAnimation = keyframes`
-from {
-  background-color: yellow;
-}
-to {
-  background-color: transparent;
-}
-`;
-
 const useStyles = makeStyles()((theme) => ({
   actionButton: {
     padding: theme.spacing(0.5),
@@ -70,7 +62,15 @@ const useStyles = makeStyles()((theme) => ({
     },
   },
   focusedNode: {
-    animation: `${focusAnimation} 0.3s 2 ease-in-out`,
+    animation: `${keyframes`
+      from {
+        background-color: ${tinycolor(theme.palette.primary.main).setAlpha(0.3).toRgbString()};
+      }
+      to {
+        background-color: transparent;
+      }`}
+      0.5s ease-in-out
+    `,
   },
   fieldPadding: {
     gridColumn: "span 2",
