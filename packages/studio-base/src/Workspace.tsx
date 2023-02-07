@@ -566,6 +566,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
   }, [
     DataSourceSidebarItem,
     playerProblems,
+    ConnectedLayoutBrowser,
     enableStudioLogsSidebar,
     enableNewTopNav,
     supportsAccountSettings,
