@@ -465,7 +465,7 @@ function costmapColorCached(output: ColorRGBA, value: number) {
   if (!costmapPalette) {
     costmapPalette = createCostmapPalette();
   }
-  // console.log({ unsignedValue, costmapPalette });
+
   const colorRaw = costmapPalette[Math.trunc(unsignedValue)]!;
   output.r = colorRaw[0];
   output.g = colorRaw[1];
@@ -473,6 +473,8 @@ function costmapColorCached(output: ColorRGBA, value: number) {
   output.a = colorRaw[3];
 }
 
+// Based off of rviz costmap implementation
+// https://github.com/ros-visualization/rviz/blob/1f622b8c95b8e188841b5505db2f97394d3e9c6c/src/rviz/default_plugin/map_display.cpp#L322
 function createCostmapPalette() {
   let index = 0;
   const palette = new Array(256).fill([0, 0, 0, 0]);
