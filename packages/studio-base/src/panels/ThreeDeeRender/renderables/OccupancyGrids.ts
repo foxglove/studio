@@ -463,7 +463,7 @@ function costmapColorCached(output: ColorRGBA, value: number) {
     output.a = 0;
   }
   if (!costmapPalette) {
-    costmapPalette = createCostmapPallette();
+    costmapPalette = createCostmapPalette();
   }
   // console.log({ unsignedValue, costmapPalette });
   const colorRaw = costmapPalette[Math.trunc(unsignedValue)]!;
@@ -473,7 +473,7 @@ function costmapColorCached(output: ColorRGBA, value: number) {
   output.a = colorRaw[3];
 }
 
-function createCostmapPallette() {
+function createCostmapPalette() {
   let index = 0;
   const palette = new Array(256).fill([0, 0, 0, 0]);
   // zero values have alpha=0
