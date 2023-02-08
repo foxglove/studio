@@ -22,12 +22,13 @@ import { getLineColor } from "@foxglove/studio-base/util/plotColors";
 import { PlotPath } from "./internalTypes";
 
 type PlotLegendRowProps = {
+  currentTime?: number;
+  datasets: ComponentProps<typeof TimeBasedChart>["data"]["datasets"];
+  hasMismatchedDataLength: boolean;
   index: number;
+  onClickPath: () => void;
   path: PlotPath;
   paths: PlotPath[];
-  hasMismatchedDataLength: boolean;
-  datasets: ComponentProps<typeof TimeBasedChart>["data"]["datasets"];
-  currentTime?: number;
   savePaths: (paths: PlotPath[]) => void;
   showPlotValuesInLegend: boolean;
 };
@@ -90,12 +91,13 @@ const useStyles = makeStyles<void, "plotName">()((theme, _params, classes) => ({
 }));
 
 export function PlotLegendRow({
+  currentTime,
+  datasets,
+  hasMismatchedDataLength,
   index,
+  onClickPath,
   path,
   paths,
-  hasMismatchedDataLength,
-  datasets,
-  currentTime,
   savePaths,
   showPlotValuesInLegend,
 }: PlotLegendRowProps): JSX.Element {
@@ -143,6 +145,7 @@ export function PlotLegendRow({
       onClick={() => {
         setSelectedPanelIds([panelId]);
         openPanelSettings();
+        onClickPath();
       }}
     >
       <div className={classes.listIcon}>

@@ -19,13 +19,14 @@ const minLegendWidth = 25;
 const maxLegendWidth = 800;
 
 type Props = {
-  paths: PlotPath[];
-  datasets: ComponentProps<typeof TimeBasedChart>["data"]["datasets"];
   currentTime?: number;
+  datasets: ComponentProps<typeof TimeBasedChart>["data"]["datasets"];
+  legendDisplay: "floating" | "top" | "left";
+  onClickPath: (index: number) => void;
+  paths: PlotPath[];
+  pathsWithMismatchedDataLengths: string[];
   saveConfig: SaveConfig<PlotConfig>;
   showLegend: boolean;
-  pathsWithMismatchedDataLengths: string[];
-  legendDisplay: "floating" | "top" | "left";
   showPlotValuesInLegend: boolean;
   sidebarDimension: number;
 };
@@ -122,15 +123,16 @@ const useStyles = makeStyles<StyleProps, "container" | "toggleButton">()(
 
 export function PlotLegend(props: Props): JSX.Element {
   const {
-    paths,
-    saveConfig,
-    datasets,
     currentTime,
+    datasets,
     legendDisplay,
+    onClickPath,
+    paths,
     pathsWithMismatchedDataLengths,
-    sidebarDimension,
+    saveConfig,
     showLegend,
     showPlotValuesInLegend,
+    sidebarDimension,
   } = props;
   const { classes, cx } = useStyles({ legendDisplay, sidebarDimension });
 
@@ -204,6 +206,7 @@ export function PlotLegend(props: Props): JSX.Element {
                 <PlotLegendRow
                   key={index}
                   index={index}
+                  onClickPath={() => onClickPath(index)}
                   path={path}
                   paths={paths}
                   hasMismatchedDataLength={pathsWithMismatchedDataLengths.includes(path.value)}
