@@ -289,7 +289,7 @@ const Editor = ({
   // Refer to setScriptCode by reference so that the onChange callback isn't invalidated
   // on every edit.
   const latestSetScriptCode = useLatest(setScriptCode);
-  const onChange = React.useCallback(
+  const onChange = useCallback(
     (srcCode: string) => latestSetScriptCode.current(srcCode),
     [latestSetScriptCode],
   );
