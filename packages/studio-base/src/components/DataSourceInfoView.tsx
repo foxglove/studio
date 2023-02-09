@@ -24,7 +24,7 @@ import { MultilineMiddleTruncate } from "./MultilineMiddleTruncate";
 
 const useStyles = makeStyles()({
   numericValue: {
-    fontFamily: fonts.MONOSPACE,
+    fontFeatureSettings: `${fonts.SANS_SERIF_FEATURE_SETTINGS}, zero`,
   },
 });
 
@@ -32,19 +32,27 @@ const selectStartTime = (ctx: MessagePipelineContext) => ctx.playerState.activeD
 const selectEndTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.endTime;
 const selectPlayerName = (ctx: MessagePipelineContext) => ctx.playerState.name;
 const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => playerState.presence;
+const selectPlayerSourceId = ({ playerState }: MessagePipelineContext) =>
+  playerState.urlState?.sourceId;
 
 function DataSourceInfoContent(props: {
   durationRef: MutableRefObject<ReactNull | HTMLDivElement>;
   endTimeRef: MutableRefObject<ReactNull | HTMLDivElement>;
   playerName?: string;
   playerPresence: PlayerPresence;
+  playerSourceId?: string;
   startTime?: Time;
 }): JSX.Element {
-  const { durationRef, endTimeRef, playerName, playerPresence, startTime } = props;
+  const { durationRef, endTimeRef, playerName, playerPresence, playerSourceId, startTime } = props;
   const { classes } = useStyles();
 
+  const isLiveConnection =
+    playerSourceId != undefined
+      ? playerSourceId.endsWith("socket") || playerSourceId.endsWith("lidar")
+      : false;
+
   return (
-    <Stack gap={1.5} paddingX={2} paddingBottom={2}>
+    <Stack gap={1.5}>
       <Stack>
         <Typography display="block" variant="overline" color="text.secondary">
           Current source
@@ -81,18 +89,20 @@ function DataSourceInfoContent(props: {
         )}
       </Stack>
 
-      <Stack>
-        <Typography variant="overline" color="text.secondary">
-          End time
-        </Typography>
-        {playerPresence === PlayerPresence.INITIALIZING ? (
-          <Skeleton animation="wave" width="50%" />
-        ) : (
-          <Typography className={classes.numericValue} variant="inherit" ref={endTimeRef}>
-            &mdash;
+      {!isLiveConnection && (
+        <Stack>
+          <Typography variant="overline" color="text.secondary">
+            End time
           </Typography>
-        )}
-      </Stack>
+          {playerPresence === PlayerPresence.INITIALIZING ? (
+            <Skeleton animation="wave" width="50%" />
+          ) : (
+            <Typography className={classes.numericValue} variant="inherit" ref={endTimeRef}>
+              &mdash;
+            </Typography>
+          )}
+        </Stack>
+      )}
 
       <Stack>
         <Typography variant="overline" color="text.secondary">
@@ -119,6 +129,7 @@ export function DataSourceInfoView(): JSX.Element {
   const endTime = useMessagePipeline(selectEndTime);
   const playerName = useMessagePipeline(selectPlayerName);
   const playerPresence = useMessagePipeline(selectPlayerPresence);
+  const playerSourceId = useMessagePipeline(selectPlayerSourceId);
   const durationRef = useRef<HTMLDivElement>(ReactNull);
   const endTimeRef = useRef<HTMLDivElement>(ReactNull);
   const { formatDate, formatTime } = useAppTimeFormat();
@@ -152,6 +163,7 @@ export function DataSourceInfoView(): JSX.Element {
       endTimeRef={endTimeRef}
       playerName={playerName}
       playerPresence={playerPresence}
+      playerSourceId={playerSourceId}
       startTime={startTime}
     />
   );

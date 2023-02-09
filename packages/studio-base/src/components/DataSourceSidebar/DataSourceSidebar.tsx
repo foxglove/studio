@@ -14,6 +14,7 @@ import {
 } from "@mui/material";
 import { useState, PropsWithChildren, useEffect, useMemo } from "react";
 
+import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import { EventsList } from "@foxglove/studio-base/components/DataSourceSidebar/EventsList";
 import {
   MessagePipelineContext,
@@ -23,6 +24,7 @@ import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent"
 import Stack from "@foxglove/studio-base/components/Stack";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
 import { EventsStore, useEvents } from "@foxglove/studio-base/context/EventsContext";
+import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
 
 import { ProblemsList } from "./ProblemsList";
@@ -97,6 +99,7 @@ export default function DataSourceSidebar(props: Props): JSX.Element {
   const playerSourceId = useMessagePipeline(selectPlayerSourceId);
   const selectedEventId = useEvents(selectSelectedEventId);
   const [activeTab, setActiveTab] = useState(0);
+  const [enableNewTopNav = false] = useAppConfigurationValue<boolean>(AppSetting.ENABLE_NEW_TOPNAV);
 
   const showEventsTab = currentUser != undefined && playerSourceId === "foxglove-data-platform";
 
@@ -120,6 +123,7 @@ export default function DataSourceSidebar(props: Props): JSX.Element {
       overflow="auto"
       title="Data source"
       disablePadding
+      disableToolbar={enableNewTopNav}
       trailingItems={[
         isLoading && (
           <Stack key="loading" alignItems="center" justifyContent="center" padding={1}>
@@ -137,7 +141,11 @@ export default function DataSourceSidebar(props: Props): JSX.Element {
       ].filter(Boolean)}
     >
       <Stack fullHeight>
-        <DataSourceInfoView />
+        {!enableNewTopNav && (
+          <Stack paddingX={2} paddingBottom={2}>
+            <DataSourceInfoView />
+          </Stack>
+        )}
         {playerPresence !== PlayerPresence.NOT_PRESENT && (
           <>
             <Divider />
@@ -149,18 +157,20 @@ export default function DataSourceSidebar(props: Props): JSX.Element {
               >
                 <StyledTab disableRipple label="Topics" value={0} />
                 {showEventsTab && <StyledTab disableRipple label="Events" value={1} />}
-                <StyledTab
-                  disableRipple
-                  label={
-                    <Stack direction="row" alignItems="baseline" gap={1}>
-                      Problems
-                      {playerProblems.length > 0 && (
-                        <ProblemCount>{playerProblems.length}</ProblemCount>
-                      )}
-                    </Stack>
-                  }
-                  value={2}
-                />
+                {!enableNewTopNav && (
+                  <StyledTab
+                    disableRipple
+                    label={
+                      <Stack direction="row" alignItems="baseline" gap={1}>
+                        Problems
+                        {playerProblems.length > 0 && (
+                          <ProblemCount>{playerProblems.length}</ProblemCount>
+                        )}
+                      </Stack>
+                    }
+                    value={2}
+                  />
+                )}
               </StyledTabs>
               <Divider />
               <TabPanel value={activeTab} index={0}>

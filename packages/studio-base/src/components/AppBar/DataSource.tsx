@@ -5,7 +5,6 @@
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import ErrorIcon from "@mui/icons-material/Error";
 import { ButtonBase, CircularProgress, Tooltip, Typography } from "@mui/material";
-import { useMemo } from "react";
 import { makeStyles } from "tss-react/mui";
 
 import { DataSourceInfoView } from "@foxglove/studio-base/components/DataSourceInfoView";
@@ -18,13 +17,6 @@ import Stack from "@foxglove/studio-base/components/Stack";
 import TextMiddleTruncate from "@foxglove/studio-base/components/TextMiddleTruncate";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
 
-const selectPlayerName = ({ playerState }: MessagePipelineContext) => playerState.name;
-// const selectProfile = ({ playerState }: MessagePipelineContext) => playerState.profile;
-const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => playerState.presence;
-const selectPlayerProblems = ({ playerState }: MessagePipelineContext) => playerState.problems;
-const selectPlayerSourceId = ({ playerState }: MessagePipelineContext) =>
-  playerState.urlState?.sourceId;
-
 const useStyles = makeStyles()((theme) => ({
   root: {
     padding: theme.spacing(0, 1),
@@ -32,9 +24,7 @@ const useStyles = makeStyles()((theme) => ({
     overflow: "hidden",
     maxWidth: "100%",
 
-    "&:not(:hover)": {
-      opacity: 0.8,
-    },
+    "&:not(:hover)": { opacity: 0.8 },
   },
   sourceInfo: {
     gridArea: "sourceInfo",
@@ -52,6 +42,10 @@ const useStyles = makeStyles()((theme) => ({
   },
 }));
 
+const selectPlayerName = ({ playerState }: MessagePipelineContext) => playerState.name;
+const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => playerState.presence;
+const selectPlayerProblems = ({ playerState }: MessagePipelineContext) => playerState.problems;
+
 export function DataSource({
   onSelectDataSourceAction,
 }: {
@@ -60,51 +54,7 @@ export function DataSource({
   const { classes } = useStyles();
   const playerName = useMessagePipeline(selectPlayerName) ?? "<unknown>";
   const playerPresence = useMessagePipeline(selectPlayerPresence);
-  // const playerProfile = useMessagePipeline(selectProfile);
   const playerProblems = useMessagePipeline(selectPlayerProblems) ?? [];
-  const playerSourceId = useMessagePipeline(selectPlayerSourceId);
-
-  const currentSource = useMemo(() => {
-    switch (playerSourceId) {
-      // Data platform
-      case "foxglove-data-platform":
-        return "Foxglove Data Platform";
-
-      // Files
-      case "mcap-local-file":
-        return "MCAP";
-      case "ros1-local-bagfile":
-        return "ROS1";
-      case "ros2-local-bagfile":
-        return "ROS2";
-      case "ulog-local-file":
-        return "uLog";
-
-      // Remote file
-      case "remote-file":
-        return "Remote URL";
-
-      // Socket too me
-      case "ros1-socket":
-        return "ROS1 Websocket";
-      case "ros2-socket":
-        return "ROS2 Websocket";
-      case "rosbridge-websocket":
-        return "Rosbridge";
-      case "foxglove-websocket":
-        return "Foxglove Websocket";
-
-      // Other
-      case "velodyne-device":
-        return "Velodyne LIDAR";
-      case "sample-nuscenes":
-        return "Example Dataset";
-
-      // Fallback
-      default:
-        return undefined;
-    }
-  }, [playerSourceId]);
 
   if (playerPresence === PlayerPresence.NOT_PRESENT) {
     return (
@@ -141,15 +91,7 @@ export function DataSource({
     <Tooltip
       title={
         <>
-          <Stack gap={1} paddingTop={1}>
-            {currentSource != undefined && (
-              <Stack paddingX={2}>
-                <Typography variant="overline" color="text.secondary">
-                  Connection Type
-                </Typography>
-                <Typography variant="body2">{currentSource}</Typography>
-              </Stack>
-            )}
+          <Stack gap={1} padding={1}>
             <DataSourceInfoView />
             {playerProblems.length > 0 && <ProblemsList problems={playerProblems} />}
           </Stack>

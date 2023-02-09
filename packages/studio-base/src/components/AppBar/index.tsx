@@ -55,7 +55,7 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }>(
         display: "grid",
         width: "100%",
         gridTemplateAreas: `"start middle end"`,
-        gridTemplateColumns: "auto 1fr auto",
+        gridTemplateColumns: "1fr auto 1fr",
       },
 
       logo: {
