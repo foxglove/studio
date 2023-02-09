@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import ArrowRightIcon from "@mui/icons-material/ArrowRight";
+import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import ErrorIcon from "@mui/icons-material/Error";
 import { ButtonBase, CircularProgress, Tooltip, Typography } from "@mui/material";
 import { useMemo } from "react";
@@ -27,24 +27,13 @@ const selectPlayerSourceId = ({ playerState }: MessagePipelineContext) =>
 
 const useStyles = makeStyles()((theme) => ({
   root: {
+    padding: theme.spacing(0, 1),
+    font: "inherit",
     overflow: "hidden",
     maxWidth: "100%",
 
     "&:not(:hover)": {
       opacity: 0.8,
-    },
-  },
-  grid: {
-    display: "grid",
-    alignItems: "center",
-    gap: theme.spacing(0.25),
-    gridTemplateAreas: `"sourceInfo"`,
-    gridTemplateColumns: "1fr",
-
-    [theme.breakpoints.up("md")]: {
-      display: "grid",
-      gridTemplateAreas: `"icon sourceLabel separator sourceInfo"`,
-      gridTemplateColumns: "auto auto auto 1fr",
     },
   },
   sourceInfo: {
@@ -55,20 +44,8 @@ const useStyles = makeStyles()((theme) => ({
     whiteSpace: "nowrap",
     overflow: "hidden",
   },
-  sourceLabel: {
-    gridArea: "sourceLabel",
-    whiteSpace: "nowrap",
-
-    [theme.breakpoints.down("md")]: {
-      display: "none",
-    },
-  },
-  separator: {
-    gridArea: "separator",
-
-    [theme.breakpoints.down("md")]: {
-      display: "none",
-    },
+  spinner: {
+    flex: "none",
   },
   playerName: {
     minWidth: 0,
@@ -91,7 +68,7 @@ export function DataSource({
     switch (playerSourceId) {
       // Data platform
       case "foxglove-data-platform":
-        return "Data Platform";
+        return "Foxglove Data Platform";
 
       // Files
       case "mcap-local-file":
@@ -130,16 +107,22 @@ export function DataSource({
   }, [playerSourceId]);
 
   if (playerPresence === PlayerPresence.NOT_PRESENT) {
-    return <></>;
+    return (
+      <ButtonBase className={classes.root} onClick={onSelectDataSourceAction}>
+        <Typography noWrap variant="inherit" component="span">
+          Open a new connection…
+        </Typography>
+      </ButtonBase>
+    );
   }
 
   if (playerPresence === PlayerPresence.INITIALIZING) {
     return (
-      <Stack direction="row" alignItems="center" gap={1}>
-        <Typography variant="inherit" component="span">
+      <Stack direction="row" alignItems="center" gap={1} paddingX={1}>
+        <Typography noWrap variant="inherit" component="span">
           Initializing connection
         </Typography>
-        <CircularProgress size={16} variant="indeterminate" />
+        <CircularProgress className={classes.spinner} size={16} variant="indeterminate" />
       </Stack>
     );
   }
@@ -159,6 +142,14 @@ export function DataSource({
       title={
         <>
           <Stack gap={1} paddingTop={1}>
+            {currentSource != undefined && (
+              <Stack paddingX={2}>
+                <Typography variant="overline" color="text.secondary">
+                  Connection Type
+                </Typography>
+                <Typography variant="body2">{currentSource}</Typography>
+              </Stack>
+            )}
             <DataSourceInfoView />
             {playerProblems.length > 0 && <ProblemsList problems={playerProblems} />}
           </Stack>
@@ -166,20 +157,15 @@ export function DataSource({
       }
     >
       <ButtonBase className={classes.root} onClick={onSelectDataSourceAction}>
-        <div className={classes.grid}>
-          {currentSource != undefined && playerSourceId !== "sample-nuscenes" && (
-            <>
-              <div className={classes.sourceLabel}>{currentSource}</div>
-              <ArrowRightIcon className={classes.separator} color="inherit" />
-            </>
-          )}
+        <Stack direction="row" alignItems="center" gap={0.5} overflow="hidden">
+          {playerProblems.length > 0 && <ErrorIcon color="error" fontSize="small" />}
           <div className={classes.sourceInfo}>
             <Typography noWrap variant="inherit" component="span">
               <TextMiddleTruncate className={classes.playerName} text={playerName} />
             </Typography>
-            {playerProblems.length > 0 && <ErrorIcon color="error" fontSize="small" />}
           </div>
-        </div>
+          <ArrowDropDownIcon />
+        </Stack>
       </ButtonBase>
     </Tooltip>
   );
