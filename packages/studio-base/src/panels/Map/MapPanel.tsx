@@ -524,6 +524,7 @@ function MapPanel(props: MapPanelProps): JSX.Element {
       });
 
       topicLayer.allFrames.addLayer(pointLayer);
+      pointLayer.bringToBack();
 
       allGeoMessages
         .filter((message) => message.topic === topic)
