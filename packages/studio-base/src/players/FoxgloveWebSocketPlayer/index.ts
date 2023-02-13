@@ -200,8 +200,9 @@ export default class FoxgloveWebSocketPlayer implements Player {
       this._supportedEncodings = event.supportedEncodings;
       this._datatypes = new Map();
 
-      if (event.metadata != undefined && "ROS_DISTRO" in event.metadata) {
-        const rosDistro = event.metadata["ROS_DISTRO"] as string;
+      const maybeRosDistro = event.metadata?.["ROS_DISTRO"];
+      if (maybeRosDistro) {
+        const rosDistro = maybeRosDistro;
         const isRos1 = ["melodic", "noetic"].includes(rosDistro);
         this._profile = isRos1 ? "ros1" : "ros2";
 
