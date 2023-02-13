@@ -47,6 +47,7 @@ import {
 import WorkerSocketAdapter from "./WorkerSocketAdapter";
 
 const log = Log.getLogger(__dirname);
+const textEncoder = new TextEncoder();
 
 /** Suppress warnings about messages on unknown subscriptions if the susbscription was recently canceled. */
 const SUBSCRIPTION_WARNING_SUPPRESSION_MS = 2000;
@@ -259,7 +260,9 @@ export default class FoxgloveWebSocketPlayer implements Player {
         } else {
           this._problems.addProblem(problemId, {
             severity: "warn",
-            message: `calling services is disabled as no compatible encoding could be found`,
+            message: `Calling services is disabled as no compatible encoding could be found. \
+            The server supports [${event.supportedEncodings?.join(", ")}], \
+            but Studio only supports [${SUPPORTED_SERVICE_ENCODINGS.join(", ")}]`,
           });
         }
       }
@@ -293,7 +296,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
           let schemaData;
           if (channel.encoding === "json") {
             schemaEncoding = "jsonschema";
-            schemaData = new TextEncoder().encode(channel.schema);
+            schemaData = textEncoder.encode(channel.schema);
           } else if (channel.encoding === "protobuf") {
             schemaEncoding = "protobuf";
             schemaData = new Uint8Array(base64.length(channel.schema));
@@ -308,10 +311,10 @@ export default class FoxgloveWebSocketPlayer implements Player {
             }
           } else if (channel.encoding === "ros1") {
             schemaEncoding = "ros1msg";
-            schemaData = new TextEncoder().encode(channel.schema);
+            schemaData = textEncoder.encode(channel.schema);
           } else if (channel.encoding === "cdr") {
             schemaEncoding = "ros2msg";
-            schemaData = new TextEncoder().encode(channel.schema);
+            schemaData = textEncoder.encode(channel.schema);
           } else {
             throw new Error(`Unsupported encoding ${channel.encoding}`);
           }
@@ -472,7 +475,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
       } else if (this._serviceCallEncoding === "cdr") {
         schemaEncoding = "ros2msg";
       } else {
-        throw new Error(`Unsupported encoding ${this._serviceCallEncoding}`);
+        throw new Error(`Unsupported encoding "${this._serviceCallEncoding}"`);
       }
 
       for (const service of services) {
@@ -483,7 +486,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
           schema: {
             name: requestType,
             encoding: schemaEncoding,
-            data: new TextEncoder().encode(service.requestSchema),
+            data: textEncoder.encode(service.requestSchema),
           },
         });
         const parsedResponse = parseChannel({
@@ -491,7 +494,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
           schema: {
             name: responseType,
             encoding: schemaEncoding,
-            data: new TextEncoder().encode(service.responseSchema),
+            data: textEncoder.encode(service.responseSchema),
           },
         });
         const requestMsgDef = rosDatatypesToMessageDefinition(parsedRequest.datatypes, requestType);
@@ -780,7 +783,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
 
     const message = requestMessageWriter.writeMessage(request);
     serviceCallRequest.data = new DataView(message.buffer);
-    this._client.sendCallServiceRequest(serviceCallRequest);
+    this._client.sendServiceCallRequest(serviceCallRequest);
 
     return await new Promise<Record<string, unknown>>((resolve, reject) => {
       this._serviceResponseCbs.set(serviceCallRequest.callId, (response: ServiceCallResponse) => {
