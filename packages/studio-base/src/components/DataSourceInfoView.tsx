@@ -7,17 +7,16 @@ import { MutableRefObject, useEffect, useRef } from "react";
 import { makeStyles } from "tss-react/mui";
 
 import { Time } from "@foxglove/rostime";
-import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import {
   MessagePipelineContext,
   useMessagePipeline,
 } from "@foxglove/studio-base/components/MessagePipeline";
 import Stack from "@foxglove/studio-base/components/Stack";
 import Timestamp from "@foxglove/studio-base/components/Timestamp";
-import { useAppConfigurationValue, useAppTimeFormat } from "@foxglove/studio-base/hooks";
+import { useAppTimeFormat } from "@foxglove/studio-base/hooks";
 import { subtractTimes } from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/typescript/userUtils/time";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
-import { formatDate, formatDuration } from "@foxglove/studio-base/util/formatTime";
+import { formatDuration } from "@foxglove/studio-base/util/formatTime";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 import { formatTimeRaw, isAbsoluteTime } from "@foxglove/studio-base/util/time";
 
@@ -43,7 +42,6 @@ function DataSourceInfoContent(props: {
 }): JSX.Element {
   const { durationRef, endTimeRef, playerName, playerPresence, startTime } = props;
   const { classes } = useStyles();
-  const [timezone] = useAppConfigurationValue<string>(AppSetting.TIMEZONE);
 
   return (
     <Stack gap={1.5} paddingX={2} paddingBottom={2}>
@@ -75,7 +73,7 @@ function DataSourceInfoContent(props: {
         {playerPresence === PlayerPresence.INITIALIZING ? (
           <Skeleton animation="wave" width="50%" />
         ) : startTime ? (
-          <Timestamp horizontal time={startTime} timezone={timezone} />
+          <Timestamp horizontal time={startTime} />
         ) : (
           <Typography className={classes.numericValue} variant="inherit" color="text.secondary">
             &mdash;
@@ -123,8 +121,7 @@ export function DataSourceInfoView(): JSX.Element {
   const playerPresence = useMessagePipeline(selectPlayerPresence);
   const durationRef = useRef<HTMLDivElement>(ReactNull);
   const endTimeRef = useRef<HTMLDivElement>(ReactNull);
-  const { formatTime } = useAppTimeFormat();
-  const [timezone] = useAppConfigurationValue<string>(AppSetting.TIMEZONE);
+  const { formatDate, formatTime } = useAppTimeFormat();
 
   // We bypass react and update the DOM elements directly for better performance here.
   useEffect(() => {
@@ -139,7 +136,7 @@ export function DataSourceInfoView(): JSX.Element {
     }
     if (endTimeRef.current) {
       if (endTime) {
-        const date = formatDate(endTime, timezone);
+        const date = formatDate(endTime);
         endTimeRef.current.innerText = !isAbsoluteTime(endTime)
           ? `${formatTimeRaw(endTime)}`
           : `${date} ${formatTime(endTime)}`;
@@ -147,7 +144,7 @@ export function DataSourceInfoView(): JSX.Element {
         endTimeRef.current.innerHTML = EmDash;
       }
     }
-  }, [endTime, formatTime, startTime, playerPresence, timezone]);
+  }, [endTime, formatTime, startTime, playerPresence, formatDate]);
 
   return (
     <MemoDataSourceInfoContent
