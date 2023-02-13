@@ -630,7 +630,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
         topics: _topics,
         // Always copy topic stats since message counts and timestamps are being updated
         topicStats: new Map(this._topicsStats),
-        datatypes: _datatypes,
+        datatypes: new Map(_datatypes),
         parameters: new Map(this._parameters),
         services: new Map(this._services),
       },
