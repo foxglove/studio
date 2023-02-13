@@ -7,10 +7,10 @@ import { SceneEntity, TextPrimitive } from "@foxglove/schemas";
 import { emptyPose } from "@foxglove/studio-base/util/Pose";
 import { Label, LabelPool } from "@foxglove/three-text";
 
+import { RenderablePrimitive } from "./RenderablePrimitive";
 import type { Renderer } from "../../Renderer";
 import { getLuminance, makeRgba, SRGBToLinear, stringToRgba } from "../../color";
 import { LayerSettingsEntity } from "../SceneEntities";
-import { RenderablePrimitive } from "./RenderablePrimitive";
 
 const tempRgba = makeRgba();
 
@@ -96,6 +96,7 @@ export class RenderableTexts extends RenderablePrimitive {
     for (const label of this.labels) {
       this.labelPool.release(label);
     }
+    super.dispose();
   }
 
   public override update(

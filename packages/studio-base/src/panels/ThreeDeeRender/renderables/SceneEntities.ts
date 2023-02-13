@@ -20,6 +20,8 @@ import {
 } from "@foxglove/schemas";
 import { SettingsTreeAction } from "@foxglove/studio";
 
+import { TopicEntities } from "./TopicEntities";
+import { PrimitivePool } from "./primitives/PrimitivePool";
 import { SELECTED_ID_VARIABLE } from "../Renderable";
 import { Renderer } from "../Renderer";
 import { PartialMessage, PartialMessageEvent, SceneExtension } from "../SceneExtension";
@@ -36,8 +38,6 @@ import {
 import { BaseSettings } from "../settings";
 import { topicIsConvertibleToSchema } from "../topicIsConvertibleToSchema";
 import { makePose } from "../transforms";
-import { TopicEntities } from "./TopicEntities";
-import { PrimitivePool } from "./primitives/PrimitivePool";
 
 export type LayerSettingsEntity = BaseSettings & {
   color: string | undefined;
@@ -177,8 +177,8 @@ export class FoxgloveSceneEntities extends SceneExtension<TopicEntities> {
   }
 
   public override dispose(): void {
-    super.dispose();
     this.primitivePool.dispose();
+    super.dispose();
   }
 }
 

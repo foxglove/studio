@@ -16,7 +16,6 @@ import {
   SettingsTreeAction,
 } from "@foxglove/studio";
 import { MessagePathInputStoryFixture } from "@foxglove/studio-base/components/MessagePathSyntax/fixture";
-import MockPanelContextProvider from "@foxglove/studio-base/components/MockPanelContextProvider";
 import SettingsTreeEditor from "@foxglove/studio-base/components/SettingsTreeEditor";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 
@@ -449,6 +448,14 @@ const IconExamplesSettings: SettingsTreeNodes = {
   grid: {
     label: "Grid",
     icon: "Grid",
+    error: "Also an error!",
+    visible: true,
+    actions: [
+      { type: "action", id: "action1", label: "Action 1", display: "inline", icon: "Camera" },
+      { type: "action", id: "action2", label: "Action 2", display: "inline", icon: "Clock" },
+      { type: "action", id: "action3", label: "Action 3", display: "inline" },
+      { type: "action", id: "action4", label: "Action 4", display: "menu" },
+    ],
     fields: {
       color: {
         label: "Color",
@@ -764,19 +771,17 @@ function Wrapper({ nodes }: { nodes: SettingsTreeNodes }): JSX.Element {
   }, [dynamicNodes]);
 
   return (
-    <MockPanelContextProvider>
-      <PanelSetup fixture={MessagePathInputStoryFixture}>
-        <Box
-          display="flex"
-          flexDirection="column"
-          width="100%"
-          bgcolor="background.paper"
-          overflow="auto"
-        >
-          <SettingsTreeEditor settings={settingsTree} />
-        </Box>
-      </PanelSetup>
-    </MockPanelContextProvider>
+    <PanelSetup fixture={MessagePathInputStoryFixture}>
+      <Box
+        display="flex"
+        flexDirection="column"
+        width="100%"
+        bgcolor="background.paper"
+        overflow="auto"
+      >
+        <SettingsTreeEditor settings={settingsTree} />
+      </Box>
+    </PanelSetup>
   );
 }
 

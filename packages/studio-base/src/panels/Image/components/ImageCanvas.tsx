@@ -23,8 +23,9 @@ import { Topic } from "@foxglove/studio-base/players/types";
 import Rpc from "@foxglove/studio-base/util/Rpc";
 import WebWorkerManager from "@foxglove/studio-base/util/WebWorkerManager";
 
+import ZoomMenu from "./ZoomMenu";
 import { renderImage } from "../lib/renderImage";
-import { Config, SaveImagePanelConfig } from "../types";
+import { Config } from "../types";
 import type {
   Dimensions,
   PixelData,
@@ -33,7 +34,6 @@ import type {
   RenderArgs,
   NormalizedImageMessage,
 } from "../types";
-import ZoomMenu from "./ZoomMenu";
 
 type OnFinishRenderImage = () => void;
 
@@ -42,7 +42,7 @@ type Props = {
   image?: NormalizedImageMessage;
   rawMarkerData: RawMarkerData;
   config: Config;
-  saveConfig: SaveImagePanelConfig;
+  saveConfig: (config: Partial<Config>) => void;
   onStartRenderImage: () => OnFinishRenderImage;
   renderInMainThread?: boolean;
   setActivePixelData: (data: PixelData | undefined) => void;

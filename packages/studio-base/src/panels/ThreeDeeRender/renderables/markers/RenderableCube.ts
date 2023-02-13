@@ -4,11 +4,12 @@
 
 import * as THREE from "three";
 
-import type { Renderer } from "../../Renderer";
-import { rgbToThreeColor } from "../../color";
-import { Marker } from "../../ros";
 import { RenderableMarker } from "./RenderableMarker";
 import { makeStandardMaterial } from "./materials";
+import type { Renderer } from "../../Renderer";
+import { rgbToThreeColor } from "../../color";
+import { disposeMeshesRecursive } from "../../dispose";
+import { Marker } from "../../ros";
 
 export class RenderableCube extends RenderableMarker {
   private mesh: THREE.Mesh<THREE.BoxGeometry, THREE.MeshStandardMaterial>;
@@ -45,7 +46,8 @@ export class RenderableCube extends RenderableMarker {
   }
 
   public override dispose(): void {
-    this.mesh.material.dispose();
+    disposeMeshesRecursive(this.mesh);
+    super.dispose();
   }
 
   public override update(newMarker: Marker, receiveTime: bigint | undefined): void {

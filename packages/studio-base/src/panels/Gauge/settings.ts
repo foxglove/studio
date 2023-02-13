@@ -51,19 +51,19 @@ export function useSettingsTree(
       error,
       fields: {
         path: {
-          label: "Data",
+          label: "Message path",
           input: "messagepath",
           value: config.path,
           error: pathParseError,
           validTypes: supportedDataTypes,
         },
         minValue: {
-          label: "Minimum",
+          label: "Min",
           input: "number",
           value: config.minValue,
         },
         maxValue: {
-          label: "Maximum",
+          label: "Max",
           input: "number",
           value: config.maxValue,
         },

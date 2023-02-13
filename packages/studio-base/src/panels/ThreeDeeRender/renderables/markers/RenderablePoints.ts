@@ -4,11 +4,11 @@
 
 import * as THREE from "three";
 
+import { RenderableMarker } from "./RenderableMarker";
+import { markerHasTransparency, makePointsMaterial } from "./materials";
 import { DynamicBufferGeometry } from "../../DynamicBufferGeometry";
 import type { Renderer } from "../../Renderer";
 import { Marker } from "../../ros";
-import { RenderableMarker } from "./RenderableMarker";
-import { markerHasTransparency, makePointsMaterial } from "./materials";
 
 export class RenderablePoints extends RenderableMarker {
   private geometry: DynamicBufferGeometry;
@@ -34,6 +34,8 @@ export class RenderablePoints extends RenderableMarker {
 
   public override dispose(): void {
     this.points.material.dispose();
+    this.geometry.dispose();
+    super.dispose();
   }
 
   public override update(newMarker: Marker, receiveTime: bigint | undefined): void {

@@ -4,10 +4,10 @@
 
 import { Label } from "@foxglove/three-text";
 
+import { RenderableMarker } from "./RenderableMarker";
 import type { Renderer } from "../../Renderer";
 import { getLuminance, SRGBToLinear } from "../../color";
 import { Marker } from "../../ros";
-import { RenderableMarker } from "./RenderableMarker";
 
 export class RenderableTextViewFacing extends RenderableMarker {
   private label: Label;
@@ -29,6 +29,7 @@ export class RenderableTextViewFacing extends RenderableMarker {
 
   public override dispose(): void {
     this.renderer.labelPool.release(this.label);
+    super.dispose();
   }
 
   public override update(newMarker: Marker, receiveTime: bigint | undefined): void {

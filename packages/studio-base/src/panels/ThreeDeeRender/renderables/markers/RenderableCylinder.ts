@@ -4,12 +4,13 @@
 
 import * as THREE from "three";
 
-import type { Renderer } from "../../Renderer";
-import { rgbToThreeColor } from "../../color";
-import { cylinderSubdivisions, DetailLevel } from "../../lod";
-import { Marker } from "../../ros";
 import { RenderableMarker } from "./RenderableMarker";
 import { makeStandardMaterial } from "./materials";
+import type { Renderer } from "../../Renderer";
+import { rgbToThreeColor } from "../../color";
+import { disposeMeshesRecursive } from "../../dispose";
+import { cylinderSubdivisions, DetailLevel } from "../../lod";
+import { Marker } from "../../ros";
 
 export class RenderableCylinder extends RenderableMarker {
   private mesh: THREE.Mesh<THREE.CylinderGeometry, THREE.MeshStandardMaterial>;
@@ -47,7 +48,8 @@ export class RenderableCylinder extends RenderableMarker {
   }
 
   public override dispose(): void {
-    this.mesh.material.dispose();
+    disposeMeshesRecursive(this.mesh);
+    super.dispose();
   }
 
   public override update(newMarker: Marker, receiveTime: bigint | undefined): void {

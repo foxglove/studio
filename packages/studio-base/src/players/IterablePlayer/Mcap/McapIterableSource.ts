@@ -8,18 +8,17 @@ import Log from "@foxglove/log";
 import { loadDecompressHandlers } from "@foxglove/mcap-support";
 import { MessageEvent } from "@foxglove/studio-base/players/types";
 
+import { FileReadable } from "./FileReadable";
+import { McapIndexedIterableSource } from "./McapIndexedIterableSource";
+import { McapStreamingIterableSource } from "./McapStreamingIterableSource";
+import { RemoteFileReadable } from "./RemoteFileReadable";
 import {
   IIterableSource,
   IteratorResult,
   Initalization,
   MessageIteratorArgs,
   GetBackfillMessagesArgs,
-  IterableSourceInitializeArgs,
 } from "../IIterableSource";
-import { FileReadable } from "./FileReadable";
-import { McapIndexedIterableSource } from "./McapIndexedIterableSource";
-import { McapStreamingIterableSource } from "./McapStreamingIterableSource";
-import { RemoteFileReadable } from "./RemoteFileReadable";
 
 const log = Log.getLogger(__filename);
 
@@ -112,14 +111,4 @@ export class McapIterableSource implements IIterableSource {
 
     return await this._sourceImpl.getBackfillMessages(args);
   }
-}
-
-export function initialize(args: IterableSourceInitializeArgs): McapIterableSource {
-  if (args.file) {
-    return new McapIterableSource({ type: "file", file: args.file });
-  } else if (args.url) {
-    return new McapIterableSource({ type: "url", url: args.url });
-  }
-
-  throw new Error("file or url required");
 }

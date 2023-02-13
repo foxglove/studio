@@ -8,11 +8,11 @@ import { toNanoSec } from "@foxglove/rostime";
 import { CylinderPrimitive, SceneEntity } from "@foxglove/schemas";
 import { emptyPose } from "@foxglove/studio-base/util/Pose";
 
+import { RenderablePrimitive } from "./RenderablePrimitive";
 import type { Renderer } from "../../Renderer";
 import { DARK_OUTLINE, LIGHT_OUTLINE, makeRgba, rgbToThreeColor, stringToRgba } from "../../color";
 import { LayerSettingsEntity } from "../SceneEntities";
 import { MeshStandardMaterialWithInstanceOpacity } from "../materials/MeshStandardMaterialWithInstanceOpacity";
-import { RenderablePrimitive } from "./RenderablePrimitive";
 
 const tempColor = new THREE.Color();
 const tempVec3 = new THREE.Vector3();
@@ -209,6 +209,7 @@ export class RenderableCylinders extends RenderablePrimitive {
     this.pickingMaterial.dispose();
     this.outlineMaterial.dispose();
     this.outlineGeometry.dispose();
+    super.dispose();
   }
 
   public override update(

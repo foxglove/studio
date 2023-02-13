@@ -2,21 +2,21 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import type { Renderer } from "../../Renderer";
-import { MarkerType, Marker } from "../../ros";
 import { RenderableArrow } from "./RenderableArrow";
 import { RenderableCube } from "./RenderableCube";
 import { RenderableCubeList } from "./RenderableCubeList";
 import { RenderableCylinder } from "./RenderableCylinder";
 import { RenderableLineList } from "./RenderableLineList";
 import { RenderableLineStrip } from "./RenderableLineStrip";
-import { RenderableMarker } from "./RenderableMarker";
+import { RenderableMarker, getMarkerId } from "./RenderableMarker";
 import { RenderableMeshResource } from "./RenderableMeshResource";
 import { RenderablePoints } from "./RenderablePoints";
 import { RenderableSphere } from "./RenderableSphere";
 import { RenderableSphereList } from "./RenderableSphereList";
 import { RenderableTextViewFacing } from "./RenderableTextViewFacing";
 import { RenderableTriangleList } from "./RenderableTriangleList";
+import type { Renderer } from "../../Renderer";
+import { MarkerType, Marker } from "../../ros";
 
 const CONSTRUCTORS = {
   [MarkerType.ARROW]: RenderableArrow,
@@ -54,6 +54,7 @@ export class MarkerPool {
         renderable.userData.settingsPath = ["topics", topic];
         renderable.userData.settings = { visible: true, frameLocked: marker.frame_locked };
         renderable.userData.topic = topic;
+        renderable.name = getMarkerId(topic, marker.ns, marker.id);
         renderable.update(marker, receiveTime);
         return renderable;
       }

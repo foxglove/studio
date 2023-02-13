@@ -26,15 +26,14 @@ import ConsoleApi, { CoverageResponse } from "@foxglove/studio-base/services/Con
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import { formatTimeRaw } from "@foxglove/studio-base/util/time";
 
+import { streamMessages, ParsedChannelAndEncodings, StreamParams } from "./streamMessages";
 import {
   IIterableSource,
   Initalization,
   MessageIteratorArgs,
   IteratorResult,
   GetBackfillMessagesArgs,
-  IterableSourceInitializeArgs,
 } from "../IIterableSource";
-import { streamMessages, ParsedChannelAndEncodings, StreamParams } from "./streamMessages";
 
 const log = Logger.getLogger(__filename);
 
@@ -49,7 +48,7 @@ export type DataPlatformInterableSourceConsoleApi = Pick<
   "coverage" | "topics" | "getDevice" | "stream"
 >;
 
-type DataPlatformSourceParameters =
+export type DataPlatformSourceParameters =
   | { type: "by-device"; deviceId: string; start: Time; end: Time }
   | { type: "by-import"; importId: string; start?: Time; end?: Time };
 
@@ -390,41 +389,4 @@ export class DataPlatformIterableSource implements IIterableSource {
     }
     return messages;
   }
-}
-
-export function initialize(args: IterableSourceInitializeArgs): DataPlatformIterableSource {
-  const { api, params } = args;
-  if (!params) {
-    throw new Error("params is required for data platform source");
-  }
-
-  if (!api) {
-    throw new Error("api is required for data platfomr");
-  }
-
-  const start = params.start;
-  const end = params.end;
-  const deviceId = params.deviceId;
-  const importId = params.importId;
-
-  const startTime = start ? fromRFC3339String(start) : undefined;
-  const endTime = end ? fromRFC3339String(end) : undefined;
-
-  if (!(importId || (deviceId && startTime && endTime))) {
-    throw new Error("invalid args");
-  }
-
-  const dpSourceParams: DataPlatformSourceParameters = importId
-    ? { type: "by-import", importId, start: startTime, end: endTime }
-    : { type: "by-device", deviceId: deviceId!, start: startTime!, end: endTime! };
-
-  const consoleApi = new ConsoleApi(api.baseUrl);
-  if (api.auth) {
-    consoleApi.setAuthHeader(api.auth);
-  }
-
-  return new DataPlatformIterableSource({
-    api: consoleApi,
-    params: dpSourceParams,
-  });
 }

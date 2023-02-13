@@ -26,11 +26,11 @@ import {
   OsContext,
 } from "@foxglove/studio-base";
 
-import { Desktop, NativeMenuBridge, Storage } from "../common/types";
 import { DesktopExtensionLoader } from "./services/DesktopExtensionLoader";
 import { NativeAppMenu } from "./services/NativeAppMenu";
 import NativeStorageLayoutStorage from "./services/NativeStorageLayoutStorage";
 import { NativeWindow } from "./services/NativeWindow";
+import { Desktop, NativeMenuBridge, Storage } from "../common/types";
 
 const desktopBridge = (global as unknown as { desktopBridge: Desktop }).desktopBridge;
 const storageBridge = (global as unknown as { storageBridge?: Storage }).storageBridge;
@@ -42,25 +42,6 @@ export default function Root({
 }: {
   appConfiguration: IAppConfiguration;
 }): JSX.Element {
-  const dataSources: IDataSourceFactory[] = useMemo(() => {
-    const sources = [
-      new FoxgloveWebSocketDataSourceFactory(),
-      new RosbridgeDataSourceFactory(),
-      new Ros1SocketDataSourceFactory(),
-      new Ros1LocalBagDataSourceFactory(),
-      new Ros2SocketDataSourceFactory(),
-      new Ros2LocalBagDataSourceFactory(),
-      new UlogLocalDataSourceFactory(),
-      new VelodyneDataSourceFactory(),
-      new FoxgloveDataPlatformDataSourceFactory(),
-      new SampleNuscenesDataSourceFactory(),
-      new McapLocalDataSourceFactory(),
-      new RemoteDataSourceFactory(),
-    ];
-
-    return sources;
-  }, []);
-
   if (!storageBridge) {
     throw new Error("storageBridge is missing");
   }
@@ -84,6 +65,25 @@ export default function Root({
   const consoleApi = useMemo(() => new ConsoleApi(process.env.FOXGLOVE_API_URL ?? ""), []);
   const nativeAppMenu = useMemo(() => new NativeAppMenu(menuBridge), []);
   const nativeWindow = useMemo(() => new NativeWindow(desktopBridge), []);
+
+  const dataSources: IDataSourceFactory[] = useMemo(() => {
+    const sources = [
+      new FoxgloveWebSocketDataSourceFactory(),
+      new RosbridgeDataSourceFactory(),
+      new Ros1SocketDataSourceFactory(),
+      new Ros1LocalBagDataSourceFactory(),
+      new Ros2SocketDataSourceFactory(),
+      new Ros2LocalBagDataSourceFactory(),
+      new UlogLocalDataSourceFactory(),
+      new VelodyneDataSourceFactory(),
+      new FoxgloveDataPlatformDataSourceFactory(consoleApi),
+      new SampleNuscenesDataSourceFactory(),
+      new McapLocalDataSourceFactory(),
+      new RemoteDataSourceFactory(),
+    ];
+
+    return sources;
+  }, [consoleApi]);
 
   // App url state in window.location will represent the user's current session state
   // better than the initial deep link so we prioritize the current window.location

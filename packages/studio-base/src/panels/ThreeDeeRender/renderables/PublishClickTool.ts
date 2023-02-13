@@ -4,13 +4,13 @@
 
 import * as THREE from "three";
 
+import { RenderableArrow } from "./markers/RenderableArrow";
+import { RenderableSphere } from "./markers/RenderableSphere";
 import { Renderable, BaseUserData } from "../Renderable";
 import { Renderer } from "../Renderer";
 import { SceneExtension } from "../SceneExtension";
 import { Marker, MarkerAction, MarkerType, TIME_ZERO } from "../ros";
 import { makePose, Point, Pose } from "../transforms/geometry";
-import { RenderableArrow } from "./markers/RenderableArrow";
-import { RenderableSphere } from "./markers/RenderableSphere";
 
 const UNIT_X = new THREE.Vector3(1, 0, 0);
 const tempVec3 = new THREE.Vector3();
@@ -96,11 +96,11 @@ export class PublishClickTool extends SceneExtension<Renderable<BaseUserData>, P
   }
 
   public override dispose(): void {
-    super.dispose();
     this.arrow.dispose();
     this.sphere.dispose();
     this.renderer.input.removeListener("click", this._handleClick);
     this.renderer.input.removeListener("mousemove", this._handleMouseMove);
+    super.dispose();
   }
 
   public setPublishClickType(type: PublishClickType): void {
