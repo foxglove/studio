@@ -234,8 +234,8 @@ export default class FoxgloveWebSocketPlayer implements Player {
         const rosDataTypes = isRos1
           ? CommonRosTypes.ros1
           : ["foxy", "galactic"].includes(rosDistro)
-            ? CommonRosTypes.ros2galactic
-            : CommonRosTypes.ros2humble;
+          ? CommonRosTypes.ros2galactic
+          : CommonRosTypes.ros2humble;
 
         for (const dataType in rosDataTypes) {
           const msgDef = (rosDataTypes as Record<string, RosMsgDefinition>)[dataType]!;
@@ -520,7 +520,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
     this._client.on("unadvertiseServices", (serviceIds) => {
       for (const serviceId of serviceIds) {
         const service: ResolvedService | undefined = Object.values(this._servicesByName).find(
-          (s) => s.service.id === serviceId,
+          (srv) => srv.service.id === serviceId,
         );
         if (service) {
           this._servicesByName.delete(service.service.name);
@@ -794,7 +794,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
     });
   }
 
-  public setGlobalVariables(): void { }
+  public setGlobalVariables(): void {}
 
   private _getCurrentTime(): Time {
     return this._serverPublishesTime ? this._clockTime ?? ZERO_TIME : fromMillis(Date.now());
