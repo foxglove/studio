@@ -139,7 +139,7 @@ export default class Ros1Player implements Player {
 
       rosNode.on("paramUpdate", ({ key, value, prevValue, callerId }) => {
         log.debug("paramUpdate", key, value, prevValue, callerId);
-        this._parameters = new Map(rosNode.parameters);
+        this._parameters = new Map(rosNode.parameters as Map<string, ParameterValue>);
       });
       rosNode.on("error", (error) => {
         this._addProblem(Problem.Node, {
@@ -237,7 +237,7 @@ export default class Ros1Player implements Player {
         const params = await rosNode.subscribeAllParams();
         if (!isEqual(params, this._parameters)) {
           this._parameters = new Map();
-          params.forEach((value, key) => this._parameters.set(key, value));
+          params.forEach((value, key) => this._parameters.set(key, value as ParameterValue));
         }
         this._clearProblem(Problem.Parameters, { skipEmit: true });
       } catch (error) {

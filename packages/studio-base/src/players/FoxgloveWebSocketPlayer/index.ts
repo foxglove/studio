@@ -36,7 +36,6 @@ import {
   ChannelId,
   ClientChannel,
   FoxgloveClient,
-  Parameter as WebSocketParameter,
   ServerCapability,
   SubscriptionId,
   Service,
@@ -726,10 +725,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
     }
 
     log.debug(`FoxgloveWebSocketPlayer.setParameter(key=${key}, value=${value})`);
-    this._client.setParameters(
-      [{ name: key, value: value as WebSocketParameter["value"] }],
-      uuidv4(),
-    );
+    this._client.setParameters([{ name: key, value }], uuidv4());
 
     // Pre-actively update our parameter map, such that a change is detected if our update failed
     this._parameters.set(key, value);
