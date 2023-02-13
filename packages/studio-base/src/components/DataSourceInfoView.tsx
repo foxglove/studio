@@ -7,13 +7,14 @@ import { MutableRefObject, useEffect, useRef } from "react";
 import { makeStyles } from "tss-react/mui";
 
 import { Time } from "@foxglove/rostime";
+import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import {
   MessagePipelineContext,
   useMessagePipeline,
 } from "@foxglove/studio-base/components/MessagePipeline";
 import Stack from "@foxglove/studio-base/components/Stack";
 import Timestamp from "@foxglove/studio-base/components/Timestamp";
-import { useAppTimeFormat } from "@foxglove/studio-base/hooks";
+import { useAppConfigurationValue, useAppTimeFormat } from "@foxglove/studio-base/hooks";
 import { subtractTimes } from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/typescript/userUtils/time";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
 import { formatDate, formatDuration } from "@foxglove/studio-base/util/formatTime";
@@ -42,6 +43,7 @@ function DataSourceInfoContent(props: {
 }): JSX.Element {
   const { durationRef, endTimeRef, playerName, playerPresence, startTime } = props;
   const { classes } = useStyles();
+  const [timezone] = useAppConfigurationValue<string>(AppSetting.TIMEZONE);
 
   return (
     <Stack gap={1.5} paddingX={2} paddingBottom={2}>
@@ -73,7 +75,7 @@ function DataSourceInfoContent(props: {
         {playerPresence === PlayerPresence.INITIALIZING ? (
           <Skeleton animation="wave" width="50%" />
         ) : startTime ? (
-          <Timestamp horizontal time={startTime} />
+          <Timestamp horizontal time={startTime} timezone={timezone} />
         ) : (
           <Typography className={classes.numericValue} variant="inherit" color="text.secondary">
             &mdash;
@@ -122,6 +124,7 @@ export function DataSourceInfoView(): JSX.Element {
   const durationRef = useRef<HTMLDivElement>(ReactNull);
   const endTimeRef = useRef<HTMLDivElement>(ReactNull);
   const { formatTime } = useAppTimeFormat();
+  const [timezone] = useAppConfigurationValue<string>(AppSetting.TIMEZONE);
 
   // We bypass react and update the DOM elements directly for better performance here.
   useEffect(() => {
@@ -136,7 +139,7 @@ export function DataSourceInfoView(): JSX.Element {
     }
     if (endTimeRef.current) {
       if (endTime) {
-        const date = formatDate(endTime, undefined);
+        const date = formatDate(endTime, timezone);
         endTimeRef.current.innerText = !isAbsoluteTime(endTime)
           ? `${formatTimeRaw(endTime)}`
           : `${date} ${formatTime(endTime)}`;
@@ -144,7 +147,7 @@ export function DataSourceInfoView(): JSX.Element {
         endTimeRef.current.innerHTML = EmDash;
       }
     }
-  }, [endTime, formatTime, startTime, playerPresence]);
+  }, [endTime, formatTime, startTime, playerPresence, timezone]);
 
   return (
     <MemoDataSourceInfoContent
