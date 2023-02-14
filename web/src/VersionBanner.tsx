@@ -8,43 +8,41 @@ import {
   Typography,
   Link,
   Button,
-  styled as muiStyled,
   ThemeProvider as MuiThemeProvider,
 } from "@mui/material";
 import { useState, useMemo, ReactElement } from "react";
+import { makeStyles } from "tss-react/mui";
 
 import Stack from "@foxglove/studio-base/components/Stack";
 import { createMuiTheme } from "@foxglove/studio-base/theme";
 
 const MINIMUM_CHROME_VERSION = 76;
 
-const Root = muiStyled("div", {
-  shouldForwardProp: (prop) => prop !== "isDismissable",
-})<{ isDismissable: boolean }>(({ isDismissable, theme }) => ({
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "center",
-  justifyContent: "center",
-  width: "100%",
-  backgroundColor: theme.palette.primary.main,
-  color: theme.palette.primary.contrastText,
-  zIndex: 100,
-
-  ...(!isDismissable && {
+const useStyles = makeStyles()((theme) => ({
+  root: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+    backgroundColor: theme.palette.primary.main,
+    color: theme.palette.primary.contrastText,
+    zIndex: 100,
+  },
+  rootDismissable: {
     position: "fixed",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
     height: "100vh",
-  }),
-}));
-
-const DismissButton = muiStyled(IconButton)(({ theme }) => ({
-  position: "absolute",
-  margin: theme.spacing(1),
-  right: 0,
-  top: 0,
+  },
+  iconButton: {
+    position: "absolute",
+    margin: theme.spacing(1),
+    right: 0,
+    top: 0,
+  },
 }));
 
 const VersionBanner = function ({
@@ -58,6 +56,7 @@ const VersionBanner = function ({
 }): ReactElement | ReactNull {
   const [showBanner, setShowBanner] = useState(true);
   const muiTheme = useMemo(() => createMuiTheme("dark"), []);
+  const { classes, cx } = useStyles();
 
   if (!showBanner || currentVersion >= MINIMUM_CHROME_VERSION) {
     return ReactNull;
@@ -70,12 +69,16 @@ const VersionBanner = function ({
 
   return (
     <MuiThemeProvider theme={muiTheme}>
-      <Root isDismissable={isDismissable}>
+      <div className={cx(classes.root, { [classes.rootDismissable]: isDismissable })}>
         <Stack padding={2} gap={1.5} alignItems="center">
           {isDismissable && (
-            <DismissButton color="inherit" onClick={() => setShowBanner(false)}>
+            <IconButton
+              color="inherit"
+              className={classes.iconButton}
+              onClick={() => setShowBanner(false)}
+            >
               <CloseIcon />
-            </DismissButton>
+            </IconButton>
           )}
 
           <div>
@@ -104,7 +107,7 @@ const VersionBanner = function ({
             {fixText}
           </Button>
         </Stack>
-      </Root>
+      </div>
     </MuiThemeProvider>
   );
 };
