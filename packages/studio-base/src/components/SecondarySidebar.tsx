@@ -6,7 +6,6 @@ import ArrowLeftIcon from "@mui/icons-material/ArrowLeft";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import { Divider, IconButton, Tab, Tabs } from "@mui/material";
 import { useState } from "react";
-import JsonTree from "react-json-tree";
 import { makeStyles } from "tss-react/mui";
 
 import { EventsList } from "@foxglove/studio-base/components/DataSourceSidebar/EventsList";
@@ -18,7 +17,6 @@ import Stack from "@foxglove/studio-base/components/Stack";
 import { TabPanel } from "@foxglove/studio-base/components/TabPanel";
 import VariablesSidebar from "@foxglove/studio-base/components/VariablesSidebar";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
-import { useJsonTreeTheme } from "@foxglove/studio-base/util/globalConstants";
 
 const useStyles = makeStyles()((theme) => ({
   root: {
@@ -47,7 +45,7 @@ const useStyles = makeStyles()((theme) => ({
     },
   },
   tabPanel: {
-    width: 300,
+    width: 240,
   },
   collapseButton: {
     fontSize: 20,
@@ -60,7 +58,6 @@ const selectPlayerSourceId = ({ playerState }: MessagePipelineContext) =>
 export function SecondarySidebar(): JSX.Element {
   const { classes } = useStyles();
   const { currentUser } = useCurrentUser();
-  const jsonTreeTheme = useJsonTreeTheme();
   const [activeTab, setActiveTab] = useState(0);
   const [collapsed, setCollapsed] = useState(true);
 
@@ -86,9 +83,8 @@ export function SecondarySidebar(): JSX.Element {
               }
             }}
           >
-            <Tab label="Selected object" value={0} />
-            <Tab label="Variables" value={1} />
-            {showEventsTab && <Tab label="Events" value={2} />}
+            <Tab label="Variables" value={0} />
+            {showEventsTab && <Tab label="Events" value={1} />}
           </Tabs>
         )}
 
@@ -100,13 +96,10 @@ export function SecondarySidebar(): JSX.Element {
       {!collapsed && (
         <>
           <TabPanel className={classes.tabPanel} value={activeTab} index={0}>
-            <JsonTree theme={jsonTreeTheme} />
-          </TabPanel>
-          <TabPanel className={classes.tabPanel} value={activeTab} index={1}>
             <VariablesSidebar />
           </TabPanel>
           {showEventsTab && (
-            <TabPanel className={classes.tabPanel} value={activeTab} index={2}>
+            <TabPanel className={classes.tabPanel} value={activeTab} index={1}>
               <EventsList />
             </TabPanel>
           )}

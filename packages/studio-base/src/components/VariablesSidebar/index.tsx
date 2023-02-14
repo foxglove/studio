@@ -54,7 +54,7 @@ export default function VariablesSidebar(): ReactElement {
   }, [globalVariables, skipAnimation]);
 
   return (
-    <Stack flex="auto" style={{ width: 300 }}>
+    <Stack flex="auto" fullWidth overflowX="auto">
       {globalVariableNames.map((name, idx) => (
         <Variable
           key={name}
