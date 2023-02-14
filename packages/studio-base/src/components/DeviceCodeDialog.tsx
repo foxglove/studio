@@ -126,6 +126,7 @@ export default function DeviceCodeDialog(props: DeviceCodePanelProps): JSX.Eleme
               variant="inherit"
               color="primary"
               href={`${verificationUri}?user_code=${userCode}`}
+              target="_blank"
             >
               click here
             </Link>{" "}
