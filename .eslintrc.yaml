@@ -25,6 +25,7 @@ settings:
 
 rules:
   "@foxglove/license-header": error
+  foxglove-link-target: error
 
   tss-unused-classes/unused-classes: error
 
