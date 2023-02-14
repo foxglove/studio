@@ -7,6 +7,7 @@ import { Time, compare } from "@foxglove/rostime";
 import { FrameTransform, Vector3 } from "@foxglove/schemas";
 import { MessageEvent } from "@foxglove/studio";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
+import { normalizeFrameTransform } from "@foxglove/studio-base/panels/ThreeDeeRender/normalizeMessages";
 import {
   AdvertiseOptions,
   BlockCache,
@@ -21,8 +22,6 @@ import {
   TopicStats,
 } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
-
-import { normalizeFrameTransform } from "@foxglove/studio-base/panels/ThreeDeeRender/normalizeMessages";
 import delay from "@foxglove/studio-base/util/delay";
 
 const log = Log.getLogger(__filename);
@@ -39,7 +38,6 @@ class TransformPreloadingPlayer implements Player {
   private topics: Topic[];
 
   public constructor() {
-    console.log("initializing player");
     this.datatypes.set("Time", {
       definitions: [
         { name: "sec", type: "uint32" },
@@ -122,7 +120,6 @@ class TransformPreloadingPlayer implements Player {
     if (!listener) {
       throw new Error("Invariant: listener is not set");
     }
-    console.log("running the transform preloading player");
 
     log.info("Initializing transform preloading player");
 
