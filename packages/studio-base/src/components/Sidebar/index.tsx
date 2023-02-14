@@ -231,35 +231,35 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
         >
           {topTabs}
           <TabSpacer />
-          <Tab
-            className={classes.tab}
-            color="inherit"
-            id="help-button"
-            aria-label="Help menu button"
-            aria-controls={helpMenuOpen ? "help-menu" : undefined}
-            aria-haspopup="true"
-            aria-expanded={helpMenuOpen ? "true" : undefined}
-            onClick={(event) => handleHelpClick(event)}
-            icon={<HelpOutlineIcon color={helpMenuOpen ? "primary" : "inherit"} />}
-          />
+          {!enableNewTopNav && (
+            <Tab
+              className={classes.tab}
+              color="inherit"
+              id="help-button"
+              aria-label="Help menu button"
+              aria-controls={helpMenuOpen ? "help-menu" : undefined}
+              aria-haspopup="true"
+              aria-expanded={helpMenuOpen ? "true" : undefined}
+              onClick={(event) => handleHelpClick(event)}
+              icon={<HelpOutlineIcon color={helpMenuOpen ? "primary" : "inherit"} />}
+            />
+          )}
           {bottomTabs}
           {enableMemoryUseIndicator && <MemoryUseIndicator />}
         </Tabs>
-        {enableNewTopNav && (
-          <HelpMenu
-            anchorEl={helpAnchorEl}
-            open={helpMenuOpen}
-            handleClose={handleHelpClose}
-            anchorOrigin={{
-              horizontal: "right",
-              vertical: "bottom",
-            }}
-            transformOrigin={{
-              vertical: "bottom",
-              horizontal: "left",
-            }}
-          />
-        )}
+        <HelpMenu
+          anchorEl={helpAnchorEl}
+          open={helpMenuOpen}
+          handleClose={handleHelpClose}
+          anchorOrigin={{
+            horizontal: "right",
+            vertical: "bottom",
+          }}
+          transformOrigin={{
+            vertical: "bottom",
+            horizontal: "left",
+          }}
+        />
       </Stack>
       {
         // By always rendering the mosaic, even if we are only showing children, we can prevent the
