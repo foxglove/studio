@@ -478,7 +478,8 @@ export class FoxgloveGrid extends SceneExtension<FoxgloveGridRenderable> {
         | Partial<LayerSettingsFoxgloveGrid>
         | undefined;
       const settings = { ...DEFAULT_SETTINGS, ...userSettings };
-      if (settings.colorField == undefined) {
+      // only want to autoselect if it's in flatcolor mode (without colorfield) and previously didn't have fields
+      if (settings.colorField == undefined && this.fieldsByTopic.get(topic) == undefined) {
         autoSelectColorField(settings, foxgloveGrid.fields, { supportsPackedRgbModes: false });
         // Update user settings with the newly selected color field
         this.renderer.updateConfig((draft) => {
