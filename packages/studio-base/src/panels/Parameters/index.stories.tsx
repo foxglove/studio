@@ -34,11 +34,8 @@ const getFixture = ({
             ["boolean", false],
             ["number", -42],
             ["string", "Hello, world!"],
-            ["date", new Date(1618876820517)],
-            ["Uint8Array", new Uint8Array([0, 1])],
             ["array", [1, 2]],
             ["string array", ["one", "two", "three"]],
-            ["struct", { a: 1, b: [2, 3], c: "String value" }],
           ])
         : undefined,
     },
