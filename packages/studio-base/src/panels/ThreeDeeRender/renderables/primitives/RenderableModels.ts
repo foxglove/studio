@@ -197,6 +197,14 @@ export class RenderableModels extends RenderablePrimitive {
             this._disposeModel(renderable);
           }
         }
+        for (const renderables of prevRenderablesByDataCrc.values()) {
+          for (const renderable of renderables) {
+            renderable.model.removeFromParent();
+            this._disposeModel(renderable);
+          }
+        }
+
+        this.renderer.queueAnimationFrame();
       });
   }
 
