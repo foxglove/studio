@@ -4,7 +4,8 @@
 
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import ErrorIcon from "@mui/icons-material/Error";
-import { ButtonBase, CircularProgress, Tooltip, Typography } from "@mui/material";
+import FileOpenOutlinedIcon from "@mui/icons-material/FileOpenOutlined";
+import { Button, ButtonBase, CircularProgress, Tooltip, Typography } from "@mui/material";
 import { makeStyles } from "tss-react/mui";
 
 import { DataSourceInfoView } from "@foxglove/studio-base/components/DataSourceInfoView";
@@ -19,7 +20,8 @@ import { PlayerPresence } from "@foxglove/studio-base/players/types";
 
 const useStyles = makeStyles()((theme) => ({
   root: {
-    padding: theme.spacing(0, 1),
+    paddingRight: theme.spacing(1),
+    paddingLeft: theme.spacing(1),
     font: "inherit",
     overflow: "hidden",
     maxWidth: "100%",
@@ -58,11 +60,16 @@ export function DataSource({
 
   if (playerPresence === PlayerPresence.NOT_PRESENT) {
     return (
-      <ButtonBase className={classes.root} onClick={onSelectDataSourceAction}>
+      <Button
+        color="inherit"
+        variant="outlined"
+        className={classes.root}
+        onClick={onSelectDataSourceAction}
+      >
         <Typography noWrap variant="inherit" component="span">
           Open a new connection…
         </Typography>
-      </ButtonBase>
+      </Button>
     );
   }
 
@@ -98,7 +105,7 @@ export function DataSource({
         </>
       }
     >
-      <ButtonBase className={classes.root} onClick={onSelectDataSourceAction}>
+      <ButtonBase color="inherit" className={classes.root} onClick={onSelectDataSourceAction}>
         <Stack direction="row" alignItems="center" gap={0.5} overflow="hidden">
           {playerProblems.length > 0 && <ErrorIcon color="error" fontSize="small" />}
           <div className={classes.sourceInfo}>
