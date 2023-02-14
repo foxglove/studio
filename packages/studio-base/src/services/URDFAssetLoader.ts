@@ -30,12 +30,27 @@ export default class URDFAssetLoader implements AssetLoader {
       source: "param" | "local_file";
     },
   ): Promise<Asset | undefined> {
-    void options.analytics.logEvent(
-      options.source === "param" ? AppEvent.URDF_LOAD_LOCAL_FILE : AppEvent.URDF_LOAD_LOCAL_FILE,
-    );
     if (!/\.(urdf|xacro|xml)$/.test(file.name)) {
       return undefined;
     }
+    try {
+      const result = await this._load(file);
+
+      void options.analytics.logEvent(
+        options.source === "param" ? AppEvent.URDF_LOAD_PARAM : AppEvent.URDF_LOAD_LOCAL_FILE,
+        { success: true },
+      );
+      return result;
+    } catch (error) {
+      void options.analytics.logEvent(
+        options.source === "param" ? AppEvent.URDF_LOAD_PARAM : AppEvent.URDF_LOAD_LOCAL_FILE,
+        { success: false },
+      );
+      throw error;
+    }
+  }
+
+  private async _load(file: File): Promise<Asset | undefined> {
     const text = await file.text();
     if (text.trim().length === 0) {
       throw new Error(`${file.name} is empty`);
