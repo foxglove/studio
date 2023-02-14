@@ -185,7 +185,7 @@ class TransformPreloadingPlayer implements Player {
     const numMessagesPerBlock100Hz = Math.ceil(msgs100Hz.length / numBlocks);
     const numMessagesPerBlock150Hz = Math.ceil(msgs150Hz.length / numBlocks);
     for (let i = 0; i < numBlocks; i++) {
-      const block = { messagesByTopic: {} as any, sizeInBytes: 1 };
+      const block = { messagesByTopic: {}, sizeInBytes: 1 };
       const start100HzIndex = i * numMessagesPerBlock100Hz;
       const start150HzIndex = i * numMessagesPerBlock150Hz;
 
