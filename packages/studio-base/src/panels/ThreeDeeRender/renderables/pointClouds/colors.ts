@@ -205,6 +205,11 @@ export function autoSelectColorField<Settings extends ColorModeSettings>(
     }
   }
 
+  if (hasSeparateRgbaFields(fields.map((f) => f.name))) {
+    output.colorMode = "rgba-fields";
+    return;
+  }
+
   // Fall back to using the first field
   if (fields.length > 0) {
     const firstField = fields[0]!;
