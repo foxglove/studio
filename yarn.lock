@@ -2239,7 +2239,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@foxglove/crc@npm:^0.0.3":
+"@foxglove/crc@npm:0.0.3, @foxglove/crc@npm:^0.0.3":
   version: 0.0.3
   resolution: "@foxglove/crc@npm:0.0.3"
   checksum: 2eee0e45780e3289c4a190fa909e5977643667e19a21b945a109977b89427b877d8e12ebf91821653d69bdb0390e58540e1c9bb906aefcc7dd818c64f131f071
@@ -13560,6 +13560,7 @@ __metadata:
     "@babel/core": 7.20.12
     "@babel/preset-env": 7.20.2
     "@babel/preset-typescript": 7.18.6
+    "@foxglove/crc": 0.0.3
     "@foxglove/eslint-plugin": 0.21.0
     "@foxglove/tsconfig": 1.1.0
     "@octokit/rest": 19.0.7
