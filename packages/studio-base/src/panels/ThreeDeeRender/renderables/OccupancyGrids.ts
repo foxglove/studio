@@ -349,7 +349,7 @@ function updateTexture(
           rgba[offset + 0] = 0;
           rgba[offset + 1] = 0;
           rgba[offset + 2] = 0;
-          rgba[offset + 3] = 0;
+          rgba[offset + 3] = 255;
         } else {
           rgba[offset + 0] = tempMinColor.r + (tempMaxColor.r - tempMinColor.r) * t;
           rgba[offset + 1] = tempMinColor.g + (tempMaxColor.g - tempMinColor.g) * t;
