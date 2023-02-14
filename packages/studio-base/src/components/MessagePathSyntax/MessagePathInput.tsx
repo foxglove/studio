@@ -25,12 +25,13 @@ import { Topic } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import { getTopicsByTopicName } from "@foxglove/studio-base/util/selectors";
 
-import { MessagePathStructureItemMessage, RosPath, RosPrimitive } from "./constants";
+import { RosPath, RosPrimitive } from "./constants";
 import {
   traverseStructure,
   messagePathStructures,
   messagePathsForDatatype,
   validTerminatingStructureItem,
+  StructureTraversalResult,
 } from "./messagePathsForDatatype";
 import parseRosPath, { quoteFieldNameIfNeeded, quoteTopicNameIfNeeded } from "./parseRosPath";
 
@@ -275,7 +276,7 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
     [datatypes],
   );
 
-  const structureTraversalResult = useMemo(() => {
+  const structureTraversalResult = useMemo((): StructureTraversalResult | undefined => {
     if (!topic || !rosPath?.messagePath) {
       return undefined;
     }
@@ -287,7 +288,7 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
           structureType: "message",
           nextByName: {},
           datatype: "",
-        } satisfies MessagePathStructureItemMessage,
+        },
       };
     }
 
