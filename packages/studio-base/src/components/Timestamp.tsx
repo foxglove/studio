@@ -35,7 +35,7 @@ export default function Timestamp(props: Props): JSX.Element {
   if (!isAbsoluteTime(time)) {
     return (
       <Stack direction="row" alignItems="center" flexGrow={0}>
-        <Typography fontFamily={fonts.MONOSPACE} variant="inherit">
+        <Typography className={classes.numericValue} variant="inherit">
           {rawTimeStr}
         </Typography>
       </Stack>
