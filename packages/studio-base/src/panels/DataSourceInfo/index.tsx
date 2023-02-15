@@ -30,7 +30,6 @@ const useStyles = makeStyles<void, "copyIcon">()((theme, _params, classes) => ({
     borderCollapse: "collapse",
     display: "block",
     flex: 1,
-    overflowY: "auto",
 
     thead: {
       position: "sticky",
@@ -131,26 +130,28 @@ function SourceInfo(): JSX.Element {
     <>
       <PanelToolbar />
       <Divider />
-      <Stack padding={1.5}>
-        <DataSourceInfoView />
+      <Stack fullHeight overflowY="auto">
+        <Stack padding={1.5}>
+          <DataSourceInfoView />
+        </Stack>
+        <Divider />
+        <table className={classes.table}>
+          <thead>
+            <tr>
+              <th>Topic Name</th>
+              <th>Datatype</th>
+              <th>Message count</th>
+              <th>Frequency</th>
+            </tr>
+          </thead>
+          <tbody>
+            {topics.map((topic) => (
+              <MemoTopicRow key={topic.name} topic={topic} />
+            ))}
+          </tbody>
+        </table>
+        <DirectTopicStatsUpdater interval={6} />
       </Stack>
-      <Divider />
-      <table className={classes.table}>
-        <thead>
-          <tr>
-            <th>Topic name</th>
-            <th>Schema name</th>
-            <th>Message count</th>
-            <th>Frequency</th>
-          </tr>
-        </thead>
-        <tbody>
-          {topics.map((topic) => (
-            <MemoTopicRow key={topic.name} topic={topic} />
-          ))}
-        </tbody>
-      </table>
-      <DirectTopicStatsUpdater interval={6} />
     </>
   );
 }
