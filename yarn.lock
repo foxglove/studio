@@ -3829,6 +3829,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@sentry/browser@npm:7.37.2":
+  version: 7.37.2
+  resolution: "@sentry/browser@npm:7.37.2"
+  dependencies:
+    "@sentry/core": 7.37.2
+    "@sentry/replay": 7.37.2
+    "@sentry/types": 7.37.2
+    "@sentry/utils": 7.37.2
+    tslib: ^1.9.3
+  checksum: b43a7d6f4c1f23dc98a35142dea83e54d4c930963fa8e52b35f78998b7f43a1c6bc99bb487247213c2708f79b53c60c1efacb1390a5542b6971617069c52fa5e
+  languageName: node
+  linkType: hard
+
 "@sentry/cli@npm:^1.74.6":
   version: 1.74.6
   resolution: "@sentry/cli@npm:1.74.6"
@@ -3908,6 +3921,17 @@ __metadata:
   peerDependencies:
     "@sentry/browser": ">=7.24.0"
   checksum: da7f545ddad9e7584a155382d210e9f8bf2479651dae1c94196075be5d973ceed1d74d49745377ffd0a736c6e3654da98c36ede67c5c18f6f125c191416bb1f3
+  languageName: node
+  linkType: hard
+
+"@sentry/replay@npm:7.37.2":
+  version: 7.37.2
+  resolution: "@sentry/replay@npm:7.37.2"
+  dependencies:
+    "@sentry/core": 7.37.2
+    "@sentry/types": 7.37.2
+    "@sentry/utils": 7.37.2
+  checksum: 09484769b8aed4f8257b83e89c18f6150a0f3128f16f4d942c785fbcdf202f86b0ef11014fb275b9a5981b3dcce2035775df668ba8bf3ee888639e7fe85130a6
   languageName: node
   linkType: hard
 
@@ -25235,7 +25259,7 @@ __metadata:
     "@mui/icons-material": 5.11.0
     "@mui/material": 5.11.9
     "@pmmmwh/react-refresh-webpack-plugin": 0.5.10
-    "@sentry/browser": 7.30.0
+    "@sentry/browser": 7.37.2
     "@sentry/tracing": 7.30.0
     "@sentry/webpack-plugin": 1.20.0
     "@types/copy-webpack-plugin": 10.1.0
