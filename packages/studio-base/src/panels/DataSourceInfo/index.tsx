@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Box, Divider } from "@mui/material";
+import { Divider } from "@mui/material";
 import { makeStyles } from "tss-react/mui";
 
 import CopyButton from "@foxglove/studio-base/components/CopyButton";
@@ -15,6 +15,7 @@ import {
 } from "@foxglove/studio-base/components/MessagePipeline";
 import Panel from "@foxglove/studio-base/components/Panel";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
+import Stack from "@foxglove/studio-base/components/Stack";
 import { Topic } from "@foxglove/studio-base/src/players/types";
 
 const useStyles = makeStyles<void, "copyIcon">()((theme, _params, classes) => ({
@@ -130,9 +131,9 @@ function SourceInfo(): JSX.Element {
     <>
       <PanelToolbar />
       <Divider />
-      <Box paddingTop={1}>
+      <Stack padding={1.5}>
         <DataSourceInfoView />
-      </Box>
+      </Stack>
       <Divider />
       <table className={classes.table}>
         <thead>
