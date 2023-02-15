@@ -141,7 +141,6 @@ function ExtensionsSidebar() {
 
 type WorkspaceProps = CustomWindowControlsProps & {
   deepLinks?: string[];
-  disableSignin?: boolean;
   appBarLeftInset?: number;
   onAppBarDoubleClick?: () => void;
 };
@@ -176,8 +175,6 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     return extensions;
   }, [availableSources]);
 
-  const supportsAccountSettings = props.disableSignin !== true;
-
   // We use playerId to detect when a player changes for RemountOnValueChange below
   // see comment below above the RemountOnValueChange component
   const playerId = useMessagePipeline(selectPlayerId);
@@ -185,6 +182,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
   const isPlayerPresent = playerPresence !== PlayerPresence.NOT_PRESENT;
 
   const { currentUser, signIn } = useCurrentUser();
+  const supportsAccountSettings = signIn != undefined;
 
   const { currentUserRequired } = useInitialDeepLinkState(props.deepLinks ?? DEFAULT_DEEPLINKS);
 
@@ -616,7 +614,6 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
         {enableNewTopNav && (
           <AppBar
             currentUser={currentUser}
-            disableSignin={props.disableSignin}
             signIn={signIn}
             leftInset={props.appBarLeftInset}
             onDoubleClick={props.onAppBarDoubleClick}

@@ -48,7 +48,6 @@ type AppProps = CustomWindowControlsProps & {
   extensionLoaders: readonly ExtensionLoader[];
   nativeAppMenu?: INativeAppMenu;
   nativeWindow?: INativeWindow;
-  disableSignin?: boolean;
   enableLaunchPreferenceScreen?: boolean;
   enableGlobalCss?: boolean;
   appBarLeftInset?: number;
@@ -72,7 +71,6 @@ export function App(props: AppProps): JSX.Element {
     appConfiguration,
     dataSources,
     layoutStorage,
-    disableSignin,
     extensionLoaders,
     nativeAppMenu,
     nativeWindow,
@@ -130,7 +128,6 @@ export function App(props: AppProps): JSX.Element {
                     <PanelCatalogProvider>
                       <Workspace
                         deepLinks={deepLinks}
-                        disableSignin={disableSignin}
                         appBarLeftInset={props.appBarLeftInset}
                         onAppBarDoubleClick={props.onAppBarDoubleClick}
                         showCustomWindowControls={props.showCustomWindowControls}
