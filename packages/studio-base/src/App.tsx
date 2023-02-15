@@ -24,15 +24,11 @@ import StudioToastProvider from "./components/StudioToastProvider";
 import AnalyticsProvider from "./context/AnalyticsProvider";
 import AppConfigurationContext, { IAppConfiguration } from "./context/AppConfigurationContext";
 import { AssetsProvider } from "./context/AssetsContext";
-import ConsoleApiContext from "./context/ConsoleApiContext";
 import LayoutStorageContext from "./context/LayoutStorageContext";
 import NativeAppMenuContext, { INativeAppMenu } from "./context/NativeAppMenuContext";
 import NativeWindowContext, { INativeWindow } from "./context/NativeWindowContext";
 import { IDataSourceFactory } from "./context/PlayerSelectionContext";
 import { UserNodeStateProvider } from "./context/UserNodeStateContext";
-import { ConsoleApiCookieCurrentUserProvider } from "./providers/ConsoleApiCookieUserProvider";
-import { ConsoleApiDialogCurrentUserProvider } from "./providers/ConsoleApiDialogCurrentUserProvider";
-import ConsoleApiRemoteLayoutStorageProvider from "./providers/ConsoleApiRemoteLayoutStorageProvider";
 import CurrentLayoutProvider from "./providers/CurrentLayoutProvider";
 import ExtensionCatalogProvider from "./providers/ExtensionCatalogProvider";
 import ExtensionMarketplaceProvider from "./providers/ExtensionMarketplaceProvider";
@@ -40,7 +36,6 @@ import LayoutManagerProvider from "./providers/LayoutManagerProvider";
 import PanelCatalogProvider from "./providers/PanelCatalogProvider";
 import UserProfileLocalStorageProvider from "./providers/UserProfileLocalStorageProvider";
 import { LaunchPreference } from "./screens/LaunchPreference";
-import ConsoleApi from "./services/ConsoleApi";
 import { ExtensionLoader } from "./services/ExtensionLoader";
 import { ILayoutStorage } from "./services/ILayoutStorage";
 import URDFAssetLoader from "./services/URDFAssetLoader";
@@ -49,13 +44,11 @@ type AppProps = CustomWindowControlsProps & {
   deepLinks: string[];
   appConfiguration: IAppConfiguration;
   dataSources: IDataSourceFactory[];
-  consoleApi: ConsoleApi;
   layoutStorage: ILayoutStorage;
   extensionLoaders: readonly ExtensionLoader[];
   nativeAppMenu?: INativeAppMenu;
   nativeWindow?: INativeWindow;
   disableSignin?: boolean;
-  enableDialogAuth?: boolean;
   enableLaunchPreferenceScreen?: boolean;
   enableGlobalCss?: boolean;
   appBarLeftInset?: number;
@@ -79,28 +72,18 @@ export function App(props: AppProps): JSX.Element {
     appConfiguration,
     dataSources,
     layoutStorage,
-    consoleApi,
     disableSignin,
     extensionLoaders,
     nativeAppMenu,
     nativeWindow,
-    enableDialogAuth,
     deepLinks,
     enableLaunchPreferenceScreen,
     enableGlobalCss = false,
   } = props;
 
-  const CurrentUserProviderComponent =
-    enableDialogAuth === true
-      ? ConsoleApiDialogCurrentUserProvider
-      : ConsoleApiCookieCurrentUserProvider;
-
   const providers = [
     /* eslint-disable react/jsx-key */
     <StudioLogsSettingsProvider />,
-    <ConsoleApiContext.Provider value={consoleApi} />,
-    <CurrentUserProviderComponent />,
-    <ConsoleApiRemoteLayoutStorageProvider />,
     <StudioToastProvider />,
     <LayoutStorageContext.Provider value={layoutStorage} />,
     <UserProfileLocalStorageProvider />,
