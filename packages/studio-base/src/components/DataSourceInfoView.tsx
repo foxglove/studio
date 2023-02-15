@@ -83,7 +83,7 @@ function DataSourceInfoContent(props: {
         ) : startTime ? (
           <Timestamp horizontal time={startTime} />
         ) : (
-          <Typography className={classes.numericValue} variant="inherit" color="text.secondary">
+          <Typography className={classes.numericValue} variant="inherit">
             &mdash;
           </Typography>
         )}
