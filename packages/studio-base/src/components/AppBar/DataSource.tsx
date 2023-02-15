@@ -4,7 +4,6 @@
 
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import ErrorIcon from "@mui/icons-material/Error";
-import FileOpenOutlinedIcon from "@mui/icons-material/FileOpenOutlined";
 import { Button, ButtonBase, CircularProgress, Tooltip, Typography } from "@mui/material";
 import { makeStyles } from "tss-react/mui";
 
