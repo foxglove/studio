@@ -51,6 +51,7 @@ type AppProps = CustomWindowControlsProps & {
   enableLaunchPreferenceScreen?: boolean;
   enableGlobalCss?: boolean;
   appBarLeftInset?: number;
+  extraProviders?: JSX.Element[];
   onAppBarDoubleClick?: () => void;
 };
 
@@ -77,6 +78,7 @@ export function App(props: AppProps): JSX.Element {
     deepLinks,
     enableLaunchPreferenceScreen,
     enableGlobalCss = false,
+    extraProviders,
   } = props;
 
   const providers = [
@@ -104,6 +106,10 @@ export function App(props: AppProps): JSX.Element {
 
   if (nativeWindow) {
     providers.push(<NativeWindowContext.Provider value={nativeWindow} />);
+  }
+
+  if (extraProviders) {
+    providers.unshift(...extraProviders);
   }
 
   const MaybeLaunchPreference = enableLaunchPreferenceScreen === true ? LaunchPreference : Fragment;
