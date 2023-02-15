@@ -11,7 +11,8 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { useCallback, useRef } from "react";
+import { Story } from "@storybook/react";
+import { useCallback, useRef, useEffect } from "react";
 
 import PanelSetup, { Fixture, triggerWheel } from "@foxglove/studio-base/stories/PanelSetup";
 import { useReadySignal } from "@foxglove/studio-base/stories/ReadySignalContext";
@@ -132,8 +133,7 @@ export default {
   },
 };
 
-Basic.parameters = { useReadySignal: true };
-export function Basic(): JSX.Element {
+export const Basic: Story = () => {
   const readySignal = useReadySignal();
   return (
     <PanelSetup fixture={fixture}>
@@ -143,10 +143,13 @@ export function Basic(): JSX.Element {
       />
     </PanelSetup>
   );
-}
+};
+Basic.play = async (ctx) => {
+  await ctx.parameters.storyReady;
+};
+Basic.parameters = { useReadySignal: true };
 
-CustomMinMaxWindow.parameters = { useReadySignal: true };
-export function CustomMinMaxWindow(): JSX.Element {
+export const CustomMinMaxWindow: Story = () => {
   const readySignal = useReadySignal();
   return (
     <PanelSetup fixture={fixture}>
@@ -162,10 +165,13 @@ export function CustomMinMaxWindow(): JSX.Element {
       />
     </PanelSetup>
   );
-}
+};
+CustomMinMaxWindow.play = async (ctx) => {
+  await ctx.parameters.storyReady;
+};
+CustomMinMaxWindow.parameters = { useReadySignal: true };
 
-CustomMinMaxVal.parameters = { useReadySignal: true };
-export function CustomMinMaxVal(): JSX.Element {
+export const CustomMinMaxVal: Story = () => {
   const readySignal = useReadySignal();
   return (
     <PanelSetup fixture={fixture}>
@@ -175,24 +181,37 @@ export function CustomMinMaxVal(): JSX.Element {
       />
     </PanelSetup>
   );
-}
+};
+CustomMinMaxVal.play = async (ctx) => {
+  await ctx.parameters.storyReady;
+};
+CustomMinMaxVal.parameters = { useReadySignal: true };
 
-export function EmptyTopic(): JSX.Element {
+export const EmptyTopic: Story = () => {
   return (
     <PanelSetup fixture={fixture}>
       <TwoDimensionalPlot overrideConfig={{ path: { value: "/plot_b" } }} />
     </PanelSetup>
   );
-}
+};
 
-WithTooltip.parameters = { useReadySignal: true, colorScheme: "dark" };
-export function WithTooltip(): JSX.Element {
+export const WithTooltip: Story = () => {
+  const timeOutID = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const readySignal = useReadySignal();
+
+  useEffect(() => {
+    return () => {
+      if (timeOutID.current != undefined) {
+        clearTimeout(timeOutID.current);
+      }
+    };
+  }, []);
+
   return (
     <div
       style={{ width: 300, height: 300 }}
       ref={() => {
-        setTimeout(() => {
+        timeOutID.current = setTimeout(() => {
           const [canvas] = document.getElementsByTagName("canvas");
           const x = 105;
           const y = 190;
@@ -215,7 +234,11 @@ export function WithTooltip(): JSX.Element {
       </PanelSetup>
     </div>
   );
-}
+};
+WithTooltip.play = async (ctx) => {
+  await ctx.parameters.storyReady;
+};
+WithTooltip.parameters = { useReadySignal: true, colorScheme: "dark" };
 
 type StepFn = () => void;
 function useStepSequence(...steps: StepFn[]): () => void {
@@ -230,8 +253,7 @@ function useStepSequence(...steps: StepFn[]): () => void {
   }, []);
 }
 
-ShowResetAfterHorizontalZoom.parameters = { useReadySignal: true, colorScheme: "dark" };
-export function ShowResetAfterHorizontalZoom(): JSX.Element {
+export const ShowResetAfterHorizontalZoom: Story = () => {
   const readySignal = useReadySignal();
 
   const step = useStepSequence(zoomOut, readySignal);
@@ -243,9 +265,13 @@ export function ShowResetAfterHorizontalZoom(): JSX.Element {
       />
     </PanelSetup>
   );
-}
-ShowResetAfterVerticalZoom.parameters = { useReadySignal: true, colorScheme: "dark" };
-export function ShowResetAfterVerticalZoom(): JSX.Element {
+};
+ShowResetAfterHorizontalZoom.play = async (ctx) => {
+  await ctx.parameters.storyReady;
+};
+ShowResetAfterHorizontalZoom.parameters = { useReadySignal: true, colorScheme: "dark" };
+
+export const ShowResetAfterVerticalZoom: Story = () => {
   const readySignal = useReadySignal({ count: 2 });
   const step = useStepSequence(
     useCallback(() => {
@@ -263,9 +289,13 @@ export function ShowResetAfterVerticalZoom(): JSX.Element {
       />
     </PanelSetup>
   );
-}
-ShowResetZoom.parameters = { useReadySignal: true, colorScheme: "dark" };
-export function ShowResetZoom(): JSX.Element {
+};
+ShowResetAfterVerticalZoom.play = async (ctx) => {
+  await ctx.parameters.storyReady;
+};
+ShowResetAfterVerticalZoom.parameters = { useReadySignal: true, colorScheme: "dark" };
+
+export const ShowResetZoom: Story = () => {
   const readySignal = useReadySignal({ count: 2 });
   const step = useStepSequence(
     useCallback(() => {
@@ -283,10 +313,13 @@ export function ShowResetZoom(): JSX.Element {
       />
     </PanelSetup>
   );
-}
+};
+ShowResetZoom.play = async (ctx) => {
+  await ctx.parameters.storyReady;
+};
+ShowResetZoom.parameters = { useReadySignal: true, colorScheme: "dark" };
 
-ResetZoom.parameters = { useReadySignal: true, colorScheme: "dark" };
-export function ResetZoom(): JSX.Element {
+export const ResetZoom: Story = () => {
   const readySignal = useReadySignal();
 
   const elRef = useRef<HTMLDivElement | ReactNull>();
@@ -312,4 +345,8 @@ export function ResetZoom(): JSX.Element {
       />
     </PanelSetup>
   );
-}
+};
+ResetZoom.play = async (ctx) => {
+  await ctx.parameters.storyReady;
+};
+ResetZoom.parameters = { useReadySignal: true, colorScheme: "dark" };

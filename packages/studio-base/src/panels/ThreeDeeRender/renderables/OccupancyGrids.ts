@@ -345,17 +345,11 @@ function updateTexture(
       } else if (value >= 0 && value <= 100) {
         // Valid [0-100]
         const t = value / 100;
-        if (t === 1) {
-          rgba[offset + 0] = 0;
-          rgba[offset + 1] = 0;
-          rgba[offset + 2] = 0;
-          rgba[offset + 3] = 0;
-        } else {
-          rgba[offset + 0] = tempMinColor.r + (tempMaxColor.r - tempMinColor.r) * t;
-          rgba[offset + 1] = tempMinColor.g + (tempMaxColor.g - tempMinColor.g) * t;
-          rgba[offset + 2] = tempMinColor.b + (tempMaxColor.b - tempMinColor.b) * t;
-          rgba[offset + 3] = tempMinColor.a + (tempMaxColor.a - tempMinColor.a) * t;
-        }
+
+        rgba[offset + 0] = tempMinColor.r + (tempMaxColor.r - tempMinColor.r) * t;
+        rgba[offset + 1] = tempMinColor.g + (tempMaxColor.g - tempMinColor.g) * t;
+        rgba[offset + 2] = tempMinColor.b + (tempMaxColor.b - tempMinColor.b) * t;
+        rgba[offset + 3] = tempMinColor.a + (tempMaxColor.a - tempMinColor.a) * t;
       } else {
         // Invalid (< -1 or > 100)
         rgba[offset + 0] = tempInvalidColor.r;
@@ -455,7 +449,7 @@ function normalizeOccupancyGrid(message: PartialMessage<OccupancyGrid>): Occupan
 let costmapPalette: [number, number, number, number][] | undefined;
 
 function costmapColorCached(output: ColorRGBA, value: number) {
-  const unsignedValue = value > 0 ? value : Math.abs(value) + 127;
+  const unsignedValue = value > 0 ? value : value + 255;
   if (unsignedValue < 0 || unsignedValue > 255) {
     output.r = 0;
     output.g = 0;
@@ -499,10 +493,10 @@ function createCostmapPalette() {
 
   // illegal negative (char) values in shades of red/yellow
   for (let i = 128; i <= 254; i++) {
-    palette[index++] = [255, (255 * (i - 128)) / (254 - 128), 0, 255];
+    palette[index++] = [255, Math.trunc((255 * (i - 128)) / (254 - 128)), 0, 255];
   }
 
   // legal -1 value is tasteful blueish greenish grayish color
-  palette[index++] = [70, 137, 134, 255];
+  palette[index++] = [112, 137, 134, 255];
   return palette;
 }
