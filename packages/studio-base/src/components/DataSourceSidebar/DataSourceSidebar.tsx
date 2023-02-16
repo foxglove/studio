@@ -124,7 +124,6 @@ export default function DataSourceSidebar(props: Props): JSX.Element {
       overflow="auto"
       title="Data source"
       disablePadding
-      disableToolbar={enableNewTopNav}
       trailingItems={[
         isLoading && (
           <Stack key="loading" alignItems="center" justifyContent="center" padding={1}>
@@ -142,11 +141,9 @@ export default function DataSourceSidebar(props: Props): JSX.Element {
       ].filter(Boolean)}
     >
       <Stack fullHeight>
-        {!enableNewTopNav && (
-          <Stack paddingX={2} paddingBottom={2}>
-            <DataSourceInfoView />
-          </Stack>
-        )}
+        <Stack paddingX={2} paddingBottom={2}>
+          <DataSourceInfoView />
+        </Stack>
         {playerPresence !== PlayerPresence.NOT_PRESENT && (
           <>
             <Stack flex={1}>
