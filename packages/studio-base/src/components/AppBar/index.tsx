@@ -274,6 +274,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
                     <Button
                       variant="contained"
                       color="primary"
+                      size="small"
                       onClick={() => {
                         signIn();
                         void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
