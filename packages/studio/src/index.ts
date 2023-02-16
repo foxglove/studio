@@ -8,9 +8,10 @@ export type ParameterValue =
   | boolean
   | number
   | string
-  | boolean[]
-  | number[]
-  | string[];
+  | Date
+  | Uint8Array
+  | ParameterValue[]
+  | { [key: string]: ParameterValue };
 
 // Valid types for global variables
 export type VariableValue =
