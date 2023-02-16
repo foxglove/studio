@@ -132,14 +132,14 @@ export function DataSources(): JSX.Element {
       >
         <MockMessagePipelineProvider
           name="roman-transbot (dev_W m1gvryKJmREqnVT)"
-          presence={PlayerPresence.ERROR}
+          presence={PlayerPresence.PRESENT}
           urlState={{ sourceId: "foxglove-data-platform" }}
         >
           <LabeledAppBar label="foxglove-data-platform" {...actions} />
         </MockMessagePipelineProvider>
         <MockMessagePipelineProvider
           name="Adapted from nuScenes dataset. Copyright © 2020 nuScenes. https://www.nuscenes.org/terms-of-use"
-          presence={PlayerPresence.ERROR}
+          presence={PlayerPresence.PRESENT}
           urlState={{ sourceId: "sample-nuscenes" }}
         >
           <LabeledAppBar label="sample-nuscenes" {...actions} />
@@ -154,7 +154,7 @@ export function DataSources(): JSX.Element {
           <MockMessagePipelineProvider
             key={sourceId}
             name="longexampleurlwith_specialcharaters-and-portnumber.ext"
-            presence={PlayerPresence.ERROR}
+            presence={PlayerPresence.PRESENT}
             urlState={{ sourceId }}
           >
             <LabeledAppBar label={sourceId} {...actions} />
@@ -171,14 +171,14 @@ export function DataSources(): JSX.Element {
           <MockMessagePipelineProvider
             key={sourceId}
             name="https://longexampleurlwith_specialcharaters-and-portnumber:3030"
-            presence={PlayerPresence.ERROR}
+            presence={PlayerPresence.PRESENT}
             urlState={{ sourceId }}
           >
             <LabeledAppBar label={sourceId} {...actions} />
           </MockMessagePipelineProvider>
         ))}
         <MockMessagePipelineProvider
-          name="example"
+          name="https://longexampleurlwith_error-and-portnumber:3030"
           presence={PlayerPresence.PRESENT}
           problems={[
             { severity: "error", message: "example error" },
