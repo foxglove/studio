@@ -239,9 +239,6 @@ export function makeConfig(
         // Should match webpack-defines.d.ts
         ReactNull: null, // eslint-disable-line no-restricted-syntax
         FOXGLOVE_STUDIO_VERSION: JSON.stringify(packageJson.version),
-        FOXGLOVE_USER_AGENT: JSON.stringify(
-          `studio/${packageJson.version} (commit ${commitHash ?? "??"})`,
-        ),
       }),
       // https://webpack.js.org/plugins/ignore-plugin/#example-of-ignoring-moment-locales
       new webpack.IgnorePlugin({
