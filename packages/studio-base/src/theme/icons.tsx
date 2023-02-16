@@ -26,8 +26,8 @@ import RosIcon from "@foxglove/studio-base/components/RosIcon";
 import { RegisteredIconNames } from "@foxglove/studio-base/types/Icons";
 
 import DatabaseSettings from "../assets/database-settings.svg";
-import PanelSettings from "../assets/panel-settings.svg";
 import PanelLayout from "../assets/panel-layout.svg";
+import PanelSettings from "../assets/panel-settings.svg";
 
 const icons: {
   // This makes it a type error to forget to add an icon here once it has been added to RegisteredIconNames.
