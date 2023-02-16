@@ -2,16 +2,17 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import ArrowLeftIcon from "@mui/icons-material/ArrowLeft";
+import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
-import { Badge, Paper, Tab, Tabs } from "@mui/material";
+import { Badge, IconButton, Paper, Tab, Tabs } from "@mui/material";
 import {
   ComponentProps,
   MouseEvent,
   PropsWithChildren,
   useCallback,
-  useLayoutEffect,
+  useEffect,
   useMemo,
-  useRef,
   useState,
 } from "react";
 import { MosaicNode, MosaicWithoutDragDropContext } from "react-mosaic-component";
@@ -116,15 +117,16 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
   const [initialEnableNewTopNav] = useState(currentEnableNewTopNav);
   const enableNewTopNav = isDesktopApp() ? initialEnableNewTopNav : currentEnableNewTopNav;
 
-  const [mosaicValue, setMosaicValue] = useState<MosaicNode<"sidebar" | "children">>("children");
+  const [mosaicValue, setMosaicValue] =
+    useState<MosaicNode<"leftbar" | "children" | "rightbar">>("children");
   const { classes } = useStyles();
-  const prevSelectedKey = useRef<string | undefined>(undefined);
 
   const allItems = useMemo(() => {
     return new Map([...items, ...bottomItems]);
   }, [bottomItems, items]);
 
   const [helpAnchorEl, setHelpAnchorEl] = useState<undefined | HTMLElement>(undefined);
+  const [rightBarShown, setRightBarShown] = useState(false);
 
   const helpMenuOpen = Boolean(helpAnchorEl);
 
@@ -135,32 +137,50 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
     setHelpAnchorEl(undefined);
   };
 
-  useLayoutEffect(() => {
-    const keyDoesNotExist = selectedKey != undefined && !allItems.has(selectedKey);
-    const keyChanged = prevSelectedKey.current !== selectedKey;
+  const leftBarShown = selectedKey != undefined && allItems.has(selectedKey);
 
-    if (keyDoesNotExist) {
-      // if the selected key has been removed from allItems, hide the sidebar content
-      setMosaicValue("children");
-    } else if (keyChanged) {
-      if (selectedKey == undefined) {
-        // hide sidebar content when deselecting an item
-        setMosaicValue("children");
-      } else {
-        // show sidebar content when selecting an item
-        setMosaicValue((oldValue) => ({
+  useEffect(() => {
+    if (leftBarShown && rightBarShown) {
+      setMosaicValue((oldValue) => {
+        return {
           direction: "row",
-          first: "sidebar",
-          second: "children",
+          first: "leftbar",
+          second: {
+            direction: "row",
+            first: "children",
+            second: "rightbar",
+            splitPercentage: 80,
+          },
           splitPercentage:
             // keep previous splitPercentage when changing from one tab to another
+            (typeof oldValue === "object" && typeof oldValue.second === "object"
+              ? oldValue.splitPercentage
+              : undefined) ?? defaultInitialSidebarPercentage(),
+        };
+      });
+    } else if (leftBarShown && !rightBarShown) {
+      setMosaicValue((oldValue) => {
+        return {
+          direction: "row",
+          first: "leftbar",
+          second: "children",
+          splitPercentage:
+            // keep previous splitPercentage when hiding the right bar
             (typeof oldValue === "object" ? oldValue.splitPercentage : undefined) ??
             defaultInitialSidebarPercentage(),
-        }));
-      }
+        };
+      });
+    } else if (!leftBarShown && rightBarShown) {
+      setMosaicValue({
+        direction: "row",
+        first: "children",
+        second: "rightbar",
+        splitPercentage: 80,
+      });
+    } else {
+      setMosaicValue("children");
     }
-    prevSelectedKey.current = selectedKey;
-  }, [allItems, selectedKey]);
+  }, [leftBarShown, rightBarShown]);
 
   const SelectedComponent =
     (selectedKey != undefined && allItems.get(selectedKey)?.component) || Noop;
@@ -279,26 +299,38 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
         // children from having to re-mount each time the sidebar is opened/closed.
       }
       <div className={classes.mosaicWrapper}>
-        <MosaicWithoutDragDropContext<"sidebar" | "children">
+        <MosaicWithoutDragDropContext<"leftbar" | "children" | "rightbar">
           className=""
           value={mosaicValue}
           onChange={(value) => value != undefined && setMosaicValue(value)}
-          renderTile={(id) => (
-            <ErrorBoundary>
-              {id === "children" ? (
-                (children as JSX.Element)
-              ) : (
-                <Paper square elevation={0}>
-                  <SelectedComponent />
-                </Paper>
-              )}
-            </ErrorBoundary>
-          )}
+          renderTile={(id) => {
+            switch (id) {
+              case "children":
+                return <ErrorBoundary>{children as JSX.Element}</ErrorBoundary>;
+              case "leftbar":
+                return (
+                  <ErrorBoundary>
+                    <Paper square elevation={0}>
+                      <SelectedComponent />
+                    </Paper>
+                  </ErrorBoundary>
+                );
+              case "rightbar":
+                return (
+                  <ErrorBoundary>
+                    <SecondarySidebar />
+                  </ErrorBoundary>
+                );
+            }
+          }}
           resize={{ minimumPaneSizePercentage: 10 }}
         />
       </div>
-
-      {enableNewTopNav && <SecondarySidebar />}
+      {enableNewTopNav && (
+        <IconButton size="small" onClick={() => setRightBarShown((old) => !old)}>
+          {rightBarShown ? <ArrowRightIcon /> : <ArrowLeftIcon />}
+        </IconButton>
+      )}
     </Stack>
   );
 }

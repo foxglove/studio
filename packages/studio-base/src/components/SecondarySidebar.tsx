@@ -59,7 +59,7 @@ export function SecondarySidebar(): JSX.Element {
   const { classes } = useStyles();
   const { currentUser } = useCurrentUser();
   const [activeTab, setActiveTab] = useState(0);
-  const [collapsed, setCollapsed] = useState(true);
+  const [collapsed, setCollapsed] = useState(false);
 
   const playerSourceId = useMessagePipeline(selectPlayerSourceId);
 
