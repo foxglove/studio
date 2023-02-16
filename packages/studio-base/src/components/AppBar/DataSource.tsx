@@ -66,7 +66,7 @@ export function DataSource({
         onClick={onSelectDataSourceAction}
       >
         <Typography noWrap variant="inherit" component="span">
-          Open a new connection…
+          Open data source…
         </Typography>
       </Button>
     );
@@ -76,7 +76,7 @@ export function DataSource({
     return (
       <Stack direction="row" alignItems="center" gap={1} paddingX={1}>
         <Typography noWrap variant="inherit" component="span">
-          Initializing connection
+          Initializing data source
         </Typography>
         <CircularProgress className={classes.spinner} size={16} variant="indeterminate" />
       </Stack>
@@ -88,6 +88,17 @@ export function DataSource({
       <ButtonBase className={classes.root} onClick={onSelectDataSourceAction}>
         <Typography noWrap variant="inherit" component="span">
           <TextMiddleTruncate text={`Listening on ${playerName}`} />
+        </Typography>
+      </ButtonBase>
+    );
+  }
+
+  if (playerPresence === PlayerPresence.ERROR) {
+    // TODO: Make error state
+    return (
+      <ButtonBase className={classes.root} onClick={onSelectDataSourceAction}>
+        <Typography noWrap variant="inherit" component="span">
+          Error
         </Typography>
       </ButtonBase>
     );
