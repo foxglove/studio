@@ -126,6 +126,16 @@ export function PlayerStates(): JSX.Element {
             <LabeledAppBar label={presence} {...actions} />
           </MockMessagePipelineProvider>
         ))}
+        <MockMessagePipelineProvider
+          name="https://exampleurl:2002"
+          presence={PlayerPresence.INITIALIZING}
+          problems={[
+            { severity: "error", message: "example error" },
+            { severity: "warn", message: "example warn" },
+          ]}
+        >
+          <LabeledAppBar label="PlayerPresence.INITIALIZING + problems" {...actions} />
+        </MockMessagePipelineProvider>
       </div>
     </Stack>
   );

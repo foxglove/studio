@@ -42,8 +42,8 @@ const useStyles = makeStyles()((theme) => ({
     justifyContent: "center",
     position: "relative",
     color: APP_BAR_PRIMARY_COLOR,
-    width: 20,
-    height: 20,
+    width: 19,
+    height: 19,
   },
   adornmentError: {
     color: theme.palette.error.main,
