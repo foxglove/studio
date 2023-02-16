@@ -1,5 +1,5 @@
 {
-  "name": "@foxglove/comlink-transfer-handlers",
+  "name": "@foxglove/eslint-plugin-studio",
   "license": "MPL-2.0",
   "private": true,
   "repository": {
@@ -11,16 +11,8 @@
     "email": "support@foxglove.dev"
   },
   "homepage": "https://foxglove.dev/",
-  "main": "./src/index.ts",
+  "main": "./index.js",
   "files": [
-    "dist",
     "src"
-  ],
-  "scripts": {
-    "prepack": "tsc -b"
-  },
-  "devDependencies": {
-    "comlink": "4.3.1",
-    "typescript": "4.9.5"
-  }
+  ]
 }
