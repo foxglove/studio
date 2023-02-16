@@ -9,8 +9,7 @@
     "useUnknownInCatchVariables": false,
     "lib": ["dom", "dom.iterable", "es2020", "webworker"],
     "paths": {
-      "@foxglove/studio-base/*": ["../../packages/studio-base/src/*"],
-      "@foxglove/studio": ["../../packages/studio/src"]
+      "@foxglove/studio-base/*": ["../../packages/studio-base/src/*"]
     }
   }
 }
