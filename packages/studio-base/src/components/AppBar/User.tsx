@@ -27,8 +27,9 @@ const useStyles = makeStyles()((theme) => ({
   avatar: {
     color: theme.palette.common.white,
     backgroundColor: APP_BAR_PRIMARY_COLOR,
-    height: theme.spacing(4),
-    width: theme.spacing(4),
+    height: theme.spacing(3.25),
+    width: theme.spacing(3.25),
+    marginLeft: theme.spacing(0.5),
   },
   avatarButton: {
     padding: 0,

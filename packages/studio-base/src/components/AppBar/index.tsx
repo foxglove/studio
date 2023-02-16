@@ -62,7 +62,7 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }>(
       },
       logo: {
         padding: 0,
-        fontSize: "2.25rem",
+        fontSize: "2.125rem",
         color: APP_BAR_PRIMARY_COLOR,
       },
       start: {
