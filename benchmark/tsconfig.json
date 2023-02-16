@@ -5,6 +5,5 @@
     "module": "commonjs",
     "noEmit": true,
     "experimentalDecorators": true
-  },
-  "references": [{ "path": "../studio" }]
+  }
 }
