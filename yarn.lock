@@ -2235,7 +2235,7 @@ __metadata:
   resolution: "@foxglove/comlink-transfer-handlers@workspace:packages/comlink-transfer-handlers"
   dependencies:
     comlink: 4.3.1
-    typescript: 4.9.4
+    typescript: 4.9.5
   languageName: unknown
   linkType: soft
 
@@ -2299,7 +2299,7 @@ __metadata:
     "@foxglove/log": "workspace:*"
     "@testing-library/react-hooks": 8.0.1
     shallowequal: 1.1.0
-    typescript: 4.9.4
+    typescript: 4.9.5
   peerDependencies:
     react: ^17.0.2
   languageName: unknown
@@ -2318,7 +2318,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@foxglove/log@workspace:packages/log"
   dependencies:
-    typescript: 4.9.4
+    typescript: 4.9.5
   languageName: unknown
   linkType: soft
 
@@ -2339,7 +2339,7 @@ __metadata:
     flatbuffers: 23.1.21
     flatbuffers_reflection: 0.0.3
     protobufjs: 7.2.0
-    typescript: 4.9.4
+    typescript: 4.9.5
     zstd-codec: "patch:zstd-codec@0.1.4#../../patches/zstd-codec.patch"
   languageName: unknown
   linkType: soft
@@ -2673,7 +2673,7 @@ __metadata:
     ts-loader: 9.4.2
     tss-react: 4.5.2
     ttypescript: 1.5.15
-    typescript: 4.9.4
+    typescript: 4.9.5
     typescript-transform-paths: 3.4.6
     urdf-loader: 0.10.4
     url-search-params: 1.1.0
@@ -2715,7 +2715,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@foxglove/typescript-transformers@workspace:packages/typescript-transformers"
   dependencies:
-    typescript: 4.9.4
+    typescript: 4.9.5
   languageName: unknown
   linkType: soft
 
@@ -13613,7 +13613,7 @@ __metadata:
     ts-node: 10.9.1
     ts-prune: 0.10.3
     tslib: 2.5.0
-    typescript: 4.9.4
+    typescript: 4.9.5
     typescript-plugin-css-modules: 4.1.1
     webpack: 5.75.0
     webpack-cli: 5.0.1
@@ -24349,7 +24349,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:4.9.4, typescript@npm:^4":
+"typescript@npm:4.9.5":
+  version: 4.9.5
+  resolution: "typescript@npm:4.9.5"
+  bin:
+    tsc: bin/tsc
+    tsserver: bin/tsserver
+  checksum: ee000bc26848147ad423b581bd250075662a354d84f0e06eb76d3b892328d8d4440b7487b5a83e851b12b255f55d71835b008a66cbf8f255a11e4400159237db
+  languageName: node
+  linkType: hard
+
+"typescript@npm:^4":
   version: 4.9.4
   resolution: "typescript@npm:4.9.4"
   bin:
@@ -24359,7 +24369,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@4.9.4#~builtin<compat/typescript>, typescript@patch:typescript@^4#~builtin<compat/typescript>":
+"typescript@patch:typescript@4.9.5#~builtin<compat/typescript>":
+  version: 4.9.5
+  resolution: "typescript@patch:typescript@npm%3A4.9.5#~builtin<compat/typescript>::version=4.9.5&hash=ad5954"
+  bin:
+    tsc: bin/tsc
+    tsserver: bin/tsserver
+  checksum: 8f6260acc86b56bfdda6004bc53f32ea548f543e8baef7071c8e34d29d292f3e375c8416556c8de10b24deef6933cd1c16a8233dc84a3dd43a13a13265d0faab
+  languageName: node
+  linkType: hard
+
+"typescript@patch:typescript@^4#~builtin<compat/typescript>":
   version: 4.9.4
   resolution: "typescript@patch:typescript@npm%3A4.9.4#~builtin<compat/typescript>::version=4.9.4&hash=ad5954"
   bin:
