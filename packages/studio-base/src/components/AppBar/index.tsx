@@ -25,7 +25,12 @@ import { DataSource } from "./DataSource";
 import { HelpIconButton, HelpMenu } from "./Help";
 import { PreferencesDialog, PreferencesIconButton } from "./Preferences";
 import { UserIconButton, UserMenu } from "./User";
-import { APP_BAR_HEIGHT, APP_BAR_BACKGROUND_COLOR, APP_BAR_FOREGROUND_COLOR } from "./constants";
+import {
+  APP_BAR_HEIGHT,
+  APP_BAR_BACKGROUND_COLOR,
+  APP_BAR_FOREGROUND_COLOR,
+  APP_BAR_PRIMARY_COLOR,
+} from "./constants";
 
 const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }>()(
   (theme, { leftInset, debugDragRegion = false }) => {
@@ -50,20 +55,17 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }>(
         paddingRight: "calc(100% - env(titlebar-area-x) - env(titlebar-area-width))",
         ...DRAGGABLE_STYLE, // make custom window title bar draggable for desktop app
       },
-
       toolbar: {
         display: "grid",
         width: "100%",
         gridTemplateAreas: `"start middle end"`,
         gridTemplateColumns: "1fr auto 1fr",
       },
-
       logo: {
         padding: 0,
         fontSize: "2.25rem",
-        color: "#9480ed",
+        color: APP_BAR_PRIMARY_COLOR,
       },
-
       start: {
         marginInlineStart: theme.spacing(-1),
         gridArea: "start",
@@ -76,14 +78,12 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }>(
           marginInlineStart: theme.spacing(-2),
         },
       },
-
       middle: {
         gridArea: "middle",
         justifySelf: "center",
         overflow: "hidden",
         maxWidth: "100%",
       },
-
       end: {
         gridArea: "end",
         flex: 1,
@@ -95,18 +95,15 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }>(
           marginInlineEnd: theme.spacing(-2),
         },
       },
-
       endInner: {
         display: "flex",
         alignItems: "center",
         gap: theme.spacing(0.5),
         ...NOT_DRAGGABLE_STYLE, // make buttons clickable for desktop app
       },
-
       noDrag: {
         ...NOT_DRAGGABLE_STYLE, // make buttons clickable for desktop app
       },
-
       closeButton: {
         ":hover": {
           backgroundColor: theme.palette.error.main,
