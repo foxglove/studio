@@ -5,6 +5,7 @@
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import ErrorIcon from "@mui/icons-material/Error";
 import { Button, ButtonBase, CircularProgress, Divider, Tooltip, Typography } from "@mui/material";
+import { useState } from "react";
 import { makeStyles } from "tss-react/mui";
 
 import { APP_BAR_PRIMARY_COLOR } from "@foxglove/studio-base/components/AppBar/constants";
@@ -86,6 +87,8 @@ export function DataSource({
   const error = playerPresence === PlayerPresence.ERROR || playerProblems.length > 0;
   const loading = reconnecting || initializing;
 
+  const [problemModal, setProblemModal] = useState<JSX.Element | undefined>(undefined);
+
   if (playerPresence === PlayerPresence.NOT_PRESENT) {
     return (
       <Button size="small" color="inherit" variant="outlined" onClick={onSelectDataSourceAction}>
@@ -97,52 +100,55 @@ export function DataSource({
   }
 
   return (
-    <Tooltip
-      disableHoverListener={initializing}
-      disableFocusListener={initializing}
-      classes={{ tooltip: classes.tooltip }}
-      placement="bottom"
-      title={
-        <>
-          <Stack padding={1}>
-            <Stack gap={1} padding={1}>
-              <DataSourceInfoView />
+    <>
+      {problemModal}
+      <Tooltip
+        disableHoverListener={initializing}
+        disableFocusListener={initializing}
+        classes={{ tooltip: classes.tooltip }}
+        placement="bottom"
+        title={
+          <>
+            <Stack padding={1}>
+              <Stack gap={1} padding={1}>
+                <DataSourceInfoView />
+              </Stack>
+            </Stack>
+            {error && (
+              <>
+                <Divider className={classes.divider} />
+                <Stack paddingY={0.5}>
+                  <ProblemsList problems={playerProblems} setProblemModal={setProblemModal} />
+                </Stack>
+              </>
+            )}
+          </>
+        }
+      >
+        <ButtonBase color="inherit" className={classes.root} onClick={onSelectDataSourceAction}>
+          <Stack alignItems="center" flex="auto">
+            <Stack direction="row" alignItems="center" gap={0.75} overflow="hidden">
+              <div className={cx(classes.adornment, { [classes.adornmentError]: error })}>
+                {loading && (
+                  <CircularProgress
+                    size={19}
+                    color="inherit"
+                    className={classes.spinner}
+                    variant="indeterminate"
+                  />
+                )}
+                {error && <ErrorIcon color="error" fontSize={loading ? "small" : "medium"} />}
+              </div>
+              <div className={classes.sourceInfo}>
+                <Typography noWrap variant="inherit" component="span">
+                  <TextMiddleTruncate className={classes.playerName} text={playerName} />
+                </Typography>
+                <ArrowDropDownIcon />
+              </div>
             </Stack>
           </Stack>
-          {error && (
-            <>
-              <Divider className={classes.divider} />
-              <Stack paddingY={0.5}>
-                <ProblemsList problems={playerProblems} />
-              </Stack>
-            </>
-          )}
-        </>
-      }
-    >
-      <ButtonBase color="inherit" className={classes.root} onClick={onSelectDataSourceAction}>
-        <Stack alignItems="center" flex="auto">
-          <Stack direction="row" alignItems="center" gap={0.75} overflow="hidden">
-            <div className={cx(classes.adornment, { [classes.adornmentError]: error })}>
-              {loading && (
-                <CircularProgress
-                  size={19}
-                  color="inherit"
-                  className={classes.spinner}
-                  variant="indeterminate"
-                />
-              )}
-              {error && <ErrorIcon color="error" fontSize={loading ? "small" : "medium"} />}
-            </div>
-            <div className={classes.sourceInfo}>
-              <Typography noWrap variant="inherit" component="span">
-                <TextMiddleTruncate className={classes.playerName} text={playerName} />
-              </Typography>
-              <ArrowDropDownIcon />
-            </div>
-          </Stack>
-        </Stack>
-      </ButtonBase>
-    </Tooltip>
+        </ButtonBase>
+      </Tooltip>
+    </>
   );
 }
