@@ -21,6 +21,10 @@ import { PlayerPresence } from "@foxglove/studio-base/players/types";
 
 const useStyles = makeStyles()((theme) => ({
   root: {
+    display: "grid",
+    gridTemplateAreas: `"adornment sourceInfo arrow"`,
+    gap: theme.spacing(0.75),
+    gridAutoColumns: "19px 1fr 19px",
     paddingRight: theme.spacing(1),
     paddingLeft: theme.spacing(1),
     font: "inherit",
@@ -30,6 +34,7 @@ const useStyles = makeStyles()((theme) => ({
     ":hover": { opacity: 0.8 },
   },
   sourceInfo: {
+    gridArea: "sourceInfo",
     display: "flex",
     alignItems: "center",
     gap: theme.spacing(0.25),
@@ -37,6 +42,7 @@ const useStyles = makeStyles()((theme) => ({
     overflow: "hidden",
   },
   adornment: {
+    gridArea: "adornment",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -44,6 +50,9 @@ const useStyles = makeStyles()((theme) => ({
     color: APP_BAR_PRIMARY_COLOR,
     width: 19,
     height: 19,
+  },
+  arrow: {
+    gridArea: "arrow",
   },
   adornmentError: {
     color: theme.palette.error.main,
@@ -126,27 +135,23 @@ export function DataSource({
         }
       >
         <ButtonBase color="inherit" className={classes.root} onClick={onSelectDataSourceAction}>
-          <Stack alignItems="center" flex="auto">
-            <Stack direction="row" alignItems="center" gap={0.75} overflow="hidden">
-              <div className={cx(classes.adornment, { [classes.adornmentError]: error })}>
-                {loading && (
-                  <CircularProgress
-                    size={19}
-                    color="inherit"
-                    className={classes.spinner}
-                    variant="indeterminate"
-                  />
-                )}
-                {error && <ErrorIcon color="error" fontSize={loading ? "small" : "medium"} />}
-              </div>
-              <div className={classes.sourceInfo}>
-                <Typography noWrap variant="inherit" component="span">
-                  <TextMiddleTruncate className={classes.playerName} text={playerName} />
-                </Typography>
-                <ArrowDropDownIcon />
-              </div>
-            </Stack>
-          </Stack>
+          <div className={cx(classes.adornment, { [classes.adornmentError]: error })}>
+            {loading && (
+              <CircularProgress
+                size={19}
+                color="inherit"
+                className={classes.spinner}
+                variant="indeterminate"
+              />
+            )}
+            {error && <ErrorIcon color="error" fontSize={loading ? "small" : "medium"} />}
+          </div>
+          <div className={classes.sourceInfo}>
+            <Typography noWrap variant="inherit" component="span">
+              <TextMiddleTruncate className={classes.playerName} text={playerName} />
+            </Typography>
+          </div>
+          <ArrowDropDownIcon className={classes.arrow} />
         </ButtonBase>
       </Tooltip>
     </>

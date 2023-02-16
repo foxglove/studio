@@ -96,6 +96,12 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }>(
       },
       button: {
         backgroundColor: APP_BAR_PRIMARY_COLOR,
+
+        "&:hover": {
+          backgroundColor: theme.palette.augmentColor({
+            color: { main: APP_BAR_PRIMARY_COLOR },
+          }).dark,
+        },
       },
       endInner: {
         display: "flex",
