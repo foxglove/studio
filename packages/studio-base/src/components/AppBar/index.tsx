@@ -94,6 +94,9 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }>(
           marginInlineEnd: theme.spacing(-2),
         },
       },
+      button: {
+        backgroundColor: APP_BAR_PRIMARY_COLOR,
+      },
       endInner: {
         display: "flex",
         alignItems: "center",
@@ -269,6 +272,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
                   <Button
                     variant="contained"
                     color="primary"
+                    className={classes.button}
                     size="small"
                     onClick={() => {
                       signIn();
