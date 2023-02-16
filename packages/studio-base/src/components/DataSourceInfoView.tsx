@@ -23,6 +23,9 @@ import { formatTimeRaw, isAbsoluteTime } from "@foxglove/studio-base/util/time";
 import { MultilineMiddleTruncate } from "./MultilineMiddleTruncate";
 
 const useStyles = makeStyles()({
+  overline: {
+    opacity: 0.6,
+  },
   numericValue: {
     fontFeatureSettings: `${fonts.SANS_SERIF_FEATURE_SETTINGS}, zero`,
   },
@@ -54,7 +57,7 @@ function DataSourceInfoContent(props: {
   return (
     <Stack gap={1.5}>
       <Stack>
-        <Typography display="block" variant="overline" color="text.secondary">
+        <Typography className={classes.overline} display="block" variant="overline">
           Current source
         </Typography>
         {playerPresence === PlayerPresence.INITIALIZING ? (
@@ -75,7 +78,7 @@ function DataSourceInfoContent(props: {
       </Stack>
 
       <Stack>
-        <Typography variant="overline" color="text.secondary">
+        <Typography className={classes.overline} variant="overline">
           Start time
         </Typography>
         {playerPresence === PlayerPresence.INITIALIZING ? (
@@ -91,7 +94,7 @@ function DataSourceInfoContent(props: {
 
       {!isLiveConnection && (
         <Stack>
-          <Typography variant="overline" color="text.secondary">
+          <Typography className={classes.overline} variant="overline">
             End time
           </Typography>
           {playerPresence === PlayerPresence.INITIALIZING ? (
@@ -105,7 +108,7 @@ function DataSourceInfoContent(props: {
       )}
 
       <Stack>
-        <Typography variant="overline" color="text.secondary">
+        <Typography className={classes.overline} variant="overline">
           Duration
         </Typography>
         {playerPresence === PlayerPresence.INITIALIZING ? (

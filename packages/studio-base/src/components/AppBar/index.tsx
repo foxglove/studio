@@ -19,7 +19,6 @@ import {
 } from "@foxglove/studio-base/context/CurrentUserContext";
 import useNativeAppMenuEvent from "@foxglove/studio-base/hooks/useNativeAppMenuEvent";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
-import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
 
 import { DataSource } from "./DataSource";
 import { HelpIconButton, HelpMenu } from "./Help";
@@ -198,105 +197,103 @@ export function AppBar(props: AppBarProps): JSX.Element {
 
   return (
     <>
-      <ThemeProvider isDark>
-        <MuiAppBar
-          className={classes.appBar}
-          position="relative"
-          color="inherit"
-          elevation={0}
-          onDoubleClick={handleDoubleClick}
-        >
-          <Toolbar variant="dense" className={classes.toolbar}>
-            <div className={classes.start}>
-              <IconButton className={cx(classes.logo, classes.noDrag)} size="large" color="inherit">
-                <FoxgloveLogo fontSize="inherit" color="inherit" />
-              </IconButton>
-              {currentUser != undefined && (
-                <Typography noWrap variant="h5" fontWeight={800} color="inherit" component="div">
-                  {currentUser.org.displayName}
-                </Typography>
+      <MuiAppBar
+        className={classes.appBar}
+        position="relative"
+        color="inherit"
+        elevation={0}
+        onDoubleClick={handleDoubleClick}
+      >
+        <Toolbar variant="dense" className={classes.toolbar}>
+          <div className={classes.start}>
+            <IconButton className={cx(classes.logo, classes.noDrag)} size="large" color="inherit">
+              <FoxgloveLogo fontSize="inherit" color="inherit" />
+            </IconButton>
+            {currentUser != undefined && (
+              <Typography noWrap variant="h5" fontWeight={800} color="inherit" component="div">
+                {currentUser.org.displayName}
+              </Typography>
+            )}
+          </div>
+
+          <div className={classes.middle}>
+            <DataSource onSelectDataSourceAction={onSelectDataSourceAction} />
+          </div>
+
+          <div className={classes.end}>
+            <div className={classes.endInner}>
+              <HelpIconButton
+                color="inherit"
+                id="help-button"
+                aria-label="Help menu button"
+                aria-controls={helpMenuOpen ? "help-menu" : undefined}
+                aria-haspopup="true"
+                aria-expanded={helpMenuOpen ? "true" : undefined}
+                size="large"
+                onClick={(event) => {
+                  void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
+                    user: currentUserType,
+                    cta: "help-menu",
+                  });
+                  handleHelpClick(event);
+                }}
+              />
+              <PreferencesIconButton
+                color="inherit"
+                id="preferences-button"
+                aria-label="Preferences dialog button"
+                aria-controls={prefsDialogOpen ? "preferences-dialog" : undefined}
+                aria-haspopup="true"
+                aria-expanded={prefsDialogOpen ? "true" : undefined}
+                onClick={() => {
+                  void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
+                    user: currentUserType,
+                    cta: "preferences-dialog",
+                  });
+                  openPreferences();
+                }}
+              />
+              {supportsAccountSettings &&
+                (currentUser ? (
+                  <UserIconButton
+                    aria-label="User profile menu button"
+                    color="inherit"
+                    id="user-profile-button"
+                    aria-controls={userMenuOpen ? "user-profile-menu" : undefined}
+                    aria-haspopup="true"
+                    aria-expanded={userMenuOpen ? "true" : undefined}
+                    onClick={handleUserMenuClick}
+                    size="small"
+                  />
+                ) : (
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    size="small"
+                    onClick={() => {
+                      signIn();
+                      void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
+                        user: "unauthenticated",
+                        cta: "sign-in",
+                      });
+                    }}
+                  >
+                    Sign in
+                  </Button>
+                ))}
+              {showCustomWindowControls && (
+                <CustomWindowControls
+                  onMinimizeWindow={onMinimizeWindow}
+                  isMaximized={isMaximized}
+                  onUnmaximizeWindow={onUnmaximizeWindow}
+                  onMaximizeWindow={onMaximizeWindow}
+                  onCloseWindow={onCloseWindow}
+                />
               )}
             </div>
-
-            <div className={classes.middle}>
-              <DataSource onSelectDataSourceAction={onSelectDataSourceAction} />
-            </div>
-
-            <div className={classes.end}>
-              <div className={classes.endInner}>
-                <HelpIconButton
-                  color="inherit"
-                  id="help-button"
-                  aria-label="Help menu button"
-                  aria-controls={helpMenuOpen ? "help-menu" : undefined}
-                  aria-haspopup="true"
-                  aria-expanded={helpMenuOpen ? "true" : undefined}
-                  size="large"
-                  onClick={(event) => {
-                    void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
-                      user: currentUserType,
-                      cta: "help-menu",
-                    });
-                    handleHelpClick(event);
-                  }}
-                />
-                <PreferencesIconButton
-                  color="inherit"
-                  id="preferences-button"
-                  aria-label="Preferences dialog button"
-                  aria-controls={prefsDialogOpen ? "preferences-dialog" : undefined}
-                  aria-haspopup="true"
-                  aria-expanded={prefsDialogOpen ? "true" : undefined}
-                  onClick={() => {
-                    void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
-                      user: currentUserType,
-                      cta: "preferences-dialog",
-                    });
-                    openPreferences();
-                  }}
-                />
-                {supportsAccountSettings &&
-                  (currentUser ? (
-                    <UserIconButton
-                      aria-label="User profile menu button"
-                      color="inherit"
-                      id="user-profile-button"
-                      aria-controls={userMenuOpen ? "user-profile-menu" : undefined}
-                      aria-haspopup="true"
-                      aria-expanded={userMenuOpen ? "true" : undefined}
-                      onClick={handleUserMenuClick}
-                      size="small"
-                    />
-                  ) : (
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      size="small"
-                      onClick={() => {
-                        signIn();
-                        void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
-                          user: "unauthenticated",
-                          cta: "sign-in",
-                        });
-                      }}
-                    >
-                      Sign in
-                    </Button>
-                  ))}
-                {showCustomWindowControls && (
-                  <CustomWindowControls
-                    onMinimizeWindow={onMinimizeWindow}
-                    isMaximized={isMaximized}
-                    onUnmaximizeWindow={onUnmaximizeWindow}
-                    onMaximizeWindow={onMaximizeWindow}
-                    onCloseWindow={onCloseWindow}
-                  />
-                )}
-              </div>
-            </div>
-          </Toolbar>
-        </MuiAppBar>
-      </ThemeProvider>
+          </div>
+        </Toolbar>
+      </MuiAppBar>
       <HelpMenu
         anchorEl={helpAnchorEl}
         open={helpMenuOpen}

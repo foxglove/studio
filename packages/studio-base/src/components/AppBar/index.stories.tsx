@@ -114,6 +114,14 @@ export function PlayerStates(): JSX.Element {
             key={presence}
             name="https://exampleurl:2002"
             presence={presence}
+            problems={
+              presence === PlayerPresence.ERROR
+                ? [
+                    { severity: "error", message: "example error" },
+                    { severity: "warn", message: "example warn" },
+                  ]
+                : undefined
+            }
           >
             <LabeledAppBar label={presence} {...actions} />
           </MockMessagePipelineProvider>

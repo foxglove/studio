@@ -4,9 +4,11 @@
 
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import ErrorIcon from "@mui/icons-material/Error";
-import { Button, ButtonBase, CircularProgress, Tooltip, Typography } from "@mui/material";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import { Button, ButtonBase, CircularProgress, Divider, Tooltip, Typography } from "@mui/material";
 import { makeStyles } from "tss-react/mui";
 
+import { APP_BAR_PRIMARY_COLOR } from "@foxglove/studio-base/components/AppBar/constants";
 import { DataSourceInfoView } from "@foxglove/studio-base/components/DataSourceInfoView";
 import { ProblemsList } from "@foxglove/studio-base/components/DataSourceSidebar/ProblemsList";
 import {
@@ -25,18 +27,41 @@ const useStyles = makeStyles()((theme) => ({
     overflow: "hidden",
     maxWidth: "100%",
 
-    "&:not(:hover)": { opacity: 0.8 },
+    ":hover": { opacity: 0.8 },
   },
   sourceInfo: {
-    gridArea: "sourceInfo",
     display: "flex",
     alignItems: "center",
-    gap: theme.spacing(0.5),
+    gap: theme.spacing(0.25),
     whiteSpace: "nowrap",
     overflow: "hidden",
   },
+  adornment: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+    color: APP_BAR_PRIMARY_COLOR,
+    width: 20,
+    height: 20,
+  },
+  adornmentError: {
+    color: theme.palette.error.main,
+  },
+  divider: {
+    borderColor: "currentColor",
+    opacity: 0.4,
+  },
   spinner: {
-    flex: "none",
+    position: "absolute",
+    top: 0,
+    right: 0,
+    left: 0,
+    bottom: 0,
+    margin: "auto",
+  },
+  tooltip: {
+    padding: 0,
   },
   playerName: {
     minWidth: 0,
@@ -52,19 +77,19 @@ export function DataSource({
 }: {
   onSelectDataSourceAction: () => void;
 }): JSX.Element {
-  const { classes } = useStyles();
+  const { classes, cx } = useStyles();
   const playerName = useMessagePipeline(selectPlayerName) ?? "<unknown>";
   const playerPresence = useMessagePipeline(selectPlayerPresence);
   const playerProblems = useMessagePipeline(selectPlayerProblems) ?? [];
 
+  const reconnecting = playerPresence === PlayerPresence.RECONNECTING;
+  const initializing = playerPresence === PlayerPresence.INITIALIZING;
+  const error = playerPresence === PlayerPresence.ERROR || playerProblems.length > 0;
+  const loading = reconnecting || initializing;
+
   if (playerPresence === PlayerPresence.NOT_PRESENT) {
     return (
-      <Button
-        color="inherit"
-        variant="outlined"
-        className={classes.root}
-        onClick={onSelectDataSourceAction}
-      >
+      <Button size="small" color="inherit" variant="outlined" onClick={onSelectDataSourceAction}>
         <Typography noWrap variant="inherit" component="span">
           Open data source…
         </Typography>
@@ -72,58 +97,50 @@ export function DataSource({
     );
   }
 
-  if (playerPresence === PlayerPresence.INITIALIZING) {
-    return (
-      <Stack direction="row" alignItems="center" gap={1} paddingX={1}>
-        <Typography noWrap variant="inherit" component="span">
-          Initializing data source
-        </Typography>
-        <CircularProgress className={classes.spinner} size={16} variant="indeterminate" />
-      </Stack>
-    );
-  }
-
-  if (playerPresence === PlayerPresence.RECONNECTING) {
-    return (
-      <ButtonBase className={classes.root} onClick={onSelectDataSourceAction}>
-        <Typography noWrap variant="inherit" component="span">
-          <TextMiddleTruncate text={`Listening on ${playerName}`} />
-        </Typography>
-      </ButtonBase>
-    );
-  }
-
-  if (playerPresence === PlayerPresence.ERROR) {
-    // TODO: Make error state
-    return (
-      <ButtonBase className={classes.root} onClick={onSelectDataSourceAction}>
-        <Typography noWrap variant="inherit" component="span">
-          Error
-        </Typography>
-      </ButtonBase>
-    );
-  }
-
   return (
     <Tooltip
+      disableHoverListener={initializing}
+      disableFocusListener={initializing}
+      classes={{ tooltip: classes.tooltip }}
       title={
         <>
-          <Stack gap={1} padding={1}>
-            <DataSourceInfoView />
-            {playerProblems.length > 0 && <ProblemsList problems={playerProblems} />}
+          <Stack padding={1}>
+            <Stack gap={1} padding={1}>
+              <DataSourceInfoView />
+            </Stack>
           </Stack>
+          {error && (
+            <>
+              <Divider className={classes.divider} />
+              <Stack paddingY={0.5}>
+                <ProblemsList problems={playerProblems} />
+              </Stack>
+            </>
+          )}
         </>
       }
     >
       <ButtonBase color="inherit" className={classes.root} onClick={onSelectDataSourceAction}>
-        <Stack direction="row" alignItems="center" gap={0.5} overflow="hidden">
-          {playerProblems.length > 0 && <ErrorIcon color="error" fontSize="small" />}
-          <div className={classes.sourceInfo}>
-            <Typography noWrap variant="inherit" component="span">
-              <TextMiddleTruncate className={classes.playerName} text={playerName} />
-            </Typography>
-          </div>
-          <ArrowDropDownIcon />
+        <Stack alignItems="center" flex="auto">
+          <Stack direction="row" alignItems="center" gap={0.75} overflow="hidden">
+            <div className={cx(classes.adornment, { [classes.adornmentError]: error })}>
+              {loading && (
+                <CircularProgress
+                  size={19}
+                  color="inherit"
+                  className={classes.spinner}
+                  variant="indeterminate"
+                />
+              )}
+              {error && <ErrorIcon color="error" fontSize={loading ? "small" : "medium"} />}
+            </div>
+            <div className={classes.sourceInfo}>
+              <Typography noWrap variant="inherit" component="span">
+                <TextMiddleTruncate className={classes.playerName} text={playerName} />
+              </Typography>
+              <ArrowDropDownIcon />
+            </div>
+          </Stack>
         </Stack>
       </ButtonBase>
     </Tooltip>
