@@ -130,12 +130,14 @@ type AppBarProps = CustomWindowControlsProps & {
   leftInset?: number;
   onDoubleClick?: () => void;
   debugDragRegion?: boolean;
+  disableSignIn?: boolean;
   onSelectDataSourceAction: () => void;
 };
 
 export function AppBar(props: AppBarProps): JSX.Element {
   const {
     currentUser,
+    disableSignIn = false,
     signIn,
     leftInset,
     showCustomWindowControls = false,
@@ -256,7 +258,8 @@ export function AppBar(props: AppBarProps): JSX.Element {
                   openPreferences();
                 }}
               />
-              {supportsAccountSettings &&
+              {!disableSignIn &&
+                supportsAccountSettings &&
                 (currentUser ? (
                   <UserIconButton
                     aria-label="User profile menu button"

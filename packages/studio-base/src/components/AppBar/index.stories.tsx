@@ -59,7 +59,7 @@ export function CustomWindowControlsDragRegion(): JSX.Element {
 }
 
 export function SignInDisabled(): JSX.Element {
-  return <AppBar {...actions} />;
+  return <AppBar disableSignIn {...actions} />;
 }
 
 export function UserPresent(): JSX.Element {
