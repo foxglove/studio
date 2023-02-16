@@ -4,7 +4,7 @@
 
 import { createContext, useContext } from "react";
 
-interface IAppModule {
+interface IAppContext {
   syncAdapters?: readonly JSX.Element[];
   createEvent?: (args: {
     deviceId: string;
@@ -14,12 +14,12 @@ interface IAppModule {
   }) => Promise<void>;
 }
 
-const AppModuleContext = createContext<IAppModule>({});
-AppModuleContext.displayName = "AppModuleContext";
+const AppContext = createContext<IAppContext>({});
+AppContext.displayName = "AppContext";
 
-export function useAppModule(): IAppModule {
-  return useContext(AppModuleContext);
+export function useAppContext(): IAppContext {
+  return useContext(AppContext);
 }
 
-export { AppModuleContext };
-export type { IAppModule };
+export { AppContext };
+export type { IAppContext };

@@ -33,7 +33,7 @@ import {
   useMessagePipeline,
 } from "@foxglove/studio-base/components/MessagePipeline";
 import Stack from "@foxglove/studio-base/components/Stack";
-import { useAppModule } from "@foxglove/studio-base/context/AppModuleContext";
+import { useAppContext } from "@foxglove/studio-base/context/AppContext";
 import { EventsStore, useEvents } from "@foxglove/studio-base/context/EventsContext";
 import { useAppTimeFormat } from "@foxglove/studio-base/hooks";
 
@@ -123,7 +123,7 @@ export function CreateEventDialog(props: { deviceId: string; onClose: () => void
   );
 
   const { formatTime } = useAppTimeFormat();
-  const { createEvent: appModuleCreateEvent } = useAppModule();
+  const { createEvent: appModuleCreateEvent } = useAppContext();
 
   const countedMetadata = countBy(event.metadataEntries, (kv) => kv.key);
   const duplicateKey = Object.entries(countedMetadata).find(

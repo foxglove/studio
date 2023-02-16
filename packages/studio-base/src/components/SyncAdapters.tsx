@@ -3,10 +3,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { URLStateSyncAdapter } from "@foxglove/studio-base/components/URLStateSyncAdapter";
-import { useAppModule } from "@foxglove/studio-base/context/AppModuleContext";
+import { useAppContext } from "@foxglove/studio-base/context/AppContext";
 
 export function SyncAdapters(): JSX.Element {
-  const { syncAdapters = [] } = useAppModule();
+  const { syncAdapters = [] } = useAppContext();
   return (
     <>
       {...syncAdapters}
