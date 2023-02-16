@@ -134,7 +134,7 @@ export function PlayerStates(): JSX.Element {
             { severity: "warn", message: "example warn" },
           ]}
         >
-          <LabeledAppBar label="PlayerPresence.INITIALIZING + problems" {...actions} />
+          <LabeledAppBar label="INITIALIZING + problems" {...actions} />
         </MockMessagePipelineProvider>
       </div>
     </Stack>
