@@ -101,6 +101,7 @@ export function DataSource({
       disableHoverListener={initializing}
       disableFocusListener={initializing}
       classes={{ tooltip: classes.tooltip }}
+      placement="bottom"
       title={
         <>
           <Stack padding={1}>
