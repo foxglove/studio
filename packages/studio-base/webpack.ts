@@ -49,8 +49,6 @@ export function makeConfig(
   const isDev = argv.mode === "development";
   const isServe = argv.env?.WEBPACK_SERVE ?? false;
 
-  const commitHash = process.env.GITHUB_SHA ?? process.env.VERCEL_GIT_COMMIT_SHA;
-
   const { allowUnusedVariables = isDev && isServe } = options ?? {};
 
   return {
