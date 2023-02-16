@@ -17,9 +17,9 @@ import { forwardRef, useCallback } from "react";
 import { makeStyles } from "tss-react/mui";
 
 import Logger from "@foxglove/log";
+import { APP_BAR_PRIMARY_COLOR } from "@foxglove/studio-base/components/AppBar/constants";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
 import { useConfirm } from "@foxglove/studio-base/hooks/useConfirm";
-import { APP_BAR_PRIMARY_COLOR } from "@foxglove/studio-base/components/AppBar/constants";
 
 const log = Logger.getLogger(__filename);
 
