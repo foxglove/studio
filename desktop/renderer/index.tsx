@@ -8,7 +8,7 @@
 import * as Sentry from "@sentry/electron/renderer";
 import { BrowserTracing } from "@sentry/tracing";
 import { StrictMode, useEffect } from "react";
-import { createRoot } from "react-dom/client";
+import ReactDOM from "react-dom";
 
 import { Sockets } from "@foxglove/electron-socket/renderer";
 import Logger from "@foxglove/log";
@@ -19,10 +19,10 @@ import {
   waitForFonts,
 } from "@foxglove/studio-base";
 
-import pkgInfo from "../../package.json";
-import { Storage } from "../common/types";
 import Root from "./Root";
 import NativeStorageAppConfiguration from "./services/NativeStorageAppConfiguration";
+import pkgInfo from "../../package.json";
+import { Storage } from "../common/types";
 
 const log = Logger.getLogger(__filename);
 
@@ -90,12 +90,13 @@ async function main() {
     },
   );
 
-  createRoot(rootEl!).render(
+  ReactDOM.render(
     <StrictMode>
       <LogAfterRender>
         <Root appConfiguration={appConfiguration} />
       </LogAfterRender>
     </StrictMode>,
+    rootEl,
   );
 }
 

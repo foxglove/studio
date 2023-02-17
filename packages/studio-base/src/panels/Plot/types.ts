@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import type { BasePlotPath, PlotPath } from "@foxglove/studio-base/panels/Plot/internalTypes";
+import { PANEL_TITLE_CONFIG_KEY } from "@foxglove/studio-base/util/layout";
 
 // X-axis values:
 export type PlotXAxisVal =
@@ -11,11 +12,27 @@ export type PlotXAxisVal =
   | "custom" // Message path data. Preloaded.
   | "currentCustom"; // Message path data. One "current" message at playback time.
 
+/**
+ * Coalesces null, undefined and empty string to undefined.
+ */
+function presence<T>(value: undefined | T): undefined | T {
+  if (value === "") {
+    return undefined;
+  }
+
+  return value == undefined ? undefined : value;
+}
+
+export function plotPathDisplayName(path: Readonly<PlotPath>, index: number): string {
+  return presence(path.label) ?? presence(path.value) ?? `Series ${index + 1}`;
+}
+
 type DeprecatedPlotConfig = {
   showSidebar?: boolean;
   sidebarWidth?: number;
 };
 export type PlotConfig = DeprecatedPlotConfig & {
+  /** @deprecated Replaced by global panel rename functionality https://github.com/foxglove/studio/pull/5225 */
   title?: string;
   paths: PlotPath[];
   minXValue?: number;
@@ -32,6 +49,7 @@ export type PlotConfig = DeprecatedPlotConfig & {
   xAxisPath?: BasePlotPath;
   followingViewWidth?: number;
   sidebarDimension: number;
+  [PANEL_TITLE_CONFIG_KEY]?: string;
 };
 
 export const plotableRosTypes = [

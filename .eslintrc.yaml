@@ -14,6 +14,7 @@ ignorePatterns:
 plugins:
   - file-progress
   - tss-unused-classes
+  - "@foxglove/eslint-plugin-studio"
 
 extends:
   - plugin:@foxglove/base
@@ -25,6 +26,7 @@ settings:
 
 rules:
   "@foxglove/license-header": error
+  "@foxglove/studio/link-target": error
 
   tss-unused-classes/unused-classes: error
 
@@ -156,7 +158,7 @@ overrides:
       - "packages/studio-base/src/components/EmptyState.tsx"
       - "packages/studio-base/src/components/ExpandingToolbar.tsx"
       - "packages/studio-base/src/components/ExtensionDetails.tsx"
-      - "packages/studio-base/src/components/ExtensionsSidebar/index.tsx"
+      - "packages/studio-base/src/components/ExtensionsSettings/index.tsx"
       - "packages/studio-base/src/components/LayoutBrowser/LayoutRow.tsx"
       - "packages/studio-base/src/components/LayoutBrowser/SignInPrompt.tsx"
       - "packages/studio-base/src/components/OpenDialog/OpenDialog.tsx"
@@ -175,9 +177,8 @@ overrides:
       - "packages/studio-base/src/components/ShareJsonModal.tsx"
       - "packages/studio-base/src/components/TextHighlight.tsx"
       - "packages/studio-base/src/panels/Image/components/Toolbar.tsx"
-      - "packages/studio-base/src/panels/Image/components/TopicDropdown.tsx"
       - "packages/studio-base/src/panels/Image/components/ZoomMenu.tsx"
-      - "packages/studio-base/src/panels/Image/index.tsx"
+      - "packages/studio-base/src/panels/Image/ImageView.tsx"
       - "packages/studio-base/src/panels/NodePlayground/BottomBar/DiagnosticsSection.tsx"
       - "packages/studio-base/src/panels/NodePlayground/BottomBar/index.tsx"
       - "packages/studio-base/src/panels/NodePlayground/Sidebar.tsx"

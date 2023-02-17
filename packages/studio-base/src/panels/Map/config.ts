@@ -30,6 +30,17 @@ export function validateCustomUrl(url: string): Error | undefined {
   return undefined;
 }
 
+function isGeoJSONSchema(schemaName: string) {
+  switch (schemaName) {
+    case "foxglove_msgs/GeoJSON":
+    case "foxglove_msgs/msg/GeoJSON":
+    case "foxglove.GeoJSON":
+      return true;
+    default:
+      return false;
+  }
+}
+
 export function buildSettingsTree(
   config: Config,
   eligibleTopics: Omit<Topic, "datatype">[],
@@ -69,14 +80,14 @@ export function buildSettingsTree(
   );
 
   const eligibleFollowTopicOptions = filterMap(eligibleTopics, (topic) =>
-    config.disabledTopics.includes(topic.name)
+    config.disabledTopics.includes(topic.name) || isGeoJSONSchema(topic.schemaName)
       ? undefined
       : { label: topic.name, value: topic.name },
   );
   const followTopicOptions = [{ label: "Off", value: "" }, ...eligibleFollowTopicOptions];
   const generalSettings: SettingsTreeFields = {
     layer: {
-      label: "Tile Layer",
+      label: "Tile layer",
       input: "select",
       value: config.layer,
       options: [
@@ -112,7 +123,6 @@ export function buildSettingsTree(
   const settings: SettingsTreeNodes = {
     general: {
       label: "General",
-      icon: "Settings",
       fields: generalSettings,
     },
     topics: {

@@ -27,7 +27,6 @@ import FilterBar, { FilterBarProps } from "./FilterBar";
 import LogList from "./LogList";
 import { normalizedLogMessage } from "./conversion";
 import filterMessages from "./filterMessages";
-import helpContent from "./index.help.md";
 import { buildSettingsTree } from "./settings";
 import { Config, LogMessageEvent } from "./types";
 
@@ -60,7 +59,10 @@ const LogPanel = React.memo(({ config, saveConfig }: Props) => {
   );
 
   const availableTopics = useMemo(
-    () => topics.filter((topic) => SUPPORTED_DATATYPES.includes(topic.schemaName)),
+    () =>
+      topics.filter(
+        (topic) => topic.schemaName != undefined && SUPPORTED_DATATYPES.includes(topic.schemaName),
+      ),
     [topics],
   );
 
@@ -122,7 +124,7 @@ const LogPanel = React.memo(({ config, saveConfig }: Props) => {
 
   return (
     <Stack fullHeight>
-      <PanelToolbar helpContent={helpContent}>
+      <PanelToolbar>
         <FilterBar
           searchTerms={searchTermsSet}
           minLogLevel={minLogLevel}

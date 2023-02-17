@@ -14,15 +14,18 @@
 import { Story } from "@storybook/react";
 import { fireEvent } from "@testing-library/dom";
 
-import MockPanelContextProvider from "@foxglove/studio-base/components/MockPanelContextProvider";
 import Panel from "@foxglove/studio-base/components/Panel";
 import PanelLayout from "@foxglove/studio-base/components/PanelLayout";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
+import LayoutStorageContext from "@foxglove/studio-base/context/LayoutStorageContext";
 import { PanelCatalog, PanelInfo } from "@foxglove/studio-base/context/PanelCatalogContext";
 import {
   nestedTabLayoutFixture,
   nestedTabLayoutFixture2,
 } from "@foxglove/studio-base/panels/Tab/nestedTabLayoutFixture";
+import LayoutManagerProvider from "@foxglove/studio-base/providers/LayoutManagerProvider";
+import LayoutManager from "@foxglove/studio-base/services/LayoutManager/LayoutManager";
+import MockLayoutStorage from "@foxglove/studio-base/services/MockLayoutStorage";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 import { SExpectedResult } from "@foxglove/studio-base/stories/storyHelpers";
 import tick from "@foxglove/studio-base/util/tick";
@@ -90,6 +93,20 @@ export default {
 
     colorScheme: "dark",
   },
+
+  decorators: [
+    (StoryFn: Story): JSX.Element => {
+      const storage = new MockLayoutStorage(LayoutManager.LOCAL_STORAGE_NAMESPACE, []);
+
+      return (
+        <LayoutStorageContext.Provider value={storage}>
+          <LayoutManagerProvider>
+            <StoryFn />
+          </LayoutManagerProvider>
+        </LayoutStorageContext.Provider>
+      );
+    },
+  ],
 };
 
 export const Default: Story = () => (
@@ -474,7 +491,6 @@ export const DraggingAndDroppingANestedTabPanelDoesNotRemoveAnyTabs: Story = () 
             document.querySelectorAll('[data-testid~="Tab!Left"] [data-testid="add-tab"]')[0] as any
           ).click();
 
-          await Promise.resolve();
           const dragHandle = document.querySelector(
             '[data-testid~="Tab!RightInner"] [data-testid="panel-menu"]',
           );
@@ -482,13 +498,7 @@ export const DraggingAndDroppingANestedTabPanelDoesNotRemoveAnyTabs: Story = () 
           const target = document.querySelector(
             '[data-testid~="Tab!Left"] [data-testid="empty-drop-target"]',
           );
-          if (!dragHandle) {
-            throw new Error("No drag handle");
-          }
-          if (!target) {
-            throw new Error("No drop target");
-          }
-          dragAndDrop(dragHandle, target);
+          dragAndDrop(dragHandle!, target!);
         }, DEFAULT_TIMEOUT);
       }}
     >
@@ -512,17 +522,16 @@ export const SupportsDraggingBetweenTabsAnywhereInTheLayout: Story = () => {
           const dragHandle = document.querySelector(
             '[data-testid~="Sample1"] [data-testid="mosaic-drag-handle"]',
           );
+
           const target = document
-            .querySelector('[data-testid~="unknown!inner4"]')
-            ?.parentElement?.parentElement?.querySelector(".drop-target.left");
+            .querySelector('[data-testid="unknown!inner4"]')
+            ?.parentElement?.parentElement?.parentElement?.querySelector(".drop-target.left");
 
           dragAndDrop(dragHandle!, target!);
         }, DEFAULT_TIMEOUT);
       }}
     >
-      <MockPanelContextProvider>
-        <PanelLayout />
-      </MockPanelContextProvider>
+      <PanelLayout />
     </PanelSetup>
   );
 };

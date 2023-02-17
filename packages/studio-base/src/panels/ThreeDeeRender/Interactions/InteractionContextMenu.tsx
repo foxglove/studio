@@ -7,8 +7,8 @@ import { useCallback } from "react";
 
 import { BaseMarker, InstancedLineListMarker } from "@foxglove/studio-base/types/Messages";
 
-import { MouseEventObject } from "../camera";
 import { Interactive, SelectedObject } from "./types";
+import { MouseEventObject } from "../camera";
 
 type ClickedPosition = { clientX: number; clientY: number };
 
@@ -30,7 +30,7 @@ const getObject = (selectedObject?: MouseEventObject): unknown => {
   const object =
     (selectedObject?.instanceIndex != undefined &&
       (selectedObject.object as InstancedLineListMarker).metadataByIndex != undefined &&
-      getInstanceObj(selectedObject.object, selectedObject.instanceIndex)) ||
+      getInstanceObj(selectedObject.object, selectedObject.instanceIndex) != undefined) ||
     selectedObject?.object;
   return object;
 };

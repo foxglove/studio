@@ -4,8 +4,8 @@
 
 import * as THREE from "three";
 
-import { LoadedModel } from "../ModelCache";
 import { GltfMesh } from "./markers/RenderableMeshResource";
+import { LoadedModel } from "../ModelCache";
 
 export function removeLights(model: LoadedModel): void {
   // Remove lights from the model
@@ -39,6 +39,7 @@ export function replaceMaterials(model: LoadedModel, material: THREE.MeshStandar
       disposeStandardMaterial(meshChild.material);
     }
     meshChild.material = material;
+    meshChild.geometry.computeVertexNormals();
   });
 }
 

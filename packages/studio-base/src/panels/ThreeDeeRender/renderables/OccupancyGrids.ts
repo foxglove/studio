@@ -23,12 +23,16 @@ import { ColorRGBA, OccupancyGrid, OCCUPANCY_GRID_DATATYPES } from "../ros";
 import { BaseSettings } from "../settings";
 import { topicIsConvertibleToSchema } from "../topicIsConvertibleToSchema";
 
+type ColorModes = "custom" | "costmap" | "map" | "raw";
+
 export type LayerSettingsOccupancyGrid = BaseSettings & {
   frameLocked: boolean;
   minColor: string;
   maxColor: string;
   unknownColor: string;
   invalidColor: string;
+  colorMode: ColorModes;
+  alpha: number;
 };
 
 const INVALID_OCCUPANCY_GRID = "INVALID_OCCUPANCY_GRID";
@@ -37,6 +41,7 @@ const DEFAULT_MIN_COLOR = { r: 1, g: 1, b: 1, a: 1 }; // white
 const DEFAULT_MAX_COLOR = { r: 0, g: 0, b: 0, a: 1 }; // black
 const DEFAULT_UNKNOWN_COLOR = { r: 0.5, g: 0.5, b: 0.5, a: 1 }; // gray
 const DEFAULT_INVALID_COLOR = { r: 1, g: 0, b: 1, a: 1 }; // magenta
+const DEFAULT_ALPHA = 1.0;
 
 const DEFAULT_MIN_COLOR_STR = rgbaToCssString(DEFAULT_MIN_COLOR);
 const DEFAULT_MAX_COLOR_STR = rgbaToCssString(DEFAULT_MAX_COLOR);
@@ -46,10 +51,12 @@ const DEFAULT_INVALID_COLOR_STR = rgbaToCssString(DEFAULT_INVALID_COLOR);
 const DEFAULT_SETTINGS: LayerSettingsOccupancyGrid = {
   visible: false,
   frameLocked: false,
+  colorMode: "custom",
   minColor: DEFAULT_MIN_COLOR_STR,
   maxColor: DEFAULT_MAX_COLOR_STR,
   unknownColor: DEFAULT_UNKNOWN_COLOR_STR,
   invalidColor: DEFAULT_INVALID_COLOR_STR,
+  alpha: DEFAULT_ALPHA,
 };
 
 export type OccupancyGridUserData = BaseUserData & {
@@ -91,14 +98,50 @@ export class OccupancyGrids extends SceneExtension<OccupancyGridRenderable> {
       }
       const config = (configTopics[topic.name] ?? {}) as Partial<LayerSettingsOccupancyGrid>;
 
-      // prettier-ignore
-      const fields: SettingsTreeFields = {
-        minColor: { label: "Min Color", input: "rgba", value: config.minColor ?? DEFAULT_MIN_COLOR_STR },
-        maxColor: { label: "Max Color", input: "rgba", value: config.maxColor ?? DEFAULT_MAX_COLOR_STR },
-        unknownColor: { label: "Unknown Color", input: "rgba", value: config.unknownColor ?? DEFAULT_UNKNOWN_COLOR_STR },
-        invalidColor: { label: "Invalid Color", input: "rgba", value: config.invalidColor ?? DEFAULT_INVALID_COLOR_STR },
-        frameLocked: { label: "Frame Lock", input: "boolean", value: config.frameLocked ?? false },
+      let fields: SettingsTreeFields = {
+        colorMode: {
+          label: "Color mode",
+          input: "select",
+          value: config.colorMode ?? "custom",
+          options: [
+            { label: "Custom", value: "custom" },
+            { label: "Map", value: "map" },
+            { label: "Costmap", value: "costmap" },
+            { label: "Raw", value: "raw" },
+          ],
+        },
       };
+
+      if (config.colorMode === "custom") {
+        // prettier-ignore
+        const customFields: SettingsTreeFields = {
+          minColor: { label: "Min Color", input: "rgba", value: config.minColor ?? DEFAULT_MIN_COLOR_STR },
+          maxColor: { label: "Max Color", input: "rgba", value: config.maxColor ?? DEFAULT_MAX_COLOR_STR },
+          unknownColor: { label: "Unknown Color", input: "rgba", value: config.unknownColor ?? DEFAULT_UNKNOWN_COLOR_STR },
+          invalidColor: { label: "Invalid Color", input: "rgba", value: config.invalidColor ?? DEFAULT_INVALID_COLOR_STR },
+          frameLocked: { label: "Frame Lock", input: "boolean", value: config.frameLocked ?? false },
+        };
+        fields = {
+          ...fields,
+          ...customFields,
+        };
+      } else {
+        const paletteFields: SettingsTreeFields = {
+          alpha: {
+            label: "Alpha",
+            input: "number",
+            value: config.alpha ?? DEFAULT_ALPHA,
+            min: 0.0,
+            max: 1.0,
+            step: 0.1,
+            placeholder: "auto",
+          },
+        };
+        fields = {
+          ...fields,
+          ...paletteFields,
+        };
+      }
 
       entries.push({
         path: ["topics", topic.name],
@@ -286,6 +329,7 @@ function createMesh(
   return mesh;
 }
 
+const tempColor = { r: 0, g: 0, b: 0, a: 0 };
 const tempUnknownColor = { r: 0, g: 0, b: 0, a: 0 };
 const tempInvalidColor = { r: 0, g: 0, b: 0, a: 0 };
 const tempMinColor = { r: 0, g: 0, b: 0, a: 0 };
@@ -312,32 +356,34 @@ function updateTexture(
   for (let i = 0; i < size; i++) {
     const value = data[i]! | 0;
     const offset = i * 4;
-    if (value === -1) {
-      // Unknown (-1)
-      rgba[offset + 0] = tempUnknownColor.r;
-      rgba[offset + 1] = tempUnknownColor.g;
-      rgba[offset + 2] = tempUnknownColor.b;
-      rgba[offset + 3] = tempUnknownColor.a;
-    } else if (value >= 0 && value <= 100) {
-      // Valid [0-100]
-      const t = value / 100;
-      if (t === 1) {
-        rgba[offset + 0] = 0;
-        rgba[offset + 1] = 0;
-        rgba[offset + 2] = 0;
-        rgba[offset + 3] = 0;
-      } else {
+    if (settings.colorMode === "custom") {
+      if (value === -1) {
+        // Unknown (-1)
+        rgba[offset + 0] = tempUnknownColor.r;
+        rgba[offset + 1] = tempUnknownColor.g;
+        rgba[offset + 2] = tempUnknownColor.b;
+        rgba[offset + 3] = tempUnknownColor.a;
+      } else if (value >= 0 && value <= 100) {
+        // Valid [0-100]
+        const t = value / 100;
+
         rgba[offset + 0] = tempMinColor.r + (tempMaxColor.r - tempMinColor.r) * t;
         rgba[offset + 1] = tempMinColor.g + (tempMaxColor.g - tempMinColor.g) * t;
         rgba[offset + 2] = tempMinColor.b + (tempMaxColor.b - tempMinColor.b) * t;
         rgba[offset + 3] = tempMinColor.a + (tempMaxColor.a - tempMinColor.a) * t;
+      } else {
+        // Invalid (< -1 or > 100)
+        rgba[offset + 0] = tempInvalidColor.r;
+        rgba[offset + 1] = tempInvalidColor.g;
+        rgba[offset + 2] = tempInvalidColor.b;
+        rgba[offset + 3] = tempInvalidColor.a;
       }
     } else {
-      // Invalid (< -1 or > 100)
-      rgba[offset + 0] = tempInvalidColor.r;
-      rgba[offset + 1] = tempInvalidColor.g;
-      rgba[offset + 2] = tempInvalidColor.b;
-      rgba[offset + 3] = tempInvalidColor.a;
+      paletteColorCached(tempColor, value, settings.colorMode);
+      rgba[offset + 0] = tempColor.r;
+      rgba[offset + 1] = tempColor.g;
+      rgba[offset + 2] = tempColor.b;
+      rgba[offset + 3] = tempColor.a * settings.alpha;
     }
   }
 
@@ -389,13 +435,17 @@ function createPickingMaterial(texture: THREE.DataTexture): THREE.ShaderMaterial
 }
 
 function occupancyGridHasTransparency(settings: LayerSettingsOccupancyGrid): boolean {
-  stringToRgba(tempMinColor, settings.minColor);
-  stringToRgba(tempMaxColor, settings.maxColor);
-  stringToRgba(tempUnknownColor, settings.unknownColor);
-  stringToRgba(tempInvalidColor, settings.invalidColor);
-  return (
-    tempMinColor.a < 1 || tempMaxColor.a < 1 || tempInvalidColor.a < 1 || tempUnknownColor.a < 1
-  );
+  if (settings.colorMode === "custom") {
+    stringToRgba(tempMinColor, settings.minColor);
+    stringToRgba(tempMaxColor, settings.maxColor);
+    stringToRgba(tempUnknownColor, settings.unknownColor);
+    stringToRgba(tempInvalidColor, settings.invalidColor);
+    return (
+      tempMinColor.a < 1 || tempMaxColor.a < 1 || tempInvalidColor.a < 1 || tempUnknownColor.a < 1
+    );
+  } else {
+    return true;
+  }
 }
 
 function srgbToLinearUint8(color: ColorRGBA): void {
@@ -419,4 +469,119 @@ function normalizeOccupancyGrid(message: PartialMessage<OccupancyGrid>): Occupan
     },
     data: normalizeInt8Array(message.data),
   };
+}
+
+let costmapPalette: [number, number, number, number][] | undefined;
+let mapPalette: [number, number, number, number][] | undefined;
+let rawPalette: [number, number, number, number][] | undefined;
+
+function paletteColorCached(output: ColorRGBA, value: number, color_mode: ColorModes) {
+  const unsignedValue = value >= 0 ? value : value + 256;
+  if (unsignedValue < 0 || unsignedValue > 255) {
+    output.r = 0;
+    output.g = 0;
+    output.b = 0;
+    output.a = 0;
+  }
+
+  let palette: [number, number, number, number][] | undefined;
+  if (color_mode === "costmap") {
+    if (!costmapPalette) {
+      costmapPalette = createCostmapPalette();
+    }
+    palette = costmapPalette;
+  } else if (color_mode === "map") {
+    if (!mapPalette) {
+      mapPalette = createMapPalette();
+    }
+    palette = mapPalette;
+  } else if (color_mode === "raw") {
+    if (!rawPalette) {
+      rawPalette = createRawPalette();
+    }
+    palette = rawPalette;
+  } else {
+    throw new Error(`Unsupported color mode ${color_mode}`);
+  }
+
+  const colorRaw = palette[Math.trunc(unsignedValue)]!;
+  output.r = colorRaw[0];
+  output.g = colorRaw[1];
+  output.b = colorRaw[2];
+  output.a = colorRaw[3];
+}
+
+// Based off of rviz map implementation
+// https://github.com/ros-visualization/rviz/blob/1f622b8c95b8e188841b5505db2f97394d3e9c6c/src/rviz/default_plugin/map_display.cpp#L284
+function createMapPalette() {
+  let index = 0;
+  const palette = new Array(256).fill([0, 0, 0, 0]);
+
+  // Standard gray map palette values
+  for (let i = 0; i <= 100; i++) {
+    const v = Math.trunc(255 - (255 * i) / 100);
+    palette[index++] = [v, v, v, 255];
+  }
+
+  // illegal positive values in green
+  for (let i = 101; i <= 127; i++) {
+    palette[index++] = [0, 255, 0, 255];
+  }
+
+  // illegal negative (char) values in shades of red/yellow
+  for (let i = 128; i <= 254; i++) {
+    palette[index++] = [255, Math.trunc((255 * (i - 128)) / (254 - 128)), 0, 255];
+  }
+
+  // legal -1 value is tasteful blueish greenish grayish color
+  palette[index++] = [112, 137, 134, 255];
+  return palette;
+}
+
+// Based off of rviz costmap implementation
+// https://github.com/ros-visualization/rviz/blob/1f622b8c95b8e188841b5505db2f97394d3e9c6c/src/rviz/default_plugin/map_display.cpp#L322
+function createCostmapPalette() {
+  let index = 0;
+  const palette = new Array(256).fill([0, 0, 0, 0]);
+  // zero values have alpha=0
+  palette[index++] = [0, 0, 0, 0];
+
+  // Blue to red spectrum for most normal cost values
+  for (let i = 1; i <= 98; i++) {
+    const v = Math.trunc((255 * i) / 100);
+    palette[index++] = [v, 0, 255 - v, 255];
+  }
+  // inscribed obstacle values (99) in cyan
+  palette[index++] = [0, 255, 255, 255];
+
+  // lethal obstacle values (100) in purple
+  palette[index++] = [255, 0, 255, 255];
+
+  // illegal positive values in green
+  for (let i = 101; i <= 127; i++) {
+    palette[index++] = [0, 255, 0, 255];
+  }
+
+  // illegal negative (char) values in shades of red/yellow
+  for (let i = 128; i <= 254; i++) {
+    palette[index++] = [255, Math.trunc((255 * (i - 128)) / (254 - 128)), 0, 255];
+  }
+
+  // legal -1 value is tasteful blueish greenish grayish color
+  palette[index++] = [112, 137, 134, 255];
+  return palette;
+}
+
+// Based off of rviz raw implementation
+// https://github.com/ros-visualization/rviz/blob/1f622b8c95b8e188841b5505db2f97394d3e9c6c/src/rviz/default_plugin/map_display.cpp#L377
+function createRawPalette() {
+  let index = 0;
+  const palette = new Array(256).fill([0, 0, 0, 0]);
+
+  // Standard gray map palette values
+  for (let i = 0; i < 256; i++) {
+    palette[index++] = [i, i, i, 255];
+  }
+
+  return palette;
 }

@@ -30,7 +30,6 @@ import { SaveConfig } from "@foxglove/studio-base/types/panels";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import buildSampleMessage from "./buildSampleMessage";
-import helpContent from "./index.help.md";
 
 type Config = Partial<{
   topicName: string;
@@ -50,12 +49,11 @@ type Props = {
 function buildSettingsTree(config: Config): SettingsTreeNodes {
   return {
     general: {
-      icon: "Settings",
       fields: {
-        advancedView: { label: "Editing Mode", input: "boolean", value: config.advancedView },
-        buttonText: { label: "Button Title", input: "string", value: config.buttonText },
-        buttonTooltip: { label: "Button Tooltip", input: "string", value: config.buttonTooltip },
-        buttonColor: { label: "Button Color", input: "rgb", value: config.buttonColor },
+        advancedView: { label: "Editing mode", input: "boolean", value: config.advancedView },
+        buttonText: { label: "Button title", input: "string", value: config.buttonText },
+        buttonTooltip: { label: "Button tooltip", input: "string", value: config.buttonTooltip },
+        buttonColor: { label: "Button color", input: "rgb", value: config.buttonColor },
       },
     },
   };
@@ -230,7 +228,7 @@ function Publish(props: Props) {
 
   return (
     <Stack fullHeight>
-      <PanelToolbar helpContent={helpContent} />
+      <PanelToolbar />
       {advancedView && (
         <Stack flex="auto" padding={2} gap={1} paddingBottom={0}>
           <div>

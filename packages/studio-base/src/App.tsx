@@ -12,6 +12,7 @@ import { StudioLogsSettingsProvider } from "@foxglove/studio-base/providers/Stud
 import TimelineInteractionStateProvider from "@foxglove/studio-base/providers/TimelineInteractionStateProvider";
 
 import Workspace from "./Workspace";
+import { CustomWindowControlsProps } from "./components/AppBar";
 import { ColorSchemeThemeProvider } from "./components/ColorSchemeThemeProvider";
 import CssBaseline from "./components/CssBaseline";
 import DocumentTitleAdapter from "./components/DocumentTitleAdapter";
@@ -23,42 +24,35 @@ import StudioToastProvider from "./components/StudioToastProvider";
 import AnalyticsProvider from "./context/AnalyticsProvider";
 import AppConfigurationContext, { IAppConfiguration } from "./context/AppConfigurationContext";
 import { AssetsProvider } from "./context/AssetsContext";
-import ConsoleApiContext from "./context/ConsoleApiContext";
 import LayoutStorageContext from "./context/LayoutStorageContext";
-import ModalHost from "./context/ModalHost";
 import NativeAppMenuContext, { INativeAppMenu } from "./context/NativeAppMenuContext";
 import NativeWindowContext, { INativeWindow } from "./context/NativeWindowContext";
 import { IDataSourceFactory } from "./context/PlayerSelectionContext";
 import { UserNodeStateProvider } from "./context/UserNodeStateContext";
-import { ConsoleApiCookieCurrentUserProvider } from "./providers/ConsoleApiCookieUserProvider";
-import { ConsoleApiDialogCurrentUserProvider } from "./providers/ConsoleApiDialogCurrentUserProvider";
-import ConsoleApiRemoteLayoutStorageProvider from "./providers/ConsoleApiRemoteLayoutStorageProvider";
 import CurrentLayoutProvider from "./providers/CurrentLayoutProvider";
 import ExtensionCatalogProvider from "./providers/ExtensionCatalogProvider";
 import ExtensionMarketplaceProvider from "./providers/ExtensionMarketplaceProvider";
-import HelpInfoProvider from "./providers/HelpInfoProvider";
 import LayoutManagerProvider from "./providers/LayoutManagerProvider";
 import PanelCatalogProvider from "./providers/PanelCatalogProvider";
 import UserProfileLocalStorageProvider from "./providers/UserProfileLocalStorageProvider";
 import { LaunchPreference } from "./screens/LaunchPreference";
-import ConsoleApi from "./services/ConsoleApi";
 import { ExtensionLoader } from "./services/ExtensionLoader";
 import { ILayoutStorage } from "./services/ILayoutStorage";
 import URDFAssetLoader from "./services/URDFAssetLoader";
 
-type AppProps = {
+type AppProps = CustomWindowControlsProps & {
   deepLinks: string[];
   appConfiguration: IAppConfiguration;
   dataSources: IDataSourceFactory[];
-  consoleApi: ConsoleApi;
   layoutStorage: ILayoutStorage;
   extensionLoaders: readonly ExtensionLoader[];
   nativeAppMenu?: INativeAppMenu;
   nativeWindow?: INativeWindow;
-  disableSignin?: boolean;
-  enableDialogAuth?: boolean;
   enableLaunchPreferenceScreen?: boolean;
   enableGlobalCss?: boolean;
+  appBarLeftInset?: number;
+  extraProviders?: JSX.Element[];
+  onAppBarDoubleClick?: () => void;
 };
 
 // Suppress context menu for the entire app except on inputs & textareas.
@@ -78,36 +72,24 @@ export function App(props: AppProps): JSX.Element {
     appConfiguration,
     dataSources,
     layoutStorage,
-    consoleApi,
-    disableSignin,
     extensionLoaders,
     nativeAppMenu,
     nativeWindow,
-    enableDialogAuth,
     deepLinks,
     enableLaunchPreferenceScreen,
     enableGlobalCss = false,
+    extraProviders,
   } = props;
-
-  const CurrentUserProviderComponent =
-    enableDialogAuth === true
-      ? ConsoleApiDialogCurrentUserProvider
-      : ConsoleApiCookieCurrentUserProvider;
 
   const providers = [
     /* eslint-disable react/jsx-key */
     <StudioLogsSettingsProvider />,
-    <ConsoleApiContext.Provider value={consoleApi} />,
-    <CurrentUserProviderComponent />,
-    <ConsoleApiRemoteLayoutStorageProvider />,
     <StudioToastProvider />,
     <LayoutStorageContext.Provider value={layoutStorage} />,
     <UserProfileLocalStorageProvider />,
     <AnalyticsProvider amplitudeApiKey={process.env.AMPLITUDE_API_KEY} />,
     <LayoutManagerProvider />,
-    <ModalHost />, // render modal elements inside the ThemeProvider
     <AssetsProvider loaders={assetLoaders} />,
-    <HelpInfoProvider />,
     <TimelineInteractionStateProvider />,
     <UserNodeStateProvider />,
     <CurrentLayoutProvider />,
@@ -124,6 +106,10 @@ export function App(props: AppProps): JSX.Element {
 
   if (nativeWindow) {
     providers.push(<NativeWindowContext.Provider value={nativeWindow} />);
+  }
+
+  if (extraProviders) {
+    providers.unshift(...extraProviders);
   }
 
   const MaybeLaunchPreference = enableLaunchPreferenceScreen === true ? LaunchPreference : Fragment;
@@ -146,7 +132,17 @@ export function App(props: AppProps): JSX.Element {
                 <DndProvider backend={HTML5Backend}>
                   <Suspense fallback={<></>}>
                     <PanelCatalogProvider>
-                      <Workspace deepLinks={deepLinks} disableSignin={disableSignin} />
+                      <Workspace
+                        deepLinks={deepLinks}
+                        appBarLeftInset={props.appBarLeftInset}
+                        onAppBarDoubleClick={props.onAppBarDoubleClick}
+                        showCustomWindowControls={props.showCustomWindowControls}
+                        isMaximized={props.isMaximized}
+                        onMinimizeWindow={props.onMinimizeWindow}
+                        onMaximizeWindow={props.onMaximizeWindow}
+                        onUnmaximizeWindow={props.onUnmaximizeWindow}
+                        onCloseWindow={props.onCloseWindow}
+                      />
                     </PanelCatalogProvider>
                   </Suspense>
                 </DndProvider>

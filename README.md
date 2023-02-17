@@ -4,9 +4,10 @@
 
 <div align="center">
     <h1>Foxglove Studio</h1>
-    <a href="https://github.com/foxglove/studio#contributing"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" /></a>
-    <a href="https://github.com/foxglove/studio/blob/main/LICENSE"><img src="https://img.shields.io/aur/license/foxglove-studio" /></a>
-    <a href="https://foxglove.dev/join-slack"><img src="https://img.shields.io/badge/chat-on%20slack-purple.svg" /></a>
+    <a href="https://github.com/foxglove/studio/releases"><img src="https://img.shields.io/github/v/release/foxglove/studio?label=version" /></a>
+    <a href="https://github.com/foxglove/studio/blob/main/LICENSE"><img src="https://img.shields.io/github/license/foxglove/studio" /></a>
+    <a href="https://github.com/orgs/foxglove/discussions"><img src="https://img.shields.io/github/discussions/foxglove/community.svg?logo=github" /></a>
+    <a href="https://foxglove.dev/join-slack"><img src="https://img.shields.io/badge/chat-on%20slack-purple.svg?logo=slack" /></a>
     <br />
     <br />
     <a href="https://foxglove.dev/download">Download</a>
@@ -48,7 +49,7 @@ To learn more, visit the following resources:
 
 You can also join us on the following platforms to ask questions, share feedback, and stay up to date on what our team is working on:
 
-[GitHub Discussions](https://github.com/foxglove/studio/discussions)
+[GitHub Discussions](https://github.com/orgs/foxglove/discussions)
 &nbsp;•&nbsp;
 [Slack](https://foxglove.dev/join-slack)
 &nbsp;•&nbsp;

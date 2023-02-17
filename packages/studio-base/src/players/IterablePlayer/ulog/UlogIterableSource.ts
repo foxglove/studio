@@ -17,15 +17,14 @@ import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import { MessageType, ULog } from "@foxglove/ulog";
 import { BlobReader } from "@foxglove/ulog/web";
 
+import { messageIdToTopic, messageDefinitionToRos, logLevelToRosout } from "./support";
 import {
   IIterableSource,
   IteratorResult,
   Initalization,
   MessageIteratorArgs,
   GetBackfillMessagesArgs,
-  IterableSourceInitializeArgs,
 } from "../IIterableSource";
-import { messageIdToTopic, messageDefinitionToRos, logLevelToRosout } from "./support";
 
 type UlogOptions = { type: "file"; file: File };
 
@@ -189,12 +188,4 @@ export class UlogIterableSource implements IIterableSource {
   ): Promise<MessageEvent<unknown>[]> {
     return [];
   }
-}
-
-export function initialize(args: IterableSourceInitializeArgs): UlogIterableSource {
-  if (args.file) {
-    return new UlogIterableSource({ type: "file", file: args.file });
-  }
-
-  throw new Error("file required");
 }

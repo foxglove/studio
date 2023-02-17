@@ -29,6 +29,8 @@ import {
 import { Color, Point2D } from "@foxglove/studio-base/types/Messages";
 import sendNotification from "@foxglove/studio-base/util/sendNotification";
 
+import { HitmapRenderContext } from "./HitmapRenderContext";
+import { buildMarkerData, calculateZoomScale } from "./util";
 import type {
   MarkerData,
   PanZoom,
@@ -43,8 +45,6 @@ import type {
   TextAnnotation,
   NormalizedImageMessage,
 } from "../types";
-import { HitmapRenderContext } from "./HitmapRenderContext";
-import { buildMarkerData, calculateZoomScale } from "./util";
 
 // Just globally keep track of if we've shown an error in rendering, since typically when you get
 // one error, you'd then get a whole bunch more, which is spammy.
@@ -184,7 +184,13 @@ function decodeMessageToBitmap(
 
 function clearCanvas(canvas?: RenderableCanvas) {
   if (canvas) {
-    canvas.getContext("2d")?.clearRect(0, 0, canvas.width, canvas.height);
+    // https://github.com/microsoft/TypeScript-DOM-lib-generator/issues/1480
+    (
+      canvas.getContext("2d") as
+        | CanvasRenderingContext2D
+        | OffscreenCanvasRenderingContext2D
+        | undefined
+    )?.clearRect(0, 0, canvas.width, canvas.height);
   }
 }
 
@@ -208,7 +214,10 @@ function render({
       ? { width: bitmap.width, height: bitmap.height }
       : { width: bitmap.height, height: bitmap.width };
 
-  const canvasCtx = canvas.getContext("2d");
+  const canvasCtx = canvas.getContext("2d") as  // https://github.com/microsoft/TypeScript-DOM-lib-generator/issues/1480
+    | CanvasRenderingContext2D
+    | OffscreenCanvasRenderingContext2D
+    | undefined;
   if (!canvasCtx) {
     return;
   }
@@ -271,7 +280,7 @@ function render({
 
 function paintMarkers(
   ctx: HitmapRenderContext,
-  annotations: Annotation[],
+  annotations: readonly Annotation[],
   cameraModel: PinholeCameraModel | undefined,
   panZoom: PanZoom,
 ) {

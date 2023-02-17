@@ -2,8 +2,6 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import decompressLZ4 from "wasm-lz4";
-
 import { Bag, Filelike } from "@foxglove/rosbag";
 import { BlobReader } from "@foxglove/rosbag/web";
 import { parse as parseMessageDefinition } from "@foxglove/rosmsg";
@@ -20,6 +18,7 @@ import BrowserHttpReader from "@foxglove/studio-base/util/BrowserHttpReader";
 import CachedFilelike from "@foxglove/studio-base/util/CachedFilelike";
 import { getBagChunksOverlapCount } from "@foxglove/studio-base/util/bags";
 import Bzip2 from "@foxglove/wasm-bz2";
+import decompressLZ4 from "@foxglove/wasm-lz4";
 
 import {
   IIterableSource,
@@ -27,7 +26,6 @@ import {
   Initalization,
   MessageIteratorArgs,
   GetBackfillMessagesArgs,
-  IterableSourceInitializeArgs,
 } from "./IIterableSource";
 
 type BagSource = { type: "file"; file: File } | { type: "remote"; url: string };
@@ -266,14 +264,4 @@ export class BagIterableSource implements IIterableSource {
     messages.sort((a, b) => compare(a.receiveTime, b.receiveTime));
     return messages;
   }
-}
-
-export function initialize(args: IterableSourceInitializeArgs): BagIterableSource {
-  if (args.file) {
-    return new BagIterableSource({ type: "file", file: args.file });
-  } else if (args.url) {
-    return new BagIterableSource({ type: "remote", url: args.url });
-  }
-
-  throw new Error("file or url required");
 }

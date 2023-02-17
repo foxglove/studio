@@ -23,7 +23,6 @@ import {
   TAB_DRAG_TYPE,
   TabActions,
 } from "@foxglove/studio-base/panels/Tab/TabDndContext";
-import helpContent from "@foxglove/studio-base/panels/Tab/index.help.md";
 import { TabConfig } from "@foxglove/studio-base/types/layouts";
 
 const STabbedToolbar = muiStyled("div")(({ theme }) => ({
@@ -61,7 +60,7 @@ export function TabbedToolbar(props: Props): JSX.Element {
 
   const [{ isOver, item }, dropRef] = useDrop({
     accept: TAB_DRAG_TYPE,
-    collect: (monitor): { isOver: boolean; item?: DraggingTabItem } => ({
+    collect: (monitor) => ({
       item: monitor.getItem(),
       isOver: monitor.isOver(),
     }),
@@ -72,7 +71,7 @@ export function TabbedToolbar(props: Props): JSX.Element {
 
   return (
     <STabbedToolbar>
-      <PanelToolbar backgroundColor={theme.palette.background.default} helpContent={helpContent}>
+      <PanelToolbar backgroundColor={theme.palette.background.default}>
         <STabs role="tab" ref={dropRef} data-testid="toolbar-droppable">
           {tabs.map((tab, i) => (
             <DraggableToolbarTab

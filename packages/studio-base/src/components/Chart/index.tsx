@@ -8,14 +8,13 @@
 /// <reference types="chartjs-plugin-datalabels" />
 /// <reference types="@foxglove/chartjs-plugin-zoom" />
 
-/// <reference types="@types/offscreencanvas" />
-
 import { ChartData as ChartJsChartData, ChartOptions, ScatterDataPoint } from "chart.js";
 import Hammer from "hammerjs";
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { useAsync, useMountedState } from "react-use";
 import { v4 as uuidv4 } from "uuid";
 
+import { type ZoomPluginOptions } from "@foxglove/chartjs-plugin-zoom/types/options";
 import Logger from "@foxglove/log";
 import { RpcElement, RpcScales } from "@foxglove/studio-base/components/Chart/types";
 import ChartJsMux, {
@@ -48,7 +47,7 @@ type Props = {
   data: ChartData;
   options: ChartOptions;
   isBoundsReset: boolean;
-  type: string;
+  type: "scatter";
   height: number;
   width: number;
   onClick?: (params: OnClickArg) => void;
@@ -108,8 +107,10 @@ function Chart(props: Props): JSX.Element {
   // at the time they are invoked
   const currentScalesRef = useRef<RpcScales | undefined>();
 
-  const zoomEnabled = props.options.plugins?.zoom?.zoom?.enabled ?? false;
-  const panEnabled = props.options.plugins?.zoom?.pan?.enabled ?? false;
+  const zoomEnabled =
+    (props.options.plugins?.zoom as ZoomPluginOptions | undefined)?.zoom?.enabled ?? false;
+  const panEnabled =
+    (props.options.plugins?.zoom as ZoomPluginOptions | undefined)?.pan?.enabled ?? false;
 
   const { type, data, isBoundsReset, options, width, height, onStartRender, onFinishRender } =
     props;
@@ -255,7 +256,9 @@ function Chart(props: Props): JSX.Element {
 
       onStartRender?.();
       const offscreenCanvas =
-        "transferControlToOffscreen" in canvas ? canvas.transferControlToOffscreen() : canvas;
+        typeof canvas.transferControlToOffscreen === "function"
+          ? canvas.transferControlToOffscreen()
+          : canvas;
       const scales = await sendWrapperRef.current<RpcScales>(
         "initialize",
         {

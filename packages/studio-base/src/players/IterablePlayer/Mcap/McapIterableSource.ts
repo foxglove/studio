@@ -2,33 +2,32 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Mcap0IndexedReader, Mcap0Types } from "@mcap/core";
+import { McapIndexedReader, McapTypes } from "@mcap/core";
 
 import Log from "@foxglove/log";
 import { loadDecompressHandlers } from "@foxglove/mcap-support";
 import { MessageEvent } from "@foxglove/studio-base/players/types";
 
+import { FileReadable } from "./FileReadable";
+import { McapIndexedIterableSource } from "./McapIndexedIterableSource";
+import { McapStreamingIterableSource } from "./McapStreamingIterableSource";
+import { RemoteFileReadable } from "./RemoteFileReadable";
 import {
   IIterableSource,
   IteratorResult,
   Initalization,
   MessageIteratorArgs,
   GetBackfillMessagesArgs,
-  IterableSourceInitializeArgs,
 } from "../IIterableSource";
-import { FileReadable } from "./FileReadable";
-import { McapIndexedIterableSource } from "./McapIndexedIterableSource";
-import { McapStreamingIterableSource } from "./McapStreamingIterableSource";
-import { RemoteFileReadable } from "./RemoteFileReadable";
 
 const log = Log.getLogger(__filename);
 
 type McapSource = { type: "file"; file: File } | { type: "url"; url: string };
 
-async function tryCreateIndexedReader(readable: Mcap0Types.IReadable) {
+async function tryCreateIndexedReader(readable: McapTypes.IReadable) {
   const decompressHandlers = await loadDecompressHandlers();
   try {
-    const reader = await Mcap0IndexedReader.Initialize({ readable, decompressHandlers });
+    const reader = await McapIndexedReader.Initialize({ readable, decompressHandlers });
 
     if (reader.chunkIndexes.length === 0 || reader.channelsById.size === 0) {
       return undefined;
@@ -112,14 +111,4 @@ export class McapIterableSource implements IIterableSource {
 
     return await this._sourceImpl.getBackfillMessages(args);
   }
-}
-
-export function initialize(args: IterableSourceInitializeArgs): McapIterableSource {
-  if (args.file) {
-    return new McapIterableSource({ type: "file", file: args.file });
-  } else if (args.url) {
-    return new McapIterableSource({ type: "url", url: args.url });
-  }
-
-  throw new Error("file or url required");
 }

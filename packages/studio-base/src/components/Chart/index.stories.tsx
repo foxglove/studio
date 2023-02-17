@@ -132,6 +132,9 @@ export const Basic: Story = (_args) => {
     </div>
   );
 };
+Basic.play = async (ctx) => {
+  await ctx.parameters.storyReady;
+};
 Basic.parameters = {
   useReadySignal: true,
 };
@@ -145,7 +148,9 @@ export const WithDatalabels: Story = (_args) => {
     </div>
   );
 };
-
+WithDatalabels.play = async (ctx) => {
+  await ctx.parameters.storyReady;
+};
 WithDatalabels.parameters = {
   useReadySignal: true,
 };
@@ -157,7 +162,7 @@ export const AllowsClickingOnDatalabels: Story = (_args) => {
   const doClick = useCallback(() => {
     if (clickedDatalabel == undefined) {
       const [canvas] = document.getElementsByTagName("canvas");
-      TestUtils.Simulate.click(canvas!.parentElement!, { clientX: 245, clientY: 429 });
+      TestUtils.Simulate.click(canvas!.parentElement!, { clientX: 304, clientY: 378 });
     }
   }, [clickedDatalabel]);
 
@@ -184,7 +189,9 @@ export const AllowsClickingOnDatalabels: Story = (_args) => {
     </div>
   );
 };
-
+AllowsClickingOnDatalabels.play = async (ctx) => {
+  await ctx.parameters.storyReady;
+};
 AllowsClickingOnDatalabels.parameters = {
   useReadySignal: true,
 };

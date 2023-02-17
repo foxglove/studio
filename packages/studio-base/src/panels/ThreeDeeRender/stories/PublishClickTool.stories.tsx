@@ -2,18 +2,18 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { screen } from "@testing-library/dom";
+import { screen } from "@testing-library/react";
 
 import { MessageEvent } from "@foxglove/studio";
 import { PlayerCapabilities, Topic } from "@foxglove/studio-base/players/types";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 import delay from "@foxglove/studio-base/util/delay";
 
+import { QUAT_IDENTITY, rad2deg } from "./common";
+import useDelayedFixture from "./useDelayedFixture";
 import ThreeDeeRender from "../index";
 import { PublishClickType } from "../renderables/PublishClickTool";
 import { TransformStamped } from "../ros";
-import { QUAT_IDENTITY, rad2deg } from "./common";
-import useDelayedFixture from "./useDelayedFixture";
 
 export default {
   title: "panels/ThreeDeeRender/PublishClickTool",

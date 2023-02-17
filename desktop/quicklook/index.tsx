@@ -5,7 +5,7 @@
 /// <reference types="quicklookjs" />
 
 import { useState, useEffect, useRef } from "react";
-import { createRoot } from "react-dom/client";
+import ReactDOM from "react-dom";
 import { useAsync } from "react-use";
 
 import Logger from "@foxglove/log";
@@ -104,6 +104,7 @@ function Root(): JSX.Element {
           ) : (
             <a
               href="#"
+              target="_self"
               onClick={(event) => {
                 event.preventDefault();
                 setShouldLoadMoreInfo(true);
@@ -118,9 +119,10 @@ function Root(): JSX.Element {
   );
 }
 
-createRoot(rootEl).render(
+ReactDOM.render(
   <>
     <GlobalStyle />
     <Root />
   </>,
+  rootEl,
 );

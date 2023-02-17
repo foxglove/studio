@@ -5,25 +5,20 @@
 
 import { render, screen, fireEvent, act } from "@testing-library/react";
 
-import ModalHost from "@foxglove/studio-base/context/ModalHost";
-
 import { usePrompt } from "./usePrompt";
 
 describe("usePrompt", () => {
   it("cleans up extra nodes added", async () => {
-    let prompt: ReturnType<typeof usePrompt> | undefined;
+    let prompt: ReturnType<typeof usePrompt>[0] | undefined;
     const Test = () => {
-      prompt = usePrompt();
-      return ReactNull;
+      let promptModal;
+      [prompt, promptModal] = usePrompt();
+      return <>{promptModal}</>;
     };
-    const root = render(
-      <ModalHost>
-        <Test />
-      </ModalHost>,
-    );
+    const root = render(<Test />);
     const start = document.body.childNodes.length;
     let promise: Promise<string | undefined> | undefined;
-    await act(() => {
+    act(() => {
       promise = prompt!({ title: "Hello" });
     });
     expect(promise).toBeDefined();
@@ -34,18 +29,15 @@ describe("usePrompt", () => {
   });
 
   it("should support a title and placeholder", async () => {
-    let prompt: ReturnType<typeof usePrompt> | undefined;
+    let prompt: ReturnType<typeof usePrompt>[0] | undefined;
     const Test = () => {
-      prompt = usePrompt();
-      return ReactNull;
+      let promptModal;
+      [prompt, promptModal] = usePrompt();
+      return <>{promptModal}</>;
     };
-    const root = render(
-      <ModalHost>
-        <Test />
-      </ModalHost>,
-    );
+    const root = render(<Test />);
 
-    await act(() => {
+    act(() => {
       void prompt!({
         title: "test-title",
         placeholder: "test-placeholder",
@@ -59,18 +51,15 @@ describe("usePrompt", () => {
   });
 
   it("should return entered value", async () => {
-    let prompt: ReturnType<typeof usePrompt> | undefined;
+    let prompt: ReturnType<typeof usePrompt>[0] | undefined;
     const Test = () => {
-      prompt = usePrompt();
-      return ReactNull;
+      let promptModal;
+      [prompt, promptModal] = usePrompt();
+      return <>{promptModal}</>;
     };
-    const root = render(
-      <ModalHost>
-        <Test />
-      </ModalHost>,
-    );
+    const root = render(<Test />);
     let valPromise: Promise<string | undefined> | undefined;
-    await act(() => {
+    act(() => {
       valPromise = prompt!({
         title: "test-title",
         placeholder: "test-placeholder",
@@ -82,25 +71,22 @@ describe("usePrompt", () => {
     fireEvent.change(input, { target: { value: "something" } });
 
     const submitButton = screen.getByText("OK");
-    await act(() => submitButton.click());
+    act(() => submitButton.click());
 
     await expect(valPromise).resolves.toEqual("something");
     root.unmount();
   });
 
   it("should use an initial value", async () => {
-    let prompt: ReturnType<typeof usePrompt> | undefined;
+    let prompt: ReturnType<typeof usePrompt>[0] | undefined;
     const Test = () => {
-      prompt = usePrompt();
-      return ReactNull;
+      let promptModal;
+      [prompt, promptModal] = usePrompt();
+      return <>{promptModal}</>;
     };
-    const root = render(
-      <ModalHost>
-        <Test />
-      </ModalHost>,
-    );
+    const root = render(<Test />);
     let valPromise: Promise<string | undefined> | undefined;
-    await act(() => {
+    act(() => {
       valPromise = prompt!({
         title: "test-title",
         initialValue: "initial-value",
@@ -113,7 +99,7 @@ describe("usePrompt", () => {
     expect(input.value).toEqual("initial-value");
 
     const submitButton = screen.getByText("OK");
-    await act(() => submitButton.click());
+    act(() => submitButton.click());
 
     await expect(valPromise).resolves.toEqual("initial-value");
     root.unmount();

@@ -196,6 +196,9 @@ const generateRosLib = ({
   let datatypeInterfaces = generateTypeDefs(datatypes);
 
   topics.forEach(({ name, schemaName }) => {
+    if (schemaName == undefined) {
+      return;
+    }
     if (!datatypeInterfaces[schemaName]) {
       datatypeInterfaces = {
         ...datatypeInterfaces,
@@ -206,8 +209,6 @@ const generateRosLib = ({
     TopicsToMessageDefinition = ts.factory.updateInterfaceDeclaration(
       TopicsToMessageDefinition,
       /* node */
-      undefined,
-      /* decorators */
       modifiers,
       /* modifiers */
       TopicsToMessageDefinition.name,
@@ -229,8 +230,6 @@ const generateRosLib = ({
   });
 
   const datatypesNamespace = ts.factory.createModuleDeclaration(
-    undefined,
-    /* decorators */
     modifiers,
     /* modifiers */
     ts.factory.createIdentifier(DATATYPES_IDENTIFIER),

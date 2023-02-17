@@ -16,6 +16,12 @@ export type ForwardedMenuEvent =
   | "open-help"
   | "open-account";
 
+export type ForwardedWindowEvent =
+  | "enter-full-screen"
+  | "leave-full-screen"
+  | "maximize"
+  | "unmaximize";
+
 interface NativeMenuBridge {
   // Events from the native window are available in the main process but not the renderer, so we forward them through the bridge.
   addIpcEventListener(eventName: ForwardedMenuEvent, handler: () => void): void;
@@ -58,6 +64,10 @@ interface Desktop {
   /** https://www.electronjs.org/docs/tutorial/represented-file */
   setRepresentedFilename(path: string | undefined): Promise<void>;
 
+  // Events from the native window are available in the main process but not the renderer, so we forward them through the bridge.
+  addIpcEventListener(eventName: ForwardedWindowEvent, handler: () => void): void;
+  removeIpcEventListener(eventName: ForwardedWindowEvent, handler: () => void): void;
+
   /**
    * Notify the app that the color scheme setting has changed and the native theme may need to be
    * updated.
@@ -79,6 +89,15 @@ interface Desktop {
   // Uninstall an extension. Returns true if the extension was found and uninstalled, or false if it
   // was not found (i.e. already uninstalled)
   uninstallExtension: (id: string) => Promise<boolean>;
+
+  /** Handle a double-click on the custom title bar */
+  handleTitleBarDoubleClick(): void;
+
+  isMaximized(): boolean;
+  minimizeWindow(): void;
+  maximizeWindow(): void;
+  unmaximizeWindow(): void;
+  closeWindow(): void;
 }
 
 export type { NativeMenuBridge, Storage, StorageContent, Desktop, DesktopExtension };

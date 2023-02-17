@@ -53,6 +53,7 @@ import { downsampleTimeseries, downsampleScatter } from "./downsample";
 const log = Logger.getLogger(__filename);
 
 export type TimeBasedChartTooltipData = {
+  datasetIndex?: number;
   x: number | bigint;
   y: number | bigint;
   path: string;
@@ -99,10 +100,6 @@ const useStyles = makeStyles()((theme) => ({
 
 type ChartComponentProps = ComponentProps<typeof ChartComponent>;
 
-// Chartjs typings use _null_ to indicate _gaps_ in the dataset
-// eslint-disable-next-line no-restricted-syntax
-const ChartNull = null;
-
 const selectGlobalBounds = (store: TimelineInteractionStateStore) => store.globalBounds;
 const selectSetGlobalBounds = (store: TimelineInteractionStateStore) => store.setGlobalBounds;
 
@@ -117,7 +114,7 @@ export type Props = {
   height: number;
   zoom: boolean;
   data: ChartComponentProps["data"];
-  tooltips?: TimeBasedChartTooltipData[];
+  tooltips?: Map<string, TimeBasedChartTooltipData>;
   xAxes?: ScaleOptions<"linear">;
   yAxes: ScaleOptions<"linear">;
   annotations?: AnnotationOptions[];
@@ -144,6 +141,7 @@ export type Props = {
 // component. Uses chart.js internally, with a zoom/pan plugin, and with our
 // standard tooltips.
 export default function TimeBasedChart(props: Props): JSX.Element {
+  const requestID = useRef<number>(0);
   const {
     datasetId,
     type,
@@ -178,6 +176,7 @@ export default function TimeBasedChart(props: Props): JSX.Element {
   );
 
   const resumeFrame = useRef<() => void | undefined>();
+  const requestedResumeFrame = useRef<() => void | undefined>();
 
   // when data changes, we pause and wait for onFinishRender to resume
   const onStartRender = useCallback(() => {
@@ -195,10 +194,14 @@ export default function TimeBasedChart(props: Props): JSX.Element {
   const onFinishRender = useCallback(() => {
     const current = resumeFrame.current;
     resumeFrame.current = undefined;
+    requestedResumeFrame.current = current;
 
     if (current) {
       // allow the chart offscreen canvas to render to screen before calling done
-      requestAnimationFrame(current);
+      requestID.current = requestAnimationFrame(() => {
+        current();
+        requestedResumeFrame.current = undefined;
+      });
     }
   }, []);
 
@@ -206,6 +209,8 @@ export default function TimeBasedChart(props: Props): JSX.Element {
     // cleanup paused frames on unmount or dataset changes
     return () => {
       onFinishRender();
+      cancelAnimationFrame(requestID.current);
+      requestedResumeFrame.current?.();
     };
   }, [pauseFrame, onFinishRender]);
 
@@ -299,20 +304,6 @@ export default function TimeBasedChart(props: Props): JSX.Element {
 
   const mouseYRef = useRef<number | undefined>(undefined);
 
-  // Tooltip lookup via x/y string key to find tooltips on hover without iterating entire array
-  const tooltipLookup = useMemo(() => {
-    const tooltipMap = new Map<string, TimeBasedChartTooltipData>();
-    if (!tooltips) {
-      return tooltipMap;
-    }
-
-    for (const tooltip of tooltips) {
-      const key = `${tooltip.x}:${tooltip.y}`;
-      tooltipMap.set(key, tooltip);
-    }
-    return tooltipMap;
-  }, [tooltips]);
-
   // We use a custom tooltip so we can style it more nicely, and so that it can break
   // out of the bounds of the canvas, in case the panel is small.
   const [activeTooltip, setActiveTooltip] = useState<{
@@ -332,14 +323,14 @@ export default function TimeBasedChart(props: Props): JSX.Element {
         if (!element.data) {
           continue;
         }
-        const key = `${element.data.x}:${element.data.y}`;
-        const foundTooltip = tooltipLookup.get(key);
+        const key = `${element.data.x}:${element.data.y}:${element.datasetIndex}`;
+        const foundTooltip = tooltips?.get(key);
         if (!foundTooltip) {
           continue;
         }
 
         tooltipItems.push({
-          item: foundTooltip,
+          item: { ...foundTooltip, datasetIndex: element.datasetIndex },
           element,
         });
       }
@@ -359,7 +350,7 @@ export default function TimeBasedChart(props: Props): JSX.Element {
         });
       }
     },
-    [tooltipLookup],
+    [tooltips],
   );
 
   const setHoverValue = useSetHoverValue();
@@ -442,7 +433,7 @@ export default function TimeBasedChart(props: Props): JSX.Element {
       },
       ...props.plugins,
       annotation: { annotations: props.annotations },
-    } as ChartOptions["plugins"];
+    };
   }, [props.annotations, props.plugins, props.zoom, zoomMode]);
 
   // To avoid making a new xScale identity on all updates that might change the min/max
@@ -624,17 +615,15 @@ export default function TimeBasedChart(props: Props): JSX.Element {
           dataset.showLine !== true
             ? downsampleScatter(dataset, bounds)
             : downsampleTimeseries(dataset, bounds);
-        // NaN item values are now allowed, instead we convert these to undefined entries
-        // which will create _gaps_ in the line
-        const nanToNulldata = downsampled.data.map((item) => {
+        // NaN item values create gaps in the line
+        const undefinedToNanData = downsampled.data.map((item) => {
           if (item == undefined || isNaN(item.x) || isNaN(item.y)) {
-            // Chartjs typings use _null_ to indicate a gap
-            return ChartNull;
+            return { x: NaN, y: NaN };
           }
           return item;
         });
 
-        return { ...downsampled, data: nanToNulldata };
+        return { ...downsampled, data: undefinedToNanData };
       });
     },
     [height, width],
@@ -777,15 +766,22 @@ export default function TimeBasedChart(props: Props): JSX.Element {
 
   useEffect(() => log.debug(`<TimeBasedChart> (datasetId=${datasetId})`), [datasetId]);
 
+  const colorsByDatasetIndex = useMemo(() => {
+    return Object.fromEntries(
+      data.datasets.map((dataset, index) => [index, dataset.borderColor?.toString()]),
+    );
+  }, [data.datasets]);
+
   const datasetsLength = datasets.length;
   const tooltipContent = useMemo(() => {
     return activeTooltip ? (
       <TimeBasedChartTooltipContent
-        multiDataset={datasetsLength > 1}
         content={activeTooltip.data}
+        multiDataset={datasetsLength > 1}
+        colorsByDatasetIndex={colorsByDatasetIndex}
       />
     ) : undefined;
-  }, [activeTooltip, datasetsLength]);
+  }, [activeTooltip, colorsByDatasetIndex, datasetsLength]);
 
   // reset is shown if we have sync lock and there has been user interaction, or if we don't
   // have sync lock and the user has manually interacted with the plot

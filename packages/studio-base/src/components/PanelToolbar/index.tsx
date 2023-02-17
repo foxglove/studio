@@ -17,6 +17,8 @@ import { useContext, useMemo, CSSProperties } from "react";
 
 import PanelContext from "@foxglove/studio-base/components/PanelContext";
 import ToolbarIconButton from "@foxglove/studio-base/components/PanelToolbar/ToolbarIconButton";
+import { useDefaultPanelTitle } from "@foxglove/studio-base/providers/PanelStateContextProvider";
+import { PANEL_TITLE_CONFIG_KEY } from "@foxglove/studio-base/util/layout";
 
 import { PanelToolbarControls } from "./PanelToolbarControls";
 
@@ -26,10 +28,6 @@ type Props = {
   additionalIcons?: React.ReactNode;
   backgroundColor?: CSSProperties["backgroundColor"];
   children?: React.ReactNode;
-  // Keeping this prop for now in case we decide to expose it via some other mechanism
-  // like a context menu item.
-  // eslint-disable-next-line react/no-unused-prop-types
-  helpContent?: React.ReactNode;
   isUnknownPanel?: boolean;
 };
 
@@ -61,7 +59,11 @@ export default React.memo<Props>(function PanelToolbar({
   children,
   isUnknownPanel = false,
 }: Props) {
-  const { isFullscreen, exitFullscreen } = useContext(PanelContext) ?? {};
+  const {
+    isFullscreen,
+    exitFullscreen,
+    config: { [PANEL_TITLE_CONFIG_KEY]: customTitle = undefined } = {},
+  } = useContext(PanelContext) ?? {};
 
   const panelContext = useContext(PanelContext);
 
@@ -92,6 +94,13 @@ export default React.memo<Props>(function PanelToolbar({
   const controlsDragRef =
     isUnknownPanel || children == undefined ? undefined : panelContext?.connectToolbarDragHandle;
 
+  const [defaultPanelTitle] = useDefaultPanelTitle();
+  const customPanelTitle =
+    customTitle != undefined && typeof customTitle === "string" && customTitle.length > 0
+      ? customTitle
+      : defaultPanelTitle;
+
+  const title = customPanelTitle ?? panelContext?.title;
   return (
     <PanelToolbarRoot
       backgroundColor={backgroundColor}
@@ -100,9 +109,9 @@ export default React.memo<Props>(function PanelToolbar({
       ref={rootDragRef}
     >
       {children ??
-        (panelContext != undefined && (
+        (title && (
           <Typography noWrap variant="body2" color="text.secondary" flex="auto">
-            {panelContext.title}
+            {title}
           </Typography>
         ))}
       <PanelToolbarControls

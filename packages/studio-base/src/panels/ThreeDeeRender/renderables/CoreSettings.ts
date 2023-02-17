@@ -6,6 +6,7 @@ import { cloneDeep, round, set } from "lodash";
 
 import { SettingsTreeAction } from "@foxglove/studio";
 
+import { PublishClickType } from "./PublishClickTool";
 import { DEFAULT_MESH_UP_AXIS } from "../ModelCache";
 import { FollowMode, Renderer, RendererConfig } from "../Renderer";
 import { SceneExtension } from "../SceneExtension";
@@ -13,7 +14,6 @@ import { SettingsTreeEntry } from "../SettingsManager";
 import { DEFAULT_CAMERA_STATE } from "../camera";
 import { PRECISION_DEGREES, PRECISION_DISTANCE, SelectEntry } from "../settings";
 import { CoordinateFrame } from "../transforms";
-import { PublishClickType } from "./PublishClickTool";
 
 export const DEFAULT_LABEL_SCALE_FACTOR = 1;
 export const DEFAULT_AXIS_SCALE = 1;
@@ -43,6 +43,9 @@ export class CoreSettings extends SceneExtension {
       "foxglove.publish-type-change",
       this.handlePublishToolChange,
     );
+    renderer.settings.errors.on("update", this.handleErrorChange);
+    renderer.settings.errors.on("clear", this.handleErrorChange);
+    renderer.settings.errors.on("remove", this.handleErrorChange);
 
     renderer.labelPool.scaleFactor =
       renderer.config.scene.labelScaleFactor ?? DEFAULT_LABEL_SCALE_FACTOR;
@@ -51,6 +54,9 @@ export class CoreSettings extends SceneExtension {
   public override dispose(): void {
     this.renderer.off("transformTreeUpdated", this.handleTransformTreeUpdated);
     this.renderer.off("cameraMove", this.handleCameraMove);
+    this.renderer.settings.errors.off("update", this.handleErrorChange);
+    this.renderer.settings.errors.off("clear", this.handleErrorChange);
+    this.renderer.settings.errors.off("remove", this.handleErrorChange);
     this.renderer.publishClickTool.removeEventListener(
       "foxglove.publish-type-change",
       this.handlePublishToolChange,
@@ -407,6 +413,9 @@ export class CoreSettings extends SceneExtension {
   };
 
   private handleCameraMove = (): void => {
+    this.updateSettingsTree();
+  };
+  private handleErrorChange = (): void => {
     this.updateSettingsTree();
   };
 

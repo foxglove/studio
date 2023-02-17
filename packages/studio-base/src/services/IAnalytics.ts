@@ -5,58 +5,71 @@
 enum AppEventCategory {
   LIFECYCLE = "LIFECYCLE",
   DIALOG = "DIALOG",
+  APP_BAR = "APP_BAR",
+  HELP_MENU = "HELP_MENU",
   PLAYERS = "PLAYERS",
   LAYOUTS = "LAYOUTS",
   PANELS = "PANELS",
   VARIABLES = "VARIABLES",
   EXTENSIONS = "EXTENSIONS",
   EXPERIMENTAL_FEATURES = "EXPERIMENTAL_FEATURES",
+  URDF = "URDF",
 }
 
 enum AppEvent {
-  APP_INIT = "APP_INIT",
+  APP_INIT = "Studio: App Initialized",
 
   // Dialog events
-  DIALOG_SELECT_VIEW = "DIALOG_SELECT_VIEW",
-  DIALOG_CLOSE = "DIALOG_CLOSE",
-  DIALOG_CLICK_CTA = "DIALOG_CLICK_CTA",
+  DIALOG_SELECT_VIEW = "Studio: Dialog View Selected",
+  DIALOG_CLOSE = "Studio: Dialog Closed",
+  DIALOG_CLICK_CTA = "Studio: Dialog CTA Clicked",
+
+  // App Bar events
+  APP_BAR_CLICK_CTA = "Studio: App Bar CTA CLicked",
+
+  // Help Menu events
+  HELP_MENU_CLICK_CTA = "Studio: Help Menu CTA Clicked",
 
   // Player events
-  PLAYER_CONSTRUCTED = "PLAYER_CONSTRUCTED",
-  PLAYER_PLAY = "PLAYER_PLAY",
-  PLAYER_SEEK = "PLAYER_SEEK",
-  PLAYER_SET_SPEED = "PLAYER_SET_SPEED",
-  PLAYER_PAUSE = "PLAYER_PAUSE",
-  PLAYER_CLOSE = "PLAYER_CLOSE",
+  PLAYER_CONSTRUCTED = "Studio: Player Constructed",
+  PLAYER_PLAY = "Studio: Player Played",
+  PLAYER_SEEK = "Studio: Player Seeked",
+  PLAYER_SET_SPEED = "Studio: Player Speed Set",
+  PLAYER_PAUSE = "Studio: Player Paused",
+  PLAYER_CLOSE = "Studio: Player Closed",
 
   // Layout events
-  LAYOUT_UPDATE = "LAYOUT_UPDATE",
-  LAYOUT_CREATE = "LAYOUT_CREATE",
-  LAYOUT_DUPLICATE = "LAYOUT_DUPLICATE",
-  LAYOUT_RENAME = "LAYOUT_RENAME",
-  LAYOUT_DELETE = "LAYOUT_DELETE",
-  LAYOUT_SELECT = "LAYOUT_SELECT",
-  LAYOUT_IMPORT = "LAYOUT_IMPORT",
-  LAYOUT_EXPORT = "LAYOUT_EXPORT",
-  LAYOUT_SHARE = "LAYOUT_SHARE",
-  LAYOUT_OVERWRITE = "LAYOUT_OVERWRITE",
-  LAYOUT_REVERT = "LAYOUT_REVERT",
-  LAYOUT_MAKE_PERSONAL_COPY = "LAYOUT_MAKE_PERSONAL_COPY",
+  LAYOUT_UPDATE = "Studio: Layout Updated",
+  LAYOUT_CREATE = "Studio: Layout Created",
+  LAYOUT_DUPLICATE = "Studio: Layout Duplicated",
+  LAYOUT_RENAME = "Studio: Layout Renamed",
+  LAYOUT_DELETE = "Studio: Layout Deleted",
+  LAYOUT_SELECT = "Studio: Layout Selected",
+  LAYOUT_IMPORT = "Studio: Layout Imported",
+  LAYOUT_EXPORT = "Studio: Layout Exported",
+  LAYOUT_SHARE = "Studio: Layout Shared",
+  LAYOUT_OVERWRITE = "Studio: Layout Overwritten",
+  LAYOUT_REVERT = "Studio: Layout Reverted",
+  LAYOUT_MAKE_PERSONAL_COPY = "Studio: Layout Personal Copy Made",
 
   // Panel events
-  PANEL_ADD = "PANEL_ADD",
-  PANEL_DELETE = "PANEL_DELETE",
+  PANEL_ADD = "Studio: Panel Added",
+  PANEL_DELETE = "Studio: Panel Deleted",
 
   // Variable events
-  VARIABLE_ADD = "VARIABLE_ADD",
-  VARIABLE_DELETE = "VARIABLE_DELETE",
+  VARIABLE_ADD = "Studio: Variable Added",
+  VARIABLE_DELETE = "Studio: Variable Deleted",
 
   // Extension events
-  EXTENSION_INSTALL = "EXTENSION_INSTALL",
-  EXTENSION_UNINSTALL = "EXTENSION_UNINSTALL",
+  EXTENSION_INSTALL = "Studio: Extension Installed",
+  EXTENSION_UNINSTALL = "Studio: Extension Uninstalled",
 
   // Experimental features
-  EXPERIMENTAL_FEATURE_TOGGLE = "EXPERIMENTAL_FEATURE_TOGGLE",
+  EXPERIMENTAL_FEATURE_TOGGLE = "Studio: Experimental Feature Toggled",
+
+  // URDF functionality
+  URDF_LOAD_LOCAL_FILE = "Studio: Local URDF File Loaded",
+  URDF_LOAD_PARAM = "Studio: URDF Loaded from robot_description Paramter",
 }
 
 /** https://develop.sentry.dev/sdk/event-payloads/breadcrumbs/#breadcrumb-types */
@@ -82,6 +95,12 @@ export function getEventCategory(event: AppEvent): AppEventCategory {
     case AppEvent.DIALOG_CLOSE:
     case AppEvent.DIALOG_CLICK_CTA:
       return AppEventCategory.DIALOG;
+
+    case AppEvent.APP_BAR_CLICK_CTA:
+      return AppEventCategory.APP_BAR;
+
+    case AppEvent.HELP_MENU_CLICK_CTA:
+      return AppEventCategory.HELP_MENU;
 
     case AppEvent.PLAYER_CONSTRUCTED:
     case AppEvent.PLAYER_PLAY:
@@ -119,6 +138,10 @@ export function getEventCategory(event: AppEvent): AppEventCategory {
 
     case AppEvent.EXPERIMENTAL_FEATURE_TOGGLE:
       return AppEventCategory.EXPERIMENTAL_FEATURES;
+
+    case AppEvent.URDF_LOAD_LOCAL_FILE:
+    case AppEvent.URDF_LOAD_PARAM:
+      return AppEventCategory.URDF;
   }
 }
 
@@ -130,6 +153,12 @@ export function getEventBreadcrumbType(event: AppEvent): SentryBreadcrumbType {
     case AppEvent.DIALOG_SELECT_VIEW:
     case AppEvent.DIALOG_CLOSE:
     case AppEvent.DIALOG_CLICK_CTA:
+      return SentryBreadcrumbType.USER;
+
+    case AppEvent.APP_BAR_CLICK_CTA:
+      return SentryBreadcrumbType.USER;
+
+    case AppEvent.HELP_MENU_CLICK_CTA:
       return SentryBreadcrumbType.USER;
 
     case AppEvent.PLAYER_CONSTRUCTED:
@@ -169,6 +198,10 @@ export function getEventBreadcrumbType(event: AppEvent): SentryBreadcrumbType {
       return SentryBreadcrumbType.USER;
 
     case AppEvent.EXPERIMENTAL_FEATURE_TOGGLE:
+      return SentryBreadcrumbType.USER;
+
+    case AppEvent.URDF_LOAD_LOCAL_FILE:
+    case AppEvent.URDF_LOAD_PARAM:
       return SentryBreadcrumbType.USER;
   }
 }

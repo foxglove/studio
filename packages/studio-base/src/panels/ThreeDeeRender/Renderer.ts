@@ -175,10 +175,12 @@ export type RendererSubscription<T = unknown> = {
   preload?: boolean;
   /**
    * By default, topic subscriptions are only created when the topic visibility
-   * has been toggled on by the user in the settings sidebar. Enabling forced
-   * will unconditionally create the topic subscription(s)
+   * has been toggled on by the user in the settings sidebar. Override this
+   * behavior with a custom shouldSubscribe callback. This callback will be
+   * called whenever the list of available topics changes or when any 3D panel
+   * settings are changed.
    */
-  forced?: boolean;
+  shouldSubscribe?: (topic: string) => boolean;
   /** Callback that will be fired for each matching incoming message */
   handler: MessageHandler<T>;
 };
@@ -449,22 +451,18 @@ export class Renderer extends EventEmitter<RendererEvents> {
     // Internal handlers for TF messages to update the transform tree
     this.addSchemaSubscriptions(FRAME_TRANSFORM_DATATYPES, {
       handler: this.handleFrameTransform,
-      forced: true,
-      // Disabled until we can efficiently preload transforms. See
-      // <https://github.com/foxglove/studio/issues/4657> for more details.
-      // preload: config.scene.transforms?.enablePreloading ?? true,
+      shouldSubscribe: () => true,
+      preload: config.scene.transforms?.enablePreloading ?? true,
     });
     this.addSchemaSubscriptions(TF_DATATYPES, {
       handler: this.handleTFMessage,
-      forced: true,
-      // Disabled until we can efficiently preload transforms
-      // preload: config.scene.transforms?.enablePreloading ?? true,
+      shouldSubscribe: () => true,
+      preload: config.scene.transforms?.enablePreloading ?? true,
     });
     this.addSchemaSubscriptions(TRANSFORM_STAMPED_DATATYPES, {
       handler: this.handleTransformStamped,
-      forced: true,
-      // Disabled until we can efficiently preload transforms
-      // preload: config.scene.transforms?.enablePreloading ?? true,
+      shouldSubscribe: () => true,
+      preload: config.scene.transforms?.enablePreloading ?? true,
     });
 
     this.addSceneExtension(this.coreSettings);
@@ -522,6 +520,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     }
     this.sceneExtensions.clear();
     this.sharedGeometry.dispose();
+    this.modelCache.dispose();
 
     this.labelPool.dispose();
     this.markerPool.dispose();
@@ -999,7 +998,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
       this.settings.errors.add(
         ["transforms", `frame:${childFrameId}`],
         TF_OVERFLOW,
-        `Transform history is at capacity (${frame.maxCapacity}), TFs will be dropped`,
+        `[Warning] Transform history is at capacity (${frame.maxCapacity}), old TFs will be dropped`,
       );
     }
   }

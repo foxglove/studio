@@ -29,7 +29,6 @@ import { useUnsavedChangesPrompt } from "@foxglove/studio-base/components/Layout
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
 import Stack from "@foxglove/studio-base/components/Stack";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
-import ConsoleApiContext from "@foxglove/studio-base/context/ConsoleApiContext";
 import {
   LayoutState,
   useCurrentLayoutActions,
@@ -49,7 +48,6 @@ import { downloadTextFile } from "@foxglove/studio-base/util/download";
 import showOpenFilePicker from "@foxglove/studio-base/util/showOpenFilePicker";
 
 import LayoutSection from "./LayoutSection";
-import helpContent from "./index.help.md";
 import { useLayoutBrowserReducer } from "./reducer";
 import { debugBorder } from "./styles";
 
@@ -59,16 +57,18 @@ const selectedLayoutIdSelector = (state: LayoutState) => state.selectedLayout?.i
 
 export default function LayoutBrowser({
   currentDateForStorybook,
+  supportsSignIn,
 }: React.PropsWithChildren<{
   currentDateForStorybook?: Date;
+  supportsSignIn?: boolean;
 }>): JSX.Element {
   const theme = useTheme();
   const isMounted = useMountedState();
   const { enqueueSnackbar } = useSnackbar();
   const layoutManager = useLayoutManager();
-  const prompt = usePrompt();
+  const [prompt, promptModal] = usePrompt();
   const analytics = useAnalytics();
-  const confirm = useConfirm();
+  const [confirm, confirmModal] = useConfirm();
   const { unsavedChangesPrompt, openUnsavedChangesPrompt } = useUnsavedChangesPrompt();
 
   const currentLayoutId = useCurrentLayoutSelector(selectedLayoutIdSelector);
@@ -358,8 +358,8 @@ export default function LayoutBrowser({
   const onShareLayout = useCallbackWithToast(
     async (item: Layout) => {
       const name = await prompt({
-        title: "Share a copy with your team",
-        subText: "Team layouts can be used and changed by other members of your team.",
+        title: "Share a copy with your organization",
+        subText: "Shared layouts can be used and changed by other members of your organization.",
         initialValue: item.name,
         label: "Layout name",
       });
@@ -390,7 +390,7 @@ export default function LayoutBrowser({
         const response = await confirm({
           title: `Update “${item.name}”?`,
           prompt:
-            "Your changes will overwrite this layout for all team members. This cannot be undone.",
+            "Your changes will overwrite this layout for all organization members. This cannot be undone.",
           ok: "Save",
         });
         if (response !== "ok") {
@@ -504,13 +504,13 @@ export default function LayoutBrowser({
   ]);
 
   const layoutDebug = useContext(LayoutStorageDebuggingContext);
-  const supportsSignIn = useContext(ConsoleApiContext) != undefined;
 
   const [hideSignInPrompt = false, setHideSignInPrompt] = useAppConfigurationValue<boolean>(
     AppSetting.HIDE_SIGN_IN_PROMPT,
   );
 
-  const showSignInPrompt = supportsSignIn && !layoutManager.supportsSharing && !hideSignInPrompt;
+  const showSignInPrompt =
+    supportsSignIn === true && !layoutManager.supportsSharing && !hideSignInPrompt;
 
   const pendingMultiAction = state.multiAction?.ids != undefined;
 
@@ -523,7 +523,6 @@ export default function LayoutBrowser({
   return (
     <SidebarContent
       title="Layouts"
-      helpContent={helpContent}
       disablePadding
       trailingItems={[
         (layouts.loading || state.busy || pendingMultiAction) && (
@@ -557,6 +556,8 @@ export default function LayoutBrowser({
         </IconButton>,
       ].filter(Boolean)}
     >
+      {promptModal}
+      {confirmModal}
       {unsavedChangesPrompt}
       <Stack fullHeight gap={2} style={{ pointerEvents: pendingMultiAction ? "none" : "auto" }}>
         <LayoutSection
@@ -578,8 +579,8 @@ export default function LayoutBrowser({
         />
         {layoutManager.supportsSharing && (
           <LayoutSection
-            title="Team"
-            emptyText="Your organization doesn’t have any shared layouts yet. Share a personal layout to collaborate with other team members."
+            title="Organization"
+            emptyText="Your organization doesn’t have any shared layouts yet. Share a layout to collaborate with others."
             items={layouts.value?.shared}
             anySelectedModifiedLayouts={anySelectedModifiedLayouts}
             multiSelectedIds={state.selectedIds}

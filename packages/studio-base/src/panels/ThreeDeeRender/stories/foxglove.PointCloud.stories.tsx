@@ -9,10 +9,10 @@ import { MessageEvent } from "@foxglove/studio";
 import { Topic } from "@foxglove/studio-base/players/types";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 
-import ThreeDeeRender from "../index";
-import { TransformStamped } from "../ros";
 import { QUAT_IDENTITY, rad2deg, VEC3_ZERO } from "./common";
 import useDelayedFixture from "./useDelayedFixture";
+import ThreeDeeRender from "../index";
+import { TransformStamped } from "../ros";
 
 export default {
   title: "panels/ThreeDeeRender",
@@ -33,17 +33,22 @@ export const Foxglove_PointCloud_Gradient = (): JSX.Element => (
 export const Foxglove_PointCloud_Gradient_Clamped = (): JSX.Element => (
   <Foxglove_PointCloud colorMode="gradient" minValue={-2} maxValue={2} />
 );
+export const Foxglove_PointCloud_Stixels = (): JSX.Element => (
+  <Foxglove_PointCloud colorMode="gradient" stixelsEnabled={true} />
+);
 
 function Foxglove_PointCloud({
   pointShape = "circle",
   colorMode = "rgba-fields",
   minValue,
   maxValue,
+  stixelsEnabled = false,
 }: {
   pointShape?: "circle" | "square";
   colorMode?: "gradient" | "rgba-fields";
   minValue?: number;
   maxValue?: number;
+  stixelsEnabled?: boolean;
 }): JSX.Element {
   const topics: Topic[] = [
     { name: "/pointcloud", schemaName: "foxglove.PointCloud" },
@@ -158,6 +163,7 @@ function Foxglove_PointCloud({
               gradient: ["#17b3f6", "#09e609d5"],
               minValue,
               maxValue,
+              stixelsEnabled,
             },
           },
           layers: {

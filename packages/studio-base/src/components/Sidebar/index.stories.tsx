@@ -6,6 +6,9 @@ import { useEffect, useState } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
+import { AppSetting } from "@foxglove/studio-base/AppSetting";
+import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
+
 import Sidebar, { SidebarItem } from ".";
 
 export default {
@@ -33,13 +36,22 @@ const BOTTOM_ITEMS = new Map<string, SidebarItem>([
 function Story({
   clickKey,
   defaultSelectedKey,
+  enableAppBar,
   height = 300,
 }: {
   clickKey?: string;
   defaultSelectedKey?: string | undefined;
+  enableAppBar?: boolean;
   height?: number;
 }) {
   const [selectedKey, setSelectedKey] = useState<string | undefined>(defaultSelectedKey);
+  const [_, setAppBarEnabled] = useAppConfigurationValue<boolean>(AppSetting.ENABLE_NEW_TOPNAV);
+
+  useEffect(() => {
+    if (enableAppBar === true) {
+      void setAppBarEnabled(true);
+    }
+  }, [enableAppBar, setAppBarEnabled]);
 
   useEffect(() => {
     if (clickKey != undefined) {
@@ -86,3 +98,5 @@ ClickToDeselect.parameters = { colorScheme: "dark" };
 export const OverflowUnselected = (): JSX.Element => <Story height={200} />;
 export const OverflowCSelected = (): JSX.Element => <Story height={200} defaultSelectedKey="c" />;
 export const OverflowBSelected = (): JSX.Element => <Story height={200} defaultSelectedKey="b" />;
+
+export const WithAppBarEnabled = (): JSX.Element => <Story enableAppBar />;

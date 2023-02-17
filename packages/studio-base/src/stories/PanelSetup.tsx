@@ -50,7 +50,6 @@ import {
 } from "@foxglove/studio-base/players/types";
 import MockCurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider/MockCurrentLayoutProvider";
 import ExtensionCatalogProvider from "@foxglove/studio-base/providers/ExtensionCatalogProvider";
-import HelpInfoProvider from "@foxglove/studio-base/providers/HelpInfoProvider";
 import { PanelStateContextProvider } from "@foxglove/studio-base/providers/PanelStateContextProvider";
 import TimelineInteractionStateProvider from "@foxglove/studio-base/providers/TimelineInteractionStateProvider";
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
@@ -166,7 +165,7 @@ class MockPanelCatalog implements PanelCatalog {
 
 function PanelWrapper({
   children,
-  includeSettings,
+  includeSettings = false,
 }: {
   children?: ReactNode;
   includeSettings?: boolean;
@@ -263,7 +262,9 @@ function UnconnectedPanelSetup(props: UnconnectedProps): JSX.Element | ReactNull
   if (!dTypes) {
     const dummyDatatypes: RosDatatypes = new Map();
     for (const { schemaName } of topics) {
-      dummyDatatypes.set(schemaName, { definitions: [] });
+      if (schemaName != undefined) {
+        dummyDatatypes.set(schemaName, { definitions: [] });
+      }
     }
     dTypes = dummyDatatypes;
   }
@@ -331,11 +332,9 @@ export default function PanelSetup(props: Props): JSX.Element {
         <MockCurrentLayoutProvider onAction={props.onLayoutAction}>
           <PanelStateContextProvider>
             <ExtensionCatalogProvider loaders={[]}>
-              <HelpInfoProvider>
-                <ThemeProvider isDark={theme.palette.mode === "dark"}>
-                  <UnconnectedPanelSetup {...props} />
-                </ThemeProvider>
-              </HelpInfoProvider>
+              <ThemeProvider isDark={theme.palette.mode === "dark"}>
+                <UnconnectedPanelSetup {...props} />
+              </ThemeProvider>
             </ExtensionCatalogProvider>
           </PanelStateContextProvider>
         </MockCurrentLayoutProvider>

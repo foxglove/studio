@@ -18,10 +18,10 @@ import { Topic } from "@foxglove/studio-base/players/types";
 import { useReadySignal } from "@foxglove/studio-base/stories/ReadySignalContext";
 import { CameraInfo } from "@foxglove/studio-base/types/Messages";
 
+import { ImageCanvas } from "./ImageCanvas";
 import ImageView from "../index";
 import { useCompressedImage, annotations } from "../storySupport";
 import { Config } from "../types";
-import { ImageCanvas } from "./ImageCanvas";
 
 const cameraInfo: CameraInfo = {
   width: 400,
@@ -245,7 +245,9 @@ export const MarkersOriginal: Story = (_args) => {
     </div>
   );
 };
-
+MarkersOriginal.play = async (ctx) => {
+  await ctx.parameters.storyReady;
+};
 MarkersOriginal.parameters = {
   useReadySignal: true,
 };
@@ -272,7 +274,9 @@ export const MarkersTransformed: Story = (_args) => {
     </div>
   );
 };
-
+MarkersTransformed.play = async (ctx) => {
+  await ctx.parameters.storyReady;
+};
 MarkersTransformed.parameters = {
   useReadySignal: true,
 };
@@ -300,7 +304,9 @@ export const MarkersImageSize: Story = (_args) => {
     </div>
   );
 };
-
+MarkersImageSize.play = async (ctx) => {
+  await ctx.parameters.storyReady;
+};
 MarkersImageSize.parameters = {
   useReadySignal: true,
 };

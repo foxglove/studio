@@ -12,8 +12,8 @@ function serverURLsForBackend(backend: string): { api: string; console: string }
 
   if (backend === "development") {
     return {
-      api: "https://api-dev.foxglove.dev",
-      console: "https://console-dev.foxglove.dev",
+      api: "https://api-dev.foxglove.party",
+      console: "https://console-dev.foxglove.party",
     };
   }
 
@@ -34,7 +34,6 @@ export function buildEnvironmentDefaults(
     FOXGLOVE_ACCOUNT_DASHBOARD_URL:
       process.env.FOXGLOVE_ACCOUNT_DASHBOARD_URL ?? serverURLs.console + "/dashboard",
     FOXGLOVE_CONSOLE_URL: serverURLs.console,
-    FOXGLOVE_DISABLE_SIGN_IN: process.env.FOXGLOVE_DISABLE_SIGN_IN ?? null, // eslint-disable-line no-restricted-syntax
     OAUTH_CLIENT_ID: process.env.OAUTH_CLIENT_ID ?? "oSJGEAQm16LNF09FSVTMYJO5aArQzq8o",
     SENTRY_DSN: process.env.SENTRY_DSN ?? null, // eslint-disable-line no-restricted-syntax
     SENTRY_PROJECT: process.env.SENTRY_PROJECT ?? null, // eslint-disable-line no-restricted-syntax

@@ -70,7 +70,6 @@ export function buildSettingsTree(
 
   const settings: SettingsTreeNodes = {
     general: {
-      icon: "Settings",
       fields: {
         assetId: {
           label: "Asset",
@@ -88,7 +87,7 @@ export function buildSettingsTree(
           value: config.opacity,
         },
         manualControl: {
-          label: "Manual Control",
+          label: "Manual control",
           input: "boolean",
           value: manualControl,
         },
@@ -126,7 +125,10 @@ export function useURDFViewerSettings(
   const { robotDescriptionAsset } = useRobotDescriptionAsset();
 
   const availableTopics = useMemo(
-    () => topics.filter((topic) => DATA_TYPES.includes(topic.schemaName)),
+    () =>
+      topics.filter(
+        (topic) => topic.schemaName != undefined && DATA_TYPES.includes(topic.schemaName),
+      ),
     [topics],
   );
 

@@ -12,22 +12,21 @@
 //   You may not use this file except in compliance with the License.
 
 import DownloadIcon from "@mui/icons-material/Download";
-import { Typography, useTheme } from "@mui/material";
-import { compact, isEmpty, isNumber, uniq } from "lodash";
+import { useTheme } from "@mui/material";
+import { compact, isNumber, uniq } from "lodash";
 import memoizeWeak from "memoize-weak";
-import { useEffect, useCallback, useMemo, ComponentProps } from "react";
+import { ComponentProps, useCallback, useEffect, useMemo, useState } from "react";
 
 import { filterMap } from "@foxglove/den/collection";
 import { useShallowMemo } from "@foxglove/hooks";
 import {
-  Time,
   add as addTimes,
   fromSec,
   subtract as subtractTimes,
+  Time,
   toSec,
 } from "@foxglove/rostime";
 import { MessageEvent } from "@foxglove/studio";
-import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import { useBlocksByTopic, useMessageReducer } from "@foxglove/studio-base/PanelAPI";
 import { MessageBlock } from "@foxglove/studio-base/PanelAPI/useBlocksByTopic";
 import parseRosPath, {
@@ -53,17 +52,16 @@ import {
   ChartDefaultView,
   TimeBasedChartTooltipData,
 } from "@foxglove/studio-base/components/TimeBasedChart";
-import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import { OnClickArg as OnChartClickArgs } from "@foxglove/studio-base/src/components/Chart";
 import { OpenSiblingPanel, PanelConfig, SaveConfig } from "@foxglove/studio-base/types/panels";
+import { PANEL_TITLE_CONFIG_KEY } from "@foxglove/studio-base/util/layout";
 import { getTimestampForMessage } from "@foxglove/studio-base/util/time";
 
 import PlotChart from "./PlotChart";
-import PlotLegend from "./PlotLegend";
+import { PlotLegend } from "./PlotLegend";
 import { downloadCSV } from "./csv";
 import { getDatasets } from "./datasets";
-import helpContent from "./index.help.md";
-import { PlotDataByPath, PlotDataItem } from "./internalTypes";
+import { DataSet, PlotDataByPath, PlotDataItem } from "./internalTypes";
 import { usePlotPanelSettings } from "./settings";
 import { PlotConfig } from "./types";
 
@@ -123,6 +121,20 @@ const getMessagePathItemsForBlock = memoizeWeak(
 const ZERO_TIME = { sec: 0, nsec: 0 };
 
 const performance = window.performance;
+
+/**
+ * Builds a lookup map of a compound x:y:index key to a datum, used to map hovered positions
+ * on screen to a data point for tooltip display.
+ */
+function buildTooltipLookupMap(datasets: DataSet[]): Map<string, TimeBasedChartTooltipData> {
+  const lookup = new Map<string, TimeBasedChartTooltipData>();
+  for (const [index, dataset] of datasets.entries()) {
+    for (const datum of dataset.data) {
+      lookup.set(`${datum.x}:${datum.y}:${index}`, datum);
+    }
+  }
+  return lookup;
+}
 
 function getBlockItemsByPath(
   decodeMessagePathsForMessagesByTopic: (_: MessageBlock) => MessageDataItemsByPath,
@@ -200,7 +212,7 @@ function selectEndTime(ctx: MessagePipelineContext) {
 function Plot(props: Props) {
   const { saveConfig, config } = props;
   const {
-    title,
+    title: legacyTitle,
     followingViewWidth,
     paths: yAxisPaths,
     minXValue,
@@ -216,7 +228,20 @@ function Plot(props: Props) {
     xAxisVal,
     xAxisPath,
     sidebarDimension = config.sidebarWidth ?? defaultSidebarDimension,
+    [PANEL_TITLE_CONFIG_KEY]: customTitle,
   } = config;
+
+  useEffect(() => {
+    if (legacyTitle && (customTitle == undefined || customTitle === "")) {
+      // Migrate legacy Plot-specific title setting to new global title setting
+      // https://github.com/foxglove/studio/pull/5225
+      saveConfig({
+        title: undefined,
+        [PANEL_TITLE_CONFIG_KEY]: legacyTitle,
+      } as Partial<PlotConfig>);
+    }
+  }, [customTitle, legacyTitle, saveConfig]);
+
   const theme = useTheme();
 
   useEffect(() => {
@@ -451,15 +476,9 @@ function Plot(props: Props) {
 
   const tooltips = useMemo(() => {
     if (showLegend && showPlotValuesInLegend) {
-      return [];
+      return new Map();
     }
-    const allTooltips: TimeBasedChartTooltipData[] = [];
-    for (const dataset of datasets) {
-      for (const datum of dataset.data) {
-        allTooltips.push(datum);
-      }
-    }
-    return allTooltips;
+    return buildTooltipLookupMap(datasets);
   }, [datasets, showLegend, showPlotValuesInLegend]);
 
   const messagePipeline = useMessagePipelineGetter();
@@ -480,11 +499,9 @@ function Plot(props: Props) {
     [messagePipeline, xAxisVal],
   );
 
-  usePlotPanelSettings(config, saveConfig);
+  const [focusedPath, setFocusedPath] = useState<undefined | string[]>(undefined);
 
-  const [seriesSettings = false] = useAppConfigurationValue(
-    AppSetting.ENABLE_PLOT_PANEL_SERIES_SETTINGS,
-  );
+  usePlotPanelSettings(config, saveConfig, focusedPath);
 
   const stackDirection = useMemo(
     () => (legendDisplay === "top" ? "column" : "row"),
@@ -500,7 +517,6 @@ function Plot(props: Props) {
       position="relative"
     >
       <PanelToolbar
-        helpContent={helpContent}
         additionalIcons={
           <ToolbarIconButton
             onClick={() => downloadCSV(datasets, xAxisVal)}
@@ -509,32 +525,25 @@ function Plot(props: Props) {
             <DownloadIcon fontSize="small" />
           </ToolbarIconButton>
         }
-      >
-        <Typography noWrap variant="body2" color="text.secondary" flex="auto">
-          {isEmpty(title) ? "Plot" : title}
-        </Typography>
-      </PanelToolbar>
+      />
       <Stack
         direction={stackDirection}
         flex="auto"
         fullWidth
         style={{ height: `calc(100% - ${PANEL_TOOLBAR_MIN_HEIGHT}px)` }}
       >
-        {seriesSettings === false && (
-          <PlotLegend
-            paths={yAxisPaths}
-            datasets={datasets}
-            currentTime={currentTimeSinceStart}
-            saveConfig={saveConfig}
-            showLegend={showLegend}
-            xAxisVal={xAxisVal}
-            xAxisPath={xAxisPath}
-            pathsWithMismatchedDataLengths={pathsWithMismatchedDataLengths}
-            legendDisplay={legendDisplay}
-            showPlotValuesInLegend={showPlotValuesInLegend}
-            sidebarDimension={sidebarDimension}
-          />
-        )}
+        <PlotLegend
+          paths={yAxisPaths}
+          datasets={datasets}
+          currentTime={currentTimeSinceStart}
+          onClickPath={(index: number) => setFocusedPath(["paths", String(index)])}
+          saveConfig={saveConfig}
+          showLegend={showLegend}
+          pathsWithMismatchedDataLengths={pathsWithMismatchedDataLengths}
+          legendDisplay={legendDisplay}
+          showPlotValuesInLegend={showPlotValuesInLegend}
+          sidebarDimension={sidebarDimension}
+        />
         <Stack flex="auto" alignItems="center" justifyContent="center" overflow="hidden">
           <PlotChart
             isSynced={xAxisVal === "timestamp" && isSynced}

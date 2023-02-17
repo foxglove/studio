@@ -11,14 +11,13 @@ import FoxgloveLogoText from "@foxglove/studio-base/components/FoxgloveLogoText"
 import Stack from "@foxglove/studio-base/components/Stack";
 import TextMiddleTruncate from "@foxglove/studio-base/components/TextMiddleTruncate";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
-import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
+import { useCurrentUserType } from "@foxglove/studio-base/context/CurrentUserContext";
 import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 
 import { OpenDialogViews } from "./types";
 
 export type IStartProps = {
-  supportedLocalFileExtensions?: string[];
   onSelectView: (newValue: OpenDialogViews) => void;
 };
 
@@ -120,10 +119,11 @@ type DataSourceOptionProps = {
   icon: JSX.Element;
   onClick: () => void;
   href?: string;
+  target: "_blank";
 };
 
 function DataSourceOption(props: DataSourceOptionProps): JSX.Element {
-  const { icon, onClick, text, secondaryText, href } = props;
+  const { icon, onClick, text, secondaryText, href, target } = props;
   const { classes } = useStyles();
   const button = (
     <Button
@@ -147,35 +147,12 @@ function DataSourceOption(props: DataSourceOptionProps): JSX.Element {
   );
 
   return href ? (
-    <Link href={href} target="_blank" style={{ textDecoration: "none" }}>
+    <Link href={href} target={target} style={{ textDecoration: "none" }}>
       {button}
     </Link>
   ) : (
     button
   );
-}
-
-type UserType =
-  | "unauthenticated"
-  | "authenticated-free"
-  | "authenticated-team"
-  | "authenticated-enterprise";
-
-function useCurrentUserType(): UserType {
-  const user = useCurrentUser();
-  if (user.currentUser == undefined) {
-    return "unauthenticated";
-  }
-
-  if (user.currentUser.org.isEnterprise) {
-    return "authenticated-enterprise";
-  }
-
-  if (user.currentUser.orgPaid === true) {
-    return "authenticated-team";
-  }
-
-  return "authenticated-free";
 }
 
 type SidebarItem = {
@@ -290,6 +267,7 @@ function SidebarItems(props: { onSelectView: (newValue: OpenDialogViews) => void
               </Button>
               <Button
                 href="https://foxglove.dev/tutorials"
+                target="_blank"
                 className={classes.button}
                 onClick={() => {
                   void analytics.logEvent(AppEvent.DIALOG_CLICK_CTA, {
@@ -389,7 +367,7 @@ function SidebarItems(props: { onSelectView: (newValue: OpenDialogViews) => void
                   target="_blank"
                   className={classes.button}
                 >
-                  Share team layouts
+                  Share layouts
                 </Button>
               </>
             ),
@@ -433,21 +411,17 @@ function SidebarItems(props: { onSelectView: (newValue: OpenDialogViews) => void
 }
 
 export default function Start(props: IStartProps): JSX.Element {
-  const { supportedLocalFileExtensions = [], onSelectView } = props;
+  const { onSelectView } = props;
   const { recentSources, selectRecent } = usePlayerSelection();
   const { classes } = useStyles();
   const analytics = useAnalytics();
 
   const startItems = useMemo(() => {
-    const formatter = new Intl.ListFormat("en-US", { style: "long" });
-    const supportedLocalFiles = formatter.format(
-      Array.from(new Set(supportedLocalFileExtensions)).sort(),
-    );
     return [
       {
         key: "open-local-file",
         text: "Open local file",
-        secondaryText: `Supports ${supportedLocalFiles} files.`,
+        secondaryText: "Visualize data directly from your local filesystem.",
         icon: (
           <SvgIcon fontSize="large" color="primary" viewBox="0 0 2048 2048">
             <path d="M1955 1533l-163-162v677h-128v-677l-163 162-90-90 317-317 317 317-90 90zM256 1920h1280v128H128V0h1115l549 549v475h-128V640h-512V128H256v1792zM1280 512h293l-293-293v293z" />
@@ -488,7 +462,7 @@ export default function Start(props: IStartProps): JSX.Element {
         },
       },
     ];
-  }, [analytics, onSelectView, supportedLocalFileExtensions]);
+  }, [analytics, onSelectView]);
 
   return (
     <Stack className={classes.grid}>
@@ -509,6 +483,7 @@ export default function Start(props: IStartProps): JSX.Element {
                 icon={item.icon}
                 onClick={item.onClick}
                 href={item.href}
+                target="_blank"
               />
             ))}
           </Stack>

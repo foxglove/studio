@@ -5,8 +5,8 @@
 import CircularDependencyPlugin from "circular-dependency-plugin";
 import { ESBuildMinifyPlugin } from "esbuild-loader";
 import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
-import MonacoWebpackPlugin from "monaco-editor-webpack-plugin";
 import monacoPkg from "monaco-editor/package.json";
+import MonacoWebpackPlugin from "monaco-editor-webpack-plugin";
 import path from "path";
 import ReactRefreshTypescript from "react-refresh-typescript";
 import ts from "typescript";
@@ -48,8 +48,6 @@ export function makeConfig(
 ): Pick<Configuration, "resolve" | "module" | "optimization" | "plugins" | "node"> {
   const isDev = argv.mode === "development";
   const isServe = argv.env?.WEBPACK_SERVE ?? false;
-
-  const commitHash = process.env.GITHUB_SHA ?? process.env.VERCEL_GIT_COMMIT_SHA;
 
   const { allowUnusedVariables = isDev && isServe } = options ?? {};
 
@@ -110,9 +108,13 @@ export function makeConfig(
                 // avoid looking at files which are not part of the bundle
                 onlyCompileBundledFiles: true,
                 projectReferences: true,
-                configFile: path.resolve(__dirname, isDev ? "tsconfig.dev.json" : "tsconfig.json"),
+                // Note: configFile should not be overridden, it needs to differ between web,
+                // desktop, etc. so that files specific to each build (not just shared files) are
+                // also type-checked. The default behavior is to find it from the webpack `context`
+                // directory.
                 compilerOptions: {
                   sourceMap: true,
+                  jsx: isDev ? "react-jsxdev" : "react-jsx",
                 },
                 getCustomTransformers: (program: ts.Program) => ({
                   before: [
@@ -235,9 +237,6 @@ export function makeConfig(
         // Should match webpack-defines.d.ts
         ReactNull: null, // eslint-disable-line no-restricted-syntax
         FOXGLOVE_STUDIO_VERSION: JSON.stringify(packageJson.version),
-        FOXGLOVE_USER_AGENT: JSON.stringify(
-          `studio/${packageJson.version} (commit ${commitHash ?? "??"})`,
-        ),
       }),
       // https://webpack.js.org/plugins/ignore-plugin/#example-of-ignoring-moment-locales
       new webpack.IgnorePlugin({
@@ -254,14 +253,14 @@ export function makeConfig(
       }),
       new ForkTsCheckerWebpackPlugin({
         typescript: {
-          configFile: path.resolve(__dirname, isDev ? "tsconfig.dev.json" : "tsconfig.json"),
+          // Note: configFile should not be overridden, it needs to differ between web, desktop,
+          // etc. so that files specific to each build (not just shared files) are also
+          // type-checked. The default behavior is to find it from the webpack `context` directory.
           configOverwrite: {
             compilerOptions: {
               noUnusedLocals: !allowUnusedVariables,
               noUnusedParameters: !allowUnusedVariables,
-              paths: {
-                "@foxglove/studio-base/*": [path.join(__dirname, "src/*")],
-              },
+              jsx: isDev ? "react-jsxdev" : "react-jsx",
             },
           },
         },

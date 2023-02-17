@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { CircularProgress, Link, styled as muiStyled } from "@mui/material";
+import { CircularProgress, Link, styled as muiStyled, Typography } from "@mui/material";
 import React, {
   LazyExoticComponent,
   PropsWithChildren,
@@ -29,27 +29,30 @@ import {
   MosaicWindow,
   MosaicWithoutDragDropContext,
 } from "react-mosaic-component";
-import "react-mosaic-component/react-mosaic-component.css";
 
 import { EmptyPanelLayout } from "@foxglove/studio-base/components/EmptyPanelLayout";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
-import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
-import Stack from "@foxglove/studio-base/components/Stack";
 import {
   LayoutState,
   useCurrentLayoutActions,
   useCurrentLayoutSelector,
   usePanelMosaicId,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
+import { LayoutData } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
 import { useExtensionCatalog } from "@foxglove/studio-base/context/ExtensionCatalogContext";
+import { useLayoutManager } from "@foxglove/studio-base/context/LayoutManagerContext";
 import { PanelComponent, usePanelCatalog } from "@foxglove/studio-base/context/PanelCatalogContext";
 import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
+import { defaultPlaybackConfig } from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
 import { MosaicDropResult, PanelConfig } from "@foxglove/studio-base/types/panels";
 import { getPanelIdForType, getPanelTypeFromId } from "@foxglove/studio-base/util/layout";
+
+import "react-mosaic-component/react-mosaic-component.css";
 
 import ErrorBoundary from "./ErrorBoundary";
 import { MosaicPathContext } from "./MosaicPathContext";
 import { PanelRemounter } from "./PanelRemounter";
+import { UnknownPanel } from "./UnknownPanel";
 
 type Props = {
   layout?: MosaicNode<string>;
@@ -139,12 +142,7 @@ export function UnconnectedPanelLayout(props: Props): React.ReactElement {
         // If we haven't found a panel of the given type, render the panel selector
         Panel = panelInfo
           ? React.lazy(panelInfo.module)
-          : () => (
-              <Stack flex="auto" alignItems="center" justifyContent="center" data-testid={id}>
-                <PanelToolbar isUnknownPanel />
-                <EmptyState>Unknown panel type: {type}.</EmptyState>
-              </Stack>
-            );
+          : () => <UnknownPanel overrideConfig={{ type, id }} />;
 
         if (panelInfo) {
           panelComponentCache.current.set(type, Panel);
@@ -216,12 +214,38 @@ const selectedLayoutExistsSelector = (state: LayoutState) =>
 const selectedLayoutMosaicSelector = (state: LayoutState) => state.selectedLayout?.data?.layout;
 
 export default function PanelLayout(): JSX.Element {
-  const { changePanelLayout } = useCurrentLayoutActions();
+  const { changePanelLayout, setSelectedLayoutId } = useCurrentLayoutActions();
   const { openLayoutBrowser } = useWorkspace();
+  const layoutManager = useLayoutManager();
   const layoutExists = useCurrentLayoutSelector(selectedLayoutExistsSelector);
   const layoutLoading = useCurrentLayoutSelector(selectedLayoutLoadingSelector);
   const mosaicLayout = useCurrentLayoutSelector(selectedLayoutMosaicSelector);
   const registeredExtensions = useExtensionCatalog((state) => state.installedExtensions);
+
+  const createNewLayout = async () => {
+    const layoutData: Omit<LayoutData, "name" | "id"> = {
+      configById: {},
+      globalVariables: {},
+      userNodes: {},
+      playbackConfig: defaultPlaybackConfig,
+    };
+
+    const layout = await layoutManager.saveNewLayout({
+      name: "Default",
+      data: layoutData,
+      permission: "CREATOR_WRITE",
+    });
+    setSelectedLayoutId(layout.id);
+    openLayoutBrowser();
+  };
+
+  const selectExistingLayout = async () => {
+    const layouts = await layoutManager.getLayouts();
+    if (layouts[0]) {
+      setSelectedLayoutId(layouts[0].id);
+    }
+    openLayoutBrowser();
+  };
 
   const onChange = useCallback(
     (newLayout: MosaicNode<string> | undefined) => {
@@ -246,10 +270,18 @@ export default function PanelLayout(): JSX.Element {
 
   return (
     <EmptyState>
-      <Link onClick={openLayoutBrowser} underline="hover">
-        Select a layout
+      <Typography display="block" variant="body1" color="text.primary">
+        You don&apos;t currently have a layout selected.
+      </Typography>
+      <Link onClick={selectExistingLayout} underline="hover" color="primary" variant="body1">
+        Select an existing layout
       </Link>{" "}
-      in the sidebar to get started!
+      <Typography display="inline-flex" variant="body1" color="text.primary">
+        or
+      </Typography>{" "}
+      <Link onClick={createNewLayout} underline="hover" color="primary" variant="body1">
+        Create a new layout
+      </Link>
     </EmptyState>
   );
 }

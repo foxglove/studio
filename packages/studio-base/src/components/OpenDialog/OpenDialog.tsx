@@ -8,6 +8,7 @@ import { useCallback, useLayoutEffect, useMemo, useState } from "react";
 import { useMountedState } from "react-use";
 import { makeStyles } from "tss-react/mui";
 
+import Snow from "@foxglove/studio-base/components/OpenDialog/Snow";
 import Stack from "@foxglove/studio-base/components/Stack";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 import {
@@ -21,9 +22,10 @@ import Start from "./Start";
 import { OpenDialogViews } from "./types";
 import { useOpenFile } from "./useOpenFile";
 
-type OpenDialogProps = {
-  activeView?: OpenDialogViews;
+export type OpenDialogProps = {
   activeDataSource?: IDataSourceFactory;
+  activeView?: OpenDialogViews;
+  backdropAnimation?: boolean;
   onDismiss?: () => void;
 };
 
@@ -40,7 +42,7 @@ const useStyles = makeStyles()((theme) => ({
 }));
 
 export default function OpenDialog(props: OpenDialogProps): JSX.Element {
-  const { activeView: defaultActiveView, onDismiss, activeDataSource } = props;
+  const { activeView: defaultActiveView, onDismiss, activeDataSource, backdropAnimation } = props;
   const { classes } = useStyles();
   const { availableSources, selectSource } = usePlayerSelection();
 
@@ -87,6 +89,18 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
     }
   }, [activeView, firstSampleSource, isMounted, openFile, selectSource]);
 
+  const backdrop = useMemo(() => {
+    const now = new Date();
+    if (backdropAnimation === false) {
+      return;
+    } else if (now >= new Date(now.getFullYear(), 11, 25)) {
+      return <Snow effect="snow" />;
+    } else if (now < new Date(now.getFullYear(), 0, 2)) {
+      return <Snow effect="confetti" />;
+    }
+    return;
+  }, [backdropAnimation]);
+
   // connectionSources is the list of availableSources supporting "connections"
   const connectionSources = useMemo(() => {
     return availableSources.filter((source) => {
@@ -94,14 +108,7 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
     });
   }, [availableSources]);
 
-  const localFileSources = useMemo(() => {
-    return availableSources.filter((source) => source.type === "file");
-  }, [availableSources]);
-
   const view = useMemo(() => {
-    const supportedLocalFileTypes = localFileSources.flatMap(
-      (source) => source.supportedFileTypes ?? [],
-    );
     switch (activeView) {
       case "demo": {
         return {
@@ -124,22 +131,10 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
       default:
         return {
           title: "Get started",
-          component: (
-            <Start
-              onSelectView={onSelectView}
-              supportedLocalFileExtensions={supportedLocalFileTypes}
-            />
-          ),
+          component: <Start onSelectView={onSelectView} />,
         };
     }
-  }, [
-    activeDataSource,
-    activeView,
-    connectionSources,
-    localFileSources,
-    onModalClose,
-    onSelectView,
-  ]);
+  }, [activeDataSource, activeView, connectionSources, onModalClose, onSelectView]);
 
   return (
     <Dialog
@@ -147,6 +142,7 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
       onClose={onModalClose}
       fullWidth
       maxWidth="lg"
+      BackdropProps={{ children: backdrop }}
       PaperProps={{
         square: false,
         elevation: 4,

@@ -10,7 +10,6 @@ import { useMemo } from "react";
 import AnalyticsProvider from "@foxglove/studio-base/context/AnalyticsProvider";
 import { LayoutData } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
 import LayoutStorageContext from "@foxglove/studio-base/context/LayoutStorageContext";
-import ModalHost from "@foxglove/studio-base/context/ModalHost";
 import { UserProfileStorageContext } from "@foxglove/studio-base/context/UserProfileStorageContext";
 import CurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider";
 import { defaultPlaybackConfig } from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
@@ -81,7 +80,7 @@ function makeUnsavedLayout(id: number): Layout {
 async function clickMenuButtonAction(index: number) {
   const actions = await screen.findAllByTestId("layout-actions");
   if (actions[index]) {
-    await userEvent.click(actions[index]!);
+    fireEvent.click(actions[index]!);
   }
 }
 
@@ -89,16 +88,16 @@ async function deleteLayoutInteraction(index: number) {
   await clickMenuButtonAction(index);
 
   const deleteButton = await screen.findByText("Delete");
-  await userEvent.click(deleteButton);
+  fireEvent.click(deleteButton);
   const confirmButton = await screen.findByText("Delete");
-  await userEvent.click(confirmButton);
+  fireEvent.click(confirmButton);
 }
 
 async function doMultiAction(action: string) {
   await selectAllAction();
   await clickMenuButtonAction(0);
   const button = await screen.findByText(action);
-  await userEvent.click(button);
+  fireEvent.click(button);
 }
 
 async function selectAllAction() {
@@ -128,19 +127,17 @@ function WithSetup(Child: Story, ctx: StoryContext): JSX.Element {
   );
   return (
     <div style={{ display: "flex", height: "100%", width: 320 }}>
-      <ModalHost>
-        <AnalyticsProvider>
-          <UserProfileStorageContext.Provider value={userProfile}>
-            <LayoutStorageContext.Provider value={storage}>
-              <LayoutManagerProvider>
-                <CurrentLayoutProvider>
-                  <Child />
-                </CurrentLayoutProvider>
-              </LayoutManagerProvider>
-            </LayoutStorageContext.Provider>
-          </UserProfileStorageContext.Provider>
-        </AnalyticsProvider>
-      </ModalHost>
+      <AnalyticsProvider>
+        <UserProfileStorageContext.Provider value={userProfile}>
+          <LayoutStorageContext.Provider value={storage}>
+            <LayoutManagerProvider>
+              <CurrentLayoutProvider>
+                <Child />
+              </CurrentLayoutProvider>
+            </LayoutManagerProvider>
+          </LayoutStorageContext.Provider>
+        </UserProfileStorageContext.Provider>
+      </AnalyticsProvider>
     </div>
   );
 }
@@ -196,15 +193,12 @@ MultiSelect.play = async () => {
 export function MultiDelete(): JSX.Element {
   return <LayoutBrowser />;
 }
-MultiDelete.parameters = {
-  colorScheme: "dark",
-  chromatic: { disableSnapshot: true }, // FG-1083
-};
+MultiDelete.parameters = { colorScheme: "dark" };
 MultiDelete.play = async () => {
   await doMultiAction("Delete");
 
   const confirmButton = await screen.findByText("Delete");
-  await userEvent.click(confirmButton);
+  fireEvent.click(confirmButton);
 };
 
 export function MultiDuplicate(): JSX.Element {
@@ -213,7 +207,6 @@ export function MultiDuplicate(): JSX.Element {
 MultiDuplicate.parameters = {
   colorScheme: "dark",
   mockLayouts: [exampleCurrentLayout, makeUnsavedLayout(1), shortLayout],
-  chromatic: { disableSnapshot: true }, // FG-1083
 };
 MultiDuplicate.play = async () => {
   await doMultiAction("Duplicate");
@@ -225,12 +218,12 @@ export function MultiRevert(): JSX.Element {
 MultiRevert.parameters = {
   colorScheme: "dark",
   mockLayouts: [makeUnsavedLayout(1), makeUnsavedLayout(2), makeUnsavedLayout(3)],
-  chromatic: { disableSnapshot: true }, // FG-1083
 };
 MultiRevert.play = async () => {
   await doMultiAction("Revert");
+
   const revertButton = await screen.findByText("Discard changes");
-  await userEvent.click(revertButton);
+  fireEvent.click(revertButton);
 };
 
 export function MultiSave(): JSX.Element {
@@ -280,7 +273,7 @@ export function AddLayout(_args: unknown): JSX.Element {
 AddLayout.parameters = { colorScheme: "dark" };
 AddLayout.play = async () => {
   const button = await screen.findByTestId("add-layout");
-  await userEvent.click(button);
+  fireEvent.click(button);
 };
 
 export function MenuOpen(_args: unknown): JSX.Element {
@@ -290,7 +283,7 @@ MenuOpen.parameters = { colorScheme: "dark" };
 MenuOpen.play = async () => {
   const actions = await screen.findAllByTestId("layout-actions");
   if (actions[1]) {
-    await userEvent.click(actions[1]);
+    fireEvent.click(actions[1]);
   }
 };
 
@@ -299,7 +292,7 @@ MenuOpenLight.parameters = { colorScheme: "light" };
 MenuOpenLight.play = async () => {
   const actions = await screen.findAllByTestId("layout-actions");
   if (actions[1]) {
-    await userEvent.click(actions[1]);
+    fireEvent.click(actions[1]);
   }
 };
 
@@ -310,10 +303,10 @@ EditingName.parameters = { colorScheme: "dark" };
 EditingName.play = async () => {
   const actions = await screen.findAllByTestId("layout-actions");
   if (actions[1]) {
-    await userEvent.click(actions[1]);
+    fireEvent.click(actions[1]);
   }
   const button = await screen.findByText("Rename");
-  await userEvent.click(button);
+  fireEvent.click(button);
 };
 
 export function CancelRenameWithEscape(_args: unknown): JSX.Element {
@@ -323,10 +316,10 @@ CancelRenameWithEscape.parameters = { colorScheme: "dark" };
 CancelRenameWithEscape.play = async () => {
   const actions = await screen.findAllByTestId("layout-actions");
   if (actions[1]) {
-    await userEvent.click(actions[1]);
+    fireEvent.click(actions[1]);
   }
   const button = await screen.findByText("Rename");
-  await userEvent.click(button);
+  fireEvent.click(button);
   fireEvent.keyDown(document.activeElement!, { key: "Escape" });
 };
 
@@ -337,12 +330,12 @@ CommitRenameWithTab.parameters = { colorScheme: "dark" };
 CommitRenameWithTab.play = async () => {
   const actions = await screen.findAllByTestId("layout-actions");
   if (actions[1]) {
-    await userEvent.click(actions[1]);
+    fireEvent.click(actions[1]);
   }
   const button = await screen.findByText("Rename");
-  await userEvent.click(button);
-  await userEvent.keyboard("New name");
-  await userEvent.tab();
+  fireEvent.click(button);
+  fireEvent.change(document.activeElement!, { target: { value: "New name" } });
+  fireEvent.focusOut(document.activeElement!);
 };
 
 export function Duplicate(_args: unknown): JSX.Element {
@@ -352,19 +345,16 @@ Duplicate.parameters = { colorScheme: "dark" };
 Duplicate.play = async () => {
   const actions = await screen.findAllByTestId("layout-actions");
   if (actions[1]) {
-    await userEvent.click(actions[1]);
+    fireEvent.click(actions[1]);
   }
   const button = await screen.findByText("Duplicate");
-  await userEvent.click(button);
+  fireEvent.click(button);
 };
 
 export function DeleteLayout(_args: unknown): JSX.Element {
   return <LayoutBrowser />;
 }
-DeleteLayout.parameters = {
-  colorScheme: "dark",
-  chromatic: { disableSnapshot: true }, // FG-1083
-};
+DeleteLayout.parameters = { colorScheme: "dark" };
 DeleteLayout.play = async () => await deleteLayoutInteraction(0);
 
 export function DeleteSelectedLayout(_args: unknown): JSX.Element {
@@ -373,17 +363,14 @@ export function DeleteSelectedLayout(_args: unknown): JSX.Element {
 DeleteSelectedLayout.play = async () => {
   const layouts = await screen.findAllByTestId("layout-list-item");
   if (layouts[1]) {
-    await userEvent.click(layouts[1]);
+    fireEvent.click(layouts[1]);
   }
   await deleteLayoutInteraction(1);
   if (layouts[0]) {
-    await userEvent.click(layouts[0]);
+    fireEvent.click(layouts[0]);
   }
 };
-DeleteSelectedLayout.parameters = {
-  colorScheme: "dark",
-  chromatic: { disableSnapshot: true }, // FG-1083
-};
+DeleteSelectedLayout.parameters = { colorScheme: "dark" };
 
 export function DeleteLastLayout(_args: unknown): JSX.Element {
   return <LayoutBrowser />;
@@ -391,6 +378,5 @@ export function DeleteLastLayout(_args: unknown): JSX.Element {
 DeleteLastLayout.parameters = {
   mockLayouts: [exampleCurrentLayout],
   colorScheme: "dark",
-  chromatic: { disableSnapshot: true }, // FG-1083
 };
 DeleteLastLayout.play = async () => await deleteLayoutInteraction(0);

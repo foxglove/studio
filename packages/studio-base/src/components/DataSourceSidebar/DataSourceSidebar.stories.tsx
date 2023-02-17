@@ -4,11 +4,13 @@
 
 import { Box } from "@mui/material";
 import { Story } from "@storybook/react";
+import { useEffect } from "react";
 
 import { fromDate } from "@foxglove/rostime";
+import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import MockMessagePipelineProvider from "@foxglove/studio-base/components/MessagePipeline/MockMessagePipelineProvider";
 import CurrentUserContext, { User } from "@foxglove/studio-base/context/CurrentUserContext";
-import ModalHost from "@foxglove/studio-base/context/ModalHost";
+import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import { PlayerPresence, Topic } from "@foxglove/studio-base/players/types";
 import EventsProvider from "@foxglove/studio-base/providers/EventsProvider";
 
@@ -17,9 +19,7 @@ import DataSourceSidebar from "./DataSourceSidebar";
 function Wrapper(StoryFn: Story): JSX.Element {
   return (
     <EventsProvider>
-      <ModalHost>
-        <StoryFn />
-      </ModalHost>
+      <StoryFn />
     </EventsProvider>
   );
 }
@@ -139,6 +139,27 @@ export const PlayerPresent = (): JSX.Element => {
     <MockMessagePipelineProvider
       startTime={START_TIME}
       endTime={END_TIME}
+      topics={TOPICS}
+      presence={PlayerPresence.PRESENT}
+    >
+      <Box height="100%" bgcolor="background.paper">
+        <DataSourceSidebar onSelectDataSourceAction={() => {}} />
+      </Box>
+    </MockMessagePipelineProvider>
+  );
+};
+
+export const PlayerPresentWithCustomTimezone = (): JSX.Element => {
+  const [_, setTimezone] = useAppConfigurationValue<string>(AppSetting.TIMEZONE);
+
+  useEffect(() => {
+    setTimezone("Pacific/Ponape").catch(console.error);
+  }, [setTimezone]);
+
+  return (
+    <MockMessagePipelineProvider
+      startTime={fromDate(new Date(2022, 1, 22, 21, 22, 11))}
+      endTime={fromDate(new Date(2022, 1, 22, 23, 22, 22))}
       topics={TOPICS}
       presence={PlayerPresence.PRESENT}
     >

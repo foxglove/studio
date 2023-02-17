@@ -12,11 +12,17 @@ import { PreloaderSockets } from "@foxglove/electron-socket/preloader";
 import Logger from "@foxglove/log";
 import { NetworkInterface, OsContext } from "@foxglove/studio-base/src/OsContext";
 
-import pkgInfo from "../../package.json";
-import { decodeRendererArg } from "../common/rendererArgs";
-import { Desktop, ForwardedMenuEvent, NativeMenuBridge, Storage } from "../common/types";
 import LocalFileStorage from "./LocalFileStorage";
 import { getExtensions, loadExtension, installExtension, uninstallExtension } from "./extensions";
+import pkgInfo from "../../package.json";
+import { decodeRendererArg } from "../common/rendererArgs";
+import {
+  Desktop,
+  ForwardedMenuEvent,
+  ForwardedWindowEvent,
+  NativeMenuBridge,
+  Storage,
+} from "../common/types";
 
 const log = Logger.getLogger(__filename);
 
@@ -97,7 +103,19 @@ const ctx: OsContext = {
   },
 };
 
+// Keep track of maximized state in the preload script because the initial ipc event sent from main
+// may occur before the app is fully rendered.
+let isMaximized = false;
+ipcRenderer.on("maximize", () => (isMaximized = true));
+ipcRenderer.on("unmaximize", () => (isMaximized = false));
+
 const desktopBridge: Desktop = {
+  addIpcEventListener(eventName: ForwardedWindowEvent, handler: () => void) {
+    ipcRenderer.on(eventName, () => handler());
+  },
+  removeIpcEventListener(eventName: ForwardedWindowEvent, handler: () => void) {
+    ipcRenderer.off(eventName, () => handler());
+  },
   async setRepresentedFilename(path: string | undefined) {
     await ipcRenderer.invoke("setRepresentedFilename", path);
   },
@@ -127,6 +145,24 @@ const desktopBridge: Desktop = {
     const homePath = (await ipcRenderer.invoke("getHomePath")) as string;
     const userExtensionRoot = pathJoin(homePath, ".foxglove-studio", "extensions");
     return await uninstallExtension(id, userExtensionRoot);
+  },
+  handleTitleBarDoubleClick() {
+    ipcRenderer.send("titleBarDoubleClicked");
+  },
+  isMaximized() {
+    return isMaximized;
+  },
+  minimizeWindow() {
+    ipcRenderer.send("minimizeWindow");
+  },
+  maximizeWindow() {
+    ipcRenderer.send("maximizeWindow");
+  },
+  unmaximizeWindow() {
+    ipcRenderer.send("unmaximizeWindow");
+  },
+  closeWindow() {
+    ipcRenderer.send("closeWindow");
   },
 };
 

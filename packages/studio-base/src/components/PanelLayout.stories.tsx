@@ -11,14 +11,18 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { Story } from "@storybook/react";
 import { fireEvent, screen } from "@testing-library/dom";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
-import MockPanelContextProvider from "@foxglove/studio-base/components/MockPanelContextProvider";
 import Panel from "@foxglove/studio-base/components/Panel";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
+import LayoutStorageContext from "@foxglove/studio-base/context/LayoutStorageContext";
 import { PanelCatalog, PanelInfo } from "@foxglove/studio-base/context/PanelCatalogContext";
+import LayoutManagerProvider from "@foxglove/studio-base/providers/LayoutManagerProvider";
+import LayoutManager from "@foxglove/studio-base/services/LayoutManager/LayoutManager";
+import MockLayoutStorage from "@foxglove/studio-base/services/MockLayoutStorage";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 
 import PanelLayout from "./PanelLayout";
@@ -85,6 +89,19 @@ class MockPanelCatalog implements PanelCatalog {
 
 export default {
   title: "components/PanelLayout",
+  decorators: [
+    (StoryFn: Story): JSX.Element => {
+      const storage = new MockLayoutStorage(LayoutManager.LOCAL_STORAGE_NAMESPACE, []);
+
+      return (
+        <LayoutStorageContext.Provider value={storage}>
+          <LayoutManagerProvider>
+            <StoryFn />
+          </LayoutManagerProvider>
+        </LayoutStorageContext.Provider>
+      );
+    },
+  ],
 };
 
 export const PanelNotFound = (): JSX.Element => {
@@ -94,9 +111,7 @@ export const PanelNotFound = (): JSX.Element => {
         fixture={{ topics: [], datatypes: new Map(), frame: {}, layout: "UnknownPanel!4co6n9d" }}
         omitDragAndDrop
       >
-        <MockPanelContextProvider>
-          <PanelLayout />
-        </MockPanelContextProvider>
+        <PanelLayout />
       </PanelSetup>
     </DndProvider>
   );
@@ -117,9 +132,7 @@ export const PanelWithError = (): JSX.Element => {
         fixture={{ topics: [], datatypes: new Map(), frame: {}, layout: "Sample2!4co6n9d" }}
         omitDragAndDrop
       >
-        <MockPanelContextProvider>
-          <PanelLayout />
-        </MockPanelContextProvider>
+        <PanelLayout />
       </PanelSetup>
     </DndProvider>
   );
@@ -132,9 +145,7 @@ export const RemoveUnknownPanel = (): JSX.Element => {
         fixture={{ topics: [], datatypes: new Map(), frame: {}, layout: "UnknownPanel!4co6n9d" }}
         omitDragAndDrop
       >
-        <MockPanelContextProvider>
-          <PanelLayout />
-        </MockPanelContextProvider>
+        <PanelLayout />
       </PanelSetup>
     </DndProvider>
   );
@@ -152,9 +163,7 @@ export const PanelLoading = (): JSX.Element => {
         fixture={{ topics: [], datatypes: new Map(), frame: {}, layout: "Sample1!4co6n9d" }}
         omitDragAndDrop
       >
-        <MockPanelContextProvider>
-          <PanelLayout />
-        </MockPanelContextProvider>
+        <PanelLayout />
       </PanelSetup>
     </DndProvider>
   );
@@ -177,9 +186,7 @@ export const FullScreen = (): JSX.Element => {
         }}
         omitDragAndDrop
       >
-        <MockPanelContextProvider>
-          <PanelLayout />
-        </MockPanelContextProvider>
+        <PanelLayout />
       </PanelSetup>
     </DndProvider>
   );

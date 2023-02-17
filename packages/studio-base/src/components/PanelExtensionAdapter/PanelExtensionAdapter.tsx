@@ -47,6 +47,7 @@ import {
 import {
   usePanelSettingsTreeUpdate,
   useSharedPanelState,
+  useDefaultPanelTitle,
 } from "@foxglove/studio-base/providers/PanelStateContextProvider";
 import { PanelConfig, SaveConfig } from "@foxglove/studio-base/types/panels";
 import { assertNever } from "@foxglove/studio-base/util/assertNever";
@@ -61,9 +62,6 @@ type PanelExtensionAdapterProps = {
 
   config: unknown;
   saveConfig: SaveConfig<unknown>;
-
-  /** Help document for the panel */
-  help?: string;
 };
 
 function selectContext(ctx: MessagePipelineContext) {
@@ -114,6 +112,7 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
   const isPanelInitializedRef = useRef(false);
 
   const [slowRender, setSlowRender] = useState(false);
+  const [, setDefaultPanelTitle] = useDefaultPanelTitle();
 
   const { globalVariables, setGlobalVariables } = useGlobalVariables();
 
@@ -271,16 +270,17 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
         if (!isMounted()) {
           return;
         }
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-        if (position === "sibling") {
-          openSiblingPanel({
-            panelType: type,
-            updateIfExists,
-            siblingConfigCreator: (existingConfig) => getState(existingConfig) as PanelConfig,
-          });
-          return;
+        switch (position) {
+          case "sibling":
+            openSiblingPanel({
+              panelType: type,
+              updateIfExists,
+              siblingConfigCreator: (existingConfig) => getState(existingConfig) as PanelConfig,
+            });
+            return;
+          default:
+            assertNever(position, `Unsupported position for addPanel: ${position}`);
         }
-        assertNever(position, `Unsupported position for addPanel: ${position}`);
       },
     };
 
@@ -351,8 +351,15 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
           return;
         }
         setWatchedFields((old) => {
-          old.add(field);
-          return new Set(old);
+          if (old.has(field)) {
+            // In React 18 we noticed that this setter function would be called in an infinite loop
+            // even though watch() was not called repeatedly. Adding this early return of the old
+            // value fixed the issue.
+            return old;
+          }
+          const newWatchedFields = new Set(old);
+          newWatchedFields.add(field);
+          return newWatchedFields;
         });
       },
 
@@ -374,7 +381,16 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
           };
         });
 
-        setLocalSubscriptions(subscribePayloads);
+        // ExtensionPanel-Facing subscription type
+        const localSubs = topics.map<Subscription>((item) => {
+          if (typeof item === "string") {
+            return { topic: item, preload: true };
+          }
+
+          return item;
+        });
+
+        setLocalSubscriptions(localSubs);
         setSubscriptions(panelId, subscribePayloads);
       },
 
@@ -452,6 +468,13 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
         }
         updatePanelSettingsTree(settings);
       },
+
+      setDefaultPanelTitle: (title: string) => {
+        if (!isMounted()) {
+          return;
+        }
+        setDefaultPanelTitle(title);
+      },
     };
   }, [
     capabilities,
@@ -464,6 +487,7 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
     panelId,
     saveConfig,
     seekPlayback,
+    setDefaultPanelTitle,
     setGlobalVariables,
     setHoverValue,
     setSharedPanelState,
@@ -546,7 +570,7 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
         ...style,
       }}
     >
-      <PanelToolbar helpContent={props.help} />
+      <PanelToolbar />
       <div style={{ flex: 1, overflow: "hidden" }} ref={panelContainerRef} />
     </div>
   );

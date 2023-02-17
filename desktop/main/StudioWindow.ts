@@ -11,20 +11,31 @@ import {
   MenuItemConstructorOptions,
   shell,
   MenuItem,
+  systemPreferences,
 } from "electron";
 import path from "path";
 
 import Logger from "@foxglove/log";
+import { AppSetting } from "@foxglove/studio-base/src/AppSetting";
+import {
+  APP_BAR_BACKGROUND_COLOR,
+  APP_BAR_HEIGHT,
+  APP_BAR_FOREGROUND_COLOR,
+} from "@foxglove/studio-base/src/components/AppBar/constants";
 
-import pkgInfo from "../../package.json";
-import { encodeRendererArg } from "../common/rendererArgs";
+import StudioAppUpdater from "./StudioAppUpdater";
 import getDevModeIcon from "./getDevModeIcon";
+import { getAppSetting } from "./settings";
 import { simulateUserClick } from "./simulateUserClick";
 import { getTelemetrySettings } from "./telemetry";
+import pkgInfo from "../../package.json";
+import { encodeRendererArg } from "../common/rendererArgs";
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 
 const isMac = process.platform === "darwin";
+const isLinux = process.platform === "linux";
+const isWindows = process.platform === "win32";
 const isProduction = process.env.NODE_ENV === "production";
 const rendererPath = MAIN_WINDOW_WEBPACK_ENTRY;
 
@@ -90,8 +101,12 @@ type ClearableMenu = Menu & { clear: () => void };
 
 function newStudioWindow(deepLinks: string[] = []): BrowserWindow {
   const { crashReportingEnabled, telemetryEnabled } = getTelemetrySettings();
+  const enableNewTopNav = getAppSetting<boolean>(AppSetting.ENABLE_NEW_TOPNAV) ?? false;
 
   const preloadPath = path.join(app.getAppPath(), "main", "preload.js");
+
+  const macTrafficLightInset =
+    Math.floor((APP_BAR_HEIGHT - /*button size*/ 12) / 2) - /*for good measure*/ 1;
 
   const windowOptions: BrowserWindowConstructorOptions = {
     height: 800,
@@ -100,8 +115,20 @@ function newStudioWindow(deepLinks: string[] = []): BrowserWindow {
     minHeight: 250,
     autoHideMenuBar: true,
     title: pkgInfo.productName,
+    frame: enableNewTopNav && isLinux ? false : true,
+    titleBarStyle: enableNewTopNav ? "hidden" : "default",
+    trafficLightPosition:
+      isMac && enableNewTopNav ? { x: macTrafficLightInset, y: macTrafficLightInset } : undefined,
+    titleBarOverlay: isWindows
+      ? {
+          height: APP_BAR_HEIGHT,
+          color: APP_BAR_BACKGROUND_COLOR,
+          symbolColor: APP_BAR_FOREGROUND_COLOR,
+        }
+      : undefined,
     webPreferences: {
       contextIsolation: true,
+      sandbox: false, // Allow preload script to access Node builtins
       preload: preloadPath,
       nodeIntegration: false,
       additionalArguments: [
@@ -129,23 +156,24 @@ function newStudioWindow(deepLinks: string[] = []): BrowserWindow {
   browserWindow.addListener("enter-full-screen", () =>
     browserWindow.webContents.send("enter-full-screen"),
   );
-
   browserWindow.addListener("leave-full-screen", () =>
     browserWindow.webContents.send("leave-full-screen"),
   );
+  browserWindow.addListener("maximize", () => browserWindow.webContents.send("maximize"));
+
+  browserWindow.addListener("unmaximize", () => browserWindow.webContents.send("unmaximize"));
 
   browserWindow.webContents.once("dom-ready", () => {
     if (!isProduction) {
       browserWindow.webContents.openDevTools();
     }
+    browserWindow.webContents.send(browserWindow.isMaximized() ? "maximize" : "unmaximize");
   });
 
   // Open all new windows in an external browser
-  // Note: this API is supposed to be superseded by webContents.setWindowOpenHandler,
-  // but using that causes the app to freeze when a new window is opened.
-  browserWindow.webContents.on("new-window", (event, url) => {
-    event.preventDefault();
+  browserWindow.webContents.setWindowOpenHandler(({ url }) => {
     void shell.openExternal(url);
+    return { action: "deny" };
   });
 
   browserWindow.webContents.on("will-navigate", (event, reqUrl) => {
@@ -160,11 +188,52 @@ function newStudioWindow(deepLinks: string[] = []): BrowserWindow {
     }
   });
 
+  browserWindow.webContents.on("ipc-message", (_event, channel) => {
+    switch (channel) {
+      case "titleBarDoubleClicked": {
+        const action: string =
+          systemPreferences.getUserDefault("AppleActionOnDoubleClick", "string") || "Maximize";
+        if (action === "Minimize") {
+          browserWindow.minimize();
+        } else if (action === "Maximize") {
+          if (browserWindow.isMaximized()) {
+            browserWindow.unmaximize();
+          } else {
+            browserWindow.maximize();
+          }
+        } else {
+          // "None"
+        }
+        break;
+      }
+      case "minimizeWindow":
+        browserWindow.minimize();
+        break;
+      case "maximizeWindow":
+        browserWindow.maximize();
+        break;
+      case "unmaximizeWindow":
+        browserWindow.unmaximize();
+        break;
+      case "closeWindow":
+        browserWindow.close();
+        break;
+      default:
+        break;
+    }
+  });
+
   return browserWindow;
 }
 
 function buildMenu(browserWindow: BrowserWindow): Menu {
   const menuTemplate: MenuItemConstructorOptions[] = [];
+
+  const checkForUpdatesItem: MenuItemConstructorOptions = {
+    label: "Check for Updates…",
+    click: () => void StudioAppUpdater.Instance().checkNow(),
+    enabled: StudioAppUpdater.Instance().canCheckForUpdates(),
+  };
 
   if (isMac) {
     menuTemplate.push({
@@ -172,6 +241,7 @@ function buildMenu(browserWindow: BrowserWindow): Menu {
       label: app.name,
       submenu: [
         { role: "about" },
+        checkForUpdatesItem,
         { type: "separator" },
 
         {
@@ -349,6 +419,7 @@ function buildMenu(browserWindow: BrowserWindow): Menu {
                 showAboutDialog();
               },
             },
+            checkForUpdatesItem,
           ]),
     ],
   });

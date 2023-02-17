@@ -11,7 +11,7 @@ import { MessageReader as ROS2MessageReader } from "@foxglove/rosmsg2-serializat
 
 import { parseFlatbufferSchema } from "./parseFlatbufferSchema";
 import { parseJsonSchema } from "./parseJsonSchema";
-import { protobufDefinitionsToDatatypes } from "./protobufDefinitionsToDatatypes";
+import { protobufDefinitionsToDatatypes, stripLeadingDot } from "./protobufDefinitionsToDatatypes";
 import { RosDatatypes } from "./types";
 
 type Channel = {
@@ -49,33 +49,31 @@ function parsedDefinitionsToDatatypes(
  */
 export function parseChannel(channel: Channel): ParsedChannel {
   if (channel.messageEncoding === "json") {
-    if (channel.schema?.encoding !== "jsonschema") {
+    if (channel.schema != undefined && channel.schema.encoding !== "jsonschema") {
       throw new Error(
-        `Message encoding ${channel.messageEncoding} with ${
-          channel.schema == undefined
-            ? "no encoding"
-            : `schema encoding '${channel.schema.encoding}'`
-        } is not supported (expected jsonschema)`,
+        `Message encoding ${channel.messageEncoding} with schema encoding '${channel.schema.encoding}' is not supported (expected jsonschema or no schema)`,
       );
     }
     const textDecoder = new TextDecoder();
-    const schema =
-      channel.schema.data.length > 0
-        ? JSON.parse(textDecoder.decode(channel.schema.data))
-        : undefined;
     let datatypes: RosDatatypes = new Map();
     let deserializer = (data: ArrayBufferView) => JSON.parse(textDecoder.decode(data));
-    if (schema != undefined) {
-      if (typeof schema !== "object") {
-        throw new Error(`Invalid schema, expected JSON object, got ${typeof schema}`);
+    if (channel.schema != undefined) {
+      const schema =
+        channel.schema.data.length > 0
+          ? JSON.parse(textDecoder.decode(channel.schema.data))
+          : undefined;
+      if (schema != undefined) {
+        if (typeof schema !== "object") {
+          throw new Error(`Invalid schema, expected JSON object, got ${typeof schema}`);
+        }
+        const { datatypes: parsedDatatypes, postprocessValue } = parseJsonSchema(
+          schema as Record<string, unknown>,
+          channel.schema.name,
+        );
+        datatypes = parsedDatatypes;
+        deserializer = (data) =>
+          postprocessValue(JSON.parse(textDecoder.decode(data)) as Record<string, unknown>);
       }
-      const { datatypes: parsedDatatypes, postprocessValue } = parseJsonSchema(
-        schema as Record<string, unknown>,
-        channel.schema.name,
-      );
-      datatypes = parsedDatatypes;
-      deserializer = (data) =>
-        postprocessValue(JSON.parse(textDecoder.decode(data)) as Record<string, unknown>);
     }
     return { deserializer, datatypes };
   }
@@ -136,6 +134,14 @@ export function parseChannel(channel: Channel): ParsedChannel {
 
     const datatypes: RosDatatypes = new Map();
     protobufDefinitionsToDatatypes(datatypes, type);
+
+    if (!datatypes.has(channel.schema.name)) {
+      throw new Error(
+        `Protobuf schema does not contain an entry for '${
+          channel.schema.name
+        }'. The schema name should be fully-qualified, e.g. '${stripLeadingDot(type.fullName)}'.`,
+      );
+    }
 
     return { deserializer, datatypes };
   }

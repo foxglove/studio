@@ -100,7 +100,7 @@ export type PlayerState = {
 
   // Capabilities of this particular `Player`, which are not shared across all players.
   // See `const PlayerCapabilities` for more details.
-  capabilities: typeof PlayerCapabilities[keyof typeof PlayerCapabilities][];
+  capabilities: (typeof PlayerCapabilities)[keyof typeof PlayerCapabilities][];
 
   /**
    * Identifies the semantics of the data being played back, such as which topics or parameters are
@@ -204,15 +204,19 @@ export type Topic = {
   // a consistent representation for topics that people recognize though.
   name: string;
   // Name of the datatype (see `type PlayerStateActiveData` for details).
-  schemaName: string;
+  schemaName: string | undefined;
 };
+
+export type TopicWithSchemaName = Topic & { schemaName: string };
 
 export type TopicStats = {
   // The number of messages observed on the topic.
   numMessages: number;
-  // Timestamp of the first observed message on this topic.
+  // Timestamp of the first observed message on this topic. Only set for static data sources such as
+  // local files or servers that provide a fixed set of data.
   firstMessageTime?: Time;
-  // Timestamp of the last observed message on this topic.
+  // Timestamp of the last observed message on this topic. Only set for static data sources such as
+  // local files or servers that provide a fixed set of data.
   lastMessageTime?: Time;
 };
 
