@@ -495,6 +495,22 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
     updatePanelSettingsTree,
   ]);
 
+  useValueChangedDebugLog(capabilities, "cap");
+  useValueChangedDebugLog(clearHoverValue, "clear hover");
+  useValueChangedDebugLog(dataSourceProfile, "dp profile");
+  useValueChangedDebugLog(getMessagePipelineContext, "pip contx");
+  useValueChangedDebugLog(initialState, "init state");
+  useValueChangedDebugLog(openSiblingPanel, "open sib");
+  useValueChangedDebugLog(panelId, "panel id");
+  useValueChangedDebugLog(saveConfig, "saveConfig");
+  useValueChangedDebugLog(seekPlayback, "seek pb");
+  useValueChangedDebugLog(setDefaultPanelTitle, "default panel title");
+  useValueChangedDebugLog(setGlobalVariables, "set global var");
+  useValueChangedDebugLog(setHoverValue, "set hover value");
+  useValueChangedDebugLog(setSharedPanelState, "set shared panel state");
+  useValueChangedDebugLog(setSubscriptions, "set subs");
+  useValueChangedDebugLog(updatePanelSettingsTree, "update panel settings tree");
+
   const panelContainerRef = useRef<HTMLDivElement>(ReactNull);
 
   useValueChangedDebugLog(initPanel, "initPanel");
