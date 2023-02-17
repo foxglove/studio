@@ -20,7 +20,7 @@ type Props = {
 
 const useStyles = makeStyles()({
   numericValue: {
-    fontFeatureSettings: `${fonts.SANS_SERIF_FEATURE_SETTINGS}, zero`,
+    fontFeatureSettings: `${fonts.SANS_SERIF_FEATURE_SETTINGS}, "zero"`,
   },
 });
 
