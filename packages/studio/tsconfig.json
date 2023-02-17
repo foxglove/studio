@@ -6,7 +6,7 @@
     "incremental": true,
     "rootDir": "./src",
     "outDir": "./dist",
-    "noEmit": true, // Don't need to emit anything since this is a types-only package
+    "noEmit": true,
     "lib": ["es2020"]
   }
 }
