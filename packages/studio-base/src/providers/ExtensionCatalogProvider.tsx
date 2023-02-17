@@ -5,6 +5,7 @@
 import { PropsWithChildren, useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import { createStore, StoreApi } from "zustand";
+import React from "react";
 
 import Logger from "@foxglove/log";
 import { ExtensionContext, ExtensionModule, RegisterMessageConverterArgs } from "@foxglove/studio";
