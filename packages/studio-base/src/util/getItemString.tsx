@@ -12,10 +12,11 @@ import { quatToEuler } from "@foxglove/studio-base/util/quatToEuler";
 const DURATION_20_YEARS_SEC = 20 * 365 * 24 * 60 * 60;
 
 export function getItemString(
-  _type: string,
+  _nodeType: string,
   data: unknown,
   itemType: ReactNode,
   itemString: string,
+  _keyPath: (string | number)[],
   timezone?: string,
 ): ReactNode {
   if (typeof data !== "object" || data == undefined) {
