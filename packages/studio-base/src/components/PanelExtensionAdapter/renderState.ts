@@ -342,6 +342,22 @@ function initRenderStateBuilder(): BuildRenderStateFn {
       }
     }
 
+    if (watchedFields.has("timeRange")) {
+      const startTime = activeData?.startTime;
+      const endTime = activeData?.endTime;
+
+      if (!renderState.timeRange) {
+        shouldRender = true;
+        renderState.timeRange = [startTime, endTime];
+      } else {
+        if (startTime !== renderState.timeRange[0] || endTime !== renderState.timeRange[1]) {
+          shouldRender = true;
+          renderState.timeRange[0] = startTime;
+          renderState.timeRange[1] = endTime;
+        }
+      }
+    }
+
     if (watchedFields.has("previewTime")) {
       const startTime = activeData?.startTime;
 
