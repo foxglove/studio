@@ -659,6 +659,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
     this._hasReceivedMessage = false;
     if (this._openTimeout != undefined) {
       clearTimeout(this._openTimeout);
+      this._openTimeout = undefined;
     }
     if (this._getParameterInterval != undefined) {
       clearInterval(this._getParameterInterval);
