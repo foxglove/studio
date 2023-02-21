@@ -204,11 +204,17 @@ export interface RenderState {
   currentTime?: Time;
 
   /**
-   * The start and end timestamps of the playback range for the current data source. For offline
-   * files it is expected both values will be present. For live connections, the start time may
-   * or may not be present depending on the data source and the end time will be undefined.
+   * The start timestamp of the playback range for the current data source. For offline files it
+   * is expected to be present. For live connections, the start time may or may not be present
+   * depending on the data source.
    */
-  timeRange?: [Time | undefined, Time | undefined];
+  startTime?: Time;
+
+  /**
+   * The end timestamp of the playback range for the current data source. For offline files it
+   * is expected to be present. For live connections, the end time will be undefined.
+   */
+  endTime?: Time;
 
   /**
    * A seconds value indicating a preview time. The preview time is set when a user hovers
