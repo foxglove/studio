@@ -174,7 +174,7 @@ export const aboutItems: Map<
 
 export function PreferencesIconButton(props: IconButtonProps): JSX.Element {
   return (
-    <IconButton {...props}>
+    <IconButton {...props} className={classes.iconButton}>
       <Settings24Regular />
     </IconButton>
   );
