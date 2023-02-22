@@ -2,8 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { ChatHelp24Regular } from "@fluentui/react-icons";
 import CloudOutlinedIcon from "@mui/icons-material/CloudOutlined";
-import ContactSupportOutlinedIcon from "@mui/icons-material/ContactSupportOutlined";
 import ForumOutlinedIcon from "@mui/icons-material/ForumOutlined";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import {
@@ -41,7 +41,7 @@ const useStyles = makeStyles()((theme) => ({
 export function HelpIconButton(props: IconButtonProps): JSX.Element {
   return (
     <IconButton {...props}>
-      <ContactSupportOutlinedIcon />
+      <ChatHelp24Regular />
     </IconButton>
   );
 }
