@@ -36,11 +36,16 @@ const useStyles = makeStyles()((theme) => ({
   menuText: {
     whiteSpace: "normal",
   },
+  iconButton: {
+    padding: theme.spacing(0.375),
+  },
 }));
 
 export function HelpIconButton(props: IconButtonProps): JSX.Element {
+  const { classes } = useStyles();
+
   return (
-    <IconButton {...props}>
+    <IconButton {...props} className={classes.iconButton} id="help-button">
       <ChatHelp24Regular />
     </IconButton>
   );
