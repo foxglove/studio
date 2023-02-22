@@ -212,7 +212,8 @@ export interface RenderState {
 
   /**
    * The end timestamp of the playback range for the current data source. For offline files it
-   * is expected to be present. For live connections, the end time will be undefined.
+   * is expected to be present. For live connections, the end time may or may not be present
+   * depending on the data source.
    */
   endTime?: Time;
 
