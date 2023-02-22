@@ -538,6 +538,12 @@ export default function muiComponents(theme: Theme): Theme["components"] & MuiLa
     MuiTypography: {
       defaultProps: {
         variantMapping: {
+          h1: "div",
+          h2: "div",
+          h3: "div",
+          h4: "div",
+          h5: "div",
+          h6: "div",
           subtitle1: "div",
           subtitle2: "div",
           body1: "div",
