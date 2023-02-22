@@ -136,10 +136,10 @@ function DataSourceOption(props: DataSourceOptionProps): JSX.Element {
       onClick={onClick}
     >
       <Stack flex="auto" zeroMinWidth>
-        <Typography component="div" variant="subtitle1" color="text.primary">
+        <Typography variant="subtitle1" color="text.primary">
           {text}
         </Typography>
-        <Typography component="div" variant="body2" color="text.secondary" noWrap>
+        <Typography variant="body2" color="text.secondary" noWrap>
           {secondaryText}
         </Typography>
       </Stack>
