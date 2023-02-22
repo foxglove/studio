@@ -34,6 +34,9 @@ const useStyles = makeStyles()((theme) => ({
   avatarButton: {
     padding: 0,
   },
+  menuList: {
+    minWidth: 200,
+  },
 }));
 
 export const UserIconButton = forwardRef<HTMLButtonElement, IconButtonProps>((props, ref) => {
@@ -58,6 +61,7 @@ export function UserMenu({
   anchorEl?: HTMLElement;
   open: boolean;
 }): JSX.Element {
+  const { classes } = useStyles();
   const { currentUser, signOut } = useCurrentUser();
   const { enqueueSnackbar } = useSnackbar();
   const [confirm, confirmModal] = useConfirm();
@@ -97,11 +101,7 @@ export function UserMenu({
         open={open}
         onClose={handleClose}
         onClick={handleClose}
-        MenuListProps={{
-          sx: {
-            minWidth: 200,
-          },
-        }}
+        MenuListProps={{ className: classes.menuList }}
       >
         <MenuItem onClick={onSettingsClick}>
           <ListItemText primary={currentUser.email} />

@@ -67,6 +67,14 @@ export function HelpMenu(
       MenuListProps={{
         "aria-labelledby": "help-button",
       }}
+      anchorOrigin={{
+        horizontal: "right",
+        vertical: "bottom",
+      }}
+      transformOrigin={{
+        vertical: "top",
+        horizontal: "right",
+      }}
     >
       <ListSubheader className={classes.subheader} tabIndex={-1}>
         Documentation

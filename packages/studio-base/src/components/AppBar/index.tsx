@@ -8,7 +8,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import FilterNoneIcon from "@mui/icons-material/FilterNone";
 import MinimizeIcon from "@mui/icons-material/Minimize";
 import { AppBar as MuiAppBar, Button, IconButton, Toolbar, Typography } from "@mui/material";
-import { MouseEvent, useCallback, useState } from "react";
+import { Dispatch, MouseEvent, SetStateAction, useCallback, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
@@ -25,6 +25,7 @@ import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import useNativeAppMenuEvent from "@foxglove/studio-base/hooks/useNativeAppMenuEvent";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 
+import { AddPanelMenu, AddPanelIconButton } from "./AddPanel";
 import { DataSource } from "./DataSource";
 import { HelpIconButton, HelpMenu } from "./Help";
 import { PreferencesDialog, PreferencesIconButton } from "./Preferences";
@@ -99,6 +100,12 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }>(
           marginInlineEnd: theme.spacing(-2),
         },
       },
+      endInner: {
+        display: "flex",
+        alignItems: "center",
+        gap: theme.spacing(1),
+        ...NOT_DRAGGABLE_STYLE, // make buttons clickable for desktop app
+      },
       button: {
         backgroundColor: APP_BAR_PRIMARY_COLOR,
 
@@ -108,6 +115,7 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }>(
           }).dark,
         },
       },
+<<<<<<< HEAD
       iconButton: {
         padding: theme.spacing(0.375),
       },
@@ -117,6 +125,8 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }>(
         gap: theme.spacing(1),
         ...NOT_DRAGGABLE_STYLE, // make buttons clickable for desktop app
       },
+=======
+>>>>>>> 45f91654e (Move panel list into app bar)
       noDrag: {
         ...NOT_DRAGGABLE_STYLE, // make buttons clickable for desktop app
       },
@@ -177,23 +187,22 @@ export function AppBar(props: AppBarProps): JSX.Element {
 
   const [helpAnchorEl, setHelpAnchorEl] = useState<undefined | HTMLElement>(undefined);
   const [userAnchorEl, setUserAnchorEl] = useState<undefined | HTMLElement>(undefined);
+  const [panelAnchorEl, setPanelAnchorEl] = useState<undefined | HTMLElement>(undefined);
   const [prefsDialogOpen, setPrefsDialogOpen] = useState(false);
 
   const helpMenuOpen = Boolean(helpAnchorEl);
   const userMenuOpen = Boolean(userAnchorEl);
+  const panelMenuOpen = Boolean(panelAnchorEl);
 
-  const handleHelpClick = (event: MouseEvent<HTMLElement>) => {
-    setHelpAnchorEl(event.currentTarget);
-  };
-  const handleHelpClose = () => {
-    setHelpAnchorEl(undefined);
+  const handleMenu = (
+    event: MouseEvent<HTMLElement>,
+    action: Dispatch<SetStateAction<HTMLElement | undefined>>,
+  ) => {
+    action(event.currentTarget);
   };
 
-  const handleUserMenuClick = (event: MouseEvent<HTMLElement>) => {
-    setUserAnchorEl(event.currentTarget);
-  };
-  const handleUserClose = () => {
-    setUserAnchorEl(undefined);
+  const handleClose = (action: Dispatch<SetStateAction<HTMLElement | undefined>>) => {
+    action(undefined);
   };
 
   const openPreferences = () => {
@@ -257,6 +266,19 @@ export function AppBar(props: AppBarProps): JSX.Element {
               >
                 {rightSidebarOpen ? <PanelRight24Filled /> : <PanelRight24Regular />}
               </IconButton>
+              <AddPanelIconButton
+                color="inherit"
+                id="add-panel-button"
+                title="Add panel"
+                aria-label="Add panel button"
+                aria-controls={panelMenuOpen ? "help-menu" : undefined}
+                aria-haspopup="true"
+                aria-expanded={panelMenuOpen ? "true" : undefined}
+                size="large"
+                onClick={(event) => {
+                  handleMenu(event, setPanelAnchorEl);
+                }}
+              />
               <HelpIconButton
                 className={classes.iconButton}
                 color="inherit"
@@ -271,7 +293,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
                     user: currentUserType,
                     cta: "help-menu",
                   });
-                  handleHelpClick(event);
+                  handleMenu(event, setHelpAnchorEl);
                 }}
               />
               <PreferencesIconButton
@@ -301,7 +323,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
                     aria-controls={userMenuOpen ? "user-profile-menu" : undefined}
                     aria-haspopup="true"
                     aria-expanded={userMenuOpen ? "true" : undefined}
-                    onClick={handleUserMenuClick}
+                    onClick={(event) => handleMenu(event, setUserAnchorEl)}
                     size="small"
                   />
                 ) : (
@@ -334,20 +356,21 @@ export function AppBar(props: AppBarProps): JSX.Element {
           </div>
         </Toolbar>
       </MuiAppBar>
+      <AddPanelMenu
+        anchorEl={panelAnchorEl}
+        open={panelMenuOpen}
+        handleClose={() => handleClose(setPanelAnchorEl)}
+      />
       <HelpMenu
         anchorEl={helpAnchorEl}
         open={helpMenuOpen}
-        handleClose={handleHelpClose}
-        anchorOrigin={{
-          horizontal: "right",
-          vertical: "bottom",
-        }}
-        transformOrigin={{
-          vertical: "top",
-          horizontal: "right",
-        }}
+        handleClose={() => handleClose(setHelpAnchorEl)}
       />
-      <UserMenu anchorEl={userAnchorEl} open={userMenuOpen} handleClose={handleUserClose} />
+      <UserMenu
+        anchorEl={userAnchorEl}
+        open={userMenuOpen}
+        handleClose={() => handleClose(setUserAnchorEl)}
+      />
       <PreferencesDialog
         id="preferences-dialog"
         open={prefsDialogOpen}
