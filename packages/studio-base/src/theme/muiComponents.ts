@@ -537,6 +537,8 @@ export default function muiComponents(theme: Theme): Theme["components"] & MuiLa
     },
     MuiTypography: {
       defaultProps: {
+        // Remap typography variants to be <div> elements to
+        // avoid triggering react's validateDOMNesting error
         variantMapping: {
           h1: "div",
           h2: "div",
