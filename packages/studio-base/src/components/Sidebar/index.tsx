@@ -2,10 +2,10 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { BracesVariable20Filled } from "@fluentui/react-icons";
 import ArrowLeftIcon from "@mui/icons-material/ArrowLeft";
-import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
-import { Badge, IconButton, Paper, Tab, Tabs } from "@mui/material";
+import { Badge, Divider, IconButton, Paper, Tab, Tabs } from "@mui/material";
 import {
   ComponentProps,
   MouseEvent,
@@ -22,9 +22,15 @@ import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import { HelpMenu } from "@foxglove/studio-base/components/AppBar/Help";
 import { BuiltinIcon } from "@foxglove/studio-base/components/BuiltinIcon";
 import ErrorBoundary from "@foxglove/studio-base/components/ErrorBoundary";
+import EventOutlinedIcon from "@foxglove/studio-base/components/EventOutlinedIcon";
 import { MemoryUseIndicator } from "@foxglove/studio-base/components/MemoryUseIndicator";
+import {
+  MessagePipelineContext,
+  useMessagePipeline,
+} from "@foxglove/studio-base/components/MessagePipeline";
 import { SecondarySidebar } from "@foxglove/studio-base/components/SecondarySidebar";
 import Stack from "@foxglove/studio-base/components/Stack";
+import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
 
@@ -86,6 +92,17 @@ const useStyles = makeStyles()((theme) => ({
       display: "none !important",
     },
   },
+  header: {
+    height: 30,
+  },
+  iconButton: {
+    fontSize: 20,
+    borderRadius: 0,
+  },
+  paper: {
+    backgroundColor: theme.palette.background.paper,
+    borderInlineStart: `1px solid ${theme.palette.divider}`,
+  },
 }));
 
 // Determine initial sidebar width, with a cap for larger
@@ -96,6 +113,9 @@ function defaultInitialSidebarPercentage() {
   return (100 * width) / window.innerWidth;
 }
 
+const selectPlayerSourceId = ({ playerState }: MessagePipelineContext) =>
+  playerState.urlState?.sourceId;
+
 type SidebarProps<K> = PropsWithChildren<{
   items: Map<K, SidebarItem>;
   bottomItems: Map<K, SidebarItem>;
@@ -105,6 +125,10 @@ type SidebarProps<K> = PropsWithChildren<{
 
 export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.Element {
   const { children, items, bottomItems, selectedKey, onSelectKey } = props;
+
+  const { currentUser } = useCurrentUser();
+  const playerSourceId = useMessagePipeline(selectPlayerSourceId);
+  const showEventsTab = currentUser != undefined && playerSourceId === "foxglove-data-platform";
 
   const [enableMemoryUseIndicator = false] = useAppConfigurationValue<boolean>(
     AppSetting.ENABLE_MEMORY_USE_INDICATOR,
@@ -127,6 +151,7 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
 
   const [helpAnchorEl, setHelpAnchorEl] = useState<undefined | HTMLElement>(undefined);
   const [rightBarShown, setRightBarShown] = useState(false);
+  const [activeRightTab, setActiveRightTab] = useState(0);
 
   const helpMenuOpen = Boolean(helpAnchorEl);
 
@@ -318,7 +343,12 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
               case "rightbar":
                 return (
                   <ErrorBoundary>
-                    <SecondarySidebar />
+                    <SecondarySidebar
+                      collapsed={!rightBarShown}
+                      toggleCollapsed={() => setRightBarShown((old) => !old)}
+                      activeTab={activeRightTab}
+                      setActiveTab={setActiveRightTab}
+                    />
                   </ErrorBoundary>
                 );
             }
@@ -326,10 +356,43 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
           resize={{ minimumPaneSizePercentage: 10 }}
         />
       </div>
-      {enableNewTopNav && (
-        <IconButton size="small" onClick={() => setRightBarShown((old) => !old)}>
-          {rightBarShown ? <ArrowRightIcon /> : <ArrowLeftIcon />}
-        </IconButton>
+      {enableNewTopNav && !rightBarShown && (
+        <Stack className={classes.paper}>
+          <div className={classes.header}>
+            <IconButton
+              className={classes.iconButton}
+              size="small"
+              onClick={() => setRightBarShown((old) => !old)}
+            >
+              <ArrowLeftIcon fontSize="inherit" />
+            </IconButton>
+          </div>
+          <Divider />
+          <IconButton
+            title="Variables"
+            className={classes.iconButton}
+            size="small"
+            onClick={() => {
+              setRightBarShown((old) => !old);
+              setActiveRightTab(0);
+            }}
+          >
+            <BracesVariable20Filled />
+          </IconButton>
+          {showEventsTab && (
+            <IconButton
+              title="Events"
+              className={classes.iconButton}
+              size="small"
+              onClick={() => {
+                setRightBarShown((old) => !old);
+                setActiveRightTab(0);
+              }}
+            >
+              <EventOutlinedIcon />
+            </IconButton>
+          )}
+        </Stack>
       )}
     </Stack>
   );

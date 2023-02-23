@@ -2,10 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import ArrowLeftIcon from "@mui/icons-material/ArrowLeft";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import { Divider, IconButton, Tab, Tabs } from "@mui/material";
-import { useState } from "react";
 import { makeStyles } from "tss-react/mui";
 
 import { EventsList } from "@foxglove/studio-base/components/DataSourceSidebar/EventsList";
@@ -26,6 +24,9 @@ const useStyles = makeStyles()((theme) => ({
   },
   tabs: {
     minHeight: "auto",
+    flex: "1 1 auto",
+    overflow: "hidden",
+    paddingLeft: theme.spacing(0.25),
 
     ".MuiTabs-indicator": {
       transform: "scaleX(0.5)",
@@ -34,8 +35,8 @@ const useStyles = makeStyles()((theme) => ({
     },
     ".MuiTab-root": {
       minHeight: 30,
-      minWidth: theme.spacing(8),
-      padding: theme.spacing(0, 1.5),
+      minWidth: theme.spacing(4),
+      padding: theme.spacing(0, 1),
       color: theme.palette.text.secondary,
       fontSize: "0.6875rem",
 
@@ -44,34 +45,36 @@ const useStyles = makeStyles()((theme) => ({
       },
     },
   },
-  tabPanel: {
-    width: 240,
-  },
-  collapseButton: {
+  iconButton: {
     fontSize: 20,
+    borderRadius: 0,
   },
 }));
 
 const selectPlayerSourceId = ({ playerState }: MessagePipelineContext) =>
   playerState.urlState?.sourceId;
 
-export function SecondarySidebar(): JSX.Element {
+export function SecondarySidebar({
+  collapsed,
+  toggleCollapsed,
+  activeTab,
+  setActiveTab,
+}: {
+  collapsed: boolean;
+  toggleCollapsed: () => void;
+  activeTab: number;
+  setActiveTab: (newValue: number) => void;
+}): JSX.Element {
   const { classes } = useStyles();
   const { currentUser } = useCurrentUser();
-  const [activeTab, setActiveTab] = useState(0);
-  const [collapsed, setCollapsed] = useState(false);
 
   const playerSourceId = useMessagePipeline(selectPlayerSourceId);
 
   const showEventsTab = currentUser != undefined && playerSourceId === "foxglove-data-platform";
 
-  const toggleCollapsed = () => {
-    setCollapsed(!collapsed);
-  };
-
   return (
     <Stack className={classes.root} flexShrink={0}>
-      <Stack direction="row" justifyContent="space-between">
+      <Stack direction="row" justifyContent="space-between" alignItems="center">
         {!collapsed && (
           <Tabs
             className={classes.tabs}
@@ -88,18 +91,18 @@ export function SecondarySidebar(): JSX.Element {
           </Tabs>
         )}
 
-        <IconButton className={classes.collapseButton} size="small" onClick={toggleCollapsed}>
-          {collapsed ? <ArrowLeftIcon fontSize="inherit" /> : <ArrowRightIcon fontSize="inherit" />}
+        <IconButton className={classes.iconButton} size="small" onClick={toggleCollapsed}>
+          <ArrowRightIcon fontSize="inherit" />
         </IconButton>
       </Stack>
       <Divider />
       {!collapsed && (
         <>
-          <TabPanel className={classes.tabPanel} value={activeTab} index={0}>
+          <TabPanel value={activeTab} index={0}>
             <VariablesSidebar />
           </TabPanel>
           {showEventsTab && (
-            <TabPanel className={classes.tabPanel} value={activeTab} index={1}>
+            <TabPanel value={activeTab} index={1}>
               <EventsList />
             </TabPanel>
           )}
