@@ -24150,6 +24150,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"tss-react@npm:4.6.1":
+  version: 4.6.1
+  resolution: "tss-react@npm:4.6.1"
+  dependencies:
+    "@emotion/cache": "*"
+    "@emotion/serialize": "*"
+    "@emotion/utils": "*"
+  peerDependencies:
+    "@emotion/react": ^11.4.1
+    "@emotion/server": ^11.4.0
+    react: ^16.8.0 || ^17.0.2 || ^18.0.0
+  peerDependenciesMeta:
+    "@emotion/server":
+      optional: true
+  checksum: 93b7a7b6514ae86856eca2a7b8fde2878cdef01a5d0166998bb9ca9db94e60b1405cd5610ac9c7f4796af188ce7e9a8c7e39900f56d5ae2b4f518f7ede4d41ae
+  languageName: node
+  linkType: hard
+
 "tsutils@npm:^3, tsutils@npm:^3.21.0":
   version: 3.21.0
   resolution: "tsutils@npm:3.21.0"
@@ -25245,6 +25263,11 @@ __metadata:
     playwright: 1.30.0
     react: 17.0.2
     react-dom: 17.0.2
+<<<<<<< HEAD
+=======
+    react-i18next: 12.1.5
+    tss-react: 4.6.1
+>>>>>>> dc0277243 (Add tss-react as dep to /web)
     webpack: 5.75.0
     webpack-dev-server: 4.11.1
   languageName: unknown
