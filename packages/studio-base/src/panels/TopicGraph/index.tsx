@@ -12,12 +12,15 @@
 //   You may not use this file except in compliance with the License.
 
 import RectangleOutlinedIcon from "@mui/icons-material/RectangleOutlined";
-import { FormControlLabel, IconButton, Paper, Radio, RadioGroup, SvgIcon } from "@mui/material";
+import { FormControlLabel, IconButton, Paper, Radio, RadioGroup } from "@mui/material";
 import Cytoscape from "cytoscape";
 import { useCallback, useMemo, useRef, useState } from "react";
 import textMetrics from "text-metrics";
 import { makeStyles } from "tss-react/mui";
 
+import ArrowLeftRightIcon from "@foxglove/studio-base/assets/arrow-left-right.svg";
+import ArrowUpDownIcon from "@foxglove/studio-base/assets/arrow-up-down.svg";
+import FitToPageIcon from "@foxglove/studio-base/assets/fit-to-page.svg";
 import TopicIcon from "@foxglove/studio-base/assets/rhombus.svg";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import ExpandingToolbar, { ToolGroup } from "@foxglove/studio-base/components/ExpandingToolbar";
@@ -126,6 +129,10 @@ const useStyles = makeStyles()((theme) => ({
   },
   icon: {
     fontSize: "1rem !important",
+
+    "& svg:not(.MuiSvgIcon-root)": {
+      fontSize: "1rem !important",
+    },
   },
   pointerEventsAuto: {
     pointerEvents: "auto",
@@ -374,29 +381,10 @@ function TopicGraph() {
         <Paper square={false} elevation={4} className={classes.pointerEventsAuto}>
           <Stack flex="0 0" className={cx(classes.stack, classes.pointerEventsAuto)}>
             <IconButton title="Zoom fit" onClick={onZoomFit} className={classes.icon}>
-              <SvgIcon fontSize="inherit">
-                <path
-                  d="M20,2H4C2.89,2 2,2.89 2,4V20C2,21.11 2.89,22 4,22H20C21.11,22 22,21.11 22,20V4C22,2.89 21.11,2 20,2M20,20H4V4H20M13,8V10H11V8H9L12,5L15,8M16,15V13H14V11H16V9L19,12M10,13H8V15L5,12L8,9V11H10M15,16L12,19L9,16H11V14H13V16"
-                  fill="currentColor"
-                />
-              </SvgIcon>
+              <FitToPageIcon />
             </IconButton>
             <IconButton title="Orientation" onClick={toggleOrientation} className={classes.icon}>
-              {lrOrientation ? (
-                <SvgIcon fontSize="inherit">
-                  <path
-                    d="M6.45,17.45L1,12L6.45,6.55L7.86,7.96L4.83,11H19.17L16.14,7.96L17.55,6.55L23,12L17.55,17.45L16.14,16.04L19.17,13H4.83L7.86,16.04L6.45,17.45Z"
-                    fill="currentColor"
-                  />
-                </SvgIcon>
-              ) : (
-                <SvgIcon fontSize="inherit">
-                  <path
-                    d="M17.45,17.55L12,23L6.55,17.55L7.96,16.14L11,19.17V4.83L7.96,7.86L6.55,6.45L12,1L17.45,6.45L16.04,7.86L13,4.83V19.17L16.04,16.14L17.45,17.55Z"
-                    fill="currentColor"
-                  />
-                </SvgIcon>
-              )}
+              {lrOrientation ? <ArrowLeftRightIcon /> : <ArrowUpDownIcon />}
             </IconButton>
             <IconButton
               color={showServices ? "info" : "inherit"}
