@@ -40,6 +40,8 @@ function Noop(): ReactNull {
   return ReactNull;
 }
 
+type LayoutNode = "leftbar" | "children" | "rightbar";
+
 export type SidebarItem = {
   iconName: ComponentProps<typeof BuiltinIcon>["name"];
   title: string;
@@ -105,12 +107,17 @@ const useStyles = makeStyles()((theme) => ({
   },
 }));
 
-// Determine initial sidebar width, with a cap for larger
-// screens.
-function defaultInitialSidebarPercentage() {
-  const defaultFraction = 0.3;
-  const width = Math.min(384, defaultFraction * window.innerWidth);
-  return (100 * width) / window.innerWidth;
+/**
+ * Extract existing split percentage from a layout node or return the default.
+ */
+function mosiacLeftSidebarSplitPercentage(node: MosaicNode<LayoutNode>) {
+  if (typeof node === "object") {
+    return node.splitPercentage;
+  } else {
+    const defaultFraction = 0.3;
+    const width = Math.min(384, defaultFraction * window.innerWidth);
+    return (100 * width) / window.innerWidth;
+  }
 }
 
 const selectPlayerSourceId = ({ playerState }: MessagePipelineContext) =>
@@ -141,8 +148,7 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
   const [initialEnableNewTopNav] = useState(currentEnableNewTopNav);
   const enableNewTopNav = isDesktopApp() ? initialEnableNewTopNav : currentEnableNewTopNav;
 
-  const [mosaicValue, setMosaicValue] =
-    useState<MosaicNode<"leftbar" | "children" | "rightbar">>("children");
+  const [mosaicValue, setMosaicValue] = useState<MosaicNode<LayoutNode>>("children");
   const { classes } = useStyles();
 
   const allItems = useMemo(() => {
@@ -176,11 +182,7 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
             second: "rightbar",
             splitPercentage: 80,
           },
-          splitPercentage:
-            // keep previous splitPercentage when changing from one tab to another
-            (typeof oldValue === "object" && typeof oldValue.second === "object"
-              ? oldValue.splitPercentage
-              : undefined) ?? defaultInitialSidebarPercentage(),
+          splitPercentage: mosiacLeftSidebarSplitPercentage(oldValue),
         };
       });
     } else if (leftBarShown && !rightBarShown) {
@@ -189,10 +191,7 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
           direction: "row",
           first: "leftbar",
           second: "children",
-          splitPercentage:
-            // keep previous splitPercentage when hiding the right bar
-            (typeof oldValue === "object" ? oldValue.splitPercentage : undefined) ??
-            defaultInitialSidebarPercentage(),
+          splitPercentage: mosiacLeftSidebarSplitPercentage(oldValue),
         };
       });
     } else if (!leftBarShown && rightBarShown) {
@@ -324,7 +323,7 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
         // children from having to re-mount each time the sidebar is opened/closed.
       }
       <div className={classes.mosaicWrapper}>
-        <MosaicWithoutDragDropContext<"leftbar" | "children" | "rightbar">
+        <MosaicWithoutDragDropContext<LayoutNode>
           className=""
           value={mosaicValue}
           onChange={(value) => value != undefined && setMosaicValue(value)}
