@@ -171,8 +171,8 @@ function initRenderStateBuilder(): BuildRenderStateFn {
         const topics = sortedTopics.map<Topic>((topic) => {
           const newTopic: Topic = {
             name: topic.name,
-            datatype: topic.schemaName,
-            schemaName: topic.schemaName,
+            datatype: topic.schemaName ?? "",
+            schemaName: topic.schemaName ?? "",
           };
 
           if (messageConverters) {
@@ -339,6 +339,34 @@ function initRenderStateBuilder(): BuildRenderStateFn {
           shouldRender = true;
         }
         renderState.currentTime = undefined;
+      }
+    }
+
+    if (watchedFields.has("startTime")) {
+      const startTime = activeData?.startTime;
+
+      if (startTime != undefined && startTime !== renderState.startTime) {
+        shouldRender = true;
+        renderState.startTime = startTime;
+      } else {
+        if (renderState.startTime != undefined) {
+          shouldRender = true;
+        }
+        renderState.startTime = undefined;
+      }
+    }
+
+    if (watchedFields.has("endTime")) {
+      const endTime = activeData?.endTime;
+
+      if (endTime != undefined && endTime !== renderState.endTime) {
+        shouldRender = true;
+        renderState.endTime = endTime;
+      } else {
+        if (renderState.endTime != undefined) {
+          shouldRender = true;
+        }
+        renderState.endTime = undefined;
       }
     }
 

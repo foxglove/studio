@@ -124,7 +124,6 @@ function TopicListItem({
         <Stack style={{ textAlign: "right" }}>
           <Typography
             variant="caption"
-            component="div"
             color="text.secondary"
             data-topic={topic.name}
             data-topic-stat="count"
@@ -133,7 +132,6 @@ function TopicListItem({
           </Typography>
           <Typography
             variant="caption"
-            component="div"
             color="text.secondary"
             data-topic={topic.name}
             data-topic-stat="frequency"
@@ -147,11 +145,15 @@ function TopicListItem({
         primary={<HighlightChars str={topic.name} indices={positions} />}
         primaryTypographyProps={{ noWrap: true, title: topic.name }}
         secondary={
-          <HighlightChars
-            str={topic.schemaName}
-            indices={positions}
-            offset={topic.name.length + 1}
-          />
+          topic.schemaName == undefined ? (
+            "—"
+          ) : (
+            <HighlightChars
+              str={topic.schemaName}
+              indices={positions}
+              offset={topic.name.length + 1}
+            />
+          )
         }
         secondaryTypographyProps={{
           variant: "caption",

@@ -112,11 +112,11 @@ const useStyles = makeStyles()((theme) => ({
   },
   topic: {
     fontFamily: fonts.SANS_SERIF,
-    fontFeatureSettings: `${fonts.SANS_SERIF_FEATURE_SETTINGS}, "zero"`,
+    fontFeatureSettings: `${theme.typography.fontFeatureSettings}, "zero"`,
   },
   big: {
     "&.MuiTypography-root": {
-      fontFeatureSettings: `${fonts.SANS_SERIF_FEATURE_SETTINGS}, "zero"`,
+      fontFeatureSettings: `${theme.typography.fontFeatureSettings}, "zero"`,
     },
   },
   hoverObserver: {
@@ -153,7 +153,7 @@ function RawMessages(props: Props) {
     [topicRosPath, topics],
   );
   const rootStructureItem: MessagePathStructureItem | undefined = useMemo(() => {
-    if (!topic || !topicRosPath) {
+    if (!topic || !topicRosPath || topic.schemaName == undefined) {
       return;
     }
     return traverseStructure(

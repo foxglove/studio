@@ -3,7 +3,15 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { debounce } from "lodash";
-import { createContext } from "react";
+import {
+  createContext,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { StoreApi, useStore } from "zustand";
 
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
@@ -28,8 +36,6 @@ import {
 import { MessagePipelineContext } from "./types";
 
 export type { MessagePipelineContext };
-
-const { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } = React;
 
 // exported only for MockMessagePipelineProvider
 export const ContextInternal = createContext<StoreApi<MessagePipelineInternalState> | undefined>(
@@ -126,6 +132,13 @@ export function MessagePipelineProvider({
   const dispatch = store.getState().dispatch;
   useEffect(() => {
     if (!player) {
+      // When there is no player, set the player state to the default to go back to a state where we
+      // indicate the player is not present.
+      dispatch({
+        type: "update-player-state",
+        playerState: defaultPlayerState(),
+        renderDone: undefined,
+      });
       return;
     }
 

@@ -11,9 +11,11 @@ import {
   ThemeProvider as MuiThemeProvider,
 } from "@mui/material";
 import { useState, useMemo, ReactElement } from "react";
+import { useTranslation } from "react-i18next";
 import { makeStyles } from "tss-react/mui";
 
 import Stack from "@foxglove/studio-base/components/Stack";
+import { Language } from "@foxglove/studio-base/i18n";
 import { createMuiTheme } from "@foxglove/studio-base/theme";
 
 const MINIMUM_CHROME_VERSION = 76;
@@ -57,7 +59,11 @@ const VersionBanner = function ({
   const [showBanner, setShowBanner] = useState(true);
   const muiTheme = useMemo(() => createMuiTheme("dark"), []);
   const { classes, cx } = useStyles();
-
+  const { i18n } = useTranslation();
+  const muiTheme = useMemo(
+    () => createMuiTheme("dark", i18n.language as Language),
+    [i18n.language],
+  );
   if (!showBanner || currentVersion >= MINIMUM_CHROME_VERSION) {
     return ReactNull;
   }
@@ -89,7 +95,11 @@ const VersionBanner = function ({
             {!isChrome && (
               <Typography align="center" variant="subtitle1">
                 Check out our cross-browser support progress in GitHub issue{" "}
-                <Link color="inherit" href="https://github.com/foxglove/studio/issues/1511">
+                <Link
+                  color="inherit"
+                  href="https://github.com/foxglove/studio/issues/1511"
+                  target="_blank"
+                >
                   #1511
                 </Link>
                 .

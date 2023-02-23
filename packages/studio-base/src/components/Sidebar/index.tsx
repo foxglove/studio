@@ -21,10 +21,10 @@ import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import { HelpMenu } from "@foxglove/studio-base/components/AppBar/Help";
 import { BuiltinIcon } from "@foxglove/studio-base/components/BuiltinIcon";
 import ErrorBoundary from "@foxglove/studio-base/components/ErrorBoundary";
+import { MemoryUseIndicator } from "@foxglove/studio-base/components/MemoryUseIndicator";
 import Stack from "@foxglove/studio-base/components/Stack";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 
-import { MemoryUseIndicator } from "./MemoryUseIndicator";
 import { TabSpacer } from "./TabSpacer";
 
 function Noop(): ReactNull {
@@ -231,6 +231,7 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
         >
           {topTabs}
           <TabSpacer />
+          {!enableNewTopNav && enableMemoryUseIndicator && <MemoryUseIndicator />}
           {!enableNewTopNav && (
             <Tab
               className={classes.tab}
@@ -245,21 +246,22 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
             />
           )}
           {bottomTabs}
-          {enableMemoryUseIndicator && <MemoryUseIndicator />}
         </Tabs>
-        <HelpMenu
-          anchorEl={helpAnchorEl}
-          open={helpMenuOpen}
-          handleClose={handleHelpClose}
-          anchorOrigin={{
-            horizontal: "right",
-            vertical: "bottom",
-          }}
-          transformOrigin={{
-            vertical: "bottom",
-            horizontal: "left",
-          }}
-        />
+        {!enableNewTopNav && (
+          <HelpMenu
+            anchorEl={helpAnchorEl}
+            open={helpMenuOpen}
+            handleClose={handleHelpClose}
+            anchorOrigin={{
+              horizontal: "right",
+              vertical: "bottom",
+            }}
+            transformOrigin={{
+              vertical: "bottom",
+              horizontal: "left",
+            }}
+          />
+        )}
       </Stack>
       {
         // By always rendering the mosaic, even if we are only showing children, we can prevent the
