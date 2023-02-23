@@ -33,6 +33,8 @@ export default {
   newNavigation: "新版导航栏",
   newNavigationDescription: "使用新版导航栏。",
   restartTheAppForChangesToTakeEffect: " 重新启动应用程序以使更改生效。",
+  ros2NativeConnection: "ROS 2 原生连接",
+  ros2NativeConnectionDescription: "启用已弃用的 ROS 2 本机实时连接。",
   layoutDebugging: "布局调试",
   layoutDebuggingDescription: "显示用于开发和调试布局存储的额外控件。",
 };
