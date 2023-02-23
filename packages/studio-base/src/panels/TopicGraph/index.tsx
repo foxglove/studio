@@ -11,12 +11,8 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import ArrowLeftRightIcon from "@mdi/svg/svg/arrow-left-right.svg";
-import ArrowUpDownIcon from "@mdi/svg/svg/arrow-up-down.svg";
-import FitToPageIcon from "@mdi/svg/svg/fit-to-page-outline.svg";
-import ServiceIcon from "@mdi/svg/svg/rectangle-outline.svg";
-import TopicIcon from "@mdi/svg/svg/rhombus.svg";
-import { FormControlLabel, IconButton, Paper, Radio, RadioGroup } from "@mui/material";
+import RectangleOutlinedIcon from "@mui/icons-material/RectangleOutlined";
+import { FormControlLabel, IconButton, Paper, Radio, RadioGroup, SvgIcon } from "@mui/material";
 import Cytoscape from "cytoscape";
 import { useCallback, useMemo, useRef, useState } from "react";
 import textMetrics from "text-metrics";
@@ -129,10 +125,6 @@ const useStyles = makeStyles()((theme) => ({
   },
   icon: {
     fontSize: "1rem !important",
-
-    "& svg:not(.MuiSvgIcon-root)": {
-      fontSize: "1rem !important",
-    },
   },
   pointerEventsAuto: {
     pointerEvents: "auto",
@@ -381,10 +373,29 @@ function TopicGraph() {
         <Paper square={false} elevation={4} className={classes.pointerEventsAuto}>
           <Stack flex="0 0" className={cx(classes.stack, classes.pointerEventsAuto)}>
             <IconButton title="Zoom fit" onClick={onZoomFit} className={classes.icon}>
-              <FitToPageIcon />
+              <SvgIcon fontSize="inherit">
+                <path
+                  d="M20,2H4C2.89,2 2,2.89 2,4V20C2,21.11 2.89,22 4,22H20C21.11,22 22,21.11 22,20V4C22,2.89 21.11,2 20,2M20,20H4V4H20M13,8V10H11V8H9L12,5L15,8M16,15V13H14V11H16V9L19,12M10,13H8V15L5,12L8,9V11H10M15,16L12,19L9,16H11V14H13V16"
+                  fill="currentColor"
+                />
+              </SvgIcon>
             </IconButton>
             <IconButton title="Orientation" onClick={toggleOrientation} className={classes.icon}>
-              {lrOrientation ? <ArrowLeftRightIcon /> : <ArrowUpDownIcon />}
+              {lrOrientation ? (
+                <SvgIcon fontSize="inherit">
+                  <path
+                    d="M6.45,17.45L1,12L6.45,6.55L7.86,7.96L4.83,11H19.17L16.14,7.96L17.55,6.55L23,12L17.55,17.45L16.14,16.04L19.17,13H4.83L7.86,16.04L6.45,17.45Z"
+                    fill="currentColor"
+                  />
+                </SvgIcon>
+              ) : (
+                <SvgIcon fontSize="inherit">
+                  <path
+                    d="M17.45,17.55L12,23L6.55,17.55L7.96,16.14L11,19.17V4.83L7.96,7.86L6.55,6.45L12,1L17.45,6.45L16.04,7.86L13,4.83V19.17L16.04,16.14L17.45,17.55Z"
+                    fill="currentColor"
+                  />
+                </SvgIcon>
+              )}
             </IconButton>
             <IconButton
               color={showServices ? "info" : "inherit"}
@@ -392,7 +403,7 @@ function TopicGraph() {
               title={showServices ? "Showing services" : "Hiding services"}
               onClick={toggleShowServices}
             >
-              <ServiceIcon />
+              <RectangleOutlinedIcon fontSize="inherit" />
             </IconButton>
           </Stack>
         </Paper>
@@ -401,7 +412,11 @@ function TopicGraph() {
           checked={topicVisibility !== "none"}
           dataTest="set-topic-visibility"
           tooltip={topicVisibilityTooltip}
-          icon={<TopicIcon />}
+          icon={
+            <SvgIcon>
+              <path d="M12 2C11.5 2 11 2.19 10.59 2.59L2.59 10.59C1.8 11.37 1.8 12.63 2.59 13.41L10.59 21.41C11.37 22.2 12.63 22.2 13.41 21.41L21.41 13.41C22.2 12.63 22.2 11.37 21.41 10.59L13.41 2.59C13 2.19 12.5 2 12 2Z" />
+            </SvgIcon>
+          }
           selectedTab={selectedTab}
           onSelectTab={(newSelectedTab) => {
             setSelectedTab(newSelectedTab);
