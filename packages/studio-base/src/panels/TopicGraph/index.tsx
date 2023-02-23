@@ -18,6 +18,7 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import textMetrics from "text-metrics";
 import { makeStyles } from "tss-react/mui";
 
+import TopicIcon from "@foxglove/studio-base/assets/rhombus.svg";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import ExpandingToolbar, { ToolGroup } from "@foxglove/studio-base/components/ExpandingToolbar";
 import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
@@ -412,11 +413,7 @@ function TopicGraph() {
           checked={topicVisibility !== "none"}
           dataTest="set-topic-visibility"
           tooltip={topicVisibilityTooltip}
-          icon={
-            <SvgIcon>
-              <path d="M12 2C11.5 2 11 2.19 10.59 2.59L2.59 10.59C1.8 11.37 1.8 12.63 2.59 13.41L10.59 21.41C11.37 22.2 12.63 22.2 13.41 21.41L21.41 13.41C22.2 12.63 22.2 11.37 21.41 10.59L13.41 2.59C13 2.19 12.5 2 12 2Z" />
-            </SvgIcon>
-          }
+          icon={<TopicIcon />}
           selectedTab={selectedTab}
           onSelectTab={(newSelectedTab) => {
             setSelectedTab(newSelectedTab);
