@@ -16,6 +16,7 @@ import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useSta
 import ReactDOM from "react-dom";
 import { useLatest, useLongPress } from "react-use";
 import { DeepPartial } from "ts-essentials";
+import { makeStyles } from "tss-react/mui";
 import { useDebouncedCallback } from "use-debounce";
 
 import Logger from "@foxglove/log";
@@ -87,6 +88,18 @@ const PublishClickIcons: Record<PublishClickType, React.ReactNode> = {
   pose_estimate: <PublishPoseEstimateIcon fontSize="inherit" />,
 };
 
+const useStyles = makeStyles()({
+  iconButton: {
+    position: "relative",
+    fontSize: "1rem !important",
+    pointerEvents: "auto",
+
+    "& svg:not(.MuiSvgIcon-root)": {
+      fontSize: "1rem !important",
+    },
+  },
+});
+
 /**
  * Provides DOM overlay elements on top of the 3D scene (e.g. stats, debug GUI).
  */
@@ -104,6 +117,7 @@ function RendererOverlay(props: {
   onChangePublishClickType: (_: PublishClickType) => void;
   onClickPublish: () => void;
 }): JSX.Element {
+  const { classes } = useStyles();
   const [clickedPosition, setClickedPosition] = useState<{ clientX: number; clientY: number }>({
     clientX: 0,
     clientY: 0,
@@ -229,19 +243,19 @@ function RendererOverlay(props: {
         />
         <Paper square={false} elevation={4} style={{ display: "flex", flexDirection: "column" }}>
           <IconButton
+            className={classes.iconButton}
             color={props.perspective ? "info" : "inherit"}
             title={props.perspective ? "Switch to 2D camera" : "Switch to 3D camera"}
             onClick={props.onTogglePerspective}
-            style={{ pointerEvents: "auto" }}
           >
             <ThreeDeeIcon />
           </IconButton>
           <IconButton
             data-testid="measure-button"
+            className={classes.iconButton}
             color={props.measureActive ? "info" : "inherit"}
             title={props.measureActive ? "Cancel measuring" : "Measure distance"}
             onClick={props.onClickMeasure}
-            style={{ position: "relative", pointerEvents: "auto" }}
           >
             <RulerIcon />
           </IconButton>
