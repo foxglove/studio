@@ -7,6 +7,7 @@ import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
+import MockMessagePipelineProvider from "@foxglove/studio-base/components/MessagePipeline/MockMessagePipelineProvider";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 
 import Sidebar, { SidebarItem } from ".";
@@ -72,16 +73,18 @@ function Story({
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div style={{ width: 300, height }}>
-        <Sidebar
-          items={ITEMS}
-          bottomItems={BOTTOM_ITEMS}
-          selectedKey={selectedKey}
-          onSelectKey={setSelectedKey}
-        >
-          Main content
-        </Sidebar>
-      </div>
+      <MockMessagePipelineProvider>
+        <div style={{ width: 300, height }}>
+          <Sidebar
+            items={ITEMS}
+            bottomItems={BOTTOM_ITEMS}
+            selectedKey={selectedKey}
+            onSelectKey={setSelectedKey}
+          >
+            Main content
+          </Sidebar>
+        </div>
+      </MockMessagePipelineProvider>
     </DndProvider>
   );
 }
