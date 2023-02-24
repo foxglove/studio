@@ -111,12 +111,18 @@ const useStyles = makeStyles()((theme) => ({
  * Extract existing split percentage from a layout node or return the default.
  */
 function mosiacLeftSidebarSplitPercentage(node: MosaicNode<LayoutNode>) {
-  if (typeof node === "object") {
+  const defaultFraction = 0.3;
+  const width = Math.min(384, defaultFraction * window.innerWidth);
+  const defaultPercentage = (100 * width) / window.innerWidth;
+
+  if (typeof node === "object" && node.first === "children") {
+    // Left bar not previously shown
+    return defaultPercentage;
+  } else if (typeof node === "object" && node.first === "leftbar") {
+    // Left bar currently shown, preserve existing split
     return node.splitPercentage;
   } else {
-    const defaultFraction = 0.3;
-    const width = Math.min(384, defaultFraction * window.innerWidth);
-    return (100 * width) / window.innerWidth;
+    return defaultPercentage;
   }
 }
 
