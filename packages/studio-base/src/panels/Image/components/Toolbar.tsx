@@ -2,11 +2,11 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { Cursor24Regular } from "@fluentui/react-icons";
 import { Typography, styled as muiStyled } from "@mui/material";
 import { ReactElement, useEffect, useRef, useState } from "react";
 import Tree from "react-json-tree";
 
-import CursorIcon from "@foxglove/studio-base/assets/cursor-default.svg";
 import ExpandingToolbar, {
   ToolGroup,
   ToolGroupFixedSizePane,
@@ -104,7 +104,7 @@ export function Toolbar({ pixelData }: { pixelData: PixelData | undefined }): JS
     <ToolbarRoot ref={ref} visible={mousePresent}>
       <ExpandingToolbar
         tooltip="Inspect objects"
-        icon={<CursorIcon />}
+        icon={<Cursor24Regular />}
         selectedTab={selectedTab}
         onSelectTab={setSelectedTab}
       >
