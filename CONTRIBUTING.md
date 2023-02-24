@@ -49,7 +49,7 @@ $ yarn test         # run all tests
 $ yarn test:watch   # run tests on changed files
 ```
 
-## Localization (multi-language support)
+## Localization
 
 Foxglove Studio primarily supports English, but a Chinese localization is available with translations provided by community volunteers. Translation support is implemented using [`react-i18next`](https://react.i18next.com).
 
