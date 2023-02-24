@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { debounce, set, unset } from "lodash";
+import { set, unset } from "lodash";
 import * as THREE from "three";
 import { DeepPartial } from "ts-essentials";
 
@@ -18,8 +18,6 @@ import { updatePose } from "./updatePose";
 export type PartialMessage<T> = DeepPartial<T>;
 
 export type PartialMessageEvent<T> = MessageEvent<DeepPartial<T>>;
-
-const SETTINGS_DEBOUNCE_MS = 100;
 
 /**
  * SceneExtension is a base class for extending the 3D scene. It extends THREE.Object3D and is a
