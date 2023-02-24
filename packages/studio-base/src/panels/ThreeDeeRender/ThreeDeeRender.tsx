@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { Ruler24Filled } from "@fluentui/react-icons";
 import {
   IconButton,
   ListItemIcon,
@@ -33,13 +34,11 @@ import {
   Topic,
   VariableValue,
 } from "@foxglove/studio";
-import { Ruler24Filled } from "@fluentui/react-icons";
-import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
-
 import PublishGoalIcon from "@foxglove/studio-base/components/PublishGoalIcon";
 import PublishPointIcon from "@foxglove/studio-base/components/PublishPointIcon";
 import PublishPoseEstimateIcon from "@foxglove/studio-base/components/PublishPoseEstimateIcon";
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
+import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import { DebugGui } from "./DebugGui";
 import { InteractionContextMenu, Interactions, SelectionObject, TabType } from "./Interactions";
@@ -129,7 +128,7 @@ function RendererOverlay(props: {
   onChangePublishClickType: (_: PublishClickType) => void;
   onClickPublish: () => void;
 }): JSX.Element {
-  const { classes, cx } = useStyles();
+  const { classes } = useStyles();
   const [clickedPosition, setClickedPosition] = useState<{ clientX: number; clientY: number }>({
     clientX: 0,
     clientY: 0,
