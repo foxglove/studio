@@ -71,7 +71,7 @@ Foxglove Studio is primarily written in TypeScript – contributions are welcome
 
 Note: All contributors must agree to our [Contributor License Agreement](https://github.com/foxglove/cla).
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for further details.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for more details.
 
 ## Self-hosting
 
