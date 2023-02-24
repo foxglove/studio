@@ -51,12 +51,16 @@ $ yarn test:watch   # run tests on changed files
 
 ## Localization
 
-Foxglove Studio primarily supports English, but a Chinese localization is available with translations provided by community volunteers. Translation support is implemented using [`react-i18next`](https://react.i18next.com).
+At this time, first-class support for Foxglove Studio is provided in English only. Localization into other languages is available on a best-effort basis, with translations provided by community volunteers. Current community supported-languages are:
+
+- Chinese
+
+Translation support is implemented using [`react-i18next`](https://react.i18next.com).
 
 ### Add translations
 
-- We value having _high-quality_ translations over having _all_ translations for a given component or view. Though every PR must have up-to-date English translations, updating other languages is completely optional. We encourage you to use follow-up PRs to update other languages, once you have accurate translations.
-- If you update an English translation and cannot provide updated non-English translations, delete the non-English versions in that PR. Open follow-up PRs to handle adding accurate non-English translations.
+- We value having _high-quality_ translations over having _all_ translations for a given component or view. Though every PR must have up-to-date English translations, updating other languages is completely optional.
+- If you update an English translation and cannot provide updated non-English translations, delete the non-English versions in that PR. Optionally, open follow-up PRs to add accurate non-English translations.
 
 ### Add translations to the `i18n` directory
 
