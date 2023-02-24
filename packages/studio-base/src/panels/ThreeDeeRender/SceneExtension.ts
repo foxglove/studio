@@ -55,12 +55,6 @@ export class SceneExtension<
    */
   public readonly renderables = new Map<string, TRenderable>();
 
-  private _settingsUpdateDebounced = debounce(
-    () => this.renderer.settings.setNodesForKey(this.extensionId, this.settingsNodes()),
-    SETTINGS_DEBOUNCE_MS,
-    { leading: true, trailing: true, maxWait: SETTINGS_DEBOUNCE_MS },
-  );
-
   /**
    * @param extensionId A unique identifier for this SceneExtension, such as `foxglove.Markers`.
    * @param renderer A reference to the parent `Renderer` instance.
@@ -123,7 +117,7 @@ export class SceneExtension<
    * `settingsNodes()` method will be called to retrieve the latest nodes.
    */
   public updateSettingsTree(): void {
-    this._settingsUpdateDebounced();
+    this.renderer.settings.setNodesForKey(this.extensionId, this.settingsNodes());
   }
 
   /**
