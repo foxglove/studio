@@ -11,11 +11,11 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { Database20Filled } from "@fluentui/react-icons";
 import { Box } from "@mui/material";
 import { storiesOf } from "@storybook/react";
 import { Mosaic, MosaicWindow } from "react-mosaic-component";
 
-import DatabaseIcon from "@foxglove/studio-base/assets/database.svg";
 import MockPanelContextProvider from "@foxglove/studio-base/components/MockPanelContextProvider";
 import ToolbarIconButton from "@foxglove/studio-base/components/PanelToolbar/ToolbarIconButton";
 import MockCurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider/MockCurrentLayoutProvider";
@@ -118,7 +118,7 @@ storiesOf("components/PanelToolbar", module)
   .add("one additional icon", () => {
     const additionalIcons = (
       <ToolbarIconButton title="database icon">
-        <DatabaseIcon />
+        <Database20Filled />
       </ToolbarIconButton>
     );
     return (

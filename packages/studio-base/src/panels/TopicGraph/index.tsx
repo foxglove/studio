@@ -11,16 +11,18 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import RectangleOutlinedIcon from "@mui/icons-material/RectangleOutlined";
+import {
+  ArrowBidirectionalUpDown20Filled,
+  RectangleLandscape20Filled,
+  RectangleLandscape20Regular,
+  ScaleFill20Regular,
+} from "@fluentui/react-icons";
 import { FormControlLabel, IconButton, Paper, Radio, RadioGroup } from "@mui/material";
 import Cytoscape from "cytoscape";
 import { useCallback, useMemo, useRef, useState } from "react";
 import textMetrics from "text-metrics";
 import { makeStyles } from "tss-react/mui";
 
-import ArrowLeftRightIcon from "@foxglove/studio-base/assets/arrow-left-right.svg";
-import ArrowUpDownIcon from "@foxglove/studio-base/assets/arrow-up-down.svg";
-import FitToPageIcon from "@foxglove/studio-base/assets/fit-to-page.svg";
 import TopicIcon from "@foxglove/studio-base/assets/rhombus.svg";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import ExpandingToolbar, { ToolGroup } from "@foxglove/studio-base/components/ExpandingToolbar";
@@ -381,10 +383,12 @@ function TopicGraph() {
         <Paper square={false} elevation={4} className={classes.pointerEventsAuto}>
           <Stack flex="0 0" className={cx(classes.stack, classes.pointerEventsAuto)}>
             <IconButton title="Zoom fit" onClick={onZoomFit} className={classes.icon}>
-              <FitToPageIcon />
+              <ScaleFill20Regular />
             </IconButton>
             <IconButton title="Orientation" onClick={toggleOrientation} className={classes.icon}>
-              {lrOrientation ? <ArrowLeftRightIcon /> : <ArrowUpDownIcon />}
+              <ArrowBidirectionalUpDown20Filled
+                style={{ transform: `rotate(${lrOrientation ? 90 : 0}deg)` }}
+              />
             </IconButton>
             <IconButton
               color={showServices ? "info" : "inherit"}
@@ -392,7 +396,7 @@ function TopicGraph() {
               title={showServices ? "Showing services" : "Hiding services"}
               onClick={toggleShowServices}
             >
-              <RectangleOutlinedIcon fontSize="inherit" />
+              {showServices ? <RectangleLandscape20Filled /> : <RectangleLandscape20Regular />}
             </IconButton>
           </Stack>
         </Paper>
