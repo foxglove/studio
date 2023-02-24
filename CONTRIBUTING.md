@@ -53,22 +53,22 @@ $ yarn test:watch   # run tests on changed files
 
 Foxglove Studio primarily supports English, but a Chinese localization is available with translations provided by community volunteers. Translation support is implemented using [`react-i18next`](https://react.i18next.com).
 
-### Guidelines for translations
+### Add translations
 
-- English text **must** be kept up to date in every pull request. Updating translations for other languages in the same pull request is **optional**. We value _high-quality_ translations more than having _some_ translation for each part of the user interface.
-- If the English version of an existing translation is changed, and other versions would need to be updated, is better to delete the non-English versions rather than leave them unchanged, since they might become incorrect or confusing.
+- We value having _high-quality_ translations over having _all_ translations for a given component or view. Though every PR must have up-to-date English translations, updating other languages is completely optional. We encourage you to use follow-up PRs to update other languages, once you have accurate translations.
+- If you update an English translation and cannot provide updated non-English translations, delete the non-English versions in that PR. Open follow-up PRs to handle adding accurate non-English translations.
 
-### Place strings in the `i18n` directory
+### Add translations to the `i18n` directory
 
 The [`i18n` directory](packages/studio-base/src/i18n) contains translated (localized) strings for all languages supported by Foxglove Studio.
 
-Translated strings are organized into _namespaces_ — for example, [`i18n/[language]/preferences.ts`](packages/studio-base/src/i18n/en/preferences.ts) contains localization keys and strings for the app's Preferences window.
+Translated strings are organized into _namespaces_ — e.g. [`i18n/[language]/preferences.ts`](packages/studio-base/src/i18n/en/preferences.ts) contains translations for the app's Preferences tab.
 
 ### Use `useTranslation()` and `t()` to access translated strings
 
 1. Call the [<code>useTranslation(<i>namespace</i>)</code> hook](https://react.i18next.com/latest/usetranslation-hook) inside a React component to access strings in a given namespace. The hook returns a function called `t`.
 
-2. Call the `t` function to get the translated version of a string.
+2. Call the `t` function to get the translation for a string.
 
 For example:
 
@@ -77,11 +77,11 @@ const { t } = useTranslation("myComponent");
 return <p>{t("hello")}</p>;
 ```
 
-### Adding localization support to a component
+### Add localization support to a component
 
-1. Move English strings out of the component code, and into the `i18n` folder. Use a new namespace for logical groups of components or app screens.
+1. Move English strings out of the component code, and into the `i18n` folder. Use a new namespace for logical groups of components or app views.
 
-2. Replace strings hard-coded in source code with calls to the `t()` function. Use `camelCase` for keys.
+2. Replace strings hard-coded in source code with calls to the `t()` function. Use `camelCase` for new localization keys.
 
 <table><tr><th>Before</th><th>After</th></tr><tr><td>
 
