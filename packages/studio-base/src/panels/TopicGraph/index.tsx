@@ -12,10 +12,9 @@
 //   You may not use this file except in compliance with the License.
 
 import {
-  ArrowBidirectionalUpDown20Filled,
-  RectangleLandscape20Filled,
-  RectangleLandscape20Regular,
-  ScaleFill20Regular,
+  ArrowBidirectionalUpDown16Regular,
+  PageFit16Regular,
+  RectangleLandscape16Regular,
 } from "@fluentui/react-icons";
 import { FormControlLabel, IconButton, Paper, Radio, RadioGroup } from "@mui/material";
 import Cytoscape from "cytoscape";
@@ -383,10 +382,10 @@ function TopicGraph() {
         <Paper square={false} elevation={4} className={classes.pointerEventsAuto}>
           <Stack flex="0 0" className={cx(classes.stack, classes.pointerEventsAuto)}>
             <IconButton title="Zoom fit" onClick={onZoomFit} className={classes.icon}>
-              <ScaleFill20Regular />
+              <PageFit16Regular />
             </IconButton>
             <IconButton title="Orientation" onClick={toggleOrientation} className={classes.icon}>
-              <ArrowBidirectionalUpDown20Filled
+              <ArrowBidirectionalUpDown16Regular
                 style={{ transform: `rotate(${lrOrientation ? 90 : 0}deg)` }}
               />
             </IconButton>
@@ -396,7 +395,7 @@ function TopicGraph() {
               title={showServices ? "Showing services" : "Hiding services"}
               onClick={toggleShowServices}
             >
-              {showServices ? <RectangleLandscape20Filled /> : <RectangleLandscape20Regular />}
+              <RectangleLandscape16Regular />
             </IconButton>
           </Stack>
         </Paper>
