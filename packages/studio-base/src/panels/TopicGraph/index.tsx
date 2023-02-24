@@ -15,6 +15,7 @@ import {
   ArrowBidirectionalUpDown16Regular,
   PageFit16Regular,
   RectangleLandscape16Regular,
+  Diamond32Filled,
 } from "@fluentui/react-icons";
 import { FormControlLabel, IconButton, Paper, Radio, RadioGroup } from "@mui/material";
 import Cytoscape from "cytoscape";
@@ -22,7 +23,6 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import textMetrics from "text-metrics";
 import { makeStyles } from "tss-react/mui";
 
-import TopicIcon from "@foxglove/studio-base/assets/rhombus.svg";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import ExpandingToolbar, { ToolGroup } from "@foxglove/studio-base/components/ExpandingToolbar";
 import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
@@ -404,7 +404,7 @@ function TopicGraph() {
           checked={topicVisibility !== "none"}
           dataTest="set-topic-visibility"
           tooltip={topicVisibilityTooltip}
-          icon={<TopicIcon />}
+          icon={<Diamond32Filled />}
           selectedTab={selectedTab}
           onSelectTab={(newSelectedTab) => {
             setSelectedTab(newSelectedTab);

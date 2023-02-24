@@ -33,8 +33,9 @@ import {
   Topic,
   VariableValue,
 } from "@foxglove/studio";
-import RulerIcon from "@foxglove/studio-base/assets/ruler.svg";
-import ThreeDeeIcon from "@foxglove/studio-base/assets/video-3d.svg";
+import { Ruler24Filled } from "@fluentui/react-icons";
+import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
+
 import PublishGoalIcon from "@foxglove/studio-base/components/PublishGoalIcon";
 import PublishPointIcon from "@foxglove/studio-base/components/PublishPointIcon";
 import PublishPoseEstimateIcon from "@foxglove/studio-base/components/PublishPoseEstimateIcon";
@@ -88,17 +89,28 @@ const PublishClickIcons: Record<PublishClickType, React.ReactNode> = {
   pose_estimate: <PublishPoseEstimateIcon fontSize="inherit" />,
 };
 
-const useStyles = makeStyles()({
+const useStyles = makeStyles()((theme) => ({
   iconButton: {
     position: "relative",
     fontSize: "1rem !important",
     pointerEvents: "auto",
+    aspectRatio: "1",
 
     "& svg:not(.MuiSvgIcon-root)": {
       fontSize: "1rem !important",
     },
   },
-});
+  rulerIcon: {
+    transform: "rotate(45deg)",
+  },
+  threeDeeButton: {
+    fontFamily: fonts.MONOSPACE,
+    fontFeatureSettings: theme.typography.caption.fontFeatureSettings,
+    fontSize: theme.typography.caption.fontSize,
+    fontWeight: theme.typography.fontWeightBold,
+    lineHeight: "1em",
+  },
+}));
 
 /**
  * Provides DOM overlay elements on top of the 3D scene (e.g. stats, debug GUI).
@@ -117,7 +129,7 @@ function RendererOverlay(props: {
   onChangePublishClickType: (_: PublishClickType) => void;
   onClickPublish: () => void;
 }): JSX.Element {
-  const { classes } = useStyles();
+  const { classes, cx } = useStyles();
   const [clickedPosition, setClickedPosition] = useState<{ clientX: number; clientY: number }>({
     clientX: 0,
     clientY: 0,
@@ -248,7 +260,7 @@ function RendererOverlay(props: {
             title={props.perspective ? "Switch to 2D camera" : "Switch to 3D camera"}
             onClick={props.onTogglePerspective}
           >
-            <ThreeDeeIcon />
+            <span className={classes.threeDeeButton}>3D</span>
           </IconButton>
           <IconButton
             data-testid="measure-button"
@@ -257,7 +269,7 @@ function RendererOverlay(props: {
             title={props.measureActive ? "Cancel measuring" : "Measure distance"}
             onClick={props.onClickMeasure}
           >
-            <RulerIcon />
+            <Ruler24Filled className={classes.rulerIcon} />
           </IconButton>
 
           {showPublishControl && (
