@@ -34,6 +34,7 @@ import {
   Topic,
   VariableValue,
 } from "@foxglove/studio";
+import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import PublishGoalIcon from "@foxglove/studio-base/components/PublishGoalIcon";
 import PublishPointIcon from "@foxglove/studio-base/components/PublishPointIcon";
 import PublishPoseEstimateIcon from "@foxglove/studio-base/components/PublishPoseEstimateIcon";
@@ -63,7 +64,6 @@ import {
 import { DEFAULT_PUBLISH_SETTINGS } from "./renderables/CoreSettings";
 import type { LayerSettingsTransform } from "./renderables/FrameAxes";
 import { PublishClickEvent, PublishClickType } from "./renderables/PublishClickTool";
-import { AppSetting } from "@foxglove/studio-base/AppSetting";
 
 const log = Logger.getLogger(__filename);
 
