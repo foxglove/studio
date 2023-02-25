@@ -390,6 +390,8 @@ function useRendererProperty<K extends keyof Renderer>(
 export function ThreeDeeRender({ context }: { context: PanelExtensionContext }): JSX.Element {
   const { initialState, saveState } = context;
 
+  throw new Error("foob");
+
   // Load and save the persisted panel configuration
   const [config, setConfig] = useState<RendererConfig>(() => {
     const partialConfig = initialState as DeepPartial<RendererConfig> | undefined;
