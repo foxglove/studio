@@ -63,6 +63,7 @@ import {
 import { DEFAULT_PUBLISH_SETTINGS } from "./renderables/CoreSettings";
 import type { LayerSettingsTransform } from "./renderables/FrameAxes";
 import { PublishClickEvent, PublishClickType } from "./renderables/PublishClickTool";
+import { AppSetting } from "@foxglove/studio-base/AppSetting";
 
 const log = Logger.getLogger(__filename);
 
@@ -103,6 +104,7 @@ function RendererOverlay(props: {
   publishClickType: PublishClickType;
   onChangePublishClickType: (_: PublishClickType) => void;
   onClickPublish: () => void;
+  timezone: string | undefined;
 }): JSX.Element {
   const [clickedPosition, setClickedPosition] = useState<{ clientX: number; clientY: number }>({
     clientX: 0,
@@ -226,6 +228,7 @@ function RendererOverlay(props: {
           selectedObject={selectedObject}
           interactionsTabType={interactionsTabType}
           setInteractionsTabType={setInteractionsTabType}
+          timezone={props.timezone}
         />
         <Paper square={false} elevation={4} style={{ display: "flex", flexDirection: "column" }}>
           <IconButton
@@ -410,6 +413,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
   }, [canvas, configRef, config.scene.transforms?.enablePreloading]);
 
   const [colorScheme, setColorScheme] = useState<"dark" | "light" | undefined>();
+  const [timezone, setTimezone] = useState<string | undefined>();
   const [topics, setTopics] = useState<ReadonlyArray<Topic> | undefined>();
   const [parameters, setParameters] = useState<ReadonlyMap<string, ParameterValue> | undefined>();
   const [variables, setVariables] = useState<ReadonlyMap<string, VariableValue> | undefined>();
@@ -574,6 +578,10 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
 
         // Keep UI elements and the renderer aware of the current color scheme
         setColorScheme(renderState.colorScheme);
+        if (renderState.appSettings) {
+          const tz = renderState.appSettings.get(AppSetting.TIMEZONE);
+          setTimezone(typeof tz === "string" ? tz : undefined);
+        }
 
         // We may have new topics - since we are also watching for messages in
         // the current frame, topics may not have changed
@@ -606,6 +614,8 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
     context.watch("sharedPanelState");
     context.watch("variables");
     context.watch("topics");
+    context.watch("appSettings");
+    context.subscribeAppSettings([AppSetting.TIMEZONE]);
   }, [context, renderer]);
 
   // Build a list of topics to subscribe to
@@ -1039,6 +1049,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
               renderer?.publishClickTool.setPublishClickType(type);
               renderer?.publishClickTool.start();
             }}
+            timezone={timezone}
           />
         </RendererContext.Provider>
       </div>
