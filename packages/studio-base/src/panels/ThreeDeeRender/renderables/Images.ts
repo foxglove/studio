@@ -132,19 +132,29 @@ export class Images extends SceneExtension<ImageRenderable> {
       shouldSubscribe: this.cameraInfoShouldSubscribe,
     });
 
-    this._updateCameraInfoToImageTopicsIfNeeded();
+    this._updateTopicInfoIfNeeded();
   }
 
   private _lastTopics: readonly Topic[] | undefined = undefined;
   /**
    * Update cameraInfoToImageTopics based on the current config and list of available topics.
    */
-  private _updateCameraInfoToImageTopicsIfNeeded() {
+  private _updateTopicInfoIfNeeded() {
     if (this.renderer.topics === this._lastTopics) {
       return;
     }
+
     this._lastTopics = this.renderer.topics;
+
+    this.cameraInfoTopics = new Set();
     for (const topic of this.renderer.topics ?? []) {
+      if (
+        topicIsConvertibleToSchema(topic, CAMERA_INFO_DATATYPES) ||
+        topicIsConvertibleToSchema(topic, CAMERA_CALIBRATION_DATATYPES)
+      ) {
+        this.cameraInfoTopics.add(topic.name);
+      }
+
       if (
         !(
           topicIsConvertibleToSchema(topic, ROS_IMAGE_DATATYPES) ||
@@ -164,6 +174,7 @@ export class Images extends SceneExtension<ImageRenderable> {
   }
 
   public override settingsNodes(): SettingsTreeEntry[] {
+    this._updateTopicInfoIfNeeded();
     const configTopics = this.renderer.config.topics;
     const handler = this.handleSettingsAction;
     const entries: SettingsTreeEntry[] = [];
@@ -286,7 +297,7 @@ export class Images extends SceneExtension<ImageRenderable> {
   };
 
   private handleImage = (messageEvent: PartialMessageEvent<AnyImage>, image: AnyImage): void => {
-    this._updateCameraInfoToImageTopicsIfNeeded();
+    this._updateTopicInfoIfNeeded();
     const imageTopic = messageEvent.topic;
     const receiveTime = toNanoSec(messageEvent.receiveTime);
     const frameId = "header" in image ? image.header.frame_id : image.frame_id;
