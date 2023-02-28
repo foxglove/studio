@@ -11,6 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { ReOrderDotsVertical16Filled } from "@fluentui/react-icons";
 import CloseIcon from "@mui/icons-material/Close";
 import SearchIcon from "@mui/icons-material/Search";
 import {
@@ -52,7 +53,7 @@ import {
 } from "@foxglove/studio-base/types/panels";
 import { mightActuallyBePartial } from "@foxglove/studio-base/util/mightActuallyBePartial";
 
-const useStyles = makeStyles()((theme) => {
+const useStyles = makeStyles<void, "dragIcon">()((theme, _params, classes) => {
   return {
     fullHeight: {
       height: "100%",
@@ -64,8 +65,17 @@ const useStyles = makeStyles()((theme) => {
     cardContent: {
       flex: "auto",
     },
-    grab: {
+    listItemButton: {
       cursor: "grab",
+
+      [`&:not(:hover) .${classes.dragIcon}`]: {
+        visibility: "hidden",
+      },
+    },
+    dragIcon: {
+      cursor: "grab",
+      marginRight: theme.spacing(-1),
+      color: theme.palette.text.disabled,
     },
     grid: {
       display: "grid !important",
@@ -77,11 +87,14 @@ const useStyles = makeStyles()((theme) => {
       top: -0.5, // yep that's a half pixel to avoid a gap between the appbar and panel top
       zIndex: 100,
       display: "flex",
-      padding: theme.spacing(2),
+      padding: theme.spacing(1.5),
       justifyContent: "stretch",
       backgroundImage: `linear-gradient(to top, transparent, ${
         theme.palette.background.paper
       } ${theme.spacing(1.5)}) !important`,
+    },
+    toolbarGrid: {
+      padding: theme.spacing(2),
     },
   };
 });
@@ -249,9 +262,10 @@ function DraggablePanelItem({
             </Stack>
           }
         >
-          <ListItem disableGutters disablePadding selected={highlighted}>
+          <ListItem disableGutters disablePadding>
             <ListItemButton
-              className={classes.grab}
+              selected={highlighted}
+              className={classes.listItemButton}
               disabled={checked}
               ref={mergedRef}
               onClick={onClickWithStopPropagation}
@@ -264,6 +278,7 @@ function DraggablePanelItem({
                 }
                 primaryTypographyProps={{ fontWeight: checked ? "bold" : undefined }}
               />
+              <ReOrderDotsVertical16Filled className={classes.dragIcon} />
             </ListItemButton>
           </ListItem>
         </Tooltip>
@@ -313,7 +328,7 @@ const PanelList = forwardRef<HTMLDivElement, Props>((props: Props, ref) => {
   const { mode, onDragStart, onPanelSelect, selectedPanelType } = props;
   const [searchQuery, setSearchQuery] = useState("");
   const [highlightedPanelIdx, setHighlightedPanelIdx] = useState<number | undefined>();
-  const { classes } = useStyles();
+  const { classes, cx } = useStyles();
 
   const { dropPanel } = useCurrentLayoutActions();
   const mosaicId = usePanelMosaicId();
@@ -486,7 +501,11 @@ const PanelList = forwardRef<HTMLDivElement, Props>((props: Props, ref) => {
 
   return (
     <div className={classes.fullHeight} ref={ref}>
-      <div className={classes.toolbar}>
+      <div
+        className={cx(classes.toolbar, {
+          [classes.toolbarGrid]: mode === "grid",
+        })}
+      >
         <TextField
           fullWidth
           placeholder="Search panels"

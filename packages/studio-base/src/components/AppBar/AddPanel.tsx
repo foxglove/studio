@@ -57,7 +57,16 @@ export function AddPanelMenu(
       open={open}
       onClose={handleClose}
       MenuListProps={{
+        disablePadding: true,
         "aria-labelledby": "add-panel-button",
+      }}
+      anchorOrigin={{
+        horizontal: "left",
+        vertical: "bottom",
+      }}
+      transformOrigin={{
+        vertical: "top",
+        horizontal: "left",
       }}
     >
       <PanelList

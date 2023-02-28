@@ -77,7 +77,7 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }>(
         display: "flex",
         flex: 1,
         alignItems: "center",
-        gap: theme.spacing(0.5),
+        gap: theme.spacing(1),
 
         [theme.breakpoints.up("sm")]: {
           marginInlineStart: theme.spacing(-2),
@@ -115,7 +115,6 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }>(
           }).dark,
         },
       },
-<<<<<<< HEAD
       iconButton: {
         padding: theme.spacing(0.375),
       },
@@ -125,8 +124,6 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }>(
         gap: theme.spacing(1),
         ...NOT_DRAGGABLE_STYLE, // make buttons clickable for desktop app
       },
-=======
->>>>>>> 45f91654e (Move panel list into app bar)
       noDrag: {
         ...NOT_DRAGGABLE_STYLE, // make buttons clickable for desktop app
       },
@@ -242,11 +239,19 @@ export function AppBar(props: AppBarProps): JSX.Element {
             <IconButton className={cx(classes.logo, classes.noDrag)} size="large" color="inherit">
               <FoxgloveLogo fontSize="inherit" color="inherit" />
             </IconButton>
-            {currentUser != undefined && (
-              <Typography noWrap variant="h5" fontWeight={800} color="inherit">
-                {currentUser.org.displayName}
-              </Typography>
-            )}
+            <AddPanelIconButton
+              color="inherit"
+              id="add-panel-button"
+              title="Add panel"
+              aria-label="Add panel button"
+              aria-controls={panelMenuOpen ? "help-menu" : undefined}
+              aria-haspopup="true"
+              aria-expanded={panelMenuOpen ? "true" : undefined}
+              size="large"
+              onClick={(event) => {
+                handleMenu(event, setPanelAnchorEl);
+              }}
+            />
           </div>
 
           <div className={classes.middle}>
@@ -266,19 +271,6 @@ export function AppBar(props: AppBarProps): JSX.Element {
               >
                 {rightSidebarOpen ? <PanelRight24Filled /> : <PanelRight24Regular />}
               </IconButton>
-              <AddPanelIconButton
-                color="inherit"
-                id="add-panel-button"
-                title="Add panel"
-                aria-label="Add panel button"
-                aria-controls={panelMenuOpen ? "help-menu" : undefined}
-                aria-haspopup="true"
-                aria-expanded={panelMenuOpen ? "true" : undefined}
-                size="large"
-                onClick={(event) => {
-                  handleMenu(event, setPanelAnchorEl);
-                }}
-              />
               <HelpIconButton
                 className={classes.iconButton}
                 color="inherit"
