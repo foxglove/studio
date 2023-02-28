@@ -76,7 +76,6 @@ function Story({
         <Sidebar
           items={ITEMS}
           bottomItems={BOTTOM_ITEMS}
-          rightItems={["variables", "events"]}
           selectedKey={selectedKey}
           onSelectKey={setSelectedKey}
         >
