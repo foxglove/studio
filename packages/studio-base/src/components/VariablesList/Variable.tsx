@@ -65,7 +65,7 @@ const useStyles = makeStyles<void, "copyButton">()((theme, _params, classes) => 
     },
   },
   edgeEnd: {
-    marginRight: theme.spacing(-1),
+    marginRight: theme.spacing(-1.625),
   },
   editorWrapper: {
     position: "relative",
