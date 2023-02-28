@@ -2,10 +2,23 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { createContext, useContext } from "react";
+import { createContext, Dispatch, SetStateAction, useContext } from "react";
 
-export const WorkspaceContext = createContext({
+type WorkspaceContextType = {
+  panelSettingsOpen: boolean;
+  rightSidebarOpen: boolean;
+
+  openPanelSettings: () => void;
+  openHelp: () => void;
+  openAccountSettings: () => void;
+  openLayoutBrowser: () => void;
+  setRightSidebarOpen: Dispatch<SetStateAction<boolean>>;
+};
+
+export const WorkspaceContext = createContext<WorkspaceContextType>({
   panelSettingsOpen: false,
+  rightSidebarOpen: false,
+
   openPanelSettings: (): void => {
     throw new Error("Must be in a WorkspaceContext.Provider to open panel settings");
   },
@@ -18,15 +31,12 @@ export const WorkspaceContext = createContext({
   openLayoutBrowser: (): void => {
     throw new Error("Must be in a WorkspaceContext.Provider to open layout browser");
   },
+  setRightSidebarOpen: (): void => {
+    throw new Error("Must be in a WorkspaceContext.Provider to open the right sidebar");
+  },
 });
 WorkspaceContext.displayName = "WorkspaceContext";
 
-export function useWorkspace(): {
-  panelSettingsOpen: boolean;
-  openPanelSettings: () => void;
-  openHelp: () => void;
-  openAccountSettings: () => void;
-  openLayoutBrowser: () => void;
-} {
+export function useWorkspace(): WorkspaceContextType {
   return useContext(WorkspaceContext);
 }

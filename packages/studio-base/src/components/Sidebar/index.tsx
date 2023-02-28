@@ -26,6 +26,7 @@ import EventOutlinedIcon from "@foxglove/studio-base/components/EventOutlinedIco
 import { MemoryUseIndicator } from "@foxglove/studio-base/components/MemoryUseIndicator";
 import { NewSidebar } from "@foxglove/studio-base/components/NewSidebar";
 import Stack from "@foxglove/studio-base/components/Stack";
+import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
 
@@ -143,6 +144,8 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
   const [initialEnableNewTopNav] = useState(currentEnableNewTopNav);
   const enableNewTopNav = isDesktopApp() ? initialEnableNewTopNav : currentEnableNewTopNav;
 
+  const { rightSidebarOpen, setRightSidebarOpen } = useWorkspace();
+
   const [mosaicValue, setMosaicValue] = useState<MosaicNode<LayoutNode>>("children");
   const { classes } = useStyles();
 
@@ -151,7 +154,6 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
   }, [bottomItems, items]);
 
   const [helpAnchorEl, setHelpAnchorEl] = useState<undefined | HTMLElement>(undefined);
-  const [rightBarShown, setRightBarShown] = useState(false);
   const [activeRightTab, setActiveRightTab] = useState(0);
 
   const helpMenuOpen = Boolean(helpAnchorEl);
@@ -166,7 +168,7 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
   const leftBarShown = selectedKey != undefined && allItems.has(selectedKey);
 
   useEffect(() => {
-    if (leftBarShown && rightBarShown) {
+    if (leftBarShown && rightSidebarOpen) {
       setMosaicValue((oldValue) => {
         return {
           direction: "row",
@@ -180,7 +182,7 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
           splitPercentage: mosiacLeftSidebarSplitPercentage(oldValue),
         };
       });
-    } else if (leftBarShown && !rightBarShown) {
+    } else if (leftBarShown && !rightSidebarOpen) {
       setMosaicValue((oldValue) => {
         return {
           direction: "row",
@@ -189,7 +191,7 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
           splitPercentage: mosiacLeftSidebarSplitPercentage(oldValue),
         };
       });
-    } else if (!leftBarShown && rightBarShown) {
+    } else if (!leftBarShown && rightSidebarOpen) {
       setMosaicValue({
         direction: "row",
         first: "children",
@@ -199,7 +201,7 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
     } else {
       setMosaicValue("children");
     }
-  }, [leftBarShown, rightBarShown]);
+  }, [leftBarShown, rightSidebarOpen]);
 
   const SelectedComponent =
     (selectedKey != undefined && allItems.get(selectedKey)?.component) || Noop;
@@ -339,8 +341,8 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
                   <ErrorBoundary>
                     <NewSidebar
                       anchor="right"
-                      collapsed={!rightBarShown}
-                      toggleCollapsed={() => setRightBarShown((old) => !old)}
+                      collapsed={!rightSidebarOpen}
+                      toggleCollapsed={() => setRightSidebarOpen((old) => !old)}
                       activeTab={activeRightTab}
                       setActiveTab={setActiveRightTab}
                     />
@@ -351,13 +353,13 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
           resize={{ minimumPaneSizePercentage: 10 }}
         />
       </div>
-      {enableNewTopNav && !rightBarShown && (
+      {enableNewTopNav && !rightSidebarOpen && (
         <Stack className={classes.paper}>
           <div className={classes.header}>
             <IconButton
               className={classes.iconButton}
               size="small"
-              onClick={() => setRightBarShown((old) => !old)}
+              onClick={() => setRightSidebarOpen((old) => !old)}
             >
               <ArrowLeftIcon fontSize="inherit" />
             </IconButton>
@@ -368,7 +370,7 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
             className={classes.iconButton}
             size="small"
             onClick={() => {
-              setRightBarShown((old) => !old);
+              setRightSidebarOpen((old) => !old);
               setActiveRightTab(0);
             }}
           >
@@ -380,7 +382,7 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
               className={classes.iconButton}
               size="small"
               onClick={() => {
-                setRightBarShown((old) => !old);
+                setRightSidebarOpen((old) => !old);
                 setActiveRightTab(0);
               }}
             >

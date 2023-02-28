@@ -206,6 +206,8 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
   const [initialEnableNewTopNav] = useState(currentEnableNewTopNav);
   const enableNewTopNav = isDesktopApp() ? initialEnableNewTopNav : currentEnableNewTopNav;
 
+  const [rightSidebarOpen, setRightSidebarOpen] = useState(false);
+
   const showSignInForm = currentUserRequired && currentUser == undefined;
 
   const [showOpenDialog, setShowOpenDialog] = useState<
@@ -468,15 +470,17 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     [openFiles, openHandle],
   );
 
-  const workspaceActions = useMemo(
+  const workspaceContextValue = useMemo(
     () => ({
       panelSettingsOpen: selectedSidebarItem === "panel-settings",
+      rightSidebarOpen,
       openPanelSettings: () => setSelectedSidebarItem("panel-settings"),
       openHelp: () => setSelectedSidebarItem("help"),
       openAccountSettings: () => supportsAccountSettings && setSelectedSidebarItem("account"),
       openLayoutBrowser: () => setSelectedSidebarItem("layouts"),
+      setRightSidebarOpen,
     }),
-    [selectedSidebarItem, supportsAccountSettings],
+    [rightSidebarOpen, selectedSidebarItem, supportsAccountSettings],
   );
 
   // Since the _component_ field of a sidebar item entry is a component and accepts no additional
@@ -607,7 +611,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     <MultiProvider
       providers={[
         /* eslint-disable react/jsx-key */
-        <WorkspaceContext.Provider value={workspaceActions} />,
+        <WorkspaceContext.Provider value={workspaceContextValue} />,
         <PanelStateContextProvider />,
         /* eslint-enable react/jsx-key */
       ]}
