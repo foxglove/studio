@@ -2,12 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import {
-  PanelLeft24Filled,
-  PanelRight24Filled,
-  PanelLeft24Regular,
-  PanelRight24Regular,
-} from "@fluentui/react-icons";
+import { PanelRight24Filled, PanelRight24Regular } from "@fluentui/react-icons";
 import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import CloseIcon from "@mui/icons-material/Close";
 import FilterNoneIcon from "@mui/icons-material/FilterNone";
@@ -180,7 +175,6 @@ export function AppBar(props: AppBarProps): JSX.Element {
 
   const { rightSidebarOpen, setRightSidebarOpen } = useWorkspace();
 
-  const [leftSidebarActive, setLeftSidebarActive] = useState(true);
   const [helpAnchorEl, setHelpAnchorEl] = useState<undefined | HTMLElement>(undefined);
   const [userAnchorEl, setUserAnchorEl] = useState<undefined | HTMLElement>(undefined);
   const [prefsDialogOpen, setPrefsDialogOpen] = useState(false);
@@ -253,18 +247,6 @@ export function AppBar(props: AppBarProps): JSX.Element {
           <div className={classes.end}>
             <div className={classes.endInner}>
               {enableMemoryUseIndicator && <MemoryUseIndicator />}
-
-              <IconButton
-                className={classes.iconButton}
-                color="inherit"
-                id="left-sidebar-button"
-                title={`${leftSidebarActive ? "Hide" : "Show"} left sidebar`}
-                aria-label={`${leftSidebarActive ? "Hide" : "Show"} left sidebar`}
-                size="large"
-                onClick={() => setLeftSidebarActive(!leftSidebarActive)}
-              >
-                {leftSidebarActive ? <PanelLeft24Filled /> : <PanelLeft24Regular />}
-              </IconButton>
               <IconButton
                 className={classes.iconButton}
                 color="inherit"
