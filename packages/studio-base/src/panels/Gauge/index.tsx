@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { StrictMode } from "react";
+import { StrictMode, useState } from "react";
 import ReactDOM from "react-dom";
 
 import { useCrash } from "@foxglove/hooks";
@@ -39,12 +39,13 @@ type Props = {
 
 function GaugePanelAdapter(props: Props) {
   const crash = useCrash();
+  const [boundInitPanel] = useState(() => initPanel.bind(undefined, crash));
 
   return (
     <PanelExtensionAdapter
       config={props.config}
       saveConfig={props.saveConfig}
-      initPanel={initPanel.bind(undefined, crash)}
+      initPanel={boundInitPanel}
     />
   );
 }
