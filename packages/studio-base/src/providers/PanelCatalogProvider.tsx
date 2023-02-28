@@ -83,7 +83,7 @@ export default function PanelCatalogProvider(
     }
     panelList.push(...wrappedExtensionPanels);
     return panelList;
-  }, [enableLegacyPlotPanel, showDebugPanels, wrappedExtensionPanels]);
+  }, [enableLegacyPlotPanel, enableUrdfViewerPanel, showDebugPanels, wrappedExtensionPanels]);
 
   const panelsByType = useMemo(() => {
     const byType = new Map<string, PanelInfo>();
