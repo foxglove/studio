@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { StrictMode, useState } from "react";
+import { StrictMode, useMemo } from "react";
 import ReactDOM from "react-dom";
 
 import { useCrash } from "@foxglove/hooks";
@@ -39,7 +39,7 @@ type Props = {
 
 function IndicatorLightPanelAdapter(props: Props) {
   const crash = useCrash();
-  const [boundInitPanel] = useState(() => initPanel.bind(undefined, crash));
+  const boundInitPanel = useMemo(() => initPanel.bind(undefined, crash), [crash]);
 
   return (
     <PanelExtensionAdapter
