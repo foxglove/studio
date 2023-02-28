@@ -5,7 +5,9 @@
 import { StrictMode } from "react";
 import ReactDOM from "react-dom";
 
+import { useCrash } from "@foxglove/hooks";
 import { PanelExtensionContext } from "@foxglove/studio";
+import { CaptureErrorBoundary } from "@foxglove/studio-base/components/CaptureErrorBoundary";
 import Panel from "@foxglove/studio-base/components/Panel";
 import { PanelExtensionAdapter } from "@foxglove/studio-base/components/PanelExtensionAdapter";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
@@ -13,10 +15,12 @@ import { SaveConfig } from "@foxglove/studio-base/types/panels";
 import { defaultConfig, ImageView } from "./ImageView";
 import { Config } from "./types";
 
-function initPanel(context: PanelExtensionContext) {
+function initPanel(crash: ReturnType<typeof useCrash>, context: PanelExtensionContext) {
   ReactDOM.render(
     <StrictMode>
-      <ImageView context={context} />
+      <CaptureErrorBoundary onError={crash}>
+        <ImageView context={context} />
+      </CaptureErrorBoundary>
     </StrictMode>,
     context.panelElement,
   );
@@ -31,11 +35,13 @@ type Props = {
 };
 
 function ImagePanelAdapter(props: Props) {
+  const crash = useCrash();
+
   return (
     <PanelExtensionAdapter
       config={props.config}
       saveConfig={props.saveConfig}
-      initPanel={initPanel}
+      initPanel={initPanel.bind(undefined, crash)}
     />
   );
 }

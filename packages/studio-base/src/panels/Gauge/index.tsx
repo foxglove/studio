@@ -5,7 +5,9 @@
 import { StrictMode } from "react";
 import ReactDOM from "react-dom";
 
+import { useCrash } from "@foxglove/hooks";
 import { PanelExtensionContext } from "@foxglove/studio";
+import { CaptureErrorBoundary } from "@foxglove/studio-base/components/CaptureErrorBoundary";
 import Panel from "@foxglove/studio-base/components/Panel";
 import { PanelExtensionAdapter } from "@foxglove/studio-base/components/PanelExtensionAdapter";
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
@@ -14,12 +16,14 @@ import { SaveConfig } from "@foxglove/studio-base/types/panels";
 import { Gauge } from "./Gauge";
 import { Config } from "./types";
 
-function initPanel(context: PanelExtensionContext) {
+function initPanel(crash: ReturnType<typeof useCrash>, context: PanelExtensionContext) {
   ReactDOM.render(
     <StrictMode>
-      <ThemeProvider isDark>
-        <Gauge context={context} />
-      </ThemeProvider>
+      <CaptureErrorBoundary onError={crash}>
+        <ThemeProvider isDark>
+          <Gauge context={context} />
+        </ThemeProvider>
+      </CaptureErrorBoundary>
     </StrictMode>,
     context.panelElement,
   );
@@ -34,11 +38,13 @@ type Props = {
 };
 
 function GaugePanelAdapter(props: Props) {
+  const crash = useCrash();
+
   return (
     <PanelExtensionAdapter
       config={props.config}
       saveConfig={props.saveConfig}
-      initPanel={initPanel}
+      initPanel={initPanel.bind(undefined, crash)}
     />
   );
 }
