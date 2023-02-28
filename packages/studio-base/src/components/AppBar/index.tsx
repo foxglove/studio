@@ -7,7 +7,7 @@ import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import CloseIcon from "@mui/icons-material/Close";
 import FilterNoneIcon from "@mui/icons-material/FilterNone";
 import MinimizeIcon from "@mui/icons-material/Minimize";
-import { AppBar as MuiAppBar, Button, IconButton, Toolbar, Typography } from "@mui/material";
+import { AppBar as MuiAppBar, Button, IconButton, Toolbar } from "@mui/material";
 import { Dispatch, MouseEvent, SetStateAction, useCallback, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 
@@ -25,15 +25,15 @@ import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import useNativeAppMenuEvent from "@foxglove/studio-base/hooks/useNativeAppMenuEvent";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 
-import { AddPanelMenu, AddPanelIconButton } from "./AddPanel";
+import { AddPanelIconButton, AddPanelMenu } from "./AddPanel";
 import { DataSource } from "./DataSource";
 import { HelpIconButton, HelpMenu } from "./Help";
 import { PreferencesDialog, PreferencesIconButton } from "./Preferences";
 import { UserIconButton, UserMenu } from "./User";
 import {
-  APP_BAR_HEIGHT,
   APP_BAR_BACKGROUND_COLOR,
   APP_BAR_FOREGROUND_COLOR,
+  APP_BAR_HEIGHT,
   APP_BAR_PRIMARY_COLOR,
 } from "./constants";
 
