@@ -25,6 +25,7 @@ import {
   useCurrentUserType,
   User,
 } from "@foxglove/studio-base/context/CurrentUserContext";
+import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import useNativeAppMenuEvent from "@foxglove/studio-base/hooks/useNativeAppMenuEvent";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
@@ -177,8 +178,9 @@ export function AppBar(props: AppBarProps): JSX.Element {
 
   const supportsAccountSettings = signIn != undefined;
 
+  const { rightSidebarOpen, setRightSidebarOpen } = useWorkspace();
+
   const [leftSidebarActive, setLeftSidebarActive] = useState(true);
-  const [rightSidebarActive, setRightSidebarActive] = useState(true);
   const [helpAnchorEl, setHelpAnchorEl] = useState<undefined | HTMLElement>(undefined);
   const [userAnchorEl, setUserAnchorEl] = useState<undefined | HTMLElement>(undefined);
   const [prefsDialogOpen, setPrefsDialogOpen] = useState(false);
@@ -267,12 +269,12 @@ export function AppBar(props: AppBarProps): JSX.Element {
                 className={classes.iconButton}
                 color="inherit"
                 id="right-sidebar-button"
-                title={`${rightSidebarActive ? "Hide" : "Show"} left sidebar`}
-                aria-label={`${rightSidebarActive ? "Hide" : "Show"} right sidebar`}
+                title={`${rightSidebarOpen ? "Hide" : "Show"} left sidebar`}
+                aria-label={`${rightSidebarOpen ? "Hide" : "Show"} right sidebar`}
                 size="large"
-                onClick={() => setRightSidebarActive(!rightSidebarActive)}
+                onClick={() => setRightSidebarOpen(!rightSidebarOpen)}
               >
-                {rightSidebarActive ? <PanelRight24Filled /> : <PanelRight24Regular />}
+                {rightSidebarOpen ? <PanelRight24Filled /> : <PanelRight24Regular />}
               </IconButton>
               <HelpIconButton
                 className={classes.iconButton}
