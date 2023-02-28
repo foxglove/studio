@@ -46,12 +46,12 @@ export function AddPanelMenu(
     handleClose: () => void;
   } & MenuProps,
 ): JSX.Element {
-  const { anchorEl, handleClose, open } = props;
+  const { anchorEl, handleClose, open, ...menuProps } = props;
   const addPanel = useAddPanel();
 
   return (
     <Menu
-      {...props}
+      {...menuProps}
       id="add-panel-menu"
       anchorEl={anchorEl}
       open={open}
@@ -60,7 +60,11 @@ export function AddPanelMenu(
         "aria-labelledby": "add-panel-button",
       }}
     >
-      <PanelList onPanelSelect={addPanel} />
+      <PanelList
+        // Close when a drag starts so the modal menu doesn't block the drop targets
+        onDragStart={handleClose}
+        onPanelSelect={addPanel}
+      />
     </Menu>
   );
 }

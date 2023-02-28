@@ -51,14 +51,14 @@ export function HelpMenu(
     handleClose: () => void;
   } & MenuProps,
 ): JSX.Element {
-  const { anchorEl, handleClose, open } = props;
+  const { anchorEl, handleClose, open, ...menuProps } = props;
   const { classes } = useStyles();
   const currentUserType = useCurrentUserType();
   const analytics = useAnalytics();
 
   return (
     <Menu
-      {...props}
+      {...menuProps}
       classes={{ paper: classes.paper }}
       id="help-menu"
       anchorEl={anchorEl}

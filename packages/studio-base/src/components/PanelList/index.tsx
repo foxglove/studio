@@ -111,6 +111,7 @@ type PanelItemProps = {
   highlighted?: boolean;
   onClick: () => void;
   mosaicId: string;
+  onDragStart?: () => void;
   onDrop: (arg0: DropDescription) => void;
 };
 
@@ -127,6 +128,7 @@ function DraggablePanelItem({
   searchQuery,
   panel,
   onClick,
+  onDragStart,
   onDrop,
   checked = false,
   highlighted = false,
@@ -137,7 +139,10 @@ function DraggablePanelItem({
   const [, connectDragSource] = useDrag<unknown, MosaicDropResult, never>({
     type: MosaicDragType.WINDOW,
     // mosaicId is needed for react-mosaic to accept the drop
-    item: () => ({ mosaicId }),
+    item: () => {
+      onDragStart?.();
+      return { mosaicId };
+    },
     options: { dropEffect: "copy" },
     end: (_item, monitor) => {
       const dropResult = monitor.getDropResult() ?? {};
@@ -277,6 +282,7 @@ export type PanelSelection = {
 type Props = {
   mode?: "grid" | "list";
   onPanelSelect: (arg0: PanelSelection) => void;
+  onDragStart?: () => void;
   selectedPanelType?: string;
 };
 
@@ -306,7 +312,7 @@ function verifyPanels(panels: readonly PanelInfo[]) {
 const PanelList = React.forwardRef<HTMLDivElement, Props>((props: Props, ref) => {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [highlightedPanelIdx, setHighlightedPanelIdx] = React.useState<number | undefined>();
-  const { mode, onPanelSelect, selectedPanelType } = props;
+  const { mode, onDragStart, onPanelSelect, selectedPanelType } = props;
   const { classes } = useStyles();
 
   const { dropPanel } = useCurrentLayoutActions();
@@ -454,6 +460,7 @@ const PanelList = React.forwardRef<HTMLDivElement, Props>((props: Props, ref) =>
           key={`${type}-${title}`}
           mosaicId={mosaicId}
           panel={panelInfo}
+          onDragStart={onDragStart}
           onDrop={onPanelMenuItemDrop}
           onClick={() => {
             onPanelSelect({ type, config, relatedConfigs });
