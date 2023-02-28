@@ -157,6 +157,8 @@ const selectPlay = (ctx: MessagePipelineContext) => ctx.startPlayback;
 const selectSeek = (ctx: MessagePipelineContext) => ctx.seekPlayback;
 const selectPlayUntil = (ctx: MessagePipelineContext) => ctx.playUntil;
 const selectPlayerId = (ctx: MessagePipelineContext) => ctx.playerState.playerId;
+const selectPlayerSourceId = ({ playerState }: MessagePipelineContext) =>
+  playerState.urlState?.sourceId;
 
 export default function Workspace(props: WorkspaceProps): JSX.Element {
   const { classes } = useStyles();
@@ -590,6 +592,11 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
   const pause = useMessagePipeline(selectPause);
   const seek = useMessagePipeline(selectSeek);
   const isPlaying = useMessagePipeline(selectIsPlaying);
+  const playerSourceId = useMessagePipeline(selectPlayerSourceId);
+  const rightSidebarItems =
+    currentUser != undefined && playerSourceId === "foxglove-data-platform"
+      ? (["variables", "events"] as const)
+      : (["variables"] as const);
   const getMessagePipeline = useMessagePipelineGetter();
   const getTimeInfo = useCallback(
     () => getMessagePipeline().playerState.activeData ?? {},
@@ -635,6 +642,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
         <Sidebar
           items={sidebarItems}
           bottomItems={sidebarBottomItems}
+          rightItems={rightSidebarItems}
           selectedKey={selectedSidebarItem}
           onSelectKey={selectSidebarItem}
         >

@@ -24,13 +24,8 @@ import { BuiltinIcon } from "@foxglove/studio-base/components/BuiltinIcon";
 import ErrorBoundary from "@foxglove/studio-base/components/ErrorBoundary";
 import EventOutlinedIcon from "@foxglove/studio-base/components/EventOutlinedIcon";
 import { MemoryUseIndicator } from "@foxglove/studio-base/components/MemoryUseIndicator";
-import {
-  MessagePipelineContext,
-  useMessagePipeline,
-} from "@foxglove/studio-base/components/MessagePipeline";
 import { SecondarySidebar } from "@foxglove/studio-base/components/SecondarySidebar";
 import Stack from "@foxglove/studio-base/components/Stack";
-import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
 
@@ -126,22 +121,16 @@ function mosiacLeftSidebarSplitPercentage(node: MosaicNode<LayoutNode>) {
   }
 }
 
-const selectPlayerSourceId = ({ playerState }: MessagePipelineContext) =>
-  playerState.urlState?.sourceId;
-
 type SidebarProps<K> = PropsWithChildren<{
   items: Map<K, SidebarItem>;
   bottomItems: Map<K, SidebarItem>;
+  rightItems: readonly ["variables"] | readonly ["variables", "events"];
   selectedKey: K | undefined;
   onSelectKey: (key: K | undefined) => void;
 }>;
 
 export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.Element {
-  const { children, items, bottomItems, selectedKey, onSelectKey } = props;
-
-  const { currentUser } = useCurrentUser();
-  const playerSourceId = useMessagePipeline(selectPlayerSourceId);
-  const showEventsTab = currentUser != undefined && playerSourceId === "foxglove-data-platform";
+  const { children, items, bottomItems, rightItems, selectedKey, onSelectKey } = props;
 
   const [enableMemoryUseIndicator = false] = useAppConfigurationValue<boolean>(
     AppSetting.ENABLE_MEMORY_USE_INDICATOR,
@@ -384,7 +373,7 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
           >
             <BracesVariable20Filled />
           </IconButton>
-          {showEventsTab && (
+          {rightItems.includes("variables") && (
             <IconButton
               title="Events"
               className={classes.iconButton}
