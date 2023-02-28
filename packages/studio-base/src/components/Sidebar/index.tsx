@@ -2,10 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { BracesVariable20Filled } from "@fluentui/react-icons";
-import ArrowLeftIcon from "@mui/icons-material/ArrowLeft";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
-import { Badge, Divider, IconButton, Paper, Tab, Tabs } from "@mui/material";
+import { Badge, Paper, Tab, Tabs } from "@mui/material";
 import {
   ComponentProps,
   MouseEvent,
@@ -22,7 +20,6 @@ import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import { HelpMenu } from "@foxglove/studio-base/components/AppBar/Help";
 import { BuiltinIcon } from "@foxglove/studio-base/components/BuiltinIcon";
 import ErrorBoundary from "@foxglove/studio-base/components/ErrorBoundary";
-import EventOutlinedIcon from "@foxglove/studio-base/components/EventOutlinedIcon";
 import { MemoryUseIndicator } from "@foxglove/studio-base/components/MemoryUseIndicator";
 import { NewSidebar } from "@foxglove/studio-base/components/NewSidebar";
 import Stack from "@foxglove/studio-base/components/Stack";
@@ -90,17 +87,6 @@ const useStyles = makeStyles()((theme) => ({
       display: "none !important",
     },
   },
-  header: {
-    height: 30,
-  },
-  iconButton: {
-    fontSize: 20,
-    borderRadius: 0,
-  },
-  paper: {
-    backgroundColor: theme.palette.background.paper,
-    borderInlineStart: `1px solid ${theme.palette.divider}`,
-  },
 }));
 
 /**
@@ -125,13 +111,12 @@ function mosiacLeftSidebarSplitPercentage(node: MosaicNode<LayoutNode>) {
 type SidebarProps<K> = PropsWithChildren<{
   items: Map<K, SidebarItem>;
   bottomItems: Map<K, SidebarItem>;
-  rightItems: readonly ["variables"] | readonly ["variables", "events"];
   selectedKey: K | undefined;
   onSelectKey: (key: K | undefined) => void;
 }>;
 
 export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.Element {
-  const { children, items, bottomItems, rightItems, selectedKey, onSelectKey } = props;
+  const { children, items, bottomItems, selectedKey, onSelectKey } = props;
 
   const [enableMemoryUseIndicator = false] = useAppConfigurationValue<boolean>(
     AppSetting.ENABLE_MEMORY_USE_INDICATOR,
@@ -353,44 +338,6 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
           resize={{ minimumPaneSizePercentage: 10 }}
         />
       </div>
-      {enableNewTopNav && !rightSidebarOpen && (
-        <Stack className={classes.paper}>
-          <div className={classes.header}>
-            <IconButton
-              className={classes.iconButton}
-              size="small"
-              onClick={() => setRightSidebarOpen((old) => !old)}
-            >
-              <ArrowLeftIcon fontSize="inherit" />
-            </IconButton>
-          </div>
-          <Divider />
-          <IconButton
-            title="Variables"
-            className={classes.iconButton}
-            size="small"
-            onClick={() => {
-              setRightSidebarOpen((old) => !old);
-              setActiveRightTab(0);
-            }}
-          >
-            <BracesVariable20Filled />
-          </IconButton>
-          {rightItems.includes("variables") && (
-            <IconButton
-              title="Events"
-              className={classes.iconButton}
-              size="small"
-              onClick={() => {
-                setRightSidebarOpen((old) => !old);
-                setActiveRightTab(0);
-              }}
-            >
-              <EventOutlinedIcon />
-            </IconButton>
-          )}
-        </Stack>
-      )}
     </Stack>
   );
 }
