@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import ArrowLeftIcon from "@mui/icons-material/ArrowLeft";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import { Divider, IconButton, Tab, Tabs } from "@mui/material";
 import { makeStyles } from "tss-react/mui";
@@ -12,8 +13,8 @@ import {
   useMessagePipeline,
 } from "@foxglove/studio-base/components/MessagePipeline";
 import Stack from "@foxglove/studio-base/components/Stack";
-import { TabPanel } from "@foxglove/studio-base/components/TabPanel";
-import VariablesSidebar from "@foxglove/studio-base/components/VariablesSidebar";
+import { TabContent } from "@foxglove/studio-base/components/TabContent";
+import VariablesList from "@foxglove/studio-base/components/VariablesList";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
 
 const useStyles = makeStyles()((theme) => ({
@@ -54,12 +55,14 @@ const useStyles = makeStyles()((theme) => ({
 const selectPlayerSourceId = ({ playerState }: MessagePipelineContext) =>
   playerState.urlState?.sourceId;
 
-export function SecondarySidebar({
+export function NewSidebar({
+  anchor = "right",
   collapsed,
   toggleCollapsed,
   activeTab,
   setActiveTab,
 }: {
+  anchor?: "right" | "left";
   collapsed: boolean;
   toggleCollapsed: () => void;
   activeTab: number;
@@ -92,19 +95,23 @@ export function SecondarySidebar({
         )}
 
         <IconButton className={classes.iconButton} size="small" onClick={toggleCollapsed}>
-          <ArrowRightIcon fontSize="inherit" />
+          {anchor === "right" ? (
+            <ArrowRightIcon fontSize="inherit" />
+          ) : (
+            <ArrowLeftIcon fontSize="inherit" />
+          )}
         </IconButton>
       </Stack>
       <Divider />
       {!collapsed && (
         <>
-          <TabPanel value={activeTab} index={0}>
-            <VariablesSidebar />
-          </TabPanel>
+          <TabContent value={activeTab} index={0}>
+            <VariablesList />
+          </TabContent>
           {showEventsTab && (
-            <TabPanel value={activeTab} index={1}>
+            <TabContent value={activeTab} index={1}>
               <EventsList />
-            </TabPanel>
+            </TabContent>
           )}
         </>
       )}

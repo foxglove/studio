@@ -20,7 +20,7 @@ import {
 } from "@foxglove/studio-base/components/MessagePipeline";
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
 import Stack from "@foxglove/studio-base/components/Stack";
-import { TabPanel } from "@foxglove/studio-base/components/TabPanel";
+import { TabContent } from "@foxglove/studio-base/components/TabContent";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
 import { EventsStore, useEvents } from "@foxglove/studio-base/context/EventsContext";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
@@ -143,15 +143,15 @@ export default function DataSourceSidebar(props: Props): JSX.Element {
                 />
               </StyledTabs>
               <Divider />
-              <TabPanel value={activeTab} index={0}>
+              <TabContent value={activeTab} index={0}>
                 <TopicList />
-              </TabPanel>
-              <TabPanel value={activeTab} index={1}>
+              </TabContent>
+              <TabContent value={activeTab} index={1}>
                 <EventsList />
-              </TabPanel>
-              <TabPanel value={activeTab} index={2}>
+              </TabContent>
+              <TabContent value={activeTab} index={2}>
                 <ProblemsList problems={playerProblems} />
-              </TabPanel>
+              </TabContent>
             </Stack>
           </>
         )}

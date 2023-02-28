@@ -11,7 +11,7 @@ const useStyles = makeStyles()({
   },
 });
 
-export function TabPanel(
+export function TabContent(
   props: PropsWithChildren<{
     index: number;
     value: number;

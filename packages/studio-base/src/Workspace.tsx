@@ -44,7 +44,7 @@ import { SignInFormModal } from "@foxglove/studio-base/components/SignInFormModa
 import Stack from "@foxglove/studio-base/components/Stack";
 import { StudioLogsSettingsSidebar } from "@foxglove/studio-base/components/StudioLogsSettingsSidebar";
 import { SyncAdapters } from "@foxglove/studio-base/components/SyncAdapters";
-import VariablesSidebar from "@foxglove/studio-base/components/VariablesSidebar";
+import VariablesList from "@foxglove/studio-base/components/VariablesList";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 import { useAssets } from "@foxglove/studio-base/context/AssetsContext";
 import {
@@ -534,7 +534,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
       topItems.set("extensions", {
         iconName: "Variable2",
         title: "Variables",
-        component: VariablesSidebar,
+        component: VariablesList,
       });
 
       topItems.set("variables", {

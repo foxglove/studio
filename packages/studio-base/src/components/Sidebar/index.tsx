@@ -24,7 +24,7 @@ import { BuiltinIcon } from "@foxglove/studio-base/components/BuiltinIcon";
 import ErrorBoundary from "@foxglove/studio-base/components/ErrorBoundary";
 import EventOutlinedIcon from "@foxglove/studio-base/components/EventOutlinedIcon";
 import { MemoryUseIndicator } from "@foxglove/studio-base/components/MemoryUseIndicator";
-import { SecondarySidebar } from "@foxglove/studio-base/components/SecondarySidebar";
+import { NewSidebar } from "@foxglove/studio-base/components/NewSidebar";
 import Stack from "@foxglove/studio-base/components/Stack";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
@@ -337,7 +337,8 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
               case "rightbar":
                 return (
                   <ErrorBoundary>
-                    <SecondarySidebar
+                    <NewSidebar
+                      anchor="right"
                       collapsed={!rightBarShown}
                       toggleCollapsed={() => setRightBarShown((old) => !old)}
                       activeTab={activeRightTab}

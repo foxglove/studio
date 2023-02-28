@@ -17,7 +17,7 @@ import Variable from "./Variable";
 
 const ANIMATION_RESET_DELAY_MS = 1500;
 
-export default function VariablesSidebar(): ReactElement {
+export default function VariablesList(): ReactElement {
   const { globalVariables, setGlobalVariables } = useGlobalVariables();
   const globalVariableNames = useMemo(() => Object.keys(globalVariables), [globalVariables]);
 
