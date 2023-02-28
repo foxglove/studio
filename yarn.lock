@@ -2437,6 +2437,7 @@ __metadata:
     "@foxglove/hooks": "workspace:*"
     "@foxglove/log": "workspace:*"
     "@foxglove/mcap-support": "workspace:*"
+    "@foxglove/message-definition": 0.2.0
     "@foxglove/ros1": 2.0.0
     "@foxglove/ros2": 4.0.0
     "@foxglove/rosbag": 0.3.0
