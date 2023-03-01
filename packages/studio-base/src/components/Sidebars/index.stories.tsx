@@ -7,10 +7,10 @@ import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
-import { NewSidebarItem } from "@foxglove/studio-base/components/NewSidebar";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 
 import Sidebars, { SidebarItem } from ".";
+import { NewSidebarItem } from "./NewSidebar";
 
 export default {
   title: "components/Sidebar",
