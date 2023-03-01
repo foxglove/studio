@@ -12,7 +12,11 @@ import {
   FormGroup,
   FormControlLabel,
   CircularProgress,
-  ButtonGroup,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+  Divider,
 } from "@mui/material";
 import { partition } from "lodash";
 import moment from "moment";
@@ -21,7 +25,6 @@ import path from "path";
 import { MouseEvent, useCallback, useContext, useEffect, useLayoutEffect, useMemo } from "react";
 import { useMountedState } from "react-use";
 import useAsyncFn from "react-use/lib/useAsyncFn";
-import tinycolor from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 
 import Logger from "@foxglove/log";
@@ -72,10 +75,8 @@ const useStyles = makeStyles()((theme) => ({
       "#121217 12px",
     ].join(",")}) 4`,
   },
-  buttonGroup: {
-    backgroundColor: tinycolor(theme.palette.primary.main)
-      .setAlpha(theme.palette.action.selectedOpacity)
-      .toRgbString(),
+  actionList: {
+    paddingTop: theme.spacing(1),
   },
 }));
 
@@ -529,10 +530,10 @@ export default function LayoutBrowser({
 
   const layoutDebug = useContext(LayoutStorageDebuggingContext);
 
+  const [enableNewTopNav = false] = useAppConfigurationValue<boolean>(AppSetting.ENABLE_NEW_TOPNAV);
   const [hideSignInPrompt = false, setHideSignInPrompt] = useAppConfigurationValue<boolean>(
     AppSetting.HIDE_SIGN_IN_PROMPT,
   );
-
   const showSignInPrompt =
     supportsSignIn === true && !layoutManager.supportsSharing && !hideSignInPrompt;
 
@@ -543,8 +544,6 @@ export default function LayoutBrowser({
       .flat()
       .some((layout) => layout.working != undefined && state.selectedIds.includes(layout.id));
   }, [layouts, state.selectedIds]);
-
-  const [enableNewTopNav = false] = useAppConfigurationValue<boolean>(AppSetting.ENABLE_NEW_TOPNAV);
 
   return (
     <SidebarContent
@@ -588,10 +587,28 @@ export default function LayoutBrowser({
       {unsavedChangesPrompt}
       <Stack
         fullHeight
-        gap={enableNewTopNav ? 0 : 2}
+        gap={enableNewTopNav ? 1 : 2}
         style={{ pointerEvents: pendingMultiAction ? "none" : "auto" }}
       >
+        {enableNewTopNav && (
+          <>
+            <List className={classes.actionList} disablePadding>
+              <ListItem disablePadding>
+                <ListItemButton onClick={createNewLayout}>
+                  <ListItemText disableTypography>Create new layout</ListItemText>
+                </ListItemButton>
+              </ListItem>
+              <ListItem disablePadding>
+                <ListItemButton onClick={importLayout}>
+                  <ListItemText disableTypography>Import layout from JSON…</ListItemText>
+                </ListItemButton>
+              </ListItem>
+            </List>
+            <Divider variant="middle" />
+          </>
+        )}
         <LayoutSection
+          disablePadding={enableNewTopNav}
           title={layoutManager.supportsSharing ? "Personal" : undefined}
           emptyText="Add a new layout to get started with Foxglove Studio!"
           items={layouts.value?.personal}
@@ -610,6 +627,7 @@ export default function LayoutBrowser({
         />
         {layoutManager.supportsSharing && (
           <LayoutSection
+            disablePadding={enableNewTopNav}
             title="Organization"
             emptyText="Your organization doesn’t have any shared layouts yet. Share a layout to collaborate with others."
             items={layouts.value?.shared}
@@ -626,24 +644,6 @@ export default function LayoutBrowser({
             onRevert={onRevertLayout}
             onMakePersonalCopy={onMakePersonalCopy}
           />
-        )}
-        {enableNewTopNav && (
-          <Stack paddingX={1} paddingBottom={1}>
-            <ButtonGroup disableElevation className={classes.buttonGroup}>
-              <Button
-                fullWidth
-                onClick={createNewLayout}
-                aria-label="Create new layout"
-                data-testid="add-layout"
-                title="Create new layout"
-              >
-                Create new layout
-              </Button>
-              <Button onClick={importLayout} aria-label="Import layout" title="Import layout">
-                <FileOpenOutlinedIcon />
-              </Button>
-            </ButtonGroup>
-          </Stack>
         )}
         <Stack flexGrow={1} />
         {showSignInPrompt && <SignInPrompt onDismiss={() => void setHideSignInPrompt(true)} />}

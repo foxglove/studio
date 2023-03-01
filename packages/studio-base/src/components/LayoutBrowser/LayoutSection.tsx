@@ -12,6 +12,7 @@ import LayoutRow from "./LayoutRow";
 
 export default function LayoutSection({
   title,
+  disablePadding = false,
   emptyText,
   items,
   anySelectedModifiedLayouts,
@@ -28,6 +29,7 @@ export default function LayoutSection({
   onMakePersonalCopy,
 }: {
   title: string | undefined;
+  disablePadding?: boolean;
   emptyText: string | undefined;
   items: readonly Layout[] | undefined;
   anySelectedModifiedLayouts: boolean;
@@ -52,7 +54,7 @@ export default function LayoutSection({
           </Typography>
         </Stack>
       )}
-      <List>
+      <List disablePadding={disablePadding}>
         {items != undefined && items.length === 0 && (
           <Stack paddingX={2}>
             <Typography variant="body2" color="text.secondary">
