@@ -96,6 +96,12 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }>(
           marginInlineStart: theme.spacing(-2),
         },
       },
+      startInner: {
+        display: "flex",
+        alignItems: "center",
+        gap: theme.spacing(0.25),
+        ...NOT_DRAGGABLE_STYLE, // make buttons clickable for desktop app
+      },
       middle: {
         gridArea: "middle",
         justifySelf: "center",
@@ -137,9 +143,6 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }>(
           }).dark,
         },
       },
-      noDrag: {
-        ...NOT_DRAGGABLE_STYLE, // make buttons clickable for desktop app
-      },
     };
   },
 );
@@ -172,7 +175,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
     onSelectDataSourceAction,
     debugDragRegion,
   } = props;
-  const { classes, cx } = useStyles({ leftInset, debugDragRegion });
+  const { classes } = useStyles({ leftInset, debugDragRegion });
   const currentUserType = useCurrentUserType();
   const analytics = useAnalytics();
   const [enableMemoryUseIndicator = false] = useAppConfigurationValue<boolean>(
@@ -222,43 +225,45 @@ export function AppBar(props: AppBarProps): JSX.Element {
       >
         <Toolbar variant="dense" className={classes.toolbar}>
           <div className={classes.start}>
-            <IconButton className={cx(classes.logo, classes.noDrag)} size="large" color="inherit">
-              <FoxgloveLogo fontSize="inherit" color="inherit" />
-            </IconButton>
-            <IconButton
-              className={classes.iconButton}
-              color="inherit"
-              id="layout-button"
-              title="Layout browser"
-              aria-label="Layout button"
-              aria-controls={layoutMenuOpen ? "layout-menu" : undefined}
-              aria-haspopup="true"
-              aria-expanded={layoutMenuOpen ? "true" : undefined}
-              size="large"
-              onClick={(event) => {
-                setLayoutAnchorEl(event.currentTarget);
-              }}
-            >
-              <PanelLayoutIcon />
-            </IconButton>
-            {selectedLayoutId != undefined && (
+            <div className={classes.startInner}>
+              <IconButton className={classes.logo} size="large" color="inherit">
+                <FoxgloveLogo fontSize="inherit" color="inherit" />
+              </IconButton>
               <IconButton
                 className={classes.iconButton}
                 color="inherit"
-                id="add-panel-button"
-                title="Add panel"
-                aria-label="Add panel button"
-                aria-controls={panelMenuOpen ? "add-panel-menu" : undefined}
+                id="layout-button"
+                title="Layout browser"
+                aria-label="Layout button"
+                aria-controls={layoutMenuOpen ? "layout-menu" : undefined}
                 aria-haspopup="true"
-                aria-expanded={panelMenuOpen ? "true" : undefined}
+                aria-expanded={layoutMenuOpen ? "true" : undefined}
                 size="large"
                 onClick={(event) => {
-                  setPanelAnchorEl(event.currentTarget);
+                  setLayoutAnchorEl(event.currentTarget);
                 }}
               >
-                <SlideAdd24Regular />
+                <PanelLayoutIcon />
               </IconButton>
-            )}
+              {selectedLayoutId != undefined && (
+                <IconButton
+                  className={classes.iconButton}
+                  color="inherit"
+                  id="add-panel-button"
+                  title="Add panel"
+                  aria-label="Add panel button"
+                  aria-controls={panelMenuOpen ? "add-panel-menu" : undefined}
+                  aria-haspopup="true"
+                  aria-expanded={panelMenuOpen ? "true" : undefined}
+                  size="large"
+                  onClick={(event) => {
+                    setPanelAnchorEl(event.currentTarget);
+                  }}
+                >
+                  <SlideAdd24Regular />
+                </IconButton>
+              )}
+            </div>
           </div>
 
           <div className={classes.middle}>
