@@ -250,8 +250,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
               <IconButton
                 className={classes.iconButton}
                 color="inherit"
-                id="right-sidebar-button"
-                title={`${rightSidebarOpen ? "Hide" : "Show"} left sidebar`}
+                title={`${rightSidebarOpen ? "Hide" : "Show"} right sidebar`}
                 aria-label={`${rightSidebarOpen ? "Hide" : "Show"} right sidebar`}
                 size="large"
                 onClick={() => setRightSidebarOpen(!rightSidebarOpen)}

@@ -13,7 +13,6 @@ import {
   useMessagePipeline,
 } from "@foxglove/studio-base/components/MessagePipeline";
 import Stack from "@foxglove/studio-base/components/Stack";
-import { TabContent } from "@foxglove/studio-base/components/TabContent";
 import VariablesList from "@foxglove/studio-base/components/VariablesList";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
 
@@ -32,7 +31,6 @@ const useStyles = makeStyles()((theme) => ({
     ".MuiTabs-indicator": {
       transform: "scaleX(0.5)",
       height: 2,
-      bottom: -1,
     },
     ".MuiTab-root": {
       minHeight: 30,
@@ -50,23 +48,26 @@ const useStyles = makeStyles()((theme) => ({
     fontSize: 20,
     borderRadius: 0,
   },
+  tabContent: {
+    flex: "auto",
+  },
 }));
 
 const selectPlayerSourceId = ({ playerState }: MessagePipelineContext) =>
   playerState.urlState?.sourceId;
 
+export type NewSidebarTab = "variables" | "events";
+
 export function NewSidebar({
-  anchor = "right",
-  collapsed,
-  toggleCollapsed,
+  anchor,
+  onClose,
   activeTab,
   setActiveTab,
 }: {
-  anchor?: "right" | "left";
-  collapsed: boolean;
-  toggleCollapsed: () => void;
-  activeTab: number;
-  setActiveTab: (newValue: number) => void;
+  anchor: "right" | "left";
+  onClose: () => void;
+  activeTab: NewSidebarTab;
+  setActiveTab: (newValue: NewSidebarTab) => void;
 }): JSX.Element {
   const { classes } = useStyles();
   const { currentUser } = useCurrentUser();
@@ -78,23 +79,21 @@ export function NewSidebar({
   return (
     <Stack className={classes.root} flexShrink={0}>
       <Stack direction="row" justifyContent="space-between" alignItems="center">
-        {!collapsed && (
-          <Tabs
-            className={classes.tabs}
-            textColor="inherit"
-            value={activeTab}
-            onChange={(_ev, newValue: number) => {
-              if (newValue !== activeTab) {
-                setActiveTab(newValue);
-              }
-            }}
-          >
-            <Tab label="Variables" value={0} />
-            {showEventsTab && <Tab label="Events" value={1} />}
-          </Tabs>
-        )}
+        <Tabs
+          className={classes.tabs}
+          textColor="inherit"
+          value={activeTab}
+          onChange={(_ev, newValue: NewSidebarTab) => {
+            if (newValue !== activeTab) {
+              setActiveTab(newValue);
+            }
+          }}
+        >
+          <Tab label="Variables" value="variables" />
+          {showEventsTab && <Tab label="Events" value="events" />}
+        </Tabs>
 
-        <IconButton className={classes.iconButton} size="small" onClick={toggleCollapsed}>
+        <IconButton className={classes.iconButton} size="small" onClick={onClose}>
           {anchor === "right" ? (
             <ArrowRightIcon fontSize="inherit" />
           ) : (
@@ -103,17 +102,15 @@ export function NewSidebar({
         </IconButton>
       </Stack>
       <Divider />
-      {!collapsed && (
-        <>
-          <TabContent value={activeTab} index={0}>
-            <VariablesList />
-          </TabContent>
-          {showEventsTab && (
-            <TabContent value={activeTab} index={1}>
-              <EventsList />
-            </TabContent>
-          )}
-        </>
+      {activeTab === "variables" && (
+        <div className={classes.tabContent}>
+          <VariablesList />
+        </div>
+      )}
+      {showEventsTab && activeTab === "events" && (
+        <div className={classes.tabContent}>
+          <EventsList />
+        </div>
       )}
     </Stack>
   );

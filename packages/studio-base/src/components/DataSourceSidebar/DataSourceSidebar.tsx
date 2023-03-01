@@ -12,6 +12,7 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { useState, useEffect, useMemo } from "react";
+import { makeStyles } from "tss-react/mui";
 
 import { EventsList } from "@foxglove/studio-base/components/DataSourceSidebar/EventsList";
 import {
@@ -20,7 +21,6 @@ import {
 } from "@foxglove/studio-base/components/MessagePipeline";
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
 import Stack from "@foxglove/studio-base/components/Stack";
-import { TabContent } from "@foxglove/studio-base/components/TabContent";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
 import { EventsStore, useEvents } from "@foxglove/studio-base/context/EventsContext";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
@@ -32,6 +32,12 @@ import { DataSourceInfoView } from "../DataSourceInfoView";
 type Props = {
   onSelectDataSourceAction: () => void;
 };
+
+const useStyles = makeStyles()({
+  tabContent: {
+    flex: "auto",
+  },
+});
 
 const StyledTab = muiStyled(Tab)(({ theme }) => ({
   minHeight: 30,
@@ -68,6 +74,8 @@ const selectPlayerSourceId = ({ playerState }: MessagePipelineContext) =>
   playerState.urlState?.sourceId;
 const selectSelectedEventId = (store: EventsStore) => store.selectedEventId;
 
+type DataSourceSidebarTab = "topics" | "events" | "problems";
+
 export default function DataSourceSidebar(props: Props): JSX.Element {
   const { onSelectDataSourceAction } = props;
   const playerPresence = useMessagePipeline(selectPlayerPresence);
@@ -75,7 +83,8 @@ export default function DataSourceSidebar(props: Props): JSX.Element {
   const { currentUser } = useCurrentUser();
   const playerSourceId = useMessagePipeline(selectPlayerSourceId);
   const selectedEventId = useEvents(selectSelectedEventId);
-  const [activeTab, setActiveTab] = useState(0);
+  const [activeTab, setActiveTab] = useState<DataSourceSidebarTab>("topics");
+  const { classes } = useStyles();
 
   const showEventsTab = currentUser != undefined && playerSourceId === "foxglove-data-platform";
 
@@ -88,9 +97,9 @@ export default function DataSourceSidebar(props: Props): JSX.Element {
 
   useEffect(() => {
     if (playerPresence === PlayerPresence.ERROR || playerPresence === PlayerPresence.RECONNECTING) {
-      setActiveTab(2);
+      setActiveTab("problems");
     } else if (showEventsTab && selectedEventId != undefined) {
-      setActiveTab(1);
+      setActiveTab("events");
     }
   }, [playerPresence, showEventsTab, selectedEventId]);
 
@@ -124,11 +133,11 @@ export default function DataSourceSidebar(props: Props): JSX.Element {
             <Stack flex={1}>
               <StyledTabs
                 value={activeTab}
-                onChange={(_ev, newValue: number) => setActiveTab(newValue)}
+                onChange={(_ev, newValue: DataSourceSidebarTab) => setActiveTab(newValue)}
                 textColor="inherit"
               >
-                <StyledTab disableRipple label="Topics" value={0} />
-                {showEventsTab && <StyledTab disableRipple label="Events" value={1} />}
+                <StyledTab disableRipple label="Topics" value="topics" />
+                {showEventsTab && <StyledTab disableRipple label="Events" value="events" />}
                 <StyledTab
                   disableRipple
                   label={
@@ -139,19 +148,25 @@ export default function DataSourceSidebar(props: Props): JSX.Element {
                       )}
                     </Stack>
                   }
-                  value={2}
+                  value="problems"
                 />
               </StyledTabs>
               <Divider />
-              <TabContent value={activeTab} index={0}>
-                <TopicList />
-              </TabContent>
-              <TabContent value={activeTab} index={1}>
-                <EventsList />
-              </TabContent>
-              <TabContent value={activeTab} index={2}>
-                <ProblemsList problems={playerProblems} />
-              </TabContent>
+              {activeTab === "topics" && (
+                <div className={classes.tabContent}>
+                  <TopicList />
+                </div>
+              )}
+              {activeTab === "events" && (
+                <div className={classes.tabContent}>
+                  <EventsList />
+                </div>
+              )}
+              {activeTab === "problems" && (
+                <div className={classes.tabContent}>
+                  <ProblemsList problems={playerProblems} />
+                </div>
+              )}
             </Stack>
           </>
         )}

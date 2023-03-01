@@ -21,7 +21,7 @@ import { HelpMenu } from "@foxglove/studio-base/components/AppBar/Help";
 import { BuiltinIcon } from "@foxglove/studio-base/components/BuiltinIcon";
 import ErrorBoundary from "@foxglove/studio-base/components/ErrorBoundary";
 import { MemoryUseIndicator } from "@foxglove/studio-base/components/MemoryUseIndicator";
-import { NewSidebar } from "@foxglove/studio-base/components/NewSidebar";
+import { NewSidebar, NewSidebarTab } from "@foxglove/studio-base/components/NewSidebar";
 import Stack from "@foxglove/studio-base/components/Stack";
 import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
@@ -90,21 +90,35 @@ const useStyles = makeStyles()((theme) => ({
 }));
 
 /**
- * Extract existing split percentage from a layout node or return the default.
+ * Extract existing left split percentage from a layout node or return the default.
  */
-function mosiacLeftSidebarSplitPercentage(node: MosaicNode<LayoutNode>) {
-  const defaultFraction = 0.3;
-  const width = Math.min(384, defaultFraction * window.innerWidth);
-  const defaultPercentage = (100 * width) / window.innerWidth;
-
-  if (typeof node === "object" && node.first === "children") {
-    // Left bar not previously shown
-    return defaultPercentage;
-  } else if (typeof node === "object" && node.first === "leftbar") {
-    // Left bar currently shown, preserve existing split
+function mosiacLeftSidebarSplitPercentage(node: MosaicNode<LayoutNode>): number | undefined {
+  if (typeof node !== "object") {
+    return undefined;
+  }
+  if (node.first === "leftbar") {
     return node.splitPercentage;
   } else {
-    return defaultPercentage;
+    return (
+      mosiacLeftSidebarSplitPercentage(node.first) ?? mosiacLeftSidebarSplitPercentage(node.second)
+    );
+  }
+}
+
+/**
+ * Extract existing right split percentage from a layout node or return the default.
+ */
+function mosiacRightSidebarSplitPercentage(node: MosaicNode<LayoutNode>): number | undefined {
+  if (typeof node !== "object") {
+    return undefined;
+  }
+  if (node.second === "rightbar") {
+    return node.splitPercentage;
+  } else {
+    return (
+      mosiacRightSidebarSplitPercentage(node.first) ??
+      mosiacRightSidebarSplitPercentage(node.second)
+    );
   }
 }
 
@@ -139,7 +153,7 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
   }, [bottomItems, items]);
 
   const [helpAnchorEl, setHelpAnchorEl] = useState<undefined | HTMLElement>(undefined);
-  const [activeRightTab, setActiveRightTab] = useState(0);
+  const [activeRightTab, setActiveRightTab] = useState<NewSidebarTab>("variables");
 
   const helpMenuOpen = Boolean(helpAnchorEl);
 
@@ -150,43 +164,33 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
     setHelpAnchorEl(undefined);
   };
 
-  const leftBarShown = selectedKey != undefined && allItems.has(selectedKey);
+  const leftSidebarOpen = selectedKey != undefined && allItems.has(selectedKey);
 
   useEffect(() => {
-    if (leftBarShown && rightSidebarOpen) {
-      setMosaicValue((oldValue) => {
-        return {
+    const width = Math.min(384, 0.3 * window.innerWidth);
+    const defaultLeftPercentage = (100 * width) / window.innerWidth;
+    const defaultRightPercentage = 80;
+    setMosaicValue((oldValue) => {
+      let node: MosaicNode<LayoutNode> = "children";
+      if (rightSidebarOpen) {
+        node = {
+          direction: "row",
+          first: node,
+          second: "rightbar",
+          splitPercentage: mosiacRightSidebarSplitPercentage(oldValue) ?? defaultRightPercentage,
+        };
+      }
+      if (leftSidebarOpen) {
+        node = {
           direction: "row",
           first: "leftbar",
-          second: {
-            direction: "row",
-            first: "children",
-            second: "rightbar",
-            splitPercentage: 80,
-          },
-          splitPercentage: mosiacLeftSidebarSplitPercentage(oldValue),
+          second: node,
+          splitPercentage: mosiacLeftSidebarSplitPercentage(oldValue) ?? defaultLeftPercentage,
         };
-      });
-    } else if (leftBarShown && !rightSidebarOpen) {
-      setMosaicValue((oldValue) => {
-        return {
-          direction: "row",
-          first: "leftbar",
-          second: "children",
-          splitPercentage: mosiacLeftSidebarSplitPercentage(oldValue),
-        };
-      });
-    } else if (!leftBarShown && rightSidebarOpen) {
-      setMosaicValue({
-        direction: "row",
-        first: "children",
-        second: "rightbar",
-        splitPercentage: 80,
-      });
-    } else {
-      setMosaicValue("children");
-    }
-  }, [leftBarShown, rightSidebarOpen]);
+      }
+      return node;
+    });
+  }, [leftSidebarOpen, rightSidebarOpen]);
 
   const SelectedComponent =
     (selectedKey != undefined && allItems.get(selectedKey)?.component) || Noop;
@@ -326,8 +330,7 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
                   <ErrorBoundary>
                     <NewSidebar
                       anchor="right"
-                      collapsed={!rightSidebarOpen}
-                      toggleCollapsed={() => setRightSidebarOpen((old) => !old)}
+                      onClose={() => setRightSidebarOpen((old) => !old)}
                       activeTab={activeRightTab}
                       setActiveTab={setActiveRightTab}
                     />
