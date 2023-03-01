@@ -48,7 +48,7 @@ export default function LayoutSection({
   return (
     <Stack>
       {title != undefined && (
-        <Stack paddingX={2}>
+        <Stack paddingX={2} paddingY={disablePadding ? 1 : 0}>
           <Typography variant="overline" color="text.secondary">
             {title}
           </Typography>

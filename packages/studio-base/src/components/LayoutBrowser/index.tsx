@@ -645,7 +645,7 @@ export default function LayoutBrowser({
             onMakePersonalCopy={onMakePersonalCopy}
           />
         )}
-        <Stack flexGrow={1} />
+        {!enableNewTopNav && <Stack flexGrow={1} />}
         {showSignInPrompt && <SignInPrompt onDismiss={() => void setHideSignInPrompt(true)} />}
         {layoutDebug && (
           <Stack gap={0.5} padding={1} position="sticky" className={classes.debugBanner}>
