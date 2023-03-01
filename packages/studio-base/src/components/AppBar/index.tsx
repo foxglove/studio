@@ -63,7 +63,7 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }>(
         gridArea: "appbar",
         boxShadow: "none",
         backgroundColor: APP_BAR_BACKGROUND_COLOR[theme.palette.mode],
-        borderBottom: `${theme.palette.divider} 1px solid`,
+        borderBottom: "none",
         color: APP_BAR_FOREGROUND_COLOR,
         height: APP_BAR_HEIGHT + 1 /*border*/,
 

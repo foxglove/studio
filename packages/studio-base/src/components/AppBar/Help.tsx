@@ -2,9 +2,11 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import CloudOutlinedIcon from "@mui/icons-material/CloudOutlined";
-import ForumOutlinedIcon from "@mui/icons-material/ForumOutlined";
-import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
+import {
+  ChatBubblesQuestion24Regular,
+  Cloud24Regular,
+  SlideLayout24Regular,
+} from "@fluentui/react-icons";
 import { Divider, ListItemText, ListSubheader, Menu, MenuItem, MenuProps } from "@mui/material";
 import { makeStyles } from "tss-react/mui";
 
@@ -20,11 +22,16 @@ const useStyles = makeStyles()((theme) => ({
   paper: {
     width: 280,
   },
+  icon: {
+    color: theme.palette.primary.main,
+    flex: "none",
+  },
   menuItem: {
     gap: theme.spacing(1),
   },
   menuText: {
     whiteSpace: "normal",
+    flex: "0 1 auto",
   },
 }));
 
@@ -76,7 +83,7 @@ export function HelpMenu({
           handleClose();
         }}
       >
-        <VisibilityOutlinedIcon color="primary" />
+        <SlideLayout24Regular className={classes.icon} />
         <ListItemText
           primary="Studio"
           secondary="Open source robotics visualization and debugging."
@@ -96,7 +103,7 @@ export function HelpMenu({
           handleClose();
         }}
       >
-        <CloudOutlinedIcon color="primary" />
+        <Cloud24Regular className={classes.icon} />
         <ListItemText
           primary="Data Platform"
           secondary="Scalable data management platform"
@@ -120,7 +127,7 @@ export function HelpMenu({
           handleClose();
         }}
       >
-        <ForumOutlinedIcon color="primary" />
+        <ChatBubblesQuestion24Regular className={classes.icon} />
         <ListItemText
           primary="Join us on Slack"
           secondary="Give us feedback, ask questions, and collaborate with other users."
