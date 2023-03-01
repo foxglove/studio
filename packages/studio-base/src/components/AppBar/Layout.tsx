@@ -3,8 +3,16 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Menu } from "@mui/material";
+import { makeStyles } from "tss-react/mui";
 
 import LayoutBrowser from "@foxglove/studio-base/components/LayoutBrowser";
+
+const useStyles = makeStyles()({
+  paper: {
+    // default spacing + top nav height + playback bar
+    maxHeight: "calc(100% - 32px - 48px - 48px)",
+  },
+});
 
 type LayoutMenuProps = {
   anchorEl?: HTMLElement;
@@ -19,6 +27,8 @@ export function LayoutMenu({
   open,
   supportsSignIn,
 }: LayoutMenuProps): JSX.Element {
+  const { classes } = useStyles();
+
   return (
     <Menu
       id="layout-menu"
@@ -28,6 +38,9 @@ export function LayoutMenu({
       MenuListProps={{
         disablePadding: true,
         "aria-labelledby": "layout-button",
+      }}
+      PaperProps={{
+        className: classes.paper,
       }}
       anchorOrigin={{
         horizontal: "left",
