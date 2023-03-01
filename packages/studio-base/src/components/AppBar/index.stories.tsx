@@ -74,6 +74,7 @@ export function UserPresent(): JSX.Element {
 
   const me = {
     id: "fake-userid",
+    avatarImageUrl: "https://loremflickr.com/64/64/animals?lock=56789",
     orgId: org.id,
     orgDisplayName: org.displayName,
     orgSlug: org.slug,
