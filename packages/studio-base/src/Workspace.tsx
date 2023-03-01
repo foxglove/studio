@@ -563,21 +563,6 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     const bottomItems = new Map<SidebarItemKey, SidebarItem>([]);
 
     if (!enableNewTopNav) {
-<<<<<<< HEAD
-      topItems.set("extensions", {
-        iconName: "Variable2",
-        title: "Variables",
-        component: VariablesList,
-      });
-
-      topItems.set("variables", {
-        iconName: "AddIn",
-        title: "Extensions",
-        component: ExtensionsSidebar,
-      });
-
-=======
->>>>>>> 94abbfde2 (Change order of sidebar items to match current)
       if (supportsAccountSettings) {
         bottomItems.set("account", {
           iconName: currentUser != undefined ? "BlockheadFilled" : "Blockhead",
