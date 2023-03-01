@@ -8,7 +8,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import FilterNoneIcon from "@mui/icons-material/FilterNone";
 import MinimizeIcon from "@mui/icons-material/Minimize";
 import { AppBar as MuiAppBar, Button, IconButton, Toolbar } from "@mui/material";
-import { Dispatch, MouseEvent, SetStateAction, useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
@@ -191,24 +191,6 @@ export function AppBar(props: AppBarProps): JSX.Element {
   const userMenuOpen = Boolean(userAnchorEl);
   const panelMenuOpen = Boolean(panelAnchorEl);
 
-  const handleMenu = (
-    event: MouseEvent<HTMLElement>,
-    action: Dispatch<SetStateAction<HTMLElement | undefined>>,
-  ) => {
-    action(event.currentTarget);
-  };
-
-  const handleClose = (action: Dispatch<SetStateAction<HTMLElement | undefined>>) => {
-    action(undefined);
-  };
-
-  const openPreferences = () => {
-    setPrefsDialogOpen(true);
-  };
-  const closePreferences = () => {
-    setPrefsDialogOpen(false);
-  };
-
   const handleDoubleClick = useCallback(
     (event: React.MouseEvent) => {
       event.stopPropagation();
@@ -249,7 +231,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
               aria-expanded={panelMenuOpen ? "true" : undefined}
               size="large"
               onClick={(event) => {
-                handleMenu(event, setPanelAnchorEl);
+                setPanelAnchorEl(event.currentTarget);
               }}
             />
           </div>
@@ -285,7 +267,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
                     user: currentUserType,
                     cta: "help-menu",
                   });
-                  handleMenu(event, setHelpAnchorEl);
+                  setPanelAnchorEl(event.currentTarget);
                 }}
               />
               <PreferencesIconButton
@@ -301,7 +283,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
                     user: currentUserType,
                     cta: "preferences-dialog",
                   });
-                  openPreferences();
+                  setPrefsDialogOpen(true);
                 }}
               />
               {!disableSignIn &&
@@ -315,7 +297,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
                     aria-controls={userMenuOpen ? "user-profile-menu" : undefined}
                     aria-haspopup="true"
                     aria-expanded={userMenuOpen ? "true" : undefined}
-                    onClick={(event) => handleMenu(event, setUserAnchorEl)}
+                    onClick={(event) => setPanelAnchorEl(event.currentTarget)}
                     size="small"
                   />
                 ) : (
@@ -351,22 +333,22 @@ export function AppBar(props: AppBarProps): JSX.Element {
       <AddPanelMenu
         anchorEl={panelAnchorEl}
         open={panelMenuOpen}
-        handleClose={() => handleClose(setPanelAnchorEl)}
+        handleClose={() => setPanelAnchorEl(undefined)}
       />
       <HelpMenu
         anchorEl={helpAnchorEl}
         open={helpMenuOpen}
-        handleClose={() => handleClose(setHelpAnchorEl)}
+        handleClose={() => setHelpAnchorEl(undefined)}
       />
       <UserMenu
         anchorEl={userAnchorEl}
         open={userMenuOpen}
-        handleClose={() => handleClose(setUserAnchorEl)}
+        handleClose={() => setUserAnchorEl(undefined)}
       />
       <PreferencesDialog
         id="preferences-dialog"
         open={prefsDialogOpen}
-        onClose={closePreferences}
+        onClose={() => setPrefsDialogOpen(false)}
       />
     </>
   );
