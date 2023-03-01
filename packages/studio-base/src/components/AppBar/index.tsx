@@ -118,12 +118,6 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }>(
       iconButton: {
         padding: theme.spacing(0.375),
       },
-      endInner: {
-        display: "flex",
-        alignItems: "center",
-        gap: theme.spacing(1),
-        ...NOT_DRAGGABLE_STYLE, // make buttons clickable for desktop app
-      },
       noDrag: {
         ...NOT_DRAGGABLE_STYLE, // make buttons clickable for desktop app
       },
