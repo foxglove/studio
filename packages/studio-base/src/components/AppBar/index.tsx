@@ -303,6 +303,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
                     aria-expanded={userMenuOpen ? "true" : undefined}
                     onClick={(event) => setPanelAnchorEl(event.currentTarget)}
                     size="small"
+                    currentUser={currentUser}
                   />
                 ) : (
                   <Button
