@@ -2,56 +2,22 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { SlideAdd24Regular } from "@fluentui/react-icons";
-import { Menu, IconButton, IconButtonProps, MenuProps } from "@mui/material";
-import { forwardRef } from "react";
-import { makeStyles } from "tss-react/mui";
+import { Menu } from "@mui/material";
 
 import PanelList from "@foxglove/studio-base/components/PanelList";
-import {
-  LayoutState,
-  useCurrentLayoutSelector,
-} from "@foxglove/studio-base/context/CurrentLayoutContext";
 import useAddPanel from "@foxglove/studio-base/hooks/useAddPanel";
 
-const useStyles = makeStyles()((theme) => ({
-  iconButton: {
-    padding: theme.spacing(0.375),
-  },
-}));
+type AddPanelProps = {
+  anchorEl?: HTMLElement;
+  handleClose: () => void;
+  open: boolean;
+};
 
-export const AddPanelIconButton = forwardRef<HTMLButtonElement, IconButtonProps>((props, ref) => {
-  const { classes } = useStyles();
-  const selectedLayoutId = useCurrentLayoutSelector(selectedLayoutIdSelector);
-
-  return (
-    <IconButton
-      {...props}
-      ref={ref}
-      className={classes.iconButton}
-      disabled={selectedLayoutId == undefined}
-      id="add-panel-button"
-    >
-      <SlideAdd24Regular />
-    </IconButton>
-  );
-});
-
-AddPanelIconButton.displayName = "AddPanelIconButton";
-
-const selectedLayoutIdSelector = (state: LayoutState) => state.selectedLayout?.id;
-
-export function AddPanelMenu(
-  props: {
-    handleClose: () => void;
-  } & MenuProps,
-): JSX.Element {
-  const { anchorEl, handleClose, open, ...menuProps } = props;
+export function AddPanelMenu({ anchorEl, handleClose, open }: AddPanelProps): JSX.Element {
   const addPanel = useAddPanel();
 
   return (
     <Menu
-      {...menuProps}
       id="add-panel-menu"
       anchorEl={anchorEl}
       open={open}

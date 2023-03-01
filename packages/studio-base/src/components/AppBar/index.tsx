@@ -2,7 +2,13 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { PanelRight24Filled, PanelRight24Regular } from "@fluentui/react-icons";
+import {
+  ChatHelp24Regular,
+  PanelRight24Filled,
+  PanelRight24Regular,
+  Settings24Regular,
+  SlideAdd24Regular,
+} from "@fluentui/react-icons";
 import { AppBar as MuiAppBar, Button, IconButton, Toolbar } from "@mui/material";
 import { useCallback, useState } from "react";
 import { makeStyles } from "tss-react/mui";
@@ -30,11 +36,11 @@ import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import useNativeAppMenuEvent from "@foxglove/studio-base/hooks/useNativeAppMenuEvent";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 
-import { AddPanelIconButton, AddPanelMenu } from "./AddPanel";
+import { AddPanelMenu } from "./AddPanel";
 import { DataSource } from "./DataSource";
-import { HelpIconButton, HelpMenu } from "./Help";
+import { HelpMenu } from "./Help";
 import { LayoutMenu } from "./Layout";
-import { PreferencesDialog, PreferencesIconButton } from "./Preferences";
+import { PreferencesDialog } from "./Preferences";
 import { UserIconButton, UserMenu } from "./User";
 import {
   APP_BAR_BACKGROUND_COLOR,
@@ -229,7 +235,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
               <PanelLayoutIcon />
             </IconButton>
             {selectedLayoutId != undefined && (
-              <AddPanelIconButton
+              <IconButton
                 className={classes.iconButton}
                 color="inherit"
                 id="add-panel-button"
@@ -242,7 +248,9 @@ export function AppBar(props: AppBarProps): JSX.Element {
                 onClick={(event) => {
                   setPanelAnchorEl(event.currentTarget);
                 }}
-              />
+              >
+                <SlideAdd24Regular />
+              </IconButton>
             )}
           </div>
 
@@ -263,7 +271,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
               >
                 {rightSidebarOpen ? <PanelRight24Filled /> : <PanelRight24Regular />}
               </IconButton>
-              <HelpIconButton
+              <IconButton
                 className={classes.iconButton}
                 color="inherit"
                 id="help-button"
@@ -279,8 +287,10 @@ export function AppBar(props: AppBarProps): JSX.Element {
                   });
                   setHelpAnchorEl(event.currentTarget);
                 }}
-              />
-              <PreferencesIconButton
+              >
+                <ChatHelp24Regular />
+              </IconButton>
+              <IconButton
                 className={classes.iconButton}
                 color="inherit"
                 id="preferences-button"
@@ -295,7 +305,9 @@ export function AppBar(props: AppBarProps): JSX.Element {
                   });
                   setPrefsDialogOpen(true);
                 }}
-              />
+              >
+                <Settings24Regular />
+              </IconButton>
               {!disableSignIn &&
                 supportsAccountSettings &&
                 (currentUser ? (
@@ -356,6 +368,8 @@ export function AppBar(props: AppBarProps): JSX.Element {
         anchorEl={helpAnchorEl}
         open={helpMenuOpen}
         handleClose={() => setHelpAnchorEl(undefined)}
+        anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+        transformOrigin={{ vertical: "top", horizontal: "right" }}
       />
       <UserMenu
         anchorEl={userAnchorEl}
