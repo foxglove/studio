@@ -2,8 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import RulerIcon from "@mdi/svg/svg/ruler.svg";
-import Video3dIcon from "@mdi/svg/svg/video-3d.svg";
+import { Ruler24Filled } from "@fluentui/react-icons";
 import {
   IconButton,
   ListItemIcon,
@@ -18,6 +17,7 @@ import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useSta
 import ReactDOM from "react-dom";
 import { useLatest, useLongPress } from "react-use";
 import { DeepPartial } from "ts-essentials";
+import { makeStyles } from "tss-react/mui";
 import { useDebouncedCallback } from "use-debounce";
 
 import Logger from "@foxglove/log";
@@ -34,10 +34,12 @@ import {
   Topic,
   VariableValue,
 } from "@foxglove/studio";
+import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import PublishGoalIcon from "@foxglove/studio-base/components/PublishGoalIcon";
 import PublishPointIcon from "@foxglove/studio-base/components/PublishPointIcon";
 import PublishPoseEstimateIcon from "@foxglove/studio-base/components/PublishPoseEstimateIcon";
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
+import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import { DebugGui } from "./DebugGui";
 import { InteractionContextMenu, Interactions, SelectionObject, TabType } from "./Interactions";
@@ -87,6 +89,29 @@ const PublishClickIcons: Record<PublishClickType, React.ReactNode> = {
   pose_estimate: <PublishPoseEstimateIcon fontSize="inherit" />,
 };
 
+const useStyles = makeStyles()((theme) => ({
+  iconButton: {
+    position: "relative",
+    fontSize: "1rem !important",
+    pointerEvents: "auto",
+    aspectRatio: "1",
+
+    "& svg:not(.MuiSvgIcon-root)": {
+      fontSize: "1rem !important",
+    },
+  },
+  rulerIcon: {
+    transform: "rotate(45deg)",
+  },
+  threeDeeButton: {
+    fontFamily: fonts.MONOSPACE,
+    fontFeatureSettings: theme.typography.caption.fontFeatureSettings,
+    fontSize: theme.typography.caption.fontSize,
+    fontWeight: theme.typography.fontWeightBold,
+    lineHeight: "1em",
+  },
+}));
+
 /**
  * Provides DOM overlay elements on top of the 3D scene (e.g. stats, debug GUI).
  */
@@ -103,7 +128,9 @@ function RendererOverlay(props: {
   publishClickType: PublishClickType;
   onChangePublishClickType: (_: PublishClickType) => void;
   onClickPublish: () => void;
+  timezone: string | undefined;
 }): JSX.Element {
+  const { classes } = useStyles();
   const [clickedPosition, setClickedPosition] = useState<{ clientX: number; clientY: number }>({
     clientX: 0,
     clientY: 0,
@@ -226,24 +253,25 @@ function RendererOverlay(props: {
           selectedObject={selectedObject}
           interactionsTabType={interactionsTabType}
           setInteractionsTabType={setInteractionsTabType}
+          timezone={props.timezone}
         />
         <Paper square={false} elevation={4} style={{ display: "flex", flexDirection: "column" }}>
           <IconButton
+            className={classes.iconButton}
             color={props.perspective ? "info" : "inherit"}
             title={props.perspective ? "Switch to 2D camera" : "Switch to 3D camera"}
             onClick={props.onTogglePerspective}
-            style={{ pointerEvents: "auto" }}
           >
-            <Video3dIcon style={{ width: 16, height: 16 }} />
+            <span className={classes.threeDeeButton}>3D</span>
           </IconButton>
           <IconButton
             data-testid="measure-button"
+            className={classes.iconButton}
             color={props.measureActive ? "info" : "inherit"}
             title={props.measureActive ? "Cancel measuring" : "Measure distance"}
             onClick={props.onClickMeasure}
-            style={{ position: "relative", pointerEvents: "auto" }}
           >
-            <RulerIcon style={{ width: 16, height: 16 }} />
+            <Ruler24Filled className={classes.rulerIcon} />
           </IconButton>
 
           {showPublishControl && (
@@ -410,6 +438,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
   }, [canvas, configRef, config.scene.transforms?.enablePreloading]);
 
   const [colorScheme, setColorScheme] = useState<"dark" | "light" | undefined>();
+  const [timezone, setTimezone] = useState<string | undefined>();
   const [topics, setTopics] = useState<ReadonlyArray<Topic> | undefined>();
   const [parameters, setParameters] = useState<ReadonlyMap<string, ParameterValue> | undefined>();
   const [variables, setVariables] = useState<ReadonlyMap<string, VariableValue> | undefined>();
@@ -574,6 +603,10 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
 
         // Keep UI elements and the renderer aware of the current color scheme
         setColorScheme(renderState.colorScheme);
+        if (renderState.appSettings) {
+          const tz = renderState.appSettings.get(AppSetting.TIMEZONE);
+          setTimezone(typeof tz === "string" ? tz : undefined);
+        }
 
         // We may have new topics - since we are also watching for messages in
         // the current frame, topics may not have changed
@@ -606,6 +639,8 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
     context.watch("sharedPanelState");
     context.watch("variables");
     context.watch("topics");
+    context.watch("appSettings");
+    context.subscribeAppSettings([AppSetting.TIMEZONE]);
   }, [context, renderer]);
 
   // Build a list of topics to subscribe to
@@ -1039,6 +1074,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
               renderer?.publishClickTool.setPublishClickType(type);
               renderer?.publishClickTool.start();
             }}
+            timezone={timezone}
           />
         </RendererContext.Provider>
       </div>
