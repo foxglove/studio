@@ -545,7 +545,13 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
       title: "Variables",
       component: VariablesList,
     });
-
+    if (!enableNewTopNav) {
+      topItems.set("extensions", {
+        iconName: "AddIn",
+        title: "Extensions",
+        component: ExtensionsSidebar,
+      });
+    }
     if (enableStudioLogsSidebar) {
       topItems.set("studio-logs-settings", {
         iconName: "BacklogList",
@@ -557,6 +563,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     const bottomItems = new Map<SidebarItemKey, SidebarItem>([]);
 
     if (!enableNewTopNav) {
+<<<<<<< HEAD
       topItems.set("extensions", {
         iconName: "Variable2",
         title: "Variables",
@@ -569,6 +576,8 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
         component: ExtensionsSidebar,
       });
 
+=======
+>>>>>>> 94abbfde2 (Change order of sidebar items to match current)
       if (supportsAccountSettings) {
         bottomItems.set("account", {
           iconName: currentUser != undefined ? "BlockheadFilled" : "Blockhead",
