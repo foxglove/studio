@@ -16,6 +16,10 @@ import { FoxgloveLogo } from "@foxglove/studio-base/components/FoxgloveLogo";
 import { MemoryUseIndicator } from "@foxglove/studio-base/components/MemoryUseIndicator";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 import {
+  LayoutState,
+  useCurrentLayoutSelector,
+} from "@foxglove/studio-base/context/CurrentLayoutContext";
+import {
   CurrentUser,
   useCurrentUserType,
   User,
@@ -149,6 +153,8 @@ type AppBarProps = CustomWindowControlsProps & {
   onSelectDataSourceAction: () => void;
 };
 
+const selectedLayoutIdSelector = (state: LayoutState) => state.selectedLayout?.id;
+
 export function AppBar(props: AppBarProps): JSX.Element {
   const {
     currentUser,
@@ -172,6 +178,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
     AppSetting.ENABLE_MEMORY_USE_INDICATOR,
   );
 
+  const selectedLayoutId = useCurrentLayoutSelector(selectedLayoutIdSelector);
   const supportsAccountSettings = signIn != undefined;
 
   const { rightSidebarOpen, setRightSidebarOpen } = useWorkspace();
@@ -215,19 +222,22 @@ export function AppBar(props: AppBarProps): JSX.Element {
             <IconButton className={cx(classes.logo, classes.noDrag)} size="large" color="inherit">
               <FoxgloveLogo fontSize="inherit" color="inherit" />
             </IconButton>
-            <AddPanelIconButton
-              color="inherit"
-              id="add-panel-button"
-              title="Add panel"
-              aria-label="Add panel button"
-              aria-controls={panelMenuOpen ? "help-menu" : undefined}
-              aria-haspopup="true"
-              aria-expanded={panelMenuOpen ? "true" : undefined}
-              size="large"
-              onClick={(event) => {
-                setPanelAnchorEl(event.currentTarget);
-              }}
-            />
+            {selectedLayoutId != undefined && (
+              <AddPanelIconButton
+                className={classes.iconButton}
+                color="inherit"
+                id="add-panel-button"
+                title="Add panel"
+                aria-label="Add panel button"
+                aria-controls={panelMenuOpen ? "add-panel-menu" : undefined}
+                aria-haspopup="true"
+                aria-expanded={panelMenuOpen ? "true" : undefined}
+                size="large"
+                onClick={(event) => {
+                  setPanelAnchorEl(event.currentTarget);
+                }}
+              />
+            )}
           </div>
 
           <div className={classes.middle}>
