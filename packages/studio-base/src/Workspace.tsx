@@ -542,12 +542,12 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
       title: "Panel settings",
       component: PanelSettings,
     });
-    topItems.set("variables", {
-      iconName: "Variable2",
-      title: "Variables",
-      component: VariablesList,
-    });
     if (!enableNewTopNav) {
+      topItems.set("variables", {
+        iconName: "Variable2",
+        title: "Variables",
+        component: VariablesList,
+      });
       topItems.set("extensions", {
         iconName: "AddIn",
         title: "Extensions",
