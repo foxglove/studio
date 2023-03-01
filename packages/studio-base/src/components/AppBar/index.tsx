@@ -11,6 +11,7 @@ import {
 } from "@fluentui/react-icons";
 import { AppBar as MuiAppBar, Button, IconButton, Toolbar } from "@mui/material";
 import { useCallback, useState } from "react";
+import tinycolor from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
@@ -61,7 +62,7 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }>(
       appBar: {
         gridArea: "appbar",
         boxShadow: "none",
-        backgroundColor: APP_BAR_BACKGROUND_COLOR,
+        backgroundColor: APP_BAR_BACKGROUND_COLOR[theme.palette.mode],
         borderBottom: `${theme.palette.divider} 1px solid`,
         color: APP_BAR_FOREGROUND_COLOR,
         height: APP_BAR_HEIGHT + 1 /*border*/,
@@ -79,7 +80,7 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }>(
         gridTemplateColumns: "1fr auto 1fr",
       },
       logo: {
-        padding: 0,
+        padding: theme.spacing(0.125),
         fontSize: "2.125rem",
         color: APP_BAR_PRIMARY_COLOR,
       },
@@ -89,7 +90,7 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }>(
         display: "flex",
         flex: 1,
         alignItems: "center",
-        gap: theme.spacing(1),
+        gap: theme.spacing(0.25),
 
         [theme.breakpoints.up("sm")]: {
           marginInlineStart: theme.spacing(-2),
@@ -112,14 +113,20 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }>(
           marginInlineEnd: theme.spacing(-2),
         },
       },
-      iconButton: {
-        padding: theme.spacing(0.375),
-      },
       endInner: {
         display: "flex",
         alignItems: "center",
-        gap: theme.spacing(1),
+        gap: theme.spacing(0.25),
         ...NOT_DRAGGABLE_STYLE, // make buttons clickable for desktop app
+      },
+      iconButton: {
+        padding: theme.spacing(1),
+
+        "&:hover": {
+          backgroundColor: tinycolor(APP_BAR_FOREGROUND_COLOR)
+            .setAlpha(theme.palette.action.hoverOpacity)
+            .toRgbString(),
+        },
       },
       button: {
         backgroundColor: APP_BAR_PRIMARY_COLOR,
