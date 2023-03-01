@@ -12,7 +12,7 @@ import {
   FormGroup,
   FormControlLabel,
   CircularProgress,
-  useTheme,
+  ButtonGroup,
 } from "@mui/material";
 import { partition } from "lodash";
 import moment from "moment";
@@ -21,6 +21,8 @@ import path from "path";
 import { MouseEvent, useCallback, useContext, useEffect, useLayoutEffect, useMemo } from "react";
 import { useMountedState } from "react-use";
 import useAsyncFn from "react-use/lib/useAsyncFn";
+import tinycolor from "tinycolor2";
+import { makeStyles } from "tss-react/mui";
 
 import Logger from "@foxglove/log";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
@@ -49,11 +51,33 @@ import showOpenFilePicker from "@foxglove/studio-base/util/showOpenFilePicker";
 
 import LayoutSection from "./LayoutSection";
 import { useLayoutBrowserReducer } from "./reducer";
-import { debugBorder } from "./styles";
 
 const log = Logger.getLogger(__filename);
 
 const selectedLayoutIdSelector = (state: LayoutState) => state.selectedLayout?.id;
+
+const useStyles = makeStyles()((theme) => ({
+  debugBanner: {
+    bottom: 0,
+    left: 0,
+    right: 0,
+    background: theme.palette.background.paper,
+    borderWidth: 4,
+    borderStyle: "solid",
+    borderImage: `repeating-linear-gradient(${[
+      "-45deg",
+      theme.palette.warning.main,
+      `${theme.palette.warning.main} 6px`,
+      "#121217 6px",
+      "#121217 12px",
+    ].join(",")}) 4`,
+  },
+  buttonGroup: {
+    backgroundColor: tinycolor(theme.palette.primary.main)
+      .setAlpha(theme.palette.action.selectedOpacity)
+      .toRgbString(),
+  },
+}));
 
 export default function LayoutBrowser({
   currentDateForStorybook,
@@ -62,7 +86,7 @@ export default function LayoutBrowser({
   currentDateForStorybook?: Date;
   supportsSignIn?: boolean;
 }>): JSX.Element {
-  const theme = useTheme();
+  const { classes } = useStyles();
   const isMounted = useMountedState();
   const { enqueueSnackbar } = useSnackbar();
   const layoutManager = useLayoutManager();
@@ -520,10 +544,13 @@ export default function LayoutBrowser({
       .some((layout) => layout.working != undefined && state.selectedIds.includes(layout.id));
   }, [layouts, state.selectedIds]);
 
+  const [enableNewTopNav = false] = useAppConfigurationValue<boolean>(AppSetting.ENABLE_NEW_TOPNAV);
+
   return (
     <SidebarContent
       title="Layouts"
       disablePadding
+      disableToolbar={enableNewTopNav}
       trailingItems={[
         (layouts.loading || state.busy || pendingMultiAction) && (
           <Stack key="loading" alignItems="center" justifyContent="center" padding={1}>
@@ -559,7 +586,11 @@ export default function LayoutBrowser({
       {promptModal}
       {confirmModal}
       {unsavedChangesPrompt}
-      <Stack fullHeight gap={2} style={{ pointerEvents: pendingMultiAction ? "none" : "auto" }}>
+      <Stack
+        fullHeight
+        gap={enableNewTopNav ? 0 : 2}
+        style={{ pointerEvents: pendingMultiAction ? "none" : "auto" }}
+      >
         <LayoutSection
           title={layoutManager.supportsSharing ? "Personal" : undefined}
           emptyText="Add a new layout to get started with Foxglove Studio!"
@@ -596,23 +627,32 @@ export default function LayoutBrowser({
             onMakePersonalCopy={onMakePersonalCopy}
           />
         )}
+        {enableNewTopNav && (
+          <Stack paddingX={1} paddingBottom={1}>
+            <ButtonGroup disableElevation className={classes.buttonGroup}>
+              <Button
+                fullWidth
+                onClick={createNewLayout}
+                aria-label="Create new layout"
+                data-testid="add-layout"
+                title="Create new layout"
+              >
+                Create new layout
+              </Button>
+              <Button onClick={importLayout} aria-label="Import layout" title="Import layout">
+                <FileOpenOutlinedIcon />
+              </Button>
+            </ButtonGroup>
+          </Stack>
+        )}
         <Stack flexGrow={1} />
         {showSignInPrompt && <SignInPrompt onDismiss={() => void setHideSignInPrompt(true)} />}
         {layoutDebug && (
-          <Stack
-            gap={0.5}
-            padding={1}
-            position="sticky"
-            style={{
-              bottom: 0,
-              left: 0,
-              right: 0,
-              background: theme.palette.background.default,
-              ...debugBorder,
-            }}
-          >
-            <Stack direction="row" flex="auto" gap={1}>
+          <Stack gap={0.5} padding={1} position="sticky" className={classes.debugBanner}>
+            <Stack direction="row" flex="auto" gap={1} alignItems="center">
               <Button
+                size="small"
+                color="inherit"
                 onClick={async () => {
                   await layoutDebug.syncNow();
                   await reloadLayouts();
@@ -627,6 +667,8 @@ export default function LayoutBrowser({
                 <FormControlLabel
                   control={
                     <Switch
+                      size="small"
+                      color="warning"
                       checked={layoutManager.isOnline}
                       onChange={(_, checked) => {
                         layoutDebug.setOnline(checked);

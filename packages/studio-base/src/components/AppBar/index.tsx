@@ -3,15 +3,16 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { PanelRight24Filled, PanelRight24Regular } from "@fluentui/react-icons";
-import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
-import CloseIcon from "@mui/icons-material/Close";
-import FilterNoneIcon from "@mui/icons-material/FilterNone";
-import MinimizeIcon from "@mui/icons-material/Minimize";
 import { AppBar as MuiAppBar, Button, IconButton, Toolbar } from "@mui/material";
 import { useCallback, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
+import PanelLayoutIcon from "@foxglove/studio-base/assets/panel-layout.svg";
+import {
+  CustomWindowControls,
+  CustomWindowControlsProps,
+} from "@foxglove/studio-base/components/AppBar/CustomWindowControls";
 import { FoxgloveLogo } from "@foxglove/studio-base/components/FoxgloveLogo";
 import { MemoryUseIndicator } from "@foxglove/studio-base/components/MemoryUseIndicator";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
@@ -32,6 +33,7 @@ import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 import { AddPanelIconButton, AddPanelMenu } from "./AddPanel";
 import { DataSource } from "./DataSource";
 import { HelpIconButton, HelpMenu } from "./Help";
+import { LayoutMenu } from "./Layout";
 import { PreferencesDialog, PreferencesIconButton } from "./Preferences";
 import { UserIconButton, UserMenu } from "./User";
 import {
@@ -104,6 +106,9 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }>(
           marginInlineEnd: theme.spacing(-2),
         },
       },
+      iconButton: {
+        padding: theme.spacing(0.375),
+      },
       endInner: {
         display: "flex",
         alignItems: "center",
@@ -119,29 +124,12 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }>(
           }).dark,
         },
       },
-      iconButton: {
-        padding: theme.spacing(0.375),
-      },
       noDrag: {
         ...NOT_DRAGGABLE_STYLE, // make buttons clickable for desktop app
-      },
-      closeButton: {
-        ":hover": {
-          backgroundColor: theme.palette.error.main,
-        },
       },
     };
   },
 );
-
-export type CustomWindowControlsProps = {
-  showCustomWindowControls?: boolean;
-  isMaximized?: boolean;
-  onMinimizeWindow?: () => void;
-  onMaximizeWindow?: () => void;
-  onUnmaximizeWindow?: () => void;
-  onCloseWindow?: () => void;
-};
 
 type AppBarProps = CustomWindowControlsProps & {
   currentUser?: User;
@@ -186,11 +174,13 @@ export function AppBar(props: AppBarProps): JSX.Element {
   const [helpAnchorEl, setHelpAnchorEl] = useState<undefined | HTMLElement>(undefined);
   const [userAnchorEl, setUserAnchorEl] = useState<undefined | HTMLElement>(undefined);
   const [panelAnchorEl, setPanelAnchorEl] = useState<undefined | HTMLElement>(undefined);
+  const [layoutAnchorEl, setLayoutAnchorEl] = useState<undefined | HTMLElement>(undefined);
   const [prefsDialogOpen, setPrefsDialogOpen] = useState(false);
 
   const helpMenuOpen = Boolean(helpAnchorEl);
   const userMenuOpen = Boolean(userAnchorEl);
   const panelMenuOpen = Boolean(panelAnchorEl);
+  const layoutMenuOpen = Boolean(layoutAnchorEl);
 
   const handleDoubleClick = useCallback(
     (event: React.MouseEvent) => {
@@ -221,6 +211,22 @@ export function AppBar(props: AppBarProps): JSX.Element {
           <div className={classes.start}>
             <IconButton className={cx(classes.logo, classes.noDrag)} size="large" color="inherit">
               <FoxgloveLogo fontSize="inherit" color="inherit" />
+            </IconButton>
+            <IconButton
+              className={classes.iconButton}
+              color="inherit"
+              id="layout-button"
+              title="Layout browser"
+              aria-label="Layout button"
+              aria-controls={layoutMenuOpen ? "layout-menu" : undefined}
+              aria-haspopup="true"
+              aria-expanded={layoutMenuOpen ? "true" : undefined}
+              size="large"
+              onClick={(event) => {
+                setLayoutAnchorEl(event.currentTarget);
+              }}
+            >
+              <PanelLayoutIcon />
             </IconButton>
             {selectedLayoutId != undefined && (
               <AddPanelIconButton
@@ -340,6 +346,12 @@ export function AppBar(props: AppBarProps): JSX.Element {
         open={panelMenuOpen}
         handleClose={() => setPanelAnchorEl(undefined)}
       />
+      <LayoutMenu
+        anchorEl={layoutAnchorEl}
+        open={layoutMenuOpen}
+        handleClose={() => setLayoutAnchorEl(undefined)}
+        supportsSignIn={supportsAccountSettings}
+      />
       <HelpMenu
         anchorEl={helpAnchorEl}
         open={helpMenuOpen}
@@ -355,51 +367,6 @@ export function AppBar(props: AppBarProps): JSX.Element {
         open={prefsDialogOpen}
         onClose={() => setPrefsDialogOpen(false)}
       />
-    </>
-  );
-}
-
-function CustomWindowControls({
-  isMaximized = false,
-  onMinimizeWindow,
-  onMaximizeWindow,
-  onUnmaximizeWindow,
-  onCloseWindow,
-}: Omit<CustomWindowControlsProps, "showCustomWindowControls">) {
-  const { classes } = useStyles({});
-  return (
-    <>
-      <IconButton
-        size="small"
-        color="inherit"
-        onClick={onMinimizeWindow}
-        data-testid="win-minimize"
-      >
-        <MinimizeIcon fontSize="inherit" color="inherit" />
-      </IconButton>
-
-      <IconButton
-        size="small"
-        color="inherit"
-        onClick={isMaximized ? onUnmaximizeWindow : onMaximizeWindow}
-        data-testid="win-maximize"
-      >
-        {isMaximized ? (
-          <FilterNoneIcon fontSize="inherit" color="inherit" />
-        ) : (
-          <CheckBoxOutlineBlankIcon fontSize="inherit" color="inherit" />
-        )}
-      </IconButton>
-
-      <IconButton
-        className={classes.closeButton}
-        size="small"
-        color="inherit"
-        onClick={onCloseWindow}
-        data-testid="win-close"
-      >
-        <CloseIcon fontSize="inherit" color="inherit" />
-      </IconButton>
     </>
   );
 }
