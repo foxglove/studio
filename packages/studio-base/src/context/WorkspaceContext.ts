@@ -2,17 +2,17 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { createContext, Dispatch, SetStateAction, useContext } from "react";
+import { createContext, useContext } from "react";
 
 type WorkspaceContextType = {
   panelSettingsOpen: boolean;
-  rightSidebarOpen: boolean;
-
   openPanelSettings: () => void;
   openHelp: () => void;
   openAccountSettings: () => void;
   openLayoutBrowser: () => void;
-  setRightSidebarOpen: Dispatch<SetStateAction<boolean>>;
+  rightSidebarOpen: boolean;
+  // eslint-disable-next-line @foxglove/no-boolean-parameters
+  setRightSidebarOpen: (open: boolean) => void;
 };
 
 export const WorkspaceContext = createContext<WorkspaceContextType>({

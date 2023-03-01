@@ -7,14 +7,7 @@ import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import { Divider, IconButton, Tab, Tabs } from "@mui/material";
 import { makeStyles } from "tss-react/mui";
 
-import { EventsList } from "@foxglove/studio-base/components/DataSourceSidebar/EventsList";
-import {
-  MessagePipelineContext,
-  useMessagePipeline,
-} from "@foxglove/studio-base/components/MessagePipeline";
 import Stack from "@foxglove/studio-base/components/Stack";
-import VariablesList from "@foxglove/studio-base/components/VariablesList";
-import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
 
 const useStyles = makeStyles()((theme) => ({
   root: {
@@ -53,28 +46,31 @@ const useStyles = makeStyles()((theme) => ({
   },
 }));
 
-const selectPlayerSourceId = ({ playerState }: MessagePipelineContext) =>
-  playerState.urlState?.sourceId;
+export type NewSidebarItem = {
+  title: string;
+  component: React.ComponentType;
+};
 
-export type NewSidebarTab = "variables" | "events";
+function Noop(): ReactNull {
+  return ReactNull;
+}
 
-export function NewSidebar({
+export function NewSidebar<K extends string>({
+  items,
   anchor,
   onClose,
   activeTab,
   setActiveTab,
 }: {
+  items: Map<K, NewSidebarItem>;
   anchor: "right" | "left";
   onClose: () => void;
-  activeTab: NewSidebarTab;
-  setActiveTab: (newValue: NewSidebarTab) => void;
+  activeTab: K | undefined;
+  setActiveTab: (newValue: K) => void;
 }): JSX.Element {
   const { classes } = useStyles();
-  const { currentUser } = useCurrentUser();
 
-  const playerSourceId = useMessagePipeline(selectPlayerSourceId);
-
-  const showEventsTab = currentUser != undefined && playerSourceId === "foxglove-data-platform";
+  const SelectedComponent = (activeTab != undefined && items.get(activeTab)?.component) || Noop;
 
   return (
     <Stack className={classes.root} flexShrink={0}>
@@ -82,15 +78,16 @@ export function NewSidebar({
         <Tabs
           className={classes.tabs}
           textColor="inherit"
-          value={activeTab}
-          onChange={(_ev, newValue: NewSidebarTab) => {
+          value={activeTab ?? false}
+          onChange={(_ev, newValue: K) => {
             if (newValue !== activeTab) {
               setActiveTab(newValue);
             }
           }}
         >
-          <Tab label="Variables" value="variables" />
-          {showEventsTab && <Tab label="Events" value="events" />}
+          {Array.from(items.entries(), ([key, item]) => (
+            <Tab key={key} label={item.title} value={key} />
+          ))}
         </Tabs>
 
         <IconButton className={classes.iconButton} size="small" onClick={onClose}>
@@ -102,14 +99,9 @@ export function NewSidebar({
         </IconButton>
       </Stack>
       <Divider />
-      {activeTab === "variables" && (
+      {activeTab != undefined && (
         <div className={classes.tabContent}>
-          <VariablesList />
-        </div>
-      )}
-      {showEventsTab && activeTab === "events" && (
-        <div className={classes.tabContent}>
-          <EventsList />
+          <SelectedComponent />
         </div>
       )}
     </Stack>

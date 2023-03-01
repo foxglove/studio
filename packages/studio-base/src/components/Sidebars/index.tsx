@@ -21,9 +21,8 @@ import { HelpMenu } from "@foxglove/studio-base/components/AppBar/Help";
 import { BuiltinIcon } from "@foxglove/studio-base/components/BuiltinIcon";
 import ErrorBoundary from "@foxglove/studio-base/components/ErrorBoundary";
 import { MemoryUseIndicator } from "@foxglove/studio-base/components/MemoryUseIndicator";
-import { NewSidebar, NewSidebarTab } from "@foxglove/studio-base/components/NewSidebar";
+import { NewSidebar, NewSidebarItem } from "@foxglove/studio-base/components/NewSidebar";
 import Stack from "@foxglove/studio-base/components/Stack";
-import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
 
@@ -122,15 +121,30 @@ function mosiacRightSidebarSplitPercentage(node: MosaicNode<LayoutNode>): number
   }
 }
 
-type SidebarProps<K> = PropsWithChildren<{
-  items: Map<K, SidebarItem>;
-  bottomItems: Map<K, SidebarItem>;
-  selectedKey: K | undefined;
-  onSelectKey: (key: K | undefined) => void;
+type SidebarProps<LeftKey, RightKey> = PropsWithChildren<{
+  items: Map<LeftKey, SidebarItem>;
+  bottomItems: Map<LeftKey, SidebarItem>;
+  selectedKey: LeftKey | undefined;
+  onSelectKey: (key: LeftKey | undefined) => void;
+
+  rightItems: Map<RightKey, NewSidebarItem>;
+  selectedRightKey: RightKey | undefined;
+  onSelectRightKey: (key: RightKey | undefined) => void;
 }>;
 
-export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.Element {
-  const { children, items, bottomItems, selectedKey, onSelectKey } = props;
+export default function Sidebars<LeftKey extends string, RightKey extends string>(
+  props: SidebarProps<LeftKey, RightKey>,
+): JSX.Element {
+  const {
+    children,
+    items,
+    bottomItems,
+    selectedKey,
+    onSelectKey,
+    rightItems,
+    selectedRightKey,
+    onSelectRightKey,
+  } = props;
 
   const [enableMemoryUseIndicator = false] = useAppConfigurationValue<boolean>(
     AppSetting.ENABLE_MEMORY_USE_INDICATOR,
@@ -143,17 +157,14 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
   const [initialEnableNewTopNav] = useState(currentEnableNewTopNav);
   const enableNewTopNav = isDesktopApp() ? initialEnableNewTopNav : currentEnableNewTopNav;
 
-  const { rightSidebarOpen, setRightSidebarOpen } = useWorkspace();
-
   const [mosaicValue, setMosaicValue] = useState<MosaicNode<LayoutNode>>("children");
   const { classes } = useStyles();
 
-  const allItems = useMemo(() => {
+  const allLeftItems = useMemo(() => {
     return new Map([...items, ...bottomItems]);
   }, [bottomItems, items]);
 
   const [helpAnchorEl, setHelpAnchorEl] = useState<undefined | HTMLElement>(undefined);
-  const [activeRightTab, setActiveRightTab] = useState<NewSidebarTab>("variables");
 
   const helpMenuOpen = Boolean(helpAnchorEl);
 
@@ -164,7 +175,8 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
     setHelpAnchorEl(undefined);
   };
 
-  const leftSidebarOpen = selectedKey != undefined && allItems.has(selectedKey);
+  const leftSidebarOpen = selectedKey != undefined && allLeftItems.has(selectedKey);
+  const rightSidebarOpen = selectedRightKey != undefined && rightItems.has(selectedRightKey);
 
   useEffect(() => {
     const width = Math.min(384, 0.3 * window.innerWidth);
@@ -192,11 +204,11 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
     });
   }, [leftSidebarOpen, rightSidebarOpen]);
 
-  const SelectedComponent =
-    (selectedKey != undefined && allItems.get(selectedKey)?.component) || Noop;
+  const SelectedLeftComponent =
+    (selectedKey != undefined && allLeftItems.get(selectedKey)?.component) || Noop;
 
   const onClickTabAction = useCallback(
-    (key: K) => {
+    (key: LeftKey) => {
       // toggle tab selected/unselected on click
       if (selectedKey === key) {
         onSelectKey(undefined);
@@ -321,18 +333,19 @@ export default function Sidebar<K extends string>(props: SidebarProps<K>): JSX.E
                 return (
                   <ErrorBoundary>
                     <Paper square elevation={0}>
-                      <SelectedComponent />
+                      <SelectedLeftComponent />
                     </Paper>
                   </ErrorBoundary>
                 );
               case "rightbar":
                 return (
                   <ErrorBoundary>
-                    <NewSidebar
+                    <NewSidebar<RightKey>
                       anchor="right"
-                      onClose={() => setRightSidebarOpen((old) => !old)}
-                      activeTab={activeRightTab}
-                      setActiveTab={setActiveRightTab}
+                      onClose={() => onSelectRightKey(undefined)}
+                      items={rightItems}
+                      activeTab={selectedRightKey}
+                      setActiveTab={onSelectRightKey}
                     />
                   </ErrorBoundary>
                 );

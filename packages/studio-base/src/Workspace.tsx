@@ -21,6 +21,7 @@ import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import AccountSettings from "@foxglove/studio-base/components/AccountSettingsSidebar/AccountSettings";
 import { AppBar, CustomWindowControlsProps } from "@foxglove/studio-base/components/AppBar";
 import { DataSourceSidebar } from "@foxglove/studio-base/components/DataSourceSidebar";
+import { EventsList } from "@foxglove/studio-base/components/DataSourceSidebar/EventsList";
 import DocumentDropListener from "@foxglove/studio-base/components/DocumentDropListener";
 import ExtensionsSettings from "@foxglove/studio-base/components/ExtensionsSettings";
 import KeyListener from "@foxglove/studio-base/components/KeyListener";
@@ -31,6 +32,7 @@ import {
   useMessagePipelineGetter,
 } from "@foxglove/studio-base/components/MessagePipeline";
 import MultiProvider from "@foxglove/studio-base/components/MultiProvider";
+import { NewSidebarItem } from "@foxglove/studio-base/components/NewSidebar";
 import { OpenDialog, OpenDialogViews } from "@foxglove/studio-base/components/OpenDialog";
 import PanelLayout from "@foxglove/studio-base/components/PanelLayout";
 import PanelList from "@foxglove/studio-base/components/PanelList";
@@ -38,8 +40,8 @@ import PanelSettings from "@foxglove/studio-base/components/PanelSettings";
 import PlaybackControls from "@foxglove/studio-base/components/PlaybackControls";
 import Preferences from "@foxglove/studio-base/components/Preferences";
 import RemountOnValueChange from "@foxglove/studio-base/components/RemountOnValueChange";
-import Sidebar, { SidebarItem } from "@foxglove/studio-base/components/Sidebar";
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
+import Sidebars, { SidebarItem } from "@foxglove/studio-base/components/Sidebars";
 import { SignInFormModal } from "@foxglove/studio-base/components/SignInFormModal";
 import Stack from "@foxglove/studio-base/components/Stack";
 import { StudioLogsSettingsSidebar } from "@foxglove/studio-base/components/StudioLogsSettingsSidebar";
@@ -96,6 +98,8 @@ type SidebarItemKey =
   | "preferences"
   | "help"
   | "studio-logs-settings";
+
+type RightSidebarItemKey = "variables" | "events";
 
 const selectedLayoutIdSelector = (state: LayoutState) => state.selectedLayout?.id;
 
@@ -157,6 +161,8 @@ const selectPlay = (ctx: MessagePipelineContext) => ctx.startPlayback;
 const selectSeek = (ctx: MessagePipelineContext) => ctx.seekPlayback;
 const selectPlayUntil = (ctx: MessagePipelineContext) => ctx.playUntil;
 const selectPlayerId = (ctx: MessagePipelineContext) => ctx.playerState.playerId;
+const selectPlayerSourceId = ({ playerState }: MessagePipelineContext) =>
+  playerState.urlState?.sourceId;
 
 export default function Workspace(props: WorkspaceProps): JSX.Element {
   const { classes } = useStyles();
@@ -179,6 +185,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
   // We use playerId to detect when a player changes for RemountOnValueChange below
   // see comment below above the RemountOnValueChange component
   const playerId = useMessagePipeline(selectPlayerId);
+  const playerSourceId = useMessagePipeline(selectPlayerSourceId);
 
   const isPlayerPresent = playerPresence !== PlayerPresence.NOT_PRESENT;
 
@@ -204,8 +211,6 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
   const [initialEnableNewTopNav] = useState(currentEnableNewTopNav);
   const enableNewTopNav = isDesktopApp() ? initialEnableNewTopNav : currentEnableNewTopNav;
 
-  const [rightSidebarOpen, setRightSidebarOpen] = useState(false);
-
   const showSignInForm = currentUserRequired && currentUser == undefined;
 
   const [showOpenDialog, setShowOpenDialog] = useState<
@@ -215,6 +220,10 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
   const [selectedSidebarItem, setSelectedSidebarItem] = useState<SidebarItemKey | undefined>(
     "connection",
   );
+
+  const [selectedRightSidebarItem, setSelectedRightSidebarItem] = useState<
+    RightSidebarItemKey | undefined
+  >(undefined);
 
   // When a player is present we hide the connection sidebar. To prevent hiding the connection sidebar
   // when the user wants to select a new connection we track whether the sidebar item opened
@@ -471,14 +480,16 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
   const workspaceContextValue = useMemo(
     () => ({
       panelSettingsOpen: selectedSidebarItem === "panel-settings",
-      rightSidebarOpen,
       openPanelSettings: () => setSelectedSidebarItem("panel-settings"),
       openHelp: () => setSelectedSidebarItem("help"),
       openAccountSettings: () => supportsAccountSettings && setSelectedSidebarItem("account"),
       openLayoutBrowser: () => setSelectedSidebarItem("layouts"),
-      setRightSidebarOpen,
+      rightSidebarOpen: selectedRightSidebarItem != undefined,
+      // eslint-disable-next-line @foxglove/no-boolean-parameters
+      setRightSidebarOpen: (open: boolean) =>
+        setSelectedRightSidebarItem(open ? "variables" : undefined),
     }),
-    [rightSidebarOpen, selectedSidebarItem, supportsAccountSettings],
+    [selectedSidebarItem, selectedRightSidebarItem, supportsAccountSettings],
   );
 
   // Since the _component_ field of a sidebar item entry is a component and accepts no additional
@@ -571,6 +582,17 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     currentUser,
   ]);
 
+  const showEventsTab = currentUser != undefined && playerSourceId === "foxglove-data-platform";
+  const rightSidebarItems = useMemo(() => {
+    const items = new Map<RightSidebarItemKey, NewSidebarItem>([
+      ["variables", { title: "Variables", component: VariablesList }],
+    ]);
+    if (showEventsTab) {
+      items.set("events", { title: "Events", component: EventsList });
+    }
+    return items;
+  }, [showEventsTab]);
+
   const keyDownHandlers = useMemo(
     () => ({
       b: (ev: KeyboardEvent) => {
@@ -636,11 +658,14 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
             onSelectDataSourceAction={() => setShowOpenDialog({ view: "start" })}
           />
         )}
-        <Sidebar
+        <Sidebars
           items={sidebarItems}
           bottomItems={sidebarBottomItems}
           selectedKey={selectedSidebarItem}
           onSelectKey={selectSidebarItem}
+          rightItems={rightSidebarItems}
+          selectedRightKey={selectedRightSidebarItem}
+          onSelectRightKey={setSelectedRightSidebarItem}
         >
           {/* To ensure no stale player state remains, we unmount all panels when players change */}
           <RemountOnValueChange value={playerId}>
@@ -648,7 +673,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
               <PanelLayout />
             </Stack>
           </RemountOnValueChange>
-        </Sidebar>
+        </Sidebars>
         {play && pause && seek && (
           <div style={{ flexShrink: 0 }}>
             <PlaybackControls

@@ -14,6 +14,7 @@ import {
 import { useState, useEffect, useMemo } from "react";
 import { makeStyles } from "tss-react/mui";
 
+import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import { EventsList } from "@foxglove/studio-base/components/DataSourceSidebar/EventsList";
 import {
   MessagePipelineContext,
@@ -23,6 +24,7 @@ import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent"
 import Stack from "@foxglove/studio-base/components/Stack";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
 import { EventsStore, useEvents } from "@foxglove/studio-base/context/EventsContext";
+import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
 
 import { ProblemsList } from "./ProblemsList";
@@ -86,7 +88,10 @@ export default function DataSourceSidebar(props: Props): JSX.Element {
   const [activeTab, setActiveTab] = useState<DataSourceSidebarTab>("topics");
   const { classes } = useStyles();
 
-  const showEventsTab = currentUser != undefined && playerSourceId === "foxglove-data-platform";
+  const [enableNewTopNav = false] = useAppConfigurationValue<boolean>(AppSetting.ENABLE_NEW_TOPNAV);
+
+  const showEventsTab =
+    !enableNewTopNav && currentUser != undefined && playerSourceId === "foxglove-data-platform";
 
   const isLoading = useMemo(
     () =>
