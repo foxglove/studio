@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { AddPanelMenu } from "./AddPanelMenu";
-import { StorybookDecorator } from "./StorybookDecorator";
+import { StorybookDecorator } from "./StorybookDecorator.stories";
 
 export default {
   title: "components/AppBar/AddPanelMenu",

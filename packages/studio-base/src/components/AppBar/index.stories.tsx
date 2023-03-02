@@ -5,7 +5,7 @@
 import { action } from "@storybook/addon-actions";
 
 import { AppBar } from "@foxglove/studio-base/components/AppBar";
-import { StorybookDecorator } from "@foxglove/studio-base/components/AppBar/StorybookDecorator";
+import { StorybookDecorator } from "@foxglove/studio-base/components/AppBar/StorybookDecorator.stories";
 import MockMessagePipelineProvider from "@foxglove/studio-base/components/MessagePipeline/MockMessagePipelineProvider";
 import Stack from "@foxglove/studio-base/components/Stack";
 import { User } from "@foxglove/studio-base/context/CurrentUserContext";

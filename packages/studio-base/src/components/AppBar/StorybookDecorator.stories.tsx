@@ -57,6 +57,10 @@ class MockPanelCatalog implements PanelCatalog {
   }
 }
 
+export default {
+  excludeStories: ["StorybookDecorator"],
+};
+
 export function StorybookDecorator(StoryFn: Story): JSX.Element {
   return (
     <DndProvider backend={HTML5Backend}>
