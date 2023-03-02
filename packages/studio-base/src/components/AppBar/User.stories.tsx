@@ -2,13 +2,13 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { UserMenu } from "@foxglove/studio-base/components/AppBar/User";
-import { Wrapper } from "@foxglove/studio-base/components/AppBar/index.stories";
+import { StorybookDecorator } from "./StorybookDecorator";
+import { UserMenu } from "./User";
 
 export default {
   title: "components/AppBar/UserMenu",
   component: UserMenu,
-  decorators: [Wrapper],
+  decorators: [StorybookDecorator],
 };
 
 export function Default(): JSX.Element {
