@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import {
-  QuestionCircle24Regular,
+  ChatHelp24Regular,
   PanelRight24Filled,
   PanelRight24Regular,
   Settings24Regular,
@@ -63,7 +63,7 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }>(
         gridArea: "appbar",
         boxShadow: "none",
         backgroundColor: APP_BAR_BACKGROUND_COLOR[theme.palette.mode],
-        borderBottom: "none",
+        borderBottom: `${theme.palette.divider} 1px solid`,
         color: APP_BAR_FOREGROUND_COLOR,
         height: APP_BAR_HEIGHT + 1 /*border*/,
 
@@ -80,19 +80,26 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }>(
         gridTemplateColumns: "1fr auto 1fr",
       },
       logo: {
-        padding: theme.spacing(0.925),
+        padding: theme.spacing(0.125),
         fontSize: "2.125rem",
         color: APP_BAR_PRIMARY_COLOR,
       },
       start: {
+        marginInlineStart: theme.spacing(-1),
         gridArea: "start",
         display: "flex",
         flex: 1,
         alignItems: "center",
+        gap: theme.spacing(0.25),
+
+        [theme.breakpoints.up("sm")]: {
+          marginInlineStart: theme.spacing(-2),
+        },
       },
       startInner: {
         display: "flex",
         alignItems: "center",
+        gap: theme.spacing(0.25),
         ...NOT_DRAGGABLE_STYLE, // make buttons clickable for desktop app
       },
       middle: {
@@ -106,15 +113,20 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }>(
         flex: 1,
         display: "flex",
         justifyContent: "flex-end",
+        marginInlineEnd: theme.spacing(-1),
+
+        [theme.breakpoints.up("sm")]: {
+          marginInlineEnd: theme.spacing(-2),
+        },
       },
       endInner: {
         display: "flex",
         alignItems: "center",
+        gap: theme.spacing(0.25),
         ...NOT_DRAGGABLE_STYLE, // make buttons clickable for desktop app
       },
       iconButton: {
-        padding: theme.spacing(1.75),
-        borderRadius: 0,
+        padding: theme.spacing(1),
 
         "&:hover": {
           backgroundColor: tinycolor(APP_BAR_FOREGROUND_COLOR)
@@ -211,7 +223,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
         elevation={0}
         onDoubleClick={handleDoubleClick}
       >
-        <Toolbar disableGutters variant="dense" className={classes.toolbar}>
+        <Toolbar variant="dense" className={classes.toolbar}>
           <div className={classes.start}>
             <div className={classes.startInner}>
               <IconButton className={classes.logo} size="large" color="inherit">
@@ -288,7 +300,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
                   setHelpAnchorEl(event.currentTarget);
                 }}
               >
-                <QuestionCircle24Regular />
+                <ChatHelp24Regular />
               </IconButton>
               <IconButton
                 className={classes.iconButton}

@@ -9,6 +9,8 @@ import MinimizeIcon from "@mui/icons-material/Minimize";
 import { IconButton } from "@mui/material";
 import { makeStyles } from "tss-react/mui";
 
+import Stack from "@foxglove/studio-base/components/Stack";
+
 export type CustomWindowControlsProps = {
   showCustomWindowControls?: boolean;
   isMaximized?: boolean;
@@ -35,7 +37,7 @@ export function CustomWindowControls({
 }: Omit<CustomWindowControlsProps, "showCustomWindowControls">): JSX.Element {
   const { classes } = useStyles();
   return (
-    <>
+    <Stack direction="row" gap={1} paddingX={1}>
       <IconButton
         size="small"
         color="inherit"
@@ -67,6 +69,6 @@ export function CustomWindowControls({
       >
         <CloseIcon fontSize="inherit" color="inherit" />
       </IconButton>
-    </>
+    </Stack>
   );
 }
