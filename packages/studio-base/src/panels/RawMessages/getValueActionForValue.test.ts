@@ -372,7 +372,7 @@ describe("getStructureItemForPath", () => {
       },
       datatype: "",
     };
-    expect(getStructureItemForPath(structureItem, [0])).toEqual({
+    expect(getStructureItemForPath(structureItem, ["0"])).toEqual({
       structureType: "primitive",
       primitiveType: "uint32",
       datatype: "",
