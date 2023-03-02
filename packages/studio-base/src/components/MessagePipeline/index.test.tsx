@@ -506,7 +506,7 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
     expect(player.publishers).toBe(lastPublishers);
   });
 
-  it("keeps publishers when changing player", () => {
+  it("informs new player of existing prior advertisements", () => {
     const player1 = new FakePlayer();
     const { Hook, Wrapper, setPlayer } = makeTestHook({ player: player1 });
     const { result, rerender } = renderHook(Hook, { wrapper: Wrapper });
