@@ -38,7 +38,7 @@ export function LayoutMenu({
         horizontal: "left",
       }}
     >
-      <LayoutBrowser supportsSignIn={supportsSignIn} />
+      <LayoutBrowser menuClose={handleClose} supportsSignIn={supportsSignIn} />
     </Menu>
   );
 }

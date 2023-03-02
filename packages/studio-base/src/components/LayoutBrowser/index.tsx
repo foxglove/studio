@@ -81,9 +81,11 @@ const useStyles = makeStyles()((theme) => ({
 }));
 
 export default function LayoutBrowser({
+  menuClose,
   currentDateForStorybook,
   supportsSignIn,
 }: React.PropsWithChildren<{
+  menuClose?: () => void;
   currentDateForStorybook?: Date;
   supportsSignIn?: boolean;
 }>): JSX.Element {
@@ -268,6 +270,7 @@ export default function LayoutBrowser({
       } else {
         setSelectedLayoutId(item.id);
         dispatch({ type: "select-id", id: item.id });
+        menuClose?.();
       }
     },
     [
@@ -275,6 +278,7 @@ export default function LayoutBrowser({
       currentLayoutId,
       dispatch,
       layouts.value,
+      menuClose,
       promptForUnsavedChanges,
       setSelectedLayoutId,
     ],
@@ -600,7 +604,7 @@ export default function LayoutBrowser({
               </ListItem>
               <ListItem disablePadding>
                 <ListItemButton onClick={importLayout}>
-                  <ListItemText disableTypography>Import layout from JSON…</ListItemText>
+                  <ListItemText disableTypography>Import from file…</ListItemText>
                 </ListItemButton>
               </ListItem>
             </List>
