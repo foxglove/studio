@@ -80,7 +80,7 @@ class MockPanelCatalog implements PanelCatalog {
   }
 }
 
-function Wrapper(StoryFn: Story): JSX.Element {
+export function Wrapper(StoryFn: Story): JSX.Element {
   return (
     <DndProvider backend={HTML5Backend}>
       <PanelCatalogContext.Provider value={new MockPanelCatalog()}>
