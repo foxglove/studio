@@ -38,10 +38,10 @@ import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import useNativeAppMenuEvent from "@foxglove/studio-base/hooks/useNativeAppMenuEvent";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 
-import { AddPanelMenu } from "./AddPanel";
+import { AddPanelMenu } from "./AddPanelMenu";
 import { DataSource } from "./DataSource";
-import { HelpMenu } from "./Help";
-import { LayoutMenu } from "./Layout";
+import { HelpMenu } from "./HelpMenu";
+import { LayoutMenu } from "./LayoutMenu";
 import { PreferencesDialog } from "./Preferences";
 import { UserIconButton, UserMenu } from "./User";
 import {
