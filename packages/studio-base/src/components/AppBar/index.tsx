@@ -3,13 +3,13 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import {
-  ChatHelp24Regular,
+  QuestionCircle24Regular,
   PanelRight24Filled,
   PanelRight24Regular,
   Settings24Regular,
   SlideAdd24Regular,
 } from "@fluentui/react-icons";
-import { AppBar as MuiAppBar, Button, IconButton, Toolbar } from "@mui/material";
+import { AppBar as MuiAppBar, Button, IconButton } from "@mui/material";
 import { useCallback, useState } from "react";
 import tinycolor from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
@@ -22,6 +22,7 @@ import {
 } from "@foxglove/studio-base/components/AppBar/CustomWindowControls";
 import { FoxgloveLogo } from "@foxglove/studio-base/components/FoxgloveLogo";
 import { MemoryUseIndicator } from "@foxglove/studio-base/components/MemoryUseIndicator";
+import Stack from "@foxglove/studio-base/components/Stack";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 import {
   LayoutState,
@@ -63,9 +64,9 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }>(
         gridArea: "appbar",
         boxShadow: "none",
         backgroundColor: APP_BAR_BACKGROUND_COLOR[theme.palette.mode],
-        borderBottom: `${theme.palette.divider} 1px solid`,
+        borderBottom: "none",
         color: APP_BAR_FOREGROUND_COLOR,
-        height: APP_BAR_HEIGHT + 1 /*border*/,
+        height: APP_BAR_HEIGHT,
 
         // Leave space for system window controls on the right on Windows.
         // Use hard-coded padding for Mac because it looks better than env(titlebar-area-x).
@@ -78,28 +79,22 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }>(
         width: "100%",
         gridTemplateAreas: `"start middle end"`,
         gridTemplateColumns: "1fr auto 1fr",
+        alignItems: "center",
       },
       logo: {
-        padding: theme.spacing(0.125),
+        padding: theme.spacing(0.5),
         fontSize: "2.125rem",
         color: APP_BAR_PRIMARY_COLOR,
       },
       start: {
-        marginInlineStart: theme.spacing(-1),
         gridArea: "start",
         display: "flex",
         flex: 1,
         alignItems: "center",
-        gap: theme.spacing(0.25),
-
-        [theme.breakpoints.up("sm")]: {
-          marginInlineStart: theme.spacing(-2),
-        },
       },
       startInner: {
         display: "flex",
         alignItems: "center",
-        gap: theme.spacing(0.25),
         ...NOT_DRAGGABLE_STYLE, // make buttons clickable for desktop app
       },
       middle: {
@@ -113,25 +108,24 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }>(
         flex: 1,
         display: "flex",
         justifyContent: "flex-end",
-        marginInlineEnd: theme.spacing(-1),
-
-        [theme.breakpoints.up("sm")]: {
-          marginInlineEnd: theme.spacing(-2),
-        },
       },
       endInner: {
         display: "flex",
         alignItems: "center",
-        gap: theme.spacing(0.25),
         ...NOT_DRAGGABLE_STYLE, // make buttons clickable for desktop app
       },
       iconButton: {
-        padding: theme.spacing(1),
+        borderRadius: 0,
+        fontSize: 20,
 
+        svg: {
+          fontSize: "1em !important",
+        },
         "&:hover": {
-          backgroundColor: tinycolor(APP_BAR_FOREGROUND_COLOR)
-            .setAlpha(theme.palette.action.hoverOpacity)
-            .toRgbString(),
+          backgroundColor: tinycolor(APP_BAR_FOREGROUND_COLOR).setAlpha(0.08).toRgbString(),
+        },
+        "&.Mui-selected": {
+          backgroundColor: APP_BAR_PRIMARY_COLOR,
         },
       },
       button: {
@@ -175,7 +169,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
     onSelectDataSourceAction,
     debugDragRegion,
   } = props;
-  const { classes } = useStyles({ leftInset, debugDragRegion });
+  const { classes, cx } = useStyles({ leftInset, debugDragRegion });
   const currentUserType = useCurrentUserType();
   const analytics = useAnalytics();
   const [enableMemoryUseIndicator = false] = useAppConfigurationValue<boolean>(
@@ -223,14 +217,14 @@ export function AppBar(props: AppBarProps): JSX.Element {
         elevation={0}
         onDoubleClick={handleDoubleClick}
       >
-        <Toolbar variant="dense" className={classes.toolbar}>
+        <div className={classes.toolbar}>
           <div className={classes.start}>
             <div className={classes.startInner}>
               <IconButton className={classes.logo} size="large" color="inherit">
                 <FoxgloveLogo fontSize="inherit" color="inherit" />
               </IconButton>
               <IconButton
-                className={classes.iconButton}
+                className={cx(classes.iconButton, { "Mui-selected": layoutMenuOpen })}
                 color="inherit"
                 id="layout-button"
                 title="Layout browser"
@@ -247,7 +241,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
               </IconButton>
               {selectedLayoutId != undefined && (
                 <IconButton
-                  className={classes.iconButton}
+                  className={cx(classes.iconButton, { "Mui-selected": panelMenuOpen })}
                   color="inherit"
                   id="add-panel-button"
                   title="Add panel"
@@ -284,7 +278,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
                 {rightSidebarOpen ? <PanelRight24Filled /> : <PanelRight24Regular />}
               </IconButton>
               <IconButton
-                className={classes.iconButton}
+                className={cx(classes.iconButton, { "Mui-selected": helpMenuOpen })}
                 color="inherit"
                 id="help-button"
                 aria-label="Help menu button"
@@ -300,15 +294,16 @@ export function AppBar(props: AppBarProps): JSX.Element {
                   setHelpAnchorEl(event.currentTarget);
                 }}
               >
-                <ChatHelp24Regular />
+                <QuestionCircle24Regular />
               </IconButton>
               <IconButton
-                className={classes.iconButton}
+                className={cx(classes.iconButton, { "Mui-selected": userMenuOpen })}
                 color="inherit"
                 id="preferences-button"
                 aria-label="Preferences dialog button"
                 aria-controls={prefsDialogOpen ? "preferences-dialog" : undefined}
                 aria-haspopup="true"
+                size="large"
                 aria-expanded={prefsDialogOpen ? "true" : undefined}
                 onClick={() => {
                   void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
@@ -320,38 +315,40 @@ export function AppBar(props: AppBarProps): JSX.Element {
               >
                 <Settings24Regular />
               </IconButton>
-              {!disableSignIn &&
-                supportsAccountSettings &&
-                (currentUser ? (
-                  <UserIconButton
-                    className={classes.iconButton}
-                    aria-label="User profile menu button"
-                    color="inherit"
-                    id="user-profile-button"
-                    aria-controls={userMenuOpen ? "user-profile-menu" : undefined}
-                    aria-haspopup="true"
-                    aria-expanded={userMenuOpen ? "true" : undefined}
-                    onClick={(event) => setUserAnchorEl(event.currentTarget)}
-                    size="small"
-                    currentUser={currentUser}
-                  />
-                ) : (
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    className={classes.button}
-                    size="small"
-                    onClick={() => {
-                      signIn();
-                      void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
-                        user: "unauthenticated",
-                        cta: "sign-in",
-                      });
-                    }}
-                  >
-                    Sign in
-                  </Button>
-                ))}
+              {!disableSignIn && supportsAccountSettings && (
+                <Stack direction="row" gap={1} paddingX={1}>
+                  {currentUser ? (
+                    <UserIconButton
+                      className={classes.iconButton}
+                      aria-label="User profile menu button"
+                      color="inherit"
+                      id="user-profile-button"
+                      aria-controls={userMenuOpen ? "user-profile-menu" : undefined}
+                      aria-haspopup="true"
+                      aria-expanded={userMenuOpen ? "true" : undefined}
+                      onClick={(event) => setUserAnchorEl(event.currentTarget)}
+                      size="small"
+                      currentUser={currentUser}
+                    />
+                  ) : (
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      className={classes.button}
+                      size="small"
+                      onClick={() => {
+                        signIn();
+                        void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
+                          user: "unauthenticated",
+                          cta: "sign-in",
+                        });
+                      }}
+                    >
+                      Sign in
+                    </Button>
+                  )}
+                </Stack>
+              )}
               {showCustomWindowControls && (
                 <CustomWindowControls
                   onMinimizeWindow={onMinimizeWindow}
@@ -363,7 +360,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
               )}
             </div>
           </div>
-        </Toolbar>
+        </div>
       </MuiAppBar>
       <AddPanelMenu
         anchorEl={panelAnchorEl}
