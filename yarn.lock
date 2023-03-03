@@ -13570,7 +13570,7 @@ __metadata:
     jest-environment-jsdom: 29.4.0
     license-checker: 25.0.1
     prettier: 2.8.3
-    rimraf: 4.1.2
+    rimraf: 4.1.4
     semver: 7.3.8
     ts-node: 10.9.1
     ts-prune: 0.10.3
@@ -21943,12 +21943,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"rimraf@npm:4.1.2":
-  version: 4.1.2
-  resolution: "rimraf@npm:4.1.2"
+"rimraf@npm:4.1.4":
+  version: 4.1.4
+  resolution: "rimraf@npm:4.1.4"
   bin:
     rimraf: dist/cjs/src/bin.js
-  checksum: 480b8147fd9bcbef3ac118f88a7b1169c3872977a3411a0c84df838bfc30e175a394c0db6f9619fc8b8a886a18c6d779d5e74f380a0075ecc710afaf81b3f50c
+  checksum: b49ada3ce6f3c48f7f240165c68c03b2167541155e151ce829f94e85228d7c312463c031967e93c54243c047a7a9540b832a0d75f3b4e78c22c782b628ec7a21
   languageName: node
   linkType: hard
 
