@@ -12,8 +12,13 @@ import Stack from "@foxglove/studio-base/components/Stack";
 const useStyles = makeStyles()((theme) => ({
   root: {
     boxSizing: "content-box",
-    borderLeft: `1px solid ${theme.palette.divider}`,
     backgroundColor: theme.palette.background.paper,
+  },
+  anchorRight: {
+    borderLeft: `1px solid ${theme.palette.divider}`,
+  },
+  anchorLeft: {
+    borderRight: `1px solid ${theme.palette.divider}`,
   },
   tabs: {
     minHeight: "auto",
@@ -69,12 +74,19 @@ export function NewSidebar<K extends string>({
   activeTab: K | undefined;
   setActiveTab: (newValue: K) => void;
 }): JSX.Element {
-  const { classes } = useStyles();
+  const { classes, cx } = useStyles();
 
   const SelectedComponent = (activeTab != undefined && items.get(activeTab)?.component) || Noop;
 
   return (
-    <Stack className={classes.root} flexShrink={0} overflow="hidden">
+    <Stack
+      className={cx(classes.root, {
+        [classes.anchorLeft]: anchor === "left",
+        [classes.anchorRight]: anchor === "right",
+      })}
+      flexShrink={0}
+      overflow="hidden"
+    >
       <Stack direction="row" justifyContent="space-between" alignItems="center">
         <Tabs
           className={classes.tabs}
