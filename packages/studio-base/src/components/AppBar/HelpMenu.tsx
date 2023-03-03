@@ -43,13 +43,8 @@ type HelpMenuProps = {
   transformOrigin?: MenuProps["transformOrigin"];
 };
 
-export function HelpMenu({
-  anchorEl,
-  anchorOrigin,
-  handleClose,
-  open,
-  transformOrigin,
-}: HelpMenuProps): JSX.Element {
+export function HelpMenu(props: HelpMenuProps): JSX.Element {
+  const { anchorEl, anchorOrigin, handleClose, open, transformOrigin } = props;
   const { classes } = useStyles();
   const currentUserType = useCurrentUserType();
   const analytics = useAnalytics();

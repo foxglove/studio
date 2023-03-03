@@ -13,7 +13,8 @@ type AddPanelProps = {
   open: boolean;
 };
 
-export function AddPanelMenu({ anchorEl, handleClose, open }: AddPanelProps): JSX.Element {
+export function AddPanelMenu(props: AddPanelProps): JSX.Element {
+  const { anchorEl, handleClose, open } = props;
   const addPanel = useAddPanel();
 
   return (

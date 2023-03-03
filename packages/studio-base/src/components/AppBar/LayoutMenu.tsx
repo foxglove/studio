@@ -13,12 +13,8 @@ type LayoutMenuProps = {
   open: boolean;
 };
 
-export function LayoutMenu({
-  anchorEl,
-  handleClose,
-  open,
-  supportsSignIn,
-}: LayoutMenuProps): JSX.Element {
+export function LayoutMenu(props: LayoutMenuProps): JSX.Element {
+  const { anchorEl, handleClose, open, supportsSignIn } = props;
   return (
     <Menu
       id="layout-menu"
