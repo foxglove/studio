@@ -5,6 +5,7 @@
 import ClearIcon from "@mui/icons-material/Clear";
 import SearchIcon from "@mui/icons-material/Search";
 import {
+  Button,
   IconButton,
   List,
   ListItem,
@@ -162,7 +163,11 @@ function TopicListItem({
 
 const MemoTopicListItem = React.memo(TopicListItem);
 
-export function TopicList(): JSX.Element {
+export function TopicList({
+  onSelectDataSourceAction,
+}: {
+  onSelectDataSourceAction?: () => void;
+}): JSX.Element {
   const { classes, cx } = useStyles();
   const [filterText, setFilterText] = useState<string>("");
 
@@ -180,6 +185,25 @@ export function TopicList(): JSX.Element {
         : topics.map((item) => topicToFzfResult(item)),
     [filterText, topics],
   );
+
+  if (playerPresence === PlayerPresence.NOT_PRESENT) {
+    return (
+      <Stack
+        flex="auto"
+        padding={2}
+        paddingBottom={4}
+        fullHeight
+        alignItems="center"
+        gap={1}
+        justifyContent="center"
+      >
+        <Typography align="center" variant="subtitle2" color="text.secondary">
+          No data source selected
+        </Typography>
+        <Button onClick={onSelectDataSourceAction}>Open data source…</Button>
+      </Stack>
+    );
+  }
 
   if (playerPresence === PlayerPresence.ERROR) {
     return (

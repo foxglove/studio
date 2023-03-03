@@ -521,6 +521,12 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     };
   }, [enableNewTopNav]);
 
+  const TopicListSidebar = useMemo(() => {
+    return function TopicListSidebarImpl() {
+      return <TopicList onSelectDataSourceAction={() => setShowOpenDialog({ view: "start" })} />;
+    };
+  }, []);
+
   const PanelSettingsSidebar = useMemo(() => {
     return function PanelSettingsSidebarImpl() {
       return <PanelSettings disableToolbar />;
@@ -618,11 +624,11 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
 
   const leftSidebarItems = useMemo(() => {
     const items = new Map<LeftSidebarItemKey, NewSidebarItem>([
-      ["topics", { title: "Topics", component: TopicList }],
+      ["topics", { title: "Topics", component: TopicListSidebar }],
       ["panel-settings", { title: "Panel settings", component: PanelSettingsSidebar }],
     ]);
     return items;
-  }, [PanelSettingsSidebar]);
+  }, [PanelSettingsSidebar, TopicListSidebar]);
 
   const rightSidebarItems = useMemo(() => {
     const items = new Map<RightSidebarItemKey, NewSidebarItem>([
