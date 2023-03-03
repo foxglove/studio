@@ -5,7 +5,6 @@
 import ClearIcon from "@mui/icons-material/Clear";
 import SearchIcon from "@mui/icons-material/Search";
 import {
-  Box,
   IconButton,
   List,
   ListItem,
@@ -71,13 +70,10 @@ const useStyles = makeStyles()((theme) => ({
   appBar: {
     top: -1,
     zIndex: theme.zIndex.appBar,
-    display: "flex",
-    flexDirection: "row",
-    gap: theme.spacing(1),
-    alignItems: "center",
     padding: theme.spacing(0.5),
     position: "sticky",
     backgroundColor: theme.palette.background.paper,
+    borderBottom: `1px solid ${theme.palette.divider}`,
   },
   listItem: {
     paddingRight: theme.spacing(1),
@@ -229,36 +225,34 @@ export function TopicList(): JSX.Element {
   return (
     <>
       <header className={classes.appBar}>
-        <Box flex="auto">
-          <TextField
-            id="topic-filter"
-            variant="filled"
-            disabled={playerPresence !== PlayerPresence.PRESENT}
-            onChange={(event) => setFilterText(event.target.value)}
-            value={filterText}
-            className={classes.textField}
-            fullWidth
-            placeholder="Filter by topic or datatype…"
-            InputProps={{
-              size: "small",
-              startAdornment: (
-                <label className={classes.startAdornment} htmlFor="topic-filter">
-                  <SearchIcon fontSize="small" />
-                </label>
-              ),
-              endAdornment: filterText && (
-                <IconButton
-                  size="small"
-                  title="Clear search"
-                  onClick={() => setFilterText("")}
-                  edge="end"
-                >
-                  <ClearIcon fontSize="small" />
-                </IconButton>
-              ),
-            }}
-          />
-        </Box>
+        <TextField
+          id="topic-filter"
+          variant="filled"
+          disabled={playerPresence !== PlayerPresence.PRESENT}
+          onChange={(event) => setFilterText(event.target.value)}
+          value={filterText}
+          className={classes.textField}
+          fullWidth
+          placeholder="Filter by topic or datatype…"
+          InputProps={{
+            size: "small",
+            startAdornment: (
+              <label className={classes.startAdornment} htmlFor="topic-filter">
+                <SearchIcon fontSize="small" />
+              </label>
+            ),
+            endAdornment: filterText && (
+              <IconButton
+                size="small"
+                title="Clear search"
+                onClick={() => setFilterText("")}
+                edge="end"
+              >
+                <ClearIcon fontSize="small" />
+              </IconButton>
+            ),
+          }}
+        />
       </header>
 
       {filteredTopics.length > 0 ? (
