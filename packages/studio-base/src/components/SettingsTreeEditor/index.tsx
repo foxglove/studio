@@ -4,7 +4,7 @@
 
 import ClearIcon from "@mui/icons-material/Clear";
 import SearchIcon from "@mui/icons-material/Search";
-import { AppBar, IconButton, TextField } from "@mui/material";
+import { IconButton, TextField } from "@mui/material";
 import memoizeWeak from "memoize-weak";
 import { useCallback, useMemo, useState } from "react";
 import { DeepReadonly } from "ts-essentials";
@@ -27,12 +27,22 @@ const useStyles = makeStyles()((theme) => ({
     top: -1,
     zIndex: theme.zIndex.appBar - 1,
     borderBottom: `1px solid ${theme.palette.divider}`,
+    position: "sticky",
     padding: theme.spacing(1),
+    backgroundColor: theme.palette.background.paper,
   },
   fieldGrid: {
     display: "grid",
     gridTemplateColumns: "minmax(20%, 20ch) auto",
     columnGap: theme.spacing(1),
+  },
+  textField: {
+    ".MuiOutlinedInput-notchedOutline": {
+      border: "none",
+    },
+  },
+  startAdornment: {
+    display: "flex",
   },
 }));
 
@@ -102,16 +112,23 @@ export default function SettingsTreeEditor({
   return (
     <Stack fullHeight>
       {settings.enableFilter === true && (
-        <AppBar className={classes.appBar} position="sticky" color="default" elevation={0}>
+        <header className={classes.appBar}>
           <TextField
+            id="settings-filter"
+            variant="filled"
             data-testid="settings-filter-field"
             onChange={(event) => setFilterText(event.target.value)}
             value={filterText}
-            variant="filled"
+            className={classes.textField}
             fullWidth
-            placeholder="Filter"
+            placeholder="Seach panel settings…"
             InputProps={{
-              startAdornment: <SearchIcon fontSize="small" />,
+              size: "small",
+              startAdornment: (
+                <label className={classes.startAdornment} htmlFor="settings-filter">
+                  <SearchIcon fontSize="small" />
+                </label>
+              ),
               endAdornment: filterText && (
                 <IconButton
                   size="small"
@@ -124,7 +141,7 @@ export default function SettingsTreeEditor({
               ),
             }}
           />
-        </AppBar>
+        </header>
       )}
       <div className={classes.fieldGrid}>
         {showTitleField && (

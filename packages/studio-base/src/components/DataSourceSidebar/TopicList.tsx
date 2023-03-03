@@ -5,7 +5,6 @@
 import ClearIcon from "@mui/icons-material/Clear";
 import SearchIcon from "@mui/icons-material/Search";
 import {
-  AppBar,
   Box,
   IconButton,
   List,
@@ -75,9 +74,11 @@ const useStyles = makeStyles()((theme) => ({
     borderBottom: `1px solid ${theme.palette.divider}`,
     display: "flex",
     flexDirection: "row",
-    padding: theme.spacing(1),
     gap: theme.spacing(1),
     alignItems: "center",
+    padding: theme.spacing(1),
+    position: "sticky",
+    backgroundColor: theme.palette.background.paper,
   },
   listItem: {
     paddingRight: theme.spacing(1),
@@ -91,6 +92,14 @@ const useStyles = makeStyles()((theme) => ({
     ".MuiListItemSecondaryAction-root": {
       marginRight: theme.spacing(-1),
     },
+  },
+  textField: {
+    ".MuiOutlinedInput-notchedOutline": {
+      border: "none",
+    },
+  },
+  startAdornment: {
+    display: "flex",
   },
 }));
 
@@ -191,17 +200,18 @@ export function TopicList(): JSX.Element {
   if (playerPresence === PlayerPresence.INITIALIZING) {
     return (
       <>
-        <AppBar className={classes.appBar} position="sticky" color="inherit" elevation={0}>
+        <header className={classes.appBar}>
           <TextField
             disabled
-            variant="filled"
+            className={classes.textField}
             fullWidth
             placeholder="Waiting for data..."
             InputProps={{
+              size: "small",
               startAdornment: <SearchIcon fontSize="small" />,
             }}
           />
-        </AppBar>
+        </header>
         <List key="loading" dense disablePadding>
           {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map((i) => (
             <ListItem className={cx(classes.listItem, "loading")} divider key={i}>
@@ -219,17 +229,24 @@ export function TopicList(): JSX.Element {
 
   return (
     <>
-      <AppBar className={classes.appBar} position="sticky" color="inherit" elevation={0}>
+      <header className={classes.appBar}>
         <Box flex="auto">
           <TextField
+            id="topic-filter"
+            variant="filled"
             disabled={playerPresence !== PlayerPresence.PRESENT}
             onChange={(event) => setFilterText(event.target.value)}
             value={filterText}
-            variant="filled"
+            className={classes.textField}
             fullWidth
-            placeholder="Filter by topic or datatype"
+            placeholder="Filter by topic or datatype…"
             InputProps={{
-              startAdornment: <SearchIcon fontSize="small" />,
+              size: "small",
+              startAdornment: (
+                <label className={classes.startAdornment} htmlFor="topic-filter">
+                  <SearchIcon fontSize="small" />
+                </label>
+              ),
               endAdornment: filterText && (
                 <IconButton
                   size="small"
@@ -243,7 +260,7 @@ export function TopicList(): JSX.Element {
             }}
           />
         </Box>
-      </AppBar>
+      </header>
 
       {filteredTopics.length > 0 ? (
         <List key="topics" dense disablePadding>
