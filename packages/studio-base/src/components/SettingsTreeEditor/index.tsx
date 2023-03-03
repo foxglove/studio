@@ -25,10 +25,9 @@ import { filterTreeNodes, prepareSettingsNodes } from "./utils";
 const useStyles = makeStyles()((theme) => ({
   appBar: {
     top: -1,
-    zIndex: theme.zIndex.appBar - 1,
-    borderBottom: `1px solid ${theme.palette.divider}`,
+    zIndex: theme.zIndex.appBar,
     position: "sticky",
-    padding: theme.spacing(1),
+    padding: theme.spacing(0.5),
     backgroundColor: theme.palette.background.paper,
   },
   fieldGrid: {

@@ -70,13 +70,12 @@ const HighlightChars = ({
 const useStyles = makeStyles()((theme) => ({
   appBar: {
     top: -1,
-    zIndex: theme.zIndex.appBar - 1,
-    borderBottom: `1px solid ${theme.palette.divider}`,
+    zIndex: theme.zIndex.appBar,
     display: "flex",
     flexDirection: "row",
     gap: theme.spacing(1),
     alignItems: "center",
-    padding: theme.spacing(1),
+    padding: theme.spacing(0.5),
     position: "sticky",
     backgroundColor: theme.palette.background.paper,
   },
