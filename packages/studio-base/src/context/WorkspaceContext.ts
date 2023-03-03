@@ -10,6 +10,11 @@ type WorkspaceContextType = {
   openHelp: () => void;
   openAccountSettings: () => void;
   openLayoutBrowser: () => void;
+
+  leftSidebarOpen: boolean;
+  // eslint-disable-next-line @foxglove/no-boolean-parameters
+  setLeftSidebarOpen: (open: boolean) => void;
+
   rightSidebarOpen: boolean;
   // eslint-disable-next-line @foxglove/no-boolean-parameters
   setRightSidebarOpen: (open: boolean) => void;
@@ -17,6 +22,7 @@ type WorkspaceContextType = {
 
 export const WorkspaceContext = createContext<WorkspaceContextType>({
   panelSettingsOpen: false,
+  leftSidebarOpen: false,
   rightSidebarOpen: false,
 
   openPanelSettings: (): void => {
@@ -30,6 +36,9 @@ export const WorkspaceContext = createContext<WorkspaceContextType>({
   },
   openLayoutBrowser: (): void => {
     throw new Error("Must be in a WorkspaceContext.Provider to open layout browser");
+  },
+  setLeftSidebarOpen: (): void => {
+    throw new Error("Must be in a WorkspaceContext.Provider to open the left sidebar");
   },
   setRightSidebarOpen: (): void => {
     throw new Error("Must be in a WorkspaceContext.Provider to open the right sidebar");

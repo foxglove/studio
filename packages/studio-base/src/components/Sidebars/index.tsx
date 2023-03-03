@@ -127,6 +127,10 @@ type SidebarProps<LeftKey, RightKey> = PropsWithChildren<{
   selectedKey: LeftKey | undefined;
   onSelectKey: (key: LeftKey | undefined) => void;
 
+  leftItems: Map<LeftKey, NewSidebarItem>;
+  selectedLeftKey: LeftKey | undefined;
+  onSelectLeftKey: (key: LeftKey | undefined) => void;
+
   rightItems: Map<RightKey, NewSidebarItem>;
   selectedRightKey: RightKey | undefined;
   onSelectRightKey: (key: RightKey | undefined) => void;
@@ -141,6 +145,9 @@ export default function Sidebars<LeftKey extends string, RightKey extends string
     bottomItems,
     selectedKey,
     onSelectKey,
+    leftItems,
+    selectedLeftKey,
+    onSelectLeftKey,
     rightItems,
     selectedRightKey,
     onSelectRightKey,
@@ -274,18 +281,18 @@ export default function Sidebars<LeftKey extends string, RightKey extends string
 
   return (
     <Stack direction="row" fullHeight overflow="hidden">
-      <Stack className={classes.leftNav} flexShrink={0} justifyContent="space-between">
-        <Tabs
-          className={classes.tabs}
-          orientation="vertical"
-          variant="scrollable"
-          value={selectedKey ?? false}
-          scrollButtons={false}
-        >
-          {topTabs}
-          <TabSpacer />
-          {!enableNewTopNav && enableMemoryUseIndicator && <MemoryUseIndicator />}
-          {!enableNewTopNav && (
+      {!enableNewTopNav && (
+        <Stack className={classes.leftNav} flexShrink={0} justifyContent="space-between">
+          <Tabs
+            className={classes.tabs}
+            orientation="vertical"
+            variant="scrollable"
+            value={selectedKey ?? false}
+            scrollButtons={false}
+          >
+            {topTabs}
+            <TabSpacer />
+            {enableMemoryUseIndicator && <MemoryUseIndicator />}
             <Tab
               className={classes.tab}
               color="inherit"
@@ -297,10 +304,8 @@ export default function Sidebars<LeftKey extends string, RightKey extends string
               onClick={(event) => handleHelpClick(event)}
               icon={<HelpOutlineIcon color={helpMenuOpen ? "primary" : "inherit"} />}
             />
-          )}
-          {bottomTabs}
-        </Tabs>
-        {!enableNewTopNav && (
+            {bottomTabs}
+          </Tabs>
           <HelpMenu
             anchorEl={helpAnchorEl}
             open={helpMenuOpen}
@@ -314,8 +319,8 @@ export default function Sidebars<LeftKey extends string, RightKey extends string
               horizontal: "left",
             }}
           />
-        )}
-      </Stack>
+        </Stack>
+      )}
       {
         // By always rendering the mosaic, even if we are only showing children, we can prevent the
         // children from having to re-mount each time the sidebar is opened/closed.
@@ -332,9 +337,19 @@ export default function Sidebars<LeftKey extends string, RightKey extends string
               case "leftbar":
                 return (
                   <ErrorBoundary>
-                    <Paper square elevation={0}>
-                      <SelectedLeftComponent />
-                    </Paper>
+                    {enableNewTopNav ? (
+                      <NewSidebar<LeftKey>
+                        anchor="left"
+                        onClose={() => onSelectLeftKey(undefined)}
+                        items={leftItems}
+                        activeTab={selectedLeftKey}
+                        setActiveTab={onSelectLeftKey}
+                      />
+                    ) : (
+                      <Paper square elevation={0}>
+                        <SelectedLeftComponent />
+                      </Paper>
+                    )}
                   </ErrorBoundary>
                 );
               case "rightbar":

@@ -23,6 +23,7 @@ import { AppBar } from "@foxglove/studio-base/components/AppBar";
 import { CustomWindowControlsProps } from "@foxglove/studio-base/components/AppBar/CustomWindowControls";
 import { DataSourceSidebar } from "@foxglove/studio-base/components/DataSourceSidebar";
 import { EventsList } from "@foxglove/studio-base/components/DataSourceSidebar/EventsList";
+import { TopicList } from "@foxglove/studio-base/components/DataSourceSidebar/TopicList";
 import DocumentDropListener from "@foxglove/studio-base/components/DocumentDropListener";
 import ExtensionsSettings from "@foxglove/studio-base/components/ExtensionsSettings";
 import KeyListener from "@foxglove/studio-base/components/KeyListener";
@@ -100,6 +101,7 @@ type SidebarItemKey =
   | "help"
   | "studio-logs-settings";
 
+type LeftSidebarItemKey = "topics" | "panel-settings";
 type RightSidebarItemKey = "variables" | "events";
 
 const selectedLayoutIdSelector = (state: LayoutState) => state.selectedLayout?.id;
@@ -222,6 +224,9 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     "connection",
   );
 
+  const [selectedLeftSidebarItem, setSelectedLeftSidebarItem] = useState<
+    LeftSidebarItemKey | undefined
+  >("topics");
   const [selectedRightSidebarItem, setSelectedRightSidebarItem] = useState<
     RightSidebarItemKey | undefined
   >(undefined);
@@ -485,12 +490,21 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
       openHelp: () => setSelectedSidebarItem("help"),
       openAccountSettings: () => supportsAccountSettings && setSelectedSidebarItem("account"),
       openLayoutBrowser: () => setSelectedSidebarItem("layouts"),
+      leftSidebarOpen: selectedLeftSidebarItem != undefined,
+      // eslint-disable-next-line @foxglove/no-boolean-parameters
+      setLeftSidebarOpen: (open: boolean) =>
+        setSelectedLeftSidebarItem(open ? "topics" : undefined),
       rightSidebarOpen: selectedRightSidebarItem != undefined,
       // eslint-disable-next-line @foxglove/no-boolean-parameters
       setRightSidebarOpen: (open: boolean) =>
         setSelectedRightSidebarItem(open ? "variables" : undefined),
     }),
-    [selectedSidebarItem, selectedRightSidebarItem, supportsAccountSettings],
+    [
+      selectedSidebarItem,
+      selectedLeftSidebarItem,
+      selectedRightSidebarItem,
+      supportsAccountSettings,
+    ],
   );
 
   // Since the _component_ field of a sidebar item entry is a component and accepts no additional
@@ -499,8 +513,17 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
   const DataSourceSidebarItem = useMemo(() => {
     return function DataSourceSidebarItemImpl() {
       return (
-        <DataSourceSidebar onSelectDataSourceAction={() => setShowOpenDialog({ view: "start" })} />
+        <DataSourceSidebar
+          disableToolbar={enableNewTopNav}
+          onSelectDataSourceAction={() => setShowOpenDialog({ view: "start" })}
+        />
       );
+    };
+  }, [enableNewTopNav]);
+
+  const PanelSettingsSidebar = useMemo(() => {
+    return function PanelSettingsSidebarImpl() {
+      return <PanelSettings disableToolbar />;
     };
   }, []);
 
@@ -592,6 +615,15 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
   ]);
 
   const showEventsTab = currentUser != undefined && playerSourceId === "foxglove-data-platform";
+
+  const leftSidebarItems = useMemo(() => {
+    const items = new Map<LeftSidebarItemKey, NewSidebarItem>([
+      ["topics", { title: "Topics", component: TopicList }],
+      ["panel-settings", { title: "Panel settings", component: PanelSettingsSidebar }],
+    ]);
+    return items;
+  }, [PanelSettingsSidebar]);
+
   const rightSidebarItems = useMemo(() => {
     const items = new Map<RightSidebarItemKey, NewSidebarItem>([
       ["variables", { title: "Variables", component: VariablesList }],
@@ -672,6 +704,9 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
           bottomItems={sidebarBottomItems}
           selectedKey={selectedSidebarItem}
           onSelectKey={selectSidebarItem}
+          leftItems={leftSidebarItems}
+          selectedLeftKey={selectedLeftSidebarItem}
+          onSelectLeftKey={setSelectedLeftSidebarItem}
           rightItems={rightSidebarItems}
           selectedRightKey={selectedRightSidebarItem}
           onSelectRightKey={setSelectedRightSidebarItem}

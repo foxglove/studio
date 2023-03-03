@@ -3,9 +3,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import {
-  QuestionCircle24Regular,
+  PanelLeft24Filled,
+  PanelLeft24Regular,
   PanelRight24Filled,
   PanelRight24Regular,
+  QuestionCircle24Regular,
   Settings24Regular,
   SlideAdd24Regular,
 } from "@fluentui/react-icons";
@@ -179,7 +181,8 @@ export function AppBar(props: AppBarProps): JSX.Element {
   const selectedLayoutId = useCurrentLayoutSelector(selectedLayoutIdSelector);
   const supportsAccountSettings = signIn != undefined;
 
-  const { rightSidebarOpen, setRightSidebarOpen } = useWorkspace();
+  const { leftSidebarOpen, setLeftSidebarOpen, rightSidebarOpen, setRightSidebarOpen } =
+    useWorkspace();
 
   const [helpAnchorEl, setHelpAnchorEl] = useState<undefined | HTMLElement>(undefined);
   const [userAnchorEl, setUserAnchorEl] = useState<undefined | HTMLElement>(undefined);
@@ -267,6 +270,16 @@ export function AppBar(props: AppBarProps): JSX.Element {
           <div className={classes.end}>
             <div className={classes.endInner}>
               {enableMemoryUseIndicator && <MemoryUseIndicator />}
+              <IconButton
+                className={classes.iconButton}
+                color="inherit"
+                title={`${leftSidebarOpen ? "Hide" : "Show"} right sidebar`}
+                aria-label={`${leftSidebarOpen ? "Hide" : "Show"} right sidebar`}
+                size="large"
+                onClick={() => setLeftSidebarOpen(!leftSidebarOpen)}
+              >
+                {leftSidebarOpen ? <PanelLeft24Filled /> : <PanelLeft24Regular />}
+              </IconButton>
               <IconButton
                 className={classes.iconButton}
                 color="inherit"

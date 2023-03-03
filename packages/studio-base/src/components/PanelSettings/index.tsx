@@ -38,8 +38,10 @@ const singlePanelIdSelector = (state: LayoutState) =>
 const selectIncrementSequenceNumber = (store: PanelStateStore) => store.incrementSequenceNumber;
 
 export default function PanelSettings({
+  disableToolbar = false,
   selectedPanelIdsForTests,
 }: React.PropsWithChildren<{
+  disableToolbar?: boolean;
   selectedPanelIdsForTests?: readonly string[];
 }>): JSX.Element {
   const selectedLayoutId = useCurrentLayoutSelector(selectedLayoutIdSelector);
@@ -129,7 +131,7 @@ export default function PanelSettings({
 
   if (selectedLayoutId == undefined) {
     return (
-      <SidebarContent title="Panel settings">
+      <SidebarContent disableToolbar={disableToolbar} title="Panel settings">
         <Typography color="text.secondary">
           <Link onClick={openLayoutBrowser}>Select a layout</Link> to get started!
         </Typography>
@@ -139,7 +141,7 @@ export default function PanelSettings({
 
   if (selectedPanelId == undefined) {
     return (
-      <SidebarContent title="Panel settings">
+      <SidebarContent disableToolbar={disableToolbar} title="Panel settings">
         <Typography color="text.secondary">Select a panel to edit its settings.</Typography>
       </SidebarContent>
     );
@@ -153,7 +155,7 @@ export default function PanelSettings({
 
   if (!config) {
     return (
-      <SidebarContent title="Panel settings">
+      <SidebarContent disableToolbar={disableToolbar} title="Panel settings">
         <Typography color="text.secondary">Loading panel settings...</Typography>
       </SidebarContent>
     );
@@ -164,6 +166,7 @@ export default function PanelSettings({
   return (
     <SidebarContent
       disablePadding={isSettingsTree}
+      disableToolbar={disableToolbar}
       title={`${panelInfo.title} panel settings`}
       trailingItems={[
         <ActionMenu

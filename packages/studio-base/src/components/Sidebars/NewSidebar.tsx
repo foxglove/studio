@@ -43,6 +43,7 @@ const useStyles = makeStyles()((theme) => ({
   },
   tabContent: {
     flex: "auto",
+    overflow: "auto",
   },
 }));
 
@@ -73,7 +74,7 @@ export function NewSidebar<K extends string>({
   const SelectedComponent = (activeTab != undefined && items.get(activeTab)?.component) || Noop;
 
   return (
-    <Stack className={classes.root} flexShrink={0}>
+    <Stack className={classes.root} flexShrink={0} overflow="hidden">
       <Stack direction="row" justifyContent="space-between" alignItems="center">
         <Tabs
           className={classes.tabs}
