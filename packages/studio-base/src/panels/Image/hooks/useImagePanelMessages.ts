@@ -28,7 +28,7 @@ type UseImagePanelMessagesParams = {
 export type ImagePanelState = UseImagePanelMessagesParams & {
   image?: NormalizedImageMessage;
   cameraInfo?: CameraInfo;
-  annotationsByTopic: Map<string, Annotation[]>;
+  annotationsByTopic: ReadonlyMap<string, Annotation[]>;
   tree: AVLTree<Time, SynchronizationItem>;
 
   actions: {
@@ -86,8 +86,15 @@ function addMessages(
     return synchronizedAddMessages(state, messageEvents);
   }
 
-  let newState: Pick<ImagePanelState, "image" | "annotationsByTopic" | "cameraInfo"> | undefined;
+  let newState:
+    | (Pick<ImagePanelState, "image" | "cameraInfo"> & {
+        annotationsByTopic: Map<string, Annotation[]>;
+      })
+    | undefined;
   for (const event of messageEvents) {
+    // We have to check `event.topic` in all cases because we may occasionally receive messages on
+    // topics that we have already unsubscribed from with context.subscribe().
+    // <https://github.com/foxglove/studio/issues/5371>
     const normalizedCameraInfo =
       event.topic === state.cameraInfoTopic
         ? normalizeCameraInfo(event.message, event.schemaName)
@@ -96,7 +103,9 @@ function addMessages(
       event.topic === state.imageTopic
         ? normalizeImageMessage(event.message, event.schemaName)
         : undefined;
-    const normalizedAnnotations = normalizeAnnotations(event.message, event.schemaName);
+    const normalizedAnnotations = state.annotationTopics.includes(event.topic)
+      ? normalizeAnnotations(event.message, event.schemaName)
+      : undefined;
     if (!normalizedCameraInfo && !normalizedImage && !normalizedAnnotations) {
       continue;
     }
@@ -138,14 +147,45 @@ export function useImagePanelMessages(params: UseImagePanelMessagesParams): Publ
 
       actions: {
         setParams(newParams: UseImagePanelMessagesParams) {
-          // When changing params, clear the image and any annotations
-          set({
-            image: undefined,
-            cameraInfo: undefined,
-            annotationsByTopic: new Map(),
-            tree: new AVLTree(compareTime),
+          set((prevState) => {
+            // Optimize for the common case of toggling annotations on/off while the synchronize
+            // setting is disabled. As long as the image and camera info topics are the same, we can
+            // keep the existing image and need only rebuild the annotationsByTopic.
+            if (
+              !prevState.synchronize &&
+              !newParams.synchronize &&
+              prevState.imageTopic === newParams.imageTopic &&
+              prevState.cameraInfoTopic === newParams.cameraInfoTopic
+            ) {
+              let newAnnotationsByTopic: Map<string, Annotation[]> | undefined;
+              if (prevState.annotationTopics !== newParams.annotationTopics) {
+                newAnnotationsByTopic = new Map();
+                for (const topic of newParams.annotationTopics) {
+                  const annotation = prevState.annotationsByTopic.get(topic);
+                  if (annotation) {
+                    newAnnotationsByTopic.set(topic, annotation);
+                  }
+                }
+              }
+              return {
+                annotationsByTopic: newAnnotationsByTopic ?? prevState.annotationsByTopic,
+                ...newParams,
+              };
+            }
 
-            ...newParams,
+            // Otherwise, simply clear the image and any annotations when settings
+            // change. More precise/intelligent/complicated logic could be written to keep the image
+            // hidden if a new annotation is enabled but a synchronized set is not available, and
+            // similarly to show the image if an annotation being disabled results in a synchronized
+            // set being available. For now, we just clear everything.
+            return {
+              image: undefined,
+              cameraInfo: undefined,
+              annotationsByTopic: new Map(),
+              tree: new AVLTree(compareTime),
+
+              ...newParams,
+            };
           });
         },
         clear() {
