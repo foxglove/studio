@@ -121,11 +121,11 @@ function mosiacRightSidebarSplitPercentage(node: MosaicNode<LayoutNode>): number
   }
 }
 
-type SidebarProps<LeftKey, RightKey> = PropsWithChildren<{
-  items: Map<LeftKey, SidebarItem>;
-  bottomItems: Map<LeftKey, SidebarItem>;
-  selectedKey: LeftKey | undefined;
-  onSelectKey: (key: LeftKey | undefined) => void;
+type SidebarProps<OldLeftKey, LeftKey, RightKey> = PropsWithChildren<{
+  items: Map<OldLeftKey, SidebarItem>;
+  bottomItems: Map<OldLeftKey, SidebarItem>;
+  selectedKey: OldLeftKey | undefined;
+  onSelectKey: (key: OldLeftKey | undefined) => void;
 
   leftItems: Map<LeftKey, NewSidebarItem>;
   selectedLeftKey: LeftKey | undefined;
@@ -136,9 +136,11 @@ type SidebarProps<LeftKey, RightKey> = PropsWithChildren<{
   onSelectRightKey: (key: RightKey | undefined) => void;
 }>;
 
-export default function Sidebars<LeftKey extends string, RightKey extends string>(
-  props: SidebarProps<LeftKey, RightKey>,
-): JSX.Element {
+export default function Sidebars<
+  OldLeftKey extends string,
+  LeftKey extends string,
+  RightKey extends string,
+>(props: SidebarProps<OldLeftKey, LeftKey, RightKey>): JSX.Element {
   const {
     children,
     items,
@@ -167,7 +169,7 @@ export default function Sidebars<LeftKey extends string, RightKey extends string
   const [mosaicValue, setMosaicValue] = useState<MosaicNode<LayoutNode>>("children");
   const { classes } = useStyles();
 
-  const allLeftItems = useMemo(() => {
+  const allOldLeftItems = useMemo(() => {
     return new Map([...items, ...bottomItems]);
   }, [bottomItems, items]);
 
@@ -182,7 +184,8 @@ export default function Sidebars<LeftKey extends string, RightKey extends string
     setHelpAnchorEl(undefined);
   };
 
-  const leftSidebarOpen = selectedKey != undefined && allLeftItems.has(selectedKey);
+  const oldLeftSidebarOpen = selectedKey != undefined && allOldLeftItems.has(selectedKey);
+  const leftSidebarOpen = selectedLeftKey != undefined && leftItems.has(selectedLeftKey);
   const rightSidebarOpen = selectedRightKey != undefined && rightItems.has(selectedRightKey);
 
   useEffect(() => {
@@ -199,7 +202,7 @@ export default function Sidebars<LeftKey extends string, RightKey extends string
           splitPercentage: mosiacRightSidebarSplitPercentage(oldValue) ?? defaultRightPercentage,
         };
       }
-      if (leftSidebarOpen) {
+      if (oldLeftSidebarOpen || leftSidebarOpen) {
         node = {
           direction: "row",
           first: "leftbar",
@@ -209,13 +212,13 @@ export default function Sidebars<LeftKey extends string, RightKey extends string
       }
       return node;
     });
-  }, [leftSidebarOpen, rightSidebarOpen]);
+  }, [leftSidebarOpen, oldLeftSidebarOpen, rightSidebarOpen]);
 
   const SelectedLeftComponent =
-    (selectedKey != undefined && allLeftItems.get(selectedKey)?.component) || Noop;
+    (selectedKey != undefined && allOldLeftItems.get(selectedKey)?.component) || Noop;
 
   const onClickTabAction = useCallback(
-    (key: LeftKey) => {
+    (key: OldLeftKey) => {
       // toggle tab selected/unselected on click
       if (selectedKey === key) {
         onSelectKey(undefined);
