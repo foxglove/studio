@@ -64,8 +64,9 @@ const useStyles = makeStyles()((theme) => ({
     svg: {
       fontSize: "inherit",
     },
-    "> span, > .MuiSvgIcon-root": {
+    "> svg": {
       display: "flex",
+      flex: "none",
       color: theme.palette.primary.main,
       marginRight: theme.spacing(1.5),
       height: theme.typography.pxToRem(21),
