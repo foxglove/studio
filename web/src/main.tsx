@@ -8,44 +8,11 @@ import { StrictMode, useEffect } from "react";
 import ReactDOM from "react-dom";
 
 import Logger from "@foxglove/log";
-import { AppSetting } from "@foxglove/studio-base";
+import { AppContext, IAppContext, IDataSourceFactory } from "@foxglove/studio-base";
 
 import VersionBanner from "./VersionBanner";
-import LocalStorageAppConfiguration from "./services/LocalStorageAppConfiguration";
 
 const log = Logger.getLogger(__filename);
-log.debug("initializing");
-
-window.onerror = (...args) => {
-  console.error(...args);
-};
-
-if (typeof process.env.SENTRY_DSN === "string") {
-  log.info("initializing Sentry");
-  Sentry.init({
-    dsn: process.env.SENTRY_DSN,
-    autoSessionTracking: true,
-    // Remove the default breadbrumbs integration - it does not accurately track breadcrumbs and
-    // creates more noise than benefit.
-    integrations: (integrations) => {
-      return integrations
-        .filter((integration) => integration.name !== "Breadcrumbs")
-        .concat([
-          new BrowserTracing({
-            startTransactionOnLocationChange: false, // location changes as a result of non-navigation interactions such as seeking
-          }),
-        ]);
-    },
-    tracesSampleRate: 0.05,
-  });
-}
-
-const rootEl = document.getElementById("root");
-if (!rootEl) {
-  throw new Error("missing #root element");
-}
-
-const isDevelopment = process.env.NODE_ENV === "development";
 
 function LogAfterRender(props: React.PropsWithChildren<unknown>): JSX.Element {
   useEffect(() => {
@@ -58,7 +25,44 @@ function LogAfterRender(props: React.PropsWithChildren<unknown>): JSX.Element {
   return <>{props.children}</>;
 }
 
-async function main() {
+type MainParams = {
+  appContext: IAppContext;
+  dataSources?: IDataSourceFactory[];
+  extraProviders?: JSX.Element[];
+};
+
+export async function main(params: MainParams = { appContext: {} }): Promise<void> {
+  log.debug("initializing");
+
+  window.onerror = (...args) => {
+    console.error(...args);
+  };
+
+  if (typeof process.env.SENTRY_DSN === "string") {
+    log.info("initializing Sentry");
+    Sentry.init({
+      dsn: process.env.SENTRY_DSN,
+      autoSessionTracking: true,
+      // Remove the default breadbrumbs integration - it does not accurately track breadcrumbs and
+      // creates more noise than benefit.
+      integrations: (integrations) => {
+        return integrations
+          .filter((integration) => integration.name !== "Breadcrumbs")
+          .concat([
+            new BrowserTracing({
+              startTransactionOnLocationChange: false, // location changes as a result of non-navigation interactions such as seeking
+            }),
+          ]);
+      },
+      tracesSampleRate: 0.05,
+    });
+  }
+
+  const rootEl = document.getElementById("root");
+  if (!rootEl) {
+    throw new Error("missing #root element");
+  }
+
   const chromeMatch = navigator.userAgent.match(/Chrome\/(\d+)\./);
   const chromeVersion = chromeMatch ? parseInt(chromeMatch[1] ?? "", 10) : 0;
   const isChrome = chromeVersion !== 0;
@@ -93,21 +97,15 @@ async function main() {
 
   const { Root } = await import("./Root");
 
-  const appConfiguration = new LocalStorageAppConfiguration({
-    defaults: {
-      [AppSetting.SHOW_DEBUG_PANELS]: isDevelopment,
-    },
-  });
-
   ReactDOM.render(
     <StrictMode>
       <LogAfterRender>
         {banner}
-        <Root appConfiguration={appConfiguration} />
+        <AppContext.Provider value={params.appContext}>
+          <Root extraProviders={params.extraProviders} dataSources={params.dataSources} />
+        </AppContext.Provider>
       </LogAfterRender>
     </StrictMode>,
     rootEl,
   );
 }
-
-void main();

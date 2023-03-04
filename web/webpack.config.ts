@@ -15,23 +15,28 @@ import type { WebpackArgv } from "@foxglove/studio-base/WebpackArgv";
 import { buildEnvironmentDefaults } from "@foxglove/studio-base/environment";
 import { makeConfig } from "@foxglove/studio-base/webpack";
 
-interface WebpackConfiguration extends Configuration {
+export interface WebpackConfiguration extends Configuration {
   devServer?: WebpackDevServerConfiguration;
 }
 
-const devServerConfig: WebpackConfiguration = {
+export type ConfigParams = {
+  contextPath: string;
+  outputPath: string;
+};
+
+export const devServerConfig = (params: ConfigParams): WebpackConfiguration => ({
   // Use empty entry to avoid webpack default fallback to /src
   entry: {},
 
   // Output path must be specified here for HtmlWebpackPlugin within render config to work
   output: {
     publicPath: "",
-    path: path.resolve(__dirname, ".webpack"),
+    path: params.outputPath,
   },
 
   devServer: {
     static: {
-      directory: path.resolve(__dirname, ".webpack"),
+      directory: params.outputPath,
     },
     hot: true,
     // The problem and solution are described at <https://github.com/webpack/webpack-dev-server/issues/1604>.
@@ -43,72 +48,74 @@ const devServerConfig: WebpackConfiguration = {
   },
 
   plugins: [new CleanWebpackPlugin()],
-};
+});
 
-const mainConfig = (env: unknown, argv: WebpackArgv): Configuration => {
-  const isDev = argv.mode === "development";
-  const isServe = argv.env?.WEBPACK_SERVE ?? false;
-  const publicPath = process.env.FOXGLOVE_PUBLIC_PATH ?? "";
+export const mainConfig =
+  (params: ConfigParams) =>
+  (env: unknown, argv: WebpackArgv): Configuration => {
+    const isDev = argv.mode === "development";
+    const isServe = argv.env?.WEBPACK_SERVE ?? false;
+    const publicPath = process.env.FOXGLOVE_PUBLIC_PATH ?? "";
 
-  const allowUnusedVariables = isDev;
+    const allowUnusedVariables = isDev;
 
-  const plugins: WebpackPluginInstance[] = [];
+    const plugins: WebpackPluginInstance[] = [];
 
-  if (isServe) {
-    plugins.push(new ReactRefreshPlugin());
-  }
+    if (isServe) {
+      plugins.push(new ReactRefreshPlugin());
+    }
 
-  // Source map upload if configuration permits
-  if (
-    !isDev &&
-    process.env.SENTRY_AUTH_TOKEN != undefined &&
-    process.env.SENTRY_ORG != undefined &&
-    process.env.SENTRY_PROJECT != undefined
-  ) {
-    plugins.push(
-      new SentryWebpackPlugin({
-        authToken: process.env.SENTRY_AUTH_TOKEN,
-        org: process.env.SENTRY_ORG,
-        project: process.env.SENTRY_PROJECT,
-        include: path.resolve(__dirname, ".webpack"),
-        setCommits:
-          process.env.SENTRY_REPO && process.env.SENTRY_CURRENT_COMMIT
-            ? { repo: process.env.SENTRY_REPO, commit: process.env.SENTRY_CURRENT_COMMIT }
-            : undefined,
-      }),
-    );
-  }
+    // Source map upload if configuration permits
+    if (
+      !isDev &&
+      process.env.SENTRY_AUTH_TOKEN != undefined &&
+      process.env.SENTRY_ORG != undefined &&
+      process.env.SENTRY_PROJECT != undefined
+    ) {
+      plugins.push(
+        new SentryWebpackPlugin({
+          authToken: process.env.SENTRY_AUTH_TOKEN,
+          org: process.env.SENTRY_ORG,
+          project: process.env.SENTRY_PROJECT,
+          include: params.outputPath,
+          setCommits:
+            process.env.SENTRY_REPO && process.env.SENTRY_CURRENT_COMMIT
+              ? { repo: process.env.SENTRY_REPO, commit: process.env.SENTRY_CURRENT_COMMIT }
+              : undefined,
+        }),
+      );
+    }
 
-  const appWebpackConfig = makeConfig(env, argv, { allowUnusedVariables });
+    const appWebpackConfig = makeConfig(env, argv, { allowUnusedVariables });
 
-  const config: Configuration = {
-    name: "main",
+    const config: Configuration = {
+      name: "main",
 
-    ...appWebpackConfig,
+      ...appWebpackConfig,
 
-    target: "web",
-    context: path.resolve(__dirname, "src"),
-    entry: "./index.tsx",
-    devtool: isDev ? "eval-cheap-module-source-map" : "source-map",
+      target: "web",
+      context: params.contextPath,
+      entry: "./entrypoint.tsx",
+      devtool: isDev ? "eval-cheap-module-source-map" : "source-map",
 
-    output: {
-      publicPath: publicPath === "" ? "auto" : publicPath,
+      output: {
+        publicPath: publicPath === "" ? "auto" : publicPath,
 
-      // Output filenames should include content hashes in order to cache bust when new versions are available
-      filename: isDev ? "[name].js" : "[name].[contenthash].js",
+        // Output filenames should include content hashes in order to cache bust when new versions are available
+        filename: isDev ? "[name].js" : "[name].[contenthash].js",
 
-      path: path.resolve(__dirname, ".webpack"),
-    },
+        path: params.outputPath,
+      },
 
-    plugins: [
-      ...plugins,
-      ...(appWebpackConfig.plugins ?? []),
-      new EnvironmentPlugin(buildEnvironmentDefaults(argv.env?.FOXGLOVE_BACKEND ?? argv.mode)),
-      new CopyPlugin({
-        patterns: [{ from: "../public" }],
-      }),
-      new HtmlWebpackPlugin({
-        templateContent: `
+      plugins: [
+        ...plugins,
+        ...(appWebpackConfig.plugins ?? []),
+        new EnvironmentPlugin(buildEnvironmentDefaults(argv.env?.FOXGLOVE_BACKEND ?? argv.mode)),
+        new CopyPlugin({
+          patterns: [{ from: "../public" }],
+        }),
+        new HtmlWebpackPlugin({
+          templateContent: `
   <!doctype html>
   <html>
     <head>
@@ -134,11 +141,15 @@ const mainConfig = (env: unknown, argv: WebpackArgv): Configuration => {
     </body>
   </html>
   `,
-      }),
-    ],
+        }),
+      ],
+    };
+
+    return config;
   };
 
-  return config;
+const params: ConfigParams = {
+  outputPath: path.resolve(__dirname, ".webpack"),
+  contextPath: path.resolve(__dirname, "src"),
 };
-
-export default [devServerConfig, mainConfig];
+export default [devServerConfig(params), mainConfig(params)];
