@@ -94,7 +94,7 @@ function addMessages(
   for (const event of messageEvents) {
     // We have to check `event.topic` in all cases because we may occasionally receive messages on
     // topics that we have already unsubscribed from with context.subscribe().
-    // <https://github.com/foxglove/studio/issues/5371>
+    // <https://github.com/foxglove/studio/issues/5479>
     const normalizedCameraInfo =
       event.topic === state.cameraInfoTopic
         ? normalizeCameraInfo(event.message, event.schemaName)
