@@ -2611,6 +2611,34 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@foxglove/studio-web@workspace:web":
+  version: 0.0.0-use.local
+  resolution: "@foxglove/studio-web@workspace:web"
+  dependencies:
+    "@foxglove/log": "workspace:*"
+    "@foxglove/studio-base": "workspace:*"
+    "@mui/icons-material": 5.11.0
+    "@mui/material": 5.11.11
+    "@pmmmwh/react-refresh-webpack-plugin": 0.5.10
+    "@sentry/browser": 7.30.0
+    "@sentry/tracing": 7.30.0
+    "@sentry/webpack-plugin": 1.20.0
+    "@types/copy-webpack-plugin": 10.1.0
+    "@types/serve-handler": ^6
+    clean-webpack-plugin: 4.0.0
+    copy-webpack-plugin: 11.0.0
+    html-webpack-plugin: 5.5.0
+    idb: 7.1.1
+    playwright: 1.30.0
+    react: 17.0.2
+    react-dom: 17.0.2
+    react-i18next: 12.2.0
+    serve-handler: 6.1.5
+    webpack: 5.75.0
+    webpack-dev-server: 4.11.1
+  languageName: unknown
+  linkType: soft
+
 "@foxglove/studio@workspace:*, @foxglove/studio@workspace:packages/studio":
   version: 0.0.0-use.local
   resolution: "@foxglove/studio@workspace:packages/studio"
@@ -25300,34 +25328,6 @@ __metadata:
   checksum: b6d9f02f1a43d0ef0848a812d89c83801d5bbad57d8bb61f02eb6d7eb794c3736f6cc2e1191664bb26136594c8218ac609f4069722c6f56d9fc2d808fa9271c6
   languageName: node
   linkType: hard
-
-"web@workspace:web":
-  version: 0.0.0-use.local
-  resolution: "web@workspace:web"
-  dependencies:
-    "@foxglove/log": "workspace:*"
-    "@foxglove/studio-base": "workspace:*"
-    "@mui/icons-material": 5.11.0
-    "@mui/material": 5.11.11
-    "@pmmmwh/react-refresh-webpack-plugin": 0.5.10
-    "@sentry/browser": 7.30.0
-    "@sentry/tracing": 7.30.0
-    "@sentry/webpack-plugin": 1.20.0
-    "@types/copy-webpack-plugin": 10.1.0
-    "@types/serve-handler": ^6
-    clean-webpack-plugin: 4.0.0
-    copy-webpack-plugin: 11.0.0
-    html-webpack-plugin: 5.5.0
-    idb: 7.1.1
-    playwright: 1.30.0
-    react: 17.0.2
-    react-dom: 17.0.2
-    react-i18next: 12.2.0
-    serve-handler: 6.1.5
-    webpack: 5.75.0
-    webpack-dev-server: 4.11.1
-  languageName: unknown
-  linkType: soft
 
 "webidl-conversions@npm:^3.0.0":
   version: 3.0.1
