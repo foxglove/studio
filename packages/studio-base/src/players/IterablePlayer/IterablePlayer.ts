@@ -254,7 +254,7 @@ export class IterablePlayer implements Player {
     // Wait to perform seek until initialization is complete
     if (this._state === "preinit" || this._state === "initialize" || !this._start || !this._end) {
       log.debug(`Ignoring seek, state=${this._state}`);
-      this._seekTarget = time;
+      this._seekTarget = this._start && this._end ? clampTime(time, this._start, this._end) : time;
       return;
     }
 
