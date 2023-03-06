@@ -2624,16 +2624,13 @@ __metadata:
     "@sentry/tracing": 7.30.0
     "@sentry/webpack-plugin": 1.20.0
     "@types/copy-webpack-plugin": 10.1.0
-    "@types/serve-handler": ^6
     clean-webpack-plugin: 4.0.0
     copy-webpack-plugin: 11.0.0
     html-webpack-plugin: 5.5.0
     idb: 7.1.1
-    playwright: 1.30.0
     react: 17.0.2
     react-dom: 17.0.2
     react-i18next: 12.2.0
-    serve-handler: 6.1.5
     webpack: 5.75.0
     webpack-dev-server: 4.11.1
   languageName: unknown
@@ -25333,7 +25330,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "web@workspace:web"
   dependencies:
-    "@foxglove/studio-base": "workspace:*"
+    "@foxglove/log": "workspace:*"
     "@foxglove/studio-web": "workspace:*"
     "@types/serve-handler": ^6
     playwright: 1.30.0

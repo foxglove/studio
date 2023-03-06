@@ -11,4 +11,6 @@ const params: ConfigParams = {
   contextPath: path.resolve(__dirname, "src"),
   entrypoint: "./entrypoint.tsx",
 };
+
+// foxglove-depcheck-used: webpack-dev-server
 export default [devServerConfig(params), mainConfig(params)];
