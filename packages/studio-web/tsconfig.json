@@ -6,6 +6,9 @@
     "jsx": "react-jsx",
     "lib": ["dom", "dom.iterable", "es2020", "webworker"],
     "noEmit": true,
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    "paths": {
+      "@foxglove/studio-base/*": ["../package/studio-base/src/*"]
+    }
   }
 }

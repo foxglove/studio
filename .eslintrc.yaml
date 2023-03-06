@@ -151,7 +151,7 @@ overrides:
       no-restricted-imports: off
     files:
       # Ignore existing implementations of @mui/styled
-      - "web/src/VersionBanner.tsx"
+      - "packages/studio-web/src/VersionBanner.tsx"
       - "packages/studio-base/src/components/DataSourceSidebar/DataSourceSidebar.tsx"
       - "packages/studio-base/src/components/DataSourceSidebar/TopicList.tsx"
       - "packages/studio-base/src/components/EmptyPanelLayout.tsx"
