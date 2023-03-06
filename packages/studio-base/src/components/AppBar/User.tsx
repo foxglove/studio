@@ -136,7 +136,7 @@ export function UserMenu({
         <MenuItem onClick={onSettingsClick}>
           <ListItemText>User settings</ListItemText>
         </MenuItem>
-        <Divider />
+        <Divider variant="middle" />
         <MenuItem onClick={onSignoutClick}>
           <ListItemText>Log out</ListItemText>
         </MenuItem>
