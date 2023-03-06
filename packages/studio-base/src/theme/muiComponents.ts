@@ -517,11 +517,11 @@ export default function muiComponents(theme: Theme): Theme["components"] & MuiLa
       styleOverrides: {
         arrow: {
           color: tinycolor(theme.palette.grey[700]).setAlpha(0.86).toRgbString(),
-          backdropFilter: "blur(10px)",
+          backdropFilter: "blur(3px)",
         },
         tooltip: {
           backgroundColor: tinycolor(theme.palette.grey[700]).setAlpha(0.86).toRgbString(),
-          backdropFilter: "blur(10px)",
+          backdropFilter: "blur(3px)",
           fontWeight: "normal",
           fontSize: "0.75rem",
         },
