@@ -151,24 +151,25 @@ export function useImagePanelMessages(params: UseImagePanelMessagesParams): Publ
             // Optimize for the common case of toggling annotations on/off while the synchronize
             // setting is disabled. As long as the image and camera info topics are the same, we can
             // keep the existing image and need only rebuild the annotationsByTopic.
+            const synchronizeDisabled = !prevState.synchronize && !newParams.synchronize;
             if (
-              !prevState.synchronize &&
-              !newParams.synchronize &&
+              synchronizeDisabled &&
               prevState.imageTopic === newParams.imageTopic &&
               prevState.cameraInfoTopic === newParams.cameraInfoTopic
             ) {
-              let newAnnotationsByTopic: Map<string, Annotation[]> | undefined;
-              if (prevState.annotationTopics !== newParams.annotationTopics) {
-                newAnnotationsByTopic = new Map();
-                for (const topic of newParams.annotationTopics) {
-                  const annotation = prevState.annotationsByTopic.get(topic);
-                  if (annotation) {
-                    newAnnotationsByTopic.set(topic, annotation);
-                  }
+              if (prevState.annotationTopics === newParams.annotationTopics) {
+                return newParams;
+              }
+
+              const newAnnotationsByTopic = new Map<string, Annotation[]>();
+              for (const topic of newParams.annotationTopics) {
+                const annotation = prevState.annotationsByTopic.get(topic);
+                if (annotation) {
+                  newAnnotationsByTopic.set(topic, annotation);
                 }
               }
               return {
-                annotationsByTopic: newAnnotationsByTopic ?? prevState.annotationsByTopic,
+                annotationsByTopic: newAnnotationsByTopic,
                 ...newParams,
               };
             }
