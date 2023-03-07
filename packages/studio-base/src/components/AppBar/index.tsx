@@ -12,7 +12,7 @@ import {
   SlideAdd24Regular,
 } from "@fluentui/react-icons";
 import { AppBar as MuiAppBar, Button, IconButton } from "@mui/material";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import tinycolor from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 
@@ -37,7 +37,6 @@ import {
 } from "@foxglove/studio-base/context/CurrentUserContext";
 import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
-import useNativeAppMenuEvent from "@foxglove/studio-base/hooks/useNativeAppMenuEvent";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 
 import { AddPanelMenu } from "./AddPanelMenu";
@@ -151,6 +150,12 @@ type AppBarProps = CustomWindowControlsProps & {
   debugDragRegion?: boolean;
   disableSignIn?: boolean;
   onSelectDataSourceAction: () => void;
+  prefsDialogOpen: boolean;
+  // eslint-disable-next-line @foxglove/no-boolean-parameters
+  setPrefsDialogOpen: (open: boolean) => void;
+  layoutMenuOpen: boolean;
+  // eslint-disable-next-line @foxglove/no-boolean-parameters
+  setLayoutMenuOpen: (open: boolean) => void;
 };
 
 const selectedLayoutIdSelector = (state: LayoutState) => state.selectedLayout?.id;
@@ -170,6 +175,10 @@ export function AppBar(props: AppBarProps): JSX.Element {
     onCloseWindow,
     onSelectDataSourceAction,
     debugDragRegion,
+    prefsDialogOpen,
+    setPrefsDialogOpen,
+    layoutMenuOpen,
+    setLayoutMenuOpen,
   } = props;
   const { classes, cx } = useStyles({ leftInset, debugDragRegion });
   const currentUserType = useCurrentUserType();
@@ -187,13 +196,12 @@ export function AppBar(props: AppBarProps): JSX.Element {
   const [helpAnchorEl, setHelpAnchorEl] = useState<undefined | HTMLElement>(undefined);
   const [userAnchorEl, setUserAnchorEl] = useState<undefined | HTMLElement>(undefined);
   const [panelAnchorEl, setPanelAnchorEl] = useState<undefined | HTMLElement>(undefined);
-  const [layoutAnchorEl, setLayoutAnchorEl] = useState<undefined | HTMLElement>(undefined);
-  const [prefsDialogOpen, setPrefsDialogOpen] = useState(false);
+  const layoutButtonRef = useRef<HTMLButtonElement>(ReactNull);
+  const layoutAnchorEl = layoutMenuOpen ? layoutButtonRef.current : undefined;
 
   const helpMenuOpen = Boolean(helpAnchorEl);
   const userMenuOpen = Boolean(userAnchorEl);
   const panelMenuOpen = Boolean(panelAnchorEl);
-  const layoutMenuOpen = Boolean(layoutAnchorEl);
 
   const handleDoubleClick = useCallback(
     (event: React.MouseEvent) => {
@@ -202,13 +210,6 @@ export function AppBar(props: AppBarProps): JSX.Element {
       onDoubleClick?.();
     },
     [onDoubleClick],
-  );
-
-  useNativeAppMenuEvent(
-    "open-preferences",
-    useCallback(() => {
-      setPrefsDialogOpen((open) => !open);
-    }, []),
   );
 
   return (
@@ -228,6 +229,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
               </IconButton>
               <IconButton
                 className={cx(classes.iconButton, { "Mui-selected": layoutMenuOpen })}
+                ref={layoutButtonRef}
                 color="inherit"
                 id="layout-button"
                 title="Layout browser"
@@ -381,9 +383,9 @@ export function AppBar(props: AppBarProps): JSX.Element {
         handleClose={() => setPanelAnchorEl(undefined)}
       />
       <LayoutMenu
-        anchorEl={layoutAnchorEl}
+        anchorEl={layoutAnchorEl ?? undefined}
         open={layoutMenuOpen}
-        handleClose={() => setLayoutAnchorEl(undefined)}
+        handleClose={() => setLayoutMenuOpen(false)}
         supportsSignIn={supportsAccountSettings}
       />
       <HelpMenu

@@ -174,6 +174,9 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
   const playerPresence = useMessagePipeline(selectPlayerPresence);
   const playerProblems = useMessagePipeline(selectPlayerProblems);
 
+  const [prefsDialogOpen, setPrefsDialogOpen] = useState(false);
+  const [layoutMenuOpen, setLayoutMenuOpen] = useState(false);
+
   // file types we support for drag/drop
   const allowedDropExtensions = useMemo(() => {
     const extensions = [".foxe", ".urdf", ".xacro"];
@@ -304,7 +307,9 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
   useNativeAppMenuEvent(
     "open-preferences",
     useCallback(() => {
-      if (!enableNewTopNav) {
+      if (enableNewTopNav) {
+        setPrefsDialogOpen(true);
+      } else {
         setSelectedSidebarItem("preferences");
       }
     }, [enableNewTopNav]),
@@ -485,11 +490,16 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
 
   const workspaceContextValue = useMemo(
     () => ({
-      panelSettingsOpen: selectedSidebarItem === "panel-settings",
-      openPanelSettings: () => setSelectedSidebarItem("panel-settings"),
-      openHelp: () => setSelectedSidebarItem("help"),
+      panelSettingsOpen:
+        selectedSidebarItem === "panel-settings" || selectedLeftSidebarItem === "panel-settings",
+      openPanelSettings: () =>
+        enableNewTopNav
+          ? setSelectedLeftSidebarItem("panel-settings")
+          : setSelectedSidebarItem("panel-settings"),
+      // ↓ ↓ ↓  just remove this one when deleting enableNewTopNav feature flag  ↓ ↓ ↓
       openAccountSettings: () => supportsAccountSettings && setSelectedSidebarItem("account"),
-      openLayoutBrowser: () => setSelectedSidebarItem("layouts"),
+      openLayoutBrowser: () =>
+        enableNewTopNav ? setLayoutMenuOpen(true) : setSelectedSidebarItem("layouts"),
       leftSidebarOpen: selectedLeftSidebarItem != undefined,
       // eslint-disable-next-line @foxglove/no-boolean-parameters
       setLeftSidebarOpen: (open: boolean) =>
@@ -500,6 +510,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
         setSelectedRightSidebarItem(open ? "variables" : undefined),
     }),
     [
+      enableNewTopNav,
       selectedSidebarItem,
       selectedLeftSidebarItem,
       selectedRightSidebarItem,
@@ -702,6 +713,10 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
             onUnmaximizeWindow={props.onUnmaximizeWindow}
             onCloseWindow={props.onCloseWindow}
             onSelectDataSourceAction={() => setShowOpenDialog({ view: "start" })}
+            prefsDialogOpen={prefsDialogOpen}
+            setPrefsDialogOpen={setPrefsDialogOpen}
+            layoutMenuOpen={layoutMenuOpen}
+            setLayoutMenuOpen={setLayoutMenuOpen}
           />
         )}
         <Sidebars

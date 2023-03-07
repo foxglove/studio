@@ -7,7 +7,6 @@ import { createContext, useContext } from "react";
 type WorkspaceContextType = {
   panelSettingsOpen: boolean;
   openPanelSettings: () => void;
-  openHelp: () => void;
   openAccountSettings: () => void;
   openLayoutBrowser: () => void;
 
@@ -27,9 +26,6 @@ export const WorkspaceContext = createContext<WorkspaceContextType>({
 
   openPanelSettings: (): void => {
     throw new Error("Must be in a WorkspaceContext.Provider to open panel settings");
-  },
-  openHelp: (): void => {
-    throw new Error("Must be in a WorkspaceContext.Provider to open help");
   },
   openAccountSettings: (): void => {
     throw new Error("Must be in a WorkspaceContext.Provider to open account settings");
