@@ -188,19 +188,13 @@ export function TopicList({
 
   if (playerPresence === PlayerPresence.NOT_PRESENT) {
     return (
-      <Stack
-        flex="auto"
-        padding={2}
-        paddingBottom={4}
-        fullHeight
-        alignItems="center"
-        gap={1}
-        justifyContent="center"
-      >
+      <Stack flex="auto" fullHeight alignItems="center" gap={1} justifyContent="center">
         <Typography align="center" variant="subtitle2" color="text.secondary">
           No data source selected
         </Typography>
-        <Button onClick={onSelectDataSourceAction}>Open data source…</Button>
+        <Button variant="outlined" size="small" onClick={onSelectDataSourceAction}>
+          Open data source…
+        </Button>
       </Stack>
     );
   }

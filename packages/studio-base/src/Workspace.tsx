@@ -641,7 +641,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
       ["panel-settings", { title: "Panel settings", component: PanelSettingsSidebar }],
     ]);
     if (enableStudioLogsSidebar) {
-      items.set("studio-logs-settings", { title: "Logs", component: StudioLogsSettings });
+      items.set("studio-logs-settings", { title: "Studio Logs", component: StudioLogsSettings });
     }
     return items;
   }, [PanelSettingsSidebar, TopicListSidebar, enableStudioLogsSidebar]);
