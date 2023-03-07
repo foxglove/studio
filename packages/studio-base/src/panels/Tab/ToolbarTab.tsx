@@ -25,31 +25,35 @@ const MAX_TAB_WIDTH = 120;
 const MIN_ACTIVE_TAB_WIDTH = 40;
 const MIN_OTHER_TAB_WIDTH = 14;
 
-const useStyles = makeStyles()((theme) => ({
+const useStyles = makeStyles<void, "active">()((theme, _params, classes) => ({
   root: {
-    fontSize: theme.typography.overline.fontSize,
+    cursor: "pointer",
+    color: theme.palette.text.secondary,
+    fontSize: theme.typography.body2.fontSize,
+    fontWeight: theme.typography.body2.fontWeight,
     position: "relative",
-    borderTopLeftRadius: theme.shape.borderRadius,
-    borderTopRightRadius: theme.shape.borderRadius,
     display: "flex",
     alignItems: "center",
     width: "100%",
-    height: PANEL_TOOLBAR_MIN_HEIGHT - 4,
-    padding: theme.spacing(0, 0.75),
+    height: PANEL_TOOLBAR_MIN_HEIGHT,
+    padding: theme.spacing(0, 1),
     userSelect: "none",
-    border: "1px solid transparent",
-    borderBottom: "none",
     backgroundColor: "transparent",
     maxWidth: MAX_TAB_WIDTH,
-    top: 5, // Shift the tab down so it's flush with the bottom of the PanelToolbar
-    marginTop: -4,
     gap: theme.spacing(0.5),
+    top: 1,
+
+    [`:not(.${classes.active}):hover`]: {
+      color: theme.palette.text.primary,
+    },
   },
   active: {
+    color: theme.palette.text.primary,
+    fontWeight: theme.typography.subtitle2.fontWeight,
     backgroundColor: theme.palette.background.paper,
-    borderColor: theme.palette.divider,
     userSelect: "all",
     zIndex: 1,
+    boxShadow: theme.shadows[2],
   },
   dragging: {
     backgroundColor: theme.palette.background.paper,
@@ -57,6 +61,10 @@ const useStyles = makeStyles()((theme) => ({
   },
   hidden: {
     visibility: "hidden",
+  },
+  input: {
+    font: "inherit",
+    color: "inherit",
   },
   dropIndicator: {
     position: "absolute",
@@ -71,6 +79,11 @@ const useStyles = makeStyles()((theme) => ({
   },
   iconButton: {
     padding: theme.spacing(0.125),
+    color: theme.palette.text.secondary,
+
+    ":hover": {
+      color: theme.palette.text.primary,
+    },
   },
 }));
 
@@ -217,6 +230,7 @@ export function ToolbarTab(props: Props): JSX.Element {
         />
       )}
       <InputBase
+        className={classes.input}
         readOnly={!editingTitle}
         placeholder="Enter tab name"
         value={title}

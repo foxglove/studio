@@ -171,9 +171,6 @@ const useStyles = makeStyles()(({ palette, typography }) => ({
         "&:hover .mosaic-split-line": {
           boxShadow: `0 0 0 1px ${palette.grey.A100}`,
         },
-        "&.-row": {
-          marginTop: 2,
-        },
       },
       "&.borderless": {
         ".mosaic-split": {
