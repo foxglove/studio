@@ -13,22 +13,32 @@
 
 import AddIcon from "@mui/icons-material/Add";
 <<<<<<< HEAD
+<<<<<<< HEAD
 import { ButtonBase, useTheme } from "@mui/material";
 =======
 import { IconButton, useTheme } from "@mui/material";
 >>>>>>> 5998bae7d (Refactor tab panel to use makeStyles)
+=======
+import { ButtonBase, useTheme } from "@mui/material";
+>>>>>>> d82ba7be9 (Refactor toolbar tab to be more minimal)
 import { useEffect } from "react";
 import { useDrop } from "react-dnd";
 import { makeStyles } from "tss-react/mui";
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> d82ba7be9 (Refactor toolbar tab to be more minimal)
 import PanelToolbar, {
   PANEL_TOOLBAR_MIN_HEIGHT,
 } from "@foxglove/studio-base/components/PanelToolbar";
 import ToolbarIconButton from "@foxglove/studio-base/components/PanelToolbar/ToolbarIconButton";
+<<<<<<< HEAD
 =======
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 >>>>>>> 5998bae7d (Refactor tab panel to use makeStyles)
+=======
+>>>>>>> d82ba7be9 (Refactor toolbar tab to be more minimal)
 import Stack from "@foxglove/studio-base/components/Stack";
 import { DraggableToolbarTab } from "@foxglove/studio-base/panels/Tab/DraggableToolbarTab";
 import {
@@ -40,6 +50,7 @@ import { TabConfig } from "@foxglove/studio-base/types/layouts";
 
 const useStyles = makeStyles()((theme) => ({
   root: {
+<<<<<<< HEAD
 <<<<<<< HEAD
     backgroundColor: theme.palette.background.default,
   },
@@ -57,6 +68,16 @@ const useStyles = makeStyles()((theme) => ({
     padding: theme.spacing(0.25),
     margin: theme.spacing(0, 0.5, -0.25),
 >>>>>>> 5998bae7d (Refactor tab panel to use makeStyles)
+=======
+    backgroundColor: theme.palette.background.default,
+  },
+  toolbar: {
+    padding: theme.spacing(0, 0.75, 0, 0.25),
+  },
+  button: {
+    flexGrow: 1,
+    height: PANEL_TOOLBAR_MIN_HEIGHT,
+>>>>>>> d82ba7be9 (Refactor toolbar tab to be more minimal)
   },
 }));
 
@@ -87,6 +108,9 @@ export function TabbedToolbar(props: Props): JSX.Element {
   return (
     <Stack className={classes.root} flex="0 0" position="relative">
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> d82ba7be9 (Refactor toolbar tab to be more minimal)
       <PanelToolbar
         className={classes.toolbar}
         backgroundColor={theme.palette.background.default}
@@ -96,6 +120,7 @@ export function TabbedToolbar(props: Props): JSX.Element {
           </ToolbarIconButton>
         }
       >
+<<<<<<< HEAD
         <Stack
           direction="row"
           flex="auto"
@@ -106,13 +131,20 @@ export function TabbedToolbar(props: Props): JSX.Element {
           overflow="hidden"
 =======
       <PanelToolbar backgroundColor={theme.palette.background.default}>
+=======
+>>>>>>> d82ba7be9 (Refactor toolbar tab to be more minimal)
         <Stack
           direction="row"
           flex="auto"
-          alignItems="flex-end"
+          alignItems="center"
           ref={dropRef}
           data-testid="toolbar-droppable"
+<<<<<<< HEAD
 >>>>>>> 5998bae7d (Refactor tab panel to use makeStyles)
+=======
+          style={{ gap: 1 }}
+          overflow="hidden"
+>>>>>>> d82ba7be9 (Refactor toolbar tab to be more minimal)
         >
           {tabs.map((tab, i) => (
             <DraggableToolbarTab
@@ -126,6 +158,7 @@ export function TabbedToolbar(props: Props): JSX.Element {
             />
           ))}
 <<<<<<< HEAD
+<<<<<<< HEAD
           <ButtonBase className={classes.button} onDoubleClick={actions.addTab} />
 =======
           <IconButton
@@ -138,6 +171,9 @@ export function TabbedToolbar(props: Props): JSX.Element {
             <AddIcon fontSize="inherit" />
           </IconButton>
 >>>>>>> 5998bae7d (Refactor tab panel to use makeStyles)
+=======
+          <ButtonBase className={classes.button} onDoubleClick={actions.addTab} />
+>>>>>>> d82ba7be9 (Refactor toolbar tab to be more minimal)
         </Stack>
       </PanelToolbar>
     </Stack>
