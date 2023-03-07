@@ -654,7 +654,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
       items.set("events", { title: "Events", component: EventsList });
     }
     return items;
-  }, [showEventsTab]);
+  }, [PanelSettingsSidebar, showEventsTab]);
 
   const keyDownHandlers = useMemo(
     () => ({
