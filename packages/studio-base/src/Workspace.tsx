@@ -104,8 +104,8 @@ type SidebarItemKey =
   | "help"
   | "studio-logs-settings";
 
-type LeftSidebarItemKey = "topics" | "panel-settings" | "studio-logs-settings";
-type RightSidebarItemKey = "variables" | "events";
+type LeftSidebarItemKey = "topics" | "variables" | "studio-logs-settings";
+type RightSidebarItemKey = "panel-settings" | "events";
 
 const selectedLayoutIdSelector = (state: LayoutState) => state.selectedLayout?.id;
 
@@ -494,10 +494,10 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
   const workspaceContextValue = useMemo(
     () => ({
       panelSettingsOpen:
-        selectedSidebarItem === "panel-settings" || selectedLeftSidebarItem === "panel-settings",
+        selectedSidebarItem === "panel-settings" || selectedLeftSidebarItem === "topics",
       openPanelSettings: () =>
         enableNewTopNav
-          ? setSelectedLeftSidebarItem("panel-settings")
+          ? setSelectedLeftSidebarItem("topics")
           : setSelectedSidebarItem("panel-settings"),
       // ↓ ↓ ↓  just remove this one when deleting enableNewTopNav feature flag  ↓ ↓ ↓
       openAccountSettings: () => supportsAccountSettings && setSelectedSidebarItem("account"),
@@ -510,7 +510,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
       rightSidebarOpen: selectedRightSidebarItem != undefined,
       // eslint-disable-next-line @foxglove/no-boolean-parameters
       setRightSidebarOpen: (open: boolean) =>
-        setSelectedRightSidebarItem(open ? "variables" : undefined),
+        setSelectedRightSidebarItem(open ? "panel-settings" : undefined),
     }),
     [
       enableNewTopNav,
@@ -638,17 +638,17 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
   const leftSidebarItems = useMemo(() => {
     const items = new Map<LeftSidebarItemKey, NewSidebarItem>([
       ["topics", { title: "Topics", component: TopicListSidebar }],
-      ["panel-settings", { title: "Panel settings", component: PanelSettingsSidebar }],
+      ["variables", { title: "Variables", component: VariablesList }],
     ]);
     if (enableStudioLogsSidebar) {
       items.set("studio-logs-settings", { title: "Studio Logs", component: StudioLogsSettings });
     }
     return items;
-  }, [PanelSettingsSidebar, TopicListSidebar, enableStudioLogsSidebar]);
+  }, [TopicListSidebar, enableStudioLogsSidebar]);
 
   const rightSidebarItems = useMemo(() => {
     const items = new Map<RightSidebarItemKey, NewSidebarItem>([
-      ["variables", { title: "Variables", component: VariablesList }],
+      ["panel-settings", { title: "Panel settings", component: PanelSettingsSidebar }],
     ]);
     if (showEventsTab) {
       items.set("events", { title: "Events", component: EventsList });
