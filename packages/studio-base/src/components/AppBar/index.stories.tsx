@@ -35,6 +35,10 @@ const actions = {
   onMaximizeWindow: action("onMaximizeWindow"),
   onUnmaximizeWindow: action("onUnmaximizeWindow"),
   onCloseWindow: action("onCloseWindow"),
+  prefsDialogOpen: false,
+  setPrefsDialogOpen: action("setPrefsDialogOpen"),
+  layoutMenuOpen: false,
+  setLayoutMenuOpen: action("setLayoutMenuOpen"),
 };
 
 const SamplePanel1 = function () {
@@ -95,12 +99,7 @@ function Wrapper(StoryFn: Story): JSX.Element {
 }
 
 export function Default(): JSX.Element {
-  return (
-    <AppBar
-      signIn={action("signIn")}
-      onSelectDataSourceAction={action("onSelectDataSourceAction")}
-    />
-  );
+  return <AppBar {...actions} />;
 }
 
 export function CustomWindowControls(): JSX.Element {
