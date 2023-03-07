@@ -12,7 +12,6 @@ import ExpandingToolbar, {
   ToolGroup,
   ToolGroupFixedSizePane,
 } from "@foxglove/studio-base/components/ExpandingToolbar";
-import { PANEL_TOOLBAR_MIN_HEIGHT } from "@foxglove/studio-base/components/PanelToolbar";
 import Stack from "@foxglove/studio-base/components/Stack";
 import { usePanelMousePresence } from "@foxglove/studio-base/hooks/usePanelMousePresence";
 import { useJsonTreeTheme } from "@foxglove/studio-base/util/globalConstants";
