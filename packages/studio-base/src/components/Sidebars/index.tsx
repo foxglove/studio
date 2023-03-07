@@ -187,8 +187,10 @@ export default function Sidebars<
   const oldLeftSidebarOpen = !enableNewTopNav
     ? selectedKey != undefined && allOldLeftItems.has(selectedKey)
     : false;
-  const leftSidebarOpen = selectedLeftKey != undefined && leftItems.has(selectedLeftKey);
-  const rightSidebarOpen = selectedRightKey != undefined && rightItems.has(selectedRightKey);
+  const leftSidebarOpen =
+    enableNewTopNav && selectedLeftKey != undefined && leftItems.has(selectedLeftKey);
+  const rightSidebarOpen =
+    enableNewTopNav && selectedRightKey != undefined && rightItems.has(selectedRightKey);
 
   useEffect(() => {
     const width = Math.min(enableNewTopNav ? 280 : 384, 0.3 * window.innerWidth);
