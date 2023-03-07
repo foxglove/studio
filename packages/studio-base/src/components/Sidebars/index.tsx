@@ -184,12 +184,14 @@ export default function Sidebars<
     setHelpAnchorEl(undefined);
   };
 
-  const oldLeftSidebarOpen = selectedKey != undefined && allOldLeftItems.has(selectedKey);
+  const oldLeftSidebarOpen = !enableNewTopNav
+    ? selectedKey != undefined && allOldLeftItems.has(selectedKey)
+    : false;
   const leftSidebarOpen = selectedLeftKey != undefined && leftItems.has(selectedLeftKey);
   const rightSidebarOpen = selectedRightKey != undefined && rightItems.has(selectedRightKey);
 
   useEffect(() => {
-    const width = Math.min(384, 0.3 * window.innerWidth);
+    const width = Math.min(enableNewTopNav ? 280 : 384, 0.3 * window.innerWidth);
     const defaultLeftPercentage = (100 * width) / window.innerWidth;
     const defaultRightPercentage = 80;
     setMosaicValue((oldValue) => {
@@ -212,7 +214,7 @@ export default function Sidebars<
       }
       return node;
     });
-  }, [leftSidebarOpen, oldLeftSidebarOpen, rightSidebarOpen]);
+  }, [enableNewTopNav, leftSidebarOpen, oldLeftSidebarOpen, rightSidebarOpen]);
 
   const SelectedLeftComponent =
     (selectedKey != undefined && allOldLeftItems.get(selectedKey)?.component) || Noop;
