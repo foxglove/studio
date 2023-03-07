@@ -521,17 +521,16 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     };
   }, [enableNewTopNav]);
 
-  const TopicListSidebar = useMemo(() => {
-    return function TopicListSidebarImpl() {
-      return <TopicList onSelectDataSourceAction={() => setShowOpenDialog({ view: "start" })} />;
-    };
-  }, []);
-
   const PanelSettingsSidebar = useMemo(() => {
     return function PanelSettingsSidebarImpl() {
       return <PanelSettings disableToolbar />;
     };
   }, []);
+
+  const TopicListSidebar = useCallback(
+    () => <TopicList onSelectDataSourceAction={() => setShowOpenDialog({ view: "start" })} />,
+    [],
+  );
 
   const ConnectedLayoutBrowser = useCallback(
     () => <LayoutBrowser supportsSignIn={supportsAccountSettings} />,
