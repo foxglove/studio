@@ -46,7 +46,10 @@ import Sidebars, { SidebarItem } from "@foxglove/studio-base/components/Sidebars
 import { NewSidebarItem } from "@foxglove/studio-base/components/Sidebars/NewSidebar";
 import { SignInFormModal } from "@foxglove/studio-base/components/SignInFormModal";
 import Stack from "@foxglove/studio-base/components/Stack";
-import { StudioLogsSettingsSidebar } from "@foxglove/studio-base/components/StudioLogsSettingsSidebar";
+import {
+  StudioLogsSettings,
+  StudioLogsSettingsSidebar,
+} from "@foxglove/studio-base/components/StudioLogsSettings";
 import { SyncAdapters } from "@foxglove/studio-base/components/SyncAdapters";
 import VariablesList from "@foxglove/studio-base/components/VariablesList";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
@@ -101,7 +104,7 @@ type SidebarItemKey =
   | "help"
   | "studio-logs-settings";
 
-type LeftSidebarItemKey = "topics" | "panel-settings";
+type LeftSidebarItemKey = "topics" | "panel-settings" | "studio-logs-settings";
 type RightSidebarItemKey = "variables" | "events";
 
 const selectedLayoutIdSelector = (state: LayoutState) => state.selectedLayout?.id;
@@ -637,8 +640,11 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
       ["topics", { title: "Topics", component: TopicListSidebar }],
       ["panel-settings", { title: "Panel settings", component: PanelSettingsSidebar }],
     ]);
+    if (enableStudioLogsSidebar) {
+      items.set("studio-logs-settings", { title: "Logs", component: StudioLogsSettings });
+    }
     return items;
-  }, [PanelSettingsSidebar, TopicListSidebar]);
+  }, [PanelSettingsSidebar, TopicListSidebar, enableStudioLogsSidebar]);
 
   const rightSidebarItems = useMemo(() => {
     const items = new Map<RightSidebarItemKey, NewSidebarItem>([
