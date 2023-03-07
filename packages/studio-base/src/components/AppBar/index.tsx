@@ -3,13 +3,14 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import {
+  AddCircle24Regular,
+  BoardSplit24Regular,
   PanelLeft24Filled,
   PanelLeft24Regular,
   PanelRight24Filled,
   PanelRight24Regular,
   QuestionCircle24Regular,
   Settings24Regular,
-  SlideAdd24Regular,
 } from "@fluentui/react-icons";
 import { AppBar as MuiAppBar, Button, IconButton } from "@mui/material";
 import { useCallback, useRef, useState } from "react";
@@ -17,7 +18,6 @@ import tinycolor from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
-import PanelLayoutIcon from "@foxglove/studio-base/assets/panel-layout.svg";
 import {
   CustomWindowControls,
   CustomWindowControlsProps,
@@ -117,7 +117,8 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }>(
       },
       iconButton: {
         borderRadius: 0,
-        fontSize: 20,
+        fontSize: 24,
+        padding: theme.spacing(1.25),
 
         svg: {
           fontSize: "1em !important",
@@ -241,12 +242,11 @@ export function AppBar(props: AppBarProps): JSX.Element {
                 aria-controls={layoutMenuOpen ? "layout-menu" : undefined}
                 aria-haspopup="true"
                 aria-expanded={layoutMenuOpen ? "true" : undefined}
-                size="large"
                 onClick={() => {
                   setLayoutMenuOpen(true);
                 }}
               >
-                <PanelLayoutIcon />
+                <BoardSplit24Regular />
               </IconButton>
               <IconButton
                 className={cx(classes.iconButton, { "Mui-selected": panelMenuOpen })}
@@ -258,12 +258,11 @@ export function AppBar(props: AppBarProps): JSX.Element {
                 aria-controls={panelMenuOpen ? "add-panel-menu" : undefined}
                 aria-haspopup="true"
                 aria-expanded={panelMenuOpen ? "true" : undefined}
-                size="large"
                 onClick={(event) => {
                   setPanelAnchorEl(event.currentTarget);
                 }}
               >
-                <SlideAdd24Regular />
+                <AddCircle24Regular />
               </IconButton>
             </div>
           </div>
@@ -280,7 +279,6 @@ export function AppBar(props: AppBarProps): JSX.Element {
                 color="inherit"
                 title={`${leftSidebarOpen ? "Hide" : "Show"} right sidebar`}
                 aria-label={`${leftSidebarOpen ? "Hide" : "Show"} right sidebar`}
-                size="large"
                 onClick={() => setLeftSidebarOpen(!leftSidebarOpen)}
               >
                 {leftSidebarOpen ? <PanelLeft24Filled /> : <PanelLeft24Regular />}
@@ -290,7 +288,6 @@ export function AppBar(props: AppBarProps): JSX.Element {
                 color="inherit"
                 title={`${rightSidebarOpen ? "Hide" : "Show"} right sidebar`}
                 aria-label={`${rightSidebarOpen ? "Hide" : "Show"} right sidebar`}
-                size="large"
                 onClick={() => setRightSidebarOpen(!rightSidebarOpen)}
               >
                 {rightSidebarOpen ? <PanelRight24Filled /> : <PanelRight24Regular />}
@@ -303,7 +300,6 @@ export function AppBar(props: AppBarProps): JSX.Element {
                 aria-controls={helpMenuOpen ? "help-menu" : undefined}
                 aria-haspopup="true"
                 aria-expanded={helpMenuOpen ? "true" : undefined}
-                size="large"
                 onClick={(event) => {
                   void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
                     user: currentUserType,
@@ -321,7 +317,6 @@ export function AppBar(props: AppBarProps): JSX.Element {
                 aria-label="Preferences dialog button"
                 aria-controls={prefsDialogOpen ? "preferences-dialog" : undefined}
                 aria-haspopup="true"
-                size="large"
                 aria-expanded={prefsDialogOpen ? "true" : undefined}
                 onClick={() => {
                   void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {

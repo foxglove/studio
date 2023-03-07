@@ -36,6 +36,12 @@ const BOTTOM_ITEMS = new Map<string, SidebarItem>([
   ["b", { title: "B", component: B, iconName: "ErrorBadge" }],
 ]);
 
+const LEFT_ITEMS = new Map<string, NewSidebarItem>([
+  ["a", { title: "A", component: A }],
+  ["b", { title: "B", component: B }],
+  ["c", { title: "C", component: C }],
+]);
+
 const RIGHT_ITEMS = new Map<string, NewSidebarItem>([
   ["x", { title: "X", component: X }],
   ["y", { title: "Y", component: Y }],
@@ -90,10 +96,13 @@ function Story({
           items={ITEMS}
           bottomItems={BOTTOM_ITEMS}
           rightItems={RIGHT_ITEMS}
+          leftItems={LEFT_ITEMS}
           selectedKey={selectedKey}
           onSelectKey={setSelectedKey}
           selectedRightKey={selectedRightKey}
           onSelectRightKey={setSelectedRightKey}
+          selectedLeftKey={undefined}
+          onSelectLeftKey={() => {}}
         >
           Main content
         </Sidebars>
