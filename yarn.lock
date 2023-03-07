@@ -3373,22 +3373,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mui/utils@npm:^5.11.11":
-  version: 5.11.11
-  resolution: "@mui/utils@npm:5.11.11"
-  dependencies:
-    "@babel/runtime": ^7.21.0
-    "@types/prop-types": ^15.7.5
-    "@types/react-is": ^16.7.1 || ^17.0.0
-    prop-types: ^15.8.1
-    react-is: ^18.2.0
-  peerDependencies:
-    react: ^17.0.0 || ^18.0.0
-  checksum: 268ac11cfcf5acc90137502f1fb999c4b5a4a05b00769056f48a15c9aa0c358b2ce93655c04929136282ed2f3b8b0a62d12653449c3463ed4b79723764ab6d71
-  languageName: node
-  linkType: hard
-
-"@mui/utils@npm:^5.11.12":
+"@mui/utils@npm:^5.11.11, @mui/utils@npm:^5.11.12":
   version: 5.11.12
   resolution: "@mui/utils@npm:5.11.12"
   dependencies:
