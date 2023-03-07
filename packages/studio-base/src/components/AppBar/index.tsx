@@ -128,6 +128,10 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }>(
         "&.Mui-selected": {
           backgroundColor: APP_BAR_PRIMARY_COLOR,
         },
+        "&.Mui-disabled": {
+          color: "currentColor",
+          opacity: theme.palette.action.disabledOpacity,
+        },
       },
       button: {
         backgroundColor: APP_BAR_PRIMARY_COLOR,
@@ -238,30 +242,29 @@ export function AppBar(props: AppBarProps): JSX.Element {
                 aria-haspopup="true"
                 aria-expanded={layoutMenuOpen ? "true" : undefined}
                 size="large"
-                onClick={(event) => {
-                  setLayoutAnchorEl(event.currentTarget);
+                onClick={() => {
+                  setLayoutMenuOpen(true);
                 }}
               >
                 <PanelLayoutIcon />
               </IconButton>
-              {selectedLayoutId != undefined && (
-                <IconButton
-                  className={cx(classes.iconButton, { "Mui-selected": panelMenuOpen })}
-                  color="inherit"
-                  id="add-panel-button"
-                  title="Add panel"
-                  aria-label="Add panel button"
-                  aria-controls={panelMenuOpen ? "add-panel-menu" : undefined}
-                  aria-haspopup="true"
-                  aria-expanded={panelMenuOpen ? "true" : undefined}
-                  size="large"
-                  onClick={(event) => {
-                    setPanelAnchorEl(event.currentTarget);
-                  }}
-                >
-                  <SlideAdd24Regular />
-                </IconButton>
-              )}
+              <IconButton
+                className={cx(classes.iconButton, { "Mui-selected": panelMenuOpen })}
+                color="inherit"
+                disabled={selectedLayoutId == undefined}
+                id="add-panel-button"
+                title="Add panel"
+                aria-label="Add panel button"
+                aria-controls={panelMenuOpen ? "add-panel-menu" : undefined}
+                aria-haspopup="true"
+                aria-expanded={panelMenuOpen ? "true" : undefined}
+                size="large"
+                onClick={(event) => {
+                  setPanelAnchorEl(event.currentTarget);
+                }}
+              >
+                <SlideAdd24Regular />
+              </IconButton>
             </div>
           </div>
 
