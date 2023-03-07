@@ -2,11 +2,9 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Divider } from "@mui/material";
 import { makeStyles } from "tss-react/mui";
 
 import CopyButton from "@foxglove/studio-base/components/CopyButton";
-import { DataSourceInfoView } from "@foxglove/studio-base/components/DataSourceInfoView";
 import { DirectTopicStatsUpdater } from "@foxglove/studio-base/components/DirectTopicStatsUpdater";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import {
@@ -129,12 +127,7 @@ function SourceInfo(): JSX.Element {
   return (
     <>
       <PanelToolbar />
-      <Divider />
       <Stack fullHeight overflowY="auto">
-        <Stack padding={1.5}>
-          <DataSourceInfoView />
-        </Stack>
-        <Divider />
         <table className={classes.table}>
           <thead>
             <tr>
