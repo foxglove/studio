@@ -25,6 +25,7 @@ const MAX_TAB_WIDTH = 120;
 const MIN_ACTIVE_TAB_WIDTH = 40;
 const MIN_OTHER_TAB_WIDTH = 14;
 
+<<<<<<< HEAD
 const useStyles = makeStyles<void, "active">()((theme, _params, classes) => ({
   root: {
     cursor: "pointer",
@@ -50,10 +51,36 @@ const useStyles = makeStyles<void, "active">()((theme, _params, classes) => ({
   active: {
     color: theme.palette.text.primary,
     fontWeight: theme.typography.subtitle2.fontWeight,
+=======
+const useStyles = makeStyles()((theme) => ({
+  root: {
+    fontSize: theme.typography.overline.fontSize,
+    position: "relative",
+    borderTopLeftRadius: theme.shape.borderRadius,
+    borderTopRightRadius: theme.shape.borderRadius,
+    display: "flex",
+    alignItems: "center",
+    width: "100%",
+    height: PANEL_TOOLBAR_MIN_HEIGHT - 4,
+    padding: theme.spacing(0, 0.75),
+    userSelect: "none",
+    border: "1px solid transparent",
+    borderBottom: "none",
+    backgroundColor: "transparent",
+    maxWidth: MAX_TAB_WIDTH,
+    top: 5, // Shift the tab down so it's flush with the bottom of the PanelToolbar
+    marginTop: -4,
+    gap: theme.spacing(0.5),
+  },
+  active: {
+>>>>>>> 5998bae7d (Refactor tab panel to use makeStyles)
     backgroundColor: theme.palette.background.paper,
     userSelect: "all",
     zIndex: 1,
+<<<<<<< HEAD
     boxShadow: theme.shadows[2],
+=======
+>>>>>>> 5998bae7d (Refactor tab panel to use makeStyles)
   },
   dragging: {
     backgroundColor: theme.palette.background.paper,
@@ -62,10 +89,13 @@ const useStyles = makeStyles<void, "active">()((theme, _params, classes) => ({
   hidden: {
     visibility: "hidden",
   },
+<<<<<<< HEAD
   input: {
     font: "inherit",
     color: "inherit",
   },
+=======
+>>>>>>> 5998bae7d (Refactor tab panel to use makeStyles)
   dropIndicator: {
     position: "absolute",
     top: 0,
@@ -79,11 +109,14 @@ const useStyles = makeStyles<void, "active">()((theme, _params, classes) => ({
   },
   iconButton: {
     padding: theme.spacing(0.125),
+<<<<<<< HEAD
     color: theme.palette.text.secondary,
 
     ":hover": {
       color: theme.palette.text.primary,
     },
+=======
+>>>>>>> 5998bae7d (Refactor tab panel to use makeStyles)
   },
 }));
 

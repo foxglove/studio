@@ -12,15 +12,23 @@
 //   You may not use this file except in compliance with the License.
 
 import AddIcon from "@mui/icons-material/Add";
+<<<<<<< HEAD
 import { ButtonBase, useTheme } from "@mui/material";
+=======
+import { IconButton, useTheme } from "@mui/material";
+>>>>>>> 5998bae7d (Refactor tab panel to use makeStyles)
 import { useEffect } from "react";
 import { useDrop } from "react-dnd";
 import { makeStyles } from "tss-react/mui";
 
+<<<<<<< HEAD
 import PanelToolbar, {
   PANEL_TOOLBAR_MIN_HEIGHT,
 } from "@foxglove/studio-base/components/PanelToolbar";
 import ToolbarIconButton from "@foxglove/studio-base/components/PanelToolbar/ToolbarIconButton";
+=======
+import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
+>>>>>>> 5998bae7d (Refactor tab panel to use makeStyles)
 import Stack from "@foxglove/studio-base/components/Stack";
 import { DraggableToolbarTab } from "@foxglove/studio-base/panels/Tab/DraggableToolbarTab";
 import {
@@ -32,6 +40,7 @@ import { TabConfig } from "@foxglove/studio-base/types/layouts";
 
 const useStyles = makeStyles()((theme) => ({
   root: {
+<<<<<<< HEAD
     backgroundColor: theme.palette.background.default,
   },
   toolbar: {
@@ -40,6 +49,14 @@ const useStyles = makeStyles()((theme) => ({
   button: {
     flexGrow: 1,
     height: PANEL_TOOLBAR_MIN_HEIGHT,
+=======
+    borderBottom: `1px solid ${theme.palette.divider}`,
+    backgroundColor: theme.palette.background.default,
+  },
+  iconButton: {
+    padding: theme.spacing(0.25),
+    margin: theme.spacing(0, 0.5, -0.25),
+>>>>>>> 5998bae7d (Refactor tab panel to use makeStyles)
   },
 }));
 
@@ -69,6 +86,7 @@ export function TabbedToolbar(props: Props): JSX.Element {
 
   return (
     <Stack className={classes.root} flex="0 0" position="relative">
+<<<<<<< HEAD
       <PanelToolbar
         className={classes.toolbar}
         backgroundColor={theme.palette.background.default}
@@ -86,6 +104,15 @@ export function TabbedToolbar(props: Props): JSX.Element {
           data-testid="toolbar-droppable"
           style={{ gap: 1 }}
           overflow="hidden"
+=======
+      <PanelToolbar backgroundColor={theme.palette.background.default}>
+        <Stack
+          direction="row"
+          flex="auto"
+          alignItems="flex-end"
+          ref={dropRef}
+          data-testid="toolbar-droppable"
+>>>>>>> 5998bae7d (Refactor tab panel to use makeStyles)
         >
           {tabs.map((tab, i) => (
             <DraggableToolbarTab
@@ -98,7 +125,19 @@ export function TabbedToolbar(props: Props): JSX.Element {
               tabTitle={tab.title}
             />
           ))}
+<<<<<<< HEAD
           <ButtonBase className={classes.button} onDoubleClick={actions.addTab} />
+=======
+          <IconButton
+            className={classes.iconButton}
+            size="small"
+            data-testid="add-tab"
+            title="Add tab"
+            onClick={actions.addTab}
+          >
+            <AddIcon fontSize="inherit" />
+          </IconButton>
+>>>>>>> 5998bae7d (Refactor tab panel to use makeStyles)
         </Stack>
       </PanelToolbar>
     </Stack>
