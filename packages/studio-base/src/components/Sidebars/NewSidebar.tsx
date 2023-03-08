@@ -99,11 +99,16 @@ export function NewSidebar<K extends string>({
           }}
         >
           {Array.from(items.entries(), ([key, item]) => (
-            <Tab key={key} label={item.title} value={key} />
+            <Tab key={key} label={item.title} value={key} data-testid={`${key}-${anchor}`} />
           ))}
         </Tabs>
 
-        <IconButton className={classes.iconButton} size="small" onClick={onClose}>
+        <IconButton
+          className={classes.iconButton}
+          size="small"
+          onClick={onClose}
+          data-testid={`sidebar-close-${anchor}`}
+        >
           {anchor === "right" ? (
             <ArrowRightIcon fontSize="inherit" />
           ) : (

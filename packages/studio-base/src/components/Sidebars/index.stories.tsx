@@ -117,9 +117,6 @@ export const BSelected = (): JSX.Element => <Story defaultSelectedKey="b" />;
 
 export const RightX = (): JSX.Element => <Story defaultSelectedRightKey="x" />;
 export const RightY = (): JSX.Element => <Story defaultSelectedRightKey="y" />;
-export const LeftAndRight = (): JSX.Element => (
-  <Story defaultSelectedKey="b" defaultSelectedRightKey="y" />
-);
 
 export const ClickToSelect = (): JSX.Element => <Story clickKey="a" />;
 ClickToSelect.parameters = { colorScheme: "dark" };
@@ -129,5 +126,3 @@ ClickToDeselect.parameters = { colorScheme: "dark" };
 export const OverflowUnselected = (): JSX.Element => <Story height={200} />;
 export const OverflowCSelected = (): JSX.Element => <Story height={200} defaultSelectedKey="c" />;
 export const OverflowBSelected = (): JSX.Element => <Story height={200} defaultSelectedKey="b" />;
-
-export const WithAppBarEnabled = (): JSX.Element => <Story enableAppBar />;
