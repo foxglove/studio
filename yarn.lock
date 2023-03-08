@@ -3841,6 +3841,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@sentry/core@npm:7.41.0":
+  version: 7.41.0
+  resolution: "@sentry/core@npm:7.41.0"
+  dependencies:
+    "@sentry/types": 7.41.0
+    "@sentry/utils": 7.41.0
+    tslib: ^1.9.3
+  checksum: 59e80206e0fd37e8a475532f1369e9e5bd98af821041c7b3054ddba6dbea9ad8e0801826cd811c2b670b8ae34518d89120df83f474fb2442e71080bd139dd4e6
+  languageName: node
+  linkType: hard
+
 "@sentry/electron@npm:4.2.0":
   version: 4.2.0
   resolution: "@sentry/electron@npm:4.2.0"
@@ -3884,15 +3895,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sentry/tracing@npm:7.30.0":
-  version: 7.30.0
-  resolution: "@sentry/tracing@npm:7.30.0"
+"@sentry/tracing@npm:7.41.0":
+  version: 7.41.0
+  resolution: "@sentry/tracing@npm:7.41.0"
   dependencies:
-    "@sentry/core": 7.30.0
-    "@sentry/types": 7.30.0
-    "@sentry/utils": 7.30.0
+    "@sentry/core": 7.41.0
+    "@sentry/types": 7.41.0
+    "@sentry/utils": 7.41.0
     tslib: ^1.9.3
-  checksum: 475b41e3c9503bd6a00db058050388914f2c04763d7d204527c9b83cfb0af02cde413c3bb9935a300a0ff2fc9e1b100442d55ab6edd9ce535ebc2793ea16111e
+  checksum: 4b537a408d0b78a40c0f19efc80bde91396fb8edef156a38df5eb8250364839e464bcc1dd919e62712dcaffada1c0ba65bfd9a7c0205c9e99aca850c65dcf64a
   languageName: node
   linkType: hard
 
@@ -3907,6 +3918,13 @@ __metadata:
   version: 7.39.0
   resolution: "@sentry/types@npm:7.39.0"
   checksum: 7d8b3f5fdb033240750bfdd4398b596b24bb6963d1e923b9fe6c5226b19dd965e53cec9790bbf13340641e0006b8f3d0958613a8561b42ae3ff22da1c419df27
+  languageName: node
+  linkType: hard
+
+"@sentry/types@npm:7.41.0":
+  version: 7.41.0
+  resolution: "@sentry/types@npm:7.41.0"
+  checksum: d65c81770a7a9765a8ff66b6c612cb499cd32de2c158a7733b99c0ae1422134fc31f544537e5f739bcd66e2a3eb644b16d9cbeb65299afe0ea5441393e64a633
   languageName: node
   linkType: hard
 
@@ -3927,6 +3945,16 @@ __metadata:
     "@sentry/types": 7.39.0
     tslib: ^1.9.3
   checksum: 620c41f9fca3efb48e137f6d9635a0c11bd47262c68997dba13ca78296faaf0c60dc0e5c2d3f548d9eae3d57cc7ed165bd870de0e9ca3c9ce97ffc705a217fca
+  languageName: node
+  linkType: hard
+
+"@sentry/utils@npm:7.41.0":
+  version: 7.41.0
+  resolution: "@sentry/utils@npm:7.41.0"
+  dependencies:
+    "@sentry/types": 7.41.0
+    tslib: ^1.9.3
+  checksum: 540d9f862c6ef86732918ba8d7f0ba83fd9a60dd8e1af4408f7938cefdcbca82ea08303cfcc263d674c806cc469c4c28107d3161b1a933f300040c8eb16c8b2a
   languageName: node
   linkType: hard
 
@@ -11271,7 +11299,7 @@ __metadata:
     "@mcap/core": 1.1.0
     "@pmmmwh/react-refresh-webpack-plugin": 0.5.10
     "@sentry/electron": 4.2.0
-    "@sentry/tracing": 7.30.0
+    "@sentry/tracing": 7.41.0
     "@sentry/webpack-plugin": 1.20.0
     "@storybook/react": 6.5.15
     "@types/electron-devtools-installer": 2.2.2
