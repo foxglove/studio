@@ -42,16 +42,19 @@ const X = () => <Wrapper>X</Wrapper>;
 const Y = () => <Wrapper>Y</Wrapper>;
 const Z = () => <>{longText}</>;
 
+type LeftKey = "a" | "b" | "c";
+type RightKey = "x" | "y" | "z";
+
 const ITEMS = new Map<string, SidebarItem>([]);
 const BOTTOM_ITEMS = new Map<string, SidebarItem>([]);
 
-const LEFT_ITEMS = new Map<string, NewSidebarItem>([
+const LEFT_ITEMS = new Map<LeftKey, NewSidebarItem>([
   ["a", { title: "A", component: A }],
   ["b", { title: "B", component: B }],
   ["c", { title: "C", component: C }],
 ]);
 
-const RIGHT_ITEMS = new Map<string, NewSidebarItem>([
+const RIGHT_ITEMS = new Map<RightKey, NewSidebarItem>([
   ["x", { title: "X", component: X }],
   ["y", { title: "Y", component: Y }],
   ["z", { title: "Z", component: Z }],
@@ -63,11 +66,11 @@ function Story({
   defaultRightKey,
 }: {
   label?: string;
-  defaultLeftKey?: string | undefined;
-  defaultRightKey?: string | undefined;
+  defaultLeftKey?: LeftKey | undefined;
+  defaultRightKey?: RightKey | undefined;
 }): JSX.Element {
-  const [selectedRightKey, setSelectedRightKey] = useState<string | undefined>(defaultRightKey);
-  const [selectedLeftKey, setSelectedLeftKey] = useState<string | undefined>(defaultLeftKey);
+  const [selectedRightKey, setSelectedRightKey] = useState<RightKey | undefined>(defaultRightKey);
+  const [selectedLeftKey, setSelectedLeftKey] = useState<LeftKey | undefined>(defaultLeftKey);
   const [_, setAppBarEnabled] = useAppConfigurationValue<boolean>(AppSetting.ENABLE_NEW_TOPNAV);
 
   useEffect(() => {
@@ -99,7 +102,7 @@ function Story({
 }
 
 // Left
-export const LeftOpen = (): JSX.Element => <Story defaultRightKey="a" />;
+export const LeftOpen = (): JSX.Element => <Story defaultLeftKey="a" />;
 LeftOpen.storyName = "Left";
 
 export const LeftLongText = (): JSX.Element => <Story defaultLeftKey="c" />;
