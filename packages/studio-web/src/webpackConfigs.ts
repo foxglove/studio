@@ -3,16 +3,14 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import ReactRefreshPlugin from "@pmmmwh/react-refresh-webpack-plugin";
-import SentryWebpackPlugin from "@sentry/webpack-plugin";
 import { CleanWebpackPlugin } from "clean-webpack-plugin";
 import CopyPlugin from "copy-webpack-plugin";
 import HtmlWebpackPlugin from "html-webpack-plugin";
 import path from "path";
-import { Configuration, EnvironmentPlugin, WebpackPluginInstance } from "webpack";
+import { Configuration, WebpackPluginInstance } from "webpack";
 import type { Configuration as WebpackDevServerConfiguration } from "webpack-dev-server";
 
 import type { WebpackArgv } from "@foxglove/studio-base/WebpackArgv";
-import { buildEnvironmentDefaults } from "@foxglove/studio-base/environment";
 import { makeConfig } from "@foxglove/studio-base/webpack";
 
 export interface WebpackConfiguration extends Configuration {
@@ -20,12 +18,12 @@ export interface WebpackConfiguration extends Configuration {
 }
 
 export type ConfigParams = {
-  /**
-   * Directory to find `entrypoint` and `tsconfig.json`.
-   */
+  /** Directory to find `entrypoint` and `tsconfig.json`. */
   contextPath: string;
   entrypoint: string;
   outputPath: string;
+  /** Source map (`devtool`) setting to use for production builds */
+  prodSourceMap: string | false;
 };
 
 export const devServerConfig = (params: ConfigParams): WebpackConfiguration => ({
@@ -59,7 +57,6 @@ export const mainConfig =
   (env: unknown, argv: WebpackArgv): Configuration => {
     const isDev = argv.mode === "development";
     const isServe = argv.env?.WEBPACK_SERVE ?? false;
-    const publicPath = process.env.FOXGLOVE_PUBLIC_PATH ?? "";
 
     const allowUnusedVariables = isDev;
 
@@ -67,27 +64,6 @@ export const mainConfig =
 
     if (isServe) {
       plugins.push(new ReactRefreshPlugin());
-    }
-
-    // Source map upload if configuration permits
-    if (
-      !isDev &&
-      process.env.SENTRY_AUTH_TOKEN != undefined &&
-      process.env.SENTRY_ORG != undefined &&
-      process.env.SENTRY_PROJECT != undefined
-    ) {
-      plugins.push(
-        new SentryWebpackPlugin({
-          authToken: process.env.SENTRY_AUTH_TOKEN,
-          org: process.env.SENTRY_ORG,
-          project: process.env.SENTRY_PROJECT,
-          include: params.outputPath,
-          setCommits:
-            process.env.SENTRY_REPO && process.env.SENTRY_CURRENT_COMMIT
-              ? { repo: process.env.SENTRY_REPO, commit: process.env.SENTRY_CURRENT_COMMIT }
-              : undefined,
-        }),
-      );
     }
 
     const appWebpackConfig = makeConfig(env, argv, { allowUnusedVariables });
@@ -100,10 +76,10 @@ export const mainConfig =
       target: "web",
       context: params.contextPath,
       entry: params.entrypoint,
-      devtool: isDev ? "eval-cheap-module-source-map" : "source-map",
+      devtool: isDev ? "eval-cheap-module-source-map" : params.prodSourceMap,
 
       output: {
-        publicPath: publicPath === "" ? "auto" : publicPath,
+        publicPath: "auto",
 
         // Output filenames should include content hashes in order to cache bust when new versions are available
         filename: isDev ? "[name].js" : "[name].[contenthash].js",
@@ -114,7 +90,6 @@ export const mainConfig =
       plugins: [
         ...plugins,
         ...(appWebpackConfig.plugins ?? []),
-        new EnvironmentPlugin(buildEnvironmentDefaults(argv.env?.FOXGLOVE_BACKEND ?? argv.mode)),
         new CopyPlugin({
           patterns: [{ from: path.resolve(__dirname, "..", "public") }],
         }),
@@ -132,9 +107,9 @@ export const mainConfig =
       <meta property="og:url" content="https://studio.foxglove.dev/"/>
       <meta name="twitter:card" content="summary_large_image"/>
       <meta name="twitter:site" content="@foxglovedev"/>
-      <link rel="apple-touch-icon" sizes="180x180" href="${publicPath}apple-touch-icon.png" />
-      <link rel="icon" type="image/png" sizes="32x32" href="${publicPath}favicon-32x32.png" />
-      <link rel="icon" type="image/png" sizes="16x16" href="${publicPath}favicon-16x16.png" />
+      <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
+      <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png" />
+      <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png" />
       <title>Foxglove Studio</title>
     </head>
     <script>

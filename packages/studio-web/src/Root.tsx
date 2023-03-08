@@ -19,7 +19,6 @@ import {
   AppSetting,
 } from "@foxglove/studio-base";
 
-import VelodyneUnavailableDataSourceFactory from "./dataSources/VelodyneUnavailableDataSourceFactory";
 import { IdbLayoutStorage } from "./services/IdbLayoutStorage";
 import LocalStorageAppConfiguration from "./services/LocalStorageAppConfiguration";
 
@@ -51,7 +50,6 @@ export function Root(props: {
       new FoxgloveWebSocketDataSourceFactory(),
       new RosbridgeDataSourceFactory(),
       new UlogLocalDataSourceFactory(),
-      new VelodyneUnavailableDataSourceFactory(),
       new SampleNuscenesDataSourceFactory(),
       new McapLocalDataSourceFactory(),
       new RemoteDataSourceFactory(),

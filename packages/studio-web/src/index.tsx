@@ -2,13 +2,11 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import * as Sentry from "@sentry/browser";
-import { BrowserTracing } from "@sentry/tracing";
 import { StrictMode, useEffect } from "react";
 import ReactDOM from "react-dom";
 
 import Logger from "@foxglove/log";
-import { AppContext, IAppContext, IDataSourceFactory } from "@foxglove/studio-base";
+import { IDataSourceFactory } from "@foxglove/studio-base";
 
 import VersionBanner from "./VersionBanner";
 
@@ -26,37 +24,16 @@ function LogAfterRender(props: React.PropsWithChildren<unknown>): JSX.Element {
 }
 
 type MainParams = {
-  appContext: IAppContext;
   dataSources?: IDataSourceFactory[];
   extraProviders?: JSX.Element[];
 };
 
-export async function main(params: MainParams = { appContext: {} }): Promise<void> {
+export async function main(params: MainParams = {}): Promise<void> {
   log.debug("initializing");
 
   window.onerror = (...args) => {
     console.error(...args);
   };
-
-  if (typeof process.env.SENTRY_DSN === "string") {
-    log.info("initializing Sentry");
-    Sentry.init({
-      dsn: process.env.SENTRY_DSN,
-      autoSessionTracking: true,
-      // Remove the default breadbrumbs integration - it does not accurately track breadcrumbs and
-      // creates more noise than benefit.
-      integrations: (integrations) => {
-        return integrations
-          .filter((integration) => integration.name !== "Breadcrumbs")
-          .concat([
-            new BrowserTracing({
-              startTransactionOnLocationChange: false, // location changes as a result of non-navigation interactions such as seeking
-            }),
-          ]);
-      },
-      tracesSampleRate: 0.05,
-    });
-  }
 
   const rootEl = document.getElementById("root");
   if (!rootEl) {
@@ -101,9 +78,7 @@ export async function main(params: MainParams = { appContext: {} }): Promise<voi
     <StrictMode>
       <LogAfterRender>
         {banner}
-        <AppContext.Provider value={params.appContext}>
-          <Root extraProviders={params.extraProviders} dataSources={params.dataSources} />
-        </AppContext.Provider>
+        <Root extraProviders={params.extraProviders} dataSources={params.dataSources} />
       </LogAfterRender>
     </StrictMode>,
     rootEl,
