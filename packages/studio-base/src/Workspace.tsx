@@ -541,11 +541,6 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     };
   }, []);
 
-  const TopicListSidebar = useCallback(
-    () => <TopicList onSelectDataSourceAction={() => setShowOpenDialog({ view: "start" })} />,
-    [],
-  );
-
   const ConnectedLayoutBrowser = useCallback(
     () => <LayoutBrowser supportsSignIn={supportsAccountSettings} />,
     [supportsAccountSettings],
@@ -637,14 +632,14 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
 
   const leftSidebarItems = useMemo(() => {
     const items = new Map<LeftSidebarItemKey, NewSidebarItem>([
-      ["topics", { title: "Topics", component: TopicListSidebar }],
+      ["topics", { title: "Topics", component: TopicList }],
       ["variables", { title: "Variables", component: VariablesList }],
     ]);
     if (enableStudioLogsSidebar) {
       items.set("studio-logs-settings", { title: "Studio Logs", component: StudioLogsSettings });
     }
     return items;
-  }, [TopicListSidebar, enableStudioLogsSidebar]);
+  }, [enableStudioLogsSidebar]);
 
   const rightSidebarItems = useMemo(() => {
     const items = new Map<RightSidebarItemKey, NewSidebarItem>([

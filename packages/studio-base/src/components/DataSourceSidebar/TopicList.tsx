@@ -5,7 +5,6 @@
 import ClearIcon from "@mui/icons-material/Clear";
 import SearchIcon from "@mui/icons-material/Search";
 import {
-  Button,
   IconButton,
   List,
   ListItem,
@@ -163,11 +162,7 @@ function TopicListItem({
 
 const MemoTopicListItem = React.memo(TopicListItem);
 
-export function TopicList({
-  onSelectDataSourceAction,
-}: {
-  onSelectDataSourceAction?: () => void;
-}): JSX.Element {
+export function TopicList(): JSX.Element {
   const { classes, cx } = useStyles();
   const [filterText, setFilterText] = useState<string>("");
 
@@ -192,9 +187,6 @@ export function TopicList({
         <Typography align="center" variant="subtitle2" color="text.secondary">
           No data source selected
         </Typography>
-        <Button variant="outlined" size="small" onClick={onSelectDataSourceAction}>
-          Open data source…
-        </Button>
       </Stack>
     );
   }
