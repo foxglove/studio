@@ -61,28 +61,22 @@ function Story({
   label,
   defaultLeftKey,
   defaultRightKey,
-  enableAppBar,
-  height,
 }: {
   label?: string;
   defaultLeftKey?: string | undefined;
   defaultRightKey?: string | undefined;
-  enableAppBar?: boolean;
-  height?: number;
 }): JSX.Element {
   const [selectedRightKey, setSelectedRightKey] = useState<string | undefined>(defaultRightKey);
   const [selectedLeftKey, setSelectedLeftKey] = useState<string | undefined>(defaultLeftKey);
-  const [_enableNewTopNav = true, setAppBarEnabled] = useAppConfigurationValue<boolean>(
-    AppSetting.ENABLE_NEW_TOPNAV,
-  );
+  const [_, setAppBarEnabled] = useAppConfigurationValue<boolean>(AppSetting.ENABLE_NEW_TOPNAV);
 
   useEffect(() => {
     void setAppBarEnabled(true);
-  }, [enableAppBar, setAppBarEnabled]);
+  }, [setAppBarEnabled]);
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div style={{ height: height ?? "100%" }}>
+      <div style={{ height: "100%" }}>
         <Sidebars
           items={ITEMS}
           bottomItems={BOTTOM_ITEMS}
@@ -105,7 +99,7 @@ function Story({
 }
 
 // Left
-export const LeftOpen = (): JSX.Element => <Story defaultLeftKey="a" />;
+export const LeftOpen = (): JSX.Element => <Story />;
 LeftOpen.storyName = "Left";
 
 export const LeftLongText = (): JSX.Element => <Story defaultLeftKey="c" />;
@@ -133,7 +127,7 @@ LeftClosed.play = async () => {
 };
 
 // Right
-export const RightOpen = (): JSX.Element => <Story defaultRightKey="x" />;
+export const RightOpen = (): JSX.Element => <Story />;
 RightOpen.storyName = "Right";
 
 export const RightLongText = (): JSX.Element => <Story defaultRightKey="z" />;
