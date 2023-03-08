@@ -207,7 +207,9 @@ function newStudioWindow(deepLinks: string[] = []): BrowserWindow {
     switch (channel) {
       case "titleBarDoubleClicked": {
         const action: string =
-          systemPreferences.getUserDefault("AppleActionOnDoubleClick", "string") || "Maximize";
+          // Although the TS types say this function is always available, it is undefined on non-Mac platforms
+          (isMac && systemPreferences.getUserDefault("AppleActionOnDoubleClick", "string")) ||
+          "Maximize";
         if (action === "Minimize") {
           browserWindow.minimize();
         } else if (action === "Maximize") {
