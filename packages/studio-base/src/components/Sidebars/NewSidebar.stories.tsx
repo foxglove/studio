@@ -99,7 +99,7 @@ function Story({
 }
 
 // Left
-export const LeftOpen = (): JSX.Element => <Story />;
+export const LeftOpen = (): JSX.Element => <Story defaultRightKey="a" />;
 LeftOpen.storyName = "Left";
 
 export const LeftLongText = (): JSX.Element => <Story defaultLeftKey="c" />;
@@ -127,7 +127,7 @@ LeftClosed.play = async () => {
 };
 
 // Right
-export const RightOpen = (): JSX.Element => <Story />;
+export const RightOpen = (): JSX.Element => <Story defaultRightKey="x" />;
 RightOpen.storyName = "Right";
 
 export const RightLongText = (): JSX.Element => <Story defaultRightKey="z" />;
