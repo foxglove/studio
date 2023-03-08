@@ -161,7 +161,10 @@ function newStudioWindow(deepLinks: string[] = []): BrowserWindow {
 
   const browserWindow = new BrowserWindow(windowOptions);
   nativeTheme.on("updated", () => {
-    browserWindow.setTitleBarOverlay(getTitleBarOverlayOptions());
+    if (isWindows) {
+      // Although the TS types say this function is always available, it is undefined on non-Windows platforms
+      browserWindow.setTitleBarOverlay(getTitleBarOverlayOptions());
+    }
   });
 
   // Forward full screen events to the renderer
