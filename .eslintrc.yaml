@@ -151,7 +151,6 @@ overrides:
       no-restricted-imports: off
     files:
       # Ignore existing implementations of @mui/styled
-      - "web/src/VersionBanner.tsx"
       - "packages/studio-base/src/components/DataSourceSidebar/DataSourceSidebar.tsx"
       - "packages/studio-base/src/components/EmptyPanelLayout.tsx"
       - "packages/studio-base/src/components/ExpandingToolbar.tsx"
@@ -177,9 +176,6 @@ overrides:
       - "packages/studio-base/src/panels/NodePlayground/index.tsx"
       - "packages/studio-base/src/panels/Publish/index.tsx"
       - "packages/studio-base/src/panels/RawMessages/DiffSpan.tsx"
-      - "packages/studio-base/src/panels/Tab/TabbedToolbar.tsx"
-      - "packages/studio-base/src/panels/Tab/ToolbarTab.tsx"
-      - "packages/studio-base/src/panels/Tab/index.tsx"
       - "packages/studio-base/src/panels/diagnostics/DiagnosticStatus.tsx"
       - "packages/studio-base/src/panels/diagnostics/DiagnosticSummary.tsx"
       - "packages/studio-base/src/stories/storyHelpers.tsx"
