@@ -318,26 +318,29 @@ export default class FoxgloveWebSocketPlayer implements Player {
         try {
           let schemaEncoding;
           let schemaData;
-          if (channel.encoding === "json") {
+          if (channel.schemaEncoding === "jsonschema" || channel.encoding === "json") {
             schemaEncoding = "jsonschema";
             schemaData = textEncoder.encode(channel.schema);
-          } else if (channel.encoding === "protobuf") {
+          } else if (channel.schemaEncoding === "protobuf" || channel.encoding === "protobuf") {
             schemaEncoding = "protobuf";
             schemaData = new Uint8Array(base64.length(channel.schema));
             if (base64.decode(channel.schema, schemaData, 0) !== schemaData.byteLength) {
               throw new Error(`Failed to decode base64 schema on channel ${channel.id}`);
             }
-          } else if (channel.encoding === "flatbuffer") {
+          } else if (channel.schemaEncoding === "flatbuffer" || channel.encoding === "flatbuffer") {
             schemaEncoding = "flatbuffer";
             schemaData = new Uint8Array(base64.length(channel.schema));
             if (base64.decode(channel.schema, schemaData, 0) !== schemaData.byteLength) {
               throw new Error(`Failed to decode base64 schema on channel ${channel.id}`);
             }
-          } else if (channel.encoding === "ros1") {
+          } else if (channel.schemaEncoding === "ros1msg" || channel.encoding === "ros1") {
             schemaEncoding = "ros1msg";
             schemaData = textEncoder.encode(channel.schema);
-          } else if (channel.encoding === "cdr") {
-            schemaEncoding = "ros2msg";
+          } else if (
+            ["ros2idl", "ros2msg"].includes(channel.schemaEncoding ?? "") ||
+            channel.encoding === "cdr"
+          ) {
+            schemaEncoding = channel.schemaEncoding ?? "ros2msg";
             schemaData = textEncoder.encode(channel.schema);
           } else {
             throw new Error(`Unsupported encoding ${channel.encoding}`);
