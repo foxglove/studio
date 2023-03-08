@@ -134,7 +134,7 @@ export const RightLongText = (): JSX.Element => <Story defaultRightKey="z" />;
 RightLongText.storyName = "Right (with text overflow)";
 
 export const RightClicked = (): JSX.Element => <Story defaultRightKey="x" />;
-RightClicked.storyName = "Left (tab click interaction)";
+RightClicked.storyName = "Right (tab click interaction)";
 RightClicked.parameters = { colorScheme: "dark" };
 RightClicked.play = async () => {
   const user = userEvent.setup();
