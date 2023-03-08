@@ -497,7 +497,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
         selectedSidebarItem === "panel-settings" || selectedLeftSidebarItem === "topics",
       openPanelSettings: () =>
         enableNewTopNav
-          ? setSelectedLeftSidebarItem("topics")
+          ? setSelectedRightSidebarItem("panel-settings")
           : setSelectedSidebarItem("panel-settings"),
       // ↓ ↓ ↓  just remove this one when deleting enableNewTopNav feature flag  ↓ ↓ ↓
       openAccountSettings: () => supportsAccountSettings && setSelectedSidebarItem("account"),
