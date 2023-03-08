@@ -2468,7 +2468,7 @@ __metadata:
     "@mui/material": 5.11.12
     "@popperjs/core": 2.11.6
     "@protobufjs/base64": 1.1.2
-    "@sentry/core": 7.39.0
+    "@sentry/core": 7.41.0
     "@sentry/types": 7.30.0
     "@storybook/addon-actions": 6.5.16
     "@storybook/react": 6.5.16
@@ -3807,14 +3807,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sentry/core@npm:7.39.0":
-  version: 7.39.0
-  resolution: "@sentry/core@npm:7.39.0"
+"@sentry/core@npm:7.41.0":
+  version: 7.41.0
+  resolution: "@sentry/core@npm:7.41.0"
   dependencies:
-    "@sentry/types": 7.39.0
-    "@sentry/utils": 7.39.0
+    "@sentry/types": 7.41.0
+    "@sentry/utils": 7.41.0
     tslib: ^1.9.3
-  checksum: b00095a339fac77d17932e097d78c1e701cda63751e0a13f7be2f4cbdcf28ce6dcefd46f8c1e9ee85b15361b8884ca7d27d7e34cebae45b514f678e3ac49994c
+  checksum: 59e80206e0fd37e8a475532f1369e9e5bd98af821041c7b3054ddba6dbea9ad8e0801826cd811c2b670b8ae34518d89120df83f474fb2442e71080bd139dd4e6
   languageName: node
   linkType: hard
 
@@ -3880,10 +3880,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sentry/types@npm:7.39.0":
-  version: 7.39.0
-  resolution: "@sentry/types@npm:7.39.0"
-  checksum: 7d8b3f5fdb033240750bfdd4398b596b24bb6963d1e923b9fe6c5226b19dd965e53cec9790bbf13340641e0006b8f3d0958613a8561b42ae3ff22da1c419df27
+"@sentry/types@npm:7.41.0":
+  version: 7.41.0
+  resolution: "@sentry/types@npm:7.41.0"
+  checksum: d65c81770a7a9765a8ff66b6c612cb499cd32de2c158a7733b99c0ae1422134fc31f544537e5f739bcd66e2a3eb644b16d9cbeb65299afe0ea5441393e64a633
   languageName: node
   linkType: hard
 
@@ -3897,13 +3897,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sentry/utils@npm:7.39.0":
-  version: 7.39.0
-  resolution: "@sentry/utils@npm:7.39.0"
+"@sentry/utils@npm:7.41.0":
+  version: 7.41.0
+  resolution: "@sentry/utils@npm:7.41.0"
   dependencies:
-    "@sentry/types": 7.39.0
+    "@sentry/types": 7.41.0
     tslib: ^1.9.3
-  checksum: 620c41f9fca3efb48e137f6d9635a0c11bd47262c68997dba13ca78296faaf0c60dc0e5c2d3f548d9eae3d57cc7ed165bd870de0e9ca3c9ce97ffc705a217fca
+  checksum: 540d9f862c6ef86732918ba8d7f0ba83fd9a60dd8e1af4408f7938cefdcbca82ea08303cfcc263d674c806cc469c4c28107d3161b1a933f300040c8eb16c8b2a
   languageName: node
   linkType: hard
 
