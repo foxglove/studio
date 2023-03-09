@@ -14,10 +14,10 @@ import {
 } from "@fluentui/react-icons";
 import { AppBar as MuiAppBar, Button, IconButton } from "@mui/material";
 import { useCallback, useRef, useState } from "react";
-import tinycolor from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
+import { AppBarIconButton } from "@foxglove/studio-base/components/AppBar/AppBarIconButton";
 import {
   CustomWindowControls,
   CustomWindowControlsProps,
@@ -115,26 +115,8 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }>(
         alignItems: "center",
         ...NOT_DRAGGABLE_STYLE, // make buttons clickable for desktop app
       },
-      iconButton: {
-        borderRadius: 0,
-        fontSize: 24,
-        padding: theme.spacing(1.25),
-
-        svg: {
-          fontSize: "1em !important",
-        },
-        "&:hover": {
-          backgroundColor: tinycolor(APP_BAR_FOREGROUND_COLOR).setAlpha(0.08).toRgbString(),
-        },
-        "&.Mui-selected": {
-          backgroundColor: APP_BAR_PRIMARY_COLOR,
-        },
-        "&.Mui-disabled": {
-          color: "currentColor",
-          opacity: theme.palette.action.disabledOpacity,
-        },
-      },
       button: {
+        marginInline: theme.spacing(1),
         backgroundColor: APP_BAR_PRIMARY_COLOR,
 
         "&:hover": {
@@ -232,8 +214,8 @@ export function AppBar(props: AppBarProps): JSX.Element {
               <IconButton className={classes.logo} size="large" color="inherit">
                 <FoxgloveLogo fontSize="inherit" color="inherit" />
               </IconButton>
-              <IconButton
-                className={cx(classes.iconButton, { "Mui-selected": layoutMenuOpen })}
+              <AppBarIconButton
+                className={cx({ "Mui-selected": layoutMenuOpen })}
                 ref={layoutButtonRef}
                 color="inherit"
                 id="layout-button"
@@ -247,9 +229,9 @@ export function AppBar(props: AppBarProps): JSX.Element {
                 }}
               >
                 <BoardSplit24Regular />
-              </IconButton>
-              <IconButton
-                className={cx(classes.iconButton, { "Mui-selected": panelMenuOpen })}
+              </AppBarIconButton>
+              <AppBarIconButton
+                className={cx({ "Mui-selected": panelMenuOpen })}
                 color="inherit"
                 disabled={selectedLayoutId == undefined}
                 id="add-panel-button"
@@ -263,7 +245,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
                 }}
               >
                 <AddCircle24Regular />
-              </IconButton>
+              </AppBarIconButton>
             </div>
           </div>
 
@@ -274,28 +256,26 @@ export function AppBar(props: AppBarProps): JSX.Element {
           <div className={classes.end}>
             <div className={classes.endInner}>
               {enableMemoryUseIndicator && <MemoryUseIndicator />}
-              <IconButton
-                className={classes.iconButton}
-                color="inherit"
-                title={`${leftSidebarOpen ? "Hide" : "Show"} left sidebar`}
-                aria-label={`${leftSidebarOpen ? "Hide" : "Show"} left sidebar`}
-                onClick={() => setLeftSidebarOpen(!leftSidebarOpen)}
-              >
-                {leftSidebarOpen ? <PanelLeft24Filled /> : <PanelLeft24Regular />}
-              </IconButton>
-              <IconButton
-                className={classes.iconButton}
-                color="inherit"
-                title={`${rightSidebarOpen ? "Hide" : "Show"} right sidebar`}
-                aria-label={`${rightSidebarOpen ? "Hide" : "Show"} right sidebar`}
-                onClick={() => setRightSidebarOpen(!rightSidebarOpen)}
-              >
-                {rightSidebarOpen ? <PanelRight24Filled /> : <PanelRight24Regular />}
-              </IconButton>
-              <IconButton
-                className={cx(classes.iconButton, { "Mui-selected": helpMenuOpen })}
-                color="inherit"
+              <Stack direction="row" alignItems="center" paddingX={1.5}>
+                <AppBarIconButton
+                  title={`${leftSidebarOpen ? "Hide" : "Show"} left sidebar`}
+                  aria-label={`${leftSidebarOpen ? "Hide" : "Show"} left sidebar`}
+                  onClick={() => setLeftSidebarOpen(!leftSidebarOpen)}
+                >
+                  {leftSidebarOpen ? <PanelLeft24Filled /> : <PanelLeft24Regular />}
+                </AppBarIconButton>
+                <AppBarIconButton
+                  title={`${rightSidebarOpen ? "Hide" : "Show"} right sidebar`}
+                  aria-label={`${rightSidebarOpen ? "Hide" : "Show"} right sidebar`}
+                  onClick={() => setRightSidebarOpen(!rightSidebarOpen)}
+                >
+                  {rightSidebarOpen ? <PanelRight24Filled /> : <PanelRight24Regular />}
+                </AppBarIconButton>
+              </Stack>
+              <AppBarIconButton
+                className={cx({ "Mui-selected": helpMenuOpen })}
                 id="help-button"
+                title="Help & Docs"
                 aria-label="Help menu button"
                 aria-controls={helpMenuOpen ? "help-menu" : undefined}
                 aria-haspopup="true"
@@ -309,11 +289,10 @@ export function AppBar(props: AppBarProps): JSX.Element {
                 }}
               >
                 <QuestionCircle24Regular />
-              </IconButton>
-              <IconButton
-                className={classes.iconButton}
-                color="inherit"
+              </AppBarIconButton>
+              <AppBarIconButton
                 id="preferences-button"
+                title="Studio preferences"
                 aria-label="Preferences dialog button"
                 aria-controls={prefsDialogOpen ? "preferences-dialog" : undefined}
                 aria-haspopup="true"
@@ -327,41 +306,38 @@ export function AppBar(props: AppBarProps): JSX.Element {
                 }}
               >
                 <Settings24Regular />
-              </IconButton>
-              {!disableSignIn && supportsAccountSettings && (
-                <Stack direction="row" gap={1} paddingX={1}>
-                  {currentUser ? (
-                    <UserIconButton
-                      className={classes.iconButton}
-                      aria-label="User profile menu button"
-                      color="inherit"
-                      id="user-profile-button"
-                      aria-controls={userMenuOpen ? "user-profile-menu" : undefined}
-                      aria-haspopup="true"
-                      aria-expanded={userMenuOpen ? "true" : undefined}
-                      onClick={(event) => setUserAnchorEl(event.currentTarget)}
-                      size="small"
-                      currentUser={currentUser}
-                    />
-                  ) : (
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      className={classes.button}
-                      size="small"
-                      onClick={() => {
-                        signIn();
-                        void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
-                          user: "unauthenticated",
-                          cta: "sign-in",
-                        });
-                      }}
-                    >
-                      Sign in
-                    </Button>
-                  )}
-                </Stack>
-              )}
+              </AppBarIconButton>
+              {!disableSignIn &&
+                supportsAccountSettings &&
+                (currentUser ? (
+                  <UserIconButton
+                    aria-label="User profile menu button"
+                    color="inherit"
+                    id="user-profile-button"
+                    aria-controls={userMenuOpen ? "user-profile-menu" : undefined}
+                    aria-haspopup="true"
+                    aria-expanded={userMenuOpen ? "true" : undefined}
+                    onClick={(event) => setUserAnchorEl(event.currentTarget)}
+                    size="small"
+                    currentUser={currentUser}
+                  />
+                ) : (
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    className={classes.button}
+                    size="small"
+                    onClick={() => {
+                      signIn();
+                      void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
+                        user: "unauthenticated",
+                        cta: "sign-in",
+                      });
+                    }}
+                  >
+                    Sign in
+                  </Button>
+                ))}
               {showCustomWindowControls && (
                 <CustomWindowControls
                   onMinimizeWindow={onMinimizeWindow}
