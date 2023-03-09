@@ -40,29 +40,40 @@ describe("TransformTree", () => {
     tfTree.addTransform("b", "a", 0n, tf);
     tfTree.addTransform("c", "b", 0n, tf);
     tfTree.addTransform("c", "b", 1n, tf);
+    tfTree.addTransform("d", "a", 0n, tf);
 
     // Remove non-existent transform is a no-op
-    tfTree.removeTransform("a", "c", 0n);
+    tfTree.removeTransform("c", "a", 0n);
     expect(tfTree.frame("a")).toBeDefined();
     expect(tfTree.frame("b")).toBeDefined();
     expect(tfTree.frame("c")).toBeDefined();
+    expect(tfTree.frame("d")).toBeDefined();
 
     // Remove transform from a->b, a is not deleted because it still has children
     tfTree.removeTransform("b", "a", 0n);
     expect(tfTree.frame("a")).toBeDefined();
     expect(tfTree.frame("b")).toBeDefined();
     expect(tfTree.frame("c")).toBeDefined();
+    expect(tfTree.frame("d")).toBeDefined();
 
     // Remove transform at 0 from b->c, nothing is deleted because there's still a transform at time 1
     tfTree.removeTransform("c", "b", 0n);
     expect(tfTree.frame("a")).toBeDefined();
     expect(tfTree.frame("b")).toBeDefined();
     expect(tfTree.frame("c")).toBeDefined();
+    expect(tfTree.frame("d")).toBeDefined();
 
-    // Remove transform at 1 from b->c, everything is now empty, all frames get deleted
+    // Remove transform at 1 from b->c, b and c can now be deleted, a->d still exists
     tfTree.removeTransform("c", "b", 1n);
+    expect(tfTree.frame("a")).toBeDefined();
+    expect(tfTree.frame("b")).toBeUndefined();
+    expect(tfTree.frame("c")).toBeUndefined();
+    expect(tfTree.frame("d")).toBeDefined();
+
+    tfTree.removeTransform("d", "a", 0n);
     expect(tfTree.frame("a")).toBeUndefined();
     expect(tfTree.frame("b")).toBeUndefined();
     expect(tfTree.frame("c")).toBeUndefined();
+    expect(tfTree.frame("d")).toBeUndefined();
   });
 });

@@ -75,54 +75,61 @@ export class TransformTree {
       return;
     }
     child.removeTransformAt(stamp);
-    this._removeEmptyFrames();
+    this._removeEmptyAncestors(child);
   }
 
-  /** Prune frames with no history entries and no children from the tree */
-  private _removeEmptyFrames() {
-    // Build a list of children for each frame in the tree
+  /**
+   * Walk up the tree starting from `candidate` and prune frames with no history entries and no
+   * children.
+   */
+  private _removeEmptyAncestors(candidate: CoordinateFrame): void {
+    if (candidate.transformsSize() > 0) {
+      // don't want to delete this frame, it is not empty
+      return;
+    }
+
+    // Build a list of children for each frame in the tree, used to check whether nodes are leaf
+    // nodes
     const childrenByParentId = new Map<string, Set<string>>();
     for (const frame of this._frames.values()) {
       childrenByParentId.set(frame.id, new Set());
     }
     for (const frame of this._frames.values()) {
-      const parentId = frame.parent()?.id;
-      if (parentId == undefined) {
+      const parent = frame.parent();
+      if (parent === candidate) {
+        // can't delete this frame or its ancestors, it still has children
+        return;
+      }
+      if (parent == undefined) {
         continue;
       }
-      const children = childrenByParentId.get(parentId);
+      const children = childrenByParentId.get(parent.id);
       if (!children) {
         throw new Error("invariant: should have children array");
       }
       children.add(frame.id);
     }
 
-    // Repeatedly delete any frames with no children until the tree doesn't change
-    for (;;) {
-      let deletedAnyFrames = false;
-      for (const [frameId, children] of childrenByParentId) {
-        const frame = this.frame(frameId);
-        if (!frame) {
-          throw new Error(`invariant: unknown parent frame id ${frameId}`);
-        }
-        if (frame.transformsSize() > 0) {
-          // don't want to delete this frame, it is not empty
-          continue;
-        }
-        if (children.size > 0) {
-          // can't delete this frame yet, it still has children
-          continue;
-        }
-        const parent = frame.parent();
-        if (parent) {
-          childrenByParentId.get(parent.id)?.delete(frameId);
-        }
-        this._frames.delete(frameId);
-        childrenByParentId.delete(frameId);
-        deletedAnyFrames = true;
+    // Walk upwards, deleting nodes with no history entries and no children
+    for (
+      let current: typeof candidate | undefined = candidate;
+      current;
+      current = current.parent()
+    ) {
+      if (current.transformsSize() > 0) {
+        // don't want to delete this frame, it is not empty
+        return;
       }
-      if (!deletedAnyFrames) {
-        break;
+      const children = childrenByParentId.get(current.id);
+      if (children && children.size > 0) {
+        // can't delete this frame or its ancestors, it still has children
+        return;
+      }
+      this._frames.delete(current.id);
+      childrenByParentId.delete(current.id);
+      const parentId = current.parent()?.id;
+      if (parentId) {
+        childrenByParentId.get(parentId)?.delete(current.id);
       }
     }
   }
