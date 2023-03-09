@@ -118,7 +118,7 @@ function initRenderStateBuilder(): BuildRenderStateFn {
 
     // If topics, message converters, or subscriptions change, recalculate the
     if (
-      subscriptions !== prevSubscriptions ||
+      prevSubscriptions !== subscriptions ||
       prevSortedTopics !== sortedTopics ||
       prevMessageConverters !== messageConverters
     ) {
@@ -166,11 +166,14 @@ function initRenderStateBuilder(): BuildRenderStateFn {
         }
 
         // Find a converter that can go from the original topic schema to the target schema
+        // Note: We only support one converter per unique from/to pair so this _find_ only needs to
+        //       find one converter rather than multiple converters.
         const converter = messageConverters?.find(
           (conv) =>
             conv.fromSchemaName === subscriberTopic.schemaName &&
             conv.toSchemaName === subscription.convertTo,
         );
+
         if (converter) {
           existingConverters ??= [];
           existingConverters.push(converter);
@@ -245,7 +248,6 @@ function initRenderStateBuilder(): BuildRenderStateFn {
         });
 
         renderState.topics = topics;
-        prevSortedTopics = sortedTopics;
       }
     }
 
@@ -402,6 +404,7 @@ function initRenderStateBuilder(): BuildRenderStateFn {
     // Update the prev fields with the latest values at the end of all the watch steps
     // Several of the watch steps depend on the comparison against prev and new values
     prevSubscriptions = subscriptions;
+    prevSortedTopics = sortedTopics;
     prevMessageConverters = messageConverters;
 
     if (!shouldRender) {
