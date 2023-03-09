@@ -248,6 +248,7 @@ function initRenderStateBuilder(): BuildRenderStateFn {
         });
 
         renderState.topics = topics;
+        prevSortedTopics = sortedTopics;
       }
     }
 
@@ -404,7 +405,6 @@ function initRenderStateBuilder(): BuildRenderStateFn {
     // Update the prev fields with the latest values at the end of all the watch steps
     // Several of the watch steps depend on the comparison against prev and new values
     prevSubscriptions = subscriptions;
-    prevSortedTopics = sortedTopics;
     prevMessageConverters = messageConverters;
 
     if (!shouldRender) {
