@@ -537,7 +537,7 @@ describe("renderState", () => {
     });
   });
 
-  it.only("should support multiple _from_ converters with different _to_", () => {
+  it("should support multiple _from_ converters with different _to_", () => {
     const buildRenderState = initRenderStateBuilder();
     const state = buildRenderState({
       watchedFields: new Set(["topics", "currentFrame", "allFrames"]),
