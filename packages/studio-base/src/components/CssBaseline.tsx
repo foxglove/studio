@@ -169,12 +169,16 @@ const useStyles = makeStyles()(({ palette, typography }) => ({
         ".mosaic-split-line": {
           boxShadow: `0 0 0 1px ${palette.divider}`,
         },
-        "&:hover .mosaic-split-line": {
-          boxShadow: `0 0 0 1px ${
-            palette.mode === "dark"
-              ? tinycolor(palette.divider).lighten().toHexString()
-              : tinycolor(palette.divider).darken().toHexString()
-          }`,
+        "&:hover": {
+          zIndex: 100,
+
+          ".mosaic-split-line": {
+            boxShadow: `0 0 0 1px ${
+              palette.mode === "dark"
+                ? tinycolor(palette.divider).lighten().toHexString()
+                : tinycolor(palette.divider).darken().toHexString()
+            }`,
+          },
         },
       },
       "&.borderless": {

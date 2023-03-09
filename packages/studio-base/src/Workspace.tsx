@@ -513,10 +513,10 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
         setSelectedRightSidebarItem(open ? "panel-settings" : undefined),
     }),
     [
-      enableNewTopNav,
       selectedSidebarItem,
       selectedLeftSidebarItem,
       selectedRightSidebarItem,
+      enableNewTopNav,
       supportsAccountSettings,
     ],
   );
@@ -651,8 +651,10 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     return items;
   }, [PanelSettingsSidebar, showEventsTab]);
 
-  const keyDownHandlers = useMemo(
-    () => ({
+  const keyDownHandlers = useMemo(() => {
+    const { leftSidebarOpen, rightSidebarOpen, setLeftSidebarOpen, setRightSidebarOpen } =
+      workspaceContextValue;
+    return {
       b: (ev: KeyboardEvent) => {
         if (
           !keyboardEventHasModifier(ev) ||
@@ -665,9 +667,10 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
         ev.preventDefault();
         setSelectedSidebarItem(undefined);
       },
-    }),
-    [selectedSidebarItem],
-  );
+      "[": () => setLeftSidebarOpen(!leftSidebarOpen),
+      "]": () => setRightSidebarOpen(!rightSidebarOpen),
+    };
+  }, [selectedSidebarItem, workspaceContextValue]);
 
   const play = useMessagePipeline(selectPlay);
   const playUntil = useMessagePipeline(selectPlayUntil);

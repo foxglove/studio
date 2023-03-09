@@ -154,7 +154,6 @@ export default function Sidebars<
     selectedRightKey,
     onSelectRightKey,
   } = props;
-
   const [enableMemoryUseIndicator = false] = useAppConfigurationValue<boolean>(
     AppSetting.ENABLE_MEMORY_USE_INDICATOR,
   );
@@ -193,9 +192,11 @@ export default function Sidebars<
     enableNewTopNav && selectedRightKey != undefined && rightItems.has(selectedRightKey);
 
   useEffect(() => {
-    const width = Math.min(enableNewTopNav ? 280 : 384, 0.3 * window.innerWidth);
-    const defaultLeftPercentage = (100 * width) / window.innerWidth;
-    const defaultRightPercentage = 80;
+    const leftTargetWidth = enableNewTopNav ? 280 : 384;
+    const rightTargetWidth = 320;
+    const defaultLeftPercentage = 100 * (leftTargetWidth / window.innerWidth);
+    const defaultRightPercentage = 100 * (1 - rightTargetWidth / window.innerWidth);
+
     setMosaicValue((oldValue) => {
       let node: MosaicNode<LayoutNode> = "children";
       if (rightSidebarOpen) {
