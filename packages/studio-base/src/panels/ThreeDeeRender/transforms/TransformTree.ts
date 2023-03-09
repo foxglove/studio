@@ -62,6 +62,71 @@ export class TransformTree {
       : AddTransformResult.NOT_UPDATED;
   }
 
+  /**
+   * Removes transform data from a particular parent-child link at the given timestamp. Does nothing
+   * if the child does not exist or has a different parent.
+   */
+  public removeTransform(childFrameId: string, parentFrameId: string, stamp: bigint): void {
+    const child = this.frame(childFrameId);
+    if (!child) {
+      return;
+    }
+    if (child.parent()?.id !== parentFrameId) {
+      return;
+    }
+    child.removeTransformAt(stamp);
+    this._removeEmptyFrames();
+  }
+
+  /** Prune frames with no history entries and no children from the tree */
+  private _removeEmptyFrames() {
+    // Build a list of children for each frame in the tree
+    const childrenByParentId = new Map<string, Set<string>>();
+    for (const frame of this._frames.values()) {
+      childrenByParentId.set(frame.id, new Set());
+    }
+    for (const frame of this._frames.values()) {
+      const parentId = frame.parent()?.id;
+      if (parentId == undefined) {
+        continue;
+      }
+      const children = childrenByParentId.get(parentId);
+      if (!children) {
+        throw new Error("invariant: should have children array");
+      }
+      children.add(frame.id);
+    }
+
+    // Repeatedly delete any frames with no children until the tree doesn't change
+    for (;;) {
+      let deletedAnyFrames = false;
+      for (const [frameId, children] of childrenByParentId) {
+        const frame = this.frame(frameId);
+        if (!frame) {
+          throw new Error(`invariant: unknown parent frame id ${frameId}`);
+        }
+        if (frame.transformsSize() > 0) {
+          // don't want to delete this frame, it is not empty
+          continue;
+        }
+        if (children.size > 0) {
+          // can't delete this frame yet, it still has children
+          continue;
+        }
+        const parent = frame.parent();
+        if (parent) {
+          childrenByParentId.get(parent.id)?.delete(frameId);
+        }
+        this._frames.delete(frameId);
+        childrenByParentId.delete(frameId);
+        deletedAnyFrames = true;
+      }
+      if (!deletedAnyFrames) {
+        break;
+      }
+    }
+  }
+
   public clear(): void {
     this._frames.clear();
   }
