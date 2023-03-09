@@ -38,6 +38,17 @@ type BuilderRenderStateInput = {
 
 type BuildRenderStateFn = (input: BuilderRenderStateInput) => Readonly<RenderState> | undefined;
 
+// Branded string to ensure that users go through the `converterKey` function to compute a lookup key
+type ConverterKey = string & { __brand: "ConverterKey" };
+
+// Create a string lookup key from a message event
+//
+// The string key uses a newline delimeter to avoid producting the same key for topic/schema name
+// values that might concatenate to the same string. i.e. "topic" "schema" and "topics" "chema".
+function converterKey(topic: string, schema: string): ConverterKey {
+  return (topic + "\n" + schema) as ConverterKey;
+}
+
 /**
  * initRenderStateBuilder creates a function that transforms render state input into a new
  * RenderState
@@ -57,11 +68,19 @@ function initRenderStateBuilder(): BuildRenderStateFn {
   let prevMessageConverters: BuilderRenderStateInput["messageConverters"] | undefined;
   let prevSharedPanelState: BuilderRenderStateInput["sharedPanelState"];
 
-  // Topics which we are subscribed without a conversion, these are topics we want to receive the original message
-  const topicNoConversions: Set<string> = new Set();
+  // Topics which we are subscribed without a conversion, these are topics we want to receive the
+  // original message
+  const unconvertedSubscriptionTopics: Set<string> = new Set();
 
-  // Topic -> convertTo mapping. These are topics which we want to receive some converted data in the convertTo schema
-  const topicConversions: Map<string, RegisterMessageConverterArgs<unknown>[]> = new Map();
+  // When a subscription with a convertTo exists, we lookup a converter which can produce the
+  // desired output message schema and store it in this map. The keys for the map are `topic + input
+  // schema`.
+  //
+  // This allows the runtime message event handler logic which builds currentFrame and allFrames to
+  // lookup whether the incoming message event has converters to run by looking up the topic +
+  // schema of the message event in this map.
+  const topicSchemaConverters: Map<ConverterKey, RegisterMessageConverterArgs<unknown>[]> =
+    new Map();
 
   const prevRenderState: RenderState = {};
 
@@ -103,9 +122,9 @@ function initRenderStateBuilder(): BuildRenderStateFn {
       prevSortedTopics !== sortedTopics ||
       prevMessageConverters !== messageConverters
     ) {
-      // reset which topics need converting
-      topicNoConversions.clear();
-      topicConversions.clear();
+      // reset which topics have subscriptions and which need converting
+      unconvertedSubscriptionTopics.clear();
+      topicSchemaConverters.clear();
 
       // Bin the subscriptions into two sets: those which want a conversion and those that do not.
       //
@@ -113,7 +132,7 @@ function initRenderStateBuilder(): BuildRenderStateFn {
       // convertTo, then we don't need to do a conversion.
       for (const subscription of subscriptions) {
         if (!subscription.convertTo) {
-          topicNoConversions.add(subscription.topic);
+          unconvertedSubscriptionTopics.add(subscription.topic);
           continue;
         }
 
@@ -124,7 +143,7 @@ function initRenderStateBuilder(): BuildRenderStateFn {
             topic.name === subscription.topic && topic.schemaName === subscription.convertTo,
         );
         if (noConversion) {
-          topicNoConversions.add(noConversion.name);
+          unconvertedSubscriptionTopics.add(noConversion.name);
           continue;
         }
 
@@ -135,8 +154,8 @@ function initRenderStateBuilder(): BuildRenderStateFn {
           continue;
         }
 
-        const key = subscription.topic + (subscriberTopic.schemaName ?? "<no-schema>");
-        let existingConverters = topicConversions.get(key);
+        const key = converterKey(subscription.topic, subscriberTopic.schemaName ?? "<no-schema>");
+        let existingConverters = topicSchemaConverters.get(key);
 
         // We've already stored a converter for this topic to convertTo
         const haveConverter = existingConverters?.find(
@@ -155,7 +174,7 @@ function initRenderStateBuilder(): BuildRenderStateFn {
         if (converter) {
           existingConverters ??= [];
           existingConverters.push(converter);
-          topicConversions.set(key, existingConverters);
+          topicSchemaConverters.set(key, existingConverters);
         }
       }
     }
@@ -242,17 +261,15 @@ function initRenderStateBuilder(): BuildRenderStateFn {
           const postProcessedFrame: MessageEvent<unknown>[] = [];
 
           for (const messageEvent of currentFrame) {
-            if (topicNoConversions.has(messageEvent.topic)) {
+            if (unconvertedSubscriptionTopics.has(messageEvent.topic)) {
               postProcessedFrame.push(messageEvent);
             }
 
-            // fixme - comment
-            // When subscribing with a convertTo, we have a topic + set of destination schemas
-            // to identify a potential converter to use we lookup a converter by the src schema + dest schema.
-            // The src schema comes from the message event and the destination schema from the subscription
-
-            // Get the converters available for this topic and schema
-            const converters = topicConversions.get(messageEvent.topic + messageEvent.schemaName);
+            // Get the converters that need to be run for this message event
+            // See the comment for topicSchemaConverters on the use of the key
+            const converters = topicSchemaConverters.get(
+              converterKey(messageEvent.topic, messageEvent.schemaName),
+            );
             if (converters) {
               for (const converter of converters) {
                 const convertedMessage = converter.converter(messageEvent.message);
@@ -302,12 +319,14 @@ function initRenderStateBuilder(): BuildRenderStateFn {
               // Message blocks may contain topics that we are not subscribed to so we need to filter those out.
               // We use the topicNoConversions and topicConversions to determine if we should include the message event
 
-              if (topicNoConversions.has(messageEvent.topic)) {
+              if (unconvertedSubscriptionTopics.has(messageEvent.topic)) {
                 frames.push(messageEvent);
               }
 
               // Get the converters available for this topic and schema
-              const converters = topicConversions.get(messageEvent.topic + messageEvent.schemaName);
+              const converters = topicSchemaConverters.get(
+                converterKey(messageEvent.topic, messageEvent.schemaName),
+              );
               if (converters) {
                 for (const converter of converters) {
                   const convertedMessage = converter.converter(messageEvent.message);

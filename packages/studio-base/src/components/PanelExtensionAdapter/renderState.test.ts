@@ -537,6 +537,8 @@ describe("renderState", () => {
     });
   });
 
+  // It is valid to register multiple converters all sharing the same _from_ schema and having
+  // different _to_ schemas.
   it("should support multiple _from_ converters with different _to_", () => {
     const buildRenderState = initRenderStateBuilder();
     const state = buildRenderState({
