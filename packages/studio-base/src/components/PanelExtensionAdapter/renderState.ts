@@ -41,14 +41,6 @@ type BuilderRenderStateInput = {
 
 type BuildRenderStateFn = (input: BuilderRenderStateInput) => Readonly<RenderState> | undefined;
 
-// Create a string lookup key using fromSchemaName and toSchemaName.
-//
-// The string key uses a newline delimeter to avoid producting the same key for from/to name values
-// that might concatenate to the same string. i.e. "fromName" "toName" and "fromNameto" "Name".
-function converterKey(fromSchemaName: string, toSchemaName: string): string {
-  return fromSchemaName + "\n" + toSchemaName;
-}
-
 /**
  * initRenderStateBuilder creates a function that transforms render state input into a new
  * RenderState
@@ -72,10 +64,10 @@ function initRenderStateBuilder(): BuildRenderStateFn {
   const topicNoConversions: Set<string> = new Set();
 
   // Topic -> convertTo mapping. These are topics which we want to receive some converted data in the convertTo schema
-  const topicConversions: Map<string, string> = new Map();
+  const topicConversions: Map<string, RegisterMessageConverterArgs<unknown>[]> = new Map();
 
   // from + to -> converter mapping. Allows for quick lookup of a converter by its from and to schema names
-  const convertersByKey: Map<string, RegisterMessageConverterArgs<unknown>> = new Map();
+  //const convertersByKey: Map<string, RegisterMessageConverterArgs<unknown>> = new Map();
 
   const prevRenderState: RenderState = {};
 
@@ -100,27 +92,70 @@ function initRenderStateBuilder(): BuildRenderStateFn {
     // created, we unset the blocks ref which will force re-creating allFrames.
     if (subscriptions !== prevSubscriptions) {
       prevBlocks = undefined;
+    }
+
+    // Re-calculate the topic converters that need to run for subscriptions
+    if (subscriptions !== prevSubscriptions) {
+      // fixme - update when message converters change
+      // fixme - update when topics change
+
+      // reset which topics need converting
+      topicNoConversions.clear();
+      topicConversions.clear();
 
       // Bin the subscriptions into two sets: those which want a conversion and those that do not.
       //
       // For the subscriptions that want a conversion, if the topic schemaName matches the requested
       // convertTo, then we don't need to do a conversion.
       for (const subscription of subscriptions) {
-        if (subscription.convertTo) {
-          const noConversion = sortedTopics.find(
-            (topic) =>
-              topic.name === subscription.topic && topic.schemaName === subscription.convertTo,
-          );
-          if (noConversion) {
-            topicNoConversions.add(noConversion.name);
-          } else {
-            topicConversions.set(subscription.topic, subscription.convertTo);
-          }
-        } else {
+        if (!subscription.convertTo) {
           topicNoConversions.add(subscription.topic);
+          continue;
+        }
+
+        // If the convertTo is the same as the original schema for the topic then we don't need to
+        // perform a conversion.
+        const noConversion = sortedTopics.find(
+          (topic) =>
+            topic.name === subscription.topic && topic.schemaName === subscription.convertTo,
+        );
+        if (noConversion) {
+          topicNoConversions.add(noConversion.name);
+          continue;
+        }
+
+        // Since we don't have an existing topic with out destination schema we need to find
+        // a converter that will convert from the topic to the desired schema
+        const subscriberTopic = sortedTopics.find((topic) => topic.name === subscription.topic);
+        if (!subscriberTopic) {
+          continue;
+        }
+
+        const key = subscription.topic + (subscriberTopic.schemaName ?? "<no-schema>");
+        let existingConverters = topicConversions.get(key);
+
+        // We've already stored a converter for this topic to convertTo
+        const haveConverter = existingConverters?.find(
+          (conv) => conv.toSchemaName === subscription.convertTo,
+        );
+        if (haveConverter) {
+          continue;
+        }
+
+        // Find a converter that can go from the original topic schema to the target schema
+        const converter = messageConverters?.find(
+          (conv) =>
+            conv.fromSchemaName === subscriberTopic.schemaName &&
+            conv.toSchemaName === subscription.convertTo,
+        );
+        if (converter) {
+          existingConverters ??= [];
+          existingConverters.push(converter);
+          topicConversions.set(key, existingConverters);
         }
       }
     }
+
     prevSubscriptions = subscriptions;
 
     // Should render indicates whether any fields of render state are updated
@@ -201,30 +236,8 @@ function initRenderStateBuilder(): BuildRenderStateFn {
       }
     }
 
-    // Update the mapping of converters.
-    // This needs to happen _after_ the above topics processing which re-runs if the message converters have changed,
-    // and _before_ currentFrame and _allFrames_ processing which use this cache.
-    //
-    // If setting `prevMessageConverters` runs before the above topics handling then topics won't
-    // run again if the message converters have changed.
-    //
-    // And if this runs after the currentFrame and allFrames handling then convertersByKey will be
-    // from the previous converters.
-    if (messageConverters !== prevMessageConverters) {
-      convertersByKey.clear();
-
-      if (messageConverters) {
-        for (const converter of messageConverters) {
-          const key = converterKey(converter.fromSchemaName, converter.toSchemaName);
-          if (convertersByKey.has(key)) {
-            log.error(
-              `A message converter from (${converter.fromSchemaName}) to (${converter.toSchemaName}) already exists.`,
-            );
-          }
-          convertersByKey.set(key, converter);
-        }
-      }
-    }
+    // fixme - how to make this clearer?
+    // update this after watch handlers which need to check for reference equality
     prevMessageConverters = messageConverters;
 
     if (watchedFields.has("currentFrame")) {
@@ -243,16 +256,15 @@ function initRenderStateBuilder(): BuildRenderStateFn {
               postProcessedFrame.push(messageEvent);
             }
 
-            // When subscribing with a convertTo, we have a topic + destination schema
+            // fixme - comment
+            // When subscribing with a convertTo, we have a topic + set of destination schemas
             // to identify a potential converter to use we lookup a converter by the src schema + dest schema.
             // The src schema comes from the message event and the destination schema from the subscription
 
-            // Lookup any subscriptions for this topic which want a conversion
-            const subConvertTo = topicConversions.get(messageEvent.topic);
-            if (subConvertTo) {
-              const convertKey = converterKey(messageEvent.schemaName, subConvertTo);
-              const converter = convertersByKey.get(convertKey);
-              if (converter) {
+            // Get the converters available for this topic and schema
+            const converters = topicConversions.get(messageEvent.topic + messageEvent.schemaName);
+            if (converters) {
+              for (const converter of converters) {
                 const convertedMessage = converter.converter(messageEvent.message);
                 postProcessedFrame.push({
                   topic: messageEvent.topic,
@@ -304,12 +316,10 @@ function initRenderStateBuilder(): BuildRenderStateFn {
                 frames.push(messageEvent);
               }
 
-              // Lookup any subscriptions for this topic which want a conversion
-              const subConvertTo = topicConversions.get(messageEvent.topic);
-              if (subConvertTo) {
-                const convertKey = converterKey(messageEvent.schemaName, subConvertTo);
-                const converter = convertersByKey.get(convertKey);
-                if (converter) {
+              // Get the converters available for this topic and schema
+              const converters = topicConversions.get(messageEvent.topic + messageEvent.schemaName);
+              if (converters) {
+                for (const converter of converters) {
                   const convertedMessage = converter.converter(messageEvent.message);
                   frames.push({
                     topic: messageEvent.topic,

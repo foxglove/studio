@@ -585,8 +585,8 @@ describe("renderState", () => {
       sortedTopics: [{ name: "test", schemaName: "schema" }],
       subscriptions: [
         { topic: "test" },
-        { topic: "test", convertTo: "otherSchema", preload: false },
-        { topic: "test", convertTo: "anotherSchema", preload: false },
+        { topic: "test", convertTo: "otherSchema", preload: true },
+        { topic: "test", convertTo: "anotherSchema", preload: true },
       ],
       messageConverters: [
         {
@@ -652,8 +652,6 @@ describe("renderState", () => {
           },
         },
       ],
-      allFrames: [],
-      /* fixme
       allFrames: [
         {
           message: { from: "allFrames" },
@@ -691,7 +689,6 @@ describe("renderState", () => {
           topic: "test",
         },
       ],
-      */
     });
   });
 });
