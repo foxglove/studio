@@ -128,7 +128,12 @@ function TwoDimensionalPlot(props: Props) {
   const matchedMessages = useMessageDataItem(path.value);
   const message = matchedMessages[0]?.queriedData[0]?.value as PlotMessage | undefined;
 
-  const { title, yAxisLabel, xAxisLabel, gridColor = theme.palette.divider } = message ?? {};
+  const {
+    title,
+    yAxisLabel,
+    xAxisLabel,
+    gridColor = theme.palette.mode === "dark" ? "#585858" : "#D6d6d6",
+  } = message ?? {};
 
   const datasets = useMemo<Data["datasets"]>(() => {
     if (!message) {

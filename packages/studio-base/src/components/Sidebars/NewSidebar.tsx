@@ -13,6 +13,9 @@ const useStyles = makeStyles()((theme) => ({
     boxSizing: "content-box",
     backgroundColor: theme.palette.background.paper,
   },
+  divider: {
+    borderBottomColor: theme.palette.mode === "dark" ? theme.palette.background.default : undefined,
+  },
   anchorRight: {
     borderLeft: `1px solid ${theme.palette.divider}`,
   },
@@ -116,7 +119,7 @@ export function NewSidebar<K extends string>({
           <CloseIcon fontSize="inherit" />
         </IconButton>
       </Stack>
-      <Divider />
+      <Divider className={classes.divider} />
       {activeTab != undefined && (
         <div className={classes.tabContent}>
           <SelectedComponent />

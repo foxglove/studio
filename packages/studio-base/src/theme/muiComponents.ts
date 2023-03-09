@@ -211,9 +211,16 @@ export default function muiComponents(theme: Theme): Theme["components"] & MuiLa
         },
         root: {
           borderRadius: theme.shape.borderRadius,
+          backgroundColor:
+            theme.palette.mode === "dark" ? alpha(theme.palette.common.black, 0.4) : undefined,
 
+          "&:hover": {
+            backgroundColor:
+              theme.palette.mode === "dark" ? alpha(theme.palette.common.black, 0.7) : undefined,
+          },
           "&.Mui-focused": {
-            backgroundColor: theme.palette.action.focus,
+            backgroundColor:
+              theme.palette.mode === "dark" ? alpha(theme.palette.common.black, 0.6) : undefined,
           },
           "&.Mui-disabled": {
             opacity: 0.5,
@@ -388,6 +395,7 @@ export default function muiComponents(theme: Theme): Theme["components"] & MuiLa
       styleOverrides: {
         paper: {
           borderRadius: theme.shape.borderRadius,
+          backgroundColor: theme.palette.mode === "dark" ? "#35363A" : undefined,
         },
       },
     },

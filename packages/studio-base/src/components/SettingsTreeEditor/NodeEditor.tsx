@@ -51,6 +51,10 @@ const useStyles = makeStyles()((theme) => ({
   actionButton: {
     padding: theme.spacing(0.5),
   },
+  divider: {
+    borderBottomColor: theme.palette.mode === "dark" ? theme.palette.background.default : undefined,
+    gridColumn: "span 2",
+  },
   editNameField: {
     font: "inherit",
     gridColumn: "span 2",
@@ -484,7 +488,7 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
         />
       )}
       {state.open && childNodes}
-      {indent === 1 && <Divider style={{ gridColumn: "span 2" }} />}
+      {indent === 1 && <Divider className={classes.divider} />}
     </>
   );
 }

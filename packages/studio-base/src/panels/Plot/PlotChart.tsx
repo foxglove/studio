@@ -99,10 +99,10 @@ export default function PlotChart(props: PlotChartProps): JSX.Element {
         precision: 3,
       },
       grid: {
-        color: theme.palette.divider,
+        color: theme.palette.mode === "dark" ? "#585858" : "#D6d6d6",
       },
     };
-  }, [maxYValue, minYValue, showYAxisLabels, theme]);
+  }, [maxYValue, minYValue, showYAxisLabels, theme.palette.mode]);
 
   // Use a debounce and 0 refresh rate to avoid triggering a resize observation while handling
   // an existing resize observation.

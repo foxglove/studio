@@ -76,6 +76,7 @@ const useStyles = makeStyles()((theme) => ({
   },
   listItem: {
     paddingRight: theme.spacing(1),
+    borderBottomColor: theme.palette.mode === "dark" ? theme.palette.background.default : undefined,
 
     "&.MuiListItem-dense": {
       ".MuiListItemText-root": {
@@ -85,6 +86,9 @@ const useStyles = makeStyles()((theme) => ({
     },
     ".MuiListItemSecondaryAction-root": {
       marginRight: theme.spacing(-1),
+    },
+    ":last-of-type": {
+      borderBottom: "none",
     },
   },
   textField: {

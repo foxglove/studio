@@ -90,10 +90,11 @@ const useStyles = makeStyles<void, "dragIcon">()((theme, _params, classes) => {
       padding: theme.spacing(1.5),
       justifyContent: "stretch",
       backgroundImage: `linear-gradient(to top, transparent, ${
-        theme.palette.background.paper
+        theme.palette.mode === "dark" ? "#35363A" : theme.palette.background.paper
       } ${theme.spacing(1.5)}) !important`,
     },
     toolbarGrid: {
+      backgroundImage: "none",
       padding: theme.spacing(2),
     },
   };

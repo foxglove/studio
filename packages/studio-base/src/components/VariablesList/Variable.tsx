@@ -6,7 +6,6 @@ import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import ErrorIcon from "@mui/icons-material/Error";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import {
-  Divider,
   IconButton,
   Menu,
   MenuItem,
@@ -252,7 +251,6 @@ export default function Variable(props: {
       </ListItem>
       {expanded && (
         <div className={classes.editorWrapper}>
-          <Divider />
           <CopyButton
             className={classes.copyButton}
             size="small"
@@ -264,7 +262,6 @@ export default function Variable(props: {
           <JsonInput value={value} onChange={onChangeValue} />
         </div>
       )}
-      <Divider />
     </Stack>
   );
 }

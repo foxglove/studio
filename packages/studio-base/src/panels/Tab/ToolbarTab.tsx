@@ -45,6 +45,7 @@ const useStyles = makeStyles<void, "active">()((theme, _params, classes) => ({
 
     [`:not(.${classes.active}):hover`]: {
       color: theme.palette.text.primary,
+      backgroundColor: theme.palette.mode === "dark" ? "#1d1d1f" : theme.palette.action.hover,
     },
   },
   active: {

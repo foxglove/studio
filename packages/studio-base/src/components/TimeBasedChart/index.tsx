@@ -482,7 +482,9 @@ export default function TimeBasedChart(props: Props): JSX.Element {
     };
 
     const scale: ScaleOptions<"linear"> = {
-      grid: { color: theme.palette.divider },
+      grid: {
+        color: theme.palette.mode === "dark" ? "#585858" : "#D6d6d6",
+      },
       ...xAxes,
       min: minX,
       max: maxX,
