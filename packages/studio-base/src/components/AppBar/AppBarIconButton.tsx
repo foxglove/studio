@@ -38,18 +38,12 @@ const useStyles = makeStyles()((theme) => ({
 }));
 
 export const AppBarIconButton = forwardRef<HTMLButtonElement, IconButtonProps>((props, ref) => {
-  const { title, className, children, color = "inherit" } = props;
+  const { title, className, children, color = "inherit", ...rest } = props;
   const { classes, cx } = useStyles();
 
   return (
     <Tooltip classes={{ tooltip: classes.tooltip }} title={title} arrow={false}>
-      <IconButton
-        data-testid="app-bar-button"
-        {...props}
-        color={color}
-        ref={ref}
-        className={cx(classes.iconButton, className)}
-      >
+      <IconButton color={color} ref={ref} className={cx(classes.iconButton, className)} {...rest}>
         {children}
       </IconButton>
     </Tooltip>

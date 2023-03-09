@@ -258,14 +258,14 @@ export function AppBar(props: AppBarProps): JSX.Element {
               {enableMemoryUseIndicator && <MemoryUseIndicator />}
               <Stack direction="row" alignItems="center" paddingX={1.5}>
                 <AppBarIconButton
-                  title={`${leftSidebarOpen ? "Hide" : "Show"} left sidebar`}
+                  title={`${leftSidebarOpen ? "Hide" : "Show"} left sidebar - Shortcut: [`}
                   aria-label={`${leftSidebarOpen ? "Hide" : "Show"} left sidebar`}
                   onClick={() => setLeftSidebarOpen(!leftSidebarOpen)}
                 >
                   {leftSidebarOpen ? <PanelLeft24Filled /> : <PanelLeft24Regular />}
                 </AppBarIconButton>
                 <AppBarIconButton
-                  title={`${rightSidebarOpen ? "Hide" : "Show"} right sidebar`}
+                  title={`${rightSidebarOpen ? "Hide" : "Show"} right sidebar - Shortcut: ]`}
                   aria-label={`${rightSidebarOpen ? "Hide" : "Show"} right sidebar`}
                   onClick={() => setRightSidebarOpen(!rightSidebarOpen)}
                 >
