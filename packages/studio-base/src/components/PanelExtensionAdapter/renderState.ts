@@ -3,7 +3,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { filterMap } from "@foxglove/den/collection";
-import Log from "@foxglove/log";
 import { compare, toSec } from "@foxglove/rostime";
 import {
   AppSettingValue,
@@ -20,8 +19,6 @@ import {
 } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { PlayerState, Topic as PlayerTopic } from "@foxglove/studio-base/players/types";
 import { HoverValue } from "@foxglove/studio-base/types/hoverValue";
-
-const log = Log.getLogger(__filename);
 
 const EmptyParameters = new Map<string, ParameterValue>();
 
@@ -65,9 +62,6 @@ function initRenderStateBuilder(): BuildRenderStateFn {
 
   // Topic -> convertTo mapping. These are topics which we want to receive some converted data in the convertTo schema
   const topicConversions: Map<string, RegisterMessageConverterArgs<unknown>[]> = new Map();
-
-  // from + to -> converter mapping. Allows for quick lookup of a converter by its from and to schema names
-  //const convertersByKey: Map<string, RegisterMessageConverterArgs<unknown>> = new Map();
 
   const prevRenderState: RenderState = {};
 
