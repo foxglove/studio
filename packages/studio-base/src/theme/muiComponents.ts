@@ -382,6 +382,9 @@ export default function muiComponents(theme: Theme): Theme["components"] & MuiLa
       },
     },
     MuiMenu: {
+      defaultProps: {
+        TransitionComponent: Fade,
+      },
       styleOverrides: {
         paper: {
           borderRadius: theme.shape.borderRadius,
