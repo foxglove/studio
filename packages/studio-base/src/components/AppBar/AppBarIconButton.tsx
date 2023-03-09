@@ -42,7 +42,13 @@ export const AppBarIconButton = forwardRef<HTMLButtonElement, IconButtonProps>((
   const { classes, cx } = useStyles();
 
   return (
-    <Tooltip classes={{ tooltip: classes.tooltip }} title={title} arrow={false}>
+    <Tooltip
+      disableInteractive
+      classes={{ tooltip: classes.tooltip }}
+      title={title}
+      arrow={false}
+      enterDelay={200}
+    >
       <IconButton color={color} ref={ref} className={cx(classes.iconButton, className)} {...rest}>
         {children}
       </IconButton>
