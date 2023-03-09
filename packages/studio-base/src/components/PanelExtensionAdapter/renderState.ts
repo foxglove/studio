@@ -80,6 +80,15 @@ function initRenderStateBuilder(): BuildRenderStateFn {
       watchedFields,
     } = input;
 
+    // Should render indicates whether any fields of render state are updated
+    let shouldRender = false;
+
+    // Hoisted active data to shorten some of the code below that repeatedly uses active data
+    const activeData = playerState?.activeData;
+
+    // The render state starts with the previous render state and changes are applied as detected
+    const renderState: RenderState = prevRenderState;
+
     // If the player has loaded all the blocks, the blocks reference won't change so our message
     // pipeline handler for allFrames won't create a new set of all frames for the newly
     // subscribed topic. To ensure a new set of allFrames with the newly subscribed topic is
@@ -88,11 +97,12 @@ function initRenderStateBuilder(): BuildRenderStateFn {
       prevBlocks = undefined;
     }
 
-    // Re-calculate the topic converters that need to run for subscriptions
-    if (subscriptions !== prevSubscriptions) {
-      // fixme - update when message converters change
-      // fixme - update when topics change
-
+    // If topics, message converters, or subscriptions change, recalculate the
+    if (
+      subscriptions !== prevSubscriptions ||
+      prevSortedTopics !== sortedTopics ||
+      prevMessageConverters !== messageConverters
+    ) {
       // reset which topics need converting
       topicNoConversions.clear();
       topicConversions.clear();
@@ -149,16 +159,6 @@ function initRenderStateBuilder(): BuildRenderStateFn {
         }
       }
     }
-
-    prevSubscriptions = subscriptions;
-
-    // Should render indicates whether any fields of render state are updated
-    let shouldRender = false;
-
-    const activeData = playerState?.activeData;
-
-    // The render state starts with the previous render state and changes are applied as detected
-    const renderState: RenderState = prevRenderState;
 
     if (watchedFields.has("didSeek")) {
       const didSeek = prevSeekTime !== activeData?.lastSeekTime;
@@ -229,10 +229,6 @@ function initRenderStateBuilder(): BuildRenderStateFn {
         prevSortedTopics = sortedTopics;
       }
     }
-
-    // fixme - how to make this clearer?
-    // update this after watch handlers which need to check for reference equality
-    prevMessageConverters = messageConverters;
 
     if (watchedFields.has("currentFrame")) {
       // If there are new frames we render
@@ -383,6 +379,11 @@ function initRenderStateBuilder(): BuildRenderStateFn {
         renderState.appSettings = appSettings;
       }
     }
+
+    // Update the prev fields with the latest values at the end of all the watch steps
+    // Several of the watch steps depend on the comparison against prev and new values
+    prevSubscriptions = subscriptions;
+    prevMessageConverters = messageConverters;
 
     if (!shouldRender) {
       return undefined;
