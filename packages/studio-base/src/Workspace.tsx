@@ -494,7 +494,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
   const workspaceContextValue = useMemo(
     () => ({
       panelSettingsOpen:
-        selectedSidebarItem === "panel-settings" || selectedLeftSidebarItem === "topics",
+        selectedSidebarItem === "panel-settings" || selectedRightSidebarItem === "panel-settings",
       openPanelSettings: () =>
         enableNewTopNav
           ? setSelectedRightSidebarItem("panel-settings")
