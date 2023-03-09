@@ -6,7 +6,7 @@ import protobufjs from "protobufjs";
 import { FileDescriptorSet, IFileDescriptorSet } from "protobufjs/ext/descriptor";
 
 import { MessageDefinition } from "@foxglove/message-definition";
-import { parse as parseMessageDefinition } from "@foxglove/rosmsg";
+import { parse as parseMessageDefinition, parseRos2idl } from "@foxglove/rosmsg";
 import { MessageReader } from "@foxglove/rosmsg-serialization";
 import { MessageReader as ROS2MessageReader } from "@foxglove/rosmsg2-serialization";
 
@@ -167,7 +167,7 @@ export function parseChannel(channel: Channel): ParsedChannel {
   }
 
   if (channel.messageEncoding === "cdr") {
-    if (channel.schema?.encoding !== "ros2msg") {
+    if (channel.schema?.encoding !== "ros2msg" && channel.schema?.encoding !== "ros2idl") {
       throw new Error(
         `Message encoding ${channel.messageEncoding} with ${
           channel.schema == undefined
@@ -177,7 +177,12 @@ export function parseChannel(channel: Channel): ParsedChannel {
       );
     }
     const schema = new TextDecoder().decode(channel.schema.data);
-    const parsedDefinitions = parseMessageDefinition(schema, { ros2: true });
+    const isIdl = channel.schema.encoding === "ros2idl";
+
+    const parsedDefinitions = isIdl
+      ? parseRos2idl(schema)
+      : parseMessageDefinition(schema, { ros2: true });
+
     const reader = new ROS2MessageReader(parsedDefinitions);
     return {
       datatypes: parsedDefinitionsToDatatypes(parsedDefinitions, channel.schema.name),
