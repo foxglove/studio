@@ -2376,7 +2376,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@foxglove/rosmsg@npm:4.0.0, @foxglove/rosmsg@npm:^4.0.0":
+"@foxglove/rosmsg@npm:4.0.0":
   version: 4.0.0
   resolution: "@foxglove/rosmsg@npm:4.0.0"
   dependencies:
@@ -2388,7 +2388,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@foxglove/rosmsg@npm:4.2.0":
+"@foxglove/rosmsg@npm:4.2.0, @foxglove/rosmsg@npm:^4.0.0":
   version: 4.2.0
   resolution: "@foxglove/rosmsg@npm:4.2.0"
   dependencies:
