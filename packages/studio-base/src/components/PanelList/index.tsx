@@ -19,7 +19,6 @@ import {
   CardActionArea,
   CardContent,
   CardMedia,
-  Container,
   Fade,
   IconButton,
   List,
@@ -37,6 +36,7 @@ import { useDrag } from "react-dnd";
 import { MosaicDragType, MosaicPath } from "react-mosaic-component";
 import { makeStyles } from "tss-react/mui";
 
+import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import Stack from "@foxglove/studio-base/components/Stack";
 import TextHighlight from "@foxglove/studio-base/components/TextHighlight";
 import {
@@ -44,6 +44,7 @@ import {
   usePanelMosaicId,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { PanelInfo, usePanelCatalog } from "@foxglove/studio-base/context/PanelCatalogContext";
+import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import { ExtensionNamespace } from "@foxglove/studio-base/types/Extensions";
 import {
   PanelConfig,
@@ -80,6 +81,7 @@ const useStyles = makeStyles<void, "dragIcon">()((theme, _params, classes) => {
     grid: {
       display: "grid !important",
       gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+      padding: theme.spacing(1.5),
       gap: theme.spacing(2),
     },
     toolbar: {
@@ -89,13 +91,11 @@ const useStyles = makeStyles<void, "dragIcon">()((theme, _params, classes) => {
       display: "flex",
       padding: theme.spacing(1.5),
       justifyContent: "stretch",
-      backgroundImage: `linear-gradient(to top, transparent, ${
-        theme.palette.mode === "dark" ? theme.palette.grey["700"] : theme.palette.background.paper
-      } ${theme.spacing(1.5)}) !important`,
+      backgroundColor:
+        theme.palette.mode === "dark" ? theme.palette.grey["700"] : theme.palette.background.paper,
     },
     toolbarGrid: {
       backgroundImage: "none",
-      padding: theme.spacing(2),
     },
   };
 });
@@ -332,6 +332,7 @@ const PanelList = forwardRef<HTMLDivElement, Props>((props: Props, ref) => {
   const [highlightedPanelIdx, setHighlightedPanelIdx] = useState<number | undefined>();
   const { classes, cx } = useStyles();
 
+  const [enableNewTopNav = false] = useAppConfigurationValue<boolean>(AppSetting.ENABLE_NEW_TOPNAV);
   const { dropPanel } = useCurrentLayoutActions();
   const mosaicId = usePanelMosaicId();
 
@@ -503,21 +504,18 @@ const PanelList = forwardRef<HTMLDivElement, Props>((props: Props, ref) => {
 
   return (
     <div className={classes.fullHeight} ref={ref}>
-      <div
-        className={cx(classes.toolbar, {
-          [classes.toolbarGrid]: mode === "grid",
-        })}
-      >
+      <div className={cx(classes.toolbar, { [classes.toolbarGrid]: mode === "grid" })}>
         <TextField
           fullWidth
           placeholder="Search panels"
+          variant="filled"
           value={searchQuery}
           onChange={handleSearchChange}
           onKeyDown={onKeyDown}
           onBlur={() => setHighlightedPanelIdx(undefined)}
           autoFocus
           InputProps={{
-            startAdornment: <SearchIcon fontSize="small" color="primary" />,
+            startAdornment: <SearchIcon fontSize="small" />,
             endAdornment: searchQuery && (
               <IconButton size="small" edge="end" onClick={() => setSearchQuery("")}>
                 <CloseIcon fontSize="small" />
@@ -527,11 +525,9 @@ const PanelList = forwardRef<HTMLDivElement, Props>((props: Props, ref) => {
         />
       </div>
       {mode === "grid" ? (
-        <Container className={classes.grid} maxWidth={false}>
-          {allFilteredPanels.map(displayPanelListItem)}
-        </Container>
+        <div className={classes.grid}>{allFilteredPanels.map(displayPanelListItem)}</div>
       ) : (
-        <List dense disablePadding>
+        <List dense disablePadding={!enableNewTopNav}>
           {allFilteredPanels.map(displayPanelListItem)}
         </List>
       )}

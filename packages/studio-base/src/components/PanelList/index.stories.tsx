@@ -80,7 +80,11 @@ const PanelListWithInteractions = ({
   const theme = useTheme();
   return (
     <div
-      style={{ margin: 50, height: 480, backgroundColor: theme.palette.background.paper }}
+      style={{
+        margin: 50,
+        height: 480,
+        backgroundColor: theme.palette.background.paper,
+      }}
       ref={(el) => {
         if (el) {
           const input: HTMLInputElement | undefined = el.querySelector("input") as any;
