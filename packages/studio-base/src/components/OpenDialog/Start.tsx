@@ -91,7 +91,7 @@ const useStyles = makeStyles()((theme) => ({
     justifyContent: "flex-start",
     padding: theme.spacing(2, 3),
     gap: theme.spacing(1.5),
-    borderColor: theme.palette.divider,
+    borderColor: theme.palette.mode === "dark" ? theme.palette.grey.A200 : theme.palette.divider,
 
     ".MuiButton-startIcon .MuiSvgIcon-fontSizeLarge": {
       fontSize: 28,
