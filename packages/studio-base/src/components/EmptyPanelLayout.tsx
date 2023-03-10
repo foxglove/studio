@@ -27,7 +27,8 @@ type Props = {
 };
 
 const Root = muiStyled("div")(({ theme }) => ({
-  backgroundColor: theme.palette.background.paper,
+  backgroundColor:
+    theme.palette.mode === "dark" ? theme.palette.grey[700] : theme.palette.background.paper,
   width: "100%",
   height: "100%",
   overflowY: "auto",
