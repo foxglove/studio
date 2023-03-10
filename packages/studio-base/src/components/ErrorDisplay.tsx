@@ -9,6 +9,9 @@ import { makeStyles } from "tss-react/mui";
 import Stack from "@foxglove/studio-base/components/Stack";
 
 const useStyles = makeStyles()((theme) => ({
+  divider: {
+    borderColor: theme.palette.mode === "dark" ? theme.palette.grey.A200 : undefined,
+  },
   grid: {
     display: "grid",
     gridTemplateRows: "auto 1fr auto",
@@ -129,7 +132,7 @@ function ErrorDisplay(props: ErrorDisplayProps): JSX.Element {
           </Typography>
           <Typography variant="body1">{props.content}</Typography>
         </Stack>
-        <Divider />
+        <Divider className={classes.divider} />
         <Typography variant="subtitle2" component="code" fontWeight="bold">
           {error?.message}
         </Typography>
