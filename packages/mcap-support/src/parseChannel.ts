@@ -173,7 +173,7 @@ export function parseChannel(channel: Channel): ParsedChannel {
           channel.schema == undefined
             ? "no encoding"
             : `schema encoding '${channel.schema.encoding}'`
-        } is not supported (expected ros2msg)`,
+        } is not supported (expected "ros2msg" or "ros2idl")`,
       );
     }
     const schema = new TextDecoder().decode(channel.schema.data);
