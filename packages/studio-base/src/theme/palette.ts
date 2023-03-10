@@ -34,7 +34,7 @@ export const dark: PaletteOptions & CustomPaletteOptions = {
     400: "#2C2C2C",
     500: "#2E2E2E",
     600: "#333333",
-    700: "#353535",
+    700: "#35363A",
     800: "#383838",
     900: "#454545",
     A100: "#303030",

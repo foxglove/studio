@@ -389,7 +389,11 @@ export default function muiComponents(theme: Theme): Theme["components"] & MuiLa
       styleOverrides: {
         paper: {
           borderRadius: theme.shape.borderRadius,
-          backgroundColor: theme.palette.mode === "dark" ? "#35363A" : undefined,
+          backgroundColor: theme.palette.mode === "dark" ? theme.palette.grey["700"] : undefined,
+
+          ".MuiDivider-root": {
+            borderBottomColor: lightDividerColor,
+          },
         },
       },
     },
@@ -400,10 +404,6 @@ export default function muiComponents(theme: Theme): Theme["components"] & MuiLa
       styleOverrides: {
         root: {
           minHeight: 32,
-
-          ".MuiDivider-root": {
-            borderBottomColor: lightDividerColor,
-          },
         },
         divider: {
           borderBottomColor: lightDividerColor,
