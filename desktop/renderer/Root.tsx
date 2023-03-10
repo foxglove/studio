@@ -18,6 +18,7 @@ import {
   RemoteDataSourceFactory,
   Ros1SocketDataSourceFactory,
   Ros2SocketDataSourceFactory,
+  Ros2DisabledDataSourceFactory,
   SampleNuscenesDataSourceFactory,
   UlogLocalDataSourceFactory,
   VelodyneDataSourceFactory,
@@ -77,10 +78,12 @@ export default function Root({
   const nativeWindow = useMemo(() => new NativeWindow(desktopBridge), []);
 
   const dataSources: IDataSourceFactory[] = useMemo(() => {
+    const ros2Enabled = (ros2NativeDsEnabled as boolean | undefined) ?? false;
     const sources = [
       new FoxgloveWebSocketDataSourceFactory(),
       new RosbridgeDataSourceFactory(),
       new Ros1SocketDataSourceFactory(),
+      ros2Enabled ? new Ros2SocketDataSourceFactory() : new Ros2DisabledDataSourceFactory(),
       new Ros1LocalBagDataSourceFactory(),
       new Ros2LocalBagDataSourceFactory(),
       new UlogLocalDataSourceFactory(),
@@ -90,8 +93,7 @@ export default function Root({
       new RemoteDataSourceFactory(),
     ];
 
-    const ros2Enabled = (ros2NativeDsEnabled as boolean | undefined) ?? false;
-    return ros2Enabled ? [...sources, new Ros2SocketDataSourceFactory()] : sources;
+    return sources;
   }, [ros2NativeDsEnabled]);
 
   // App url state in window.location will represent the user's current session state
