@@ -23,6 +23,7 @@ const useStyles = makeStyles<void, "eventMetadata" | "eventSelected">()(
     event: {
       display: "contents",
       cursor: "pointer",
+
       "&:hover": {
         [`.${classes.eventMetadata}`]: {
           backgroundColor: alpha(theme.palette.info.main, theme.palette.action.hoverOpacity),
@@ -45,7 +46,7 @@ const useStyles = makeStyles<void, "eventMetadata" | "eventSelected">()(
     },
     eventMetadata: {
       padding: theme.spacing(1),
-      backgroundColor: theme.palette.background.default,
+      backgroundColor: theme.palette.action.hover,
       borderRight: `1px solid ${theme.palette.divider}`,
       borderBottom: `1px solid ${theme.palette.divider}`,
 
