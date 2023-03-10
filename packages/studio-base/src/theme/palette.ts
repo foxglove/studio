@@ -21,7 +21,7 @@ export const dark: PaletteOptions & CustomPaletteOptions = {
     primary: "#e1e1e4",
     secondary: "#a7a6af",
   },
-  divider: "#585858",
+  divider: "#121217",
   background: {
     default: "#121217",
     paper: "#27272b",
@@ -38,7 +38,7 @@ export const dark: PaletteOptions & CustomPaletteOptions = {
     800: "#383838",
     900: "#454545",
     A100: "#303030",
-    A200: "#616161",
+    A200: "#585858",
     A400: "#aaaaaa",
     A700: "#d5d5d5",
   },

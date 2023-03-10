@@ -15,7 +15,6 @@ import {
   Tooltip,
   TextField,
   ListProps,
-  alpha,
 } from "@mui/material";
 import { DeepReadonly } from "ts-essentials";
 import { makeStyles } from "tss-react/mui";
@@ -84,16 +83,9 @@ const useStyles = makeStyles<void, "error">()((theme, _params, classes) => {
       },
     },
     styledToggleButtonGroup: {
-      backgroundColor:
-        theme.palette.mode === "dark"
-          ? alpha(theme.palette.common.black, 0.4)
-          : theme.palette.action.hover,
+      backgroundColor: theme.palette.action.hover,
       gap: theme.spacing(0.25),
 
-      "&:hover": {
-        backgroundColor:
-          theme.palette.mode === "dark" ? alpha(theme.palette.common.black, 0.7) : undefined,
-      },
       "& .MuiToggleButtonGroup-grouped": {
         margin: theme.spacing(0.55),
         borderRadius: theme.shape.borderRadius,

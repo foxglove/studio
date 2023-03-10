@@ -52,9 +52,7 @@ const useStyles = makeStyles()((theme) => ({
     padding: theme.spacing(0.5, 1, 1, 1),
     position: "relative",
     backgroundColor: theme.palette.background.paper,
-    borderTop: `1px solid ${
-      theme.palette.mode === "dark" ? theme.palette.background.default : theme.palette.divider
-    }`,
+    borderTop: `1px solid ${theme.palette.divider}`,
     zIndex: 100000,
   },
 }));

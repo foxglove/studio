@@ -44,6 +44,7 @@ const disableBackgroundColorTransition = {
 
 export default function muiComponents(theme: Theme): Theme["components"] & MuiLabComponents {
   const prefersDarkMode = theme.palette.mode === "dark";
+  const lightDividerColor = prefersDarkMode ? theme.palette.grey.A200 : theme.palette.divider;
 
   return {
     MuiCssBaseline: {
@@ -211,16 +212,9 @@ export default function muiComponents(theme: Theme): Theme["components"] & MuiLa
         },
         root: {
           borderRadius: theme.shape.borderRadius,
-          backgroundColor:
-            theme.palette.mode === "dark" ? alpha(theme.palette.common.black, 0.4) : undefined,
 
-          "&:hover": {
-            backgroundColor:
-              theme.palette.mode === "dark" ? alpha(theme.palette.common.black, 0.7) : undefined,
-          },
           "&.Mui-focused": {
-            backgroundColor:
-              theme.palette.mode === "dark" ? alpha(theme.palette.common.black, 0.6) : undefined,
+            backgroundColor: theme.palette.action.focus,
           },
           "&.Mui-disabled": {
             opacity: 0.5,
@@ -406,6 +400,13 @@ export default function muiComponents(theme: Theme): Theme["components"] & MuiLa
       styleOverrides: {
         root: {
           minHeight: 32,
+
+          ".MuiDivider-root": {
+            borderBottomColor: lightDividerColor,
+          },
+        },
+        divider: {
+          borderBottomColor: lightDividerColor,
         },
       },
     },

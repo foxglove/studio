@@ -52,7 +52,6 @@ const useStyles = makeStyles()((theme) => ({
     padding: theme.spacing(0.5),
   },
   divider: {
-    borderBottomColor: theme.palette.mode === "dark" ? theme.palette.background.default : undefined,
     gridColumn: "span 2",
   },
   editNameField: {

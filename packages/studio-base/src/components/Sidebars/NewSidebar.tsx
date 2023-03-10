@@ -8,56 +8,58 @@ import { makeStyles } from "tss-react/mui";
 
 import Stack from "@foxglove/studio-base/components/Stack";
 
-const useStyles = makeStyles()((theme) => ({
-  root: {
-    boxSizing: "content-box",
-    backgroundColor: theme.palette.background.paper,
-  },
-  divider: {
-    borderBottomColor: theme.palette.mode === "dark" ? theme.palette.background.default : undefined,
-  },
-  anchorRight: {
-    borderLeft: `1px solid ${theme.palette.divider}`,
-  },
-  anchorLeft: {
-    borderRight: `1px solid ${theme.palette.divider}`,
-  },
-  tabs: {
-    minHeight: "auto",
-    flex: "1 1 auto",
-    overflow: "hidden",
-    paddingLeft: theme.spacing(0.25),
+const useStyles = makeStyles()((theme) => {
+  const lightBorderColor =
+    theme.palette.mode === "dark" ? theme.palette.grey.A200 : theme.palette.divider;
 
-    ".MuiTabs-indicator": {
-      transform: "scaleX(0.5)",
-      height: 2,
+  return {
+    root: {
+      boxSizing: "content-box",
+      backgroundColor: theme.palette.background.paper,
     },
-    ".MuiTab-root": {
-      minHeight: 30,
-      minWidth: theme.spacing(4),
-      padding: theme.spacing(0, 1),
-      color: theme.palette.text.secondary,
-      fontSize: "0.6875rem",
+    anchorRight: {
+      borderLeft: `1px solid ${lightBorderColor}`,
+    },
+    anchorLeft: {
+      borderRight: `1px solid ${lightBorderColor}`,
+    },
+    tabs: {
+      minHeight: "auto",
+      flex: "1 1 auto",
+      overflow: "hidden",
+      paddingLeft: theme.spacing(0.25),
 
-      "&.Mui-selected": {
+      ".MuiTabs-indicator": {
+        transform: "scaleX(0.5)",
+        height: 2,
+      },
+      ".MuiTab-root": {
+        minHeight: 30,
+        minWidth: theme.spacing(4),
+        padding: theme.spacing(0, 1),
+        color: theme.palette.text.secondary,
+        fontSize: "0.6875rem",
+
+        "&.Mui-selected": {
+          color: theme.palette.text.primary,
+        },
+      },
+    },
+    iconButton: {
+      padding: theme.spacing(0.91125), // round out the overall height to 30px
+      color: theme.palette.text.secondary,
+      borderRadius: 0,
+
+      ":hover": {
         color: theme.palette.text.primary,
       },
     },
-  },
-  iconButton: {
-    padding: theme.spacing(0.91125), // round out the overall height to 30px
-    color: theme.palette.text.secondary,
-    borderRadius: 0,
-
-    ":hover": {
-      color: theme.palette.text.primary,
+    tabContent: {
+      flex: "auto",
+      overflow: "auto",
     },
-  },
-  tabContent: {
-    flex: "auto",
-    overflow: "auto",
-  },
-}));
+  };
+});
 
 export type NewSidebarItem = {
   title: string;
@@ -119,7 +121,7 @@ export function NewSidebar<K extends string>({
           <CloseIcon fontSize="inherit" />
         </IconButton>
       </Stack>
-      <Divider className={classes.divider} />
+      <Divider />
       {activeTab != undefined && (
         <div className={classes.tabContent}>
           <SelectedComponent />
