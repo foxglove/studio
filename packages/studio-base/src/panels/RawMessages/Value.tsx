@@ -222,4 +222,6 @@ function Value(props: ValueProps): JSX.Element {
   );
 }
 
+// In practice this seems to be an expensive component to render.
+// Memoization provides a very noticeable performance boost.
 export default React.memo(Value);
