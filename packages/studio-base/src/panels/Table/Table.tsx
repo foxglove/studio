@@ -37,71 +37,76 @@ import Stack from "@foxglove/studio-base/components/Stack";
 import TableCell from "./TableCell";
 import { sanitizeAccessorPath } from "./sanitizeAccessorPath";
 
-const useStyles = makeStyles<void, "tableData" | "tableHeader">()((theme, _params, classes) => ({
-  table: {
-    border: "none",
-    width: "100%",
-    borderCollapse: "collapse",
-    borderSpacing: 0,
-  },
-  tableRow: {
-    svg: { opacity: 0.6 },
+const useStyles = makeStyles<void, "tableData" | "tableHeader">()((theme, _params, classes) => {
+  const lightDividerColor =
+    theme.palette.mode === "dark" ? theme.palette.grey.A200 : theme.palette.divider;
 
-    "&:nth-child(even)": {
-      backgroundColor: theme.palette.action.hover,
+  return {
+    table: {
+      border: "none",
+      width: "100%",
+      borderCollapse: "collapse",
+      borderSpacing: 0,
     },
-    "&:hover": {
-      backgroundColor: theme.palette.action.focus,
+    tableRow: {
+      svg: { opacity: 0.6 },
 
-      [`.${classes.tableData}`]: {
+      "&:nth-child(even)": {
         backgroundColor: theme.palette.action.hover,
-        cursor: "pointer",
       },
-      svg: { opacity: 0.8 },
-    },
+      "&:hover": {
+        backgroundColor: theme.palette.action.focus,
 
-    [`.${classes.tableHeader}:first-of-type`]: {
-      paddingTop: theme.spacing(0.5),
-      paddingBottom: theme.spacing(0.5),
-    },
-  },
-  tableData: {
-    padding: `${theme.spacing(0.5)} !important`,
-    whiteSpace: "nowrap",
-    textOverflow: "ellipsis",
-    verticalAlign: "top",
-    border: `1px solid ${theme.palette.divider}`,
-    lineHeight: "1.3em",
-  },
-  tableHeader: {
-    color: theme.palette.text.primary,
-    verticalAlign: "top",
-    border: `1px solid ${theme.palette.divider}`,
-    lineHeight: "1.3em",
-    borderLeftColor: "transparent",
-    borderRightColor: "transparent",
-    padding: theme.spacing(0.5),
-    fontWeight: "bold !important",
-    cursor: "pointer",
-    width: "auto",
-    textAlign: "left",
+        [`.${classes.tableData}`]: {
+          backgroundColor: theme.palette.action.hover,
+          cursor: "pointer",
+        },
+        svg: { opacity: 0.8 },
+      },
 
-    "&#expander": { width: 28 },
-  },
-  sortAsc: {
-    borderBottomColor: theme.palette.primary.main,
-  },
-  sortDesc: {
-    borderTopColor: theme.palette.primary.main,
-  },
-  iconButton: {
-    margin: theme.spacing(-0.5),
-
-    "&:hover": {
-      backgroundColor: "transparent",
+      [`.${classes.tableHeader}:first-of-type`]: {
+        paddingTop: theme.spacing(0.5),
+        paddingBottom: theme.spacing(0.5),
+      },
     },
-  },
-}));
+    tableData: {
+      padding: `${theme.spacing(0.5)} !important`,
+      whiteSpace: "nowrap",
+      textOverflow: "ellipsis",
+      verticalAlign: "top",
+      border: `1px solid ${lightDividerColor}`,
+      lineHeight: "1.3em",
+    },
+    tableHeader: {
+      color: theme.palette.text.primary,
+      verticalAlign: "top",
+      border: `1px solid ${lightDividerColor}`,
+      lineHeight: "1.3em",
+      borderLeftColor: "transparent",
+      borderRightColor: "transparent",
+      padding: theme.spacing(0.5),
+      fontWeight: "bold !important",
+      cursor: "pointer",
+      width: "auto",
+      textAlign: "left",
+
+      "&#expander": { width: 28 },
+    },
+    sortAsc: {
+      borderBottomColor: theme.palette.primary.main,
+    },
+    sortDesc: {
+      borderTopColor: theme.palette.primary.main,
+    },
+    iconButton: {
+      margin: theme.spacing(-0.5),
+
+      "&:hover": {
+        backgroundColor: "transparent",
+      },
+    },
+  };
+});
 
 function getColumnsFromObject(
   val: { toJSON?: () => Record<string, unknown> },
