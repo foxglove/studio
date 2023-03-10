@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { Paper } from "@mui/material";
 import { Story } from "@storybook/react";
 
 import MockMessagePipelineProvider from "@foxglove/studio-base/components/MessagePipeline/MockMessagePipelineProvider";
@@ -19,7 +20,7 @@ function Wrapper(StoryFn: Story): JSX.Element {
           schemaName: "std_msgs/String",
         },
         {
-          name: '"/topic_2"',
+          name: "/topic_2",
           schemaName: "std_msgs/String",
         },
       ]}
@@ -34,7 +35,7 @@ function Wrapper(StoryFn: Story): JSX.Element {
             },
           ],
           [
-            '"/topic_2"',
+            "/topic_2",
             {
               numMessages: 3456,
               firstMessageTime: { sec: 1, nsec: 0 },
@@ -56,5 +57,9 @@ export default {
 };
 
 export function Default(): JSX.Element {
-  return <TopicList />;
+  return (
+    <Paper style={{ height: "100%" }}>
+      <TopicList />
+    </Paper>
+  );
 }
