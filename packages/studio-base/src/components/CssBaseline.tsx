@@ -167,12 +167,12 @@ const useStyles = makeStyles()(({ palette, typography }) => ({
         zIndex: 99,
 
         ".mosaic-split-line": {
-          boxShadow: `0 0 0 1px ${palette.divider}`,
+          boxShadow: `0 0 0 1px ${palette.mode === "dark" ? palette.grey.A200 : palette.divider}`,
         },
         "&:hover .mosaic-split-line": {
           boxShadow: `0 0 0 1px ${
             palette.mode === "dark"
-              ? tinycolor(palette.divider).lighten().toHexString()
+              ? tinycolor(palette.grey.A200).lighten().toHexString()
               : tinycolor(palette.divider).darken().toHexString()
           }`,
         },
