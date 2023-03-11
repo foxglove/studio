@@ -10,7 +10,6 @@ import Logger from "@foxglove/log";
 import { AppSetting } from "@foxglove/studio-base/src/AppSetting";
 
 import { getAppSetting } from "./settings";
-import pkgInfo from "../../package.json";
 
 const log = Logger.getLogger(__filename);
 
@@ -65,7 +64,7 @@ class StudioAppUpdater {
     };
     const onNotAvailable = (info: UpdateInfo) => {
       void dialog.showMessageBox({
-        message: `${pkgInfo.productName} is up to date (version ${info.version}).`,
+        message: `Foxglove Studio is up to date (version ${info.version}).`,
       });
     };
     const onError = (error: Error) => {

@@ -22,7 +22,6 @@ import {
 
 import Root from "./Root";
 import NativeStorageAppConfiguration from "./services/NativeStorageAppConfiguration";
-import pkgInfo from "../../package.json";
 import { Storage } from "../common/types";
 
 const log = Logger.getLogger(__filename);
@@ -38,7 +37,7 @@ if (isCrashReportingEnabled && typeof process.env.SENTRY_DSN === "string") {
   Sentry.init({
     dsn: process.env.SENTRY_DSN,
     autoSessionTracking: true,
-    release: `${process.env.SENTRY_PROJECT}@${pkgInfo.version}`,
+    release: `${process.env.SENTRY_PROJECT}@${FOXGLOVE_STUDIO_VERSION}`,
     // Remove the default breadbrumbs integration - it does not accurately track breadcrumbs and
     // creates more noise than benefit.
     integrations: (integrations) => {

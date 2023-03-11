@@ -1,0 +1,9 @@
+{
+  "name": "@foxglove/studio-desktop",
+  "license": "MPL-2.0",
+  "private": true,
+  "main": "./src/index.tsx",
+  "dependencies": {
+    "@foxglove/studio-base": "workspace:*"
+  }
+}

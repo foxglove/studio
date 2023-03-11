@@ -2623,6 +2623,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@foxglove/studio-desktop@workspace:packages/studio-desktop":
+  version: 0.0.0-use.local
+  resolution: "@foxglove/studio-desktop@workspace:packages/studio-desktop"
+  dependencies:
+    "@foxglove/studio-base": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
 "@foxglove/studio-web@workspace:*, @foxglove/studio-web@workspace:packages/studio-web":
   version: 0.0.0-use.local
   resolution: "@foxglove/studio-web@workspace:packages/studio-web"
