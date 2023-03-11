@@ -29,9 +29,6 @@ import {
 
 const log = Logger.getLogger(__filename);
 
-// https://github.com/electron/electron/issues/28422#issuecomment-987504138
-app.commandLine.appendSwitch("enable-experimental-web-platform-features");
-
 /**
  * Determine whether an item in argv is a file that we should try opening as a data source.
  *
@@ -53,7 +50,10 @@ function updateNativeColorScheme() {
     colorScheme === "dark" ? "dark" : colorScheme === "light" ? "light" : "system";
 }
 
-function main() {
+export function main() {
+  // https://github.com/electron/electron/issues/28422#issuecomment-987504138
+  app.commandLine.appendSwitch("enable-experimental-web-platform-features");
+
   const start = Date.now();
   log.info(`${FOXGLOVE_PRODUCT_NAME} ${FOXGLOVE_PRODUCT_VERSION}`);
 
@@ -308,5 +308,3 @@ function main() {
     }
   });
 }
-
-main();

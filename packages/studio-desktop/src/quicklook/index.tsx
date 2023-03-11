@@ -16,6 +16,8 @@ import { GlobalStyle } from "./GlobalStyle";
 import { getBagInfo } from "./getBagInfo";
 import { getMcapInfo } from "./getMcapInfo";
 
+export function main():void {
+
 const log = Logger.getLogger(__filename);
 
 log.debug("initializing quicklook");
@@ -126,3 +128,5 @@ ReactDOM.render(
   </>,
   rootEl,
 );
+
+}
