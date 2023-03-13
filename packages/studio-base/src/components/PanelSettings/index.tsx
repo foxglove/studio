@@ -167,6 +167,8 @@ export default function PanelSettings({
 
   const isSettingsTree = settingsTree != undefined;
 
+  const showTitleField = panelInfo.hasCustomToolbar !== true;
+
   return (
     <SidebarContent
       disablePadding={enableNewTopNav || isSettingsTree}
@@ -189,7 +191,7 @@ export default function PanelSettings({
               <Typography variant="subtitle2">{`${panelInfo.title} panel`}</Typography>
             </Stack>
           )}
-          {settingsTree ? (
+          {settingsTree || showTitleField ? (
             <SettingsTreeEditor key={selectedPanelId} settings={settingsTree} />
           ) : (
             <Stack

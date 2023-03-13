@@ -10,7 +10,12 @@ import { useCallback, useMemo, useState } from "react";
 import { DeepReadonly } from "ts-essentials";
 import { makeStyles } from "tss-react/mui";
 
-import { SettingsTree, SettingsTreeAction, SettingsTreeField } from "@foxglove/studio";
+import {
+  SettingsTree,
+  SettingsTreeAction,
+  SettingsTreeField,
+  SettingsTreeNodes,
+} from "@foxglove/studio";
 import { useConfigById } from "@foxglove/studio-base/PanelAPI";
 import { FieldEditor } from "@foxglove/studio-base/components/SettingsTreeEditor/FieldEditor";
 import Stack from "@foxglove/studio-base/components/Stack";
@@ -47,22 +52,25 @@ const useStyles = makeStyles()((theme) => ({
 
 const makeStablePath = memoizeWeak((key: string) => [key]);
 
+const EMPTY_NODES: SettingsTreeNodes = {};
+const NULL_ACTION_HANDLER: SettingsTree["actionHandler"] = () => undefined;
+
 export default function SettingsTreeEditor({
   settings,
 }: {
-  settings: DeepReadonly<SettingsTree>;
+  settings: undefined | DeepReadonly<SettingsTree>;
 }): JSX.Element {
   const { classes } = useStyles();
-  const { actionHandler, focusedPath } = settings;
+  const { actionHandler = NULL_ACTION_HANDLER, focusedPath } = settings ?? {};
   const [filterText, setFilterText] = useState<string>("");
 
   const filteredNodes = useMemo(() => {
     if (filterText.length > 0) {
-      return filterTreeNodes(settings.nodes, filterText);
+      return filterTreeNodes(settings?.nodes ?? EMPTY_NODES, filterText);
     } else {
-      return settings.nodes;
+      return settings?.nodes ?? EMPTY_NODES;
     }
-  }, [settings.nodes, filterText]);
+  }, [settings?.nodes, filterText]);
 
   const definedNodes = useMemo(() => prepareSettingsNodes(filteredNodes), [filteredNodes]);
 
@@ -110,7 +118,7 @@ export default function SettingsTreeEditor({
 
   return (
     <Stack fullHeight>
-      {settings.enableFilter === true && (
+      {settings?.enableFilter === true && (
         <header className={classes.appBar}>
           <TextField
             id="settings-filter"

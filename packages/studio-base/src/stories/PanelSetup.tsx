@@ -174,7 +174,7 @@ function PanelWrapper({
 
   return (
     <>
-      {settings && includeSettings && <SettingsTreeEditor settings={settings} />}
+      {includeSettings && <SettingsTreeEditor settings={settings} />}
       {children}
     </>
   );
