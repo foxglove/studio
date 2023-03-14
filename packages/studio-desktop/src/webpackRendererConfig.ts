@@ -3,14 +3,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import ReactRefreshPlugin from "@pmmmwh/react-refresh-webpack-plugin";
-import SentryWebpackPlugin from "@sentry/webpack-plugin";
 import { ESBuildMinifyPlugin } from "esbuild-loader";
 import HtmlWebpackPlugin from "html-webpack-plugin";
 import path from "path";
-import { Configuration, EnvironmentPlugin, WebpackPluginInstance } from "webpack";
+import { Configuration, WebpackPluginInstance } from "webpack";
 
 import type { WebpackArgv } from "@foxglove/studio-base/WebpackArgv";
-import { buildEnvironmentDefaults } from "@foxglove/studio-base/environment";
 import { makeConfig } from "@foxglove/studio-base/webpack";
 
 import { WebpackConfigParams } from "./WebpackConfigParams";
@@ -27,33 +25,6 @@ export const webpackRendererConfig =
 
     if (isServe) {
       plugins.push(new ReactRefreshPlugin());
-    }
-
-    // Source map upload if configuration permits
-    if (
-      !isDev &&
-      process.env.SENTRY_AUTH_TOKEN != undefined &&
-      process.env.SENTRY_ORG != undefined &&
-      process.env.SENTRY_PROJECT != undefined
-    ) {
-      plugins.push(
-        new SentryWebpackPlugin({
-          authToken: process.env.SENTRY_AUTH_TOKEN,
-          org: process.env.SENTRY_ORG,
-          project: process.env.SENTRY_PROJECT,
-          release: `${process.env.SENTRY_PROJECT}@${params.packageJson.version}`,
-          setCommits:
-            process.env.SENTRY_REPO && process.env.SENTRY_CURRENT_COMMIT
-              ? { repo: process.env.SENTRY_REPO, commit: process.env.SENTRY_CURRENT_COMMIT }
-              : undefined,
-
-          // Since the render config appears last in the list of webpack configs, we use it to upload
-          // all the source maps under .webpack (main and renderer).
-          include: params.outputPath,
-          // in production, sources are loaded from app:/// so we need to explicitly indicate this url prefix
-          urlPrefix: "app:///",
-        }),
-      );
     }
 
     const appWebpackConfig = makeConfig(env, argv, { allowUnusedVariables });
@@ -89,7 +60,6 @@ export const webpackRendererConfig =
       plugins: [
         ...plugins,
         ...(appWebpackConfig.plugins ?? []),
-        new EnvironmentPlugin(buildEnvironmentDefaults(argv.env?.FOXGLOVE_BACKEND ?? argv.mode)),
         new HtmlWebpackPlugin({
           templateContent: `
   <!doctype html>

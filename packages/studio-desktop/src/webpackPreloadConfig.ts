@@ -5,7 +5,7 @@
 import { ESBuildMinifyPlugin } from "esbuild-loader";
 import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
 import path from "path";
-import { Configuration, DefinePlugin, EnvironmentPlugin } from "webpack";
+import { Configuration, DefinePlugin } from "webpack";
 
 import { WebpackArgv } from "@foxglove/studio-base/WebpackArgv";
 
@@ -66,11 +66,6 @@ export const webpackPreloadConfig =
           FOXGLOVE_PRODUCT_NAME: JSON.stringify(params.packageJson.productName),
           FOXGLOVE_PRODUCT_VERSION: JSON.stringify(params.packageJson.version),
           FOXGLOVE_PRODUCT_HOMEPAGE: JSON.stringify(params.packageJson.homepage),
-        }),
-        new EnvironmentPlugin({
-          SENTRY_DSN: process.env.SENTRY_DSN ?? null, // eslint-disable-line no-restricted-syntax
-          SENTRY_PROJECT: process.env.SENTRY_PROJECT ?? null, // eslint-disable-line no-restricted-syntax
-          AMPLITUDE_API_KEY: process.env.AMPLITUDE_API_KEY ?? null, // eslint-disable-line no-restricted-syntax
         }),
         new ForkTsCheckerWebpackPlugin(),
       ],

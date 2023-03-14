@@ -2,7 +2,6 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import * as Sentry from "@sentry/electron/main";
 import { app, BrowserWindow, ipcMain, Menu, session, nativeTheme } from "electron";
 import fs from "fs";
 
@@ -20,7 +19,6 @@ import {
   registerRosPackageProtocolSchemes,
 } from "./rosPackageResources";
 import { getAppSetting } from "./settings";
-import { getTelemetrySettings } from "./telemetry";
 import {
   FOXGLOVE_PRODUCT_HOMEPAGE,
   FOXGLOVE_PRODUCT_NAME,
@@ -50,7 +48,7 @@ function updateNativeColorScheme() {
     colorScheme === "dark" ? "dark" : colorScheme === "light" ? "light" : "system";
 }
 
-export function main() {
+export function main(): void {
   // https://github.com/electron/electron/issues/28422#issuecomment-987504138
   app.commandLine.appendSwitch("enable-experimental-web-platform-features");
 
@@ -112,22 +110,6 @@ export function main() {
       new StudioWindow().load();
     }
   });
-
-  // Load opt-out settings for crash reporting and telemetry
-  const { crashReportingEnabled } = getTelemetrySettings();
-  if (crashReportingEnabled && typeof process.env.SENTRY_DSN === "string") {
-    log.info("initializing Sentry in main");
-    Sentry.init({
-      dsn: process.env.SENTRY_DSN,
-      autoSessionTracking: true,
-      release: `${process.env.SENTRY_PROJECT}@${FOXGLOVE_PRODUCT_VERSION}`,
-      // Remove the default breadbrumbs integration - it does not accurately track breadcrumbs and
-      // creates more noise than benefit.
-      integrations: (integrations) => {
-        return integrations.filter((integration) => integration.name !== "Breadcrumbs");
-      },
-    });
-  }
 
   if (!app.isDefaultProtocolClient("foxglove")) {
     if (!app.setAsDefaultProtocolClient("foxglove")) {
