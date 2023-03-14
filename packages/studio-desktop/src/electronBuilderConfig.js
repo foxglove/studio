@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+const { version: electronVersion } = require("electron/package.json");
 const path = require("path");
 
 /**
@@ -10,6 +11,7 @@ const path = require("path");
  */
 function makeElectronBuilderConfig(params) {
   return {
+    electronVersion,
     appId: "dev.foxglove.studio",
     npmRebuild: false,
     asar: true,
