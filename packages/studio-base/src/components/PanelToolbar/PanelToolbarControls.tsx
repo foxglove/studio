@@ -172,7 +172,7 @@ const PanelToolbarControlsComponent = forwardRef<HTMLDivElement, PanelToolbarCon
     return (
       <Stack direction="row" alignItems="center" paddingLeft={1} ref={ref}>
         {additionalIcons}
-        {panelInfo?.hasCustomToolbar !== true && settingsButton}
+        {(panelInfo?.hasCustomToolbar !== true || hasSettings) && settingsButton}
         <PanelActionsDropdown isUnknownPanel={isUnknownPanel} />
       </Stack>
     );
