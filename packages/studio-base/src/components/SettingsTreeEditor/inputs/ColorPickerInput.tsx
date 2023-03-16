@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import ClearIcon from "@mui/icons-material/Clear";
+import CancelIcon from "@mui/icons-material/Cancel";
 import { TextField, Popover, IconButton } from "@mui/material";
 import { useCallback, MouseEvent, useState, useMemo } from "react";
 import tinycolor from "tinycolor2";
@@ -14,7 +14,7 @@ import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 import { ColorPickerControl } from "./ColorPickerControl";
 import { ColorSwatch } from "./ColorSwatch";
 
-const useStyles = makeStyles()({
+const useStyles = makeStyles<void, "iconButton">()((theme, _params, classes) => ({
   root: {
     position: "relative",
   },
@@ -27,13 +27,26 @@ const useStyles = makeStyles()({
     },
     ".MuiInputBase-root": {
       cursor: "pointer",
+
+      [`:not(:hover) .${classes.iconButton}`]: {
+        visibility: "hidden",
+      },
     },
     ".MuiInputBase-input": {
       fontFamily: fonts.MONOSPACE,
       alignItems: "center",
     },
   },
-});
+  iconButton: {
+    marginRight: theme.spacing(0.25),
+    opacity: theme.palette.action.disabledOpacity,
+
+    ":hover": {
+      background: "transparent",
+      opacity: 1,
+    },
+  },
+}));
 
 type ColorPickerInputProps = {
   alphaType: "none" | "alpha";
@@ -90,8 +103,13 @@ export function ColorPickerInput(props: ColorPickerInputProps): JSX.Element {
           readOnly: true,
           startAdornment: <ColorSwatch color={swatchColor} onClick={handleClick} />,
           endAdornment: !shouldHideClearButton && (
-            <IconButton onClick={clearValue} size="small" disabled={disabled}>
-              <ClearIcon />
+            <IconButton
+              size="small"
+              className={classes.iconButton}
+              onClick={clearValue}
+              disabled={disabled}
+            >
+              <CancelIcon />
             </IconButton>
           ),
         }}
