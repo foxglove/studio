@@ -41,7 +41,7 @@ type Props = {
 };
 
 const useStyles = makeStyles<void, "container" | "toggleButton">()(
-  ({ palette, shape, spacing }, _params, classes) => ({
+  ({ palette, shape, shadows, spacing }, _params, classes) => ({
     root: {
       display: "flex",
       overflow: "hidden",
@@ -102,7 +102,6 @@ const useStyles = makeStyles<void, "container" | "toggleButton">()(
       },
     },
     rootTop: {
-      backgroundColor: palette.background.paper,
       flexDirection: "column",
     },
     container: {
@@ -135,6 +134,9 @@ const useStyles = makeStyles<void, "container" | "toggleButton">()(
       borderRadius: shape.borderRadius,
       backgroundColor: `${palette.background.paper} !important`,
       backdropFilter: "blur(3px)",
+      ...(palette.mode === "light" && {
+        boxShadow: shadows[1],
+      }),
     },
   }),
 );

@@ -179,7 +179,7 @@ export function PlotLegendRow({
         <Typography
           noWrap
           flex="auto"
-          variant="body2"
+          variant="caption"
           className={cx({ [classes.disabledPathLabel]: !path.enabled })}
         >
           {plotPathDisplayName(path, index)}
