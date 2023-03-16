@@ -33,8 +33,8 @@ const useStyles = makeStyles<void, "iconButton">()((theme, _params, classes) => 
       },
     },
     ".MuiInputBase-input": {
-      fontFamily: fonts.MONOSPACE,
       alignItems: "center",
+      fontFeatureSettings: `${fonts.SANS_SERIF_FEATURE_SETTINGS}, "zero"`,
     },
   },
   iconButton: {
@@ -45,6 +45,9 @@ const useStyles = makeStyles<void, "iconButton">()((theme, _params, classes) => 
       background: "transparent",
       opacity: 1,
     },
+  },
+  colorSwatch: {
+    marginLeft: theme.spacing(0.75),
   },
 }));
 
@@ -101,7 +104,14 @@ export function ColorPickerInput(props: ColorPickerInputProps): JSX.Element {
         variant="filled"
         InputProps={{
           readOnly: true,
-          startAdornment: <ColorSwatch color={swatchColor} onClick={handleClick} />,
+          startAdornment: (
+            <ColorSwatch
+              className={classes.colorSwatch}
+              color={swatchColor}
+              onClick={handleClick}
+              size="small"
+            />
+          ),
           endAdornment: !shouldHideClearButton && (
             <IconButton
               size="small"
