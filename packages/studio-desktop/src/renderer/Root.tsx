@@ -37,14 +37,15 @@ const storageBridge = (global as unknown as { storageBridge?: Storage }).storage
 const menuBridge = (global as { menuBridge?: NativeMenuBridge }).menuBridge;
 const ctxbridge = (global as { ctxbridge?: OsContext }).ctxbridge;
 
-export default function Root({
-  appConfiguration,
-}: {
+export default function Root(props: {
   appConfiguration: IAppConfiguration;
+  extraProviders: JSX.Element[] | undefined;
+  dataSources: IDataSourceFactory[] | undefined;
 }): JSX.Element {
   if (!storageBridge) {
     throw new Error("storageBridge is missing");
   }
+  const { appConfiguration } = props;
 
   const [ros2NativeDsEnabled, setros2NativeDsEnabled] = useState<AppConfigurationValue>(
     appConfiguration.get(AppSetting.ENABLE_ROS2_NATIVE_DATA_SOURCE),
@@ -93,8 +94,13 @@ export default function Root({
       new RemoteDataSourceFactory(),
     ];
 
+<<<<<<< HEAD:desktop/renderer/Root.tsx
     return sources;
   }, [ros2NativeDsEnabled]);
+=======
+    return props.dataSources ?? sources;
+  }, [props.dataSources]);
+>>>>>>> origin/main:packages/studio-desktop/src/renderer/Root.tsx
 
   // App url state in window.location will represent the user's current session state
   // better than the initial deep link so we prioritize the current window.location
@@ -151,6 +157,7 @@ export default function Root({
         onMaximizeWindow={onMaximizeWindow}
         onUnmaximizeWindow={onUnmaximizeWindow}
         onCloseWindow={onCloseWindow}
+        extraProviders={props.extraProviders}
       />
     </>
   );
