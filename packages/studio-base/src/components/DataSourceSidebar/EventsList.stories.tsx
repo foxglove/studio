@@ -15,11 +15,6 @@ import { makeMockEvents } from "@foxglove/studio-base/test/mocks/makeMockEvents"
 import { EventsList } from "./EventsList";
 
 function Wrapper(Child: Story): JSX.Element {
-  const setEventsSupported = useEvents((store) => store.setEventsSupported);
-  useEffect(() => {
-    setEventsSupported(true);
-  }, [setEventsSupported]);
-
   return (
     <MockMessagePipelineProvider>
       <EventsProvider>
