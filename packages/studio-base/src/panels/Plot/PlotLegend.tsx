@@ -10,7 +10,7 @@ import {
   ChevronRight20Regular,
   TextBulletListLtr20Filled,
 } from "@fluentui/react-icons";
-import { Divider, IconButton } from "@mui/material";
+import { IconButton } from "@mui/material";
 import { clamp } from "lodash";
 import { ComponentProps, useCallback, useMemo, useRef } from "react";
 import tinycolor from "tinycolor2";
