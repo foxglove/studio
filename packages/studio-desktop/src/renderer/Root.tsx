@@ -79,6 +79,10 @@ export default function Root(props: {
   const nativeWindow = useMemo(() => new NativeWindow(desktopBridge), []);
 
   const dataSources: IDataSourceFactory[] = useMemo(() => {
+    if (props.dataSources) {
+      return props.dataSources;
+    }
+
     const ros2Enabled = (ros2NativeDsEnabled as boolean | undefined) ?? false;
     const sources = [
       new FoxgloveWebSocketDataSourceFactory(),
@@ -94,13 +98,8 @@ export default function Root(props: {
       new RemoteDataSourceFactory(),
     ];
 
-<<<<<<< HEAD:desktop/renderer/Root.tsx
     return sources;
-  }, [ros2NativeDsEnabled]);
-=======
-    return props.dataSources ?? sources;
-  }, [props.dataSources]);
->>>>>>> origin/main:packages/studio-desktop/src/renderer/Root.tsx
+  }, [props.dataSources, ros2NativeDsEnabled]);
 
   // App url state in window.location will represent the user's current session state
   // better than the initial deep link so we prioritize the current window.location
