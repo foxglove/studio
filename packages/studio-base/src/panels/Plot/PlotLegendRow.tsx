@@ -2,10 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import CircleIcon from "@mui/icons-material/Circle";
-import CircleOutlinedIcon from "@mui/icons-material/CircleOutlined";
-import CircleTwoToneIcon from "@mui/icons-material/CircleTwoTone";
-import ErrorIcon from "@mui/icons-material/Error";
+import { Square24Filled, Square24Regular, ErrorCircle24Filled } from "@fluentui/react-icons";
 import { IconButton, Tooltip, Typography } from "@mui/material";
 import { ComponentProps, useMemo, useState } from "react";
 import { makeStyles } from "tss-react/mui";
@@ -33,7 +30,7 @@ type PlotLegendRowProps = {
   showPlotValuesInLegend: boolean;
 };
 
-const ROW_HEIGHT = 28;
+const ROW_HEIGHT = 24;
 
 const useStyles = makeStyles<void, "plotName">()((theme, _params, classes) => ({
   root: {
@@ -63,14 +60,17 @@ const useStyles = makeStyles<void, "plotName">()((theme, _params, classes) => ({
     display: "flex",
     alignItems: "center",
     position: "sticky",
-    padding: theme.spacing(0, 0.25),
     height: ROW_HEIGHT,
     left: 0,
   },
   legendIconButton: {
-    padding: `${theme.spacing(0.75)} !important`,
-    marginLeft: theme.spacing(0.125),
-    fontSize: theme.typography.pxToRem(14),
+    padding: `${theme.spacing(0.625)} !important`,
+    fontSize: 14,
+    borderRadius: 0,
+
+    svg: {
+      fontSize: "1em !important",
+    },
   },
   disabledPathLabel: {
     opacity: 0.5,
@@ -79,7 +79,7 @@ const useStyles = makeStyles<void, "plotName">()((theme, _params, classes) => ({
     display: "flex",
     alignItems: "center",
     height: ROW_HEIGHT,
-    padding: theme.spacing(0, 1, 0, 0.25),
+    padding: theme.spacing(0, 1, 0, 0.5),
     gridColumn: "span 2",
   },
   plotValue: {
@@ -87,6 +87,10 @@ const useStyles = makeStyles<void, "plotName">()((theme, _params, classes) => ({
     alignItems: "center",
     height: ROW_HEIGHT,
     padding: theme.spacing(0.25, 1, 0.25, 0.25),
+  },
+  errorIcon: {
+    color: theme.palette.error.main,
+    fontSize: theme.typography.pxToRem(21),
   },
 }));
 
@@ -118,8 +122,6 @@ export function PlotLegendRow({
     componentId: hoverComponentId,
     isTimestampScale: true,
   });
-
-  const [hover, setHover] = useState(false);
 
   const currentValue = useMemo(() => {
     if (!showPlotValuesInLegend) {
@@ -154,8 +156,6 @@ export function PlotLegendRow({
           centerRipple={false}
           size="small"
           title="Toggle visibility"
-          onMouseEnter={() => setHover(true)}
-          onMouseLeave={() => setHover(false)}
           onClick={(event) => {
             event.stopPropagation();
 
@@ -169,13 +169,7 @@ export function PlotLegendRow({
           }}
           style={{ color: getLineColor(path.color, index) }}
         >
-          {path.enabled ? (
-            <CircleIcon fontSize="inherit" />
-          ) : hover ? (
-            <CircleTwoToneIcon fontSize="inherit" />
-          ) : (
-            <CircleOutlinedIcon fontSize="inherit" />
-          )}
+          {path.enabled ? <Square24Filled /> : <Square24Regular />}
         </IconButton>
       </div>
       <div
@@ -183,9 +177,9 @@ export function PlotLegendRow({
         style={{ gridColumn: !showPlotValuesInLegend ? "span 2" : undefined }}
       >
         <Typography
-          noWrap={true}
+          noWrap
           flex="auto"
-          variant="subtitle2"
+          variant="body2"
           className={cx({ [classes.disabledPathLabel]: !path.enabled })}
         >
           {plotPathDisplayName(path, index)}
@@ -195,7 +189,7 @@ export function PlotLegendRow({
             placement="top"
             title="Mismatch in the number of elements in x-axis and y-axis messages"
           >
-            <ErrorIcon fontSize="small" color="error" />
+            <ErrorCircle24Filled className={classes.errorIcon} />
           </Tooltip>
         )}
       </div>
