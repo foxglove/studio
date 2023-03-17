@@ -91,8 +91,14 @@ export function getItemString(
 
   // Surface typically-used keys directly in the object summary so the user doesn't have to expand it.
   const filterKeys = keys
-    .filter(isTypicalFilterName)
-    .map((key) => `${key}: ${(data as { [key: string]: unknown })[key]}`)
+    .filter(
+      (key) =>
+        isTypicalFilterName(key) &&
+        ["string", "number", "bigint", "boolean"].includes(
+          typeof (data as Record<string, unknown>)[key],
+        ),
+    )
+    .map((key) => `${key}: ${(data as Record<string, unknown>)[key]}`)
     .join(", ");
   return (
     <span>
