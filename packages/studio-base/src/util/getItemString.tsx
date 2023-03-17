@@ -8,6 +8,7 @@ import tinycolor from "tinycolor2";
 import { isTypicalFilterName } from "@foxglove/studio-base/components/MessagePathSyntax/isTypicalFilterName";
 import { format, formatDuration } from "@foxglove/studio-base/util/formatTime";
 import { quatToEuler } from "@foxglove/studio-base/util/quatToEuler";
+import { filterMap } from "@foxglove/den/collection";
 
 const DURATION_20_YEARS_SEC = 20 * 365 * 24 * 60 * 60;
 
@@ -90,16 +91,16 @@ export function getItemString(
   }
 
   // Surface typically-used keys directly in the object summary so the user doesn't have to expand it.
-  const filterKeys = keys
-    .filter(
-      (key) =>
-        isTypicalFilterName(key) &&
-        ["string", "number", "bigint", "boolean"].includes(
-          typeof (data as Record<string, unknown>)[key],
-        ),
-    )
-    .map((key) => `${key}: ${(data as Record<string, unknown>)[key]}`)
-    .join(", ");
+  const filterKeys = filterMap(keys, (key) => {
+    const value = (data as Record<string, unknown>)[key];
+    if (
+      isTypicalFilterName(key) &&
+      (value == undefined || ["string", "number", "bigint", "boolean"].includes(typeof value))
+    ) {
+      return `${key}: ${value}`;
+    }
+    return undefined;
+  }).join(", ");
   return (
     <span>
       {itemType} {filterKeys.length > 0 ? filterKeys : itemString}
