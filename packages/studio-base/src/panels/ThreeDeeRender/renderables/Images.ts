@@ -108,6 +108,7 @@ export class ImageRenderable extends Renderable<ImageUserData> {
 export class Images extends SceneExtension<ImageRenderable> {
   /* All known camera info topics */
   private cameraInfoTopics = new Set<string>();
+
   /**
    * A bi-directional mapping between cameraInfo topics and image topics. This
    * is used for retrieving an image renderable, which is indexed by image
@@ -115,8 +116,14 @@ export class Images extends SceneExtension<ImageRenderable> {
    */
   private cameraInfoToImageTopics = new MultiMap<string, string>();
 
-  /** Map of camera info topic name -> PinholeCameraModel */
-  private cameraModelsByTopic = new Map<string, PinholeCameraModel>();
+  /**
+   * Map of camera info topic name -> normalized CameraInfo message
+   *
+   * This stores the last camera info message on each topic so it can be applied when rendering the image
+   */
+  private cameraInfoByTopic = new Map<string, CameraInfo>();
+
+  private lastTopics: readonly Topic[] | undefined = undefined;
 
   public constructor(renderer: Renderer) {
     super("foxglove.Images", renderer);
@@ -135,19 +142,18 @@ export class Images extends SceneExtension<ImageRenderable> {
       shouldSubscribe: this.cameraInfoShouldSubscribe,
     });
 
-    this._updateTopicInfoIfNeeded();
+    this._updateCameraInfoTopics();
   }
 
-  private _lastTopics: readonly Topic[] | undefined = undefined;
   /**
-   * Update cameraInfoToImageTopics based on the current config and list of available topics.
+   * Update cameraInfoTopics cache with latest set of camera info messages
    */
-  private _updateTopicInfoIfNeeded() {
-    if (this.renderer.topics === this._lastTopics) {
+  private _updateCameraInfoTopics() {
+    if (this.renderer.topics === this.lastTopics) {
       return;
     }
 
-    this._lastTopics = this.renderer.topics;
+    this.lastTopics = this.renderer.topics;
 
     this.cameraInfoTopics = new Set();
     for (const topic of this.renderer.topics ?? []) {
@@ -157,27 +163,11 @@ export class Images extends SceneExtension<ImageRenderable> {
       ) {
         this.cameraInfoTopics.add(topic.name);
       }
-
-      if (
-        !(
-          topicIsConvertibleToSchema(topic, ROS_IMAGE_DATATYPES) ||
-          topicIsConvertibleToSchema(topic, ROS_COMPRESSED_IMAGE_DATATYPES) ||
-          topicIsConvertibleToSchema(topic, RAW_IMAGE_DATATYPES) ||
-          topicIsConvertibleToSchema(topic, COMPRESSED_IMAGE_DATATYPES)
-        )
-      ) {
-        continue;
-      }
-      const imageTopic = topic.name;
-      const config = (this.renderer.config.topics[imageTopic] ?? {}) as Partial<LayerSettingsImage>;
-      if (typeof config.cameraInfoTopic === "string") {
-        this.cameraInfoToImageTopics.set(config.cameraInfoTopic, imageTopic);
-      }
     }
   }
 
   public override settingsNodes(): SettingsTreeEntry[] {
-    this._updateTopicInfoIfNeeded();
+    this._updateCameraInfoTopics();
     const configTopics = this.renderer.config.topics;
     const handler = this.handleSettingsAction;
     const entries: SettingsTreeEntry[] = [];
@@ -248,17 +238,30 @@ export class Images extends SceneExtension<ImageRenderable> {
       | undefined;
     const cameraInfoTopic = settings?.cameraInfoTopic;
 
+    // const renderable = this.renderables.get(imageTopic);
+
+    // Remove the previous camera_info_topic -> image_topic mapping
     if (prevCameraInfoTopic != undefined && cameraInfoTopic !== prevCameraInfoTopic) {
-      // Remove the previous camera_info_topic -> image_topic mapping
       this.cameraInfoToImageTopics.delete(prevCameraInfoTopic, imageTopic);
+
+      // fixme - how do we clear the renderable since the info topic changed?
+      // and make it render again
     }
 
     // Add this camera_info_topic -> image_topic mapping
     if (cameraInfoTopic != undefined) {
       this.cameraInfoToImageTopics.set(cameraInfoTopic, imageTopic);
+
+      // how do we make the renderable render again?
     }
 
+    // fixme - if the camera info topic changes, then we need to re-calculate image rendering
+    // with the new camera info topic if we do have a message for it
+    // but if we don't?
+
     // Update the renderable
+    // fixme - why? can I avoid doing this? seems not necessary here...
+    /*
     const renderable = this.renderables.get(imageTopic);
     const image = renderable?.userData.image;
     const cameraModel = renderable?.userData.cameraModel;
@@ -267,18 +270,21 @@ export class Images extends SceneExtension<ImageRenderable> {
 
       this._updateImageRenderable(renderable, image, cameraModel, receiveTime, settings);
     }
+    */
   };
 
   private cameraInfoShouldSubscribe = (cameraInfoTopic: string): boolean => {
     // Iterate over each configured topic and check if it has a `cameraInfoTopic` setting
-    // that matches the given CameraInfo topic name
-    for (const topicConfig of Object.values(this.renderer.config.topics)) {
+    // that matches the given CameraInfo topic name.
+    //
+    // If _any_ of these topics do have the cameraInfoTopic and are visible, then we need to subscribe
+    // to the camera info topic so we can render the image in the scene.
+    return Array.from(Object.values(this.renderer.config.topics)).some((topicConfig) => {
       const maybeImageConfig = topicConfig as Partial<LayerSettingsImage>;
-      if (maybeImageConfig.cameraInfoTopic === cameraInfoTopic) {
-        return maybeImageConfig.visible ?? false;
-      }
-    }
-    return false;
+      return (
+        maybeImageConfig.cameraInfoTopic === cameraInfoTopic && (maybeImageConfig.visible ?? false)
+      );
+    });
   };
 
   private handleRosRawImage = (messageEvent: PartialMessageEvent<RosImage>): void => {
@@ -300,7 +306,9 @@ export class Images extends SceneExtension<ImageRenderable> {
   };
 
   private handleImage = (messageEvent: PartialMessageEvent<AnyImage>, image: AnyImage): void => {
-    this._updateTopicInfoIfNeeded();
+    // Ensure the latest list of camera info topics is up to date for autoSelectCameraInfoTopic call below
+    this._updateCameraInfoTopics();
+
     const imageTopic = messageEvent.topic;
     const receiveTime = toNanoSec(messageEvent.receiveTime);
     const frameId = "header" in image ? image.header.frame_id : image.frame_id;
@@ -310,34 +318,64 @@ export class Images extends SceneExtension<ImageRenderable> {
     // Auto-select settings.cameraInfoTopic if it's not already set
     const settings = renderable.userData.settings;
     if (settings.cameraInfoTopic == undefined) {
-      autoSelectCameraInfoTopic(settings, imageTopic, this.cameraInfoTopics);
+      const newCameraInfoTopic = (settings.cameraInfoTopic = autoSelectCameraInfoTopic(
+        imageTopic,
+        this.cameraInfoTopics,
+      ));
+
+      if (newCameraInfoTopic != undefined) {
+        // Update user settings with the newly selected CameraInfo topic
+        this.renderer.updateConfig((draft) => {
+          const updatedUserSettings = { ...settings };
+          updatedUserSettings.cameraInfoTopic = newCameraInfoTopic;
+          draft.topics[imageTopic] = updatedUserSettings;
+        });
+        this.updateSettingsTree();
+      } else {
+        this.renderer.settings.errors.addToTopic(
+          imageTopic,
+          NO_CAMERA_INFO_ERR,
+          "No CameraInfo topic found",
+        );
+      }
     }
 
-    const newCameraInfoTopic = settings.cameraInfoTopic;
-    if (newCameraInfoTopic != undefined) {
-      this.cameraInfoToImageTopics.set(newCameraInfoTopic, imageTopic);
-      // Update user settings with the newly selected CameraInfo topic
-      this.renderer.updateConfig((draft) => {
-        const updatedUserSettings = { ...settings };
-        updatedUserSettings.cameraInfoTopic = newCameraInfoTopic;
-        draft.topics[imageTopic] = updatedUserSettings;
-      });
-      this.updateSettingsTree();
-    } else {
+    if (!settings.cameraInfoTopic) {
+      return;
+    }
+
+    // Keep the camera info -> image topic map updated so handleCamera info can update the model
+    // and renderable if the camera info message is received after the image message
+    this.cameraInfoToImageTopics.set(settings.cameraInfoTopic, imageTopic);
+
+    // Lookup the camera info for our image topic
+    const cameraInfo = this.cameraInfoByTopic.get(settings.cameraInfoTopic);
+    if (!cameraInfo) {
       this.renderer.settings.errors.addToTopic(
         imageTopic,
         NO_CAMERA_INFO_ERR,
-        "No CameraInfo topic found",
+        `No CameraInfo received on ${settings.cameraInfoTopic}`,
       );
+      return;
     }
 
-    // fixme - ternary hard to read
-    const cameraModel =
-      renderable.userData.cameraModel ??
-      (newCameraInfoTopic != undefined
-        ? this.cameraModelsByTopic.get(newCameraInfoTopic)
-        : undefined);
+    // Making a camera model is "expensive", so we only make a new model when the camera info
+    // changes.
+    const dataEqual = cameraInfosEqual(renderable.userData.cameraInfo, cameraInfo);
+    if (!dataEqual) {
+      // clear the old model since that is no longer valid if the camera info changed
+      renderable.userData.cameraModel = undefined;
 
+      try {
+        renderable.userData.cameraModel = new PinholeCameraModel(cameraInfo);
+        this.renderer.settings.errors.removeFromTopic(imageTopic, CAMERA_MODEL);
+      } catch (errUnk) {
+        const err = errUnk as Error;
+        this.renderer.settings.errors.addToTopic(imageTopic, CAMERA_MODEL, err.message);
+      }
+    }
+
+    const cameraModel = renderable.userData.cameraModel;
     if (cameraModel) {
       this._updateImageRenderable(renderable, image, cameraModel, receiveTime, settings);
     }
@@ -346,61 +384,56 @@ export class Images extends SceneExtension<ImageRenderable> {
   private handleCameraInfo = (
     messageEvent: PartialMessageEvent<CameraInfo> & PartialMessageEvent<CameraCalibration>,
   ): void => {
-    // fixme - in what situation is this needed?
-    this._updateTopicInfoIfNeeded();
-
-    const cameraInfoTopic = messageEvent.topic;
-    const receiveTime = toNanoSec(messageEvent.receiveTime);
-
-    const topicsUpdated = !this.cameraInfoTopics.has(cameraInfoTopic);
-    if (topicsUpdated) {
-      this.cameraInfoTopics.add(cameraInfoTopic);
-    }
+    // Store the last camera info on each topic, when processing an image message we'll lookup
+    // the camera info by the info topic configured for the image
     const cameraInfo = normalizeCameraInfo(messageEvent.message);
+    this.cameraInfoByTopic.set(messageEvent.topic, cameraInfo);
 
-    // create a camera model for the incoming camera info topic
-    // fixme - this is expensive any we don't need to do this if the model already exists?
-    // there is some logic to track camera info messages and determine if they are equal to avoid making the model
-    //         const dataEqual = cameraInfosEqual(renderable.userData.cameraInfo, cameraInfo);
-    try {
-      const cameraModel = new PinholeCameraModel(cameraInfo);
-      this.cameraModelsByTopic.set(messageEvent.topic, cameraModel);
-    } catch (errUnk) {
-      const err = errUnk as Error;
-      this.renderer.settings.errors.addToTopic(messageEvent.topic, CAMERA_MODEL, err.message);
-    }
-
-    const frameId = cameraInfo.header.frame_id;
-    // Check if we have a mapping from this CameraInfo topic to an Image topic
-    const imageTopics = this.cameraInfoToImageTopics.get(cameraInfoTopic);
-    if (imageTopics && imageTopics.length > 0) {
-      for (const imageTopic of imageTopics) {
-        // Get the ImageRenderable for the image topic
-        const renderable = this._getImageRenderable(imageTopic, receiveTime, undefined, frameId);
-
-        const dataEqual = cameraInfosEqual(renderable.userData.cameraInfo, cameraInfo);
-        if (dataEqual) {
-          continue;
-        }
-
-        try {
-          const cameraModel = new PinholeCameraModel(cameraInfo);
-          renderable.userData.cameraModel = cameraModel;
-          if (renderable.userData.image) {
-            const { image, settings } = renderable.userData;
-            this._updateImageRenderable(renderable, image, cameraModel, receiveTime, settings);
-          }
-          this.renderer.settings.errors.removeFromTopic(imageTopic, CAMERA_MODEL);
-        } catch (errUnk) {
-          const err = errUnk as Error;
-          this.renderer.settings.errors.addToTopic(imageTopic, CAMERA_MODEL, err.message);
-          renderable.userData.cameraModel = undefined;
-        }
+    // Lookup any image topics assigned to our camera info topic and determine if we need to update
+    // those renderables since we now have a camera info whereas we may not have previously
+    const imageTopics = this.cameraInfoToImageTopics.get(messageEvent.topic) ?? [];
+    for (const imageTopic of imageTopics) {
+      const renderable = this.renderables.get(imageTopic);
+      if (!renderable) {
+        return;
       }
-    }
 
-    if (topicsUpdated) {
-      this.updateSettingsTree();
+      // if there's no camera info topic assigned then we don't need to do anything for this renderable
+      const settings = renderable.userData.settings;
+      if (!settings.cameraInfoTopic) {
+        return;
+      }
+
+      // If there's no active image then we don't need to update the renderable
+      const { image, receiveTime } = renderable.userData;
+      if (!image) {
+        return;
+      }
+
+      // Making a camera model is "expensive", so we only make a new model when the camera info
+      // changes.
+      //
+      // The assigned cameraInfo is unchanged so we don't need to update the renderable
+      const dataEqual = cameraInfosEqual(renderable.userData.cameraInfo, cameraInfo);
+      if (dataEqual) {
+        return;
+      }
+
+      // clear the old model since that is no longer valid if the camera info changed
+      renderable.userData.cameraModel = undefined;
+
+      try {
+        renderable.userData.cameraModel = new PinholeCameraModel(cameraInfo);
+        this.renderer.settings.errors.removeFromTopic(imageTopic, CAMERA_MODEL);
+      } catch (errUnk) {
+        const err = errUnk as Error;
+        this.renderer.settings.errors.addToTopic(imageTopic, CAMERA_MODEL, err.message);
+      }
+
+      const cameraModel = renderable.userData.cameraModel;
+      if (cameraModel) {
+        this._updateImageRenderable(renderable, image, cameraModel, receiveTime, settings);
+      }
     }
   };
 
@@ -699,11 +732,15 @@ export function cameraInfoTopicMatches(imageTopic: string, cameraInfoTopic: stri
   return true;
 }
 
+/**
+ * Lookup a matching camera info topic for the image topic.
+ *
+ * Return a candidate camera info topic.
+ */
 function autoSelectCameraInfoTopic(
-  output: LayerSettingsImage,
   imageTopic: string,
   cameraInfoTopics: Set<string>,
-): void {
+): string | undefined {
   const candidates: string[] = [];
   for (const cameraInfoTopic of cameraInfoTopics) {
     if (cameraInfoTopicMatches(imageTopic, cameraInfoTopic)) {
@@ -711,7 +748,7 @@ function autoSelectCameraInfoTopic(
     }
   }
   candidates.sort();
-  output.cameraInfoTopic = candidates[0];
+  return candidates[0];
 }
 
 function rawImageToDataTexture(
