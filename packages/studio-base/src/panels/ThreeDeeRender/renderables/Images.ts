@@ -246,11 +246,19 @@ export class Images extends SceneExtension<ImageRenderable> {
 
       // fixme - how do we clear the renderable since the info topic changed?
       // and make it render again
+      console.log("camera info changed", { prevCameraInfoTopic, cameraInfoTopic });
+
+      const renderable = this.renderables.get(imageTopic);
+      if (renderable) {
+        renderable.userData.cameraInfo = undefined;
+        renderable.userData.cameraModel = undefined;
+      }
     }
 
     // Add this camera_info_topic -> image_topic mapping
     if (cameraInfoTopic != undefined) {
       this.cameraInfoToImageTopics.set(cameraInfoTopic, imageTopic);
+      console.log("set camera info", { cameraInfoTopic, imageTopic });
 
       // how do we make the renderable render again?
     }
@@ -455,9 +463,19 @@ export class Images extends SceneExtension<ImageRenderable> {
 
     renderable.userData.image = image;
     renderable.userData.cameraModel = cameraModel;
+
+    // fixme - set from image only if camera info is not set
     renderable.userData.frameId = this.renderer.normalizeFrameId(
       "header" in image ? image.header.frame_id : image.frame_id,
     );
+
+    // fixme - the camera info should set the frame id
+    if (renderable.userData.cameraInfo) {
+      // fixme - normalize?
+      renderable.userData.frameId = renderable.userData.cameraInfo.header.frame_id;
+    }
+    console.log(renderable.userData.frameId);
+
     renderable.userData.receiveTime = receiveTime;
     renderable.userData.messageTime = toNanoSec(
       "header" in image ? image.header.stamp : image.timestamp,
