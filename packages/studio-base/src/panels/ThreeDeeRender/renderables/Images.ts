@@ -238,47 +238,69 @@ export class Images extends SceneExtension<ImageRenderable> {
       | undefined;
     const cameraInfoTopic = settings?.cameraInfoTopic;
 
-    // const renderable = this.renderables.get(imageTopic);
-
-    // Remove the previous camera_info_topic -> image_topic mapping
-    if (prevCameraInfoTopic != undefined && cameraInfoTopic !== prevCameraInfoTopic) {
-      this.cameraInfoToImageTopics.delete(prevCameraInfoTopic, imageTopic);
-
-      // fixme - how do we clear the renderable since the info topic changed?
-      // and make it render again
-      console.log("camera info changed", { prevCameraInfoTopic, cameraInfoTopic });
-
-      const renderable = this.renderables.get(imageTopic);
-      if (renderable) {
-        renderable.userData.cameraInfo = undefined;
-        renderable.userData.cameraModel = undefined;
-      }
-    }
-
     // Add this camera_info_topic -> image_topic mapping
-    if (cameraInfoTopic != undefined) {
+    if (cameraInfoTopic !== prevCameraInfoTopic && cameraInfoTopic != undefined) {
       this.cameraInfoToImageTopics.set(cameraInfoTopic, imageTopic);
-      console.log("set camera info", { cameraInfoTopic, imageTopic });
-
-      // how do we make the renderable render again?
     }
 
-    // fixme - if the camera info topic changes, then we need to re-calculate image rendering
-    // with the new camera info topic if we do have a message for it
-    // but if we don't?
+    const cameraInfoTopicChanged =
+      prevCameraInfoTopic != undefined && cameraInfoTopic !== prevCameraInfoTopic;
 
-    // Update the renderable
-    // fixme - why? can I avoid doing this? seems not necessary here...
-    /*
-    const renderable = this.renderables.get(imageTopic);
-    const image = renderable?.userData.image;
-    const cameraModel = renderable?.userData.cameraModel;
-    if (image && cameraModel) {
-      const receiveTime = renderable.userData.receiveTime;
+    // The topic did not change, some other setting changed
+    // We re-update the renderable with the new settings and are done
+    if (!cameraInfoTopicChanged) {
+      const renderable = this.renderables.get(imageTopic);
+      if (!renderable) {
+        return;
+      }
+
+      const { image, cameraModel, receiveTime } = renderable.userData;
+      if (!image || !cameraModel) {
+        return;
+      }
 
       this._updateImageRenderable(renderable, image, cameraModel, receiveTime, settings);
+      return;
     }
-    */
+
+    // The camera info topic changed for our renderable
+    // Remove the previous camera_info_topic -> image_topic mapping
+    this.cameraInfoToImageTopics.delete(prevCameraInfoTopic, imageTopic);
+
+    const renderable = this.renderables.get(imageTopic);
+    if (!renderable) {
+      return;
+    }
+
+    // We dispose the old renderable and setup a new one. It is easier to dispose the old
+    // renderable than clear only the specific camera topic fields.
+    renderable.dispose();
+    this.renderables.delete(imageTopic);
+
+    // Create a new renderable preserving the image from the previous one
+    const { image, receiveTime, frameId } = renderable.userData;
+    const newRenderable = this._getImageRenderable(imageTopic, receiveTime, image, frameId);
+
+    // apply camera info to new renderable
+    if (!cameraInfoTopic) {
+      return;
+    }
+
+    // Lookup the camera info for our image topic
+    const cameraInfo = this.cameraInfoByTopic.get(cameraInfoTopic);
+    if (!cameraInfo) {
+      this.renderer.settings.errors.addToTopic(
+        imageTopic,
+        NO_CAMERA_INFO_ERR,
+        `No CameraInfo received on ${cameraInfoTopic}`,
+      );
+      return;
+    }
+
+    const cameraModel = this._recomputeCameraModel(newRenderable, cameraInfo);
+    if (image && cameraModel) {
+      this._updateImageRenderable(newRenderable, image, cameraModel, receiveTime, settings);
+    }
   };
 
   private cameraInfoShouldSubscribe = (cameraInfoTopic: string): boolean => {
@@ -331,32 +353,32 @@ export class Images extends SceneExtension<ImageRenderable> {
         this.cameraInfoTopics,
       ));
 
-      if (newCameraInfoTopic != undefined) {
-        // Update user settings with the newly selected CameraInfo topic
-        this.renderer.updateConfig((draft) => {
-          const updatedUserSettings = { ...settings };
-          updatedUserSettings.cameraInfoTopic = newCameraInfoTopic;
-          draft.topics[imageTopic] = updatedUserSettings;
-        });
-        this.updateSettingsTree();
-      } else {
+      // With no selected camera info topic, we show a topic error and bail
+      // There's no way to render without camera info
+      if (newCameraInfoTopic == undefined) {
         this.renderer.settings.errors.addToTopic(
           imageTopic,
           NO_CAMERA_INFO_ERR,
           "No CameraInfo topic found",
         );
+        return;
       }
+
+      // Update user settings with the newly selected CameraInfo topic
+      this.renderer.updateConfig((draft) => {
+        const updatedUserSettings = { ...settings };
+        updatedUserSettings.cameraInfoTopic = newCameraInfoTopic;
+        draft.topics[imageTopic] = updatedUserSettings;
+      });
+      this.updateSettingsTree();
     }
 
+    // There's no camera info topic so we can't lookup camera info messages to make a model
     if (!settings.cameraInfoTopic) {
       return;
     }
 
-    // Keep the camera info -> image topic map updated so handleCamera info can update the model
-    // and renderable if the camera info message is received after the image message
-    this.cameraInfoToImageTopics.set(settings.cameraInfoTopic, imageTopic);
-
-    // Lookup the camera info for our image topic
+    // Lookup the camera info for our renderable
     const cameraInfo = this.cameraInfoByTopic.get(settings.cameraInfoTopic);
     if (!cameraInfo) {
       this.renderer.settings.errors.addToTopic(
@@ -367,23 +389,7 @@ export class Images extends SceneExtension<ImageRenderable> {
       return;
     }
 
-    // Making a camera model is "expensive", so we only make a new model when the camera info
-    // changes.
-    const dataEqual = cameraInfosEqual(renderable.userData.cameraInfo, cameraInfo);
-    if (!dataEqual) {
-      // clear the old model since that is no longer valid if the camera info changed
-      renderable.userData.cameraModel = undefined;
-
-      try {
-        renderable.userData.cameraModel = new PinholeCameraModel(cameraInfo);
-        this.renderer.settings.errors.removeFromTopic(imageTopic, CAMERA_MODEL);
-      } catch (errUnk) {
-        const err = errUnk as Error;
-        this.renderer.settings.errors.addToTopic(imageTopic, CAMERA_MODEL, err.message);
-      }
-    }
-
-    const cameraModel = renderable.userData.cameraModel;
+    const cameraModel = this._recomputeCameraModel(renderable, cameraInfo);
     if (cameraModel) {
       this._updateImageRenderable(renderable, image, cameraModel, receiveTime, settings);
     }
@@ -403,47 +409,71 @@ export class Images extends SceneExtension<ImageRenderable> {
     for (const imageTopic of imageTopics) {
       const renderable = this.renderables.get(imageTopic);
       if (!renderable) {
-        return;
+        continue;
       }
 
-      // if there's no camera info topic assigned then we don't need to do anything for this renderable
+      // If there's no camera info topic assigned then we don't need to do update this renderable
       const settings = renderable.userData.settings;
-      if (!settings.cameraInfoTopic) {
-        return;
+      if (!settings.cameraInfoTopic || settings.cameraInfoTopic !== messageEvent.topic) {
+        continue;
       }
 
       // If there's no active image then we don't need to update the renderable
+      //
+      // When an image is received, the handleImage call will lookup the cameraInfoByTopic and
+      // create the model.
       const { image, receiveTime } = renderable.userData;
       if (!image) {
-        return;
+        continue;
       }
 
-      // Making a camera model is "expensive", so we only make a new model when the camera info
-      // changes.
-      //
-      // The assigned cameraInfo is unchanged so we don't need to update the renderable
-      const dataEqual = cameraInfosEqual(renderable.userData.cameraInfo, cameraInfo);
-      if (dataEqual) {
-        return;
-      }
-
-      // clear the old model since that is no longer valid if the camera info changed
-      renderable.userData.cameraModel = undefined;
-
-      try {
-        renderable.userData.cameraModel = new PinholeCameraModel(cameraInfo);
-        this.renderer.settings.errors.removeFromTopic(imageTopic, CAMERA_MODEL);
-      } catch (errUnk) {
-        const err = errUnk as Error;
-        this.renderer.settings.errors.addToTopic(imageTopic, CAMERA_MODEL, err.message);
-      }
-
-      const cameraModel = renderable.userData.cameraModel;
+      const cameraModel = this._recomputeCameraModel(renderable, cameraInfo);
       if (cameraModel) {
         this._updateImageRenderable(renderable, image, cameraModel, receiveTime, settings);
       }
     }
   };
+
+  /**
+   * Recompute a new camera model if the newCameraInfo differs from the current renderable info
+   *
+   * Return a new camera model if the info differs, return undefined if the info is unchanged or
+   * if a camera model could not be created.
+   *
+   * This function will set a topic error on the image topic if the camera model creation fails.
+   */
+  private _recomputeCameraModel(
+    renderable: ImageRenderable,
+    newCameraInfo: CameraInfo,
+  ): PinholeCameraModel | undefined {
+    // If the camera info has not changed, we don't need to make a new model
+    const dataEqual = cameraInfosEqual(renderable.userData.cameraInfo, newCameraInfo);
+    if (dataEqual && renderable.userData.cameraModel != undefined) {
+      return;
+    }
+
+    const imageTopic = renderable.userData.topic;
+
+    // clear the old model since that is no longer valid if the camera info changed
+    renderable.userData.cameraModel = undefined;
+    renderable.userData.geometry = undefined;
+
+    try {
+      renderable.userData.cameraModel = new PinholeCameraModel(newCameraInfo);
+      this.renderer.settings.errors.removeFromTopic(imageTopic, CAMERA_MODEL);
+    } catch (errUnk) {
+      const err = errUnk as Error;
+      this.renderer.settings.errors.addToTopic(imageTopic, CAMERA_MODEL, err.message);
+
+      // if there's no model, there's no way to update the renderable
+      return;
+    }
+
+    // Save the latest camera info if we were able to make a model
+    renderable.userData.cameraInfo = newCameraInfo;
+
+    return renderable.userData.cameraModel;
+  }
 
   private _updateImageRenderable(
     renderable: ImageRenderable,
@@ -464,18 +494,15 @@ export class Images extends SceneExtension<ImageRenderable> {
     renderable.userData.image = image;
     renderable.userData.cameraModel = cameraModel;
 
-    // fixme - set from image only if camera info is not set
-    renderable.userData.frameId = this.renderer.normalizeFrameId(
-      "header" in image ? image.header.frame_id : image.frame_id,
-    );
+    // If there is camera info, the frameId comes from the camera info since the user may have
+    // selected camera info with a different frame than our image frame.
+    //
+    // If there is no camera info, we fall bakc to the image's frame
+    const rawFrameId =
+      renderable.userData.cameraInfo?.header.frame_id ??
+      ("header" in image ? image.header.frame_id : image.frame_id);
 
-    // fixme - the camera info should set the frame id
-    if (renderable.userData.cameraInfo) {
-      // fixme - normalize?
-      renderable.userData.frameId = renderable.userData.cameraInfo.header.frame_id;
-    }
-    console.log(renderable.userData.frameId);
-
+    renderable.userData.frameId = this.renderer.normalizeFrameId(rawFrameId);
     renderable.userData.receiveTime = receiveTime;
     renderable.userData.messageTime = toNanoSec(
       "header" in image ? image.header.stamp : image.timestamp,
@@ -498,7 +525,7 @@ export class Images extends SceneExtension<ImageRenderable> {
     }
 
     // Create the plane geometry if needed
-    if (hasCameraInfo && renderable.userData.geometry == undefined) {
+    if (renderable.userData.geometry == undefined) {
       const geometry = createGeometry(cameraModel, renderable.userData.settings);
       renderable.userData.geometry = geometry;
       if (renderable.userData.mesh) {
