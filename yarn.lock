@@ -2602,7 +2602,7 @@ __metadata:
     react-json-tree: "patch:react-json-tree@npm:0.15.1#../../patches/react-json-tree.patch"
     react-markdown: 8.0.5
     react-monaco-editor: 0.51.0
-    react-mosaic-component: 5.3.0
+    react-mosaic-component: 6.0.0
     react-refresh-typescript: 2.0.8
     react-resize-detector: 8.0.3
     react-svg-loader: 3.0.3
@@ -3857,10 +3857,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@react-dnd/asap@npm:^5.0.1":
+  version: 5.0.2
+  resolution: "@react-dnd/asap@npm:5.0.2"
+  checksum: 18f040e53512983f11c542ef21e6e4cac605d585a10cd764b13bc1b2f3ac7490e0fa40503adc348d8387aa45bc8e7eebe9cb33003b960a30bb5fde666ff2adde
+  languageName: node
+  linkType: hard
+
 "@react-dnd/invariant@npm:^2.0.0":
   version: 2.0.0
   resolution: "@react-dnd/invariant@npm:2.0.0"
   checksum: ef1e989920d70b15c80dccb01af9b598081d76993311aa22d2e9a3ec41d10a88540eeec4b4de7a8b2a2ea52dfc3495ab45e39192c2d27795a9258bd6b79d000e
+  languageName: node
+  linkType: hard
+
+"@react-dnd/invariant@npm:^4.0.1":
+  version: 4.0.2
+  resolution: "@react-dnd/invariant@npm:4.0.2"
+  checksum: 594f6d78896c19bb8f023e101334fd91a9fdff686117bd8e830ba53737ec0a6042dab66971d3d63c7afbc622103909aff7a64c5c6767e0aa8d9561fd42705016
   languageName: node
   linkType: hard
 
@@ -9803,10 +9817,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"classnames@npm:^2.3.1":
-  version: 2.3.1
-  resolution: "classnames@npm:2.3.1"
-  checksum: 14db8889d56c267a591f08b0834989fe542d47fac659af5a539e110cc4266694e8de86e4e3bbd271157dbd831361310a8293e0167141e80b0f03a0f175c80960
+"classnames@npm:^2.3.2":
+  version: 2.3.2
+  resolution: "classnames@npm:2.3.2"
+  checksum: 2c62199789618d95545c872787137262e741f9db13328e216b093eea91c85ef2bfb152c1f9e63027204e2559a006a92eb74147d46c800a9f96297ae1d9f96f4e
   languageName: node
   linkType: hard
 
@@ -11364,10 +11378,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dnd-multi-backend@npm:^6.0.0":
-  version: 6.0.0
-  resolution: "dnd-multi-backend@npm:6.0.0"
-  checksum: d74924f36fb4679af9cc5ab8fbaf2ee1df6e3160b4a46e5ba482e5e643d6707c6ee2ba32bfc61e126a561c34f126e1d945c2c71b490a6f9ada5475ee2d8e7347
+"dnd-core@npm:^16.0.1":
+  version: 16.0.1
+  resolution: "dnd-core@npm:16.0.1"
+  dependencies:
+    "@react-dnd/asap": ^5.0.1
+    "@react-dnd/invariant": ^4.0.1
+    redux: ^4.2.0
+  checksum: b7d3ef4664f433af796f440ddd27ad9d7fef0205f26c4b7c0af6ebf612ffa9b33e64d095d3e79190c4baaed34aa36570f321ebe0d2cc8ff1031ff158a0907b3f
+  languageName: node
+  linkType: hard
+
+"dnd-multi-backend@npm:^8.0.0":
+  version: 8.0.0
+  resolution: "dnd-multi-backend@npm:8.0.0"
+  checksum: ce19b14c509e3740f6ab8cab725f8df2e7ad79fd04cb7d57d4b3f9e579cd5ab1f9439517b4325e014ca1caeab6152adced993085b734aff5a5d40cbb766a5da0
   languageName: node
   linkType: hard
 
@@ -20574,6 +20599,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"rdndmb-html5-to-touch@npm:^8.0.0":
+  version: 8.0.0
+  resolution: "rdndmb-html5-to-touch@npm:8.0.0"
+  dependencies:
+    dnd-multi-backend: ^8.0.0
+    react-dnd-html5-backend: ^16.0.1
+    react-dnd-touch-backend: ^16.0.1
+  checksum: 9ede5db33820ca592f0c0aaed3b9a6cd9026cd7ffe60c2cdabd62275ab253b3a69db2b4eb909c250602b98d413bf635380ba6d5df574ca002d076fdc12f94606
+  languageName: node
+  linkType: hard
+
 "react-autocomplete@https://github.com/foxglove/react-autocomplete/raw/9717d597d7c78c316fb7ad3c2c57060c243530c2/react-autocomplete-9.9.9.tgz":
   version: 9.9.9
   resolution: "react-autocomplete@https://github.com/foxglove/react-autocomplete/raw/9717d597d7c78c316fb7ad3c2c57060c243530c2/react-autocomplete-9.9.9.tgz"
@@ -20620,50 +20656,45 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-dnd-html5-backend@npm:^14.1.0":
-  version: 14.1.0
-  resolution: "react-dnd-html5-backend@npm:14.1.0"
+"react-dnd-html5-backend@npm:^16.0.1":
+  version: 16.0.1
+  resolution: "react-dnd-html5-backend@npm:16.0.1"
   dependencies:
-    dnd-core: 14.0.1
-  checksum: 6aa8d62c6b2288893b3f216d476d2f84495b40d33578ba9e3a5051dc093a71dc59700e6927ed7ac596ff8d7aa3b3f29404f7d173f844bd6144ed633403dd8e96
+    dnd-core: ^16.0.1
+  checksum: e2368bf85d5632a5cd867b743feb54c9052d909ea5331608860fa455edf3c633ac791f5b338e3db29b19ea8670c0ba5fb43c9c1c2510760bea030811d726cdfa
   languageName: node
   linkType: hard
 
-"react-dnd-multi-backend@npm:^6.0.2":
-  version: 6.0.2
-  resolution: "react-dnd-multi-backend@npm:6.0.2"
+"react-dnd-multi-backend@npm:^8.0.0":
+  version: 8.0.0
+  resolution: "react-dnd-multi-backend@npm:8.0.0"
   dependencies:
-    dnd-multi-backend: ^6.0.0
-    prop-types: ^15.7.2
-    react-dnd-preview: ^6.0.2
+    dnd-multi-backend: ^8.0.0
+    react-dnd-preview: ^8.0.0
   peerDependencies:
-    react: ^16.13
-    react-dnd-html5-backend: ^11.1.3
-    react-dnd-touch-backend: ^11.1.3
-    react-dom: ^16.13
-  checksum: 6a7c56b6013ad652b9e85ba1d7bc88197cb178eeeaa34c0be78602eeb5886f7446590d1cc9fb08103c50d30d24db53cc852f3bda1dd9b19034cb2f5166da654d
+    react: ^16.14.0 || ^17.0.2 || ^18.0.0
+    react-dom: ^16.14.0 || ^17.0.2 || ^18.0.0
+  checksum: a0871a4845df814f3a57b5c110e1601439d74d6433d2115a2078a4d49a200aa33a91b37a23d6dafaebc2ab857a25caa7d83d28cee034aa6907f7224c6257e56f
   languageName: node
   linkType: hard
 
-"react-dnd-preview@npm:^6.0.2":
-  version: 6.0.2
-  resolution: "react-dnd-preview@npm:6.0.2"
-  dependencies:
-    prop-types: ^15.7.2
+"react-dnd-preview@npm:^8.0.0":
+  version: 8.0.0
+  resolution: "react-dnd-preview@npm:8.0.0"
   peerDependencies:
-    react: ^16.13.1
-    react-dnd: ^11.1.3
-  checksum: 62f35d229e06cc552c7c4e2ebb2c6df212b41139412074f2a85b2a7309d36e417e1699f21d3a7fb70610a28064f4bf799b4116ff4045ecb1d2a122909298ef21
+    react: ^16.14.0 || ^17.0.2 || ^18.0.0
+    react-dnd: ^16.0.1
+  checksum: abed644a2ccd454a8fc54fa5bc4904beeb8ccf40c1ea20fb3c5ff178733062fd9f5d657435fb671c5736c93d9e7b2ce8e7de8c07cbc9822b459f02fdbfc99b77
   languageName: node
   linkType: hard
 
-"react-dnd-touch-backend@npm:^14.1.1":
-  version: 14.1.1
-  resolution: "react-dnd-touch-backend@npm:14.1.1"
+"react-dnd-touch-backend@npm:^16.0.1":
+  version: 16.0.1
+  resolution: "react-dnd-touch-backend@npm:16.0.1"
   dependencies:
-    "@react-dnd/invariant": ^2.0.0
-    dnd-core: 14.0.1
-  checksum: 09eed870aa64f4f1a2ad267bd5c89c0b9e7ce52e2e9613c4ebf749cbf1808e56f092c3adb69dd80ad394cb5448fa9730b95695cd8b86def407e36e7eddd169f3
+    "@react-dnd/invariant": ^4.0.1
+    dnd-core: ^16.0.1
+  checksum: 5362c5f4266e3655d02c716f341dc55c61fae53e12eb3b239245bafb7a3f3cdb953e27e187e8dcb9d86c01bc738853d764d7c85b87104a49a8a8f1ecc4d35755
   languageName: node
   linkType: hard
 
@@ -20911,22 +20942,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-mosaic-component@npm:5.3.0":
-  version: 5.3.0
-  resolution: "react-mosaic-component@npm:5.3.0"
+"react-mosaic-component@npm:6.0.0":
+  version: 6.0.0
+  resolution: "react-mosaic-component@npm:6.0.0"
   dependencies:
-    classnames: ^2.3.1
+    classnames: ^2.3.2
     immutability-helper: ^3.1.1
     lodash: ^4.17.21
     prop-types: ^15.8.1
-    react-dnd: ^14.0.5
-    react-dnd-html5-backend: ^14.1.0
-    react-dnd-multi-backend: ^6.0.2
-    react-dnd-touch-backend: ^14.1.1
-    uuid: ^3.4.0
+    rdndmb-html5-to-touch: ^8.0.0
+    react-dnd: ^16.0.1
+    react-dnd-html5-backend: ^16.0.1
+    react-dnd-multi-backend: ^8.0.0
+    react-dnd-touch-backend: ^16.0.1
+    uuid: ^9.0.0
   peerDependencies:
     react: 16 - 18
-  checksum: 92db779aa4ce34860a318f19d375fe9a9b2803903c24417e5f1b5979aa9cab89b4b28d4a536c84b680c198f203d48f5146165323523de12eba264a8467b5df63
+  checksum: 557874a9f131c6979b462c678dae6cea490fe7df3d55e69d69df19f71380d5782fca62e033a689331497c841f96fc6f529efe21e19c08201b5217aff451d243d
   languageName: node
   linkType: hard
 
@@ -21301,6 +21333,15 @@ __metadata:
   dependencies:
     "@babel/runtime": ^7.9.2
   checksum: 75f3955c89b3f18edf5411e5fb482aa2e4f41a416183e8802a6bf6472c4fc3d47675b8b321d147f8af8e0f616436ac507bf5a25f1c4d6180e797b549c7db2c1d
+  languageName: node
+  linkType: hard
+
+"redux@npm:^4.2.0":
+  version: 4.2.1
+  resolution: "redux@npm:4.2.1"
+  dependencies:
+    "@babel/runtime": ^7.9.2
+  checksum: f63b9060c3a1d930ae775252bb6e579b42415aee7a23c4114e21a0b4ba7ec12f0ec76936c00f546893f06e139819f0e2855e0d55ebfce34ca9c026241a6950dd
   languageName: node
   linkType: hard
 
@@ -24914,7 +24955,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"uuid@npm:9.0.0":
+"uuid@npm:9.0.0, uuid@npm:^9.0.0":
   version: 9.0.0
   resolution: "uuid@npm:9.0.0"
   bin:
@@ -24923,7 +24964,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"uuid@npm:^3.3.2, uuid@npm:^3.4.0":
+"uuid@npm:^3.3.2":
   version: 3.4.0
   resolution: "uuid@npm:3.4.0"
   bin:
