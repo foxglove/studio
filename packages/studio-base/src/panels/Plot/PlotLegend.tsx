@@ -77,6 +77,7 @@ const useStyles = makeStyles<void, "container" | "toggleButton" | "toggleButtonF
       alignItems: "flex-start",
 
       [`.${classes.toggleButton}`]: {
+        padding: spacing(0.25),
         height: "100%",
         borderRadius: 0,
         borderTop: "none",
@@ -92,6 +93,7 @@ const useStyles = makeStyles<void, "container" | "toggleButton" | "toggleButtonF
       flexDirection: "column",
 
       [`.${classes.toggleButton}`]: {
+        padding: spacing(0.25),
         borderRadius: 0,
         borderRight: "none",
         borderLeft: "none",
