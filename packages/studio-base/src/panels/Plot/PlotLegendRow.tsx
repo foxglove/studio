@@ -15,6 +15,7 @@ import { useHoverValue } from "@foxglove/studio-base/context/TimelineInteraction
 import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
 import { plotPathDisplayName } from "@foxglove/studio-base/panels/Plot/types";
 import { getLineColor } from "@foxglove/studio-base/util/plotColors";
+import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import { PlotPath } from "./internalTypes";
 
@@ -81,6 +82,7 @@ const useStyles = makeStyles<void, "plotName">()((theme, _params, classes) => ({
     height: ROW_HEIGHT,
     padding: theme.spacing(0, 1.5, 0, 0.5),
     gridColumn: "span 2",
+    fontFeatureSettings: `${fonts.SANS_SERIF_FEATURE_SETTINGS}, "zero"`,
 
     ".MuiTypography-root": {
       whiteSpace: "nowrap",
@@ -94,9 +96,6 @@ const useStyles = makeStyles<void, "plotName">()((theme, _params, classes) => ({
   },
   errorIcon: {
     color: theme.palette.error.main,
-    // fontSize: 20,
-    // height: "1em",
-    // width: "1em",
   },
 }));
 
