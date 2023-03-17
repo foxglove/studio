@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Square24Filled, Square24Regular, ErrorCircle24Filled } from "@fluentui/react-icons";
-import { IconButton, Tooltip, Typography } from "@mui/material";
+import { Checkbox, Tooltip, Typography } from "@mui/material";
 import { ComponentProps, useMemo, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 import { v4 as uuidv4 } from "uuid";
@@ -30,14 +30,14 @@ type PlotLegendRowProps = {
   showPlotValuesInLegend: boolean;
 };
 
-const ROW_HEIGHT = 24;
+const ROW_HEIGHT = 28;
 
 const useStyles = makeStyles<void, "plotName">()((theme, _params, classes) => ({
   root: {
     display: "contents",
     cursor: "pointer",
 
-    "&:hover, &:focus-within": {
+    "&:hover": {
       "& > *:last-child": {
         opacity: 1,
       },
@@ -63,13 +63,13 @@ const useStyles = makeStyles<void, "plotName">()((theme, _params, classes) => ({
     height: ROW_HEIGHT,
     left: 0,
   },
-  legendIconButton: {
-    padding: `${theme.spacing(0.625)} !important`,
-    fontSize: 14,
+  checkbox: {
+    fontSize: "1em",
+    padding: theme.spacing(0.975),
     borderRadius: 0,
 
-    svg: {
-      fontSize: "1em !important",
+    "svg:not(.MuiSvgIcon-root)": {
+      fontSize: "1em",
     },
   },
   disabledPathLabel: {
@@ -79,8 +79,12 @@ const useStyles = makeStyles<void, "plotName">()((theme, _params, classes) => ({
     display: "flex",
     alignItems: "center",
     height: ROW_HEIGHT,
-    padding: theme.spacing(0, 1, 0, 0.5),
+    padding: theme.spacing(0, 1.5, 0, 0.5),
     gridColumn: "span 2",
+
+    ".MuiTypography-root": {
+      whiteSpace: "nowrap",
+    },
   },
   plotValue: {
     display: "flex",
@@ -151,12 +155,15 @@ export function PlotLegendRow({
       }}
     >
       <div className={classes.listIcon}>
-        <IconButton
-          className={classes.legendIconButton}
-          centerRipple={false}
+        <Checkbox
+          className={classes.checkbox}
+          checked={path.enabled}
           size="small"
           title="Toggle visibility"
-          onClick={(event) => {
+          style={{ color: getLineColor(path.color, index) }}
+          icon={<Square24Regular />}
+          checkedIcon={<Square24Filled />}
+          onChange={(event) => {
             event.stopPropagation();
 
             const newPaths = paths.slice();
@@ -167,19 +174,15 @@ export function PlotLegendRow({
             }
             savePaths(newPaths);
           }}
-          style={{ color: getLineColor(path.color, index) }}
-        >
-          {path.enabled ? <Square24Filled /> : <Square24Regular />}
-        </IconButton>
+        />
       </div>
       <div
         className={classes.plotName}
         style={{ gridColumn: !showPlotValuesInLegend ? "span 2" : undefined }}
       >
         <Typography
-          noWrap
           flex="auto"
-          variant="caption"
+          variant="body2"
           className={cx({ [classes.disabledPathLabel]: !path.enabled })}
         >
           {plotPathDisplayName(path, index)}

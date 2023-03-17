@@ -3,12 +3,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import {
-  Dismiss20Filled,
   ChevronDown20Regular,
   ChevronUp20Regular,
   ChevronLeft20Regular,
   ChevronRight20Regular,
   TextBulletListLtr20Filled,
+  ArrowMinimize24Filled,
 } from "@fluentui/react-icons";
 import { IconButton } from "@mui/material";
 import { clamp } from "lodash";
@@ -40,17 +40,18 @@ type Props = {
   sidebarDimension: number;
 };
 
-const useStyles = makeStyles<void, "container" | "toggleButton">()(
-  ({ palette, shape, shadows, spacing }, _params, classes) => ({
+const useStyles = makeStyles<void, "container" | "toggleButton" | "toggleButtonFloating">()(
+  ({ palette, shadows, shape, spacing }, _params, classes) => ({
     root: {
       display: "flex",
       overflow: "hidden",
     },
     rootFloating: {
+      padding: spacing(0.75), // pad the container to prevent shadow from being clipped
       pointerEvents: "none",
-      gap: spacing(0.25),
+      gap: spacing(0.75),
       position: "absolute",
-      top: spacing(5.25),
+      top: spacing(4.5),
       left: spacing(4),
       zIndex: 1000,
       backgroundColor: "transparent",
@@ -68,30 +69,8 @@ const useStyles = makeStyles<void, "container" | "toggleButton">()(
         ].join(" ,")})`,
         backgroundColor: tinycolor(palette.background.paper).setAlpha(0.8).toHex8String(),
         backdropFilter: "blur(3px)",
-      },
-
-      [`.${classes.toggleButton}`]: {
-        pointerEvents: "auto",
-        backgroundColor: tinycolor(palette.background.paper).setAlpha(0.8).toHex8String(),
-        backgroundImage: `linear-gradient(${[
-          "0deg",
-          tinycolor(palette.background.default).setAlpha(0.2).toHex8String(),
-          tinycolor(palette.background.default).setAlpha(0.2).toHex8String(),
-        ].join(" ,")})`,
-
-        "&:hover":
-          palette.mode === "dark"
-            ? {
-                backgroundImage: `linear-gradient(0deg, ${[
-                  tinycolor(palette.background.default).setAlpha(0.2).toHex8String(),
-                  tinycolor(palette.background.default).setAlpha(0.2).toHex8String(),
-                ].join(",")}),
-                linear-gradient(0deg, ${[palette.action.hover, palette.action.hover].join(",")})`,
-                backgroundColor: tinycolor(palette.background.paper).setAlpha(0.8).toHex8String(),
-              }
-            : {
-                backgroundColor: palette.background.paper,
-              },
+        maxWidth: `calc(100% - ${spacing(1)})`,
+        boxShadow: shadows[3],
       },
     },
     rootLeft: {
@@ -99,10 +78,24 @@ const useStyles = makeStyles<void, "container" | "toggleButton">()(
 
       [`.${classes.toggleButton}`]: {
         height: "100%",
+        borderRadius: 0,
+        borderTop: "none",
+        borderBottom: "none",
+      },
+      [`.${classes.container}`]: {
+        overflow: "auto",
+        height: "100%",
+        alignContent: "flex-start",
       },
     },
     rootTop: {
       flexDirection: "column",
+
+      [`.${classes.toggleButton}`]: {
+        borderRadius: 0,
+        borderRight: "none",
+        borderLeft: "none",
+      },
     },
     container: {
       alignItems: "center",
@@ -119,24 +112,28 @@ const useStyles = makeStyles<void, "container" | "toggleButton">()(
       },
     },
     toggleButton: {
-      fontSize: 16,
-      padding: spacing(0.5),
-      borderBlockEnd: `1px ${palette.divider} solid`,
-      borderInlineEnd: `1px ${palette.divider} solid`,
+      fontSize: "1rem",
+      padding: spacing(0.75),
 
-      svg: {
-        fontSize: "1em !important",
+      "svg:not(.MuiSvgIcon-root)": {
+        fontSize: "1em",
       },
     },
     toggleButtonFloating: {
-      border: "none",
-      marginRight: spacing(0.25),
-      borderRadius: shape.borderRadius,
-      backgroundColor: `${palette.background.paper} !important`,
       backdropFilter: "blur(3px)",
-      ...(palette.mode === "light" && {
-        boxShadow: shadows[1],
-      }),
+      pointerEvents: "auto",
+      backgroundImage: `linear-gradient(${[
+        "0deg",
+        tinycolor(palette.background.default).setAlpha(0.2).toHex8String(),
+        tinycolor(palette.background.default).setAlpha(0.2).toHex8String(),
+      ].join(" ,")})`,
+      backgroundColor: tinycolor(palette.background.paper).setAlpha(0.8).toHex8String(),
+      boxShadow: shadows[3],
+
+      "&:hover": {
+        backgroundColor: palette.background.paper,
+        backgroundImage: `linear-gradient(0deg, ${palette.action.hover}, ${palette.action.hover})`,
+      },
     },
   }),
 );
@@ -172,7 +169,7 @@ export function PlotLegend(props: Props): JSX.Element {
 
       return <ArrowIcon />;
     }
-    return showLegend ? <Dismiss20Filled /> : <TextBulletListLtr20Filled />;
+    return showLegend ? <ArrowMinimize24Filled /> : <TextBulletListLtr20Filled />;
   }, [showLegend, legendDisplay]);
 
   const handlePointerMove = useCallback(
@@ -226,7 +223,6 @@ export function PlotLegend(props: Props): JSX.Element {
       }}
     >
       <IconButton
-        size="small"
         onClick={toggleLegend}
         className={cx(classes.toggleButton, {
           [classes.toggleButtonFloating]: legendDisplay === "floating",
@@ -239,7 +235,7 @@ export function PlotLegend(props: Props): JSX.Element {
           flexGrow={1}
           gap={0.5}
           overflow="auto"
-          fullHeight={legendDisplay === "floating"}
+          fullHeight={legendDisplay !== "top"}
           style={{
             height: legendDisplay === "top" ? Math.round(sidebarDimension) : undefined,
             width: legendDisplay === "left" ? Math.round(sidebarDimension) : undefined,
@@ -248,7 +244,7 @@ export function PlotLegend(props: Props): JSX.Element {
           <Stack
             flex="auto"
             fullWidth
-            fullHeight={legendDisplay === "floating"}
+            fullHeight={legendDisplay !== "top"}
             overflow={legendDisplay === "floating" ? "auto" : undefined}
           >
             <div className={classes.container}>
