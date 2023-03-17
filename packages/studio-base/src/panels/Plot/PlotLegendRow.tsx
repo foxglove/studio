@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Square24Filled, Square24Regular, ErrorCircle24Filled } from "@fluentui/react-icons";
+import { Square24Filled, Square24Regular, ErrorCircle16Filled } from "@fluentui/react-icons";
 import { Checkbox, Tooltip, Typography } from "@mui/material";
 import { ComponentProps, useMemo, useState } from "react";
 import { makeStyles } from "tss-react/mui";
@@ -94,7 +94,9 @@ const useStyles = makeStyles<void, "plotName">()((theme, _params, classes) => ({
   },
   errorIcon: {
     color: theme.palette.error.main,
-    fontSize: theme.typography.pxToRem(21),
+    // fontSize: 20,
+    // height: "1em",
+    // width: "1em",
   },
 }));
 
@@ -181,6 +183,7 @@ export function PlotLegendRow({
         style={{ gridColumn: !showPlotValuesInLegend ? "span 2" : undefined }}
       >
         <Typography
+          noWrap={showPlotValuesInLegend}
           flex="auto"
           variant="body2"
           className={cx({ [classes.disabledPathLabel]: !path.enabled })}
@@ -192,7 +195,7 @@ export function PlotLegendRow({
             placement="top"
             title="Mismatch in the number of elements in x-axis and y-axis messages"
           >
-            <ErrorCircle24Filled className={classes.errorIcon} />
+            <ErrorCircle16Filled className={classes.errorIcon} />
           </Tooltip>
         )}
       </div>
