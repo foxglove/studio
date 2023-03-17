@@ -12,6 +12,8 @@ import { quatToEuler } from "@foxglove/studio-base/util/quatToEuler";
 
 const DURATION_20_YEARS_SEC = 20 * 365 * 24 * 60 * 60;
 
+const PRIMITIVE_TYPES = ["string", "number", "bigint", "boolean"];
+
 export function getItemString(
   _nodeType: string,
   data: unknown,
@@ -95,7 +97,7 @@ export function getItemString(
     const value = (data as Record<string, unknown>)[key];
     if (
       isTypicalFilterName(key) &&
-      (value == undefined || ["string", "number", "bigint", "boolean"].includes(typeof value))
+      (value == undefined || PRIMITIVE_TYPES.includes(typeof value))
     ) {
       return `${key}: ${value}`;
     }
