@@ -5,10 +5,10 @@
 import { ReactNode } from "react";
 import tinycolor from "tinycolor2";
 
+import { filterMap } from "@foxglove/den/collection";
 import { isTypicalFilterName } from "@foxglove/studio-base/components/MessagePathSyntax/isTypicalFilterName";
 import { format, formatDuration } from "@foxglove/studio-base/util/formatTime";
 import { quatToEuler } from "@foxglove/studio-base/util/quatToEuler";
-import { filterMap } from "@foxglove/den/collection";
 
 const DURATION_20_YEARS_SEC = 20 * 365 * 24 * 60 * 60;
 
