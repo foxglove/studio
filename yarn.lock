@@ -2438,23 +2438,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@foxglove/schemas@npm:1.1.2":
+"@foxglove/schemas@npm:1.1.2, @foxglove/schemas@npm:^1.1.0":
   version: 1.1.2
   resolution: "@foxglove/schemas@npm:1.1.2"
   dependencies:
     "@foxglove/rosmsg-msgs-common": ^3.0.0
     tslib: ^2.5.0
   checksum: ddfdb610a36b4010c069834d45dbc4c8e58e7c60cba62f0d7108ee711f023d86e9e4874b799a5b0b6b7bd162ba076d7590b3a61d621f8bb13b0af5eb2c54c3eb
-  languageName: node
-  linkType: hard
-
-"@foxglove/schemas@npm:^1.1.0":
-  version: 1.1.0
-  resolution: "@foxglove/schemas@npm:1.1.0"
-  dependencies:
-    "@foxglove/rosmsg-msgs-common": ^3.0.0
-    tslib: ^2.5.0
-  checksum: 9757cac98e9606a4c13f37e3b05dd2384e7283b9b676781986710c1ead99777e54d79b4fb7c64c047db308d288ac2e47a69c488bd2e1e3a8a4adc88f9f1eddf9
   languageName: node
   linkType: hard
 
