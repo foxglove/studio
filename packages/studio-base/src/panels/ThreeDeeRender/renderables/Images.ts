@@ -497,7 +497,7 @@ export class Images extends SceneExtension<ImageRenderable> {
     // If there is camera info, the frameId comes from the camera info since the user may have
     // selected camera info with a different frame than our image frame.
     //
-    // If there is no camera info, we fall bakc to the image's frame
+    // If there is no camera info, we fall back to the image's frame
     const rawFrameId =
       renderable.userData.cameraInfo?.header.frame_id ??
       ("header" in image ? image.header.frame_id : image.frame_id);
