@@ -131,6 +131,9 @@ const PanelToolbarControlsComponent = forwardRef<HTMLDivElement, PanelToolbarCon
         <SettingsIcon />
       </ToolbarIconButton>
     );
+
+    const showSettingsButton = panelInfo?.hasCustomToolbar !== true || hasSettings;
+
     if (settingsOnboardingTooltip) {
       settingsButton = (
         <Tooltip
@@ -172,7 +175,7 @@ const PanelToolbarControlsComponent = forwardRef<HTMLDivElement, PanelToolbarCon
     return (
       <Stack direction="row" alignItems="center" paddingLeft={1} ref={ref}>
         {additionalIcons}
-        {(panelInfo?.hasCustomToolbar !== true || hasSettings) && settingsButton}
+        {showSettingsButton && settingsButton}
         <PanelActionsDropdown isUnknownPanel={isUnknownPanel} />
       </Stack>
     );

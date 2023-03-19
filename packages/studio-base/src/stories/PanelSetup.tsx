@@ -19,7 +19,7 @@ import { HTML5Backend } from "react-dnd-html5-backend";
 import { Mosaic, MosaicNode, MosaicWindow } from "react-mosaic-component";
 
 import { useShallowMemo } from "@foxglove/hooks";
-import { MessageEvent } from "@foxglove/studio";
+import { MessageEvent, SettingsTree } from "@foxglove/studio";
 import MockMessagePipelineProvider from "@foxglove/studio-base/components/MessagePipeline/MockMessagePipelineProvider";
 import SettingsTreeEditor from "@foxglove/studio-base/components/SettingsTreeEditor";
 import AppConfigurationContext from "@foxglove/studio-base/context/AppConfigurationContext";
@@ -168,6 +168,11 @@ export const MosaicWrapper = ({ children }: { children: React.ReactNode }): JSX.
   );
 };
 
+const EmptyTree: SettingsTree = {
+  actionHandler: () => undefined,
+  nodes: {},
+};
+
 function PanelWrapper({
   children,
   includeSettings = false,
@@ -175,7 +180,8 @@ function PanelWrapper({
   children?: ReactNode;
   includeSettings?: boolean;
 }): JSX.Element {
-  const settings = usePanelStateStore((store) => Object.values(store.settingsTrees)[0]);
+  const settings =
+    usePanelStateStore((store) => Object.values(store.settingsTrees)[0]) ?? EmptyTree;
 
   return (
     <>
