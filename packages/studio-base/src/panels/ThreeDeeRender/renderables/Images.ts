@@ -305,17 +305,20 @@ export class Images extends SceneExtension<ImageRenderable> {
   };
 
   private cameraInfoShouldSubscribe = (cameraInfoTopic: string): boolean => {
-    // Iterate over each configured topic and check if it has a `cameraInfoTopic` setting
-    // that matches the given CameraInfo topic name.
-    //
-    // If _any_ of these topics do have the cameraInfoTopic and are visible, then we need to subscribe
-    // to the camera info topic so we can render the image in the scene.
-    return Array.from(Object.values(this.renderer.config.topics)).some((topicConfig) => {
+    // Iterate over each topic config and check if it has a cameraInfoTopic setting that matches
+    // the cameraInfoTopic we might want to turn on. If it does and the topic is visible, return
+    // true so we know to subscribe.
+    for (const topicConfig of Object.values(this.renderer.config.topics)) {
       const maybeImageConfig = topicConfig as Partial<LayerSettingsImage>;
-      return (
-        maybeImageConfig.cameraInfoTopic === cameraInfoTopic && (maybeImageConfig.visible ?? false)
-      );
-    });
+      if (
+        maybeImageConfig.cameraInfoTopic === cameraInfoTopic &&
+        maybeImageConfig.visible === true
+      ) {
+        return true;
+      }
+    }
+
+    return false;
   };
 
   private handleRosRawImage = (messageEvent: PartialMessageEvent<RosImage>): void => {
