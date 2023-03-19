@@ -16,7 +16,7 @@ import { Fixture } from "@foxglove/studio-base/stories/PanelSetup";
  * When you call useFixtureQueue with a fixture, if the previous fixture is still rendering, the new
  * input fixture is queued.
  */
-export function useFixtureQueue(fixture: Fixture): [Fixture, () => () => void] {
+function useFixtureQueue(fixture: Fixture): [Fixture, () => () => void] {
   const [activeFixture, setActiveFixture] = useState<Fixture>(fixture);
   const fixtureQueue = useRef<Fixture[]>([]);
   const rendering = useRef<boolean>(false);
@@ -46,3 +46,6 @@ export function useFixtureQueue(fixture: Fixture): [Fixture, () => () => void] {
 
   return [activeFixture, pauseFrame];
 }
+
+// ts-prune-ignore-next
+export { useFixtureQueue };
