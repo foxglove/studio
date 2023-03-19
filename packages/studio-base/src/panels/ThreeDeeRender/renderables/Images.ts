@@ -272,13 +272,14 @@ export class Images extends SceneExtension<ImageRenderable> {
       return;
     }
 
+    // Create a new renderable preserving the image from the previous one
+    const { image, receiveTime, frameId } = renderable.userData;
+
     // We dispose the old renderable and setup a new one. It is easier to dispose the old
     // renderable than clear only the specific camera topic fields.
     renderable.dispose();
     this.renderables.delete(imageTopic);
 
-    // Create a new renderable preserving the image from the previous one
-    const { image, receiveTime, frameId } = renderable.userData;
     const newRenderable = this._getImageRenderable(imageTopic, receiveTime, image, frameId);
 
     // apply camera info to new renderable
@@ -286,7 +287,7 @@ export class Images extends SceneExtension<ImageRenderable> {
       return;
     }
 
-    // Lookup the camera info for our image topic
+    // Look up the camera info for our image topic
     const cameraInfo = this.cameraInfoByTopic.get(cameraInfoTopic);
     if (!cameraInfo) {
       this.renderer.settings.errors.addToTopic(
@@ -364,6 +365,11 @@ export class Images extends SceneExtension<ImageRenderable> {
         return;
       }
 
+      // We auto-selected a camera info topic for this image topic so we need to add the lookup.
+      // Without this lookup, the handleCameraInfo won't know what image topics to update when
+      // camera info messages arrive after image messages.
+      this.cameraInfoToImageTopics.set(newCameraInfoTopic, imageTopic);
+
       // Update user settings with the newly selected CameraInfo topic
       this.renderer.updateConfig((draft) => {
         const updatedUserSettings = { ...settings };
@@ -373,12 +379,12 @@ export class Images extends SceneExtension<ImageRenderable> {
       this.updateSettingsTree();
     }
 
-    // There's no camera info topic so we can't lookup camera info messages to make a model
+    // There's no camera info topic so we can't look up camera info messages to make a model
     if (!settings.cameraInfoTopic) {
       return;
     }
 
-    // Lookup the camera info for our renderable
+    // Look up the camera info for our renderable
     const cameraInfo = this.cameraInfoByTopic.get(settings.cameraInfoTopic);
     if (!cameraInfo) {
       this.renderer.settings.errors.addToTopic(
@@ -398,12 +404,12 @@ export class Images extends SceneExtension<ImageRenderable> {
   private handleCameraInfo = (
     messageEvent: PartialMessageEvent<CameraInfo> & PartialMessageEvent<CameraCalibration>,
   ): void => {
-    // Store the last camera info on each topic, when processing an image message we'll lookup
+    // Store the last camera info on each topic, when processing an image message we'll look up
     // the camera info by the info topic configured for the image
     const cameraInfo = normalizeCameraInfo(messageEvent.message);
     this.cameraInfoByTopic.set(messageEvent.topic, cameraInfo);
 
-    // Lookup any image topics assigned to our camera info topic and determine if we need to update
+    // Look up any image topics assigned to our camera info topic and determine if we need to update
     // those renderables since we now have a camera info whereas we may not have previously
     const imageTopics = this.cameraInfoToImageTopics.get(messageEvent.topic) ?? [];
     for (const imageTopic of imageTopics) {
@@ -420,7 +426,7 @@ export class Images extends SceneExtension<ImageRenderable> {
 
       // If there's no active image then we don't need to update the renderable
       //
-      // When an image is received, the handleImage call will lookup the cameraInfoByTopic and
+      // When an image is received, the handleImage call will look up the cameraInfoByTopic and
       // create the model.
       const { image, receiveTime } = renderable.userData;
       if (!image) {
@@ -599,7 +605,7 @@ export class Images extends SceneExtension<ImageRenderable> {
       return renderable;
     }
 
-    // Lookup any existing settings for the image topic to save as user data with the renderable
+    // Look up any existing settings for the image topic to save as user data with the renderable
     const userSettings = this.renderer.config.topics[imageTopic] as
       | Partial<LayerSettingsImage>
       | undefined;
@@ -778,7 +784,7 @@ export function cameraInfoTopicMatches(imageTopic: string, cameraInfoTopic: stri
 }
 
 /**
- * Lookup a matching camera info topic for the image topic.
+ * Look up a matching camera info topic for the image topic.
  *
  * Return a candidate camera info topic.
  */
