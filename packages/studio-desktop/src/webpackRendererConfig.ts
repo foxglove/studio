@@ -50,7 +50,7 @@ export const webpackRendererConfig =
         minimizer: [
           new ESBuildMinifyPlugin({
             target: "es2020",
-            minifyIdentifiers: false, // readable error stack traces are helpful for debugging
+            minifyIdentifiers: true,
             minifySyntax: true,
             minifyWhitespace: true,
           }),
