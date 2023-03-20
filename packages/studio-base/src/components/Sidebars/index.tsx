@@ -22,6 +22,12 @@ import { BuiltinIcon } from "@foxglove/studio-base/components/BuiltinIcon";
 import ErrorBoundary from "@foxglove/studio-base/components/ErrorBoundary";
 import { MemoryUseIndicator } from "@foxglove/studio-base/components/MemoryUseIndicator";
 import Stack from "@foxglove/studio-base/components/Stack";
+import {
+  LeftSidebarItemKey,
+  RightSidebarItemKey,
+  useWorkspaceStore,
+  useWorkspaceActions,
+} from "@foxglove/studio-base/context/WorkspaceContext";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
 
@@ -121,39 +127,20 @@ function mosiacRightSidebarSplitPercentage(node: MosaicNode<LayoutNode>): number
   }
 }
 
-type SidebarProps<OldLeftKey, LeftKey, RightKey> = PropsWithChildren<{
+type SidebarProps<OldLeftKey> = PropsWithChildren<{
   items: Map<OldLeftKey, SidebarItem>;
   bottomItems: Map<OldLeftKey, SidebarItem>;
   selectedKey: OldLeftKey | undefined;
   onSelectKey: (key: OldLeftKey | undefined) => void;
 
-  leftItems: Map<LeftKey, NewSidebarItem>;
-  selectedLeftKey: LeftKey | undefined;
-  onSelectLeftKey: (key: LeftKey | undefined) => void;
-
-  rightItems: Map<RightKey, NewSidebarItem>;
-  selectedRightKey: RightKey | undefined;
-  onSelectRightKey: (key: RightKey | undefined) => void;
+  leftItems: Map<LeftSidebarItemKey, NewSidebarItem>;
+  rightItems: Map<RightSidebarItemKey, NewSidebarItem>;
 }>;
 
-export default function Sidebars<
-  OldLeftKey extends string,
-  LeftKey extends string,
-  RightKey extends string,
->(props: SidebarProps<OldLeftKey, LeftKey, RightKey>): JSX.Element {
-  const {
-    children,
-    items,
-    bottomItems,
-    selectedKey,
-    onSelectKey,
-    leftItems,
-    selectedLeftKey,
-    onSelectLeftKey,
-    rightItems,
-    selectedRightKey,
-    onSelectRightKey,
-  } = props;
+export default function Sidebars<OldLeftKey extends string>(
+  props: SidebarProps<OldLeftKey>,
+): JSX.Element {
+  const { children, items, bottomItems, selectedKey, onSelectKey, leftItems, rightItems } = props;
   const [enableMemoryUseIndicator = false] = useAppConfigurationValue<boolean>(
     AppSetting.ENABLE_MEMORY_USE_INDICATOR,
   );
@@ -164,6 +151,18 @@ export default function Sidebars<
   );
   const [initialEnableNewTopNav] = useState(currentEnableNewTopNav);
   const enableNewTopNav = isDesktopApp() ? initialEnableNewTopNav : currentEnableNewTopNav;
+
+  const {
+    leftSidebarItem,
+    leftSidebarOpen,
+    leftSidebarSize,
+    rightSidebarItem,
+    rightSidebarOpen,
+    rightSidebarSize,
+  } = useWorkspaceStore((store) => store);
+
+  const { selectLeftSidebarItem, selectRightSidebarItem, setLeftSidebarSize, setRightSidebarSize } =
+    useWorkspaceActions();
 
   const [mosaicValue, setMosaicValue] = useState<MosaicNode<LayoutNode>>("children");
   const { classes } = useStyles();
@@ -186,10 +185,16 @@ export default function Sidebars<
   const oldLeftSidebarOpen = !enableNewTopNav
     ? selectedKey != undefined && allOldLeftItems.has(selectedKey)
     : false;
-  const leftSidebarOpen =
-    enableNewTopNav && selectedLeftKey != undefined && leftItems.has(selectedLeftKey);
-  const rightSidebarOpen =
-    enableNewTopNav && selectedRightKey != undefined && rightItems.has(selectedRightKey);
+  const showLeftSidebar =
+    enableNewTopNav &&
+    leftSidebarOpen &&
+    leftSidebarItem != undefined &&
+    leftItems.has(leftSidebarItem);
+  const showRightSidebar =
+    enableNewTopNav &&
+    rightSidebarOpen &&
+    rightSidebarItem != undefined &&
+    rightItems.has(rightSidebarItem);
 
   useEffect(() => {
     const leftTargetWidth = enableNewTopNav ? 280 : 384;
@@ -199,25 +204,36 @@ export default function Sidebars<
 
     setMosaicValue((oldValue) => {
       let node: MosaicNode<LayoutNode> = "children";
-      if (rightSidebarOpen) {
+      if (showRightSidebar) {
         node = {
           direction: "row",
           first: node,
           second: "rightbar",
-          splitPercentage: mosiacRightSidebarSplitPercentage(oldValue) ?? defaultRightPercentage,
+          splitPercentage:
+            rightSidebarSize ??
+            mosiacRightSidebarSplitPercentage(oldValue) ??
+            defaultRightPercentage,
         };
       }
-      if (oldLeftSidebarOpen || leftSidebarOpen) {
+      if (oldLeftSidebarOpen || showLeftSidebar) {
         node = {
           direction: "row",
           first: "leftbar",
           second: node,
-          splitPercentage: mosiacLeftSidebarSplitPercentage(oldValue) ?? defaultLeftPercentage,
+          splitPercentage:
+            leftSidebarSize ?? mosiacLeftSidebarSplitPercentage(oldValue) ?? defaultLeftPercentage,
         };
       }
       return node;
     });
-  }, [enableNewTopNav, leftSidebarOpen, oldLeftSidebarOpen, rightSidebarOpen]);
+  }, [
+    enableNewTopNav,
+    leftSidebarSize,
+    oldLeftSidebarOpen,
+    rightSidebarSize,
+    showLeftSidebar,
+    showRightSidebar,
+  ]);
 
   const SelectedLeftComponent =
     (selectedKey != undefined && allOldLeftItems.get(selectedKey)?.component) || Noop;
@@ -287,6 +303,17 @@ export default function Sidebars<
     ));
   }, [bottomItems, classes, onClickTabAction]);
 
+  const onChangeMosaicValue = useCallback(
+    (newValue: ReactNull | MosaicNode<LayoutNode>) => {
+      if (newValue != undefined) {
+        setMosaicValue(newValue);
+        setLeftSidebarSize(mosiacLeftSidebarSplitPercentage(newValue));
+        setRightSidebarSize(mosiacRightSidebarSplitPercentage(newValue));
+      }
+    },
+    [setLeftSidebarSize, setRightSidebarSize],
+  );
+
   return (
     <Stack direction="row" fullHeight overflow="hidden">
       {!enableNewTopNav && (
@@ -337,7 +364,7 @@ export default function Sidebars<
         <MosaicWithoutDragDropContext<LayoutNode>
           className=""
           value={mosaicValue}
-          onChange={(value) => value != undefined && setMosaicValue(value)}
+          onChange={onChangeMosaicValue}
           renderTile={(id) => {
             switch (id) {
               case "children":
@@ -346,12 +373,12 @@ export default function Sidebars<
                 return (
                   <ErrorBoundary>
                     {enableNewTopNav ? (
-                      <NewSidebar<LeftKey>
+                      <NewSidebar<LeftSidebarItemKey>
                         anchor="left"
-                        onClose={() => onSelectLeftKey(undefined)}
+                        onClose={() => selectLeftSidebarItem(undefined)}
                         items={leftItems}
-                        activeTab={selectedLeftKey}
-                        setActiveTab={onSelectLeftKey}
+                        activeTab={leftSidebarItem}
+                        setActiveTab={selectLeftSidebarItem}
                       />
                     ) : (
                       <Paper square elevation={0}>
@@ -363,12 +390,12 @@ export default function Sidebars<
               case "rightbar":
                 return (
                   <ErrorBoundary>
-                    <NewSidebar<RightKey>
+                    <NewSidebar<RightSidebarItemKey>
                       anchor="right"
-                      onClose={() => onSelectRightKey(undefined)}
+                      onClose={() => selectRightSidebarItem(undefined)}
                       items={rightItems}
-                      activeTab={selectedRightKey}
-                      setActiveTab={onSelectRightKey}
+                      activeTab={rightSidebarItem}
+                      setActiveTab={selectRightSidebarItem}
                     />
                   </ErrorBoundary>
                 );
