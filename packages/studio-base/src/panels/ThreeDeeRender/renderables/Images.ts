@@ -465,6 +465,7 @@ export class Images extends SceneExtension<ImageRenderable> {
 
     // clear the old model since that is no longer valid if the camera info changed
     renderable.userData.cameraModel = undefined;
+    renderable.userData.geometry?.dispose();
     renderable.userData.geometry = undefined;
 
     try {
