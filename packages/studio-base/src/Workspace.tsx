@@ -83,6 +83,7 @@ import { useInitialDeepLinkState } from "@foxglove/studio-base/hooks/useInitialD
 import useNativeAppMenuEvent from "@foxglove/studio-base/hooks/useNativeAppMenuEvent";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
 import { PanelStateContextProvider } from "@foxglove/studio-base/providers/PanelStateContextProvider";
+import WorkspaceContextProvider from "@foxglove/studio-base/providers/WorkspaceContextProvider";
 import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
 
 const log = Logger.getLogger(__filename);
@@ -163,7 +164,7 @@ const selectPlayerId = (ctx: MessagePipelineContext) => ctx.playerState.playerId
 const selectEventsSupported = (store: EventsStore) => store.eventsSupported;
 const selectWorkspaceSidebarItem = (store: WorkspaceContextStore) => store.sidebarItem;
 
-export default function Workspace(props: WorkspaceProps): JSX.Element {
+function WorkspaceContent(props: WorkspaceProps): JSX.Element {
   const { classes } = useStyles();
   const containerRef = useRef<HTMLDivElement>(ReactNull);
   const { availableSources, selectSource } = usePlayerSelection();
@@ -687,5 +688,13 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
         )}
       </div>
     </MultiProvider>
+  );
+}
+
+export default function Workspace(props: WorkspaceProps): JSX.Element {
+  return (
+    <WorkspaceContextProvider>
+      <WorkspaceContent {...props} />
+    </WorkspaceContextProvider>
   );
 }

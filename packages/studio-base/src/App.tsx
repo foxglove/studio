@@ -10,7 +10,6 @@ import GlobalCss from "@foxglove/studio-base/components/GlobalCss";
 import EventsProvider from "@foxglove/studio-base/providers/EventsProvider";
 import { StudioLogsSettingsProvider } from "@foxglove/studio-base/providers/StudioLogsSettingsProvider";
 import TimelineInteractionStateProvider from "@foxglove/studio-base/providers/TimelineInteractionStateProvider";
-import WorkspaceContextProvider from "@foxglove/studio-base/providers/WorkspaceContextProvider";
 
 import Workspace from "./Workspace";
 import { CustomWindowControlsProps } from "./components/AppBar/CustomWindowControls";
@@ -84,7 +83,6 @@ export function App(props: AppProps): JSX.Element {
 
   const providers = [
     /* eslint-disable react/jsx-key */
-    <WorkspaceContextProvider />,
     <StudioLogsSettingsProvider />,
     <StudioToastProvider />,
     <LayoutStorageContext.Provider value={layoutStorage} />,
