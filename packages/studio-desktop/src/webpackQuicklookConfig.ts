@@ -68,9 +68,7 @@ export const webpackQuicklookConfig =
         minimizer: [
           new ESBuildMinifyPlugin({
             target: "es2020",
-            minifyIdentifiers: true,
-            minifySyntax: true,
-            minifyWhitespace: true,
+            minify: true,
           }),
         ],
       },

@@ -211,12 +211,11 @@ export function makeConfig(
     },
     optimization: {
       removeAvailableModules: true,
+
       minimizer: [
         new ESBuildMinifyPlugin({
           target: "es2020",
-          minifyIdentifiers: true,
-          minifySyntax: true,
-          minifyWhitespace: true,
+          minify: true,
         }),
       ],
     },

@@ -71,9 +71,7 @@ export const webpackMainConfig =
         minimizer: [
           new ESBuildMinifyPlugin({
             target: "es2020",
-            minifyIdentifiers: true,
-            minifySyntax: true,
-            minifyWhitespace: true,
+            minify: true,
           }),
         ],
       },
