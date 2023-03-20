@@ -969,7 +969,7 @@ export default class UserNodePlayer implements Player {
       })
       .catch((err) => {
         log.error(err);
-        reportError(err);
+        reportError(err as Error);
       });
   }
 
