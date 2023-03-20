@@ -163,6 +163,12 @@ const selectPlayUntil = (ctx: MessagePipelineContext) => ctx.playUntil;
 const selectPlayerId = (ctx: MessagePipelineContext) => ctx.playerState.playerId;
 const selectEventsSupported = (store: EventsStore) => store.eventsSupported;
 const selectWorkspaceSidebarItem = (store: WorkspaceContextStore) => store.sidebarItem;
+const selectWorkspaceLeftSidebarItem = (store: WorkspaceContextStore) => store.leftSidebarItem;
+const selectWorkspaceLeftSidebarOpen = (store: WorkspaceContextStore) => store.leftSidebarOpen;
+const selectWorkspaceLeftSidebarSize = (store: WorkspaceContextStore) => store.leftSidebarSize;
+const selectWorkspaceRightSidebarItem = (store: WorkspaceContextStore) => store.rightSidebarItem;
+const selectWorkspaceRightSidebarOpen = (store: WorkspaceContextStore) => store.rightSidebarOpen;
+const selectWorkspaceRightSidebarSize = (store: WorkspaceContextStore) => store.rightSidebarSize;
 
 function WorkspaceContent(props: WorkspaceProps): JSX.Element {
   const { classes } = useStyles();
@@ -172,8 +178,22 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
   const playerProblems = useMessagePipeline(selectPlayerProblems);
 
   const sidebarItem = useWorkspaceStore(selectWorkspaceSidebarItem);
+  const leftSidebarItem = useWorkspaceStore(selectWorkspaceLeftSidebarItem);
+  const leftSidebarOpen = useWorkspaceStore(selectWorkspaceLeftSidebarOpen);
+  const leftSidebarSize = useWorkspaceStore(selectWorkspaceLeftSidebarSize);
+  const rightSidebarItem = useWorkspaceStore(selectWorkspaceRightSidebarItem);
+  const rightSidebarOpen = useWorkspaceStore(selectWorkspaceRightSidebarOpen);
+  const rightSidebarSize = useWorkspaceStore(selectWorkspaceRightSidebarSize);
 
-  const { setLeftSidebarOpen, setRightSidebarOpen, selectSidebarItem } = useWorkspaceActions();
+  const {
+    setLeftSidebarOpen,
+    setRightSidebarOpen,
+    selectLeftSidebarItem,
+    selectRightSidebarItem,
+    setLeftSidebarSize,
+    setRightSidebarSize,
+    selectSidebarItem,
+  } = useWorkspaceActions();
 
   const [prefsDialogOpen, setPrefsDialogOpen] = useState(false);
 
@@ -662,10 +682,20 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
           />
         )}
         <Sidebars
-          bottomItems={sidebarBottomItems}
           items={sidebarItems}
+          bottomItems={sidebarBottomItems}
+          selectedKey={sidebarItem}
+          onSelectKey={selectSidebarItem}
           leftItems={leftSidebarItems}
+          selectedLeftKey={leftSidebarOpen ? leftSidebarItem : undefined}
+          onSelectLeftKey={selectLeftSidebarItem}
+          leftSidebarSize={leftSidebarSize}
+          setLeftSidebarSize={setLeftSidebarSize}
           rightItems={rightSidebarItems}
+          selectedRightKey={rightSidebarOpen ? rightSidebarItem : undefined}
+          onSelectRightKey={selectRightSidebarItem}
+          rightSidebarSize={rightSidebarSize}
+          setRightSidebarSize={setRightSidebarSize}
         >
           {/* To ensure no stale player state remains, we unmount all panels when players change */}
           <RemountOnValueChange value={playerId}>

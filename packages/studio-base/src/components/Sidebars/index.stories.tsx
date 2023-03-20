@@ -2,14 +2,12 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
-import { SidebarItemKey } from "@foxglove/studio-base/context/WorkspaceContext";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
-import WorkspaceContextProvider from "@foxglove/studio-base/providers/WorkspaceContextProvider";
 
 import Sidebars, { SidebarItem } from ".";
 
@@ -24,15 +22,15 @@ const C = () => <>C</>;
 const D = () => <>D</>;
 const E = () => <>E</>;
 
-const ITEMS = new Map<SidebarItemKey, SidebarItem>([
-  ["account", { title: "A", component: A, iconName: "Add" }],
-  ["add-panel", { title: "C", component: C, iconName: "Cancel" }],
-  ["connection", { title: "D", component: D, iconName: "Delete" }],
-  ["extensions", { title: "E", component: E, badge: { count: 2 }, iconName: "Edit" }],
+const ITEMS = new Map<string, SidebarItem>([
+  ["a", { title: "A", component: A, iconName: "Add" }],
+  ["c", { title: "C", component: C, iconName: "Cancel" }],
+  ["d", { title: "D", component: D, iconName: "Delete" }],
+  ["e", { title: "E", component: E, badge: { count: 2 }, iconName: "Edit" }],
 ]);
 
-const BOTTOM_ITEMS = new Map<SidebarItemKey, SidebarItem>([
-  ["help", { title: "B", component: B, iconName: "ErrorBadge" }],
+const BOTTOM_ITEMS = new Map<string, SidebarItem>([
+  ["b", { title: "B", component: B, iconName: "ErrorBadge" }],
 ]);
 
 function Story({
@@ -42,10 +40,11 @@ function Story({
   height = 300,
 }: {
   clickKey?: string;
-  defaultSelectedKey?: SidebarItemKey | undefined;
+  defaultSelectedKey?: string | undefined;
   enableAppBar?: boolean;
   height?: number;
 }) {
+  const [selectedKey, setSelectedKey] = useState<string | undefined>(defaultSelectedKey);
   const [_, setAppBarEnabled] = useAppConfigurationValue<boolean>(AppSetting.ENABLE_NEW_TOPNAV);
 
   useEffect(() => {
@@ -64,6 +63,9 @@ function Story({
           button.click();
           return;
         }
+        setSelectedKey(() => {
+          throw new Error("Missing sidebar button");
+        });
       })();
     }
   }, [clickKey]);
@@ -71,36 +73,38 @@ function Story({
   return (
     <DndProvider backend={HTML5Backend}>
       <div style={{ height }}>
-        <WorkspaceContextProvider initialState={{ sidebarItem: defaultSelectedKey }}>
-          <Sidebars
-            items={ITEMS}
-            bottomItems={BOTTOM_ITEMS}
-            rightItems={new Map()}
-            leftItems={new Map()}
-          >
-            Main content
-          </Sidebars>
-        </WorkspaceContextProvider>
+        <Sidebars
+          items={ITEMS}
+          bottomItems={BOTTOM_ITEMS}
+          rightItems={new Map()}
+          leftItems={new Map()}
+          selectedKey={selectedKey}
+          onSelectKey={setSelectedKey}
+          selectedRightKey={undefined}
+          onSelectRightKey={() => {}}
+          selectedLeftKey={undefined}
+          onSelectLeftKey={() => {}}
+          leftSidebarSize={undefined}
+          rightSidebarSize={undefined}
+          setLeftSidebarSize={() => {}}
+          setRightSidebarSize={() => {}}
+        >
+          Main content
+        </Sidebars>
       </div>
     </DndProvider>
   );
 }
 
 export const Unselected = (): JSX.Element => <Story />;
-export const ASelected = (): JSX.Element => <Story defaultSelectedKey="account" />;
-export const BSelected = (): JSX.Element => <Story defaultSelectedKey="add-panel" />;
+export const ASelected = (): JSX.Element => <Story defaultSelectedKey="a" />;
+export const BSelected = (): JSX.Element => <Story defaultSelectedKey="b" />;
 
 export const ClickToSelect = (): JSX.Element => <Story clickKey="a" />;
 ClickToSelect.parameters = { colorScheme: "dark" };
-export const ClickToDeselect = (): JSX.Element => (
-  <Story defaultSelectedKey="connection" clickKey="a" />
-);
+export const ClickToDeselect = (): JSX.Element => <Story defaultSelectedKey="a" clickKey="a" />;
 ClickToDeselect.parameters = { colorScheme: "dark" };
 
 export const OverflowUnselected = (): JSX.Element => <Story height={200} />;
-export const OverflowCSelected = (): JSX.Element => (
-  <Story height={200} defaultSelectedKey="extensions" />
-);
-export const OverflowBSelected = (): JSX.Element => (
-  <Story height={200} defaultSelectedKey="help" />
-);
+export const OverflowCSelected = (): JSX.Element => <Story height={200} defaultSelectedKey="c" />;
+export const OverflowBSelected = (): JSX.Element => <Story height={200} defaultSelectedKey="b" />;
