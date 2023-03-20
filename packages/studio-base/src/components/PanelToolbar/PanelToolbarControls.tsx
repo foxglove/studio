@@ -132,6 +132,8 @@ const PanelToolbarControlsComponent = forwardRef<HTMLDivElement, PanelToolbarCon
       </ToolbarIconButton>
     );
 
+    // Show the settings button so that panel title is editable, unless we have a custom
+    // toolbar in which case the title wouldn't be visible.
     const showSettingsButton = panelInfo?.hasCustomToolbar !== true || hasSettings;
 
     if (settingsOnboardingTooltip) {
