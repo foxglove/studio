@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { createContext, useMemo, useState } from "react";
+import { createContext, Dispatch, SetStateAction, useMemo, useState } from "react";
 import { DeepReadonly } from "ts-essentials";
 import { StoreApi, useStore } from "zustand";
 
@@ -45,7 +45,6 @@ export const WorkspaceContext = createContext<undefined | StoreApi<WorkspaceCont
 WorkspaceContext.displayName = "WorkspaceContext";
 
 export const WorkspaceStoreSelectors = {
-  selectAll: (store: WorkspaceContextStore): WorkspaceContextStore => store,
   selectPanelSettingsOpen: (store: WorkspaceContextStore): boolean =>
     store.sidebarItem === "panel-settings" || store.rightSidebarItem === "panel-settings",
 };
@@ -68,15 +67,20 @@ export type WorkspaceActions = {
   selectSidebarItem: (selectedSidebarItem: undefined | SidebarItemKey) => void;
   selectLeftSidebarItem: (item: undefined | LeftSidebarItemKey) => void;
   selectRightSidebarItem: (item: undefined | RightSidebarItemKey) => void;
-  // eslint-disable-next-line @foxglove/no-boolean-parameters
-  setLayoutMenuOpen: (open: boolean) => void;
-  // eslint-disable-next-line @foxglove/no-boolean-parameters
-  setLeftSidebarOpen: (open: boolean) => void;
+  setLayoutMenuOpen: Dispatch<SetStateAction<boolean>>;
+  setLeftSidebarOpen: Dispatch<SetStateAction<boolean>>;
   setLeftSidebarSize: (size: undefined | number) => void;
-  // eslint-disable-next-line @foxglove/no-boolean-parameters
-  setRightSidebarOpen: (open: boolean) => void;
+  setRightSidebarOpen: Dispatch<SetStateAction<boolean>>;
   setRightSidebarSize: (size: undefined | number) => void;
 };
+
+function setterValue<T>(action: SetStateAction<T>, value: T): T {
+  if (action instanceof Function) {
+    return action(value);
+  }
+
+  return action;
+}
 
 /**
  * Provides various actions to manipulate the workspace state.
@@ -105,8 +109,12 @@ export function useWorkspaceActions(): WorkspaceActions {
       openLayoutBrowser: () =>
         enableNewTopNav ? set({ layoutMenuOpen: true }) : set({ sidebarItem: "layouts" }),
 
-      // eslint-disable-next-line @foxglove/no-boolean-parameters
-      setLayoutMenuOpen: (layoutMenuOpen: boolean) => set({ layoutMenuOpen }),
+      setLayoutMenuOpen: (setter: SetStateAction<boolean>) => {
+        set((oldValue) => {
+          const layoutMenuOpen = setterValue(setter, oldValue.layoutMenuOpen);
+          return { layoutMenuOpen };
+        });
+      },
 
       selectSidebarItem: (selectedSidebarItem: undefined | SidebarItemKey) =>
         set({ sidebarItem: selectedSidebarItem }),
@@ -125,30 +133,34 @@ export function useWorkspaceActions(): WorkspaceActions {
         });
       },
 
-      // eslint-disable-next-line @foxglove/no-boolean-parameters
-      setLeftSidebarOpen: (leftSidebarOpen: boolean) => {
-        if (leftSidebarOpen) {
-          set((oldValue) => ({
-            leftSidebarOpen,
-            leftSidebarItem: oldValue.leftSidebarItem ?? "topics",
-          }));
-        } else {
-          set({ leftSidebarOpen: false });
-        }
+      setLeftSidebarOpen: (setter: SetStateAction<boolean>) => {
+        set((oldValue) => {
+          const leftSidebarOpen = setterValue(setter, oldValue.leftSidebarOpen);
+          if (leftSidebarOpen) {
+            return {
+              leftSidebarOpen,
+              leftSidebarItem: oldValue.leftSidebarItem ?? "topics",
+            };
+          } else {
+            return { leftSidebarOpen: false };
+          }
+        });
       },
 
       setLeftSidebarSize: (leftSidebarSize: undefined | number) => set({ leftSidebarSize }),
 
-      // eslint-disable-next-line @foxglove/no-boolean-parameters
-      setRightSidebarOpen: (rightSidebarOpen: boolean) => {
-        if (rightSidebarOpen) {
-          set((oldValue) => ({
-            rightSidebarOpen,
-            rightSidebarItem: oldValue.rightSidebarItem ?? "panel-settings",
-          }));
-        } else {
-          set({ rightSidebarOpen: false });
-        }
+      setRightSidebarOpen: (setter: SetStateAction<boolean>) => {
+        set((oldValue) => {
+          const rightSidebarOpen = setterValue(setter, oldValue.rightSidebarOpen);
+          if (rightSidebarOpen) {
+            return {
+              rightSidebarOpen,
+              rightSidebarItem: oldValue.rightSidebarItem ?? "panel-settings",
+            };
+          } else {
+            return { rightSidebarOpen: false };
+          }
+        });
       },
 
       setRightSidebarSize: (rightSidebarSize: undefined | number) => set({ rightSidebarSize }),

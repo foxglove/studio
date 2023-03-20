@@ -70,9 +70,9 @@ import {
   LeftSidebarItemKey,
   RightSidebarItemKey,
   SidebarItemKey,
-  useWorkspaceStore,
   useWorkspaceActions,
-  WorkspaceStoreSelectors,
+  useWorkspaceStore,
+  WorkspaceContextStore,
 } from "@foxglove/studio-base/context/WorkspaceContext";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import useAddPanel from "@foxglove/studio-base/hooks/useAddPanel";
@@ -161,6 +161,7 @@ const selectSeek = (ctx: MessagePipelineContext) => ctx.seekPlayback;
 const selectPlayUntil = (ctx: MessagePipelineContext) => ctx.playUntil;
 const selectPlayerId = (ctx: MessagePipelineContext) => ctx.playerState.playerId;
 const selectEventsSupported = (store: EventsStore) => store.eventsSupported;
+const selectWorkspaceSidebarItem = (store: WorkspaceContextStore) => store.sidebarItem;
 
 export default function Workspace(props: WorkspaceProps): JSX.Element {
   const { classes } = useStyles();
@@ -169,9 +170,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
   const playerPresence = useMessagePipeline(selectPlayerPresence);
   const playerProblems = useMessagePipeline(selectPlayerProblems);
 
-  const { leftSidebarOpen, rightSidebarOpen, sidebarItem } = useWorkspaceStore(
-    WorkspaceStoreSelectors.selectAll,
-  );
+  const sidebarItem = useWorkspaceStore(selectWorkspaceSidebarItem);
 
   const { setLeftSidebarOpen, setRightSidebarOpen, selectSidebarItem } = useWorkspaceActions();
 
@@ -608,17 +607,10 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
         ev.preventDefault();
         selectSidebarItem(undefined);
       },
-      "[": () => setLeftSidebarOpen(!leftSidebarOpen),
-      "]": () => setRightSidebarOpen(!rightSidebarOpen),
+      "[": () => setLeftSidebarOpen((oldValue) => !oldValue),
+      "]": () => setRightSidebarOpen((oldValue) => !oldValue),
     };
-  }, [
-    leftSidebarOpen,
-    rightSidebarOpen,
-    sidebarItem,
-    setLeftSidebarOpen,
-    setRightSidebarOpen,
-    selectSidebarItem,
-  ]);
+  }, [sidebarItem, setLeftSidebarOpen, setRightSidebarOpen, selectSidebarItem]);
 
   const play = useMessagePipeline(selectPlay);
   const playUntil = useMessagePipeline(selectPlayUntil);
