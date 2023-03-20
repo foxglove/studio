@@ -672,9 +672,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
           bottomItems={sidebarBottomItems}
           items={sidebarItems}
           leftItems={leftSidebarItems}
-          onSelectKey={selectSidebarItem}
           rightItems={rightSidebarItems}
-          selectedKey={sidebarItem}
         >
           {/* To ensure no stale player state remains, we unmount all panels when players change */}
           <RemountOnValueChange value={playerId}>

@@ -11,7 +11,9 @@ import {
   WorkspaceContextStore,
 } from "@foxglove/studio-base/context/WorkspaceContext";
 
-function createWorkspaceContextStore(): StoreApi<WorkspaceContextStore> {
+function createWorkspaceContextStore(
+  initialState?: Partial<WorkspaceContextStore>,
+): StoreApi<WorkspaceContextStore> {
   return createStore<WorkspaceContextStore>()(
     persist(
       () => {
@@ -24,6 +26,7 @@ function createWorkspaceContextStore(): StoreApi<WorkspaceContextStore> {
           rightSidebarOpen: false,
           rightSidebarSize: undefined,
           sidebarItem: undefined,
+          ...initialState,
         };
         return store;
       },
@@ -40,10 +43,12 @@ function createWorkspaceContextStore(): StoreApi<WorkspaceContextStore> {
 
 export default function WorkspaceContextProvider({
   children,
+  initialState,
 }: {
   children?: ReactNode;
+  initialState?: Partial<WorkspaceContextStore>;
 }): JSX.Element {
-  const [store] = useState(createWorkspaceContextStore());
+  const [store] = useState(() => createWorkspaceContextStore(initialState));
 
   return <WorkspaceContext.Provider value={store}>{children}</WorkspaceContext.Provider>;
 }

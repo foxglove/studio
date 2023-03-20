@@ -2,18 +2,30 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { DecoratorFn } from "@storybook/react";
 import { screen } from "@testing-library/dom";
 import userEvent from "@testing-library/user-event";
-import { PropsWithChildren, useEffect, useState } from "react";
+import { PropsWithChildren, useEffect } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import Stack from "@foxglove/studio-base/components/Stack";
+import {
+  LeftSidebarItemKey,
+  RightSidebarItemKey,
+  SidebarItemKey,
+} from "@foxglove/studio-base/context/WorkspaceContext";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
+import WorkspaceContextProvider from "@foxglove/studio-base/providers/WorkspaceContextProvider";
 
 import Sidebars, { SidebarItem } from ".";
 import { NewSidebarItem } from "./NewSidebar";
+
+const localStorageResetDecorator: DecoratorFn = (Story) => {
+  window.localStorage.clear();
+  return <Story />;
+};
 
 export default {
   title: "components/NewSidebar",
@@ -21,6 +33,7 @@ export default {
   parameters: {
     colorScheme: "both-column",
   },
+  decorators: [localStorageResetDecorator],
 };
 
 const longText =
@@ -40,37 +53,30 @@ const C = () => <>{longText}</>;
 
 const X = () => <Wrapper>X</Wrapper>;
 const Y = () => <Wrapper>Y</Wrapper>;
-const Z = () => <>{longText}</>;
 
-type LeftKey = "a" | "b" | "c";
-type RightKey = "x" | "y" | "z";
+const ITEMS = new Map<SidebarItemKey, SidebarItem>([]);
+const BOTTOM_ITEMS = new Map<SidebarItemKey, SidebarItem>([]);
 
-const ITEMS = new Map<string, SidebarItem>([]);
-const BOTTOM_ITEMS = new Map<string, SidebarItem>([]);
-
-const LEFT_ITEMS = new Map<LeftKey, NewSidebarItem>([
-  ["a", { title: "A", component: A }],
-  ["b", { title: "B", component: B }],
-  ["c", { title: "C", component: C }],
+const LEFT_ITEMS = new Map<LeftSidebarItemKey, NewSidebarItem>([
+  ["topics", { title: "A", component: A }],
+  ["variables", { title: "B", component: B }],
+  ["studio-logs-settings", { title: "C", component: C }],
 ]);
 
-const RIGHT_ITEMS = new Map<RightKey, NewSidebarItem>([
-  ["x", { title: "X", component: X }],
-  ["y", { title: "Y", component: Y }],
-  ["z", { title: "Z", component: Z }],
+const RIGHT_ITEMS = new Map<RightSidebarItemKey, NewSidebarItem>([
+  ["events", { title: "X", component: X }],
+  ["panel-settings", { title: "Y", component: Y }],
 ]);
 
-function Story({
+function StoryWrapper({
   label,
   defaultLeftKey,
   defaultRightKey,
 }: {
   label?: string;
-  defaultLeftKey?: LeftKey | undefined;
-  defaultRightKey?: RightKey | undefined;
+  defaultLeftKey?: LeftSidebarItemKey | undefined;
+  defaultRightKey?: RightSidebarItemKey | undefined;
 }): JSX.Element {
-  const [selectedRightKey, setSelectedRightKey] = useState<RightKey | undefined>(defaultRightKey);
-  const [selectedLeftKey, setSelectedLeftKey] = useState<LeftKey | undefined>(defaultLeftKey);
   const [_, setAppBarEnabled] = useAppConfigurationValue<boolean>(AppSetting.ENABLE_NEW_TOPNAV);
 
   useEffect(() => {
@@ -80,45 +86,52 @@ function Story({
   return (
     <DndProvider backend={HTML5Backend}>
       <div style={{ height: "100%" }}>
-        <Sidebars
-          items={ITEMS}
-          bottomItems={BOTTOM_ITEMS}
-          rightItems={RIGHT_ITEMS}
-          leftItems={LEFT_ITEMS}
-          selectedKey={undefined}
-          onSelectKey={() => {
-            // no-op
+        <WorkspaceContextProvider
+          initialState={{
+            leftSidebarItem: defaultLeftKey,
+            leftSidebarOpen: defaultLeftKey != undefined,
+            rightSidebarItem: defaultRightKey,
+            rightSidebarOpen: defaultRightKey != undefined,
           }}
-          selectedRightKey={selectedRightKey}
-          onSelectRightKey={setSelectedRightKey}
-          selectedLeftKey={selectedLeftKey}
-          onSelectLeftKey={setSelectedLeftKey}
         >
-          {label ?? "Main content"}
-        </Sidebars>
+          <Sidebars
+            items={ITEMS}
+            bottomItems={BOTTOM_ITEMS}
+            rightItems={RIGHT_ITEMS}
+            leftItems={LEFT_ITEMS}
+          >
+            {label ?? "Main content"}
+          </Sidebars>
+        </WorkspaceContextProvider>
       </div>
     </DndProvider>
   );
 }
 
 // Left
-export const LeftOpen = (): JSX.Element => <Story defaultLeftKey="a" />;
+export const LeftOpen = (): JSX.Element => <StoryWrapper defaultLeftKey="topics" />;
 LeftOpen.storyName = "Left";
 
-export const LeftLongText = (): JSX.Element => <Story defaultLeftKey="c" />;
+export const LeftLongText = (): JSX.Element => <StoryWrapper defaultLeftKey="variables" />;
 LeftLongText.storyName = "Left (with text overflow)";
 
-export const LeftClicked = (): JSX.Element => <Story defaultLeftKey="a" />;
+export const LeftClicked = (): JSX.Element => (
+  <StoryWrapper defaultLeftKey="studio-logs-settings" />
+);
 LeftClicked.storyName = "Left (tab click interaction)";
 LeftClicked.parameters = { colorScheme: "dark" };
 LeftClicked.play = async () => {
   const user = userEvent.setup();
 
-  const leftTab = await screen.findByTestId("b-left");
+  const leftTab = await screen.findByTestId("variables-left");
   await user.click(leftTab);
 };
 export const LeftClosed = (): JSX.Element => (
-  <Story defaultLeftKey="b" defaultRightKey="y" label="Left sidebar should be closed" />
+  <StoryWrapper
+    defaultLeftKey="topics"
+    defaultRightKey="panel-settings"
+    label="Left sidebar should be closed"
+  />
 );
 LeftClosed.storyName = "Left (closed by interaction)";
 LeftClosed.parameters = { colorScheme: "dark" };
@@ -130,23 +143,27 @@ LeftClosed.play = async () => {
 };
 
 // Right
-export const RightOpen = (): JSX.Element => <Story defaultRightKey="x" />;
+export const RightOpen = (): JSX.Element => <StoryWrapper defaultRightKey="panel-settings" />;
 RightOpen.storyName = "Right";
 
-export const RightLongText = (): JSX.Element => <Story defaultRightKey="z" />;
+export const RightLongText = (): JSX.Element => <StoryWrapper defaultRightKey="events" />;
 RightLongText.storyName = "Right (with text overflow)";
 
-export const RightClicked = (): JSX.Element => <Story defaultRightKey="x" />;
+export const RightClicked = (): JSX.Element => <StoryWrapper defaultRightKey="panel-settings" />;
 RightClicked.storyName = "Right (tab click interaction)";
 RightClicked.parameters = { colorScheme: "dark" };
 RightClicked.play = async () => {
   const user = userEvent.setup();
 
-  const rightTab = await screen.findByTestId("y-right");
+  const rightTab = await screen.findByTestId("panel-settings-right");
   await user.click(rightTab);
 };
 export const RightClosed = (): JSX.Element => (
-  <Story defaultLeftKey="b" defaultRightKey="y" label="Right sidebar should be closed" />
+  <StoryWrapper
+    defaultLeftKey="topics"
+    defaultRightKey="panel-settings"
+    label="Right sidebar should be closed"
+  />
 );
 RightClosed.storyName = "Right (closed by interaction)";
 RightClosed.parameters = { colorScheme: "dark" };
@@ -158,19 +175,23 @@ RightClosed.play = async () => {
 };
 
 // Both
-export const Default = (): JSX.Element => <Story label="Both sidebars should be closed" />;
-export const BothOpen = (): JSX.Element => <Story defaultLeftKey="a" defaultRightKey="x" />;
+export const Default = (): JSX.Element => <StoryWrapper label="Both sidebars should be closed" />;
+export const BothOpen = (): JSX.Element => (
+  <StoryWrapper defaultLeftKey="topics" defaultRightKey="panel-settings" />
+);
 BothOpen.storyName = "Both (opened)";
 
-export const BothClicked = (): JSX.Element => <Story defaultLeftKey="a" defaultRightKey="x" />;
+export const BothClicked = (): JSX.Element => (
+  <StoryWrapper defaultLeftKey="topics" defaultRightKey="panel-settings" />
+);
 BothClicked.storyName = "Both (tab click interaction)";
 BothClicked.parameters = { colorScheme: "dark" };
 BothClicked.play = async () => {
   const user = userEvent.setup();
 
-  const leftTab = await screen.findByTestId("b-left");
+  const leftTab = await screen.findByTestId("topics-left");
   await user.click(leftTab);
 
-  const rightTab = await screen.findByTestId("y-right");
+  const rightTab = await screen.findByTestId("panel-settings-right");
   await user.click(rightTab);
 };
