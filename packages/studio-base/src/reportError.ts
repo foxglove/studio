@@ -3,14 +3,15 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 type ReportErrorHandler = (error: Error) => void;
-let reportFn: ReportErrorHandler = (_err: Error) => {};
+
+const globalWithHandler = global as { foxgloveStudioReportErrorFn?: ReportErrorHandler };
 
 /**
  * Report an error that has escaped past normal error-handling flows in the app and should be
  * triaged and diagnosed.
  */
 export function reportError(error: Error): void {
-  reportFn(error);
+  globalWithHandler.foxgloveStudioReportErrorFn?.(error);
 }
 
 /**
@@ -18,5 +19,5 @@ export function reportError(error: Error): void {
  * a no-op.
  */
 export function setReportErrorHandler(fn: ReportErrorHandler): void {
-  reportFn = fn;
+  globalWithHandler.foxgloveStudioReportErrorFn = fn;
 }
