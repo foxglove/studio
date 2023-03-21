@@ -2,6 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import produce from "immer";
+import { isEqual, set } from "lodash";
 import memoizeWeak from "memoize-weak";
 import { useCallback, useEffect } from "react";
 
@@ -9,7 +11,6 @@ import { SettingsTreeAction, SettingsTreeNode, SettingsTreeNodes } from "@foxglo
 import { plotableRosTypes } from "@foxglove/studio-base/panels/Plot";
 import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelStateContextProvider";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
-import { lineColors } from "@foxglove/studio-base/util/plotColors";
 
 import {
   StateTransitionConfig,
@@ -29,7 +30,7 @@ const makeSeriesNode = memoizeWeak((path: StateTransitionPath, index: number): S
       },
     ],
     label: stateTransitionPathDisplayName(path, index),
-    visible: path.enabled,
+    visible: path.enabled ?? false,
     fields: {
       value: {
         label: "Message path",
@@ -41,11 +42,6 @@ const makeSeriesNode = memoizeWeak((path: StateTransitionPath, index: number): S
         input: "string",
         label: "Label",
         value: path.label,
-      },
-      color: {
-        input: "rgb",
-        label: "Color",
-        value: path.color ?? lineColors[index % lineColors.length],
       },
       timestampMethod: {
         input: "select",
@@ -99,14 +95,44 @@ export function useStateTransitionsPanelSettings(
 
   const actionHandler = useCallback(
     (action: SettingsTreeAction) => {
-      if (action.action !== "update") {
-        return;
-      } else if (
-        action.payload.input === "boolean" &&
-        action.payload.path[0] === "general" &&
-        action.payload.path[1] === "isSynced"
-      ) {
-        saveConfig({ isSynced: action.payload.value });
+      if (action.action === "update") {
+        const { input, path, value } = action.payload;
+        if (input === "boolean" && isEqual(path, ["general", "isSynced"])) {
+          saveConfig({ isSynced: value });
+        }
+
+        if (path[0] === "paths") {
+          saveConfig(
+            produce((draft) => {
+              if (path[2] === "visible") {
+                set(draft, [...path.slice(0, 2), "enabled"], value);
+              } else {
+                set(draft, path, value);
+              }
+            }),
+          );
+        }
+      }
+
+      if (action.action === "perform-node-action") {
+        if (action.payload.id === "add-series") {
+          saveConfig(
+            produce((draft) => {
+              draft.paths.push({
+                timestampMethod: "receiveTime",
+                value: "",
+                enabled: true,
+              });
+            }),
+          );
+        } else if (action.payload.id === "delete-series") {
+          const index = action.payload.path[1];
+          saveConfig(
+            produce((draft) => {
+              draft.paths.splice(Number(index), 1);
+            }),
+          );
+        }
       }
     },
     [saveConfig],
