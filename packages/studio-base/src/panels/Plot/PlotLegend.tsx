@@ -75,6 +75,7 @@ const useStyles = makeStyles<void, "container" | "toggleButton" | "toggleButtonF
     },
     rootLeft: {
       alignItems: "flex-start",
+      maxWidth: "80%",
 
       [`.${classes.toggleButton}`]: {
         padding: spacing(0.25),
@@ -91,6 +92,7 @@ const useStyles = makeStyles<void, "container" | "toggleButton" | "toggleButtonF
     },
     rootTop: {
       flexDirection: "column",
+      maxHeight: "80%",
 
       [`.${classes.toggleButton}`]: {
         padding: spacing(0.25),
@@ -218,10 +220,6 @@ export function PlotLegend(props: Props): JSX.Element {
         [classes.rootLeft]: legendDisplay === "left",
         [classes.rootTop]: legendDisplay === "top",
       })}
-      style={{
-        maxHeight: legendDisplay === "top" ? "80%" : "none",
-        maxWidth: legendDisplay === "left" ? "80%" : "none",
-      }}
     >
       <IconButton
         onClick={toggleLegend}
