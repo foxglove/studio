@@ -2085,15 +2085,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@fluentui/react-icons@npm:2.0.195":
-  version: 2.0.195
-  resolution: "@fluentui/react-icons@npm:2.0.195"
+"@fluentui/react-icons@npm:2.0.196":
+  version: 2.0.196
+  resolution: "@fluentui/react-icons@npm:2.0.196"
   dependencies:
     "@griffel/react": ^1.0.0
     tslib: ^2.1.0
   peerDependencies:
     react: ">=16.8.0 <19.0.0"
-  checksum: b3360bb39838342614df9461d4329fba10ea6872729e0390ed4c727612c7e32312780e55b35b46a17cb984f68c76abb32e3aa8e064e9d72e11c4e1d670ea05a3
+  checksum: 4dfabf8c605e753218864746e184e50aa7539590dba5c236b1edd47fa2e6df5dd6e670560fa6cfc49e1d14f46227038546188397585f09b69ba52fb0914c6450
   languageName: node
   linkType: hard
 
@@ -2222,7 +2222,7 @@ __metadata:
     "@foxglove/rosmsg": 4.2.0
     "@foxglove/rosmsg-serialization": 2.0.0
     "@foxglove/rosmsg2-serialization": 2.0.0
-    "@foxglove/schemas": 1.1.0
+    "@foxglove/schemas": 1.1.2
     "@foxglove/wasm-bz2": 0.1.1
     "@foxglove/wasm-lz4": 1.0.2
     "@foxglove/wasm-zstd": 1.0.1
@@ -2405,13 +2405,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@foxglove/schemas@npm:1.1.0, @foxglove/schemas@npm:^1.1.0":
-  version: 1.1.0
-  resolution: "@foxglove/schemas@npm:1.1.0"
+"@foxglove/schemas@npm:1.1.2, @foxglove/schemas@npm:^1.1.0":
+  version: 1.1.2
+  resolution: "@foxglove/schemas@npm:1.1.2"
   dependencies:
     "@foxglove/rosmsg-msgs-common": ^3.0.0
     tslib: ^2.5.0
-  checksum: 9757cac98e9606a4c13f37e3b05dd2384e7283b9b676781986710c1ead99777e54d79b4fb7c64c047db308d288ac2e47a69c488bd2e1e3a8a4adc88f9f1eddf9
+  checksum: ddfdb610a36b4010c069834d45dbc4c8e58e7c60cba62f0d7108ee711f023d86e9e4874b799a5b0b6b7bd162ba076d7590b3a61d621f8bb13b0af5eb2c54c3eb
   languageName: node
   linkType: hard
 
@@ -2429,7 +2429,7 @@ __metadata:
     "@emotion/cache": 11.10.5
     "@emotion/react": 11.10.6
     "@emotion/styled": 11.10.6
-    "@fluentui/react-icons": 2.0.195
+    "@fluentui/react-icons": 2.0.196
     "@foxglove/avl": 1.0.0
     "@foxglove/chartjs-plugin-zoom": 2.0.4
     "@foxglove/comlink-transfer-handlers": "workspace:*"
@@ -2451,7 +2451,7 @@ __metadata:
     "@foxglove/rosmsg2-serialization": 2.0.0
     "@foxglove/rostime": 1.1.2
     "@foxglove/rtps": 1.6.0
-    "@foxglove/schemas": 1.1.0
+    "@foxglove/schemas": 1.1.2
     "@foxglove/studio": "workspace:*"
     "@foxglove/three-text": 0.1.0
     "@foxglove/typescript-transformers": "workspace:*"
@@ -2459,7 +2459,7 @@ __metadata:
     "@foxglove/velodyne-cloud": 1.0.1
     "@foxglove/wasm-bz2": 0.1.1
     "@foxglove/wasm-lz4": 1.0.2
-    "@foxglove/ws-protocol": 0.5.1
+    "@foxglove/ws-protocol": 0.5.2
     "@foxglove/xmlrpc": 1.3.0
     "@mcap/core": 1.2.1
     "@mui/icons-material": 5.11.0
@@ -2481,7 +2481,7 @@ __metadata:
     "@types/foxglove__roslibjs": "workspace:*"
     "@types/gl-matrix": 3.2.0
     "@types/hammerjs": 2.0.41
-    "@types/leaflet": 1.9.0
+    "@types/leaflet": 1.9.3
     "@types/memoize-weak": "workspace:*"
     "@types/moment-duration-format": 2.2.3
     "@types/nearley": 2.11.2
@@ -2494,8 +2494,8 @@ __metadata:
     "@types/react-transition-group": ^4.4.5
     "@types/react-virtualized": 9.21.21
     "@types/react-window": ^1.8.5
-    "@types/sanitize-html": 2.8.0
-    "@types/seedrandom": 3.0.4
+    "@types/sanitize-html": 2.9.0
+    "@types/seedrandom": 3.0.5
     "@types/shallowequal": 1.1.1
     "@types/string-hash": 1.1.1
     "@types/text-metrics": "workspace:*"
@@ -2579,7 +2579,7 @@ __metadata:
     readable-stream: 4.3.0
     rehype-raw: 6.1.1
     reselect: 4.1.7
-    sanitize-html: 2.8.1
+    sanitize-html: 2.10.0
     seedrandom: 3.0.5
     shallowequal: 1.1.0
     string-hash: 1.1.3
@@ -2632,7 +2632,7 @@ __metadata:
     async-mutex: 0.4.0
     builder-util: 23.6.0
     clean-webpack-plugin: 4.0.0
-    electron: 22.1.0
+    electron: 23.1.4
     electron-builder: 23.6.0
     electron-devtools-installer: 3.2.0
     electron-squirrel-startup: 1.0.0
@@ -2752,14 +2752,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@foxglove/ws-protocol@npm:0.5.1":
-  version: 0.5.1
-  resolution: "@foxglove/ws-protocol@npm:0.5.1"
+"@foxglove/ws-protocol@npm:0.5.2":
+  version: 0.5.2
+  resolution: "@foxglove/ws-protocol@npm:0.5.2"
   dependencies:
     debug: ^4
     eventemitter3: ^5.0.0
     tslib: ^2.5.0
-  checksum: cd366be3f8d03fff6b32465f1bc1cf6868cf13f91f7d7a62544ffea3a866c8030ae4a20c01689a664f7f3d081a842bb4107006a61def3da30ce399a48660c7a7
+  checksum: 39ff9665f652c3761155b6e3d12e9546c0c3cd5984631ac04ccf2089625f1bd896f66ca2796f1aa5cef8cbb93e9cd39af038f6a3a409f9931475a32b99337ac6
   languageName: node
   linkType: hard
 
@@ -6394,12 +6394,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/leaflet@npm:1.9.0":
-  version: 1.9.0
-  resolution: "@types/leaflet@npm:1.9.0"
+"@types/leaflet@npm:1.9.3":
+  version: 1.9.3
+  resolution: "@types/leaflet@npm:1.9.3"
   dependencies:
     "@types/geojson": "*"
-  checksum: f3ee2e2fc8bd3480d77667471c8f774a3726ff7694a7d08d2423c05b40e28f00379c7d469b4cbd3b53a1bc96c75970c92f9da7908fc477cbac0eda2a9d17b6ad
+  checksum: d12042edc3a043d074b4fd3b4c4800f479dfb01db3980d8c1151edbc70b23ca9e84ab7da72ce0d1c36c040f89ba1421bd36d9d9796ec3704a0d3c942985a87ae
   languageName: node
   linkType: hard
 
@@ -6717,12 +6717,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/sanitize-html@npm:2.8.0":
-  version: 2.8.0
-  resolution: "@types/sanitize-html@npm:2.8.0"
+"@types/sanitize-html@npm:2.9.0":
+  version: 2.9.0
+  resolution: "@types/sanitize-html@npm:2.9.0"
   dependencies:
     htmlparser2: ^8.0.0
-  checksum: 6e583cac673832536fac8da53890073f753baf2c49826fd0c2831e615cb5527692d03b2b5ba9eb8caf8694de4bfb1c31fd12398d2b68331725590a6ceb8f82fe
+  checksum: b60f42b740bbfb1b1434ce8b43925a38ecc608b60aa654fd009d2e22e33f324b61d370768c55bd2fd98e03de08518ffa8911d61606c483526fb931bb8b59d1b0
   languageName: node
   linkType: hard
 
@@ -6733,10 +6733,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/seedrandom@npm:3.0.4":
-  version: 3.0.4
-  resolution: "@types/seedrandom@npm:3.0.4"
-  checksum: 994f444f2c4ea2c7d8ca3358fc16f4a912c71b2d015647597ec28c8e6ba403101e8075bde382977189b065fcbb64d6af09a9e55d5db444e2b95f7643efb2f8c3
+"@types/seedrandom@npm:3.0.5":
+  version: 3.0.5
+  resolution: "@types/seedrandom@npm:3.0.5"
+  checksum: d63d56ebc609203cf8cbe2ab7e7934237446bc2463ade664be130dcd4a3d74915d529909de2e1b18141cfabc9e42784998b7e5ff30c016919ac5b83911a700f0
   languageName: node
   linkType: hard
 
@@ -8791,7 +8791,7 @@ __metadata:
     "@foxglove/den": "workspace:*"
     "@foxglove/log": "workspace:*"
     "@foxglove/rostime": 1.1.2
-    "@foxglove/schemas": 1.1.0
+    "@foxglove/schemas": 1.1.2
     "@foxglove/studio": "workspace:*"
     "@foxglove/studio-base": "workspace:*"
     "@pmmmwh/react-refresh-webpack-plugin": 0.5.10
@@ -11105,7 +11105,7 @@ __metadata:
   dependencies:
     "@foxglove/log": "workspace:*"
     "@foxglove/studio-desktop": "workspace:*"
-    electron: 22.1.0
+    electron: 23.1.4
     playwright: 1.30.0
     webpack: 5.76.2
   languageName: unknown
@@ -11682,16 +11682,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"electron@npm:22.1.0":
-  version: 22.1.0
-  resolution: "electron@npm:22.1.0"
+"electron@npm:23.1.4":
+  version: 23.1.4
+  resolution: "electron@npm:23.1.4"
   dependencies:
     "@electron/get": ^2.0.0
     "@types/node": ^16.11.26
     extract-zip: ^2.0.1
   bin:
     electron: cli.js
-  checksum: d448cf785fe6c24c7338d48c8aa98765e384a3e3f91317ea6a6ebb363f6a25ceef40e05cec73de0bc3406e803ed5400e9fbbc1dd107249ac7a477c8ffc2da18a
+  checksum: 42e167d5ae4e60b9a2bab191321645cb76b901d3c88dc7ae1551ecad2946aa4ebef9e49c347ca3db76032d84802d878a64a1123111579a270e3b8406c5a18b16
   languageName: node
   linkType: hard
 
@@ -13346,7 +13346,7 @@ __metadata:
     babel-plugin-transform-import-meta: 2.2.0
     cross-env: 7.0.3
     depcheck: 1.4.3
-    electron: 22.1.0
+    electron: 23.1.4
     electron-builder: 23.6.0
     electron-notarize: 1.2.2
     eslint: 8.36.0
@@ -21816,9 +21816,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sanitize-html@npm:2.8.1":
-  version: 2.8.1
-  resolution: "sanitize-html@npm:2.8.1"
+"sanitize-html@npm:2.10.0":
+  version: 2.10.0
+  resolution: "sanitize-html@npm:2.10.0"
   dependencies:
     deepmerge: ^4.2.2
     escape-string-regexp: ^4.0.0
@@ -21826,7 +21826,7 @@ __metadata:
     is-plain-object: ^5.0.0
     parse-srcset: ^1.0.2
     postcss: ^8.3.11
-  checksum: 0d35503b261800b736a02648e8b9b2a5206cbc621248cf8dd86d5b9bdd470d0146d74704222d287bd7359a599e8a186cc5b015401237b0244352f18f37465daa
+  checksum: 0cb2bb330ed966a4d667b1890322dd868a67f527f87c04d7e3be1688fcfda20f7452a9a7744870751f51e255742e7264a287d9bcfcd64d4cd74a3c99f99c73d2
   languageName: node
   linkType: hard
 
