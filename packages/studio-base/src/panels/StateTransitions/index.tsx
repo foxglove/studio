@@ -38,7 +38,7 @@ import TimeBasedChart, {
   TimeBasedChartTooltipData,
 } from "@foxglove/studio-base/components/TimeBasedChart";
 import { useSelectedPanels } from "@foxglove/studio-base/context/CurrentLayoutContext";
-import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
+import { useWorkspaceActions } from "@foxglove/studio-base/context/WorkspaceContext";
 import {
   ChartData,
   OnClickArg as OnChartClickArgs,
@@ -164,7 +164,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
   const pathStrings = useMemo(() => paths.map(({ value }) => value), [paths]);
   const subscribeTopics = useMemo(() => getTopicsFromPaths(pathStrings), [pathStrings]);
 
-  const { openPanelSettings } = useWorkspace();
+  const { openPanelSettings } = useWorkspaceActions();
   const { id: panelId } = usePanelContext();
   const { setSelectedPanelIds } = useSelectedPanels();
   const [focusedPath, setFocusedPath] = useState<undefined | string[]>(undefined);
