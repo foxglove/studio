@@ -106,7 +106,7 @@ function buildSettingsTree(config: PlotConfig): SettingsTreeNodes {
             { value: "floating", label: "Floating" },
             { value: "left", label: "Left" },
             { value: "top", label: "Top" },
-            { value: "hidden", label: "Hidden" },
+            { value: "none", label: "Hidden" },
           ],
         },
         showPlotValuesInLegend: {

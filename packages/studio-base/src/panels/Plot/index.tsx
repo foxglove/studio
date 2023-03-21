@@ -532,7 +532,7 @@ function Plot(props: Props) {
         fullWidth
         style={{ height: `calc(100% - ${PANEL_TOOLBAR_MIN_HEIGHT}px)` }}
       >
-        {legendDisplay !== "hidden" && (
+        {legendDisplay !== "none" && (
           <PlotLegend
             paths={yAxisPaths}
             datasets={datasets}
