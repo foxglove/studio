@@ -11,9 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import AddIcon from "@mui/icons-material/Add";
-import ClearIcon from "@mui/icons-material/Clear";
-import { alpha, Button, IconButton } from "@mui/material";
+import { alpha, Typography } from "@mui/material";
 import { ChartOptions, ScaleOptions } from "chart.js";
 import { uniq } from "lodash";
 import { useCallback, useMemo, useRef } from "react";
@@ -24,7 +22,6 @@ import { useShallowMemo } from "@foxglove/hooks";
 import { add as addTimes, fromSec, subtract as subtractTimes, toSec } from "@foxglove/rostime";
 import * as PanelAPI from "@foxglove/studio-base/PanelAPI";
 import { useBlocksByTopic } from "@foxglove/studio-base/PanelAPI";
-import MessagePathInput from "@foxglove/studio-base/components/MessagePathSyntax/MessagePathInput";
 import { getTopicsFromPaths } from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
 import { useDecodeMessagePathsForMessagesByTopic } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
 import useMessagesByPath from "@foxglove/studio-base/components/MessagePathSyntax/useMessagesByPath";
@@ -34,26 +31,21 @@ import {
   useMessagePipelineGetter,
 } from "@foxglove/studio-base/components/MessagePipeline";
 import Panel from "@foxglove/studio-base/components/Panel";
-import PanelToolbar, {
-  PANEL_TOOLBAR_MIN_HEIGHT,
-} from "@foxglove/studio-base/components/PanelToolbar";
+import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import Stack from "@foxglove/studio-base/components/Stack";
 import TimeBasedChart, {
   TimeBasedChartTooltipData,
 } from "@foxglove/studio-base/components/TimeBasedChart";
-import TimestampMethodDropdown from "@foxglove/studio-base/components/TimestampMethodDropdown";
-import { usePanelMousePresence } from "@foxglove/studio-base/hooks/usePanelMousePresence";
 import {
   ChartData,
   OnClickArg as OnChartClickArgs,
 } from "@foxglove/studio-base/src/components/Chart";
 import { OpenSiblingPanel, PanelConfig, SaveConfig } from "@foxglove/studio-base/types/panels";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
-import { TimestampMethod } from "@foxglove/studio-base/util/time";
 
 import messagesToDatasets from "./messagesToDatasets";
 import { useStateTransitionsPanelSettings } from "./settings";
-import { StateTransitionConfig } from "./types";
+import { StateTransitionConfig, stateTransitionPathDisplayName } from "./types";
 
 export const transitionableRosTypes = [
   "bool",
@@ -74,20 +66,6 @@ const fontSize = 10;
 const fontWeight = "bold";
 
 const useStyles = makeStyles()((theme) => ({
-  addButton: {
-    position: "absolute",
-    top: `calc(${PANEL_TOOLBAR_MIN_HEIGHT}px + ${theme.spacing(1)})`,
-    right: theme.spacing(0.5),
-    zIndex: 1,
-  },
-  clearButton: {
-    "&.MuiIconButton-root": {
-      padding: theme.spacing(0.125),
-    },
-  },
-  visibilityHidden: {
-    visibility: "hidden",
-  },
   chartWrapper: {
     position: "relative",
     marginTop: theme.spacing(0.5),
@@ -177,31 +155,7 @@ type Props = {
 const StateTransitions = React.memo(function StateTransitions(props: Props) {
   const { config, saveConfig } = props;
   const { paths } = config;
-  const { classes, cx } = useStyles();
-
-  const onInputChange = (value: string, index?: number) => {
-    if (index == undefined) {
-      throw new Error("index not set");
-    }
-    const newPaths = config.paths.slice();
-    const newPath = newPaths[index];
-    if (newPath) {
-      newPaths[index] = { ...newPath, value: value.trim() };
-    }
-    saveConfig({ paths: newPaths });
-  };
-
-  const onInputTimestampMethodChange = (value: TimestampMethod, index: number | undefined) => {
-    if (index == undefined) {
-      throw new Error("index not set");
-    }
-    const newPaths = config.paths.slice();
-    const newPath = newPaths[index];
-    if (newPath) {
-      newPaths[index] = { ...newPath, timestampMethod: value };
-    }
-    saveConfig({ paths: newPaths });
-  };
+  const { classes } = useStyles();
 
   const pathStrings = useMemo(() => paths.map(({ value }) => value), [paths]);
   const subscribeTopics = useMemo(() => getTopicsFromPaths(pathStrings), [pathStrings]);
@@ -340,7 +294,6 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
 
   const data: ChartData = useShallowMemo({ datasets });
   const rootRef = useRef<HTMLDivElement>(ReactNull);
-  const mousePresent = usePanelMousePresence(rootRef);
 
   useStateTransitionsPanelSettings(config, saveConfig);
 
@@ -355,24 +308,6 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
   return (
     <Stack ref={rootRef} flexGrow={1} overflow="hidden" style={{ zIndex: 0 }}>
       <PanelToolbar />
-      <div
-        className={cx(classes.addButton, {
-          [classes.visibilityHidden]: !mousePresent,
-        })}
-      >
-        <Button
-          size="small"
-          variant="contained"
-          color="inherit"
-          startIcon={<AddIcon />}
-          disableRipple
-          onClick={() =>
-            saveConfig({ paths: [...config.paths, { value: "", timestampMethod: "receiveTime" }] })
-          }
-        >
-          Add topic
-        </Button>
-      </div>
       <Stack fullWidth flex="auto" overflowX="hidden" overflowY="auto">
         <div className={classes.chartWrapper} style={{ height }} ref={sizeRef}>
           <TimeBasedChart
@@ -392,34 +327,9 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
             currentTime={currentTimeSinceStart}
           />
 
-          {paths.map(({ value: path, timestampMethod }, index) => (
+          {paths.map((path, index) => (
             <div className={classes.row} key={index} style={{ top: index * heightPerTopic }}>
-              <IconButton
-                size="small"
-                className={classes.clearButton}
-                onClick={() => {
-                  const newPaths = config.paths.slice();
-                  newPaths.splice(index, 1);
-                  saveConfig({ paths: newPaths });
-                }}
-              >
-                <ClearIcon fontSize="inherit" />
-              </IconButton>
-              <MessagePathInput
-                path={path}
-                onChange={onInputChange}
-                index={index}
-                autoSize
-                validTypes={transitionableRosTypes}
-                noMultiSlices
-              />
-              <TimestampMethodDropdown
-                path={path}
-                index={index}
-                iconButtonProps={{ disabled: path !== "" }}
-                timestampMethod={timestampMethod}
-                onTimestampMethodChange={onInputTimestampMethodChange}
-              />
+              <Typography variant="body2">{stateTransitionPathDisplayName(path, index)}</Typography>
             </div>
           ))}
         </div>
