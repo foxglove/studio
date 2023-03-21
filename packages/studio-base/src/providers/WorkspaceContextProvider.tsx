@@ -25,7 +25,7 @@ function createWorkspaceContextStore(
           rightSidebarItem: undefined,
           rightSidebarOpen: false,
           rightSidebarSize: undefined,
-          sidebarItem: undefined,
+          sidebarItem: "connection",
           ...initialState,
         };
         return store;
