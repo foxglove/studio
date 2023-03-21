@@ -428,7 +428,10 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
   );
 });
 
-const defaultConfig: StateTransitionConfig = { paths: [], isSynced: true };
+const defaultConfig: StateTransitionConfig = {
+  paths: [{ value: "", timestampMethod: "receiveTime" }],
+  isSynced: true,
+};
 export default Panel(
   Object.assign(StateTransitions, {
     panelType: "StateTransitions",

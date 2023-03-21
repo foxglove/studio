@@ -4,9 +4,30 @@
 
 import { TimestampMethod } from "@foxglove/studio-base/util/time";
 
-export type StateTransitionPath = { value: string; timestampMethod: TimestampMethod };
+export type StateTransitionPath = {
+  color?: string;
+  value: string;
+  label?: string;
+  enabled?: boolean;
+  timestampMethod: TimestampMethod;
+};
 
 export type StateTransitionConfig = {
   paths: StateTransitionPath[];
   isSynced: boolean;
 };
+
+function presence<T>(value: undefined | T): undefined | T {
+  if (value === "") {
+    return undefined;
+  }
+
+  return value == undefined ? undefined : value;
+}
+
+export function stateTransitionPathDisplayName(
+  path: Readonly<StateTransitionPath>,
+  index: number,
+): string {
+  return presence(path.label) ?? presence(path.value) ?? `Series ${index + 1}`;
+}
