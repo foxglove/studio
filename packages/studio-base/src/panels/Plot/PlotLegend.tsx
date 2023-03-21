@@ -163,15 +163,14 @@ export function PlotLegend(props: Props): JSX.Element {
   );
 
   const legendIcon = useMemo(() => {
-    if (legendDisplay !== "floating") {
-      const iconMap = showLegend
-        ? { left: ChevronLeft20Regular, top: ChevronUp20Regular }
-        : { left: ChevronRight20Regular, top: ChevronDown20Regular };
-      const ArrowIcon = iconMap[legendDisplay];
-
-      return <ArrowIcon />;
+    switch (legendDisplay) {
+      case "floating":
+        return showLegend ? <ArrowMinimize24Filled /> : <TextBulletListLtr20Filled />;
+      case "left":
+        return showLegend ? <ChevronLeft20Regular /> : <ChevronRight20Regular />;
+      case "top":
+        return showLegend ? <ChevronUp20Regular /> : <ChevronDown20Regular />;
     }
-    return showLegend ? <ArrowMinimize24Filled /> : <TextBulletListLtr20Filled />;
   }, [showLegend, legendDisplay]);
 
   const handlePointerMove = useCallback(
