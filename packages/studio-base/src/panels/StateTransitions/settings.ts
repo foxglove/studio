@@ -89,6 +89,7 @@ function buildSettingsTree(config: StateTransitionConfig): SettingsTreeNodes {
 export function useStateTransitionsPanelSettings(
   config: StateTransitionConfig,
   saveConfig: SaveConfig<StateTransitionConfig>,
+  focusedPath?: readonly string[],
 ): void {
   const updatePanelSettingsTree = usePanelSettingsTreeUpdate();
 
@@ -140,7 +141,8 @@ export function useStateTransitionsPanelSettings(
   useEffect(() => {
     updatePanelSettingsTree({
       actionHandler,
+      focusedPath,
       nodes: buildSettingsTree(config),
     });
-  }, [actionHandler, config, updatePanelSettingsTree]);
+  }, [actionHandler, config, focusedPath, updatePanelSettingsTree]);
 }

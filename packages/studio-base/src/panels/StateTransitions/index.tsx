@@ -14,7 +14,7 @@
 import { alpha, Typography } from "@mui/material";
 import { ChartOptions, ScaleOptions } from "chart.js";
 import { uniq } from "lodash";
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
 import { makeStyles } from "tss-react/mui";
 
@@ -31,11 +31,14 @@ import {
   useMessagePipelineGetter,
 } from "@foxglove/studio-base/components/MessagePipeline";
 import Panel from "@foxglove/studio-base/components/Panel";
+import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import Stack from "@foxglove/studio-base/components/Stack";
 import TimeBasedChart, {
   TimeBasedChartTooltipData,
 } from "@foxglove/studio-base/components/TimeBasedChart";
+import { useSelectedPanels } from "@foxglove/studio-base/context/CurrentLayoutContext";
+import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
 import {
   ChartData,
   OnClickArg as OnChartClickArgs,
@@ -74,6 +77,7 @@ const useStyles = makeStyles()((theme) => ({
     display: "grid",
     position: "absolute",
     alignItems: "center",
+    cursor: "pointer",
     gridTemplateColumns: "auto minmax(min-content, 1fr) auto",
     gap: theme.spacing(0.25),
     paddingLeft: theme.spacing(0.25),
@@ -159,6 +163,11 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
 
   const pathStrings = useMemo(() => paths.map(({ value }) => value), [paths]);
   const subscribeTopics = useMemo(() => getTopicsFromPaths(pathStrings), [pathStrings]);
+
+  const { openPanelSettings } = useWorkspace();
+  const { id: panelId } = usePanelContext();
+  const { setSelectedPanelIds } = useSelectedPanels();
+  const [focusedPath, setFocusedPath] = useState<undefined | string[]>(undefined);
 
   const { startTime } = PanelAPI.useDataSourceInfo();
   const currentTime = useMessagePipeline(selectCurrentTime);
@@ -295,7 +304,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
   const data: ChartData = useShallowMemo({ datasets });
   const rootRef = useRef<HTMLDivElement>(ReactNull);
 
-  useStateTransitionsPanelSettings(config, saveConfig);
+  useStateTransitionsPanelSettings(config, saveConfig, focusedPath);
 
   const pointToDatumTooltipMap = useMemo(() => {
     const lookup = new Map<string, TimeBasedChartTooltipData>();
@@ -328,7 +337,16 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
           />
 
           {paths.map((path, index) => (
-            <div className={classes.row} key={index} style={{ top: index * heightPerTopic }}>
+            <div
+              className={classes.row}
+              key={index}
+              style={{ top: index * heightPerTopic }}
+              onClick={() => {
+                setSelectedPanelIds([panelId]);
+                openPanelSettings();
+                setFocusedPath(["paths", String(index)]);
+              }}
+            >
               <Typography variant="body2">{stateTransitionPathDisplayName(path, index)}</Typography>
             </div>
           ))}
