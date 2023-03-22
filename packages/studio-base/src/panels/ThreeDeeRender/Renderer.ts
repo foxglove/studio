@@ -10,7 +10,7 @@ import { DeepPartial } from "ts-essentials";
 import { v4 as uuidv4 } from "uuid";
 
 import Logger from "@foxglove/log";
-import { toNanoSec } from "@foxglove/rostime";
+import { Time, fromNanoSec, isLessThan, toNanoSec } from "@foxglove/rostime";
 import type { FrameTransform, SceneUpdate } from "@foxglove/schemas";
 import {
   MessageEvent,
@@ -545,27 +545,117 @@ export class Renderer extends EventEmitter<RendererEvents> {
   /**
    *
    * @param currentTime what renderer.currentTime will be set to
-   * @param didSeek - whether this currentTime update is a result of a seek operation. This causes the renderer to clear some internal state.
    */
-  // eslint-disable-next-line @foxglove/no-boolean-parameters
-  public setCurrentTime(newTimeNs: bigint, didSeek?: boolean): void {
-    const prevTime = this.currentTime;
+  public setCurrentTime(newTimeNs: bigint): void {
     this.currentTime = newTimeNs;
+  }
 
-    if (didSeek !== true) {
-      return;
-    }
-    // These must be cleared before calling `SceneExtension#removeAllRenderables()` to allow
-    // extensions to add transforms and errors back afterward
-    // only clear transforms if we're seeking backward
-    if (newTimeNs < prevTime) {
+  /**
+   * performs a clear on the renderables, errors and optionally the transform tree within the Renderer
+   * @param {Object} params - modifiers to the clear operation
+   * @param {boolean} params.clearTransforms - whether to clear the transform tree. This should be set to true when a seek to a previous time is performed in order
+   * order to flush potential future state to the newly set time.
+   * @param {boolean} params.resetAllFramesCursor - whether to reset the cursor for the allFrames array.
+   */
+  public clear(
+    {
+      clearTransforms,
+      resetAllFramesCursor,
+    }: { clearTransforms?: boolean; resetAllFramesCursor?: boolean } = {
+      clearTransforms: false,
+      resetAllFramesCursor: false,
+    },
+  ): void {
+    if (clearTransforms === true) {
       this.transformTree.clear();
+    }
+    if (resetAllFramesCursor === true) {
+      this._resetAllFramesCursor();
     }
     this.settings.errors.clear();
 
     for (const extension of this.sceneExtensions.values()) {
       extension.removeAllRenderables();
     }
+  }
+
+  private _allFramesCursor: {
+    // index represents where the last read message is in allFrames
+    index: number;
+    cursorTimeReached?: Time;
+  } = {
+    index: -1,
+    cursorTimeReached: undefined,
+  };
+
+  private _resetAllFramesCursor() {
+    this._allFramesCursor = {
+      index: -1,
+      cursorTimeReached: undefined,
+    };
+  }
+
+  /**
+   * Iterates through allFrames and handles messages with a receiveTime <= currentTime
+   * @param allFrames - array of all preloaded messages
+   * @returns {boolean} - whether the allFramesCursor has been updated and new messages were read in
+   */
+  public handleAllFramesMessages(allFrames?: readonly MessageEvent<unknown>[]): boolean {
+    const currentTime = fromNanoSec(this.currentTime);
+    const allFramesCursor = this._allFramesCursor;
+    // index always indicates last read-in message
+    let cursor = allFramesCursor.index;
+    let cursorTimeReached = allFramesCursor.cursorTimeReached;
+
+    if (!allFrames || allFrames.length === 0) {
+      // when tf preloading is disabled
+      if (cursor > -1) {
+        this._resetAllFramesCursor();
+      }
+      return false;
+    }
+
+    /**
+     * Assumptions about allFrames needed by allFramesCursor:
+     *  - always sorted by receiveTime
+     *  - preloaded topics/schemas are only ever all removed or all added at once, otherwise it is not stable and would need to be reset
+     *  - allFrame chunks are only ever loaded from beginning to end and does not have any eviction
+     */
+
+    // cursor should never be over allFramesLength, if it some how is, it means the cursor was at the end of `allFrames` prior to eviction and eviction shortened allframes
+    // in this case we should set the cursor to the end of allFrames
+    cursor = Math.min(cursor, allFrames.length - 1);
+    let message;
+
+    let hasAddedMessageEvents = false;
+    // load preloaded messages up to current time
+    while (cursor < allFrames.length - 1) {
+      cursor++;
+      message = allFrames[cursor]!;
+      // read messages until we reach the current time
+      if (isLessThan(currentTime, message.receiveTime)) {
+        cursorTimeReached = currentTime;
+        // reset cursor to last read message index
+        cursor--;
+        break;
+      }
+      if (!hasAddedMessageEvents) {
+        hasAddedMessageEvents = true;
+      }
+
+      this.addMessageEvent(message);
+      if (cursor === allFrames.length - 1) {
+        cursorTimeReached = message.receiveTime;
+      }
+    }
+
+    // want to avoid setting anything if nothing has changed
+    if (!hasAddedMessageEvents) {
+      return false;
+    }
+
+    this._allFramesCursor = { index: cursor, cursorTimeReached };
+    return true;
   }
 
   private addSceneExtension(extension: SceneExtension): void {
