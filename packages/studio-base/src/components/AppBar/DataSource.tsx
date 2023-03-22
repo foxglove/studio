@@ -2,13 +2,15 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
-import ErrorIcon from "@mui/icons-material/Error";
-import { Button, ButtonBase, CircularProgress, Divider, Tooltip, Typography } from "@mui/material";
-import { useState } from "react";
+import { ErrorCircle20Filled, Info16Regular, ChevronDown12Filled } from "@fluentui/react-icons";
+import { IconButton, Button, Link, CircularProgress, Tooltip, Typography } from "@mui/material";
+import { useState, useRef } from "react";
 import { makeStyles } from "tss-react/mui";
 
-import { APP_BAR_PRIMARY_COLOR } from "@foxglove/studio-base/components/AppBar/constants";
+import {
+  APP_BAR_PRIMARY_COLOR,
+  APP_BAR_FOREGROUND_COLOR,
+} from "@foxglove/studio-base/components/AppBar/constants";
 import { DataSourceInfoView } from "@foxglove/studio-base/components/DataSourceInfoView";
 import { ProblemsList } from "@foxglove/studio-base/components/DataSourceSidebar/ProblemsList";
 import {
@@ -19,47 +21,40 @@ import Stack from "@foxglove/studio-base/components/Stack";
 import TextMiddleTruncate from "@foxglove/studio-base/components/TextMiddleTruncate";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
 
-const useStyles = makeStyles()((theme) => ({
-  root: {
-    display: "grid",
-    gridTemplateAreas: `"adornment sourceInfo arrow"`,
-    gap: theme.spacing(0.75),
-    gridAutoColumns: "19px 1fr 19px",
-    paddingRight: theme.spacing(1),
-    paddingLeft: theme.spacing(1),
-    font: "inherit",
-    overflow: "hidden",
-    maxWidth: "100%",
+import { LayoutMenu } from "./LayoutMenu";
 
-    ":hover": { opacity: 0.8 },
-  },
-  sourceInfo: {
-    gridArea: "sourceInfo",
+const LEFT_ICON_SIZE = 19;
+
+const useStyles = makeStyles()((theme) => ({
+  link: {
     display: "flex",
+    flex: "0 1 auto",
     alignItems: "center",
-    gap: theme.spacing(0.25),
-    whiteSpace: "nowrap",
-    overflow: "hidden",
+    gap: theme.spacing(0.5),
+    color: APP_BAR_FOREGROUND_COLOR,
+    padding: theme.spacing(0.5, 0.75),
+    opacity: 0.8,
+
+    ":hover": {
+      opacity: 1,
+    },
   },
   adornment: {
-    gridArea: "adornment",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
     color: APP_BAR_PRIMARY_COLOR,
-    width: 19,
-    height: 19,
-  },
-  arrow: {
-    gridArea: "arrow",
+    width: LEFT_ICON_SIZE,
+    height: LEFT_ICON_SIZE,
   },
   adornmentError: {
     color: theme.palette.error.main,
   },
-  divider: {
-    borderColor: "currentColor",
-    opacity: 0.4,
+  separator: {
+    color: APP_BAR_FOREGROUND_COLOR,
+    fontSize: theme.typography.body1.fontSize,
+    opacity: 0.6,
   },
   spinner: {
     position: "absolute",
@@ -69,10 +64,28 @@ const useStyles = makeStyles()((theme) => ({
     bottom: 0,
     margin: "auto",
   },
+  iconButton: {
+    padding: 0,
+
+    "svg:not(.MuiSvgIcon-root)": {
+      fontSize: "1em",
+    },
+  },
+  infoIconButton: {
+    fontSize: LEFT_ICON_SIZE - 1,
+  },
+  errorIconButton: {
+    position: "relative",
+    zIndex: 1,
+    fontSize: LEFT_ICON_SIZE - 1,
+  },
+  layoutIconButton: {
+    fontSize: 12,
+  },
   tooltip: {
     padding: 0,
   },
-  playerName: {
+  zeroMinWidth: {
     minWidth: 0,
   },
 }));
@@ -83,19 +96,30 @@ const selectPlayerProblems = ({ playerState }: MessagePipelineContext) => player
 
 export function DataSource({
   onSelectDataSourceAction,
+  layoutMenuOpen,
+  setLayoutMenuOpen,
+  supportsAccountSettings,
 }: {
   onSelectDataSourceAction: () => void;
+  layoutMenuOpen: boolean;
+  // eslint-disable-next-line @foxglove/no-boolean-parameters
+  setLayoutMenuOpen: (open: boolean) => void;
+  supportsAccountSettings: boolean;
 }): JSX.Element {
   const { classes, cx } = useStyles();
   const playerName = useMessagePipeline(selectPlayerName);
   const playerPresence = useMessagePipeline(selectPlayerPresence);
   const playerProblems = useMessagePipeline(selectPlayerProblems) ?? [];
+
   const reconnecting = playerPresence === PlayerPresence.RECONNECTING;
   const initializing = playerPresence === PlayerPresence.INITIALIZING;
   const error =
     playerPresence === PlayerPresence.ERROR ||
     playerProblems.some((problem) => problem.severity === "error");
   const loading = reconnecting || initializing;
+
+  const layoutButtonRef = useRef<HTMLButtonElement>(ReactNull);
+  const layoutAnchorEl = layoutMenuOpen ? layoutButtonRef.current : undefined;
 
   const playerDisplayName =
     initializing && playerName == undefined ? "Initializing..." : playerName;
@@ -115,53 +139,103 @@ export function DataSource({
   return (
     <>
       {problemModal}
-      <Tooltip
-        arrow={false}
-        disableHoverListener={initializing}
-        disableFocusListener={initializing}
-        classes={{ tooltip: classes.tooltip }}
-        placement="bottom"
-        title={
-          <>
-            <Stack padding={1}>
-              <Stack gap={1} padding={1}>
-                <DataSourceInfoView />
-              </Stack>
-            </Stack>
-            {error && (
-              <>
-                <Divider className={classes.divider} />
-                <Stack paddingY={0.5}>
-                  <ProblemsList problems={playerProblems} setProblemModal={setProblemModal} />
-                </Stack>
-              </>
-            )}
-          </>
-        }
-      >
-        <ButtonBase color="inherit" className={classes.root} onClick={onSelectDataSourceAction}>
-          <div className={cx(classes.adornment, { [classes.adornmentError]: error })}>
-            {loading && (
-              <CircularProgress
-                size={19}
+      <Stack direction="row" alignItems="center" paddingRight={1.25}>
+        <div className={cx(classes.adornment, { [classes.adornmentError]: error })}>
+          {loading && (
+            <CircularProgress
+              size={LEFT_ICON_SIZE}
+              color="inherit"
+              className={classes.spinner}
+              variant="indeterminate"
+            />
+          )}
+          {error && (
+            <Tooltip
+              arrow={false}
+              disableHoverListener={initializing}
+              disableFocusListener={initializing}
+              classes={{ tooltip: classes.tooltip }}
+              placement="bottom"
+              title={<ProblemsList problems={playerProblems} setProblemModal={setProblemModal} />}
+            >
+              <IconButton
                 color="inherit"
-                className={classes.spinner}
-                variant="indeterminate"
-              />
-            )}
-            {error && <ErrorIcon color="error" fontSize={loading ? "small" : "medium"} />}
-          </div>
-          <div className={classes.sourceInfo}>
-            <Typography noWrap variant="inherit" component="span">
-              <TextMiddleTruncate
-                className={classes.playerName}
-                text={playerDisplayName ?? "<unknown>"}
-              />
-            </Typography>
-          </div>
-          <ArrowDropDownIcon className={classes.arrow} />
-        </ButtonBase>
-      </Tooltip>
+                className={cx(classes.iconButton, classes.errorIconButton)}
+              >
+                <ErrorCircle20Filled />
+              </IconButton>
+            </Tooltip>
+          )}
+          {!loading && !error && (
+            <Tooltip
+              arrow={false}
+              disableHoverListener={initializing}
+              disableFocusListener={initializing}
+              classes={{ tooltip: classes.tooltip }}
+              placement="bottom"
+              title={
+                <Stack gap={1} padding={1}>
+                  <DataSourceInfoView />
+                </Stack>
+              }
+            >
+              <IconButton
+                className={cx(classes.iconButton, classes.infoIconButton)}
+                color="inherit"
+              >
+                <Info16Regular />
+              </IconButton>
+            </Tooltip>
+          )}
+        </div>
+        <Stack direction="row" alignItems="center" gap={0.25} overflow="hidden">
+          <Link
+            className={classes.link}
+            color="inherit"
+            underline="none"
+            noWrap
+            variant="body2"
+            component="span"
+            onClick={onSelectDataSourceAction}
+          >
+            <TextMiddleTruncate
+              className={classes.zeroMinWidth}
+              text={playerDisplayName ?? "<unknown>"}
+            />
+          </Link>
+          <span className={classes.separator}>/</span>
+          <Link
+            className={classes.link}
+            color="inherit"
+            underline="none"
+            variant="body2"
+            component="span"
+            ref={layoutButtonRef}
+            id="layout-button"
+            title="Layouts"
+            aria-controls={layoutMenuOpen ? "layout-menu" : undefined}
+            aria-haspopup="true"
+            aria-expanded={layoutMenuOpen ? "true" : undefined}
+            onClick={() => {
+              setLayoutMenuOpen(true);
+            }}
+          >
+            <TextMiddleTruncate className={classes.zeroMinWidth} text="Layout name" />
+            <IconButton
+              color="inherit"
+              className={cx(classes.iconButton, classes.layoutIconButton)}
+            >
+              <ChevronDown12Filled />
+            </IconButton>
+          </Link>
+        </Stack>
+      </Stack>
+      <LayoutMenu
+        anchorEl={layoutAnchorEl ?? undefined}
+        open={layoutMenuOpen}
+        handleClose={() => setLayoutMenuOpen(false)}
+        supportsSignIn={supportsAccountSettings}
+      />
     </>
   );
 }

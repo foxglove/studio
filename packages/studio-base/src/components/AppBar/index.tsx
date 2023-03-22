@@ -4,7 +4,7 @@
 
 import {
   AddCircle24Regular,
-  BoardSplit24Regular,
+  // BoardSplit24Regular,
   PanelLeft24Filled,
   PanelLeft24Regular,
   PanelRight24Filled,
@@ -251,7 +251,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
               <IconButton className={classes.logo} size="large" color="inherit">
                 <FoxgloveLogo fontSize="inherit" color="inherit" />
               </IconButton>
-              <AppBarIconButton
+              {/* <AppBarIconButton
                 className={cx({ "Mui-selected": layoutMenuOpen })}
                 ref={layoutButtonRef}
                 color="inherit"
@@ -265,7 +265,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
                 }}
               >
                 <BoardSplit24Regular />
-              </AppBarIconButton>
+              </AppBarIconButton> */}
               <AppBarIconButton
                 className={cx({ "Mui-selected": panelMenuOpen })}
                 color="inherit"
@@ -286,7 +286,12 @@ export function AppBar(props: AppBarProps): JSX.Element {
           </div>
 
           <div className={classes.middle}>
-            <DataSource onSelectDataSourceAction={onSelectDataSourceAction} />
+            <DataSource
+              layoutMenuOpen={layoutMenuOpen}
+              setLayoutMenuOpen={setLayoutMenuOpen}
+              onSelectDataSourceAction={onSelectDataSourceAction}
+              supportsAccountSettings={signIn != undefined}
+            />
           </div>
 
           <div className={classes.end}>
@@ -386,6 +391,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
         anchorEl={layoutAnchorEl ?? undefined}
         open={layoutMenuOpen}
         handleClose={() => setLayoutMenuOpen(false)}
+        supportsSignIn={signIn != undefined}
       />
       <UserMenu
         anchorEl={userAnchorEl}
