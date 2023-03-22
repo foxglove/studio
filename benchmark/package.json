@@ -8,7 +8,7 @@
     "@foxglove/den": "workspace:*",
     "@foxglove/log": "workspace:*",
     "@foxglove/rostime": "1.1.2",
-    "@foxglove/schemas": "1.1.0",
+    "@foxglove/schemas": "1.1.2",
     "@foxglove/studio": "workspace:*",
     "@pmmmwh/react-refresh-webpack-plugin": "0.5.10",
     "@types/react": "17.0.53",
@@ -18,7 +18,7 @@
     "mathjs": "11.6.0",
     "react": "17.0.2",
     "react-dom": "17.0.2",
-    "webpack": "5.75.0",
+    "webpack": "5.76.2",
     "webpack-dev-server": "4.11.1"
   }
 }

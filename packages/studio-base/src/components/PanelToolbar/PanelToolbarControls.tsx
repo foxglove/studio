@@ -15,7 +15,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import SettingsIcon from "@mui/icons-material/Settings";
 import { IconButton, Tooltip } from "@mui/material";
 import produce from "immer";
-import { forwardRef, useCallback, useContext, useEffect } from "react";
+import { forwardRef, useCallback, useContext, useEffect, useMemo } from "react";
 import { useAsyncFn } from "react-use";
 import { makeStyles } from "tss-react/mui";
 
@@ -29,7 +29,7 @@ import {
   usePanelStateStore,
 } from "@foxglove/studio-base/context/PanelStateContext";
 import { UserProfileStorageContext } from "@foxglove/studio-base/context/UserProfileStorageContext";
-import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
+import { useWorkspaceActions } from "@foxglove/studio-base/context/WorkspaceContext";
 
 import { PanelActionsDropdown } from "./PanelActionsDropdown";
 
@@ -64,12 +64,17 @@ const PanelToolbarControlsComponent = forwardRef<HTMLDivElement, PanelToolbarCon
     const { id: panelId, type: panelType } = useContext(PanelContext) ?? {};
     const panelCatalog = useContext(PanelCatalogContext);
     const { setSelectedPanelIds } = useSelectedPanels();
-    const { openPanelSettings } = useWorkspace();
+    const { openPanelSettings } = useWorkspaceActions();
     const { classes } = useStyles();
 
     const hasSettingsSelector = useCallback(
       (store: PanelStateStore) => (panelId ? store.settingsTrees[panelId] != undefined : false),
       [panelId],
+    );
+
+    const panelInfo = useMemo(
+      () => (panelType != undefined ? panelCatalog?.getPanelByType(panelType) : undefined),
+      [panelCatalog, panelType],
     );
 
     const hasSettings = usePanelStateStore(hasSettingsSelector);
@@ -91,6 +96,7 @@ const PanelToolbarControlsComponent = forwardRef<HTMLDivElement, PanelToolbarCon
         }
         return tooltip;
       }, [hasSettings, panelCatalog, panelType, userProfileStorage]);
+
     useEffect(() => {
       void loadOnboardingState();
     }, [loadOnboardingState]);
@@ -125,6 +131,11 @@ const PanelToolbarControlsComponent = forwardRef<HTMLDivElement, PanelToolbarCon
         <SettingsIcon />
       </ToolbarIconButton>
     );
+
+    // Show the settings button so that panel title is editable, unless we have a custom
+    // toolbar in which case the title wouldn't be visible.
+    const showSettingsButton = panelInfo?.hasCustomToolbar !== true || hasSettings;
+
     if (settingsOnboardingTooltip) {
       settingsButton = (
         <Tooltip
@@ -166,7 +177,7 @@ const PanelToolbarControlsComponent = forwardRef<HTMLDivElement, PanelToolbarCon
     return (
       <Stack direction="row" alignItems="center" paddingLeft={1} ref={ref}>
         {additionalIcons}
-        {hasSettings && settingsButton}
+        {showSettingsButton && settingsButton}
         <PanelActionsDropdown isUnknownPanel={isUnknownPanel} />
       </Stack>
     );

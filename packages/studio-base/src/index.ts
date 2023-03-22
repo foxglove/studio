@@ -40,6 +40,7 @@ export { default as Ros1LocalBagDataSourceFactory } from "./dataSources/Ros1Loca
 export { default as Ros1SocketDataSourceFactory } from "./dataSources/Ros1SocketDataSourceFactory";
 export { default as Ros2LocalBagDataSourceFactory } from "./dataSources/Ros2LocalBagDataSourceFactory";
 export { default as Ros2SocketDataSourceFactory } from "./dataSources/Ros2SocketDataSourceFactory";
+export { default as Ros2UnavailableDataSourceFactory } from "./dataSources/Ros2UnavailableDataSourceFactory";
 export { default as RosbridgeDataSourceFactory } from "./dataSources/RosbridgeDataSourceFactory";
 export { default as UlogLocalDataSourceFactory } from "./dataSources/UlogLocalDataSourceFactory";
 export { default as RemoteDataSourceFactory } from "./dataSources/RemoteDataSourceFactory";
@@ -47,3 +48,4 @@ export { default as VelodyneDataSourceFactory } from "./dataSources/VelodyneData
 export { default as McapLocalDataSourceFactory } from "./dataSources/McapLocalDataSourceFactory";
 export { default as SampleNuscenesDataSourceFactory } from "./dataSources/SampleNuscenesDataSourceFactory";
 export { LaunchPreferenceValue } from "@foxglove/studio-base/types/LaunchPreferenceValue";
+export { reportError, setReportErrorHandler } from "./reportError";
