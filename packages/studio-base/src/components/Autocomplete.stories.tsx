@@ -155,7 +155,7 @@ storiesOf("components/Autocomplete", module)
           getItemText={({ value }: any) => `item: ${value.toUpperCase()}`}
           selectedItem={{ value: "two" }}
           onSelect={() => {}}
-          clearOnFocus
+          selectOnFocus
         />
       </div>
     );
