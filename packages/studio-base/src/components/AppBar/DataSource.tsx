@@ -2,16 +2,25 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { ErrorCircle20Filled, Info16Regular, ChevronDown12Filled } from "@fluentui/react-icons";
-import { IconButton, Button, Link, CircularProgress, Tooltip, Typography } from "@mui/material";
-import { useState, useRef } from "react";
+import { ErrorCircle20Filled, ChevronDown12Filled } from "@fluentui/react-icons";
+import {
+  ButtonBase,
+  CircularProgress,
+  Divider,
+  IconButton,
+  Menu,
+  MenuItem,
+  Tooltip,
+} from "@mui/material";
+import { useState, useRef, MouseEvent } from "react";
+import tinycolor from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 
 import {
   APP_BAR_PRIMARY_COLOR,
   APP_BAR_FOREGROUND_COLOR,
+  APP_BAR_HEIGHT,
 } from "@foxglove/studio-base/components/AppBar/constants";
-import { DataSourceInfoView } from "@foxglove/studio-base/components/DataSourceInfoView";
 import { ProblemsList } from "@foxglove/studio-base/components/DataSourceSidebar/ProblemsList";
 import {
   MessagePipelineContext,
@@ -25,18 +34,29 @@ import { LayoutMenu } from "./LayoutMenu";
 
 const LEFT_ICON_SIZE = 19;
 
-const useStyles = makeStyles()((theme) => ({
-  link: {
+const useStyles = makeStyles<void, "adornmentError">()((theme, _params, classes) => ({
+  button: {
+    font: "inherit",
     display: "flex",
-    flex: "0 1 auto",
     alignItems: "center",
     gap: theme.spacing(0.5),
-    color: APP_BAR_FOREGROUND_COLOR,
-    padding: theme.spacing(0.5, 0.75),
-    opacity: 0.8,
+    padding: theme.spacing(1.5),
+    minHeight: APP_BAR_HEIGHT,
+    minWidth: 0,
 
-    ":hover": {
-      opacity: 1,
+    "&:hover": {
+      backgroundColor: tinycolor(APP_BAR_FOREGROUND_COLOR).setAlpha(0.08).toRgbString(),
+    },
+    "&.Mui-selected": {
+      backgroundColor: APP_BAR_PRIMARY_COLOR,
+
+      [`.${classes.adornmentError}`]: {
+        color: tinycolor(APP_BAR_PRIMARY_COLOR).lighten(15).toString(),
+      },
+    },
+    "&.Mui-disabled": {
+      color: "currentColor",
+      opacity: theme.palette.action.disabledOpacity,
     },
   },
   adornment: {
@@ -50,11 +70,6 @@ const useStyles = makeStyles()((theme) => ({
   },
   adornmentError: {
     color: theme.palette.error.main,
-  },
-  separator: {
-    color: APP_BAR_FOREGROUND_COLOR,
-    fontSize: theme.typography.body1.fontSize,
-    opacity: 0.6,
   },
   spinner: {
     position: "absolute",
@@ -71,22 +86,13 @@ const useStyles = makeStyles()((theme) => ({
       fontSize: "1em",
     },
   },
-  infoIconButton: {
-    fontSize: LEFT_ICON_SIZE - 1,
-  },
   errorIconButton: {
     position: "relative",
     zIndex: 1,
     fontSize: LEFT_ICON_SIZE - 1,
   },
-  layoutIconButton: {
-    fontSize: 12,
-  },
   tooltip: {
     padding: 0,
-  },
-  zeroMinWidth: {
-    minWidth: 0,
   },
 }));
 
@@ -107,6 +113,17 @@ export function DataSource({
   supportsAccountSettings: boolean;
 }): JSX.Element {
   const { classes, cx } = useStyles();
+
+  const [anchorEl, setAnchorEl] = useState<undefined | HTMLElement>(undefined);
+  const open = Boolean(anchorEl);
+
+  const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleClose = () => {
+    setAnchorEl(undefined);
+  };
+
   const playerName = useMessagePipeline(selectPlayerName);
   const playerPresence = useMessagePipeline(selectPlayerPresence);
   const playerProblems = useMessagePipeline(selectPlayerProblems) ?? [];
@@ -128,18 +145,64 @@ export function DataSource({
 
   if (playerPresence === PlayerPresence.NOT_PRESENT) {
     return (
-      <Button size="small" color="inherit" variant="outlined" onClick={onSelectDataSourceAction}>
-        <Typography noWrap variant="inherit" component="span">
-          Open data source…
-        </Typography>
-      </Button>
+      <ButtonBase className={classes.button} color="inherit" onClick={onSelectDataSourceAction}>
+        Open data source…
+      </ButtonBase>
     );
   }
 
   return (
     <>
       {problemModal}
-      <Stack direction="row" alignItems="center" paddingRight={1.25}>
+      <Stack direction="row" alignItems="center">
+        <ButtonBase className={cx(classes.button, { "Mui-selected": open })} onClick={handleClick}>
+          <div className={cx(classes.adornment, { [classes.adornmentError]: error })}>
+            {loading && (
+              <CircularProgress
+                size={LEFT_ICON_SIZE}
+                color="inherit"
+                className={classes.spinner}
+                variant="indeterminate"
+              />
+            )}
+            {error && (
+              <Tooltip
+                arrow={false}
+                disableHoverListener={initializing}
+                disableFocusListener={initializing}
+                classes={{ tooltip: classes.tooltip }}
+                placement="bottom"
+                title={<ProblemsList problems={playerProblems} setProblemModal={setProblemModal} />}
+              >
+                <IconButton
+                  color="inherit"
+                  className={cx(classes.iconButton, classes.errorIconButton)}
+                >
+                  <ErrorCircle20Filled />
+                </IconButton>
+              </Tooltip>
+            )}
+          </div>
+          <TextMiddleTruncate text={playerDisplayName ?? "<unknown>"} />
+        </ButtonBase>
+        <Divider flexItem orientation="vertical" style={{ marginBlock: 12, opacity: 0.5 }} />
+        <ButtonBase
+          className={cx(classes.button, { "Mui-selected": layoutMenuOpen })}
+          ref={layoutButtonRef}
+          id="layout-button"
+          title="Layouts"
+          aria-controls={layoutMenuOpen ? "layout-menu" : undefined}
+          aria-haspopup="true"
+          aria-expanded={layoutMenuOpen ? "true" : undefined}
+          onClick={() => {
+            setLayoutMenuOpen(true);
+          }}
+        >
+          <TextMiddleTruncate text="Layout name" />
+          <ChevronDown12Filled />
+        </ButtonBase>
+      </Stack>
+      {/* <Stack direction="row" alignItems="center" paddingRight={1.25}>
         <div className={cx(classes.adornment, { [classes.adornmentError]: error })}>
           {loading && (
             <CircularProgress
@@ -229,7 +292,10 @@ export function DataSource({
             </IconButton>
           </Link>
         </Stack>
-      </Stack>
+      </Stack> */}
+      <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
+        <MenuItem onClick={onSelectDataSourceAction}>Open Data Source</MenuItem>
+      </Menu>
       <LayoutMenu
         anchorEl={layoutAnchorEl ?? undefined}
         open={layoutMenuOpen}
