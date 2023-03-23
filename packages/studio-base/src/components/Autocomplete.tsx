@@ -149,7 +149,11 @@ const HighlightChars = (props: { str: string; indices: Set<number> }) => {
         </b>
       );
     } else {
-      return char;
+      return (
+        <span key={i} style={{ whiteSpace: "pre" }}>
+          {char}
+        </span>
+      );
     }
   });
 
