@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { alpha, Typography } from "@mui/material";
+import { Button, useTheme } from "@mui/material";
 import { ChartOptions, ScaleOptions } from "chart.js";
 import { uniq } from "lodash";
 import { useCallback, useMemo, useRef, useState } from "react";
@@ -68,33 +68,28 @@ const fontFamily = fonts.MONOSPACE;
 const fontSize = 10;
 const fontWeight = "bold";
 
-const useStyles = makeStyles()((theme) => ({
+const useStyles = makeStyles<void, "button">()((theme) => ({
   chartWrapper: {
     position: "relative",
-    marginTop: theme.spacing(0.5),
+
+    ":hover": {},
+  },
+  chartOverlay: {
+    pointerEvents: "none",
+    top: 0,
+    left: 0,
+    right: 0,
   },
   row: {
-    display: "grid",
-    position: "absolute",
-    alignItems: "center",
-    cursor: "pointer",
-    gridTemplateColumns: "auto minmax(min-content, 1fr) auto",
-    gap: theme.spacing(0.25),
-    paddingLeft: theme.spacing(0.25),
-    left: theme.spacing(0.5),
-    borderRadius: theme.shape.borderRadius,
-
-    ".MuiIconButton-root": {
-      visibility: "hidden",
-    },
-    "&:hover, &:focus-within": {
-      backgroundColor: alpha(theme.palette.background.paper, 0.67),
-      backgroundImage: `linear-gradient(to right, ${theme.palette.action.focus}, ${theme.palette.action.focus})`,
-
-      ".MuiIconButton-root": {
-        visibility: "visible",
-      },
-    },
+    pointerEvents: "none",
+    paddingLeft: theme.spacing(1.75),
+  },
+  button: {
+    minWidth: "auto",
+    textAlign: "left",
+    pointerEvents: "auto",
+    fontWeight: "normal",
+    padding: theme.spacing(0, 1),
   },
 }));
 
@@ -336,20 +331,24 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
             currentTime={currentTimeSinceStart}
           />
 
-          {paths.map((path, index) => (
-            <div
-              className={classes.row}
-              key={index}
-              style={{ top: index * heightPerTopic }}
-              onClick={() => {
-                setSelectedPanelIds([panelId]);
-                openPanelSettings();
-                setFocusedPath(["paths", String(index)]);
-              }}
-            >
-              <Typography variant="body2">{stateTransitionPathDisplayName(path, index)}</Typography>
-            </div>
-          ))}
+          <Stack className={classes.chartOverlay} position="absolute" paddingTop={0.5}>
+            {paths.map((path, index) => (
+              <div className={classes.row} key={index} style={{ height: heightPerTopic }}>
+                <Button
+                  size="small"
+                  color="inherit"
+                  className={classes.button}
+                  onClick={() => {
+                    setSelectedPanelIds([panelId]);
+                    openPanelSettings();
+                    setFocusedPath(["paths", String(index)]);
+                  }}
+                >
+                  {stateTransitionPathDisplayName(path, index)}
+                </Button>
+              </div>
+            ))}
+          </Stack>
         </div>
       </Stack>
     </Stack>
