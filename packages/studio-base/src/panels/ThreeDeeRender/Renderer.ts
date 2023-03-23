@@ -549,6 +549,16 @@ export class Renderer extends EventEmitter<RendererEvents> {
   public setCurrentTime(newTimeNs: bigint): void {
     this.currentTime = newTimeNs;
   }
+  /**
+   * Updates renderer state according to seek delta - does not set time
+   * @param oldTime used to determine clearing of time sensitive data
+   * @param newTime what renderer.currentTime will be set to
+   */
+  public handleSeek(oldTimeNs: bigint, newTimeNs: bigint): void {
+    const movedBack = newTimeNs < oldTimeNs;
+    // want to clear transforms and reset the cursor if we seek backwards
+    this.clear({ clearTransforms: movedBack, resetAllFramesCursor: movedBack });
+  }
 
   /**
    * performs a clear on the renderables, errors and optionally the transform tree within the Renderer

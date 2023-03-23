@@ -723,9 +723,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
 
     renderer.setCurrentTime(newTimeNs);
     if (didSeek) {
-      const movedBack = newTimeNs < oldTimeNs;
-      // want to clear transforms and reset the cursor if we seek backwards
-      renderer.clear({ clearTransforms: movedBack, resetAllFramesCursor: movedBack });
+      renderer.handleSeek(oldTimeNs, newTimeNs);
       setDidSeek(false);
     }
   }, [currentTime, renderer, didSeek]);
