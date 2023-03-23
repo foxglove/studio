@@ -15,14 +15,13 @@ import ClearIcon from "@mui/icons-material/Clear";
 import {
   alpha,
   Autocomplete as MuiAutocomplete,
-  List,
-  ListProps,
   MenuItem,
   TextField,
   useTheme,
 } from "@mui/material";
 import { Fzf, FzfResultItem } from "fzf";
-import React, {
+import * as React from "react";
+import {
   CSSProperties,
   SyntheticEvent,
   useCallback,
@@ -33,54 +32,10 @@ import React, {
 } from "react";
 import { makeStyles } from "tss-react/mui";
 
-const ROW_HEIGHT = 24;
-const MAX_ITEMS = 200;
+import { ReactWindowListboxAdapter } from "@foxglove/studio-base/components/ReactWindowListboxAdapter";
 
-const useStyles = makeStyles()((theme) => {
-  const prefersDarkMode = theme.palette.mode === "dark";
-  const inputBackgroundColor = prefersDarkMode
-    ? "rgba(255, 255, 255, 0.09)"
-    : "rgba(0, 0, 0, 0.06)";
+const MAX_FZF_MATCHES = 200;
 
-  return {
-    root: {
-      ".MuiInputBase-root.MuiInputBase-sizeSmall": {
-        backgroundColor: "transparent",
-        paddingInline: 0,
-        "&:focus-within": {
-          backgroundColor: inputBackgroundColor,
-        },
-      },
-    },
-    inputError: {
-      input: {
-        color: theme.palette.error.main,
-      },
-    },
-    item: {
-      padding: 6,
-      cursor: "pointer",
-      minHeight: ROW_HEIGHT,
-      lineHeight: `${ROW_HEIGHT - 10}px`,
-      overflowWrap: "break-word",
-      color: theme.palette.text.primary,
-      whiteSpace: "pre",
-    },
-    itemSelected: {
-      backgroundColor: alpha(
-        theme.palette.primary.main,
-        theme.palette.action.selectedOpacity + theme.palette.action.hoverOpacity,
-      ),
-    },
-    itemHighlighted: {
-      backgroundColor: theme.palette.action.hover,
-    },
-  };
-});
-
-// <Autocomplete> is a Studio-specific wrapper of MUI autocomplete with support
-// for things like multiple autocompletes that seamlessly transition into each
-// other, e.g. when building more complex strings like in the Plot panel.
 type AutocompleteProps<T> = {
   autoSize?: boolean;
   disableAutoSelect?: boolean;
@@ -109,6 +64,48 @@ export interface IAutocomplete {
   focus(): void;
   blur(): void;
 }
+
+const useStyles = makeStyles()((theme) => {
+  const prefersDarkMode = theme.palette.mode === "dark";
+  const inputBackgroundColor = prefersDarkMode
+    ? "rgba(255, 255, 255, 0.09)"
+    : "rgba(0, 0, 0, 0.06)";
+
+  return {
+    root: {
+      ".MuiInputBase-root.MuiInputBase-sizeSmall": {
+        backgroundColor: "transparent",
+        paddingInline: 0,
+        "&:focus-within": {
+          backgroundColor: inputBackgroundColor,
+        },
+      },
+    },
+    inputError: {
+      input: {
+        color: theme.palette.error.main,
+      },
+    },
+    item: {
+      padding: 6,
+      cursor: "pointer",
+      minHeight: "100%",
+      lineHeight: "calc(100% - 10px)",
+      overflowWrap: "break-word",
+      color: theme.palette.text.primary,
+      whiteSpace: "pre",
+    },
+    itemSelected: {
+      backgroundColor: alpha(
+        theme.palette.primary.main,
+        theme.palette.action.selectedOpacity + theme.palette.action.hoverOpacity,
+      ),
+    },
+    itemHighlighted: {
+      backgroundColor: theme.palette.action.hover,
+    },
+  };
+});
 
 function defaultGetText(name: string): (item: unknown) => string {
   return function (item: unknown) {
@@ -160,6 +157,11 @@ const HighlightChars = (props: { str: string; indices: Set<number> }) => {
   return <>{nodes}</>;
 };
 
+/**
+ * <Autocomplete> is a Studio-specific wrapper of MUI autocomplete with support
+ * for things like multiple autocompletes that seamlessly transition into each
+ * other, e.g. when building more complex strings like in the Plot panel.
+ */
 export default React.forwardRef(function Autocomplete<T = unknown>(
   props: AutocompleteProps<T>,
   ref: React.ForwardedRef<IAutocomplete>,
@@ -206,7 +208,7 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
     return new Fzf(items, {
       fuzzy: "v2",
       sort: sortWhenFiltering,
-      limit: MAX_ITEMS,
+      limit: MAX_FZF_MATCHES,
       selector: getItemText,
     });
   }, [getItemText, items, sortWhenFiltering]);
@@ -223,15 +225,13 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
     inputRef.current?.setSelectionRange(selectionStart, selectionEnd);
   }, []);
 
-  const focus = useCallback((): void => {
+  const focus = useCallback(() => {
     inputRef.current?.focus();
   }, []);
 
-  const blur = useCallback((): void => {
+  const blur = useCallback(() => {
     inputRef.current?.blur();
-    if (onBlurCallback) {
-      onBlurCallback();
-    }
+    onBlurCallback?.();
   }, [onBlurCallback]);
 
   // Give callers an opportunity to control autocomplete
@@ -269,37 +269,32 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
     [onSelectCallback, blur, focus, setSelectionRange],
   );
 
-  const filterOptions = useCallback(
-    (options: FzfResultItem<T>[]) => {
-      // Don't filter out options here because we assume that the parent
-      // component has already filtered them. This allows completing fragments.
-      //
-      // If we have input then slice the options to improve performance since
-      // the MUI autocomplete is slow with many items.
-      if (value == undefined || value === "") {
-        return options;
-      } else {
-        return options.slice(0, 25);
-      }
-    },
-    [value],
-  );
+  // Don't filter out options here because we assume that the parent
+  // component has already filtered them. This allows completing fragments.
+  const filterOptions = useCallback((options: FzfResultItem<T>[]) => options, []);
 
   return (
     <MuiAutocomplete
       className={classes.root}
-      size="small"
-      options={autocompleteItems}
-      disableCloseOnSelect
-      fullWidth
-      openOnFocus
-      disabled={disabled}
-      selectOnFocus={selectOnFocus}
-      readOnly={readOnly}
-      componentsProps={{ clearIndicator: { size: "small" } }}
       clearIcon={<ClearIcon fontSize="small" />}
-      ListboxComponent={List}
-      ListboxProps={{ dense: true } as Partial<ListProps>}
+      componentsProps={{ clearIndicator: { size: "small" } }}
+      disableCloseOnSelect
+      disabled={disabled}
+      freeSolo
+      fullWidth
+      getOptionLabel={(item: string | FzfResultItem<T>) => {
+        if (typeof item === "string") {
+          return item;
+        }
+        return getItemValue(item.item);
+      }}
+      filterOptions={filterOptions}
+      ListboxComponent={ReactWindowListboxAdapter}
+      onChange={onSelect}
+      onInputChange={onChange}
+      openOnFocus
+      options={autocompleteItems}
+      readOnly={readOnly}
       renderInput={(params) => (
         <TextField
           {...params}
@@ -310,12 +305,6 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
           size="small"
         />
       )}
-      getOptionLabel={(item: string | FzfResultItem<T>) => {
-        if (typeof item === "string") {
-          return item;
-        }
-        return getItemValue(item.item);
-      }}
       renderOption={(optProps, item: FzfResultItem<T>, { selected }) => {
         const itemValue = getItemValue(item.item);
         return (
@@ -323,6 +312,7 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
             dense
             {...optProps}
             key={itemValue}
+            component="span"
             data-highlighted={selected}
             data-test-auto-item
             className={cx(classes.item, {
@@ -335,10 +325,8 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
           </MenuItem>
         );
       }}
-      filterOptions={filterOptions}
-      freeSolo
-      onInputChange={onChange}
-      onChange={onSelect}
+      selectOnFocus={selectOnFocus}
+      size="small"
       value={value ?? ReactNull}
     />
   );
