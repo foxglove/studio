@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { Feature, GeoJsonProperties, Geometry } from "geojson";
 import produce from "immer";
 import {
   CircleMarker,
@@ -468,12 +469,22 @@ function MapPanel(props: MapPanelProps): JSX.Element {
   const [filterBounds, setFilterBounds] = useState<LatLngBounds | undefined>();
 
   const addGeoFeatureEventHandlers = useCallback(
-    (message: MessageEvent<unknown>, layer: Layer) => {
+    (
+      feature: Feature<Geometry, GeoJsonProperties>,
+      message: MessageEvent<unknown>,
+      layer: Layer,
+    ) => {
+      const featureName = feature.properties?.name;
+      if (typeof featureName === "string" && featureName.length > 0) {
+        layer.bindTooltip(featureName);
+      }
       layer.on("mouseover", () => {
         onHover(message);
+        layer.openTooltip();
       });
       layer.on("mouseout", () => {
         onHover(undefined);
+        layer.closeTooltip();
       });
       layer.on("click", () => {
         onClick(message);
@@ -486,7 +497,8 @@ function MapPanel(props: MapPanelProps): JSX.Element {
     (message: GeoJsonMessage, group: FeatureGroup) => {
       const parsed = JSON.parse(message.message.geojson) as Parameters<typeof geoJSON>[0];
       geoJSON(parsed, {
-        onEachFeature: (_feature, layer) => addGeoFeatureEventHandlers(message, layer),
+        onEachFeature: (feature: Feature<Geometry, GeoJsonProperties>, layer) =>
+          addGeoFeatureEventHandlers(feature, message, layer),
         style: config.topicColors[message.topic]
           ? { color: config.topicColors[message.topic] }
           : {},
