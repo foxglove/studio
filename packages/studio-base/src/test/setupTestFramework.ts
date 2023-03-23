@@ -29,21 +29,6 @@ jest.mock("@foxglove/studio-base/util/sendNotification", () => {
   };
 });
 
-// Copied from: https://jestjs.io/docs/manual-mocks#mocking-methods-which-are-not-implemented-in-jsdom
-// mock matchMedia for `Renderer` class in ThreeDeeRender
-Object.defineProperty(window, "matchMedia", {
-  writable: true,
-  value: jest.fn().mockImplementation((query) => ({
-    matches: false,
-    media: query,
-    onchange: ReactNull,
-    addListener: jest.fn(), // deprecated
-    removeListener: jest.fn(), // deprecated
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn(),
-  })),
-});
 // intercept console.error and console.warn calls to fail tests if they are called
 // the user can indicate they expect the call to happen by checking the mock.calls
 // and then clearing the mock via mockClear()

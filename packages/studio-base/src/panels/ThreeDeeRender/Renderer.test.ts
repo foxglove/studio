@@ -12,6 +12,7 @@ import { TFMessage } from "@foxglove/studio-base/panels/ThreeDeeRender/ros";
 
 // Jest doesn't support ES module imports fully yet, so we need to mock the wasm file
 jest.mock("three/examples/jsm/libs/draco/draco_decoder.wasm", () => "");
+
 // We need to mock the WebGLRenderer because it's not available in jsdom
 // only mocking what we currently use
 jest.mock("three", () => {
@@ -38,6 +39,22 @@ jest.mock("three", () => {
       getDrawingBufferSize: jest.fn().mockReturnValue({ width: 100, height: 100 }),
     }),
   };
+});
+
+// Copied from: https://jestjs.io/docs/manual-mocks#mocking-methods-which-are-not-implemented-in-jsdom
+// mock matchMedia for `Renderer` class in ThreeDeeRender
+Object.defineProperty(window, "matchMedia", {
+  writable: true,
+  value: jest.fn().mockImplementation((query) => ({
+    matches: false,
+    media: query,
+    onchange: ReactNull,
+    addListener: jest.fn(), // deprecated
+    removeListener: jest.fn(), // deprecated
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+    dispatchEvent: jest.fn(),
+  })),
 });
 
 const defaultRendererConfig: RendererConfig = {
