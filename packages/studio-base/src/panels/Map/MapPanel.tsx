@@ -2,7 +2,6 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Feature, GeoJsonProperties, Geometry } from "geojson";
 import produce from "immer";
 import {
   CircleMarker,
@@ -41,6 +40,9 @@ import { hasFix } from "./support";
 import { MapPanelMessage, NavSatFixMsg, NavSatFixStatus, Point } from "./types";
 
 type GeoJsonMessage = MessageEvent<FoxgloveMessages["foxglove.GeoJSON"]>;
+
+// Minimal definition to allow extracting properties from features.
+type GeoJSONFeature = { properties: Record<string, unknown> };
 
 type MapPanelProps = {
   context: PanelExtensionContext;
@@ -469,12 +471,8 @@ function MapPanel(props: MapPanelProps): JSX.Element {
   const [filterBounds, setFilterBounds] = useState<LatLngBounds | undefined>();
 
   const addGeoFeatureEventHandlers = useCallback(
-    (
-      feature: Feature<Geometry, GeoJsonProperties>,
-      message: MessageEvent<unknown>,
-      layer: Layer,
-    ) => {
-      const featureName = feature.properties?.name;
+    (feature: GeoJSONFeature, message: MessageEvent<unknown>, layer: Layer) => {
+      const featureName = feature.properties.name;
       if (typeof featureName === "string" && featureName.length > 0) {
         layer.bindTooltip(featureName);
       }
@@ -497,7 +495,7 @@ function MapPanel(props: MapPanelProps): JSX.Element {
     (message: GeoJsonMessage, group: FeatureGroup) => {
       const parsed = JSON.parse(message.message.geojson) as Parameters<typeof geoJSON>[0];
       geoJSON(parsed, {
-        onEachFeature: (feature: Feature<Geometry, GeoJsonProperties>, layer) =>
+        onEachFeature: (feature: GeoJSONFeature, layer) =>
           addGeoFeatureEventHandlers(feature, message, layer),
         style: config.topicColors[message.topic]
           ? { color: config.topicColors[message.topic] }
