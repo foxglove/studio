@@ -16,6 +16,7 @@ import { sortBy, take } from "lodash";
 import { Fragment, PropsWithChildren, useMemo } from "react";
 import { makeStyles } from "tss-react/mui";
 
+import Stack from "@foxglove/studio-base/components/Stack";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import { TimeBasedChartTooltipData } from "./index";
@@ -29,8 +30,6 @@ type Props = {
 
 const useStyles = makeStyles()((theme) => ({
   root: {
-    display: "flex",
-    flexDirection: "column",
     fontFamily: fonts.MONOSPACE,
     fontSize: theme.typography.caption.fontSize,
     lineHeight: theme.typography.caption.lineHeight,
@@ -41,6 +40,10 @@ const useStyles = makeStyles()((theme) => ({
     display: "grid",
     gridTemplateColumns: "auto minmax(0px, max-content) minmax(auto, max-content)",
     alignItems: "center",
+    fontFamily: fonts.MONOSPACE,
+    fontSize: theme.typography.caption.fontSize,
+    lineHeight: theme.typography.caption.lineHeight,
+    overflowWrap: "break-word",
   },
   icon: {
     gridColumn: "1",
@@ -76,7 +79,7 @@ export default function TimeBasedChartTooltipContent(
   props: PropsWithChildren<Props>,
 ): React.ReactElement {
   const { colorsByDatasetIndex, content, multiDataset } = props;
-  const { classes } = useStyles();
+  const { classes, cx } = useStyles();
 
   const itemsByPath = useMemo(() => {
     const out = new Map<string, TimeBasedChartTooltipData[]>();
@@ -104,7 +107,7 @@ export default function TimeBasedChartTooltipContent(
   // not include all datasets
   if (!multiDataset) {
     return (
-      <div className={classes.root} data-testid="TimeBasedChartTooltipContent">
+      <Stack className={classes.root} data-testid="TimeBasedChartTooltipContent">
         {take(content, 1).map((item, idx) => {
           const value =
             typeof item.value === "string"
@@ -120,7 +123,7 @@ export default function TimeBasedChartTooltipContent(
           );
         })}
         {content.length > 1 && <OverflowMessage />}
-      </div>
+      </Stack>
     );
   }
 
@@ -131,37 +134,35 @@ export default function TimeBasedChartTooltipContent(
   );
 
   return (
-    <div className={classes.root} data-testid="TimeBasedChartTooltipContent">
-      <div className={classes.grid}>
-        {sortedItems.map(([path, items], idx) => {
-          const firstItem = items[0];
-          const color =
-            firstItem?.datasetIndex != undefined
-              ? colorsByDatasetIndex?.[firstItem.datasetIndex]
-              : "auto";
-          return (
-            <Fragment key={idx}>
-              <Square24Filled className={classes.icon} primaryFill={color} />
-              <div className={classes.path}>{path}</div>
-              {take(items, 1).map((item, itemIdx) => {
-                const value =
-                  typeof item.value === "string"
-                    ? item.value
-                    : typeof item.value === "bigint"
-                    ? item.value.toString()
-                    : JSON.stringify(item.value);
-                return (
-                  <div className={classes.value} key={itemIdx}>
-                    {value}
-                    {item.constantName != undefined ? ` (${item.constantName})` : ""}
-                  </div>
-                );
-              })}
-              {itemsByPath.overflow.has(path) && <OverflowMessage />}
-            </Fragment>
-          );
-        })}
-      </div>
+    <div className={cx(classes.root, classes.grid)} data-testid="TimeBasedChartTooltipContent">
+      {sortedItems.map(([path, items], idx) => {
+        const firstItem = items[0];
+        const color =
+          firstItem?.datasetIndex != undefined
+            ? colorsByDatasetIndex?.[firstItem.datasetIndex]
+            : "auto";
+        return (
+          <Fragment key={idx}>
+            <Square24Filled className={classes.icon} primaryFill={color} />
+            <div className={classes.path}>{path}</div>
+            {take(items, 1).map((item, itemIdx) => {
+              const value =
+                typeof item.value === "string"
+                  ? item.value
+                  : typeof item.value === "bigint"
+                  ? item.value.toString()
+                  : JSON.stringify(item.value);
+              return (
+                <div className={classes.value} key={itemIdx}>
+                  {value}
+                  {item.constantName != undefined ? ` (${item.constantName})` : ""}
+                </div>
+              );
+            })}
+            {itemsByPath.overflow.has(path) && <OverflowMessage />}
+          </Fragment>
+        );
+      })}
     </div>
   );
 }
