@@ -11,10 +11,11 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Button, useTheme } from "@mui/material";
+import { Edit16Filled } from "@fluentui/react-icons";
+import { Button } from "@mui/material";
 import { ChartOptions, ScaleOptions } from "chart.js";
 import { uniq } from "lodash";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
 import { makeStyles } from "tss-react/mui";
 
@@ -71,18 +72,16 @@ const fontWeight = "bold";
 const useStyles = makeStyles<void, "button">()((theme) => ({
   chartWrapper: {
     position: "relative",
-
-    ":hover": {},
   },
   chartOverlay: {
-    pointerEvents: "none",
     top: 0,
     left: 0,
     right: 0,
+    pointerEvents: "none",
   },
   row: {
+    paddingLeft: theme.spacing(1.25),
     pointerEvents: "none",
-    paddingLeft: theme.spacing(1.75),
   },
   button: {
     minWidth: "auto",
@@ -90,6 +89,26 @@ const useStyles = makeStyles<void, "button">()((theme) => ({
     pointerEvents: "auto",
     fontWeight: "normal",
     padding: theme.spacing(0, 1),
+
+    "&:hover": {
+      backgroundColor: theme.palette.background.paper,
+      backgroundImage: `linear-gradient(0deg, ${theme.palette.action.hover}, ${theme.palette.action.hover})`,
+      boxShadow: theme.shadows[1],
+    },
+    ".MuiButton-endIcon": {
+      opacity: 0.8,
+      fontSize: 14,
+      marginLeft: theme.spacing(0.5),
+
+      svg: {
+        fontSize: "1em",
+        height: "1em",
+        width: "1em",
+      },
+    },
+    ":not(:hover) .MuiButton-endIcon": {
+      visibility: "hidden",
+    },
   },
 }));
 
@@ -181,7 +200,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
   );
 
   const { height, heightPerTopic } = useMemo(() => {
-    const onlyTopicsHeight = paths.length * 55;
+    const onlyTopicsHeight = paths.length * 64;
     const xAxisHeight = 30;
     return {
       height: Math.max(80, onlyTopicsHeight + xAxisHeight),
@@ -259,6 +278,9 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
         // Hide all y-axis ticks since each bar on the y-axis is just a separate path.
         display: false,
       },
+      grid: {
+        display: false,
+      },
       type: "linear",
       min: minY,
       max: -3,
@@ -268,6 +290,9 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
   const xScale = useMemo<ScaleOptions<"linear">>(() => {
     return {
       type: "linear",
+      border: {
+        display: false,
+      },
     };
   }, []);
 
@@ -297,7 +322,6 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
   );
 
   const data: ChartData = useShallowMemo({ datasets });
-  const rootRef = useRef<HTMLDivElement>(ReactNull);
 
   useStateTransitionsPanelSettings(config, saveConfig, focusedPath);
 
@@ -310,7 +334,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
   }, [tooltips]);
 
   return (
-    <Stack ref={rootRef} flexGrow={1} overflow="hidden" style={{ zIndex: 0 }}>
+    <Stack flexGrow={1} overflow="hidden" style={{ zIndex: 0 }}>
       <PanelToolbar />
       <Stack fullWidth flex="auto" overflowX="hidden" overflowY="auto">
         <div className={classes.chartWrapper} style={{ height }} ref={sizeRef}>
@@ -338,6 +362,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
                   size="small"
                   color="inherit"
                   className={classes.button}
+                  endIcon={<Edit16Filled />}
                   onClick={() => {
                     setSelectedPanelIds([panelId]);
                     openPanelSettings();
