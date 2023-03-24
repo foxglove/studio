@@ -11100,6 +11100,7 @@ __metadata:
   resolution: "desktop@workspace:desktop"
   dependencies:
     "@foxglove/log": "workspace:*"
+    "@foxglove/studio-base": "workspace:*"
     "@foxglove/studio-desktop": "workspace:*"
     electron: 23.1.4
     playwright: 1.30.0
