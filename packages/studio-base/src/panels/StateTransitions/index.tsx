@@ -12,7 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { Edit16Filled } from "@fluentui/react-icons";
-import { Button } from "@mui/material";
+import { Button, Typography } from "@mui/material";
 import { ChartOptions, ScaleOptions } from "chart.js";
 import { uniq } from "lodash";
 import { useCallback, useMemo, useState } from "react";
@@ -82,7 +82,7 @@ const useStyles = makeStyles<void, "button">()((theme) => ({
     pointerEvents: "none",
   },
   row: {
-    paddingLeft: theme.spacing(1),
+    paddingInline: theme.spacing(0.5),
     pointerEvents: "none",
   },
   button: {
@@ -91,6 +91,7 @@ const useStyles = makeStyles<void, "button">()((theme) => ({
     pointerEvents: "auto",
     fontWeight: "normal",
     padding: theme.spacing(0, 1),
+    maxWidth: "100%",
 
     "&:hover": {
       backgroundColor: tinycolor(theme.palette.background.paper).setAlpha(0.67).toString(),
@@ -108,7 +109,7 @@ const useStyles = makeStyles<void, "button">()((theme) => ({
       },
     },
     ":not(:hover) .MuiButton-endIcon": {
-      visibility: "hidden",
+      display: "none",
     },
   },
 }));
@@ -370,7 +371,9 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
                     setFocusedPath(["paths", String(index)]);
                   }}
                 >
-                  {stateTransitionPathDisplayName(path, index)}
+                  <Typography variant="inherit" noWrap>
+                    {stateTransitionPathDisplayName(path, index)}
+                  </Typography>
                 </Button>
               </div>
             ))}
