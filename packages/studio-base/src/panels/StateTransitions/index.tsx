@@ -17,6 +17,7 @@ import { ChartOptions, ScaleOptions } from "chart.js";
 import { uniq } from "lodash";
 import { useCallback, useMemo, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
+import tinycolor from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 
 import { useShallowMemo } from "@foxglove/hooks";
@@ -72,6 +73,7 @@ const fontWeight = "bold";
 const useStyles = makeStyles<void, "button">()((theme) => ({
   chartWrapper: {
     position: "relative",
+    marginTop: theme.spacing(0.5),
   },
   chartOverlay: {
     top: 0,
@@ -80,7 +82,7 @@ const useStyles = makeStyles<void, "button">()((theme) => ({
     pointerEvents: "none",
   },
   row: {
-    paddingLeft: theme.spacing(1.25),
+    paddingLeft: theme.spacing(1),
     pointerEvents: "none",
   },
   button: {
@@ -91,9 +93,8 @@ const useStyles = makeStyles<void, "button">()((theme) => ({
     padding: theme.spacing(0, 1),
 
     "&:hover": {
-      backgroundColor: theme.palette.background.paper,
-      backgroundImage: `linear-gradient(0deg, ${theme.palette.action.hover}, ${theme.palette.action.hover})`,
-      boxShadow: theme.shadows[1],
+      backgroundColor: tinycolor(theme.palette.background.paper).setAlpha(0.67).toString(),
+      backgroundImage: `linear-gradient(to right, ${theme.palette.action.focus}, ${theme.palette.action.focus})`,
     },
     ".MuiButton-endIcon": {
       opacity: 0.8,
@@ -200,7 +201,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
   );
 
   const { height, heightPerTopic } = useMemo(() => {
-    const onlyTopicsHeight = paths.length * 55;
+    const onlyTopicsHeight = paths.length * 64;
     const xAxisHeight = 30;
     return {
       height: Math.max(80, onlyTopicsHeight + xAxisHeight),
