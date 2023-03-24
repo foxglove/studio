@@ -310,7 +310,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
     });
 
     this._client.on("status", (event) => {
-      const msg = `FoxgloveWebsocket: ${event.message}`;
+      const msg = `FoxgloveWebSocket: ${event.message}`;
       if (event.level === StatusLevel.INFO) {
         log.info(msg);
       } else if (event.level === StatusLevel.WARNING) {
