@@ -181,7 +181,6 @@ export function AppBar(props: AppBarProps): JSX.Element {
   );
 
   const selectedLayoutId = useCurrentLayoutSelector(selectedLayoutIdSelector);
-  const supportsAccountSettings = signIn != undefined;
 
   const { leftSidebarOpen, rightSidebarOpen, layoutMenuOpen, prefsDialogOpen } = useWorkspaceStore(
     selectWorkspace,
@@ -308,25 +307,8 @@ export function AppBar(props: AppBarProps): JSX.Element {
               >
                 <QuestionCircle24Regular />
               </AppBarIconButton>
-              <AppBarIconButton
-                id="preferences-button"
-                title="Preferences"
-                aria-controls={prefsDialogOpen ? "preferences-dialog" : undefined}
-                aria-haspopup="true"
-                aria-expanded={prefsDialogOpen ? "true" : undefined}
-                onClick={() => {
-                  void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
-                    user: currentUserType,
-                    cta: "preferences-dialog",
-                  });
-                  setPrefsDialogOpen(true);
-                }}
-              >
-                <Settings24Regular />
-              </AppBarIconButton>
-              {!disableSignIn &&
-                supportsAccountSettings &&
-                (currentUser ? (
+              {!disableSignIn && signIn ? (
+                currentUser ? (
                   <UserIconButton
                     aria-label="User profile menu button"
                     color="inherit"
@@ -354,7 +336,20 @@ export function AppBar(props: AppBarProps): JSX.Element {
                   >
                     Sign in
                   </Button>
-                ))}
+                )
+              ) : (
+                <UserIconButton
+                  aria-label="User preferences menu button"
+                  color="inherit"
+                  id="user-preferences-button"
+                  title="Prefereces"
+                  aria-controls={prefsDialogOpen ? "preferences-menu" : undefined}
+                  aria-haspopup="true"
+                  aria-expanded={prefsDialogOpen ? "true" : undefined}
+                  onClick={() => setPrefsDialogOpen(true)}
+                  size="small"
+                />
+              )}
               {showCustomWindowControls && (
                 <CustomWindowControls
                   onMinimizeWindow={onMinimizeWindow}
@@ -377,7 +372,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
         anchorEl={layoutAnchorEl ?? undefined}
         open={layoutMenuOpen}
         handleClose={() => setLayoutMenuOpen(false)}
-        supportsSignIn={supportsAccountSettings}
+        supportsSignIn={signIn != undefined}
       />
       <HelpMenu
         anchorEl={helpAnchorEl}
@@ -390,6 +385,13 @@ export function AppBar(props: AppBarProps): JSX.Element {
         anchorEl={userAnchorEl}
         open={userMenuOpen}
         handleClose={() => setUserAnchorEl(undefined)}
+        onPreferencesClick={() => {
+          void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
+            user: currentUserType,
+            cta: "preferences-dialog",
+          });
+          setPrefsDialogOpen(true);
+        }}
       />
     </>
   );

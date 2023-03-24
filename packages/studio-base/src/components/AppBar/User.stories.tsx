@@ -53,6 +53,10 @@ function UserDecorator(StoryFn: Story): JSX.Element {
   );
 }
 
+const noOp = () => {
+  // no-op
+};
+
 export function Default(): JSX.Element {
   return (
     <Stack padding={1.5} alignItems="flex-start">
@@ -62,9 +66,8 @@ export function Default(): JSX.Element {
         anchorReference="anchorPosition"
         anchorPosition={{ left: 0, top: 54 }}
         disablePortal
-        handleClose={() => {
-          // no-op
-        }}
+        handleClose={noOp}
+        onPreferencesClick={noOp}
       />
     </Stack>
   );

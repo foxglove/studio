@@ -67,10 +67,14 @@ type UserIconProps = IconButtonProps & {
 
 export const UserIconButton = forwardRef<HTMLButtonElement, UserIconProps>((props, ref) => {
   const { classes } = useStyles();
-  const { currentUser: me, ...otherProps } = props;
+  const { currentUser: me, title, ...otherProps } = props;
 
   return (
-    <Tooltip classes={{ tooltip: classes.tooltip }} title={me?.email ?? "Profile"} arrow={false}>
+    <Tooltip
+      classes={{ tooltip: classes.tooltip }}
+      title={me?.email ?? title ?? "Profile"}
+      arrow={false}
+    >
       <IconButton {...otherProps} ref={ref} className={classes.iconButton}>
         <Avatar className={classes.avatar} variant="rounded">
           {me?.avatarImageUrl != undefined && (
@@ -95,6 +99,7 @@ export function UserMenu({
   disablePortal,
   handleClose,
   open,
+  onPreferencesClick,
 }: {
   handleClose: () => void;
   anchorEl?: HTMLElement;
@@ -102,6 +107,7 @@ export function UserMenu({
   anchorPosition?: PopoverPosition;
   disablePortal?: boolean;
   open: boolean;
+  onPreferencesClick: () => void;
 }): JSX.Element {
   const { classes } = useStyles();
   const { currentUser, signOut } = useCurrentUser();
@@ -148,6 +154,9 @@ export function UserMenu({
         onClick={handleClose}
         MenuListProps={{ className: classes.menuList }}
       >
+        <MenuItem onClick={onPreferencesClick}>
+          <ListItemText primary="Preferences" />
+        </MenuItem>
         <MenuItem onClick={onSettingsClick}>
           <ListItemText primary={currentUser.email} />
         </MenuItem>
