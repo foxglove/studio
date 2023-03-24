@@ -200,7 +200,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
   );
 
   const { height, heightPerTopic } = useMemo(() => {
-    const onlyTopicsHeight = paths.length * 64;
+    const onlyTopicsHeight = paths.length * 55;
     const xAxisHeight = 30;
     return {
       height: Math.max(80, onlyTopicsHeight + xAxisHeight),
