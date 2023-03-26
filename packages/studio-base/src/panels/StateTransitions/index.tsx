@@ -50,7 +50,8 @@ import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import messagesToDatasets from "./messagesToDatasets";
 import { useStateTransitionsPanelSettings } from "./settings";
-import { StateTransitionConfig, stateTransitionPathDisplayName } from "./types";
+import { stateTransitionPathDisplayName } from "./shared";
+import { StateTransitionConfig } from "./types";
 
 export const transitionableRosTypes = [
   "bool",

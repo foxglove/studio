@@ -16,18 +16,3 @@ export type StateTransitionConfig = {
   paths: StateTransitionPath[];
   isSynced: boolean;
 };
-
-function presence<T>(value: undefined | T): undefined | T {
-  if (value === "") {
-    return undefined;
-  }
-
-  return value == undefined ? undefined : value;
-}
-
-export function stateTransitionPathDisplayName(
-  path: Readonly<StateTransitionPath>,
-  index: number,
-): string {
-  return presence(path.label) ?? presence(path.value) ?? `Series ${index + 1}`;
-}

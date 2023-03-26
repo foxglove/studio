@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import produce from "immer";
-import { isEqual, set } from "lodash";
+import { isEqual } from "lodash";
 import memoizeWeak from "memoize-weak";
 import { useCallback, useEffect } from "react";
 
@@ -12,11 +12,12 @@ import { plotableRosTypes } from "@foxglove/studio-base/panels/Plot";
 import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelStateContextProvider";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 
-import {
-  StateTransitionConfig,
-  StateTransitionPath,
-  stateTransitionPathDisplayName,
-} from "./types";
+import { stateTransitionPathDisplayName } from "./shared";
+import { StateTransitionConfig, StateTransitionPath } from "./types";
+
+// Note - we use memoizeWeak here instead of react memoization to allow us to memoize
+// at the level of individual nodes in our tree. This keeps our DOM updates small since
+// the NodeEditor component is wrapped in a React.memo.
 
 const makeSeriesNode = memoizeWeak((path: StateTransitionPath, index: number): SettingsTreeNode => {
   return {
@@ -99,18 +100,6 @@ export function useStateTransitionsPanelSettings(
         const { input, path, value } = action.payload;
         if (input === "boolean" && isEqual(path, ["general", "isSynced"])) {
           saveConfig({ isSynced: value });
-        }
-
-        if (path[0] === "paths") {
-          saveConfig(
-            produce((draft) => {
-              if (path[2] === "visible") {
-                set(draft, [...path.slice(0, 2), "enabled"], value);
-              } else {
-                set(draft, path, value);
-              }
-            }),
-          );
         }
       }
 
