@@ -10,9 +10,8 @@ import {
   PanelRight24Filled,
   PanelRight24Regular,
   QuestionCircle24Regular,
-  Settings24Regular,
 } from "@fluentui/react-icons";
-import { AppBar as MuiAppBar, Button, IconButton } from "@mui/material";
+import { AppBar as MuiAppBar, IconButton } from "@mui/material";
 import { useCallback, useRef, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 import { shallow } from "zustand/shallow";
@@ -49,7 +48,8 @@ import { AddPanelMenu } from "./AddPanelMenu";
 import { DataSource } from "./DataSource";
 import { HelpMenu } from "./HelpMenu";
 import { LayoutMenu } from "./LayoutMenu";
-import { UserIconButton, UserMenu } from "./User";
+import { UserButton } from "./UserButton";
+import { UserMenu } from "./UserMenu";
 import {
   APP_BAR_BACKGROUND_COLOR,
   APP_BAR_FOREGROUND_COLOR,
@@ -120,16 +120,6 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }>(
         display: "flex",
         alignItems: "center",
         ...NOT_DRAGGABLE_STYLE, // make buttons clickable for desktop app
-      },
-      button: {
-        marginInline: theme.spacing(1),
-        backgroundColor: APP_BAR_PRIMARY_COLOR,
-
-        "&:hover": {
-          backgroundColor: theme.palette.augmentColor({
-            color: { main: APP_BAR_PRIMARY_COLOR },
-          }).dark,
-        },
       },
       keyEquivalent: {
         fontFamily: fonts.MONOSPACE,
@@ -307,49 +297,15 @@ export function AppBar(props: AppBarProps): JSX.Element {
               >
                 <QuestionCircle24Regular />
               </AppBarIconButton>
-              {!disableSignIn && signIn ? (
-                currentUser ? (
-                  <UserIconButton
-                    aria-label="User profile menu button"
-                    color="inherit"
-                    id="user-profile-button"
-                    aria-controls={userMenuOpen ? "user-profile-menu" : undefined}
-                    aria-haspopup="true"
-                    aria-expanded={userMenuOpen ? "true" : undefined}
-                    onClick={(event) => setUserAnchorEl(event.currentTarget)}
-                    size="small"
-                    currentUser={currentUser}
-                  />
-                ) : (
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    className={classes.button}
-                    size="small"
-                    onClick={() => {
-                      signIn();
-                      void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
-                        user: "unauthenticated",
-                        cta: "sign-in",
-                      });
-                    }}
-                  >
-                    Sign in
-                  </Button>
-                )
-              ) : (
-                <UserIconButton
-                  aria-label="User preferences menu button"
-                  color="inherit"
-                  id="user-preferences-button"
-                  title="Prefereces"
-                  aria-controls={prefsDialogOpen ? "preferences-menu" : undefined}
-                  aria-haspopup="true"
-                  aria-expanded={prefsDialogOpen ? "true" : undefined}
-                  onClick={() => setPrefsDialogOpen(true)}
-                  size="small"
-                />
-              )}
+              <UserButton
+                disableSignIn={disableSignIn}
+                currentUser={currentUser}
+                currentUserType={currentUserType}
+                userMenuOpen={userMenuOpen}
+                setUserAnchorEl={setUserAnchorEl}
+                prefsDialogOpen={prefsDialogOpen}
+                setPrefsDialogOpen={setPrefsDialogOpen}
+              />
               {showCustomWindowControls && (
                 <CustomWindowControls
                   onMinimizeWindow={onMinimizeWindow}

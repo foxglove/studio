@@ -11,7 +11,7 @@ import CurrentUserContext, {
 } from "@foxglove/studio-base/context/CurrentUserContext";
 
 import { StorybookDecorator } from "./StorybookDecorator.stories";
-import { UserIconButton, UserMenu } from "./User";
+import { UserButton, UserMenu } from "./UserMenu";
 
 export default {
   title: "components/AppBar/UserMenu",
@@ -60,7 +60,12 @@ const noOp = () => {
 export function Default(): JSX.Element {
   return (
     <Stack padding={1.5} alignItems="flex-start">
-      <UserIconButton />
+      <UserButton
+        userMenuOpen={false}
+        setUserAnchorEl={noOp}
+        prefsDialogOpen={false}
+        setPrefsDialogOpen={noOp}
+      />
       <UserMenu
         open
         anchorReference="anchorPosition"
