@@ -318,6 +318,17 @@ export default class FoxgloveWebSocketPlayer implements Player {
       } else {
         log.error(msg);
       }
+      
+      this._problems.addProblem(event.message, {
+        message: event.message,
+        severity:
+          event.level === StatusLevel.INFO
+            ? "info"
+            : event.level === StatusLevel.WARNING
+              ? "warn"
+              : "error",
+      });
+      this._emitState();
     });
 
     this._client.on("advertise", (newChannels) => {
