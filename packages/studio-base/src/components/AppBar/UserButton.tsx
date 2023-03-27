@@ -14,6 +14,7 @@ import {
   APP_BAR_FOREGROUND_COLOR,
   APP_BAR_PRIMARY_COLOR,
 } from "@foxglove/studio-base/components/AppBar/constants";
+import Stack from "@foxglove/studio-base/components/Stack";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 import { User, UserType } from "@foxglove/studio-base/context/CurrentUserContext";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
@@ -70,7 +71,7 @@ export type UserButtonProps = {
 export const UserButton = forwardRef<HTMLButtonElement, UserButtonProps>((props, ref) => {
   const { classes } = useStyles();
   const {
-    currentUser: me,
+    currentUser,
     currentUserType,
     disableSignIn = false,
     signIn,
@@ -81,43 +82,9 @@ export const UserButton = forwardRef<HTMLButtonElement, UserButtonProps>((props,
   } = props;
   const analytics = useAnalytics();
 
-  if (disableSignIn) {
-    return <></>;
-  }
-
-  if (signIn == undefined) {
+  if (currentUser) {
     return (
-      <Tooltip classes={{ tooltip: classes.tooltip }} title={me?.email ?? "Profile"} arrow={false}>
-        <IconButton
-          aria-label="User preferences menu button"
-          color="inherit"
-          id="user-preferences-button"
-          title="Prefereces"
-          aria-controls={prefsDialogOpen ? "preferences-menu" : undefined}
-          aria-haspopup="true"
-          aria-expanded={prefsDialogOpen ? "true" : undefined}
-          onClick={() => setPrefsDialogOpen(true)}
-          size="small"
-          ref={ref}
-          className={classes.iconButton}
-        >
-          <Avatar className={classes.avatar} variant="rounded">
-            {me?.avatarImageUrl != undefined && (
-              <img
-                src={me.avatarImageUrl}
-                referrerPolicy="same-origin"
-                className={classes.userIconImage}
-              />
-            )}
-            {me?.avatarImageUrl == undefined && <PersonIcon />}
-          </Avatar>
-        </IconButton>
-      </Tooltip>
-    );
-  }
-  if (me) {
-    return (
-      <Tooltip classes={{ tooltip: classes.tooltip }} title={me.email} arrow={false}>
+      <Tooltip classes={{ tooltip: classes.tooltip }} title={currentUser.email} arrow={false}>
         <IconButton
           aria-label="User profile menu button"
           color="inherit"
@@ -126,19 +93,21 @@ export const UserButton = forwardRef<HTMLButtonElement, UserButtonProps>((props,
           aria-haspopup="true"
           aria-expanded={userMenuOpen ? "true" : undefined}
           onClick={(event) => setUserAnchorEl(event.currentTarget)}
+          data-testid="user-button"
           size="small"
           ref={ref}
           className={classes.iconButton}
         >
           <Avatar className={classes.avatar} variant="rounded">
-            {me.avatarImageUrl != undefined && (
+            {currentUser.avatarImageUrl ? (
               <img
-                src={me.avatarImageUrl}
+                src={currentUser.avatarImageUrl}
                 referrerPolicy="same-origin"
                 className={classes.userIconImage}
               />
+            ) : (
+              <PersonIcon />
             )}
-            {me.avatarImageUrl == undefined && <PersonIcon />}
           </Avatar>
         </IconButton>
       </Tooltip>
@@ -146,7 +115,7 @@ export const UserButton = forwardRef<HTMLButtonElement, UserButtonProps>((props,
   }
 
   return (
-    <>
+    <Stack direction="row" alignItems="center">
       <AppBarIconButton
         id="preferences-button"
         title="Preferences"
@@ -160,25 +129,28 @@ export const UserButton = forwardRef<HTMLButtonElement, UserButtonProps>((props,
           });
           setPrefsDialogOpen(true);
         }}
+        data-testid="user-button"
       >
         <Settings24Regular />
       </AppBarIconButton>
-      <Button
-        variant="contained"
-        color="primary"
-        className={classes.button}
-        size="small"
-        onClick={() => {
-          signIn();
-          void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
-            user: "unauthenticated",
-            cta: "sign-in",
-          });
-        }}
-      >
-        Sign in
-      </Button>
-    </>
+      {!disableSignIn && signIn != undefined && (
+        <Button
+          variant="contained"
+          color="primary"
+          className={classes.button}
+          size="small"
+          onClick={() => {
+            signIn();
+            void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
+              user: "unauthenticated",
+              cta: "sign-in",
+            });
+          }}
+        >
+          Sign in
+        </Button>
+      )}
+    </Stack>
   );
 });
 UserButton.displayName = "UserButton";
