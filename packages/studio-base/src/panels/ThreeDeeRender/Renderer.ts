@@ -11,7 +11,7 @@ import { v4 as uuidv4 } from "uuid";
 
 import Logger from "@foxglove/log";
 import { Time, fromNanoSec, isLessThan, toNanoSec } from "@foxglove/rostime";
-import type { FrameTransform, SceneUpdate } from "@foxglove/schemas";
+import type { FrameTransform, FrameTransforms, SceneUpdate } from "@foxglove/schemas";
 import {
   MessageEvent,
   ParameterValue,
@@ -38,10 +38,11 @@ import { SettingsManager, SettingsTreeEntry } from "./SettingsManager";
 import { SharedGeometry } from "./SharedGeometry";
 import { CameraState } from "./camera";
 import { DARK_OUTLINE, LIGHT_OUTLINE, stringToRgb } from "./color";
-import { FRAME_TRANSFORM_DATATYPES } from "./foxglove";
+import { FRAME_TRANSFORMS_DATATYPES, FRAME_TRANSFORM_DATATYPES } from "./foxglove";
 import { DetailLevel, msaaSamples } from "./lod";
 import {
   normalizeFrameTransform,
+  normalizeFrameTransforms,
   normalizeTFMessage,
   normalizeTransformStamped,
 } from "./normalizeMessages";
@@ -454,6 +455,11 @@ export class Renderer extends EventEmitter<RendererEvents> {
       shouldSubscribe: () => true,
       preload: config.scene.transforms?.enablePreloading ?? true,
     });
+    this.addSchemaSubscriptions(FRAME_TRANSFORMS_DATATYPES, {
+      handler: this.handleFrameTransforms,
+      shouldSubscribe: () => true,
+      preload: config.scene.transforms?.enablePreloading ?? true,
+    });
     this.addSchemaSubscriptions(TF_DATATYPES, {
       handler: this.handleTFMessage,
       shouldSubscribe: () => true,
@@ -550,18 +556,22 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.currentTime = newTimeNs;
   }
   /**
-   * Updates renderer state according to seek delta - does not set time
-   * @param oldTime used to determine clearing of time sensitive data
-   * @param newTime what renderer.currentTime will be set to
+   * Updates renderer state according to seek delta. Handles clearing of future state and resetting of allFrames cursor if seeked backwards
+   * Should be called after `setCurrentTime` as been called
+   * @param oldTime used to determine if seeked backwards
    */
-  public handleSeek(oldTimeNs: bigint, newTimeNs: bigint): void {
-    const movedBack = newTimeNs < oldTimeNs;
+  public handleSeek(oldTimeNs: bigint): void {
+    const movedBack = this.currentTime < oldTimeNs;
     // want to clear transforms and reset the cursor if we seek backwards
     this.clear({ clearTransforms: movedBack, resetAllFramesCursor: movedBack });
   }
 
   /**
-   * performs a clear on the renderables, errors and optionally the transform tree within the Renderer
+   * Clears:
+   *  - Rendered objects (a backfill is performed to ensure that they are regenerated with new messages from current frame)
+   *  - Errors in settings. Messages that caused errors in the past are cleared, but will be re-added if they are still causing errors when read in.
+   *  - [Optional] Transform tree. This should be set to true when a seek to a previous time is performed in order to flush potential future state to the newly set time.
+   *  - [Optional] allFramesCursor. This is the cursor that iterates through allFrames up to currentTime. It should be reset when seeking backwards to avoid keeping future state.
    * @param {Object} params - modifiers to the clear operation
    * @param {boolean} params.clearTransforms - whether to clear the transform tree. This should be set to true when a seek to a previous time is performed in order
    * order to flush potential future state to the newly set time.
@@ -1265,9 +1275,19 @@ export class Renderer extends EventEmitter<RendererEvents> {
   };
 
   private handleFrameTransform = ({ message }: MessageEvent<DeepPartial<FrameTransform>>): void => {
-    // foxglove.FrameTransform - Ingest the list of transforms into our TF tree
+    // foxglove.FrameTransform - Ingest this single transform into our TF tree
     const transform = normalizeFrameTransform(message);
     this.addFrameTransform(transform);
+  };
+
+  private handleFrameTransforms = ({
+    message,
+  }: MessageEvent<DeepPartial<FrameTransforms>>): void => {
+    // foxglove.FrameTransforms - Ingest the list of transforms into our TF tree
+    const frameTransforms = normalizeFrameTransforms(message);
+    for (const transform of frameTransforms.transforms) {
+      this.addFrameTransform(transform);
+    }
   };
 
   private handleTFMessage = ({ message }: MessageEvent<DeepPartial<TFMessage>>): void => {
