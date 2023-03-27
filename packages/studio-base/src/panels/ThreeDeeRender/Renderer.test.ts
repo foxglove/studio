@@ -115,7 +115,7 @@ describe("Renderer", () => {
   it("constructs a renderer without error", () => {
     expect(() => new Renderer(canvas, defaultRendererConfig)).not.toThrow();
   });
-  it("tfPreloading off: clears transform tree when seeking to before currentTime", () => {
+  it("tfPreloading off:  when seeking to before currentTime, clears transform tree", () => {
     // This test is meant accurately represent the flow of seek through the react component
 
     const renderer = new Renderer(canvas, {
@@ -124,7 +124,7 @@ describe("Renderer", () => {
     });
     let currentFrame = [];
 
-    // initialize renderer with normal transforms
+    // initialize renderer with transforms
 
     // first frame
     let currentTime = 5n;
@@ -144,7 +144,7 @@ describe("Renderer", () => {
 
     // third frame
     currentTime = 7n;
-    const afterHeader = createTFMessageEvent("root", "after", currentTime, [currentTime]);
+    const afterHeader = createTFMessageEvent("root", "after", currentTime, [currentTime + 2n]);
     // transform with headerstamp after currentTime
     currentFrame = [afterHeader];
     renderer.setCurrentTime(currentTime);
@@ -162,13 +162,118 @@ describe("Renderer", () => {
     renderer.handleSeek(oldTime);
     // should have cleared transforms so that no future-to-the-currentTime transforms are in the tree
     expect(renderer.transformTree.frame("before")).toBeUndefined();
+    expect(renderer.transformTree.frame("on")).toBeUndefined();
+    expect(renderer.transformTree.frame("after")).toBeUndefined();
     // currentFrame will be set back to what it was at that time
     currentFrame = [beforeHeader];
     currentFrame.forEach((msg) => renderer.addMessageEvent(msg));
 
     expect(renderer.transformTree.frame("before")).not.toBeUndefined();
   });
-  it("tfPreloading on: clears transform tree when seeking to before, repopulates it up to receiveTime from allFrames", () => {
+  it("tfPreloading off: when seeking to time after currentTime, does not clear transform tree", () => {
+    // This test is meant accurately represent the flow of seek through the react component
+
+    const renderer = new Renderer(canvas, {
+      ...defaultRendererConfig,
+      scene: { transforms: { enablePreloading: false } },
+    });
+    let currentFrame = [];
+
+    // initialize renderer with transforms
+
+    // first frame
+    let currentTime = 5n;
+    const beforeHeader = createTFMessageEvent("root", "before", currentTime, [currentTime - 2n]);
+    // transform with headerstamp before currentTime
+    currentFrame = [beforeHeader];
+    renderer.setCurrentTime(currentTime);
+    currentFrame.forEach((msg) => renderer.addMessageEvent(msg));
+
+    // second frame
+    currentTime = 6n;
+    const onHeader = createTFMessageEvent("root", "on", currentTime, [currentTime]);
+    // transform with headerstamp on currentTime
+    currentFrame = [onHeader];
+    renderer.setCurrentTime(currentTime);
+    currentFrame.forEach((msg) => renderer.addMessageEvent(msg));
+
+    // third frame
+    currentTime = 7n;
+    const afterHeader = createTFMessageEvent("root", "after", currentTime, [currentTime + 2n]);
+    // transform with headerstamp after currentTime
+    currentFrame = [afterHeader];
+    renderer.setCurrentTime(currentTime);
+    currentFrame.forEach((msg) => renderer.addMessageEvent(msg));
+
+    expect(renderer.transformTree.frame("before")).not.toBeUndefined();
+    expect(renderer.transformTree.frame("on")).not.toBeUndefined();
+    expect(renderer.transformTree.frame("after")).not.toBeUndefined();
+
+    //seek to 10n (forward)
+
+    const oldTime = currentTime;
+    currentTime = 10n;
+    renderer.setCurrentTime(currentTime);
+    renderer.handleSeek(oldTime);
+    // should not have cleared transforms
+    expect(renderer.transformTree.frame("before")).not.toBeUndefined();
+    expect(renderer.transformTree.frame("on")).not.toBeUndefined();
+    expect(renderer.transformTree.frame("after")).not.toBeUndefined();
+    // currentFrame will be set back to what it was at that time
+    const seekOnHeader = createTFMessageEvent("root", "seekOn", currentTime, [currentTime]);
+    currentFrame = [seekOnHeader];
+    currentFrame.forEach((msg) => renderer.addMessageEvent(msg));
+
+    expect(renderer.transformTree.frame("before")).not.toBeUndefined();
+    expect(renderer.transformTree.frame("on")).not.toBeUndefined();
+    expect(renderer.transformTree.frame("after")).not.toBeUndefined();
+    expect(renderer.transformTree.frame("seekOn")).not.toBeUndefined();
+  });
+  it("tfPreloading on:  when seeking to before currentTime, clears transform tree and repopulates it up to receiveTime from allFrames", () => {
+    const renderer = new Renderer(canvas, {
+      ...defaultRendererConfig,
+      scene: { transforms: { enablePreloading: true } },
+    });
+    const allFrames = [
+      createTFMessageEvent("root", "before4", 5n, [1n]),
+      createTFMessageEvent("root", "before2", 6n, [4n]),
+      createTFMessageEvent("root", "on", 7n, [7n]),
+      createTFMessageEvent("root", "after2", 8n, [10n]),
+      createTFMessageEvent("root", "after4", 9n, [13n]),
+    ];
+
+    // initialize renderer with transforms
+    let currentTime = 8n;
+    renderer.setCurrentTime(currentTime);
+    renderer.handleAllFramesMessages(allFrames);
+    expect(renderer.transformTree.frame("before4")).not.toBeUndefined();
+    expect(renderer.transformTree.frame("before2")).not.toBeUndefined();
+    expect(renderer.transformTree.frame("on")).not.toBeUndefined();
+    expect(renderer.transformTree.frame("after2")).not.toBeUndefined();
+    expect(renderer.transformTree.frame("after4")).toBeUndefined();
+
+    //seek to 6n (backwards)
+
+    const oldTime = currentTime;
+    currentTime = 6n;
+    renderer.setCurrentTime(currentTime);
+    renderer.handleSeek(oldTime);
+    // should have cleared transforms so that no future-to-the-currentTime transforms are in the tree
+    expect(renderer.transformTree.frame("before4")).toBeUndefined();
+    expect(renderer.transformTree.frame("before2")).toBeUndefined();
+    expect(renderer.transformTree.frame("on")).toBeUndefined();
+    expect(renderer.transformTree.frame("after2")).toBeUndefined();
+    expect(renderer.transformTree.frame("after4")).toBeUndefined();
+
+    // repopulate up to current receiveTime from allFrames
+    renderer.handleAllFramesMessages(allFrames);
+    expect(renderer.transformTree.frame("before4")).not.toBeUndefined();
+    expect(renderer.transformTree.frame("before2")).not.toBeUndefined();
+    expect(renderer.transformTree.frame("on")).toBeUndefined();
+    expect(renderer.transformTree.frame("after2")).toBeUndefined();
+    expect(renderer.transformTree.frame("after4")).toBeUndefined();
+  });
+  it("tfPreloading on: does not clear transform tree when seeking to after", () => {
     const renderer = new Renderer(canvas, {
       ...defaultRendererConfig,
       scene: { transforms: { enablePreloading: true } },
@@ -182,25 +287,35 @@ describe("Renderer", () => {
     ];
 
     // initialize renderer with normal transforms
-    let currentTime = 8n;
+    let currentTime = 7n;
     renderer.setCurrentTime(currentTime);
     renderer.handleAllFramesMessages(allFrames);
     expect(renderer.transformTree.frame("before4")).not.toBeUndefined();
     expect(renderer.transformTree.frame("before2")).not.toBeUndefined();
     expect(renderer.transformTree.frame("on")).not.toBeUndefined();
-    expect(renderer.transformTree.frame("after2")).not.toBeUndefined();
-    //seek to 5n
+    expect(renderer.transformTree.frame("after2")).toBeUndefined();
+    expect(renderer.transformTree.frame("after4")).toBeUndefined();
+
+    //seek to 9n (forwards)
 
     const oldTime = currentTime;
-    currentTime = 6n;
+    currentTime = 9n;
     renderer.setCurrentTime(currentTime);
     renderer.handleSeek(oldTime);
-    // should have cleared transforms so that no future-to-the-currentTime transforms are in the tree
-    expect(renderer.transformTree.frame("before4")).toBeUndefined();
-    renderer.handleAllFramesMessages(allFrames);
-    // repopulate up to current receiveTime from allFrames
+    // should not have cleared tree, so should be same as before
     expect(renderer.transformTree.frame("before4")).not.toBeUndefined();
     expect(renderer.transformTree.frame("before2")).not.toBeUndefined();
+    expect(renderer.transformTree.frame("on")).not.toBeUndefined();
+    expect(renderer.transformTree.frame("after2")).toBeUndefined();
+    expect(renderer.transformTree.frame("after4")).toBeUndefined();
+
+    // repopulate up to current receiveTime from allFrames
+    renderer.handleAllFramesMessages(allFrames);
+    expect(renderer.transformTree.frame("before4")).not.toBeUndefined();
+    expect(renderer.transformTree.frame("before2")).not.toBeUndefined();
+    expect(renderer.transformTree.frame("on")).not.toBeUndefined();
+    expect(renderer.transformTree.frame("after2")).not.toBeUndefined();
+    expect(renderer.transformTree.frame("after4")).not.toBeUndefined();
   });
 });
 
@@ -247,7 +362,7 @@ describe("Renderer.handleAllFramesMessages behavior", () => {
 
     expect(addMessageEventMock).toHaveBeenCalledTimes(5);
   });
-  it("adds later messages after being currentTime is updated", () => {
+  it("adds later messages after currentTime is updated", () => {
     const renderer = new Renderer(canvas, defaultRendererConfig);
 
     const msgs = [];
