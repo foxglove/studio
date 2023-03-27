@@ -23,6 +23,7 @@ import {
   PlayerCapabilities,
   PlayerMetricsCollectorInterface,
   PlayerPresence,
+  PlayerProblem,
   PlayerState,
   PublishPayload,
   SubscribePayload,
@@ -318,16 +319,18 @@ export default class FoxgloveWebSocketPlayer implements Player {
       } else {
         log.error(msg);
       }
-      
-      this._problems.addProblem(event.message, {
+
+      const problem: PlayerProblem = {
         message: event.message,
-        severity:
-          event.level === StatusLevel.INFO
-            ? "info"
-            : event.level === StatusLevel.WARNING
-              ? "warn"
-              : "error",
-      });
+        severity: statusLevelToProblemSeverity(event.level),
+      };
+
+      if (event.message === "Send buffer limit reached") {
+        problem.tip =
+          "Server is dropping messages to the client. Check if you are subscribing to large or frequent topics or adjust your server send buffer limit.";
+      }
+
+      this._problems.addProblem(event.message, problem);
       this._emitState();
     });
 
@@ -981,4 +984,14 @@ function dataTypeToFullName(dataType: string): string {
     return `${parts[0]}/msg/${parts[1]}`;
   }
   return dataType;
+}
+
+function statusLevelToProblemSeverity(level: StatusLevel): PlayerProblem["severity"] {
+  if (level === StatusLevel.INFO) {
+    return "info";
+  } else if (level === StatusLevel.WARNING) {
+    return "warn";
+  } else {
+    return "error";
+  }
 }
