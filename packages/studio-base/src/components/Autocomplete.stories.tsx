@@ -174,18 +174,6 @@ storiesOf("components/Autocomplete", module)
       </div>
     );
   })
-  .add("at the right edge of the screen", () => {
-    class Example extends Component {
-      public override render() {
-        return (
-          <div style={{ position: "absolute", right: 0, padding: 20 }} ref={focusInput}>
-            <Autocomplete items={["loooooooooooooong item"]} value="looo" onSelect={() => {}} />
-          </div>
-        );
-      }
-    }
-    return <Example />;
-  })
   .add("with a long truncated path (and autoSize)", () => {
     class Example extends Component {
       public override render() {
