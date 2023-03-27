@@ -723,7 +723,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
 
     renderer.setCurrentTime(newTimeNs);
     if (didSeek) {
-      renderer.handleSeek(oldTimeNs, newTimeNs);
+      renderer.handleSeek(oldTimeNs);
       setDidSeek(false);
     }
   }, [currentTime, renderer, didSeek]);
