@@ -159,7 +159,7 @@ describe("Renderer", () => {
     const oldTime = currentTime;
     currentTime = 5n;
     renderer.setCurrentTime(currentTime);
-    renderer.handleSeek(oldTime, currentTime);
+    renderer.handleSeek(oldTime);
     // should have cleared transforms so that no future-to-the-currentTime transforms are in the tree
     expect(renderer.transformTree.frame("before")).toBeUndefined();
     // currentFrame will be set back to what it was at that time
@@ -194,7 +194,7 @@ describe("Renderer", () => {
     const oldTime = currentTime;
     currentTime = 6n;
     renderer.setCurrentTime(currentTime);
-    renderer.handleSeek(oldTime, currentTime);
+    renderer.handleSeek(oldTime);
     // should have cleared transforms so that no future-to-the-currentTime transforms are in the tree
     expect(renderer.transformTree.frame("before4")).toBeUndefined();
     renderer.handleAllFramesMessages(allFrames);
