@@ -131,6 +131,7 @@ export default function CurrentLayoutProvider({
               loading: false,
               id: layout.id,
               data: layout.working?.data ?? layout.baseline.data,
+              name: layout.name,
             },
           });
           if (saveToProfile) {
@@ -225,6 +226,7 @@ export default function CurrentLayoutProvider({
             loading: false,
             id: updatedLayout.id,
             data: updatedLayout.working?.data ?? updatedLayout.baseline.data,
+            name: updatedLayout.name,
           },
         });
       }

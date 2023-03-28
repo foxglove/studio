@@ -100,7 +100,8 @@ const useStyles = makeStyles<void, "adornmentError" | "openIcon">()((theme, _par
 const selectPlayerName = ({ playerState }: MessagePipelineContext) => playerState.name;
 const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => playerState.presence;
 const selectPlayerProblems = ({ playerState }: MessagePipelineContext) => playerState.problems;
-const selectLayoutId = ({ selectedLayout }: LayoutState) => selectedLayout?.id;
+const selectCurrentLayoutId = ({ selectedLayout }: LayoutState) => selectedLayout?.id;
+const selectCurrentLayoutName = ({ selectedLayout }: LayoutState) => selectedLayout?.name;
 
 export function DataSource({
   onSelectDataSourceAction,
@@ -119,7 +120,8 @@ export function DataSource({
   const playerName = useMessagePipeline(selectPlayerName);
   const playerPresence = useMessagePipeline(selectPlayerPresence);
   const playerProblems = useMessagePipeline(selectPlayerProblems) ?? [];
-  const currentLayoutId = useCurrentLayoutSelector(selectLayoutId);
+  const currentLayoutId = useCurrentLayoutSelector(selectCurrentLayoutId);
+  const currentLayoutName = useCurrentLayoutSelector(selectCurrentLayoutName);
 
   const reconnecting = playerPresence === PlayerPresence.RECONNECTING;
   const initializing = playerPresence === PlayerPresence.INITIALIZING;
@@ -199,7 +201,7 @@ export function DataSource({
             setLayoutMenuOpen(true);
           }}
         >
-          <TextMiddleTruncate text={currentLayoutId?.toString} />
+          <TextMiddleTruncate text={currentLayoutName ?? currentLayoutId ?? ""} />
           <ChevronDown12Filled />
         </ButtonBase>
       </Stack>
