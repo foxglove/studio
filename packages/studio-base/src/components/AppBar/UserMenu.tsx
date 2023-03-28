@@ -12,11 +12,11 @@ import {
   Typography,
 } from "@mui/material";
 import { useSnackbar } from "notistack";
-import { SetStateAction, useCallback } from "react";
+import { useCallback } from "react";
 import { makeStyles } from "tss-react/mui";
 
 import Logger from "@foxglove/log";
-import { useCurrentUser, User, UserType } from "@foxglove/studio-base/context/CurrentUserContext";
+import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
 import { useConfirm } from "@foxglove/studio-base/hooks/useConfirm";
 
 const log = Logger.getLogger(__filename);
@@ -27,16 +27,14 @@ const useStyles = makeStyles()({
   },
 });
 
-export type UserButtonProps = {
-  disableSignIn?: boolean;
-  currentUser?: User;
-  currentUserType?: UserType;
-  signIn?: () => void;
-  userMenuOpen: boolean;
-  setUserAnchorEl: (value: SetStateAction<HTMLElement | undefined>) => void;
-  prefsDialogOpen: boolean;
-  // eslint-disable-next-line @foxglove/no-boolean-parameters
-  setPrefsDialogOpen: (open: boolean) => void;
+type UserMenuProps = {
+  handleClose: () => void;
+  anchorEl?: HTMLElement;
+  anchorReference?: PopoverReference;
+  anchorPosition?: PopoverPosition;
+  disablePortal?: boolean;
+  open: boolean;
+  onPreferencesClick: () => void;
 };
 
 export function UserMenu({
@@ -47,15 +45,7 @@ export function UserMenu({
   handleClose,
   open,
   onPreferencesClick,
-}: {
-  handleClose: () => void;
-  anchorEl?: HTMLElement;
-  anchorReference?: PopoverReference;
-  anchorPosition?: PopoverPosition;
-  disablePortal?: boolean;
-  open: boolean;
-  onPreferencesClick: () => void;
-}): JSX.Element {
+}: UserMenuProps): JSX.Element {
   const { classes } = useStyles();
   const { currentUser, signOut } = useCurrentUser();
   const { enqueueSnackbar } = useSnackbar();
