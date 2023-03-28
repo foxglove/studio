@@ -56,7 +56,7 @@ const useStyles = makeStyles()((theme) => ({
   },
 }));
 
-export type UserButtonProps = {
+type UserButtonProps = {
   disableSignIn?: boolean;
   userMenuOpen: boolean;
   setUserAnchorEl: (value: SetStateAction<HTMLElement | undefined>) => void;
@@ -66,7 +66,6 @@ export type UserButtonProps = {
 };
 
 export const UserButton = forwardRef<HTMLButtonElement, UserButtonProps>((props, ref) => {
-  const { classes } = useStyles();
   const {
     disableSignIn = false,
     prefsDialogOpen,
@@ -74,6 +73,7 @@ export const UserButton = forwardRef<HTMLButtonElement, UserButtonProps>((props,
     setUserAnchorEl,
     userMenuOpen,
   } = props;
+  const { classes } = useStyles();
   const analytics = useAnalytics();
   const { currentUser, signIn } = useCurrentUser();
 
