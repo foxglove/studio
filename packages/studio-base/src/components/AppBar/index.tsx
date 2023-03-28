@@ -4,7 +4,6 @@
 
 import {
   AddCircle24Regular,
-  // BoardSplit24Regular,
   PanelLeft24Filled,
   PanelLeft24Regular,
   PanelRight24Filled,
@@ -251,21 +250,6 @@ export function AppBar(props: AppBarProps): JSX.Element {
               <IconButton className={classes.logo} size="large" color="inherit">
                 <FoxgloveLogo fontSize="inherit" color="inherit" />
               </IconButton>
-              {/* <AppBarIconButton
-                className={cx({ "Mui-selected": layoutMenuOpen })}
-                ref={layoutButtonRef}
-                color="inherit"
-                id="layout-button"
-                title="Layouts"
-                aria-controls={layoutMenuOpen ? "layout-menu" : undefined}
-                aria-haspopup="true"
-                aria-expanded={layoutMenuOpen ? "true" : undefined}
-                onClick={() => {
-                  setLayoutMenuOpen(true);
-                }}
-              >
-                <BoardSplit24Regular />
-              </AppBarIconButton> */}
               <AppBarIconButton
                 className={cx({ "Mui-selected": panelMenuOpen })}
                 color="inherit"
