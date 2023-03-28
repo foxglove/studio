@@ -341,12 +341,14 @@ function RawMessages(props: Props) {
               keyPath.slice(0, -1).reverse(),
             );
             if (childStructureItem) {
-              // if it's an array entry we need the array field name to get the enum annotation, not the element index
-              const field = typeof keyPath[0] === "number" ? keyPath[1] : keyPath[0];
+              // if it's an array entry we need most root (first) array field name to get the enum annotation, not the element index
+
+              const keyPathIndex = keyPath.findIndex((key) => typeof key === "string");
+              const field = keyPath[keyPathIndex];
               if (typeof field === "string") {
                 const enumMapping = enumValuesByDatatypeAndField(datatypes);
                 const datatype = childStructureItem.datatype;
-                constantName = enumMapping[datatype]?.[field]?.[String(itemValue)];
+                constantName = enumMapping[datatype]?.[field][String(itemValue)];
               }
             }
           }
