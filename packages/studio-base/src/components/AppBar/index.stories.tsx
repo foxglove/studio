@@ -50,8 +50,50 @@ export function CustomWindowControlsDragRegion(): JSX.Element {
   return <AppBar showCustomWindowControls debugDragRegion {...actions} />;
 }
 
-export function SignInDisabled(): JSX.Element {
-  return <AppBar disableSignIn {...actions} />;
+export function SignInStates(): JSX.Element {
+  return (
+    <Stack gap={1} paddingTop={1}>
+      sign in undefined
+      <AppBar {...actions} />
+      sign in disabled
+      <AppBar disableSignIn {...actions} />
+      no user present
+      <CurrentUserContext.Provider
+        value={{
+          currentUser: undefined,
+          signIn: () => undefined,
+          signOut: async () => undefined,
+        }}
+      >
+        <AppBar {...actions} />
+      </CurrentUserContext.Provider>
+      user present
+      <CurrentUserContext.Provider
+        value={{
+          currentUser: {
+            id: "user-1",
+            email: "user@example.com",
+            orgId: "org_id",
+            orgDisplayName: "Orgalorg",
+            orgSlug: "org",
+            orgPaid: false,
+            org: {
+              id: "org_id",
+              slug: "org",
+              displayName: "Orgalorg",
+              isEnterprise: false,
+              allowsUploads: true,
+              supportsEdgeSites: false,
+            },
+          },
+          signIn: () => undefined,
+          signOut: async () => undefined,
+        }}
+      >
+        <AppBar {...actions} />
+      </CurrentUserContext.Provider>
+    </Stack>
+  );
 }
 
 export function UserPresent(): JSX.Element {
