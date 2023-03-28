@@ -199,7 +199,7 @@ export function DataSource({
             setLayoutMenuOpen(true);
           }}
         >
-          <TextMiddleTruncate text={currentLayoutId} />
+          <TextMiddleTruncate text={currentLayoutId?.toString} />
           <ChevronDown12Filled />
         </ButtonBase>
       </Stack>
