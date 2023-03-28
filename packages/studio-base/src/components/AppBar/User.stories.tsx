@@ -80,7 +80,6 @@ export function Private(): JSX.Element {
           setUserAnchorEl={setUserAnchorEl}
           prefsDialogOpen={false}
           setPrefsDialogOpen={noOp}
-          signIn={() => {}}
         />
       </Stack>
     </CurrentUserWrapper>
@@ -100,8 +99,6 @@ export function UserPresent(): JSX.Element {
           setUserAnchorEl={setUserAnchorEl}
           prefsDialogOpen={false}
           setPrefsDialogOpen={noOp}
-          currentUser={freeUser}
-          signIn={() => {}}
         />
         <UserMenu
           open={true}

@@ -30,11 +30,7 @@ import {
   LayoutState,
   useCurrentLayoutSelector,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
-import {
-  CurrentUser,
-  useCurrentUserType,
-  User,
-} from "@foxglove/studio-base/context/CurrentUserContext";
+import { useCurrentUserType } from "@foxglove/studio-base/context/CurrentUserContext";
 import {
   useWorkspaceActions,
   useWorkspaceStore,
@@ -134,8 +130,6 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }>(
 );
 
 type AppBarProps = CustomWindowControlsProps & {
-  currentUser?: User;
-  signIn?: CurrentUser["signIn"];
   leftInset?: number;
   onDoubleClick?: () => void;
   debugDragRegion?: boolean;
@@ -149,7 +143,6 @@ const selectWorkspace = (store: WorkspaceContextStore) => store;
 
 export function AppBar(props: AppBarProps): JSX.Element {
   const {
-    currentUser,
     debugDragRegion,
     disableSignIn = false,
     isMaximized,
@@ -161,7 +154,6 @@ export function AppBar(props: AppBarProps): JSX.Element {
     onSelectDataSourceAction,
     onUnmaximizeWindow,
     showCustomWindowControls = false,
-    signIn,
   } = props;
   const { classes, cx } = useStyles({ leftInset, debugDragRegion });
   const currentUserType = useCurrentUserType();
@@ -298,10 +290,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
                 <QuestionCircle24Regular />
               </AppBarIconButton>
               <UserButton
-                signIn={signIn}
                 disableSignIn={disableSignIn}
-                currentUser={currentUser}
-                currentUserType={currentUserType}
                 userMenuOpen={userMenuOpen}
                 setUserAnchorEl={setUserAnchorEl}
                 prefsDialogOpen={prefsDialogOpen}
@@ -329,7 +318,6 @@ export function AppBar(props: AppBarProps): JSX.Element {
         anchorEl={layoutAnchorEl ?? undefined}
         open={layoutMenuOpen}
         handleClose={() => setLayoutMenuOpen(false)}
-        supportsSignIn={signIn != undefined}
       />
       <HelpMenu
         anchorEl={helpAnchorEl}

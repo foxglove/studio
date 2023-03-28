@@ -16,7 +16,7 @@ import {
 } from "@foxglove/studio-base/components/AppBar/constants";
 import Stack from "@foxglove/studio-base/components/Stack";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
-import { User, UserType } from "@foxglove/studio-base/context/CurrentUserContext";
+import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 
 const useStyles = makeStyles()((theme) => ({
@@ -58,9 +58,6 @@ const useStyles = makeStyles()((theme) => ({
 
 export type UserButtonProps = {
   disableSignIn?: boolean;
-  currentUser?: User;
-  currentUserType?: UserType;
-  signIn?: () => void;
   userMenuOpen: boolean;
   setUserAnchorEl: (value: SetStateAction<HTMLElement | undefined>) => void;
   prefsDialogOpen: boolean;
@@ -71,16 +68,14 @@ export type UserButtonProps = {
 export const UserButton = forwardRef<HTMLButtonElement, UserButtonProps>((props, ref) => {
   const { classes } = useStyles();
   const {
-    currentUser,
-    currentUserType,
     disableSignIn = false,
-    signIn,
     prefsDialogOpen,
     setPrefsDialogOpen,
     setUserAnchorEl,
     userMenuOpen,
   } = props;
   const analytics = useAnalytics();
+  const { currentUser, signIn } = useCurrentUser();
 
   if (currentUser != undefined) {
     return (
@@ -124,7 +119,6 @@ export const UserButton = forwardRef<HTMLButtonElement, UserButtonProps>((props,
         aria-expanded={prefsDialogOpen ? "true" : undefined}
         onClick={() => {
           void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
-            user: currentUserType,
             cta: "preferences-dialog",
           });
           setPrefsDialogOpen(true);
