@@ -82,7 +82,7 @@ export const UserButton = forwardRef<HTMLButtonElement, UserButtonProps>((props,
   } = props;
   const analytics = useAnalytics();
 
-  if (currentUser) {
+  if (currentUser != undefined) {
     return (
       <Tooltip classes={{ tooltip: classes.tooltip }} title={currentUser.email} arrow={false}>
         <IconButton

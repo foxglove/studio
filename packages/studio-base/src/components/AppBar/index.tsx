@@ -298,6 +298,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
                 <QuestionCircle24Regular />
               </AppBarIconButton>
               <UserButton
+                signIn={signIn}
                 disableSignIn={disableSignIn}
                 currentUser={currentUser}
                 currentUserType={currentUserType}
