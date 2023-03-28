@@ -24,8 +24,8 @@ const useStyles = makeStyles()((theme) => ({
     marginTop: `${theme.spacing(0.5)} !important`,
   },
   avatar: {
-    color: theme.palette.common.white,
-    backgroundColor: APP_BAR_PRIMARY_COLOR,
+    color: APP_BAR_FOREGROUND_COLOR,
+    backgroundColor: tinycolor(APP_BAR_FOREGROUND_COLOR).setAlpha(0.16).toString(),
     height: theme.spacing(3.5),
     width: theme.spacing(3.5),
   },
@@ -34,7 +34,7 @@ const useStyles = makeStyles()((theme) => ({
     borderRadius: 0,
 
     "&:hover": {
-      backgroundColor: tinycolor(APP_BAR_FOREGROUND_COLOR).setAlpha(0.08).toRgbString(),
+      backgroundColor: tinycolor(APP_BAR_FOREGROUND_COLOR).setAlpha(0.08).toString(),
     },
     "&.Mui-selected": {
       backgroundColor: APP_BAR_PRIMARY_COLOR,
@@ -49,9 +49,7 @@ const useStyles = makeStyles()((theme) => ({
     backgroundColor: APP_BAR_PRIMARY_COLOR,
 
     "&:hover": {
-      backgroundColor: theme.palette.augmentColor({
-        color: { main: APP_BAR_PRIMARY_COLOR },
-      }).dark,
+      backgroundColor: theme.palette.augmentColor({ color: { main: APP_BAR_PRIMARY_COLOR } }).dark,
     },
   },
 }));
