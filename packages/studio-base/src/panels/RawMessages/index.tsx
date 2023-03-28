@@ -341,7 +341,8 @@ function RawMessages(props: Props) {
               keyPath.slice(0, -1).reverse(),
             );
             if (childStructureItem) {
-              const field = keyPath[0];
+              // if it's an array entry we need the array field name to get the enum annotation, not the element index
+              const field = typeof keyPath[0] === "number" ? keyPath[1] : keyPath[0];
               if (typeof field === "string") {
                 const enumMapping = enumValuesByDatatypeAndField(datatypes);
                 const datatype = childStructureItem.datatype;
