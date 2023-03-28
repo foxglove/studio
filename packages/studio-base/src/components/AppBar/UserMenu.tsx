@@ -85,6 +85,10 @@ export function UserMenu({
     window.open(process.env.FOXGLOVE_ACCOUNT_DASHBOARD_URL, "_blank");
   }, []);
 
+  if (currentUser == undefined) {
+    return <></>;
+  }
+
   return (
     <>
       <Menu
@@ -101,19 +105,15 @@ export function UserMenu({
         <MenuItem onClick={onPreferencesClick}>
           <ListItemText primary="Preferences" />
         </MenuItem>
-        {currentUser && (
-          <MenuItem onClick={onSettingsClick}>
-            <ListItemText primary={currentUser.email} />
-          </MenuItem>
-        )}
-        {currentUser && <Divider variant="middle" />}
-        {currentUser && (
-          <MenuItem onClick={onSignoutClick}>
-            <ListItemText>
-              <Typography color="error">Sign out</Typography>
-            </ListItemText>
-          </MenuItem>
-        )}
+        <MenuItem onClick={onSettingsClick}>
+          <ListItemText primary={currentUser.email} />
+        </MenuItem>
+        <Divider variant="middle" />
+        <MenuItem onClick={onSignoutClick}>
+          <ListItemText>
+            <Typography color="error">Sign out</Typography>
+          </ListItemText>
+        </MenuItem>
       </Menu>
       {confirmModal}
     </>

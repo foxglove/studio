@@ -64,6 +64,14 @@ export function Default(): JSX.Element {
         prefsDialogOpen={false}
         setPrefsDialogOpen={noOp}
       />
+      <UserMenu
+        open={true}
+        anchorPosition={{ top: 60, left: 0 }}
+        anchorReference="anchorPosition"
+        disablePortal
+        handleClose={noOp}
+        onPreferencesClick={noOp}
+      />
     </Stack>
   );
 }
@@ -80,6 +88,14 @@ export function Private(): JSX.Element {
           setUserAnchorEl={setUserAnchorEl}
           prefsDialogOpen={false}
           setPrefsDialogOpen={noOp}
+        />
+        <UserMenu
+          open={true}
+          anchorPosition={{ top: 60, left: 0 }}
+          anchorReference="anchorPosition"
+          disablePortal
+          handleClose={noOp}
+          onPreferencesClick={noOp}
         />
       </Stack>
     </CurrentUserWrapper>
