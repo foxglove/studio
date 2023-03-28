@@ -18,6 +18,10 @@ import {
 } from "@foxglove/studio-base/components/MessagePipeline";
 import Stack from "@foxglove/studio-base/components/Stack";
 import TextMiddleTruncate from "@foxglove/studio-base/components/TextMiddleTruncate";
+import {
+  LayoutState,
+  useCurrentLayoutSelector,
+} from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
 
 import { LayoutMenu } from "./LayoutMenu";
@@ -96,6 +100,7 @@ const useStyles = makeStyles<void, "adornmentError" | "openIcon">()((theme, _par
 const selectPlayerName = ({ playerState }: MessagePipelineContext) => playerState.name;
 const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => playerState.presence;
 const selectPlayerProblems = ({ playerState }: MessagePipelineContext) => playerState.problems;
+const selectLayoutId = ({ selectedLayout }: LayoutState) => selectedLayout?.id;
 
 export function DataSource({
   onSelectDataSourceAction,
@@ -114,6 +119,7 @@ export function DataSource({
   const playerName = useMessagePipeline(selectPlayerName);
   const playerPresence = useMessagePipeline(selectPlayerPresence);
   const playerProblems = useMessagePipeline(selectPlayerProblems) ?? [];
+  const currentLayoutId = useCurrentLayoutSelector(selectLayoutId);
 
   const reconnecting = playerPresence === PlayerPresence.RECONNECTING;
   const initializing = playerPresence === PlayerPresence.INITIALIZING;
@@ -193,7 +199,7 @@ export function DataSource({
             setLayoutMenuOpen(true);
           }}
         >
-          <TextMiddleTruncate text="Layout name" />
+          <TextMiddleTruncate text={currentLayoutId} />
           <ChevronDown12Filled />
         </ButtonBase>
       </Stack>
