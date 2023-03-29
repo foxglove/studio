@@ -11,6 +11,7 @@ import { makeStyles } from "tss-react/mui";
 
 import { AppBarIconButton } from "@foxglove/studio-base/components/AppBar/AppBarIconButton";
 import {
+  APP_BAR_BACKGROUND_COLOR,
   APP_BAR_FOREGROUND_COLOR,
   APP_BAR_PRIMARY_COLOR,
 } from "@foxglove/studio-base/components/AppBar/constants";
@@ -19,13 +20,13 @@ import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 
-const useStyles = makeStyles()((theme) => ({
+const useStyles = makeStyles<void, "avatar">()((theme, _params, classes) => ({
   tooltip: {
     marginTop: `${theme.spacing(0.5)} !important`,
   },
   avatar: {
     color: APP_BAR_FOREGROUND_COLOR,
-    backgroundColor: tinycolor(APP_BAR_FOREGROUND_COLOR).setAlpha(0.16).toString(),
+    backgroundColor: tinycolor(APP_BAR_BACKGROUND_COLOR[theme.palette.mode]).lighten().toString(),
     height: theme.spacing(3.5),
     width: theme.spacing(3.5),
   },
@@ -35,6 +36,12 @@ const useStyles = makeStyles()((theme) => ({
 
     "&:hover": {
       backgroundColor: tinycolor(APP_BAR_FOREGROUND_COLOR).setAlpha(0.08).toString(),
+
+      [`.${classes.avatar}`]: {
+        backgroundColor: tinycolor(APP_BAR_BACKGROUND_COLOR[theme.palette.mode])
+          .lighten(20)
+          .toString(),
+      },
     },
     "&.Mui-selected": {
       backgroundColor: APP_BAR_PRIMARY_COLOR,
