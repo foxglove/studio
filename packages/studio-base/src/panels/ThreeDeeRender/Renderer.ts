@@ -1471,12 +1471,14 @@ export class Renderer extends EventEmitter<RendererEvents> {
       this.fixedFrameId = fixedFrameId;
     }
 
+    const renderFrameIsRoot = this.fixedFrameId === this.renderFrameId;
     // Should only occur on reload when the saved followMode is not follow
     if (
       this.followMode !== "follow-pose" &&
       !this.unfollowPoseSnapshot &&
       // only record snapshot if the frame has transforms, otherwise it will be identity pose
-      frame.transformsSize() > 0
+      // except in the case that the renderFrame is the root/fixed frame in which case it won't have transforms
+      (renderFrameIsRoot || frame.transformsSize() > 0)
     ) {
       // Snapshot the current pose of the render frame in the fixed frame
       this.unfollowPoseSnapshot = makePose();
