@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Menu } from "@mui/material";
+import { makeStyles } from "tss-react/mui";
 
 import LayoutBrowser from "@foxglove/studio-base/components/LayoutBrowser";
 
@@ -12,8 +13,16 @@ type LayoutMenuProps = {
   open: boolean;
 };
 
+const useStyles = makeStyles()({
+  menuList: {
+    minWidth: 270,
+    maxWidth: 320,
+  },
+});
+
 export function LayoutMenu(props: LayoutMenuProps): JSX.Element {
   const { anchorEl, handleClose, open } = props;
+  const { classes } = useStyles();
   return (
     <Menu
       id="layout-menu"
@@ -23,6 +32,7 @@ export function LayoutMenu(props: LayoutMenuProps): JSX.Element {
       MenuListProps={{
         disablePadding: true,
         "aria-labelledby": "layout-button",
+        className: classes.menuList,
       }}
       anchorOrigin={{
         horizontal: "left",

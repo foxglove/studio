@@ -375,7 +375,6 @@ export function AppBar(props: AppBarProps): JSX.Element {
         anchorEl={layoutAnchorEl ?? undefined}
         open={layoutMenuOpen}
         handleClose={() => setLayoutMenuOpen(false)}
-        supportsSignIn={signIn != undefined}
       />
       <UserMenu
         anchorEl={userAnchorEl}

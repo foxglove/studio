@@ -32,8 +32,6 @@ const LEFT_ICON_SIZE = 19;
 
 const useStyles = makeStyles<void, "adornmentError" | "openIcon">()((theme, _params, classes) => ({
   button: {
-    maxWidth: "25vw",
-    overflow: "hidden",
     font: "inherit",
     display: "flex",
     alignItems: "center",
@@ -84,7 +82,7 @@ const useStyles = makeStyles<void, "adornmentError" | "openIcon">()((theme, _par
   divider: {
     opacity: 0.6,
   },
-  playerName: {
+  textTruncate: {
     maxWidth: "25vw",
     overflow: "hidden",
   },
@@ -119,13 +117,11 @@ export function DataSource({
   onSelectDataSourceAction,
   layoutMenuOpen,
   setLayoutMenuOpen,
-  supportsAccountSettings,
 }: {
   onSelectDataSourceAction: () => void;
   layoutMenuOpen: boolean;
   // eslint-disable-next-line @foxglove/no-boolean-parameters
   setLayoutMenuOpen: (open: boolean) => void;
-  supportsAccountSettings: boolean;
 }): JSX.Element {
   const { classes, cx } = useStyles();
 
@@ -196,7 +192,7 @@ export function DataSource({
           ) : (
             <Open16Filled className={classes.openIcon} />
           )}
-          <div className={classes.playerName}>
+          <div className={classes.textTruncate}>
             <TextMiddleTruncate text={playerDisplayName ?? "<unknown>"} />
           </div>
         </ButtonBase>
@@ -213,7 +209,9 @@ export function DataSource({
             setLayoutMenuOpen(true);
           }}
         >
-          <TextMiddleTruncate text={currentLayoutName ?? currentLayoutId ?? ""} />
+          <div className={classes.textTruncate}>
+            <TextMiddleTruncate text={currentLayoutName ?? currentLayoutId ?? ""} />
+          </div>
           <ChevronDown12Filled className={classes.dropDownIcon} />
         </ButtonBase>
       </Stack>
@@ -221,7 +219,6 @@ export function DataSource({
         anchorEl={layoutAnchorEl ?? undefined}
         open={layoutMenuOpen}
         handleClose={() => setLayoutMenuOpen(false)}
-        supportsSignIn={supportsAccountSettings}
       />
     </>
   );
