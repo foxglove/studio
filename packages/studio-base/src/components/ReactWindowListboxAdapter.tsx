@@ -6,15 +6,17 @@ import { Typography } from "@mui/material";
 import { clamp } from "lodash";
 import { FixedSizeList, ListChildComponentProps } from "react-window";
 
-const LISTBOX_PADDING = 8;
-const ROW_HEIGHT = 24;
+const Constants = Object.freeze({
+  LISTBOX_PADDING: 8,
+  ROW_HEIGHT: 26,
+});
 
 function renderRow(props: ListChildComponentProps) {
   const { data, index, style } = props;
   const dataSet = data[index];
   const inlineStyle = {
     ...style,
-    top: (style.top as number) + LISTBOX_PADDING,
+    top: (style.top as number) + Constants.LISTBOX_PADDING,
   };
 
   return (
@@ -48,19 +50,18 @@ export const ReactWindowListboxAdapter = React.forwardRef<
     },
   );
 
-  const totalHeight = 2 * LISTBOX_PADDING + ROW_HEIGHT * clamp(itemData.length, 16);
+  const totalHeight =
+    2 * Constants.LISTBOX_PADDING + Constants.ROW_HEIGHT * clamp(itemData.length, 16);
 
   return (
     <div ref={ref}>
       <OuterElementContext.Provider value={other}>
         <FixedSizeList
           height={totalHeight}
-          innerElementType="ul"
           itemCount={itemData.length}
           itemData={itemData}
-          itemSize={ROW_HEIGHT}
+          itemSize={Constants.ROW_HEIGHT}
           outerElementType={OuterElementType}
-          //   overscanCount={5}
           width="100%"
         >
           {renderRow}

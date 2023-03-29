@@ -277,7 +277,10 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
     <MuiAutocomplete
       className={classes.root}
       clearIcon={<ClearIcon fontSize="small" />}
-      componentsProps={{ clearIndicator: { size: "small" } }}
+      componentsProps={{
+        clearIndicator: { size: "small" },
+        paper: { elevation: 8 },
+      }}
       disableCloseOnSelect
       disabled={disabled}
       freeSolo
