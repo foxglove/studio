@@ -50,6 +50,17 @@ export function CustomWindowControlsDragRegion(): JSX.Element {
   return <AppBar showCustomWindowControls debugDragRegion {...actions} />;
 }
 
+function LabeledAppBar({ label }: React.PropsWithChildren<{ label: string }>) {
+  return (
+    <>
+      <div style={{ padding: 8 }}>{label}</div>
+      <div>
+        <AppBar {...actions} />
+      </div>
+    </>
+  );
+}
+
 export function SignInStates(): JSX.Element {
   const currentUser: User = {
     id: "user-1",
@@ -69,12 +80,8 @@ export function SignInStates(): JSX.Element {
   };
 
   return (
-    <Stack gap={1} paddingTop={1}>
-      sign in undefined
-      <AppBar {...actions} />
-      sign in disabled
-      <AppBar disableSignIn {...actions} />
-      no user present
+    <div style={{ display: "grid", gridTemplateColumns: "max-content auto", alignItems: "center" }}>
+      <LabeledAppBar label="sign in undefined" />
       <CurrentUserContext.Provider
         value={{
           currentUser: undefined,
@@ -82,9 +89,8 @@ export function SignInStates(): JSX.Element {
           signOut: async () => undefined,
         }}
       >
-        <AppBar {...actions} />
+        <LabeledAppBar label="no user present" />
       </CurrentUserContext.Provider>
-      user present
       <CurrentUserContext.Provider
         value={{
           currentUser,
@@ -92,9 +98,8 @@ export function SignInStates(): JSX.Element {
           signOut: async () => undefined,
         }}
       >
-        <AppBar {...actions} />
+        <LabeledAppBar label="user present" />
       </CurrentUserContext.Provider>
-      user present with avatar
       <CurrentUserContext.Provider
         value={{
           currentUser: {
@@ -106,20 +111,9 @@ export function SignInStates(): JSX.Element {
           signOut: async () => undefined,
         }}
       >
-        <AppBar {...actions} />
+        <LabeledAppBar label="user present with avatar" />
       </CurrentUserContext.Provider>
-    </Stack>
-  );
-}
-
-function LabeledAppBar({ label }: React.PropsWithChildren<{ label: string }>) {
-  return (
-    <>
-      <div style={{ padding: 8 }}>{label}</div>
-      <div>
-        <AppBar {...actions} />
-      </div>
-    </>
+    </div>
   );
 }
 
