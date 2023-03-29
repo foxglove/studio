@@ -1468,18 +1468,14 @@ export class Renderer extends EventEmitter<RendererEvents> {
       } else {
         log.debug(`Changing fixed frame from "${this.fixedFrameId}" to "${fixedFrameId}"`);
       }
+      // Set the unfollowPoseSnapshot to undefined because there is a new fixed frame for the snapshot
+      // This keeps the camera settings offsets based off of the display frame rather than old fixed frame.
+      this.unfollowPoseSnapshot = undefined;
       this.fixedFrameId = fixedFrameId;
     }
 
-    const renderFrameIsRoot = this.fixedFrameId === this.renderFrameId;
     // Should only occur on reload when the saved followMode is not follow
-    if (
-      this.followMode !== "follow-pose" &&
-      !this.unfollowPoseSnapshot &&
-      // only record snapshot if the frame has transforms, otherwise it will be identity pose
-      // except in the case that the renderFrame is the root/fixed frame in which case it won't have transforms
-      (renderFrameIsRoot || frame.transformsSize() > 0)
-    ) {
+    if (this.followMode !== "follow-pose" && !this.unfollowPoseSnapshot) {
       // Snapshot the current pose of the render frame in the fixed frame
       this.unfollowPoseSnapshot = makePose();
       fixedFrame.applyLocal(
