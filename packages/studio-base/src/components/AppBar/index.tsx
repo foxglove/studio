@@ -4,6 +4,7 @@
 
 import {
   SlideAdd24Regular,
+  ChevronDown12Filled,
   PanelLeft24Filled,
   PanelLeft24Regular,
   PanelRight24Filled,
@@ -82,9 +83,12 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }, 
         alignItems: "center",
       },
       logo: {
-        padding: theme.spacing(0.5),
-        fontSize: "2.125rem",
+        padding: theme.spacing(0.5, 0.5, 0.5, 0.25),
+        fontSize: "2.25rem",
         color: APP_BAR_PRIMARY_COLOR,
+      },
+      dropDownIcon: {
+        fontSize: "12px !important",
       },
       start: {
         gridArea: "start",
@@ -240,9 +244,13 @@ export function AppBar(props: AppBarProps): JSX.Element {
         <div className={classes.toolbar}>
           <div className={classes.start}>
             <div className={classes.startInner}>
-              <IconButton className={classes.logo} size="large" color="inherit">
+              <AppBarIconButton className={classes.logo}>
                 <FoxgloveLogo fontSize="inherit" color="inherit" />
-              </IconButton>
+                <ChevronDown12Filled
+                  className={classes.dropDownIcon}
+                  primaryFill={APP_BAR_FOREGROUND_COLOR}
+                />
+              </AppBarIconButton>
               <AppBarIconButton
                 className={cx({ "Mui-selected": panelMenuOpen })}
                 color="inherit"
