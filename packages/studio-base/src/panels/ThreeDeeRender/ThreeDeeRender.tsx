@@ -144,9 +144,6 @@ function RendererOverlay(props: {
   const [interactionsTabType, setInteractionsTabType] = useState<TabType | undefined>(undefined);
   const renderer = useRenderer();
 
-  // Publish control is only available if the canPublish prop is true and we have a fixed frame in the renderer
-  const showPublishControl: boolean = props.canPublish && renderer?.fixedFrameId != undefined;
-
   // Toggle object selection mode on/off in the renderer
   useEffect(() => {
     if (renderer) {
@@ -236,6 +233,76 @@ function RendererOverlay(props: {
 
   const theme = useTheme();
 
+  // Publish control is only available if the canPublish prop is true and we have a fixed frame in the renderer
+  const showPublishControl =
+    props.interfaceMode === "3d" && props.canPublish && renderer?.fixedFrameId != undefined;
+  const publishControls = showPublishControl && (
+    <>
+      <IconButton
+        {...longPressPublishEvent}
+        color={props.publishActive ? "info" : "inherit"}
+        title={props.publishActive ? "Click to cancel" : "Click to publish"}
+        ref={publickClickButtonRef}
+        onClick={props.onClickPublish}
+        data-testid="publish-button"
+        style={{ fontSize: "1rem", pointerEvents: "auto" }}
+      >
+        {selectedPublishClickIcon}
+        <div
+          style={{
+            borderBottom: "6px solid currentColor",
+            borderRight: "6px solid transparent",
+            bottom: 0,
+            left: 0,
+            height: 0,
+            width: 0,
+            margin: theme.spacing(0.25),
+            position: "absolute",
+          }}
+        />
+      </IconButton>
+      <Menu
+        id="publish-menu"
+        anchorEl={publickClickButtonRef.current}
+        anchorOrigin={{ vertical: "top", horizontal: "left" }}
+        transformOrigin={{ vertical: "top", horizontal: "right" }}
+        open={publishMenuExpanded}
+        onClose={() => setPublishMenuExpanded(false)}
+      >
+        <MenuItem
+          selected={props.publishClickType === "pose_estimate"}
+          onClick={() => {
+            props.onChangePublishClickType("pose_estimate");
+            setPublishMenuExpanded(false);
+          }}
+        >
+          <ListItemIcon>{PublishClickIcons.pose_estimate}</ListItemIcon>
+          <ListItemText>Publish pose estimate</ListItemText>
+        </MenuItem>
+        <MenuItem
+          selected={props.publishClickType === "pose"}
+          onClick={() => {
+            props.onChangePublishClickType("pose");
+            setPublishMenuExpanded(false);
+          }}
+        >
+          <ListItemIcon>{PublishClickIcons.pose}</ListItemIcon>
+          <ListItemText>Publish pose</ListItemText>
+        </MenuItem>
+        <MenuItem
+          selected={props.publishClickType === "point"}
+          onClick={() => {
+            props.onChangePublishClickType("point");
+            setPublishMenuExpanded(false);
+          }}
+        >
+          <ListItemIcon>{PublishClickIcons.point}</ListItemIcon>
+          <ListItemText>Publish point</ListItemText>
+        </MenuItem>
+      </Menu>
+    </>
+  );
+
   return (
     <React.Fragment>
       <div
@@ -277,72 +344,7 @@ function RendererOverlay(props: {
               <Ruler24Filled className={classes.rulerIcon} />
             </IconButton>
 
-            {showPublishControl && (
-              <>
-                <IconButton
-                  {...longPressPublishEvent}
-                  color={props.publishActive ? "info" : "inherit"}
-                  title={props.publishActive ? "Click to cancel" : "Click to publish"}
-                  ref={publickClickButtonRef}
-                  onClick={props.onClickPublish}
-                  data-testid="publish-button"
-                  style={{ fontSize: "1rem", pointerEvents: "auto" }}
-                >
-                  {selectedPublishClickIcon}
-                  <div
-                    style={{
-                      borderBottom: "6px solid currentColor",
-                      borderRight: "6px solid transparent",
-                      bottom: 0,
-                      left: 0,
-                      height: 0,
-                      width: 0,
-                      margin: theme.spacing(0.25),
-                      position: "absolute",
-                    }}
-                  />
-                </IconButton>
-                <Menu
-                  id="publish-menu"
-                  anchorEl={publickClickButtonRef.current}
-                  anchorOrigin={{ vertical: "top", horizontal: "left" }}
-                  transformOrigin={{ vertical: "top", horizontal: "right" }}
-                  open={publishMenuExpanded}
-                  onClose={() => setPublishMenuExpanded(false)}
-                >
-                  <MenuItem
-                    selected={props.publishClickType === "pose_estimate"}
-                    onClick={() => {
-                      props.onChangePublishClickType("pose_estimate");
-                      setPublishMenuExpanded(false);
-                    }}
-                  >
-                    <ListItemIcon>{PublishClickIcons.pose_estimate}</ListItemIcon>
-                    <ListItemText>Publish pose estimate</ListItemText>
-                  </MenuItem>
-                  <MenuItem
-                    selected={props.publishClickType === "pose"}
-                    onClick={() => {
-                      props.onChangePublishClickType("pose");
-                      setPublishMenuExpanded(false);
-                    }}
-                  >
-                    <ListItemIcon>{PublishClickIcons.pose}</ListItemIcon>
-                    <ListItemText>Publish pose</ListItemText>
-                  </MenuItem>
-                  <MenuItem
-                    selected={props.publishClickType === "point"}
-                    onClick={() => {
-                      props.onChangePublishClickType("point");
-                      setPublishMenuExpanded(false);
-                    }}
-                  >
-                    <ListItemIcon>{PublishClickIcons.point}</ListItemIcon>
-                    <ListItemText>Publish point</ListItemText>
-                  </MenuItem>
-                </Menu>
-              </>
-            )}
+            {publishControls}
           </Paper>
         )}
       </div>
