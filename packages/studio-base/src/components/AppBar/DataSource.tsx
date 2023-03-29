@@ -5,11 +5,13 @@
 import { ErrorCircle20Filled, ChevronDown12Filled, Open16Filled } from "@fluentui/react-icons";
 import { ButtonBase, CircularProgress, IconButton, Tooltip } from "@mui/material";
 import { useState, useRef } from "react";
+import tinycolor from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 
 import {
   APP_BAR_PRIMARY_COLOR,
   APP_BAR_HEIGHT,
+  APP_BAR_FOREGROUND_COLOR,
 } from "@foxglove/studio-base/components/AppBar/constants";
 import { ProblemsList } from "@foxglove/studio-base/components/DataSourceSidebar/ProblemsList";
 import {
@@ -30,6 +32,8 @@ const LEFT_ICON_SIZE = 19;
 
 const useStyles = makeStyles<void, "adornmentError" | "openIcon">()((theme, _params, classes) => ({
   button: {
+    maxWidth: "25vw",
+    overflow: "hidden",
     font: "inherit",
     display: "flex",
     alignItems: "center",
@@ -37,18 +41,25 @@ const useStyles = makeStyles<void, "adornmentError" | "openIcon">()((theme, _par
     padding: theme.spacing(1.5),
     minHeight: APP_BAR_HEIGHT,
     minWidth: 0,
+    color: tinycolor(APP_BAR_FOREGROUND_COLOR).setAlpha(0.6).toString(),
 
+    ":hover": {
+      color: APP_BAR_FOREGROUND_COLOR,
+    },
+    [`:not(:hover) .${classes.openIcon}`]: {
+      visibility: "hidden",
+    },
     "&.Mui-disabled": {
       color: "currentColor",
       opacity: theme.palette.action.disabledOpacity,
     },
-    ":not(:hover)": {
-      opacity: 0.6,
-
-      [`.${classes.openIcon}`]: {
-        visibility: "hidden",
-      },
+    "&.Mui-selected": {
+      color: APP_BAR_FOREGROUND_COLOR,
+      backgroundColor: APP_BAR_PRIMARY_COLOR,
     },
+  },
+  dropDownIcon: {
+    flex: "none",
   },
   adornment: {
     display: "flex",
@@ -74,11 +85,12 @@ const useStyles = makeStyles<void, "adornmentError" | "openIcon">()((theme, _par
     opacity: 0.6,
   },
   playerName: {
-    maxWidth: "20vw",
+    maxWidth: "25vw",
     overflow: "hidden",
   },
   openIcon: {
     opacity: 0.6,
+    flex: "none",
   },
   iconButton: {
     padding: 0,
@@ -188,9 +200,9 @@ export function DataSource({
             <TextMiddleTruncate text={playerDisplayName ?? "<unknown>"} />
           </div>
         </ButtonBase>
-        <span className={classes.divider}>/</span>
+        <span className={classes.divider}>|</span>
         <ButtonBase
-          className={classes.button}
+          className={cx(classes.button, { "Mui-selected": layoutMenuOpen })}
           ref={layoutButtonRef}
           id="layout-button"
           title="Layouts"
@@ -202,7 +214,7 @@ export function DataSource({
           }}
         >
           <TextMiddleTruncate text={currentLayoutName ?? currentLayoutId ?? ""} />
-          <ChevronDown12Filled />
+          <ChevronDown12Filled className={classes.dropDownIcon} />
         </ButtonBase>
       </Stack>
       <LayoutMenu
