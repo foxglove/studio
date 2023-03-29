@@ -210,7 +210,7 @@ export function DataSource({
           }}
         >
           <div className={classes.textTruncate}>
-            <TextMiddleTruncate text={currentLayoutName ?? currentLayoutId ?? ""} />
+            <TextMiddleTruncate text={currentLayoutName ?? currentLayoutId ?? "Select a layout"} />
           </div>
           <ChevronDown12Filled className={classes.dropDownIcon} />
         </ButtonBase>
