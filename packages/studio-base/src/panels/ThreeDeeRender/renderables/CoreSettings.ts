@@ -4,6 +4,7 @@
 
 import { cloneDeep, round, set } from "lodash";
 
+import { filterMap } from "@foxglove/den/collection";
 import { SettingsTreeAction } from "@foxglove/studio";
 
 import { PublishClickType } from "./PublishClickTool";
@@ -12,7 +13,18 @@ import { FollowMode, Renderer, RendererConfig } from "../Renderer";
 import { SceneExtension } from "../SceneExtension";
 import { SettingsTreeEntry } from "../SettingsManager";
 import { DEFAULT_CAMERA_STATE } from "../camera";
+import {
+  CAMERA_CALIBRATION_DATATYPES,
+  COMPRESSED_IMAGE_DATATYPES,
+  RAW_IMAGE_DATATYPES,
+} from "../foxglove";
+import {
+  IMAGE_DATATYPES as ROS_IMAGE_DATATYPES,
+  COMPRESSED_IMAGE_DATATYPES as ROS_COMPRESSED_IMAGE_DATATYPES,
+  CAMERA_INFO_DATATYPES,
+} from "../ros";
 import { PRECISION_DEGREES, PRECISION_DISTANCE, SelectEntry } from "../settings";
+import { topicIsConvertibleToSchema } from "../topicIsConvertibleToSchema";
 import { CoordinateFrame } from "../transforms";
 
 export const DEFAULT_LABEL_SCALE_FACTOR = 1;
@@ -64,10 +76,8 @@ export class CoreSettings extends SceneExtension {
     super.dispose();
   }
 
-  public override settingsNodes(): SettingsTreeEntry[] {
+  private frameSettings(): SettingsTreeEntry {
     const config = this.renderer.config;
-    const { cameraState: camera, publish } = config;
-    const handler = this.handleSettingsAction;
 
     // If the user-selected frame does not exist, show it in the dropdown
     // anyways. A settings node error will be displayed
@@ -93,32 +103,152 @@ export class CoreSettings extends SceneExtension {
     ];
     const followModeValue = this.renderer.followMode;
 
-    return [
-      {
-        path: ["general"],
-        node: {
-          label: "Frame",
-          fields: {
-            followTf: {
-              label: "Display frame",
-              help: "The coordinate frame to place the camera in. The camera position and orientation will be relative to the origin of this frame.",
-              input: "select",
-              options: followTfOptions,
-              value: followTfValue,
-              error: followTfError,
-            },
-            followMode: {
-              label: "Follow mode",
-              help: "Change the camera behavior during playback to follow the display frame or not.",
-              input: "select",
-              options: followModeOptions,
-              value: followModeValue,
-            },
+    return {
+      path: ["general"],
+      node: {
+        label: "Frame",
+        fields: {
+          followTf: {
+            label: "Display frame",
+            help: "The coordinate frame to place the camera in. The camera position and orientation will be relative to the origin of this frame.",
+            input: "select",
+            options: followTfOptions,
+            value: followTfValue,
+            error: followTfError,
           },
-          defaultExpansionState: "expanded",
-          handler,
+          followMode: {
+            label: "Follow mode",
+            help: "Change the camera behavior during playback to follow the display frame or not.",
+            input: "select",
+            options: followModeOptions,
+            value: followModeValue,
+          },
+        },
+        defaultExpansionState: "expanded",
+        handler: this.handleSettingsAction,
+      },
+    };
+  }
+
+  private imageModeSettings(): SettingsTreeEntry {
+    const config = this.renderer.config;
+
+    const imageTopics = filterMap(this.renderer.topics ?? [], (topic) => {
+      if (
+        !(
+          topicIsConvertibleToSchema(topic, ROS_IMAGE_DATATYPES) ||
+          topicIsConvertibleToSchema(topic, ROS_COMPRESSED_IMAGE_DATATYPES) ||
+          topicIsConvertibleToSchema(topic, RAW_IMAGE_DATATYPES) ||
+          topicIsConvertibleToSchema(topic, COMPRESSED_IMAGE_DATATYPES)
+        )
+      ) {
+        return;
+      }
+      return { label: topic.name, value: topic.name };
+    });
+
+    const calibrationTopics = filterMap(this.renderer.topics ?? [], (topic) => {
+      if (
+        !(
+          topicIsConvertibleToSchema(topic, CAMERA_INFO_DATATYPES) ||
+          topicIsConvertibleToSchema(topic, CAMERA_CALIBRATION_DATATYPES)
+        )
+      ) {
+        return;
+      }
+      return { label: topic.name, value: topic.name };
+    });
+
+    return {
+      path: ["general"],
+      node: {
+        label: "General",
+        defaultExpansionState: "expanded",
+        fields: {
+          cameraTopic: {
+            label: "🚧 Topic",
+            input: "select",
+            value: config.imageMode.imageTopic ?? config.cameraTopic,
+            options: imageTopics,
+          },
+          cameraInfoTopic: {
+            label: "🚧 Calibration",
+            input: "select",
+            value: config.imageMode.calibrationTopic,
+            options: calibrationTopics,
+          },
+          transformMarkers: {
+            readonly: true, // not yet implemented
+            input: "boolean",
+            label: "🚧 Transform markers",
+            value: config.transformMarkers,
+            help:
+              config.transformMarkers ?? false
+                ? "Markers are being transformed by Foxglove Studio based on the camera model. Click to turn it off."
+                : `Markers can be transformed by Foxglove Studio based on the camera model. Click to turn it on.`,
+          },
+          synchronize: {
+            readonly: true, // not yet implemented
+            input: "boolean",
+            label: "🚧 Synchronize timestamps",
+            value: config.synchronize,
+          },
+          smooth: {
+            readonly: true, // not yet implemented
+            input: "boolean",
+            label: "🚧 Bilinear smoothing",
+            value: config.smooth ?? false,
+          },
+          flipHorizontal: {
+            readonly: true, // not yet implemented
+            input: "boolean",
+            label: "🚧 Flip horizontal",
+            value: config.flipHorizontal ?? false,
+          },
+          flipVertical: {
+            readonly: true, // not yet implemented
+            input: "boolean",
+            label: "🚧 Flip vertical",
+            value: config.flipVertical ?? false,
+          },
+          rotation: {
+            readonly: true, // not yet implemented
+            input: "select",
+            label: "🚧 Rotation",
+            value: config.rotation ?? 0,
+            options: [
+              { label: "0°", value: 0 },
+              { label: "90°", value: 90 },
+              { label: "180°", value: 180 },
+              { label: "270°", value: 270 },
+            ],
+          },
+          minValue: {
+            readonly: true, // not yet implemented
+            input: "number",
+            label: "🚧 Min (depth images)",
+            placeholder: "0",
+            value: config.minValue,
+          },
+          maxValue: {
+            readonly: true, // not yet implemented
+            input: "number",
+            label: "🚧 Max (depth images)",
+            placeholder: "10000",
+            value: config.maxValue,
+          },
         },
       },
+    };
+  }
+
+  public override settingsNodes(): SettingsTreeEntry[] {
+    const config = this.renderer.config;
+    const { cameraState: camera, publish } = config;
+    const handler = this.handleSettingsAction;
+
+    return [
+      this.renderer.interfaceMode === "3d" ? this.frameSettings() : this.imageModeSettings(),
       {
         path: ["scene"],
         node: {

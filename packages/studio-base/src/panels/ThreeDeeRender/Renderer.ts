@@ -107,7 +107,34 @@ export type RendererEvents = {
 
 export type FollowMode = "follow-pose" | "follow-position" | "follow-none";
 
-export type RendererConfig = {
+/** Legacy Image panel settings that occur at the root level */
+export type LegacyImageConfig = {
+  cameraTopic: string;
+  enabledMarkerTopics: string[];
+  synchronize: boolean;
+  flipHorizontal: boolean;
+  flipVertical: boolean;
+  maxValue: number;
+  minValue: number;
+  mode: "fit" | "fill" | "other";
+  pan: { x: number; y: number };
+  rotation: number;
+  smooth: boolean;
+  transformMarkers: boolean;
+  zoom: number;
+  zoomPercentage: number;
+};
+
+/** Settings pertaining to Image mode */
+export type ImageModeConfig = {
+  /** Image topic to display */
+  imageTopic?: string;
+  calibrationTopic?: string;
+};
+
+export type RendererConfig = /* Support reading values from legacy Image panel config */ Readonly<
+  Partial<LegacyImageConfig>
+> & {
   /** Camera settings for the currently rendering scene */
   cameraState: CameraState;
   /** Coordinate frameId of the rendering frame */
@@ -167,6 +194,9 @@ export type RendererConfig = {
   topics: Record<string, Partial<BaseSettings> | undefined>;
   /** instanceId -> settings */
   layers: Record<string, Partial<CustomLayerSettings> | undefined>;
+
+  /** Settings pertaining to Image mode */
+  imageMode: ImageModeConfig;
 };
 
 /** Callback for handling a message received on a topic */
@@ -340,7 +370,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
   public constructor(
     canvas: HTMLCanvasElement,
-    config: RendererConfig,
+    config: Immutable<RendererConfig>,
     interfaceMode: InterfaceMode,
   ) {
     super();

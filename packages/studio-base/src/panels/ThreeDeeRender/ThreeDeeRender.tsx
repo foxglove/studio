@@ -12,6 +12,7 @@ import {
   Paper,
   useTheme,
 } from "@mui/material";
+import { Immutable } from "immer";
 import { cloneDeep, isEqual, merge } from "lodash";
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import ReactDOM from "react-dom";
@@ -404,7 +405,7 @@ export function ThreeDeeRender(props: {
   const { initialState, saveState } = context;
 
   // Load and save the persisted panel configuration
-  const [config, setConfig] = useState<RendererConfig>(() => {
+  const [config, setConfig] = useState<Immutable<RendererConfig>>(() => {
     const partialConfig = initialState as DeepPartial<RendererConfig> | undefined;
 
     // Initialize the camera from default settings overlaid with persisted settings
@@ -428,6 +429,7 @@ export function ThreeDeeRender(props: {
       topics: partialConfig?.topics ?? {},
       layers: partialConfig?.layers ?? {},
       publish,
+      imageMode: partialConfig?.imageMode ?? {}, // TODO: maybe merge old image config into here and get rid of top level fields?
     };
   });
   const configRef = useLatest(config);
@@ -590,7 +592,7 @@ export function ThreeDeeRender(props: {
 
   // Save panel settings whenever they change
   const throttledSave = useDebouncedCallback(
-    (newConfig: RendererConfig) => saveState(newConfig),
+    (newConfig: Immutable<RendererConfig>) => saveState(newConfig),
     1000,
     { leading: false, trailing: true, maxWait: 1000 },
   );
