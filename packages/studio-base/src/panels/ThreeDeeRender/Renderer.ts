@@ -1472,7 +1472,12 @@ export class Renderer extends EventEmitter<RendererEvents> {
     }
 
     // Should only occur on reload when the saved followMode is not follow
-    if (this.followMode !== "follow-pose" && !this.unfollowPoseSnapshot) {
+    if (
+      this.followMode !== "follow-pose" &&
+      !this.unfollowPoseSnapshot &&
+      // only record snapshot if the frame has transforms, otherwise it will be identity pose
+      frame.transformsSize() > 0
+    ) {
       // Snapshot the current pose of the render frame in the fixed frame
       this.unfollowPoseSnapshot = makePose();
       fixedFrame.applyLocal(
