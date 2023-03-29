@@ -44,7 +44,7 @@ import {
   RosPackagePath,
   TimeFormat,
   TimezoneSettings,
-} from "./components";
+} from "./settings";
 
 const useStyles = makeStyles()((theme) => ({
   layoutGrid: {
