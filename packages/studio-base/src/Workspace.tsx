@@ -571,7 +571,7 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
 
   const leftSidebarItems = useMemo(() => {
     const items = new Map<LeftSidebarItemKey, NewSidebarItem>([
-      ["panel-settings", { title: "Panel settings", component: PanelSettingsSidebar }],
+      ["panel-settings", { title: "Panel", component: PanelSettingsSidebar }],
       ["topics", { title: "Topics", component: TopicList }],
     ]);
     return items;
