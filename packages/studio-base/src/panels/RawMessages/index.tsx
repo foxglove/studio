@@ -341,7 +341,7 @@ function RawMessages(props: Props) {
               keyPath.slice(0, -1).reverse(),
             );
             if (childStructureItem) {
-              // if it's an array entry we need most root (first) array field name to get the enum annotation, not the element index
+              // if it's an array index (typeof number) then we want the nearest named array which will be typeof string 
 
               const keyPathIndex = keyPath.findIndex((key) => typeof key === "string");
               const field = keyPath[keyPathIndex];
