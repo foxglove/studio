@@ -96,7 +96,7 @@ export function UserMenu({
           <ListItemText primary="Preferences" />
         </MenuItem>
         <MenuItem onClick={onSettingsClick}>
-          <ListItemText primary={currentUser.email} />
+          <ListItemText primary="Profile" secondary={currentUser.email} />
         </MenuItem>
         <Divider variant="middle" />
         <MenuItem onClick={onSignoutClick}>
