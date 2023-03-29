@@ -348,7 +348,7 @@ function RawMessages(props: Props) {
               if (typeof field === "string") {
                 const enumMapping = enumValuesByDatatypeAndField(datatypes);
                 const datatype = childStructureItem.datatype;
-                constantName = enumMapping[datatype]?.[field]![String(itemValue)];
+                constantName = enumMapping[datatype]?.[field]?.[String(itemValue)];
               }
             }
           }
