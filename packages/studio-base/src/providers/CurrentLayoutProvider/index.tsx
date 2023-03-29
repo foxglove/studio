@@ -180,6 +180,7 @@ export default function CurrentLayoutProvider({
       const newLayout = {
         id: layoutStateRef.current.selectedLayout.id,
         data: newData,
+        name: layoutStateRef.current.selectedLayout.name,
       };
 
       // store the layout for saving
