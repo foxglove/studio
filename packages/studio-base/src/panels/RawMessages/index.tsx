@@ -341,7 +341,7 @@ function RawMessages(props: Props) {
               keyPath.slice(0, -1).reverse(),
             );
             if (childStructureItem) {
-              // if it's an array index (typeof number) then we want the nearest named array which will be typeof string 
+              // if it's an array index (typeof number) then we want the nearest named array which will be typeof string
 
               const keyPathIndex = keyPath.findIndex((key) => typeof key === "string");
               const field = keyPath[keyPathIndex];
