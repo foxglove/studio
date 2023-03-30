@@ -46,9 +46,10 @@ import {
   normalizeTFMessage,
   normalizeTransformStamped,
 } from "./normalizeMessages";
+import { CameraStateSettings } from "./renderables/CameraStateSettings";
 import { Cameras } from "./renderables/Cameras";
-import { CoreSettings } from "./renderables/CoreSettings";
 import { FrameAxes, LayerSettingsTransform } from "./renderables/FrameAxes";
+import { FrameSettings } from "./renderables/FrameSettings";
 import { Grids } from "./renderables/Grids";
 import { ImageMode } from "./renderables/ImageMode";
 import { Images } from "./renderables/Images";
@@ -61,7 +62,9 @@ import { Polygons } from "./renderables/Polygons";
 import { PoseArrays } from "./renderables/PoseArrays";
 import { Poses } from "./renderables/Poses";
 import { PublishClickTool, PublishClickType } from "./renderables/PublishClickTool";
+import { PublishSettings } from "./renderables/PublishSettings";
 import { FoxgloveSceneEntities } from "./renderables/SceneEntities";
+import { SceneSettings } from "./renderables/SceneSettings";
 import { Urdfs } from "./renderables/Urdfs";
 import { VelodyneScans } from "./renderables/VelodyneScans";
 import { MarkerPool } from "./renderables/markers/MarkerPool";
@@ -325,7 +328,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
   public readonly outlineMaterial = new THREE.LineBasicMaterial({ dithering: true });
   public readonly instancedOutlineMaterial = new InstancedLineMaterial({ dithering: true });
 
-  private coreSettings: CoreSettings;
+  private cameraStateSettings: CameraStateSettings;
   public measurementTool: MeasurementTool;
   public publishClickTool: PublishClickTool;
 
@@ -484,7 +487,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
     this.measurementTool = new MeasurementTool(this);
     this.publishClickTool = new PublishClickTool(this);
-    this.coreSettings = new CoreSettings(this);
+    this.cameraStateSettings = new CameraStateSettings(this);
 
     // Internal handlers for TF messages to update the transform tree
     this.addSchemaSubscriptions(FRAME_TRANSFORM_DATATYPES, {
@@ -508,10 +511,18 @@ export class Renderer extends EventEmitter<RendererEvents> {
       preload: config.scene.transforms?.enablePreloading ?? true,
     });
 
-    if (interfaceMode === "image") {
-      this.addSceneExtension(new ImageMode(this));
+    switch (interfaceMode) {
+      case "image":
+        this.addSceneExtension(new ImageMode(this));
+        break;
+      case "3d":
+        this.addSceneExtension(this.cameraStateSettings);
+        this.addSceneExtension(new PublishSettings(this));
+        this.addSceneExtension(new FrameSettings(this));
+        break;
     }
-    this.addSceneExtension(this.coreSettings);
+
+    this.addSceneExtension(new SceneSettings(this));
     this.addSceneExtension(new Cameras(this));
     this.addSceneExtension(new FrameAxes(this));
     this.addSceneExtension(new Grids(this));
@@ -581,7 +592,8 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
   public setCameraSyncError(error: undefined | string): void {
     this._cameraSyncError = error;
-    this.updateCoreSettings();
+    // Updates the settings tree for camera state settings to account for any changes in the config.
+    this.cameraStateSettings.updateSettingsTree();
   }
 
   public getPixelRatio(): number {
@@ -729,11 +741,6 @@ export class Renderer extends EventEmitter<RendererEvents> {
   public updateConfig(updateHandler: (draft: RendererConfig) => void): void {
     this.config = produce(this.config, updateHandler);
     this.emit("configChange", this);
-  }
-
-  /** Updates the settings tree for core settings to account for any changes in the config. */
-  public updateCoreSettings(): void {
-    this.coreSettings.updateSettingsTree();
   }
 
   public addSchemaSubscriptions<T>(
@@ -1615,13 +1622,11 @@ function deselectObject(object: THREE.Object3D) {
  */
 function baseSettingsTree(interfaceMode: InterfaceMode): SettingsTreeNodes {
   const keys: string[] = [];
-  keys.push(
-    interfaceMode === "image" ? "imageMode" : "general",
-    "scene",
-    "transforms",
-    "topics",
-    "layers",
-  );
+  keys.push(interfaceMode === "image" ? "imageMode" : "general", "scene");
+  if (interfaceMode === "3d") {
+    keys.push("cameraState");
+  }
+  keys.push("transforms", "topics", "layers");
   if (interfaceMode === "3d") {
     keys.push("publish");
   }

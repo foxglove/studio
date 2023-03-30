@@ -65,9 +65,9 @@ import {
   PublishRos1Datatypes,
   PublishRos2Datatypes,
 } from "./publish";
-import { DEFAULT_PUBLISH_SETTINGS } from "./renderables/CoreSettings";
 import type { LayerSettingsTransform } from "./renderables/FrameAxes";
 import { PublishClickEvent, PublishClickType } from "./renderables/PublishClickTool";
+import { DEFAULT_PUBLISH_SETTINGS } from "./renderables/PublishSettings";
 import { InterfaceMode } from "./types";
 
 const log = Logger.getLogger(__filename);
@@ -970,7 +970,7 @@ export function ThreeDeeRender(props: {
       action: "update",
       payload: {
         input: "boolean",
-        path: ["scene", "cameraState", "perspective"],
+        path: ["cameraState", "perspective"],
         value: !currentState,
       },
     });
