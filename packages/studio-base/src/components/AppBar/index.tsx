@@ -137,11 +137,16 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }, 
           .toString(),
         height: theme.spacing(3.5),
         width: theme.spacing(3.5),
+        transition: theme.transitions.create("background-color", {
+          duration: theme.transitions.duration.shortest,
+        }),
       },
       iconButton: {
         padding: theme.spacing(1),
         borderRadius: 0,
-
+        transition: theme.transitions.create("background-color", {
+          duration: theme.transitions.duration.shortest,
+        }),
         "&:hover": {
           backgroundColor: tinycolor(APP_BAR_FOREGROUND_COLOR).setAlpha(0.08).toString(),
 
@@ -152,7 +157,11 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }, 
           },
         },
         "&.Mui-selected": {
-          backgroundColor: APP_BAR_PRIMARY_COLOR,
+          backgroundColor: tinycolor(APP_BAR_FOREGROUND_COLOR).setAlpha(0.08).toString(),
+
+          [`.${classes.avatar}`]: {
+            backgroundColor: APP_BAR_PRIMARY_COLOR,
+          },
         },
       },
       userIconImage: {
@@ -335,7 +344,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
                 arrow={false}
               >
                 <IconButton
-                  className={classes.iconButton}
+                  className={cx(classes.iconButton, { "Mui-selected": userMenuOpen })}
                   aria-label="User profile menu button"
                   color="inherit"
                   id="user-profile-button"
