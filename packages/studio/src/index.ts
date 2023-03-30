@@ -256,6 +256,9 @@ export type PanelExtensionContext = {
    */
   readonly dataSourceProfile?: string;
 
+  /** Data about connection. */
+  readonly connection?: any;
+
   /**
    * Subscribe to updates on this field within the render state. Render will only be invoked when
    * this field changes.

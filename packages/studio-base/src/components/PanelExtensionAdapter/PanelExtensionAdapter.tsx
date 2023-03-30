@@ -93,7 +93,7 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
   const { playerState, pauseFrame, setSubscriptions, seekPlayback, sortedTopics } =
     messagePipelineContext;
 
-  const { capabilities, profile: dataSourceProfile } = playerState;
+  const { capabilities, profile: dataSourceProfile, urlState: connection } = playerState;
 
   const { openSiblingPanel } = usePanelContext();
 
@@ -306,6 +306,8 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
         : undefined,
 
       dataSourceProfile,
+
+      connection,
 
       setParameter: (name: string, value: ParameterValue) => {
         if (!isMounted()) {
