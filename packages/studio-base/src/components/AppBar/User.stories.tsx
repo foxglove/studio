@@ -70,7 +70,6 @@ export function Default(): JSX.Element {
         anchorReference="anchorPosition"
         disablePortal
         handleClose={noOp}
-        onPreferencesClick={noOp}
       />
     </Stack>
   );
@@ -95,7 +94,6 @@ export function Private(): JSX.Element {
           anchorReference="anchorPosition"
           disablePortal
           handleClose={noOp}
-          onPreferencesClick={noOp}
         />
       </Stack>
     </CurrentUserWrapper>
@@ -122,7 +120,6 @@ export function UserPresent(): JSX.Element {
           anchorReference="anchorPosition"
           disablePortal
           handleClose={noOp}
-          onPreferencesClick={noOp}
         />
       </Stack>
     </CurrentUserWrapper>
