@@ -14,6 +14,7 @@
 import { Button, Fade, Tooltip, useTheme } from "@mui/material";
 import { ChartOptions, ScaleOptions } from "chart.js";
 import { AnnotationOptions } from "chartjs-plugin-annotation";
+import { isEqual } from "lodash";
 import React, {
   ComponentProps,
   MouseEvent,
@@ -677,6 +678,12 @@ export default function TimeBasedChart(props: Props): JSX.Element {
 
       if (userInteraction) {
         setHasUserPannedOrZoomed(true);
+      }
+
+      // We only need to update global bounds and datasets when the chart
+      // reports X scale changes. We let the chart handle Y on its own.
+      if (isEqual(scales.x, currentScalesRef.current?.x)) {
+        return;
       }
 
       currentScalesRef.current = scales;
