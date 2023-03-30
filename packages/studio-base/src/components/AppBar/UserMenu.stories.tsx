@@ -12,7 +12,6 @@ export default {
   title: "components/AppBar/UserMenu",
   component: AppBar,
   decorators: [StorybookDecorator],
-  excludeStories: ["Wrapper"],
 };
 
 function MenuStory({ top, left }: { top: number; left: number }) {
