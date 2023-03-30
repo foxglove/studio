@@ -10,9 +10,12 @@ import {
   PanelRight24Filled,
   PanelRight24Regular,
   QuestionCircle24Regular,
+  Settings24Regular,
 } from "@fluentui/react-icons";
-import { AppBar as MuiAppBar, IconButton } from "@mui/material";
+import PersonIcon from "@mui/icons-material/Person";
+import { Avatar, Button, IconButton, Tooltip, AppBar as MuiAppBar } from "@mui/material";
 import { useCallback, useRef, useState } from "react";
+import tinycolor from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 import { shallow } from "zustand/shallow";
 
@@ -30,7 +33,10 @@ import {
   LayoutState,
   useCurrentLayoutSelector,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
-import { useCurrentUserType } from "@foxglove/studio-base/context/CurrentUserContext";
+import {
+  useCurrentUser,
+  useCurrentUserType,
+} from "@foxglove/studio-base/context/CurrentUserContext";
 import {
   useWorkspaceActions,
   useWorkspaceStore,
@@ -44,7 +50,6 @@ import { AddPanelMenu } from "./AddPanelMenu";
 import { DataSource } from "./DataSource";
 import { HelpMenu } from "./HelpMenu";
 import { LayoutMenu } from "./LayoutMenu";
-import { UserButton } from "./UserButton";
 import { UserMenu } from "./UserMenu";
 import {
   APP_BAR_BACKGROUND_COLOR,
@@ -53,8 +58,8 @@ import {
   APP_BAR_PRIMARY_COLOR,
 } from "./constants";
 
-const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }>()(
-  (theme, { leftInset, debugDragRegion = false }) => {
+const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }, "avatar">()(
+  (theme, { leftInset, debugDragRegion = false }, classes) => {
     const DRAGGABLE_STYLE: Record<string, string> = { WebkitAppRegion: "drag" };
     const NOT_DRAGGABLE_STYLE: Record<string, string> = { WebkitAppRegion: "no-drag" };
     if (debugDragRegion) {
@@ -125,6 +130,47 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }>(
         borderRadius: theme.shape.borderRadius,
         marginLeft: theme.spacing(1),
       },
+      tooltip: {
+        marginTop: `${theme.spacing(0.5)} !important`,
+      },
+      avatar: {
+        color: APP_BAR_FOREGROUND_COLOR,
+        backgroundColor: tinycolor(APP_BAR_BACKGROUND_COLOR[theme.palette.mode])
+          .lighten()
+          .toString(),
+        height: theme.spacing(3.5),
+        width: theme.spacing(3.5),
+      },
+      iconButton: {
+        padding: theme.spacing(1),
+        borderRadius: 0,
+
+        "&:hover": {
+          backgroundColor: tinycolor(APP_BAR_FOREGROUND_COLOR).setAlpha(0.08).toString(),
+
+          [`.${classes.avatar}`]: {
+            backgroundColor: tinycolor(APP_BAR_BACKGROUND_COLOR[theme.palette.mode])
+              .lighten(20)
+              .toString(),
+          },
+        },
+        "&.Mui-selected": {
+          backgroundColor: APP_BAR_PRIMARY_COLOR,
+        },
+      },
+      userIconImage: {
+        objectFit: "cover",
+        width: "100%",
+      },
+      button: {
+        marginInline: theme.spacing(1),
+        backgroundColor: APP_BAR_PRIMARY_COLOR,
+
+        "&:hover": {
+          backgroundColor: theme.palette.augmentColor({ color: { main: APP_BAR_PRIMARY_COLOR } })
+            .dark,
+        },
+      },
     };
   },
 );
@@ -156,6 +202,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
     showCustomWindowControls = false,
   } = props;
   const { classes, cx } = useStyles({ leftInset, debugDragRegion });
+  const { currentUser, signIn } = useCurrentUser();
   const currentUserType = useCurrentUserType();
   const analytics = useAnalytics();
   const [enableMemoryUseIndicator = false] = useAppConfigurationValue<boolean>(
@@ -289,13 +336,74 @@ export function AppBar(props: AppBarProps): JSX.Element {
               >
                 <QuestionCircle24Regular />
               </AppBarIconButton>
-              <UserButton
-                disableSignIn={disableSignIn}
-                userMenuOpen={userMenuOpen}
-                setUserAnchorEl={setUserAnchorEl}
-                prefsDialogOpen={prefsDialogOpen}
-                setPrefsDialogOpen={setPrefsDialogOpen}
-              />
+              {currentUser ? (
+                <Tooltip
+                  classes={{ tooltip: classes.tooltip }}
+                  title={currentUser.email}
+                  arrow={false}
+                >
+                  <IconButton
+                    aria-label="User profile menu button"
+                    color="inherit"
+                    id="user-profile-button"
+                    aria-controls={userMenuOpen ? "user-profile-menu" : undefined}
+                    aria-haspopup="true"
+                    aria-expanded={userMenuOpen ? "true" : undefined}
+                    onClick={(event) => setUserAnchorEl(event.currentTarget)}
+                    data-testid="user-button"
+                    size="small"
+                    className={classes.iconButton}
+                  >
+                    <Avatar className={classes.avatar} variant="rounded">
+                      {currentUser.avatarImageUrl ? (
+                        <img
+                          src={currentUser.avatarImageUrl}
+                          referrerPolicy="same-origin"
+                          className={classes.userIconImage}
+                        />
+                      ) : (
+                        <PersonIcon />
+                      )}
+                    </Avatar>
+                  </IconButton>
+                </Tooltip>
+              ) : (
+                <Stack direction="row" alignItems="center">
+                  <AppBarIconButton
+                    id="preferences-button"
+                    title="Preferences"
+                    aria-controls={prefsDialogOpen ? "preferences-dialog" : undefined}
+                    aria-haspopup="true"
+                    aria-expanded={prefsDialogOpen ? "true" : undefined}
+                    onClick={() => {
+                      void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
+                        cta: "preferences-dialog",
+                      });
+                      setPrefsDialogOpen(true);
+                    }}
+                    data-testid="user-button"
+                  >
+                    <Settings24Regular />
+                  </AppBarIconButton>
+                  {!disableSignIn && signIn != undefined && (
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      className={classes.button}
+                      size="small"
+                      onClick={() => {
+                        signIn();
+                        void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
+                          user: "unauthenticated",
+                          cta: "sign-in",
+                        });
+                      }}
+                    >
+                      Sign in
+                    </Button>
+                  )}
+                </Stack>
+              )}
               {showCustomWindowControls && (
                 <CustomWindowControls
                   onMinimizeWindow={onMinimizeWindow}
