@@ -381,7 +381,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.canvas = canvas;
     this.config = config;
 
-    this.settings = new SettingsManager(baseSettingsTree());
+    this.settings = new SettingsManager(baseSettingsTree(this.interfaceMode));
     this.settings.on("update", () => this.emit("settingsTreeChange", this));
     // Add the top-level nodes first so merging happens in the correct order.
     // Another approach would be to modify SettingsManager to allow merging parent
@@ -1607,13 +1607,16 @@ function deselectObject(object: THREE.Object3D) {
 }
 
 // Creates a skeleton settings tree. The tree contents are filled in by scene extensions
-function baseSettingsTree(): SettingsTreeNodes {
-  return {
+function baseSettingsTree(interfaceMode: InterfaceMode): SettingsTreeNodes {
+  const tree: SettingsTreeNodes = {
     general: {},
     scene: {},
     transforms: {},
     topics: {},
     layers: {},
-    publish: {},
   };
+  if (interfaceMode === "3d") {
+    tree.publish = {};
+  }
+  return tree;
 }

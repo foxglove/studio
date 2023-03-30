@@ -242,12 +242,73 @@ export class CoreSettings extends SceneExtension {
     };
   }
 
+  private publishSettings(): SettingsTreeEntry {
+    const { publish } = this.renderer.config;
+
+    return {
+      path: ["publish"],
+      node: {
+        label: "Publish",
+        fields: {
+          type: {
+            label: "Type",
+            input: "select",
+            value: publish.type,
+            options: [
+              { label: "Point (geometry_msgs/Point)", value: "point" },
+              { label: "Pose (geometry_msgs/PoseStamped)", value: "pose" },
+              {
+                label: "Pose estimate (geometry_msgs/PoseWithCovarianceStamped)",
+                value: "pose_estimate",
+              },
+            ],
+            help: "The type of message to publish when clicking in the scene",
+          },
+          topic: {
+            label: "Topic",
+            input: "string",
+            value: {
+              point: publish.pointTopic,
+              pose: publish.poseTopic,
+              pose_estimate: publish.poseEstimateTopic,
+            }[publish.type],
+            help: `The topic on which to publish ${
+              { point: "points", pose: "poses", pose_estimate: "pose estimates" }[publish.type]
+            }`,
+          },
+          ...(publish.type === "pose_estimate" && {
+            poseEstimateXDeviation: {
+              label: "X deviation",
+              input: "number",
+              value: publish.poseEstimateXDeviation,
+              help: "The X standard deviation to publish with pose estimates",
+            },
+            poseEstimateYDeviation: {
+              label: "Y deviation",
+              input: "number",
+              value: publish.poseEstimateYDeviation,
+              help: "The Y standard deviation to publish with pose estimates",
+            },
+            poseEstimateThetaDeviation: {
+              label: "Theta deviation",
+              input: "number",
+              value: publish.poseEstimateThetaDeviation,
+              help: "The theta standard deviation to publish with pose estimates",
+            },
+          }),
+        },
+        defaultExpansionState: "collapsed",
+        handler: this.handleSettingsAction,
+      },
+    };
+  }
+
   public override settingsNodes(): SettingsTreeEntry[] {
     const config = this.renderer.config;
-    const { cameraState: camera, publish } = config;
+    const { cameraState: camera } = config;
     const handler = this.handleSettingsAction;
 
-    return [
+    const nodes: SettingsTreeEntry[] = [
       this.renderer.interfaceMode === "3d" ? this.frameSettings() : this.imageModeSettings(),
       {
         path: ["scene"],
@@ -373,63 +434,13 @@ export class CoreSettings extends SceneExtension {
           handler,
         },
       },
-      {
-        path: ["publish"],
-        node: {
-          label: "Publish",
-          fields: {
-            type: {
-              label: "Type",
-              input: "select",
-              value: publish.type,
-              options: [
-                { label: "Point (geometry_msgs/Point)", value: "point" },
-                { label: "Pose (geometry_msgs/PoseStamped)", value: "pose" },
-                {
-                  label: "Pose estimate (geometry_msgs/PoseWithCovarianceStamped)",
-                  value: "pose_estimate",
-                },
-              ],
-              help: "The type of message to publish when clicking in the scene",
-            },
-            topic: {
-              label: "Topic",
-              input: "string",
-              value: {
-                point: publish.pointTopic,
-                pose: publish.poseTopic,
-                pose_estimate: publish.poseEstimateTopic,
-              }[publish.type],
-              help: `The topic on which to publish ${
-                { point: "points", pose: "poses", pose_estimate: "pose estimates" }[publish.type]
-              }`,
-            },
-            ...(publish.type === "pose_estimate" && {
-              poseEstimateXDeviation: {
-                label: "X deviation",
-                input: "number",
-                value: publish.poseEstimateXDeviation,
-                help: "The X standard deviation to publish with pose estimates",
-              },
-              poseEstimateYDeviation: {
-                label: "Y deviation",
-                input: "number",
-                value: publish.poseEstimateYDeviation,
-                help: "The Y standard deviation to publish with pose estimates",
-              },
-              poseEstimateThetaDeviation: {
-                label: "Theta deviation",
-                input: "number",
-                value: publish.poseEstimateThetaDeviation,
-                help: "The theta standard deviation to publish with pose estimates",
-              },
-            }),
-          },
-          defaultExpansionState: "collapsed",
-          handler,
-        },
-      },
     ];
+
+    if (this.renderer.interfaceMode === "3d") {
+      nodes.push(this.publishSettings());
+    }
+
+    return nodes;
   }
 
   public override handleSettingsAction = (action: SettingsTreeAction): void => {
