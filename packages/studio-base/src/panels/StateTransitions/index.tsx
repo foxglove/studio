@@ -14,7 +14,7 @@
 import { Edit16Filled } from "@fluentui/react-icons";
 import { Button, Typography } from "@mui/material";
 import { ChartOptions, ScaleOptions } from "chart.js";
-import { uniq } from "lodash";
+import { isEmpty, pickBy, uniq } from "lodash";
 import { useCallback, useMemo, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
 import tinycolor from "tinycolor2";
@@ -73,7 +73,7 @@ export const transitionableRosTypes = [
 const fontFamily = fonts.MONOSPACE;
 const fontSize = 10;
 const fontWeight = "bold";
-const emptyItemsByPath: MessageDataItemsByPath = {};
+const EMPTY_ITEMS_BY_PATH: MessageDataItemsByPath = {};
 
 const useStyles = makeStyles<void, "button">()((theme) => ({
   chartWrapper: {
@@ -196,7 +196,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
     () => (!currentTime || !startTime ? undefined : toSec(subtractTimes(currentTime, startTime))),
     [currentTime, startTime],
   );
-  let itemsByPath = useMessagesByPath(pathStrings);
+  const itemsByPath = useMessagesByPath(pathStrings);
 
   const decodeMessagePathsForMessagesByTopic = useDecodeMessagePathsForMessagesByTopic(pathStrings);
 
@@ -235,21 +235,11 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
   // More granular caching would be better, but React makes it difficult to
   // write this code in a straight-forward manner and this change is good enough
   // for now.
-  //
-  // TODO: make this better.
-  const pathsWithoutBlocks = new Set<string>(Object.keys(itemsByPath));
-  for (const path in itemsByPath) {
-    if (
-      decodedBlocks.some((decodedBlock) => Object.prototype.hasOwnProperty.call(decodedBlock, path))
-    ) {
-      pathsWithoutBlocks.delete(path);
-    }
-  }
-
-  // This allows memo dependency to always have a stable object so it doesn't recompute.
-  if (pathsWithoutBlocks.size === 0) {
-    itemsByPath = emptyItemsByPath;
-  }
+  const newItemsNotInBlocks = pickBy(
+    itemsByPath,
+    (_items, path) => !decodedBlocks.some((block) => block[path]),
+  );
+  const newItemsByPath = isEmpty(newItemsNotInBlocks) ? EMPTY_ITEMS_BY_PATH : newItemsNotInBlocks;
 
   const { datasets, tooltips, minY } = useMemo(() => {
     let outMinY: number | undefined;
@@ -287,14 +277,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
         outTooltips = outTooltips.concat(newTooltips);
       }
 
-      // If we have have messages in blocks for this path, we ignore streamed messages and only
-      // display the messages from blocks.
-      const haveBlocksForPath = blocksForPath.some((item) => item != undefined);
-      if (haveBlocksForPath) {
-        return;
-      }
-
-      const items = itemsByPath[path.value];
+      const items = newItemsByPath[path.value];
       if (items) {
         const { datasets: newDataSets, tooltips: newTooltips } = messagesToDatasets({
           path,
@@ -313,7 +296,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
       tooltips: outTooltips,
       minY: outMinY,
     };
-  }, [itemsByPath, decodedBlocks, paths, startTime]);
+  }, [startTime, paths, decodedBlocks, newItemsByPath]);
 
   const yScale = useMemo<ScaleOptions<"linear">>(() => {
     return {
