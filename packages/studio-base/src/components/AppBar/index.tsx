@@ -330,13 +330,6 @@ export function AppBar(props: AppBarProps): JSX.Element {
         anchorEl={userAnchorEl}
         open={userMenuOpen}
         handleClose={() => setUserAnchorEl(undefined)}
-        onPreferencesClick={() => {
-          void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
-            user: currentUserType,
-            cta: "preferences-dialog",
-          });
-          setPrefsDialogOpen(true);
-        }}
       />
     </>
   );

@@ -2,22 +2,20 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import {
-  Divider,
-  ListItemText,
-  Menu,
-  MenuItem,
-  PopoverPosition,
-  PopoverReference,
-  Typography,
-} from "@mui/material";
+import { Divider, Menu, MenuItem, PopoverPosition, PopoverReference } from "@mui/material";
 import { useSnackbar } from "notistack";
 import { useCallback } from "react";
 import { makeStyles } from "tss-react/mui";
 
 import Logger from "@foxglove/log";
-import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
+import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
+import {
+  useCurrentUser,
+  useCurrentUserType,
+} from "@foxglove/studio-base/context/CurrentUserContext";
+import { useWorkspaceActions } from "@foxglove/studio-base/context/WorkspaceContext";
 import { useConfirm } from "@foxglove/studio-base/hooks/useConfirm";
+import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 
 const log = Logger.getLogger(__filename);
 
@@ -34,7 +32,6 @@ type UserMenuProps = {
   anchorPosition?: PopoverPosition;
   disablePortal?: boolean;
   open: boolean;
-  onPreferencesClick: () => void;
 };
 
 export function UserMenu({
@@ -44,12 +41,15 @@ export function UserMenu({
   disablePortal,
   handleClose,
   open,
-  onPreferencesClick,
 }: UserMenuProps): JSX.Element {
   const { classes } = useStyles();
   const { currentUser, signOut } = useCurrentUser();
+  const currentUserType = useCurrentUserType();
+  const analytics = useAnalytics();
   const { enqueueSnackbar } = useSnackbar();
   const [confirm, confirmModal] = useConfirm();
+
+  const { setPrefsDialogOpen } = useWorkspaceActions();
 
   const beginSignOut = useCallback(async () => {
     try {
@@ -71,7 +71,15 @@ export function UserMenu({
     });
   }, [beginSignOut, confirm]);
 
-  const onSettingsClick = useCallback(() => {
+  const onPreferencesClick = useCallback(() => {
+    void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
+      user: currentUserType,
+      cta: "preferences-dialog",
+    });
+    setPrefsDialogOpen(true);
+  }, [analytics, currentUserType, setPrefsDialogOpen]);
+
+  const onProfileClick = useCallback(() => {
     window.open(process.env.FOXGLOVE_ACCOUNT_DASHBOARD_URL, "_blank");
   }, []);
 
@@ -90,20 +98,13 @@ export function UserMenu({
         open={open}
         onClose={handleClose}
         onClick={handleClose}
-        MenuListProps={{ className: classes.menuList }}
+        MenuListProps={{ className: classes.menuList, dense: true }}
       >
-        <MenuItem onClick={onPreferencesClick}>
-          <ListItemText primary="Preferences" />
-        </MenuItem>
-        <MenuItem onClick={onSettingsClick}>
-          <ListItemText primary="Profile" secondary={currentUser.email} />
-        </MenuItem>
+        <MenuItem disabled>{`Signed in as ${currentUser.email}`}</MenuItem>
+        <MenuItem onClick={onPreferencesClick}>Preferences</MenuItem>
+        <MenuItem onClick={onProfileClick}>Profile</MenuItem>
         <Divider variant="middle" />
-        <MenuItem onClick={onSignoutClick}>
-          <ListItemText>
-            <Typography color="error">Sign out</Typography>
-          </ListItemText>
-        </MenuItem>
+        <MenuItem onClick={onSignoutClick}>Sign out</MenuItem>
       </Menu>
       {confirmModal}
     </>
