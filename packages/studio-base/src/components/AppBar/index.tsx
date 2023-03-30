@@ -31,10 +31,7 @@ import {
   LayoutState,
   useCurrentLayoutSelector,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
-import {
-  useCurrentUser,
-  // useCurrentUserType,
-} from "@foxglove/studio-base/context/CurrentUserContext";
+import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
 import {
   useWorkspaceActions,
   useWorkspaceStore,
