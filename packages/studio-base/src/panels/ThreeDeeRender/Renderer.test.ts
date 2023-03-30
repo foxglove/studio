@@ -116,12 +116,16 @@ describe("Renderer", () => {
     expect(() => new Renderer(canvas, defaultRendererConfig, "3d")).not.toThrow();
   });
   it("fixed follow mode: ensures that the unfollowPoseSnapshot updates when there is a new fixedFrame", () => {
-    const renderer = new Renderer(canvas, {
-      ...defaultRendererConfig,
-      followMode: "follow-none",
-      followTf: "display",
-      scene: { transforms: { enablePreloading: false } },
-    });
+    const renderer = new Renderer(
+      canvas,
+      {
+        ...defaultRendererConfig,
+        followMode: "follow-none",
+        followTf: "display",
+        scene: { transforms: { enablePreloading: false } },
+      },
+      "3d",
+    );
     renderer.setCurrentTime(1n);
 
     const tfWithDisplayParent = createTFMessageEvent("display", "childOfDisplay", 1n, [1n]);
