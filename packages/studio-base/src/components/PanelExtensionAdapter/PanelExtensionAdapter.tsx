@@ -482,6 +482,7 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
     capabilities,
     clearHoverValue,
     dataSourceProfile,
+    connection,
     getMessagePipelineContext,
     initialState,
     isMounted,
