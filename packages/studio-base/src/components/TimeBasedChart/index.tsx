@@ -681,11 +681,15 @@ export default function TimeBasedChart(props: Props): JSX.Element {
       }
 
       // If this is an update from the chart adjusting its own bounds and not a
-      // user interaction and no changes have been made to the X scale we can
+      // user interaction and the X scale is defined but hasn't changed we can
       // skip updating global bounds and downsampling. This avoids a feedback
       // loop on boundary conditions when the chart is adjusting its own Y axis
       // to fit the dataset.
-      if (isEqual(scales.x, currentScalesRef.current?.x) && !userInteraction) {
+      if (
+        scales.x != undefined &&
+        isEqual(scales.x, currentScalesRef.current?.x) &&
+        !userInteraction
+      ) {
         return;
       }
 
