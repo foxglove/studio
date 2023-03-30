@@ -680,9 +680,12 @@ export default function TimeBasedChart(props: Props): JSX.Element {
         setHasUserPannedOrZoomed(true);
       }
 
-      // We only need to update global bounds and datasets when the chart
-      // reports X scale changes. We let the chart handle Y on its own.
-      if (isEqual(scales.x, currentScalesRef.current?.x)) {
+      // If this is an update from the chart adjusting its own bounds and not a
+      // user interaction and no changes have been made to the X scale we can
+      // skip updating global bounds and downsampling. This avoids a feedback
+      // loop on boundary conditions when the chart is adjusting its own Y axis
+      // to fit the dataset.
+      if (isEqual(scales.x, currentScalesRef.current?.x) && !userInteraction) {
         return;
       }
 
