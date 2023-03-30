@@ -277,6 +277,8 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
         outTooltips = outTooltips.concat(newTooltips);
       }
 
+      // We have already filtered out paths we can find in blocks so anything left here
+      // should be included in the dataset.
       const items = newItemsByPath[path.value];
       if (items) {
         const { datasets: newDataSets, tooltips: newTooltips } = messagesToDatasets({
