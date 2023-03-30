@@ -329,12 +329,7 @@ export function PreferencesDialog(props: DialogProps & { activeTab?: TabOption }
                 </Typography>
                 <CopyButton
                   size="small"
-                  getText={() => {
-                    if (FOXGLOVE_STUDIO_VERSION != undefined) {
-                      return FOXGLOVE_STUDIO_VERSION.toString();
-                    }
-                    return "";
-                  }}
+                  getText={() => FOXGLOVE_STUDIO_VERSION?.toString() ?? ""}
                 />
               </Stack>
               {[
