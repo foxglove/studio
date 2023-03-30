@@ -127,14 +127,6 @@ export function UserMenu({
         onClose={handleClose}
         onClick={handleClose}
         MenuListProps={{ className: classes.menuList, dense: true }}
-        anchorOrigin={{
-          vertical: "bottom",
-          horizontal: "right",
-        }}
-        transformOrigin={{
-          vertical: "top",
-          horizontal: "right",
-        }}
       >
         {currentUser && <MenuItem disabled>{currentUser.email}</MenuItem>}
         <MenuItem onClick={() => onPreferencesClick()}>Settings</MenuItem>
