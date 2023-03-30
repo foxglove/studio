@@ -19,9 +19,10 @@ function createWorkspaceContextStore(
       () => {
         const store: WorkspaceContextStore = {
           layoutMenuOpen: false,
-          leftSidebarItem: undefined,
-          leftSidebarOpen: false,
+          leftSidebarItem: "panel-settings",
+          leftSidebarOpen: true,
           leftSidebarSize: undefined,
+          prefsDialogOpen: false,
           rightSidebarItem: undefined,
           rightSidebarOpen: false,
           rightSidebarSize: undefined,

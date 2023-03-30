@@ -24,8 +24,11 @@ export type SidebarItemKey =
   | "studio-logs-settings"
   | "variables";
 
-export type LeftSidebarItemKey = "topics" | "variables" | "studio-logs-settings";
-export type RightSidebarItemKey = "panel-settings" | "events";
+const LeftSidebarItemKeys = ["panel-settings", "topics"] as const;
+export type LeftSidebarItemKey = (typeof LeftSidebarItemKeys)[number];
+
+const RightSidebarItemKeys = ["events", "variables", "studio-logs-settings"] as const;
+export type RightSidebarItemKey = (typeof RightSidebarItemKeys)[number];
 
 export type WorkspaceContextStore = DeepReadonly<{
   layoutMenuOpen: boolean;
@@ -33,6 +36,7 @@ export type WorkspaceContextStore = DeepReadonly<{
   rightSidebarOpen: boolean;
   leftSidebarItem: undefined | LeftSidebarItemKey;
   leftSidebarSize: undefined | number;
+  prefsDialogOpen: boolean;
   rightSidebarItem: undefined | RightSidebarItemKey;
   rightSidebarSize: undefined | number;
   sidebarItem: undefined | SidebarItemKey;
@@ -46,7 +50,7 @@ WorkspaceContext.displayName = "WorkspaceContext";
 
 export const WorkspaceStoreSelectors = {
   selectPanelSettingsOpen: (store: WorkspaceContextStore): boolean =>
-    store.sidebarItem === "panel-settings" || store.rightSidebarItem === "panel-settings",
+    store.sidebarItem === "panel-settings" || store.leftSidebarItem === "panel-settings",
 };
 
 /**
@@ -70,6 +74,7 @@ export type WorkspaceActions = {
   setLayoutMenuOpen: Dispatch<SetStateAction<boolean>>;
   setLeftSidebarOpen: Dispatch<SetStateAction<boolean>>;
   setLeftSidebarSize: (size: undefined | number) => void;
+  setPrefsDialogOpen: Dispatch<SetStateAction<boolean>>;
   setRightSidebarOpen: Dispatch<SetStateAction<boolean>>;
   setRightSidebarSize: (size: undefined | number) => void;
 };
@@ -101,7 +106,7 @@ export function useWorkspaceActions(): WorkspaceActions {
     return {
       openPanelSettings: () =>
         enableNewTopNav
-          ? set({ rightSidebarItem: "panel-settings", rightSidebarOpen: true })
+          ? set({ leftSidebarItem: "panel-settings", leftSidebarOpen: true })
           : set({ sidebarItem: "panel-settings" }),
 
       openAccountSettings: () => supportsAccountSettings && set({ sidebarItem: "account" }),
@@ -116,8 +121,13 @@ export function useWorkspaceActions(): WorkspaceActions {
         });
       },
 
-      selectSidebarItem: (selectedSidebarItem: undefined | SidebarItemKey) =>
-        set({ sidebarItem: selectedSidebarItem }),
+      selectSidebarItem: (selectedSidebarItem: undefined | SidebarItemKey) => {
+        if (selectedSidebarItem === "preferences") {
+          set({ prefsDialogOpen: true });
+        } else {
+          set({ sidebarItem: selectedSidebarItem });
+        }
+      },
 
       selectLeftSidebarItem: (selectedLeftSidebarItem: undefined | LeftSidebarItemKey) => {
         set({
@@ -137,9 +147,10 @@ export function useWorkspaceActions(): WorkspaceActions {
         set((oldValue) => {
           const leftSidebarOpen = setterValue(setter, oldValue.leftSidebarOpen);
           if (leftSidebarOpen) {
+            const oldItem = LeftSidebarItemKeys.find((item) => item === oldValue.leftSidebarItem);
             return {
               leftSidebarOpen,
-              leftSidebarItem: oldValue.leftSidebarItem ?? "topics",
+              leftSidebarItem: oldItem ?? "panel-settings",
             };
           } else {
             return { leftSidebarOpen: false };
@@ -149,13 +160,21 @@ export function useWorkspaceActions(): WorkspaceActions {
 
       setLeftSidebarSize: (leftSidebarSize: undefined | number) => set({ leftSidebarSize }),
 
+      setPrefsDialogOpen: (setter: SetStateAction<boolean>) => {
+        set((oldValue) => {
+          const prefsDialogOpen = setterValue(setter, oldValue.prefsDialogOpen);
+          return { prefsDialogOpen };
+        });
+      },
+
       setRightSidebarOpen: (setter: SetStateAction<boolean>) => {
         set((oldValue) => {
           const rightSidebarOpen = setterValue(setter, oldValue.rightSidebarOpen);
+          const oldItem = RightSidebarItemKeys.find((item) => item === oldValue.rightSidebarItem);
           if (rightSidebarOpen) {
             return {
               rightSidebarOpen,
-              rightSidebarItem: oldValue.rightSidebarItem ?? "panel-settings",
+              rightSidebarItem: oldItem ?? "variables",
             };
           } else {
             return { rightSidebarOpen: false };
