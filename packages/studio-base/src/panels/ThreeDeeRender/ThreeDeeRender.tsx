@@ -48,6 +48,8 @@ import type { PickedRenderable } from "./Picker";
 import { Renderable, SELECTED_ID_VARIABLE } from "./Renderable";
 import {
   FollowMode,
+  ImageModeConfig,
+  LegacyImageConfig,
   Renderer,
   RendererConfig,
   RendererEvents,
@@ -420,6 +422,13 @@ export function ThreeDeeRender(props: {
       Partial<LayerSettingsTransform>
     >;
 
+    // Merge in config from the legacy Image panel
+    const legacyImageConfig = partialConfig as DeepPartial<LegacyImageConfig> | undefined;
+    const imageMode: ImageModeConfig = {
+      imageTopic: legacyImageConfig?.cameraTopic,
+      ...partialConfig?.imageMode,
+    };
+
     return {
       cameraState,
       followMode: partialConfig?.followMode ?? "follow-pose",
@@ -429,7 +438,7 @@ export function ThreeDeeRender(props: {
       topics: partialConfig?.topics ?? {},
       layers: partialConfig?.layers ?? {},
       publish,
-      imageMode: partialConfig?.imageMode ?? {}, // TODO: maybe merge old image config into here and get rid of top level fields?
+      imageMode,
     };
   });
   const configRef = useLatest(config);

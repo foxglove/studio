@@ -4,7 +4,6 @@
 
 import { cloneDeep, round, set } from "lodash";
 
-import { filterMap } from "@foxglove/den/collection";
 import { SettingsTreeAction } from "@foxglove/studio";
 
 import { PublishClickType } from "./PublishClickTool";
@@ -13,18 +12,7 @@ import { FollowMode, Renderer, RendererConfig } from "../Renderer";
 import { SceneExtension } from "../SceneExtension";
 import { SettingsTreeEntry } from "../SettingsManager";
 import { DEFAULT_CAMERA_STATE } from "../camera";
-import {
-  CAMERA_CALIBRATION_DATATYPES,
-  COMPRESSED_IMAGE_DATATYPES,
-  RAW_IMAGE_DATATYPES,
-} from "../foxglove";
-import {
-  IMAGE_DATATYPES as ROS_IMAGE_DATATYPES,
-  COMPRESSED_IMAGE_DATATYPES as ROS_COMPRESSED_IMAGE_DATATYPES,
-  CAMERA_INFO_DATATYPES,
-} from "../ros";
 import { PRECISION_DEGREES, PRECISION_DISTANCE, SelectEntry } from "../settings";
-import { topicIsConvertibleToSchema } from "../topicIsConvertibleToSchema";
 import { CoordinateFrame } from "../transforms";
 
 export const DEFAULT_LABEL_SCALE_FACTOR = 1;
@@ -130,118 +118,6 @@ export class CoreSettings extends SceneExtension {
     };
   }
 
-  private imageModeSettings(): SettingsTreeEntry {
-    const config = this.renderer.config;
-
-    const imageTopics = filterMap(this.renderer.topics ?? [], (topic) => {
-      if (
-        !(
-          topicIsConvertibleToSchema(topic, ROS_IMAGE_DATATYPES) ||
-          topicIsConvertibleToSchema(topic, ROS_COMPRESSED_IMAGE_DATATYPES) ||
-          topicIsConvertibleToSchema(topic, RAW_IMAGE_DATATYPES) ||
-          topicIsConvertibleToSchema(topic, COMPRESSED_IMAGE_DATATYPES)
-        )
-      ) {
-        return;
-      }
-      return { label: topic.name, value: topic.name };
-    });
-
-    const calibrationTopics = filterMap(this.renderer.topics ?? [], (topic) => {
-      if (
-        !(
-          topicIsConvertibleToSchema(topic, CAMERA_INFO_DATATYPES) ||
-          topicIsConvertibleToSchema(topic, CAMERA_CALIBRATION_DATATYPES)
-        )
-      ) {
-        return;
-      }
-      return { label: topic.name, value: topic.name };
-    });
-
-    return {
-      path: ["general"],
-      node: {
-        label: "General",
-        defaultExpansionState: "expanded",
-        fields: {
-          cameraTopic: {
-            label: "🚧 Topic",
-            input: "select",
-            value: config.imageMode.imageTopic ?? config.cameraTopic,
-            options: imageTopics,
-          },
-          cameraInfoTopic: {
-            label: "🚧 Calibration",
-            input: "select",
-            value: config.imageMode.calibrationTopic,
-            options: calibrationTopics,
-          },
-          transformMarkers: {
-            readonly: true, // not yet implemented
-            input: "boolean",
-            label: "🚧 Transform markers",
-            value: config.transformMarkers,
-            help:
-              config.transformMarkers ?? false
-                ? "Markers are being transformed by Foxglove Studio based on the camera model. Click to turn it off."
-                : `Markers can be transformed by Foxglove Studio based on the camera model. Click to turn it on.`,
-          },
-          synchronize: {
-            readonly: true, // not yet implemented
-            input: "boolean",
-            label: "🚧 Synchronize timestamps",
-            value: config.synchronize,
-          },
-          smooth: {
-            readonly: true, // not yet implemented
-            input: "boolean",
-            label: "🚧 Bilinear smoothing",
-            value: config.smooth ?? false,
-          },
-          flipHorizontal: {
-            readonly: true, // not yet implemented
-            input: "boolean",
-            label: "🚧 Flip horizontal",
-            value: config.flipHorizontal ?? false,
-          },
-          flipVertical: {
-            readonly: true, // not yet implemented
-            input: "boolean",
-            label: "🚧 Flip vertical",
-            value: config.flipVertical ?? false,
-          },
-          rotation: {
-            readonly: true, // not yet implemented
-            input: "select",
-            label: "🚧 Rotation",
-            value: config.rotation ?? 0,
-            options: [
-              { label: "0°", value: 0 },
-              { label: "90°", value: 90 },
-              { label: "180°", value: 180 },
-              { label: "270°", value: 270 },
-            ],
-          },
-          minValue: {
-            readonly: true, // not yet implemented
-            input: "number",
-            label: "🚧 Min (depth images)",
-            placeholder: "0",
-            value: config.minValue,
-          },
-          maxValue: {
-            readonly: true, // not yet implemented
-            input: "number",
-            label: "🚧 Max (depth images)",
-            placeholder: "10000",
-            value: config.maxValue,
-          },
-        },
-      },
-    };
-  }
-
   private publishSettings(): SettingsTreeEntry {
     const { publish } = this.renderer.config;
 
@@ -308,133 +184,134 @@ export class CoreSettings extends SceneExtension {
     const { cameraState: camera } = config;
     const handler = this.handleSettingsAction;
 
-    const nodes: SettingsTreeEntry[] = [
-      this.renderer.interfaceMode === "3d" ? this.frameSettings() : this.imageModeSettings(),
-      {
-        path: ["scene"],
-        node: {
-          label: "Scene",
-          actions: [{ type: "action", id: "reset-scene", label: "Reset" }],
-          fields: {
-            enableStats: {
-              label: "Render stats",
-              input: "boolean",
-              value: config.scene.enableStats,
-            },
-            backgroundColor: {
-              label: "Background",
-              input: "rgb",
-              value: config.scene.backgroundColor,
-            },
-            labelScaleFactor: {
-              label: "Label scale",
-              help: "Scale factor to apply to all labels",
-              input: "number",
-              min: 0,
-              step: 0.1,
-              precision: 2,
-              value: config.scene.labelScaleFactor,
-              placeholder: String(DEFAULT_LABEL_SCALE_FACTOR),
-            },
-            ignoreColladaUpAxis: {
-              label: "Ignore COLLADA <up_axis>",
-              help: "Match the behavior of rviz by ignoring the <up_axis> tag in COLLADA files",
-              input: "boolean",
-              value: config.scene.ignoreColladaUpAxis,
-              error:
-                (config.scene.ignoreColladaUpAxis ?? false) !==
-                this.renderer.modelCache.options.ignoreColladaUpAxis
-                  ? "This setting requires a restart to take effect"
-                  : undefined,
-            },
-            syncCamera: {
-              label: "Sync camera",
-              input: "boolean",
-              error: this.renderer.cameraSyncError(),
-              value: config.scene.syncCamera ?? false,
-              help: "Sync the camera with other panels that also have this setting enabled.",
-            },
-            meshUpAxis: {
-              label: "Mesh up axis",
-              help: "The direction to use as “up” when loading meshes without orientation info (STL and OBJ)",
-              input: "select",
-              value: config.scene.meshUpAxis ?? DEFAULT_MESH_UP_AXIS,
-              options: [
-                { label: "Y-up", value: "y_up" },
-                { label: "Z-up", value: "z_up" },
-              ],
-              error:
-                (config.scene.meshUpAxis ?? DEFAULT_MESH_UP_AXIS) !==
-                this.renderer.modelCache.options.meshUpAxis
-                  ? "This setting requires a restart to take effect"
-                  : undefined,
-            },
+    const nodes: SettingsTreeEntry[] = [];
+    if (this.renderer.interfaceMode === "3d") {
+      nodes.push(this.frameSettings());
+    }
+    nodes.push({
+      path: ["scene"],
+      node: {
+        label: "Scene",
+        actions: [{ type: "action", id: "reset-scene", label: "Reset" }],
+        fields: {
+          enableStats: {
+            label: "Render stats",
+            input: "boolean",
+            value: config.scene.enableStats,
           },
-          children: {
-            cameraState: {
-              label: "View",
-              actions: [{ type: "action", id: "reset-camera", label: "Reset" }],
-              fields: {
-                distance: {
-                  label: "Distance",
-                  input: "number",
-                  step: 1,
-                  precision: PRECISION_DISTANCE,
-                  value: camera.distance,
-                },
-                perspective: { label: "Perspective", input: "boolean", value: camera.perspective },
-                targetOffset: {
-                  label: "Target",
-                  input: "vec3",
-                  labels: ["X", "Y", "Z"],
-                  precision: PRECISION_DISTANCE,
-                  value: [...camera.targetOffset],
-                },
-                thetaOffset: {
-                  label: "Theta",
+          backgroundColor: {
+            label: "Background",
+            input: "rgb",
+            value: config.scene.backgroundColor,
+          },
+          labelScaleFactor: {
+            label: "Label scale",
+            help: "Scale factor to apply to all labels",
+            input: "number",
+            min: 0,
+            step: 0.1,
+            precision: 2,
+            value: config.scene.labelScaleFactor,
+            placeholder: String(DEFAULT_LABEL_SCALE_FACTOR),
+          },
+          ignoreColladaUpAxis: {
+            label: "Ignore COLLADA <up_axis>",
+            help: "Match the behavior of rviz by ignoring the <up_axis> tag in COLLADA files",
+            input: "boolean",
+            value: config.scene.ignoreColladaUpAxis,
+            error:
+              (config.scene.ignoreColladaUpAxis ?? false) !==
+              this.renderer.modelCache.options.ignoreColladaUpAxis
+                ? "This setting requires a restart to take effect"
+                : undefined,
+          },
+          syncCamera: {
+            label: "Sync camera",
+            input: "boolean",
+            error: this.renderer.cameraSyncError(),
+            value: config.scene.syncCamera ?? false,
+            help: "Sync the camera with other panels that also have this setting enabled.",
+          },
+          meshUpAxis: {
+            label: "Mesh up axis",
+            help: "The direction to use as “up” when loading meshes without orientation info (STL and OBJ)",
+            input: "select",
+            value: config.scene.meshUpAxis ?? DEFAULT_MESH_UP_AXIS,
+            options: [
+              { label: "Y-up", value: "y_up" },
+              { label: "Z-up", value: "z_up" },
+            ],
+            error:
+              (config.scene.meshUpAxis ?? DEFAULT_MESH_UP_AXIS) !==
+              this.renderer.modelCache.options.meshUpAxis
+                ? "This setting requires a restart to take effect"
+                : undefined,
+          },
+        },
+        children: {
+          cameraState: {
+            label: "View",
+            actions: [{ type: "action", id: "reset-camera", label: "Reset" }],
+            fields: {
+              distance: {
+                label: "Distance",
+                input: "number",
+                step: 1,
+                precision: PRECISION_DISTANCE,
+                value: camera.distance,
+              },
+              perspective: { label: "Perspective", input: "boolean", value: camera.perspective },
+              targetOffset: {
+                label: "Target",
+                input: "vec3",
+                labels: ["X", "Y", "Z"],
+                precision: PRECISION_DISTANCE,
+                value: [...camera.targetOffset],
+              },
+              thetaOffset: {
+                label: "Theta",
+                input: "number",
+                step: 1,
+                precision: PRECISION_DEGREES,
+                value: camera.thetaOffset,
+              },
+              ...(camera.perspective && {
+                phi: {
+                  label: "Phi",
                   input: "number",
                   step: 1,
                   precision: PRECISION_DEGREES,
-                  value: camera.thetaOffset,
+                  value: camera.phi,
                 },
-                ...(camera.perspective && {
-                  phi: {
-                    label: "Phi",
-                    input: "number",
-                    step: 1,
-                    precision: PRECISION_DEGREES,
-                    value: camera.phi,
-                  },
-                  fovy: {
-                    label: "Y-Axis FOV",
-                    input: "number",
-                    step: 1,
-                    precision: PRECISION_DEGREES,
-                    value: camera.fovy,
-                  },
-                }),
-                near: {
-                  label: "Near",
-                  input: "number",
-                  step: DEFAULT_CAMERA_STATE.near,
-                  precision: PRECISION_DISTANCE,
-                  value: camera.near,
-                },
-                far: {
-                  label: "Far",
+                fovy: {
+                  label: "Y-Axis FOV",
                   input: "number",
                   step: 1,
-                  precision: PRECISION_DISTANCE,
-                  value: camera.far,
+                  precision: PRECISION_DEGREES,
+                  value: camera.fovy,
                 },
+              }),
+              near: {
+                label: "Near",
+                input: "number",
+                step: DEFAULT_CAMERA_STATE.near,
+                precision: PRECISION_DISTANCE,
+                value: camera.near,
+              },
+              far: {
+                label: "Far",
+                input: "number",
+                step: 1,
+                precision: PRECISION_DISTANCE,
+                value: camera.far,
               },
             },
           },
-          defaultExpansionState: "collapsed",
-          handler,
         },
+        defaultExpansionState: "collapsed",
+        handler,
       },
-    ];
+    });
 
     if (this.renderer.interfaceMode === "3d") {
       nodes.push(this.publishSettings());

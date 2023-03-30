@@ -50,6 +50,7 @@ import { Cameras } from "./renderables/Cameras";
 import { CoreSettings } from "./renderables/CoreSettings";
 import { FrameAxes, LayerSettingsTransform } from "./renderables/FrameAxes";
 import { Grids } from "./renderables/Grids";
+import { ImageMode } from "./renderables/ImageMode";
 import { Images } from "./renderables/Images";
 import { LaserScans } from "./renderables/LaserScans";
 import { Markers } from "./renderables/Markers";
@@ -129,12 +130,11 @@ export type LegacyImageConfig = {
 export type ImageModeConfig = {
   /** Image topic to display */
   imageTopic?: string;
+  /** Topic containing CameraCalibration or CameraInfo */
   calibrationTopic?: string;
 };
 
-export type RendererConfig = /* Support reading values from legacy Image panel config */ Readonly<
-  Partial<LegacyImageConfig>
-> & {
+export type RendererConfig = {
   /** Camera settings for the currently rendering scene */
   cameraState: CameraState;
   /** Coordinate frameId of the rendering frame */
@@ -508,6 +508,9 @@ export class Renderer extends EventEmitter<RendererEvents> {
       preload: config.scene.transforms?.enablePreloading ?? true,
     });
 
+    if (interfaceMode === "image") {
+      this.addSceneExtension(new ImageMode(this));
+    }
     this.addSceneExtension(this.coreSettings);
     this.addSceneExtension(new Cameras(this));
     this.addSceneExtension(new FrameAxes(this));
@@ -1606,17 +1609,21 @@ function deselectObject(object: THREE.Object3D) {
   });
 }
 
-// Creates a skeleton settings tree. The tree contents are filled in by scene extensions
+/**
+ * Creates a skeleton settings tree. The tree contents are filled in by scene extensions.
+ * This dictates the order in which groups appear in the settings editor.
+ */
 function baseSettingsTree(interfaceMode: InterfaceMode): SettingsTreeNodes {
-  const tree: SettingsTreeNodes = {
-    general: {},
-    scene: {},
-    transforms: {},
-    topics: {},
-    layers: {},
-  };
+  const keys: string[] = [];
+  keys.push(
+    interfaceMode === "image" ? "imageMode" : "general",
+    "scene",
+    "transforms",
+    "topics",
+    "layers",
+  );
   if (interfaceMode === "3d") {
-    tree.publish = {};
+    keys.push("publish");
   }
-  return tree;
+  return Object.fromEntries(keys.map((key) => [key, {}]));
 }
