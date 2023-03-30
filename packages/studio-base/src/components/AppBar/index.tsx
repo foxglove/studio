@@ -318,7 +318,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
                   {rightSidebarOpen ? <PanelRight24Filled /> : <PanelRight24Regular />}
                 </AppBarIconButton>
               </Stack>
-              {!disableSignIn && signIn != undefined && (
+              {!disableSignIn && !currentUser && signIn != undefined && (
                 <Button
                   variant="contained"
                   color="primary"
