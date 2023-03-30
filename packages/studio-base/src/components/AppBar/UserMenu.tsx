@@ -131,7 +131,7 @@ export function UserMenu({
         {currentUser && <MenuItem disabled>{currentUser.email}</MenuItem>}
         <MenuItem onClick={() => onPreferencesClick()}>Settings</MenuItem>
         <MenuItem onClick={() => onPreferencesClick("extensions")}>Extensions</MenuItem>
-        {currentUser && <MenuItem onClick={onProfileClick}>User Profile</MenuItem>}
+        {currentUser && <MenuItem onClick={onProfileClick}>User profile</MenuItem>}
         <Divider variant="middle" />
         <MenuItem onClick={onDocsClick}>Documentation</MenuItem>
         <MenuItem onClick={onSlackClick}>Join Slack community</MenuItem>

@@ -46,8 +46,11 @@ function SignInStates(): JSX.Element {
   };
 
   return (
-    <Stack direction="row" gap={1}>
-      <MenuStory top={0} left={0} />
+    <Stack direction="row" padding={2}>
+      <div style={{ width: 224, paddingLeft: 16 }}>sign in undefined</div>
+      <div style={{ width: 224, paddingLeft: 16 }}>no user present</div>
+      <div style={{ width: 240, paddingLeft: 16 }}>user present</div>
+      <MenuStory top={44} left={0} />
       <CurrentUserContext.Provider
         value={{
           currentUser: undefined,
@@ -55,7 +58,7 @@ function SignInStates(): JSX.Element {
           signOut: async () => undefined,
         }}
       >
-        <MenuStory top={0} left={240} />
+        <MenuStory top={44} left={240} />
       </CurrentUserContext.Provider>
       <CurrentUserContext.Provider
         value={{
@@ -64,7 +67,7 @@ function SignInStates(): JSX.Element {
           signOut: async () => undefined,
         }}
       >
-        <MenuStory top={0} left={464} />
+        <MenuStory top={44} left={464} />
       </CurrentUserContext.Provider>
     </Stack>
   );
