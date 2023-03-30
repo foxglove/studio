@@ -43,7 +43,7 @@ export function UserMenu({
   open,
 }: UserMenuProps): JSX.Element {
   const { classes } = useStyles();
-  const { currentUser, signOut } = useCurrentUser();
+  const { currentUser, signIn, signOut } = useCurrentUser();
   const currentUserType = useCurrentUserType();
   const analytics = useAnalytics();
   const { enqueueSnackbar } = useSnackbar();
@@ -71,6 +71,14 @@ export function UserMenu({
     });
   }, [beginSignOut, confirm]);
 
+  const onSignInClick = useCallback(() => {
+    void analytics.logEvent(AppEvent.DIALOG_CLICK_CTA, {
+      user: currentUserType,
+      cta: "sign-in",
+    });
+    signIn?.();
+  }, [analytics, currentUserType, signIn]);
+
   const onPreferencesClick = useCallback(() => {
     void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
       user: currentUserType,
@@ -80,12 +88,28 @@ export function UserMenu({
   }, [analytics, currentUserType, setPrefsDialogOpen]);
 
   const onProfileClick = useCallback(() => {
+    void analytics.logEvent(AppEvent.DIALOG_CLICK_CTA, {
+      user: currentUserType,
+      cta: "profile",
+    });
     window.open(process.env.FOXGLOVE_ACCOUNT_DASHBOARD_URL, "_blank");
-  }, []);
+  }, [analytics, currentUserType]);
 
-  if (currentUser == undefined) {
-    return <></>;
-  }
+  const onDocsClick = useCallback(() => {
+    void analytics.logEvent(AppEvent.DIALOG_CLICK_CTA, {
+      user: currentUserType,
+      cta: "docs",
+    });
+    window.open("https://foxglove.dev/docs", "_blank");
+  }, [analytics, currentUserType]);
+
+  const onSlackClick = useCallback(() => {
+    void analytics.logEvent(AppEvent.DIALOG_CLICK_CTA, {
+      user: currentUserType,
+      cta: "join-slack",
+    });
+    window.open("https://foxglove.dev/slack", "_blank");
+  }, [analytics, currentUserType]);
 
   return (
     <>
@@ -100,11 +124,19 @@ export function UserMenu({
         onClick={handleClose}
         MenuListProps={{ className: classes.menuList, dense: true }}
       >
-        <MenuItem disabled>{`Signed in as ${currentUser.email}`}</MenuItem>
-        <MenuItem onClick={onPreferencesClick}>Preferences</MenuItem>
-        <MenuItem onClick={onProfileClick}>Profile</MenuItem>
+        {currentUser && <MenuItem disabled>{currentUser.email}</MenuItem>}
+        <MenuItem onClick={onPreferencesClick}>Settings</MenuItem>
+        <MenuItem onClick={onPreferencesClick}>Extensions</MenuItem>
+        {currentUser && <MenuItem onClick={onProfileClick}>User Profile</MenuItem>}
         <Divider variant="middle" />
-        <MenuItem onClick={onSignoutClick}>Sign out</MenuItem>
+        <MenuItem onClick={onDocsClick}>Documentation</MenuItem>
+        <MenuItem onClick={onSlackClick}>Join Slack community</MenuItem>
+        {signIn != undefined && <Divider variant="middle" />}
+        {currentUser ? (
+          <MenuItem onClick={onSignoutClick}>Sign out</MenuItem>
+        ) : signIn != undefined ? (
+          <MenuItem onClick={onSignInClick}>Sign in</MenuItem>
+        ) : undefined}
       </Menu>
       {confirmModal}
     </>

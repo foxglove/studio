@@ -9,8 +9,6 @@ import {
   PanelLeft24Regular,
   PanelRight24Filled,
   PanelRight24Regular,
-  QuestionCircle24Regular,
-  Settings24Regular,
 } from "@fluentui/react-icons";
 import PersonIcon from "@mui/icons-material/Person";
 import { Avatar, Button, IconButton, Tooltip, AppBar as MuiAppBar } from "@mui/material";
@@ -35,7 +33,7 @@ import {
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import {
   useCurrentUser,
-  useCurrentUserType,
+  // useCurrentUserType,
 } from "@foxglove/studio-base/context/CurrentUserContext";
 import {
   useWorkspaceActions,
@@ -48,7 +46,6 @@ import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import { AddPanelMenu } from "./AddPanelMenu";
 import { DataSource } from "./DataSource";
-import { HelpMenu } from "./HelpMenu";
 import { LayoutMenu } from "./LayoutMenu";
 import { UserMenu } from "./UserMenu";
 import {
@@ -203,7 +200,6 @@ export function AppBar(props: AppBarProps): JSX.Element {
   } = props;
   const { classes, cx } = useStyles({ leftInset, debugDragRegion });
   const { currentUser, signIn } = useCurrentUser();
-  const currentUserType = useCurrentUserType();
   const analytics = useAnalytics();
   const [enableMemoryUseIndicator = false] = useAppConfigurationValue<boolean>(
     AppSetting.ENABLE_MEMORY_USE_INDICATOR,
@@ -211,20 +207,17 @@ export function AppBar(props: AppBarProps): JSX.Element {
 
   const selectedLayoutId = useCurrentLayoutSelector(selectedLayoutIdSelector);
 
-  const { leftSidebarOpen, rightSidebarOpen, layoutMenuOpen, prefsDialogOpen } = useWorkspaceStore(
+  const { leftSidebarOpen, rightSidebarOpen, layoutMenuOpen } = useWorkspaceStore(
     selectWorkspace,
     shallow,
   );
-  const { setLayoutMenuOpen, setRightSidebarOpen, setLeftSidebarOpen, setPrefsDialogOpen } =
-    useWorkspaceActions();
+  const { setLayoutMenuOpen, setRightSidebarOpen, setLeftSidebarOpen } = useWorkspaceActions();
 
-  const [helpAnchorEl, setHelpAnchorEl] = useState<undefined | HTMLElement>(undefined);
   const [userAnchorEl, setUserAnchorEl] = useState<undefined | HTMLElement>(undefined);
   const [panelAnchorEl, setPanelAnchorEl] = useState<undefined | HTMLElement>(undefined);
   const layoutButtonRef = useRef<HTMLButtonElement>(ReactNull);
   const layoutAnchorEl = layoutMenuOpen ? layoutButtonRef.current : undefined;
 
-  const helpMenuOpen = Boolean(helpAnchorEl);
   const userMenuOpen = Boolean(userAnchorEl);
   const panelMenuOpen = Boolean(panelAnchorEl);
 
@@ -319,91 +312,52 @@ export function AppBar(props: AppBarProps): JSX.Element {
                   {rightSidebarOpen ? <PanelRight24Filled /> : <PanelRight24Regular />}
                 </AppBarIconButton>
               </Stack>
-              <AppBarIconButton
-                className={cx({ "Mui-selected": helpMenuOpen })}
-                id="help-button"
-                title="Help"
-                aria-controls={helpMenuOpen ? "help-menu" : undefined}
-                aria-haspopup="true"
-                aria-expanded={helpMenuOpen ? "true" : undefined}
-                onClick={(event) => {
-                  void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
-                    user: currentUserType,
-                    cta: "help-menu",
-                  });
-                  setHelpAnchorEl(event.currentTarget);
-                }}
-              >
-                <QuestionCircle24Regular />
-              </AppBarIconButton>
-              {currentUser ? (
-                <Tooltip
-                  classes={{ tooltip: classes.tooltip }}
-                  title={currentUser.email}
-                  arrow={false}
+              {!disableSignIn && signIn != undefined && (
+                <Button
+                  variant="contained"
+                  color="primary"
+                  className={classes.button}
+                  size="small"
+                  onClick={() => {
+                    signIn();
+                    void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
+                      user: "unauthenticated",
+                      cta: "sign-in",
+                    });
+                  }}
                 >
-                  <IconButton
-                    aria-label="User profile menu button"
-                    color="inherit"
-                    id="user-profile-button"
-                    aria-controls={userMenuOpen ? "user-profile-menu" : undefined}
-                    aria-haspopup="true"
-                    aria-expanded={userMenuOpen ? "true" : undefined}
-                    onClick={(event) => setUserAnchorEl(event.currentTarget)}
-                    data-testid="user-button"
-                    size="small"
-                    className={classes.iconButton}
-                  >
-                    <Avatar className={classes.avatar} variant="rounded">
-                      {currentUser.avatarImageUrl ? (
-                        <img
-                          src={currentUser.avatarImageUrl}
-                          referrerPolicy="same-origin"
-                          className={classes.userIconImage}
-                        />
-                      ) : (
-                        <PersonIcon />
-                      )}
-                    </Avatar>
-                  </IconButton>
-                </Tooltip>
-              ) : (
-                <Stack direction="row" alignItems="center">
-                  <AppBarIconButton
-                    id="preferences-button"
-                    title="Preferences"
-                    aria-controls={prefsDialogOpen ? "preferences-dialog" : undefined}
-                    aria-haspopup="true"
-                    aria-expanded={prefsDialogOpen ? "true" : undefined}
-                    onClick={() => {
-                      void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
-                        cta: "preferences-dialog",
-                      });
-                      setPrefsDialogOpen(true);
-                    }}
-                    data-testid="user-button"
-                  >
-                    <Settings24Regular />
-                  </AppBarIconButton>
-                  {!disableSignIn && signIn != undefined && (
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      className={classes.button}
-                      size="small"
-                      onClick={() => {
-                        signIn();
-                        void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
-                          user: "unauthenticated",
-                          cta: "sign-in",
-                        });
-                      }}
-                    >
-                      Sign in
-                    </Button>
-                  )}
-                </Stack>
+                  Sign in
+                </Button>
               )}
+              <Tooltip
+                classes={{ tooltip: classes.tooltip }}
+                title={currentUser?.email ?? "Profile"}
+                arrow={false}
+              >
+                <IconButton
+                  className={classes.iconButton}
+                  aria-label="User profile menu button"
+                  color="inherit"
+                  id="user-profile-button"
+                  aria-controls={userMenuOpen ? "user-profile-menu" : undefined}
+                  aria-haspopup="true"
+                  aria-expanded={userMenuOpen ? "true" : undefined}
+                  onClick={(event) => setUserAnchorEl(event.currentTarget)}
+                  data-testid="user-button"
+                >
+                  <Avatar className={classes.avatar} variant="rounded">
+                    {currentUser?.avatarImageUrl ? (
+                      <img
+                        src={currentUser.avatarImageUrl}
+                        referrerPolicy="same-origin"
+                        className={classes.userIconImage}
+                      />
+                    ) : (
+                      <PersonIcon />
+                    )}
+                  </Avatar>
+                </IconButton>
+              </Tooltip>
               {showCustomWindowControls && (
                 <CustomWindowControls
                   onMinimizeWindow={onMinimizeWindow}
@@ -426,13 +380,6 @@ export function AppBar(props: AppBarProps): JSX.Element {
         anchorEl={layoutAnchorEl ?? undefined}
         open={layoutMenuOpen}
         handleClose={() => setLayoutMenuOpen(false)}
-      />
-      <HelpMenu
-        anchorEl={helpAnchorEl}
-        open={helpMenuOpen}
-        handleClose={() => setHelpAnchorEl(undefined)}
-        anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
-        transformOrigin={{ vertical: "top", horizontal: "right" }}
       />
       <UserMenu
         anchorEl={userAnchorEl}
