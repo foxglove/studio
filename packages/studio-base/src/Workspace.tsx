@@ -184,12 +184,12 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
   const rightSidebarSize = useWorkspaceStore(selectWorkspaceRightSidebarSize);
 
   const {
+    prefsDialogActions,
     setLeftSidebarOpen,
     setRightSidebarOpen,
     selectLeftSidebarItem,
     selectRightSidebarItem,
     setLeftSidebarSize,
-    setPrefsDialogOpen,
     setRightSidebarSize,
     selectSidebarItem,
   } = useWorkspaceActions();
@@ -303,8 +303,8 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
   useNativeAppMenuEvent(
     "open-preferences",
     useCallback(() => {
-      setPrefsDialogOpen(true);
-    }, [setPrefsDialogOpen]),
+      prefsDialogActions.open();
+    }, [prefsDialogActions]),
   );
 
   useNativeAppMenuEvent(

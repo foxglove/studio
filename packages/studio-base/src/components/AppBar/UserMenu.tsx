@@ -49,7 +49,7 @@ export function UserMenu({
   const { enqueueSnackbar } = useSnackbar();
   const [confirm, confirmModal] = useConfirm();
 
-  const { setPrefsDialogOpen } = useWorkspaceActions();
+  const { prefsDialogActions } = useWorkspaceActions();
 
   const beginSignOut = useCallback(async () => {
     try {
@@ -84,8 +84,8 @@ export function UserMenu({
       user: currentUserType,
       cta: "preferences-dialog",
     });
-    setPrefsDialogOpen(true);
-  }, [analytics, currentUserType, setPrefsDialogOpen]);
+    prefsDialogActions.open();
+  }, [analytics, currentUserType, prefsDialogActions]);
 
   const onProfileClick = useCallback(() => {
     void analytics.logEvent(AppEvent.DIALOG_CLICK_CTA, {
