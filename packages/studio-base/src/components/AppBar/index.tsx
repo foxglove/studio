@@ -274,7 +274,6 @@ export function AppBar(props: AppBarProps): JSX.Element {
               layoutMenuOpen={layoutMenuOpen}
               setLayoutMenuOpen={setLayoutMenuOpen}
               onSelectDataSourceAction={onSelectDataSourceAction}
-              supportsAccountSettings={signIn != undefined}
             />
           </div>
 

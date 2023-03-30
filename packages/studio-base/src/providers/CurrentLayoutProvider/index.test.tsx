@@ -249,13 +249,13 @@ describe("CurrentLayoutProvider", () => {
     };
 
     expect(mockLayoutManager.updateLayout.mock.calls).toEqual([
-      [{ id: "example", data: newState }],
+      [{ id: "example", data: newState, name: "Test layout" }],
     ]);
     expect(all.map((item) => (item instanceof Error ? undefined : item.layoutState))).toEqual([
       { selectedLayout: undefined },
       { selectedLayout: { loading: true, id: "example", data: undefined } },
       { selectedLayout: { loading: false, id: "example", data: TEST_LAYOUT, name: "Test layout" } },
-      { selectedLayout: { loading: false, id: "example", data: newState } },
+      { selectedLayout: { loading: false, id: "example", data: newState, name: "Test layout" } },
     ]);
     (console.warn as jest.Mock).mockClear();
   });
