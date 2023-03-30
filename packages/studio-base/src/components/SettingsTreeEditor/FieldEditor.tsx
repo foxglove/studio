@@ -315,7 +315,6 @@ function FieldInput({
       const hasError = !selectedOption && (!isEmpty || field.value != undefined);
       return (
         <Select
-          data-testid="field-editor-select"
           className={cx({ [classes.error]: hasError })}
           size="small"
           displayEmpty
