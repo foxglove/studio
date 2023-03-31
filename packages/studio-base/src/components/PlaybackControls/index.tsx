@@ -173,7 +173,7 @@ export default function PlaybackControls(props: {
               classes={{ popper: classes.popper }}
               title={
                 <Stack paddingY={1}>
-                  <DataSourceInfoView />
+                  <DataSourceInfoView disableSource />
                 </Stack>
               }
             >
@@ -182,7 +182,6 @@ export default function PlaybackControls(props: {
                 size="small"
                 icon={<Info24Regular />}
                 activeIcon={<Info24Filled />}
-                onClick={toggleCreateEventDialog}
               />
             </Tooltip>
             {currentUser && eventsSupported && (
