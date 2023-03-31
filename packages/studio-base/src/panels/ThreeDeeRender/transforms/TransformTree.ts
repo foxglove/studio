@@ -20,7 +20,7 @@ export enum AddTransformResult {
  * for getting and creating frames and adding transforms between frames.
  */
 export class TransformTree {
-  private _frames = new Map<string, CoordinateFrame<string>>();
+  private _frames = new Map<string, CoordinateFrame>();
   private _maxStorageTime: Duration;
   private _maxCapacityPerFrame: number;
   public defaultRootFrame: CoordinateFrame<FallbackFrameId>;
@@ -90,7 +90,7 @@ export class TransformTree {
    * Walk up the tree starting from `candidate` and prune frames with no history entries and no
    * children.
    */
-  private _removeEmptyAncestors(candidate: CoordinateFrame<string>): void {
+  private _removeEmptyAncestors(candidate: CoordinateFrame): void {
     if (candidate.transformsSize() > 0) {
       // don't want to delete this frame, it is not empty
       return;
@@ -166,7 +166,7 @@ export class TransformTree {
     return this._frames.get(id) as CoordinateFrame<ID>;
   }
 
-  public getOrCreateFrame(id: string): CoordinateFrame<string> {
+  public getOrCreateFrame(id: string): CoordinateFrame {
     let frame = this._frames.get(id);
     if (!frame) {
       frame = new CoordinateFrame(id, undefined, this._maxStorageTime, this._maxCapacityPerFrame);
@@ -175,7 +175,7 @@ export class TransformTree {
     return frame;
   }
 
-  public frames(): ReadonlyMap<string, CoordinateFrame<string>> {
+  public frames(): ReadonlyMap<string, CoordinateFrame> {
     return this._frames;
   }
 
