@@ -821,7 +821,9 @@ export class Renderer extends EventEmitter<RendererEvents> {
     // Choose the root frame with the most children
     const rootsToCounts = new Map<string, number>();
     for (const frame of allFrames.values()) {
-      const rootId = frame.root().id;
+      const root = frame.root();
+      const rootId = root.id;
+
       rootsToCounts.set(rootId, (rootsToCounts.get(rootId) ?? 0) + 1);
     }
     const rootsArray = Array.from(rootsToCounts.entries());

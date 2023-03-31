@@ -6,7 +6,8 @@ import {
   CoordinateFrame,
   MAX_DURATION,
   FALLBACK_FRAME_ID,
-  FallbackFrameID,
+  FallbackFrameId,
+  AnyFrameId,
 } from "./CoordinateFrame";
 import { Transform } from "./Transform";
 import { Pose } from "./geometry";
@@ -28,7 +29,7 @@ export class TransformTree {
   private _frames = new Map<string, CoordinateFrame<string>>();
   private _maxStorageTime: Duration;
   private _maxCapacityPerFrame: number;
-  public defaultRootFrame: CoordinateFrame<FallbackFrameID>;
+  public defaultRootFrame: CoordinateFrame<FallbackFrameId>;
 
   public constructor(
     maxStorageTime = MAX_DURATION,
@@ -158,13 +159,13 @@ export class TransformTree {
   }
 
   public hasFrame(id: CoordinateFrame["id"]): boolean {
-    if (id === FALLBACK_FRAME_ID) {
+    if ((id as unknown as FallbackFrameId) === FALLBACK_FRAME_ID) {
       return true;
     }
     return this._frames.has(id);
   }
 
-  public frame<ID extends CoordinateFrame["id"]>(id: ID): CoordinateFrame<ID> | undefined {
+  public frame<ID extends AnyFrameId>(id: ID): CoordinateFrame<ID> | undefined {
     if (id === FALLBACK_FRAME_ID) {
       return this.defaultRootFrame as CoordinateFrame<ID>;
     }
@@ -187,9 +188,9 @@ export class TransformTree {
   public apply(
     output: Pose,
     input: Readonly<Pose>,
-    frameId: string | FallbackFrameID,
-    rootFrameId: string | FallbackFrameID | undefined,
-    srcFrameId: string | FallbackFrameID,
+    frameId: AnyFrameId,
+    rootFrameId: AnyFrameId | undefined,
+    srcFrameId: AnyFrameId,
     dstTime: Time,
     srcTime: Time,
     maxDelta?: Duration,

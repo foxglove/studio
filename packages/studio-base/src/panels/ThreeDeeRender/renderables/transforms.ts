@@ -2,14 +2,14 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { CoordinateFrame, FallbackFrameID } from "../transforms";
+import { AnyFrameId, CoordinateFrame } from "../transforms";
 
 export const MISSING_TRANSFORM = "MISSING_TRANSFORM";
 
 export function missingTransformMessage(
-  renderFrameId: string | FallbackFrameID,
-  fixedFrameId: string | FallbackFrameID,
-  srcFrameId: string | FallbackFrameID,
+  renderFrameId: AnyFrameId,
+  fixedFrameId: AnyFrameId,
+  srcFrameId: AnyFrameId,
 ): string {
   const dstFrameId = renderFrameId === srcFrameId ? fixedFrameId : renderFrameId;
   if (srcFrameId !== dstFrameId) {

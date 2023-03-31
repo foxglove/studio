@@ -13,7 +13,7 @@ import { BaseUserData, Renderable } from "./Renderable";
 import type { Renderer } from "./Renderer";
 import type { SettingsTreeEntry } from "./SettingsManager";
 import { missingTransformMessage, MISSING_TRANSFORM } from "./renderables/transforms";
-import { FallbackFrameID } from "./transforms";
+import { AnyFrameId } from "./transforms";
 import { updatePose } from "./updatePose";
 
 export type PartialMessage<T> = DeepPartial<T>;
@@ -161,8 +161,8 @@ export class SceneExtension<
    */
   public startFrame(
     currentTime: bigint,
-    renderFrameId: string | FallbackFrameID,
-    fixedFrameId: string | FallbackFrameID,
+    renderFrameId: AnyFrameId,
+    fixedFrameId: AnyFrameId,
   ): void {
     for (const renderable of this.renderables.values()) {
       const path = renderable.userData.settingsPath;
