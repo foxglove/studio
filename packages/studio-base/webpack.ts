@@ -38,7 +38,7 @@ type Options = {
   // those out while iterating.
   allowUnusedVariables?: boolean;
   // Specify the app version. If undefined the app version is read from `package.json`
-  fullVersion?: string;
+  version?: string;
 };
 
 // Create a partial webpack configuration required to build app using webpack.
@@ -53,7 +53,7 @@ export function makeConfig(
 
   const { allowUnusedVariables = isDev && isServe } = options ?? {};
 
-  const fullVersion = options?.fullVersion ?? packageJson.version;
+  const version = options?.version ?? packageJson.version;
 
   return {
     resolve: {
@@ -239,7 +239,7 @@ export function makeConfig(
       new webpack.DefinePlugin({
         // Should match webpack-defines.d.ts
         ReactNull: null, // eslint-disable-line no-restricted-syntax
-        FOXGLOVE_STUDIO_VERSION: JSON.stringify(fullVersion),
+        FOXGLOVE_STUDIO_VERSION: JSON.stringify(version),
       }),
       // https://webpack.js.org/plugins/ignore-plugin/#example-of-ignoring-moment-locales
       new webpack.IgnorePlugin({
