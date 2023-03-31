@@ -13,6 +13,7 @@
 
 import { isEqual, uniq } from "lodash";
 import memoizeWeak from "memoize-weak";
+import ReactDOM from "react-dom";
 import shallowequal from "shallowequal";
 import { v4 as uuidv4 } from "uuid";
 
@@ -21,7 +22,6 @@ import Log from "@foxglove/log";
 import { Time, compare } from "@foxglove/rostime";
 import { ParameterValue } from "@foxglove/studio";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
-import getPrettifiedCode from "@foxglove/studio-base/panels/NodePlayground/getPrettifiedCode";
 import { MemoizedLibGenerator } from "@foxglove/studio-base/players/UserNodePlayer/MemoizedLibGenerator";
 import { generateTypesLib } from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/generateTypesLib";
 import { TransformArgs } from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/types";
@@ -184,7 +184,12 @@ export default class UserNodePlayer implements Player {
         datatypes: new Map([...basicDatatypes, ...args.datatypes]),
       });
 
-      return await getPrettifiedCode(lib);
+      // Do not prettify the types library as it can cause severe performance
+      // degradations. This is OK because the generated types library is
+      // read-only and should be rarely read by a human. Further, the
+      // not-prettified code is not that bad either. It just lacks the
+      // appropriate indentations.
+      return lib;
     });
 
     this._rosLibGenerator = new MemoizedLibGenerator(async (args) => {
@@ -748,9 +753,23 @@ export default class UserNodePlayer implements Player {
       this._memoizedNodeDatatypes = nodeDatatypes;
     }
 
-    for (const nodeRegistration of state.nodeRegistrations) {
-      this._setUserNodeDiagnostics(nodeRegistration.nodeId, []);
-    }
+    // We need to set the user node diagnostics, which is a react set state
+    // function. This is called once per user script. Since this is in an async
+    // function, the state updates will not be batched below React 18 and React
+    // will update components synchronously during the set state. In a complex
+    // layout, each of the following _setUserNodeDiagnostics call result in
+    // ~100ms of latency. With many scripts, this can turn into a multi-second
+    // stall during layout switching.
+    //
+    // By batching the state update, unnecessary component updates are avoided
+    // and performance is improved for layout switching and initial loading.
+    //
+    // Moving to React 18 should remove the need for this call.
+    ReactDOM.unstable_batchedUpdates(() => {
+      for (const nodeRegistration of state.nodeRegistrations) {
+        this._setUserNodeDiagnostics(nodeRegistration.nodeId, []);
+      }
+    });
   }
 
   private async _getRosLib(state: ProtectedState): Promise<string> {
