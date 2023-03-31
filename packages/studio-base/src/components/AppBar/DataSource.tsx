@@ -4,7 +4,7 @@
 
 import { ErrorCircle20Filled, Open16Filled } from "@fluentui/react-icons";
 import { ButtonBase, CircularProgress, IconButton, Tooltip } from "@mui/material";
-import { useState, useRef } from "react";
+import { useState } from "react";
 import tc from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 
@@ -96,13 +96,8 @@ const selectPlayerProblems = ({ playerState }: MessagePipelineContext) => player
 
 export function DataSource({
   onSelectDataSourceAction,
-  layoutMenuOpen,
-  setLayoutMenuOpen,
 }: {
   onSelectDataSourceAction: () => void;
-  layoutMenuOpen: boolean;
-  // eslint-disable-next-line @foxglove/no-boolean-parameters
-  setLayoutMenuOpen: (open: boolean) => void;
 }): JSX.Element {
   const { classes, cx } = useStyles();
 
@@ -116,9 +111,6 @@ export function DataSource({
     playerPresence === PlayerPresence.ERROR ||
     playerProblems.some((problem) => problem.severity === "error");
   const loading = reconnecting || initializing;
-
-  const layoutButtonRef = useRef<HTMLButtonElement>(ReactNull);
-  const layoutAnchorEl = layoutMenuOpen ? layoutButtonRef.current : undefined;
 
   const playerDisplayName =
     initializing && playerName == undefined ? "Initializing..." : playerName;

@@ -296,11 +296,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
           </div>
 
           <div className={classes.middle}>
-            <DataSource
-              layoutMenuOpen={layoutMenuOpen}
-              setLayoutMenuOpen={setLayoutMenuOpen}
-              onSelectDataSourceAction={onSelectDataSourceAction}
-            />
+            <DataSource onSelectDataSourceAction={onSelectDataSourceAction} />
           </div>
 
           <div className={classes.end}>
