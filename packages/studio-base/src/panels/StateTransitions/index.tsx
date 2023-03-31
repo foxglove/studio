@@ -302,24 +302,21 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
   // Use a debounce and 0 refresh rate to avoid triggering a resize observation while handling
   // an existing resize observation.
   // https://github.com/maslianok/react-resize-detector/issues/45
-  const { width, ref: sizeRef } = useResizeDetector({
+  const { width, ref: sizeRef } = useResizeDetector<HTMLDivElement>({
     handleHeight: false,
     refreshRate: 0,
     refreshMode: "debounce",
   });
 
   useEffect(() => {
-    if (!sizeRef.current) {
-      return;
-    }
     const el = sizeRef.current;
-    const handler = (ev) => {
+    const handler = (ev: WheelEvent) => {
       ev.preventDefault();
     };
 
-    el.addEventListener("wheel", handler);
+    el?.addEventListener("wheel", handler);
     return () => {
-      el.removeEventListener("wheel", handler);
+      el?.removeEventListener("wheel", handler);
     };
   }, [sizeRef]);
 
