@@ -28,7 +28,7 @@ const tempTransform = Transform.Identity();
 const tempMatrix = mat4Identity();
 const temp2Matrix = mat4Identity();
 
-export const FALLBACK_FRAME_ID = Symbol("FALLBACK_FRAME_ID");
+const FALLBACK_FRAME_ID = Symbol("FALLBACK_FRAME_ID");
 export type FallbackFrameId = typeof FALLBACK_FRAME_ID;
 
 export type UserFrameId = string;
@@ -42,6 +42,8 @@ export type AnyFrameId = UserFrameId | FallbackFrameId;
  */
 // ts-prune-ignore-next
 export class CoordinateFrame<ID extends AnyFrameId = UserFrameId> {
+  public static readonly FALLBACK_FRAME_ID: FallbackFrameId = FALLBACK_FRAME_ID;
+
   public readonly id: ID;
   public maxStorageTime: Duration;
   public maxCapacity: number;

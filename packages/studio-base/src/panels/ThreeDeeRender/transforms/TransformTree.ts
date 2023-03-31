@@ -2,13 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import {
-  CoordinateFrame,
-  MAX_DURATION,
-  FALLBACK_FRAME_ID,
-  FallbackFrameId,
-  AnyFrameId,
-} from "./CoordinateFrame";
+import { CoordinateFrame, MAX_DURATION, FallbackFrameId, AnyFrameId } from "./CoordinateFrame";
 import { Transform } from "./Transform";
 import { Pose } from "./geometry";
 import { Duration, Time } from "./time";
@@ -38,7 +32,7 @@ export class TransformTree {
     this._maxStorageTime = maxStorageTime;
     this._maxCapacityPerFrame = maxCapacityPerFrame;
     this.defaultRootFrame = new CoordinateFrame(
-      FALLBACK_FRAME_ID,
+      CoordinateFrame.FALLBACK_FRAME_ID,
       undefined,
       this._maxStorageTime,
       this._maxCapacityPerFrame,
@@ -158,15 +152,15 @@ export class TransformTree {
     }
   }
 
-  public hasFrame(id: CoordinateFrame["id"]): boolean {
-    if ((id as unknown as FallbackFrameId) === FALLBACK_FRAME_ID) {
+  public hasFrame(id: CoordinateFrame<AnyFrameId>["id"]): boolean {
+    if (id === CoordinateFrame.FALLBACK_FRAME_ID) {
       return true;
     }
     return this._frames.has(id);
   }
 
   public frame<ID extends AnyFrameId>(id: ID): CoordinateFrame<ID> | undefined {
-    if (id === FALLBACK_FRAME_ID) {
+    if (id === CoordinateFrame.FALLBACK_FRAME_ID) {
       return this.defaultRootFrame as CoordinateFrame<ID>;
     }
     return this._frames.get(id) as CoordinateFrame<ID>;
