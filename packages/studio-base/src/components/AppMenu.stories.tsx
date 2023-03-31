@@ -3,22 +3,43 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import AppMenu from "@foxglove/studio-base/components/AppMenu";
+import PlayerSelectionContext, {
+  PlayerSelection,
+} from "@foxglove/studio-base/context/PlayerSelectionContext";
 
 export default {
   title: "components/AppMenu",
   component: AppMenu,
 };
 
+// Connection
+const playerSelection: PlayerSelection = {
+  selectSource: () => {},
+  selectRecent: () => {},
+  recentSources: [
+    // prettier-ignore
+    { id: "1111", title: "NuScenes-v1.0-mini-scene-0655-reallllllllly-long-name-8829908290831091.bag", },
+    { id: "2222", title: "http://localhost:11311", label: "ROS 1" },
+    { id: "3333", title: "ws://localhost:9090/", label: "Rosbridge (ROS 1 & 2)" },
+    { id: "4444", title: "ws://localhost:8765", label: "Foxglove WebSocket" },
+    { id: "5555", title: "2369", label: "Velodyne Lidar" },
+    { id: "6666", title: "THIS ITEM SHOULD BE HIDDEN IN STORYBOOKS", label: "!!!!!!!!!!!!" },
+  ],
+  availableSources: [],
+};
+
 export function Default(): JSX.Element {
   return (
-    <AppMenu
-      open
-      anchorPosition={{ top: 0, left: 0 }}
-      anchorReference="anchorPosition"
-      disablePortal
-      handleClose={() => {
-        // no-op
-      }}
-    />
+    <PlayerSelectionContext.Provider value={playerSelection}>
+      <AppMenu
+        open
+        anchorPosition={{ top: 0, left: 0 }}
+        anchorReference="anchorPosition"
+        disablePortal
+        handleClose={() => {
+          // no-op
+        }}
+      />
+    </PlayerSelectionContext.Provider>
   );
 }
