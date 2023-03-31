@@ -308,6 +308,15 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
     refreshMode: "debounce",
   });
 
+  // Disable the wheel event for the chart wrapper div (which is where we use sizeRef)
+  //
+  // The chart component uses wheel events for zoom and pan. After adding more series, the logic
+  // expands the chart element beyond the visible area of the panel. When this happens, scrolling on
+  // the chart also scrolls the chart wrapper div and results in zooming that chart AND scrolling
+  // the panel. This behavior is undesirable.
+  //
+  // This effect registers a wheel event handler for the wrapper div to prevent scrolling. To scroll
+  // the panel the user will use the scrollbar.
   useEffect(() => {
     const el = sizeRef.current;
     const handler = (ev: WheelEvent) => {
