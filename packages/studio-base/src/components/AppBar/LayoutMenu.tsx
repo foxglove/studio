@@ -35,12 +35,12 @@ export function LayoutMenu(props: LayoutMenuProps): JSX.Element {
         className: classes.menuList,
       }}
       anchorOrigin={{
-        horizontal: "left",
+        horizontal: "right",
         vertical: "bottom",
       }}
       transformOrigin={{
         vertical: "top",
-        horizontal: "left",
+        horizontal: "right",
       }}
     >
       <LayoutBrowser menuClose={handleClose} />

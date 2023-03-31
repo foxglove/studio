@@ -2,15 +2,14 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { ErrorCircle20Filled, ChevronDown12Filled, Open16Filled } from "@fluentui/react-icons";
+import { ErrorCircle20Filled, Open16Filled } from "@fluentui/react-icons";
 import { ButtonBase, CircularProgress, IconButton, Tooltip } from "@mui/material";
 import { useState, useRef } from "react";
-import tinycolor from "tinycolor2";
+import tc from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 
 import {
   APP_BAR_PRIMARY_COLOR,
-  APP_BAR_HEIGHT,
   APP_BAR_FOREGROUND_COLOR,
 } from "@foxglove/studio-base/components/AppBar/constants";
 import { ProblemsList } from "@foxglove/studio-base/components/DataSourceSidebar/ProblemsList";
@@ -20,44 +19,31 @@ import {
 } from "@foxglove/studio-base/components/MessagePipeline";
 import Stack from "@foxglove/studio-base/components/Stack";
 import TextMiddleTruncate from "@foxglove/studio-base/components/TextMiddleTruncate";
-import {
-  LayoutState,
-  useCurrentLayoutSelector,
-} from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
-
-import { LayoutMenu } from "./LayoutMenu";
 
 const LEFT_ICON_SIZE = 19;
 
 const useStyles = makeStyles<void, "adornmentError" | "openIcon">()((theme, _params, classes) => ({
   button: {
     font: "inherit",
+    fontSize: theme.typography.body2.fontSize,
     display: "flex",
     alignItems: "center",
-    gap: theme.spacing(0.5),
+    gap: theme.spacing(0.75),
     padding: theme.spacing(1.5),
-    minHeight: APP_BAR_HEIGHT,
+    whiteSpace: "nowrap",
     minWidth: 0,
-    color: tinycolor(APP_BAR_FOREGROUND_COLOR).setAlpha(0.6).toString(),
 
-    ":hover": {
-      color: APP_BAR_FOREGROUND_COLOR,
-    },
-    [`:not(:hover) .${classes.openIcon}`]: {
-      visibility: "hidden",
+    ":not(:hover)": {
+      color: tc(APP_BAR_FOREGROUND_COLOR).setAlpha(0.8).toString(),
+
+      [`.${classes.openIcon}`]: {
+        visibility: "hidden",
+      },
     },
     "&.Mui-disabled": {
-      color: "currentColor",
-      opacity: theme.palette.action.disabledOpacity,
+      color: tc(APP_BAR_FOREGROUND_COLOR).setAlpha(theme.palette.action.disabledOpacity).toString(),
     },
-    "&.Mui-selected": {
-      color: APP_BAR_FOREGROUND_COLOR,
-      backgroundColor: APP_BAR_PRIMARY_COLOR,
-    },
-  },
-  dropDownIcon: {
-    flex: "none",
   },
   adornment: {
     display: "flex",
@@ -79,11 +65,8 @@ const useStyles = makeStyles<void, "adornmentError" | "openIcon">()((theme, _par
     bottom: 0,
     margin: "auto",
   },
-  divider: {
-    opacity: 0.6,
-  },
   textTruncate: {
-    maxWidth: "25vw",
+    maxWidth: "30vw",
     overflow: "hidden",
   },
   openIcon: {
@@ -110,8 +93,6 @@ const useStyles = makeStyles<void, "adornmentError" | "openIcon">()((theme, _par
 const selectPlayerName = ({ playerState }: MessagePipelineContext) => playerState.name;
 const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => playerState.presence;
 const selectPlayerProblems = ({ playerState }: MessagePipelineContext) => playerState.problems;
-const selectCurrentLayoutId = ({ selectedLayout }: LayoutState) => selectedLayout?.id;
-const selectCurrentLayoutName = ({ selectedLayout }: LayoutState) => selectedLayout?.name;
 
 export function DataSource({
   onSelectDataSourceAction,
@@ -128,8 +109,6 @@ export function DataSource({
   const playerName = useMessagePipeline(selectPlayerName);
   const playerPresence = useMessagePipeline(selectPlayerPresence);
   const playerProblems = useMessagePipeline(selectPlayerProblems) ?? [];
-  const currentLayoutId = useCurrentLayoutSelector(selectCurrentLayoutId);
-  const currentLayoutName = useCurrentLayoutSelector(selectCurrentLayoutName);
 
   const reconnecting = playerPresence === PlayerPresence.RECONNECTING;
   const initializing = playerPresence === PlayerPresence.INITIALIZING;
@@ -159,67 +138,39 @@ export function DataSource({
       {problemModal}
       <Stack direction="row" alignItems="center">
         <ButtonBase className={classes.button} onClick={onSelectDataSourceAction}>
-          {loading || error ? (
-            <div className={cx(classes.adornment, { [classes.adornmentError]: error })}>
-              {loading && (
-                <CircularProgress
-                  size={LEFT_ICON_SIZE}
+          <div className={cx(classes.adornment, { [classes.adornmentError]: error })}>
+            {loading && (
+              <CircularProgress
+                size={LEFT_ICON_SIZE}
+                color="inherit"
+                className={classes.spinner}
+                variant="indeterminate"
+              />
+            )}
+            {error && (
+              <Tooltip
+                arrow={false}
+                disableHoverListener={initializing}
+                disableFocusListener={initializing}
+                classes={{ tooltip: classes.tooltip }}
+                placement="bottom"
+                title={<ProblemsList problems={playerProblems} setProblemModal={setProblemModal} />}
+              >
+                <IconButton
                   color="inherit"
-                  className={classes.spinner}
-                  variant="indeterminate"
-                />
-              )}
-              {error && (
-                <Tooltip
-                  arrow={false}
-                  disableHoverListener={initializing}
-                  disableFocusListener={initializing}
-                  classes={{ tooltip: classes.tooltip }}
-                  placement="bottom"
-                  title={
-                    <ProblemsList problems={playerProblems} setProblemModal={setProblemModal} />
-                  }
+                  className={cx(classes.iconButton, classes.errorIconButton)}
                 >
-                  <IconButton
-                    color="inherit"
-                    className={cx(classes.iconButton, classes.errorIconButton)}
-                  >
-                    <ErrorCircle20Filled />
-                  </IconButton>
-                </Tooltip>
-              )}
-            </div>
-          ) : (
-            <Open16Filled className={classes.openIcon} />
-          )}
+                  <ErrorCircle20Filled />
+                </IconButton>
+              </Tooltip>
+            )}
+          </div>
           <div className={classes.textTruncate}>
             <TextMiddleTruncate text={playerDisplayName ?? "<unknown>"} />
           </div>
-        </ButtonBase>
-        <span className={classes.divider}>|</span>
-        <ButtonBase
-          className={cx(classes.button, { "Mui-selected": layoutMenuOpen })}
-          ref={layoutButtonRef}
-          id="layout-button"
-          title="Layouts"
-          aria-controls={layoutMenuOpen ? "layout-menu" : undefined}
-          aria-haspopup="true"
-          aria-expanded={layoutMenuOpen ? "true" : undefined}
-          onClick={() => {
-            setLayoutMenuOpen(true);
-          }}
-        >
-          <div className={classes.textTruncate}>
-            <TextMiddleTruncate text={currentLayoutName ?? currentLayoutId ?? "Select a layout"} />
-          </div>
-          <ChevronDown12Filled className={classes.dropDownIcon} />
+          <Open16Filled className={classes.openIcon} />
         </ButtonBase>
       </Stack>
-      <LayoutMenu
-        anchorEl={layoutAnchorEl ?? undefined}
-        open={layoutMenuOpen}
-        handleClose={() => setLayoutMenuOpen(false)}
-      />
     </>
   );
 }

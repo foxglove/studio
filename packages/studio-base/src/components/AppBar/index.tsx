@@ -4,15 +4,23 @@
 
 import {
   AddCircle24Regular,
+  ChevronDown12Filled,
   PanelLeft24Filled,
   PanelLeft24Regular,
   PanelRight24Filled,
   PanelRight24Regular,
 } from "@fluentui/react-icons";
 import PersonIcon from "@mui/icons-material/Person";
-import { Avatar, Button, IconButton, Tooltip, AppBar as MuiAppBar } from "@mui/material";
+import {
+  Avatar,
+  Button,
+  ButtonBase,
+  IconButton,
+  Tooltip,
+  AppBar as MuiAppBar,
+} from "@mui/material";
 import { useCallback, useRef, useState } from "react";
-import tinycolor from "tinycolor2";
+import tc from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 import { shallow } from "zustand/shallow";
 
@@ -25,6 +33,7 @@ import {
 import { FoxgloveLogo } from "@foxglove/studio-base/components/FoxgloveLogo";
 import { MemoryUseIndicator } from "@foxglove/studio-base/components/MemoryUseIndicator";
 import Stack from "@foxglove/studio-base/components/Stack";
+import TextMiddleTruncate from "@foxglove/studio-base/components/TextMiddleTruncate";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 import {
   LayoutState,
@@ -74,6 +83,10 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }, 
         paddingRight: "calc(100% - env(titlebar-area-x) - env(titlebar-area-width))",
         ...DRAGGABLE_STYLE, // make custom window title bar draggable for desktop app
       },
+      textTruncate: {
+        maxWidth: "18vw",
+        overflow: "hidden",
+      },
       toolbar: {
         display: "grid",
         width: "100%",
@@ -117,7 +130,7 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }, 
       },
       keyEquivalent: {
         fontFamily: fonts.MONOSPACE,
-        background: tinycolor(APP_BAR_FOREGROUND_COLOR).darken(45).toString(),
+        background: tc(APP_BAR_FOREGROUND_COLOR).darken(45).toString(),
         padding: theme.spacing(0, 0.5),
         aspectRatio: 1,
         borderRadius: theme.shape.borderRadius,
@@ -128,9 +141,7 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }, 
       },
       avatar: {
         color: APP_BAR_FOREGROUND_COLOR,
-        backgroundColor: tinycolor(APP_BAR_BACKGROUND_COLOR[theme.palette.mode])
-          .lighten()
-          .toString(),
+        backgroundColor: tc(APP_BAR_BACKGROUND_COLOR[theme.palette.mode]).lighten().toString(),
         height: theme.spacing(3.5),
         width: theme.spacing(3.5),
         transition: theme.transitions.create("background-color", {
@@ -144,16 +155,16 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }, 
           duration: theme.transitions.duration.shortest,
         }),
         "&:hover": {
-          backgroundColor: tinycolor(APP_BAR_FOREGROUND_COLOR).setAlpha(0.08).toString(),
+          backgroundColor: tc(APP_BAR_FOREGROUND_COLOR).setAlpha(0.08).toString(),
 
           [`.${classes.avatar}`]: {
-            backgroundColor: tinycolor(APP_BAR_BACKGROUND_COLOR[theme.palette.mode])
+            backgroundColor: tc(APP_BAR_BACKGROUND_COLOR[theme.palette.mode])
               .lighten(20)
               .toString(),
           },
         },
         "&.Mui-selected": {
-          backgroundColor: tinycolor(APP_BAR_FOREGROUND_COLOR).setAlpha(0.08).toString(),
+          backgroundColor: tc(APP_BAR_FOREGROUND_COLOR).setAlpha(0.08).toString(),
 
           [`.${classes.avatar}`]: {
             backgroundColor: APP_BAR_PRIMARY_COLOR,
@@ -173,6 +184,20 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }, 
             .dark,
         },
       },
+      layoutButton: {
+        font: "inherit",
+        fontSize: theme.typography.body2.fontSize,
+        padding: theme.spacing(1.875, 2),
+        gap: theme.spacing(0.5),
+        borderRadius: 0,
+
+        ":hover": {
+          backgroundColor: tc(APP_BAR_FOREGROUND_COLOR).setAlpha(0.08).toString(),
+        },
+        "&.Mui-selected": {
+          backgroundColor: APP_BAR_PRIMARY_COLOR,
+        },
+      },
     };
   },
 );
@@ -185,8 +210,8 @@ type AppBarProps = CustomWindowControlsProps & {
   onSelectDataSourceAction: () => void;
 };
 
-const selectedLayoutIdSelector = (state: LayoutState) => state.selectedLayout?.id;
-
+const selectCurrentLayoutId = ({ selectedLayout }: LayoutState) => selectedLayout?.id;
+const selectCurrentLayoutName = ({ selectedLayout }: LayoutState) => selectedLayout?.name;
 const selectWorkspace = (store: WorkspaceContextStore) => store;
 
 export function AppBar(props: AppBarProps): JSX.Element {
@@ -210,7 +235,8 @@ export function AppBar(props: AppBarProps): JSX.Element {
     AppSetting.ENABLE_MEMORY_USE_INDICATOR,
   );
 
-  const selectedLayoutId = useCurrentLayoutSelector(selectedLayoutIdSelector);
+  const currentLayoutId = useCurrentLayoutSelector(selectCurrentLayoutId);
+  const currentLayoutName = useCurrentLayoutSelector(selectCurrentLayoutName);
 
   const { leftSidebarOpen, rightSidebarOpen, layoutMenuOpen } = useWorkspaceStore(
     selectWorkspace,
@@ -253,7 +279,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
               <AppBarIconButton
                 className={cx({ "Mui-selected": panelMenuOpen })}
                 color="inherit"
-                disabled={selectedLayoutId == undefined}
+                disabled={currentLayoutId == undefined}
                 id="add-panel-button"
                 title="Add panel"
                 aria-label="Add panel button"
@@ -280,7 +306,26 @@ export function AppBar(props: AppBarProps): JSX.Element {
           <div className={classes.end}>
             <div className={classes.endInner}>
               {enableMemoryUseIndicator && <MemoryUseIndicator />}
-              <Stack direction="row" alignItems="center" paddingX={1.5}>
+              <ButtonBase
+                className={cx(classes.layoutButton, { "Mui-selected": layoutMenuOpen })}
+                ref={layoutButtonRef}
+                id="layout-button"
+                title="Layouts"
+                aria-controls={layoutMenuOpen ? "layout-menu" : undefined}
+                aria-haspopup="true"
+                aria-expanded={layoutMenuOpen ? "true" : undefined}
+                onClick={() => {
+                  setLayoutMenuOpen(true);
+                }}
+              >
+                <div className={classes.textTruncate}>
+                  <TextMiddleTruncate
+                    text={currentLayoutName ?? currentLayoutId ?? "Select a layout"}
+                  />
+                </div>
+                <ChevronDown12Filled />
+              </ButtonBase>
+              <Stack direction="row" alignItems="center">
                 <AppBarIconButton
                   title={
                     <>
