@@ -1211,7 +1211,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     camera.layers.set(LAYER_DEFAULT);
     this.selectionBackdrop.visible = this.selectedRenderable != undefined;
 
-    // use the NONE_ROOT_FRAME_ID if renderFrame is undefined and there are no options for transforms
+    // use the FALLBACK_FRAME_ID if renderFrame is undefined and there are no options for transforms
     const renderFrameId = this.renderFrameId ?? CoordinateFrame.FALLBACK_FRAME_ID;
     const fixedFrameId = this.fixedFrameId ?? CoordinateFrame.FALLBACK_FRAME_ID;
 
