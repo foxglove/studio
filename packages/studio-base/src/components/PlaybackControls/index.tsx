@@ -20,8 +20,8 @@ import {
   Next20Regular,
   Previous20Filled,
   Previous20Regular,
-  Clock24Regular,
-  Clock24Filled,
+  Info24Regular,
+  Info24Filled,
 } from "@fluentui/react-icons";
 import { Tooltip } from "@mui/material";
 import { useCallback, useMemo, useState } from "react";
@@ -193,8 +193,8 @@ export default function PlaybackControls(props: {
                 <HoverableIconButton
                   disabled={presence !== PlayerPresence.PRESENT}
                   size="small"
-                  icon={<Clock24Regular />}
-                  activeIcon={<Clock24Filled />}
+                  icon={<Info24Regular />}
+                  activeIcon={<Info24Filled />}
                 />
               </Tooltip>
             )}
