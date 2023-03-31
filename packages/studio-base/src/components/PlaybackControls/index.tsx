@@ -60,6 +60,11 @@ const useStyles = makeStyles()((theme) => ({
     borderTop: `1px solid ${theme.palette.divider}`,
     zIndex: 100000,
   },
+  popper: {
+    "&[data-popper-placement*=top] .MuiTooltip-tooltip": {
+      margin: theme.spacing(0.5, 0.5, 0.75),
+    },
+  },
 }));
 
 const selectPresence = (ctx: MessagePipelineContext) => ctx.playerState.presence;
@@ -165,7 +170,7 @@ export default function PlaybackControls(props: {
         <Stack direction="row" alignItems="center" flex={1} gap={1} overflowX="auto">
           <Stack direction="row" flex={1} gap={0.5}>
             <Tooltip
-              disableInteractive
+              classes={{ popper: classes.popper }}
               title={
                 <Stack paddingY={1}>
                   <DataSourceInfoView />
@@ -175,7 +180,6 @@ export default function PlaybackControls(props: {
               <HoverableIconButton
                 disabled={presence !== PlayerPresence.PRESENT}
                 size="small"
-                color="info"
                 icon={<Info24Regular />}
                 activeIcon={<Info24Filled />}
                 onClick={toggleCreateEventDialog}
