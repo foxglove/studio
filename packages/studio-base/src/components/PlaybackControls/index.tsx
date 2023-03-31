@@ -20,8 +20,8 @@ import {
   Next20Regular,
   Previous20Filled,
   Previous20Regular,
-  Info24Regular,
-  Info24Filled,
+  Clock24Regular,
+  Clock24Filled,
 } from "@fluentui/react-icons";
 import { Tooltip } from "@mui/material";
 import { useCallback, useMemo, useState } from "react";
@@ -169,21 +169,6 @@ export default function PlaybackControls(props: {
         <Scrubber onSeek={seek} />
         <Stack direction="row" alignItems="center" flex={1} gap={1} overflowX="auto">
           <Stack direction="row" flex={1} gap={0.5}>
-            <Tooltip
-              classes={{ popper: classes.popper }}
-              title={
-                <Stack paddingY={1}>
-                  <DataSourceInfoView disableSource />
-                </Stack>
-              }
-            >
-              <HoverableIconButton
-                disabled={presence !== PlayerPresence.PRESENT}
-                size="small"
-                icon={<Info24Regular />}
-                activeIcon={<Info24Filled />}
-              />
-            </Tooltip>
             {currentUser && eventsSupported && (
               <HoverableIconButton
                 size="small"
@@ -193,6 +178,21 @@ export default function PlaybackControls(props: {
                 onClick={toggleCreateEventDialog}
               />
             )}
+            <Tooltip
+              classes={{ popper: classes.popper }}
+              title={
+                <Stack paddingY={0.75}>
+                  <DataSourceInfoView disableSource />
+                </Stack>
+              }
+            >
+              <HoverableIconButton
+                disabled={presence !== PlayerPresence.PRESENT}
+                size="small"
+                icon={<Clock24Regular />}
+                activeIcon={<Clock24Filled />}
+              />
+            </Tooltip>
             <PlaybackTimeDisplay onSeek={seek} onPause={pause} />
           </Stack>
           <Stack direction="row" alignItems="center" gap={1}>
