@@ -3,14 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { ChevronRight12Regular } from "@fluentui/react-icons";
-import {
-  BackdropProps,
-  Divider,
-  Menu,
-  MenuItem,
-  PopoverPosition,
-  PopoverReference,
-} from "@mui/material";
+import { Divider, Menu, MenuItem, PopoverPosition, PopoverReference } from "@mui/material";
 import { Dispatch, MouseEvent, SetStateAction, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 
