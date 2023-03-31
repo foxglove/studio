@@ -20,12 +20,16 @@ import {
   Next20Regular,
   Previous20Filled,
   Previous20Regular,
+  Info24Regular,
+  Info24Filled,
 } from "@fluentui/react-icons";
+import { Tooltip } from "@mui/material";
 import { useCallback, useMemo, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 
 import { compare, Time } from "@foxglove/rostime";
 import { CreateEventDialog } from "@foxglove/studio-base/components/CreateEventDialog";
+import { DataSourceInfoView } from "@foxglove/studio-base/components/DataSourceInfoView";
 import EventIcon from "@foxglove/studio-base/components/EventIcon";
 import EventOutlinedIcon from "@foxglove/studio-base/components/EventOutlinedIcon";
 import HoverableIconButton from "@foxglove/studio-base/components/HoverableIconButton";
@@ -160,6 +164,23 @@ export default function PlaybackControls(props: {
         <Scrubber onSeek={seek} />
         <Stack direction="row" alignItems="center" flex={1} gap={1} overflowX="auto">
           <Stack direction="row" flex={1} gap={0.5}>
+            <Tooltip
+              disableInteractive
+              title={
+                <Stack paddingY={1}>
+                  <DataSourceInfoView />
+                </Stack>
+              }
+            >
+              <HoverableIconButton
+                disabled={presence !== PlayerPresence.PRESENT}
+                size="small"
+                color="info"
+                icon={<Info24Regular />}
+                activeIcon={<Info24Filled />}
+                onClick={toggleCreateEventDialog}
+              />
+            </Tooltip>
             {currentUser && eventsSupported && (
               <HoverableIconButton
                 size="small"
