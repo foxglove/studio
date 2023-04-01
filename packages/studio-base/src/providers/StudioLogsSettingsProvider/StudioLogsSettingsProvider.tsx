@@ -35,7 +35,7 @@ function StudioLogsSettingsProvider(props: PropsWithChildren<unknown>): JSX.Elem
       if (storeChannelsCount !== Log.channels().length) {
         setStudioLogsSettingsStore(createStudioLogsSettingsStore(savedStateRef.current));
       }
-    }, 100);
+    }, 1000);
 
     return () => clearInterval(intervalHandle);
   }, [studioLogsSettingsStore, studioLogsSettingsSavedState]);
