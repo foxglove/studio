@@ -44,8 +44,7 @@ export default function WssErrorModal(props: { onClose?: () => void }): JSX.Elem
       </Stack>
       <Stack paddingX={3} paddingY={2} rowGap={2}>
         <Typography variant="body1" color="text.secondary">
-          Chrome prevents connecting to a websocket which is not served over TLS/SSL. For now you
-          can circumvent this by enabling &quot;unsafe&quot; scripts for this page.
+          By default, Chrome prevents a secure <code>https://</code> page from connecting to an insecure <code>ws://</code> WebSocket server. To allow the connection, enable "Unsafe Scripts" for this page.
         </Typography>
         <Typography variant="body1" color="text.secondary">
           Click the shield icon at the end of your address bar, and then click &quot;Load Unsafe
