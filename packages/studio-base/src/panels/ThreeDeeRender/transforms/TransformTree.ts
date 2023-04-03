@@ -152,7 +152,7 @@ export class TransformTree {
     }
   }
 
-  public hasFrame(id: CoordinateFrame<AnyFrameId>["id"]): boolean {
+  public hasFrame(id: AnyFrameId): boolean {
     if (id === CoordinateFrame.FALLBACK_FRAME_ID) {
       return true;
     }

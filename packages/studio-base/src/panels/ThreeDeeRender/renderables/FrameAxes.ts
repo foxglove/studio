@@ -502,7 +502,7 @@ function createLineGeometry(): LineGeometry {
 }
 
 function buildSettingsFields(
-  frame: CoordinateFrame<string> | undefined,
+  frame: CoordinateFrame | undefined,
   currentTime: bigint | undefined,
   config: Immutable<RendererConfig>,
 ): SettingsTreeFields {
