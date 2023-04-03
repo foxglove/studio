@@ -3,10 +3,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Condvar } from "@foxglove/den/async";
-import { VecQueue } from "@foxglove/den/collection";
+import { VecQueue, filterMap } from "@foxglove/den/collection";
 import Log from "@foxglove/log";
-import { add as addTime, compare, clampTime } from "@foxglove/rostime";
-import { Time, MessageEvent } from "@foxglove/studio";
+import { add as addTime, clampTime, compare } from "@foxglove/rostime";
+import { MessageEvent, Time } from "@foxglove/studio";
 import { Range } from "@foxglove/studio-base/util/ranges";
 
 import { CachingIterableSource } from "./CachingIterableSource";
@@ -36,19 +36,19 @@ type Options = {
  * reading from the underlying source and populating the cache.
  */
 class BufferedIterableSource implements IIterableSource {
-  private source: CachingIterableSource;
+  private readonly source: CachingIterableSource;
 
   private readDone = false;
   private aborted = false;
 
   // The producer uses this signal to notify a waiting consumer there is data to consume.
-  private readSignal = new Condvar();
+  private readonly readSignal = new Condvar();
 
   // The consumer uses this signal to notify a waiting producer that something has been consumed.
-  private writeSignal = new Condvar();
+  private readonly writeSignal = new Condvar();
 
   // The producer loads results into the cache and the consumer reads from the cache.
-  private cache = new VecQueue<IteratorResult>();
+  private readonly cache = new VecQueue<IteratorResult>();
 
   // The location of the consumer read head
   private readHead: Time = { sec: 0, nsec: 0 };
@@ -60,7 +60,7 @@ class BufferedIterableSource implements IIterableSource {
   private initResult?: Initalization;
 
   // How far ahead of the read head we should try to keep buffering
-  private readAheadDuration: Time;
+  private readonly readAheadDuration: Time;
 
   public constructor(source: IIterableSource, opt?: Options) {
     this.readAheadDuration = opt?.readAheadDuration ?? DEFAULT_READ_AHEAD_DURATION;
@@ -70,6 +70,11 @@ class BufferedIterableSource implements IIterableSource {
   public async initialize(): Promise<Initalization> {
     this.initResult = await this.source.initialize();
     return this.initResult;
+  }
+
+  public getReadAheadMessages(): MessageEvent<unknown>[] {
+    const data = this.cache.export();
+    return filterMap(data, (item) => (item?.type === "message-event" ? item.msgEvent : undefined));
   }
 
   private async startProducer(args: MessageIteratorArgs): Promise<void> {

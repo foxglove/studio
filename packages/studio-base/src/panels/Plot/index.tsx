@@ -13,17 +13,18 @@
 
 import DownloadIcon from "@mui/icons-material/Download";
 import { useTheme } from "@mui/material";
-import { compact, isNumber, uniq } from "lodash";
+import { compact, isNumber, last, transform, uniq } from "lodash";
 import memoizeWeak from "memoize-weak";
 import { ComponentProps, useCallback, useEffect, useMemo, useState } from "react";
 
 import { filterMap } from "@foxglove/den/collection";
 import { useShallowMemo } from "@foxglove/hooks";
 import {
+  Time,
   add as addTimes,
   fromSec,
+  isGreaterThan,
   subtract as subtractTimes,
-  Time,
   toSec,
 } from "@foxglove/rostime";
 import { MessageEvent } from "@foxglove/studio";
@@ -205,6 +206,11 @@ function selectCurrentTime(ctx: MessagePipelineContext) {
   return ctx.playerState.activeData?.currentTime;
 }
 
+const EMPTY_READAHEAD_MESSAGES: MessageEvent<unknown>[] = [];
+function selectReadAheadMessages(ctx: MessagePipelineContext) {
+  return ctx.playerState.activeData?.readAheadMessages ?? EMPTY_READAHEAD_MESSAGES;
+}
+
 function selectEndTime(ctx: MessagePipelineContext) {
   return ctx.playerState.activeData?.endTime;
 }
@@ -338,6 +344,47 @@ function Plot(props: Props) {
     return getBlockItemsByPath(decodeMessagePathsForMessagesByTopic, blocks);
   }, [blocks, decodeMessagePathsForMessagesByTopic, showSingleCurrentMessage]);
 
+  const readAheadMessages = useMessagePipeline(selectReadAheadMessages);
+  const readAheadPlotDataItems: Record<string, PlotDataItem[]> = useMemo(() => {
+    const data: Record<string, PlotDataItem[]> = {};
+    for (const msgEvent of readAheadMessages) {
+      const paths = topicToPaths.get(msgEvent.topic);
+      if (!paths) {
+        continue;
+      }
+
+      for (const path of paths) {
+        const dataItem = cachedGetMessagePathDataItems(path, msgEvent);
+        if (!dataItem) {
+          continue;
+        }
+
+        const headerStamp = getTimestampForMessage(msgEvent.message);
+        const plotDataItem = {
+          queriedData: dataItem,
+          receiveTime: msgEvent.receiveTime,
+          headerStamp,
+        };
+        (data[path] ?? (data[path] = [])).push(plotDataItem);
+      }
+    }
+    return data;
+  }, [cachedGetMessagePathDataItems, readAheadMessages, topicToPaths]);
+
+  const plotDataForBlocksIncludingReadahead = useMemo<Record<string, PlotDataItem[][]>>(() => {
+    return transform(plotDataForBlocks, (result, value, key) => {
+      const lastBlockEndTime = last(last(value))?.receiveTime;
+      if (lastBlockEndTime) {
+        const itemsAfterBlocks = (readAheadPlotDataItems[key] ?? []).filter((item) =>
+          isGreaterThan(item.receiveTime, lastBlockEndTime),
+        );
+        result[key] = value.concat([itemsAfterBlocks]);
+      } else {
+        result[key] = value;
+      }
+    });
+  }, [plotDataForBlocks, readAheadPlotDataItems]);
+
   // When restoring, keep only the paths that are present in allPaths.
   // Without this, the reducer value will grow unbounded with new paths as users add/remove series.
   const restore = useCallback(
@@ -366,7 +413,10 @@ function Plot(props: Props) {
   // To keep the addMessages function "stable" when loading new blocks we grab only the paths from
   // the blocks and make addMessages depend on the paths. To keep paths referentially stable when
   // the paths values haven't changed we use a shallow memo.
-  const blockPaths = useMemo(() => Object.keys(plotDataForBlocks), [plotDataForBlocks]);
+  const blockPaths = useMemo(
+    () => Object.keys(plotDataForBlocksIncludingReadahead),
+    [plotDataForBlocksIncludingReadahead],
+  );
   const blockPathsMemo = useShallowMemo(blockPaths);
 
   const addMessages = useCallback(
@@ -462,7 +512,7 @@ function Plot(props: Props) {
   // Keep disabled paths when passing into getDatasets, because we still want
   // easy access to the history when turning the disabled paths back on.
   const { datasets, pathsWithMismatchedDataLengths } = useMemo(() => {
-    const allPlotData = { ...plotDataByPath, ...plotDataForBlocks };
+    const allPlotData = { ...plotDataByPath, ...plotDataForBlocksIncludingReadahead };
 
     return getDatasets({
       paths: yAxisPaths,
@@ -472,7 +522,15 @@ function Plot(props: Props) {
       xAxisPath,
       invertedTheme: theme.palette.mode === "dark",
     });
-  }, [plotDataByPath, plotDataForBlocks, yAxisPaths, startTime, xAxisVal, xAxisPath, theme]);
+  }, [
+    plotDataByPath,
+    plotDataForBlocksIncludingReadahead,
+    yAxisPaths,
+    startTime,
+    xAxisVal,
+    xAxisPath,
+    theme.palette.mode,
+  ]);
 
   const tooltips = useMemo(() => {
     if (showLegend && showPlotValuesInLegend) {

@@ -11,7 +11,7 @@
 export class VecQueue<T> {
   private readPos = 0;
   private writePos = 0;
-  private buffer: Array<T | undefined> = new Array(4);
+  private readonly buffer: Array<T | undefined> = new Array(4);
 
   /**
    * Add an item at the end of the queue. If the queue is full the underlying buffer is grown.
@@ -87,6 +87,22 @@ export class VecQueue<T> {
     this.buffer.length = 0;
     this.writePos = 0;
     this.readPos = 0;
+  }
+
+  /**
+   * Export the contents of the queue.
+   * @returns a linear, in-order array of all enqueued items.
+   */
+  public export(): Array<undefined | T> {
+    const endPos =
+      this.writePos < this.readPos ? this.writePos + this.buffer.length : this.writePos;
+    let pos = this.readPos;
+    const result = Array(endPos - pos);
+    while (pos < endPos) {
+      result[pos] = this.buffer[pos % this.buffer.length];
+      pos++;
+    }
+    return result;
   }
 
   private addCapacity() {

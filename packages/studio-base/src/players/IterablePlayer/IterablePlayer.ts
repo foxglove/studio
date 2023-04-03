@@ -757,6 +757,7 @@ export class IterablePlayer implements Player {
         topicStats: this._providerTopicStats,
         datatypes: this._providerDatatypes,
         publishedTopics: this._publishedTopics,
+        readAheadMessages: this._bufferedSource.getReadAheadMessages(),
       };
     }
 
