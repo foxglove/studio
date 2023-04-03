@@ -161,7 +161,9 @@ export default class FoxgloveWebSocketPlayer implements Player {
     }
     log.info(`Opening connection to ${this._url}`);
 
-    // Set a timeout to abort the connection if we are still not connected by then
+    // Set a timeout to abort the connection if we are still not connected by then.
+    // This will abort hanging connection attempts that can for whatever reason not
+    // establish a connection with the server.
     this._connectionAttemptTimeout = setTimeout(() => {
       this._client?.close();
     }, 10000);
