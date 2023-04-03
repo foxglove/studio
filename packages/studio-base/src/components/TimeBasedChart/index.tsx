@@ -676,10 +676,6 @@ export default function TimeBasedChart(props: Props): JSX.Element {
         return;
       }
 
-      if (userInteraction) {
-        setHasUserPannedOrZoomed(true);
-      }
-
       // If this is an update from the chart adjusting its own bounds and not a
       // user interaction and the X scale is defined but hasn't changed we can
       // skip updating global bounds and downsampling. This avoids a feedback
@@ -691,6 +687,10 @@ export default function TimeBasedChart(props: Props): JSX.Element {
         !userInteraction
       ) {
         return;
+      }
+
+      if (userInteraction) {
+        setHasUserPannedOrZoomed(true);
       }
 
       currentScalesRef.current = scales;
