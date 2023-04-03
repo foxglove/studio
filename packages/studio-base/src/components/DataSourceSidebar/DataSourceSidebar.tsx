@@ -22,6 +22,7 @@ import {
 } from "@foxglove/studio-base/components/MessagePipeline";
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
 import Stack from "@foxglove/studio-base/components/Stack";
+import WssErrorModal from "@foxglove/studio-base/components/WssErrorModal";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
 import { EventsStore, useEvents } from "@foxglove/studio-base/context/EventsContext";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
@@ -107,6 +108,12 @@ export default function DataSourceSidebar(props: Props): JSX.Element {
     }
   }, [playerPresence, showEventsTab, selectedEventId]);
 
+  const [hasDismissedWssErrorModal, setHasDismissedWssErrorModal] = useState(false);
+  const hasWssConnectionProblem = playerProblems.find(
+    (problem) =>
+      problem.severity === "error" && problem.message === "Insecure WebSocket connection",
+  );
+
   return (
     <SidebarContent
       disablePadding
@@ -182,6 +189,9 @@ export default function DataSourceSidebar(props: Props): JSX.Element {
           </>
         )}
       </Stack>
+      {hasWssConnectionProblem && !hasDismissedWssErrorModal && (
+        <WssErrorModal onClose={() => setHasDismissedWssErrorModal(true)} />
+      )}
     </SidebarContent>
   );
 }
