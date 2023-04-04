@@ -46,10 +46,12 @@ import {
   normalizeTFMessage,
   normalizeTransformStamped,
 } from "./normalizeMessages";
+import { CameraStateSettings } from "./renderables/CameraStateSettings";
 import { Cameras } from "./renderables/Cameras";
-import { CoreSettings } from "./renderables/CoreSettings";
 import { FrameAxes, LayerSettingsTransform } from "./renderables/FrameAxes";
+import { FrameSettings } from "./renderables/FrameSettings";
 import { Grids } from "./renderables/Grids";
+import { ImageMode } from "./renderables/ImageMode";
 import { Images } from "./renderables/Images";
 import { LaserScans } from "./renderables/LaserScans";
 import { Markers } from "./renderables/Markers";
@@ -60,7 +62,9 @@ import { Polygons } from "./renderables/Polygons";
 import { PoseArrays } from "./renderables/PoseArrays";
 import { Poses } from "./renderables/Poses";
 import { PublishClickTool, PublishClickType } from "./renderables/PublishClickTool";
+import { PublishSettings } from "./renderables/PublishSettings";
 import { FoxgloveSceneEntities } from "./renderables/SceneEntities";
+import { SceneSettings } from "./renderables/SceneSettings";
 import { Urdfs } from "./renderables/Urdfs";
 import { VelodyneScans } from "./renderables/VelodyneScans";
 import { MarkerPool } from "./renderables/markers/MarkerPool";
@@ -75,7 +79,14 @@ import {
   Vector3,
 } from "./ros";
 import { BaseSettings, CustomLayerSettings, SelectEntry } from "./settings";
-import { AddTransformResult, makePose, Pose, Transform, TransformTree } from "./transforms";
+import {
+  AddTransformResult,
+  CoordinateFrame,
+  makePose,
+  Pose,
+  Transform,
+  TransformTree,
+} from "./transforms";
 import { InterfaceMode } from "./types";
 
 const log = Logger.getLogger(__filename);
@@ -106,6 +117,32 @@ export type RendererEvents = {
 };
 
 export type FollowMode = "follow-pose" | "follow-position" | "follow-none";
+
+/** Legacy Image panel settings that occur at the root level */
+export type LegacyImageConfig = {
+  cameraTopic: string;
+  enabledMarkerTopics: string[];
+  synchronize: boolean;
+  flipHorizontal: boolean;
+  flipVertical: boolean;
+  maxValue: number;
+  minValue: number;
+  mode: "fit" | "fill" | "other";
+  pan: { x: number; y: number };
+  rotation: number;
+  smooth: boolean;
+  transformMarkers: boolean;
+  zoom: number;
+  zoomPercentage: number;
+};
+
+/** Settings pertaining to Image mode */
+export type ImageModeConfig = {
+  /** Image topic to display */
+  imageTopic?: string;
+  /** Topic containing CameraCalibration or CameraInfo */
+  calibrationTopic?: string;
+};
 
 export type RendererConfig = {
   /** Camera settings for the currently rendering scene */
@@ -167,6 +204,9 @@ export type RendererConfig = {
   topics: Record<string, Partial<BaseSettings> | undefined>;
   /** instanceId -> settings */
   layers: Record<string, Partial<CustomLayerSettings> | undefined>;
+
+  /** Settings pertaining to Image mode */
+  imageMode: ImageModeConfig;
 };
 
 /** Callback for handling a message received on a topic */
@@ -295,7 +335,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
   public readonly outlineMaterial = new THREE.LineBasicMaterial({ dithering: true });
   public readonly instancedOutlineMaterial = new InstancedLineMaterial({ dithering: true });
 
-  private coreSettings: CoreSettings;
+  private cameraStateSettings: CameraStateSettings;
   public measurementTool: MeasurementTool;
   public publishClickTool: PublishClickTool;
 
@@ -340,7 +380,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
   public constructor(
     canvas: HTMLCanvasElement,
-    config: RendererConfig,
+    config: Immutable<RendererConfig>,
     interfaceMode: InterfaceMode,
   ) {
     super();
@@ -351,7 +391,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.canvas = canvas;
     this.config = config;
 
-    this.settings = new SettingsManager(baseSettingsTree());
+    this.settings = new SettingsManager(baseSettingsTree(this.interfaceMode));
     this.settings.on("update", () => this.emit("settingsTreeChange", this));
     // Add the top-level nodes first so merging happens in the correct order.
     // Another approach would be to modify SettingsManager to allow merging parent
@@ -454,7 +494,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
     this.measurementTool = new MeasurementTool(this);
     this.publishClickTool = new PublishClickTool(this);
-    this.coreSettings = new CoreSettings(this);
+    this.cameraStateSettings = new CameraStateSettings(this);
 
     // Internal handlers for TF messages to update the transform tree
     this.addSchemaSubscriptions(FRAME_TRANSFORM_DATATYPES, {
@@ -478,7 +518,18 @@ export class Renderer extends EventEmitter<RendererEvents> {
       preload: config.scene.transforms?.enablePreloading ?? true,
     });
 
-    this.addSceneExtension(this.coreSettings);
+    switch (interfaceMode) {
+      case "image":
+        this.addSceneExtension(new ImageMode(this));
+        break;
+      case "3d":
+        this.addSceneExtension(this.cameraStateSettings);
+        this.addSceneExtension(new PublishSettings(this));
+        this.addSceneExtension(new FrameSettings(this));
+        break;
+    }
+
+    this.addSceneExtension(new SceneSettings(this));
     this.addSceneExtension(new Cameras(this));
     this.addSceneExtension(new FrameAxes(this));
     this.addSceneExtension(new Grids(this));
@@ -548,7 +599,8 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
   public setCameraSyncError(error: undefined | string): void {
     this._cameraSyncError = error;
-    this.updateCoreSettings();
+    // Updates the settings tree for camera state settings to account for any changes in the config.
+    this.cameraStateSettings.updateSettingsTree();
   }
 
   public getPixelRatio(): number {
@@ -698,11 +750,6 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.emit("configChange", this);
   }
 
-  /** Updates the settings tree for core settings to account for any changes in the config. */
-  public updateCoreSettings(): void {
-    this.coreSettings.updateSettingsTree();
-  }
-
   public addSchemaSubscriptions<T>(
     schemaNames: Iterable<string>,
     subscription: RendererSubscription<T> | MessageHandler<T>,
@@ -814,7 +861,9 @@ export class Renderer extends EventEmitter<RendererEvents> {
     // Choose the root frame with the most children
     const rootsToCounts = new Map<string, number>();
     for (const frame of allFrames.values()) {
-      const rootId = frame.root().id;
+      const root = frame.root();
+      const rootId = root.id;
+
       rootsToCounts.set(rootId, (rootsToCounts.get(rootId) ?? 0) + 1);
     }
     const rootsArray = Array.from(rootsToCounts.entries());
@@ -1162,11 +1211,9 @@ export class Renderer extends EventEmitter<RendererEvents> {
     camera.layers.set(LAYER_DEFAULT);
     this.selectionBackdrop.visible = this.selectedRenderable != undefined;
 
-    const renderFrameId = this.renderFrameId;
-    const fixedFrameId = this.fixedFrameId;
-    if (renderFrameId == undefined || fixedFrameId == undefined) {
-      return;
-    }
+    // use the FALLBACK_FRAME_ID if renderFrame is undefined and there are no options for transforms
+    const renderFrameId = this.renderFrameId ?? CoordinateFrame.FALLBACK_FRAME_ID;
+    const fixedFrameId = this.fixedFrameId ?? CoordinateFrame.FALLBACK_FRAME_ID;
 
     const renderFrame = this.transformTree.frame(renderFrameId);
     const fixedFrame = this.transformTree.frame(fixedFrameId);
@@ -1579,14 +1626,19 @@ function deselectObject(object: THREE.Object3D) {
   });
 }
 
-// Creates a skeleton settings tree. The tree contents are filled in by scene extensions
-function baseSettingsTree(): SettingsTreeNodes {
-  return {
-    general: {},
-    scene: {},
-    transforms: {},
-    topics: {},
-    layers: {},
-    publish: {},
-  };
+/**
+ * Creates a skeleton settings tree. The tree contents are filled in by scene extensions.
+ * This dictates the order in which groups appear in the settings editor.
+ */
+function baseSettingsTree(interfaceMode: InterfaceMode): SettingsTreeNodes {
+  const keys: string[] = [];
+  keys.push(interfaceMode === "image" ? "imageMode" : "general", "scene");
+  if (interfaceMode === "3d") {
+    keys.push("cameraState");
+  }
+  keys.push("transforms", "topics", "layers");
+  if (interfaceMode === "3d") {
+    keys.push("publish");
+  }
+  return Object.fromEntries(keys.map((key) => [key, {}]));
 }

@@ -4,22 +4,14 @@
 
 import {
   AddCircle24Regular,
-  ChevronDown12Filled,
   PanelLeft24Filled,
   PanelLeft24Regular,
   PanelRight24Filled,
   PanelRight24Regular,
 } from "@fluentui/react-icons";
 import PersonIcon from "@mui/icons-material/Person";
-import {
-  Avatar,
-  Button,
-  ButtonBase,
-  IconButton,
-  Tooltip,
-  AppBar as MuiAppBar,
-} from "@mui/material";
-import { useCallback, useRef, useState } from "react";
+import { Avatar, Button, IconButton, Tooltip, AppBar as MuiAppBar } from "@mui/material";
+import { useCallback, useState } from "react";
 import tc from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 import { shallow } from "zustand/shallow";
@@ -33,8 +25,8 @@ import {
 import { FoxgloveLogo } from "@foxglove/studio-base/components/FoxgloveLogo";
 import { MemoryUseIndicator } from "@foxglove/studio-base/components/MemoryUseIndicator";
 import Stack from "@foxglove/studio-base/components/Stack";
-import TextMiddleTruncate from "@foxglove/studio-base/components/TextMiddleTruncate";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
+import { useAppContext } from "@foxglove/studio-base/context/AppContext";
 import {
   LayoutState,
   useCurrentLayoutSelector,
@@ -51,7 +43,6 @@ import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import { AddPanelMenu } from "./AddPanelMenu";
 import { DataSource } from "./DataSource";
-import { LayoutMenu } from "./LayoutMenu";
 import { UserMenu } from "./UserMenu";
 import {
   APP_BAR_BACKGROUND_COLOR,
@@ -211,7 +202,6 @@ type AppBarProps = CustomWindowControlsProps & {
 };
 
 const selectCurrentLayoutId = ({ selectedLayout }: LayoutState) => selectedLayout?.id;
-const selectCurrentLayoutName = ({ selectedLayout }: LayoutState) => selectedLayout?.name;
 const selectWorkspace = (store: WorkspaceContextStore) => store;
 
 export function AppBar(props: AppBarProps): JSX.Element {
@@ -230,24 +220,21 @@ export function AppBar(props: AppBarProps): JSX.Element {
   } = props;
   const { classes, cx } = useStyles({ leftInset, debugDragRegion });
   const { currentUser, signIn } = useCurrentUser();
+
+  const { appBarLayoutButton } = useAppContext();
+
   const analytics = useAnalytics();
   const [enableMemoryUseIndicator = false] = useAppConfigurationValue<boolean>(
     AppSetting.ENABLE_MEMORY_USE_INDICATOR,
   );
 
   const currentLayoutId = useCurrentLayoutSelector(selectCurrentLayoutId);
-  const currentLayoutName = useCurrentLayoutSelector(selectCurrentLayoutName);
 
-  const { leftSidebarOpen, rightSidebarOpen, layoutMenuOpen } = useWorkspaceStore(
-    selectWorkspace,
-    shallow,
-  );
-  const { setLayoutMenuOpen, setRightSidebarOpen, setLeftSidebarOpen } = useWorkspaceActions();
+  const { leftSidebarOpen, rightSidebarOpen } = useWorkspaceStore(selectWorkspace, shallow);
+  const { setRightSidebarOpen, setLeftSidebarOpen } = useWorkspaceActions();
 
   const [userAnchorEl, setUserAnchorEl] = useState<undefined | HTMLElement>(undefined);
   const [panelAnchorEl, setPanelAnchorEl] = useState<undefined | HTMLElement>(undefined);
-  const layoutButtonRef = useRef<HTMLButtonElement>(ReactNull);
-  const layoutAnchorEl = layoutMenuOpen ? layoutButtonRef.current : undefined;
 
   const userMenuOpen = Boolean(userAnchorEl);
   const panelMenuOpen = Boolean(panelAnchorEl);
@@ -302,25 +289,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
           <div className={classes.end}>
             <div className={classes.endInner}>
               {enableMemoryUseIndicator && <MemoryUseIndicator />}
-              <ButtonBase
-                className={cx(classes.layoutButton, { "Mui-selected": layoutMenuOpen })}
-                ref={layoutButtonRef}
-                id="layout-button"
-                title="Layouts"
-                aria-controls={layoutMenuOpen ? "layout-menu" : undefined}
-                aria-haspopup="true"
-                aria-expanded={layoutMenuOpen ? "true" : undefined}
-                onClick={() => {
-                  setLayoutMenuOpen(true);
-                }}
-              >
-                <div className={classes.textTruncate}>
-                  <TextMiddleTruncate
-                    text={currentLayoutName ?? currentLayoutId ?? "Select a layout"}
-                  />
-                </div>
-                <ChevronDown12Filled />
-              </ButtonBase>
+              {appBarLayoutButton}
               <Stack direction="row" alignItems="center">
                 <AppBarIconButton
                   title={
@@ -410,11 +379,6 @@ export function AppBar(props: AppBarProps): JSX.Element {
         anchorEl={panelAnchorEl}
         open={panelMenuOpen}
         handleClose={() => setPanelAnchorEl(undefined)}
-      />
-      <LayoutMenu
-        anchorEl={layoutAnchorEl ?? undefined}
-        open={layoutMenuOpen}
-        handleClose={() => setLayoutMenuOpen(false)}
       />
       <UserMenu
         anchorEl={userAnchorEl}

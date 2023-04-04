@@ -268,7 +268,7 @@ export function PreferencesDialog(
               <LanguageSettings />
               {supportsAppUpdates && <AutoUpdate />}
               {!isDesktopApp() && <LaunchDefault />}
-              <RosPackagePath />
+              {isDesktopApp() && <RosPackagePath />}
             </Stack>
           </section>
 
@@ -346,12 +346,7 @@ export function PreferencesDialog(
                 </Typography>
                 <CopyButton
                   size="small"
-                  getText={() => {
-                    if (FOXGLOVE_STUDIO_VERSION != undefined) {
-                      return FOXGLOVE_STUDIO_VERSION.toString();
-                    }
-                    return "";
-                  }}
+                  getText={() => FOXGLOVE_STUDIO_VERSION?.toString() ?? ""}
                 />
               </Stack>
               {[
