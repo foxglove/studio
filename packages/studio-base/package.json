@@ -107,7 +107,7 @@
     "chart.js": "4.2.1",
     "chartjs-plugin-annotation": "2.2.1",
     "chartjs-plugin-datalabels": "2.2.0",
-    "chromatic": "6.17.1",
+    "chromatic": "6.17.2",
     "circular-dependency-plugin": "5.2.2",
     "clean-webpack-plugin": "4.0.0",
     "comlink": "4.4.1",
