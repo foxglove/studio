@@ -394,6 +394,12 @@ export default function muiComponents(theme: Theme): Theme["components"] & MuiLa
         paper: {
           borderRadius: theme.shape.borderRadius,
         },
+        list: {
+          ".MuiListItem-root + .MuiDivider-root": {
+            marginTop: theme.spacing(1),
+            marginBottom: theme.spacing(1),
+          },
+        },
       },
     },
     MuiMenuItem: {
