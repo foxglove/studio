@@ -74,10 +74,6 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }, 
         paddingRight: "calc(100% - env(titlebar-area-x) - env(titlebar-area-width))",
         ...DRAGGABLE_STYLE, // make custom window title bar draggable for desktop app
       },
-      textTruncate: {
-        maxWidth: "18vw",
-        overflow: "hidden",
-      },
       toolbar: {
         display: "grid",
         width: "100%",
@@ -173,20 +169,6 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }, 
         "&:hover": {
           backgroundColor: theme.palette.augmentColor({ color: { main: APP_BAR_PRIMARY_COLOR } })
             .dark,
-        },
-      },
-      layoutButton: {
-        font: "inherit",
-        fontSize: theme.typography.body2.fontSize,
-        padding: theme.spacing(1.875, 2),
-        gap: theme.spacing(0.5),
-        borderRadius: 0,
-
-        ":hover": {
-          backgroundColor: tc(APP_BAR_FOREGROUND_COLOR).setAlpha(0.08).toString(),
-        },
-        "&.Mui-selected": {
-          backgroundColor: APP_BAR_PRIMARY_COLOR,
         },
       },
     };
