@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { alpha, Fade, Theme } from "@mui/material";
+import { alpha, Fade, Theme, dividerClasses, listClasses } from "@mui/material";
 import { CSSProperties } from "react";
 import tinycolor from "tinycolor2";
 
@@ -395,7 +395,12 @@ export default function muiComponents(theme: Theme): Theme["components"] & MuiLa
           borderRadius: theme.shape.borderRadius,
         },
         list: {
-          ".MuiListItem-root + .MuiDivider-root": {
+          ...theme.typography.body1,
+
+          [`&.${listClasses.dense}`]: {
+            ...theme.typography.body2,
+          },
+          [`.MuiListItem-root + .${dividerClasses.root}`]: {
             marginTop: theme.spacing(1),
             marginBottom: theme.spacing(1),
           },
