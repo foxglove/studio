@@ -98,10 +98,10 @@ const VersionBanner = function ({
 
             {!isChrome && (
               <Typography align="center" variant="subtitle1">
-                Check out our cross-browser support progress in GitHub issue{" "}
+                Check out our cross-browser support progress in GitHub discussion{" "}
                 <Link
                   color="inherit"
-                  href="https://github.com/foxglove/studio/issues/1511"
+                  href="https://github.com/orgs/foxglove/discussions/174"
                   target="_blank"
                 >
                   #1511
