@@ -144,16 +144,36 @@ export default function AppMenu(props: AppMenuProps): JSX.Element {
       >
         <MenuItem className={classes.menuItem}>Back to Data Platform</MenuItem>
         <Divider variant="middle" />
-        <NestedMenuItem setSubMenu={setSubMenu} subMenu={subMenu} items={fileItems}>
+        <NestedMenuItem
+          setSubMenu={setSubMenu}
+          subMenu={subMenu}
+          subMenuOpen={subMenuOpen}
+          items={fileItems}
+        >
           File
         </NestedMenuItem>
-        <NestedMenuItem setSubMenu={setSubMenu} subMenu={subMenu} items={editItems}>
+        <NestedMenuItem
+          setSubMenu={setSubMenu}
+          subMenu={subMenu}
+          subMenuOpen={subMenuOpen}
+          items={editItems}
+        >
           Edit
         </NestedMenuItem>
-        <NestedMenuItem setSubMenu={setSubMenu} subMenu={subMenu} items={panelItems}>
+        <NestedMenuItem
+          setSubMenu={setSubMenu}
+          subMenu={subMenu}
+          subMenuOpen={subMenuOpen}
+          items={panelItems}
+        >
           Panel
         </NestedMenuItem>
-        <NestedMenuItem setSubMenu={setSubMenu} subMenu={subMenu} items={workspaceItems}>
+        <NestedMenuItem
+          setSubMenu={setSubMenu}
+          subMenu={subMenu}
+          subMenuOpen={subMenuOpen}
+          items={workspaceItems}
+        >
           Workspace
         </NestedMenuItem>
       </Menu>
@@ -166,10 +186,11 @@ export function NestedMenuItem(
     items: NestedMenuItem[];
     subMenu?: HTMLElement;
     setSubMenu: Dispatch<SetStateAction<HTMLElement | undefined>>;
+    subMenuOpen: boolean;
   }>,
 ): JSX.Element {
   const { classes, cx } = useStyles();
-  const { children, items, subMenu, setSubMenu } = props;
+  const { children, items, subMenu, subMenuOpen, setSubMenu } = props;
   const [anchorEl, setAnchorEl] = useState<undefined | HTMLElement>(undefined);
   const open = Boolean(anchorEl);
 
@@ -185,6 +206,13 @@ export function NestedMenuItem(
     setAnchorEl(event.currentTarget);
   };
 
+  const handleMouseLeave = (event: MouseEvent<HTMLElement>) => {
+    if (!subMenuOpen && subMenu !== event.currentTarget) {
+      setAnchorEl(undefined);
+    }
+    setSubMenu(undefined);
+  };
+
   return (
     <>
       <MenuItem
@@ -192,12 +220,7 @@ export function NestedMenuItem(
         className={classes.menuItem}
         onClick={handleClick}
         onMouseEnter={handleMouseEnter}
-        onMouseLeave={(event) => {
-          if (subMenu === event.currentTarget) {
-            setAnchorEl(undefined);
-          }
-          setSubMenu(event.currentTarget);
-        }}
+        onMouseLeave={handleMouseLeave}
       >
         {children}
         <ChevronRight12Regular className={cx(classes.icon, classes.endIcon)} />
@@ -207,7 +230,10 @@ export function NestedMenuItem(
         disablePortal
         anchorEl={anchorEl}
         onClose={() => setAnchorEl(undefined)}
-        onMouseLeave={() => setAnchorEl(undefined)}
+        onMouseLeave={() => {
+          setAnchorEl(undefined);
+          setSubMenu(undefined);
+        }}
         anchorOrigin={{ vertical: "top", horizontal: "right" }}
         MenuListProps={{ dense: true, className: classes.menuList }}
         autoFocus={false}
