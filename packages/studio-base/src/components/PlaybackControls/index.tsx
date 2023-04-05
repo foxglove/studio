@@ -177,7 +177,7 @@ export default function PlaybackControls(props: {
                 size="small"
                 title="Create event"
                 icon={<EventOutlinedIcon />}
-                activeIcon={<EventIcon />}
+                activeColor="info"
                 onClick={toggleCreateEventDialog}
               />
             )}
