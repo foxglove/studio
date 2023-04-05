@@ -5,6 +5,16 @@
 import { FoxgloveMessages } from "@foxglove/studio-base/types/FoxgloveMessages";
 import { CameraInfo, DistortionModel } from "@foxglove/studio-base/types/Messages";
 
+export const CALIBRATION_DATATYPES = [
+  // ROS well-known
+  "sensor_msgs/CameraInfo",
+  "sensor_msgs/msg/CameraInfo",
+  // Foxglove schemas (ros and proto variants)
+  "foxglove_msgs/CameraCalibration",
+  "foxglove_msgs/msg/CameraCalibration",
+  "foxglove.CameraCalibration",
+] as const;
+
 export function normalizeCameraInfo(message: unknown, datatype: string): CameraInfo | undefined {
   switch (datatype) {
     case "sensor_msgs/CameraInfo":
