@@ -737,7 +737,7 @@ export function ThreeDeeRender(props: {
   // Keep the renderer currentTime up to date and handle seeking
   useEffect(() => {
     const newTimeNs = currentTime ? toNanoSec(currentTime) : undefined;
-    if (!renderer || newTimeNs == undefined || newTimeNs === renderer.currentTime) {
+    if (!renderer || newTimeNs == undefined) {
       return;
     }
     const oldTimeNs = renderer.currentTime;
