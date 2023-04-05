@@ -16,7 +16,8 @@ export const CALIBRATION_DATATYPES = [
 ] as const;
 
 export function normalizeCameraInfo(message: unknown, datatype: string): CameraInfo | undefined {
-  switch (datatype) {
+  // Cast to the union of all supported datatypes to ensure we handle all cases
+  switch (datatype as (typeof CALIBRATION_DATATYPES)[number]) {
     case "sensor_msgs/CameraInfo":
     case "sensor_msgs/msg/CameraInfo":
       return message as CameraInfo;

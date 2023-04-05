@@ -191,7 +191,8 @@ function normalizeAnnotations(
   // The panel may send the annotations to a web worker, for this we need
   const message = toPOD(maybeLazyMessage);
 
-  switch (datatype) {
+  // Cast to the union of all supported datatypes to ensure we handle all cases
+  switch (datatype as (typeof ANNOTATION_DATATYPES)[number]) {
     // single marker
     case "visualization_msgs/ImageMarker":
     case "visualization_msgs/msg/ImageMarker":
