@@ -18,7 +18,6 @@ export const dark: PaletteOptions = {
   name: "dark",
   mode: "dark",
   tonalOffset: 0.15,
-  contrastThreshold: 3.5,
   primary: { main: "#9480ed" },
   secondary: { main: "#b1b1b1" },
   error: { main: "#f54966" },
