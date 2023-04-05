@@ -4,7 +4,15 @@
 
 import { ChevronRight12Regular } from "@fluentui/react-icons";
 import { Divider, Menu, MenuItem, PopoverPosition, PopoverReference } from "@mui/material";
-import { Dispatch, MouseEvent, SetStateAction, useState } from "react";
+import {
+  Dispatch,
+  MouseEvent,
+  PropsWithChildren,
+  ReactNode,
+  SetStateAction,
+  useMemo,
+  useState,
+} from "react";
 import { makeStyles } from "tss-react/mui";
 
 import TextMiddleTruncate from "@foxglove/studio-base/components/TextMiddleTruncate";
@@ -18,6 +26,16 @@ type AppMenuProps = {
   disablePortal?: boolean;
   open: boolean;
 };
+
+type NestedMenuItem =
+  | {
+      type: "item";
+      label: ReactNode;
+      key: string;
+      disabled?: boolean;
+      onClick?: () => void;
+    }
+  | { type: "divider" };
 
 const useStyles = makeStyles<void, "icon">()((theme, _params, classes) => ({
   menuItem: {
@@ -44,30 +62,31 @@ const useStyles = makeStyles<void, "icon">()((theme, _params, classes) => ({
 export default function AppMenu(props: AppMenuProps): JSX.Element {
   const { open, handleClose, anchorEl, anchorReference, anchorPosition, disablePortal } = props;
   const { classes, cx } = useStyles();
+
+  const [subMenu, setSubMenu] = useState<undefined | HTMLElement>(undefined);
+  const subMenuOpen = Boolean(subMenu);
+
   const { recentSources, selectRecent } = usePlayerSelection();
 
-  const [fileMenuEl, setFileMenuEl] = useState<undefined | HTMLElement>(undefined);
-  const [editMenuEl, setEditMenuEl] = useState<undefined | HTMLElement>(undefined);
+  const fileItems = useMemo(() => {
+    const items: NestedMenuItem[] = [
+      { type: "item", label: "Open local file…", key: "open-file", onClick: () => {} },
+      { type: "item", label: "Open connection…", key: "open-connection", onClick: () => {} },
+      { type: "divider" },
+      { type: "item", label: "Recent sources", key: "recent-sources", disabled: true },
+    ];
 
-  const fileMenuOpen = Boolean(fileMenuEl);
-  const editMenuOpen = Boolean(editMenuEl);
+    recentSources.slice(0, 5).map((recent) => {
+      items.push({
+        type: "item",
+        key: recent.id,
+        onClick: () => selectRecent(recent.id),
+        label: <TextMiddleTruncate text={recent.title} className={classes.truncate} />,
+      });
+    });
 
-  const handleSubMenuClick = (
-    event: MouseEvent<HTMLElement>,
-    el: HTMLElement | undefined,
-    action: Dispatch<SetStateAction<HTMLElement | undefined>>,
-  ) => {
-    if (el !== event.currentTarget) {
-      action(event.currentTarget);
-    }
-  };
-
-  const handleSubMenuMouseEnter = (
-    event: MouseEvent<HTMLElement>,
-    action: Dispatch<SetStateAction<HTMLElement | undefined>>,
-  ) => {
-    action(event.currentTarget);
-  };
+    return items;
+  }, [classes.truncate, recentSources, selectRecent]);
 
   return (
     <>
@@ -83,24 +102,21 @@ export default function AppMenu(props: AppMenuProps): JSX.Element {
       >
         <MenuItem className={classes.menuItem}>Back to Data Platform</MenuItem>
         <Divider variant="middle" />
-        <MenuItem
-          selected={fileMenuOpen}
-          className={classes.menuItem}
-          onClick={(event) => handleSubMenuClick(event, fileMenuEl, setFileMenuEl)}
-          onMouseEnter={(event) => handleSubMenuMouseEnter(event, setFileMenuEl)}
-          onMouseLeave={() => setFileMenuEl(undefined)}
+        <NestedMenuItem setSubMenu={setSubMenu} subMenu={subMenu} items={fileItems}>
+          File
+        </NestedMenuItem>
+        <NestedMenuItem
+          setSubMenu={setSubMenu}
+          subMenu={subMenu}
+          items={[
+            { type: "item", label: "Undo", key: "undo" },
+            { type: "item", label: "Redo", key: "undo" },
+            { type: "divider" },
+            { type: "item", label: "Copy", key: "undo" },
+          ]}
         >
-          File <ChevronRight12Regular className={cx(classes.icon, classes.endIcon)} />
-        </MenuItem>
-        <MenuItem
-          selected={editMenuOpen}
-          className={classes.menuItem}
-          onClick={(event) => handleSubMenuClick(event, editMenuEl, setEditMenuEl)}
-          onMouseEnter={(event) => handleSubMenuMouseEnter(event, setEditMenuEl)}
-          onMouseLeave={() => setFileMenuEl(undefined)}
-        >
-          Edit <ChevronRight12Regular className={cx(classes.icon, classes.endIcon)} />
-        </MenuItem>
+          Edit
+        </NestedMenuItem>
         <MenuItem className={classes.menuItem}>
           Panel <ChevronRight12Regular className={cx(classes.icon, classes.endIcon)} />
         </MenuItem>
@@ -111,14 +127,57 @@ export default function AppMenu(props: AppMenuProps): JSX.Element {
           Layout <ChevronRight12Regular className={cx(classes.icon, classes.endIcon)} />
         </MenuItem>
       </Menu>
+    </>
+  );
+}
 
-      {/* File menu */}
+export function NestedMenuItem(
+  props: PropsWithChildren<{
+    items: NestedMenuItem[];
+    subMenu?: HTMLElement;
+    setSubMenu: Dispatch<SetStateAction<HTMLElement | undefined>>;
+  }>,
+): JSX.Element {
+  const { classes, cx } = useStyles();
+  const { children, items, subMenu, setSubMenu } = props;
+  const [anchorEl, setAnchorEl] = useState<undefined | HTMLElement>(undefined);
+  const open = Boolean(anchorEl);
+
+  const handleClick = (event: MouseEvent<HTMLElement>) => {
+    if (anchorEl !== event.currentTarget) {
+      setSubMenu(event.currentTarget);
+      setAnchorEl(event.currentTarget);
+    }
+  };
+
+  const handleMouseEnter = (event: MouseEvent<HTMLElement>) => {
+    setSubMenu(event.currentTarget);
+    setAnchorEl(event.currentTarget);
+  };
+
+  return (
+    <>
+      <MenuItem
+        selected={open}
+        className={classes.menuItem}
+        onClick={handleClick}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={(event) => {
+          if (subMenu === event.currentTarget) {
+            setAnchorEl(undefined);
+          }
+          setSubMenu(event.currentTarget);
+        }}
+      >
+        {children}
+        <ChevronRight12Regular className={cx(classes.icon, classes.endIcon)} />
+      </MenuItem>
       <Menu
-        open={fileMenuOpen}
+        open={open}
         disablePortal
-        anchorEl={fileMenuEl}
-        onClose={() => setFileMenuEl(undefined)}
-        onMouseLeave={() => setFileMenuEl(undefined)}
+        anchorEl={anchorEl}
+        onClose={() => setAnchorEl(undefined)}
+        onMouseLeave={() => setAnchorEl(undefined)}
         anchorOrigin={{ vertical: "top", horizontal: "right" }}
         MenuListProps={{ dense: true, className: classes.menuList }}
         autoFocus={false}
@@ -133,47 +192,15 @@ export default function AppMenu(props: AppMenuProps): JSX.Element {
           },
         }}
       >
-        <MenuItem>Open local file</MenuItem>
-        <MenuItem>Open connection</MenuItem>
-        <Divider variant="middle" />
-        <MenuItem disabled>Recent sources</MenuItem>
-        {recentSources.slice(0, 5).map((recent) => (
-          <MenuItem
-            className={classes.menuItem}
-            key={recent.id}
-            id={recent.id}
-            onClick={() => selectRecent(recent.id)}
-          >
-            <TextMiddleTruncate text={recent.title} className={classes.truncate} />
-          </MenuItem>
-        ))}
-      </Menu>
-
-      {/* Edit menu */}
-      <Menu
-        open={editMenuOpen}
-        disablePortal
-        anchorEl={editMenuEl}
-        onClose={() => setEditMenuEl(undefined)}
-        onMouseLeave={() => setEditMenuEl(undefined)}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
-        MenuListProps={{ dense: true, className: classes.menuList }}
-        autoFocus={false}
-        disableAutoFocus
-        disableEnforceFocus
-        style={{
-          pointerEvents: "none",
-        }}
-        PaperProps={{
-          style: {
-            pointerEvents: "auto",
-          },
-        }}
-      >
-        <MenuItem>Undo</MenuItem>
-        <MenuItem>Redo</MenuItem>
-        <Divider variant="middle" />
-        <MenuItem>Copy</MenuItem>
+        {items.map((item, idx) =>
+          item.type !== "divider" ? (
+            <MenuItem key={item.key} onClick={item.onClick} disabled={item.disabled}>
+              {item.label}
+            </MenuItem>
+          ) : (
+            <Divider key={`${idx}-divider`} variant="middle" />
+          ),
+        )}
       </Menu>
     </>
   );
