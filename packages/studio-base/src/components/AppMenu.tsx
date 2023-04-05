@@ -42,6 +42,9 @@ const useStyles = makeStyles<void, "icon">()((theme, _params, classes) => ({
     justifyContent: "space-between",
     cursor: "pointer",
 
+    "&.Mui-selected, &.Mui-selected:hover": {
+      backgroundColor: theme.palette.action.hover,
+    },
     [`:not(:hover, :focus) .${classes.icon}`]: {
       opacity: 0.6,
     },
@@ -61,7 +64,7 @@ const useStyles = makeStyles<void, "icon">()((theme, _params, classes) => ({
 
 export default function AppMenu(props: AppMenuProps): JSX.Element {
   const { open, handleClose, anchorEl, anchorReference, anchorPosition, disablePortal } = props;
-  const { classes, cx } = useStyles();
+  const { classes } = useStyles();
 
   const [subMenu, setSubMenu] = useState<undefined | HTMLElement>(undefined);
   const subMenuOpen = Boolean(subMenu);
@@ -88,6 +91,44 @@ export default function AppMenu(props: AppMenuProps): JSX.Element {
     return items;
   }, [classes.truncate, recentSources, selectRecent]);
 
+  const editItems = useMemo(
+    () =>
+      [
+        { type: "item", label: "Undo", key: "undo" },
+        { type: "item", label: "Redo", key: "undo" },
+        { type: "divider" },
+        { type: "item", label: "Copy", key: "undo" },
+      ] as NestedMenuItem[],
+    [],
+  );
+
+  const panelItems = useMemo(
+    () =>
+      [
+        { type: "item", label: "Fullscreen", key: "fullscreen" },
+        { type: "divider" },
+        { type: "item", label: "Change panel", key: "change-panel" },
+        { type: "item", label: "Remove", key: "remove-panel" },
+        { type: "divider" },
+        { type: "item", label: "Split up", key: "split-up" },
+        { type: "item", label: "Split down", key: "split-down" },
+        { type: "item", label: "Split left", key: "split-left" },
+        { type: "item", label: "Split right", key: "split-right" },
+      ] as NestedMenuItem[],
+    [],
+  );
+
+  const workspaceItems = useMemo(
+    () =>
+      [
+        { type: "item", label: "Left sidebar", key: "left-sidebar" },
+        { type: "item", label: "Right sidebar", key: "left-sidebar" },
+        { type: "divider" },
+        { type: "item", label: "Add panel", key: "add-panel" },
+      ] as NestedMenuItem[],
+    [],
+  );
+
   return (
     <>
       <Menu
@@ -97,6 +138,7 @@ export default function AppMenu(props: AppMenuProps): JSX.Element {
         disablePortal={disablePortal}
         id="app-menu"
         open={open}
+        disableAutoFocusItem
         onClose={handleClose}
         MenuListProps={{ dense: true, className: classes.menuList }}
       >
@@ -105,27 +147,15 @@ export default function AppMenu(props: AppMenuProps): JSX.Element {
         <NestedMenuItem setSubMenu={setSubMenu} subMenu={subMenu} items={fileItems}>
           File
         </NestedMenuItem>
-        <NestedMenuItem
-          setSubMenu={setSubMenu}
-          subMenu={subMenu}
-          items={[
-            { type: "item", label: "Undo", key: "undo" },
-            { type: "item", label: "Redo", key: "undo" },
-            { type: "divider" },
-            { type: "item", label: "Copy", key: "undo" },
-          ]}
-        >
+        <NestedMenuItem setSubMenu={setSubMenu} subMenu={subMenu} items={editItems}>
           Edit
         </NestedMenuItem>
-        <MenuItem className={classes.menuItem}>
-          Panel <ChevronRight12Regular className={cx(classes.icon, classes.endIcon)} />
-        </MenuItem>
-        <MenuItem className={classes.menuItem}>
-          View <ChevronRight12Regular className={cx(classes.icon, classes.endIcon)} />
-        </MenuItem>
-        <MenuItem className={classes.menuItem}>
-          Layout <ChevronRight12Regular className={cx(classes.icon, classes.endIcon)} />
-        </MenuItem>
+        <NestedMenuItem setSubMenu={setSubMenu} subMenu={subMenu} items={panelItems}>
+          Panel
+        </NestedMenuItem>
+        <NestedMenuItem setSubMenu={setSubMenu} subMenu={subMenu} items={workspaceItems}>
+          Workspace
+        </NestedMenuItem>
       </Menu>
     </>
   );
@@ -186,6 +216,7 @@ export function NestedMenuItem(
         style={{
           pointerEvents: "none",
         }}
+        hideBackdrop
         PaperProps={{
           style: {
             pointerEvents: "auto",

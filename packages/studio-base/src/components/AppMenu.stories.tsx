@@ -28,7 +28,7 @@ const playerSelection: PlayerSelection = {
   availableSources: [],
 };
 
-export function Default(): JSX.Element {
+function Default(): JSX.Element {
   return (
     <PlayerSelectionContext.Provider value={playerSelection}>
       <AppMenu
@@ -43,3 +43,9 @@ export function Default(): JSX.Element {
     </PlayerSelectionContext.Provider>
   );
 }
+
+export const Dark = (): JSX.Element => <Default />;
+Dark.parameters = { colorScheme: "dark" };
+
+export const Light = (): JSX.Element => <Default />;
+Light.parameters = { colorScheme: "light" };
