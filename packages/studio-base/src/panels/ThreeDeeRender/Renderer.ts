@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import EventEmitter from "eventemitter3";
+import i18next from "i18next";
 import { Immutable, produce } from "immer";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
@@ -79,7 +80,14 @@ import {
   Vector3,
 } from "./ros";
 import { BaseSettings, CustomLayerSettings, SelectEntry } from "./settings";
-import { AddTransformResult, makePose, Pose, Transform, TransformTree } from "./transforms";
+import {
+  AddTransformResult,
+  CoordinateFrame,
+  makePose,
+  Pose,
+  Transform,
+  TransformTree,
+} from "./transforms";
 import { InterfaceMode } from "./types";
 
 const log = Logger.getLogger(__filename);
@@ -806,11 +814,11 @@ export class Renderer extends EventEmitter<RendererEvents> {
       path: ["topics"],
       node: {
         enableVisibilityFilter: true,
-        label: "Topics",
+        label: i18next.t("threeDee:topics"),
         defaultExpansionState: "expanded",
         actions: [
-          { id: "show-all", type: "action", label: "Show All" },
-          { id: "hide-all", type: "action", label: "Hide All" },
+          { id: "show-all", type: "action", label: i18next.t("threeDee:showAll") },
+          { id: "hide-all", type: "action", label: i18next.t("threeDee:hideAll") },
         ],
         children: this.settings.tree()["topics"]?.children,
         handler: this.handleTopicsAction,
@@ -822,7 +830,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     const customLayers: SettingsTreeEntry = {
       path: ["layers"],
       node: {
-        label: `Custom Layers${layerCount > 0 ? ` (${layerCount})` : ""}`,
+        label: `${i18next.t("threeDee:customLayers")}${layerCount > 0 ? ` (${layerCount})` : ""}`,
         children: this.settings.tree()["layers"]?.children,
         actions: Array.from(this.customLayerActions.values()).map((entry) => entry.action),
         handler: this.handleCustomLayersAction,
@@ -854,7 +862,9 @@ export class Renderer extends EventEmitter<RendererEvents> {
     // Choose the root frame with the most children
     const rootsToCounts = new Map<string, number>();
     for (const frame of allFrames.values()) {
-      const rootId = frame.root().id;
+      const root = frame.root();
+      const rootId = root.id;
+
       rootsToCounts.set(rootId, (rootsToCounts.get(rootId) ?? 0) + 1);
     }
     const rootsArray = Array.from(rootsToCounts.entries());
@@ -1202,11 +1212,9 @@ export class Renderer extends EventEmitter<RendererEvents> {
     camera.layers.set(LAYER_DEFAULT);
     this.selectionBackdrop.visible = this.selectedRenderable != undefined;
 
-    const renderFrameId = this.renderFrameId;
-    const fixedFrameId = this.fixedFrameId;
-    if (renderFrameId == undefined || fixedFrameId == undefined) {
-      return;
-    }
+    // use the FALLBACK_FRAME_ID if renderFrame is undefined and there are no options for transforms
+    const renderFrameId = this.renderFrameId ?? CoordinateFrame.FALLBACK_FRAME_ID;
+    const fixedFrameId = this.fixedFrameId ?? CoordinateFrame.FALLBACK_FRAME_ID;
 
     const renderFrame = this.transformTree.frame(renderFrameId);
     const fixedFrame = this.transformTree.frame(fixedFrameId);
@@ -1480,10 +1488,16 @@ export class Renderer extends EventEmitter<RendererEvents> {
           this.settings.errors.add(
             FOLLOW_TF_PATH,
             FRAME_NOT_FOUND,
-            `Frame "${this.followFrameId}" not found`,
+            i18next.t("threeDee:frameNotFound", {
+              followFrameId: this.followFrameId,
+            }),
           );
         } else {
-          this.settings.errors.add(FOLLOW_TF_PATH, NO_FRAME_SELECTED, `No coordinate frames found`);
+          this.settings.errors.add(
+            FOLLOW_TF_PATH,
+            NO_FRAME_SELECTED,
+            i18next.t("threeDee:noCoordinateFramesFound"),
+          );
         }
         this.fixedFrameId = undefined;
         return;
@@ -1500,7 +1514,9 @@ export class Renderer extends EventEmitter<RendererEvents> {
       this.settings.errors.add(
         FOLLOW_TF_PATH,
         FRAME_NOT_FOUND,
-        `Frame "${this.renderFrameId}" not found`,
+        i18next.t("threeDee:frameNotFound", {
+          followFrameId: this.renderFrameId,
+        }),
       );
       return;
     } else {
