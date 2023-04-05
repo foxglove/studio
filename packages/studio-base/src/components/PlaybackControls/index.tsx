@@ -21,7 +21,6 @@ import {
   Previous20Filled,
   Previous20Regular,
   Info24Regular,
-  Info24Filled,
 } from "@fluentui/react-icons";
 import { Tooltip } from "@mui/material";
 import { useCallback, useMemo, useState } from "react";
@@ -177,7 +176,7 @@ export default function PlaybackControls(props: {
                 size="small"
                 title="Create event"
                 icon={<EventOutlinedIcon />}
-                activeColor="info"
+                activeIcon={<EventIcon />}
                 onClick={toggleCreateEventDialog}
               />
             )}
@@ -194,7 +193,7 @@ export default function PlaybackControls(props: {
                   disabled={presence !== PlayerPresence.PRESENT}
                   size="small"
                   icon={<Info24Regular />}
-                  activeIcon={<Info24Filled />}
+                  activeColor="info"
                 />
               </Tooltip>
             )}
