@@ -1,6 +1,6 @@
 {
   "name": "foxglove-studio",
-  "version": "1.47.0-dev",
+  "version": "1.48.0-dev",
   "description": "Integrated robotics visualization and debugging.",
   "productName": "Foxglove Studio",
   "productDescription": "Foxglove Studio is a highly customizable and extensible visualization and display tool for robotics.",
@@ -71,7 +71,7 @@
     "@actions/exec": "1.1.1",
     "@actions/tool-cache": "2.0.1",
     "@babel/core": "7.21.3",
-    "@babel/preset-env": "7.20.2",
+    "@babel/preset-env": "7.21.4",
     "@babel/preset-typescript": "7.21.0",
     "@foxglove/eslint-plugin": "0.21.2",
     "@foxglove/eslint-plugin-studio": "workspace:*",
@@ -121,7 +121,7 @@
     "typescript-plugin-css-modules": "4.2.3",
     "webpack": "5.76.2",
     "webpack-cli": "5.0.1",
-    "webpack-dev-server": "4.11.1",
+    "webpack-dev-server": "4.13.2",
     "webpack-hot-middleware": "2.25.3"
   },
   "packageManager": "yarn@3.3.1"

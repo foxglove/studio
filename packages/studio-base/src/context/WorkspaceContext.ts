@@ -32,7 +32,6 @@ const RightSidebarItemKeys = ["events", "variables", "studio-logs-settings"] as 
 export type RightSidebarItemKey = (typeof RightSidebarItemKeys)[number];
 
 export type WorkspaceContextStore = DeepReadonly<{
-  layoutMenuOpen: boolean;
   leftSidebarOpen: boolean;
   rightSidebarOpen: boolean;
   leftSidebarItem: undefined | LeftSidebarItemKey;
@@ -53,8 +52,12 @@ export const WorkspaceContext = createContext<undefined | StoreApi<WorkspaceCont
 WorkspaceContext.displayName = "WorkspaceContext";
 
 export const WorkspaceStoreSelectors = {
-  selectPanelSettingsOpen: (store: WorkspaceContextStore): boolean =>
-    store.sidebarItem === "panel-settings" || store.leftSidebarItem === "panel-settings",
+  selectPanelSettingsOpen: (store: WorkspaceContextStore): boolean => {
+    return (
+      store.sidebarItem === "panel-settings" ||
+      (store.leftSidebarOpen && store.leftSidebarItem === "panel-settings")
+    );
+  },
 };
 
 /**
@@ -79,7 +82,6 @@ export type WorkspaceActions = {
   selectSidebarItem: (selectedSidebarItem: undefined | SidebarItemKey) => void;
   selectLeftSidebarItem: (item: undefined | LeftSidebarItemKey) => void;
   selectRightSidebarItem: (item: undefined | RightSidebarItemKey) => void;
-  setLayoutMenuOpen: Dispatch<SetStateAction<boolean>>;
   setLeftSidebarOpen: Dispatch<SetStateAction<boolean>>;
   setLeftSidebarSize: (size: undefined | number) => void;
   setRightSidebarOpen: Dispatch<SetStateAction<boolean>>;
@@ -118,21 +120,13 @@ export function useWorkspaceActions(): WorkspaceActions {
           ? set({ leftSidebarItem: "panel-settings", leftSidebarOpen: true })
           : set({ sidebarItem: "panel-settings" }),
 
-      openLayoutBrowser: () =>
-        enableNewTopNav ? set({ layoutMenuOpen: true }) : set({ sidebarItem: "layouts" }),
+      openLayoutBrowser: () => set({ sidebarItem: "layouts" }),
 
       prefsDialogActions: {
         close: () => set({ prefsDialogState: { open: false, initialTab: undefined } }),
         open: (initialTab?: PreferencesDialogTab) => {
           set({ prefsDialogState: { open: true, initialTab } });
         },
-      },
-
-      setLayoutMenuOpen: (setter: SetStateAction<boolean>) => {
-        set((oldValue) => {
-          const layoutMenuOpen = setterValue(setter, oldValue.layoutMenuOpen);
-          return { layoutMenuOpen };
-        });
       },
 
       selectSidebarItem: (selectedSidebarItem: undefined | SidebarItemKey) => {
