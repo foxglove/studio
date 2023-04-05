@@ -273,7 +273,7 @@ export default function CurrentLayoutProvider({
       await setSelectedLayoutId(currentLayoutId, { saveToProfile: false });
     } else {
       const newLayout = await layoutManager.saveNewLayout({
-        name: "Default",
+        name: "Default layout",
         data: defaultLayout,
         permission: "CREATOR_WRITE",
       });
