@@ -104,7 +104,7 @@ const VersionBanner = function ({
                   href="https://github.com/orgs/foxglove/discussions/174"
                   target="_blank"
                 >
-                  #1511
+                  #174
                 </Link>
                 .
               </Typography>
