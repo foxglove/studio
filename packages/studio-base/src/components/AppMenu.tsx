@@ -33,6 +33,7 @@ type NestedMenuItem =
       label: ReactNode;
       key: string;
       disabled?: boolean;
+      shortcut?: string;
       onClick?: () => void;
     }
   | { type: "divider" };
@@ -41,12 +42,17 @@ const useStyles = makeStyles<void, "icon">()((theme, _params, classes) => ({
   menuItem: {
     justifyContent: "space-between",
     cursor: "pointer",
+    gap: theme.spacing(2),
 
     "&.Mui-selected, &.Mui-selected:hover": {
       backgroundColor: theme.palette.action.hover,
     },
     [`:not(:hover, :focus) .${classes.icon}`]: {
       opacity: 0.6,
+    },
+    kbd: {
+      font: "inherit",
+      color: theme.palette.text.disabled,
     },
   },
   menuList: {
@@ -94,10 +100,13 @@ export default function AppMenu(props: AppMenuProps): JSX.Element {
   const editItems = useMemo(
     () =>
       [
-        { type: "item", label: "Undo", key: "undo" },
-        { type: "item", label: "Redo", key: "undo" },
+        { type: "item", label: "Copy", key: "copy", shortcut: "⌘C" },
+        { type: "item", label: "Copy as", key: "copy" },
+        { type: "item", label: "Copy timestamp", key: "copy-timestamp", shortcut: "⌘⇧C" },
+        { type: "item", label: "Paste", key: "paste", shortcut: "⌘V" },
+        { type: "item", label: "Select all", key: "select-all", shortcut: "⌘A" },
         { type: "divider" },
-        { type: "item", label: "Copy", key: "undo" },
+        { type: "item", label: "Find", key: "find", shortcut: "⌘F" },
       ] as NestedMenuItem[],
     [],
   );
@@ -105,26 +114,54 @@ export default function AppMenu(props: AppMenuProps): JSX.Element {
   const panelItems = useMemo(
     () =>
       [
-        { type: "item", label: "Fullscreen", key: "fullscreen" },
+        { type: "item", label: "Maximize panel", key: "maximize", shortcut: "⌘⌥F" },
         { type: "divider" },
         { type: "item", label: "Change panel", key: "change-panel" },
-        { type: "item", label: "Remove", key: "remove-panel" },
-        { type: "divider" },
         { type: "item", label: "Split up", key: "split-up" },
         { type: "item", label: "Split down", key: "split-down" },
         { type: "item", label: "Split left", key: "split-left" },
         { type: "item", label: "Split right", key: "split-right" },
+        { type: "divider" },
+        { type: "item", label: "Remove panel", key: "remove-panel" },
       ] as NestedMenuItem[],
     [],
   );
 
-  const workspaceItems = useMemo(
+  const viewItems = useMemo(
     () =>
       [
-        { type: "item", label: "Left sidebar", key: "left-sidebar" },
-        { type: "item", label: "Right sidebar", key: "left-sidebar" },
+        { type: "item", label: "Left sidebar", key: "left-sidebar", shortcut: "[" },
+        { type: "item", label: "Right sidebar", key: "left-sidebar", shortcut: "]" },
         { type: "divider" },
         { type: "item", label: "Add panel", key: "add-panel" },
+      ] as NestedMenuItem[],
+    [],
+  );
+
+  const playbackItems = useMemo(
+    () =>
+      [
+        { type: "item", label: "Play/Pause", key: "play-pause", shortcut: "Space" },
+        { type: "item", label: "Seek backwards", key: "seek-back", shortcut: "←" },
+        { type: "item", label: "Seek forward", key: "seek-forward", shortcut: "→" },
+        { type: "item", label: "Next frame", key: "next-frame" },
+        { type: "item", label: "Previous frame", key: "previous-frame" },
+        { type: "divider" },
+        { type: "item", label: "Jump to start", key: "jump-to-start" },
+        { type: "item", label: "Jump to end", key: "jump-to-end" },
+        { type: "item", label: "Jump to time", key: "jump-to-time" },
+        { type: "divider" },
+        { type: "item", label: "Playback speed", key: "playback-speed" },
+        { type: "item", label: "Loop", key: "loop", shortcut: "⌘L" },
+      ] as NestedMenuItem[],
+    [],
+  );
+
+  const helpItems = useMemo(
+    () =>
+      [
+        { type: "item", label: "Documentation", key: "docs" },
+        { type: "item", label: "Join Slack", key: "slack" },
       ] as NestedMenuItem[],
     [],
   );
@@ -164,6 +201,22 @@ export default function AppMenu(props: AppMenuProps): JSX.Element {
           setSubMenu={setSubMenu}
           subMenu={subMenu}
           subMenuOpen={subMenuOpen}
+          items={viewItems}
+        >
+          View
+        </NestedMenuItem>
+        <NestedMenuItem
+          setSubMenu={setSubMenu}
+          subMenu={subMenu}
+          subMenuOpen={subMenuOpen}
+          items={playbackItems}
+        >
+          Playback
+        </NestedMenuItem>
+        <NestedMenuItem
+          setSubMenu={setSubMenu}
+          subMenu={subMenu}
+          subMenuOpen={subMenuOpen}
           items={panelItems}
         >
           Panel
@@ -172,9 +225,9 @@ export default function AppMenu(props: AppMenuProps): JSX.Element {
           setSubMenu={setSubMenu}
           subMenu={subMenu}
           subMenuOpen={subMenuOpen}
-          items={workspaceItems}
+          items={helpItems}
         >
-          Workspace
+          Help
         </NestedMenuItem>
       </Menu>
     </>
@@ -251,8 +304,14 @@ export function NestedMenuItem(
       >
         {items.map((item, idx) =>
           item.type !== "divider" ? (
-            <MenuItem key={item.key} onClick={item.onClick} disabled={item.disabled}>
+            <MenuItem
+              className={classes.menuItem}
+              key={item.key}
+              onClick={item.onClick}
+              disabled={item.disabled}
+            >
               {item.label}
+              {item.shortcut && <kbd>{item.shortcut}</kbd>}
             </MenuItem>
           ) : (
             <Divider key={`${idx}-divider`} variant="middle" />
