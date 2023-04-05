@@ -19,7 +19,7 @@ export function Palette(): JSX.Element {
       fullWidth
       flexWrap="wrap"
       padding={2}
-      gap={2}
+      gap={6}
       style={{ backgroundColor: theme.palette.background.paper }}
     >
       <Stack direction="row" gap={6}>
@@ -111,25 +111,27 @@ export function Palette(): JSX.Element {
         </Stack>
       </Stack>
 
-      <Typography variant="overline">Grey (with Divider border)</Typography>
-      <Stack gap={1} direction="row" alignItems="center">
-        {Object.keys(theme.palette.grey).map((key) => (
-          <Stack key={key} alignItems="center" gap={1}>
-            <Box
-              display="flex"
-              width={32}
-              height={32}
-              bgcolor={`grey.${key}`}
-              alignItems="center"
-              justifyContent="center"
-              border="1px solid"
-              borderColor="divider"
-            >
-              Aa
-            </Box>
-            {key}
-          </Stack>
-        ))}
+      <Stack gap={1}>
+        <Typography variant="overline">Grey (with Divider border)</Typography>
+        <Stack gap={1} direction="row" alignItems="center">
+          {Object.keys(theme.palette.grey).map((key) => (
+            <Stack key={key} alignItems="center" gap={1}>
+              <Box
+                display="flex"
+                width={32}
+                height={32}
+                bgcolor={`grey.${key}`}
+                alignItems="center"
+                justifyContent="center"
+                border="1px solid"
+                borderColor="divider"
+              >
+                Aa
+              </Box>
+              {key}
+            </Stack>
+          ))}
+        </Stack>
       </Stack>
     </Stack>
   );
