@@ -56,7 +56,6 @@ export const light: PaletteOptions = {
   name: "light",
   mode: "light",
   tonalOffset: 0.22,
-  contrastThreshold: 2,
   primary: { main: "#6f3be8" },
   secondary: { main: "#808080" },
   error: { main: "#db3553" },
