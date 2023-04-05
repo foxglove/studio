@@ -88,8 +88,8 @@ export class RenderableMeshResource extends RenderableMarker {
             return;
           }
           this.mesh = mesh;
-          this.updateOutlineVisibility();
           this.add(mesh);
+          this.updateOutlineVisibility();
 
           // Remove any mesh fetch error message since loading was successful
           this.renderer.settings.errors.remove(this.userData.settingsPath, MESH_FETCH_FAILED);
