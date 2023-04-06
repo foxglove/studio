@@ -12,7 +12,7 @@ import "@foxglove/studio-base/styles/assets/plex-mono.css";
 
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
-const useStyles = makeStyles()(({ palette, typography }) => ({
+const useStyles = makeStyles()(({ palette, transitions, typography }) => ({
   root: {
     // container styling
     height: "100%",
@@ -167,10 +167,12 @@ const useStyles = makeStyles()(({ palette, typography }) => ({
         zIndex: 99,
 
         ".mosaic-split-line": {
+          transition: transitions.create("box-shadow", { duration: transitions.duration.shorter }),
           boxShadow: `0 0 0 1px ${palette.divider}`,
         },
         "&:hover .mosaic-split-line": {
-          boxShadow: `0 0 0 1px ${
+          transition: transitions.create("box-shadow", { duration: transitions.duration.shorter }),
+          boxShadow: `0 0 0 2px ${
             palette.mode === "dark"
               ? tinycolor(palette.divider).lighten().toHexString()
               : tinycolor(palette.divider).darken().toHexString()

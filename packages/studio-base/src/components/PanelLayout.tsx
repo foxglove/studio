@@ -11,13 +11,16 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { Add24Filled } from "@fluentui/react-icons";
 import {
-  Button,
   CircularProgress,
   Link,
   Popper,
-  styled as muiStyled,
   Typography,
+  Fab,
+  styled as muiStyled,
+  Zoom,
+  ZoomProps,
 } from "@mui/material";
 import React, {
   PropsWithChildren,
@@ -350,24 +353,41 @@ export function UnconnectedPanelLayout(props: Props): React.ReactElement {
         <Popper
           open={hoveredSplitter != undefined}
           anchorEl={hoveredSplitter}
+          transition
           // hideBackdrop
-          // disableEnforceFocus
+          modifiers={
+            hoveredSplitter
+              ? [
+                  {
+                    name: "offset",
+                    options: {
+                      offset: hoveredSplitter.classList.contains("-row")
+                        ? [0, -hoveredSplitter.clientHeight / 2 - 20]
+                        : [0, -hoveredSplitter.clientWidth / 2 - 20],
+                    },
+                  },
+                ]
+              : undefined
+          }
           popperOptions={
             hoveredSplitter
-              ? {
-                  placement: hoveredSplitter.classList.contains("-row") ? "top" : "left",
-                }
+              ? { placement: hoveredSplitter.classList.contains("-row") ? "top" : "left" }
               : undefined
           }
         >
-          <Button
-            variant="contained"
-            onClick={handleButtonClick}
-            onMouseEnter={handleButtonMouseEnter}
-            onMouseLeave={handleButtonMouseLeave}
-          >
-            + Add panel
-          </Button>
+          {({ TransitionProps }: { TransitionProps: ZoomProps }) => (
+            <Zoom {...TransitionProps} timeout={{ enter: 200, exit: 0, appear: 200 }}>
+              <Fab
+                size="small"
+                color="primary"
+                onClick={handleButtonClick}
+                onMouseEnter={handleButtonMouseEnter}
+                onMouseLeave={handleButtonMouseLeave}
+              >
+                <Add24Filled />
+              </Fab>
+            </Zoom>
+          )}
         </Popper>
         {bodyToRender}
       </div>
