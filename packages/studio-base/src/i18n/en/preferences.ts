@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-export default {
+export const preferences = {
   preferences: "Preferences",
   colorScheme: "Color scheme",
   dark: "Dark",
@@ -31,8 +31,6 @@ export default {
   studioDebugPanelsDescription: "Show Foxglove Studio debug panels in the “Add panel” list.",
   legacyPlotPanel: "Legacy Plot panel",
   legacyPlotPanelDescription: "Enable the Legacy Plot panel.",
-  urdfPanel: "URDF Viewer panel",
-  urdfPanelDescription: "Enable the deprecated URDF Viewer panel.",
   memoryUseIndicator: "Memory use indicator",
   memoryUseIndicatorDescription: "Show the app memory use in the sidebar.",
   newNavigation: "New navigation",
@@ -42,4 +40,6 @@ export default {
   ros2NativeConnectionDescription: "Enable the deprecated ROS 2 native connector.",
   layoutDebugging: "Layout debugging",
   layoutDebuggingDescription: "Show extra controls for developing and debugging layout storage.",
+  newImagePanel: "New Image panel",
+  newImagePanelDescription: "Enable the experimental Image panel.",
 };

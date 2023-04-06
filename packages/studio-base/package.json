@@ -1,7 +1,7 @@
 {
   "name": "@foxglove/studio-base",
-  "version": "1.45.0-dev",
   "description": "Core components of Foxglove Studio",
+  "private": true,
   "license": "MPL-2.0",
   "repository": {
     "type": "git",
@@ -12,18 +12,7 @@
     "email": "support@foxglove.dev"
   },
   "homepage": "https://foxglove.dev/",
-  "browser": "assets/index.js",
   "main": "src/index",
-  "files": [
-    "assets",
-    "src/**/*.js",
-    "src/**/*.d.ts"
-  ],
-  "scripts": {
-    "prepack": "yarn build:webpack && yarn build:tsc",
-    "build:tsc": "ttsc --module es2020 --project tsconfig.json",
-    "build:webpack": "cross-env TS_NODE_PROJECT=\"tsconfig.cli.json\" webpack --mode production --progress"
-  },
   "devDependencies": {
     "@emotion/cache": "11.10.5",
     "@emotion/react": "11.10.6",
@@ -43,7 +32,7 @@
     "@foxglove/ros2": "4.0.0",
     "@foxglove/rosbag": "0.3.0",
     "@foxglove/rosbag2-web": "4.1.0",
-    "@foxglove/roslibjs": "0.0.1",
+    "@foxglove/roslibjs": "0.0.3",
     "@foxglove/rosmsg": "4.2.1",
     "@foxglove/rosmsg-msgs-common": "3.0.0",
     "@foxglove/rosmsg-serialization": "2.0.1",
@@ -67,7 +56,7 @@
     "@protobufjs/base64": "1.1.2",
     "@storybook/addon-actions": "6.5.16",
     "@storybook/react": "6.5.16",
-    "@testing-library/dom": "8.11.3",
+    "@testing-library/dom": "9.2.0",
     "@testing-library/react": "12.1.2",
     "@testing-library/react-hooks": "8.0.1",
     "@testing-library/user-event": "14.4.3",
@@ -84,7 +73,6 @@
     "@types/nearley": "2.11.2",
     "@types/prettier": "2.7.2",
     "@types/react": "17.0.53",
-    "@types/react-autocomplete": "1.8.6",
     "@types/react-dom": "17.0.18",
     "@types/react-hover-observer": "workspace:*",
     "@types/react-table": "7.7.14",
@@ -106,13 +94,11 @@
     "babel-plugin-transform-import-meta": "2.2.0",
     "browserify-zlib": "0.2.0",
     "chart.js": "4.2.1",
-    "chartjs-plugin-annotation": "2.1.2",
+    "chartjs-plugin-annotation": "2.2.1",
     "chartjs-plugin-datalabels": "2.2.0",
     "chromatic": "6.17.1",
     "circular-dependency-plugin": "5.2.2",
-    "clean-webpack-plugin": "4.0.0",
     "comlink": "4.4.1",
-    "cross-env": "7.0.3",
     "crypto-browserify": "3.12.0",
     "css-loader": "6.7.3",
     "cytoscape": "3.23.0",
@@ -127,7 +113,7 @@
     "fzf": "0.5.1",
     "gl-matrix": "3.4.3",
     "hammerjs": "2.0.8",
-    "i18next": "22.4.10",
+    "i18next": "22.4.13",
     "i18next-browser-languagedetector": "7.0.1",
     "idb": "7.1.1",
     "idb-keyval": "6.2.0",
@@ -154,7 +140,6 @@
     "path-browserify": "1.0.1",
     "prettier": "2.8.3",
     "react": "17.0.2",
-    "react-autocomplete": "https://github.com/foxglove/react-autocomplete/raw/9717d597d7c78c316fb7ad3c2c57060c243530c2/react-autocomplete-9.9.9.tgz",
     "react-colorful": "5.6.1",
     "react-dnd": "14.0.2",
     "react-dnd-html5-backend": "14.0.2",
@@ -189,17 +174,13 @@
     "ts-key-enum": "2.0.12",
     "ts-loader": "9.4.2",
     "tss-react": "4.7.7",
-    "ttypescript": "1.5.15",
     "typescript": "5.0.2",
-    "typescript-transform-paths": "3.4.6",
-    "urdf-loader": "0.10.4",
     "url-search-params": "1.1.0",
     "use-debounce": "9.0.3",
     "use-immer": "0.8.1",
     "use-pan-and-zoom": "0.6.5",
     "uuid": "9.0.0",
     "webpack": "5.76.2",
-    "xacro-parser": "0.3.9",
     "zustand": "4.3.6"
   }
 }

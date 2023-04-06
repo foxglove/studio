@@ -3,18 +3,18 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import {
-  AddCircle24Regular,
-  BoardSplit24Regular,
+  SlideAdd24Regular,
   PanelLeft24Filled,
   PanelLeft24Regular,
   PanelRight24Filled,
   PanelRight24Regular,
-  QuestionCircle24Regular,
-  Settings24Regular,
 } from "@fluentui/react-icons";
-import { AppBar as MuiAppBar, Button, IconButton } from "@mui/material";
-import { useCallback, useRef, useState } from "react";
+import PersonIcon from "@mui/icons-material/Person";
+import { Avatar, Button, IconButton, Tooltip, AppBar as MuiAppBar } from "@mui/material";
+import { useCallback, useState } from "react";
+import tc from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
+import { shallow } from "zustand/shallow";
 
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import { AppBarIconButton } from "@foxglove/studio-base/components/AppBar/AppBarIconButton";
@@ -26,18 +26,15 @@ import { FoxgloveLogo } from "@foxglove/studio-base/components/FoxgloveLogo";
 import { MemoryUseIndicator } from "@foxglove/studio-base/components/MemoryUseIndicator";
 import Stack from "@foxglove/studio-base/components/Stack";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
+import { useAppContext } from "@foxglove/studio-base/context/AppContext";
 import {
   LayoutState,
   useCurrentLayoutSelector,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
+import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
 import {
-  CurrentUser,
-  useCurrentUserType,
-  User,
-} from "@foxglove/studio-base/context/CurrentUserContext";
-import {
-  useWorkspaceStore,
   useWorkspaceActions,
+  useWorkspaceStore,
   WorkspaceContextStore,
 } from "@foxglove/studio-base/context/WorkspaceContext";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
@@ -46,10 +43,7 @@ import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import { AddPanelMenu } from "./AddPanelMenu";
 import { DataSource } from "./DataSource";
-import { HelpMenu } from "./HelpMenu";
-import { LayoutMenu } from "./LayoutMenu";
-import { PreferencesDialog } from "./Preferences";
-import { UserIconButton, UserMenu } from "./User";
+import { UserMenu } from "./UserMenu";
 import {
   APP_BAR_BACKGROUND_COLOR,
   APP_BAR_FOREGROUND_COLOR,
@@ -57,8 +51,8 @@ import {
   APP_BAR_PRIMARY_COLOR,
 } from "./constants";
 
-const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }>()(
-  (theme, { leftInset, debugDragRegion = false }) => {
+const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }, "avatar">()(
+  (theme, { leftInset, debugDragRegion = false }, classes) => {
     const DRAGGABLE_STYLE: Record<string, string> = { WebkitAppRegion: "drag" };
     const NOT_DRAGGABLE_STYLE: Record<string, string> = { WebkitAppRegion: "no-drag" };
     if (debugDragRegion) {
@@ -121,83 +115,109 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }>(
         alignItems: "center",
         ...NOT_DRAGGABLE_STYLE, // make buttons clickable for desktop app
       },
+      keyEquivalent: {
+        fontFamily: fonts.MONOSPACE,
+        background: tc(APP_BAR_FOREGROUND_COLOR).darken(45).toString(),
+        padding: theme.spacing(0, 0.5),
+        aspectRatio: 1,
+        borderRadius: theme.shape.borderRadius,
+        marginLeft: theme.spacing(1),
+      },
+      tooltip: {
+        marginTop: `${theme.spacing(0.5)} !important`,
+      },
+      avatar: {
+        color: APP_BAR_FOREGROUND_COLOR,
+        backgroundColor: tc(APP_BAR_BACKGROUND_COLOR[theme.palette.mode]).lighten().toString(),
+        height: theme.spacing(3.5),
+        width: theme.spacing(3.5),
+        transition: theme.transitions.create("background-color", {
+          duration: theme.transitions.duration.shortest,
+        }),
+      },
+      iconButton: {
+        padding: theme.spacing(1),
+        borderRadius: 0,
+        transition: theme.transitions.create("background-color", {
+          duration: theme.transitions.duration.shortest,
+        }),
+        "&:hover": {
+          backgroundColor: tc(APP_BAR_FOREGROUND_COLOR).setAlpha(0.08).toString(),
+
+          [`.${classes.avatar}`]: {
+            backgroundColor: tc(APP_BAR_BACKGROUND_COLOR[theme.palette.mode])
+              .lighten(20)
+              .toString(),
+          },
+        },
+        "&.Mui-selected": {
+          backgroundColor: tc(APP_BAR_FOREGROUND_COLOR).setAlpha(0.08).toString(),
+
+          [`.${classes.avatar}`]: {
+            backgroundColor: APP_BAR_PRIMARY_COLOR,
+          },
+        },
+      },
+      userIconImage: {
+        objectFit: "cover",
+        width: "100%",
+      },
       button: {
         marginInline: theme.spacing(1),
         backgroundColor: APP_BAR_PRIMARY_COLOR,
 
         "&:hover": {
-          backgroundColor: theme.palette.augmentColor({
-            color: { main: APP_BAR_PRIMARY_COLOR },
-          }).dark,
+          backgroundColor: theme.palette.augmentColor({ color: { main: APP_BAR_PRIMARY_COLOR } })
+            .dark,
         },
-      },
-      keyEquivalent: {
-        fontFamily: fonts.MONOSPACE,
-        background: theme.palette.augmentColor({ color: { main: APP_BAR_FOREGROUND_COLOR } }).dark,
-        padding: theme.spacing(0, 0.5),
-        aspectRatio: 1,
-        borderRadius: theme.shape.borderRadius,
-        marginLeft: theme.spacing(1),
       },
     };
   },
 );
 
 type AppBarProps = CustomWindowControlsProps & {
-  currentUser?: User;
-  signIn?: CurrentUser["signIn"];
   leftInset?: number;
   onDoubleClick?: () => void;
   debugDragRegion?: boolean;
   disableSignIn?: boolean;
   onSelectDataSourceAction: () => void;
-  prefsDialogOpen: boolean;
-  // eslint-disable-next-line @foxglove/no-boolean-parameters
-  setPrefsDialogOpen: (open: boolean) => void;
 };
 
-const selectedLayoutIdSelector = (state: LayoutState) => state.selectedLayout?.id;
-
+const selectCurrentLayoutId = ({ selectedLayout }: LayoutState) => selectedLayout?.id;
 const selectWorkspace = (store: WorkspaceContextStore) => store;
 
 export function AppBar(props: AppBarProps): JSX.Element {
   const {
-    currentUser,
-    disableSignIn = false,
-    signIn,
-    leftInset,
-    showCustomWindowControls = false,
-    onDoubleClick,
-    isMaximized,
-    onMinimizeWindow,
-    onMaximizeWindow,
-    onUnmaximizeWindow,
-    onCloseWindow,
-    onSelectDataSourceAction,
     debugDragRegion,
-    prefsDialogOpen,
-    setPrefsDialogOpen,
+    disableSignIn = false,
+    isMaximized,
+    leftInset,
+    onCloseWindow,
+    onDoubleClick,
+    onMaximizeWindow,
+    onMinimizeWindow,
+    onSelectDataSourceAction,
+    onUnmaximizeWindow,
+    showCustomWindowControls = false,
   } = props;
   const { classes, cx } = useStyles({ leftInset, debugDragRegion });
-  const currentUserType = useCurrentUserType();
+  const { currentUser, signIn } = useCurrentUser();
+
+  const { appBarLayoutButton } = useAppContext();
+
   const analytics = useAnalytics();
   const [enableMemoryUseIndicator = false] = useAppConfigurationValue<boolean>(
     AppSetting.ENABLE_MEMORY_USE_INDICATOR,
   );
 
-  const selectedLayoutId = useCurrentLayoutSelector(selectedLayoutIdSelector);
-  const supportsAccountSettings = signIn != undefined;
+  const currentLayoutId = useCurrentLayoutSelector(selectCurrentLayoutId);
 
-  const { leftSidebarOpen, rightSidebarOpen, layoutMenuOpen } = useWorkspaceStore(selectWorkspace);
-  const { setLayoutMenuOpen, setRightSidebarOpen, setLeftSidebarOpen } = useWorkspaceActions();
+  const { leftSidebarOpen, rightSidebarOpen } = useWorkspaceStore(selectWorkspace, shallow);
+  const { setRightSidebarOpen, setLeftSidebarOpen } = useWorkspaceActions();
 
-  const [helpAnchorEl, setHelpAnchorEl] = useState<undefined | HTMLElement>(undefined);
   const [userAnchorEl, setUserAnchorEl] = useState<undefined | HTMLElement>(undefined);
   const [panelAnchorEl, setPanelAnchorEl] = useState<undefined | HTMLElement>(undefined);
-  const layoutButtonRef = useRef<HTMLButtonElement>(ReactNull);
-  const layoutAnchorEl = layoutMenuOpen ? layoutButtonRef.current : undefined;
 
-  const helpMenuOpen = Boolean(helpAnchorEl);
   const userMenuOpen = Boolean(userAnchorEl);
   const panelMenuOpen = Boolean(panelAnchorEl);
 
@@ -226,24 +246,9 @@ export function AppBar(props: AppBarProps): JSX.Element {
                 <FoxgloveLogo fontSize="inherit" color="inherit" />
               </IconButton>
               <AppBarIconButton
-                className={cx({ "Mui-selected": layoutMenuOpen })}
-                ref={layoutButtonRef}
-                color="inherit"
-                id="layout-button"
-                title="Layouts"
-                aria-controls={layoutMenuOpen ? "layout-menu" : undefined}
-                aria-haspopup="true"
-                aria-expanded={layoutMenuOpen ? "true" : undefined}
-                onClick={() => {
-                  setLayoutMenuOpen(true);
-                }}
-              >
-                <BoardSplit24Regular />
-              </AppBarIconButton>
-              <AppBarIconButton
                 className={cx({ "Mui-selected": panelMenuOpen })}
                 color="inherit"
-                disabled={selectedLayoutId == undefined}
+                disabled={currentLayoutId == undefined}
                 id="add-panel-button"
                 title="Add panel"
                 aria-label="Add panel button"
@@ -254,7 +259,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
                   setPanelAnchorEl(event.currentTarget);
                 }}
               >
-                <AddCircle24Regular />
+                <SlideAdd24Regular />
               </AppBarIconButton>
             </div>
           </div>
@@ -266,7 +271,8 @@ export function AppBar(props: AppBarProps): JSX.Element {
           <div className={classes.end}>
             <div className={classes.endInner}>
               {enableMemoryUseIndicator && <MemoryUseIndicator />}
-              <Stack direction="row" alignItems="center" paddingX={1.5}>
+              {appBarLayoutButton}
+              <Stack direction="row" alignItems="center">
                 <AppBarIconButton
                   title={
                     <>
@@ -292,70 +298,52 @@ export function AppBar(props: AppBarProps): JSX.Element {
                   {rightSidebarOpen ? <PanelRight24Filled /> : <PanelRight24Regular />}
                 </AppBarIconButton>
               </Stack>
-              <AppBarIconButton
-                className={cx({ "Mui-selected": helpMenuOpen })}
-                id="help-button"
-                title="Help"
-                aria-controls={helpMenuOpen ? "help-menu" : undefined}
-                aria-haspopup="true"
-                aria-expanded={helpMenuOpen ? "true" : undefined}
-                onClick={(event) => {
-                  void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
-                    user: currentUserType,
-                    cta: "help-menu",
-                  });
-                  setHelpAnchorEl(event.currentTarget);
-                }}
+              {!disableSignIn && !currentUser && signIn != undefined && (
+                <Button
+                  variant="contained"
+                  color="primary"
+                  className={classes.button}
+                  size="small"
+                  onClick={() => {
+                    signIn();
+                    void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
+                      user: "unauthenticated",
+                      cta: "sign-in",
+                    });
+                  }}
+                >
+                  Sign in
+                </Button>
+              )}
+              <Tooltip
+                classes={{ tooltip: classes.tooltip }}
+                title={currentUser?.email ?? "Profile"}
+                arrow={false}
               >
-                <QuestionCircle24Regular />
-              </AppBarIconButton>
-              <AppBarIconButton
-                id="preferences-button"
-                title="Preferences"
-                aria-controls={prefsDialogOpen ? "preferences-dialog" : undefined}
-                aria-haspopup="true"
-                aria-expanded={prefsDialogOpen ? "true" : undefined}
-                onClick={() => {
-                  void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
-                    user: currentUserType,
-                    cta: "preferences-dialog",
-                  });
-                  setPrefsDialogOpen(true);
-                }}
-              >
-                <Settings24Regular />
-              </AppBarIconButton>
-              {!disableSignIn &&
-                supportsAccountSettings &&
-                (currentUser ? (
-                  <UserIconButton
-                    aria-label="User profile menu button"
-                    color="inherit"
-                    id="user-profile-button"
-                    aria-controls={userMenuOpen ? "user-profile-menu" : undefined}
-                    aria-haspopup="true"
-                    aria-expanded={userMenuOpen ? "true" : undefined}
-                    onClick={(event) => setUserAnchorEl(event.currentTarget)}
-                    size="small"
-                    currentUser={currentUser}
-                  />
-                ) : (
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    className={classes.button}
-                    size="small"
-                    onClick={() => {
-                      signIn();
-                      void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
-                        user: "unauthenticated",
-                        cta: "sign-in",
-                      });
-                    }}
-                  >
-                    Sign in
-                  </Button>
-                ))}
+                <IconButton
+                  className={cx(classes.iconButton, { "Mui-selected": userMenuOpen })}
+                  aria-label="User profile menu button"
+                  color="inherit"
+                  id="user-profile-button"
+                  aria-controls={userMenuOpen ? "user-profile-menu" : undefined}
+                  aria-haspopup="true"
+                  aria-expanded={userMenuOpen ? "true" : undefined}
+                  onClick={(event) => setUserAnchorEl(event.currentTarget)}
+                  data-testid="user-button"
+                >
+                  <Avatar className={classes.avatar} variant="rounded">
+                    {currentUser?.avatarImageUrl ? (
+                      <img
+                        src={currentUser.avatarImageUrl}
+                        referrerPolicy="same-origin"
+                        className={classes.userIconImage}
+                      />
+                    ) : (
+                      <PersonIcon />
+                    )}
+                  </Avatar>
+                </IconButton>
+              </Tooltip>
               {showCustomWindowControls && (
                 <CustomWindowControls
                   onMinimizeWindow={onMinimizeWindow}
@@ -374,28 +362,10 @@ export function AppBar(props: AppBarProps): JSX.Element {
         open={panelMenuOpen}
         handleClose={() => setPanelAnchorEl(undefined)}
       />
-      <LayoutMenu
-        anchorEl={layoutAnchorEl ?? undefined}
-        open={layoutMenuOpen}
-        handleClose={() => setLayoutMenuOpen(false)}
-        supportsSignIn={supportsAccountSettings}
-      />
-      <HelpMenu
-        anchorEl={helpAnchorEl}
-        open={helpMenuOpen}
-        handleClose={() => setHelpAnchorEl(undefined)}
-        anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
-        transformOrigin={{ vertical: "top", horizontal: "right" }}
-      />
       <UserMenu
         anchorEl={userAnchorEl}
         open={userMenuOpen}
         handleClose={() => setUserAnchorEl(undefined)}
-      />
-      <PreferencesDialog
-        id="preferences-dialog"
-        open={prefsDialogOpen}
-        onClose={() => setPrefsDialogOpen(false)}
       />
     </>
   );

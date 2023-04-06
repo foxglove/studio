@@ -6,19 +6,10 @@ import i18n from "i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 import { initReactI18next } from "react-i18next";
 
-import { enPreferences, enGeneral } from "./en";
-import { zhPreferences, zhGeneral } from "./zh";
+import * as en from "./en";
+import * as zh from "./zh";
 
-export const translations = {
-  en: {
-    preferences: enPreferences,
-    general: enGeneral,
-  },
-  zh: {
-    preferences: zhPreferences,
-    general: zhGeneral,
-  },
-};
+export const translations = { en, zh };
 
 export type Language = keyof typeof translations;
 
@@ -36,5 +27,8 @@ export async function initI18n(): Promise<void> {
       },
       fallbackLng: "en",
       defaultNS,
+      interpolation: {
+        escapeValue: false, // not needed for react as it escapes by default
+      },
     });
 }

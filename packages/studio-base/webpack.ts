@@ -15,7 +15,6 @@ import webpack, { Configuration, WebpackPluginInstance } from "webpack";
 import { createTssReactNameTransformer } from "@foxglove/typescript-transformers";
 
 import { WebpackArgv } from "./WebpackArgv";
-import packageJson from "./package.json";
 
 if (monacoPkg.version !== "0.30.1") {
   throw new Error(`
@@ -37,6 +36,8 @@ type Options = {
   // We ignore errors from unused locals to avoid having to also comment
   // those out while iterating.
   allowUnusedVariables?: boolean;
+  /** Specify the app version. */
+  version: string;
 };
 
 // Create a partial webpack configuration required to build app using webpack.
@@ -44,12 +45,12 @@ type Options = {
 export function makeConfig(
   _: unknown,
   argv: WebpackArgv,
-  options?: Options,
+  options: Options,
 ): Pick<Configuration, "resolve" | "module" | "optimization" | "plugins" | "node"> {
   const isDev = argv.mode === "development";
   const isServe = argv.env?.WEBPACK_SERVE ?? false;
 
-  const { allowUnusedVariables = isDev && isServe } = options ?? {};
+  const { allowUnusedVariables = isDev && isServe, version } = options;
 
   return {
     resolve: {
@@ -239,7 +240,7 @@ export function makeConfig(
       new webpack.DefinePlugin({
         // Should match webpack-defines.d.ts
         ReactNull: null, // eslint-disable-line no-restricted-syntax
-        FOXGLOVE_STUDIO_VERSION: JSON.stringify(packageJson.version),
+        FOXGLOVE_STUDIO_VERSION: JSON.stringify(version),
       }),
       // https://webpack.js.org/plugins/ignore-plugin/#example-of-ignoring-moment-locales
       new webpack.IgnorePlugin({

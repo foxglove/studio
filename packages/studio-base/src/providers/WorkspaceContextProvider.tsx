@@ -18,10 +18,13 @@ function createWorkspaceContextStore(
     persist(
       () => {
         const store: WorkspaceContextStore = {
-          layoutMenuOpen: false,
-          leftSidebarItem: undefined,
-          leftSidebarOpen: false,
+          leftSidebarItem: "panel-settings",
+          leftSidebarOpen: true,
           leftSidebarSize: undefined,
+          prefsDialogState: {
+            initialTab: undefined,
+            open: false,
+          },
           rightSidebarItem: undefined,
           rightSidebarOpen: false,
           rightSidebarSize: undefined,
@@ -33,8 +36,7 @@ function createWorkspaceContextStore(
       {
         name: "fox.workspace",
         partialize: (value) => {
-          const { layoutMenuOpen: _, ...rest } = value;
-          return rest;
+          return value;
         },
       },
     ),

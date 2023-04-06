@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import EventEmitter from "eventemitter3";
+import i18next from "i18next";
 import { Immutable, produce } from "immer";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
@@ -10,7 +11,7 @@ import { DeepPartial } from "ts-essentials";
 import { v4 as uuidv4 } from "uuid";
 
 import Logger from "@foxglove/log";
-import { toNanoSec } from "@foxglove/rostime";
+import { Time, fromNanoSec, isLessThan, toNanoSec } from "@foxglove/rostime";
 import type { FrameTransform, FrameTransforms, SceneUpdate } from "@foxglove/schemas";
 import {
   MessageEvent,
@@ -46,10 +47,12 @@ import {
   normalizeTFMessage,
   normalizeTransformStamped,
 } from "./normalizeMessages";
+import { CameraStateSettings } from "./renderables/CameraStateSettings";
 import { Cameras } from "./renderables/Cameras";
-import { CoreSettings } from "./renderables/CoreSettings";
 import { FrameAxes, LayerSettingsTransform } from "./renderables/FrameAxes";
+import { FrameSettings } from "./renderables/FrameSettings";
 import { Grids } from "./renderables/Grids";
+import { ImageMode } from "./renderables/ImageMode";
 import { Images } from "./renderables/Images";
 import { LaserScans } from "./renderables/LaserScans";
 import { Markers } from "./renderables/Markers";
@@ -60,7 +63,9 @@ import { Polygons } from "./renderables/Polygons";
 import { PoseArrays } from "./renderables/PoseArrays";
 import { Poses } from "./renderables/Poses";
 import { PublishClickTool, PublishClickType } from "./renderables/PublishClickTool";
+import { PublishSettings } from "./renderables/PublishSettings";
 import { FoxgloveSceneEntities } from "./renderables/SceneEntities";
+import { SceneSettings } from "./renderables/SceneSettings";
 import { Urdfs } from "./renderables/Urdfs";
 import { VelodyneScans } from "./renderables/VelodyneScans";
 import { MarkerPool } from "./renderables/markers/MarkerPool";
@@ -75,7 +80,15 @@ import {
   Vector3,
 } from "./ros";
 import { BaseSettings, CustomLayerSettings, SelectEntry } from "./settings";
-import { AddTransformResult, makePose, Pose, Transform, TransformTree } from "./transforms";
+import {
+  AddTransformResult,
+  CoordinateFrame,
+  makePose,
+  Pose,
+  Transform,
+  TransformTree,
+} from "./transforms";
+import { InterfaceMode } from "./types";
 
 const log = Logger.getLogger(__filename);
 
@@ -105,6 +118,32 @@ export type RendererEvents = {
 };
 
 export type FollowMode = "follow-pose" | "follow-position" | "follow-none";
+
+/** Legacy Image panel settings that occur at the root level */
+export type LegacyImageConfig = {
+  cameraTopic: string;
+  enabledMarkerTopics: string[];
+  synchronize: boolean;
+  flipHorizontal: boolean;
+  flipVertical: boolean;
+  maxValue: number;
+  minValue: number;
+  mode: "fit" | "fill" | "other";
+  pan: { x: number; y: number };
+  rotation: number;
+  smooth: boolean;
+  transformMarkers: boolean;
+  zoom: number;
+  zoomPercentage: number;
+};
+
+/** Settings pertaining to Image mode */
+export type ImageModeConfig = {
+  /** Image topic to display */
+  imageTopic?: string;
+  /** Topic containing CameraCalibration or CameraInfo */
+  calibrationTopic?: string;
+};
 
 export type RendererConfig = {
   /** Camera settings for the currently rendering scene */
@@ -166,6 +205,9 @@ export type RendererConfig = {
   topics: Record<string, Partial<BaseSettings> | undefined>;
   /** instanceId -> settings */
   layers: Record<string, Partial<CustomLayerSettings> | undefined>;
+
+  /** Settings pertaining to Image mode */
+  imageMode: ImageModeConfig;
 };
 
 /** Callback for handling a message received on a topic */
@@ -265,6 +307,7 @@ class InstancedLineMaterial extends THREE.LineBasicMaterial {
  * `WebGLRenderingContext`, and `SettingsTree`.
  */
 export class Renderer extends EventEmitter<RendererEvents> {
+  public readonly interfaceMode: InterfaceMode;
   private canvas: HTMLCanvasElement;
   public readonly gl: THREE.WebGLRenderer;
   public maxLod = DetailLevel.High;
@@ -293,7 +336,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
   public readonly outlineMaterial = new THREE.LineBasicMaterial({ dithering: true });
   public readonly instancedOutlineMaterial = new InstancedLineMaterial({ dithering: true });
 
-  private coreSettings: CoreSettings;
+  private cameraStateSettings: CameraStateSettings;
   public measurementTool: MeasurementTool;
   public publishClickTool: PublishClickTool;
 
@@ -307,7 +350,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
   private controls: OrbitControls;
   public followMode: FollowMode;
   // The pose of the render frame in the fixed frame when following was disabled
-  private unfollowPoseSnapshot: Pose | undefined;
+  public unfollowPoseSnapshot: Pose | undefined;
 
   // Are we connected to a ROS data source? Normalize coordinate frames if so by
   // stripping any leading "/" prefix. See `normalizeFrameId()` for details.
@@ -336,15 +379,20 @@ export class Renderer extends EventEmitter<RendererEvents> {
   private _cameraSyncError: undefined | string;
   private _devicePixelRatioMediaQuery?: MediaQueryList;
 
-  public constructor(canvas: HTMLCanvasElement, config: RendererConfig) {
+  public constructor(
+    canvas: HTMLCanvasElement,
+    config: Immutable<RendererConfig>,
+    interfaceMode: InterfaceMode,
+  ) {
     super();
     // NOTE: Global side effect
     THREE.Object3D.DEFAULT_UP = new THREE.Vector3(0, 0, 1);
 
+    this.interfaceMode = interfaceMode;
     this.canvas = canvas;
     this.config = config;
 
-    this.settings = new SettingsManager(baseSettingsTree());
+    this.settings = new SettingsManager(baseSettingsTree(this.interfaceMode));
     this.settings.on("update", () => this.emit("settingsTreeChange", this));
     // Add the top-level nodes first so merging happens in the correct order.
     // Another approach would be to modify SettingsManager to allow merging parent
@@ -447,7 +495,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
     this.measurementTool = new MeasurementTool(this);
     this.publishClickTool = new PublishClickTool(this);
-    this.coreSettings = new CoreSettings(this);
+    this.cameraStateSettings = new CameraStateSettings(this);
 
     // Internal handlers for TF messages to update the transform tree
     this.addSchemaSubscriptions(FRAME_TRANSFORM_DATATYPES, {
@@ -471,7 +519,18 @@ export class Renderer extends EventEmitter<RendererEvents> {
       preload: config.scene.transforms?.enablePreloading ?? true,
     });
 
-    this.addSceneExtension(this.coreSettings);
+    switch (interfaceMode) {
+      case "image":
+        this.addSceneExtension(new ImageMode(this));
+        break;
+      case "3d":
+        this.addSceneExtension(this.cameraStateSettings);
+        this.addSceneExtension(new PublishSettings(this));
+        this.addSceneExtension(new FrameSettings(this));
+        break;
+    }
+
+    this.addSceneExtension(new SceneSettings(this));
     this.addSceneExtension(new Cameras(this));
     this.addSceneExtension(new FrameAxes(this));
     this.addSceneExtension(new Grids(this));
@@ -541,7 +600,8 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
   public setCameraSyncError(error: undefined | string): void {
     this._cameraSyncError = error;
-    this.updateCoreSettings();
+    // Updates the settings tree for camera state settings to account for any changes in the config.
+    this.cameraStateSettings.updateSettingsTree();
   }
 
   public getPixelRatio(): number {
@@ -549,18 +609,133 @@ export class Renderer extends EventEmitter<RendererEvents> {
   }
 
   /**
-   * Clears internal state such as the TransformTree and removes Renderables from SceneExtensions.
-   * This is useful when seeking to a new playback position or when a new data source is loaded.
+   *
+   * @param currentTime what renderer.currentTime will be set to
    */
-  public clear(): void {
-    // These must be cleared before calling `SceneExtension#removeAllRenderables()` to allow
-    // extensions to add transforms and errors back afterward
-    this.transformTree.clearAfter(this.currentTime);
+  public setCurrentTime(newTimeNs: bigint): void {
+    this.currentTime = newTimeNs;
+  }
+  /**
+   * Updates renderer state according to seek delta. Handles clearing of future state and resetting of allFrames cursor if seeked backwards
+   * Should be called after `setCurrentTime` as been called
+   * @param oldTime used to determine if seeked backwards
+   */
+  public handleSeek(oldTimeNs: bigint): void {
+    const movedBack = this.currentTime < oldTimeNs;
+    // want to clear transforms and reset the cursor if we seek backwards
+    this.clear({ clearTransforms: movedBack, resetAllFramesCursor: movedBack });
+  }
+
+  /**
+   * Clears:
+   *  - Rendered objects (a backfill is performed to ensure that they are regenerated with new messages from current frame)
+   *  - Errors in settings. Messages that caused errors in the past are cleared, but will be re-added if they are still causing errors when read in.
+   *  - [Optional] Transform tree. This should be set to true when a seek to a previous time is performed in order to flush potential future state to the newly set time.
+   *  - [Optional] allFramesCursor. This is the cursor that iterates through allFrames up to currentTime. It should be reset when seeking backwards to avoid keeping future state.
+   * @param {Object} params - modifiers to the clear operation
+   * @param {boolean} params.clearTransforms - whether to clear the transform tree. This should be set to true when a seek to a previous time is performed in order
+   * order to flush potential future state to the newly set time.
+   * @param {boolean} params.resetAllFramesCursor - whether to reset the cursor for the allFrames array.
+   */
+  public clear(
+    {
+      clearTransforms,
+      resetAllFramesCursor,
+    }: { clearTransforms?: boolean; resetAllFramesCursor?: boolean } = {
+      clearTransforms: false,
+      resetAllFramesCursor: false,
+    },
+  ): void {
+    if (clearTransforms === true) {
+      this.transformTree.clear();
+    }
+    if (resetAllFramesCursor === true) {
+      this._resetAllFramesCursor();
+    }
     this.settings.errors.clear();
 
     for (const extension of this.sceneExtensions.values()) {
       extension.removeAllRenderables();
     }
+  }
+
+  private _allFramesCursor: {
+    // index represents where the last read message is in allFrames
+    index: number;
+    cursorTimeReached?: Time;
+  } = {
+    index: -1,
+    cursorTimeReached: undefined,
+  };
+
+  private _resetAllFramesCursor() {
+    this._allFramesCursor = {
+      index: -1,
+      cursorTimeReached: undefined,
+    };
+  }
+
+  /**
+   * Iterates through allFrames and handles messages with a receiveTime <= currentTime
+   * @param allFrames - array of all preloaded messages
+   * @returns {boolean} - whether the allFramesCursor has been updated and new messages were read in
+   */
+  public handleAllFramesMessages(allFrames?: readonly MessageEvent<unknown>[]): boolean {
+    const currentTime = fromNanoSec(this.currentTime);
+    const allFramesCursor = this._allFramesCursor;
+    // index always indicates last read-in message
+    let cursor = allFramesCursor.index;
+    let cursorTimeReached = allFramesCursor.cursorTimeReached;
+
+    if (!allFrames || allFrames.length === 0) {
+      // when tf preloading is disabled
+      if (cursor > -1) {
+        this._resetAllFramesCursor();
+      }
+      return false;
+    }
+
+    /**
+     * Assumptions about allFrames needed by allFramesCursor:
+     *  - always sorted by receiveTime
+     *  - preloaded topics/schemas are only ever all removed or all added at once, otherwise it is not stable and would need to be reset
+     *  - allFrame chunks are only ever loaded from beginning to end and does not have any eviction
+     */
+
+    // cursor should never be over allFramesLength, if it some how is, it means the cursor was at the end of `allFrames` prior to eviction and eviction shortened allframes
+    // in this case we should set the cursor to the end of allFrames
+    cursor = Math.min(cursor, allFrames.length - 1);
+    let message;
+
+    let hasAddedMessageEvents = false;
+    // load preloaded messages up to current time
+    while (cursor < allFrames.length - 1) {
+      cursor++;
+      message = allFrames[cursor]!;
+      // read messages until we reach the current time
+      if (isLessThan(currentTime, message.receiveTime)) {
+        cursorTimeReached = currentTime;
+        // reset cursor to last read message index
+        cursor--;
+        break;
+      }
+      if (!hasAddedMessageEvents) {
+        hasAddedMessageEvents = true;
+      }
+
+      this.addMessageEvent(message);
+      if (cursor === allFrames.length - 1) {
+        cursorTimeReached = message.receiveTime;
+      }
+    }
+
+    // want to avoid setting anything if nothing has changed
+    if (!hasAddedMessageEvents) {
+      return false;
+    }
+
+    this._allFramesCursor = { index: cursor, cursorTimeReached };
+    return true;
   }
 
   private addSceneExtension(extension: SceneExtension): void {
@@ -574,11 +749,6 @@ export class Renderer extends EventEmitter<RendererEvents> {
   public updateConfig(updateHandler: (draft: RendererConfig) => void): void {
     this.config = produce(this.config, updateHandler);
     this.emit("configChange", this);
-  }
-
-  /** Updates the settings tree for core settings to account for any changes in the config. */
-  public updateCoreSettings(): void {
-    this.coreSettings.updateSettingsTree();
   }
 
   public addSchemaSubscriptions<T>(
@@ -644,11 +814,11 @@ export class Renderer extends EventEmitter<RendererEvents> {
       path: ["topics"],
       node: {
         enableVisibilityFilter: true,
-        label: "Topics",
+        label: i18next.t("threeDee:topics"),
         defaultExpansionState: "expanded",
         actions: [
-          { id: "show-all", type: "action", label: "Show All" },
-          { id: "hide-all", type: "action", label: "Hide All" },
+          { id: "show-all", type: "action", label: i18next.t("threeDee:showAll") },
+          { id: "hide-all", type: "action", label: i18next.t("threeDee:hideAll") },
         ],
         children: this.settings.tree()["topics"]?.children,
         handler: this.handleTopicsAction,
@@ -660,7 +830,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     const customLayers: SettingsTreeEntry = {
       path: ["layers"],
       node: {
-        label: `Custom Layers${layerCount > 0 ? ` (${layerCount})` : ""}`,
+        label: `${i18next.t("threeDee:customLayers")}${layerCount > 0 ? ` (${layerCount})` : ""}`,
         children: this.settings.tree()["layers"]?.children,
         actions: Array.from(this.customLayerActions.values()).map((entry) => entry.action),
         handler: this.handleCustomLayersAction,
@@ -692,7 +862,9 @@ export class Renderer extends EventEmitter<RendererEvents> {
     // Choose the root frame with the most children
     const rootsToCounts = new Map<string, number>();
     for (const frame of allFrames.values()) {
-      const rootId = frame.root().id;
+      const root = frame.root();
+      const rootId = root.id;
+
       rootsToCounts.set(rootId, (rootsToCounts.get(rootId) ?? 0) + 1);
     }
     const rootsArray = Array.from(rootsToCounts.entries());
@@ -1040,11 +1212,9 @@ export class Renderer extends EventEmitter<RendererEvents> {
     camera.layers.set(LAYER_DEFAULT);
     this.selectionBackdrop.visible = this.selectedRenderable != undefined;
 
-    const renderFrameId = this.renderFrameId;
-    const fixedFrameId = this.fixedFrameId;
-    if (renderFrameId == undefined || fixedFrameId == undefined) {
-      return;
-    }
+    // use the FALLBACK_FRAME_ID if renderFrame is undefined and there are no options for transforms
+    const renderFrameId = this.renderFrameId ?? CoordinateFrame.FALLBACK_FRAME_ID;
+    const fixedFrameId = this.fixedFrameId ?? CoordinateFrame.FALLBACK_FRAME_ID;
 
     const renderFrame = this.transformTree.frame(renderFrameId);
     const fixedFrame = this.transformTree.frame(fixedFrameId);
@@ -1318,10 +1488,16 @@ export class Renderer extends EventEmitter<RendererEvents> {
           this.settings.errors.add(
             FOLLOW_TF_PATH,
             FRAME_NOT_FOUND,
-            `Frame "${this.followFrameId}" not found`,
+            i18next.t("threeDee:frameNotFound", {
+              followFrameId: this.followFrameId,
+            }),
           );
         } else {
-          this.settings.errors.add(FOLLOW_TF_PATH, NO_FRAME_SELECTED, `No coordinate frames found`);
+          this.settings.errors.add(
+            FOLLOW_TF_PATH,
+            NO_FRAME_SELECTED,
+            i18next.t("threeDee:noCoordinateFramesFound"),
+          );
         }
         this.fixedFrameId = undefined;
         return;
@@ -1338,7 +1514,9 @@ export class Renderer extends EventEmitter<RendererEvents> {
       this.settings.errors.add(
         FOLLOW_TF_PATH,
         FRAME_NOT_FOUND,
-        `Frame "${this.renderFrameId}" not found`,
+        i18next.t("threeDee:frameNotFound", {
+          followFrameId: this.renderFrameId,
+        }),
       );
       return;
     } else {
@@ -1353,6 +1531,9 @@ export class Renderer extends EventEmitter<RendererEvents> {
       } else {
         log.debug(`Changing fixed frame from "${this.fixedFrameId}" to "${fixedFrameId}"`);
       }
+      // Set the unfollowPoseSnapshot to undefined because there is a new fixed frame for the snapshot
+      // This keeps the camera settings offsets based off of the display frame rather than old fixed frame.
+      this.unfollowPoseSnapshot = undefined;
       this.fixedFrameId = fixedFrameId;
     }
 
@@ -1454,14 +1635,19 @@ function deselectObject(object: THREE.Object3D) {
   });
 }
 
-// Creates a skeleton settings tree. The tree contents are filled in by scene extensions
-function baseSettingsTree(): SettingsTreeNodes {
-  return {
-    general: {},
-    scene: {},
-    transforms: {},
-    topics: {},
-    layers: {},
-    publish: {},
-  };
+/**
+ * Creates a skeleton settings tree. The tree contents are filled in by scene extensions.
+ * This dictates the order in which groups appear in the settings editor.
+ */
+function baseSettingsTree(interfaceMode: InterfaceMode): SettingsTreeNodes {
+  const keys: string[] = [];
+  keys.push(interfaceMode === "image" ? "imageMode" : "general", "scene");
+  if (interfaceMode === "3d") {
+    keys.push("cameraState");
+  }
+  keys.push("transforms", "topics", "layers");
+  if (interfaceMode === "3d") {
+    keys.push("publish");
+  }
+  return Object.fromEntries(keys.map((key) => [key, {}]));
 }

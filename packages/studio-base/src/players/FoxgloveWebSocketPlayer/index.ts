@@ -23,6 +23,7 @@ import {
   PlayerCapabilities,
   PlayerMetricsCollectorInterface,
   PlayerPresence,
+  PlayerProblem,
   PlayerState,
   PublishPayload,
   SubscribePayload,
@@ -116,6 +117,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
   private _parameters = new Map<string, ParameterValue>();
   private _getParameterInterval?: ReturnType<typeof setInterval>;
   private _openTimeout?: ReturnType<typeof setInterval>;
+  private _connectionAttemptTimeout?: ReturnType<typeof setInterval>;
   private _unresolvedPublications: AdvertiseOptions[] = [];
   private _publicationsByTopic = new Map<string, Publication>();
   private _serviceCallEncoding?: string;
@@ -159,6 +161,13 @@ export default class FoxgloveWebSocketPlayer implements Player {
     }
     log.info(`Opening connection to ${this._url}`);
 
+    // Set a timeout to abort the connection if we are still not connected by then.
+    // This will abort hanging connection attempts that can for whatever reason not
+    // establish a connection with the server.
+    this._connectionAttemptTimeout = setTimeout(() => {
+      this._client?.close();
+    }, 10000);
+
     this._client = new FoxgloveClient({
       ws:
         typeof Worker !== "undefined"
@@ -169,6 +178,9 @@ export default class FoxgloveWebSocketPlayer implements Player {
     this._client.on("open", () => {
       if (this._closed) {
         return;
+      }
+      if (this._connectionAttemptTimeout != undefined) {
+        clearTimeout(this._connectionAttemptTimeout);
       }
       this._presence = PlayerPresence.PRESENT;
       this._problems.clear();
@@ -194,6 +206,18 @@ export default class FoxgloveWebSocketPlayer implements Player {
 
     this._client.on("error", (err) => {
       log.error(err);
+
+      if (
+        (err as unknown as undefined | { message?: string })?.message != undefined &&
+        err.message.includes("insecure WebSocket connection")
+      ) {
+        this._problems.addProblem("ws:connection-failed", {
+          severity: "error",
+          message: "Insecure WebSocket connection",
+          tip: `Check that the WebSocket server at ${this._url} is reachable and supports protocol version ${FoxgloveClient.SUPPORTED_SUBPROTOCOL}.`,
+        });
+        this._emitState();
+      }
     });
 
     // Note: We've observed closed being called not only when an already open connection is closed
@@ -209,6 +233,9 @@ export default class FoxgloveWebSocketPlayer implements Player {
       if (this._getParameterInterval != undefined) {
         clearInterval(this._getParameterInterval);
         this._getParameterInterval = undefined;
+      }
+      if (this._connectionAttemptTimeout != undefined) {
+        clearTimeout(this._connectionAttemptTimeout);
       }
 
       this._client?.close();
@@ -318,6 +345,19 @@ export default class FoxgloveWebSocketPlayer implements Player {
       } else {
         log.error(msg);
       }
+
+      const problem: PlayerProblem = {
+        message: event.message,
+        severity: statusLevelToProblemSeverity(event.level),
+      };
+
+      if (event.message === "Send buffer limit reached") {
+        problem.tip =
+          "Server is dropping messages to the client. Check if you are subscribing to large or frequent topics or adjust your server send buffer limit.";
+      }
+
+      this._problems.addProblem(event.message, problem);
+      this._emitState();
     });
 
     this._client.on("advertise", (newChannels) => {
@@ -826,7 +866,13 @@ export default class FoxgloveWebSocketPlayer implements Player {
     }
 
     if (clientChannel.encoding === "json") {
-      const message = Buffer.from(JSON.stringify(msg) ?? "");
+      // Ensure that typed arrays are encoded as arrays and not objects.
+      const replacer = (_key: string, value: unknown) => {
+        return ArrayBuffer.isView(value)
+          ? Array.from(value as unknown as ArrayLike<unknown>)
+          : value;
+      };
+      const message = Buffer.from(JSON.stringify(msg, replacer) ?? "");
       this._client.sendMessage(clientChannel.id, message);
     } else if (
       ROS_ENCODINGS.includes(clientChannel.encoding) &&
@@ -970,4 +1016,14 @@ function dataTypeToFullName(dataType: string): string {
     return `${parts[0]}/msg/${parts[1]}`;
   }
   return dataType;
+}
+
+function statusLevelToProblemSeverity(level: StatusLevel): PlayerProblem["severity"] {
+  if (level === StatusLevel.INFO) {
+    return "info";
+  } else if (level === StatusLevel.WARNING) {
+    return "warn";
+  } else {
+    return "error";
+  }
 }

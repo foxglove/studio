@@ -12,6 +12,7 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { useState, useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { makeStyles } from "tss-react/mui";
 
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
@@ -22,6 +23,7 @@ import {
 } from "@foxglove/studio-base/components/MessagePipeline";
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
 import Stack from "@foxglove/studio-base/components/Stack";
+import WssErrorModal from "@foxglove/studio-base/components/WssErrorModal";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
 import { EventsStore, useEvents } from "@foxglove/studio-base/context/EventsContext";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
@@ -86,6 +88,7 @@ export default function DataSourceSidebar(props: Props): JSX.Element {
   const selectedEventId = useEvents(selectSelectedEventId);
   const [activeTab, setActiveTab] = useState<DataSourceSidebarTab>("topics");
   const { classes } = useStyles();
+  const { t } = useTranslation("dataSourceInfo");
 
   const [enableNewTopNav = false] = useAppConfigurationValue<boolean>(AppSetting.ENABLE_NEW_TOPNAV);
 
@@ -107,12 +110,18 @@ export default function DataSourceSidebar(props: Props): JSX.Element {
     }
   }, [playerPresence, showEventsTab, selectedEventId]);
 
+  const [hasDismissedWssErrorModal, setHasDismissedWssErrorModal] = useState(false);
+  const hasWssConnectionProblem = playerProblems.find(
+    (problem) =>
+      problem.severity === "error" && problem.message === "Insecure WebSocket connection",
+  );
+
   return (
     <SidebarContent
       disablePadding
       disableToolbar={disableToolbar}
       overflow="auto"
-      title="Data source"
+      title={t("dataSource")}
       trailingItems={[
         isLoading && (
           <Stack key="loading" alignItems="center" justifyContent="center" padding={1}>
@@ -182,6 +191,9 @@ export default function DataSourceSidebar(props: Props): JSX.Element {
           </>
         )}
       </Stack>
+      {hasWssConnectionProblem && !hasDismissedWssErrorModal && (
+        <WssErrorModal onClose={() => setHasDismissedWssErrorModal(true)} />
+      )}
     </SidebarContent>
   );
 }

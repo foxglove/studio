@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { t } from "i18next";
 import { Immutable } from "immer";
 import * as THREE from "three";
 import { Line2 } from "three/examples/jsm/lines/Line2";
@@ -13,13 +14,7 @@ import type { RosValue } from "@foxglove/studio-base/players/types";
 import { Label } from "@foxglove/three-text";
 
 import { Axis, AXIS_LENGTH } from "./Axis";
-import {
-  DEFAULT_AXIS_SCALE,
-  DEFAULT_LABEL_SCALE_FACTOR,
-  DEFAULT_LINE_COLOR_STR,
-  DEFAULT_LINE_WIDTH_PX,
-  DEFAULT_TF_LABEL_SIZE,
-} from "./CoreSettings";
+import { DEFAULT_LABEL_SCALE_FACTOR } from "./SceneSettings";
 import { makeLinePickingMaterial } from "./markers/materials";
 import { BaseUserData, Renderable } from "../Renderable";
 import { Renderer, RendererConfig } from "../Renderer";
@@ -38,6 +33,11 @@ const PICKING_LINE_SIZE = 6;
 const PI_2 = Math.PI / 2;
 
 const DEFAULT_EDITABLE = false;
+
+const DEFAULT_AXIS_SCALE = 1;
+const DEFAULT_LINE_WIDTH_PX = 2;
+const DEFAULT_LINE_COLOR_STR = "#ffff00";
+const DEFAULT_TF_LABEL_SIZE = 0.2;
 
 const DEFAULT_SETTINGS: LayerSettingsTransform = {
   visible: true,
@@ -129,23 +129,23 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
     const frameCount = this.renderer.coordinateFrameList.length;
     const children: SettingsTreeChildren = {
       settings: {
-        label: "Settings",
+        label: t("threeDee:settings"),
         defaultExpansionState: "collapsed",
         order: 0,
         fields: {
           editable: {
-            label: "Editable",
+            label: t("threeDee:editable"),
             input: "boolean",
             value: config.scene.transforms?.editable ?? DEFAULT_EDITABLE,
           },
           showLabel: {
-            label: "Labels",
+            label: t("threeDee:labels"),
             input: "boolean",
             value: config.scene.transforms?.showLabel ?? true,
           },
           ...((config.scene.transforms?.showLabel ?? true) && {
             labelSize: {
-              label: "Label size",
+              label: t("threeDee:labelSize"),
               input: "number",
               min: 0,
               step: 0.01,
@@ -155,12 +155,12 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
             },
           }),
           axisScale: fieldSize(
-            "Axis scale",
+            t("threeDee:axisScale"),
             config.scene.transforms?.axisScale,
             DEFAULT_AXIS_SCALE,
           ),
           lineWidth: {
-            label: "Line width",
+            label: t("threeDee:lineWidth"),
             input: "number",
             min: 0,
             step: 0.5,
@@ -169,12 +169,12 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
             placeholder: String(DEFAULT_LINE_WIDTH_PX),
           },
           lineColor: {
-            label: "Line color",
+            label: t("threeDee:lineColor"),
             input: "rgb",
             value: config.scene.transforms?.lineColor ?? DEFAULT_LINE_COLOR_STR,
           },
           enablePreloading: {
-            label: "Enable preloading",
+            label: t("threeDee:enablePreloading"),
             input: "boolean",
             value: config.scene.transforms?.enablePreloading ?? true,
           },
@@ -203,10 +203,10 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
       {
         path: ["transforms"],
         node: {
-          label: `Transforms${frameCount > 0 ? ` (${frameCount})` : ""}`,
+          label: `${t("threeDee:transforms")}${frameCount > 0 ? ` (${frameCount})` : ""}`,
           actions: [
-            { id: "show-all", type: "action", label: "Show All" },
-            { id: "hide-all", type: "action", label: "Hide All" },
+            { id: "show-all", type: "action", label: t("threeDee:showAll") },
+            { id: "hide-all", type: "action", label: t("threeDee:hideAll") },
           ],
           handler,
           children,
