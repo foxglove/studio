@@ -459,6 +459,11 @@ export default function muiComponents(theme: Theme): Theme["components"] & MuiLa
         },
       },
     },
+    MuiPopover: {
+      defaultProps: {
+        marginThreshold: 0,
+      },
+    },
     MuiRadio: {
       defaultProps: {
         disableRipple: true,
