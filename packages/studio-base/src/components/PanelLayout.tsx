@@ -234,7 +234,7 @@ export function UnconnectedPanelLayout(props: Props): React.ReactElement {
         if (a[i] !== b[i]) {
           break;
         }
-        result.push(a[i]);
+        result.push(a[i]!);
       }
       return result;
     }
