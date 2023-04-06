@@ -172,7 +172,7 @@ const useStyles = makeStyles()(({ palette, transitions, typography }) => ({
         },
         "&:hover .mosaic-split-line": {
           transition: transitions.create("box-shadow", { duration: transitions.duration.shorter }),
-          boxShadow: `0 0 0 2px ${
+          boxShadow: `0 0 0 1px ${
             palette.mode === "dark"
               ? tinycolor(palette.divider).lighten().toHexString()
               : tinycolor(palette.divider).darken().toHexString()

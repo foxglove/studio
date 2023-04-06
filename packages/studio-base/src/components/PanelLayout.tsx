@@ -11,17 +11,8 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Add24Filled } from "@fluentui/react-icons";
-import {
-  CircularProgress,
-  Link,
-  Popper,
-  Typography,
-  Fab,
-  styled as muiStyled,
-  Zoom,
-  ZoomProps,
-} from "@mui/material";
+import { Add20Filled } from "@fluentui/react-icons";
+import { CircularProgress, Link, Popper, Typography, Fab, Zoom, ZoomProps } from "@mui/material";
 import React, {
   PropsWithChildren,
   Suspense,
@@ -41,6 +32,8 @@ import {
   MosaicWithoutDragDropContext,
   updateTree,
 } from "react-mosaic-component";
+import tc from "tinycolor2";
+import { makeStyles } from "tss-react/mui";
 
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import { EmptyPanelLayout } from "@foxglove/studio-base/components/EmptyPanelLayout";
@@ -74,25 +67,36 @@ type Props = {
   tabId?: string;
 };
 
-// CSS hack to disable the first level of drop targets inside a Tab's own mosaic window (that would
-// place the dropped item as a sibling of the Tab), as well as the "root drop targets" inside the
-// nested mosaic (that would place the dropped item as a direct child of the Tab). Makes it easier
-// to drop panels into a tab layout.
-const HideTopLevelDropTargets = muiStyled("div")`
-  margin: 0;
+const FLOATING_BUTTON_SIZE = 28;
 
-  .mosaic-root + .drop-target-container {
-    display: none !important;
-  }
-  & > .mosaic-window > .drop-target-container {
-    display: none !important;
-  }
-`;
+const useStyles = makeStyles()((theme) => ({
+  // CSS hack to disable the first level of drop targets inside a Tab's own mosaic window (that would
+  // place the dropped item as a sibling of the Tab), as well as the "root drop targets" inside the
+  // nested mosaic (that would place the dropped item as a direct child of the Tab). Makes it easier
+  // to drop panels into a tab layout.
+  hideTopLevelDropTargets: {
+    margin: 0,
+
+    "& .mosaic-root + .drop-target-container": {
+      display: "none !important",
+    },
+    "& > .mosaic-window > .drop-target-container": {
+      display: "none !important",
+    },
+  },
+  fab: {
+    height: FLOATING_BUTTON_SIZE,
+    width: FLOATING_BUTTON_SIZE,
+    minHeight: FLOATING_BUTTON_SIZE,
+    boxShadow: theme.shadows[1],
+  },
+}));
 
 // This wrapper makes the tabId available in the drop result when something is dropped into a nested
 // drop target. This allows a panel to know which mosaic it was dropped in regardless of nesting
 // level.
-function TabMosaicWrapper({ tabId, children }: PropsWithChildren<{ tabId?: string }>) {
+function TabMosaicWrapper({ tabId, children }: PropsWithChildren<{ tabId?: string }>): JSX.Element {
+  const { classes, cx } = useStyles();
   const [, drop] = useDrop<unknown, MosaicDropResult, never>({
     accept: MosaicDragType.WINDOW,
     drop: (_item, monitor) => {
@@ -106,13 +110,14 @@ function TabMosaicWrapper({ tabId, children }: PropsWithChildren<{ tabId?: strin
     },
   });
   return (
-    <HideTopLevelDropTargets className="mosaic-tile" ref={drop}>
+    <div className={cx("mosaic-tile", classes.hideTopLevelDropTargets)} ref={drop}>
       {children}
-    </HideTopLevelDropTargets>
+    </div>
   );
 }
 
-export function UnconnectedPanelLayout(props: Props): React.ReactElement {
+export function UnconnectedPanelLayout(props: Props): JSX.Element {
+  const { classes } = useStyles();
   const { savePanelConfigs } = useCurrentLayoutActions();
   const mosaicId = usePanelMosaicId();
   const { layout, onChange, tabId } = props;
@@ -378,13 +383,13 @@ export function UnconnectedPanelLayout(props: Props): React.ReactElement {
           {({ TransitionProps }: { TransitionProps: ZoomProps }) => (
             <Zoom {...TransitionProps} timeout={{ enter: 200, exit: 0, appear: 200 }}>
               <Fab
+                className={classes.fab}
                 size="small"
-                color="primary"
                 onClick={handleButtonClick}
                 onMouseEnter={handleButtonMouseEnter}
                 onMouseLeave={handleButtonMouseLeave}
               >
-                <Add24Filled />
+                <Add20Filled />
               </Fab>
             </Zoom>
           )}
