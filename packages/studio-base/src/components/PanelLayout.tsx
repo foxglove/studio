@@ -11,15 +11,35 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { CircularProgress, Link, styled as muiStyled, Typography } from "@mui/material";
-import React, { PropsWithChildren, Suspense, useCallback, useMemo } from "react";
+import {
+  Button,
+  CircularProgress,
+  Link,
+  Paper,
+  Popover,
+  Popper,
+  styled as muiStyled,
+  Typography,
+  useTheme,
+} from "@mui/material";
+import React, {
+  PropsWithChildren,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useDrop } from "react-dnd";
 import {
+  isParent,
   MosaicDragType,
   MosaicNode,
   MosaicPath,
   MosaicWindow,
   MosaicWithoutDragDropContext,
+  updateTree,
 } from "react-mosaic-component";
 
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
@@ -184,7 +204,178 @@ export function UnconnectedPanelLayout(props: Props): React.ReactElement {
     [layout, mosaicId, onChange, renderTile, tabId],
   );
 
-  return <ErrorBoundary>{bodyToRender}</ErrorBoundary>;
+  const [hoveredSplitter, setHoveredSplitter] = useState<HTMLElement | undefined>();
+
+  const buttonHoveredRef = useRef(false);
+  const handleButtonMouseEnter = useCallback(() => {
+    buttonHoveredRef.current = true;
+  }, []);
+  const handleButtonMouseLeave = useCallback(() => {
+    buttonHoveredRef.current = false;
+    setHoveredSplitter(undefined);
+  }, []);
+
+  const handleButtonClick = useCallback(() => {
+    const mosaicRoot = hoveredSplitter?.closest(".mosaic-root");
+    if (!mosaicRoot || layout == undefined) {
+      return;
+    }
+    function* traverse(
+      node: MosaicNode<string>,
+      path: MosaicPath,
+    ): Generator<{ node: MosaicNode<string>; path: MosaicPath }> {
+      if (isParent(node)) {
+        yield* traverse(node.first, [...path, "first"]);
+        yield* traverse(node.second, [...path, "second"]);
+      } else {
+        yield { node, path };
+      }
+    }
+    function commonPrefix<T>(a: T[], b: T[]): T[] {
+      const result: T[] = [];
+      for (let i = 0; i < a.length; i++) {
+        if (a[i] !== b[i]) {
+          break;
+        }
+        result.push(a[i]);
+      }
+      return result;
+    }
+    const gen = traverse(layout, []);
+    let latestPath: MosaicPath | undefined;
+    for (const child of mosaicRoot.children) {
+      if (child.classList.contains("mosaic-tile")) {
+        const { done, value } = gen.next();
+        if (done === true) {
+          console.log("ran out of nodes :(");
+          break;
+        }
+        const { path } = value;
+        latestPath = path;
+      } else if (child.classList.contains("mosaic-split")) {
+        if (child !== hoveredSplitter) {
+          continue;
+        }
+        const { done, value } = gen.next();
+        if (done === true) {
+          console.log("ran out of nodes :(");
+          break;
+        }
+        const { path } = value;
+        console.log("FOUND1", latestPath, "vs", path);
+        latestPath = latestPath ? commonPrefix(path, latestPath) : path;
+        console.log("FOUND", hoveredSplitter, latestPath);
+        const newLayout = updateTree(layout, [
+          {
+            path: latestPath,
+            spec: (node) => {
+              if (typeof node === "string") {
+                return node;
+              }
+              return {
+                direction: node.direction,
+                first: node.first,
+                splitPercentage: ((node.splitPercentage ?? 50) * 2) / 3,
+                second: {
+                  direction: node.direction,
+                  first: getPanelIdForType("unknown"),
+                  second: node.second,
+                },
+              };
+            },
+          },
+        ]);
+        onChange(newLayout);
+        break;
+      } else {
+        console.warn("Unexpected child of .mosaic-root:", child);
+      }
+    }
+  }, [hoveredSplitter, layout, onChange]);
+
+  const wrapperRef = useRef<HTMLDivElement>(ReactNull);
+
+  useEffect(() => {
+    const mosaicRoot = wrapperRef.current?.querySelector<HTMLElement>(".mosaic-root");
+    if (!mosaicRoot) {
+      return;
+    }
+    let overTimer: ReturnType<typeof setTimeout> | undefined;
+    let outTimer: ReturnType<typeof setTimeout> | undefined;
+    const handleMouseOver = (event: MouseEvent) => {
+      const { target } = event;
+      if (!(target instanceof HTMLElement) || !target.classList.contains("mosaic-split")) {
+        return;
+      }
+      if (outTimer) {
+        clearTimeout(outTimer);
+        outTimer = undefined;
+      }
+      overTimer = setTimeout(() => {
+        setHoveredSplitter(target);
+        overTimer = undefined;
+      }, 300);
+    };
+    const handleMouseOut = (event: MouseEvent) => {
+      const { target } = event;
+      if (!(target instanceof HTMLElement) || !target.classList.contains("mosaic-split")) {
+        return;
+      }
+      if (overTimer) {
+        clearTimeout(overTimer);
+        overTimer = undefined;
+      } else {
+        outTimer = setTimeout(() => {
+          if (!buttonHoveredRef.current) {
+            setHoveredSplitter((cur) => (cur === target ? undefined : cur));
+          }
+          outTimer = undefined;
+        }, 500);
+      }
+    };
+    mosaicRoot.addEventListener("mouseover", handleMouseOver);
+    mosaicRoot.addEventListener("mouseout", handleMouseOut);
+    return () => {
+      mosaicRoot.removeEventListener("mouseover", handleMouseOver);
+      mosaicRoot.removeEventListener("mouseout", handleMouseOut);
+      if (overTimer) {
+        clearTimeout(overTimer);
+      }
+      if (outTimer) {
+        clearTimeout(outTimer);
+      }
+    };
+  }, []);
+
+  return (
+    <ErrorBoundary>
+      <div ref={wrapperRef} style={{ position: "absolute", inset: 0 }}>
+        <Popper
+          open={hoveredSplitter != undefined}
+          anchorEl={hoveredSplitter}
+          // hideBackdrop
+          // disableEnforceFocus
+          popperOptions={
+            hoveredSplitter
+              ? {
+                  placement: hoveredSplitter.classList.contains("-row") ? "top" : "left",
+                }
+              : undefined
+          }
+        >
+          <Button
+            variant="contained"
+            onClick={handleButtonClick}
+            onMouseEnter={handleButtonMouseEnter}
+            onMouseLeave={handleButtonMouseLeave}
+          >
+            + Add panel
+          </Button>
+        </Popper>
+        {bodyToRender}
+      </div>
+    </ErrorBoundary>
+  );
 }
 
 function LoadingState(): JSX.Element {
