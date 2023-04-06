@@ -43,7 +43,7 @@ export class CameraStateSettings extends SceneExtension {
         fixed: UserFrameId;
       }
     | undefined;
-  private unfollowPoseSnapshot: Pose | undefined;
+  public unfollowPoseSnapshot: Pose | undefined;
 
   private controls: OrbitControls;
   private _isUpdatingCameraState = false;

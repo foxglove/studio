@@ -140,8 +140,11 @@ describe("Renderer", () => {
     renderer.addMessageEvent(tfWithDisplayChild);
     renderer.animationFrame();
     expect(renderer.fixedFrameId).toEqual("parentOfDisplay");
-    // TODO: fix this test
-    // expect(renderer.unfollowPoseSnapshot?.position).toEqual({ x: 1, y: 0, z: 0 });
+    expect(renderer.cameraStateSettings.unfollowPoseSnapshot?.position).toEqual({
+      x: 1,
+      y: 0,
+      z: 0,
+    });
 
     const tfWithFinalRoot = createTFMessageEvent("root", "parentOfDisplay", 1n, [1n]);
     tfWithFinalRoot.message.transforms[0]!.transform.translation.y = 1;
@@ -149,8 +152,11 @@ describe("Renderer", () => {
     renderer.animationFrame();
     expect(renderer.fixedFrameId).toEqual("root");
     // combines the two translations
-    // TODO: fix this test
-    // expect(renderer.unfollowPoseSnapshot?.position).toEqual({ x: 1, y: 1, z: 0 });
+    expect(renderer.cameraStateSettings.unfollowPoseSnapshot?.position).toEqual({
+      x: 1,
+      y: 1,
+      z: 0,
+    });
   });
   it("tfPreloading off:  when seeking to before currentTime, clears transform tree", () => {
     // This test is meant accurately represent the flow of seek through the react component
