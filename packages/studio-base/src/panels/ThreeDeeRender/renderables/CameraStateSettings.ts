@@ -195,7 +195,7 @@ export class CameraStateSettings extends SceneExtension {
     };
   }
 
-  public frameSettingsNode(): SettingsTreeEntry {
+  private frameSettingsNode(): SettingsTreeEntry {
     const config = this.renderer.config;
     const handler = this.handleSettingsAction;
 
@@ -332,42 +332,27 @@ export class CameraStateSettings extends SceneExtension {
       return;
     }
 
+    const poseSnapshot = this.getUnfollowPoseSnapshot(fixedFrameId, renderFrameId, currentTime);
+
     const transformTree = this.renderer.transformTree;
 
-    // Redefine follow pose snapshot whenever renderFrame or fixedFrame changes
-    //
-    if (
-      this.unfollowSnapshotFrameIds?.fixed !== fixedFrameId &&
-      this.unfollowSnapshotFrameIds?.render !== renderFrameId
-    ) {
-      this.unfollowPoseSnapshot = makePose();
-      // record the pose of the center of the render frame in fixed frame into the snapshot
-      transformTree.apply(
-        this.unfollowPoseSnapshot,
-        this.unfollowPoseSnapshot,
-        fixedFrameId,
-        fixedFrameId,
-        renderFrameId,
-        currentTime,
-        currentTime,
-      );
-      this.unfollowSnapshotFrameIds = {
-        fixed: fixedFrameId,
-        render: renderFrameId,
-      };
-    }
-
-    if (this.unfollowPoseSnapshot) {
+    if (poseSnapshot) {
       // transform position of snapshot in fixed frame to the render frame
-      transformTree.apply(
-        snapshotInRenderFrame,
-        this.unfollowPoseSnapshot,
-        renderFrameId,
-        fixedFrameId,
-        fixedFrameId,
-        currentTime,
-        currentTime,
+      const appliedTransform = Boolean(
+        transformTree.apply(
+          snapshotInRenderFrame,
+          poseSnapshot,
+          renderFrameId,
+          fixedFrameId,
+          fixedFrameId,
+          currentTime,
+          currentTime,
+        ),
       );
+
+      if (!appliedTransform) {
+        return;
+      }
       /**
        * the application of the unfollowPoseSnapshot position and orientation
        * components makes the camera position and rotation static relative to the fixed frame.
@@ -404,6 +389,36 @@ export class CameraStateSettings extends SceneExtension {
   private handleErrorChange = (): void => {
     this.updateSettingsTree();
   };
+
+  // Redefine follow pose snapshot whenever renderFrame or fixedFrame changes
+  private getUnfollowPoseSnapshot(
+    fixedFrameId: string,
+    renderFrameId: string,
+    currentTime: bigint,
+  ) {
+    const transformTree = this.renderer.transformTree;
+    if (
+      this.unfollowSnapshotFrameIds?.fixed !== fixedFrameId ||
+      this.unfollowSnapshotFrameIds.render !== renderFrameId
+    ) {
+      this.unfollowPoseSnapshot = makePose();
+      // record the pose of the center of the render frame in fixed frame into the snapshot
+      transformTree.apply(
+        this.unfollowPoseSnapshot,
+        this.unfollowPoseSnapshot,
+        fixedFrameId,
+        fixedFrameId,
+        renderFrameId,
+        currentTime,
+        currentTime,
+      );
+      this.unfollowSnapshotFrameIds = {
+        fixed: fixedFrameId,
+        render: renderFrameId,
+      };
+    }
+    return this.unfollowPoseSnapshot;
+  }
 
   public getActiveCamera(): THREE.PerspectiveCamera | THREE.OrthographicCamera {
     return this.renderer.config.cameraState.perspective
