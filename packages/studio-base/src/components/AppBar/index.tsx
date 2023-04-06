@@ -249,10 +249,9 @@ export function AppBar(props: AppBarProps): JSX.Element {
             <div className={classes.startInner}>
               <AppBarIconButton
                 className={classes.logo}
-                ref={layoutButtonRef}
                 color="inherit"
-                id="layout-button"
-                title="Layouts"
+                id="menu-button"
+                title="Menu"
                 aria-controls={appMenuOpen ? "app-menu" : undefined}
                 aria-haspopup="true"
                 aria-expanded={appMenuOpen ? "true" : undefined}
