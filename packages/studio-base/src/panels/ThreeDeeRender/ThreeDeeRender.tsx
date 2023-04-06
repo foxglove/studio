@@ -505,7 +505,7 @@ export function ThreeDeeRender(props: {
         if (config.scene.syncCamera === true) {
           context.setSharedPanelState({
             cameraState: newCameraState,
-            followMode: renderer.followMode,
+            followMode: config.followMode,
             followTf: effectiveRendererFrameId,
           });
         }
@@ -513,7 +513,7 @@ export function ThreeDeeRender(props: {
     };
     renderer?.addListener("cameraMove", listener);
     return () => void renderer?.removeListener("cameraMove", listener);
-  }, [config.scene.syncCamera, context, effectiveRendererFrameId, renderer]);
+  }, [config.scene.syncCamera, config.followMode, context, effectiveRendererFrameId, renderer]);
 
   // Handle user changes in the settings sidebar
   const actionHandler = useCallback(
@@ -531,13 +531,13 @@ export function ThreeDeeRender(props: {
           if (updatedCameraState !== initialCameraState && config.scene.syncCamera === true) {
             context.setSharedPanelState({
               cameraState: updatedCameraState,
-              followMode: renderer.followMode,
+              followMode: config.followMode,
               followTf: renderer.followFrameId,
             });
           }
         }
       }),
-    [config.scene.syncCamera, context, renderer],
+    [config.followMode, config.scene.syncCamera, context, renderer],
   );
 
   // Maintain the settings tree
@@ -806,7 +806,7 @@ export function ThreeDeeRender(props: {
       return;
     }
 
-    if (sharedPanelState.followMode !== renderer.followMode) {
+    if (sharedPanelState.followMode !== config.followMode) {
       renderer.setCameraSyncError(
         `Follow mode must be ${sharedPanelState.followMode} to sync camera.`,
       );
@@ -824,7 +824,13 @@ export function ThreeDeeRender(props: {
       }));
       renderer.setCameraSyncError(undefined);
     }
-  }, [config.scene.syncCamera, effectiveRendererFrameId, renderer, sharedPanelState]);
+  }, [
+    config.scene.syncCamera,
+    config.followMode,
+    effectiveRendererFrameId,
+    renderer,
+    sharedPanelState,
+  ]);
 
   // Render a new frame if requested
   useEffect(() => {
