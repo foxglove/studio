@@ -3,7 +3,14 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { ChevronRight12Regular } from "@fluentui/react-icons";
-import { Divider, Menu, MenuItem, PopoverPosition, PopoverReference } from "@mui/material";
+import {
+  Divider,
+  Menu,
+  MenuItem,
+  PopoverPosition,
+  PopoverProps,
+  PopoverReference,
+} from "@mui/material";
 import {
   Dispatch,
   MouseEvent,
@@ -19,7 +26,7 @@ import TextMiddleTruncate from "@foxglove/studio-base/components/TextMiddleTrunc
 import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
 
 type AppMenuProps = {
-  handleClose: () => void;
+  handleClose: PopoverProps["onClose"];
   anchorEl?: HTMLElement;
   anchorReference?: PopoverReference;
   anchorPosition?: PopoverPosition;

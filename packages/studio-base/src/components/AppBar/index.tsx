@@ -23,6 +23,7 @@ import {
   CustomWindowControls,
   CustomWindowControlsProps,
 } from "@foxglove/studio-base/components/AppBar/CustomWindowControls";
+import AppMenu from "@foxglove/studio-base/components/AppMenu";
 import { FoxgloveLogo } from "@foxglove/studio-base/components/FoxgloveLogo";
 import { MemoryUseIndicator } from "@foxglove/studio-base/components/MemoryUseIndicator";
 import Stack from "@foxglove/studio-base/components/Stack";
@@ -217,9 +218,11 @@ export function AppBar(props: AppBarProps): JSX.Element {
   const { leftSidebarOpen, rightSidebarOpen } = useWorkspaceStore(selectWorkspace, shallow);
   const { setRightSidebarOpen, setLeftSidebarOpen } = useWorkspaceActions();
 
+  const [appMenuEl, setAppMenuEl] = useState<undefined | HTMLElement>(undefined);
   const [userAnchorEl, setUserAnchorEl] = useState<undefined | HTMLElement>(undefined);
   const [panelAnchorEl, setPanelAnchorEl] = useState<undefined | HTMLElement>(undefined);
 
+  const appMenuOpen = Boolean(appMenuEl);
   const userMenuOpen = Boolean(userAnchorEl);
   const panelMenuOpen = Boolean(panelAnchorEl);
 
@@ -244,13 +247,30 @@ export function AppBar(props: AppBarProps): JSX.Element {
         <div className={classes.toolbar}>
           <div className={classes.start}>
             <div className={classes.startInner}>
-              <AppBarIconButton className={classes.logo}>
+              <AppBarIconButton
+                className={classes.logo}
+                ref={layoutButtonRef}
+                color="inherit"
+                id="layout-button"
+                title="Layouts"
+                aria-controls={appMenuOpen ? "app-menu" : undefined}
+                aria-haspopup="true"
+                aria-expanded={appMenuOpen ? "true" : undefined}
+                onClick={(event) => {
+                  setAppMenuEl(event.currentTarget);
+                }}
+              >
                 <FoxgloveLogo fontSize="inherit" color="inherit" />
                 <ChevronDown12Filled
                   className={classes.dropDownIcon}
                   primaryFill={APP_BAR_FOREGROUND_COLOR}
                 />
               </AppBarIconButton>
+              <AppMenu
+                open={appMenuOpen}
+                anchorEl={appMenuEl}
+                handleClose={() => setAppMenuEl(undefined)}
+              />
               <AppBarIconButton
                 className={cx({ "Mui-selected": panelMenuOpen })}
                 color="inherit"
