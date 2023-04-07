@@ -18,7 +18,7 @@
 export const TypicalFilterNames = ["id", "_id", "ID", "Id", "key"];
 
 // This regex does not change so we can create it once and reuse.
-const typicalFilterNameRegex = /^id$|_id$|I[dD]|key$/;
+const typicalFilterNameRegex = /^id$|_id$|I[dD]$|^key$/;
 
 /**
  * Returns true if the given name is a typical filter name.
