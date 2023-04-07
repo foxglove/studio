@@ -564,7 +564,8 @@ export const InfoThenImage: Story = () => {
 InfoThenImage.parameters = { colorScheme: "light" };
 
 // Sending an image message after an existing image should update the displayed image
-export const UpdateImage: Story = () => {
+// A passing story will show a green image
+export const UpdateImageToGreen: Story = () => {
   const topics: Topic[] = [
     { name: "/cam1/info", schemaName: "foxglove.CameraCalibration" },
     { name: "/cam1/raw", schemaName: "foxglove.RawImage" },
@@ -595,21 +596,21 @@ export const UpdateImage: Story = () => {
 
   // Create a Uint8Array 8x8 RGBA image
   const SIZE = 8;
-  const rgba8 = new Uint8Array(SIZE * SIZE * 4);
-  const rgba8_new = new Uint8Array(SIZE * SIZE * 4);
+  const rgba8_red = new Uint8Array(SIZE * SIZE * 4);
+  const rgba8_green = new Uint8Array(SIZE * SIZE * 4);
 
   for (let y = 0; y < SIZE; y++) {
     for (let x = 0; x < SIZE; x++) {
       const i = (y * SIZE + x) * 4;
-      rgba8[i + 0] = Math.trunc((x / (SIZE - 1)) * 255);
-      rgba8[i + 1] = Math.trunc((y / (SIZE - 1)) * 255);
-      rgba8[i + 2] = 0;
-      rgba8[i + 3] = 255;
+      rgba8_red[i + 0] = 255;
+      rgba8_red[i + 1] = 0;
+      rgba8_red[i + 2] = 0;
+      rgba8_red[i + 3] = 255;
 
-      rgba8_new[i + 3] = Math.trunc((x / (SIZE - 1)) * 255);
-      rgba8_new[i + 2] = Math.trunc((y / (SIZE - 1)) * 255);
-      rgba8_new[i + 1] = 0;
-      rgba8_new[i + 0] = 255;
+      rgba8_green[i + 0] = 0;
+      rgba8_green[i + 1] = 255;
+      rgba8_green[i + 2] = 0;
+      rgba8_green[i + 3] = 255;
     }
   }
 
@@ -623,7 +624,7 @@ export const UpdateImage: Story = () => {
       width: SIZE,
       encoding: "rgba8",
       step: SIZE * 4,
-      data: rgba8,
+      data: rgba8_red,
     },
     schemaName: "foxglove.RawImage",
     sizeInBytes: 0,
@@ -655,7 +656,7 @@ export const UpdateImage: Story = () => {
                     width: SIZE,
                     encoding: "rgba8",
                     step: SIZE * 4,
-                    data: rgba8_new,
+                    data: rgba8_green,
                   },
                   schemaName: "foxglove.RawImage",
                   sizeInBytes: 0,
@@ -710,4 +711,4 @@ export const UpdateImage: Story = () => {
     </PanelSetup>
   );
 };
-UpdateImage.parameters = { colorScheme: "light" };
+UpdateImageToGreen.parameters = { colorScheme: "light" };
