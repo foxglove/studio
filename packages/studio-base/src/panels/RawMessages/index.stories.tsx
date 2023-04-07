@@ -349,4 +349,46 @@ storiesOf("panels/RawMessages", module)
         />
       </PanelSetup>
     );
+  })
+  .add("typical filter names", () => {
+    const namesFixture = {
+      datatypes: new Map(
+        Object.entries({
+          baz: {
+            definitions: [
+              { name: "some_id", type: "some_id", isComplex: true },
+              { name: "kv", type: "kv", isComplex: true },
+            ],
+          },
+          some_id: { definitions: [{ name: "some_id", type: "int32" }] },
+          kv: {
+            definitions: [
+              { name: "key", type: "string" },
+              { name: "value", type: "string" },
+            ],
+          },
+        }),
+      ),
+      topics: [{ name: "/baz", schemaName: "baz" }],
+      frame: {
+        "/baz": [
+          {
+            topic: "/baz",
+            receiveTime: { sec: 123, nsec: 456789012 },
+            message: {
+              some_id: { some_id: 1 },
+              kv: { key: "foo", value: "bar" },
+            },
+            schemaName: "baz",
+            sizeInBytes: 0,
+          },
+        ],
+      },
+    };
+
+    return (
+      <PanelSetup fixture={namesFixture}>
+        <RawMessages overrideConfig={{ topicPath: "/baz", ...noDiffConfig } as any} />
+      </PanelSetup>
+    );
   });
