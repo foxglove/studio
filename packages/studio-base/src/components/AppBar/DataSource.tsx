@@ -119,7 +119,6 @@ export function DataSource({
     initializing && playerName == undefined ? "Initializing..." : playerName;
 
   const [problemModal, setProblemModal] = useState<JSX.Element | undefined>(undefined);
-  const [hasDismissedWssErrorModal, setHasDismissedWssErrorModal] = useState(false);
 
   if (playerPresence === PlayerPresence.NOT_PRESENT) {
     return (
@@ -129,17 +128,10 @@ export function DataSource({
     );
   }
 
-  const hasWssConnectionProblem = playerProblems.find(
-    (problem) =>
-      problem.severity === "error" && problem.message === "Insecure WebSocket connection",
-  );
-
   return (
     <>
       {problemModal}
-      {hasWssConnectionProblem && !hasDismissedWssErrorModal && (
-        <WssErrorModal onClose={() => setHasDismissedWssErrorModal(true)} />
-      )}
+      <WssErrorModal playerProblems={playerProblems} />
       <Stack direction="row" alignItems="center">
         <ButtonBase className={classes.button} onClick={onSelectDataSourceAction}>
           <div className={cx(classes.adornment, { [classes.adornmentError]: error })}>
