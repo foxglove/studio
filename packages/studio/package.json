@@ -1,6 +1,6 @@
 {
   "name": "@foxglove/studio",
-  "version": "1.48.0-dev",
+  "version": "1.49.0-dev",
   "license": "MPL-2.0",
   "repository": {
     "type": "git",
@@ -19,6 +19,6 @@
     "prepack": "tsc -b tsconfig.json"
   },
   "devDependencies": {
-    "typescript": "4.9.5"
+    "typescript": "5.0.3"
   }
 }
