@@ -14,11 +14,6 @@ import { disposeMeshesRecursive } from "../../dispose";
 import { Marker } from "../../ros";
 import { removeLights, replaceMaterials } from "../models";
 
-export type GltfMesh = THREE.Mesh<
-  THREE.BufferGeometry,
-  THREE.MeshStandardMaterial | THREE.MeshStandardMaterial[]
->;
-
 const MESH_FETCH_FAILED = "MESH_FETCH_FAILED";
 
 export class RenderableMeshResource extends RenderableMarker {

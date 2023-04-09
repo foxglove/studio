@@ -2,7 +2,6 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import type { LayerSettingsMarker } from "./Markers";
 import { RenderableMarker, getMarkerId } from "./markers/RenderableMarker";
 import { RenderableMeshResource } from "./markers/RenderableMeshResource";
 import { missingTransformMessage, MISSING_TRANSFORM } from "./transforms";
@@ -11,6 +10,13 @@ import { BaseUserData, Renderable } from "../Renderable";
 import { Marker, MarkerAction, MarkerType } from "../ros";
 import { BaseSettings } from "../settings";
 import { updatePose } from "../updatePose";
+
+export type LayerSettingsMarker = BaseSettings & {
+  color: string | undefined;
+  showOutlines: boolean | undefined;
+  selectedIdVariable: string | undefined;
+  namespaces: Record<string, LayerSettingsMarkerNamespace>;
+};
 
 export type LayerSettingsMarkerNamespace = BaseSettings;
 
