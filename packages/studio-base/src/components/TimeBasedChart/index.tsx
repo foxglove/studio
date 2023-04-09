@@ -46,8 +46,9 @@ import {
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import HoverBar from "./HoverBar";
-import TimeBasedChartTooltipContent from "./TimeBasedChartTooltipContent";
-import { TimeBasedChartTooltipData } from "./TimeBasedChartTooltipContent";
+import TimeBasedChartTooltipContent, {
+  TimeBasedChartTooltipData,
+} from "./TimeBasedChartTooltipContent";
 import { VerticalBarWrapper } from "./VerticalBarWrapper";
 import { downsampleScatter, downsampleTimeseries } from "./downsample";
 
