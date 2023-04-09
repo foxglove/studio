@@ -373,18 +373,18 @@ function RendererOverlay(props: {
   );
 }
 
-function useRendererProperty<K extends keyof Renderer>(
+function useRendererProperty<K extends keyof IRenderer>(
   renderer: IRenderer | undefined,
   key: K,
   event: keyof RendererEvents,
-  fallback: () => Renderer[K],
-): Renderer[K] {
-  const [value, setValue] = useState(() => renderer?.[key] ?? fallback());
+  fallback: () => IRenderer[K],
+): IRenderer[K] {
+  const [value, setValue] = useState<IRenderer[K]>(() => renderer?.[key] ?? fallback());
   useEffect(() => {
     if (!renderer) {
       return;
     }
-    const onChange = () => setValue(renderer[key]);
+    const onChange = () => setValue(() => renderer[key]);
     onChange();
 
     renderer.addListener(event, onChange);
