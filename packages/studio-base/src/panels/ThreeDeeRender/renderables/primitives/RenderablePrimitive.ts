@@ -5,9 +5,10 @@
 import { SceneEntity } from "@foxglove/schemas";
 import { IRenderer } from "@foxglove/studio-base/panels/ThreeDeeRender/IRenderer";
 import { BaseUserData, Renderable } from "@foxglove/studio-base/panels/ThreeDeeRender/Renderable";
-import { LayerSettingsEntity } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/SceneEntities";
 import { RosValue } from "@foxglove/studio-base/players/types";
 import { emptyPose } from "@foxglove/studio-base/util/Pose";
+
+import { LayerSettingsEntity } from "../../settings";
 
 export type EntityRenderableUserData = BaseUserData & {
   topic?: string;

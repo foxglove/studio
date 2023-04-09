@@ -9,7 +9,7 @@ import { Label, LabelPool } from "@foxglove/three-text";
 import { RenderablePrimitive } from "./RenderablePrimitive";
 import type { IRenderer } from "../../IRenderer";
 import { getLuminance, makeRgba, SRGBToLinear, stringToRgba } from "../../color";
-import { LayerSettingsEntity } from "../SceneEntities";
+import { LayerSettingsEntity } from "../../settings";
 
 const tempRgba = makeRgba();
 

@@ -11,7 +11,7 @@ import { DynamicBufferGeometry } from "@foxglove/studio-base/panels/ThreeDeeRend
 import { RenderablePrimitive } from "./RenderablePrimitive";
 import type { IRenderer } from "../../IRenderer";
 import { makeRgba, rgbToThreeColor, SRGBToLinear, stringToRgba } from "../../color";
-import { LayerSettingsEntity } from "../SceneEntities";
+import { LayerSettingsEntity } from "../../settings";
 
 const tempRgba = makeRgba();
 const tempColor = new THREE.Color();

@@ -35,15 +35,9 @@ import {
   normalizeVector3,
   normalizeByteArray,
 } from "../normalizeMessages";
-import { BaseSettings } from "../settings";
+import { LayerSettingsEntity } from "../settings";
 import { topicIsConvertibleToSchema } from "../topicIsConvertibleToSchema";
 import { makePose } from "../transforms";
-
-export type LayerSettingsEntity = BaseSettings & {
-  showOutlines: boolean | undefined;
-  color: string | undefined;
-  selectedIdVariable: string | undefined;
-};
 
 const SCENE_ENTITIES_DEFAULT_SETTINGS: LayerSettingsEntity = {
   showOutlines: true,

@@ -5,7 +5,6 @@
 import { toNanoSec } from "@foxglove/rostime";
 import { SceneEntity, SceneEntityDeletion, SceneEntityDeletionType } from "@foxglove/schemas";
 
-import { LayerSettingsEntity } from "./SceneEntities";
 import { PrimitivePool } from "./primitives/PrimitivePool";
 import { RenderableArrows } from "./primitives/RenderableArrows";
 import { RenderableCubes } from "./primitives/RenderableCubes";
@@ -19,6 +18,7 @@ import { ALL_PRIMITIVE_TYPES, PrimitiveType } from "./primitives/types";
 import { missingTransformMessage, MISSING_TRANSFORM } from "./transforms";
 import type { IRenderer } from "../IRenderer";
 import { BaseUserData, Renderable } from "../Renderable";
+import { LayerSettingsEntity } from "../settings";
 import { updatePose } from "../updatePose";
 
 const INVALID_DELETION_TYPE = "INVALID_DELETION_TYPE";

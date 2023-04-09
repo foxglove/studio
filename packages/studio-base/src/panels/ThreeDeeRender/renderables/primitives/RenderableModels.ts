@@ -13,7 +13,7 @@ import type { IRenderer } from "../../IRenderer";
 import { EDGE_LINE_SEGMENTS_NAME, LoadedModel } from "../../ModelCache";
 import { makeRgba, rgbToThreeColor, stringToRgba } from "../../color";
 import { disposeMeshesRecursive } from "../../dispose";
-import { LayerSettingsEntity } from "../SceneEntities";
+import { LayerSettingsEntity } from "../../settings";
 import { removeLights, replaceMaterials } from "../models";
 
 const tempRgba = makeRgba();

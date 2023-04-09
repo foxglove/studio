@@ -10,7 +10,7 @@ import { CubePrimitive, SceneEntity } from "@foxglove/schemas";
 import { RenderablePrimitive } from "./RenderablePrimitive";
 import type { IRenderer } from "../../IRenderer";
 import { makeRgba, rgbToThreeColor, stringToRgba } from "../../color";
-import { LayerSettingsEntity } from "../SceneEntities";
+import { LayerSettingsEntity } from "../../settings";
 import { MeshStandardMaterialWithInstanceOpacity } from "../materials/MeshStandardMaterialWithInstanceOpacity";
 
 const tempColor = new THREE.Color();
