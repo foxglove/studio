@@ -8,8 +8,8 @@ import { toNanoSec } from "@foxglove/rostime";
 import { SettingsTreeAction } from "@foxglove/studio";
 
 import { LayerSettingsMarkerNamespace, TopicMarkers } from "./TopicMarkers";
+import type { IRenderer } from "../IRenderer";
 import { SELECTED_ID_VARIABLE } from "../Renderable";
-import { Renderer } from "../Renderer";
 import { PartialMessage, PartialMessageEvent, SceneExtension } from "../SceneExtension";
 import { SettingsTreeEntry, SettingsTreeNodeWithActionHandler } from "../SettingsManager";
 import {
@@ -42,7 +42,7 @@ const DEFAULT_SETTINGS: LayerSettingsMarker = {
 };
 
 export class Markers extends SceneExtension<TopicMarkers> {
-  public constructor(renderer: Renderer) {
+  public constructor(renderer: IRenderer) {
     super("foxglove.Markers", renderer);
 
     renderer.addSchemaSubscriptions(MARKER_ARRAY_DATATYPES, this.handleMarkerArray);
