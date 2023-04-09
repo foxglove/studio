@@ -43,18 +43,11 @@ import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import { DebugGui } from "./DebugGui";
+import type { RendererConfig, RendererSubscription, FollowMode, RendererEvents } from "./IRenderer";
 import { InteractionContextMenu, Interactions, SelectionObject, TabType } from "./Interactions";
 import type { PickedRenderable } from "./Picker";
 import { Renderable, SELECTED_ID_VARIABLE } from "./Renderable";
-import {
-  FollowMode,
-  ImageModeConfig,
-  LegacyImageConfig,
-  Renderer,
-  RendererConfig,
-  RendererEvents,
-  RendererSubscription,
-} from "./Renderer";
+import { ImageModeConfig, LegacyImageConfig, Renderer } from "./Renderer";
 import { RendererContext, useRenderer, useRendererEvent } from "./RendererContext";
 import { Stats } from "./Stats";
 import { CameraState, DEFAULT_CAMERA_STATE, MouseEventObject } from "./camera";

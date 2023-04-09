@@ -8,7 +8,7 @@ import { EDGE_LINE_SEGMENTS_NAME } from "@foxglove/studio-base/panels/ThreeDeeRe
 
 import { RenderableMarker } from "./RenderableMarker";
 import { makeStandardMaterial } from "./materials";
-import type { Renderer } from "../../Renderer";
+import type { IRenderer } from "../../IRenderer";
 import { rgbToThreeColor } from "../../color";
 import { disposeMeshesRecursive } from "../../dispose";
 import { Marker } from "../../ros";
@@ -32,7 +32,7 @@ export class RenderableMeshResource extends RenderableMarker {
     topic: string,
     marker: Marker,
     receiveTime: bigint | undefined,
-    renderer: Renderer,
+    renderer: IRenderer,
   ) {
     super(topic, marker, receiveTime, renderer);
 

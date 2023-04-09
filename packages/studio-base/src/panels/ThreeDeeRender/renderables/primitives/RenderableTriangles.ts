@@ -9,7 +9,7 @@ import { Point3, SceneEntity, TriangleListPrimitive } from "@foxglove/schemas";
 import { DynamicBufferGeometry } from "@foxglove/studio-base/panels/ThreeDeeRender/DynamicBufferGeometry";
 
 import { RenderablePrimitive } from "./RenderablePrimitive";
-import type { Renderer } from "../../Renderer";
+import type { IRenderer } from "../../IRenderer";
 import { makeRgba, rgbToThreeColor, SRGBToLinear, stringToRgba } from "../../color";
 import { LayerSettingsEntity } from "../SceneEntities";
 
@@ -23,7 +23,7 @@ const INVALID_POINT_ERROR_ID = "INVALID_POINT";
 type TriangleMesh = THREE.Mesh<DynamicBufferGeometry, THREE.MeshStandardMaterial>;
 export class RenderableTriangles extends RenderablePrimitive {
   private _triangleMeshes: TriangleMesh[] = [];
-  public constructor(renderer: Renderer) {
+  public constructor(renderer: IRenderer) {
     super("", renderer);
   }
 

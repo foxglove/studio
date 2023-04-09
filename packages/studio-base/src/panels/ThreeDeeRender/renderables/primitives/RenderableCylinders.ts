@@ -8,7 +8,7 @@ import { toNanoSec } from "@foxglove/rostime";
 import { CylinderPrimitive, SceneEntity } from "@foxglove/schemas";
 
 import { RenderablePrimitive } from "./RenderablePrimitive";
-import type { Renderer } from "../../Renderer";
+import type { IRenderer } from "../../IRenderer";
 import { DARK_OUTLINE, LIGHT_OUTLINE, makeRgba, rgbToThreeColor, stringToRgba } from "../../color";
 import { LayerSettingsEntity } from "../SceneEntities";
 import { MeshStandardMaterialWithInstanceOpacity } from "../materials/MeshStandardMaterialWithInstanceOpacity";
@@ -46,7 +46,7 @@ export class RenderableCylinders extends RenderablePrimitive {
   private outlineGeometry: THREE.InstancedBufferGeometry;
   private outline: THREE.LineSegments;
 
-  public constructor(renderer: Renderer) {
+  public constructor(renderer: IRenderer) {
     super("", renderer);
 
     this.geometry = renderer.sharedGeometry

@@ -8,7 +8,7 @@ import { toNanoSec } from "@foxglove/rostime";
 import { CubePrimitive, SceneEntity } from "@foxglove/schemas";
 
 import { RenderablePrimitive } from "./RenderablePrimitive";
-import type { Renderer } from "../../Renderer";
+import type { IRenderer } from "../../IRenderer";
 import { makeRgba, rgbToThreeColor, stringToRgba } from "../../color";
 import { LayerSettingsEntity } from "../SceneEntities";
 import { MeshStandardMaterialWithInstanceOpacity } from "../materials/MeshStandardMaterialWithInstanceOpacity";
@@ -43,7 +43,7 @@ export class RenderableCubes extends RenderablePrimitive {
   // stored for ease of use
   private sharedEdgesGeometry: THREE.EdgesGeometry<THREE.BufferGeometry>;
 
-  public constructor(renderer: Renderer) {
+  public constructor(renderer: IRenderer) {
     super("", renderer);
 
     // Cube mesh

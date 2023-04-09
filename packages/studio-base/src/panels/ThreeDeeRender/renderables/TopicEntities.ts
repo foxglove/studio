@@ -17,8 +17,8 @@ import { RenderableTexts } from "./primitives/RenderableTexts";
 import { RenderableTriangles } from "./primitives/RenderableTriangles";
 import { ALL_PRIMITIVE_TYPES, PrimitiveType } from "./primitives/types";
 import { missingTransformMessage, MISSING_TRANSFORM } from "./transforms";
+import type { IRenderer } from "../IRenderer";
 import { BaseUserData, Renderable } from "../Renderable";
-import { Renderer } from "../Renderer";
 import { updatePose } from "../updatePose";
 
 const INVALID_DELETION_TYPE = "INVALID_DELETION_TYPE";
@@ -57,7 +57,7 @@ export class TopicEntities extends Renderable<EntityTopicUserData> {
   public constructor(
     name: string,
     private primitivePool: PrimitivePool,
-    renderer: Renderer,
+    renderer: IRenderer,
     userData: EntityTopicUserData,
   ) {
     super(name, renderer, userData);

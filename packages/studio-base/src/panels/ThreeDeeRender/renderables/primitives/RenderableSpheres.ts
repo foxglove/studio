@@ -8,7 +8,7 @@ import { toNanoSec } from "@foxglove/rostime";
 import { SpherePrimitive, SceneEntity } from "@foxglove/schemas";
 
 import { RenderablePrimitive } from "./RenderablePrimitive";
-import type { Renderer } from "../../Renderer";
+import type { IRenderer } from "../../IRenderer";
 import { makeRgba, rgbToThreeColor, stringToRgba } from "../../color";
 import { LayerSettingsEntity } from "../SceneEntities";
 import { MeshStandardMaterialWithInstanceOpacity } from "../materials/MeshStandardMaterialWithInstanceOpacity";
@@ -36,7 +36,7 @@ export class RenderableSpheres extends RenderablePrimitive {
    */
   private maxInstances: number;
 
-  public constructor(renderer: Renderer) {
+  public constructor(renderer: IRenderer) {
     super("", renderer);
 
     // Sphere mesh
