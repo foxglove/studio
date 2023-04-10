@@ -317,7 +317,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
   public readonly outlineMaterial = new THREE.LineBasicMaterial({ dithering: true });
   public readonly instancedOutlineMaterial = new InstancedLineMaterial({ dithering: true });
 
-  // only public for testing - prefer to use `getCameraState` instead
+  /** only public for testing - prefer to use `getCameraState` instead */
   public cameraStateSettings: CameraStateSettings;
 
   public measurementTool: MeasurementTool;
