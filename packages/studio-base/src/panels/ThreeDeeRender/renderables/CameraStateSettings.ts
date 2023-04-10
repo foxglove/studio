@@ -35,18 +35,20 @@ const tempSpherical = new THREE.Spherical();
 const tempEuler = new THREE.Euler();
 const FOLLOW_TF_PATH = ["general", "followTf"];
 export class CameraStateSettings extends SceneExtension {
-  // The pose of the render frame in the fixed frame when following was disabled
-
+  // The frameId's of the fixed and render frames used to create the current unfollowPoseSnapshot
   private unfollowSnapshotFrameIds:
     | {
         render: UserFrameId;
         fixed: UserFrameId;
       }
     | undefined;
+
+  // The pose of the render frame in the fixed frame when following was disabled
+  // This is used to position and orient the camera from the fixed frame in the render frame
   public unfollowPoseSnapshot: Pose | undefined;
 
   private controls: OrbitControls;
-  private _isUpdatingCameraState = false;
+  private isUpdatingCameraState = false;
   private canvas: HTMLCanvasElement;
 
   // This group is used to transform the cameras based on the Frame follow mode
@@ -85,7 +87,7 @@ export class CameraStateSettings extends SceneExtension {
     this.controls.touches.ONE = THREE.TOUCH.PAN;
     this.controls.touches.TWO = THREE.TOUCH.DOLLY_ROTATE;
     this.controls.addEventListener("change", () => {
-      if (!this._isUpdatingCameraState) {
+      if (!this.isUpdatingCameraState) {
         renderer.emit("cameraMove", renderer);
       }
     });
@@ -327,6 +329,7 @@ export class CameraStateSettings extends SceneExtension {
       fixedFrameId === CoordinateFrame.FALLBACK_FRAME_ID ||
       renderFrameId === CoordinateFrame.FALLBACK_FRAME_ID
     ) {
+      this.unfollowPoseSnapshot = undefined;
       this.cameraGroup.position.set(0, 0, 0);
       this.cameraGroup.quaternion.set(0, 0, 0, 1);
       return;
@@ -448,14 +451,14 @@ export class CameraStateSettings extends SceneExtension {
   }
 
   public setCameraState(cameraState: CameraState): void {
-    this._isUpdatingCameraState = true;
+    this.isUpdatingCameraState = true;
     this._updateCameras(cameraState);
     // only active for follow pose mode because it introduces strange behavior into the other modes
     // due to the fact that they are manipulating the camera after update with the `cameraGroup`
     if (this.renderer.config.followMode === "follow-pose") {
       this.controls.update();
     }
-    this._isUpdatingCameraState = false;
+    this.isUpdatingCameraState = false;
   }
 
   /** Translate a CameraState to the three.js coordinate system */

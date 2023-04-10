@@ -420,7 +420,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.scene.add(this.dirLight);
     this.scene.add(this.hemiLight);
 
-    this.input = new Input(canvas, () => this.activeCamera());
+    this.input = new Input(canvas, () => this.cameraStateSettings.getActiveCamera());
     this.input.on("resize", (size) => this.resizeHandler(size));
     this.input.on("click", (cursorCoords) => this.clickHandler(cursorCoords));
 
@@ -923,10 +923,6 @@ export class Renderer extends EventEmitter<RendererEvents> {
     }
   }
 
-  private activeCamera(): THREE.PerspectiveCamera | THREE.OrthographicCamera {
-    return this.cameraStateSettings.getActiveCamera();
-  }
-
   public addMessageEvent(messageEvent: Readonly<MessageEvent<unknown>>): void {
     const { message } = messageEvent;
 
@@ -1082,7 +1078,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.gl.clear();
     this.emit("startFrame", currentTime, this);
 
-    const camera = this.activeCamera();
+    const camera = this.cameraStateSettings.getActiveCamera();
     camera.layers.set(LAYER_DEFAULT);
     this.selectionBackdrop.visible = this.selectedRenderable != undefined;
 
@@ -1136,7 +1132,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
     // Pick a single renderable, hide it, re-render, and run picking again until
     // the backdrop is hit or we exceed MAX_SELECTIONS
-    const camera = this.activeCamera();
+    const camera = this.cameraStateSettings.getActiveCamera();
     const selections: PickedRenderable[] = [];
     let curSelection: PickedRenderable | undefined;
     while (
@@ -1254,7 +1250,11 @@ export class Renderer extends EventEmitter<RendererEvents> {
   private _pickSingleObject(cursorCoords: THREE.Vector2): PickedRenderable | undefined {
     // Render a single pixel using a fragment shader that writes object IDs as
     // colors, then read the value of that single pixel back
-    const objectId = this.picker.pick(cursorCoords.x, cursorCoords.y, this.activeCamera());
+    const objectId = this.picker.pick(
+      cursorCoords.x,
+      cursorCoords.y,
+      this.cameraStateSettings.getActiveCamera(),
+    );
     if (objectId === -1) {
       return undefined;
     }
@@ -1284,7 +1284,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
       instanceIndex = this.picker.pickInstance(
         cursorCoords.x,
         cursorCoords.y,
-        this.activeCamera(),
+        this.cameraStateSettings.getActiveCamera(),
         renderable,
       );
       instanceIndex = instanceIndex === -1 ? undefined : instanceIndex;

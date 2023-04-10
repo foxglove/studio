@@ -100,7 +100,7 @@ function createTFMessageEvent(
   };
 }
 
-describe("Renderer", () => {
+describe("3D Renderer", () => {
   let canvas = document.createElement("canvas");
   let parent = document.createElement("div");
   beforeEach(() => {
@@ -116,7 +116,124 @@ describe("Renderer", () => {
   it("constructs a renderer without error", () => {
     expect(() => new Renderer(canvas, defaultRendererConfig, "3d")).not.toThrow();
   });
-  it("fixed follow mode: ensures that the unfollowPoseSnapshot updates when there is a new fixedFrame", () => {
+  it("does not set a unfollow pose snapshot  when in follow-pose mode", () => {
+    const renderer = new Renderer(
+      canvas,
+      {
+        ...defaultRendererConfig,
+        followMode: "follow-pose",
+        followTf: "display",
+        scene: { transforms: { enablePreloading: false } },
+      },
+      "3d",
+    );
+
+    renderer.setCurrentTime(1n);
+
+    const tfWithDisplayParent = createTFMessageEvent("display", "childOfDisplay", 1n, [1n]);
+    renderer.addMessageEvent(tfWithDisplayParent);
+    renderer.animationFrame();
+
+    // record to make sure it changes when there's a new fixed frame
+    const tfWithDisplayChild = createTFMessageEvent("parentOfDisplay", "display", 1n, [1n]);
+    tfWithDisplayChild.message.transforms[0]!.transform.translation.x = 1;
+    renderer.addMessageEvent(tfWithDisplayChild);
+    renderer.animationFrame();
+    expect(renderer.cameraStateSettings.unfollowPoseSnapshot).toBeUndefined();
+  });
+  it("records pose snapshot after changing from follow-pose mode to follow-none", () => {
+    const config = {
+      ...defaultRendererConfig,
+      followMode: "follow-pose" as const,
+      followTf: "display",
+      scene: { transforms: { enablePreloading: false } },
+    };
+    const renderer = new Renderer(canvas, config, "3d");
+
+    renderer.setCurrentTime(1n);
+
+    const tfWithDisplayParent = createTFMessageEvent("display", "childOfDisplay", 1n, [1n]);
+    renderer.addMessageEvent(tfWithDisplayParent);
+    renderer.animationFrame();
+
+    // record to make sure it changes when there's a new fixed frame
+    const tfWithDisplayChild = createTFMessageEvent("parentOfDisplay", "display", 1n, [1n]);
+    tfWithDisplayChild.message.transforms[0]!.transform.translation.x = 1;
+    renderer.addMessageEvent(tfWithDisplayChild);
+    renderer.animationFrame();
+    expect(renderer.cameraStateSettings.unfollowPoseSnapshot).toBeUndefined();
+    renderer.config = { ...config, followMode: "follow-none" };
+    renderer.animationFrame();
+    // parent is the camera group that holds the pose from the snapshot
+    expect(renderer.cameraStateSettings.unfollowPoseSnapshot?.position).toEqual({
+      x: 1,
+      y: 0,
+      z: 0,
+    });
+  });
+  it("sets pose snapshot to undefined after changing from follow-none mode to follow-pose", () => {
+    const config = {
+      ...defaultRendererConfig,
+      followMode: "follow-none" as const,
+      followTf: "display",
+      scene: { transforms: { enablePreloading: false } },
+    };
+    const renderer = new Renderer(canvas, config, "3d");
+
+    renderer.setCurrentTime(1n);
+
+    const tfWithDisplayParent = createTFMessageEvent("display", "childOfDisplay", 1n, [1n]);
+    renderer.addMessageEvent(tfWithDisplayParent);
+    renderer.animationFrame();
+
+    // record to make sure it changes when there's a new fixed frame
+    const tfWithDisplayChild = createTFMessageEvent("parentOfDisplay", "display", 1n, [1n]);
+    tfWithDisplayChild.message.transforms[0]!.transform.translation.x = 1;
+    renderer.addMessageEvent(tfWithDisplayChild);
+    renderer.animationFrame();
+    expect(renderer.cameraStateSettings.unfollowPoseSnapshot?.position).toEqual({
+      x: 1,
+      y: 0,
+      z: 0,
+    });
+    renderer.config = { ...config, followMode: "follow-pose" };
+    renderer.animationFrame();
+    expect(renderer.cameraStateSettings.unfollowPoseSnapshot).toBeUndefined();
+  });
+  it("keeps same unfollowPoseSnapshot when switching from follow-none to follow-position", () => {
+    const config = {
+      ...defaultRendererConfig,
+      followMode: "follow-none" as const,
+      followTf: "display",
+      scene: { transforms: { enablePreloading: false } },
+    };
+    const renderer = new Renderer(canvas, config, "3d");
+
+    renderer.setCurrentTime(1n);
+
+    const tfWithDisplayParent = createTFMessageEvent("display", "childOfDisplay", 1n, [1n]);
+    renderer.addMessageEvent(tfWithDisplayParent);
+    renderer.animationFrame();
+
+    // record to make sure it changes when there's a new fixed frame
+    const tfWithDisplayChild = createTFMessageEvent("parentOfDisplay", "display", 1n, [1n]);
+    tfWithDisplayChild.message.transforms[0]!.transform.translation.x = 1;
+    renderer.addMessageEvent(tfWithDisplayChild);
+    renderer.animationFrame();
+    expect(renderer.cameraStateSettings.unfollowPoseSnapshot?.position).toEqual({
+      x: 1,
+      y: 0,
+      z: 0,
+    });
+    renderer.config = { ...config, followMode: "follow-position" };
+    renderer.animationFrame();
+    expect(renderer.cameraStateSettings.unfollowPoseSnapshot?.position).toEqual({
+      x: 1,
+      y: 0,
+      z: 0,
+    });
+  });
+  it("in fixed follow mode: ensures that the unfollowPoseSnapshot updates when there is a new fixedFrame", () => {
     const renderer = new Renderer(
       canvas,
       {
