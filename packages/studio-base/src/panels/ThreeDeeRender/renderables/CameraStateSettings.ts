@@ -329,6 +329,7 @@ export class CameraStateSettings extends SceneExtension {
       fixedFrameId === CoordinateFrame.FALLBACK_FRAME_ID ||
       renderFrameId === CoordinateFrame.FALLBACK_FRAME_ID
     ) {
+      this.unfollowSnapshotFrameIds = undefined;
       this.unfollowPoseSnapshot = undefined;
       this.cameraGroup.position.set(0, 0, 0);
       this.cameraGroup.quaternion.set(0, 0, 0, 1);
