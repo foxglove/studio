@@ -62,7 +62,7 @@
     "@testing-library/user-event": "14.4.3",
     "@types/base16": "^1.0.2",
     "@types/cytoscape": "^3.19.9",
-    "@types/dat.gui": "^0.7.7",
+    "@types/dat.gui": "^0.7.9",
     "@types/foxglove__roslibjs": "workspace:*",
     "@types/gl-matrix": "3.2.0",
     "@types/hammerjs": "2.0.41",
