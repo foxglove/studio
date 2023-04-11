@@ -16,7 +16,7 @@ import {
   makePose,
 } from "@foxglove/studio-base/panels/ThreeDeeRender/transforms";
 
-import { FollowMode, Renderer } from "../Renderer";
+import type { FollowMode, IRenderer } from "../IRenderer";
 import { SceneExtension } from "../SceneExtension";
 import { SettingsTreeEntry } from "../SettingsManager";
 import { CameraState, DEFAULT_CAMERA_STATE } from "../camera";
@@ -59,7 +59,7 @@ export class CameraStateSettings extends SceneExtension {
   private orthographicCamera: THREE.OrthographicCamera;
   private aspect: number;
 
-  public constructor(renderer: Renderer, canvas: HTMLCanvasElement, renderSize: THREE.Vector2) {
+  public constructor(renderer: IRenderer, canvas: HTMLCanvasElement, renderSize: THREE.Vector2) {
     super("foxglove.CameraStateSettings", renderer);
 
     // for Frame settings, we need to listen to the transform tree to update settings when new possible display frames are present
