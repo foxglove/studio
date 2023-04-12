@@ -32,7 +32,6 @@ import {
   MosaicWithoutDragDropContext,
   updateTree,
 } from "react-mosaic-component";
-import tc from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
@@ -252,7 +251,7 @@ export function UnconnectedPanelLayout(props: Props): JSX.Element {
       if (child.classList.contains("mosaic-tile")) {
         const { done, value } = gen.next();
         if (done === true) {
-          console.log("ran out of nodes :(");
+          // console.log("ran out of nodes :(");
           break;
         }
         const { path } = value;
@@ -263,13 +262,13 @@ export function UnconnectedPanelLayout(props: Props): JSX.Element {
         }
         const { done, value } = gen.next();
         if (done === true) {
-          console.log("ran out of nodes :(");
+          // console.log("ran out of nodes :(");
           break;
         }
         const { path } = value;
-        console.log("FOUND1", latestPath, "vs", path);
+        // console.log("FOUND1", latestPath, "vs", path);
         latestPath = latestPath ? commonPrefix(path, latestPath) : path;
-        console.log("FOUND", hoveredSplitter, latestPath);
+        // console.log("FOUND", hoveredSplitter, latestPath);
         const newLayout = updateTree(layout, [
           {
             path: latestPath,
