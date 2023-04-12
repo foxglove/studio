@@ -84,7 +84,7 @@ const useStyles = makeStyles()((theme) => ({
       display: "none !important",
     },
   },
-  fab: {
+  addPanelButton: {
     height: FLOATING_BUTTON_SIZE,
     width: FLOATING_BUTTON_SIZE,
     minHeight: FLOATING_BUTTON_SIZE,
@@ -312,6 +312,7 @@ export function UnconnectedPanelLayout(props: Props): JSX.Element {
       if (!(target instanceof HTMLElement) || !target.classList.contains("mosaic-split")) {
         return;
       }
+      event.stopPropagation(); // don't propagate to parent mosaics
       if (outTimer) {
         clearTimeout(outTimer);
         outTimer = undefined;
@@ -326,6 +327,7 @@ export function UnconnectedPanelLayout(props: Props): JSX.Element {
       if (!(target instanceof HTMLElement) || !target.classList.contains("mosaic-split")) {
         return;
       }
+      event.stopPropagation(); // don't propagate to parent mosaics
       if (overTimer) {
         clearTimeout(overTimer);
         overTimer = undefined;
@@ -383,7 +385,7 @@ export function UnconnectedPanelLayout(props: Props): JSX.Element {
           {({ TransitionProps }: { TransitionProps: ZoomProps }) => (
             <Zoom {...TransitionProps} timeout={{ enter: 200, exit: 0, appear: 200 }}>
               <Fab
-                className={classes.fab}
+                className={classes.addPanelButton}
                 size="small"
                 onClick={handleButtonClick}
                 onMouseEnter={handleButtonMouseEnter}
