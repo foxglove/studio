@@ -6,20 +6,20 @@ import * as THREE from "three";
 
 import { RenderableMarker } from "./RenderableMarker";
 import { makeStandardMaterial } from "./materials";
-import type { Renderer } from "../../Renderer";
+import type { IRenderer } from "../../IRenderer";
 import { rgbToThreeColor } from "../../color";
 import { cylinderSubdivisions, DetailLevel } from "../../lod";
 import { Marker } from "../../ros";
 
 export class RenderableCylinder extends RenderableMarker {
   private mesh: THREE.Mesh<THREE.CylinderGeometry, THREE.MeshStandardMaterial>;
-  private outline: THREE.LineSegments | undefined;
+  private outline: THREE.LineSegments;
 
   public constructor(
     topic: string,
     marker: Marker,
     receiveTime: bigint | undefined,
-    renderer: Renderer,
+    renderer: IRenderer,
   ) {
     super(topic, marker, receiveTime, renderer);
 
@@ -60,6 +60,8 @@ export class RenderableCylinder extends RenderableMarker {
       this.mesh.material.depthWrite = !transparent;
       this.mesh.material.needsUpdate = true;
     }
+
+    this.outline.visible = this.getSettings()?.showOutlines ?? true;
 
     rgbToThreeColor(this.mesh.material.color, marker.color);
     this.mesh.material.opacity = marker.color.a;

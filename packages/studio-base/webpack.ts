@@ -2,20 +2,18 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import CircularDependencyPlugin from "circular-dependency-plugin";
-import { ESBuildMinifyPlugin } from "esbuild-loader";
+import { EsbuildPlugin } from "esbuild-loader";
 import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
 import monacoPkg from "monaco-editor/package.json";
 import MonacoWebpackPlugin from "monaco-editor-webpack-plugin";
 import path from "path";
 import ReactRefreshTypescript from "react-refresh-typescript";
 import ts from "typescript";
-import webpack, { Configuration, WebpackPluginInstance } from "webpack";
+import webpack, { Configuration } from "webpack";
 
 import { createTssReactNameTransformer } from "@foxglove/typescript-transformers";
 
 import { WebpackArgv } from "./WebpackArgv";
-import packageJson from "./package.json";
 
 if (monacoPkg.version !== "0.30.1") {
   throw new Error(`
@@ -37,8 +35,8 @@ type Options = {
   // We ignore errors from unused locals to avoid having to also comment
   // those out while iterating.
   allowUnusedVariables?: boolean;
-  // Specify the app version. If undefined the app version is read from `package.json`
-  version?: string;
+  /** Specify the app version. */
+  version: string;
 };
 
 // Create a partial webpack configuration required to build app using webpack.
@@ -46,14 +44,12 @@ type Options = {
 export function makeConfig(
   _: unknown,
   argv: WebpackArgv,
-  options?: Options,
+  options: Options,
 ): Pick<Configuration, "resolve" | "module" | "optimization" | "plugins" | "node"> {
   const isDev = argv.mode === "development";
   const isServe = argv.env?.WEBPACK_SERVE ?? false;
 
-  const { allowUnusedVariables = isDev && isServe } = options ?? {};
-
-  const version = options?.version ?? packageJson.version;
+  const { allowUnusedVariables = isDev && isServe, version } = options;
 
   return {
     resolve: {
@@ -184,7 +180,7 @@ export function makeConfig(
           options: {
             multiple: [
               {
-                search: "etwModule = require(etwModulePath);",
+                search: /etwModule\s*=\s*require\(etwModulePath\);/,
                 replace:
                   "throw new Error('[Foxglove] This module is not supported in the browser.');",
               },
@@ -204,6 +200,10 @@ export function makeConfig(
                   "throw new Error('[Foxglove] This module is not supported in the browser.');",
               },
               {
+                search: `return { module:   require(modulePath), modulePath, error: void 0 };`,
+                replace: `throw new Error('[Foxglove] This module is not supported in the browser.');`,
+              },
+              {
                 search: `getModuleResolver=function(e){let t;try{t=require(e)}`,
                 replace:
                   "getModuleResolver=function(e){let t;try{throw new Error('[Foxglove] This module is not supported in the browser.')}",
@@ -217,17 +217,13 @@ export function makeConfig(
       removeAvailableModules: true,
 
       minimizer: [
-        new ESBuildMinifyPlugin({
+        new EsbuildPlugin({
           target: "es2020",
           minify: true,
         }),
       ],
     },
     plugins: [
-      new CircularDependencyPlugin({
-        exclude: /node_modules/,
-        failOnError: true,
-      }) as WebpackPluginInstance,
       new webpack.ProvidePlugin({
         // since we avoid "import React from 'react'" we shim here when used globally
         React: "react",
