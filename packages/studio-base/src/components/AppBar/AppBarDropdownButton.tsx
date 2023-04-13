@@ -10,6 +10,7 @@ import { makeStyles } from "tss-react/mui";
 
 import {
   APP_BAR_FOREGROUND_COLOR,
+  APP_BAR_HEIGHT,
   APP_BAR_PRIMARY_COLOR,
 } from "@foxglove/studio-base/components/AppBar/constants";
 import Stack from "@foxglove/studio-base/components/Stack";
@@ -26,6 +27,7 @@ const useStyles = makeStyles()((theme) => ({
   },
   layoutButton: {
     font: "inherit",
+    height: APP_BAR_HEIGHT,
     fontSize: theme.typography.body2.fontSize,
     justifyContent: "space-between",
     minWidth: 120,
