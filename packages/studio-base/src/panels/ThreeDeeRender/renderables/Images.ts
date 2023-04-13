@@ -54,7 +54,7 @@ import { makePose } from "../transforms";
 const log = Logger.getLogger(__filename);
 void log;
 
-type AnyImage = RosImage | RosCompressedImage | RawImage | CompressedImage;
+export type AnyImage = RosImage | RosCompressedImage | RawImage | CompressedImage;
 
 export type LayerSettingsImage = BaseSettings & {
   cameraInfoTopic: string | undefined;

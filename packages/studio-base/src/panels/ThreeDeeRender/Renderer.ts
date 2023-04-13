@@ -23,6 +23,7 @@ import {
   VariableValue,
 } from "@foxglove/studio";
 import { FoxgloveGrid } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/FoxgloveGrid";
+import { ICameraHandler } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/ICameraHandler";
 import { light, dark } from "@foxglove/studio-base/theme/palette";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 import { LabelMaterial, LabelPool } from "@foxglove/three-text";
@@ -208,7 +209,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
   public readonly instancedOutlineMaterial = new InstancedLineMaterial({ dithering: true });
 
   /** only public for testing - prefer to use `getCameraState` instead */
-  public cameraStateSettings: CameraStateSettings;
+  public cameraStateSettings: ICameraHandler;
 
   public measurementTool: MeasurementTool;
   public publishClickTool: PublishClickTool;
@@ -328,7 +329,6 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
 
     this.measurementTool = new MeasurementTool(this);
     this.publishClickTool = new PublishClickTool(this);
-    this.cameraStateSettings = new CameraStateSettings(this, this.canvas, renderSize);
 
     // Internal handlers for TF messages to update the transform tree
     this.addSchemaSubscriptions(FRAME_TRANSFORM_DATATYPES, {
@@ -352,12 +352,18 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
       preload: config.scene.transforms?.enablePreloading ?? true,
     });
 
+    let cameraHandler;
+    const aspect = renderSize.width / renderSize.height;
     switch (interfaceMode) {
       case "image":
-        this.addSceneExtension(new ImageMode(this));
+        cameraHandler = new ImageMode(this, aspect);
+        this.cameraStateSettings = cameraHandler;
+        this.addSceneExtension(cameraHandler);
         break;
       case "3d":
-        this.addSceneExtension(this.cameraStateSettings);
+        cameraHandler = new CameraStateSettings(this, this.canvas, aspect);
+        this.cameraStateSettings = cameraHandler;
+        this.addSceneExtension(cameraHandler);
         this.addSceneExtension(new PublishSettings(this));
         break;
     }
@@ -998,8 +1004,9 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     this.gl.setPixelRatio(window.devicePixelRatio);
     this.gl.setSize(size.width, size.height);
 
+    // renderSize points to `tempVec2` so we don't want to pass it anywhere that might store it
     const renderSize = this.gl.getDrawingBufferSize(tempVec2);
-    this.cameraStateSettings.handleResize(renderSize);
+    this.cameraStateSettings.handleResize(renderSize.width, renderSize.height);
 
     log.debug(`Resized renderer to ${renderSize.width}x${renderSize.height}`);
     this.animationFrame();
