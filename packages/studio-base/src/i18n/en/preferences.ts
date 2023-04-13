@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 export const preferences = {
-  preferences: "Preferences",
+  preferences: "Settings",
   colorScheme: "Color scheme",
   dark: "Dark",
   light: "Light",
