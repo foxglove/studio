@@ -8,6 +8,10 @@ import { FileDescriptorSet } from "protobufjs/ext/descriptor";
 import { protobufDefinitionsToDatatypes, stripLeadingDot } from "./protobufDefinitionsToDatatypes";
 import { MessageDefinitionMap } from "./types";
 
+/**
+ * Parse a Protobuf binary schema (FileDescriptorSet) and produce datatypes and a deserializer
+ * function.
+ */
 export function parseProtobufSchema(
   schemaName: string,
   schemaData: Uint8Array,
