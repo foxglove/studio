@@ -23,6 +23,12 @@ import { makeStyles } from "tss-react/mui";
 
 import { APP_BAR_HEIGHT } from "@foxglove/studio-base/components/AppBar/constants";
 
+const anchorWithOffset = (origin: "top" | "bottom") => ({
+  "&.notistack-SnackbarContainer": {
+    top: origin === "top" ? APP_BAR_HEIGHT : undefined,
+  },
+});
+
 const useStyles = makeStyles<void, "icon" | "dismissButton">()((theme, _params, classes) => ({
   icon: {},
   dismissButton: {
@@ -62,12 +68,6 @@ const useStyles = makeStyles<void, "icon" | "dismissButton">()((theme, _params, 
     },
   },
 }));
-
-const anchorWithOffset = (origin: "top" | "bottom") => ({
-  "&.notistack-SnackbarContainer": {
-    top: origin === "top" ? APP_BAR_HEIGHT : undefined,
-  },
-});
 
 const useContainerStyles = makeStyles()({
   /* eslint-disable tss-unused-classes/unused-classes */
