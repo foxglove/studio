@@ -6,10 +6,10 @@ import { set } from "lodash";
 import * as THREE from "three";
 
 import { filterMap } from "@foxglove/den/collection";
+import { PinholeCameraModel } from "@foxglove/den/image";
 import { CameraCalibration } from "@foxglove/schemas";
 import { SettingsTreeAction } from "@foxglove/studio";
-import { PinholeCameraModel } from "@foxglove/studio-base/../../den/image";
-import { AnyImage } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/Images";
+import { AnyImage } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/ImageTypes";
 import {
   cameraInfosEqual,
   normalizeCameraInfo,
@@ -66,14 +66,29 @@ export class ImageMode extends SceneExtension implements ICameraHandler {
 
   private cameraState: CameraState = DEFAULT_CAMERA_STATE;
 
+  /**
+   * We keep more than just the last message event on the selected caemara info topic because
+   * backfill won't happen when this scene extension selected a camera info topic that was
+   * already being used by the Image scene extension because it wouldn't trigger a
+   * subscription change. This lets us store them if one isn't selected in this
+   * panel but is being subscribed to elsewhere so we wouldn't need to rely on the backfill.
+   */
   private cameraInfoByTopic: Map<string, CameraInfo> = new Map();
   private cameraImageByTopic: Map<string, AnyImage> = new Map();
+
+  /** x/y zoom factors derived from image and window aspect ratios */
   private zoom = new THREE.Vector2();
+
   public constructor(renderer: IRenderer, aspect: number) {
     super("foxglove.ImageMode", renderer);
 
     this.camera = new THREE.PerspectiveCamera();
-    // have it pointing in the correct direction
+
+    /**
+     * By default the camera is facing down the -y axis with -z up,
+     * where the image is on the +y axis with +z up.
+     * To correct this we rotate the camera 180 degrees around the x axis.
+     */
     this.camera.quaternion.setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI);
     this.aspect = aspect;
 
@@ -283,7 +298,6 @@ export class ImageMode extends SceneExtension implements ICameraHandler {
     // the camera info by the info topic configured for the image
     const cameraInfo = normalizeCameraInfo(messageEvent.message);
     this.cameraInfoByTopic.set(messageEvent.topic, cameraInfo);
-
     this.updateCamera();
   };
 
@@ -329,6 +343,10 @@ export class ImageMode extends SceneExtension implements ICameraHandler {
     return this.renderer.config.imageMode;
   }
 
+  /**
+   * Updates `this.camera` based on the current settings and camera info topic.
+   * It creates a new camera model if the camera info has changed and sets the camera's projection matrix based on that.
+   */
   private updateCamera(): void {
     const { calibrationTopic } = this.getImageModeSettings();
     if (!calibrationTopic) {
@@ -345,7 +363,10 @@ export class ImageMode extends SceneExtension implements ICameraHandler {
     } else {
       this.renderer.settings.errors.remove(CALIBRATION_TOPIC_PATH, MISSING_CAMERA_INFO);
     }
+
+    // set the render frame id to the camera info's frame id
     this.renderer.followFrameId = this.getCurrentFrameId();
+
     this.updateCameraModel(possibleNewCameraInfo);
     this.updateZoomFromModel();
 

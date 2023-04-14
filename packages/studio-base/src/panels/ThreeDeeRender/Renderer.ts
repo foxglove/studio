@@ -209,7 +209,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
   public readonly instancedOutlineMaterial = new InstancedLineMaterial({ dithering: true });
 
   /** only public for testing - prefer to use `getCameraState` instead */
-  public cameraStateSettings: ICameraHandler;
+  public cameraHandler: ICameraHandler;
 
   public measurementTool: MeasurementTool;
   public publishClickTool: PublishClickTool;
@@ -311,7 +311,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     this.scene.add(this.dirLight);
     this.scene.add(this.hemiLight);
 
-    this.input = new Input(canvas, () => this.cameraStateSettings.getActiveCamera());
+    this.input = new Input(canvas, () => this.cameraHandler.getActiveCamera());
     this.input.on("resize", (size) => this.resizeHandler(size));
     this.input.on("click", (cursorCoords) => this.clickHandler(cursorCoords));
 
@@ -352,18 +352,15 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
       preload: config.scene.transforms?.enablePreloading ?? true,
     });
 
-    let cameraHandler;
     const aspect = renderSize.width / renderSize.height;
     switch (interfaceMode) {
       case "image":
-        cameraHandler = new ImageMode(this, aspect);
-        this.cameraStateSettings = cameraHandler;
-        this.addSceneExtension(cameraHandler);
+        this.cameraHandler = new ImageMode(this, aspect);
+        this.addSceneExtension(this.cameraHandler);
         break;
       case "3d":
-        cameraHandler = new CameraStateSettings(this, this.canvas, aspect);
-        this.cameraStateSettings = cameraHandler;
-        this.addSceneExtension(cameraHandler);
+        this.cameraHandler = new CameraStateSettings(this, this.canvas, aspect);
+        this.addSceneExtension(this.cameraHandler);
         this.addSceneExtension(new PublishSettings(this));
         break;
     }
@@ -437,7 +434,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
   public setCameraSyncError(error: undefined | string): void {
     this._cameraSyncError = error;
     // Updates the settings tree for camera state settings to account for any changes in the config.
-    this.cameraStateSettings.updateSettingsTree();
+    this.cameraHandler.updateSettingsTree();
   }
 
   public getPixelRatio(): number {
@@ -783,11 +780,11 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
   }
 
   public setCameraState(cameraState: CameraState): void {
-    this.cameraStateSettings.setCameraState(cameraState);
+    this.cameraHandler.setCameraState(cameraState);
   }
 
   public getCameraState(): CameraState {
-    return this.cameraStateSettings.getCameraState();
+    return this.cameraHandler.getCameraState();
   }
 
   public setSelectedRenderable(selection: PickedRenderable | undefined): void {
@@ -974,7 +971,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     this.gl.clear();
     this.emit("startFrame", currentTime, this);
 
-    const camera = this.cameraStateSettings.getActiveCamera();
+    const camera = this.cameraHandler.getActiveCamera();
     camera.layers.set(LAYER_DEFAULT);
     this.selectionBackdrop.visible = this.selectedRenderable != undefined;
 
@@ -1006,7 +1003,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
 
     // renderSize points to `tempVec2` so we don't want to pass it anywhere that might store it
     const renderSize = this.gl.getDrawingBufferSize(tempVec2);
-    this.cameraStateSettings.handleResize(renderSize.width, renderSize.height);
+    this.cameraHandler.handleResize(renderSize.width, renderSize.height);
 
     log.debug(`Resized renderer to ${renderSize.width}x${renderSize.height}`);
     this.animationFrame();
@@ -1029,7 +1026,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
 
     // Pick a single renderable, hide it, re-render, and run picking again until
     // the backdrop is hit or we exceed MAX_SELECTIONS
-    const camera = this.cameraStateSettings.getActiveCamera();
+    const camera = this.cameraHandler.getActiveCamera();
     const selections: PickedRenderable[] = [];
     let curSelection: PickedRenderable | undefined;
     while (
@@ -1150,7 +1147,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     const objectId = this.picker.pick(
       cursorCoords.x,
       cursorCoords.y,
-      this.cameraStateSettings.getActiveCamera(),
+      this.cameraHandler.getActiveCamera(),
     );
     if (objectId === -1) {
       return undefined;
@@ -1181,7 +1178,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
       instanceIndex = this.picker.pickInstance(
         cursorCoords.x,
         cursorCoords.y,
-        this.cameraStateSettings.getActiveCamera(),
+        this.cameraHandler.getActiveCamera(),
         renderable,
       );
       instanceIndex = instanceIndex === -1 ? undefined : instanceIndex;

@@ -182,7 +182,7 @@ export interface IRenderer extends EventEmitter<RendererEvents> {
   publishClickTool: PublishClickTool;
 
   /** only public for testing - prefer to use `getCameraState` instead */
-  cameraStateSettings: ICameraHandler;
+  cameraHandler: ICameraHandler;
 
   // Are we connected to a ROS data source? Normalize coordinate frames if so by
   // stripping any leading "/" prefix. See `normalizeFrameId()` for details.

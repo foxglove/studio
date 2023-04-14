@@ -141,7 +141,7 @@ describe("3D Renderer", () => {
     tfWithDisplayChild.message.transforms[0]!.transform.translation.x = 1;
     renderer.addMessageEvent(tfWithDisplayChild);
     renderer.animationFrame();
-    expect(renderer.cameraStateSettings.unfollowPoseSnapshot).toBeUndefined();
+    expect(renderer.cameraHandler.unfollowPoseSnapshot).toBeUndefined();
   });
   it("records pose snapshot after changing from follow-pose mode to follow-none", () => {
     const config = {
@@ -163,11 +163,11 @@ describe("3D Renderer", () => {
     tfWithDisplayChild.message.transforms[0]!.transform.translation.x = 1;
     renderer.addMessageEvent(tfWithDisplayChild);
     renderer.animationFrame();
-    expect(renderer.cameraStateSettings.unfollowPoseSnapshot).toBeUndefined();
+    expect(renderer.cameraHandler.unfollowPoseSnapshot).toBeUndefined();
     renderer.config = { ...config, followMode: "follow-none" };
     renderer.animationFrame();
     // parent is the camera group that holds the pose from the snapshot
-    expect(renderer.cameraStateSettings.unfollowPoseSnapshot?.position).toEqual({
+    expect(renderer.cameraHandler.unfollowPoseSnapshot?.position).toEqual({
       x: 1,
       y: 0,
       z: 0,
@@ -193,14 +193,14 @@ describe("3D Renderer", () => {
     tfWithDisplayChild.message.transforms[0]!.transform.translation.x = 1;
     renderer.addMessageEvent(tfWithDisplayChild);
     renderer.animationFrame();
-    expect(renderer.cameraStateSettings.unfollowPoseSnapshot?.position).toEqual({
+    expect(renderer.cameraHandler.unfollowPoseSnapshot?.position).toEqual({
       x: 1,
       y: 0,
       z: 0,
     });
     renderer.config = { ...config, followMode: "follow-pose" };
     renderer.animationFrame();
-    expect(renderer.cameraStateSettings.unfollowPoseSnapshot).toBeUndefined();
+    expect(renderer.cameraHandler.unfollowPoseSnapshot).toBeUndefined();
   });
   it("keeps same unfollowPoseSnapshot when switching from follow-none to follow-position", () => {
     const config = {
@@ -222,14 +222,14 @@ describe("3D Renderer", () => {
     tfWithDisplayChild.message.transforms[0]!.transform.translation.x = 1;
     renderer.addMessageEvent(tfWithDisplayChild);
     renderer.animationFrame();
-    expect(renderer.cameraStateSettings.unfollowPoseSnapshot?.position).toEqual({
+    expect(renderer.cameraHandler.unfollowPoseSnapshot?.position).toEqual({
       x: 1,
       y: 0,
       z: 0,
     });
     renderer.config = { ...config, followMode: "follow-position" };
     renderer.animationFrame();
-    expect(renderer.cameraStateSettings.unfollowPoseSnapshot?.position).toEqual({
+    expect(renderer.cameraHandler.unfollowPoseSnapshot?.position).toEqual({
       x: 1,
       y: 0,
       z: 0,
@@ -259,7 +259,7 @@ describe("3D Renderer", () => {
     renderer.addMessageEvent(tfWithDisplayChild);
     renderer.animationFrame();
     expect(renderer.fixedFrameId).toEqual("parentOfDisplay");
-    expect(renderer.cameraStateSettings.unfollowPoseSnapshot?.position).toEqual({
+    expect(renderer.cameraHandler.unfollowPoseSnapshot?.position).toEqual({
       x: 1,
       y: 0,
       z: 0,
@@ -271,7 +271,7 @@ describe("3D Renderer", () => {
     renderer.animationFrame();
     expect(renderer.fixedFrameId).toEqual("root");
     // combines the two translations
-    expect(renderer.cameraStateSettings.unfollowPoseSnapshot?.position).toEqual({
+    expect(renderer.cameraHandler.unfollowPoseSnapshot?.position).toEqual({
       x: 1,
       y: 1,
       z: 0,
