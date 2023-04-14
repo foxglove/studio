@@ -12,7 +12,6 @@
 //   You may not use this file except in compliance with the License.
 
 import { Stack } from "@mui/material";
-import { storiesOf } from "@storybook/react";
 
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 import { PointCloud2 } from "@foxglove/studio-base/types/Messages";
@@ -332,50 +331,66 @@ function DefaultStory() {
   );
 }
 
-storiesOf("panels/ThreeDeeRender/Interactions/Interaction", module)
-  .addParameters({
-    chromatic: { viewport: { width: 1001, height: 1101 } },
-  })
-  .add("default", DefaultStory, { colorScheme: "dark" })
-  .add("default light", DefaultStory, { colorScheme: "light" })
-  .add("PointCloud", () => {
-    const cloud1 = { ...selectedObject.object, ...POINT_CLOUD_MESSAGE };
-    const cloud2 = {
-      ...selectedObject.object,
-      ...POINT_CLOUD_WITH_ADDITIONAL_FIELDS,
-    };
+export default {
+  title: "panels/ThreeDeeRender/Interactions/Interaction",
 
-    return (
-      <Stack direction="row" flexWrap="wrap" height="100%" bgcolor="background.paper">
-        <PanelSetupWithData title="default with point color">
-          <Interactions
-            {...(sharedProps as any)}
-            selectedObject={{
-              instanceIndex: 0,
-              object: {
-                ...cloud1,
-                type: 102,
-                interactionData: { topic: "/foo/bar", originalMessage: POINT_CLOUD_MESSAGE },
+  parameters: {
+    chromatic: { viewport: { width: 1001, height: 1101 } },
+  },
+
+  excludeStories: ["POINT_CLOUD_MESSAGE", "POINT_CLOUD_WITH_ADDITIONAL_FIELDS"],
+};
+
+export const Default = DefaultStory;
+
+Default.storyName = "default";
+Default.parameters = { colorScheme: "dark" };
+
+export const DefaultLight = DefaultStory;
+
+DefaultLight.storyName = "default light";
+DefaultLight.parameters = { colorScheme: "light" };
+
+export const PointCloud = () => {
+  const cloud1 = { ...selectedObject.object, ...POINT_CLOUD_MESSAGE };
+  const cloud2 = {
+    ...selectedObject.object,
+    ...POINT_CLOUD_WITH_ADDITIONAL_FIELDS,
+  };
+
+  return (
+    <Stack direction="row" flexWrap="wrap" height="100%" bgcolor="background.paper">
+      <PanelSetupWithData title="default with point color">
+        <Interactions
+          {...(sharedProps as any)}
+          selectedObject={{
+            instanceIndex: 0,
+            object: {
+              ...cloud1,
+              type: 102,
+              interactionData: { topic: "/foo/bar", originalMessage: POINT_CLOUD_MESSAGE },
+            },
+          }}
+        />
+      </PanelSetupWithData>
+      <PanelSetupWithData title="with additional fields">
+        <Interactions
+          {...(sharedProps as any)}
+          selectedObject={{
+            instanceIndex: 0,
+            object: {
+              ...cloud2,
+              type: 102,
+              interactionData: {
+                topic: "/foo/bar",
+                originalMessage: POINT_CLOUD_WITH_ADDITIONAL_FIELDS,
               },
-            }}
-          />
-        </PanelSetupWithData>
-        <PanelSetupWithData title="with additional fields">
-          <Interactions
-            {...(sharedProps as any)}
-            selectedObject={{
-              instanceIndex: 0,
-              object: {
-                ...cloud2,
-                type: 102,
-                interactionData: {
-                  topic: "/foo/bar",
-                  originalMessage: POINT_CLOUD_WITH_ADDITIONAL_FIELDS,
-                },
-              },
-            }}
-          />
-        </PanelSetupWithData>
-      </Stack>
-    );
-  });
+            },
+          }}
+        />
+      </PanelSetupWithData>
+    </Stack>
+  );
+};
+
+PointCloud.storyName = "PointCloud";

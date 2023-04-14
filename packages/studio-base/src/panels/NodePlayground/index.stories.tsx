@@ -1,18 +1,3 @@
-// This Source Code Form is subject to the terms of the Mozilla Public
-// License, v2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/
-//
-// This file incorporates work covered by the following copyright and
-// permission notice:
-//
-//   Copyright 2019-2021 Cruise LLC
-//
-//   This source code is licensed under the Apache License, Version 2.0,
-//   found at http://www.apache.org/licenses/LICENSE-2.0
-//   You may not use this file except in compliance with the License.
-
-import { storiesOf } from "@storybook/react";
-
 import NodePlayground from "@foxglove/studio-base/panels/NodePlayground";
 import rawUserUtils from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/typescript/rawUserUtils";
 import { UserNodeLog } from "@foxglove/studio-base/players/UserNodePlayer/types";
@@ -114,418 +99,478 @@ const utilsSourceCode = `
 const OPEN_BOTTOM_BAR_TIMEOUT = 500;
 const SIDEBAR_OPEN_CLICK_TIMEOUT = 500;
 
-storiesOf("panels/NodePlayground", module)
-  .addParameters({
+export default {
+  title: "panels/NodePlayground",
+
+  parameters: {
     chromatic: {
       delay: 2500,
     },
-  })
-  .add("welcome screen", () => {
-    return (
-      <PanelSetup fixture={fixture}>
-        <NodePlayground />
-      </PanelSetup>
-    );
-  })
-  .add("rawUserUtils", () => {
-    return (
-      <div style={{ margin: 12 }}>
-        <p style={{ color: "lightgreen" }}>
-          This should be original TypeScript source code. This is a story rather than a unit test
-          because it’s effectively a test of our webpack config.
-        </p>
-        <pre>{rawUserUtils[0]?.sourceCode}</pre>;
-      </div>
-    );
-  })
-  .add("utils usage in node", () => (
-    <PanelSetup
-      fixture={{
-        ...fixture,
-        userNodes: {
-          nodeId1: {
-            name: "/studio_script/script",
-            sourceCode: sourceCodeWithUtils,
-          },
-        },
-        userNodeDiagnostics: { nodeId1: [] },
-        userNodeLogs: { nodeId1: [] },
-      }}
-    >
-      <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
+  },
+};
+
+export const WelcomeScreen = () => {
+  return (
+    <PanelSetup fixture={fixture}>
+      <NodePlayground />
     </PanelSetup>
-  ))
-  .add("Editor shows new code when userNodes change", () => (
-    <PanelSetup
-      fixture={{
-        ...fixture,
-        userNodes: {
+  );
+};
+
+WelcomeScreen.storyName = "welcome screen";
+
+export const RawUserUtils = () => {
+  return (
+    <div style={{ margin: 12 }}>
+      <p style={{ color: "lightgreen" }}>
+        This should be original TypeScript source code. This is a story rather than a unit test
+        because it’s effectively a test of our webpack config.
+      </p>
+      <pre>{rawUserUtils[0]?.sourceCode}</pre>;
+    </div>
+  );
+};
+
+RawUserUtils.storyName = "rawUserUtils";
+
+export const UtilsUsageInNode = () => (
+  <PanelSetup
+    fixture={{
+      ...fixture,
+      userNodes: {
+        nodeId1: {
+          name: "/studio_script/script",
+          sourceCode: sourceCodeWithUtils,
+        },
+      },
+      userNodeDiagnostics: { nodeId1: [] },
+      userNodeLogs: { nodeId1: [] },
+    }}
+  >
+    <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
+  </PanelSetup>
+);
+
+UtilsUsageInNode.storyName = "utils usage in node";
+
+export const EditorShowsNewCodeWhenUserNodesChange = () => (
+  <PanelSetup
+    fixture={{
+      ...fixture,
+      userNodes: {
+        nodeId1: {
+          name: "/studio_script/script",
+          sourceCode: sourceCodeWithUtils,
+        },
+      },
+      userNodeDiagnostics: { nodeId1: [] },
+      userNodeLogs: { nodeId1: [] },
+    }}
+    onMount={(el, actions) => {
+      setTimeout(() => {
+        // Change the userNodes to confirm the code in the Editor updates
+        actions.setUserNodes({
           nodeId1: {
             name: "/studio_script/script",
-            sourceCode: sourceCodeWithUtils,
+            sourceCode: utilsSourceCode,
           },
+        });
+        el.querySelectorAll<HTMLElement>("[data-testid=node-explorer]")[0]?.click();
+      }, 500);
+    }}
+  >
+    <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
+    <SExpectedResult style={{ left: "375px", top: "150px" }}>
+      Should show function norm() code
+    </SExpectedResult>
+  </PanelSetup>
+);
+
+EditorShowsNewCodeWhenUserNodesChange.storyName = "Editor shows new code when userNodes change";
+
+export const EditorGotoDefinition = () => (
+  <PanelSetup
+    fixture={{
+      ...fixture,
+      userNodes: {
+        nodeId1: {
+          name: "/studio_script/script",
+          sourceCode: sourceCodeWithUtils,
         },
-        userNodeDiagnostics: { nodeId1: [] },
-        userNodeLogs: { nodeId1: [] },
+      },
+      userNodeDiagnostics: { nodeId1: [] },
+      userNodeLogs: { nodeId1: [] },
+    }}
+  >
+    <NodePlayground
+      overrideConfig={{
+        selectedNodeId: "nodeId1",
+        additionalBackStackItems: [
+          {
+            filePath: "/studio_script/pointClouds",
+            code: utilsSourceCode,
+            readOnly: true,
+          },
+        ],
       }}
-      onMount={(el, actions) => {
+    />
+  </PanelSetup>
+);
+
+EditorGotoDefinition.storyName = "editor goto definition";
+
+export const GoBackFromGotoDefinition = () => (
+  <PanelSetup
+    fixture={{
+      ...fixture,
+      userNodes: {
+        nodeId1: {
+          name: "/studio_script/script",
+          sourceCode: sourceCodeWithUtils,
+        },
+      },
+      userNodeDiagnostics: { nodeId1: [] },
+      userNodeLogs: { nodeId1: [] },
+    }}
+    onMount={(el) => {
+      setTimeout(() => {
+        el.querySelectorAll<HTMLElement>("[data-testid=go-back]")[0]!.click();
+      }, 500);
+    }}
+  >
+    <NodePlayground
+      overrideConfig={{
+        selectedNodeId: "nodeId1",
+        additionalBackStackItems: [
+          {
+            filePath: "/studio_script/pointClouds",
+            code: utilsSourceCode,
+            readOnly: true,
+          },
+        ],
+      }}
+    />
+  </PanelSetup>
+);
+
+GoBackFromGotoDefinition.storyName = "go back from goto definition";
+
+export const SidebarOpenNodeExplorer = () => {
+  return (
+    <PanelSetup
+      fixture={{ ...fixture, userNodes }}
+      onMount={(el) => {
         setTimeout(() => {
-          // Change the userNodes to confirm the code in the Editor updates
-          actions.setUserNodes({
-            nodeId1: {
-              name: "/studio_script/script",
-              sourceCode: utilsSourceCode,
-            },
-          });
-          el.querySelectorAll<HTMLElement>("[data-testid=node-explorer]")[0]?.click();
-        }, 500);
+          el.querySelectorAll<HTMLElement>("[data-testid=node-explorer]")[0]!.click();
+        }, SIDEBAR_OPEN_CLICK_TIMEOUT);
+      }}
+    >
+      <NodePlayground />
+    </PanelSetup>
+  );
+};
+
+SidebarOpenNodeExplorer.storyName = "sidebar open - node explorer";
+
+export const SidebarOpenNodeExplorerSelectedNode = () => {
+  return (
+    <PanelSetup
+      fixture={{ ...fixture, userNodes }}
+      onMount={(el) => {
+        setTimeout(() => {
+          el.querySelectorAll<HTMLElement>("[data-testid=node-explorer]")[0]!.click();
+        }, SIDEBAR_OPEN_CLICK_TIMEOUT);
       }}
     >
       <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
-      <SExpectedResult style={{ left: "375px", top: "150px" }}>
-        Should show function norm() code
-      </SExpectedResult>
     </PanelSetup>
-  ))
-  .add("editor goto definition", () => (
+  );
+};
+
+SidebarOpenNodeExplorerSelectedNode.storyName = "sidebar open - node explorer - selected node";
+
+export const SidebarOpenUtilsExplorerSelectedUtility = () => {
+  return (
     <PanelSetup
-      fixture={{
-        ...fixture,
-        userNodes: {
-          nodeId1: {
-            name: "/studio_script/script",
-            sourceCode: sourceCodeWithUtils,
-          },
-        },
-        userNodeDiagnostics: { nodeId1: [] },
-        userNodeLogs: { nodeId1: [] },
+      fixture={{ ...fixture, userNodes }}
+      onMount={(el) => {
+        setTimeout(() => {
+          el.querySelectorAll<HTMLElement>("[data-testid=utils-explorer]")[0]!.click();
+        }, SIDEBAR_OPEN_CLICK_TIMEOUT);
       }}
     >
+      <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
+    </PanelSetup>
+  );
+};
+
+SidebarOpenUtilsExplorerSelectedUtility.storyName = "sidebar open - utils explorer - selected utility";
+
+export const SidebarOpenTemplatesExplorer = () => {
+  return (
+    <PanelSetup
+      fixture={{ ...fixture, userNodes }}
+      onMount={(el) => {
+        setTimeout(() => {
+          el.querySelectorAll<HTMLElement>("[data-testid=templates-explorer]")[0]!.click();
+        }, SIDEBAR_OPEN_CLICK_TIMEOUT);
+      }}
+    >
+      <NodePlayground />
+    </PanelSetup>
+  );
+};
+
+SidebarOpenTemplatesExplorer.storyName = "sidebar open - templates explorer";
+
+export const EditorLoadingState = () => {
+  const NeverLoad = () => {
+    throw new Promise(() => {
+      // no-op
+    });
+  };
+  return (
+    <PanelSetup fixture={{ ...fixture, userNodes }}>
       <NodePlayground
-        overrideConfig={{
-          selectedNodeId: "nodeId1",
-          additionalBackStackItems: [
-            {
-              filePath: "/studio_script/pointClouds",
-              code: utilsSourceCode,
-              readOnly: true,
-            },
-          ],
-        }}
+        overrideConfig={{ selectedNodeId: "nodeId1", editorForStorybook: <NeverLoad /> }}
       />
     </PanelSetup>
-  ))
-  .add("go back from goto definition", () => (
-    <PanelSetup
-      fixture={{
-        ...fixture,
-        userNodes: {
-          nodeId1: {
-            name: "/studio_script/script",
-            sourceCode: sourceCodeWithUtils,
+  );
+};
+
+EditorLoadingState.storyName = "editor loading state";
+
+export const BottomBarNoErrorsOrLogsClosed = () => (
+  <PanelSetup
+    fixture={{
+      ...fixture,
+      userNodes: { nodeId1: { name: "/studio_script/script", sourceCode: "" } },
+      userNodeDiagnostics: { nodeId1: [] },
+    }}
+  >
+    <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
+  </PanelSetup>
+);
+
+BottomBarNoErrorsOrLogsClosed.storyName = "BottomBar - no errors or logs - closed";
+
+export const BottomBarNoErrorsOpen = () => (
+  <PanelSetup
+    fixture={{
+      ...fixture,
+      userNodes: { nodeId1: { name: "/studio_script/script", sourceCode: "" } },
+      userNodeDiagnostics: { nodeId1: [] },
+    }}
+    onMount={(el) => {
+      setTimeout(() => {
+        const diagnosticsErrorsLabel = el.querySelector<HTMLElement>("[data-testid=np-errors]");
+        if (diagnosticsErrorsLabel) {
+          diagnosticsErrorsLabel.click();
+        }
+      }, OPEN_BOTTOM_BAR_TIMEOUT);
+    }}
+  >
+    <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
+  </PanelSetup>
+);
+
+BottomBarNoErrorsOpen.storyName = "BottomBar - no errors - open";
+
+export const BottomBarNoLogsOpen = () => (
+  <PanelSetup
+    fixture={{
+      ...fixture,
+      userNodes: { nodeId1: { name: "/studio_script/script", sourceCode: "" } },
+      userNodeDiagnostics: { nodeId1: [] },
+    }}
+    onMount={(el) => {
+      setTimeout(() => {
+        const logsLabel = el.querySelector<HTMLElement>("[data-testid=np-logs]");
+        if (logsLabel) {
+          logsLabel.click();
+        }
+      }, OPEN_BOTTOM_BAR_TIMEOUT);
+    }}
+  >
+    <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
+  </PanelSetup>
+);
+
+BottomBarNoLogsOpen.storyName = "BottomBar - no logs - open";
+
+export const BottomBarErrorsClosed = () => (
+  <PanelSetup
+    fixture={{
+      ...fixture,
+      userNodes: { nodeId1: { name: "/studio_script/script", sourceCode: "" } },
+      userNodeDiagnostics: {
+        nodeId1: [
+          {
+            message: `Type '"bad number"' is not assignable to type 'number[]'.`,
+            severity: 8,
+            source: "Typescript",
+            startLineNumber: 0,
+            startColumn: 6,
+            endLineNumber: 72,
+            endColumn: 20,
+            code: 2304,
           },
-        },
-        userNodeDiagnostics: { nodeId1: [] },
-        userNodeLogs: { nodeId1: [] },
-      }}
-      onMount={(el) => {
-        setTimeout(() => {
-          el.querySelectorAll<HTMLElement>("[data-testid=go-back]")[0]!.click();
-        }, 500);
-      }}
-    >
-      <NodePlayground
-        overrideConfig={{
-          selectedNodeId: "nodeId1",
-          additionalBackStackItems: [
-            {
-              filePath: "/studio_script/pointClouds",
-              code: utilsSourceCode,
-              readOnly: true,
-            },
-          ],
-        }}
-      />
-    </PanelSetup>
-  ))
-  .add("sidebar open - node explorer", () => {
-    return (
-      <PanelSetup
-        fixture={{ ...fixture, userNodes }}
-        onMount={(el) => {
-          setTimeout(() => {
-            el.querySelectorAll<HTMLElement>("[data-testid=node-explorer]")[0]!.click();
-          }, SIDEBAR_OPEN_CLICK_TIMEOUT);
-        }}
-      >
-        <NodePlayground />
-      </PanelSetup>
-    );
-  })
-  .add("sidebar open - node explorer - selected node", () => {
-    return (
-      <PanelSetup
-        fixture={{ ...fixture, userNodes }}
-        onMount={(el) => {
-          setTimeout(() => {
-            el.querySelectorAll<HTMLElement>("[data-testid=node-explorer]")[0]!.click();
-          }, SIDEBAR_OPEN_CLICK_TIMEOUT);
-        }}
-      >
-        <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
-      </PanelSetup>
-    );
-  })
-  .add("sidebar open - utils explorer - selected utility", () => {
-    return (
-      <PanelSetup
-        fixture={{ ...fixture, userNodes }}
-        onMount={(el) => {
-          setTimeout(() => {
-            el.querySelectorAll<HTMLElement>("[data-testid=utils-explorer]")[0]!.click();
-          }, SIDEBAR_OPEN_CLICK_TIMEOUT);
-        }}
-      >
-        <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
-      </PanelSetup>
-    );
-  })
-  .add("sidebar open - templates explorer", () => {
-    return (
-      <PanelSetup
-        fixture={{ ...fixture, userNodes }}
-        onMount={(el) => {
-          setTimeout(() => {
-            el.querySelectorAll<HTMLElement>("[data-testid=templates-explorer]")[0]!.click();
-          }, SIDEBAR_OPEN_CLICK_TIMEOUT);
-        }}
-      >
-        <NodePlayground />
-      </PanelSetup>
-    );
-  })
-  .add("editor loading state", () => {
-    const NeverLoad = () => {
-      throw new Promise(() => {
-        // no-op
-      });
-    };
-    return (
-      <PanelSetup fixture={{ ...fixture, userNodes }}>
-        <NodePlayground
-          overrideConfig={{ selectedNodeId: "nodeId1", editorForStorybook: <NeverLoad /> }}
-        />
-      </PanelSetup>
-    );
-  })
-  .add("BottomBar - no errors or logs - closed", () => (
-    <PanelSetup
-      fixture={{
-        ...fixture,
-        userNodes: { nodeId1: { name: "/studio_script/script", sourceCode: "" } },
-        userNodeDiagnostics: { nodeId1: [] },
-      }}
-    >
-      <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
-    </PanelSetup>
-  ))
-  .add("BottomBar - no errors - open", () => (
-    <PanelSetup
-      fixture={{
-        ...fixture,
-        userNodes: { nodeId1: { name: "/studio_script/script", sourceCode: "" } },
-        userNodeDiagnostics: { nodeId1: [] },
-      }}
-      onMount={(el) => {
-        setTimeout(() => {
-          const diagnosticsErrorsLabel = el.querySelector<HTMLElement>("[data-testid=np-errors]");
-          if (diagnosticsErrorsLabel) {
-            diagnosticsErrorsLabel.click();
-          }
-        }, OPEN_BOTTOM_BAR_TIMEOUT);
-      }}
-    >
-      <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
-    </PanelSetup>
-  ))
-  .add("BottomBar - no logs - open", () => (
-    <PanelSetup
-      fixture={{
-        ...fixture,
-        userNodes: { nodeId1: { name: "/studio_script/script", sourceCode: "" } },
-        userNodeDiagnostics: { nodeId1: [] },
-      }}
-      onMount={(el) => {
-        setTimeout(() => {
-          const logsLabel = el.querySelector<HTMLElement>("[data-testid=np-logs]");
-          if (logsLabel) {
-            logsLabel.click();
-          }
-        }, OPEN_BOTTOM_BAR_TIMEOUT);
-      }}
-    >
-      <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
-    </PanelSetup>
-  ))
-  .add("BottomBar - errors - closed", () => (
-    <PanelSetup
-      fixture={{
-        ...fixture,
-        userNodes: { nodeId1: { name: "/studio_script/script", sourceCode: "" } },
-        userNodeDiagnostics: {
-          nodeId1: [
-            {
-              message: `Type '"bad number"' is not assignable to type 'number[]'.`,
-              severity: 8,
-              source: "Typescript",
-              startLineNumber: 0,
-              startColumn: 6,
-              endLineNumber: 72,
-              endColumn: 20,
-              code: 2304,
-            },
-            {
-              message: "This is a warning message (without line or column numbers).",
-              severity: 4,
-              source: "Source A",
-              endLineNumber: 72,
-              endColumn: 20,
-              code: 2304,
-            },
-            {
-              message: "This is an info message (without line or column numbers).",
-              severity: 2,
-              source: "Source B",
-              code: 2304,
-            },
-            {
-              message: "This is a hint message (without line or column numbers).",
-              severity: 1,
-              source: "Source C",
-              code: 2304,
-            },
-          ],
-        },
-      }}
-    >
-      <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
-    </PanelSetup>
-  ))
-  .add("BottomBar - errors - open", () => (
-    <PanelSetup
-      fixture={{
-        ...fixture,
-        userNodes: { nodeId1: { name: "/studio_script/script", sourceCode: "" } },
-        userNodeDiagnostics: {
-          nodeId1: [
-            {
-              message: `Type '"bad number"' is not assignable to type 'number[]'.`,
-              severity: 8,
-              source: "Typescript",
-              startLineNumber: 0,
-              startColumn: 6,
-              endLineNumber: 72,
-              endColumn: 20,
-              code: 2304,
-            },
-            {
-              message: "This is a warning message (without line or column numbers).",
-              severity: 4,
-              source: "Source A",
-              endLineNumber: 72,
-              endColumn: 20,
-              code: 2304,
-            },
-            {
-              message: "This is an info message (without line or column numbers).",
-              severity: 2,
-              source: "Source B",
-              code: 2304,
-            },
-            {
-              message: "This is a hint message (without line or column numbers).",
-              severity: 1,
-              source: "Source C",
-              code: 2304,
-            },
-          ],
-        },
-      }}
-      onMount={(el) => {
-        setTimeout(() => {
-          const diagnosticsErrorsLabel = el.querySelector<HTMLElement>("[data-testid=np-errors]");
-          if (diagnosticsErrorsLabel) {
-            diagnosticsErrorsLabel.click();
-          }
-        }, OPEN_BOTTOM_BAR_TIMEOUT);
-      }}
-    >
-      <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
-    </PanelSetup>
-  ))
-  .add("BottomBar - logs - closed", () => (
-    <PanelSetup
-      fixture={{
-        ...fixture,
-        userNodes: {
-          nodeId1: {
-            name: "/studio_script/script",
-            sourceCode: sourceCodeWithLogs,
+          {
+            message: "This is a warning message (without line or column numbers).",
+            severity: 4,
+            source: "Source A",
+            endLineNumber: 72,
+            endColumn: 20,
+            code: 2304,
           },
-        },
-        userNodeDiagnostics: { nodeId1: [] },
-        userNodeLogs: { nodeId1: logs },
-      }}
-    >
-      <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
-    </PanelSetup>
-  ))
-  .add("BottomBar - logs - open", () => (
-    <PanelSetup
-      fixture={{
-        ...fixture,
-        userNodes: {
-          nodeId1: {
-            name: "/studio_script/script",
-            sourceCode: sourceCodeWithLogs,
+          {
+            message: "This is an info message (without line or column numbers).",
+            severity: 2,
+            source: "Source B",
+            code: 2304,
           },
+          {
+            message: "This is a hint message (without line or column numbers).",
+            severity: 1,
+            source: "Source C",
+            code: 2304,
+          },
+        ],
+      },
+    }}
+  >
+    <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
+  </PanelSetup>
+);
+
+BottomBarErrorsClosed.storyName = "BottomBar - errors - closed";
+
+export const BottomBarErrorsOpen = () => (
+  <PanelSetup
+    fixture={{
+      ...fixture,
+      userNodes: { nodeId1: { name: "/studio_script/script", sourceCode: "" } },
+      userNodeDiagnostics: {
+        nodeId1: [
+          {
+            message: `Type '"bad number"' is not assignable to type 'number[]'.`,
+            severity: 8,
+            source: "Typescript",
+            startLineNumber: 0,
+            startColumn: 6,
+            endLineNumber: 72,
+            endColumn: 20,
+            code: 2304,
+          },
+          {
+            message: "This is a warning message (without line or column numbers).",
+            severity: 4,
+            source: "Source A",
+            endLineNumber: 72,
+            endColumn: 20,
+            code: 2304,
+          },
+          {
+            message: "This is an info message (without line or column numbers).",
+            severity: 2,
+            source: "Source B",
+            code: 2304,
+          },
+          {
+            message: "This is a hint message (without line or column numbers).",
+            severity: 1,
+            source: "Source C",
+            code: 2304,
+          },
+        ],
+      },
+    }}
+    onMount={(el) => {
+      setTimeout(() => {
+        const diagnosticsErrorsLabel = el.querySelector<HTMLElement>("[data-testid=np-errors]");
+        if (diagnosticsErrorsLabel) {
+          diagnosticsErrorsLabel.click();
+        }
+      }, OPEN_BOTTOM_BAR_TIMEOUT);
+    }}
+  >
+    <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
+  </PanelSetup>
+);
+
+BottomBarErrorsOpen.storyName = "BottomBar - errors - open";
+
+export const BottomBarLogsClosed = () => (
+  <PanelSetup
+    fixture={{
+      ...fixture,
+      userNodes: {
+        nodeId1: {
+          name: "/studio_script/script",
+          sourceCode: sourceCodeWithLogs,
         },
-        userNodeDiagnostics: { nodeId1: [] },
-        userNodeLogs: { nodeId1: logs },
-      }}
-      onMount={(el) => {
-        setTimeout(() => {
-          const logsLabel = el.querySelector<HTMLElement>("[data-testid=np-logs]");
-          if (logsLabel) {
-            logsLabel.click();
+      },
+      userNodeDiagnostics: { nodeId1: [] },
+      userNodeLogs: { nodeId1: logs },
+    }}
+  >
+    <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
+  </PanelSetup>
+);
+
+BottomBarLogsClosed.storyName = "BottomBar - logs - closed";
+
+export const BottomBarLogsOpen = () => (
+  <PanelSetup
+    fixture={{
+      ...fixture,
+      userNodes: {
+        nodeId1: {
+          name: "/studio_script/script",
+          sourceCode: sourceCodeWithLogs,
+        },
+      },
+      userNodeDiagnostics: { nodeId1: [] },
+      userNodeLogs: { nodeId1: logs },
+    }}
+    onMount={(el) => {
+      setTimeout(() => {
+        const logsLabel = el.querySelector<HTMLElement>("[data-testid=np-logs]");
+        if (logsLabel) {
+          logsLabel.click();
+        }
+      }, OPEN_BOTTOM_BAR_TIMEOUT);
+    }}
+  >
+    <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
+  </PanelSetup>
+);
+
+BottomBarLogsOpen.storyName = "BottomBar - logs - open";
+
+export const BottomBarClearedLogs = () => (
+  <PanelSetup
+    fixture={{
+      ...fixture,
+      userNodes: { nodeId1: { name: "/studio_script/script", sourceCode: "" } },
+      userNodeDiagnostics: { nodeId1: [] },
+      userNodeLogs: { nodeId1: logs },
+    }}
+    onFirstMount={(el) => {
+      setTimeout(() => {
+        const logsLabel = el.querySelector<HTMLElement>("[data-testid=np-logs]");
+        if (logsLabel) {
+          logsLabel.click();
+          const clearBtn = el.querySelector<HTMLElement>("button[data-testid=np-logs-clear]");
+          if (clearBtn) {
+            clearBtn.click();
           }
-        }, OPEN_BOTTOM_BAR_TIMEOUT);
-      }}
-    >
-      <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
-    </PanelSetup>
-  ))
-  .add("BottomBar - cleared logs", () => (
-    <PanelSetup
-      fixture={{
-        ...fixture,
-        userNodes: { nodeId1: { name: "/studio_script/script", sourceCode: "" } },
-        userNodeDiagnostics: { nodeId1: [] },
-        userNodeLogs: { nodeId1: logs },
-      }}
-      onFirstMount={(el) => {
-        setTimeout(() => {
-          const logsLabel = el.querySelector<HTMLElement>("[data-testid=np-logs]");
-          if (logsLabel) {
-            logsLabel.click();
-            const clearBtn = el.querySelector<HTMLElement>("button[data-testid=np-logs-clear]");
-            if (clearBtn) {
-              clearBtn.click();
-            }
-          }
-        }, OPEN_BOTTOM_BAR_TIMEOUT);
-      }}
-    >
-      <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
-    </PanelSetup>
-  ));
+        }
+      }, OPEN_BOTTOM_BAR_TIMEOUT);
+    }}
+  >
+    <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
+  </PanelSetup>
+);
+
+BottomBarClearedLogs.storyName = "BottomBar - cleared logs";
