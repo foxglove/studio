@@ -186,7 +186,6 @@ export default class FoxgloveWebSocketPlayer implements Player {
       this._problems.clear();
       this._channelsById.clear();
       this._channelsByTopic.clear();
-      this._setupPublishers();
       this._servicesByName.clear();
       this._serviceResponseCbs.clear();
       this._parameters.clear();
@@ -194,7 +193,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
       this._publishedTopics = undefined;
       this._subscribedTopics = undefined;
       this._advertisedServices = undefined;
-
+      this._publicationsByTopic.clear();
       this._datatypes = new Map();
 
       for (const topic of this._resolvedSubscriptionsByTopic.keys()) {
@@ -293,6 +292,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
 
       if (event.capabilities.includes(ServerCapability.clientPublish)) {
         this._playerCapabilities = this._playerCapabilities.concat(PlayerCapabilities.advertise);
+        this._setupPublishers();
       }
       if (event.capabilities.includes(ServerCapability.services)) {
         this._serviceCallEncoding = event.supportedEncodings?.find((e) =>
