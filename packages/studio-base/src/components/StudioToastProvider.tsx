@@ -3,9 +3,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import {
-  CheckmarkCircle20Regular,
-  DismissCircle20Regular,
   Dismiss16Filled,
+  CheckmarkCircle20Regular,
+  QuestionCircle20Regular,
+  DismissCircle20Regular,
   Info20Regular,
   Warning20Regular,
 } from "@fluentui/react-icons";
@@ -17,47 +18,54 @@ import {
   MaterialDesignContent,
   CustomContentProps,
 } from "notistack";
-import { PropsWithChildren, forwardRef } from "react";
+import { CSSProperties, PropsWithChildren, forwardRef } from "react";
 import { makeStyles } from "tss-react/mui";
 
 import { APP_BAR_HEIGHT } from "@foxglove/studio-base/components/AppBar/constants";
 
-const useStyles = makeStyles<void, "icon">()((theme, _params, classes) => ({
-  icon: {
-    opacity: 0.8,
-  },
-  root: {
-    "&.notistack-MuiContent": {
-      padding: theme.spacing(0.5, 1.5, 0.5, 0.75),
-      fontSize: theme.typography.body2.fontSize,
-    },
-    "#notistack-snackbar": {
-      padding: 0,
-      gap: theme.spacing(0.75),
-    },
-    "&.notistack-MuiContent-default": {
-      backgroundColor: theme.palette.background.paper,
-      color: theme.palette.text.primary,
+type ThemeVariants = "success" | "error" | "info" | "warning";
 
-      [`.${classes.icon}`]: {
-        color: theme.palette.primary.main,
-        opacity: 1,
+const useStyles = makeStyles<void, "icon" | "dismissButton">()((theme, _params, classes) => {
+  // notistack does not make use of the MUI ThemeProvider
+  // so we need to create styles that use our theme colors
+  const createThemeVariants = (variant: ThemeVariants): Record<string, CSSProperties> => ({
+    [`&.notistack-MuiContent-${variant}`]: {
+      backgroundColor: theme.palette[variant].main,
+    },
+  });
+
+  return {
+    icon: {},
+    dismissButton: {
+      color: theme.palette.common.white,
+
+      "svg:not(.MuiSvgIcon-root)": {
+        fontSize: 16,
       },
     },
-    "&.notistack-MuiContent-success": {
-      backgroundColor: theme.palette.success.main,
+    root: {
+      "&.notistack-MuiContent": {
+        padding: theme.spacing(0.5, 1.5, 0.5, 1),
+        fontSize: theme.typography.body2.fontSize,
+      },
+      "#notistack-snackbar": {
+        padding: 0,
+        gap: theme.spacing(0.75),
+      },
+      "&.notistack-MuiContent-default": {
+        backgroundColor: theme.palette.background.paper,
+        color: theme.palette.text.primary,
+
+        [`.${classes.icon}`]: { color: theme.palette.primary.main },
+        [`.${classes.dismissButton}`]: { color: theme.palette.text.primary },
+      },
+      ...createThemeVariants("success"),
+      ...createThemeVariants("error"),
+      ...createThemeVariants("info"),
+      ...createThemeVariants("warning"),
     },
-    "&.notistack-MuiContent-error": {
-      backgroundColor: theme.palette.error.main,
-    },
-    "&.notistack-MuiContent-info": {
-      backgroundColor: theme.palette.info.main,
-    },
-    "&.notistack-MuiContent-warning": {
-      backgroundColor: theme.palette.warning.main,
-    },
-  },
-}));
+  };
+});
 
 const anchorWithOffset = (origin: "top" | "bottom") => ({
   "&.notistack-SnackbarContainer": {
@@ -78,8 +86,9 @@ const useContainerStyles = makeStyles()({
 
 const CloseSnackbarAction = ({ id }: { id: SnackbarKey }) => {
   const { closeSnackbar } = useSnackbar();
+  const { classes } = useStyles();
   return (
-    <IconButton size="small" onClick={() => closeSnackbar(id)}>
+    <IconButton className={classes.dismissButton} size="small" onClick={() => closeSnackbar(id)}>
       <Dismiss16Filled />
     </IconButton>
   );
@@ -105,7 +114,7 @@ export default function StudioToastProvider({ children }: PropsWithChildren<unkn
       }}
       action={(id) => <CloseSnackbarAction id={id} />}
       iconVariant={{
-        default: <Info20Regular className={classes.icon} />,
+        default: <QuestionCircle20Regular className={classes.icon} />,
         info: <Info20Regular className={classes.icon} />,
         error: <DismissCircle20Regular className={classes.icon} />,
         warning: <Warning20Regular className={classes.icon} />,

@@ -52,7 +52,17 @@ export const OneInfo = (): JSX.Element => {
   const { enqueueSnackbar } = useSnackbar();
 
   useEffect(() => {
-    enqueueSnackbar("This is the final countdown", { variant: "warning", persist: true });
+    enqueueSnackbar("This is the final countdown", { variant: "info", persist: true });
+  }, [enqueueSnackbar]);
+
+  return <StudioToastProvider />;
+};
+
+export const OneDefault = (): JSX.Element => {
+  const { enqueueSnackbar } = useSnackbar();
+
+  useEffect(() => {
+    enqueueSnackbar("This is the final countdown", { variant: "default", persist: true });
   }, [enqueueSnackbar]);
 
   return <StudioToastProvider />;
