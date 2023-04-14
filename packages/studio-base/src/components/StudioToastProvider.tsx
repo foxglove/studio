@@ -18,54 +18,50 @@ import {
   MaterialDesignContent,
   CustomContentProps,
 } from "notistack";
-import { CSSProperties, PropsWithChildren, forwardRef } from "react";
+import { PropsWithChildren, forwardRef } from "react";
 import { makeStyles } from "tss-react/mui";
 
 import { APP_BAR_HEIGHT } from "@foxglove/studio-base/components/AppBar/constants";
 
-type ThemeVariants = "success" | "error" | "info" | "warning";
+const useStyles = makeStyles<void, "icon" | "dismissButton">()((theme, _params, classes) => ({
+  icon: {},
+  dismissButton: {
+    color: theme.palette.common.white,
 
-const useStyles = makeStyles<void, "icon" | "dismissButton">()((theme, _params, classes) => {
-  // notistack does not make use of the MUI ThemeProvider
-  // so we need to create styles that use our theme colors
-  const createThemeVariants = (variant: ThemeVariants): Record<string, CSSProperties> => ({
-    [`&.notistack-MuiContent-${variant}`]: {
-      backgroundColor: theme.palette[variant].main,
+    "svg:not(.MuiSvgIcon-root)": {
+      fontSize: 16,
     },
-  });
-
-  return {
-    icon: {},
-    dismissButton: {
-      color: theme.palette.common.white,
-
-      "svg:not(.MuiSvgIcon-root)": {
-        fontSize: 16,
-      },
+  },
+  root: {
+    "&.notistack-MuiContent": {
+      padding: theme.spacing(0.5, 1.5, 0.5, 1),
+      fontSize: theme.typography.body2.fontSize,
     },
-    root: {
-      "&.notistack-MuiContent": {
-        padding: theme.spacing(0.5, 1.5, 0.5, 1),
-        fontSize: theme.typography.body2.fontSize,
-      },
-      "#notistack-snackbar": {
-        padding: 0,
-        gap: theme.spacing(0.75),
-      },
-      "&.notistack-MuiContent-default": {
-        backgroundColor: theme.palette.background.paper,
-        color: theme.palette.text.primary,
-
-        [`.${classes.icon}`]: { color: theme.palette.primary.main },
-        [`.${classes.dismissButton}`]: { color: theme.palette.text.primary },
-      },
-      ...createThemeVariants("success"),
-      ...createThemeVariants("error"),
-      ...createThemeVariants("info"),
-      ...createThemeVariants("warning"),
+    "#notistack-snackbar": {
+      padding: 0,
+      gap: theme.spacing(0.75),
     },
-  };
-});
+    "&.notistack-MuiContent-default": {
+      backgroundColor: theme.palette.background.paper,
+      color: theme.palette.text.primary,
+
+      [`.${classes.icon}`]: { color: theme.palette.primary.main },
+      [`.${classes.dismissButton}`]: { color: theme.palette.text.primary },
+    },
+    "&.notistack-MuiContent-success": {
+      backgroundColor: theme.palette.success.main,
+    },
+    "&.notistack-MuiContent-error": {
+      backgroundColor: theme.palette.error.main,
+    },
+    "&.notistack-MuiContent-info": {
+      backgroundColor: theme.palette.info.main,
+    },
+    "&.notistack-MuiContent-warning": {
+      backgroundColor: theme.palette.warning.main,
+    },
+  },
+}));
 
 const anchorWithOffset = (origin: "top" | "bottom") => ({
   "&.notistack-SnackbarContainer": {
