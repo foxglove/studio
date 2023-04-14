@@ -58,16 +58,6 @@ export const OneInfo = (): JSX.Element => {
   return <StudioToastProvider />;
 };
 
-export const OneDefault = (): JSX.Element => {
-  const { enqueueSnackbar } = useSnackbar();
-
-  useEffect(() => {
-    enqueueSnackbar("This is the final countdown", { variant: "default", persist: true });
-  }, [enqueueSnackbar]);
-
-  return <StudioToastProvider />;
-};
-
 export const MultipleMessages = (): JSX.Element => {
   const { enqueueSnackbar } = useSnackbar();
 

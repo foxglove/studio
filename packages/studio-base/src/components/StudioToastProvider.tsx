@@ -3,10 +3,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import {
-  Dismiss16Filled,
   CheckmarkCircle20Regular,
   QuestionCircle20Regular,
   DismissCircle20Regular,
+  Dismiss16Filled,
   Info20Regular,
   Warning20Regular,
 } from "@fluentui/react-icons";
