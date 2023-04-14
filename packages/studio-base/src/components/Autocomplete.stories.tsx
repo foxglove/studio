@@ -5,7 +5,7 @@
 // This file incorporates work covered by the following copyright and
 // permission notice:
 //
-//   Copyright 2019-2021 Cruise LLC
+//   Copyright 2018-2021 Cruise LLC
 //
 //   This source code is licensed under the Apache License, Version 2.0,
 //   found at http://www.apache.org/licenses/LICENSE-2.0
