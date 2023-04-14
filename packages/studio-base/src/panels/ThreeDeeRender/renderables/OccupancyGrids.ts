@@ -481,7 +481,11 @@ let costmapPalette: [number, number, number, number][] | undefined;
 let mapPalette: [number, number, number, number][] | undefined;
 let rawPalette: [number, number, number, number][] | undefined;
 
-function paletteColorCached(output: ColorRGBA, value: number, color_mode: ColorModes) {
+function paletteColorCached(
+  output: ColorRGBA,
+  value: number,
+  color_mode: "costmap" | "map" | "raw",
+) {
   const unsignedValue = value >= 0 ? value : value + 256;
   if (unsignedValue < 0 || unsignedValue > 255) {
     output.r = 0;
@@ -501,13 +505,12 @@ function paletteColorCached(output: ColorRGBA, value: number, color_mode: ColorM
       mapPalette = createMapPalette();
     }
     palette = mapPalette;
-  } else if (color_mode === "raw") {
+  } else {
+    // "raw"
     if (!rawPalette) {
       rawPalette = createRawPalette();
     }
     palette = rawPalette;
-  } else {
-    throw new Error(`Unsupported color mode ${color_mode}`);
   }
 
   const colorRaw = palette[Math.trunc(unsignedValue)]!;
