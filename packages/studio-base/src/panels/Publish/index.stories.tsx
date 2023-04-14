@@ -11,6 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 import { action } from "@storybook/addon-actions";
+import { StoryFn } from "@storybook/react";
 
 import Publish from "@foxglove/studio-base/panels/Publish";
 import { PlayerCapabilities } from "@foxglove/studio-base/players/types";
@@ -47,7 +48,7 @@ export default {
   title: "panels/Publish",
 };
 
-export const ExampleCanPublishAdvanced = () => {
+export const ExampleCanPublishAdvanced: StoryFn = () => {
   const allowPublish = true;
   return (
     <PanelSetup fixture={getFixture({ allowPublish })}>
@@ -58,7 +59,7 @@ export const ExampleCanPublishAdvanced = () => {
 
 ExampleCanPublishAdvanced.storyName = "example can publish, advanced";
 
-export const CustomButtonColor = () => {
+export const CustomButtonColor: StoryFn = () => {
   const allowPublish = true;
   return (
     <PanelSetup fixture={getFixture({ allowPublish })}>
@@ -75,7 +76,7 @@ export const CustomButtonColor = () => {
 
 CustomButtonColor.storyName = "custom button color";
 
-export const ExampleCantPublishAdvanced = () => {
+export const ExampleCantPublishAdvanced: StoryFn = () => {
   const allowPublish = false;
   return (
     <PanelSetup fixture={getFixture({ allowPublish })}>
@@ -86,7 +87,7 @@ export const ExampleCantPublishAdvanced = () => {
 
 ExampleCantPublishAdvanced.storyName = "example can't publish, advanced";
 
-export const ExampleCantPublishNotAdvanced = () => {
+export const ExampleCantPublishNotAdvanced: StoryFn = () => {
   const allowPublish = false;
   return (
     <PanelSetup fixture={getFixture({ allowPublish })}>
@@ -97,7 +98,7 @@ export const ExampleCantPublishNotAdvanced = () => {
 
 ExampleCantPublishNotAdvanced.storyName = "example can't publish, not advanced";
 
-export const ExampleWithDatatypeThatNoLongerExists = () => {
+export const ExampleWithDatatypeThatNoLongerExists: StoryFn = () => {
   return (
     <PanelSetup fixture={{ topics: [], datatypes: new Map(), frame: {}, capabilities: [] }}>
       <Publish overrideConfig={publishConfig({ advancedView: true, value: advancedJSON })} />
@@ -107,7 +108,7 @@ export const ExampleWithDatatypeThatNoLongerExists = () => {
 
 ExampleWithDatatypeThatNoLongerExists.storyName = "Example with datatype that no longer exists";
 
-export const ExampleWithValidPresetJson = () => {
+export const ExampleWithValidPresetJson: StoryFn = () => {
   const fixture = {
     topics: [],
     datatypes: new Map(
@@ -132,7 +133,7 @@ export const ExampleWithValidPresetJson = () => {
 
 ExampleWithValidPresetJson.storyName = "example with valid preset JSON";
 
-export const ExampleWithInvalidPresetJson = () => {
+export const ExampleWithInvalidPresetJson: StoryFn = () => {
   const fixture = {
     topics: [],
     datatypes: new Map(

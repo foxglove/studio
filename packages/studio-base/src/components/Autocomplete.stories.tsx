@@ -1,3 +1,8 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/
+
+import { StoryFn } from "@storybook/react";
 import { range } from "lodash";
 import { Component } from "react";
 import TestUtils from "react-dom/test-utils";
@@ -21,7 +26,7 @@ export default {
   },
 };
 
-export const FilteringToO = () => {
+export const FilteringToO: StoryFn = () => {
   class Example extends Component {
     public override render() {
       return (
@@ -42,7 +47,7 @@ export const FilteringToO = () => {
 
 FilteringToO.storyName = "filtering to 'o'";
 
-export const FilteringToOLight = () => {
+export const FilteringToOLight: StoryFn = () => {
   class Example extends Component {
     public override render() {
       return (
@@ -64,7 +69,7 @@ export const FilteringToOLight = () => {
 FilteringToOLight.storyName = "filtering to 'o' light";
 FilteringToOLight.parameters = { colorScheme: "light" };
 
-export const WithNonStringItemsAndLeadingWhitespace = () => {
+export const WithNonStringItemsAndLeadingWhitespace: StoryFn = () => {
   return (
     <div style={{ padding: 20 }} ref={focusInput}>
       <Autocomplete
@@ -84,7 +89,7 @@ export const WithNonStringItemsAndLeadingWhitespace = () => {
 
 WithNonStringItemsAndLeadingWhitespace.storyName = "with non-string items and leading whitespace";
 
-export const UncontrolledValue = () => {
+export const UncontrolledValue: StoryFn = () => {
   return (
     <div
       style={{ padding: 20 }}
@@ -110,7 +115,7 @@ export const UncontrolledValue = () => {
 
 UncontrolledValue.storyName = "uncontrolled value";
 
-export const UncontrolledValueLight = () => {
+export const UncontrolledValueLight: StoryFn = () => {
   return (
     <div
       style={{ padding: 20 }}
@@ -137,7 +142,7 @@ export const UncontrolledValueLight = () => {
 UncontrolledValueLight.storyName = "uncontrolled value light";
 UncontrolledValueLight.parameters = { colorScheme: "light" };
 
-export const UncontrolledValueWithSelectedItem = () => {
+export const UncontrolledValueWithSelectedItem: StoryFn = () => {
   return (
     <div style={{ padding: 20 }} ref={focusInput}>
       <Autocomplete
@@ -152,7 +157,7 @@ export const UncontrolledValueWithSelectedItem = () => {
 
 UncontrolledValueWithSelectedItem.storyName = "uncontrolled value with selected item";
 
-export const UncontrolledValueWithSelectedItemAndClearOnFocus = () => {
+export const UncontrolledValueWithSelectedItemAndClearOnFocus: StoryFn = () => {
   return (
     <div style={{ padding: 20 }} ref={focusInput}>
       <Autocomplete
@@ -166,9 +171,10 @@ export const UncontrolledValueWithSelectedItemAndClearOnFocus = () => {
   );
 };
 
-UncontrolledValueWithSelectedItemAndClearOnFocus.storyName = "uncontrolled value with selected item and clearOnFocus";
+UncontrolledValueWithSelectedItemAndClearOnFocus.storyName =
+  "uncontrolled value with selected item and clearOnFocus";
 
-export const SortWhenFilteringFalse = () => {
+export const SortWhenFilteringFalse: StoryFn = () => {
   return (
     <div style={{ padding: 20 }} ref={focusInput}>
       <Autocomplete
@@ -184,7 +190,7 @@ export const SortWhenFilteringFalse = () => {
 
 SortWhenFilteringFalse.storyName = "sortWhenFiltering=false";
 
-export const WithALongTruncatedPathAndAutoSize = () => {
+export const WithALongTruncatedPathAndAutoSize: StoryFn = () => {
   class Example extends Component {
     public override render() {
       return (
@@ -204,7 +210,7 @@ export const WithALongTruncatedPathAndAutoSize = () => {
 
 WithALongTruncatedPathAndAutoSize.storyName = "with a long truncated path (and autoSize)";
 
-export const ManyItems = () => {
+export const ManyItems: StoryFn = () => {
   const items = range(1, 1000).map((i) => `item_${i}`);
   class Example extends Component {
     public override render() {

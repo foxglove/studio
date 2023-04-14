@@ -1,3 +1,9 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/
+
+import { StoryFn } from "@storybook/react";
+
 import Table from "@foxglove/studio-base/panels/Table";
 import PanelSetup, { Fixture } from "@foxglove/studio-base/stories/PanelSetup";
 
@@ -47,7 +53,7 @@ export default {
   title: "panels/Table",
 };
 
-export const NoTopicPath = () => {
+export const NoTopicPath: StoryFn = () => {
   return (
     <PanelSetup fixture={{ frame: {}, topics: [] }}>
       <Table overrideConfig={{ topicPath: "" }} />
@@ -57,7 +63,7 @@ export const NoTopicPath = () => {
 
 NoTopicPath.storyName = "no topic path";
 
-export const NoData = () => {
+export const NoData: StoryFn = () => {
   return (
     <PanelSetup fixture={{ frame: {}, topics: [] }}>
       <Table overrideConfig={{ topicPath: "/unknown" }} />
@@ -67,7 +73,7 @@ export const NoData = () => {
 
 NoData.storyName = "no data";
 
-export const Arrays = () => {
+export const Arrays: StoryFn = () => {
   return (
     <PanelSetup fixture={fixture}>
       <Table overrideConfig={{ topicPath: "/my_arr.array" }} />
@@ -77,7 +83,7 @@ export const Arrays = () => {
 
 Arrays.storyName = "arrays";
 
-export const ExpandRows = () => {
+export const ExpandRows: StoryFn = () => {
   return (
     <PanelSetup
       fixture={fixture}
@@ -97,7 +103,7 @@ export const ExpandRows = () => {
 ExpandRows.storyName = "expand rows";
 ExpandRows.parameters = { colorScheme: "dark" };
 
-export const ExpandCellsWithNestedObjects = () => {
+export const ExpandCellsWithNestedObjects: StoryFn = () => {
   return (
     <PanelSetup
       fixture={fixture}
@@ -117,7 +123,7 @@ export const ExpandCellsWithNestedObjects = () => {
 ExpandCellsWithNestedObjects.storyName = "expand cells with nested objects";
 ExpandCellsWithNestedObjects.parameters = { colorScheme: "dark" };
 
-export const ExpandCellsWithNestedArrays = () => {
+export const ExpandCellsWithNestedArrays: StoryFn = () => {
   return (
     <PanelSetup
       fixture={fixture}
@@ -137,7 +143,7 @@ export const ExpandCellsWithNestedArrays = () => {
 ExpandCellsWithNestedArrays.storyName = "expand cells with nested arrays";
 ExpandCellsWithNestedArrays.parameters = { colorScheme: "dark" };
 
-export const ExpandNestedCells = () => {
+export const ExpandNestedCells: StoryFn = () => {
   return (
     <PanelSetup
       fixture={fixture}
@@ -162,7 +168,7 @@ export const ExpandNestedCells = () => {
 ExpandNestedCells.storyName = "expand nested cells";
 ExpandNestedCells.parameters = { colorScheme: "dark" };
 
-export const ExpandMultipleRows = () => {
+export const ExpandMultipleRows: StoryFn = () => {
   return (
     <PanelSetup
       fixture={fixture}
@@ -185,7 +191,7 @@ export const ExpandMultipleRows = () => {
 ExpandMultipleRows.storyName = "expand multiple rows";
 ExpandMultipleRows.parameters = { colorScheme: "dark" };
 
-export const Filtering = () => {
+export const Filtering: StoryFn = () => {
   return (
     <PanelSetup fixture={fixture}>
       <Table overrideConfig={{ topicPath: "/my_arr.array[:]{val==3}" }} />
@@ -195,7 +201,7 @@ export const Filtering = () => {
 
 Filtering.storyName = "filtering";
 
-export const Sorting = () => {
+export const Sorting: StoryFn = () => {
   return (
     <PanelSetup
       fixture={fixture}
@@ -218,7 +224,7 @@ export const Sorting = () => {
 Sorting.storyName = "sorting";
 Sorting.parameters = { colorScheme: "dark" };
 
-export const HandlesPrimitives = () => {
+export const HandlesPrimitives: StoryFn = () => {
   return (
     <PanelSetup fixture={fixture}>
       <Table overrideConfig={{ topicPath: "/my_arr.array[:].val" }} />
@@ -228,7 +234,7 @@ export const HandlesPrimitives = () => {
 
 HandlesPrimitives.storyName = "handles primitives";
 
-export const HandlesArraysOfPrimitives = () => {
+export const HandlesArraysOfPrimitives: StoryFn = () => {
   return (
     <PanelSetup fixture={fixture}>
       <Table overrideConfig={{ topicPath: "/my_arr.array[:].primitiveArray" }} />
@@ -238,7 +244,7 @@ export const HandlesArraysOfPrimitives = () => {
 
 HandlesArraysOfPrimitives.storyName = "handles arrays of primitives";
 
-export const ConstrainedWidth = () => {
+export const ConstrainedWidth: StoryFn = () => {
   return (
     <PanelSetup fixture={fixture}>
       <div style={{ width: "100px" }}>

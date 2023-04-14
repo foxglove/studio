@@ -1,3 +1,9 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/
+
+import { StoryFn } from "@storybook/react";
+
 import MockMessagePipelineProvider from "@foxglove/studio-base/components/MessagePipeline/MockMessagePipelineProvider";
 import PlaybackSpeedControls from "@foxglove/studio-base/components/PlaybackSpeedControls";
 import MockCurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider/MockCurrentLayoutProvider";
@@ -25,7 +31,7 @@ export default {
   title: "components/PlaybackSpeedControls",
 };
 
-export const WithoutSpeedCapability = () => {
+export const WithoutSpeedCapability: StoryFn = () => {
   return (
     <MockCurrentLayoutProvider>
       <MockMessagePipelineProvider>
@@ -38,7 +44,7 @@ export const WithoutSpeedCapability = () => {
 WithoutSpeedCapability.storyName = "without speed capability";
 WithoutSpeedCapability.parameters = { colorScheme: "dark" };
 
-export const WithoutASpeedFromThePlayer = () => {
+export const WithoutASpeedFromThePlayer: StoryFn = () => {
   return (
     <MockCurrentLayoutProvider>
       <MockMessagePipelineProvider capabilities={CAPABILITIES} activeData={{ speed: undefined }}>
@@ -51,7 +57,7 @@ export const WithoutASpeedFromThePlayer = () => {
 WithoutASpeedFromThePlayer.storyName = "without a speed from the player";
 WithoutASpeedFromThePlayer.parameters = { colorScheme: "dark" };
 
-export const WithASpeed = () => {
+export const WithASpeed: StoryFn = () => {
   return (
     <MockCurrentLayoutProvider>
       <MockMessagePipelineProvider capabilities={CAPABILITIES}>
@@ -64,7 +70,7 @@ export const WithASpeed = () => {
 WithASpeed.storyName = "with a speed";
 WithASpeed.parameters = { colorScheme: "dark" };
 
-export const WithAVerySmallSpeed = () => {
+export const WithAVerySmallSpeed: StoryFn = () => {
   return (
     <MockCurrentLayoutProvider>
       <MockMessagePipelineProvider capabilities={CAPABILITIES} activeData={{ speed: 0.01 }}>

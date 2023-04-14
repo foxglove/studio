@@ -1,3 +1,9 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/
+
+import { StoryFn } from "@storybook/react";
+
 import RawMessages, { PREV_MSG_METHOD } from "@foxglove/studio-base/panels/RawMessages";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 
@@ -35,7 +41,7 @@ export default {
   title: "panels/RawMessages",
 };
 
-export const Default = () => {
+export const Default: StoryFn = () => {
   return (
     <PanelSetup fixture={fixture}>
       <RawMessages overrideConfig={{ topicPath: "/msgs/big_topic", ...noDiffConfig } as any} />
@@ -45,7 +51,7 @@ export const Default = () => {
 
 Default.storyName = "default";
 
-export const Schemaless = () => {
+export const Schemaless: StoryFn = () => {
   return (
     <PanelSetup
       fixture={{
@@ -71,7 +77,7 @@ export const Schemaless = () => {
 
 Schemaless.storyName = "schemaless";
 
-export const Collapsed = () => {
+export const Collapsed: StoryFn = () => {
   return (
     <PanelSetup fixture={fixture}>
       <RawMessages
@@ -83,7 +89,7 @@ export const Collapsed = () => {
 
 Collapsed.storyName = "collapsed";
 
-export const Expanded = () => {
+export const Expanded: StoryFn = () => {
   return (
     <PanelSetup fixture={fixture}>
       <RawMessages
@@ -95,7 +101,7 @@ export const Expanded = () => {
 
 Expanded.storyName = "expanded";
 
-export const Overridden = () => {
+export const Overridden: StoryFn = () => {
   return (
     <PanelSetup fixture={fixture} includeSettings>
       <RawMessages
@@ -113,7 +119,7 @@ export const Overridden = () => {
 
 Overridden.storyName = "overridden";
 
-export const WithReceiveTime = () => {
+export const WithReceiveTime: StoryFn = () => {
   return (
     <PanelSetup fixture={fixture}>
       <RawMessages overrideConfig={{ topicPath: "/foo", ...noDiffConfig } as any} />
@@ -123,7 +129,7 @@ export const WithReceiveTime = () => {
 
 WithReceiveTime.storyName = "with receiveTime";
 
-export const DisplayBigValueNum = () => {
+export const DisplayBigValueNum: StoryFn = () => {
   return (
     <PanelSetup fixture={fixture}>
       <RawMessages overrideConfig={{ topicPath: "/baz/num.value", ...noDiffConfig } as any} />
@@ -133,7 +139,7 @@ export const DisplayBigValueNum = () => {
 
 DisplayBigValueNum.storyName = "display big value - num";
 
-export const DisplayMessageWithBigintValue = () => {
+export const DisplayMessageWithBigintValue: StoryFn = () => {
   return (
     <PanelSetup fixture={fixture}>
       <RawMessages overrideConfig={{ topicPath: "/baz/bigint", ...noDiffConfig } as any} />
@@ -143,7 +149,7 @@ export const DisplayMessageWithBigintValue = () => {
 
 DisplayMessageWithBigintValue.storyName = "display message with bigint value";
 
-export const DisplayBigintValue = () => {
+export const DisplayBigintValue: StoryFn = () => {
   return (
     <PanelSetup fixture={fixture}>
       <RawMessages overrideConfig={{ topicPath: "/baz/bigint.value", ...noDiffConfig } as any} />
@@ -153,7 +159,7 @@ export const DisplayBigintValue = () => {
 
 DisplayBigintValue.storyName = "display bigint value";
 
-export const DisplayBigValueText = () => {
+export const DisplayBigValueText: StoryFn = () => {
   return (
     <PanelSetup fixture={fixture}>
       <RawMessages overrideConfig={{ topicPath: "/baz/text.value", ...noDiffConfig } as any} />
@@ -163,7 +169,7 @@ export const DisplayBigValueText = () => {
 
 DisplayBigValueText.storyName = "display big value - text";
 
-export const DisplayBigValueTextTruncated = () => {
+export const DisplayBigValueTextTruncated: StoryFn = () => {
   return (
     <PanelSetup fixture={fixture} onMount={() => setImmediate(scrollToBottom)}>
       <RawMessages overrideConfig={{ topicPath: "/baz/text.value_long", ...noDiffConfig } as any} />
@@ -173,7 +179,7 @@ export const DisplayBigValueTextTruncated = () => {
 
 DisplayBigValueTextTruncated.storyName = "display big value - text truncated";
 
-export const DisplayBigValueTextWithNewlines = () => {
+export const DisplayBigValueTextWithNewlines: StoryFn = () => {
   return (
     <PanelSetup fixture={fixture} onMount={() => setImmediate(scrollToBottom)}>
       <RawMessages
@@ -185,7 +191,7 @@ export const DisplayBigValueTextWithNewlines = () => {
 
 DisplayBigValueTextWithNewlines.storyName = "display big value - text with newlines";
 
-export const DisplayBigValueSingleElementArray = () => {
+export const DisplayBigValueSingleElementArray: StoryFn = () => {
   return (
     <PanelSetup fixture={fixture}>
       <RawMessages overrideConfig={{ topicPath: "/baz/array.value", ...noDiffConfig } as any} />
@@ -195,7 +201,7 @@ export const DisplayBigValueSingleElementArray = () => {
 
 DisplayBigValueSingleElementArray.storyName = "display big value - single element array";
 
-export const DisplaySingleObjectArray = () => {
+export const DisplaySingleObjectArray: StoryFn = () => {
   return (
     <PanelSetup fixture={fixture}>
       <RawMessages overrideConfig={{ topicPath: "/baz/array/obj.value", ...noDiffConfig } as any} />
@@ -205,7 +211,7 @@ export const DisplaySingleObjectArray = () => {
 
 DisplaySingleObjectArray.storyName = "display single object array";
 
-export const DisplayBasicEnum = () => {
+export const DisplayBasicEnum: StoryFn = () => {
   return (
     <PanelSetup fixture={enumFixture}>
       <RawMessages overrideConfig={{ topicPath: "/baz/enum", ...noDiffConfig } as any} />
@@ -215,7 +221,7 @@ export const DisplayBasicEnum = () => {
 
 DisplayBasicEnum.storyName = "display basic enum";
 
-export const DisplayAdvancedEnumUsage = () => {
+export const DisplayAdvancedEnumUsage: StoryFn = () => {
   return (
     <PanelSetup fixture={enumAdvancedFixture}>
       <RawMessages overrideConfig={{ topicPath: "/baz/enum_advanced", ...noDiffConfig } as any} />
@@ -225,7 +231,7 @@ export const DisplayAdvancedEnumUsage = () => {
 
 DisplayAdvancedEnumUsage.storyName = "display advanced enum usage";
 
-export const WithMissingData = () => {
+export const WithMissingData: StoryFn = () => {
   return (
     <PanelSetup fixture={withMissingData}>
       <RawMessages overrideConfig={{ topicPath: "/baz/missing_data", ...noDiffConfig } as any} />
@@ -235,7 +241,7 @@ export const WithMissingData = () => {
 
 WithMissingData.storyName = "with missing data";
 
-export const WithATruncatedLongString = () => {
+export const WithATruncatedLongString: StoryFn = () => {
   return (
     <PanelSetup fixture={fixture}>
       <RawMessages overrideConfig={{ topicPath: "/baz/text", ...noDiffConfig } as any} />
@@ -245,7 +251,7 @@ export const WithATruncatedLongString = () => {
 
 WithATruncatedLongString.storyName = "with a truncated long string";
 
-export const DisplayGeometryTypesLength = () => {
+export const DisplayGeometryTypesLength: StoryFn = () => {
   return (
     <PanelSetup fixture={fixture}>
       <RawMessages overrideConfig={{ topicPath: "/geometry/types", ...noDiffConfig } as any} />
@@ -255,7 +261,7 @@ export const DisplayGeometryTypesLength = () => {
 
 DisplayGeometryTypesLength.storyName = "display geometry types - length";
 
-export const DisplayDiff = () => {
+export const DisplayDiff: StoryFn = () => {
   return (
     <PanelSetup fixture={topicsToDiffFixture}>
       <RawMessages
@@ -267,7 +273,7 @@ export const DisplayDiff = () => {
 
 DisplayDiff.storyName = "display diff";
 
-export const DisplayFullDiff = () => {
+export const DisplayFullDiff: StoryFn = () => {
   return (
     <PanelSetup fixture={topicsToDiffFixture}>
       <RawMessages
@@ -279,7 +285,7 @@ export const DisplayFullDiff = () => {
 
 DisplayFullDiff.storyName = "display full diff";
 
-export const DisplayDiffWithIdFields = () => {
+export const DisplayDiffWithIdFields: StoryFn = () => {
   const config = {
     ...diffConfig,
     topicPath: "/baz/enum_advanced_array.value",
@@ -296,7 +302,7 @@ export const DisplayDiffWithIdFields = () => {
 
 DisplayDiffWithIdFields.storyName = "display diff with ID fields";
 
-export const EmptyDiffMessage = () => {
+export const EmptyDiffMessage: StoryFn = () => {
   return (
     <PanelSetup fixture={{ topics: [], frame: {} }}>
       <RawMessages overrideConfig={{ ...diffConfig, showFullMessageForDiff: false } as any} />
@@ -306,7 +312,7 @@ export const EmptyDiffMessage = () => {
 
 EmptyDiffMessage.storyName = "empty diff message";
 
-export const DiffSameMessages = () => {
+export const DiffSameMessages: StoryFn = () => {
   return (
     <PanelSetup fixture={fixture}>
       <RawMessages
@@ -324,7 +330,7 @@ export const DiffSameMessages = () => {
 
 DiffSameMessages.storyName = "diff same messages";
 
-export const DiffConsecutiveMessages = () => {
+export const DiffConsecutiveMessages: StoryFn = () => {
   return (
     <PanelSetup fixture={fixture}>
       <RawMessages
@@ -343,7 +349,7 @@ export const DiffConsecutiveMessages = () => {
 
 DiffConsecutiveMessages.storyName = "diff consecutive messages";
 
-export const DiffConsecutiveMessagesWithFilter = () => {
+export const DiffConsecutiveMessagesWithFilter: StoryFn = () => {
   return (
     <PanelSetup fixture={multipleMessagesFilter}>
       <RawMessages
@@ -362,7 +368,7 @@ export const DiffConsecutiveMessagesWithFilter = () => {
 
 DiffConsecutiveMessagesWithFilter.storyName = "diff consecutive messages with filter";
 
-export const DiffConsecutiveMessagesWithBigint = () => {
+export const DiffConsecutiveMessagesWithBigint: StoryFn = () => {
   return (
     <PanelSetup fixture={fixture}>
       <RawMessages
@@ -381,7 +387,7 @@ export const DiffConsecutiveMessagesWithBigint = () => {
 
 DiffConsecutiveMessagesWithBigint.storyName = "diff consecutive messages with bigint";
 
-export const DisplayCorrectMessageWhenDiffIsDisabledEvenWithDiffMethodTopicSet = () => {
+export const DisplayCorrectMessageWhenDiffIsDisabledEvenWithDiffMethodTopicSet: StoryFn = () => {
   return (
     <PanelSetup fixture={fixture}>
       <RawMessages
@@ -398,9 +404,10 @@ export const DisplayCorrectMessageWhenDiffIsDisabledEvenWithDiffMethodTopicSet =
   );
 };
 
-DisplayCorrectMessageWhenDiffIsDisabledEvenWithDiffMethodTopicSet.storyName = "display correct message when diff is disabled, even with diff method & topic set";
+DisplayCorrectMessageWhenDiffIsDisabledEvenWithDiffMethodTopicSet.storyName =
+  "display correct message when diff is disabled, even with diff method & topic set";
 
-export const MultipleMessagesWithTopLevelFilter = () => {
+export const MultipleMessagesWithTopLevelFilter: StoryFn = () => {
   return (
     <PanelSetup fixture={multipleNumberMessagesFixture}>
       <RawMessages

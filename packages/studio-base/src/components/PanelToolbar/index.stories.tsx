@@ -13,6 +13,7 @@
 
 import { Database20Filled } from "@fluentui/react-icons";
 import { Box } from "@mui/material";
+import { DecoratorFn, StoryFn } from "@storybook/react";
 import { Mosaic, MosaicWindow } from "react-mosaic-component";
 
 import MockPanelContextProvider from "@foxglove/studio-base/components/MockPanelContextProvider";
@@ -92,18 +93,18 @@ export default {
   title: "components/PanelToolbar",
 
   decorators: [
-    (childrenRenderFcn) => {
+    ((childrenRenderFcn) => {
       // Provide all stories with PanelContext and current layout
       return (
         <MockCurrentLayoutProvider>
           <MockPanelContextProvider>{childrenRenderFcn()}</MockPanelContextProvider>
         </MockCurrentLayoutProvider>
       );
-    },
+    }) as DecoratorFn,
   ],
 };
 
-export const NonFloatingNarrow = () => {
+export const NonFloatingNarrow: StoryFn = () => {
   return (
     <MosaicWrapper width={268}>
       <PanelToolbar>
@@ -115,7 +116,7 @@ export const NonFloatingNarrow = () => {
 
 NonFloatingNarrow.storyName = "non-floating (narrow)";
 
-export const NonFloatingWideWithPanelName = () => {
+export const NonFloatingWideWithPanelName: StoryFn = () => {
   return (
     <MosaicWrapper width={468}>
       <PanelToolbar>
@@ -127,7 +128,7 @@ export const NonFloatingWideWithPanelName = () => {
 
 NonFloatingWideWithPanelName.storyName = "non-floating (wide with panel name)";
 
-export const OneAdditionalIcon = () => {
+export const OneAdditionalIcon: StoryFn = () => {
   const additionalIcons = (
     <ToolbarIconButton title="database icon">
       <Database20Filled />
@@ -144,7 +145,7 @@ export const OneAdditionalIcon = () => {
 
 OneAdditionalIcon.storyName = "one additional icon";
 
-export const MenuOnlyPanel = () => {
+export const MenuOnlyPanel: StoryFn = () => {
   class Story extends React.Component {
     public override render() {
       return (
@@ -160,7 +161,7 @@ export const MenuOnlyPanel = () => {
 MenuOnlyPanel.storyName = "menu (only panel)";
 MenuOnlyPanel.parameters = { colorScheme: "dark" };
 
-export const MenuLight = () => {
+export const MenuLight: StoryFn = () => {
   class Story extends React.Component {
     public override render() {
       return (
@@ -176,7 +177,7 @@ export const MenuLight = () => {
 MenuLight.storyName = "menu light";
 MenuLight.parameters = { colorScheme: "light" };
 
-export const MenuWithSiblingPanel = () => {
+export const MenuWithSiblingPanel: StoryFn = () => {
   class Story extends React.Component {
     public override render() {
       return (
@@ -192,7 +193,7 @@ export const MenuWithSiblingPanel = () => {
 MenuWithSiblingPanel.storyName = "menu (with sibling panel)";
 MenuWithSiblingPanel.parameters = { colorScheme: "dark" };
 
-export const MenuForTabPanel = () => {
+export const MenuForTabPanel: StoryFn = () => {
   class Story extends React.Component {
     public override render() {
       return (
@@ -208,7 +209,7 @@ export const MenuForTabPanel = () => {
 MenuForTabPanel.storyName = "menu for Tab panel";
 MenuForTabPanel.parameters = { colorScheme: "dark" };
 
-export const NoToolbars = () => {
+export const NoToolbars: StoryFn = () => {
   class Story extends React.Component {
     public override render() {
       return (

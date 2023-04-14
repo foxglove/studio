@@ -12,6 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { Stack } from "@mui/material";
+import { StoryFn } from "@storybook/react";
 
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 import { PointCloud2 } from "@foxglove/studio-base/types/Messages";
@@ -314,7 +315,7 @@ function PanelSetupWithData({
   );
 }
 
-function DefaultStory() {
+const DefaultStory: StoryFn = () => {
   return (
     <Stack direction="row" flexWrap="wrap" height="100%" bgcolor="background.paper">
       <PanelSetupWithData title="Default without clicked object">
@@ -329,7 +330,7 @@ function DefaultStory() {
       </PanelSetupWithData>
     </Stack>
   );
-}
+};
 
 export default {
   title: "panels/ThreeDeeRender/Interactions/Interaction",
@@ -341,17 +342,17 @@ export default {
   excludeStories: ["POINT_CLOUD_MESSAGE", "POINT_CLOUD_WITH_ADDITIONAL_FIELDS"],
 };
 
-export const Default = DefaultStory;
+export const Default: StoryFn = DefaultStory;
 
 Default.storyName = "default";
 Default.parameters = { colorScheme: "dark" };
 
-export const DefaultLight = DefaultStory;
+export const DefaultLight: StoryFn = DefaultStory;
 
 DefaultLight.storyName = "default light";
 DefaultLight.parameters = { colorScheme: "light" };
 
-export const PointCloud = () => {
+export const PointCloud: StoryFn = () => {
   const cloud1 = { ...selectedObject.object, ...POINT_CLOUD_MESSAGE };
   const cloud2 = {
     ...selectedObject.object,

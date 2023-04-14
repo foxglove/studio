@@ -1,3 +1,7 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/
+
 import { Sparkline, SparklinePoint } from "@foxglove/studio-base/components/Sparkline";
 
 const points: SparklinePoint[] = [
@@ -19,7 +23,7 @@ export default {
   title: "components/Sparkline",
 };
 
-export const Standard = () => {
+export const Standard: StoryFn = () => {
   return (
     <div style={{ padding: 8 }}>
       <Sparkline {...props} />
@@ -29,7 +33,7 @@ export const Standard = () => {
 
 Standard.storyName = "standard";
 
-export const WithExplicitMaximumOf200 = () => {
+export const WithExplicitMaximumOf200: StoryFn = () => {
   return (
     <div style={{ padding: 8 }}>
       <Sparkline {...props} maximum={200} />

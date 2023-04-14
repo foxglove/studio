@@ -1,3 +1,8 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/
+
+import { StoryFn } from "@storybook/react";
 import { noop } from "lodash";
 import React, { ReactNode } from "react";
 
@@ -36,7 +41,7 @@ export default {
   title: "panels/Tab/ToolbarTab",
 };
 
-export const Default = () => (
+export const Default: StoryFn = () => (
   <Container>
     <ToolbarTab {...baseProps} />
   </Container>
@@ -44,7 +49,7 @@ export const Default = () => (
 
 Default.storyName = "default";
 
-export const ActiveWithCloseIcon = () => (
+export const ActiveWithCloseIcon: StoryFn = () => (
   <Container>
     <ToolbarTab {...{ ...baseProps, isActive: true, tabCount: 3 }} />
   </Container>
@@ -52,7 +57,7 @@ export const ActiveWithCloseIcon = () => (
 
 ActiveWithCloseIcon.storyName = "active with close icon";
 
-export const ActiveWithoutCloseIcon = () => (
+export const ActiveWithoutCloseIcon: StoryFn = () => (
   <Container>
     <ToolbarTab {...{ ...baseProps, isActive: true, tabCount: 1 }} />
   </Container>
@@ -60,7 +65,7 @@ export const ActiveWithoutCloseIcon = () => (
 
 ActiveWithoutCloseIcon.storyName = "active without close icon";
 
-export const Hidden = () => (
+export const Hidden: StoryFn = () => (
   <Container>
     <ToolbarTab {...{ ...baseProps, hidden: true }} />
   </Container>
@@ -68,7 +73,7 @@ export const Hidden = () => (
 
 Hidden.storyName = "hidden";
 
-export const Highlight = () => (
+export const Highlight: StoryFn = () => (
   <Container>
     <ToolbarTab {...{ ...baseProps, highlight: "before" }} />
   </Container>
@@ -76,7 +81,7 @@ export const Highlight = () => (
 
 Highlight.storyName = "highlight";
 
-export const Dragging = () => (
+export const Dragging: StoryFn = () => (
   <Container>
     <ToolbarTab {...{ ...baseProps, isDragging: true }} />
   </Container>
@@ -84,7 +89,7 @@ export const Dragging = () => (
 
 Dragging.storyName = "dragging";
 
-export const Editing = () => (
+export const Editing: StoryFn = () => (
   <Container
     ref={async (el) => {
       await tick();

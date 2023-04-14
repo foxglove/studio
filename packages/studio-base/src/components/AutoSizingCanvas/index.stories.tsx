@@ -1,3 +1,8 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/
+
+import { StoryFn } from "@storybook/react";
 import { useState, useEffect } from "react";
 
 import AutoSizingCanvas from ".";
@@ -55,18 +60,18 @@ export default {
   title: "components/AutoSizingCanvas",
 };
 
-export const Static = () => <Example />;
+export const Static: StoryFn = () => <Example />;
 
 Static.storyName = "static";
 
-export const ChangingSize = () => <Example changeSize />;
+export const ChangingSize: StoryFn = () => <Example changeSize />;
 
 ChangingSize.storyName = "changing size";
 
-export const PixelRatio2 = () => <Example devicePixelRatio={2} />;
+export const PixelRatio2: StoryFn = () => <Example devicePixelRatio={2} />;
 
 PixelRatio2.storyName = "pixel ratio 2";
 
-export const ChangingPixelRatio = () => <Example changePixelRatio />;
+export const ChangingPixelRatio: StoryFn = () => <Example changePixelRatio />;
 
 ChangingPixelRatio.storyName = "changing pixel ratio";

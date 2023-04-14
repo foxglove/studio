@@ -1,3 +1,9 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/
+
+import { StoryFn } from "@storybook/react";
+
 import NodePlayground from "@foxglove/studio-base/panels/NodePlayground";
 import rawUserUtils from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/typescript/rawUserUtils";
 import { UserNodeLog } from "@foxglove/studio-base/players/UserNodePlayer/types";
@@ -109,7 +115,7 @@ export default {
   },
 };
 
-export const WelcomeScreen = () => {
+export const WelcomeScreen: StoryFn = () => {
   return (
     <PanelSetup fixture={fixture}>
       <NodePlayground />
@@ -119,7 +125,7 @@ export const WelcomeScreen = () => {
 
 WelcomeScreen.storyName = "welcome screen";
 
-export const RawUserUtils = () => {
+export const RawUserUtils: StoryFn = () => {
   return (
     <div style={{ margin: 12 }}>
       <p style={{ color: "lightgreen" }}>
@@ -133,7 +139,7 @@ export const RawUserUtils = () => {
 
 RawUserUtils.storyName = "rawUserUtils";
 
-export const UtilsUsageInNode = () => (
+export const UtilsUsageInNode: StoryFn = () => (
   <PanelSetup
     fixture={{
       ...fixture,
@@ -153,7 +159,7 @@ export const UtilsUsageInNode = () => (
 
 UtilsUsageInNode.storyName = "utils usage in node";
 
-export const EditorShowsNewCodeWhenUserNodesChange = () => (
+export const EditorShowsNewCodeWhenUserNodesChange: StoryFn = () => (
   <PanelSetup
     fixture={{
       ...fixture,
@@ -188,7 +194,7 @@ export const EditorShowsNewCodeWhenUserNodesChange = () => (
 
 EditorShowsNewCodeWhenUserNodesChange.storyName = "Editor shows new code when userNodes change";
 
-export const EditorGotoDefinition = () => (
+export const EditorGotoDefinition: StoryFn = () => (
   <PanelSetup
     fixture={{
       ...fixture,
@@ -219,7 +225,7 @@ export const EditorGotoDefinition = () => (
 
 EditorGotoDefinition.storyName = "editor goto definition";
 
-export const GoBackFromGotoDefinition = () => (
+export const GoBackFromGotoDefinition: StoryFn = () => (
   <PanelSetup
     fixture={{
       ...fixture,
@@ -255,7 +261,7 @@ export const GoBackFromGotoDefinition = () => (
 
 GoBackFromGotoDefinition.storyName = "go back from goto definition";
 
-export const SidebarOpenNodeExplorer = () => {
+export const SidebarOpenNodeExplorer: StoryFn = () => {
   return (
     <PanelSetup
       fixture={{ ...fixture, userNodes }}
@@ -272,7 +278,7 @@ export const SidebarOpenNodeExplorer = () => {
 
 SidebarOpenNodeExplorer.storyName = "sidebar open - node explorer";
 
-export const SidebarOpenNodeExplorerSelectedNode = () => {
+export const SidebarOpenNodeExplorerSelectedNode: StoryFn = () => {
   return (
     <PanelSetup
       fixture={{ ...fixture, userNodes }}
@@ -289,7 +295,7 @@ export const SidebarOpenNodeExplorerSelectedNode = () => {
 
 SidebarOpenNodeExplorerSelectedNode.storyName = "sidebar open - node explorer - selected node";
 
-export const SidebarOpenUtilsExplorerSelectedUtility = () => {
+export const SidebarOpenUtilsExplorerSelectedUtility: StoryFn = () => {
   return (
     <PanelSetup
       fixture={{ ...fixture, userNodes }}
@@ -304,9 +310,10 @@ export const SidebarOpenUtilsExplorerSelectedUtility = () => {
   );
 };
 
-SidebarOpenUtilsExplorerSelectedUtility.storyName = "sidebar open - utils explorer - selected utility";
+SidebarOpenUtilsExplorerSelectedUtility.storyName =
+  "sidebar open - utils explorer - selected utility";
 
-export const SidebarOpenTemplatesExplorer = () => {
+export const SidebarOpenTemplatesExplorer: StoryFn = () => {
   return (
     <PanelSetup
       fixture={{ ...fixture, userNodes }}
@@ -323,7 +330,7 @@ export const SidebarOpenTemplatesExplorer = () => {
 
 SidebarOpenTemplatesExplorer.storyName = "sidebar open - templates explorer";
 
-export const EditorLoadingState = () => {
+export const EditorLoadingState: StoryFn = () => {
   const NeverLoad = () => {
     throw new Promise(() => {
       // no-op
@@ -340,7 +347,7 @@ export const EditorLoadingState = () => {
 
 EditorLoadingState.storyName = "editor loading state";
 
-export const BottomBarNoErrorsOrLogsClosed = () => (
+export const BottomBarNoErrorsOrLogsClosed: StoryFn = () => (
   <PanelSetup
     fixture={{
       ...fixture,
@@ -354,7 +361,7 @@ export const BottomBarNoErrorsOrLogsClosed = () => (
 
 BottomBarNoErrorsOrLogsClosed.storyName = "BottomBar - no errors or logs - closed";
 
-export const BottomBarNoErrorsOpen = () => (
+export const BottomBarNoErrorsOpen: StoryFn = () => (
   <PanelSetup
     fixture={{
       ...fixture,
@@ -376,7 +383,7 @@ export const BottomBarNoErrorsOpen = () => (
 
 BottomBarNoErrorsOpen.storyName = "BottomBar - no errors - open";
 
-export const BottomBarNoLogsOpen = () => (
+export const BottomBarNoLogsOpen: StoryFn = () => (
   <PanelSetup
     fixture={{
       ...fixture,
@@ -398,7 +405,7 @@ export const BottomBarNoLogsOpen = () => (
 
 BottomBarNoLogsOpen.storyName = "BottomBar - no logs - open";
 
-export const BottomBarErrorsClosed = () => (
+export const BottomBarErrorsClosed: StoryFn = () => (
   <PanelSetup
     fixture={{
       ...fixture,
@@ -445,7 +452,7 @@ export const BottomBarErrorsClosed = () => (
 
 BottomBarErrorsClosed.storyName = "BottomBar - errors - closed";
 
-export const BottomBarErrorsOpen = () => (
+export const BottomBarErrorsOpen: StoryFn = () => (
   <PanelSetup
     fixture={{
       ...fixture,
@@ -500,7 +507,7 @@ export const BottomBarErrorsOpen = () => (
 
 BottomBarErrorsOpen.storyName = "BottomBar - errors - open";
 
-export const BottomBarLogsClosed = () => (
+export const BottomBarLogsClosed: StoryFn = () => (
   <PanelSetup
     fixture={{
       ...fixture,
@@ -520,7 +527,7 @@ export const BottomBarLogsClosed = () => (
 
 BottomBarLogsClosed.storyName = "BottomBar - logs - closed";
 
-export const BottomBarLogsOpen = () => (
+export const BottomBarLogsOpen: StoryFn = () => (
   <PanelSetup
     fixture={{
       ...fixture,
@@ -548,7 +555,7 @@ export const BottomBarLogsOpen = () => (
 
 BottomBarLogsOpen.storyName = "BottomBar - logs - open";
 
-export const BottomBarClearedLogs = () => (
+export const BottomBarClearedLogs: StoryFn = () => (
   <PanelSetup
     fixture={{
       ...fixture,
