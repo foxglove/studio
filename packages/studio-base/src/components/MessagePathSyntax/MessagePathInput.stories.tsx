@@ -173,28 +173,33 @@ PathWithInvalidGlobalVariablesVariable.storyName = "path with invalid globalVari
 export const PathWithIncorrectlyPrefixedGlobalVariablesVariable = (): JSX.Element => {
   return <MessagePathInputStory path="/some_topic/state.items[:]{id==global_var_2}" />;
 };
-PathWithIncorrectlyPrefixedGlobalVariablesVariable.storyName = "path with incorrectly prefixed globalVariables variable";
+PathWithIncorrectlyPrefixedGlobalVariablesVariable.storyName =
+  "path with incorrectly prefixed globalVariables variable";
 
 export const AutocompleteForPathWithGlobalVariablesVariableInSliceSingleIdx = (): JSX.Element => {
   return <MessagePathInputStory path="/some_topic/state.items[$]" />;
 };
-AutocompleteForPathWithGlobalVariablesVariableInSliceSingleIdx.storyName = "autocomplete for path with globalVariables variable in slice (single idx)";
+AutocompleteForPathWithGlobalVariablesVariableInSliceSingleIdx.storyName =
+  "autocomplete for path with globalVariables variable in slice (single idx)";
 
 export const AutocompleteForPathWithGlobalVariablesVariableInSliceStartIdx = (): JSX.Element => {
   return <MessagePathInputStory path="/some_topic/state.items[$:]" />;
 };
-AutocompleteForPathWithGlobalVariablesVariableInSliceStartIdx.storyName = "autocomplete for path with globalVariables variable in slice (start idx)";
+AutocompleteForPathWithGlobalVariablesVariableInSliceStartIdx.storyName =
+  "autocomplete for path with globalVariables variable in slice (start idx)";
 
 export const AutocompleteForPathWithGlobalVariablesVariableInSliceEndIdx = (): JSX.Element => {
   return <MessagePathInputStory path="/some_topic/state.items[:$]" />;
 };
-AutocompleteForPathWithGlobalVariablesVariableInSliceEndIdx.storyName = "autocomplete for path with globalVariables variable in slice (end idx)";
+AutocompleteForPathWithGlobalVariablesVariableInSliceEndIdx.storyName =
+  "autocomplete for path with globalVariables variable in slice (end idx)";
 
 export const AutocompleteForPathWithGlobalVariablesVariablesInSliceStartAndEndIdx =
   (): JSX.Element => {
     return <MessagePathInputStory path="/some_topic/state.items[$global_var_2:$]" />;
   };
-AutocompleteForPathWithGlobalVariablesVariablesInSliceStartAndEndIdx.storyName = "autocomplete for path with globalVariables variables in slice (start and end idx)";
+AutocompleteForPathWithGlobalVariablesVariablesInSliceStartAndEndIdx.storyName =
+  "autocomplete for path with globalVariables variables in slice (start and end idx)";
 
 export const PathWithInvalidMathModifier = (): JSX.Element => {
   return <MessagePathInputStory path="/some_topic/location.pose.x.@negative" />;
@@ -204,7 +209,8 @@ PathWithInvalidMathModifier.storyName = "path with invalid math modifier";
 export const AutocompleteWhenPrioritizedDatatypeIsAvailable = (): JSX.Element => {
   return <MessagePathInputStory path="/" prioritizedDatatype="msgs/State" />;
 };
-AutocompleteWhenPrioritizedDatatypeIsAvailable.storyName = "autocomplete when prioritized datatype is available";
+AutocompleteWhenPrioritizedDatatypeIsAvailable.storyName =
+  "autocomplete when prioritized datatype is available";
 
 export const AutocompleteForMessageWithJsonField = (): JSX.Element => {
   return <MessagePathInputStory path="/some_logs_topic." />;
@@ -219,7 +225,8 @@ AutocompleteForPathWithExistingFilter.storyName = "autocomplete for path with ex
 export const AutocompleteForPathWithExistingFilterUsingAGlobalVariable = (): JSX.Element => {
   return <MessagePathInputStory path="/some_topic/state.items[:]{id==$global_var_2}." />;
 };
-AutocompleteForPathWithExistingFilterUsingAGlobalVariable.storyName = "autocomplete for path with existing filter using a global variable";
+AutocompleteForPathWithExistingFilterUsingAGlobalVariable.storyName =
+  "autocomplete for path with existing filter using a global variable";
 
 export const PathForFieldInsideJsonObject = (): JSX.Element => {
   return <MessagePathInputStory path="/some_logs_topic.myJson" />;
@@ -229,7 +236,8 @@ PathForFieldInsideJsonObject.storyName = "path for field inside json object";
 export const PathForMultipleLevelsOfNestedFieldsInsideJsonObject = (): JSX.Element => {
   return <MessagePathInputStory path="/some_logs_topic.myJson.a.b.c" />;
 };
-PathForMultipleLevelsOfNestedFieldsInsideJsonObject.storyName = "path for multiple levels of nested fields inside json object";
+PathForMultipleLevelsOfNestedFieldsInsideJsonObject.storyName =
+  "path for multiple levels of nested fields inside json object";
 
 export const PerformanceTesting = (): JSX.Element => {
   return <MessagePathPerformanceStory path="." />;

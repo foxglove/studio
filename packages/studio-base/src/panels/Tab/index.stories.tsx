@@ -162,7 +162,8 @@ export const PickingAPanelFromThePanelListCreatesANewTabIfThereAreNone: Story = 
   );
 };
 
-PickingAPanelFromThePanelListCreatesANewTabIfThereAreNone.storyName = "picking a panel from the panel list creates a new tab if there are none";
+PickingAPanelFromThePanelListCreatesANewTabIfThereAreNone.storyName =
+  "picking a panel from the panel list creates a new tab if there are none";
 
 export const PickingAPanelFromThePanelListUpdatesTheTabsLayout: Story = () => {
   return (
@@ -191,7 +192,8 @@ export const PickingAPanelFromThePanelListUpdatesTheTabsLayout: Story = () => {
   );
 };
 
-PickingAPanelFromThePanelListUpdatesTheTabsLayout.storyName = "picking a panel from the panel list updates the tab's layout";
+PickingAPanelFromThePanelListUpdatesTheTabsLayout.storyName =
+  "picking a panel from the panel list updates the tab's layout";
 
 export const DraggingAPanelFromThePanelListUpdatesTheTabsLayout: Story = () => {
   return (
@@ -223,7 +225,8 @@ export const DraggingAPanelFromThePanelListUpdatesTheTabsLayout: Story = () => {
   );
 };
 
-DraggingAPanelFromThePanelListUpdatesTheTabsLayout.storyName = "dragging a panel from the panel list updates the tab's layout";
+DraggingAPanelFromThePanelListUpdatesTheTabsLayout.storyName =
+  "dragging a panel from the panel list updates the tab's layout";
 
 export const DraggingAPanelFromThePanelListCreatesANewTabIfThereAreNone: Story = () => {
   return (
@@ -255,7 +258,8 @@ export const DraggingAPanelFromThePanelListCreatesANewTabIfThereAreNone: Story =
   );
 };
 
-DraggingAPanelFromThePanelListCreatesANewTabIfThereAreNone.storyName = "dragging a panel from the panel list creates a new tab if there are none";
+DraggingAPanelFromThePanelListCreatesANewTabIfThereAreNone.storyName =
+  "dragging a panel from the panel list creates a new tab if there are none";
 
 export const WithChosenActiveTab: Story = () => (
   <PanelSetup panelCatalog={new MockPanelCatalog()} fixture={fixture}>
@@ -379,7 +383,8 @@ export const ReorderTabsWithinTabPanelByDroppingOnTab: Story = () => {
   );
 };
 
-ReorderTabsWithinTabPanelByDroppingOnTab.storyName = "reorder tabs within Tab panel by dropping on tab";
+ReorderTabsWithinTabPanelByDroppingOnTab.storyName =
+  "reorder tabs within Tab panel by dropping on tab";
 
 export const MoveTabToDifferentTabPanel: Story = () => {
   return (
@@ -450,7 +455,8 @@ export const PreventDraggingSelectedParentTabIntoChildTabPanel: Story = () => {
   );
 };
 
-PreventDraggingSelectedParentTabIntoChildTabPanel.storyName = "prevent dragging selected parent tab into child tab panel";
+PreventDraggingSelectedParentTabIntoChildTabPanel.storyName =
+  "prevent dragging selected parent tab into child tab panel";
 
 export const DraggingAndDroppingANestedTabPanelDoesNotRemoveAnyTabs: Story = () => {
   return (
@@ -481,7 +487,8 @@ export const DraggingAndDroppingANestedTabPanelDoesNotRemoveAnyTabs: Story = () 
   );
 };
 
-DraggingAndDroppingANestedTabPanelDoesNotRemoveAnyTabs.storyName = "dragging and dropping a nested tab panel does not remove any tabs";
+DraggingAndDroppingANestedTabPanelDoesNotRemoveAnyTabs.storyName =
+  "dragging and dropping a nested tab panel does not remove any tabs";
 
 export const SupportsDraggingBetweenTabsAnywhereInTheLayout: Story = () => {
   return (
@@ -508,4 +515,5 @@ export const SupportsDraggingBetweenTabsAnywhereInTheLayout: Story = () => {
   );
 };
 
-SupportsDraggingBetweenTabsAnywhereInTheLayout.storyName = "supports dragging between tabs anywhere in the layout";
+SupportsDraggingBetweenTabsAnywhereInTheLayout.storyName =
+  "supports dragging between tabs anywhere in the layout";
