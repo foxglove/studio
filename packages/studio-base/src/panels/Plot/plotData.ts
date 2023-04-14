@@ -168,6 +168,8 @@ function mergeByPath(a: Im<PlotDataByPath>, b: Im<PlotDataByPath>): Im<PlotDataB
   );
 }
 
+// Sort by start time, then end time, so that folding from the left gives us the
+// right consolidated interval.
 function compare(a: Im<PlotDataByPath>, b: Im<PlotDataByPath>): number {
   const rangeA = findTimeRanges(a).all;
   const rangeB = findTimeRanges(b).all;
