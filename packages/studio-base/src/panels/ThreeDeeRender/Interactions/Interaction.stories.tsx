@@ -342,12 +342,12 @@ export default {
   excludeStories: ["POINT_CLOUD_MESSAGE", "POINT_CLOUD_WITH_ADDITIONAL_FIELDS"],
 };
 
-export const Default: StoryFn = DefaultStory;
+export const Default: StoryFn = DefaultStory.bind(undefined);
 
 Default.storyName = "default";
 Default.parameters = { colorScheme: "dark" };
 
-export const DefaultLight: StoryFn = DefaultStory;
+export const DefaultLight: StoryFn = DefaultStory.bind(undefined);
 
 DefaultLight.storyName = "default light";
 DefaultLight.parameters = { colorScheme: "light" };
