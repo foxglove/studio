@@ -2530,7 +2530,7 @@ __metadata:
     "@mui/material": 5.12.0
     "@popperjs/core": 2.11.6
     "@protobufjs/base64": 1.1.2
-    "@storybook/addon-actions": 6.5.16
+    "@storybook/addon-actions": 7.0.4
     "@storybook/react": 6.5.16
     "@svgr/webpack": 7.0.0
     "@testing-library/dom": 9.2.0
@@ -3227,6 +3227,13 @@ __metadata:
     "@jridgewell/resolve-uri": 3.1.0
     "@jridgewell/sourcemap-codec": 1.4.14
   checksum: 9d703b859cff5cd83b7308fd457a431387db5db96bd781a63bf48e183418dd9d3d44e76b9e4ae13237f6abeeb25d739ec9215c1d5bfdd08f66f750a50074a339
+  languageName: node
+  linkType: hard
+
+"@juggle/resize-observer@npm:^3.3.1":
+  version: 3.4.0
+  resolution: "@juggle/resize-observer@npm:3.4.0"
+  checksum: 2505028c05cc2e17639fcad06218b1c4b60f932a4ebb4b41ab546ef8c157031ae377e3f560903801f6d01706dbefd4943b6c4704bf19ed86dfa1c62f1473a570
   languageName: node
   linkType: hard
 
@@ -4039,6 +4046,38 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@storybook/addon-actions@npm:7.0.4":
+  version: 7.0.4
+  resolution: "@storybook/addon-actions@npm:7.0.4"
+  dependencies:
+    "@storybook/client-logger": 7.0.4
+    "@storybook/components": 7.0.4
+    "@storybook/core-events": 7.0.4
+    "@storybook/global": ^5.0.0
+    "@storybook/manager-api": 7.0.4
+    "@storybook/preview-api": 7.0.4
+    "@storybook/theming": 7.0.4
+    "@storybook/types": 7.0.4
+    dequal: ^2.0.2
+    lodash: ^4.17.21
+    polished: ^4.2.2
+    prop-types: ^15.7.2
+    react-inspector: ^6.0.0
+    telejson: ^7.0.3
+    ts-dedent: ^2.0.0
+    uuid-browser: ^3.1.0
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0 || ^18.0.0
+    react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0
+  peerDependenciesMeta:
+    react:
+      optional: true
+    react-dom:
+      optional: true
+  checksum: 907d9e0df7eec7f964dddb8bf998a1de740fa7fd38fdb0aa8d2f98a6f0b8c3a2a00169d2648249538322f77d561c8fb75329fd3a2ec62e4da9b07075ef17cde6
+  languageName: node
+  linkType: hard
+
 "@storybook/addon-backgrounds@npm:6.5.16":
   version: 6.5.16
   resolution: "@storybook/addon-backgrounds@npm:6.5.16"
@@ -4481,6 +4520,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@storybook/channel-postmessage@npm:7.0.4":
+  version: 7.0.4
+  resolution: "@storybook/channel-postmessage@npm:7.0.4"
+  dependencies:
+    "@storybook/channels": 7.0.4
+    "@storybook/client-logger": 7.0.4
+    "@storybook/core-events": 7.0.4
+    "@storybook/global": ^5.0.0
+    qs: ^6.10.0
+    telejson: ^7.0.3
+  checksum: 892f9cbfcfc2510943d04e30aec0e067e6a18db45447050b640d4e33c6d2415784f42d912726a8a1cb1554cd6f50c188b878631076c1e5b078836afcf469f172
+  languageName: node
+  linkType: hard
+
 "@storybook/channel-websocket@npm:6.5.16":
   version: 6.5.16
   resolution: "@storybook/channel-websocket@npm:6.5.16"
@@ -4502,6 +4555,13 @@ __metadata:
     ts-dedent: ^2.0.0
     util-deprecate: ^1.0.2
   checksum: 3d7f7bc19ed7b250976e00e02ab544408806b439106bed18a5db9815612f6c5df9bdf7c1a97b5a40ba3194184ebe7e4c75e2bca5496025d6b26afefa95cfccbd
+  languageName: node
+  linkType: hard
+
+"@storybook/channels@npm:7.0.4":
+  version: 7.0.4
+  resolution: "@storybook/channels@npm:7.0.4"
+  checksum: b523abfdcdae0ff4e8ea4a9a47919618970f9438c2770ff33d68bef3dd59ce32fb70197115423da8095e8c6de4597e8b1460210807277af1953d5670664aeed8
   languageName: node
   linkType: hard
 
@@ -4546,6 +4606,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@storybook/client-logger@npm:7.0.4":
+  version: 7.0.4
+  resolution: "@storybook/client-logger@npm:7.0.4"
+  dependencies:
+    "@storybook/global": ^5.0.0
+  checksum: 608d9aa75509fcd5780103681acca88c7808ab8c435a1685a99f9465c1ec7ac1f3a94d4403392a8bfa5e574a3d4e7e71d48e26e69b070e2c1262e8c0c6c9b054
+  languageName: node
+  linkType: hard
+
 "@storybook/components@npm:6.5.16":
   version: 6.5.16
   resolution: "@storybook/components@npm:6.5.16"
@@ -4562,6 +4631,25 @@ __metadata:
     react: ^16.8.0 || ^17.0.0 || ^18.0.0
     react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0
   checksum: 1caf822bf1293ca043822f1c77f05c0f01631e8a61adad6bc4651ba9be78c8f4822ba0905e39c8feaa3fb44ae10422e9ccd3004348b18531fb82c54cfcea4fa9
+  languageName: node
+  linkType: hard
+
+"@storybook/components@npm:7.0.4":
+  version: 7.0.4
+  resolution: "@storybook/components@npm:7.0.4"
+  dependencies:
+    "@storybook/client-logger": 7.0.4
+    "@storybook/csf": ^0.1.0
+    "@storybook/global": ^5.0.0
+    "@storybook/theming": 7.0.4
+    "@storybook/types": 7.0.4
+    memoizerific: ^1.11.3
+    use-resize-observer: ^9.1.0
+    util-deprecate: ^1.0.2
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0 || ^18.0.0
+    react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0
+  checksum: 794b30a9db674b94d8206bce1ec2c05a252fe794fe234592584995cd3b839e9c96dd6db2ec7fcbfffabaff0bbb1d4f4d661029559e83707dccf2daf70140efb0
   languageName: node
   linkType: hard
 
@@ -4670,6 +4758,13 @@ __metadata:
   dependencies:
     core-js: ^3.8.2
   checksum: 1844bdabfb7828af7ddd54129fbb321bf65d8b65459eaac99c8f3f94c7c2f0ee000468362758076444083f863a3bc835ecd1e4f2128524eb5c00c8a576473bc9
+  languageName: node
+  linkType: hard
+
+"@storybook/core-events@npm:7.0.4":
+  version: 7.0.4
+  resolution: "@storybook/core-events@npm:7.0.4"
+  checksum: 1d51fe1d5489ee553044899e1f10423a8906681f2e768acdaca80c4a3ca562bf509003d59c7d16bf33f0751c36fd5aaa44e4f7c643c5389e9f95fe962b9c850c
   languageName: node
   linkType: hard
 
@@ -4793,6 +4888,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@storybook/csf@npm:^0.1.0":
+  version: 0.1.0
+  resolution: "@storybook/csf@npm:0.1.0"
+  dependencies:
+    type-fest: ^2.19.0
+  checksum: f1784f2aff27d5c27ab897878b08e3b04a64e7f62da1ea95fd11bfe9f558300e55f0d483d58282e8254a4b4e8935201178e70c264ccc96104c67403215d651f0
+  languageName: node
+  linkType: hard
+
 "@storybook/docs-tools@npm:6.5.16":
   version: 6.5.16
   resolution: "@storybook/docs-tools@npm:6.5.16"
@@ -4805,6 +4909,39 @@ __metadata:
     lodash: ^4.17.21
     regenerator-runtime: ^0.13.7
   checksum: 6351c5b1cbe5820f0f0dfcc3e4e7da8cca3c8d73a06c5803e65cb86e9e81ccbae53cec8e1b579af0ac9a5bbb6d4b6ac03ffe26af2220dc5dfe8f065067f0e2d7
+  languageName: node
+  linkType: hard
+
+"@storybook/global@npm:^5.0.0":
+  version: 5.0.0
+  resolution: "@storybook/global@npm:5.0.0"
+  checksum: ede0ad35ec411fe31c61150dbd118fef344d1d0e72bf5d3502368e35cf68126f6b7ae4a0ab5e2ffe2f0baa3b4286f03ad069ba3e098e1725449ef08b7e154ba8
+  languageName: node
+  linkType: hard
+
+"@storybook/manager-api@npm:7.0.4":
+  version: 7.0.4
+  resolution: "@storybook/manager-api@npm:7.0.4"
+  dependencies:
+    "@storybook/channels": 7.0.4
+    "@storybook/client-logger": 7.0.4
+    "@storybook/core-events": 7.0.4
+    "@storybook/csf": ^0.1.0
+    "@storybook/global": ^5.0.0
+    "@storybook/router": 7.0.4
+    "@storybook/theming": 7.0.4
+    "@storybook/types": 7.0.4
+    dequal: ^2.0.2
+    lodash: ^4.17.21
+    memoizerific: ^1.11.3
+    semver: ^7.3.7
+    store2: ^2.14.2
+    telejson: ^7.0.3
+    ts-dedent: ^2.0.0
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0 || ^18.0.0
+    react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0
+  checksum: b7f5e5ab9f50646d13e80662d8f10bde1d8e0f72b29c3cda4d89411c9af64b41660dd1ef59caa15d33a5a6bc91d3a2bec671625a93403af01baec1cceddd9eae
   languageName: node
   linkType: hard
 
@@ -4944,6 +5081,29 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@storybook/preview-api@npm:7.0.4":
+  version: 7.0.4
+  resolution: "@storybook/preview-api@npm:7.0.4"
+  dependencies:
+    "@storybook/channel-postmessage": 7.0.4
+    "@storybook/channels": 7.0.4
+    "@storybook/client-logger": 7.0.4
+    "@storybook/core-events": 7.0.4
+    "@storybook/csf": ^0.1.0
+    "@storybook/global": ^5.0.0
+    "@storybook/types": 7.0.4
+    "@types/qs": ^6.9.5
+    dequal: ^2.0.2
+    lodash: ^4.17.21
+    memoizerific: ^1.11.3
+    qs: ^6.10.0
+    synchronous-promise: ^2.0.15
+    ts-dedent: ^2.0.0
+    util-deprecate: ^1.0.2
+  checksum: 2660c643c8e22b5a352370df36531eb92df8f6087434884f1bc580909c4ceb9675ecd2a3cd5ca43d80631fc7edf6e437b3419dc136796e38cc74d56d52243f89
+  languageName: node
+  linkType: hard
+
 "@storybook/preview-web@npm:6.5.16":
   version: 6.5.16
   resolution: "@storybook/preview-web@npm:6.5.16"
@@ -5070,6 +5230,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@storybook/router@npm:7.0.4":
+  version: 7.0.4
+  resolution: "@storybook/router@npm:7.0.4"
+  dependencies:
+    "@storybook/client-logger": 7.0.4
+    memoizerific: ^1.11.3
+    qs: ^6.10.0
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0 || ^18.0.0
+    react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0
+  checksum: e151a2b7439564171cec28b9e9365373a743caff981dbbf3e214f67bffd2819ef998cd0d89fbb957d72031478bf8f8c500d1c2195b1488526e99f2ceb485f920
+  languageName: node
+  linkType: hard
+
 "@storybook/semver@npm:^7.3.2":
   version: 7.3.2
   resolution: "@storybook/semver@npm:7.3.2"
@@ -5161,6 +5335,33 @@ __metadata:
     react: ^16.8.0 || ^17.0.0 || ^18.0.0
     react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0
   checksum: 349affa5c5208240291a5d24c73d852e220bfaf36b8fda70564aec1cac6070248ce7566ccb755c55a6ce0844ab2bbfd55881f6f788240b38cb407714e393c6f3
+  languageName: node
+  linkType: hard
+
+"@storybook/theming@npm:7.0.4":
+  version: 7.0.4
+  resolution: "@storybook/theming@npm:7.0.4"
+  dependencies:
+    "@emotion/use-insertion-effect-with-fallbacks": ^1.0.0
+    "@storybook/client-logger": 7.0.4
+    "@storybook/global": ^5.0.0
+    memoizerific: ^1.11.3
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0 || ^18.0.0
+    react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0
+  checksum: 223bc0338c68589b22d80ea5f28dd6af10caa4dec1bf48206afa2b8a7941930bffc26aedc3c990b4118f18f078c33965274b7f778c284050d74a35c8f339e247
+  languageName: node
+  linkType: hard
+
+"@storybook/types@npm:7.0.4":
+  version: 7.0.4
+  resolution: "@storybook/types@npm:7.0.4"
+  dependencies:
+    "@storybook/channels": 7.0.4
+    "@types/babel__core": ^7.0.0
+    "@types/express": ^4.7.0
+    file-system-cache: ^2.0.0
+  checksum: e39b000d91d1d70bba03356fa64fadbcafd5188b1c745e788f8a6ef87fb9e6239093858d1f47bcce7d6f427c2c0183d60079c0c208b428e5a74fc8228f571401
   languageName: node
   linkType: hard
 
@@ -5502,7 +5703,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/babel__core@npm:^7.1.14, @types/babel__core@npm:^7.20.0":
+"@types/babel__core@npm:^7.0.0, @types/babel__core@npm:^7.1.14, @types/babel__core@npm:^7.20.0":
   version: 7.20.0
   resolution: "@types/babel__core@npm:7.20.0"
   dependencies:
@@ -5699,6 +5900,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/express-serve-static-core@npm:^4.17.33":
+  version: 4.17.33
+  resolution: "@types/express-serve-static-core@npm:4.17.33"
+  dependencies:
+    "@types/node": "*"
+    "@types/qs": "*"
+    "@types/range-parser": "*"
+  checksum: dce580d16b85f207445af9d4053d66942b27d0c72e86153089fa00feee3e96ae336b7bedb31ed4eea9e553c99d6dd356ed6e0928f135375d9f862a1a8015adf2
+  languageName: node
+  linkType: hard
+
 "@types/express@npm:*, @types/express@npm:^4.17.13":
   version: 4.17.13
   resolution: "@types/express@npm:4.17.13"
@@ -5708,6 +5920,18 @@ __metadata:
     "@types/qs": "*"
     "@types/serve-static": "*"
   checksum: 12a2a0e6c4b993fc0854bec665906788aea0d8ee4392389d7a98a5de1eefdd33c9e1e40a91f3afd274011119c506f7b4126acb97fae62ae20b654974d44cba12
+  languageName: node
+  linkType: hard
+
+"@types/express@npm:^4.7.0":
+  version: 4.17.17
+  resolution: "@types/express@npm:4.17.17"
+  dependencies:
+    "@types/body-parser": "*"
+    "@types/express-serve-static-core": ^4.17.33
+    "@types/qs": "*"
+    "@types/serve-static": "*"
+  checksum: 0196dacc275ac3ce89d7364885cb08e7fb61f53ca101f65886dbf1daf9b7eb05c0943e2e4bbd01b0cc5e50f37e0eea7e4cbe97d0304094411ac73e1b7998f4da
   languageName: node
   linkType: hard
 
@@ -10549,6 +10773,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"dequal@npm:^2.0.2":
+  version: 2.0.3
+  resolution: "dequal@npm:2.0.3"
+  checksum: 8679b850e1a3d0ebbc46ee780d5df7b478c23f335887464023a631d1b9af051ad4a6595a44220f9ff8ff95a8ddccf019b5ad778a976fd7bbf77383d36f412f90
+  languageName: node
+  linkType: hard
+
 "des.js@npm:^1.0.0":
   version: 1.0.1
   resolution: "des.js@npm:1.0.1"
@@ -12391,6 +12622,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"file-system-cache@npm:^2.0.0":
+  version: 2.0.2
+  resolution: "file-system-cache@npm:2.0.2"
+  dependencies:
+    fs-extra: ^11.1.0
+    ramda: ^0.28.0
+  checksum: ac4f9065132ac4593dbfb7c8fc4683cccc0f58823279763690fb3fca859cc5e6b4446c846af718354059695fa90db316be4ce19e16578bbb0feab4a9159e9fbc
+  languageName: node
+  linkType: hard
+
 "file-uri-to-path@npm:1.0.0":
   version: 1.0.0
   resolution: "file-uri-to-path@npm:1.0.0"
@@ -12704,7 +12945,7 @@ __metadata:
     "@foxglove/eslint-plugin-studio": "workspace:*"
     "@foxglove/tsconfig": 1.1.0
     "@octokit/rest": 19.0.7
-    "@storybook/addon-actions": 6.5.16
+    "@storybook/addon-actions": 7.0.4
     "@storybook/addon-essentials": 6.5.16
     "@storybook/builder-webpack5": 6.5.16
     "@storybook/manager-webpack5": 6.5.16
@@ -12813,6 +13054,17 @@ __metadata:
     jsonfile: ^6.0.1
     universalify: ^2.0.0
   checksum: dc94ab37096f813cc3ca12f0f1b5ad6744dfed9ed21e953d72530d103cea193c2f81584a39e9dee1bea36de5ee66805678c0dddc048e8af1427ac19c00fffc50
+  languageName: node
+  linkType: hard
+
+"fs-extra@npm:^11.1.0":
+  version: 11.1.1
+  resolution: "fs-extra@npm:11.1.1"
+  dependencies:
+    graceful-fs: ^4.2.0
+    jsonfile: ^6.0.1
+    universalify: ^2.0.0
+  checksum: fb883c68245b2d777fbc1f2082c9efb084eaa2bbf9fddaa366130d196c03608eebef7fb490541276429ee1ca99f317e2d73e96f5ca0999eefedf5a624ae1edfd
   languageName: node
   linkType: hard
 
@@ -19832,6 +20084,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"ramda@npm:^0.28.0":
+  version: 0.28.0
+  resolution: "ramda@npm:0.28.0"
+  checksum: 44ea6e5010bba70151b6a92d8114a91915e8b5a16105cce65fae58c9d7386b812c429645e35f21141d7087568550ce383bc10ee1a65cdec951f4b69ea457e6a4
+  languageName: node
+  linkType: hard
+
 "randexp@npm:0.4.6":
   version: 0.4.6
   resolution: "randexp@npm:0.4.6"
@@ -20125,6 +20384,15 @@ __metadata:
   peerDependencies:
     react: ^16.8.4 || ^17.0.0
   checksum: ca9e4c1fedb94e4e956dd3142838c5a25a9d61375aee5e8a74dd623bae09a263098a93f220e8d84c7fd39e569e1fa4297d363ddbc91b15bca91baeb7281d7f4f
+  languageName: node
+  linkType: hard
+
+"react-inspector@npm:^6.0.0":
+  version: 6.0.1
+  resolution: "react-inspector@npm:6.0.1"
+  peerDependencies:
+    react: ^16.8.4 || ^17.0.0 || ^18.0.0
+  checksum: 877cbccf36fdc6213abb9611fb9279c4bb76ef7ecb4ec554b3935419a99d55e6d30a80799a054d468d43cc59a9777f21d22d6219a4597bfbd27f3f08a4cdfdc6
   languageName: node
   linkType: hard
 
@@ -22271,6 +22539,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"store2@npm:^2.14.2":
+  version: 2.14.2
+  resolution: "store2@npm:2.14.2"
+  checksum: 6f270fc5bab99b63f45fcc7bd8b99c2714b4adf880f557ed7ffb5ed3987131251165bccde425a00928aaf044870aee79ddeef548576d093c68703ed2edec45d7
+  languageName: node
+  linkType: hard
+
 "stream-browserify@npm:^2.0.1":
   version: 2.0.2
   resolution: "stream-browserify@npm:2.0.2"
@@ -22793,6 +23068,15 @@ __metadata:
     lodash: ^4.17.21
     memoizerific: ^1.11.3
   checksum: 7411a5e78a35720bd0654a544409d3ce467b1dbb2073c73f36476b4c0905d97dbf539d6cbae737bb1fd8c872c2058f2a5450163a15117ed3fa031b2a2b8b33f6
+  languageName: node
+  linkType: hard
+
+"telejson@npm:^7.0.3":
+  version: 7.1.0
+  resolution: "telejson@npm:7.1.0"
+  dependencies:
+    memoizerific: ^1.11.3
+  checksum: 8000e43dc862a87ab1ca342a2635641923d55c2585f85ea8c7c60293681d6f920e8b9570cc12d90ecef286f065c176da5f769f42f4828ba18a626627bed1ac07
   languageName: node
   linkType: hard
 
@@ -23453,6 +23737,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"type-fest@npm:^2.19.0":
+  version: 2.19.0
+  resolution: "type-fest@npm:2.19.0"
+  checksum: a4ef07ece297c9fba78fc1bd6d85dff4472fe043ede98bd4710d2615d15776902b595abf62bd78339ed6278f021235fb28a96361f8be86ed754f778973a0d278
+  languageName: node
+  linkType: hard
+
 "type-is@npm:~1.6.18":
   version: 1.6.18
   resolution: "type-is@npm:1.6.18"
@@ -24078,6 +24369,18 @@ __metadata:
   peerDependencies:
     react: ^17.0.2
   checksum: 38c5f5ac85ada18437d4315039ffe8a9cc067d95e70461c935427da5a3d231dcc5b6cc5a87f96ec70fe623e50eb0c8b02fbdd06fc322e961b511b0cc915d64b8
+  languageName: node
+  linkType: hard
+
+"use-resize-observer@npm:^9.1.0":
+  version: 9.1.0
+  resolution: "use-resize-observer@npm:9.1.0"
+  dependencies:
+    "@juggle/resize-observer": ^3.3.1
+  peerDependencies:
+    react: 16.8.0 - 18
+    react-dom: 16.8.0 - 18
+  checksum: 92be0ac34a3b3cf884cd55847c90792b5b44833dc258e96d650152815ad246afe45825aa223332203004d836535a927ab74f18dc0313229e2c7c69510eddf382
   languageName: node
   linkType: hard
 
