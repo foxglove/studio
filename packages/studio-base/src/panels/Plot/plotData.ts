@@ -30,26 +30,27 @@ type TimeRange = { start: Time; end: Time };
  * Find the earliest and latest times of messages in data, for all messages and
  * per-path.
  */
-export const findTimeRanges = memoizeWeak(
-  (data: Im<PlotDataByPath>): { all: TimeRange; byPath: Record<string, TimeRange> } => {
-    const byPath: Record<string, TimeRange> = {};
-    let start: Time = MAX_TIME;
-    let end: Time = MIN_TIME;
-    for (const path of Object.keys(data)) {
-      const thisPath = (byPath[path] = { start: MAX_TIME, end: MIN_TIME });
-      for (const item of data[path] ?? []) {
-        for (const datum of item) {
-          start = minTime(start, datum.receiveTime);
-          end = maxTime(end, datum.receiveTime);
-          thisPath.start = minTime(thisPath.start, datum.receiveTime);
-          thisPath.end = maxTime(thisPath.end, datum.receiveTime);
-        }
+export function findTimeRanges(data: Im<PlotDataByPath>): {
+  all: TimeRange;
+  byPath: Record<string, TimeRange>;
+} {
+  const byPath: Record<string, TimeRange> = {};
+  let start: Time = MAX_TIME;
+  let end: Time = MIN_TIME;
+  for (const path of Object.keys(data)) {
+    const thisPath = (byPath[path] = { start: MAX_TIME, end: MIN_TIME });
+    for (const item of data[path] ?? []) {
+      for (const datum of item) {
+        start = minTime(start, datum.receiveTime);
+        end = maxTime(end, datum.receiveTime);
+        thisPath.start = minTime(thisPath.start, datum.receiveTime);
+        thisPath.end = maxTime(thisPath.end, datum.receiveTime);
       }
     }
+  }
 
-    return { all: { start, end }, byPath };
-  },
-);
+  return { all: { start, end }, byPath };
+}
 
 /**
  * Fetch the data we need from each item in itemsByPath and discard the rest of
@@ -168,11 +169,13 @@ function mergeByPath(a: Im<PlotDataByPath>, b: Im<PlotDataByPath>): Im<PlotDataB
   );
 }
 
+const memoFindTimeRanges = memoizeWeak(findTimeRanges);
+
 // Sort by start time, then end time, so that folding from the left gives us the
 // right consolidated interval.
 function compare(a: Im<PlotDataByPath>, b: Im<PlotDataByPath>): number {
-  const rangeA = findTimeRanges(a).all;
-  const rangeB = findTimeRanges(b).all;
+  const rangeA = memoFindTimeRanges(a).all;
+  const rangeB = memoFindTimeRanges(b).all;
   const startCompare = compareTimes(rangeA.start, rangeB.start);
   return startCompare !== 0 ? startCompare : compareTimes(rangeA.end, rangeB.end);
 }

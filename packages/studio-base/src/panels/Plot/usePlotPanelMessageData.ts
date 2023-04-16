@@ -62,7 +62,10 @@ export function usePlotPanelMessageData(params: Params): Immutable<PlotDataByPat
 
   const cachedGetMessagePathDataItems = useCachedGetMessagePathDataItems(allPaths);
 
-  const blocksTimeRange = PlotData.findTimeRanges(plotDataForBlocks);
+  const blocksTimeRange = useMemo(
+    () => PlotData.findTimeRanges(plotDataForBlocks),
+    [plotDataForBlocks],
+  );
 
   // When restoring, keep only the paths that are present in allPaths. Without
   // this, the reducer value will grow unbounded with new paths as users
