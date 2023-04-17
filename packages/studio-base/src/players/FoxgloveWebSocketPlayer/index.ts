@@ -183,6 +183,24 @@ export default class FoxgloveWebSocketPlayer implements Player {
         clearTimeout(this._connectionAttemptTimeout);
       }
       this._presence = PlayerPresence.PRESENT;
+      this._problems.clear();
+      this._channelsById.clear();
+      this._channelsByTopic.clear();
+      this._servicesByName.clear();
+      this._serviceResponseCbs.clear();
+      this._parameters.clear();
+      this._profile = undefined;
+      this._publishedTopics = undefined;
+      this._subscribedTopics = undefined;
+      this._advertisedServices = undefined;
+      this._publicationsByTopic.clear();
+      this._datatypes = new Map();
+
+      for (const topic of this._resolvedSubscriptionsByTopic.keys()) {
+        this._unresolvedSubscriptions.add(topic);
+      }
+      this._resolvedSubscriptionsById.clear();
+      this._resolvedSubscriptionsByTopic.clear();
     });
 
     this._client.on("error", (err) => {
@@ -244,24 +262,6 @@ export default class FoxgloveWebSocketPlayer implements Player {
       this._serverPublishesTime = this._serverCapabilities.includes(ServerCapability.time);
       this._supportedEncodings = event.supportedEncodings;
       this._datatypes = new Map();
-      this._problems.clear();
-      this._channelsById.clear();
-      this._channelsByTopic.clear();
-      this._servicesByName.clear();
-      this._serviceResponseCbs.clear();
-      this._parameters.clear();
-      this._publicationsByTopic.clear();
-      this._profile = undefined;
-      this._publishedTopics = undefined;
-      this._subscribedTopics = undefined;
-      this._advertisedServices = undefined;
-      this._datatypes = new Map();
-
-      for (const topic of this._resolvedSubscriptionsByTopic.keys()) {
-        this._unresolvedSubscriptions.add(topic);
-      }
-      this._resolvedSubscriptionsById.clear();
-      this._resolvedSubscriptionsByTopic.clear();
 
       // If the server publishes the time we clear any existing clockTime we might have and let the
       // server override
