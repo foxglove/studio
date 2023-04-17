@@ -79,7 +79,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
   private _url: string; // WebSocket URL.
   private _name: string;
   private _client?: FoxgloveClient; // The client when we're connected.
-  private _id: string = uuidv4(); // Unique ID for this player.
+  private _id: string = uuidv4(); // Unique ID for this player session.
   private _serverCapabilities: string[] = [];
   private _playerCapabilities: (typeof PlayerCapabilities)[keyof typeof PlayerCapabilities][] = [];
   private _supportedEncodings?: string[];
@@ -183,6 +183,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
         clearTimeout(this._connectionAttemptTimeout);
       }
       this._presence = PlayerPresence.PRESENT;
+      this._resetSessionState();
       this._problems.clear();
       this._channelsById.clear();
       this._channelsByTopic.clear();
@@ -257,6 +258,13 @@ export default class FoxgloveWebSocketPlayer implements Player {
           message: `Server sent an invalid or missing capabilities field: '${event.capabilities}'`,
         });
       }
+
+      const newSessionId = event.sessionId ?? uuidv4();
+      if (this._id !== newSessionId) {
+        this._resetSessionState();
+      }
+
+      this._id = newSessionId;
       this._name = `${this._url}\n${event.name}`;
       this._serverCapabilities = Array.isArray(event.capabilities) ? event.capabilities : [];
       this._serverPublishesTime = this._serverCapabilities.includes(ServerCapability.time);
@@ -1007,6 +1015,18 @@ export default class FoxgloveWebSocketPlayer implements Player {
 
     this._unresolvedPublications = [];
     this._emitState();
+  }
+
+  private _resetSessionState(): void {
+    this._startTime = undefined;
+    this._endTime = undefined;
+    this._clockTime = undefined;
+    this._topicsStats = new Map();
+    this._parsedMessages = [];
+    this._receivedBytes = 0;
+    this._hasReceivedMessage = false;
+    this._problems.clear();
+    this._parameters.clear();
   }
 }
 
