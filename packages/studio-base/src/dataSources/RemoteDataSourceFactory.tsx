@@ -67,7 +67,7 @@ class RemoteDataSourceFactory implements IDataSourceFactory {
 
   public warning = (
     <>
-      Loading large remote files can be slow. For better performance use{" "}
+      Loading large remote files can be slow. For better performance, use{" "}
       <Link href="https://foxglove.dev/data-platform" target="_blank">
         Foxglove Data Platform.
       </Link>
