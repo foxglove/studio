@@ -481,10 +481,16 @@ let costmapPalette: [number, number, number, number][] | undefined;
 let mapPalette: [number, number, number, number][] | undefined;
 let rawPalette: [number, number, number, number][] | undefined;
 
+/**
+ * Maps the value to a color using the given palette that is cached after initial use.
+ * @param output - RGBA color output of the given value using the palette in the colormode
+ * @param value - Int8 or Uint8 value to map to a color
+ * @param paletteColorMode - "costmap", "map", or "raw" these are the predefined palette colormodes. Their palette will be used to determine the output color
+ */
 function paletteColorCached(
   output: ColorRGBA,
   value: number,
-  color_mode: "costmap" | "map" | "raw",
+  paletteColorMode: "costmap" | "map" | "raw",
 ) {
   const unsignedValue = value >= 0 ? value : value + 256;
   if (unsignedValue < 0 || unsignedValue > 255) {
@@ -495,22 +501,25 @@ function paletteColorCached(
   }
 
   let palette: [number, number, number, number][] | undefined;
-  if (color_mode === "costmap") {
-    if (!costmapPalette) {
-      costmapPalette = createCostmapPalette();
-    }
-    palette = costmapPalette;
-  } else if (color_mode === "map") {
-    if (!mapPalette) {
-      mapPalette = createMapPalette();
-    }
-    palette = mapPalette;
-  } else {
-    // "raw"
-    if (!rawPalette) {
-      rawPalette = createRawPalette();
-    }
-    palette = rawPalette;
+  switch (paletteColorMode) {
+    case "costmap":
+      if (!costmapPalette) {
+        costmapPalette = createCostmapPalette();
+      }
+      palette = costmapPalette;
+      break;
+    case "map":
+      if (!mapPalette) {
+        mapPalette = createMapPalette();
+      }
+      palette = mapPalette;
+      break;
+    case "raw":
+      if (!rawPalette) {
+        rawPalette = createRawPalette();
+      }
+      palette = rawPalette;
+      break;
   }
 
   const colorRaw = palette[Math.trunc(unsignedValue)]!;
