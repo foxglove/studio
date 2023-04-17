@@ -19,7 +19,6 @@ import { ICameraHandler } from "./ICameraHandler";
 import type { IRenderer } from "../IRenderer";
 import { PartialMessageEvent, SceneExtension } from "../SceneExtension";
 import { SettingsTreeEntry } from "../SettingsManager";
-import { CameraState } from "../camera";
 import {
   CAMERA_CALIBRATION_DATATYPES,
   COMPRESSED_IMAGE_DATATYPES,
@@ -42,29 +41,20 @@ const MISSING_CAMERA_INFO = "MISSING_CAMERA_INFO";
 const IMAGE_TOPIC_DIFFERENT_FRAME = "IMAGE_TOPIC_DIFFERENT_FRAME";
 const CAMERA_MODEL = "CameraModel";
 
-const DEFAULT_CAMERA_STATE: CameraState = {
-  distance: 20, // using zoom instead
-  perspective: true, // not used
-  phi: 60, // not used
-  target: [0, 0, 0],
-  targetOffset: [0, 0, 0], // not used
-  targetOrientation: [0, 0, 0, 1], // not used
-  thetaOffset: 45, // not used
-  fovy: 45, // not used because focal length from pinhole model is used
+const DEFAULT_CAMERA_STATE = {
   near: 0.001,
   far: 1000,
 };
 export class ImageMode extends SceneExtension implements ICameraHandler {
   private aspect: number;
   private camera: THREE.PerspectiveCamera;
+  private cameraState = DEFAULT_CAMERA_STATE;
   private cameraModel:
     | {
         model: PinholeCameraModel;
         info: CameraInfo;
       }
     | undefined;
-
-  private cameraState: CameraState = DEFAULT_CAMERA_STATE;
 
   /**
    * We keep more than just the last message event on the selected caemara info topic because
@@ -491,13 +481,12 @@ export class ImageMode extends SceneExtension implements ICameraHandler {
     this.updateCamera();
   }
 
-  public setCameraState(state: CameraState): void {
-    this.cameraState = state;
+  public setCameraState(): void {
     this.updateCamera();
   }
 
-  public getCameraState(): CameraState {
-    return this.cameraState;
+  public getCameraState(): undefined {
+    return undefined;
   }
 
   private handleErrorChange = (): void => {

@@ -13,14 +13,14 @@ export interface ICameraHandler extends SceneExtension {
    * */
   getActiveCamera(): THREE.PerspectiveCamera | THREE.OrthographicCamera;
   /**
-   * Sets the camera state and should ensure that it isn't already being updated when set
+   * Sets the camera state
    * @param state - The new camera state
    */
-  setCameraState(state: CameraState): void;
+  setCameraState(state: CameraState | undefined): void;
   /**
    * Gets the state of the camera
    */
-  getCameraState(): CameraState;
+  getCameraState(): CameraState | undefined;
   /**
    * Used to update the aspect ratio of the camera when necessary
    * @param width - The width of the render canvas

@@ -276,7 +276,7 @@ export interface IRenderer extends EventEmitter<RendererEvents> {
 
   setCameraState(cameraState: CameraState): void;
 
-  getCameraState(): CameraState;
+  getCameraState(): CameraState | undefined;
 
   setSelectedRenderable(selection: PickedRenderable | undefined): void;
 

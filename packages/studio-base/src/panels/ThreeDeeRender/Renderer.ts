@@ -783,7 +783,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     this.cameraHandler.setCameraState(cameraState);
   }
 
-  public getCameraState(): CameraState {
+  public getCameraState(): CameraState | undefined {
     return this.cameraHandler.getCameraState();
   }
 
