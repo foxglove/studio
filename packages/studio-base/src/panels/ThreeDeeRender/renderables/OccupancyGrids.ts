@@ -520,6 +520,12 @@ function paletteColorCached(
       }
       palette = rawPalette;
       break;
+    default:
+      // Default to raw palette if unknown colormode, the user will have an error already in the settings
+      if (!rawPalette) {
+        rawPalette = createRawPalette();
+      }
+      palette = rawPalette;
   }
 
   const colorRaw = palette[Math.trunc(unsignedValue)]!;
