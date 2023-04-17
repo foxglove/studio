@@ -4,7 +4,6 @@
 
 import {
   CheckmarkCircle20Regular,
-  QuestionCircle20Regular,
   DismissCircle20Regular,
   Dismiss16Filled,
   Info20Regular,
@@ -39,13 +38,13 @@ const useStyles = makeStyles<void, "icon" | "dismissButton">()((theme, _params, 
     },
   },
   root: {
-    "&.notistack-MuiContent": {
-      padding: theme.spacing(0.5, 1.5, 0.5, 1),
-      fontSize: theme.typography.body2.fontSize,
-    },
     "#notistack-snackbar": {
       padding: 0,
       gap: theme.spacing(0.75),
+    },
+    "&.notistack-MuiContent": {
+      padding: theme.spacing(0.5, 1.5, 0.5, 1),
+      fontSize: theme.typography.body2.fontSize,
     },
     "&.notistack-MuiContent-default": {
       backgroundColor: theme.palette.background.paper,
@@ -84,7 +83,7 @@ const CloseSnackbarAction = ({ id }: { id: SnackbarKey }) => {
   const { closeSnackbar } = useSnackbar();
   const { classes } = useStyles();
   return (
-    <IconButton className={classes.dismissButton} size="small" onClick={() => closeSnackbar(id)}>
+    <IconButton size="small" className={classes.dismissButton} onClick={() => closeSnackbar(id)}>
       <Dismiss16Filled />
     </IconButton>
   );
@@ -110,7 +109,7 @@ export default function StudioToastProvider({ children }: PropsWithChildren<unkn
       }}
       action={(id) => <CloseSnackbarAction id={id} />}
       iconVariant={{
-        default: <QuestionCircle20Regular className={classes.icon} />,
+        default: <Info20Regular className={classes.icon} />,
         info: <Info20Regular className={classes.icon} />,
         error: <DismissCircle20Regular className={classes.icon} />,
         warning: <Warning20Regular className={classes.icon} />,
