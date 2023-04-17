@@ -8,6 +8,7 @@ import { CompressedImage, RawImage } from "@foxglove/schemas";
 import { MessageEvent } from "@foxglove/studio";
 import { Topic } from "@foxglove/studio-base/players/types";
 import PanelSetup, { Fixture } from "@foxglove/studio-base/stories/PanelSetup";
+import delay from "@foxglove/studio-base/util/delay";
 
 import { PNG_TEST_IMAGE, rad2deg, SENSOR_FRAME_ID } from "./common";
 import { ImagePanel, ThreeDeePanel } from "../index";
@@ -345,3 +346,17 @@ export const ImageModeFoxgloveRawImage: Story = () => <ImageModeFoxgloveImage im
 ImageModeFoxgloveRawImage.parameters = { colorScheme: "light" };
 export const ImageModeFoxglovePngImage: Story = () => <ImageModeFoxgloveImage imageType="png" />;
 ImageModeFoxglovePngImage.parameters = { colorScheme: "light" };
+
+export const ImageModeResizeHandled: Story = () => <ImageModeFoxgloveImage imageType="raw" />;
+ImageModeResizeHandled.parameters = { colorScheme: "light" };
+ImageModeResizeHandled.play = async (ctx) => {
+  const canvas = document.querySelector("canvas")!;
+  // Input attaches resize listener to parent element, so we need to resize that.
+  const parentEl = canvas.parentElement!;
+  await delay(30);
+  parentEl.style.width = "50%";
+  canvas.dispatchEvent(new Event("resize"));
+  await delay(30);
+
+  ctx.parameters.storyReady = true;
+};
