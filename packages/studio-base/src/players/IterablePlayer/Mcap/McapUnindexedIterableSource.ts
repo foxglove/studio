@@ -32,7 +32,8 @@ const DURATION_YEAR_SEC = 365 * 24 * 60 * 60;
 
 type Options = { size: number; stream: ReadableStream<Uint8Array> };
 
-export class McapStreamingIterableSource implements IIterableSource {
+/** Only efficient for small files */
+export class McapUnindexedIterableSource implements IIterableSource {
   private options: Options;
   private msgEventsByChannel?: Map<number, MessageEvent<unknown>[]>;
   private start?: Time;
