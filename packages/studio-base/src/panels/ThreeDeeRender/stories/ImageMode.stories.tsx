@@ -349,7 +349,7 @@ ImageModeFoxglovePngImage.parameters = { colorScheme: "light" };
 
 export const ImageModeResizeHandled: Story = () => <ImageModeFoxgloveImage imageType="raw" />;
 ImageModeResizeHandled.parameters = { colorScheme: "light" };
-ImageModeResizeHandled.play = async (ctx) => {
+ImageModeResizeHandled.play = async () => {
   const canvas = document.querySelector("canvas")!;
   // Input attaches resize listener to parent element, so we need to resize that.
   const parentEl = canvas.parentElement!;
@@ -357,6 +357,4 @@ ImageModeResizeHandled.play = async (ctx) => {
   parentEl.style.width = "50%";
   canvas.dispatchEvent(new Event("resize"));
   await delay(30);
-
-  ctx.parameters.storyReady = true;
 };

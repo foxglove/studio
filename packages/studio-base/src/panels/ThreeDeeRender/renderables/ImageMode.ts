@@ -433,14 +433,24 @@ export class ImageMode extends SceneExtension implements ICameraHandler {
     const near = this.cameraState.near;
     const far = this.cameraState.far;
 
-    // prettier-ignore
-    const matrix = new THREE.Matrix4()
-        .set(
-          2.0*fx/width * zoomX, 0, 2.0*(0.5 - cx/width) * zoomX, 0,
-          0, 2.0*fy/height * zoomY, 2.0*(cy/height-0.5) * zoomY, 0,
-          0, 0, -(far+near)/(far-near), -2.0*far*near/(far-near),
-          0, 0, -1.0, 0,
-        );
+    const matrix = new THREE.Matrix4().set(
+      ((2.0 * fx) / width) * zoomX,
+      0,
+      2.0 * (0.5 - cx / width) * zoomX,
+      0,
+      0,
+      ((2.0 * fy) / height) * zoomY,
+      2.0 * (cy / height - 0.5) * zoomY,
+      0,
+      0,
+      0,
+      -(far + near) / (far - near),
+      (-2.0 * far * near) / (far - near),
+      0,
+      0,
+      -1.0,
+      0,
+    );
 
     return matrix;
   }
@@ -460,15 +470,12 @@ export class ImageMode extends SceneExtension implements ICameraHandler {
     const fx = model.P[0]!;
     const fy = model.P[5]!;
     const windowAspect = this.aspect;
-    // prettier-ignore
-    const imageAspect = (imgWidth / fx) / (imgHeight / fy);
+    const imageAspect = imgWidth / fx / (imgHeight / fy);
     // preserve the aspect ratio
     if (imageAspect > windowAspect) {
-      //prettier-ignore
-      this.zoom.y = this.zoom.y / imageAspect * windowAspect;
+      this.zoom.y = (this.zoom.y / imageAspect) * windowAspect;
     } else {
-      //prettier-ignore
-      this.zoom.x = this.zoom.x / windowAspect * imageAspect;
+      this.zoom.x = (this.zoom.x / windowAspect) * imageAspect;
     }
   }
 

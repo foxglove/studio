@@ -18,7 +18,7 @@ export interface ICameraHandler extends SceneExtension {
    */
   setCameraState(state: CameraState | undefined): void;
   /**
-   * Gets the state of the camera
+   * Gets the state of the camera if interface mode supports it, otherwise undefined
    */
   getCameraState(): CameraState | undefined;
   /**
