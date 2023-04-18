@@ -263,9 +263,7 @@ export class McapUnindexedIterableSource implements IIterableSource {
     // Messages need to be yielded in receiveTime order
     resultMessages.sort((a, b) => compare(a.msgEvent.receiveTime, b.msgEvent.receiveTime));
 
-    for (const resultMsg of resultMessages) {
-      yield resultMsg;
-    }
+    yield* resultMessages;
   }
 
   public async getBackfillMessages(
