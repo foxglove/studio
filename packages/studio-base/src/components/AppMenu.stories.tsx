@@ -46,20 +46,18 @@ export const Default = (): JSX.Element => (
   </PlayerSelectionContext.Provider>
 );
 
-type Story = StoryObj<typeof Default>;
-
 export const Dark = (): JSX.Element => <Default />;
 Dark.parameters = { colorScheme: "dark" };
 
 export const Light = (): JSX.Element => <Default />;
 Light.parameters = { colorScheme: "light" };
 
+type Story = StoryObj<typeof Default>;
+
 const NestedMenuSelected = (id: string, colorScheme: "dark" | "light"): Story => ({
-  render: () => <Default />,
-  play: async () => {
-    await userEvent.hover(screen.getByTestId(id));
-  },
+  render: Default,
   parameters: { colorScheme },
+  play: async () => await userEvent.hover(screen.getByTestId(id)),
 });
 
 export const DarkFileSelected = NestedMenuSelected("app-menu-file", "dark");
