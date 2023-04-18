@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { filterMap } from "@foxglove/den/collection";
-import { fromNanoSec } from "@foxglove/rostime";
+import { Time, fromNanoSec } from "@foxglove/rostime";
 import { ImageAnnotations, PointsAnnotationType } from "@foxglove/schemas";
 import {
   ImageMarker,
@@ -67,8 +67,7 @@ function normalizeFoxgloveImageAnnotations(
   const annotations: Annotation[] = [];
 
   for (const circle of message.circles ?? []) {
-    const stamp =
-      typeof circle.timestamp === "bigint" ? fromNanoSec(circle.timestamp) : circle.timestamp;
+    const stamp = normalizeTimestamp(circle.timestamp);
     annotations.push({
       type: "circle",
       stamp,
@@ -84,8 +83,7 @@ function normalizeFoxgloveImageAnnotations(
     if (!style) {
       continue;
     }
-    const stamp =
-      typeof point.timestamp === "bigint" ? fromNanoSec(point.timestamp) : point.timestamp;
+    const stamp = normalizeTimestamp(point.timestamp);
     annotations.push({
       type: "points",
       stamp,
@@ -97,8 +95,25 @@ function normalizeFoxgloveImageAnnotations(
       fillColor: point.fill_color,
     });
   }
+  for (const text of message.texts ?? []) {
+    const stamp = normalizeTimestamp(text.timestamp);
+    annotations.push({
+      type: "text",
+      stamp,
+      position: text.position,
+      text: text.text,
+      textColor: text.text_color,
+      backgroundColor: text.background_color,
+      fontSize: text.font_size,
+      padding: (text.font_size / 12) * 4,
+    });
+  }
 
   return annotations;
+}
+
+function normalizeTimestamp(stamp: Time | bigint): Time {
+  return typeof stamp === "bigint" ? fromNanoSec(stamp) : stamp;
 }
 
 function normalizeRosImageMarkerArray(message: ImageMarkerArray): Annotation[] | undefined {
