@@ -242,6 +242,7 @@ export class McapStreamingIterableSource implements IIterableSource {
     }
 
     const topicsSet = new Set(topics);
+    const messagesWithChannelId: { msgEvent: MessageEvent<unknown>; channelId: number }[] = [];
 
     for (const [channelId, msgEvents] of this.msgEventsByChannel) {
       for (const msgEvent of msgEvents) {
@@ -249,13 +250,23 @@ export class McapStreamingIterableSource implements IIterableSource {
           isTimeInRangeInclusive(msgEvent.receiveTime, start, end) &&
           topicsSet.has(msgEvent.topic)
         ) {
-          yield {
-            type: "message-event",
-            connectionId: channelId,
+          messagesWithChannelId.push({
             msgEvent,
-          };
+            channelId,
+          });
         }
       }
+    }
+
+    // Messages need to be yielded in receiveTime order
+    messagesWithChannelId.sort((a, b) => compare(a.msgEvent.receiveTime, b.msgEvent.receiveTime));
+
+    for (const { msgEvent, channelId } of messagesWithChannelId) {
+      yield {
+        type: "message-event",
+        connectionId: channelId,
+        msgEvent,
+      };
     }
   }
 
