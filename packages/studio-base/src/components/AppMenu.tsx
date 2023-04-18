@@ -46,6 +46,9 @@ type NestedMenuItem =
   | { type: "divider" };
 
 const useStyles = makeStyles<void, "icon">()((theme, _params, classes) => ({
+  nestedMenuPaper: {
+    marginTop: theme.spacing(-1),
+  },
   menuItem: {
     justifyContent: "space-between",
     cursor: "pointer",
@@ -193,6 +196,7 @@ export default function AppMenu(props: AppMenuProps): JSX.Element {
           subMenu={subMenu}
           subMenuOpen={subMenuOpen}
           items={fileItems}
+          id="app-menu-file"
         >
           File
         </NestedMenuItem>
@@ -201,6 +205,7 @@ export default function AppMenu(props: AppMenuProps): JSX.Element {
           subMenu={subMenu}
           subMenuOpen={subMenuOpen}
           items={editItems}
+          id="app-menu-edit"
         >
           Edit
         </NestedMenuItem>
@@ -209,6 +214,7 @@ export default function AppMenu(props: AppMenuProps): JSX.Element {
           subMenu={subMenu}
           subMenuOpen={subMenuOpen}
           items={viewItems}
+          id="app-menu-view"
         >
           View
         </NestedMenuItem>
@@ -217,6 +223,7 @@ export default function AppMenu(props: AppMenuProps): JSX.Element {
           subMenu={subMenu}
           subMenuOpen={subMenuOpen}
           items={playbackItems}
+          id="app-menu-playback"
         >
           Playback
         </NestedMenuItem>
@@ -225,6 +232,7 @@ export default function AppMenu(props: AppMenuProps): JSX.Element {
           subMenu={subMenu}
           subMenuOpen={subMenuOpen}
           items={panelItems}
+          id="app-menu-panel"
         >
           Panel
         </NestedMenuItem>
@@ -233,6 +241,7 @@ export default function AppMenu(props: AppMenuProps): JSX.Element {
           subMenu={subMenu}
           subMenuOpen={subMenuOpen}
           items={helpItems}
+          id="app-menu-help"
         >
           Help
         </NestedMenuItem>
@@ -247,10 +256,11 @@ export function NestedMenuItem(
     subMenu?: HTMLElement;
     setSubMenu: Dispatch<SetStateAction<HTMLElement | undefined>>;
     subMenuOpen: boolean;
+    id?: string;
   }>,
 ): JSX.Element {
   const { classes, cx } = useStyles();
-  const { children, items, subMenu, subMenuOpen, setSubMenu } = props;
+  const { children, items, subMenu, subMenuOpen, setSubMenu, id } = props;
   const [anchorEl, setAnchorEl] = useState<undefined | HTMLElement>(undefined);
   const open = Boolean(anchorEl);
 
@@ -276,11 +286,13 @@ export function NestedMenuItem(
   return (
     <>
       <MenuItem
+        id={id}
         selected={open}
         className={classes.menuItem}
         onClick={handleClick}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
+        data-testid={id}
       >
         {children}
         <ChevronRight12Regular className={cx(classes.icon, classes.endIcon)} />
@@ -299,14 +311,9 @@ export function NestedMenuItem(
         autoFocus={false}
         disableAutoFocus
         disableEnforceFocus
-        style={{
-          pointerEvents: "none",
-        }}
         hideBackdrop
         PaperProps={{
-          style: {
-            pointerEvents: "auto",
-          },
+          className: classes.nestedMenuPaper,
         }}
       >
         {items.map((item, idx) =>
