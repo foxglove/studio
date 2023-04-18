@@ -243,7 +243,7 @@ export class McapUnindexedIterableSource implements IIterableSource {
     }
 
     const topicsSet = new Set(topics);
-    const messagesWithChannelId: { msgEvent: MessageEvent<unknown>; channelId: number }[] = [];
+    const resultMessages = [];
 
     for (const [channelId, msgEvents] of this.msgEventsByChannel) {
       for (const msgEvent of msgEvents) {
@@ -251,23 +251,20 @@ export class McapUnindexedIterableSource implements IIterableSource {
           isTimeInRangeInclusive(msgEvent.receiveTime, start, end) &&
           topicsSet.has(msgEvent.topic)
         ) {
-          messagesWithChannelId.push({
+          resultMessages.push({
+            type: "message-event" as const,
+            connectionId: channelId,
             msgEvent,
-            channelId,
           });
         }
       }
     }
 
     // Messages need to be yielded in receiveTime order
-    messagesWithChannelId.sort((a, b) => compare(a.msgEvent.receiveTime, b.msgEvent.receiveTime));
+    resultMessages.sort((a, b) => compare(a.msgEvent.receiveTime, b.msgEvent.receiveTime));
 
-    for (const { msgEvent, channelId } of messagesWithChannelId) {
-      yield {
-        type: "message-event",
-        connectionId: channelId,
-        msgEvent,
-      };
+    for (const resultMsg of resultMessages) {
+      yield resultMsg;
     }
   }
 
