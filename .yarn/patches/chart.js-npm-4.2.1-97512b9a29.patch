@@ -1,0 +1,15 @@
+diff --git a/dist/chunks/helpers.segment.js b/dist/chunks/helpers.segment.js
+index 0ed995200101efa12327093707f1b53b7562ce33..5a9494d1fb196d2dd7d8ba766be262b871b99b1e 100644
+--- a/dist/chunks/helpers.segment.js
++++ b/dist/chunks/helpers.segment.js
+@@ -880,8 +880,8 @@ const formatters = {
+         const numDecimal = Math.max(Math.min(-1 * Math.floor(logDelta), 20), 0);
+         const options = {
+             notation,
+-            minimumFractionDigits: numDecimal,
+-            maximumFractionDigits: numDecimal
++            minimumFractionDigits: isNaN(numDecimal) ? 1 : numDecimal,
++            maximumFractionDigits: isNaN(numDecimal) ? 1 : numDecimal
+         };
+         Object.assign(options, this.options.ticks.format);
+         return formatNumber(tickValue, locale, options);
