@@ -10,6 +10,7 @@ import { AppMenu } from "@foxglove/studio-base/components/AppMenu";
 import PlayerSelectionContext, {
   PlayerSelection,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
+import WorkspaceContextProvider from "@foxglove/studio-base/providers/WorkspaceContextProvider";
 
 export default {
   title: "components/AppMenu",
@@ -33,17 +34,19 @@ const playerSelection: PlayerSelection = {
 };
 
 export const Default = (): JSX.Element => (
-  <PlayerSelectionContext.Provider value={playerSelection}>
-    <AppMenu
-      open
-      anchorPosition={{ top: 0, left: 0 }}
-      anchorReference="anchorPosition"
-      disablePortal
-      handleClose={() => {
-        // no-op
-      }}
-    />
-  </PlayerSelectionContext.Provider>
+  <WorkspaceContextProvider>
+    <PlayerSelectionContext.Provider value={playerSelection}>
+      <AppMenu
+        open
+        anchorPosition={{ top: 0, left: 0 }}
+        anchorReference="anchorPosition"
+        disablePortal
+        handleClose={() => {
+          // no-op
+        }}
+      />
+    </PlayerSelectionContext.Provider>
+  </WorkspaceContextProvider>
 );
 
 export const Dark = (): JSX.Element => <Default />;
@@ -61,13 +64,11 @@ const NestedMenuSelected = (id: string, colorScheme: "dark" | "light"): Story =>
 });
 
 export const DarkFileSelected = NestedMenuSelected("app-menu-file", "dark");
-export const DarkEditSelected = NestedMenuSelected("app-menu-edit", "dark");
 export const DarkViewSelected = NestedMenuSelected("app-menu-view", "dark");
 export const DarkPanelSelected = NestedMenuSelected("app-menu-panel", "dark");
 export const DarkHelpSelected = NestedMenuSelected("app-menu-help", "dark");
 
 export const LightFileSelected = NestedMenuSelected("app-menu-file", "light");
-export const LightEditSelected = NestedMenuSelected("app-menu-edit", "light");
 export const LightViewSelected = NestedMenuSelected("app-menu-view", "light");
 export const LightPanelSelected = NestedMenuSelected("app-menu-panel", "light");
 export const LightHelpSelected = NestedMenuSelected("app-menu-help", "light");

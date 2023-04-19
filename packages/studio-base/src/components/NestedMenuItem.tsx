@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { ChevronRight12Regular } from "@fluentui/react-icons";
-import { Divider, Menu, MenuItem } from "@mui/material";
+import { Divider, Menu, MenuItem, MenuItemProps } from "@mui/material";
 import {
   Dispatch,
   MouseEvent,
@@ -21,7 +21,7 @@ export type NestedMenuItem =
       key: string;
       disabled?: boolean;
       shortcut?: string;
-      onClick?: () => void;
+      onClick?: MenuItemProps["onClick"];
     }
   | { type: "divider" };
 

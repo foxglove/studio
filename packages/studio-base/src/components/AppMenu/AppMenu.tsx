@@ -12,12 +12,18 @@ import {
 } from "@mui/material";
 import { useCallback, useMemo, useState } from "react";
 import { makeStyles } from "tss-react/mui";
+import { shallow } from "zustand/shallow";
 
 import { NestedMenuItem } from "@foxglove/studio-base/components/NestedMenuItem";
 import TextMiddleTruncate from "@foxglove/studio-base/components/TextMiddleTruncate";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 import { useCurrentUserType } from "@foxglove/studio-base/context/CurrentUserContext";
 import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
+import {
+  WorkspaceContextStore,
+  useWorkspaceActions,
+  useWorkspaceStore,
+} from "@foxglove/studio-base/context/WorkspaceContext";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 
 type AppMenuProps = {
@@ -56,6 +62,8 @@ const useStyles = makeStyles<void, "icon">()((theme, _params, classes) => ({
   },
 }));
 
+const selectWorkspace = (store: WorkspaceContextStore) => store;
+
 export function AppMenu(props: AppMenuProps): JSX.Element {
   const { open, handleClose, anchorEl, anchorReference, anchorPosition, disablePortal } = props;
   const { classes } = useStyles();
@@ -88,19 +96,6 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
     return items;
   }, [classes.truncate, recentSources, selectRecent]);
 
-  const editItems = useMemo(
-    () =>
-      [
-        { type: "item", label: "Copy", key: "copy", shortcut: "⌘C" },
-        { type: "item", label: "Copy timestamp", key: "copy-timestamp", shortcut: "⌘⇧C" },
-        { type: "item", label: "Paste", key: "paste", shortcut: "⌘V" },
-        { type: "item", label: "Select all", key: "select-all", shortcut: "⌘A" },
-        { type: "divider" },
-        { type: "item", label: "Find", key: "find", shortcut: "⌘F" },
-      ] as NestedMenuItem[],
-    [],
-  );
-
   const panelItems = useMemo(
     () =>
       [
@@ -117,34 +112,65 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
     [],
   );
 
+  // VIEW
+
+  const { leftSidebarOpen, rightSidebarOpen } = useWorkspaceStore(selectWorkspace, shallow);
+  const { setRightSidebarOpen, setLeftSidebarOpen } = useWorkspaceActions();
+
   const viewItems = useMemo(
     () =>
       [
-        { type: "item", label: "Left sidebar", key: "left-sidebar", shortcut: "[" },
-        { type: "item", label: "Right sidebar", key: "left-sidebar", shortcut: "]" },
+        {
+          type: "item",
+          label: `${leftSidebarOpen ? "Hide" : "Show"} left sidebar`,
+          key: "left-sidebar",
+          shortcut: "[",
+          onClick: (event) => {
+            handleClose?.(event, "backdropClick");
+            setLeftSidebarOpen(!leftSidebarOpen);
+          },
+        },
+        {
+          type: "item",
+          label: `${rightSidebarOpen ? "Hide" : "Show"} right sidebar`,
+          key: "right-sidebar",
+          shortcut: "]",
+          onClick: (event) => {
+            handleClose?.(event, "backdropClick");
+            setRightSidebarOpen(!rightSidebarOpen);
+          },
+        },
         { type: "divider" },
         { type: "item", label: "Add panel", key: "add-panel" },
       ] as NestedMenuItem[],
-    [],
+    [handleClose, leftSidebarOpen, rightSidebarOpen, setLeftSidebarOpen, setRightSidebarOpen],
   );
 
   // HELP
 
-  const onDocsClick = useCallback(() => {
-    void analytics.logEvent(AppEvent.APP_MENU_CLICK, {
-      user: currentUserType,
-      cta: "docs",
-    });
-    window.open("https://foxglove.dev/docs", "_blank");
-  }, [analytics, currentUserType]);
+  const onDocsClick = useCallback(
+    (event) => {
+      void analytics.logEvent(AppEvent.APP_MENU_CLICK, {
+        user: currentUserType,
+        cta: "docs",
+      });
+      handleClose?.(event, "backdropClick");
+      window.open("https://foxglove.dev/docs", "_blank");
+    },
+    [analytics, currentUserType, handleClose],
+  );
 
-  const onSlackClick = useCallback(() => {
-    void analytics.logEvent(AppEvent.APP_MENU_CLICK, {
-      user: currentUserType,
-      cta: "join-slack",
-    });
-    window.open("https://foxglove.dev/slack", "_blank");
-  }, [analytics, currentUserType]);
+  const onSlackClick = useCallback(
+    (event) => {
+      void analytics.logEvent(AppEvent.APP_MENU_CLICK, {
+        user: currentUserType,
+        cta: "join-slack",
+      });
+      handleClose?.(event, "backdropClick");
+      window.open("https://foxglove.dev/slack", "_blank");
+    },
+    [analytics, currentUserType, handleClose],
+  );
 
   const helpItems = useMemo(
     () =>
@@ -178,15 +204,6 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
           id="app-menu-file"
         >
           File
-        </NestedMenuItem>
-        <NestedMenuItem
-          setSubMenu={setSubMenu}
-          subMenu={subMenu}
-          subMenuOpen={subMenuOpen}
-          items={editItems}
-          id="app-menu-edit"
-        >
-          Edit
         </NestedMenuItem>
         <NestedMenuItem
           setSubMenu={setSubMenu}
