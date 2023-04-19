@@ -22,7 +22,7 @@ export type NestedMenuItem =
       disabled?: boolean;
       shortcut?: string;
       onClick?: MenuItemProps["onClick"];
-      externalLink?: boolean;
+      external?: boolean;
     }
   | { type: "divider" };
 
@@ -132,7 +132,7 @@ export function NestedMenuItem(
               {item.label}
               {item.shortcut ? (
                 <kbd>{item.shortcut}</kbd>
-              ) : item.externalLink ?? false ? (
+              ) : item.external ?? false ? (
                 <Open16Regular className={classes.endIcon} />
               ) : undefined}
             </MenuItem>

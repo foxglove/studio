@@ -173,20 +173,8 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
           label: "App version",
         },
         { type: "divider" },
-        {
-          type: "item",
-          label: "Documentation",
-          key: "docs",
-          onClick: onDocsClick,
-          externalLink: true,
-        },
-        {
-          type: "item",
-          label: "Join Slack",
-          key: "slack",
-          onClick: onSlackClick,
-          externalLink: true,
-        },
+        { type: "item", label: "Documentation", key: "docs", onClick: onDocsClick, external: true },
+        { type: "item", label: "Join Slack", key: "slack", onClick: onSlackClick, external: true },
       ] as NestedMenuItem[],
     [onDocsClick, onSlackClick],
   );
