@@ -13,6 +13,12 @@ import {
 import { useCallback, useMemo, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 
+import { Time, compare } from "@foxglove/rostime";
+import {
+  MessagePipelineContext,
+  useMessagePipeline,
+  useMessagePipelineGetter,
+} from "@foxglove/studio-base/components/MessagePipeline";
 import { NestedMenuItem } from "@foxglove/studio-base/components/NestedMenuItem";
 import TextMiddleTruncate from "@foxglove/studio-base/components/TextMiddleTruncate";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
@@ -56,6 +62,12 @@ const useStyles = makeStyles<void, "icon">()((theme, _params, classes) => ({
   },
 }));
 
+const selectIsPlaying = (ctx: MessagePipelineContext) =>
+  ctx.playerState.activeData?.isPlaying === true;
+const selectPause = (ctx: MessagePipelineContext) => ctx.pausePlayback;
+const selectPlay = (ctx: MessagePipelineContext) => ctx.startPlayback;
+const selectSeek = (ctx: MessagePipelineContext) => ctx.seekPlayback;
+
 export function AppMenu(props: AppMenuProps): JSX.Element {
   const { open, handleClose, anchorEl, anchorReference, anchorPosition, disablePortal } = props;
   const { classes } = useStyles();
@@ -67,22 +79,6 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
   const analytics = useAnalytics();
 
   const { recentSources, selectRecent } = usePlayerSelection();
-
-  const onDocsClick = useCallback(() => {
-    void analytics.logEvent(AppEvent.APP_MENU_CLICK, {
-      user: currentUserType,
-      cta: "docs",
-    });
-    window.open("https://foxglove.dev/docs", "_blank");
-  }, [analytics, currentUserType]);
-
-  const onSlackClick = useCallback(() => {
-    void analytics.logEvent(AppEvent.APP_MENU_CLICK, {
-      user: currentUserType,
-      cta: "join-slack",
-    });
-    window.open("https://foxglove.dev/slack", "_blank");
-  }, [analytics, currentUserType]);
 
   const fileItems = useMemo(() => {
     const items: NestedMenuItem[] = [
@@ -144,24 +140,23 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
     [],
   );
 
-  const playbackItems = useMemo(
-    () =>
-      [
-        { type: "item", label: "Play/Pause", key: "play-pause", shortcut: "Space" },
-        { type: "item", label: "Seek backwards", key: "seek-back", shortcut: "←" },
-        { type: "item", label: "Seek forward", key: "seek-forward", shortcut: "→" },
-        { type: "item", label: "Next frame", key: "next-frame" },
-        { type: "item", label: "Previous frame", key: "previous-frame" },
-        { type: "divider" },
-        { type: "item", label: "Jump to start", key: "jump-to-start" },
-        { type: "item", label: "Jump to end", key: "jump-to-end" },
-        { type: "item", label: "Jump to time", key: "jump-to-time" },
-        { type: "divider" },
-        { type: "item", label: "Playback speed", key: "playback-speed" },
-        { type: "item", label: "Loop", key: "loop", shortcut: "⌘L" },
-      ] as NestedMenuItem[],
-    [],
-  );
+  // HELP
+
+  const onDocsClick = useCallback(() => {
+    void analytics.logEvent(AppEvent.APP_MENU_CLICK, {
+      user: currentUserType,
+      cta: "docs",
+    });
+    window.open("https://foxglove.dev/docs", "_blank");
+  }, [analytics, currentUserType]);
+
+  const onSlackClick = useCallback(() => {
+    void analytics.logEvent(AppEvent.APP_MENU_CLICK, {
+      user: currentUserType,
+      cta: "join-slack",
+    });
+    window.open("https://foxglove.dev/slack", "_blank");
+  }, [analytics, currentUserType]);
 
   const helpItems = useMemo(
     () =>
@@ -213,15 +208,6 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
           id="app-menu-view"
         >
           View
-        </NestedMenuItem>
-        <NestedMenuItem
-          setSubMenu={setSubMenu}
-          subMenu={subMenu}
-          subMenuOpen={subMenuOpen}
-          items={playbackItems}
-          id="app-menu-playback"
-        >
-          Playback
         </NestedMenuItem>
         <NestedMenuItem
           setSubMenu={setSubMenu}
