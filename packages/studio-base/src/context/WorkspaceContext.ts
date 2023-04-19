@@ -6,6 +6,7 @@ import { createContext, Dispatch, SetStateAction, useMemo, useState } from "reac
 import { DeepReadonly } from "ts-essentials";
 import { StoreApi, useStore } from "zustand";
 
+import { IDataSourceFactory } from "@foxglove/studio-base";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import { AppSettingsTab } from "@foxglove/studio-base/components/AppSettingsDialog/AppSettingsDialog";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
@@ -35,8 +36,11 @@ const RightSidebarItemKeys = ["events", "variables", "studio-logs-settings"] as 
 export type RightSidebarItemKey = (typeof RightSidebarItemKeys)[number];
 
 export type WorkspaceContextStore = DeepReadonly<{
-  dataSourceDialogOpen: boolean;
-  dataSourceDialogItem: undefined | DataSourceDialogItemKeys;
+  dataSourceDialog: {
+    activeDataSource: undefined | IDataSourceFactory;
+    item: undefined | DataSourceDialogItemKeys;
+    open: boolean;
+  };
   leftSidebarOpen: boolean;
   rightSidebarOpen: boolean;
   leftSidebarItem: undefined | LeftSidebarItemKey;
@@ -88,7 +92,7 @@ export type WorkspaceActions = {
   selectSidebarItem: (selectedSidebarItem: undefined | SidebarItemKey) => void;
   selectLeftSidebarItem: (item: undefined | LeftSidebarItemKey) => void;
   selectRightSidebarItem: (item: undefined | RightSidebarItemKey) => void;
-  setDataSourceDialogOpen: Dispatch<SetStateAction<boolean>>;
+  setDataSourceDialog: Dispatch<SetStateAction<WorkspaceContextStore["dataSourceDialog"]>>;
   setLeftSidebarOpen: Dispatch<SetStateAction<boolean>>;
   setLeftSidebarSize: (size: undefined | number) => void;
   setRightSidebarOpen: Dispatch<SetStateAction<boolean>>;
@@ -139,25 +143,30 @@ export function useWorkspaceActions(): WorkspaceActions {
       selectDataSourceDialogItem: (
         selectedDataSourceDialogItem: undefined | DataSourceDialogItemKeys,
       ) => {
-        set({
-          dataSourceDialogItem: selectedDataSourceDialogItem,
-          dataSourceDialogOpen: selectedDataSourceDialogItem != undefined,
-        });
+        set((oldValue) => ({
+          dataSourceDialog: {
+            ...oldValue.dataSourceDialog,
+            item: selectedDataSourceDialogItem,
+            open: selectedDataSourceDialogItem != undefined,
+          },
+        }));
       },
 
-      setDataSourceDialogOpen: (setter: SetStateAction<boolean>) => {
+      setDataSourceDialog: (setter: SetStateAction<WorkspaceContextStore["dataSourceDialog"]>) => {
         set((oldValue) => {
-          const dataSourceDialogOpen = setterValue(setter, oldValue.dataSourceDialogOpen);
-          if (dataSourceDialogOpen) {
+          const dataSourceDialog = setterValue(setter, oldValue.dataSourceDialog);
+          if (dataSourceDialog.open) {
             const oldItem = DataSourceDialogItemKeys.find(
-              (item) => item === oldValue.dataSourceDialogItem,
+              (item) => item === oldValue.dataSourceDialog.item,
             );
             return {
-              dataSourceDialogOpen,
-              dataSourceDialogItem: oldItem ?? "start",
+              dataSourceDialog: {
+                ...dataSourceDialog,
+                item: oldItem ?? "start",
+              },
             };
           } else {
-            return { dataSourceDialogOpen: false };
+            return { dataSourceDialog };
           }
         });
       },

@@ -6,6 +6,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import { Dialog, IconButton } from "@mui/material";
 import { useCallback, useLayoutEffect, useMemo, useState } from "react";
 import { useMountedState } from "react-use";
+import { DeepReadonly } from "ts-essentials";
 import { makeStyles } from "tss-react/mui";
 
 import Snow from "@foxglove/studio-base/components/OpenDialog/Snow";
@@ -23,7 +24,7 @@ import { OpenDialogViews } from "./types";
 import { useOpenFile } from "./useOpenFile";
 
 export type OpenDialogProps = {
-  activeDataSource?: IDataSourceFactory;
+  activeDataSource?: DeepReadonly<IDataSourceFactory>;
   activeView?: OpenDialogViews;
   backdropAnimation?: boolean;
   onDismiss?: () => void;

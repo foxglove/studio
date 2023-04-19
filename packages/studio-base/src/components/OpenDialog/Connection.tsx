@@ -4,6 +4,7 @@
 
 import { Alert, Link, Tab, Tabs, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { useState, useMemo, useCallback, useLayoutEffect, FormEvent } from "react";
+import { DeepReadonly } from "ts-essentials";
 import { makeStyles } from "tss-react/mui";
 
 import { BuiltinIcon } from "@foxglove/studio-base/components/BuiltinIcon";
@@ -18,12 +19,12 @@ import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 import { FormField } from "./FormField";
 import View from "./View";
 
-type ConnectionProps = {
+type ConnectionProps = DeepReadonly<{
   onBack?: () => void;
   onCancel?: () => void;
   availableSources: IDataSourceFactory[];
   activeSource?: IDataSourceFactory;
-};
+}>;
 
 const useStyles = makeStyles()((theme) => ({
   grid: {
