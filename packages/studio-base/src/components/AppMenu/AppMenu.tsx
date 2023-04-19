@@ -89,22 +89,6 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
     return items;
   }, [classes.truncate, recentSources, selectRecent]);
 
-  const panelItems = useMemo(
-    () =>
-      [
-        { type: "item", label: "Maximize panel", key: "maximize", shortcut: "⌘⌥F" },
-        { type: "divider" },
-        { type: "item", label: "Change panel", key: "change-panel" },
-        { type: "item", label: "Split up", key: "split-up" },
-        { type: "item", label: "Split down", key: "split-down" },
-        { type: "item", label: "Split left", key: "split-left" },
-        { type: "item", label: "Split right", key: "split-right" },
-        { type: "divider" },
-        { type: "item", label: "Remove panel", key: "remove-panel" },
-      ] as NestedMenuItem[],
-    [],
-  );
-
   // VIEW
 
   const { leftSidebarOpen, rightSidebarOpen } = useWorkspaceStore(selectWorkspace, shallow);
@@ -211,15 +195,6 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
           id="app-menu-view"
         >
           View
-        </NestedMenuItem>
-        <NestedMenuItem
-          setSubMenu={setSubMenu}
-          subMenu={subMenu}
-          subMenuOpen={subMenuOpen}
-          items={panelItems}
-          id="app-menu-panel"
-        >
-          Panel
         </NestedMenuItem>
         <NestedMenuItem
           setSubMenu={setSubMenu}
