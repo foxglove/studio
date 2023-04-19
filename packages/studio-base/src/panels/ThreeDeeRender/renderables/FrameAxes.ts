@@ -86,6 +86,7 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
   private labelForegroundColor = 1;
   private labelBackgroundColor = new THREE.Color();
   private lineGeometry: LineGeometry;
+  private defaultAxisVisibility: boolean;
 
   public constructor(renderer: IRenderer) {
     super("foxglove.FrameAxes", renderer);
@@ -108,6 +109,9 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
     this.linePickingMaterial = makeLinePickingMaterial(PICKING_LINE_SIZE, options);
 
     renderer.on("transformTreeUpdated", this.handleTransformTreeUpdated);
+
+    // want to hide frame axes when in image mode so that that they don't show through the camera
+    this.defaultAxisVisibility = this.renderer.interfaceMode === "3d";
   }
 
   public override dispose(): void {
@@ -185,14 +189,14 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
     let order = 1;
     for (const { label, value: frameId } of this.renderer.coordinateFrameList) {
       const frameKey = `frame:${frameId}`;
-      const tfConfig = (configTransforms[frameKey] ?? {}) as Partial<LayerSettingsTransform>;
+      const tfConfig = this.getRenderableSettingsWithDefaults(configTransforms[frameKey] ?? {});
       const frame = this.renderer.transformTree.frame(frameId);
       const fields = buildSettingsFields(frame, this.renderer.currentTime, config);
       tempTfPath[1] = frameKey;
       children[frameKey] = {
         label,
         fields,
-        visible: tfConfig.visible ?? true,
+        visible: tfConfig.visible,
         order: order++,
         defaultExpansionState: "collapsed",
         error: this.renderer.settings.errors.errors.errorAtPath(tempTfPath),
@@ -239,7 +243,11 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
 
     // Update the lines and labels between coordinate frames
     for (const renderable of this.renderables.values()) {
-      const label = renderable.userData.label;
+      // lines and labels are children of the renderable and won't render if the renderer isn't visible
+      // so we can skip these updates
+      if (!renderable.visible) {
+        continue;
+      }
       const line = renderable.userData.parentLine;
       const childFrame = this.renderer.transformTree.frame(renderable.userData.frameId);
       const parentFrame = childFrame?.parent();
@@ -262,6 +270,7 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
         }
       }
 
+      const label = renderable.userData.label;
       // Add the label offset in "world" coordinates (in the render frame)
       worldPosition.z += labelOffsetZ;
       // Transform worldPosition back to the local coordinate frame of the
@@ -395,12 +404,18 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
         const settings = this.renderer.config.transforms[frameKey] as
           | Partial<LayerSettingsTransform>
           | undefined;
-        renderable.userData.settings = { ...DEFAULT_SETTINGS, ...settings };
+        renderable.userData.settings = this.getRenderableSettingsWithDefaults(settings ?? {});
 
         this._updateFrameAxis(renderable);
       }
     }
   };
+
+  private getRenderableSettingsWithDefaults(
+    partialDefinedSettings: Partial<LayerSettingsTransform>,
+  ): LayerSettingsTransform {
+    return { ...DEFAULT_SETTINGS, visible: this.defaultAxisVisibility, ...partialDefinedSettings };
+  }
 
   private handleTransformTreeUpdated = (): void => {
     for (const frameId of this.renderer.transformTree.frames().keys()) {
@@ -426,7 +441,6 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
     label.setBillboard(true);
     label.setText(text);
     label.setLineHeight(config.scene.transforms?.labelSize ?? DEFAULT_TF_LABEL_SIZE);
-    label.visible = config.scene.transforms?.showLabel ?? true;
     label.setColor(this.labelForegroundColor, this.labelForegroundColor, this.labelForegroundColor);
     label.setBackgroundColor(
       this.labelBackgroundColor.r,
@@ -437,14 +451,13 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
     // Set the initial settings from default values merged with any user settings
     const frameKey = `frame:${frameId}`;
     const userSettings = config.transforms[frameKey] as Partial<LayerSettingsTransform> | undefined;
-    const settings = { ...DEFAULT_SETTINGS, ...userSettings };
+    const settings = this.getRenderableSettingsWithDefaults(userSettings ?? {});
 
     // Parent line
     const parentLine = new Line2(this.lineGeometry, this.lineMaterial);
     parentLine.castShadow = true;
     parentLine.receiveShadow = false;
     parentLine.userData.pickingMaterial = this.linePickingMaterial;
-    parentLine.visible = false;
 
     // Three arrow axis
     const axis = new Axis(frameId, this.renderer);
