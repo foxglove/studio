@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { ChevronRight12Regular } from "@fluentui/react-icons";
+import { ChevronRight12Regular, Open16Regular } from "@fluentui/react-icons";
 import { Divider, Menu, MenuItem, MenuItemProps } from "@mui/material";
 import {
   Dispatch,
@@ -22,10 +22,11 @@ export type NestedMenuItem =
       disabled?: boolean;
       shortcut?: string;
       onClick?: MenuItemProps["onClick"];
+      externalLink?: boolean;
     }
   | { type: "divider" };
 
-const useStyles = makeStyles<void, "icon">()((theme, _params, classes) => ({
+const useStyles = makeStyles<void, "endIcon">()((theme, _params, classes) => ({
   nestedMenuPaper: {
     marginTop: theme.spacing(-1),
   },
@@ -37,7 +38,7 @@ const useStyles = makeStyles<void, "icon">()((theme, _params, classes) => ({
     "&.Mui-selected, &.Mui-selected:hover": {
       backgroundColor: theme.palette.action.hover,
     },
-    [`:not(:hover, :focus) .${classes.icon}`]: {
+    [`:not(:hover, :focus) .${classes.endIcon}`]: {
       opacity: 0.6,
     },
     kbd: {
@@ -49,9 +50,8 @@ const useStyles = makeStyles<void, "icon">()((theme, _params, classes) => ({
     minWidth: 180,
     maxWidth: 220,
   },
-  icon: {},
   endIcon: {
-    marginRight: theme.spacing(-0.5),
+    marginRight: theme.spacing(-0.75),
   },
 }));
 
@@ -64,7 +64,7 @@ export function NestedMenuItem(
     id?: string;
   }>,
 ): JSX.Element {
-  const { classes, cx } = useStyles();
+  const { classes } = useStyles();
   const { children, items, subMenu, subMenuOpen, setSubMenu, id } = props;
   const [anchorEl, setAnchorEl] = useState<undefined | HTMLElement>(undefined);
   const open = Boolean(anchorEl);
@@ -100,7 +100,7 @@ export function NestedMenuItem(
         data-testid={id}
       >
         {children}
-        <ChevronRight12Regular className={cx(classes.icon, classes.endIcon)} />
+        <ChevronRight12Regular className={classes.endIcon} />
       </MenuItem>
       <Menu
         open={open}
@@ -130,7 +130,11 @@ export function NestedMenuItem(
               disabled={item.disabled}
             >
               {item.label}
-              {item.shortcut && <kbd>{item.shortcut}</kbd>}
+              {item.shortcut ? (
+                <kbd>{item.shortcut}</kbd>
+              ) : item.externalLink ?? false ? (
+                <Open16Regular className={classes.endIcon} />
+              ) : undefined}
             </MenuItem>
           ) : (
             <Divider key={`${idx}-divider`} variant="middle" />

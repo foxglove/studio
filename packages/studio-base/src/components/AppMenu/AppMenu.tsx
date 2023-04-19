@@ -168,8 +168,25 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
   const helpItems = useMemo(
     () =>
       [
-        { type: "item", label: "Documentation", key: "docs", onClick: onDocsClick },
-        { type: "item", label: "Join Slack", key: "slack", onClick: onSlackClick },
+        {
+          type: "item",
+          label: "App version",
+        },
+        { type: "divider" },
+        {
+          type: "item",
+          label: "Documentation",
+          key: "docs",
+          onClick: onDocsClick,
+          externalLink: true,
+        },
+        {
+          type: "item",
+          label: "Join Slack",
+          key: "slack",
+          onClick: onSlackClick,
+          externalLink: true,
+        },
       ] as NestedMenuItem[],
     [onDocsClick, onSlackClick],
   );
