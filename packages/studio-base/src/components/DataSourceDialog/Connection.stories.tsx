@@ -66,13 +66,14 @@ export const Light = (): JSX.Element => (
     <DataSourceDialog {...defaultProps} />
   </PlayerSelectionContext.Provider>
 );
+
 Light.storyName = "Default (light)";
 Light.parameters = { colorScheme: "light" };
 
-export const LightChinese = Object.assign(Light.bind(undefined), {
-  storyName: "Default Chinese",
-  parameters: { forceLanguage: "zh" },
-});
+export const LightChinese = (): JSX.Element => <Light />;
+
+LightChinese.storyName = "Default Chinese";
+LightChinese.parameters = { forceLanguage: "zh", colorScheme: "light" };
 
 export const Dark = (): JSX.Element => (
   <PlayerSelectionContext.Provider value={playerSelection}>
