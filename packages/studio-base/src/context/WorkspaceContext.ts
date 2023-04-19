@@ -9,6 +9,7 @@ import { StoreApi, useStore } from "zustand";
 import { IDataSourceFactory } from "@foxglove/studio-base";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import { AppSettingsTab } from "@foxglove/studio-base/components/AppSettingsDialog/AppSettingsDialog";
+import { DataSourceDialogItemKeys } from "@foxglove/studio-base/components/DataSourceDialog";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import useGuaranteedContext from "@foxglove/studio-base/hooks/useGuaranteedContext";
@@ -25,9 +26,6 @@ export type SidebarItemKey =
   | "app-settings"
   | "studio-logs-settings"
   | "variables";
-
-const DataSourceDialogItemKeys = ["start", "file", "demo", "remote", "connection"] as const;
-export type DataSourceDialogItemKeys = (typeof DataSourceDialogItemKeys)[number];
 
 const LeftSidebarItemKeys = ["panel-settings", "topics"] as const;
 export type LeftSidebarItemKey = (typeof LeftSidebarItemKeys)[number];

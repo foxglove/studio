@@ -20,15 +20,17 @@ import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 
 import Connection from "./Connection";
 import Start from "./Start";
-import { DataSourceDialogViews } from "./types";
 import { useOpenFile } from "./useOpenFile";
+
+export const DataSourceDialogItemKeys = ["start", "file", "demo", "remote", "connection"] as const;
+export type DataSourceDialogItemKeys = (typeof DataSourceDialogItemKeys)[number];
 
 type DataSourceDialogProps = {
   activeDataSource?: DeepReadonly<IDataSourceFactory>;
-  activeView?: DataSourceDialogViews;
+  activeView?: DataSourceDialogItemKeys;
   backdropAnimation?: boolean;
   onDismiss?: () => void;
-  setActiveView?: (item: DataSourceDialogViews) => void;
+  setActiveView?: (item: DataSourceDialogItemKeys) => void;
 };
 
 const useStyles = makeStyles()((theme) => ({
@@ -57,7 +59,7 @@ export function DataSourceDialog(props: DataSourceDialogProps): JSX.Element {
   }, [availableSources]);
 
   const onSelectView = useCallback(
-    (view: DataSourceDialogViews) => setActiveView?.(view),
+    (view: DataSourceDialogItemKeys) => setActiveView?.(view),
     [setActiveView],
   );
 

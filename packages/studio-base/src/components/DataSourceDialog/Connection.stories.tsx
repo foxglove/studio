@@ -6,7 +6,7 @@ import PlayerSelectionContext, {
   PlayerSelection,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
 
-import { DataSourceDialog, DataSourceDialogProps } from "./DataSourceDialog";
+import { DataSourceDialog } from "./DataSourceDialog";
 
 export default {
   title: "components/DataSourceDialog/Connection",
@@ -59,11 +59,9 @@ const playerSelection: PlayerSelection = {
   ],
 };
 
-const defaultProps: DataSourceDialogProps = { activeView: "connection", backdropAnimation: false };
-
 export const Light = (): JSX.Element => (
   <PlayerSelectionContext.Provider value={playerSelection}>
-    <DataSourceDialog {...defaultProps} />
+    <DataSourceDialog activeView="connection" backdropAnimation={false} />
   </PlayerSelectionContext.Provider>
 );
 
@@ -77,7 +75,7 @@ LightChinese.parameters = { forceLanguage: "zh", colorScheme: "light" };
 
 export const Dark = (): JSX.Element => (
   <PlayerSelectionContext.Provider value={playerSelection}>
-    <DataSourceDialog {...defaultProps} />
+    <DataSourceDialog activeView="connection" backdropAnimation={false} />
   </PlayerSelectionContext.Provider>
 );
 Dark.storyName = "Default (dark)";
