@@ -86,9 +86,12 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
   private labelForegroundColor = 1;
   private labelBackgroundColor = new THREE.Color();
   private lineGeometry: LineGeometry;
-  private defaultAxisVisibility: boolean;
+  private defaultRenderableSettings: LayerSettingsTransform;
 
-  public constructor(renderer: IRenderer) {
+  public constructor(
+    renderer: IRenderer,
+    defaultRenderableSettings: Partial<LayerSettingsTransform>,
+  ) {
     super("foxglove.FrameAxes", renderer);
 
     const linewidth = this.renderer.config.scene.transforms?.lineWidth ?? DEFAULT_LINE_WIDTH_PX;
@@ -110,8 +113,7 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
 
     renderer.on("transformTreeUpdated", this.handleTransformTreeUpdated);
 
-    // want to hide frame axes when in image mode so that that they don't show through the camera
-    this.defaultAxisVisibility = this.renderer.interfaceMode === "3d";
+    this.defaultRenderableSettings = { ...DEFAULT_SETTINGS, ...defaultRenderableSettings };
   }
 
   public override dispose(): void {
@@ -414,7 +416,7 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
   private getRenderableSettingsWithDefaults(
     partialDefinedSettings: Partial<LayerSettingsTransform>,
   ): LayerSettingsTransform {
-    return { ...DEFAULT_SETTINGS, visible: this.defaultAxisVisibility, ...partialDefinedSettings };
+    return { ...this.defaultRenderableSettings, ...partialDefinedSettings };
   }
 
   private handleTransformTreeUpdated = (): void => {
