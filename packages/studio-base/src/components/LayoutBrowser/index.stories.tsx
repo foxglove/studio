@@ -2,8 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Story, StoryContext } from "@storybook/react";
-import { fireEvent, screen, userEvent } from "@storybook/testing-library";
+import { Story, StoryContext, StoryFn } from "@storybook/react";
+import { fireEvent, screen, userEvent, within } from "@storybook/testing-library";
 import { useMemo } from "react";
 
 import { LayoutData } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
@@ -155,9 +155,9 @@ export function LayoutList(): JSX.Element {
   return <LayoutBrowser />;
 }
 
-export function MultiSelect(): JSX.Element {
+export const MultiSelect: StoryFn = (): JSX.Element => {
   return <LayoutBrowser />;
-}
+};
 MultiSelect.parameters = {
   colorScheme: "dark",
   mockLayouts: Array(8)
@@ -168,23 +168,17 @@ MultiSelect.parameters = {
       baseline: { data: DEFAULT_LAYOUT_FOR_TESTS, updatedAt: new Date(10).toISOString() },
     })),
 };
-MultiSelect.play = async () => {
-  const layouts = await screen.findAllByTestId("layout-list-item");
+MultiSelect.play = async ({ canvasElement }) => {
+  const layouts = await within(canvasElement).findAllByTestId("layout-list-item");
 
   userEvent.click(layouts[0]!);
 
-  userEvent.keyboard("{Meta>}");
-  userEvent.click(layouts[1]!);
-  userEvent.click(layouts[3]!);
-  userEvent.keyboard("{/Meta}");
+  userEvent.click(layouts[1]!, { metaKey: true });
+  userEvent.click(layouts[3]!, { metaKey: true });
 
-  userEvent.keyboard("{Shift>}");
-  userEvent.click(layouts[6]!);
-  userEvent.keyboard("{/Shift}");
+  userEvent.click(layouts[6]!, { shiftKey: true });
 
-  userEvent.keyboard("{Meta>}");
-  userEvent.click(layouts[4]!);
-  userEvent.keyboard("{/Meta}");
+  userEvent.click(layouts[4]!, { metaKey: true });
 };
 
 export function MultiDelete(): JSX.Element {
