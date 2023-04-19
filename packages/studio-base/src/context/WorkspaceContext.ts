@@ -82,6 +82,10 @@ export function useWorkspaceStore<T>(
 }
 
 export type WorkspaceActions = {
+  dataSourceDialogActions: {
+    set: Dispatch<SetStateAction<WorkspaceContextStore["dataSourceDialog"]>>;
+    selectItem: (item: undefined | DataSourceDialogItem) => void;
+  };
   openAccountSettings: () => void;
   openPanelSettings: () => void;
   openLayoutBrowser: () => void;
@@ -89,11 +93,9 @@ export type WorkspaceActions = {
     close: () => void;
     open: (initialTab?: AppSettingsTab) => void;
   };
-  selectDataSourceDialogItem: (item: undefined | DataSourceDialogItem) => void;
   selectSidebarItem: (selectedSidebarItem: undefined | SidebarItemKey) => void;
   selectLeftSidebarItem: (item: undefined | LeftSidebarItemKey) => void;
   selectRightSidebarItem: (item: undefined | RightSidebarItemKey) => void;
-  setDataSourceDialog: Dispatch<SetStateAction<WorkspaceContextStore["dataSourceDialog"]>>;
   setLeftSidebarOpen: Dispatch<SetStateAction<boolean>>;
   setLeftSidebarSize: (size: undefined | number) => void;
   setRightSidebarOpen: Dispatch<SetStateAction<boolean>>;
@@ -125,6 +127,37 @@ export function useWorkspaceActions(): WorkspaceActions {
 
   return useMemo(() => {
     return {
+      dataSourceDialogActions: {
+        selectItem: (selectedDataSourceDialogItem: undefined | DataSourceDialogItem) => {
+          set((oldValue) => ({
+            dataSourceDialog: {
+              ...oldValue.dataSourceDialog,
+              item: selectedDataSourceDialogItem,
+              open: selectedDataSourceDialogItem != undefined,
+            },
+          }));
+        },
+
+        set: (setter: SetStateAction<WorkspaceContextStore["dataSourceDialog"]>) => {
+          set((oldValue) => {
+            const dataSourceDialog = setterValue(setter, oldValue.dataSourceDialog);
+            if (dataSourceDialog.open) {
+              const oldItem = DataSourceDialogItems.find(
+                (item) => item === oldValue.dataSourceDialog.item,
+              );
+              return {
+                dataSourceDialog: {
+                  ...dataSourceDialog,
+                  item: oldItem ?? "start",
+                },
+              };
+            } else {
+              return { dataSourceDialog };
+            }
+          });
+        },
+      },
+
       openAccountSettings: () => supportsAccountSettings && set({ sidebarItem: "account" }),
 
       openPanelSettings: () =>
@@ -139,37 +172,6 @@ export function useWorkspaceActions(): WorkspaceActions {
         open: (initialTab?: AppSettingsTab) => {
           set({ prefsDialogState: { open: true, initialTab } });
         },
-      },
-
-      selectDataSourceDialogItem: (
-        selectedDataSourceDialogItem: undefined | DataSourceDialogItem,
-      ) => {
-        set((oldValue) => ({
-          dataSourceDialog: {
-            ...oldValue.dataSourceDialog,
-            item: selectedDataSourceDialogItem,
-            open: selectedDataSourceDialogItem != undefined,
-          },
-        }));
-      },
-
-      setDataSourceDialog: (setter: SetStateAction<WorkspaceContextStore["dataSourceDialog"]>) => {
-        set((oldValue) => {
-          const dataSourceDialog = setterValue(setter, oldValue.dataSourceDialog);
-          if (dataSourceDialog.open) {
-            const oldItem = DataSourceDialogItems.find(
-              (item) => item === oldValue.dataSourceDialog.item,
-            );
-            return {
-              dataSourceDialog: {
-                ...dataSourceDialog,
-                item: oldItem ?? "start",
-              },
-            };
-          } else {
-            return { dataSourceDialog };
-          }
-        });
       },
 
       selectSidebarItem: (selectedSidebarItem: undefined | SidebarItemKey) => {

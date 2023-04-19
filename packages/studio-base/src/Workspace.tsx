@@ -194,12 +194,11 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
   const rightSidebarSize = useWorkspaceStore(selectWorkspaceRightSidebarSize);
 
   const {
+    dataSourceDialogActions,
     prefsDialogActions,
-    selectDataSourceDialogItem,
     selectLeftSidebarItem,
     selectRightSidebarItem,
     selectSidebarItem,
-    setDataSourceDialog,
     setLeftSidebarOpen,
     setLeftSidebarSize,
     setRightSidebarOpen,
@@ -248,13 +247,13 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
       playerPresence === PlayerPresence.PRESENT ||
       playerPresence === PlayerPresence.INITIALIZING
     ) {
-      setDataSourceDialog({
+      dataSourceDialogActions.set({
         activeDataSource: undefined,
         item: undefined,
         open: false,
       });
     }
-  }, [playerPresence, setDataSourceDialog]);
+  }, [playerPresence, dataSourceDialogActions]);
 
   useEffect(() => {
     // Focus on page load to enable keyboard interaction.
@@ -314,17 +313,17 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
 
   useNativeAppMenuEvent(
     "open-file",
-    useCallback(() => selectDataSourceDialogItem("file"), [selectDataSourceDialogItem]),
+    useCallback(() => dataSourceDialogActions.selectItem("file"), [dataSourceDialogActions]),
   );
 
   useNativeAppMenuEvent(
     "open-remote-file",
-    useCallback(() => selectDataSourceDialogItem("remote"), [selectDataSourceDialogItem]),
+    useCallback(() => dataSourceDialogActions.selectItem("remote"), [dataSourceDialogActions]),
   );
 
   useNativeAppMenuEvent(
     "open-sample-data",
-    useCallback(() => selectDataSourceDialogItem("demo"), [selectDataSourceDialogItem]),
+    useCallback(() => dataSourceDialogActions.selectItem("demo"), [dataSourceDialogActions]),
   );
 
   const nativeAppMenu = useNativeAppMenu();
@@ -340,7 +339,7 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
 
     for (const item of connectionSources) {
       nativeAppMenu.addFileEntry(item.displayName, () => {
-        setDataSourceDialog({ item: "connection", activeDataSource: item, open: true });
+        dataSourceDialogActions.set({ item: "connection", activeDataSource: item, open: true });
       });
     }
 
@@ -349,7 +348,7 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
         nativeAppMenu.removeFileEntry(item.displayName);
       }
     };
-  }, [connectionSources, nativeAppMenu, setDataSourceDialog]);
+  }, [connectionSources, dataSourceDialogActions, nativeAppMenu]);
 
   const { enqueueSnackbar } = useSnackbar();
 
@@ -464,12 +463,12 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
         <DataSourceSidebar
           disableToolbar={enableNewTopNav}
           onSelectDataSourceAction={() =>
-            setDataSourceDialog((oldValue) => ({ ...oldValue, open: true }))
+            dataSourceDialogActions.set((oldValue) => ({ ...oldValue, open: true }))
           }
         />
       );
     };
-  }, [enableNewTopNav, setDataSourceDialog]);
+  }, [enableNewTopNav, dataSourceDialogActions]);
 
   const PanelSettingsSidebar = useMemo(() => {
     return function PanelSettingsSidebarImpl() {
@@ -619,10 +618,14 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
       {dataSourceDialog.open && (
         <DataSourceDialog
           activeView={dataSourceDialog.item}
-          setActiveView={selectDataSourceDialogItem}
+          setActiveView={dataSourceDialogActions.selectItem}
           activeDataSource={dataSourceDialog.activeDataSource}
           onDismiss={() => {
-            setDataSourceDialog({ activeDataSource: undefined, item: undefined, open: false });
+            dataSourceDialogActions.set({
+              activeDataSource: undefined,
+              item: undefined,
+              open: false,
+            });
           }}
         />
       )}

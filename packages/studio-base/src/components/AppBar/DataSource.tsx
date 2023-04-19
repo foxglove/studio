@@ -104,7 +104,7 @@ export function DataSource(): JSX.Element {
   const playerName = useMessagePipeline(selectPlayerName);
   const playerPresence = useMessagePipeline(selectPlayerPresence);
   const playerProblems = useMessagePipeline(selectPlayerProblems) ?? [];
-  const { setDataSourceDialog } = useWorkspaceActions();
+  const { dataSourceDialogActions } = useWorkspaceActions();
 
   const reconnecting = playerPresence === PlayerPresence.RECONNECTING;
   const initializing = playerPresence === PlayerPresence.INITIALIZING;
@@ -119,7 +119,7 @@ export function DataSource(): JSX.Element {
   const [problemModal, setProblemModal] = useState<JSX.Element | undefined>(undefined);
 
   const openDataSourceDialog = () =>
-    setDataSourceDialog((oldValue) => ({ ...oldValue, open: true }));
+    dataSourceDialogActions.set((oldValue) => ({ ...oldValue, open: true }));
 
   if (playerPresence === PlayerPresence.NOT_PRESENT) {
     return (
