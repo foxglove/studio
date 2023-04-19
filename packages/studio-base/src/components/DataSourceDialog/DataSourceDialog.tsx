@@ -25,7 +25,7 @@ import { useOpenFile } from "./useOpenFile";
 export const DataSourceDialogItems = ["start", "file", "demo", "remote", "connection"] as const;
 export type DataSourceDialogItem = (typeof DataSourceDialogItems)[number];
 
-export type DataSourceDialogProps = {
+type DataSourceDialogProps = {
   activeDataSource?: DeepReadonly<IDataSourceFactory>;
   activeView?: DataSourceDialogItem;
   backdropAnimation?: boolean;
