@@ -25,6 +25,9 @@ export type SidebarItemKey =
   | "studio-logs-settings"
   | "variables";
 
+const DataSourceDialogItemKeys = ["start", "file", "demo", "remote", "connection"] as const;
+export type DataSourceDialogItemKeys = (typeof DataSourceDialogItemKeys)[number];
+
 const LeftSidebarItemKeys = ["panel-settings", "topics"] as const;
 export type LeftSidebarItemKey = (typeof LeftSidebarItemKeys)[number];
 
@@ -32,6 +35,8 @@ const RightSidebarItemKeys = ["events", "variables", "studio-logs-settings"] as 
 export type RightSidebarItemKey = (typeof RightSidebarItemKeys)[number];
 
 export type WorkspaceContextStore = DeepReadonly<{
+  dataSourceDialogOpen: boolean;
+  dataSourceDialogItem: undefined | DataSourceDialogItemKeys;
   leftSidebarOpen: boolean;
   rightSidebarOpen: boolean;
   leftSidebarItem: undefined | LeftSidebarItemKey;
@@ -79,9 +84,11 @@ export type WorkspaceActions = {
     close: () => void;
     open: (initialTab?: AppSettingsTab) => void;
   };
+  selectDataSourceDialogItem: (item: undefined | DataSourceDialogItemKeys) => void;
   selectSidebarItem: (selectedSidebarItem: undefined | SidebarItemKey) => void;
   selectLeftSidebarItem: (item: undefined | LeftSidebarItemKey) => void;
   selectRightSidebarItem: (item: undefined | RightSidebarItemKey) => void;
+  setDataSourceDialogOpen: Dispatch<SetStateAction<boolean>>;
   setLeftSidebarOpen: Dispatch<SetStateAction<boolean>>;
   setLeftSidebarSize: (size: undefined | number) => void;
   setRightSidebarOpen: Dispatch<SetStateAction<boolean>>;
@@ -127,6 +134,32 @@ export function useWorkspaceActions(): WorkspaceActions {
         open: (initialTab?: AppSettingsTab) => {
           set({ prefsDialogState: { open: true, initialTab } });
         },
+      },
+
+      selectDataSourceDialogItem: (
+        selectedDataSourceDialogItem: undefined | DataSourceDialogItemKeys,
+      ) => {
+        set({
+          dataSourceDialogItem: selectedDataSourceDialogItem,
+          dataSourceDialogOpen: selectedDataSourceDialogItem != undefined,
+        });
+      },
+
+      setDataSourceDialogOpen: (setter: SetStateAction<boolean>) => {
+        set((oldValue) => {
+          const dataSourceDialogOpen = setterValue(setter, oldValue.dataSourceDialogOpen);
+          if (dataSourceDialogOpen) {
+            const oldItem = DataSourceDialogItemKeys.find(
+              (item) => item === oldValue.dataSourceDialogItem,
+            );
+            return {
+              dataSourceDialogOpen,
+              dataSourceDialogItem: oldItem ?? "start",
+            };
+          } else {
+            return { dataSourceDialogOpen: false };
+          }
+        });
       },
 
       selectSidebarItem: (selectedSidebarItem: undefined | SidebarItemKey) => {
