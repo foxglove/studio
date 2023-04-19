@@ -9,10 +9,7 @@ import { StoreApi, useStore } from "zustand";
 import { IDataSourceFactory } from "@foxglove/studio-base";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import { AppSettingsTab } from "@foxglove/studio-base/components/AppSettingsDialog/AppSettingsDialog";
-import {
-  DataSourceDialogItem,
-  DataSourceDialogItems,
-} from "@foxglove/studio-base/components/DataSourceDialog";
+import { DataSourceDialogItem } from "@foxglove/studio-base/components/DataSourceDialog";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import useGuaranteedContext from "@foxglove/studio-base/hooks/useGuaranteedContext";
@@ -84,8 +81,7 @@ export function useWorkspaceStore<T>(
 export type WorkspaceActions = {
   dataSourceDialogActions: {
     close: () => void;
-    set: Dispatch<SetStateAction<WorkspaceContextStore["dataSourceDialog"]>>;
-    selectItem: (item: undefined | DataSourceDialogItem) => void;
+    open: (item: DataSourceDialogItem, dataSource?: IDataSourceFactory) => void;
   };
   openAccountSettings: () => void;
   openPanelSettings: () => void;
@@ -133,32 +129,16 @@ export function useWorkspaceActions(): WorkspaceActions {
           set({ dataSourceDialog: { activeDataSource: undefined, item: undefined, open: false } });
         },
 
-        selectItem: (selectedDataSourceDialogItem: undefined | DataSourceDialogItem) => {
-          set((oldValue) => ({
+        open: (
+          selectedDataSourceDialogItem: DataSourceDialogItem,
+          dataSource?: IDataSourceFactory,
+        ) => {
+          set({
             dataSourceDialog: {
-              ...oldValue.dataSourceDialog,
+              activeDataSource: dataSource,
               item: selectedDataSourceDialogItem,
-              open: selectedDataSourceDialogItem != undefined,
+              open: true,
             },
-          }));
-        },
-
-        set: (setter: SetStateAction<WorkspaceContextStore["dataSourceDialog"]>) => {
-          set((oldValue) => {
-            const dataSourceDialog = setterValue(setter, oldValue.dataSourceDialog);
-            if (dataSourceDialog.open) {
-              const oldItem = DataSourceDialogItems.find(
-                (item) => item === oldValue.dataSourceDialog.item,
-              );
-              return {
-                dataSourceDialog: {
-                  ...dataSourceDialog,
-                  item: oldItem ?? "start",
-                },
-              };
-            } else {
-              return { dataSourceDialog };
-            }
           });
         },
       },

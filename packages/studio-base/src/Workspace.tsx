@@ -309,17 +309,17 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
 
   useNativeAppMenuEvent(
     "open-file",
-    useCallback(() => dataSourceDialogActions.selectItem("file"), [dataSourceDialogActions]),
+    useCallback(() => dataSourceDialogActions.open("file"), [dataSourceDialogActions]),
   );
 
   useNativeAppMenuEvent(
     "open-remote-file",
-    useCallback(() => dataSourceDialogActions.selectItem("remote"), [dataSourceDialogActions]),
+    useCallback(() => dataSourceDialogActions.open("remote"), [dataSourceDialogActions]),
   );
 
   useNativeAppMenuEvent(
     "open-sample-data",
-    useCallback(() => dataSourceDialogActions.selectItem("demo"), [dataSourceDialogActions]),
+    useCallback(() => dataSourceDialogActions.open("demo"), [dataSourceDialogActions]),
   );
 
   const nativeAppMenu = useNativeAppMenu();
@@ -335,7 +335,7 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
 
     for (const item of connectionSources) {
       nativeAppMenu.addFileEntry(item.displayName, () => {
-        dataSourceDialogActions.set({ item: "connection", activeDataSource: item, open: true });
+        dataSourceDialogActions.open("connection", item);
       });
     }
 
@@ -458,9 +458,7 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
       return (
         <DataSourceSidebar
           disableToolbar={enableNewTopNav}
-          onSelectDataSourceAction={() =>
-            dataSourceDialogActions.set((oldValue) => ({ ...oldValue, open: true }))
-          }
+          onSelectDataSourceAction={() => dataSourceDialogActions.open("start")}
         />
       );
     };
@@ -614,7 +612,7 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
       {dataSourceDialog.open && (
         <DataSourceDialog
           activeView={dataSourceDialog.item}
-          setActiveView={dataSourceDialogActions.selectItem}
+          setActiveView={dataSourceDialogActions.open}
           activeDataSource={dataSourceDialog.activeDataSource}
           onDismiss={() => {
             dataSourceDialogActions.close();
