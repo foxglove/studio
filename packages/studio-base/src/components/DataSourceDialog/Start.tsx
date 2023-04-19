@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 import tinycolor from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 
+import { DataSourceDialogItem } from "@foxglove/studio-base/components/DataSourceDialog/DataSourceDialog";
 import FoxgloveLogoText from "@foxglove/studio-base/components/FoxgloveLogoText";
 import Stack from "@foxglove/studio-base/components/Stack";
 import TextMiddleTruncate from "@foxglove/studio-base/components/TextMiddleTruncate";
@@ -19,10 +20,8 @@ import {
 import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 
-import { DataSourceDialogViews } from "./types";
-
 export type IStartProps = {
-  onSelectView: (newValue: DataSourceDialogViews) => void;
+  onSelectView: (newValue: DataSourceDialogItem) => void;
 };
 
 const useStyles = makeStyles()((theme) => ({
@@ -172,7 +171,7 @@ type SidebarItem = {
 };
 
 function SidebarItems(props: {
-  onSelectView: (newValue: DataSourceDialogViews) => void;
+  onSelectView: (newValue: DataSourceDialogItem) => void;
 }): JSX.Element {
   const { onSelectView } = props;
   const { signIn } = useCurrentUser();
