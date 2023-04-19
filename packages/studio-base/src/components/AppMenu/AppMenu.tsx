@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Divider, Menu, MenuItem, PopoverPosition, PopoverReference } from "@mui/material";
-import { MouseEventHandler, useCallback, useMemo, useState } from "react";
+import { MouseEvent, MouseEventHandler, useCallback, useMemo, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 import { shallow } from "zustand/shallow";
 
@@ -20,7 +20,7 @@ import {
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 
 type AppMenuProps = {
-  handleClose: MouseEventHandler<HTMLElement>;
+  handleClose: () => void;
   anchorEl?: HTMLElement;
   anchorReference?: PopoverReference;
   anchorPosition?: PopoverPosition;
@@ -71,8 +71,30 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
 
   const fileItems = useMemo(() => {
     const items: NestedMenuItem[] = [
-      { type: "item", label: "Open local file…", key: "open-file", onClick: () => {} },
-      { type: "item", label: "Open connection…", key: "open-connection", onClick: () => {} },
+      {
+        type: "item",
+        label: "Open…",
+        key: "open",
+        onClick: () => {
+          handleClose();
+        },
+      },
+      {
+        type: "item",
+        label: "Open local file…",
+        key: "open-file",
+        onClick: () => {
+          handleClose();
+        },
+      },
+      {
+        type: "item",
+        label: "Open connection…",
+        key: "open-connection",
+        onClick: () => {
+          handleClose();
+        },
+      },
       { type: "divider" },
       { type: "item", label: "Recent sources", key: "recent-sources", disabled: true },
     ];
@@ -81,13 +103,16 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
       items.push({
         type: "item",
         key: recent.id,
-        onClick: () => selectRecent(recent.id),
+        onClick: () => {
+          handleClose();
+          selectRecent(recent.id);
+        },
         label: <TextMiddleTruncate text={recent.title} className={classes.truncate} />,
       });
     });
 
     return items;
-  }, [classes.truncate, recentSources, selectRecent]);
+  }, [classes.truncate, handleClose, recentSources, selectRecent]);
 
   // VIEW
 
@@ -102,8 +127,8 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
           label: `${leftSidebarOpen ? "Hide" : "Show"} left sidebar`,
           key: "left-sidebar",
           shortcut: "[",
-          onClick: (event) => {
-            handleClose(event);
+          onClick: () => {
+            handleClose();
             setLeftSidebarOpen(!leftSidebarOpen);
           },
         },
@@ -112,8 +137,8 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
           label: `${rightSidebarOpen ? "Hide" : "Show"} right sidebar`,
           key: "right-sidebar",
           shortcut: "]",
-          onClick: (event) => {
-            handleClose(event);
+          onClick: () => {
+            handleClose();
             setRightSidebarOpen(!rightSidebarOpen);
           },
         },
@@ -125,29 +150,23 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
 
   // HELP
 
-  const onDocsClick = useCallback(
-    (event) => {
-      void analytics.logEvent(AppEvent.APP_MENU_CLICK, {
-        user: currentUserType,
-        cta: "docs",
-      });
-      handleClose(event);
-      window.open("https://foxglove.dev/docs", "_blank");
-    },
-    [analytics, currentUserType, handleClose],
-  );
+  const onDocsClick = useCallback(() => {
+    void analytics.logEvent(AppEvent.APP_MENU_CLICK, {
+      user: currentUserType,
+      cta: "docs",
+    });
+    handleClose();
+    window.open("https://foxglove.dev/docs", "_blank");
+  }, [analytics, currentUserType, handleClose]);
 
-  const onSlackClick = useCallback(
-    (event) => {
-      void analytics.logEvent(AppEvent.APP_MENU_CLICK, {
-        user: currentUserType,
-        cta: "join-slack",
-      });
-      handleClose(event);
-      window.open("https://foxglove.dev/slack", "_blank");
-    },
-    [analytics, currentUserType, handleClose],
-  );
+  const onSlackClick = useCallback(() => {
+    void analytics.logEvent(AppEvent.APP_MENU_CLICK, {
+      user: currentUserType,
+      cta: "join-slack",
+    });
+    handleClose();
+    window.open("https://foxglove.dev/slack", "_blank");
+  }, [analytics, currentUserType, handleClose]);
 
   const helpItems = useMemo(
     () =>
