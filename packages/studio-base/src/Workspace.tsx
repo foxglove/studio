@@ -239,10 +239,6 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
 
   const showSignInForm = currentUserRequired && currentUser == undefined;
 
-  // const [showOpenDialog, setShowOpenDialog] = useState<
-  //   { view: OpenDialogViews; activeDataSource?: IDataSourceFactory } | undefined
-  // >(isPlayerPresent || !showOpenDialogOnStartup || showSignInForm ? undefined : { view: "start" });
-
   // When a player is activated, hide the open dialog.
   useLayoutEffect(() => {
     if (
@@ -606,8 +602,6 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
     () => getMessagePipeline().playerState.activeData ?? {},
     [getMessagePipeline],
   );
-
-  console.log({ dataSourceDialog });
 
   return (
     <MultiProvider
