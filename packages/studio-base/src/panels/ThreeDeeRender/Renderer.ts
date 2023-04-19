@@ -59,7 +59,6 @@ import { CameraStateSettings } from "./renderables/CameraStateSettings";
 import { Cameras } from "./renderables/Cameras";
 import { FrameAxes } from "./renderables/FrameAxes";
 import { Grids } from "./renderables/Grids";
-import { ImageMode } from "./renderables/ImageMode";
 import { Images } from "./renderables/Images";
 import { LaserScans } from "./renderables/LaserScans";
 import { Markers } from "./renderables/Markers";
@@ -75,6 +74,7 @@ import { FoxgloveSceneEntities } from "./renderables/SceneEntities";
 import { SceneSettings } from "./renderables/SceneSettings";
 import { Urdfs } from "./renderables/Urdfs";
 import { VelodyneScans } from "./renderables/VelodyneScans";
+import { ImageMode } from "./renderables/imageMode/ImageMode";
 import { MarkerPool } from "./renderables/markers/MarkerPool";
 import {
   Header,
@@ -108,14 +108,6 @@ export type LegacyImageConfig = {
   transformMarkers: boolean;
   zoom: number;
   zoomPercentage: number;
-};
-
-/** Settings pertaining to Image mode */
-export type ImageModeConfig = {
-  /** Image topic to display */
-  imageTopic?: string;
-  /** Topic containing CameraCalibration or CameraInfo */
-  calibrationTopic?: string;
 };
 
 /** Menu item entry and callback for the "Custom Layers" menu */
@@ -1318,6 +1310,9 @@ function deselectObject(object: THREE.Object3D) {
 function baseSettingsTree(interfaceMode: InterfaceMode): SettingsTreeNodes {
   const keys: string[] = [];
   keys.push(interfaceMode === "image" ? "imageMode" : "general", "scene");
+  if (interfaceMode === "image") {
+    keys.push("imageAnnotations");
+  }
   if (interfaceMode === "3d") {
     keys.push("cameraState");
   }

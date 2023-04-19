@@ -54,12 +54,17 @@ export type RendererEvents = {
 
 export type FollowMode = "follow-pose" | "follow-position" | "follow-none";
 
+export type ImageAnnotationSettings = {
+  visible: boolean;
+};
+
 /** Settings pertaining to Image mode */
 export type ImageModeConfig = {
   /** Image topic to display */
   imageTopic?: string;
   /** Topic containing CameraCalibration or CameraInfo */
   calibrationTopic?: string;
+  annotationsByTopicAndSchema?: Record<string, Record<string, ImageAnnotationSettings>>;
 };
 
 export type RendererConfig = {

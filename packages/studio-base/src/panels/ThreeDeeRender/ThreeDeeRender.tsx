@@ -48,11 +48,12 @@ import type {
   FollowMode,
   RendererEvents,
   IRenderer,
+  ImageModeConfig,
 } from "./IRenderer";
 import { InteractionContextMenu, Interactions, SelectionObject, TabType } from "./Interactions";
 import type { PickedRenderable } from "./Picker";
 import { Renderable, SELECTED_ID_VARIABLE } from "./Renderable";
-import { ImageModeConfig, LegacyImageConfig, Renderer } from "./Renderer";
+import { LegacyImageConfig, Renderer } from "./Renderer";
 import { RendererContext, useRenderer, useRendererEvent } from "./RendererContext";
 import { Stats } from "./Stats";
 import { CameraState, DEFAULT_CAMERA_STATE, MouseEventObject } from "./camera";
@@ -416,6 +417,7 @@ export function ThreeDeeRender(props: {
     const imageMode: ImageModeConfig = {
       imageTopic: legacyImageConfig?.cameraTopic,
       ...partialConfig?.imageMode,
+      //FIXME: add annotations
     };
 
     return {

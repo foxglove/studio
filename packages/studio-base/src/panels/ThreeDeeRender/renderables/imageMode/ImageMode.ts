@@ -15,22 +15,23 @@ import {
   normalizeCameraInfo,
 } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/projections";
 
-import { ICameraHandler } from "./ICameraHandler";
-import type { IRenderer } from "../IRenderer";
-import { PartialMessageEvent, SceneExtension } from "../SceneExtension";
-import { SettingsTreeEntry } from "../SettingsManager";
+import { ImageAnnotations } from "./ImageAnnotations";
+import type { IRenderer } from "../../IRenderer";
+import { PartialMessageEvent, SceneExtension } from "../../SceneExtension";
+import { SettingsTreeEntry } from "../../SettingsManager";
 import {
   CAMERA_CALIBRATION_DATATYPES,
   COMPRESSED_IMAGE_DATATYPES,
   RAW_IMAGE_DATATYPES,
-} from "../foxglove";
+} from "../../foxglove";
 import {
   IMAGE_DATATYPES as ROS_IMAGE_DATATYPES,
   COMPRESSED_IMAGE_DATATYPES as ROS_COMPRESSED_IMAGE_DATATYPES,
   CAMERA_INFO_DATATYPES,
   CameraInfo,
-} from "../ros";
-import { topicIsConvertibleToSchema } from "../topicIsConvertibleToSchema";
+} from "../../ros";
+import { topicIsConvertibleToSchema } from "../../topicIsConvertibleToSchema";
+import { ICameraHandler } from "../ICameraHandler";
 
 const IMAGE_TOPIC_PATH = ["imageMode", "imageTopic"];
 const CALIBRATION_TOPIC_PATH = ["imageMode", "calibrationTopic"];
@@ -69,6 +70,8 @@ export class ImageMode extends SceneExtension implements ICameraHandler {
   /** x/y zoom factors derived from image and window aspect ratios */
   private zoom = new THREE.Vector2();
 
+  private annotations: ImageAnnotations;
+
   public constructor(renderer: IRenderer, aspect: number) {
     super("foxglove.ImageMode", renderer);
 
@@ -94,6 +97,17 @@ export class ImageMode extends SceneExtension implements ICameraHandler {
     renderer.addSchemaSubscriptions(CAMERA_CALIBRATION_DATATYPES, {
       handler: this.handleCameraInfo,
       shouldSubscribe: this.cameraInfoShouldSubscribe,
+    });
+
+    this.annotations = new ImageAnnotations({
+      topics: () => renderer.topics ?? [],
+      config: () => renderer.config.imageMode,
+      updateConfig: (updateHandler) => {
+        renderer.updateConfig((draft) => updateHandler(draft.imageMode));
+      },
+      updateSettingsTree: () => {
+        this.updateSettingsTree();
+      },
     });
   }
 
@@ -254,6 +268,7 @@ export class ImageMode extends SceneExtension implements ICameraHandler {
           },
         },
       },
+      ...this.annotations.settingsNodes(),
     ];
   }
 
