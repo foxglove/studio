@@ -3,8 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Story, StoryContext } from "@storybook/react";
-import { fireEvent, screen } from "@testing-library/dom";
-import userEvent from "@testing-library/user-event";
+import { fireEvent, screen, userEvent } from "@storybook/testing-library";
 import { useMemo } from "react";
 
 import { LayoutData } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
@@ -171,22 +170,21 @@ MultiSelect.parameters = {
 };
 MultiSelect.play = async () => {
   const layouts = await screen.findAllByTestId("layout-list-item");
-  const user = userEvent.setup();
 
-  await user.click(layouts[0]!);
+  userEvent.click(layouts[0]!);
 
-  await user.keyboard("{Meta>}");
-  await user.click(layouts[1]!);
-  await user.click(layouts[3]!);
-  await user.keyboard("{/Meta}");
+  userEvent.keyboard("{Meta>}");
+  userEvent.click(layouts[1]!);
+  userEvent.click(layouts[3]!);
+  userEvent.keyboard("{/Meta}");
 
-  await user.keyboard("{Shift>}");
-  await user.click(layouts[6]!);
-  await user.keyboard("{/Shift}");
+  userEvent.keyboard("{Shift>}");
+  userEvent.click(layouts[6]!);
+  userEvent.keyboard("{/Shift}");
 
-  await user.keyboard("{Meta>}");
-  await user.click(layouts[4]!);
-  await user.keyboard("{/Meta}");
+  userEvent.keyboard("{Meta>}");
+  userEvent.click(layouts[4]!);
+  userEvent.keyboard("{/Meta}");
 };
 
 export function MultiDelete(): JSX.Element {
