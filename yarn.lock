@@ -2563,7 +2563,7 @@ __metadata:
     "@mui/material": 5.12.0
     "@popperjs/core": 2.11.6
     "@protobufjs/base64": 1.1.2
-    "@storybook/addon-actions": 7.0.4
+    "@storybook/addon-actions": 7.0.6
     "@storybook/react": 7.0.4
     "@storybook/testing-library": 0.1.0
     "@svgr/webpack": 7.0.0
@@ -11591,7 +11591,7 @@ __metadata:
     "@foxglove/eslint-plugin-studio": "workspace:*"
     "@foxglove/tsconfig": 1.1.0
     "@octokit/rest": 19.0.7
-    "@storybook/addon-actions": 7.0.4
+    "@storybook/addon-actions": 7.0.6
     "@storybook/addon-essentials": 7.0.4
     "@storybook/react": 7.0.4
     "@storybook/react-webpack5": 7.0.4
