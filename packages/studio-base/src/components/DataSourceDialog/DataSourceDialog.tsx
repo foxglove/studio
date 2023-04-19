@@ -23,7 +23,7 @@ import Start from "./Start";
 import { DataSourceDialogViews } from "./types";
 import { useOpenFile } from "./useOpenFile";
 
-export type DataSourceDialogProps = {
+type DataSourceDialogProps = {
   activeDataSource?: DeepReadonly<IDataSourceFactory>;
   activeView?: DataSourceDialogViews;
   backdropAnimation?: boolean;
