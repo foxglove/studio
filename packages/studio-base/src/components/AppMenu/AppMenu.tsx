@@ -2,15 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import {
-  Divider,
-  Menu,
-  MenuItem,
-  PopoverPosition,
-  PopoverProps,
-  PopoverReference,
-} from "@mui/material";
-import { useCallback, useMemo, useState } from "react";
+import { Divider, Menu, MenuItem, PopoverPosition, PopoverReference } from "@mui/material";
+import { MouseEventHandler, useCallback, useMemo, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 import { shallow } from "zustand/shallow";
 
@@ -27,7 +20,7 @@ import {
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 
 type AppMenuProps = {
-  handleClose: PopoverProps["onClose"];
+  handleClose: MouseEventHandler<HTMLElement>;
   anchorEl?: HTMLElement;
   anchorReference?: PopoverReference;
   anchorPosition?: PopoverPosition;
@@ -126,7 +119,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
           key: "left-sidebar",
           shortcut: "[",
           onClick: (event) => {
-            handleClose?.(event, "backdropClick");
+            handleClose(event);
             setLeftSidebarOpen(!leftSidebarOpen);
           },
         },
@@ -136,7 +129,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
           key: "right-sidebar",
           shortcut: "]",
           onClick: (event) => {
-            handleClose?.(event, "backdropClick");
+            handleClose(event);
             setRightSidebarOpen(!rightSidebarOpen);
           },
         },
@@ -154,7 +147,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
         user: currentUserType,
         cta: "docs",
       });
-      handleClose?.(event, "backdropClick");
+      handleClose(event);
       window.open("https://foxglove.dev/docs", "_blank");
     },
     [analytics, currentUserType, handleClose],
@@ -166,7 +159,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
         user: currentUserType,
         cta: "join-slack",
       });
-      handleClose?.(event, "backdropClick");
+      handleClose(event);
       window.open("https://foxglove.dev/slack", "_blank");
     },
     [analytics, currentUserType, handleClose],
