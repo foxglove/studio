@@ -13,12 +13,6 @@ import {
 import { useCallback, useMemo, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 
-import { Time, compare } from "@foxglove/rostime";
-import {
-  MessagePipelineContext,
-  useMessagePipeline,
-  useMessagePipelineGetter,
-} from "@foxglove/studio-base/components/MessagePipeline";
 import { NestedMenuItem } from "@foxglove/studio-base/components/NestedMenuItem";
 import TextMiddleTruncate from "@foxglove/studio-base/components/TextMiddleTruncate";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
@@ -61,12 +55,6 @@ const useStyles = makeStyles<void, "icon">()((theme, _params, classes) => ({
     alignSelf: "center !important",
   },
 }));
-
-const selectIsPlaying = (ctx: MessagePipelineContext) =>
-  ctx.playerState.activeData?.isPlaying === true;
-const selectPause = (ctx: MessagePipelineContext) => ctx.pausePlayback;
-const selectPlay = (ctx: MessagePipelineContext) => ctx.startPlayback;
-const selectSeek = (ctx: MessagePipelineContext) => ctx.seekPlayback;
 
 export function AppMenu(props: AppMenuProps): JSX.Element {
   const { open, handleClose, anchorEl, anchorReference, anchorPosition, disablePortal } = props;
