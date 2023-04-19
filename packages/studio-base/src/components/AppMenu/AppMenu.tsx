@@ -69,7 +69,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
   const { recentSources, selectRecent } = usePlayerSelection();
 
   const onDocsClick = useCallback(() => {
-    void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
+    void analytics.logEvent(AppEvent.APP_MENU_CLICK, {
       user: currentUserType,
       cta: "docs",
     });
@@ -77,7 +77,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
   }, [analytics, currentUserType]);
 
   const onSlackClick = useCallback(() => {
-    void analytics.logEvent(AppEvent.DIALOG_CLICK_CTA, {
+    void analytics.logEvent(AppEvent.APP_MENU_CLICK, {
       user: currentUserType,
       cta: "join-slack",
     });
