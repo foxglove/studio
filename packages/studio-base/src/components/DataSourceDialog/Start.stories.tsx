@@ -12,7 +12,7 @@ import PlayerSelectionContext, {
   PlayerSelection,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
 
-import { DataSourceDialog, DataSourceDialogProps } from "./DataSourceDialog";
+import { DataSourceDialog } from "./DataSourceDialog";
 
 export default {
   title: "components/DataSourceDialog/Start",
@@ -103,19 +103,17 @@ function CurrentUserWrapper(props: { children: ReactNode; user?: User | undefine
   return <CurrentUserContext.Provider value={value}>{props.children}</CurrentUserContext.Provider>;
 }
 
-const defaultProps: DataSourceDialogProps = { backdropAnimation: false };
-
-export const DefaultLight = (): JSX.Element => <DataSourceDialog {...defaultProps} />;
+export const DefaultLight = (): JSX.Element => <DataSourceDialog backdropAnimation={false} />;
 DefaultLight.storyName = "Default (light)";
 DefaultLight.parameters = { colorScheme: "light" };
 
-export const DefaultDark = (): JSX.Element => <DataSourceDialog {...defaultProps} />;
+export const DefaultDark = (): JSX.Element => <DataSourceDialog backdropAnimation={false} />;
 DefaultDark.storyName = "Default (dark)";
 
 export function UserNoAuth(): JSX.Element {
   return (
     <PlayerSelectionContext.Provider value={playerSelection}>
-      <DataSourceDialog {...defaultProps} />
+      <DataSourceDialog backdropAnimation={false} />
     </PlayerSelectionContext.Provider>
   );
 }
@@ -130,7 +128,7 @@ export function UserPrivate(): JSX.Element {
   return (
     <CurrentUserWrapper>
       <PlayerSelectionContext.Provider value={playerSelection}>
-        <DataSourceDialog {...defaultProps} />
+        <DataSourceDialog backdropAnimation={false} />
       </PlayerSelectionContext.Provider>
     </CurrentUserWrapper>
   );
@@ -148,7 +146,7 @@ export function UserAuthedFree(): JSX.Element {
   return (
     <CurrentUserWrapper user={freeUser}>
       <PlayerSelectionContext.Provider value={playerSelection}>
-        <DataSourceDialog {...defaultProps} />
+        <DataSourceDialog backdropAnimation={false} />
       </PlayerSelectionContext.Provider>
     </CurrentUserWrapper>
   );
@@ -166,7 +164,7 @@ export function UserAuthedPaid(): JSX.Element {
   return (
     <CurrentUserWrapper user={freeUser}>
       <PlayerSelectionContext.Provider value={playerSelection}>
-        <DataSourceDialog {...defaultProps} />
+        <DataSourceDialog backdropAnimation={false} />
       </PlayerSelectionContext.Provider>
     </CurrentUserWrapper>
   );
