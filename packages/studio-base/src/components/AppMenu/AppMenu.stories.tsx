@@ -6,7 +6,7 @@ import { StoryObj } from "@storybook/react";
 import { screen } from "@testing-library/dom";
 import userEvent from "@testing-library/user-event";
 
-import AppMenu from "@foxglove/studio-base/components/AppMenu";
+import { AppMenu } from "@foxglove/studio-base/components/AppMenu";
 import PlayerSelectionContext, {
   PlayerSelection,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";

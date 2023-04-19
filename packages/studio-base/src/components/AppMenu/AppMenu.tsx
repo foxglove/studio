@@ -2,7 +2,6 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { ChevronRight12Regular } from "@fluentui/react-icons";
 import {
   Divider,
   Menu,
@@ -11,19 +10,15 @@ import {
   PopoverProps,
   PopoverReference,
 } from "@mui/material";
-import {
-  Dispatch,
-  MouseEvent,
-  PropsWithChildren,
-  ReactNode,
-  SetStateAction,
-  useMemo,
-  useState,
-} from "react";
+import { useCallback, useMemo, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 
+import { NestedMenuItem } from "@foxglove/studio-base/components/NestedMenuItem";
 import TextMiddleTruncate from "@foxglove/studio-base/components/TextMiddleTruncate";
+import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
+import { useCurrentUserType } from "@foxglove/studio-base/context/CurrentUserContext";
 import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
+import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 
 type AppMenuProps = {
   handleClose: PopoverProps["onClose"];
@@ -34,21 +29,7 @@ type AppMenuProps = {
   open: boolean;
 };
 
-type NestedMenuItem =
-  | {
-      type: "item";
-      label: ReactNode;
-      key: string;
-      disabled?: boolean;
-      shortcut?: string;
-      onClick?: () => void;
-    }
-  | { type: "divider" };
-
 const useStyles = makeStyles<void, "icon">()((theme, _params, classes) => ({
-  nestedMenuPaper: {
-    marginTop: theme.spacing(-1),
-  },
   menuItem: {
     justifyContent: "space-between",
     cursor: "pointer",
@@ -70,22 +51,38 @@ const useStyles = makeStyles<void, "icon">()((theme, _params, classes) => ({
     maxWidth: 220,
   },
   icon: {},
-  endIcon: {
-    marginRight: theme.spacing(-0.5),
-  },
   truncate: {
     alignSelf: "center !important",
   },
 }));
 
-export default function AppMenu(props: AppMenuProps): JSX.Element {
+export function AppMenu(props: AppMenuProps): JSX.Element {
   const { open, handleClose, anchorEl, anchorReference, anchorPosition, disablePortal } = props;
   const { classes } = useStyles();
 
   const [subMenu, setSubMenu] = useState<undefined | HTMLElement>(undefined);
   const subMenuOpen = Boolean(subMenu);
 
+  const currentUserType = useCurrentUserType();
+  const analytics = useAnalytics();
+
   const { recentSources, selectRecent } = usePlayerSelection();
+
+  const onDocsClick = useCallback(() => {
+    void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
+      user: currentUserType,
+      cta: "docs",
+    });
+    window.open("https://foxglove.dev/docs", "_blank");
+  }, [analytics, currentUserType]);
+
+  const onSlackClick = useCallback(() => {
+    void analytics.logEvent(AppEvent.DIALOG_CLICK_CTA, {
+      user: currentUserType,
+      cta: "join-slack",
+    });
+    window.open("https://foxglove.dev/slack", "_blank");
+  }, [analytics, currentUserType]);
 
   const fileItems = useMemo(() => {
     const items: NestedMenuItem[] = [
@@ -111,7 +108,6 @@ export default function AppMenu(props: AppMenuProps): JSX.Element {
     () =>
       [
         { type: "item", label: "Copy", key: "copy", shortcut: "⌘C" },
-        { type: "item", label: "Copy as", key: "copy" },
         { type: "item", label: "Copy timestamp", key: "copy-timestamp", shortcut: "⌘⇧C" },
         { type: "item", label: "Paste", key: "paste", shortcut: "⌘V" },
         { type: "item", label: "Select all", key: "select-all", shortcut: "⌘A" },
@@ -170,10 +166,10 @@ export default function AppMenu(props: AppMenuProps): JSX.Element {
   const helpItems = useMemo(
     () =>
       [
-        { type: "item", label: "Documentation", key: "docs" },
-        { type: "item", label: "Join Slack", key: "slack" },
+        { type: "item", label: "Documentation", key: "docs", onClick: onDocsClick },
+        { type: "item", label: "Join Slack", key: "slack", onClick: onSlackClick },
       ] as NestedMenuItem[],
-    [],
+    [onDocsClick, onSlackClick],
   );
 
   return (
@@ -245,92 +241,6 @@ export default function AppMenu(props: AppMenuProps): JSX.Element {
         >
           Help
         </NestedMenuItem>
-      </Menu>
-    </>
-  );
-}
-
-export function NestedMenuItem(
-  props: PropsWithChildren<{
-    items: NestedMenuItem[];
-    subMenu?: HTMLElement;
-    setSubMenu: Dispatch<SetStateAction<HTMLElement | undefined>>;
-    subMenuOpen: boolean;
-    id?: string;
-  }>,
-): JSX.Element {
-  const { classes, cx } = useStyles();
-  const { children, items, subMenu, subMenuOpen, setSubMenu, id } = props;
-  const [anchorEl, setAnchorEl] = useState<undefined | HTMLElement>(undefined);
-  const open = Boolean(anchorEl);
-
-  const handleClick = (event: MouseEvent<HTMLElement>) => {
-    if (anchorEl !== event.currentTarget) {
-      setSubMenu(event.currentTarget);
-      setAnchorEl(event.currentTarget);
-    }
-  };
-
-  const handleMouseEnter = (event: MouseEvent<HTMLElement>) => {
-    setSubMenu(event.currentTarget);
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleMouseLeave = (event: MouseEvent<HTMLElement>) => {
-    if (!subMenuOpen && subMenu !== event.currentTarget) {
-      setAnchorEl(undefined);
-    }
-    setSubMenu(undefined);
-  };
-
-  return (
-    <>
-      <MenuItem
-        id={id}
-        selected={open}
-        className={classes.menuItem}
-        onClick={handleClick}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-        data-testid={id}
-      >
-        {children}
-        <ChevronRight12Regular className={cx(classes.icon, classes.endIcon)} />
-      </MenuItem>
-      <Menu
-        open={open}
-        disablePortal
-        anchorEl={anchorEl}
-        onClose={() => setAnchorEl(undefined)}
-        onMouseLeave={() => {
-          setAnchorEl(undefined);
-          setSubMenu(undefined);
-        }}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
-        MenuListProps={{ dense: true, className: classes.menuList }}
-        autoFocus={false}
-        disableAutoFocus
-        disableEnforceFocus
-        hideBackdrop
-        PaperProps={{
-          className: classes.nestedMenuPaper,
-        }}
-      >
-        {items.map((item, idx) =>
-          item.type !== "divider" ? (
-            <MenuItem
-              className={classes.menuItem}
-              key={item.key}
-              onClick={item.onClick}
-              disabled={item.disabled}
-            >
-              {item.label}
-              {item.shortcut && <kbd>{item.shortcut}</kbd>}
-            </MenuItem>
-          ) : (
-            <Divider key={`${idx}-divider`} variant="middle" />
-          ),
-        )}
       </Menu>
     </>
   );
