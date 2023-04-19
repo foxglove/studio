@@ -245,10 +245,7 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
       playerPresence === PlayerPresence.PRESENT ||
       playerPresence === PlayerPresence.INITIALIZING
     ) {
-      setDataSourceDialog((oldValue) => ({
-        ...oldValue,
-        open: false,
-      }));
+      setDataSourceDialog((oldValue) => ({ ...oldValue, open: false }));
     }
   }, [playerPresence, setDataSourceDialog]);
 
