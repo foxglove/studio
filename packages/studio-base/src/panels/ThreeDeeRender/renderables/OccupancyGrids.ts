@@ -12,14 +12,14 @@ import type { IRenderer } from "../IRenderer";
 import { BaseUserData, Renderable } from "../Renderable";
 import { PartialMessage, PartialMessageEvent, SceneExtension } from "../SceneExtension";
 import { SettingsTreeEntry } from "../SettingsManager";
-import { rgbaToCssString, SRGBToLinear, stringToRgba } from "../color";
+import { SRGBToLinear, rgbaToCssString, stringToRgba } from "../color";
 import {
   normalizeHeader,
-  normalizePose,
   normalizeInt8Array,
+  normalizePose,
   normalizeTime,
 } from "../normalizeMessages";
-import { ColorRGBA, OccupancyGrid, OCCUPANCY_GRID_DATATYPES } from "../ros";
+import { ColorRGBA, OCCUPANCY_GRID_DATATYPES, OccupancyGrid } from "../ros";
 import { BaseSettings } from "../settings";
 import { topicIsConvertibleToSchema } from "../topicIsConvertibleToSchema";
 
@@ -69,6 +69,8 @@ export type OccupancyGridUserData = BaseUserData & {
   pickingMaterial: THREE.ShaderMaterial;
 };
 
+const ALL_DATATYPES = Object.freeze([...OCCUPANCY_GRID_DATATYPES].sort());
+
 export class OccupancyGridRenderable extends Renderable<OccupancyGridUserData> {
   public override dispose(): void {
     this.userData.texture.dispose();
@@ -98,6 +100,8 @@ export class OccupancyGrids extends SceneExtension<OccupancyGridRenderable> {
       if (!topicIsConvertibleToSchema(topic, OCCUPANCY_GRID_DATATYPES)) {
         continue;
       }
+
+      const settingsKey = this.settingsKeyForTopic(topic.name);
 
       const configWithDefaults = { ...DEFAULT_SETTINGS, ...configTopics[topic.name] };
 
@@ -152,7 +156,7 @@ export class OccupancyGrids extends SceneExtension<OccupancyGridRenderable> {
       };
 
       entries.push({
-        path: ["topics", topic.name],
+        path: ["topics", settingsKey],
         node: {
           label: topic.name,
           icon: "Cells",
@@ -166,6 +170,10 @@ export class OccupancyGrids extends SceneExtension<OccupancyGridRenderable> {
     return entries;
   }
 
+  public override supportedSchemas(): readonly string[] {
+    return ALL_DATATYPES;
+  }
+
   public override handleSettingsAction = (action: SettingsTreeAction): void => {
     const path = action.payload.path;
     if (action.action !== "update" || path.length !== 3) {
@@ -175,11 +183,11 @@ export class OccupancyGrids extends SceneExtension<OccupancyGridRenderable> {
     this.saveSetting(path, action.payload.value);
 
     // Update the renderable
-    const topicName = path[1]!;
-    const renderable = this.renderables.get(topicName);
+    const settingsKey = path[1]!;
+    const renderable = this.renderables.get(settingsKey);
     if (renderable) {
       const prevTransparent = occupancyGridHasTransparency(renderable.userData.settings);
-      const settings = this.renderer.config.topics[topicName] as
+      const settings = this.renderer.config.topics[settingsKey] as
         | Partial<LayerSettingsOccupancyGrid>
         | undefined;
       renderable.userData.settings = { ...DEFAULT_SETTINGS, ...settings };
@@ -205,10 +213,12 @@ export class OccupancyGrids extends SceneExtension<OccupancyGridRenderable> {
     const occupancyGrid = normalizeOccupancyGrid(messageEvent.message);
     const receiveTime = toNanoSec(messageEvent.receiveTime);
 
-    let renderable = this.renderables.get(topic);
+    const settingsKey = this.settingsKeyForTopic(topic);
+
+    let renderable = this.renderables.get(settingsKey);
     if (!renderable) {
       // Set the initial settings from default values merged with any user settings
-      const userSettings = this.renderer.config.topics[topic] as
+      const userSettings = this.renderer.config.topics[settingsKey] as
         | Partial<LayerSettingsOccupancyGrid>
         | undefined;
       const settings = { ...DEFAULT_SETTINGS, ...userSettings };
@@ -228,7 +238,7 @@ export class OccupancyGrids extends SceneExtension<OccupancyGridRenderable> {
         messageTime: toNanoSec(occupancyGrid.header.stamp),
         frameId: this.renderer.normalizeFrameId(occupancyGrid.header.frame_id),
         pose: occupancyGrid.info.origin,
-        settingsPath: ["topics", topic],
+        settingsPath: ["topics", settingsKey],
         settings,
         topic,
         occupancyGrid,
@@ -240,7 +250,7 @@ export class OccupancyGrids extends SceneExtension<OccupancyGridRenderable> {
       renderable.add(mesh);
 
       this.add(renderable);
-      this.renderables.set(topic, renderable);
+      this.renderables.set(settingsKey, renderable);
     }
 
     this.#updateOccupancyGridRenderable(renderable, occupancyGrid, receiveTime);
