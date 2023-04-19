@@ -22,7 +22,10 @@ import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import AccountSettings from "@foxglove/studio-base/components/AccountSettingsSidebar/AccountSettings";
 import { AppBar } from "@foxglove/studio-base/components/AppBar";
 import { CustomWindowControlsProps } from "@foxglove/studio-base/components/AppBar/CustomWindowControls";
-import { DataSourceDialog } from "@foxglove/studio-base/components/DataSourceDialog";
+import {
+  DataSourceDialog,
+  DataSourceDialogItem,
+} from "@foxglove/studio-base/components/DataSourceDialog";
 import { DataSourceSidebar } from "@foxglove/studio-base/components/DataSourceSidebar";
 import { EventsList } from "@foxglove/studio-base/components/DataSourceSidebar/EventsList";
 import { TopicList } from "@foxglove/studio-base/components/DataSourceSidebar/TopicList";
@@ -245,7 +248,11 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
       playerPresence === PlayerPresence.PRESENT ||
       playerPresence === PlayerPresence.INITIALIZING
     ) {
-      setDataSourceDialog((oldValue) => ({ ...oldValue, open: false }));
+      setDataSourceDialog({
+        activeDataSource: undefined,
+        item: undefined,
+        open: false,
+      });
     }
   }, [playerPresence, setDataSourceDialog]);
 
@@ -681,11 +688,24 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     AppSetting.SHOW_OPEN_DIALOG_ON_STARTUP,
   );
 
-  const initialState: Partial<WorkspaceContextStore> = {
+  const { currentUser } = useCurrentUser();
+
+  const { currentUserRequired } = useInitialDeepLinkState(props.deepLinks ?? DEFAULT_DEEPLINKS);
+
+  const playerPresence = useMessagePipeline(selectPlayerPresence);
+
+  const isPlayerPresent = playerPresence !== PlayerPresence.NOT_PRESENT;
+
+  const showSignInForm = currentUserRequired && currentUser == undefined;
+
+  const initialItem: undefined | DataSourceDialogItem =
+    isPlayerPresent || !showOpenDialogOnStartup || showSignInForm ? undefined : "start";
+
+  const initialState: Pick<WorkspaceContextStore, "dataSourceDialog"> = {
     dataSourceDialog: {
       activeDataSource: undefined,
-      open: showOpenDialogOnStartup,
-      item: showOpenDialogOnStartup ? "start" : undefined,
+      open: initialItem != undefined,
+      item: initialItem,
     },
   };
 
