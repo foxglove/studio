@@ -14,6 +14,10 @@ import { mightActuallyBePartial } from "@foxglove/studio-base/util/mightActually
 
 import type { Annotation, PointsAnnotation } from "../types";
 
+// Should mirror TextAnnotation.font_size default value
+const DEFAULT_FONT_SIZE = 12;
+const DEFAULT_PADDING = 4;
+
 // Supported annotation schema names
 export const ANNOTATION_DATATYPES = [
   // Single marker
@@ -105,7 +109,7 @@ function normalizeFoxgloveImageAnnotations(
       textColor: text.text_color,
       backgroundColor: text.background_color,
       fontSize: text.font_size,
-      padding: (text.font_size / 12) * 4,
+      padding: (text.font_size / DEFAULT_FONT_SIZE) * DEFAULT_PADDING,
     });
   }
 
@@ -159,8 +163,8 @@ function normalizeRosImageMarker(message: ImageMarker): Annotation | undefined {
         text: message.text?.data ?? "",
         textColor: message.outline_color,
         backgroundColor: message.filled ? message.fill_color : undefined,
-        fontSize: message.scale * 12,
-        padding: 4 * message.scale,
+        fontSize: message.scale * DEFAULT_FONT_SIZE,
+        padding: DEFAULT_PADDING * message.scale,
       };
     case ImageMarkerType.POINTS:
       return {
