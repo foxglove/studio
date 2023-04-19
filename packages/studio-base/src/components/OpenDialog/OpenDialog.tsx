@@ -4,7 +4,7 @@
 
 import CloseIcon from "@mui/icons-material/Close";
 import { Dialog, IconButton } from "@mui/material";
-import { useCallback, useLayoutEffect, useMemo, useState } from "react";
+import { useCallback, useLayoutEffect, useMemo } from "react";
 import { useMountedState } from "react-use";
 import { DeepReadonly } from "ts-essentials";
 import { makeStyles } from "tss-react/mui";
@@ -28,6 +28,7 @@ export type OpenDialogProps = {
   activeView?: OpenDialogViews;
   backdropAnimation?: boolean;
   onDismiss?: () => void;
+  setActiveView?: (item: OpenDialogViews) => void;
 };
 
 const useStyles = makeStyles()((theme) => ({
@@ -43,12 +44,11 @@ const useStyles = makeStyles()((theme) => ({
 }));
 
 export default function OpenDialog(props: OpenDialogProps): JSX.Element {
-  const { activeView: defaultActiveView, onDismiss, activeDataSource, backdropAnimation } = props;
+  const { activeView, onDismiss, activeDataSource, backdropAnimation, setActiveView } = props;
   const { classes } = useStyles();
   const { availableSources, selectSource } = usePlayerSelection();
 
   const isMounted = useMountedState();
-  const [activeView, setActiveView] = useState<OpenDialogViews>(defaultActiveView ?? "start");
 
   const openFile = useOpenFile(availableSources);
 
@@ -56,13 +56,10 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
     return availableSources.find((source) => source.type === "sample");
   }, [availableSources]);
 
-  useLayoutEffect(() => {
-    setActiveView(defaultActiveView ?? "start");
-  }, [defaultActiveView]);
-
-  const onSelectView = useCallback((view: OpenDialogViews) => {
-    setActiveView(view);
-  }, []);
+  const onSelectView = useCallback(
+    (view: OpenDialogViews) => setActiveView?.(view),
+    [setActiveView],
+  );
 
   const analytics = useAnalytics();
 
@@ -82,13 +79,13 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
         .finally(() => {
           // set the view back to start so the user can click to open file again
           if (isMounted()) {
-            setActiveView("start");
+            setActiveView?.("start");
           }
         });
     } else if (activeView === "demo" && firstSampleSource) {
       selectSource(firstSampleSource.id);
     }
-  }, [activeView, firstSampleSource, isMounted, openFile, selectSource]);
+  }, [activeView, firstSampleSource, isMounted, openFile, selectSource, setActiveView]);
 
   const backdrop = useMemo(() => {
     const now = new Date();

@@ -615,6 +615,7 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
       {dataSourceDialog.open && (
         <OpenDialog
           activeView={dataSourceDialog.item}
+          setActiveView={selectDataSourceDialogItem}
           activeDataSource={dataSourceDialog.activeDataSource}
           onDismiss={() => {
             setDataSourceDialog({ activeDataSource: undefined, item: undefined, open: false });
