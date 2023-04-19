@@ -9,7 +9,10 @@ import { StoreApi, useStore } from "zustand";
 import { IDataSourceFactory } from "@foxglove/studio-base";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import { AppSettingsTab } from "@foxglove/studio-base/components/AppSettingsDialog/AppSettingsDialog";
-import { DataSourceDialogItemKeys } from "@foxglove/studio-base/components/DataSourceDialog";
+import {
+  DataSourceDialogItem,
+  DataSourceDialogItems,
+} from "@foxglove/studio-base/components/DataSourceDialog";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import useGuaranteedContext from "@foxglove/studio-base/hooks/useGuaranteedContext";
@@ -36,7 +39,7 @@ export type RightSidebarItemKey = (typeof RightSidebarItemKeys)[number];
 export type WorkspaceContextStore = DeepReadonly<{
   dataSourceDialog: {
     activeDataSource: undefined | IDataSourceFactory;
-    item: undefined | DataSourceDialogItemKeys;
+    item: undefined | DataSourceDialogItem;
     open: boolean;
   };
   leftSidebarOpen: boolean;
@@ -86,7 +89,7 @@ export type WorkspaceActions = {
     close: () => void;
     open: (initialTab?: AppSettingsTab) => void;
   };
-  selectDataSourceDialogItem: (item: undefined | DataSourceDialogItemKeys) => void;
+  selectDataSourceDialogItem: (item: undefined | DataSourceDialogItem) => void;
   selectSidebarItem: (selectedSidebarItem: undefined | SidebarItemKey) => void;
   selectLeftSidebarItem: (item: undefined | LeftSidebarItemKey) => void;
   selectRightSidebarItem: (item: undefined | RightSidebarItemKey) => void;
@@ -139,7 +142,7 @@ export function useWorkspaceActions(): WorkspaceActions {
       },
 
       selectDataSourceDialogItem: (
-        selectedDataSourceDialogItem: undefined | DataSourceDialogItemKeys,
+        selectedDataSourceDialogItem: undefined | DataSourceDialogItem,
       ) => {
         set((oldValue) => ({
           dataSourceDialog: {
@@ -154,7 +157,7 @@ export function useWorkspaceActions(): WorkspaceActions {
         set((oldValue) => {
           const dataSourceDialog = setterValue(setter, oldValue.dataSourceDialog);
           if (dataSourceDialog.open) {
-            const oldItem = DataSourceDialogItemKeys.find(
+            const oldItem = DataSourceDialogItems.find(
               (item) => item === oldValue.dataSourceDialog.item,
             );
             return {

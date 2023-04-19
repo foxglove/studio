@@ -22,15 +22,15 @@ import Connection from "./Connection";
 import Start from "./Start";
 import { useOpenFile } from "./useOpenFile";
 
-export const DataSourceDialogItemKeys = ["start", "file", "demo", "remote", "connection"] as const;
-export type DataSourceDialogItemKeys = (typeof DataSourceDialogItemKeys)[number];
+export const DataSourceDialogItems = ["start", "file", "demo", "remote", "connection"] as const;
+export type DataSourceDialogItem = (typeof DataSourceDialogItems)[number];
 
 type DataSourceDialogProps = {
   activeDataSource?: DeepReadonly<IDataSourceFactory>;
-  activeView?: DataSourceDialogItemKeys;
+  activeView?: DataSourceDialogItem;
   backdropAnimation?: boolean;
   onDismiss?: () => void;
-  setActiveView?: (item: DataSourceDialogItemKeys) => void;
+  setActiveView?: (item: DataSourceDialogItem) => void;
 };
 
 const useStyles = makeStyles()((theme) => ({
@@ -59,7 +59,7 @@ export function DataSourceDialog(props: DataSourceDialogProps): JSX.Element {
   }, [availableSources]);
 
   const onSelectView = useCallback(
-    (view: DataSourceDialogItemKeys) => setActiveView?.(view),
+    (view: DataSourceDialogItem) => setActiveView?.(view),
     [setActiveView],
   );
 
