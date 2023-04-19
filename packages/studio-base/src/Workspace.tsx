@@ -636,9 +636,6 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
             onMaximizeWindow={props.onMaximizeWindow}
             onUnmaximizeWindow={props.onUnmaximizeWindow}
             onCloseWindow={props.onCloseWindow}
-            onSelectDataSourceAction={() => {
-              setDataSourceDialog((oldValue) => ({ ...oldValue, open: true }));
-            }}
           />
         )}
         <Sidebars
