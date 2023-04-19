@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Divider, Menu, MenuItem, PopoverPosition, PopoverReference } from "@mui/material";
-import { MouseEvent, MouseEventHandler, useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 import { shallow } from "zustand/shallow";
 
