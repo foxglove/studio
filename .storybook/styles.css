@@ -7,3 +7,16 @@
   animation: none !important;
   caret-color: transparent !important;
 }
+
+/* Help stories that don't have an intrinsic height to display correctly and consistently */
+#storybook-root {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  flex: 1 1 100%;
+  outline: none;
+  overflow: hidden;
+  z-index: 0;
+}
