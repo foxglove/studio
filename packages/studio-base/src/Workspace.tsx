@@ -22,6 +22,7 @@ import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import AccountSettings from "@foxglove/studio-base/components/AccountSettingsSidebar/AccountSettings";
 import { AppBar } from "@foxglove/studio-base/components/AppBar";
 import { CustomWindowControlsProps } from "@foxglove/studio-base/components/AppBar/CustomWindowControls";
+import { DataSourceDialog } from "@foxglove/studio-base/components/DataSourceDialog";
 import { DataSourceSidebar } from "@foxglove/studio-base/components/DataSourceSidebar";
 import { EventsList } from "@foxglove/studio-base/components/DataSourceSidebar/EventsList";
 import { TopicList } from "@foxglove/studio-base/components/DataSourceSidebar/TopicList";
@@ -35,7 +36,6 @@ import {
   useMessagePipelineGetter,
 } from "@foxglove/studio-base/components/MessagePipeline";
 import MultiProvider from "@foxglove/studio-base/components/MultiProvider";
-import { OpenDialog } from "@foxglove/studio-base/components/OpenDialog";
 import PanelLayout from "@foxglove/studio-base/components/PanelLayout";
 import PanelList from "@foxglove/studio-base/components/PanelList";
 import PanelSettings from "@foxglove/studio-base/components/PanelSettings";
@@ -613,7 +613,7 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
     >
       {showSignInForm && <SignInFormModal />}
       {dataSourceDialog.open && (
-        <OpenDialog
+        <DataSourceDialog
           activeView={dataSourceDialog.item}
           setActiveView={selectDataSourceDialogItem}
           activeDataSource={dataSourceDialog.activeDataSource}

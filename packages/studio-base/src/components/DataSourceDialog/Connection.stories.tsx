@@ -6,11 +6,11 @@ import PlayerSelectionContext, {
   PlayerSelection,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
 
-import OpenDialog, { OpenDialogProps } from "./OpenDialog";
+import { DataSourceDialog, DataSourceDialogProps } from "./DataSourceDialog";
 
 export default {
-  title: "components/OpenDialog/Connection",
-  component: OpenDialog,
+  title: "components/DataSourceDialog/Connection",
+  component: DataSourceDialog,
 };
 
 // Connection
@@ -59,11 +59,11 @@ const playerSelection: PlayerSelection = {
   ],
 };
 
-const defaultProps: OpenDialogProps = { activeView: "connection", backdropAnimation: false };
+const defaultProps: DataSourceDialogProps = { activeView: "connection", backdropAnimation: false };
 
 export const Light = (): JSX.Element => (
   <PlayerSelectionContext.Provider value={playerSelection}>
-    <OpenDialog {...defaultProps} />
+    <DataSourceDialog {...defaultProps} />
   </PlayerSelectionContext.Provider>
 );
 Light.storyName = "Default (light)";
@@ -76,7 +76,7 @@ export const LightChinese = Object.assign(Light.bind(undefined), {
 
 export const Dark = (): JSX.Element => (
   <PlayerSelectionContext.Provider value={playerSelection}>
-    <OpenDialog {...defaultProps} />
+    <DataSourceDialog {...defaultProps} />
   </PlayerSelectionContext.Provider>
 );
 Dark.storyName = "Default (dark)";

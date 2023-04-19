@@ -9,7 +9,7 @@ import { useMountedState } from "react-use";
 import { DeepReadonly } from "ts-essentials";
 import { makeStyles } from "tss-react/mui";
 
-import Snow from "@foxglove/studio-base/components/OpenDialog/Snow";
+import Snow from "@foxglove/studio-base/components/DataSourceDialog/Snow";
 import Stack from "@foxglove/studio-base/components/Stack";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 import {
@@ -20,15 +20,15 @@ import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 
 import Connection from "./Connection";
 import Start from "./Start";
-import { OpenDialogViews } from "./types";
+import { DataSourceDialogViews } from "./types";
 import { useOpenFile } from "./useOpenFile";
 
-export type OpenDialogProps = {
+export type DataSourceDialogProps = {
   activeDataSource?: DeepReadonly<IDataSourceFactory>;
-  activeView?: OpenDialogViews;
+  activeView?: DataSourceDialogViews;
   backdropAnimation?: boolean;
   onDismiss?: () => void;
-  setActiveView?: (item: OpenDialogViews) => void;
+  setActiveView?: (item: DataSourceDialogViews) => void;
 };
 
 const useStyles = makeStyles()((theme) => ({
@@ -43,7 +43,7 @@ const useStyles = makeStyles()((theme) => ({
   },
 }));
 
-export default function OpenDialog(props: OpenDialogProps): JSX.Element {
+export function DataSourceDialog(props: DataSourceDialogProps): JSX.Element {
   const { activeView, onDismiss, activeDataSource, backdropAnimation, setActiveView } = props;
   const { classes } = useStyles();
   const { availableSources, selectSource } = usePlayerSelection();
@@ -57,7 +57,7 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
   }, [availableSources]);
 
   const onSelectView = useCallback(
-    (view: OpenDialogViews) => setActiveView?.(view),
+    (view: DataSourceDialogViews) => setActiveView?.(view),
     [setActiveView],
   );
 

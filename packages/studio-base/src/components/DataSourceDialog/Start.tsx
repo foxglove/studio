@@ -19,10 +19,10 @@ import {
 import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 
-import { OpenDialogViews } from "./types";
+import { DataSourceDialogViews } from "./types";
 
 export type IStartProps = {
-  onSelectView: (newValue: OpenDialogViews) => void;
+  onSelectView: (newValue: DataSourceDialogViews) => void;
 };
 
 const useStyles = makeStyles()((theme) => ({
@@ -171,7 +171,9 @@ type SidebarItem = {
   actions?: ReactNode;
 };
 
-function SidebarItems(props: { onSelectView: (newValue: OpenDialogViews) => void }): JSX.Element {
+function SidebarItems(props: {
+  onSelectView: (newValue: DataSourceDialogViews) => void;
+}): JSX.Element {
   const { onSelectView } = props;
   const { signIn } = useCurrentUser();
   const currentUserType = useCurrentUserType();
