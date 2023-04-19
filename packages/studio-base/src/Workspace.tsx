@@ -247,11 +247,7 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
       playerPresence === PlayerPresence.PRESENT ||
       playerPresence === PlayerPresence.INITIALIZING
     ) {
-      dataSourceDialogActions.set({
-        activeDataSource: undefined,
-        item: undefined,
-        open: false,
-      });
+      dataSourceDialogActions.close();
     }
   }, [playerPresence, dataSourceDialogActions]);
 
@@ -621,11 +617,7 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
           setActiveView={dataSourceDialogActions.selectItem}
           activeDataSource={dataSourceDialog.activeDataSource}
           onDismiss={() => {
-            dataSourceDialogActions.set({
-              activeDataSource: undefined,
-              item: undefined,
-              open: false,
-            });
+            dataSourceDialogActions.close();
           }}
         />
       )}

@@ -83,6 +83,7 @@ export function useWorkspaceStore<T>(
 
 export type WorkspaceActions = {
   dataSourceDialogActions: {
+    close: () => void;
     set: Dispatch<SetStateAction<WorkspaceContextStore["dataSourceDialog"]>>;
     selectItem: (item: undefined | DataSourceDialogItem) => void;
   };
@@ -128,6 +129,10 @@ export function useWorkspaceActions(): WorkspaceActions {
   return useMemo(() => {
     return {
       dataSourceDialogActions: {
+        close: () => {
+          set({ dataSourceDialog: { activeDataSource: undefined, item: undefined, open: false } });
+        },
+
         selectItem: (selectedDataSourceDialogItem: undefined | DataSourceDialogItem) => {
           set((oldValue) => ({
             dataSourceDialog: {
