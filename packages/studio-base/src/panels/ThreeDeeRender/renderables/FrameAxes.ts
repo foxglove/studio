@@ -273,6 +273,7 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
       }
 
       const label = renderable.userData.label;
+      label.visible = this.renderer.config.scene.transforms?.showLabel ?? true;
       // Add the label offset in "world" coordinates (in the render frame)
       worldPosition.z += labelOffsetZ;
       // Transform worldPosition back to the local coordinate frame of the
@@ -306,13 +307,6 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
         this.labelBackgroundColor.g,
         this.labelBackgroundColor.b,
       );
-    }
-  }
-
-  // eslint-disable-next-line @foxglove/no-boolean-parameters
-  private setLabelVisible(visible: boolean): void {
-    for (const renderable of this.renderables.values()) {
-      renderable.userData.label.visible = visible;
     }
   }
 
@@ -379,9 +373,6 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
 
       if (setting === "editable") {
         this._updateFrameAxes();
-      } else if (setting === "showLabel") {
-        const showLabel = value as boolean | undefined;
-        this.setLabelVisible(showLabel ?? true);
       } else if (setting === "labelSize") {
         const labelSize = value as number | undefined;
         this.setLabelSize(labelSize ?? DEFAULT_TF_LABEL_SIZE);
