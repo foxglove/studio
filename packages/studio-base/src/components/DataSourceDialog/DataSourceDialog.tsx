@@ -23,7 +23,7 @@ import Connection from "./Connection";
 import Start from "./Start";
 import { useOpenFile } from "./useOpenFile";
 
-export const DataSourceDialogItems = ["start", "file", "demo", "remote", "connection"] as const;
+const DataSourceDialogItems = ["start", "file", "demo", "remote", "connection"] as const;
 export type DataSourceDialogItem = (typeof DataSourceDialogItems)[number];
 
 type DataSourceDialogProps = {

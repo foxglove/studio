@@ -21,10 +21,6 @@ import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectio
 import { useWorkspaceActions } from "@foxglove/studio-base/context/WorkspaceContext";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 
-export type IStartProps = {
-  onSelectView: (newValue: DataSourceDialogItem) => void;
-};
-
 const useStyles = makeStyles()((theme) => ({
   logo: {
     width: 212,
