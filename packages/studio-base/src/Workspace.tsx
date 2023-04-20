@@ -158,6 +158,8 @@ type WorkspaceProps = CustomWindowControlsProps & {
 const DEFAULT_DEEPLINKS = Object.freeze([]);
 
 const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => playerState.presence;
+const selectPlayerIsPresent = ({ playerState }: MessagePipelineContext) =>
+  playerState.presence !== PlayerPresence.NOT_PRESENT;
 const selectPlayerProblems = ({ playerState }: MessagePipelineContext) => playerState.problems;
 const selectIsPlaying = (ctx: MessagePipelineContext) =>
   ctx.playerState.activeData?.isPlaying === true;
@@ -685,9 +687,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
 
   const { currentUserRequired } = useInitialDeepLinkState(props.deepLinks ?? DEFAULT_DEEPLINKS);
 
-  const playerPresence = useMessagePipeline(selectPlayerPresence);
-
-  const isPlayerPresent = playerPresence !== PlayerPresence.NOT_PRESENT;
+  const isPlayerPresent = useMessagePipeline(selectPlayerIsPresent);
 
   const showSignInForm = currentUserRequired && currentUser == undefined;
 
