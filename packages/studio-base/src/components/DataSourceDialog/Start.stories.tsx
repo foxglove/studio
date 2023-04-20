@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { StoryFn } from "@storybook/react";
+import { StoryFn, StoryObj } from "@storybook/react";
 import { ReactNode } from "react";
 
 import CurrentUserContext, {
@@ -124,72 +124,88 @@ function CurrentUserWrapper(props: { children: ReactNode; user?: User | undefine
 
 const Default = (): JSX.Element => <DataSourceDialog backdropAnimation={false} />;
 
-export const DefaultLight = (): JSX.Element => <Default />;
+export const DefaultLight: StoryObj = (): JSX.Element => <Default />;
 DefaultLight.storyName = "Default (light)";
 DefaultLight.parameters = { colorScheme: "light" };
 
-export const DefaultDark = (): JSX.Element => <Default />;
+export const DefaultDark: StoryObj = (): JSX.Element => <Default />;
 DefaultDark.storyName = "Default (dark)";
 DefaultDark.parameters = { colorScheme: "dark" };
 
-export function UserNoAuth(): JSX.Element {
-  return (
-    <PlayerSelectionContext.Provider value={playerSelection}>
-      <DataSourceDialog backdropAnimation={false} />
-    </PlayerSelectionContext.Provider>
-  );
-}
-UserNoAuth.storyName = "User not authenticated";
-
-export const UserNoAuthChinese = (): JSX.Element => <UserNoAuth />;
-UserNoAuthChinese.storyName = "User not authenticated Chinese";
-UserNoAuthChinese.parameters = { forceLanguage: "zh" };
-
-export function UserPrivate(): JSX.Element {
-  return (
-    <CurrentUserWrapper>
+export const UserNoAuth: StoryObj = {
+  render: () => {
+    return (
       <PlayerSelectionContext.Provider value={playerSelection}>
         <DataSourceDialog backdropAnimation={false} />
       </PlayerSelectionContext.Provider>
-    </CurrentUserWrapper>
-  );
-}
-UserPrivate.storyName = "User not authenticated (private)";
+    );
+  },
+  name: "User not authenticated",
+};
 
-export const UserPrivateChinese = (): JSX.Element => <UserPrivate />;
-UserPrivateChinese.storyName = "User not authenticated (private) Chinese";
-UserPrivateChinese.parameters = { forceLanguage: "zh" };
+export const UserNoAuthChinese: StoryObj = {
+  ...UserNoAuth,
+  name: "User not authenticated Chinese",
+  parameters: { forceLanguage: "zh" },
+};
 
-export function UserAuthedFree(): JSX.Element {
-  const freeUser = fakeUser("free");
+export const UserPrivate: StoryObj = {
+  render: () => {
+    return (
+      <CurrentUserWrapper>
+        <PlayerSelectionContext.Provider value={playerSelection}>
+          <DataSourceDialog backdropAnimation={false} />
+        </PlayerSelectionContext.Provider>
+      </CurrentUserWrapper>
+    );
+  },
+  name: "User not authenticated (private)",
+};
 
-  return (
-    <CurrentUserWrapper user={freeUser}>
-      <PlayerSelectionContext.Provider value={playerSelection}>
-        <DataSourceDialog backdropAnimation={false} />
-      </PlayerSelectionContext.Provider>
-    </CurrentUserWrapper>
-  );
-}
-UserAuthedFree.storyName = "User Authenticated with Free Account";
+export const UserPrivateChinese: StoryObj = {
+  ...UserPrivate,
+  name: "User not authenticated (private) Chinese",
+  parameters: { forceLanguage: "zh" },
+};
 
-export const UserAuthedFreeChinese = (): JSX.Element => <UserAuthedFree />;
-UserAuthedFreeChinese.storyName = "User Authenticated with Free Account Chinese";
-UserAuthedFreeChinese.parameters = { forceLanguage: "zh" };
+export const UserAuthedFree: StoryObj = {
+  render: () => {
+    const freeUser = fakeUser("free");
 
-export function UserAuthedPaid(): JSX.Element {
-  const freeUser = fakeUser("paid");
+    return (
+      <CurrentUserWrapper user={freeUser}>
+        <PlayerSelectionContext.Provider value={playerSelection}>
+          <DataSourceDialog backdropAnimation={false} />
+        </PlayerSelectionContext.Provider>
+      </CurrentUserWrapper>
+    );
+  },
+  name: "User Authenticated with Free Account",
+};
 
-  return (
-    <CurrentUserWrapper user={freeUser}>
-      <PlayerSelectionContext.Provider value={playerSelection}>
-        <DataSourceDialog backdropAnimation={false} />
-      </PlayerSelectionContext.Provider>
-    </CurrentUserWrapper>
-  );
-}
-UserAuthedPaid.storyName = "User Authenticated with Paid Account";
+export const UserAuthedFreeChinese: StoryObj = {
+  ...UserAuthedFree,
+  name: "User Authenticated with Free Account Chinese",
+  parameters: { forceLanguage: "zh" },
+};
 
-export const UserAuthedPaidChinese = (): JSX.Element => <UserAuthedPaid />;
-UserAuthedPaidChinese.storyName = "User Authenticated with Paid Account Chinese";
-UserAuthedPaidChinese.parameters = { forceLanguage: "zh" };
+export const UserAuthedPaid: StoryObj = {
+  render: () => {
+    const freeUser = fakeUser("paid");
+
+    return (
+      <CurrentUserWrapper user={freeUser}>
+        <PlayerSelectionContext.Provider value={playerSelection}>
+          <DataSourceDialog backdropAnimation={false} />
+        </PlayerSelectionContext.Provider>
+      </CurrentUserWrapper>
+    );
+  },
+  name: "User Authenticated with Paid Account",
+};
+
+export const UserAuthedPaidChinese: StoryObj = {
+  ...UserAuthedPaid,
+  name: "User Authenticated with Paid Account Chinese",
+  parameters: { forceLanguage: "zh" },
+};
