@@ -6,9 +6,6 @@ import * as THREE from "three";
 
 import { PinholeCameraModel } from "@foxglove/den/image";
 
-import { cameraInfosEqual } from "./projections";
-import { CameraInfo } from "../ros";
-
 const DEFAULT_CAMERA_STATE = {
   near: 0.001,
   far: 1000,
@@ -16,15 +13,14 @@ const DEFAULT_CAMERA_STATE = {
 
 export class ImageModelCamera extends THREE.PerspectiveCamera {
   private model?: PinholeCameraModel;
-  private cameraInfoMessage?: CameraInfo;
   private cameraState = DEFAULT_CAMERA_STATE;
 
   /** x/y zoom factors derived from image and window aspect ratios */
   private aspectZoom = new THREE.Vector2();
   private rendererAspect = 1;
 
-  public updateCamera(cameraInfo: CameraInfo): void {
-    this.updateCameraModel(cameraInfo);
+  public updateCamera(cameraModel: PinholeCameraModel): void {
+    this.model = cameraModel;
     this.updateProjection();
   }
 
@@ -36,26 +32,6 @@ export class ImageModelCamera extends THREE.PerspectiveCamera {
     if (projection) {
       this.projectionMatrix.copy(projection);
       this.projectionMatrixInverse.copy(projection).invert();
-    }
-  }
-
-  /**
-   * update this.cameraModel with a new model if the camera info has changed
-   */
-  private updateCameraModel(newCameraInfo: CameraInfo): void {
-    // If the camera info has not changed, we don't need to make a new model and can return the existing one
-    const currentCameraInfo = this.cameraInfoMessage;
-    const dataEqual = cameraInfosEqual(currentCameraInfo, newCameraInfo);
-    if (dataEqual && currentCameraInfo != undefined) {
-      return;
-    }
-    this.cameraInfoMessage = newCameraInfo;
-
-    try {
-      this.model = new PinholeCameraModel(newCameraInfo);
-    } catch (err) {
-      this.model = undefined;
-      throw err;
     }
   }
 

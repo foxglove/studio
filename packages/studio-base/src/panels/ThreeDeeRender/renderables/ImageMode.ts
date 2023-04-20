@@ -6,11 +6,15 @@ import { set } from "lodash";
 import * as THREE from "three";
 
 import { filterMap } from "@foxglove/den/collection";
+import { PinholeCameraModel } from "@foxglove/den/image";
 import { CameraCalibration } from "@foxglove/schemas";
 import { SettingsTreeAction } from "@foxglove/studio";
 import { ImageModelCamera } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/ImageModelCamera";
 import { AnyImage } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/ImageTypes";
-import { normalizeCameraInfo } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/projections";
+import {
+  cameraInfosEqual,
+  normalizeCameraInfo,
+} from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/projections";
 
 import { ICameraHandler } from "./ICameraHandler";
 import type { IRenderer } from "../IRenderer";
@@ -37,11 +41,16 @@ const CALIBRATION_TOPIC_UNAVAILABLE = "CALIBRATION_TOPIC_UNAVAILABLE";
 const MISSING_CAMERA_INFO = "MISSING_CAMERA_INFO";
 const IMAGE_TOPIC_DIFFERENT_FRAME = "IMAGE_TOPIC_DIFFERENT_FRAME";
 
-const CAMERA_UPDATE_ERROR_KEY = "CameraUpdate";
+const CAMERA_MODEL = "CameraModel";
 
 export class ImageMode extends SceneExtension implements ICameraHandler {
   private camera: ImageModelCamera;
-
+  private cameraModel:
+    | {
+        model: PinholeCameraModel;
+        info: CameraInfo;
+      }
+    | undefined;
   /**
    * We keep more than just the last message event on the selected camera info topic because
    * backfill won't happen when this scene extension selected a camera info topic that was
@@ -338,17 +347,48 @@ export class ImageMode extends SceneExtension implements ICameraHandler {
 
     // set the render frame id to the camera info's frame id
     this.renderer.followFrameId = this.getCurrentFrameId();
-    try {
-      this.camera.updateCamera(possibleNewCameraInfo);
-      this.renderer.settings.errors.remove(CALIBRATION_TOPIC_PATH, CAMERA_UPDATE_ERROR_KEY);
-    } catch (errUnk) {
-      const err = errUnk as Error;
-      this.renderer.settings.errors.add(
-        CALIBRATION_TOPIC_PATH,
-        CAMERA_UPDATE_ERROR_KEY,
-        err.message,
-      );
+    this.updateCameraModel(possibleNewCameraInfo);
+    if (this.cameraModel?.model) {
+      this.camera.updateCamera(this.cameraModel.model);
     }
+  }
+
+  /**
+   * update this.cameraModel with a new model if the camera info has changed
+   */
+  private updateCameraModel(newCameraInfo: CameraInfo) {
+    // If the camera info has not changed, we don't need to make a new model and can return the existing one
+    const currentCameraInfo = this.cameraModel?.info;
+    const dataEqual = cameraInfosEqual(currentCameraInfo, newCameraInfo);
+    if (dataEqual && currentCameraInfo != undefined) {
+      return;
+    }
+
+    const model = this.getPinholeCameraModel(newCameraInfo);
+    if (model) {
+      this.cameraModel = {
+        model,
+        info: newCameraInfo,
+      };
+    }
+  }
+
+  /**
+   * Returns PinholeCameraModel for given CameraInfo
+   * This function will set a topic error on the image topic if the camera model creation fails.
+   * @param cameraInfo - CameraInfo to create model from
+   */
+  private getPinholeCameraModel(cameraInfo: CameraInfo): PinholeCameraModel | undefined {
+    let model = undefined;
+    try {
+      model = new PinholeCameraModel(cameraInfo);
+      this.renderer.settings.errors.remove(CALIBRATION_TOPIC_PATH, CAMERA_MODEL);
+    } catch (errUnk) {
+      this.cameraModel = undefined;
+      const err = errUnk as Error;
+      this.renderer.settings.errors.add(CALIBRATION_TOPIC_PATH, CAMERA_MODEL, err.message);
+    }
+    return model;
   }
 
   public getActiveCamera(): THREE.PerspectiveCamera | THREE.OrthographicCamera {
