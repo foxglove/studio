@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { StoryFn } from "@storybook/react";
+import { StoryObj } from "@storybook/react";
 
 import { MessageEvent } from "@foxglove/studio";
 import { Topic } from "@foxglove/studio-base/players/types";
@@ -102,60 +102,63 @@ export default {
   component: ThreeDeePanel,
 };
 
-export const Urdfs: StoryFn = (): JSX.Element => {
-  const topics: Topic[] = [{ name: "/robot_description", schemaName: "std_msgs/String" }];
-  const robot_description: MessageEvent<{ data: string }> = {
-    topic: "/robot_description",
-    receiveTime: { sec: 10, nsec: 0 },
-    message: {
-      data: URDF,
-    },
-    schemaName: "std_msgs/String",
-    sizeInBytes: 0,
-  };
+export const Urdfs: StoryObj = {
+  render: function Story(): JSX.Element {
+    const topics: Topic[] = [{ name: "/robot_description", schemaName: "std_msgs/String" }];
+    const robot_description: MessageEvent<{ data: string }> = {
+      topic: "/robot_description",
+      receiveTime: { sec: 10, nsec: 0 },
+      message: {
+        data: URDF,
+      },
+      schemaName: "std_msgs/String",
+      sizeInBytes: 0,
+    };
 
-  const fixture = useDelayedFixture({
-    topics,
-    frame: {
-      "/robot_description": [robot_description],
-    },
-    capabilities: [],
-    activeData: {
-      currentTime: undefined,
-    },
-  });
+    const fixture = useDelayedFixture({
+      topics,
+      frame: {
+        "/robot_description": [robot_description],
+      },
+      capabilities: [],
+      activeData: {
+        currentTime: undefined,
+      },
+    });
 
-  return (
-    <PanelSetup fixture={fixture}>
-      <ThreeDeePanel
-        overrideConfig={{
-          scene: {
-            transforms: {
-              axisScale: 3,
+    return (
+      <PanelSetup fixture={fixture}>
+        <ThreeDeePanel
+          overrideConfig={{
+            scene: {
+              transforms: {
+                axisScale: 3,
+              },
             },
-          },
-          layers: {
-            grid: {
-              layerId: "foxglove.Grid",
-              position: [0, 0, 0],
+            layers: {
+              grid: {
+                layerId: "foxglove.Grid",
+                position: [0, 0, 0],
+              },
+              urdf: {
+                layerId: "foxglove.Urdf",
+                url: encodeURI(`data:text/xml;utf8,${URDF2}`),
+              },
             },
-            urdf: {
-              layerId: "foxglove.Urdf",
-              url: encodeURI(`data:text/xml;utf8,${URDF2}`),
+            cameraState: {
+              distance: 6,
             },
-          },
-          cameraState: {
-            distance: 6,
-          },
-          topics: {
-            "/robot_description": { visible: true },
-          },
-        }}
-      />
-    </PanelSetup>
-  );
+            topics: {
+              "/robot_description": { visible: true },
+            },
+          }}
+        />
+      </PanelSetup>
+    );
+  },
+
+  parameters: { colorScheme: "dark" },
 };
-Urdfs.parameters = { colorScheme: "dark" };
 
 function makeColorAttribute(hex: string, alpha = 1): string {
   const c = makeColor(hex, alpha);

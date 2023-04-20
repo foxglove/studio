@@ -45,7 +45,7 @@ export const EmptyState = (): JSX.Element => {
 };
 
 export const InvalidValue = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return <GaugePanel overrideConfig={{ path: "/data.value", minValue: 0, maxValue: 1 }} />;
   },
 
@@ -53,7 +53,7 @@ export const InvalidValue = {
 };
 
 export const Rainbow = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return (
       <GaugePanel
         overrideConfig={{
@@ -71,7 +71,7 @@ export const Rainbow = {
 };
 
 export const Turbo = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return (
       <GaugePanel
         overrideConfig={{
@@ -89,7 +89,7 @@ export const Turbo = {
 };
 
 export const TurboReverse = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return (
       <GaugePanel
         overrideConfig={{
@@ -108,7 +108,7 @@ export const TurboReverse = {
 };
 
 export const CustomGradient = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return (
       <GaugePanel
         overrideConfig={{
@@ -126,7 +126,7 @@ export const CustomGradient = {
 };
 
 export const CustomGradientReverse = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return (
       <GaugePanel
         overrideConfig={{
@@ -145,7 +145,7 @@ export const CustomGradientReverse = {
 };
 
 export const MinValue = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return <GaugePanel overrideConfig={{ path: "/data.value", minValue: 0, maxValue: 1 }} />;
   },
 
@@ -153,7 +153,7 @@ export const MinValue = {
 };
 
 export const MaxValue = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return <GaugePanel overrideConfig={{ path: "/data.value", minValue: 0, maxValue: 1 }} />;
   },
 
@@ -161,7 +161,7 @@ export const MaxValue = {
 };
 
 export const TooLow = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return <GaugePanel overrideConfig={{ path: "/data.value", minValue: 0, maxValue: 1 }} />;
   },
 
@@ -169,7 +169,7 @@ export const TooLow = {
 };
 
 export const TooHigh = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return <GaugePanel overrideConfig={{ path: "/data.value", minValue: 0, maxValue: 1 }} />;
   },
 
@@ -177,7 +177,7 @@ export const TooHigh = {
 };
 
 export const CustomRange = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return <GaugePanel overrideConfig={{ path: "/data.value", minValue: 5, maxValue: 7 }} />;
   },
 
@@ -185,7 +185,7 @@ export const CustomRange = {
 };
 
 export const MessagePathWithFilter = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return (
       <GaugePanel overrideConfig={{ path: `/data{id=="b"}.value`, minValue: 0, maxValue: 4 }} />
     );
@@ -220,7 +220,7 @@ export const MessagePathWithFilter = {
 };
 
 export const StringValue = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return <GaugePanel overrideConfig={{ path: `/data.value`, minValue: 0, maxValue: 1 }} />;
   },
 

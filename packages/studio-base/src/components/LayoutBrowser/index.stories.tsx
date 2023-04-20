@@ -146,17 +146,20 @@ export default {
   decorators: [WithSetup],
 };
 
-export const Empty: StoryFn = (): JSX.Element => {
-  return <LayoutBrowser />;
+export const Empty: StoryObj = {
+  render: function Story(): JSX.Element {
+    return <LayoutBrowser />;
+  },
+
+  parameters: { mockLayouts: [] },
 };
-Empty.parameters = { mockLayouts: [] };
 
 export const LayoutList: StoryFn = (): JSX.Element => {
   return <LayoutBrowser />;
 };
 
 export const MultiSelect: StoryObj = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return <LayoutBrowser />;
   },
 
@@ -185,101 +188,107 @@ export const MultiSelect: StoryObj = {
   },
 };
 
-export const MultiDelete: StoryFn = (): JSX.Element => {
-  return <LayoutBrowser />;
-};
-MultiDelete.parameters = { colorScheme: "dark" };
-MultiDelete.play = async () => {
-  await doMultiAction("Delete");
+export const MultiDelete: StoryObj = {
+  render: function Story(): JSX.Element {
+    return <LayoutBrowser />;
+  },
 
-  const confirmButton = await screen.findByText("Delete");
-  fireEvent.click(confirmButton);
-};
+  parameters: { colorScheme: "dark" },
 
-export const MultiDuplicate: StoryFn = (): JSX.Element => {
-  return <LayoutBrowser />;
-};
-MultiDuplicate.parameters = {
-  colorScheme: "dark",
-  mockLayouts: [exampleCurrentLayout, makeUnsavedLayout(1), shortLayout],
-};
-MultiDuplicate.play = async () => {
-  await doMultiAction("Duplicate");
+  play: async () => {
+    await doMultiAction("Delete");
+
+    const confirmButton = await screen.findByText("Delete");
+    fireEvent.click(confirmButton);
+  },
 };
 
-export const MultiRevert: StoryFn = (): JSX.Element => {
-  return <LayoutBrowser />;
-};
-MultiRevert.parameters = {
-  colorScheme: "dark",
-  mockLayouts: [makeUnsavedLayout(1), makeUnsavedLayout(2), makeUnsavedLayout(3)],
-};
-MultiRevert.play = async () => {
-  await doMultiAction("Revert");
+export const MultiDuplicate: StoryObj = {
+  render: function Story(): JSX.Element {
+    return <LayoutBrowser />;
+  },
 
-  const revertButton = await screen.findByText("Discard changes");
-  fireEvent.click(revertButton);
-};
+  parameters: {
+    colorScheme: "dark",
+    mockLayouts: [exampleCurrentLayout, makeUnsavedLayout(1), shortLayout],
+  },
 
-export const MultiSave: StoryFn = (): JSX.Element => {
-  return <LayoutBrowser />;
-};
-MultiSave.parameters = {
-  colorScheme: "dark",
-  mockLayouts: [makeUnsavedLayout(1), makeUnsavedLayout(2), makeUnsavedLayout(3)],
-};
-MultiSave.play = async () => {
-  await doMultiAction("Save changes");
+  play: async () => {
+    await doMultiAction("Duplicate");
+  },
 };
 
-TruncatedLayoutName.parameters = {
-  mockLayouts: [
-    {
-      id: "not-current",
-      name: "Lorem ipsum dolor sit amet, consectetur adipiscing elit",
-      baseline: { data: DEFAULT_LAYOUT_FOR_TESTS, updatedAt: new Date(10).toISOString() },
-    },
-  ],
+export const MultiRevert: StoryObj = {
+  render: function Story(): JSX.Element {
+    return <LayoutBrowser />;
+  },
+
+  parameters: {
+    colorScheme: "dark",
+    mockLayouts: [makeUnsavedLayout(1), makeUnsavedLayout(2), makeUnsavedLayout(3)],
+  },
+
+  play: async () => {
+    await doMultiAction("Revert");
+
+    const revertButton = await screen.findByText("Discard changes");
+    fireEvent.click(revertButton);
+  },
 };
+
+export const MultiSave: StoryObj = {
+  render: function Story(): JSX.Element {
+    return <LayoutBrowser />;
+  },
+
+  parameters: {
+    colorScheme: "dark",
+    mockLayouts: [makeUnsavedLayout(1), makeUnsavedLayout(2), makeUnsavedLayout(3)],
+  },
+
+  play: async () => {
+    await doMultiAction("Save changes");
+  },
+};
+
 export const TruncatedLayoutName: StoryFn = (): JSX.Element => {
   return <LayoutBrowser />;
 };
 
-TruncatedLayoutNameSelected.parameters = {
-  mockLayouts: [
-    {
-      id: "test-id",
-      name: "Lorem ipsum dolor sit amet, consectetur adipiscing elit",
-      baseline: { data: DEFAULT_LAYOUT_FOR_TESTS, updatedAt: new Date(10).toISOString() },
-    },
-  ],
-};
 export const TruncatedLayoutNameSelected: StoryFn = (): JSX.Element => {
   return <LayoutBrowser />;
 };
 
-export const AddLayout: StoryFn = (): JSX.Element => {
-  return (
-    <LayoutBrowser
-      currentDateForStorybook={useMemo(() => new Date("2021-06-16T04:28:33.549Z"), [])}
-    />
-  );
-};
-AddLayout.parameters = { colorScheme: "dark" };
-AddLayout.play = async () => {
-  const button = await screen.findByTestId("add-layout");
-  fireEvent.click(button);
+export const AddLayout: StoryObj = {
+  render: function Story(): JSX.Element {
+    return (
+      <LayoutBrowser
+        currentDateForStorybook={useMemo(() => new Date("2021-06-16T04:28:33.549Z"), [])}
+      />
+    );
+  },
+
+  parameters: { colorScheme: "dark" },
+
+  play: async () => {
+    const button = await screen.findByTestId("add-layout");
+    fireEvent.click(button);
+  },
 };
 
-export const MenuOpen: StoryFn = (): JSX.Element => {
-  return <LayoutBrowser />;
-};
-MenuOpen.parameters = { colorScheme: "dark" };
-MenuOpen.play = async () => {
-  const actions = await screen.findAllByTestId("layout-actions");
-  if (actions[1]) {
-    fireEvent.click(actions[1]);
-  }
+export const MenuOpen: StoryObj = {
+  render: function Story(): JSX.Element {
+    return <LayoutBrowser />;
+  },
+
+  parameters: { colorScheme: "dark" },
+
+  play: async () => {
+    const actions = await screen.findAllByTestId("layout-actions");
+    if (actions[1]) {
+      fireEvent.click(actions[1]);
+    }
+  },
 };
 
 export const MenuOpenLight = MenuOpen.bind(undefined);
@@ -291,106 +300,136 @@ MenuOpenLight.play = async () => {
   }
 };
 
-export const EditingName: StoryFn = (): JSX.Element => {
-  return <LayoutBrowser />;
-};
-EditingName.parameters = { colorScheme: "dark" };
-EditingName.play = async () => {
-  const actions = await screen.findAllByTestId("layout-actions");
-  if (actions[1]) {
-    fireEvent.click(actions[1]);
-  }
-  const button = await screen.findByText("Rename");
-  fireEvent.click(button);
+export const EditingName: StoryObj = {
+  render: function Story(): JSX.Element {
+    return <LayoutBrowser />;
+  },
+
+  parameters: { colorScheme: "dark" },
+
+  play: async () => {
+    const actions = await screen.findAllByTestId("layout-actions");
+    if (actions[1]) {
+      fireEvent.click(actions[1]);
+    }
+    const button = await screen.findByText("Rename");
+    fireEvent.click(button);
+  },
 };
 
-export const CancelRenameWithEscape: StoryFn = (): JSX.Element => {
-  return <LayoutBrowser />;
-};
-CancelRenameWithEscape.parameters = { colorScheme: "dark" };
-CancelRenameWithEscape.play = async () => {
-  const actions = await screen.findAllByTestId("layout-actions");
-  if (actions[1]) {
-    fireEvent.click(actions[1]);
-  }
-  const button = await screen.findByText("Rename");
-  fireEvent.click(button);
-  fireEvent.keyDown(document.activeElement!, { key: "Escape" });
+export const CancelRenameWithEscape: StoryObj = {
+  render: function Story(): JSX.Element {
+    return <LayoutBrowser />;
+  },
+
+  parameters: { colorScheme: "dark" },
+
+  play: async () => {
+    const actions = await screen.findAllByTestId("layout-actions");
+    if (actions[1]) {
+      fireEvent.click(actions[1]);
+    }
+    const button = await screen.findByText("Rename");
+    fireEvent.click(button);
+    fireEvent.keyDown(document.activeElement!, { key: "Escape" });
+  },
 };
 
-export const CommitRenameWithTab: StoryFn = (): JSX.Element => {
-  return <LayoutBrowser />;
-};
-CommitRenameWithTab.parameters = { colorScheme: "dark" };
-CommitRenameWithTab.play = async () => {
-  const actions = await screen.findAllByTestId("layout-actions");
-  if (actions[1]) {
-    fireEvent.click(actions[1]);
-  }
-  const button = await screen.findByText("Rename");
-  fireEvent.click(button);
-  fireEvent.change(document.activeElement!, { target: { value: "New name" } });
-  fireEvent.focusOut(document.activeElement!);
+export const CommitRenameWithTab: StoryObj = {
+  render: function Story(): JSX.Element {
+    return <LayoutBrowser />;
+  },
+
+  parameters: { colorScheme: "dark" },
+
+  play: async () => {
+    const actions = await screen.findAllByTestId("layout-actions");
+    if (actions[1]) {
+      fireEvent.click(actions[1]);
+    }
+    const button = await screen.findByText("Rename");
+    fireEvent.click(button);
+    fireEvent.change(document.activeElement!, { target: { value: "New name" } });
+    fireEvent.focusOut(document.activeElement!);
+  },
 };
 
-export const Duplicate: StoryFn = (): JSX.Element => {
-  return <LayoutBrowser />;
-};
-Duplicate.parameters = { colorScheme: "dark" };
-Duplicate.play = async () => {
-  const actions = await screen.findAllByTestId("layout-actions");
-  if (actions[1]) {
-    fireEvent.click(actions[1]);
-  }
-  const button = await screen.findByText("Duplicate");
-  fireEvent.click(button);
+export const Duplicate: StoryObj = {
+  render: function Story(): JSX.Element {
+    return <LayoutBrowser />;
+  },
+
+  parameters: { colorScheme: "dark" },
+
+  play: async () => {
+    const actions = await screen.findAllByTestId("layout-actions");
+    if (actions[1]) {
+      fireEvent.click(actions[1]);
+    }
+    const button = await screen.findByText("Duplicate");
+    fireEvent.click(button);
+  },
 };
 
-export const DeleteLayout: StoryFn = (): JSX.Element => {
-  return <LayoutBrowser />;
-};
-DeleteLayout.parameters = { colorScheme: "dark" };
-DeleteLayout.play = async () => await deleteLayoutInteraction(0);
+export const DeleteLayout: StoryObj = {
+  render: function Story(): JSX.Element {
+    return <LayoutBrowser />;
+  },
 
-export const DeleteSelectedLayout: StoryFn = (): JSX.Element => {
-  return <LayoutBrowser />;
+  parameters: { colorScheme: "dark" },
+  play: async () => await deleteLayoutInteraction(0),
 };
-DeleteSelectedLayout.play = async () => {
-  const layouts = await screen.findAllByTestId("layout-list-item");
-  if (layouts[1]) {
-    fireEvent.click(layouts[1]);
-  }
-  await deleteLayoutInteraction(1);
-  if (layouts[0]) {
-    fireEvent.click(layouts[0]);
-  }
-};
-DeleteSelectedLayout.parameters = { colorScheme: "dark" };
 
-export const DeleteLastLayout: StoryFn = (): JSX.Element => {
-  return <LayoutBrowser />;
-};
-DeleteLastLayout.parameters = {
-  mockLayouts: [exampleCurrentLayout],
-  colorScheme: "dark",
-};
-DeleteLastLayout.play = async () => await deleteLayoutInteraction(0);
+export const DeleteSelectedLayout: StoryObj = {
+  render: function Story(): JSX.Element {
+    return <LayoutBrowser />;
+  },
 
-export const SignInPrompt: StoryFn = (): JSX.Element => {
-  return (
-    <CurrentUserContext.Provider
-      value={{
-        currentUser: undefined,
-        signIn: () => undefined,
-        signOut: async () => undefined,
-      }}
-    >
-      <WorkspaceContextProvider>
-        <LayoutBrowser />
-      </WorkspaceContextProvider>
-    </CurrentUserContext.Provider>
-  );
+  play: async () => {
+    const layouts = await screen.findAllByTestId("layout-list-item");
+    if (layouts[1]) {
+      fireEvent.click(layouts[1]);
+    }
+    await deleteLayoutInteraction(1);
+    if (layouts[0]) {
+      fireEvent.click(layouts[0]);
+    }
+  },
+
+  parameters: { colorScheme: "dark" },
 };
-SignInPrompt.parameters = {
-  colorScheme: "light",
+
+export const DeleteLastLayout: StoryObj = {
+  render: function Story(): JSX.Element {
+    return <LayoutBrowser />;
+  },
+
+  parameters: {
+    mockLayouts: [exampleCurrentLayout],
+    colorScheme: "dark",
+  },
+
+  play: async () => await deleteLayoutInteraction(0),
+};
+
+export const SignInPrompt: StoryObj = {
+  render: function Story(): JSX.Element {
+    return (
+      <CurrentUserContext.Provider
+        value={{
+          currentUser: undefined,
+          signIn: () => undefined,
+          signOut: async () => undefined,
+        }}
+      >
+        <WorkspaceContextProvider>
+          <LayoutBrowser />
+        </WorkspaceContextProvider>
+      </CurrentUserContext.Provider>
+    );
+  },
+
+  parameters: {
+    colorScheme: "light",
+  },
 };

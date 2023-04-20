@@ -128,7 +128,7 @@ export const LeftClicked = {
 };
 
 export const LeftClosed = {
-  render: (): JSX.Element => (
+  render: function Story(): JSX.Element (
     <Story defaultLeftKey="b" defaultRightKey="y" label="Left sidebar should be closed" />
   ),
 
@@ -163,7 +163,7 @@ export const RightClicked = {
 };
 
 export const RightClosed = {
-  render: (): JSX.Element => (
+  render: function Story(): JSX.Element (
     <Story defaultLeftKey="b" defaultRightKey="y" label="Right sidebar should be closed" />
   ),
 

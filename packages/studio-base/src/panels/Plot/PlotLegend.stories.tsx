@@ -136,16 +136,21 @@ export const Dark: StoryObj = {
   parameters: { useReadySignal: true, colorScheme: "dark" },
 };
 
-export const LimitWidth: StoryFn = (): JSX.Element => {
-  return (
-    <div
-      style={{
-        height: "100%",
-        width: "100%",
-      }}
-    >
-      <Plot overrideConfig={{ ...exampleConfig, legendDisplay: "left", sidebarDimension: 4096 }} />
-    </div>
-  );
+export const LimitWidth: StoryObj = {
+  render: function Story(): JSX.Element {
+    return (
+      <div
+        style={{
+          height: "100%",
+          width: "100%",
+        }}
+      >
+        <Plot
+          overrideConfig={{ ...exampleConfig, legendDisplay: "left", sidebarDimension: 4096 }}
+        />
+      </div>
+    );
+  },
+
+  parameters: { useReadySignal: true, colorScheme: "light" },
 };
-LimitWidth.parameters = { useReadySignal: true, colorScheme: "light" };

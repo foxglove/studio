@@ -97,7 +97,7 @@ export default {
 };
 
 export const EmptyState = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return <MapPanel />;
   },
 
@@ -105,7 +105,7 @@ export const EmptyState = {
 };
 
 export const SinglePoint = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return <MapPanel />;
   },
 
@@ -135,7 +135,7 @@ export const SinglePoint = {
 };
 
 export const SinglePointWithMissingValues = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return <MapPanel />;
   },
 
@@ -169,7 +169,7 @@ export const SinglePointWithMissingValues = {
 };
 
 export const SinglePointWithNoFix = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return <MapPanel />;
   },
 
@@ -205,7 +205,7 @@ export const SinglePointWithNoFix = {
 };
 
 export const SinglePointWithSettings = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return <MapPanel overrideConfig={{ layer: "custom" }} />;
   },
 
@@ -218,7 +218,7 @@ export const SinglePointWithSettings = {
 };
 
 export const SinglePointWithSettingsOverride = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return <MapPanel overrideConfig={{ layer: "custom", topicColors: { "/gps": "#ffc0cb" } }} />;
   },
 
@@ -231,7 +231,7 @@ export const SinglePointWithSettingsOverride = {
 };
 
 export const MultipleTopics = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return <MapPanel />;
   },
 
@@ -274,7 +274,7 @@ export const MultipleTopics = {
 };
 
 export const SinglePointNoFix = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return <MapPanel />;
   },
 
@@ -315,7 +315,7 @@ export const SinglePointNoFix = {
 };
 
 export const SinglePointDiagonalCovariance = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return <MapPanel />;
   },
 
@@ -357,7 +357,7 @@ export const SinglePointDiagonalCovariance = {
 };
 
 export const SinglePointFullCovariance = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return <MapPanel />;
   },
 
@@ -400,7 +400,7 @@ export const SinglePointFullCovariance = {
 const GeoCenter = { lat: 0.25, lon: 0.25 };
 
 export const GeoJSON = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     const topics: Topic[] = [
       { name: "/geo", schemaName: "foxglove.GeoJSON" },
       { name: "/geo2", schemaName: "foxglove.GeoJSON" },

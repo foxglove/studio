@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { action } from "@storybook/addon-actions";
-import { StoryFn } from "@storybook/react";
+import { StoryObj, StoryFn } from "@storybook/react";
 
 import { AppBar } from "@foxglove/studio-base/components/AppBar";
 import { StorybookDecorator } from "@foxglove/studio-base/components/AppBar/StorybookDecorator.stories";
@@ -36,6 +36,7 @@ const actions = {
 export const Default: StoryFn = (): JSX.Element => {
   return <AppBar {...actions} />;
 };
+
 export const DefaultChinese = Object.assign(Default.bind(undefined), {
   parameters: { forceLanguage: "zh" },
 });
@@ -118,130 +119,139 @@ export const SignInStates: StoryFn = (): JSX.Element => {
     </div>
   );
 };
+
 export const SignInStatesChinese = Object.assign(SignInStates.bind(undefined), {
   parameters: { forceLanguage: "zh" },
 });
 
-export const PlayerStates: StoryFn = (): JSX.Element => {
-  return (
-    <Stack overflowY="auto">
-      <div
-        style={{ display: "grid", gridTemplateColumns: "max-content auto", alignItems: "center" }}
-      >
-        {[
-          PlayerPresence.NOT_PRESENT,
-          PlayerPresence.INITIALIZING,
-          PlayerPresence.RECONNECTING,
-          PlayerPresence.BUFFERING,
-          PlayerPresence.PRESENT,
-          PlayerPresence.ERROR,
-        ].map((presence) => (
+export const PlayerStates: StoryObj = {
+  render: function Story(): JSX.Element {
+    return (
+      <Stack overflowY="auto">
+        <div
+          style={{ display: "grid", gridTemplateColumns: "max-content auto", alignItems: "center" }}
+        >
+          {[
+            PlayerPresence.NOT_PRESENT,
+            PlayerPresence.INITIALIZING,
+            PlayerPresence.RECONNECTING,
+            PlayerPresence.BUFFERING,
+            PlayerPresence.PRESENT,
+            PlayerPresence.ERROR,
+          ].map((presence) => (
+            <MockMessagePipelineProvider
+              key={presence}
+              name="https://exampleurl:2002"
+              presence={presence}
+              problems={
+                presence === PlayerPresence.ERROR
+                  ? [
+                      { severity: "error", message: "example error" },
+                      { severity: "warn", message: "example warn" },
+                    ]
+                  : undefined
+              }
+            >
+              <LabeledAppBar label={presence} {...actions} />
+            </MockMessagePipelineProvider>
+          ))}
           <MockMessagePipelineProvider
-            key={presence}
             name="https://exampleurl:2002"
-            presence={presence}
-            problems={
-              presence === PlayerPresence.ERROR
-                ? [
-                    { severity: "error", message: "example error" },
-                    { severity: "warn", message: "example warn" },
-                  ]
-                : undefined
-            }
+            presence={PlayerPresence.INITIALIZING}
+            problems={[
+              { severity: "error", message: "example error" },
+              { severity: "warn", message: "example warn" },
+            ]}
           >
-            <LabeledAppBar label={presence} {...actions} />
+            <LabeledAppBar label="INITIALIZING + problems" {...actions} />
           </MockMessagePipelineProvider>
-        ))}
-        <MockMessagePipelineProvider
-          name="https://exampleurl:2002"
-          presence={PlayerPresence.INITIALIZING}
-          problems={[
-            { severity: "error", message: "example error" },
-            { severity: "warn", message: "example warn" },
-          ]}
-        >
-          <LabeledAppBar label="INITIALIZING + problems" {...actions} />
-        </MockMessagePipelineProvider>
-        <MockMessagePipelineProvider
-          name={undefined}
-          presence={PlayerPresence.INITIALIZING}
-          problems={[
-            { severity: "error", message: "example error" },
-            { severity: "warn", message: "example warn" },
-          ]}
-        >
-          <LabeledAppBar label="INITIALIZING + no name" {...actions} />
-        </MockMessagePipelineProvider>
-      </div>
-    </Stack>
-  );
+          <MockMessagePipelineProvider
+            name={undefined}
+            presence={PlayerPresence.INITIALIZING}
+            problems={[
+              { severity: "error", message: "example error" },
+              { severity: "warn", message: "example warn" },
+            ]}
+          >
+            <LabeledAppBar label="INITIALIZING + no name" {...actions} />
+          </MockMessagePipelineProvider>
+        </div>
+      </Stack>
+    );
+  },
+
+  parameters: { colorScheme: "light" },
 };
-PlayerStates.parameters = { colorScheme: "light" };
+
 export const PlayerStatesChinese = Object.assign(PlayerStates.bind(undefined), {
   parameters: { olorScheme: "light", forceLanguage: "zh" },
 });
 
-export const DataSources: StoryFn = (): JSX.Element => {
-  return (
-    <Stack overflowY="auto">
-      <div
-        style={{ display: "grid", gridTemplateColumns: "max-content auto", alignItems: "center" }}
-      >
-        <MockMessagePipelineProvider
-          name="Adapted from nuScenes dataset. Copyright © 2020 nuScenes. https://www.nuscenes.org/terms-of-use"
-          presence={PlayerPresence.PRESENT}
-          urlState={{ sourceId: "sample-nuscenes" }}
+export const DataSources: StoryObj = {
+  render: function Story(): JSX.Element {
+    return (
+      <Stack overflowY="auto">
+        <div
+          style={{ display: "grid", gridTemplateColumns: "max-content auto", alignItems: "center" }}
         >
-          <LabeledAppBar label="sample-nuscenes" {...actions} />
-        </MockMessagePipelineProvider>
-        {[
-          "mcap-local-file",
-          "ros1-local-bagfile",
-          "ros2-local-bagfile",
-          "ulog-local-file",
-          "remote-file",
-        ].map((sourceId) => (
           <MockMessagePipelineProvider
-            key={sourceId}
-            name="longexampleurlwith_specialcharaters-and-portnumber.ext"
+            name="Adapted from nuScenes dataset. Copyright © 2020 nuScenes. https://www.nuscenes.org/terms-of-use"
             presence={PlayerPresence.PRESENT}
-            urlState={{ sourceId }}
+            urlState={{ sourceId: "sample-nuscenes" }}
           >
-            <LabeledAppBar label={sourceId} {...actions} />
+            <LabeledAppBar label="sample-nuscenes" {...actions} />
           </MockMessagePipelineProvider>
-        ))}
-        {[
-          "ros1-socket",
-          "ros2-socket",
-          "rosbridge-websocket",
-          "foxglove-websocket",
-          "velodyne-device",
-          "some other source type",
-        ].map((sourceId) => (
+          {[
+            "mcap-local-file",
+            "ros1-local-bagfile",
+            "ros2-local-bagfile",
+            "ulog-local-file",
+            "remote-file",
+          ].map((sourceId) => (
+            <MockMessagePipelineProvider
+              key={sourceId}
+              name="longexampleurlwith_specialcharaters-and-portnumber.ext"
+              presence={PlayerPresence.PRESENT}
+              urlState={{ sourceId }}
+            >
+              <LabeledAppBar label={sourceId} {...actions} />
+            </MockMessagePipelineProvider>
+          ))}
+          {[
+            "ros1-socket",
+            "ros2-socket",
+            "rosbridge-websocket",
+            "foxglove-websocket",
+            "velodyne-device",
+            "some other source type",
+          ].map((sourceId) => (
+            <MockMessagePipelineProvider
+              key={sourceId}
+              name="https://longexampleurlwith_specialcharaters-and-portnumber:3030"
+              presence={PlayerPresence.PRESENT}
+              urlState={{ sourceId }}
+            >
+              <LabeledAppBar label={sourceId} {...actions} />
+            </MockMessagePipelineProvider>
+          ))}
           <MockMessagePipelineProvider
-            key={sourceId}
-            name="https://longexampleurlwith_specialcharaters-and-portnumber:3030"
+            name="https://longexampleurlwith_error-and-portnumber:3030"
             presence={PlayerPresence.PRESENT}
-            urlState={{ sourceId }}
+            problems={[
+              { severity: "error", message: "example error" },
+              { severity: "warn", message: "example warn" },
+            ]}
           >
-            <LabeledAppBar label={sourceId} {...actions} />
+            <LabeledAppBar label="with problems" {...actions} />
           </MockMessagePipelineProvider>
-        ))}
-        <MockMessagePipelineProvider
-          name="https://longexampleurlwith_error-and-portnumber:3030"
-          presence={PlayerPresence.PRESENT}
-          problems={[
-            { severity: "error", message: "example error" },
-            { severity: "warn", message: "example warn" },
-          ]}
-        >
-          <LabeledAppBar label="with problems" {...actions} />
-        </MockMessagePipelineProvider>
-      </div>
-    </Stack>
-  );
+        </div>
+      </Stack>
+    );
+  },
+
+  parameters: { colorScheme: "light" },
 };
-DataSources.parameters = { colorScheme: "light" };
+
 export const DataSourcesChinese = Object.assign(DataSources.bind(undefined), {
   parameters: { colorScheme: "light", forceLanguage: "zh" },
 });

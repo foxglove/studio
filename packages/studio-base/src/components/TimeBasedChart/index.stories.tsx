@@ -110,60 +110,62 @@ export const Simple: StoryFn = (): JSX.Element => {
     </div>
   );
 };
+
 export const SimpleLight = Object.assign(Simple.bind(undefined), {
   parameters: { colorScheme: "light" },
 });
 
-// zoom and update without resetting zoom
-export const CanZoomAndUpdate: StoryFn = (): JSX.Element => {
-  const [chartProps, setChartProps] = useState(cloneDeep(commonProps));
-  const callCountRef = useRef(0);
+export const CanZoomAndUpdate: StoryObj = {
+  render: function Story(): JSX.Element {
+    const [chartProps, setChartProps] = useState(cloneDeep(commonProps));
+    const callCountRef = useRef(0);
 
-  const doScroll = useCallback(async () => {
-    const canvasEl = document.querySelector("canvas");
-    if (!canvasEl) {
-      return;
-    }
-
-    // Zoom is a continuous event, so we need to simulate wheel multiple times
-    for (let i = 0; i < 5; i++) {
-      triggerWheel(canvasEl.parentElement!, 2);
-      await delay(10);
-    }
-
-    await delay(100);
-    setChartProps((oldProps) => {
-      const newProps = cloneDeep(oldProps);
-      const newDataPoint = cloneDeep(newProps.data.datasets[0]!.data[0]!);
-      newDataPoint.x = 20;
-      newProps.data.datasets[0]!.data[1] = newDataPoint;
-      return newProps;
-    });
-  }, []);
-
-  const pauseFrame = useCallback(() => {
-    return () => {
-      // first render of the chart triggers scrolling
-      if (callCountRef.current === 0) {
-        void doScroll();
+    const doScroll = useCallback(async () => {
+      const canvasEl = document.querySelector("canvas");
+      if (!canvasEl) {
+        return;
       }
 
-      ++callCountRef.current;
-    };
-  }, [doScroll]);
+      // Zoom is a continuous event, so we need to simulate wheel multiple times
+      for (let i = 0; i < 5; i++) {
+        triggerWheel(canvasEl.parentElement!, 2);
+        await delay(10);
+      }
 
-  return (
-    <div style={{ width: 800, height: 800, background: "black" }}>
-      <MockMessagePipelineProvider pauseFrame={pauseFrame}>
-        <TimeBasedChart {...chartProps} width={800} height={800} />
-      </MockMessagePipelineProvider>
-    </div>
-  );
-};
+      await delay(100);
+      setChartProps((oldProps) => {
+        const newProps = cloneDeep(oldProps);
+        const newDataPoint = cloneDeep(newProps.data.datasets[0]!.data[0]!);
+        newDataPoint.x = 20;
+        newProps.data.datasets[0]!.data[1] = newDataPoint;
+        return newProps;
+      });
+    }, []);
 
-CanZoomAndUpdate.parameters = {
-  chromatic: {
-    delay: 500,
+    const pauseFrame = useCallback(() => {
+      return () => {
+        // first render of the chart triggers scrolling
+        if (callCountRef.current === 0) {
+          void doScroll();
+        }
+
+        ++callCountRef.current;
+      };
+    }, [doScroll]);
+
+    return (
+      <div style={{ width: 800, height: 800, background: "black" }}>
+        <MockMessagePipelineProvider pauseFrame={pauseFrame}>
+          <TimeBasedChart {...chartProps} width={800} height={800} />
+        </MockMessagePipelineProvider>
+      </div>
+    );
+  },
+
+  parameters: {
+    chromatic: {
+      delay: 500,
+    },
   },
 };
 
@@ -244,15 +246,6 @@ export const CallPauseOnInitialMount: StoryFn = (): JSX.Element => {
   );
 };
 
-// We should still call resumeFrame exactly once when removed in the middle of an update.
-// The way this test works:
-// - start by rendering the chart normally
-// - after the timeout (chart should be rendered), force a re-render of the chart.
-// - This rerender updates the chart, which calls `pauseFrame` until the chart has finished updating
-// - in `pauseFrame`, trigger an update that removes the chart. This happens before the returned function
-// (`resumeFrame`) fires.
-// - `resumeFrame` should then fire exactly once.
-// shows `SUCCESS` message with no chart visible
 export const ResumeFrameOnUnmount: StoryFn = (): JSX.Element => {
   const [showChart, setShowChart] = useState(true);
   const [statusMessage, setStatusMessage] = useState("FAILURE - START");

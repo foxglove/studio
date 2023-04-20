@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Box } from "@mui/material";
-import { StoryFn } from "@storybook/react";
+import { StoryObj, StoryFn } from "@storybook/react";
 import { fireEvent, userEvent } from "@storybook/testing-library";
 import produce from "immer";
 import { last } from "lodash";
@@ -874,14 +874,16 @@ function Wrapper({ nodes }: { nodes: SettingsTreeNodes }): JSX.Element {
   );
 }
 
-export const Basics: StoryFn = (): JSX.Element => {
-  return <Wrapper nodes={BasicSettings} />;
-};
+export const Basics: StoryObj = {
+  render: function Story(): JSX.Element {
+    return <Wrapper nodes={BasicSettings} />;
+  },
 
-Basics.play = () => {
-  Array.from(document.querySelectorAll("[data-testid=node-actions-menu-button]"))
-    .slice(0, 1)
-    .forEach((node) => fireEvent.click(node));
+  play: () => {
+    Array.from(document.querySelectorAll("[data-testid=node-actions-menu-button]"))
+      .slice(0, 1)
+      .forEach((node) => fireEvent.click(node));
+  },
 };
 
 export const BasicsChinese = Object.assign(Basics.bind(undefined), {
@@ -897,18 +899,20 @@ export const ReadonlyFields: StoryFn = (): JSX.Element => {
   return <Wrapper nodes={ReadonlySettings} />;
 };
 
-export const PanelExamples: StoryFn = (): JSX.Element => {
-  return <Wrapper nodes={PanelExamplesSettings} />;
-};
+export const PanelExamples: StoryObj = {
+  render: function Story(): JSX.Element {
+    return <Wrapper nodes={PanelExamplesSettings} />;
+  },
 
-PanelExamples.play = () => {
-  Array.from(document.querySelectorAll("[data-node-function=edit-label]"))
-    .slice(0, 1)
-    .forEach((node) => {
-      fireEvent.click(node);
-      fireEvent.change(document.activeElement!, { target: { value: "Renamed Node" } });
-      fireEvent.keyDown(document.activeElement!, { key: "Enter" });
-    });
+  play: () => {
+    Array.from(document.querySelectorAll("[data-node-function=edit-label]"))
+      .slice(0, 1)
+      .forEach((node) => {
+        fireEvent.click(node);
+        fireEvent.change(document.activeElement!, { target: { value: "Renamed Node" } });
+        fireEvent.keyDown(document.activeElement!, { key: "Enter" });
+      });
+  },
 };
 
 export const IconExamples: StoryFn = (): JSX.Element => {
@@ -919,15 +923,18 @@ export const Topics: StoryFn = (): JSX.Element => {
   return <Wrapper nodes={TopicSettings} />;
 };
 
-export const Filter: StoryFn = (): JSX.Element => {
-  return <Wrapper nodes={FilterSettings} />;
-};
-Filter.play = () => {
-  const node = document.querySelector("[data-testid=settings-filter-field] input");
-  if (node) {
-    fireEvent.click(node);
-    fireEvent.change(node, { target: { value: "matcha" } });
-  }
+export const Filter: StoryObj = {
+  render: function Story(): JSX.Element {
+    return <Wrapper nodes={FilterSettings} />;
+  },
+
+  play: () => {
+    const node = document.querySelector("[data-testid=settings-filter-field] input");
+    if (node) {
+      fireEvent.click(node);
+      fireEvent.change(node, { target: { value: "matcha" } });
+    }
+  },
 };
 
 export const Colors: StoryFn = (): JSX.Element => {
@@ -1014,36 +1021,54 @@ export const Vec3: StoryFn = (): JSX.Element => {
   return <Wrapper nodes={settings} />;
 };
 
-async function clickSelect() {
+async function clickSelect(): Promise<void> {
   userEvent.click(document.querySelector(".MuiSelect-select")!);
 }
 
-export const SelectInvalidWithUndefined: StoryFn = (): JSX.Element => {
-  return <Wrapper nodes={SelectInvalidWithUndefinedSettings} />;
-};
-SelectInvalidWithUndefined.play = clickSelect;
+export const SelectInvalidWithUndefined: StoryObj = {
+  render: function Story(): JSX.Element {
+    return <Wrapper nodes={SelectInvalidWithUndefinedSettings} />;
+  },
 
-export const SelectInvalidWithoutUndefined: StoryFn = (): JSX.Element => {
-  return <Wrapper nodes={SelectInvalidWithoutUndefinedSettings} />;
+  play: clickSelect,
 };
-SelectInvalidWithoutUndefined.play = clickSelect;
 
-export const SelectValidWithUndefined: StoryFn = (): JSX.Element => {
-  return <Wrapper nodes={SelectValidWithUndefinedSettings} />;
-};
-SelectValidWithUndefined.play = clickSelect;
+export const SelectInvalidWithoutUndefined: StoryObj = {
+  render: function Story(): JSX.Element {
+    return <Wrapper nodes={SelectInvalidWithoutUndefinedSettings} />;
+  },
 
-export const SelectValidWithEmptyString: StoryFn = (): JSX.Element => {
-  return <Wrapper nodes={SelectValidWithEmptyStringSettings} />;
+  play: clickSelect,
 };
-SelectValidWithEmptyString.play = clickSelect;
 
-export const SelectEmpty: StoryFn = (): JSX.Element => {
-  return <Wrapper nodes={SelectEmptySettings} />;
-};
-SelectEmpty.play = clickSelect;
+export const SelectValidWithUndefined: StoryObj = {
+  render: function Story(): JSX.Element {
+    return <Wrapper nodes={SelectValidWithUndefinedSettings} />;
+  },
 
-export const SelectEmptyInvalid: StoryFn = (): JSX.Element => {
-  return <Wrapper nodes={SelectEmptyInvalidSettings} />;
+  play: clickSelect,
 };
-SelectEmptyInvalid.play = clickSelect;
+
+export const SelectValidWithEmptyString: StoryObj = {
+  render: function Story(): JSX.Element {
+    return <Wrapper nodes={SelectValidWithEmptyStringSettings} />;
+  },
+
+  play: clickSelect,
+};
+
+export const SelectEmpty: StoryObj = {
+  render: function Story(): JSX.Element {
+    return <Wrapper nodes={SelectEmptySettings} />;
+  },
+
+  play: clickSelect,
+};
+
+export const SelectEmptyInvalid: StoryObj = {
+  render: function Story(): JSX.Element {
+    return <Wrapper nodes={SelectEmptyInvalidSettings} />;
+  },
+
+  play: clickSelect,
+};

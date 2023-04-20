@@ -376,7 +376,6 @@ export const Foxglove_PointCloud_Intensity_Clamped = Foxglove_PointCloud_Intensi
   },
 );
 
-// Render a flat plane if we only have two dimensions
 export const Foxglove_PointCloud_TwoDimensions: StoryFn = (): JSX.Element => {
   const topics: Topic[] = [{ name: "/pointcloud", schemaName: "foxglove.PointCloud" }];
 

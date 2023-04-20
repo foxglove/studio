@@ -32,7 +32,7 @@ export const Unconfigured = (): JSX.Element => {
 };
 
 export const WithSettings = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return <TeleopPanel overrideConfig={{ topic: "/abc" }} />;
   },
 

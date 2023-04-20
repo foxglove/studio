@@ -105,7 +105,7 @@ export default {
 };
 
 export const PanelNotFound = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return (
       <DndProvider backend={HTML5Backend}>
         <PanelSetup
@@ -143,7 +143,7 @@ export const PanelWithError = (): JSX.Element => {
 };
 
 export const RemoveUnknownPanel = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return (
       <DndProvider backend={HTML5Backend}>
         <PanelSetup
@@ -173,7 +173,7 @@ export const EmptyLayout = (): JSX.Element => {
 };
 
 export const EmptyLayoutChinese = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return (
       <PanelSetup fixture={{ layout: undefined }}>
         <PanelLayout />
@@ -199,7 +199,7 @@ export const PanelLoading = (): JSX.Element => {
 };
 
 export const FullScreen = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return (
       <DndProvider backend={HTML5Backend}>
         <PanelSetup

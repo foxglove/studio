@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { StoryFn } from "@storybook/react";
+import { StoryObj, StoryFn } from "@storybook/react";
 import { screen, userEvent } from "@storybook/testing-library";
 import { useState } from "react";
 
@@ -25,15 +25,18 @@ export const WithAlpha: StoryFn = (): JSX.Element => {
   return <ColorPickerControl alphaType="alpha" value={color} onChange={setColor} />;
 };
 
-export const TextEntry: StoryFn = (): JSX.Element => {
-  const [color, setColor] = useState("");
+export const TextEntry: StoryObj = {
+  render: function Story(): JSX.Element {
+    const [color, setColor] = useState("");
 
-  return <ColorPickerControl alphaType="none" value={color} onChange={setColor} />;
-};
-TextEntry.play = async () => {
-  const inputs = await screen.findAllByPlaceholderText("RRGGBB");
-  for (const input of inputs) {
-    userEvent.click(input);
-    userEvent.type(input, "aabbcc");
-  }
+    return <ColorPickerControl alphaType="none" value={color} onChange={setColor} />;
+  },
+
+  play: async () => {
+    const inputs = await screen.findAllByPlaceholderText("RRGGBB");
+    for (const input of inputs) {
+      userEvent.click(input);
+      userEvent.type(input, "aabbcc");
+    }
+  },
 };

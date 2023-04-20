@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { StoryFn } from "@storybook/react";
+import { StoryObj, StoryFn } from "@storybook/react";
 import { screen, userEvent } from "@storybook/testing-library";
 import { useEffect } from "react";
 
@@ -38,24 +38,28 @@ export const Default: StoryFn = (): JSX.Element => {
   return <EventsList />;
 };
 
-export const Selected: StoryFn = (): JSX.Element => {
-  const setEvents = useEvents((store) => store.setEvents);
-  const selectEvent = useEvents((store) => store.selectEvent);
+export const Selected: StoryObj = {
+  render: function Story(): JSX.Element {
+    const setEvents = useEvents((store) => store.setEvents);
+    const selectEvent = useEvents((store) => store.selectEvent);
 
-  useEffect(() => {
-    const events = makeMockEvents(20);
+    useEffect(() => {
+      const events = makeMockEvents(20);
 
-    setEvents({ loading: false, value: events });
-  }, [selectEvent, setEvents]);
+      setEvents({ loading: false, value: events });
+    }, [selectEvent, setEvents]);
 
-  return <EventsList />;
-};
-Selected.play = async () => {
-  const events = await screen.findAllByTestId("sidebar-event");
-  userEvent.click(events[1]!);
-};
-Selected.parameters = {
-  colorScheme: "light",
+    return <EventsList />;
+  },
+
+  play: async () => {
+    const events = await screen.findAllByTestId("sidebar-event");
+    userEvent.click(events[1]!);
+  },
+
+  parameters: {
+    colorScheme: "light",
+  },
 };
 
 export const WithError: StoryFn = (): JSX.Element => {

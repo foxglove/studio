@@ -104,7 +104,7 @@ function makePathAndSelectionAction(path: undefined | string, item: number) {
 }
 
 export const PathWithHeaderFields = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return <MessagePathInputStory path="/some_topic/state.header.stamp.sec" />;
   },
 
@@ -112,7 +112,7 @@ export const PathWithHeaderFields = {
 };
 
 export const AutocompleteTopics = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return <MessagePathInputStory path="/" />;
   },
 
@@ -120,7 +120,7 @@ export const AutocompleteTopics = {
 };
 
 export const AutocompleteScalarFromTopicAndEmptyPath = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return <MessagePathInputStory path="" validTypes={["int32"]} />;
   },
 
@@ -129,7 +129,7 @@ export const AutocompleteScalarFromTopicAndEmptyPath = {
 };
 
 export const AutocompleteScalarFromTopic = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return <MessagePathInputStory path="" validTypes={["int32"]} />;
   },
 
@@ -138,7 +138,7 @@ export const AutocompleteScalarFromTopic = {
 };
 
 export const AutocompleteScalarFromFullTopic = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return <MessagePathInputStory path="" validTypes={["int32"]} />;
   },
 
@@ -147,7 +147,7 @@ export const AutocompleteScalarFromFullTopic = {
 };
 
 export const AutocompleteMessagePath = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return <MessagePathInputStory path="/some_topic/location.po" />;
   },
 
@@ -155,7 +155,7 @@ export const AutocompleteMessagePath = {
 };
 
 export const AutocompleteMessagePathLight = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return <MessagePathInputStory path="/some_topic/location.po" />;
   },
 
@@ -164,7 +164,7 @@ export const AutocompleteMessagePathLight = {
 };
 
 export const AutocompleteFilter = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return <MessagePathInputStory path="/some_topic/state.items[:]{}" />;
   },
 
@@ -172,7 +172,7 @@ export const AutocompleteFilter = {
 };
 
 export const AutocompleteTopLevelFilter = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return <MessagePathInputStory path="/some_topic/state{}" />;
   },
 
@@ -180,7 +180,7 @@ export const AutocompleteTopLevelFilter = {
 };
 
 export const AutocompleteForGlobalVariablesVariables = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return <MessagePathInputStory path="/some_topic/state{foo_id==0}.items[:]{id==$}" />;
   },
 
@@ -188,7 +188,7 @@ export const AutocompleteForGlobalVariablesVariables = {
 };
 
 export const PathWithValidGlobalVariablesVariable = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return <MessagePathInputStory path="/some_topic/state.items[:]{id==$global_var_2}" />;
   },
 
@@ -196,7 +196,7 @@ export const PathWithValidGlobalVariablesVariable = {
 };
 
 export const PathWithInvalidGlobalVariablesVariable = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return <MessagePathInputStory path="/some_topic/state.items[:]{id==$global_var_3}" />;
   },
 
@@ -204,7 +204,7 @@ export const PathWithInvalidGlobalVariablesVariable = {
 };
 
 export const PathWithIncorrectlyPrefixedGlobalVariablesVariable = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return <MessagePathInputStory path="/some_topic/state.items[:]{id==global_var_2}" />;
   },
 
@@ -212,7 +212,7 @@ export const PathWithIncorrectlyPrefixedGlobalVariablesVariable = {
 };
 
 export const AutocompleteForPathWithGlobalVariablesVariableInSliceSingleIdx = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return <MessagePathInputStory path="/some_topic/state.items[$]" />;
   },
 
@@ -220,7 +220,7 @@ export const AutocompleteForPathWithGlobalVariablesVariableInSliceSingleIdx = {
 };
 
 export const AutocompleteForPathWithGlobalVariablesVariableInSliceStartIdx = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return <MessagePathInputStory path="/some_topic/state.items[$:]" />;
   },
 
@@ -228,7 +228,7 @@ export const AutocompleteForPathWithGlobalVariablesVariableInSliceStartIdx = {
 };
 
 export const AutocompleteForPathWithGlobalVariablesVariableInSliceEndIdx = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return <MessagePathInputStory path="/some_topic/state.items[:$]" />;
   },
 
@@ -236,7 +236,7 @@ export const AutocompleteForPathWithGlobalVariablesVariableInSliceEndIdx = {
 };
 
 export const AutocompleteForPathWithGlobalVariablesVariablesInSliceStartAndEndIdx = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return <MessagePathInputStory path="/some_topic/state.items[$global_var_2:$]" />;
   },
 
@@ -244,7 +244,7 @@ export const AutocompleteForPathWithGlobalVariablesVariablesInSliceStartAndEndId
 };
 
 export const PathWithInvalidMathModifier = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return <MessagePathInputStory path="/some_topic/location.pose.x.@negative" />;
   },
 
@@ -252,7 +252,7 @@ export const PathWithInvalidMathModifier = {
 };
 
 export const AutocompleteWhenPrioritizedDatatypeIsAvailable = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return <MessagePathInputStory path="/" prioritizedDatatype="msgs/State" />;
   },
 
@@ -260,7 +260,7 @@ export const AutocompleteWhenPrioritizedDatatypeIsAvailable = {
 };
 
 export const AutocompleteForMessageWithJsonField = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return <MessagePathInputStory path="/some_logs_topic." />;
   },
 
@@ -268,7 +268,7 @@ export const AutocompleteForMessageWithJsonField = {
 };
 
 export const AutocompleteForPathWithExistingFilter = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return <MessagePathInputStory path="/some_topic/state.items[:]{id==1}." />;
   },
 
@@ -276,7 +276,7 @@ export const AutocompleteForPathWithExistingFilter = {
 };
 
 export const AutocompleteForPathWithExistingFilterUsingAGlobalVariable = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return <MessagePathInputStory path="/some_topic/state.items[:]{id==$global_var_2}." />;
   },
 
@@ -284,7 +284,7 @@ export const AutocompleteForPathWithExistingFilterUsingAGlobalVariable = {
 };
 
 export const PathForFieldInsideJsonObject = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return <MessagePathInputStory path="/some_logs_topic.myJson" />;
   },
 
@@ -292,7 +292,7 @@ export const PathForFieldInsideJsonObject = {
 };
 
 export const PathForMultipleLevelsOfNestedFieldsInsideJsonObject = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return <MessagePathInputStory path="/some_logs_topic.myJson.a.b.c" />;
   },
 
@@ -300,7 +300,7 @@ export const PathForMultipleLevelsOfNestedFieldsInsideJsonObject = {
 };
 
 export const PerformanceTesting = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return <MessagePathPerformanceStory path="." />;
   },
 

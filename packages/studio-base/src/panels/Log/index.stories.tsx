@@ -158,7 +158,7 @@ export const WithSettings = (): JSX.Element => {
 };
 
 export const TopicToRender = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     function makeMessages(topic: any) {
       return fixture.frame!["/rosout"]!.map((msg: any) => ({
         ...msg,
@@ -198,7 +198,7 @@ export const TopicToRender = {
 };
 
 export const FilteredTerms = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return (
       <PanelSetup fixture={fixture}>
         <Log
@@ -216,7 +216,7 @@ export const FilteredTerms = {
 };
 
 export const CaseInsensitiveFilter = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return (
       <PanelSetup fixture={fixture}>
         <Log
@@ -234,7 +234,7 @@ export const CaseInsensitiveFilter = {
 };
 
 export const AutoCompleteItems = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return (
       <PanelSetup fixture={fixture}>
         <Log

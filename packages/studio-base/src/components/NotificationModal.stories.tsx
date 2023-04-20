@@ -26,7 +26,7 @@ export default {
 };
 
 export const ErrorNoSubtextWithDetails = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return (
       <NotificationModal
         onRequestClose={() => {}}
@@ -48,7 +48,7 @@ export const ErrorNoSubtextWithDetailsDark = ErrorNoSubtextWithDetails.bind(unde
 ErrorNoSubtextWithDetailsDark.parameters = { colorScheme: "dark" };
 
 export const ErrorWithSubtextAndDetails = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return (
       <NotificationModal
         onRequestClose={() => {}}
@@ -68,7 +68,7 @@ export const ErrorWithSubtextAndDetails = {
 };
 
 export const ErrorWithSubtextNoDetails = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return (
       <NotificationModal
         onRequestClose={() => {}}
@@ -88,7 +88,7 @@ export const ErrorWithSubtextNoDetails = {
 };
 
 export const Warning = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return (
       <NotificationModal
         onRequestClose={() => {}}
@@ -107,7 +107,7 @@ export const Warning = {
 };
 
 export const ErrorNoDetailsOrSubtext = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return (
       <NotificationModal
         onRequestClose={() => {}}
@@ -126,7 +126,7 @@ export const ErrorNoDetailsOrSubtext = {
 };
 
 export const ErrorWithJsxElementDetails = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return (
       <NotificationModal
         onRequestClose={() => {}}
@@ -152,7 +152,7 @@ export const ErrorWithJsxElementDetailsDark = ErrorWithJsxElementDetails.bind(un
 ErrorWithJsxElementDetailsDark.parameters = { colorScheme: "dark" };
 
 export const ErrorWithNewlineDetails = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return (
       <NotificationModal
         onRequestClose={() => {}}

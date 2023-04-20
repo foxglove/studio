@@ -248,7 +248,7 @@ export const PanelListChinese = {
 };
 
 export const NoResultsChinese = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return <PanelListWithInteractions mode="grid" inputValue="WWW" />;
   },
 

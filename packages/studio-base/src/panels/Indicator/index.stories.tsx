@@ -103,7 +103,7 @@ export const BooleanFalse = {
 };
 
 export const String = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return (
       <Indicator
         overrideConfig={{
@@ -154,7 +154,7 @@ export const NumberPositive = {
 };
 
 export const MessagePathWithFilter = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return (
       <Indicator
         overrideConfig={{

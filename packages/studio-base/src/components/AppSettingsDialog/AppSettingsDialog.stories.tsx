@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { StoryFn } from "@storybook/react";
+import { StoryObj, StoryFn } from "@storybook/react";
 import { screen, userEvent } from "@storybook/testing-library";
 import { range } from "lodash";
 
@@ -88,16 +88,19 @@ export const DefaultChinese = {
   parameters: { forceLanguage: "zh" },
 };
 
-export const ChangingLanguage: StoryFn = (): JSX.Element => {
-  return <AppSettingsDialog open />;
-};
-ChangingLanguage.play = async () => {
-  const input = await screen.findByText("English", { exact: false });
-  userEvent.click(input);
+export const ChangingLanguage: StoryObj = {
+  render: function Story(): JSX.Element {
+    return <AppSettingsDialog open />;
+  },
 
-  userEvent.keyboard("中文");
-  const item = await screen.findByText("中文", { exact: false });
-  userEvent.click(item);
+  play: async () => {
+    const input = await screen.findByText("English", { exact: false });
+    userEvent.click(input);
+
+    userEvent.keyboard("中文");
+    const item = await screen.findByText("中文", { exact: false });
+    userEvent.click(item);
+  },
 };
 
 export const General: StoryFn = (): JSX.Element => {

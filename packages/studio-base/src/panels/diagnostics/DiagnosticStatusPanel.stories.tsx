@@ -1,7 +1,7 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
-import { StoryFn } from "@storybook/react";
+import { StoryObj, StoryFn } from "@storybook/react";
 
 import DiagnosticStatusPanel from "@foxglove/studio-base/panels/diagnostics/DiagnosticStatusPanel";
 import { makeDiagnosticMessage } from "@foxglove/studio-base/panels/diagnostics/DiagnosticSummary.stories";
@@ -56,21 +56,24 @@ export const Default: StoryFn = (): JSX.Element => {
   );
 };
 
-export const WithSettings: StoryFn = (): JSX.Element => {
-  return (
-    <PanelSetup fixture={fixture} includeSettings>
-      <DiagnosticStatusPanel
-        overrideConfig={{
-          topicToRender: "/diagnostics",
-          selectedHardwareId: "hardware_id1",
-          selectedName: "name2",
-        }}
-      />
-    </PanelSetup>
-  );
-};
-WithSettings.parameters = {
-  colorScheme: "light",
+export const WithSettings: StoryObj = {
+  render: function Story(): JSX.Element {
+    return (
+      <PanelSetup fixture={fixture} includeSettings>
+        <DiagnosticStatusPanel
+          overrideConfig={{
+            topicToRender: "/diagnostics",
+            selectedHardwareId: "hardware_id1",
+            selectedName: "name2",
+          }}
+        />
+      </PanelSetup>
+    );
+  },
+
+  parameters: {
+    colorScheme: "light",
+  },
 };
 
 export const SelectedHardwareIDOnly: StoryFn = (): JSX.Element => {

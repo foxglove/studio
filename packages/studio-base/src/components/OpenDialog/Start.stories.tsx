@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { StoryFn } from "@storybook/react";
+import { StoryObj } from "@storybook/react";
 import { ReactNode } from "react";
 
 import CurrentUserContext, {
@@ -117,66 +117,78 @@ export const DefaultDark = {
   name: "Default (dark)",
 };
 
-export const UserNoAuth: StoryFn = (): JSX.Element => {
-  return (
-    <PlayerSelectionContext.Provider value={playerSelection}>
-      <OpenDialog {...defaultProps} />
-    </PlayerSelectionContext.Provider>
-  );
+export const UserNoAuth: StoryObj = {
+  render: function Story(): JSX.Element {
+    return (
+      <PlayerSelectionContext.Provider value={playerSelection}>
+        <OpenDialog {...defaultProps} />
+      </PlayerSelectionContext.Provider>
+    );
+  },
+
+  name: "User not authenticated",
 };
-UserNoAuth.storyName = "User not authenticated";
 
 export const UserNoAuthChinese = Object.assign(UserNoAuth.bind(undefined), {
   storyName: "User not authenticated Chinese",
   parameters: { forceLanguage: "zh" },
 });
 
-export const UserPrivate: StoryFn = (): JSX.Element => {
-  return (
-    <CurrentUserWrapper>
-      <PlayerSelectionContext.Provider value={playerSelection}>
-        <OpenDialog {...defaultProps} />
-      </PlayerSelectionContext.Provider>
-    </CurrentUserWrapper>
-  );
+export const UserPrivate: StoryObj = {
+  render: function Story(): JSX.Element {
+    return (
+      <CurrentUserWrapper>
+        <PlayerSelectionContext.Provider value={playerSelection}>
+          <OpenDialog {...defaultProps} />
+        </PlayerSelectionContext.Provider>
+      </CurrentUserWrapper>
+    );
+  },
+
+  name: "User not authenticated (private)",
 };
-UserPrivate.storyName = "User not authenticated (private)";
 
 export const UserPrivateChinese = Object.assign(UserPrivate.bind(undefined), {
   storyName: "User not authenticated (private) Chinese",
   parameters: { forceLanguage: "zh" },
 });
 
-export const UserAuthedFree: StoryFn = (): JSX.Element => {
-  const freeUser = fakeUser("free");
+export const UserAuthedFree: StoryObj = {
+  render: function Story(): JSX.Element {
+    const freeUser = fakeUser("free");
 
-  return (
-    <CurrentUserWrapper user={freeUser}>
-      <PlayerSelectionContext.Provider value={playerSelection}>
-        <OpenDialog {...defaultProps} />
-      </PlayerSelectionContext.Provider>
-    </CurrentUserWrapper>
-  );
+    return (
+      <CurrentUserWrapper user={freeUser}>
+        <PlayerSelectionContext.Provider value={playerSelection}>
+          <OpenDialog {...defaultProps} />
+        </PlayerSelectionContext.Provider>
+      </CurrentUserWrapper>
+    );
+  },
+
+  name: "User Authenticated with Free Account",
 };
-UserAuthedFree.storyName = "User Authenticated with Free Account";
 
 export const UserAuthedFreeChinese = Object.assign(UserAuthedFree.bind(undefined), {
   storyName: "User Authenticated with Free Account Chinese",
   parameters: { forceLanguage: "zh" },
 });
 
-export const UserAuthedPaid: StoryFn = (): JSX.Element => {
-  const freeUser = fakeUser("paid");
+export const UserAuthedPaid: StoryObj = {
+  render: function Story(): JSX.Element {
+    const freeUser = fakeUser("paid");
 
-  return (
-    <CurrentUserWrapper user={freeUser}>
-      <PlayerSelectionContext.Provider value={playerSelection}>
-        <OpenDialog {...defaultProps} />
-      </PlayerSelectionContext.Provider>
-    </CurrentUserWrapper>
-  );
+    return (
+      <CurrentUserWrapper user={freeUser}>
+        <PlayerSelectionContext.Provider value={playerSelection}>
+          <OpenDialog {...defaultProps} />
+        </PlayerSelectionContext.Provider>
+      </CurrentUserWrapper>
+    );
+  },
+
+  name: "User Authenticated with Paid Account",
 };
-UserAuthedPaid.storyName = "User Authenticated with Paid Account";
 
 export const UserAuthedPaidChinese = Object.assign(UserAuthedPaid.bind(undefined), {
   storyName: "User Authenticated with Paid Account Chinese",

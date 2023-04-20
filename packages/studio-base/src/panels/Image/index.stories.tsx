@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { StoryFn } from "@storybook/react";
+import { StoryObj, StoryFn } from "@storybook/react";
 import { useRef, useEffect } from "react";
 import TestUtils from "react-dom/test-utils";
 
@@ -46,15 +46,18 @@ export const NoTopic: StoryFn = (): React.ReactElement => {
   );
 };
 
-export const WithSettings: StoryFn = (): JSX.Element => {
-  return (
-    <PanelSetup includeSettings>
-      <ImageView />
-    </PanelSetup>
-  );
-};
-WithSettings.parameters = {
-  colorScheme: "light",
+export const WithSettings: StoryObj = {
+  render: function Story(): JSX.Element {
+    return (
+      <PanelSetup includeSettings>
+        <ImageView />
+      </PanelSetup>
+    );
+  },
+
+  parameters: {
+    colorScheme: "light",
+  },
 };
 
 export const TopicButNoDataSource: StoryFn = (): React.ReactElement => {
@@ -65,15 +68,19 @@ export const TopicButNoDataSource: StoryFn = (): React.ReactElement => {
   );
 };
 
-export const TopicButNoDataSourceHovered: StoryFn = (): React.ReactElement => {
-  const onMount = useHoverOnPanel();
-  return (
-    <PanelSetup onMount={onMount}>
-      <ImageView overrideConfig={{ ...ImageView.defaultConfig, cameraTopic: "a_topic" }} />
-    </PanelSetup>
-  );
+export const TopicButNoDataSourceHovered: StoryObj = {
+  render: function Story(): JSX.Element {
+    const onMount = useHoverOnPanel();
+    return (
+      <PanelSetup onMount={onMount}>
+        <ImageView overrideConfig={{ ...ImageView.defaultConfig, cameraTopic: "a_topic" }} />
+      </PanelSetup>
+    );
+  },
+
+  parameters: { colorScheme: "dark" },
 };
-TopicButNoDataSourceHovered.parameters = { colorScheme: "dark" };
+
 export const TopicButNoDataSourceHoveredLight = Object.assign(
   TopicButNoDataSourceHovered.bind(undefined),
   { parameters: { colorScheme: "light" } },

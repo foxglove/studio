@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { StoryFn } from "@storybook/react";
+import { StoryObj, StoryFn } from "@storybook/react";
 import { fireEvent, screen } from "@storybook/testing-library";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
@@ -32,59 +32,66 @@ export const Default: StoryFn = (): JSX.Element => {
   );
 };
 
-export const Interactive: StoryFn = (): JSX.Element => {
-  return (
-    <DndProvider backend={HTML5Backend}>
-      <MockCurrentLayoutProvider>
-        <VariablesList />
-      </MockCurrentLayoutProvider>
-    </DndProvider>
-  );
-};
-Interactive.play = async () => {
-  const addButton = await screen.findByTestId("add-variable-button");
-  fireEvent.click(addButton);
+export const Interactive: StoryObj = {
+  render: function Story(): JSX.Element {
+    return (
+      <DndProvider backend={HTML5Backend}>
+        <MockCurrentLayoutProvider>
+          <VariablesList />
+        </MockCurrentLayoutProvider>
+      </DndProvider>
+    );
+  },
 
-  const input = await screen.findByPlaceholderText("variable_name");
-  fireEvent.change(input, { target: { value: "new_variable_name" } });
+  play: async () => {
+    const addButton = await screen.findByTestId("add-variable-button");
+    fireEvent.click(addButton);
 
-  const valueInput = await screen.findByDisplayValue('""');
-  fireEvent.change(valueInput, { target: { value: '"edited value"' } });
+    const input = await screen.findByPlaceholderText("variable_name");
+    fireEvent.change(input, { target: { value: "new_variable_name" } });
 
-  const menuButton = await screen.findByTestId("variable-action-button");
-  fireEvent.click(menuButton);
+    const valueInput = await screen.findByDisplayValue('""');
+    fireEvent.change(valueInput, { target: { value: '"edited value"' } });
 
-  await screen.findByTestId("global-variable-key-input-new_variable_name");
+    const menuButton = await screen.findByTestId("variable-action-button");
+    fireEvent.click(menuButton);
 
-  const menuButton2 = await screen.findByTestId("variable-action-button");
-  fireEvent.click(menuButton2);
+    await screen.findByTestId("global-variable-key-input-new_variable_name");
 
-  const deleteButton = await screen.findByText("Delete variable");
-  fireEvent.click(deleteButton);
-};
+    const menuButton2 = await screen.findByTestId("variable-action-button");
+    fireEvent.click(menuButton2);
 
-Interactive.parameters = { colorScheme: "light" };
+    const deleteButton = await screen.findByText("Delete variable");
+    fireEvent.click(deleteButton);
+  },
 
-export const WithVariablesLight: StoryFn = (): JSX.Element => {
-  return (
-    <DndProvider backend={HTML5Backend}>
-      <MockCurrentLayoutProvider initialState={initialState}>
-        <VariablesList />
-      </MockCurrentLayoutProvider>
-    </DndProvider>
-  );
+  parameters: { colorScheme: "light" },
 };
 
-WithVariablesLight.parameters = { colorScheme: "light" };
+export const WithVariablesLight: StoryObj = {
+  render: function Story(): JSX.Element {
+    return (
+      <DndProvider backend={HTML5Backend}>
+        <MockCurrentLayoutProvider initialState={initialState}>
+          <VariablesList />
+        </MockCurrentLayoutProvider>
+      </DndProvider>
+    );
+  },
 
-export const WithVariablesDark: StoryFn = (): JSX.Element => {
-  return (
-    <DndProvider backend={HTML5Backend}>
-      <MockCurrentLayoutProvider initialState={initialState}>
-        <VariablesList />
-      </MockCurrentLayoutProvider>
-    </DndProvider>
-  );
+  parameters: { colorScheme: "light" },
 };
 
-WithVariablesDark.parameters = { colorScheme: "dark" };
+export const WithVariablesDark: StoryObj = {
+  render: function Story(): JSX.Element {
+    return (
+      <DndProvider backend={HTML5Backend}>
+        <MockCurrentLayoutProvider initialState={initialState}>
+          <VariablesList />
+        </MockCurrentLayoutProvider>
+      </DndProvider>
+    );
+  },
+
+  parameters: { colorScheme: "dark" },
+};

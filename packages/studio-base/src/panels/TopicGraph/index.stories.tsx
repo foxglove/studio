@@ -24,7 +24,7 @@ export const Empty = (): JSX.Element => {
 };
 
 export const WithSettings = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     return (
       <PanelSetup includeSettings>
         <TopicGraph />
@@ -84,7 +84,7 @@ export const TopicsWithSubscribers = (): JSX.Element => (
 export const TopicsHidden = (): JSX.Element => <TopicsStory topicVisibility="none" />;
 
 export const ReLayout = {
-  render: (): JSX.Element => {
+  render: function Story(): JSX.Element {
     const [fixture, setFixture] = useState<Fixture>({
       frame: {},
       topics: [{ name: "/topic", schemaName: "std_msgs/Header" }],
