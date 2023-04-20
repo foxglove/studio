@@ -9,29 +9,29 @@ import { filterMap } from "@foxglove/den/collection";
 import { PinholeCameraModel } from "@foxglove/den/image";
 import { CameraCalibration } from "@foxglove/schemas";
 import { SettingsTreeAction } from "@foxglove/studio";
-import { ImageModelCamera } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/ImageModelCamera";
 import { AnyImage } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/ImageTypes";
 import {
   cameraInfosEqual,
   normalizeCameraInfo,
 } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/projections";
 
-import { ICameraHandler } from "./ICameraHandler";
-import type { IRenderer } from "../IRenderer";
-import { PartialMessageEvent, SceneExtension } from "../SceneExtension";
-import { SettingsTreeEntry } from "../SettingsManager";
+import { ImageModelCamera } from "./ImageModelCamera";
+import type { IRenderer } from "../../IRenderer";
+import { PartialMessageEvent, SceneExtension } from "../../SceneExtension";
+import { SettingsTreeEntry } from "../../SettingsManager";
 import {
   CAMERA_CALIBRATION_DATATYPES,
   COMPRESSED_IMAGE_DATATYPES,
   RAW_IMAGE_DATATYPES,
-} from "../foxglove";
+} from "../../foxglove";
 import {
   IMAGE_DATATYPES as ROS_IMAGE_DATATYPES,
   COMPRESSED_IMAGE_DATATYPES as ROS_COMPRESSED_IMAGE_DATATYPES,
   CAMERA_INFO_DATATYPES,
   CameraInfo,
-} from "../ros";
-import { topicIsConvertibleToSchema } from "../topicIsConvertibleToSchema";
+} from "../../ros";
+import { topicIsConvertibleToSchema } from "../../topicIsConvertibleToSchema";
+import { ICameraHandler } from "../ICameraHandler";
 
 const IMAGE_TOPIC_PATH = ["imageMode", "imageTopic"];
 const CALIBRATION_TOPIC_PATH = ["imageMode", "calibrationTopic"];
