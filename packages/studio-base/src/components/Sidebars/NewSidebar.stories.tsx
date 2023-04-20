@@ -122,7 +122,7 @@ export const LeftClicked: StoryObj = {
   name: "Left (tab click interaction)",
   parameters: { colorScheme: "dark" },
 
-  play: async (): Promise<void> => {
+  play: async () => {
     const leftTab = await screen.findByTestId("b-left");
     userEvent.click(leftTab);
   },
@@ -136,7 +136,7 @@ export const LeftClosed: StoryObj = {
   name: "Left (closed by interaction)",
   parameters: { colorScheme: "dark" },
 
-  play: async (): Promise<void> => {
+  play: async () => {
     const leftClose = await screen.findByTestId("sidebar-close-left");
     userEvent.click(leftClose);
   },
@@ -157,7 +157,7 @@ export const RightClicked: StoryObj = {
   name: "Right (tab click interaction)",
   parameters: { colorScheme: "dark" },
 
-  play: async (): Promise<void> => {
+  play: async () => {
     const rightTab = await screen.findByTestId("y-right");
     userEvent.click(rightTab);
   },
@@ -171,7 +171,7 @@ export const RightClosed: StoryObj = {
   name: "Right (closed by interaction)",
   parameters: { colorScheme: "dark" },
 
-  play: async (): Promise<void> => {
+  play: async () => {
     const rightClose = await screen.findByTestId("sidebar-close-right");
     userEvent.click(rightClose);
   },
@@ -191,7 +191,7 @@ export const BothClicked: StoryObj = {
   name: "Both (tab click interaction)",
   parameters: { colorScheme: "dark" },
 
-  play: async (): Promise<void> => {
+  play: async () => {
     const leftTab = await screen.findByTestId("b-left");
     userEvent.click(leftTab);
 

@@ -158,7 +158,7 @@ export const RemoveUnknownPanel: StoryObj = {
     );
   },
 
-  play: async (): Promise<void> => {
+  play: async () => {
     (await screen.findAllByTestId("panel-menu")).forEach((button) => fireEvent.click(button));
     (await screen.findAllByTestId("panel-menu-remove")).forEach((button) =>
       fireEvent.click(button),

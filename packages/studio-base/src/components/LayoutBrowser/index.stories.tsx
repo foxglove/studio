@@ -300,7 +300,7 @@ export const MenuOpen: StoryObj = {
 export const MenuOpenLight: StoryObj = {
   ...MenuOpen,
   parameters: { colorScheme: "light" },
-  play: async (): Promise<void> => {
+  play: async () => {
     const actions = await screen.findAllByTestId("layout-actions");
     if (actions[1]) {
       fireEvent.click(actions[1]);
