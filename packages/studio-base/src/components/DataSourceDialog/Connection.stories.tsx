@@ -2,15 +2,37 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { Story } from "@storybook/react";
+
 import PlayerSelectionContext, {
   PlayerSelection,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
+import WorkspaceContextProvider from "@foxglove/studio-base/providers/WorkspaceContextProvider";
 
 import { DataSourceDialog } from "./DataSourceDialog";
+
+const Wrapper = (StoryFn: Story): JSX.Element => {
+  return (
+    <WorkspaceContextProvider
+      initialState={{
+        dataSourceDialog: {
+          activeDataSource: undefined,
+          item: "connection",
+          open: true,
+        },
+      }}
+    >
+      <PlayerSelectionContext.Provider value={playerSelection}>
+        <StoryFn />
+      </PlayerSelectionContext.Provider>
+    </WorkspaceContextProvider>
+  );
+};
 
 export default {
   title: "components/DataSourceDialog/Connection",
   component: DataSourceDialog,
+  decorators: [Wrapper],
 };
 
 // Connection
@@ -59,11 +81,7 @@ const playerSelection: PlayerSelection = {
   ],
 };
 
-export const Light = (): JSX.Element => (
-  <PlayerSelectionContext.Provider value={playerSelection}>
-    <DataSourceDialog activeView="connection" backdropAnimation={false} />
-  </PlayerSelectionContext.Provider>
-);
+export const Light = (): JSX.Element => <DataSourceDialog backdropAnimation={false} />;
 
 Light.storyName = "Default (light)";
 Light.parameters = { colorScheme: "light" };
@@ -73,10 +91,6 @@ export const LightChinese = (): JSX.Element => <Light />;
 LightChinese.storyName = "Default Chinese";
 LightChinese.parameters = { forceLanguage: "zh", colorScheme: "light" };
 
-export const Dark = (): JSX.Element => (
-  <PlayerSelectionContext.Provider value={playerSelection}>
-    <DataSourceDialog activeView="connection" backdropAnimation={false} />
-  </PlayerSelectionContext.Provider>
-);
+export const Dark = (): JSX.Element => <DataSourceDialog backdropAnimation={false} />;
 Dark.storyName = "Default (dark)";
 Dark.parameters = { colorScheme: "dark" };
