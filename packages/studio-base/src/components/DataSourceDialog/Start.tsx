@@ -18,6 +18,7 @@ import {
   useCurrentUserType,
 } from "@foxglove/studio-base/context/CurrentUserContext";
 import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
+import { useWorkspaceActions } from "@foxglove/studio-base/context/WorkspaceContext";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 
 export type IStartProps = {
@@ -429,12 +430,12 @@ function SidebarItems(props: {
   );
 }
 
-export default function Start(props: IStartProps): JSX.Element {
-  const { onSelectView } = props;
+export default function Start(): JSX.Element {
   const { recentSources, selectRecent } = usePlayerSelection();
   const { classes } = useStyles();
   const analytics = useAnalytics();
   const { t } = useTranslation("openDialog");
+  const { dataSourceDialogActions } = useWorkspaceActions();
 
   const startItems = useMemo(() => {
     return [
@@ -448,7 +449,7 @@ export default function Start(props: IStartProps): JSX.Element {
           </SvgIcon>
         ),
         onClick: () => {
-          onSelectView("file");
+          dataSourceDialogActions.open("file");
           void analytics.logEvent(AppEvent.DIALOG_SELECT_VIEW, { type: "local" });
         },
       },
@@ -477,12 +478,12 @@ export default function Start(props: IStartProps): JSX.Element {
           </SvgIcon>
         ),
         onClick: () => {
-          onSelectView("connection");
+          dataSourceDialogActions.open("connection");
           void analytics.logEvent(AppEvent.DIALOG_SELECT_VIEW, { type: "live" });
         },
       },
     ];
-  }, [analytics, onSelectView, t]);
+  }, [analytics, dataSourceDialogActions, t]);
 
   return (
     <Stack className={classes.grid}>
@@ -534,7 +535,7 @@ export default function Start(props: IStartProps): JSX.Element {
       </Stack>
       <div className={classes.spacer} />
       <Stack gap={4} className={classes.sidebar}>
-        <SidebarItems onSelectView={onSelectView} />
+        <SidebarItems onSelectView={dataSourceDialogActions.open} />
       </Stack>
     </Stack>
   );

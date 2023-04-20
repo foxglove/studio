@@ -611,16 +611,7 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
       ]}
     >
       {showSignInForm && <SignInFormModal />}
-      {dataSourceDialog.open && (
-        <DataSourceDialog
-          activeView={dataSourceDialog.item}
-          setActiveView={dataSourceDialogActions.open}
-          activeDataSource={dataSourceDialog.activeDataSource}
-          onDismiss={() => {
-            dataSourceDialogActions.close();
-          }}
-        />
-      )}
+      {dataSourceDialog.open && <DataSourceDialog />}
       <DocumentDropListener onDrop={dropHandler} allowedExtensions={allowedDropExtensions} />
       <SyncAdapters />
       <KeyListener global keyDownHandlers={keyDownHandlers} />
