@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { StoryFn } from "@storybook/react";
 import { ReactNode } from "react";
 
 import CurrentUserContext, {
@@ -11,13 +12,31 @@ import CurrentUserContext, {
 import PlayerSelectionContext, {
   PlayerSelection,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
+import WorkspaceContextProvider from "@foxglove/studio-base/providers/WorkspaceContextProvider";
 
 import { DataSourceDialog } from "./DataSourceDialog";
+
+const Wrapper = (Story: StoryFn): JSX.Element => {
+  return (
+    <WorkspaceContextProvider
+      initialState={{
+        dataSourceDialog: {
+          activeDataSource: undefined,
+          item: "start",
+          open: true,
+        },
+      }}
+    >
+      <Story />
+    </WorkspaceContextProvider>
+  );
+};
 
 export default {
   title: "components/DataSourceDialog/Start",
   component: DataSourceDialog,
   parameters: { colorScheme: "dark" },
+  decorators: [Wrapper],
 };
 
 function fakeUser(type: "free" | "paid" | "enterprise"): User {
@@ -103,12 +122,15 @@ function CurrentUserWrapper(props: { children: ReactNode; user?: User | undefine
   return <CurrentUserContext.Provider value={value}>{props.children}</CurrentUserContext.Provider>;
 }
 
-export const DefaultLight = (): JSX.Element => <DataSourceDialog backdropAnimation={false} />;
+const Default = (): JSX.Element => <DataSourceDialog backdropAnimation={false} />;
+
+export const DefaultLight = (): JSX.Element => <Default />;
 DefaultLight.storyName = "Default (light)";
 DefaultLight.parameters = { colorScheme: "light" };
 
-export const DefaultDark = (): JSX.Element => <DataSourceDialog backdropAnimation={false} />;
+export const DefaultDark = (): JSX.Element => <Default />;
 DefaultDark.storyName = "Default (dark)";
+DefaultDark.parameters = { colorScheme: "dark" };
 
 export function UserNoAuth(): JSX.Element {
   return (
@@ -119,10 +141,9 @@ export function UserNoAuth(): JSX.Element {
 }
 UserNoAuth.storyName = "User not authenticated";
 
-export const UserNoAuthChinese = Object.assign(UserNoAuth.bind(undefined), {
-  storyName: "User not authenticated Chinese",
-  parameters: { forceLanguage: "zh" },
-});
+export const UserNoAuthChinese = (): JSX.Element => <UserNoAuth />;
+UserNoAuthChinese.storyName = "User not authenticated Chinese";
+UserNoAuthChinese.parameters = { forceLanguage: "zh" };
 
 export function UserPrivate(): JSX.Element {
   return (
@@ -135,10 +156,9 @@ export function UserPrivate(): JSX.Element {
 }
 UserPrivate.storyName = "User not authenticated (private)";
 
-export const UserPrivateChinese = Object.assign(UserPrivate.bind(undefined), {
-  storyName: "User not authenticated (private) Chinese",
-  parameters: { forceLanguage: "zh" },
-});
+export const UserPrivateChinese = (): JSX.Element => <UserPrivate />;
+UserPrivateChinese.storyName = "User not authenticated (private) Chinese";
+UserPrivateChinese.parameters = { forceLanguage: "zh" };
 
 export function UserAuthedFree(): JSX.Element {
   const freeUser = fakeUser("free");
@@ -153,10 +173,9 @@ export function UserAuthedFree(): JSX.Element {
 }
 UserAuthedFree.storyName = "User Authenticated with Free Account";
 
-export const UserAuthedFreeChinese = Object.assign(UserAuthedFree.bind(undefined), {
-  storyName: "User Authenticated with Free Account Chinese",
-  parameters: { forceLanguage: "zh" },
-});
+export const UserAuthedFreeChinese = (): JSX.Element => <UserAuthedFree />;
+UserAuthedFreeChinese.storyName = "User Authenticated with Free Account Chinese";
+UserAuthedFreeChinese.parameters = { forceLanguage: "zh" };
 
 export function UserAuthedPaid(): JSX.Element {
   const freeUser = fakeUser("paid");
@@ -171,7 +190,6 @@ export function UserAuthedPaid(): JSX.Element {
 }
 UserAuthedPaid.storyName = "User Authenticated with Paid Account";
 
-export const UserAuthedPaidChinese = Object.assign(UserAuthedPaid.bind(undefined), {
-  storyName: "User Authenticated with Paid Account Chinese",
-  parameters: { forceLanguage: "zh" },
-});
+export const UserAuthedPaidChinese = (): JSX.Element => <UserAuthedPaid />;
+UserAuthedPaidChinese.storyName = "User Authenticated with Paid Account Chinese";
+UserAuthedPaidChinese.parameters = { forceLanguage: "zh" };

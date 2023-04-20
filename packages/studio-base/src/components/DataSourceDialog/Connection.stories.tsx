@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Story } from "@storybook/react";
+import { StoryFn } from "@storybook/react";
 
 import PlayerSelectionContext, {
   PlayerSelection,
@@ -11,7 +11,7 @@ import WorkspaceContextProvider from "@foxglove/studio-base/providers/WorkspaceC
 
 import { DataSourceDialog } from "./DataSourceDialog";
 
-const Wrapper = (StoryFn: Story): JSX.Element => {
+const Wrapper = (Story: StoryFn): JSX.Element => {
   return (
     <WorkspaceContextProvider
       initialState={{
@@ -23,7 +23,7 @@ const Wrapper = (StoryFn: Story): JSX.Element => {
       }}
     >
       <PlayerSelectionContext.Provider value={playerSelection}>
-        <StoryFn />
+        <Story />
       </PlayerSelectionContext.Provider>
     </WorkspaceContextProvider>
   );
@@ -82,7 +82,6 @@ const playerSelection: PlayerSelection = {
 };
 
 export const Light = (): JSX.Element => <DataSourceDialog backdropAnimation={false} />;
-
 Light.storyName = "Default (light)";
 Light.parameters = { colorScheme: "light" };
 

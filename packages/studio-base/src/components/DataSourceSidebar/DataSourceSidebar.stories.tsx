@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Box } from "@mui/material";
-import { Story } from "@storybook/react";
+import { StoryFn } from "@storybook/react";
 import { useEffect } from "react";
 
 import { fromDate } from "@foxglove/rostime";
@@ -14,14 +14,17 @@ import { useEvents } from "@foxglove/studio-base/context/EventsContext";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import { PlayerPresence, Topic } from "@foxglove/studio-base/players/types";
 import EventsProvider from "@foxglove/studio-base/providers/EventsProvider";
+import WorkspaceContextProvider from "@foxglove/studio-base/providers/WorkspaceContextProvider";
 
 import DataSourceSidebar from "./DataSourceSidebar";
 
-function Wrapper(StoryFn: Story): JSX.Element {
+function Wrapper(Story: StoryFn): JSX.Element {
   return (
-    <EventsProvider>
-      <StoryFn />
-    </EventsProvider>
+    <WorkspaceContextProvider>
+      <EventsProvider>
+        <Story />
+      </EventsProvider>
+    </WorkspaceContextProvider>
   );
 }
 
