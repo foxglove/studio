@@ -6,14 +6,11 @@ import { set } from "lodash";
 import * as THREE from "three";
 
 import { filterMap } from "@foxglove/den/collection";
-import { PinholeCameraModel } from "@foxglove/den/image";
 import { CameraCalibration } from "@foxglove/schemas";
 import { SettingsTreeAction } from "@foxglove/studio";
+import { ImageModelCamera } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/ImageModelCamera";
 import { AnyImage } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/ImageTypes";
-import {
-  cameraInfosEqual,
-  normalizeCameraInfo,
-} from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/projections";
+import { normalizeCameraInfo } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/projections";
 
 import { ICameraHandler } from "./ICameraHandler";
 import type { IRenderer } from "../IRenderer";
@@ -39,25 +36,14 @@ const IMAGE_TOPIC_UNAVAILABLE = "IMAGE_TOPIC_UNAVAILABLE";
 const CALIBRATION_TOPIC_UNAVAILABLE = "CALIBRATION_TOPIC_UNAVAILABLE";
 const MISSING_CAMERA_INFO = "MISSING_CAMERA_INFO";
 const IMAGE_TOPIC_DIFFERENT_FRAME = "IMAGE_TOPIC_DIFFERENT_FRAME";
-const CAMERA_MODEL = "CameraModel";
 
-const DEFAULT_CAMERA_STATE = {
-  near: 0.001,
-  far: 1000,
-};
+const CAMERA_UPDATE_ERROR_KEY = "CameraUpdate";
+
 export class ImageMode extends SceneExtension implements ICameraHandler {
-  private aspect: number;
-  private camera: THREE.PerspectiveCamera;
-  private cameraState = DEFAULT_CAMERA_STATE;
-  private cameraModel:
-    | {
-        model: PinholeCameraModel;
-        info: CameraInfo;
-      }
-    | undefined;
+  private camera: ImageModelCamera;
 
   /**
-   * We keep more than just the last message event on the selected caemara info topic because
+   * We keep more than just the last message event on the selected camera info topic because
    * backfill won't happen when this scene extension selected a camera info topic that was
    * already being used by the Image scene extension because it wouldn't trigger a
    * subscription change. This lets us store them if one isn't selected in this
@@ -66,13 +52,10 @@ export class ImageMode extends SceneExtension implements ICameraHandler {
   private cameraInfoByTopic: Map<string, CameraInfo> = new Map();
   private cameraImageByTopic: Map<string, AnyImage> = new Map();
 
-  /** x/y zoom factors derived from image and window aspect ratios */
-  private zoom = new THREE.Vector2();
-
   public constructor(renderer: IRenderer, aspect: number) {
     super("foxglove.ImageMode", renderer);
 
-    this.camera = new THREE.PerspectiveCamera();
+    this.camera = new ImageModelCamera();
 
     /**
      * By default the camera is facing down the -y axis with -z up,
@@ -80,7 +63,7 @@ export class ImageMode extends SceneExtension implements ICameraHandler {
      * To correct this we rotate the camera 180 degrees around the x axis.
      */
     this.camera.quaternion.setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI);
-    this.aspect = aspect;
+    this.camera.setRendererAspect(aspect);
 
     renderer.settings.errors.on("update", this.handleErrorChange);
     renderer.settings.errors.on("clear", this.handleErrorChange);
@@ -267,7 +250,7 @@ export class ImageMode extends SceneExtension implements ICameraHandler {
     const value = action.payload.value;
     if (category === "imageMode") {
       this.renderer.updateConfig((draft) => set(draft, path, value));
-      this.updateCamera();
+      this.updateView();
     } else {
       return;
     }
@@ -288,7 +271,7 @@ export class ImageMode extends SceneExtension implements ICameraHandler {
     // the camera info by the info topic configured for the image
     const cameraInfo = normalizeCameraInfo(messageEvent.message);
     this.cameraInfoByTopic.set(messageEvent.topic, cameraInfo);
-    this.updateCamera();
+    this.updateView();
   };
 
   /** Gets frame from active info or image message if info does not have one*/
@@ -334,10 +317,9 @@ export class ImageMode extends SceneExtension implements ICameraHandler {
   }
 
   /**
-   * Updates `this.camera` based on the current settings and camera info topic.
-   * It creates a new camera model if the camera info has changed and sets the camera's projection matrix based on that.
+   * Updates necessary camera and frame information when the image or calibration message changes
    */
-  private updateCamera(): void {
+  private updateView(): void {
     const { calibrationTopic } = this.getImageModeSettings();
     if (!calibrationTopic) {
       return;
@@ -356,116 +338,16 @@ export class ImageMode extends SceneExtension implements ICameraHandler {
 
     // set the render frame id to the camera info's frame id
     this.renderer.followFrameId = this.getCurrentFrameId();
-
-    this.updateCameraModel(possibleNewCameraInfo);
-    this.updateZoomFromModel();
-
-    const projection = this.getProjection();
-
-    const camera = this.camera;
-    if (projection) {
-      camera.projectionMatrix.copy(projection);
-      camera.projectionMatrixInverse.copy(projection).invert();
-    }
-  }
-
-  /**
-   * update this.cameraModel with a new model if the camera info has changed
-   */
-  private updateCameraModel(newCameraInfo: CameraInfo) {
-    // If the camera info has not changed, we don't need to make a new model and can return the existing one
-    const currentCameraInfo = this.cameraModel?.info;
-    const dataEqual = cameraInfosEqual(currentCameraInfo, newCameraInfo);
-    if (dataEqual && currentCameraInfo != undefined) {
-      return;
-    }
-
-    const model = this.getPinholeCameraModel(newCameraInfo);
-    if (model) {
-      this.cameraModel = {
-        model,
-        info: newCameraInfo,
-      };
-    }
-  }
-
-  /**
-   * Returns PinholeCameraModel for given CameraInfo
-   * This function will set a topic error on the image topic if the camera model creation fails.
-   * @param cameraInfo - CameraInfo to create model from
-   */
-  private getPinholeCameraModel(cameraInfo: CameraInfo): PinholeCameraModel | undefined {
-    let model = undefined;
     try {
-      model = new PinholeCameraModel(cameraInfo);
-      this.renderer.settings.errors.remove(CALIBRATION_TOPIC_PATH, CAMERA_MODEL);
+      this.camera.updateCamera(possibleNewCameraInfo);
+      this.renderer.settings.errors.remove(CALIBRATION_TOPIC_PATH, CAMERA_UPDATE_ERROR_KEY);
     } catch (errUnk) {
-      this.cameraModel = undefined;
       const err = errUnk as Error;
-      this.renderer.settings.errors.add(CALIBRATION_TOPIC_PATH, CAMERA_MODEL, err.message);
-    }
-    return model;
-  }
-
-  /**
-   * Get Perspective projection matrix from this.cameraModel.model
-   * @returns the projection matrix for the current camera model, or undefined if no camera model is available
-   */
-  private getProjection(): THREE.Matrix4 | undefined {
-    const model = this.cameraModel?.model;
-    if (!model?.P) {
-      return;
-    }
-
-    // Adapted from https://github.com/ros2/rviz/blob/ee44ccde8a7049073fd1901dd36c1fb69110f726/rviz_default_plugins/src/rviz_default_plugins/displays/camera/camera_display.cpp#L615
-    // focal lengths
-    const fx = model.P[0];
-    const fy = model.P[5];
-    // (cx, cy) image center in pixel coordinates
-    // for panning we can take offsets from this in pixel coordinates
-    const cx = model.P[2];
-    const cy = model.P[6];
-    const { width, height } = model;
-
-    const zoom = this.zoom;
-    const zoomX = zoom.x;
-    const zoomY = zoom.y;
-    const near = this.cameraState.near;
-    const far = this.cameraState.far;
-
-    // prettier-ignore
-    const matrix = new THREE.Matrix4()
-        .set(
-          2.0*fx/width * zoomX, 0, 2.0*(0.5 - cx/width) * zoomX, 0,
-          0, 2.0*fy/height * zoomY, 2.0*(cy/height-0.5) * zoomY, 0,
-          0, 0, -(far+near)/(far-near), -2.0*far*near/(far-near),
-          0, 0, -1.0, 0,
-        );
-
-    return matrix;
-  }
-  /**
-   * Uses the camera model to compute the zoom factors to preserve the aspect ratio of the image.
-   */
-  private updateZoomFromModel(): void {
-    const model = this.cameraModel?.model;
-    if (!model?.P) {
-      return;
-    }
-    // Adapted from https://github.com/ros2/rviz/blob/ee44ccde8a7049073fd1901dd36c1fb69110f726/rviz_default_plugins/src/rviz_default_plugins/displays/camera/camera_display.cpp#L568
-    this.zoom.set(1.0, 1.0);
-
-    const { width: imgWidth, height: imgHeight } = model;
-
-    const fx = model.P[0]!;
-    const fy = model.P[5]!;
-    const windowAspect = this.aspect;
-    const imageAspect = imgWidth / fx / (imgHeight / fy);
-    // preserve the aspect ratio
-    if (imageAspect > windowAspect) {
-      this.zoom.y = (this.zoom.y / imageAspect) * windowAspect;
-    } else {
-      this.zoom.x = (this.zoom.x / windowAspect) * imageAspect;
+      this.renderer.settings.errors.add(
+        CALIBRATION_TOPIC_PATH,
+        CAMERA_UPDATE_ERROR_KEY,
+        err.message,
+      );
     }
   }
 
@@ -474,12 +356,11 @@ export class ImageMode extends SceneExtension implements ICameraHandler {
   }
 
   public handleResize(width: number, height: number): void {
-    this.aspect = width / height;
-    this.updateCamera();
+    this.camera.setRendererAspect(width / height);
   }
 
   public setCameraState(): void {
-    this.updateCamera();
+    this.updateView();
   }
 
   public getCameraState(): undefined {
