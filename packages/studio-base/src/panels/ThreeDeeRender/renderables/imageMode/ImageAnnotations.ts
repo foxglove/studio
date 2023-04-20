@@ -19,8 +19,12 @@ interface ImageAnnotationsContext {
   config(): ImageModeConfig;
   updateConfig(updateHandler: (draft: ImageModeConfig) => void): void;
   updateSettingsTree(): void;
+  // addSchemaSubscriptions
 }
 
+/**
+ * This class handles settings and rendering for ImageAnnotations/ImageMarkers.
+ */
 export class ImageAnnotations extends THREE.Object3D {
   #context: ImageAnnotationsContext;
 
@@ -33,7 +37,7 @@ export class ImageAnnotations extends THREE.Object3D {
     if (action.action !== "update" || action.payload.path.length < 2) {
       return;
     }
-    if (action.payload.path[0] !== "imageAnnotations") {
+    if (action.payload.path[0] !== "imageAnnotations" || action.payload.path[2] !== "visible") {
       return;
     }
     this.#context.updateConfig((draft) => {
@@ -71,7 +75,13 @@ export class ImageAnnotations extends THREE.Object3D {
         continue;
       }
       entries.push({
-        path: ["imageAnnotations", `${i++}` /*FIXME: message converters? see FG-1040 */],
+        // We want 2 levels of nesting in the panel config
+        // (annotationsByTopicAndSchema[topic][schema]), but only 1 level of nesting in the settings
+        // tree (all annotation topics listed under "Image annotations"). So when building the tree,
+        // we just use a numeric index in the path. Inside the handler, this part of the path is
+        // ignored, and instead we pass in the `topic` directly so the handler knows which value to
+        // update in the config.
+        path: ["imageAnnotations", `${i++}`],
         node: {
           label: topic.name,
           visible:
