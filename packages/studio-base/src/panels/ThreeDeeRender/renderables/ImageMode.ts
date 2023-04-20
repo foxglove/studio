@@ -326,7 +326,7 @@ export class ImageMode extends SceneExtension implements ICameraHandler {
   }
 
   /**
-   * Updates necessary camera and frame information when the image or calibration message changes
+   * Updates model, frame, and camera to be in sync with current message and topic
    */
   private updateView(): void {
     const { calibrationTopic } = this.getImageModeSettings();
