@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Story } from "@storybook/react";
+import { StoryFn } from "@storybook/react";
 import { screen, userEvent } from "@storybook/testing-library";
 import { useEffect } from "react";
 
@@ -13,7 +13,7 @@ import { makeMockEvents } from "@foxglove/studio-base/test/mocks/makeMockEvents"
 
 import { EventsList } from "./EventsList";
 
-function Wrapper(Child: Story): JSX.Element {
+function Wrapper(Child: StoryFn): JSX.Element {
   return (
     <MockMessagePipelineProvider>
       <EventsProvider>

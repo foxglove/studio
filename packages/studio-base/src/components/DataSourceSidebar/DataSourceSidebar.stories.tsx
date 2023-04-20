@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Box } from "@mui/material";
-import { Story } from "@storybook/react";
+import { StoryFn } from "@storybook/react";
 import { useEffect } from "react";
 
 import { fromDate } from "@foxglove/rostime";
@@ -17,10 +17,10 @@ import EventsProvider from "@foxglove/studio-base/providers/EventsProvider";
 
 import DataSourceSidebar from "./DataSourceSidebar";
 
-function Wrapper(StoryFn: Story): JSX.Element {
+function Wrapper(Wrapped: StoryFn): JSX.Element {
   return (
     <EventsProvider>
-      <StoryFn />
+      <Wrapped />
     </EventsProvider>
   );
 }

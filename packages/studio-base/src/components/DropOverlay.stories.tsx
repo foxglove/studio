@@ -9,8 +9,12 @@ export default {
   component: DropOverlay,
 };
 
-export const Dark = (): JSX.Element => <DropOverlay open>Some DropOverlay</DropOverlay>;
-Dark.parameters = { colorScheme: "dark" };
+export const Dark = {
+  render: (): JSX.Element => <DropOverlay open>Some DropOverlay</DropOverlay>,
+  parameters: { colorScheme: "dark" },
+};
 
-export const Light = (): JSX.Element => <DropOverlay open>Some DropOverlay</DropOverlay>;
-Light.parameters = { colorScheme: "light" };
+export const Light = {
+  render: (): JSX.Element => <DropOverlay open>Some DropOverlay</DropOverlay>,
+  parameters: { colorScheme: "light" },
+};

@@ -157,91 +157,101 @@ export const WithSettings = (): JSX.Element => {
   );
 };
 
-export const TopicToRender = (): JSX.Element => {
-  function makeMessages(topic: any) {
-    return fixture.frame!["/rosout"]!.map((msg: any) => ({
-      ...msg,
-      topic,
-      message: { ...msg.message, name: `${topic}${msg.message.name}` },
-    }));
-  }
-  return (
-    <PanelSetup
-      fixture={{
-        topics: [
-          { name: "/rosout", schemaName: "rosgraph_msgs/Log" },
-          { name: "/foo/rosout", schemaName: "rosgraph_msgs/Log" },
-          { name: "/studio_source_2/rosout", schemaName: "rosgraph_msgs/Log" },
-        ],
-        frame: {
-          "/rosout": makeMessages("/rosout"),
-          "/foo/rosout": makeMessages("/foo/rosout"),
-          "/studio_source_2/rosout": makeMessages("/studio_source_2/rosout"),
-        },
-      }}
-      onMount={() => {
-        TestUtils.Simulate.mouseEnter(
-          document.querySelectorAll("[data-testid~=panel-mouseenter-container]")[0]!,
-        );
-        setTimeout(() => {
-          TestUtils.Simulate.click(document.querySelectorAll("[data-testid=topic-set]")[0]!);
-        }, 0);
-      }}
-    >
-      <Log overrideConfig={{ searchTerms: [], minLogLevel: 1, topicToRender: "/foo/rosout" }} />
-    </PanelSetup>
-  );
-};
-TopicToRender.parameters = { colorScheme: "dark" };
-
-export const FilteredTerms = (): JSX.Element => {
-  return (
-    <PanelSetup fixture={fixture}>
-      <Log
-        overrideConfig={{
-          searchTerms: ["multiple", "/some_topic"],
-          minLogLevel: 1,
-          topicToRender: "/rosout",
+export const TopicToRender = {
+  render: (): JSX.Element => {
+    function makeMessages(topic: any) {
+      return fixture.frame!["/rosout"]!.map((msg: any) => ({
+        ...msg,
+        topic,
+        message: { ...msg.message, name: `${topic}${msg.message.name}` },
+      }));
+    }
+    return (
+      <PanelSetup
+        fixture={{
+          topics: [
+            { name: "/rosout", schemaName: "rosgraph_msgs/Log" },
+            { name: "/foo/rosout", schemaName: "rosgraph_msgs/Log" },
+            { name: "/studio_source_2/rosout", schemaName: "rosgraph_msgs/Log" },
+          ],
+          frame: {
+            "/rosout": makeMessages("/rosout"),
+            "/foo/rosout": makeMessages("/foo/rosout"),
+            "/studio_source_2/rosout": makeMessages("/studio_source_2/rosout"),
+          },
         }}
-      />
-    </PanelSetup>
-  );
-};
-
-FilteredTerms.title = `filtered terms: "multiple", "/some_topic"`;
-
-export const CaseInsensitiveFilter = (): JSX.Element => {
-  return (
-    <PanelSetup fixture={fixture}>
-      <Log
-        overrideConfig={{
-          searchTerms: ["could", "Ipsum"],
-          minLogLevel: 1,
-          topicToRender: "/rosout",
+        onMount={() => {
+          TestUtils.Simulate.mouseEnter(
+            document.querySelectorAll("[data-testid~=panel-mouseenter-container]")[0]!,
+          );
+          setTimeout(() => {
+            TestUtils.Simulate.click(document.querySelectorAll("[data-testid=topic-set]")[0]!);
+          }, 0);
         }}
-      />
-    </PanelSetup>
-  );
+      >
+        <Log overrideConfig={{ searchTerms: [], minLogLevel: 1, topicToRender: "/foo/rosout" }} />
+      </PanelSetup>
+    );
+  },
+
+  parameters: { colorScheme: "dark" },
 };
 
-CaseInsensitiveFilter.title = `case insensitive message filtering: "could", "Ipsum"`;
+export const FilteredTerms = {
+  render: (): JSX.Element => {
+    return (
+      <PanelSetup fixture={fixture}>
+        <Log
+          overrideConfig={{
+            searchTerms: ["multiple", "/some_topic"],
+            minLogLevel: 1,
+            topicToRender: "/rosout",
+          }}
+        />
+      </PanelSetup>
+    );
+  },
 
-export const AutoCompleteItems = (): JSX.Element => {
-  return (
-    <PanelSetup fixture={fixture}>
-      <Log
-        overrideConfig={{
-          searchTerms: ["could", "Ipsum"],
-          minLogLevel: 1,
-          topicToRender: "/rosout",
-        }}
-      />
-    </PanelSetup>
-  );
+  title: `filtered terms: "multiple", "/some_topic"`,
 };
-AutoCompleteItems.play = async () => {
-  const input = (await screen.findAllByPlaceholderText("Search filter"))[0]!;
-  userEvent.click(input);
+
+export const CaseInsensitiveFilter = {
+  render: (): JSX.Element => {
+    return (
+      <PanelSetup fixture={fixture}>
+        <Log
+          overrideConfig={{
+            searchTerms: ["could", "Ipsum"],
+            minLogLevel: 1,
+            topicToRender: "/rosout",
+          }}
+        />
+      </PanelSetup>
+    );
+  },
+
+  title: `case insensitive message filtering: "could", "Ipsum"`,
+};
+
+export const AutoCompleteItems = {
+  render: (): JSX.Element => {
+    return (
+      <PanelSetup fixture={fixture}>
+        <Log
+          overrideConfig={{
+            searchTerms: ["could", "Ipsum"],
+            minLogLevel: 1,
+            topicToRender: "/rosout",
+          }}
+        />
+      </PanelSetup>
+    );
+  },
+
+  play: async () => {
+    const input = (await screen.findAllByPlaceholderText("Search filter"))[0]!;
+    userEvent.click(input);
+  },
 };
 
 export const FoxgloveLog = (): JSX.Element => {

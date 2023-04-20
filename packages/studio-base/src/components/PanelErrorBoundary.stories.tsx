@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { action } from "@storybook/addon-actions";
-import { Story } from "@storybook/react";
+import { StoryFn } from "@storybook/react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
@@ -26,7 +26,7 @@ export default {
   title: "components/PanelErrorBoundary",
 };
 
-export const Default: Story = () => {
+export const Default: StoryFn = () => {
   return (
     <DndProvider backend={HTML5Backend}>
       <PanelErrorBoundary
@@ -39,7 +39,7 @@ export const Default: Story = () => {
   );
 };
 
-export const ShowingDetails: Story = () => {
+export const ShowingDetails: StoryFn = () => {
   return (
     <DndProvider backend={HTML5Backend}>
       <PanelErrorBoundary

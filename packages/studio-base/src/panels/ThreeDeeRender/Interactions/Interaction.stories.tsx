@@ -12,7 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { Stack } from "@mui/material";
-import { StoryFn } from "@storybook/react";
+import { StoryObj, StoryFn } from "@storybook/react";
 
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 import { PointCloud2 } from "@foxglove/studio-base/types/Messages";
@@ -352,46 +352,48 @@ export const DefaultLight: StoryFn = DefaultStory.bind(undefined);
 DefaultLight.storyName = "default light";
 DefaultLight.parameters = { colorScheme: "light" };
 
-export const PointCloud: StoryFn = () => {
-  const cloud1 = { ...selectedObject.object, ...POINT_CLOUD_MESSAGE };
-  const cloud2 = {
-    ...selectedObject.object,
-    ...POINT_CLOUD_WITH_ADDITIONAL_FIELDS,
-  };
+export const PointCloud: StoryObj = {
+  render: () => {
+    const cloud1 = { ...selectedObject.object, ...POINT_CLOUD_MESSAGE };
+    const cloud2 = {
+      ...selectedObject.object,
+      ...POINT_CLOUD_WITH_ADDITIONAL_FIELDS,
+    };
 
-  return (
-    <Stack direction="row" flexWrap="wrap" height="100%" bgcolor="background.paper">
-      <PanelSetupWithData title="default with point color">
-        <Interactions
-          {...(sharedProps as any)}
-          selectedObject={{
-            instanceIndex: 0,
-            object: {
-              ...cloud1,
-              type: 102,
-              interactionData: { topic: "/foo/bar", originalMessage: POINT_CLOUD_MESSAGE },
-            },
-          }}
-        />
-      </PanelSetupWithData>
-      <PanelSetupWithData title="with additional fields">
-        <Interactions
-          {...(sharedProps as any)}
-          selectedObject={{
-            instanceIndex: 0,
-            object: {
-              ...cloud2,
-              type: 102,
-              interactionData: {
-                topic: "/foo/bar",
-                originalMessage: POINT_CLOUD_WITH_ADDITIONAL_FIELDS,
+    return (
+      <Stack direction="row" flexWrap="wrap" height="100%" bgcolor="background.paper">
+        <PanelSetupWithData title="default with point color">
+          <Interactions
+            {...(sharedProps as any)}
+            selectedObject={{
+              instanceIndex: 0,
+              object: {
+                ...cloud1,
+                type: 102,
+                interactionData: { topic: "/foo/bar", originalMessage: POINT_CLOUD_MESSAGE },
               },
-            },
-          }}
-        />
-      </PanelSetupWithData>
-    </Stack>
-  );
-};
+            }}
+          />
+        </PanelSetupWithData>
+        <PanelSetupWithData title="with additional fields">
+          <Interactions
+            {...(sharedProps as any)}
+            selectedObject={{
+              instanceIndex: 0,
+              object: {
+                ...cloud2,
+                type: 102,
+                interactionData: {
+                  topic: "/foo/bar",
+                  originalMessage: POINT_CLOUD_WITH_ADDITIONAL_FIELDS,
+                },
+              },
+            }}
+          />
+        </PanelSetupWithData>
+      </Stack>
+    );
+  },
 
-PointCloud.storyName = "PointCloud";
+  name: "PointCloud",
+};

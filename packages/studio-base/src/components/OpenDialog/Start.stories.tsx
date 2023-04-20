@@ -105,12 +105,16 @@ function CurrentUserWrapper(props: { children: ReactNode; user?: User | undefine
 
 const defaultProps: OpenDialogProps = { backdropAnimation: false };
 
-export const DefaultLight = (): JSX.Element => <OpenDialog {...defaultProps} />;
-DefaultLight.storyName = "Default (light)";
-DefaultLight.parameters = { colorScheme: "light" };
+export const DefaultLight = {
+  render: (): JSX.Element => <OpenDialog {...defaultProps} />,
+  name: "Default (light)",
+  parameters: { colorScheme: "light" },
+};
 
-export const DefaultDark = (): JSX.Element => <OpenDialog {...defaultProps} />;
-DefaultDark.storyName = "Default (dark)";
+export const DefaultDark = {
+  render: (): JSX.Element => <OpenDialog {...defaultProps} />,
+  name: "Default (dark)",
+};
 
 export function UserNoAuth(): JSX.Element {
   return (

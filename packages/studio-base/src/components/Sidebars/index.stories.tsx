@@ -100,10 +100,15 @@ export const Unselected = (): JSX.Element => <Story />;
 export const ASelected = (): JSX.Element => <Story defaultSelectedKey="a" />;
 export const BSelected = (): JSX.Element => <Story defaultSelectedKey="b" />;
 
-export const ClickToSelect = (): JSX.Element => <Story clickKey="a" />;
-ClickToSelect.parameters = { colorScheme: "dark" };
-export const ClickToDeselect = (): JSX.Element => <Story defaultSelectedKey="a" clickKey="a" />;
-ClickToDeselect.parameters = { colorScheme: "dark" };
+export const ClickToSelect = {
+  render: (): JSX.Element => <Story clickKey="a" />,
+  parameters: { colorScheme: "dark" },
+};
+
+export const ClickToDeselect = {
+  render: (): JSX.Element => <Story defaultSelectedKey="a" clickKey="a" />,
+  parameters: { colorScheme: "dark" },
+};
 
 export const OverflowUnselected = (): JSX.Element => <Story height={200} />;
 export const OverflowCSelected = (): JSX.Element => <Story height={200} defaultSelectedKey="c" />;

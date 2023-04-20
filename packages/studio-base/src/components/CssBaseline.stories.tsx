@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Story } from "@storybook/react";
+import { StoryFn } from "@storybook/react";
 
 import CssBaseline from "./CssBaseline";
 
@@ -14,7 +14,7 @@ export default {
   },
 };
 
-export const Scrollbars: Story = () => {
+export const Scrollbars: StoryFn = () => {
   return (
     <CssBaseline>
       <div

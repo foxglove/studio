@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { useTheme } from "@mui/material";
-import { Story } from "@storybook/react";
+import { StoryFn } from "@storybook/react";
 import { useEffect } from "react";
 
 import MockMessagePipelineProvider from "@foxglove/studio-base/components/MessagePipeline/MockMessagePipelineProvider";
@@ -11,7 +11,7 @@ import { PlaybackControlsTooltipContent } from "@foxglove/studio-base/components
 import { useTimelineInteractionState } from "@foxglove/studio-base/context/TimelineInteractionStateContext";
 import TimelineInteractionStateProvider from "@foxglove/studio-base/providers/TimelineInteractionStateProvider";
 
-function Wrapper(StoryFn: Story): JSX.Element {
+function Wrapper(Wrapped: StoryFn): JSX.Element {
   const theme = useTheme();
   return (
     <TimelineInteractionStateProvider>
@@ -23,7 +23,7 @@ function Wrapper(StoryFn: Story): JSX.Element {
             backgroundColor: theme.palette.background.paper,
           }}
         >
-          <StoryFn />
+          <Wrapped />
         </div>
       </MockMessagePipelineProvider>
     </TimelineInteractionStateProvider>

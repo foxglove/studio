@@ -346,8 +346,12 @@ function FormElements(): JSX.Element {
   );
 }
 
-export const FormElementsDark = (): JSX.Element => FormElements();
-FormElementsDark.parameters = { colorScheme: "dark" };
+export const FormElementsDark = {
+  render: (): JSX.Element => FormElements(),
+  parameters: { colorScheme: "dark" },
+};
 
-export const FormElementsLight = (): JSX.Element => FormElements();
-FormElementsLight.parameters = { colorScheme: "light" };
+export const FormElementsLight = {
+  render: (): JSX.Element => FormElements(),
+  parameters: { colorScheme: "light" },
+};

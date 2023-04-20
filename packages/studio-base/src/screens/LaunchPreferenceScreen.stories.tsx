@@ -11,14 +11,18 @@ export default {
   component: LaunchPreferenceScreen,
 };
 
-export const Dark = (): ReactElement => {
-  return <LaunchPreferenceScreen />;
+export const Dark = {
+  render: (): ReactElement => {
+    return <LaunchPreferenceScreen />;
+  },
+
+  parameters: { colorScheme: "dark" },
 };
 
-Dark.parameters = { colorScheme: "dark" };
+export const Light = {
+  render: (): ReactElement => {
+    return <LaunchPreferenceScreen />;
+  },
 
-export const Light = (): ReactElement => {
-  return <LaunchPreferenceScreen />;
+  parameters: { colorScheme: "light" },
 };
-
-Light.parameters = { colorScheme: "light" };

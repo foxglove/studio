@@ -25,124 +25,147 @@ export default {
   title: "components/NotificationModal",
 };
 
-export const ErrorNoSubtextWithDetails = (): JSX.Element => {
-  return (
-    <NotificationModal
-      onRequestClose={() => {}}
-      notification={{
-        id: "1",
-        message: "Error 1",
-        details: fakeError(),
-        created: new Date(),
-        severity: "error",
-      }}
-    />
-  );
+export const ErrorNoSubtextWithDetails = {
+  render: (): JSX.Element => {
+    return (
+      <NotificationModal
+        onRequestClose={() => {}}
+        notification={{
+          id: "1",
+          message: "Error 1",
+          details: fakeError(),
+          created: new Date(),
+          severity: "error",
+        }}
+      />
+    );
+  },
+
+  parameters: { colorScheme: "light" },
 };
-ErrorNoSubtextWithDetails.parameters = { colorScheme: "light" };
+
 export const ErrorNoSubtextWithDetailsDark = ErrorNoSubtextWithDetails.bind(undefined);
 ErrorNoSubtextWithDetailsDark.parameters = { colorScheme: "dark" };
 
-export const ErrorWithSubtextAndDetails = (): JSX.Element => {
-  return (
-    <NotificationModal
-      onRequestClose={() => {}}
-      notification={{
-        id: "1",
-        message: "Error 1",
-        details: fakeError(),
-        created: new Date(),
-        severity: "error",
-        subText: "This error has a subtext.",
-      }}
-    />
-  );
-};
-ErrorWithSubtextAndDetails.parameters = { colorScheme: "light" };
+export const ErrorWithSubtextAndDetails = {
+  render: (): JSX.Element => {
+    return (
+      <NotificationModal
+        onRequestClose={() => {}}
+        notification={{
+          id: "1",
+          message: "Error 1",
+          details: fakeError(),
+          created: new Date(),
+          severity: "error",
+          subText: "This error has a subtext.",
+        }}
+      />
+    );
+  },
 
-export const ErrorWithSubtextNoDetails = (): JSX.Element => {
-  return (
-    <NotificationModal
-      onRequestClose={() => {}}
-      notification={{
-        id: "1",
-        message: "Error 1",
-        details: undefined,
-        created: new Date(),
-        severity: "error",
-        subText: "This error has a subtext.",
-      }}
-    />
-  );
+  parameters: { colorScheme: "light" },
 };
-ErrorWithSubtextNoDetails.parameters = { colorScheme: "light" };
 
-export const Warning = (): JSX.Element => {
-  return (
-    <NotificationModal
-      onRequestClose={() => {}}
-      notification={{
-        id: "1",
-        message: "Warning 1",
-        details: "Some error details",
-        created: new Date(),
-        severity: "warn",
-      }}
-    />
-  );
-};
-Warning.parameters = { colorScheme: "dark" };
+export const ErrorWithSubtextNoDetails = {
+  render: (): JSX.Element => {
+    return (
+      <NotificationModal
+        onRequestClose={() => {}}
+        notification={{
+          id: "1",
+          message: "Error 1",
+          details: undefined,
+          created: new Date(),
+          severity: "error",
+          subText: "This error has a subtext.",
+        }}
+      />
+    );
+  },
 
-export const ErrorNoDetailsOrSubtext = (): JSX.Element => {
-  return (
-    <NotificationModal
-      onRequestClose={() => {}}
-      notification={{
-        id: "1",
-        message: "Error 1",
-        details: undefined,
-        created: new Date(),
-        severity: "error",
-      }}
-    />
-  );
+  parameters: { colorScheme: "light" },
 };
-ErrorNoDetailsOrSubtext.parameters = { colorScheme: "dark" };
 
-export const ErrorWithJsxElementDetails = (): JSX.Element => {
-  return (
-    <NotificationModal
-      onRequestClose={() => {}}
-      notification={{
-        id: "1",
-        message: "Error 1",
-        details: (
-          <p>
-            This is <b style={{ color: "red" }}>customized</b> error detail.
-          </p>
-        ),
-        created: new Date(),
-        severity: "error",
-      }}
-    />
-  );
+export const Warning = {
+  render: (): JSX.Element => {
+    return (
+      <NotificationModal
+        onRequestClose={() => {}}
+        notification={{
+          id: "1",
+          message: "Warning 1",
+          details: "Some error details",
+          created: new Date(),
+          severity: "warn",
+        }}
+      />
+    );
+  },
+
+  parameters: { colorScheme: "dark" },
 };
-ErrorWithJsxElementDetails.parameters = { colorScheme: "light" };
+
+export const ErrorNoDetailsOrSubtext = {
+  render: (): JSX.Element => {
+    return (
+      <NotificationModal
+        onRequestClose={() => {}}
+        notification={{
+          id: "1",
+          message: "Error 1",
+          details: undefined,
+          created: new Date(),
+          severity: "error",
+        }}
+      />
+    );
+  },
+
+  parameters: { colorScheme: "dark" },
+};
+
+export const ErrorWithJsxElementDetails = {
+  render: (): JSX.Element => {
+    return (
+      <NotificationModal
+        onRequestClose={() => {}}
+        notification={{
+          id: "1",
+          message: "Error 1",
+          details: (
+            <p>
+              This is <b style={{ color: "red" }}>customized</b> error detail.
+            </p>
+          ),
+          created: new Date(),
+          severity: "error",
+        }}
+      />
+    );
+  },
+
+  parameters: { colorScheme: "light" },
+};
+
 export const ErrorWithJsxElementDetailsDark = ErrorWithJsxElementDetails.bind(undefined);
 ErrorWithJsxElementDetailsDark.parameters = { colorScheme: "dark" };
 
-export const ErrorWithNewlineDetails = (): JSX.Element => {
-  return (
-    <NotificationModal
-      onRequestClose={() => {}}
-      notification={{
-        id: "1",
-        message: "Error 1",
-        details: "Some details.\n\nWith a newline.",
-        created: new Date(),
-        severity: "error",
-      }}
-    />
-  );
+export const ErrorWithNewlineDetails = {
+  render: (): JSX.Element => {
+    return (
+      <NotificationModal
+        onRequestClose={() => {}}
+        notification={{
+          id: "1",
+          message: "Error 1",
+          details: "Some details.\n\nWith a newline.",
+          created: new Date(),
+          severity: "error",
+        }}
+      />
+    );
+  },
+
+  parameters: { colorScheme: "dark" },
 };
-ErrorWithNewlineDetails.parameters = { colorScheme: "dark" };

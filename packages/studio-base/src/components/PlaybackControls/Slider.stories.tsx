@@ -12,7 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { Box } from "@mui/material";
-import { Story } from "@storybook/react";
+import { StoryFn } from "@storybook/react";
 import { useState } from "react";
 import { makeStyles } from "tss-react/mui";
 
@@ -41,7 +41,7 @@ export default {
   title: "components/PlaybackControls/Slider",
 };
 
-export const Examples: Story = () => {
+export const Examples: StoryFn = () => {
   const [value, setValue] = useState(0.5);
   const [draggableValue, setDraggableValue] = useState(0.25);
   return (
@@ -71,7 +71,7 @@ export const Examples: Story = () => {
   );
 };
 
-export const CustomRenderer: Story = () => {
+export const CustomRenderer: StoryFn = () => {
   const { classes } = useStyles();
   const [draggableValue, setDraggableValue] = useState(0.25);
 

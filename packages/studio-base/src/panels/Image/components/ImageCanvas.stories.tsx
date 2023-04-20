@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Story } from "@storybook/react";
+import { StoryObj, StoryFn } from "@storybook/react";
 import { noop } from "lodash";
 
 import { Topic } from "@foxglove/studio-base/players/types";
@@ -223,92 +223,103 @@ export default {
   },
 };
 
-export const MarkersOriginal: Story = (_args) => {
-  const image = useCompressedImage();
-  const readySignal = useReadySignal();
+export const MarkersOriginal: StoryObj = {
+  render: (_args) => {
+    const image = useCompressedImage();
+    const readySignal = useReadySignal();
 
-  return (
-    <div style={{ height: "400px" }}>
-      <ImageCanvas
-        topic={topics[1]}
-        image={image}
-        rawMarkerData={{
-          markers: annotations,
-          cameraInfo: undefined,
-          transformMarkers: false,
-        }}
-        config={config}
-        saveConfig={noop}
-        setActivePixelData={noop}
-        onStartRenderImage={() => readySignal}
-      />
-    </div>
-  );
-};
-MarkersOriginal.play = async (ctx) => {
-  await ctx.parameters.storyReady;
-};
-MarkersOriginal.parameters = {
-  useReadySignal: true,
-};
+    return (
+      <div style={{ height: "400px" }}>
+        <ImageCanvas
+          topic={topics[1]}
+          image={image}
+          rawMarkerData={{
+            markers: annotations,
+            cameraInfo: undefined,
+            transformMarkers: false,
+          }}
+          config={config}
+          saveConfig={noop}
+          setActivePixelData={noop}
+          onStartRenderImage={() => readySignal}
+        />
+      </div>
+    );
+  },
 
-export const MarkersTransformed: Story = (_args) => {
-  const image = useCompressedImage();
-  const readySignal = useReadySignal();
+  play: async (ctx) => {
+    await ctx.parameters.storyReady;
+  },
 
-  return (
-    <div style={{ height: "400px" }}>
-      <ImageCanvas
-        topic={topics[1]}
-        image={image}
-        rawMarkerData={{
-          markers: annotations,
-          cameraInfo,
-          transformMarkers: true,
-        }}
-        config={config}
-        saveConfig={noop}
-        setActivePixelData={noop}
-        onStartRenderImage={() => readySignal}
-      />
-    </div>
-  );
-};
-MarkersTransformed.play = async (ctx) => {
-  await ctx.parameters.storyReady;
-};
-MarkersTransformed.parameters = {
-  useReadySignal: true,
+  parameters: {
+    useReadySignal: true,
+  },
 };
 
-// markers with different original image size
-export const MarkersImageSize: Story = (_args) => {
-  const image = useCompressedImage();
-  const readySignal = useReadySignal();
+export const MarkersTransformed: StoryObj = {
+  render: (_args) => {
+    const image = useCompressedImage();
+    const readySignal = useReadySignal();
 
-  return (
-    <div style={{ height: "400px" }}>
-      <ImageCanvas
-        topic={topics[1]}
-        image={image}
-        rawMarkerData={{
-          markers: annotations,
-          cameraInfo: { ...cameraInfo, width: 200, height: 150 },
-          transformMarkers: true,
-        }}
-        config={config}
-        saveConfig={noop}
-        setActivePixelData={noop}
-        onStartRenderImage={() => readySignal}
-      />
-    </div>
-  );
+    return (
+      <div style={{ height: "400px" }}>
+        <ImageCanvas
+          topic={topics[1]}
+          image={image}
+          rawMarkerData={{
+            markers: annotations,
+            cameraInfo,
+            transformMarkers: true,
+          }}
+          config={config}
+          saveConfig={noop}
+          setActivePixelData={noop}
+          onStartRenderImage={() => readySignal}
+        />
+      </div>
+    );
+  },
+
+  play: async (ctx) => {
+    await ctx.parameters.storyReady;
+  },
+
+  parameters: {
+    useReadySignal: true,
+  },
 };
-MarkersImageSize.play = async (ctx) => {
-  await ctx.parameters.storyReady;
-};
-MarkersImageSize.parameters = {
-  useReadySignal: true,
+
+export const MarkersImageSize: StoryObj = {
+  render: (_args) => {
+    const image = useCompressedImage();
+    const readySignal = useReadySignal();
+
+    return (
+      <div style={{ height: "400px" }}>
+        <ImageCanvas
+          topic={topics[1]}
+          image={image}
+          rawMarkerData={{
+            markers: annotations,
+            cameraInfo: { ...cameraInfo, width: 200, height: 150 },
+            transformMarkers: true,
+          }}
+          config={config}
+          saveConfig={noop}
+          setActivePixelData={noop}
+          onStartRenderImage={() => readySignal}
+        />
+      </div>
+    );
+  },
+
+  play: async (ctx) => {
+    await ctx.parameters.storyReady;
+  },
+
+  parameters: {
+    useReadySignal: true,
+  },
 };
 
 export const MarkersWithFallbackRenderingUsingMainThread = (): JSX.Element => {
@@ -442,15 +453,16 @@ export const CallsOnRenderFrameWhenRenderingFails = (): JSX.Element => {
 
 export const RGB8 = (): JSX.Element => <RGBStory encoding="rgb8" />;
 export const BGR8 = (): JSX.Element => <RGBStory encoding="bgr8" />;
-
 export const Mono16BigEndian = (): JSX.Element => <Mono16Story bigEndian={true} />;
 export const Mono16LittleEndian = (): JSX.Element => <Mono16Story bigEndian={false} />;
 
 const mono16Args = { minValue: 5000, maxValue: 20000 };
-export const Mono16CustomMinMax = (args: typeof mono16Args): JSX.Element => (
-  <Mono16Story bigEndian {...args} />
-);
-Mono16CustomMinMax.args = mono16Args;
+
+export const Mono16CustomMinMax = {
+  render: (args: typeof mono16Args): JSX.Element => <Mono16Story bigEndian {...args} />,
+
+  args: mono16Args,
+};
 
 export const BayerRGGB8 = (): JSX.Element => <BayerStory encoding="bayer_rggb8" />;
 export const BayerBGGR8 = (): JSX.Element => <BayerStory encoding="bayer_bggr8" />;

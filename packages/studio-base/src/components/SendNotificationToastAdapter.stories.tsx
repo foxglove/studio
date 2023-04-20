@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Story } from "@storybook/react";
+import { StoryFn } from "@storybook/react";
 import { useEffect } from "react";
 
 import SendNotificationToastAdapter from "@foxglove/studio-base/components/SendNotificationToastAdapter";
@@ -45,11 +45,11 @@ export default {
     colorScheme: "dark",
   },
   decorators: [
-    (StoryFn: Story): JSX.Element => {
+    (Wrapped: StoryFn): JSX.Element => {
       return (
         <div style={{ padding: 10, height: "300px" }}>
           <StudioToastProvider>
-            <StoryFn />
+            <Wrapped />
           </StudioToastProvider>
         </div>
       );

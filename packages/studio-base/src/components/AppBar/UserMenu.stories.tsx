@@ -73,8 +73,12 @@ function SignInStates(): JSX.Element {
   );
 }
 
-export const Dark = (): JSX.Element => <SignInStates />;
-Dark.parameters = { colorScheme: "dark" };
+export const Dark = {
+  render: (): JSX.Element => <SignInStates />,
+  parameters: { colorScheme: "dark" },
+};
 
-export const Light = (): JSX.Element => <SignInStates />;
-Light.parameters = { colorScheme: "light" };
+export const Light = {
+  render: (): JSX.Element => <SignInStates />,
+  parameters: { colorScheme: "light" },
+};

@@ -23,15 +23,18 @@ export const Empty = (): JSX.Element => {
   );
 };
 
-export const WithSettings = (): JSX.Element => {
-  return (
-    <PanelSetup includeSettings>
-      <TopicGraph />
-    </PanelSetup>
-  );
-};
-WithSettings.parameters = {
-  colorScheme: "light",
+export const WithSettings = {
+  render: (): JSX.Element => {
+    return (
+      <PanelSetup includeSettings>
+        <TopicGraph />
+      </PanelSetup>
+    );
+  },
+
+  parameters: {
+    colorScheme: "light",
+  },
 };
 
 function TopicsStory({
@@ -73,48 +76,51 @@ function TopicsStory({
 }
 
 export const AllTopics = (): JSX.Element => <TopicsStory topicVisibility="all" />;
+
 export const TopicsWithSubscribers = (): JSX.Element => (
   <TopicsStory topicVisibility="subscribed" />
 );
+
 export const TopicsHidden = (): JSX.Element => <TopicsStory topicVisibility="none" />;
 
-// Adding new active data should cause the graph to re-layout
-export const ReLayout = (): JSX.Element => {
-  const [fixture, setFixture] = useState<Fixture>({
-    frame: {},
-    topics: [{ name: "/topic", schemaName: "std_msgs/Header" }],
-    activeData: {
-      publishedTopics: new Map([["/topic", new Set(["pub-1", "pub-2"])]]),
-      subscribedTopics: new Map([["/topic", new Set(["sub-1"])]]),
+export const ReLayout = {
+  render: (): JSX.Element => {
+    const [fixture, setFixture] = useState<Fixture>({
+      frame: {},
+      topics: [{ name: "/topic", schemaName: "std_msgs/Header" }],
+      activeData: {
+        publishedTopics: new Map([["/topic", new Set(["pub-1", "pub-2"])]]),
+        subscribedTopics: new Map([["/topic", new Set(["sub-1"])]]),
+      },
+    });
+
+    useEffect(() => {
+      const timeOutID = setTimeout(() => {
+        setFixture({
+          frame: {},
+          topics: [{ name: "/topic", schemaName: "std_msgs/Header" }],
+          activeData: {
+            publishedTopics: new Map([["/topic", new Set(["pub-1", "pub-2"])]]),
+            subscribedTopics: new Map([["/topic", new Set(["sub-1", "sub-2"])]]),
+          },
+        });
+      }, 100);
+
+      return () => {
+        clearTimeout(timeOutID);
+      };
+    }, []);
+
+    return (
+      <PanelSetup fixture={fixture}>
+        <TopicGraph />
+      </PanelSetup>
+    );
+  },
+
+  parameters: {
+    chromatic: {
+      delay: 200,
     },
-  });
-
-  useEffect(() => {
-    const timeOutID = setTimeout(() => {
-      setFixture({
-        frame: {},
-        topics: [{ name: "/topic", schemaName: "std_msgs/Header" }],
-        activeData: {
-          publishedTopics: new Map([["/topic", new Set(["pub-1", "pub-2"])]]),
-          subscribedTopics: new Map([["/topic", new Set(["sub-1", "sub-2"])]]),
-        },
-      });
-    }, 100);
-
-    return () => {
-      clearTimeout(timeOutID);
-    };
-  }, []);
-
-  return (
-    <PanelSetup fixture={fixture}>
-      <TopicGraph />
-    </PanelSetup>
-  );
-};
-
-ReLayout.parameters = {
-  chromatic: {
-    delay: 200,
   },
 };

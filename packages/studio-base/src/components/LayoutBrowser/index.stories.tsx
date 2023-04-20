@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Story, StoryContext, StoryFn } from "@storybook/react";
+import { StoryObj, StoryContext, StoryFn } from "@storybook/react";
 import { fireEvent, screen, userEvent, within } from "@storybook/testing-library";
 import { useMemo } from "react";
 
@@ -105,7 +105,7 @@ async function selectAllAction() {
   layouts.forEach((layout) => fireEvent.click(layout, { ctrlKey: true }));
 }
 
-function WithSetup(Child: Story, ctx: StoryContext): JSX.Element {
+function WithSetup(Child: StoryFn, ctx: StoryContext): JSX.Element {
   const storage = useMemo(
     () =>
       new MockLayoutStorage(
@@ -155,30 +155,34 @@ export function LayoutList(): JSX.Element {
   return <LayoutBrowser />;
 }
 
-export const MultiSelect: StoryFn = (): JSX.Element => {
-  return <LayoutBrowser />;
-};
-MultiSelect.parameters = {
-  colorScheme: "dark",
-  mockLayouts: Array(8)
-    .fill(undefined)
-    .map((_, idx) => ({
-      id: `layout-${idx + 1}`,
-      name: `Layout ${idx + 1}`,
-      baseline: { data: DEFAULT_LAYOUT_FOR_TESTS, updatedAt: new Date(10).toISOString() },
-    })),
-};
-MultiSelect.play = async ({ canvasElement }) => {
-  const layouts = await within(canvasElement).findAllByTestId("layout-list-item");
+export const MultiSelect: StoryObj = {
+  render: (): JSX.Element => {
+    return <LayoutBrowser />;
+  },
 
-  userEvent.click(layouts[0]!);
+  parameters: {
+    colorScheme: "dark",
+    mockLayouts: Array(8)
+      .fill(undefined)
+      .map((_, idx) => ({
+        id: `layout-${idx + 1}`,
+        name: `Layout ${idx + 1}`,
+        baseline: { data: DEFAULT_LAYOUT_FOR_TESTS, updatedAt: new Date(10).toISOString() },
+      })),
+  },
 
-  userEvent.click(layouts[1]!, { metaKey: true });
-  userEvent.click(layouts[3]!, { metaKey: true });
+  play: async ({ canvasElement }) => {
+    const layouts = await within(canvasElement).findAllByTestId("layout-list-item");
 
-  userEvent.click(layouts[6]!, { shiftKey: true });
+    userEvent.click(layouts[0]!);
 
-  userEvent.click(layouts[4]!, { metaKey: true });
+    userEvent.click(layouts[1]!, { metaKey: true });
+    userEvent.click(layouts[3]!, { metaKey: true });
+
+    userEvent.click(layouts[6]!, { shiftKey: true });
+
+    userEvent.click(layouts[4]!, { metaKey: true });
+  },
 };
 
 export function MultiDelete(): JSX.Element {

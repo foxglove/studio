@@ -10,7 +10,7 @@
 //   This source code is licensed under the Apache License, Version 2.0,
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
-import { Story } from "@storybook/react";
+import { StoryObj, StoryFn } from "@storybook/react";
 import cloneDeep from "lodash/cloneDeep";
 import { useState, useCallback, useRef, useEffect } from "react";
 import TestUtils from "react-dom/test-utils";
@@ -167,57 +167,62 @@ CanZoomAndUpdate.parameters = {
   },
 };
 
-export const CleansUpTooltipOnUnmount: Story = (_args: unknown) => {
-  const [hasRenderedOnce, setHasRenderedOnce] = useState<boolean>(false);
-  const { error } = useAsync(async () => {
-    const [canvas] = document.getElementsByTagName("canvas");
-    const { top, left } = canvas!.getBoundingClientRect();
-    // wait for chart to render before triggering tooltip
-    let tooltip: Element | undefined;
+export const CleansUpTooltipOnUnmount: StoryObj = {
+  render: (_args: unknown) => {
+    const [hasRenderedOnce, setHasRenderedOnce] = useState<boolean>(false);
+    const { error } = useAsync(async () => {
+      const [canvas] = document.getElementsByTagName("canvas");
+      const { top, left } = canvas!.getBoundingClientRect();
+      // wait for chart to render before triggering tooltip
+      let tooltip: Element | undefined;
 
-    TestUtils.Simulate.mouseEnter(canvas!.parentElement!);
-    for (let i = 0; !tooltip && i < 20; i++) {
-      TestUtils.Simulate.mouseMove(canvas!.parentElement!, {
-        clientX: 70 + left,
-        clientY: 296 + top,
-      });
-      await delay(100);
-      tooltip = document.querySelector("[data-testid~=TimeBasedChartTooltipContent]") ?? undefined;
+      TestUtils.Simulate.mouseEnter(canvas!.parentElement!);
+      for (let i = 0; !tooltip && i < 20; i++) {
+        TestUtils.Simulate.mouseMove(canvas!.parentElement!, {
+          clientX: 70 + left,
+          clientY: 296 + top,
+        });
+        await delay(100);
+        tooltip =
+          document.querySelector("[data-testid~=TimeBasedChartTooltipContent]") ?? undefined;
+      }
+      if (tooltip == undefined) {
+        throw new Error("could not find tooltip");
+      }
+      setHasRenderedOnce(true);
+    }, []);
+
+    const readySignal = useReadySignal();
+
+    useEffect(() => {
+      if (hasRenderedOnce) {
+        readySignal();
+      }
+    }, [hasRenderedOnce, readySignal]);
+
+    if (error) {
+      throw error;
     }
-    if (tooltip == undefined) {
-      throw new Error("could not find tooltip");
-    }
-    setHasRenderedOnce(true);
-  }, []);
 
-  const readySignal = useReadySignal();
-
-  useEffect(() => {
     if (hasRenderedOnce) {
-      readySignal();
+      return <></>;
     }
-  }, [hasRenderedOnce, readySignal]);
 
-  if (error) {
-    throw error;
-  }
+    return (
+      <div style={{ width: "100%", height: "100%", background: "black" }}>
+        <MockMessagePipelineProvider>
+          <TimeBasedChart {...commonProps} />
+        </MockMessagePipelineProvider>
+      </div>
+    );
+  },
 
-  if (hasRenderedOnce) {
-    return <></>;
-  }
+  play: async (ctx) => {
+    await ctx.parameters.storyReady;
+  },
 
-  return (
-    <div style={{ width: "100%", height: "100%", background: "black" }}>
-      <MockMessagePipelineProvider>
-        <TimeBasedChart {...commonProps} />
-      </MockMessagePipelineProvider>
-    </div>
-  );
+  parameters: { useReadySignal: true },
 };
-CleansUpTooltipOnUnmount.play = async (ctx) => {
-  await ctx.parameters.storyReady;
-};
-CleansUpTooltipOnUnmount.parameters = { useReadySignal: true };
 
 export function CallPauseOnInitialMount(): JSX.Element {
   const [unpauseFrameCount, setUnpauseFrameCount] = useState(0);

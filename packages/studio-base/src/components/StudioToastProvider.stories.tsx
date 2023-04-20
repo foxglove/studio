@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Story } from "@storybook/react";
+import { StoryFn } from "@storybook/react";
 import { useSnackbar } from "notistack";
 import { useEffect } from "react";
 
@@ -18,10 +18,10 @@ export default {
     colorScheme: "dark",
   },
   decorators: [
-    (StoryFn: Story): JSX.Element => {
+    (Wrapped: StoryFn): JSX.Element => {
       return (
         <StudioToastProvider>
-          <StoryFn />
+          <Wrapped />
         </StudioToastProvider>
       );
     },

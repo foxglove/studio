@@ -18,15 +18,17 @@ export default {
   component: ThreeDeePanel,
 };
 
-export const SensorMsgs_PointCloud2_RGBA = (): JSX.Element => (
-  <SensorMsgs_PointCloud2 rgbaFieldName="rgba" />
-);
-SensorMsgs_PointCloud2_RGBA.parameters = { colorScheme: "dark" };
+export const SensorMsgs_PointCloud2_RGBA = {
+  render: (): JSX.Element => <SensorMsgs_PointCloud2 rgbaFieldName="rgba" />,
 
-export const SensorMsgs_PointCloud2_RGB = (): JSX.Element => (
-  <SensorMsgs_PointCloud2 rgbaFieldName="rgb" />
-);
-SensorMsgs_PointCloud2_RGB.parameters = { colorScheme: "dark" };
+  parameters: { colorScheme: "dark" },
+};
+
+export const SensorMsgs_PointCloud2_RGB = {
+  render: (): JSX.Element => <SensorMsgs_PointCloud2 rgbaFieldName="rgb" />,
+
+  parameters: { colorScheme: "dark" },
+};
 
 function SensorMsgs_PointCloud2({ rgbaFieldName }: { rgbaFieldName: string }): JSX.Element {
   const topics: Topic[] = [

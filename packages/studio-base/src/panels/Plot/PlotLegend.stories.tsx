@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Story } from "@storybook/react";
+import { StoryObj, StoryFn } from "@storybook/react";
 import { useCallback } from "react";
 
 import Stack from "@foxglove/studio-base/components/Stack";
@@ -44,13 +44,13 @@ const exampleConfig: PlotConfig = {
   maxXValue: 3,
 };
 
-function Wrapper(StoryFn: Story): JSX.Element {
+function Wrapper(Wrapped: StoryFn): JSX.Element {
   const readySignal = useReadySignal({ count: 3 });
   const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
   return (
     <PanelSetup fixture={fixture} pauseFrame={pauseFrame}>
-      <StoryFn />
+      <Wrapped />
     </PanelSetup>
   );
 }
@@ -108,23 +108,33 @@ function Default() {
   );
 }
 
-export const Light: Story = () => {
-  return <Default />;
-};
-Light.storyName = "Plot Legend (Light)";
-Light.play = async (ctx) => {
-  await ctx.parameters.storyReady;
-};
-Light.parameters = { useReadySignal: true, colorScheme: "light" };
+export const Light: StoryObj = {
+  render: () => {
+    return <Default />;
+  },
 
-export const Dark: Story = () => {
-  return <Default />;
+  name: "Plot Legend (Light)",
+
+  play: async (ctx) => {
+    await ctx.parameters.storyReady;
+  },
+
+  parameters: { useReadySignal: true, colorScheme: "light" },
 };
-Dark.storyName = "Plot Legend (Dark)";
-Dark.play = async (ctx) => {
-  await ctx.parameters.storyReady;
+
+export const Dark: StoryObj = {
+  render: () => {
+    return <Default />;
+  },
+
+  name: "Plot Legend (Dark)",
+
+  play: async (ctx) => {
+    await ctx.parameters.storyReady;
+  },
+
+  parameters: { useReadySignal: true, colorScheme: "dark" },
 };
-Dark.parameters = { useReadySignal: true, colorScheme: "dark" };
 
 export function LimitWidth(): JSX.Element {
   return (

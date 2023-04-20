@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Story } from "@storybook/react";
+import { StoryFn } from "@storybook/react";
 import { fireEvent, screen } from "@storybook/testing-library";
 
 import MultiProvider from "@foxglove/studio-base/components/MultiProvider";
@@ -29,13 +29,13 @@ export default {
     colorScheme: "light",
   },
   decorators: [
-    (StoryFn: Story): JSX.Element => {
+    (Wrapped: StoryFn): JSX.Element => {
       const storage = new MockLayoutStorage(LayoutManager.LOCAL_STORAGE_NAMESPACE, []);
 
       return (
         <LayoutStorageContext.Provider value={storage}>
           <LayoutManagerProvider>
-            <StoryFn />
+            <Wrapped />
           </LayoutManagerProvider>
         </LayoutStorageContext.Provider>
       );
@@ -87,7 +87,9 @@ export function Basic(): JSX.Element {
   );
 }
 
-export const FullscreenPanel = Basic.bind({});
+export const FullscreenPanel = {
+  render: Basic,
+};
 Object.assign(FullscreenPanel, {
   play: async () => {
     fireEvent.click(await screen.findByTestId("panel-menu"));

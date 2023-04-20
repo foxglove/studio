@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Story } from "@storybook/react";
+import { StoryFn } from "@storybook/react";
 import { screen, userEvent } from "@storybook/testing-library";
 import { range } from "lodash";
 
@@ -60,7 +60,7 @@ const MockExtensionMarketplace: ExtensionMarketplace = {
 Mock markdown rendering for URL [${url}](${url}).`,
 };
 
-function Wrapper(StoryComponent: Story): JSX.Element {
+function Wrapper(StoryComponent: StoryFn): JSX.Element {
   return (
     <WorkspaceContextProvider>
       <ExtensionCatalogProvider loaders={[MockExtensionLoader]}>
@@ -82,8 +82,11 @@ export default {
 export function Default(): JSX.Element {
   return <AppSettingsDialog open />;
 }
-export const DefaultChinese = (): JSX.Element => <Default />;
-DefaultChinese.parameters = { forceLanguage: "zh" };
+
+export const DefaultChinese = {
+  render: (): JSX.Element => <Default />,
+  parameters: { forceLanguage: "zh" },
+};
 
 export function ChangingLanguage(): JSX.Element {
   return <AppSettingsDialog open />;
@@ -100,29 +103,44 @@ ChangingLanguage.play = async () => {
 export function General(): JSX.Element {
   return <AppSettingsDialog open activeTab="general" />;
 }
-export const GeneralChinese = (): JSX.Element => <General />;
-GeneralChinese.parameters = { forceLanguage: "zh" };
+
+export const GeneralChinese = {
+  render: (): JSX.Element => <General />,
+  parameters: { forceLanguage: "zh" },
+};
 
 export function Privacy(): JSX.Element {
   return <AppSettingsDialog open activeTab="privacy" />;
 }
-export const PrivacyChinese = (): JSX.Element => <Privacy />;
-PrivacyChinese.parameters = { forceLanguage: "zh" };
+
+export const PrivacyChinese = {
+  render: (): JSX.Element => <Privacy />,
+  parameters: { forceLanguage: "zh" },
+};
 
 export function Extensions(): JSX.Element {
   return <AppSettingsDialog open activeTab="extensions" />;
 }
-export const ExtensionsChinese = (): JSX.Element => <Extensions />;
-ExtensionsChinese.parameters = { forceLanguage: "zh" };
+
+export const ExtensionsChinese = {
+  render: (): JSX.Element => <Extensions />,
+  parameters: { forceLanguage: "zh" },
+};
 
 export function Experimental(): JSX.Element {
   return <AppSettingsDialog open activeTab="experimental-features" />;
 }
-export const ExperimentalChinese = (): JSX.Element => <Experimental />;
-ExperimentalChinese.parameters = { forceLanguage: "zh" };
+
+export const ExperimentalChinese = {
+  render: (): JSX.Element => <Experimental />,
+  parameters: { forceLanguage: "zh" },
+};
 
 export function About(): JSX.Element {
   return <AppSettingsDialog open activeTab="about" />;
 }
-export const AboutChinese = (): JSX.Element => <About />;
-AboutChinese.parameters = { forceLanguage: "zh" };
+
+export const AboutChinese = {
+  render: (): JSX.Element => <About />,
+  parameters: { forceLanguage: "zh" },
+};
