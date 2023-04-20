@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { StoryObj, StoryFn } from "@storybook/react";
+import { StoryObj } from "@storybook/react";
 import { screen, userEvent } from "@storybook/testing-library";
 import { useState } from "react";
 
@@ -13,20 +13,24 @@ export default {
   component: ColorPickerControl,
 };
 
-export const Default: StoryFn = (): JSX.Element => {
-  const [color, setColor] = useState("#ffaa00");
+export const Default: StoryObj = {
+  render: function Story() {
+    const [color, setColor] = useState("#ffaa00");
 
-  return <ColorPickerControl alphaType="none" value={color} onChange={setColor} />;
+    return <ColorPickerControl alphaType="none" value={color} onChange={setColor} />;
+  },
 };
 
-export const WithAlpha: StoryFn = (): JSX.Element => {
-  const [color, setColor] = useState("#ffaa0088");
+export const WithAlpha: StoryObj = {
+  render: function Story() {
+    const [color, setColor] = useState("#ffaa0088");
 
-  return <ColorPickerControl alphaType="alpha" value={color} onChange={setColor} />;
+    return <ColorPickerControl alphaType="alpha" value={color} onChange={setColor} />;
+  },
 };
 
 export const TextEntry: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const [color, setColor] = useState("");
 
     return <ColorPickerControl alphaType="none" value={color} onChange={setColor} />;

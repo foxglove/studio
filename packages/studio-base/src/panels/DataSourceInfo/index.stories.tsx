@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { StoryFn } from "@storybook/react";
+import { StoryObj } from "@storybook/react";
 
 import { fromDate } from "@foxglove/rostime";
 import MockMessagePipelineProvider from "@foxglove/studio-base/components/MessagePipeline/MockMessagePipelineProvider";
@@ -35,27 +35,31 @@ const TOPICS: Topic[] = [
   { schemaName: "nav_msgs/Odometry", name: "/odom" },
 ];
 
-export const Default: StoryFn = (): JSX.Element => {
-  return (
-    <MockMessagePipelineProvider
-      startTime={START_TIME}
-      endTime={END_TIME}
-      topics={TOPICS}
-      presence={PlayerPresence.PRESENT}
-    >
-      <PanelSetup fixture={{ topics: TOPICS }}>
-        <DataSourceInfoPanel />
-      </PanelSetup>
-    </MockMessagePipelineProvider>
-  );
+export const Default: StoryObj = {
+  render: (): JSX.Element => {
+    return (
+      <MockMessagePipelineProvider
+        startTime={START_TIME}
+        endTime={END_TIME}
+        topics={TOPICS}
+        presence={PlayerPresence.PRESENT}
+      >
+        <PanelSetup fixture={{ topics: TOPICS }}>
+          <DataSourceInfoPanel />
+        </PanelSetup>
+      </MockMessagePipelineProvider>
+    );
+  },
 };
 
-export const Empty: StoryFn = (): JSX.Element => {
-  return (
-    <MockMessagePipelineProvider noActiveData presence={PlayerPresence.NOT_PRESENT}>
-      <PanelSetup>
-        <DataSourceInfoPanel />
-      </PanelSetup>
-    </MockMessagePipelineProvider>
-  );
+export const Empty: StoryObj = {
+  render: (): JSX.Element => {
+    return (
+      <MockMessagePipelineProvider noActiveData presence={PlayerPresence.NOT_PRESENT}>
+        <PanelSetup>
+          <DataSourceInfoPanel />
+        </PanelSetup>
+      </MockMessagePipelineProvider>
+    );
+  },
 };

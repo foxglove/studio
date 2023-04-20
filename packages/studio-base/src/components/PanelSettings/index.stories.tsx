@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { StoryFn } from "@storybook/react";
+import { StoryObj } from "@storybook/react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
@@ -42,48 +42,54 @@ class MockPanelCatalog implements PanelCatalog {
 const fixture = { topics: [], datatypes: new Map(), frame: {}, layout: "Sample1!abc" };
 const selectedPanelIds: readonly string[] = ["Sample1!abc"];
 
-export const NoPanelSelected: StoryFn = (): JSX.Element => {
-  return (
-    <div style={{ margin: 30, height: 400 }}>
-      <DndProvider backend={HTML5Backend}>
-        <MockCurrentLayoutProvider>
-          <PanelSetup panelCatalog={new MockPanelCatalog()} fixture={fixture} omitDragAndDrop>
-            <PanelSettings />
-          </PanelSetup>
-        </MockCurrentLayoutProvider>
-      </DndProvider>
-    </div>
-  );
+export const NoPanelSelected: StoryObj = {
+  render: (): JSX.Element => {
+    return (
+      <div style={{ margin: 30, height: 400 }}>
+        <DndProvider backend={HTML5Backend}>
+          <MockCurrentLayoutProvider>
+            <PanelSetup panelCatalog={new MockPanelCatalog()} fixture={fixture} omitDragAndDrop>
+              <PanelSettings />
+            </PanelSetup>
+          </MockCurrentLayoutProvider>
+        </DndProvider>
+      </div>
+    );
+  },
 };
 
-export const PanelSelected: StoryFn = (): JSX.Element => {
-  return (
-    <div style={{ margin: 30, height: 400 }}>
-      <DndProvider backend={HTML5Backend}>
-        <MockCurrentLayoutProvider>
-          <PanelSetup
-            panelCatalog={new MockPanelCatalog()}
-            fixture={{ ...fixture, savedProps: { "Sample1!abc": { someKey: "someVal" } } }}
-            omitDragAndDrop
-          >
-            <PanelSettings selectedPanelIdsForTests={selectedPanelIds} />
-          </PanelSetup>
-        </MockCurrentLayoutProvider>
-      </DndProvider>
-    </div>
-  );
+export const PanelSelected: StoryObj = {
+  render: (): JSX.Element => {
+    return (
+      <div style={{ margin: 30, height: 400 }}>
+        <DndProvider backend={HTML5Backend}>
+          <MockCurrentLayoutProvider>
+            <PanelSetup
+              panelCatalog={new MockPanelCatalog()}
+              fixture={{ ...fixture, savedProps: { "Sample1!abc": { someKey: "someVal" } } }}
+              omitDragAndDrop
+            >
+              <PanelSettings selectedPanelIdsForTests={selectedPanelIds} />
+            </PanelSetup>
+          </MockCurrentLayoutProvider>
+        </DndProvider>
+      </div>
+    );
+  },
 };
 
-export const PanelLoading: StoryFn = (): JSX.Element => {
-  return (
-    <div style={{ margin: 30, height: 400 }}>
-      <DndProvider backend={HTML5Backend}>
-        <MockCurrentLayoutProvider>
-          <PanelSetup panelCatalog={new MockPanelCatalog()} fixture={fixture} omitDragAndDrop>
-            <PanelSettings selectedPanelIdsForTests={selectedPanelIds} />
-          </PanelSetup>
-        </MockCurrentLayoutProvider>
-      </DndProvider>
-    </div>
-  );
+export const PanelLoading: StoryObj = {
+  render: (): JSX.Element => {
+    return (
+      <div style={{ margin: 30, height: 400 }}>
+        <DndProvider backend={HTML5Backend}>
+          <MockCurrentLayoutProvider>
+            <PanelSetup panelCatalog={new MockPanelCatalog()} fixture={fixture} omitDragAndDrop>
+              <PanelSettings selectedPanelIdsForTests={selectedPanelIds} />
+            </PanelSetup>
+          </MockCurrentLayoutProvider>
+        </DndProvider>
+      </div>
+    );
+  },
 };

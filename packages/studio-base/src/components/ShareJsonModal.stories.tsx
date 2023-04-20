@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { StoryObj, StoryFn } from "@storybook/react";
+import { StoryObj } from "@storybook/react";
 import { useEffect } from "react";
 import TestUtils from "react-dom/test-utils";
 
@@ -54,7 +54,7 @@ export const Json: StoryObj = {
 };
 
 export const SubmittingInvalidLayout: StoryObj = {
-  render: () => {
+  render: function Story() {
     useEffect(() => {
       setTimeout(() => {
         const textarea = document.querySelector("textarea")!;

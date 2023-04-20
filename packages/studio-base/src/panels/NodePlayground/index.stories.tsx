@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { StoryObj, StoryFn } from "@storybook/react";
+import { StoryObj } from "@storybook/react";
 
 import NodePlayground from "@foxglove/studio-base/panels/NodePlayground";
 import rawUserUtils from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/typescript/rawUserUtils";

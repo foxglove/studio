@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { StoryObj, StoryFn } from "@storybook/react";
+import { StoryObj } from "@storybook/react";
 import { screen, userEvent } from "@storybook/testing-library";
 
 import { MessageEvent } from "@foxglove/studio";
@@ -153,8 +153,10 @@ function BaseStory({ includeSettings = false }: { includeSettings?: boolean }): 
   );
 }
 
-export const Occupancy_Grid_Costmap: StoryFn = (): JSX.Element => {
-  return <BaseStory />;
+export const Occupancy_Grid_Costmap: StoryObj = {
+  render: (): JSX.Element => {
+    return <BaseStory />;
+  },
 };
 
 export const Occupancy_Grid_Costmap_With_Settings: StoryObj = {

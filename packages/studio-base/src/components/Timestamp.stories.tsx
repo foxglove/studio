@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Stack } from "@mui/material";
-import { StoryFn } from "@storybook/react";
+import { StoryObj } from "@storybook/react";
 import { PropsWithChildren, useState } from "react";
 
 import { Time } from "@foxglove/rostime";
@@ -40,42 +40,50 @@ function TimestampStory(props: PropsWithChildren<Props>): JSX.Element {
   );
 }
 
-export const Default: StoryFn = (): JSX.Element => {
-  return <TimestampStory config={[[AppSetting.TIMEZONE, "UTC"]]} time={ABSOLUTE_TIME} />;
+export const Default: StoryObj = {
+  render: (): JSX.Element => {
+    return <TimestampStory config={[[AppSetting.TIMEZONE, "UTC"]]} time={ABSOLUTE_TIME} />;
+  },
 };
 
-export const TimeFormatSeconds: StoryFn = (): JSX.Element => {
-  return (
-    <TimestampStory
-      config={[
-        [AppSetting.TIME_FORMAT, "SEC"],
-        [AppSetting.TIMEZONE, "UTC"],
-      ]}
-      time={ABSOLUTE_TIME}
-    />
-  );
+export const TimeFormatSeconds: StoryObj = {
+  render: (): JSX.Element => {
+    return (
+      <TimestampStory
+        config={[
+          [AppSetting.TIME_FORMAT, "SEC"],
+          [AppSetting.TIMEZONE, "UTC"],
+        ]}
+        time={ABSOLUTE_TIME}
+      />
+    );
+  },
 };
 
-export const TimeFormatTOD: StoryFn = (): JSX.Element => {
-  return (
-    <TimestampStory
-      config={[
-        [AppSetting.TIME_FORMAT, "TOD"],
-        [AppSetting.TIMEZONE, "UTC"],
-      ]}
-      time={ABSOLUTE_TIME}
-    />
-  );
+export const TimeFormatTOD: StoryObj = {
+  render: (): JSX.Element => {
+    return (
+      <TimestampStory
+        config={[
+          [AppSetting.TIME_FORMAT, "TOD"],
+          [AppSetting.TIMEZONE, "UTC"],
+        ]}
+        time={ABSOLUTE_TIME}
+      />
+    );
+  },
 };
 
-export const TimeFormatRelative: StoryFn = (): JSX.Element => {
-  return (
-    <TimestampStory
-      config={[
-        [AppSetting.TIME_FORMAT, "TOD"],
-        [AppSetting.TIMEZONE, "UTC"],
-      ]}
-      time={RELATIVE_TIME}
-    />
-  );
+export const TimeFormatRelative: StoryObj = {
+  render: (): JSX.Element => {
+    return (
+      <TimestampStory
+        config={[
+          [AppSetting.TIME_FORMAT, "TOD"],
+          [AppSetting.TIMEZONE, "UTC"],
+        ]}
+        time={RELATIVE_TIME}
+      />
+    );
+  },
 };

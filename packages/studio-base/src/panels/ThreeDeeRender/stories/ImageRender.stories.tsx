@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { StoryObj, StoryFn } from "@storybook/react";
+import { StoryObj } from "@storybook/react";
 import { useState } from "react";
 import { create } from "zustand";
 
@@ -22,7 +22,7 @@ export default {
 };
 
 export const ImageRender: StoryObj = {
-  render: () => {
+  render: function Story() {
     const topics: Topic[] = [
       { name: "/cam1/info", schemaName: "sensor_msgs/CameraInfo" },
       { name: "/cam2/info", schemaName: "sensor_msgs/CameraInfo" },
@@ -185,7 +185,7 @@ export const ImageRender: StoryObj = {
 };
 
 export const FoxgloveImage: StoryObj = {
-  render: () => {
+  render: function Story() {
     const topics: Topic[] = [
       { name: "/cam1/info", schemaName: "foxglove.CameraCalibration" },
       { name: "/cam2/info", schemaName: "foxglove.CameraCalibration" },
@@ -349,7 +349,7 @@ export const FoxgloveImage: StoryObj = {
 };
 
 export const ImageThenInfo: StoryObj = {
-  render: () => {
+  render: function Story() {
     const topics: Topic[] = [
       { name: "/cam1/info", schemaName: "foxglove.CameraCalibration" },
       { name: "/cam2/info", schemaName: "foxglove.CameraCalibration" },
@@ -462,7 +462,7 @@ export const ImageThenInfo: StoryObj = {
 };
 
 export const InfoThenImage: StoryObj = {
-  render: () => {
+  render: function Story() {
     const topics: Topic[] = [
       { name: "/cam1/info", schemaName: "foxglove.CameraCalibration" },
       { name: "/cam2/info", schemaName: "foxglove.CameraCalibration" },
@@ -575,7 +575,7 @@ export const InfoThenImage: StoryObj = {
 };
 
 export const UpdateImageToGreen: StoryObj = {
-  render: () => {
+  render: function Story() {
     const topics: Topic[] = [
       { name: "/cam1/info", schemaName: "foxglove.CameraCalibration" },
       { name: "/cam1/raw", schemaName: "foxglove.RawImage" },

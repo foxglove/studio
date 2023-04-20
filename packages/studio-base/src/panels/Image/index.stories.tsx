@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { StoryObj, StoryFn } from "@storybook/react";
+import { StoryObj } from "@storybook/react";
 import { useRef, useEffect } from "react";
 import TestUtils from "react-dom/test-utils";
 
@@ -38,12 +38,14 @@ function useHoverOnPanel(andThen?: () => void) {
   };
 }
 
-export const NoTopic: StoryFn = (): React.ReactElement => {
-  return (
-    <PanelSetup>
-      <ImageView />
-    </PanelSetup>
-  );
+export const NoTopic: StoryObj = {
+  render: (): React.ReactElement => {
+    return (
+      <PanelSetup>
+        <ImageView />
+      </PanelSetup>
+    );
+  },
 };
 
 export const WithSettings: StoryObj = {
@@ -60,12 +62,14 @@ export const WithSettings: StoryObj = {
   },
 };
 
-export const TopicButNoDataSource: StoryFn = (): React.ReactElement => {
-  return (
-    <PanelSetup>
-      <ImageView overrideConfig={{ ...ImageView.defaultConfig, cameraTopic: "a_topic" }} />
-    </PanelSetup>
-  );
+export const TopicButNoDataSource: StoryObj = {
+  render: (): React.ReactElement => {
+    return (
+      <PanelSetup>
+        <ImageView overrideConfig={{ ...ImageView.defaultConfig, cameraTopic: "a_topic" }} />
+      </PanelSetup>
+    );
+  },
 };
 
 export const TopicButNoDataSourceHovered: StoryObj = {

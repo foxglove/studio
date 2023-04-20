@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { StoryObj, StoryFn } from "@storybook/react";
+import { StoryFn, StoryObj } from "@storybook/react";
 import { screen, userEvent } from "@storybook/testing-library";
 import { range } from "lodash";
 
@@ -79,12 +79,14 @@ export default {
   decorators: [Wrapper],
 };
 
-export const Default: StoryFn = (): JSX.Element => {
-  return <AppSettingsDialog open />;
+export const Default: StoryObj = {
+  render: (): JSX.Element => {
+    return <AppSettingsDialog open />;
+  },
 };
 
 export const DefaultChinese = {
-  render: (): JSX.Element => <Default />,
+  ...Default,
   parameters: { forceLanguage: "zh" },
 };
 
@@ -103,47 +105,57 @@ export const ChangingLanguage: StoryObj = {
   },
 };
 
-export const General: StoryFn = (): JSX.Element => {
-  return <AppSettingsDialog open activeTab="general" />;
+export const General: StoryObj = {
+  render: (): JSX.Element => {
+    return <AppSettingsDialog open activeTab="general" />;
+  },
 };
 
 export const GeneralChinese = {
-  render: (): JSX.Element => <General />,
+  ...General,
   parameters: { forceLanguage: "zh" },
 };
 
-export const Privacy: StoryFn = (): JSX.Element => {
-  return <AppSettingsDialog open activeTab="privacy" />;
+export const Privacy: StoryObj = {
+  render: (): JSX.Element => {
+    return <AppSettingsDialog open activeTab="privacy" />;
+  },
 };
 
 export const PrivacyChinese = {
-  render: (): JSX.Element => <Privacy />,
+  ...Privacy,
   parameters: { forceLanguage: "zh" },
 };
 
-export const Extensions: StoryFn = (): JSX.Element => {
-  return <AppSettingsDialog open activeTab="extensions" />;
+export const Extensions: StoryObj = {
+  render: (): JSX.Element => {
+    return <AppSettingsDialog open activeTab="extensions" />;
+  },
 };
 
 export const ExtensionsChinese = {
-  render: (): JSX.Element => <Extensions />,
+  ...Extensions,
   parameters: { forceLanguage: "zh" },
 };
 
-export const Experimental: StoryFn = (): JSX.Element => {
-  return <AppSettingsDialog open activeTab="experimental-features" />;
+export const Experimental: StoryObj = {
+  render: (): JSX.Element => {
+    return <AppSettingsDialog open activeTab="experimental-features" />;
+  },
 };
 
 export const ExperimentalChinese = {
-  render: (): JSX.Element => <Experimental />,
+  ...Experimental,
   parameters: { forceLanguage: "zh" },
 };
 
-export const About: StoryFn = (): JSX.Element => {
-  return <AppSettingsDialog open activeTab="about" />;
+export const About: StoryObj = {
+  render: (): JSX.Element => {
+    return <AppSettingsDialog open activeTab="about" />;
+  },
 };
 
 export const AboutChinese = {
-  render: (): JSX.Element => <About />,
+  ...About,
   parameters: { forceLanguage: "zh" },
 };

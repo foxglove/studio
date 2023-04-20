@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { StoryObj, StoryFn } from "@storybook/react";
+import { StoryObj } from "@storybook/react";
 import { useEffect, useMemo, useRef } from "react";
 
 import { normalizeAnnotations } from "./normalizeAnnotations";
@@ -20,7 +20,7 @@ export default {
 };
 
 export const MarkersWithHitmap: StoryObj = {
-  render: (_args) => {
+  render: function Story() {
     const imageMessage = useCompressedImage();
     const canvasRef = useRef<HTMLCanvasElement>(ReactNull);
     const hitmapRef = useRef<HTMLCanvasElement>(ReactNull);
@@ -68,7 +68,7 @@ export const MarkersWithHitmap: StoryObj = {
 };
 
 export const MarkersWithRotations: StoryObj = {
-  render: (_args) => {
+  render: function Story() {
     const width = 300;
     const height = 200;
     const imageMessage = useCompressedImage();
@@ -130,44 +130,46 @@ export const MarkersWithRotations: StoryObj = {
   },
 };
 
-export const FoxgloveAnnotations: StoryFn = (): JSX.Element => {
-  const imageMessage = useCompressedImage();
-  const canvasRef = useRef<HTMLCanvasElement>(ReactNull);
+export const FoxgloveAnnotations: StoryObj = {
+  render: function Story() {
+    const imageMessage = useCompressedImage();
+    const canvasRef = useRef<HTMLCanvasElement>(ReactNull);
 
-  const width = 400;
-  const height = 300;
+    const width = 400;
+    const height = 300;
 
-  useEffect(() => {
-    if (!canvasRef.current) {
-      return;
-    }
+    useEffect(() => {
+      if (!canvasRef.current) {
+        return;
+      }
 
-    canvasRef.current.width = 2 * width;
-    canvasRef.current.height = 2 * height;
+      canvasRef.current.width = 2 * width;
+      canvasRef.current.height = 2 * height;
 
-    void renderImage({
-      canvas: canvasRef.current,
-      hitmapCanvas: undefined,
-      geometry: {
-        flipHorizontal: false,
-        flipVertical: false,
-        panZoom: { x: 0, y: 0, scale: 1 },
-        rotation: 0,
-        viewport: { width, height },
-        zoomMode: "fill",
-      },
-      imageMessage,
-      rawMarkerData: {
-        markers: normalizeAnnotations(foxgloveAnnotations, "foxglove.ImageAnnotations")!,
-        cameraInfo,
-        transformMarkers: false,
-      },
-    });
-  }, [imageMessage]);
+      void renderImage({
+        canvas: canvasRef.current,
+        hitmapCanvas: undefined,
+        geometry: {
+          flipHorizontal: false,
+          flipVertical: false,
+          panZoom: { x: 0, y: 0, scale: 1 },
+          rotation: 0,
+          viewport: { width, height },
+          zoomMode: "fill",
+        },
+        imageMessage,
+        rawMarkerData: {
+          markers: normalizeAnnotations(foxgloveAnnotations, "foxglove.ImageAnnotations")!,
+          cameraInfo,
+          transformMarkers: false,
+        },
+      });
+    }, [imageMessage]);
 
-  return (
-    <div style={{ backgroundColor: "white", padding: "1rem" }}>
-      <canvas ref={canvasRef} style={{ width, height }} />
-    </div>
-  );
+    return (
+      <div style={{ backgroundColor: "white", padding: "1rem" }}>
+        <canvas ref={canvasRef} style={{ width, height }} />
+      </div>
+    );
+  },
 };

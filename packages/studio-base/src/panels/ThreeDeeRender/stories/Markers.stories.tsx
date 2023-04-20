@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { StoryObj, StoryFn } from "@storybook/react";
+import { StoryObj } from "@storybook/react";
 import { useEffect, useState } from "react";
 
 import { MessageEvent } from "@foxglove/studio";
@@ -568,7 +568,7 @@ export const MarkersNoOutlines: StoryObj = {
 };
 
 export const EmptyLineStrip: StoryObj = {
-  render: () => {
+  render: function Story() {
     const readySignal = useReadySignal();
     const topics: Topic[] = [
       { name: "/tf", schemaName: "geometry_msgs/TransformStamped" },

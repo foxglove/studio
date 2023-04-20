@@ -154,8 +154,10 @@ export const Empty: StoryObj = {
   parameters: { mockLayouts: [] },
 };
 
-export const LayoutList: StoryFn = (): JSX.Element => {
-  return <LayoutBrowser />;
+export const LayoutList: StoryObj = {
+  render: (): JSX.Element => {
+    return <LayoutBrowser />;
+  },
 };
 
 export const MultiSelect: StoryObj = {
@@ -251,12 +253,16 @@ export const MultiSave: StoryObj = {
   },
 };
 
-export const TruncatedLayoutName: StoryFn = (): JSX.Element => {
-  return <LayoutBrowser />;
+export const TruncatedLayoutName: StoryObj = {
+  render: (): JSX.Element => {
+    return <LayoutBrowser />;
+  },
 };
 
-export const TruncatedLayoutNameSelected: StoryFn = (): JSX.Element => {
-  return <LayoutBrowser />;
+export const TruncatedLayoutNameSelected: StoryObj = {
+  render: (): JSX.Element => {
+    return <LayoutBrowser />;
+  },
 };
 
 export const AddLayout: StoryObj = {

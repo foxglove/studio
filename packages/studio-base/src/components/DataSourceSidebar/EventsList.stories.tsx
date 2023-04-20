@@ -29,17 +29,19 @@ export default {
   decorators: [Wrapper],
 };
 
-export const Default: StoryFn = (): JSX.Element => {
-  const setEvents = useEvents((store) => store.setEvents);
-  useEffect(() => {
-    setEvents({ loading: false, value: makeMockEvents(20) });
-  }, [setEvents]);
+export const Default: StoryObj = {
+  render: function Story() {
+    const setEvents = useEvents((store) => store.setEvents);
+    useEffect(() => {
+      setEvents({ loading: false, value: makeMockEvents(20) });
+    }, [setEvents]);
 
-  return <EventsList />;
+    return <EventsList />;
+  },
 };
 
 export const Selected: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const setEvents = useEvents((store) => store.setEvents);
     const selectEvent = useEvents((store) => store.selectEvent);
 
@@ -62,20 +64,24 @@ export const Selected: StoryObj = {
   },
 };
 
-export const WithError: StoryFn = (): JSX.Element => {
-  const setEvents = useEvents((store) => store.setEvents);
-  useEffect(() => {
-    setEvents({ loading: false, error: new Error("Error loading events") });
-  }, [setEvents]);
+export const WithError: StoryObj = {
+  render: function Story() {
+    const setEvents = useEvents((store) => store.setEvents);
+    useEffect(() => {
+      setEvents({ loading: false, error: new Error("Error loading events") });
+    }, [setEvents]);
 
-  return <EventsList />;
+    return <EventsList />;
+  },
 };
 
-export const Loading: StoryFn = (): JSX.Element => {
-  const setEvents = useEvents((store) => store.setEvents);
-  useEffect(() => {
-    setEvents({ loading: true });
-  }, [setEvents]);
+export const Loading: StoryObj = {
+  render: function Story() {
+    const setEvents = useEvents((store) => store.setEvents);
+    useEffect(() => {
+      setEvents({ loading: true });
+    }, [setEvents]);
 
-  return <EventsList />;
+    return <EventsList />;
+  },
 };

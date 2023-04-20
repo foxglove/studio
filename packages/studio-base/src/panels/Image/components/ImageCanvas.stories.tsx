@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { StoryObj, StoryFn } from "@storybook/react";
+import { StoryObj } from "@storybook/react";
 import { noop } from "lodash";
 
 import { Topic } from "@foxglove/studio-base/players/types";
@@ -224,7 +224,7 @@ export default {
 };
 
 export const MarkersOriginal: StoryObj = {
-  render: (_args) => {
+  render: function Story() {
     const image = useCompressedImage();
     const readySignal = useReadySignal();
 
@@ -257,7 +257,7 @@ export const MarkersOriginal: StoryObj = {
 };
 
 export const MarkersTransformed: StoryObj = {
-  render: (_args) => {
+  render: function Story() {
     const image = useCompressedImage();
     const readySignal = useReadySignal();
 
@@ -290,7 +290,7 @@ export const MarkersTransformed: StoryObj = {
 };
 
 export const MarkersImageSize: StoryObj = {
-  render: (_args) => {
+  render: function Story() {
     const image = useCompressedImage();
     const readySignal = useReadySignal();
 

@@ -10,7 +10,7 @@
 //   This source code is licensed under the Apache License, Version 2.0,
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
-import { StoryObj, StoryFn } from "@storybook/react";
+import { StoryObj } from "@storybook/react";
 import cloneDeep from "lodash/cloneDeep";
 import { useState, useCallback, useRef, useEffect } from "react";
 import TestUtils from "react-dom/test-utils";
@@ -101,14 +101,16 @@ export default {
   },
 };
 
-export const Simple: StoryFn = (): JSX.Element => {
-  return (
-    <div style={{ width: "100%", height: "100%" }}>
-      <MockMessagePipelineProvider>
-        <TimeBasedChart {...commonProps} />
-      </MockMessagePipelineProvider>
-    </div>
-  );
+export const Simple: StoryObj = {
+  render: (): JSX.Element => {
+    return (
+      <div style={{ width: "100%", height: "100%" }}>
+        <MockMessagePipelineProvider>
+          <TimeBasedChart {...commonProps} />
+        </MockMessagePipelineProvider>
+      </div>
+    );
+  },
 };
 
 export const SimpleLight = { ...Simple, parameters: { colorScheme: "light" } };
@@ -224,48 +226,52 @@ export const CleansUpTooltipOnUnmount: StoryObj = {
   parameters: { useReadySignal: true },
 };
 
-export const CallPauseOnInitialMount: StoryFn = (): JSX.Element => {
-  const [unpauseFrameCount, setUnpauseFrameCount] = useState(0);
-  const pauseFrame = useCallback(() => {
-    return () => {
-      setUnpauseFrameCount((old) => old + 1);
-    };
-  }, []);
+export const CallPauseOnInitialMount: StoryObj = {
+  render: function Story(): JSX.Element {
+    const [unpauseFrameCount, setUnpauseFrameCount] = useState(0);
+    const pauseFrame = useCallback(() => {
+      return () => {
+        setUnpauseFrameCount((old) => old + 1);
+      };
+    }, []);
 
-  return (
-    <div style={{ width: "100%", height: "100%", background: "black" }}>
-      <div style={{ fontSize: 20, padding: 6 }}>
-        Finished pause frame count: {unpauseFrameCount}
+    return (
+      <div style={{ width: "100%", height: "100%", background: "black" }}>
+        <div style={{ fontSize: 20, padding: 6 }}>
+          Finished pause frame count: {unpauseFrameCount}
+        </div>
+        <MockMessagePipelineProvider pauseFrame={pauseFrame}>
+          <TimeBasedChart {...commonProps} />
+        </MockMessagePipelineProvider>
       </div>
-      <MockMessagePipelineProvider pauseFrame={pauseFrame}>
-        <TimeBasedChart {...commonProps} />
-      </MockMessagePipelineProvider>
-    </div>
-  );
+    );
+  },
 };
 
-export const ResumeFrameOnUnmount: StoryFn = (): JSX.Element => {
-  const [showChart, setShowChart] = useState(true);
-  const [statusMessage, setStatusMessage] = useState("FAILURE - START");
-  const pauseFrame = useCallback(() => {
-    setShowChart(() => false);
-    return () => {
-      setStatusMessage((old) => {
-        if (old === "FAILURE - START") {
-          return "SUCCESS";
-        } else {
-          return "FAILURE - CANNOT CALL RESUME FRAME TWICE";
-        }
-      });
-    };
-  }, [setStatusMessage]);
+export const ResumeFrameOnUnmount: StoryObj = {
+  render: function Story(): JSX.Element {
+    const [showChart, setShowChart] = useState(true);
+    const [statusMessage, setStatusMessage] = useState("FAILURE - START");
+    const pauseFrame = useCallback(() => {
+      setShowChart(() => false);
+      return () => {
+        setStatusMessage((old) => {
+          if (old === "FAILURE - START") {
+            return "SUCCESS";
+          } else {
+            return "FAILURE - CANNOT CALL RESUME FRAME TWICE";
+          }
+        });
+      };
+    }, [setStatusMessage]);
 
-  return (
-    <div style={{ width: "100%", height: "100%", background: "black" }}>
-      <MockMessagePipelineProvider pauseFrame={pauseFrame}>
-        <div style={{ fontSize: 48, padding: 50 }}>{statusMessage}</div>
-        {showChart && <TimeBasedChart {...commonProps} />}
-      </MockMessagePipelineProvider>
-    </div>
-  );
+    return (
+      <div style={{ width: "100%", height: "100%", background: "black" }}>
+        <MockMessagePipelineProvider pauseFrame={pauseFrame}>
+          <div style={{ fontSize: 48, padding: 50 }}>{statusMessage}</div>
+          {showChart && <TimeBasedChart {...commonProps} />}
+        </MockMessagePipelineProvider>
+      </div>
+    );
+  },
 };

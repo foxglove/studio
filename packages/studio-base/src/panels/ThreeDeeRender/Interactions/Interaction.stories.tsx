@@ -12,7 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { Stack } from "@mui/material";
-import { StoryObj, StoryFn } from "@storybook/react";
+import { StoryObj } from "@storybook/react";
 
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 import { PointCloud2 } from "@foxglove/studio-base/types/Messages";
@@ -315,23 +315,6 @@ function PanelSetupWithData({
   );
 }
 
-const DefaultStory: StoryFn = () => {
-  return (
-    <Stack direction="row" flexWrap="wrap" height="100%" bgcolor="background.paper">
-      <PanelSetupWithData title="Default without clicked object">
-        <Interactions
-          {...(sharedProps as any)}
-          selectedObject={undefined}
-          interactionsTabType={OBJECT_TAB_TYPE}
-        />
-      </PanelSetupWithData>
-      <PanelSetupWithData title="With interactionData">
-        <Interactions {...(sharedProps as any)} />
-      </PanelSetupWithData>
-    </Stack>
-  );
-};
-
 export default {
   title: "panels/ThreeDeeRender/Interactions/Interaction",
 
@@ -342,15 +325,32 @@ export default {
   excludeStories: ["POINT_CLOUD_MESSAGE", "POINT_CLOUD_WITH_ADDITIONAL_FIELDS"],
 };
 
-export const Default: StoryFn = DefaultStory.bind(undefined);
+export const Default: StoryObj = {
+  render: (): JSX.Element => {
+    return (
+      <Stack direction="row" flexWrap="wrap" height="100%" bgcolor="background.paper">
+        <PanelSetupWithData title="Default without clicked object">
+          <Interactions
+            {...(sharedProps as any)}
+            selectedObject={undefined}
+            interactionsTabType={OBJECT_TAB_TYPE}
+          />
+        </PanelSetupWithData>
+        <PanelSetupWithData title="With interactionData">
+          <Interactions {...(sharedProps as any)} />
+        </PanelSetupWithData>
+      </Stack>
+    );
+  },
+  name: "default",
+  parameters: { colorScheme: "dark" },
+};
 
-Default.storyName = "default";
-Default.parameters = { colorScheme: "dark" };
-
-export const DefaultLight: StoryFn = DefaultStory.bind(undefined);
-
-DefaultLight.storyName = "default light";
-DefaultLight.parameters = { colorScheme: "light" };
+export const DefaultLight: StoryObj = {
+  ...Default,
+  name: "default light",
+  parameters: { colorScheme: "light" },
+};
 
 export const PointCloud: StoryObj = {
   render: () => {

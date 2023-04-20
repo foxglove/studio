@@ -1,7 +1,7 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
-import { StoryObj, StoryFn } from "@storybook/react";
+import { StoryObj } from "@storybook/react";
 
 import DiagnosticStatusPanel from "@foxglove/studio-base/panels/diagnostics/DiagnosticStatusPanel";
 import { makeDiagnosticMessage } from "@foxglove/studio-base/panels/diagnostics/DiagnosticSummary.stories";
@@ -35,25 +35,29 @@ const fixture: Fixture = {
   },
 };
 
-export const Empty: StoryFn = (): JSX.Element => {
-  return (
-    <PanelSetup fixture={fixture}>
-      <DiagnosticStatusPanel />
-    </PanelSetup>
-  );
+export const Empty: StoryObj = {
+  render: (): JSX.Element => {
+    return (
+      <PanelSetup fixture={fixture}>
+        <DiagnosticStatusPanel />
+      </PanelSetup>
+    );
+  },
 };
 
-export const Default: StoryFn = (): JSX.Element => {
-  return (
-    <PanelSetup fixture={fixture}>
-      <DiagnosticStatusPanel
-        overrideConfig={{
-          topicToRender: "/diagnostics",
-          selectedHardwareId: "levels_id",
-        }}
-      />
-    </PanelSetup>
-  );
+export const Default: StoryObj = {
+  render: (): JSX.Element => {
+    return (
+      <PanelSetup fixture={fixture}>
+        <DiagnosticStatusPanel
+          overrideConfig={{
+            topicToRender: "/diagnostics",
+            selectedHardwareId: "levels_id",
+          }}
+        />
+      </PanelSetup>
+    );
+  },
 };
 
 export const WithSettings: StoryObj = {
@@ -76,45 +80,51 @@ export const WithSettings: StoryObj = {
   },
 };
 
-export const SelectedHardwareIDOnly: StoryFn = (): JSX.Element => {
-  return (
-    <PanelSetup fixture={fixture}>
-      <DiagnosticStatusPanel
-        overrideConfig={{
-          topicToRender: "/diagnostics",
-          selectedHardwareId: "hardware_id1",
-          selectedName: undefined,
-        }}
-      />
-    </PanelSetup>
-  );
+export const SelectedHardwareIDOnly: StoryObj = {
+  render: (): JSX.Element => {
+    return (
+      <PanelSetup fixture={fixture}>
+        <DiagnosticStatusPanel
+          overrideConfig={{
+            topicToRender: "/diagnostics",
+            selectedHardwareId: "hardware_id1",
+            selectedName: undefined,
+          }}
+        />
+      </PanelSetup>
+    );
+  },
 };
 
-export const SelectedName: StoryFn = (): JSX.Element => {
-  return (
-    <PanelSetup fixture={fixture}>
-      <DiagnosticStatusPanel
-        overrideConfig={{
-          topicToRender: "/diagnostics",
-          selectedHardwareId: "hardware_id1",
-          selectedName: "name2",
-        }}
-      />
-    </PanelSetup>
-  );
+export const SelectedName: StoryObj = {
+  render: (): JSX.Element => {
+    return (
+      <PanelSetup fixture={fixture}>
+        <DiagnosticStatusPanel
+          overrideConfig={{
+            topicToRender: "/diagnostics",
+            selectedHardwareId: "hardware_id1",
+            selectedName: "name2",
+          }}
+        />
+      </PanelSetup>
+    );
+  },
 };
 
-export const MovedDivider: StoryFn = (): JSX.Element => {
-  return (
-    <PanelSetup fixture={fixture}>
-      <DiagnosticStatusPanel
-        overrideConfig={{
-          topicToRender: "/diagnostics",
-          selectedHardwareId: "hardware_id1",
-          selectedName: undefined,
-          splitFraction: 0.25,
-        }}
-      />
-    </PanelSetup>
-  );
+export const MovedDivider: StoryObj = {
+  render: (): JSX.Element => {
+    return (
+      <PanelSetup fixture={fixture}>
+        <DiagnosticStatusPanel
+          overrideConfig={{
+            topicToRender: "/diagnostics",
+            selectedHardwareId: "hardware_id1",
+            selectedName: undefined,
+            splitFraction: 0.25,
+          }}
+        />
+      </PanelSetup>
+    );
+  },
 };

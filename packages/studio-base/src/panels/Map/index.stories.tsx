@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { StoryFn, StoryContext } from "@storybook/react";
+import { StoryFn, StoryContext, StoryObj } from "@storybook/react";
 import { userEvent } from "@storybook/testing-library";
 import { cloneDeep, tap } from "lodash";
 import { useState } from "react";
@@ -399,8 +399,8 @@ export const SinglePointFullCovariance = {
 
 const GeoCenter = { lat: 0.25, lon: 0.25 };
 
-export const GeoJSON = {
-  render: function Story(): JSX.Element {
+export const GeoJSON: StoryObj = {
+  render: function Story() {
     const topics: Topic[] = [
       { name: "/geo", schemaName: "foxglove.GeoJSON" },
       { name: "/geo2", schemaName: "foxglove.GeoJSON" },

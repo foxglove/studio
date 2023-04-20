@@ -11,6 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { StoryObj } from "@storybook/react";
 import { screen, userEvent } from "@storybook/testing-library";
 import { range } from "lodash";
 import TestUtils from "react-dom/test-utils";
@@ -233,7 +234,7 @@ export const CaseInsensitiveFilter = {
   title: `case insensitive message filtering: "could", "Ipsum"`,
 };
 
-export const AutoCompleteItems = {
+export const AutoCompleteItems: StoryObj = {
   render: function Story(): JSX.Element {
     return (
       <PanelSetup fixture={fixture}>

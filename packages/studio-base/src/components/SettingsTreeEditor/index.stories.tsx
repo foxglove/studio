@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Box } from "@mui/material";
-import { StoryObj, StoryFn } from "@storybook/react";
+import { StoryObj } from "@storybook/react";
 import { fireEvent, userEvent } from "@storybook/testing-library";
 import produce from "immer";
 import { last } from "lodash";
@@ -888,12 +888,16 @@ export const Basics: StoryObj = {
 
 export const BasicsChinese = { ...Basics, play: Basics.play, parameters: { forceLanguage: "zh" } };
 
-export const DisabledFields: StoryFn = (): JSX.Element => {
-  return <Wrapper nodes={DisabledSettings} />;
+export const DisabledFields: StoryObj = {
+  render: (): JSX.Element => {
+    return <Wrapper nodes={DisabledSettings} />;
+  },
 };
 
-export const ReadonlyFields: StoryFn = (): JSX.Element => {
-  return <Wrapper nodes={ReadonlySettings} />;
+export const ReadonlyFields: StoryObj = {
+  render: (): JSX.Element => {
+    return <Wrapper nodes={ReadonlySettings} />;
+  },
 };
 
 export const PanelExamples: StoryObj = {
@@ -912,12 +916,16 @@ export const PanelExamples: StoryObj = {
   },
 };
 
-export const IconExamples: StoryFn = (): JSX.Element => {
-  return <Wrapper nodes={IconExamplesSettings} />;
+export const IconExamples: StoryObj = {
+  render: (): JSX.Element => {
+    return <Wrapper nodes={IconExamplesSettings} />;
+  },
 };
 
-export const Topics: StoryFn = (): JSX.Element => {
-  return <Wrapper nodes={TopicSettings} />;
+export const Topics: StoryObj = {
+  render: (): JSX.Element => {
+    return <Wrapper nodes={TopicSettings} />;
+  },
 };
 
 export const Filter: StoryObj = {
@@ -934,88 +942,98 @@ export const Filter: StoryObj = {
   },
 };
 
-export const Colors: StoryFn = (): JSX.Element => {
-  return <Wrapper nodes={ColorSettings} />;
+export const Colors: StoryObj = {
+  render: (): JSX.Element => {
+    return <Wrapper nodes={ColorSettings} />;
+  },
 };
 
-export const EmptyValue: StoryFn = (): JSX.Element => {
-  return <Wrapper nodes={ColorSettings} />;
+export const EmptyValue: StoryObj = {
+  render: (): JSX.Element => {
+    return <Wrapper nodes={ColorSettings} />;
+  },
 };
 
-export const SetHiddenValueToTrue: StoryFn = (): JSX.Element => {
-  return <Wrapper nodes={ColorSettings} />;
+export const SetHiddenValueToTrue: StoryObj = {
+  render: (): JSX.Element => {
+    return <Wrapper nodes={ColorSettings} />;
+  },
 };
 
-export const Vec2: StoryFn = (): JSX.Element => {
-  const settings: SettingsTreeNodes = {
-    fields: {
+export const Vec2: StoryObj = {
+  render: (): JSX.Element => {
+    const settings: SettingsTreeNodes = {
       fields: {
-        basic: {
-          label: "Basic",
-          input: "vec2",
-        },
-        labels: {
-          label: "Custom Labels",
-          input: "vec2",
-          labels: ["A", "B"],
-        },
-        values: {
-          label: "Values",
-          input: "vec2",
-          value: [1.1111, 2.2222],
-        },
-        someValues: {
-          label: "Some values",
-          input: "vec2",
-          value: [1.1111, undefined],
-        },
-        placeholder: {
-          label: "Placeholder",
-          input: "vec2",
-          placeholder: ["foo", "bar"],
-          value: [1.1111, undefined],
+        fields: {
+          basic: {
+            label: "Basic",
+            input: "vec2",
+          },
+          labels: {
+            label: "Custom Labels",
+            input: "vec2",
+            labels: ["A", "B"],
+          },
+          values: {
+            label: "Values",
+            input: "vec2",
+            value: [1.1111, 2.2222],
+          },
+          someValues: {
+            label: "Some values",
+            input: "vec2",
+            value: [1.1111, undefined],
+          },
+          placeholder: {
+            label: "Placeholder",
+            input: "vec2",
+            placeholder: ["foo", "bar"],
+            value: [1.1111, undefined],
+          },
         },
       },
-    },
-  };
+    };
 
-  return <Wrapper nodes={settings} />;
+    return <Wrapper nodes={settings} />;
+  },
 };
 
-export const Vec3: StoryFn = (): JSX.Element => {
-  const settings: SettingsTreeNodes = {
-    fields: {
+export const Vec3: StoryObj = {
+  render: (): JSX.Element => {
+    const settings: SettingsTreeNodes = {
       fields: {
-        basic: {
-          label: "Basic",
-          input: "vec3",
-        },
-        labels: {
-          label: "Custom Labels",
-          input: "vec3",
-          labels: ["A", "B", "C"],
-        },
-        values: {
-          label: "Values",
-          input: "vec3",
-          value: [1.1111, 2.2222, 3.333],
-        },
-        someValues: {
-          label: "Some values",
-          input: "vec3",
-          value: [1.1111, undefined, 2.222],
-        },
-        placeholder: {
-          label: "Placeholder",
-          input: "vec3",
-          placeholder: ["foo", "bar", "baz"],
-          value: [1.1111, undefined, undefined],
+        fields: {
+          basic: {
+            label: "Basic",
+            input: "vec3",
+          },
+          labels: {
+            label: "Custom Labels",
+            input: "vec3",
+            labels: ["A", "B", "C"],
+          },
+          values: {
+            label: "Values",
+            input: "vec3",
+            value: [1.1111, 2.2222, 3.333],
+          },
+          someValues: {
+            label: "Some values",
+            input: "vec3",
+            value: [1.1111, undefined, 2.222],
+          },
+          placeholder: {
+            label: "Placeholder",
+            input: "vec3",
+            placeholder: ["foo", "bar", "baz"],
+            value: [1.1111, undefined, undefined],
+          },
         },
       },
-    },
-  };
+    };
 
-  return <Wrapper nodes={settings} />;
+    return <Wrapper nodes={settings} />;
+  },
 };
 
 async function clickSelect(): Promise<void> {

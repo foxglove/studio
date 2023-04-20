@@ -13,7 +13,7 @@
 
 import { Database20Filled } from "@fluentui/react-icons";
 import { Box } from "@mui/material";
-import { StoryObj, DecoratorFn, StoryFn } from "@storybook/react";
+import { StoryObj, DecoratorFn } from "@storybook/react";
 import { Mosaic, MosaicWindow } from "react-mosaic-component";
 
 import MockPanelContextProvider from "@foxglove/studio-base/components/MockPanelContextProvider";

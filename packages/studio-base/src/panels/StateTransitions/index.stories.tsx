@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { StoryObj, StoryFn } from "@storybook/react";
+import { StoryObj } from "@storybook/react";
 import { useCallback } from "react";
 import TestUtils from "react-dom/test-utils";
 
@@ -118,18 +118,20 @@ export default {
   },
 };
 
-export const ColorPalette: StoryFn = () => {
-  return (
-    <div style={{ width: "100%", padding: "1rem" }}>
-      {expandedLineColors.map((color) => (
-        <div key={color} style={{ backgroundColor: color, height: "1rem" }} />
-      ))}
-    </div>
-  );
+export const ColorPalette: StoryObj = {
+  render: function Story() {
+    return (
+      <div style={{ width: "100%", padding: "1rem" }}>
+        {expandedLineColors.map((color) => (
+          <div key={color} style={{ backgroundColor: color, height: "1rem" }} />
+        ))}
+      </div>
+    );
+  },
 };
 
 export const OnePath: StoryObj = {
-  render: () => {
+  render: function Story() {
     const readySignal = useReadySignal({ count: 3 });
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
     return (
@@ -152,7 +154,7 @@ export const OnePath: StoryObj = {
 };
 
 export const WithSettings: StoryObj = {
-  render: () => {
+  render: function Story() {
     const readySignal = useReadySignal({ count: 3 });
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
     return (
@@ -175,7 +177,7 @@ export const WithSettings: StoryObj = {
 };
 
 export const MultiplePaths: StoryObj = {
-  render: () => {
+  render: function Story() {
     const readySignal = useReadySignal({ count: 3 });
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
     return (
@@ -201,7 +203,7 @@ export const MultiplePaths: StoryObj = {
 };
 
 export const MultiplePathsWithHover: StoryObj = {
-  render: () => {
+  render: function Story() {
     const readySignal = useReadySignal({ count: 3 });
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
     return (
@@ -237,7 +239,7 @@ export const MultiplePathsWithHover: StoryObj = {
 };
 
 export const LongPath: StoryObj = {
-  render: () => {
+  render: function Story() {
     const readySignal = useReadySignal({ count: 3 });
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
     return (
@@ -260,7 +262,7 @@ export const LongPath: StoryObj = {
 };
 
 export const JsonPath: StoryObj = {
-  render: () => {
+  render: function Story() {
     const readySignal = useReadySignal({ count: 3 });
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
     return (
@@ -283,7 +285,7 @@ export const JsonPath: StoryObj = {
 };
 
 export const ColorClash: StoryObj = {
-  render: () => {
+  render: function Story() {
     const readySignal = useReadySignal({ count: 3 });
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
     return (
@@ -356,7 +358,7 @@ const messageCache: BlockCache = {
 };
 
 export const Blocks: StoryObj = {
-  render: () => {
+  render: function Story() {
     const readySignal = useReadySignal({ count: 3 });
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 

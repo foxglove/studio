@@ -10,7 +10,7 @@
 //   This source code is licensed under the Apache License, Version 2.0,
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
-import { StoryObj, StoryFn } from "@storybook/react";
+import { StoryObj } from "@storybook/react";
 import cloneDeep from "lodash/cloneDeep";
 import { useState, useCallback, ComponentProps, useEffect } from "react";
 import TestUtils from "react-dom/test-utils";
@@ -125,7 +125,7 @@ export default {
 };
 
 export const Basic: StoryObj = {
-  render: (_args) => {
+  render: function Story() {
     const readySignal = useReadySignal();
 
     return (
@@ -145,7 +145,7 @@ export const Basic: StoryObj = {
 };
 
 export const WithDatalabels: StoryObj = {
-  render: (_args) => {
+  render: function Story() {
     const readySignal = useReadySignal();
 
     return (
@@ -165,7 +165,7 @@ export const WithDatalabels: StoryObj = {
 };
 
 export const AllowsClickingOnDatalabels: StoryObj = {
-  render: (_args) => {
+  render: function Story() {
     const [clickedDatalabel, setClickedDatalabel] = useState<unknown>(undefined);
     const readySignal = useReadySignal();
 

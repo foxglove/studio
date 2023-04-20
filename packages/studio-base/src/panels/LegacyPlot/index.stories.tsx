@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { StoryFn, StoryObj } from "@storybook/react";
+import { StoryObj } from "@storybook/react";
 import { useCallback, useRef, useEffect } from "react";
 
 import PanelSetup, { Fixture, triggerWheel } from "@foxglove/studio-base/stories/PanelSetup";
@@ -135,7 +135,7 @@ export default {
 };
 
 export const Basic: StoryObj = {
-  render: () => {
+  render: function Story() {
     const readySignal = useReadySignal();
     return (
       <PanelSetup fixture={fixture}>
@@ -155,7 +155,7 @@ export const Basic: StoryObj = {
 };
 
 export const CustomMinMaxWindow: StoryObj = {
-  render: () => {
+  render: function Story() {
     const readySignal = useReadySignal();
     return (
       <PanelSetup fixture={fixture}>
@@ -181,7 +181,7 @@ export const CustomMinMaxWindow: StoryObj = {
 };
 
 export const CustomMinMaxVal: StoryObj = {
-  render: () => {
+  render: function Story() {
     const readySignal = useReadySignal();
     return (
       <PanelSetup fixture={fixture}>
@@ -200,16 +200,18 @@ export const CustomMinMaxVal: StoryObj = {
   parameters: { useReadySignal: true },
 };
 
-export const EmptyTopic: StoryFn = () => {
-  return (
-    <PanelSetup fixture={fixture}>
-      <TwoDimensionalPlot overrideConfig={{ path: { value: "/plot_b" } }} />
-    </PanelSetup>
-  );
+export const EmptyTopic: StoryObj = {
+  render: function Story() {
+    return (
+      <PanelSetup fixture={fixture}>
+        <TwoDimensionalPlot overrideConfig={{ path: { value: "/plot_b" } }} />
+      </PanelSetup>
+    );
+  },
 };
 
 export const WithTooltip: StoryObj = {
-  render: () => {
+  render: function Story() {
     const timeOutID = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
     const readySignal = useReadySignal();
 
@@ -271,7 +273,7 @@ function useStepSequence(...steps: StepFn[]): () => void {
 }
 
 export const ShowResetAfterHorizontalZoom: StoryObj = {
-  render: () => {
+  render: function Story() {
     const readySignal = useReadySignal();
 
     const step = useStepSequence(zoomOut, readySignal);
@@ -293,7 +295,7 @@ export const ShowResetAfterHorizontalZoom: StoryObj = {
 };
 
 export const ShowResetAfterVerticalZoom: StoryObj = {
-  render: () => {
+  render: function Story() {
     const readySignal = useReadySignal({ count: 2 });
     const step = useStepSequence(
       useCallback(() => {
@@ -321,7 +323,7 @@ export const ShowResetAfterVerticalZoom: StoryObj = {
 };
 
 export const ShowResetZoom: StoryObj = {
-  render: () => {
+  render: function Story() {
     const readySignal = useReadySignal({ count: 2 });
     const step = useStepSequence(
       useCallback(() => {
@@ -349,7 +351,7 @@ export const ShowResetZoom: StoryObj = {
 };
 
 export const ResetZoom: StoryObj = {
-  render: () => {
+  render: function Story() {
     const readySignal = useReadySignal();
 
     const elRef = useRef<HTMLDivElement | ReactNull>();

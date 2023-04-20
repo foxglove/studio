@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { StoryFn } from "@storybook/react";
+import { StoryObj, StoryFn } from "@storybook/react";
 import { fireEvent, screen } from "@storybook/testing-library";
 
 import MultiProvider from "@foxglove/studio-base/components/MultiProvider";
@@ -71,20 +71,22 @@ class MockPanelCatalog implements PanelCatalog {
   }
 }
 
-export const Basic: StoryFn = (): JSX.Element => {
-  const providers = [
-    /* eslint-disable react/jsx-key */
-    <PanelSetup>{undefined}</PanelSetup>,
-    <EventsProvider />,
-    <PanelCatalogContext.Provider value={new MockPanelCatalog()} />,
-    <MockCurrentLayoutProvider initialState={{ layout: "Fake" }} />,
-    /* eslint-enable react/jsx-key */
-  ];
-  return (
-    <MultiProvider providers={providers}>
-      <Workspace />
-    </MultiProvider>
-  );
+export const Basic: StoryObj = {
+  render: (): JSX.Element => {
+    const providers = [
+      /* eslint-disable react/jsx-key */
+      <PanelSetup>{undefined}</PanelSetup>,
+      <EventsProvider />,
+      <PanelCatalogContext.Provider value={new MockPanelCatalog()} />,
+      <MockCurrentLayoutProvider initialState={{ layout: "Fake" }} />,
+      /* eslint-enable react/jsx-key */
+    ];
+    return (
+      <MultiProvider providers={providers}>
+        <Workspace />
+      </MultiProvider>
+    );
+  },
 };
 
 export const FullscreenPanel = {

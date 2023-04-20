@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { StoryFn } from "@storybook/react";
+import { StoryObj, StoryFn } from "@storybook/react";
 
 import MockMessagePipelineProvider from "@foxglove/studio-base/components/MessagePipeline/MockMessagePipelineProvider";
 import { PlayerCapabilities, TopicStats } from "@foxglove/studio-base/players/types";
@@ -55,6 +55,8 @@ export default {
   decorators: [Wrapper],
 };
 
-export const Default: StoryFn = (): JSX.Element => {
-  return <TopicList />;
+export const Default: StoryObj = {
+  render: (): JSX.Element => {
+    return <TopicList />;
+  },
 };

@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { StoryObj, StoryFn } from "@storybook/react";
+import { StoryObj } from "@storybook/react";
 import { fireEvent, screen } from "@storybook/testing-library";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
@@ -22,14 +22,16 @@ const initialState = {
   },
 };
 
-export const Default: StoryFn = (): JSX.Element => {
-  return (
-    <DndProvider backend={HTML5Backend}>
-      <MockCurrentLayoutProvider>
-        <VariablesList />
-      </MockCurrentLayoutProvider>
-    </DndProvider>
-  );
+export const Default: StoryObj = {
+  render: (): JSX.Element => {
+    return (
+      <DndProvider backend={HTML5Backend}>
+        <MockCurrentLayoutProvider>
+          <VariablesList />
+        </MockCurrentLayoutProvider>
+      </DndProvider>
+    );
+  },
 };
 
 export const Interactive: StoryObj = {
