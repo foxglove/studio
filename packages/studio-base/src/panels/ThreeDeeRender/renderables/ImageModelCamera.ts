@@ -4,9 +4,10 @@
 
 import * as THREE from "three";
 
-import { PinholeCameraModel } from "@foxglove/studio-base/../../den/image";
-import { cameraInfosEqual } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/projections";
-import { CameraInfo } from "@foxglove/studio-base/panels/ThreeDeeRender/ros";
+import { PinholeCameraModel } from "@foxglove/den/image";
+
+import { cameraInfosEqual } from "./projections";
+import { CameraInfo } from "../ros";
 
 const DEFAULT_CAMERA_STATE = {
   near: 0.001,
