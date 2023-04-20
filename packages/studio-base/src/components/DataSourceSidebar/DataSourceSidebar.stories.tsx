@@ -172,7 +172,11 @@ export const PlayerPresent: StoryObj = {
     );
   },
 };
-export const PlayerPresentChinese = { ...PlayerPresent, parameters: { forceLanguage: "zh" } };
+
+export const PlayerPresentChinese: StoryObj = {
+  ...PlayerPresent,
+  parameters: { forceLanguage: "zh" },
+};
 
 export const PlayerPresentWithCustomTimezone: StoryObj = {
   render: function Story() {
