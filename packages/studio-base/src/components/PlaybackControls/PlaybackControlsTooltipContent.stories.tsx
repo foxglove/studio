@@ -36,11 +36,11 @@ export default {
   decorators: [Wrapper],
 };
 
-export function Default(): JSX.Element {
+export const Default: StoryFn = (): JSX.Element => {
   return <PlaybackControlsTooltipContent stamp={{ sec: 1, nsec: 1 }} />;
-}
+};
 
-export function WithEvents(): JSX.Element {
+export const WithEvents: StoryFn = (): JSX.Element => {
   const setEvents = useTimelineInteractionState((store) => store.setEventsAtHoverValue);
 
   useEffect(() => {
@@ -72,4 +72,4 @@ export function WithEvents(): JSX.Element {
   }, [setEvents]);
 
   return <PlaybackControlsTooltipContent stamp={{ sec: 1, nsec: 1 }} />;
-}
+};

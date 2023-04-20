@@ -101,7 +101,7 @@ export default {
   },
 };
 
-export function Simple(): JSX.Element {
+export const Simple: StoryFn = (): JSX.Element => {
   return (
     <div style={{ width: "100%", height: "100%" }}>
       <MockMessagePipelineProvider>
@@ -109,13 +109,13 @@ export function Simple(): JSX.Element {
       </MockMessagePipelineProvider>
     </div>
   );
-}
+};
 export const SimpleLight = Object.assign(Simple.bind(undefined), {
   parameters: { colorScheme: "light" },
 });
 
 // zoom and update without resetting zoom
-export function CanZoomAndUpdate(): JSX.Element {
+export const CanZoomAndUpdate: StoryFn = (): JSX.Element => {
   const [chartProps, setChartProps] = useState(cloneDeep(commonProps));
   const callCountRef = useRef(0);
 
@@ -159,7 +159,7 @@ export function CanZoomAndUpdate(): JSX.Element {
       </MockMessagePipelineProvider>
     </div>
   );
-}
+};
 
 CanZoomAndUpdate.parameters = {
   chromatic: {
@@ -224,7 +224,7 @@ export const CleansUpTooltipOnUnmount: StoryObj = {
   parameters: { useReadySignal: true },
 };
 
-export function CallPauseOnInitialMount(): JSX.Element {
+export const CallPauseOnInitialMount: StoryFn = (): JSX.Element => {
   const [unpauseFrameCount, setUnpauseFrameCount] = useState(0);
   const pauseFrame = useCallback(() => {
     return () => {
@@ -242,7 +242,7 @@ export function CallPauseOnInitialMount(): JSX.Element {
       </MockMessagePipelineProvider>
     </div>
   );
-}
+};
 
 // We should still call resumeFrame exactly once when removed in the middle of an update.
 // The way this test works:
@@ -253,7 +253,7 @@ export function CallPauseOnInitialMount(): JSX.Element {
 // (`resumeFrame`) fires.
 // - `resumeFrame` should then fire exactly once.
 // shows `SUCCESS` message with no chart visible
-export function ResumeFrameOnUnmount(): JSX.Element {
+export const ResumeFrameOnUnmount: StoryFn = (): JSX.Element => {
   const [showChart, setShowChart] = useState(true);
   const [statusMessage, setStatusMessage] = useState("FAILURE - START");
   const pauseFrame = useCallback(() => {
@@ -277,4 +277,4 @@ export function ResumeFrameOnUnmount(): JSX.Element {
       </MockMessagePipelineProvider>
     </div>
   );
-}
+};

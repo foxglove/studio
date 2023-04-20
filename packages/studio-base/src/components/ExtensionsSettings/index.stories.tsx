@@ -11,6 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { StoryFn } from "@storybook/react";
 import { useState } from "react";
 
 import { ExtensionInfo, ExtensionLoader } from "@foxglove/studio-base";
@@ -87,7 +88,7 @@ const MockExtensionMarketplace: ExtensionMarketplace = {
 Mock markdown rendering for URL [${url}](${url}).`,
 };
 
-export function Sidebar(): JSX.Element {
+export const Sidebar: StoryFn = (): JSX.Element => {
   const [config] = useState(() => makeMockAppConfiguration());
 
   return (
@@ -99,4 +100,4 @@ export function Sidebar(): JSX.Element {
       </ExtensionCatalogProvider>
     </AppConfigurationContext.Provider>
   );
-}
+};

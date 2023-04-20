@@ -71,7 +71,7 @@ class MockPanelCatalog implements PanelCatalog {
   }
 }
 
-export function Basic(): JSX.Element {
+export const Basic: StoryFn = (): JSX.Element => {
   const providers = [
     /* eslint-disable react/jsx-key */
     <PanelSetup>{undefined}</PanelSetup>,
@@ -85,7 +85,7 @@ export function Basic(): JSX.Element {
       <Workspace />
     </MultiProvider>
   );
-}
+};
 
 export const FullscreenPanel = {
   render: Basic,

@@ -2,6 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { StoryFn } from "@storybook/react";
+
 import { Topic } from "@foxglove/studio-base/players/types";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 import { VelodyneScan } from "@foxglove/studio-base/types/Messages";
@@ -1289,7 +1291,7 @@ const velodyneScan: VelodyneScan = {
   ],
 };
 
-export function VelodyneScan_Intensity(): JSX.Element {
+export const VelodyneScan_Intensity: StoryFn = (): JSX.Element => {
   const topics: Topic[] = [{ name: "/velodyne_packets", schemaName: "velodyne_msgs/VelodyneScan" }];
 
   const fixture = useDelayedFixture({
@@ -1344,4 +1346,4 @@ export function VelodyneScan_Intensity(): JSX.Element {
       />
     </PanelSetup>
   );
-}
+};

@@ -2,6 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { StoryFn } from "@storybook/react";
+
 import DiagnosticSummary from "@foxglove/studio-base/panels/diagnostics/DiagnosticSummary";
 import {
   DiagnosticStatusArrayMsg,
@@ -49,31 +51,31 @@ const fixture: Fixture = {
   },
 };
 
-export function Empty(): JSX.Element {
+export const Empty: StoryFn = (): JSX.Element => {
   return (
     <PanelSetup fixture={{ ...fixture, frame: {} }}>
       <DiagnosticSummary />
     </PanelSetup>
   );
-}
+};
 
-export function Basic(): JSX.Element {
+export const Basic: StoryFn = (): JSX.Element => {
   return (
     <PanelSetup fixture={fixture}>
       <DiagnosticSummary />
     </PanelSetup>
   );
-}
+};
 
-export function WithSettings(): JSX.Element {
+export const WithSettings: StoryFn = (): JSX.Element => {
   return (
     <PanelSetup fixture={fixture} includeSettings>
       <DiagnosticSummary />
     </PanelSetup>
   );
-}
+};
 
-export function WithPinnedNodes(): JSX.Element {
+export const WithPinnedNodes: StoryFn = (): JSX.Element => {
   return (
     <PanelSetup fixture={fixture}>
       <DiagnosticSummary
@@ -89,9 +91,9 @@ export function WithPinnedNodes(): JSX.Element {
       />
     </PanelSetup>
   );
-}
+};
 
-export function WithPinnedNodesAndFilter(): JSX.Element {
+export const WithPinnedNodesAndFilter: StoryFn = (): JSX.Element => {
   return (
     <PanelSetup fixture={fixture}>
       <DiagnosticSummary
@@ -107,9 +109,9 @@ export function WithPinnedNodesAndFilter(): JSX.Element {
       />
     </PanelSetup>
   );
-}
+};
 
-export function WithoutSorting(): JSX.Element {
+export const WithoutSorting: StoryFn = (): JSX.Element => {
   return (
     <PanelSetup fixture={fixture}>
       <DiagnosticSummary
@@ -123,9 +125,9 @@ export function WithoutSorting(): JSX.Element {
       />
     </PanelSetup>
   );
-}
+};
 
-export function FilteredByHardwareId(): JSX.Element {
+export const FilteredByHardwareId: StoryFn = (): JSX.Element => {
   return (
     <PanelSetup fixture={fixture}>
       <DiagnosticSummary
@@ -139,9 +141,9 @@ export function FilteredByHardwareId(): JSX.Element {
       />
     </PanelSetup>
   );
-}
+};
 
-export function FilteredByLevel(): JSX.Element {
+export const FilteredByLevel: StoryFn = (): JSX.Element => {
   return (
     <PanelSetup fixture={fixture}>
       <DiagnosticSummary
@@ -155,9 +157,9 @@ export function FilteredByLevel(): JSX.Element {
       />
     </PanelSetup>
   );
-}
+};
 
-export function FilteredByHardwareIdAndLevel(): JSX.Element {
+export const FilteredByHardwareIdAndLevel: StoryFn = (): JSX.Element => {
   return (
     <PanelSetup fixture={fixture}>
       <DiagnosticSummary
@@ -171,4 +173,4 @@ export function FilteredByHardwareIdAndLevel(): JSX.Element {
       />
     </PanelSetup>
   );
-}
+};

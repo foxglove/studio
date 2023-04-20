@@ -2,6 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { StoryFn } from "@storybook/react";
+
 import { fromDate } from "@foxglove/rostime";
 import MockMessagePipelineProvider from "@foxglove/studio-base/components/MessagePipeline/MockMessagePipelineProvider";
 import DataSourceInfoPanel from "@foxglove/studio-base/panels/DataSourceInfo";
@@ -33,7 +35,7 @@ const TOPICS: Topic[] = [
   { schemaName: "nav_msgs/Odometry", name: "/odom" },
 ];
 
-export function Default(): JSX.Element {
+export const Default: StoryFn = (): JSX.Element => {
   return (
     <MockMessagePipelineProvider
       startTime={START_TIME}
@@ -46,9 +48,9 @@ export function Default(): JSX.Element {
       </PanelSetup>
     </MockMessagePipelineProvider>
   );
-}
+};
 
-export function Empty(): JSX.Element {
+export const Empty: StoryFn = (): JSX.Element => {
   return (
     <MockMessagePipelineProvider noActiveData presence={PlayerPresence.NOT_PRESENT}>
       <PanelSetup>
@@ -56,4 +58,4 @@ export function Empty(): JSX.Element {
       </PanelSetup>
     </MockMessagePipelineProvider>
   );
-}
+};

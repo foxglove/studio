@@ -11,6 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { StoryFn } from "@storybook/react";
 import { fireEvent, screen } from "@storybook/testing-library";
 
 import TextMiddleTruncate from "./TextMiddleTruncate";
@@ -27,7 +28,7 @@ async function hoverText() {
   const allText = await screen.findAllByTestId("text-middle-truncate");
   fireEvent.pointerOver(allText[3]!);
 }
-export function Default(): JSX.Element {
+export const Default: StoryFn = (): JSX.Element => {
   return (
     <div
       style={{
@@ -62,5 +63,5 @@ export function Default(): JSX.Element {
       </div>
     </div>
   );
-}
+};
 Default.play = hoverText;

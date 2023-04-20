@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { action } from "@storybook/addon-actions";
+import { StoryFn } from "@storybook/react";
 
 import { AppBar } from "@foxglove/studio-base/components/AppBar";
 import { StorybookDecorator } from "@foxglove/studio-base/components/AppBar/StorybookDecorator.stories";
@@ -32,24 +33,24 @@ const actions = {
   setPrefsDialogOpen: action("setPrefsDialogOpen"),
 };
 
-export function Default(): JSX.Element {
+export const Default: StoryFn = (): JSX.Element => {
   return <AppBar {...actions} />;
-}
+};
 export const DefaultChinese = Object.assign(Default.bind(undefined), {
   parameters: { forceLanguage: "zh" },
 });
 
-export function CustomWindowControls(): JSX.Element {
+export const CustomWindowControls: StoryFn = (): JSX.Element => {
   return <AppBar showCustomWindowControls {...actions} />;
-}
+};
 
-export function CustomWindowControlsMaximized(): JSX.Element {
+export const CustomWindowControlsMaximized: StoryFn = (): JSX.Element => {
   return <AppBar showCustomWindowControls isMaximized {...actions} />;
-}
+};
 
-export function CustomWindowControlsDragRegion(): JSX.Element {
+export const CustomWindowControlsDragRegion: StoryFn = (): JSX.Element => {
   return <AppBar showCustomWindowControls debugDragRegion {...actions} />;
-}
+};
 
 function LabeledAppBar({ label }: React.PropsWithChildren<{ label: string }>) {
   return (
@@ -62,7 +63,7 @@ function LabeledAppBar({ label }: React.PropsWithChildren<{ label: string }>) {
   );
 }
 
-export function SignInStates(): JSX.Element {
+export const SignInStates: StoryFn = (): JSX.Element => {
   const currentUser: User = {
     id: "user-1",
     email: "user@example.com",
@@ -116,12 +117,12 @@ export function SignInStates(): JSX.Element {
       </CurrentUserContext.Provider>
     </div>
   );
-}
+};
 export const SignInStatesChinese = Object.assign(SignInStates.bind(undefined), {
   parameters: { forceLanguage: "zh" },
 });
 
-export function PlayerStates(): JSX.Element {
+export const PlayerStates: StoryFn = (): JSX.Element => {
   return (
     <Stack overflowY="auto">
       <div
@@ -174,13 +175,13 @@ export function PlayerStates(): JSX.Element {
       </div>
     </Stack>
   );
-}
+};
 PlayerStates.parameters = { colorScheme: "light" };
 export const PlayerStatesChinese = Object.assign(PlayerStates.bind(undefined), {
   parameters: { olorScheme: "light", forceLanguage: "zh" },
 });
 
-export function DataSources(): JSX.Element {
+export const DataSources: StoryFn = (): JSX.Element => {
   return (
     <Stack overflowY="auto">
       <div
@@ -239,7 +240,7 @@ export function DataSources(): JSX.Element {
       </div>
     </Stack>
   );
-}
+};
 DataSources.parameters = { colorScheme: "light" };
 export const DataSourcesChinese = Object.assign(DataSources.bind(undefined), {
   parameters: { colorScheme: "light", forceLanguage: "zh" },

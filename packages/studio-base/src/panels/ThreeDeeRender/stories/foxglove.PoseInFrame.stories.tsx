@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { StoryFn } from "@storybook/react";
 import { quat } from "gl-matrix";
 
 import { FrameTransform, PoseInFrame } from "@foxglove/schemas";
@@ -22,8 +23,7 @@ type Vec4 = [number, number, number, number];
 
 const vec4ToOrientation = ([x, y, z, w]: Vec4) => ({ x, y, z, w });
 
-Foxglove_PoseInFrame.parameters = { colorScheme: "dark" };
-export function Foxglove_PoseInFrame(): JSX.Element {
+export const Foxglove_PoseInFrame: StoryFn = (): JSX.Element => {
   const topics: Topic[] = [
     { name: "/tf", schemaName: "foxglove.FrameTransform" },
     { name: "/pose1", schemaName: "foxglove.PoseInFrame" },
@@ -161,4 +161,5 @@ export function Foxglove_PoseInFrame(): JSX.Element {
       />
     </PanelSetup>
   );
-}
+};
+Foxglove_PoseInFrame.parameters = { colorScheme: "dark" };

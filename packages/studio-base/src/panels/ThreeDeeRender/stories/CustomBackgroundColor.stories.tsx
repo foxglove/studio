@@ -2,6 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { StoryFn } from "@storybook/react";
+
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 
 import useDelayedFixture from "./useDelayedFixture";
@@ -12,7 +14,7 @@ export default {
   component: ThreeDeePanel,
 };
 
-export function CustomBackgroundColor(): JSX.Element {
+export const CustomBackgroundColor: StoryFn = (): JSX.Element => {
   const fixture = useDelayedFixture({
     topics: [],
     frame: {},
@@ -32,4 +34,4 @@ export function CustomBackgroundColor(): JSX.Element {
       />
     </PanelSetup>
   );
-}
+};

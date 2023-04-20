@@ -55,6 +55,6 @@ export default {
   decorators: [Wrapper],
 };
 
-export function Default(): JSX.Element {
+export const Default: StoryFn = (): JSX.Element => {
   return <TopicList />;
-}
+};

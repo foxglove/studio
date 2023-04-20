@@ -551,14 +551,14 @@ function AllMarkers(props: { showOutlines: boolean }): JSX.Element {
   );
 }
 
-export function Markers(): JSX.Element {
+export const Markers: StoryFn = (): JSX.Element => {
   return <AllMarkers showOutlines={true} />;
-}
+};
 Markers.parameters = { colorScheme: "dark", chromatic: { delay: 100 } };
 
-export function MarkersNoOutlines(): JSX.Element {
+export const MarkersNoOutlines: StoryFn = (): JSX.Element => {
   return <AllMarkers showOutlines={false} />;
-}
+};
 MarkersNoOutlines.parameters = { colorScheme: "dark", chromatic: { delay: 100 } };
 
 export const EmptyLineStrip: StoryObj = {

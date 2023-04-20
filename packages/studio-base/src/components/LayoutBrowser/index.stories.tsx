@@ -146,14 +146,14 @@ export default {
   decorators: [WithSetup],
 };
 
-export function Empty(): JSX.Element {
+export const Empty: StoryFn = (): JSX.Element => {
   return <LayoutBrowser />;
-}
+};
 Empty.parameters = { mockLayouts: [] };
 
-export function LayoutList(): JSX.Element {
+export const LayoutList: StoryFn = (): JSX.Element => {
   return <LayoutBrowser />;
-}
+};
 
 export const MultiSelect: StoryObj = {
   render: (): JSX.Element => {
@@ -185,9 +185,9 @@ export const MultiSelect: StoryObj = {
   },
 };
 
-export function MultiDelete(): JSX.Element {
+export const MultiDelete: StoryFn = (): JSX.Element => {
   return <LayoutBrowser />;
-}
+};
 MultiDelete.parameters = { colorScheme: "dark" };
 MultiDelete.play = async () => {
   await doMultiAction("Delete");
@@ -196,9 +196,9 @@ MultiDelete.play = async () => {
   fireEvent.click(confirmButton);
 };
 
-export function MultiDuplicate(): JSX.Element {
+export const MultiDuplicate: StoryFn = (): JSX.Element => {
   return <LayoutBrowser />;
-}
+};
 MultiDuplicate.parameters = {
   colorScheme: "dark",
   mockLayouts: [exampleCurrentLayout, makeUnsavedLayout(1), shortLayout],
@@ -207,9 +207,9 @@ MultiDuplicate.play = async () => {
   await doMultiAction("Duplicate");
 };
 
-export function MultiRevert(): JSX.Element {
+export const MultiRevert: StoryFn = (): JSX.Element => {
   return <LayoutBrowser />;
-}
+};
 MultiRevert.parameters = {
   colorScheme: "dark",
   mockLayouts: [makeUnsavedLayout(1), makeUnsavedLayout(2), makeUnsavedLayout(3)],
@@ -221,9 +221,9 @@ MultiRevert.play = async () => {
   fireEvent.click(revertButton);
 };
 
-export function MultiSave(): JSX.Element {
+export const MultiSave: StoryFn = (): JSX.Element => {
   return <LayoutBrowser />;
-}
+};
 MultiSave.parameters = {
   colorScheme: "dark",
   mockLayouts: [makeUnsavedLayout(1), makeUnsavedLayout(2), makeUnsavedLayout(3)],
@@ -241,9 +241,9 @@ TruncatedLayoutName.parameters = {
     },
   ],
 };
-export function TruncatedLayoutName(): JSX.Element {
+export const TruncatedLayoutName: StoryFn = (): JSX.Element => {
   return <LayoutBrowser />;
-}
+};
 
 TruncatedLayoutNameSelected.parameters = {
   mockLayouts: [
@@ -254,26 +254,26 @@ TruncatedLayoutNameSelected.parameters = {
     },
   ],
 };
-export function TruncatedLayoutNameSelected(): JSX.Element {
+export const TruncatedLayoutNameSelected: StoryFn = (): JSX.Element => {
   return <LayoutBrowser />;
-}
+};
 
-export function AddLayout(_args: unknown): JSX.Element {
+export const AddLayout: StoryFn = (): JSX.Element => {
   return (
     <LayoutBrowser
       currentDateForStorybook={useMemo(() => new Date("2021-06-16T04:28:33.549Z"), [])}
     />
   );
-}
+};
 AddLayout.parameters = { colorScheme: "dark" };
 AddLayout.play = async () => {
   const button = await screen.findByTestId("add-layout");
   fireEvent.click(button);
 };
 
-export function MenuOpen(_args: unknown): JSX.Element {
+export const MenuOpen: StoryFn = (): JSX.Element => {
   return <LayoutBrowser />;
-}
+};
 MenuOpen.parameters = { colorScheme: "dark" };
 MenuOpen.play = async () => {
   const actions = await screen.findAllByTestId("layout-actions");
@@ -291,9 +291,9 @@ MenuOpenLight.play = async () => {
   }
 };
 
-export function EditingName(_args: unknown): JSX.Element {
+export const EditingName: StoryFn = (): JSX.Element => {
   return <LayoutBrowser />;
-}
+};
 EditingName.parameters = { colorScheme: "dark" };
 EditingName.play = async () => {
   const actions = await screen.findAllByTestId("layout-actions");
@@ -304,9 +304,9 @@ EditingName.play = async () => {
   fireEvent.click(button);
 };
 
-export function CancelRenameWithEscape(_args: unknown): JSX.Element {
+export const CancelRenameWithEscape: StoryFn = (): JSX.Element => {
   return <LayoutBrowser />;
-}
+};
 CancelRenameWithEscape.parameters = { colorScheme: "dark" };
 CancelRenameWithEscape.play = async () => {
   const actions = await screen.findAllByTestId("layout-actions");
@@ -318,9 +318,9 @@ CancelRenameWithEscape.play = async () => {
   fireEvent.keyDown(document.activeElement!, { key: "Escape" });
 };
 
-export function CommitRenameWithTab(_args: unknown): JSX.Element {
+export const CommitRenameWithTab: StoryFn = (): JSX.Element => {
   return <LayoutBrowser />;
-}
+};
 CommitRenameWithTab.parameters = { colorScheme: "dark" };
 CommitRenameWithTab.play = async () => {
   const actions = await screen.findAllByTestId("layout-actions");
@@ -333,9 +333,9 @@ CommitRenameWithTab.play = async () => {
   fireEvent.focusOut(document.activeElement!);
 };
 
-export function Duplicate(_args: unknown): JSX.Element {
+export const Duplicate: StoryFn = (): JSX.Element => {
   return <LayoutBrowser />;
-}
+};
 Duplicate.parameters = { colorScheme: "dark" };
 Duplicate.play = async () => {
   const actions = await screen.findAllByTestId("layout-actions");
@@ -346,15 +346,15 @@ Duplicate.play = async () => {
   fireEvent.click(button);
 };
 
-export function DeleteLayout(_args: unknown): JSX.Element {
+export const DeleteLayout: StoryFn = (): JSX.Element => {
   return <LayoutBrowser />;
-}
+};
 DeleteLayout.parameters = { colorScheme: "dark" };
 DeleteLayout.play = async () => await deleteLayoutInteraction(0);
 
-export function DeleteSelectedLayout(_args: unknown): JSX.Element {
+export const DeleteSelectedLayout: StoryFn = (): JSX.Element => {
   return <LayoutBrowser />;
-}
+};
 DeleteSelectedLayout.play = async () => {
   const layouts = await screen.findAllByTestId("layout-list-item");
   if (layouts[1]) {
@@ -367,16 +367,16 @@ DeleteSelectedLayout.play = async () => {
 };
 DeleteSelectedLayout.parameters = { colorScheme: "dark" };
 
-export function DeleteLastLayout(_args: unknown): JSX.Element {
+export const DeleteLastLayout: StoryFn = (): JSX.Element => {
   return <LayoutBrowser />;
-}
+};
 DeleteLastLayout.parameters = {
   mockLayouts: [exampleCurrentLayout],
   colorScheme: "dark",
 };
 DeleteLastLayout.play = async () => await deleteLayoutInteraction(0);
 
-export function SignInPrompt(_args: unknown): JSX.Element {
+export const SignInPrompt: StoryFn = (): JSX.Element => {
   return (
     <CurrentUserContext.Provider
       value={{
@@ -390,7 +390,7 @@ export function SignInPrompt(_args: unknown): JSX.Element {
       </WorkspaceContextProvider>
     </CurrentUserContext.Provider>
   );
-}
+};
 SignInPrompt.parameters = {
   colorScheme: "light",
 };

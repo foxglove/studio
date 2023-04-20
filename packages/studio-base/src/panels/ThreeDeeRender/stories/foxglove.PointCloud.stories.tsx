@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { StoryFn } from "@storybook/react";
 import { vec3 } from "gl-matrix";
 
 import type { PointCloud } from "@foxglove/schemas";
@@ -376,7 +377,7 @@ export const Foxglove_PointCloud_Intensity_Clamped = Foxglove_PointCloud_Intensi
 );
 
 // Render a flat plane if we only have two dimensions
-export function Foxglove_PointCloud_TwoDimensions(): JSX.Element {
+export const Foxglove_PointCloud_TwoDimensions: StoryFn = (): JSX.Element => {
   const topics: Topic[] = [{ name: "/pointcloud", schemaName: "foxglove.PointCloud" }];
 
   const SCALE = 10 / 128;
@@ -452,4 +453,4 @@ export function Foxglove_PointCloud_TwoDimensions(): JSX.Element {
       />
     </PanelSetup>
   );
-}
+};

@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { useTheme } from "@mui/material";
+import { StoryFn } from "@storybook/react";
 import { PropsWithChildren } from "react";
 
 import Stack, { StackProps } from "./Stack";
@@ -34,7 +35,7 @@ function Box({ children }: PropsWithChildren<StackProps>): JSX.Element {
   );
 }
 
-export function Default(): JSX.Element {
+export const Default: StoryFn = (): JSX.Element => {
   return (
     <Stack data-testid padding={2} gap={2} fullHeight>
       <Stack direction="row" gap={2}>
@@ -87,4 +88,4 @@ export function Default(): JSX.Element {
       </Stack>
     </Stack>
   );
-}
+};

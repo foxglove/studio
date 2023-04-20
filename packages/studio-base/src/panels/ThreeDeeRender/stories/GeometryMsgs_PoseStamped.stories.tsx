@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { StoryFn } from "@storybook/react";
 import { quat } from "gl-matrix";
 
 import { MessageEvent } from "@foxglove/studio";
@@ -22,8 +23,7 @@ type Vec4 = [number, number, number, number];
 
 const vec4ToOrientation = ([x, y, z, w]: Vec4) => ({ x, y, z, w });
 
-GeometryMsgs_PoseStamped.parameters = { colorScheme: "dark" };
-export function GeometryMsgs_PoseStamped(): JSX.Element {
+export const GeometryMsgs_PoseStamped: StoryFn = (): JSX.Element => {
   const topics: Topic[] = [
     { name: "/tf", schemaName: "geometry_msgs/TransformStamped" },
     { name: "/pose1", schemaName: "geometry_msgs/PoseStamped" },
@@ -160,4 +160,5 @@ export function GeometryMsgs_PoseStamped(): JSX.Element {
       />
     </PanelSetup>
   );
-}
+};
+GeometryMsgs_PoseStamped.parameters = { colorScheme: "dark" };

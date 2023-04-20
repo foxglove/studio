@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { StoryFn } from "@storybook/react";
 import { fireEvent, screen } from "@storybook/testing-library";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
@@ -21,7 +22,7 @@ const initialState = {
   },
 };
 
-export function Default(): JSX.Element {
+export const Default: StoryFn = (): JSX.Element => {
   return (
     <DndProvider backend={HTML5Backend}>
       <MockCurrentLayoutProvider>
@@ -29,9 +30,9 @@ export function Default(): JSX.Element {
       </MockCurrentLayoutProvider>
     </DndProvider>
   );
-}
+};
 
-export function Interactive(): JSX.Element {
+export const Interactive: StoryFn = (): JSX.Element => {
   return (
     <DndProvider backend={HTML5Backend}>
       <MockCurrentLayoutProvider>
@@ -39,7 +40,7 @@ export function Interactive(): JSX.Element {
       </MockCurrentLayoutProvider>
     </DndProvider>
   );
-}
+};
 Interactive.play = async () => {
   const addButton = await screen.findByTestId("add-variable-button");
   fireEvent.click(addButton);
@@ -64,7 +65,7 @@ Interactive.play = async () => {
 
 Interactive.parameters = { colorScheme: "light" };
 
-export function WithVariablesLight(): JSX.Element {
+export const WithVariablesLight: StoryFn = (): JSX.Element => {
   return (
     <DndProvider backend={HTML5Backend}>
       <MockCurrentLayoutProvider initialState={initialState}>
@@ -72,11 +73,11 @@ export function WithVariablesLight(): JSX.Element {
       </MockCurrentLayoutProvider>
     </DndProvider>
   );
-}
+};
 
 WithVariablesLight.parameters = { colorScheme: "light" };
 
-export function WithVariablesDark(): JSX.Element {
+export const WithVariablesDark: StoryFn = (): JSX.Element => {
   return (
     <DndProvider backend={HTML5Backend}>
       <MockCurrentLayoutProvider initialState={initialState}>
@@ -84,6 +85,6 @@ export function WithVariablesDark(): JSX.Element {
       </MockCurrentLayoutProvider>
     </DndProvider>
   );
-}
+};
 
 WithVariablesDark.parameters = { colorScheme: "dark" };

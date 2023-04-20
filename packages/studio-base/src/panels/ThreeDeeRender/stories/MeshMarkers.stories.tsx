@@ -2,6 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { StoryFn } from "@storybook/react";
+
 import { MessageEvent } from "@foxglove/studio";
 import { Topic } from "@foxglove/studio-base/players/types";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
@@ -17,8 +19,7 @@ export default {
   component: ThreeDeePanel,
 };
 
-MeshMarkers.parameters = { colorScheme: "dark" };
-export function MeshMarkers(): JSX.Element {
+export const MeshMarkers: StoryFn = (): JSX.Element => {
   const topics: Topic[] = [
     { name: "/markersOutline", schemaName: "visualization_msgs/Marker" },
     { name: "/markersNoOutline", schemaName: "visualization_msgs/Marker" },
@@ -154,4 +155,5 @@ export function MeshMarkers(): JSX.Element {
       />
     </PanelSetup>
   );
-}
+};
+MeshMarkers.parameters = { colorScheme: "dark" };

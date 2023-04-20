@@ -2,6 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { StoryFn } from "@storybook/react";
+
 import { fromSec } from "@foxglove/rostime";
 import type { FrameTransforms } from "@foxglove/schemas";
 import { MessageEvent } from "@foxglove/studio";
@@ -17,8 +19,7 @@ export default {
   component: ThreeDeePanel,
 };
 
-FoxgloveFrameTransforms.parameters = { colorScheme: "dark" };
-export function FoxgloveFrameTransforms(): JSX.Element {
+export const FoxgloveFrameTransforms: StoryFn = (): JSX.Element => {
   const topics: Topic[] = [
     { name: "/markers", schemaName: "visualization_msgs/Marker" },
     { name: "/tf", schemaName: "foxglove.FrameTransforms" },
@@ -119,4 +120,5 @@ export function FoxgloveFrameTransforms(): JSX.Element {
       />
     </PanelSetup>
   );
-}
+};
+FoxgloveFrameTransforms.parameters = { colorScheme: "dark" };

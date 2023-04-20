@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Stack } from "@mui/material";
+import { StoryFn } from "@storybook/react";
 import { PropsWithChildren, useState } from "react";
 
 import { Time } from "@foxglove/rostime";
@@ -39,11 +40,11 @@ function TimestampStory(props: PropsWithChildren<Props>): JSX.Element {
   );
 }
 
-export function Default(): JSX.Element {
+export const Default: StoryFn = (): JSX.Element => {
   return <TimestampStory config={[[AppSetting.TIMEZONE, "UTC"]]} time={ABSOLUTE_TIME} />;
-}
+};
 
-export function TimeFormatSeconds(): JSX.Element {
+export const TimeFormatSeconds: StoryFn = (): JSX.Element => {
   return (
     <TimestampStory
       config={[
@@ -53,9 +54,9 @@ export function TimeFormatSeconds(): JSX.Element {
       time={ABSOLUTE_TIME}
     />
   );
-}
+};
 
-export function TimeFormatTOD(): JSX.Element {
+export const TimeFormatTOD: StoryFn = (): JSX.Element => {
   return (
     <TimestampStory
       config={[
@@ -65,9 +66,9 @@ export function TimeFormatTOD(): JSX.Element {
       time={ABSOLUTE_TIME}
     />
   );
-}
+};
 
-export function TimeFormatRelative(): JSX.Element {
+export const TimeFormatRelative: StoryFn = (): JSX.Element => {
   return (
     <TimestampStory
       config={[
@@ -77,4 +78,4 @@ export function TimeFormatRelative(): JSX.Element {
       time={RELATIVE_TIME}
     />
   );
-}
+};

@@ -9,10 +9,10 @@ export default {
   component: VersionBanner,
 };
 
-export function OldChrome(): JSX.Element {
+export const OldChrome: StoryFn = (): JSX.Element => {
   return <VersionBanner isChrome currentVersion={42} isDismissable />;
-}
+};
 
-export function UnsupportedBrowser(): JSX.Element {
+export const UnsupportedBrowser: StoryFn = (): JSX.Element => {
   return <VersionBanner isChrome={false} currentVersion={42} isDismissable />;
-}
+};

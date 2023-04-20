@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { StoryFn } from "@storybook/react";
 import * as THREE from "three";
 
 import { fromSec } from "@foxglove/rostime";
@@ -215,7 +216,7 @@ export const Time10 = Object.assign(SensorMsgs_LaserScan.bind({}), {
   },
 });
 
-export function ComparisonWithPointCloudColors(): JSX.Element {
+export const ComparisonWithPointCloudColors: StoryFn = (): JSX.Element => {
   const topics: Topic[] = [
     { name: "/scan", schemaName: "sensor_msgs/LaserScan" },
     { name: "/cloud", schemaName: "sensor_msgs/PointCloud2" },
@@ -354,4 +355,4 @@ export function ComparisonWithPointCloudColors(): JSX.Element {
       />
     </PanelSetup>
   );
-}
+};

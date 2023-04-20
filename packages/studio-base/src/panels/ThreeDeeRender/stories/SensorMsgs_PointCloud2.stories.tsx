@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { StoryFn } from "@storybook/react";
 import { vec3 } from "gl-matrix";
 
 import { MessageEvent } from "@foxglove/studio";
@@ -159,8 +160,7 @@ function SensorMsgs_PointCloud2({ rgbaFieldName }: { rgbaFieldName: string }): J
   );
 }
 
-SensorMsgs_PointCloud2_Intensity.parameters = { colorScheme: "dark" };
-export function SensorMsgs_PointCloud2_Intensity(): JSX.Element {
+export const SensorMsgs_PointCloud2_Intensity: StoryFn = (): JSX.Element => {
   const topics: Topic[] = [
     { name: "/pointcloud", schemaName: "sensor_msgs/PointCloud2" },
     { name: "/tf", schemaName: "geometry_msgs/TransformStamped" },
@@ -179,6 +179,7 @@ export function SensorMsgs_PointCloud2_Intensity(): JSX.Element {
     schemaName: "geometry_msgs/TransformStamped",
     sizeInBytes: 0,
   };
+  SensorMsgs_PointCloud2_Intensity.parameters = { colorScheme: "dark" };
   const tf2: MessageEvent<TransformStamped> = {
     topic: "/tf",
     receiveTime: { sec: 10, nsec: 0 },
@@ -331,11 +332,10 @@ export function SensorMsgs_PointCloud2_Intensity(): JSX.Element {
       />
     </PanelSetup>
   );
-}
+};
 
 // Render a flat plane if we only have two dimensions
-SensorMsgs_PointCloud2_TwoDimensions.parameters = { colorScheme: "dark" };
-export function SensorMsgs_PointCloud2_TwoDimensions(): JSX.Element {
+export const SensorMsgs_PointCloud2_TwoDimensions: StoryFn = (): JSX.Element => {
   const topics: Topic[] = [{ name: "/pointcloud", schemaName: "sensor_msgs/PointCloud2" }];
 
   const SCALE = 10 / 128;
@@ -414,4 +414,5 @@ export function SensorMsgs_PointCloud2_TwoDimensions(): JSX.Element {
       />
     </PanelSetup>
   );
-}
+};
+SensorMsgs_PointCloud2_TwoDimensions.parameters = { colorScheme: "dark" };

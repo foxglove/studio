@@ -2,6 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { StoryFn } from "@storybook/react";
+
 import { MessageEvent } from "@foxglove/studio";
 import { Topic } from "@foxglove/studio-base/players/types";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
@@ -16,8 +18,7 @@ export default {
   component: ThreeDeePanel,
 };
 
-GeometryMsgs_Polygon.parameters = { colorScheme: "dark" };
-export function GeometryMsgs_Polygon(): JSX.Element {
+export const GeometryMsgs_Polygon: StoryFn = (): JSX.Element => {
   const topics: Topic[] = [
     { name: "/polygon", schemaName: "geometry_msgs/PolygonStamped" },
     { name: "/tf", schemaName: "geometry_msgs/TransformStamped" },
@@ -105,4 +106,5 @@ export function GeometryMsgs_Polygon(): JSX.Element {
       />
     </PanelSetup>
   );
-}
+};
+GeometryMsgs_Polygon.parameters = { colorScheme: "dark" };

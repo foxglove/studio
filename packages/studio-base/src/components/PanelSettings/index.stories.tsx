@@ -11,6 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { StoryFn } from "@storybook/react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
@@ -41,7 +42,7 @@ class MockPanelCatalog implements PanelCatalog {
 const fixture = { topics: [], datatypes: new Map(), frame: {}, layout: "Sample1!abc" };
 const selectedPanelIds: readonly string[] = ["Sample1!abc"];
 
-export function NoPanelSelected(): JSX.Element {
+export const NoPanelSelected: StoryFn = (): JSX.Element => {
   return (
     <div style={{ margin: 30, height: 400 }}>
       <DndProvider backend={HTML5Backend}>
@@ -53,9 +54,9 @@ export function NoPanelSelected(): JSX.Element {
       </DndProvider>
     </div>
   );
-}
+};
 
-export function PanelSelected(): JSX.Element {
+export const PanelSelected: StoryFn = (): JSX.Element => {
   return (
     <div style={{ margin: 30, height: 400 }}>
       <DndProvider backend={HTML5Backend}>
@@ -71,9 +72,9 @@ export function PanelSelected(): JSX.Element {
       </DndProvider>
     </div>
   );
-}
+};
 
-export function PanelLoading(): JSX.Element {
+export const PanelLoading: StoryFn = (): JSX.Element => {
   return (
     <div style={{ margin: 30, height: 400 }}>
       <DndProvider backend={HTML5Backend}>
@@ -85,4 +86,4 @@ export function PanelLoading(): JSX.Element {
       </DndProvider>
     </div>
   );
-}
+};

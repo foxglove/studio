@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { StoryFn } from "@storybook/react";
 import { ReactNode } from "react";
 
 import CurrentUserContext, {
@@ -116,13 +117,13 @@ export const DefaultDark = {
   name: "Default (dark)",
 };
 
-export function UserNoAuth(): JSX.Element {
+export const UserNoAuth: StoryFn = (): JSX.Element => {
   return (
     <PlayerSelectionContext.Provider value={playerSelection}>
       <OpenDialog {...defaultProps} />
     </PlayerSelectionContext.Provider>
   );
-}
+};
 UserNoAuth.storyName = "User not authenticated";
 
 export const UserNoAuthChinese = Object.assign(UserNoAuth.bind(undefined), {
@@ -130,7 +131,7 @@ export const UserNoAuthChinese = Object.assign(UserNoAuth.bind(undefined), {
   parameters: { forceLanguage: "zh" },
 });
 
-export function UserPrivate(): JSX.Element {
+export const UserPrivate: StoryFn = (): JSX.Element => {
   return (
     <CurrentUserWrapper>
       <PlayerSelectionContext.Provider value={playerSelection}>
@@ -138,7 +139,7 @@ export function UserPrivate(): JSX.Element {
       </PlayerSelectionContext.Provider>
     </CurrentUserWrapper>
   );
-}
+};
 UserPrivate.storyName = "User not authenticated (private)";
 
 export const UserPrivateChinese = Object.assign(UserPrivate.bind(undefined), {
@@ -146,7 +147,7 @@ export const UserPrivateChinese = Object.assign(UserPrivate.bind(undefined), {
   parameters: { forceLanguage: "zh" },
 });
 
-export function UserAuthedFree(): JSX.Element {
+export const UserAuthedFree: StoryFn = (): JSX.Element => {
   const freeUser = fakeUser("free");
 
   return (
@@ -156,7 +157,7 @@ export function UserAuthedFree(): JSX.Element {
       </PlayerSelectionContext.Provider>
     </CurrentUserWrapper>
   );
-}
+};
 UserAuthedFree.storyName = "User Authenticated with Free Account";
 
 export const UserAuthedFreeChinese = Object.assign(UserAuthedFree.bind(undefined), {
@@ -164,7 +165,7 @@ export const UserAuthedFreeChinese = Object.assign(UserAuthedFree.bind(undefined
   parameters: { forceLanguage: "zh" },
 });
 
-export function UserAuthedPaid(): JSX.Element {
+export const UserAuthedPaid: StoryFn = (): JSX.Element => {
   const freeUser = fakeUser("paid");
 
   return (
@@ -174,7 +175,7 @@ export function UserAuthedPaid(): JSX.Element {
       </PlayerSelectionContext.Provider>
     </CurrentUserWrapper>
   );
-}
+};
 UserAuthedPaid.storyName = "User Authenticated with Paid Account";
 
 export const UserAuthedPaidChinese = Object.assign(UserAuthedPaid.bind(undefined), {

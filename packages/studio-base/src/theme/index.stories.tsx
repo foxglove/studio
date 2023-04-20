@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Box, Typography, useTheme } from "@mui/material";
+import { StoryFn } from "@storybook/react";
 import { ReactNode } from "react";
 
 import Stack from "@foxglove/studio-base/components/Stack";
@@ -11,7 +12,7 @@ export default {
   title: "Theme",
 };
 
-export function Palette(): JSX.Element {
+export const Palette: StoryFn = (): JSX.Element => {
   const theme = useTheme();
   return (
     <Stack
@@ -135,13 +136,13 @@ export function Palette(): JSX.Element {
       </Stack>
     </Stack>
   );
-}
+};
 
 function Wrapper({ children }: { children: ReactNode }): JSX.Element {
   return <Box sx={{ border: "1px dotted", borderColor: "info.main" }}>{children}</Box>;
 }
 
-export function TypographyCatalog(): JSX.Element {
+export const TypographyCatalog: StoryFn = (): JSX.Element => {
   return (
     <Stack gap={1} padding={1}>
       <Wrapper>
@@ -217,5 +218,5 @@ export function TypographyCatalog(): JSX.Element {
       </Wrapper>
     </Stack>
   );
-}
+};
 TypographyCatalog.parameters = { colorScheme: "light" };

@@ -29,16 +29,16 @@ export default {
   decorators: [Wrapper],
 };
 
-export function Default(): JSX.Element {
+export const Default: StoryFn = (): JSX.Element => {
   const setEvents = useEvents((store) => store.setEvents);
   useEffect(() => {
     setEvents({ loading: false, value: makeMockEvents(20) });
   }, [setEvents]);
 
   return <EventsList />;
-}
+};
 
-export function Selected(): JSX.Element {
+export const Selected: StoryFn = (): JSX.Element => {
   const setEvents = useEvents((store) => store.setEvents);
   const selectEvent = useEvents((store) => store.selectEvent);
 
@@ -49,7 +49,7 @@ export function Selected(): JSX.Element {
   }, [selectEvent, setEvents]);
 
   return <EventsList />;
-}
+};
 Selected.play = async () => {
   const events = await screen.findAllByTestId("sidebar-event");
   userEvent.click(events[1]!);
@@ -58,20 +58,20 @@ Selected.parameters = {
   colorScheme: "light",
 };
 
-export function WithError(): JSX.Element {
+export const WithError: StoryFn = (): JSX.Element => {
   const setEvents = useEvents((store) => store.setEvents);
   useEffect(() => {
     setEvents({ loading: false, error: new Error("Error loading events") });
   }, [setEvents]);
 
   return <EventsList />;
-}
+};
 
-export function Loading(): JSX.Element {
+export const Loading: StoryFn = (): JSX.Element => {
   const setEvents = useEvents((store) => store.setEvents);
   useEffect(() => {
     setEvents({ loading: true });
   }, [setEvents]);
 
   return <EventsList />;
-}
+};

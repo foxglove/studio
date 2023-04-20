@@ -2,13 +2,15 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { StoryFn } from "@storybook/react";
+
 import inScreenshotTests from "@foxglove/studio-base/stories/inScreenshotTests";
 
 export default {
   title: "inScreenshotTests",
 };
 
-export function InScreenshotTests(): JSX.Element {
+export const InScreenshotTests: StoryFn = (): JSX.Element => {
   return (
     <div
       style={{
@@ -21,4 +23,4 @@ export function InScreenshotTests(): JSX.Element {
       inScreenshotTests: {JSON.stringify(inScreenshotTests())}
     </div>
   );
-}
+};

@@ -12,6 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { Tooltip } from "@mui/material";
+import { StoryFn } from "@storybook/react";
 
 import { TimeBasedChartTooltipData } from "@foxglove/studio-base/components/TimeBasedChart";
 
@@ -22,7 +23,7 @@ export default {
   component: TimeBasedChartTooltipContent,
 };
 
-export function SingleItemSingleDataset(): JSX.Element {
+export const SingleItemSingleDataset: StoryFn = (): JSX.Element => {
   const data: TimeBasedChartTooltipData = {
     x: 0,
     y: 0,
@@ -47,14 +48,14 @@ export function SingleItemSingleDataset(): JSX.Element {
       <div style={{ width: "100%", height: "100%" }} />
     </Tooltip>
   );
-}
+};
 SingleItemSingleDataset.parameters = { colorScheme: "dark" };
 
 export const SingleItemSingleDatasetLight = Object.assign(SingleItemSingleDataset.bind(undefined), {
   parameters: { colorScheme: "light" },
 });
 
-export function SingleItemMultiDataset(): JSX.Element {
+export const SingleItemMultiDataset: StoryFn = (): JSX.Element => {
   const data: TimeBasedChartTooltipData = {
     x: 0,
     y: 0,
@@ -79,14 +80,14 @@ export function SingleItemMultiDataset(): JSX.Element {
       <div style={{ width: "100%", height: "100%" }} />
     </Tooltip>
   );
-}
+};
 SingleItemMultiDataset.parameters = { colorScheme: "dark" };
 
 export const SingleItemMultiDatasetLight = Object.assign(SingleItemMultiDataset.bind(undefined), {
   parameters: { colorScheme: "light" },
 });
 
-export function MultipleItemsSingleDataset(): JSX.Element {
+export const MultipleItemsSingleDataset: StoryFn = (): JSX.Element => {
   const data: TimeBasedChartTooltipData = {
     x: 0,
     y: 0,
@@ -111,7 +112,7 @@ export function MultipleItemsSingleDataset(): JSX.Element {
       <div style={{ width: "100%", height: "100%" }} />
     </Tooltip>
   );
-}
+};
 MultipleItemsSingleDataset.parameters = { colorScheme: "dark" };
 
 export const MultipleItemsSingleDatasetLight = Object.assign(
@@ -119,7 +120,7 @@ export const MultipleItemsSingleDatasetLight = Object.assign(
   { parameters: { colorScheme: "light" } },
 );
 
-export function MultipleItemsMultipleDataset(): JSX.Element {
+export const MultipleItemsMultipleDataset: StoryFn = (): JSX.Element => {
   const data: TimeBasedChartTooltipData[] = [
     {
       datasetIndex: 0,
@@ -162,7 +163,7 @@ export function MultipleItemsMultipleDataset(): JSX.Element {
       <div style={{ width: "100%", height: "100%" }} />
     </Tooltip>
   );
-}
+};
 MultipleItemsMultipleDataset.parameters = { colorScheme: "dark" };
 
 export const MultipleItemsMultiDatasetLight = Object.assign(

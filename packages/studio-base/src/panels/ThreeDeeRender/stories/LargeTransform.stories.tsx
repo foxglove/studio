@@ -2,6 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { StoryFn } from "@storybook/react";
+
 import { fromSec } from "@foxglove/rostime";
 import { MessageEvent } from "@foxglove/studio";
 import { Topic } from "@foxglove/studio-base/players/types";
@@ -17,8 +19,7 @@ export default {
   component: ThreeDeePanel,
 };
 
-LargeTransform.parameters = { colorScheme: "dark" };
-export function LargeTransform(): JSX.Element {
+export const LargeTransform: StoryFn = (): JSX.Element => {
   const topics: Topic[] = [
     { name: "/markers", schemaName: "visualization_msgs/Marker" },
     { name: "/tf", schemaName: "geometry_msgs/TransformStamped" },
@@ -115,4 +116,5 @@ export function LargeTransform(): JSX.Element {
       />
     </PanelSetup>
   );
-}
+};
+LargeTransform.parameters = { colorScheme: "dark" };

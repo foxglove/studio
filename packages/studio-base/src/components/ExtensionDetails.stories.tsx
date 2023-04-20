@@ -11,6 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { StoryFn } from "@storybook/react";
 import { useState } from "react";
 
 import { ExtensionDetails } from "@foxglove/studio-base/components/ExtensionDetails";
@@ -66,7 +67,7 @@ const extension: ExtensionMarketplaceDetail = {
   },
 };
 
-export function Details(): JSX.Element {
+export const Details: StoryFn = (): JSX.Element => {
   const [config] = useState(() => makeMockAppConfiguration());
 
   return (
@@ -78,4 +79,4 @@ export function Details(): JSX.Element {
       </ExtensionCatalogProvider>
     </AppConfigurationContext.Provider>
   );
-}
+};

@@ -130,7 +130,7 @@ export const MarkersWithRotations: StoryObj = {
   },
 };
 
-export function FoxgloveAnnotations(): JSX.Element {
+export const FoxgloveAnnotations: StoryFn = (): JSX.Element => {
   const imageMessage = useCompressedImage();
   const canvasRef = useRef<HTMLCanvasElement>(ReactNull);
 
@@ -170,4 +170,4 @@ export function FoxgloveAnnotations(): JSX.Element {
       <canvas ref={canvasRef} style={{ width, height }} />
     </div>
   );
-}
+};

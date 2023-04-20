@@ -2,6 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { StoryFn } from "@storybook/react";
+
 import { MessageEvent } from "@foxglove/studio";
 import { Topic } from "@foxglove/studio-base/players/types";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
@@ -16,8 +18,7 @@ export default {
   component: ThreeDeePanel,
 };
 
-FramelessMarkers.parameters = { colorScheme: "dark", chromatic: { delay: 100 } };
-export function FramelessMarkers(): JSX.Element {
+export const FramelessMarkers: StoryFn = (): JSX.Element => {
   const topics: Topic[] = [{ name: "/markers", schemaName: "visualization_msgs/Marker" }];
 
   type FramelessHeader = Omit<Header, "frame_id">;
@@ -88,4 +89,5 @@ export function FramelessMarkers(): JSX.Element {
       />
     </PanelSetup>
   );
-}
+};
+FramelessMarkers.parameters = { colorScheme: "dark", chromatic: { delay: 100 } };

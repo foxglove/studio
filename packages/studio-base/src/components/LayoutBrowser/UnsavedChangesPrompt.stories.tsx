@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { action } from "@storybook/addon-actions";
+import { StoryFn } from "@storybook/react";
 
 import { UnsavedChangesPrompt } from "@foxglove/studio-base/components/LayoutBrowser/UnsavedChangesPrompt";
 import { defaultPlaybackConfig } from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
@@ -31,20 +32,20 @@ const dummyLayout: Layout = {
   syncInfo: undefined,
 };
 
-export function Default(): JSX.Element {
+export const Default: StoryFn = (): JSX.Element => {
   return <UnsavedChangesPrompt isOnline layout={dummyLayout} onComplete={action("onComplete")} />;
-}
+};
 export const DefaultLight = Object.assign(Default.bind(undefined), {
   parameters: { colorScheme: "light" },
 });
 
-export function Offline(): JSX.Element {
+export const Offline: StoryFn = (): JSX.Element => {
   return (
     <UnsavedChangesPrompt isOnline={false} layout={dummyLayout} onComplete={action("onComplete")} />
   );
-}
+};
 
-export function Overwrite(): JSX.Element {
+export const Overwrite: StoryFn = (): JSX.Element => {
   return (
     <UnsavedChangesPrompt
       isOnline
@@ -53,9 +54,9 @@ export function Overwrite(): JSX.Element {
       defaultSelectedKey="overwrite"
     />
   );
-}
+};
 
-export function MakePersonal(): JSX.Element {
+export const MakePersonal: StoryFn = (): JSX.Element => {
   return (
     <UnsavedChangesPrompt
       isOnline
@@ -64,9 +65,9 @@ export function MakePersonal(): JSX.Element {
       defaultSelectedKey="makePersonal"
     />
   );
-}
+};
 
-export function MakePersonalWithEmptyField(): JSX.Element {
+export const MakePersonalWithEmptyField: StoryFn = (): JSX.Element => {
   return (
     <UnsavedChangesPrompt
       isOnline
@@ -76,4 +77,4 @@ export function MakePersonalWithEmptyField(): JSX.Element {
       defaultPersonalCopyName=""
     />
   );
-}
+};

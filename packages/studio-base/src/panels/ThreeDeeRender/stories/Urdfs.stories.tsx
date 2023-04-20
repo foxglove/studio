@@ -2,6 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { StoryFn } from "@storybook/react";
+
 import { MessageEvent } from "@foxglove/studio";
 import { Topic } from "@foxglove/studio-base/players/types";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
@@ -100,8 +102,7 @@ export default {
   component: ThreeDeePanel,
 };
 
-Urdfs.parameters = { colorScheme: "dark" };
-export function Urdfs(): JSX.Element {
+export const Urdfs: StoryFn = (): JSX.Element => {
   const topics: Topic[] = [{ name: "/robot_description", schemaName: "std_msgs/String" }];
   const robot_description: MessageEvent<{ data: string }> = {
     topic: "/robot_description",
@@ -153,7 +154,8 @@ export function Urdfs(): JSX.Element {
       />
     </PanelSetup>
   );
-}
+};
+Urdfs.parameters = { colorScheme: "dark" };
 
 function makeColorAttribute(hex: string, alpha = 1): string {
   const c = makeColor(hex, alpha);

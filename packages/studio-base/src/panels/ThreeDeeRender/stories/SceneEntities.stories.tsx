@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { StoryFn } from "@storybook/react";
 import * as THREE from "three";
 import { STLExporter } from "three/examples/jsm/exporters/STLExporter";
 import { TeapotGeometry } from "three/examples/jsm/geometries/TeapotGeometry";
@@ -319,8 +320,7 @@ function makeStoryScene({
   };
 }
 
-BasicEntities.parameters = { colorScheme: "light", chromatic: { delay: 100 } };
-export function BasicEntities(): JSX.Element {
+export const BasicEntities: StoryFn = (): JSX.Element => {
   const topics: Topic[] = [
     { name: "transforms", schemaName: "foxglove.FrameTransform" },
     { name: "scene1", schemaName: "foxglove.SceneUpdate" },
@@ -429,4 +429,5 @@ export function BasicEntities(): JSX.Element {
       />
     </PanelSetup>
   );
-}
+};
+BasicEntities.parameters = { colorScheme: "light", chromatic: { delay: 100 } };

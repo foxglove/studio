@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { StoryFn } from "@storybook/react";
 import { DeepWritable } from "ts-essentials";
 
 import { MessageEvent } from "@foxglove/studio";
@@ -19,8 +20,7 @@ export default {
   component: ThreeDeePanel,
 };
 
-SphereListPointsTransform.parameters = { colorScheme: "dark" };
-export function SphereListPointsTransform(): JSX.Element {
+export const SphereListPointsTransform: StoryFn = (): JSX.Element => {
   function makeSphere(
     id: string,
     color: string,
@@ -138,4 +138,5 @@ export function SphereListPointsTransform(): JSX.Element {
       />
     </PanelSetup>
   );
-}
+};
+SphereListPointsTransform.parameters = { colorScheme: "dark" };

@@ -11,6 +11,8 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { StoryFn } from "@storybook/react";
+
 import VariableSliderPanel from "@foxglove/studio-base/panels/VariableSlider/index";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 
@@ -31,15 +33,15 @@ export default {
   component: VariableSliderPanel,
 };
 
-export function Example(): JSX.Element {
+export const Example: StoryFn = (): JSX.Element => {
   return (
     <PanelSetup fixture={fixture}>
       <VariableSliderPanel />
     </PanelSetup>
   );
-}
+};
 
-export function NarrowLayout(): JSX.Element {
+export const NarrowLayout: StoryFn = (): JSX.Element => {
   return (
     <PanelSetup fixture={fixture}>
       <div style={{ width: 400 }}>
@@ -47,15 +49,15 @@ export function NarrowLayout(): JSX.Element {
       </div>
     </PanelSetup>
   );
-}
+};
 
-export function WithSettings(): JSX.Element {
+export const WithSettings: StoryFn = (): JSX.Element => {
   return (
     <PanelSetup fixture={fixture} includeSettings>
       <VariableSliderPanel />
     </PanelSetup>
   );
-}
+};
 WithSettings.parameters = {
   colorScheme: "light",
 };

@@ -2,6 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { StoryFn } from "@storybook/react";
+
 import { MessageEvent } from "@foxglove/studio";
 import { Topic } from "@foxglove/studio-base/players/types";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
@@ -17,25 +19,7 @@ export default {
   component: ThreeDeePanel,
 };
 
-MeasurementTool.parameters = { colorScheme: "dark", chromatic: { delay: 200 } };
-MeasurementTool.play = async () => {
-  document.querySelector<HTMLElement>("[data-testid=measure-button]")!.click();
-  await delay(100);
-  document
-    .querySelector("canvas")!
-    .dispatchEvent(new MouseEvent("mousedown", { clientX: 100, clientY: 100 }));
-  document
-    .querySelector("canvas")!
-    .dispatchEvent(new MouseEvent("click", { clientX: 100, clientY: 100 }));
-  document
-    .querySelector("canvas")!
-    .dispatchEvent(new MouseEvent("mousedown", { clientX: 300, clientY: 200 }));
-  document
-    .querySelector("canvas")!
-    .dispatchEvent(new MouseEvent("click", { clientX: 300, clientY: 200 }));
-  await delay(100);
-};
-export function MeasurementTool(): JSX.Element {
+export const MeasurementTool: StoryFn = (): JSX.Element => {
   const topics: Topic[] = [{ name: "/tf", schemaName: "geometry_msgs/TransformStamped" }];
   const tf1: MessageEvent<TransformStamped> = {
     topic: "/tf",
@@ -85,4 +69,22 @@ export function MeasurementTool(): JSX.Element {
       />
     </PanelSetup>
   );
-}
+};
+MeasurementTool.parameters = { colorScheme: "dark", chromatic: { delay: 200 } };
+MeasurementTool.play = async () => {
+  document.querySelector<HTMLElement>("[data-testid=measure-button]")!.click();
+  await delay(100);
+  document
+    .querySelector("canvas")!
+    .dispatchEvent(new MouseEvent("mousedown", { clientX: 100, clientY: 100 }));
+  document
+    .querySelector("canvas")!
+    .dispatchEvent(new MouseEvent("click", { clientX: 100, clientY: 100 }));
+  document
+    .querySelector("canvas")!
+    .dispatchEvent(new MouseEvent("mousedown", { clientX: 300, clientY: 200 }));
+  document
+    .querySelector("canvas")!
+    .dispatchEvent(new MouseEvent("click", { clientX: 300, clientY: 200 }));
+  await delay(100);
+};

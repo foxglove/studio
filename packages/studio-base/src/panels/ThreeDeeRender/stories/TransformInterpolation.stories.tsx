@@ -2,6 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { StoryFn } from "@storybook/react";
+
 import { fromSec } from "@foxglove/rostime";
 import { MessageEvent } from "@foxglove/studio";
 import { Topic } from "@foxglove/studio-base/players/types";
@@ -19,8 +21,7 @@ export default {
   component: ThreeDeePanel,
 };
 
-TransformInterpolation.parameters = { colorScheme: "dark" };
-export function TransformInterpolation(): JSX.Element {
+export const TransformInterpolation: StoryFn = (): JSX.Element => {
   const topics: Topic[] = [
     { name: "/markers", schemaName: "visualization_msgs/Marker" },
     { name: "/tf", schemaName: "geometry_msgs/TransformStamped" },
@@ -116,10 +117,10 @@ export function TransformInterpolation(): JSX.Element {
       />
     </PanelSetup>
   );
-}
+};
+TransformInterpolation.parameters = { colorScheme: "dark" };
 
-TransformOffsets.parameters = { colorScheme: "dark" };
-export function TransformOffsets(): JSX.Element {
+export const TransformOffsets: StoryFn = (): JSX.Element => {
   const topics: Topic[] = [
     { name: "/markers", schemaName: "visualization_msgs/Marker" },
     { name: "/tf", schemaName: "geometry_msgs/TransformStamped" },
@@ -236,4 +237,5 @@ export function TransformOffsets(): JSX.Element {
       />
     </PanelSetup>
   );
-}
+};
+TransformOffsets.parameters = { colorScheme: "dark" };

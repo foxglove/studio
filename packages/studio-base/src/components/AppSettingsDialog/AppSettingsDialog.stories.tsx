@@ -79,18 +79,18 @@ export default {
   decorators: [Wrapper],
 };
 
-export function Default(): JSX.Element {
+export const Default: StoryFn = (): JSX.Element => {
   return <AppSettingsDialog open />;
-}
+};
 
 export const DefaultChinese = {
   render: (): JSX.Element => <Default />,
   parameters: { forceLanguage: "zh" },
 };
 
-export function ChangingLanguage(): JSX.Element {
+export const ChangingLanguage: StoryFn = (): JSX.Element => {
   return <AppSettingsDialog open />;
-}
+};
 ChangingLanguage.play = async () => {
   const input = await screen.findByText("English", { exact: false });
   userEvent.click(input);
@@ -100,45 +100,45 @@ ChangingLanguage.play = async () => {
   userEvent.click(item);
 };
 
-export function General(): JSX.Element {
+export const General: StoryFn = (): JSX.Element => {
   return <AppSettingsDialog open activeTab="general" />;
-}
+};
 
 export const GeneralChinese = {
   render: (): JSX.Element => <General />,
   parameters: { forceLanguage: "zh" },
 };
 
-export function Privacy(): JSX.Element {
+export const Privacy: StoryFn = (): JSX.Element => {
   return <AppSettingsDialog open activeTab="privacy" />;
-}
+};
 
 export const PrivacyChinese = {
   render: (): JSX.Element => <Privacy />,
   parameters: { forceLanguage: "zh" },
 };
 
-export function Extensions(): JSX.Element {
+export const Extensions: StoryFn = (): JSX.Element => {
   return <AppSettingsDialog open activeTab="extensions" />;
-}
+};
 
 export const ExtensionsChinese = {
   render: (): JSX.Element => <Extensions />,
   parameters: { forceLanguage: "zh" },
 };
 
-export function Experimental(): JSX.Element {
+export const Experimental: StoryFn = (): JSX.Element => {
   return <AppSettingsDialog open activeTab="experimental-features" />;
-}
+};
 
 export const ExperimentalChinese = {
   render: (): JSX.Element => <Experimental />,
   parameters: { forceLanguage: "zh" },
 };
 
-export function About(): JSX.Element {
+export const About: StoryFn = (): JSX.Element => {
   return <AppSettingsDialog open activeTab="about" />;
-}
+};
 
 export const AboutChinese = {
   render: (): JSX.Element => <About />,

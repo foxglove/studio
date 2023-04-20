@@ -29,9 +29,9 @@ export default {
   },
 };
 
-export function Empty(): JSX.Element {
+export const Empty: StoryFn = (): JSX.Element => {
   return <CreateEventDialog onClose={() => undefined} />;
-}
+};
 
 export const Normal: StoryObj = {
   render: () => {

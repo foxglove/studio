@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { StoryFn } from "@storybook/react";
 import { quat } from "gl-matrix";
 
 import { MessageEvent } from "@foxglove/studio";
@@ -18,8 +19,7 @@ export default {
   component: ThreeDeePanel,
 };
 
-NavMsgs_Path.parameters = { colorScheme: "dark" };
-export function NavMsgs_Path(): JSX.Element {
+export const NavMsgs_Path: StoryFn = (): JSX.Element => {
   const topics: Topic[] = [
     { name: "/baselink_path", schemaName: "nav_msgs/Path" },
     { name: "/sensor_path", schemaName: "nav_msgs/Path" },
@@ -148,4 +148,5 @@ export function NavMsgs_Path(): JSX.Element {
       />
     </PanelSetup>
   );
-}
+};
+NavMsgs_Path.parameters = { colorScheme: "dark" };

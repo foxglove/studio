@@ -136,7 +136,7 @@ export const Dark: StoryObj = {
   parameters: { useReadySignal: true, colorScheme: "dark" },
 };
 
-export function LimitWidth(): JSX.Element {
+export const LimitWidth: StoryFn = (): JSX.Element => {
   return (
     <div
       style={{
@@ -147,5 +147,5 @@ export function LimitWidth(): JSX.Element {
       <Plot overrideConfig={{ ...exampleConfig, legendDisplay: "left", sidebarDimension: 4096 }} />
     </div>
   );
-}
+};
 LimitWidth.parameters = { useReadySignal: true, colorScheme: "light" };
