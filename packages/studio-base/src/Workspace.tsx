@@ -457,14 +457,9 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
   // open the data source dialog.
   const DataSourceSidebarItem = useMemo(() => {
     return function DataSourceSidebarItemImpl() {
-      return (
-        <DataSourceSidebar
-          disableToolbar={enableNewTopNav}
-          onSelectDataSourceAction={() => dataSourceDialogActions.open("start")}
-        />
-      );
+      return <DataSourceSidebar disableToolbar={enableNewTopNav} />;
     };
-  }, [enableNewTopNav, dataSourceDialogActions]);
+  }, [enableNewTopNav]);
 
   const PanelSettingsSidebar = useMemo(() => {
     return function PanelSettingsSidebarImpl() {
