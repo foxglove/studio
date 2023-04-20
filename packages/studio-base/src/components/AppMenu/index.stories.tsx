@@ -57,19 +57,19 @@ const NestedMenuSelected = (id: string, colorScheme: "dark" | "light"): Story =>
 });
 
 export const DarkFileSelected = NestedMenuSelected("app-menu-file", "dark");
-DarkFileSelected.storyName = "File (dark)";
+DarkFileSelected.storyName = "File Menu (dark)";
 
 export const DarkViewSelected = NestedMenuSelected("app-menu-view", "dark");
-DarkViewSelected.storyName = "View (dark)";
+DarkViewSelected.storyName = "View Menu (dark)";
 
 export const DarkHelpSelected = NestedMenuSelected("app-menu-help", "dark");
-DarkHelpSelected.storyName = "Help (dark)";
+DarkHelpSelected.storyName = "Help Menu (dark)";
 
 export const LightFileSelected = NestedMenuSelected("app-menu-file", "light");
-LightFileSelected.storyName = "File (light)";
+LightFileSelected.storyName = "File Menu (light)";
 
 export const LightViewSelected = NestedMenuSelected("app-menu-view", "light");
-LightViewSelected.storyName = "View (light)";
+LightViewSelected.storyName = "View Menu (light)";
 
 export const LightHelpSelected = NestedMenuSelected("app-menu-help", "light");
-LightHelpSelected.storyName = "Help (light)";
+LightHelpSelected.storyName = "Help Menu (light)";

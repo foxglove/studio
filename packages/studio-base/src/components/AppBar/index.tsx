@@ -84,8 +84,8 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }, 
         alignItems: "center",
       },
       logo: {
-        padding: theme.spacing(0.5, 0.5, 0.5, 0.25),
-        fontSize: "2.25rem",
+        padding: theme.spacing(0.75, 0.5, 0.75, 0.25),
+        fontSize: "2rem",
         color: APP_BAR_PRIMARY_COLOR,
       },
       dropDownIcon: {
