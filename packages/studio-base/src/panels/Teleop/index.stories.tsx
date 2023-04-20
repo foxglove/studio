@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { action } from "@storybook/addon-actions";
-import { StoryFn, StoryContext } from "@storybook/react";
+import { StoryFn, StoryContext, StoryObj } from "@storybook/react";
 
 import { PlayerCapabilities } from "@foxglove/studio-base/players/types";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
@@ -27,14 +27,14 @@ export default {
   ],
 };
 
-export const Unconfigured = {
-  render: (): JSX.Element => {
+export const Unconfigured: StoryObj = {
+  render: () => {
     return <TeleopPanel />;
   },
 };
 
-export const WithSettings = {
-  render: function Story(): JSX.Element {
+export const WithSettings: StoryObj = {
+  render: function Story() {
     return <TeleopPanel overrideConfig={{ topic: "/abc" }} />;
   },
 
@@ -44,8 +44,8 @@ export const WithSettings = {
   },
 };
 
-export const WithTopic = {
-  render: (): JSX.Element => {
+export const WithTopic: StoryObj = {
+  render: () => {
     return <TeleopPanel overrideConfig={{ topic: "/abc" }} />;
   },
 };

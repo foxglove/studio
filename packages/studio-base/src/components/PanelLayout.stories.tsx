@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { StoryFn } from "@storybook/react";
+import { StoryFn, StoryObj } from "@storybook/react";
 import { fireEvent, screen } from "@storybook/testing-library";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
@@ -104,8 +104,8 @@ export default {
   ],
 };
 
-export const PanelNotFound = {
-  render: function Story(): JSX.Element {
+export const PanelNotFound: StoryObj = {
+  render: function Story() {
     return (
       <DndProvider backend={HTML5Backend}>
         <PanelSetup
@@ -122,14 +122,14 @@ export const PanelNotFound = {
   play: openPanelMenu,
 };
 
-export const PanelNotFoundLight = {
+export const PanelNotFoundLight: StoryObj = {
   ...PanelNotFound,
   parameters: { colorScheme: "light" },
   play: openPanelMenu,
 };
 
-export const PanelWithError = {
-  render: (): JSX.Element => {
+export const PanelWithError: StoryObj = {
+  render: () => {
     return (
       <DndProvider backend={HTML5Backend}>
         <PanelSetup
@@ -144,8 +144,8 @@ export const PanelWithError = {
   },
 };
 
-export const RemoveUnknownPanel = {
-  render: function Story(): JSX.Element {
+export const RemoveUnknownPanel: StoryObj = {
+  render: function Story() {
     return (
       <DndProvider backend={HTML5Backend}>
         <PanelSetup
@@ -166,8 +166,8 @@ export const RemoveUnknownPanel = {
   },
 };
 
-export const EmptyLayout = {
-  render: (): JSX.Element => {
+export const EmptyLayout: StoryObj = {
+  render: () => {
     return (
       <PanelSetup fixture={{ layout: undefined }}>
         <PanelLayout />
@@ -176,8 +176,8 @@ export const EmptyLayout = {
   },
 };
 
-export const EmptyLayoutChinese = {
-  render: function Story(): JSX.Element {
+export const EmptyLayoutChinese: StoryObj = {
+  render: function Story() {
     return (
       <PanelSetup fixture={{ layout: undefined }}>
         <PanelLayout />
@@ -188,8 +188,8 @@ export const EmptyLayoutChinese = {
   parameters: { forceLanguage: "zh" },
 };
 
-export const PanelLoading = {
-  render: (): JSX.Element => {
+export const PanelLoading: StoryObj = {
+  render: () => {
     return (
       <DndProvider backend={HTML5Backend}>
         <PanelSetup
@@ -204,8 +204,8 @@ export const PanelLoading = {
   },
 };
 
-export const FullScreen = {
-  render: function Story(): JSX.Element {
+export const FullScreen: StoryObj = {
+  render: function Story() {
     return (
       <DndProvider backend={HTML5Backend}>
         <PanelSetup
@@ -232,7 +232,7 @@ export const FullScreen = {
   play: goFullScreen,
 };
 
-export const FullScreenLight = {
+export const FullScreenLight: StoryObj = {
   ...FullScreen,
   parameters: { colorScheme: "light" },
   play: goFullScreen,

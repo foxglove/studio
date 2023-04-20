@@ -41,13 +41,13 @@ function TimestampStory(props: PropsWithChildren<Props>): JSX.Element {
 }
 
 export const Default: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return <TimestampStory config={[[AppSetting.TIMEZONE, "UTC"]]} time={ABSOLUTE_TIME} />;
   },
 };
 
 export const TimeFormatSeconds: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return (
       <TimestampStory
         config={[
@@ -61,7 +61,7 @@ export const TimeFormatSeconds: StoryObj = {
 };
 
 export const TimeFormatTOD: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return (
       <TimestampStory
         config={[
@@ -75,7 +75,7 @@ export const TimeFormatTOD: StoryObj = {
 };
 
 export const TimeFormatRelative: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return (
       <TimestampStory
         config={[

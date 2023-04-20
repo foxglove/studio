@@ -80,18 +80,18 @@ export default {
 };
 
 export const Default: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return <AppSettingsDialog open />;
   },
 };
 
-export const DefaultChinese = {
+export const DefaultChinese: StoryObj = {
   ...Default,
   parameters: { forceLanguage: "zh" },
 };
 
 export const ChangingLanguage: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     return <AppSettingsDialog open />;
   },
 
@@ -106,56 +106,56 @@ export const ChangingLanguage: StoryObj = {
 };
 
 export const General: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return <AppSettingsDialog open activeTab="general" />;
   },
 };
 
-export const GeneralChinese = {
+export const GeneralChinese: StoryObj = {
   ...General,
   parameters: { forceLanguage: "zh" },
 };
 
 export const Privacy: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return <AppSettingsDialog open activeTab="privacy" />;
   },
 };
 
-export const PrivacyChinese = {
+export const PrivacyChinese: StoryObj = {
   ...Privacy,
   parameters: { forceLanguage: "zh" },
 };
 
 export const Extensions: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return <AppSettingsDialog open activeTab="extensions" />;
   },
 };
 
-export const ExtensionsChinese = {
+export const ExtensionsChinese: StoryObj = {
   ...Extensions,
   parameters: { forceLanguage: "zh" },
 };
 
 export const Experimental: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return <AppSettingsDialog open activeTab="experimental-features" />;
   },
 };
 
-export const ExperimentalChinese = {
+export const ExperimentalChinese: StoryObj = {
   ...Experimental,
   parameters: { forceLanguage: "zh" },
 };
 
 export const About: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return <AppSettingsDialog open activeTab="about" />;
   },
 };
 
-export const AboutChinese = {
+export const AboutChinese: StoryObj = {
   ...About,
   parameters: { forceLanguage: "zh" },
 };

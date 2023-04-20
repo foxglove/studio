@@ -16,6 +16,7 @@ import {
   TextField,
   useTheme,
 } from "@mui/material";
+import { StoryObj } from "@storybook/react";
 
 import Stack from "@foxglove/studio-base/components/Stack";
 
@@ -346,12 +347,12 @@ function FormElements(): JSX.Element {
   );
 }
 
-export const FormElementsDark = {
+export const FormElementsDark: StoryObj = {
   render: FormElements,
   parameters: { colorScheme: "dark" },
 };
 
-export const FormElementsLight = {
+export const FormElementsLight: StoryObj = {
   render: FormElements,
   parameters: { colorScheme: "light" },
 };

@@ -2,6 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { StoryObj } from "@storybook/react";
+
 import NotificationModal from "@foxglove/studio-base/components/NotificationModal";
 
 const fakeError = () => {
@@ -25,8 +27,8 @@ export default {
   title: "components/NotificationModal",
 };
 
-export const ErrorNoSubtextWithDetails = {
-  render: function Story(): JSX.Element {
+export const ErrorNoSubtextWithDetails: StoryObj = {
+  render: function Story() {
     return (
       <NotificationModal
         onRequestClose={() => {}}
@@ -44,13 +46,13 @@ export const ErrorNoSubtextWithDetails = {
   parameters: { colorScheme: "light" },
 };
 
-export const ErrorNoSubtextWithDetailsDark = {
+export const ErrorNoSubtextWithDetailsDark: StoryObj = {
   ...ErrorNoSubtextWithDetails,
   parameters: { colorScheme: "dark" },
 };
 
-export const ErrorWithSubtextAndDetails = {
-  render: function Story(): JSX.Element {
+export const ErrorWithSubtextAndDetails: StoryObj = {
+  render: function Story() {
     return (
       <NotificationModal
         onRequestClose={() => {}}
@@ -69,8 +71,8 @@ export const ErrorWithSubtextAndDetails = {
   parameters: { colorScheme: "light" },
 };
 
-export const ErrorWithSubtextNoDetails = {
-  render: function Story(): JSX.Element {
+export const ErrorWithSubtextNoDetails: StoryObj = {
+  render: function Story() {
     return (
       <NotificationModal
         onRequestClose={() => {}}
@@ -89,8 +91,8 @@ export const ErrorWithSubtextNoDetails = {
   parameters: { colorScheme: "light" },
 };
 
-export const Warning = {
-  render: function Story(): JSX.Element {
+export const Warning: StoryObj = {
+  render: function Story() {
     return (
       <NotificationModal
         onRequestClose={() => {}}
@@ -108,8 +110,8 @@ export const Warning = {
   parameters: { colorScheme: "dark" },
 };
 
-export const ErrorNoDetailsOrSubtext = {
-  render: function Story(): JSX.Element {
+export const ErrorNoDetailsOrSubtext: StoryObj = {
+  render: function Story() {
     return (
       <NotificationModal
         onRequestClose={() => {}}
@@ -127,8 +129,8 @@ export const ErrorNoDetailsOrSubtext = {
   parameters: { colorScheme: "dark" },
 };
 
-export const ErrorWithJsxElementDetails = {
-  render: function Story(): JSX.Element {
+export const ErrorWithJsxElementDetails: StoryObj = {
+  render: function Story() {
     return (
       <NotificationModal
         onRequestClose={() => {}}
@@ -150,13 +152,13 @@ export const ErrorWithJsxElementDetails = {
   parameters: { colorScheme: "light" },
 };
 
-export const ErrorWithJsxElementDetailsDark = {
+export const ErrorWithJsxElementDetailsDark: StoryObj = {
   ...ErrorWithJsxElementDetails,
   parameters: { colorScheme: "dark" },
 };
 
-export const ErrorWithNewlineDetails = {
-  render: function Story(): JSX.Element {
+export const ErrorWithNewlineDetails: StoryObj = {
+  render: function Story() {
     return (
       <NotificationModal
         onRequestClose={() => {}}

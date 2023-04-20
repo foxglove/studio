@@ -134,8 +134,8 @@ export default {
   component: Log,
 };
 
-export const Simple = {
-  render: (): JSX.Element => {
+export const Simple: StoryObj = {
+  render: () => {
     return (
       <PanelSetup fixture={fixture}>
         <Log />
@@ -144,8 +144,8 @@ export const Simple = {
   },
 };
 
-export const Scrolled = {
-  render: (): JSX.Element => {
+export const Scrolled: StoryObj = {
+  render: () => {
     return (
       <PanelSetup fixture={makeLongFixture()}>
         <Log />
@@ -154,8 +154,8 @@ export const Scrolled = {
   },
 };
 
-export const WithSettings = {
-  render: (): JSX.Element => {
+export const WithSettings: StoryObj = {
+  render: () => {
     return (
       <PanelSetup fixture={fixture} includeSettings>
         <Log />
@@ -164,8 +164,8 @@ export const WithSettings = {
   },
 };
 
-export const TopicToRender = {
-  render: function Story(): JSX.Element {
+export const TopicToRender: StoryObj = {
+  render: function Story() {
     function makeMessages(topic: any) {
       return fixture.frame!["/rosout"]!.map((msg: any) => ({
         ...msg,
@@ -204,8 +204,8 @@ export const TopicToRender = {
   parameters: { colorScheme: "dark" },
 };
 
-export const FilteredTerms = {
-  render: function Story(): JSX.Element {
+export const FilteredTerms: StoryObj = {
+  render: function Story() {
     return (
       <PanelSetup fixture={fixture}>
         <Log
@@ -219,11 +219,11 @@ export const FilteredTerms = {
     );
   },
 
-  title: `filtered terms: "multiple", "/some_topic"`,
+  name: `filtered terms: "multiple", "/some_topic"`,
 };
 
-export const CaseInsensitiveFilter = {
-  render: function Story(): JSX.Element {
+export const CaseInsensitiveFilter: StoryObj = {
+  render: function Story() {
     return (
       <PanelSetup fixture={fixture}>
         <Log
@@ -237,11 +237,11 @@ export const CaseInsensitiveFilter = {
     );
   },
 
-  title: `case insensitive message filtering: "could", "Ipsum"`,
+  name: `case insensitive message filtering: "could", "Ipsum"`,
 };
 
 export const AutoCompleteItems: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     return (
       <PanelSetup fixture={fixture}>
         <Log
@@ -261,8 +261,8 @@ export const AutoCompleteItems: StoryObj = {
   },
 };
 
-export const FoxgloveLog = {
-  render: (): JSX.Element => {
+export const FoxgloveLog: StoryObj = {
+  render: () => {
     const foxgloveLogFixture: Fixture = {
       topics: [{ name: "/log", schemaName: "foxglove.Log" }],
       frame: {

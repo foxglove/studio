@@ -56,7 +56,7 @@ export default {
 };
 
 export const Default: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return <TopicList />;
   },
 };

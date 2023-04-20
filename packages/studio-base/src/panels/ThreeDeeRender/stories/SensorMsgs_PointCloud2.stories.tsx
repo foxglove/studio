@@ -19,14 +19,14 @@ export default {
   component: ThreeDeePanel,
 };
 
-export const SensorMsgs_PointCloud2_RGBA = {
-  render: (): JSX.Element => <SensorMsgs_PointCloud2 rgbaFieldName="rgba" />,
+export const SensorMsgs_PointCloud2_RGBA: StoryObj = {
+  render: () => <SensorMsgs_PointCloud2 rgbaFieldName="rgba" />,
 
   parameters: { colorScheme: "dark" },
 };
 
-export const SensorMsgs_PointCloud2_RGB = {
-  render: (): JSX.Element => <SensorMsgs_PointCloud2 rgbaFieldName="rgb" />,
+export const SensorMsgs_PointCloud2_RGB: StoryObj = {
+  render: () => <SensorMsgs_PointCloud2 rgbaFieldName="rgb" />,
 
   parameters: { colorScheme: "dark" },
 };
@@ -337,7 +337,7 @@ export const SensorMsgs_PointCloud2_Intensity: StoryObj = {
 };
 
 export const SensorMsgs_PointCloud2_TwoDimensions: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const topics: Topic[] = [{ name: "/pointcloud", schemaName: "sensor_msgs/PointCloud2" }];
 
     const SCALE = 10 / 128;

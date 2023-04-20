@@ -374,7 +374,7 @@ export default {
 };
 
 export const LineGraph: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const readySignal = useReadySignal({ count: 3 });
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
     return <PlotWrapper pauseFrame={pauseFrame} config={exampleConfig} />;
@@ -392,7 +392,7 @@ export const LineGraph: StoryObj = {
 };
 
 export const LineGraphWithXMinMax: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const readySignal = useReadySignal({ count: 3 });
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
     return (
@@ -416,7 +416,7 @@ export const LineGraphWithXMinMax: StoryObj = {
 };
 
 export const LineGraphWithXRange: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const readySignal = useReadySignal({ count: 3 });
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
     return (
@@ -441,7 +441,7 @@ export const LineGraphWithXRange: StoryObj = {
 };
 
 export const LineGraphWithNoTitle: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const readySignal = useReadySignal({ count: 3 });
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
     return <PlotWrapper pauseFrame={pauseFrame} config={{ ...exampleConfig, title: undefined }} />;
@@ -459,7 +459,7 @@ export const LineGraphWithNoTitle: StoryObj = {
 };
 
 export const LineGraphWithSettings: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const readySignal = useReadySignal({ count: 3 });
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
     return (
@@ -485,7 +485,7 @@ export const LineGraphWithSettings: StoryObj = {
   },
 };
 
-export const LineGraphWithSettingsChinese = {
+export const LineGraphWithSettingsChinese: StoryObj = {
   ...LineGraphWithSettings,
   play: LineGraphWithSettings.play,
   parameters: {
@@ -495,7 +495,7 @@ export const LineGraphWithSettingsChinese = {
 };
 
 export const LineGraphWithLegendsHidden: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const readySignal = useReadySignal({ count: 3 });
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
     return <PlotWrapper pauseFrame={pauseFrame} config={{ ...exampleConfig, showLegend: false }} />;
@@ -523,7 +523,7 @@ const useStyles = makeStyles()(() => ({
 }));
 
 export const InALineGraphWithMultiplePlotsXAxesAreSynced: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const readySignal = useReadySignal({ count: 6 });
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
     const { classes } = useStyles();
@@ -570,7 +570,7 @@ export const InALineGraphWithMultiplePlotsXAxesAreSynced: StoryObj = {
 };
 
 export const LineGraphAfterZoom: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const pauseState = useRef<"init" | "zoom" | "ready">("init");
     const readyState = useReadySignal();
 
@@ -619,7 +619,7 @@ export const LineGraphAfterZoom: StoryObj = {
 };
 
 export const TimestampMethodHeaderStamp: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const readySignal = useReadySignal({ count: 3 });
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
@@ -653,7 +653,7 @@ export const TimestampMethodHeaderStamp: StoryObj = {
 };
 
 export const LongPath: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const readySignal = useReadySignal({ count: 3 });
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
@@ -687,7 +687,7 @@ export const LongPath: StoryObj = {
 };
 
 export const DisabledPath: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const readySignal = useReadySignal({ count: 3 });
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
@@ -725,7 +725,7 @@ export const DisabledPath: StoryObj = {
 };
 
 export const ReferenceLine: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const readySignal = useReadySignal({ count: 3 });
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
@@ -759,7 +759,7 @@ export const ReferenceLine: StoryObj = {
 };
 
 export const WithMinAndMaxYValues: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const readySignal = useReadySignal({ count: 3 });
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
@@ -797,7 +797,7 @@ export const WithMinAndMaxYValues: StoryObj = {
 };
 
 export const WithJustMinYValueLessThanMinimumValue: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const readySignal = useReadySignal({ count: 3 });
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
@@ -831,7 +831,7 @@ export const WithJustMinYValueLessThanMinimumValue: StoryObj = {
 };
 
 export const WithJustMinYValueMoreThanMinimumValue: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const readySignal = useReadySignal({ count: 3 });
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
@@ -865,7 +865,7 @@ export const WithJustMinYValueMoreThanMinimumValue: StoryObj = {
 };
 
 export const WithJustMinYValueMoreThanMaximumValue: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const readySignal = useReadySignal({ count: 3 });
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
@@ -899,7 +899,7 @@ export const WithJustMinYValueMoreThanMaximumValue: StoryObj = {
 };
 
 export const WithJustMaxYValueLessThanMaximumValue: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const readySignal = useReadySignal({ count: 3 });
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
@@ -933,7 +933,7 @@ export const WithJustMaxYValueLessThanMaximumValue: StoryObj = {
 };
 
 export const WithJustMaxYValueMoreThanMaximumValue: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const readySignal = useReadySignal({ count: 3 });
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
@@ -967,7 +967,7 @@ export const WithJustMaxYValueMoreThanMaximumValue: StoryObj = {
 };
 
 export const WithJustMaxYValueLessThanMinimumValue: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const readySignal = useReadySignal({ count: 3 });
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
@@ -1001,7 +1001,7 @@ export const WithJustMaxYValueLessThanMinimumValue: StoryObj = {
 };
 
 export const ScatterPlotPlusLineGraphPlusReferenceLine: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const readySignal = useReadySignal({ count: 3 });
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
@@ -1040,7 +1040,7 @@ export const ScatterPlotPlusLineGraphPlusReferenceLine: StoryObj = {
 };
 
 export const IndexBasedXAxisForArray: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const readySignal = useReadySignal({ count: 3 });
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
@@ -1075,7 +1075,7 @@ export const IndexBasedXAxisForArray: StoryObj = {
 };
 
 export const CustomXAxisTopic: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const readySignal = useReadySignal({ count: 3 });
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
@@ -1110,7 +1110,7 @@ export const CustomXAxisTopic: StoryObj = {
 };
 
 export const CustomXAxisTopicWithXLimits: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const readySignal = useReadySignal({ count: 3 });
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
@@ -1148,7 +1148,7 @@ export const CustomXAxisTopicWithXLimits: StoryObj = {
 };
 
 export const CurrentCustomXAxisTopic: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const readySignal = useReadySignal({ count: 3 });
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
@@ -1184,7 +1184,7 @@ export const CurrentCustomXAxisTopic: StoryObj = {
 };
 
 export const CustomXAxisTopicWithMismatchedDataLengths: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const readySignal = useReadySignal({ count: 3 });
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
@@ -1230,7 +1230,7 @@ export const CustomXAxisTopicWithMismatchedDataLengths: StoryObj = {
 };
 
 export const SuperCloseValues: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const readySignal = useReadySignal({ count: 3 });
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
@@ -1291,7 +1291,7 @@ export const SuperCloseValues: StoryObj = {
 };
 
 export const TimeValues: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const readySignal = useReadySignal({ count: 3 });
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
@@ -1326,7 +1326,7 @@ export const TimeValues: StoryObj = {
 };
 
 export const PreloadedDataInBinaryBlocks: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const readySignal = useReadySignal({ count: 3 });
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
@@ -1357,7 +1357,7 @@ export const PreloadedDataInBinaryBlocks: StoryObj = {
 };
 
 export const MixedStreamedAndPreloadedData: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const readySignal = useReadySignal({ count: 3 });
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
@@ -1392,7 +1392,7 @@ export const MixedStreamedAndPreloadedData: StoryObj = {
 };
 
 export const PreloadedDataAndItsDerivative: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const readySignal = useReadySignal({ count: 3 });
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
@@ -1427,7 +1427,7 @@ export const PreloadedDataAndItsDerivative: StoryObj = {
 };
 
 export const PreloadedDataAndItsNegative: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const readySignal = useReadySignal({ count: 3 });
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
@@ -1462,7 +1462,7 @@ export const PreloadedDataAndItsNegative: StoryObj = {
 };
 
 export const PreloadedDataAndItsAbsoluteValue: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const readySignal = useReadySignal({ count: 3 });
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 

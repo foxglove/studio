@@ -12,13 +12,13 @@ export default {
 };
 
 export const OldChrome: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return <VersionBanner isChrome currentVersion={42} isDismissable />;
   },
 };
 
 export const UnsupportedBrowser: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return <VersionBanner isChrome={false} currentVersion={42} isDismissable />;
   },
 };

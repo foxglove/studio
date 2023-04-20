@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Box } from "@mui/material";
-import { StoryFn } from "@storybook/react";
+import { StoryFn, StoryObj } from "@storybook/react";
 import { useEffect } from "react";
 
 import { fromDate } from "@foxglove/rostime";
@@ -88,8 +88,8 @@ const TOPICS: Topic[] = [
   },
 ];
 
-export const PlayerNotPresent = {
-  render: function Story(): JSX.Element {
+export const PlayerNotPresent: StoryObj = {
+  render: function Story() {
     return (
       <MockMessagePipelineProvider noActiveData presence={PlayerPresence.NOT_PRESENT}>
         <Box height="100%" bgcolor="background.paper">
@@ -100,10 +100,13 @@ export const PlayerNotPresent = {
   },
 };
 
-export const PlayerNotPresentChinese = { ...PlayerNotPresent, parameters: { forceLanguage: "zh" } };
+export const PlayerNotPresentChinese: StoryObj = {
+  ...PlayerNotPresent,
+  parameters: { forceLanguage: "zh" },
+};
 
-export const PlayerIntializing = {
-  render: function Story(): JSX.Element {
+export const PlayerIntializing: StoryObj = {
+  render: function Story() {
     return (
       <MockMessagePipelineProvider
         startTime={START_TIME}
@@ -118,13 +121,13 @@ export const PlayerIntializing = {
   },
 };
 
-export const PlayerIntializingChinese = {
+export const PlayerIntializingChinese: StoryObj = {
   ...PlayerIntializing,
   parameters: { forceLanguage: "zh" },
 };
 
-export const PlayerReconnecting = {
-  render: function Story(): JSX.Element {
+export const PlayerReconnecting: StoryObj = {
+  render: function Story() {
     return (
       <MockMessagePipelineProvider
         startTime={START_TIME}
@@ -148,13 +151,13 @@ export const PlayerReconnecting = {
   },
 };
 
-export const PlayerReconnectingChinese = {
+export const PlayerReconnectingChinese: StoryObj = {
   ...PlayerReconnecting,
   parameters: { forceLanguage: "zh" },
 };
 
-export const PlayerPresent = {
-  render: function Story(): JSX.Element {
+export const PlayerPresent: StoryObj = {
+  render: function Story() {
     return (
       <MockMessagePipelineProvider
         startTime={START_TIME}
@@ -170,10 +173,13 @@ export const PlayerPresent = {
   },
 };
 
-export const PlayerPresentChinese = { ...PlayerPresent, parameters: { forceLanguage: "zh" } };
+export const PlayerPresentChinese: StoryObj = {
+  ...PlayerPresent,
+  parameters: { forceLanguage: "zh" },
+};
 
-export const PlayerPresentWithCustomTimezone = {
-  render: function Story(): JSX.Element {
+export const PlayerPresentWithCustomTimezone: StoryObj = {
+  render: function Story() {
     const [_, setTimezone] = useAppConfigurationValue<string>(AppSetting.TIMEZONE);
 
     useEffect(() => {
@@ -195,13 +201,13 @@ export const PlayerPresentWithCustomTimezone = {
   },
 };
 
-export const PlayerPresentWithCustomTimezoneChinese = {
+export const PlayerPresentWithCustomTimezoneChinese: StoryObj = {
   ...PlayerPresentWithCustomTimezone,
   parameters: { forceLanguage: "zh" },
 };
 
-export const WithEvents = {
-  render: function Story(): JSX.Element {
+export const WithEvents: StoryObj = {
+  render: function Story() {
     const userContextValue = {
       currentUser: { id: "ok" } as User,
       signIn: () => undefined,
@@ -230,10 +236,10 @@ export const WithEvents = {
   },
 };
 
-export const WithEventsChinese = { ...WithEvents, parameters: { forceLanguage: "zh" } };
+export const WithEventsChinese: StoryObj = { ...WithEvents, parameters: { forceLanguage: "zh" } };
 
-export const PlayerWithError = {
-  render: function Story(): JSX.Element {
+export const PlayerWithError: StoryObj = {
+  render: function Story() {
     return (
       <MockMessagePipelineProvider
         presence={PlayerPresence.ERROR}
@@ -273,4 +279,7 @@ export const PlayerWithError = {
   },
 };
 
-export const PlayerWithErrorChinese = { ...PlayerWithError, parameters: { forceLanguage: "zh" } };
+export const PlayerWithErrorChinese: StoryObj = {
+  ...PlayerWithError,
+  parameters: { forceLanguage: "zh" },
+};

@@ -147,7 +147,7 @@ export default {
 };
 
 export const Empty: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     return <LayoutBrowser />;
   },
 
@@ -155,13 +155,13 @@ export const Empty: StoryObj = {
 };
 
 export const LayoutList: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return <LayoutBrowser />;
   },
 };
 
 export const MultiSelect: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     return <LayoutBrowser />;
   },
 
@@ -191,7 +191,7 @@ export const MultiSelect: StoryObj = {
 };
 
 export const MultiDelete: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     return <LayoutBrowser />;
   },
 
@@ -206,7 +206,7 @@ export const MultiDelete: StoryObj = {
 };
 
 export const MultiDuplicate: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     return <LayoutBrowser />;
   },
 
@@ -221,7 +221,7 @@ export const MultiDuplicate: StoryObj = {
 };
 
 export const MultiRevert: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     return <LayoutBrowser />;
   },
 
@@ -239,7 +239,7 @@ export const MultiRevert: StoryObj = {
 };
 
 export const MultiSave: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     return <LayoutBrowser />;
   },
 
@@ -254,19 +254,19 @@ export const MultiSave: StoryObj = {
 };
 
 export const TruncatedLayoutName: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return <LayoutBrowser />;
   },
 };
 
 export const TruncatedLayoutNameSelected: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return <LayoutBrowser />;
   },
 };
 
 export const AddLayout: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     return (
       <LayoutBrowser
         currentDateForStorybook={useMemo(() => new Date("2021-06-16T04:28:33.549Z"), [])}
@@ -283,7 +283,7 @@ export const AddLayout: StoryObj = {
 };
 
 export const MenuOpen: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     return <LayoutBrowser />;
   },
 
@@ -297,7 +297,7 @@ export const MenuOpen: StoryObj = {
   },
 };
 
-export const MenuOpenLight = {
+export const MenuOpenLight: StoryObj = {
   ...MenuOpen,
   parameters: { colorScheme: "light" },
   play: async (): Promise<void> => {
@@ -309,7 +309,7 @@ export const MenuOpenLight = {
 };
 
 export const EditingName: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     return <LayoutBrowser />;
   },
 
@@ -326,7 +326,7 @@ export const EditingName: StoryObj = {
 };
 
 export const CancelRenameWithEscape: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     return <LayoutBrowser />;
   },
 
@@ -344,7 +344,7 @@ export const CancelRenameWithEscape: StoryObj = {
 };
 
 export const CommitRenameWithTab: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     return <LayoutBrowser />;
   },
 
@@ -363,7 +363,7 @@ export const CommitRenameWithTab: StoryObj = {
 };
 
 export const Duplicate: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     return <LayoutBrowser />;
   },
 
@@ -380,7 +380,7 @@ export const Duplicate: StoryObj = {
 };
 
 export const DeleteLayout: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     return <LayoutBrowser />;
   },
 
@@ -389,7 +389,7 @@ export const DeleteLayout: StoryObj = {
 };
 
 export const DeleteSelectedLayout: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     return <LayoutBrowser />;
   },
 
@@ -408,7 +408,7 @@ export const DeleteSelectedLayout: StoryObj = {
 };
 
 export const DeleteLastLayout: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     return <LayoutBrowser />;
   },
 
@@ -421,7 +421,7 @@ export const DeleteLastLayout: StoryObj = {
 };
 
 export const SignInPrompt: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     return (
       <CurrentUserContext.Provider
         value={{

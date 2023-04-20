@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { StoryObj } from "@storybook/react";
 import { ReactElement, useLayoutEffect, useState } from "react";
 import ReactDOM from "react-dom";
 
@@ -18,8 +19,8 @@ export default {
   component: PanelExtensionAdapter,
 };
 
-export const CatchRenderError = {
-  render: (): JSX.Element => {
+export const CatchRenderError: StoryObj = {
+  render: () => {
     const initPanel = (context: PanelExtensionContext) => {
       context.watch("topics");
 
@@ -84,7 +85,7 @@ function SimplePanel({ context }: { context: PanelExtensionContext }) {
   );
 }
 
-export const SimplePanelRender = {
+export const SimplePanelRender: StoryObj = {
   render: (): ReactElement => {
     function initPanel(context: PanelExtensionContext) {
       ReactDOM.render(<SimplePanel context={context} />, context.panelElement);

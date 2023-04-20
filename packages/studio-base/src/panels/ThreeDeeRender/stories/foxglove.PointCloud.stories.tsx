@@ -23,26 +23,24 @@ export default {
   },
 };
 
-export const Foxglove_PointCloud_RGBA = {
-  render: (): JSX.Element => <Foxglove_PointCloud />,
+export const Foxglove_PointCloud_RGBA: StoryObj = {
+  render: () => <Foxglove_PointCloud />,
 };
 
-export const Foxglove_PointCloud_RGBA_Square = {
-  render: (): JSX.Element => <Foxglove_PointCloud pointShape="square" />,
+export const Foxglove_PointCloud_RGBA_Square: StoryObj = {
+  render: () => <Foxglove_PointCloud pointShape="square" />,
 };
 
-export const Foxglove_PointCloud_Gradient = {
-  render: (): JSX.Element => <Foxglove_PointCloud colorMode="gradient" />,
+export const Foxglove_PointCloud_Gradient: StoryObj = {
+  render: () => <Foxglove_PointCloud colorMode="gradient" />,
 };
 
-export const Foxglove_PointCloud_Gradient_Clamped = {
-  render: (): JSX.Element => (
-    <Foxglove_PointCloud colorMode="gradient" minValue={-2} maxValue={2} />
-  ),
+export const Foxglove_PointCloud_Gradient_Clamped: StoryObj = {
+  render: () => <Foxglove_PointCloud colorMode="gradient" minValue={-2} maxValue={2} />,
 };
 
-export const Foxglove_PointCloud_Stixels = {
-  render: (): JSX.Element => <Foxglove_PointCloud colorMode="gradient" stixelsEnabled={true} />,
+export const Foxglove_PointCloud_Stixels: StoryObj = {
+  render: () => <Foxglove_PointCloud colorMode="gradient" stixelsEnabled={true} />,
 };
 
 function Foxglove_PointCloud({

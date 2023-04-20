@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { StoryObj } from "@storybook/react";
 import { screen, userEvent } from "@storybook/testing-library";
 import { PropsWithChildren, useEffect, useState } from "react";
 import { DndProvider } from "react-dnd";
@@ -106,18 +107,18 @@ function Story({
   );
 }
 
-export const LeftOpen = {
-  render: (): JSX.Element => <Story defaultLeftKey="a" />,
+export const LeftOpen: StoryObj = {
+  render: () => <Story defaultLeftKey="a" />,
   name: "Left",
 };
 
-export const LeftLongText = {
-  render: (): JSX.Element => <Story defaultLeftKey="c" />,
+export const LeftLongText: StoryObj = {
+  render: () => <Story defaultLeftKey="c" />,
   name: "Left (with text overflow)",
 };
 
-export const LeftClicked = {
-  render: (): JSX.Element => <Story defaultLeftKey="a" />,
+export const LeftClicked: StoryObj = {
+  render: () => <Story defaultLeftKey="a" />,
   name: "Left (tab click interaction)",
   parameters: { colorScheme: "dark" },
 
@@ -127,8 +128,8 @@ export const LeftClicked = {
   },
 };
 
-export const LeftClosed = {
-  render: (): JSX.Element => (
+export const LeftClosed: StoryObj = {
+  render: () => (
     <Story defaultLeftKey="b" defaultRightKey="y" label="Left sidebar should be closed" />
   ),
 
@@ -141,18 +142,18 @@ export const LeftClosed = {
   },
 };
 
-export const RightOpen = {
-  render: (): JSX.Element => <Story defaultRightKey="x" />,
+export const RightOpen: StoryObj = {
+  render: () => <Story defaultRightKey="x" />,
   name: "Right",
 };
 
-export const RightLongText = {
-  render: (): JSX.Element => <Story defaultRightKey="z" />,
+export const RightLongText: StoryObj = {
+  render: () => <Story defaultRightKey="z" />,
   name: "Right (with text overflow)",
 };
 
-export const RightClicked = {
-  render: (): JSX.Element => <Story defaultRightKey="x" />,
+export const RightClicked: StoryObj = {
+  render: () => <Story defaultRightKey="x" />,
   name: "Right (tab click interaction)",
   parameters: { colorScheme: "dark" },
 
@@ -162,8 +163,8 @@ export const RightClicked = {
   },
 };
 
-export const RightClosed = {
-  render: (): JSX.Element => (
+export const RightClosed: StoryObj = {
+  render: () => (
     <Story defaultLeftKey="b" defaultRightKey="y" label="Right sidebar should be closed" />
   ),
 
@@ -176,17 +177,17 @@ export const RightClosed = {
   },
 };
 
-export const Default = {
-  render: (): JSX.Element => <Story label="Both sidebars should be closed" />,
+export const Default: StoryObj = {
+  render: () => <Story label="Both sidebars should be closed" />,
 };
 
-export const BothOpen = {
-  render: (): JSX.Element => <Story defaultLeftKey="a" defaultRightKey="x" />,
+export const BothOpen: StoryObj = {
+  render: () => <Story defaultLeftKey="a" defaultRightKey="x" />,
   name: "Both (opened)",
 };
 
-export const BothClicked = {
-  render: (): JSX.Element => <Story defaultLeftKey="a" defaultRightKey="x" />,
+export const BothClicked: StoryObj = {
+  render: () => <Story defaultLeftKey="a" defaultRightKey="x" />,
   name: "Both (tab click interaction)",
   parameters: { colorScheme: "dark" },
 

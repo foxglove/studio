@@ -154,13 +154,13 @@ function BaseStory({ includeSettings = false }: { includeSettings?: boolean }): 
 }
 
 export const Occupancy_Grid_Costmap: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return <BaseStory />;
   },
 };
 
 export const Occupancy_Grid_Costmap_With_Settings: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     return <BaseStory includeSettings />;
   },
 
@@ -170,7 +170,7 @@ export const Occupancy_Grid_Costmap_With_Settings: StoryObj = {
   },
 };
 
-export const OccupancyGridCostmapWithSettingsChinese = {
+export const OccupancyGridCostmapWithSettingsChinese: StoryObj = {
   ...Occupancy_Grid_Costmap_With_Settings,
   parameters: { forceLanguage: "zh" },
 };

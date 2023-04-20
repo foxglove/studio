@@ -102,7 +102,7 @@ export default {
 };
 
 export const Simple: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return (
       <div style={{ width: "100%", height: "100%" }}>
         <MockMessagePipelineProvider>
@@ -113,10 +113,10 @@ export const Simple: StoryObj = {
   },
 };
 
-export const SimpleLight = { ...Simple, parameters: { colorScheme: "light" } };
+export const SimpleLight: StoryObj = { ...Simple, parameters: { colorScheme: "light" } };
 
 export const CanZoomAndUpdate: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const [chartProps, setChartProps] = useState(cloneDeep(commonProps));
     const callCountRef = useRef(0);
 
@@ -170,7 +170,7 @@ export const CanZoomAndUpdate: StoryObj = {
 };
 
 export const CleansUpTooltipOnUnmount: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const [hasRenderedOnce, setHasRenderedOnce] = useState<boolean>(false);
     const { error } = useAsync(async () => {
       const [canvas] = document.getElementsByTagName("canvas");
@@ -227,7 +227,7 @@ export const CleansUpTooltipOnUnmount: StoryObj = {
 };
 
 export const CallPauseOnInitialMount: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const [unpauseFrameCount, setUnpauseFrameCount] = useState(0);
     const pauseFrame = useCallback(() => {
       return () => {
@@ -249,7 +249,7 @@ export const CallPauseOnInitialMount: StoryObj = {
 };
 
 export const ResumeFrameOnUnmount: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const [showChart, setShowChart] = useState(true);
     const [statusMessage, setStatusMessage] = useState("FAILURE - START");
     const pauseFrame = useCallback(() => {

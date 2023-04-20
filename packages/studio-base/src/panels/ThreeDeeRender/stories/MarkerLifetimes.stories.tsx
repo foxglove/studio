@@ -20,7 +20,7 @@ export default {
 };
 
 export const MarkerLifetimes: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const topics: Topic[] = [
       { name: "/markers", schemaName: "visualization_msgs/Marker" },
       { name: "/tf", schemaName: "geometry_msgs/TransformStamped" },

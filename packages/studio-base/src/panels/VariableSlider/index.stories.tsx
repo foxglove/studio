@@ -34,7 +34,7 @@ export default {
 };
 
 export const Example: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return (
       <PanelSetup fixture={fixture}>
         <VariableSliderPanel />
@@ -44,7 +44,7 @@ export const Example: StoryObj = {
 };
 
 export const NarrowLayout: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return (
       <PanelSetup fixture={fixture}>
         <div style={{ width: 400 }}>
@@ -56,7 +56,7 @@ export const NarrowLayout: StoryObj = {
 };
 
 export const WithSettings: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     return (
       <PanelSetup fixture={fixture} includeSettings>
         <VariableSliderPanel />

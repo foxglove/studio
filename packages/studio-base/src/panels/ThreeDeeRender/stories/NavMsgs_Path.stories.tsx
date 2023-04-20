@@ -20,7 +20,7 @@ export default {
 };
 
 export const NavMsgs_Path: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const topics: Topic[] = [
       { name: "/baselink_path", schemaName: "nav_msgs/Path" },
       { name: "/sensor_path", schemaName: "nav_msgs/Path" },

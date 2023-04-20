@@ -23,7 +23,7 @@ const initialState = {
 };
 
 export const Default: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return (
       <DndProvider backend={HTML5Backend}>
         <MockCurrentLayoutProvider>
@@ -35,7 +35,7 @@ export const Default: StoryObj = {
 };
 
 export const Interactive: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     return (
       <DndProvider backend={HTML5Backend}>
         <MockCurrentLayoutProvider>
@@ -71,7 +71,7 @@ export const Interactive: StoryObj = {
 };
 
 export const WithVariablesLight: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     return (
       <DndProvider backend={HTML5Backend}>
         <MockCurrentLayoutProvider initialState={initialState}>
@@ -85,7 +85,7 @@ export const WithVariablesLight: StoryObj = {
 };
 
 export const WithVariablesDark: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     return (
       <DndProvider backend={HTML5Backend}>
         <MockCurrentLayoutProvider initialState={initialState}>

@@ -24,7 +24,7 @@ type Vec4 = [number, number, number, number];
 const vec4ToOrientation = ([x, y, z, w]: Vec4) => ({ x, y, z, w });
 
 export const GeometryMsgs_PoseStamped: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const topics: Topic[] = [
       { name: "/tf", schemaName: "geometry_msgs/TransformStamped" },
       { name: "/pose1", schemaName: "geometry_msgs/PoseStamped" },

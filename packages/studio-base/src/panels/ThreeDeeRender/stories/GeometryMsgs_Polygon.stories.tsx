@@ -19,7 +19,7 @@ export default {
 };
 
 export const GeometryMsgs_Polygon: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const topics: Topic[] = [
       { name: "/polygon", schemaName: "geometry_msgs/PolygonStamped" },
       { name: "/tf", schemaName: "geometry_msgs/TransformStamped" },

@@ -326,7 +326,7 @@ export default {
 };
 
 export const Default: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return (
       <Stack direction="row" flexWrap="wrap" height="100%" bgcolor="background.paper">
         <PanelSetupWithData title="Default without clicked object">

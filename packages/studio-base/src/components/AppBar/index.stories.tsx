@@ -34,27 +34,27 @@ const actions = {
 };
 
 export const Default: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return <AppBar {...actions} />;
   },
 };
 
-export const DefaultChinese = { ...Default, parameters: { forceLanguage: "zh" } };
+export const DefaultChinese: StoryObj = { ...Default, parameters: { forceLanguage: "zh" } };
 
 export const CustomWindowControls: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return <AppBar showCustomWindowControls {...actions} />;
   },
 };
 
 export const CustomWindowControlsMaximized: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return <AppBar showCustomWindowControls isMaximized {...actions} />;
   },
 };
 
 export const CustomWindowControlsDragRegion: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return <AppBar showCustomWindowControls debugDragRegion {...actions} />;
   },
 };
@@ -71,7 +71,7 @@ function LabeledAppBar({ label }: React.PropsWithChildren<{ label: string }>) {
 }
 
 export const SignInStates: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     const currentUser: User = {
       id: "user-1",
       email: "user@example.com",
@@ -130,10 +130,13 @@ export const SignInStates: StoryObj = {
   },
 };
 
-export const SignInStatesChinese = { ...SignInStates, parameters: { forceLanguage: "zh" } };
+export const SignInStatesChinese: StoryObj = {
+  ...SignInStates,
+  parameters: { forceLanguage: "zh" },
+};
 
 export const PlayerStates: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     return (
       <Stack overflowY="auto">
         <div
@@ -191,13 +194,13 @@ export const PlayerStates: StoryObj = {
   parameters: { colorScheme: "light" },
 };
 
-export const PlayerStatesChinese = {
+export const PlayerStatesChinese: StoryObj = {
   ...PlayerStates,
   parameters: { colorScheme: "light", forceLanguage: "zh" },
 };
 
 export const DataSources: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     return (
       <Stack overflowY="auto">
         <div
@@ -261,7 +264,7 @@ export const DataSources: StoryObj = {
   parameters: { colorScheme: "light" },
 };
 
-export const DataSourcesChinese = {
+export const DataSourcesChinese: StoryObj = {
   ...DataSources,
   parameters: { colorScheme: "light", forceLanguage: "zh" },
 };

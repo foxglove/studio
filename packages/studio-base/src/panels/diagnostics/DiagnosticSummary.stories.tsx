@@ -52,7 +52,7 @@ const fixture: Fixture = {
 };
 
 export const Empty: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return (
       <PanelSetup fixture={{ ...fixture, frame: {} }}>
         <DiagnosticSummary />
@@ -62,7 +62,7 @@ export const Empty: StoryObj = {
 };
 
 export const Basic: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return (
       <PanelSetup fixture={fixture}>
         <DiagnosticSummary />
@@ -72,7 +72,7 @@ export const Basic: StoryObj = {
 };
 
 export const WithSettings: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return (
       <PanelSetup fixture={fixture} includeSettings>
         <DiagnosticSummary />
@@ -82,7 +82,7 @@ export const WithSettings: StoryObj = {
 };
 
 export const WithPinnedNodes: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return (
       <PanelSetup fixture={fixture}>
         <DiagnosticSummary
@@ -102,7 +102,7 @@ export const WithPinnedNodes: StoryObj = {
 };
 
 export const WithPinnedNodesAndFilter: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return (
       <PanelSetup fixture={fixture}>
         <DiagnosticSummary
@@ -122,7 +122,7 @@ export const WithPinnedNodesAndFilter: StoryObj = {
 };
 
 export const WithoutSorting: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return (
       <PanelSetup fixture={fixture}>
         <DiagnosticSummary
@@ -140,7 +140,7 @@ export const WithoutSorting: StoryObj = {
 };
 
 export const FilteredByHardwareId: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return (
       <PanelSetup fixture={fixture}>
         <DiagnosticSummary
@@ -158,7 +158,7 @@ export const FilteredByHardwareId: StoryObj = {
 };
 
 export const FilteredByLevel: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return (
       <PanelSetup fixture={fixture}>
         <DiagnosticSummary
@@ -176,7 +176,7 @@ export const FilteredByLevel: StoryObj = {
 };
 
 export const FilteredByHardwareIdAndLevel: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return (
       <PanelSetup fixture={fixture}>
         <DiagnosticSummary

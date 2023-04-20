@@ -137,7 +137,7 @@ export const Dark: StoryObj = {
 };
 
 export const LimitWidth: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     return (
       <div
         style={{

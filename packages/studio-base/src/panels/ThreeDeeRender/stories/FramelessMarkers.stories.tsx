@@ -19,7 +19,7 @@ export default {
 };
 
 export const FramelessMarkers: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const topics: Topic[] = [{ name: "/markers", schemaName: "visualization_msgs/Marker" }];
 
     type FramelessHeader = Omit<Header, "frame_id">;

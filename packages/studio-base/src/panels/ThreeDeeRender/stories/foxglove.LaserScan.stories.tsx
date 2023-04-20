@@ -156,7 +156,7 @@ function Foxglove_LaserScan({
   );
 }
 
-export const Square = {
+export const Square: StoryObj<Parameters<typeof Foxglove_LaserScan>[0]> = {
   render: Foxglove_LaserScan,
   args: {
     settings: {
@@ -165,7 +165,7 @@ export const Square = {
   },
 };
 
-export const Size20 = {
+export const Size20: StoryObj<Parameters<typeof Foxglove_LaserScan>[0]> = {
   render: Foxglove_LaserScan,
   args: {
     settings: {
@@ -174,7 +174,7 @@ export const Size20 = {
   },
 };
 
-export const FlatColor = {
+export const FlatColor: StoryObj<Parameters<typeof Foxglove_LaserScan>[0]> = {
   render: Foxglove_LaserScan,
   args: {
     settings: {
@@ -184,7 +184,7 @@ export const FlatColor = {
   },
 };
 
-export const CustomGradient = {
+export const CustomGradient: StoryObj<Parameters<typeof Foxglove_LaserScan>[0]> = {
   render: Foxglove_LaserScan,
   args: {
     settings: {
@@ -194,7 +194,7 @@ export const CustomGradient = {
   },
 };
 
-export const RangeLimits = {
+export const RangeLimits: StoryObj<Parameters<typeof Foxglove_LaserScan>[0]> = {
   render: Foxglove_LaserScan,
   args: {
     rangeMin: 2,
@@ -202,21 +202,21 @@ export const RangeLimits = {
   },
 };
 
-export const Time0 = {
+export const Time0: StoryObj<Parameters<typeof Foxglove_LaserScan>[0]> = {
   render: Foxglove_LaserScan,
   args: {
     time: 0,
   },
 };
 
-export const Time5 = {
+export const Time5: StoryObj<Parameters<typeof Foxglove_LaserScan>[0]> = {
   render: Foxglove_LaserScan,
   args: {
     time: 5,
   },
 };
 
-export const Time10 = {
+export const Time10: StoryObj<Parameters<typeof Foxglove_LaserScan>[0]> = {
   render: Foxglove_LaserScan,
   args: {
     time: 10,

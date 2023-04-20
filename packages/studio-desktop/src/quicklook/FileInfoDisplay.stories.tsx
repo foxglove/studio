@@ -19,19 +19,19 @@ export default {
 };
 
 export const Bag: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return <FileInfoDisplay fileStats={{ name: "name.bag", size: 0 }} />;
   },
 };
 
 export const Mcap: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return <FileInfoDisplay fileStats={{ name: "name.mcap", size: 0 }} />;
   },
 };
 
 export const LongName: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return (
       <FileInfoDisplay
         fileStats={{
@@ -44,7 +44,7 @@ export const LongName: StoryObj = {
 };
 
 export const ErrorStory: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     return (
       <FileInfoDisplay fileStats={{ name: "name", size: 0 }} error={new Error("Example error")} />
     );
@@ -54,7 +54,7 @@ export const ErrorStory: StoryObj = {
 };
 
 export const Details: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return (
       <FileInfoDisplay
         fileStats={{ name: "name.mcap", size: 0 }}

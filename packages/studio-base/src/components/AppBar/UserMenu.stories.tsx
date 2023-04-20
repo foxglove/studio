@@ -2,6 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { StoryObj } from "@storybook/react";
+
 import { AppBar } from "@foxglove/studio-base/components/AppBar";
 import { StorybookDecorator } from "@foxglove/studio-base/components/AppBar/StorybookDecorator.stories";
 import { UserMenu } from "@foxglove/studio-base/components/AppBar/UserMenu";
@@ -73,12 +75,12 @@ function SignInStates(): JSX.Element {
   );
 }
 
-export const Dark = {
-  render: (): JSX.Element => <SignInStates />,
+export const Dark: StoryObj = {
+  render: () => <SignInStates />,
   parameters: { colorScheme: "dark" },
 };
 
-export const Light = {
-  render: (): JSX.Element => <SignInStates />,
+export const Light: StoryObj = {
+  render: () => <SignInStates />,
   parameters: { colorScheme: "light" },
 };

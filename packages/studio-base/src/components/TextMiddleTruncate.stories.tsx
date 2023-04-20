@@ -30,7 +30,7 @@ async function hoverText(): Promise<void> {
 }
 
 export const Default: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     return (
       <div
         style={{

@@ -106,19 +106,19 @@ function CurrentUserWrapper(props: { children: ReactNode; user?: User | undefine
 
 const defaultProps: OpenDialogProps = { backdropAnimation: false };
 
-export const DefaultLight = {
-  render: (): JSX.Element => <OpenDialog {...defaultProps} />,
+export const DefaultLight: StoryObj = {
+  render: () => <OpenDialog {...defaultProps} />,
   name: "Default (light)",
   parameters: { colorScheme: "light" },
 };
 
-export const DefaultDark = {
-  render: (): JSX.Element => <OpenDialog {...defaultProps} />,
+export const DefaultDark: StoryObj = {
+  render: () => <OpenDialog {...defaultProps} />,
   name: "Default (dark)",
 };
 
 export const UserNoAuth: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     return (
       <PlayerSelectionContext.Provider value={playerSelection}>
         <OpenDialog {...defaultProps} />
@@ -129,14 +129,14 @@ export const UserNoAuth: StoryObj = {
   name: "User not authenticated",
 };
 
-export const UserNoAuthChinese = {
+export const UserNoAuthChinese: StoryObj = {
   ...UserNoAuth,
   name: "User not authenticated Chinese",
   parameters: { forceLanguage: "zh" },
 };
 
 export const UserPrivate: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     return (
       <CurrentUserWrapper>
         <PlayerSelectionContext.Provider value={playerSelection}>
@@ -149,14 +149,14 @@ export const UserPrivate: StoryObj = {
   name: "User not authenticated (private)",
 };
 
-export const UserPrivateChinese = {
+export const UserPrivateChinese: StoryObj = {
   ...UserPrivate,
   name: "User not authenticated (private) Chinese",
   parameters: { forceLanguage: "zh" },
 };
 
 export const UserAuthedFree: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const freeUser = fakeUser("free");
 
     return (
@@ -171,14 +171,14 @@ export const UserAuthedFree: StoryObj = {
   name: "User Authenticated with Free Account",
 };
 
-export const UserAuthedFreeChinese = {
+export const UserAuthedFreeChinese: StoryObj = {
   ...UserAuthedFree,
   name: "User Authenticated with Free Account Chinese",
   parameters: { forceLanguage: "zh" },
 };
 
 export const UserAuthedPaid: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const freeUser = fakeUser("paid");
 
     return (
@@ -193,7 +193,7 @@ export const UserAuthedPaid: StoryObj = {
   name: "User Authenticated with Paid Account",
 };
 
-export const UserAuthedPaidChinese = {
+export const UserAuthedPaidChinese: StoryObj = {
   ...UserAuthedPaid,
   name: "User Authenticated with Paid Account Chinese",
   parameters: { forceLanguage: "zh" },

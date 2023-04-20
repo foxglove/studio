@@ -72,7 +72,7 @@ class MockPanelCatalog implements PanelCatalog {
 }
 
 export const Basic: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     const providers = [
       /* eslint-disable react/jsx-key */
       <PanelSetup>{undefined}</PanelSetup>,
@@ -89,12 +89,10 @@ export const Basic: StoryObj = {
   },
 };
 
-export const FullscreenPanel = {
-  render: Basic,
-};
-Object.assign(FullscreenPanel, {
+export const FullscreenPanel: StoryObj = {
+  ...Basic,
   play: async () => {
     fireEvent.click(await screen.findByTestId("panel-menu"));
     fireEvent.click(await screen.findByTestId("panel-menu-fullscreen"));
   },
-});
+};

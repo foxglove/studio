@@ -96,16 +96,16 @@ export default {
   component: MapPanel,
 };
 
-export const EmptyState = {
-  render: function Story(): JSX.Element {
+export const EmptyState: StoryObj = {
+  render: function Story() {
     return <MapPanel />;
   },
 
   decorators: [Wrapper],
 };
 
-export const SinglePoint = {
-  render: function Story(): JSX.Element {
+export const SinglePoint: StoryObj = {
+  render: function Story() {
     return <MapPanel />;
   },
 
@@ -134,8 +134,8 @@ export const SinglePoint = {
   },
 };
 
-export const SinglePointWithMissingValues = {
-  render: function Story(): JSX.Element {
+export const SinglePointWithMissingValues: StoryObj = {
+  render: function Story() {
     return <MapPanel />;
   },
 
@@ -168,8 +168,8 @@ export const SinglePointWithMissingValues = {
   },
 };
 
-export const SinglePointWithNoFix = {
-  render: function Story(): JSX.Element {
+export const SinglePointWithNoFix: StoryObj = {
+  render: function Story() {
     return <MapPanel />;
   },
 
@@ -204,8 +204,8 @@ export const SinglePointWithNoFix = {
   },
 };
 
-export const SinglePointWithSettings = {
-  render: function Story(): JSX.Element {
+export const SinglePointWithSettings: StoryObj = {
+  render: function Story() {
     return <MapPanel overrideConfig={{ layer: "custom" }} />;
   },
 
@@ -217,8 +217,8 @@ export const SinglePointWithSettings = {
   },
 };
 
-export const SinglePointWithSettingsOverride = {
-  render: function Story(): JSX.Element {
+export const SinglePointWithSettingsOverride: StoryObj = {
+  render: function Story() {
     return <MapPanel overrideConfig={{ layer: "custom", topicColors: { "/gps": "#ffc0cb" } }} />;
   },
 
@@ -230,8 +230,8 @@ export const SinglePointWithSettingsOverride = {
   },
 };
 
-export const MultipleTopics = {
-  render: function Story(): JSX.Element {
+export const MultipleTopics: StoryObj = {
+  render: function Story() {
     return <MapPanel />;
   },
 
@@ -273,8 +273,8 @@ export const MultipleTopics = {
   },
 };
 
-export const SinglePointNoFix = {
-  render: function Story(): JSX.Element {
+export const SinglePointNoFix: StoryObj = {
+  render: function Story() {
     return <MapPanel />;
   },
 
@@ -314,8 +314,8 @@ export const SinglePointNoFix = {
   },
 };
 
-export const SinglePointDiagonalCovariance = {
-  render: function Story(): JSX.Element {
+export const SinglePointDiagonalCovariance: StoryObj = {
+  render: function Story() {
     return <MapPanel />;
   },
 
@@ -356,8 +356,8 @@ export const SinglePointDiagonalCovariance = {
   },
 };
 
-export const SinglePointFullCovariance = {
-  render: function Story(): JSX.Element {
+export const SinglePointFullCovariance: StoryObj = {
+  render: function Story() {
     return <MapPanel />;
   },
 

@@ -24,7 +24,7 @@ export default {
 };
 
 export const SingleItemSingleDataset: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const data: TimeBasedChartTooltipData = {
       x: 0,
       y: 0,
@@ -54,13 +54,13 @@ export const SingleItemSingleDataset: StoryObj = {
   parameters: { colorScheme: "dark" },
 };
 
-export const SingleItemSingleDatasetLight = {
+export const SingleItemSingleDatasetLight: StoryObj = {
   ...SingleItemSingleDataset,
   parameters: { colorScheme: "light" },
 };
 
 export const SingleItemMultiDataset: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const data: TimeBasedChartTooltipData = {
       x: 0,
       y: 0,
@@ -90,13 +90,13 @@ export const SingleItemMultiDataset: StoryObj = {
   parameters: { colorScheme: "dark" },
 };
 
-export const SingleItemMultiDatasetLight = {
+export const SingleItemMultiDatasetLight: StoryObj = {
   ...SingleItemMultiDataset,
   parameters: { colorScheme: "light" },
 };
 
 export const MultipleItemsSingleDataset: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const data: TimeBasedChartTooltipData = {
       x: 0,
       y: 0,
@@ -126,13 +126,13 @@ export const MultipleItemsSingleDataset: StoryObj = {
   parameters: { colorScheme: "dark" },
 };
 
-export const MultipleItemsSingleDatasetLight = {
+export const MultipleItemsSingleDatasetLight: StoryObj = {
   ...MultipleItemsSingleDataset,
   parameters: { colorScheme: "light" },
 };
 
 export const MultipleItemsMultipleDataset: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const data: TimeBasedChartTooltipData[] = [
       {
         datasetIndex: 0,
@@ -180,7 +180,7 @@ export const MultipleItemsMultipleDataset: StoryObj = {
   parameters: { colorScheme: "dark" },
 };
 
-export const MultipleItemsMultiDatasetLight = {
+export const MultipleItemsMultiDatasetLight: StoryObj = {
   ...MultipleItemsMultipleDataset,
   parameters: { colorScheme: "light" },
 };

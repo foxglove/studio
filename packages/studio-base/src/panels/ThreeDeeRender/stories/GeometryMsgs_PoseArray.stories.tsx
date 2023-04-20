@@ -23,7 +23,7 @@ type Vec4 = [number, number, number, number];
 const vec4ToOrientation = ([x, y, z, w]: Vec4) => ({ x, y, z, w });
 
 export const GeometryMsgs_PoseArray: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const topics: Topic[] = [
       { name: "/baselink_path", schemaName: "geometry_msgs/PoseArray" },
       { name: "/sensor_path", schemaName: "geometry_msgs/PoseArray" },

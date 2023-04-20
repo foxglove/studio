@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { StoryFn } from "@storybook/react";
+import { StoryFn, StoryObj } from "@storybook/react";
 import { useEffect } from "react";
 
 import SendNotificationToastAdapter from "@foxglove/studio-base/components/SendNotificationToastAdapter";
@@ -57,8 +57,8 @@ export default {
   ],
 };
 
-export const OneError = {
-  render: function Story(): JSX.Element {
+export const OneError: StoryObj = {
+  render: function Story() {
     useEffect(() => {
       sendNotification("Something bad happened", fakeError(), "app", "error");
     }, []);
@@ -67,8 +67,8 @@ export const OneError = {
   },
 };
 
-export const OneWarning = {
-  render: function Story(): JSX.Element {
+export const OneWarning: StoryObj = {
+  render: function Story() {
     useEffect(() => {
       sendNotification(
         "This is the final countdown",
@@ -82,8 +82,8 @@ export const OneWarning = {
   },
 };
 
-export const OneInfo = {
-  render: function Story(): JSX.Element {
+export const OneInfo: StoryObj = {
+  render: function Story() {
     useEffect(() => {
       sendNotification(
         "Here's a helpful tip",
@@ -97,8 +97,8 @@ export const OneInfo = {
   },
 };
 
-export const MultipleMessages = {
-  render: function Story(): JSX.Element {
+export const MultipleMessages: StoryObj = {
+  render: function Story() {
     useEffect(() => {
       sendNotification("Something bad happened 1", fakeError(), "app", "error");
       sendNotification("Here's a helpful tip", fakeError(), "user", "info");
@@ -115,7 +115,7 @@ export const MultipleMessages = {
   },
 };
 
-export const MultipleMessagesLightTheme = {
+export const MultipleMessagesLightTheme: StoryObj = {
   ...MultipleMessages,
   parameters: { colorScheme: "light" },
 };

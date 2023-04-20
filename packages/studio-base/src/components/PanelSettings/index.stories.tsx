@@ -43,7 +43,7 @@ const fixture = { topics: [], datatypes: new Map(), frame: {}, layout: "Sample1!
 const selectedPanelIds: readonly string[] = ["Sample1!abc"];
 
 export const NoPanelSelected: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return (
       <div style={{ margin: 30, height: 400 }}>
         <DndProvider backend={HTML5Backend}>
@@ -59,7 +59,7 @@ export const NoPanelSelected: StoryObj = {
 };
 
 export const PanelSelected: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return (
       <div style={{ margin: 30, height: 400 }}>
         <DndProvider backend={HTML5Backend}>
@@ -79,7 +79,7 @@ export const PanelSelected: StoryObj = {
 };
 
 export const PanelLoading: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return (
       <div style={{ margin: 30, height: 400 }}>
         <DndProvider backend={HTML5Backend}>

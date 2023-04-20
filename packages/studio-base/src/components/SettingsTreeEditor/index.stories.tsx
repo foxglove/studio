@@ -875,7 +875,7 @@ function Wrapper({ nodes }: { nodes: SettingsTreeNodes }): JSX.Element {
 }
 
 export const Basics: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     return <Wrapper nodes={BasicSettings} />;
   },
 
@@ -886,22 +886,26 @@ export const Basics: StoryObj = {
   },
 };
 
-export const BasicsChinese = { ...Basics, play: Basics.play, parameters: { forceLanguage: "zh" } };
+export const BasicsChinese: StoryObj = {
+  ...Basics,
+  play: Basics.play,
+  parameters: { forceLanguage: "zh" },
+};
 
 export const DisabledFields: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return <Wrapper nodes={DisabledSettings} />;
   },
 };
 
 export const ReadonlyFields: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return <Wrapper nodes={ReadonlySettings} />;
   },
 };
 
 export const PanelExamples: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     return <Wrapper nodes={PanelExamplesSettings} />;
   },
 
@@ -917,19 +921,19 @@ export const PanelExamples: StoryObj = {
 };
 
 export const IconExamples: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return <Wrapper nodes={IconExamplesSettings} />;
   },
 };
 
 export const Topics: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return <Wrapper nodes={TopicSettings} />;
   },
 };
 
 export const Filter: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     return <Wrapper nodes={FilterSettings} />;
   },
 
@@ -943,25 +947,25 @@ export const Filter: StoryObj = {
 };
 
 export const Colors: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return <Wrapper nodes={ColorSettings} />;
   },
 };
 
 export const EmptyValue: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return <Wrapper nodes={ColorSettings} />;
   },
 };
 
 export const SetHiddenValueToTrue: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return <Wrapper nodes={ColorSettings} />;
   },
 };
 
 export const Vec2: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     const settings: SettingsTreeNodes = {
       fields: {
         fields: {
@@ -999,7 +1003,7 @@ export const Vec2: StoryObj = {
 };
 
 export const Vec3: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     const settings: SettingsTreeNodes = {
       fields: {
         fields: {
@@ -1041,7 +1045,7 @@ async function clickSelect(): Promise<void> {
 }
 
 export const SelectInvalidWithUndefined: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     return <Wrapper nodes={SelectInvalidWithUndefinedSettings} />;
   },
 
@@ -1049,7 +1053,7 @@ export const SelectInvalidWithUndefined: StoryObj = {
 };
 
 export const SelectInvalidWithoutUndefined: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     return <Wrapper nodes={SelectInvalidWithoutUndefinedSettings} />;
   },
 
@@ -1057,7 +1061,7 @@ export const SelectInvalidWithoutUndefined: StoryObj = {
 };
 
 export const SelectValidWithUndefined: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     return <Wrapper nodes={SelectValidWithUndefinedSettings} />;
   },
 
@@ -1065,7 +1069,7 @@ export const SelectValidWithUndefined: StoryObj = {
 };
 
 export const SelectValidWithEmptyString: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     return <Wrapper nodes={SelectValidWithEmptyStringSettings} />;
   },
 
@@ -1073,7 +1077,7 @@ export const SelectValidWithEmptyString: StoryObj = {
 };
 
 export const SelectEmpty: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     return <Wrapper nodes={SelectEmptySettings} />;
   },
 
@@ -1081,7 +1085,7 @@ export const SelectEmpty: StoryObj = {
 };
 
 export const SelectEmptyInvalid: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     return <Wrapper nodes={SelectEmptyInvalidSettings} />;
   },
 

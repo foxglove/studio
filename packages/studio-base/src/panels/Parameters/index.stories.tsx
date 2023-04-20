@@ -53,7 +53,7 @@ export default {
 };
 
 export const Default: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return (
       <PanelSetup fixture={getFixture({ getParameters: false, setParameters: false })}>
         <Parameters />
@@ -63,7 +63,7 @@ export const Default: StoryObj = {
 };
 
 export const WithParameters: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return (
       <PanelSetup fixture={getFixture({ getParameters: true, setParameters: false })}>
         <Parameters />
@@ -73,7 +73,7 @@ export const WithParameters: StoryObj = {
 };
 
 export const WithEditableParameters: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return (
       <PanelSetup fixture={getFixture({ getParameters: true, setParameters: true })}>
         <Parameters />

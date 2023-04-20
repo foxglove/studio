@@ -103,7 +103,7 @@ export default {
 };
 
 export const Urdfs: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const topics: Topic[] = [{ name: "/robot_description", schemaName: "std_msgs/String" }];
     const robot_description: MessageEvent<{ data: string }> = {
       topic: "/robot_description",

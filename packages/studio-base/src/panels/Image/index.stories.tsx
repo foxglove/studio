@@ -49,7 +49,7 @@ export const NoTopic: StoryObj = {
 };
 
 export const WithSettings: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     return (
       <PanelSetup includeSettings>
         <ImageView />
@@ -73,7 +73,7 @@ export const TopicButNoDataSource: StoryObj = {
 };
 
 export const TopicButNoDataSourceHovered: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const onMount = useHoverOnPanel();
     return (
       <PanelSetup onMount={onMount}>
@@ -85,7 +85,7 @@ export const TopicButNoDataSourceHovered: StoryObj = {
   parameters: { colorScheme: "dark" },
 };
 
-export const TopicButNoDataSourceHoveredLight = {
+export const TopicButNoDataSourceHoveredLight: StoryObj = {
   ...TopicButNoDataSourceHovered,
   parameters: { colorScheme: "light" },
 };

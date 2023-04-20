@@ -36,7 +36,7 @@ const fixture: Fixture = {
 };
 
 export const Empty: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return (
       <PanelSetup fixture={fixture}>
         <DiagnosticStatusPanel />
@@ -46,7 +46,7 @@ export const Empty: StoryObj = {
 };
 
 export const Default: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return (
       <PanelSetup fixture={fixture}>
         <DiagnosticStatusPanel
@@ -61,7 +61,7 @@ export const Default: StoryObj = {
 };
 
 export const WithSettings: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     return (
       <PanelSetup fixture={fixture} includeSettings>
         <DiagnosticStatusPanel
@@ -81,7 +81,7 @@ export const WithSettings: StoryObj = {
 };
 
 export const SelectedHardwareIDOnly: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return (
       <PanelSetup fixture={fixture}>
         <DiagnosticStatusPanel
@@ -97,7 +97,7 @@ export const SelectedHardwareIDOnly: StoryObj = {
 };
 
 export const SelectedName: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return (
       <PanelSetup fixture={fixture}>
         <DiagnosticStatusPanel
@@ -113,7 +113,7 @@ export const SelectedName: StoryObj = {
 };
 
 export const MovedDivider: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return (
       <PanelSetup fixture={fixture}>
         <DiagnosticStatusPanel

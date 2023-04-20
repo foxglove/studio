@@ -33,15 +33,15 @@ const dummyLayout: Layout = {
 };
 
 export const Default: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return <UnsavedChangesPrompt isOnline layout={dummyLayout} onComplete={action("onComplete")} />;
   },
 };
 
-export const DefaultLight = { ...Default, parameters: { colorScheme: "light" } };
+export const DefaultLight: StoryObj = { ...Default, parameters: { colorScheme: "light" } };
 
 export const Offline: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return (
       <UnsavedChangesPrompt
         isOnline={false}
@@ -53,7 +53,7 @@ export const Offline: StoryObj = {
 };
 
 export const Overwrite: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return (
       <UnsavedChangesPrompt
         isOnline
@@ -66,7 +66,7 @@ export const Overwrite: StoryObj = {
 };
 
 export const MakePersonal: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return (
       <UnsavedChangesPrompt
         isOnline
@@ -79,7 +79,7 @@ export const MakePersonal: StoryObj = {
 };
 
 export const MakePersonalWithEmptyField: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return (
       <UnsavedChangesPrompt
         isOnline

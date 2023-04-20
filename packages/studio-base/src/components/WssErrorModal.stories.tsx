@@ -15,7 +15,7 @@ export default {
 };
 
 export const Default: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return (
       <WssErrorModal
         playerProblems={[{ severity: "error", message: "Insecure WebSocket connection" }]}

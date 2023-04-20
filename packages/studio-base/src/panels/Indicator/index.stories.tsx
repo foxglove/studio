@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { StoryFn, StoryContext } from "@storybook/react";
+import { StoryFn, StoryContext, StoryObj } from "@storybook/react";
 
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 
@@ -37,14 +37,14 @@ function makeFixture(value: boolean | number | bigint | string) {
   };
 }
 
-export const EmptyState = {
-  render: (): JSX.Element => {
+export const EmptyState: StoryObj = {
+  render: () => {
     return <Indicator />;
   },
 };
 
-export const MissingValue = {
-  render: (): JSX.Element => {
+export const MissingValue: StoryObj = {
+  render: () => {
     return (
       <Indicator
         overrideConfig={{
@@ -62,8 +62,8 @@ export const MissingValue = {
   },
 };
 
-export const BackgroundStyle = {
-  render: (): JSX.Element => {
+export const BackgroundStyle: StoryObj = {
+  render: () => {
     return (
       <Indicator
         overrideConfig={{
@@ -98,18 +98,18 @@ const BooleanStory = (): JSX.Element => {
   );
 };
 
-export const BooleanTrue = {
-  render: (): JSX.Element => <BooleanStory />,
+export const BooleanTrue: StoryObj = {
+  render: () => <BooleanStory />,
   parameters: { panelSetup: { fixture: makeFixture(true) } },
 };
 
-export const BooleanFalse = {
-  render: (): JSX.Element => <BooleanStory />,
+export const BooleanFalse: StoryObj = {
+  render: () => <BooleanStory />,
   parameters: { panelSetup: { fixture: makeFixture(false) } },
 };
 
-export const String = {
-  render: function Story(): JSX.Element {
+export const String: StoryObj = {
+  render: function Story() {
     return (
       <Indicator
         overrideConfig={{
@@ -144,23 +144,23 @@ const NumberStory = (): JSX.Element => {
   );
 };
 
-export const NumberNegative = {
-  render: (): JSX.Element => <NumberStory />,
+export const NumberNegative: StoryObj = {
+  render: () => <NumberStory />,
   parameters: { panelSetup: { fixture: makeFixture(-1) } },
 };
 
-export const NumberZero = {
-  render: (): JSX.Element => <NumberStory />,
+export const NumberZero: StoryObj = {
+  render: () => <NumberStory />,
   parameters: { panelSetup: { fixture: makeFixture(0) } },
 };
 
-export const NumberPositive = {
-  render: (): JSX.Element => <NumberStory />,
+export const NumberPositive: StoryObj = {
+  render: () => <NumberStory />,
   parameters: { panelSetup: { fixture: makeFixture(1) } },
 };
 
-export const MessagePathWithFilter = {
-  render: function Story(): JSX.Element {
+export const MessagePathWithFilter: StoryObj = {
+  render: function Story() {
     return (
       <Indicator
         overrideConfig={{

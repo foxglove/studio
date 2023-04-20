@@ -37,7 +37,7 @@ export default {
 };
 
 export const Default: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return <PlaybackControlsTooltipContent stamp={{ sec: 1, nsec: 1 }} />;
   },
 };

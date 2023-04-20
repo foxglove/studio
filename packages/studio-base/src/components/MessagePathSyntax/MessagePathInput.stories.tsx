@@ -12,6 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { Stack } from "@mui/material";
+import { StoryObj } from "@storybook/react";
 import { screen, waitFor, userEvent } from "@storybook/testing-library";
 
 import { Topic } from "@foxglove/studio-base/players/types";
@@ -103,24 +104,24 @@ function makePathAndSelectionAction(path: undefined | string, item: number) {
   };
 }
 
-export const PathWithHeaderFields = {
-  render: function Story(): JSX.Element {
+export const PathWithHeaderFields: StoryObj = {
+  render: function Story() {
     return <MessagePathInputStory path="/some_topic/state.header.stamp.sec" />;
   },
 
   name: "path with header fields",
 };
 
-export const AutocompleteTopics = {
-  render: function Story(): JSX.Element {
+export const AutocompleteTopics: StoryObj = {
+  render: function Story() {
     return <MessagePathInputStory path="/" />;
   },
 
   name: "autocomplete topics",
 };
 
-export const AutocompleteScalarFromTopicAndEmptyPath = {
-  render: function Story(): JSX.Element {
+export const AutocompleteScalarFromTopicAndEmptyPath: StoryObj = {
+  render: function Story() {
     return <MessagePathInputStory path="" validTypes={["int32"]} />;
   },
 
@@ -128,8 +129,8 @@ export const AutocompleteScalarFromTopicAndEmptyPath = {
   name: "autocomplete scalar from topic and empty path",
 };
 
-export const AutocompleteScalarFromTopic = {
-  render: function Story(): JSX.Element {
+export const AutocompleteScalarFromTopic: StoryObj = {
+  render: function Story() {
     return <MessagePathInputStory path="" validTypes={["int32"]} />;
   },
 
@@ -137,8 +138,8 @@ export const AutocompleteScalarFromTopic = {
   name: "autocomplete scalar from topic",
 };
 
-export const AutocompleteScalarFromFullTopic = {
-  render: function Story(): JSX.Element {
+export const AutocompleteScalarFromFullTopic: StoryObj = {
+  render: function Story() {
     return <MessagePathInputStory path="" validTypes={["int32"]} />;
   },
 
@@ -146,16 +147,16 @@ export const AutocompleteScalarFromFullTopic = {
   name: "autocomplete scalar from full topic",
 };
 
-export const AutocompleteMessagePath = {
-  render: function Story(): JSX.Element {
+export const AutocompleteMessagePath: StoryObj = {
+  render: function Story() {
     return <MessagePathInputStory path="/some_topic/location.po" />;
   },
 
   name: "autocomplete messagePath",
 };
 
-export const AutocompleteMessagePathLight = {
-  render: function Story(): JSX.Element {
+export const AutocompleteMessagePathLight: StoryObj = {
+  render: function Story() {
     return <MessagePathInputStory path="/some_topic/location.po" />;
   },
 
@@ -163,144 +164,144 @@ export const AutocompleteMessagePathLight = {
   parameters: { colorScheme: "light" },
 };
 
-export const AutocompleteFilter = {
-  render: function Story(): JSX.Element {
+export const AutocompleteFilter: StoryObj = {
+  render: function Story() {
     return <MessagePathInputStory path="/some_topic/state.items[:]{}" />;
   },
 
   name: "autocomplete filter",
 };
 
-export const AutocompleteTopLevelFilter = {
-  render: function Story(): JSX.Element {
+export const AutocompleteTopLevelFilter: StoryObj = {
+  render: function Story() {
     return <MessagePathInputStory path="/some_topic/state{}" />;
   },
 
   name: "autocomplete top level filter",
 };
 
-export const AutocompleteForGlobalVariablesVariables = {
-  render: function Story(): JSX.Element {
+export const AutocompleteForGlobalVariablesVariables: StoryObj = {
+  render: function Story() {
     return <MessagePathInputStory path="/some_topic/state{foo_id==0}.items[:]{id==$}" />;
   },
 
   name: "autocomplete for globalVariables variables",
 };
 
-export const PathWithValidGlobalVariablesVariable = {
-  render: function Story(): JSX.Element {
+export const PathWithValidGlobalVariablesVariable: StoryObj = {
+  render: function Story() {
     return <MessagePathInputStory path="/some_topic/state.items[:]{id==$global_var_2}" />;
   },
 
   name: "path with valid globalVariables variable",
 };
 
-export const PathWithInvalidGlobalVariablesVariable = {
-  render: function Story(): JSX.Element {
+export const PathWithInvalidGlobalVariablesVariable: StoryObj = {
+  render: function Story() {
     return <MessagePathInputStory path="/some_topic/state.items[:]{id==$global_var_3}" />;
   },
 
   name: "path with invalid globalVariables variable",
 };
 
-export const PathWithIncorrectlyPrefixedGlobalVariablesVariable = {
-  render: function Story(): JSX.Element {
+export const PathWithIncorrectlyPrefixedGlobalVariablesVariable: StoryObj = {
+  render: function Story() {
     return <MessagePathInputStory path="/some_topic/state.items[:]{id==global_var_2}" />;
   },
 
   name: "path with incorrectly prefixed globalVariables variable",
 };
 
-export const AutocompleteForPathWithGlobalVariablesVariableInSliceSingleIdx = {
-  render: function Story(): JSX.Element {
+export const AutocompleteForPathWithGlobalVariablesVariableInSliceSingleIdx: StoryObj = {
+  render: function Story() {
     return <MessagePathInputStory path="/some_topic/state.items[$]" />;
   },
 
   name: "autocomplete for path with globalVariables variable in slice (single idx)",
 };
 
-export const AutocompleteForPathWithGlobalVariablesVariableInSliceStartIdx = {
-  render: function Story(): JSX.Element {
+export const AutocompleteForPathWithGlobalVariablesVariableInSliceStartIdx: StoryObj = {
+  render: function Story() {
     return <MessagePathInputStory path="/some_topic/state.items[$:]" />;
   },
 
   name: "autocomplete for path with globalVariables variable in slice (start idx)",
 };
 
-export const AutocompleteForPathWithGlobalVariablesVariableInSliceEndIdx = {
-  render: function Story(): JSX.Element {
+export const AutocompleteForPathWithGlobalVariablesVariableInSliceEndIdx: StoryObj = {
+  render: function Story() {
     return <MessagePathInputStory path="/some_topic/state.items[:$]" />;
   },
 
   name: "autocomplete for path with globalVariables variable in slice (end idx)",
 };
 
-export const AutocompleteForPathWithGlobalVariablesVariablesInSliceStartAndEndIdx = {
-  render: function Story(): JSX.Element {
+export const AutocompleteForPathWithGlobalVariablesVariablesInSliceStartAndEndIdx: StoryObj = {
+  render: function Story() {
     return <MessagePathInputStory path="/some_topic/state.items[$global_var_2:$]" />;
   },
 
   name: "autocomplete for path with globalVariables variables in slice (start and end idx)",
 };
 
-export const PathWithInvalidMathModifier = {
-  render: function Story(): JSX.Element {
+export const PathWithInvalidMathModifier: StoryObj = {
+  render: function Story() {
     return <MessagePathInputStory path="/some_topic/location.pose.x.@negative" />;
   },
 
   name: "path with invalid math modifier",
 };
 
-export const AutocompleteWhenPrioritizedDatatypeIsAvailable = {
-  render: function Story(): JSX.Element {
+export const AutocompleteWhenPrioritizedDatatypeIsAvailable: StoryObj = {
+  render: function Story() {
     return <MessagePathInputStory path="/" prioritizedDatatype="msgs/State" />;
   },
 
   name: "autocomplete when prioritized datatype is available",
 };
 
-export const AutocompleteForMessageWithJsonField = {
-  render: function Story(): JSX.Element {
+export const AutocompleteForMessageWithJsonField: StoryObj = {
+  render: function Story() {
     return <MessagePathInputStory path="/some_logs_topic." />;
   },
 
   name: "autocomplete for message with json field",
 };
 
-export const AutocompleteForPathWithExistingFilter = {
-  render: function Story(): JSX.Element {
+export const AutocompleteForPathWithExistingFilter: StoryObj = {
+  render: function Story() {
     return <MessagePathInputStory path="/some_topic/state.items[:]{id==1}." />;
   },
 
   name: "autocomplete for path with existing filter",
 };
 
-export const AutocompleteForPathWithExistingFilterUsingAGlobalVariable = {
-  render: function Story(): JSX.Element {
+export const AutocompleteForPathWithExistingFilterUsingAGlobalVariable: StoryObj = {
+  render: function Story() {
     return <MessagePathInputStory path="/some_topic/state.items[:]{id==$global_var_2}." />;
   },
 
   name: "autocomplete for path with existing filter using a global variable",
 };
 
-export const PathForFieldInsideJsonObject = {
-  render: function Story(): JSX.Element {
+export const PathForFieldInsideJsonObject: StoryObj = {
+  render: function Story() {
     return <MessagePathInputStory path="/some_logs_topic.myJson" />;
   },
 
   name: "path for field inside json object",
 };
 
-export const PathForMultipleLevelsOfNestedFieldsInsideJsonObject = {
-  render: function Story(): JSX.Element {
+export const PathForMultipleLevelsOfNestedFieldsInsideJsonObject: StoryObj = {
+  render: function Story() {
     return <MessagePathInputStory path="/some_logs_topic.myJson.a.b.c" />;
   },
 
   name: "path for multiple levels of nested fields inside json object",
 };
 
-export const PerformanceTesting = {
-  render: function Story(): JSX.Element {
+export const PerformanceTesting: StoryObj = {
+  render: function Story() {
     return <MessagePathPerformanceStory path="." />;
   },
 

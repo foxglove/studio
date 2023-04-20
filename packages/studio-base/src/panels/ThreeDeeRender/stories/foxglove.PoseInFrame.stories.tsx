@@ -24,7 +24,7 @@ type Vec4 = [number, number, number, number];
 const vec4ToOrientation = ([x, y, z, w]: Vec4) => ({ x, y, z, w });
 
 export const Foxglove_PoseInFrame: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const topics: Topic[] = [
       { name: "/tf", schemaName: "foxglove.FrameTransform" },
       { name: "/pose1", schemaName: "foxglove.PoseInFrame" },

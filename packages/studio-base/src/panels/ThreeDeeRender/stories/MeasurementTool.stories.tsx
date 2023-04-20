@@ -20,7 +20,7 @@ export default {
 };
 
 export const MeasurementTool: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const topics: Topic[] = [{ name: "/tf", schemaName: "geometry_msgs/TransformStamped" }];
     const tf1: MessageEvent<TransformStamped> = {
       topic: "/tf",

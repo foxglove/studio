@@ -552,7 +552,7 @@ function AllMarkers(props: { showOutlines: boolean }): JSX.Element {
 }
 
 export const Markers: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     return <AllMarkers showOutlines={true} />;
   },
 
@@ -560,7 +560,7 @@ export const Markers: StoryObj = {
 };
 
 export const MarkersNoOutlines: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     return <AllMarkers showOutlines={false} />;
   },
 

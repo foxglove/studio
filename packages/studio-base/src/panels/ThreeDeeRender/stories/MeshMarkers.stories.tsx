@@ -20,7 +20,7 @@ export default {
 };
 
 export const MeshMarkers: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const topics: Topic[] = [
       { name: "/markersOutline", schemaName: "visualization_msgs/Marker" },
       { name: "/markersNoOutline", schemaName: "visualization_msgs/Marker" },

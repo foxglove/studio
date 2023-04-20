@@ -21,7 +21,7 @@ export default {
 };
 
 export const SphereListPointsTransform: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     function makeSphere(
       id: string,
       color: string,

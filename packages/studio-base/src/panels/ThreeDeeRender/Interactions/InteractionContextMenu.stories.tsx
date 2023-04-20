@@ -67,7 +67,7 @@ export default {
 };
 
 export const Light: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     return (
       <Box height="100vh" width="100vh" bgcolor="background.default">
         <InteractionContextMenu onClose={() => {}} {...sharedProps} />
@@ -79,7 +79,7 @@ export const Light: StoryObj = {
 };
 
 export const Dark: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     return (
       <Box height="100vh" width="100vh" bgcolor="background.default">
         <InteractionContextMenu onClose={() => {}} {...sharedProps} />

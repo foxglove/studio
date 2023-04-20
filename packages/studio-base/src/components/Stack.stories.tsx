@@ -36,7 +36,7 @@ function Box({ children }: PropsWithChildren<StackProps>): JSX.Element {
 }
 
 export const Default: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return (
       <Stack data-testid padding={2} gap={2} fullHeight>
         <Stack direction="row" gap={2}>

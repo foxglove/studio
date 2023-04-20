@@ -322,8 +322,8 @@ export const MarkersImageSize: StoryObj = {
   },
 };
 
-export const MarkersWithFallbackRenderingUsingMainThread = {
-  render: function Story(): JSX.Element {
+export const MarkersWithFallbackRenderingUsingMainThread: StoryObj = {
+  render: function Story() {
     const image = useCompressedImage();
 
     return (
@@ -379,8 +379,8 @@ export const MarkersWithFallbackRenderingUsingMainThread = {
   },
 };
 
-export const ErrorState = {
-  render: (): JSX.Element => {
+export const ErrorState: StoryObj = {
+  render: () => {
     return (
       <ImageCanvas
         topic={topics[0]}
@@ -404,8 +404,8 @@ export const ErrorState = {
   },
 };
 
-export const CallsOnRenderFrameWhenRenderingSucceeds = {
-  render: function Story(): JSX.Element {
+export const CallsOnRenderFrameWhenRenderingSucceeds: StoryObj = {
+  render: function Story() {
     const image = useCompressedImage();
 
     return (
@@ -430,8 +430,8 @@ export const CallsOnRenderFrameWhenRenderingSucceeds = {
   },
 };
 
-export const CallsOnRenderFrameWhenRenderingFails = {
-  render: (): JSX.Element => {
+export const CallsOnRenderFrameWhenRenderingFails: StoryObj = {
+  render: () => {
     return (
       <ShouldCallOnRenderImage>
         {(onStartRenderImage) => (
@@ -459,22 +459,34 @@ export const CallsOnRenderFrameWhenRenderingFails = {
   },
 };
 
-export const RGB8 = {
-  render: (): JSX.Element => <RGBStory encoding="rgb8" />,
+export const RGB8: StoryObj = {
+  render: () => <RGBStory encoding="rgb8" />,
 };
 
-export const BGR8 = { render: (): JSX.Element => <RGBStory encoding="bgr8" /> };
-export const Mono16BigEndian = { render: (): JSX.Element => <Mono16Story bigEndian={true} /> };
-export const Mono16LittleEndian = { render: (): JSX.Element => <Mono16Story bigEndian={false} /> };
+export const BGR8: StoryObj = { render: () => <RGBStory encoding="bgr8" /> };
+export const Mono16BigEndian: StoryObj = {
+  render: () => <Mono16Story bigEndian={true} />,
+};
+export const Mono16LittleEndian: StoryObj = {
+  render: () => <Mono16Story bigEndian={false} />,
+};
 
 const mono16Args = { minValue: 5000, maxValue: 20000 };
 
-export const Mono16CustomMinMax = {
-  render: (args: typeof mono16Args): JSX.Element => <Mono16Story bigEndian {...args} />,
+export const Mono16CustomMinMax: StoryObj<typeof mono16Args> = {
+  render: (args: typeof mono16Args) => <Mono16Story bigEndian {...args} />,
 
   args: mono16Args,
 };
-export const BayerRGGB8 = { render: (): JSX.Element => <BayerStory encoding="bayer_rggb8" /> };
-export const BayerBGGR8 = { render: (): JSX.Element => <BayerStory encoding="bayer_bggr8" /> };
-export const BayerGBRG8 = { render: (): JSX.Element => <BayerStory encoding="bayer_gbrg8" /> };
-export const BayerGRBG8 = { render: (): JSX.Element => <BayerStory encoding="bayer_grbg8" /> };
+export const BayerRGGB8: StoryObj = {
+  render: () => <BayerStory encoding="bayer_rggb8" />,
+};
+export const BayerBGGR8: StoryObj = {
+  render: () => <BayerStory encoding="bayer_bggr8" />,
+};
+export const BayerGBRG8: StoryObj = {
+  render: () => <BayerStory encoding="bayer_gbrg8" />,
+};
+export const BayerGRBG8: StoryObj = {
+  render: () => <BayerStory encoding="bayer_grbg8" />,
+};

@@ -25,7 +25,7 @@ export default {
 };
 
 export const CameraInfoRender: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const topics: Topic[] = [
       { name: "/tf", schemaName: "geometry_msgs/TransformStamped" },
       { name: "/rational_polynomial", schemaName: "sensor_msgs/CameraInfo" },

@@ -26,7 +26,7 @@ export default {
 };
 
 export const AutoSelectFrame: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const topics: Topic[] = [
       { name: "/tf", schemaName: "geometry_msgs/TransformStamped" },
       { name: "/markers", schemaName: "visualization_msgs/Marker" },

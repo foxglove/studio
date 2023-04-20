@@ -321,7 +321,7 @@ function makeStoryScene({
 }
 
 export const BasicEntities: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const topics: Topic[] = [
       { name: "transforms", schemaName: "foxglove.FrameTransform" },
       { name: "scene1", schemaName: "foxglove.SceneUpdate" },

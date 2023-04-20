@@ -11,7 +11,7 @@ export default {
 };
 
 export const InScreenshotTests: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return (
       <div
         style={{

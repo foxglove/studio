@@ -36,7 +36,7 @@ const TOPICS: Topic[] = [
 ];
 
 export const Default: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return (
       <MockMessagePipelineProvider
         startTime={START_TIME}
@@ -53,7 +53,7 @@ export const Default: StoryObj = {
 };
 
 export const Empty: StoryObj = {
-  render: (): JSX.Element => {
+  render: () => {
     return (
       <MockMessagePipelineProvider noActiveData presence={PlayerPresence.NOT_PRESENT}>
         <PanelSetup>

@@ -201,7 +201,7 @@ export const DownloadProgressByRanges: StoryObj = {
 };
 
 export const HoverTicks: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const player = getPlayerState();
     const setHoverValue = useSetHoverValue();
 
@@ -230,7 +230,7 @@ export const HoverTicks: StoryObj = {
 };
 
 export const WithEvents: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     const player = getPlayerState();
     const setEvents = useEvents((store) => store.setEvents);
 

@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { StoryObj } from "@storybook/react";
 import { useEffect, useState } from "react";
 import { useAsync } from "react-use";
 
@@ -15,8 +16,8 @@ export default {
   component: TopicGraph,
 };
 
-export const Empty = {
-  render: (): JSX.Element => {
+export const Empty: StoryObj = {
+  render: () => {
     return (
       <PanelSetup>
         <TopicGraph />
@@ -25,8 +26,8 @@ export const Empty = {
   },
 };
 
-export const WithSettings = {
-  render: function Story(): JSX.Element {
+export const WithSettings: StoryObj = {
+  render: function Story() {
     return (
       <PanelSetup includeSettings>
         <TopicGraph />
@@ -77,20 +78,20 @@ function TopicsStory({
   );
 }
 
-export const AllTopics = {
-  render: (): JSX.Element => <TopicsStory topicVisibility="all" />,
+export const AllTopics: StoryObj = {
+  render: () => <TopicsStory topicVisibility="all" />,
 };
 
-export const TopicsWithSubscribers = {
-  render: (): JSX.Element => <TopicsStory topicVisibility="subscribed" />,
+export const TopicsWithSubscribers: StoryObj = {
+  render: () => <TopicsStory topicVisibility="subscribed" />,
 };
 
-export const TopicsHidden = {
-  render: (): JSX.Element => <TopicsStory topicVisibility="none" />,
+export const TopicsHidden: StoryObj = {
+  render: () => <TopicsStory topicVisibility="none" />,
 };
 
-export const ReLayout = {
-  render: function Story(): JSX.Element {
+export const ReLayout: StoryObj = {
+  render: function Story() {
     const [fixture, setFixture] = useState<Fixture>({
       frame: {},
       topics: [{ name: "/topic", schemaName: "std_msgs/Header" }],

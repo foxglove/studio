@@ -145,7 +145,7 @@ function Wrapper({ children }: { children: ReactNode }): JSX.Element {
 }
 
 export const TypographyCatalog: StoryObj = {
-  render: function Story(): JSX.Element {
+  render: function Story() {
     return (
       <Stack gap={1} padding={1}>
         <Wrapper>

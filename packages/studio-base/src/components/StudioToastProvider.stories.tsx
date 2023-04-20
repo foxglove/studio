@@ -52,8 +52,8 @@ export const OneWarning: StoryObj = {
   },
 };
 
-export const OneInfo = {
-  render: function Story(): JSX.Element {
+export const OneInfo: StoryObj = {
+  render: function Story() {
     const { enqueueSnackbar } = useSnackbar();
 
     useEffect(() => {
@@ -64,8 +64,8 @@ export const OneInfo = {
   },
 };
 
-export const MultipleMessages = {
-  render: function Story(): JSX.Element {
+export const MultipleMessages: StoryObj = {
+  render: function Story() {
     const { enqueueSnackbar } = useSnackbar();
 
     useEffect(() => {
@@ -80,7 +80,7 @@ export const MultipleMessages = {
   },
 };
 
-export const MultipleMessagesLightTheme = {
+export const MultipleMessagesLightTheme: StoryObj = {
   ...MultipleMessages,
   parameters: { colorScheme: "light" },
 };

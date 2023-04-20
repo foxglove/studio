@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { StoryObj } from "@storybook/react";
 import { useEffect, useState } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
@@ -96,27 +97,27 @@ function Story({
   );
 }
 
-export const Unselected = {
-  render: (): JSX.Element => <Story />,
+export const Unselected: StoryObj = {
+  render: () => <Story />,
 };
 
-export const ASelected = { render: (): JSX.Element => <Story defaultSelectedKey="a" /> };
-export const BSelected = { render: (): JSX.Element => <Story defaultSelectedKey="b" /> };
+export const ASelected: StoryObj = { render: () => <Story defaultSelectedKey="a" /> };
+export const BSelected: StoryObj = { render: () => <Story defaultSelectedKey="b" /> };
 
-export const ClickToSelect = {
-  render: (): JSX.Element => <Story clickKey="a" />,
+export const ClickToSelect: StoryObj = {
+  render: () => <Story clickKey="a" />,
   parameters: { colorScheme: "dark" },
 };
 
-export const ClickToDeselect = {
-  render: (): JSX.Element => <Story defaultSelectedKey="a" clickKey="a" />,
+export const ClickToDeselect: StoryObj = {
+  render: () => <Story defaultSelectedKey="a" clickKey="a" />,
   parameters: { colorScheme: "dark" },
 };
 
-export const OverflowUnselected = { render: (): JSX.Element => <Story height={200} /> };
-export const OverflowCSelected = {
-  render: (): JSX.Element => <Story height={200} defaultSelectedKey="c" />,
+export const OverflowUnselected: StoryObj = { render: () => <Story height={200} /> };
+export const OverflowCSelected: StoryObj = {
+  render: () => <Story height={200} defaultSelectedKey="c" />,
 };
-export const OverflowBSelected = {
-  render: (): JSX.Element => <Story height={200} defaultSelectedKey="b" />,
+export const OverflowBSelected: StoryObj = {
+  render: () => <Story height={200} defaultSelectedKey="b" />,
 };
