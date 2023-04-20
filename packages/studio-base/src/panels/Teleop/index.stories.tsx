@@ -27,8 +27,10 @@ export default {
   ],
 };
 
-export const Unconfigured = (): JSX.Element => {
-  return <TeleopPanel />;
+export const Unconfigured = {
+  render: (): JSX.Element => {
+    return <TeleopPanel />;
+  },
 };
 
 export const WithSettings = {
@@ -42,6 +44,8 @@ export const WithSettings = {
   },
 };
 
-export const WithTopic = (): JSX.Element => {
-  return <TeleopPanel overrideConfig={{ topic: "/abc" }} />;
+export const WithTopic = {
+  render: (): JSX.Element => {
+    return <TeleopPanel overrideConfig={{ topic: "/abc" }} />;
+  },
 };

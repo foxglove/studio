@@ -176,7 +176,9 @@ export const RightClosed = {
   },
 };
 
-export const Default = (): JSX.Element => <Story label="Both sidebars should be closed" />;
+export const Default = {
+  render: (): JSX.Element => <Story label="Both sidebars should be closed" />,
+};
 
 export const BothOpen = {
   render: (): JSX.Element => <Story defaultLeftKey="a" defaultRightKey="x" />,

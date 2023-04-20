@@ -322,92 +322,15 @@ export const MarkersImageSize: StoryObj = {
   },
 };
 
-export const MarkersWithFallbackRenderingUsingMainThread = (): JSX.Element => {
-  const image = useCompressedImage();
+export const MarkersWithFallbackRenderingUsingMainThread = {
+  render: function Story(): JSX.Element {
+    const image = useCompressedImage();
 
-  return (
-    <div>
-      <div>original markers</div>
-      <ImageCanvas
-        topic={topics[1]}
-        image={image}
-        rawMarkerData={{
-          markers: annotations,
-          cameraInfo: undefined,
-          transformMarkers: false,
-        }}
-        config={config}
-        saveConfig={noop}
-        setActivePixelData={noop}
-        renderInMainThread
-        onStartRenderImage={() => () => undefined}
-      />
-      <br />
-      <div>transformed markers</div>
-      <ImageCanvas
-        topic={topics[1]}
-        image={image}
-        rawMarkerData={{
-          markers: annotations,
-          cameraInfo,
-          transformMarkers: true,
-        }}
-        config={config}
-        saveConfig={noop}
-        setActivePixelData={noop}
-        renderInMainThread
-        onStartRenderImage={() => () => undefined}
-      />
-      <div>markers with different original image size</div>
-      <ImageCanvas
-        topic={topics[1]}
-        image={image}
-        rawMarkerData={{
-          markers: annotations,
-          cameraInfo: { ...cameraInfo, width: 200, height: 150 },
-          transformMarkers: true,
-        }}
-        config={config}
-        saveConfig={noop}
-        setActivePixelData={noop}
-        renderInMainThread
-        onStartRenderImage={() => () => undefined}
-      />
-    </div>
-  );
-};
-
-export const ErrorState = (): JSX.Element => {
-  return (
-    <ImageCanvas
-      topic={topics[0]}
-      image={{
-        type: "raw",
-        stamp: { sec: 0, nsec: 0 },
-        data: new Uint8Array([]),
-        width: 100,
-        height: 50,
-        encoding: "Foo",
-        is_bigendian: false,
-        step: 10,
-      }}
-      rawMarkerData={noMarkersMarkerData}
-      config={config}
-      saveConfig={noop}
-      setActivePixelData={noop}
-      onStartRenderImage={() => () => undefined}
-    />
-  );
-};
-
-export const CallsOnRenderFrameWhenRenderingSucceeds = (): JSX.Element => {
-  const image = useCompressedImage();
-
-  return (
-    <ShouldCallOnRenderImage>
-      {(onStartRenderImage) => (
+    return (
+      <div>
+        <div>original markers</div>
         <ImageCanvas
-          topic={topics[0]}
+          topic={topics[1]}
           image={image}
           rawMarkerData={{
             markers: annotations,
@@ -417,44 +340,132 @@ export const CallsOnRenderFrameWhenRenderingSucceeds = (): JSX.Element => {
           config={config}
           saveConfig={noop}
           setActivePixelData={noop}
-          onStartRenderImage={onStartRenderImage}
+          renderInMainThread
+          onStartRenderImage={() => () => undefined}
         />
-      )}
-    </ShouldCallOnRenderImage>
-  );
-};
-
-export const CallsOnRenderFrameWhenRenderingFails = (): JSX.Element => {
-  return (
-    <ShouldCallOnRenderImage>
-      {(onStartRenderImage) => (
+        <br />
+        <div>transformed markers</div>
         <ImageCanvas
-          topic={topics[0]}
-          image={{
-            type: "raw",
-            stamp: { sec: 0, nsec: 0 },
-            data: new Uint8Array([]),
-            width: 100,
-            height: 50,
-            encoding: "Foo",
-            is_bigendian: false,
-            step: 10,
+          topic={topics[1]}
+          image={image}
+          rawMarkerData={{
+            markers: annotations,
+            cameraInfo,
+            transformMarkers: true,
           }}
-          rawMarkerData={noMarkersMarkerData}
           config={config}
           saveConfig={noop}
           setActivePixelData={noop}
-          onStartRenderImage={onStartRenderImage}
+          renderInMainThread
+          onStartRenderImage={() => () => undefined}
         />
-      )}
-    </ShouldCallOnRenderImage>
-  );
+        <div>markers with different original image size</div>
+        <ImageCanvas
+          topic={topics[1]}
+          image={image}
+          rawMarkerData={{
+            markers: annotations,
+            cameraInfo: { ...cameraInfo, width: 200, height: 150 },
+            transformMarkers: true,
+          }}
+          config={config}
+          saveConfig={noop}
+          setActivePixelData={noop}
+          renderInMainThread
+          onStartRenderImage={() => () => undefined}
+        />
+      </div>
+    );
+  },
 };
 
-export const RGB8 = (): JSX.Element => <RGBStory encoding="rgb8" />;
-export const BGR8 = (): JSX.Element => <RGBStory encoding="bgr8" />;
-export const Mono16BigEndian = (): JSX.Element => <Mono16Story bigEndian={true} />;
-export const Mono16LittleEndian = (): JSX.Element => <Mono16Story bigEndian={false} />;
+export const ErrorState = {
+  render: (): JSX.Element => {
+    return (
+      <ImageCanvas
+        topic={topics[0]}
+        image={{
+          type: "raw",
+          stamp: { sec: 0, nsec: 0 },
+          data: new Uint8Array([]),
+          width: 100,
+          height: 50,
+          encoding: "Foo",
+          is_bigendian: false,
+          step: 10,
+        }}
+        rawMarkerData={noMarkersMarkerData}
+        config={config}
+        saveConfig={noop}
+        setActivePixelData={noop}
+        onStartRenderImage={() => () => undefined}
+      />
+    );
+  },
+};
+
+export const CallsOnRenderFrameWhenRenderingSucceeds = {
+  render: function Story(): JSX.Element {
+    const image = useCompressedImage();
+
+    return (
+      <ShouldCallOnRenderImage>
+        {(onStartRenderImage) => (
+          <ImageCanvas
+            topic={topics[0]}
+            image={image}
+            rawMarkerData={{
+              markers: annotations,
+              cameraInfo: undefined,
+              transformMarkers: false,
+            }}
+            config={config}
+            saveConfig={noop}
+            setActivePixelData={noop}
+            onStartRenderImage={onStartRenderImage}
+          />
+        )}
+      </ShouldCallOnRenderImage>
+    );
+  },
+};
+
+export const CallsOnRenderFrameWhenRenderingFails = {
+  render: (): JSX.Element => {
+    return (
+      <ShouldCallOnRenderImage>
+        {(onStartRenderImage) => (
+          <ImageCanvas
+            topic={topics[0]}
+            image={{
+              type: "raw",
+              stamp: { sec: 0, nsec: 0 },
+              data: new Uint8Array([]),
+              width: 100,
+              height: 50,
+              encoding: "Foo",
+              is_bigendian: false,
+              step: 10,
+            }}
+            rawMarkerData={noMarkersMarkerData}
+            config={config}
+            saveConfig={noop}
+            setActivePixelData={noop}
+            onStartRenderImage={onStartRenderImage}
+          />
+        )}
+      </ShouldCallOnRenderImage>
+    );
+  },
+};
+
+export const RGB8 = {
+  render: (): JSX.Element => <RGBStory encoding="rgb8" />,
+};
+
+export const BGR8 = { render: (): JSX.Element => <RGBStory encoding="bgr8" /> };
+export const Mono16BigEndian = { render: (): JSX.Element => <Mono16Story bigEndian={true} /> };
+export const Mono16LittleEndian = { render: (): JSX.Element => <Mono16Story bigEndian={false} /> };
 
 const mono16Args = { minValue: 5000, maxValue: 20000 };
 
@@ -463,8 +474,7 @@ export const Mono16CustomMinMax = {
 
   args: mono16Args,
 };
-
-export const BayerRGGB8 = (): JSX.Element => <BayerStory encoding="bayer_rggb8" />;
-export const BayerBGGR8 = (): JSX.Element => <BayerStory encoding="bayer_bggr8" />;
-export const BayerGBRG8 = (): JSX.Element => <BayerStory encoding="bayer_gbrg8" />;
-export const BayerGRBG8 = (): JSX.Element => <BayerStory encoding="bayer_grbg8" />;
+export const BayerRGGB8 = { render: (): JSX.Element => <BayerStory encoding="bayer_rggb8" /> };
+export const BayerBGGR8 = { render: (): JSX.Element => <BayerStory encoding="bayer_bggr8" /> };
+export const BayerGBRG8 = { render: (): JSX.Element => <BayerStory encoding="bayer_gbrg8" /> };
+export const BayerGRBG8 = { render: (): JSX.Element => <BayerStory encoding="bayer_grbg8" /> };

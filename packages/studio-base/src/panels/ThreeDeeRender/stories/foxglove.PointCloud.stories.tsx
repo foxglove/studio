@@ -23,23 +23,27 @@ export default {
   },
 };
 
-export const Foxglove_PointCloud_RGBA = (): JSX.Element => <Foxglove_PointCloud />;
+export const Foxglove_PointCloud_RGBA = {
+  render: (): JSX.Element => <Foxglove_PointCloud />,
+};
 
-export const Foxglove_PointCloud_RGBA_Square = (): JSX.Element => (
-  <Foxglove_PointCloud pointShape="square" />
-);
+export const Foxglove_PointCloud_RGBA_Square = {
+  render: (): JSX.Element => <Foxglove_PointCloud pointShape="square" />,
+};
 
-export const Foxglove_PointCloud_Gradient = (): JSX.Element => (
-  <Foxglove_PointCloud colorMode="gradient" />
-);
+export const Foxglove_PointCloud_Gradient = {
+  render: (): JSX.Element => <Foxglove_PointCloud colorMode="gradient" />,
+};
 
-export const Foxglove_PointCloud_Gradient_Clamped = (): JSX.Element => (
-  <Foxglove_PointCloud colorMode="gradient" minValue={-2} maxValue={2} />
-);
+export const Foxglove_PointCloud_Gradient_Clamped = {
+  render: (): JSX.Element => (
+    <Foxglove_PointCloud colorMode="gradient" minValue={-2} maxValue={2} />
+  ),
+};
 
-export const Foxglove_PointCloud_Stixels = (): JSX.Element => (
-  <Foxglove_PointCloud colorMode="gradient" stixelsEnabled={true} />
-);
+export const Foxglove_PointCloud_Stixels = {
+  render: (): JSX.Element => <Foxglove_PointCloud colorMode="gradient" stixelsEnabled={true} />,
+};
 
 function Foxglove_PointCloud({
   pointShape = "circle",
@@ -369,15 +373,17 @@ function Foxglove_PointCloud_Intensity_Base({
   );
 }
 
-export const Foxglove_PointCloud_Intensity = Foxglove_PointCloud_Intensity_Base.bind(undefined, {});
+export const Foxglove_PointCloud_Intensity: StoryObj = {
+  render: () => Foxglove_PointCloud_Intensity_Base({}),
+};
 
-export const Foxglove_PointCloud_Intensity_Clamped = Foxglove_PointCloud_Intensity_Base.bind(
-  undefined,
-  {
-    minValue: 80,
-    maxValue: 130,
-  },
-);
+export const Foxglove_PointCloud_Intensity_Clamped: StoryObj = {
+  render: () =>
+    Foxglove_PointCloud_Intensity_Base({
+      minValue: 80,
+      maxValue: 130,
+    }),
+};
 
 export const Foxglove_PointCloud_TwoDimensions: StoryObj = {
   render: function Story() {

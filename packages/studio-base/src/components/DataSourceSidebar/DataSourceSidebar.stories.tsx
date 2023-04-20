@@ -88,168 +88,189 @@ const TOPICS: Topic[] = [
   },
 ];
 
-export const PlayerNotPresent = (): JSX.Element => {
-  return (
-    <MockMessagePipelineProvider noActiveData presence={PlayerPresence.NOT_PRESENT}>
-      <Box height="100%" bgcolor="background.paper">
-        <DataSourceSidebar onSelectDataSourceAction={() => {}} />
-      </Box>
-    </MockMessagePipelineProvider>
-  );
+export const PlayerNotPresent = {
+  render: function Story(): JSX.Element {
+    return (
+      <MockMessagePipelineProvider noActiveData presence={PlayerPresence.NOT_PRESENT}>
+        <Box height="100%" bgcolor="background.paper">
+          <DataSourceSidebar onSelectDataSourceAction={() => {}} />
+        </Box>
+      </MockMessagePipelineProvider>
+    );
+  },
 };
+
 export const PlayerNotPresentChinese = { ...PlayerNotPresent, parameters: { forceLanguage: "zh" } };
 
-export const PlayerIntializing = (): JSX.Element => {
-  return (
-    <MockMessagePipelineProvider
-      startTime={START_TIME}
-      endTime={END_TIME}
-      presence={PlayerPresence.INITIALIZING}
-    >
-      <Box height="100%" bgcolor="background.paper">
-        <DataSourceSidebar onSelectDataSourceAction={() => {}} />
-      </Box>
-    </MockMessagePipelineProvider>
-  );
+export const PlayerIntializing = {
+  render: function Story(): JSX.Element {
+    return (
+      <MockMessagePipelineProvider
+        startTime={START_TIME}
+        endTime={END_TIME}
+        presence={PlayerPresence.INITIALIZING}
+      >
+        <Box height="100%" bgcolor="background.paper">
+          <DataSourceSidebar onSelectDataSourceAction={() => {}} />
+        </Box>
+      </MockMessagePipelineProvider>
+    );
+  },
 };
+
 export const PlayerIntializingChinese = {
   ...PlayerIntializing,
   parameters: { forceLanguage: "zh" },
 };
 
-export const PlayerReconnecting = (): JSX.Element => {
-  return (
-    <MockMessagePipelineProvider
-      startTime={START_TIME}
-      endTime={END_TIME}
-      topics={TOPICS}
-      presence={PlayerPresence.RECONNECTING}
-      problems={[
-        {
-          severity: "error",
-          message: "Connection lost",
-          tip: "A tip that we might want to show the user",
-          error: new Error("Original Error"),
-        },
-      ]}
-    >
-      <Box height="100%" bgcolor="background.paper">
-        <DataSourceSidebar onSelectDataSourceAction={() => {}} />
-      </Box>
-    </MockMessagePipelineProvider>
-  );
+export const PlayerReconnecting = {
+  render: function Story(): JSX.Element {
+    return (
+      <MockMessagePipelineProvider
+        startTime={START_TIME}
+        endTime={END_TIME}
+        topics={TOPICS}
+        presence={PlayerPresence.RECONNECTING}
+        problems={[
+          {
+            severity: "error",
+            message: "Connection lost",
+            tip: "A tip that we might want to show the user",
+            error: new Error("Original Error"),
+          },
+        ]}
+      >
+        <Box height="100%" bgcolor="background.paper">
+          <DataSourceSidebar onSelectDataSourceAction={() => {}} />
+        </Box>
+      </MockMessagePipelineProvider>
+    );
+  },
 };
+
 export const PlayerReconnectingChinese = {
   ...PlayerReconnecting,
   parameters: { forceLanguage: "zh" },
 };
 
-export const PlayerPresent = (): JSX.Element => {
-  return (
-    <MockMessagePipelineProvider
-      startTime={START_TIME}
-      endTime={END_TIME}
-      topics={TOPICS}
-      presence={PlayerPresence.PRESENT}
-    >
-      <Box height="100%" bgcolor="background.paper">
-        <DataSourceSidebar onSelectDataSourceAction={() => {}} />
-      </Box>
-    </MockMessagePipelineProvider>
-  );
-};
-export const PlayerPresentChinese = { ...PlayerPresent, parameters: { forceLanguage: "zh" } };
-
-export const PlayerPresentWithCustomTimezone = (): JSX.Element => {
-  const [_, setTimezone] = useAppConfigurationValue<string>(AppSetting.TIMEZONE);
-
-  useEffect(() => {
-    setTimezone("Pacific/Ponape").catch(console.error);
-  }, [setTimezone]);
-
-  return (
-    <MockMessagePipelineProvider
-      startTime={fromDate(new Date(2022, 1, 22, 21, 22, 11))}
-      endTime={fromDate(new Date(2022, 1, 22, 23, 22, 22))}
-      topics={TOPICS}
-      presence={PlayerPresence.PRESENT}
-    >
-      <Box height="100%" bgcolor="background.paper">
-        <DataSourceSidebar onSelectDataSourceAction={() => {}} />
-      </Box>
-    </MockMessagePipelineProvider>
-  );
-};
-export const PlayerPresentWithCustomTimezoneChinese = Object.assign(
-  PlayerPresentWithCustomTimezone.bind(undefined),
-  { parameters: { forceLanguage: "zh" } },
-);
-
-export const WithEvents = (): JSX.Element => {
-  const userContextValue = {
-    currentUser: { id: "ok" } as User,
-    signIn: () => undefined,
-    signOut: async () => undefined,
-  };
-
-  const setEventsSupported = useEvents((store) => store.setEventsSupported);
-  useEffect(() => {
-    setEventsSupported(true);
-  }, [setEventsSupported]);
-
-  return (
-    <MockMessagePipelineProvider
-      startTime={START_TIME}
-      endTime={END_TIME}
-      topics={TOPICS}
-      presence={PlayerPresence.PRESENT}
-    >
-      <CurrentUserContext.Provider value={userContextValue}>
+export const PlayerPresent = {
+  render: function Story(): JSX.Element {
+    return (
+      <MockMessagePipelineProvider
+        startTime={START_TIME}
+        endTime={END_TIME}
+        topics={TOPICS}
+        presence={PlayerPresence.PRESENT}
+      >
         <Box height="100%" bgcolor="background.paper">
           <DataSourceSidebar onSelectDataSourceAction={() => {}} />
         </Box>
-      </CurrentUserContext.Provider>
-    </MockMessagePipelineProvider>
-  );
+      </MockMessagePipelineProvider>
+    );
+  },
 };
+
+export const PlayerPresentChinese = { ...PlayerPresent, parameters: { forceLanguage: "zh" } };
+
+export const PlayerPresentWithCustomTimezone = {
+  render: function Story(): JSX.Element {
+    const [_, setTimezone] = useAppConfigurationValue<string>(AppSetting.TIMEZONE);
+
+    useEffect(() => {
+      setTimezone("Pacific/Ponape").catch(console.error);
+    }, [setTimezone]);
+
+    return (
+      <MockMessagePipelineProvider
+        startTime={fromDate(new Date(2022, 1, 22, 21, 22, 11))}
+        endTime={fromDate(new Date(2022, 1, 22, 23, 22, 22))}
+        topics={TOPICS}
+        presence={PlayerPresence.PRESENT}
+      >
+        <Box height="100%" bgcolor="background.paper">
+          <DataSourceSidebar onSelectDataSourceAction={() => {}} />
+        </Box>
+      </MockMessagePipelineProvider>
+    );
+  },
+};
+
+export const PlayerPresentWithCustomTimezoneChinese = {
+  ...PlayerPresentWithCustomTimezone,
+  parameters: { forceLanguage: "zh" },
+};
+
+export const WithEvents = {
+  render: function Story(): JSX.Element {
+    const userContextValue = {
+      currentUser: { id: "ok" } as User,
+      signIn: () => undefined,
+      signOut: async () => undefined,
+    };
+
+    const setEventsSupported = useEvents((store) => store.setEventsSupported);
+    useEffect(() => {
+      setEventsSupported(true);
+    }, [setEventsSupported]);
+
+    return (
+      <MockMessagePipelineProvider
+        startTime={START_TIME}
+        endTime={END_TIME}
+        topics={TOPICS}
+        presence={PlayerPresence.PRESENT}
+      >
+        <CurrentUserContext.Provider value={userContextValue}>
+          <Box height="100%" bgcolor="background.paper">
+            <DataSourceSidebar onSelectDataSourceAction={() => {}} />
+          </Box>
+        </CurrentUserContext.Provider>
+      </MockMessagePipelineProvider>
+    );
+  },
+};
+
 export const WithEventsChinese = { ...WithEvents, parameters: { forceLanguage: "zh" } };
 
-export const PlayerWithError = (): JSX.Element => {
-  return (
-    <MockMessagePipelineProvider
-      presence={PlayerPresence.ERROR}
-      startTime={START_TIME}
-      endTime={END_TIME}
-      problems={[
-        {
-          severity: "error",
-          message: "Some message",
-          tip: "A tip that we might want to show the user",
-          error: new Error("Original Error"),
-        },
-        {
-          severity: "error",
-          message:
-            "Error initializing player: Error: Cannot identify bag format. at _.verifyBagHeader (https://studio.foxglove.dev/5562.c1166ea8644d0123e6d6.js:2:9) at async _.readHeader (https://studio.foxglove.dev/5562.c1166ea8644d0123e6d6.js:2:69) at async m.open (https://studio.foxglove.dev/5562.c1166ea8644d0123e6d6.js:1:677) at async Se.initialize (https://studio.foxglove.dev/1324.f562ab30da8aea77f0c3.js:15:1986) at async https://studio.foxglove.dev/1324.f562ab30da8aea77f0c3.js:17:4281",
-          error: new Error(
-            "Error initializing player: Error: Cannot identify bag format. at _.verifyBagHeader (https://studio.foxglove.dev/5562.c1166ea8644d0123e6d6.js:2:9) at async _.readHeader (https://studio.foxglove.dev/5562.c1166ea8644d0123e6d6.js:2:69) at async m.open (https://studio.foxglove.dev/5562.c1166ea8644d0123e6d6.js:1:677) at async Se.initialize (https://studio.foxglove.dev/1324.f562ab30da8aea77f0c3.js:15:1986) at async https://studio.foxglove.dev/1324.f562ab30da8aea77f0c3.js:17:4281",
-          ),
-          tip: "Is this a bag file?",
-        },
-        {
-          severity: "warn",
-          message: "Some longer warning message about sadness",
-        },
-        {
-          severity: "info",
-          message: "Some longer info message",
-        },
-      ]}
-    >
-      <Box height="100%" bgcolor="background.paper">
-        <DataSourceSidebar onSelectDataSourceAction={() => {}} />
-      </Box>
-    </MockMessagePipelineProvider>
-  );
+export const PlayerWithError = {
+  render: function Story(): JSX.Element {
+    return (
+      <MockMessagePipelineProvider
+        presence={PlayerPresence.ERROR}
+        startTime={START_TIME}
+        endTime={END_TIME}
+        problems={[
+          {
+            severity: "error",
+            message: "Some message",
+            tip: "A tip that we might want to show the user",
+            error: new Error("Original Error"),
+          },
+          {
+            severity: "error",
+            message:
+              "Error initializing player: Error: Cannot identify bag format. at _.verifyBagHeader (https://studio.foxglove.dev/5562.c1166ea8644d0123e6d6.js:2:9) at async _.readHeader (https://studio.foxglove.dev/5562.c1166ea8644d0123e6d6.js:2:69) at async m.open (https://studio.foxglove.dev/5562.c1166ea8644d0123e6d6.js:1:677) at async Se.initialize (https://studio.foxglove.dev/1324.f562ab30da8aea77f0c3.js:15:1986) at async https://studio.foxglove.dev/1324.f562ab30da8aea77f0c3.js:17:4281",
+            error: new Error(
+              "Error initializing player: Error: Cannot identify bag format. at _.verifyBagHeader (https://studio.foxglove.dev/5562.c1166ea8644d0123e6d6.js:2:9) at async _.readHeader (https://studio.foxglove.dev/5562.c1166ea8644d0123e6d6.js:2:69) at async m.open (https://studio.foxglove.dev/5562.c1166ea8644d0123e6d6.js:1:677) at async Se.initialize (https://studio.foxglove.dev/1324.f562ab30da8aea77f0c3.js:15:1986) at async https://studio.foxglove.dev/1324.f562ab30da8aea77f0c3.js:17:4281",
+            ),
+            tip: "Is this a bag file?",
+          },
+          {
+            severity: "warn",
+            message: "Some longer warning message about sadness",
+          },
+          {
+            severity: "info",
+            message: "Some longer info message",
+          },
+        ]}
+      >
+        <Box height="100%" bgcolor="background.paper">
+          <DataSourceSidebar onSelectDataSourceAction={() => {}} />
+        </Box>
+      </MockMessagePipelineProvider>
+    );
+  },
 };
+
 export const PlayerWithErrorChinese = { ...PlayerWithError, parameters: { forceLanguage: "zh" } };

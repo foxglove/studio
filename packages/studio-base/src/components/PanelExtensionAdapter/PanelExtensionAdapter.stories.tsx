@@ -18,41 +18,43 @@ export default {
   component: PanelExtensionAdapter,
 };
 
-export const CatchRenderError = (): JSX.Element => {
-  const initPanel = (context: PanelExtensionContext) => {
-    context.watch("topics");
+export const CatchRenderError = {
+  render: (): JSX.Element => {
+    const initPanel = (context: PanelExtensionContext) => {
+      context.watch("topics");
 
-    context.onRender = () => {
-      const err = new Error("sample render error");
-      // The default stacktrace contains paths from the webpack bundle. These paths have the bundle
-      // identifier/hash and change whenever the bundle changes. This makes the story change.
-      // To avoid the story changing we set the stacktrace explicitly.
-      err.stack = "sample stacktrace";
-      throw err;
+      context.onRender = () => {
+        const err = new Error("sample render error");
+        // The default stacktrace contains paths from the webpack bundle. These paths have the bundle
+        // identifier/hash and change whenever the bundle changes. This makes the story change.
+        // To avoid the story changing we set the stacktrace explicitly.
+        err.stack = "sample stacktrace";
+        throw err;
+      };
     };
-  };
 
-  return (
-    <PanelSetup
-      fixture={{
-        topics: [
-          {
-            name: "/topic",
-            schemaName: "test_msgs/Sample",
-          },
-        ],
-        datatypes: new Map(),
-        frame: {},
-        layout: "UnknownPanel!4co6n9d",
-      }}
-    >
-      <MockPanelContextProvider>
-        <ErrorBoundary>
-          <PanelExtensionAdapter config={{}} saveConfig={() => {}} initPanel={initPanel} />
-        </ErrorBoundary>
-      </MockPanelContextProvider>
-    </PanelSetup>
-  );
+    return (
+      <PanelSetup
+        fixture={{
+          topics: [
+            {
+              name: "/topic",
+              schemaName: "test_msgs/Sample",
+            },
+          ],
+          datatypes: new Map(),
+          frame: {},
+          layout: "UnknownPanel!4co6n9d",
+        }}
+      >
+        <MockPanelContextProvider>
+          <ErrorBoundary>
+            <PanelExtensionAdapter config={{}} saveConfig={() => {}} initPanel={initPanel} />
+          </ErrorBoundary>
+        </MockPanelContextProvider>
+      </PanelSetup>
+    );
+  },
 };
 
 function SimplePanel({ context }: { context: PanelExtensionContext }) {
@@ -82,29 +84,31 @@ function SimplePanel({ context }: { context: PanelExtensionContext }) {
   );
 }
 
-export const SimplePanelRender = (): ReactElement => {
-  function initPanel(context: PanelExtensionContext) {
-    ReactDOM.render(<SimplePanel context={context} />, context.panelElement);
-  }
+export const SimplePanelRender = {
+  render: (): ReactElement => {
+    function initPanel(context: PanelExtensionContext) {
+      ReactDOM.render(<SimplePanel context={context} />, context.panelElement);
+    }
 
-  return (
-    <PanelSetup
-      fixture={{
-        datatypes: new Map(),
-        frame: {},
-        activeData: {
-          currentTime: { sec: 1, nsec: 2 },
-          parameters: new Map([
-            ["param1", "value1"],
-            ["param2", "value2"],
-          ]),
-        },
-        layout: "UnknownPanel!4co6n9d",
-      }}
-    >
-      <MockPanelContextProvider>
-        <PanelExtensionAdapter config={{}} saveConfig={() => {}} initPanel={initPanel} />
-      </MockPanelContextProvider>
-    </PanelSetup>
-  );
+    return (
+      <PanelSetup
+        fixture={{
+          datatypes: new Map(),
+          frame: {},
+          activeData: {
+            currentTime: { sec: 1, nsec: 2 },
+            parameters: new Map([
+              ["param1", "value1"],
+              ["param2", "value2"],
+            ]),
+          },
+          layout: "UnknownPanel!4co6n9d",
+        }}
+      >
+        <MockPanelContextProvider>
+          <PanelExtensionAdapter config={{}} saveConfig={() => {}} initPanel={initPanel} />
+        </MockPanelContextProvider>
+      </PanelSetup>
+    );
+  },
 };

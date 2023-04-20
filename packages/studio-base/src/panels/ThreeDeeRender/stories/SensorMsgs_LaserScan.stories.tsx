@@ -157,64 +157,72 @@ function SensorMsgs_LaserScan({
   );
 }
 
-export const Square = Object.assign(SensorMsgs_LaserScan.bind({}), {
+export const Square = {
+  render: SensorMsgs_LaserScan,
   args: {
     settings: {
       pointShape: "square",
     },
   },
-});
+};
 
-export const Size20 = Object.assign(SensorMsgs_LaserScan.bind({}), {
+export const Size20 = {
+  render: SensorMsgs_LaserScan,
   args: {
     settings: {
       pointSize: 20,
     },
   },
-});
+};
 
-export const FlatColor = Object.assign(SensorMsgs_LaserScan.bind({}), {
+export const FlatColor = {
+  render: SensorMsgs_LaserScan,
   args: {
     settings: {
       colorMode: "flat",
       flatColor: "#ff00ff",
     },
   },
-});
+};
 
-export const CustomGradient = Object.assign(SensorMsgs_LaserScan.bind({}), {
+export const CustomGradient = {
+  render: SensorMsgs_LaserScan,
   args: {
     settings: {
       colorMode: "gradient",
       gradient: ["#00ffff", "#0000ff"],
     },
   },
-});
+};
 
-export const RangeLimits = Object.assign(SensorMsgs_LaserScan.bind({}), {
+export const RangeLimits = {
+  render: SensorMsgs_LaserScan,
   args: {
     rangeMin: 2,
     rangeMax: 3,
   },
-});
+};
 
-export const Time0 = Object.assign(SensorMsgs_LaserScan.bind({}), {
+export const Time0 = {
+  render: SensorMsgs_LaserScan,
   args: {
     time: 0,
   },
-});
+};
 
-export const Time5 = Object.assign(SensorMsgs_LaserScan.bind({}), {
+export const Time5 = {
+  render: SensorMsgs_LaserScan,
   args: {
     time: 5,
   },
-});
+};
 
-export const Time10 = Object.assign(SensorMsgs_LaserScan.bind({}), {
+export const Time10 = {
+  render: SensorMsgs_LaserScan,
   args: {
     time: 10,
   },
-});
+};
 
 export const ComparisonWithPointCloudColors: StoryObj = {
   render: function Story() {

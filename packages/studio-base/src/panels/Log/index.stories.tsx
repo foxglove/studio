@@ -134,28 +134,34 @@ export default {
   component: Log,
 };
 
-export const Simple = (): JSX.Element => {
-  return (
-    <PanelSetup fixture={fixture}>
-      <Log />
-    </PanelSetup>
-  );
+export const Simple = {
+  render: (): JSX.Element => {
+    return (
+      <PanelSetup fixture={fixture}>
+        <Log />
+      </PanelSetup>
+    );
+  },
 };
 
-export const Scrolled = (): JSX.Element => {
-  return (
-    <PanelSetup fixture={makeLongFixture()}>
-      <Log />
-    </PanelSetup>
-  );
+export const Scrolled = {
+  render: (): JSX.Element => {
+    return (
+      <PanelSetup fixture={makeLongFixture()}>
+        <Log />
+      </PanelSetup>
+    );
+  },
 };
 
-export const WithSettings = (): JSX.Element => {
-  return (
-    <PanelSetup fixture={fixture} includeSettings>
-      <Log />
-    </PanelSetup>
-  );
+export const WithSettings = {
+  render: (): JSX.Element => {
+    return (
+      <PanelSetup fixture={fixture} includeSettings>
+        <Log />
+      </PanelSetup>
+    );
+  },
 };
 
 export const TopicToRender = {
@@ -255,86 +261,88 @@ export const AutoCompleteItems: StoryObj = {
   },
 };
 
-export const FoxgloveLog = (): JSX.Element => {
-  const foxgloveLogFixture: Fixture = {
-    topics: [{ name: "/log", schemaName: "foxglove.Log" }],
-    frame: {
-      "/log": [
-        {
-          topic: "/log",
-          receiveTime: { sec: 123, nsec: 456 },
-          message: {
-            file: "some_topic_utils/src/foo.cpp",
-            timestamp: 123000000000n,
-            level: 1,
-            line: 242,
-            message: "Couldn't find int 83757.",
+export const FoxgloveLog = {
+  render: (): JSX.Element => {
+    const foxgloveLogFixture: Fixture = {
+      topics: [{ name: "/log", schemaName: "foxglove.Log" }],
+      frame: {
+        "/log": [
+          {
+            topic: "/log",
+            receiveTime: { sec: 123, nsec: 456 },
+            message: {
+              file: "some_topic_utils/src/foo.cpp",
+              timestamp: 123000000000n,
+              level: 1,
+              line: 242,
+              message: "Couldn't find int 83757.",
+            },
+            schemaName: "foxglove.Log",
+            sizeInBytes: 0,
           },
-          schemaName: "foxglove.Log",
-          sizeInBytes: 0,
-        },
-        {
-          topic: "/log",
-          receiveTime: { sec: 123, nsec: 456 },
-          message: {
-            file: "other_topic_utils/src/foo.cpp",
-            function: "vector<int> other_node::findInt",
-            timestamp: 123000000000n,
-            level: 2,
-            line: 242,
-            message: "Couldn't find int 2121.",
+          {
+            topic: "/log",
+            receiveTime: { sec: 123, nsec: 456 },
+            message: {
+              file: "other_topic_utils/src/foo.cpp",
+              function: "vector<int> other_node::findInt",
+              timestamp: 123000000000n,
+              level: 2,
+              line: 242,
+              message: "Couldn't find int 2121.",
+            },
+            schemaName: "foxglove.Log",
+            sizeInBytes: 0,
           },
-          schemaName: "foxglove.Log",
-          sizeInBytes: 0,
-        },
-        {
-          topic: "/log",
-          receiveTime: { sec: 123, nsec: 456 },
-          message: {
-            file: "other_topic_utils/src/foo.cpp",
-            function: "vector<int> other_node::findInt",
-            timestamp: 123000000000n,
-            level: 3,
-            line: 242,
-            message: "Lorem ipsum blah blah. This message should\nshow up as multiple lines",
+          {
+            topic: "/log",
+            receiveTime: { sec: 123, nsec: 456 },
+            message: {
+              file: "other_topic_utils/src/foo.cpp",
+              function: "vector<int> other_node::findInt",
+              timestamp: 123000000000n,
+              level: 3,
+              line: 242,
+              message: "Lorem ipsum blah blah. This message should\nshow up as multiple lines",
+            },
+            schemaName: "foxglove.Log",
+            sizeInBytes: 0,
           },
-          schemaName: "foxglove.Log",
-          sizeInBytes: 0,
-        },
-        {
-          topic: "/log",
-          receiveTime: { sec: 0, nsec: 0 },
-          message: {
-            timestamp: 1529678605521518001n,
-            level: 4,
-            message:
-              "26826:\nheader: \n  seq: 0\n  stamp: 1529678605.349576000\n  Adipisicing minim veniam sint occaecat anim laborum irure velit ut non do labore.\n",
-            file: "somefile.cpp",
-            line: 491,
+          {
+            topic: "/log",
+            receiveTime: { sec: 0, nsec: 0 },
+            message: {
+              timestamp: 1529678605521518001n,
+              level: 4,
+              message:
+                "26826:\nheader: \n  seq: 0\n  stamp: 1529678605.349576000\n  Adipisicing minim veniam sint occaecat anim laborum irure velit ut non do labore.\n",
+              file: "somefile.cpp",
+              line: 491,
+            },
+            schemaName: "foxglove.Log",
+            sizeInBytes: 0,
           },
-          schemaName: "foxglove.Log",
-          sizeInBytes: 0,
-        },
-        {
-          topic: "/log",
-          receiveTime: { sec: 0, nsec: 0 },
-          message: {
-            timestamp: 1529678605521518001n,
-            level: 5,
-            message: "fatal message",
-            file: "somefile.cpp",
-            line: 491,
+          {
+            topic: "/log",
+            receiveTime: { sec: 0, nsec: 0 },
+            message: {
+              timestamp: 1529678605521518001n,
+              level: 5,
+              message: "fatal message",
+              file: "somefile.cpp",
+              line: 491,
+            },
+            schemaName: "foxglove.Log",
+            sizeInBytes: 0,
           },
-          schemaName: "foxglove.Log",
-          sizeInBytes: 0,
-        },
-      ],
-    },
-  };
+        ],
+      },
+    };
 
-  return (
-    <PanelSetup fixture={foxgloveLogFixture}>
-      <Log />
-    </PanelSetup>
-  );
+    return (
+      <PanelSetup fixture={foxgloveLogFixture}>
+        <Log />
+      </PanelSetup>
+    );
+  },
 };

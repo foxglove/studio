@@ -11,6 +11,8 @@ export default {
   component: LaunchingInDesktopScreen,
 };
 
-export const LaunchingInDesktopScreenRender = (): ReactElement => {
-  return <LaunchingInDesktopScreen />;
+export const LaunchingInDesktopScreenRender = {
+  render: (): ReactElement => {
+    return <LaunchingInDesktopScreen />;
+  },
 };

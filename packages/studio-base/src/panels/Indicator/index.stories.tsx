@@ -37,42 +37,48 @@ function makeFixture(value: boolean | number | bigint | string) {
   };
 }
 
-export const EmptyState = (): JSX.Element => {
-  return <Indicator />;
+export const EmptyState = {
+  render: (): JSX.Element => {
+    return <Indicator />;
+  },
 };
 
-export const MissingValue = (): JSX.Element => {
-  return (
-    <Indicator
-      overrideConfig={{
-        path: "/data.value",
-        style: "bulb",
-        rules: [
-          { operator: "=", rawValue: "true", color: "#00dd00", label: "True" },
-          { operator: "=", rawValue: "true", color: "#dd00dd", label: "False" },
-        ],
-        fallbackColor: "#dddd00",
-        fallbackLabel: "Fallback",
-      }}
-    />
-  );
+export const MissingValue = {
+  render: (): JSX.Element => {
+    return (
+      <Indicator
+        overrideConfig={{
+          path: "/data.value",
+          style: "bulb",
+          rules: [
+            { operator: "=", rawValue: "true", color: "#00dd00", label: "True" },
+            { operator: "=", rawValue: "true", color: "#dd00dd", label: "False" },
+          ],
+          fallbackColor: "#dddd00",
+          fallbackLabel: "Fallback",
+        }}
+      />
+    );
+  },
 };
 
-export const BackgroundStyle = (): JSX.Element => {
-  return (
-    <Indicator
-      overrideConfig={{
-        path: "/data.value",
-        style: "background",
-        rules: [
-          { operator: "=", rawValue: "true", color: "#00dd00", label: "True" },
-          { operator: "=", rawValue: "true", color: "#dd00dd", label: "False" },
-        ],
-        fallbackColor: "#dddd00",
-        fallbackLabel: "Fallback",
-      }}
-    />
-  );
+export const BackgroundStyle = {
+  render: (): JSX.Element => {
+    return (
+      <Indicator
+        overrideConfig={{
+          path: "/data.value",
+          style: "background",
+          rules: [
+            { operator: "=", rawValue: "true", color: "#00dd00", label: "True" },
+            { operator: "=", rawValue: "true", color: "#dd00dd", label: "False" },
+          ],
+          fallbackColor: "#dddd00",
+          fallbackLabel: "Fallback",
+        }}
+      />
+    );
+  },
 };
 
 const BooleanStory = (): JSX.Element => {

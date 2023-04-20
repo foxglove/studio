@@ -57,55 +57,65 @@ export default {
   ],
 };
 
-export const OneError = (): JSX.Element => {
-  useEffect(() => {
-    sendNotification("Something bad happened", fakeError(), "app", "error");
-  }, []);
+export const OneError = {
+  render: function Story(): JSX.Element {
+    useEffect(() => {
+      sendNotification("Something bad happened", fakeError(), "app", "error");
+    }, []);
 
-  return <SendNotificationToastAdapter />;
+    return <SendNotificationToastAdapter />;
+  },
 };
 
-export const OneWarning = (): JSX.Element => {
-  useEffect(() => {
-    sendNotification(
-      "This is the final countdown",
-      "This warning is on purpose - it comes from the story",
-      "app",
-      "warn",
-    );
-  }, []);
+export const OneWarning = {
+  render: function Story(): JSX.Element {
+    useEffect(() => {
+      sendNotification(
+        "This is the final countdown",
+        "This warning is on purpose - it comes from the story",
+        "app",
+        "warn",
+      );
+    }, []);
 
-  return <SendNotificationToastAdapter />;
+    return <SendNotificationToastAdapter />;
+  },
 };
 
-export const OneInfo = (): JSX.Element => {
-  useEffect(() => {
-    sendNotification(
-      "Here's a helpful tip",
-      "These are the details of the message",
-      "user",
-      "info",
-    );
-  }, []);
+export const OneInfo = {
+  render: function Story(): JSX.Element {
+    useEffect(() => {
+      sendNotification(
+        "Here's a helpful tip",
+        "These are the details of the message",
+        "user",
+        "info",
+      );
+    }, []);
 
-  return <SendNotificationToastAdapter />;
+    return <SendNotificationToastAdapter />;
+  },
 };
 
-export const MultipleMessages = (): JSX.Element => {
-  useEffect(() => {
-    sendNotification("Something bad happened 1", fakeError(), "app", "error");
-    sendNotification("Here's a helpful tip", fakeError(), "user", "info");
-    sendNotification(
-      "Just a warning",
-      "This warning is on purpose - it comes from the story",
-      "app",
-      "warn",
-    );
-    sendNotification("Something bad happened 2", fakeError(), "app", "error");
-  }, []);
+export const MultipleMessages = {
+  render: function Story(): JSX.Element {
+    useEffect(() => {
+      sendNotification("Something bad happened 1", fakeError(), "app", "error");
+      sendNotification("Here's a helpful tip", fakeError(), "user", "info");
+      sendNotification(
+        "Just a warning",
+        "This warning is on purpose - it comes from the story",
+        "app",
+        "warn",
+      );
+      sendNotification("Something bad happened 2", fakeError(), "app", "error");
+    }, []);
 
-  return <SendNotificationToastAdapter />;
+    return <SendNotificationToastAdapter />;
+  },
 };
 
-export const MultipleMessagesLightTheme = MultipleMessages.bind(undefined);
-(MultipleMessagesLightTheme as any).parameters = { colorScheme: "light" };
+export const MultipleMessagesLightTheme = {
+  ...MultipleMessages,
+  parameters: { colorScheme: "light" },
+};

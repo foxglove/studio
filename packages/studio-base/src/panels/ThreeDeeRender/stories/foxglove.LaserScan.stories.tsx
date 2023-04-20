@@ -156,64 +156,72 @@ function Foxglove_LaserScan({
   );
 }
 
-export const Square = Object.assign(Foxglove_LaserScan.bind({}), {
+export const Square = {
+  render: Foxglove_LaserScan,
   args: {
     settings: {
       pointShape: "square",
     },
   },
-});
+};
 
-export const Size20 = Object.assign(Foxglove_LaserScan.bind({}), {
+export const Size20 = {
+  render: Foxglove_LaserScan,
   args: {
     settings: {
       pointSize: 20,
     },
   },
-});
+};
 
-export const FlatColor = Object.assign(Foxglove_LaserScan.bind({}), {
+export const FlatColor = {
+  render: Foxglove_LaserScan,
   args: {
     settings: {
       colorMode: "flat",
       flatColor: "#ff00ff",
     },
   },
-});
+};
 
-export const CustomGradient = Object.assign(Foxglove_LaserScan.bind({}), {
+export const CustomGradient = {
+  render: Foxglove_LaserScan,
   args: {
     settings: {
       colorMode: "gradient",
       gradient: ["#00ffff", "#0000ff"],
     },
   },
-});
+};
 
-export const RangeLimits = Object.assign(Foxglove_LaserScan.bind({}), {
+export const RangeLimits = {
+  render: Foxglove_LaserScan,
   args: {
     rangeMin: 2,
     rangeMax: 3,
   },
-});
+};
 
-export const Time0 = Object.assign(Foxglove_LaserScan.bind({}), {
+export const Time0 = {
+  render: Foxglove_LaserScan,
   args: {
     time: 0,
   },
-});
+};
 
-export const Time5 = Object.assign(Foxglove_LaserScan.bind({}), {
+export const Time5 = {
+  render: Foxglove_LaserScan,
   args: {
     time: 5,
   },
-});
+};
 
-export const Time10 = Object.assign(Foxglove_LaserScan.bind({}), {
+export const Time10 = {
+  render: Foxglove_LaserScan,
   args: {
     time: 10,
   },
-});
+};
 
 export const ComparisonWithPointCloudColors: StoryObj = {
   render: function Story() {

@@ -128,18 +128,20 @@ export const PanelNotFoundLight = {
   play: openPanelMenu,
 };
 
-export const PanelWithError = (): JSX.Element => {
-  return (
-    <DndProvider backend={HTML5Backend}>
-      <PanelSetup
-        panelCatalog={new MockPanelCatalog()}
-        fixture={{ topics: [], datatypes: new Map(), frame: {}, layout: "Sample2!4co6n9d" }}
-        omitDragAndDrop
-      >
-        <PanelLayout />
-      </PanelSetup>
-    </DndProvider>
-  );
+export const PanelWithError = {
+  render: (): JSX.Element => {
+    return (
+      <DndProvider backend={HTML5Backend}>
+        <PanelSetup
+          panelCatalog={new MockPanelCatalog()}
+          fixture={{ topics: [], datatypes: new Map(), frame: {}, layout: "Sample2!4co6n9d" }}
+          omitDragAndDrop
+        >
+          <PanelLayout />
+        </PanelSetup>
+      </DndProvider>
+    );
+  },
 };
 
 export const RemoveUnknownPanel = {
@@ -164,12 +166,14 @@ export const RemoveUnknownPanel = {
   },
 };
 
-export const EmptyLayout = (): JSX.Element => {
-  return (
-    <PanelSetup fixture={{ layout: undefined }}>
-      <PanelLayout />
-    </PanelSetup>
-  );
+export const EmptyLayout = {
+  render: (): JSX.Element => {
+    return (
+      <PanelSetup fixture={{ layout: undefined }}>
+        <PanelLayout />
+      </PanelSetup>
+    );
+  },
 };
 
 export const EmptyLayoutChinese = {
@@ -184,18 +188,20 @@ export const EmptyLayoutChinese = {
   parameters: { forceLanguage: "zh" },
 };
 
-export const PanelLoading = (): JSX.Element => {
-  return (
-    <DndProvider backend={HTML5Backend}>
-      <PanelSetup
-        panelCatalog={new MockPanelCatalog()}
-        fixture={{ topics: [], datatypes: new Map(), frame: {}, layout: "Sample1!4co6n9d" }}
-        omitDragAndDrop
-      >
-        <PanelLayout />
-      </PanelSetup>
-    </DndProvider>
-  );
+export const PanelLoading = {
+  render: (): JSX.Element => {
+    return (
+      <DndProvider backend={HTML5Backend}>
+        <PanelSetup
+          panelCatalog={new MockPanelCatalog()}
+          fixture={{ topics: [], datatypes: new Map(), frame: {}, layout: "Sample1!4co6n9d" }}
+          omitDragAndDrop
+        >
+          <PanelLayout />
+        </PanelSetup>
+      </DndProvider>
+    );
+  },
 };
 
 export const FullScreen = {

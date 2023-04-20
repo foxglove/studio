@@ -11,10 +11,14 @@ export default {
   component: DirectionalPad,
 };
 
-export const Basic = (): JSX.Element => {
-  return <DirectionalPad onAction={action("click")} />;
+export const Basic = {
+  render: (): JSX.Element => {
+    return <DirectionalPad onAction={action("click")} />;
+  },
 };
 
-export const Disabled = (): JSX.Element => {
-  return <DirectionalPad disabled onAction={action("click")} />;
+export const Disabled = {
+  render: (): JSX.Element => {
+    return <DirectionalPad disabled onAction={action("click")} />;
+  },
 };

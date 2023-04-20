@@ -40,8 +40,10 @@ function makeFixture(value: number) {
   };
 }
 
-export const EmptyState = (): JSX.Element => {
-  return <GaugePanel />;
+export const EmptyState = {
+  render: (): JSX.Element => {
+    return <GaugePanel />;
+  },
 };
 
 export const InvalidValue = {

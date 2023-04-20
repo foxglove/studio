@@ -15,12 +15,14 @@ export default {
   component: TopicGraph,
 };
 
-export const Empty = (): JSX.Element => {
-  return (
-    <PanelSetup>
-      <TopicGraph />
-    </PanelSetup>
-  );
+export const Empty = {
+  render: (): JSX.Element => {
+    return (
+      <PanelSetup>
+        <TopicGraph />
+      </PanelSetup>
+    );
+  },
 };
 
 export const WithSettings = {
@@ -75,13 +77,17 @@ function TopicsStory({
   );
 }
 
-export const AllTopics = (): JSX.Element => <TopicsStory topicVisibility="all" />;
+export const AllTopics = {
+  render: (): JSX.Element => <TopicsStory topicVisibility="all" />,
+};
 
-export const TopicsWithSubscribers = (): JSX.Element => (
-  <TopicsStory topicVisibility="subscribed" />
-);
+export const TopicsWithSubscribers = {
+  render: (): JSX.Element => <TopicsStory topicVisibility="subscribed" />,
+};
 
-export const TopicsHidden = (): JSX.Element => <TopicsStory topicVisibility="none" />;
+export const TopicsHidden = {
+  render: (): JSX.Element => <TopicsStory topicVisibility="none" />,
+};
 
 export const ReLayout = {
   render: function Story(): JSX.Element {

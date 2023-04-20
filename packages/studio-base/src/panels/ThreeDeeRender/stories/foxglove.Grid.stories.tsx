@@ -664,13 +664,23 @@ function Row_Stride_Grid(): JSX.Element {
     </PanelSetup>
   );
 }
-export const Foxglove_Grid_Uint8_Values = (): JSX.Element => <Foxglove_Grid_Uint8 />;
-export const Foxglove_Grid_Uint8_Values_Clamped = (): JSX.Element => (
-  <Foxglove_Grid_Uint8 minValue={30} maxValue={80} />
-);
-export const Foxglove_Grid_RGBA_Values = (): JSX.Element => <Foxglove_Grid_RGBA />;
-export const Foxglove_Grid_Float_Values = (): JSX.Element => <Foxglove_Grid_Float />;
-export const Foxglove_Grid_Float_Values_Clamped = (): JSX.Element => (
-  <Foxglove_Grid_Float minValue={0.05} maxValue={0.1} />
-);
-export const Foxglove_Grid_Padded_Row = (): JSX.Element => <Row_Stride_Grid />;
+
+export const Foxglove_Grid_Uint8_Values = {
+  render: (): JSX.Element => <Foxglove_Grid_Uint8 />,
+};
+
+export const Foxglove_Grid_Uint8_Values_Clamped = {
+  render: (): JSX.Element => <Foxglove_Grid_Uint8 minValue={30} maxValue={80} />,
+};
+
+export const Foxglove_Grid_RGBA_Values = {
+  render: (): JSX.Element => <Foxglove_Grid_RGBA />,
+};
+
+export const Foxglove_Grid_Float_Values = { render: (): JSX.Element => <Foxglove_Grid_Float /> };
+
+export const Foxglove_Grid_Float_Values_Clamped = {
+  render: (): JSX.Element => <Foxglove_Grid_Float minValue={0.05} maxValue={0.1} />,
+};
+
+export const Foxglove_Grid_Padded_Row = { render: (): JSX.Element => <Row_Stride_Grid /> };
