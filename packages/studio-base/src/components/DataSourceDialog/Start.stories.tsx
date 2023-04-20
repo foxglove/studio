@@ -124,13 +124,17 @@ function CurrentUserWrapper(props: { children: ReactNode; user?: User | undefine
 
 const Default = (): JSX.Element => <DataSourceDialog backdropAnimation={false} />;
 
-export const DefaultLight: StoryObj = (): JSX.Element => <Default />;
-DefaultLight.storyName = "Default (light)";
-DefaultLight.parameters = { colorScheme: "light" };
+export const DefaultLight: StoryObj = {
+  render: Default,
+  name: "Default (light)",
+  parameters: { colorScheme: "light" },
+};
 
-export const DefaultDark: StoryObj = (): JSX.Element => <Default />;
-DefaultDark.storyName = "Default (dark)";
-DefaultDark.parameters = { colorScheme: "dark" };
+export const DefaultDark: StoryObj = {
+  render: Default,
+  name: "Default (dark)",
+  parameters: { colorScheme: "dark" },
+};
 
 export const UserNoAuth: StoryObj = {
   render: () => {
