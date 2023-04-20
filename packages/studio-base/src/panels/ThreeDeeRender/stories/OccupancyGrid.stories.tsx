@@ -2,8 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { screen } from "@testing-library/dom";
-import userEvent from "@testing-library/user-event";
+import { StoryObj } from "@storybook/react";
+import { screen, userEvent } from "@storybook/testing-library";
 
 import { MessageEvent } from "@foxglove/studio";
 import { LayerSettingsOccupancyGrid } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/OccupancyGrids";
@@ -153,20 +153,24 @@ function BaseStory({ includeSettings = false }: { includeSettings?: boolean }): 
   );
 }
 
-export function Occupancy_Grid_Costmap(): JSX.Element {
-  return <BaseStory />;
-}
-
-export function Occupancy_Grid_Costmap_With_Settings(): JSX.Element {
-  return <BaseStory includeSettings />;
-}
-Occupancy_Grid_Costmap_With_Settings.play = async () => {
-  const user = userEvent.setup();
-  const label = await screen.findByText("/custom");
-  await user.click(label);
+export const Occupancy_Grid_Costmap: StoryObj = {
+  render: () => {
+    return <BaseStory />;
+  },
 };
 
-export const OccupancyGridCostmapWithSettingsChinese = Object.assign(
-  Occupancy_Grid_Costmap_With_Settings.bind(undefined),
-  { play: Occupancy_Grid_Costmap_With_Settings.play, parameters: { forceLanguage: "zh" } },
-);
+export const Occupancy_Grid_Costmap_With_Settings: StoryObj = {
+  render: function Story() {
+    return <BaseStory includeSettings />;
+  },
+
+  play: async () => {
+    const label = await screen.findByText("/custom");
+    userEvent.click(label);
+  },
+};
+
+export const OccupancyGridCostmapWithSettingsChinese: StoryObj = {
+  ...Occupancy_Grid_Costmap_With_Settings,
+  parameters: { forceLanguage: "zh" },
+};
