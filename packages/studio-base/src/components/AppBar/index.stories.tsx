@@ -37,9 +37,7 @@ export const Default: StoryFn = (): JSX.Element => {
   return <AppBar {...actions} />;
 };
 
-export const DefaultChinese = Object.assign(Default.bind(undefined), {
-  parameters: { forceLanguage: "zh" },
-});
+export const DefaultChinese = { ...Default, parameters: { forceLanguage: "zh" } };
 
 export const CustomWindowControls: StoryFn = (): JSX.Element => {
   return <AppBar showCustomWindowControls {...actions} />;
@@ -120,9 +118,7 @@ export const SignInStates: StoryFn = (): JSX.Element => {
   );
 };
 
-export const SignInStatesChinese = Object.assign(SignInStates.bind(undefined), {
-  parameters: { forceLanguage: "zh" },
-});
+export const SignInStatesChinese = { ...SignInStates, parameters: { forceLanguage: "zh" } };
 
 export const PlayerStates: StoryObj = {
   render: function Story(): JSX.Element {
@@ -183,9 +179,10 @@ export const PlayerStates: StoryObj = {
   parameters: { colorScheme: "light" },
 };
 
-export const PlayerStatesChinese = Object.assign(PlayerStates.bind(undefined), {
-  parameters: { olorScheme: "light", forceLanguage: "zh" },
-});
+export const PlayerStatesChinese = {
+  ...PlayerStates,
+  parameters: { colorScheme: "light", forceLanguage: "zh" },
+};
 
 export const DataSources: StoryObj = {
   render: function Story(): JSX.Element {
@@ -252,6 +249,7 @@ export const DataSources: StoryObj = {
   parameters: { colorScheme: "light" },
 };
 
-export const DataSourcesChinese = Object.assign(DataSources.bind(undefined), {
+export const DataSourcesChinese = {
+  ...DataSources,
   parameters: { colorScheme: "light", forceLanguage: "zh" },
-});
+};

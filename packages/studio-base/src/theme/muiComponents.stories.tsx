@@ -347,11 +347,11 @@ function FormElements(): JSX.Element {
 }
 
 export const FormElementsDark = {
-  render: function Story(): JSX.Element FormElements(),
+  render: FormElements,
   parameters: { colorScheme: "dark" },
 };
 
 export const FormElementsLight = {
-  render: function Story(): JSX.Element FormElements(),
+  render: FormElements,
   parameters: { colorScheme: "light" },
 };

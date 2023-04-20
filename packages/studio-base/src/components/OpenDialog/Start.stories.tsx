@@ -129,10 +129,11 @@ export const UserNoAuth: StoryObj = {
   name: "User not authenticated",
 };
 
-export const UserNoAuthChinese = Object.assign(UserNoAuth.bind(undefined), {
-  storyName: "User not authenticated Chinese",
+export const UserNoAuthChinese = {
+  ...UserNoAuth,
+  name: "User not authenticated Chinese",
   parameters: { forceLanguage: "zh" },
-});
+};
 
 export const UserPrivate: StoryObj = {
   render: function Story(): JSX.Element {
@@ -148,10 +149,11 @@ export const UserPrivate: StoryObj = {
   name: "User not authenticated (private)",
 };
 
-export const UserPrivateChinese = Object.assign(UserPrivate.bind(undefined), {
-  storyName: "User not authenticated (private) Chinese",
+export const UserPrivateChinese = {
+  ...UserPrivate,
+  name: "User not authenticated (private) Chinese",
   parameters: { forceLanguage: "zh" },
-});
+};
 
 export const UserAuthedFree: StoryObj = {
   render: function Story(): JSX.Element {
@@ -169,10 +171,11 @@ export const UserAuthedFree: StoryObj = {
   name: "User Authenticated with Free Account",
 };
 
-export const UserAuthedFreeChinese = Object.assign(UserAuthedFree.bind(undefined), {
-  storyName: "User Authenticated with Free Account Chinese",
+export const UserAuthedFreeChinese = {
+  ...UserAuthedFree,
+  name: "User Authenticated with Free Account Chinese",
   parameters: { forceLanguage: "zh" },
-});
+};
 
 export const UserAuthedPaid: StoryObj = {
   render: function Story(): JSX.Element {
@@ -190,7 +193,8 @@ export const UserAuthedPaid: StoryObj = {
   name: "User Authenticated with Paid Account",
 };
 
-export const UserAuthedPaidChinese = Object.assign(UserAuthedPaid.bind(undefined), {
-  storyName: "User Authenticated with Paid Account Chinese",
+export const UserAuthedPaidChinese = {
+  ...UserAuthedPaid,
+  name: "User Authenticated with Paid Account Chinese",
   parameters: { forceLanguage: "zh" },
-});
+};

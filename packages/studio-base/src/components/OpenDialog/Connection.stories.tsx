@@ -62,7 +62,7 @@ const playerSelection: PlayerSelection = {
 const defaultProps: OpenDialogProps = { activeView: "connection", backdropAnimation: false };
 
 export const Light = {
-  render: function Story(): JSX.Element (
+  render: (): JSX.Element => (
     <PlayerSelectionContext.Provider value={playerSelection}>
       <OpenDialog {...defaultProps} />
     </PlayerSelectionContext.Provider>
@@ -72,13 +72,14 @@ export const Light = {
   parameters: { colorScheme: "light" },
 };
 
-export const LightChinese = Object.assign(Light.bind(undefined), {
-  storyName: "Default Chinese",
+export const LightChinese = {
+  ...Light,
+  name: "Default Chinese",
   parameters: { forceLanguage: "zh" },
-});
+};
 
 export const Dark = {
-  render: function Story(): JSX.Element (
+  render: (): JSX.Element => (
     <PlayerSelectionContext.Provider value={playerSelection}>
       <OpenDialog {...defaultProps} />
     </PlayerSelectionContext.Provider>

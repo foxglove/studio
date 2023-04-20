@@ -111,9 +111,7 @@ export const Simple: StoryFn = (): JSX.Element => {
   );
 };
 
-export const SimpleLight = Object.assign(Simple.bind(undefined), {
-  parameters: { colorScheme: "light" },
-});
+export const SimpleLight = { ...Simple, parameters: { colorScheme: "light" } };
 
 export const CanZoomAndUpdate: StoryObj = {
   render: function Story(): JSX.Element {
@@ -170,7 +168,7 @@ export const CanZoomAndUpdate: StoryObj = {
 };
 
 export const CleansUpTooltipOnUnmount: StoryObj = {
-  render: (_args: unknown) => {
+  render: function Story(): JSX.Element {
     const [hasRenderedOnce, setHasRenderedOnce] = useState<boolean>(false);
     const { error } = useAsync(async () => {
       const [canvas] = document.getElementsByTagName("canvas");

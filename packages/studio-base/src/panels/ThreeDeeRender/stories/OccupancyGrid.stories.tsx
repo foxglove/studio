@@ -168,7 +168,7 @@ export const Occupancy_Grid_Costmap_With_Settings: StoryObj = {
   },
 };
 
-export const OccupancyGridCostmapWithSettingsChinese = Object.assign(
-  Occupancy_Grid_Costmap_With_Settings.bind(undefined),
-  { play: Occupancy_Grid_Costmap_With_Settings.play, parameters: { forceLanguage: "zh" } },
-);
+export const OccupancyGridCostmapWithSettingsChinese = {
+  ...Occupancy_Grid_Costmap_With_Settings,
+  parameters: { forceLanguage: "zh" },
+};

@@ -886,10 +886,7 @@ export const Basics: StoryObj = {
   },
 };
 
-export const BasicsChinese = Object.assign(Basics.bind(undefined), {
-  play: Basics.play,
-  parameters: { forceLanguage: "zh" },
-});
+export const BasicsChinese = { ...Basics, play: Basics.play, parameters: { forceLanguage: "zh" } };
 
 export const DisabledFields: StoryFn = (): JSX.Element => {
   return <Wrapper nodes={DisabledSettings} />;

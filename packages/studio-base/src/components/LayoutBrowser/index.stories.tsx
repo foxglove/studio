@@ -291,13 +291,15 @@ export const MenuOpen: StoryObj = {
   },
 };
 
-export const MenuOpenLight = MenuOpen.bind(undefined);
-MenuOpenLight.parameters = { colorScheme: "light" };
-MenuOpenLight.play = async () => {
-  const actions = await screen.findAllByTestId("layout-actions");
-  if (actions[1]) {
-    fireEvent.click(actions[1]);
-  }
+export const MenuOpenLight = {
+  ...MenuOpen,
+  parameters: { colorScheme: "light" },
+  play: async (): Promise<void> => {
+    const actions = await screen.findAllByTestId("layout-actions");
+    if (actions[1]) {
+      fireEvent.click(actions[1]);
+    }
+  },
 };
 
 export const EditingName: StoryObj = {

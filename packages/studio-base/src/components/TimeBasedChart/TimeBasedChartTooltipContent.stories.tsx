@@ -54,9 +54,10 @@ export const SingleItemSingleDataset: StoryObj = {
   parameters: { colorScheme: "dark" },
 };
 
-export const SingleItemSingleDatasetLight = Object.assign(SingleItemSingleDataset.bind(undefined), {
+export const SingleItemSingleDatasetLight = {
+  ...SingleItemSingleDataset,
   parameters: { colorScheme: "light" },
-});
+};
 
 export const SingleItemMultiDataset: StoryObj = {
   render: function Story(): JSX.Element {
@@ -89,9 +90,10 @@ export const SingleItemMultiDataset: StoryObj = {
   parameters: { colorScheme: "dark" },
 };
 
-export const SingleItemMultiDatasetLight = Object.assign(SingleItemMultiDataset.bind(undefined), {
+export const SingleItemMultiDatasetLight = {
+  ...SingleItemMultiDataset,
   parameters: { colorScheme: "light" },
-});
+};
 
 export const MultipleItemsSingleDataset: StoryObj = {
   render: function Story(): JSX.Element {
@@ -124,10 +126,10 @@ export const MultipleItemsSingleDataset: StoryObj = {
   parameters: { colorScheme: "dark" },
 };
 
-export const MultipleItemsSingleDatasetLight = Object.assign(
-  MultipleItemsSingleDataset.bind(undefined),
-  { parameters: { colorScheme: "light" } },
-);
+export const MultipleItemsSingleDatasetLight = {
+  ...MultipleItemsSingleDataset,
+  parameters: { colorScheme: "light" },
+};
 
 export const MultipleItemsMultipleDataset: StoryObj = {
   render: function Story(): JSX.Element {
@@ -178,7 +180,7 @@ export const MultipleItemsMultipleDataset: StoryObj = {
   parameters: { colorScheme: "dark" },
 };
 
-export const MultipleItemsMultiDatasetLight = Object.assign(
-  MultipleItemsMultipleDataset.bind(undefined),
-  { parameters: { colorScheme: "light" } },
-);
+export const MultipleItemsMultiDatasetLight = {
+  ...MultipleItemsMultipleDataset,
+  parameters: { colorScheme: "light" },
+};

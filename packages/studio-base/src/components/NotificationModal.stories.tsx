@@ -44,8 +44,10 @@ export const ErrorNoSubtextWithDetails = {
   parameters: { colorScheme: "light" },
 };
 
-export const ErrorNoSubtextWithDetailsDark = ErrorNoSubtextWithDetails.bind(undefined);
-ErrorNoSubtextWithDetailsDark.parameters = { colorScheme: "dark" };
+export const ErrorNoSubtextWithDetailsDark = {
+  ...ErrorNoSubtextWithDetails,
+  parameters: { colorScheme: "dark" },
+};
 
 export const ErrorWithSubtextAndDetails = {
   render: function Story(): JSX.Element {
@@ -148,8 +150,10 @@ export const ErrorWithJsxElementDetails = {
   parameters: { colorScheme: "light" },
 };
 
-export const ErrorWithJsxElementDetailsDark = ErrorWithJsxElementDetails.bind(undefined);
-ErrorWithJsxElementDetailsDark.parameters = { colorScheme: "dark" };
+export const ErrorWithJsxElementDetailsDark = {
+  ...ErrorWithJsxElementDetails,
+  parameters: { colorScheme: "dark" },
+};
 
 export const ErrorWithNewlineDetails = {
   render: function Story(): JSX.Element {

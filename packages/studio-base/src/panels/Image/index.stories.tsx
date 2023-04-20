@@ -81,7 +81,7 @@ export const TopicButNoDataSourceHovered: StoryObj = {
   parameters: { colorScheme: "dark" },
 };
 
-export const TopicButNoDataSourceHoveredLight = Object.assign(
-  TopicButNoDataSourceHovered.bind(undefined),
-  { parameters: { colorScheme: "light" } },
-);
+export const TopicButNoDataSourceHoveredLight = {
+  ...TopicButNoDataSourceHovered,
+  parameters: { colorScheme: "light" },
+};

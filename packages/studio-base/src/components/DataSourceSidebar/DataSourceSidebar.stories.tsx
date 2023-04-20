@@ -97,9 +97,7 @@ export const PlayerNotPresent = (): JSX.Element => {
     </MockMessagePipelineProvider>
   );
 };
-export const PlayerNotPresentChinese = Object.assign(PlayerNotPresent.bind(undefined), {
-  parameters: { forceLanguage: "zh" },
-});
+export const PlayerNotPresentChinese = { ...PlayerNotPresent, parameters: { forceLanguage: "zh" } };
 
 export const PlayerIntializing = (): JSX.Element => {
   return (
@@ -114,9 +112,10 @@ export const PlayerIntializing = (): JSX.Element => {
     </MockMessagePipelineProvider>
   );
 };
-export const PlayerIntializingChinese = Object.assign(PlayerIntializing.bind(undefined), {
+export const PlayerIntializingChinese = {
+  ...PlayerIntializing,
   parameters: { forceLanguage: "zh" },
-});
+};
 
 export const PlayerReconnecting = (): JSX.Element => {
   return (
@@ -140,9 +139,10 @@ export const PlayerReconnecting = (): JSX.Element => {
     </MockMessagePipelineProvider>
   );
 };
-export const PlayerReconnectingChinese = Object.assign(PlayerReconnecting.bind(undefined), {
+export const PlayerReconnectingChinese = {
+  ...PlayerReconnecting,
   parameters: { forceLanguage: "zh" },
-});
+};
 
 export const PlayerPresent = (): JSX.Element => {
   return (
@@ -158,9 +158,7 @@ export const PlayerPresent = (): JSX.Element => {
     </MockMessagePipelineProvider>
   );
 };
-export const PlayerPresentChinese = Object.assign(PlayerPresent.bind(undefined), {
-  parameters: { forceLanguage: "zh" },
-});
+export const PlayerPresentChinese = { ...PlayerPresent, parameters: { forceLanguage: "zh" } };
 
 export const PlayerPresentWithCustomTimezone = (): JSX.Element => {
   const [_, setTimezone] = useAppConfigurationValue<string>(AppSetting.TIMEZONE);
@@ -214,9 +212,7 @@ export const WithEvents = (): JSX.Element => {
     </MockMessagePipelineProvider>
   );
 };
-export const WithEventsChinese = Object.assign(WithEvents.bind(undefined), {
-  parameters: { forceLanguage: "zh" },
-});
+export const WithEventsChinese = { ...WithEvents, parameters: { forceLanguage: "zh" } };
 
 export const PlayerWithError = (): JSX.Element => {
   return (
@@ -256,6 +252,4 @@ export const PlayerWithError = (): JSX.Element => {
     </MockMessagePipelineProvider>
   );
 };
-export const PlayerWithErrorChinese = Object.assign(PlayerWithError.bind(undefined), {
-  parameters: { forceLanguage: "zh" },
-});
+export const PlayerWithErrorChinese = { ...PlayerWithError, parameters: { forceLanguage: "zh" } };
