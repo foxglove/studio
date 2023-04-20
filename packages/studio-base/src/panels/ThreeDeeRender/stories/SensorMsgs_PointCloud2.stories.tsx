@@ -161,6 +161,7 @@ function SensorMsgs_PointCloud2({ rgbaFieldName }: { rgbaFieldName: string }): J
 }
 
 export const SensorMsgs_PointCloud2_Intensity: StoryObj = {
+  parameters: { colorScheme: "dark" },
   render: function Story() {
     const topics: Topic[] = [
       { name: "/pointcloud", schemaName: "sensor_msgs/PointCloud2" },
@@ -180,7 +181,6 @@ export const SensorMsgs_PointCloud2_Intensity: StoryObj = {
       schemaName: "geometry_msgs/TransformStamped",
       sizeInBytes: 0,
     };
-    SensorMsgs_PointCloud2_Intensity.parameters = { colorScheme: "dark" };
     const tf2: MessageEvent<TransformStamped> = {
       topic: "/tf",
       receiveTime: { sec: 10, nsec: 0 },

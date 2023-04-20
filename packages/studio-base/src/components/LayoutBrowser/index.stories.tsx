@@ -257,11 +257,29 @@ export const TruncatedLayoutName: StoryObj = {
   render: () => {
     return <LayoutBrowser />;
   },
+  parameters: {
+    mockLayouts: [
+      {
+        id: "not-current",
+        name: "Lorem ipsum dolor sit amet, consectetur adipiscing elit",
+        baseline: { data: DEFAULT_LAYOUT_FOR_TESTS, updatedAt: new Date(10).toISOString() },
+      },
+    ],
+  },
 };
 
 export const TruncatedLayoutNameSelected: StoryObj = {
   render: () => {
     return <LayoutBrowser />;
+  },
+  parameters: {
+    mockLayouts: [
+      {
+        id: "test-id",
+        name: "Lorem ipsum dolor sit amet, consectetur adipiscing elit",
+        baseline: { data: DEFAULT_LAYOUT_FOR_TESTS, updatedAt: new Date(10).toISOString() },
+      },
+    ],
   },
 };
 

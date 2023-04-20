@@ -65,8 +65,8 @@ const fixture = {
 const sourceCodeWithLogs = `
   import { Messages } from "ros";
 
-  export const inputs: StoryObj = ["/my_topic"];
-  export const output: StoryObj = "${DEFAULT_STUDIO_NODE_PREFIX}";
+  export const inputs = ["/my_topic"];
+  export const output = "${DEFAULT_STUDIO_NODE_PREFIX}";
 
   const publisher = (): Messages.std_msgs__ColorRGBA => {
     log({ "someKey": { "nestedKey": "nestedValue" } });
@@ -92,8 +92,8 @@ const sourceCodeWithUtils = `
   import { Input } from "ros";
   import { norm } from "./pointClouds";
 
-  export const inputs: StoryObj = ["/my_topic"];
-  export const output: StoryObj = "${DEFAULT_STUDIO_NODE_PREFIX}/1";
+  export const inputs = ["/my_topic"];
+  export const output = "${DEFAULT_STUDIO_NODE_PREFIX}/1";
 
   const publisher = (message: Input<"/my_topic">): { val: number } => {
     const val = norm({x:1, y:2, z:3});
