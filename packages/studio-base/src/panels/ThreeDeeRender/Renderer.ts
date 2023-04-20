@@ -59,6 +59,7 @@ import { CameraStateSettings } from "./renderables/CameraStateSettings";
 import { Cameras } from "./renderables/Cameras";
 import { FrameAxes } from "./renderables/FrameAxes";
 import { Grids } from "./renderables/Grids";
+import { ImageMode } from "./renderables/ImageMode/ImageMode";
 import { Images } from "./renderables/Images";
 import { LaserScans } from "./renderables/LaserScans";
 import { Markers } from "./renderables/Markers";
@@ -74,7 +75,6 @@ import { FoxgloveSceneEntities } from "./renderables/SceneEntities";
 import { SceneSettings } from "./renderables/SceneSettings";
 import { Urdfs } from "./renderables/Urdfs";
 import { VelodyneScans } from "./renderables/VelodyneScans";
-import { ImageMode } from "./renderables/imageMode/ImageMode";
 import { MarkerPool } from "./renderables/markers/MarkerPool";
 import {
   Header,
