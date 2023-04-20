@@ -92,7 +92,7 @@ export const PlayerNotPresent = (): JSX.Element => {
   return (
     <MockMessagePipelineProvider noActiveData presence={PlayerPresence.NOT_PRESENT}>
       <Box height="100%" bgcolor="background.paper">
-        <DataSourceSidebar onSelectDataSourceAction={() => {}} />
+        <DataSourceSidebar />
       </Box>
     </MockMessagePipelineProvider>
   );
@@ -109,7 +109,7 @@ export const PlayerIntializing = (): JSX.Element => {
       presence={PlayerPresence.INITIALIZING}
     >
       <Box height="100%" bgcolor="background.paper">
-        <DataSourceSidebar onSelectDataSourceAction={() => {}} />
+        <DataSourceSidebar />
       </Box>
     </MockMessagePipelineProvider>
   );
@@ -135,7 +135,7 @@ export const PlayerReconnecting = (): JSX.Element => {
       ]}
     >
       <Box height="100%" bgcolor="background.paper">
-        <DataSourceSidebar onSelectDataSourceAction={() => {}} />
+        <DataSourceSidebar />
       </Box>
     </MockMessagePipelineProvider>
   );
@@ -153,7 +153,7 @@ export const PlayerPresent = (): JSX.Element => {
       presence={PlayerPresence.PRESENT}
     >
       <Box height="100%" bgcolor="background.paper">
-        <DataSourceSidebar onSelectDataSourceAction={() => {}} />
+        <DataSourceSidebar />
       </Box>
     </MockMessagePipelineProvider>
   );
@@ -177,7 +177,7 @@ export const PlayerPresentWithCustomTimezone = (): JSX.Element => {
       presence={PlayerPresence.PRESENT}
     >
       <Box height="100%" bgcolor="background.paper">
-        <DataSourceSidebar onSelectDataSourceAction={() => {}} />
+        <DataSourceSidebar />
       </Box>
     </MockMessagePipelineProvider>
   );
@@ -208,7 +208,7 @@ export const WithEvents = (): JSX.Element => {
     >
       <CurrentUserContext.Provider value={userContextValue}>
         <Box height="100%" bgcolor="background.paper">
-          <DataSourceSidebar onSelectDataSourceAction={() => {}} />
+          <DataSourceSidebar />
         </Box>
       </CurrentUserContext.Provider>
     </MockMessagePipelineProvider>
@@ -251,7 +251,7 @@ export const PlayerWithError = (): JSX.Element => {
       ]}
     >
       <Box height="100%" bgcolor="background.paper">
-        <DataSourceSidebar onSelectDataSourceAction={() => {}} />
+        <DataSourceSidebar />
       </Box>
     </MockMessagePipelineProvider>
   );
