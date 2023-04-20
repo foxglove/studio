@@ -3,8 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { StoryObj } from "@storybook/react";
-import { screen } from "@testing-library/dom";
-import userEvent from "@testing-library/user-event";
+import { screen, userEvent } from "@storybook/testing-library";
 
 import { AppMenu } from "@foxglove/studio-base/components/AppMenu";
 import PlayerSelectionContext, {
@@ -49,26 +48,28 @@ export const Default = (): JSX.Element => (
   </WorkspaceContextProvider>
 );
 
-export const Dark = (): JSX.Element => <Default />;
-Dark.parameters = { colorScheme: "dark" };
-
-export const Light = (): JSX.Element => <Default />;
-Light.parameters = { colorScheme: "light" };
-
 type Story = StoryObj<typeof Default>;
 
 const NestedMenuSelected = (id: string, colorScheme: "dark" | "light"): Story => ({
   render: Default,
   parameters: { colorScheme },
-  play: async () => await userEvent.hover(screen.getByTestId(id)),
+  play: async () => userEvent.hover(screen.getByTestId(id)),
 });
 
 export const DarkFileSelected = NestedMenuSelected("app-menu-file", "dark");
+DarkFileSelected.storyName = "File (dark)";
+
 export const DarkViewSelected = NestedMenuSelected("app-menu-view", "dark");
-export const DarkPanelSelected = NestedMenuSelected("app-menu-panel", "dark");
+DarkViewSelected.storyName = "View (dark)";
+
 export const DarkHelpSelected = NestedMenuSelected("app-menu-help", "dark");
+DarkHelpSelected.storyName = "Help (dark)";
 
 export const LightFileSelected = NestedMenuSelected("app-menu-file", "light");
+LightFileSelected.storyName = "File (light)";
+
 export const LightViewSelected = NestedMenuSelected("app-menu-view", "light");
-export const LightPanelSelected = NestedMenuSelected("app-menu-panel", "light");
+LightViewSelected.storyName = "View (light)";
+
 export const LightHelpSelected = NestedMenuSelected("app-menu-help", "light");
+LightHelpSelected.storyName = "Help (light)";

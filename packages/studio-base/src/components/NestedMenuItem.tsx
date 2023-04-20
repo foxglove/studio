@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { ChevronRight12Regular, Open16Regular } from "@fluentui/react-icons";
-import { Divider, Menu, MenuItem, MenuItemProps } from "@mui/material";
+import { Divider, Menu, MenuItem, MenuItemProps, useTheme } from "@mui/material";
 import {
   Dispatch,
   MouseEvent,
@@ -65,6 +65,7 @@ export function NestedMenuItem(
   }>,
 ): JSX.Element {
   const { classes } = useStyles();
+  const theme = useTheme();
   const { children, items, subMenu, subMenuOpen, setSubMenu, id } = props;
   const [anchorEl, setAnchorEl] = useState<undefined | HTMLElement>(undefined);
   const open = Boolean(anchorEl);
@@ -133,7 +134,10 @@ export function NestedMenuItem(
               {item.shortcut ? (
                 <kbd>{item.shortcut}</kbd>
               ) : item.external ?? false ? (
-                <Open16Regular className={classes.endIcon} />
+                <Open16Regular
+                  className={classes.endIcon}
+                  primaryFill={theme.palette.primary.main}
+                />
               ) : undefined}
             </MenuItem>
           ) : (

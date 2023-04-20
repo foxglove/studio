@@ -73,14 +73,6 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
     const items: NestedMenuItem[] = [
       {
         type: "item",
-        label: "Open…",
-        key: "open",
-        onClick: () => {
-          handleClose();
-        },
-      },
-      {
-        type: "item",
         label: "Open local file…",
         key: "open-file",
         onClick: () => {
