@@ -347,7 +347,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     const aspect = renderSize.width / renderSize.height;
     switch (interfaceMode) {
       case "image":
-        this.cameraHandler = new ImageMode(this, aspect);
+        this.cameraHandler = new ImageMode(this, renderSize);
         this.addSceneExtension(this.cameraHandler);
         break;
       case "3d":

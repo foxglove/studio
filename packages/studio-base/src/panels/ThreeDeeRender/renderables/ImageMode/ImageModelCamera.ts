@@ -17,7 +17,7 @@ export class ImageModelCamera extends THREE.PerspectiveCamera {
 
   /** x/y zoom factors derived from image and window aspect ratios */
   private aspectZoom = new THREE.Vector2();
-  private rendererAspect = 1;
+  private canvasSize = new THREE.Vector2();
 
   public updateCamera(cameraModel: PinholeCameraModel): void {
     this.model = cameraModel;
@@ -73,9 +73,20 @@ export class ImageModelCamera extends THREE.PerspectiveCamera {
     return matrix;
   }
 
-  public setRendererAspect(aspect: number): void {
-    this.rendererAspect = aspect;
+  public setCanvasSize(size: THREE.Vector2): void {
+    this.canvasSize.copy(size);
     this.updateProjection();
+  }
+
+  /** @returns The ratio of screen points per image pixel */
+  public getEffectiveScale(): number {
+    if (!this.model) {
+      return 1;
+    }
+    return Math.min(
+      (this.canvasSize.width / this.model.width) * this.aspectZoom.x,
+      (this.canvasSize.height / this.model.height) * this.aspectZoom.y,
+    );
   }
 
   /**
@@ -93,7 +104,7 @@ export class ImageModelCamera extends THREE.PerspectiveCamera {
 
     const fx = model.P[0]!;
     const fy = model.P[5]!;
-    const rendererAspect = this.rendererAspect;
+    const rendererAspect = this.canvasSize.width / this.canvasSize.height;
     const imageAspect = imgWidth / fx / (imgHeight / fy);
     // preserve the aspect ratio
     if (imageAspect > rendererAspect) {

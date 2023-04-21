@@ -15,8 +15,8 @@ import {
   normalizeCameraInfo,
 } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/projections";
 
-import { ImageAnnotations } from "./ImageAnnotations";
 import { ImageModelCamera } from "./ImageModelCamera";
+import { ImageAnnotations } from "./annotations/ImageAnnotations";
 import type { IRenderer } from "../../IRenderer";
 import { PartialMessageEvent, SceneExtension } from "../../SceneExtension";
 import { SettingsTreeEntry } from "../../SettingsManager";
@@ -44,6 +44,8 @@ const IMAGE_TOPIC_DIFFERENT_FRAME = "IMAGE_TOPIC_DIFFERENT_FRAME";
 
 const CAMERA_MODEL = "CameraModel";
 
+const tempVec2 = new THREE.Vector2();
+
 export class ImageMode extends SceneExtension implements ICameraHandler {
   private camera: ImageModelCamera;
   private cameraModel:
@@ -64,7 +66,7 @@ export class ImageMode extends SceneExtension implements ICameraHandler {
 
   private annotations: ImageAnnotations;
 
-  public constructor(renderer: IRenderer, aspect: number) {
+  public constructor(renderer: IRenderer, canvasSize: THREE.Vector2) {
     super("foxglove.ImageMode", renderer);
 
     this.camera = new ImageModelCamera();
@@ -75,7 +77,7 @@ export class ImageMode extends SceneExtension implements ICameraHandler {
      * To correct this we rotate the camera 180 degrees around the x axis.
      */
     this.camera.quaternion.setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI);
-    this.camera.setRendererAspect(aspect);
+    this.camera.setCanvasSize(canvasSize);
 
     renderer.settings.errors.on("update", this.handleErrorChange);
     renderer.settings.errors.on("clear", this.handleErrorChange);
@@ -100,7 +102,11 @@ export class ImageMode extends SceneExtension implements ICameraHandler {
       updateSettingsTree: () => {
         this.updateSettingsTree();
       },
+      addSchemaSubscriptions: (schemaNames, handler) => {
+        renderer.addSchemaSubscriptions(schemaNames, handler);
+      },
     });
+    this.add(this.annotations);
   }
 
   public override dispose(): void {
@@ -385,6 +391,7 @@ export class ImageMode extends SceneExtension implements ICameraHandler {
         model,
         info: newCameraInfo,
       };
+      this.annotations.updateCameraModel(model);
     }
   }
 
@@ -411,7 +418,8 @@ export class ImageMode extends SceneExtension implements ICameraHandler {
   }
 
   public handleResize(width: number, height: number): void {
-    this.camera.setRendererAspect(width / height);
+    this.camera.setCanvasSize(tempVec2.set(width, height));
+    this.annotations.updateScale(this.camera.getEffectiveScale());
   }
 
   public setCameraState(): void {

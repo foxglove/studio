@@ -64,6 +64,7 @@ export type ImageModeConfig = {
   imageTopic?: string;
   /** Topic containing CameraCalibration or CameraInfo */
   calibrationTopic?: string;
+  /** Annotation topic settings, analogous to {@link RendererConfig.topics} */
   annotationsByTopicAndSchema?: Record<string, Record<string, ImageAnnotationSettings>>;
 };
 
