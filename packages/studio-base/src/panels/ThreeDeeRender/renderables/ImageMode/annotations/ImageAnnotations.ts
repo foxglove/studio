@@ -82,6 +82,7 @@ export class ImageAnnotations extends THREE.Object3D {
   }
 
   public updateScale(scale: number): void {
+    //TODO: get initial scale in constructor?
     for (const renderable of this.#renderablesByTopic.values()) {
       renderable.updateScale(scale);
     }

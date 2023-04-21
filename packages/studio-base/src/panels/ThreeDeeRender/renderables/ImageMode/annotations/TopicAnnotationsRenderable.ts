@@ -7,11 +7,13 @@ import * as THREE from "three";
 import { PinholeCameraModel } from "@foxglove/den/image";
 import { Annotation as NormalizedAnnotation } from "@foxglove/studio-base/panels/Image/types";
 
+import { LineListRenderable } from "./LineListRenderable";
 import { PointsRenderable } from "./PointsRenderable";
 
 export class TopicAnnotationsRenderable extends THREE.Object3D {
   #points?: PointsRenderable;
-  #scale = 1;
+  #lineList?: LineListRenderable;
+  #scale = 0; // TODO: get correct initial scale
 
   public dispose(): void {
     this.#points?.dispose();
@@ -25,6 +27,9 @@ export class TopicAnnotationsRenderable extends THREE.Object3D {
   public update(annotations: NormalizedAnnotation[], cameraModel: PinholeCameraModel): void {
     if (this.#points) {
       this.#points.visible = false;
+    }
+    if (this.#lineList) {
+      this.#lineList.visible = false;
     }
     for (const annotation of annotations) {
       switch (annotation.type) {
@@ -49,6 +54,16 @@ export class TopicAnnotationsRenderable extends THREE.Object3D {
             case "line_strip":
               break;
             case "line_list":
+              if (!this.#lineList) {
+                this.#lineList = new LineListRenderable();
+                this.add(this.#lineList);
+              }
+              this.#lineList.visible = true;
+              this.#lineList.update(
+                annotation as typeof annotation & { style: typeof annotation.style },
+                cameraModel,
+                this.#scale,
+              );
               break;
           }
           break;
