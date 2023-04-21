@@ -9,10 +9,10 @@ import WarningIcon from "@mui/icons-material/Warning";
 import { List, ListItem, ListItemIcon, ListItemText, Typography } from "@mui/material";
 import { invert } from "lodash";
 import { ReactElement } from "react";
+import { makeStyles } from "tss-react/mui";
 
 import Stack from "@foxglove/studio-base/components/Stack";
 import { Diagnostic, DiagnosticSeverity } from "@foxglove/studio-base/players/UserNodePlayer/types";
-import { makeStyles } from "tss-react/mui";
 
 const severityIcons = {
   Hint: <HelpIcon fontSize="small" />,
