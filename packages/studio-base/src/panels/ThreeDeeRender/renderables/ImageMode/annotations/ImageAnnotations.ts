@@ -35,7 +35,6 @@ interface ImageAnnotationsContext {
 export class ImageAnnotations extends THREE.Object3D {
   #context: ImageAnnotationsContext;
 
-  #annotationsByTopic = new Map<string, FoxgloveImageAnnotations>();
   #renderablesByTopic = new Map<string, TopicAnnotationsRenderable>();
   #cameraModel?: PinholeCameraModel;
 
