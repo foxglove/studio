@@ -27,7 +27,11 @@ export type NestedMenuItem =
   | { type: "divider" };
 
 const useStyles = makeStyles<void, "endIcon">()((theme, _params, classes) => ({
-  nestedMenuPaper: {
+  menu: {
+    pointerEvents: "none",
+  },
+  paper: {
+    pointerEvents: "auto",
     marginTop: theme.spacing(-1),
   },
   menuItem: {
@@ -104,6 +108,10 @@ export function NestedMenuItem(
         <ChevronRight12Regular className={classes.endIcon} />
       </MenuItem>
       <Menu
+        classes={{
+          root: classes.menu,
+          paper: classes.paper,
+        }}
         open={open}
         disablePortal
         anchorEl={anchorEl}
@@ -118,9 +126,6 @@ export function NestedMenuItem(
         disableAutoFocus
         disableEnforceFocus
         hideBackdrop
-        PaperProps={{
-          className: classes.nestedMenuPaper,
-        }}
       >
         {items.map((item, idx) =>
           item.type !== "divider" ? (
