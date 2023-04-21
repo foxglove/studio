@@ -4,7 +4,7 @@ Benchmarks are specific combinations of layout and synthetic data playback. When
 
 ## Instructions
 
-Run a dev or prod build and select a benchmark from `benchmarks.txt`.
+Run a dev or prod build and open a benchmark URL from `benchmarks.txt`.
 
 `yarn benchmark:serve` to start the benchmark dev build.
 
