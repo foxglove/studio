@@ -121,7 +121,10 @@ function useSyncTimeFromUrl(targetUrlState: AppURLState | undefined) {
   }, [playerPresence, seekPlayback, unappliedTime]);
 }
 
-/** Ensure only one copy of the hook is mounted */
+/**
+ * Ensure only one copy of the hook is mounted so we don't trigger side effects like selectSource
+ * more than once.
+ */
 let useInitialDeepLinkStateMounted = false;
 /**
  * Restores our session state from any deep link we were passed on startup.
