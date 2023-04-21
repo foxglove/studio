@@ -65,7 +65,6 @@ export class LineListRenderable extends THREE.Object3D {
 
     const hasExactColors = outlineColors.length === points.length / 2;
 
-    console.log("update", { scale, thickness, outlineColor });
     const positions = this.#positionBuffer;
     const colors = this.#colorBuffer;
     let hasTransparency = false;
