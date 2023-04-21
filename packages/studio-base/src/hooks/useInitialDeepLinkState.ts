@@ -121,12 +121,24 @@ function useSyncTimeFromUrl(targetUrlState: AppURLState | undefined) {
   }, [playerPresence, seekPlayback, unappliedTime]);
 }
 
+/** Ensure only one copy of the hook is mounted */
+let useInitialDeepLinkStateMounted = false;
 /**
  * Restores our session state from any deep link we were passed on startup.
  */
 export function useInitialDeepLinkState(deepLinks: readonly string[]): {
   currentUserRequired: boolean;
 } {
+  useEffect(() => {
+    if (useInitialDeepLinkStateMounted) {
+      throw new Error("Invariant: only one copy of useInitialDeepLinkState may be mounted");
+    }
+    useInitialDeepLinkStateMounted = true;
+    return () => {
+      useInitialDeepLinkStateMounted = false;
+    };
+  }, []);
+
   const { availableSources } = usePlayerSelection();
   const targetUrlState = useMemo(
     () => (deepLinks[0] ? parseAppURLState(new URL(deepLinks[0])) : undefined),
