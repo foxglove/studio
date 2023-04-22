@@ -44,8 +44,6 @@ const IMAGE_TOPIC_DIFFERENT_FRAME = "IMAGE_TOPIC_DIFFERENT_FRAME";
 
 const CAMERA_MODEL = "CameraModel";
 
-const tempVec2 = new THREE.Vector2();
-
 export class ImageMode extends SceneExtension implements ICameraHandler {
   private camera: ImageModelCamera;
   private cameraModel:
@@ -64,8 +62,11 @@ export class ImageMode extends SceneExtension implements ICameraHandler {
   private cameraInfoByTopic: Map<string, CameraInfo> = new Map();
   private cameraImageByTopic: Map<string, AnyImage> = new Map();
 
-  private annotations: ImageAnnotations;
+  #annotations: ImageAnnotations;
 
+  /**
+   * @param canvasSize Canvas size in screen points
+   */
   public constructor(renderer: IRenderer, canvasSize: THREE.Vector2) {
     super("foxglove.ImageMode", renderer);
 
@@ -77,7 +78,7 @@ export class ImageMode extends SceneExtension implements ICameraHandler {
      * To correct this we rotate the camera 180 degrees around the x axis.
      */
     this.camera.quaternion.setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI);
-    this.camera.setCanvasSize(canvasSize);
+    this.camera.setCanvasSize(canvasSize.width, canvasSize.height);
 
     renderer.settings.errors.on("update", this.handleErrorChange);
     renderer.settings.errors.on("clear", this.handleErrorChange);
@@ -93,7 +94,10 @@ export class ImageMode extends SceneExtension implements ICameraHandler {
       shouldSubscribe: this.cameraInfoShouldSubscribe,
     });
 
-    this.annotations = new ImageAnnotations({
+    this.#annotations = new ImageAnnotations({
+      initialScale: this.camera.getEffectiveScale(),
+      initialCanvasWidth: canvasSize.width,
+      initialCanvasHeight: canvasSize.height,
       topics: () => renderer.topics ?? [],
       config: () => renderer.config.imageMode,
       updateConfig: (updateHandler) => {
@@ -106,14 +110,20 @@ export class ImageMode extends SceneExtension implements ICameraHandler {
         renderer.addSchemaSubscriptions(schemaNames, handler);
       },
     });
-    this.add(this.annotations);
+    this.add(this.#annotations);
   }
 
   public override dispose(): void {
     this.renderer.settings.errors.off("update", this.handleErrorChange);
     this.renderer.settings.errors.off("clear", this.handleErrorChange);
     this.renderer.settings.errors.off("remove", this.handleErrorChange);
+    this.#annotations.dispose();
     super.dispose();
+  }
+
+  public override removeAllRenderables(): void {
+    this.#annotations.removeAllRenderables();
+    super.removeAllRenderables();
   }
 
   public override settingsNodes(): SettingsTreeEntry[] {
@@ -266,7 +276,7 @@ export class ImageMode extends SceneExtension implements ICameraHandler {
           },
         },
       },
-      ...this.annotations.settingsNodes(),
+      ...this.#annotations.settingsNodes(),
     ];
   }
 
@@ -371,6 +381,11 @@ export class ImageMode extends SceneExtension implements ICameraHandler {
     this.updateCameraModel(possibleNewCameraInfo);
     if (this.cameraModel?.model) {
       this.camera.updateCamera(this.cameraModel.model);
+      this.#annotations.updateScale(
+        this.camera.getEffectiveScale(),
+        this.renderer.input.canvasSize.width,
+        this.renderer.input.canvasSize.height,
+      );
     }
   }
 
@@ -391,7 +406,7 @@ export class ImageMode extends SceneExtension implements ICameraHandler {
         model,
         info: newCameraInfo,
       };
-      this.annotations.updateCameraModel(model);
+      this.#annotations.updateCameraModel(model);
     }
   }
 
@@ -418,8 +433,8 @@ export class ImageMode extends SceneExtension implements ICameraHandler {
   }
 
   public handleResize(width: number, height: number): void {
-    this.camera.setCanvasSize(tempVec2.set(width, height));
-    this.annotations.updateScale(this.camera.getEffectiveScale());
+    this.camera.setCanvasSize(width, height);
+    this.#annotations.updateScale(this.camera.getEffectiveScale(), width, height);
   }
 
   public setCameraState(): void {

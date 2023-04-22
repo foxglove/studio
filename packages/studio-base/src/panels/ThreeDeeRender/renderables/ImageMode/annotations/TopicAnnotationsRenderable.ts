@@ -7,69 +7,160 @@ import * as THREE from "three";
 import { PinholeCameraModel } from "@foxglove/den/image";
 import { Annotation as NormalizedAnnotation } from "@foxglove/studio-base/panels/Image/types";
 
-import { LineListRenderable } from "./LineListRenderable";
-import { PointsRenderable } from "./PointsRenderable";
+import { RenderableLineListAnnotation } from "./RenderableLineListAnnotation";
+import { RenderablePointsAnnotation } from "./RenderablePointsAnnotation";
 
+/**
+ * Holds renderables for all the 2D image annotations on a single topic.
+ * TODO: should be Renderable for picking purposes
+ */
 export class TopicAnnotationsRenderable extends THREE.Object3D {
-  #points?: PointsRenderable;
-  #lineList?: LineListRenderable;
-  #scale = 0; // TODO: get correct initial scale
+  #points: RenderablePointsAnnotation[] = [];
+  #lineLists: RenderableLineListAnnotation[] = [];
+
+  #scale = 0;
+  #canvasWidth = 0;
+  #canvasHeight = 0;
+  #scaleChanged = false;
+
+  #annotations: NormalizedAnnotation[] = [];
+  #annotationsChanged = false;
+
+  #cameraModel?: PinholeCameraModel;
+  #cameraModelChanged = false;
 
   public dispose(): void {
-    this.#points?.dispose();
+    for (const points of this.#points) {
+      points.dispose();
+    }
+    for (const lineList of this.#lineLists) {
+      lineList.dispose();
+    }
   }
 
-  public updateScale(scale: number): void {
+  public setScale(scale: number, canvasWidth: number, canvasHeight: number): void {
+    this.#scaleChanged ||= this.#scale !== scale;
     this.#scale = scale;
-    //TODO: re-render immediately with new scale
+    this.#canvasWidth = canvasWidth;
+    this.#canvasHeight = canvasHeight;
   }
 
-  public update(annotations: NormalizedAnnotation[], cameraModel: PinholeCameraModel): void {
-    if (this.#points) {
-      this.#points.visible = false;
+  public setCameraModel(cameraModel: PinholeCameraModel | undefined): void {
+    this.#cameraModelChanged ||= this.#cameraModel !== cameraModel;
+    this.#cameraModel = cameraModel;
+  }
+
+  public setAnnotations(annotations: NormalizedAnnotation[]): void {
+    this.#annotationsChanged ||= this.#annotations !== annotations;
+    this.#annotations = annotations;
+  }
+
+  public update(): void {
+    if (this.#scaleChanged) {
+      this.#scaleChanged = false;
+      for (const points of this.#points) {
+        points.setScale(this.#scale, this.#canvasWidth, this.#canvasHeight);
+      }
+      for (const lineList of this.#lineLists) {
+        lineList.setScale(this.#scale, this.#canvasWidth, this.#canvasHeight);
+      }
     }
-    if (this.#lineList) {
-      this.#lineList.visible = false;
+
+    if (this.#cameraModelChanged) {
+      this.#cameraModelChanged = false;
+      for (const points of this.#points) {
+        points.setCameraModel(this.#cameraModel);
+      }
+      for (const lineList of this.#lineLists) {
+        lineList.setCameraModel(this.#cameraModel);
+      }
     }
-    for (const annotation of annotations) {
+
+    const updateRenderables = () => {
+      for (const points of this.#points) {
+        points.update();
+      }
+      for (const lineList of this.#lineLists) {
+        lineList.update();
+      }
+    };
+
+    if (!this.#annotationsChanged) {
+      updateRenderables();
+      return;
+    }
+
+    this.#annotationsChanged = false;
+
+    const unusedPoints = this.#points;
+    this.#points = [];
+    const unusedLineLists = this.#lineLists;
+    this.#lineLists = [];
+
+    for (const annotation of this.#annotations) {
       switch (annotation.type) {
         case "circle":
+          // not yet implemented
           break;
+
         case "points":
           switch (annotation.style) {
-            case "points":
-              if (!this.#points) {
-                this.#points = new PointsRenderable();
-                this.add(this.#points);
+            case "points": {
+              let points = unusedPoints.pop();
+              if (!points) {
+                points = new RenderablePointsAnnotation();
+                points.setScale(this.#scale, this.#canvasWidth, this.#canvasHeight);
+                points.setCameraModel(this.#cameraModel);
+                this.add(points);
               }
-              this.#points.visible = true;
-              this.#points.update(
+              this.#points.push(points);
+              points.setAnnotation(
                 annotation as typeof annotation & { style: typeof annotation.style },
-                cameraModel,
-                this.#scale,
               );
               break;
+            }
+
             case "polygon":
+              // not yet implemented
               break;
+
             case "line_strip":
+              // not yet implemented
               break;
-            case "line_list":
-              if (!this.#lineList) {
-                this.#lineList = new LineListRenderable();
-                this.add(this.#lineList);
+
+            case "line_list": {
+              let lineList = unusedLineLists.pop();
+              if (!lineList) {
+                lineList = new RenderableLineListAnnotation();
+                lineList.setScale(this.#scale, this.#canvasWidth, this.#canvasHeight);
+                lineList.setCameraModel(this.#cameraModel);
+                this.add(lineList);
               }
-              this.#lineList.visible = true;
-              this.#lineList.update(
+              this.#lineLists.push(lineList);
+              lineList.setAnnotation(
                 annotation as typeof annotation & { style: typeof annotation.style },
-                cameraModel,
-                this.#scale,
               );
               break;
+            }
           }
           break;
+
         case "text":
+          // not yet implemented
           break;
       }
+    }
+
+    updateRenderables();
+
+    //TODO: keep and reuse these?
+    for (const points of unusedPoints) {
+      points.removeFromParent();
+      points.dispose();
+    }
+    for (const lineList of unusedLineLists) {
+      lineList.removeFromParent();
+      lineList.dispose();
     }
   }
 }

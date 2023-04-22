@@ -73,8 +73,9 @@ export class ImageModelCamera extends THREE.PerspectiveCamera {
     return matrix;
   }
 
-  public setCanvasSize(size: THREE.Vector2): void {
-    this.canvasSize.copy(size);
+  /** Set canvas size in screen points */
+  public setCanvasSize(width: number, height: number): void {
+    this.canvasSize.set(width, height);
     this.updateProjection();
   }
 

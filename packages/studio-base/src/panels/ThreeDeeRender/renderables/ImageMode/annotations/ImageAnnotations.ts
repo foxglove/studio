@@ -11,6 +11,10 @@ import { ImageAnnotations as FoxgloveImageAnnotations } from "@foxglove/schemas"
 import { MessageEvent, SettingsTreeAction, Topic } from "@foxglove/studio";
 import { normalizeAnnotations } from "@foxglove/studio-base/panels/Image/lib/normalizeAnnotations";
 import { ImageModeConfig } from "@foxglove/studio-base/panels/ThreeDeeRender/IRenderer";
+import {
+  ImageMarker as RosImageMarker,
+  ImageMarkerArray as RosImageMarkerArray,
+} from "@foxglove/studio-base/types/Messages";
 
 import { TopicAnnotationsRenderable } from "./TopicAnnotationsRenderable";
 import { SettingsTreeEntry } from "../../../SettingsManager";
@@ -19,6 +23,9 @@ import { IMAGE_MARKER_ARRAY_DATATYPES, IMAGE_MARKER_DATATYPES } from "../../../r
 import { topicIsConvertibleToSchema } from "../../../topicIsConvertibleToSchema";
 
 interface ImageAnnotationsContext {
+  initialScale: number;
+  initialCanvasWidth: number;
+  initialCanvasHeight: number;
   topics(): readonly Topic[];
   config(): ImageModeConfig;
   updateConfig(updateHandler: (draft: ImageModeConfig) => void): void;
@@ -38,27 +45,28 @@ export class ImageAnnotations extends THREE.Object3D {
   #renderablesByTopic = new Map<string, TopicAnnotationsRenderable>();
   #cameraModel?: PinholeCameraModel;
 
+  #scale: number;
+  #canvasWidth: number;
+  #canvasHeight: number;
+
   public constructor(context: ImageAnnotationsContext) {
     super();
     this.#context = context;
+    this.#scale = context.initialScale;
+    this.#canvasWidth = context.initialCanvasWidth;
+    this.#canvasHeight = context.initialCanvasHeight;
 
     this.#context.addSchemaSubscriptions(
       IMAGE_ANNOTATIONS_DATATYPES,
-      this.#handleImageAnnotations.bind(this),
+      this.#handleMessage.bind(this),
     );
-    this.#context.addSchemaSubscriptions(
-      IMAGE_MARKER_DATATYPES,
-      this.#handleImageMarker.bind(this),
-    );
+    this.#context.addSchemaSubscriptions(IMAGE_MARKER_DATATYPES, this.#handleMessage.bind(this));
     this.#context.addSchemaSubscriptions(
       IMAGE_MARKER_ARRAY_DATATYPES,
-      this.#handleImageMarkerArray.bind(this),
+      this.#handleMessage.bind(this),
     );
   }
-  /**
-   * Called when the scene is being destroyed. Free any unmanaged resources such as GPU buffers
-   * here. The base class implementation calls dispose() on all `renderables`.
-   */
+
   public dispose(): void {
     for (const renderable of this.#renderablesByTopic.values()) {
       renderable.dispose();
@@ -67,10 +75,7 @@ export class ImageAnnotations extends THREE.Object3D {
     this.#renderablesByTopic.clear();
   }
 
-  /**
-   * Called when seeking or a new data source is loaded. The base class implementation removes all
-   * `renderables` and calls `updateSettingsTree()`.
-   */
+  /** Called when seeking or a new data source is loaded.  */
   public removeAllRenderables(): void {
     for (const renderable of this.#renderablesByTopic.values()) {
       renderable.dispose();
@@ -80,21 +85,27 @@ export class ImageAnnotations extends THREE.Object3D {
     // this.#context.updateSettingsTree();
   }
 
-  public updateScale(scale: number): void {
-    //TODO: get initial scale in constructor?
+  public updateScale(scale: number, canvasWidth: number, canvasHeight: number): void {
+    this.#scale = scale;
+    this.#canvasWidth = canvasWidth;
+    this.#canvasHeight = canvasHeight;
     for (const renderable of this.#renderablesByTopic.values()) {
-      renderable.updateScale(scale);
+      renderable.setScale(scale, canvasWidth, canvasHeight);
+      renderable.update();
     }
   }
 
   public updateCameraModel(cameraModel: PinholeCameraModel): void {
     this.#cameraModel = cameraModel;
-    // for (const renderable of this.#renderablesByTopic.values()) {
-    //   renderable.update(cameraModel);
-    // }
+    for (const renderable of this.#renderablesByTopic.values()) {
+      renderable.setCameraModel(cameraModel);
+      renderable.update();
+    }
   }
 
-  #handleImageAnnotations(messageEvent: MessageEvent<FoxgloveImageAnnotations>) {
+  #handleMessage(
+    messageEvent: MessageEvent<FoxgloveImageAnnotations | RosImageMarker | RosImageMarkerArray>,
+  ) {
     const annotations = normalizeAnnotations(messageEvent.message, messageEvent.schemaName);
     if (!annotations) {
       return;
@@ -103,22 +114,14 @@ export class ImageAnnotations extends THREE.Object3D {
     let renderable = this.#renderablesByTopic.get(messageEvent.topic);
     if (!renderable) {
       renderable = new TopicAnnotationsRenderable();
+      renderable.setScale(this.#scale, this.#canvasWidth, this.#canvasHeight);
+      renderable.setCameraModel(this.#cameraModel);
       this.#renderablesByTopic.set(messageEvent.topic, renderable);
       this.add(renderable);
     }
 
-    if (!this.#cameraModel) {
-      //TODO: store annotations so we can render them when there is a cameraModel
-      return;
-    }
-    renderable.update(annotations, this.#cameraModel);
-  }
-
-  #handleImageMarker(_messageEvent: MessageEvent<unknown>) {
-    //TODO
-  }
-  #handleImageMarkerArray(_messageEvent: MessageEvent<unknown>) {
-    //TODO
+    renderable.setAnnotations(annotations);
+    renderable.update();
   }
 
   #handleTopicVisibilityChange(topic: Topic, action: SettingsTreeAction): void {
