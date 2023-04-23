@@ -42,18 +42,13 @@ type Feature = {
 };
 
 function useFeatures(): Feature[] {
-  const { t } = useTranslation("preferences");
+  const { t } = useTranslation("appSettings");
 
   const features: Feature[] = [
     {
       key: AppSetting.SHOW_DEBUG_PANELS,
       name: t("studioDebugPanels"),
       description: <>{t("studioDebugPanelsDescription")}</>,
-    },
-    {
-      key: AppSetting.ENABLE_LEGACY_PLOT_PANEL,
-      name: t("legacyPlotPanel"),
-      description: <>{t("legacyPlotPanelDescription")}</>,
     },
     {
       key: AppSetting.ENABLE_MEMORY_USE_INDICATOR,
@@ -136,7 +131,7 @@ function ExperimentalFeatureItem(props: { feature: Feature }) {
 
 export const ExperimentalFeatureSettings = (): React.ReactElement => {
   const features = useFeatures();
-  const { t } = useTranslation("preferences");
+  const { t } = useTranslation("appSettings");
   return (
     <Stack gap={2}>
       {features.length === 0 && (

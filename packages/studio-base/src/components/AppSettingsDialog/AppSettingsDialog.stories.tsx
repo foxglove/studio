@@ -2,9 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Story } from "@storybook/react";
-import { screen } from "@testing-library/dom";
-import userEvent from "@testing-library/user-event";
+import { StoryFn, StoryObj } from "@storybook/react";
+import { screen, userEvent } from "@storybook/testing-library";
 import { range } from "lodash";
 
 import { ExtensionInfo, ExtensionLoader } from "@foxglove/studio-base";
@@ -14,7 +13,7 @@ import ExtensionMarketplaceContext, {
 import ExtensionCatalogProvider from "@foxglove/studio-base/providers/ExtensionCatalogProvider";
 import WorkspaceContextProvider from "@foxglove/studio-base/providers/WorkspaceContextProvider";
 
-import { PreferencesDialog } from "./PreferencesDialog";
+import { AppSettingsDialog } from "./AppSettingsDialog";
 
 const installedExtensions: ExtensionInfo[] = range(1, 10).map((index) => ({
   id: "publisher.storyextension",
@@ -61,7 +60,7 @@ const MockExtensionMarketplace: ExtensionMarketplace = {
 Mock markdown rendering for URL [${url}](${url}).`,
 };
 
-function Wrapper(StoryComponent: Story): JSX.Element {
+function Wrapper(StoryComponent: StoryFn): JSX.Element {
   return (
     <WorkspaceContextProvider>
       <ExtensionCatalogProvider loaders={[MockExtensionLoader]}>
@@ -74,57 +73,89 @@ function Wrapper(StoryComponent: Story): JSX.Element {
 }
 
 export default {
-  title: "components/PreferencesDialog",
-  component: PreferencesDialog,
+  title: "components/AppSettingsDialog",
+  component: AppSettingsDialog,
   parameters: { colorScheme: "light" },
   decorators: [Wrapper],
 };
 
-export function Default(): JSX.Element {
-  return <PreferencesDialog open />;
-}
-export const DefaultChinese = (): JSX.Element => <Default />;
-DefaultChinese.parameters = { forceLanguage: "zh" };
-
-export function ChangingLanguage(): JSX.Element {
-  return <PreferencesDialog open />;
-}
-ChangingLanguage.play = async () => {
-  const user = userEvent.setup();
-  const input = await screen.findByText("English", { exact: false });
-  await user.click(input);
-
-  await userEvent.keyboard("中文");
-  const item = await screen.findByText("中文", { exact: false });
-  await user.click(item);
+export const Default: StoryObj = {
+  render: () => {
+    return <AppSettingsDialog open />;
+  },
 };
 
-export function General(): JSX.Element {
-  return <PreferencesDialog open activeTab="general" />;
-}
-export const GeneralChinese = (): JSX.Element => <General />;
-GeneralChinese.parameters = { forceLanguage: "zh" };
+export const DefaultChinese: StoryObj = {
+  ...Default,
+  parameters: { forceLanguage: "zh" },
+};
 
-export function Privacy(): JSX.Element {
-  return <PreferencesDialog open activeTab="privacy" />;
-}
-export const PrivacyChinese = (): JSX.Element => <Privacy />;
-PrivacyChinese.parameters = { forceLanguage: "zh" };
+export const ChangingLanguage: StoryObj = {
+  render: function Story() {
+    return <AppSettingsDialog open />;
+  },
 
-export function Extensions(): JSX.Element {
-  return <PreferencesDialog open activeTab="extensions" />;
-}
-export const ExtensionsChinese = (): JSX.Element => <Extensions />;
-ExtensionsChinese.parameters = { forceLanguage: "zh" };
+  play: async () => {
+    const input = await screen.findByText("English", { exact: false });
+    userEvent.click(input);
 
-export function Experimental(): JSX.Element {
-  return <PreferencesDialog open activeTab="experimental-features" />;
-}
-export const ExperimentalChinese = (): JSX.Element => <Experimental />;
-ExperimentalChinese.parameters = { forceLanguage: "zh" };
+    userEvent.keyboard("中文");
+    const item = await screen.findByText("中文", { exact: false });
+    userEvent.click(item);
+  },
+};
 
-export function About(): JSX.Element {
-  return <PreferencesDialog open activeTab="about" />;
-}
-export const AboutChinese = (): JSX.Element => <About />;
-AboutChinese.parameters = { forceLanguage: "zh" };
+export const General: StoryObj = {
+  render: () => {
+    return <AppSettingsDialog open activeTab="general" />;
+  },
+};
+
+export const GeneralChinese: StoryObj = {
+  ...General,
+  parameters: { forceLanguage: "zh" },
+};
+
+export const Privacy: StoryObj = {
+  render: () => {
+    return <AppSettingsDialog open activeTab="privacy" />;
+  },
+};
+
+export const PrivacyChinese: StoryObj = {
+  ...Privacy,
+  parameters: { forceLanguage: "zh" },
+};
+
+export const Extensions: StoryObj = {
+  render: () => {
+    return <AppSettingsDialog open activeTab="extensions" />;
+  },
+};
+
+export const ExtensionsChinese: StoryObj = {
+  ...Extensions,
+  parameters: { forceLanguage: "zh" },
+};
+
+export const Experimental: StoryObj = {
+  render: () => {
+    return <AppSettingsDialog open activeTab="experimental-features" />;
+  },
+};
+
+export const ExperimentalChinese: StoryObj = {
+  ...Experimental,
+  parameters: { forceLanguage: "zh" },
+};
+
+export const About: StoryObj = {
+  render: () => {
+    return <AppSettingsDialog open activeTab="about" />;
+  },
+};
+
+export const AboutChinese: StoryObj = {
+  ...About,
+  parameters: { forceLanguage: "zh" },
+};

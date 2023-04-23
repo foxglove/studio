@@ -2,8 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-export const preferences = {
-  preferences: "Preferences",
+export const appSettings = {
+  settings: "Settings",
   colorScheme: "Color scheme",
   dark: "Dark",
   light: "Light",
@@ -29,8 +29,6 @@ export const preferences = {
   noExperimentalFeatures: "Currently there are no experimental features.",
   studioDebugPanels: "Studio debug panels",
   studioDebugPanelsDescription: "Show Foxglove Studio debug panels in the “Add panel” list.",
-  legacyPlotPanel: "Legacy Plot panel",
-  legacyPlotPanelDescription: "Enable the Legacy Plot panel.",
   memoryUseIndicator: "Memory use indicator",
   memoryUseIndicatorDescription: "Show the app memory use in the sidebar.",
   newNavigation: "New navigation",
