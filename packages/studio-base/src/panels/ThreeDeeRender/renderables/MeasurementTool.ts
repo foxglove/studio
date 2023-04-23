@@ -174,12 +174,14 @@ export class MeasurementTool extends SceneExtension<Renderable<BaseUserData>, Me
     switch (state) {
       case "idle":
         this.renderer.input.removeListener("click", this._handleClick);
+        this.renderer.input.removeListener("touchend", this._handleClick);
         this.renderer.input.removeListener("mousemove", this._handleMouseMove);
         this.dispatchEvent({ type: "foxglove.measure-end" });
         break;
       case "place-first-point":
         this.point1 = this.point2 = undefined;
         this.renderer.input.addListener("click", this._handleClick);
+        this.renderer.input.addListener("touchend", this._handleClick);
         this.renderer.input.addListener("mousemove", this._handleMouseMove);
         this.dispatchEvent({ type: "foxglove.measure-start" });
         break;
@@ -223,7 +225,6 @@ export class MeasurementTool extends SceneExtension<Renderable<BaseUserData>, Me
   private _handleClick = (
     _cursorCoords: THREE.Vector2,
     worldSpaceCursorCoords: THREE.Vector3 | undefined,
-    _event: MouseEvent,
   ) => {
     if (!worldSpaceCursorCoords) {
       return;

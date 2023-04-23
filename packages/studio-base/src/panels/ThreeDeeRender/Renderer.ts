@@ -314,6 +314,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     this.input = new Input(canvas, () => this.cameraHandler.getActiveCamera());
     this.input.on("resize", (size) => this.resizeHandler(size));
     this.input.on("click", (cursorCoords) => this.clickHandler(cursorCoords));
+    this.input.on("touchend", (cursorCoords) => this.clickHandler(cursorCoords));
 
     this.picker = new Picker(this.gl, this.scene, { debug: DEBUG_PICKING });
 

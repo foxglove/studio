@@ -34,6 +34,11 @@ export type InputEvents = {
     worldSpaceCursorCoords: THREE.Vector3 | undefined,
     event: MouseEvent,
   ) => void;
+  touchend: (
+    cursorCoords: THREE.Vector2,
+    worldSpaceCursorCoords: THREE.Vector3 | undefined,
+    event: TouchEvent,
+  ) => void;
   keydown: (key: Key, event: KeyboardEvent) => void;
 };
 
@@ -102,17 +107,17 @@ export class Input extends EventEmitter<InputEvents> {
 
   private onMouseDown = (event: MouseEvent): void => {
     this.startClientPos = new THREE.Vector2(event.offsetX, event.offsetY);
-    this.updateCursorCoords(event);
+    this.updateCursorCoords(event.offsetX, event.offsetY);
     this.emit("mousedown", this.cursorCoords, this.worldSpaceCursorCoords, event);
   };
 
   private onMouseMove = (event: MouseEvent): void => {
-    this.updateCursorCoords(event);
+    this.updateCursorCoords(event.offsetX, event.offsetY);
     this.emit("mousemove", this.cursorCoords, this.worldSpaceCursorCoords, event);
   };
 
   private onMouseUp = (event: MouseEvent): void => {
-    this.updateCursorCoords(event);
+    this.updateCursorCoords(event.offsetX, event.offsetY);
     this.emit("mouseup", this.cursorCoords, this.worldSpaceCursorCoords, event);
   };
 
@@ -128,7 +133,7 @@ export class Input extends EventEmitter<InputEvents> {
       return;
     }
 
-    this.updateCursorCoords(event);
+    this.updateCursorCoords(event.offsetX, event.offsetY);
     this.emit("click", this.cursorCoords, this.worldSpaceCursorCoords, event);
   };
 
@@ -142,6 +147,24 @@ export class Input extends EventEmitter<InputEvents> {
 
   private onTouchEnd = (event: TouchEvent): void => {
     event.preventDefault();
+    const touch = event.changedTouches[0];
+    if (!touch || !this.startClientPos) {
+      return;
+    }
+
+    const dist = this.startClientPos.distanceTo(tempVec2.set(touch.clientX, touch.clientY));
+    this.startClientPos = undefined;
+
+    if (dist > MAX_DIST) {
+      return;
+    }
+
+    const target = event.target as HTMLCanvasElement;
+    const rect = target.getBoundingClientRect();
+    const offsetX = touch.clientX - rect.left;
+    const offsetY = touch.clientY - rect.top;
+    this.updateCursorCoords(offsetX, offsetY);
+    this.emit("touchend", this.cursorCoords, this.worldSpaceCursorCoords, event);
   };
 
   private onTouchMove = (event: TouchEvent): void => {
@@ -152,16 +175,13 @@ export class Input extends EventEmitter<InputEvents> {
     event.preventDefault();
   };
 
-  private updateCursorCoords(event: MouseEvent): void {
-    this.cursorCoords.x = event.offsetX;
-    this.cursorCoords.y = event.offsetY;
+  private updateCursorCoords(x: number, y: number): void {
+    this.cursorCoords.x = x;
+    this.cursorCoords.y = y;
 
     this.raycaster.setFromCamera(
       // Cursor position in NDC
-      tempVec2.set(
-        (event.offsetX / this.canvasSize.width) * 2 - 1,
-        -((event.offsetY / this.canvasSize.height) * 2 - 1),
-      ),
+      tempVec2.set((x / this.canvasSize.width) * 2 - 1, -((y / this.canvasSize.height) * 2 - 1)),
       this.getCamera(),
     );
     this.worldSpaceCursorCoords =
