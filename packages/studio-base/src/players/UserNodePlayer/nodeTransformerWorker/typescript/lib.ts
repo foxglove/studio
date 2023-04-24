@@ -127,6 +127,11 @@ const libDts = new Map(
   }),
 );
 
+/**
+ * Each top-level type definition file (such as lib.es2022.d.ts) is a lightweight wrapper that
+ * references other .d.ts files. To produce the complete definitions we manually resolve these
+ * references.
+ */
 function resolveReferences(originalSrc: string): string {
   return originalSrc.replace(/\/\/\/ <reference lib="(.+)" \/>/g, (_, name: string) => {
     const src = libDts.get(name);
