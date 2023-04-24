@@ -417,8 +417,8 @@ export function ThreeDeeRender(props: {
     const imageMode: ImageModeConfig = {
       imageTopic: legacyImageConfig?.cameraTopic,
       ...partialConfig?.imageMode,
-      annotationsByTopicAndSchema: partialConfig?.imageMode?.annotationsByTopicAndSchema as
-        | ImageModeConfig["annotationsByTopicAndSchema"]
+      annotations: partialConfig?.imageMode?.annotations as
+        | ImageModeConfig["annotations"]
         | undefined,
     };
 
@@ -673,16 +673,21 @@ export function ThreeDeeRender(props: {
     const newSubscriptions: Subscription[] = [];
 
     const addSubscription = (
-      topic: string,
+      topic: Topic,
       rendererSubscription: RendererSubscription,
-      schemaName: string,
+      convertTo?: string,
     ) => {
-      let shouldSubscribe = rendererSubscription.shouldSubscribe?.(topic);
+      let shouldSubscribe = rendererSubscription.shouldSubscribe?.(topic.name);
       if (shouldSubscribe == undefined) {
-        if (config.topics[topic]?.visible === true) {
+        if (config.topics[topic.name]?.visible === true) {
           shouldSubscribe = true;
         } else if (
-          config.imageMode.annotationsByTopicAndSchema?.[topic]?.[schemaName]?.visible === true
+          config.imageMode.annotations?.some(
+            (sub) =>
+              sub.topic === topic.name &&
+              sub.schemaName === (convertTo ?? topic.schemaName) &&
+              sub.settings.visible,
+          ) === true
         ) {
           shouldSubscribe = true;
         } else {
@@ -691,23 +696,23 @@ export function ThreeDeeRender(props: {
       }
       if (shouldSubscribe) {
         newSubscriptions.push({
-          topic,
+          topic: topic.name,
           preload: rendererSubscription.preload,
-          convertTo: schemaName, // FIXME: is it wrong to pass this if schemaName is the original and does not come from a converter?
+          convertTo,
         });
       }
     };
 
     for (const topic of topics) {
       for (const rendererSubscription of topicHandlers.get(topic.name) ?? []) {
-        addSubscription(topic.name, rendererSubscription, topic.schemaName);
+        addSubscription(topic, rendererSubscription);
       }
       for (const rendererSubscription of schemaHandlers.get(topic.schemaName) ?? []) {
-        addSubscription(topic.name, rendererSubscription, topic.schemaName);
+        addSubscription(topic, rendererSubscription);
       }
       for (const schemaName of topic.convertibleTo ?? []) {
         for (const rendererSubscription of schemaHandlers.get(schemaName) ?? []) {
-          addSubscription(topic.name, rendererSubscription, schemaName);
+          addSubscription(topic, rendererSubscription, schemaName);
         }
       }
     }
@@ -715,13 +720,7 @@ export function ThreeDeeRender(props: {
     // Sort the list to make comparisons stable
     newSubscriptions.sort((a, b) => a.topic.localeCompare(b.topic));
     setTopicsToSubscribe((prev) => (isEqual(prev, newSubscriptions) ? prev : newSubscriptions));
-  }, [
-    topics,
-    config.topics,
-    schemaHandlers,
-    topicHandlers,
-    config.imageMode.annotationsByTopicAndSchema,
-  ]);
+  }, [topics, config.topics, schemaHandlers, topicHandlers, config.imageMode.annotations]);
 
   // Notify the extension context when our subscription list changes
   useEffect(() => {

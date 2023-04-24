@@ -3,20 +3,20 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { t } from "i18next";
-import { set } from "lodash";
+import { Immutable } from "immer";
 import * as THREE from "three";
 
 import { PinholeCameraModel } from "@foxglove/den/image";
 import { ImageAnnotations as FoxgloveImageAnnotations } from "@foxglove/schemas";
 import { MessageEvent, SettingsTreeAction, Topic } from "@foxglove/studio";
 import { normalizeAnnotations } from "@foxglove/studio-base/panels/Image/lib/normalizeAnnotations";
-import { ImageModeConfig } from "@foxglove/studio-base/panels/ThreeDeeRender/IRenderer";
 import {
   ImageMarker as RosImageMarker,
   ImageMarkerArray as RosImageMarkerArray,
 } from "@foxglove/studio-base/types/Messages";
 
 import { TopicAnnotationsRenderable } from "./TopicAnnotationsRenderable";
+import { ImageModeConfig } from "../../../IRenderer";
 import { SettingsTreeEntry } from "../../../SettingsManager";
 import { IMAGE_ANNOTATIONS_DATATYPES } from "../../../foxglove";
 import { IMAGE_MARKER_ARRAY_DATATYPES, IMAGE_MARKER_DATATYPES } from "../../../ros";
@@ -27,7 +27,7 @@ interface ImageAnnotationsContext {
   initialCanvasWidth: number;
   initialCanvasHeight: number;
   topics(): readonly Topic[];
-  config(): ImageModeConfig;
+  config(): Immutable<ImageModeConfig>;
   updateConfig(updateHandler: (draft: ImageModeConfig) => void): void;
   updateSettingsTree(): void;
   addSchemaSubscriptions<T>(
@@ -42,6 +42,7 @@ interface ImageAnnotationsContext {
 export class ImageAnnotations extends THREE.Object3D {
   #context: ImageAnnotationsContext;
 
+  /** FG-3065: support multiple converters per message */
   #renderablesByTopic = new Map<string, TopicAnnotationsRenderable>();
   #cameraModel?: PinholeCameraModel;
 
@@ -82,7 +83,6 @@ export class ImageAnnotations extends THREE.Object3D {
       this.remove(renderable);
     }
     this.#renderablesByTopic.clear();
-    // this.#context.updateSettingsTree();
   }
 
   public updateScale(scale: number, canvasWidth: number, canvasHeight: number): void {
@@ -128,24 +128,34 @@ export class ImageAnnotations extends THREE.Object3D {
     if (action.action !== "update" || action.payload.path.length < 2) {
       return;
     }
+    const { value } = action.payload;
     if (
       action.payload.path[0] !== "imageAnnotations" ||
       action.payload.path[2] !== "visible" ||
-      typeof action.payload.value !== "boolean"
+      typeof value !== "boolean"
     ) {
       return;
     }
     this.#context.updateConfig((draft) => {
-      draft.annotationsByTopicAndSchema ??= {};
-      set(
-        draft.annotationsByTopicAndSchema,
-        [topic.name, topic.schemaName, "visible"],
-        action.payload.value,
+      draft.annotations ??= [];
+      // FG-3065: support topic.convertTo
+      let subscription = draft.annotations.find(
+        (sub) => sub.topic === topic.name && sub.schemaName === topic.schemaName,
       );
+      if (subscription) {
+        subscription.settings.visible = value;
+      } else {
+        subscription = {
+          topic: topic.name,
+          schemaName: topic.schemaName,
+          settings: { visible: value },
+        };
+        draft.annotations.push(subscription);
+      }
     });
     const renderable = this.#renderablesByTopic.get(topic.name);
     if (renderable) {
-      renderable.visible = action.payload.value;
+      renderable.visible = value;
     }
     this.#context.updateSettingsTree();
   }
@@ -173,18 +183,18 @@ export class ImageAnnotations extends THREE.Object3D {
       ) {
         continue;
       }
+      // FG-3065: support topic.convertTo
+      const settings = config.annotations?.find(
+        (sub) => sub.topic === topic.name && sub.schemaName === topic.schemaName,
+      )?.settings;
       entries.push({
-        // We want 2 levels of nesting in the panel config
-        // (annotationsByTopicAndSchema[topic][schema]), but only 1 level of nesting in the settings
-        // tree (all annotation topics listed under "Image annotations"). So when building the tree,
-        // we just use a numeric index in the path. Inside the handler, this part of the path is
-        // ignored, and instead we pass in the `topic` directly so the handler knows which value to
-        // update in the config.
+        // When building the tree, we just use a numeric index in the path. Inside the handler, this
+        // part of the path is ignored, and instead we pass in the `topic` directly so the handler
+        // knows which value to update in the config.
         path: ["imageAnnotations", `${i++}`],
         node: {
           label: topic.name,
-          visible:
-            config.annotationsByTopicAndSchema?.[topic.name]?.[topic.schemaName]?.visible ?? false,
+          visible: settings?.visible ?? false,
           handler: this.#handleTopicVisibilityChange.bind(this, topic),
         },
       });
