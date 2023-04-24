@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import EventEmitter from "eventemitter3";
+import { debounce } from "lodash";
 import * as THREE from "three";
 import { Key } from "ts-key-enum";
 
@@ -57,7 +58,10 @@ export class Input extends EventEmitter<InputEvents> {
     this.canvas = canvas;
     this.canvasSize = new THREE.Vector2(canvas.width, canvas.height);
 
-    this.resizeObserver = new ResizeObserver(this.onResize);
+    // Calling the resize observer too often causes Chrome to throw an exception
+    // so we debounce it.
+    const debouncedOnResize = debounce(this.onResize);
+    this.resizeObserver = new ResizeObserver(debouncedOnResize);
     this.resizeObserver.observe(parentEl);
 
     canvas.addEventListener("mousedown", this.onMouseDown);
