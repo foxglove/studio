@@ -2,15 +2,9 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
-import {
-  App,
-  AppSetting,
-  IDataSourceFactory,
-  LaunchPreferenceValue,
-  initI18n,
-} from "@foxglove/studio-base";
+import { App, IDataSourceFactory, AppSetting, LaunchPreferenceValue } from "@foxglove/studio-base";
 
 import { McapLocalBenchmarkDataSourceFactory, SyntheticDataSourceFactory } from "./dataSources";
 import { LAYOUTS } from "./layouts";
@@ -20,14 +14,9 @@ import {
   TransformPlayer,
   TransformPreloadingPlayer,
 } from "./players";
-import { MemoryAppConfiguration, PredefinedLayoutStorage } from "./services";
+import { PredefinedLayoutStorage, MemoryAppConfiguration } from "./services";
 
 export function Root(): JSX.Element {
-  useEffect(() => {
-    // Need to init i18n stuff here because we skip the normal startup code path.
-    initI18n().catch(console.error);
-  }, []);
-
   const [appConfiguration] = useState(
     () =>
       new MemoryAppConfiguration({
