@@ -66,14 +66,15 @@ const CREATE_BITMAP_ERR = "CreateBitmap";
 const DEFAULT_IMAGE_WIDTH = 512;
 
 export class ImageRenderable extends Renderable<ImageUserData> {
+  // Make sure that everything is build the first time we render
   // set when camera info or image changes
-  #geometryNeedsUpdate = false;
+  #geometryNeedsUpdate = true;
   // set when geometry or material reference changes
-  #meshNeedsUpdate = false;
+  #meshNeedsUpdate = true;
   // set when image changes
-  #textureNeedsUpdate = false;
+  #textureNeedsUpdate = true;
   // set when material or texture changes
-  #materialNeedsUpdate = false;
+  #materialNeedsUpdate = true;
 
   public override dispose(): void {
     this.userData.texture?.dispose();
@@ -84,6 +85,7 @@ export class ImageRenderable extends Renderable<ImageUserData> {
 
   public updateHeaderInfo(): void {
     assert(this.userData.image, "updateHeaderInfo called without image");
+
     // If there is camera info, the frameId comes from the camera info since the user may have
     // selected camera info with a different frame than our image frame.
     //
@@ -100,11 +102,8 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     return { image: this.userData.image, camera_info: this.userData.cameraInfo };
   }
 
-  // Renderable should only need ot care about the model
+  // Renderable should only need to care about the model
   public setCameraModel = (cameraModel: PinholeCameraModel): void => {
-    /**
-     * set model in userdata, then call updateGeometry to clear the old geometry and create a new one
-     */
     this.userData.cameraModel = cameraModel;
     this.#geometryNeedsUpdate = true;
   };
@@ -113,9 +112,11 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     const newSettings = { ...DEFAULT_SETTINGS, ...settings };
     const prevSettings = this.userData.settings;
     if (prevSettings.cameraInfoTopic !== newSettings.cameraInfoTopic) {
-      // to prevent from showing incorrect camera info, we'll set the mesh to invisible
-      this.userData.cameraModel = undefined;
-      // maybe just clear mesh and info
+      // clear mesh since it is no longer showing userData accurately
+      if (this.userData.mesh != undefined) {
+        this.remove(this.userData.mesh);
+      }
+      this.userData.mesh = undefined;
       this.#geometryNeedsUpdate = true;
     }
     if (
@@ -128,11 +129,50 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     if (newSettings.color !== prevSettings.color) {
       this.#materialNeedsUpdate = true;
     }
+    this.userData.settings = newSettings;
   }
 
   public setImage(image: AnyImage): void {
     this.userData.image = image;
     this.#textureNeedsUpdate = true;
+  }
+
+  public update(): void {
+    // We need a valid camera model and image to render
+    if (!this.userData.cameraModel || !this.userData.image) {
+      return;
+    }
+
+    this.updateHeaderInfo();
+
+    if (this.#geometryNeedsUpdate) {
+      this.rebuildGeometry();
+      this.#geometryNeedsUpdate = false;
+    }
+
+    if (this.#textureNeedsUpdate) {
+      this.updateTexture();
+      this.#textureNeedsUpdate = false;
+    }
+    if (this.#materialNeedsUpdate) {
+      this.updateMaterial();
+      this.#materialNeedsUpdate = false;
+    }
+
+    if (this.#meshNeedsUpdate && this.userData.texture) {
+      this.updateMesh();
+      this.#meshNeedsUpdate = false;
+    }
+  }
+
+  private rebuildGeometry() {
+    assert(this.userData.cameraModel, "Camera model must be set before geometry can be updated");
+    // Dispose of the current geometry if the settings have changed
+    this.userData.geometry?.dispose();
+    this.userData.geometry = undefined;
+    const geometry = createGeometry(this.userData.cameraModel, this.userData.settings);
+    this.userData.geometry = geometry;
+    this.#meshNeedsUpdate = true;
   }
 
   private updateTexture(): void {
@@ -153,8 +193,8 @@ export class ImageRenderable extends Renderable<ImageUserData> {
           }
 
           this.removeTopicError(CREATE_BITMAP_ERR);
-          this.updateMaterial();
-          this.updateMesh();
+          this.#materialNeedsUpdate = true;
+          this.update();
           this.renderer.queueAnimationFrame();
         })
         .catch((err) => {
@@ -175,8 +215,8 @@ export class ImageRenderable extends Renderable<ImageUserData> {
       const texture = this.userData.texture as THREE.DataTexture;
       rawImageToDataTexture(image, {}, texture);
       texture.needsUpdate = true;
-      this.#materialNeedsUpdate = true;
     }
+    this.#materialNeedsUpdate = true;
   }
 
   private addTopicError(key: string, errorMessage: string) {
@@ -185,51 +225,10 @@ export class ImageRenderable extends Renderable<ImageUserData> {
   private removeTopicError(key: string) {
     this.renderer.settings.errors.removeFromTopic(this.userData.topic, key);
   }
-
-  public update(): void {
-    // We need a valid camera model and image to render
-    if (!this.userData.cameraModel || !this.userData.image) {
-      return;
-    }
-
-    this.updateHeaderInfo();
-
-    if (!this.userData.material) {
-      this.initMaterial();
-    }
-    if (this.#geometryNeedsUpdate) {
-      this.rebuildGeometry();
-      this.#geometryNeedsUpdate = false;
-    }
-
-    if (this.#textureNeedsUpdate) {
-      this.updateTexture();
-      this.#textureNeedsUpdate = false;
-    }
-    if (this.#materialNeedsUpdate) {
-      this.updateMaterial();
-      this.#materialNeedsUpdate = false;
-    }
-
-    if (this.#meshNeedsUpdate) {
-      this.updateMesh();
-      this.#meshNeedsUpdate = false;
-    }
-  }
-
-  private rebuildGeometry() {
-    assert(this.userData.cameraModel, "Camera model must be set before geometry can be updated");
-    // Dispose of the current geometry if the settings have changed
-    this.userData.geometry?.dispose();
-    this.userData.geometry = undefined;
-    const geometry = createGeometry(this.userData.cameraModel, this.userData.settings);
-    this.userData.geometry = geometry;
-    this.#meshNeedsUpdate = true;
-  }
-
   private updateMaterial(): void {
     if (!this.userData.material) {
       this.initMaterial();
+      this.#meshNeedsUpdate = true;
     }
     const material = this.userData.material!;
 
@@ -247,7 +246,6 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     material.depthWrite = !transparent;
 
     material.needsUpdate = true;
-    this.#meshNeedsUpdate = true;
   }
 
   private initMaterial(): void {

@@ -278,6 +278,8 @@ export class Images extends SceneExtension<ImageRenderable> {
 
     const renderable = this._getImageRenderable(imageTopic, receiveTime, image, frameId);
 
+    renderable.setImage(image);
+    renderable.userData.receiveTime = receiveTime;
     // Auto-select settings.cameraInfoTopic if it's not already set
     const settings = renderable.userData.settings;
     if (settings.cameraInfoTopic == undefined) {
@@ -309,11 +311,10 @@ export class Images extends SceneExtension<ImageRenderable> {
         draft.topics[imageTopic] = updatedUserSettings;
       });
       this.updateSettingsTree();
-      return;
     }
 
     // Look up the camera info for our renderable
-    const cameraInfo = this.cameraInfoByTopic.get(settings.cameraInfoTopic);
+    const cameraInfo = this.cameraInfoByTopic.get(settings.cameraInfoTopic ?? "");
     if (!cameraInfo) {
       this.renderer.settings.errors.addToTopic(
         imageTopic,
@@ -323,9 +324,8 @@ export class Images extends SceneExtension<ImageRenderable> {
       return;
     }
 
+    renderable.setSettings(settings);
     this._recomputeCameraModel(renderable, cameraInfo);
-    renderable.userData.receiveTime = receiveTime;
-    renderable.setImage(image);
     renderable.update();
   };
 
