@@ -41,7 +41,7 @@ export type InputEvents = {
 export class Input extends EventEmitter<InputEvents> {
   private readonly canvas: HTMLCanvasElement;
   public canvasSize: THREE.Vector2;
-  private resizeObserver: ResizeObserver;
+  private readonly resizeObserver: ResizeObserver;
   private startClientPos?: THREE.Vector2;
   private cursorCoords = new THREE.Vector2();
   private worldSpaceCursorCoords?: THREE.Vector3;
