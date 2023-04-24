@@ -2,6 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { assert } from "ts-essentials";
+
 import { MultiMap } from "@foxglove/den/collection";
 import { PinholeCameraModel } from "@foxglove/den/image";
 import Logger from "@foxglove/log";
@@ -292,7 +294,6 @@ export class Images extends SceneExtension<ImageRenderable> {
       // We auto-selected a camera info topic for this image topic so we need to add the lookup.
       // Without this lookup, the handleCameraInfo won't know what image topics to update when
       // camera info messages arrive after image messages.
-      this.cameraInfoToImageTopics.set(newCameraInfoTopic, imageTopic);
 
       // Update user settings with the newly selected CameraInfo topic
       this.renderer.updateConfig((draft) => {
@@ -303,8 +304,11 @@ export class Images extends SceneExtension<ImageRenderable> {
       this.updateSettingsTree();
     }
 
+    assert(settings.cameraInfoTopic != undefined);
+    this.cameraInfoToImageTopics.set(settings.cameraInfoTopic, imageTopic);
+
     // Look up the camera info for our renderable
-    const cameraInfo = this.cameraInfoByTopic.get(settings.cameraInfoTopic ?? "");
+    const cameraInfo = this.cameraInfoByTopic.get(settings.cameraInfoTopic);
     if (!cameraInfo) {
       this.renderer.settings.errors.addToTopic(
         imageTopic,
@@ -340,6 +344,7 @@ export class Images extends SceneExtension<ImageRenderable> {
       if (!settings.cameraInfoTopic || settings.cameraInfoTopic !== messageEvent.topic) {
         continue;
       }
+      this.renderer.settings.errors.removeFromTopic(imageTopic, NO_CAMERA_INFO_ERR);
 
       this._recomputeCameraModel(renderable, cameraInfo);
       renderable.update();
