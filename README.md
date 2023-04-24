@@ -59,7 +59,7 @@ You can join us on the following platforms to ask questions, share feedback, and
 
 ## Installation
 
-Foxglove Studio is can be accessed online at [studio.foxglove.dev](https://studio.foxglove.dev/), or desktop releases can be downloaded from [foxglove.dev/download](https://foxglove.dev/download).
+Foxglove Studio is available online at [studio.foxglove.dev](https://studio.foxglove.dev/), or desktop releases can be downloaded from [foxglove.dev/download](https://foxglove.dev/download).
 
 ## Open Source
 
