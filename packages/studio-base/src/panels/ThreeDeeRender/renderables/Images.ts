@@ -8,7 +8,10 @@ import Logger from "@foxglove/log";
 import { toNanoSec } from "@foxglove/rostime";
 import { CameraCalibration, CompressedImage, RawImage } from "@foxglove/schemas";
 import { SettingsTreeAction, SettingsTreeFields, Topic } from "@foxglove/studio";
-import { ImageRenderable } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/Images/ImageRenderable";
+import {
+  IMAGE_RENDERABLE_DEFAULT_SETTINGS,
+  ImageRenderable,
+} from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/Images/ImageRenderable";
 import { AnyImage } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/Images/ImageTypes";
 import {
   normalizeCompressedImage,
@@ -50,18 +53,6 @@ export type LayerSettingsImage = BaseSettings & {
 
 const NO_CAMERA_INFO_ERR = "NoCameraInfo";
 const CAMERA_MODEL = "CameraModel";
-
-const DEFAULT_DISTANCE = 1;
-const DEFAULT_PLANAR_PROJECTION_FACTOR = 0;
-
-const DEFAULT_SETTINGS: LayerSettingsImage = {
-  visible: false,
-  frameLocked: true,
-  cameraInfoTopic: undefined,
-  distance: DEFAULT_DISTANCE,
-  planarProjectionFactor: DEFAULT_PLANAR_PROJECTION_FACTOR,
-  color: "#ffffff",
-};
 
 export class Images extends SceneExtension<ImageRenderable> {
   /* All known camera info topics */
@@ -158,8 +149,8 @@ export class Images extends SceneExtension<ImageRenderable> {
       // prettier-ignore
       const fields: SettingsTreeFields = {
         cameraInfoTopic: { label: "Camera Info", input: "select", options: cameraInfoOptions, value: config.cameraInfoTopic },
-        distance: { label: "Distance", input: "number", placeholder: String(DEFAULT_DISTANCE), step: 0.1, precision: PRECISION_DISTANCE, value: config.distance },
-        planarProjectionFactor: { label: "Planar Projection Factor", input: "number", placeholder: String(DEFAULT_PLANAR_PROJECTION_FACTOR), min: 0, max: 1, step: 0.1, precision: 2, value: config.planarProjectionFactor },
+        distance: { label: "Distance", input: "number", placeholder: String(IMAGE_RENDERABLE_DEFAULT_SETTINGS.distance), step: 0.1, precision: PRECISION_DISTANCE, value: config.distance },
+        planarProjectionFactor: { label: "Planar Projection Factor", input: "number", placeholder: String(IMAGE_RENDERABLE_DEFAULT_SETTINGS.planarProjectionFactor), min: 0, max: 1, step: 0.1, precision: 2, value: config.planarProjectionFactor },
         color: { label: "Color", input: "rgba", value: config.color },
       };
 
@@ -168,7 +159,7 @@ export class Images extends SceneExtension<ImageRenderable> {
         node: {
           icon: "ImageProjection",
           fields,
-          visible: config.visible ?? DEFAULT_SETTINGS.visible,
+          visible: config.visible ?? IMAGE_RENDERABLE_DEFAULT_SETTINGS.visible,
           order: imageTopic.toLocaleLowerCase(),
           handler,
         },
@@ -206,7 +197,7 @@ export class Images extends SceneExtension<ImageRenderable> {
       return;
     }
 
-    renderable.setSettings(settings);
+    renderable.setSettings({ ...IMAGE_RENDERABLE_DEFAULT_SETTINGS, ...settings });
 
     // The camera info topic changed for our renderable
     // Remove the previous camera_info_topic -> image_topic mapping
@@ -283,10 +274,9 @@ export class Images extends SceneExtension<ImageRenderable> {
     // Auto-select settings.cameraInfoTopic if it's not already set
     const settings = renderable.userData.settings;
     if (settings.cameraInfoTopic == undefined) {
-      const newCameraInfoTopic = (settings.cameraInfoTopic = autoSelectCameraInfoTopic(
-        imageTopic,
-        this.cameraInfoTopics,
-      ));
+      const newCameraInfoTopic = autoSelectCameraInfoTopic(imageTopic, this.cameraInfoTopics);
+      settings.cameraInfoTopic = newCameraInfoTopic;
+      renderable.setSettings(settings);
 
       // With no selected camera info topic, we show a topic error and bail
       // There's no way to render without camera info
@@ -324,7 +314,6 @@ export class Images extends SceneExtension<ImageRenderable> {
       return;
     }
 
-    renderable.setSettings(settings);
     this._recomputeCameraModel(renderable, cameraInfo);
     renderable.update();
   };
@@ -408,7 +397,7 @@ export class Images extends SceneExtension<ImageRenderable> {
       pose: makePose(),
       settingsPath: ["topics", imageTopic],
       topic: imageTopic,
-      settings: { ...DEFAULT_SETTINGS, ...userSettings },
+      settings: { ...IMAGE_RENDERABLE_DEFAULT_SETTINGS, ...userSettings },
       cameraInfo: undefined,
       cameraModel: undefined,
       image,

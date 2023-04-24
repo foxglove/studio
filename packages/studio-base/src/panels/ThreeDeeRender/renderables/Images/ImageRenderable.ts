@@ -42,7 +42,7 @@ export interface ImageRenderableSettings {
 
 const DEFAULT_DISTANCE = 1;
 const DEFAULT_PLANAR_PROJECTION_FACTOR = 0;
-const DEFAULT_SETTINGS: ImageRenderableSettings = {
+export const IMAGE_RENDERABLE_DEFAULT_SETTINGS: ImageRenderableSettings = {
   visible: false,
   frameLocked: true,
   cameraInfoTopic: undefined,
@@ -108,8 +108,7 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     this.#geometryNeedsUpdate = true;
   };
 
-  public setSettings(settings: Partial<ImageRenderableSettings> | undefined): void {
-    const newSettings = { ...DEFAULT_SETTINGS, ...settings };
+  public setSettings(newSettings: ImageRenderableSettings): void {
     const prevSettings = this.userData.settings;
     if (prevSettings.cameraInfoTopic !== newSettings.cameraInfoTopic) {
       // clear mesh since it is no longer showing userData accurately
