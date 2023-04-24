@@ -13,7 +13,7 @@ import { RenderablePointsAnnotation } from "./RenderablePointsAnnotation";
 /**
  * Holds renderables for all the 2D image annotations on a single topic.
  */
-export class TopicAnnotationsRenderable extends THREE.Object3D {
+export class RenderableTopicAnnotations extends THREE.Object3D {
   #points: RenderablePointsAnnotation[] = [];
   #lineLists: RenderableLineListAnnotation[] = [];
 

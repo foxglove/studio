@@ -15,7 +15,7 @@ import {
   ImageMarkerArray as RosImageMarkerArray,
 } from "@foxglove/studio-base/types/Messages";
 
-import { TopicAnnotationsRenderable } from "./TopicAnnotationsRenderable";
+import { RenderableTopicAnnotations } from "./RenderableTopicAnnotations";
 import { ImageModeConfig } from "../../../IRenderer";
 import { SettingsTreeEntry } from "../../../SettingsManager";
 import { IMAGE_ANNOTATIONS_DATATYPES } from "../../../foxglove";
@@ -43,7 +43,7 @@ export class ImageAnnotations extends THREE.Object3D {
   #context: ImageAnnotationsContext;
 
   /** FG-3065: support multiple converters per message */
-  #renderablesByTopic = new Map<string, TopicAnnotationsRenderable>();
+  #renderablesByTopic = new Map<string, RenderableTopicAnnotations>();
   #cameraModel?: PinholeCameraModel;
 
   #scale: number;
@@ -113,7 +113,7 @@ export class ImageAnnotations extends THREE.Object3D {
 
     let renderable = this.#renderablesByTopic.get(messageEvent.topic);
     if (!renderable) {
-      renderable = new TopicAnnotationsRenderable();
+      renderable = new RenderableTopicAnnotations();
       renderable.setScale(this.#scale, this.#canvasWidth, this.#canvasHeight);
       renderable.setCameraModel(this.#cameraModel);
       this.#renderablesByTopic.set(messageEvent.topic, renderable);
