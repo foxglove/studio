@@ -22,13 +22,13 @@ export class RenderablePointsAnnotation extends Renderable<BaseUserData, /*TRend
   #pointsMaterial: THREE.PointsMaterial;
 
   #scale = 0;
-  #scaleChanged = false;
+  #scaleNeedsUpdate = false;
 
   #annotation?: NormalizedPointsAnnotation & { style: "points" };
-  #annotationChanged = false;
+  #annotationNeedsUpdate = false;
 
   #cameraModel?: PinholeCameraModel;
-  #cameraModelChanged = false;
+  #cameraModelNeedsUpdate = false;
 
   public constructor() {
     super("foxglove.ImageAnnotations.Points", undefined, {
@@ -59,17 +59,17 @@ export class RenderablePointsAnnotation extends Renderable<BaseUserData, /*TRend
   }
 
   public setScale(scale: number, _canvasWidth: number, _canvasHeight: number): void {
-    this.#scaleChanged ||= scale !== this.#scale;
+    this.#scaleNeedsUpdate ||= scale !== this.#scale;
     this.#scale = scale;
   }
 
   public setCameraModel(cameraModel: PinholeCameraModel | undefined): void {
-    this.#cameraModelChanged ||= this.#cameraModel !== cameraModel;
+    this.#cameraModelNeedsUpdate ||= this.#cameraModel !== cameraModel;
     this.#cameraModel = cameraModel;
   }
 
   public setAnnotation(annotation: NormalizedPointsAnnotation & { style: "points" }): void {
-    this.#annotationChanged ||= this.#annotation !== annotation;
+    this.#annotationNeedsUpdate ||= this.#annotation !== annotation;
     this.#annotation = annotation;
   }
 
@@ -80,17 +80,17 @@ export class RenderablePointsAnnotation extends Renderable<BaseUserData, /*TRend
     }
     this.visible = true;
 
-    if (this.#annotationChanged || this.#scaleChanged) {
-      this.#scaleChanged = false;
+    if (this.#annotationNeedsUpdate || this.#scaleNeedsUpdate) {
+      this.#scaleNeedsUpdate = false;
       const { thickness } = this.#annotation;
       // thickness specifies radius, PointsMaterial.size specifies diameter
       // FIXME: looks like point size is being rounded to integer, why?
       this.#pointsMaterial.size = thickness * 2 * this.#scale;
     }
 
-    if (this.#annotationChanged || this.#cameraModelChanged) {
-      this.#annotationChanged = false;
-      this.#cameraModelChanged = false;
+    if (this.#annotationNeedsUpdate || this.#cameraModelNeedsUpdate) {
+      this.#annotationNeedsUpdate = false;
+      this.#cameraModelNeedsUpdate = false;
       const { points, outlineColors, outlineColor, fillColor } = this.#annotation;
       this.#geometry.resize(points.length);
       const positionAttribute = this.#geometry.getAttribute("position") as THREE.BufferAttribute;
