@@ -73,13 +73,13 @@ export class ImageModelCamera extends THREE.PerspectiveCamera {
     return matrix;
   }
 
-  /** Set canvas size in screen points */
+  /** Set canvas size in CSS pixels */
   public setCanvasSize(width: number, height: number): void {
     this.canvasSize.set(width, height);
     this.updateProjection();
   }
 
-  /** @returns The ratio of screen points per image pixel */
+  /** @returns The ratio of CSS pixels per image pixel */
   public getEffectiveScale(): number {
     if (!this.model) {
       return 1;

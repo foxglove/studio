@@ -65,7 +65,7 @@ export class ImageMode extends SceneExtension implements ICameraHandler {
   #annotations: ImageAnnotations;
 
   /**
-   * @param canvasSize Canvas size in screen points
+   * @param canvasSize Canvas size in CSS pixels
    */
   public constructor(renderer: IRenderer, canvasSize: THREE.Vector2) {
     super("foxglove.ImageMode", renderer);

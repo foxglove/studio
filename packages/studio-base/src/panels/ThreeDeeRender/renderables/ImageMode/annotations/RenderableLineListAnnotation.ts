@@ -49,7 +49,7 @@ export class RenderableLineListAnnotation extends Renderable<
 
     this.#geometry = new LineSegmentsGeometry();
     this.#material = new LineMaterial({
-      worldUnits: false, //options.worldUnits ?? true,
+      worldUnits: false,
       vertexColors: true,
       linewidth: 0,
       transparent: false,
@@ -66,7 +66,10 @@ export class RenderableLineListAnnotation extends Renderable<
   }
 
   public setScale(scale: number, canvasWidth: number, canvasHeight: number): void {
-    this.#scaleNeedsUpdate ||= scale !== this.#scale;
+    this.#scaleNeedsUpdate ||=
+      scale !== this.#scale ||
+      canvasWidth !== this.#canvasWidth ||
+      canvasHeight !== this.#canvasHeight;
     this.#scale = scale;
     this.#canvasWidth = canvasWidth;
     this.#canvasHeight = canvasHeight;
@@ -95,6 +98,7 @@ export class RenderableLineListAnnotation extends Renderable<
     }
     this.visible = true;
 
+    // Update line width if thickness or scale has changed
     if (this.#annotationNeedsUpdate || this.#scaleNeedsUpdate) {
       this.#material.resolution.set(this.#canvasWidth, this.#canvasHeight);
       this.#material.linewidth = thickness * this.#scale;

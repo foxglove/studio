@@ -124,18 +124,23 @@ export class ImageAnnotations extends THREE.Object3D {
     renderable.update();
   }
 
-  #handleTopicVisibilityChange(topic: Topic, action: SettingsTreeAction): void {
+  #handleSettingsAction(topic: Topic, action: SettingsTreeAction): void {
     if (action.action !== "update" || action.payload.path.length < 2) {
       return;
     }
     const { value } = action.payload;
     if (
-      action.payload.path[0] !== "imageAnnotations" ||
-      action.payload.path[2] !== "visible" ||
-      typeof value !== "boolean"
+      action.payload.path[0] === "imageAnnotations" &&
+      action.payload.path[2] === "visible" &&
+      typeof value === "boolean"
     ) {
-      return;
+      this.#handleTopicVisibilityChange(topic, value);
     }
+    this.#context.updateSettingsTree();
+  }
+
+  // eslint-disable-next-line @foxglove/no-boolean-parameters
+  #handleTopicVisibilityChange(topic: Topic, visible: boolean): void {
     this.#context.updateConfig((draft) => {
       draft.annotations ??= [];
       // FG-3065: support topic.convertTo
@@ -143,21 +148,20 @@ export class ImageAnnotations extends THREE.Object3D {
         (sub) => sub.topic === topic.name && sub.schemaName === topic.schemaName,
       );
       if (subscription) {
-        subscription.settings.visible = value;
+        subscription.settings.visible = visible;
       } else {
         subscription = {
           topic: topic.name,
           schemaName: topic.schemaName,
-          settings: { visible: value },
+          settings: { visible },
         };
         draft.annotations.push(subscription);
       }
     });
     const renderable = this.#renderablesByTopic.get(topic.name);
     if (renderable) {
-      renderable.visible = value;
+      renderable.visible = visible;
     }
-    this.#context.updateSettingsTree();
   }
 
   public settingsNodes(): SettingsTreeEntry[] {
@@ -195,7 +199,7 @@ export class ImageAnnotations extends THREE.Object3D {
         node: {
           label: topic.name,
           visible: settings?.visible ?? false,
-          handler: this.#handleTopicVisibilityChange.bind(this, topic),
+          handler: this.#handleSettingsAction.bind(this, topic),
         },
       });
     }
