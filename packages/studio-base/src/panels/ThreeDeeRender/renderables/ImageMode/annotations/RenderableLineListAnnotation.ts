@@ -29,13 +29,13 @@ export class RenderableLineListAnnotation extends Renderable<
   #scale = 0;
   #canvasWidth = 0;
   #canvasHeight = 0;
-  #scaleChanged = false;
+  #scaleNeedsUpdate = false;
 
   #annotation?: NormalizedPointsAnnotation & { style: "line_list" };
-  #annotationChanged = false;
+  #annotationNeedsUpdate = false;
 
   #cameraModel?: PinholeCameraModel;
-  #cameraModelChanged = false;
+  #cameraModelNeedsUpdate = false;
 
   public constructor() {
     super("foxglove.ImageAnnotations.LineList", undefined, {
@@ -66,19 +66,19 @@ export class RenderableLineListAnnotation extends Renderable<
   }
 
   public setScale(scale: number, canvasWidth: number, canvasHeight: number): void {
-    this.#scaleChanged ||= scale !== this.#scale;
+    this.#scaleNeedsUpdate ||= scale !== this.#scale;
     this.#scale = scale;
     this.#canvasWidth = canvasWidth;
     this.#canvasHeight = canvasHeight;
   }
 
   public setCameraModel(cameraModel: PinholeCameraModel | undefined): void {
-    this.#cameraModelChanged ||= this.#cameraModel !== cameraModel;
+    this.#cameraModelNeedsUpdate ||= this.#cameraModel !== cameraModel;
     this.#cameraModel = cameraModel;
   }
 
   public setAnnotation(annotation: NormalizedPointsAnnotation & { style: "line_list" }): void {
-    this.#annotationChanged ||= this.#annotation !== annotation;
+    this.#annotationNeedsUpdate ||= this.#annotation !== annotation;
     this.#annotation = annotation;
   }
 
@@ -95,16 +95,16 @@ export class RenderableLineListAnnotation extends Renderable<
     }
     this.visible = true;
 
-    if (this.#annotationChanged || this.#scaleChanged) {
+    if (this.#annotationNeedsUpdate || this.#scaleNeedsUpdate) {
       this.#material.resolution.set(this.#canvasWidth, this.#canvasHeight);
       this.#material.linewidth = thickness * this.#scale;
       this.#material.needsUpdate = true;
-      this.#scaleChanged = false;
+      this.#scaleNeedsUpdate = false;
     }
 
-    if (this.#annotationChanged || this.#cameraModelChanged) {
-      this.#annotationChanged = false;
-      this.#cameraModelChanged = false;
+    if (this.#annotationNeedsUpdate || this.#cameraModelNeedsUpdate) {
+      this.#annotationNeedsUpdate = false;
+      this.#cameraModelNeedsUpdate = false;
       if (this.#capacity == undefined || !this.#geometry || points.length > this.#capacity) {
         // Need to recreate the geometry when length changes: https://github.com/mrdoob/three.js/issues/21488
         this.#geometry?.dispose();

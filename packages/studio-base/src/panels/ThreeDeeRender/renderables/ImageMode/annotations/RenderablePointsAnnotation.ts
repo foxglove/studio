@@ -84,7 +84,6 @@ export class RenderablePointsAnnotation extends Renderable<BaseUserData, /*TRend
       this.#scaleNeedsUpdate = false;
       const { thickness } = this.#annotation;
       // thickness specifies radius, PointsMaterial.size specifies diameter
-      // FIXME: looks like point size is being rounded to integer, why?
       this.#pointsMaterial.size = thickness * 2 * this.#scale;
     }
 

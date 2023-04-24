@@ -12,7 +12,6 @@ import { RenderablePointsAnnotation } from "./RenderablePointsAnnotation";
 
 /**
  * Holds renderables for all the 2D image annotations on a single topic.
- * TODO: should be Renderable for picking purposes
  */
 export class TopicAnnotationsRenderable extends THREE.Object3D {
   #points: RenderablePointsAnnotation[] = [];
@@ -21,13 +20,13 @@ export class TopicAnnotationsRenderable extends THREE.Object3D {
   #scale = 0;
   #canvasWidth = 0;
   #canvasHeight = 0;
-  #scaleChanged = false;
+  #scaleNeedsUpdate = false;
 
   #annotations: NormalizedAnnotation[] = [];
-  #annotationsChanged = false;
+  #annotationsNeedsUpdate = false;
 
   #cameraModel?: PinholeCameraModel;
-  #cameraModelChanged = false;
+  #cameraModelNeedsUpdate = false;
 
   public dispose(): void {
     for (const points of this.#points) {
@@ -39,25 +38,25 @@ export class TopicAnnotationsRenderable extends THREE.Object3D {
   }
 
   public setScale(scale: number, canvasWidth: number, canvasHeight: number): void {
-    this.#scaleChanged ||= this.#scale !== scale;
+    this.#scaleNeedsUpdate ||= this.#scale !== scale;
     this.#scale = scale;
     this.#canvasWidth = canvasWidth;
     this.#canvasHeight = canvasHeight;
   }
 
   public setCameraModel(cameraModel: PinholeCameraModel | undefined): void {
-    this.#cameraModelChanged ||= this.#cameraModel !== cameraModel;
+    this.#cameraModelNeedsUpdate ||= this.#cameraModel !== cameraModel;
     this.#cameraModel = cameraModel;
   }
 
   public setAnnotations(annotations: NormalizedAnnotation[]): void {
-    this.#annotationsChanged ||= this.#annotations !== annotations;
+    this.#annotationsNeedsUpdate ||= this.#annotations !== annotations;
     this.#annotations = annotations;
   }
 
   public update(): void {
-    if (this.#scaleChanged) {
-      this.#scaleChanged = false;
+    if (this.#scaleNeedsUpdate) {
+      this.#scaleNeedsUpdate = false;
       for (const points of this.#points) {
         points.setScale(this.#scale, this.#canvasWidth, this.#canvasHeight);
       }
@@ -66,8 +65,8 @@ export class TopicAnnotationsRenderable extends THREE.Object3D {
       }
     }
 
-    if (this.#cameraModelChanged) {
-      this.#cameraModelChanged = false;
+    if (this.#cameraModelNeedsUpdate) {
+      this.#cameraModelNeedsUpdate = false;
       for (const points of this.#points) {
         points.setCameraModel(this.#cameraModel);
       }
@@ -85,12 +84,12 @@ export class TopicAnnotationsRenderable extends THREE.Object3D {
       }
     };
 
-    if (!this.#annotationsChanged) {
+    if (!this.#annotationsNeedsUpdate) {
       updateRenderables();
       return;
     }
 
-    this.#annotationsChanged = false;
+    this.#annotationsNeedsUpdate = false;
 
     const unusedPoints = this.#points;
     this.#points = [];
@@ -153,7 +152,6 @@ export class TopicAnnotationsRenderable extends THREE.Object3D {
 
     updateRenderables();
 
-    //TODO: keep and reuse these?
     for (const points of unusedPoints) {
       points.removeFromParent();
       points.dispose();

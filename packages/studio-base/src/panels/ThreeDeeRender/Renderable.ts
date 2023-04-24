@@ -33,10 +33,12 @@ export type BaseUserData = {
  * Renderables are generic THREE.js scene graph entities with additional
  * properties from `BaseUserData` that allow coordinate frame transforms to
  * automatically be applied and settings tree errors to be displayed.
+ *
+ * TRenderer may be set to `undefined` to opt out of access to the bloated IRenderer interface.
  */
 export class Renderable<
   TUserData extends BaseUserData = BaseUserData,
-  TRenderer = IRenderer,
+  TRenderer extends IRenderer | undefined = IRenderer,
 > extends THREE.Object3D {
   /** Identifies this class as inheriting from `Renderable` */
   public readonly isRenderable = true;
