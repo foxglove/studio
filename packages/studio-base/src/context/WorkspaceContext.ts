@@ -6,8 +6,10 @@ import { createContext, Dispatch, SetStateAction, useMemo, useState } from "reac
 import { DeepReadonly } from "ts-essentials";
 import { StoreApi, useStore } from "zustand";
 
+import { IDataSourceFactory } from "@foxglove/studio-base";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
-import { PreferencesDialogTab } from "@foxglove/studio-base/components/PreferencesDialog/PreferencesDialog";
+import { AppSettingsTab } from "@foxglove/studio-base/components/AppSettingsDialog/AppSettingsDialog";
+import { DataSourceDialogItem } from "@foxglove/studio-base/components/DataSourceDialog";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import useGuaranteedContext from "@foxglove/studio-base/hooks/useGuaranteedContext";
@@ -21,7 +23,7 @@ export type SidebarItemKey =
   | "help"
   | "layouts"
   | "panel-settings"
-  | "preferences"
+  | "app-settings"
   | "studio-logs-settings"
   | "variables";
 
@@ -32,14 +34,22 @@ const RightSidebarItemKeys = ["events", "variables", "studio-logs-settings"] as 
 export type RightSidebarItemKey = (typeof RightSidebarItemKeys)[number];
 
 export type WorkspaceContextStore = DeepReadonly<{
+  dataSourceDialog: {
+    activeDataSource: undefined | IDataSourceFactory;
+    item: undefined | DataSourceDialogItem;
+    open: boolean;
+  };
   leftSidebarOpen: boolean;
   rightSidebarOpen: boolean;
   leftSidebarItem: undefined | LeftSidebarItemKey;
   leftSidebarSize: undefined | number;
   rightSidebarItem: undefined | RightSidebarItemKey;
   rightSidebarSize: undefined | number;
+  playbackControls: {
+    repeat: boolean;
+  };
   prefsDialogState: {
-    initialTab: undefined | PreferencesDialogTab;
+    initialTab: undefined | AppSettingsTab;
     open: boolean;
   };
   sidebarItem: undefined | SidebarItemKey;
@@ -72,12 +82,19 @@ export function useWorkspaceStore<T>(
 }
 
 export type WorkspaceActions = {
+  dataSourceDialogActions: {
+    close: () => void;
+    open: (item: DataSourceDialogItem, dataSource?: IDataSourceFactory) => void;
+  };
   openAccountSettings: () => void;
   openPanelSettings: () => void;
   openLayoutBrowser: () => void;
+  playbackControlActions: {
+    setRepeat: Dispatch<SetStateAction<boolean>>;
+  };
   prefsDialogActions: {
     close: () => void;
-    open: (initialTab?: PreferencesDialogTab) => void;
+    open: (initialTab?: AppSettingsTab) => void;
   };
   selectSidebarItem: (selectedSidebarItem: undefined | SidebarItemKey) => void;
   selectLeftSidebarItem: (item: undefined | LeftSidebarItemKey) => void;
@@ -113,6 +130,25 @@ export function useWorkspaceActions(): WorkspaceActions {
 
   return useMemo(() => {
     return {
+      dataSourceDialogActions: {
+        close: () => {
+          set({ dataSourceDialog: { activeDataSource: undefined, item: undefined, open: false } });
+        },
+
+        open: (
+          selectedDataSourceDialogItem: DataSourceDialogItem,
+          dataSource?: IDataSourceFactory,
+        ) => {
+          set({
+            dataSourceDialog: {
+              activeDataSource: dataSource,
+              item: selectedDataSourceDialogItem,
+              open: true,
+            },
+          });
+        },
+      },
+
       openAccountSettings: () => supportsAccountSettings && set({ sidebarItem: "account" }),
 
       openPanelSettings: () =>
@@ -122,15 +158,24 @@ export function useWorkspaceActions(): WorkspaceActions {
 
       openLayoutBrowser: () => set({ sidebarItem: "layouts" }),
 
+      playbackControlActions: {
+        setRepeat: (setter: SetStateAction<boolean>) => {
+          set((oldValue) => {
+            const repeat = setterValue(setter, oldValue.playbackControls.repeat);
+            return { playbackControls: { repeat } };
+          });
+        },
+      },
+
       prefsDialogActions: {
         close: () => set({ prefsDialogState: { open: false, initialTab: undefined } }),
-        open: (initialTab?: PreferencesDialogTab) => {
+        open: (initialTab?: AppSettingsTab) => {
           set({ prefsDialogState: { open: true, initialTab } });
         },
       },
 
       selectSidebarItem: (selectedSidebarItem: undefined | SidebarItemKey) => {
-        if (selectedSidebarItem === "preferences") {
+        if (selectedSidebarItem === "app-settings") {
           set({ prefsDialogState: { open: true, initialTab: undefined } });
         } else {
           set({ sidebarItem: selectedSidebarItem });

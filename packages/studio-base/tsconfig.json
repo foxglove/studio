@@ -5,17 +5,13 @@
     "rootDir": "./src",
     "baseUrl": "./src",
     "jsx": "react-jsx",
-    "lib": ["dom", "dom.iterable", "es2020", "webworker"],
+    "lib": ["dom", "dom.iterable", "es2022", "webworker"],
     "declarationMap": false,
     "sourceMap": false,
     "paths": {
       "@foxglove/studio-base/*": ["./*"]
     },
     "experimentalDecorators": true,
-    "useUnknownInCatchVariables": false,
-    "plugins": [
-      { "transform": "typescript-transform-paths" },
-      { "transform": "typescript-transform-paths", "afterDeclarations": true }
-    ]
+    "useUnknownInCatchVariables": false
   }
 }

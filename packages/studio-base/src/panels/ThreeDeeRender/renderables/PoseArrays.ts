@@ -13,8 +13,8 @@ import { Axis, AXIS_LENGTH } from "./Axis";
 import { createArrowMarker } from "./Poses";
 import { RenderableArrow } from "./markers/RenderableArrow";
 import { RenderableLineStrip } from "./markers/RenderableLineStrip";
+import type { IRenderer } from "../IRenderer";
 import { BaseUserData, Renderable } from "../Renderable";
-import { Renderer } from "../Renderer";
 import { PartialMessage, PartialMessageEvent, SceneExtension } from "../SceneExtension";
 import { SettingsTreeEntry } from "../SettingsManager";
 import { makeRgba, rgbaGradient, rgbaToCssString, stringToRgba } from "../color";
@@ -37,7 +37,6 @@ import {
   fieldLineWidth,
   fieldScaleVec3,
   fieldSize,
-  PRECISION_DISTANCE,
 } from "../settings";
 import { topicIsConvertibleToSchema } from "../topicIsConvertibleToSchema";
 import { makePose, Pose } from "../transforms";
@@ -140,7 +139,7 @@ export class PoseArrayRenderable extends Renderable<PoseArrayUserData> {
 }
 
 export class PoseArrays extends SceneExtension<PoseArrayRenderable> {
-  public constructor(renderer: Renderer) {
+  public constructor(renderer: IRenderer) {
     super("foxglove.PoseArrays", renderer);
 
     renderer.addSchemaSubscriptions(POSE_ARRAY_DATATYPES, this.handlePoseArray);
@@ -173,7 +172,7 @@ export class PoseArrays extends SceneExtension<PoseArrayRenderable> {
       };
       switch (displayType) {
         case "axis":
-          fields["axisScale"] = fieldSize("Scale", axisScale, PRECISION_DISTANCE);
+          fields["axisScale"] = fieldSize("Scale", axisScale, DEFAULT_AXIS_SCALE);
           break;
         case "arrow":
           fields["arrowScale"] = fieldScaleVec3("Scale", arrowScale);
@@ -521,7 +520,7 @@ function normalizePosesInFrameToPoseArray(poseArray: PartialMessage<PosesInFrame
   };
 }
 
-function validateNavPath(messageEvent: PartialMessageEvent<NavPath>, renderer: Renderer): boolean {
+function validateNavPath(messageEvent: PartialMessageEvent<NavPath>, renderer: IRenderer): boolean {
   const { topic, message: navPath } = messageEvent;
   if (navPath.poses) {
     const baseFrameId = renderer.normalizeFrameId(navPath.header?.frame_id ?? "");

@@ -2,6 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { StoryObj } from "@storybook/react";
+
 import { AppBar } from "@foxglove/studio-base/components/AppBar";
 import { StorybookDecorator } from "@foxglove/studio-base/components/AppBar/StorybookDecorator.stories";
 import { UserMenu } from "@foxglove/studio-base/components/AppBar/UserMenu";
@@ -50,7 +52,7 @@ function SignInStates(): JSX.Element {
       <div style={{ width: 224, paddingLeft: 16 }}>sign in undefined</div>
       <div style={{ width: 224, paddingLeft: 16 }}>no user present</div>
       <div style={{ width: 240, paddingLeft: 16 }}>user present</div>
-      <MenuStory top={44} left={0} />
+      <MenuStory top={44} left={16} />
       <CurrentUserContext.Provider
         value={{
           currentUser: undefined,
@@ -73,8 +75,12 @@ function SignInStates(): JSX.Element {
   );
 }
 
-export const Dark = (): JSX.Element => <SignInStates />;
-Dark.parameters = { colorScheme: "dark" };
+export const Dark: StoryObj = {
+  render: () => <SignInStates />,
+  parameters: { colorScheme: "dark" },
+};
 
-export const Light = (): JSX.Element => <SignInStates />;
-Light.parameters = { colorScheme: "light" };
+export const Light: StoryObj = {
+  render: () => <SignInStates />,
+  parameters: { colorScheme: "light" },
+};

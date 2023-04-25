@@ -7,7 +7,7 @@ import { Time, compare as compareTime } from "@foxglove/rostime";
 import { CompressedImage, ImageAnnotations } from "@foxglove/schemas";
 
 import { synchronizedAddMessages } from "./synchronizedAddMessages";
-import { SynchronizationItem, ImagePanelState } from "./useImagePanelMessages";
+import { SynchronizationItem, ImagePanelState } from "../types";
 
 function emptyState(): Parameters<typeof synchronizedAddMessages>[0] {
   return {
@@ -40,6 +40,7 @@ function generateAnnotations(stamp: Time): ImageAnnotations {
       },
     ],
     points: [],
+    texts: [],
   };
 }
 

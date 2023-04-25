@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { filterMap } from "@foxglove/den/collection";
-import { fromNanoSec } from "@foxglove/rostime";
+import { Time, fromNanoSec } from "@foxglove/rostime";
 import { ImageAnnotations, PointsAnnotationType } from "@foxglove/schemas";
 import {
   ImageMarker,
@@ -13,6 +13,32 @@ import {
 import { mightActuallyBePartial } from "@foxglove/studio-base/util/mightActuallyBePartial";
 
 import type { Annotation, PointsAnnotation } from "../types";
+
+// Should mirror TextAnnotation.font_size default value
+const DEFAULT_FONT_SIZE = 12;
+const DEFAULT_PADDING = 4;
+
+// Supported annotation schema names
+export const ANNOTATION_DATATYPES = [
+  // Single marker
+  "visualization_msgs/ImageMarker",
+  "visualization_msgs/msg/ImageMarker",
+  "ros.visualization_msgs.ImageMarker",
+  // Marker arrays
+  "foxglove_msgs/ImageMarkerArray",
+  "foxglove_msgs/msg/ImageMarkerArray",
+  "studio_msgs/ImageMarkerArray",
+  "studio_msgs/msg/ImageMarkerArray",
+  "visualization_msgs/ImageMarkerArray",
+  "visualization_msgs/msg/ImageMarkerArray",
+  "ros.visualization_msgs.ImageMarkerArray",
+  // backwards compat with webviz
+  "webviz_msgs/ImageMarkerArray",
+  // foxglove
+  "foxglove_msgs/ImageAnnotations",
+  "foxglove_msgs/msg/ImageAnnotations",
+  "foxglove.ImageAnnotations",
+] as const;
 
 function foxglovePointTypeToStyle(
   type: PointsAnnotationType,
@@ -45,8 +71,7 @@ function normalizeFoxgloveImageAnnotations(
   const annotations: Annotation[] = [];
 
   for (const circle of message.circles ?? []) {
-    const stamp =
-      typeof circle.timestamp === "bigint" ? fromNanoSec(circle.timestamp) : circle.timestamp;
+    const stamp = normalizeTimestamp(circle.timestamp);
     annotations.push({
       type: "circle",
       stamp,
@@ -62,8 +87,7 @@ function normalizeFoxgloveImageAnnotations(
     if (!style) {
       continue;
     }
-    const stamp =
-      typeof point.timestamp === "bigint" ? fromNanoSec(point.timestamp) : point.timestamp;
+    const stamp = normalizeTimestamp(point.timestamp);
     annotations.push({
       type: "points",
       stamp,
@@ -75,8 +99,25 @@ function normalizeFoxgloveImageAnnotations(
       fillColor: point.fill_color,
     });
   }
+  for (const text of message.texts ?? []) {
+    const stamp = normalizeTimestamp(text.timestamp);
+    annotations.push({
+      type: "text",
+      stamp,
+      position: text.position,
+      text: text.text,
+      textColor: text.text_color,
+      backgroundColor: text.background_color,
+      fontSize: text.font_size,
+      padding: (text.font_size / DEFAULT_FONT_SIZE) * DEFAULT_PADDING,
+    });
+  }
 
   return annotations;
+}
+
+function normalizeTimestamp(stamp: Time | bigint): Time {
+  return typeof stamp === "bigint" ? fromNanoSec(stamp) : stamp;
 }
 
 function normalizeRosImageMarkerArray(message: ImageMarkerArray): Annotation[] | undefined {
@@ -122,8 +163,8 @@ function normalizeRosImageMarker(message: ImageMarker): Annotation | undefined {
         text: message.text?.data ?? "",
         textColor: message.outline_color,
         backgroundColor: message.filled ? message.fill_color : undefined,
-        fontSize: message.scale * 12,
-        padding: 4 * message.scale,
+        fontSize: message.scale * DEFAULT_FONT_SIZE,
+        padding: DEFAULT_PADDING * message.scale,
       };
     case ImageMarkerType.POINTS:
       return {
@@ -169,7 +210,8 @@ function normalizeAnnotations(
   // The panel may send the annotations to a web worker, for this we need
   const message = toPOD(maybeLazyMessage);
 
-  switch (datatype) {
+  // Cast to the union of all supported datatypes to ensure we handle all cases
+  switch (datatype as (typeof ANNOTATION_DATATYPES)[number]) {
     // single marker
     case "visualization_msgs/ImageMarker":
     case "visualization_msgs/msg/ImageMarker":

@@ -4,13 +4,12 @@
 
 import { toNanoSec } from "@foxglove/rostime";
 import { SceneEntity, TextPrimitive } from "@foxglove/schemas";
-import { emptyPose } from "@foxglove/studio-base/util/Pose";
 import { Label, LabelPool } from "@foxglove/three-text";
 
 import { RenderablePrimitive } from "./RenderablePrimitive";
-import type { Renderer } from "../../Renderer";
+import type { IRenderer } from "../../IRenderer";
 import { getLuminance, makeRgba, SRGBToLinear, stringToRgba } from "../../color";
-import { LayerSettingsEntity } from "../SceneEntities";
+import { LayerSettingsEntity } from "../../settings";
 
 const tempRgba = makeRgba();
 
@@ -18,16 +17,8 @@ export class RenderableTexts extends RenderablePrimitive {
   private labelPool: LabelPool;
   private labels: Label[] = [];
 
-  public constructor(renderer: Renderer) {
-    super("", renderer, {
-      receiveTime: -1n,
-      messageTime: -1n,
-      frameId: "",
-      pose: emptyPose(),
-      settings: { visible: true, color: undefined, selectedIdVariable: undefined },
-      settingsPath: [],
-      entity: undefined,
-    });
+  public constructor(renderer: IRenderer) {
+    super("", renderer);
 
     this.labelPool = renderer.labelPool;
   }

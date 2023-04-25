@@ -28,6 +28,13 @@ export type PlotPath = BasePlotPath & {
   timestampMethod: TimestampMethod;
 };
 
+// X-axis values:
+export type PlotXAxisVal =
+  | "timestamp" // Message playback time. Preloaded.
+  | "index" // Message-path value index. One "current" message at playback time.
+  | "custom" // Message path data. Preloaded.
+  | "currentCustom"; // Message path data. One "current" message at playback time.
+
 export type Datum = {
   x: number;
   y: number;
@@ -46,9 +53,7 @@ export type PlotDataItem = {
   headerStamp?: Time;
 };
 
-export type PlotDataByPath = {
-  [path: string]: PlotDataItem[][];
-};
+export type PlotDataByPath = Record<string, PlotDataItem[][]>;
 
 // A "reference line" plot path is a numeric value. It creates a horizontal line on the plot at the specified value.
 export function isReferenceLinePlotPathType(path: BasePlotPath): boolean {

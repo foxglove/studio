@@ -22,8 +22,8 @@ import { SettingsTreeAction } from "@foxglove/studio";
 
 import { TopicEntities } from "./TopicEntities";
 import { PrimitivePool } from "./primitives/PrimitivePool";
+import type { IRenderer } from "../IRenderer";
 import { SELECTED_ID_VARIABLE } from "../Renderable";
-import { Renderer } from "../Renderer";
 import { PartialMessage, PartialMessageEvent, SceneExtension } from "../SceneExtension";
 import { SettingsTreeEntry, SettingsTreeNodeWithActionHandler } from "../SettingsManager";
 import { SCENE_UPDATE_DATATYPES } from "../foxglove";
@@ -35,16 +35,12 @@ import {
   normalizeVector3,
   normalizeByteArray,
 } from "../normalizeMessages";
-import { BaseSettings } from "../settings";
+import { LayerSettingsEntity } from "../settings";
 import { topicIsConvertibleToSchema } from "../topicIsConvertibleToSchema";
 import { makePose } from "../transforms";
 
-export type LayerSettingsEntity = BaseSettings & {
-  color: string | undefined;
-  selectedIdVariable: string | undefined;
-};
-
-const DEFAULT_SETTINGS: LayerSettingsEntity = {
+const SCENE_ENTITIES_DEFAULT_SETTINGS: LayerSettingsEntity = {
+  showOutlines: true,
   visible: false,
   color: undefined,
   selectedIdVariable: undefined,
@@ -53,7 +49,7 @@ const DEFAULT_SETTINGS: LayerSettingsEntity = {
 export class FoxgloveSceneEntities extends SceneExtension<TopicEntities> {
   private primitivePool = new PrimitivePool(this.renderer);
 
-  public constructor(renderer: Renderer) {
+  public constructor(renderer: IRenderer) {
     super("foxglove.SceneEntities", renderer);
 
     renderer.addSchemaSubscriptions(SCENE_UPDATE_DATATYPES, this.handleSceneUpdate);
@@ -74,6 +70,11 @@ export class FoxgloveSceneEntities extends SceneExtension<TopicEntities> {
         order: topic.name.toLocaleLowerCase(),
         fields: {
           color: { label: "Color", input: "rgba", value: config.color },
+          showOutlines: {
+            label: "Show outlines",
+            input: "boolean",
+            value: config.showOutlines ?? SCENE_ENTITIES_DEFAULT_SETTINGS.showOutlines,
+          },
           selectedIdVariable: {
             label: "Selection Variable",
             input: "string",
@@ -82,7 +83,7 @@ export class FoxgloveSceneEntities extends SceneExtension<TopicEntities> {
             placeholder: SELECTED_ID_VARIABLE,
           },
         },
-        visible: config.visible ?? DEFAULT_SETTINGS.visible,
+        visible: config.visible ?? SCENE_ENTITIES_DEFAULT_SETTINGS.visible,
         handler: this.handleSettingsAction,
       };
 
@@ -127,7 +128,7 @@ export class FoxgloveSceneEntities extends SceneExtension<TopicEntities> {
       const settings = this.renderer.config.topics[topicName] as
         | Partial<LayerSettingsEntity>
         | undefined;
-      renderable.userData.settings = { ...DEFAULT_SETTINGS, ...settings };
+      renderable.userData.settings = { ...SCENE_ENTITIES_DEFAULT_SETTINGS, ...settings };
       renderable.updateSettings();
     }
   };
@@ -168,7 +169,7 @@ export class FoxgloveSceneEntities extends SceneExtension<TopicEntities> {
         pose: makePose(),
         settingsPath: ["topics", topic],
         topic,
-        settings: { ...DEFAULT_SETTINGS, ...userSettings },
+        settings: { ...SCENE_ENTITIES_DEFAULT_SETTINGS, ...userSettings },
       });
       this.renderables.set(topic, topicEntities);
       this.add(topicEntities);
