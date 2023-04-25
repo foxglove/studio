@@ -11,8 +11,6 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-export const TypicalFilterNames = ["id", "_id", "ID", "Id"];
-
 export function isTypicalFilterName(name: string): boolean {
   return /^id$|_id$|I[dD]$/.test(name);
 }
