@@ -28,7 +28,6 @@ export const SingleItemSingleDataset: StoryObj = {
     const data: TimeBasedChartTooltipData = {
       x: 0,
       y: 0,
-      path: "/some/topic.path",
       value: 3,
       constantName: "ACTIVE",
     };
@@ -64,7 +63,6 @@ export const SingleItemMultiDataset: StoryObj = {
     const data: TimeBasedChartTooltipData = {
       x: 0,
       y: 0,
-      path: "/some/topic.path",
       value: 3,
       constantName: "ACTIVE",
     };
@@ -100,7 +98,6 @@ export const MultipleItemsSingleDataset: StoryObj = {
     const data: TimeBasedChartTooltipData = {
       x: 0,
       y: 0,
-      path: "/some/topic.path",
       value: 3,
       constantName: "ACTIVE",
     };
@@ -138,7 +135,6 @@ export const MultipleItemsMultipleDataset: StoryObj = {
         datasetIndex: 0,
         x: 0,
         y: 0,
-        path: "/some/topic.path",
         value: 3,
         constantName: "ACTIVE",
       },
@@ -146,7 +142,6 @@ export const MultipleItemsMultipleDataset: StoryObj = {
         datasetIndex: 1,
         x: 0,
         y: 0,
-        path: "/other/topic.path",
         value: 4,
         constantName: "ACTIVE",
       },
