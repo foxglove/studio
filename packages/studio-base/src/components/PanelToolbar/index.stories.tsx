@@ -13,7 +13,7 @@
 
 import { Database20Filled } from "@fluentui/react-icons";
 import { Box } from "@mui/material";
-import { storiesOf } from "@storybook/react";
+import { StoryObj, DecoratorFn } from "@storybook/react";
 import { Mosaic, MosaicWindow } from "react-mosaic-component";
 
 import MockPanelContextProvider from "@foxglove/studio-base/components/MockPanelContextProvider";
@@ -23,6 +23,8 @@ import { PanelStateContextProvider } from "@foxglove/studio-base/providers/Panel
 import WorkspaceContextProvider from "@foxglove/studio-base/providers/WorkspaceContextProvider";
 
 import PanelToolbar from "./index";
+
+import "react-mosaic-component/react-mosaic-component.css";
 
 class MosaicWrapper extends React.Component<{
   layout?: any;
@@ -89,16 +91,23 @@ class PanelToolbarWithOpenMenu extends React.PureComponent {
   }
 }
 
-storiesOf("components/PanelToolbar", module)
-  .addDecorator((childrenRenderFcn) => {
-    // Provide all stories with PanelContext and current layout
-    return (
-      <MockCurrentLayoutProvider>
-        <MockPanelContextProvider>{childrenRenderFcn()}</MockPanelContextProvider>
-      </MockCurrentLayoutProvider>
-    );
-  })
-  .add("non-floating (narrow)", () => {
+export default {
+  title: "components/PanelToolbar",
+
+  decorators: [
+    ((childrenRenderFcn) => {
+      // Provide all stories with PanelContext and current layout
+      return (
+        <MockCurrentLayoutProvider>
+          <MockPanelContextProvider>{childrenRenderFcn()}</MockPanelContextProvider>
+        </MockCurrentLayoutProvider>
+      );
+    }) as DecoratorFn,
+  ],
+};
+
+export const NonFloatingNarrow: StoryObj = {
+  render: () => {
     return (
       <MosaicWrapper width={268}>
         <PanelToolbar>
@@ -108,8 +117,13 @@ storiesOf("components/PanelToolbar", module)
         </PanelToolbar>
       </MosaicWrapper>
     );
-  })
-  .add("non-floating (wide with panel name)", () => {
+  },
+
+  name: "non-floating (narrow)",
+};
+
+export const NonFloatingWideWithPanelName: StoryObj = {
+  render: () => {
     return (
       <MosaicWrapper width={468}>
         <PanelToolbar>
@@ -119,8 +133,13 @@ storiesOf("components/PanelToolbar", module)
         </PanelToolbar>
       </MosaicWrapper>
     );
-  })
-  .add("one additional icon", () => {
+  },
+
+  name: "non-floating (wide with panel name)",
+};
+
+export const OneAdditionalIcon: StoryObj = {
+  render: () => {
     const additionalIcons = (
       <ToolbarIconButton title="database icon">
         <Database20Filled />
@@ -135,93 +154,103 @@ storiesOf("components/PanelToolbar", module)
         </PanelToolbar>
       </MosaicWrapper>
     );
-  })
-  .add(
-    "menu (only panel)",
-    () => {
-      class Story extends React.Component {
-        public override render() {
-          return (
-            <MosaicWrapper width={268}>
-              <PanelToolbarWithOpenMenu />
-            </MosaicWrapper>
-          );
-        }
+  },
+
+  name: "one additional icon",
+};
+
+export const MenuOnlyPanel: StoryObj = {
+  render: () => {
+    class Story extends React.Component {
+      public override render() {
+        return (
+          <MosaicWrapper width={268}>
+            <PanelToolbarWithOpenMenu />
+          </MosaicWrapper>
+        );
       }
-      return <Story />;
-    },
-    { colorScheme: "dark" },
-  )
-  .add(
-    "menu light",
-    () => {
-      class Story extends React.Component {
-        public override render() {
-          return (
-            <MosaicWrapper width={268}>
-              <PanelToolbarWithOpenMenu />
-            </MosaicWrapper>
-          );
-        }
+    }
+    return <Story />;
+  },
+
+  name: "menu (only panel)",
+  parameters: { colorScheme: "dark" },
+};
+
+export const MenuLight: StoryObj = {
+  render: () => {
+    class Story extends React.Component {
+      public override render() {
+        return (
+          <MosaicWrapper width={268}>
+            <PanelToolbarWithOpenMenu />
+          </MosaicWrapper>
+        );
       }
-      return <Story />;
-    },
-    { colorScheme: "light" },
-  )
-  .add(
-    "menu (with sibling panel)",
-    () => {
-      class Story extends React.Component {
-        public override render() {
-          return (
-            <MosaicWrapper
-              width={268}
-              layout={{ direction: "row", first: "dummy", second: "Sibling" }}
-            >
-              <PanelToolbarWithOpenMenu />
-            </MosaicWrapper>
-          );
-        }
+    }
+    return <Story />;
+  },
+
+  name: "menu light",
+  parameters: { colorScheme: "light" },
+};
+
+export const MenuWithSiblingPanel: StoryObj = {
+  render: () => {
+    class Story extends React.Component {
+      public override render() {
+        return (
+          <MosaicWrapper
+            width={268}
+            layout={{ direction: "row", first: "dummy", second: "Sibling" }}
+          >
+            <PanelToolbarWithOpenMenu />
+          </MosaicWrapper>
+        );
       }
-      return <Story />;
-    },
-    { colorScheme: "dark" },
-  )
-  .add(
-    "menu for Tab panel",
-    () => {
-      class Story extends React.Component {
-        public override render() {
-          return (
-            <MosaicWrapper
-              width={268}
-              layout={{ direction: "row", first: "Tab", second: "Sibling" }}
-            >
-              <PanelToolbarWithOpenMenu />
-            </MosaicWrapper>
-          );
-        }
+    }
+    return <Story />;
+  },
+
+  name: "menu (with sibling panel)",
+  parameters: { colorScheme: "dark" },
+};
+
+export const MenuForTabPanel: StoryObj = {
+  render: () => {
+    class Story extends React.Component {
+      public override render() {
+        return (
+          <MosaicWrapper width={268} layout={{ direction: "row", first: "Tab", second: "Sibling" }}>
+            <PanelToolbarWithOpenMenu />
+          </MosaicWrapper>
+        );
       }
-      return <Story />;
-    },
-    { colorScheme: "dark" },
-  )
-  .add(
-    "no toolbars",
-    () => {
-      class Story extends React.Component {
-        public override render() {
-          return (
-            <MosaicWrapper
-              width={268}
-              layout={{ direction: "row", first: "dummy", second: "Sibling" }}
-            >
-              <PanelToolbarWithOpenMenu />
-            </MosaicWrapper>
-          );
-        }
+    }
+    return <Story />;
+  },
+
+  name: "menu for Tab panel",
+  parameters: { colorScheme: "dark" },
+};
+
+export const NoToolbars: StoryObj = {
+  render: () => {
+    class Story extends React.Component {
+      public override render() {
+        return (
+          <MosaicWrapper
+            width={268}
+            layout={{ direction: "row", first: "dummy", second: "Sibling" }}
+          >
+            <PanelToolbarWithOpenMenu />
+          </MosaicWrapper>
+        );
       }
-      return <Story />;
-    },
-    { colorScheme: "dark" },
-  );
+    }
+    return <Story />;
+  },
+
+  name: "no toolbars",
+  parameters: { colorScheme: "dark" },
+};

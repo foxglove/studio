@@ -11,8 +11,8 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Story } from "@storybook/react";
-import { fireEvent } from "@testing-library/dom";
+import { StoryObj, StoryFn } from "@storybook/react";
+import { fireEvent } from "@storybook/testing-library";
 
 import Panel from "@foxglove/studio-base/components/Panel";
 import PanelLayout from "@foxglove/studio-base/components/PanelLayout";
@@ -95,13 +95,13 @@ export default {
   },
 
   decorators: [
-    (StoryFn: Story): JSX.Element => {
+    (Wrapped: StoryFn): JSX.Element => {
       const storage = new MockLayoutStorage(LayoutManager.LOCAL_STORAGE_NAMESPACE, []);
 
       return (
         <LayoutStorageContext.Provider value={storage}>
           <LayoutManagerProvider>
-            <StoryFn />
+            <Wrapped />
           </LayoutManagerProvider>
         </LayoutStorageContext.Provider>
       );
@@ -109,433 +109,435 @@ export default {
   ],
 };
 
-export const Default: Story = () => (
-  <PanelSetup fixture={fixture}>
-    <Tab />
-  </PanelSetup>
-);
+export const Default: StoryObj = {
+  render: () => (
+    <PanelSetup fixture={fixture}>
+      <Tab />
+    </PanelSetup>
+  ),
 
-Default.story = {
   name: "default",
   parameters: { colorScheme: "both-row" },
 };
 
-export const ShowingPanelList: Story = () => (
-  <PanelSetup fixture={fixture} panelCatalog={new MockPanelCatalog()}>
-    <Tab />
-  </PanelSetup>
-);
+export const ShowingPanelList: StoryObj = {
+  render: () => (
+    <PanelSetup fixture={fixture} panelCatalog={new MockPanelCatalog()}>
+      <Tab />
+    </PanelSetup>
+  ),
 
-ShowingPanelList.story = {
   name: "showing panel list",
 };
 
-export const ShowingPanelListLight: Story = () => (
-  <PanelSetup fixture={fixture} panelCatalog={new MockPanelCatalog()}>
-    <Tab />
-  </PanelSetup>
-);
+export const ShowingPanelListLight: StoryObj = {
+  render: () => (
+    <PanelSetup fixture={fixture} panelCatalog={new MockPanelCatalog()}>
+      <Tab />
+    </PanelSetup>
+  ),
 
-ShowingPanelListLight.story = {
   name: "showing panel list light",
   parameters: { colorScheme: "light" },
 };
 
-export const PickingAPanelFromThePanelListCreatesANewTabIfThereAreNone: Story = () => {
-  return (
-    <PanelSetup
-      panelCatalog={new MockPanelCatalog()}
-      fixture={{
-        ...fixture,
-        savedProps: {
-          "Tab!a": {
-            activeTabIdx: -1,
-            tabs: [],
+export const PickingAPanelFromThePanelListCreatesANewTabIfThereAreNone: StoryObj = {
+  render: () => {
+    return (
+      <PanelSetup
+        panelCatalog={new MockPanelCatalog()}
+        fixture={{
+          ...fixture,
+          savedProps: {
+            "Tab!a": {
+              activeTabIdx: -1,
+              tabs: [],
+            },
           },
-        },
-      }}
-      onMount={() => {
-        setTimeout(async () => {
-          await tick();
-          (
-            document.querySelectorAll('[data-testid="panel-menu-item Some Panel"]')[0] as any
-          ).click();
-        }, DEFAULT_TIMEOUT);
-      }}
-    >
-      <PanelLayout />
-    </PanelSetup>
-  );
-};
+        }}
+        onMount={() => {
+          setTimeout(async () => {
+            await tick();
+            (
+              document.querySelectorAll('[data-testid="panel-menu-item Some Panel"]')[0] as any
+            ).click();
+          }, DEFAULT_TIMEOUT);
+        }}
+      >
+        <PanelLayout />
+      </PanelSetup>
+    );
+  },
 
-PickingAPanelFromThePanelListCreatesANewTabIfThereAreNone.story = {
   name: "picking a panel from the panel list creates a new tab if there are none",
 };
 
-export const PickingAPanelFromThePanelListUpdatesTheTabsLayout: Story = () => {
-  return (
-    <PanelSetup
-      panelCatalog={new MockPanelCatalog()}
-      fixture={{
-        ...fixture,
-        savedProps: {
-          "Tab!a": {
-            activeTabIdx: 0,
-            tabs: [{ title: "First tab", layout: undefined }],
+export const PickingAPanelFromThePanelListUpdatesTheTabsLayout: StoryObj = {
+  render: () => {
+    return (
+      <PanelSetup
+        panelCatalog={new MockPanelCatalog()}
+        fixture={{
+          ...fixture,
+          savedProps: {
+            "Tab!a": {
+              activeTabIdx: 0,
+              tabs: [{ title: "First tab", layout: undefined }],
+            },
           },
-        },
-      }}
-      onMount={() => {
-        setTimeout(async () => {
-          await tick();
-          (
-            document.querySelectorAll('[data-testid="panel-menu-item Some Panel"]')[0] as any
-          ).click();
-        }, DEFAULT_TIMEOUT);
-      }}
-    >
-      <PanelLayout />
-    </PanelSetup>
-  );
-};
+        }}
+        onMount={() => {
+          setTimeout(async () => {
+            await tick();
+            (
+              document.querySelectorAll('[data-testid="panel-menu-item Some Panel"]')[0] as any
+            ).click();
+          }, DEFAULT_TIMEOUT);
+        }}
+      >
+        <PanelLayout />
+      </PanelSetup>
+    );
+  },
 
-PickingAPanelFromThePanelListUpdatesTheTabsLayout.story = {
   name: "picking a panel from the panel list updates the tab's layout",
 };
 
-export const DraggingAPanelFromThePanelListUpdatesTheTabsLayout: Story = () => {
-  return (
-    <PanelSetup
-      panelCatalog={new MockPanelCatalog()}
-      fixture={{
-        ...fixture,
-        savedProps: {
-          "Tab!a": {
-            activeTabIdx: 0,
-            tabs: [{ title: "First tab", layout: undefined }],
+export const DraggingAPanelFromThePanelListUpdatesTheTabsLayout: StoryObj = {
+  render: () => {
+    return (
+      <PanelSetup
+        panelCatalog={new MockPanelCatalog()}
+        fixture={{
+          ...fixture,
+          savedProps: {
+            "Tab!a": {
+              activeTabIdx: 0,
+              tabs: [{ title: "First tab", layout: undefined }],
+            },
           },
-        },
-      }}
-      onMount={() => {
-        setTimeout(async () => {
-          await tick();
+        }}
+        onMount={() => {
+          setTimeout(async () => {
+            await tick();
 
-          const imageItem = document.querySelectorAll(
-            '[data-testid="panel-menu-item Some Panel"]',
-          )[0];
-          const panel = document.querySelectorAll('[data-testid="empty-drop-target"]')[0];
-          dragAndDrop(imageItem!, panel!);
-        }, DEFAULT_TIMEOUT);
-      }}
-    >
-      <PanelLayout />
-    </PanelSetup>
-  );
-};
+            const imageItem = document.querySelectorAll(
+              '[data-testid="panel-menu-item Some Panel"]',
+            )[0];
+            const panel = document.querySelectorAll('[data-testid="empty-drop-target"]')[0];
+            dragAndDrop(imageItem!, panel!);
+          }, DEFAULT_TIMEOUT);
+        }}
+      >
+        <PanelLayout />
+      </PanelSetup>
+    );
+  },
 
-DraggingAPanelFromThePanelListUpdatesTheTabsLayout.story = {
   name: "dragging a panel from the panel list updates the tab's layout",
 };
 
-export const DraggingAPanelFromThePanelListCreatesANewTabIfThereAreNone: Story = () => {
-  return (
-    <PanelSetup
-      panelCatalog={new MockPanelCatalog()}
-      fixture={{
-        ...fixture,
-        savedProps: {
-          "Tab!a": {
-            activeTabIdx: -1,
-            tabs: [],
+export const DraggingAPanelFromThePanelListCreatesANewTabIfThereAreNone: StoryObj = {
+  render: () => {
+    return (
+      <PanelSetup
+        panelCatalog={new MockPanelCatalog()}
+        fixture={{
+          ...fixture,
+          savedProps: {
+            "Tab!a": {
+              activeTabIdx: -1,
+              tabs: [],
+            },
           },
-        },
-      }}
-      onMount={() => {
-        setTimeout(async () => {
-          await tick();
+        }}
+        onMount={() => {
+          setTimeout(async () => {
+            await tick();
 
-          const imageItem = document.querySelectorAll(
-            '[data-testid="panel-menu-item Some Panel"]',
-          )[0];
-          const panel = document.querySelectorAll('[data-testid="empty-drop-target"]')[0];
-          dragAndDrop(imageItem!, panel!);
-        }, DEFAULT_TIMEOUT);
-      }}
-    >
-      <PanelLayout />
-    </PanelSetup>
-  );
-};
+            const imageItem = document.querySelectorAll(
+              '[data-testid="panel-menu-item Some Panel"]',
+            )[0];
+            const panel = document.querySelectorAll('[data-testid="empty-drop-target"]')[0];
+            dragAndDrop(imageItem!, panel!);
+          }, DEFAULT_TIMEOUT);
+        }}
+      >
+        <PanelLayout />
+      </PanelSetup>
+    );
+  },
 
-DraggingAPanelFromThePanelListCreatesANewTabIfThereAreNone.story = {
   name: "dragging a panel from the panel list creates a new tab if there are none",
 };
 
-export const WithChosenActiveTab: Story = () => (
-  <PanelSetup panelCatalog={new MockPanelCatalog()} fixture={fixture}>
-    <Tab
-      overrideConfig={{
-        activeTabIdx: 1,
-        tabs: [
-          {
-            title: "Tab A",
-            layout: undefined,
-          },
-          {
-            title: "Tab B",
-            layout: {
-              direction: "row",
-              first: {
-                direction: "column",
-                first: "Sample1!2xqjjqw",
-                second: "Sample2!81fx2n",
-                splitPercentage: 60,
-              },
-              second: {
-                direction: "column",
-                first: "Sample2!3dor2gy",
-                second: "Sample1!3wrafzj",
-                splitPercentage: 40,
+export const WithChosenActiveTab: StoryObj = {
+  render: () => (
+    <PanelSetup panelCatalog={new MockPanelCatalog()} fixture={fixture}>
+      <Tab
+        overrideConfig={{
+          activeTabIdx: 1,
+          tabs: [
+            {
+              title: "Tab A",
+              layout: undefined,
+            },
+            {
+              title: "Tab B",
+              layout: {
+                direction: "row",
+                first: {
+                  direction: "column",
+                  first: "Sample1!2xqjjqw",
+                  second: "Sample2!81fx2n",
+                  splitPercentage: 60,
+                },
+                second: {
+                  direction: "column",
+                  first: "Sample2!3dor2gy",
+                  second: "Sample1!3wrafzj",
+                  splitPercentage: 40,
+                },
               },
             },
-          },
-          {
-            title: "Tab C",
-            layout: undefined,
-          },
-        ],
-      }}
-    />
-  </PanelSetup>
-);
+            {
+              title: "Tab C",
+              layout: undefined,
+            },
+          ],
+        }}
+      />
+    </PanelSetup>
+  ),
 
-WithChosenActiveTab.story = {
   name: "with chosen active tab",
   parameters: { colorScheme: "both-row" },
 };
 
-export const AddTab: Story = () => {
-  return (
-    <PanelSetup
-      panelCatalog={new MockPanelCatalog()}
-      fixture={{
-        ...fixture,
-        savedProps: {
-          "Tab!a": { activeTabIdx: 0, tabs: [{ title: "Tab A", layout: undefined }] },
-        },
-      }}
-      style={{ width: "100%" }}
-      onMount={() => {
-        setTimeout(async () => {
-          const addTabBtn = document.querySelector("[data-testid=add-tab]");
-          if (addTabBtn) {
-            (addTabBtn as any).click();
-          }
-        }, DEFAULT_TIMEOUT);
-      }}
-    >
-      <PanelLayout />
-    </PanelSetup>
-  );
-};
+export const AddTab: StoryObj = {
+  render: () => {
+    return (
+      <PanelSetup
+        panelCatalog={new MockPanelCatalog()}
+        fixture={{
+          ...fixture,
+          savedProps: {
+            "Tab!a": { activeTabIdx: 0, tabs: [{ title: "Tab A", layout: undefined }] },
+          },
+        }}
+        style={{ width: "100%" }}
+        onMount={() => {
+          setTimeout(async () => {
+            const addTabBtn = document.querySelector("[data-testid=add-tab]");
+            if (addTabBtn) {
+              (addTabBtn as any).click();
+            }
+          }, DEFAULT_TIMEOUT);
+        }}
+      >
+        <PanelLayout />
+      </PanelSetup>
+    );
+  },
 
-AddTab.story = {
   name: "add tab",
 };
 
-export const RemoveTab: Story = () => {
-  return (
-    <PanelSetup
-      panelCatalog={new MockPanelCatalog()}
-      fixture={{
-        ...fixture,
-        savedProps: {
-          "Tab!a": { activeTabIdx: 0, tabs: manyTabs.slice(0, 5) },
-        },
-      }}
-      style={{ width: "100%" }}
-      onMount={() => {
-        setTimeout(async () => {
-          const removeTabBtn = document.querySelector("[data-testid=tab-icon]");
-          if (removeTabBtn) {
-            (removeTabBtn as any).click();
-          }
-        }, DEFAULT_TIMEOUT);
-      }}
-    >
-      <PanelLayout />
-    </PanelSetup>
-  );
-};
+export const RemoveTab: StoryObj = {
+  render: () => {
+    return (
+      <PanelSetup
+        panelCatalog={new MockPanelCatalog()}
+        fixture={{
+          ...fixture,
+          savedProps: {
+            "Tab!a": { activeTabIdx: 0, tabs: manyTabs.slice(0, 5) },
+          },
+        }}
+        style={{ width: "100%" }}
+        onMount={() => {
+          setTimeout(async () => {
+            const removeTabBtn = document.querySelector("[data-testid=tab-icon]");
+            if (removeTabBtn) {
+              (removeTabBtn as any).click();
+            }
+          }, DEFAULT_TIMEOUT);
+        }}
+      >
+        <PanelLayout />
+      </PanelSetup>
+    );
+  },
 
-RemoveTab.story = {
   name: "remove tab",
 };
 
-export const ReorderTabsWithinTabPanelByDroppingOnTab: Story = () => {
-  return (
-    <PanelSetup
-      panelCatalog={new MockPanelCatalog()}
-      fixture={{
-        ...fixture,
-        savedProps: {
-          "Tab!a": { activeTabIdx: 0, tabs: manyTabs.slice(0, 5) },
-        },
-      }}
-      style={{ width: "100%" }}
-      onMount={() => {
-        setTimeout(async () => {
-          await tick();
-          const tabs = document.querySelectorAll("[draggable=true]");
+export const ReorderTabsWithinTabPanelByDroppingOnTab: StoryObj = {
+  render: () => {
+    return (
+      <PanelSetup
+        panelCatalog={new MockPanelCatalog()}
+        fixture={{
+          ...fixture,
+          savedProps: {
+            "Tab!a": { activeTabIdx: 0, tabs: manyTabs.slice(0, 5) },
+          },
+        }}
+        style={{ width: "100%" }}
+        onMount={() => {
+          setTimeout(async () => {
+            await tick();
+            const tabs = document.querySelectorAll("[draggable=true]");
 
-          // Drag and drop the first tab onto the third tab
-          dragAndDrop(tabs[0]!, tabs[2]!);
-        }, DEFAULT_TIMEOUT);
-      }}
-    >
-      <PanelLayout />
-      <SExpectedResult>Expected result: #2, #3, #1, #4, #5</SExpectedResult>
-    </PanelSetup>
-  );
-};
+            // Drag and drop the first tab onto the third tab
+            dragAndDrop(tabs[0]!, tabs[2]!);
+          }, DEFAULT_TIMEOUT);
+        }}
+      >
+        <PanelLayout />
+        <SExpectedResult>Expected result: #2, #3, #1, #4, #5</SExpectedResult>
+      </PanelSetup>
+    );
+  },
 
-ReorderTabsWithinTabPanelByDroppingOnTab.story = {
   name: "reorder tabs within Tab panel by dropping on tab",
 };
 
-export const MoveTabToDifferentTabPanel: Story = () => {
-  return (
-    <PanelSetup
-      panelCatalog={new MockPanelCatalog()}
-      fixture={{
-        ...fixture,
-        layout: {
-          first: "Tab!a",
-          second: "Tab!b",
-          direction: "row",
-          splitPercentage: 50,
-        },
-        savedProps: {
-          "Tab!a": { activeTabIdx: 0, tabs: manyTabs.slice(0, 2) },
-          "Tab!b": { activeTabIdx: 0, tabs: manyTabs.slice(2, 3) },
-        },
-      }}
-      style={{ width: "100%" }}
-      onMount={() => {
-        setTimeout(async () => {
-          await tick();
-          const tabs = document.querySelectorAll("[data-testid=toolbar-tab]");
-          dragAndDrop(tabs[0]!, tabs[2]!);
-        }, DEFAULT_TIMEOUT);
-      }}
-    >
-      <PanelLayout />
-      <SExpectedResult style={{ left: 0 }}>Should have only #2</SExpectedResult>
-      <SExpectedResult style={{ left: "50%" }}>Should have #1 and #3</SExpectedResult>
-    </PanelSetup>
-  );
-};
+export const MoveTabToDifferentTabPanel: StoryObj = {
+  render: () => {
+    return (
+      <PanelSetup
+        panelCatalog={new MockPanelCatalog()}
+        fixture={{
+          ...fixture,
+          layout: {
+            first: "Tab!a",
+            second: "Tab!b",
+            direction: "row",
+            splitPercentage: 50,
+          },
+          savedProps: {
+            "Tab!a": { activeTabIdx: 0, tabs: manyTabs.slice(0, 2) },
+            "Tab!b": { activeTabIdx: 0, tabs: manyTabs.slice(2, 3) },
+          },
+        }}
+        style={{ width: "100%" }}
+        onMount={() => {
+          setTimeout(async () => {
+            await tick();
+            const tabs = document.querySelectorAll("[data-testid=toolbar-tab]");
+            dragAndDrop(tabs[0]!, tabs[2]!);
+          }, DEFAULT_TIMEOUT);
+        }}
+      >
+        <PanelLayout />
+        <SExpectedResult style={{ left: 0 }}>Should have only #2</SExpectedResult>
+        <SExpectedResult style={{ left: "50%" }}>Should have #1 and #3</SExpectedResult>
+      </PanelSetup>
+    );
+  },
 
-MoveTabToDifferentTabPanel.story = {
   name: "move tab to different Tab panel",
 };
 
-export const PreventDraggingSelectedParentTabIntoChildTabPanel: Story = () => {
-  return (
-    <PanelSetup
-      panelCatalog={new MockPanelCatalog()}
-      fixture={{
-        ...fixture,
-        savedProps: {
-          "Tab!a": {
-            activeTabIdx: 0,
-            tabs: [{ title: "Parent tab", layout: "Tab!b" }, manyTabs[0]],
+export const PreventDraggingSelectedParentTabIntoChildTabPanel: StoryObj = {
+  render: () => {
+    return (
+      <PanelSetup
+        panelCatalog={new MockPanelCatalog()}
+        fixture={{
+          ...fixture,
+          savedProps: {
+            "Tab!a": {
+              activeTabIdx: 0,
+              tabs: [{ title: "Parent tab", layout: "Tab!b" }, manyTabs[0]],
+            },
+            "Tab!b": { activeTabIdx: 0, tabs: manyTabs.slice(3, 6) },
           },
-          "Tab!b": { activeTabIdx: 0, tabs: manyTabs.slice(3, 6) },
-        },
-      }}
-      style={{ width: "100%" }}
-      onMount={() => {
-        setTimeout(async () => {
-          await tick();
-          const tabs = document.querySelectorAll("[draggable=true]");
+        }}
+        style={{ width: "100%" }}
+        onMount={() => {
+          setTimeout(async () => {
+            await tick();
+            const tabs = document.querySelectorAll("[draggable=true]");
 
-          fireEvent.dragStart(tabs[0]!);
-          fireEvent.dragOver(tabs[2]!);
-        }, DEFAULT_TIMEOUT);
-      }}
-    >
-      <PanelLayout />
-      <SExpectedResult style={{ left: 0 }}>
-        the first tab should be hidden (we never dropped it)
-      </SExpectedResult>
-      <SExpectedResult style={{ top: "50px" }}>tab content should be hidden</SExpectedResult>
-    </PanelSetup>
-  );
-};
+            fireEvent.dragStart(tabs[0]!);
+            fireEvent.dragOver(tabs[2]!);
+          }, DEFAULT_TIMEOUT);
+        }}
+      >
+        <PanelLayout />
+        <SExpectedResult style={{ left: 0 }}>
+          the first tab should be hidden (we never dropped it)
+        </SExpectedResult>
+        <SExpectedResult style={{ top: "50px" }}>tab content should be hidden</SExpectedResult>
+      </PanelSetup>
+    );
+  },
 
-PreventDraggingSelectedParentTabIntoChildTabPanel.story = {
   name: "prevent dragging selected parent tab into child tab panel",
 };
 
-export const DraggingAndDroppingANestedTabPanelDoesNotRemoveAnyTabs: Story = () => {
-  return (
-    <PanelSetup
-      panelCatalog={new MockPanelCatalog()}
-      fixture={nestedTabLayoutFixture}
-      style={{ width: "100%" }}
-      onMount={() => {
-        setTimeout(async () => {
-          // Create a new tab on the left side
-          (
-            document.querySelectorAll('[data-testid~="Tab!Left"] [data-testid="add-tab"]')[0] as any
-          ).click();
+export const DraggingAndDroppingANestedTabPanelDoesNotRemoveAnyTabs: StoryObj = {
+  render: () => {
+    return (
+      <PanelSetup
+        panelCatalog={new MockPanelCatalog()}
+        fixture={nestedTabLayoutFixture}
+        style={{ width: "100%" }}
+        onMount={() => {
+          setTimeout(async () => {
+            // Create a new tab on the left side
+            (
+              document.querySelectorAll(
+                '[data-testid~="Tab!Left"] [data-testid="add-tab"]',
+              )[0] as any
+            ).click();
 
-          const dragHandle = document.querySelector(
-            '[data-testid~="Tab!RightInner"] [data-testid="panel-menu"]',
-          );
+            const dragHandle = document.querySelector(
+              '[data-testid~="Tab!RightInner"] [data-testid="panel-menu"]',
+            );
 
-          const target = document.querySelector(
-            '[data-testid~="Tab!Left"] [data-testid="empty-drop-target"]',
-          );
-          dragAndDrop(dragHandle!, target!);
-        }, DEFAULT_TIMEOUT);
-      }}
-    >
-      <PanelLayout />
-    </PanelSetup>
-  );
-};
+            const target = document.querySelector(
+              '[data-testid~="Tab!Left"] [data-testid="empty-drop-target"]',
+            );
+            dragAndDrop(dragHandle!, target!);
+          }, DEFAULT_TIMEOUT);
+        }}
+      >
+        <PanelLayout />
+      </PanelSetup>
+    );
+  },
 
-DraggingAndDroppingANestedTabPanelDoesNotRemoveAnyTabs.story = {
   name: "dragging and dropping a nested tab panel does not remove any tabs",
 };
 
-export const SupportsDraggingBetweenTabsAnywhereInTheLayout: Story = () => {
-  return (
-    <PanelSetup
-      panelCatalog={new MockPanelCatalog()}
-      fixture={nestedTabLayoutFixture2}
-      style={{ width: "100%" }}
-      onMount={() => {
-        setTimeout(async () => {
-          const dragHandle = document.querySelector(
-            '[data-testid~="Sample1"] [data-testid="mosaic-drag-handle"]',
-          );
+export const SupportsDraggingBetweenTabsAnywhereInTheLayout: StoryObj = {
+  render: () => {
+    return (
+      <PanelSetup
+        panelCatalog={new MockPanelCatalog()}
+        fixture={nestedTabLayoutFixture2}
+        style={{ width: "100%" }}
+        onMount={() => {
+          setTimeout(async () => {
+            const dragHandle = document.querySelector(
+              '[data-testid~="Sample1"] [data-testid="mosaic-drag-handle"]',
+            );
 
-          const target = document
-            .querySelector('[data-testid="unknown!inner4"]')
-            ?.parentElement?.parentElement?.parentElement?.querySelector(".drop-target.left");
+            const target = document
+              .querySelector('[data-testid="unknown!inner4"]')
+              ?.parentElement?.parentElement?.parentElement?.querySelector(".drop-target.left");
 
-          dragAndDrop(dragHandle!, target!);
-        }, DEFAULT_TIMEOUT);
-      }}
-    >
-      <PanelLayout />
-    </PanelSetup>
-  );
-};
+            dragAndDrop(dragHandle!, target!);
+          }, DEFAULT_TIMEOUT);
+        }}
+      >
+        <PanelLayout />
+      </PanelSetup>
+    );
+  },
 
-SupportsDraggingBetweenTabsAnywhereInTheLayout.story = {
   name: "supports dragging between tabs anywhere in the layout",
 };

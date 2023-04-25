@@ -59,6 +59,8 @@ import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import { SavedProps, UserNodes } from "@foxglove/studio-base/types/panels";
 
+import "react-mosaic-component/react-mosaic-component.css";
+
 function noop() {}
 
 type Frame = {
@@ -116,7 +118,7 @@ function setNativeValue(element: unknown, value: unknown) {
 }
 
 export function makeMockPanelCatalog(t: TFunction<"panels">): PanelCatalog {
-  const allPanels = [...panels.getBuiltin(t), ...panels.getDebug(t), panels.getLegacyPlot(t)];
+  const allPanels = [...panels.getBuiltin(t), ...panels.getDebug(t)];
 
   const visiblePanels = [...panels.getBuiltin(t)];
 

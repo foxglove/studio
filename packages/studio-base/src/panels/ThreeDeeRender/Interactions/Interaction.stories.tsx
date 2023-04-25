@@ -12,7 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { Stack } from "@mui/material";
-import { storiesOf } from "@storybook/react";
+import { StoryObj } from "@storybook/react";
 
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 import { PointCloud2 } from "@foxglove/studio-base/types/Messages";
@@ -315,30 +315,45 @@ function PanelSetupWithData({
   );
 }
 
-function DefaultStory() {
-  return (
-    <Stack direction="row" flexWrap="wrap" height="100%" bgcolor="background.paper">
-      <PanelSetupWithData title="Default without clicked object">
-        <Interactions
-          {...(sharedProps as any)}
-          selectedObject={undefined}
-          interactionsTabType={OBJECT_TAB_TYPE}
-        />
-      </PanelSetupWithData>
-      <PanelSetupWithData title="With interactionData">
-        <Interactions {...(sharedProps as any)} />
-      </PanelSetupWithData>
-    </Stack>
-  );
-}
+export default {
+  title: "panels/ThreeDeeRender/Interactions/Interaction",
 
-storiesOf("panels/ThreeDeeRender/Interactions/Interaction", module)
-  .addParameters({
+  parameters: {
     chromatic: { viewport: { width: 1001, height: 1101 } },
-  })
-  .add("default", DefaultStory, { colorScheme: "dark" })
-  .add("default light", DefaultStory, { colorScheme: "light" })
-  .add("PointCloud", () => {
+  },
+
+  excludeStories: ["POINT_CLOUD_MESSAGE", "POINT_CLOUD_WITH_ADDITIONAL_FIELDS"],
+};
+
+export const Default: StoryObj = {
+  render: () => {
+    return (
+      <Stack direction="row" flexWrap="wrap" height="100%" bgcolor="background.paper">
+        <PanelSetupWithData title="Default without clicked object">
+          <Interactions
+            {...(sharedProps as any)}
+            selectedObject={undefined}
+            interactionsTabType={OBJECT_TAB_TYPE}
+          />
+        </PanelSetupWithData>
+        <PanelSetupWithData title="With interactionData">
+          <Interactions {...(sharedProps as any)} />
+        </PanelSetupWithData>
+      </Stack>
+    );
+  },
+  name: "default",
+  parameters: { colorScheme: "dark" },
+};
+
+export const DefaultLight: StoryObj = {
+  ...Default,
+  name: "default light",
+  parameters: { colorScheme: "light" },
+};
+
+export const PointCloud: StoryObj = {
+  render: () => {
     const cloud1 = { ...selectedObject.object, ...POINT_CLOUD_MESSAGE };
     const cloud2 = {
       ...selectedObject.object,
@@ -378,4 +393,7 @@ storiesOf("panels/ThreeDeeRender/Interactions/Interaction", module)
         </PanelSetupWithData>
       </Stack>
     );
-  });
+  },
+
+  name: "PointCloud",
+};

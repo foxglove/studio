@@ -10,7 +10,8 @@
 //   This source code is licensed under the Apache License, Version 2.0,
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
-import { storiesOf } from "@storybook/react";
+
+import { StoryObj } from "@storybook/react";
 
 import MockMessagePipelineProvider from "@foxglove/studio-base/components/MessagePipeline/MockMessagePipelineProvider";
 import PlaybackSpeedControls from "@foxglove/studio-base/components/PlaybackSpeedControls";
@@ -35,59 +36,66 @@ function ControlsStory() {
   );
 }
 
-storiesOf("components/PlaybackSpeedControls", module)
-  .add(
-    "without speed capability",
-    () => {
-      return (
-        <MockCurrentLayoutProvider>
-          <MockMessagePipelineProvider>
-            <ControlsStory />
-          </MockMessagePipelineProvider>
-        </MockCurrentLayoutProvider>
-      );
-    },
-    { colorScheme: "dark" },
-  )
-  .add(
-    "without a speed from the player",
-    () => {
-      return (
-        <MockCurrentLayoutProvider>
-          <MockMessagePipelineProvider
-            capabilities={CAPABILITIES}
-            activeData={{ speed: undefined }}
-          >
-            <ControlsStory />
-          </MockMessagePipelineProvider>
-        </MockCurrentLayoutProvider>
-      );
-    },
-    { colorScheme: "dark" },
-  )
-  .add(
-    "with a speed",
-    () => {
-      return (
-        <MockCurrentLayoutProvider>
-          <MockMessagePipelineProvider capabilities={CAPABILITIES}>
-            <ControlsStory />
-          </MockMessagePipelineProvider>
-        </MockCurrentLayoutProvider>
-      );
-    },
-    { colorScheme: "dark" },
-  )
-  .add(
-    "with a very small speed",
-    () => {
-      return (
-        <MockCurrentLayoutProvider>
-          <MockMessagePipelineProvider capabilities={CAPABILITIES} activeData={{ speed: 0.01 }}>
-            <ControlsStory />
-          </MockMessagePipelineProvider>
-        </MockCurrentLayoutProvider>
-      );
-    },
-    { colorScheme: "dark" },
-  );
+export default {
+  title: "components/PlaybackSpeedControls",
+};
+
+export const WithoutSpeedCapability: StoryObj = {
+  render: () => {
+    return (
+      <MockCurrentLayoutProvider>
+        <MockMessagePipelineProvider>
+          <ControlsStory />
+        </MockMessagePipelineProvider>
+      </MockCurrentLayoutProvider>
+    );
+  },
+
+  name: "without speed capability",
+  parameters: { colorScheme: "dark" },
+};
+
+export const WithoutASpeedFromThePlayer: StoryObj = {
+  render: () => {
+    return (
+      <MockCurrentLayoutProvider>
+        <MockMessagePipelineProvider capabilities={CAPABILITIES} activeData={{ speed: undefined }}>
+          <ControlsStory />
+        </MockMessagePipelineProvider>
+      </MockCurrentLayoutProvider>
+    );
+  },
+
+  name: "without a speed from the player",
+  parameters: { colorScheme: "dark" },
+};
+
+export const WithASpeed: StoryObj = {
+  render: () => {
+    return (
+      <MockCurrentLayoutProvider>
+        <MockMessagePipelineProvider capabilities={CAPABILITIES}>
+          <ControlsStory />
+        </MockMessagePipelineProvider>
+      </MockCurrentLayoutProvider>
+    );
+  },
+
+  name: "with a speed",
+  parameters: { colorScheme: "dark" },
+};
+
+export const WithAVerySmallSpeed: StoryObj = {
+  render: () => {
+    return (
+      <MockCurrentLayoutProvider>
+        <MockMessagePipelineProvider capabilities={CAPABILITIES} activeData={{ speed: 0.01 }}>
+          <ControlsStory />
+        </MockMessagePipelineProvider>
+      </MockCurrentLayoutProvider>
+    );
+  },
+
+  name: "with a very small speed",
+  parameters: { colorScheme: "dark" },
+};

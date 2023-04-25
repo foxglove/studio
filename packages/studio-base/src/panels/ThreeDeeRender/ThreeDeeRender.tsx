@@ -42,19 +42,18 @@ import PublishPoseEstimateIcon from "@foxglove/studio-base/components/PublishPos
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
-import { DebugGui } from "./DebugGui";
+import type {
+  RendererConfig,
+  RendererSubscription,
+  FollowMode,
+  RendererEvents,
+  IRenderer,
+  ImageModeConfig,
+} from "./IRenderer";
 import { InteractionContextMenu, Interactions, SelectionObject, TabType } from "./Interactions";
 import type { PickedRenderable } from "./Picker";
 import { Renderable, SELECTED_ID_VARIABLE } from "./Renderable";
-import {
-  FollowMode,
-  ImageModeConfig,
-  LegacyImageConfig,
-  Renderer,
-  RendererConfig,
-  RendererEvents,
-  RendererSubscription,
-} from "./Renderer";
+import { LegacyImageConfig, Renderer } from "./Renderer";
 import { RendererContext, useRenderer, useRendererEvent } from "./RendererContext";
 import { Stats } from "./Stats";
 import { CameraState, DEFAULT_CAMERA_STATE, MouseEventObject } from "./camera";
@@ -77,8 +76,6 @@ type Shared3DPanelState = {
   followMode: FollowMode;
   followTf: undefined | string;
 };
-
-const SHOW_DEBUG: true | false = false;
 
 const PANEL_STYLE: React.CSSProperties = {
   width: "100%",
@@ -164,12 +161,6 @@ function RendererOverlay(props: {
   const stats = props.enableStats ? (
     <div id="stats" style={{ position: "absolute", top: "10px", left: "10px" }}>
       <Stats />
-    </div>
-  ) : undefined;
-
-  const debug = SHOW_DEBUG ? (
-    <div id="debug" style={{ position: "absolute", top: "70px", left: "10px" }}>
-      <DebugGui />
     </div>
   ) : undefined;
 
@@ -369,23 +360,22 @@ function RendererOverlay(props: {
         />
       )}
       {stats}
-      {debug}
     </React.Fragment>
   );
 }
 
-function useRendererProperty<K extends keyof Renderer>(
-  renderer: Renderer | undefined,
+function useRendererProperty<K extends keyof IRenderer>(
+  renderer: IRenderer | undefined,
   key: K,
   event: keyof RendererEvents,
-  fallback: () => Renderer[K],
-): Renderer[K] {
-  const [value, setValue] = useState(() => renderer?.[key] ?? fallback());
+  fallback: () => IRenderer[K],
+): IRenderer[K] {
+  const [value, setValue] = useState<IRenderer[K]>(() => renderer?.[key] ?? fallback());
   useEffect(() => {
     if (!renderer) {
       return;
     }
-    const onChange = () => setValue(renderer[key]);
+    const onChange = () => setValue(() => renderer[key]);
     onChange();
 
     renderer.addListener(event, onChange);
@@ -427,6 +417,9 @@ export function ThreeDeeRender(props: {
     const imageMode: ImageModeConfig = {
       imageTopic: legacyImageConfig?.cameraTopic,
       ...partialConfig?.imageMode,
+      annotations: partialConfig?.imageMode?.annotations as
+        | ImageModeConfig["annotations"]
+        | undefined,
     };
 
     return {
@@ -446,8 +439,8 @@ export function ThreeDeeRender(props: {
   const backgroundColor = config.scene.backgroundColor;
 
   const [canvas, setCanvas] = useState<HTMLCanvasElement | ReactNull>(ReactNull);
-  const [renderer, setRenderer] = useState<Renderer | undefined>(undefined);
-  const rendererRef = useRef<Renderer | undefined>(undefined);
+  const [renderer, setRenderer] = useState<IRenderer | undefined>(undefined);
+  const rendererRef = useRef<IRenderer | undefined>(undefined);
   useEffect(() => {
     const newRenderer = canvas ? new Renderer(canvas, configRef.current, interfaceMode) : undefined;
     setRenderer(newRenderer);
@@ -497,6 +490,9 @@ export function ThreeDeeRender(props: {
     const listener = () => {
       if (renderer) {
         const newCameraState = renderer.getCameraState();
+        if (!newCameraState) {
+          return;
+        }
         // This needs to be before `setConfig` otherwise flickering will occur during
         // non-follow mode playback
         renderer.setCameraState(newCameraState);
@@ -505,7 +501,7 @@ export function ThreeDeeRender(props: {
         if (config.scene.syncCamera === true) {
           context.setSharedPanelState({
             cameraState: newCameraState,
-            followMode: renderer.followMode,
+            followMode: config.followMode,
             followTf: effectiveRendererFrameId,
           });
         }
@@ -513,7 +509,7 @@ export function ThreeDeeRender(props: {
     };
     renderer?.addListener("cameraMove", listener);
     return () => void renderer?.removeListener("cameraMove", listener);
-  }, [config.scene.syncCamera, context, effectiveRendererFrameId, renderer]);
+  }, [config.scene.syncCamera, config.followMode, context, effectiveRendererFrameId, renderer]);
 
   // Handle user changes in the settings sidebar
   const actionHandler = useCallback(
@@ -531,25 +527,25 @@ export function ThreeDeeRender(props: {
           if (updatedCameraState !== initialCameraState && config.scene.syncCamera === true) {
             context.setSharedPanelState({
               cameraState: updatedCameraState,
-              followMode: renderer.followMode,
+              followMode: config.followMode,
               followTf: renderer.followFrameId,
             });
           }
         }
       }),
-    [config.scene.syncCamera, context, renderer],
+    [config.followMode, config.scene.syncCamera, context, renderer],
   );
 
   // Maintain the settings tree
   const [settingsTree, setSettingsTree] = useState<SettingsTreeNodes | undefined>(undefined);
   const updateSettingsTree = useCallback(
-    (curRenderer: Renderer) => setSettingsTree(curRenderer.settings.tree()),
+    (curRenderer: IRenderer) => setSettingsTree(curRenderer.settings.tree()),
     [],
   );
   useRendererEvent("settingsTreeChange", updateSettingsTree, renderer);
 
   // Save the panel configuration when it changes
-  const updateConfig = useCallback((curRenderer: Renderer) => setConfig(curRenderer.config), []);
+  const updateConfig = useCallback((curRenderer: IRenderer) => setConfig(curRenderer.config), []);
   useRendererEvent("configChange", updateConfig, renderer);
 
   // Write to a global variable when the current selection changes
@@ -677,15 +673,30 @@ export function ThreeDeeRender(props: {
     const newSubscriptions: Subscription[] = [];
 
     const addSubscription = (
-      topic: string,
+      topic: Topic,
       rendererSubscription: RendererSubscription,
       convertTo?: string,
     ) => {
-      const shouldSubscribe =
-        rendererSubscription.shouldSubscribe ?? ((t) => config.topics[t]?.visible === true);
-      if (shouldSubscribe(topic)) {
+      let shouldSubscribe = rendererSubscription.shouldSubscribe?.(topic.name);
+      if (shouldSubscribe == undefined) {
+        if (config.topics[topic.name]?.visible === true) {
+          shouldSubscribe = true;
+        } else if (
+          config.imageMode.annotations?.some(
+            (sub) =>
+              sub.topic === topic.name &&
+              sub.schemaName === (convertTo ?? topic.schemaName) &&
+              sub.settings.visible,
+          ) === true
+        ) {
+          shouldSubscribe = true;
+        } else {
+          shouldSubscribe = false;
+        }
+      }
+      if (shouldSubscribe) {
         newSubscriptions.push({
-          topic,
+          topic: topic.name,
           preload: rendererSubscription.preload,
           convertTo,
         });
@@ -694,14 +705,14 @@ export function ThreeDeeRender(props: {
 
     for (const topic of topics) {
       for (const rendererSubscription of topicHandlers.get(topic.name) ?? []) {
-        addSubscription(topic.name, rendererSubscription);
+        addSubscription(topic, rendererSubscription);
       }
       for (const rendererSubscription of schemaHandlers.get(topic.schemaName) ?? []) {
-        addSubscription(topic.name, rendererSubscription);
+        addSubscription(topic, rendererSubscription);
       }
       for (const schemaName of topic.convertibleTo ?? []) {
         for (const rendererSubscription of schemaHandlers.get(schemaName) ?? []) {
-          addSubscription(topic.name, rendererSubscription, schemaName);
+          addSubscription(topic, rendererSubscription, schemaName);
         }
       }
     }
@@ -709,7 +720,7 @@ export function ThreeDeeRender(props: {
     // Sort the list to make comparisons stable
     newSubscriptions.sort((a, b) => a.topic.localeCompare(b.topic));
     setTopicsToSubscribe((prev) => (isEqual(prev, newSubscriptions) ? prev : newSubscriptions));
-  }, [topics, config.topics, schemaHandlers, topicHandlers]);
+  }, [topics, config.topics, schemaHandlers, topicHandlers, config.imageMode.annotations]);
 
   // Notify the extension context when our subscription list changes
   useEffect(() => {
@@ -806,7 +817,7 @@ export function ThreeDeeRender(props: {
       return;
     }
 
-    if (sharedPanelState.followMode !== renderer.followMode) {
+    if (sharedPanelState.followMode !== config.followMode) {
       renderer.setCameraSyncError(
         `Follow mode must be ${sharedPanelState.followMode} to sync camera.`,
       );
@@ -824,7 +835,13 @@ export function ThreeDeeRender(props: {
       }));
       renderer.setCameraSyncError(undefined);
     }
-  }, [config.scene.syncCamera, effectiveRendererFrameId, renderer, sharedPanelState]);
+  }, [
+    config.scene.syncCamera,
+    config.followMode,
+    effectiveRendererFrameId,
+    renderer,
+    sharedPanelState,
+  ]);
 
   // Render a new frame if requested
   useEffect(() => {
@@ -974,7 +991,7 @@ export function ThreeDeeRender(props: {
   }, [publishActive, renderer]);
 
   const onTogglePerspective = useCallback(() => {
-    const currentState = renderer?.getCameraState().perspective ?? false;
+    const currentState = renderer?.getCameraState()?.perspective ?? false;
     actionHandler({
       action: "update",
       payload: {

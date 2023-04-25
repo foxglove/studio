@@ -12,7 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { action } from "@storybook/addon-actions";
-import { Story } from "@storybook/react";
+import { StoryObj, StoryFn } from "@storybook/react";
 import { useEffect, useLayoutEffect } from "react";
 
 import MockMessagePipelineProvider from "@foxglove/studio-base/components/MessagePipeline/MockMessagePipelineProvider";
@@ -29,6 +29,7 @@ import {
 } from "@foxglove/studio-base/players/types";
 import MockCurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider/MockCurrentLayoutProvider";
 import EventsProvider from "@foxglove/studio-base/providers/EventsProvider";
+import WorkspaceContextProvider from "@foxglove/studio-base/providers/WorkspaceContextProvider";
 import { makeMockEvents } from "@foxglove/studio-base/test/mocks/makeMockEvents";
 
 import PlaybackControls from "./index";
@@ -107,131 +108,151 @@ function Wrapper({
 export default {
   title: "components/PlaybackControls",
   decorators: [
-    (StoryFn: Story): JSX.Element => (
+    (Wrapped: StoryFn): JSX.Element => (
       <AppConfigurationContext.Provider value={mockAppConfiguration}>
-        <MockCurrentLayoutProvider>
-          <EventsProvider>
-            <StoryFn />
-          </EventsProvider>
-        </MockCurrentLayoutProvider>
+        <WorkspaceContextProvider>
+          <MockCurrentLayoutProvider>
+            <EventsProvider>
+              <Wrapped />
+            </EventsProvider>
+          </MockCurrentLayoutProvider>
+        </WorkspaceContextProvider>
       </AppConfigurationContext.Provider>
     ),
   ],
 };
 
-export const Playing: Story = () => {
-  return (
-    <Wrapper isPlaying>
-      <PlaybackControls
-        isPlaying={true}
-        getTimeInfo={() => ({})}
-        play={action("play")}
-        pause={action("pause")}
-        seek={action("seek")}
-      />
-    </Wrapper>
-  );
+export const Playing: StoryObj = {
+  render: () => {
+    return (
+      <Wrapper isPlaying>
+        <PlaybackControls
+          isPlaying={true}
+          getTimeInfo={() => ({})}
+          play={action("play")}
+          pause={action("pause")}
+          seek={action("seek")}
+        />
+      </Wrapper>
+    );
+  },
+
+  parameters: { colorScheme: "both-column" },
 };
-Playing.parameters = { colorScheme: "both-column" };
 
-export const Paused: Story = () => {
-  return (
-    <Wrapper>
-      <PlaybackControls
-        isPlaying={false}
-        getTimeInfo={() => ({})}
-        play={action("play")}
-        pause={action("pause")}
-        seek={action("seek")}
-      />
-    </Wrapper>
-  );
+export const Paused: StoryObj = {
+  render: () => {
+    return (
+      <Wrapper>
+        <PlaybackControls
+          isPlaying={false}
+          getTimeInfo={() => ({})}
+          play={action("play")}
+          pause={action("pause")}
+          seek={action("seek")}
+        />
+      </Wrapper>
+    );
+  },
+
+  parameters: { colorScheme: "both-column" },
 };
-Paused.parameters = { colorScheme: "both-column" };
 
-export const Disabled: Story = () => {
-  return (
-    <Wrapper presence={PlayerPresence.ERROR} noActiveData>
-      <PlaybackControls
-        isPlaying={false}
-        getTimeInfo={() => ({})}
-        play={action("play")}
-        pause={action("pause")}
-        seek={action("seek")}
-      />
-    </Wrapper>
-  );
+export const Disabled: StoryObj = {
+  render: () => {
+    return (
+      <Wrapper presence={PlayerPresence.ERROR} noActiveData>
+        <PlaybackControls
+          isPlaying={false}
+          getTimeInfo={() => ({})}
+          play={action("play")}
+          pause={action("pause")}
+          seek={action("seek")}
+        />
+      </Wrapper>
+    );
+  },
+
+  parameters: { colorScheme: "both-column" },
 };
-Disabled.parameters = { colorScheme: "both-column" };
 
-export const DownloadProgressByRanges: Story = () => {
-  const player = getPlayerState();
-  player.progress = {
-    ...player.progress,
-    fullyLoadedFractionRanges: [
-      { start: -2, end: 0.1 },
-      { start: 0.23, end: 0.6 },
-      { start: 0.7, end: 1 },
-    ],
-  };
-  return (
-    <Wrapper progress={player.progress}>
-      <PlaybackControls
-        isPlaying
-        getTimeInfo={() => ({})}
-        play={action("play")}
-        pause={action("pause")}
-        seek={action("seek")}
-      />
-    </Wrapper>
-  );
+export const DownloadProgressByRanges: StoryObj = {
+  render: () => {
+    const player = getPlayerState();
+    player.progress = {
+      ...player.progress,
+      fullyLoadedFractionRanges: [
+        { start: -2, end: 0.1 },
+        { start: 0.23, end: 0.6 },
+        { start: 0.7, end: 1 },
+      ],
+    };
+    return (
+      <Wrapper progress={player.progress}>
+        <PlaybackControls
+          isPlaying
+          getTimeInfo={() => ({})}
+          play={action("play")}
+          pause={action("pause")}
+          seek={action("seek")}
+        />
+      </Wrapper>
+    );
+  },
+
+  parameters: { colorScheme: "both-column" },
 };
-DownloadProgressByRanges.parameters = { colorScheme: "both-column" };
 
-export const HoverTicks: Story = () => {
-  const player = getPlayerState();
-  const setHoverValue = useSetHoverValue();
+export const HoverTicks: StoryObj = {
+  render: function Story() {
+    const player = getPlayerState();
+    const setHoverValue = useSetHoverValue();
 
-  useLayoutEffect(() => {
-    setHoverValue({
-      type: "PLAYBACK_SECONDS",
-      value: 0.5,
-      componentId: "story",
+    useLayoutEffect(() => {
+      setHoverValue({
+        type: "PLAYBACK_SECONDS",
+        value: 0.5,
+        componentId: "story",
+      });
+    }, [setHoverValue]);
+
+    return (
+      <Wrapper activeData={player.activeData}>
+        <PlaybackControls
+          isPlaying
+          getTimeInfo={() => ({})}
+          play={action("play")}
+          pause={action("pause")}
+          seek={action("seek")}
+        />
+      </Wrapper>
+    );
+  },
+
+  parameters: { colorScheme: "both-column" },
+};
+
+export const WithEvents: StoryObj = {
+  render: function Story() {
+    const player = getPlayerState();
+    const setEvents = useEvents((store) => store.setEvents);
+
+    useEffect(() => {
+      setEvents({ loading: false, value: makeMockEvents(4, START_TIME + 1, 4) });
     });
-  }, [setHoverValue]);
 
-  return (
-    <Wrapper activeData={player.activeData}>
-      <PlaybackControls
-        isPlaying
-        getTimeInfo={() => ({})}
-        play={action("play")}
-        pause={action("pause")}
-        seek={action("seek")}
-      />
-    </Wrapper>
-  );
+    return (
+      <Wrapper activeData={player.activeData}>
+        <PlaybackControls
+          isPlaying
+          getTimeInfo={() => ({})}
+          play={action("play")}
+          pause={action("pause")}
+          seek={action("seek")}
+        />
+      </Wrapper>
+    );
+  },
+
+  parameters: { colorScheme: "both-column" },
 };
-HoverTicks.parameters = { colorScheme: "both-column" };
-
-export const WithEvents: Story = () => {
-  const player = getPlayerState();
-  const setEvents = useEvents((store) => store.setEvents);
-
-  useEffect(() => {
-    setEvents({ loading: false, value: makeMockEvents(4, START_TIME + 1, 4) });
-  });
-
-  return (
-    <Wrapper activeData={player.activeData}>
-      <PlaybackControls
-        isPlaying
-        getTimeInfo={() => ({})}
-        play={action("play")}
-        pause={action("pause")}
-        seek={action("seek")}
-      />
-    </Wrapper>
-  );
-};
-WithEvents.parameters = { colorScheme: "both-column" };
