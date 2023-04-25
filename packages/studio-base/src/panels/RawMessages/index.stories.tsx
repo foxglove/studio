@@ -505,12 +505,17 @@ export const KeyValueObjects: StoryObj = {
         Object.entries({
           baz: {
             definitions: [
-              { name: "some_id", type: "some_id", isComplex: true },
+              { name: "obj", type: "obj", isComplex: true },
               { name: "kv", type: "kv", isComplex: true },
               { name: "kv_arr", type: "kv", isArray: true, isComplex: true },
             ],
           },
-          some_id: { definitions: [{ name: "some_id", type: "int32" }] },
+          obj: {
+            definitions: [
+              { name: "key", type: "int32" },
+              { name: "field", type: "string" },
+            ],
+          },
           kv: {
             definitions: [
               { name: "key", type: "string" },
@@ -526,7 +531,7 @@ export const KeyValueObjects: StoryObj = {
             topic: "/baz",
             receiveTime: { sec: 123, nsec: 456789012 },
             message: {
-              some_id: { some_id: 1 },
+              obj: { key: 1, field: "foo" },
               kv: { key: "foo", value: "bar" },
               kv_arr: [
                 { key: "foo", value: "bar" },
