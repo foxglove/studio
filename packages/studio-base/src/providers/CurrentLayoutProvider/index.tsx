@@ -8,6 +8,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getNodeAtPath } from "react-mosaic-component";
 import { useAsync, useAsyncFn, useMountedState } from "react-use";
 import shallowequal from "shallowequal";
+import { useDebounce } from "use-debounce";
 import { v4 as uuidv4 } from "uuid";
 
 import { useShallowMemo } from "@foxglove/hooks";
@@ -173,7 +174,6 @@ export default function CurrentLayoutProvider({
 
   // When the user performs an action, we immediately setLayoutState to update the UI. Saving back
   // to the LayoutManager is debounced.
-  const debouncedSaveTimeout = useRef<ReturnType<typeof setTimeout> | undefined>();
   const performAction = useCallback(
     (action: PanelsActions) => {
       if (
@@ -200,32 +200,36 @@ export default function CurrentLayoutProvider({
       // store the layout for saving
       unsavedLayoutsRef.current.set(newLayout.id, newLayout);
 
-      debouncedSaveTimeout.current ??= setTimeout(() => {
-        const layoutsToSave = [...unsavedLayoutsRef.current.values()];
-        unsavedLayoutsRef.current.clear();
-
-        debouncedSaveTimeout.current = undefined;
-        for (const params of layoutsToSave) {
-          void analytics.logEvent(AppEvent.LAYOUT_UPDATE);
-          layoutManager.updateLayout(params).catch((error) => {
-            log.error(error);
-            if (isMounted()) {
-              enqueueSnackbar(`Your changes could not be saved. ${error.toString()}`, {
-                variant: "error",
-                key: "CurrentLayoutProvider.throttledSave",
-              });
-            }
-          });
-        }
-      }, SAVE_INTERVAL_MS);
-
       // Some actions like CHANGE_PANEL_LAYOUT will cause further downstream effects to update panel
       // configs (i.e. set default configs). These result in calls to performAction. To ensure the
       // debounced params are set in the proper order, we invoke setLayoutState at the end.
       setLayoutState({ selectedLayout: { ...newLayout, loading: false } });
     },
-    [analytics, enqueueSnackbar, isMounted, layoutManager, setLayoutState],
+    [setLayoutState],
   );
+
+  const [debouncedLayoutState, debouncedLayoutStateActions] = useDebounce(
+    layoutState,
+    SAVE_INTERVAL_MS,
+  );
+
+  useEffect(() => {
+    const layoutsToSave = [...unsavedLayoutsRef.current.values()];
+    unsavedLayoutsRef.current.clear();
+
+    for (const params of layoutsToSave) {
+      void analytics.logEvent(AppEvent.LAYOUT_UPDATE);
+      layoutManager.updateLayout(params).catch((error) => {
+        log.error(error);
+        if (isMounted()) {
+          enqueueSnackbar(`Your changes could not be saved. ${error.toString()}`, {
+            variant: "error",
+            key: "CurrentLayoutProvider.throttledSave",
+          });
+        }
+      });
+    }
+  }, [analytics, enqueueSnackbar, isMounted, layoutManager, debouncedLayoutState]);
 
   // Changes to the layout storage from external user actions (such as resetting a layout to a
   // previous saved state) need to trigger setLayoutState.
@@ -249,11 +253,9 @@ export default function CurrentLayoutProvider({
     layoutManager.on("change", listener);
     return () => {
       layoutManager.off("change", listener);
-      if (debouncedSaveTimeout.current) {
-        clearTimeout(debouncedSaveTimeout.current);
-      }
+      debouncedLayoutStateActions.cancel();
     };
-  }, [layoutManager, setLayoutState]);
+  }, [debouncedLayoutStateActions, layoutManager, setLayoutState]);
 
   // Make sure our layout still exists after changes. If not deselect it.
   useEffect(() => {
