@@ -4,10 +4,10 @@
 
 import { exec } from "@actions/exec";
 import { downloadTool, extractZip } from "@actions/tool-cache";
-import { AfterPackContext } from "app-builder-lib";
 import type MacPackager from "app-builder-lib/out/macPackager";
 import { log, Arch } from "builder-util";
 import crypto from "crypto";
+import { AfterPackContext } from "electron-builder";
 import fs from "fs/promises";
 import path from "path";
 import plist, { PlistObject } from "plist";
