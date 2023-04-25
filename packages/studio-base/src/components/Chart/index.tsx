@@ -223,8 +223,13 @@ function Chart(props: Props): JSX.Element {
       return;
     }
 
+    console.log(data.datasets[0]?.data.length);
     return out;
   }, [data, height, options, isBoundsReset, width]);
+
+  const counter = useRef(0);
+
+  const running = useRef(false);
 
   const { error: updateError } = useAsync(async () => {
     if (!sendWrapperRef.current) {
@@ -290,15 +295,27 @@ function Chart(props: Props): JSX.Element {
       return;
     }
 
+    if (running.current) {
+      console.log("already running");
+      return;
+    }
+
     const newUpdateMessage = getNewUpdateMessage();
     if (!newUpdateMessage) {
       return;
     }
 
+    running.current = true;
+
+    const count = counter.current++;
+    console.log("do render", count);
     onStartRender?.();
     const scales = await rpcSendRef.current<RpcScales>("update", newUpdateMessage);
     maybeUpdateScales(scales);
     onFinishRender?.();
+    console.log("end render", count);
+
+    running.current = false;
   }, [getNewUpdateMessage, maybeUpdateScales, onFinishRender, onStartRender, type]);
 
   useLayoutEffect(() => {
