@@ -5,7 +5,7 @@
 import { isTypicalFilterName } from "./isTypicalFilterName";
 
 describe("isTypicalFilterName", () => {
-  it.each(["id", "trackID", "_id", "track_id", "ID", "Id", "key"])(
+  it.each(["id", "trackID", "_id", "track_id", "ID", "Id", "key", "trackId"])(
     "returns true for %s",
     (value) => {
       expect(isTypicalFilterName(value)).toBe(true);

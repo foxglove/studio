@@ -507,6 +507,7 @@ export const KeyValueObjects: StoryObj = {
             definitions: [
               { name: "some_id", type: "some_id", isComplex: true },
               { name: "kv", type: "kv", isComplex: true },
+              { name: "kv_arr", type: "kv", isArray: true, isComplex: true },
             ],
           },
           some_id: { definitions: [{ name: "some_id", type: "int32" }] },
@@ -527,6 +528,10 @@ export const KeyValueObjects: StoryObj = {
             message: {
               some_id: { some_id: 1 },
               kv: { key: "foo", value: "bar" },
+              kv_arr: [
+                { key: "foo", value: "bar" },
+                { key: "baz", value: "qux" },
+              ],
             },
             schemaName: "baz",
             sizeInBytes: 0,
