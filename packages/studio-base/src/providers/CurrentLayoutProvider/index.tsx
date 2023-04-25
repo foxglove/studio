@@ -170,7 +170,7 @@ export default function CurrentLayoutProvider({
   );
 
   type UpdateLayoutParams = { id: LayoutID; data: LayoutData };
-  const unsavedLayoutsRef = useRef(new Map<LayoutID, UpdateLayoutParams>());
+  const [unsavedLayouts, setUnsavedLayouts] = useState<Record<LayoutID, UpdateLayoutParams>>({});
 
   // When the user performs an action, we immediately setLayoutState to update the UI. Saving back
   // to the LayoutManager is debounced.
@@ -197,29 +197,30 @@ export default function CurrentLayoutProvider({
         name: layoutStateRef.current.selectedLayout.name,
       };
 
-      // store the layout for saving
-      unsavedLayoutsRef.current.set(newLayout.id, newLayout);
-
       // Some actions like CHANGE_PANEL_LAYOUT will cause further downstream effects to update panel
       // configs (i.e. set default configs). These result in calls to performAction. To ensure the
       // debounced params are set in the proper order, we invoke setLayoutState at the end.
       setLayoutState({ selectedLayout: { ...newLayout, loading: false } });
+
+      // store the layout for saving
+      setUnsavedLayouts((old) => ({ ...old, [newLayout.id]: newLayout }));
     },
     [setLayoutState],
   );
 
-  const [debouncedLayoutState, debouncedLayoutStateActions] = useDebounce(
-    layoutState,
+  const [debouncedUnsavedLayouts, debouncedUnsavedLayoutActions] = useDebounce(
+    unsavedLayouts,
     SAVE_INTERVAL_MS,
   );
 
-  useEffect(() => {
-    const layoutsToSave = [...unsavedLayoutsRef.current.values()];
-    unsavedLayoutsRef.current.clear();
+  useAsync(async () => {
+    const unsavedLayoutsSnapshot = { ...debouncedUnsavedLayouts };
+    setUnsavedLayouts({});
 
-    for (const params of layoutsToSave) {
-      void analytics.logEvent(AppEvent.LAYOUT_UPDATE);
-      layoutManager.updateLayout(params).catch((error) => {
+    for (const params of Object.values(unsavedLayoutsSnapshot)) {
+      try {
+        await layoutManager.updateLayout(params);
+      } catch (error) {
         log.error(error);
         if (isMounted()) {
           enqueueSnackbar(`Your changes could not be saved. ${error.toString()}`, {
@@ -227,9 +228,11 @@ export default function CurrentLayoutProvider({
             key: "CurrentLayoutProvider.throttledSave",
           });
         }
-      });
+      }
     }
-  }, [analytics, enqueueSnackbar, isMounted, layoutManager, debouncedLayoutState]);
+
+    await analytics.logEvent(AppEvent.LAYOUT_UPDATE);
+  }, [analytics, debouncedUnsavedLayouts, enqueueSnackbar, isMounted, layoutManager]);
 
   // Changes to the layout storage from external user actions (such as resetting a layout to a
   // previous saved state) need to trigger setLayoutState.
@@ -253,9 +256,10 @@ export default function CurrentLayoutProvider({
     layoutManager.on("change", listener);
     return () => {
       layoutManager.off("change", listener);
-      debouncedLayoutStateActions.cancel();
+      debouncedUnsavedLayoutActions.flush();
+      debouncedUnsavedLayoutActions.cancel();
     };
-  }, [debouncedLayoutStateActions, layoutManager, setLayoutState]);
+  }, [debouncedUnsavedLayoutActions, layoutManager, setLayoutState]);
 
   // Make sure our layout still exists after changes. If not deselect it.
   useEffect(() => {
