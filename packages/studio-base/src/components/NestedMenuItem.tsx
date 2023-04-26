@@ -4,14 +4,7 @@
 
 import { ChevronRight12Regular, Open16Regular } from "@fluentui/react-icons";
 import { Divider, Menu, MenuItem, MenuItemProps, useTheme } from "@mui/material";
-import {
-  Dispatch,
-  MouseEvent,
-  PropsWithChildren,
-  ReactNode,
-  SetStateAction,
-  useState,
-} from "react";
+import { PropsWithChildren, ReactNode, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 
 export type NestedMenuItem =
@@ -61,47 +54,31 @@ const useStyles = makeStyles<void, "endIcon">()((theme, _params, classes) => ({
 
 export function NestedMenuItem(
   props: PropsWithChildren<{
-    items: NestedMenuItem[];
-    subMenu?: HTMLElement;
-    setSubMenu: Dispatch<SetStateAction<HTMLElement | undefined>>;
-    subMenuOpen: boolean;
     id?: string;
+    items: NestedMenuItem[];
+    open: boolean;
+    onPointerEnter: (itemId: string) => void;
   }>,
 ): JSX.Element {
   const { classes } = useStyles();
   const theme = useTheme();
-  const { children, items, subMenu, subMenuOpen, setSubMenu, id } = props;
-  const [anchorEl, setAnchorEl] = useState<undefined | HTMLElement>(undefined);
-  const open = Boolean(anchorEl);
+  const { children, items, open, onPointerEnter, id } = props;
+  const [anchorEl, setAnchorEl] = useState<undefined | HTMLLIElement>(undefined);
 
-  const handleClick = (event: MouseEvent<HTMLElement>) => {
-    if (anchorEl !== event.currentTarget) {
-      setSubMenu(event.currentTarget);
-      setAnchorEl(event.currentTarget);
+  const handlePointerEnter = () => {
+    if (id) {
+      onPointerEnter(id);
     }
-  };
-
-  const handleMouseEnter = (event: MouseEvent<HTMLElement>) => {
-    setSubMenu(event.currentTarget);
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleMouseLeave = (event: MouseEvent<HTMLElement>) => {
-    if (!subMenuOpen && subMenu !== event.currentTarget) {
-      setAnchorEl(undefined);
-    }
-    setSubMenu(undefined);
   };
 
   return (
     <>
       <MenuItem
         id={id}
+        ref={(element) => setAnchorEl(element ?? undefined)}
         selected={open}
         className={classes.menuItem}
-        onClick={handleClick}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
+        onPointerEnter={handlePointerEnter}
         data-testid={id}
       >
         {children}
@@ -118,7 +95,6 @@ export function NestedMenuItem(
         onClose={() => setAnchorEl(undefined)}
         onMouseLeave={() => {
           setAnchorEl(undefined);
-          setSubMenu(undefined);
         }}
         anchorOrigin={{ vertical: "top", horizontal: "right" }}
         MenuListProps={{ dense: true, className: classes.menuList }}

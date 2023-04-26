@@ -61,8 +61,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
   const { open, handleClose, anchorEl, anchorReference, anchorPosition, disablePortal } = props;
   const { classes } = useStyles();
 
-  const [subMenu, setSubMenu] = useState<undefined | HTMLElement>(undefined);
-  const subMenuOpen = Boolean(subMenu);
+  const [openItemId, setOpenItemId] = useState<string | undefined>();
 
   const currentUserType = useCurrentUserType();
   const analytics = useAnalytics();
@@ -111,32 +110,31 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
   const { leftSidebarOpen, rightSidebarOpen } = useWorkspaceStore(selectWorkspace, shallow);
   const { setRightSidebarOpen, setLeftSidebarOpen } = useWorkspaceActions();
 
-  const viewItems = useMemo(
-    () =>
-      [
-        {
-          type: "item",
-          label: `${leftSidebarOpen ? "Hide" : "Show"} left sidebar`,
-          key: "left-sidebar",
-          shortcut: "[",
-          onClick: () => {
-            handleClose();
-            setLeftSidebarOpen(!leftSidebarOpen);
-          },
+  const viewItems = useMemo<NestedMenuItem[]>(
+    () => [
+      {
+        type: "item",
+        label: `${leftSidebarOpen ? "Hide" : "Show"} left sidebar`,
+        key: "left-sidebar",
+        shortcut: "[",
+        onClick: () => {
+          handleClose();
+          setLeftSidebarOpen(!leftSidebarOpen);
         },
-        {
-          type: "item",
-          label: `${rightSidebarOpen ? "Hide" : "Show"} right sidebar`,
-          key: "right-sidebar",
-          shortcut: "]",
-          onClick: () => {
-            handleClose();
-            setRightSidebarOpen(!rightSidebarOpen);
-          },
+      },
+      {
+        type: "item",
+        label: `${rightSidebarOpen ? "Hide" : "Show"} right sidebar`,
+        key: "right-sidebar",
+        shortcut: "]",
+        onClick: () => {
+          handleClose();
+          setRightSidebarOpen(!rightSidebarOpen);
         },
-        { type: "divider" },
-        { type: "item", label: "Add panel", key: "add-panel" },
-      ] as NestedMenuItem[],
+      },
+      { type: "divider" },
+      { type: "item", label: "Add panel", key: "add-panel" },
+    ],
     [handleClose, leftSidebarOpen, rightSidebarOpen, setLeftSidebarOpen, setRightSidebarOpen],
   );
 
@@ -160,17 +158,21 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
     window.open("https://foxglove.dev/slack", "_blank");
   }, [analytics, currentUserType, handleClose]);
 
-  const helpItems = useMemo(
-    () =>
-      [
-        {
-          type: "item",
-          label: "App version",
-        },
-        { type: "divider" },
-        { type: "item", label: "Documentation", key: "docs", onClick: onDocsClick, external: true },
-        { type: "item", label: "Join Slack", key: "slack", onClick: onSlackClick, external: true },
-      ] as NestedMenuItem[],
+  const handleItemPointerEnter = useCallback((id: string) => {
+    setOpenItemId(id);
+  }, []);
+
+  const helpItems = useMemo<NestedMenuItem[]>(
+    () => [
+      {
+        type: "item",
+        key: "appversion",
+        label: "App version",
+      },
+      { type: "divider" },
+      { type: "item", label: "Documentation", key: "docs", onClick: onDocsClick, external: true },
+      { type: "item", label: "Join Slack", key: "slack", onClick: onSlackClick, external: true },
+    ],
     [onDocsClick, onSlackClick],
   );
 
@@ -187,31 +189,30 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
         onClose={handleClose}
         MenuListProps={{ dense: true, className: classes.menuList }}
       >
-        <MenuItem className={classes.menuItem}>Back to Data Platform</MenuItem>
+        <MenuItem className={classes.menuItem} onPointerEnter={() => setOpenItemId(undefined)}>
+          Back to Data Platform
+        </MenuItem>
         <Divider variant="middle" />
         <NestedMenuItem
-          setSubMenu={setSubMenu}
-          subMenu={subMenu}
-          subMenuOpen={subMenuOpen}
+          onPointerEnter={handleItemPointerEnter}
           items={fileItems}
+          open={openItemId === "app-menu-file"}
           id="app-menu-file"
         >
           File
         </NestedMenuItem>
         <NestedMenuItem
-          setSubMenu={setSubMenu}
-          subMenu={subMenu}
-          subMenuOpen={subMenuOpen}
+          onPointerEnter={handleItemPointerEnter}
           items={viewItems}
+          open={openItemId === "app-menu-view"}
           id="app-menu-view"
         >
           View
         </NestedMenuItem>
         <NestedMenuItem
-          setSubMenu={setSubMenu}
-          subMenu={subMenu}
-          subMenuOpen={subMenuOpen}
+          onPointerEnter={handleItemPointerEnter}
           items={helpItems}
+          open={openItemId === "app-menu-help"}
           id="app-menu-help"
         >
           Help
