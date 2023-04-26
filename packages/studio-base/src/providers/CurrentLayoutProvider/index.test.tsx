@@ -153,6 +153,43 @@ describe("CurrentLayoutProvider", () => {
     (console.warn as jest.Mock).mockClear();
   });
 
+  it("refuses to load an incompatible layout", async () => {
+    const expectedState: LayoutData = {
+      configById: { "Foo!bar": { setting: 1 } },
+      globalVariables: { var: "hello" },
+      layout: "Foo!bar",
+      playbackConfig: { speed: 0.1 },
+      userNodes: { node1: { name: "node", sourceCode: "node()" } },
+      version: 2,
+    };
+
+    const condvar = new Condvar();
+    const layoutStorageGetCalledWait = condvar.wait();
+    const mockLayoutManager = makeMockLayoutManager();
+    mockLayoutManager.getLayout.mockImplementation(async () => {
+      condvar.notifyAll();
+      return {
+        id: "example",
+        name: "Example layout",
+        baseline: { updatedAt: new Date(10).toISOString(), data: expectedState },
+      };
+    });
+
+    const mockUserProfile = makeMockUserProfile();
+    mockUserProfile.getUserProfile.mockResolvedValue({ currentLayoutId: "example" });
+
+    const { all } = renderTest({ mockLayoutManager, mockUserProfile });
+    await act(async () => await layoutStorageGetCalledWait);
+
+    expect(mockLayoutManager.getLayout.mock.calls).toEqual([["example"], ["example"]]);
+    expect(all.map((item) => (item instanceof Error ? undefined : item.layoutState))).toEqual([
+      { selectedLayout: undefined },
+      { selectedLayout: { loading: true, id: "example", data: undefined } },
+      { selectedLayout: undefined },
+    ]);
+    (console.warn as jest.Mock).mockClear();
+  });
+
   it("saves new layout selection into UserProfile", async () => {
     const mockLayoutManager = makeMockLayoutManager();
     const newLayout: Partial<LayoutData> = {
