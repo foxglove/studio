@@ -408,7 +408,7 @@ export class ImageMode extends SceneExtension<ImageRenderable> implements ICamer
 
     this.add(renderable);
     this.#imageRenderable = renderable;
-    renderable.renderBehindScene();
+    renderable.setRenderBehindScene();
     renderable.visible = true;
     return renderable;
   }
@@ -485,6 +485,7 @@ export class ImageMode extends SceneExtension<ImageRenderable> implements ICamer
       if (imageRenderable) {
         imageRenderable.userData.cameraInfo = this.cameraModel.info;
         imageRenderable.setCameraModel(this.cameraModel.model);
+        imageRenderable.update();
       }
     }
   }

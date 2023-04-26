@@ -723,6 +723,8 @@ export function ThreeDeeRender(props: {
   }, [
     topics,
     config.topics,
+    // Need to update subscriptions when imagemode topics change
+    // shouldSubscribe values will be re-evaluated
     config.imageMode.calibrationTopic,
     config.imageMode.imageTopic,
     schemaHandlers,

@@ -104,13 +104,8 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     return { image: this.userData.image, camera_info: this.userData.cameraInfo };
   }
 
-  public renderBehindScene(): void {
+  public setRenderBehindScene(): void {
     this.#renderBehindScene = true;
-    this.#materialNeedsUpdate = true;
-  }
-
-  public renderInScene(): void {
-    this.#renderBehindScene = false;
     this.#materialNeedsUpdate = true;
   }
 
@@ -257,6 +252,7 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     material.depthWrite = !transparent;
 
     if (this.#renderBehindScene) {
+      material.depthWrite = false;
       material.depthTest = false;
       this.renderOrder = -1 * Number.MAX_SAFE_INTEGER;
     } else {
