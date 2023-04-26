@@ -8,7 +8,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getNodeAtPath } from "react-mosaic-component";
 import { useAsync, useAsyncFn, useMountedState } from "react-use";
 import shallowequal from "shallowequal";
-import { useDebounce } from "use-debounce";
 import { v4 as uuidv4 } from "uuid";
 
 import { useShallowMemo } from "@foxglove/hooks";
@@ -28,7 +27,6 @@ import {
   EndDragPayload,
   MoveTabPayload,
   PanelsActions,
-  LayoutData,
   SaveConfigsPayload,
   SplitPanelPayload,
   StartDragPayload,
@@ -41,15 +39,14 @@ import panelsReducer from "@foxglove/studio-base/providers/CurrentLayoutProvider
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 import { LayoutManagerEventTypes } from "@foxglove/studio-base/services/ILayoutManager";
 import { LayoutID } from "@foxglove/studio-base/services/ILayoutStorage";
-import { PanelConfig, UserNodes, PlaybackConfig } from "@foxglove/studio-base/types/panels";
+import { PanelConfig, PlaybackConfig, UserNodes } from "@foxglove/studio-base/types/panels";
 import { windowAppURLState } from "@foxglove/studio-base/util/appURLState";
 import { getPanelTypeFromId } from "@foxglove/studio-base/util/layout";
 
 import { IncompatibleLayoutVersionAlert } from "./IncompatibleLayoutVersionAlert";
+import { useLayoutPersistence } from "./useLayoutPersistence";
 
 const log = Logger.getLogger(__filename);
-
-const SAVE_INTERVAL_MS = 1000;
 
 export const MAX_SUPPORTED_LAYOUT_VERSION = 1;
 
@@ -115,6 +112,8 @@ export default function CurrentLayoutProvider({
     [],
   );
 
+  const persistLayout = useLayoutPersistence();
+
   const [, setSelectedLayoutId] = useAsyncFn(
     async (
       id: LayoutID | undefined,
@@ -169,9 +168,6 @@ export default function CurrentLayoutProvider({
     [enqueueSnackbar, isMounted, layoutManager, setLayoutState, setUserProfile],
   );
 
-  type UpdateLayoutParams = { id: LayoutID; data: LayoutData };
-  const [unsavedLayouts, setUnsavedLayouts] = useState<Record<LayoutID, UpdateLayoutParams>>({});
-
   // When the user performs an action, we immediately setLayoutState to update the UI. Saving back
   // to the LayoutManager is debounced.
   const performAction = useCallback(
@@ -202,37 +198,10 @@ export default function CurrentLayoutProvider({
       // debounced params are set in the proper order, we invoke setLayoutState at the end.
       setLayoutState({ selectedLayout: { ...newLayout, loading: false } });
 
-      // store the layout for saving
-      setUnsavedLayouts((old) => ({ ...old, [newLayout.id]: newLayout }));
+      persistLayout(newLayout);
     },
-    [setLayoutState],
+    [persistLayout, setLayoutState],
   );
-
-  const [debouncedUnsavedLayouts, debouncedUnsavedLayoutActions] = useDebounce(
-    unsavedLayouts,
-    SAVE_INTERVAL_MS,
-  );
-
-  useAsync(async () => {
-    const unsavedLayoutsSnapshot = { ...debouncedUnsavedLayouts };
-    setUnsavedLayouts({});
-
-    for (const params of Object.values(unsavedLayoutsSnapshot)) {
-      try {
-        await layoutManager.updateLayout(params);
-      } catch (error) {
-        log.error(error);
-        if (isMounted()) {
-          enqueueSnackbar(`Your changes could not be saved. ${error.toString()}`, {
-            variant: "error",
-            key: "CurrentLayoutProvider.throttledSave",
-          });
-        }
-      }
-    }
-
-    await analytics.logEvent(AppEvent.LAYOUT_UPDATE);
-  }, [analytics, debouncedUnsavedLayouts, enqueueSnackbar, isMounted, layoutManager]);
 
   // Changes to the layout storage from external user actions (such as resetting a layout to a
   // previous saved state) need to trigger setLayoutState.
@@ -256,10 +225,8 @@ export default function CurrentLayoutProvider({
     layoutManager.on("change", listener);
     return () => {
       layoutManager.off("change", listener);
-      debouncedUnsavedLayoutActions.flush();
-      debouncedUnsavedLayoutActions.cancel();
     };
-  }, [debouncedUnsavedLayoutActions, layoutManager, setLayoutState]);
+  }, [layoutManager, setLayoutState]);
 
   // Make sure our layout still exists after changes. If not deselect it.
   useEffect(() => {
