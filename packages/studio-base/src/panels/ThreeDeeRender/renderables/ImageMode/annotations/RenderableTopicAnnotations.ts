@@ -132,13 +132,7 @@ export class RenderableTopicAnnotations extends THREE.Object3D {
             }
 
             case "polygon":
-              // not yet implemented
-              break;
-
             case "line_strip":
-              // not yet implemented
-              break;
-
             case "line_list": {
               let lineList = unusedLineLists.pop();
               if (!lineList) {
