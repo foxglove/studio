@@ -14,6 +14,7 @@ import { PointsAnnotation as NormalizedPointsAnnotation } from "@foxglove/studio
 import { BaseUserData, Renderable } from "../../../Renderable";
 import { SRGBToLinear } from "../../../color";
 
+const tempVec2 = new THREE.Vector2();
 const tempVec3 = new THREE.Vector3();
 
 class PickingMaterial extends LineMaterial {
@@ -42,15 +43,17 @@ class PickingMaterial extends LineMaterial {
 /** subset of {@link NormalizedPointsAnnotation.style} */
 type LineStyle = "polygon" | "line_strip" | "line_list";
 
-export class RenderableLineListAnnotation extends Renderable<
-  BaseUserData,
-  /*TRenderer=*/ undefined
-> {
+/**
+ * Handles rendering of 2D annotations (line list, line strip, and line loop/polygon).
+ */
+export class RenderableLineAnnotation extends Renderable<BaseUserData, /*TRenderer=*/ undefined> {
   #geometry?: LineSegmentsGeometry;
-  #style?: LineStyle;
   #line: LineSegments2;
   #linePickingMaterial: PickingMaterial;
   #lineMaterial: LineMaterial;
+  /** Style that was last used for configuring geometry */
+  #style?: LineStyle;
+  /** Number of points that was last used for configuring geometry */
   #numPoints?: number;
   #positionBuffer = new Float32Array();
   #colorBuffer = new Uint8Array();
@@ -97,6 +100,8 @@ export class RenderableLineListAnnotation extends Renderable<
     this.#geometry?.dispose();
     this.#lineMaterial.dispose();
     this.#linePickingMaterial.dispose();
+    this.#fillGeometry?.dispose();
+    this.#fillMaterial?.dispose();
     super.dispose();
   }
 
@@ -163,15 +168,15 @@ export class RenderableLineListAnnotation extends Renderable<
         this.#geometry?.dispose();
         this.#numPoints = pointsLength;
         this.#style = style;
-        switch (this.#style) {
+        switch (style) {
           case "polygon":
             this.#positionBuffer = new Float32Array((pointsLength + 1) * 3);
-            // this.#colorBuffer = new Uint8Array(pointsLength * 8); // unused
+            // color buffer is unused (we don't use vertex colors)
             this.#geometry = new LineGeometry();
             break;
           case "line_strip":
             this.#positionBuffer = new Float32Array(pointsLength * 3);
-            // this.#colorBuffer = new Uint8Array(pointsLength * 8); // unused
+            // color buffer is unused (we don't use vertex colors)
             this.#geometry = new LineGeometry();
             break;
           case "line_list":
@@ -183,8 +188,8 @@ export class RenderableLineListAnnotation extends Renderable<
         this.#line.geometry = this.#geometry;
       }
 
-      const isPolygon = this.#style === "polygon";
-      const isLineList = this.#style === "line_list";
+      const isPolygon = style === "polygon";
+      const isLineList = style === "line_list";
       const useVertexColors = isLineList;
       const hasExactColors = outlineColors.length === pointsLength / 2;
 
@@ -230,30 +235,28 @@ export class RenderableLineListAnnotation extends Renderable<
         }
       }
 
-      if (!isLineList && fillColor && fillColor.a > 0) {
+      const focalLengths = this.#cameraModel.getFocalLengths(tempVec2);
+      if (!isLineList && fillColor && fillColor.a > 0 && focalLengths) {
         const shape = new THREE.Shape();
-        // shape.moveTo(points[0]!.x, points[0]!.y);
-        // for (let i = 1; i < pointsLength; i++) {
-        //   shape.lineTo(points[i]!.x, points[i]!.y);
-        // }
-        // if (isPolygon) {
-        //   shape.closePath();
-        // }
-        shape.moveTo(-1000, -1000);
-        shape.lineTo(1000, -1000);
-        shape.lineTo(1000, 1000);
-        shape.lineTo(-1000, 1000);
-        shape.closePath();
+        shape.moveTo(points[0]!.x, points[0]!.y);
+        for (let i = 1; i < pointsLength; i++) {
+          shape.lineTo(points[i]!.x, points[i]!.y);
+        }
+        if (isPolygon) {
+          shape.closePath();
+        }
         this.#fillGeometry ??= new THREE.ShapeGeometry(shape);
-        this.#fillMaterial ??= new THREE.MeshBasicMaterial();
+        this.#fillMaterial ??= new THREE.MeshBasicMaterial({ side: THREE.DoubleSide });
         if (!this.#fill) {
           this.#fill = new THREE.Mesh(this.#fillGeometry, this.#fillMaterial);
-          this.#fill.position.set(5, 0, 0);
-          this.#fill.rotateZ(0.2);
-          this.#fill.rotateX(0.2);
-          this.#fill.rotateY(0.2);
           this.add(this.#fill);
         }
+        // Position the fill on the focal plane so the Shape's coordinates correspond to pixel coordinates
+        this.#fill.position.set(
+          -this.#cameraModel.width / 2,
+          -this.#cameraModel.height / 2,
+          focalLengths.x,
+        );
         this.#fillMaterial.color
           .setRGB(fillColor.r, fillColor.g, fillColor.b)
           .convertSRGBToLinear();
