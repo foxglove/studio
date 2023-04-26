@@ -219,10 +219,10 @@ export class ImageRenderable extends Renderable<ImageUserData> {
   }
 
   private addTopicError(key: string, errorMessage: string) {
-    this.renderer.settings.errors.addToTopic(this.userData.topic, key, errorMessage);
+    this.renderer.settings.errors.add(this.userData.settingsPath, key, errorMessage);
   }
   private removeTopicError(key: string) {
-    this.renderer.settings.errors.removeFromTopic(this.userData.topic, key);
+    this.renderer.settings.errors.remove(this.userData.settingsPath, key);
   }
   private updateMaterial(): void {
     if (!this.userData.material) {

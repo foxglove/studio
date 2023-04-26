@@ -720,7 +720,15 @@ export function ThreeDeeRender(props: {
     // Sort the list to make comparisons stable
     newSubscriptions.sort((a, b) => a.topic.localeCompare(b.topic));
     setTopicsToSubscribe((prev) => (isEqual(prev, newSubscriptions) ? prev : newSubscriptions));
-  }, [topics, config.topics, schemaHandlers, topicHandlers, config.imageMode.annotations]);
+  }, [
+    topics,
+    config.topics,
+    config.imageMode.calibrationTopic,
+    config.imageMode.imageTopic,
+    schemaHandlers,
+    topicHandlers,
+    config.imageMode.annotations,
+  ]);
 
   // Notify the extension context when our subscription list changes
   useEffect(() => {
