@@ -71,6 +71,11 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
   const { setRightSidebarOpen, setLeftSidebarOpen, dataSourceDialogActions } =
     useWorkspaceActions();
 
+  const handleNestedMenuClose = useCallback(() => {
+    setOpenItemId(undefined);
+    handleClose();
+  }, [handleClose]);
+
   const fileItems = useMemo(() => {
     const items: NestedMenuItem[] = [
       {
@@ -79,7 +84,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
         key: "open-file",
         onClick: () => {
           dataSourceDialogActions.open("file");
-          handleClose();
+          handleNestedMenuClose();
         },
       },
       {
@@ -108,7 +113,14 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
     });
 
     return items;
-  }, [classes.truncate, handleClose, recentSources, selectRecent]);
+  }, [
+    classes.truncate,
+    dataSourceDialogActions,
+    handleClose,
+    handleNestedMenuClose,
+    recentSources,
+    selectRecent,
+  ]);
 
   // VIEW
 
@@ -120,7 +132,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
         key: "left-sidebar",
         shortcut: "[",
         onClick: () => {
-          handleClose();
+          handleNestedMenuClose();
           setLeftSidebarOpen(!leftSidebarOpen);
         },
       },
@@ -130,14 +142,20 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
         key: "right-sidebar",
         shortcut: "]",
         onClick: () => {
-          handleClose();
+          handleNestedMenuClose();
           setRightSidebarOpen(!rightSidebarOpen);
         },
       },
       { type: "divider" },
       { type: "item", label: "Add panel", key: "add-panel" },
     ],
-    [handleClose, leftSidebarOpen, rightSidebarOpen, setLeftSidebarOpen, setRightSidebarOpen],
+    [
+      handleNestedMenuClose,
+      leftSidebarOpen,
+      rightSidebarOpen,
+      setLeftSidebarOpen,
+      setRightSidebarOpen,
+    ],
   );
 
   // HELP
@@ -147,18 +165,18 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
       user: currentUserType,
       cta: "docs",
     });
-    handleClose();
+    handleNestedMenuClose();
     window.open("https://foxglove.dev/docs", "_blank");
-  }, [analytics, currentUserType, handleClose]);
+  }, [analytics, currentUserType, handleNestedMenuClose]);
 
   const onSlackClick = useCallback(() => {
     void analytics.logEvent(AppEvent.APP_MENU_CLICK, {
       user: currentUserType,
       cta: "join-slack",
     });
-    handleClose();
+    handleNestedMenuClose();
     window.open("https://foxglove.dev/slack", "_blank");
-  }, [analytics, currentUserType, handleClose]);
+  }, [analytics, currentUserType, handleNestedMenuClose]);
 
   const handleItemPointerEnter = useCallback((id: string) => {
     setOpenItemId(id);
