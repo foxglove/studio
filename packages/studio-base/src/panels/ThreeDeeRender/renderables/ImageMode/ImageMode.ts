@@ -366,7 +366,6 @@ export class ImageMode extends SceneExtension<ImageRenderable> implements ICamer
 
     const renderable = this.#getImageRenderable(topic, receiveTime, image, frameId);
 
-    // const cameraInfo = this.#getCurrentCameraInfo();
     if (this.cameraModel) {
       renderable.userData.cameraInfo = this.cameraModel.info;
       renderable.setCameraModel(this.cameraModel.model);
