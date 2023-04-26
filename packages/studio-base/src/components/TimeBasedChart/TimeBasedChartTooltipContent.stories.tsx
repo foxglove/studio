@@ -154,7 +154,7 @@ export const MultipleItemsMultipleDataset: StoryObj = {
             multiDataset={true}
             content={data}
             colorsByDatasetIndex={{ "0": "chartreuse", "1": "yellow" }}
-            labelsByDatasetIndex={{ "1": "-*- Custom Label -*-" }}
+            labelsByDatasetIndex={{ "0": "Series A", "1": "Series B" }}
           />
         }
         placement="top"
