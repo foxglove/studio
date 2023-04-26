@@ -12,6 +12,7 @@ import { ChartData as ChartJsChartData, ChartOptions, ScatterDataPoint } from "c
 import Hammer from "hammerjs";
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { useMountedState } from "react-use";
+import { assert } from "ts-essentials";
 import { v4 as uuidv4 } from "uuid";
 
 import { type ZoomPluginOptions } from "@foxglove/chartjs-plugin-zoom/types/options";
@@ -231,17 +232,9 @@ function Chart(props: Props): JSX.Element {
     async (update: Partial<ChartUpdateMessage>) => {
       // first time initialization
       if (!initialized.current) {
-        if (!containerRef.current) {
-          throw new Error("No container ref");
-        }
-
-        if (canvasRef.current) {
-          throw new Error("Canvas has already been initialized");
-        }
-
-        if (!sendWrapperRef.current) {
-          throw new Error("No RPC");
-        }
+        assert(canvasRef.current == undefined, "Canvas has already been initialized");
+        assert(containerRef.current, "No container ref");
+        assert(sendWrapperRef.current, "No RPC");
 
         const canvas = document.createElement("canvas");
         canvas.style.width = "100%";
@@ -284,9 +277,7 @@ function Chart(props: Props): JSX.Element {
         return;
       }
 
-      if (!rpcSendRef.current) {
-        throw new Error("No RPC");
-      }
+      assert(rpcSendRef.current, "No RPC");
 
       onStartRender?.();
       const scales = await rpcSendRef.current<RpcScales>("update", update);
