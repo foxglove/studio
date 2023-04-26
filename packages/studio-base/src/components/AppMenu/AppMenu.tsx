@@ -67,6 +67,9 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
   const analytics = useAnalytics();
 
   const { recentSources, selectRecent } = usePlayerSelection();
+  const { leftSidebarOpen, rightSidebarOpen } = useWorkspaceStore(selectWorkspace, shallow);
+  const { setRightSidebarOpen, setLeftSidebarOpen, dataSourceDialogActions } =
+    useWorkspaceActions();
 
   const fileItems = useMemo(() => {
     const items: NestedMenuItem[] = [
@@ -75,6 +78,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
         label: "Open local file…",
         key: "open-file",
         onClick: () => {
+          dataSourceDialogActions.open("file");
           handleClose();
         },
       },
@@ -83,6 +87,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
         label: "Open connection…",
         key: "open-connection",
         onClick: () => {
+          dataSourceDialogActions.open("connection");
           handleClose();
         },
       },
@@ -106,9 +111,6 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
   }, [classes.truncate, handleClose, recentSources, selectRecent]);
 
   // VIEW
-
-  const { leftSidebarOpen, rightSidebarOpen } = useWorkspaceStore(selectWorkspace, shallow);
-  const { setRightSidebarOpen, setLeftSidebarOpen } = useWorkspaceActions();
 
   const viewItems = useMemo<NestedMenuItem[]>(
     () => [
