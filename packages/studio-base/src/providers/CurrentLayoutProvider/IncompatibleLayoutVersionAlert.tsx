@@ -11,6 +11,7 @@ import {
   DialogTitle,
   Link,
 } from "@mui/material";
+import { useTranslation } from "react-i18next";
 
 type Props = {
   onClose: () => void;
@@ -18,15 +19,16 @@ type Props = {
 
 export function IncompatibleLayoutVersionAlert(props: Props): JSX.Element {
   const { onClose } = props;
+  const { t } = useTranslation("incompatibleLayoutVersion");
 
   return (
     <Dialog open onClose={onClose}>
-      <DialogTitle>Incompatible layout version</DialogTitle>
+      <DialogTitle>{t("title")}</DialogTitle>
       <DialogContent>
         <DialogContentText>
-          This layout was created with a newer version of Foxglove Studio. Please update to the{" "}
+          {t("text")}
           <Link target="_blank" href="https://foxglove.dev/download">
-            latest version
+            https://foxglove.dev/download
           </Link>
           .
         </DialogContentText>

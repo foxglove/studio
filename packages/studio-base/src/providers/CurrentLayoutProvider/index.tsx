@@ -50,7 +50,7 @@ const log = Logger.getLogger(__filename);
 
 const SAVE_INTERVAL_MS = 1000;
 
-const MAX_SUPPORTED_LAYOUT_VERSION = 1;
+export const MAX_SUPPORTED_LAYOUT_VERSION = 1;
 
 /**
  * Concrete implementation of CurrentLayoutContext.Provider which handles automatically saving and

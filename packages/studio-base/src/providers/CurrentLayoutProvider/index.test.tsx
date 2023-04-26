@@ -20,7 +20,9 @@ import {
   UserProfileStorage,
   UserProfileStorageContext,
 } from "@foxglove/studio-base/context/UserProfileStorageContext";
-import CurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider";
+import CurrentLayoutProvider, {
+  MAX_SUPPORTED_LAYOUT_VERSION,
+} from "@foxglove/studio-base/providers/CurrentLayoutProvider";
 import { ILayoutManager } from "@foxglove/studio-base/services/ILayoutManager";
 import { LayoutID } from "@foxglove/studio-base/services/ILayoutStorage";
 
@@ -160,7 +162,7 @@ describe("CurrentLayoutProvider", () => {
       layout: "Foo!bar",
       playbackConfig: { speed: 0.1 },
       userNodes: { node1: { name: "node", sourceCode: "node()" } },
-      version: 2,
+      version: MAX_SUPPORTED_LAYOUT_VERSION + 1,
     };
 
     const condvar = new Condvar();
