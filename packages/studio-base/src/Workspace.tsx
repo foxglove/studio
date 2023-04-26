@@ -552,10 +552,23 @@ function WorkspaceContent(props: WorkspaceContentProps): JSX.Element {
     const items = new Map<LeftSidebarItemKey, NewSidebarItem>([
       ["panel-settings", { title: "Panel", component: PanelSettingsSidebar }],
       ["topics", { title: "Topics", component: TopicList }],
-      ["problems", { title: "Problems", component: ProblemsList }],
+      [
+        "problems",
+        {
+          title: "Problems",
+          component: ProblemsList,
+          badge:
+            playerProblems && playerProblems.length > 0
+              ? {
+                  count: playerProblems.length,
+                  color: "error",
+                }
+              : undefined,
+        },
+      ],
     ]);
     return items;
-  }, [PanelSettingsSidebar]);
+  }, [PanelSettingsSidebar, playerProblems]);
 
   const rightSidebarItems = useMemo(() => {
     const items = new Map<RightSidebarItemKey, NewSidebarItem>([
