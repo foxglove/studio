@@ -21,8 +21,7 @@ import {
   useMessagePipeline,
 } from "@foxglove/studio-base/components/MessagePipeline";
 import Stack from "@foxglove/studio-base/components/Stack";
-import { NotificationSeverity } from "@foxglove/studio-base/util/sendNotification";
-import { DetailsType } from "@foxglove/studio-base/util/sendNotification";
+import { DetailsType, NotificationSeverity } from "@foxglove/studio-base/util/sendNotification";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 const useStyles = makeStyles()((theme) => ({
