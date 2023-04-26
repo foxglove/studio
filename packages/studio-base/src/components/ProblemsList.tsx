@@ -106,11 +106,11 @@ function ProblemIcon({ severity }: { severity: NotificationSeverity }): JSX.Elem
   }
 }
 
-function ProblemDetails(props: { details: DetailsType }): JSX.Element {
-  const { details } = props;
+function ProblemDetails(props: { details: DetailsType; tip?: string }): JSX.Element {
+  const { details, tip } = props;
   const { classes } = useStyles();
 
-  const detailsElement = useMemo(() => {
+  const content = useMemo(() => {
     if (details instanceof Error) {
       return <div className={classes.detailsText}>{details.stack}</div>;
     } else if (details != undefined && details !== "") {
@@ -119,12 +119,19 @@ function ProblemDetails(props: { details: DetailsType }): JSX.Element {
           {details}
         </Typography>
       );
+    } else if (tip != undefined && tip !== "") {
+      return undefined;
     }
 
     return "No details provided";
-  }, [classes, details]);
+  }, [classes, details, tip]);
 
-  return <AccordionDetails className={classes.accordionDetails}>{detailsElement}</AccordionDetails>;
+  return (
+    <AccordionDetails className={classes.accordionDetails}>
+      {tip && <div>{tip}</div>}
+      {content}
+    </AccordionDetails>
+  );
 }
 
 export function ProblemsList(): JSX.Element {
@@ -157,11 +164,10 @@ export function ProblemsList(): JSX.Element {
               <ProblemIcon severity={problem.severity} />
               <Typography variant="inherit" noWrap>
                 {problem.message}
-                {problem.tip && <>: {problem.tip}</>}
               </Typography>
             </AccordionSummary>
             <Divider />
-            <ProblemDetails details={problem.error} />
+            <ProblemDetails details={problem.error} tip={problem.tip} />
           </Accordion>
           <Divider />
         </>
