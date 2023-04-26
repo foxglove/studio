@@ -11,7 +11,7 @@
 import { ChartData as ChartJsChartData, ChartOptions, ScatterDataPoint } from "chart.js";
 import Hammer from "hammerjs";
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
-import { useAsync, useMountedState } from "react-use";
+import { useMountedState } from "react-use";
 import { v4 as uuidv4 } from "uuid";
 
 import { type ZoomPluginOptions } from "@foxglove/chartjs-plugin-zoom/types/options";
@@ -223,100 +223,108 @@ function Chart(props: Props): JSX.Element {
       return;
     }
 
-    console.log(data.datasets[0]?.data.length);
     return out;
   }, [data, height, options, isBoundsReset, width]);
 
-  const counter = useRef(0);
+  // Update the chart with a new set of data
+  const updateChart = useCallback(
+    async (update: Partial<ChartUpdateMessage>) => {
+      // first time initialization
+      if (!initialized.current) {
+        if (!containerRef.current) {
+          throw new Error("No container ref");
+        }
 
-  const running = useRef(false);
+        if (canvasRef.current) {
+          throw new Error("Canvas has already been initialized");
+        }
 
-  const { error: updateError } = useAsync(async () => {
-    if (!sendWrapperRef.current) {
-      return;
-    }
+        if (!sendWrapperRef.current) {
+          throw new Error("No RPC");
+        }
 
-    // first time initialization
-    if (!initialized.current) {
-      if (!containerRef.current) {
+        const canvas = document.createElement("canvas");
+        canvas.style.width = "100%";
+        canvas.style.height = "100%";
+        canvas.width = update.width ?? 0;
+        canvas.height = update.height ?? 0;
+        containerRef.current.appendChild(canvas);
+
+        canvasRef.current = canvas;
+        initialized.current = true;
+
+        onStartRender?.();
+        const offscreenCanvas =
+          typeof canvas.transferControlToOffscreen === "function"
+            ? canvas.transferControlToOffscreen()
+            : canvas;
+        const scales = await sendWrapperRef.current<RpcScales>(
+          "initialize",
+          {
+            node: offscreenCanvas,
+            type,
+            data: update.data,
+            options: update.options,
+            devicePixelRatio,
+            width: update.width,
+            height: update.height,
+          },
+          [
+            // If this is actually a HTMLCanvasElement then it will not be transferred because we
+            // don't use a worker
+            offscreenCanvas as OffscreenCanvas,
+          ],
+        );
+
+        // once we are initialized, we can allow other handlers to send to the rpc endpoint
+        rpcSendRef.current = sendWrapperRef.current;
+
+        maybeUpdateScales(scales);
+        onFinishRender?.();
         return;
       }
 
-      const newUpdateMessage = getNewUpdateMessage();
-      if (!newUpdateMessage) {
-        return;
+      if (!rpcSendRef.current) {
+        throw new Error("No RPC");
       }
-
-      if (canvasRef.current) {
-        throw new Error("Canvas has already been initialized");
-      }
-      const canvas = document.createElement("canvas");
-      canvas.style.width = "100%";
-      canvas.style.height = "100%";
-      canvas.width = newUpdateMessage.width ?? 0;
-      canvas.height = newUpdateMessage.height ?? 0;
-      containerRef.current.appendChild(canvas);
-
-      canvasRef.current = canvas;
-      initialized.current = true;
 
       onStartRender?.();
-      const offscreenCanvas =
-        typeof canvas.transferControlToOffscreen === "function"
-          ? canvas.transferControlToOffscreen()
-          : canvas;
-      const scales = await sendWrapperRef.current<RpcScales>(
-        "initialize",
-        {
-          node: offscreenCanvas,
-          type,
-          data: newUpdateMessage.data,
-          options: newUpdateMessage.options,
-          devicePixelRatio,
-          width: newUpdateMessage.width,
-          height: newUpdateMessage.height,
-        },
-        [
-          // If this is actually a HTMLCanvasElement then it will not be transferred because we
-          // don't use a worker
-          offscreenCanvas as OffscreenCanvas,
-        ],
-      );
-
-      // once we are initialized, we can allow other handlers to send to the rpc endpoint
-      rpcSendRef.current = sendWrapperRef.current;
-
+      const scales = await rpcSendRef.current<RpcScales>("update", update);
       maybeUpdateScales(scales);
       onFinishRender?.();
+    },
+    [maybeUpdateScales, onFinishRender, onStartRender, type],
+  );
+
+  // Prevent updating the chart if we are already updating the chart to avoid backing up stale updates
+  const running = useRef(false);
+  const [updateError, setUpdateError] = useState<Error | undefined>();
+  useLayoutEffect(() => {
+    if (!containerRef.current) {
       return;
     }
 
-    if (!rpcSendRef.current) {
-      return;
-    }
-
+    // Do we want to queue up this change or do we assume another update will trigger it
     if (running.current) {
-      console.log("already running");
       return;
     }
 
-    const newUpdateMessage = getNewUpdateMessage();
-    if (!newUpdateMessage) {
+    setUpdateError(undefined);
+
+    const newUpdate = getNewUpdateMessage();
+    if (!newUpdate) {
       return;
     }
 
     running.current = true;
-
-    const count = counter.current++;
-    console.log("do render", count);
-    onStartRender?.();
-    const scales = await rpcSendRef.current<RpcScales>("update", newUpdateMessage);
-    maybeUpdateScales(scales);
-    onFinishRender?.();
-    console.log("end render", count);
-
-    running.current = false;
-  }, [getNewUpdateMessage, maybeUpdateScales, onFinishRender, onStartRender, type]);
+    updateChart(newUpdate)
+      .catch((err: Error) => {
+        setUpdateError(err);
+      })
+      .finally(() => {
+        running.current = false;
+      });
+  }, [getNewUpdateMessage, updateChart]);
 
   useLayoutEffect(() => {
     const container = containerRef.current;
