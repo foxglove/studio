@@ -76,6 +76,8 @@ export class ImageRenderable extends Renderable<ImageUserData> {
   // set when material or texture changes
   #materialNeedsUpdate = true;
 
+  #renderBehindScene: boolean = false;
+
   public override dispose(): void {
     this.userData.texture?.dispose();
     this.userData.material?.dispose();
@@ -100,6 +102,16 @@ export class ImageRenderable extends Renderable<ImageUserData> {
 
   public override details(): Record<string, RosValue> {
     return { image: this.userData.image, camera_info: this.userData.cameraInfo };
+  }
+
+  public renderBehindScene(): void {
+    this.#renderBehindScene = true;
+    this.#materialNeedsUpdate = true;
+  }
+
+  public renderInScene(): void {
+    this.#renderBehindScene = false;
+    this.#materialNeedsUpdate = true;
   }
 
   // Renderable should only need to care about the model
@@ -243,6 +255,14 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     material.opacity = tempColor.a;
     material.transparent = transparent;
     material.depthWrite = !transparent;
+
+    if (this.#renderBehindScene) {
+      material.depthTest = false;
+      this.renderOrder = -1 * Number.MAX_SAFE_INTEGER;
+    } else {
+      material.depthTest = true;
+      this.renderOrder = 0;
+    }
 
     material.needsUpdate = true;
   }

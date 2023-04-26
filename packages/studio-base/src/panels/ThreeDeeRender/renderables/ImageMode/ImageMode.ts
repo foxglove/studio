@@ -407,7 +407,8 @@ export class ImageMode extends SceneExtension<ImageRenderable> implements ICamer
 
     this.add(renderable);
     this.#imageRenderable = renderable;
-    this.#imageRenderable.visible = true;
+    renderable.renderBehindScene();
+    renderable.visible = true;
     return renderable;
   }
 
