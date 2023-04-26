@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Divider, Menu, MenuItem, PopoverPosition, PopoverReference } from "@mui/material";
+import { Menu, PopoverPosition, PopoverReference } from "@mui/material";
 import { useCallback, useMemo, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 import { shallow } from "zustand/shallow";
@@ -28,32 +28,15 @@ type AppMenuProps = {
   open: boolean;
 };
 
-const useStyles = makeStyles<void, "icon">()((theme, _params, classes) => ({
-  menuItem: {
-    justifyContent: "space-between",
-    cursor: "pointer",
-    gap: theme.spacing(2),
-
-    "&.Mui-selected, &.Mui-selected:hover": {
-      backgroundColor: theme.palette.action.hover,
-    },
-    [`:not(:hover, :focus) .${classes.icon}`]: {
-      opacity: 0.6,
-    },
-    kbd: {
-      font: "inherit",
-      color: theme.palette.text.disabled,
-    },
-  },
+const useStyles = makeStyles()({
   menuList: {
     minWidth: 180,
     maxWidth: 220,
   },
-  icon: {},
   truncate: {
     alignSelf: "center !important",
   },
-}));
+});
 
 const selectWorkspace = (store: WorkspaceContextStore) => store;
 
@@ -61,20 +44,36 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
   const { open, handleClose, anchorEl, anchorReference, anchorPosition, disablePortal } = props;
   const { classes } = useStyles();
 
-  const [openItemId, setOpenItemId] = useState<string | undefined>();
+  const [nestedMenu, setNestedMenu] = useState<string | undefined>();
 
   const currentUserType = useCurrentUserType();
   const analytics = useAnalytics();
 
   const { recentSources, selectRecent } = usePlayerSelection();
   const { leftSidebarOpen, rightSidebarOpen } = useWorkspaceStore(selectWorkspace, shallow);
-  const { setRightSidebarOpen, setLeftSidebarOpen, dataSourceDialogActions } =
+  const { setRightSidebarOpen, setLeftSidebarOpen, dataSourceDialogActions, prefsDialogActions } =
     useWorkspaceActions();
 
   const handleNestedMenuClose = useCallback(() => {
-    setOpenItemId(undefined);
+    setNestedMenu(undefined);
     handleClose();
   }, [handleClose]);
+
+  const handleItemPointerEnter = useCallback((id: string) => {
+    setNestedMenu(id);
+  }, []);
+
+  const handleAnalytics = useCallback(
+    (cta: string) => {
+      void analytics.logEvent(AppEvent.APP_MENU_CLICK, {
+        user: currentUserType,
+        cta,
+      });
+    },
+    [analytics, currentUserType],
+  );
+
+  // FILE
 
   const fileItems = useMemo(() => {
     const items: NestedMenuItem[] = [
@@ -84,6 +83,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
         key: "open-file",
         onClick: () => {
           dataSourceDialogActions.open("file");
+          handleAnalytics("open-file");
           handleNestedMenuClose();
         },
       },
@@ -93,7 +93,8 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
         key: "open-connection",
         onClick: () => {
           dataSourceDialogActions.open("connection");
-          handleClose();
+          handleAnalytics("open-connection");
+          handleNestedMenuClose();
         },
       },
       { type: "divider" },
@@ -105,8 +106,9 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
         type: "item",
         key: recent.id,
         onClick: () => {
-          handleClose();
+          handleAnalytics("open-recent");
           selectRecent(recent.id);
+          handleNestedMenuClose();
         },
         label: <TextMiddleTruncate text={recent.title} className={classes.truncate} />,
       });
@@ -116,7 +118,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
   }, [
     classes.truncate,
     dataSourceDialogActions,
-    handleClose,
+    handleAnalytics,
     handleNestedMenuClose,
     recentSources,
     selectRecent,
@@ -132,8 +134,8 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
         key: "left-sidebar",
         shortcut: "[",
         onClick: () => {
-          handleNestedMenuClose();
           setLeftSidebarOpen(!leftSidebarOpen);
+          handleNestedMenuClose();
         },
       },
       {
@@ -142,12 +144,10 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
         key: "right-sidebar",
         shortcut: "]",
         onClick: () => {
-          handleNestedMenuClose();
           setRightSidebarOpen(!rightSidebarOpen);
+          handleNestedMenuClose();
         },
       },
-      { type: "divider" },
-      { type: "item", label: "Add panel", key: "add-panel" },
     ],
     [
       handleNestedMenuClose,
@@ -160,40 +160,32 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
 
   // HELP
 
-  const onDocsClick = useCallback(() => {
-    void analytics.logEvent(AppEvent.APP_MENU_CLICK, {
-      user: currentUserType,
-      cta: "docs",
-    });
+  const onAboutClick = useCallback(() => {
+    prefsDialogActions.open("about");
+    handleAnalytics("about");
     handleNestedMenuClose();
+  }, [handleAnalytics, handleNestedMenuClose, prefsDialogActions]);
+
+  const onDocsClick = useCallback(() => {
+    handleAnalytics("docs");
     window.open("https://foxglove.dev/docs", "_blank");
-  }, [analytics, currentUserType, handleNestedMenuClose]);
+    handleNestedMenuClose();
+  }, [handleAnalytics, handleNestedMenuClose]);
 
   const onSlackClick = useCallback(() => {
-    void analytics.logEvent(AppEvent.APP_MENU_CLICK, {
-      user: currentUserType,
-      cta: "join-slack",
-    });
-    handleNestedMenuClose();
+    handleAnalytics("join-slack");
     window.open("https://foxglove.dev/slack", "_blank");
-  }, [analytics, currentUserType, handleNestedMenuClose]);
-
-  const handleItemPointerEnter = useCallback((id: string) => {
-    setOpenItemId(id);
-  }, []);
+    handleNestedMenuClose();
+  }, [handleAnalytics, handleNestedMenuClose]);
 
   const helpItems = useMemo<NestedMenuItem[]>(
     () => [
-      {
-        type: "item",
-        key: "appversion",
-        label: "App version",
-      },
+      { type: "item", key: "about", label: "About", onClick: onAboutClick },
       { type: "divider" },
       { type: "item", label: "Documentation", key: "docs", onClick: onDocsClick, external: true },
       { type: "item", label: "Join Slack", key: "slack", onClick: onSlackClick, external: true },
     ],
-    [onDocsClick, onSlackClick],
+    [onAboutClick, onDocsClick, onSlackClick],
   );
 
   return (
@@ -209,14 +201,10 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
         onClose={handleClose}
         MenuListProps={{ dense: true, className: classes.menuList }}
       >
-        <MenuItem className={classes.menuItem} onPointerEnter={() => setOpenItemId(undefined)}>
-          Back to Data Platform
-        </MenuItem>
-        <Divider variant="middle" />
         <NestedMenuItem
           onPointerEnter={handleItemPointerEnter}
           items={fileItems}
-          open={openItemId === "app-menu-file"}
+          open={nestedMenu === "app-menu-file"}
           id="app-menu-file"
         >
           File
@@ -224,7 +212,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
         <NestedMenuItem
           onPointerEnter={handleItemPointerEnter}
           items={viewItems}
-          open={openItemId === "app-menu-view"}
+          open={nestedMenu === "app-menu-view"}
           id="app-menu-view"
         >
           View
@@ -232,7 +220,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
         <NestedMenuItem
           onPointerEnter={handleItemPointerEnter}
           items={helpItems}
-          open={openItemId === "app-menu-help"}
+          open={nestedMenu === "app-menu-help"}
           id="app-menu-help"
         >
           Help
