@@ -131,7 +131,6 @@ export default function TimeBasedChart(props: Props): JSX.Element {
     height,
     data,
     isSynced = false,
-    tooltips,
     yAxes,
     xAxes,
     defaultView,
@@ -290,47 +289,58 @@ export default function TimeBasedChart(props: Props): JSX.Element {
     y: number;
     data: TimeBasedChartTooltipData[];
   }>();
-  const updateTooltip = useCallback(
-    (elements: RpcElement[]) => {
-      if (elements.length === 0 || mouseYRef.current == undefined) {
-        return setActiveTooltip(undefined);
+
+  const datasetRef = useRef<typeof datasets | undefined>(undefined);
+  datasetRef.current = datasets;
+  const updateTooltip = useCallback((elements: RpcElement[]) => {
+    if (elements.length === 0 || mouseYRef.current == undefined) {
+      return setActiveTooltip(undefined);
+    }
+
+    const tooltipItems: { item: TimeBasedChartTooltipData; element: RpcElement }[] = [];
+
+    for (const element of elements) {
+      if (!element.data) {
+        continue;
       }
 
-      const tooltipItems: { item: TimeBasedChartTooltipData; element: RpcElement }[] = [];
-
-      for (const element of elements) {
-        if (!element.data) {
-          continue;
-        }
-        const key = `${element.data.x}:${element.data.y}:${element.datasetIndex}`;
-        const foundTooltip = tooltips?.get(key);
-        if (!foundTooltip) {
-          continue;
-        }
-
-        tooltipItems.push({
-          item: { ...foundTooltip, datasetIndex: element.datasetIndex },
-          element,
-        });
+      // element has data (x,y) and datasetIndex
+      // foundTooltip also has _value_ - do I need this?
+      // yes - the value is the original value (for state transition panel)
+      // foundTooltip also has constantName (for state transition panel)
+      const datum = datasetRef.current?.[element.datasetIndex]?.data[element.index];
+      if (!datum) {
+        continue;
       }
 
-      if (tooltipItems.length === 0) {
-        return setActiveTooltip(undefined);
-      }
+      tooltipItems.push({
+        item: {
+          datasetIndex: element.datasetIndex,
+          // fixme - so this needs to be the original value to support state transition panels
+          value: datum.value,
+          constantName: datum.constantName,
+          x: element.data.x,
+          y: element.data.y,
+        },
+        element,
+      });
+    }
 
-      const element = tooltipItems[0]!.element;
+    if (tooltipItems.length === 0) {
+      return setActiveTooltip(undefined);
+    }
 
-      const canvasRect = canvasContainer.current?.getBoundingClientRect();
-      if (canvasRect) {
-        setActiveTooltip({
-          x: canvasRect.left + element.view.x,
-          y: canvasRect.top + mouseYRef.current,
-          data: tooltipItems.map((item) => item.item),
-        });
-      }
-    },
-    [tooltips],
-  );
+    const element = tooltipItems[0]!.element;
+
+    const canvasRect = canvasContainer.current?.getBoundingClientRect();
+    if (canvasRect) {
+      setActiveTooltip({
+        x: canvasRect.left + element.view.x,
+        y: canvasRect.top + mouseYRef.current,
+        data: tooltipItems.map((item) => item.item),
+      });
+    }
+  }, []);
 
   const setHoverValue = useSetHoverValue();
   const clearHoverValue = useClearHoverValue();

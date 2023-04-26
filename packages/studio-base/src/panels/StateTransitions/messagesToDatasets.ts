@@ -8,7 +8,6 @@ import stringHash from "string-hash";
 import { Time, toSec, subtract as subtractTimes } from "@foxglove/rostime";
 import { ChartData } from "@foxglove/studio-base/components/Chart";
 import { MessageAndData } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
-import { TimeBasedChartTooltipData } from "@foxglove/studio-base/components/TimeBasedChart";
 import { darkColor, expandedLineColors } from "@foxglove/studio-base/util/plotColors";
 import { getTimestampForMessageEvent } from "@foxglove/studio-base/util/time";
 import { grey } from "@foxglove/studio-base/util/toolsColorScheme";
@@ -16,10 +15,7 @@ import { grey } from "@foxglove/studio-base/util/toolsColorScheme";
 import positiveModulo from "./positiveModulo";
 import { StateTransitionPath } from "./types";
 
-type DatasetInfo = {
-  datasets: ChartData["datasets"];
-  tooltips: TimeBasedChartTooltipData[];
-};
+type DatasetInfo = ChartData["datasets"];
 
 type Dataset = ChartData["datasets"][number];
 type DatasetData = ChartData["datasets"][number]["data"];
@@ -37,10 +33,7 @@ type Args = {
 export default function messagesToDatasets(args: Args): DatasetInfo {
   const { path, pathIndex, startTime, y, blocks } = args;
 
-  const info: DatasetInfo = {
-    datasets: [],
-    tooltips: [],
-  };
+  const datasets = [];
 
   let previousTimestamp: Time | undefined;
   let currentData: DatasetData = [];
@@ -102,6 +95,7 @@ export default function messagesToDatasets(args: Args): DatasetInfo {
 
       const x = toSec(subtractTimes(timestamp, startTime));
 
+      /* fixme
       const tooltip: TimeBasedChartTooltipData = {
         datasetIndex,
         x,
@@ -109,7 +103,7 @@ export default function messagesToDatasets(args: Args): DatasetInfo {
         value,
         constantName,
       };
-      info.tooltips.unshift(tooltip);
+      */
 
       // If the value maps to a different dataset than the last value, close the previous segment
       // and insert a gap.
@@ -121,12 +115,14 @@ export default function messagesToDatasets(args: Args): DatasetInfo {
       const label =
         constantName != undefined ? `${constantName} (${String(value)})` : String(value);
       if (datasetIndex == undefined) {
-        datasetIndexMap.set(value, info.datasets.length);
+        datasetIndexMap.set(value, datasets.length);
         const elementWithLabel = {
           x,
           y,
           label,
           labelColor: color,
+          value,
+          constantName,
         };
 
         // new data starts with our current point, the current point
@@ -147,19 +143,26 @@ export default function messagesToDatasets(args: Args): DatasetInfo {
           },
         };
 
-        lastDatasetIndex = info.datasets.length;
-        info.datasets.push(dataset);
+        lastDatasetIndex = datasets.length;
+        datasets.push(dataset);
       } else {
-        currentData = info.datasets[datasetIndex]?.data ?? [];
+        currentData = datasets[datasetIndex]?.data ?? [];
         if (newSegment) {
-          currentData.push({ x, y, label, labelColor: color } as ScatterDataPoint);
+          currentData.push({
+            x,
+            y,
+            label,
+            labelColor: color,
+            value,
+            constantName,
+          } as ScatterDataPoint);
         } else {
-          currentData.push({ x, y });
+          currentData.push({ x, y, value, constantName });
         }
         lastDatasetIndex = datasetIndex;
       }
     }
   }
 
-  return info;
+  return datasets;
 }
