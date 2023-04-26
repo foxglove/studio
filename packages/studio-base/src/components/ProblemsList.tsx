@@ -30,9 +30,6 @@ const useStyles = makeStyles()((theme) => ({
     background: "none",
     boxShadow: "none",
 
-    "&:hover": {
-      backgroundColor: theme.palette.action.hover,
-    },
     "&:not(:last-child)": {
       borderBottom: 0,
     },
@@ -55,13 +52,19 @@ const useStyles = makeStyles()((theme) => ({
     height: 30,
     minHeight: "auto",
     padding: theme.spacing(0, 0.5, 0, 0.75),
-    fontWeight: theme.typography.subtitle1.fontWeight,
+    fontWeight: 500,
 
+    "&:hover": {
+      backgroundColor: theme.palette.action.hover,
+    },
     "&.Mui-expanded": {
       minHeight: "auto",
     },
     [`& .${accordionSummaryClasses.content}`]: {
-      margin: 0,
+      gap: theme.spacing(0.5),
+      overflow: "hidden",
+      alignItems: "center",
+      margin: "0 !important",
     },
     [`& .${accordionSummaryClasses.expandIconWrapper}`]: {
       transform: "rotate(-90deg)",
@@ -75,7 +78,14 @@ const useStyles = makeStyles()((theme) => ({
     fontSize: theme.typography.caption.fontSize,
     lineHeight: 1.5,
     whiteSpace: "pre-wrap",
+    maxHeight: "30vh",
+    overflow: "auto",
     flex: 1,
+    backgroundColor: theme.palette.action.hover,
+    padding: theme.spacing(1),
+  },
+  icon: {
+    flex: "none",
   },
 }));
 
@@ -83,21 +93,22 @@ const selectPlayerProblems = ({ playerState }: MessagePipelineContext) => player
 
 function ProblemIcon({ severity }: { severity: NotificationSeverity }): JSX.Element {
   const { palette } = useTheme();
+  const { classes } = useStyles();
 
   switch (severity) {
     case "warn":
-      return <Warning16Regular primaryFill={palette.warning.main} />;
+      return <Warning16Regular className={classes.icon} primaryFill={palette.warning.main} />;
     case "error":
-      return <ErrorCircle16Regular primaryFill={palette.error.main} />;
+      return <ErrorCircle16Regular className={classes.icon} primaryFill={palette.error.main} />;
     case "info":
-      return <Info16Regular primaryFill={palette.info.main} />;
+      return <Info16Regular className={classes.icon} primaryFill={palette.info.main} />;
     default:
       return <></>;
   }
 }
 
-function ProblemDetails(props: { details: DetailsType; subText?: string }): JSX.Element {
-  const { details, subText } = props;
+function ProblemDetails(props: { details: DetailsType }): JSX.Element {
+  const { details } = props;
   const { classes } = useStyles();
 
   const detailsElement = useMemo(() => {
@@ -109,19 +120,12 @@ function ProblemDetails(props: { details: DetailsType; subText?: string }): JSX.
           {details}
         </Typography>
       );
-    } else if (subText) {
-      return undefined;
     }
 
     return "No details provided";
-  }, [classes, details, subText]);
+  }, [classes, details]);
 
-  return (
-    <AccordionDetails className={classes.accordionDetails}>
-      {subText && <Typography variant="body2">{subText}</Typography>}
-      {detailsElement}
-    </AccordionDetails>
-  );
+  return <AccordionDetails className={classes.accordionDetails}>{detailsElement}</AccordionDetails>;
 }
 
 export function ProblemsList(): JSX.Element {
@@ -151,13 +155,14 @@ export function ProblemsList(): JSX.Element {
               className={classes.acccordionSummary}
               expandIcon={<ArrowDropDownIcon />}
             >
-              <Stack direction="row" alignItems="center" gap={0.5}>
-                <ProblemIcon severity={problem.severity} />
+              <ProblemIcon severity={problem.severity} />
+              <Typography variant="inherit" noWrap>
                 {problem.message}
-              </Stack>
+                {problem.tip && <>: {problem.tip}</>}
+              </Typography>
             </AccordionSummary>
             <Divider />
-            <ProblemDetails subText={problem.tip} details={problem.error} />
+            <ProblemDetails details={problem.error} />
           </Accordion>
           <Divider />
         </>
