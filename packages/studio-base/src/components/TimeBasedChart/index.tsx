@@ -302,12 +302,8 @@ export default function TimeBasedChart(props: Props): JSX.Element {
         continue;
       }
 
-      // element has data (x,y) and datasetIndex
-      // foundTooltip also has _value_ - do I need this?
-      // yes - the value is the original value (for state transition panel)
-      // foundTooltip also has constantName (for state transition panel)
-      const datum = datasetRef.current?.[element.datasetIndex]?.data[element.index];
-      if (!datum) {
+      const datum = element.data;
+      if (datum.value == undefined) {
         continue;
       }
 

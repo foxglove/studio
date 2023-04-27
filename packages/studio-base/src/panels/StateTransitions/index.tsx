@@ -37,12 +37,10 @@ import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import Stack from "@foxglove/studio-base/components/Stack";
 import TimeBasedChart from "@foxglove/studio-base/components/TimeBasedChart";
+import { ChartData, ChartDatasets } from "@foxglove/studio-base/components/TimeBasedChart/types";
 import { useSelectedPanels } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { useWorkspaceActions } from "@foxglove/studio-base/context/WorkspaceContext";
-import {
-  ChartData,
-  OnClickArg as OnChartClickArgs,
-} from "@foxglove/studio-base/src/components/Chart";
+import { OnClickArg as OnChartClickArgs } from "@foxglove/studio-base/src/components/Chart";
 import { OpenSiblingPanel, PanelConfig, SaveConfig } from "@foxglove/studio-base/types/panels";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
@@ -219,7 +217,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
     }
 
     let outMinY: number | undefined;
-    let outDatasets: ChartData["datasets"] = [];
+    let outDatasets: ChartDatasets = [];
 
     paths.forEach((path, pathIndex) => {
       // y axis values are set based on the path we are rendering

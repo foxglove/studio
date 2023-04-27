@@ -97,8 +97,8 @@ export default function messagesToDatasets(args: Args): ChartDatasets {
       // and insert a gap.
       const newSegment = datasetIndex !== lastDatasetIndex;
       if (newSegment) {
-        currentData.push({ x, y, value: y });
-        currentData.push({ x: NaN, y: NaN, value: NaN });
+        currentData.push({ x, y });
+        currentData.push({ x: NaN, y: NaN });
       }
       const label =
         constantName != undefined ? `${constantName} (${String(value)})` : String(value);
