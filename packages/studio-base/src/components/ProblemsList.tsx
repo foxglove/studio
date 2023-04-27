@@ -150,12 +150,13 @@ export function ProblemsList(): JSX.Element {
 
   return (
     <Stack fullHeight flex="auto" overflow="auto">
-      {playerProblems.map((problem, idx) => (
+      {playerProblems.map((problem) => (
         <>
           <Accordion
             className={classes.acccordion}
-            key={`${idx}.${problem.message}`}
+            key={problem.message}
             TransitionProps={{ unmountOnExit: true }}
+            defaultExpanded
           >
             <AccordionSummary
               className={classes.acccordionSummary}
