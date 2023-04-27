@@ -44,15 +44,14 @@ import { windowAppURLState } from "@foxglove/studio-base/util/appURLState";
 import { getPanelTypeFromId } from "@foxglove/studio-base/util/layout";
 
 import { IncompatibleLayoutVersionAlert } from "./IncompatibleLayoutVersionAlert";
-import { useLayoutPersistence } from "./useLayoutPersistence";
 
 const log = Logger.getLogger(__filename);
 
 export const MAX_SUPPORTED_LAYOUT_VERSION = 1;
 
 /**
- * Concrete implementation of CurrentLayoutContext.Provider which handles automatically saving and
- * restoring the current layout from LayoutStorage.
+ * Concrete implementation of CurrentLayoutContext.Provider which handles
+ * automatically restoring the current layout from LayoutStorage.
  */
 export default function CurrentLayoutProvider({
   children,
@@ -112,8 +111,6 @@ export default function CurrentLayoutProvider({
     [],
   );
 
-  const persistLayout = useLayoutPersistence();
-
   const [, setSelectedLayoutId] = useAsyncFn(
     async (
       id: LayoutID | undefined,
@@ -168,8 +165,6 @@ export default function CurrentLayoutProvider({
     [enqueueSnackbar, isMounted, layoutManager, setLayoutState, setUserProfile],
   );
 
-  // When the user performs an action, we immediately setLayoutState to update the UI. Saving back
-  // to the LayoutManager is debounced.
   const performAction = useCallback(
     (action: PanelsActions) => {
       if (
@@ -181,26 +176,24 @@ export default function CurrentLayoutProvider({
       const oldData = layoutStateRef.current.selectedLayout.data;
       const newData = panelsReducer(oldData, action);
 
-      // the panel state did not change, so no need to perform layout state updates or layout manager updates
+      // The panel state did not change, so no need to perform layout state
+      // updates or layout manager updates.
       if (isEqual(oldData, newData)) {
         log.warn("Panel action resulted in identical config:", action);
         return;
       }
 
-      const newLayout = {
-        id: layoutStateRef.current.selectedLayout.id,
-        data: newData,
-        name: layoutStateRef.current.selectedLayout.name,
-      };
-
-      // Some actions like CHANGE_PANEL_LAYOUT will cause further downstream effects to update panel
-      // configs (i.e. set default configs). These result in calls to performAction. To ensure the
-      // debounced params are set in the proper order, we invoke setLayoutState at the end.
-      setLayoutState({ selectedLayout: { ...newLayout, loading: false } });
-
-      persistLayout(newLayout);
+      setLayoutState({
+        selectedLayout: {
+          id: layoutStateRef.current.selectedLayout.id,
+          data: newData,
+          loading: false,
+          name: layoutStateRef.current.selectedLayout.name,
+          edited: true,
+        },
+      });
     },
-    [persistLayout, setLayoutState],
+    [setLayoutState],
   );
 
   // Changes to the layout storage from external user actions (such as resetting a layout to a
