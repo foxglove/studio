@@ -13,25 +13,33 @@ import {
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
 
+import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
+
 type Props = {
+  isDesktop?: boolean;
   onClose: () => void;
 };
 
 export function IncompatibleLayoutVersionAlert(props: Props): JSX.Element {
-  const { onClose } = props;
+  const { isDesktop, onClose } = props;
   const { t } = useTranslation("incompatibleLayoutVersion");
+
+  const showDesktopText = isDesktop ?? isDesktopApp();
 
   return (
     <Dialog open onClose={onClose}>
       <DialogTitle>{t("title")}</DialogTitle>
       <DialogContent>
-        <DialogContentText>
-          {t("text")}
-          <Link target="_blank" href="https://foxglove.dev/download">
-            https://foxglove.dev/download
-          </Link>
-          .
-        </DialogContentText>
+        {showDesktopText && (
+          <DialogContentText>
+            {t("desktopText")}
+            <Link target="_blank" href="https://foxglove.dev/download">
+              https://foxglove.dev/download
+            </Link>
+            .
+          </DialogContentText>
+        )}
+        {!showDesktopText && <DialogContentText>{t("webText")}</DialogContentText>}
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} variant="contained">
