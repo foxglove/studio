@@ -14,7 +14,6 @@ import { PointsAnnotation as NormalizedPointsAnnotation } from "@foxglove/studio
 import { BaseUserData, Renderable } from "../../../Renderable";
 import { SRGBToLinear } from "../../../color";
 
-const tempVec2 = new THREE.Vector2();
 const tempVec3 = new THREE.Vector3();
 
 class PickingMaterial extends LineMaterial {
@@ -42,6 +41,11 @@ class PickingMaterial extends LineMaterial {
 
 /** subset of {@link NormalizedPointsAnnotation.style} */
 type LineStyle = "polygon" | "line_strip" | "line_list";
+
+enum RenderOrder {
+  FILL = 1,
+  LINE = 2,
+}
 
 /**
  * Handles rendering of 2D annotations (line list, line strip, and line loop/polygon).
@@ -92,6 +96,7 @@ export class RenderableLineAnnotation extends Renderable<BaseUserData, /*TRender
       depthWrite: true,
     });
     this.#line = new LineSegments2(this.#geometry, this.#lineMaterial);
+    this.#line.renderOrder = RenderOrder.LINE;
     this.#line.userData.pickingMaterial = this.#linePickingMaterial = new PickingMaterial();
     this.add(this.#line);
   }
@@ -144,6 +149,10 @@ export class RenderableLineAnnotation extends Renderable<BaseUserData, /*TRender
     }
     this.visible = true;
 
+    const isPolygon = style === "polygon";
+    const isLineStrip = style === "line_strip";
+    const isLineList = style === "line_list";
+
     // Update line width if thickness or scale has changed
     if (this.#annotationNeedsUpdate || this.#scaleNeedsUpdate) {
       this.#lineMaterial.resolution.set(this.#canvasWidth, this.#canvasHeight);
@@ -188,10 +197,14 @@ export class RenderableLineAnnotation extends Renderable<BaseUserData, /*TRender
         this.#line.geometry = this.#geometry;
       }
 
-      const isPolygon = style === "polygon";
-      const isLineList = style === "line_list";
       const useVertexColors = isLineList;
       const hasExactColors = outlineColors.length === pointsLength / 2;
+
+      const shapeFillColor =
+        (isPolygon || isLineStrip) && fillColor != undefined && fillColor.a > 0
+          ? fillColor
+          : undefined;
+      const shape = shapeFillColor ? new THREE.Shape() : undefined;
 
       const positions = this.#positionBuffer;
       const colors = this.#colorBuffer;
@@ -217,12 +230,19 @@ export class RenderableLineAnnotation extends Renderable<BaseUserData, /*TRender
               hasTransparency = true;
             }
           }
+          if (i === 0) {
+            shape?.moveTo(tempVec3.x, tempVec3.y);
+          } else {
+            shape?.lineTo(tempVec3.x, tempVec3.y);
+          }
         } else {
           positions[i * 3 + 0] = NaN;
           positions[i * 3 + 1] = NaN;
           positions[i * 3 + 2] = NaN;
         }
       }
+
+      // Add another point to close the polygon
       if (isPolygon) {
         positions[pointsLength * 3 + 0] = positions[0]!;
         positions[pointsLength * 3 + 1] = positions[1]!;
@@ -233,35 +253,24 @@ export class RenderableLineAnnotation extends Renderable<BaseUserData, /*TRender
           colors[pointsLength * 4 + 2] = colors[2]!;
           colors[pointsLength * 4 + 3] = colors[3]!;
         }
+        shape?.closePath();
       }
 
-      const focalLengths = this.#cameraModel.getFocalLengths(tempVec2);
-      if (!isLineList && fillColor && fillColor.a > 0 && focalLengths) {
-        const shape = new THREE.Shape();
-        shape.moveTo(points[0]!.x, points[0]!.y);
-        for (let i = 1; i < pointsLength; i++) {
-          shape.lineTo(points[i]!.x, points[i]!.y);
-        }
-        if (isPolygon) {
-          shape.closePath();
-        }
+      if (shapeFillColor) {
         this.#fillGeometry ??= new THREE.ShapeGeometry(shape);
         this.#fillMaterial ??= new THREE.MeshBasicMaterial({ side: THREE.DoubleSide });
         if (!this.#fill) {
           this.#fill = new THREE.Mesh(this.#fillGeometry, this.#fillMaterial);
+          this.#fill.renderOrder = RenderOrder.FILL;
           this.add(this.#fill);
         }
         // Position the fill on the focal plane so the Shape's coordinates correspond to pixel coordinates
-        this.#fill.position.set(
-          -this.#cameraModel.width / 2,
-          -this.#cameraModel.height / 2,
-          focalLengths.x,
-        );
+        this.#fill.position.set(0, 0, 1);
         this.#fillMaterial.color
-          .setRGB(fillColor.r, fillColor.g, fillColor.b)
+          .setRGB(shapeFillColor.r, shapeFillColor.g, shapeFillColor.b)
           .convertSRGBToLinear();
-        this.#fillMaterial.opacity = fillColor.a;
-        const fillHasTransparency = fillColor.a < 1;
+        this.#fillMaterial.opacity = shapeFillColor.a;
+        const fillHasTransparency = shapeFillColor.a < 1;
         this.#fillMaterial.transparent = fillHasTransparency;
         this.#fillMaterial.depthWrite = !fillHasTransparency;
         this.#fillMaterial.needsUpdate = true;

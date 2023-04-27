@@ -131,23 +131,6 @@ export class PinholeCameraModel {
   }
 
   /**
-   * Get the focal lengths fx and fy, if set. These come from the projection matrix `P` at P(1,1) and P(2,2).
-   * @param out The output vector to receive the focal lengths.
-   * @returns A reference to `out` if focal lengths are known, or `undefined` if the camera projection matrix `P` is
-   * not set.
-   */
-  public getFocalLengths(out: Vector2): Vector2 | undefined {
-    const fx = this.P?.[0];
-    const fy = this.P?.[5];
-    if (fx == undefined || fy == undefined) {
-      return undefined;
-    }
-    out.x = fx;
-    out.y = fy;
-    return out;
-  }
-
-  /**
    * Projects a 2D image pixel to a point on a plane in 3D world coordinates a
    * unit distance along the Z axis. This is equivalent to `projectPixelTo3dRay`
    * before normalizing.
