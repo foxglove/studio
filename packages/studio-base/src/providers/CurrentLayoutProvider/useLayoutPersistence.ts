@@ -70,7 +70,7 @@ export function useLayoutPersistence(): (updatedLayout: UpdateLayoutParams) => v
       }
     }
 
-    await analytics.logEvent(AppEvent.LAYOUT_UPDATE);
+    void analytics.logEvent(AppEvent.LAYOUT_UPDATE);
   }, [analytics, debouncedUnsavedLayouts, isMounted, layoutManager]);
 
   return persistLayout;
