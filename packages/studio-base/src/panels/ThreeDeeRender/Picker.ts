@@ -30,8 +30,10 @@ export type PickedRenderable = {
 
 export type PickerOptions = {
   debug?: boolean;
-  // Disable the setting of the projection matrix in the picking pass.
-  // Use this if you are setting the projection matrix of the camera manually
+  /**
+   * Disable the setting of the projection matrix in the picking pass.
+   * Use this if you are setting the projection matrix of the camera manually elsewhere
+   */
   disableSetViewOffset?: boolean;
 };
 
@@ -159,7 +161,7 @@ export class Picker {
     const pixelRatio = this.gl.getPixelRatio();
 
     if (options.disableSetViewOffset !== true) {
-      const hw = PIXEL_WIDTH / 2;
+      const hw = (PIXEL_WIDTH / 2) | 0;
       const xi = Math.max(0, x * pixelRatio - hw);
       const yi = Math.max(0, y * pixelRatio - hw);
       // Set the projection matrix to only look at the pixels we are interested in
