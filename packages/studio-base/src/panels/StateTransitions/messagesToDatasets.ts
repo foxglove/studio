@@ -41,7 +41,7 @@ export default function messagesToDatasets(args: Args): ChartDatasets {
 
   for (const messages of blocks) {
     if (!messages) {
-      currentData.push({ x: NaN, y: NaN, value: NaN });
+      currentData.push({ x: NaN, y: NaN });
       lastDatasetIndex = undefined;
       previousTimestamp = undefined;
       continue;
