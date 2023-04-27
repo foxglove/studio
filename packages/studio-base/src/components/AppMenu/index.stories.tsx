@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { StoryObj } from "@storybook/react";
+import { StoryFn, StoryObj } from "@storybook/react";
 import { screen, userEvent } from "@storybook/testing-library";
 
 import { AppMenu } from "@foxglove/studio-base/components/AppMenu";
@@ -14,6 +14,15 @@ import WorkspaceContextProvider from "@foxglove/studio-base/providers/WorkspaceC
 export default {
   title: "components/AppMenu",
   component: AppMenu,
+  decorators: [
+    (Story: StoryFn): JSX.Element => (
+      <WorkspaceContextProvider>
+        <PlayerSelectionContext.Provider value={playerSelection}>
+          <Story />
+        </PlayerSelectionContext.Provider>
+      </WorkspaceContextProvider>
+    ),
+  ],
 };
 
 // Connection
@@ -33,19 +42,15 @@ const playerSelection: PlayerSelection = {
 };
 
 export const Default = (): JSX.Element => (
-  <WorkspaceContextProvider>
-    <PlayerSelectionContext.Provider value={playerSelection}>
-      <AppMenu
-        open
-        anchorPosition={{ top: 0, left: 0 }}
-        anchorReference="anchorPosition"
-        disablePortal
-        handleClose={() => {
-          // no-op
-        }}
-      />
-    </PlayerSelectionContext.Provider>
-  </WorkspaceContextProvider>
+  <AppMenu
+    open
+    anchorPosition={{ top: 0, left: 0 }}
+    anchorReference="anchorPosition"
+    disablePortal
+    handleClose={() => {
+      // no-op
+    }}
+  />
 );
 
 type Story = StoryObj<typeof Default>;
