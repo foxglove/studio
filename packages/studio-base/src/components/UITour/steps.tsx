@@ -8,7 +8,7 @@ import { StepContent } from "./StepContent";
 
 const tourId = (id: string) => `[data-tourid=${id}]`;
 const simulateClick = (elem: Element | null) =>
-  elem?.dispatchEvent(new MouseEvent("click", { bubbles: true })) ?? undefined;
+  elem?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
 
 const steps: StepType[] = [
   {
