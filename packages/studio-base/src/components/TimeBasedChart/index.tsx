@@ -52,8 +52,6 @@ import TimeBasedChartTooltipContent, {
 import { VerticalBarWrapper } from "./VerticalBarWrapper";
 import { downsampleScatter, downsampleTimeseries } from "./downsample";
 
-export type { TimeBasedChartTooltipData };
-
 const log = Logger.getLogger(__filename);
 
 const useStyles = makeStyles()((theme) => ({

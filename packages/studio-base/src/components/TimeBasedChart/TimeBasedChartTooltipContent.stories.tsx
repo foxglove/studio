@@ -14,9 +14,9 @@
 import { Tooltip } from "@mui/material";
 import { StoryObj } from "@storybook/react";
 
-import { TimeBasedChartTooltipData } from "@foxglove/studio-base/components/TimeBasedChart";
-
-import TimeBasedChartTooltipContent from "./TimeBasedChartTooltipContent";
+import TimeBasedChartTooltipContent, {
+  TimeBasedChartTooltipData,
+} from "./TimeBasedChartTooltipContent";
 
 export default {
   title: "components/TimeBasedChart/TimeBasedChartTooltipContent",
