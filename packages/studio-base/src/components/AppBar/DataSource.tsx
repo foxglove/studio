@@ -100,7 +100,8 @@ export function DataSource(): JSX.Element {
   const playerName = useMessagePipeline(selectPlayerName);
   const playerPresence = useMessagePipeline(selectPlayerPresence);
   const playerProblems = useMessagePipeline(selectPlayerProblems) ?? [];
-  const { dataSourceDialogActions } = useWorkspaceActions();
+  const { dataSourceDialogActions, selectLeftSidebarItem, setLeftSidebarOpen } =
+    useWorkspaceActions();
 
   const reconnecting = playerPresence === PlayerPresence.RECONNECTING;
   const initializing = playerPresence === PlayerPresence.INITIALIZING;
@@ -136,7 +137,14 @@ export function DataSource(): JSX.Element {
             />
           )}
           {error && (
-            <IconButton color="inherit" className={cx(classes.iconButton, classes.errorIconButton)}>
+            <IconButton
+              color="inherit"
+              className={cx(classes.iconButton, classes.errorIconButton)}
+              onClick={() => {
+                setLeftSidebarOpen(true);
+                selectLeftSidebarItem("problems");
+              }}
+            >
               <ErrorCircle20Filled />
             </IconButton>
           )}
