@@ -5,18 +5,18 @@
 import stringHash from "string-hash";
 
 import { Time, toSec, subtract as subtractTimes } from "@foxglove/rostime";
-import { ChartData } from "@foxglove/studio-base/components/Chart";
 import { MessageAndData } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
+import {
+  ChartDataset,
+  ChartDatasets,
+  ChartDatum,
+} from "@foxglove/studio-base/components/TimeBasedChart/types";
 import { darkColor, expandedLineColors } from "@foxglove/studio-base/util/plotColors";
 import { getTimestampForMessageEvent } from "@foxglove/studio-base/util/time";
 import { grey } from "@foxglove/studio-base/util/toolsColorScheme";
 
 import positiveModulo from "./positiveModulo";
 import { StateTransitionPath } from "./types";
-
-type DatasetInfo = ChartData["datasets"];
-type Dataset = ChartData["datasets"][number];
-type DatasetData = ChartData["datasets"][number]["data"];
 
 const baseColors = [grey, ...expandedLineColors];
 
@@ -28,13 +28,13 @@ type Args = {
   blocks: readonly (readonly MessageAndData[] | undefined)[];
 };
 
-export default function messagesToDatasets(args: Args): DatasetInfo {
+export default function messagesToDatasets(args: Args): ChartDatasets {
   const { path, pathIndex, startTime, y, blocks } = args;
 
   const datasets = [];
 
   let previousTimestamp: Time | undefined;
-  let currentData: DatasetData = [];
+  let currentData: ChartDatum[] = [];
 
   const datasetIndexMap = new Map<unknown, number>();
   let lastDatasetIndex: undefined | number = undefined;
@@ -115,7 +115,7 @@ export default function messagesToDatasets(args: Args): DatasetInfo {
 
         // new data starts with our current point, the current point
         currentData = [elementWithLabel];
-        const dataset: Dataset = {
+        const dataset: ChartDataset = {
           borderWidth: 10,
           borderColor: color,
           data: currentData,

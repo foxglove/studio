@@ -134,7 +134,6 @@ function getDatasetsFromMessagePlotPath({
     (yAxisRanges.length !== xAxisRanges.length ||
       xAxisRanges.every((range, rangeIndex) => range.length !== yAxisRanges[rangeIndex]?.length));
 
-  // fixme - this datum could be used as the datum for TimeBasedChart?
   const plotData: Datum[] = [];
 
   let maybeMathFn: MathFunction | undefined;

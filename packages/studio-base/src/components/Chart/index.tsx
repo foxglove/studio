@@ -44,7 +44,15 @@ export type OnClickArg = {
 // eslint-disable-next-line no-restricted-syntax
 const ChartNull = null;
 type Datum = ScatterDataPoint & {
+  // chart.js supported properties to show a label above the datapoint
+  // used by the state transition panel to show a label above the transition datum
+  label?: string;
+  labelColor?: string;
+
+  // Our additional properties
+  // value is the original value (rather than the plot x/y value) for the datum (used by state transitions)
   value: string | number | bigint | boolean;
+  // Constant name for the datum (used by state transitions)
   constantName?: string | undefined;
 };
 export type ChartData = ChartJsChartData<"scatter", (Datum | typeof ChartNull)[]>;
