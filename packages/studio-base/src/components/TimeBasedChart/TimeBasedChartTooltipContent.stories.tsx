@@ -61,6 +61,7 @@ export const SingleItemSingleDatasetLight: StoryObj = {
 export const SingleItemMultiDataset: StoryObj = {
   render: function Story() {
     const data: TimeBasedChartTooltipData = {
+      datasetIndex: 0,
       x: 0,
       y: 0,
       value: 3,
@@ -69,7 +70,13 @@ export const SingleItemMultiDataset: StoryObj = {
     return (
       <Tooltip
         open
-        title={<TimeBasedChartTooltipContent multiDataset={true} content={[data]} />}
+        title={
+          <TimeBasedChartTooltipContent
+            multiDataset={true}
+            content={[data]}
+            labelsByDatasetIndex={{ "0": "/some/topic.path", "1": "Series B" }}
+          />
+        }
         placement="top"
         arrow
         PopperProps={{
