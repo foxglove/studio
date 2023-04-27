@@ -12,6 +12,7 @@ import Stack from "@foxglove/studio-base/components/Stack";
 const useStyles = makeStyles()((theme) => ({
   paper: {
     position: "relative",
+    borderRadius: 8,
   },
   closeButton: {
     position: "absolute",
@@ -30,15 +31,10 @@ export function PopoverContent(props: PopoverContentProps): JSX.Element {
   const handleClose = () => setIsOpen(false);
 
   const handleNext = () => {
-    if (currentStep !== steps.length - 1) {
-      setCurrentStep(currentStep + 1);
-    }
+    setCurrentStep(currentStep + 1);
   };
-
   const handleBack = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
-    }
+    setCurrentStep(currentStep - 1);
   };
 
   return (

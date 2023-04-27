@@ -8,14 +8,16 @@ import { StepType } from "@reactour/tour";
 import Stack from "@foxglove/studio-base/components/Stack";
 
 const tourId = (id: string) => `[data-tourid=${id}]`;
+const simulateClick = (target: HTMLElement | undefined) =>
+  target?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
 
 function StepContent({ title, content }: { title: string; content: string }): JSX.Element {
   return (
     <Stack padding={2} gap={1}>
-      <Typography variant="h3" fontWeight={500}>
+      <Typography variant="h5" fontWeight={500}>
         {title}
       </Typography>
-      <Typography>{content}</Typography>
+      <Typography variant="body2">{content}</Typography>
     </Stack>
   );
 }
@@ -25,7 +27,7 @@ const steps: StepType[] = [
     selector: tourId("app-bar"),
     content: (
       <StepContent
-        title="App Bar"
+        title="Top Bar"
         content="All of your high-level information and controls now live in the top bar."
       />
     ),
@@ -40,6 +42,57 @@ const steps: StepType[] = [
         content="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam quis ligula placerat nisl condimentum vulputate."
       />
     ),
+    padding: 0,
+  },
+  {
+    selector: tourId("layout-menu"),
+    content: (
+      <StepContent
+        title="Layout menu"
+        content="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam quis ligula placerat nisl condimentum vulputate."
+      />
+    ),
+    padding: 0,
+  },
+  {
+    selector: tourId("add-panel-button"),
+    content: (
+      <StepContent
+        title="Add panel"
+        content="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam quis ligula placerat nisl condimentum vulputate."
+      />
+    ),
+    padding: 0,
+    action: simulateClick,
+    highlightedSelectors: [tourId("add-panel-menu")],
+    mutationObservables: [tourId("add-panel-menu")],
+  },
+  {
+    selector: tourId("right-sidebar-button"),
+    content: (
+      <StepContent
+        title="Right sidebar"
+        content="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam quis ligula placerat nisl condimentum vulputate."
+      />
+    ),
+    padding: 0,
+    action: simulateClick,
+    highlightedSelectors: [tourId("right-sidebar")],
+    mutationObservables: [tourId("right-sidebar")],
+  },
+  {
+    selector: tourId("user-profile-button"),
+    content: (
+      <StepContent
+        title="User menu"
+        content="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam quis ligula placerat nisl condimentum vulputate."
+      />
+    ),
+    padding: 0,
+    action: simulateClick,
+    highlightedSelectors: [tourId("account-menu")],
+    mutationObservables: [tourId("account-menu")],
+    position: "left",
   },
 ];
 

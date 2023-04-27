@@ -51,14 +51,16 @@ export function AddPanelMenu(props: AddPanelProps): JSX.Element {
         horizontal: "left",
       }}
     >
-      <PanelList
-        // Close when a drag starts so the modal menu doesn't block the drop targets
-        onDragStart={handleClose}
-        onPanelSelect={(selection) => {
-          addPanel(selection);
-          handleClose();
-        }}
-      />
+      <div data-tourid="add-panel-menu">
+        <PanelList
+          // Close when a drag starts so the modal menu doesn't block the drop targets
+          onDragStart={handleClose}
+          onPanelSelect={(selection) => {
+            addPanel(selection);
+            handleClose();
+          }}
+        />
+      </div>
     </Menu>
   );
 }

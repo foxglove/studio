@@ -272,6 +272,8 @@ export function AppBar(props: AppBarProps): JSX.Element {
                 onClick={(event) => {
                   setAppMenuEl(event.currentTarget);
                 }}
+                size="large"
+                data-tourid="app-menu"
               >
                 <FoxgloveLogo fontSize="inherit" color="inherit" />
                 <ChevronDown12Regular
@@ -289,6 +291,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
                 color="inherit"
                 disabled={currentLayoutId == undefined}
                 id="add-panel-button"
+                data-tourid="add-panel-button"
                 title="Add panel"
                 aria-label="Add panel button"
                 aria-controls={panelMenuOpen ? "add-panel-menu" : undefined}
@@ -333,6 +336,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
                   }
                   aria-label={`${rightSidebarOpen ? "Hide" : "Show"} right sidebar`}
                   onClick={() => setRightSidebarOpen(!rightSidebarOpen)}
+                  data-tourid="right-sidebar-button"
                 >
                   {rightSidebarOpen ? <PanelRight24Filled /> : <PanelRight24Regular />}
                 </AppBarIconButton>
@@ -364,6 +368,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
                   aria-label="User profile menu button"
                   color="inherit"
                   id="user-profile-button"
+                  data-tourid="user-profile-button"
                   aria-controls={userMenuOpen ? "user-profile-menu" : undefined}
                   aria-haspopup="true"
                   aria-expanded={userMenuOpen ? "true" : undefined}

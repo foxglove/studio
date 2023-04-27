@@ -125,6 +125,7 @@ export function UserMenu({
         anchorReference={anchorReference}
         anchorPosition={anchorPosition}
         disablePortal={disablePortal}
+        data-tourud="acccount-menu"
         id="account-menu"
         open={open}
         onClose={handleClose}

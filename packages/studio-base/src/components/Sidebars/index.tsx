@@ -383,6 +383,7 @@ export default function Sidebars<
                         items={leftItems}
                         activeTab={selectedLeftKey}
                         setActiveTab={onSelectLeftKey}
+                        data-tourid="left-sidebar"
                       />
                     ) : (
                       <Paper square elevation={0}>
@@ -400,6 +401,7 @@ export default function Sidebars<
                       items={rightItems}
                       activeTab={selectedRightKey}
                       setActiveTab={onSelectRightKey}
+                      data-tourid="right-sidebar"
                     />
                   </ErrorBoundary>
                 );

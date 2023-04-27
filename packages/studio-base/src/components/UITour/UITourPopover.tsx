@@ -11,6 +11,8 @@ import {
   IconButton,
   Grow,
   ClickAwayListener,
+  Slide,
+  SlideProps,
 } from "@mui/material";
 import { useTour } from "@reactour/tour";
 import { useState } from "react";
@@ -47,7 +49,8 @@ export function UITourPopover(): JSX.Element {
       }}
       marginThreshold={16}
       PaperProps={{ className: classes.paper, square: false }}
-      TransitionComponent={Grow}
+      TransitionComponent={Slide}
+      TransitionProps={{ direction: "up", timeout: 500 } as Partial<SlideProps>}
     >
       <ClickAwayListener onClickAway={() => setOpen(false)}>
         <Stack padding={2} gap={1}>

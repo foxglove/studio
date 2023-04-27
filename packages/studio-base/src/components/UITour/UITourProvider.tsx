@@ -17,7 +17,7 @@ export function UITourProvider(props: PropsWithChildren<unknown>): JSX.Element {
       styles={{
         popover: (base) => ({
           ...base,
-          margin: 16,
+          margin: 12,
           padding: undefined,
           backgroundColor: undefined,
           color: undefined,
