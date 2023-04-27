@@ -54,6 +54,7 @@
     "@mui/material": "5.12.2",
     "@popperjs/core": "2.11.7",
     "@protobufjs/base64": "1.1.2",
+    "@reactour/tour": "3.3.0",
     "@storybook/addon-actions": "7.0.7",
     "@storybook/react": "7.0.7",
     "@storybook/testing-library": "0.1.0",

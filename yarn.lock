@@ -2563,6 +2563,7 @@ __metadata:
     "@mui/material": 5.12.2
     "@popperjs/core": 2.11.7
     "@protobufjs/base64": 1.1.2
+    "@reactour/tour": 3.3.0
     "@storybook/addon-actions": 7.0.7
     "@storybook/react": 7.0.7
     "@storybook/testing-library": 0.1.0
@@ -3889,6 +3890,62 @@ __metadata:
   version: 2.0.0
   resolution: "@react-dnd/shallowequal@npm:2.0.0"
   checksum: b5bbdc795d65945bb7ba2322bed5cf8d4c6fe91dced98c3b10e3d16822c438f558751135ff296f8d1aa1eaa9d0037dacab2b522ca5eb812175123b9996966dcb
+  languageName: node
+  linkType: hard
+
+"@reactour/mask@npm:*":
+  version: 1.0.5
+  resolution: "@reactour/mask@npm:1.0.5"
+  dependencies:
+    "@reactour/utils": "*"
+  peerDependencies:
+    react: 16.x || 17.x || 18.x
+  checksum: 6bd19b570430dfb5950d8c22047aba0673b9ee35a29973f82561f0bd71189e9e79fe09992c03bd480daeb2b9b44e6f467cb63ef7bd7527358a069a65739f8a35
+  languageName: node
+  linkType: hard
+
+"@reactour/popover@npm:*":
+  version: 1.0.5
+  resolution: "@reactour/popover@npm:1.0.5"
+  dependencies:
+    "@reactour/utils": "*"
+  peerDependencies:
+    react: 16.x || 17.x || 18.x
+  checksum: 882e1e709c7fe6e5d95a8500ae2a497d3d364f89f9e93d6d0cc6d53ecca8bda661c29ff63b1a58127d624cad927831d506b435df7e533da4949fff026e26e405
+  languageName: node
+  linkType: hard
+
+"@reactour/tour@npm:3.3.0":
+  version: 3.3.0
+  resolution: "@reactour/tour@npm:3.3.0"
+  dependencies:
+    "@reactour/mask": "*"
+    "@reactour/popover": "*"
+    "@reactour/utils": "*"
+  peerDependencies:
+    react: 16.x || 17.x || 18.x
+  checksum: 3e292075431a406236cfa0d469ed9f991c839b1f96460f865da9e1b4ae190cb8535c76a662923a1b3b2573572eb165c71a73e82361725e29d0f5a7b77dc92c09
+  languageName: node
+  linkType: hard
+
+"@reactour/utils@npm:*":
+  version: 0.4.7
+  resolution: "@reactour/utils@npm:0.4.7"
+  dependencies:
+    "@rooks/use-mutation-observer": ^4.11.2
+    resize-observer-polyfill: ^1.5.1
+  peerDependencies:
+    react: 16.x || 17.x || 18.x
+  checksum: fec485bdb7ef0604fdd241d583be19a2b009fbaef4fff68cf1e8e3717a09f317a4025c6ca7d0afa72b383e5732d77553122881ff569fee297a3814b0bdec5f03
+  languageName: node
+  linkType: hard
+
+"@rooks/use-mutation-observer@npm:^4.11.2":
+  version: 4.11.2
+  resolution: "@rooks/use-mutation-observer@npm:4.11.2"
+  peerDependencies:
+    react: ">=16.8.0"
+  checksum: 9f60f58f9c2dc49f65384edd98b838178f1e1a9981d13ca61f3a62b922518a57f2eefe98332b55c4dc03c6d15548702a1437cf90dbca003315d28ad60929da73
   languageName: node
   linkType: hard
 
