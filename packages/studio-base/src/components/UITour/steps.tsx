@@ -2,25 +2,13 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Typography } from "@mui/material";
 import { StepType } from "@reactour/tour";
 
-import Stack from "@foxglove/studio-base/components/Stack";
+import { StepContent } from "./StepContent";
 
 const tourId = (id: string) => `[data-tourid=${id}]`;
 const simulateClick = (target: HTMLElement | undefined) =>
   target?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-
-function StepContent({ title, content }: { title: string; content: string }): JSX.Element {
-  return (
-    <Stack padding={2} gap={1}>
-      <Typography variant="h5" fontWeight={500}>
-        {title}
-      </Typography>
-      <Typography variant="body2">{content}</Typography>
-    </Stack>
-  );
-}
 
 const steps: StepType[] = [
   {

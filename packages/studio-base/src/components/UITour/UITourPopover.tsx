@@ -9,7 +9,6 @@ import {
   Typography,
   Chip,
   IconButton,
-  Grow,
   ClickAwayListener,
   Slide,
   SlideProps,
