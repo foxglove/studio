@@ -316,11 +316,8 @@ export default function TimeBasedChart(props: Props): JSX.Element {
       tooltipItems.push({
         item: {
           datasetIndex: element.datasetIndex,
-          // fixme - so this needs to be the original value to support state transition panels
           value: datum.value,
           constantName: datum.constantName,
-          x: element.data.x,
-          y: element.data.y,
         },
         element,
       });
@@ -607,7 +604,7 @@ export default function TimeBasedChart(props: Props): JSX.Element {
         // NaN item values create gaps in the line
         const undefinedToNanData = downsampled.data.map((item) => {
           if (item == undefined || isNaN(item.x) || isNaN(item.y)) {
-            return { x: NaN, y: NaN };
+            return { x: NaN, y: NaN, value: NaN };
           }
           return item;
         });

@@ -2,7 +2,6 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { ScatterDataPoint } from "chart.js";
 import stringHash from "string-hash";
 
 import { Time, toSec, subtract as subtractTimes } from "@foxglove/rostime";
@@ -16,7 +15,6 @@ import positiveModulo from "./positiveModulo";
 import { StateTransitionPath } from "./types";
 
 type DatasetInfo = ChartData["datasets"];
-
 type Dataset = ChartData["datasets"][number];
 type DatasetData = ChartData["datasets"][number]["data"];
 
@@ -43,7 +41,7 @@ export default function messagesToDatasets(args: Args): DatasetInfo {
 
   for (const messages of blocks) {
     if (!messages) {
-      currentData.push({ x: NaN, y: NaN });
+      currentData.push({ x: NaN, y: NaN, value: NaN });
       lastDatasetIndex = undefined;
       previousTimestamp = undefined;
       continue;
@@ -95,22 +93,12 @@ export default function messagesToDatasets(args: Args): DatasetInfo {
 
       const x = toSec(subtractTimes(timestamp, startTime));
 
-      /* fixme
-      const tooltip: TimeBasedChartTooltipData = {
-        datasetIndex,
-        x,
-        y,
-        value,
-        constantName,
-      };
-      */
-
       // If the value maps to a different dataset than the last value, close the previous segment
       // and insert a gap.
       const newSegment = datasetIndex !== lastDatasetIndex;
       if (newSegment) {
-        currentData.push({ x, y });
-        currentData.push({ x: NaN, y: NaN });
+        currentData.push({ x, y, value: y });
+        currentData.push({ x: NaN, y: NaN, value: NaN });
       }
       const label =
         constantName != undefined ? `${constantName} (${String(value)})` : String(value);
@@ -155,7 +143,7 @@ export default function messagesToDatasets(args: Args): DatasetInfo {
             labelColor: color,
             value,
             constantName,
-          } as ScatterDataPoint);
+          });
         } else {
           currentData.push({ x, y, value, constantName });
         }

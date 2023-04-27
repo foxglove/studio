@@ -2,13 +2,12 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { ChartData, ScatterDataPoint } from "chart.js";
+import type { ChartData } from "@foxglove/studio-base/components/Chart";
 
 // Chartjs typings use _null_ to indicate _gaps_ in the dataset
-// eslint-disable-next-line no-restricted-syntax
-type ChartNull = null;
-type Data = ChartData<"scatter", (ScatterDataPoint | ChartNull)[]>;
+type Data = ChartData;
 type DataSet = Data["datasets"][0];
+type Datum = DataSet["data"][0];
 
 type DownsampleBounds = {
   width: number;
@@ -48,9 +47,9 @@ export function downsampleTimeseries(dataset: DataSet, bounds: DownsampleBounds)
   const pixelPerXValue = bounds.width / (bounds.x.max - bounds.x.min);
   const pixelPerYValue = bounds.height / (bounds.y.max - bounds.y.min);
 
-  const downsampled: ScatterDataPoint[] = [];
+  const downsampled: Datum[] = [];
 
-  type IntervalItem = { xPixel: number; yPixel: number; datum: ScatterDataPoint };
+  type IntervalItem = { xPixel: number; yPixel: number; datum: Datum };
 
   let intFirst: IntervalItem | undefined;
   let intLast: IntervalItem | undefined;
@@ -162,7 +161,7 @@ export function downsampleScatter(dataset: DataSet, bounds: DownsampleBounds): D
   const pixelPerYValue = bounds.height / (bounds.y.max - bounds.y.min);
   const pixelPerRow = bounds.width;
 
-  const downsampled: ScatterDataPoint[] = [];
+  const downsampled: Datum[] = [];
 
   // downsampling tracks a sparse array of x/y locations
   const sparse: boolean[] = [];

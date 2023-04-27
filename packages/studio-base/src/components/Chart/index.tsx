@@ -43,7 +43,11 @@ export type OnClickArg = {
 // Chartjs typings use _null_ to indicate _gaps_ in the dataset
 // eslint-disable-next-line no-restricted-syntax
 const ChartNull = null;
-export type ChartData = ChartJsChartData<"scatter", (ScatterDataPoint | typeof ChartNull)[]>;
+type Datum = ScatterDataPoint & {
+  value: string | number | bigint | boolean;
+  constantName?: string | undefined;
+};
+export type ChartData = ChartJsChartData<"scatter", (Datum | typeof ChartNull)[]>;
 
 type Props = {
   data: ChartData;

@@ -21,9 +21,7 @@ import Stack from "@foxglove/studio-base/components/Stack";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 export type TimeBasedChartTooltipData = {
-  datasetIndex?: number;
-  x: number | bigint;
-  y: number | bigint;
+  datasetIndex?: number; // fixme - required?
   value: number | bigint | boolean | string;
   constantName?: string;
 };
