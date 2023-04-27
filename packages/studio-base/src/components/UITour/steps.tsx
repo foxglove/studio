@@ -7,8 +7,8 @@ import { StepType } from "@reactour/tour";
 import { StepContent } from "./StepContent";
 
 const tourId = (id: string) => `[data-tourid=${id}]`;
-const simulateClick = (target: HTMLElement | undefined) =>
-  target?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+const simulateClick = (elem: Element | null) =>
+  elem?.dispatchEvent(new MouseEvent("click", { bubbles: true })) ?? undefined;
 
 const steps: StepType[] = [
   {
