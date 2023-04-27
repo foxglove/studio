@@ -13,6 +13,7 @@ const useStyles = makeStyles()((theme) => ({
   paper: {
     position: "relative",
     borderRadius: 8,
+    backgroundColor: theme.palette.background.menu,
   },
   closeButton: {
     position: "absolute",

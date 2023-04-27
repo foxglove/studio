@@ -80,7 +80,6 @@ const steps: StepType[] = [
     action: simulateClick,
     highlightedSelectors: [tourId("account-menu")],
     mutationObservables: [tourId("account-menu")],
-    position: "left",
   },
 ];
 

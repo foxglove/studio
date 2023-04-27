@@ -25,6 +25,7 @@ const useStyles = makeStyles()((theme) => ({
   paper: {
     width: 320,
     borderRadius: 8,
+    backgroundColor: theme.palette.background.menu,
   },
   dismissIcon: {
     marginRight: theme.spacing(-0.5),
