@@ -371,6 +371,7 @@ export class ImageMode extends SceneExtension<ImageRenderable> implements ICamer
       renderable.userData.cameraInfo = this.cameraModel.info;
       renderable.setCameraModel(this.cameraModel.model);
     }
+    renderable.name = topic;
     renderable.setImage(image);
     renderable.update();
   };
@@ -389,7 +390,7 @@ export class ImageMode extends SceneExtension<ImageRenderable> implements ICamer
     // we don't have settings for images yet
     const userSettings = { ...IMAGE_RENDERABLE_DEFAULT_SETTINGS };
 
-    renderable = new ImageRenderable("imageMode-image", this.renderer, {
+    renderable = new ImageRenderable(topicName, this.renderer, {
       receiveTime,
       messageTime: image ? toNanoSec("header" in image ? image.header.stamp : image.timestamp) : 0n,
       frameId: this.renderer.normalizeFrameId(frameId),
