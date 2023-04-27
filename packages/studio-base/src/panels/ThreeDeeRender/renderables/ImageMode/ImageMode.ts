@@ -26,7 +26,7 @@ import {
 } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/projections";
 import { makePose } from "@foxglove/studio-base/panels/ThreeDeeRender/transforms";
 
-import { ImageModelCamera } from "./ImageModelCamera";
+import { ImageModeCamera } from "./ImageModeCamera";
 import { ImageAnnotations } from "./annotations/ImageAnnotations";
 import type { IRenderer } from "../../IRenderer";
 import { PartialMessageEvent, SceneExtension } from "../../SceneExtension";
@@ -58,7 +58,7 @@ const IMAGE_TOPIC_DIFFERENT_FRAME = "IMAGE_TOPIC_DIFFERENT_FRAME";
 const CAMERA_MODEL = "CameraModel";
 
 export class ImageMode extends SceneExtension<ImageRenderable> implements ICameraHandler {
-  private camera: ImageModelCamera;
+  private camera: ImageModeCamera;
   private cameraModel:
     | {
         model: PinholeCameraModel;
@@ -76,7 +76,7 @@ export class ImageMode extends SceneExtension<ImageRenderable> implements ICamer
   public constructor(renderer: IRenderer, canvasSize: THREE.Vector2) {
     super("foxglove.ImageMode", renderer);
 
-    this.camera = new ImageModelCamera();
+    this.camera = new ImageModeCamera();
 
     /**
      * By default the camera is facing down the -y axis with -z up,
