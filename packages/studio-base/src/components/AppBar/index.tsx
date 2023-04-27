@@ -256,6 +256,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
         color="inherit"
         elevation={0}
         onDoubleClick={handleDoubleClick}
+        data-tourid="app-bar"
       >
         <div className={classes.toolbar}>
           <div className={classes.start}>

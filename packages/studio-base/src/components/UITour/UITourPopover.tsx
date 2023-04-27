@@ -12,10 +12,13 @@ import {
   Grow,
   ClickAwayListener,
 } from "@mui/material";
+import { useTour } from "@reactour/tour";
 import { useState } from "react";
 import { makeStyles } from "tss-react/mui";
 
+import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import Stack from "@foxglove/studio-base/components/Stack";
+import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 
 const useStyles = makeStyles()((theme) => ({
   paper: {
@@ -29,6 +32,9 @@ const useStyles = makeStyles()((theme) => ({
 
 export function UITourPopover(): JSX.Element {
   const { classes } = useStyles();
+  const { setIsOpen: setTourOpen } = useTour();
+
+  const [_, setEnabled] = useAppConfigurationValue<boolean>(AppSetting.ENABLE_NEW_TOPNAV);
 
   const [open, setOpen] = useState(true);
 
@@ -59,7 +65,15 @@ export function UITourPopover(): JSX.Element {
           </Typography>
 
           <Stack direction="row-reverse" gap={1} paddingTop={4}>
-            <Button variant="contained">Try it now</Button>
+            <Button
+              variant="contained"
+              onClick={async () => {
+                await setEnabled(true);
+                setTourOpen(true);
+              }}
+            >
+              Try it now
+            </Button>
             <Button>Read more</Button>
           </Stack>
         </Stack>
