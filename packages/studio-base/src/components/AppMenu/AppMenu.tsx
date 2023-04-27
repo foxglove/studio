@@ -7,7 +7,6 @@ import { useCallback, useMemo, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 import { shallow } from "zustand/shallow";
 
-import { NestedMenuItem } from "@foxglove/studio-base/components/NestedMenuItem";
 import TextMiddleTruncate from "@foxglove/studio-base/components/TextMiddleTruncate";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 import { useCurrentUserType } from "@foxglove/studio-base/context/CurrentUserContext";
@@ -18,6 +17,8 @@ import {
   useWorkspaceStore,
 } from "@foxglove/studio-base/context/WorkspaceContext";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
+
+import { NestedMenuItem } from "./NestedMenuItem";
 
 type AppMenuProps = {
   handleClose: () => void;
