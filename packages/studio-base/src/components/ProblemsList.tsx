@@ -43,8 +43,8 @@ const useStyles = makeStyles()((theme) => ({
     display: "flex",
     flexDirection: "column",
     fontFamily: fonts.MONOSPACE,
-    fontSize: theme.typography.caption.fontSize,
-    padding: theme.spacing(1),
+    fontSize: "0.6875rem",
+    padding: theme.spacing(1.125),
     gap: theme.spacing(1),
   },
   acccordionSummary: {
