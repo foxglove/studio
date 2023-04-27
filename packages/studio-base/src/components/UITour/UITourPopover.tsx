@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Dismiss20Regular } from "@fluentui/react-icons";
+import { Dismiss20Filled } from "@fluentui/react-icons";
 import {
   Button,
   Popover,
@@ -54,7 +54,7 @@ export function UITourPopover(): JSX.Element {
           <Stack direction="row" justifyContent="space-between" alignItems="center">
             <Chip label="BETA" size="small" color="info" variant="outlined" />
             <IconButton size="small" className={classes.dismissIcon} onClick={() => setOpen(false)}>
-              <Dismiss20Regular />
+              <Dismiss20Filled />
             </IconButton>
           </Stack>
           <Typography variant="h5" fontWeight={500}>
