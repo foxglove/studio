@@ -288,8 +288,6 @@ export default function TimeBasedChart(props: Props): JSX.Element {
     data: TimeBasedChartTooltipData[];
   }>();
 
-  const datasetRef = useRef<typeof datasets | undefined>(undefined);
-  datasetRef.current = datasets;
   const updateTooltip = useCallback((elements: RpcElement[]) => {
     if (elements.length === 0 || mouseYRef.current == undefined) {
       return setActiveTooltip(undefined);
