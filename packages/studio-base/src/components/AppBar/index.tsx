@@ -14,6 +14,7 @@ import PersonIcon from "@mui/icons-material/Person";
 import { Avatar, Button, IconButton, Tooltip, AppBar as MuiAppBar } from "@mui/material";
 import { useCallback, useState } from "react";
 import tc from "tinycolor2";
+import tinycolor from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 import { shallow } from "zustand/shallow";
 
@@ -87,6 +88,21 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }, 
         padding: theme.spacing(0.75, 0.5, 0.75, 0.25),
         fontSize: "2rem",
         color: APP_BAR_PRIMARY_COLOR,
+        borderRadius: 0,
+
+        "svg:not(.MuiSvgIcon-root)": {
+          fontSize: "1em",
+        },
+        "&:hover": {
+          backgroundColor: tinycolor(APP_BAR_FOREGROUND_COLOR).setAlpha(0.08).toRgbString(),
+        },
+        "&.Mui-selected": {
+          backgroundColor: APP_BAR_PRIMARY_COLOR,
+        },
+        "&.Mui-disabled": {
+          color: "currentColor",
+          opacity: theme.palette.action.disabledOpacity,
+        },
       },
       dropDownIcon: {
         fontSize: "12px !important",
@@ -247,7 +263,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
         <div className={classes.toolbar}>
           <div className={classes.start}>
             <div className={classes.startInner}>
-              <AppBarIconButton
+              <IconButton
                 className={classes.logo}
                 color="inherit"
                 id="menu-button"
@@ -264,7 +280,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
                   className={classes.dropDownIcon}
                   primaryFill={APP_BAR_FOREGROUND_COLOR}
                 />
-              </AppBarIconButton>
+              </IconButton>
               <AppMenu
                 open={appMenuOpen}
                 anchorEl={appMenuEl}

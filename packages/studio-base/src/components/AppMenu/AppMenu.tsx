@@ -199,7 +199,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
         id="app-menu"
         open={open}
         disableAutoFocusItem
-        onClose={handleClose}
+        onClose={handleNestedMenuClose}
         MenuListProps={{ dense: true, className: classes.menuList }}
       >
         <NestedMenuItem
