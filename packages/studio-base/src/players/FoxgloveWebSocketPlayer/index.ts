@@ -77,6 +77,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
   private readonly _sourceId: string;
 
   private _url: string; // WebSocket URL.
+  private _headers: unknown; // HTTP headers.
   private _name: string;
   private _client?: FoxgloveClient; // The client when we're connected.
   private _id: string = uuidv4(); // Unique ID for this player session.
@@ -133,15 +134,18 @@ export default class FoxgloveWebSocketPlayer implements Player {
 
   public constructor({
     url,
+    headers,
     metricsCollector,
     sourceId,
   }: {
     url: string;
+    headers: unknown;
     metricsCollector: PlayerMetricsCollectorInterface;
     sourceId: string;
   }) {
     this._metricsCollector = metricsCollector;
     this._url = url;
+    this._headers = headers;
     this._name = url;
     this._metricsCollector.playerConstructed();
     this._sourceId = sourceId;

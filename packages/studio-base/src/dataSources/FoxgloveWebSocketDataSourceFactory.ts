@@ -49,6 +49,22 @@ export default class FoxgloveWebSocketDataSourceFactory implements IDataSourceFa
           }
         },
       },
+      {
+        id: "headers",
+        label: "HTTP headers",
+        defaultValue: "{}",
+        validate: (newValue: string): Error | undefined => {
+          try {
+            const headers = JSON.parse(newValue);
+            if (typeof headers !== "object") {
+              return new Error("Invalid JSON object");
+            }
+            return undefined;
+          } catch (err) {
+            return new Error("Enter a valid JSON object");
+          }
+        },
+      },
     ],
   };
 
@@ -58,8 +74,12 @@ export default class FoxgloveWebSocketDataSourceFactory implements IDataSourceFa
       return;
     }
 
+    const headerStr = args.params?.headers as string;
+    const headers = JSON.parse(headerStr);
+
     return new FoxgloveWebSocketPlayer({
       url,
+      headers,
       metricsCollector: args.metricsCollector,
       sourceId: this.id,
     });
