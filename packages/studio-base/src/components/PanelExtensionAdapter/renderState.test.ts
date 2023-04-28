@@ -762,8 +762,8 @@ describe("renderState", () => {
       ],
     };
 
-    let state = buildRenderState(initialState);
-    expect(state).toEqual({
+    const state1 = buildRenderState(initialState);
+    expect(state1).toEqual({
       topics: [
         {
           name: "test",
@@ -820,7 +820,7 @@ describe("renderState", () => {
       ],
     });
 
-    state = buildRenderState({
+    const state2 = buildRenderState({
       ...initialState,
       subscriptions: [
         ...initialState.subscriptions,
@@ -828,7 +828,9 @@ describe("renderState", () => {
       ],
     });
 
-    expect(state).toEqual({
+    expect(state2?.currentFrame).not.toBe(state1?.currentFrame);
+
+    expect(state2).toEqual({
       topics: [
         {
           name: "test",
