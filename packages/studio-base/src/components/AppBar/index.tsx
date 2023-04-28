@@ -14,7 +14,6 @@ import PersonIcon from "@mui/icons-material/Person";
 import { Avatar, Button, IconButton, Tooltip, AppBar as MuiAppBar } from "@mui/material";
 import { useCallback, useState } from "react";
 import tc from "tinycolor2";
-import tinycolor from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 import { shallow } from "zustand/shallow";
 
@@ -94,7 +93,7 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }, 
           fontSize: "1em",
         },
         "&:hover": {
-          backgroundColor: tinycolor(APP_BAR_FOREGROUND_COLOR).setAlpha(0.08).toRgbString(),
+          backgroundColor: tc(APP_BAR_FOREGROUND_COLOR).setAlpha(0.08).toRgbString(),
         },
         "&.Mui-selected": {
           backgroundColor: APP_BAR_PRIMARY_COLOR,
