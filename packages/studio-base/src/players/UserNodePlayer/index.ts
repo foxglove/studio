@@ -385,10 +385,6 @@ export default class UserNodePlayer implements Player {
 
       // Prune the node registration cache so it doesn't grow forever.
       // We add one to the count so we don't have to recompile nodes if users undo/redo node changes.
-
-      // fixme - but if a user removes a user node and the keys length decreases this randomly un-cached some other userNode?
-      // why?
-
       const maxNodeRegistrationCacheCount = Object.keys(userNodes).length + 1;
       state.nodeRegistrationCache.splice(maxNodeRegistrationCacheCount);
       // This code causes us to reset workers twice because the seeking resets the workers too
@@ -407,10 +403,6 @@ export default class UserNodePlayer implements Player {
   ): Promise<NodeRegistration> {
     for (const cacheEntry of state.nodeRegistrationCache) {
       if (nodeId === cacheEntry.nodeId && isEqual(userNode, cacheEntry.userNode)) {
-        // fixme
-        // the node is already registered so the intent is to avoid transforming unchanged code again
-        // but the message build processor closed over the already terminated signal
-
         return cacheEntry.result;
       }
     }
@@ -436,8 +428,10 @@ export default class UserNodePlayer implements Player {
 
     // This signals that we have terminated the node registration and we should bail any message
     // processing that is in-flight.
-    const terminateCondvar = new Condvar();
-    const terminateSignal = terminateCondvar.wait();
+    //
+    // These are lazily created in the first message we process and cleared on terminate.
+    let terminateCondvar: Condvar | undefined;
+    let terminateSignal: Promise<void> | undefined;
 
     // problemKey is a unique identifier for each userspace node so we can manage problems from
     // a specific node. A node may have a problem that may later clear. Using the key we can add/remove
@@ -513,6 +507,13 @@ export default class UserNodePlayer implements Player {
           this._addUserNodeLogs(nodeId, userNodeLogs);
         }
 
+        // This signals that we have terminated the node registration and we should bail any message
+        // processing that is in-flight.
+        if (!terminateCondvar) {
+          terminateCondvar = new Condvar();
+          terminateSignal = terminateCondvar.wait();
+        }
+
         // To send the message over RPC we invoke maybePlainObject which calls toJSON on the message
         // and builds a plain js object of the entire message. This is expensive so a future enhancement
         // would be to send the underlying message array and build a lazy message reader
@@ -583,21 +584,15 @@ export default class UserNodePlayer implements Player {
       };
     };
 
-    // fixme - is this meant to signal that we are done with this node registration or that we want
-    // to terminate the specific message build but keep the registration around?
-    //
-    // The use of the cache makes it seem like we maybe wanted to keep the registration around?
     const terminate = () => {
-      // Removed the cached registration once terminated
-      const existingCacheIdx = state.nodeRegistrationCache.findIndex(
-        (nodeRegistration) => nodeRegistration.nodeId === nodeId,
-      );
-      if (existingCacheIdx >= 0) {
-        state.nodeRegistrationCache.splice(existingCacheIdx, 1);
-      }
-
       this._problemStore.delete(problemKey);
-      terminateCondvar.notifyAll();
+
+      // Signal any pending in-flight message processing to terminate and clear the state so we can
+      // re-initialize when the next message is processed.
+      terminateCondvar?.notifyAll();
+      terminateCondvar = undefined;
+      terminateSignal = undefined;
+
       if (rpc) {
         this._unusedNodeRuntimeWorkers.push(rpc);
         rpc = undefined;
