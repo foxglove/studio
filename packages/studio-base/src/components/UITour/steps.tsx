@@ -7,8 +7,14 @@ import { StepType } from "@reactour/tour";
 import { StepContent } from "./StepContent";
 
 const tourId = (id: string) => `[data-tourid=${id}]`;
-const simulateClick = (elem: Element | null) =>
-  elem?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+const simulateClick = (elem: Element | null) => {
+  elem?.dispatchEvent(
+    new MouseEvent("click", {
+      bubbles: true,
+    }),
+  );
+};
 
 const steps: StepType[] = [
   {
@@ -31,6 +37,7 @@ const steps: StepType[] = [
       />
     ),
     padding: 0,
+    action: simulateClick,
   },
   {
     selector: tourId("layout-menu"),
@@ -41,6 +48,7 @@ const steps: StepType[] = [
       />
     ),
     padding: 0,
+    action: simulateClick,
   },
   {
     selector: tourId("add-panel-button"),
@@ -52,7 +60,7 @@ const steps: StepType[] = [
     ),
     padding: 0,
     action: simulateClick,
-    highlightedSelectors: [tourId("add-panel-menu")],
+    highlightedSelectors: [tourId("add-panel-menu"), tourId("add-panel-button")],
     mutationObservables: [tourId("add-panel-menu")],
   },
   {
@@ -65,8 +73,9 @@ const steps: StepType[] = [
     ),
     padding: 0,
     action: simulateClick,
-    highlightedSelectors: [tourId("right-sidebar")],
-    mutationObservables: [tourId("right-sidebar")],
+    highlightedSelectors: [tourId("sidebar-right")],
+    mutationObservables: [tourId("sidebar-right")],
+    resizeObservables: [tourId("sidebar-right")],
   },
   {
     selector: tourId("user-profile-button"),
@@ -80,6 +89,7 @@ const steps: StepType[] = [
     action: simulateClick,
     highlightedSelectors: [tourId("account-menu")],
     mutationObservables: [tourId("account-menu")],
+    resizeObservables: [tourId("account-menu")],
   },
 ];
 

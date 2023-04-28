@@ -53,8 +53,13 @@ export function UITourPopover(): JSX.Element {
       TransitionProps={{ direction: "up", timeout: 500 } as Partial<SlideProps>}
     >
       <ClickAwayListener onClickAway={() => setOpen(false)}>
-        <Stack padding={2} gap={1}>
-          <Stack direction="row" justifyContent="space-between" alignItems="center">
+        <Stack padding={2} gap={0.5}>
+          <Stack
+            direction="row"
+            justifyContent="space-between"
+            alignItems="center"
+            paddingBottom={0.5}
+          >
             <Chip label="BETA" size="small" color="info" variant="outlined" />
             <IconButton size="small" className={classes.dismissIcon} onClick={() => setOpen(false)}>
               <Dismiss20Filled />
@@ -63,12 +68,13 @@ export function UITourPopover(): JSX.Element {
           <Typography variant="h5" fontWeight={500}>
             Try our new user experience
           </Typography>
-          <Typography>
+          <Typography variant="body2">
             We&apos;ve redesigned our navigation to make Studio faster and easier to use.
           </Typography>
 
-          <Stack direction="row-reverse" gap={1} paddingTop={4}>
+          <Stack direction="row-reverse" gap={1} paddingTop={3}>
             <Button
+              size="small"
               variant="contained"
               onClick={async () => {
                 await setEnabled(true);

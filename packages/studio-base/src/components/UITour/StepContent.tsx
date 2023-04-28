@@ -6,7 +6,7 @@ import { Stack, Typography } from "@mui/material";
 
 export function StepContent({ title, content }: { title: string; content: string }): JSX.Element {
   return (
-    <Stack padding={2} gap={1}>
+    <Stack padding={2} gap={0.5}>
       <Typography variant="h5" fontWeight={500}>
         {title}
       </Typography>
