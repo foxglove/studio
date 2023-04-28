@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { useTheme } from "@mui/material";
+import { Portal, useTheme } from "@mui/material";
 import { TourProvider } from "@reactour/tour";
 import { PropsWithChildren } from "react";
 import tc from "tinycolor2";
@@ -39,6 +39,7 @@ export function UITourProvider(props: PropsWithChildren<unknown>): JSX.Element {
         }),
       }}
       ContentComponent={PopoverContent}
+      Wrapper={Portal}
     >
       {children}
     </TourProvider>
