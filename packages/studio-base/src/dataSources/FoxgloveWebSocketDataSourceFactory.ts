@@ -55,7 +55,8 @@ export default class FoxgloveWebSocketDataSourceFactory implements IDataSourceFa
         defaultValue: "{}",
         validate: (newValue: string): Error | undefined => {
           try {
-            const headers = JSON.parse(newValue);
+            const headers = new Map<string, string>(
+              Object.entries(JSON.parse(newValue) as { [s: string]: string }));
             if (typeof headers !== "object") {
               return new Error("Invalid JSON object");
             }
@@ -75,7 +76,8 @@ export default class FoxgloveWebSocketDataSourceFactory implements IDataSourceFa
     }
 
     const headerStr = args.params?.headers as string;
-    const headers = JSON.parse(headerStr);
+    const headers = new Map<string, string>(
+      Object.entries(JSON.parse(headerStr) as { [s: string]: string }));
 
     return new FoxgloveWebSocketPlayer({
       url,
