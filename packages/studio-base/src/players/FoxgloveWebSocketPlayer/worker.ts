@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 export type ToWorkerMessage =
-  | { type: "open"; data: { wsUrl: string; protocols?: string[] | string } }
+  | { type: "open"; data: { wsUrl: string; wsHeaders: Map<string, string>; protocols?: string[] | string } }
   | { type: "close"; data: undefined }
   | { type: "data"; data: string | ArrayBuffer | ArrayBufferView };
 

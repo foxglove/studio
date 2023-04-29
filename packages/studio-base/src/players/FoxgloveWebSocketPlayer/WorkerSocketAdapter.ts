@@ -16,10 +16,10 @@ export default class WorkerSocketAdapter implements IWebSocket {
   public onclose: ((event: unknown) => void) | undefined = undefined;
   public onmessage: ((event: unknown) => void) | undefined = undefined;
 
-  public constructor(wsUrl: string, protocols?: string[] | string) {
+  public constructor(wsUrl: string, wsHeaders: Map<string, string>, protocols?: string[] | string) {
     // foxglove-depcheck-used: babel-plugin-transform-import-meta
     this.worker = new Worker(new URL("./worker", import.meta.url));
-    this.sendToWorker({ type: "open", data: { wsUrl, protocols } });
+    this.sendToWorker({ type: "open", data: { wsUrl, wsHeaders, protocols } });
 
     this.worker.onerror = (ev) => {
       if (this.onerror) {
