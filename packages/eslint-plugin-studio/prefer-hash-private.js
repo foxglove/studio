@@ -36,6 +36,7 @@ module.exports = {
         /** @type {import("estree").Identifier} */ node,
       ) => {
         if (node.parent.object.type !== "ThisExpression") {
+          // Avoid treating `this.foo.bar` as a reference to `private bar`.
           // We'd prefer the selector to use `:has(> ThisExpression.object)`, but ESQuery doesn't support that syntax.
           return;
         }
