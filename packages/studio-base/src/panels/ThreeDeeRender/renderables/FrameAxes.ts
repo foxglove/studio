@@ -322,11 +322,11 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
     }
   }
 
-  private setLineWidth(width: number): void {
+  #setLineWidth(width: number): void {
     this.#lineMaterial.linewidth = width;
   }
 
-  private setLineColor(color: string): void {
+  #setLineColor(color: string): void {
     stringToRgb(this.#lineMaterial.color, color);
   }
 
@@ -372,7 +372,7 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
       this.saveSetting(["scene", "transforms", setting], value);
 
       if (setting === "editable") {
-        this._updateFrameAxes();
+        this.#updateFrameAxes();
       } else if (setting === "labelSize") {
         const labelSize = value as number | undefined;
         this.#setLabelSize(labelSize ?? DEFAULT_TF_LABEL_SIZE);
@@ -381,10 +381,10 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
         this.#setAxisScale(axisScale ?? DEFAULT_AXIS_SCALE);
       } else if (setting === "lineWidth") {
         const lineWidth = value as number | undefined;
-        this.setLineWidth(lineWidth ?? DEFAULT_LINE_WIDTH_PX);
+        this.#setLineWidth(lineWidth ?? DEFAULT_LINE_WIDTH_PX);
       } else if (setting === "lineColor") {
         const lineColor = value as string | undefined;
-        this.setLineColor(lineColor ?? DEFAULT_LINE_COLOR_STR);
+        this.#setLineColor(lineColor ?? DEFAULT_LINE_COLOR_STR);
       }
     } else {
       this.saveSetting(path, action.payload.value);
@@ -480,7 +480,7 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
     this.#updateFrameAxis(renderable);
   }
 
-  private _updateFrameAxes(): void {
+  #updateFrameAxes(): void {
     for (const renderable of this.renderables.values()) {
       this.#updateFrameAxis(renderable);
     }

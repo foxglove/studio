@@ -59,7 +59,7 @@ export class BlockLoader {
   #problemManager: PlayerProblemManager;
   #stopped: boolean = false;
   #activeChangeCondvar: Condvar = new Condvar();
-  private abortController: AbortController;
+  #abortController: AbortController;
 
   public constructor(args: BlockLoaderArgs) {
     this.#source = args.source;
@@ -67,7 +67,7 @@ export class BlockLoader {
     this.#end = args.end;
     this.#maxCacheSize = args.cacheSizeBytes;
     this.#problemManager = args.problemManager;
-    this.abortController = new AbortController();
+    this.#abortController = new AbortController();
 
     const totalNs = Number(toNanoSec(subtractTimes(this.#end, this.#start))) + 1; // +1 since times are inclusive.
     if (totalNs > Number.MAX_SAFE_INTEGER * 0.9) {
@@ -89,7 +89,7 @@ export class BlockLoader {
       return;
     }
 
-    this.abortController.abort();
+    this.#abortController.abort();
     this.#topics = topics;
     this.#activeChangeCondvar.notifyAll();
     log.debug(`Preloaded topics: ${[...topics].join(", ")}`);
@@ -110,7 +110,7 @@ export class BlockLoader {
   /**
    * Remove topics that are no longer requested to be preloaded from blocks to free up space
    */
-  private _removeUnusedBlockTopics(): number {
+  #removeUnusedBlockTopics(): number {
     const topics = this.#topics;
     let totalBytesRemoved = 0;
     for (let i = 0; i < this.#blocks.length; i++) {
@@ -155,11 +155,11 @@ export class BlockLoader {
 
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     while (!this.#stopped) {
-      this.abortController = new AbortController();
+      this.#abortController = new AbortController();
 
       const topics = this.#topics;
 
-      await this.load({ progress: args.progress });
+      await this.#load({ progress: args.progress });
 
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (this.#stopped) {
@@ -173,7 +173,7 @@ export class BlockLoader {
     }
   }
 
-  private async load(args: { progress: LoadArgs["progress"] }): Promise<void> {
+  async #load(args: { progress: LoadArgs["progress"] }): Promise<void> {
     const topics = this.#topics;
 
     // Ignore changing the blocks if the topic list is empty
@@ -230,7 +230,7 @@ export class BlockLoader {
       }
 
       const cursorStartTime = this.#blockIdToStartTime(blockId);
-      const cursorEndTime = clampTime(this.blockIdToEndTime(endBlockId), this.#start, this.#end);
+      const cursorEndTime = clampTime(this.#blockIdToEndTime(endBlockId), this.#start, this.#end);
 
       const iteratorArgs: MessageIteratorArgs = {
         topics: Array.from(topicsToFetch),
@@ -242,11 +242,11 @@ export class BlockLoader {
       // If the source provides a message cursor we use its message cursor, otherwise we make one
       // using the source's message iterator.
       const cursor =
-        this.#source.getMessageCursor?.({ ...iteratorArgs, abort: this.abortController.signal }) ??
-        new IteratorCursor(this.#source.messageIterator(iteratorArgs), this.abortController.signal);
+        this.#source.getMessageCursor?.({ ...iteratorArgs, abort: this.#abortController.signal }) ??
+        new IteratorCursor(this.#source.messageIterator(iteratorArgs), this.#abortController.signal);
 
       for (let currentBlockId = blockId; currentBlockId <= endBlockId; ++currentBlockId) {
-        const untilTime = clampTime(this.blockIdToEndTime(currentBlockId), this.#start, this.#end);
+        const untilTime = clampTime(this.#blockIdToEndTime(currentBlockId), this.#start, this.#end);
 
         const results = await cursor.readUntil(untilTime);
         // No results means cursor aborted or eof
@@ -316,7 +316,7 @@ export class BlockLoader {
             continue;
           }
           // cache over capacity, try removing unused topics
-          const removedSize = this._removeUnusedBlockTopics();
+          const removedSize = this.#removeUnusedBlockTopics();
           totalBlockSizeBytes -= removedSize;
           if (totalBlockSizeBytes > this.#maxCacheSize) {
             this.#problemManager.addProblem("cache-full", {
@@ -397,7 +397,7 @@ export class BlockLoader {
   }
 
   // The end time of a block is the start time of the next block minus 1 nanosecond
-  private blockIdToEndTime(id: number): Time {
+  #blockIdToEndTime(id: number): Time {
     return add(this.#start, fromNanoSec(BigInt(id + 1) * BigInt(this.#blockDurationNanos) - 1n));
   }
 }

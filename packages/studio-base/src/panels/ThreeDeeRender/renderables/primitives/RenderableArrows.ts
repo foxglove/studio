@@ -50,7 +50,7 @@ export class RenderableArrows extends RenderablePrimitive {
   #maxInstances: number;
 
   #shaftOutline: THREE.LineSegments;
-  private headOutline: THREE.LineSegments;
+  #headOutline: THREE.LineSegments;
 
   public constructor(renderer: IRenderer) {
     super("", renderer, undefined);
@@ -97,16 +97,16 @@ export class RenderableArrows extends RenderablePrimitive {
     );
     this.#headOutlineGeometry = new THREE.InstancedBufferGeometry().copy(headEdgesGeometry);
     this.#headOutlineGeometry.setAttribute("instanceMatrix", this.#headMesh.instanceMatrix);
-    this.headOutline = new THREE.LineSegments(
+    this.#headOutline = new THREE.LineSegments(
       this.#headOutlineGeometry,
       renderer.instancedOutlineMaterial,
     );
-    this.headOutline.frustumCulled = false;
-    this.headOutline.userData.picking = false;
-    this.add(this.headOutline);
+    this.#headOutline.frustumCulled = false;
+    this.#headOutline.userData.picking = false;
+    this.add(this.#headOutline);
   }
 
-  private _ensureCapacity(numArrows: number) {
+  #ensureCapacity(numArrows: number) {
     if (numArrows > this.#maxInstances) {
       const newCapacity = Math.ceil(numArrows * 1.5) + 16;
       this.#maxInstances = newCapacity;
@@ -153,14 +153,14 @@ export class RenderableArrows extends RenderablePrimitive {
       this.#headOutlineGeometry = new THREE.InstancedBufferGeometry().copy(headEdgesGeometry);
       this.#headOutlineGeometry.instanceCount = newCapacity;
       this.#headOutlineGeometry.setAttribute("instanceMatrix", this.#headMesh.instanceMatrix);
-      this.headOutline.geometry = this.#headOutlineGeometry;
+      this.#headOutline.geometry = this.#headOutlineGeometry;
     }
   }
 
   #updateMesh(arrows: ArrowPrimitive[]) {
     let isTransparent = false;
 
-    this._ensureCapacity(arrows.length);
+    this.#ensureCapacity(arrows.length);
 
     const overrideColor = this.userData.settings.color
       ? stringToRgba(tempRgba, this.userData.settings.color)
@@ -253,7 +253,7 @@ export class RenderableArrows extends RenderablePrimitive {
       this.userData.expiresAt = lifetimeNs === 0n ? undefined : receiveTime + lifetimeNs;
       this.#updateMesh(entity.arrows);
 
-      this.headOutline.visible = settings.showOutlines ?? true;
+      this.#headOutline.visible = settings.showOutlines ?? true;
       this.#shaftOutline.visible = settings.showOutlines ?? true;
     }
   }

@@ -69,11 +69,11 @@ export class Input extends EventEmitter<InputEvents> {
     canvas.addEventListener("mousedown", this.#onMouseDown);
     canvas.addEventListener("mousemove", this.#onMouseMove);
     canvas.addEventListener("mouseup", this.#onMouseUp);
-    canvas.addEventListener("click", this.onClick);
-    canvas.addEventListener("touchstart", this.onTouchStart, { passive: false });
-    canvas.addEventListener("touchend", this.onTouchEnd, { passive: false });
-    canvas.addEventListener("touchmove", this.onTouchMove, { passive: false });
-    canvas.addEventListener("touchcancel", this.onTouchCancel, { passive: false });
+    canvas.addEventListener("click", this.#onClick);
+    canvas.addEventListener("touchstart", this.#onTouchStart, { passive: false });
+    canvas.addEventListener("touchend", this.#onTouchEnd, { passive: false });
+    canvas.addEventListener("touchmove", this.#onTouchMove, { passive: false });
+    canvas.addEventListener("touchcancel", this.#onTouchCancel, { passive: false });
   }
 
   public dispose(): void {
@@ -85,11 +85,11 @@ export class Input extends EventEmitter<InputEvents> {
     canvas.removeEventListener("mousedown", this.#onMouseDown);
     canvas.removeEventListener("mousemove", this.#onMouseMove);
     canvas.removeEventListener("mouseup", this.#onMouseUp);
-    canvas.removeEventListener("click", this.onClick);
-    canvas.removeEventListener("touchstart", this.onTouchStart);
-    canvas.removeEventListener("touchend", this.onTouchEnd);
-    canvas.removeEventListener("touchmove", this.onTouchMove);
-    canvas.removeEventListener("touchcancel", this.onTouchCancel);
+    canvas.removeEventListener("click", this.#onClick);
+    canvas.removeEventListener("touchstart", this.#onTouchStart);
+    canvas.removeEventListener("touchend", this.#onTouchEnd);
+    canvas.removeEventListener("touchmove", this.#onTouchMove);
+    canvas.removeEventListener("touchcancel", this.#onTouchCancel);
   }
 
   #onResize = (_entries: ResizeObserverEntry[]): void => {
@@ -122,7 +122,7 @@ export class Input extends EventEmitter<InputEvents> {
     this.emit("mouseup", this.#cursorCoords, this.#worldSpaceCursorCoords, event);
   };
 
-  private onClick = (event: MouseEvent): void => {
+  #onClick = (event: MouseEvent): void => {
     if (!this.#startClientPos) {
       return;
     }
@@ -138,7 +138,7 @@ export class Input extends EventEmitter<InputEvents> {
     this.emit("click", this.#cursorCoords, this.#worldSpaceCursorCoords, event);
   };
 
-  private onTouchStart = (event: TouchEvent): void => {
+  #onTouchStart = (event: TouchEvent): void => {
     const touch = event.touches[0];
     if (touch) {
       this.#startClientPos = new THREE.Vector2(touch.clientX, touch.clientY);
@@ -146,15 +146,15 @@ export class Input extends EventEmitter<InputEvents> {
     event.preventDefault();
   };
 
-  private onTouchEnd = (event: TouchEvent): void => {
+  #onTouchEnd = (event: TouchEvent): void => {
     event.preventDefault();
   };
 
-  private onTouchMove = (event: TouchEvent): void => {
+  #onTouchMove = (event: TouchEvent): void => {
     event.preventDefault();
   };
 
-  private onTouchCancel = (event: TouchEvent): void => {
+  #onTouchCancel = (event: TouchEvent): void => {
     event.preventDefault();
   };
 

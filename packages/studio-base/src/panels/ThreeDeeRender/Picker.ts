@@ -125,7 +125,7 @@ export class Picker {
     renderable: Renderable,
     options: PickerOptions = {},
   ): number {
-    this.#emptyScene.onAfterRender = this.makeHandleInstanceAfterRender(renderable);
+    this.#emptyScene.onAfterRender = this.#makeHandleInstanceAfterRender(renderable);
 
     this.#camera = camera;
     const { xInView, yInView } = this.#updateCameraForPickAndGetPickCoordsInView(x, y, options);
@@ -226,7 +226,7 @@ export class Picker {
     renderable: Renderable,
   ): void {
     this.#isDebugPass = true;
-    this.#emptyScene.onAfterRender = this.makeHandleInstanceAfterRender(renderable);
+    this.#emptyScene.onAfterRender = this.#makeHandleInstanceAfterRender(renderable);
     const currAlpha = this.#gl.getClearAlpha();
     this.#gl.getClearColor(this.#currClearColor);
     this.#gl.setClearColor(WHITE_COLOR, 1);
@@ -245,7 +245,7 @@ export class Picker {
     renderList.transparent.forEach(this.#processItem);
   };
 
-  private makeHandleInstanceAfterRender(renderable: Renderable): () => void {
+  #makeHandleInstanceAfterRender(renderable: Renderable): () => void {
     return (): void => {
       // Note that no attempt is made to define a sensible sort order. Since the
       // instanced picking pass should only be rendering opaque pixels, the

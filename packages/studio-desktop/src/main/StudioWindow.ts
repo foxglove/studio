@@ -450,14 +450,14 @@ class StudioWindow {
   // BrowserWindow.id is not as available
   private static windowsByContentId = new Map<number, StudioWindow>();
 
-  #window: BrowserWindow;
+  #browserWindow: BrowserWindow;
   #menu: Menu;
 
   #inputSources = new Set<string>();
 
   public constructor(deepLinks: string[] = []) {
     const browserWindow = newStudioWindow(deepLinks);
-    this.#window = browserWindow;
+    this.#browserWindow = browserWindow;
     this.#menu = buildMenu(browserWindow);
 
     const id = browserWindow.webContents.id;
@@ -499,7 +499,7 @@ class StudioWindow {
   public load(): void {
     // load after setting windowsById so any ipc handlers with id lookup work
     log.info(`window.loadURL(${rendererPath})`);
-    this.#window
+    this.#browserWindow
       .loadURL(rendererPath)
       .then(() => {
         log.info("window URL loaded");
@@ -535,7 +535,7 @@ class StudioWindow {
     // build new file menu
     this.#rebuildFileMenu(fileMenu);
 
-    this.#window.setMenu(this.#menu);
+    this.#browserWindow.setMenu(this.#menu);
   }
 
   public removeInputSource(name: string): void {
@@ -547,11 +547,11 @@ class StudioWindow {
     }
 
     this.#rebuildFileMenu(fileMenu);
-    this.#window.setMenu(this.#menu);
+    this.#browserWindow.setMenu(this.#menu);
   }
 
   public getBrowserWindow(): BrowserWindow {
-    return this.#window;
+    return this.#browserWindow;
   }
 
   public getMenu(): Menu {
@@ -563,7 +563,7 @@ class StudioWindow {
   }
 
   #rebuildFileMenu(fileMenu: MenuItem): void {
-    const browserWindow = this.#window;
+    const browserWindow = this.#browserWindow;
 
     // https://github.com/electron/electron/issues/8598
     (fileMenu.submenu as ClearableMenu).clear();

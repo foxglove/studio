@@ -260,18 +260,18 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
 
   public override removeAllRenderables(): void {
     // Re-add coordinate frames and transforms since the scene has been cleared
-    this._refreshTransforms();
+    this.#refreshTransforms();
   }
 
   /**
    * Re-add coordinate frames and transforms corresponding to existing custom URDFs
    */
-  private _refreshTransforms() {
+  #refreshTransforms() {
     for (const [instanceId, frames] of this.#framesByInstanceId) {
-      this._loadFrames(instanceId, frames);
+      this.#loadFrames(instanceId, frames);
     }
     for (const [instanceId, transforms] of this.#transformsByInstanceId) {
-      this._loadTransforms(instanceId, transforms);
+      this.#loadTransforms(instanceId, transforms);
     }
   }
 
@@ -356,7 +356,7 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
         this.#transformsByInstanceId.delete(instanceId);
 
         // Re-add coordinate frames in case the deleted URDF shared frame names with other URDFs
-        this._refreshTransforms();
+        this.#refreshTransforms();
 
         // Update the settings tree
         this.updateSettingsTree();
@@ -600,8 +600,8 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     const renderer = this.renderer;
     const instanceId = renderable.userData.settings.instanceId;
 
-    this._loadFrames(instanceId, frames);
-    this._loadTransforms(instanceId, transforms);
+    this.#loadFrames(instanceId, frames);
+    this.#loadTransforms(instanceId, transforms);
     this.updateSettingsTree();
 
     // Dispose any existing renderables
@@ -633,7 +633,7 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     }
   }
 
-  private _loadFrames(instanceId: string, frames: string[]): void {
+  #loadFrames(instanceId: string, frames: string[]): void {
     this.#framesByInstanceId.set(instanceId, frames);
 
     // Import all coordinate frames from the URDF into the scene
@@ -642,7 +642,7 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     }
   }
 
-  private _loadTransforms(instanceId: string, transforms: TransformData[]): void {
+  #loadTransforms(instanceId: string, transforms: TransformData[]): void {
     this.#transformsByInstanceId.set(instanceId, transforms);
 
     // Import all transforms from the URDF into the scene

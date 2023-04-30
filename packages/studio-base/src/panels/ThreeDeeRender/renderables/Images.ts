@@ -93,13 +93,13 @@ export class Images extends SceneExtension<ImageRenderable> {
       shouldSubscribe: this.#cameraInfoShouldSubscribe,
     });
 
-    this._updateCameraInfoTopics();
+    this.#updateCameraInfoTopics();
   }
 
   /**
    * Update cameraInfoTopics cache with latest set of camera info messages
    */
-  private _updateCameraInfoTopics() {
+  #updateCameraInfoTopics() {
     if (this.renderer.topics === this.#lastTopics) {
       return;
     }
@@ -118,7 +118,7 @@ export class Images extends SceneExtension<ImageRenderable> {
   }
 
   public override settingsNodes(): SettingsTreeEntry[] {
-    this._updateCameraInfoTopics();
+    this.#updateCameraInfoTopics();
     const configTopics = this.renderer.config.topics;
     const handler = this.handleSettingsAction;
     const entries: SettingsTreeEntry[] = [];
@@ -263,7 +263,7 @@ export class Images extends SceneExtension<ImageRenderable> {
 
   #handleImage = (messageEvent: PartialMessageEvent<AnyImage>, image: AnyImage): void => {
     // Ensure the latest list of camera info topics is up to date for autoSelectCameraInfoTopic call below
-    this._updateCameraInfoTopics();
+    this.#updateCameraInfoTopics();
 
     const imageTopic = messageEvent.topic;
     const receiveTime = toNanoSec(messageEvent.receiveTime);

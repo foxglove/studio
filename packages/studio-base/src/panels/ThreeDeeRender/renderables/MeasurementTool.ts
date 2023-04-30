@@ -93,8 +93,8 @@ export class MeasurementTool extends SceneExtension<Renderable<BaseUserData>, Me
   #point1NeedsUpdate = false;
   #point2NeedsUpdate = false;
 
-  private point1?: THREE.Vector3;
-  private point2?: THREE.Vector3;
+  #point1?: THREE.Vector3;
+  #point2?: THREE.Vector3;
 
   public state: MeasurementState = "idle";
 
@@ -134,7 +134,7 @@ export class MeasurementTool extends SceneExtension<Renderable<BaseUserData>, Me
     this.add(this.#line);
     this.add(this.#lineOccluded);
     this.add(this.#label);
-    this._setState("idle");
+    this.#setState("idle");
   }
 
   public override dispose(): void {
@@ -147,16 +147,16 @@ export class MeasurementTool extends SceneExtension<Renderable<BaseUserData>, Me
     this.#lineOccluded.geometry.dispose();
     this.#lineOccluded.material.dispose();
     this.renderer.input.removeListener("click", this.#handleClick);
-    this.renderer.input.removeListener("mousemove", this._handleMouseMove);
+    this.renderer.input.removeListener("mousemove", this.#handleMouseMove);
   }
 
   public startMeasuring(): void {
-    this._setState("place-first-point");
+    this.#setState("place-first-point");
   }
 
   public stopMeasuring(): void {
-    this.point1 = this.point2 = undefined;
-    this._setState("idle");
+    this.#point1 = this.#point2 = undefined;
+    this.#setState("idle");
   }
 
   public override startFrame(
@@ -169,28 +169,28 @@ export class MeasurementTool extends SceneExtension<Renderable<BaseUserData>, Me
     this.#circleMaterial.uniforms.canvasSize!.value[1] = this.renderer.input.canvasSize.y;
   }
 
-  private _setState(state: MeasurementState): void {
+  #setState(state: MeasurementState): void {
     this.state = state;
     switch (state) {
       case "idle":
         this.renderer.input.removeListener("click", this.#handleClick);
-        this.renderer.input.removeListener("mousemove", this._handleMouseMove);
+        this.renderer.input.removeListener("mousemove", this.#handleMouseMove);
         this.dispatchEvent({ type: "foxglove.measure-end" });
         break;
       case "place-first-point":
-        this.point1 = this.point2 = undefined;
+        this.#point1 = this.#point2 = undefined;
         this.renderer.input.addListener("click", this.#handleClick);
-        this.renderer.input.addListener("mousemove", this._handleMouseMove);
+        this.renderer.input.addListener("mousemove", this.#handleMouseMove);
         this.dispatchEvent({ type: "foxglove.measure-start" });
         break;
       case "place-second-point":
         break;
     }
     this.#updateDistance();
-    this._render();
+    this.#render();
   }
 
-  private _handleMouseMove = (
+  #handleMouseMove = (
     _cursorCoords: THREE.Vector2,
     worldSpaceCursorCoords: THREE.Vector3 | undefined,
     _event: MouseEvent,
@@ -202,21 +202,21 @@ export class MeasurementTool extends SceneExtension<Renderable<BaseUserData>, Me
       case "idle":
         break;
       case "place-first-point":
-        (this.point1 ??= new THREE.Vector3()).copy(worldSpaceCursorCoords);
+        (this.#point1 ??= new THREE.Vector3()).copy(worldSpaceCursorCoords);
         this.#point1NeedsUpdate = true;
         break;
       case "place-second-point":
-        (this.point2 ??= new THREE.Vector3()).copy(worldSpaceCursorCoords);
+        (this.#point2 ??= new THREE.Vector3()).copy(worldSpaceCursorCoords);
         this.#point2NeedsUpdate = true;
         this.#updateDistance();
         break;
     }
-    this._render();
+    this.#render();
   };
 
   #updateDistance() {
-    if (this.point1 && this.point2) {
-      this.#label.setText(this.point1.distanceTo(this.point2).toFixed(2));
+    if (this.#point1 && this.#point2) {
+      this.#label.setText(this.#point1.distanceTo(this.#point2).toFixed(2));
     }
   }
 
@@ -232,26 +232,26 @@ export class MeasurementTool extends SceneExtension<Renderable<BaseUserData>, Me
       case "idle":
         break;
       case "place-first-point":
-        this.point1 = worldSpaceCursorCoords.clone();
+        this.#point1 = worldSpaceCursorCoords.clone();
         this.#point1NeedsUpdate = true;
-        this._setState("place-second-point");
+        this.#setState("place-second-point");
         break;
       case "place-second-point":
-        this.point2 = worldSpaceCursorCoords.clone();
+        this.#point2 = worldSpaceCursorCoords.clone();
         this.#point2NeedsUpdate = true;
-        this._setState("idle");
+        this.#setState("idle");
         break;
     }
-    this._render();
+    this.#render();
   };
 
-  private _render() {
-    if (this.point1) {
+  #render() {
+    if (this.#point1) {
       this.#circle1.visible = true;
-      this.#circle1.position.copy(this.point1);
+      this.#circle1.position.copy(this.#point1);
 
       if (this.#point1NeedsUpdate) {
-        this.#linePositionAttribute.setXYZ(0, this.point1.x, this.point1.y, this.point1.z);
+        this.#linePositionAttribute.setXYZ(0, this.#point1.x, this.#point1.y, this.#point1.z);
         this.#linePositionAttribute.needsUpdate = true;
         this.#lineOccluded.computeLineDistances();
         this.#point1NeedsUpdate = false;
@@ -260,12 +260,12 @@ export class MeasurementTool extends SceneExtension<Renderable<BaseUserData>, Me
       this.#circle1.visible = false;
     }
 
-    if (this.point2) {
+    if (this.#point2) {
       this.#circle2.visible = true;
-      this.#circle2.position.copy(this.point2);
+      this.#circle2.position.copy(this.#point2);
 
       if (this.#point2NeedsUpdate) {
-        this.#linePositionAttribute.setXYZ(1, this.point2.x, this.point2.y, this.point2.z);
+        this.#linePositionAttribute.setXYZ(1, this.#point2.x, this.#point2.y, this.#point2.z);
         this.#linePositionAttribute.needsUpdate = true;
         this.#lineOccluded.computeLineDistances();
         this.#point2NeedsUpdate = false;
@@ -274,11 +274,11 @@ export class MeasurementTool extends SceneExtension<Renderable<BaseUserData>, Me
       this.#circle2.visible = false;
     }
 
-    if (this.point1 && this.point2) {
+    if (this.#point1 && this.#point2) {
       this.#line.visible = true;
       this.#lineOccluded.visible = true;
       this.#label.visible = true;
-      this.#label.position.copy(this.point1).lerp(this.point2, 0.5);
+      this.#label.position.copy(this.#point1).lerp(this.#point2, 0.5);
     } else {
       this.#line.visible = false;
       this.#lineOccluded.visible = false;
