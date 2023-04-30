@@ -35,6 +35,10 @@ module.exports = {
       [`MemberExpression:has(ThisExpression.object) > Identifier.property`]: (
         /** @type {import("estree").Identifier} */ node,
       ) => {
+        if (node.parent.object.type !== "ThisExpression") {
+          // We'd prefer the selector to use `:has(> ThisExpression.object)`, but ESQuery doesn't support that syntax.
+          return;
+        }
         const cls = getEnclosingClass(node);
         if (!cls) {
           return;
