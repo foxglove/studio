@@ -37,7 +37,7 @@ class BenchmarkPlayer implements Player {
   #blockLoader?: BlockLoader;
   #problemManager = new PlayerProblemManager();
 
-  public constructor(name: string, source: BenchmarkPlayer["source"]) {
+  public constructor(name: string, source: IIterableSource) {
     this.#name = name;
     this.#source = source;
   }
