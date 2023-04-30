@@ -2,8 +2,6 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-const { findVariable } = require("@eslint-community/eslint-utils");
-
 /**
  * @param {import("estree").Node} node
  */
@@ -73,31 +71,6 @@ module.exports = {
             infoByClass.set(cls, info);
           }
           info.privates.add(node);
-
-          // const scope = context.getScope();
-          // const v = findVariable(context.getScope(), node.key.name);
-          // console.log(`scope for ${node.key.name} is:`, scope);
-          // console.log(`fn scope:`, scope.childScopes[1]);
-          // console.log(`findVariable returned`, v);
-          // const variable = scope.set.get(node.key.name);
-          // if (!variable) {
-          //   throw new Error(`Couldn't find scope variable named ${node.key.name}`);
-          // }
-
-          // const newName = "#" + node.key.name.replace(/^_/, "");
-
-          // context.report({
-          //   node,
-          //   message: "Use `#` language feature instead of `private` accessibility modifier",
-          //   suggest: [
-          //     {
-          //       desc: `Rename to ${newName}`,
-          //       fix: (fixer) => {
-          //         return variable.references.map((ref) => fixer.replaceText(ref.identifier, newName));
-          //       },
-          //     },
-          //   ],
-          // });
         },
 
       [`ClassDeclaration:exit`]: (node) => {
