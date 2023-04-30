@@ -72,7 +72,7 @@ class BufferedIterableSource implements IIterableSource {
     return this.#initResult;
   }
 
-  private async startProducer(args: MessageIteratorArgs): Promise<void> {
+  async #startProducer(args: MessageIteratorArgs): Promise<void> {
     if (!this.#initResult) {
       throw new Error("Invariant: uninitialized");
     }
@@ -203,7 +203,7 @@ class BufferedIterableSource implements IIterableSource {
     this.#readDone = false;
 
     // Create and start the producer when the messageIterator function is called.
-    this.#producer = this.startProducer(args);
+    this.#producer = this.#startProducer(args);
 
     // Rather than messageIterator itself being a generator, we return a generator function. This is
     // so the setup code above will run when the messageIterator is called rather than when .next()
@@ -221,30 +221,30 @@ class BufferedIterableSource implements IIterableSource {
         }
 
         for (;;) {
-          const item = self.cache.dequeue();
+          const item = self.#cache.dequeue();
           if (!item) {
-            if (self.readDone) {
+            if (self.#readDone) {
               break;
             }
 
             // Wait for more stuff to load
-            await self.readSignal.wait();
+            await self.#readSignal.wait();
             continue;
           }
 
           if (item.type === "stamp") {
-            self.readHead = item.stamp;
+            self.#readHead = item.stamp;
           }
 
           // When there is a new message update the readHead for the producer to know where we are
           // currently reading
           if (item.type === "message-event") {
-            self.readHead = item.msgEvent.receiveTime;
+            self.#readHead = item.msgEvent.receiveTime;
           }
 
           // Notify the producer thread that it can load more data. Since our producer and consumer are on the same _thread_
           // this notification is picked up on the next tick.
-          self.writeSignal.notifyAll();
+          self.#writeSignal.notifyAll();
 
           yield item;
         }

@@ -100,12 +100,9 @@ export class Transform {
    * Copy the values in another transform into this one
    */
   public copy(other: Transform): this {
-    // eslint-disable-next-line no-underscore-dangle
-    vec3.copy(this.#position, other._position);
-    // eslint-disable-next-line no-underscore-dangle
-    quat.copy(this.#rotation, other._rotation);
-    // eslint-disable-next-line no-underscore-dangle
-    mat4.copy(this.#matrix, other._matrix);
+    vec3.copy(this.#position, other.#position);
+    quat.copy(this.#rotation, other.#rotation);
+    mat4.copy(this.#matrix, other.#matrix);
     return this;
   }
 
@@ -135,12 +132,9 @@ export class Transform {
    * @returns A reference to `out`
    */
   public static Interpolate(out: Transform, a: Transform, b: Transform, t: number): Transform {
-    // eslint-disable-next-line no-underscore-dangle
-    vec3.lerp(out._position, a.position(), b.position(), t);
-    // eslint-disable-next-line no-underscore-dangle
-    quat.slerp(out._rotation, a.rotation(), b.rotation(), t);
-    // eslint-disable-next-line no-underscore-dangle
-    out.setPositionRotation(out._position, out._rotation);
+    vec3.lerp(out.#position, a.position(), b.position(), t);
+    quat.slerp(out.#rotation, a.rotation(), b.rotation(), t);
+    out.setPositionRotation(out.#position, out.#rotation);
     return out;
   }
 }

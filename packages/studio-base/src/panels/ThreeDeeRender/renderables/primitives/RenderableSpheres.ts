@@ -61,7 +61,7 @@ export class RenderableSpheres extends RenderablePrimitive {
 
       this.#mesh.removeFromParent();
       this.#mesh.dispose();
-      this.#mesh = new THREE.InstancedMesh(this.#mesh.#geometry, this.#material, this.#maxInstances);
+      this.#mesh = new THREE.InstancedMesh(this.#mesh.geometry, this.#material, this.#maxInstances);
       this.#instanceOpacity = new THREE.InstancedBufferAttribute(
         new Float32Array(this.#maxInstances),
         1,

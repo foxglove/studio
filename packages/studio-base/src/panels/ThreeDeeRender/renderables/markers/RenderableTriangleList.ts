@@ -34,7 +34,10 @@ export class RenderableTriangleList extends RenderableMarker {
     this.#vertices = new Float32Array(marker.points.length * 3);
     this.#colors = new Float32Array(marker.colors.length * 4);
 
-    this.#mesh = new THREE.Mesh(new THREE.BufferGeometry(), makeStandardVertexColorMaterial(marker));
+    this.#mesh = new THREE.Mesh(
+      new THREE.BufferGeometry(),
+      makeStandardVertexColorMaterial(marker),
+    );
     this.#mesh.castShadow = true;
     this.#mesh.receiveShadow = true;
     this.add(this.#mesh);
@@ -101,7 +104,8 @@ export class RenderableTriangleList extends RenderableMarker {
       this.#colors = new Float32Array(vertexCount * 4);
       dataChanged = true;
     }
-    const { vertices, colors } = this;
+    const vertices = this.#vertices;
+    const colors = this.#colors;
 
     // Update position/color buffers with the new marker data
     for (let i = 0; i < vertexCount; i++) {

@@ -314,7 +314,7 @@ export class ImageMode extends SceneExtension<ImageRenderable> implements ICamer
     const value = action.payload.value;
     if (category === "imageMode") {
       this.saveSetting(path, value);
-      this.updateViewAndRenderables();
+      this.#updateViewAndRenderables();
     } else {
       return;
     }
@@ -339,16 +339,14 @@ export class ImageMode extends SceneExtension<ImageRenderable> implements ICamer
     // the camera info by the info topic configured for the image
     const cameraInfo = normalizeCameraInfo(messageEvent.message);
     this.#updateCameraModel(cameraInfo);
-    this.updateViewAndRenderables();
+    this.#updateViewAndRenderables();
   };
 
   #handleRosRawImage = (messageEvent: PartialMessageEvent<RosImage>): void => {
     this.#handleImage(messageEvent, normalizeRosImage(messageEvent.message));
   };
 
-  #handleRosCompressedImage = (
-    messageEvent: PartialMessageEvent<RosCompressedImage>,
-  ): void => {
+  #handleRosCompressedImage = (messageEvent: PartialMessageEvent<RosCompressedImage>): void => {
     this.#handleImage(messageEvent, normalizeRosCompressedImage(messageEvent.message));
   };
 
@@ -459,7 +457,7 @@ export class ImageMode extends SceneExtension<ImageRenderable> implements ICamer
   /**
    * Updates renderable, frame, and camera to be in sync with current camera model
    */
-  private updateViewAndRenderables(): void {
+  #updateViewAndRenderables(): void {
     const cameraInfo = this.#cameraModel?.info;
     if (!cameraInfo) {
       this.renderer.settings.errors.add(
@@ -508,7 +506,7 @@ export class ImageMode extends SceneExtension<ImageRenderable> implements ICamer
         model,
         info: newCameraInfo,
       };
-      this.#annotations.#updateCameraModel(model);
+      this.#annotations.updateCameraModel(model);
     }
   }
 
@@ -540,7 +538,7 @@ export class ImageMode extends SceneExtension<ImageRenderable> implements ICamer
   }
 
   public setCameraState(): void {
-    this.updateViewAndRenderables();
+    this.#updateViewAndRenderables();
   }
 
   public getCameraState(): undefined {

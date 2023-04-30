@@ -90,12 +90,12 @@ export default class LayoutManager implements ILayoutManager {
     const method = descriptor.value!;
     descriptor.value = async function (...args) {
       try {
-        this.busyCount++;
-        this.emitter.emit("busychange");
+        this.#busyCount++;
+        this.#emitter.emit("busychange");
         return await method.apply(this, args);
       } finally {
-        this.busyCount--;
-        this.emitter.emit("busychange");
+        this.#busyCount--;
+        this.#emitter.emit("busychange");
       }
     };
   }
@@ -592,7 +592,7 @@ export default class LayoutManager implements ILayoutManager {
     operations: readonly (SyncOperation & { local: false })[],
     abortSignal: AbortSignal,
   ): Promise<void> {
-    const { remote } = this;
+    const remote = this.#remote;
     if (!remote) {
       return;
     }

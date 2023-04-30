@@ -107,8 +107,8 @@ export class RenderableLineStrip extends RenderableMarker {
     if (pointsLength !== prevPointsLength) {
       this.#geometry.dispose();
       this.#geometry = new LineGeometry();
-      this.#linePrepass.#geometry = this.#geometry;
-      this.#line.#geometry = this.#geometry;
+      this.#linePrepass.geometry = this.#geometry;
+      this.#line.geometry = this.#geometry;
     }
 
     this.#setPositions(marker, pointsLength);

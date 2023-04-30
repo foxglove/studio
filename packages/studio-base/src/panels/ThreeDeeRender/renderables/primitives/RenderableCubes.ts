@@ -68,7 +68,10 @@ export class RenderableCubes extends RenderablePrimitive {
     );
     this.#outlineGeometry = new THREE.InstancedBufferGeometry().copy(this.#sharedEdgesGeometry);
     this.#outlineGeometry.setAttribute("instanceMatrix", this.#mesh.instanceMatrix);
-    this.#outline = new THREE.LineSegments(this.#outlineGeometry, renderer.instancedOutlineMaterial);
+    this.#outline = new THREE.LineSegments(
+      this.#outlineGeometry,
+      renderer.instancedOutlineMaterial,
+    );
     this.#outline.frustumCulled = false;
     this.#outline.userData.picking = false;
     this.add(this.#outline);
@@ -95,7 +98,7 @@ export class RenderableCubes extends RenderablePrimitive {
       this.#outlineGeometry = new THREE.InstancedBufferGeometry().copy(this.#sharedEdgesGeometry);
       this.#outlineGeometry.instanceCount = newCapacity;
       this.#outlineGeometry.setAttribute("instanceMatrix", this.#mesh.instanceMatrix);
-      this.#outline.#geometry = this.#outlineGeometry;
+      this.#outline.geometry = this.#outlineGeometry;
     }
   }
 

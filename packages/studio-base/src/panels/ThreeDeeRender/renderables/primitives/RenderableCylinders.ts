@@ -22,10 +22,7 @@ const tempRgba = makeRgba();
 
 export class RenderableCylinders extends RenderablePrimitive {
   // Each RenderableCylinders needs its own geometry because we attach additional custom attributes to it.
-  #mesh: THREE.InstancedMesh<
-    THREE.CylinderGeometry,
-    MeshStandardMaterialWithInstanceOpacity
-  >;
+  #mesh: THREE.InstancedMesh<THREE.CylinderGeometry, MeshStandardMaterialWithInstanceOpacity>;
   #geometry: THREE.CylinderGeometry;
   // actual shared geometry across instances, only copy -- do not modify
   // stored for ease of use
@@ -43,8 +40,8 @@ export class RenderableCylinders extends RenderablePrimitive {
    */
   #maxInstances: number;
 
-  private outlineGeometry: THREE.InstancedBufferGeometry;
-  private outline: THREE.LineSegments;
+  #outlineGeometry: THREE.InstancedBufferGeometry;
+  #outline: THREE.LineSegments;
 
   public constructor(renderer: IRenderer) {
     super("", renderer);
@@ -54,7 +51,7 @@ export class RenderableCylinders extends RenderablePrimitive {
       .clone() as THREE.CylinderGeometry;
     this.#maxInstances = 16;
     this.#mesh = new THREE.InstancedMesh(this.#geometry, this.#material, this.#maxInstances);
-    this.#mesh.userData.#pickingMaterial = this.#pickingMaterial;
+    this.#mesh.userData.pickingMaterial = this.#pickingMaterial;
     this.#instanceOpacity = new THREE.InstancedBufferAttribute(
       new Float32Array(this.#maxInstances),
       1,
@@ -77,14 +74,14 @@ export class RenderableCylinders extends RenderablePrimitive {
       `${this.constructor.name}-edges`,
       () => createEdgesGeometry(this.#geometry),
     );
-    this.outlineGeometry = new THREE.InstancedBufferGeometry().copy(this.#sharedEdgesGeometry);
-    this.outlineGeometry.setAttribute("instanceMatrix", this.#mesh.instanceMatrix);
-    this.outlineGeometry.setAttribute("instanceBottomScale", this.#instanceBottomScale);
-    this.outlineGeometry.setAttribute("instanceTopScale", this.#instanceTopScale);
-    this.outline = new THREE.LineSegments(this.outlineGeometry, this.#outlineMaterial);
-    this.outline.frustumCulled = false;
-    this.outline.userData.picking = false;
-    this.add(this.outline);
+    this.#outlineGeometry = new THREE.InstancedBufferGeometry().copy(this.#sharedEdgesGeometry);
+    this.#outlineGeometry.setAttribute("instanceMatrix", this.#mesh.instanceMatrix);
+    this.#outlineGeometry.setAttribute("instanceBottomScale", this.#instanceBottomScale);
+    this.#outlineGeometry.setAttribute("instanceTopScale", this.#instanceTopScale);
+    this.#outline = new THREE.LineSegments(this.#outlineGeometry, this.#outlineMaterial);
+    this.#outline.frustumCulled = false;
+    this.#outline.userData.picking = false;
+    this.add(this.#outline);
   }
 
   public override setColorScheme(colorScheme: "dark" | "light"): void {
@@ -92,7 +89,7 @@ export class RenderableCylinders extends RenderablePrimitive {
     this.#outlineMaterial.needsUpdate = true;
   }
 
-  private _ensureCapacity(numCubes: number) {
+  #ensureCapacity(numCubes: number) {
     if (numCubes > this.#maxInstances) {
       const newCapacity = Math.trunc(numCubes * 1.5) + 16;
       this.#maxInstances = newCapacity;
@@ -116,25 +113,25 @@ export class RenderableCylinders extends RenderablePrimitive {
       this.#mesh.removeFromParent();
       this.#mesh.dispose();
       this.#mesh = new THREE.InstancedMesh(this.#geometry, this.#material, this.#maxInstances);
-      this.#mesh.userData.#pickingMaterial = this.#pickingMaterial;
+      this.#mesh.userData.pickingMaterial = this.#pickingMaterial;
       this.add(this.#mesh);
 
       // THREE.js doesn't correctly recompute the new max instance count when dynamically
       // reassigning the attribute of InstancedBufferGeometry, so we just create a new geometry
-      this.outlineGeometry.dispose();
-      this.outlineGeometry = new THREE.InstancedBufferGeometry().copy(this.#sharedEdgesGeometry);
-      this.outlineGeometry.instanceCount = newCapacity;
-      this.outlineGeometry.setAttribute("instanceMatrix", this.#mesh.instanceMatrix);
-      this.outlineGeometry.setAttribute("instanceBottomScale", this.#instanceBottomScale);
-      this.outlineGeometry.setAttribute("instanceTopScale", this.#instanceTopScale);
-      this.outline.#geometry = this.outlineGeometry;
+      this.#outlineGeometry.dispose();
+      this.#outlineGeometry = new THREE.InstancedBufferGeometry().copy(this.#sharedEdgesGeometry);
+      this.#outlineGeometry.instanceCount = newCapacity;
+      this.#outlineGeometry.setAttribute("instanceMatrix", this.#mesh.instanceMatrix);
+      this.#outlineGeometry.setAttribute("instanceBottomScale", this.#instanceBottomScale);
+      this.#outlineGeometry.setAttribute("instanceTopScale", this.#instanceTopScale);
+      this.#outline.geometry = this.#outlineGeometry;
     }
   }
 
   #updateMesh(cylinders: CylinderPrimitive[]) {
     let isTransparent = false;
 
-    this._ensureCapacity(cylinders.length);
+    this.#ensureCapacity(cylinders.length);
 
     const overrideColor = this.userData.settings.color
       ? stringToRgba(tempRgba, this.userData.settings.color)
@@ -181,7 +178,7 @@ export class RenderableCylinders extends RenderablePrimitive {
       this.#material.needsUpdate = true;
     }
     this.#mesh.count = cylinders.length;
-    this.outlineGeometry.instanceCount = cylinders.length;
+    this.#outlineGeometry.instanceCount = cylinders.length;
     this.#mesh.instanceMatrix.needsUpdate = true;
     this.#instanceOpacity.needsUpdate = true;
     this.#instanceBottomScale.needsUpdate = true;
@@ -199,7 +196,7 @@ export class RenderableCylinders extends RenderablePrimitive {
     this.#material.dispose();
     this.#pickingMaterial.dispose();
     this.#outlineMaterial.dispose();
-    this.outlineGeometry.dispose();
+    this.#outlineGeometry.dispose();
   }
 
   public override update(
@@ -213,7 +210,7 @@ export class RenderableCylinders extends RenderablePrimitive {
       const lifetimeNs = toNanoSec(entity.lifetime);
       this.userData.expiresAt = lifetimeNs === 0n ? undefined : receiveTime + lifetimeNs;
       this.#updateMesh(entity.cylinders);
-      this.outline.visible = settings.showOutlines ?? true;
+      this.#outline.visible = settings.showOutlines ?? true;
     }
   }
 

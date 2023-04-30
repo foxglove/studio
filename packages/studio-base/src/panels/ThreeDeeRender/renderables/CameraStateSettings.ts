@@ -68,9 +68,9 @@ export class CameraStateSettings extends SceneExtension implements ICameraHandle
 
     renderer.on("cameraMove", this.#handleCameraMove);
 
-    renderer.settings.errors.on("update", this.handleErrorChange);
-    renderer.settings.errors.on("clear", this.handleErrorChange);
-    renderer.settings.errors.on("remove", this.handleErrorChange);
+    renderer.settings.errors.on("update", this.#handleErrorChange);
+    renderer.settings.errors.on("clear", this.#handleErrorChange);
+    renderer.settings.errors.on("remove", this.#handleErrorChange);
 
     this.#canvas = canvas;
     this.#perspectiveCamera = new THREE.PerspectiveCamera();
@@ -107,15 +107,15 @@ export class CameraStateSettings extends SceneExtension implements ICameraHandle
     // for frame settings
     this.renderer.off("transformTreeUpdated", this.#handleTransformTreeUpdated);
 
-    this.renderer.settings.errors.off("update", this.handleErrorChange);
-    this.renderer.settings.errors.off("clear", this.handleErrorChange);
-    this.renderer.settings.errors.off("remove", this.handleErrorChange);
+    this.renderer.settings.errors.off("update", this.#handleErrorChange);
+    this.renderer.settings.errors.off("clear", this.#handleErrorChange);
+    this.renderer.settings.errors.off("remove", this.#handleErrorChange);
 
     super.dispose();
   }
 
   public override settingsNodes(): SettingsTreeEntry[] {
-    return [this.#cameraSettingsNode(), this.frameSettingsNode()];
+    return [this.#cameraSettingsNode(), this.#frameSettingsNode()];
   }
 
   #cameraSettingsNode(): SettingsTreeEntry {
@@ -198,7 +198,7 @@ export class CameraStateSettings extends SceneExtension implements ICameraHandle
     };
   }
 
-  private frameSettingsNode(): SettingsTreeEntry {
+  #frameSettingsNode(): SettingsTreeEntry {
     const config = this.renderer.config;
     const handler = this.handleSettingsAction;
 
@@ -391,16 +391,12 @@ export class CameraStateSettings extends SceneExtension implements ICameraHandle
   #handleTransformTreeUpdated = (): void => {
     this.updateSettingsTree();
   };
-  private handleErrorChange = (): void => {
+  #handleErrorChange = (): void => {
     this.updateSettingsTree();
   };
 
   // Redefine follow pose snapshot whenever renderFrame or fixedFrame changes
-  #getUnfollowPoseSnapshot(
-    fixedFrameId: string,
-    renderFrameId: string,
-    currentTime: bigint,
-  ) {
+  #getUnfollowPoseSnapshot(fixedFrameId: string, renderFrameId: string, currentTime: bigint) {
     const transformTree = this.renderer.transformTree;
     if (
       this.#unfollowSnapshotFrameIds?.fixed !== fixedFrameId ||
@@ -486,7 +482,7 @@ export class CameraStateSettings extends SceneExtension implements ICameraHandle
     this.#perspectiveCamera.fov = cameraState.fovy;
     this.#perspectiveCamera.near = cameraState.near;
     this.#perspectiveCamera.far = cameraState.far;
-    this.#perspectiveCamera.#aspect = this.#aspect;
+    this.#perspectiveCamera.aspect = this.#aspect;
     this.#perspectiveCamera.updateProjectionMatrix();
 
     this.#controls.target.copy(targetOffset);

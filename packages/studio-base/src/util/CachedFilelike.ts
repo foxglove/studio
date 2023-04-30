@@ -97,7 +97,7 @@ export default class CachedFilelike implements Filelike {
   #lastResolvedCallbackEnd?: number;
 
   // The last time we've encountered an error;
-  private _lastErrorTime?: number;
+  #lastErrorTime?: number;
 
   public constructor(options: {
     fileReader: FileReader;
@@ -242,14 +242,14 @@ export default class CachedFilelike implements Filelike {
 
       if (this.#keepReconnectingCallback) {
         // If this callback is set, just keep retrying.
-        if (this._lastErrorTime == undefined) {
+        if (this.#lastErrorTime == undefined) {
           // And if this is the first error, let the callback know.
           this.#keepReconnectingCallback(true);
         }
       } else {
         // Otherwise, if we get two errors in a short timespan (100ms) then there is probably a
         // serious error, we resolve all remaining callbacks with errors and close out.
-        const lastErrorTime = this._lastErrorTime;
+        const lastErrorTime = this.#lastErrorTime;
         if (lastErrorTime != undefined && Date.now() - lastErrorTime < 100) {
           this.#log.error(
             `Connection @ ${rangeToString(
@@ -270,9 +270,9 @@ export default class CachedFilelike implements Filelike {
       this.#log.info(
         `Connection @ ${rangeToString(range)} threw error; trying to continue: ${error.toString()}`,
       );
-      this._lastErrorTime = Date.now();
+      this.#lastErrorTime = Date.now();
       currentConnection.stream.destroy();
-      delete this.#currentConnection;
+      this.#currentConnection = undefined;
       this.#updateState();
     });
 
@@ -286,9 +286,9 @@ export default class CachedFilelike implements Filelike {
         return; // Ignore data from old streams.
       }
 
-      if (this._lastErrorTime != undefined) {
+      if (this.#lastErrorTime != undefined) {
         // If we had an error before, then that has clearly been resolved since we received some data.
-        this._lastErrorTime = undefined;
+        this.#lastErrorTime = undefined;
         if (this.#keepReconnectingCallback) {
           // And if we had a callback, let it know that the issue has been resolved.
           this.#keepReconnectingCallback(false);
@@ -317,7 +317,7 @@ export default class CachedFilelike implements Filelike {
         // If the requested range has been downloaded, we're done!
         this.#log.info(`Connection @ ${rangeToString(currentConnection.remainingRange)} finished!`);
         stream.destroy();
-        delete this.#currentConnection;
+        this.#currentConnection = undefined;
       } else {
         // Otherwise, update `remainingRange`.
         this.#currentConnection = {

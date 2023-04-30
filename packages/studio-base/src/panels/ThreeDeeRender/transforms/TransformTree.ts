@@ -261,10 +261,8 @@ export class TransformTree {
   }
 
   public static Clone(tree: TransformTree): TransformTree {
-    // eslint-disable-next-line no-underscore-dangle
-    const newTree = new TransformTree(tree._maxStorageTime, tree._maxCapacityPerFrame);
-    // eslint-disable-next-line no-underscore-dangle
-    newTree._frames = tree._frames;
+    const newTree = new TransformTree(tree.#maxStorageTime, tree.#maxCapacityPerFrame);
+    newTree.#frames = tree.#frames;
     return newTree;
   }
 }

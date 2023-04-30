@@ -2,7 +2,6 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-/* eslint-disable no-underscore-dangle */
 /* eslint-disable @foxglove/no-boolean-parameters */
 
 import { mat4, quat, vec3, vec4 } from "gl-matrix";
@@ -96,8 +95,8 @@ export class CoordinateFrame<ID extends AnyFrameId = UserFrameId> {
     CoordinateFrame.assertUserFrame(this);
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     let root: CoordinateFrame<UserFrameId> = this;
-    while (root._parent) {
-      root = root._parent;
+    while (root.#parent) {
+      root = root.#parent;
     }
     return root as CoordinateFrame<ID>;
   }
@@ -139,7 +138,7 @@ export class CoordinateFrame<ID extends AnyFrameId = UserFrameId> {
       if (ancestor.id === id) {
         return ancestor;
       }
-      ancestor = ancestor._parent;
+      ancestor = ancestor.#parent;
     }
     return undefined;
   }
@@ -330,7 +329,7 @@ export class CoordinateFrame<ID extends AnyFrameId = UserFrameId> {
           ? out
           : undefined;
       }
-      curSrcFrame = curSrcFrame._parent;
+      curSrcFrame = curSrcFrame.#parent;
     }
 
     return undefined;
@@ -483,12 +482,12 @@ export class CoordinateFrame<ID extends AnyFrameId = UserFrameId> {
 
       mat4.multiply(out, tempTransform.matrix(), out);
 
-      if (curFrame._parent == undefined) {
+      if (curFrame.#parent == undefined) {
         throw new Error(
           `Frame "${parentFrame.displayName()}" is not a parent of "${childFrame.displayName()}"`,
         );
       }
-      curFrame = curFrame._parent;
+      curFrame = curFrame.#parent;
     }
 
     return true;
