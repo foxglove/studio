@@ -127,10 +127,7 @@ export class IterablePlayer implements Player {
   #providerTopicStats = new Map<string, TopicStats>();
   #providerDatatypes: RosDatatypes = new Map();
 
-  #capabilities: string[] = [
-    PlayerCapabilities.setSpeed,
-    PlayerCapabilities.playbackControl,
-  ];
+  #capabilities: string[] = [PlayerCapabilities.setSpeed, PlayerCapabilities.playbackControl];
   #profile: string | undefined;
   #metricsCollector: PlayerMetricsCollectorInterface;
   #subscriptions: SubscribePayload[] = [];

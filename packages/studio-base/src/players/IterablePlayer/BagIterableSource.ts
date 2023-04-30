@@ -85,7 +85,9 @@ export class BagIterableSource implements IIterableSource {
     // since it looks like `rosbag record` has a bit of a race condition, and that's not too terrible, so
     // only warn when there's a more serious slowdown.
     if (chunksOverlapCount > this.#bag.chunkInfos.length * 0.25) {
-      const message = `This bag has many overlapping chunks (${chunksOverlapCount} out of ${this.#bag.chunkInfos.length}). This results in more memory use during playback.`;
+      const message = `This bag has many overlapping chunks (${chunksOverlapCount} out of ${
+        this.#bag.chunkInfos.length
+      }). This results in more memory use during playback.`;
       const tip = "Re-sort the messages in your bag by receive time.";
       problems.push({
         severity: "warn",

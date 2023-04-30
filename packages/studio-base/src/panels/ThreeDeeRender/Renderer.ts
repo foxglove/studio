@@ -1044,9 +1044,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     this.#addFrameTransform(transform);
   };
 
-  #handleFrameTransforms = ({
-    message,
-  }: MessageEvent<DeepPartial<FrameTransforms>>): void => {
+  #handleFrameTransforms = ({ message }: MessageEvent<DeepPartial<FrameTransforms>>): void => {
     // foxglove.FrameTransforms - Ingest the list of transforms into our TF tree
     const frameTransforms = normalizeFrameTransforms(message);
     for (const transform of frameTransforms.transforms) {
@@ -1062,9 +1060,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     }
   };
 
-  #handleTransformStamped = ({
-    message,
-  }: MessageEvent<DeepPartial<TransformStamped>>): void => {
+  #handleTransformStamped = ({ message }: MessageEvent<DeepPartial<TransformStamped>>): void => {
     // geometry_msgs/TransformStamped - Ingest this single transform into our TF tree
     const tf = normalizeTransformStamped(message);
     this.#addTransformMessage(tf);

@@ -434,7 +434,11 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
     label.setBillboard(true);
     label.setText(text);
     label.setLineHeight(config.scene.transforms?.labelSize ?? DEFAULT_TF_LABEL_SIZE);
-    label.setColor(this.#labelForegroundColor, this.#labelForegroundColor, this.#labelForegroundColor);
+    label.setColor(
+      this.#labelForegroundColor,
+      this.#labelForegroundColor,
+      this.#labelForegroundColor,
+    );
     label.setBackgroundColor(
       this.#labelBackgroundColor.r,
       this.#labelBackgroundColor.g,

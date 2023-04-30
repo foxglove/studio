@@ -247,9 +247,7 @@ export class Images extends SceneExtension<ImageRenderable> {
     this.#handleImage(messageEvent, normalizeRosImage(messageEvent.message));
   };
 
-  #handleRosCompressedImage = (
-    messageEvent: PartialMessageEvent<RosCompressedImage>,
-  ): void => {
+  #handleRosCompressedImage = (messageEvent: PartialMessageEvent<RosCompressedImage>): void => {
     this.#handleImage(messageEvent, normalizeRosCompressedImage(messageEvent.message));
   };
 

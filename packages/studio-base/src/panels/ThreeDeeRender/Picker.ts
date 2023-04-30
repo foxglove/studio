@@ -298,7 +298,14 @@ export class Picker {
       renderMaterial.uniforms.center = { value: (object as THREE.Sprite).center };
     }
     setObjectId(renderMaterial, objId);
-    this.#gl.renderBufferDirect(this.#camera, NullScene, geometry, renderMaterial, object, ReactNull);
+    this.#gl.renderBufferDirect(
+      this.#camera,
+      NullScene,
+      geometry,
+      renderMaterial,
+      object,
+      ReactNull,
+    );
   };
 
   #processInstancedItem = (renderItem: THREE.RenderItem): void => {
@@ -318,7 +325,14 @@ export class Picker {
       | THREE.ShaderMaterial
       | undefined;
     const renderMaterial = instancePickingMaterial ?? this.#instanceRenderMaterial();
-    this.#gl.renderBufferDirect(this.#camera, NullScene, geometry, renderMaterial, object, ReactNull);
+    this.#gl.renderBufferDirect(
+      this.#camera,
+      NullScene,
+      geometry,
+      renderMaterial,
+      object,
+      ReactNull,
+    );
   };
 
   #renderMaterial(sprite: 0 | 1, sizeAttenuation: 0 | 1): THREE.ShaderMaterial {

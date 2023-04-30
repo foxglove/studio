@@ -584,10 +584,7 @@ export default class Ros1Player implements Player {
     // no-op
   }
 
-  #getRosDatatypes = (
-    datatype: string,
-    messageDefinition: MessageDefinition[],
-  ): RosDatatypes => {
+  #getRosDatatypes = (datatype: string, messageDefinition: MessageDefinition[]): RosDatatypes => {
     const typesByName: RosDatatypes = new Map();
     for (const def of messageDefinition) {
       // The first definition usually doesn't have an explicit name so we use the datatype
@@ -647,7 +644,9 @@ export default class Ros1Player implements Player {
           severity: "warn",
           message: "Unable to update connection graph",
           tip: `The connection graph contains information about publishers and subscribers. A
-stale graph may result in missing topics you expect. Ensure that roscore is reachable at ${this.#url}.`,
+stale graph may result in missing topics you expect. Ensure that roscore is reachable at ${
+            this.#url
+          }.`,
           error,
         },
         { skipEmit: true },

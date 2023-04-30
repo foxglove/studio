@@ -243,7 +243,10 @@ export class BlockLoader {
       // using the source's message iterator.
       const cursor =
         this.#source.getMessageCursor?.({ ...iteratorArgs, abort: this.#abortController.signal }) ??
-        new IteratorCursor(this.#source.messageIterator(iteratorArgs), this.#abortController.signal);
+        new IteratorCursor(
+          this.#source.messageIterator(iteratorArgs),
+          this.#abortController.signal,
+        );
 
       for (let currentBlockId = blockId; currentBlockId <= endBlockId; ++currentBlockId) {
         const untilTime = clampTime(this.#blockIdToEndTime(currentBlockId), this.#start, this.#end);
@@ -281,7 +284,10 @@ export class BlockLoader {
         let sizeInBytes = 0;
         for (const iterResult of results) {
           if (iterResult.type === "problem") {
-            this.#problemManager.addProblem(`connid-${iterResult.connectionId}`, iterResult.problem);
+            this.#problemManager.addProblem(
+              `connid-${iterResult.connectionId}`,
+              iterResult.problem,
+            );
             continue;
           }
 

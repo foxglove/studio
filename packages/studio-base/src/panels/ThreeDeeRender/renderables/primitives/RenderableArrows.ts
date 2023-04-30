@@ -28,14 +28,8 @@ export class RenderableArrows extends RenderablePrimitive {
   #shaftOutlineGeometry: THREE.InstancedBufferGeometry;
   #headOutlineGeometry: THREE.InstancedBufferGeometry;
 
-  #shaftMesh: THREE.InstancedMesh<
-    THREE.CylinderGeometry,
-    MeshStandardMaterialWithInstanceOpacity
-  >;
-  #headMesh: THREE.InstancedMesh<
-    THREE.ConeGeometry,
-    MeshStandardMaterialWithInstanceOpacity
-  >;
+  #shaftMesh: THREE.InstancedMesh<THREE.CylinderGeometry, MeshStandardMaterialWithInstanceOpacity>;
+  #headMesh: THREE.InstancedMesh<THREE.ConeGeometry, MeshStandardMaterialWithInstanceOpacity>;
   #instanceOpacity: THREE.InstancedBufferAttribute;
   #material = new MeshStandardMaterialWithInstanceOpacity({
     metalness: 0,
@@ -65,7 +59,11 @@ export class RenderableArrows extends RenderablePrimitive {
       .getGeometry(`${this.constructor.name}-shaft`, createShaftGeometry)
       .clone() as THREE.CylinderGeometry;
     this.#shaftGeometry.setAttribute("instanceOpacity", this.#instanceOpacity);
-    this.#shaftMesh = new THREE.InstancedMesh(this.#shaftGeometry, this.#material, this.#maxInstances);
+    this.#shaftMesh = new THREE.InstancedMesh(
+      this.#shaftGeometry,
+      this.#material,
+      this.#maxInstances,
+    );
     this.#shaftMesh.count = 0;
     this.add(this.#shaftMesh);
 
@@ -73,7 +71,11 @@ export class RenderableArrows extends RenderablePrimitive {
       .getGeometry(`${this.constructor.name}-head`, createHeadGeometry)
       .clone() as THREE.ConeGeometry;
     this.#headGeometry.setAttribute("instanceOpacity", this.#instanceOpacity);
-    this.#headMesh = new THREE.InstancedMesh(this.#headGeometry, this.#material, this.#maxInstances);
+    this.#headMesh = new THREE.InstancedMesh(
+      this.#headGeometry,
+      this.#material,
+      this.#maxInstances,
+    );
     this.#headMesh.count = 0;
     this.add(this.#headMesh);
 
@@ -128,7 +130,11 @@ export class RenderableArrows extends RenderablePrimitive {
 
       this.#headMesh.removeFromParent();
       this.#headMesh.dispose();
-      this.#headMesh = new THREE.InstancedMesh(this.#headGeometry, this.#material, this.#maxInstances);
+      this.#headMesh = new THREE.InstancedMesh(
+        this.#headGeometry,
+        this.#material,
+        this.#maxInstances,
+      );
       this.#headGeometry.setAttribute("instanceOpacity", this.#instanceOpacity);
       this.add(this.#headMesh);
 

@@ -214,7 +214,9 @@ export default class FoxgloveWebSocketPlayer implements Player {
         this.#problems.addProblem("ws:connection-failed", {
           severity: "error",
           message: "Insecure WebSocket connection",
-          tip: `Check that the WebSocket server at ${this.#url} is reachable and supports protocol version ${FoxgloveClient.SUPPORTED_SUBPROTOCOL}.`,
+          tip: `Check that the WebSocket server at ${
+            this.#url
+          } is reachable and supports protocol version ${FoxgloveClient.SUPPORTED_SUBPROTOCOL}.`,
         });
         this.#emitState();
       }
@@ -244,7 +246,9 @@ export default class FoxgloveWebSocketPlayer implements Player {
       this.#problems.addProblem("ws:connection-failed", {
         severity: "error",
         message: "Connection failed",
-        tip: `Check that the WebSocket server at ${this.#url} is reachable and supports protocol version ${FoxgloveClient.SUPPORTED_SUBPROTOCOL}.`,
+        tip: `Check that the WebSocket server at ${
+          this.#url
+        } is reachable and supports protocol version ${FoxgloveClient.SUPPORTED_SUBPROTOCOL}.`,
       });
 
       this.#emitState();

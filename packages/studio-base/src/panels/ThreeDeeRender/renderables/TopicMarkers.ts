@@ -214,10 +214,7 @@ export class TopicMarkers extends Renderable<MarkerTopicUserData> {
     }
   }
 
-  #createMarkerRenderable(
-    marker: Marker,
-    receiveTime: bigint,
-  ): RenderableMarker | undefined {
+  #createMarkerRenderable(marker: Marker, receiveTime: bigint): RenderableMarker | undefined {
     const pool = this.renderer.markerPool;
     switch (marker.type) {
       case MarkerType.ARROW:
