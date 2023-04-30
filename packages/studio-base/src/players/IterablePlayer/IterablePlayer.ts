@@ -239,7 +239,7 @@ export class IterablePlayer implements Player {
   }
 
   public setPlaybackSpeed(speed: number): void {
-    delete this.#lastRangeMillis;
+    this.#lastRangeMillis = undefined;
     this.#speed = speed;
     this.#metricsCollector.setSpeed(speed);
 
