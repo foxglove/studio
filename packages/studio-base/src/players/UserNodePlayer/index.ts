@@ -101,23 +101,23 @@ type ProtectedState = {
 };
 
 export default class UserNodePlayer implements Player {
-  private _player: Player;
+  #player: Player;
 
   // Datatypes and topics are derived from nodeRegistrations, but memoized so they only change when needed
-  private _memoizedNodeDatatypes: readonly RosDatatypes[] = [];
-  private _memoizedNodeTopics: readonly Topic[] = [];
+  #memoizedNodeDatatypes: readonly RosDatatypes[] = [];
+  #memoizedNodeTopics: readonly Topic[] = [];
 
-  private _subscriptions: SubscribePayload[] = [];
-  private _nodeSubscriptions: Record<string, SubscribePayload> = {};
+  #subscriptions: SubscribePayload[] = [];
+  #nodeSubscriptions: Record<string, SubscribePayload> = {};
 
   // listener for state updates
-  private _listener?: (arg0: PlayerState) => Promise<void>;
+  #listener?: (arg0: PlayerState) => Promise<void>;
 
   // Not sure if there is perf issue with unused workers (may just go idle) - requires more research
-  private _unusedNodeRuntimeWorkers: Rpc[] = [];
-  private _setUserNodeDiagnostics: (nodeId: string, diagnostics: readonly Diagnostic[]) => void;
-  private _addUserNodeLogs: (nodeId: string, logs: UserNodeLog[]) => void;
-  private _nodeTransformRpc?: Rpc;
+  #unusedNodeRuntimeWorkers: Rpc[] = [];
+  #setUserNodeDiagnostics: (nodeId: string, diagnostics: readonly Diagnostic[]) => void;
+  #addUserNodeLogs: (nodeId: string, logs: UserNodeLog[]) => void;
+  #nodeTransformRpc?: Rpc;
   private _globalVariables: GlobalVariables = {};
   private _userNodeActions: UserNodeActions;
   private _rosLibGenerator: MemoizedLibGenerator;
@@ -165,14 +165,14 @@ export default class UserNodePlayer implements Player {
   };
 
   public constructor(player: Player, userNodeActions: UserNodeActions) {
-    this._player = player;
+    this.#player = player;
     this._userNodeActions = userNodeActions;
     const { setUserNodeDiagnostics, addUserNodeLogs } = userNodeActions;
 
-    this._setUserNodeDiagnostics = (nodeId: string, diagnostics: readonly Diagnostic[]) => {
+    this.#setUserNodeDiagnostics = (nodeId: string, diagnostics: readonly Diagnostic[]) => {
       setUserNodeDiagnostics(nodeId, diagnostics);
     };
-    this._addUserNodeLogs = (nodeId: string, logs: UserNodeLog[]) => {
+    this.#addUserNodeLogs = (nodeId: string, logs: UserNodeLog[]) => {
       if (logs.length > 0) {
         addUserNodeLogs(nodeId, logs);
       }
@@ -262,7 +262,7 @@ export default class UserNodePlayer implements Player {
       const messagePromises = [];
       for (const nodeRegistration of nodeRegistrations) {
         if (
-          this._nodeSubscriptions[nodeRegistration.output.name] &&
+          this.#nodeSubscriptions[nodeRegistration.output.name] &&
           nodeRegistration.inputs.includes(message.topic)
         ) {
           const messagePromise = nodeRegistration.processMessage(message, globalVariables);
@@ -305,7 +305,7 @@ export default class UserNodePlayer implements Player {
     // If no downstream subscriptions want blocks for our output topics we can just pass through
     // the blocks from the underlying player.
     const fullRegistrations = nodeRegistrations.filter(
-      (reg) => this._nodeSubscriptions[reg.output.name]?.preloadType === "full",
+      (reg) => this.#nodeSubscriptions[reg.output.name]?.preloadType === "full",
     );
     if (fullRegistrations.length === 0) {
       return blocks;
@@ -389,7 +389,7 @@ export default class UserNodePlayer implements Player {
       state.nodeRegistrationCache.splice(maxNodeRegistrationCacheCount);
       // This code causes us to reset workers twice because the seeking resets the workers too
       await this._resetWorkersUnlocked(state);
-      this._setSubscriptionsUnlocked(this._subscriptions, state);
+      this._setSubscriptionsUnlocked(this.#subscriptions, state);
     });
   }
 
@@ -441,7 +441,7 @@ export default class UserNodePlayer implements Player {
       return async (msgEvent: MessageEvent<unknown>, globalVariables: GlobalVariables) => {
         // Register the node within a web worker to be executed.
         if (!rpc) {
-          rpc = this._unusedNodeRuntimeWorkers.pop();
+          rpc = this.#unusedNodeRuntimeWorkers.pop();
 
           // initialize a new worker since no unused one is available
           if (!rpc) {
@@ -493,7 +493,7 @@ export default class UserNodePlayer implements Player {
             },
           );
           if (error != undefined) {
-            this._setUserNodeDiagnostics(nodeId, [
+            this.#setUserNodeDiagnostics(nodeId, [
               ...userNodeDiagnostics,
               {
                 source: Sources.Runtime,
@@ -504,7 +504,7 @@ export default class UserNodePlayer implements Player {
             ]);
             return;
           }
-          this._addUserNodeLogs(nodeId, userNodeLogs);
+          this.#addUserNodeLogs(nodeId, userNodeLogs);
         }
 
         // This signals that we have terminated the node registration and we should bail any message
@@ -548,7 +548,7 @@ export default class UserNodePlayer implements Player {
           });
         }
 
-        this._addUserNodeLogs(nodeId, result.userNodeLogs);
+        this.#addUserNodeLogs(nodeId, result.userNodeLogs);
 
         if (allDiagnostics.length > 0) {
           this._problemStore.set(problemKey, {
@@ -557,7 +557,7 @@ export default class UserNodePlayer implements Player {
             tip: "Open the User Scripts panel and check the Problems tab for errors.",
           });
 
-          this._setUserNodeDiagnostics(nodeId, allDiagnostics);
+          this.#setUserNodeDiagnostics(nodeId, allDiagnostics);
           return;
         }
 
@@ -594,7 +594,7 @@ export default class UserNodePlayer implements Player {
       terminateSignal = undefined;
 
       if (rpc) {
-        this._unusedNodeRuntimeWorkers.push(rpc);
+        this.#unusedNodeRuntimeWorkers.push(rpc);
         rpc = undefined;
       }
     };
@@ -613,7 +613,7 @@ export default class UserNodePlayer implements Player {
   }
 
   private _getTransformWorker(): Rpc {
-    if (!this._nodeTransformRpc) {
+    if (!this.#nodeTransformRpc) {
       const worker = UserNodePlayer.CreateNodeTransformWorker();
 
       // The errors below persist for the lifetime of the player.
@@ -655,9 +655,9 @@ export default class UserNodePlayer implements Player {
         void this._emitState();
       });
 
-      this._nodeTransformRpc = rpc;
+      this.#nodeTransformRpc = rpc;
     }
-    return this._nodeTransformRpc;
+    return this.#nodeTransformRpc;
   }
 
   // We need to reset workers in a variety of circumstances:
@@ -682,8 +682,8 @@ export default class UserNodePlayer implements Player {
     }
     state.nodeRegistrations = [];
 
-    const rosLib = await this._getRosLib(state);
-    const typesLib = await this._getTypesLib(state);
+    const rosLib = await this.#getRosLib(state);
+    const typesLib = await this.#getTypesLib(state);
 
     const allNodeRegistrations = await Promise.all(
       Object.entries(state.userNodes).map(
@@ -705,7 +705,7 @@ export default class UserNodePlayer implements Player {
       const { nodeData, nodeId } = nodeRegistration;
 
       if (!nodeData.outputTopic) {
-        this._setUserNodeDiagnostics(nodeId, [
+        this.#setUserNodeDiagnostics(nodeId, [
           ...nodeData.diagnostics,
           {
             severity: DiagnosticSeverity.Error,
@@ -719,7 +719,7 @@ export default class UserNodePlayer implements Player {
 
       // Create diagnostic errors if more than one node outputs to the same topic
       if (state.inputsByOutputTopic.has(nodeData.outputTopic)) {
-        this._setUserNodeDiagnostics(nodeId, [
+        this.#setUserNodeDiagnostics(nodeId, [
           ...nodeData.diagnostics,
           {
             severity: DiagnosticSeverity.Error,
@@ -736,7 +736,7 @@ export default class UserNodePlayer implements Player {
 
       // Create diagnostic errors if node outputs overlap with real topics
       if (playerTopics.has(nodeData.outputTopic)) {
-        this._setUserNodeDiagnostics(nodeId, [
+        this.#setUserNodeDiagnostics(nodeId, [
           ...nodeData.diagnostics,
           {
             severity: DiagnosticSeverity.Error,
@@ -750,7 +750,7 @@ export default class UserNodePlayer implements Player {
 
       // Filter out nodes with compilation errors
       if (hasTransformerErrors(nodeData)) {
-        this._setUserNodeDiagnostics(nodeId, nodeData.diagnostics);
+        this.#setUserNodeDiagnostics(nodeId, nodeData.diagnostics);
         continue;
       }
 
@@ -768,12 +768,12 @@ export default class UserNodePlayer implements Player {
 
     state.nodeRegistrations = validNodeRegistrations;
     const nodeTopics = state.nodeRegistrations.map(({ output }) => output);
-    if (!isEqual(nodeTopics, this._memoizedNodeTopics)) {
-      this._memoizedNodeTopics = nodeTopics;
+    if (!isEqual(nodeTopics, this.#memoizedNodeTopics)) {
+      this.#memoizedNodeTopics = nodeTopics;
     }
     const nodeDatatypes = state.nodeRegistrations.map(({ nodeData: { datatypes } }) => datatypes);
-    if (!isEqual(nodeDatatypes, this._memoizedNodeDatatypes)) {
-      this._memoizedNodeDatatypes = nodeDatatypes;
+    if (!isEqual(nodeDatatypes, this.#memoizedNodeDatatypes)) {
+      this.#memoizedNodeDatatypes = nodeDatatypes;
     }
 
     // We need to set the user node diagnostics, which is a react set state
@@ -790,12 +790,12 @@ export default class UserNodePlayer implements Player {
     // Moving to React 18 should remove the need for this call.
     ReactDOM.unstable_batchedUpdates(() => {
       for (const nodeRegistration of state.nodeRegistrations) {
-        this._setUserNodeDiagnostics(nodeRegistration.nodeId, []);
+        this.#setUserNodeDiagnostics(nodeRegistration.nodeId, []);
       }
     });
   }
 
-  private async _getRosLib(state: ProtectedState): Promise<string> {
+  async #getRosLib(state: ProtectedState): Promise<string> {
     if (!state.lastPlayerStateActiveData) {
       throw new Error("_getRosLib was called before `_lastPlayerStateActiveData` set");
     }
@@ -809,7 +809,7 @@ export default class UserNodePlayer implements Player {
     return lib;
   }
 
-  private async _getTypesLib(state: ProtectedState): Promise<string> {
+  async #getTypesLib(state: ProtectedState): Promise<string> {
     if (!state.lastPlayerStateActiveData) {
       throw new Error("_getTypesLib was called before `_lastPlayerStateActiveData` set");
     }
@@ -824,7 +824,7 @@ export default class UserNodePlayer implements Player {
   }
 
   // invoked when our child player state changes
-  private async _onPlayerState(playerState: PlayerState) {
+  async #onPlayerState(playerState: PlayerState) {
     try {
       const globalVariables = this._globalVariables;
       const { activeData } = playerState;
@@ -843,7 +843,7 @@ export default class UserNodePlayer implements Player {
         if (!state.lastPlayerStateActiveData) {
           state.lastPlayerStateActiveData = activeData;
           await this._resetWorkersUnlocked(state);
-          this._setSubscriptionsUnlocked(this._subscriptions, state);
+          this._setSubscriptionsUnlocked(this.#subscriptions, state);
         } else {
           // Reset node state after seeking
           let shouldReset =
@@ -864,7 +864,7 @@ export default class UserNodePlayer implements Player {
           }
         }
 
-        const allDatatypes = this._getDatatypes(datatypes, this._memoizedNodeDatatypes);
+        const allDatatypes = this._getDatatypes(datatypes, this.#memoizedNodeDatatypes);
 
         /**
          * if nodes have been updated we need to add their previous input messages
@@ -949,7 +949,7 @@ export default class UserNodePlayer implements Player {
           activeData: {
             ...activeData,
             messages: parsedMessages,
-            topics: this._getTopics(topics, this._memoizedNodeTopics),
+            topics: this._getTopics(topics, this.#memoizedNodeTopics),
             datatypes: allDatatypes,
           },
         };
@@ -989,22 +989,22 @@ export default class UserNodePlayer implements Player {
       problems,
     };
 
-    if (this._listener) {
-      await this._listener(playerState);
+    if (this.#listener) {
+      await this.#listener(playerState);
     }
   }
 
   public setListener(listener: NonNullable<UserNodePlayer["_listener"]>): void {
-    this._listener = listener;
+    this.#listener = listener;
 
     // Delay _player.setListener until our setListener is called because setListener in some cases
     // triggers initialization logic and remote requests. This is an unfortunate API behavior and
     // naming choice, but it's better for us not to do trigger this logic in the constructor.
-    this._player.setListener(async (state) => await this._onPlayerState(state));
+    this.#player.setListener(async (state) => await this.#onPlayerState(state));
   }
 
   public setSubscriptions(subscriptions: SubscribePayload[]): void {
-    this._subscriptions = subscriptions;
+    this.#subscriptions = subscriptions;
     this._protectedState
       .runExclusive(async (state) => {
         this._setSubscriptionsUnlocked(subscriptions, state);
@@ -1047,8 +1047,8 @@ export default class UserNodePlayer implements Player {
       }
     }
 
-    this._nodeSubscriptions = nodeSubscriptions;
-    this._player.setSubscriptions(realTopicSubscriptions);
+    this.#nodeSubscriptions = nodeSubscriptions;
+    this.#player.setSubscriptions(realTopicSubscriptions);
   }
 
   public close = (): void => {
@@ -1057,49 +1057,49 @@ export default class UserNodePlayer implements Player {
         nodeRegistration.terminate();
       }
     });
-    this._player.close();
-    if (this._nodeTransformRpc) {
-      void this._nodeTransformRpc.send("close");
+    this.#player.close();
+    if (this.#nodeTransformRpc) {
+      void this.#nodeTransformRpc.send("close");
     }
   };
 
   public setPublishers(publishers: AdvertiseOptions[]): void {
-    this._player.setPublishers(publishers);
+    this.#player.setPublishers(publishers);
   }
 
   public setParameter(key: string, value: ParameterValue): void {
-    this._player.setParameter(key, value);
+    this.#player.setParameter(key, value);
   }
 
   public publish(request: PublishPayload): void {
-    this._player.publish(request);
+    this.#player.publish(request);
   }
 
   public async callService(service: string, request: unknown): Promise<unknown> {
-    return await this._player.callService(service, request);
+    return await this.#player.callService(service, request);
   }
 
   public startPlayback(): void {
-    this._player.startPlayback?.();
+    this.#player.startPlayback?.();
   }
 
   public pausePlayback(): void {
-    this._player.pausePlayback?.();
+    this.#player.pausePlayback?.();
   }
 
   public playUntil(time: Time): void {
-    if (this._player.playUntil) {
-      this._player.playUntil(time);
+    if (this.#player.playUntil) {
+      this.#player.playUntil(time);
       return;
     }
-    this._player.seekPlayback?.(time);
+    this.#player.seekPlayback?.(time);
   }
 
   public setPlaybackSpeed(speed: number): void {
-    this._player.setPlaybackSpeed?.(speed);
+    this.#player.setPlaybackSpeed?.(speed);
   }
 
   public seekPlayback(time: Time, backfillDuration?: Time): void {
-    this._player.seekPlayback?.(time, backfillDuration);
+    this.#player.seekPlayback?.(time, backfillDuration);
   }
 }

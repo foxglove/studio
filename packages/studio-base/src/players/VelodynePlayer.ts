@@ -68,17 +68,17 @@ type VelodynePlayerOpts = {
 };
 
 export default class VelodynePlayer implements Player {
-  private _id: string = uuidv4(); // Unique ID for this player
-  private _port: number; // Listening UDP port
-  private _listener?: (arg0: PlayerState) => Promise<void>; // Listener for _emitState()
-  private _socket?: UdpSocketRenderer;
-  private _seq = 0;
-  private _totalBytesReceived = 0;
-  private _closed: boolean = false; // Whether the player has been completely closed using close()
-  private _topic: Topic = { ...TOPIC }; // The one topic we are "subscribed" to
-  private _topics = [this._topic]; // Stable list of all topics
-  private _topicStats = new Map<string, TopicStats>(); // Message count and timestamps for our single topic
-  private _start: Time; // The time at which we started playing
+  #id: string = uuidv4(); // Unique ID for this player
+  #port: number; // Listening UDP port
+  #listener?: (arg0: PlayerState) => Promise<void>; // Listener for _emitState()
+  #socket?: UdpSocketRenderer;
+  #seq = 0;
+  #totalBytesReceived = 0;
+  #closed: boolean = false; // Whether the player has been completely closed using close()
+  #topic: Topic = { ...TOPIC }; // The one topic we are "subscribed" to
+  #topics = [this.#topic]; // Stable list of all topics
+  #topicStats = new Map<string, TopicStats>(); // Message count and timestamps for our single topic
+  #start: Time; // The time at which we started playing
   private _packets: RawPacket[] = []; // Queue of packets that will form the next parsed message
   private _parsedMessages: MessageEvent<unknown>[] = []; // Queue of messages that we'll send in next _emitState() call
   private _metricsCollector: PlayerMetricsCollectorInterface;
@@ -90,25 +90,25 @@ export default class VelodynePlayer implements Player {
   private _problemsById = new Map<string, PlayerProblem>();
 
   public constructor({ port, metricsCollector }: VelodynePlayerOpts) {
-    this._port = port ?? DEFAULT_VELODYNE_PORT;
-    log.info(`initializing VelodynePlayer on port ${this._port}`);
+    this.#port = port ?? DEFAULT_VELODYNE_PORT;
+    log.info(`initializing VelodynePlayer on port ${this.#port}`);
     this._metricsCollector = metricsCollector;
-    this._start = fromMillis(Date.now());
+    this.#start = fromMillis(Date.now());
     this._metricsCollector.playerConstructed();
     void this._open();
   }
 
   private _open = async (): Promise<void> => {
-    if (this._closed) {
+    if (this.#closed) {
       return;
     }
     this._presence = PlayerPresence.PRESENT;
     this._emitState();
 
-    if (this._socket == undefined) {
+    if (this.#socket == undefined) {
       const net = await Sockets.Create();
-      this._socket = await net.createUdpSocket();
-      this._socket.on("error", (error) => {
+      this.#socket = await net.createUdpSocket();
+      this.#socket.on("error", (error) => {
         this._addProblem(PROBLEM_SOCKET_ERROR, {
           message: "Networking error listening for Velodyne data",
           severity: "error",
@@ -116,24 +116,24 @@ export default class VelodynePlayer implements Player {
           tip: "Check that your are connected to the same local network (subnet) as the Velodyne sensor",
         });
       });
-      this._socket.on("message", this._handleMessage);
+      this.#socket.on("message", this._handleMessage);
     } else {
       try {
-        await this._socket.close();
+        await this.#socket.close();
       } catch (err) {
         log.error(`Failed to close socket: ${err}`);
       }
     }
 
     try {
-      await this._socket.bind({ address: "0.0.0.0", port: this._port });
-      log.debug(`Bound Velodyne UDP listener socket to port ${this._port}`);
+      await this.#socket.bind({ address: "0.0.0.0", port: this.#port });
+      log.debug(`Bound Velodyne UDP listener socket to port ${this.#port}`);
     } catch (error) {
       this._addProblem(PROBLEM_SOCKET_ERROR, {
         message: "Could not bind to the Velodyne UDP data port",
         severity: "error",
         error,
-        tip: `Check that port ${this._port} is not in use by another application`,
+        tip: `Check that port ${this.#port} is not in use by another application`,
       });
     }
   };
@@ -144,11 +144,11 @@ export default class VelodynePlayer implements Player {
     date.setMinutes(0, 0, 0);
     const topOfHour = fromDate(date);
 
-    this._totalBytesReceived += data.byteLength;
+    this.#totalBytesReceived += data.byteLength;
     this._presence = PlayerPresence.PRESENT;
-    this._clearProblem(PROBLEM_SOCKET_ERROR, { skipEmit: true });
+    this.#clearProblem(PROBLEM_SOCKET_ERROR, { skipEmit: true });
 
-    if (this._seq === 0) {
+    if (this.#seq === 0) {
       this._metricsCollector.recordTimeToFirstMsgs();
     }
 
@@ -164,7 +164,7 @@ export default class VelodynePlayer implements Player {
     this._packets.push(rawPacket);
     if (this._packets.length >= numPackets) {
       const message = {
-        header: { seq: this._seq++, stamp: receiveTime, frame_id: rinfo.address },
+        header: { seq: this.#seq++, stamp: receiveTime, frame_id: rinfo.address },
         packets: this._packets.map((raw) => rawPacketToRos(raw, topOfHour)),
       };
 
@@ -180,10 +180,10 @@ export default class VelodynePlayer implements Player {
       this._packets = [];
 
       // Update the message count
-      let stats = this._topicStats.get(TOPIC_NAME);
+      let stats = this.#topicStats.get(TOPIC_NAME);
       if (!stats) {
         stats = { numMessages: 0 };
-        this._topicStats.set(TOPIC_NAME, stats);
+        this.#topicStats.set(TOPIC_NAME, stats);
       }
       stats.numMessages++;
       stats.firstMessageTime ??= receiveTime;
@@ -205,7 +205,7 @@ export default class VelodynePlayer implements Player {
     }
   }
 
-  private _clearProblem(id: string, { skipEmit = false }: { skipEmit?: boolean } = {}): void {
+  #clearProblem(id: string, { skipEmit = false }: { skipEmit?: boolean } = {}): void {
     if (!this._problemsById.delete(id)) {
       return;
     }
@@ -218,7 +218,7 @@ export default class VelodynePlayer implements Player {
   // Potentially performance-sensitive; await can be expensive
   // eslint-disable-next-line @typescript-eslint/promise-function-async
   private _emitState = debouncePromise(() => {
-    if (!this._listener || this._closed) {
+    if (!this.#listener || this.#closed) {
       return Promise.resolve();
     }
 
@@ -234,19 +234,19 @@ export default class VelodynePlayer implements Player {
     const currentTime = fromMillis(Date.now());
     const messages = this._parsedMessages;
     this._parsedMessages = [];
-    return this._listener({
+    return this.#listener({
       name: "Velodyne",
       presence: this._presence,
       progress: {},
       capabilities: CAPABILITIES,
       profile: "velodyne",
-      playerId: this._id,
+      playerId: this.#id,
       problems: this._problems,
 
       activeData: {
         messages,
-        totalBytesReceived: this._totalBytesReceived,
-        startTime: this._start,
+        totalBytesReceived: this.#totalBytesReceived,
+        startTime: this.#start,
         endTime: currentTime,
         currentTime,
         isPlaying: true,
@@ -254,8 +254,8 @@ export default class VelodynePlayer implements Player {
         // We don't support seeking, so we need to set this to any fixed value. Just avoid 0 so
         // that we don't accidentally hit falsy checks.
         lastSeekTime: 1,
-        topics: this._topics,
-        topicStats: new Map(this._topicStats),
+        topics: this.#topics,
+        topicStats: new Map(this.#topicStats),
         datatypes: DATATYPES,
         publishedTopics: undefined,
         subscribedTopics: undefined,
@@ -266,23 +266,23 @@ export default class VelodynePlayer implements Player {
   });
 
   public setListener(listener: (arg0: PlayerState) => Promise<void>): void {
-    this._listener = listener;
+    this.#listener = listener;
     this._emitState();
   }
 
   public close(): void {
-    this._closed = true;
-    if (this._socket) {
-      void this._socket.dispose();
-      this._socket = undefined;
+    this.#closed = true;
+    if (this.#socket) {
+      void this.#socket.dispose();
+      this.#socket = undefined;
     }
     if (this._emitTimer != undefined) {
       clearTimeout(this._emitTimer);
       this._emitTimer = undefined;
     }
     this._metricsCollector.close();
-    this._totalBytesReceived = 0;
-    this._seq = 0;
+    this.#totalBytesReceived = 0;
+    this.#seq = 0;
     this._packets = [];
     this._parsedMessages = [];
   }

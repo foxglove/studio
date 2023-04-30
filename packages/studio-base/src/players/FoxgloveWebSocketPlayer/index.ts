@@ -74,17 +74,17 @@ type ResolvedService = {
 };
 
 export default class FoxgloveWebSocketPlayer implements Player {
-  private readonly _sourceId: string;
+  readonly #sourceId: string;
 
-  private _url: string; // WebSocket URL.
-  private _name: string;
-  private _client?: FoxgloveClient; // The client when we're connected.
-  private _id: string = uuidv4(); // Unique ID for this player session.
-  private _serverCapabilities: string[] = [];
-  private _playerCapabilities: (typeof PlayerCapabilities)[keyof typeof PlayerCapabilities][] = [];
-  private _supportedEncodings?: string[];
-  private _listener?: (arg0: PlayerState) => Promise<void>; // Listener for _emitState().
-  private _closed: boolean = false; // Whether the player has been completely closed using close().
+  #url: string; // WebSocket URL.
+  #name: string;
+  #client?: FoxgloveClient; // The client when we're connected.
+  #id: string = uuidv4(); // Unique ID for this player session.
+  #serverCapabilities: string[] = [];
+  #playerCapabilities: (typeof PlayerCapabilities)[keyof typeof PlayerCapabilities][] = [];
+  #supportedEncodings?: string[];
+  #listener?: (arg0: PlayerState) => Promise<void>; // Listener for _emitState().
+  #closed: boolean = false; // Whether the player has been completely closed using close().
   private _topics?: Topic[]; // Topics as published by the WebSocket.
   private _topicsStats = new Map<string, TopicStats>(); // Topic names to topic statistics.
   private _datatypes: RosDatatypes = new Map(); // Datatypes as published by the WebSocket.
@@ -141,42 +141,42 @@ export default class FoxgloveWebSocketPlayer implements Player {
     sourceId: string;
   }) {
     this._metricsCollector = metricsCollector;
-    this._url = url;
-    this._name = url;
+    this.#url = url;
+    this.#name = url;
     this._metricsCollector.playerConstructed();
-    this._sourceId = sourceId;
+    this.#sourceId = sourceId;
     this._urlState = {
-      sourceId: this._sourceId,
-      parameters: { url: this._url },
+      sourceId: this.#sourceId,
+      parameters: { url: this.#url },
     };
-    this._open();
+    this.#open();
   }
 
-  private _open = (): void => {
-    if (this._closed) {
+  #open = (): void => {
+    if (this.#closed) {
       return;
     }
-    if (this._client != undefined) {
+    if (this.#client != undefined) {
       throw new Error(`Attempted to open a second Foxglove WebSocket connection`);
     }
-    log.info(`Opening connection to ${this._url}`);
+    log.info(`Opening connection to ${this.#url}`);
 
     // Set a timeout to abort the connection if we are still not connected by then.
     // This will abort hanging connection attempts that can for whatever reason not
     // establish a connection with the server.
     this._connectionAttemptTimeout = setTimeout(() => {
-      this._client?.close();
+      this.#client?.close();
     }, 10000);
 
-    this._client = new FoxgloveClient({
+    this.#client = new FoxgloveClient({
       ws:
         typeof Worker !== "undefined"
-          ? new WorkerSocketAdapter(this._url, [FoxgloveClient.SUPPORTED_SUBPROTOCOL])
-          : new WebSocket(this._url, [FoxgloveClient.SUPPORTED_SUBPROTOCOL]),
+          ? new WorkerSocketAdapter(this.#url, [FoxgloveClient.SUPPORTED_SUBPROTOCOL])
+          : new WebSocket(this.#url, [FoxgloveClient.SUPPORTED_SUBPROTOCOL]),
     });
 
-    this._client.on("open", () => {
-      if (this._closed) {
+    this.#client.on("open", () => {
+      if (this.#closed) {
         return;
       }
       if (this._connectionAttemptTimeout != undefined) {
@@ -204,7 +204,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
       this._resolvedSubscriptionsByTopic.clear();
     });
 
-    this._client.on("error", (err) => {
+    this.#client.on("error", (err) => {
       log.error(err);
 
       if (
@@ -214,7 +214,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
         this._problems.addProblem("ws:connection-failed", {
           severity: "error",
           message: "Insecure WebSocket connection",
-          tip: `Check that the WebSocket server at ${this._url} is reachable and supports protocol version ${FoxgloveClient.SUPPORTED_SUBPROTOCOL}.`,
+          tip: `Check that the WebSocket server at ${this.#url} is reachable and supports protocol version ${FoxgloveClient.SUPPORTED_SUBPROTOCOL}.`,
         });
         this._emitState();
       }
@@ -226,7 +226,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
     // Note: We explicitly avoid clearing state like start/end times, datatypes, etc to preserve
     // this during a disconnect event. Any necessary state clearing is handled once a new connection
     // is established
-    this._client.on("close", (event) => {
+    this.#client.on("close", (event) => {
       log.info("Connection closed:", event);
       this._presence = PlayerPresence.RECONNECTING;
 
@@ -238,20 +238,20 @@ export default class FoxgloveWebSocketPlayer implements Player {
         clearTimeout(this._connectionAttemptTimeout);
       }
 
-      this._client?.close();
-      this._client = undefined;
+      this.#client?.close();
+      this.#client = undefined;
 
       this._problems.addProblem("ws:connection-failed", {
         severity: "error",
         message: "Connection failed",
-        tip: `Check that the WebSocket server at ${this._url} is reachable and supports protocol version ${FoxgloveClient.SUPPORTED_SUBPROTOCOL}.`,
+        tip: `Check that the WebSocket server at ${this.#url} is reachable and supports protocol version ${FoxgloveClient.SUPPORTED_SUBPROTOCOL}.`,
       });
 
       this._emitState();
-      this._openTimeout = setTimeout(this._open, 3000);
+      this._openTimeout = setTimeout(this.#open, 3000);
     });
 
-    this._client.on("serverInfo", (event) => {
+    this.#client.on("serverInfo", (event) => {
       if (!Array.isArray(event.capabilities)) {
         this._problems.addProblem("ws:invalid-capabilities", {
           severity: "warn",
@@ -260,15 +260,15 @@ export default class FoxgloveWebSocketPlayer implements Player {
       }
 
       const newSessionId = event.sessionId ?? uuidv4();
-      if (this._id !== newSessionId) {
+      if (this.#id !== newSessionId) {
         this._resetSessionState();
       }
 
-      this._id = newSessionId;
-      this._name = `${this._url}\n${event.name}`;
-      this._serverCapabilities = Array.isArray(event.capabilities) ? event.capabilities : [];
-      this._serverPublishesTime = this._serverCapabilities.includes(ServerCapability.time);
-      this._supportedEncodings = event.supportedEncodings;
+      this.#id = newSessionId;
+      this.#name = `${this.#url}\n${event.name}`;
+      this.#serverCapabilities = Array.isArray(event.capabilities) ? event.capabilities : [];
+      this._serverPublishesTime = this.#serverCapabilities.includes(ServerCapability.time);
+      this.#supportedEncodings = event.supportedEncodings;
       this._datatypes = new Map();
 
       // If the server publishes the time we clear any existing clockTime we might have and let the
@@ -299,8 +299,8 @@ export default class FoxgloveWebSocketPlayer implements Player {
       }
 
       if (event.capabilities.includes(ServerCapability.clientPublish)) {
-        this._playerCapabilities = this._playerCapabilities.concat(PlayerCapabilities.advertise);
-        this._setupPublishers();
+        this.#playerCapabilities = this.#playerCapabilities.concat(PlayerCapabilities.advertise);
+        this.#setupPublishers();
       }
       if (event.capabilities.includes(ServerCapability.services)) {
         this._serviceCallEncoding = event.supportedEncodings?.find((e) =>
@@ -309,7 +309,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
 
         const problemId = "callService:unsupportedEncoding";
         if (this._serviceCallEncoding) {
-          this._playerCapabilities = this._playerCapabilities.concat(
+          this.#playerCapabilities = this.#playerCapabilities.concat(
             PlayerCapabilities.callServices,
           );
           this._problems.removeProblem(problemId);
@@ -324,27 +324,27 @@ export default class FoxgloveWebSocketPlayer implements Player {
       }
 
       if (event.capabilities.includes(ServerCapability.parameters)) {
-        this._playerCapabilities = this._playerCapabilities.concat(
+        this.#playerCapabilities = this.#playerCapabilities.concat(
           PlayerCapabilities.getParameters,
           PlayerCapabilities.setParameters,
         );
 
         // Periodically request all available parameters.
         this._getParameterInterval = setInterval(() => {
-          this._client?.getParameters([], GET_ALL_PARAMS_REQUEST_ID);
+          this.#client?.getParameters([], GET_ALL_PARAMS_REQUEST_ID);
         }, GET_ALL_PARAMS_PERIOD_MS);
 
-        this._client?.getParameters([], GET_ALL_PARAMS_REQUEST_ID);
+        this.#client?.getParameters([], GET_ALL_PARAMS_REQUEST_ID);
       }
 
       if (event.capabilities.includes(ServerCapability.connectionGraph)) {
-        this._client?.subscribeConnectionGraph();
+        this.#client?.subscribeConnectionGraph();
       }
 
       this._emitState();
     });
 
-    this._client.on("status", (event) => {
+    this.#client.on("status", (event) => {
       const msg = `FoxgloveWebSocket: ${event.message}`;
       if (event.level === StatusLevel.INFO) {
         log.info(msg);
@@ -368,7 +368,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
       this._emitState();
     });
 
-    this._client.on("advertise", (newChannels) => {
+    this.#client.on("advertise", (newChannels) => {
       for (const channel of newChannels) {
         let parsedChannel;
         try {
@@ -444,12 +444,12 @@ export default class FoxgloveWebSocketPlayer implements Player {
         this._channelsById.set(channel.id, resolvedChannel);
         this._channelsByTopic.set(channel.topic, resolvedChannel);
       }
-      this._updateTopicsAndDatatypes();
+      this.#updateTopicsAndDatatypes();
       this._emitState();
       this._processUnresolvedSubscriptions();
     });
 
-    this._client.on("unadvertise", (removedChannels) => {
+    this.#client.on("unadvertise", (removedChannels) => {
       for (const id of removedChannels) {
         const chanInfo = this._channelsById.get(id);
         if (!chanInfo) {
@@ -466,18 +466,18 @@ export default class FoxgloveWebSocketPlayer implements Player {
           if (channel.id === id) {
             this._resolvedSubscriptionsById.delete(subId);
             this._resolvedSubscriptionsByTopic.delete(channel.topic);
-            this._client?.unsubscribe(subId);
+            this.#client?.unsubscribe(subId);
             this._unresolvedSubscriptions.add(channel.topic);
           }
         }
         this._channelsById.delete(id);
         this._channelsByTopic.delete(chanInfo.channel.topic);
       }
-      this._updateTopicsAndDatatypes();
+      this.#updateTopicsAndDatatypes();
       this._emitState();
     });
 
-    this._client.on("message", ({ subscriptionId, data }) => {
+    this.#client.on("message", ({ subscriptionId, data }) => {
       if (!this._hasReceivedMessage) {
         this._hasReceivedMessage = true;
         this._metricsCollector.recordTimeToFirstMsgs();
@@ -524,7 +524,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
       this._emitState();
     });
 
-    this._client.on("time", ({ timestamp }) => {
+    this.#client.on("time", ({ timestamp }) => {
       if (!this._serverPublishesTime) {
         return;
       }
@@ -539,7 +539,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
       this._emitState();
     });
 
-    this._client.on("parameterValues", ({ parameters, id }) => {
+    this.#client.on("parameterValues", ({ parameters, id }) => {
       const newParameters = parameters.filter((param) => !this._parameters.has(param.name));
 
       if (id === GET_ALL_PARAMS_REQUEST_ID) {
@@ -554,14 +554,14 @@ export default class FoxgloveWebSocketPlayer implements Player {
 
       if (
         newParameters.length > 0 &&
-        this._serverCapabilities.includes(ServerCapability.parametersSubscribe)
+        this.#serverCapabilities.includes(ServerCapability.parametersSubscribe)
       ) {
         // Subscribe to value updates of new parameters
-        this._client?.subscribeParameterUpdates(newParameters.map((p) => p.name));
+        this.#client?.subscribeParameterUpdates(newParameters.map((p) => p.name));
       }
     });
 
-    this._client.on("advertiseServices", (services) => {
+    this.#client.on("advertiseServices", (services) => {
       if (!this._serviceCallEncoding) {
         return;
       }
@@ -619,7 +619,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
       this._emitState();
     });
 
-    this._client.on("unadvertiseServices", (serviceIds) => {
+    this.#client.on("unadvertiseServices", (serviceIds) => {
       for (const serviceId of serviceIds) {
         const service: ResolvedService | undefined = Object.values(this._servicesByName).find(
           (srv) => srv.service.id === serviceId,
@@ -630,7 +630,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
       }
     });
 
-    this._client.on("serviceCallResponse", (response) => {
+    this.#client.on("serviceCallResponse", (response) => {
       const responseCallback = this._serviceResponseCbs.get(response.callId);
       if (!responseCallback) {
         this._problems.addProblem(`callService:${response.callId}`, {
@@ -643,7 +643,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
       this._serviceResponseCbs.delete(response.callId);
     });
 
-    this._client.on("connectionGraphUpdate", (event) => {
+    this.#client.on("connectionGraphUpdate", (event) => {
       if (event.publishedTopics.length > 0 || event.removedTopics.length > 0) {
         const newMap: Map<string, Set<string>> = new Map(this._publishedTopics ?? new Map());
         for (const { name, publisherIds } of event.publishedTopics) {
@@ -673,7 +673,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
     });
   };
 
-  private _updateTopicsAndDatatypes() {
+  #updateTopicsAndDatatypes() {
     // Build a new topics array from this._channelsById
     const topics: Topic[] = Array.from(this._channelsById.values(), (chanInfo) => ({
       name: chanInfo.channel.topic,
@@ -703,18 +703,18 @@ export default class FoxgloveWebSocketPlayer implements Player {
   // Potentially performance-sensitive; await can be expensive
   // eslint-disable-next-line @typescript-eslint/promise-function-async
   private _emitState = debouncePromise(() => {
-    if (!this._listener || this._closed) {
+    if (!this.#listener || this.#closed) {
       return Promise.resolve();
     }
 
     if (!this._topics) {
-      return this._listener({
-        name: this._name,
+      return this.#listener({
+        name: this.#name,
         presence: this._presence,
         progress: {},
-        capabilities: this._playerCapabilities,
+        capabilities: this.#playerCapabilities,
         profile: undefined,
-        playerId: this._id,
+        playerId: this.#id,
         activeData: undefined,
         problems: this._problems.problems(),
         urlState: this._urlState,
@@ -731,13 +731,13 @@ export default class FoxgloveWebSocketPlayer implements Player {
 
     const messages = this._parsedMessages;
     this._parsedMessages = [];
-    return this._listener({
-      name: this._name,
+    return this.#listener({
+      name: this.#name,
       presence: this._presence,
       progress: {},
-      capabilities: this._playerCapabilities,
+      capabilities: this.#playerCapabilities,
       profile: this._profile,
-      playerId: this._id,
+      playerId: this.#id,
       problems: this._problems.problems(),
       urlState: this._urlState,
 
@@ -763,13 +763,13 @@ export default class FoxgloveWebSocketPlayer implements Player {
   });
 
   public setListener(listener: (arg0: PlayerState) => Promise<void>): void {
-    this._listener = listener;
+    this.#listener = listener;
     this._emitState();
   }
 
   public close(): void {
-    this._closed = true;
-    this._client?.close();
+    this.#closed = true;
+    this.#client?.close();
     this._metricsCollector.close();
     this._hasReceivedMessage = false;
     if (this._openTimeout != undefined) {
@@ -785,7 +785,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
   public setSubscriptions(subscriptions: SubscribePayload[]): void {
     const newTopics = new Set(subscriptions.map(({ topic }) => topic));
 
-    if (!this._client || this._closed) {
+    if (!this.#client || this.#closed) {
       // Remember requested subscriptions so we can retry subscribing when
       // the client is available.
       this._unresolvedSubscriptions = newTopics;
@@ -800,7 +800,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
 
     for (const [topic, subId] of this._resolvedSubscriptionsByTopic) {
       if (!newTopics.has(topic)) {
-        this._client.unsubscribe(subId);
+        this.#client.unsubscribe(subId);
         this._resolvedSubscriptionsByTopic.delete(topic);
         this._resolvedSubscriptionsById.delete(subId);
         this._recentlyCanceledSubscriptions.add(subId);
@@ -824,14 +824,14 @@ export default class FoxgloveWebSocketPlayer implements Player {
   }
 
   private _processUnresolvedSubscriptions() {
-    if (!this._client) {
+    if (!this.#client) {
       return;
     }
 
     for (const topic of this._unresolvedSubscriptions) {
       const chanInfo = this._channelsByTopic.get(topic);
       if (chanInfo) {
-        const subId = this._client.subscribe(chanInfo.channel.id);
+        const subId = this.#client.subscribe(chanInfo.channel.id);
         this._unresolvedSubscriptions.delete(topic);
         this._resolvedSubscriptionsByTopic.set(topic, subId);
         this._resolvedSubscriptionsById.set(subId, chanInfo);
@@ -843,20 +843,20 @@ export default class FoxgloveWebSocketPlayer implements Player {
     // Since `setPublishers` is rarely called, we can get away with just unadvertising existing
     // channels und re-advertising them again
     for (const channel of this._publicationsByTopic.values()) {
-      this._client?.unadvertise(channel.id);
+      this.#client?.unadvertise(channel.id);
     }
     this._publicationsByTopic.clear();
     this._unresolvedPublications = publishers;
-    this._setupPublishers();
+    this.#setupPublishers();
   }
 
   public setParameter(key: string, value: ParameterValue): void {
-    if (!this._client) {
+    if (!this.#client) {
       throw new Error(`Attempted to set parameters without a valid Foxglove WebSocket connection`);
     }
 
     log.debug(`FoxgloveWebSocketPlayer.setParameter(key=${key}, value=${value})`);
-    this._client.setParameters([{ name: key, value: value as Parameter["value"] }], uuidv4());
+    this.#client.setParameters([{ name: key, value: value as Parameter["value"] }], uuidv4());
 
     // Pre-actively update our parameter map, such that a change is detected if our update failed
     this._parameters.set(key, value);
@@ -864,7 +864,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
   }
 
   public publish({ topic, msg }: PublishPayload): void {
-    if (!this._client) {
+    if (!this.#client) {
       throw new Error(`Attempted to publish without a valid Foxglove WebSocket connection`);
     }
 
@@ -881,18 +881,18 @@ export default class FoxgloveWebSocketPlayer implements Player {
           : value;
       };
       const message = Buffer.from(JSON.stringify(msg, replacer) ?? "");
-      this._client.sendMessage(clientChannel.id, message);
+      this.#client.sendMessage(clientChannel.id, message);
     } else if (
       ROS_ENCODINGS.includes(clientChannel.encoding) &&
       clientChannel.messageWriter != undefined
     ) {
       const message = clientChannel.messageWriter.writeMessage(msg);
-      this._client.sendMessage(clientChannel.id, message);
+      this.#client.sendMessage(clientChannel.id, message);
     }
   }
 
   public async callService(serviceName: string, request: unknown): Promise<unknown> {
-    if (!this._client) {
+    if (!this.#client) {
       throw new Error(
         `Attempted to call service ${serviceName} without a valid Foxglove WebSocket connection.`,
       );
@@ -920,7 +920,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
 
     const message = requestMessageWriter.writeMessage(request);
     serviceCallRequest.data = new DataView(message.buffer);
-    this._client.sendServiceCallRequest(serviceCallRequest);
+    this.#client.sendServiceCallRequest(serviceCallRequest);
 
     return await new Promise<Record<string, unknown>>((resolve, reject) => {
       this._serviceResponseCbs.set(serviceCallRequest.callId, (response: ServiceCallResponse) => {
@@ -951,9 +951,9 @@ export default class FoxgloveWebSocketPlayer implements Player {
     return this._clockTime ?? ZERO_TIME;
   }
 
-  private _setupPublishers(): void {
+  #setupPublishers(): void {
     // This function will be called again once a connection is established
-    if (!this._client || this._closed) {
+    if (!this.#client || this.#closed) {
       return;
     }
 
@@ -963,8 +963,8 @@ export default class FoxgloveWebSocketPlayer implements Player {
 
     this._problems.removeProblems((id) => id.startsWith("pub:"));
 
-    const encoding = this._supportedEncodings
-      ? this._supportedEncodings.find((e) => SUPPORTED_PUBLICATION_ENCODINGS.includes(e))
+    const encoding = this.#supportedEncodings
+      ? this.#supportedEncodings.find((e) => SUPPORTED_PUBLICATION_ENCODINGS.includes(e))
       : FALLBACK_PUBLICATION_ENCODING;
 
     for (const { topic, schemaName, options } of this._unresolvedPublications) {
@@ -1003,7 +1003,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
           encoding === "ros1" ? new Ros1MessageWriter(msgdef) : new Ros2MessageWriter(msgdef);
       }
 
-      const channelId = this._client.advertise(topic, encoding, schemaName);
+      const channelId = this.#client.advertise(topic, encoding, schemaName);
       this._publicationsByTopic.set(topic, {
         id: channelId,
         topic,

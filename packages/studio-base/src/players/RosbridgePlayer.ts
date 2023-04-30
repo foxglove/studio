@@ -83,16 +83,16 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 // support raw ROS messages; instead we use the CBOR compression provided by roslibjs, which
 // unmarshalls into plain JS objects.
 export default class RosbridgePlayer implements Player {
-  private _url: string; // WebSocket URL.
-  private _rosClient?: roslib.Ros; // The roslibjs client when we're connected.
-  private _id: string = uuidv4(); // Unique ID for this player.
-  private _isRefreshing = false; // True if currently refreshing the node graph.
-  private _listener?: (arg0: PlayerState) => Promise<void>; // Listener for _emitState().
-  private _closed: boolean = false; // Whether the player has been completely closed using close().
-  private _providerTopics?: TopicWithSchemaName[]; // Topics as published by the WebSocket.
-  private _providerTopicsStats = new Map<string, TopicStats>(); // topic names to topic statistics.
-  private _providerDatatypes?: RosDatatypes; // Datatypes as published by the WebSocket.
-  private _publishedTopics = new Map<string, Set<string>>(); // A map of topic names to the set of publisher IDs publishing each topic.
+  #url: string; // WebSocket URL.
+  #rosClient?: roslib.Ros; // The roslibjs client when we're connected.
+  #id: string = uuidv4(); // Unique ID for this player.
+  #isRefreshing = false; // True if currently refreshing the node graph.
+  #listener?: (arg0: PlayerState) => Promise<void>; // Listener for _emitState().
+  #closed: boolean = false; // Whether the player has been completely closed using close().
+  #providerTopics?: TopicWithSchemaName[]; // Topics as published by the WebSocket.
+  #providerTopicsStats = new Map<string, TopicStats>(); // topic names to topic statistics.
+  #providerDatatypes?: RosDatatypes; // Datatypes as published by the WebSocket.
+  #publishedTopics = new Map<string, Set<string>>(); // A map of topic names to the set of publisher IDs publishing each topic.
   private _subscribedTopics = new Map<string, Set<string>>(); // A map of topic names to the set of subscriber IDs subscribed to each topic.
   private _services = new Map<string, Set<string>>(); // A map of service names to service provider IDs that provide each service.
   private _messageReadersByDatatype: {
@@ -131,7 +131,7 @@ export default class RosbridgePlayer implements Player {
   }) {
     this._presence = PlayerPresence.INITIALIZING;
     this._metricsCollector = metricsCollector;
-    this._url = url;
+    this.#url = url;
     this._start = fromMillis(Date.now());
     this._metricsCollector.playerConstructed();
     this._sourceId = sourceId;
@@ -139,26 +139,26 @@ export default class RosbridgePlayer implements Player {
   }
 
   private _open = (): void => {
-    if (this._closed) {
+    if (this.#closed) {
       return;
     }
-    if (this._rosClient != undefined) {
+    if (this.#rosClient != undefined) {
       throw new Error(`Attempted to open a second Rosbridge connection`);
     }
     this._problems.removeProblem("rosbridge:connection-failed");
-    log.info(`Opening connection to ${this._url}`);
+    log.info(`Opening connection to ${this.#url}`);
 
     // `workersocket` will open the actual WebSocket connection in a WebWorker.
-    const rosClient = new roslib.Ros({ url: this._url, transportLibrary: "workersocket" });
+    const rosClient = new roslib.Ros({ url: this.#url, transportLibrary: "workersocket" });
 
     rosClient.on("connection", () => {
-      log.info(`Connected to ${this._url}`);
-      if (this._closed) {
+      log.info(`Connected to ${this.#url}`);
+      if (this.#closed) {
         return;
       }
       this._presence = PlayerPresence.PRESENT;
       this._problems.removeProblem("rosbridge:connection-failed");
-      this._rosClient = rosClient;
+      this.#rosClient = rosClient;
 
       this._setupPublishers();
       void this._requestTopics({ forceUpdate: true });
@@ -186,12 +186,12 @@ export default class RosbridgePlayer implements Player {
         this._topicSubscriptions.delete(topicName);
       }
       rosClient.close(); // ensure the underlying worker is cleaned up
-      delete this._rosClient;
+      delete this.#rosClient;
 
       this._problems.addProblem("rosbridge:connection-failed", {
         severity: "error",
         message: "Connection failed",
-        tip: `Check that the rosbridge WebSocket server at ${this._url} is reachable.`,
+        tip: `Check that the rosbridge WebSocket server at ${this.#url} is reachable.`,
       });
 
       this._emitState();
@@ -202,10 +202,10 @@ export default class RosbridgePlayer implements Player {
   };
 
   private _topicsChanged = (newTopics: Topic[]): boolean => {
-    if (!this._providerTopics || newTopics.length !== this._providerTopics.length) {
+    if (!this.#providerTopics || newTopics.length !== this.#providerTopics.length) {
       return true;
     }
-    return !isEqual(this._providerTopics, newTopics);
+    return !isEqual(this.#providerTopics, newTopics);
   };
 
   private async _requestTopics(opt?: { forceUpdate: boolean }): Promise<void> {
@@ -216,8 +216,8 @@ export default class RosbridgePlayer implements Player {
     if (this._requestTopicsTimeout) {
       clearTimeout(this._requestTopicsTimeout);
     }
-    const rosClient = this._rosClient;
-    if (!rosClient || this._closed) {
+    const rosClient = this.#rosClient;
+    if (!rosClient || this.#closed) {
       return;
     }
 
@@ -307,15 +307,15 @@ export default class RosbridgePlayer implements Player {
 
       // Remove stats entries for removed topics
       const topicsSet = new Set<string>(topics.map((topic) => topic.name));
-      for (const topic of this._providerTopicsStats.keys()) {
+      for (const topic of this.#providerTopicsStats.keys()) {
         if (!topicsSet.has(topic)) {
-          this._providerTopicsStats.delete(topic);
+          this.#providerTopicsStats.delete(topic);
         }
       }
 
-      this._providerTopics = sortedTopics;
+      this.#providerTopics = sortedTopics;
 
-      this._providerDatatypes = bagConnectionsToDatatypes(datatypeDescriptions, {
+      this.#providerDatatypes = bagConnectionsToDatatypes(datatypeDescriptions, {
         ros2: this._rosVersion === 2,
       });
       this._messageReadersByDatatype = messageReaders;
@@ -324,7 +324,7 @@ export default class RosbridgePlayer implements Player {
       this.setSubscriptions(this._requestedSubscriptions);
 
       // Refresh the full graph topology
-      this._refreshSystemState().catch((error) => log.error(error));
+      this.#refreshSystemState().catch((error) => log.error(error));
     } catch (error) {
       log.error(error);
       clearTimeout(topicsStallWarningTimeout);
@@ -346,24 +346,24 @@ export default class RosbridgePlayer implements Player {
   // Potentially performance-sensitive; await can be expensive
   // eslint-disable-next-line @typescript-eslint/promise-function-async
   private _emitState = debouncePromise(() => {
-    if (!this._listener || this._closed) {
+    if (!this.#listener || this.#closed) {
       return Promise.resolve();
     }
 
     const { _providerTopics, _providerDatatypes, _start } = this;
     if (!_providerTopics || !_providerDatatypes || !_start) {
-      return this._listener({
-        name: this._url,
+      return this.#listener({
+        name: this.#url,
         presence: this._presence,
         progress: {},
         capabilities: CAPABILITIES,
         profile: undefined,
-        playerId: this._id,
+        playerId: this.#id,
         activeData: undefined,
         problems: this._problems.problems(),
         urlState: {
           sourceId: this._sourceId,
-          parameters: { url: this._url },
+          parameters: { url: this.#url },
         },
       });
     }
@@ -380,17 +380,17 @@ export default class RosbridgePlayer implements Player {
     const currentTime = this._getCurrentTime();
     const messages = this._parsedMessages;
     this._parsedMessages = [];
-    return this._listener({
-      name: this._url,
+    return this.#listener({
+      name: this.#url,
       presence: this._presence,
       progress: {},
       capabilities: CAPABILITIES,
       profile: this._rosVersion === 2 ? "ros2" : "ros1",
-      playerId: this._id,
+      playerId: this.#id,
       problems: this._problems.problems(),
       urlState: {
         sourceId: this._sourceId,
-        parameters: { url: this._url },
+        parameters: { url: this.#url },
       },
 
       activeData: {
@@ -406,9 +406,9 @@ export default class RosbridgePlayer implements Player {
         lastSeekTime: 1,
         topics: _providerTopics,
         // Always copy topic stats since message counts and timestamps are being updated
-        topicStats: new Map(this._providerTopicsStats),
+        topicStats: new Map(this.#providerTopicsStats),
         datatypes: _providerDatatypes,
-        publishedTopics: this._publishedTopics,
+        publishedTopics: this.#publishedTopics,
         subscribedTopics: this._subscribedTopics,
         services: this._services,
       },
@@ -416,14 +416,14 @@ export default class RosbridgePlayer implements Player {
   });
 
   public setListener(listener: (arg0: PlayerState) => Promise<void>): void {
-    this._listener = listener;
+    this.#listener = listener;
     this._emitState();
   }
 
   public close(): void {
-    this._closed = true;
-    if (this._rosClient) {
-      this._rosClient.close();
+    this.#closed = true;
+    if (this.#rosClient) {
+      this.#rosClient.close();
     }
     if (this._emitTimer != undefined) {
       clearTimeout(this._emitTimer);
@@ -436,17 +436,17 @@ export default class RosbridgePlayer implements Player {
   public setSubscriptions(subscriptions: SubscribePayload[]): void {
     this._requestedSubscriptions = subscriptions;
 
-    if (!this._rosClient || this._closed) {
+    if (!this.#rosClient || this.#closed) {
       return;
     }
 
     // Subscribe to additional topics used by RosbridgePlayer itself
-    this._addInternalSubscriptions(subscriptions);
+    this.#addInternalSubscriptions(subscriptions);
 
     this._parsedTopics = new Set(subscriptions.map(({ topic }) => topic));
 
     // See what topics we actually can subscribe to.
-    const availableTopicsByTopicName = keyBy(this._providerTopics ?? [], ({ name }) => name);
+    const availableTopicsByTopicName = keyBy(this.#providerTopics ?? [], ({ name }) => name);
     const topicNames = subscriptions
       .map(({ topic }) => topic)
       .filter((topicName) => availableTopicsByTopicName[topicName]);
@@ -457,7 +457,7 @@ export default class RosbridgePlayer implements Player {
         continue;
       }
       const topic = new roslib.Topic({
-        ros: this._rosClient,
+        ros: this.#rosClient,
         name: topicName,
         compression: "cbor-raw",
       });
@@ -474,7 +474,7 @@ export default class RosbridgePlayer implements Player {
 
       const problemId = `message:${topicName}`;
       topic.subscribe((message) => {
-        if (!this._providerTopics) {
+        if (!this.#providerTopics) {
           return;
         }
         try {
@@ -531,11 +531,11 @@ export default class RosbridgePlayer implements Player {
           this._problems.removeProblem(problemId);
 
           // Update the message count for this topic
-          let stats = this._providerTopicsStats.get(topicName);
+          let stats = this.#providerTopicsStats.get(topicName);
           if (this._topicSubscriptions.has(topicName)) {
             if (!stats) {
               stats = { numMessages: 0 };
-              this._providerTopicsStats.set(topicName, stats);
+              this.#providerTopicsStats.set(topicName, stats);
             }
             stats.numMessages++;
           }
@@ -559,7 +559,7 @@ export default class RosbridgePlayer implements Player {
         this._topicSubscriptions.delete(topicName);
 
         // Reset the message count for this topic
-        this._providerTopicsStats.delete(topicName);
+        this.#providerTopicsStats.delete(topicName);
       }
     }
   }
@@ -594,8 +594,8 @@ export default class RosbridgePlayer implements Player {
   }
 
   // Query the type name for this service. Cache the query to avoid looking it up again.
-  private async getServiceType(service: string): Promise<string> {
-    if (!this._rosClient) {
+  async #getServiceType(service: string): Promise<string> {
+    if (!this.#rosClient) {
       throw new Error("Not connected");
     }
 
@@ -604,7 +604,7 @@ export default class RosbridgePlayer implements Player {
       return await existing;
     }
 
-    const rosClient = this._rosClient;
+    const rosClient = this.#rosClient;
     const serviceTypePromise = new Promise<string>((resolve, reject) => {
       rosClient.getServiceType(service, resolve, reject);
     });
@@ -615,7 +615,7 @@ export default class RosbridgePlayer implements Player {
   }
 
   public async callService(service: string, request: unknown): Promise<unknown> {
-    if (!this._rosClient) {
+    if (!this.#rosClient) {
       throw new Error("Not connected");
     }
 
@@ -623,11 +623,11 @@ export default class RosbridgePlayer implements Player {
       throw new Error("RosbridgePlayer#callService request must be an object");
     }
 
-    const serviceType = await this.getServiceType(service);
+    const serviceType = await this.#getServiceType(service);
 
     // Create a proxy object for dispatching our service call
     const proxy = new roslib.Service({
-      ros: this._rosClient,
+      ros: this.#rosClient,
       name: service,
       serviceType,
     });
@@ -661,7 +661,7 @@ export default class RosbridgePlayer implements Player {
 
   private _setupPublishers(): void {
     // This function will be called again once a connection is established
-    if (!this._rosClient) {
+    if (!this.#rosClient) {
       return;
     }
 
@@ -671,7 +671,7 @@ export default class RosbridgePlayer implements Player {
 
     for (const { topic, schemaName: datatype } of this._advertisements) {
       const roslibTopic = new roslib.Topic({
-        ros: this._rosClient,
+        ros: this.#rosClient,
         name: topic,
         messageType: datatype,
         queue_size: 0,
@@ -681,7 +681,7 @@ export default class RosbridgePlayer implements Player {
     }
   }
 
-  private _addInternalSubscriptions(subscriptions: SubscribePayload[]): void {
+  #addInternalSubscriptions(subscriptions: SubscribePayload[]): void {
     // Always subscribe to /clock if available
     if (subscriptions.find((sub) => sub.topic === "/clock") == undefined) {
       subscriptions.unshift({
@@ -696,21 +696,21 @@ export default class RosbridgePlayer implements Player {
 
   // Refreshes the full system state graph. Runs in the background so we don't
   // block app startup while mapping large node graphs.
-  private async _refreshSystemState(): Promise<void> {
-    if (this._isRefreshing) {
+  async #refreshSystemState(): Promise<void> {
+    if (this.#isRefreshing) {
       return;
     }
 
     try {
-      this._isRefreshing = true;
+      this.#isRefreshing = true;
 
       const nodes = await new Promise<string[]>((resolve, reject) => {
-        this._rosClient?.getNodes((fetchedNodes) => resolve(fetchedNodes), reject);
+        this.#rosClient?.getNodes((fetchedNodes) => resolve(fetchedNodes), reject);
       });
 
       const promises = nodes.map(async (node) => {
         return await new Promise<RosNodeDetails>((resolve, reject) => {
-          this._rosClient?.getNodeDetails(
+          this.#rosClient?.getNodeDetails(
             node,
             (subscriptions, publications, services) => {
               resolve({
@@ -728,7 +728,7 @@ export default class RosbridgePlayer implements Player {
       const fulfilled = filterMap(results, (item) =>
         item.status === "fulfilled" ? item.value : undefined,
       );
-      this._publishedTopics = collateNodeDetails(fulfilled, "publications");
+      this.#publishedTopics = collateNodeDetails(fulfilled, "publications");
       this._subscribedTopics = collateNodeDetails(fulfilled, "subscriptions");
       this._services = collateNodeDetails(fulfilled, "services");
 
@@ -740,7 +740,7 @@ export default class RosbridgePlayer implements Player {
         error,
       });
     } finally {
-      this._isRefreshing = false;
+      this.#isRefreshing = false;
     }
   }
 }
