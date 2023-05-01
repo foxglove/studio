@@ -6,6 +6,7 @@ import { t } from "i18next";
 import { Immutable } from "immer";
 import * as THREE from "three";
 
+import { TwoKeyMap } from "@foxglove/den/collection";
 import { PinholeCameraModel } from "@foxglove/den/image";
 import { ImageAnnotations as FoxgloveImageAnnotations } from "@foxglove/schemas";
 import { MessageEvent, SettingsTreeAction, Topic } from "@foxglove/studio";
@@ -21,6 +22,9 @@ import { SettingsTreeEntry } from "../../../SettingsManager";
 import { IMAGE_ANNOTATIONS_DATATYPES } from "../../../foxglove";
 import { IMAGE_MARKER_ARRAY_DATATYPES, IMAGE_MARKER_DATATYPES } from "../../../ros";
 import { topicIsConvertibleToSchema } from "../../../topicIsConvertibleToSchema";
+
+type TopicName = string & { __brand: "TopicName" };
+type SchemaName = string & { __brand: "SchemaName" };
 
 interface ImageAnnotationsContext {
   initialScale: number;
@@ -68,7 +72,11 @@ function subscriptionMatches(
 export class ImageAnnotations extends THREE.Object3D {
   #context: ImageAnnotationsContext;
 
-  #renderablesByTopicAndSchemaName = new Map<string, Map<string, RenderableTopicAnnotations>>();
+  #renderablesByTopicAndSchemaName = new TwoKeyMap<
+    TopicName,
+    SchemaName,
+    RenderableTopicAnnotations
+  >();
   #cameraModel?: PinholeCameraModel;
 
   #scale: number;
@@ -88,10 +96,8 @@ export class ImageAnnotations extends THREE.Object3D {
   }
 
   public dispose(): void {
-    for (const renderables of this.#renderablesByTopicAndSchemaName.values()) {
-      for (const renderable of renderables.values()) {
-        renderable.dispose();
-      }
+    for (const renderable of this.#renderablesByTopicAndSchemaName.values()) {
+      renderable.dispose();
     }
     this.children.length = 0;
     this.#renderablesByTopicAndSchemaName.clear();
@@ -99,11 +105,9 @@ export class ImageAnnotations extends THREE.Object3D {
 
   /** Called when seeking or a new data source is loaded.  */
   public removeAllRenderables(): void {
-    for (const renderables of this.#renderablesByTopicAndSchemaName.values()) {
-      for (const renderable of renderables.values()) {
-        renderable.dispose();
-        this.remove(renderable);
-      }
+    for (const renderable of this.#renderablesByTopicAndSchemaName.values()) {
+      renderable.dispose();
+      this.remove(renderable);
     }
     this.#renderablesByTopicAndSchemaName.clear();
   }
@@ -118,21 +122,17 @@ export class ImageAnnotations extends THREE.Object3D {
     this.#canvasWidth = canvasWidth;
     this.#canvasHeight = canvasHeight;
     this.#pixelRatio = pixelRatio;
-    for (const renderables of this.#renderablesByTopicAndSchemaName.values()) {
-      for (const renderable of renderables.values()) {
-        renderable.setScale(scale, canvasWidth, canvasHeight, pixelRatio);
-        renderable.update();
-      }
+    for (const renderable of this.#renderablesByTopicAndSchemaName.values()) {
+      renderable.setScale(scale, canvasWidth, canvasHeight, pixelRatio);
+      renderable.update();
     }
   }
 
   public updateCameraModel(cameraModel: PinholeCameraModel): void {
     this.#cameraModel = cameraModel;
-    for (const renderables of this.#renderablesByTopicAndSchemaName.values()) {
-      for (const renderable of renderables.values()) {
-        renderable.setCameraModel(cameraModel);
-        renderable.update();
-      }
+    for (const renderable of this.#renderablesByTopicAndSchemaName.values()) {
+      renderable.setCameraModel(cameraModel);
+      renderable.update();
     }
   }
 
@@ -144,17 +144,19 @@ export class ImageAnnotations extends THREE.Object3D {
       return;
     }
 
-    let topicRenderables = this.#renderablesByTopicAndSchemaName.get(messageEvent.topic);
-    if (!topicRenderables) {
-      topicRenderables = new Map<string, RenderableTopicAnnotations>();
-      this.#renderablesByTopicAndSchemaName.set(messageEvent.topic, topicRenderables);
-    }
-    let renderable = topicRenderables.get(messageEvent.schemaName);
+    let renderable = this.#renderablesByTopicAndSchemaName.get(
+      messageEvent.topic as TopicName,
+      messageEvent.schemaName as SchemaName,
+    );
     if (!renderable) {
       renderable = new RenderableTopicAnnotations();
       renderable.setScale(this.#scale, this.#canvasWidth, this.#canvasHeight, this.#pixelRatio);
       renderable.setCameraModel(this.#cameraModel);
-      topicRenderables.set(messageEvent.schemaName, renderable);
+      this.#renderablesByTopicAndSchemaName.set(
+        messageEvent.topic as TopicName,
+        messageEvent.schemaName as SchemaName,
+        renderable,
+      );
       this.add(renderable);
     }
 
@@ -202,9 +204,10 @@ export class ImageAnnotations extends THREE.Object3D {
         draft.annotations.push(subscription);
       }
     });
-    const renderable = this.#renderablesByTopicAndSchemaName
-      .get(topic.name)
-      ?.get(convertTo ?? topic.schemaName);
+    const renderable = this.#renderablesByTopicAndSchemaName.get(
+      topic.name as TopicName,
+      (convertTo ?? topic.schemaName) as SchemaName,
+    );
     if (renderable) {
       renderable.visible = visible;
     }
