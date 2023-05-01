@@ -60,7 +60,19 @@ export const WithErrors: StoryObj = {
             severity: "error",
             message: "Connection lost",
             tip: "A tip that we might want to show the user",
-            error: new Error("Original Error"),
+            error: Object.assign(new Error("Fake Error"), {
+              stack: `Error: Original Error
+  at Story (https://603ec8bf7908b500231841e2-xbxzczuvhp.chromatic.com/ProblemsList-stories.8492cc61.iframe.bundle.js:58:28)
+  at undecoratedStoryFn (https://603ec8bf7908b500231841e2-xbxzczuvhp.chromatic.com/sb-preview/runtime.mjs:34:2794)
+  at hookified (https://603ec8bf7908b500231841e2-xbxzczuvhp.chromatic.com/sb-preview/runtime.mjs:7:17032)
+  at https://603ec8bf7908b500231841e2-xbxzczuvhp.chromatic.com/sb-preview/runtime.mjs:34:1915
+  at jsxDecorator (https://603ec8bf7908b500231841e2-xbxzczuvhp.chromatic.com/2792.504e9cb5.iframe.bundle.js:13838:1100)
+  at hookified (https://603ec8bf7908b500231841e2-xbxzczuvhp.chromatic.com/sb-preview/runtime.mjs:7:17032)
+  at https://603ec8bf7908b500231841e2-xbxzczuvhp.chromatic.com/sb-preview/runtime.mjs:34:1454
+  at https://603ec8bf7908b500231841e2-xbxzczuvhp.chromatic.com/sb-preview/runtime.mjs:34:1915
+  at Ch (https://603ec8bf7908b500231841e2-xbxzczuvhp.chromatic.com/2792.504e9cb5.iframe.bundle.js:47712:137)
+  at ck (https://603ec8bf7908b500231841e2-xbxzczuvhp.chromatic.com/2792.504e9cb5.iframe.bundle.js:47822:460)`,
+            }),
           },
           {
             severity: "warn",
