@@ -138,16 +138,16 @@ export const PlayerIntializingJapanese: StoryObj = {
 const fakeError = (): Error =>
   Object.assign(new Error("Fake Error"), {
     stack: `Error: Original Error
-    at Story (https://603ec8bf7908b500231841e2-nozcuvybhv.chromatic.com/studio-base-src-components-DataSourceSidebar-DataSourceSidebar-stories.f1dd4357.iframe.bundle.js:233:28)
-    at undecoratedStoryFn (https://603ec8bf7908b500231841e2-nozcuvybhv.chromatic.com/sb-preview/runtime.mjs:34:2794)
-    at hookified (https://603ec8bf7908b500231841e2-nozcuvybhv.chromatic.com/sb-preview/runtime.mjs:7:17032)
-    at https://603ec8bf7908b500231841e2-nozcuvybhv.chromatic.com/sb-preview/runtime.mjs:34:1915
-    at jsxDecorator (https://603ec8bf7908b500231841e2-nozcuvybhv.chromatic.com/1983.4cb8db42.iframe.bundle.js:13838:1100)
-    at hookified (https://603ec8bf7908b500231841e2-nozcuvybhv.chromatic.com/sb-preview/runtime.mjs:7:17032)
-    at https://603ec8bf7908b500231841e2-nozcuvybhv.chromatic.com/sb-preview/runtime.mjs:34:1454
-    at https://603ec8bf7908b500231841e2-nozcuvybhv.chromatic.com/sb-preview/runtime.mjs:34:1915
-    at Ch (https://603ec8bf7908b500231841e2-nozcuvybhv.chromatic.com/1983.4cb8db42.iframe.bundle.js:47712:137)
-    at ck (https://603ec8bf7908b500231841e2-nozcuvybhv.chromatic.com/1983.4cb8db42.iframe.bundle.js:47822:460)`,
+    at Story (https://603ec8bf7908b500231841e2-nozcuvybhv.capture.chromatic.com/studio-base-src-components-DataSourceSidebar-DataSourceSidebar-stories.f1dd4357.iframe.bundle.js:233:28)
+    at undecoratedStoryFn (https://603ec8bf7908b500231841e2-nozcuvybhv.capture.chromatic.com/sb-preview/runtime.mjs:34:2794)
+    at hookified (https://603ec8bf7908b500231841e2-nozcuvybhv.capture.chromatic.com/sb-preview/runtime.mjs:7:17032)
+    at https://603ec8bf7908b500231841e2-nozcuvybhv.capture.chromatic.com/sb-preview/runtime.mjs:34:1915
+    at jsxDecorator (https://603ec8bf7908b500231841e2-nozcuvybhv.capture.chromatic.com/1983.4cb8db42.iframe.bundle.js:13838:1100)
+    at hookified (https://603ec8bf7908b500231841e2-nozcuvybhv.capture.chromatic.com/sb-preview/runtime.mjs:7:17032)
+    at https://603ec8bf7908b500231841e2-nozcuvybhv.capture.chromatic.com/sb-preview/runtime.mjs:34:1454
+    at https://603ec8bf7908b500231841e2-nozcuvybhv.capture.chromatic.com/sb-preview/runtime.mjs:34:1915
+    at Ch (https://603ec8bf7908b500231841e2-nozcuvybhv.capture.chromatic.com/1983.4cb8db42.iframe.bundle.js:47712:137)
+    at ck (https://603ec8bf7908b500231841e2-nozcuvybhv.capture.chromatic.com/1983.4cb8db42.iframe.bundle.js:47822:460)`,
   });
 
 export const PlayerReconnecting: StoryObj = {
