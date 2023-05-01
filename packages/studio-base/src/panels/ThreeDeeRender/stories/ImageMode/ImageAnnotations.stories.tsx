@@ -101,7 +101,7 @@ export const Annotations: StoryObj = {
             position: { x: 25, y: 5 },
             diameter: 4,
             thickness: 1,
-            fill_color: { r: 1, g: 0, b: 1, a: 1 },
+            fill_color: { r: 1, g: 0, b: 1, a: 0.5 },
             outline_color: { r: 0, g: 0, b: 0, a: 0 },
           },
           {
@@ -110,7 +110,7 @@ export const Annotations: StoryObj = {
             diameter: 4,
             thickness: 0.5,
             fill_color: { r: 1, g: 1, b: 0, a: 0 },
-            outline_color: { r: 0, g: 1, b: 1, a: 1 },
+            outline_color: { r: 0, g: 1, b: 1, a: 0.5 },
           },
         ],
         points: [
