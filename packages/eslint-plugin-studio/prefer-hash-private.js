@@ -25,6 +25,7 @@ module.exports = {
   meta: {
     type: "problem",
     fixable: "code",
+    hasSuggestions: true,
   },
   create: (context) => {
     /** @type {Map<import("estree").ClassDeclaration, { privates: Set<import("estree").Identifier>, memberReferences: Map<string, import("estree").Identifier[]> }>} */
@@ -59,7 +60,6 @@ module.exports = {
           /** @type {import("estree").PropertyDefinition | import("estree").MethodDefinition} */
           node,
         ) => {
-          // debugger;
           const cls = getEnclosingClass(node);
           if (!cls) {
             throw new Error("No class around private definition??");
@@ -89,19 +89,24 @@ module.exports = {
           context.report({
             node: privateIdentifier,
             message: `Prefer \`${newName}\` language feature over \`private ${privateIdentifier.name}\` accessibility modifier`,
-            *fix(fixer) {
-              const privateToken = context
-                .getSourceCode()
-                .getTokens(privateIdentifier.parent)
-                .find((token) => token.type === "Keyword" && token.value === "private");
-              if (privateToken) {
-                yield fixer.removeRange([privateToken.range[0], privateToken.range[1] + 1]);
-              }
-              yield fixer.replaceText(privateIdentifier, newName);
-              for (const ref of refs) {
-                yield fixer.replaceText(ref, newName);
-              }
-            },
+            suggest: [
+              {
+                desc: `Rename to ${newName}`,
+                *fix(fixer) {
+                  const privateToken = context
+                    .getSourceCode()
+                    .getTokens(privateIdentifier.parent)
+                    .find((token) => token.type === "Keyword" && token.value === "private");
+                  if (privateToken) {
+                    yield fixer.removeRange([privateToken.range[0], privateToken.range[1] + 1]);
+                  }
+                  yield fixer.replaceText(privateIdentifier, newName);
+                  for (const ref of refs) {
+                    yield fixer.replaceText(ref, newName);
+                  }
+                },
+              },
+            ],
           });
         }
       },
