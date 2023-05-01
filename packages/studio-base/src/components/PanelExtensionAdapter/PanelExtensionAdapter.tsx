@@ -25,6 +25,7 @@ import {
   useMessagePipeline,
   useMessagePipelineGetter,
 } from "@foxglove/studio-base/components/MessagePipeline";
+import { PanelConfigVersionGuard } from "@foxglove/studio-base/components/PanelConfigVersionGuard";
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import { useAppConfiguration } from "@foxglove/studio-base/context/AppConfigurationContext";
@@ -56,12 +57,22 @@ import { initRenderStateBuilder } from "./renderState";
 
 const log = Logger.getLogger(__filename);
 
-type PanelExtensionAdapterProps = {
+type PanelExtensionAdapterContentProps = {
   /** function that initializes the panel extension */
   initPanel: ExtensionPanelRegistration["initPanel"];
 
   config: unknown;
   saveConfig: SaveConfig<unknown>;
+};
+
+type PanelExtensionAdapterProps = PanelExtensionAdapterContentProps & {
+  /**
+   * If defined, the highest supported version of config the panel supports.
+   * Used to prevent older implementations of a panel from trying to access
+   * newer, incompatible versions of the panel's config. Panels should include a
+   * numbered version property in their config to control this.
+   */
+  highestSupportedConfigVersion?: number;
 };
 
 function selectContext(ctx: MessagePipelineContext) {
@@ -78,7 +89,7 @@ type RenderFn = NonNullable<PanelExtensionContext["onRender"]>;
  *
  * The adapter creates a PanelExtensionContext and invokes initPanel using the context.
  */
-function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
+function PanelExtensionAdapterContent(props: PanelExtensionAdapterContentProps): JSX.Element {
   const { initPanel, config, saveConfig } = props;
 
   // Unlike the react data flow, the config is only provided to the panel once on setup.
@@ -573,6 +584,23 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
       <PanelToolbar />
       <div style={{ flex: 1, overflow: "hidden" }} ref={panelContainerRef} />
     </div>
+  );
+}
+
+function PanelExtensionAdapter(
+  props: PanelExtensionAdapterProps & { highestSupportedConfigVersion?: number },
+): JSX.Element {
+  const { highestSupportedConfigVersion, ...otherProps } = props;
+
+  return highestSupportedConfigVersion != undefined ? (
+    <PanelConfigVersionGuard
+      highestSupportedVersion={highestSupportedConfigVersion}
+      config={otherProps.config}
+    >
+      <PanelExtensionAdapterContent {...otherProps} />
+    </PanelConfigVersionGuard>
+  ) : (
+    <PanelExtensionAdapterContent {...otherProps} />
   );
 }
 

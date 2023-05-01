@@ -9,7 +9,6 @@ import { useCrash } from "@foxglove/hooks";
 import { PanelExtensionContext } from "@foxglove/studio";
 import { CaptureErrorBoundary } from "@foxglove/studio-base/components/CaptureErrorBoundary";
 import Panel from "@foxglove/studio-base/components/Panel";
-import { PanelConfigVersionGuard } from "@foxglove/studio-base/components/PanelConfigVersionGuard";
 import { PanelExtensionAdapter } from "@foxglove/studio-base/components/PanelExtensionAdapter";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 
@@ -47,13 +46,12 @@ function ThreeDeeRenderAdapter(interfaceMode: InterfaceMode, props: Props) {
   );
 
   return (
-    <PanelConfigVersionGuard highestSupportedVersion={1} config={props.config}>
-      <PanelExtensionAdapter
-        config={props.config}
-        saveConfig={props.saveConfig}
-        initPanel={boundInitPanel}
-      />
-    </PanelConfigVersionGuard>
+    <PanelExtensionAdapter
+      config={props.config}
+      highestSupportedConfigVersion={1}
+      saveConfig={props.saveConfig}
+      initPanel={boundInitPanel}
+    />
   );
 }
 
