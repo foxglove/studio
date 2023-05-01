@@ -23,6 +23,7 @@ import {
 } from "@foxglove/den/image";
 import { toNanoSec } from "@foxglove/rostime";
 import { RawImage } from "@foxglove/schemas";
+import { IRenderer } from "@foxglove/studio-base/panels/ThreeDeeRender/IRenderer";
 import { BaseUserData, Renderable } from "@foxglove/studio-base/panels/ThreeDeeRender/Renderable";
 import { stringToRgba } from "@foxglove/studio-base/panels/ThreeDeeRender/color";
 import { projectPixel } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/projections";
@@ -78,6 +79,20 @@ export class ImageRenderable extends Renderable<ImageUserData> {
 
   #renderBehindScene: boolean = false;
 
+  #onTextureLoad: (texture: THREE.Texture) => void;
+
+  #isUpdating = false;
+
+  public constructor(
+    topicName: string,
+    renderer: IRenderer,
+    userData: ImageUserData,
+    onTextureLoad?: (texture: THREE.Texture) => void,
+  ) {
+    super(topicName, renderer, userData);
+    this.#onTextureLoad = onTextureLoad ? onTextureLoad : () => {};
+  }
+
   public override dispose(): void {
     this.userData.texture?.dispose();
     this.userData.material?.dispose();
@@ -96,7 +111,8 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     const rawFrameId =
       this.userData.cameraInfo?.header.frame_id ??
       ("header" in image ? image.header.frame_id : image.frame_id);
-    this.userData.frameId = this.renderer.normalizeFrameId(rawFrameId);
+    this.userData.frameId =
+      typeof rawFrameId === "string" ? this.renderer.normalizeFrameId(rawFrameId) : rawFrameId;
     this.userData.messageTime = toNanoSec("header" in image ? image.header.stamp : image.timestamp);
   }
 
@@ -144,8 +160,18 @@ export class ImageRenderable extends Renderable<ImageUserData> {
   }
 
   public update(): void {
+    if (this.#isUpdating) {
+      return;
+    }
+    this.#isUpdating = true;
+    // fallback camera info needs image width and height
+    if (this.#textureNeedsUpdate && this.userData.image) {
+      this.updateTexture();
+      this.#textureNeedsUpdate = false;
+    }
     // We need a valid camera model and image to render
     if (!this.userData.cameraModel || !this.userData.image) {
+      this.#isUpdating = false;
       return;
     }
 
@@ -156,10 +182,6 @@ export class ImageRenderable extends Renderable<ImageUserData> {
       this.#geometryNeedsUpdate = false;
     }
 
-    if (this.#textureNeedsUpdate) {
-      this.updateTexture();
-      this.#textureNeedsUpdate = false;
-    }
     if (this.#materialNeedsUpdate) {
       this.updateMaterial();
       this.#materialNeedsUpdate = false;
@@ -169,6 +191,7 @@ export class ImageRenderable extends Renderable<ImageUserData> {
       this.updateMesh();
       this.#meshNeedsUpdate = false;
     }
+    this.#isUpdating = false;
   }
 
   private rebuildGeometry() {
@@ -200,6 +223,7 @@ export class ImageRenderable extends Renderable<ImageUserData> {
 
           this.removeTopicError(CREATE_BITMAP_ERR);
           this.#materialNeedsUpdate = true;
+          this.#onTextureLoad(this.userData.texture);
           this.update();
           this.renderer.queueAnimationFrame();
         })
@@ -220,6 +244,7 @@ export class ImageRenderable extends Renderable<ImageUserData> {
 
       const texture = this.userData.texture as THREE.DataTexture;
       rawImageToDataTexture(image, {}, texture);
+      this.#onTextureLoad(texture);
       texture.needsUpdate = true;
     }
     this.#materialNeedsUpdate = true;

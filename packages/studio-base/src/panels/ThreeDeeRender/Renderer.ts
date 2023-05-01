@@ -6,7 +6,7 @@ import EventEmitter from "eventemitter3";
 import i18next from "i18next";
 import { Immutable, produce } from "immer";
 import * as THREE from "three";
-import { DeepPartial } from "ts-essentials";
+import { DeepPartial, assert } from "ts-essentials";
 import { v4 as uuidv4 } from "uuid";
 
 import Logger from "@foxglove/log";
@@ -59,7 +59,7 @@ import { CameraStateSettings } from "./renderables/CameraStateSettings";
 import { Cameras } from "./renderables/Cameras";
 import { FrameAxes } from "./renderables/FrameAxes";
 import { Grids } from "./renderables/Grids";
-import { ImageMode } from "./renderables/ImageMode/ImageMode";
+import { ImageMode, UNSELECTED_CAMERA_CALIBRATION } from "./renderables/ImageMode/ImageMode";
 import { Images } from "./renderables/Images";
 import { LaserScans } from "./renderables/LaserScans";
 import { Markers } from "./renderables/Markers";
@@ -200,6 +200,8 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
 
   /** only public for testing - prefer to use `getCameraState` instead */
   public cameraHandler: ICameraHandler;
+
+  #imageModeExtension?: ImageMode;
 
   public measurementTool: MeasurementTool;
   public publishClickTool: PublishClickTool;
@@ -345,8 +347,9 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     const aspect = renderSize.width / renderSize.height;
     switch (interfaceMode) {
       case "image":
-        this.cameraHandler = new ImageMode(this, this.input.canvasSize);
-        this.addSceneExtension(this.cameraHandler);
+        this.#imageModeExtension = new ImageMode(this, this.input.canvasSize);
+        this.cameraHandler = this.#imageModeExtension;
+        this.addSceneExtension(this.#imageModeExtension);
         break;
       case "3d":
         this.cameraHandler = new CameraStateSettings(this, this.canvas, aspect);
@@ -373,6 +376,15 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     this.addSceneExtension(new VelodyneScans(this));
     this.addSceneExtension(this.measurementTool);
     this.addSceneExtension(this.publishClickTool);
+
+    if (
+      interfaceMode === "image" &&
+      config.imageMode.calibrationTopic === UNSELECTED_CAMERA_CALIBRATION
+    ) {
+      assert(this.#imageModeExtension);
+      this.enableImageOnlySubscriptionMode();
+      this.#imageModeExtension.subscribeToSchemas();
+    }
 
     this._watchDevicePixelRatio();
 
@@ -614,6 +626,37 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     this.emit("topicHandlersChanged", this);
   }
 
+  #prevSubs:
+    | { schemaHandlers: IRenderer["schemaHandlers"]; topicHandlers: IRenderer["topicHandlers"] }
+    | undefined;
+
+  public enableImageOnlySubscriptionMode(): void {
+    assert(!this.#prevSubs, "enableImageOnlySubscriptionMode called twice");
+    assert(
+      this.#imageModeExtension,
+      "Image mode extension should be defined when calling enable Image only mode",
+    );
+    this.clear({ clearTransforms: true, resetAllFramesCursor: true });
+    this.#prevSubs = { schemaHandlers: this.schemaHandlers, topicHandlers: this.topicHandlers };
+    this.emit("topicHandlersChanged", this);
+    this.schemaHandlers = new Map();
+    this.topicHandlers = new Map();
+
+    this.#imageModeExtension.subscribeToSchemas();
+  }
+
+  public disableImageOnlySubscriptionMode(): void {
+    assert(
+      this.#prevSubs,
+      "disableImageOnlySubscriptionMode called without enableImageOnlySubscriptionMode",
+    );
+    this.schemaHandlers = this.#prevSubs.schemaHandlers;
+    this.topicHandlers = this.#prevSubs.topicHandlers;
+    this.#prevSubs = undefined;
+    this.emit("topicHandlersChanged", this);
+    this.emit("schemaHandlersChanged", this);
+  }
+
   public addCustomLayerAction(options: {
     layerId: string;
     label: string;
@@ -664,6 +707,9 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
   }
 
   private defaultFrameId(): string | undefined {
+    if (this.interfaceMode === "image") {
+      return undefined;
+    }
     const allFrames = this.transformTree.frames();
     if (allFrames.size === 0) {
       return undefined;

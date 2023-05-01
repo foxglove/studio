@@ -319,4 +319,7 @@ export interface IRenderer extends EventEmitter<RendererEvents> {
   // Callback handlers
   animationFrame: () => void;
   queueAnimationFrame: () => void;
+
+  enableImageOnlySubscriptionMode: () => void;
+  disableImageOnlySubscriptionMode: () => void;
 }

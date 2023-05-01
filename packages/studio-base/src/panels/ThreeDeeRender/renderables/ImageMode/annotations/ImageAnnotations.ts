@@ -64,7 +64,10 @@ export class ImageAnnotations extends THREE.Object3D {
     this.#canvasWidth = context.initialCanvasWidth;
     this.#canvasHeight = context.initialCanvasHeight;
     this.#pixelRatio = context.initialPixelRatio;
+    this.subscribeToSchemas();
+  }
 
+  public subscribeToSchemas(): void {
     this.#context.addSchemaSubscriptions(
       IMAGE_ANNOTATIONS_DATATYPES,
       this.#handleMessage.bind(this),

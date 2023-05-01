@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import * as THREE from "three";
+import { assert } from "ts-essentials";
 
 import { filterMap } from "@foxglove/den/collection";
 import { PinholeCameraModel } from "@foxglove/den/image";
@@ -57,6 +58,43 @@ const IMAGE_TOPIC_DIFFERENT_FRAME = "IMAGE_TOPIC_DIFFERENT_FRAME";
 
 const CAMERA_MODEL = "CameraModel";
 
+const DEFAULT_FOCAL_LENGTH = 500;
+
+export const UNSELECTED_CAMERA_CALIBRATION = "UNSELECTED_CAMERA_CALIBRATION";
+
+const createFallbackCameraInfoForImage = (
+  texture: THREE.Texture,
+  options: { focalLength: number },
+): CameraInfo => {
+  const { width, height } = texture.image;
+  const { focalLength } = options;
+  const cx = width / 2;
+  const cy = height / 2;
+  const fx = focalLength;
+  const fy = focalLength;
+  const cameraInfo = normalizeCameraInfo({
+    header: { seq: 0, stamp: { sec: 0, nsec: 0 } },
+    height,
+    width,
+    distortion_model: "",
+    R: [1, 0, 0, 1, 0, 0, 1, 0, 0], // doesn't matter
+    D: [], // doesn't matter
+    // prettier-ignore
+    K: [
+      fx, 0, cx,
+      0, fy, cy,
+      0, 0, 1,
+    ],
+    // prettier-ignore
+    P: [
+      fx, 0, cx, 0,
+      0, fy, cy, 0,
+      0, 0, 1, 0,
+    ],
+  });
+  return cameraInfo;
+};
+
 export class ImageMode extends SceneExtension<ImageRenderable> implements ICameraHandler {
   private camera: ImageModeCamera;
   private cameraModel:
@@ -90,6 +128,30 @@ export class ImageMode extends SceneExtension<ImageRenderable> implements ICamer
     renderer.settings.errors.on("clear", this.handleErrorChange);
     renderer.settings.errors.on("remove", this.handleErrorChange);
 
+    this.#annotations = new ImageAnnotations({
+      initialScale: this.camera.getEffectiveScale(),
+      initialCanvasWidth: canvasSize.width,
+      initialCanvasHeight: canvasSize.height,
+      initialPixelRatio: renderer.getPixelRatio(),
+      topics: () => renderer.topics ?? [],
+      config: () => renderer.config.imageMode,
+      updateConfig: (updateHandler) => {
+        renderer.updateConfig((draft) => updateHandler(draft.imageMode));
+      },
+      updateSettingsTree: () => {
+        this.updateSettingsTree();
+      },
+      addSchemaSubscriptions: (schemaNames, handler) => {
+        renderer.addSchemaSubscriptions(schemaNames, handler);
+      },
+    });
+    this.add(this.#annotations);
+
+    this.subscribeToSchemas();
+  }
+
+  public subscribeToSchemas(): void {
+    const renderer = this.renderer;
     renderer.addSchemaSubscriptions(CAMERA_INFO_DATATYPES, {
       handler: this.handleCameraInfo,
       shouldSubscribe: this.cameraInfoShouldSubscribe,
@@ -116,25 +178,7 @@ export class ImageMode extends SceneExtension<ImageRenderable> implements ICamer
       handler: this.handleCompressedImage,
       shouldSubscribe: this.imageShouldSubscribe,
     });
-
-    this.#annotations = new ImageAnnotations({
-      initialScale: this.camera.getEffectiveScale(),
-      initialCanvasWidth: canvasSize.width,
-      initialCanvasHeight: canvasSize.height,
-      initialPixelRatio: renderer.getPixelRatio(),
-      topics: () => renderer.topics ?? [],
-      config: () => renderer.config.imageMode,
-      updateConfig: (updateHandler) => {
-        renderer.updateConfig((draft) => updateHandler(draft.imageMode));
-      },
-      updateSettingsTree: () => {
-        this.updateSettingsTree();
-      },
-      addSchemaSubscriptions: (schemaNames, handler) => {
-        renderer.addSchemaSubscriptions(schemaNames, handler);
-      },
-    });
-    this.add(this.#annotations);
+    this.#annotations.subscribeToSchemas();
   }
 
   public override dispose(): void {
@@ -181,6 +225,9 @@ export class ImageMode extends SceneExtension<ImageRenderable> implements ICamer
       }
       return { label: topic.name, value: topic.name };
     });
+
+    // add unselected camera calibration option
+    calibrationTopics.unshift({ label: "None", value: UNSELECTED_CAMERA_CALIBRATION });
 
     if (imageTopic && !imageTopics.some((topic) => topic.value === imageTopic)) {
       this.renderer.settings.errors.add(
@@ -313,7 +360,25 @@ export class ImageMode extends SceneExtension<ImageRenderable> implements ICamer
     const category = path[0]!;
     const value = action.payload.value;
     if (category === "imageMode") {
+      const prevImageModeConfig = this.getImageModeSettings();
       this.saveSetting(path, value);
+      const config = this.getImageModeSettings();
+      const calibrationTopicChanged =
+        config.calibrationTopic !== prevImageModeConfig.calibrationTopic;
+      if (calibrationTopicChanged) {
+        const changingToUnselectedCalibration =
+          config.calibrationTopic === UNSELECTED_CAMERA_CALIBRATION;
+        if (changingToUnselectedCalibration) {
+          this.renderer.enableImageOnlySubscriptionMode();
+        }
+
+        const changingFromUnselectedCalibration =
+          prevImageModeConfig.calibrationTopic === UNSELECTED_CAMERA_CALIBRATION;
+        if (changingFromUnselectedCalibration) {
+          this.renderer.disableImageOnlySubscriptionMode();
+        }
+      }
+
       this.updateViewAndRenderables();
     } else {
       return;
@@ -390,22 +455,29 @@ export class ImageMode extends SceneExtension<ImageRenderable> implements ICamer
     // we don't have settings for images yet
     const userSettings = { ...IMAGE_RENDERABLE_DEFAULT_SETTINGS };
 
-    renderable = new ImageRenderable(topicName, this.renderer, {
-      receiveTime,
-      messageTime: image ? toNanoSec("header" in image ? image.header.stamp : image.timestamp) : 0n,
-      frameId: this.renderer.normalizeFrameId(frameId),
-      pose: makePose(),
-      settingsPath: IMAGE_TOPIC_PATH,
-      topic: topicName,
-      settings: userSettings,
-      cameraInfo: undefined,
-      cameraModel: undefined,
-      image,
-      texture: undefined,
-      material: undefined,
-      geometry: undefined,
-      mesh: undefined,
-    });
+    renderable = new ImageRenderable(
+      topicName,
+      this.renderer,
+      {
+        receiveTime,
+        messageTime: image
+          ? toNanoSec("header" in image ? image.header.stamp : image.timestamp)
+          : 0n,
+        frameId: this.renderer.normalizeFrameId(frameId),
+        pose: makePose(),
+        settingsPath: IMAGE_TOPIC_PATH,
+        topic: topicName,
+        settings: userSettings,
+        cameraInfo: undefined,
+        cameraModel: undefined,
+        image,
+        texture: undefined,
+        material: undefined,
+        geometry: undefined,
+        mesh: undefined,
+      },
+      this.#onImageTextureLoad,
+    );
 
     this.add(renderable);
     this.#imageRenderable = renderable;
@@ -413,6 +485,18 @@ export class ImageMode extends SceneExtension<ImageRenderable> implements ICamer
     renderable.visible = true;
     return renderable;
   }
+
+  #onImageTextureLoad = (texture: THREE.Texture): void => {
+    if (this.getImageModeSettings().calibrationTopic !== UNSELECTED_CAMERA_CALIBRATION) {
+      return;
+    }
+    assert(this.#imageRenderable?.userData.image);
+    const cameraInfo = createFallbackCameraInfoForImage(texture, {
+      focalLength: DEFAULT_FOCAL_LENGTH,
+    });
+    this.updateCameraModel(cameraInfo);
+    this.updateViewAndRenderables();
+  };
 
   /** Gets frame from active info or image message if info does not have one*/
   private getCurrentFrameId(): string | undefined {
@@ -428,10 +512,7 @@ export class ImageMode extends SceneExtension<ImageRenderable> implements ICamer
 
     const cameraInfoFrameId = selectedCameraInfo?.header.frame_id;
 
-    const imageFrameId =
-      selectedImage && "header" in selectedImage
-        ? selectedImage.header.frame_id
-        : selectedImage?.frame_id;
+    const imageFrameId = selectedImage && getFrameIdFromImage(selectedImage);
 
     if (imageFrameId != undefined) {
       if (imageFrameId !== cameraInfoFrameId) {
@@ -445,7 +526,6 @@ export class ImageMode extends SceneExtension<ImageRenderable> implements ICamer
       }
     }
 
-    // use camera info's frame id if available, otherwise use image topic's frame id
     return cameraInfoFrameId ?? imageFrameId;
   }
 
@@ -550,4 +630,12 @@ export class ImageMode extends SceneExtension<ImageRenderable> implements ICamer
   private handleErrorChange = (): void => {
     this.updateSettingsTree();
   };
+}
+
+function getFrameIdFromImage(image: AnyImage) {
+  if ("header" in image) {
+    return image.header.frame_id;
+  } else {
+    return image.frame_id;
+  }
 }
