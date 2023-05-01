@@ -291,7 +291,7 @@ export const PlayerWithError: StoryObj = {
             message:
               "Error initializing player: Error: Cannot identify bag format. at _.verifyBagHeader (https://studio.foxglove.dev/5562.c1166ea8644d0123e6d6.js:2:9) at async _.readHeader (https://studio.foxglove.dev/5562.c1166ea8644d0123e6d6.js:2:69) at async m.open (https://studio.foxglove.dev/5562.c1166ea8644d0123e6d6.js:1:677) at async Se.initialize (https://studio.foxglove.dev/1324.f562ab30da8aea77f0c3.js:15:1986) at async https://studio.foxglove.dev/1324.f562ab30da8aea77f0c3.js:17:4281",
             error: Object.assign(new Error("Fake Error"), {
-              stack: `Error initializing player: Cannot identify bag format. at _.verifyBagHeader (https://studio.foxglove.dev/5562.c1166ea8644d0123e6d6.js:2:9) at async _.readHeader (https://studio.foxglove.dev/5562.c1166ea8644d0123e6d6.js:2:69) at async m.open (https://studio.foxglove.dev/5562.c1166ea8644d0123e6d6.js:1:677) at async Se.initialize (https://studio.foxglove.dev/1324.f562ab30da8aea77f0c3.js:15:1986) at async https://studio.foxglove.dev/1324.f562ab30da8aea77f0c3.js:17:4281`,
+              stack: `Error: Error initializing player: Error: Cannot identify bag format. at _.verifyBagHeader (https://studio.foxglove.dev/5562.c1166ea8644d0123e6d6.js:2:9) at async _.readHeader (https://studio.foxglove.dev/5562.c1166ea8644d0123e6d6.js:2:69) at async m.open (https://studio.foxglove.dev/5562.c1166ea8644d0123e6d6.js:1:677) at async Se.initialize (https://studio.foxglove.dev/1324.f562ab30da8aea77f0c3.js:15:1986) at async https://studio.foxglove.dev/1324.f562ab30da8aea77f0c3.js:17:4281`,
             }),
             tip: "Is this a bag file?",
           },
