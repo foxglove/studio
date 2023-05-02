@@ -2,14 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import {
-  Divider,
-  Menu,
-  MenuItem,
-  PopoverPosition,
-  PopoverReference,
-  Typography,
-} from "@mui/material";
+import { Divider, Menu, MenuItem, PopoverPosition, PopoverReference } from "@mui/material";
 import { useSnackbar } from "notistack";
 import { useCallback } from "react";
 import { makeStyles } from "tss-react/mui";
@@ -142,11 +135,7 @@ export function UserMenu({
         <MenuItem onClick={() => onSettingsClick()}>Settings</MenuItem>
         <MenuItem onClick={() => onSettingsClick("extensions")}>Extensions</MenuItem>
         {currentUser && <MenuItem onClick={onProfileClick}>User profile</MenuItem>}
-        <MenuItem onClick={async () => await setEnableNewTopNav(false)}>
-          <Typography variant="inherit" color="primary" fontWeight={600}>
-            Revert to Old UI
-          </Typography>
-        </MenuItem>
+        <MenuItem onClick={async () => await setEnableNewTopNav(false)}>Revert to Old UI</MenuItem>
         <Divider variant="middle" />
         <MenuItem onClick={onDocsClick}>Documentation</MenuItem>
         <MenuItem onClick={onSlackClick}>Join Slack community</MenuItem>
