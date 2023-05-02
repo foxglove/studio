@@ -2,6 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { produce } from "immer";
+import { useEffect, useState } from "react";
 import { useAsync } from "react-use";
 
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
@@ -15,6 +17,7 @@ import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 
 const selectWorkspaceDataSourceDialogOpen = (store: WorkspaceContextStore) =>
   store.dataSourceDialog.open;
+
 const selectWorkspacePrefsDialogOpen = (store: WorkspaceContextStore) =>
   store.prefsDialogState.open;
 
@@ -26,13 +29,36 @@ export function WorkspaceTours(): ReactNull | JSX.Element {
   const userProfileStorage = useUserProfileStorage();
   const { value: userProfile } = useAsync(userProfileStorage.getUserProfile);
 
+  const [tourClosed, setTourClosed] = useState(false);
+
+  const appBarTourShown = userProfile?.onboarding?.appBarTourShown === true;
+  const showTour =
+    !enableNewTopNav &&
+    !prefsDialogOpen &&
+    !dataSourceDialogOpen &&
+    !appBarTourShown &&
+    !tourClosed;
+
+  useEffect(() => {
+    if (showTour) {
+      userProfileStorage
+        .setUserProfile(
+          produce((draft) => {
+            const onboarding = (draft.onboarding ??= {});
+            onboarding.appBarTourShown = true;
+          }),
+        )
+        .catch(console.error);
+    }
+  }, [showTour, userProfileStorage]);
+
   if (userProfile == undefined) {
     return ReactNull;
   }
 
-  const appBarTourShown = userProfile.onboarding?.appBarTourShown === true;
-  const showTour =
-    !enableNewTopNav && !prefsDialogOpen && !dataSourceDialogOpen && !appBarTourShown;
-
-  return <UITourProvider>{showTour && <UITourPopover />}</UITourProvider>;
+  return (
+    <UITourProvider>
+      {showTour && <UITourPopover open onClose={() => setTourClosed(true)} />}
+    </UITourProvider>
+  );
 }

@@ -5,16 +5,15 @@
 import { Dismiss20Filled } from "@fluentui/react-icons";
 import {
   Button,
-  Popover,
-  Typography,
   Chip,
-  IconButton,
   ClickAwayListener,
+  IconButton,
+  Popover,
   Slide,
   SlideProps,
+  Typography,
 } from "@mui/material";
 import { useTour } from "@reactour/tour";
-import { useState } from "react";
 import { makeStyles } from "tss-react/mui";
 
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
@@ -32,13 +31,18 @@ const useStyles = makeStyles()((theme) => ({
   },
 }));
 
-export function UITourPopover(): JSX.Element {
+type Props = {
+  onClose: () => void;
+  open: boolean;
+};
+
+export function UITourPopover(props: Props): JSX.Element {
+  const { open, onClose } = props;
+
   const { classes } = useStyles();
   const { setIsOpen: setTourOpen } = useTour();
 
   const [_, setEnabled] = useAppConfigurationValue<boolean>(AppSetting.ENABLE_NEW_TOPNAV);
-
-  const [open, setOpen] = useState(true);
 
   return (
     <Popover
@@ -52,7 +56,7 @@ export function UITourPopover(): JSX.Element {
       TransitionComponent={Slide}
       TransitionProps={{ direction: "up", timeout: 500 } as Partial<SlideProps>}
     >
-      <ClickAwayListener onClickAway={() => setOpen(false)}>
+      <ClickAwayListener onClickAway={() => onClose()}>
         <Stack padding={2} gap={0.5}>
           <Stack
             direction="row"
@@ -61,7 +65,7 @@ export function UITourPopover(): JSX.Element {
             paddingBottom={0.5}
           >
             <Chip label="BETA" size="small" color="info" variant="outlined" />
-            <IconButton size="small" className={classes.dismissIcon} onClick={() => setOpen(false)}>
+            <IconButton size="small" className={classes.dismissIcon} onClick={() => onClose()}>
               <Dismiss20Filled />
             </IconButton>
           </Stack>

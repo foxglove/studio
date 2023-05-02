@@ -21,7 +21,7 @@ export type UserProfile = {
 
   /** Onboarding flow status */
   onboarding?: {
-    /** True if we've shown the user the app bar. */
+    /** True if we've shown the user the app bar tour. */
     appBarTourShown?: boolean;
     /** List of panel types for which the settings tooltip has been shown */
     settingsTooltipShownForPanelTypes?: string[];
