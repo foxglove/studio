@@ -56,9 +56,7 @@ export const Default: StoryObj = {
   ),
 };
 
-type Story = StoryObj<typeof Default>;
-
-const NestedMenuSelected = (id: string, colorScheme: "dark" | "light", name: string): Story => ({
+const NestedMenuSelected = (id: string, colorScheme: "dark" | "light", name: string): StoryObj => ({
   ...Default,
   parameters: { colorScheme },
   storyName: `${name} (dark)`,
