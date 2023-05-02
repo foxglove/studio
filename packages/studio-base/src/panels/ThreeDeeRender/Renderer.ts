@@ -322,33 +322,11 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     this.measurementTool = new MeasurementTool(this);
     this.publishClickTool = new PublishClickTool(this);
 
-    // Internal handlers for TF messages to update the transform tree
-    this.addSchemaSubscriptions(FRAME_TRANSFORM_DATATYPES, {
-      handler: this.#handleFrameTransform,
-      shouldSubscribe: () => true,
-      preload: config.scene.transforms?.enablePreloading ?? true,
-    });
-    this.addSchemaSubscriptions(FRAME_TRANSFORMS_DATATYPES, {
-      handler: this.#handleFrameTransforms,
-      shouldSubscribe: () => true,
-      preload: config.scene.transforms?.enablePreloading ?? true,
-    });
-    this.addSchemaSubscriptions(TF_DATATYPES, {
-      handler: this.#handleTFMessage,
-      shouldSubscribe: () => true,
-      preload: config.scene.transforms?.enablePreloading ?? true,
-    });
-    this.addSchemaSubscriptions(TRANSFORM_STAMPED_DATATYPES, {
-      handler: this.#handleTransformStamped,
-      shouldSubscribe: () => true,
-      preload: config.scene.transforms?.enablePreloading ?? true,
-    });
-
     const aspect = renderSize.width / renderSize.height;
     switch (interfaceMode) {
       case "image":
         this.#imageModeExtension = new ImageMode(this, this.input.canvasSize);
-        this.cameraHandler = new ImageMode(this, this.input.canvasSize);
+        this.cameraHandler = this.#imageModeExtension;
         this.#addSceneExtension(this.cameraHandler);
         break;
       case "3d":
@@ -377,13 +355,14 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     this.#addSceneExtension(this.measurementTool);
     this.#addSceneExtension(this.publishClickTool);
 
+    this.#addTransformSubscriptions();
+    this.#addSubscriptionsFromSceneExtensions();
+
     if (
       interfaceMode === "image" &&
       config.imageMode.calibrationTopic === UNSELECTED_CAMERA_CALIBRATION
     ) {
-      assert(this.#imageModeExtension);
       this.enableImageOnlySubscriptionMode();
-      this.#imageModeExtension.subscribeToSchemas();
     }
 
     this.#watchDevicePixelRatio();
@@ -586,6 +565,49 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     this.emit("configChange", this);
   }
 
+  #addTransformSubscriptions(): void {
+    const config = this.config;
+    // Internal handlers for TF messages to update the transform tree
+    this.addSchemaSubscriptions(FRAME_TRANSFORM_DATATYPES, {
+      handler: this.#handleFrameTransform,
+      shouldSubscribe: () => true,
+      preload: config.scene.transforms?.enablePreloading ?? true,
+    });
+    this.addSchemaSubscriptions(FRAME_TRANSFORMS_DATATYPES, {
+      handler: this.#handleFrameTransforms,
+      shouldSubscribe: () => true,
+      preload: config.scene.transforms?.enablePreloading ?? true,
+    });
+    this.addSchemaSubscriptions(TF_DATATYPES, {
+      handler: this.#handleTFMessage,
+      shouldSubscribe: () => true,
+      preload: config.scene.transforms?.enablePreloading ?? true,
+    });
+    this.addSchemaSubscriptions(TRANSFORM_STAMPED_DATATYPES, {
+      handler: this.#handleTransformStamped,
+      shouldSubscribe: () => true,
+      preload: config.scene.transforms?.enablePreloading ?? true,
+    });
+  }
+
+  // Call on scene extensions to add subscriptions to the renderer
+  #addSubscriptionsFromSceneExtensions(filterFn?: (extension: SceneExtension) => boolean): void {
+    const filteredExtensions = filterFn
+      ? Array.from(this.sceneExtensions.values()).filter(filterFn)
+      : this.sceneExtensions.values();
+    for (const extension of filteredExtensions) {
+      extension.addSubscriptionsToRenderer();
+    }
+  }
+
+  // Clear topic and schema subscriptions and emit change events for both
+  #clearSubscriptions(): void {
+    this.topicHandlers.clear();
+    this.schemaHandlers.clear();
+    this.emit("topicHandlersChanged", this);
+    this.emit("schemaHandlersChanged", this);
+  }
+
   public addSchemaSubscriptions<T>(
     schemaNames: Iterable<string>,
     subscription: RendererSubscription<T> | MessageHandler<T>,
@@ -626,33 +648,23 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     this.emit("topicHandlersChanged", this);
   }
 
-  #prevSubs:
-    | { schemaHandlers: IRenderer["schemaHandlers"]; topicHandlers: IRenderer["topicHandlers"] }
-    | undefined;
-
   public enableImageOnlySubscriptionMode(): void {
-    assert(!this.#prevSubs, "enableImageOnlySubscriptionMode called twice");
     assert(
       this.#imageModeExtension,
       "Image mode extension should be defined when calling enable Image only mode",
     );
     this.clear({ clearTransforms: true, resetAllFramesCursor: true });
-    this.#prevSubs = { schemaHandlers: this.schemaHandlers, topicHandlers: this.topicHandlers };
-    this.emit("topicHandlersChanged", this);
-    this.schemaHandlers = new Map();
-    this.topicHandlers = new Map();
-
-    this.#imageModeExtension.subscribeToSchemas();
+    this.#clearSubscriptions();
+    this.#addSubscriptionsFromSceneExtensions(
+      (extension) => extension === this.#imageModeExtension,
+    );
   }
 
   public disableImageOnlySubscriptionMode(): void {
-    assert(
-      this.#prevSubs,
-      "disableImageOnlySubscriptionMode called without enableImageOnlySubscriptionMode",
+    this.#addSubscriptionsFromSceneExtensions(
+      (extension) => extension !== this.#imageModeExtension,
     );
-    this.schemaHandlers = this.#prevSubs.schemaHandlers;
-    this.topicHandlers = this.#prevSubs.topicHandlers;
-    this.#prevSubs = undefined;
+    this.#addTransformSubscriptions();
     this.emit("topicHandlersChanged", this);
     this.emit("schemaHandlersChanged", this);
   }

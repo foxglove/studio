@@ -14,7 +14,10 @@ import {
   IMAGE_RENDERABLE_DEFAULT_SETTINGS,
   ImageRenderable,
 } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/Images/ImageRenderable";
-import { AnyImage } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/Images/ImageTypes";
+import {
+  ALL_CAMERA_INFO_SCHEMAS,
+  AnyImage,
+} from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/Images/ImageTypes";
 import {
   normalizeCompressedImage,
   normalizeRawImage,
@@ -78,22 +81,22 @@ export class Images extends SceneExtension<ImageRenderable> {
 
   public constructor(renderer: IRenderer) {
     super("foxglove.Images", renderer);
+    this.#updateCameraInfoTopics();
+  }
+
+  public override addSubscriptionsToRenderer(): void {
+    const renderer = this.renderer;
+
+    renderer.addSchemaSubscriptions(ALL_CAMERA_INFO_SCHEMAS, {
+      handler: this.#handleCameraInfo,
+      shouldSubscribe: this.#cameraInfoShouldSubscribe,
+    });
 
     renderer.addSchemaSubscriptions(ROS_IMAGE_DATATYPES, this.#handleRosRawImage);
     renderer.addSchemaSubscriptions(ROS_COMPRESSED_IMAGE_DATATYPES, this.#handleRosCompressedImage);
-    renderer.addSchemaSubscriptions(CAMERA_INFO_DATATYPES, {
-      handler: this.#handleCameraInfo,
-      shouldSubscribe: this.#cameraInfoShouldSubscribe,
-    });
 
     renderer.addSchemaSubscriptions(RAW_IMAGE_DATATYPES, this.#handleRawImage);
     renderer.addSchemaSubscriptions(COMPRESSED_IMAGE_DATATYPES, this.#handleCompressedImage);
-    renderer.addSchemaSubscriptions(CAMERA_CALIBRATION_DATATYPES, {
-      handler: this.#handleCameraInfo,
-      shouldSubscribe: this.#cameraInfoShouldSubscribe,
-    });
-
-    this.#updateCameraInfoTopics();
   }
 
   /**

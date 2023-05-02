@@ -145,10 +145,9 @@ export class ImageMode extends SceneExtension<ImageRenderable> implements ICamer
       },
     });
     this.add(this.#annotations);
-    this.subscribeToSchemas();
   }
 
-  public subscribeToSchemas(): void {
+  public override addSubscriptionsToRenderer(): void {
     const renderer = this.renderer;
     renderer.addSchemaSubscriptions(CAMERA_INFO_DATATYPES, {
       handler: this.#handleCameraInfo,
@@ -176,7 +175,7 @@ export class ImageMode extends SceneExtension<ImageRenderable> implements ICamer
       handler: this.#handleCompressedImage,
       shouldSubscribe: this.#imageShouldSubscribe,
     });
-    this.#annotations.subscribeToSchemas();
+    this.#annotations.addSubscriptions();
   }
 
   public override dispose(): void {
@@ -189,6 +188,10 @@ export class ImageMode extends SceneExtension<ImageRenderable> implements ICamer
 
   public override removeAllRenderables(): void {
     this.#annotations.removeAllRenderables();
+    this.#imageRenderable?.removeFromParent();
+    this.#imageRenderable?.dispose();
+    this.#imageRenderable = undefined;
+
     super.removeAllRenderables();
   }
 
@@ -483,15 +486,15 @@ export class ImageMode extends SceneExtension<ImageRenderable> implements ICamer
   }
 
   #onImageTextureLoad = (texture: THREE.Texture): void => {
-    if (this.getImageModeSettings().calibrationTopic !== UNSELECTED_CAMERA_CALIBRATION) {
+    if (this.#getImageModeSettings().calibrationTopic !== UNSELECTED_CAMERA_CALIBRATION) {
       return;
     }
     assert(this.#imageRenderable?.userData.image);
     const cameraInfo = createFallbackCameraInfoForImage(texture, {
       focalLength: DEFAULT_FOCAL_LENGTH,
     });
-    this.updateCameraModel(cameraInfo);
-    this.updateViewAndRenderables();
+    this.#updateCameraModel(cameraInfo);
+    this.#updateViewAndRenderables();
   };
 
   /** Gets frame from active info or image message if info does not have one*/

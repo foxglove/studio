@@ -24,6 +24,10 @@ export class ImageModeCamera extends THREE.PerspectiveCamera {
     this.#updateProjection();
   }
 
+  public clearModel(): void {
+    this.#model = undefined;
+  }
+
   #updateProjection(): void {
     this.#updateAspectScaledZoom();
 
