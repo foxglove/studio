@@ -79,31 +79,31 @@ const PanelToolbarControlsComponent = forwardRef<HTMLDivElement, PanelToolbarCon
 
     const hasSettings = usePanelStateStore(hasSettingsSelector);
 
-    const [userProfile, setUserProfile] = useContext(UserProfileStorageContext) ?? [];
+    const userProfileStorage = useContext(UserProfileStorageContext);
     const [{ value: settingsOnboardingTooltip }, loadOnboardingState] =
       useAsyncFn(async (): Promise<string | undefined> => {
-        if (panelType == undefined || userProfile == undefined || !hasSettings) {
+        if (panelType == undefined || userProfileStorage == undefined || !hasSettings) {
           return undefined;
         }
         const tooltip = panelCatalog?.getPanelByType(panelType)?.settingsOnboardingTooltip;
         if (tooltip == undefined) {
           return undefined;
         }
-        const { onboarding } = userProfile;
+        const { onboarding } = await userProfileStorage.getUserProfile();
         const { settingsTooltipShownForPanelTypes = [] } = onboarding ?? {};
         if (settingsTooltipShownForPanelTypes.includes(panelType)) {
           return undefined;
         }
         return tooltip;
-      }, [hasSettings, panelCatalog, panelType, userProfile]);
+      }, [hasSettings, panelCatalog, panelType, userProfileStorage]);
 
     useEffect(() => {
       void loadOnboardingState();
     }, [loadOnboardingState]);
 
     const onDismissTooltip = useCallback(async () => {
-      if (panelType && setUserProfile) {
-        setUserProfile((profile) =>
+      if (panelType && userProfileStorage) {
+        await userProfileStorage.setUserProfile((profile) =>
           produce(profile, (draft) => {
             draft.onboarding ??= { settingsTooltipShownForPanelTypes: [] };
             if (draft.onboarding.settingsTooltipShownForPanelTypes?.includes(panelType) !== true) {
@@ -113,7 +113,7 @@ const PanelToolbarControlsComponent = forwardRef<HTMLDivElement, PanelToolbarCon
         );
         await loadOnboardingState();
       }
-    }, [loadOnboardingState, panelType, setUserProfile]);
+    }, [loadOnboardingState, panelType, userProfileStorage]);
 
     const openSettings = useCallback(async () => {
       if (panelId) {

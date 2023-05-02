@@ -2,8 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Dispatch, SetStateAction, createContext, useContext } from "react";
-import { DeepReadonly } from "ts-essentials";
+import { createContext, useContext } from "react";
 
 import { LayoutID } from "@foxglove/studio-base/context/CurrentLayoutContext";
 
@@ -12,13 +11,13 @@ export type UserProfile = {
   currentLayoutId?: LayoutID;
 
   /** Timestamp of the first time the user loaded the app. */
-  firstSeenTime: string;
+  firstSeenTime?: string;
 
   /**
    * True if the at the time we assigned firstSeenTime it appeared to be the
    * user's first load of the app.
    */
-  firstSeenTimeIsFirstLoad: boolean;
+  firstSeenTimeIsFirstLoad?: boolean;
 
   /** Onboarding flow status */
   onboarding?: {
@@ -27,7 +26,10 @@ export type UserProfile = {
   };
 };
 
-export type UserProfileStorage = [DeepReadonly<UserProfile>, Dispatch<SetStateAction<UserProfile>>];
+export type UserProfileStorage = {
+  getUserProfile: () => Promise<UserProfile>;
+  setUserProfile: (data: UserProfile | ((profile: UserProfile) => UserProfile)) => Promise<void>;
+};
 
 export const UserProfileStorageContext = createContext<UserProfileStorage | undefined>(undefined);
 UserProfileStorageContext.displayName = "UserProfileStorageContext";

@@ -2,14 +2,16 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { SetStateAction, useCallback, useEffect, useMemo, useState } from "react";
+import { merge } from "lodash";
+import { useCallback, useEffect } from "react";
 
+import { useShallowMemo } from "@foxglove/hooks";
 import {
   UserProfile,
   UserProfileStorageContext,
 } from "@foxglove/studio-base/context/UserProfileStorageContext";
-import { UserProfileStorage } from "@foxglove/studio-base/context/UserProfileStorageContext";
 
+const DEFAULT_PROFILE: UserProfile = {};
 const LOCAL_STORAGE_KEY = "studio.profile-data";
 
 /**
@@ -18,32 +20,39 @@ const LOCAL_STORAGE_KEY = "studio.profile-data";
 export default function UserProfileLocalStorageProvider({
   children,
 }: React.PropsWithChildren<unknown>): JSX.Element {
-  const [userProfile, setUserProfile] = useState<UserProfile>(() => {
+  const getUserProfile = useCallback(async (): Promise<UserProfile> => {
     const item = localStorage.getItem(LOCAL_STORAGE_KEY);
-    const baseItem: Partial<UserProfile> = item ? JSON.parse(item) : {};
-    baseItem.firstSeenTime ??= new Date().toISOString();
-    baseItem.firstSeenTimeIsFirstLoad ??= baseItem.currentLayoutId == undefined;
-    return baseItem as UserProfile;
-  });
-
-  const setUserProfileCallback = useCallback((setter: SetStateAction<UserProfile>) => {
-    setUserProfile((oldValue) => (typeof setter === "function" ? setter(oldValue) : setter));
+    return item != undefined ? (JSON.parse(item) as UserProfile) : DEFAULT_PROFILE;
   }, []);
 
-  useEffect(() => {
-    const stringifiedProfile = JSON.stringify(userProfile);
-    if (stringifiedProfile) {
-      localStorage.setItem(LOCAL_STORAGE_KEY, stringifiedProfile);
-    }
-  }, [userProfile]);
-
-  const value: UserProfileStorage = useMemo(
-    () => [userProfile, setUserProfileCallback],
-    [userProfile, setUserProfileCallback],
+  const setUserProfile = useCallback(
+    async (value: UserProfile | ((prev: UserProfile) => UserProfile)) => {
+      const item = localStorage.getItem(LOCAL_STORAGE_KEY);
+      const prev = item != undefined ? (JSON.parse(item) as UserProfile) : DEFAULT_PROFILE;
+      const newProfile = typeof value === "function" ? value(prev) : merge(prev, value);
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newProfile) ?? "");
+    },
+    [],
   );
 
+  // On first load stamp firstSeenTime timestamp. We consider the time at which
+  // we stamp firstTime as the first time the user has opened the app if at that
+  // time there is no currentLayoutId already set in the profile.
+  useEffect(() => {
+    setUserProfile((old) => ({
+      ...old,
+      firstSeenTime: old.firstSeenTime ?? new Date().toISOString(),
+      firstSeenTimeIsFirstLoad: old.firstSeenTimeIsFirstLoad ?? old.currentLayoutId == undefined,
+    })).catch(console.error);
+  }, [setUserProfile]);
+
+  const storage = useShallowMemo({
+    getUserProfile,
+    setUserProfile,
+  });
+
   return (
-    <UserProfileStorageContext.Provider value={value}>
+    <UserProfileStorageContext.Provider value={storage}>
       {children}
     </UserProfileStorageContext.Provider>
   );
