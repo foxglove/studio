@@ -32,7 +32,7 @@ const useStyles = makeStyles<void, "adornmentError" | "openIcon">()((theme, _par
     alignItems: "center",
     gap: theme.spacing(0.5),
     padding: theme.spacing(1.5),
-    paddingInlineStart: theme.spacing(0.75),
+    paddingInlineEnd: theme.spacing(0.75),
     whiteSpace: "nowrap",
     minWidth: 0,
 
@@ -124,6 +124,11 @@ export function DataSource(): JSX.Element {
     <>
       <WssErrorModal playerProblems={playerProblems} />
       <Stack direction="row" alignItems="center">
+        <div className={classes.sourceName}>
+          <div className={classes.textTruncate}>
+            <TextMiddleTruncate text={playerDisplayName ?? "<unknown>"} />
+          </div>
+        </div>
         <div className={cx(classes.adornment, { [classes.adornmentError]: error })}>
           {loading && (
             <CircularProgress
@@ -145,11 +150,6 @@ export function DataSource(): JSX.Element {
               <ErrorCircle20Filled />
             </IconButton>
           )}
-        </div>
-        <div className={classes.sourceName}>
-          <div className={classes.textTruncate}>
-            <TextMiddleTruncate text={playerDisplayName ?? "<unknown>"} />
-          </div>
         </div>
       </Stack>
     </>
