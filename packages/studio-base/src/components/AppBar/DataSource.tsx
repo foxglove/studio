@@ -22,7 +22,7 @@ import WssErrorModal from "@foxglove/studio-base/components/WssErrorModal";
 import { useWorkspaceActions } from "@foxglove/studio-base/context/WorkspaceContext";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
 
-const LEFT_ICON_SIZE = 19;
+const ICON_SIZE = 17;
 
 const useStyles = makeStyles<void, "adornmentError" | "openIcon">()((theme, _params, classes) => ({
   sourceName: {
@@ -50,8 +50,8 @@ const useStyles = makeStyles<void, "adornmentError" | "openIcon">()((theme, _par
     justifyContent: "center",
     position: "relative",
     color: APP_BAR_PRIMARY_COLOR,
-    width: LEFT_ICON_SIZE,
-    height: LEFT_ICON_SIZE,
+    width: ICON_SIZE,
+    height: ICON_SIZE,
   },
   adornmentError: {
     color: theme.palette.error.main,
@@ -82,7 +82,7 @@ const useStyles = makeStyles<void, "adornmentError" | "openIcon">()((theme, _par
   errorIconButton: {
     position: "relative",
     zIndex: 1,
-    fontSize: LEFT_ICON_SIZE - 1,
+    fontSize: ICON_SIZE - 1,
   },
 }));
 
@@ -132,7 +132,7 @@ export function DataSource(): JSX.Element {
         <div className={cx(classes.adornment, { [classes.adornmentError]: error })}>
           {loading && (
             <CircularProgress
-              size={LEFT_ICON_SIZE}
+              size={ICON_SIZE}
               color="inherit"
               className={classes.spinner}
               variant="indeterminate"
