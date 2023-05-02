@@ -3,7 +3,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import Logger from "@foxglove/log";
-import { ILayoutStorage, Layout, LayoutID } from "@foxglove/studio-base/services/ILayoutStorage";
+import { LayoutID } from "@foxglove/studio-base/context/CurrentLayoutContext";
+import { ILayoutStorage, Layout } from "@foxglove/studio-base/services/ILayoutStorage";
 
 const log = Logger.getLogger(__filename);
 
@@ -11,7 +12,7 @@ const log = Logger.getLogger(__filename);
  * A wrapper around ILayoutStorage for a particular namespace.
  */
 export class NamespacedLayoutStorage {
-  private migration: Promise<void>;
+  #migration: Promise<void>;
   public constructor(
     private storage: ILayoutStorage,
     private namespace: string,
@@ -20,7 +21,7 @@ export class NamespacedLayoutStorage {
       importFromNamespace,
     }: { migrateUnnamespacedLayouts: boolean; importFromNamespace: string | undefined },
   ) {
-    this.migration = (async function () {
+    this.#migration = (async function () {
       if (migrateUnnamespacedLayouts) {
         await storage
           .migrateUnnamespacedLayouts?.(namespace)
@@ -39,19 +40,19 @@ export class NamespacedLayoutStorage {
   }
 
   public async list(): Promise<readonly Layout[]> {
-    await this.migration;
+    await this.#migration;
     return await this.storage.list(this.namespace);
   }
   public async get(id: LayoutID): Promise<Layout | undefined> {
-    await this.migration;
+    await this.#migration;
     return await this.storage.get(this.namespace, id);
   }
   public async put(layout: Layout): Promise<Layout> {
-    await this.migration;
+    await this.#migration;
     return await this.storage.put(this.namespace, layout);
   }
   public async delete(id: LayoutID): Promise<void> {
-    await this.migration;
+    await this.#migration;
     await this.storage.delete(this.namespace, id);
   }
 }
