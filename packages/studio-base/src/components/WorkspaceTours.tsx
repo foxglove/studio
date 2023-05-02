@@ -15,13 +15,19 @@ import {
 } from "@foxglove/studio-base/context/WorkspaceContext";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 
+type Props = {
+  signInFormShown: boolean;
+};
+
 const selectWorkspaceDataSourceDialogOpen = (store: WorkspaceContextStore) =>
   store.dataSourceDialog.open;
 
 const selectWorkspacePrefsDialogOpen = (store: WorkspaceContextStore) =>
   store.prefsDialogState.open;
 
-export function WorkspaceTours(): ReactNull | JSX.Element {
+export function WorkspaceTours(props: Props): ReactNull | JSX.Element {
+  const { signInFormShown } = props;
+
   const prefsDialogOpen = useWorkspaceStore(selectWorkspacePrefsDialogOpen);
   const dataSourceDialogOpen = useWorkspaceStore(selectWorkspaceDataSourceDialogOpen);
   const [enableNewTopNav = false] = useAppConfigurationValue<boolean>(AppSetting.ENABLE_NEW_TOPNAV);
@@ -33,10 +39,11 @@ export function WorkspaceTours(): ReactNull | JSX.Element {
 
   const appBarTourShown = userProfile?.onboarding?.appBarTourShown === true;
   const showTour =
+    !appBarTourShown &&
+    !dataSourceDialogOpen &&
     !enableNewTopNav &&
     !prefsDialogOpen &&
-    !dataSourceDialogOpen &&
-    !appBarTourShown &&
+    !signInFormShown &&
     !tourClosed;
 
   useEffect(() => {

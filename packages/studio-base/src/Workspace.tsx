@@ -674,7 +674,7 @@ function WorkspaceContent(props: WorkspaceContentProps): JSX.Element {
         )}
       </div>
       <WorkspaceDialogs />
-      <WorkspaceTours />
+      <WorkspaceTours signInFormShown={props.showSignInForm} />
     </MultiProvider>
   );
 }
