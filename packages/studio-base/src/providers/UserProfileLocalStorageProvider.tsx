@@ -2,16 +2,14 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { merge } from "lodash";
-import { useCallback } from "react";
+import { SetStateAction, useCallback, useEffect, useMemo, useState } from "react";
 
-import { useShallowMemo } from "@foxglove/hooks";
 import {
   UserProfile,
   UserProfileStorageContext,
 } from "@foxglove/studio-base/context/UserProfileStorageContext";
+import { UserProfileStorage } from "@foxglove/studio-base/context/UserProfileStorageContext";
 
-const DEFAULT_PROFILE: UserProfile = {};
 const LOCAL_STORAGE_KEY = "studio.profile-data";
 
 /**
@@ -20,25 +18,32 @@ const LOCAL_STORAGE_KEY = "studio.profile-data";
 export default function UserProfileLocalStorageProvider({
   children,
 }: React.PropsWithChildren<unknown>): JSX.Element {
-  const getUserProfile = useCallback(async (): Promise<UserProfile> => {
+  const [userProfile, setUserProfile] = useState<UserProfile>(() => {
     const item = localStorage.getItem(LOCAL_STORAGE_KEY);
-    return item != undefined ? (JSON.parse(item) as UserProfile) : DEFAULT_PROFILE;
-  }, []);
-  const setUserProfile = useCallback(
-    async (value: UserProfile | ((prev: UserProfile) => UserProfile)) => {
-      const item = localStorage.getItem(LOCAL_STORAGE_KEY);
-      const prev = item != undefined ? (JSON.parse(item) as UserProfile) : DEFAULT_PROFILE;
-      const newProfile = typeof value === "function" ? value(prev) : merge(prev, value);
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newProfile) ?? "");
-    },
-    [],
-  );
-  const storage = useShallowMemo({
-    getUserProfile,
-    setUserProfile,
+    const baseItem: Partial<UserProfile> = item ? JSON.parse(item) : {};
+    baseItem.firstSeenTime ??= new Date().toISOString();
+    baseItem.firstSeenTimeIsFirstLoad ??= baseItem.currentLayoutId == undefined;
+    return baseItem as UserProfile;
   });
+
+  const setUserProfileCallback = useCallback((setter: SetStateAction<UserProfile>) => {
+    setUserProfile((oldValue) => (typeof setter === "function" ? setter(oldValue) : setter));
+  }, []);
+
+  useEffect(() => {
+    const stringifiedProfile = JSON.stringify(userProfile);
+    if (stringifiedProfile) {
+      localStorage.setItem(LOCAL_STORAGE_KEY, stringifiedProfile);
+    }
+  }, [userProfile]);
+
+  const value: UserProfileStorage = useMemo(
+    () => [userProfile, setUserProfileCallback],
+    [userProfile, setUserProfileCallback],
+  );
+
   return (
-    <UserProfileStorageContext.Provider value={storage}>
+    <UserProfileStorageContext.Provider value={value}>
       {children}
     </UserProfileStorageContext.Provider>
   );

@@ -5,19 +5,18 @@
 import { useMemo, useState } from "react";
 
 import {
-  App,
-  AppSetting,
-  FoxgloveWebSocketDataSourceFactory,
   IDataSourceFactory,
-  IdbExtensionLoader,
-  McapLocalDataSourceFactory,
-  RemoteDataSourceFactory,
   Ros1LocalBagDataSourceFactory,
   Ros2LocalBagDataSourceFactory,
   RosbridgeDataSourceFactory,
-  SampleNuscenesDataSourceFactory,
+  RemoteDataSourceFactory,
+  FoxgloveWebSocketDataSourceFactory,
   UlogLocalDataSourceFactory,
-  useTimestampUserFirstSeen,
+  McapLocalDataSourceFactory,
+  SampleNuscenesDataSourceFactory,
+  IdbExtensionLoader,
+  App,
+  AppSetting,
 } from "@foxglove/studio-base";
 
 import { IdbLayoutStorage } from "./services/IdbLayoutStorage";
@@ -29,8 +28,6 @@ export function Root(props: {
   extraProviders: JSX.Element[] | undefined;
   dataSources: IDataSourceFactory[] | undefined;
 }): JSX.Element {
-  useTimestampUserFirstSeen();
-
   const appConfiguration = useMemo(
     () =>
       new LocalStorageAppConfiguration({

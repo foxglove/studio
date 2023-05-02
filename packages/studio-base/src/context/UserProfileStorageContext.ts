@@ -2,13 +2,24 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { createContext, useContext } from "react";
+import { Dispatch, SetStateAction, createContext, useContext } from "react";
+import { DeepReadonly } from "ts-essentials";
 
 import { LayoutID } from "@foxglove/studio-base/context/CurrentLayoutContext";
 
 export type UserProfile = {
   /** The id of the layout the user is currently working with. */
   currentLayoutId?: LayoutID;
+
+  /** Timestamp of the first time the user loaded the app. */
+  firstSeenTime: string;
+
+  /**
+   * True if the at the time we assigned firstSeenTime it appeared to be the
+   * user's first load of the app.
+   */
+  firstSeenTimeIsFirstLoad: boolean;
+
   /** Onboarding flow status */
   onboarding?: {
     /** List of panel types for which the settings tooltip has been shown */
@@ -16,10 +27,7 @@ export type UserProfile = {
   };
 };
 
-export type UserProfileStorage = {
-  getUserProfile: () => Promise<UserProfile>;
-  setUserProfile: (data: UserProfile | ((profile: UserProfile) => UserProfile)) => Promise<void>;
-};
+export type UserProfileStorage = [DeepReadonly<UserProfile>, Dispatch<SetStateAction<UserProfile>>];
 
 export const UserProfileStorageContext = createContext<UserProfileStorage | undefined>(undefined);
 UserProfileStorageContext.displayName = "UserProfileStorageContext";

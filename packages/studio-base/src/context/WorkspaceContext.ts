@@ -15,8 +15,6 @@ import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import useGuaranteedContext from "@foxglove/studio-base/hooks/useGuaranteedContext";
 import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
 
-export const WORKSPACE_CONTEXT_LOCAL_STORAGE_KEY = "fox.workspace";
-
 export type SidebarItemKey =
   | "account"
   | "add-panel"

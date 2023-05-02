@@ -2,29 +2,28 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useEffect, useState, useCallback } from "react";
 
 import {
   App,
-  AppConfigurationValue,
   AppSetting,
   FoxgloveWebSocketDataSourceFactory,
   IAppConfiguration,
   IDataSourceFactory,
   IdbExtensionLoader,
   McapLocalDataSourceFactory,
-  OsContext,
-  RemoteDataSourceFactory,
   Ros1LocalBagDataSourceFactory,
-  Ros1SocketDataSourceFactory,
   Ros2LocalBagDataSourceFactory,
+  RosbridgeDataSourceFactory,
+  RemoteDataSourceFactory,
+  Ros1SocketDataSourceFactory,
   Ros2SocketDataSourceFactory,
   Ros2UnavailableDataSourceFactory,
-  RosbridgeDataSourceFactory,
   SampleNuscenesDataSourceFactory,
   UlogLocalDataSourceFactory,
   VelodyneDataSourceFactory,
-  useTimestampUserFirstSeen,
+  OsContext,
+  AppConfigurationValue,
 } from "@foxglove/studio-base";
 
 import { DesktopExtensionLoader } from "./services/DesktopExtensionLoader";
@@ -43,8 +42,6 @@ export default function Root(props: {
   extraProviders: JSX.Element[] | undefined;
   dataSources: IDataSourceFactory[] | undefined;
 }): JSX.Element {
-  useTimestampUserFirstSeen();
-
   if (!storageBridge) {
     throw new Error("storageBridge is missing");
   }
