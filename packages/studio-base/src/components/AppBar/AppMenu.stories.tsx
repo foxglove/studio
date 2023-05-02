@@ -56,16 +56,36 @@ export const Default: StoryObj = {
   ),
 };
 
-const NestedMenuSelected = (id: string, colorScheme: "dark" | "light", name: string): StoryObj => ({
+const NestedMenuSelected = (
+  id: string,
+  colorScheme: "dark" | "light",
+  forceLanguage?: "zn" | "ja",
+): StoryObj => ({
   ...Default,
-  parameters: { colorScheme },
-  storyName: `${name} (dark)`,
+  parameters: { colorScheme, forceLanguage },
   play: async () => userEvent.hover(screen.getByTestId(id)),
 });
 
-export const DarkFileSelected = NestedMenuSelected("app-menu-file", "dark", "File Menu");
-export const DarkViewSelected = NestedMenuSelected("app-menu-view", "dark", "View Menu");
-export const DarkHelpSelected = NestedMenuSelected("app-menu-help", "dark", "Help Menu");
-export const LightFileSelected = NestedMenuSelected("app-menu-file", "light", "File Menu");
-export const LightViewSelected = NestedMenuSelected("app-menu-view", "light", "View Menu");
-export const LightHelpSelected = NestedMenuSelected("app-menu-help", "light", "Help Menu");
+export const FileMenuDark = NestedMenuSelected("app-menu-file", "dark");
+export const FileMenuDarkChinese = NestedMenuSelected("app-menu-file", "dark", "zn");
+export const FileMenuDarkJapanese = NestedMenuSelected("app-menu-file", "dark", "ja");
+
+export const ViewMenuDark = NestedMenuSelected("app-menu-view", "dark");
+export const ViewMenuDarkChinese = NestedMenuSelected("app-menu-view", "dark", "zn");
+export const ViewMenuDarkJapanese = NestedMenuSelected("app-menu-view", "dark", "ja");
+
+export const HelpMenuDark = NestedMenuSelected("app-menu-help", "dark");
+export const HelpMenuDarkChinese = NestedMenuSelected("app-menu-help", "dark");
+export const HelpMenuDarkJapanese = NestedMenuSelected("app-menu-help", "dark");
+
+export const FileMenuLight = NestedMenuSelected("app-menu-file", "light");
+export const FileMenuLightChinese = NestedMenuSelected("app-menu-file", "light", "zn");
+export const FileMenuLightJapanese = NestedMenuSelected("app-menu-file", "light", "ja");
+
+export const ViewMenuLight = NestedMenuSelected("app-menu-view", "light");
+export const ViewMenuLightChinese = NestedMenuSelected("app-menu-view", "light", "zn");
+export const ViewMenuLightJapanese = NestedMenuSelected("app-menu-view", "light", "ja");
+
+export const HelpMenuLight = NestedMenuSelected("app-menu-help", "light");
+export const HelpMenuLightChinese = NestedMenuSelected("app-menu-help", "light");
+export const HelpMenuLightJapanese = NestedMenuSelected("app-menu-help", "light");
