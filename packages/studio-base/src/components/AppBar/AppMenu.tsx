@@ -4,6 +4,7 @@
 
 import { Menu, PopoverPosition, PopoverReference } from "@mui/material";
 import { useCallback, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { makeStyles } from "tss-react/mui";
 import { shallow } from "zustand/shallow";
 
@@ -44,6 +45,7 @@ const selectWorkspace = (store: WorkspaceContextStore) => store;
 export function AppMenu(props: AppMenuProps): JSX.Element {
   const { open, handleClose, anchorEl, anchorReference, anchorPosition, disablePortal } = props;
   const { classes } = useStyles();
+  const { t } = useTranslation("appBar");
 
   const [nestedMenu, setNestedMenu] = useState<string | undefined>();
 
@@ -80,7 +82,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
     const items: MenuItem[] = [
       {
         type: "item",
-        label: "Open local file…",
+        label: t("openLocalFile"),
         key: "open-file",
         onClick: () => {
           dataSourceDialogActions.open("file");
@@ -90,7 +92,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
       },
       {
         type: "item",
-        label: "Open connection…",
+        label: t("openConnection"),
         key: "open-connection",
         onClick: () => {
           dataSourceDialogActions.open("connection");
@@ -99,7 +101,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
         },
       },
       { type: "divider" },
-      { type: "item", label: "Recent sources", key: "recent-sources", disabled: true },
+      { type: "item", label: t("recentDataSources"), key: "recent-sources", disabled: true },
     ];
 
     recentSources.slice(0, 5).map((recent) => {
@@ -123,6 +125,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
     handleNestedMenuClose,
     recentSources,
     selectRecent,
+    t,
   ]);
 
   // VIEW
@@ -131,7 +134,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
     () => [
       {
         type: "item",
-        label: `${leftSidebarOpen ? "Hide" : "Show"} left sidebar`,
+        label: leftSidebarOpen ? t("hideLeftSidebar") : t("showLeftSidebar"),
         key: "left-sidebar",
         shortcut: "[",
         onClick: () => {
@@ -141,7 +144,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
       },
       {
         type: "item",
-        label: `${rightSidebarOpen ? "Hide" : "Show"} right sidebar`,
+        label: rightSidebarOpen ? t("hideRightSidebar") : t("showRightSidebar"),
         key: "right-sidebar",
         shortcut: "]",
         onClick: () => {
@@ -156,6 +159,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
       rightSidebarOpen,
       setLeftSidebarOpen,
       setRightSidebarOpen,
+      t,
     ],
   );
 
@@ -181,12 +185,18 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
 
   const helpItems = useMemo<MenuItem[]>(
     () => [
-      { type: "item", key: "about", label: "About", onClick: onAboutClick },
+      { type: "item", key: "about", label: t("about"), onClick: onAboutClick },
       { type: "divider" },
-      { type: "item", label: "Documentation", key: "docs", onClick: onDocsClick, external: true },
-      { type: "item", label: "Join Slack", key: "slack", onClick: onSlackClick, external: true },
+      { type: "item", key: "docs", label: t("viewOurDocs"), onClick: onDocsClick, external: true },
+      {
+        type: "item",
+        key: "join-slack",
+        label: t("joinOurSlack"),
+        onClick: onSlackClick,
+        external: true,
+      },
     ],
-    [onAboutClick, onDocsClick, onSlackClick],
+    [onAboutClick, onDocsClick, onSlackClick, t],
   );
 
   return (
