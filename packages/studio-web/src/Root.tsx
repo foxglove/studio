@@ -17,8 +17,8 @@ import {
   RosbridgeDataSourceFactory,
   SampleNuscenesDataSourceFactory,
   UlogLocalDataSourceFactory,
+  useTimestampUserFirstSeen,
 } from "@foxglove/studio-base";
-import { useTimestampUserFirstSeen } from "@foxglove/studio-base/hooks";
 
 import { IdbLayoutStorage } from "./services/IdbLayoutStorage";
 import LocalStorageAppConfiguration from "./services/LocalStorageAppConfiguration";

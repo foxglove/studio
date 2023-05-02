@@ -38,6 +38,7 @@ export function useTimestampUserFirstSeen(): void {
  * was a first time user at the time of the stamp. This can be used anywhere in
  * the app to drive onboarding & tutorial features.
  */
+// ts-prune-ignore-next
 export function useUserFirstSeenTimestamp(): { firstSeen: Date; firstSeenIsFirstSession: boolean } {
   const stamp = localStorage.getItem(Keys.STAMP);
   const isFirstSession = Boolean(localStorage.getItem(Keys.STAMP_IS_FIRST_SESSION));

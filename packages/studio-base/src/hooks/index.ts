@@ -7,9 +7,3 @@
 export { useAppConfigurationValue } from "./useAppConfigurationValue";
 export { useAppTimeFormat } from "./useAppTimeFormat";
 export * from "./useMemoryInfo";
-
-// ts-prune-ignore-next
-export { useTimestampUserFirstSeen } from "./useTimestampUserFirstSeen";
-
-// ts-prune-ignore-next
-export { useUserFirstSeenTimestamp } from "./useTimestampUserFirstSeen";

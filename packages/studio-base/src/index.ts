@@ -49,4 +49,7 @@ export { default as VelodyneDataSourceFactory } from "./dataSources/VelodyneData
 export { default as McapLocalDataSourceFactory } from "./dataSources/McapLocalDataSourceFactory";
 export { default as SampleNuscenesDataSourceFactory } from "./dataSources/SampleNuscenesDataSourceFactory";
 export { LaunchPreferenceValue } from "@foxglove/studio-base/types/LaunchPreferenceValue";
+
+export { useTimestampUserFirstSeen } from "./hooks/useTimestampUserFirstSeen";
+
 export { reportError, setReportErrorHandler } from "./reportError";

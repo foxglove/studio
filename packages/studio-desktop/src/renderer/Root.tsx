@@ -24,8 +24,8 @@ import {
   SampleNuscenesDataSourceFactory,
   UlogLocalDataSourceFactory,
   VelodyneDataSourceFactory,
+  useTimestampUserFirstSeen,
 } from "@foxglove/studio-base";
-import { useTimestampUserFirstSeen } from "@foxglove/studio-base/hooks";
 
 import { DesktopExtensionLoader } from "./services/DesktopExtensionLoader";
 import { NativeAppMenu } from "./services/NativeAppMenu";
