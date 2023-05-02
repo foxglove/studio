@@ -17,8 +17,6 @@ export class RenderableTextAnnotation extends Renderable<BaseUserData, /*TRender
   #label: Label;
 
   #scale = 0;
-  #canvasWidth = 0;
-  #canvasHeight = 0;
   #scaleNeedsUpdate = false;
 
   #annotation?: NormalizedTextAnnotation;
@@ -53,17 +51,12 @@ export class RenderableTextAnnotation extends Renderable<BaseUserData, /*TRender
 
   public setScale(
     scale: number,
-    canvasWidth: number,
-    canvasHeight: number,
+    _canvasWidth: number,
+    _canvasHeight: number,
     _pixelRatio: number,
   ): void {
-    this.#scaleNeedsUpdate ||=
-      scale !== this.#scale ||
-      canvasWidth !== this.#canvasWidth ||
-      canvasHeight !== this.#canvasHeight;
+    this.#scaleNeedsUpdate ||= scale !== this.#scale;
     this.#scale = scale;
-    this.#canvasWidth = canvasWidth;
-    this.#canvasHeight = canvasHeight;
   }
 
   public setCameraModel(cameraModel: PinholeCameraModel | undefined): void {
