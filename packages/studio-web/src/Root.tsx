@@ -5,18 +5,18 @@
 import { useMemo, useState } from "react";
 
 import {
+  App,
+  AppSetting,
+  FoxgloveWebSocketDataSourceFactory,
   IDataSourceFactory,
+  IdbExtensionLoader,
+  McapLocalDataSourceFactory,
+  RemoteDataSourceFactory,
   Ros1LocalBagDataSourceFactory,
   Ros2LocalBagDataSourceFactory,
   RosbridgeDataSourceFactory,
-  RemoteDataSourceFactory,
-  FoxgloveWebSocketDataSourceFactory,
-  UlogLocalDataSourceFactory,
-  McapLocalDataSourceFactory,
   SampleNuscenesDataSourceFactory,
-  IdbExtensionLoader,
-  App,
-  AppSetting,
+  UlogLocalDataSourceFactory,
 } from "@foxglove/studio-base";
 import { useTimestampUserFirstSeen } from "@foxglove/studio-base/hooks";
 

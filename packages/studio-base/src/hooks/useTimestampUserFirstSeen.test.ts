@@ -5,7 +5,7 @@
 
 import { renderHook } from "@testing-library/react-hooks";
 
-import { useTimestampUserFirstSeen, useUserFirstSeenTimestamp } from "./useStampUserFirstSeenTime";
+import { useTimestampUserFirstSeen, useUserFirstSeenTimestamp } from "./useTimestampUserFirstSeen";
 
 describe("useTimestampUserFirstSeen", () => {
   it("stamps the first session time", () => {
