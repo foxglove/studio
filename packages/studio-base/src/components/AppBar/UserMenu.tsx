@@ -135,7 +135,7 @@ export function UserMenu({
         <MenuItem onClick={() => onSettingsClick()}>Settings</MenuItem>
         <MenuItem onClick={() => onSettingsClick("extensions")}>Extensions</MenuItem>
         {currentUser && <MenuItem onClick={onProfileClick}>User profile</MenuItem>}
-        <MenuItem onClick={async () => await setEnableNewTopNav(false)}>Revert to Old UI</MenuItem>
+        <MenuItem onClick={async () => await setEnableNewTopNav(false)}>Revert to old UI</MenuItem>
         <Divider variant="middle" />
         <MenuItem onClick={onDocsClick}>Documentation</MenuItem>
         <MenuItem onClick={onSlackClick}>Join Slack community</MenuItem>
