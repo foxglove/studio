@@ -55,9 +55,9 @@ import {
   StudioLogsSettingsSidebar,
 } from "@foxglove/studio-base/components/StudioLogsSettings";
 import { SyncAdapters } from "@foxglove/studio-base/components/SyncAdapters";
-import { UITourPopover, UITourProvider } from "@foxglove/studio-base/components/UITour";
 import VariablesList from "@foxglove/studio-base/components/VariablesList";
 import { WorkspaceDialogs } from "@foxglove/studio-base/components/WorkspaceDialogs";
+import { WorkspaceTours } from "@foxglove/studio-base/components/WorkspaceTours";
 import {
   LayoutState,
   useCurrentLayoutSelector,
@@ -173,8 +173,6 @@ const selectPlayerId = (ctx: MessagePipelineContext) => ctx.playerState.playerId
 const selectEventsSupported = (store: EventsStore) => store.eventsSupported;
 
 const selectWorkspaceDataSourceDialog = (store: WorkspaceContextStore) => store.dataSourceDialog;
-const selectWorkspacePrefsDialogOpen = (store: WorkspaceContextStore) =>
-  store.prefsDialogState.open;
 const selectWorkspaceSidebarItem = (store: WorkspaceContextStore) => store.sidebarItem;
 const selectWorkspaceLeftSidebarItem = (store: WorkspaceContextStore) => store.leftSidebarItem;
 const selectWorkspaceLeftSidebarOpen = (store: WorkspaceContextStore) => store.leftSidebarOpen;
@@ -200,7 +198,6 @@ function WorkspaceContent(props: WorkspaceContentProps): JSX.Element {
   const rightSidebarItem = useWorkspaceStore(selectWorkspaceRightSidebarItem);
   const rightSidebarOpen = useWorkspaceStore(selectWorkspaceRightSidebarOpen);
   const rightSidebarSize = useWorkspaceStore(selectWorkspaceRightSidebarSize);
-  const prefsDialogOpen = useWorkspaceStore(selectWorkspacePrefsDialogOpen);
 
   const {
     dataSourceDialogActions,
@@ -619,7 +616,6 @@ function WorkspaceContent(props: WorkspaceContentProps): JSX.Element {
       providers={[
         /* eslint-disable react/jsx-key */
         <PanelStateContextProvider />,
-        <UITourProvider />,
         /* eslint-enable react/jsx-key */
       ]}
     >
@@ -677,8 +673,8 @@ function WorkspaceContent(props: WorkspaceContentProps): JSX.Element {
           </div>
         )}
       </div>
-      {!enableNewTopNav && !prefsDialogOpen && !dataSourceDialog.open && <UITourPopover />}
       <WorkspaceDialogs />
+      <WorkspaceTours />
     </MultiProvider>
   );
 }
