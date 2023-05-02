@@ -7,7 +7,7 @@ import { Divider, Menu, MenuItem, MenuItemProps, useTheme } from "@mui/material"
 import { PropsWithChildren, ReactNode, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 
-export type NestedMenuItem =
+export type MenuItem =
   | {
       type: "item";
       label: ReactNode;
@@ -55,7 +55,7 @@ const useStyles = makeStyles<void, "endIcon">()((theme, _params, classes) => ({
 export function NestedMenuItem(
   props: PropsWithChildren<{
     id?: string;
-    items: NestedMenuItem[];
+    items: MenuItem[];
     open: boolean;
     onPointerEnter: (itemId: string) => void;
   }>,

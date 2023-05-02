@@ -18,7 +18,7 @@ import {
 } from "@foxglove/studio-base/context/WorkspaceContext";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 
-import { NestedMenuItem } from "./NestedMenuItem";
+import { NestedMenuItem, MenuItem } from "./NestedMenuItem";
 
 type AppMenuProps = {
   handleClose: () => void;
@@ -77,7 +77,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
   // FILE
 
   const fileItems = useMemo(() => {
-    const items: NestedMenuItem[] = [
+    const items: MenuItem[] = [
       {
         type: "item",
         label: "Open local file…",
@@ -127,7 +127,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
 
   // VIEW
 
-  const viewItems = useMemo<NestedMenuItem[]>(
+  const viewItems = useMemo<MenuItem[]>(
     () => [
       {
         type: "item",
@@ -179,7 +179,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
     handleNestedMenuClose();
   }, [handleAnalytics, handleNestedMenuClose]);
 
-  const helpItems = useMemo<NestedMenuItem[]>(
+  const helpItems = useMemo<MenuItem[]>(
     () => [
       { type: "item", key: "about", label: "About", onClick: onAboutClick },
       { type: "divider" },
