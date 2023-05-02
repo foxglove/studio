@@ -6,14 +6,16 @@ import { Card, CardContent, Paper, Typography } from "@mui/material";
 import { ReactNode } from "react";
 import { makeStyles } from "tss-react/mui";
 
-type VersionedPanelConfig = Record<string, unknown> & { version: number };
+type VersionedPanelConfig = Record<string, unknown> & { [VERSION_CONFIG_KEY]: number };
+
+export const VERSION_CONFIG_KEY = "foxgloveConfigVersion";
 
 function isVersionedPanelConfig(config: unknown): config is VersionedPanelConfig {
   return (
     config != undefined &&
     typeof config === "object" &&
-    "version" in config &&
-    typeof config.version === "number"
+    VERSION_CONFIG_KEY in config &&
+    typeof config[VERSION_CONFIG_KEY] === "number"
   );
 }
 
@@ -41,7 +43,7 @@ export function PanelConfigVersionGuard(props: Props): JSX.Element {
 
   const { classes } = useStyles();
 
-  if (isVersionedPanelConfig(config) && config.version > highestSupportedVersion) {
+  if (isVersionedPanelConfig(config) && config[VERSION_CONFIG_KEY] > highestSupportedVersion) {
     return (
       <Paper className={classes.root}>
         <Card>

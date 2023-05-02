@@ -4,7 +4,7 @@
 
 import { StoryObj } from "@storybook/react";
 
-import { PanelConfigVersionGuard } from "@foxglove/studio-base/components/PanelConfigVersionGuard";
+import { PanelConfigVersionGuard, VERSION_CONFIG_KEY } from "./PanelConfigVersionGuard";
 
 export default {
   component: PanelConfigVersionGuard,
@@ -13,7 +13,7 @@ export default {
 
 export const Default: StoryObj = {
   render: () => (
-    <PanelConfigVersionGuard highestSupportedVersion={1} config={{ version: 1 }}>
+    <PanelConfigVersionGuard highestSupportedVersion={1} config={{ [VERSION_CONFIG_KEY]: 1 }}>
       OK
     </PanelConfigVersionGuard>
   ),
@@ -21,7 +21,7 @@ export const Default: StoryObj = {
 
 export const Incompatible: StoryObj = {
   render: () => (
-    <PanelConfigVersionGuard highestSupportedVersion={1} config={{ version: 2 }}>
+    <PanelConfigVersionGuard highestSupportedVersion={1} config={{ [VERSION_CONFIG_KEY]: 2 }}>
       Not OK
     </PanelConfigVersionGuard>
   ),
