@@ -2,8 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { ChevronRight12Regular, Open16Regular } from "@fluentui/react-icons";
-import { Divider, Menu, MenuItem, MenuItemProps, useTheme } from "@mui/material";
+import { ChevronRight12Regular } from "@fluentui/react-icons";
+import { Divider, Menu, MenuItem, MenuItemProps } from "@mui/material";
 import { PropsWithChildren, ReactNode, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 
@@ -61,7 +61,6 @@ export function NestedMenuItem(
   }>,
 ): JSX.Element {
   const { classes } = useStyles();
-  const theme = useTheme();
   const { children, items, open, onPointerEnter, id } = props;
   const [anchorEl, setAnchorEl] = useState<undefined | HTMLLIElement>(undefined);
 
@@ -112,14 +111,7 @@ export function NestedMenuItem(
               disabled={item.disabled}
             >
               {item.label}
-              {item.shortcut ? (
-                <kbd>{item.shortcut}</kbd>
-              ) : item.external ?? false ? (
-                <Open16Regular
-                  className={classes.endIcon}
-                  primaryFill={theme.palette.primary.main}
-                />
-              ) : undefined}
+              {item.shortcut ? <kbd>{item.shortcut}</kbd> : undefined}
             </MenuItem>
           ) : (
             <Divider key={`${idx}-divider`} variant="middle" />
