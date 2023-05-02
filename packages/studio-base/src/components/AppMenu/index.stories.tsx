@@ -41,17 +41,19 @@ const playerSelection: PlayerSelection = {
   availableSources: [],
 };
 
-export const Default = (): JSX.Element => (
-  <AppMenu
-    open
-    anchorPosition={{ top: 0, left: 0 }}
-    anchorReference="anchorPosition"
-    disablePortal
-    handleClose={() => {
-      // no-op
-    }}
-  />
-);
+export const Default: StoryObj = {
+  render: () => (
+    <AppMenu
+      open
+      anchorPosition={{ top: 0, left: 0 }}
+      anchorReference="anchorPosition"
+      disablePortal
+      handleClose={() => {
+        // no-op
+      }}
+    />
+  ),
+};
 
 type Story = StoryObj<typeof Default>;
 
