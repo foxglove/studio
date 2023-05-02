@@ -3,12 +3,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import {
-  SlideAdd24Regular,
-  ChevronDown12Filled,
+  ChevronDown12Regular,
   PanelLeft24Filled,
   PanelLeft24Regular,
   PanelRight24Filled,
   PanelRight24Regular,
+  SlideAdd24Regular,
 } from "@fluentui/react-icons";
 import PersonIcon from "@mui/icons-material/Person";
 import { Avatar, Button, IconButton, Tooltip, AppBar as MuiAppBar } from "@mui/material";
@@ -97,6 +97,7 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }, 
         },
         "&.Mui-selected": {
           backgroundColor: APP_BAR_PRIMARY_COLOR,
+          color: APP_BAR_FOREGROUND_COLOR,
         },
         "&.Mui-disabled": {
           color: "currentColor",
@@ -263,7 +264,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
           <div className={classes.start}>
             <div className={classes.startInner}>
               <IconButton
-                className={classes.logo}
+                className={cx(classes.logo, { "Mui-selected": appMenuOpen })}
                 color="inherit"
                 id="menu-button"
                 title="Menu"
@@ -275,7 +276,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
                 }}
               >
                 <FoxgloveLogo fontSize="inherit" color="inherit" />
-                <ChevronDown12Filled
+                <ChevronDown12Regular
                   className={classes.dropDownIcon}
                   primaryFill={APP_BAR_FOREGROUND_COLOR}
                 />
