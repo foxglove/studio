@@ -18,6 +18,7 @@ import {
   App,
   AppSetting,
 } from "@foxglove/studio-base";
+import { useTimestampUserFirstSeen } from "@foxglove/studio-base/hooks";
 
 import { IdbLayoutStorage } from "./services/IdbLayoutStorage";
 import LocalStorageAppConfiguration from "./services/LocalStorageAppConfiguration";
@@ -28,6 +29,8 @@ export function Root(props: {
   extraProviders: JSX.Element[] | undefined;
   dataSources: IDataSourceFactory[] | undefined;
 }): JSX.Element {
+  useTimestampUserFirstSeen();
+
   const appConfiguration = useMemo(
     () =>
       new LocalStorageAppConfiguration({

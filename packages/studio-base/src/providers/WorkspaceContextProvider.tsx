@@ -7,6 +7,7 @@ import { createStore, StoreApi } from "zustand";
 import { persist } from "zustand/middleware";
 
 import {
+  WORKSPACE_CONTEXT_LOCAL_STORAGE_KEY,
   WorkspaceContext,
   WorkspaceContextStore,
 } from "@foxglove/studio-base/context/WorkspaceContext";
@@ -42,7 +43,7 @@ function createWorkspaceContextStore(
         return store;
       },
       {
-        name: "fox.workspace",
+        name: WORKSPACE_CONTEXT_LOCAL_STORAGE_KEY,
         partialize: (value) => {
           const { dataSourceDialog: _, ...rest } = value;
           return rest;
