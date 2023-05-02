@@ -72,7 +72,7 @@ export const FileMenuDark = {
 export const FileMenuDarkChinese = {
   ...Selected,
   args: { id: "app-menu-file" },
-  parameters: { colorScheme: "dark", forceLanguage: "zn" },
+  parameters: { colorScheme: "dark", forceLanguage: "zh" },
 };
 
 export const FileMenuDarkJapanese = {
@@ -90,7 +90,7 @@ export const FileMenuLight = {
 export const FileMenuLightChinese = {
   ...Selected,
   args: { id: "app-menu-file" },
-  parameters: { colorScheme: "light", forceLanguage: "zn" },
+  parameters: { colorScheme: "light", forceLanguage: "zh" },
 };
 
 export const FileMenuLightJapanese = {
@@ -108,7 +108,7 @@ export const ViewMenuDark = {
 export const ViewMenuDarkChinese = {
   ...Selected,
   args: { id: "app-menu-view" },
-  parameters: { colorScheme: "dark", forceLanguage: "zn" },
+  parameters: { colorScheme: "dark", forceLanguage: "zh" },
 };
 
 export const ViewMenuDarkJapanese = {
@@ -126,7 +126,7 @@ export const ViewMenuLight = {
 export const ViewMenuLightChinese = {
   ...Selected,
   args: { id: "app-menu-view" },
-  parameters: { colorScheme: "light", forceLanguage: "zn" },
+  parameters: { colorScheme: "light", forceLanguage: "zh" },
 };
 
 export const ViewMenuLightJapanese = {
@@ -144,7 +144,7 @@ export const HelpMenuDark = {
 export const HelpMenuDarkChinese = {
   ...Selected,
   args: { id: "app-menu-help" },
-  parameters: { colorScheme: "dark", forceLanguage: "zn" },
+  parameters: { colorScheme: "dark", forceLanguage: "zh" },
 };
 
 export const HelpMenuDarkJapanese = {
@@ -162,7 +162,7 @@ export const HelpMenuLight = {
 export const HelpMenuLightChinese = {
   ...Selected,
   args: { id: "app-menu-help" },
-  parameters: { colorScheme: "light", forceLanguage: "zn" },
+  parameters: { colorScheme: "light", forceLanguage: "zh" },
 };
 
 export const HelpMenuLightJapanese = {
