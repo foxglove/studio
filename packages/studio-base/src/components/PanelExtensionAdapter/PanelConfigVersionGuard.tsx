@@ -4,6 +4,7 @@
 
 import { Card, CardContent, Paper, Typography } from "@mui/material";
 import { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { makeStyles } from "tss-react/mui";
 
 type VersionedPanelConfig = Record<string, unknown> & { [VERSION_CONFIG_KEY]: number };
@@ -40,6 +41,7 @@ const useStyles = makeStyles()({
  */
 export function PanelConfigVersionGuard(props: Props): JSX.Element {
   const { highestSupportedVersion, children, config } = props;
+  const { t } = useTranslation("panelConfigVersionGuard");
 
   const { classes } = useStyles();
 
@@ -48,10 +50,8 @@ export function PanelConfigVersionGuard(props: Props): JSX.Element {
       <Paper className={classes.root}>
         <Card>
           <CardContent>
-            <Typography variant="subtitle1">
-              This layout requires a more recent version of this panel.
-            </Typography>
-            <Typography variant="subtitle1">Please update to the latest version.</Typography>
+            <Typography variant="subtitle1">{t("warning")}</Typography>
+            <Typography variant="subtitle1">{t("instructions")}</Typography>
           </CardContent>
         </Card>
       </Paper>

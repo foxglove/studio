@@ -25,7 +25,6 @@ import {
   useMessagePipeline,
   useMessagePipelineGetter,
 } from "@foxglove/studio-base/components/MessagePipeline";
-import { PanelConfigVersionGuard } from "@foxglove/studio-base/components/PanelConfigVersionGuard";
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import { useAppConfiguration } from "@foxglove/studio-base/context/AppConfigurationContext";
@@ -53,6 +52,7 @@ import {
 import { PanelConfig, SaveConfig } from "@foxglove/studio-base/types/panels";
 import { assertNever } from "@foxglove/studio-base/util/assertNever";
 
+import { PanelConfigVersionGuard } from "./PanelConfigVersionGuard";
 import { initRenderStateBuilder } from "./renderState";
 
 const log = Logger.getLogger(__filename);
