@@ -19,11 +19,11 @@ import { shallow } from "zustand/shallow";
 
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import { AppBarIconButton } from "@foxglove/studio-base/components/AppBar/AppBarIconButton";
+import { AppMenu } from "@foxglove/studio-base/components/AppBar/AppMenu";
 import {
   CustomWindowControls,
   CustomWindowControlsProps,
 } from "@foxglove/studio-base/components/AppBar/CustomWindowControls";
-import { AppMenu } from "@foxglove/studio-base/components/AppMenu";
 import { FoxgloveLogo } from "@foxglove/studio-base/components/FoxgloveLogo";
 import { MemoryUseIndicator } from "@foxglove/studio-base/components/MemoryUseIndicator";
 import Stack from "@foxglove/studio-base/components/Stack";

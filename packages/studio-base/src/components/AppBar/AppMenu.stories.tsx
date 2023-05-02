@@ -5,14 +5,15 @@
 import { StoryFn, StoryObj } from "@storybook/react";
 import { screen, userEvent } from "@storybook/testing-library";
 
-import { AppMenu } from "@foxglove/studio-base/components/AppMenu";
 import PlayerSelectionContext, {
   PlayerSelection,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import WorkspaceContextProvider from "@foxglove/studio-base/providers/WorkspaceContextProvider";
 
+import { AppMenu } from "./AppMenu";
+
 export default {
-  title: "components/AppMenu",
+  title: "components/AppBar/AppMenu",
   component: AppMenu,
   decorators: [
     (Story: StoryFn): JSX.Element => (
@@ -57,26 +58,16 @@ export const Default: StoryObj = {
 
 type Story = StoryObj<typeof Default>;
 
-const NestedMenuSelected = (id: string, colorScheme: "dark" | "light"): Story => ({
-  render: Default,
+const NestedMenuSelected = (id: string, colorScheme: "dark" | "light", name: string): Story => ({
+  ...Default,
   parameters: { colorScheme },
+  storyName: `${name} (dark)`,
   play: async () => userEvent.hover(screen.getByTestId(id)),
 });
 
-export const DarkFileSelected = NestedMenuSelected("app-menu-file", "dark");
-DarkFileSelected.storyName = "File Menu (dark)";
-
-export const DarkViewSelected = NestedMenuSelected("app-menu-view", "dark");
-DarkViewSelected.storyName = "View Menu (dark)";
-
-export const DarkHelpSelected = NestedMenuSelected("app-menu-help", "dark");
-DarkHelpSelected.storyName = "Help Menu (dark)";
-
-export const LightFileSelected = NestedMenuSelected("app-menu-file", "light");
-LightFileSelected.storyName = "File Menu (light)";
-
-export const LightViewSelected = NestedMenuSelected("app-menu-view", "light");
-LightViewSelected.storyName = "View Menu (light)";
-
-export const LightHelpSelected = NestedMenuSelected("app-menu-help", "light");
-LightHelpSelected.storyName = "Help Menu (light)";
+export const DarkFileSelected = NestedMenuSelected("app-menu-file", "dark", "File Menu");
+export const DarkViewSelected = NestedMenuSelected("app-menu-view", "dark", "View Menu");
+export const DarkHelpSelected = NestedMenuSelected("app-menu-help", "dark", "Help Menu");
+export const LightFileSelected = NestedMenuSelected("app-menu-file", "light", "File Menu");
+export const LightViewSelected = NestedMenuSelected("app-menu-view", "light", "View Menu");
+export const LightHelpSelected = NestedMenuSelected("app-menu-help", "light", "Help Menu");
