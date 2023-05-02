@@ -56,36 +56,117 @@ export const Default: StoryObj = {
   ),
 };
 
-const NestedMenuSelected = (
-  id: string,
-  colorScheme: "dark" | "light",
-  forceLanguage?: "zn" | "ja",
-): StoryObj => ({
+const Selected: StoryObj<{ id: string }> = {
   ...Default,
-  parameters: { colorScheme, forceLanguage },
-  play: async () => userEvent.hover(screen.getByTestId(id)),
-});
+  play: async ({ args: { id } }) => {
+    userEvent.hover(screen.getByTestId(id));
+  },
+};
 
-export const FileMenuDark = NestedMenuSelected("app-menu-file", "dark");
-export const FileMenuDarkChinese = NestedMenuSelected("app-menu-file", "dark", "zn");
-export const FileMenuDarkJapanese = NestedMenuSelected("app-menu-file", "dark", "ja");
+export const FileMenuDark = {
+  ...Selected,
+  args: { id: "app-menu-file" },
+  parameters: { colorScheme: "dark" },
+};
 
-export const ViewMenuDark = NestedMenuSelected("app-menu-view", "dark");
-export const ViewMenuDarkChinese = NestedMenuSelected("app-menu-view", "dark", "zn");
-export const ViewMenuDarkJapanese = NestedMenuSelected("app-menu-view", "dark", "ja");
+export const FileMenuDarkChinese = {
+  ...Selected,
+  args: { id: "app-menu-file" },
+  parameters: { colorScheme: "dark", forceLanguage: "zn" },
+};
 
-export const HelpMenuDark = NestedMenuSelected("app-menu-help", "dark");
-export const HelpMenuDarkChinese = NestedMenuSelected("app-menu-help", "dark");
-export const HelpMenuDarkJapanese = NestedMenuSelected("app-menu-help", "dark");
+export const FileMenuDarkJapanese = {
+  ...Selected,
+  args: { id: "app-menu-file" },
+  parameters: { colorScheme: "dark", forceLanguage: "ja" },
+};
 
-export const FileMenuLight = NestedMenuSelected("app-menu-file", "light");
-export const FileMenuLightChinese = NestedMenuSelected("app-menu-file", "light", "zn");
-export const FileMenuLightJapanese = NestedMenuSelected("app-menu-file", "light", "ja");
+export const FileMenuLight = {
+  ...Selected,
+  args: { id: "app-menu-file" },
+  parameters: { colorScheme: "light" },
+};
 
-export const ViewMenuLight = NestedMenuSelected("app-menu-view", "light");
-export const ViewMenuLightChinese = NestedMenuSelected("app-menu-view", "light", "zn");
-export const ViewMenuLightJapanese = NestedMenuSelected("app-menu-view", "light", "ja");
+export const FileMenuLightChinese = {
+  ...Selected,
+  args: { id: "app-menu-file" },
+  parameters: { colorScheme: "light", forceLanguage: "zn" },
+};
 
-export const HelpMenuLight = NestedMenuSelected("app-menu-help", "light");
-export const HelpMenuLightChinese = NestedMenuSelected("app-menu-help", "light");
-export const HelpMenuLightJapanese = NestedMenuSelected("app-menu-help", "light");
+export const FileMenuLightJapanese = {
+  ...Selected,
+  args: { id: "app-menu-file" },
+  parameters: { colorScheme: "light", forceLanguage: "ja" },
+};
+
+export const ViewMenuDark = {
+  ...Selected,
+  args: { id: "app-menu-view" },
+  parameters: { colorScheme: "dark" },
+};
+
+export const ViewMenuDarkChinese = {
+  ...Selected,
+  args: { id: "app-menu-view" },
+  parameters: { colorScheme: "dark", forceLanguage: "zn" },
+};
+
+export const ViewMenuDarkJapanese = {
+  ...Selected,
+  args: { id: "app-menu-view" },
+  parameters: { colorScheme: "dark", forceLanguage: "ja" },
+};
+
+export const ViewMenuLight = {
+  ...Selected,
+  args: { id: "app-menu-view" },
+  parameters: { colorScheme: "light" },
+};
+
+export const ViewMenuLightChinese = {
+  ...Selected,
+  args: { id: "app-menu-view" },
+  parameters: { colorScheme: "light", forceLanguage: "zn" },
+};
+
+export const ViewMenuLightJapanese = {
+  ...Selected,
+  args: { id: "app-menu-view" },
+  parameters: { colorScheme: "light", forceLanguage: "ja" },
+};
+
+export const HelpMenuDark = {
+  ...Selected,
+  args: { id: "app-menu-help" },
+  parameters: { colorScheme: "dark" },
+};
+
+export const HelpMenuDarkChinese = {
+  ...Selected,
+  args: { id: "app-menu-help" },
+  parameters: { colorScheme: "dark", forceLanguage: "zn" },
+};
+
+export const HelpMenuDarkJapanese = {
+  ...Selected,
+  args: { id: "app-menu-help" },
+  parameters: { colorScheme: "dark", forceLanguage: "ja" },
+};
+
+export const HelpMenuLight = {
+  ...Selected,
+  args: { id: "app-menu-help" },
+  parameters: { colorScheme: "light" },
+};
+
+export const HelpMenuLightChinese = {
+  ...Selected,
+  args: { id: "app-menu-help" },
+  parameters: { colorScheme: "light", forceLanguage: "zn" },
+};
+
+export const HelpMenuLightJapanese = {
+  ...Selected,
+  args: { id: "app-menu-help" },
+  parameters: { colorScheme: "light", forceLanguage: "ja" },
+};
