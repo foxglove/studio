@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { ErrorCircle20Filled, Open16Filled } from "@fluentui/react-icons";
+import { ErrorCircle20Filled } from "@fluentui/react-icons";
 import { ButtonBase, CircularProgress, IconButton } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import tc from "tinycolor2";
@@ -25,7 +25,7 @@ import { PlayerPresence } from "@foxglove/studio-base/players/types";
 const LEFT_ICON_SIZE = 19;
 
 const useStyles = makeStyles<void, "adornmentError" | "openIcon">()((theme, _params, classes) => ({
-  button: {
+  sourceName: {
     font: "inherit",
     fontSize: theme.typography.body2.fontSize,
     display: "flex",
@@ -36,15 +36,12 @@ const useStyles = makeStyles<void, "adornmentError" | "openIcon">()((theme, _par
     whiteSpace: "nowrap",
     minWidth: 0,
 
-    ":not(:hover)": {
+    "&button:not(:hover)": {
       color: tc(APP_BAR_FOREGROUND_COLOR).setAlpha(0.8).toString(),
 
       [`.${classes.openIcon}`]: {
         visibility: "hidden",
       },
-    },
-    "&.Mui-disabled": {
-      color: tc(APP_BAR_FOREGROUND_COLOR).setAlpha(theme.palette.action.disabledOpacity).toString(),
     },
   },
   adornment: {
@@ -117,7 +114,7 @@ export function DataSource(): JSX.Element {
 
   if (playerPresence === PlayerPresence.NOT_PRESENT) {
     return (
-      <ButtonBase className={classes.button} color="inherit" onClick={openDataSourceDialog}>
+      <ButtonBase className={classes.sourceName} color="inherit" onClick={openDataSourceDialog}>
         {t("openDataSource")}
       </ButtonBase>
     );
@@ -149,12 +146,11 @@ export function DataSource(): JSX.Element {
             </IconButton>
           )}
         </div>
-        <ButtonBase className={classes.button} onClick={openDataSourceDialog}>
+        <div className={classes.sourceName}>
           <div className={classes.textTruncate}>
             <TextMiddleTruncate text={playerDisplayName ?? "<unknown>"} />
           </div>
-          <Open16Filled className={classes.openIcon} />
-        </ButtonBase>
+        </div>
       </Stack>
     </>
   );
