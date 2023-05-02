@@ -218,7 +218,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
           open={nestedMenu === "app-menu-file"}
           id="app-menu-file"
         >
-          File
+          {t("file")}
         </NestedMenuItem>
         <NestedMenuItem
           onPointerEnter={handleItemPointerEnter}
@@ -226,7 +226,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
           open={nestedMenu === "app-menu-view"}
           id="app-menu-view"
         >
-          View
+          {t("view")}
         </NestedMenuItem>
         <NestedMenuItem
           onPointerEnter={handleItemPointerEnter}
@@ -234,7 +234,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
           open={nestedMenu === "app-menu-help"}
           id="app-menu-help"
         >
-          Help
+          {t("help")}
         </NestedMenuItem>
       </Menu>
     </>

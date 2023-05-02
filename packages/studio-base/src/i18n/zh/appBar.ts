@@ -16,4 +16,7 @@ export const appBar: Partial<TypeOptions["resources"]["appBar"]> = {
   showLeftSidebar: "显示左侧边栏",
   showRightSidebar: "显示右侧边栏",
   viewOurDocs: "查看我们的文档",
+  file: "文件",
+  view: "查看",
+  help: "帮助",
 };

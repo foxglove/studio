@@ -12,4 +12,7 @@ export const appBar: Partial<TypeOptions["resources"]["appBar"]> = {
   joinOurSlack: "Slackに参加する",
   recentDataSources: "最近のデータソース",
   viewOurDocs: "ドキュメンテーションを見る",
+  file: "ファイル",
+  view: "表示",
+  help: "ヘルプ",
 };

@@ -14,4 +14,7 @@ export const appBar = {
   hideRightSidebar: "Hide right sidebar",
   showRightSidebar: "Show right sidebar",
   viewOurDocs: "View our docs",
+  file: "File",
+  view: "View",
+  help: "Help",
 };
