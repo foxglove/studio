@@ -10,7 +10,7 @@ import { BaseUserData, Renderable } from "../../../Renderable";
 import { SRGBToLinear, getLuminance } from "../../../color";
 
 /**
- * Handles rendering of 2D annotations (line list, line strip, and line loop/polygon).
+ * Handles rendering of 2D text annotations.
  */
 export class RenderableTextAnnotation extends Renderable<BaseUserData, /*TRenderer=*/ undefined> {
   #labelPool: LabelPool;
