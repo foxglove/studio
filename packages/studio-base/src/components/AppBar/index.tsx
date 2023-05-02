@@ -152,16 +152,11 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }, 
         backgroundColor: tc(APP_BAR_BACKGROUND_COLOR[theme.palette.mode]).lighten().toString(),
         height: theme.spacing(3.5),
         width: theme.spacing(3.5),
-        transition: theme.transitions.create("background-color", {
-          duration: theme.transitions.duration.shortest,
-        }),
       },
       iconButton: {
         padding: theme.spacing(1),
         borderRadius: 0,
-        transition: theme.transitions.create("background-color", {
-          duration: theme.transitions.duration.shortest,
-        }),
+
         "&:hover": {
           backgroundColor: tc(APP_BAR_FOREGROUND_COLOR).setAlpha(0.08).toString(),
 
@@ -172,10 +167,12 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }, 
           },
         },
         "&.Mui-selected": {
-          backgroundColor: tc(APP_BAR_FOREGROUND_COLOR).setAlpha(0.08).toString(),
+          backgroundColor: APP_BAR_PRIMARY_COLOR,
 
           [`.${classes.avatar}`]: {
-            backgroundColor: APP_BAR_PRIMARY_COLOR,
+            backgroundColor: tc(APP_BAR_BACKGROUND_COLOR[theme.palette.mode])
+              .setAlpha(0.3)
+              .toString(),
           },
         },
       },
