@@ -319,10 +319,10 @@ export class Images extends SceneExtension<ImageRenderable> {
         NO_CAMERA_INFO_ERR,
         `No CameraInfo received on ${settings.cameraInfoTopic}`,
       );
-      return;
+    } else {
+      this.#recomputeCameraModel(renderable, cameraInfo);
     }
 
-    this.#recomputeCameraModel(renderable, cameraInfo);
     decodeImage(image, DEFAULT_BITMAP_WIDTH)
       .then((maybeBitmap) => {
         const prevRenderable = renderable;
