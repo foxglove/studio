@@ -11,6 +11,8 @@ import {
   RawImage,
 } from "@foxglove/schemas";
 import { MessageEvent } from "@foxglove/studio";
+import { ImageModeConfig } from "@foxglove/studio-base/panels/ThreeDeeRender/IRenderer";
+import { UNSELECTED_CAMERA_CALIBRATION } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/ImageMode/ImageMode";
 import PanelSetup, { Fixture } from "@foxglove/studio-base/stories/PanelSetup";
 
 import { ImagePanel } from "../../index";
@@ -75,9 +77,8 @@ function makeImageAndCalibration(width: number, height: number) {
   return { calibrationMessage, cameraMessage };
 }
 
-export const Annotations: StoryObj = {
-  parameters: { colorScheme: "light" },
-  render: function Story() {
+const AnnotationsStory = (imageModeConfigOverride: Partial<ImageModeConfig> = {}) => {
+  return function Story() {
     const width = 60;
     const height = 45;
 
@@ -266,12 +267,13 @@ export const Annotations: StoryObj = {
                   settings: { visible: true },
                 },
               ],
+              ...imageModeConfigOverride,
             },
           }}
         />
       </PanelSetup>
     );
-  },
+  };
 };
 
 export const MessageConverterSupport: StoryObj = {
@@ -456,4 +458,14 @@ export const MessageConverterSupport: StoryObj = {
       </PanelSetup>
     );
   },
+};
+
+export const Annotations: StoryObj = {
+  parameters: { colorScheme: "light" },
+  render: AnnotationsStory(),
+};
+
+export const ImageOnlyIsSameWithNo3d: StoryObj = {
+  parameters: { colorScheme: "light" },
+  render: AnnotationsStory({ calibrationTopic: UNSELECTED_CAMERA_CALIBRATION }),
 };
