@@ -122,6 +122,7 @@ export class ImageMode extends SceneExtension<ImageRenderable> implements ICamer
       addSchemaSubscriptions: (schemaNames, handler) => {
         renderer.addSchemaSubscriptions(schemaNames, handler);
       },
+      labelPool: renderer.labelPool,
     });
     this.add(this.#annotations);
   }

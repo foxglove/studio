@@ -86,13 +86,38 @@ export function makeImageAndCalibration(
 const AnnotationsStory = (imageModeConfigOverride: Partial<ImageModeConfig> = {}): JSX.Element => {
   const width = 60;
   const height = 45;
-
   const { calibrationMessage, cameraMessage } = makeImageAndCalibration(width, height);
 
   const annotationsMessage: MessageEvent<Partial<ImageAnnotations>> = {
     topic: "annotations",
     receiveTime: { sec: 10, nsec: 0 },
     message: {
+      circles: [
+        {
+          timestamp: { sec: 0, nsec: 0 },
+          position: { x: 20, y: 5 },
+          diameter: 4,
+          thickness: 1,
+          fill_color: { r: 1, g: 0, b: 1, a: 1 },
+          outline_color: { r: 1, g: 1, b: 0, a: 1 },
+        },
+        {
+          timestamp: { sec: 0, nsec: 0 },
+          position: { x: 25, y: 5 },
+          diameter: 4,
+          thickness: 1,
+          fill_color: { r: 1, g: 0, b: 1, a: 0.5 },
+          outline_color: { r: 0, g: 0, b: 0, a: 0 },
+        },
+        {
+          timestamp: { sec: 0, nsec: 0 },
+          position: { x: 30, y: 5 },
+          diameter: 4,
+          thickness: 0.5,
+          fill_color: { r: 1, g: 1, b: 0, a: 0 },
+          outline_color: { r: 0, g: 1, b: 1, a: 0.5 },
+        },
+      ],
       points: [
         {
           timestamp: { sec: 0, nsec: 0 },
@@ -234,6 +259,24 @@ const AnnotationsStory = (imageModeConfigOverride: Partial<ImageModeConfig> = {}
           outline_colors: [],
           fill_color: { r: 1, g: 0, b: 1, a: 1 },
           thickness: 0.5,
+        },
+      ],
+      texts: [
+        {
+          timestamp: { sec: 0, nsec: 0 },
+          position: { x: 20, y: 30 },
+          text: "Hi",
+          font_size: 5,
+          text_color: { r: 1, g: 0, b: 0, a: 1 },
+          background_color: { r: 1, g: 1, b: 0, a: 1 },
+        },
+        {
+          timestamp: { sec: 0, nsec: 0 },
+          position: { x: 20, y: 32 },
+          text: "hello",
+          font_size: 3,
+          text_color: { r: 0.3, g: 0.5, b: 0.5, a: 0.8 },
+          background_color: { r: 1, g: 1, b: 1, a: 0.2 },
         },
       ],
     },
