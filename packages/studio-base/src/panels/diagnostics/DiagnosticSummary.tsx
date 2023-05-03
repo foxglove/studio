@@ -21,11 +21,12 @@ import {
   Select,
   InputBase,
   IconButton,
+  List,
 } from "@mui/material";
 import { produce } from "immer";
 import { compact, set, uniq } from "lodash";
 import { useCallback, useEffect, useMemo } from "react";
-import { List, AutoSizer, ListRowProps } from "react-virtualized";
+import { AutoSizer } from "react-virtualized";
 
 import { filterMap } from "@foxglove/den/collection";
 import { SettingsTreeAction } from "@foxglove/studio";
@@ -179,22 +180,6 @@ function DiagnosticSummary(props: Props): JSX.Element {
     [topicToRender, openSiblingPanel],
   );
 
-  const renderRow = useCallback(
-    // eslint-disable-next-line react/no-unused-prop-types
-    ({ item, key }: ListRowProps & { item: DiagnosticInfo }) => {
-      return (
-        <NodeRow
-          key={key}
-          info={item}
-          isPinned={pinnedIds.includes(item.id)}
-          onClick={showDetails}
-          onClickPin={togglePinned}
-        />
-      );
-    },
-    [pinnedIds, showDetails, togglePinned],
-  );
-
   // Filter down all topics to those that conform to our supported datatypes
   const availableTopics = useMemo(() => {
     const filtered = topics
@@ -253,20 +238,31 @@ function DiagnosticSummary(props: Props): JSX.Element {
     }
     return (
       <AutoSizer>
-        {({ height, width }) => (
-          <List
-            width={width}
-            height={height}
-            style={{ outline: "none" }}
-            rowHeight={30}
-            rowRenderer={(rowProps) => renderRow({ ...rowProps, item: nodes[rowProps.index]! })}
-            rowCount={nodes.length}
-            overscanRowCount={10}
-          />
+        {({ width, height }) => (
+          <List style={{ overflow: "scroll", width, height }}>
+            {nodes.map((item) => (
+              <NodeRow
+                key={item.id}
+                info={item}
+                isPinned={pinnedIds.includes(item.id)}
+                onClick={showDetails}
+                onClickPin={togglePinned}
+              />
+            ))}
+          </List>
         )}
       </AutoSizer>
     );
-  }, [diagnostics, hardwareIdFilter, pinnedIds, renderRow, sortByLevel, minLevel, topicToRender]);
+  }, [
+    diagnostics,
+    hardwareIdFilter,
+    pinnedIds,
+    showDetails,
+    togglePinned,
+    sortByLevel,
+    minLevel,
+    topicToRender,
+  ]);
 
   const actionHandler = useCallback(
     (action: SettingsTreeAction) => {
