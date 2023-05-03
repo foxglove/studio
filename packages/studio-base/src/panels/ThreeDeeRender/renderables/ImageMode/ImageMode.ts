@@ -3,7 +3,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import * as THREE from "three";
-import { assert } from "ts-essentials";
 
 import { filterMap } from "@foxglove/den/collection";
 import { PinholeCameraModel } from "@foxglove/den/image";
@@ -13,6 +12,7 @@ import { SettingsTreeAction } from "@foxglove/studio";
 import {
   IMAGE_RENDERABLE_DEFAULT_SETTINGS,
   ImageRenderable,
+  decodeImage,
 } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/Images/ImageRenderable";
 import { AnyImage } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/Images/ImageTypes";
 import {
@@ -53,47 +53,17 @@ const CALIBRATION_TOPIC_PATH = ["imageMode", "calibrationTopic"];
 
 const IMAGE_TOPIC_UNAVAILABLE = "IMAGE_TOPIC_UNAVAILABLE";
 const CALIBRATION_TOPIC_UNAVAILABLE = "CALIBRATION_TOPIC_UNAVAILABLE";
+const CREATE_BITMAP_ERR = "CreateBitmap";
+
 const MISSING_CAMERA_INFO = "MISSING_CAMERA_INFO";
 const IMAGE_TOPIC_DIFFERENT_FRAME = "IMAGE_TOPIC_DIFFERENT_FRAME";
 
 const CAMERA_MODEL = "CameraModel";
 
 const DEFAULT_FOCAL_LENGTH = 500;
+const DEFAULT_IMAGE_WIDTH = 512;
 
 export const UNSELECTED_CAMERA_CALIBRATION = "UNSELECTED_CAMERA_CALIBRATION";
-
-const createFallbackCameraInfoForImage = (
-  texture: THREE.Texture,
-  options: { focalLength: number },
-): CameraInfo => {
-  const { width, height } = texture.image;
-  const { focalLength } = options;
-  const cx = width / 2;
-  const cy = height / 2;
-  const fx = focalLength;
-  const fy = focalLength;
-  const cameraInfo = normalizeCameraInfo({
-    header: { seq: 0, stamp: { sec: 0, nsec: 0 } },
-    height,
-    width,
-    distortion_model: "",
-    R: [1, 0, 0, 1, 0, 0, 1, 0, 0], // doesn't matter
-    D: [], // doesn't matter
-    // prettier-ignore
-    K: [
-      fx, 0, cx,
-      0, fy, cy,
-      0, 0, 1,
-    ],
-    // prettier-ignore
-    P: [
-      fx, 0, cx, 0,
-      0, fy, cy, 0,
-      0, 0, 1, 0,
-    ],
-  });
-  return cameraInfo;
-};
 
 export class ImageMode extends SceneExtension<ImageRenderable> implements ICameraHandler {
   #camera: ImageModeCamera;
@@ -188,10 +158,9 @@ export class ImageMode extends SceneExtension<ImageRenderable> implements ICamer
 
   public override removeAllRenderables(): void {
     this.#annotations.removeAllRenderables();
-    this.#imageRenderable?.removeFromParent();
     this.#imageRenderable?.dispose();
     this.#imageRenderable = undefined;
-
+    this.#clearCameraModel();
     super.removeAllRenderables();
   }
 
@@ -435,9 +404,53 @@ export class ImageMode extends SceneExtension<ImageRenderable> implements ICamer
       renderable.userData.cameraInfo = this.#cameraModel.info;
       renderable.setCameraModel(this.#cameraModel.model);
     }
+
     renderable.name = topic;
     renderable.setImage(image);
-    renderable.update();
+
+    const resizeBitmapWidth = !this.#fallbackCameraModelActive() ? DEFAULT_IMAGE_WIDTH : undefined;
+    decodeImage(image, resizeBitmapWidth)
+      .then((maybeBitmap) => {
+        const prevRenderable = renderable;
+        const currentRenderable = this.#imageRenderable;
+        if (currentRenderable && currentRenderable !== prevRenderable) {
+          return;
+        }
+        this.renderer.settings.errors.removeFromTopic(topic, CREATE_BITMAP_ERR);
+        if (maybeBitmap instanceof ImageBitmap) {
+          renderable.setBitmap(maybeBitmap);
+        }
+        if (this.#fallbackCameraModelActive()) {
+          const cameraInfo = createFallbackCameraInfoForImage({
+            frameId: getFrameIdFromImage(image),
+            height: maybeBitmap.height,
+            width: maybeBitmap.width,
+            focalLength: DEFAULT_FOCAL_LENGTH,
+          });
+          this.#updateCameraModel(cameraInfo);
+          this.#updateViewAndRenderables();
+        }
+
+        renderable.update();
+        this.renderer.queueAnimationFrame();
+      })
+      .catch((err) => {
+        this.renderer.settings.errors.addToTopic(
+          topic,
+          CREATE_BITMAP_ERR,
+          `Error creating bitmap: ${err.message}`,
+        );
+      });
+  };
+
+  #fallbackCameraModelActive = (): boolean => {
+    return this.#getImageModeSettings().calibrationTopic === UNSELECTED_CAMERA_CALIBRATION;
+  };
+
+  #clearCameraModel = (): void => {
+    this.#cameraModel = undefined;
+    this.#camera.clearModel();
+    this.#camera.updateProjectionMatrix();
   };
 
   #getImageRenderable(
@@ -454,29 +467,22 @@ export class ImageMode extends SceneExtension<ImageRenderable> implements ICamer
     // we don't have settings for images yet
     const userSettings = { ...IMAGE_RENDERABLE_DEFAULT_SETTINGS };
 
-    renderable = new ImageRenderable(
-      topicName,
-      this.renderer,
-      {
-        receiveTime,
-        messageTime: image
-          ? toNanoSec("header" in image ? image.header.stamp : image.timestamp)
-          : 0n,
-        frameId: this.renderer.normalizeFrameId(frameId),
-        pose: makePose(),
-        settingsPath: IMAGE_TOPIC_PATH,
-        topic: topicName,
-        settings: userSettings,
-        cameraInfo: undefined,
-        cameraModel: undefined,
-        image,
-        texture: undefined,
-        material: undefined,
-        geometry: undefined,
-        mesh: undefined,
-      },
-      this.#onImageTextureLoad,
-    );
+    renderable = new ImageRenderable(topicName, this.renderer, {
+      receiveTime,
+      messageTime: image ? toNanoSec("header" in image ? image.header.stamp : image.timestamp) : 0n,
+      frameId: this.renderer.normalizeFrameId(frameId),
+      pose: makePose(),
+      settingsPath: IMAGE_TOPIC_PATH,
+      topic: topicName,
+      settings: userSettings,
+      cameraInfo: undefined,
+      cameraModel: undefined,
+      image,
+      texture: undefined,
+      material: undefined,
+      geometry: undefined,
+      mesh: undefined,
+    });
 
     this.add(renderable);
     this.#imageRenderable = renderable;
@@ -484,18 +490,6 @@ export class ImageMode extends SceneExtension<ImageRenderable> implements ICamer
     renderable.visible = true;
     return renderable;
   }
-
-  #onImageTextureLoad = (texture: THREE.Texture): void => {
-    if (this.#getImageModeSettings().calibrationTopic !== UNSELECTED_CAMERA_CALIBRATION) {
-      return;
-    }
-    assert(this.#imageRenderable?.userData.image);
-    const cameraInfo = createFallbackCameraInfoForImage(texture, {
-      focalLength: DEFAULT_FOCAL_LENGTH,
-    });
-    this.#updateCameraModel(cameraInfo);
-    this.#updateViewAndRenderables();
-  };
 
   /** Gets frame from active info or image message if info does not have one*/
   #getCurrentFrameId(): string | undefined {
@@ -638,3 +632,38 @@ function getFrameIdFromImage(image: AnyImage) {
     return image.frame_id;
   }
 }
+
+const createFallbackCameraInfoForImage = (options: {
+  // should be over ~50 for a fallback at least, otherwise warping can occur in the center
+  focalLength: number;
+  frameId: string;
+  width: number;
+  height: number;
+}): CameraInfo => {
+  const { width, height, focalLength, frameId } = options;
+  const cx = width / 2;
+  const cy = height / 2;
+  const fx = focalLength;
+  const fy = focalLength;
+  const cameraInfo = normalizeCameraInfo({
+    header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: frameId },
+    height,
+    width,
+    distortion_model: "",
+    R: [1, 0, 0, 1, 0, 0, 1, 0, 0],
+    D: [],
+    // prettier-ignore
+    K: [
+      fx, 0, cx,
+      0, fy, cy,
+      0, 0, 1,
+    ],
+    // prettier-ignore
+    P: [
+      fx, 0, cx, 0,
+      0, fy, cy, 0,
+      0, 0, 1, 0,
+    ],
+  });
+  return cameraInfo;
+};

@@ -354,15 +354,14 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     this.#addSceneExtension(new VelodyneScans(this));
     this.#addSceneExtension(this.measurementTool);
     this.#addSceneExtension(this.publishClickTool);
-
-    this.#addTransformSubscriptions();
-    this.#addSubscriptionsFromSceneExtensions();
-
     if (
       interfaceMode === "image" &&
       config.imageMode.calibrationTopic === UNSELECTED_CAMERA_CALIBRATION
     ) {
       this.enableImageOnlySubscriptionMode();
+    } else {
+      this.#addTransformSubscriptions();
+      this.#addSubscriptionsFromSceneExtensions();
     }
 
     this.#watchDevicePixelRatio();

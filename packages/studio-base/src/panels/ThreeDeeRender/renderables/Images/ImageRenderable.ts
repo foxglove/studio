@@ -63,9 +63,6 @@ export type ImageUserData = BaseUserData & {
   mesh: THREE.Mesh | undefined;
 };
 
-const CREATE_BITMAP_ERR = "CreateBitmap";
-const DEFAULT_IMAGE_WIDTH = 512;
-
 export class ImageRenderable extends Renderable<ImageUserData> {
   // Make sure that everything is build the first time we render
   // set when camera info or image changes
@@ -79,18 +76,12 @@ export class ImageRenderable extends Renderable<ImageUserData> {
 
   #renderBehindScene: boolean = false;
 
-  #onTextureLoad: (texture: THREE.Texture) => void;
+  #bitmap?: ImageBitmap;
 
   #isUpdating = false;
 
-  public constructor(
-    topicName: string,
-    renderer: IRenderer,
-    userData: ImageUserData,
-    onTextureLoad?: (texture: THREE.Texture) => void,
-  ) {
+  public constructor(topicName: string, renderer: IRenderer, userData: ImageUserData) {
     super(topicName, renderer, userData);
-    this.#onTextureLoad = onTextureLoad ? onTextureLoad : () => {};
   }
 
   public override dispose(): void {
@@ -159,6 +150,11 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     this.#textureNeedsUpdate = true;
   }
 
+  public setBitmap(bitmap: ImageBitmap): void {
+    this.#bitmap = bitmap;
+    this.#textureNeedsUpdate = true;
+  }
+
   public update(): void {
     if (this.#isUpdating) {
       return;
@@ -209,27 +205,18 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     const image = this.userData.image;
     // Create or update the bitmap texture
     if ("format" in image) {
-      const bitmapData = new Blob([image.data], { type: `image/${image.format}` });
-      self
-        .createImageBitmap(bitmapData, { resizeWidth: DEFAULT_IMAGE_WIDTH })
-        .then((bitmap) => {
-          if (this.userData.texture == undefined) {
-            this.userData.texture = createCanvasTexture(bitmap);
-          } else {
-            this.userData.texture.image.close();
-            this.userData.texture.image = bitmap;
-            this.userData.texture.needsUpdate = true;
-          }
+      const bitmap = this.#bitmap;
+      if (!bitmap) {
+        return;
+      }
 
-          this.#removeTopicError(CREATE_BITMAP_ERR);
-          this.#materialNeedsUpdate = true;
-          this.#onTextureLoad(this.userData.texture);
-          this.update();
-          this.renderer.queueAnimationFrame();
-        })
-        .catch((err) => {
-          this.#addTopicError(CREATE_BITMAP_ERR, `createBitmap failed: ${err.message}`);
-        });
+      if (this.userData.texture == undefined) {
+        this.userData.texture = createCanvasTexture(bitmap);
+      } else {
+        this.userData.texture.image.close();
+        this.userData.texture.image = bitmap;
+        this.userData.texture.needsUpdate = true;
+      }
     } else {
       const { width, height } = image;
       const prevTexture = this.userData.texture as THREE.DataTexture | undefined;
@@ -244,18 +231,11 @@ export class ImageRenderable extends Renderable<ImageUserData> {
 
       const texture = this.userData.texture as THREE.DataTexture;
       rawImageToDataTexture(image, {}, texture);
-      this.#onTextureLoad(texture);
       texture.needsUpdate = true;
     }
     this.#materialNeedsUpdate = true;
   }
 
-  #addTopicError(key: string, errorMessage: string) {
-    this.renderer.settings.errors.add(this.userData.settingsPath, key, errorMessage);
-  }
-  #removeTopicError(key: string) {
-    this.renderer.settings.errors.remove(this.userData.settingsPath, key);
-  }
   #updateMaterial(): void {
     if (!this.userData.material) {
       this.#initMaterial();
@@ -321,6 +301,17 @@ type RawImageOptions = {
 };
 
 let tempColor = { r: 0, g: 0, b: 0, a: 0 };
+
+export async function decodeImage(
+  image: AnyImage,
+  resizeWidth?: number,
+): Promise<ImageBitmap | RawImage | RosImage> {
+  if ("format" in image) {
+    const bitmapData = new Blob([image.data], { type: `image/${image.format}` });
+    return await createImageBitmap(bitmapData, { resizeWidth });
+  }
+  return image;
+}
 
 function createCanvasTexture(bitmap: ImageBitmap): THREE.CanvasTexture {
   const texture = new THREE.CanvasTexture(
