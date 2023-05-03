@@ -74,9 +74,9 @@ export class RenderableTextAnnotation extends Renderable<BaseUserData, /*TRender
       this.visible = false;
       return;
     }
+    this.visible = true;
 
     const { position, text, textColor, backgroundColor, fontSize } = this.#annotation;
-    this.#label.visible = true;
 
     // Update line width if thickness or scale has changed
     if (this.#annotationNeedsUpdate || this.#scaleNeedsUpdate) {
@@ -111,7 +111,7 @@ export class RenderableTextAnnotation extends Renderable<BaseUserData, /*TRender
 
     if (this.#annotationNeedsUpdate || this.#cameraModelNeedsUpdate) {
       if (!this.#cameraModel.projectPixelTo3dPlane(this.#label.position, position)) {
-        this.#label.visible = false;
+        this.visible = false;
       }
     }
 
