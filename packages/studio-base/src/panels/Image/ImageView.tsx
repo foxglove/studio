@@ -306,7 +306,8 @@ export function ImageView({ context, enableNewImagePanel }: Props): JSX.Element 
         <DialogTitle>Upgrade to the new Image panel?</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            To undo this change, you will need to re-configure this Image panel.
+            This change will modify your layout. To revert to the old Image panel, you will need to
+            manually replace this panel or add a new one.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
