@@ -21,12 +21,12 @@ import {
   Select,
   InputBase,
   IconButton,
-  List,
 } from "@mui/material";
 import { produce } from "immer";
 import { compact, set, uniq } from "lodash";
-import { useCallback, useEffect, useMemo } from "react";
+import { CSSProperties, useCallback, useEffect, useMemo } from "react";
 import { AutoSizer } from "react-virtualized";
+import { FixedSizeList as List } from "react-window";
 
 import { filterMap } from "@foxglove/den/collection";
 import { SettingsTreeAction } from "@foxglove/studio";
@@ -132,6 +132,7 @@ const NodeRow = React.memo(function NodeRow(props: NodeRowProps) {
           secondaryTypographyProps={{
             color: MESSAGE_COLORS[levelName ?? "stale"],
           }}
+          style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
         />
       </StyledListItemButton>
     </ListItem>
@@ -178,6 +179,24 @@ function DiagnosticSummary(props: Props): JSX.Element {
       });
     },
     [topicToRender, openSiblingPanel],
+  );
+
+  const renderRow = useCallback(
+    (renderProps: { data: DiagnosticInfo[]; index: number; style: CSSProperties }) => {
+      const item = renderProps.data[renderProps.index]!;
+      return (
+        <div style={{ ...renderProps.style }}>
+          <NodeRow
+            key={item.id}
+            info={item}
+            isPinned={pinnedIds.includes(item.id)}
+            onClick={showDetails}
+            onClickPin={togglePinned}
+          />
+        </div>
+      );
+    },
+    [pinnedIds, showDetails, togglePinned],
   );
 
   // Filter down all topics to those that conform to our supported datatypes
@@ -238,31 +257,22 @@ function DiagnosticSummary(props: Props): JSX.Element {
     }
     return (
       <AutoSizer>
-        {({ width, height }) => (
-          <List style={{ overflow: "scroll", width, height }}>
-            {nodes.map((item) => (
-              <NodeRow
-                key={item.id}
-                info={item}
-                isPinned={pinnedIds.includes(item.id)}
-                onClick={showDetails}
-                onClickPin={togglePinned}
-              />
-            ))}
+        {({ height, width }) => (
+          <List
+            width={width}
+            height={height}
+            style={{ outline: "none" }}
+            itemSize={30}
+            itemData={nodes}
+            itemCount={nodes.length}
+            overscanCount={10}
+          >
+            {renderRow}
           </List>
         )}
       </AutoSizer>
     );
-  }, [
-    diagnostics,
-    hardwareIdFilter,
-    pinnedIds,
-    showDetails,
-    togglePinned,
-    sortByLevel,
-    minLevel,
-    topicToRender,
-  ]);
+  }, [diagnostics, hardwareIdFilter, pinnedIds, renderRow, sortByLevel, minLevel, topicToRender]);
 
   const actionHandler = useCallback(
     (action: SettingsTreeAction) => {
