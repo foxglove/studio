@@ -596,7 +596,7 @@ function WorkspaceContent(props: WorkspaceContentProps): JSX.Element {
       "[": () => setLeftSidebarOpen((oldValue) => !oldValue),
       "]": () => setRightSidebarOpen((oldValue) => !oldValue),
     };
-  }, [sidebarItem, selectSidebarItem, setLeftSidebarOpen, setRightSidebarOpen]);
+  }, [sidebarItem, setLeftSidebarOpen, setRightSidebarOpen, selectSidebarItem]);
 
   const play = useMessagePipeline(selectPlay);
   const playUntil = useMessagePipeline(selectPlayUntil);
