@@ -325,7 +325,10 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     const aspect = renderSize.width / renderSize.height;
     switch (interfaceMode) {
       case "image":
-        this.#imageModeExtension = new ImageMode(this, this.input.canvasSize);
+        this.#imageModeExtension = new ImageMode(this, this.input.canvasSize, {
+          enableImageOnlyMode: this.#enableImageOnlySubscriptionMode,
+          disableImageOnlyMode: this.#disableImageOnlySubscriptionMode,
+        });
         this.cameraHandler = this.#imageModeExtension;
         this.#addSceneExtension(this.cameraHandler);
         break;
@@ -358,7 +361,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
       interfaceMode === "image" &&
       config.imageMode.calibrationTopic === UNSELECTED_CAMERA_CALIBRATION
     ) {
-      this.enableImageOnlySubscriptionMode();
+      this.#enableImageOnlySubscriptionMode();
     } else {
       this.#addTransformSubscriptions();
       this.#addSubscriptionsFromSceneExtensions();
@@ -647,7 +650,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     this.emit("topicHandlersChanged", this);
   }
 
-  public enableImageOnlySubscriptionMode(): void {
+  #enableImageOnlySubscriptionMode = (): void => {
     assert(
       this.#imageModeExtension,
       "Image mode extension should be defined when calling enable Image only mode",
@@ -657,16 +660,16 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     this.#addSubscriptionsFromSceneExtensions(
       (extension) => extension === this.#imageModeExtension,
     );
-  }
+  };
 
-  public disableImageOnlySubscriptionMode(): void {
+  #disableImageOnlySubscriptionMode = (): void => {
     this.#addSubscriptionsFromSceneExtensions(
       (extension) => extension !== this.#imageModeExtension,
     );
     this.#addTransformSubscriptions();
     this.emit("topicHandlersChanged", this);
     this.emit("schemaHandlersChanged", this);
-  }
+  };
 
   public addCustomLayerAction(options: {
     layerId: string;

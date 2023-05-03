@@ -78,11 +78,24 @@ export class ImageMode extends SceneExtension<ImageRenderable> implements ICamer
 
   #imageRenderable: ImageRenderable | undefined;
 
+  #enableImageOnly: () => void;
+  #disableImageOnly: () => void;
+
   /**
    * @param canvasSize Canvas size in CSS pixels
    */
-  public constructor(renderer: IRenderer, canvasSize: THREE.Vector2) {
+  public constructor(
+    renderer: IRenderer,
+    canvasSize: THREE.Vector2,
+    {
+      enableImageOnlyMode,
+      disableImageOnlyMode,
+    }: { enableImageOnlyMode: () => void; disableImageOnlyMode: () => void },
+  ) {
     super("foxglove.ImageMode", renderer);
+
+    this.#enableImageOnly = enableImageOnlyMode;
+    this.#disableImageOnly = disableImageOnlyMode;
 
     this.#camera = new ImageModeCamera();
 
@@ -153,13 +166,13 @@ export class ImageMode extends SceneExtension<ImageRenderable> implements ICamer
     this.renderer.settings.errors.off("clear", this.#handleErrorChange);
     this.renderer.settings.errors.off("remove", this.#handleErrorChange);
     this.#annotations.dispose();
+    this.#imageRenderable?.dispose();
     super.dispose();
   }
 
   public override removeAllRenderables(): void {
     this.#annotations.removeAllRenderables();
-    this.#imageRenderable?.dispose();
-    this.#imageRenderable = undefined;
+    this.#imageRenderable?.clear();
     this.#clearCameraModel();
     super.removeAllRenderables();
   }
@@ -339,13 +352,13 @@ export class ImageMode extends SceneExtension<ImageRenderable> implements ICamer
         const changingToUnselectedCalibration =
           config.calibrationTopic === UNSELECTED_CAMERA_CALIBRATION;
         if (changingToUnselectedCalibration) {
-          this.renderer.enableImageOnlySubscriptionMode();
+          this.#enableImageOnly();
         }
 
         const changingFromUnselectedCalibration =
           prevImageModeConfig.calibrationTopic === UNSELECTED_CAMERA_CALIBRATION;
         if (changingFromUnselectedCalibration) {
-          this.renderer.disableImageOnlySubscriptionMode();
+          this.#disableImageOnly();
         }
       }
 

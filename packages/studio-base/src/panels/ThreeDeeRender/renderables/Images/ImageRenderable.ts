@@ -91,6 +91,31 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     super.dispose();
   }
 
+  public override clear(): this {
+    super.clear();
+    this.userData.texture?.image?.close();
+    this.userData.texture?.dispose();
+    this.userData.texture = undefined;
+    this.userData.material?.dispose();
+    this.userData.material = undefined;
+    this.userData.geometry?.dispose();
+    this.userData.geometry = undefined;
+    this.userData.mesh = undefined;
+
+    this.userData.cameraInfo = undefined;
+    this.userData.cameraModel = undefined;
+    this.userData.image = undefined;
+
+    this.#bitmap = undefined;
+
+    this.#geometryNeedsUpdate = true;
+    this.#materialNeedsUpdate = true;
+    this.#meshNeedsUpdate = true;
+    this.#textureNeedsUpdate = true;
+
+    return this;
+  }
+
   public updateHeaderInfo(): void {
     assert(this.userData.image, "updateHeaderInfo called without image");
 
@@ -114,6 +139,7 @@ export class ImageRenderable extends Renderable<ImageUserData> {
   public setRenderBehindScene(): void {
     this.#renderBehindScene = true;
     this.#materialNeedsUpdate = true;
+    this.#meshNeedsUpdate = true;
   }
 
   // Renderable should only need to care about the model
@@ -259,10 +285,8 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     if (this.#renderBehindScene) {
       material.depthWrite = false;
       material.depthTest = false;
-      this.renderOrder = -1 * Number.MAX_SAFE_INTEGER;
     } else {
       material.depthTest = true;
-      this.renderOrder = 0;
     }
 
     material.needsUpdate = true;
@@ -291,6 +315,12 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     } else {
       this.userData.mesh.geometry = this.userData.geometry;
       this.userData.mesh.material = this.userData.material;
+    }
+
+    if (this.#renderBehindScene) {
+      this.userData.mesh.renderOrder = -1 * Number.MAX_SAFE_INTEGER;
+    } else {
+      this.userData.mesh.renderOrder = 0;
     }
   }
 }
