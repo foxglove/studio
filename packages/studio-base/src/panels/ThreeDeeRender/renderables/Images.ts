@@ -58,6 +58,7 @@ export type LayerSettingsImage = BaseSettings & {
   color: string;
 };
 
+const DEFAULT_BITMAP_WIDTH = 512;
 const NO_CAMERA_INFO_ERR = "NoCameraInfo";
 const CAMERA_MODEL = "CameraModel";
 
@@ -322,10 +323,10 @@ export class Images extends SceneExtension<ImageRenderable> {
     }
 
     this.#recomputeCameraModel(renderable, cameraInfo);
-    decodeImage(image)
+    decodeImage(image, DEFAULT_BITMAP_WIDTH)
       .then((maybeBitmap) => {
         const prevRenderable = renderable;
-        const currentRenderable = this.#getImageRenderable(imageTopic, receiveTime, image, frameId);
+        const currentRenderable = this.renderables.get(imageTopic);
         if (currentRenderable !== prevRenderable) {
           return;
         }

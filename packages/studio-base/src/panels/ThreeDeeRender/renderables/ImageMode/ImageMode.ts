@@ -441,7 +441,7 @@ export class ImageMode extends SceneExtension<ImageRenderable> implements ICamer
       .then((maybeBitmap) => {
         const prevRenderable = renderable;
         const currentRenderable = this.#imageRenderable;
-        if (currentRenderable && currentRenderable !== prevRenderable) {
+        if (currentRenderable !== prevRenderable) {
           return;
         }
         this.renderer.settings.errors.removeFromTopic(topic, CREATE_BITMAP_ERR_KEY);

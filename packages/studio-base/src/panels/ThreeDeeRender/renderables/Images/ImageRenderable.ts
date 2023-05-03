@@ -214,12 +214,14 @@ export class ImageRenderable extends Renderable<ImageUserData> {
         return;
       }
 
-      if (this.userData.texture == undefined) {
+      const texture = this.userData.texture as THREE.CanvasTexture | undefined;
+      if (texture == undefined || !bitmapDimensionsEqual(bitmap, texture.image as ImageBitmap)) {
+        texture?.image.close();
+        texture?.dispose();
         this.userData.texture = createCanvasTexture(bitmap);
       } else {
-        this.userData.texture.image.close();
-        this.userData.texture.image = bitmap;
-        this.userData.texture.needsUpdate = true;
+        texture.image = bitmap;
+        texture.needsUpdate = true;
       }
     } else {
       const { width, height } = image;
@@ -471,3 +473,6 @@ function rawImageToDataTexture(
       throw new Error(`Unsupported encoding ${encoding}`);
   }
 }
+
+const bitmapDimensionsEqual = (a?: ImageBitmap, b?: ImageBitmap) =>
+  a?.width === b?.width && a?.height === b?.height;
