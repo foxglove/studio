@@ -268,12 +268,11 @@ export function ImageView({ context }: Props): JSX.Element {
 
   const actionHandler = useCallback(
     (action: SettingsTreeAction) => {
-      if (action.action !== "update") {
+      if (action.action === "perform-node-action" && action.payload.id === "upgradeOptIn") {
+        setShowUpgradeConfirmDialog(true);
         return;
       }
-
-      if (action.payload.path[0] === "newImage" && action.payload.value === true) {
-        setShowUpgradeConfirmDialog(true);
+      if (action.action !== "update") {
         return;
       }
 

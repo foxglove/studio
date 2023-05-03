@@ -48,13 +48,15 @@ export function buildSettingsTree({
   return {
     newImage: {
       label: "Try the new Image panel",
-      fields: {
-        newImage: {
-          input: "boolean",
-          label: "Enable new panel",
-          value: false,
+      actions: [
+        {
+          type: "action",
+          id: "upgradeOptIn",
+          display: "inline",
+          icon: "Star",
+          label: "Upgrade",
         },
-      },
+      ],
     },
     general: {
       label: "General",
