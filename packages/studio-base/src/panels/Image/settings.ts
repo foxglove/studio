@@ -52,15 +52,13 @@ export function buildSettingsTree({
   if (enableNewImagePanel) {
     nodes.newImage = {
       label: "Try the new Image panel",
-      actions: [
-        {
-          type: "action",
-          id: "upgradeOptIn",
-          display: "inline",
-          icon: "Star",
-          label: "Upgrade",
+      fields: {
+        newImage: {
+          input: "boolean",
+          label: "Enable new panel",
+          value: false,
         },
-      ],
+      },
     };
   }
 
