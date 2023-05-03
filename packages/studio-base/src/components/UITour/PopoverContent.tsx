@@ -24,12 +24,34 @@ const useStyles = makeStyles()((theme) => ({
 }));
 
 export function PopoverContent(props: PopoverContentProps): JSX.Element {
-  const { currentStep, steps, setIsOpen, setCurrentStep } = props;
+  const {
+    onClickClose,
+    currentStep,
+    disabledActions,
+    meta,
+    setCurrentStep,
+    setIsOpen,
+    setMeta,
+    setSteps,
+    steps,
+  } = props;
   const { classes } = useStyles();
 
   const step = steps[currentStep];
 
-  const handleClose = () => setIsOpen(false);
+  const handleClose = () => {
+    if (disabledActions !== true) {
+      onClickClose?.({
+        setCurrentStep,
+        setIsOpen,
+        currentStep,
+        steps,
+        meta,
+        setMeta,
+        setSteps,
+      });
+    }
+  };
 
   const handleNext = () => {
     setCurrentStep(currentStep + 1);
@@ -40,7 +62,7 @@ export function PopoverContent(props: PopoverContentProps): JSX.Element {
 
   return (
     <Paper variant="elevation" className={classes.paper}>
-      <IconButton size="small" className={classes.closeButton} onClick={() => setIsOpen(false)}>
+      <IconButton size="small" className={classes.closeButton} onClick={handleClose}>
         <Dismiss20Filled />
       </IconButton>
       <div>{step?.content}</div>

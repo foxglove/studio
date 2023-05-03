@@ -8,12 +8,8 @@ import { StepContent } from "./StepContent";
 
 const tourId = (id: string) => `[data-tourid=${id}]`;
 
-const simulateClick = (elem: Element | null) => {
-  elem?.dispatchEvent(
-    new MouseEvent("click", {
-      bubbles: true,
-    }),
-  );
+const simulateClick = (elem: Element | ReactNull): void => {
+  elem?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
 };
 
 const steps: StepType[] = [
@@ -73,7 +69,7 @@ const steps: StepType[] = [
     ),
     padding: 0,
     action: simulateClick,
-    highlightedSelectors: [tourId("sidebar-right")],
+    highlightedSelectors: [tourId("right-sidebar-button"), tourId("sidebar-right")],
     mutationObservables: [tourId("sidebar-right")],
     resizeObservables: [tourId("sidebar-right")],
   },
@@ -87,7 +83,7 @@ const steps: StepType[] = [
     ),
     padding: 0,
     action: simulateClick,
-    highlightedSelectors: [tourId("account-menu")],
+    highlightedSelectors: [tourId("user-profile-button"), tourId("account-menu")],
     mutationObservables: [tourId("account-menu")],
     resizeObservables: [tourId("account-menu")],
   },

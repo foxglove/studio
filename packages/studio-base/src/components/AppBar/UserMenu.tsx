@@ -125,28 +125,31 @@ export function UserMenu({
         anchorReference={anchorReference}
         anchorPosition={anchorPosition}
         disablePortal={disablePortal}
-        data-tourid="acccount-menu"
         id="account-menu"
         open={open}
         onClose={handleClose}
         onClick={handleClose}
         MenuListProps={{ className: classes.menuList, dense: true }}
       >
-        {currentUser && <MenuItem disabled>{currentUser.email}</MenuItem>}
-        <MenuItem onClick={() => onSettingsClick()}>Settings</MenuItem>
-        <MenuItem onClick={() => onSettingsClick("extensions")}>Extensions</MenuItem>
-        {currentUser && <MenuItem onClick={onProfileClick}>User profile</MenuItem>}
-        <Divider variant="middle" />
-        <MenuItem onClick={async () => await setEnableNewTopNav(false)}>Revert to old UI</MenuItem>
-        <Divider variant="middle" />
-        <MenuItem onClick={onDocsClick}>Documentation</MenuItem>
-        <MenuItem onClick={onSlackClick}>Join Slack community</MenuItem>
-        {signIn != undefined && <Divider variant="middle" />}
-        {currentUser ? (
-          <MenuItem onClick={onSignoutClick}>Sign out</MenuItem>
-        ) : signIn != undefined ? (
-          <MenuItem onClick={onSignInClick}>Sign in</MenuItem>
-        ) : undefined}
+        <div data-tourid="account-menu">
+          {currentUser && <MenuItem disabled>{currentUser.email}</MenuItem>}
+          <MenuItem onClick={() => onSettingsClick()}>Settings</MenuItem>
+          <MenuItem onClick={() => onSettingsClick("extensions")}>Extensions</MenuItem>
+          {currentUser && <MenuItem onClick={onProfileClick}>User profile</MenuItem>}
+          <Divider variant="middle" />
+          <MenuItem onClick={async () => await setEnableNewTopNav(false)}>
+            Revert to old UI
+          </MenuItem>
+          <Divider variant="middle" />
+          <MenuItem onClick={onDocsClick}>Documentation</MenuItem>
+          <MenuItem onClick={onSlackClick}>Join Slack community</MenuItem>
+          {signIn != undefined && <Divider variant="middle" />}
+          {currentUser ? (
+            <MenuItem onClick={onSignoutClick}>Sign out</MenuItem>
+          ) : signIn != undefined ? (
+            <MenuItem onClick={onSignInClick}>Sign in</MenuItem>
+          ) : undefined}
+        </div>
       </Menu>
       {confirmModal}
     </>

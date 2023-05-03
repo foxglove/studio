@@ -17,6 +17,14 @@ export function UITourProvider(props: PropsWithChildren<unknown>): JSX.Element {
   return (
     <TourProvider
       steps={tourSteps}
+      onClickClose={({ setIsOpen, setCurrentStep }) => {
+        setCurrentStep(0);
+        setIsOpen(false);
+      }}
+      onClickMask={({ setIsOpen, setCurrentStep }) => {
+        setCurrentStep(0);
+        setIsOpen(false);
+      }}
       styles={{
         popover: (base) => ({
           ...base,
