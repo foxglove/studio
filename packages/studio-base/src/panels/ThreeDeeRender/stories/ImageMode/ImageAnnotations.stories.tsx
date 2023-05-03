@@ -21,7 +21,13 @@ export default {
   title: "panels/ThreeDeeRender/Images/Annotations",
   component: ImagePanel,
 };
-function makeImageAndCalibration(width: number, height: number) {
+export function makeImageAndCalibration(
+  width: number,
+  height: number,
+): {
+  calibrationMessage: MessageEvent<Partial<CameraCalibration>>;
+  cameraMessage: MessageEvent<Partial<RawImage>>;
+} {
   const fx = 500;
   const fy = 500;
   const cx = width / 2;
