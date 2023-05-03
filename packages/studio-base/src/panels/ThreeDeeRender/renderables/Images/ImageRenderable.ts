@@ -41,6 +41,8 @@ export interface ImageRenderableSettings {
   color: string;
 }
 
+export const CREATE_BITMAP_ERR_KEY = "CreateBitmap";
+
 const DEFAULT_DISTANCE = 1;
 const DEFAULT_PLANAR_PROJECTION_FACTOR = 0;
 export const IMAGE_RENDERABLE_DEFAULT_SETTINGS: ImageRenderableSettings = {
@@ -120,8 +122,8 @@ export class ImageRenderable extends Renderable<ImageUserData> {
 
   // Renderable should only need to care about the model
   public setCameraModel = (cameraModel: PinholeCameraModel): void => {
+    this.#geometryNeedsUpdate ||= this.userData.cameraModel !== cameraModel;
     this.userData.cameraModel = cameraModel;
-    this.#geometryNeedsUpdate = true;
   };
 
   public setSettings(newSettings: ImageRenderableSettings): void {

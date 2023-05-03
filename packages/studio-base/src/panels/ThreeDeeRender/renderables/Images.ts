@@ -11,8 +11,10 @@ import { toNanoSec } from "@foxglove/rostime";
 import { CameraCalibration, CompressedImage, RawImage } from "@foxglove/schemas";
 import { SettingsTreeAction, SettingsTreeFields, Topic } from "@foxglove/studio";
 import {
+  CREATE_BITMAP_ERR_KEY,
   IMAGE_RENDERABLE_DEFAULT_SETTINGS,
   ImageRenderable,
+  decodeImage,
 } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/Images/ImageRenderable";
 import {
   ALL_CAMERA_INFO_SCHEMAS,
@@ -320,7 +322,27 @@ export class Images extends SceneExtension<ImageRenderable> {
     }
 
     this.#recomputeCameraModel(renderable, cameraInfo);
-    renderable.update();
+    decodeImage(image)
+      .then((maybeBitmap) => {
+        const prevRenderable = renderable;
+        const currentRenderable = this.#getImageRenderable(imageTopic, receiveTime, image, frameId);
+        if (currentRenderable !== prevRenderable) {
+          return;
+        }
+        this.renderer.settings.errors.removeFromTopic(imageTopic, CREATE_BITMAP_ERR_KEY);
+        if (maybeBitmap instanceof ImageBitmap) {
+          renderable.setBitmap(maybeBitmap);
+        }
+        renderable.update();
+        this.renderer.queueAnimationFrame();
+      })
+      .catch((err) => {
+        this.renderer.settings.errors.addToTopic(
+          imageTopic,
+          CREATE_BITMAP_ERR_KEY,
+          `Error creating bitmap: ${err.message}`,
+        );
+      });
   };
 
   #handleCameraInfo = (

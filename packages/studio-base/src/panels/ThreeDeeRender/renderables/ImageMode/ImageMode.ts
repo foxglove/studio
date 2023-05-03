@@ -10,6 +10,7 @@ import { toNanoSec } from "@foxglove/rostime";
 import { CameraCalibration, CompressedImage, RawImage } from "@foxglove/schemas";
 import { SettingsTreeAction } from "@foxglove/studio";
 import {
+  CREATE_BITMAP_ERR_KEY,
   IMAGE_RENDERABLE_DEFAULT_SETTINGS,
   ImageRenderable,
   decodeImage,
@@ -54,7 +55,6 @@ const CALIBRATION_TOPIC_PATH = ["imageMode", "calibrationTopic"];
 const IMAGE_TOPIC_UNAVAILABLE = "IMAGE_TOPIC_UNAVAILABLE";
 const CALIBRATION_TOPIC_UNAVAILABLE = "CALIBRATION_TOPIC_UNAVAILABLE";
 const FALLBACK_CALIBRATION_ACTIVE_ALERT_KEY = "FALLBACK_CALIBRATION_ACTIVE";
-const CREATE_BITMAP_ERR = "CreateBitmap";
 
 const MISSING_CAMERA_INFO = "MISSING_CAMERA_INFO";
 const IMAGE_TOPIC_DIFFERENT_FRAME = "IMAGE_TOPIC_DIFFERENT_FRAME";
@@ -444,7 +444,7 @@ export class ImageMode extends SceneExtension<ImageRenderable> implements ICamer
         if (currentRenderable && currentRenderable !== prevRenderable) {
           return;
         }
-        this.renderer.settings.errors.removeFromTopic(topic, CREATE_BITMAP_ERR);
+        this.renderer.settings.errors.removeFromTopic(topic, CREATE_BITMAP_ERR_KEY);
         if (maybeBitmap instanceof ImageBitmap) {
           renderable.setBitmap(maybeBitmap);
         }
@@ -465,7 +465,7 @@ export class ImageMode extends SceneExtension<ImageRenderable> implements ICamer
       .catch((err) => {
         this.renderer.settings.errors.addToTopic(
           topic,
-          CREATE_BITMAP_ERR,
+          CREATE_BITMAP_ERR_KEY,
           `Error creating bitmap: ${err.message}`,
         );
       });
