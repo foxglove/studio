@@ -57,7 +57,7 @@ import {
 import { SyncAdapters } from "@foxglove/studio-base/components/SyncAdapters";
 import VariablesList from "@foxglove/studio-base/components/VariablesList";
 import { WorkspaceDialogs } from "@foxglove/studio-base/components/WorkspaceDialogs";
-import { WorkspaceTours } from "@foxglove/studio-base/components/WorkspaceTours";
+import { useAppContext } from "@foxglove/studio-base/context/AppContext";
 import {
   LayoutState,
   useCurrentLayoutSelector,
@@ -242,6 +242,8 @@ function WorkspaceContent(props: WorkspaceContentProps): JSX.Element {
 
   const [initialEnableNewTopNav] = useState(currentEnableNewTopNav);
   const enableNewTopNav = isDesktopApp() ? initialEnableNewTopNav : currentEnableNewTopNav;
+
+  const { workspaceExtensions } = useAppContext();
 
   // When a player is activated, hide the open dialog.
   useLayoutEffect(() => {
@@ -673,8 +675,8 @@ function WorkspaceContent(props: WorkspaceContentProps): JSX.Element {
           </div>
         )}
       </div>
+      {workspaceExtensions}
       <WorkspaceDialogs />
-      <WorkspaceTours signInFormShown={props.showSignInForm} />
     </MultiProvider>
   );
 }
