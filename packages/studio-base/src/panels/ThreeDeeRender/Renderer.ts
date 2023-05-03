@@ -325,10 +325,17 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     const aspect = renderSize.width / renderSize.height;
     switch (interfaceMode) {
       case "image":
-        this.#imageModeExtension = new ImageMode(this, this.input.canvasSize, {
-          enableImageOnlyMode: this.#enableImageOnlySubscriptionMode,
-          disableImageOnlyMode: this.#disableImageOnlySubscriptionMode,
-        });
+        this.#imageModeExtension = new ImageMode(
+          this,
+          this.input.canvasSize,
+          ({ val: hasCameraInfo }) => {
+            if (hasCameraInfo) {
+              this.#disableImageOnlySubscriptionMode();
+            } else {
+              this.#enableImageOnlySubscriptionMode();
+            }
+          },
+        );
         this.cameraHandler = this.#imageModeExtension;
         this.#addSceneExtension(this.cameraHandler);
         break;

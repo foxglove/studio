@@ -15,4 +15,6 @@ export const ALL_CAMERA_INFO_SCHEMAS = new Set([
   ...CAMERA_CALIBRATION_DATATYPES,
 ]);
 
+export type CompressedImageTypes = RosCompressedImage | CompressedImage;
+
 export type AnyImage = RosImage | RosCompressedImage | RawImage | CompressedImage;

@@ -83,203 +83,212 @@ export function makeImageAndCalibration(
   return { calibrationMessage, cameraMessage };
 }
 
-const AnnotationsStory = (imageModeConfigOverride: Partial<ImageModeConfig> = {}) => {
-  return function Story() {
-    const width = 60;
-    const height = 45;
+const AnnotationsStory = (imageModeConfigOverride: Partial<ImageModeConfig> = {}): JSX.Element => {
+  const width = 60;
+  const height = 45;
 
-    const { calibrationMessage, cameraMessage } = makeImageAndCalibration(width, height);
+  const { calibrationMessage, cameraMessage } = makeImageAndCalibration(width, height);
 
-    const annotationsMessage: MessageEvent<Partial<ImageAnnotations>> = {
-      topic: "annotations",
-      receiveTime: { sec: 10, nsec: 0 },
-      message: {
-        points: [
-          {
-            timestamp: { sec: 0, nsec: 0 },
-            type: PointsAnnotationType.POINTS,
-            points: [
-              { x: 0, y: 0 },
-              { x: 0, y: 8 },
-              { x: 2, y: 6 },
-              { x: 5, y: 2 },
-            ],
-            outline_color: { r: 1, g: 0, b: 0, a: 1 },
-            outline_colors: [],
-            fill_color: { r: 0, g: 0, b: 0, a: 0 },
-            thickness: 1,
-          },
-          {
-            timestamp: { sec: 0, nsec: 0 },
-            type: PointsAnnotationType.POINTS,
-            points: [
-              { x: 10 + 0, y: 0 },
-              { x: 10 + 0, y: 8 },
-              { x: 10 + 2, y: 6 },
-              { x: 10 + 5, y: 2 },
-            ],
-            outline_color: { r: 0, g: 0, b: 0, a: 1 },
-            outline_colors: [
-              { r: 1, g: 0, b: 0, a: 1 },
-              { r: 0, g: 1, b: 0, a: 1 },
-              { r: 0, g: 0, b: 1, a: 1 },
-              { r: 0, g: 1, b: 1, a: 1 },
-            ],
-            fill_color: { r: 0, g: 0, b: 0, a: 0 },
-            thickness: 2,
-          },
-          {
-            timestamp: { sec: 0, nsec: 0 },
-            type: PointsAnnotationType.LINE_LIST,
-            points: [
-              { x: 0, y: 10 + 0 },
-              { x: 0, y: 10 + 8 },
-              { x: 2, y: 10 + 6 },
-              { x: 5, y: 10 + 2 },
-            ],
-            outline_color: { r: 1, g: 0, b: 0, a: 1 },
-            outline_colors: [],
-            fill_color: { r: 0, g: 0, b: 0, a: 0 },
-            thickness: 1,
-          },
-          {
-            timestamp: { sec: 0, nsec: 0 },
-            type: PointsAnnotationType.LINE_LIST,
-            points: [
-              { x: 10 + 0, y: 10 + 0 },
-              { x: 10 + 0, y: 10 + 8 },
-              { x: 10 + 2, y: 10 + 6 },
-              { x: 10 + 5, y: 10 + 2 },
-            ],
-            outline_color: { r: 0, g: 0, b: 0, a: 1 },
-            outline_colors: [
-              // 1 color per point
-              { r: 1, g: 0, b: 0, a: 1 },
-              { r: 0, g: 1, b: 0, a: 1 },
-              { r: 0, g: 0, b: 1, a: 1 },
-              { r: 0, g: 1, b: 1, a: 1 },
-            ],
-            fill_color: { r: 0, g: 0, b: 0, a: 0 },
-            thickness: 2,
-          },
-          {
-            timestamp: { sec: 0, nsec: 0 },
-            type: PointsAnnotationType.LINE_LIST,
-            points: [
-              { x: 20 + 0, y: 10 + 0 },
-              { x: 20 + 0, y: 10 + 8 },
-              { x: 20 + 2, y: 10 + 6 },
-              { x: 20 + 5, y: 10 + 2 },
-            ],
-            outline_color: { r: 0, g: 0, b: 0, a: 1 },
-            outline_colors: [
-              // 1 color per line
-              { r: 1, g: 0, b: 0, a: 1 },
-              { r: 0, g: 1, b: 0, a: 1 },
-            ],
-            fill_color: { r: 0, g: 0, b: 0, a: 0 },
-            thickness: 2,
-          },
-          {
-            timestamp: { sec: 0, nsec: 0 },
-            type: PointsAnnotationType.LINE_STRIP,
-            points: [
-              { x: 0, y: 20 + 0 },
-              { x: 0, y: 20 + 8 },
-              { x: 2, y: 20 + 6 },
-              { x: 5, y: 20 + 2 },
-            ],
-            outline_color: { r: 1, g: 0, b: 0, a: 1 },
-            outline_colors: [],
-            fill_color: { r: 0, g: 0, b: 0, a: 0 },
-            thickness: 1,
-          },
-          {
-            timestamp: { sec: 0, nsec: 0 },
-            type: PointsAnnotationType.LINE_STRIP,
-            points: [
-              { x: 10 + 0, y: 20 + 0 },
-              { x: 10 + 0, y: 20 + 8 },
-              { x: 10 + 2, y: 20 + 6 },
-              { x: 10 + 5, y: 20 + 2 },
-            ],
-            outline_color: { r: 1, g: 1, b: 0, a: 1 },
-            outline_colors: [],
-            fill_color: { r: 1, g: 0, b: 1, a: 1 },
-            thickness: 0.5,
-          },
-          {
-            timestamp: { sec: 0, nsec: 0 },
-            type: PointsAnnotationType.LINE_LOOP,
-            points: [
-              { x: 0, y: 30 + 0 },
-              { x: 0, y: 30 + 8 },
-              { x: 2, y: 30 + 6 },
-              { x: 5, y: 30 + 2 },
-            ],
-            outline_color: { r: 1, g: 0, b: 0, a: 1 },
-            outline_colors: [],
-            fill_color: { r: 0, g: 0, b: 0, a: 0 },
-            thickness: 1,
-          },
-          {
-            timestamp: { sec: 0, nsec: 0 },
-            type: PointsAnnotationType.LINE_LOOP,
-            points: [
-              { x: 10 + 0, y: 30 + 0 },
-              { x: 10 + 0, y: 30 + 8 },
-              { x: 10 + 2, y: 30 + 6 },
-              { x: 10 + 5, y: 30 + 2 },
-            ],
-            outline_color: { r: 1, g: 1, b: 0, a: 1 },
-            outline_colors: [],
-            fill_color: { r: 1, g: 0, b: 1, a: 1 },
-            thickness: 0.5,
-          },
-        ],
-      },
-      schemaName: "foxglove.ImageAnnotations",
-      sizeInBytes: 0,
-    };
-
-    const fixture: Fixture = {
-      topics: [
-        { name: "calibration", schemaName: "foxglove.CameraCalibration" },
-        { name: "camera", schemaName: "foxglove.RawImage" },
-        { name: "annotations", schemaName: "foxglove.ImageAnnotations" },
+  const annotationsMessage: MessageEvent<Partial<ImageAnnotations>> = {
+    topic: "annotations",
+    receiveTime: { sec: 10, nsec: 0 },
+    message: {
+      points: [
+        {
+          timestamp: { sec: 0, nsec: 0 },
+          type: PointsAnnotationType.POINTS,
+          points: [
+            { x: 0, y: 0 },
+            { x: 0, y: 8 },
+            { x: 2, y: 6 },
+            { x: 5, y: 2 },
+          ],
+          outline_color: { r: 1, g: 0, b: 0, a: 1 },
+          outline_colors: [],
+          fill_color: { r: 0, g: 0, b: 0, a: 0 },
+          thickness: 1,
+        },
+        {
+          timestamp: { sec: 0, nsec: 0 },
+          type: PointsAnnotationType.POINTS,
+          points: [
+            { x: 10 + 0, y: 0 },
+            { x: 10 + 0, y: 8 },
+            { x: 10 + 2, y: 6 },
+            { x: 10 + 5, y: 2 },
+          ],
+          outline_color: { r: 0, g: 0, b: 0, a: 1 },
+          outline_colors: [
+            { r: 1, g: 0, b: 0, a: 1 },
+            { r: 0, g: 1, b: 0, a: 1 },
+            { r: 0, g: 0, b: 1, a: 1 },
+            { r: 0, g: 1, b: 1, a: 1 },
+          ],
+          fill_color: { r: 0, g: 0, b: 0, a: 0 },
+          thickness: 2,
+        },
+        {
+          timestamp: { sec: 0, nsec: 0 },
+          type: PointsAnnotationType.LINE_LIST,
+          points: [
+            { x: 0, y: 10 + 0 },
+            { x: 0, y: 10 + 8 },
+            { x: 2, y: 10 + 6 },
+            { x: 5, y: 10 + 2 },
+          ],
+          outline_color: { r: 1, g: 0, b: 0, a: 1 },
+          outline_colors: [],
+          fill_color: { r: 0, g: 0, b: 0, a: 0 },
+          thickness: 1,
+        },
+        {
+          timestamp: { sec: 0, nsec: 0 },
+          type: PointsAnnotationType.LINE_LIST,
+          points: [
+            { x: 10 + 0, y: 10 + 0 },
+            { x: 10 + 0, y: 10 + 8 },
+            { x: 10 + 2, y: 10 + 6 },
+            { x: 10 + 5, y: 10 + 2 },
+          ],
+          outline_color: { r: 0, g: 0, b: 0, a: 1 },
+          outline_colors: [
+            // 1 color per point
+            { r: 1, g: 0, b: 0, a: 1 },
+            { r: 0, g: 1, b: 0, a: 1 },
+            { r: 0, g: 0, b: 1, a: 1 },
+            { r: 0, g: 1, b: 1, a: 1 },
+          ],
+          fill_color: { r: 0, g: 0, b: 0, a: 0 },
+          thickness: 2,
+        },
+        {
+          timestamp: { sec: 0, nsec: 0 },
+          type: PointsAnnotationType.LINE_LIST,
+          points: [
+            { x: 20 + 0, y: 10 + 0 },
+            { x: 20 + 0, y: 10 + 8 },
+            { x: 20 + 2, y: 10 + 6 },
+            { x: 20 + 5, y: 10 + 2 },
+          ],
+          outline_color: { r: 0, g: 0, b: 0, a: 1 },
+          outline_colors: [
+            // 1 color per line
+            { r: 1, g: 0, b: 0, a: 1 },
+            { r: 0, g: 1, b: 0, a: 1 },
+          ],
+          fill_color: { r: 0, g: 0, b: 0, a: 0 },
+          thickness: 2,
+        },
+        {
+          timestamp: { sec: 0, nsec: 0 },
+          type: PointsAnnotationType.LINE_STRIP,
+          points: [
+            { x: 0, y: 20 + 0 },
+            { x: 0, y: 20 + 8 },
+            { x: 2, y: 20 + 6 },
+            { x: 5, y: 20 + 2 },
+          ],
+          outline_color: { r: 1, g: 0, b: 0, a: 1 },
+          outline_colors: [],
+          fill_color: { r: 0, g: 0, b: 0, a: 0 },
+          thickness: 1,
+        },
+        {
+          timestamp: { sec: 0, nsec: 0 },
+          type: PointsAnnotationType.LINE_STRIP,
+          points: [
+            { x: 10 + 0, y: 20 + 0 },
+            { x: 10 + 0, y: 20 + 8 },
+            { x: 10 + 2, y: 20 + 6 },
+            { x: 10 + 5, y: 20 + 2 },
+          ],
+          outline_color: { r: 1, g: 1, b: 0, a: 1 },
+          outline_colors: [],
+          fill_color: { r: 1, g: 0, b: 1, a: 1 },
+          thickness: 0.5,
+        },
+        {
+          timestamp: { sec: 0, nsec: 0 },
+          type: PointsAnnotationType.LINE_LOOP,
+          points: [
+            { x: 0, y: 30 + 0 },
+            { x: 0, y: 30 + 8 },
+            { x: 2, y: 30 + 6 },
+            { x: 5, y: 30 + 2 },
+          ],
+          outline_color: { r: 1, g: 0, b: 0, a: 1 },
+          outline_colors: [],
+          fill_color: { r: 0, g: 0, b: 0, a: 0 },
+          thickness: 1,
+        },
+        {
+          timestamp: { sec: 0, nsec: 0 },
+          type: PointsAnnotationType.LINE_LOOP,
+          points: [
+            { x: 10 + 0, y: 30 + 0 },
+            { x: 10 + 0, y: 30 + 8 },
+            { x: 10 + 2, y: 30 + 6 },
+            { x: 10 + 5, y: 30 + 2 },
+          ],
+          outline_color: { r: 1, g: 1, b: 0, a: 1 },
+          outline_colors: [],
+          fill_color: { r: 1, g: 0, b: 1, a: 1 },
+          thickness: 0.5,
+        },
       ],
-      frame: {
-        calibration: [calibrationMessage],
-        camera: [cameraMessage],
-        annotations: [annotationsMessage],
-      },
-      capabilities: [],
-      activeData: {
-        currentTime: { sec: 0, nsec: 0 },
-      },
-    };
-    return (
-      <PanelSetup fixture={fixture}>
-        <ImagePanel
-          overrideConfig={{
-            ...ImagePanel.defaultConfig,
-            imageMode: {
-              calibrationTopic: "calibration",
-              imageTopic: "camera",
-              annotations: [
-                {
-                  topic: "annotations",
-                  schemaName: "foxglove.ImageAnnotations",
-                  settings: { visible: true },
-                },
-              ],
-              ...imageModeConfigOverride,
-            },
-          }}
-        />
-      </PanelSetup>
-    );
+    },
+    schemaName: "foxglove.ImageAnnotations",
+    sizeInBytes: 0,
   };
+
+  const fixture: Fixture = {
+    topics: [
+      { name: "calibration", schemaName: "foxglove.CameraCalibration" },
+      { name: "camera", schemaName: "foxglove.RawImage" },
+      { name: "annotations", schemaName: "foxglove.ImageAnnotations" },
+    ],
+    frame: {
+      calibration: [calibrationMessage],
+      camera: [cameraMessage],
+      annotations: [annotationsMessage],
+    },
+    capabilities: [],
+    activeData: {
+      currentTime: { sec: 0, nsec: 0 },
+    },
+  };
+  return (
+    <PanelSetup fixture={fixture}>
+      <ImagePanel
+        overrideConfig={{
+          ...ImagePanel.defaultConfig,
+          imageMode: {
+            calibrationTopic: "calibration",
+            imageTopic: "camera",
+            annotations: [
+              {
+                topic: "annotations",
+                schemaName: "foxglove.ImageAnnotations",
+                settings: { visible: true },
+              },
+            ],
+            ...imageModeConfigOverride,
+          },
+        }}
+      />
+    </PanelSetup>
+  );
+};
+
+export const Annotations: StoryObj = {
+  parameters: { colorScheme: "light" },
+  render: AnnotationsStory,
+};
+
+export const ImageOnlyIsSameWithNo3d: StoryObj = {
+  parameters: { colorScheme: "light" },
+  render: AnnotationsStory,
+  args: { calibrationTopic: UNSELECTED_CAMERA_CALIBRATION },
 };
 
 export const MessageConverterSupport: StoryObj = {
@@ -464,14 +473,4 @@ export const MessageConverterSupport: StoryObj = {
       </PanelSetup>
     );
   },
-};
-
-export const Annotations: StoryObj = {
-  parameters: { colorScheme: "light" },
-  render: AnnotationsStory(),
-};
-
-export const ImageOnlyIsSameWithNo3d: StoryObj = {
-  parameters: { colorScheme: "light" },
-  render: AnnotationsStory({ calibrationTopic: UNSELECTED_CAMERA_CALIBRATION }),
 };

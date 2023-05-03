@@ -29,7 +29,7 @@ import { stringToRgba } from "@foxglove/studio-base/panels/ThreeDeeRender/color"
 import { projectPixel } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/projections";
 import { RosValue } from "@foxglove/studio-base/players/types";
 
-import { AnyImage } from "./ImageTypes";
+import { AnyImage, CompressedImageTypes } from "./ImageTypes";
 import { Image as RosImage, CameraInfo } from "../../ros";
 
 export interface ImageRenderableSettings {
@@ -87,7 +87,6 @@ export class ImageRenderable extends Renderable<ImageUserData> {
   }
 
   public override dispose(): void {
-    this.userData.texture?.image?.close();
     this.userData.texture?.dispose();
     this.userData.material?.dispose();
     this.userData.geometry?.dispose();
@@ -312,15 +311,12 @@ type RawImageOptions = {
 
 let tempColor = { r: 0, g: 0, b: 0, a: 0 };
 
-export async function decodeImage(
-  image: AnyImage,
+export async function decodeCompressedImageToBitmap(
+  image: CompressedImageTypes,
   resizeWidth?: number,
-): Promise<ImageBitmap | RawImage | RosImage> {
-  if ("format" in image) {
-    const bitmapData = new Blob([image.data], { type: `image/${image.format}` });
-    return await createImageBitmap(bitmapData, { resizeWidth });
-  }
-  return image;
+): Promise<ImageBitmap> {
+  const bitmapData = new Blob([image.data], { type: `image/${image.format}` });
+  return await createImageBitmap(bitmapData, { resizeWidth });
 }
 
 function createCanvasTexture(bitmap: ImageBitmap): THREE.CanvasTexture {
