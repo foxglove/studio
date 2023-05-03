@@ -70,7 +70,7 @@ type PanelExtensionAdapterProps = PanelExtensionAdapterContentProps & {
    * If defined, the highest supported version of config the panel supports.
    * Used to prevent older implementations of a panel from trying to access
    * newer, incompatible versions of the panel's config. Panels should include a
-   * numbered version property in their config to control this.
+   * numbered foxgloveConfigVersion property in their config to control this.
    */
   highestSupportedConfigVersion?: number;
 };
