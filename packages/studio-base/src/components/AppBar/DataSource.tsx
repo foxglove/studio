@@ -22,7 +22,7 @@ import WssErrorModal from "@foxglove/studio-base/components/WssErrorModal";
 import { useWorkspaceActions } from "@foxglove/studio-base/context/WorkspaceContext";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
 
-const ICON_SIZE = 17;
+const ICON_SIZE = 18;
 
 const useStyles = makeStyles<void, "adornmentError" | "openIcon">()((theme, _params, classes) => ({
   sourceName: {
@@ -46,6 +46,7 @@ const useStyles = makeStyles<void, "adornmentError" | "openIcon">()((theme, _par
   },
   adornment: {
     display: "flex",
+    flex: "none",
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
@@ -76,13 +77,13 @@ const useStyles = makeStyles<void, "adornmentError" | "openIcon">()((theme, _par
     padding: 0,
 
     "svg:not(.MuiSvgIcon-root)": {
-      fontSize: "1em",
+      fontSize: "1rem",
     },
   },
   errorIconButton: {
     position: "relative",
     zIndex: 1,
-    fontSize: ICON_SIZE - 1,
+    fontSize: ICON_SIZE - 2,
   },
 }));
 
