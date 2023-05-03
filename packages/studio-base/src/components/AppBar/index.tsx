@@ -269,11 +269,10 @@ export function AppBar(props: AppBarProps): JSX.Element {
                 aria-controls={appMenuOpen ? "app-menu" : undefined}
                 aria-haspopup="true"
                 aria-expanded={appMenuOpen ? "true" : undefined}
+                data-tourid="app-menu"
                 onClick={(event) => {
                   setAppMenuEl(event.currentTarget);
                 }}
-                size="large"
-                data-tourid="app-menu"
               >
                 <FoxgloveLogo fontSize="inherit" color="inherit" />
                 <ChevronDown12Regular
