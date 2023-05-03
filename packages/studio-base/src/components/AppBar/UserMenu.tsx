@@ -2,7 +2,14 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Divider, Menu, MenuItem, PopoverPosition, PopoverReference } from "@mui/material";
+import {
+  Divider,
+  Menu,
+  MenuItem,
+  PaperProps,
+  PopoverPosition,
+  PopoverReference,
+} from "@mui/material";
 import { useSnackbar } from "notistack";
 import { useCallback } from "react";
 import { makeStyles } from "tss-react/mui";
@@ -130,26 +137,27 @@ export function UserMenu({
         onClose={handleClose}
         onClick={handleClose}
         MenuListProps={{ className: classes.menuList, dense: true }}
+        PaperProps={
+          {
+            "data-tourid": "account-menu",
+          } as Partial<PaperProps & { "data-tourid"?: string }>
+        }
       >
-        <div data-tourid="account-menu">
-          {currentUser && <MenuItem disabled>{currentUser.email}</MenuItem>}
-          <MenuItem onClick={() => onSettingsClick()}>Settings</MenuItem>
-          <MenuItem onClick={() => onSettingsClick("extensions")}>Extensions</MenuItem>
-          {currentUser && <MenuItem onClick={onProfileClick}>User profile</MenuItem>}
-          <Divider variant="middle" />
-          <MenuItem onClick={async () => await setEnableNewTopNav(false)}>
-            Revert to old UI
-          </MenuItem>
-          <Divider variant="middle" />
-          <MenuItem onClick={onDocsClick}>Documentation</MenuItem>
-          <MenuItem onClick={onSlackClick}>Join Slack community</MenuItem>
-          {signIn != undefined && <Divider variant="middle" />}
-          {currentUser ? (
-            <MenuItem onClick={onSignoutClick}>Sign out</MenuItem>
-          ) : signIn != undefined ? (
-            <MenuItem onClick={onSignInClick}>Sign in</MenuItem>
-          ) : undefined}
-        </div>
+        {currentUser && <MenuItem disabled>{currentUser.email}</MenuItem>}
+        <MenuItem onClick={() => onSettingsClick()}>Settings</MenuItem>
+        <MenuItem onClick={() => onSettingsClick("extensions")}>Extensions</MenuItem>
+        {currentUser && <MenuItem onClick={onProfileClick}>User profile</MenuItem>}
+        <Divider variant="middle" />
+        <MenuItem onClick={async () => await setEnableNewTopNav(false)}>Revert to old UI</MenuItem>
+        <Divider variant="middle" />
+        <MenuItem onClick={onDocsClick}>Documentation</MenuItem>
+        <MenuItem onClick={onSlackClick}>Join Slack community</MenuItem>
+        {signIn != undefined && <Divider variant="middle" />}
+        {currentUser ? (
+          <MenuItem onClick={onSignoutClick}>Sign out</MenuItem>
+        ) : signIn != undefined ? (
+          <MenuItem onClick={onSignInClick}>Sign in</MenuItem>
+        ) : undefined}
       </Menu>
       {confirmModal}
     </>

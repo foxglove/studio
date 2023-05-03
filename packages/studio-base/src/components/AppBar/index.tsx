@@ -264,12 +264,12 @@ export function AppBar(props: AppBarProps): JSX.Element {
               <IconButton
                 className={cx(classes.logo, { "Mui-selected": appMenuOpen })}
                 color="inherit"
-                id="menu-button"
+                id="app-menu-button"
                 title="Menu"
                 aria-controls={appMenuOpen ? "app-menu" : undefined}
                 aria-haspopup="true"
                 aria-expanded={appMenuOpen ? "true" : undefined}
-                data-tourid="app-menu"
+                data-tourid="app-menu-button"
                 onClick={(event) => {
                   setAppMenuEl(event.currentTarget);
                 }}
