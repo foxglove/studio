@@ -7,19 +7,27 @@ import ReactDOM from "react-dom";
 
 import { useCrash } from "@foxglove/hooks";
 import { PanelExtensionContext } from "@foxglove/studio";
+import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import { CaptureErrorBoundary } from "@foxglove/studio-base/components/CaptureErrorBoundary";
 import Panel from "@foxglove/studio-base/components/Panel";
 import { PanelExtensionAdapter } from "@foxglove/studio-base/components/PanelExtensionAdapter";
+import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 
 import { defaultConfig, ImageView } from "./ImageView";
 import { Config } from "./types";
 
-function initPanel(crash: ReturnType<typeof useCrash>, context: PanelExtensionContext) {
+function initPanel(
+  {
+    crash,
+    enableNewImagePanel,
+  }: { crash: ReturnType<typeof useCrash>; enableNewImagePanel: boolean },
+  context: PanelExtensionContext,
+) {
   ReactDOM.render(
     <StrictMode>
       <CaptureErrorBoundary onError={crash}>
-        <ImageView context={context} />
+        <ImageView context={context} enableNewImagePanel={enableNewImagePanel} />
       </CaptureErrorBoundary>
     </StrictMode>,
     context.panelElement,
@@ -36,7 +44,13 @@ type Props = {
 
 function ImagePanelAdapter(props: Props) {
   const crash = useCrash();
-  const boundInitPanel = useMemo(() => initPanel.bind(undefined, crash), [crash]);
+  const [enableNewImagePanel = false] = useAppConfigurationValue<boolean>(
+    AppSetting.ENABLE_NEW_IMAGE_PANEL,
+  );
+  const boundInitPanel = useMemo(
+    () => initPanel.bind(undefined, { crash, enableNewImagePanel }),
+    [crash, enableNewImagePanel],
+  );
 
   return (
     <PanelExtensionAdapter

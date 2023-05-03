@@ -40,8 +40,11 @@ export type PanelInfo = {
 
 /** PanelCatalog describes the interface for getting available panels */
 export interface PanelCatalog {
-  /** get a list of the available panels */
+  /** Get the panels that should appear in the list of available panels */
   getPanels(): readonly PanelInfo[];
+
+  /** Get all panels that can be rendered (may include some experimental new panels not present in `getPanels()`). */
+  getAllPanels?(): readonly PanelInfo[];
 
   /** Get panel information for a specific panel type (i.e. 3d, map, image, etc) */
   getPanelByType(type: string): PanelInfo | undefined;

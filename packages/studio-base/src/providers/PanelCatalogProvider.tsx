@@ -104,11 +104,14 @@ export default function PanelCatalogProvider(
       getPanels() {
         return visiblePanels;
       },
+      getAllPanels() {
+        return allPanels;
+      },
       getPanelByType(type: string) {
         return panelsByType.get(type);
       },
     };
-  }, [panelsByType, visiblePanels]);
+  }, [allPanels, panelsByType, visiblePanels]);
 
   return (
     <PanelCatalogContext.Provider value={provider}>{props.children}</PanelCatalogContext.Provider>

@@ -114,7 +114,10 @@ export function UnconnectedPanelLayout(props: Props): React.ReactElement {
   const panelComponents = useMemo(
     () =>
       new Map(
-        panelCatalog.getPanels().map((panelInfo) => [panelInfo.type, React.lazy(panelInfo.module)]),
+        (panelCatalog.getAllPanels?.() ?? panelCatalog.getPanels()).map((panelInfo) => [
+          panelInfo.type,
+          React.lazy(panelInfo.module),
+        ]),
       ),
     [panelCatalog],
   );

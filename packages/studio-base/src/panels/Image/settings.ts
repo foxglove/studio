@@ -38,15 +38,19 @@ export function buildSettingsTree({
   markerTopics,
   enabledMarkerTopics,
   relatedMarkerTopics,
+  enableNewImagePanel,
 }: {
   config: Immutable<Config>;
   imageTopics: readonly Topic[];
   markerTopics: readonly string[];
   enabledMarkerTopics: readonly string[];
   relatedMarkerTopics: readonly string[];
+  enableNewImagePanel: boolean;
 }): SettingsTreeNodes {
-  return {
-    newImage: {
+  const nodes: SettingsTreeNodes = {};
+
+  if (enableNewImagePanel) {
+    nodes.newImage = {
       label: "Try the new Image panel",
       actions: [
         {
@@ -57,69 +61,73 @@ export function buildSettingsTree({
           label: "Upgrade",
         },
       ],
-    },
-    general: {
-      label: "General",
-      fields: {
-        cameraTopic: {
-          label: "Topic",
-          input: "select",
-          value: config.cameraTopic,
-          options: imageTopics.map((topic) => ({ label: topic.name, value: topic.name })),
-        },
-        transformMarkers: {
-          input: "boolean",
-          label: "Transform markers",
-          value: config.transformMarkers,
-          help: config.transformMarkers
-            ? "Markers are being transformed by Foxglove Studio based on the camera model. Click to turn it off."
-            : `Markers can be transformed by Foxglove Studio based on the camera model. Click to turn it on.`,
-        },
-        synchronize: {
-          input: "boolean",
-          label: "Synchronize timestamps",
-          value: config.synchronize,
-        },
-        smooth: {
-          input: "boolean",
-          label: "Bilinear smoothing",
-          value: config.smooth ?? false,
-        },
-        flipHorizontal: {
-          input: "boolean",
-          label: "Flip horizontal",
-          value: config.flipHorizontal ?? false,
-        },
-        flipVertical: {
-          input: "boolean",
-          label: "Flip vertical",
-          value: config.flipVertical ?? false,
-        },
-        rotation: {
-          input: "select",
-          label: "Rotation",
-          value: config.rotation ?? 0,
-          options: [
-            { label: "0°", value: 0 },
-            { label: "90°", value: 90 },
-            { label: "180°", value: 180 },
-            { label: "270°", value: 270 },
-          ],
-        },
-        minValue: {
-          input: "number",
-          label: "Min (depth images)",
-          placeholder: "0",
-          value: config.minValue,
-        },
-        maxValue: {
-          input: "number",
-          label: "Max (depth images)",
-          placeholder: "10000",
-          value: config.maxValue,
-        },
+    };
+  }
+
+  nodes.general = {
+    label: "General",
+    fields: {
+      cameraTopic: {
+        label: "Topic",
+        input: "select",
+        value: config.cameraTopic,
+        options: imageTopics.map((topic) => ({ label: topic.name, value: topic.name })),
+      },
+      transformMarkers: {
+        input: "boolean",
+        label: "Transform markers",
+        value: config.transformMarkers,
+        help: config.transformMarkers
+          ? "Markers are being transformed by Foxglove Studio based on the camera model. Click to turn it off."
+          : `Markers can be transformed by Foxglove Studio based on the camera model. Click to turn it on.`,
+      },
+      synchronize: {
+        input: "boolean",
+        label: "Synchronize timestamps",
+        value: config.synchronize,
+      },
+      smooth: {
+        input: "boolean",
+        label: "Bilinear smoothing",
+        value: config.smooth ?? false,
+      },
+      flipHorizontal: {
+        input: "boolean",
+        label: "Flip horizontal",
+        value: config.flipHorizontal ?? false,
+      },
+      flipVertical: {
+        input: "boolean",
+        label: "Flip vertical",
+        value: config.flipVertical ?? false,
+      },
+      rotation: {
+        input: "select",
+        label: "Rotation",
+        value: config.rotation ?? 0,
+        options: [
+          { label: "0°", value: 0 },
+          { label: "90°", value: 90 },
+          { label: "180°", value: 180 },
+          { label: "270°", value: 270 },
+        ],
+      },
+      minValue: {
+        input: "number",
+        label: "Min (depth images)",
+        placeholder: "0",
+        value: config.minValue,
+      },
+      maxValue: {
+        input: "number",
+        label: "Max (depth images)",
+        placeholder: "10000",
+        value: config.maxValue,
       },
     },
-    markers: memoBuildMarkersNode(markerTopics, enabledMarkerTopics, relatedMarkerTopics),
   };
+
+  nodes.markers = memoBuildMarkersNode(markerTopics, enabledMarkerTopics, relatedMarkerTopics);
+
+  return nodes;
 }

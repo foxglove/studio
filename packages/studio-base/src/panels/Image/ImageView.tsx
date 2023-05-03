@@ -53,6 +53,7 @@ import type { Config, PixelData, RawMarkerData } from "./types";
 
 type Props = {
   context: PanelExtensionContext;
+  enableNewImagePanel: boolean;
 };
 
 const SUPPORTED_IMAGE_SCHEMAS = new Set(NORMALIZABLE_IMAGE_DATATYPES);
@@ -105,7 +106,7 @@ const useStyles = makeStyles<void, "timestamp">()((theme, _params, classes) => (
   },
 }));
 
-export function ImageView({ context }: Props): JSX.Element {
+export function ImageView({ context, enableNewImagePanel }: Props): JSX.Element {
   const { classes, cx } = useStyles();
   const [renderDone, setRenderDone] = useState(() => () => {});
   const [topics, setTopics] = useState<readonly Topic[]>([]);
@@ -345,6 +346,7 @@ export function ImageView({ context }: Props): JSX.Element {
         markerTopics,
         enabledMarkerTopics,
         relatedMarkerTopics,
+        enableNewImagePanel,
       }),
     });
   }, [
@@ -355,6 +357,7 @@ export function ImageView({ context }: Props): JSX.Element {
     markerTopics,
     relatedMarkerTopics,
     context,
+    enableNewImagePanel,
   ]);
 
   const lastImageMessageRef = useRef(image);
