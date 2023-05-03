@@ -595,15 +595,8 @@ function WorkspaceContent(props: WorkspaceContentProps): JSX.Element {
       },
       "[": () => setLeftSidebarOpen((oldValue) => !oldValue),
       "]": () => setRightSidebarOpen((oldValue) => !oldValue),
-      o: () => dataSourceDialogActions.open("start"),
     };
-  }, [
-    dataSourceDialogActions,
-    sidebarItem,
-    selectSidebarItem,
-    setLeftSidebarOpen,
-    setRightSidebarOpen,
-  ]);
+  }, [sidebarItem, selectSidebarItem, setLeftSidebarOpen, setRightSidebarOpen]);
 
   const play = useMessagePipeline(selectPlay);
   const playUntil = useMessagePipeline(selectPlayUntil);
