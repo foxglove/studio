@@ -19,13 +19,9 @@ export class ImageModeCamera extends THREE.PerspectiveCamera {
   #aspectZoom = new THREE.Vector2();
   #canvasSize = new THREE.Vector2();
 
-  public updateCamera(cameraModel: PinholeCameraModel): void {
+  public updateCamera(cameraModel: PinholeCameraModel | undefined): void {
     this.#model = cameraModel;
     this.#updateProjection();
-  }
-
-  public clearModel(): void {
-    this.#model = undefined;
   }
 
   #updateProjection(): void {
@@ -36,6 +32,8 @@ export class ImageModeCamera extends THREE.PerspectiveCamera {
     if (projection) {
       this.projectionMatrix.copy(projection);
       this.projectionMatrixInverse.copy(projection).invert();
+    } else {
+      this.updateProjectionMatrix();
     }
   }
 

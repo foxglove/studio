@@ -490,7 +490,7 @@ export class ImageMode extends SceneExtension<ImageRenderable> implements ICamer
 
   #clearCameraModel = (): void => {
     this.#cameraModel = undefined;
-    this.#camera.clearModel();
+    this.#camera.updateCamera(undefined);
     this.#camera.updateProjectionMatrix();
   };
 
