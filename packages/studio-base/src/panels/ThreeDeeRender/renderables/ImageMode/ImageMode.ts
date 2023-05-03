@@ -53,6 +53,7 @@ const CALIBRATION_TOPIC_PATH = ["imageMode", "calibrationTopic"];
 
 const IMAGE_TOPIC_UNAVAILABLE = "IMAGE_TOPIC_UNAVAILABLE";
 const CALIBRATION_TOPIC_UNAVAILABLE = "CALIBRATION_TOPIC_UNAVAILABLE";
+const FALLBACK_CALIBRATION_ACTIVE_ALERT_KEY = "FALLBACK_CALIBRATION_ACTIVE";
 const CREATE_BITMAP_ERR = "CreateBitmap";
 
 const MISSING_CAMERA_INFO = "MISSING_CAMERA_INFO";
@@ -172,7 +173,9 @@ export class ImageMode extends SceneExtension<ImageRenderable> implements ICamer
 
   public override removeAllRenderables(): void {
     this.#annotations.removeAllRenderables();
-    this.#imageRenderable?.clear();
+    this.#imageRenderable?.dispose();
+    this.#imageRenderable?.removeFromParent();
+    this.#imageRenderable = undefined;
     this.#clearCameraModel();
     super.removeAllRenderables();
   }
@@ -232,6 +235,18 @@ export class ImageMode extends SceneExtension<ImageRenderable> implements ICamer
       this.renderer.settings.errors.remove(CALIBRATION_TOPIC_PATH, CALIBRATION_TOPIC_UNAVAILABLE);
     }
 
+    if (this.#fallbackCameraModelActive()) {
+      this.renderer.settings.errors.add(
+        CALIBRATION_TOPIC_PATH,
+        FALLBACK_CALIBRATION_ACTIVE_ALERT_KEY,
+        `This mode uses a fallback camera model based on the image. 3D Topics and transforms will not be available.`,
+      );
+    } else {
+      this.renderer.settings.errors.remove(
+        CALIBRATION_TOPIC_PATH,
+        FALLBACK_CALIBRATION_ACTIVE_ALERT_KEY,
+      );
+    }
     const imageTopicError = this.renderer.settings.errors.errors.errorAtPath(IMAGE_TOPIC_PATH);
     const calibrationTopicError =
       this.renderer.settings.errors.errors.errorAtPath(CALIBRATION_TOPIC_PATH);

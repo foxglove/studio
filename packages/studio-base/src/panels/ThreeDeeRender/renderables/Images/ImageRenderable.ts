@@ -85,35 +85,11 @@ export class ImageRenderable extends Renderable<ImageUserData> {
   }
 
   public override dispose(): void {
+    this.userData.texture?.image?.close();
     this.userData.texture?.dispose();
     this.userData.material?.dispose();
     this.userData.geometry?.dispose();
     super.dispose();
-  }
-
-  public override clear(): this {
-    super.clear();
-    this.userData.texture?.image?.close();
-    this.userData.texture?.dispose();
-    this.userData.texture = undefined;
-    this.userData.material?.dispose();
-    this.userData.material = undefined;
-    this.userData.geometry?.dispose();
-    this.userData.geometry = undefined;
-    this.userData.mesh = undefined;
-
-    this.userData.cameraInfo = undefined;
-    this.userData.cameraModel = undefined;
-    this.userData.image = undefined;
-
-    this.#bitmap = undefined;
-
-    this.#geometryNeedsUpdate = true;
-    this.#materialNeedsUpdate = true;
-    this.#meshNeedsUpdate = true;
-    this.#textureNeedsUpdate = true;
-
-    return this;
   }
 
   public updateHeaderInfo(): void {
