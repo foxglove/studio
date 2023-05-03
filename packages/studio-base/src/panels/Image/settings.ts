@@ -46,6 +46,16 @@ export function buildSettingsTree({
   relatedMarkerTopics: readonly string[];
 }): SettingsTreeNodes {
   return {
+    newImage: {
+      label: "Try the new Image panel",
+      fields: {
+        newImage: {
+          input: "boolean",
+          label: "Enable new panel",
+          value: false,
+        },
+      },
+    },
     general: {
       label: "General",
       fields: {

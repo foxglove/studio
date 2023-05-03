@@ -11,11 +11,20 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Typography } from "@mui/material";
+import {
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Typography,
+} from "@mui/material";
 import { produce } from "immer";
 import { difference, keyBy, set, union } from "lodash";
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import ReactDOM from "react-dom";
+import { useLatest } from "react-use";
 import { DeepPartial } from "ts-essentials";
 import { makeStyles } from "tss-react/mui";
 
@@ -113,6 +122,7 @@ export function ImageView({ context }: Props): JSX.Element {
       },
     };
   });
+  const latestConfig = useLatest(config);
 
   const { cameraTopic, enabledMarkerTopics, transformMarkers } = config;
   const topicsByTopicName = useMemo(() => keyBy(topics, ({ name }) => name), [topics]);
@@ -254,9 +264,16 @@ export function ImageView({ context }: Props): JSX.Element {
     [config.cameraTopic, topics],
   );
 
+  const [showUpgradeConfirmDialog, setShowUpgradeConfirmDialog] = useState(false);
+
   const actionHandler = useCallback(
     (action: SettingsTreeAction) => {
       if (action.action !== "update") {
+        return;
+      }
+
+      if (action.payload.path[0] === "newImage" && action.payload.value === true) {
+        setShowUpgradeConfirmDialog(true);
         return;
       }
 
@@ -281,6 +298,37 @@ export function ImageView({ context }: Props): JSX.Element {
       }
     },
     [onChangeCameraTopic],
+  );
+
+  const upgradeConfirmDialog = useMemo(
+    () => (
+      <Dialog open={showUpgradeConfirmDialog} onClose={() => setShowUpgradeConfirmDialog(false)}>
+        <DialogTitle>Upgrade to the new Image panel?</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            To undo this change, you will need to re-configure this Image panel.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button variant="outlined" onClick={() => setShowUpgradeConfirmDialog(false)}>
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() => {
+              (
+                context.layout as {
+                  INTERNAL_replacePanel?: (type: string, config: unknown) => void;
+                }
+              ).INTERNAL_replacePanel?.("Image", latestConfig.current);
+            }}
+          >
+            Replace panel
+          </Button>
+        </DialogActions>
+      </Dialog>
+    ),
+    [latestConfig, context, showUpgradeConfirmDialog],
   );
 
   const markerTopics = useMemo(() => {
@@ -391,6 +439,7 @@ export function ImageView({ context }: Props): JSX.Element {
 
   return (
     <ThemeProvider isDark={colorScheme === "dark"}>
+      {upgradeConfirmDialog}
       <Stack
         flex="auto"
         overflow="hidden"

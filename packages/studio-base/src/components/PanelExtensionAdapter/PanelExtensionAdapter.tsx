@@ -115,7 +115,7 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
 
   const { capabilities, profile: dataSourceProfile } = playerState;
 
-  const { openSiblingPanel } = usePanelContext();
+  const { openSiblingPanel, replacePanel } = usePanelContext();
 
   const [panelId] = useState(() => uuid());
   const isMounted = useSynchronousMountedState();
@@ -302,6 +302,14 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
             assertNever(position, `Unsupported position for addPanel: ${position}`);
         }
       },
+    };
+
+    // Temporarily added to aid Image panel migration.
+    (layout as { INTERNAL_replacePanel?: unknown }).INTERNAL_replacePanel = (
+      type: string,
+      newConfig: Record<string, unknown>,
+    ) => {
+      replacePanel(type, newConfig);
     };
 
     return {
@@ -504,6 +512,7 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
     initialState,
     isMounted,
     openSiblingPanel,
+    replacePanel,
     panelId,
     saveConfig,
     seekPlayback,
