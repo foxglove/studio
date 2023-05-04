@@ -17,18 +17,19 @@ export const uiTour = {
   },
   appBar: {
     title: "Top bar",
-    content: "All of your high-level information and controls now live in the top bar.",
+    content:
+      "All of your high-level navigation, settings, and controls are now organized in the top bar.",
   },
   appMenu: {
     title: "App menu",
-    content: "Quickly open new and recent connections via the App menu",
+    content:  "Use the app menu to view data from the cloud or local storage, open a live connection, and view recent sources.",,
   },
   addPanelMenu: {
     title: "Add panel",
-    content: "Easily panels by dragging them into the layout.",
+    content: "Search and browse the list of available panel. Add a new panel by dragging it into your layout.",
   },
   layoutMenu: {
     title: "Layout menu",
-    content: "Browse your private and shared layouts.",
+    content: "Create a new layout or browse your private and shared layouts.",
   },
 };
