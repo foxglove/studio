@@ -7,7 +7,6 @@ import { StoryObj } from "@storybook/react";
 import { ImageAnnotations, PointsAnnotationType } from "@foxglove/schemas";
 import { MessageEvent } from "@foxglove/studio";
 import { ImageModeConfig } from "@foxglove/studio-base/panels/ThreeDeeRender/IRenderer";
-import { UNSELECTED_CAMERA_CALIBRATION } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/ImageMode/ImageMode";
 import { makeImageAndCalibration } from "@foxglove/studio-base/panels/ThreeDeeRender/stories/ImageMode/imageCommon";
 import PanelSetup, { Fixture } from "@foxglove/studio-base/stories/PanelSetup";
 
@@ -272,7 +271,7 @@ export const Annotations: StoryObj = {
 export const ImageOnlyModeIsSameWithNo3d: StoryObj = {
   parameters: { colorScheme: "light" },
   render: AnnotationsStory,
-  args: { calibrationTopic: UNSELECTED_CAMERA_CALIBRATION },
+  args: { calibrationTopic: undefined },
 };
 
 export const MessageConverterSupport: StoryObj = {
