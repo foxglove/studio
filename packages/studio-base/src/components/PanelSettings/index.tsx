@@ -196,8 +196,19 @@ export default function PanelSettings({
       <Stack gap={2} justifyContent="flex-start" flex="auto">
         <Stack flex="auto">
           {settingsTree && enableNewTopNav && (
-            <Stack padding={0.75}>
+            <Stack
+              padding={0.75}
+              direction="row"
+              alignItems="center"
+              justifyContent="space-between"
+            >
               <Typography variant="subtitle2">{t("panelName", { title })}</Typography>
+              <ActionMenu
+                key={1}
+                allowShare={panelType !== TAB_PANEL_TYPE}
+                onReset={resetToDefaults}
+                onShare={() => setShowShareModal(true)}
+              />
             </Stack>
           )}
           {settingsTree || showTitleField ? (
