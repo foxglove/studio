@@ -10,6 +10,7 @@ import { useUnmount } from "react-use";
 import { SettingsTree } from "@foxglove/studio";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import { useConfigById } from "@foxglove/studio-base/PanelAPI";
+import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import { ActionMenu } from "@foxglove/studio-base/components/PanelSettings/ActionMenu";
 import SettingsTreeEditor from "@foxglove/studio-base/components/SettingsTreeEditor";
 import ShareJsonModal from "@foxglove/studio-base/components/ShareJsonModal";
@@ -144,15 +145,15 @@ export default function PanelSettings({
   if (selectedLayoutId == undefined) {
     return (
       <SidebarContent disableToolbar={disableToolbar} title={t("panelSettings")}>
-        <Typography color="text.secondary">
+        <EmptyState>
           <Trans
             t={t}
             i18nKey="noLayoutSelected"
             components={{
-              selectLayoutLink: <Link onClick={openLayoutBrowser} />,
+              selectLayoutLink: <Link variant="inherit" onClick={openLayoutBrowser} />,
             }}
           />
-        </Typography>
+        </EmptyState>
       </SidebarContent>
     );
   }
@@ -160,7 +161,7 @@ export default function PanelSettings({
   if (selectedPanelId == undefined) {
     return (
       <SidebarContent disableToolbar={disableToolbar} title={t("panelSettings")}>
-        <Typography color="text.secondary">{t("selectAPanelToEditItsSettings")}</Typography>
+        <EmptyState>{t("selectAPanelToEditItsSettings")}</EmptyState>
       </SidebarContent>
     );
   }
@@ -168,7 +169,7 @@ export default function PanelSettings({
   if (!config) {
     return (
       <SidebarContent disableToolbar={disableToolbar} title={t("panelSettings")}>
-        <Typography color="text.secondary">{t("loadingPanelSettings")}</Typography>
+        <EmptyState>{t("loadingPanelSettings")}</EmptyState>
       </SidebarContent>
     );
   }

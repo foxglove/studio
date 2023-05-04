@@ -3,18 +3,13 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Container, Typography } from "@mui/material";
-import { PropsWithChildren } from "react";
+import { ReactNode } from "react";
 import { makeStyles } from "tss-react/mui";
+
+import Stack from "@foxglove/studio-base/components/Stack";
 
 const useStyles = makeStyles()((theme) => ({
   root: {
-    backgroundColor: theme.palette.background.default,
-    display: "flex",
-    flexDirection: "column",
-    flex: "auto",
-    alignItems: "center",
-    justifyContent: "center",
-
     code: {
       color: theme.palette.primary.main,
       background: "transparent",
@@ -23,16 +18,22 @@ const useStyles = makeStyles()((theme) => ({
   },
 }));
 
-export default function EmptyState({ children }: PropsWithChildren<unknown>): JSX.Element {
+export default function EmptyState({ children }: { children: ReactNode }): JSX.Element {
   const { classes } = useStyles();
 
   return (
-    <div className={classes.root}>
+    <Stack
+      className={classes.root}
+      flex="auto"
+      alignItems="center"
+      justifyContent="center"
+      fullHeight
+    >
       <Container maxWidth={false}>
         <Typography variant="body2" color="text.secondary" lineHeight={1.4} align="center">
           {children}
         </Typography>
       </Container>
-    </div>
+    </Stack>
   );
 }
