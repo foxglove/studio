@@ -531,6 +531,11 @@ function WorkspaceContent(props: WorkspaceContentProps): JSX.Element {
           title: currentUser != undefined ? `Signed in as ${currentUser.email}` : "Account",
           component: AccountSettings,
         });
+
+        bottomItems.set("app-bar-tour", {
+          iconName: "Sparkle",
+          title: "Tour new UI",
+        });
       }
 
       bottomItems.set("app-settings", {

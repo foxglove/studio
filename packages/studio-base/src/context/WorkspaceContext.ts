@@ -19,6 +19,7 @@ import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
 export type SidebarItemKey =
   | "account"
   | "add-panel"
+  | "app-bar-tour"
   | "connection"
   | "extensions"
   | "help"
@@ -205,6 +206,8 @@ export function useWorkspaceActions(): WorkspaceActions {
       selectSidebarItem: (selectedSidebarItem: undefined | SidebarItemKey) => {
         if (selectedSidebarItem === "app-settings") {
           set({ prefsDialogState: { open: true, initialTab: undefined } });
+        } else if (selectedSidebarItem === "app-bar-tour") {
+          set((old) => ({ featureTours: { ...old.featureTours, active: "appBar" } }));
         } else {
           set({ sidebarItem: selectedSidebarItem });
         }
