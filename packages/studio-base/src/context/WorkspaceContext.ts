@@ -2,7 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { createContext, Dispatch, SetStateAction, useMemo, useState } from "react";
+import { union } from "lodash";
+import { Dispatch, SetStateAction, createContext, useMemo, useState } from "react";
 import { DeepReadonly } from "ts-essentials";
 import { StoreApi, useStore } from "zustand";
 
@@ -38,6 +39,10 @@ export type WorkspaceContextStore = DeepReadonly<{
     activeDataSource: undefined | IDataSourceFactory;
     item: undefined | DataSourceDialogItem;
     open: boolean;
+  };
+  featureTours: {
+    active: undefined | string;
+    shown: string[];
   };
   leftSidebarOpen: boolean;
   rightSidebarOpen: boolean;
@@ -85,6 +90,10 @@ export type WorkspaceActions = {
   dataSourceDialogActions: {
     close: () => void;
     open: (item: DataSourceDialogItem, dataSource?: IDataSourceFactory) => void;
+  };
+  featureTourActions: {
+    startTour: (tour: string) => void;
+    finishTour: (tour: string) => void;
   };
   openAccountSettings: () => void;
   openPanelSettings: () => void;
@@ -146,6 +155,25 @@ export function useWorkspaceActions(): WorkspaceActions {
               open: true,
             },
           });
+        },
+      },
+
+      featureTourActions: {
+        startTour: (tour: string) => {
+          set((old) => ({
+            featureTours: {
+              active: tour,
+              shown: old.featureTours.shown,
+            },
+          }));
+        },
+        finishTour: (tour: string) => {
+          set((old) => ({
+            featureTours: {
+              active: undefined,
+              shown: union(old.featureTours.shown, [tour]),
+            },
+          }));
         },
       },
 

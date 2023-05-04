@@ -21,9 +21,6 @@ export type UserProfile = {
 
   /** Onboarding flow status */
   onboarding?: {
-    /** A list of tours the user has already seen or dismissed. */
-    featureToursShown?: string[];
-
     /** List of panel types for which the settings tooltip has been shown */
     settingsTooltipShownForPanelTypes?: string[];
   };
