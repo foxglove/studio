@@ -59,7 +59,7 @@ import { CameraStateSettings } from "./renderables/CameraStateSettings";
 import { Cameras } from "./renderables/Cameras";
 import { FrameAxes } from "./renderables/FrameAxes";
 import { Grids } from "./renderables/Grids";
-import { ImageMode, UNSELECTED_CAMERA_CALIBRATION } from "./renderables/ImageMode/ImageMode";
+import { ImageMode } from "./renderables/ImageMode/ImageMode";
 import { Images } from "./renderables/Images";
 import { LaserScans } from "./renderables/LaserScans";
 import { Markers } from "./renderables/Markers";
@@ -325,17 +325,17 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     const aspect = renderSize.width / renderSize.height;
     switch (interfaceMode) {
       case "image":
-        this.#imageModeExtension = new ImageMode(
-          this,
-          this.input.canvasSize,
-          ({ val: hasCameraInfo }) => {
-            if (hasCameraInfo) {
+        this.#imageModeExtension = new ImageMode(this, {
+          canvasSize: this.input.canvasSize,
+          // eslint-disable-next-line @foxglove/no-boolean-parameters
+          setHasCalibrationTopic: (hasCameraCalibrationTopic: boolean) => {
+            if (hasCameraCalibrationTopic) {
               this.#disableImageOnlySubscriptionMode();
             } else {
               this.#enableImageOnlySubscriptionMode();
             }
           },
-        );
+        });
         this.cameraHandler = this.#imageModeExtension;
         this.#addSceneExtension(this.cameraHandler);
         break;
@@ -364,10 +364,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     this.#addSceneExtension(new VelodyneScans(this));
     this.#addSceneExtension(this.measurementTool);
     this.#addSceneExtension(this.publishClickTool);
-    if (
-      interfaceMode === "image" &&
-      config.imageMode.calibrationTopic === UNSELECTED_CAMERA_CALIBRATION
-    ) {
+    if (interfaceMode === "image" && config.imageMode.calibrationTopic == undefined) {
       this.#enableImageOnlySubscriptionMode();
     } else {
       this.#addTransformSubscriptions();
@@ -657,6 +654,11 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     this.emit("topicHandlersChanged", this);
   }
 
+  /**
+   * Image Only mode disables all subscriptions for non-ImageMode scene extensions and clears all transform subscriptions.
+   * This mode should only be enabled in ImageMode when there is no calibration topic selected. Disabling these subscriptions
+   * prevents the 3D aspects of the scene from being rendered from an insufficient camera info.
+   */
   #enableImageOnlySubscriptionMode = (): void => {
     assert(
       this.#imageModeExtension,
@@ -670,9 +672,9 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
   };
 
   #disableImageOnlySubscriptionMode = (): void => {
-    this.#addSubscriptionsFromSceneExtensions(
-      (extension) => extension !== this.#imageModeExtension,
-    );
+    this.clear({ clearTransforms: true, resetAllFramesCursor: true });
+    this.#clearSubscriptions();
+    this.#addSubscriptionsFromSceneExtensions();
     this.#addTransformSubscriptions();
     this.emit("topicHandlersChanged", this);
     this.emit("schemaHandlersChanged", this);

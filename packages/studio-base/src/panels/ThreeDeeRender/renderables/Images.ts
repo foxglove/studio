@@ -294,6 +294,11 @@ export class Images extends SceneExtension<ImageRenderable> {
           this.renderer.queueAnimationFrame();
         })
         .catch((err) => {
+          const prevRenderable = renderable;
+          const currentRenderable = this.renderables.get(imageTopic);
+          if (currentRenderable !== prevRenderable) {
+            return;
+          }
           this.renderer.settings.errors.addToTopic(
             imageTopic,
             CREATE_BITMAP_ERR_KEY,

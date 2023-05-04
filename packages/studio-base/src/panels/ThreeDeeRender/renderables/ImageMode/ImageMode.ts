@@ -64,8 +64,6 @@ const CAMERA_MODEL = "CameraModel";
 const DEFAULT_FOCAL_LENGTH = 500;
 const DEFAULT_IMAGE_WIDTH = 512;
 
-export const UNSELECTED_CAMERA_CALIBRATION = "UNSELECTED_CAMERA_CALIBRATION";
-
 export class ImageMode extends SceneExtension<ImageRenderable> implements ICameraHandler {
   #camera: ImageModeCamera;
   #cameraModel:
@@ -79,19 +77,27 @@ export class ImageMode extends SceneExtension<ImageRenderable> implements ICamer
 
   #imageRenderable: ImageRenderable | undefined;
 
-  #setHasCameraInfo: ({ val }: { val: boolean }) => void;
+  // eslint-disable-next-line @foxglove/no-boolean-parameters
+  #setHasCalibrationTopic: (hasCalibrationTopic: boolean) => void;
 
   /**
    * @param canvasSize Canvas size in CSS pixels
    */
   public constructor(
     renderer: IRenderer,
-    canvasSize: THREE.Vector2,
-    setHasCameraInfo: ({ val }: { val: boolean }) => void,
+    {
+      canvasSize,
+      setHasCalibrationTopic,
+    }: {
+      canvasSize: THREE.Vector2;
+
+      // eslint-disable-next-line @foxglove/no-boolean-parameters
+      setHasCalibrationTopic: (hasCalibrationTopic: boolean) => void;
+    },
   ) {
     super("foxglove.ImageMode", renderer);
 
-    this.#setHasCameraInfo = setHasCameraInfo;
+    this.#setHasCalibrationTopic = setHasCalibrationTopic;
 
     this.#camera = new ImageModeCamera();
 
@@ -196,20 +202,23 @@ export class ImageMode extends SceneExtension<ImageRenderable> implements ICamer
       return { label: topic.name, value: topic.name };
     });
 
-    const calibrationTopics = filterMap(this.renderer.topics ?? [], (topic) => {
-      if (
-        !(
-          topicIsConvertibleToSchema(topic, CAMERA_INFO_DATATYPES) ||
-          topicIsConvertibleToSchema(topic, CAMERA_CALIBRATION_DATATYPES)
-        )
-      ) {
-        return;
-      }
-      return { label: topic.name, value: topic.name };
-    });
+    const calibrationTopics: { label: string; value: string | undefined }[] = filterMap(
+      this.renderer.topics ?? [],
+      (topic) => {
+        if (
+          !(
+            topicIsConvertibleToSchema(topic, CAMERA_INFO_DATATYPES) ||
+            topicIsConvertibleToSchema(topic, CAMERA_CALIBRATION_DATATYPES)
+          )
+        ) {
+          return;
+        }
+        return { label: topic.name, value: topic.name };
+      },
+    );
 
     // add unselected camera calibration option
-    calibrationTopics.unshift({ label: "None", value: UNSELECTED_CAMERA_CALIBRATION });
+    calibrationTopics.unshift({ label: "None", value: undefined });
 
     if (imageTopic && !imageTopics.some((topic) => topic.value === imageTopic)) {
       this.renderer.settings.errors.add(
@@ -360,16 +369,14 @@ export class ImageMode extends SceneExtension<ImageRenderable> implements ICamer
       const calibrationTopicChanged =
         config.calibrationTopic !== prevImageModeConfig.calibrationTopic;
       if (calibrationTopicChanged) {
-        const changingToUnselectedCalibration =
-          config.calibrationTopic === UNSELECTED_CAMERA_CALIBRATION;
+        const changingToUnselectedCalibration = config.calibrationTopic == undefined;
         if (changingToUnselectedCalibration) {
-          this.#setHasCameraInfo({ val: false });
+          this.#setHasCalibrationTopic(false);
         }
 
-        const changingFromUnselectedCalibration =
-          prevImageModeConfig.calibrationTopic === UNSELECTED_CAMERA_CALIBRATION;
+        const changingFromUnselectedCalibration = prevImageModeConfig.calibrationTopic == undefined;
         if (changingFromUnselectedCalibration) {
-          this.#setHasCameraInfo({ val: true });
+          this.#setHasCalibrationTopic(true);
         }
       }
 
@@ -433,41 +440,45 @@ export class ImageMode extends SceneExtension<ImageRenderable> implements ICamer
     renderable.setImage(image);
     const isCompressedImage = "format" in image;
 
-    if (isCompressedImage) {
-      const resizeBitmapWidth = !this.#fallbackCameraModelActive()
-        ? DEFAULT_IMAGE_WIDTH
-        : undefined;
-      decodeImageToBitmap(image, resizeBitmapWidth)
-        .then((maybeBitmap) => {
-          const prevRenderable = renderable;
-          const currentRenderable = this.#imageRenderable;
-          // prevent setting and updating disposed renderables
-          if (currentRenderable !== prevRenderable) {
-            return;
-          }
-          this.renderer.settings.errors.removeFromTopic(topic, CREATE_BITMAP_ERR_KEY);
-          renderable.setBitmap(maybeBitmap);
-          if (this.#fallbackCameraModelActive()) {
-            this.#updateFallbackCameraModel(maybeBitmap, getFrameIdFromImage(image));
-          }
-
-          renderable.update();
-          this.renderer.queueAnimationFrame();
-        })
-        .catch((err) => {
-          this.renderer.settings.errors.addToTopic(
-            topic,
-            CREATE_BITMAP_ERR_KEY,
-            `Error creating bitmap: ${err.message}`,
-          );
-        });
-    } else {
+    if (!isCompressedImage) {
       // Raw Images don't need to be decoded asynchronously
       if (this.#fallbackCameraModelActive()) {
         this.#updateFallbackCameraModel(image, getFrameIdFromImage(image));
       }
       renderable.update();
+      return;
     }
+
+    const resizeBitmapWidth = !this.#fallbackCameraModelActive() ? DEFAULT_IMAGE_WIDTH : undefined;
+    decodeImageToBitmap(image, resizeBitmapWidth)
+      .then((maybeBitmap) => {
+        const prevRenderable = renderable;
+        const currentRenderable = this.#imageRenderable;
+        // prevent setting and updating disposed renderables
+        if (currentRenderable !== prevRenderable) {
+          return;
+        }
+        this.renderer.settings.errors.removeFromTopic(topic, CREATE_BITMAP_ERR_KEY);
+        renderable.setBitmap(maybeBitmap);
+        if (this.#fallbackCameraModelActive()) {
+          this.#updateFallbackCameraModel(maybeBitmap, getFrameIdFromImage(image));
+        }
+
+        renderable.update();
+        this.renderer.queueAnimationFrame();
+      })
+      .catch((err) => {
+        const prevRenderable = renderable;
+        const currentRenderable = this.#imageRenderable;
+        if (currentRenderable !== prevRenderable) {
+          return;
+        }
+        this.renderer.settings.errors.addToTopic(
+          topic,
+          CREATE_BITMAP_ERR_KEY,
+          `Error creating bitmap: ${err.message}`,
+        );
+      });
   };
 
   #updateFallbackCameraModel = (
@@ -485,7 +496,7 @@ export class ImageMode extends SceneExtension<ImageRenderable> implements ICamer
   };
 
   #fallbackCameraModelActive = (): boolean => {
-    return this.#getImageModeSettings().calibrationTopic === UNSELECTED_CAMERA_CALIBRATION;
+    return this.#getImageModeSettings().calibrationTopic == undefined;
   };
 
   #clearCameraModel = (): void => {

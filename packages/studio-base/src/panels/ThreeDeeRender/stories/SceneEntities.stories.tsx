@@ -44,7 +44,7 @@ const icospherePointsAndIndices = {
   ],
 };
 
-export function makeStoryScene({
+function makeStoryScene({
   topic,
   frameId,
 }: {

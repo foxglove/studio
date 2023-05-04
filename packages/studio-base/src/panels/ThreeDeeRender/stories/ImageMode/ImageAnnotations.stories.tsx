@@ -4,15 +4,11 @@
 
 import { StoryObj } from "@storybook/react";
 
-import {
-  CameraCalibration,
-  ImageAnnotations,
-  PointsAnnotationType,
-  RawImage,
-} from "@foxglove/schemas";
+import { ImageAnnotations, PointsAnnotationType } from "@foxglove/schemas";
 import { MessageEvent } from "@foxglove/studio";
 import { ImageModeConfig } from "@foxglove/studio-base/panels/ThreeDeeRender/IRenderer";
 import { UNSELECTED_CAMERA_CALIBRATION } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/ImageMode/ImageMode";
+import { makeImageAndCalibration } from "@foxglove/studio-base/panels/ThreeDeeRender/stories/ImageMode/imageCommon";
 import PanelSetup, { Fixture } from "@foxglove/studio-base/stories/PanelSetup";
 
 import { ImagePanel } from "../../index";
@@ -21,72 +17,17 @@ export default {
   title: "panels/ThreeDeeRender/Images/Annotations",
   component: ImagePanel,
 };
-export function makeImageAndCalibration(
-  width: number,
-  height: number,
-): {
-  calibrationMessage: MessageEvent<Partial<CameraCalibration>>;
-  cameraMessage: MessageEvent<Partial<RawImage>>;
-} {
-  const fx = 500;
-  const fy = 500;
-  const cx = width / 2;
-  const cy = height / 2;
-  const calibrationMessage: MessageEvent<Partial<CameraCalibration>> = {
-    topic: "calibration",
-    receiveTime: { sec: 0, nsec: 0 },
-    message: {
-      timestamp: { sec: 0, nsec: 0 },
-      frame_id: "cam",
-      height,
-      width,
-      distortion_model: "rational_polynomial",
-      D: [],
-      K: [fx, 0, cx, 0, fy, cy, 0, 0, 1],
-      R: [1, 0, 0, 1, 0, 0, 1, 0, 0],
-      P: [fx, 0, cx, 0, 0, fy, cy, 0, 0, 0, 1, 0],
-    },
-    schemaName: "foxglove.CameraCalibration",
-    sizeInBytes: 0,
-  };
-
-  const imageData = new Uint8Array(width * height * 3);
-  for (let i = 0, r = 0; r < height; r++) {
-    for (let c = 0; c < width; c++) {
-      if (r === 0 || r === height - 1 || c === 0 || c === width - 1) {
-        imageData[i++] = 150;
-        imageData[i++] = 150;
-        imageData[i++] = 255;
-      } else {
-        imageData[i++] = (r % 2 === 0 ? 127 : 0) + (c % 2 === 0 ? 127 : 0);
-        imageData[i++] = (r % 2 === 0 ? 127 : 0) + (c % 2 === 0 ? 127 : 0);
-        imageData[i++] = (r % 2 === 0 ? 127 : 0) + (c % 2 === 0 ? 127 : 0);
-      }
-    }
-  }
-
-  const cameraMessage: MessageEvent<Partial<RawImage>> = {
-    topic: "camera",
-    receiveTime: { sec: 10, nsec: 0 },
-    message: {
-      timestamp: { sec: 0, nsec: 0 },
-      frame_id: "cam",
-      width,
-      height,
-      encoding: "rgb8",
-      data: imageData,
-    },
-    schemaName: "foxglove.RawImage",
-    sizeInBytes: 0,
-  };
-
-  return { calibrationMessage, cameraMessage };
-}
 
 const AnnotationsStory = (imageModeConfigOverride: Partial<ImageModeConfig> = {}): JSX.Element => {
   const width = 60;
   const height = 45;
-  const { calibrationMessage, cameraMessage } = makeImageAndCalibration(width, height);
+  const { calibrationMessage, cameraMessage } = makeImageAndCalibration({
+    width,
+    height,
+    frameId: "camera",
+    imageTopic: "camera",
+    calibrationTopic: "calibration",
+  });
 
   const annotationsMessage: MessageEvent<Partial<ImageAnnotations>> = {
     topic: "annotations",
@@ -328,7 +269,7 @@ export const Annotations: StoryObj = {
   render: AnnotationsStory,
 };
 
-export const ImageOnlyIsSameWithNo3d: StoryObj = {
+export const ImageOnlyModeIsSameWithNo3d: StoryObj = {
   parameters: { colorScheme: "light" },
   render: AnnotationsStory,
   args: { calibrationTopic: UNSELECTED_CAMERA_CALIBRATION },
@@ -340,7 +281,13 @@ export const MessageConverterSupport: StoryObj = {
     const width = 60;
     const height = 45;
 
-    const { calibrationMessage, cameraMessage } = makeImageAndCalibration(width, height);
+    const { calibrationMessage, cameraMessage } = makeImageAndCalibration({
+      width,
+      height,
+      frameId: "camera",
+      imageTopic: "camera",
+      calibrationTopic: "calibration",
+    });
 
     const annotationsMessage: MessageEvent<Partial<ImageAnnotations>> = {
       topic: "annotations",
