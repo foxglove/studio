@@ -300,36 +300,33 @@ export function ImageView({ context, enableNewImagePanel }: Props): JSX.Element 
     [onChangeCameraTopic],
   );
 
-  const upgradeConfirmDialog = useMemo(
-    () => (
-      <Dialog open={showUpgradeConfirmDialog} onClose={() => setShowUpgradeConfirmDialog(false)}>
-        <DialogTitle>Upgrade to the new Image panel?</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            This change will modify your layout. To revert to the old Image panel, you will need to
-            manually replace this panel or add a new one.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button variant="outlined" onClick={() => setShowUpgradeConfirmDialog(false)}>
-            Cancel
-          </Button>
-          <Button
-            variant="contained"
-            onClick={() => {
-              (
-                context.layout as {
-                  INTERNAL_replacePanel?: (type: string, config: unknown) => void;
-                }
-              ).INTERNAL_replacePanel?.("Image", latestConfig.current);
-            }}
-          >
-            Replace panel
-          </Button>
-        </DialogActions>
-      </Dialog>
-    ),
-    [latestConfig, context, showUpgradeConfirmDialog],
+  const upgradeConfirmDialog = showUpgradeConfirmDialog && (
+    <Dialog open onClose={() => setShowUpgradeConfirmDialog(false)}>
+      <DialogTitle>Upgrade to the new Image panel?</DialogTitle>
+      <DialogContent>
+        <DialogContentText>
+          This change will modify your layout. To revert to the old Image panel, you will need to
+          manually replace this panel or add a new one.
+        </DialogContentText>
+      </DialogContent>
+      <DialogActions>
+        <Button variant="outlined" onClick={() => setShowUpgradeConfirmDialog(false)}>
+          Cancel
+        </Button>
+        <Button
+          variant="contained"
+          onClick={() => {
+            (
+              context.layout as {
+                INTERNAL_replacePanel?: (type: string, config: unknown) => void;
+              }
+            ).INTERNAL_replacePanel?.("Image", latestConfig.current);
+          }}
+        >
+          Replace panel
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 
   const markerTopics = useMemo(() => {
