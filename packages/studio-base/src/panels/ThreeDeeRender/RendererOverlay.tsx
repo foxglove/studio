@@ -19,6 +19,9 @@ import { useLongPress } from "react-use";
 import { makeStyles } from "tss-react/mui";
 
 import { LayoutActions } from "@foxglove/studio";
+import PublishGoalIcon from "@foxglove/studio-base/components/PublishGoalIcon";
+import PublishPointIcon from "@foxglove/studio-base/components/PublishPointIcon";
+import PublishPoseEstimateIcon from "@foxglove/studio-base/components/PublishPoseEstimateIcon";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import { InteractionContextMenu, Interactions, SelectionObject, TabType } from "./Interactions";
@@ -26,10 +29,15 @@ import type { PickedRenderable } from "./Picker";
 import { Renderable } from "./Renderable";
 import { useRenderer, useRendererEvent } from "./RendererContext";
 import { Stats } from "./Stats";
-import { PublishClickIcons } from "./ThreeDeeRender";
 import { MouseEventObject } from "./camera";
 import { PublishClickType } from "./renderables/PublishClickTool";
 import { InterfaceMode } from "./types";
+
+const PublishClickIcons: Record<PublishClickType, React.ReactNode> = {
+  pose: <PublishGoalIcon fontSize="inherit" />,
+  point: <PublishPointIcon fontSize="inherit" />,
+  pose_estimate: <PublishPoseEstimateIcon fontSize="inherit" />,
+};
 
 const useStyles = makeStyles()((theme) => ({
   iconButton: {
