@@ -206,7 +206,7 @@ export default function PanelSettings({
                 <Typography variant="subtitle2">{t("panelName", { title })}</Typography>
                 <ActionMenu
                   key={1}
-                  size="small"
+                  fontSize="small"
                   allowShare={panelType !== TAB_PANEL_TYPE}
                   onReset={resetToDefaults}
                   onShare={() => setShowShareModal(true)}
