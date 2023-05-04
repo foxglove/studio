@@ -14,7 +14,14 @@
 import { CameraInfo, PinholeCameraModel } from "@foxglove/den/image";
 import { Topic } from "@foxglove/studio-base/players/types";
 
-import { Dimensions, MarkerData, RawMarkerData, ZoomMode } from "../types";
+import {
+  CircleAnnotation,
+  Dimensions,
+  MarkerData,
+  RawMarkerData,
+  TextAnnotation,
+  ZoomMode,
+} from "../types";
 
 export function calculateZoomScale(
   bitmap: Dimensions,
@@ -121,7 +128,7 @@ export function getCameraNamespace(topicName: string): string | undefined {
 }
 
 export function buildMarkerData(rawMarkerData: RawMarkerData): MarkerData | undefined {
-  const { markers, transformMarkers, cameraInfo } = rawMarkerData;
+  const { markers, transformMarkers, cameraInfo, showTextAnchorPoints } = rawMarkerData;
   if (markers.length === 0) {
     return {
       markers,
@@ -138,10 +145,31 @@ export function buildMarkerData(rawMarkerData: RawMarkerData): MarkerData | unde
     cameraModel = new PinholeCameraModel(cameraInfo as CameraInfo);
   }
 
+  let markersToRender = markers;
+  if (showTextAnchorPoints === true) {
+    const textAnnotations = markers.filter((marker) => marker.type === "text") as TextAnnotation[];
+    const anchorPoints = getAnchorPointsForTextAnnotations(textAnnotations);
+    if (anchorPoints.length > 0) {
+      markersToRender = markers.concat(anchorPoints);
+    }
+  }
+
   return {
-    markers,
+    markers: markersToRender,
     cameraModel,
     originalWidth: cameraInfo?.width,
     originalHeight: cameraInfo?.height,
   };
+}
+
+function getAnchorPointsForTextAnnotations(texts: TextAnnotation[]): CircleAnnotation[] {
+  return texts.map((text) => ({
+    type: "circle",
+    stamp: text.stamp,
+    position: text.position,
+    outlineColor: text.textColor,
+    radius: 2,
+    thickness: 1,
+    fillColor: text.backgroundColor,
+  }));
 }

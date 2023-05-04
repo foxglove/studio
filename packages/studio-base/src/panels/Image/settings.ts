@@ -106,6 +106,11 @@ export function buildSettingsTree({
           placeholder: "10000",
           value: config.maxValue,
         },
+        showTextAnchorPoints: {
+          input: "boolean",
+          label: "Show text anchor points",
+          value: config.showTextAnchorPoints ?? false,
+        },
       },
     },
     markers: memoBuildMarkersNode(markerTopics, enabledMarkerTopics, relatedMarkerTopics),

@@ -162,6 +162,7 @@ export const FoxgloveAnnotations: StoryObj = {
           markers: normalizeAnnotations(foxgloveAnnotations, "foxglove.ImageAnnotations")!,
           cameraInfo,
           transformMarkers: false,
+          showTextAnchorPoints: true,
         },
       });
     }, [imageMessage]);

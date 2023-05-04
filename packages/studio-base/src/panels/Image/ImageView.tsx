@@ -114,7 +114,7 @@ export function ImageView({ context }: Props): JSX.Element {
     };
   });
 
-  const { cameraTopic, enabledMarkerTopics, transformMarkers } = config;
+  const { cameraTopic, enabledMarkerTopics, transformMarkers, showTextAnchorPoints } = config;
   const topicsByTopicName = useMemo(() => keyBy(topics, ({ name }) => name), [topics]);
   const cameraTopicFullObject = useMemo(
     () => topicsByTopicName[cameraTopic],
@@ -367,12 +367,13 @@ export function ImageView({ context }: Props): JSX.Element {
   const rawMarkerData: RawMarkerData = useMemo(() => {
     return {
       markers: annotations,
+      showTextAnchorPoints,
       transformMarkers,
       // Convert to plain object before sending to web worker
       cameraInfo:
         (cameraInfo as { toJSON?: () => CameraInfo } | undefined)?.toJSON?.() ?? cameraInfo,
     };
-  }, [annotations, cameraInfo, transformMarkers]);
+  }, [annotations, cameraInfo, transformMarkers, showTextAnchorPoints]);
   const saveConfigWithMerging = useCallback(
     (newConfig: Partial<Config>) => setConfig((oldConfig) => ({ ...oldConfig, ...newConfig })),
     [setConfig],
@@ -447,4 +448,5 @@ export const defaultConfig: Config = {
   synchronize: false,
   transformMarkers: false,
   zoom: 1,
+  showTextAnchorPoints: false,
 };

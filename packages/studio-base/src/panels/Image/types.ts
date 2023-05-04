@@ -26,6 +26,7 @@ export type Config = DefaultConfig & {
   transformMarkers: boolean;
   zoom?: number;
   zoomPercentage?: number;
+  showTextAnchorPoints?: boolean;
 };
 
 export type UseImagePanelMessagesParams = {
@@ -62,6 +63,7 @@ export type Dimensions = { width: number; height: number };
 export type RawMarkerData = {
   markers: readonly Annotation[];
   transformMarkers: boolean;
+  showTextAnchorPoints?: boolean;
   cameraInfo?: CameraInfo;
 };
 
