@@ -168,8 +168,8 @@ function getAnchorPointsForTextAnnotations(texts: TextAnnotation[]): CircleAnnot
     stamp: text.stamp,
     position: text.position,
     outlineColor: text.textColor,
-    radius: 2,
-    thickness: 1,
+    radius: 2 * (text.fontSize / 12),
+    thickness: 1 * (text.fontSize / 12),
     fillColor: text.backgroundColor,
   }));
 }
