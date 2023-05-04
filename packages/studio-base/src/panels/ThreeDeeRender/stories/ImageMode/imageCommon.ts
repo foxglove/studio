@@ -5,6 +5,7 @@
 import { CameraCalibration, RawImage } from "@foxglove/schemas";
 import { MessageEvent } from "@foxglove/studio";
 
+// ts-prune-ignore-next
 export function makeImageAndCalibration(args: {
   width: number;
   height: number;
