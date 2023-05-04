@@ -13,7 +13,6 @@ import {
   CREATE_BITMAP_ERR_KEY,
   IMAGE_RENDERABLE_DEFAULT_SETTINGS,
   ImageRenderable,
-  decodeCompressedImageToBitmap as decodeImageToBitmap,
 } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/Images/ImageRenderable";
 import { AnyImage } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/Images/ImageTypes";
 import {
@@ -48,6 +47,7 @@ import {
 } from "../../ros";
 import { topicIsConvertibleToSchema } from "../../topicIsConvertibleToSchema";
 import { ICameraHandler } from "../ICameraHandler";
+import { decodeCompressedImageToBitmap } from "../Images/decodeCompressedImageToBitmap";
 
 const IMAGE_TOPIC_PATH = ["imageMode", "imageTopic"];
 const CALIBRATION_TOPIC_PATH = ["imageMode", "calibrationTopic"];
@@ -450,7 +450,7 @@ export class ImageMode extends SceneExtension<ImageRenderable> implements ICamer
     }
 
     const resizeBitmapWidth = !this.#fallbackCameraModelActive() ? DEFAULT_IMAGE_WIDTH : undefined;
-    decodeImageToBitmap(image, resizeBitmapWidth)
+    decodeCompressedImageToBitmap(image, resizeBitmapWidth)
       .then((maybeBitmap) => {
         const prevRenderable = renderable;
         const currentRenderable = this.#imageRenderable;

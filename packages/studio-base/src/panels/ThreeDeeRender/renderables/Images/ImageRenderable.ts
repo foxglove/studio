@@ -29,7 +29,7 @@ import { stringToRgba } from "@foxglove/studio-base/panels/ThreeDeeRender/color"
 import { projectPixel } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/projections";
 import { RosValue } from "@foxglove/studio-base/players/types";
 
-import { AnyImage, CompressedImageTypes } from "./ImageTypes";
+import { AnyImage } from "./ImageTypes";
 import { Image as RosImage, CameraInfo } from "../../ros";
 
 export interface ImageRenderableSettings {
@@ -310,14 +310,6 @@ type RawImageOptions = {
 };
 
 let tempColor = { r: 0, g: 0, b: 0, a: 0 };
-
-export async function decodeCompressedImageToBitmap(
-  image: CompressedImageTypes,
-  resizeWidth?: number,
-): Promise<ImageBitmap> {
-  const bitmapData = new Blob([image.data], { type: `image/${image.format}` });
-  return await createImageBitmap(bitmapData, { resizeWidth });
-}
 
 function createCanvasTexture(bitmap: ImageBitmap): THREE.CanvasTexture {
   const texture = new THREE.CanvasTexture(

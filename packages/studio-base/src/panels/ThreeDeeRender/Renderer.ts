@@ -676,8 +676,6 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     this.#clearSubscriptions();
     this.#addSubscriptionsFromSceneExtensions();
     this.#addTransformSubscriptions();
-    this.emit("topicHandlersChanged", this);
-    this.emit("schemaHandlersChanged", this);
   };
 
   public addCustomLayerAction(options: {

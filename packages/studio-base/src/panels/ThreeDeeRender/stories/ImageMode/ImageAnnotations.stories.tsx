@@ -268,7 +268,7 @@ export const Annotations: StoryObj = {
   render: AnnotationsStory,
 };
 
-export const ImageOnlyModeIsSameWithNo3d: StoryObj = {
+export const AnnotationsWithoutCalibration: StoryObj = {
   parameters: { colorScheme: "light" },
   render: AnnotationsStory,
   args: { calibrationTopic: undefined },

@@ -14,7 +14,6 @@ import {
   CREATE_BITMAP_ERR_KEY,
   IMAGE_RENDERABLE_DEFAULT_SETTINGS,
   ImageRenderable,
-  decodeCompressedImageToBitmap,
 } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/Images/ImageRenderable";
 import {
   ALL_CAMERA_INFO_SCHEMAS,
@@ -27,6 +26,7 @@ import {
   normalizeRosImage,
 } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/Images/imageNormalizers";
 
+import { decodeCompressedImageToBitmap } from "./Images/decodeCompressedImageToBitmap";
 import { cameraInfosEqual, normalizeCameraInfo } from "./projections";
 import type { IRenderer } from "../IRenderer";
 import { PartialMessageEvent, SceneExtension } from "../SceneExtension";
