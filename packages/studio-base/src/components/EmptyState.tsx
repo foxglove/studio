@@ -10,6 +10,8 @@ import Stack from "@foxglove/studio-base/components/Stack";
 
 const useStyles = makeStyles()((theme) => ({
   root: {
+    whiteSpace: "pre-wrap",
+
     code: {
       color: theme.palette.primary.main,
       background: "transparent",

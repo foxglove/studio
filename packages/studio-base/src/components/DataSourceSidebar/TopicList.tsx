@@ -19,6 +19,7 @@ import { useMemo, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 
 import { DirectTopicStatsUpdater } from "@foxglove/studio-base/components/DirectTopicStatsUpdater";
+import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import {
   MessagePipelineContext,
   useMessagePipeline,
@@ -181,24 +182,27 @@ export function TopicList(): JSX.Element {
     [filterText, topics],
   );
 
-  if (playerPresence === PlayerPresence.NOT_PRESENT) {
-    return (
-      <Stack flex="auto" fullHeight alignItems="center" gap={1} justifyContent="center">
-        <Typography align="center" variant="subtitle2" color="text.secondary">
-          No data source selected
-        </Typography>
-      </Stack>
-    );
-  }
+  const noTopicsMessage = useMemo(() => {
+    switch (playerPresence) {
+      case PlayerPresence.PRESENT:
+        return filterText
+          ? `No topics or datatypes matching \n “${filterText}”`
+          : "No topics available";
+      case PlayerPresence.ERROR:
+        return "An error occurred";
+      case PlayerPresence.NOT_PRESENT:
+        return "No data source selected";
+      case PlayerPresence.RECONNECTING:
+        return "No topics available \n Waiting for connection";
+      case PlayerPresence.BUFFERING:
+        return "Loading topics";
+      default:
+        return undefined;
+    }
+  }, [filterText, playerPresence]);
 
-  if (playerPresence === PlayerPresence.ERROR) {
-    return (
-      <Stack flex="auto" padding={2} fullHeight alignItems="center" justifyContent="center">
-        <Typography align="center" color="text.secondary">
-          An error occurred
-        </Typography>
-      </Stack>
-    );
+  if (playerPresence === PlayerPresence.NOT_PRESENT || playerPresence === PlayerPresence.ERROR) {
+    return <EmptyState>{noTopicsMessage}</EmptyState>;
   }
 
   if (playerPresence === PlayerPresence.INITIALIZING) {
@@ -271,25 +275,7 @@ export function TopicList(): JSX.Element {
           })}
         </List>
       ) : (
-        <Stack flex="auto" padding={2} fullHeight alignItems="center" justifyContent="center">
-          {playerPresence === PlayerPresence.PRESENT && filterText && (
-            <Typography align="center" color="text.secondary">
-              No topics or datatypes matching
-              <br />
-              {`“${filterText}”`}
-            </Typography>
-          )}
-          {playerPresence === PlayerPresence.PRESENT && (
-            <Typography align="center" color="text.secondary">
-              No topics available
-            </Typography>
-          )}
-          {playerPresence === PlayerPresence.RECONNECTING && (
-            <Typography align="center" color="text.secondary">
-              Waiting for connection
-            </Typography>
-          )}
-        </Stack>
+        <EmptyState>{noTopicsMessage}</EmptyState>
       )}
       <DirectTopicStatsUpdater interval={6} />
     </>
