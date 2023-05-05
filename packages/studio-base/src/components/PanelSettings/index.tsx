@@ -47,6 +47,23 @@ const EMPTY_SETTINGS_TREE: SettingsTree = Object.freeze({
   nodes: {},
 });
 
+const EmptyWrapper = ({ children }: { children: React.ReactNode }) => {
+  const { t } = useTranslation("panelSettings");
+  const [enableNewTopNav = false] = useAppConfigurationValue<boolean>(AppSetting.ENABLE_NEW_TOPNAV);
+
+  if (enableNewTopNav) {
+    return <EmptyState>{children}</EmptyState>;
+  }
+
+  return (
+    <SidebarContent title={t("panelSettings")}>
+      <Typography variant="body2" color="text.secondary">
+        {children}
+      </Typography>
+    </SidebarContent>
+  );
+};
+
 export default function PanelSettings({
   disableToolbar = false,
   selectedPanelIdsForTests,
@@ -144,42 +161,24 @@ export default function PanelSettings({
 
   if (selectedLayoutId == undefined) {
     return (
-      <SidebarContent disableToolbar={disableToolbar} title={t("panelSettings")}>
-        <Typography variant="body2" color="text.secondary">
-          <Trans
-            t={t}
-            i18nKey="noLayoutSelected"
-            components={{
-              selectLayoutLink: <Link variant="inherit" onClick={openLayoutBrowser} />,
-            }}
-          />
-        </Typography>
-      </SidebarContent>
+      <EmptyWrapper>
+        <Trans
+          t={t}
+          i18nKey="noLayoutSelected"
+          components={{
+            selectLayoutLink: <Link variant="inherit" onClick={openLayoutBrowser} />,
+          }}
+        />
+      </EmptyWrapper>
     );
   }
 
   if (selectedPanelId == undefined) {
-    return (
-      <SidebarContent
-        disableToolbar={disableToolbar}
-        disablePadding={enableNewTopNav}
-        title={t("panelSettings")}
-      >
-        <EmptyState>{t("selectAPanelToEditItsSettings")}</EmptyState>
-      </SidebarContent>
-    );
+    return <EmptyWrapper>{t("selectAPanelToEditItsSettings")}</EmptyWrapper>;
   }
 
   if (!config) {
-    return (
-      <SidebarContent
-        disableToolbar={disableToolbar}
-        disablePadding={enableNewTopNav}
-        title={t("panelSettings")}
-      >
-        <EmptyState>{t("loadingPanelSettings")}</EmptyState>
-      </SidebarContent>
-    );
+    return <EmptyWrapper>{t("loadingPanelSettings")}</EmptyWrapper>;
   }
 
   const isSettingsTree = settingsTree != undefined;
