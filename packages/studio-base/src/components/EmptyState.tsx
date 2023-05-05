@@ -20,12 +20,18 @@ const useStyles = makeStyles()((theme) => ({
   },
 }));
 
-export default function EmptyState({ children }: { children: ReactNode }): JSX.Element {
-  const { classes } = useStyles();
+export default function EmptyState({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}): JSX.Element {
+  const { classes, cx } = useStyles();
 
   return (
     <Stack
-      className={classes.root}
+      className={cx(classes.root, className)}
       flex="auto"
       alignItems="center"
       justifyContent="center"
