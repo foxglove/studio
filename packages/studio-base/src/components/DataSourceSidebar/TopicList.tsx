@@ -263,7 +263,7 @@ export function TopicList(): JSX.Element {
         <EmptyState>
           {playerPresence === PlayerPresence.PRESENT && filterText
             ? `No topics or datatypes matching \n “${filterText}”`
-            : "No topics available"}
+            : "No topics available. "}
           {playerPresence === PlayerPresence.RECONNECTING && "Waiting for connection"}
         </EmptyState>
       )}
