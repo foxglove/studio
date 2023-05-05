@@ -345,20 +345,34 @@ export const ImageModePan: StoryObj = {
   },
 };
 
-export const ImageModePanAndZoom: StoryObj = {
+export const ImageModeZoomThenPan: StoryObj = {
   render: () => <ImageModeFoxgloveImage imageType="raw" />,
-  play: async (ctx) => {
-    await ImageModePan.play?.(ctx);
+  play: async () => {
     const canvas = document.querySelector("canvas")!;
+    fireEvent.wheel(canvas, { deltaY: -30, clientX: 400, clientY: 400 });
+    fireEvent.wheel(canvas, { deltaY: -30, clientX: 400, clientY: 400 });
+    fireEvent.mouseDown(canvas, { clientX: 200, clientY: 200 });
+    fireEvent.mouseMove(canvas, { clientX: 400, clientY: 200 });
+    fireEvent.mouseUp(canvas, { clientX: 400, clientY: 200 });
+  },
+};
+
+export const ImageModePanThenZoom: StoryObj = {
+  render: () => <ImageModeFoxgloveImage imageType="raw" />,
+  play: async () => {
+    const canvas = document.querySelector("canvas")!;
+    fireEvent.mouseDown(canvas, { clientX: 200, clientY: 200 });
+    fireEvent.mouseMove(canvas, { clientX: 400, clientY: 200 });
+    fireEvent.mouseUp(canvas, { clientX: 400, clientY: 200 });
     fireEvent.wheel(canvas, { deltaY: -30, clientX: 400, clientY: 400 });
     fireEvent.wheel(canvas, { deltaY: -30, clientX: 400, clientY: 400 });
   },
 };
 
-export const ImageModePanAndZoomReset: StoryObj = {
+export const ImageModePanThenZoomReset: StoryObj = {
   render: () => <ImageModeFoxgloveImage imageType="raw" />,
   play: async (ctx) => {
-    await ImageModePanAndZoom.play?.(ctx);
+    await ImageModePanThenZoom.play?.(ctx);
     userEvent.click(await screen.findByTestId("reset-view"));
   },
 };
