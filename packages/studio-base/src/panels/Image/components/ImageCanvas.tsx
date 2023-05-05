@@ -46,6 +46,7 @@ type Props = {
   onStartRenderImage: () => OnFinishRenderImage;
   renderInMainThread?: boolean;
   setActivePixelData: (data: PixelData | undefined) => void;
+  setVideoCanvas: (data: HTMLCanvasElement | ReactNull) => void
 };
 
 const useStyles = makeStyles()((theme) => ({
@@ -105,6 +106,7 @@ export function ImageCanvas(props: Props): JSX.Element {
     config,
     saveConfig,
     onStartRenderImage,
+    setVideoCanvas
   } = props;
   const { mode } = config;
   const { classes, cx } = useStyles();
@@ -144,6 +146,7 @@ export function ImageCanvas(props: Props): JSX.Element {
   useLayoutEffect(() => {
     const newCanvas = document.createElement("canvas");
     setCanvas(newCanvas);
+    setVideoCanvas(newCanvas);
     canvasContainerRef.current?.appendChild(newCanvas);
 
     let mounted = true;

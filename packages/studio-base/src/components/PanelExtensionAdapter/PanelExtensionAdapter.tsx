@@ -54,6 +54,7 @@ import { assertNever } from "@foxglove/studio-base/util/assertNever";
 
 import { PanelConfigVersionError } from "./PanelConfigVersionError";
 import { initRenderStateBuilder } from "./renderState";
+import { subtractTimes } from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/typescript/userUtils/time";
 
 const log = Logger.getLogger(__filename);
 
@@ -109,7 +110,12 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
   const initialState = useLatest(config);
 
   const messagePipelineContext = useMessagePipeline(selectContext);
-
+  const selectStartTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.startTime;
+  const selectEndTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.endTime;
+  const selectCurrentTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.currentTime;
+  const startTime = useMessagePipeline(selectStartTime);
+  const endTime = useMessagePipeline(selectEndTime);
+  const currentTime = useMessagePipeline(selectCurrentTime)
   const { playerState, pauseFrame, setSubscriptions, seekPlayback, sortedTopics } =
     messagePipelineContext;
 
@@ -304,9 +310,19 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
       },
     };
 
+    const downloadVideoInfo = {
+      play: messagePipelineContext.startPlayback,
+      stop: messagePipelineContext.pausePlayback,
+      seek: messagePipelineContext.seekPlayback,
+      duration: endTime && startTime ? subtractTimes(endTime, startTime) : undefined,
+      currentTime,
+      startTime,
+      endTime
+    }
+
     return {
       initialState: initialState.current,
-
+      downloadVideoInfo,
       saveState: (state) => {
         if (!isMounted()) {
           return;
@@ -318,11 +334,11 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
 
       seekPlayback: seekPlayback
         ? (stamp: number) => {
-            if (!isMounted()) {
-              return;
-            }
-            seekPlayback(fromSec(stamp));
+          if (!isMounted()) {
+            return;
           }
+          seekPlayback(fromSec(stamp));
+        }
         : undefined,
 
       dataSourceProfile,
@@ -416,55 +432,55 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
 
       advertise: capabilities.includes(PlayerCapabilities.advertise)
         ? (topic: string, datatype: string, options) => {
-            if (!isMounted()) {
-              return;
-            }
-            const payload: AdvertiseOptions = {
-              topic,
-              schemaName: datatype,
-              options,
-            };
-            advertisementsRef.current.set(topic, payload);
-
-            getMessagePipelineContext().setPublishers(
-              panelId,
-              Array.from(advertisementsRef.current.values()),
-            );
+          if (!isMounted()) {
+            return;
           }
+          const payload: AdvertiseOptions = {
+            topic,
+            schemaName: datatype,
+            options,
+          };
+          advertisementsRef.current.set(topic, payload);
+
+          getMessagePipelineContext().setPublishers(
+            panelId,
+            Array.from(advertisementsRef.current.values()),
+          );
+        }
         : undefined,
 
       unadvertise: capabilities.includes(PlayerCapabilities.advertise)
         ? (topic: string) => {
-            if (!isMounted()) {
-              return;
-            }
-            advertisementsRef.current.delete(topic);
-            getMessagePipelineContext().setPublishers(
-              panelId,
-              Array.from(advertisementsRef.current.values()),
-            );
+          if (!isMounted()) {
+            return;
           }
+          advertisementsRef.current.delete(topic);
+          getMessagePipelineContext().setPublishers(
+            panelId,
+            Array.from(advertisementsRef.current.values()),
+          );
+        }
         : undefined,
 
       publish: capabilities.includes(PlayerCapabilities.advertise)
         ? (topic, message) => {
-            if (!isMounted()) {
-              return;
-            }
-            getMessagePipelineContext().publish({
-              topic,
-              msg: message as Record<string, unknown>,
-            });
+          if (!isMounted()) {
+            return;
           }
+          getMessagePipelineContext().publish({
+            topic,
+            msg: message as Record<string, unknown>,
+          });
+        }
         : undefined,
 
       callService: capabilities.includes(PlayerCapabilities.callServices)
         ? async (service, request): Promise<unknown> => {
-            if (!isMounted()) {
-              throw new Error("Service call after panel was unmounted");
-            }
-            return await getMessagePipelineContext().callService(service, request);
+          if (!isMounted()) {
+            throw new Error("Service call after panel was unmounted");
           }
+          return await getMessagePipelineContext().callService(service, request);
+        }
         : undefined,
 
       unsubscribeAll: () => {

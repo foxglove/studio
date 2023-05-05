@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Ruler24Filled } from "@fluentui/react-icons";
+import { ArrowDownloadRegular, Ruler24Filled } from "@fluentui/react-icons";
 import {
   IconButton,
   ListItemIcon,
@@ -68,6 +68,8 @@ import type { LayerSettingsTransform } from "./renderables/FrameAxes";
 import { PublishClickEvent, PublishClickType } from "./renderables/PublishClickTool";
 import { DEFAULT_PUBLISH_SETTINGS } from "./renderables/PublishSettings";
 import { InterfaceMode } from "./types";
+import { stopRecordVideo } from "@foxglove/studio-base/panels/video/downloadVideo";
+import { DownloadModal } from "@foxglove/studio-base/panels/video/DownloadVIdeoModal";
 
 const log = Logger.getLogger(__filename);
 
@@ -111,6 +113,19 @@ const useStyles = makeStyles()((theme) => ({
     fontWeight: theme.typography.fontWeightBold,
     lineHeight: "1em",
   },
+  paper: {
+    padding: "20px",
+  },
+  downloadButton: {
+    height: "50px",
+    width: "100px",
+    background: "blue",
+  },
+  input: {
+    width: "250px",
+    height: "50px",
+    border: "2px solid blue",
+  },
 }));
 
 /**
@@ -131,6 +146,9 @@ function RendererOverlay(props: {
   onChangePublishClickType: (_: PublishClickType) => void;
   onClickPublish: () => void;
   timezone: string | undefined;
+  downloadVideo: () => void;
+  stopRecord: () => void;
+  downloadStarted: boolean,
 }): JSX.Element {
   const { classes } = useStyles();
   const [clickedPosition, setClickedPosition] = useState<{ clientX: number; clientY: number }>({
@@ -191,22 +209,22 @@ function RendererOverlay(props: {
     () =>
       selectedRenderable
         ? {
-            object: {
-              pose: selectedRenderable.renderable.pose,
-              interactionData: {
-                topic: selectedRenderable.renderable.topic,
-                highlighted: true,
-                originalMessage: selectedRenderable.renderable.details(),
-                instanceDetails:
-                  selectedRenderable.instanceIndex != undefined
-                    ? selectedRenderable.renderable.instanceDetails(
-                        selectedRenderable.instanceIndex,
-                      )
-                    : undefined,
-              },
+          object: {
+            pose: selectedRenderable.renderable.pose,
+            interactionData: {
+              topic: selectedRenderable.renderable.topic,
+              highlighted: true,
+              originalMessage: selectedRenderable.renderable.details(),
+              instanceDetails:
+                selectedRenderable.instanceIndex != undefined
+                  ? selectedRenderable.renderable.instanceDetails(
+                    selectedRenderable.instanceIndex,
+                  )
+                  : undefined,
             },
-            instanceIndex: selectedRenderable.instanceIndex,
-          }
+          },
+          instanceIndex: selectedRenderable.instanceIndex,
+        }
         : undefined,
     [selectedRenderable],
   );
@@ -337,7 +355,15 @@ function RendererOverlay(props: {
             >
               <Ruler24Filled className={classes.rulerIcon} />
             </IconButton>
-
+            <IconButton
+              data-testid="download-button"
+              className={classes.iconButton}
+              color={props.downloadStarted ? "info" : "inherit"}
+              title={props.downloadStarted ? "Stop record and Download" : "Download Video"}
+              onClick={props.downloadStarted ? props.stopRecord : props.downloadVideo}
+            >
+              <ArrowDownloadRegular className={classes.iconButton} />
+            </IconButton>
             {publishControls}
           </Paper>
         )}
@@ -394,7 +420,9 @@ export function ThreeDeeRender(props: {
   interfaceMode: InterfaceMode;
 }): JSX.Element {
   const { context, interfaceMode } = props;
-  const { initialState, saveState } = context;
+  const { initialState, saveState, downloadVideoInfo } = context;
+  // @ts-ignore
+  const { play, stop, start, startTime, seek, endTime } = downloadVideoInfo;
 
   // Load and save the persisted panel configuration
   const [config, setConfig] = useState<Immutable<RendererConfig>>(() => {
@@ -410,7 +438,7 @@ export function ThreeDeeRender(props: {
     const transforms = (partialConfig?.transforms ?? {}) as Record<
       string,
       Partial<LayerSettingsTransform>
-    >;
+      >;
 
     // Merge in config from the legacy Image panel
     const legacyImageConfig = partialConfig as DeepPartial<LegacyImageConfig> | undefined;
@@ -458,7 +486,7 @@ export function ThreeDeeRender(props: {
   const [variables, setVariables] = useState<ReadonlyMap<string, VariableValue> | undefined>();
   const [currentFrameMessages, setCurrentFrameMessages] = useState<
     ReadonlyArray<MessageEvent<unknown>> | undefined
-  >();
+    >();
   const [currentTime, setCurrentTime] = useState<Time | undefined>();
   const [didSeek, setDidSeek] = useState<boolean>(false);
   const [sharedPanelState, setSharedPanelState] = useState<undefined | Shared3DPanelState>();
@@ -1035,6 +1063,35 @@ export function ThreeDeeRender(props: {
     context.dataSourceProfile === "ros1" || context.dataSourceProfile === "ros2";
   const canPublish = context.publish != undefined && isRosDataSource;
 
+  const [downloadStarted, setDownloadStarted] = useState(false);
+  const [isDownloadPressed, setIsDownloadPressed] = useState(false);
+
+  const showDownloadModal = () => {
+    setIsDownloadPressed(true);
+  };
+
+  const stopRecord = () => {
+    setDownloadStarted(false);
+    stop();
+    stopRecordVideo();
+  };
+  const [playingTime, setPlayingTime] = useState(0);
+
+  useEffect(() => {
+    if (currentTime && currentTime.sec === playingTime) {
+      stopRecord();
+    }
+  }, [currentTime, playingTime]);
+
+  const videoProps = {
+    seek,
+    play,
+    stop,
+    start,
+    startTime,
+    endTime,
+  };
+
   return (
     <ThemeProvider isDark={colorScheme === "dark"}>
       <div style={PANEL_STYLE} onKeyDown={onKeyDown}>
@@ -1066,9 +1123,20 @@ export function ThreeDeeRender(props: {
               renderer?.publishClickTool.start();
             }}
             timezone={timezone}
+            downloadVideo={showDownloadModal}
+            stopRecord={stopRecord}
+            downloadStarted={downloadStarted}
           />
         </RendererContext.Provider>
       </div>
+      {isDownloadPressed &&
+      <DownloadModal
+        setDownloadStarted={setDownloadStarted}
+        setIsDownloadPressed={setIsDownloadPressed}
+        canvas={canvas}
+        videoProps={videoProps}
+        setPlayingTime={setPlayingTime}
+      />}
     </ThemeProvider>
   );
 }

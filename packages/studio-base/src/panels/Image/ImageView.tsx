@@ -41,6 +41,8 @@ import { NORMALIZABLE_IMAGE_DATATYPES } from "./lib/normalizeMessage";
 import { getRelatedMarkerTopics, getMarkerOptions, getCameraInfoTopic } from "./lib/util";
 import { buildSettingsTree } from "./settings";
 import type { Config, PixelData, RawMarkerData } from "./types";
+import { isDownloadStopped, stopRecordVideo } from "../video/downloadVideo";
+import { DownloadModal } from "@foxglove/studio-base/panels/video/DownloadVIdeoModal";
 
 type Props = {
   context: PanelExtensionContext;
@@ -97,6 +99,13 @@ const useStyles = makeStyles<void, "timestamp">()((theme, _params, classes) => (
 }));
 
 export function ImageView({ context }: Props): JSX.Element {
+  // @ts-ignore
+  const { play, stop, seek, start, startTime, endTime } = context.downloadVideoInfo;
+  const [canvas, setVideoCanvas] = useState<HTMLCanvasElement | ReactNull>();
+  const [isDownloadPressed, setIsDownloadPressed] = useState<boolean>(false);
+  const [downloadStarted, setDownloadStarted] = useState(false);
+  const [playingTime, setPlayingTime] = useState(0);
+
   const { classes, cx } = useStyles();
   const [renderDone, setRenderDone] = useState(() => () => {});
   const [topics, setTopics] = useState<readonly Topic[]>([]);
@@ -329,10 +338,43 @@ export function ImageView({ context }: Props): JSX.Element {
     await downloadImage(lastImageMessageRef.current, topic, config);
   }, [imageTopics, cameraTopic, config]);
 
+  useEffect(() => {
+    if (isDownloadStopped) {
+      setDownloadStarted(false);
+      stop();
+    }
+  }, [isDownloadStopped]);
+  const playVideoAndDownload = () =>{
+    setIsDownloadPressed(true)
+  }
+  const stopVideoAndDownload = () => {
+    stop();
+    stopRecordVideo();
+    setDownloadStarted(false);
+  };
+  useEffect(() => {
+    if (image && image.stamp.sec === playingTime) {
+      stopVideoAndDownload()
+    }
+  }, [image])
+  const videoProps = {
+    seek,
+    play,
+    stop,
+    start,
+    startTime,
+    endTime,
+  };
+
   const contextMenuItemsForClickPosition = useCallback<() => PanelContextMenuItem[]>(
     () => [
       { type: "item", label: "Download image", onclick: doDownloadImage },
       { type: "divider" },
+      {
+        type: "item",
+        label: !downloadStarted ? "Download Video" : "Stop record and download",
+        onclick: !downloadStarted ? playVideoAndDownload : () => stopVideoAndDownload(),
+      },
       {
         type: "item",
         label: "Flip horizontal",
@@ -361,7 +403,7 @@ export function ImageView({ context }: Props): JSX.Element {
           })),
       },
     ],
-    [doDownloadImage],
+    [doDownloadImage, downloadStarted],
   );
 
   const rawMarkerData: RawMarkerData = useMemo(() => {
@@ -412,6 +454,7 @@ export function ImageView({ context }: Props): JSX.Element {
             saveConfig={saveConfigWithMerging}
             onStartRenderImage={onStartRenderImage}
             setActivePixelData={setActivePixelData}
+            setVideoCanvas={setVideoCanvas}
           />
           {/* If rendered, EmptyState will hide the always-present ImageCanvas */}
           {!image && (
@@ -433,6 +476,14 @@ export function ImageView({ context }: Props): JSX.Element {
           )}
         </Stack>
         <Toolbar pixelData={activePixelData} />
+        {isDownloadPressed &&
+        <DownloadModal
+          setDownloadStarted={setDownloadStarted}
+          setIsDownloadPressed={setIsDownloadPressed}
+          canvas={canvas}
+          videoProps={videoProps}
+          setPlayingTime={setPlayingTime}
+        />}
       </Stack>
     </ThemeProvider>
   );
