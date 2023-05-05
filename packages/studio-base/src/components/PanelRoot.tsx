@@ -8,6 +8,7 @@ import { TransitionStatus } from "react-transition-group";
 import { makeStyles } from "tss-react/mui";
 
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
+import { APP_BAR_HEIGHT } from "@foxglove/studio-base/components/AppBar/constants";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 
 export const PANEL_ROOT_CLASS_NAME = "FoxglovePanelRoot-root";
@@ -70,7 +71,7 @@ export const usePanelRootStyles = makeStyles<
     entered: {
       borderWidth: 4,
       position: "fixed",
-      top: appBarEnabled ? 44 : 0, // offset by app bar height if enabled
+      top: appBarEnabled ? APP_BAR_HEIGHT : 0, // offset by app bar height if enabled
       left: 0,
       right: 0,
       bottom: 77, // match PlaybackBar height
