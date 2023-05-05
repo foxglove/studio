@@ -160,7 +160,11 @@ export default function PanelSettings({
 
   if (selectedPanelId == undefined) {
     return (
-      <SidebarContent disableToolbar={disableToolbar} title={t("panelSettings")}>
+      <SidebarContent
+        disableToolbar={disableToolbar}
+        disablePadding={enableNewTopNav}
+        title={t("panelSettings")}
+      >
         <EmptyState>{t("selectAPanelToEditItsSettings")}</EmptyState>
       </SidebarContent>
     );
@@ -168,7 +172,11 @@ export default function PanelSettings({
 
   if (!config) {
     return (
-      <SidebarContent disableToolbar={disableToolbar} title={t("panelSettings")}>
+      <SidebarContent
+        disableToolbar={disableToolbar}
+        disablePadding={enableNewTopNav}
+        title={t("panelSettings")}
+      >
         <EmptyState>{t("loadingPanelSettings")}</EmptyState>
       </SidebarContent>
     );

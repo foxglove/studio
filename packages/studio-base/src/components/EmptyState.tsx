@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Container, Typography } from "@mui/material";
+import { Typography } from "@mui/material";
 import { ReactNode } from "react";
 import { makeStyles } from "tss-react/mui";
 
@@ -30,12 +30,11 @@ export default function EmptyState({ children }: { children: ReactNode }): JSX.E
       alignItems="center"
       justifyContent="center"
       fullHeight
+      paddingX={1}
     >
-      <Container maxWidth={false}>
-        <Typography variant="body2" color="text.secondary" lineHeight={1.4} align="center">
-          {children}
-        </Typography>
-      </Container>
+      <Typography variant="body2" color="text.secondary" lineHeight={1.4} align="center">
+        {children}
+      </Typography>
     </Stack>
   );
 }
