@@ -335,14 +335,23 @@ export const ImageModeResizeHandled: StoryObj = {
   },
 };
 
-export const ImageModePanAndZoom: StoryObj = {
+export const ImageModePan: StoryObj = {
   render: () => <ImageModeFoxgloveImage imageType="raw" />,
   play: async () => {
     const canvas = document.querySelector("canvas")!;
     fireEvent.mouseDown(canvas, { clientX: 200, clientY: 200 });
     fireEvent.mouseMove(canvas, { clientX: 400, clientY: 200 });
     fireEvent.mouseUp(canvas, { clientX: 400, clientY: 200 });
-    fireEvent.wheel(canvas, { deltaY: 100, clientX: 200, clientY: 0 });
+  },
+};
+
+export const ImageModePanAndZoom: StoryObj = {
+  render: () => <ImageModeFoxgloveImage imageType="raw" />,
+  play: async (ctx) => {
+    await ImageModePan.play?.(ctx);
+    const canvas = document.querySelector("canvas")!;
+    fireEvent.wheel(canvas, { deltaY: -30, clientX: 400, clientY: 400 });
+    fireEvent.wheel(canvas, { deltaY: -30, clientX: 400, clientY: 400 });
   },
 };
 
