@@ -145,7 +145,7 @@ export default function PanelSettings({
   if (selectedLayoutId == undefined) {
     return (
       <SidebarContent disableToolbar={disableToolbar} title={t("panelSettings")}>
-        <EmptyState>
+        <Typography variant="body2" color="text.secondary">
           <Trans
             t={t}
             i18nKey="noLayoutSelected"
@@ -153,7 +153,7 @@ export default function PanelSettings({
               selectLayoutLink: <Link variant="inherit" onClick={openLayoutBrowser} />,
             }}
           />
-        </EmptyState>
+        </Typography>
       </SidebarContent>
     );
   }
