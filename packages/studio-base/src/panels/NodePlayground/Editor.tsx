@@ -34,7 +34,7 @@ import { themes } from "./theme";
 
 const codeEditorService = StandaloneServices.get(ICodeEditorService);
 
-type CodeEditor = monacoApi.editor.IStandaloneCodeEditor;
+type CodeEditor = monacoApi.editor.ICodeEditor;
 
 type Props = {
   script?: Script;
