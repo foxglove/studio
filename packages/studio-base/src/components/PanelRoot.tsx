@@ -67,7 +67,7 @@ export const usePanelRootStyles = makeStyles<
     entered: {
       borderWidth: 4,
       position: "fixed",
-      top: 0,
+      top: sourceRect?.top ?? 0,
       left: 0,
       right: 0,
       bottom: 77, // match PlaybackBar height
