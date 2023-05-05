@@ -16,18 +16,20 @@ import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import useGuaranteedContext from "@foxglove/studio-base/hooks/useGuaranteedContext";
 import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
 
-export type SidebarItemKey =
-  | "account"
-  | "add-panel"
-  | "app-bar-tour"
-  | "connection"
-  | "extensions"
-  | "help"
-  | "layouts"
-  | "panel-settings"
-  | "app-settings"
-  | "studio-logs-settings"
-  | "variables";
+export const SidebarItemKeys = [
+  "account",
+  "add-panel",
+  "app-bar-tour",
+  "connection",
+  "extensions",
+  "help",
+  "layouts",
+  "panel-settings",
+  "app-settings",
+  "studio-logs-settings",
+  "variables",
+] as const;
+export type SidebarItemKey = (typeof SidebarItemKeys)[number];
 
 const LeftSidebarItemKeys = ["panel-settings", "topics", "problems"] as const;
 export type LeftSidebarItemKey = (typeof LeftSidebarItemKeys)[number];

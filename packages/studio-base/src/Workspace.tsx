@@ -71,6 +71,7 @@ import {
   LeftSidebarItemKey,
   RightSidebarItemKey,
   SidebarItemKey,
+  SidebarItemKeys,
   WorkspaceContextStore,
   useWorkspaceActions,
   useWorkspaceStore,
@@ -84,6 +85,7 @@ import useNativeAppMenuEvent from "@foxglove/studio-base/hooks/useNativeAppMenuE
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
 import { PanelStateContextProvider } from "@foxglove/studio-base/providers/PanelStateContextProvider";
 import WorkspaceContextProvider from "@foxglove/studio-base/providers/WorkspaceContextProvider";
+import ICONS from "@foxglove/studio-base/theme/icons";
 import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
 
 const log = Logger.getLogger(__filename);
@@ -243,7 +245,7 @@ function WorkspaceContent(props: WorkspaceContentProps): JSX.Element {
   const [initialEnableNewTopNav] = useState(currentEnableNewTopNav);
   const enableNewTopNav = isDesktopApp() ? initialEnableNewTopNav : currentEnableNewTopNav;
 
-  const { workspaceExtensions } = useAppContext();
+  const { sidebarItems: appContextSidebarItems, workspaceExtensions } = useAppContext();
 
   // When a player is activated, hide the open dialog.
   useLayoutEffect(() => {
@@ -531,11 +533,12 @@ function WorkspaceContent(props: WorkspaceContentProps): JSX.Element {
           title: currentUser != undefined ? `Signed in as ${currentUser.email}` : "Account",
           component: AccountSettings,
         });
+      }
 
-        bottomItems.set("app-bar-tour", {
-          iconName: "Sparkle",
-          title: "Tour new UI",
-        });
+      for (const [key, item] of appContextSidebarItems ?? []) {
+        if (SidebarItemKeys.some((itemKey) => itemKey === key) && item.iconName in ICONS) {
+          bottomItems.set(key as SidebarItemKey, item as SidebarItem);
+        }
       }
 
       bottomItems.set("app-settings", {
@@ -546,12 +549,13 @@ function WorkspaceContent(props: WorkspaceContentProps): JSX.Element {
 
     return [topItems, bottomItems];
   }, [
-    DataSourceSidebarItem,
-    playerProblems,
-    enableStudioLogsSidebar,
-    enableNewTopNav,
-    supportsAccountSettings,
+    appContextSidebarItems,
     currentUser,
+    DataSourceSidebarItem,
+    enableNewTopNav,
+    enableStudioLogsSidebar,
+    playerProblems,
+    supportsAccountSettings,
   ]);
 
   const eventsSupported = useEvents(selectEventsSupported);

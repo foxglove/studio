@@ -12,6 +12,7 @@ interface IAppContext {
     durationNanos: string;
     metadata: Record<string, string>;
   }) => Promise<void>;
+  sidebarItems?: readonly [[string, { iconName: string; title: string }]];
   syncAdapters?: readonly JSX.Element[];
   workspaceExtensions?: readonly JSX.Element[];
 }
