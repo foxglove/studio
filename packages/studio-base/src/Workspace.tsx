@@ -112,6 +112,17 @@ function activeElementIsInput() {
   );
 }
 
+type InjectedSidebarItem = [SidebarItemKey, SidebarItem];
+function isInjectedSidebarItem(
+  item: [string, { iconName?: string; title: string }],
+): item is InjectedSidebarItem {
+  return (
+    SidebarItemKeys.some((itemKey) => itemKey === item[0]) &&
+    item[1].iconName != undefined &&
+    Object.keys(ICONS).includes(item[1].iconName)
+  );
+}
+
 function keyboardEventHasModifier(event: KeyboardEvent) {
   if (navigator.userAgent.includes("Mac")) {
     return event.metaKey;
@@ -535,9 +546,9 @@ function WorkspaceContent(props: WorkspaceContentProps): JSX.Element {
         });
       }
 
-      for (const [key, item] of appContextSidebarItems ?? []) {
-        if (SidebarItemKeys.some((itemKey) => itemKey === key) && item.iconName in ICONS) {
-          bottomItems.set(key as SidebarItemKey, item as SidebarItem);
+      for (const item of appContextSidebarItems ?? []) {
+        if (isInjectedSidebarItem(item)) {
+          bottomItems.set(item[0], item[1]);
         }
       }
 
