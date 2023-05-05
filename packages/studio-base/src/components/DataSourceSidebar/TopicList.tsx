@@ -182,27 +182,12 @@ export function TopicList(): JSX.Element {
     [filterText, topics],
   );
 
-  const noTopicsMessage = useMemo(() => {
-    switch (playerPresence) {
-      case PlayerPresence.PRESENT:
-        return filterText
-          ? `No topics or datatypes matching \n “${filterText}”`
-          : "No topics available";
-      case PlayerPresence.ERROR:
-        return "An error occurred";
-      case PlayerPresence.NOT_PRESENT:
-        return "No data source selected";
-      case PlayerPresence.RECONNECTING:
-        return "No topics available \n Waiting for connection";
-      case PlayerPresence.BUFFERING:
-        return "Loading topics";
-      default:
-        return undefined;
-    }
-  }, [filterText, playerPresence]);
+  if (playerPresence === PlayerPresence.NOT_PRESENT) {
+    return <EmptyState>No data source selected</EmptyState>;
+  }
 
-  if (playerPresence === PlayerPresence.NOT_PRESENT || playerPresence === PlayerPresence.ERROR) {
-    return <EmptyState>{noTopicsMessage}</EmptyState>;
+  if (playerPresence === PlayerPresence.ERROR) {
+    return <EmptyState>An error occurred</EmptyState>;
   }
 
   if (playerPresence === PlayerPresence.INITIALIZING) {
@@ -275,7 +260,12 @@ export function TopicList(): JSX.Element {
           })}
         </List>
       ) : (
-        <EmptyState>{noTopicsMessage}</EmptyState>
+        <EmptyState>
+          {playerPresence === PlayerPresence.PRESENT && filterText
+            ? `No topics or datatypes matching \n “${filterText}”`
+            : "No topics available"}
+          {playerPresence === PlayerPresence.RECONNECTING && "Waiting for connection"}
+        </EmptyState>
       )}
       <DirectTopicStatsUpdater interval={6} />
     </>
