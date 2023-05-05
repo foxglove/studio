@@ -15,7 +15,7 @@ import { StoryObj } from "@storybook/react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
-import { SettingsTreeNodes } from "@foxglove/studio-base/../../studio/src";
+import { SettingsTreeNodes } from "@foxglove/studio";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import AppConfigurationContext from "@foxglove/studio-base/context/AppConfigurationContext";
 import { PanelCatalog, PanelInfo } from "@foxglove/studio-base/context/PanelCatalogContext";
