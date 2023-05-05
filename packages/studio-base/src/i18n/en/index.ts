@@ -16,4 +16,3 @@ export * from "./panelSettings";
 export * from "./plot";
 export * from "./settingsEditor";
 export * from "./threeDee";
-export * from "./uiTour";
