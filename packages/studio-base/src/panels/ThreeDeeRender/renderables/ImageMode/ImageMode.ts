@@ -159,7 +159,11 @@ export class ImageMode
     });
 
     renderer.input.on("wheel", (cursorCoords, _worldSpaceCursorCoords, event) => {
-      this.#camera.updateZoomFromWheel(event.deltaY, cursorCoords);
+      this.#camera.updateZoomFromWheel(
+        // Clamp wheel deltas which can vary wildly across different operating systems, browsers, and input devices.
+        1 - 0.01 * THREE.MathUtils.clamp(event.deltaY, -30, 30),
+        cursorCoords,
+      );
       this.#updateAnnotationsScale();
       this.#hasModifiedView = true;
       this.dispatchEvent({ type: "hasModifiedViewChanged" });

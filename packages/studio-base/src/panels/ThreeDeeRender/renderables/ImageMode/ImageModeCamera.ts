@@ -44,15 +44,15 @@ export class ImageModeCamera extends THREE.PerspectiveCamera {
     this.#updateProjection();
   }
 
-  public updateZoomFromWheel(deltaY: number, cursorCoords: THREE.Vector2): void {
-    const newZoom = Math.max(0.5, Math.min(this.#userZoom * (1 - 0.01 * deltaY), 50));
-    const zoomRatio = newZoom / this.#userZoom;
+  public updateZoomFromWheel(ratio: number, cursorCoords: THREE.Vector2): void {
+    const newZoom = THREE.MathUtils.clamp(this.#userZoom * ratio, 0.5, 50);
+    const finalRatio = newZoom / this.#userZoom;
     const halfWidth = this.#canvasSize.width / 2;
     const halfHeight = this.#canvasSize.height / 2;
     // Adjust pan offset so the zoom is centered around the mouse location
     this.#panOffset.set(
-      (halfWidth + this.#panOffset.x - cursorCoords.x) * zoomRatio - halfWidth + cursorCoords.x,
-      (halfHeight + this.#panOffset.y - cursorCoords.y) * zoomRatio - halfHeight + cursorCoords.y,
+      (halfWidth + this.#panOffset.x - cursorCoords.x) * finalRatio - halfWidth + cursorCoords.x,
+      (halfHeight + this.#panOffset.y - cursorCoords.y) * finalRatio - halfHeight + cursorCoords.y,
     );
     this.#userZoom = newZoom;
     this.#updateProjection();
