@@ -33,7 +33,7 @@ export function ImageEmptyState(props: Props): JSX.Element {
   return (
     <EmptyState className={classes.root}>
       <Typography variant="inherit" gutterBottom>
-        Waiting for images{markerTopics.length > 0 && "and markers"} on:
+        Waiting for images {markerTopics.length > 0 && "and markers"} on:
       </Typography>
       <Typography component="code" variant="inherit" display="block">
         {cameraTopic}
