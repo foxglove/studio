@@ -49,6 +49,8 @@ function createWorkspaceContextStore(
       {
         name: "fox.workspace",
         partialize: (value) => {
+          // Note that this is a list of keys from the store that we include and restore
+          // when persisting to and from localStorage.
           return pick(value, [
             "featureTours",
             "leftSidebarItem",
