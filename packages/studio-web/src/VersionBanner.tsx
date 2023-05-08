@@ -144,7 +144,7 @@ function VersionBannerBase({
   );
 }
 
-const VersionBanner = function ({
+export default function VersionBanner({
   isChrome,
   currentVersion,
   isDismissable,
@@ -177,6 +177,4 @@ const VersionBanner = function ({
       <div className={classes.spacer} />
     </MuiThemeProvider>
   );
-};
-
-export default VersionBanner;
+}
