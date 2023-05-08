@@ -7,84 +7,11 @@ import { ReactNode, useState } from "react";
 import { StoreApi, createStore } from "zustand";
 import { persist } from "zustand/middleware";
 
-import { AppSettingsTab } from "@foxglove/studio-base/components/AppSettingsDialog/AppSettingsDialog";
-import { DataSourceDialogItem } from "@foxglove/studio-base/components/DataSourceDialog";
-import { IDataSourceFactory } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import {
-  LeftSidebarItemKey,
-  RightSidebarItemKey,
-  SidebarItemKey,
   WorkspaceContext,
   WorkspaceContextStore,
 } from "@foxglove/studio-base/context/Workspace/WorkspaceContext";
-
-// Type of version 0 store, used for migration.
-type WorkspaceContextStoreV0 = {
-  dataSourceDialog: {
-    activeDataSource: undefined | IDataSourceFactory;
-    item: undefined | DataSourceDialogItem;
-    open: boolean;
-  };
-  featureTours: {
-    active: undefined | string;
-    shown: string[];
-  };
-  leftSidebarOpen: boolean;
-  rightSidebarOpen: boolean;
-  leftSidebarItem: undefined | LeftSidebarItemKey;
-  leftSidebarSize: undefined | number;
-  rightSidebarItem: undefined | RightSidebarItemKey;
-  rightSidebarSize: undefined | number;
-  playbackControls: {
-    repeat: boolean;
-  };
-  prefsDialogState: {
-    initialTab: undefined | AppSettingsTab;
-    open: boolean;
-  };
-  sidebarItem: undefined | SidebarItemKey;
-};
-
-function migrateV0State(oldState: unknown, _version: number): WorkspaceContextStore {
-  // Currently v0 is the only obsolete state. If we do more migrations this
-  // needs to consider the version number.
-  const v0State = oldState as WorkspaceContextStoreV0;
-  return {
-    dialogs: {
-      dataSource: {
-        activeDataSource: v0State.dataSourceDialog.activeDataSource,
-        item: v0State.dataSourceDialog.item,
-        open: v0State.dataSourceDialog.open,
-      },
-      preferences: {
-        initialTab: undefined,
-        open: false,
-      },
-    },
-    featureTours: {
-      active: v0State.featureTours.active,
-      shown: v0State.featureTours.shown,
-    },
-    sidebars: {
-      legacy: {
-        item: "connection",
-      },
-      left: {
-        item: v0State.leftSidebarItem,
-        open: v0State.leftSidebarOpen,
-        size: v0State.leftSidebarSize,
-      },
-      right: {
-        item: v0State.rightSidebarItem,
-        open: v0State.rightSidebarOpen,
-        size: v0State.rightSidebarSize,
-      },
-    },
-    playbackControls: {
-      repeat: v0State.playbackControls.repeat,
-    },
-  };
-}
+import { migrateV0WorkspaceState } from "@foxglove/studio-base/context/Workspace/migrations";
 
 function createWorkspaceContextStore(
   initialState?: Partial<WorkspaceContextStore>,
@@ -134,10 +61,10 @@ function createWorkspaceContextStore(
       {
         name: "fox.workspace",
         version: 1,
-        migrate: migrateV0State,
+        migrate: migrateV0WorkspaceState,
         partialize: (value) => {
-          // Note that this is a list of keys from the store that we include and restore
-          // when persisting to and from localStorage.
+          // Note that this is an opt-in list of keys from the store that we
+          // include and restore when persisting to and from localStorage.
           return pick(value, ["featureTours", "playbackControls", "sidebars"]);
         },
       },
