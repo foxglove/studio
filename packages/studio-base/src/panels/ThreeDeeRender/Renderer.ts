@@ -814,6 +814,8 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
       for (const extension of this.sceneExtensions.values()) {
         this.settings.setNodesForKey(extension.extensionId, extension.settingsNodes());
       }
+
+      this.#imageModeExtension?.updateDefaultImageTopic();
     }
   }
 

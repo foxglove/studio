@@ -28,7 +28,7 @@ import {
 import { makePose } from "@foxglove/studio-base/panels/ThreeDeeRender/transforms";
 
 import { ImageModeCamera } from "./ImageModeCamera";
-import { ImageAnnotations } from "./annotations/ImageAnnotations";
+import { ImageAnnotations, TOPIC_PREFIX_REGEX } from "./annotations/ImageAnnotations";
 import type { IRenderer } from "../../IRenderer";
 import { PartialMessageEvent, SceneExtension } from "../../SceneExtension";
 import { SettingsTreeEntry } from "../../SettingsManager";
@@ -65,6 +65,18 @@ const DEFAULT_FOCAL_LENGTH = 500;
 const DEFAULT_IMAGE_WIDTH = 512;
 
 type ImageModeEvent = { type: "hasModifiedViewChanged" };
+
+const ALL_SUPPORTED_IMAGE_SCHEMAS = new Set([
+  ...ROS_IMAGE_DATATYPES,
+  ...ROS_COMPRESSED_IMAGE_DATATYPES,
+  ...RAW_IMAGE_DATATYPES,
+  ...COMPRESSED_IMAGE_DATATYPES,
+]);
+
+const ALL_SUPPORTED_CALIBRATION_SCHEMAS = new Set([
+  ...CAMERA_INFO_DATATYPES,
+  ...CAMERA_CALIBRATION_DATATYPES,
+]);
 
 export class ImageMode
   extends SceneExtension<ImageRenderable, ImageModeEvent>
@@ -184,11 +196,7 @@ export class ImageMode
 
   public override addSubscriptionsToRenderer(): void {
     const renderer = this.renderer;
-    renderer.addSchemaSubscriptions(CAMERA_INFO_DATATYPES, {
-      handler: this.#handleCameraInfo,
-      shouldSubscribe: this.#cameraInfoShouldSubscribe,
-    });
-    renderer.addSchemaSubscriptions(CAMERA_CALIBRATION_DATATYPES, {
+    renderer.addSchemaSubscriptions(ALL_SUPPORTED_CALIBRATION_SCHEMAS, {
       handler: this.#handleCameraInfo,
       shouldSubscribe: this.#cameraInfoShouldSubscribe,
     });
@@ -231,6 +239,49 @@ export class ImageMode
     super.removeAllRenderables();
   }
 
+  /** If no image topic is selected, automatically select the first available one from `renderer.topics` */
+  public updateDefaultImageTopic(): void {
+    if (this.#getImageModeSettings().imageTopic != undefined) {
+      return;
+    }
+
+    for (const topic of this.renderer.topics ?? []) {
+      if (topicIsConvertibleToSchema(topic, ALL_SUPPORTED_IMAGE_SCHEMAS)) {
+        this.renderer.updateConfig((draft) => {
+          draft.imageMode.imageTopic = topic.name;
+        });
+        this.#autoSelectCalibrationTopic();
+        break;
+      }
+    }
+  }
+
+  /** Update the calibration topic by auto-selecting the best match with the currently selected image topic. */
+  #autoSelectCalibrationTopic() {
+    const { imageTopic } = this.#getImageModeSettings();
+    if (imageTopic == undefined) {
+      return;
+    }
+
+    const imagePrefix = TOPIC_PREFIX_REGEX.exec(imageTopic)?.[0];
+    if (imagePrefix == undefined) {
+      return;
+    }
+
+    for (const topic of this.renderer.topics ?? []) {
+      if (
+        topicIsConvertibleToSchema(topic, ALL_SUPPORTED_CALIBRATION_SCHEMAS) &&
+        topic.name.startsWith(imagePrefix)
+      ) {
+        this.renderer.updateConfig((draft) => {
+          draft.imageMode.calibrationTopic = topic.name;
+        });
+        this.#setHasCalibrationTopic(true);
+        break;
+      }
+    }
+  }
+
   public override settingsNodes(): SettingsTreeEntry[] {
     const config = this.renderer.config;
     const handler = this.handleSettingsAction;
@@ -238,14 +289,7 @@ export class ImageMode
     const { imageTopic, calibrationTopic } = config.imageMode;
 
     const imageTopics = filterMap(this.renderer.topics ?? [], (topic) => {
-      if (
-        !(
-          topicIsConvertibleToSchema(topic, ROS_IMAGE_DATATYPES) ||
-          topicIsConvertibleToSchema(topic, ROS_COMPRESSED_IMAGE_DATATYPES) ||
-          topicIsConvertibleToSchema(topic, RAW_IMAGE_DATATYPES) ||
-          topicIsConvertibleToSchema(topic, COMPRESSED_IMAGE_DATATYPES)
-        )
-      ) {
+      if (!topicIsConvertibleToSchema(topic, ALL_SUPPORTED_IMAGE_SCHEMAS)) {
         return;
       }
       return { label: topic.name, value: topic.name };
@@ -254,17 +298,24 @@ export class ImageMode
     const calibrationTopics: { label: string; value: string | undefined }[] = filterMap(
       this.renderer.topics ?? [],
       (topic) => {
-        if (
-          !(
-            topicIsConvertibleToSchema(topic, CAMERA_INFO_DATATYPES) ||
-            topicIsConvertibleToSchema(topic, CAMERA_CALIBRATION_DATATYPES)
-          )
-        ) {
+        if (!topicIsConvertibleToSchema(topic, ALL_SUPPORTED_CALIBRATION_SCHEMAS)) {
           return;
         }
         return { label: topic.name, value: topic.name };
       },
     );
+
+    // Sort calibration topics with prefixes matching the image topic to the top.
+    if (imageTopic) {
+      const imagePrefix = TOPIC_PREFIX_REGEX.exec(imageTopic)?.[0];
+      if (imagePrefix != undefined) {
+        calibrationTopics.sort((optionA, optionB) => {
+          const matchesA = optionA.label.startsWith(imagePrefix);
+          const matchesB = optionB.label.startsWith(imagePrefix);
+          return matchesA === matchesB ? 0 : matchesA ? -1 : 1;
+        });
+      }
+    }
 
     // add unselected camera calibration option
     calibrationTopics.unshift({ label: "None", value: undefined });
@@ -427,6 +478,10 @@ export class ImageMode
         if (changingFromUnselectedCalibration) {
           this.#setHasCalibrationTopic(true);
         }
+      }
+      const imageTopicChanged = config.imageTopic !== prevImageModeConfig.imageTopic;
+      if (imageTopicChanged) {
+        this.#autoSelectCalibrationTopic();
       }
 
       this.#updateViewAndRenderables();
