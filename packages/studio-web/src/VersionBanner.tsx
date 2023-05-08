@@ -2,8 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Warning24Filled } from "@fluentui/react-icons";
-import CloseIcon from "@mui/icons-material/Close";
+import { Warning24Filled, Dismiss24Regular } from "@fluentui/react-icons";
 import {
   IconButton,
   Typography,
@@ -136,7 +135,7 @@ function VersionBannerBase({
 
         {isDismissable && (
           <IconButton edge="end" color="inherit" size="small" onClick={onDismiss}>
-            <CloseIcon />
+            <Dismiss24Regular />
           </IconButton>
         )}
       </Stack>
