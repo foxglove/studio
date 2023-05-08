@@ -815,7 +815,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
         this.settings.setNodesForKey(extension.extensionId, extension.settingsNodes());
       }
 
-      this.#imageModeExtension?.updateDefaultImageTopic();
+      this.#imageModeExtension?.autoSelectImageTopic();
     }
   }
 

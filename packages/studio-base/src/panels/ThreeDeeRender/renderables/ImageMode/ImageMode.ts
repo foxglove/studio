@@ -240,7 +240,7 @@ export class ImageMode
   }
 
   /** If no image topic is selected, automatically select the first available one from `renderer.topics` */
-  public updateDefaultImageTopic(): void {
+  public autoSelectImageTopic(): void {
     if (this.#getImageModeSettings().imageTopic != undefined) {
       return;
     }
