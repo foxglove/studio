@@ -61,6 +61,7 @@ const useStyles = makeStyles<void, "button" | "icon">()((theme, _params, classes
     justifyContent: "center",
     backgroundColor: theme.palette.background.paper,
     color: theme.palette.text.primary,
+    textAlign: "center",
   },
   icon: {
     color: theme.palette.primary.dark,
@@ -96,7 +97,7 @@ function VersionBannerBase({
 
   return (
     <div className={cx(classes.root, { [classes.fullscreen]: !isDismissable })}>
-      <Stack direction="row" alignItems="center" gap={2}>
+      <Stack direction={!isDismissable ? "column" : "row"} alignItems="center" gap={2}>
         <Warning24Filled className={classes.icon} />
 
         <div>
