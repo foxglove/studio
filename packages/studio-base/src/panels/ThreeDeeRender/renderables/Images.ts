@@ -260,7 +260,7 @@ export class Images extends SceneExtension<ImageRenderable> {
   };
 
   #handleImage = (messageEvent: PartialMessageEvent<AnyImage>, image: AnyImage): void => {
-    // Ensure the latest list of camera info topics is up to date for autoSelectCalibrationTopic call below
+    // Ensure the latest list of camera info topics is up to date for auto-selection below
     this.#updateCameraInfoTopics();
 
     const imageTopic = messageEvent.topic;
