@@ -187,7 +187,7 @@ export function ThreeDeeRender(props: {
   );
 
   // The frame we care about for syncing purposes can be either of these.
-  const effectiveRendererFrameId = renderer?.followFrameId ?? renderer?.renderFrameId;
+  const effectiveRendererFrameId = renderer?.followFrameId;
 
   // Config cameraState
   useEffect(() => {
@@ -643,7 +643,7 @@ export function ThreeDeeRender(props: {
   useEffect(() => {
     const onStart = () => setPublishActive(true);
     const onSubmit = (event: PublishClickEvent & { type: "foxglove.publish-submit" }) => {
-      const frameId = renderer?.renderFrameId;
+      const frameId = renderer?.followFrameId;
       if (frameId == undefined) {
         log.warn("Unable to publish, renderFrameId is not set");
         return;
@@ -698,7 +698,7 @@ export function ThreeDeeRender(props: {
     context,
     latestPublishConfig,
     publishTopics,
-    renderer?.renderFrameId,
+    renderer?.followFrameId,
     renderer?.publishClickTool,
   ]);
 

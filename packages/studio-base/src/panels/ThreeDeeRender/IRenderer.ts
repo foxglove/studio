@@ -206,8 +206,11 @@ export interface IRenderer extends EventEmitter<RendererEvents> {
   transformTree: TransformTree;
   coordinateFrameList: SelectEntry[];
   currentTime: bigint;
+  /* Root frame of the follow frame */
   fixedFrameId: string | undefined;
-  renderFrameId: string | undefined;
+  /**
+   * The frameId that we _want_ to follow and render in if it exists.
+   */
   followFrameId: string | undefined;
 
   labelPool: LabelPool;
