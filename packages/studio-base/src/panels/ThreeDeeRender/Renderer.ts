@@ -804,19 +804,20 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
   /** Update the list of topics and rebuild all settings nodes when the identity
    * of the topics list changes */
   public setTopics(topics: ReadonlyArray<Topic> | undefined): void {
-    const changed = this.topics !== topics;
-    this.topics = topics;
-    if (changed) {
-      // Rebuild topicsByName
-      this.topicsByName = topics ? new Map(topics.map((topic) => [topic.name, topic])) : undefined;
-
-      // Rebuild the settings nodes for all scene extensions
-      for (const extension of this.sceneExtensions.values()) {
-        this.settings.setNodesForKey(extension.extensionId, extension.settingsNodes());
-      }
-
-      this.#imageModeExtension?.autoSelectImageTopic();
+    if (this.topics === topics) {
+      return;
     }
+    this.topics = topics;
+
+    // Rebuild topicsByName
+    this.topicsByName = topics ? new Map(topics.map((topic) => [topic.name, topic])) : undefined;
+
+    // Rebuild the settings nodes for all scene extensions
+    for (const extension of this.sceneExtensions.values()) {
+      this.settings.setNodesForKey(extension.extensionId, extension.settingsNodes());
+    }
+
+    this.emit("topicsChanged", this);
   }
 
   public setParameters(parameters: ReadonlyMap<string, ParameterValue> | undefined): void {

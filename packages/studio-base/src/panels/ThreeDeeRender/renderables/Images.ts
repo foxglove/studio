@@ -9,7 +9,7 @@ import { PinholeCameraModel } from "@foxglove/den/image";
 import Logger from "@foxglove/log";
 import { toNanoSec } from "@foxglove/rostime";
 import { CameraCalibration, CompressedImage, RawImage } from "@foxglove/schemas";
-import { SettingsTreeAction, SettingsTreeFields, Topic } from "@foxglove/studio";
+import { SettingsTreeAction, SettingsTreeFields } from "@foxglove/studio";
 
 import {
   CREATE_BITMAP_ERR_KEY,
@@ -78,11 +78,15 @@ export class Images extends SceneExtension<ImageRenderable> {
    */
   #cameraInfoByTopic = new Map<string, CameraInfo>();
 
-  #lastTopics: readonly Topic[] | undefined = undefined;
-
   public constructor(renderer: IRenderer) {
     super("foxglove.Images", renderer);
-    this.#updateCameraInfoTopics();
+    this.renderer.on("topicsChanged", this.#handleTopicsChanged);
+    this.#handleTopicsChanged();
+  }
+
+  public override dispose(): void {
+    this.renderer.off("topicsChanged", this.#handleTopicsChanged);
+    super.dispose();
   }
 
   public override addSubscriptionsToRenderer(): void {
@@ -103,13 +107,7 @@ export class Images extends SceneExtension<ImageRenderable> {
   /**
    * Update cameraInfoTopics cache with latest set of camera info messages
    */
-  #updateCameraInfoTopics() {
-    if (this.renderer.topics === this.#lastTopics) {
-      return;
-    }
-
-    this.#lastTopics = this.renderer.topics;
-
+  #handleTopicsChanged = () => {
     this.#cameraInfoTopics = new Set();
     for (const topic of this.renderer.topics ?? []) {
       if (
@@ -119,10 +117,9 @@ export class Images extends SceneExtension<ImageRenderable> {
         this.#cameraInfoTopics.add(topic.name);
       }
     }
-  }
+  };
 
   public override settingsNodes(): SettingsTreeEntry[] {
-    this.#updateCameraInfoTopics();
     const configTopics = this.renderer.config.topics;
     const handler = this.handleSettingsAction;
     const entries: SettingsTreeEntry[] = [];
@@ -260,9 +257,6 @@ export class Images extends SceneExtension<ImageRenderable> {
   };
 
   #handleImage = (messageEvent: PartialMessageEvent<AnyImage>, image: AnyImage): void => {
-    // Ensure the latest list of camera info topics is up to date for auto-selection below
-    this.#updateCameraInfoTopics();
-
     const imageTopic = messageEvent.topic;
     const receiveTime = toNanoSec(messageEvent.receiveTime);
     const frameId = "header" in image ? image.header.frame_id : image.frame_id;

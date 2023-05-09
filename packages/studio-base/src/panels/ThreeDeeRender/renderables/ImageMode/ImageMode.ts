@@ -182,6 +182,9 @@ export class ImageMode
       this.dispatchEvent({ type: "hasModifiedViewChanged" });
       this.renderer.queueAnimationFrame();
     });
+
+    this.renderer.on("topicsChanged", this.#handleTopicsChanged);
+    this.#handleTopicsChanged();
   }
 
   public hasModifiedView(): boolean {
@@ -226,6 +229,7 @@ export class ImageMode
     this.renderer.settings.errors.off("update", this.#handleErrorChange);
     this.renderer.settings.errors.off("clear", this.#handleErrorChange);
     this.renderer.settings.errors.off("remove", this.#handleErrorChange);
+    this.renderer.off("topicsChanged", this.#handleTopicsChanged);
     this.#annotations.dispose();
     this.#imageRenderable?.dispose();
     super.dispose();
@@ -244,7 +248,7 @@ export class ImageMode
    * If no image topic is selected, automatically select the first available one from `renderer.topics`.
    * Also auto-select a new calibration topic to match the new image topic.
    */
-  public autoSelectImageTopic(): void {
+  #handleTopicsChanged = () => {
     if (this.#getImageModeSettings().imageTopic != undefined) {
       return;
     }
@@ -264,7 +268,7 @@ export class ImageMode
         draft.imageMode.calibrationTopic = matchingCalibrationTopic.name;
       }
     });
-  }
+  };
 
   /** Choose a calibration topic that best matches the given `imageTopic`. */
   #getMatchingCalibrationTopic(imageTopic: string): Topic | undefined {
