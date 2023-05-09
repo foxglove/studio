@@ -812,12 +812,12 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     // Rebuild topicsByName
     this.topicsByName = topics ? new Map(topics.map((topic) => [topic.name, topic])) : undefined;
 
+    this.emit("topicsChanged", this);
+
     // Rebuild the settings nodes for all scene extensions
     for (const extension of this.sceneExtensions.values()) {
       this.settings.setNodesForKey(extension.extensionId, extension.settingsNodes());
     }
-
-    this.emit("topicsChanged", this);
   }
 
   public setParameters(parameters: ReadonlyMap<string, ParameterValue> | undefined): void {
