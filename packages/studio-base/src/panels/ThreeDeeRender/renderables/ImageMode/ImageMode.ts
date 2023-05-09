@@ -8,7 +8,7 @@ import { filterMap } from "@foxglove/den/collection";
 import { PinholeCameraModel } from "@foxglove/den/image";
 import { toNanoSec } from "@foxglove/rostime";
 import { CameraCalibration, CompressedImage, RawImage } from "@foxglove/schemas";
-import { SettingsTreeAction, SettingsTreeFields } from "@foxglove/studio";
+import { SettingsTreeAction, SettingsTreeFields, Topic } from "@foxglove/studio";
 import {
   CREATE_BITMAP_ERR_KEY,
   IMAGE_RENDERABLE_DEFAULT_SETTINGS,
@@ -28,7 +28,7 @@ import {
 import { makePose } from "@foxglove/studio-base/panels/ThreeDeeRender/transforms";
 
 import { ImageModeCamera } from "./ImageModeCamera";
-import { ImageAnnotations, TOPIC_PREFIX_REGEX } from "./annotations/ImageAnnotations";
+import { ImageAnnotations } from "./annotations/ImageAnnotations";
 import type { IRenderer } from "../../IRenderer";
 import { PartialMessageEvent, SceneExtension } from "../../SceneExtension";
 import { SettingsTreeEntry } from "../../SettingsManager";
@@ -48,6 +48,7 @@ import {
 import { topicIsConvertibleToSchema } from "../../topicIsConvertibleToSchema";
 import { ICameraHandler } from "../ICameraHandler";
 import { decodeCompressedImageToBitmap } from "../Images/decodeCompressedImageToBitmap";
+import { getTopicMatchPrefix, sortPrefixMatchesToFront } from "../Images/topicPrefixMatching";
 
 const IMAGE_TOPIC_PATH = ["imageMode", "imageTopic"];
 const CALIBRATION_TOPIC_PATH = ["imageMode", "calibrationTopic"];
@@ -239,47 +240,43 @@ export class ImageMode
     super.removeAllRenderables();
   }
 
-  /** If no image topic is selected, automatically select the first available one from `renderer.topics` */
+  /**
+   * If no image topic is selected, automatically select the first available one from `renderer.topics`.
+   * Also auto-select a new calibration topic to match the new image topic.
+   */
   public autoSelectImageTopic(): void {
     if (this.#getImageModeSettings().imageTopic != undefined) {
       return;
     }
 
-    for (const topic of this.renderer.topics ?? []) {
-      if (topicIsConvertibleToSchema(topic, ALL_SUPPORTED_IMAGE_SCHEMAS)) {
-        this.renderer.updateConfig((draft) => {
-          draft.imageMode.imageTopic = topic.name;
-        });
-        this.#autoSelectCalibrationTopic();
-        break;
-      }
-    }
-  }
-
-  /** Update the calibration topic by auto-selecting the best match with the currently selected image topic. */
-  #autoSelectCalibrationTopic() {
-    const { imageTopic } = this.#getImageModeSettings();
+    const imageTopic = this.renderer.topics?.find((topic) =>
+      topicIsConvertibleToSchema(topic, ALL_SUPPORTED_IMAGE_SCHEMAS),
+    );
     if (imageTopic == undefined) {
       return;
     }
 
-    const imagePrefix = TOPIC_PREFIX_REGEX.exec(imageTopic)?.[0];
-    if (imagePrefix == undefined) {
-      return;
-    }
+    const matchingCalibrationTopic = this.#getMatchingCalibrationTopic(imageTopic.name);
 
-    for (const topic of this.renderer.topics ?? []) {
-      if (
-        topicIsConvertibleToSchema(topic, ALL_SUPPORTED_CALIBRATION_SCHEMAS) &&
-        topic.name.startsWith(imagePrefix)
-      ) {
-        this.renderer.updateConfig((draft) => {
-          draft.imageMode.calibrationTopic = topic.name;
-        });
-        this.#setHasCalibrationTopic(true);
-        break;
+    this.renderer.updateConfig((draft) => {
+      draft.imageMode.imageTopic = imageTopic.name;
+      if (matchingCalibrationTopic != undefined) {
+        draft.imageMode.calibrationTopic = matchingCalibrationTopic.name;
       }
+    });
+  }
+
+  /** Choose a calibration topic that best matches the given `imageTopic`. */
+  #getMatchingCalibrationTopic(imageTopic: string): Topic | undefined {
+    const prefix = getTopicMatchPrefix(imageTopic);
+    if (prefix == undefined) {
+      return undefined;
     }
+    return this.renderer.topics?.find(
+      (topic) =>
+        topicIsConvertibleToSchema(topic, ALL_SUPPORTED_CALIBRATION_SCHEMAS) &&
+        topic.name.startsWith(prefix),
+    );
   }
 
   public override settingsNodes(): SettingsTreeEntry[] {
@@ -307,14 +304,7 @@ export class ImageMode
 
     // Sort calibration topics with prefixes matching the image topic to the top.
     if (imageTopic) {
-      const imagePrefix = TOPIC_PREFIX_REGEX.exec(imageTopic)?.[0];
-      if (imagePrefix != undefined) {
-        calibrationTopics.sort((optionA, optionB) => {
-          const matchesA = optionA.label.startsWith(imagePrefix);
-          const matchesB = optionB.label.startsWith(imagePrefix);
-          return matchesA === matchesB ? 0 : matchesA ? -1 : 1;
-        });
-      }
+      sortPrefixMatchesToFront(calibrationTopics, imageTopic, (option) => option.label);
     }
 
     // add unselected camera calibration option
@@ -480,8 +470,13 @@ export class ImageMode
         }
       }
       const imageTopicChanged = config.imageTopic !== prevImageModeConfig.imageTopic;
-      if (imageTopicChanged) {
-        this.#autoSelectCalibrationTopic();
+      if (imageTopicChanged && config.imageTopic != undefined) {
+        const calibrationTopic = this.#getMatchingCalibrationTopic(config.imageTopic);
+        if (calibrationTopic) {
+          this.renderer.updateConfig((draft) => {
+            draft.imageMode.calibrationTopic = calibrationTopic.name;
+          });
+        }
       }
 
       this.#updateViewAndRenderables();
