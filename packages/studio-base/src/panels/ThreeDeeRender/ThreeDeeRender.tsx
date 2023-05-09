@@ -16,9 +16,8 @@ import { Immutable } from "immer";
 import { cloneDeep, isEqual, merge } from "lodash";
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import ReactDOM from "react-dom";
-import { useLatest, useLongPress } from "react-use";
+import { useLatest } from "react-use";
 import { DeepPartial } from "ts-essentials";
-import { makeStyles } from "tss-react/mui";
 import { useDebouncedCallback } from "use-debounce";
 
 import Logger from "@foxglove/log";
@@ -36,11 +35,7 @@ import {
   VariableValue,
 } from "@foxglove/studio";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
-import PublishGoalIcon from "@foxglove/studio-base/components/PublishGoalIcon";
-import PublishPointIcon from "@foxglove/studio-base/components/PublishPointIcon";
-import PublishPoseEstimateIcon from "@foxglove/studio-base/components/PublishPoseEstimateIcon";
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
-import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import type {
   RendererConfig,
@@ -50,13 +45,12 @@ import type {
   IRenderer,
   ImageModeConfig,
 } from "./IRenderer";
-import { InteractionContextMenu, Interactions, SelectionObject, TabType } from "./Interactions";
 import type { PickedRenderable } from "./Picker";
-import { Renderable, SELECTED_ID_VARIABLE } from "./Renderable";
+import { SELECTED_ID_VARIABLE } from "./Renderable";
 import { LegacyImageConfig, Renderer } from "./Renderer";
-import { RendererContext, useRenderer, useRendererEvent } from "./RendererContext";
-import { Stats } from "./Stats";
-import { CameraState, DEFAULT_CAMERA_STATE, MouseEventObject } from "./camera";
+import { RendererContext, useRendererEvent } from "./RendererContext";
+import { RendererOverlay } from "./RendererOverlay";
+import { CameraState, DEFAULT_CAMERA_STATE } from "./camera";
 import {
   makePointMessage,
   makePoseEstimateMessage,
@@ -65,7 +59,7 @@ import {
   PublishRos2Datatypes,
 } from "./publish";
 import type { LayerSettingsTransform } from "./renderables/FrameAxes";
-import { PublishClickEvent, PublishClickType } from "./renderables/PublishClickTool";
+import { PublishClickEvent } from "./renderables/PublishClickTool";
 import { DEFAULT_PUBLISH_SETTINGS } from "./renderables/PublishSettings";
 import { InterfaceMode } from "./types";
 import { stopRecordVideo } from "@foxglove/studio-base/panels/video/downloadVideo";
@@ -85,6 +79,7 @@ const PANEL_STYLE: React.CSSProperties = {
   display: "flex",
   position: "relative",
 };
+
 
 const PublishClickIcons: Record<PublishClickType, React.ReactNode> = {
   pose: <PublishGoalIcon fontSize="inherit" />,
@@ -389,6 +384,7 @@ function RendererOverlay(props: {
     </React.Fragment>
   );
 }
+
 
 function useRendererProperty<K extends keyof IRenderer>(
   renderer: IRenderer | undefined,

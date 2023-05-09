@@ -35,10 +35,10 @@ import {
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
 import {
-  useWorkspaceActions,
   useWorkspaceStore,
   WorkspaceContextStore,
-} from "@foxglove/studio-base/context/WorkspaceContext";
+} from "@foxglove/studio-base/context/Workspace/WorkspaceContext";
+import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/useWorkspaceActions";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
@@ -228,8 +228,13 @@ export function AppBar(props: AppBarProps): JSX.Element {
 
   const currentLayoutId = useCurrentLayoutSelector(selectCurrentLayoutId);
 
-  const { leftSidebarOpen, rightSidebarOpen } = useWorkspaceStore(selectWorkspace, shallow);
-  const { setRightSidebarOpen, setLeftSidebarOpen } = useWorkspaceActions();
+  const {
+    sidebars: {
+      left: { open: leftSidebarOpen },
+      right: { open: rightSidebarOpen },
+    },
+  } = useWorkspaceStore(selectWorkspace, shallow);
+  const { sidebarActions } = useWorkspaceActions();
 
   const [appMenuEl, setAppMenuEl] = useState<undefined | HTMLElement>(undefined);
   const [userAnchorEl, setUserAnchorEl] = useState<undefined | HTMLElement>(undefined);
@@ -256,6 +261,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
         color="inherit"
         elevation={0}
         onDoubleClick={handleDoubleClick}
+        data-tourid="app-bar"
       >
         <div className={classes.toolbar}>
           <div className={classes.start}>
@@ -263,11 +269,12 @@ export function AppBar(props: AppBarProps): JSX.Element {
               <IconButton
                 className={cx(classes.logo, { "Mui-selected": appMenuOpen })}
                 color="inherit"
-                id="menu-button"
+                id="app-menu-button"
                 title="Menu"
                 aria-controls={appMenuOpen ? "app-menu" : undefined}
                 aria-haspopup="true"
                 aria-expanded={appMenuOpen ? "true" : undefined}
+                data-tourid="app-menu-button"
                 onClick={(event) => {
                   setAppMenuEl(event.currentTarget);
                 }}
@@ -288,6 +295,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
                 color="inherit"
                 disabled={currentLayoutId == undefined}
                 id="add-panel-button"
+                data-tourid="add-panel-button"
                 title="Add panel"
                 aria-label="Add panel button"
                 aria-controls={panelMenuOpen ? "add-panel-menu" : undefined}
@@ -319,7 +327,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
                     </>
                   }
                   aria-label={`${leftSidebarOpen ? "Hide" : "Show"} left sidebar`}
-                  onClick={() => setLeftSidebarOpen(!leftSidebarOpen)}
+                  onClick={() => sidebarActions.left.setOpen(!leftSidebarOpen)}
                 >
                   {leftSidebarOpen ? <PanelLeft24Filled /> : <PanelLeft24Regular />}
                 </AppBarIconButton>
@@ -331,7 +339,8 @@ export function AppBar(props: AppBarProps): JSX.Element {
                     </>
                   }
                   aria-label={`${rightSidebarOpen ? "Hide" : "Show"} right sidebar`}
-                  onClick={() => setRightSidebarOpen(!rightSidebarOpen)}
+                  onClick={() => sidebarActions.right.setOpen(!rightSidebarOpen)}
+                  data-tourid="right-sidebar-button"
                 >
                   {rightSidebarOpen ? <PanelRight24Filled /> : <PanelRight24Regular />}
                 </AppBarIconButton>
@@ -363,6 +372,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
                   aria-label="User profile menu button"
                   color="inherit"
                   id="user-profile-button"
+                  data-tourid="user-profile-button"
                   aria-controls={userMenuOpen ? "user-profile-menu" : undefined}
                   aria-haspopup="true"
                   aria-expanded={userMenuOpen ? "true" : undefined}
