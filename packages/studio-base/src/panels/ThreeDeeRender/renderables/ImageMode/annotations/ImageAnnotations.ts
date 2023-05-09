@@ -51,11 +51,6 @@ const ALL_SUPPORTED_SCHEMAS = new Set([
 ]);
 
 /**
- * Match everything up to the last `/` in a topic name, e.g. match `/a/b` in `/a/b/c`.
- */
-export const TOPIC_PREFIX_REGEX = /^.+\/(?=.)/;
-
-/**
  * Determine whether `subscription`, an entry in {@link ImageModeConfig.annotations}, is the entry
  * that should correspond to `topic` with conversion to `convertTo`.
  */
