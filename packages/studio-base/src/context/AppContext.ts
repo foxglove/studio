@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { createContext, useContext } from "react";
+import { FunctionComponent, createContext, useContext } from "react";
 
 interface IAppContext {
   appBarLayoutButton?: JSX.Element;
@@ -15,6 +15,7 @@ interface IAppContext {
   sidebarItems?: readonly [[string, { iconName: string; title: string }]];
   syncAdapters?: readonly JSX.Element[];
   workspaceExtensions?: readonly JSX.Element[];
+  panelLayout?: FunctionComponent<unknown>;
 }
 
 const AppContext = createContext<IAppContext>({});

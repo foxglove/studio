@@ -247,7 +247,11 @@ function WorkspaceContent(props: WorkspaceContentProps): JSX.Element {
   const [initialEnableNewTopNav] = useState(currentEnableNewTopNav);
   const enableNewTopNav = isDesktopApp() ? initialEnableNewTopNav : currentEnableNewTopNav;
 
-  const { sidebarItems: appContextSidebarItems, workspaceExtensions } = useAppContext();
+  const {
+    sidebarItems: appContextSidebarItems,
+    workspaceExtensions,
+    panelLayout: ResolvedPanelLayout = PanelLayout,
+  } = useAppContext();
 
   // When a player is activated, hide the open dialog.
   useLayoutEffect(() => {
@@ -669,7 +673,7 @@ function WorkspaceContent(props: WorkspaceContentProps): JSX.Element {
           {/* To ensure no stale player state remains, we unmount all panels when players change */}
           <RemountOnValueChange value={playerId}>
             <Stack>
-              <PanelLayout />
+              <ResolvedPanelLayout />
             </Stack>
           </RemountOnValueChange>
         </Sidebars>
