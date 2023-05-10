@@ -7174,43 +7174,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"app-builder-lib@npm:*":
-  version: 24.3.0
-  resolution: "app-builder-lib@npm:24.3.0"
-  dependencies:
-    7zip-bin: ~5.1.1
-    "@develar/schema-utils": ~2.6.5
-    "@electron/notarize": ^1.2.3
-    "@electron/osx-sign": ^1.0.4
-    "@electron/rebuild": ^3.2.13
-    "@electron/universal": 1.3.4
-    "@malept/flatpak-bundler": ^0.4.0
-    async-exit-hook: ^2.0.1
-    bluebird-lst: ^1.0.9
-    builder-util: 24.3.0
-    builder-util-runtime: 9.2.1
-    chromium-pickle-js: ^0.2.0
-    debug: ^4.3.4
-    ejs: ^3.1.8
-    electron-publish: 24.3.0
-    form-data: ^4.0.0
-    fs-extra: ^10.1.0
-    hosted-git-info: ^4.1.0
-    is-ci: ^3.0.0
-    isbinaryfile: ^5.0.0
-    js-yaml: ^4.1.0
-    lazy-val: ^1.0.5
-    minimatch: ^5.1.1
-    read-config-file: 6.3.2
-    sanitize-filename: ^1.6.3
-    semver: ^7.3.8
-    tar: ^6.1.12
-    temp-file: ^3.4.0
-  checksum: 63ce0bda36e38e0360b8472503ee846c040ccb957300a7d5d6b789304592d19782e980d4b353bba549e29c51d337cca11b31d7358fe364b100f3282b85ac90d0
-  languageName: node
-  linkType: hard
-
-"app-builder-lib@npm:24.4.0":
+"app-builder-lib@npm:*, app-builder-lib@npm:24.4.0":
   version: 24.4.0
   resolution: "app-builder-lib@npm:24.4.0"
   dependencies:
@@ -10145,20 +10109,6 @@ __metadata:
     tslib: ^2.1.0
     unzip-crx-3: ^0.2.0
   checksum: e87d4c9283f84ac610e9ee37d72677f18feed05174e9d5bf0415a56c3daac717e3f34a5a763499aff7fc2e565660d2ad66beb95d960e8176ed148acf1c3a416b
-  languageName: node
-  linkType: hard
-
-"electron-publish@npm:24.3.0":
-  version: 24.3.0
-  resolution: "electron-publish@npm:24.3.0"
-  dependencies:
-    builder-util: 24.3.0
-    builder-util-runtime: 9.2.1
-    chalk: ^4.1.2
-    fs-extra: ^10.1.0
-    lazy-val: ^1.0.5
-    mime: ^2.5.2
-  checksum: 62b951c922cfc4e6a81a612c59136dcaa18b396ef35ae14b0a06ad2cf3eaf434da1625dabba9e701a3186a72a19eff01df9db41156d6d0ab179f15417079246f
   languageName: node
   linkType: hard
 
