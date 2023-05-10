@@ -992,7 +992,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
 
   public setFollowFrameId(frameId: string | undefined): void {
     this.followFrameId = frameId;
-    log.debug(`Setting render frame to ${frameId}`);
+    log.debug(`Setting followFrameId to ${frameId}`);
   }
 
   #frameHandler = (currentTime: bigint): void => {
