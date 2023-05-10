@@ -377,10 +377,7 @@ function NodePlayground(props: Props) {
                   }}
                   inputProps={{ spellCheck: false, style: inputStyle }}
                 />
-                <div
-                  className={classes.unsavedDot}
-                  style={{ display: isNodeSaved ? "none" : "block" }}
-                />
+                {!isNodeSaved && <div className={classes.unsavedDot} />}
               </div>
             )}
             <IconButton
