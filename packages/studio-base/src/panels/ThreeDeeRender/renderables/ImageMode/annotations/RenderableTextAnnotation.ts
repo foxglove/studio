@@ -4,6 +4,7 @@
 
 import { PinholeCameraModel } from "@foxglove/den/image";
 import { TextAnnotation as NormalizedTextAnnotation } from "@foxglove/studio-base/panels/Image/types";
+import { RosValue } from "@foxglove/studio-base/players/types";
 import { Label, LabelPool } from "@foxglove/three-text";
 
 import { BaseUserData, Renderable } from "../../../Renderable";
@@ -47,6 +48,10 @@ export class RenderableTextAnnotation extends Renderable<BaseUserData, /*TRender
   public override dispose(): void {
     this.#labelPool.release(this.#label);
     super.dispose();
+  }
+
+  public override details(): Record<string, RosValue> {
+    return this.#annotation ?? {};
   }
 
   public setScale(

@@ -6,6 +6,7 @@ import * as THREE from "three";
 
 import { PinholeCameraModel } from "@foxglove/den/image";
 import { PointsAnnotation as NormalizedPointsAnnotation } from "@foxglove/studio-base/panels/Image/types";
+import { RosValue } from "@foxglove/studio-base/players/types";
 
 import { DynamicBufferGeometry } from "../../../DynamicBufferGeometry";
 import { BaseUserData, Renderable } from "../../../Renderable";
@@ -80,6 +81,10 @@ export class RenderablePointsAnnotation extends Renderable<BaseUserData, /*TRend
     this.#pointsMaterial.dispose();
     this.#pickingMaterial.dispose();
     super.dispose();
+  }
+
+  public override details(): Record<string, RosValue> {
+    return this.#annotation ?? {};
   }
 
   public setScale(

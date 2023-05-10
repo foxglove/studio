@@ -14,6 +14,7 @@ import {
   PointsAnnotation as NormalizedPointsAnnotation,
   CircleAnnotation as NormalizedCircleAnnotation,
 } from "@foxglove/studio-base/panels/Image/types";
+import { RosValue } from "@foxglove/studio-base/players/types";
 
 import { BaseUserData, Renderable } from "../../../Renderable";
 import { SRGBToLinear } from "../../../color";
@@ -114,6 +115,10 @@ export class RenderableLineAnnotation extends Renderable<BaseUserData, /*TRender
     this.#fillGeometry?.dispose();
     this.#fillMaterial?.dispose();
     super.dispose();
+  }
+
+  public override details(): Record<string, RosValue> {
+    return this.#annotation ?? {};
   }
 
   public setScale(
