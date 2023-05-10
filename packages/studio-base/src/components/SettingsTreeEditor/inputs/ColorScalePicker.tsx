@@ -6,6 +6,8 @@ import { Button, ButtonProps, Menu, MenuItem, Typography } from "@mui/material";
 import { useState } from "react";
 import { makeStyles } from "tss-react/mui";
 
+import Stack from "@foxglove/studio-base/components/Stack";
+
 const COLOR_SCALE_OPTIONS: [string, string[]][] = [
   [
     "turbo",
@@ -112,11 +114,13 @@ const useStyles = makeStyles()((theme) => ({
     borderColor: theme.palette.divider,
     display: "flex",
   },
-  colorScale: {
-    paddingBottom: theme.spacing(2.5),
-    flex: "auto",
-  },
 }));
+
+function ColorScale({ colors }: { colors: string[] }): JSX.Element {
+  const backgroundImage = `linear-gradient(to right, ${colors.join(",")})`;
+
+  return <Stack paddingBottom={2.5} flex="auto" style={{ backgroundImage }} />;
+}
 
 // ts-prune-ignore-next
 export function ColorScalePicker(props: ColorScalePickerProps): JSX.Element {
@@ -145,14 +149,7 @@ export function ColorScalePicker(props: ColorScalePickerProps): JSX.Element {
         onClick={handleClick}
         {...rest}
       >
-        <div
-          className={classes.colorScale}
-          style={{
-            backgroundImage: `linear-gradient(to right, ${
-              COLOR_SCALE_OPTIONS[selectedOption]?.[1] ?? ["black"].join(",")
-            })`,
-          }}
-        />
+        <ColorScale colors={COLOR_SCALE_OPTIONS[selectedOption]?.[1] ?? ["black"]} />
       </Button>
       <Menu
         id="colorscale-menu"
@@ -185,10 +182,7 @@ export function ColorScalePicker(props: ColorScalePickerProps): JSX.Element {
             <Typography variant="button" style={{ width: 60 }}>
               {name}
             </Typography>
-            <div
-              className={classes.colorScale}
-              style={{ backgroundImage: `linear-gradient(to right, ${colorScale.join(",")})` }}
-            />
+            <ColorScale colors={colorScale} />
           </MenuItem>
         ))}
       </Menu>
