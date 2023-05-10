@@ -396,9 +396,6 @@ export class CameraStateSettings extends SceneExtension implements ICameraHandle
     this.updateSettingsTree();
   };
 
-  /** Tracks the number of frames so we can recompute the defaultFrameId when frames are added. */
-  #lastTransformFrameCount = 0;
-
   #updateFollowFrameId() {
     const { followTf } = this.renderer.config;
     const { transformTree } = this.renderer;
@@ -410,17 +407,10 @@ export class CameraStateSettings extends SceneExtension implements ICameraHandle
       return;
     }
 
-    const newTransformFrameCount = transformTree.frames().size;
-    if (this.#lastTransformFrameCount === newTransformFrameCount) {
-      return;
-    }
-
     // No valid renderFrameId set, or new frames have been added, fall back to selecting the
     // heuristically most valid frame (if any frames are present)
     const followFrameId = transformTree.getDefaultFollowFrameId();
     this.renderer.setFollowFrameId(followFrameId);
-
-    this.#lastTransformFrameCount = newTransformFrameCount;
   }
 
   #checkFollowTf = (): void => {

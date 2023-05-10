@@ -45,6 +45,7 @@ export type RendererEvents = {
     variables: ReadonlyMap<string, VariableValue> | undefined,
     renderer: IRenderer,
   ) => void;
+  /** Fired when the structure of the transform tree changes ie: new frame added/removed or frame assigned new parent */
   transformTreeUpdated: (renderer: IRenderer) => void;
   settingsTreeChange: (renderer: IRenderer) => void;
   configChange: (renderer: IRenderer) => void;
