@@ -180,7 +180,7 @@ export class RenderableLineAnnotation extends Renderable<BaseUserData, /*TRender
       if (
         this.#numPoints == undefined ||
         !this.#geometry ||
-        pointsLength > this.#numPoints ||
+        pointsLength !== this.#numPoints ||
         this.#style !== style
       ) {
         // Need to recreate the geometry when length changes: https://github.com/mrdoob/three.js/issues/21488
