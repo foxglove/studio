@@ -49,7 +49,7 @@ const useStyles = makeStyles()((theme) => ({
     },
   },
   explorerWrapper: {
-    backgroundColor: theme.palette.grey[200],
+    backgroundColor: theme.palette.background.paper,
     width: 350,
     overflow: "auto",
   },
