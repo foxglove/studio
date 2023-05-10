@@ -267,12 +267,18 @@ export class RenderableLineAnnotation extends Renderable<BaseUserData, /*TRender
       }
 
       if (shapeFillColor) {
-        this.#fillGeometry ??= new THREE.ShapeGeometry(shape);
+        if (this.#fillGeometry) {
+          this.#fillGeometry.dispose();
+          this.#fillGeometry = undefined;
+        }
+        this.#fillGeometry = new THREE.ShapeGeometry(shape);
         this.#fillMaterial ??= new THREE.MeshBasicMaterial({ side: THREE.DoubleSide });
         if (!this.#fill) {
           this.#fill = new THREE.Mesh(this.#fillGeometry, this.#fillMaterial);
           this.#fill.renderOrder = RenderOrder.FILL;
           this.add(this.#fill);
+        } else {
+          this.#fill.geometry = this.#fillGeometry;
         }
         this.#fill.position.set(0, 0, 1);
         this.#fillMaterial.color
