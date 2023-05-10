@@ -80,7 +80,7 @@
     "@storybook/addon-actions": "7.0.9",
     "@storybook/addon-essentials": "7.0.9",
     "@storybook/react": "7.0.9",
-    "@storybook/react-webpack5": "7.0.9",
+    "@storybook/react-webpack5": "7.0.10",
     "@types/babel__core": "^7.20.0",
     "@types/babel__preset-env": "^7.9.2",
     "@types/case-sensitive-paths-webpack-plugin": "2.1.6",
