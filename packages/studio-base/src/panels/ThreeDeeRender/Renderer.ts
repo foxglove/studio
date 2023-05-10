@@ -217,10 +217,6 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
   public currentTime = 0n;
   public fixedFrameId: string | undefined;
   public followFrameId: string | undefined;
-  /**
-   * The frameId that we are actually rendering in
-   */
-  #renderFrameId: string | undefined;
 
   public labelPool = new LabelPool({ fontFamily: fonts.MONOSPACE });
   public markerPool = new MarkerPool(this);
@@ -994,6 +990,11 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     }
   }
 
+  public setFollowFrameId(frameId: string | undefined): void {
+    this.followFrameId = frameId;
+    log.debug(`Setting render frame to ${frameId}`);
+  }
+
   #frameHandler = (currentTime: bigint): void => {
     this.currentTime = currentTime;
     this.#checkFollowFrame();
@@ -1008,8 +1009,10 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     this.#selectionBackdrop.visible = this.#selectedRenderable != undefined;
 
     // use the FALLBACK_FRAME_ID if renderFrame is undefined and there are no options for transforms
-    log.debug(`Setting render frame to ${this.followFrameId}`);
-    const renderFrameId = this.followFrameId ?? CoordinateFrame.FALLBACK_FRAME_ID;
+    const renderFrameId =
+      this.followFrameId && this.transformTree.frame(this.followFrameId)
+        ? this.followFrameId
+        : CoordinateFrame.FALLBACK_FRAME_ID;
     const fixedFrameId = this.fixedFrameId ?? CoordinateFrame.FALLBACK_FRAME_ID;
 
     for (const sceneExtension of this.sceneExtensions.values()) {
@@ -1263,8 +1266,6 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
           frameId: this.followFrameId,
         }),
       );
-      this.#renderFrameId = undefined;
-      this.fixedFrameId = undefined;
       return;
     }
 

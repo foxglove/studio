@@ -406,7 +406,7 @@ export class CameraStateSettings extends SceneExtension implements ICameraHandle
 
     const followTfFrameExists = followTf != undefined && transformTree.hasFrame(followTf);
     if (followTfFrameExists) {
-      this.renderer.followFrameId = followTf;
+      this.renderer.setFollowFrameId(followTf);
       return;
     }
 
@@ -418,7 +418,8 @@ export class CameraStateSettings extends SceneExtension implements ICameraHandle
     // No valid renderFrameId set, or new frames have been added, fall back to selecting the
     // heuristically most valid frame (if any frames are present)
     const followFrameId = transformTree.getMostValidFollowFrameId();
-    this.renderer.followFrameId = followFrameId;
+    this.renderer.setFollowFrameId(followFrameId);
+
     this.#lastTransformFrameCount = newTransformFrameCount;
   }
 

@@ -303,6 +303,9 @@ export interface IRenderer extends EventEmitter<RendererEvents> {
 
   addMessageEvent(messageEvent: Readonly<MessageEvent<unknown>>): void;
 
+  /* Set desired render/display frame, will render using fallback if id is undefined or frame does not exist */
+  setFollowFrameId(frameId: string | undefined): void;
+
   /** Match the behavior of `tf::Transformer` by stripping leading slashes from
    * frame_ids. This preserves compatibility with earlier versions of ROS while
    * not breaking any current versions where:
