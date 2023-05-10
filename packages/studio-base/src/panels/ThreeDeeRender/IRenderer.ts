@@ -206,12 +206,12 @@ export interface IRenderer extends EventEmitter<RendererEvents> {
   transformTree: TransformTree;
   coordinateFrameList: SelectEntry[];
   currentTime: bigint;
-  /* Root frame of the follow frame */
+  /** Coordinate frame that transforms are applied through to the follow frame. Should be unchanging. */
   fixedFrameId: string | undefined;
   /**
    * The frameId that we _want_ to follow and render in if it exists.
    */
-  followFrameId: string | undefined;
+  readonly followFrameId: string | undefined;
 
   labelPool: LabelPool;
   markerPool: MarkerPool;
@@ -303,7 +303,7 @@ export interface IRenderer extends EventEmitter<RendererEvents> {
 
   addMessageEvent(messageEvent: Readonly<MessageEvent<unknown>>): void;
 
-  /* Set desired render/display frame, will render using fallback if id is undefined or frame does not exist */
+  /**  Set desired render/display frame, will render using fallback if id is undefined or frame does not exist */
   setFollowFrameId(frameId: string | undefined): void;
 
   /** Match the behavior of `tf::Transformer` by stripping leading slashes from

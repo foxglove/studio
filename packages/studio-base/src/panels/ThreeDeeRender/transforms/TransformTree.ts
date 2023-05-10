@@ -250,7 +250,7 @@ export class TransformTree {
   }
 
   /** Get heuristically most valid follow frame Id */
-  public getMostValidFollowFrameId(): string | undefined {
+  public getDefaultFollowFrameId(): string | undefined {
     const allFrames = this.frames();
     if (allFrames.size === 0) {
       return undefined;

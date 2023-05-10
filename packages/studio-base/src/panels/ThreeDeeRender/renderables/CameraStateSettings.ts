@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import i18next, { t } from "i18next";
+import { t } from "i18next";
 import { cloneDeep, set } from "lodash";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
@@ -417,7 +417,7 @@ export class CameraStateSettings extends SceneExtension implements ICameraHandle
 
     // No valid renderFrameId set, or new frames have been added, fall back to selecting the
     // heuristically most valid frame (if any frames are present)
-    const followFrameId = transformTree.getMostValidFollowFrameId();
+    const followFrameId = transformTree.getDefaultFollowFrameId();
     this.renderer.setFollowFrameId(followFrameId);
 
     this.#lastTransformFrameCount = newTransformFrameCount;
@@ -435,7 +435,7 @@ export class CameraStateSettings extends SceneExtension implements ICameraHandle
         this.renderer.settings.errors.add(
           FOLLOW_TF_PATH,
           DISPLAY_FRAME_NOT_FOUND,
-          i18next.t("threeDee:frameNotFound", {
+          t("threeDee:frameNotFound", {
             frameId: followTf,
           }),
         );

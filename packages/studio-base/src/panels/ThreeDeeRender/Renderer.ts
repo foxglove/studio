@@ -997,7 +997,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
 
   #frameHandler = (currentTime: bigint): void => {
     this.currentTime = currentTime;
-    this.#checkFollowFrame();
+    this.#updateFrameErrors();
     this.#updateFixedFrameId();
     this.#updateResolution();
 
@@ -1239,8 +1239,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     return { renderable, instanceIndex };
   }
 
-  // update fixed frame to be the root of the render frame
-  #checkFollowFrame(): void {
+  #updateFrameErrors(): void {
     if (this.followFrameId == undefined) {
       // No frames available
       this.settings.errors.add(
