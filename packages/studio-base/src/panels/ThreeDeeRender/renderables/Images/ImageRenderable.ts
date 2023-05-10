@@ -23,6 +23,7 @@ import {
 } from "@foxglove/den/image";
 import { toNanoSec } from "@foxglove/rostime";
 import { RawImage } from "@foxglove/schemas";
+import { IRenderer } from "@foxglove/studio-base/panels/ThreeDeeRender/IRenderer";
 import { BaseUserData, Renderable } from "@foxglove/studio-base/panels/ThreeDeeRender/Renderable";
 import { stringToRgba } from "@foxglove/studio-base/panels/ThreeDeeRender/color";
 import { projectPixel } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/projections";
@@ -39,6 +40,8 @@ export interface ImageRenderableSettings {
   planarProjectionFactor: number;
   color: string;
 }
+
+export const CREATE_BITMAP_ERR_KEY = "CreateBitmap";
 
 const DEFAULT_DISTANCE = 1;
 const DEFAULT_PLANAR_PROJECTION_FACTOR = 0;
@@ -62,9 +65,6 @@ export type ImageUserData = BaseUserData & {
   mesh: THREE.Mesh | undefined;
 };
 
-const CREATE_BITMAP_ERR = "CreateBitmap";
-const DEFAULT_IMAGE_WIDTH = 512;
-
 export class ImageRenderable extends Renderable<ImageUserData> {
   // Make sure that everything is build the first time we render
   // set when camera info or image changes
@@ -75,6 +75,16 @@ export class ImageRenderable extends Renderable<ImageUserData> {
   #textureNeedsUpdate = true;
   // set when material or texture changes
   #materialNeedsUpdate = true;
+
+  #renderBehindScene: boolean = false;
+
+  #bitmap?: ImageBitmap;
+
+  #isUpdating = false;
+
+  public constructor(topicName: string, renderer: IRenderer, userData: ImageUserData) {
+    super(topicName, renderer, userData);
+  }
 
   public override dispose(): void {
     this.userData.texture?.dispose();
@@ -94,7 +104,8 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     const rawFrameId =
       this.userData.cameraInfo?.header.frame_id ??
       ("header" in image ? image.header.frame_id : image.frame_id);
-    this.userData.frameId = this.renderer.normalizeFrameId(rawFrameId);
+    this.userData.frameId =
+      typeof rawFrameId === "string" ? this.renderer.normalizeFrameId(rawFrameId) : rawFrameId;
     this.userData.messageTime = toNanoSec("header" in image ? image.header.stamp : image.timestamp);
   }
 
@@ -102,10 +113,16 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     return { image: this.userData.image, camera_info: this.userData.cameraInfo };
   }
 
+  public setRenderBehindScene(): void {
+    this.#renderBehindScene = true;
+    this.#materialNeedsUpdate = true;
+    this.#meshNeedsUpdate = true;
+  }
+
   // Renderable should only need to care about the model
   public setCameraModel = (cameraModel: PinholeCameraModel): void => {
+    this.#geometryNeedsUpdate ||= this.userData.cameraModel !== cameraModel;
     this.userData.cameraModel = cameraModel;
-    this.#geometryNeedsUpdate = true;
   };
 
   public setSettings(newSettings: ImageRenderableSettings): void {
@@ -136,35 +153,47 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     this.#textureNeedsUpdate = true;
   }
 
+  public setBitmap(bitmap: ImageBitmap): void {
+    this.#bitmap = bitmap;
+    this.#textureNeedsUpdate = true;
+  }
+
   public update(): void {
+    if (this.#isUpdating) {
+      return;
+    }
+    this.#isUpdating = true;
+    // fallback camera info needs image width and height
+    if (this.#textureNeedsUpdate && this.userData.image) {
+      this.#updateTexture();
+      this.#textureNeedsUpdate = false;
+    }
     // We need a valid camera model and image to render
     if (!this.userData.cameraModel || !this.userData.image) {
+      this.#isUpdating = false;
       return;
     }
 
     this.updateHeaderInfo();
 
     if (this.#geometryNeedsUpdate) {
-      this.rebuildGeometry();
+      this.#rebuildGeometry();
       this.#geometryNeedsUpdate = false;
     }
 
-    if (this.#textureNeedsUpdate) {
-      this.updateTexture();
-      this.#textureNeedsUpdate = false;
-    }
     if (this.#materialNeedsUpdate) {
-      this.updateMaterial();
+      this.#updateMaterial();
       this.#materialNeedsUpdate = false;
     }
 
     if (this.#meshNeedsUpdate && this.userData.texture) {
-      this.updateMesh();
+      this.#updateMesh();
       this.#meshNeedsUpdate = false;
     }
+    this.#isUpdating = false;
   }
 
-  private rebuildGeometry() {
+  #rebuildGeometry() {
     assert(this.userData.cameraModel, "Camera model must be set before geometry can be updated");
     // Dispose of the current geometry if the settings have changed
     this.userData.geometry?.dispose();
@@ -174,31 +203,25 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     this.#meshNeedsUpdate = true;
   }
 
-  private updateTexture(): void {
+  #updateTexture(): void {
     assert(this.userData.image, "Image must be set before texture can be updated or created");
     const image = this.userData.image;
     // Create or update the bitmap texture
     if ("format" in image) {
-      const bitmapData = new Blob([image.data], { type: `image/${image.format}` });
-      self
-        .createImageBitmap(bitmapData, { resizeWidth: DEFAULT_IMAGE_WIDTH })
-        .then((bitmap) => {
-          if (this.userData.texture == undefined) {
-            this.userData.texture = createCanvasTexture(bitmap);
-          } else {
-            this.userData.texture.image.close();
-            this.userData.texture.image = bitmap;
-            this.userData.texture.needsUpdate = true;
-          }
+      const bitmap = this.#bitmap;
+      if (!bitmap) {
+        return;
+      }
 
-          this.removeTopicError(CREATE_BITMAP_ERR);
-          this.#materialNeedsUpdate = true;
-          this.update();
-          this.renderer.queueAnimationFrame();
-        })
-        .catch((err) => {
-          this.addTopicError(CREATE_BITMAP_ERR, `createBitmap failed: ${err.message}`);
-        });
+      const texture = this.userData.texture as THREE.CanvasTexture | undefined;
+      if (texture == undefined || !bitmapDimensionsEqual(bitmap, texture.image as ImageBitmap)) {
+        texture?.image.close();
+        texture?.dispose();
+        this.userData.texture = createCanvasTexture(bitmap);
+      } else {
+        texture.image = bitmap;
+        texture.needsUpdate = true;
+      }
     } else {
       const { width, height } = image;
       const prevTexture = this.userData.texture as THREE.DataTexture | undefined;
@@ -218,15 +241,9 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     this.#materialNeedsUpdate = true;
   }
 
-  private addTopicError(key: string, errorMessage: string) {
-    this.renderer.settings.errors.addToTopic(this.userData.topic, key, errorMessage);
-  }
-  private removeTopicError(key: string) {
-    this.renderer.settings.errors.removeFromTopic(this.userData.topic, key);
-  }
-  private updateMaterial(): void {
+  #updateMaterial(): void {
     if (!this.userData.material) {
-      this.initMaterial();
+      this.#initMaterial();
       this.#meshNeedsUpdate = true;
     }
     const material = this.userData.material!;
@@ -244,10 +261,17 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     material.transparent = transparent;
     material.depthWrite = !transparent;
 
+    if (this.#renderBehindScene) {
+      material.depthWrite = false;
+      material.depthTest = false;
+    } else {
+      material.depthTest = true;
+    }
+
     material.needsUpdate = true;
   }
 
-  private initMaterial(): void {
+  #initMaterial(): void {
     stringToRgba(tempColor, this.userData.settings.color);
     const transparent = tempColor.a < 1;
     const color = new THREE.Color(tempColor.r, tempColor.g, tempColor.b);
@@ -261,7 +285,7 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     });
   }
 
-  private updateMesh(): void {
+  #updateMesh(): void {
     assert(this.userData.geometry, "Geometry must be set before mesh can be updated or created");
     assert(this.userData.material, "Material must be set before mesh can be updated or created");
     if (!this.userData.mesh) {
@@ -270,6 +294,12 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     } else {
       this.userData.mesh.geometry = this.userData.geometry;
       this.userData.mesh.material = this.userData.material;
+    }
+
+    if (this.#renderBehindScene) {
+      this.userData.mesh.renderOrder = -1 * Number.MAX_SAFE_INTEGER;
+    } else {
+      this.userData.mesh.renderOrder = 0;
     }
   }
 }
@@ -431,3 +461,6 @@ function rawImageToDataTexture(
       throw new Error(`Unsupported encoding ${encoding}`);
   }
 }
+
+const bitmapDimensionsEqual = (a?: ImageBitmap, b?: ImageBitmap) =>
+  a?.width === b?.width && a?.height === b?.height;

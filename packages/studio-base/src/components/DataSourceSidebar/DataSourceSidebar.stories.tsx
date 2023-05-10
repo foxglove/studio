@@ -106,6 +106,10 @@ export const PlayerNotPresentChinese: StoryObj = {
   ...PlayerNotPresent,
   parameters: { forceLanguage: "zh" },
 };
+export const PlayerNotPresentJapanese: StoryObj = {
+  ...PlayerNotPresent,
+  parameters: { forceLanguage: "ja" },
+};
 
 export const PlayerIntializing: StoryObj = {
   render: function Story() {
@@ -126,6 +130,25 @@ export const PlayerIntializingChinese: StoryObj = {
   ...PlayerIntializing,
   parameters: { forceLanguage: "zh" },
 };
+export const PlayerIntializingJapanese: StoryObj = {
+  ...PlayerIntializing,
+  parameters: { forceLanguage: "ja" },
+};
+
+const fakeError = (): Error =>
+  Object.assign(new Error("Fake Error"), {
+    stack: `Error: Original Error
+    at Story (https://603ec8bf7908b500231841e2-nozcuvybhv.capture.chromatic.com/studio-base-src-components-DataSourceSidebar-DataSourceSidebar-stories.f1dd4357.iframe.bundle.js:233:28)
+    at undecoratedStoryFn (https://603ec8bf7908b500231841e2-nozcuvybhv.capture.chromatic.com/sb-preview/runtime.mjs:34:2794)
+    at hookified (https://603ec8bf7908b500231841e2-nozcuvybhv.capture.chromatic.com/sb-preview/runtime.mjs:7:17032)
+    at https://603ec8bf7908b500231841e2-nozcuvybhv.capture.chromatic.com/sb-preview/runtime.mjs:34:1915
+    at jsxDecorator (https://603ec8bf7908b500231841e2-nozcuvybhv.capture.chromatic.com/1983.4cb8db42.iframe.bundle.js:13838:1100)
+    at hookified (https://603ec8bf7908b500231841e2-nozcuvybhv.capture.chromatic.com/sb-preview/runtime.mjs:7:17032)
+    at https://603ec8bf7908b500231841e2-nozcuvybhv.capture.chromatic.com/sb-preview/runtime.mjs:34:1454
+    at https://603ec8bf7908b500231841e2-nozcuvybhv.capture.chromatic.com/sb-preview/runtime.mjs:34:1915
+    at Ch (https://603ec8bf7908b500231841e2-nozcuvybhv.capture.chromatic.com/1983.4cb8db42.iframe.bundle.js:47712:137)
+    at ck (https://603ec8bf7908b500231841e2-nozcuvybhv.capture.chromatic.com/1983.4cb8db42.iframe.bundle.js:47822:460)`,
+  });
 
 export const PlayerReconnecting: StoryObj = {
   render: function Story() {
@@ -140,7 +163,7 @@ export const PlayerReconnecting: StoryObj = {
             severity: "error",
             message: "Connection lost",
             tip: "A tip that we might want to show the user",
-            error: new Error("Original Error"),
+            error: fakeError(),
           },
         ]}
       >
@@ -154,6 +177,10 @@ export const PlayerReconnecting: StoryObj = {
 export const PlayerReconnectingChinese: StoryObj = {
   ...PlayerReconnecting,
   parameters: { forceLanguage: "zh" },
+};
+export const PlayerReconnectingJapanese: StoryObj = {
+  ...PlayerReconnecting,
+  parameters: { forceLanguage: "ja" },
 };
 
 export const PlayerPresent: StoryObj = {
@@ -176,6 +203,10 @@ export const PlayerPresent: StoryObj = {
 export const PlayerPresentChinese: StoryObj = {
   ...PlayerPresent,
   parameters: { forceLanguage: "zh" },
+};
+export const PlayerPresentJapanese: StoryObj = {
+  ...PlayerPresent,
+  parameters: { forceLanguage: "ja" },
 };
 
 export const PlayerPresentWithCustomTimezone: StoryObj = {
@@ -203,6 +234,10 @@ export const PlayerPresentWithCustomTimezone: StoryObj = {
 export const PlayerPresentWithCustomTimezoneChinese: StoryObj = {
   ...PlayerPresentWithCustomTimezone,
   parameters: { forceLanguage: "zh" },
+};
+export const PlayerPresentWithCustomTimezoneJapanese: StoryObj = {
+  ...PlayerPresentWithCustomTimezone,
+  parameters: { forceLanguage: "ja" },
 };
 
 export const WithEvents: StoryObj = {
@@ -235,6 +270,7 @@ export const WithEvents: StoryObj = {
   },
 };
 export const WithEventsChinese: StoryObj = { ...WithEvents, parameters: { forceLanguage: "zh" } };
+export const WithEventsJapanese: StoryObj = { ...WithEvents, parameters: { forceLanguage: "ja" } };
 
 export const PlayerWithError: StoryObj = {
   render: function Story() {
@@ -248,15 +284,15 @@ export const PlayerWithError: StoryObj = {
             severity: "error",
             message: "Some message",
             tip: "A tip that we might want to show the user",
-            error: new Error("Original Error"),
+            error: fakeError(),
           },
           {
             severity: "error",
             message:
               "Error initializing player: Error: Cannot identify bag format. at _.verifyBagHeader (https://studio.foxglove.dev/5562.c1166ea8644d0123e6d6.js:2:9) at async _.readHeader (https://studio.foxglove.dev/5562.c1166ea8644d0123e6d6.js:2:69) at async m.open (https://studio.foxglove.dev/5562.c1166ea8644d0123e6d6.js:1:677) at async Se.initialize (https://studio.foxglove.dev/1324.f562ab30da8aea77f0c3.js:15:1986) at async https://studio.foxglove.dev/1324.f562ab30da8aea77f0c3.js:17:4281",
-            error: new Error(
-              "Error initializing player: Error: Cannot identify bag format. at _.verifyBagHeader (https://studio.foxglove.dev/5562.c1166ea8644d0123e6d6.js:2:9) at async _.readHeader (https://studio.foxglove.dev/5562.c1166ea8644d0123e6d6.js:2:69) at async m.open (https://studio.foxglove.dev/5562.c1166ea8644d0123e6d6.js:1:677) at async Se.initialize (https://studio.foxglove.dev/1324.f562ab30da8aea77f0c3.js:15:1986) at async https://studio.foxglove.dev/1324.f562ab30da8aea77f0c3.js:17:4281",
-            ),
+            error: Object.assign(new Error("Fake Error"), {
+              stack: `Error: Error initializing player: Error: Cannot identify bag format. at _.verifyBagHeader (https://studio.foxglove.dev/5562.c1166ea8644d0123e6d6.js:2:9) at async _.readHeader (https://studio.foxglove.dev/5562.c1166ea8644d0123e6d6.js:2:69) at async m.open (https://studio.foxglove.dev/5562.c1166ea8644d0123e6d6.js:1:677) at async Se.initialize (https://studio.foxglove.dev/1324.f562ab30da8aea77f0c3.js:15:1986) at async https://studio.foxglove.dev/1324.f562ab30da8aea77f0c3.js:17:4281`,
+            }),
             tip: "Is this a bag file?",
           },
           {
@@ -279,4 +315,8 @@ export const PlayerWithError: StoryObj = {
 export const PlayerWithErrorChinese: StoryObj = {
   ...PlayerWithError,
   parameters: { forceLanguage: "zh" },
+};
+export const PlayerWithErrorJapanese: StoryObj = {
+  ...PlayerWithError,
+  parameters: { forceLanguage: "ja" },
 };

@@ -29,5 +29,25 @@
 // @ts-expect-error unused function
 function useEffectOnce() {} // eslint-disable-line id-denylist, @typescript-eslint/no-unused-vars
 
+class Foo {
+  private bar = 1; // eslint-disable-line @foxglove/prefer-hash-private
+  private static baz = 1; // eslint-disable-line @foxglove/prefer-hash-private
+  // eslint-disable-next-line @foxglove/prefer-hash-private
+  private foo() {
+    this.bar = 2;
+  }
+  // eslint-disable-next-line @foxglove/prefer-hash-private
+  private static getBaz() {
+    this.baz = 3;
+    void this.baz;
+  }
+  public asdf() {
+    this.foo();
+    Foo.getBaz();
+    void this.bar;
+  }
+}
+void Foo;
+
 // keep isolatedModules happy
 export default {};

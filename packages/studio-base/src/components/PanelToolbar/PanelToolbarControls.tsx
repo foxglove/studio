@@ -14,7 +14,7 @@
 import CloseIcon from "@mui/icons-material/Close";
 import SettingsIcon from "@mui/icons-material/Settings";
 import { IconButton, Tooltip } from "@mui/material";
-import produce from "immer";
+import { produce } from "immer";
 import { forwardRef, useCallback, useContext, useEffect, useMemo } from "react";
 import { useAsyncFn } from "react-use";
 import { makeStyles } from "tss-react/mui";
@@ -29,7 +29,7 @@ import {
   usePanelStateStore,
 } from "@foxglove/studio-base/context/PanelStateContext";
 import { UserProfileStorageContext } from "@foxglove/studio-base/context/UserProfileStorageContext";
-import { useWorkspaceActions } from "@foxglove/studio-base/context/WorkspaceContext";
+import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/useWorkspaceActions";
 
 import { PanelActionsDropdown } from "./PanelActionsDropdown";
 
@@ -105,9 +105,10 @@ const PanelToolbarControlsComponent = forwardRef<HTMLDivElement, PanelToolbarCon
       if (panelType && userProfileStorage) {
         await userProfileStorage.setUserProfile((profile) =>
           produce(profile, (draft) => {
-            draft.onboarding ??= { settingsTooltipShownForPanelTypes: [] };
-            if (draft.onboarding.settingsTooltipShownForPanelTypes?.includes(panelType) !== true) {
-              draft.onboarding.settingsTooltipShownForPanelTypes?.push(panelType);
+            const onboarding = (draft.onboarding ??= {});
+            const shownTypes = (onboarding.settingsTooltipShownForPanelTypes ??= []);
+            if (!shownTypes.includes(panelType)) {
+              shownTypes.push(panelType);
             }
           }),
         );

@@ -2,9 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { ErrorCircle20Filled, Open16Filled } from "@fluentui/react-icons";
-import { ButtonBase, CircularProgress, IconButton, Tooltip } from "@mui/material";
-import { useState } from "react";
+import { ErrorCircle20Filled } from "@fluentui/react-icons";
+import { ButtonBase, CircularProgress, IconButton } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import tc from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
@@ -13,7 +12,6 @@ import {
   APP_BAR_PRIMARY_COLOR,
   APP_BAR_FOREGROUND_COLOR,
 } from "@foxglove/studio-base/components/AppBar/constants";
-import { ProblemsList } from "@foxglove/studio-base/components/DataSourceSidebar/ProblemsList";
 import {
   MessagePipelineContext,
   useMessagePipeline,
@@ -21,41 +19,40 @@ import {
 import Stack from "@foxglove/studio-base/components/Stack";
 import TextMiddleTruncate from "@foxglove/studio-base/components/TextMiddleTruncate";
 import WssErrorModal from "@foxglove/studio-base/components/WssErrorModal";
-import { useWorkspaceActions } from "@foxglove/studio-base/context/WorkspaceContext";
+import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/useWorkspaceActions";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
 
-const LEFT_ICON_SIZE = 19;
+const ICON_SIZE = 18;
 
 const useStyles = makeStyles<void, "adornmentError" | "openIcon">()((theme, _params, classes) => ({
-  button: {
+  sourceName: {
     font: "inherit",
     fontSize: theme.typography.body2.fontSize,
     display: "flex",
     alignItems: "center",
-    gap: theme.spacing(0.75),
+    gap: theme.spacing(0.5),
     padding: theme.spacing(1.5),
+    paddingInlineEnd: theme.spacing(0.75),
     whiteSpace: "nowrap",
     minWidth: 0,
 
-    ":not(:hover)": {
+    "&button:not(:hover)": {
       color: tc(APP_BAR_FOREGROUND_COLOR).setAlpha(0.8).toString(),
 
       [`.${classes.openIcon}`]: {
         visibility: "hidden",
       },
     },
-    "&.Mui-disabled": {
-      color: tc(APP_BAR_FOREGROUND_COLOR).setAlpha(theme.palette.action.disabledOpacity).toString(),
-    },
   },
   adornment: {
     display: "flex",
+    flex: "none",
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
     color: APP_BAR_PRIMARY_COLOR,
-    width: LEFT_ICON_SIZE,
-    height: LEFT_ICON_SIZE,
+    width: ICON_SIZE,
+    height: ICON_SIZE,
   },
   adornmentError: {
     color: theme.palette.error.main,
@@ -80,16 +77,13 @@ const useStyles = makeStyles<void, "adornmentError" | "openIcon">()((theme, _par
     padding: 0,
 
     "svg:not(.MuiSvgIcon-root)": {
-      fontSize: "1em",
+      fontSize: "1rem",
     },
   },
   errorIconButton: {
     position: "relative",
     zIndex: 1,
-    fontSize: LEFT_ICON_SIZE - 1,
-  },
-  tooltip: {
-    padding: 0,
+    fontSize: ICON_SIZE - 2,
   },
 }));
 
@@ -104,7 +98,7 @@ export function DataSource(): JSX.Element {
   const playerName = useMessagePipeline(selectPlayerName);
   const playerPresence = useMessagePipeline(selectPlayerPresence);
   const playerProblems = useMessagePipeline(selectPlayerProblems) ?? [];
-  const { dataSourceDialogActions } = useWorkspaceActions();
+  const { dialogActions, sidebarActions } = useWorkspaceActions();
 
   const reconnecting = playerPresence === PlayerPresence.RECONNECTING;
   const initializing = playerPresence === PlayerPresence.INITIALIZING;
@@ -116,56 +110,47 @@ export function DataSource(): JSX.Element {
   const playerDisplayName =
     initializing && playerName == undefined ? "Initializing..." : playerName;
 
-  const [problemModal, setProblemModal] = useState<JSX.Element | undefined>(undefined);
-
-  const openDataSourceDialog = () => dataSourceDialogActions.open("start");
+  const openDataSourceDialog = () => dialogActions.dataSource.open("start");
 
   if (playerPresence === PlayerPresence.NOT_PRESENT) {
     return (
-      <ButtonBase className={classes.button} color="inherit" onClick={openDataSourceDialog}>
-        {t("openDataSource")}
+      <ButtonBase className={classes.sourceName} color="inherit" onClick={openDataSourceDialog}>
+        {t("noDataSource")}
       </ButtonBase>
     );
   }
 
   return (
     <>
-      {problemModal}
       <WssErrorModal playerProblems={playerProblems} />
       <Stack direction="row" alignItems="center">
-        <ButtonBase className={classes.button} onClick={openDataSourceDialog}>
-          <div className={cx(classes.adornment, { [classes.adornmentError]: error })}>
-            {loading && (
-              <CircularProgress
-                size={LEFT_ICON_SIZE}
-                color="inherit"
-                className={classes.spinner}
-                variant="indeterminate"
-              />
-            )}
-            {error && (
-              <Tooltip
-                arrow={false}
-                disableHoverListener={initializing}
-                disableFocusListener={initializing}
-                classes={{ tooltip: classes.tooltip }}
-                placement="bottom"
-                title={<ProblemsList problems={playerProblems} setProblemModal={setProblemModal} />}
-              >
-                <IconButton
-                  color="inherit"
-                  className={cx(classes.iconButton, classes.errorIconButton)}
-                >
-                  <ErrorCircle20Filled />
-                </IconButton>
-              </Tooltip>
-            )}
-          </div>
+        <div className={classes.sourceName}>
           <div className={classes.textTruncate}>
             <TextMiddleTruncate text={playerDisplayName ?? "<unknown>"} />
           </div>
-          <Open16Filled className={classes.openIcon} />
-        </ButtonBase>
+        </div>
+        <div className={cx(classes.adornment, { [classes.adornmentError]: error })}>
+          {loading && (
+            <CircularProgress
+              size={ICON_SIZE}
+              color="inherit"
+              className={classes.spinner}
+              variant="indeterminate"
+            />
+          )}
+          {error && (
+            <IconButton
+              color="inherit"
+              className={cx(classes.iconButton, classes.errorIconButton)}
+              onClick={() => {
+                sidebarActions.left.setOpen(true);
+                sidebarActions.left.selectItem("problems");
+              }}
+            >
+              <ErrorCircle20Filled />
+            </IconButton>
+          )}
+        </div>
       </Stack>
     </>
   );

@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { StoryObj } from "@storybook/react";
+import { fireEvent, screen, userEvent } from "@storybook/testing-library";
 
 import { CompressedImage, RawImage } from "@foxglove/schemas";
 import { MessageEvent } from "@foxglove/studio";
@@ -10,13 +11,14 @@ import { Topic } from "@foxglove/studio-base/players/types";
 import PanelSetup, { Fixture } from "@foxglove/studio-base/stories/PanelSetup";
 import delay from "@foxglove/studio-base/util/delay";
 
-import { PNG_TEST_IMAGE, rad2deg, SENSOR_FRAME_ID } from "./common";
-import { ImagePanel, ThreeDeePanel } from "../index";
-import { CameraInfo, CompressedImage as RosCompressedImage, Image as RosRawImage } from "../ros";
+import { ImagePanel, ThreeDeePanel } from "../../index";
+import { CameraInfo, CompressedImage as RosCompressedImage, Image as RosRawImage } from "../../ros";
+import { PNG_TEST_IMAGE, rad2deg, SENSOR_FRAME_ID } from "../common";
 
 export default {
   title: "panels/ThreeDeeRender/Images",
   component: ThreeDeePanel,
+  parameters: { colorScheme: "light" },
 };
 
 const ImageModeRosImage = ({ imageType }: { imageType: "raw" | "png" }) => {
@@ -155,24 +157,6 @@ const ImageModeRosImage = ({ imageType }: { imageType: "raw" | "png" }) => {
             target: [0, 0, 0],
             targetOrientation: [0, 0, 0, 1],
           },
-          topics: {
-            "/cam1/info": {
-              visible: false,
-              color: "rgba(0, 255, 255, 1)",
-            },
-            "/cam1/png": {
-              visible: imageType === "png",
-              color: "rgba(255, 255, 255, 0.75)",
-            },
-            "/cam2/info": {
-              visible: false,
-              color: "rgba(0, 255, 255, 1)",
-            },
-            "/cam2/raw": {
-              visible: imageType === "raw",
-              color: "rgba(255, 255, 255, 0.75)",
-            },
-          },
         }}
       />
     </PanelSetup>
@@ -181,12 +165,10 @@ const ImageModeRosImage = ({ imageType }: { imageType: "raw" | "png" }) => {
 
 export const ImageModeRosRawImage: StoryObj = {
   render: () => <ImageModeRosImage imageType="raw" />,
-  parameters: { colorScheme: "light" },
 };
 
 export const ImageModeRosPngImage: StoryObj = {
   render: () => <ImageModeRosImage imageType="png" />,
-  parameters: { colorScheme: "light" },
 };
 
 const ImageModeFoxgloveImage = ({ imageType }: { imageType: "raw" | "png" }) => {
@@ -325,22 +307,6 @@ const ImageModeFoxgloveImage = ({ imageType }: { imageType: "raw" | "png" }) => 
             target: [0, 0, 0],
             targetOrientation: [0, 0, 0, 1],
           },
-          topics: {
-            "/cam1/info": {
-              visible: false,
-            },
-            "/cam1/png": {
-              visible: imageType === "png",
-              color: "rgba(255, 255, 255, .75)",
-            },
-            "/cam2/info": {
-              visible: false,
-            },
-            "/cam2/raw": {
-              visible: imageType === "raw",
-              color: "rgba(255, 255, 255, .75)",
-            },
-          },
         }}
       />
     </PanelSetup>
@@ -349,17 +315,14 @@ const ImageModeFoxgloveImage = ({ imageType }: { imageType: "raw" | "png" }) => 
 
 export const ImageModeFoxgloveRawImage: StoryObj = {
   render: () => <ImageModeFoxgloveImage imageType="raw" />,
-  parameters: { colorScheme: "light" },
 };
 
 export const ImageModeFoxglovePngImage: StoryObj = {
   render: () => <ImageModeFoxgloveImage imageType="png" />,
-  parameters: { colorScheme: "light" },
 };
 
 export const ImageModeResizeHandled: StoryObj = {
   render: () => <ImageModeFoxgloveImage imageType="raw" />,
-  parameters: { colorScheme: "light" },
 
   play: async () => {
     const canvas = document.querySelector("canvas")!;
@@ -368,6 +331,61 @@ export const ImageModeResizeHandled: StoryObj = {
     await delay(30);
     parentEl.style.width = "50%";
     canvas.dispatchEvent(new Event("resize"));
+    await delay(30);
+  },
+};
+
+export const ImageModePan: StoryObj = {
+  render: () => <ImageModeFoxgloveImage imageType="raw" />,
+  play: async () => {
+    const canvas = document.querySelector("canvas")!;
+    fireEvent.mouseDown(canvas, { clientX: 200, clientY: 200 });
+    fireEvent.mouseMove(canvas, { clientX: 400, clientY: 200 });
+    fireEvent.mouseUp(canvas, { clientX: 400, clientY: 200 });
+  },
+};
+
+export const ImageModeZoomThenPan: StoryObj = {
+  render: () => <ImageModeFoxgloveImage imageType="raw" />,
+  play: async () => {
+    const canvas = document.querySelector("canvas")!;
+    fireEvent.wheel(canvas, { deltaY: -30, clientX: 400, clientY: 400 });
+    fireEvent.wheel(canvas, { deltaY: -30, clientX: 400, clientY: 400 });
+    fireEvent.mouseDown(canvas, { clientX: 200, clientY: 200 });
+    fireEvent.mouseMove(canvas, { clientX: 400, clientY: 200 });
+    fireEvent.mouseUp(canvas, { clientX: 400, clientY: 200 });
+  },
+};
+
+export const ImageModePanThenZoom: StoryObj = {
+  render: () => <ImageModeFoxgloveImage imageType="raw" />,
+  play: async () => {
+    const canvas = document.querySelector("canvas")!;
+    fireEvent.mouseDown(canvas, { clientX: 200, clientY: 200 });
+    fireEvent.mouseMove(canvas, { clientX: 400, clientY: 200 });
+    fireEvent.mouseUp(canvas, { clientX: 400, clientY: 200 });
+    fireEvent.wheel(canvas, { deltaY: -30, clientX: 400, clientY: 400 });
+    fireEvent.wheel(canvas, { deltaY: -30, clientX: 400, clientY: 400 });
+  },
+};
+
+export const ImageModePanThenZoomReset: StoryObj = {
+  render: () => <ImageModeFoxgloveImage imageType="raw" />,
+  play: async (ctx) => {
+    await ImageModePanThenZoom.play?.(ctx);
+    userEvent.click(await screen.findByTestId("reset-view"));
+  },
+};
+
+export const ImageModePick: StoryObj = {
+  render: () => <ImageModeFoxgloveImage imageType="raw" />,
+
+  play: async () => {
+    const canvas = document.querySelector("canvas")!;
+    const inspectObjects = screen.getByRole("button", { name: /inspect objects/i });
+    userEvent.click(inspectObjects);
+    await delay(30);
+    userEvent.click(canvas, { clientX: 500, clientY: 500 });
     await delay(30);
   },
 };

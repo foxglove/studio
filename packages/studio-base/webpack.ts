@@ -15,7 +15,7 @@ import { createTssReactNameTransformer } from "@foxglove/typescript-transformers
 
 import { WebpackArgv } from "./WebpackArgv";
 
-if (monacoPkg.version !== "0.30.1") {
+if (monacoPkg.version !== "0.38.0") {
   throw new Error(`
     It looks like you are trying to change the version of Monaco.
 
@@ -37,6 +37,8 @@ type Options = {
   allowUnusedVariables?: boolean;
   /** Specify the app version. */
   version: string;
+  /** Specify the path to the tsconfig.json file for ForkTsCheckerWebpackPlugin. If unset, the plugin defaults to finding the config file in the webpack `context` directory. */
+  tsconfigPath?: string;
 };
 
 // Create a partial webpack configuration required to build app using webpack.
@@ -49,7 +51,7 @@ export function makeConfig(
   const isDev = argv.mode === "development";
   const isServe = argv.env?.WEBPACK_SERVE ?? false;
 
-  const { allowUnusedVariables = isDev && isServe, version } = options;
+  const { allowUnusedVariables = isDev && isServe, version, tsconfigPath } = options;
 
   return {
     resolve: {
@@ -252,9 +254,7 @@ export function makeConfig(
       }),
       new ForkTsCheckerWebpackPlugin({
         typescript: {
-          // Note: configFile should not be overridden, it needs to differ between web, desktop,
-          // etc. so that files specific to each build (not just shared files) are also
-          // type-checked. The default behavior is to find it from the webpack `context` directory.
+          configFile: tsconfigPath,
           configOverwrite: {
             compilerOptions: {
               noUnusedLocals: !allowUnusedVariables,

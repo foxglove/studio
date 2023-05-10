@@ -50,6 +50,8 @@ export type RendererEvents = {
   configChange: (renderer: IRenderer) => void;
   schemaHandlersChanged: (renderer: IRenderer) => void;
   topicHandlersChanged: (renderer: IRenderer) => void;
+  topicsChanged: (renderer: IRenderer) => void;
+  resetViewChanged: (renderer: IRenderer) => void;
 };
 
 export type FollowMode = "follow-pose" | "follow-position" | "follow-none";
@@ -170,6 +172,7 @@ export interface IRenderer extends EventEmitter<RendererEvents> {
   maxLod: DetailLevel;
   config: Immutable<RendererConfig>;
   settings: SettingsManager;
+  debugPicking: boolean;
   // [{ name, datatype }]
   topics: ReadonlyArray<Topic> | undefined;
   // topicName -> { name, datatype }
@@ -288,6 +291,11 @@ export interface IRenderer extends EventEmitter<RendererEvents> {
   setCameraState(cameraState: CameraState): void;
 
   getCameraState(): CameraState | undefined;
+
+  /** Whether the view has been modified and a reset button should be shown (image mode only). */
+  canResetView(): boolean;
+  /** Reset any manual view modifications (image mode only). */
+  resetView(): void;
 
   setSelectedRenderable(selection: PickedRenderable | undefined): void;
 

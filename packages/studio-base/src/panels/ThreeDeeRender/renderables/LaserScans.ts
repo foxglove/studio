@@ -78,7 +78,7 @@ function createLaserScanGeometry(topic: string, usage: THREE.Usage): DynamicBuff
 
 class LaserScanRenderable extends Renderable<LaserScanUserData> {
   public override pickableInstances = true;
-  private pointsHistory: RenderObjectHistory<LaserScanRenderable>;
+  #pointsHistory: RenderObjectHistory<LaserScanRenderable>;
 
   public constructor(topic: string, renderer: IRenderer, userData: LaserScanUserData) {
     super(topic, renderer, userData);
@@ -98,7 +98,7 @@ class LaserScanRenderable extends Renderable<LaserScanUserData> {
       userData.instancePickingMaterial,
     );
 
-    this.pointsHistory = new RenderObjectHistory({
+    this.#pointsHistory = new RenderObjectHistory({
       initial: {
         messageTime: userData.receiveTime,
         receiveTime: userData.receiveTime,
@@ -114,7 +114,7 @@ class LaserScanRenderable extends Renderable<LaserScanUserData> {
     this.userData.material.dispose();
     this.userData.pickingMaterial.dispose();
     this.userData.instancePickingMaterial.dispose();
-    this.pointsHistory.dispose();
+    this.#pointsHistory.dispose();
     super.dispose();
   }
 
@@ -167,7 +167,7 @@ class LaserScanRenderable extends Renderable<LaserScanUserData> {
     const pickingMaterial = this.userData.pickingMaterial;
 
     const topic = this.userData.topic;
-    const pointsHistory = this.pointsHistory;
+    const pointsHistory = this.#pointsHistory;
     const isDecay = settings.decayTime > 0;
     if (isDecay) {
       // Push a new (empty) entry to the history of points
@@ -263,18 +263,18 @@ class LaserScanRenderable extends Renderable<LaserScanUserData> {
   }
 
   public invalidateLastEntry() {
-    const lastEntry = this.pointsHistory.latest();
+    const lastEntry = this.#pointsHistory.latest();
     lastEntry?.object3d.geometry.resize(0);
   }
 
   public startFrame(currentTime: bigint, renderFrameId: string, fixedFrameId: string): void {
     if (!this.userData.settings.visible) {
       this.renderer.settings.errors.clearPath(this.userData.settingsPath);
-      this.pointsHistory.clearHistory();
+      this.#pointsHistory.clearHistory();
       return;
     }
-    this.pointsHistory.updateHistoryFromCurrentTime(currentTime);
-    this.pointsHistory.updatePoses(currentTime, renderFrameId, fixedFrameId);
+    this.#pointsHistory.updateHistoryFromCurrentTime(currentTime);
+    this.#pointsHistory.updatePoses(currentTime, renderFrameId, fixedFrameId);
     this.updateUniforms();
   }
 }
@@ -282,9 +282,12 @@ class LaserScanRenderable extends Renderable<LaserScanUserData> {
 export class LaserScans extends SceneExtension<LaserScanRenderable> {
   public constructor(renderer: IRenderer) {
     super("foxglove.LaserScans", renderer);
+  }
 
-    renderer.addSchemaSubscriptions(ROS_LASERSCAN_DATATYPES, this.handleLaserScan);
-    renderer.addSchemaSubscriptions(FOXGLOVE_LASERSCAN_DATATYPES, this.handleLaserScan);
+  public override addSubscriptionsToRenderer(): void {
+    const renderer = this.renderer;
+    renderer.addSchemaSubscriptions(ROS_LASERSCAN_DATATYPES, this.#handleLaserScan);
+    renderer.addSchemaSubscriptions(FOXGLOVE_LASERSCAN_DATATYPES, this.#handleLaserScan);
   }
 
   public override settingsNodes(): SettingsTreeEntry[] {
@@ -352,7 +355,7 @@ export class LaserScans extends SceneExtension<LaserScanRenderable> {
     }
   };
 
-  private handleLaserScan = (
+  #handleLaserScan = (
     messageEvent: PartialMessageEvent<RosLaserScan | FoxgloveLaserScan>,
   ): void => {
     const topic = messageEvent.topic;
@@ -421,7 +424,7 @@ export class LaserScans extends SceneExtension<LaserScanRenderable> {
 }
 
 export class LaserScanMaterial extends THREE.RawShaderMaterial {
-  private static MIN_PICKING_POINT_SIZE = 8;
+  static #MIN_PICKING_POINT_SIZE = 8;
 
   public constructor({ picking = false }: { picking?: boolean } = {}) {
     super({
@@ -449,7 +452,7 @@ export class LaserScanMaterial extends THREE.RawShaderMaterial {
           gl_Position = projectionMatrix * modelViewMatrix * pos;
           ${
             picking
-              ? /* glsl */ `gl_PointSize = pixelRatio * max(pointSize, ${LaserScanMaterial.MIN_PICKING_POINT_SIZE.toFixed(
+              ? /* glsl */ `gl_PointSize = pixelRatio * max(pointSize, ${LaserScanMaterial.#MIN_PICKING_POINT_SIZE.toFixed(
                   1,
                 )});`
               : "gl_PointSize = pixelRatio * pointSize;"
@@ -513,10 +516,10 @@ export class LaserScanMaterial extends THREE.RawShaderMaterial {
 }
 
 class LaserScanInstancePickingMaterial extends THREE.RawShaderMaterial {
-  private static MIN_PICKING_POINT_SIZE = 8;
+  static #MIN_PICKING_POINT_SIZE = 8;
 
   public constructor() {
-    const minPointSize = LaserScanInstancePickingMaterial.MIN_PICKING_POINT_SIZE.toFixed(1);
+    const minPointSize = LaserScanInstancePickingMaterial.#MIN_PICKING_POINT_SIZE.toFixed(1);
     super({
       vertexShader: /* glsl */ `\
         #version 300 es

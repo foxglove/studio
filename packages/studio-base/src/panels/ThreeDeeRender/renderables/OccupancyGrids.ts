@@ -84,8 +84,10 @@ export class OccupancyGridRenderable extends Renderable<OccupancyGridUserData> {
 export class OccupancyGrids extends SceneExtension<OccupancyGridRenderable> {
   public constructor(renderer: IRenderer) {
     super("foxglove.OccupancyGrids", renderer);
+  }
 
-    renderer.addSchemaSubscriptions(OCCUPANCY_GRID_DATATYPES, this.handleOccupancyGrid);
+  public override addSubscriptionsToRenderer(): void {
+    this.renderer.addSchemaSubscriptions(OCCUPANCY_GRID_DATATYPES, this.#handleOccupancyGrid);
   }
 
   public override settingsNodes(): SettingsTreeEntry[] {
@@ -190,7 +192,7 @@ export class OccupancyGrids extends SceneExtension<OccupancyGridRenderable> {
         renderable.userData.material.needsUpdate = true;
       }
 
-      this._updateOccupancyGridRenderable(
+      this.#updateOccupancyGridRenderable(
         renderable,
         renderable.userData.occupancyGrid,
         renderable.userData.receiveTime,
@@ -198,7 +200,7 @@ export class OccupancyGrids extends SceneExtension<OccupancyGridRenderable> {
     }
   };
 
-  private handleOccupancyGrid = (messageEvent: PartialMessageEvent<OccupancyGrid>): void => {
+  #handleOccupancyGrid = (messageEvent: PartialMessageEvent<OccupancyGrid>): void => {
     const topic = messageEvent.topic;
     const occupancyGrid = normalizeOccupancyGrid(messageEvent.message);
     const receiveTime = toNanoSec(messageEvent.receiveTime);
@@ -241,10 +243,10 @@ export class OccupancyGrids extends SceneExtension<OccupancyGridRenderable> {
       this.renderables.set(topic, renderable);
     }
 
-    this._updateOccupancyGridRenderable(renderable, occupancyGrid, receiveTime);
+    this.#updateOccupancyGridRenderable(renderable, occupancyGrid, receiveTime);
   };
 
-  private _updateOccupancyGridRenderable(
+  #updateOccupancyGridRenderable(
     renderable: OccupancyGridRenderable,
     occupancyGrid: OccupancyGrid,
     receiveTime: bigint,

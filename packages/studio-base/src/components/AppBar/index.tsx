@@ -3,11 +3,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import {
-  SlideAdd24Regular,
+  ChevronDown12Regular,
   PanelLeft24Filled,
   PanelLeft24Regular,
   PanelRight24Filled,
   PanelRight24Regular,
+  SlideAdd24Regular,
 } from "@fluentui/react-icons";
 import PersonIcon from "@mui/icons-material/Person";
 import { Avatar, Button, IconButton, Tooltip, AppBar as MuiAppBar } from "@mui/material";
@@ -18,6 +19,7 @@ import { shallow } from "zustand/shallow";
 
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import { AppBarIconButton } from "@foxglove/studio-base/components/AppBar/AppBarIconButton";
+import { AppMenu } from "@foxglove/studio-base/components/AppBar/AppMenu";
 import {
   CustomWindowControls,
   CustomWindowControlsProps,
@@ -33,10 +35,10 @@ import {
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
 import {
-  useWorkspaceActions,
   useWorkspaceStore,
   WorkspaceContextStore,
-} from "@foxglove/studio-base/context/WorkspaceContext";
+} from "@foxglove/studio-base/context/Workspace/WorkspaceContext";
+import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/useWorkspaceActions";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
@@ -82,9 +84,28 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }, 
         alignItems: "center",
       },
       logo: {
-        padding: theme.spacing(0.5),
-        fontSize: "2.125rem",
+        padding: theme.spacing(0.75, 0.5),
+        fontSize: "2rem",
         color: APP_BAR_PRIMARY_COLOR,
+        borderRadius: 0,
+
+        "svg:not(.MuiSvgIcon-root)": {
+          fontSize: "1em",
+        },
+        "&:hover": {
+          backgroundColor: tc(APP_BAR_FOREGROUND_COLOR).setAlpha(0.08).toRgbString(),
+        },
+        "&.Mui-selected": {
+          backgroundColor: APP_BAR_PRIMARY_COLOR,
+          color: APP_BAR_FOREGROUND_COLOR,
+        },
+        "&.Mui-disabled": {
+          color: "currentColor",
+          opacity: theme.palette.action.disabledOpacity,
+        },
+      },
+      dropDownIcon: {
+        fontSize: "12px !important",
       },
       start: {
         gridArea: "start",
@@ -131,16 +152,11 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }, 
         backgroundColor: tc(APP_BAR_BACKGROUND_COLOR[theme.palette.mode]).lighten().toString(),
         height: theme.spacing(3.5),
         width: theme.spacing(3.5),
-        transition: theme.transitions.create("background-color", {
-          duration: theme.transitions.duration.shortest,
-        }),
       },
       iconButton: {
         padding: theme.spacing(1),
         borderRadius: 0,
-        transition: theme.transitions.create("background-color", {
-          duration: theme.transitions.duration.shortest,
-        }),
+
         "&:hover": {
           backgroundColor: tc(APP_BAR_FOREGROUND_COLOR).setAlpha(0.08).toString(),
 
@@ -151,10 +167,12 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }, 
           },
         },
         "&.Mui-selected": {
-          backgroundColor: tc(APP_BAR_FOREGROUND_COLOR).setAlpha(0.08).toString(),
+          backgroundColor: APP_BAR_PRIMARY_COLOR,
 
           [`.${classes.avatar}`]: {
-            backgroundColor: APP_BAR_PRIMARY_COLOR,
+            backgroundColor: tc(APP_BAR_BACKGROUND_COLOR[theme.palette.mode])
+              .setAlpha(0.3)
+              .toString(),
           },
         },
       },
@@ -210,12 +228,19 @@ export function AppBar(props: AppBarProps): JSX.Element {
 
   const currentLayoutId = useCurrentLayoutSelector(selectCurrentLayoutId);
 
-  const { leftSidebarOpen, rightSidebarOpen } = useWorkspaceStore(selectWorkspace, shallow);
-  const { setRightSidebarOpen, setLeftSidebarOpen } = useWorkspaceActions();
+  const {
+    sidebars: {
+      left: { open: leftSidebarOpen },
+      right: { open: rightSidebarOpen },
+    },
+  } = useWorkspaceStore(selectWorkspace, shallow);
+  const { sidebarActions } = useWorkspaceActions();
 
+  const [appMenuEl, setAppMenuEl] = useState<undefined | HTMLElement>(undefined);
   const [userAnchorEl, setUserAnchorEl] = useState<undefined | HTMLElement>(undefined);
   const [panelAnchorEl, setPanelAnchorEl] = useState<undefined | HTMLElement>(undefined);
 
+  const appMenuOpen = Boolean(appMenuEl);
   const userMenuOpen = Boolean(userAnchorEl);
   const panelMenuOpen = Boolean(panelAnchorEl);
 
@@ -236,18 +261,41 @@ export function AppBar(props: AppBarProps): JSX.Element {
         color="inherit"
         elevation={0}
         onDoubleClick={handleDoubleClick}
+        data-tourid="app-bar"
       >
         <div className={classes.toolbar}>
           <div className={classes.start}>
             <div className={classes.startInner}>
-              <IconButton className={classes.logo} size="large" color="inherit">
+              <IconButton
+                className={cx(classes.logo, { "Mui-selected": appMenuOpen })}
+                color="inherit"
+                id="app-menu-button"
+                title="Menu"
+                aria-controls={appMenuOpen ? "app-menu" : undefined}
+                aria-haspopup="true"
+                aria-expanded={appMenuOpen ? "true" : undefined}
+                data-tourid="app-menu-button"
+                onClick={(event) => {
+                  setAppMenuEl(event.currentTarget);
+                }}
+              >
                 <FoxgloveLogo fontSize="inherit" color="inherit" />
+                <ChevronDown12Regular
+                  className={classes.dropDownIcon}
+                  primaryFill={APP_BAR_FOREGROUND_COLOR}
+                />
               </IconButton>
+              <AppMenu
+                open={appMenuOpen}
+                anchorEl={appMenuEl}
+                handleClose={() => setAppMenuEl(undefined)}
+              />
               <AppBarIconButton
                 className={cx({ "Mui-selected": panelMenuOpen })}
                 color="inherit"
                 disabled={currentLayoutId == undefined}
                 id="add-panel-button"
+                data-tourid="add-panel-button"
                 title="Add panel"
                 aria-label="Add panel button"
                 aria-controls={panelMenuOpen ? "add-panel-menu" : undefined}
@@ -270,7 +318,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
             <div className={classes.endInner}>
               {enableMemoryUseIndicator && <MemoryUseIndicator />}
               {appBarLayoutButton}
-              <Stack direction="row" alignItems="center">
+              <Stack direction="row" alignItems="center" data-tourid="sidebar-button-group">
                 <AppBarIconButton
                   title={
                     <>
@@ -279,7 +327,8 @@ export function AppBar(props: AppBarProps): JSX.Element {
                     </>
                   }
                   aria-label={`${leftSidebarOpen ? "Hide" : "Show"} left sidebar`}
-                  onClick={() => setLeftSidebarOpen(!leftSidebarOpen)}
+                  onClick={() => sidebarActions.left.setOpen(!leftSidebarOpen)}
+                  data-tourid="left-sidebar-button"
                 >
                   {leftSidebarOpen ? <PanelLeft24Filled /> : <PanelLeft24Regular />}
                 </AppBarIconButton>
@@ -291,7 +340,8 @@ export function AppBar(props: AppBarProps): JSX.Element {
                     </>
                   }
                   aria-label={`${rightSidebarOpen ? "Hide" : "Show"} right sidebar`}
-                  onClick={() => setRightSidebarOpen(!rightSidebarOpen)}
+                  onClick={() => sidebarActions.right.setOpen(!rightSidebarOpen)}
+                  data-tourid="right-sidebar-button"
                 >
                   {rightSidebarOpen ? <PanelRight24Filled /> : <PanelRight24Regular />}
                 </AppBarIconButton>
@@ -323,6 +373,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
                   aria-label="User profile menu button"
                   color="inherit"
                   id="user-profile-button"
+                  data-tourid="user-profile-button"
                   aria-controls={userMenuOpen ? "user-profile-menu" : undefined}
                   aria-haspopup="true"
                   aria-expanded={userMenuOpen ? "true" : undefined}

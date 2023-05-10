@@ -14,9 +14,9 @@
 import { Tooltip } from "@mui/material";
 import { StoryObj } from "@storybook/react";
 
-import { TimeBasedChartTooltipData } from "@foxglove/studio-base/components/TimeBasedChart";
-
-import TimeBasedChartTooltipContent from "./TimeBasedChartTooltipContent";
+import TimeBasedChartTooltipContent, {
+  TimeBasedChartTooltipData,
+} from "./TimeBasedChartTooltipContent";
 
 export default {
   title: "components/TimeBasedChart/TimeBasedChartTooltipContent",
@@ -26,9 +26,7 @@ export default {
 export const SingleItemSingleDataset: StoryObj = {
   render: function Story() {
     const data: TimeBasedChartTooltipData = {
-      x: 0,
-      y: 0,
-      path: "/some/topic.path",
+      datasetIndex: 0,
       value: 3,
       constantName: "ACTIVE",
     };
@@ -62,16 +60,20 @@ export const SingleItemSingleDatasetLight: StoryObj = {
 export const SingleItemMultiDataset: StoryObj = {
   render: function Story() {
     const data: TimeBasedChartTooltipData = {
-      x: 0,
-      y: 0,
-      path: "/some/topic.path",
+      datasetIndex: 0,
       value: 3,
       constantName: "ACTIVE",
     };
     return (
       <Tooltip
         open
-        title={<TimeBasedChartTooltipContent multiDataset={true} content={[data]} />}
+        title={
+          <TimeBasedChartTooltipContent
+            multiDataset={true}
+            content={[data]}
+            labelsByDatasetIndex={{ "0": "/some/topic.path", "1": "Series B" }}
+          />
+        }
         placement="top"
         arrow
         PopperProps={{
@@ -98,9 +100,7 @@ export const SingleItemMultiDatasetLight: StoryObj = {
 export const MultipleItemsSingleDataset: StoryObj = {
   render: function Story() {
     const data: TimeBasedChartTooltipData = {
-      x: 0,
-      y: 0,
-      path: "/some/topic.path",
+      datasetIndex: 0,
       value: 3,
       constantName: "ACTIVE",
     };
@@ -136,17 +136,11 @@ export const MultipleItemsMultipleDataset: StoryObj = {
     const data: TimeBasedChartTooltipData[] = [
       {
         datasetIndex: 0,
-        x: 0,
-        y: 0,
-        path: "/some/topic.path",
         value: 3,
         constantName: "ACTIVE",
       },
       {
         datasetIndex: 1,
-        x: 0,
-        y: 0,
-        path: "/other/topic.path",
         value: 4,
         constantName: "ACTIVE",
       },
@@ -159,7 +153,7 @@ export const MultipleItemsMultipleDataset: StoryObj = {
             multiDataset={true}
             content={data}
             colorsByDatasetIndex={{ "0": "chartreuse", "1": "yellow" }}
-            labelsByDatasetIndex={{ "1": "-*- Custom Label -*-" }}
+            labelsByDatasetIndex={{ "0": "Series A", "1": "Series B" }}
           />
         }
         placement="top"
