@@ -209,7 +209,7 @@ export class CameraStateSettings extends SceneExtension implements ICameraHandle
     let followTfOptions = this.renderer.coordinateFrameList;
     const followFrameId = this.renderer.followFrameId;
 
-    this.#checkFollowTf();
+    this.#updateFollowTfError();
 
     // always show current config value if it exists
     const followTfValue = config.followTf ?? followFrameId;
@@ -399,7 +399,7 @@ export class CameraStateSettings extends SceneExtension implements ICameraHandle
   #updateFollowFrameId() {
     const { followTf } = this.renderer.config;
     const { transformTree } = this.renderer;
-    this.#checkFollowTf();
+    this.#updateFollowTfError();
 
     const followTfFrameExists = followTf != undefined && transformTree.hasFrame(followTf);
     if (followTfFrameExists) {
@@ -413,7 +413,7 @@ export class CameraStateSettings extends SceneExtension implements ICameraHandle
     this.renderer.setFollowFrameId(followFrameId);
   }
 
-  #checkFollowTf = (): void => {
+  #updateFollowTfError = (): void => {
     const { followTf } = this.renderer.config;
     const { transformTree } = this.renderer;
 
