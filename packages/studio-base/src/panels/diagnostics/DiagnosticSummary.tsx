@@ -90,7 +90,7 @@ const useStyles = makeStyles()((theme) => ({
     },
   },
   select: {
-    [`${inputBaseClasses.input}.${inputBaseClasses.inputSizeSmall}.${selectClasses.select}`]: {
+    [`.${inputBaseClasses.input}.${selectClasses.select}.${inputBaseClasses.inputSizeSmall}`]: {
       paddingTop: 0,
       paddingBottom: 0,
       minWidth: 40,
