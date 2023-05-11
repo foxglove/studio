@@ -12,6 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { StoryObj } from "@storybook/react";
+import { fireEvent, screen } from "@storybook/testing-library";
 
 import NodePlayground from "@foxglove/studio-base/panels/NodePlayground";
 import rawUserUtils from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/typescript/rawUserUtils";
@@ -111,9 +112,6 @@ const utilsSourceCode = `
   }
 `;
 
-const OPEN_BOTTOM_BAR_TIMEOUT = 500;
-const SIDEBAR_OPEN_CLICK_TIMEOUT = 500;
-
 export default {
   title: "panels/NodePlayground",
 
@@ -188,17 +186,14 @@ export const EditorShowsNewCodeWhenUserNodesChange: StoryObj = {
         userNodeDiagnostics: { nodeId1: [] },
         userNodeLogs: { nodeId1: [] },
       }}
-      onMount={(el, actions) => {
-        setTimeout(() => {
-          // Change the userNodes to confirm the code in the Editor updates
-          actions.setUserNodes({
-            nodeId1: {
-              name: "/studio_script/script",
-              sourceCode: utilsSourceCode,
-            },
-          });
-          el.querySelectorAll<HTMLElement>("[data-testid=node-explorer]")[0]?.click();
-        }, 500);
+      onMount={(_, actions) => {
+        // Change the userNodes to confirm the code in the Editor updates
+        actions.setUserNodes({
+          nodeId1: {
+            name: "/studio_script/script",
+            sourceCode: utilsSourceCode,
+          },
+        });
       }}
     >
       <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
@@ -209,6 +204,10 @@ export const EditorShowsNewCodeWhenUserNodesChange: StoryObj = {
   ),
 
   name: "Editor shows new code when userNodes change",
+  parameters: { colorScheme: "light" },
+  play: async () => {
+    fireEvent.click(await screen.findByTestId("node-explorer"));
+  },
 };
 
 export const EditorGotoDefinition: StoryObj = {
@@ -258,11 +257,6 @@ export const GoBackFromGotoDefinition: StoryObj = {
         userNodeDiagnostics: { nodeId1: [] },
         userNodeLogs: { nodeId1: [] },
       }}
-      onMount={(el) => {
-        setTimeout(() => {
-          el.querySelectorAll<HTMLElement>("[data-testid=go-back]")[0]!.click();
-        }, 500);
-      }}
     >
       <NodePlayground
         overrideConfig={{
@@ -280,82 +274,62 @@ export const GoBackFromGotoDefinition: StoryObj = {
   ),
 
   name: "go back from goto definition",
+  parameters: { colorScheme: "light" },
+  play: async () => {
+    fireEvent.click(await screen.findByTestId("go-back"));
+  },
 };
 
 export const SidebarOpenNodeExplorer: StoryObj = {
-  render: () => {
-    return (
-      <PanelSetup
-        fixture={{ ...fixture, userNodes }}
-        onMount={(el) => {
-          setTimeout(() => {
-            el.querySelectorAll<HTMLElement>("[data-testid=node-explorer]")[0]!.click();
-          }, SIDEBAR_OPEN_CLICK_TIMEOUT);
-        }}
-      >
-        <NodePlayground />
-      </PanelSetup>
-    );
-  },
-
+  render: () => (
+    <PanelSetup fixture={{ ...fixture, userNodes }}>
+      <NodePlayground />
+    </PanelSetup>
+  ),
   name: "sidebar open - node explorer",
+  play: async () => {
+    fireEvent.click(await screen.findByTestId("node-explorer"));
+  },
+  parameters: { colorScheme: "light" },
 };
 
 export const SidebarOpenNodeExplorerSelectedNode: StoryObj = {
-  render: () => {
-    return (
-      <PanelSetup
-        fixture={{ ...fixture, userNodes }}
-        onMount={(el) => {
-          setTimeout(() => {
-            el.querySelectorAll<HTMLElement>("[data-testid=node-explorer]")[0]!.click();
-          }, SIDEBAR_OPEN_CLICK_TIMEOUT);
-        }}
-      >
-        <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
-      </PanelSetup>
-    );
-  },
-
+  render: () => (
+    <PanelSetup fixture={{ ...fixture, userNodes }}>
+      <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
+    </PanelSetup>
+  ),
   name: "sidebar open - node explorer - selected node",
+  play: async () => {
+    fireEvent.click(await screen.findByTestId("node-explorer"));
+  },
+  parameters: { colorScheme: "light" },
 };
 
 export const SidebarOpenUtilsExplorerSelectedUtility: StoryObj = {
-  render: () => {
-    return (
-      <PanelSetup
-        fixture={{ ...fixture, userNodes }}
-        onMount={(el) => {
-          setTimeout(() => {
-            el.querySelectorAll<HTMLElement>("[data-testid=utils-explorer]")[0]!.click();
-          }, SIDEBAR_OPEN_CLICK_TIMEOUT);
-        }}
-      >
-        <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
-      </PanelSetup>
-    );
-  },
-
+  render: () => (
+    <PanelSetup fixture={{ ...fixture, userNodes }}>
+      <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
+    </PanelSetup>
+  ),
   name: "sidebar open - utils explorer - selected utility",
+  play: async () => {
+    fireEvent.click(await screen.findByTestId("utils-explorer"));
+  },
+  parameters: { colorScheme: "light" },
 };
 
 export const SidebarOpenTemplatesExplorer: StoryObj = {
-  render: () => {
-    return (
-      <PanelSetup
-        fixture={{ ...fixture, userNodes }}
-        onMount={(el) => {
-          setTimeout(() => {
-            el.querySelectorAll<HTMLElement>("[data-testid=templates-explorer]")[0]!.click();
-          }, SIDEBAR_OPEN_CLICK_TIMEOUT);
-        }}
-      >
-        <NodePlayground />
-      </PanelSetup>
-    );
-  },
-
+  render: () => (
+    <PanelSetup fixture={{ ...fixture, userNodes }}>
+      <NodePlayground />
+    </PanelSetup>
+  ),
   name: "sidebar open - templates explorer",
+  parameters: { colorScheme: "light" },
+  play: async () => {
+    fireEvent.click(await screen.findByTestId("templates-explorer"));
+  },
 };
 
 export const EditorLoadingState: StoryObj = {
@@ -389,7 +363,7 @@ export const BottomBarNoErrorsOrLogsClosed: StoryObj = {
       <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
     </PanelSetup>
   ),
-
+  parameters: { colorScheme: "light" },
   name: "BottomBar - no errors or logs - closed",
 };
 
@@ -401,20 +375,16 @@ export const BottomBarNoErrorsOpen: StoryObj = {
         userNodes: { nodeId1: { name: "/studio_script/script", sourceCode: "" } },
         userNodeDiagnostics: { nodeId1: [] },
       }}
-      onMount={(el) => {
-        setTimeout(() => {
-          const diagnosticsErrorsLabel = el.querySelector<HTMLElement>("[data-testid=np-errors]");
-          if (diagnosticsErrorsLabel) {
-            diagnosticsErrorsLabel.click();
-          }
-        }, OPEN_BOTTOM_BAR_TIMEOUT);
-      }}
     >
       <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
     </PanelSetup>
   ),
 
   name: "BottomBar - no errors - open",
+  parameters: { colorScheme: "light" },
+  play: async () => {
+    fireEvent.click(await screen.findByTestId("np-errors"));
+  },
 };
 
 export const BottomBarNoLogsOpen: StoryObj = {
@@ -425,20 +395,16 @@ export const BottomBarNoLogsOpen: StoryObj = {
         userNodes: { nodeId1: { name: "/studio_script/script", sourceCode: "" } },
         userNodeDiagnostics: { nodeId1: [] },
       }}
-      onMount={(el) => {
-        setTimeout(() => {
-          const logsLabel = el.querySelector<HTMLElement>("[data-testid=np-logs]");
-          if (logsLabel) {
-            logsLabel.click();
-          }
-        }, OPEN_BOTTOM_BAR_TIMEOUT);
-      }}
     >
       <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
     </PanelSetup>
   ),
 
   name: "BottomBar - no logs - open",
+  parameters: { colorScheme: "light" },
+  play: async () => {
+    fireEvent.click(await screen.findByTestId("np-logs"));
+  },
 };
 
 export const BottomBarErrorsClosed: StoryObj = {
@@ -497,57 +463,15 @@ export const BottomBarErrorsOpen: StoryObj = {
         ...fixture,
         userNodes: { nodeId1: { name: "/studio_script/script", sourceCode: "" } },
         userNodeDiagnostics: {
+          // prettier-ignore
           nodeId1: [
-            {
-              message: Array(10).fill("Long error that might wrap.").join(" "),
-              severity: 8,
-              source: "Typescript",
-              startLineNumber: 0,
-              startColumn: 6,
-              endLineNumber: 72,
-              endColumn: 20,
-              code: 2304,
-            },
-            {
-              message: `Type '"bad number"' is not assignable to type 'number[]'.`,
-              severity: 8,
-              source: "Typescript",
-              startLineNumber: 0,
-              startColumn: 6,
-              endLineNumber: 72,
-              endColumn: 20,
-              code: 2304,
-            },
-            {
-              message: "This is a warning message (without line or column numbers).",
-              severity: 4,
-              source: "Source A",
-              endLineNumber: 72,
-              endColumn: 20,
-              code: 2304,
-            },
-            {
-              message: "This is an info message (without line or column numbers).",
-              severity: 2,
-              source: "Source B",
-              code: 2304,
-            },
-            {
-              message: "This is a hint message (without line or column numbers).",
-              severity: 1,
-              source: "Source C",
-              code: 2304,
-            },
+            { message: Array(10).fill("Long error that might wrap.").join(" "), severity: 8, source: "Typescript", startLineNumber: 0, startColumn: 6, endLineNumber: 72, endColumn: 20, code: 2304 },
+            { message: `Type '"bad number"' is not assignable to type 'number[]'.`, severity: 8, source: "Typescript", startLineNumber: 0, startColumn: 6, endLineNumber: 72, endColumn: 20, code: 2304 },
+            { message: "This is a warning message (without line or column numbers).", severity: 4, source: "Source A", endLineNumber: 72, endColumn: 20, code: 2304 },
+            { message: "This is an info message (without line or column numbers).", severity: 2, source: "Source B", code: 2304 },
+            { message: "This is a hint message (without line or column numbers).", severity: 1, source: "Source C", code: 2304 },
           ],
         },
-      }}
-      onMount={(el) => {
-        setTimeout(() => {
-          const diagnosticsErrorsLabel = el.querySelector<HTMLElement>("[data-testid=np-errors]");
-          if (diagnosticsErrorsLabel) {
-            diagnosticsErrorsLabel.click();
-          }
-        }, OPEN_BOTTOM_BAR_TIMEOUT);
       }}
     >
       <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
@@ -555,6 +479,10 @@ export const BottomBarErrorsOpen: StoryObj = {
   ),
 
   name: "BottomBar - errors - open",
+  parameters: { colorScheme: "light" },
+  play: async () => {
+    fireEvent.click(await screen.findByTestId("np-errors"));
+  },
 };
 
 export const BottomBarLogsClosed: StoryObj = {
@@ -562,12 +490,7 @@ export const BottomBarLogsClosed: StoryObj = {
     <PanelSetup
       fixture={{
         ...fixture,
-        userNodes: {
-          nodeId1: {
-            name: "/studio_script/script",
-            sourceCode: sourceCodeWithLogs,
-          },
-        },
+        userNodes: { nodeId1: { name: "/studio_script/script", sourceCode: sourceCodeWithLogs } },
         userNodeDiagnostics: { nodeId1: [] },
         userNodeLogs: { nodeId1: logs },
       }}
@@ -575,7 +498,7 @@ export const BottomBarLogsClosed: StoryObj = {
       <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
     </PanelSetup>
   ),
-
+  parameters: { colorScheme: "light" },
   name: "BottomBar - logs - closed",
 };
 
@@ -584,22 +507,9 @@ export const BottomBarLogsOpen: StoryObj = {
     <PanelSetup
       fixture={{
         ...fixture,
-        userNodes: {
-          nodeId1: {
-            name: "/studio_script/script",
-            sourceCode: sourceCodeWithLogs,
-          },
-        },
+        userNodes: { nodeId1: { name: "/studio_script/script", sourceCode: sourceCodeWithLogs } },
         userNodeDiagnostics: { nodeId1: [] },
         userNodeLogs: { nodeId1: logs },
-      }}
-      onMount={(el) => {
-        setTimeout(() => {
-          const logsLabel = el.querySelector<HTMLElement>("[data-testid=np-logs]");
-          if (logsLabel) {
-            logsLabel.click();
-          }
-        }, OPEN_BOTTOM_BAR_TIMEOUT);
       }}
     >
       <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
@@ -607,6 +517,10 @@ export const BottomBarLogsOpen: StoryObj = {
   ),
 
   name: "BottomBar - logs - open",
+  parameters: { colorScheme: "light" },
+  play: async () => {
+    fireEvent.click(await screen.findByTestId("np-logs"));
+  },
 };
 
 export const BottomBarClearedLogs: StoryObj = {
@@ -618,22 +532,14 @@ export const BottomBarClearedLogs: StoryObj = {
         userNodeDiagnostics: { nodeId1: [] },
         userNodeLogs: { nodeId1: logs },
       }}
-      onFirstMount={(el) => {
-        setTimeout(() => {
-          const logsLabel = el.querySelector<HTMLElement>("[data-testid=np-logs]");
-          if (logsLabel) {
-            logsLabel.click();
-            const clearBtn = el.querySelector<HTMLElement>("button[data-testid=np-logs-clear]");
-            if (clearBtn) {
-              clearBtn.click();
-            }
-          }
-        }, OPEN_BOTTOM_BAR_TIMEOUT);
-      }}
     >
       <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
     </PanelSetup>
   ),
-
   name: "BottomBar - cleared logs",
+  parameters: { colorScheme: "light" },
+  play: async () => {
+    fireEvent.click(await screen.findByTestId("np-logs"));
+    fireEvent.click(await screen.findByTestId("np-logs-clear"));
+  },
 };
