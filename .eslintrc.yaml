@@ -69,26 +69,33 @@ rules:
   no-restricted-imports:
     - error
     - paths:
+        - name: "@emotion/styled"
+          importNames: [styled]
+          message: "@emotion/styled has performance implications. Use tss-react/mui instead."
+
         - name: "@mui/material"
           importNames: [styled]
           message: "@mui/styled has performance implications. Use tss-react/mui instead."
+
+        - name: "@mui/system"
+          importNames: [styled]
+          message: "@mui/styled has performance implications. Use tss-react/mui instead."
+
         - name: "@mui/material/styles/styled"
           message: "@mui/styled has performance implications. Use tss-react/mui instead."
-        - name: "@mui/system"
-          message: "@mui/styled has performance implications. Use tss-react/mui instead."
-        - name: "@mui/system/styled"
-          message: "@mui/styled has performance implications. Use tss-react/mui instead."
-        - name: "@emotion/styled"
-          message: "@emotion/styled has performance implications. Use tss-react/mui instead."
+
         - name: "@mui/material"
           importNames: [Box]
           message: "@mui/Box has performance implications. Use tss-react/mui instead."
+
         - name: "@mui/system"
           importNames: [Box]
           message: "@mui/Box has performance implications. Use tss-react/mui instead."
+
         - name: "lodash"
           importNames: [get]
           message: "Use optional chaining instead of lodash.get."
+
         - name: "lodash/get"
           message: "Use optional chaining instead of lodash.get."
 
@@ -184,4 +191,3 @@ overrides:
       - "packages/studio-base/src/panels/Publish/index.tsx"
       - "packages/studio-base/src/panels/RawMessages/DiffSpan.tsx"
       - "packages/studio-base/src/stories/storyHelpers.tsx"
-      - "packages/studio-base/src/theme/index.stories.tsx"
