@@ -10,11 +10,12 @@ import { LineSegmentsGeometry } from "three/examples/jsm/lines/LineSegmentsGeome
 
 import { PinholeCameraModel } from "@foxglove/den/image";
 import { Color } from "@foxglove/schemas";
+import { getAnnotationAtPath } from "@foxglove/studio-base/panels/Image/lib/normalizeAnnotations";
 import {
   PointsAnnotation as NormalizedPointsAnnotation,
   CircleAnnotation as NormalizedCircleAnnotation,
 } from "@foxglove/studio-base/panels/Image/types";
-import { RosValue } from "@foxglove/studio-base/players/types";
+import { RosObject, RosValue } from "@foxglove/studio-base/players/types";
 
 import { BaseUserData, Renderable } from "../../../Renderable";
 import { SRGBToLinear } from "../../../color";
@@ -78,6 +79,8 @@ export class RenderableLineAnnotation extends Renderable<BaseUserData, /*TRender
   #canvasHeight = 0;
   #scaleNeedsUpdate = false;
 
+  #originalMessage?: RosObject;
+
   #annotation?: NormalizedPointsAnnotation & { style: LineStyle };
   #annotationNeedsUpdate = false;
 
@@ -117,8 +120,18 @@ export class RenderableLineAnnotation extends Renderable<BaseUserData, /*TRender
     super.dispose();
   }
 
+  public setOriginalMessage(originalMessage: RosObject | undefined): void {
+    this.#originalMessage = originalMessage;
+  }
+
   public override details(): Record<string, RosValue> {
-    return this.#annotation ?? {};
+    if (this.#originalMessage && this.#annotation) {
+      return {
+        annotation: getAnnotationAtPath(this.#originalMessage, this.#annotation.messagePath),
+        originalMessage: this.#originalMessage,
+      };
+    }
+    return {};
   }
 
   public setScale(
@@ -361,5 +374,6 @@ function makePointsAnnotationFromCircle(
     outlineColor: circle.outlineColor,
     thickness: circle.thickness,
     fillColor: circle.fillColor,
+    messagePath: circle.messagePath,
   };
 }

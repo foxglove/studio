@@ -5,8 +5,9 @@
 import * as THREE from "three";
 
 import { PinholeCameraModel } from "@foxglove/den/image";
+import { getAnnotationAtPath } from "@foxglove/studio-base/panels/Image/lib/normalizeAnnotations";
 import { PointsAnnotation as NormalizedPointsAnnotation } from "@foxglove/studio-base/panels/Image/types";
-import { RosValue } from "@foxglove/studio-base/players/types";
+import { RosObject, RosValue } from "@foxglove/studio-base/players/types";
 
 import { DynamicBufferGeometry } from "../../../DynamicBufferGeometry";
 import { BaseUserData, Renderable } from "../../../Renderable";
@@ -46,6 +47,8 @@ export class RenderablePointsAnnotation extends Renderable<BaseUserData, /*TRend
   #pixelRatio = 0;
   #scaleNeedsUpdate = false;
 
+  #originalMessage?: RosObject;
+
   #annotation?: NormalizedPointsAnnotation & { style: "points" };
   #annotationNeedsUpdate = false;
 
@@ -84,7 +87,17 @@ export class RenderablePointsAnnotation extends Renderable<BaseUserData, /*TRend
   }
 
   public override details(): Record<string, RosValue> {
-    return this.#annotation ?? {};
+    if (this.#originalMessage && this.#annotation) {
+      return {
+        annotation: getAnnotationAtPath(this.#originalMessage, this.#annotation.messagePath),
+        originalMessage: this.#originalMessage,
+      };
+    }
+    return {};
+  }
+
+  public setOriginalMessage(originalMessage: RosObject | undefined): void {
+    this.#originalMessage = originalMessage;
   }
 
   public setScale(

@@ -3,8 +3,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { PinholeCameraModel } from "@foxglove/den/image";
+import { getAnnotationAtPath } from "@foxglove/studio-base/panels/Image/lib/normalizeAnnotations";
 import { TextAnnotation as NormalizedTextAnnotation } from "@foxglove/studio-base/panels/Image/types";
-import { RosValue } from "@foxglove/studio-base/players/types";
+import { RosObject, RosValue } from "@foxglove/studio-base/players/types";
 import { Label, LabelPool } from "@foxglove/three-text";
 
 import { BaseUserData, Renderable } from "../../../Renderable";
@@ -19,6 +20,8 @@ export class RenderableTextAnnotation extends Renderable<BaseUserData, /*TRender
 
   #scale = 0;
   #scaleNeedsUpdate = false;
+
+  #originalMessage?: RosObject;
 
   #annotation?: NormalizedTextAnnotation;
   #annotationNeedsUpdate = false;
@@ -51,7 +54,17 @@ export class RenderableTextAnnotation extends Renderable<BaseUserData, /*TRender
   }
 
   public override details(): Record<string, RosValue> {
-    return this.#annotation ?? {};
+    if (this.#originalMessage && this.#annotation) {
+      return {
+        annotation: getAnnotationAtPath(this.#originalMessage, this.#annotation.messagePath),
+        originalMessage: this.#originalMessage,
+      };
+    }
+    return {};
+  }
+
+  public setOriginalMessage(originalMessage: RosObject | undefined): void {
+    this.#originalMessage = originalMessage;
   }
 
   public setScale(

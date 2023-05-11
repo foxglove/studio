@@ -6,6 +6,7 @@ import * as THREE from "three";
 
 import { PinholeCameraModel } from "@foxglove/den/image";
 import { Annotation as NormalizedAnnotation } from "@foxglove/studio-base/panels/Image/types";
+import { RosObject } from "@foxglove/studio-base/players/types";
 import { LabelPool } from "@foxglove/three-text";
 
 import { RenderableLineAnnotation } from "./RenderableLineAnnotation";
@@ -33,6 +34,8 @@ export class RenderableTopicAnnotations extends THREE.Object3D {
   #cameraModel?: PinholeCameraModel;
   #cameraModelNeedsUpdate = false;
 
+  #originalMessage?: RosObject;
+
   public constructor(labelPool: LabelPool) {
     super();
     this.#labelPool = labelPool;
@@ -58,6 +61,10 @@ export class RenderableTopicAnnotations extends THREE.Object3D {
     this.#canvasWidth = canvasWidth;
     this.#canvasHeight = canvasHeight;
     this.#pixelRatio = pixelRatio;
+  }
+
+  public setOriginalMessage(originalMessage: RosObject | undefined): void {
+    this.#originalMessage = originalMessage;
   }
 
   public setCameraModel(cameraModel: PinholeCameraModel | undefined): void {
@@ -134,6 +141,7 @@ export class RenderableTopicAnnotations extends THREE.Object3D {
             this.add(line);
           }
           this.#lines.push(line);
+          line.setOriginalMessage(this.#originalMessage);
           line.setAnnotationFromCircle(annotation);
           break;
         }
@@ -154,6 +162,7 @@ export class RenderableTopicAnnotations extends THREE.Object3D {
                 this.add(points);
               }
               this.#points.push(points);
+              points.setOriginalMessage(this.#originalMessage);
               points.setAnnotation(
                 annotation as typeof annotation & { style: typeof annotation.style },
               );
@@ -171,6 +180,7 @@ export class RenderableTopicAnnotations extends THREE.Object3D {
                 this.add(line);
               }
               this.#lines.push(line);
+              line.setOriginalMessage(this.#originalMessage);
               line.setAnnotation(
                 annotation as typeof annotation & { style: typeof annotation.style },
               );
@@ -188,6 +198,7 @@ export class RenderableTopicAnnotations extends THREE.Object3D {
             this.add(text);
           }
           this.#texts.push(text);
+          text.setOriginalMessage(this.#originalMessage);
           text.setAnnotation(annotation);
           break;
         }

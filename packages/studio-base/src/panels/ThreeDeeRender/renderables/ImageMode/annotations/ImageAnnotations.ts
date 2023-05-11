@@ -160,6 +160,7 @@ export class ImageAnnotations extends THREE.Object3D {
       this.add(renderable);
     }
 
+    renderable.setOriginalMessage(messageEvent.message);
     renderable.setAnnotations(annotations);
     renderable.update();
   }
