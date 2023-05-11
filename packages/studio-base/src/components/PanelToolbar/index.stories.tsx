@@ -14,8 +14,7 @@
 import { Database20Filled } from "@fluentui/react-icons";
 import { useTheme } from "@mui/material";
 import { StoryObj, StoryFn } from "@storybook/react";
-import { fireEvent } from "@storybook/testing-library";
-import { screen } from "@storybook/testing-library";
+import { fireEvent, screen } from "@storybook/testing-library";
 import { PropsWithChildren } from "react";
 import { Mosaic, MosaicWindow } from "react-mosaic-component";
 
