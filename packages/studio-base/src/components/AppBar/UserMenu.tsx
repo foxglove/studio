@@ -15,10 +15,11 @@ import {
   useCurrentUser,
   useCurrentUserType,
 } from "@foxglove/studio-base/context/CurrentUserContext";
-import { useWorkspaceActions } from "@foxglove/studio-base/context/WorkspaceContext";
+import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/useWorkspaceActions";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import { useConfirm } from "@foxglove/studio-base/hooks/useConfirm";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
+import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
 
 const log = Logger.getLogger(__filename);
 
@@ -53,7 +54,9 @@ export function UserMenu({
   const { enqueueSnackbar } = useSnackbar();
   const [confirm, confirmModal] = useConfirm();
 
-  const { prefsDialogActions } = useWorkspaceActions();
+  const { dialogActions } = useWorkspaceActions();
+
+  const isDesktop = isDesktopApp();
 
   const beginSignOut = useCallback(async () => {
     try {
@@ -89,9 +92,9 @@ export function UserMenu({
         user: currentUserType,
         cta: "app-settings-dialog",
       });
-      prefsDialogActions.open(tab);
+      dialogActions.preferences.open(tab);
     },
-    [analytics, currentUserType, prefsDialogActions],
+    [analytics, currentUserType, dialogActions.preferences],
   );
 
   const onProfileClick = useCallback(() => {
@@ -118,6 +121,19 @@ export function UserMenu({
     window.open("https://foxglove.dev/slack", "_blank");
   }, [analytics, currentUserType]);
 
+  const revertToOldUI = useCallback(async () => {
+    if (isDesktop) {
+      await confirm({
+        title: "Please restart the app to finish reverting to the old UI.",
+        ok: "OK",
+        cancel: false,
+      });
+      await setEnableNewTopNav(false);
+    } else {
+      await setEnableNewTopNav(false);
+    }
+  }, [confirm, isDesktop, setEnableNewTopNav]);
+
   return (
     <>
       <Menu
@@ -136,7 +152,7 @@ export function UserMenu({
         <MenuItem onClick={() => onSettingsClick("extensions")}>Extensions</MenuItem>
         {currentUser && <MenuItem onClick={onProfileClick}>User profile</MenuItem>}
         <Divider variant="middle" />
-        <MenuItem onClick={async () => await setEnableNewTopNav(false)}>Revert to old UI</MenuItem>
+        <MenuItem onClick={revertToOldUI}>Revert to old UI</MenuItem>
         <Divider variant="middle" />
         <MenuItem onClick={onDocsClick}>Documentation</MenuItem>
         <MenuItem onClick={onSlackClick}>Join Slack community</MenuItem>

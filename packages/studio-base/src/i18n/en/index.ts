@@ -10,6 +10,7 @@ export * from "./general";
 export * from "./incompatibleLayoutVersion";
 export * from "./log";
 export * from "./openDialog";
+export * from "./panelConfigVersionGuard";
 export * from "./panels";
 export * from "./panelSettings";
 export * from "./plot";

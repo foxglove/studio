@@ -15,6 +15,7 @@ import {
   ImageMarker as RosImageMarker,
   ImageMarkerArray as RosImageMarkerArray,
 } from "@foxglove/studio-base/types/Messages";
+import { LabelPool } from "@foxglove/three-text";
 
 import { RenderableTopicAnnotations } from "./RenderableTopicAnnotations";
 import { ImageAnnotationSubscription, ImageModeConfig } from "../../../IRenderer";
@@ -22,6 +23,7 @@ import { SettingsTreeEntry } from "../../../SettingsManager";
 import { IMAGE_ANNOTATIONS_DATATYPES } from "../../../foxglove";
 import { IMAGE_MARKER_ARRAY_DATATYPES, IMAGE_MARKER_DATATYPES } from "../../../ros";
 import { topicIsConvertibleToSchema } from "../../../topicIsConvertibleToSchema";
+import { sortPrefixMatchesToFront } from "../../Images/topicPrefixMatching";
 
 type TopicName = string & { __brand: "TopicName" };
 type SchemaName = string & { __brand: "SchemaName" };
@@ -39,6 +41,7 @@ interface ImageAnnotationsContext {
     schemaNames: Set<string>,
     handler: (messageEvent: MessageEvent<T>) => void,
   ): void;
+  labelPool: LabelPool;
 }
 
 const ALL_SUPPORTED_SCHEMAS = new Set([
@@ -46,11 +49,6 @@ const ALL_SUPPORTED_SCHEMAS = new Set([
   ...IMAGE_MARKER_DATATYPES,
   ...IMAGE_MARKER_ARRAY_DATATYPES,
 ]);
-
-/**
- * Match everything up to the last `/` in a topic name, e.g. match `/a/b` in `/a/b/c`.
- */
-const TOPIC_PREFIX_REGEX = /^.+\/(?=.)/;
 
 /**
  * Determine whether `subscription`, an entry in {@link ImageModeConfig.annotations}, is the entry
@@ -91,7 +89,9 @@ export class ImageAnnotations extends THREE.Object3D {
     this.#canvasWidth = context.initialCanvasWidth;
     this.#canvasHeight = context.initialCanvasHeight;
     this.#pixelRatio = context.initialPixelRatio;
+  }
 
+  public addSubscriptions(): void {
     this.#context.addSchemaSubscriptions(ALL_SUPPORTED_SCHEMAS, this.#handleMessage.bind(this));
   }
 
@@ -149,7 +149,7 @@ export class ImageAnnotations extends THREE.Object3D {
       messageEvent.schemaName as SchemaName,
     );
     if (!renderable) {
-      renderable = new RenderableTopicAnnotations();
+      renderable = new RenderableTopicAnnotations(this.#context.labelPool);
       renderable.setScale(this.#scale, this.#canvasWidth, this.#canvasHeight, this.#pixelRatio);
       renderable.setCameraModel(this.#cameraModel);
       this.#renderablesByTopicAndSchemaName.set(
@@ -232,14 +232,7 @@ export class ImageAnnotations extends THREE.Object3D {
 
     // Sort annotation topics with prefixes matching the image topic to the top.
     if (config.imageTopic) {
-      const imagePrefix = TOPIC_PREFIX_REGEX.exec(config.imageTopic)?.[0];
-      if (imagePrefix != undefined) {
-        annotationTopics.sort((topicA, topicB) => {
-          const matchesA = topicA.name.startsWith(imagePrefix);
-          const matchesB = topicB.name.startsWith(imagePrefix);
-          return matchesA === matchesB ? 0 : matchesA ? -1 : 1;
-        });
-      }
+      sortPrefixMatchesToFront(annotationTopics, config.imageTopic, (topic) => topic.name);
     }
 
     let i = 0;
