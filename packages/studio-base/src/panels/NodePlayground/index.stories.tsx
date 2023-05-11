@@ -17,7 +17,7 @@ import NodePlayground from "@foxglove/studio-base/panels/NodePlayground";
 import rawUserUtils from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/typescript/rawUserUtils";
 import { UserNodeLog } from "@foxglove/studio-base/players/UserNodePlayer/types";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
-import { SExpectedResult } from "@foxglove/studio-base/stories/storyHelpers";
+import { ExpectedResult } from "@foxglove/studio-base/stories/storyHelpers";
 import { DEFAULT_STUDIO_NODE_PREFIX } from "@foxglove/studio-base/util/globalConstants";
 
 const userNodes = {
@@ -116,7 +116,6 @@ const SIDEBAR_OPEN_CLICK_TIMEOUT = 500;
 
 export default {
   title: "panels/NodePlayground",
-
   parameters: {
     chromatic: {
       delay: 2500,
@@ -125,30 +124,24 @@ export default {
 };
 
 export const WelcomeScreen: StoryObj = {
-  render: () => {
-    return (
-      <PanelSetup fixture={fixture}>
-        <NodePlayground />
-      </PanelSetup>
-    );
-  },
-
+  render: () => (
+    <PanelSetup fixture={fixture}>
+      <NodePlayground />
+    </PanelSetup>
+  ),
   name: "welcome screen",
 };
 
 export const RawUserUtils: StoryObj = {
-  render: () => {
-    return (
-      <div style={{ margin: 12 }}>
-        <p style={{ color: "lightgreen" }}>
-          This should be original TypeScript source code. This is a story rather than a unit test
-          because it’s effectively a test of our webpack config.
-        </p>
-        <pre>{rawUserUtils[0]?.sourceCode}</pre>;
-      </div>
-    );
-  },
-
+  render: () => (
+    <div style={{ margin: 12 }}>
+      <p style={{ color: "lightgreen" }}>
+        This should be original TypeScript source code. This is a story rather than a unit test
+        because it’s effectively a test of our webpack config.
+      </p>
+      <pre>{rawUserUtils[0]?.sourceCode}</pre>;
+    </div>
+  ),
   name: "rawUserUtils",
 };
 
@@ -170,7 +163,6 @@ export const UtilsUsageInNode: StoryObj = {
       <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
     </PanelSetup>
   ),
-
   name: "utils usage in node",
 };
 
@@ -202,12 +194,11 @@ export const EditorShowsNewCodeWhenUserNodesChange: StoryObj = {
       }}
     >
       <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
-      <SExpectedResult style={{ left: "375px", top: "150px" }}>
+      <ExpectedResult left={375} top={150}>
         Should show function norm() code
-      </SExpectedResult>
+      </ExpectedResult>
     </PanelSetup>
   ),
-
   name: "Editor shows new code when userNodes change",
 };
 
@@ -240,7 +231,6 @@ export const EditorGotoDefinition: StoryObj = {
       />
     </PanelSetup>
   ),
-
   name: "editor goto definition",
 };
 
@@ -278,83 +268,71 @@ export const GoBackFromGotoDefinition: StoryObj = {
       />
     </PanelSetup>
   ),
-
   name: "go back from goto definition",
 };
 
 export const SidebarOpenNodeExplorer: StoryObj = {
-  render: () => {
-    return (
-      <PanelSetup
-        fixture={{ ...fixture, userNodes }}
-        onMount={(el) => {
-          setTimeout(() => {
-            el.querySelectorAll<HTMLElement>("[data-testid=node-explorer]")[0]!.click();
-          }, SIDEBAR_OPEN_CLICK_TIMEOUT);
-        }}
-      >
-        <NodePlayground />
-      </PanelSetup>
-    );
-  },
-
+  render: () => (
+    <PanelSetup
+      fixture={{ ...fixture, userNodes }}
+      onMount={(el) => {
+        setTimeout(() => {
+          el.querySelectorAll<HTMLElement>("[data-testid=node-explorer]")[0]!.click();
+        }, SIDEBAR_OPEN_CLICK_TIMEOUT);
+      }}
+    >
+      <NodePlayground />
+    </PanelSetup>
+  ),
   name: "sidebar open - node explorer",
 };
 
 export const SidebarOpenNodeExplorerSelectedNode: StoryObj = {
-  render: () => {
-    return (
-      <PanelSetup
-        fixture={{ ...fixture, userNodes }}
-        onMount={(el) => {
-          setTimeout(() => {
-            el.querySelectorAll<HTMLElement>("[data-testid=node-explorer]")[0]!.click();
-          }, SIDEBAR_OPEN_CLICK_TIMEOUT);
-        }}
-      >
-        <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
-      </PanelSetup>
-    );
-  },
-
+  render: () => (
+    <PanelSetup
+      fixture={{ ...fixture, userNodes }}
+      onMount={(el) => {
+        setTimeout(() => {
+          el.querySelectorAll<HTMLElement>("[data-testid=node-explorer]")[0]!.click();
+        }, SIDEBAR_OPEN_CLICK_TIMEOUT);
+      }}
+    >
+      <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
+    </PanelSetup>
+  ),
   name: "sidebar open - node explorer - selected node",
 };
 
 export const SidebarOpenUtilsExplorerSelectedUtility: StoryObj = {
-  render: () => {
-    return (
-      <PanelSetup
-        fixture={{ ...fixture, userNodes }}
-        onMount={(el) => {
-          setTimeout(() => {
-            el.querySelectorAll<HTMLElement>("[data-testid=utils-explorer]")[0]!.click();
-          }, SIDEBAR_OPEN_CLICK_TIMEOUT);
-        }}
-      >
-        <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
-      </PanelSetup>
-    );
-  },
+  render: () => (
+    <PanelSetup
+      fixture={{ ...fixture, userNodes }}
+      onMount={(el) => {
+        setTimeout(() => {
+          el.querySelectorAll<HTMLElement>("[data-testid=utils-explorer]")[0]!.click();
+        }, SIDEBAR_OPEN_CLICK_TIMEOUT);
+      }}
+    >
+      <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
+    </PanelSetup>
+  ),
 
   name: "sidebar open - utils explorer - selected utility",
 };
 
 export const SidebarOpenTemplatesExplorer: StoryObj = {
-  render: () => {
-    return (
-      <PanelSetup
-        fixture={{ ...fixture, userNodes }}
-        onMount={(el) => {
-          setTimeout(() => {
-            el.querySelectorAll<HTMLElement>("[data-testid=templates-explorer]")[0]!.click();
-          }, SIDEBAR_OPEN_CLICK_TIMEOUT);
-        }}
-      >
-        <NodePlayground />
-      </PanelSetup>
-    );
-  },
-
+  render: () => (
+    <PanelSetup
+      fixture={{ ...fixture, userNodes }}
+      onMount={(el) => {
+        setTimeout(() => {
+          el.querySelectorAll<HTMLElement>("[data-testid=templates-explorer]")[0]!.click();
+        }, SIDEBAR_OPEN_CLICK_TIMEOUT);
+      }}
+    >
+      <NodePlayground />
+    </PanelSetup>
+  ),
   name: "sidebar open - templates explorer",
 };
 
@@ -373,7 +351,6 @@ export const EditorLoadingState: StoryObj = {
       </PanelSetup>
     );
   },
-
   name: "editor loading state",
 };
 
@@ -389,7 +366,6 @@ export const BottomBarNoErrorsOrLogsClosed: StoryObj = {
       <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
     </PanelSetup>
   ),
-
   name: "BottomBar - no errors or logs - closed",
 };
 
@@ -413,7 +389,6 @@ export const BottomBarNoErrorsOpen: StoryObj = {
       <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
     </PanelSetup>
   ),
-
   name: "BottomBar - no errors - open",
 };
 
@@ -437,7 +412,6 @@ export const BottomBarNoLogsOpen: StoryObj = {
       <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
     </PanelSetup>
   ),
-
   name: "BottomBar - no logs - open",
 };
 
@@ -486,7 +460,6 @@ export const BottomBarErrorsClosed: StoryObj = {
       <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
     </PanelSetup>
   ),
-
   name: "BottomBar - errors - closed",
 };
 
@@ -553,7 +526,6 @@ export const BottomBarErrorsOpen: StoryObj = {
       <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
     </PanelSetup>
   ),
-
   name: "BottomBar - errors - open",
 };
 
@@ -575,7 +547,6 @@ export const BottomBarLogsClosed: StoryObj = {
       <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
     </PanelSetup>
   ),
-
   name: "BottomBar - logs - closed",
 };
 
@@ -605,7 +576,6 @@ export const BottomBarLogsOpen: StoryObj = {
       <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
     </PanelSetup>
   ),
-
   name: "BottomBar - logs - open",
 };
 
@@ -634,6 +604,5 @@ export const BottomBarClearedLogs: StoryObj = {
       <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
     </PanelSetup>
   ),
-
   name: "BottomBar - cleared logs",
 };
