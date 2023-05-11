@@ -2381,19 +2381,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@foxglove/ros2@npm:4.0.0":
-  version: 4.0.0
-  resolution: "@foxglove/ros2@npm:4.0.0"
-  dependencies:
-    "@foxglove/message-definition": ^0.2.0
-    "@foxglove/rosmsg": ^4.0.0
-    "@foxglove/rosmsg2-serialization": ^2.0.0
-    "@foxglove/rtps": ^1.6.0
-    eventemitter3: ^5.0.0
-  checksum: 5f0fe7def7c06b3e96b0a4eee2a0bcda79431a024fd0ef20852c92e884e7c0a9c09ea8b2caa69ec9024540c480ca16d234fc2ec1ec6158e9f47c23fc437d91d1
-  languageName: node
-  linkType: hard
-
 "@foxglove/rosbag2-web@npm:4.1.0":
   version: 4.1.0
   resolution: "@foxglove/rosbag2-web@npm:4.1.0"
@@ -2490,7 +2477,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@foxglove/rtps@npm:1.6.0, @foxglove/rtps@npm:^1.6.0":
+"@foxglove/rtps@npm:1.6.0":
   version: 1.6.0
   resolution: "@foxglove/rtps@npm:1.6.0"
   dependencies:
@@ -2538,7 +2525,6 @@ __metadata:
     "@foxglove/mcap-support": "workspace:*"
     "@foxglove/message-definition": 0.2.0
     "@foxglove/ros1": 2.0.0
-    "@foxglove/ros2": 4.0.0
     "@foxglove/rosbag": 0.4.0
     "@foxglove/rosbag2-web": 4.1.0
     "@foxglove/roslibjs": 0.0.3
