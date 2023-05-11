@@ -33,7 +33,7 @@ type Props = { config: Config; saveConfig: SaveConfig<Config> };
 const useStyles = makeStyles()({
   inputWrapper: {
     width: "100%",
-    lineHeight: 20,
+    lineHeight: "20px",
   },
   monospace: {
     fontFamily: fonts.MONOSPACE,
