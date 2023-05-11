@@ -180,7 +180,7 @@ export class RenderableLineAnnotation extends Renderable<BaseUserData, /*TRender
       if (
         this.#numPoints == undefined ||
         !this.#geometry ||
-        pointsLength !== this.#numPoints ||
+        pointsLength > this.#numPoints ||
         this.#style !== style
       ) {
         // Need to recreate the geometry when length changes: https://github.com/mrdoob/three.js/issues/21488
@@ -314,11 +314,12 @@ export class RenderableLineAnnotation extends Renderable<BaseUserData, /*TRender
       this.#geometry.setPositions(positions);
 
       switch (style) {
+        // These should represent the number of lines, not the number of points
         case "polygon":
-          this.#geometry.instanceCount = pointsLength + 1;
+          this.#geometry.instanceCount = pointsLength;
           break;
         case "line_strip":
-          this.#geometry.instanceCount = pointsLength;
+          this.#geometry.instanceCount = pointsLength - 1;
           break;
         case "line_list":
           this.#geometry.instanceCount = pointsLength >>> 1;
