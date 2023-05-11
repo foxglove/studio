@@ -87,14 +87,15 @@ export class RenderableLineAnnotation extends Renderable<BaseUserData, /*TRender
   #cameraModel?: PinholeCameraModel;
   #cameraModelNeedsUpdate = false;
 
-  public constructor() {
-    super("foxglove.ImageAnnotations.Line", undefined, {
+  public constructor(topicName: string) {
+    super(topicName, undefined, {
       receiveTime: 0n,
       messageTime: 0n,
       frameId: "",
       pose: { position: { x: 0, y: 0, z: 0 }, orientation: { x: 0, y: 0, z: 0, w: 0 } },
       settingsPath: [],
       settings: { visible: true },
+      topic: topicName,
     });
 
     this.#geometry = new LineSegmentsGeometry();
@@ -118,10 +119,6 @@ export class RenderableLineAnnotation extends Renderable<BaseUserData, /*TRender
     this.#fillGeometry?.dispose();
     this.#fillMaterial?.dispose();
     super.dispose();
-  }
-
-  public setOriginalMessage(originalMessage: RosObject | undefined): void {
-    this.#originalMessage = originalMessage;
   }
 
   public override details(): Record<string, RosValue> {
@@ -154,13 +151,20 @@ export class RenderableLineAnnotation extends Renderable<BaseUserData, /*TRender
     this.#cameraModel = cameraModel;
   }
 
-  public setAnnotation(annotation: NormalizedPointsAnnotation & { style: LineStyle }): void {
+  public setAnnotation(
+    annotation: NormalizedPointsAnnotation & { style: LineStyle },
+    originalMessage: RosObject | undefined,
+  ): void {
     this.#annotationNeedsUpdate ||= this.#annotation !== annotation;
+    this.#originalMessage = originalMessage;
     this.#annotation = annotation;
   }
 
-  public setAnnotationFromCircle(annotation: NormalizedCircleAnnotation): void {
-    this.setAnnotation(makePointsAnnotationFromCircle(annotation));
+  public setAnnotationFromCircle(
+    annotation: NormalizedCircleAnnotation,
+    originalMessage: RosObject | undefined,
+  ): void {
+    this.setAnnotation(makePointsAnnotationFromCircle(annotation), originalMessage);
   }
 
   public update(): void {

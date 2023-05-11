@@ -35,10 +35,12 @@ export class RenderableTopicAnnotations extends THREE.Object3D {
   #cameraModelNeedsUpdate = false;
 
   #originalMessage?: RosObject;
+  #topicName: string;
 
-  public constructor(labelPool: LabelPool) {
+  public constructor(topicName: string, labelPool: LabelPool) {
     super();
     this.#labelPool = labelPool;
+    this.#topicName = topicName;
   }
 
   public dispose(): void {
@@ -135,14 +137,13 @@ export class RenderableTopicAnnotations extends THREE.Object3D {
         case "circle": {
           let line = unusedLines.pop();
           if (!line) {
-            line = new RenderableLineAnnotation();
+            line = new RenderableLineAnnotation(this.#topicName);
             line.setScale(this.#scale, this.#canvasWidth, this.#canvasHeight, this.#pixelRatio);
             line.setCameraModel(this.#cameraModel);
             this.add(line);
           }
           this.#lines.push(line);
-          line.setOriginalMessage(this.#originalMessage);
-          line.setAnnotationFromCircle(annotation);
+          line.setAnnotationFromCircle(annotation, this.#originalMessage);
           break;
         }
 
@@ -151,7 +152,7 @@ export class RenderableTopicAnnotations extends THREE.Object3D {
             case "points": {
               let points = unusedPoints.pop();
               if (!points) {
-                points = new RenderablePointsAnnotation();
+                points = new RenderablePointsAnnotation(this.#topicName);
                 points.setScale(
                   this.#scale,
                   this.#canvasWidth,
@@ -162,9 +163,9 @@ export class RenderableTopicAnnotations extends THREE.Object3D {
                 this.add(points);
               }
               this.#points.push(points);
-              points.setOriginalMessage(this.#originalMessage);
               points.setAnnotation(
                 annotation as typeof annotation & { style: typeof annotation.style },
+                this.#originalMessage,
               );
               break;
             }
@@ -174,15 +175,15 @@ export class RenderableTopicAnnotations extends THREE.Object3D {
             case "line_list": {
               let line = unusedLines.pop();
               if (!line) {
-                line = new RenderableLineAnnotation();
+                line = new RenderableLineAnnotation(this.#topicName);
                 line.setScale(this.#scale, this.#canvasWidth, this.#canvasHeight, this.#pixelRatio);
                 line.setCameraModel(this.#cameraModel);
                 this.add(line);
               }
               this.#lines.push(line);
-              line.setOriginalMessage(this.#originalMessage);
               line.setAnnotation(
                 annotation as typeof annotation & { style: typeof annotation.style },
+                this.#originalMessage,
               );
               break;
             }
@@ -192,14 +193,13 @@ export class RenderableTopicAnnotations extends THREE.Object3D {
         case "text": {
           let text = unusedTexts.pop();
           if (!text) {
-            text = new RenderableTextAnnotation(this.#labelPool);
+            text = new RenderableTextAnnotation(this.#topicName, this.#labelPool);
             text.setScale(this.#scale, this.#canvasWidth, this.#canvasHeight, this.#pixelRatio);
             text.setCameraModel(this.#cameraModel);
             this.add(text);
           }
           this.#texts.push(text);
-          text.setOriginalMessage(this.#originalMessage);
-          text.setAnnotation(annotation);
+          text.setAnnotation(annotation, this.#originalMessage);
           break;
         }
       }

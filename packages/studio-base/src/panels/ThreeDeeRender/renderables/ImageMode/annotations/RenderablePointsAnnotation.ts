@@ -55,14 +55,15 @@ export class RenderablePointsAnnotation extends Renderable<BaseUserData, /*TRend
   #cameraModel?: PinholeCameraModel;
   #cameraModelNeedsUpdate = false;
 
-  public constructor() {
-    super("foxglove.ImageAnnotations.Points", undefined, {
+  public constructor(topicName: string) {
+    super(topicName, undefined, {
       receiveTime: 0n,
       messageTime: 0n,
       frameId: "",
       pose: { position: { x: 0, y: 0, z: 0 }, orientation: { x: 0, y: 0, z: 0, w: 0 } },
       settingsPath: [],
       settings: { visible: true },
+      topic: topicName,
     });
 
     this.#geometry = new DynamicBufferGeometry();
@@ -96,10 +97,6 @@ export class RenderablePointsAnnotation extends Renderable<BaseUserData, /*TRend
     return {};
   }
 
-  public setOriginalMessage(originalMessage: RosObject | undefined): void {
-    this.#originalMessage = originalMessage;
-  }
-
   public setScale(
     scale: number,
     _canvasWidth: number,
@@ -116,8 +113,12 @@ export class RenderablePointsAnnotation extends Renderable<BaseUserData, /*TRend
     this.#cameraModel = cameraModel;
   }
 
-  public setAnnotation(annotation: NormalizedPointsAnnotation & { style: "points" }): void {
+  public setAnnotation(
+    annotation: NormalizedPointsAnnotation & { style: "points" },
+    originalMessage: RosObject | undefined,
+  ): void {
     this.#annotationNeedsUpdate ||= this.#annotation !== annotation;
+    this.#originalMessage = originalMessage;
     this.#annotation = annotation;
   }
 

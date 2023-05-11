@@ -29,14 +29,15 @@ export class RenderableTextAnnotation extends Renderable<BaseUserData, /*TRender
   #cameraModel?: PinholeCameraModel;
   #cameraModelNeedsUpdate = false;
 
-  public constructor(labelPool: LabelPool) {
-    super("foxglove.ImageAnnotations.Text", undefined, {
+  public constructor(topicName: string, labelPool: LabelPool) {
+    super(topicName, undefined, {
       receiveTime: 0n,
       messageTime: 0n,
       frameId: "",
       pose: { position: { x: 0, y: 0, z: 0 }, orientation: { x: 0, y: 0, z: 0, w: 0 } },
       settingsPath: [],
       settings: { visible: true },
+      topic: topicName,
     });
 
     this.#labelPool = labelPool;
@@ -63,10 +64,6 @@ export class RenderableTextAnnotation extends Renderable<BaseUserData, /*TRender
     return {};
   }
 
-  public setOriginalMessage(originalMessage: RosObject | undefined): void {
-    this.#originalMessage = originalMessage;
-  }
-
   public setScale(
     scale: number,
     _canvasWidth: number,
@@ -82,8 +79,12 @@ export class RenderableTextAnnotation extends Renderable<BaseUserData, /*TRender
     this.#cameraModel = cameraModel;
   }
 
-  public setAnnotation(annotation: NormalizedTextAnnotation): void {
+  public setAnnotation(
+    annotation: NormalizedTextAnnotation,
+    originalMessage: RosObject | undefined,
+  ): void {
     this.#annotationNeedsUpdate ||= this.#annotation !== annotation;
+    this.#originalMessage = originalMessage;
     this.#annotation = annotation;
   }
 
