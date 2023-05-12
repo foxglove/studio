@@ -23,6 +23,7 @@ import { SettingsTreeEntry } from "../../../SettingsManager";
 import { IMAGE_ANNOTATIONS_DATATYPES } from "../../../foxglove";
 import { IMAGE_MARKER_ARRAY_DATATYPES, IMAGE_MARKER_DATATYPES } from "../../../ros";
 import { topicIsConvertibleToSchema } from "../../../topicIsConvertibleToSchema";
+import { sortPrefixMatchesToFront } from "../../Images/topicPrefixMatching";
 
 type TopicName = string & { __brand: "TopicName" };
 type SchemaName = string & { __brand: "SchemaName" };
@@ -48,11 +49,6 @@ const ALL_SUPPORTED_SCHEMAS = new Set([
   ...IMAGE_MARKER_DATATYPES,
   ...IMAGE_MARKER_ARRAY_DATATYPES,
 ]);
-
-/**
- * Match everything up to the last `/` in a topic name, e.g. match `/a/b` in `/a/b/c`.
- */
-const TOPIC_PREFIX_REGEX = /^.+\/(?=.)/;
 
 /**
  * Determine whether `subscription`, an entry in {@link ImageModeConfig.annotations}, is the entry
@@ -153,7 +149,7 @@ export class ImageAnnotations extends THREE.Object3D {
       messageEvent.schemaName as SchemaName,
     );
     if (!renderable) {
-      renderable = new RenderableTopicAnnotations(this.#context.labelPool);
+      renderable = new RenderableTopicAnnotations(messageEvent.topic, this.#context.labelPool);
       renderable.setScale(this.#scale, this.#canvasWidth, this.#canvasHeight, this.#pixelRatio);
       renderable.setCameraModel(this.#cameraModel);
       this.#renderablesByTopicAndSchemaName.set(
@@ -164,6 +160,7 @@ export class ImageAnnotations extends THREE.Object3D {
       this.add(renderable);
     }
 
+    renderable.setOriginalMessage(messageEvent.message);
     renderable.setAnnotations(annotations);
     renderable.update();
   }
@@ -236,14 +233,7 @@ export class ImageAnnotations extends THREE.Object3D {
 
     // Sort annotation topics with prefixes matching the image topic to the top.
     if (config.imageTopic) {
-      const imagePrefix = TOPIC_PREFIX_REGEX.exec(config.imageTopic)?.[0];
-      if (imagePrefix != undefined) {
-        annotationTopics.sort((topicA, topicB) => {
-          const matchesA = topicA.name.startsWith(imagePrefix);
-          const matchesB = topicB.name.startsWith(imagePrefix);
-          return matchesA === matchesB ? 0 : matchesA ? -1 : 1;
-        });
-      }
+      sortPrefixMatchesToFront(annotationTopics, config.imageTopic, (topic) => topic.name);
     }
 
     let i = 0;
