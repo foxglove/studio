@@ -59,6 +59,7 @@ const fixture: Fixture = {
           { type: "int8", name: "BOOTING", isConstant: true, value: 2 },
           { type: "int8", name: "ACTIVE", isConstant: true, value: 3 },
           { type: "int8", name: "state", isArray: false },
+          { type: "msgs/DataValue", name: "data", isArray: false, isComplex: true },
         ],
       },
       "std_msgs/Header": {
@@ -71,6 +72,9 @@ const fixture: Fixture = {
           },
           { name: "frame_id", type: "string", isArray: false },
         ],
+      },
+      "msgs/DataValue": {
+        definitions: [{ type: "string", name: "value", isArray: false, isComplex: false }],
       },
     }),
   ),
