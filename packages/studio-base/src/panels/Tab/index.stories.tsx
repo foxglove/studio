@@ -315,28 +315,31 @@ export const WithChosenActiveTab: StoryObj = {
 };
 
 export const AddTab: StoryObj = {
-  render: () => (
-    <PanelSetup
-      panelCatalog={new MockPanelCatalog()}
-      fixture={{
-        ...fixture,
-        savedProps: {
-          "Tab!a": { activeTabIdx: 0, tabs: [{ title: "Tab A", layout: undefined }] },
-        },
-      }}
-      style={{ width: "100%" }}
-      onMount={() => {
-        setTimeout(async () => {
-          const addTabBtn = document.querySelector("[data-testid=add-tab]");
-          if (addTabBtn) {
-            (addTabBtn as any).click();
-          }
-        }, DEFAULT_TIMEOUT);
-      }}
-    >
-      <PanelLayout />
-    </PanelSetup>
-  ),
+  render: () => {
+    return (
+      <PanelSetup
+        panelCatalog={new MockPanelCatalog()}
+        fixture={{
+          ...fixture,
+          savedProps: {
+            "Tab!a": { activeTabIdx: 0, tabs: [{ title: "Tab A", layout: undefined }] },
+          },
+        }}
+        style={{ width: "100%" }}
+        onMount={() => {
+          setTimeout(async () => {
+            const addTabBtn = document.querySelector("[data-testid=add-tab]");
+            if (addTabBtn) {
+              (addTabBtn as any).click();
+            }
+          }, DEFAULT_TIMEOUT);
+        }}
+      >
+        <PanelLayout />
+      </PanelSetup>
+    );
+  },
+
   name: "add tab",
 };
 
