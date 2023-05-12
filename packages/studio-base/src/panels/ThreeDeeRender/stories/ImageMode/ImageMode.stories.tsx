@@ -27,7 +27,7 @@ export default {
   parameters: { colorScheme: "light" },
 };
 
-const ImageModeRosImage = ({ imageType }: { imageType: "raw" | "png" }) => {
+const ImageModeRosImage = ({ imageType }: { imageType: "raw" | "png" }): JSX.Element => {
   const topics: Topic[] = [
     { name: "/cam1/info", schemaName: "foxglove.CameraCalibration" },
     { name: "/cam2/info", schemaName: "foxglove.CameraCalibration" },
@@ -169,15 +169,23 @@ const ImageModeRosImage = ({ imageType }: { imageType: "raw" | "png" }) => {
   );
 };
 
-export const ImageModeRosRawImage: StoryObj = {
-  render: () => <ImageModeRosImage imageType="raw" />,
+export const ImageModeRosRawImage: StoryObj<Parameters<typeof ImageModeRosImage>[0]> = {
+  render: ImageModeRosImage,
+  args: { imageType: "raw" },
 };
 
-export const ImageModeRosPngImage: StoryObj = {
-  render: () => <ImageModeRosImage imageType="png" />,
+export const ImageModeRosPngImage: StoryObj<Parameters<typeof ImageModeRosImage>[0]> = {
+  render: ImageModeRosImage,
+  args: { imageType: "png" },
 };
 
-const ImageModeFoxgloveImage = ({ imageType }: { imageType: "raw" | "png" }) => {
+const ImageModeFoxgloveImage = ({
+  imageType,
+  zoomMode = "fit",
+}: {
+  imageType: "raw" | "png";
+  zoomMode?: "fit" | "fill";
+}): JSX.Element => {
   const topics: Topic[] = [
     { name: "/cam1/info", schemaName: "foxglove.CameraCalibration" },
     { name: "/cam2/info", schemaName: "foxglove.CameraCalibration" },
@@ -300,6 +308,7 @@ const ImageModeFoxgloveImage = ({ imageType }: { imageType: "raw" | "png" }) => 
           imageMode: {
             calibrationTopic: imageType === "raw" ? "/cam2/info" : "/cam1/info",
             imageTopic: imageType === "raw" ? "/cam2/raw" : "/cam1/png",
+            zoomMode,
           },
           cameraState: {
             distance: 1.5,
@@ -319,16 +328,19 @@ const ImageModeFoxgloveImage = ({ imageType }: { imageType: "raw" | "png" }) => 
   );
 };
 
-export const ImageModeFoxgloveRawImage: StoryObj = {
-  render: () => <ImageModeFoxgloveImage imageType="raw" />,
+export const ImageModeFoxgloveRawImage: StoryObj<Parameters<typeof ImageModeFoxgloveImage>[0]> = {
+  render: ImageModeFoxgloveImage,
+  args: { imageType: "raw" },
 };
 
-export const ImageModeFoxglovePngImage: StoryObj = {
-  render: () => <ImageModeFoxgloveImage imageType="png" />,
+export const ImageModeFoxglovePngImage: StoryObj<Parameters<typeof ImageModeFoxgloveImage>[0]> = {
+  render: ImageModeFoxgloveImage,
+  args: { imageType: "png" },
 };
 
-export const ImageModeResizeHandled: StoryObj = {
-  render: () => <ImageModeFoxgloveImage imageType="raw" />,
+export const ImageModeResizeHandled: StoryObj<Parameters<typeof ImageModeFoxgloveImage>[0]> = {
+  render: ImageModeFoxgloveImage,
+  args: { imageType: "raw" },
 
   play: async () => {
     const canvas = document.querySelector("canvas")!;
@@ -341,8 +353,17 @@ export const ImageModeResizeHandled: StoryObj = {
   },
 };
 
-export const ImageModePan: StoryObj = {
-  render: () => <ImageModeFoxgloveImage imageType="raw" />,
+export const ImageModeResizeHandledFill: StoryObj<Parameters<typeof ImageModeFoxgloveImage>[0]> = {
+  ...ImageModeResizeHandled,
+  args: {
+    ...ImageModeResizeHandled.args,
+    zoomMode: "fill",
+  },
+};
+
+export const ImageModePan: StoryObj<Parameters<typeof ImageModeFoxgloveImage>[0]> = {
+  render: ImageModeFoxgloveImage,
+  args: { imageType: "raw" },
   play: async () => {
     const canvas = document.querySelector("canvas")!;
     fireEvent.mouseDown(canvas, { clientX: 200, clientY: 200 });
@@ -351,8 +372,17 @@ export const ImageModePan: StoryObj = {
   },
 };
 
-export const ImageModeZoomThenPan: StoryObj = {
-  render: () => <ImageModeFoxgloveImage imageType="raw" />,
+export const ImageModePanFill: StoryObj<Parameters<typeof ImageModeFoxgloveImage>[0]> = {
+  ...ImageModePan,
+  args: {
+    ...ImageModePan.args,
+    zoomMode: "fill",
+  },
+};
+
+export const ImageModeZoomThenPan: StoryObj<Parameters<typeof ImageModeFoxgloveImage>[0]> = {
+  render: ImageModeFoxgloveImage,
+  args: { imageType: "raw" },
   play: async () => {
     const canvas = document.querySelector("canvas")!;
     fireEvent.wheel(canvas, { deltaY: -30, clientX: 400, clientY: 400 });
@@ -363,8 +393,17 @@ export const ImageModeZoomThenPan: StoryObj = {
   },
 };
 
-export const ImageModePanThenZoom: StoryObj = {
-  render: () => <ImageModeFoxgloveImage imageType="raw" />,
+export const ImageModeZoomThenPanFill: StoryObj<Parameters<typeof ImageModeFoxgloveImage>[0]> = {
+  ...ImageModeZoomThenPan,
+  args: {
+    ...ImageModeZoomThenPan.args,
+    zoomMode: "fill",
+  },
+};
+
+export const ImageModePanThenZoom: StoryObj<Parameters<typeof ImageModeFoxgloveImage>[0]> = {
+  render: ImageModeFoxgloveImage,
+  args: { imageType: "raw" },
   play: async () => {
     const canvas = document.querySelector("canvas")!;
     fireEvent.mouseDown(canvas, { clientX: 200, clientY: 200 });
@@ -375,16 +414,35 @@ export const ImageModePanThenZoom: StoryObj = {
   },
 };
 
-export const ImageModePanThenZoomReset: StoryObj = {
-  render: () => <ImageModeFoxgloveImage imageType="raw" />,
+export const ImageModePanThenZoomFill: StoryObj<Parameters<typeof ImageModeFoxgloveImage>[0]> = {
+  ...ImageModePanThenZoom,
+  args: {
+    ...ImageModePanThenZoom.args,
+    zoomMode: "fill",
+  },
+};
+
+export const ImageModePanThenZoomReset: StoryObj<Parameters<typeof ImageModeFoxgloveImage>[0]> = {
+  render: ImageModeFoxgloveImage,
+  args: { imageType: "raw" },
   play: async (ctx) => {
     await ImageModePanThenZoom.play?.(ctx);
     userEvent.click(await screen.findByTestId("reset-view"));
   },
 };
 
-export const ImageModePick: StoryObj = {
-  render: () => <ImageModeFoxgloveImage imageType="raw" />,
+export const ImageModePanThenZoomResetFill: StoryObj<Parameters<typeof ImageModeFoxgloveImage>[0]> =
+  {
+    ...ImageModePanThenZoomReset,
+    args: {
+      ...ImageModePanThenZoomReset.args,
+      zoomMode: "fill",
+    },
+  };
+
+export const ImageModePick: StoryObj<Parameters<typeof ImageModeFoxgloveImage>[0]> = {
+  render: ImageModeFoxgloveImage,
+  args: { imageType: "raw" },
 
   play: async () => {
     const canvas = document.querySelector("canvas")!;

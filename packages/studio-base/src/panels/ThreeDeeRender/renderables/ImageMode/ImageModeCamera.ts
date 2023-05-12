@@ -13,11 +13,12 @@ const DEFAULT_CAMERA_STATE = {
 
 const MIN_USER_ZOOM = 0.5;
 const MAX_USER_ZOOM = 50;
+export const DEFAULT_ZOOM_MODE = "fit";
 
 export class ImageModeCamera extends THREE.PerspectiveCamera {
   #model?: PinholeCameraModel;
   #cameraState = DEFAULT_CAMERA_STATE;
-  #zoomMode: "fit" | "fill" | "custom" = "fit";
+  #zoomMode: "fit" | "fill" | "custom" = DEFAULT_ZOOM_MODE;
 
   /** x/y zoom factors derived from image and window aspect ratios and zoom mode */
   #aspectZoom = new THREE.Vector2();
