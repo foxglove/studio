@@ -496,7 +496,6 @@ export class ImageMode
       if (config.zoomMode !== prevImageModeConfig.zoomMode) {
         this.#camera.setZoomMode(config.zoomMode ?? DEFAULT_ZOOM_MODE);
         this.resetViewModifications();
-        this.renderer.queueAnimationFrame();
       }
 
       this.#updateViewAndRenderables();

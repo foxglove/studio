@@ -169,12 +169,12 @@ const ImageModeRosImage = ({ imageType }: { imageType: "raw" | "png" }): JSX.Ele
   );
 };
 
-export const ImageModeRosRawImage: StoryObj<Parameters<typeof ImageModeRosImage>[0]> = {
+export const ImageModeRosRawImage: StoryObj<React.ComponentProps<typeof ImageModeRosImage>> = {
   render: ImageModeRosImage,
   args: { imageType: "raw" },
 };
 
-export const ImageModeRosPngImage: StoryObj<Parameters<typeof ImageModeRosImage>[0]> = {
+export const ImageModeRosPngImage: StoryObj<React.ComponentProps<typeof ImageModeRosImage>> = {
   render: ImageModeRosImage,
   args: { imageType: "png" },
 };
@@ -328,32 +328,39 @@ const ImageModeFoxgloveImage = ({
   );
 };
 
-export const ImageModeFoxgloveRawImage: StoryObj<Parameters<typeof ImageModeFoxgloveImage>[0]> = {
+export const ImageModeFoxgloveRawImage: StoryObj<
+  React.ComponentProps<typeof ImageModeFoxgloveImage>
+> = {
   render: ImageModeFoxgloveImage,
   args: { imageType: "raw" },
 };
 
-export const ImageModeFoxglovePngImage: StoryObj<Parameters<typeof ImageModeFoxgloveImage>[0]> = {
+export const ImageModeFoxglovePngImage: StoryObj<
+  React.ComponentProps<typeof ImageModeFoxgloveImage>
+> = {
   render: ImageModeFoxgloveImage,
   args: { imageType: "png" },
 };
 
-export const ImageModeResizeHandled: StoryObj<Parameters<typeof ImageModeFoxgloveImage>[0]> = {
-  render: ImageModeFoxgloveImage,
-  args: { imageType: "raw" },
+export const ImageModeResizeHandled: StoryObj<React.ComponentProps<typeof ImageModeFoxgloveImage>> =
+  {
+    render: ImageModeFoxgloveImage,
+    args: { imageType: "raw" },
 
-  play: async () => {
-    const canvas = document.querySelector("canvas")!;
-    // Input attaches resize listener to parent element, so we need to resize that.
-    const parentEl = canvas.parentElement!;
-    await delay(30);
-    parentEl.style.width = "50%";
-    canvas.dispatchEvent(new Event("resize"));
-    await delay(30);
-  },
-};
+    play: async () => {
+      const canvas = document.querySelector("canvas")!;
+      // Input attaches resize listener to parent element, so we need to resize that.
+      const parentEl = canvas.parentElement!;
+      await delay(30);
+      parentEl.style.width = "50%";
+      canvas.dispatchEvent(new Event("resize"));
+      await delay(30);
+    },
+  };
 
-export const ImageModeResizeHandledFill: StoryObj<Parameters<typeof ImageModeFoxgloveImage>[0]> = {
+export const ImageModeResizeHandledFill: StoryObj<
+  React.ComponentProps<typeof ImageModeFoxgloveImage>
+> = {
   ...ImageModeResizeHandled,
   args: {
     ...ImageModeResizeHandled.args,
@@ -361,7 +368,7 @@ export const ImageModeResizeHandledFill: StoryObj<Parameters<typeof ImageModeFox
   },
 };
 
-export const ImageModePan: StoryObj<Parameters<typeof ImageModeFoxgloveImage>[0]> = {
+export const ImageModePan: StoryObj<React.ComponentProps<typeof ImageModeFoxgloveImage>> = {
   render: ImageModeFoxgloveImage,
   args: { imageType: "raw" },
   play: async () => {
@@ -372,7 +379,7 @@ export const ImageModePan: StoryObj<Parameters<typeof ImageModeFoxgloveImage>[0]
   },
 };
 
-export const ImageModePanFill: StoryObj<Parameters<typeof ImageModeFoxgloveImage>[0]> = {
+export const ImageModePanFill: StoryObj<React.ComponentProps<typeof ImageModeFoxgloveImage>> = {
   ...ImageModePan,
   args: {
     ...ImageModePan.args,
@@ -380,7 +387,7 @@ export const ImageModePanFill: StoryObj<Parameters<typeof ImageModeFoxgloveImage
   },
 };
 
-export const ImageModeZoomThenPan: StoryObj<Parameters<typeof ImageModeFoxgloveImage>[0]> = {
+export const ImageModeZoomThenPan: StoryObj<React.ComponentProps<typeof ImageModeFoxgloveImage>> = {
   render: ImageModeFoxgloveImage,
   args: { imageType: "raw" },
   play: async () => {
@@ -393,7 +400,9 @@ export const ImageModeZoomThenPan: StoryObj<Parameters<typeof ImageModeFoxgloveI
   },
 };
 
-export const ImageModeZoomThenPanFill: StoryObj<Parameters<typeof ImageModeFoxgloveImage>[0]> = {
+export const ImageModeZoomThenPanFill: StoryObj<
+  React.ComponentProps<typeof ImageModeFoxgloveImage>
+> = {
   ...ImageModeZoomThenPan,
   args: {
     ...ImageModeZoomThenPan.args,
@@ -401,7 +410,7 @@ export const ImageModeZoomThenPanFill: StoryObj<Parameters<typeof ImageModeFoxgl
   },
 };
 
-export const ImageModePanThenZoom: StoryObj<Parameters<typeof ImageModeFoxgloveImage>[0]> = {
+export const ImageModePanThenZoom: StoryObj<React.ComponentProps<typeof ImageModeFoxgloveImage>> = {
   render: ImageModeFoxgloveImage,
   args: { imageType: "raw" },
   play: async () => {
@@ -414,7 +423,9 @@ export const ImageModePanThenZoom: StoryObj<Parameters<typeof ImageModeFoxgloveI
   },
 };
 
-export const ImageModePanThenZoomFill: StoryObj<Parameters<typeof ImageModeFoxgloveImage>[0]> = {
+export const ImageModePanThenZoomFill: StoryObj<
+  React.ComponentProps<typeof ImageModeFoxgloveImage>
+> = {
   ...ImageModePanThenZoom,
   args: {
     ...ImageModePanThenZoom.args,
@@ -422,7 +433,9 @@ export const ImageModePanThenZoomFill: StoryObj<Parameters<typeof ImageModeFoxgl
   },
 };
 
-export const ImageModePanThenZoomReset: StoryObj<Parameters<typeof ImageModeFoxgloveImage>[0]> = {
+export const ImageModePanThenZoomReset: StoryObj<
+  React.ComponentProps<typeof ImageModeFoxgloveImage>
+> = {
   render: ImageModeFoxgloveImage,
   args: { imageType: "raw" },
   play: async (ctx) => {
@@ -431,16 +444,17 @@ export const ImageModePanThenZoomReset: StoryObj<Parameters<typeof ImageModeFoxg
   },
 };
 
-export const ImageModePanThenZoomResetFill: StoryObj<Parameters<typeof ImageModeFoxgloveImage>[0]> =
-  {
-    ...ImageModePanThenZoomReset,
-    args: {
-      ...ImageModePanThenZoomReset.args,
-      zoomMode: "fill",
-    },
-  };
+export const ImageModePanThenZoomResetFill: StoryObj<
+  React.ComponentProps<typeof ImageModeFoxgloveImage>
+> = {
+  ...ImageModePanThenZoomReset,
+  args: {
+    ...ImageModePanThenZoomReset.args,
+    zoomMode: "fill",
+  },
+};
 
-export const ImageModePick: StoryObj<Parameters<typeof ImageModeFoxgloveImage>[0]> = {
+export const ImageModePick: StoryObj<React.ComponentProps<typeof ImageModeFoxgloveImage>> = {
   render: ImageModeFoxgloveImage,
   args: { imageType: "raw" },
 

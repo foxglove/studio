@@ -17,15 +17,15 @@ export const DEFAULT_ZOOM_MODE = "fit";
 
 export class ImageModeCamera extends THREE.PerspectiveCamera {
   #model?: PinholeCameraModel;
-  #cameraState = DEFAULT_CAMERA_STATE;
+  readonly #cameraState = DEFAULT_CAMERA_STATE;
   #zoomMode: "fit" | "fill" | "custom" = DEFAULT_ZOOM_MODE;
 
   /** x/y zoom factors derived from image and window aspect ratios and zoom mode */
-  #aspectZoom = new THREE.Vector2();
-  #canvasSize = new THREE.Vector2();
+  readonly #aspectZoom = new THREE.Vector2();
+  readonly #canvasSize = new THREE.Vector2();
 
   /** Amount the user has panned, measured in screen pixels */
-  #panOffset = new THREE.Vector2(0, 0);
+  readonly #panOffset = new THREE.Vector2(0, 0);
   /** Amount the user has zoomed with the scroll wheel */
   #userZoom = 1;
 
