@@ -375,6 +375,15 @@ export class ImageMode
       options: calibrationTopics,
       error: calibrationTopicError,
     };
+    fields.zoomMode = {
+      label: "Zoom mode",
+      input: "toggle",
+      value: config.imageMode.zoomMode ?? "fit",
+      options: [
+        { label: "Fit", value: "fit" },
+        { label: "Fill", value: "fill" },
+      ],
+    };
     // fields.TODO_transformMarkers = {
     //   readonly: true,
     //   input: "boolean",
@@ -481,6 +490,12 @@ export class ImageMode
             draft.imageMode.calibrationTopic = calibrationTopic.name;
           });
         }
+      }
+
+      if (config.zoomMode !== prevImageModeConfig.zoomMode) {
+        this.#camera.setZoomMode(config.zoomMode ?? "fit");
+        this.resetViewModifications();
+        this.renderer.queueAnimationFrame();
       }
 
       this.#updateViewAndRenderables();
@@ -677,10 +692,7 @@ export class ImageMode
     return cameraInfoFrameId ?? imageFrameId;
   }
 
-  #getImageModeSettings(): {
-    readonly calibrationTopic?: string;
-    readonly imageTopic?: string;
-  } {
+  #getImageModeSettings() {
     return this.renderer.config.imageMode;
   }
 
