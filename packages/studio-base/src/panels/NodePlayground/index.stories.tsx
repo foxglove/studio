@@ -194,7 +194,6 @@ export const EditorShowsNewCodeWhenUserNodesChange: StoryObj = {
       </SExpectedResult>
     </PanelSetup>
   ),
-
   name: "Editor shows new code when userNodes change",
   play: async () => {
     const buttons = await screen.findAllByTestId("node-explorer");
