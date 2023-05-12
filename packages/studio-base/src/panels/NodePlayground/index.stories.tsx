@@ -452,13 +452,47 @@ export const BottomBarErrorsOpen: StoryObj = {
         ...fixture,
         userNodes: { nodeId1: { name: "/studio_script/script", sourceCode: "" } },
         userNodeDiagnostics: {
-          // prettier-ignore
           nodeId1: [
-            { message: Array(10).fill("Long error that might wrap.").join(" "), severity: 8, source: "Typescript", startLineNumber: 0, startColumn: 6, endLineNumber: 72, endColumn: 20, code: 2304 },
-            { message: `Type '"bad number"' is not assignable to type 'number[]'.`, severity: 8, source: "Typescript", startLineNumber: 0, startColumn: 6, endLineNumber: 72, endColumn: 20, code: 2304 },
-            { message: "This is a warning message (without line or column numbers).", severity: 4, source: "Source A", endLineNumber: 72, endColumn: 20, code: 2304 },
-            { message: "This is an info message (without line or column numbers).", severity: 2, source: "Source B", code: 2304 },
-            { message: "This is a hint message (without line or column numbers).", severity: 1, source: "Source C", code: 2304 },
+            {
+              message: Array(10).fill("Long error that might wrap.").join(" "),
+              severity: 8,
+              source: "Typescript",
+              startLineNumber: 0,
+              startColumn: 6,
+              endLineNumber: 72,
+              endColumn: 20,
+              code: 2304,
+            },
+            {
+              message: `Type '"bad number"' is not assignable to type 'number[]'.`,
+              severity: 8,
+              source: "Typescript",
+              startLineNumber: 0,
+              startColumn: 6,
+              endLineNumber: 72,
+              endColumn: 20,
+              code: 2304,
+            },
+            {
+              message: "This is a warning message (without line or column numbers).",
+              severity: 4,
+              source: "Source A",
+              endLineNumber: 72,
+              endColumn: 20,
+              code: 2304,
+            },
+            {
+              message: "This is an info message (without line or column numbers).",
+              severity: 2,
+              source: "Source B",
+              code: 2304,
+            },
+            {
+              message: "This is a hint message (without line or column numbers).",
+              severity: 1,
+              source: "Source C",
+              code: 2304,
+            },
           ],
         },
       }}
