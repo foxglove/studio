@@ -67,6 +67,13 @@ const useStyles = makeStyles()((theme) => ({
       fontFeatureSettings: `${theme.typography.fontFeatureSettings}, 'zero' !important`,
       minWidth: "20ch",
     },
+    [`.${iconButtonClasses.root}`]: {
+      borderTopLeftRadius: 0,
+      borderBottomLeftRadius: 0,
+      borderLeft: `1px solid ${theme.palette.background.paper}`,
+      visibility: "hidden",
+      marginRight: theme.spacing(-1),
+    },
   },
   textFieldError: {
     outline: `1px solid ${theme.palette.error.main}`,
