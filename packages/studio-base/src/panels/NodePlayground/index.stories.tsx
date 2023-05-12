@@ -502,7 +502,6 @@ export const BottomBarLogsOpen: StoryObj = {
       <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
     </PanelSetup>
   ),
-
   name: "BottomBar - logs - open",
   play: async () => {
     const buttons = await screen.findAllByTestId("np-logs");
@@ -525,10 +524,10 @@ export const BottomBarClearedLogs: StoryObj = {
   ),
   name: "BottomBar - cleared logs",
   play: async () => {
-    const buttons = await screen.findAllByTestId("np-errors");
-    const clearButtons = await screen.findAllByTestId("np-logs-clear");
-
+    const buttons = await screen.findAllByTestId("np-logs");
     buttons.forEach((button) => fireEvent.click(button));
+
+    const clearButtons = await screen.findAllByTestId("np-logs-clear");
     clearButtons.forEach((button) => fireEvent.click(button));
   },
 };
