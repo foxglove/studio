@@ -231,11 +231,14 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
   // More granular caching would be better, but React makes it difficult to
   // write this code in a straight-forward manner and this change is good enough
   // for now.
-  const newItemsNotInBlocks = useMemo(
-    () => pickBy(itemsByPath, (_items, path) => !decodedBlocks.some((block) => block[path])),
-    [decodedBlocks, itemsByPath],
-  );
-  const newItemsByPath = isEmpty(newItemsNotInBlocks) ? EMPTY_ITEMS_BY_PATH : newItemsNotInBlocks;
+  const newItemsByPath = useMemo(() => {
+    const newItemsNotInBlocks = pickBy(
+      itemsByPath,
+      (_items, path) => !decodedBlocks.some((block) => block[path]),
+    );
+    return isEmpty(newItemsNotInBlocks) ? EMPTY_ITEMS_BY_PATH : newItemsNotInBlocks;
+  }, [decodedBlocks, itemsByPath]);
+
   const { datasets, minY } = useMemo(() => {
     // ignore all data when we don't have a start time
     if (!startTime) {
