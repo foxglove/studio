@@ -63,7 +63,7 @@ const useStyles = makeStyles()((theme) => ({
         backgroundColor: "transparent",
       },
     },
-    [`.${inputBaseClasses.root}`]: {
+    [`.${inputBaseClasses.input}`]: {
       fontFeatureSettings: `${theme.typography.fontFeatureSettings}, 'zero' !important`,
       minWidth: "20ch",
     },
