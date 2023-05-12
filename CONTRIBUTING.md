@@ -6,11 +6,11 @@
 
 - [Node.js](https://nodejs.org/en/) v16.10+
 - [Git LFS](https://git-lfs.github.com/)
-- [Visual Studio Code](https://code.visualstudio.com/) – Recommended
 
 ## Getting started
 
 1. Clone repo
+1. Run `git lfs pull` to ensure Git LFS objects are up to date
 1. Run `corepack enable` and `yarn install`
    - If you still get errors about corepack after running `corepack enable`, try uninstalling and reinstalling Node.js. Ensure that Yarn is not separately installed from another source, but is installed _via_ corepack.
 1. Launch the development environment:
@@ -66,7 +66,7 @@ Translation support is implemented using [`react-i18next`](https://react.i18next
 
 The [`i18n` directory](packages/studio-base/src/i18n) contains translated (localized) strings for all languages supported by Foxglove Studio.
 
-Translated strings are organized into _namespaces_ — e.g. [`i18n/[language]/preferences.ts`](packages/studio-base/src/i18n/en/preferences.ts) contains translations for the app's Preferences tab.
+Translated strings are organized into _namespaces_ — e.g. [`i18n/[language]/appSettings.ts`](packages/studio-base/src/i18n/en/appSettings.ts) contains translations for the app's Settings tab.
 
 ### Use `useTranslation()` and `t()` to access translated strings
 
@@ -106,7 +106,7 @@ function MyComponent() {
 
 ```ts
 // i18n/en/myComponent.ts
-export default {
+export const myComponent = {
   hello: "Hello!",
 };
 ```
@@ -128,37 +128,23 @@ function MyComponent(props: Props): JSX.Element {
 ```
 
 ```ts
-// i18n/index.ts
-export const translations = {
-  en: {
-    ...,
-    myComponent: enMyComponent,
-  },
-  zh: {
-    ...,
-    myComponent: zhMyComponent,
-  },
-};
-```
-
-```ts
 // i18n/en/myComponent.ts
-export default {
+export const myComponent = {
   hello: "Hello!",
 };
 
 // i18n/en/index.ts
-export { default as enMyComponent } from "./myComponent";
+export * from "./myComponent";
 ```
 
 ```ts
 // i18n/zh/myComponent.ts
-export default {
+export const myComponent: Partial<TypeOptions["resources"]["myComponent"]> = {
   hello: "你好！",
 };
 
 // i18n/zh/index.ts
-export { default as zhMyComponent } from "./myComponent";
+export * from "./myComponent";
 ```
 
 Result:

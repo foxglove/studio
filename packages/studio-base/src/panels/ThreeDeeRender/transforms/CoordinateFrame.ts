@@ -2,7 +2,6 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-/* eslint-disable no-underscore-dangle */
 /* eslint-disable @foxglove/no-boolean-parameters */
 
 import { mat4, quat, vec3, vec4 } from "gl-matrix";
@@ -28,6 +27,12 @@ const tempTransform = Transform.Identity();
 const tempMatrix = mat4Identity();
 const temp2Matrix = mat4Identity();
 
+const FALLBACK_FRAME_ID = Symbol("FALLBACK_FRAME_ID");
+export type FallbackFrameId = typeof FALLBACK_FRAME_ID;
+
+export type UserFrameId = string;
+export type AnyFrameId = UserFrameId | FallbackFrameId;
+
 /**
  * CoordinateFrame is a named 3D coordinate frame with an optional parent frame
  * and a history of transforms from this frame to its parent. The parent/child
@@ -35,8 +40,10 @@ const temp2Matrix = mat4Identity();
  * coordinate frame to another while interpolating over time.
  */
 // ts-prune-ignore-next
-export class CoordinateFrame {
-  public readonly id: string;
+export class CoordinateFrame<ID extends AnyFrameId = UserFrameId> {
+  public static readonly FALLBACK_FRAME_ID: FallbackFrameId = FALLBACK_FRAME_ID;
+
+  public readonly id: ID;
   public maxStorageTime: Duration;
   public maxCapacity: number;
   // The percentage of maxCapacity that can be exceeded before overfilled frames in history are cleared
@@ -45,64 +52,78 @@ export class CoordinateFrame {
   public offsetPosition: vec3 | undefined;
   public offsetEulerDegrees: vec3 | undefined;
 
-  private _parent?: CoordinateFrame;
-  private _transforms: ArrayMap<Time, Transform>;
+  #parent?: CoordinateFrame<UserFrameId>;
+  #transforms: ArrayMap<Time, Transform>;
 
   public constructor(
-    id: string,
-    parent: CoordinateFrame | undefined,
+    id: ID,
+    parent: CoordinateFrame<UserFrameId> | undefined, // fallback frame not allowed as parent
     maxStorageTime: Duration,
     maxCapacity: number,
     capacityOverfillPercentage = 0.1,
   ) {
+    if (parent) {
+      this.#parent = parent;
+    }
     this.id = id;
     this.maxStorageTime = maxStorageTime;
     this.maxCapacity = maxCapacity;
     this.capacityOverfillPercentage = capacityOverfillPercentage;
-    this._parent = parent;
-    this._transforms = new ArrayMap<Time, Transform>();
+    this.#transforms = new ArrayMap<Time, Transform>();
   }
 
-  public parent(): CoordinateFrame | undefined {
-    return this._parent;
+  public static assertUserFrame(
+    frame: CoordinateFrame<AnyFrameId>,
+  ): asserts frame is CoordinateFrame<UserFrameId> {
+    if (frame.id === FALLBACK_FRAME_ID) {
+      throw new Error("Expected user frame");
+    }
+  }
+
+  public parent(): CoordinateFrame<UserFrameId> | undefined {
+    return this.#parent;
   }
 
   /**
    * Returns the top-most frame by walking up each parent frame. If the current
    * frame does not have a parent, the current frame is returned.
    */
-  public root(): CoordinateFrame {
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
-    let root: CoordinateFrame = this;
-    while (root._parent) {
-      root = root._parent;
+  public root(): CoordinateFrame<ID> {
+    if (this.id === FALLBACK_FRAME_ID) {
+      return this;
     }
-    return root;
+    CoordinateFrame.assertUserFrame(this);
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    let root: CoordinateFrame<UserFrameId> = this;
+    while (root.#parent) {
+      root = root.#parent;
+    }
+    return root as CoordinateFrame<ID>;
   }
 
   /**
    * Returns true if this frame has no parent frame.
    */
   public isRoot(): boolean {
-    return this._parent == undefined;
+    return this.#parent == undefined;
   }
 
   /**
    * Returns the number of transforms stored in the transform history.
    */
   public transformsSize(): number {
-    return this._transforms.size;
+    return this.#transforms.size;
   }
 
   /**
    * Set the parent frame for this frame. If the parent frame is already set to
    * a different frame, the transform history is cleared.
    */
-  public setParent(parent: CoordinateFrame): void {
-    if (this._parent && this._parent !== parent) {
-      this._transforms.clear();
+  public setParent(parent: CoordinateFrame<UserFrameId>): void {
+    if (this.#parent && this.#parent !== parent) {
+      this.#transforms.clear();
     }
-    this._parent = parent;
+    this.#parent = parent;
   }
 
   /**
@@ -111,13 +132,13 @@ export class CoordinateFrame {
    * @param id Frame ID to search for
    * @returns The ancestor frame, or undefined if not found
    */
-  public findAncestor(id: string): CoordinateFrame | undefined {
-    let ancestor: CoordinateFrame | undefined = this._parent;
+  public findAncestor(id: string): CoordinateFrame<UserFrameId> | undefined {
+    let ancestor = this.#parent;
     while (ancestor) {
       if (ancestor.id === id) {
         return ancestor;
       }
-      ancestor = ancestor._parent;
+      ancestor = ancestor.#parent;
     }
     return undefined;
   }
@@ -131,37 +152,37 @@ export class CoordinateFrame {
    * If a transform with an identical timestamp already exists, it is replaced.
    */
   public addTransform(time: Time, transform: Transform): void {
-    this._transforms.set(time, transform);
+    this.#transforms.set(time, transform);
 
     // Remove transforms that are too old
     // percent over the maxCapacity
     const overfillPercent =
-      Math.max(0, this._transforms.size - this.maxCapacity) / this.maxCapacity;
+      Math.max(0, this.#transforms.size - this.maxCapacity) / this.maxCapacity;
 
     // Trim down to the maximum history size if we've exceeded the overfill
     if (overfillPercent > this.capacityOverfillPercentage) {
-      const overfillIndex = this._transforms.size - this.maxCapacity;
+      const overfillIndex = this.#transforms.size - this.maxCapacity;
       // guaranteed to be more than minKey
-      let removeBeforeTime = this._transforms.at(overfillIndex)![0];
-      const endTime = this._transforms.maxKey()!;
+      let removeBeforeTime = this.#transforms.at(overfillIndex)![0];
+      const endTime = this.#transforms.maxKey()!;
       // not guaranteed to be more than minKey
       const startTime = endTime - this.maxStorageTime;
       // at the very least we remove the overfill, but if the maxStorageTime enforces a  larger trim we take that
       // we can't afford to check maxStorageTime every time we add a transform, so we only check it when overfill is full
       removeBeforeTime = startTime > removeBeforeTime ? startTime : removeBeforeTime;
 
-      this._transforms.removeBefore(removeBeforeTime);
+      this.#transforms.removeBefore(removeBeforeTime);
     }
   }
 
   /** Remove all transforms with timestamps greater than the given timestamp. */
   public removeTransformsAfter(time: Time): void {
-    this._transforms.removeAfter(time);
+    this.#transforms.removeAfter(time);
   }
 
   /** Removes a transform with a specific timestamp */
   public removeTransformAt(time: Time): void {
-    this._transforms.remove(time);
+    this.#transforms.remove(time);
   }
 
   /**
@@ -185,13 +206,13 @@ export class CoordinateFrame {
     maxDelta: Duration,
   ): boolean {
     // perf-sensitive: function params instead of options object to avoid allocations
-    const transformCount = this._transforms.size;
+    const transformCount = this.#transforms.size;
     if (transformCount === 0) {
       return false;
     } else if (transformCount === 1) {
       // If only a single transform exists, check if `time` is before or equal to
       // `latestTime + maxDelta`
-      const [latestTime, latestTf] = this._transforms.maxEntry()!;
+      const [latestTime, latestTf] = this.#transforms.maxEntry()!;
       if (time <= latestTime + maxDelta) {
         outLower[0] = outUpper[0] = latestTime;
         outLower[1] = outUpper[1] = latestTf;
@@ -200,20 +221,20 @@ export class CoordinateFrame {
       return false;
     }
 
-    const index = this._transforms.binarySearch(time);
+    const index = this.#transforms.binarySearch(time);
     if (index >= 0) {
       // If the time is exactly on an existing transform, return it
-      const [_, tf] = this._transforms.at(index)!;
+      const [_, tf] = this.#transforms.at(index)!;
       outLower[0] = outUpper[0] = time;
       outLower[1] = outUpper[1] = tf;
       return true;
     }
 
     const greaterThanIndex = ~index;
-    if (greaterThanIndex >= this._transforms.size) {
+    if (greaterThanIndex >= this.#transforms.size) {
       // If the time is greater than all existing transforms, return the last
       // transform
-      const [latestTime, latestTf] = this._transforms.maxEntry()!;
+      const [latestTime, latestTf] = this.#transforms.maxEntry()!;
       if (time <= latestTime + maxDelta) {
         outLower[0] = outUpper[0] = latestTime;
         outLower[1] = outUpper[1] = latestTf;
@@ -226,7 +247,7 @@ export class CoordinateFrame {
     if (lessThanIndex < 0) {
       // If the time is less than all existing transforms, return the first
       // transform
-      const [earliestTime, earliestTf] = this._transforms.minEntry()!;
+      const [earliestTime, earliestTf] = this.#transforms.minEntry()!;
       if (earliestTime + maxDelta >= time) {
         outLower[0] = outUpper[0] = earliestTime;
         outLower[1] = outUpper[1] = earliestTf;
@@ -235,8 +256,8 @@ export class CoordinateFrame {
       return false;
     }
 
-    const [lteTime, lteTf] = this._transforms.at(lessThanIndex)!;
-    const [gtTime, gtTf] = this._transforms.at(greaterThanIndex)!;
+    const [lteTime, lteTf] = this.#transforms.at(lessThanIndex)!;
+    const [gtTime, gtTf] = this.#transforms.at(greaterThanIndex)!;
     outLower[0] = lteTime;
     outLower[1] = lteTf;
     outUpper[0] = gtTime;
@@ -267,11 +288,18 @@ export class CoordinateFrame {
   public applyLocal(
     out: Pose,
     input: Readonly<Pose>,
-    srcFrame: CoordinateFrame,
+    srcFrame: CoordinateFrame<AnyFrameId>,
     time: Time,
     maxDelta: Duration = MAX_DURATION,
   ): Pose | undefined {
     // perf-sensitive: function params instead of options object to avoid allocations
+    if (this.id === FALLBACK_FRAME_ID || srcFrame.id === FALLBACK_FRAME_ID) {
+      // Fallback frame will be used as both src and input frame because it is both the render and root/fixed frame
+      // This will result in no transformation being done to the input pose.
+      return out;
+    }
+    CoordinateFrame.assertUserFrame(this);
+    CoordinateFrame.assertUserFrame(srcFrame);
     if (srcFrame === this) {
       // Identity transform
       copyPose(out, input);
@@ -287,9 +315,8 @@ export class CoordinateFrame {
         ? out
         : undefined;
     }
-
     // Check if the two frames share a common ancestor
-    let curSrcFrame: CoordinateFrame | undefined = srcFrame;
+    let curSrcFrame: CoordinateFrame<UserFrameId> | undefined = srcFrame;
     while (curSrcFrame) {
       const commonAncestor = this.findAncestor(curSrcFrame.id);
       if (commonAncestor) {
@@ -302,7 +329,7 @@ export class CoordinateFrame {
           ? out
           : undefined;
       }
-      curSrcFrame = curSrcFrame._parent;
+      curSrcFrame = curSrcFrame.#parent;
     }
 
     return undefined;
@@ -330,8 +357,8 @@ export class CoordinateFrame {
   public apply(
     out: Pose,
     input: Readonly<Pose>,
-    rootFrame: CoordinateFrame,
-    srcFrame: CoordinateFrame,
+    rootFrame: CoordinateFrame<AnyFrameId>,
+    srcFrame: CoordinateFrame<AnyFrameId>,
     dstTime: Time,
     srcTime: Time,
     maxDelta: Duration = MAX_DURATION,
@@ -455,10 +482,12 @@ export class CoordinateFrame {
 
       mat4.multiply(out, tempTransform.matrix(), out);
 
-      if (curFrame._parent == undefined) {
-        throw new Error(`Frame "${parentFrame.id}" is not a parent of "${childFrame.id}"`);
+      if (curFrame.#parent == undefined) {
+        throw new Error(
+          `Frame "${parentFrame.displayName()}" is not a parent of "${childFrame.displayName()}"`,
+        );
       }
-      curFrame = curFrame._parent;
+      curFrame = curFrame.#parent;
     }
 
     return true;
@@ -506,7 +535,10 @@ export class CoordinateFrame {
    * Returns a display-friendly rendition of `frameId`, quoting the id if it is
    * an empty string or starts or ends with whitespace.
    */
-  public static DisplayName(frameId: string): string {
+  public static DisplayName(frameId: AnyFrameId): string {
+    if (frameId === FALLBACK_FRAME_ID) {
+      return "(none)";
+    }
     return frameId === "" || frameId.startsWith(" ") || frameId.endsWith(" ")
       ? `"${frameId}"`
       : frameId;

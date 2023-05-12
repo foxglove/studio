@@ -26,13 +26,13 @@ type RenderState = {
 };
 
 class ImageCanvasWorker {
-  private readonly _renderStates: Record<string, RenderState> = {};
+  readonly #renderStates: Record<string, RenderState> = {};
 
   public constructor(rpc: Rpc) {
     setupWorker(rpc);
 
     rpc.receive("initialize", async ({ id, canvas }: { id: string; canvas: OffscreenCanvas }) => {
-      this._renderStates[id] = {
+      this.#renderStates[id] = {
         canvas,
         hitmap: new OffscreenCanvas(canvas.width, canvas.height),
         markers: [],
@@ -40,20 +40,15 @@ class ImageCanvasWorker {
     });
 
     rpc.receive("mouseMove", async ({ id, x, y }: { id: string; x: number; y: number }) => {
-      const state = this._renderStates[id];
+      const state = this.#renderStates[id];
       if (!state) {
         return undefined;
       }
 
       const matrix = (state.dimensions?.transform ?? new DOMMatrix()).inverse();
       const point = new DOMPoint(x, y).matrixTransform(matrix);
-      // https://github.com/microsoft/TypeScript-DOM-lib-generator/issues/1480
-      const pixel = (
-        state.canvas.getContext("2d") as OffscreenCanvasRenderingContext2D | undefined
-      )?.getImageData(x, y, 1, 1);
-      const hit = (
-        state.hitmap.getContext("2d") as OffscreenCanvasRenderingContext2D | undefined
-      )?.getImageData(x, y, 1, 1);
+      const pixel = state.canvas.getContext("2d")?.getImageData(x, y, 1, 1);
+      const hit = state.hitmap.getContext("2d")?.getImageData(x, y, 1, 1);
       const markerIndex = hit ? idColorToIndex(hit.data) : undefined;
 
       if (pixel) {
@@ -75,7 +70,7 @@ class ImageCanvasWorker {
       (args: RenderArgs & { id: string }): Promise<RenderDimensions | undefined> => {
         const { id, geometry, imageMessage, rawMarkerData, options } = args;
 
-        const render = this._renderStates[id];
+        const render = this.#renderStates[id];
         if (!render) {
           return Promise.resolve(undefined);
         }

@@ -27,7 +27,7 @@ jobs:
       YARN_ENABLE_SCRIPTS: false
 
     steps:
-      - uses: actions/checkout@v3.4.0
+      - uses: actions/checkout@v3.5.2
         with:
           # Using a Personal Access Token here is required to trigger workflows on our new commit.
           # The default GitHub token doesn't trigger any workflows.
@@ -53,6 +53,7 @@ jobs:
           key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
           restore-keys: ${{ runner.os }}-yarn-
 
+      - run: yarn constraints --fix
       - run: yarn install --mode skip-build
         env:
           # yarn runs in immutable mode "by default" in CI -- turning this off requires an
@@ -65,6 +66,6 @@ jobs:
         run: |
           git config user.name "dependabot[bot]"
           git config user.email "49699333+dependabot[bot]@users.noreply.github.com"
-          git add yarn.lock
-          git commit -m '[dependabot skip] Fix yarn.lock' --allow-empty
+          git add -u
+          git commit -m '[dependabot skip] Fix dependencies and yarn.lock' --allow-empty
           git push

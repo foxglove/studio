@@ -15,7 +15,7 @@ import { Edit16Filled } from "@fluentui/react-icons";
 import { Button, Typography } from "@mui/material";
 import { ChartOptions, ScaleOptions } from "chart.js";
 import { isEmpty, pickBy, uniq } from "lodash";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
 import tinycolor from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
@@ -39,15 +39,11 @@ import Panel from "@foxglove/studio-base/components/Panel";
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import Stack from "@foxglove/studio-base/components/Stack";
-import TimeBasedChart, {
-  TimeBasedChartTooltipData,
-} from "@foxglove/studio-base/components/TimeBasedChart";
+import TimeBasedChart from "@foxglove/studio-base/components/TimeBasedChart";
+import { ChartData, ChartDatasets } from "@foxglove/studio-base/components/TimeBasedChart/types";
 import { useSelectedPanels } from "@foxglove/studio-base/context/CurrentLayoutContext";
-import { useWorkspaceActions } from "@foxglove/studio-base/context/WorkspaceContext";
-import {
-  ChartData,
-  OnClickArg as OnChartClickArgs,
-} from "@foxglove/studio-base/src/components/Chart";
+import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/useWorkspaceActions";
+import { OnClickArg as OnChartClickArgs } from "@foxglove/studio-base/src/components/Chart";
 import { OpenSiblingPanel, PanelConfig, SaveConfig } from "@foxglove/studio-base/types/panels";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
@@ -235,26 +231,22 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
   // More granular caching would be better, but React makes it difficult to
   // write this code in a straight-forward manner and this change is good enough
   // for now.
-  const newItemsNotInBlocks = pickBy(
-    itemsByPath,
-    (_items, path) => !decodedBlocks.some((block) => block[path]),
+  const newItemsNotInBlocks = useMemo(
+    () => pickBy(itemsByPath, (_items, path) => !decodedBlocks.some((block) => block[path])),
+    [decodedBlocks, itemsByPath],
   );
   const newItemsByPath = isEmpty(newItemsNotInBlocks) ? EMPTY_ITEMS_BY_PATH : newItemsNotInBlocks;
-
-  const { datasets, tooltips, minY } = useMemo(() => {
-    let outMinY: number | undefined;
-
-    let outTooltips: TimeBasedChartTooltipData[] = [];
-    let outDatasets: ChartData["datasets"] = [];
-
+  const { datasets, minY } = useMemo(() => {
     // ignore all data when we don't have a start time
     if (!startTime) {
       return {
-        datasets: outDatasets,
-        tooltips: outTooltips,
-        minY: outMinY,
+        datasets: [],
+        minY: undefined,
       };
     }
+
+    let outMinY: number | undefined;
+    let outDatasets: ChartDatasets = [];
 
     paths.forEach((path, pathIndex) => {
       // y axis values are set based on the path we are rendering
@@ -264,38 +256,33 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
 
       const blocksForPath = decodedBlocks.map((decodedBlock) => decodedBlock[path.value]);
 
-      {
-        const { datasets: newDataSets, tooltips: newTooltips } = messagesToDatasets({
-          path,
-          startTime,
-          y,
-          pathIndex,
-          blocks: blocksForPath,
-        });
+      const newBlockDataSets = messagesToDatasets({
+        path,
+        startTime,
+        y,
+        pathIndex,
+        blocks: blocksForPath,
+      });
 
-        outDatasets = outDatasets.concat(newDataSets);
-        outTooltips = outTooltips.concat(newTooltips);
-      }
+      outDatasets = outDatasets.concat(newBlockDataSets);
 
       // We have already filtered out paths we can find in blocks so anything left here
       // should be included in the dataset.
       const items = newItemsByPath[path.value];
       if (items) {
-        const { datasets: newDataSets, tooltips: newTooltips } = messagesToDatasets({
+        const newPathDataSets = messagesToDatasets({
           path,
           startTime,
           y,
           pathIndex,
           blocks: [items],
         });
-        outDatasets = outDatasets.concat(newDataSets);
-        outTooltips = outTooltips.concat(newTooltips);
+        outDatasets = outDatasets.concat(newPathDataSets);
       }
     });
 
     return {
       datasets: outDatasets,
-      tooltips: outTooltips,
       minY: outMinY,
     };
   }, [startTime, paths, decodedBlocks, newItemsByPath]);
@@ -327,11 +314,32 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
   // Use a debounce and 0 refresh rate to avoid triggering a resize observation while handling
   // an existing resize observation.
   // https://github.com/maslianok/react-resize-detector/issues/45
-  const { width, ref: sizeRef } = useResizeDetector({
+  const { width, ref: sizeRef } = useResizeDetector<HTMLDivElement>({
     handleHeight: false,
     refreshRate: 0,
     refreshMode: "debounce",
   });
+
+  // Disable the wheel event for the chart wrapper div (which is where we use sizeRef)
+  //
+  // The chart component uses wheel events for zoom and pan. After adding more series, the logic
+  // expands the chart element beyond the visible area of the panel. When this happens, scrolling on
+  // the chart also scrolls the chart wrapper div and results in zooming that chart AND scrolling
+  // the panel. This behavior is undesirable.
+  //
+  // This effect registers a wheel event handler for the wrapper div to prevent scrolling. To scroll
+  // the panel the user will use the scrollbar.
+  useEffect(() => {
+    const el = sizeRef.current;
+    const handler = (ev: WheelEvent) => {
+      ev.preventDefault();
+    };
+
+    el?.addEventListener("wheel", handler);
+    return () => {
+      el?.removeEventListener("wheel", handler);
+    };
+  }, [sizeRef]);
 
   const messagePipeline = useMessagePipelineGetter();
   const onClick = useCallback(
@@ -353,14 +361,6 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
 
   useStateTransitionsPanelSettings(config, saveConfig, focusedPath);
 
-  const pointToDatumTooltipMap = useMemo(() => {
-    const lookup = new Map<string, TimeBasedChartTooltipData>();
-    for (const tip of tooltips) {
-      lookup.set(`${tip.x}:${tip.y}:${tip.datasetIndex}`, tip);
-    }
-    return lookup;
-  }, [tooltips]);
-
   return (
     <Stack flexGrow={1} overflow="hidden" style={{ zIndex: 0 }}>
       <PanelToolbar />
@@ -378,7 +378,6 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
             xAxisIsPlaybackTime
             yAxes={yScale}
             plugins={plugins}
-            tooltips={pointToDatumTooltipMap}
             onClick={onClick}
             currentTime={currentTimeSinceStart}
           />

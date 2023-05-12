@@ -7,14 +7,13 @@ import * as THREE from "three";
 import { crc32 } from "@foxglove/crc";
 import { toNanoSec } from "@foxglove/rostime";
 import { ModelPrimitive, SceneEntity } from "@foxglove/schemas";
-import { emptyPose } from "@foxglove/studio-base/util/Pose";
 
 import { RenderablePrimitive } from "./RenderablePrimitive";
-import { LoadedModel } from "../../ModelCache";
-import type { Renderer } from "../../Renderer";
+import type { IRenderer } from "../../IRenderer";
+import { EDGE_LINE_SEGMENTS_NAME, LoadedModel } from "../../ModelCache";
 import { makeRgba, rgbToThreeColor, stringToRgba } from "../../color";
 import { disposeMeshesRecursive } from "../../dispose";
-import { LayerSettingsEntity } from "../SceneEntities";
+import { LayerSettingsEntity } from "../../settings";
 import { removeLights, replaceMaterials } from "../models";
 
 const tempRgba = makeRgba();
@@ -46,21 +45,13 @@ function byteArraysEqual(a: Uint8Array, b: Uint8Array): boolean {
 
 export class RenderableModels extends RenderablePrimitive {
   /** Renderables loaded from embedded data */
-  private renderablesByDataCrc = new Map<number, RenderableModel[]>();
+  #renderablesByDataCrc = new Map<number, RenderableModel[]>();
   /** Renderables loaded from URLs */
-  private renderablesByUrl = new Map<string, RenderableModel[]>();
-  private updateCount = 0;
+  #renderablesByUrl = new Map<string, RenderableModel[]>();
+  #updateCount = 0;
 
-  public constructor(renderer: Renderer) {
-    super("", renderer, {
-      receiveTime: -1n,
-      messageTime: -1n,
-      frameId: "",
-      pose: emptyPose(),
-      settings: { visible: true, color: undefined, selectedIdVariable: undefined },
-      settingsPath: [],
-      entity: undefined,
-    });
+  public constructor(renderer: IRenderer) {
+    super("", renderer);
   }
 
   /**
@@ -68,7 +59,7 @@ export class RenderableModels extends RenderablePrimitive {
    * @param getURL Called to retrieve the URL that should be used to load the primitive
    * @param revokeURL Called with the URL returned by getURL after loading is complete
    */
-  private async _createOrUpdateRenderable(
+  async #createOrUpdateRenderable(
     primitive: ModelPrimitive,
     prevRenderables: RenderableModel[] | undefined,
     primitivesMatch: (a: ModelPrimitive, b: ModelPrimitive) => boolean,
@@ -83,19 +74,19 @@ export class RenderableModels extends RenderablePrimitive {
       }
     }
     if (renderable) {
-      this._updateModel(renderable, primitive);
+      this.#updateModel(renderable, primitive);
       return renderable;
     }
 
     const url = getURL(primitive);
     try {
       // Load the model if necessary
-      const cachedModel = await this._loadCachedModel(url, {
+      const cachedModel = await this.#loadCachedModel(url, {
         overrideMediaType: primitive.media_type.length > 0 ? primitive.media_type : undefined,
       });
       if (cachedModel) {
         renderable = { model: cloneAndPrepareModel(cachedModel), cachedModel, primitive };
-        this._updateModel(renderable, primitive);
+        this.#updateModel(renderable, primitive);
       }
     } finally {
       revokeURL(url);
@@ -103,16 +94,16 @@ export class RenderableModels extends RenderablePrimitive {
     return renderable;
   }
 
-  private _updateModels(models: ModelPrimitive[]) {
+  #updateModels(models: ModelPrimitive[]) {
     this.clear();
 
-    const originalUpdateCount = ++this.updateCount;
+    const originalUpdateCount = ++this.#updateCount;
 
-    const prevRenderablesByUrl = this.renderablesByUrl;
-    this.renderablesByUrl = new Map();
+    const prevRenderablesByUrl = this.#renderablesByUrl;
+    this.#renderablesByUrl = new Map();
 
-    const prevRenderablesByDataCrc = this.renderablesByDataCrc;
-    this.renderablesByDataCrc = new Map();
+    const prevRenderablesByDataCrc = this.#renderablesByDataCrc;
+    this.#renderablesByDataCrc = new Map();
 
     Promise.all(
       models.map(async (primitive) => {
@@ -122,14 +113,14 @@ export class RenderableModels extends RenderablePrimitive {
         if (primitive.url.length === 0) {
           const dataCrc = crc32(primitive.data);
           prevRenderables = prevRenderablesByDataCrc.get(dataCrc);
-          newRenderables = this.renderablesByDataCrc.get(dataCrc);
+          newRenderables = this.#renderablesByDataCrc.get(dataCrc);
           if (!newRenderables) {
             newRenderables = [];
-            this.renderablesByDataCrc.set(dataCrc, newRenderables);
+            this.#renderablesByDataCrc.set(dataCrc, newRenderables);
           }
 
           try {
-            renderable = await this._createOrUpdateRenderable(
+            renderable = await this.#createOrUpdateRenderable(
               primitive,
               prevRenderables,
               (model1, model2) =>
@@ -147,14 +138,14 @@ export class RenderableModels extends RenderablePrimitive {
           }
         } else {
           prevRenderables = prevRenderablesByUrl.get(primitive.url);
-          newRenderables = this.renderablesByUrl.get(primitive.url);
+          newRenderables = this.#renderablesByUrl.get(primitive.url);
           if (!newRenderables) {
             newRenderables = [];
-            this.renderablesByUrl.set(primitive.url, newRenderables);
+            this.#renderablesByUrl.set(primitive.url, newRenderables);
           }
 
           try {
-            renderable = await this._createOrUpdateRenderable(
+            renderable = await this.#createOrUpdateRenderable(
               primitive,
               prevRenderables,
               (model1, model2) =>
@@ -171,7 +162,7 @@ export class RenderableModels extends RenderablePrimitive {
           }
         }
 
-        if (originalUpdateCount !== this.updateCount) {
+        if (originalUpdateCount !== this.#updateCount) {
           // another update has come in, bail before doing any mutations
           return;
         }
@@ -194,34 +185,34 @@ export class RenderableModels extends RenderablePrimitive {
         for (const renderables of prevRenderablesByUrl.values()) {
           for (const renderable of renderables) {
             renderable.model.removeFromParent();
-            this._disposeModel(renderable);
+            this.#disposeModel(renderable);
           }
         }
         for (const renderables of prevRenderablesByDataCrc.values()) {
           for (const renderable of renderables) {
             renderable.model.removeFromParent();
-            this._disposeModel(renderable);
+            this.#disposeModel(renderable);
           }
         }
-
+        this.#updateOutlineVisibility();
         this.renderer.queueAnimationFrame();
       });
   }
 
   public override dispose(): void {
-    for (const renderables of this.renderablesByUrl.values()) {
+    for (const renderables of this.#renderablesByUrl.values()) {
       for (const renderable of renderables) {
-        this._disposeModel(renderable);
+        this.#disposeModel(renderable);
       }
     }
-    this.renderablesByUrl.clear();
+    this.#renderablesByUrl.clear();
 
-    for (const renderables of this.renderablesByDataCrc.values()) {
+    for (const renderables of this.#renderablesByDataCrc.values()) {
       for (const renderable of renderables) {
-        this._disposeModel(renderable);
+        this.#disposeModel(renderable);
       }
     }
-    this.renderablesByDataCrc.clear();
+    this.#renderablesByDataCrc.clear();
   }
 
   public override update(
@@ -234,7 +225,7 @@ export class RenderableModels extends RenderablePrimitive {
     if (entity) {
       const lifetimeNs = toNanoSec(entity.lifetime);
       this.userData.expiresAt = lifetimeNs === 0n ? undefined : receiveTime + lifetimeNs;
-      this._updateModels(entity.models);
+      this.#updateModels(entity.models);
     }
   }
 
@@ -242,7 +233,21 @@ export class RenderableModels extends RenderablePrimitive {
     this.update(this.userData.topic, this.userData.entity, settings, this.userData.receiveTime);
   }
 
-  private async _loadCachedModel(
+  #updateOutlineVisibility(): void {
+    const showOutlines = this.getSettings()?.showOutlines ?? true;
+    this.traverse((lineSegments) => {
+      // Want to avoid picking up the LineSegments from the model itself
+      // only update line segments that we've added with the special name
+      if (
+        lineSegments instanceof THREE.LineSegments &&
+        lineSegments.name === EDGE_LINE_SEGMENTS_NAME
+      ) {
+        lineSegments.visible = showOutlines;
+      }
+    });
+  }
+
+  async #loadCachedModel(
     url: string,
     opts: { overrideMediaType?: string },
   ): Promise<LoadedModel | undefined> {
@@ -272,7 +277,7 @@ export class RenderableModels extends RenderablePrimitive {
     return cachedModel;
   }
 
-  private _updateModel(renderable: RenderableModel, primitive: ModelPrimitive) {
+  #updateModel(renderable: RenderableModel, primitive: ModelPrimitive) {
     const overrideColor = this.userData.settings.color
       ? stringToRgba(tempRgba, this.userData.settings.color)
       : primitive.override_color
@@ -313,7 +318,7 @@ export class RenderableModels extends RenderablePrimitive {
     );
   }
 
-  private _disposeModel(renderable: RenderableModel) {
+  #disposeModel(renderable: RenderableModel) {
     renderable.material?.dispose();
     disposeMeshesRecursive(renderable.model);
     disposeMeshesRecursive(renderable.cachedModel);

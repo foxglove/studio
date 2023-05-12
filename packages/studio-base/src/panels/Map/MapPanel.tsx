@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import produce from "immer";
+import { produce } from "immer";
 import {
   CircleMarker,
   FeatureGroup,
@@ -42,7 +42,7 @@ import { MapPanelMessage, NavSatFixMsg, NavSatFixStatus, Point } from "./types";
 type GeoJsonMessage = MessageEvent<FoxgloveMessages["foxglove.GeoJSON"]>;
 
 // Minimal definition to allow extracting properties from features.
-type GeoJSONFeature = { properties: Record<string, unknown> };
+type GeoJSONFeature = { properties?: Record<string, unknown> };
 
 type MapPanelProps = {
   context: PanelExtensionContext;
@@ -472,7 +472,7 @@ function MapPanel(props: MapPanelProps): JSX.Element {
 
   const addGeoFeatureEventHandlers = useCallback(
     (feature: GeoJSONFeature, message: MessageEvent<unknown>, layer: Layer) => {
-      const featureName = feature.properties.name;
+      const featureName = feature.properties?.name;
       if (typeof featureName === "string" && featureName.length > 0) {
         layer.bindTooltip(featureName);
       }

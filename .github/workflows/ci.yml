@@ -22,6 +22,7 @@ jobs:
             command: |
               # lint steps
               set -x
+              yarn constraints
               yarn license-check
               yarn dedupe --check
               yarn run tsc --noEmit # typecheck files that are not included by webpack or package builds
@@ -36,8 +37,6 @@ jobs:
             command: yarn run benchmark:build:prod
           - name: test
             command: yarn run test --maxWorkers=100%
-          - name: pack studio-base
-            command: yarn workspace @foxglove/studio-base pack
         include:
           - os: windows-2019
             config:
@@ -47,7 +46,7 @@ jobs:
     name: ${{ matrix.config.name }} (${{ matrix.os }})
 
     steps:
-      - uses: actions/checkout@v3.4.0
+      - uses: actions/checkout@v3.5.2
         with:
           lfs: true
 
@@ -74,7 +73,7 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-      - uses: actions/checkout@v3.4.0
+      - uses: actions/checkout@v3.5.2
         with:
           fetch-depth: 0 # Required for Chromatic
           lfs: true
@@ -106,6 +105,7 @@ jobs:
           storybookBuildDir: storybook-static
           autoAcceptChanges: main
           exitOnceUploaded: true
+          onlyChanged: true
 
   integration:
     runs-on: ${{ matrix.os }}
@@ -118,7 +118,7 @@ jobs:
     name: integration (${{ matrix.os }})
 
     steps:
-      - uses: actions/checkout@v3.4.0
+      - uses: actions/checkout@v3.5.2
         with:
           lfs: true
 

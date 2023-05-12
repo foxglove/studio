@@ -2,7 +2,15 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { alpha, Fade, Theme } from "@mui/material";
+import {
+  alpha,
+  CSSInterpolation,
+  Fade,
+  Theme,
+  dividerClasses,
+  listClasses,
+  listItemClasses,
+} from "@mui/material";
 import { CSSProperties } from "react";
 import tinycolor from "tinycolor2";
 
@@ -15,7 +23,7 @@ type MuiLabComponents = {
   MuiToggleButton?: {
     styleOverrides?: {
       root?: CSSProperties;
-      label?: CSSProperties;
+      label?: CSSInterpolation;
     };
   };
   MuiToggleButtonGroup?: {
@@ -393,6 +401,18 @@ export default function muiComponents(theme: Theme): Theme["components"] & MuiLa
       styleOverrides: {
         paper: {
           borderRadius: theme.shape.borderRadius,
+          backgroundColor: theme.palette.background.menu,
+        },
+        list: {
+          ...theme.typography.body1,
+
+          [`&.${listClasses.dense}`]: {
+            ...theme.typography.body2,
+          },
+          [`.${listItemClasses.root} + .${dividerClasses.root}`]: {
+            marginTop: theme.spacing(1),
+            marginBottom: theme.spacing(1),
+          },
         },
       },
     },
@@ -446,6 +466,11 @@ export default function muiComponents(theme: Theme): Theme["components"] & MuiLa
         elevation: {
           backgroundImage: "none !important",
         },
+      },
+    },
+    MuiPopover: {
+      defaultProps: {
+        marginThreshold: 8,
       },
     },
     MuiRadio: {
@@ -525,11 +550,11 @@ export default function muiComponents(theme: Theme): Theme["components"] & MuiLa
       },
       styleOverrides: {
         arrow: {
-          color: tinycolor(theme.palette.grey[700]).setAlpha(0.86).toRgbString(),
+          color: tinycolor(theme.palette.grey[700]).setAlpha(0.92).toRgbString(),
           backdropFilter: "blur(3px)",
         },
         tooltip: {
-          backgroundColor: tinycolor(theme.palette.grey[700]).setAlpha(0.86).toRgbString(),
+          backgroundColor: tinycolor(theme.palette.grey[700]).setAlpha(0.92).toRgbString(),
           backdropFilter: "blur(3px)",
           fontWeight: "normal",
           fontSize: theme.typography.caption.fontSize,

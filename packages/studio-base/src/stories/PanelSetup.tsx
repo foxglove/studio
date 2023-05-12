@@ -12,14 +12,16 @@
 //   You may not use this file except in compliance with the License.
 
 import { useTheme } from "@mui/material";
+import { TFunction } from "i18next";
 import { flatten } from "lodash";
-import { ComponentProps, ReactNode, useLayoutEffect, useRef, useState } from "react";
+import { ComponentProps, ReactNode, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
+import { useTranslation } from "react-i18next";
 import { Mosaic, MosaicNode, MosaicWindow } from "react-mosaic-component";
 
 import { useShallowMemo } from "@foxglove/hooks";
-import { MessageEvent, SettingsTree } from "@foxglove/studio";
+import { MessageEvent, RegisterMessageConverterArgs, SettingsTree } from "@foxglove/studio";
 import MockMessagePipelineProvider from "@foxglove/studio-base/components/MessagePipeline/MockMessagePipelineProvider";
 import SettingsTreeEditor from "@foxglove/studio-base/components/SettingsTreeEditor";
 import AppConfigurationContext from "@foxglove/studio-base/context/AppConfigurationContext";
@@ -33,7 +35,10 @@ import { PanelsActions } from "@foxglove/studio-base/context/CurrentLayoutContex
 import PanelCatalogContext, {
   PanelCatalog,
 } from "@foxglove/studio-base/context/PanelCatalogContext";
-import { usePanelStateStore } from "@foxglove/studio-base/context/PanelStateContext";
+import {
+  PanelStateStore,
+  usePanelStateStore,
+} from "@foxglove/studio-base/context/PanelStateContext";
 import {
   UserNodeStateProvider,
   useUserNodeState,
@@ -56,6 +61,8 @@ import WorkspaceContextProvider from "@foxglove/studio-base/providers/WorkspaceC
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import { SavedProps, UserNodes } from "@foxglove/studio-base/types/panels";
+
+import "react-mosaic-component/react-mosaic-component.css";
 
 function noop() {}
 
@@ -82,6 +89,8 @@ export type Fixture = {
   publish?: (request: PublishPayload) => void;
   setPublishers?: (publisherId: string, advertisements: AdvertiseOptions[]) => void;
   setSubscriptions?: ComponentProps<typeof MockMessagePipelineProvider>["setSubscriptions"];
+  messageConverters?: readonly RegisterMessageConverterArgs<unknown>[];
+  panelState?: Partial<PanelStateStore>;
 };
 
 type UnconnectedProps = {
@@ -113,10 +122,10 @@ function setNativeValue(element: unknown, value: unknown) {
   }
 }
 
-export function makeMockPanelCatalog(): PanelCatalog {
-  const allPanels = [...panels.builtin, ...panels.debug, panels.legacyPlot];
+export function makeMockPanelCatalog(t: TFunction<"panels">): PanelCatalog {
+  const allPanels = [...panels.getBuiltin(t), ...panels.getDebug(t)];
 
-  const visiblePanels = [...panels.builtin];
+  const visiblePanels = [...panels.getBuiltin(t)];
 
   return {
     getPanels() {
@@ -186,14 +195,22 @@ function PanelWrapper({
 
   return (
     <>
-      {includeSettings && <SettingsTreeEditor settings={settings} />}
+      {includeSettings && (
+        <div style={{ overflow: "auto" }}>
+          <SettingsTreeEditor settings={settings} />
+        </div>
+      )}
       {children}
     </>
   );
 }
 
 function UnconnectedPanelSetup(props: UnconnectedProps): JSX.Element | ReactNull {
-  const [mockPanelCatalog] = useState(() => props.panelCatalog ?? makeMockPanelCatalog());
+  const { t } = useTranslation("panels");
+  const mockPanelCatalog = useMemo(
+    () => props.panelCatalog ?? makeMockPanelCatalog(t),
+    [props.panelCatalog, t],
+  );
   const [mockAppConfiguration] = useState(() => ({
     get() {
       return undefined;
@@ -343,8 +360,11 @@ export default function PanelSetup(props: Props): JSX.Element {
       <UserNodeStateProvider>
         <TimelineInteractionStateProvider>
           <MockCurrentLayoutProvider onAction={props.onLayoutAction}>
-            <PanelStateContextProvider>
-              <ExtensionCatalogProvider loaders={[]}>
+            <PanelStateContextProvider initialState={props.fixture?.panelState}>
+              <ExtensionCatalogProvider
+                loaders={[]}
+                mockMessageConverters={props.fixture?.messageConverters}
+              >
                 <ThemeProvider isDark={theme.palette.mode === "dark"}>
                   <UnconnectedPanelSetup {...props} />
                 </ThemeProvider>

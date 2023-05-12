@@ -4,46 +4,37 @@
 
 import { toNanoSec } from "@foxglove/rostime";
 import { SceneEntity, TextPrimitive } from "@foxglove/schemas";
-import { emptyPose } from "@foxglove/studio-base/util/Pose";
 import { Label, LabelPool } from "@foxglove/three-text";
 
 import { RenderablePrimitive } from "./RenderablePrimitive";
-import type { Renderer } from "../../Renderer";
+import type { IRenderer } from "../../IRenderer";
 import { getLuminance, makeRgba, SRGBToLinear, stringToRgba } from "../../color";
-import { LayerSettingsEntity } from "../SceneEntities";
+import { LayerSettingsEntity } from "../../settings";
 
 const tempRgba = makeRgba();
 
 export class RenderableTexts extends RenderablePrimitive {
-  private labelPool: LabelPool;
-  private labels: Label[] = [];
+  #labelPool: LabelPool;
+  #labels: Label[] = [];
 
-  public constructor(renderer: Renderer) {
-    super("", renderer, {
-      receiveTime: -1n,
-      messageTime: -1n,
-      frameId: "",
-      pose: emptyPose(),
-      settings: { visible: true, color: undefined, selectedIdVariable: undefined },
-      settingsPath: [],
-      entity: undefined,
-    });
+  public constructor(renderer: IRenderer) {
+    super("", renderer);
 
-    this.labelPool = renderer.labelPool;
+    this.#labelPool = renderer.labelPool;
   }
-  private _ensureCapacity(newLength: number): void {
-    const oldLength = this.labels.length;
+  #ensureCapacity(newLength: number): void {
+    const oldLength = this.#labels.length;
     if (newLength > oldLength) {
       for (let i = oldLength; i < newLength; i++) {
-        const newLabel = this.labelPool.acquire();
-        this.labels.push(newLabel);
+        const newLabel = this.#labelPool.acquire();
+        this.#labels.push(newLabel);
         this.add(newLabel);
       }
     }
   }
 
-  private _updateTexts(texts: TextPrimitive[]) {
-    this._ensureCapacity(texts.length);
+  #updateTexts(texts: TextPrimitive[]) {
+    this.#ensureCapacity(texts.length);
     const overrideColor = this.userData.settings.color
       ? stringToRgba(tempRgba, this.userData.settings.color)
       : undefined;
@@ -51,7 +42,7 @@ export class RenderableTexts extends RenderablePrimitive {
     let i = 0;
     for (const text of texts) {
       const color = overrideColor ?? text.color;
-      const label = this.labels[i];
+      const label = this.#labels[i];
 
       if (!label) {
         throw new Error("invariant: labels array smaller than requested");
@@ -84,17 +75,17 @@ export class RenderableTexts extends RenderablePrimitive {
       i++;
     }
     // need to release the no longer used labels so that they don't linger on the scene
-    if (i < this.labels.length) {
+    if (i < this.#labels.length) {
       // cuts off remaining labels and loops through  them  release to from labelpool
-      for (const label of this.labels.splice(i)) {
-        this.labelPool.release(label);
+      for (const label of this.#labels.splice(i)) {
+        this.#labelPool.release(label);
       }
     }
   }
 
   public override dispose(): void {
-    for (const label of this.labels) {
-      this.labelPool.release(label);
+    for (const label of this.#labels) {
+      this.#labelPool.release(label);
     }
   }
 
@@ -108,7 +99,7 @@ export class RenderableTexts extends RenderablePrimitive {
     if (entity) {
       const lifetimeNs = toNanoSec(entity.lifetime);
       this.userData.expiresAt = lifetimeNs === 0n ? undefined : receiveTime + lifetimeNs;
-      this._updateTexts(entity.texts);
+      this.#updateTexts(entity.texts);
     }
   }
 

@@ -2,14 +2,15 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { t } from "i18next";
 import { maxBy } from "lodash";
 
 import Logger from "@foxglove/log";
 import { SettingsTreeAction, SettingsTreeFields } from "@foxglove/studio";
 
 import { RenderableLineList } from "./markers/RenderableLineList";
+import type { IRenderer } from "../IRenderer";
 import { BaseUserData, Renderable } from "../Renderable";
-import { Renderer } from "../Renderer";
 import { SceneExtension } from "../SceneExtension";
 import { SettingsTreeEntry } from "../SettingsManager";
 import { stringToRgba } from "../color";
@@ -67,28 +68,28 @@ export class GridRenderable extends Renderable<GridUserData> {
 }
 
 export class Grids extends SceneExtension<GridRenderable> {
-  public constructor(renderer: Renderer) {
+  public constructor(renderer: IRenderer) {
     super("foxglove.Grids", renderer);
 
     renderer.addCustomLayerAction({
       layerId: LAYER_ID,
-      label: "Add Grid",
+      label: t("threeDee:addGrid"),
       icon: "Grid",
-      handler: this.handleAddGrid,
+      handler: this.#handleAddGrid,
     });
 
-    renderer.on("transformTreeUpdated", this.handleTransformTreeUpdated);
+    renderer.on("transformTreeUpdated", this.#handleTransformTreeUpdated);
 
     // Load existing grid layers from the config
     for (const [instanceId, entry] of Object.entries(renderer.config.layers)) {
       if (entry?.layerId === LAYER_ID) {
-        this._updateGrid(instanceId, entry as Partial<LayerSettingsGrid>);
+        this.#updateGrid(instanceId, entry as Partial<LayerSettingsGrid>);
       }
     }
   }
 
   public override dispose(): void {
-    this.renderer.off("transformTreeUpdated", this.handleTransformTreeUpdated);
+    this.renderer.off("transformTreeUpdated", this.#handleTransformTreeUpdated);
     super.dispose();
   }
 
@@ -112,23 +113,23 @@ export class Grids extends SceneExtension<GridRenderable> {
 
       // prettier-ignore
       const fields: SettingsTreeFields = {
-        frameId: { label: "Frame", input: "select", options: frameIdOptions, value: config.frameId }, // options is extended in `settings.ts:buildTopicNode()`
-        size: { label: "Size", input: "number", min: 0, step: 0.5, precision: PRECISION_DISTANCE, value: config.size, placeholder: String(DEFAULT_SIZE) },
-        divisions: { label: "Divisions", input: "number", min: 1, max: MAX_DIVISIONS, step: 1, precision: 0, value: config.divisions, placeholder: String(DEFAULT_DIVISIONS) },
-        lineWidth: { label: "Line Width", input: "number", min: 0, step: 0.5, precision: 1, value: config.lineWidth, placeholder: String(DEFAULT_LINE_WIDTH) },
-        color: { label: "Color", input: "rgba", value: config.color ?? DEFAULT_COLOR },
-        position: { label: "Position", input: "vec3", labels: ["X", "Y", "Z"], precision: PRECISION_DISTANCE, value: config.position ?? [0, 0, 0] },
-        rotation: { label: "Rotation", input: "vec3", labels: ["R", "P", "Y"], precision: PRECISION_DEGREES, value: config.rotation ?? [0, 0, 0] },
+        frameId: { label: t("threeDee:frame"), input: "select", options: frameIdOptions, value: config.frameId }, // options is extended in `settings.ts:buildTopicNode()`
+        size: { label: t("threeDee:size"), input: "number", min: 0, step: 0.5, precision: PRECISION_DISTANCE, value: config.size, placeholder: String(DEFAULT_SIZE) },
+        divisions: { label: t("threeDee:divisions"), input: "number", min: 1, max: MAX_DIVISIONS, step: 1, precision: 0, value: config.divisions, placeholder: String(DEFAULT_DIVISIONS) },
+        lineWidth: { label: t("threeDee:lineWidth"), input: "number", min: 0, step: 0.5, precision: 1, value: config.lineWidth, placeholder: String(DEFAULT_LINE_WIDTH) },
+        color: { label: t("threeDee:color"), input: "rgba", value: config.color ?? DEFAULT_COLOR },
+        position: { label: t("threeDee:position"), input: "vec3", labels: ["X", "Y", "Z"], precision: PRECISION_DISTANCE, value: config.position ?? [0, 0, 0] },
+        rotation: { label: t("threeDee:rotation"), input: "vec3", labels: ["R", "P", "Y"], precision: PRECISION_DEGREES, value: config.rotation ?? [0, 0, 0] },
       };
 
       entries.push({
         path: ["layers", instanceId],
         node: {
-          label: config.label ?? "Grid",
+          label: config.label ?? t("threeDee:grid"),
           icon: "Grid",
           fields,
           visible: config.visible ?? DEFAULT_SETTINGS.visible,
-          actions: [{ type: "action", id: "delete", label: "Delete" }],
+          actions: [{ type: "action", id: "delete", label: t("threeDee:delete") }],
           order: layerConfig.order,
           handler,
         },
@@ -136,7 +137,7 @@ export class Grids extends SceneExtension<GridRenderable> {
 
       // Create renderables for new grid layers
       if (!this.renderables.has(instanceId)) {
-        this._updateGrid(instanceId, config);
+        this.#updateGrid(instanceId, config);
       }
     }
     return entries;
@@ -168,7 +169,7 @@ export class Grids extends SceneExtension<GridRenderable> {
         });
 
         // Remove the renderable
-        this._updateGrid(instanceId, undefined);
+        this.#updateGrid(instanceId, undefined);
 
         // Update the settings tree
         this.updateSettingsTree();
@@ -187,10 +188,10 @@ export class Grids extends SceneExtension<GridRenderable> {
     const settings = this.renderer.config.layers[instanceId] as
       | Partial<LayerSettingsGrid>
       | undefined;
-    this._updateGrid(instanceId, settings);
+    this.#updateGrid(instanceId, settings);
   };
 
-  private handleAddGrid = (instanceId: string): void => {
+  #handleAddGrid = (instanceId: string): void => {
     log.info(`Creating ${LAYER_ID} layer ${instanceId}`);
 
     const config: LayerSettingsGrid = { ...DEFAULT_SETTINGS, instanceId };
@@ -203,17 +204,17 @@ export class Grids extends SceneExtension<GridRenderable> {
     });
 
     // Add a renderable
-    this._updateGrid(instanceId, config);
+    this.#updateGrid(instanceId, config);
 
     // Update the settings tree
     this.updateSettingsTree();
   };
 
-  private handleTransformTreeUpdated = (): void => {
+  #handleTransformTreeUpdated = (): void => {
     this.updateSettingsTree();
   };
 
-  private _updateGrid(instanceId: string, settings: Partial<LayerSettingsGrid> | undefined): void {
+  #updateGrid(instanceId: string, settings: Partial<LayerSettingsGrid> | undefined): void {
     let renderable = this.renderables.get(instanceId);
 
     // Handle deletes
@@ -228,7 +229,7 @@ export class Grids extends SceneExtension<GridRenderable> {
 
     const newSettings = { ...DEFAULT_SETTINGS, ...settings };
     if (!renderable) {
-      renderable = this._createRenderable(instanceId, newSettings);
+      renderable = this.#createRenderable(instanceId, newSettings);
       renderable.userData.pose = xyzrpyToPose(newSettings.position, newSettings.rotation);
     }
 
@@ -257,7 +258,7 @@ export class Grids extends SceneExtension<GridRenderable> {
     }
   }
 
-  private _createRenderable(instanceId: string, settings: LayerSettingsGrid): GridRenderable {
+  #createRenderable(instanceId: string, settings: LayerSettingsGrid): GridRenderable {
     const marker = createMarker(settings);
     const lineListId = `${instanceId}:LINE_LIST`;
     const lineList = new RenderableLineList(

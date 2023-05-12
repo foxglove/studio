@@ -7,12 +7,11 @@ import * as THREE from "three";
 import { toNanoSec } from "@foxglove/rostime";
 import { Point3, SceneEntity, TriangleListPrimitive } from "@foxglove/schemas";
 import { DynamicBufferGeometry } from "@foxglove/studio-base/panels/ThreeDeeRender/DynamicBufferGeometry";
-import { emptyPose } from "@foxglove/studio-base/util/Pose";
 
 import { RenderablePrimitive } from "./RenderablePrimitive";
-import type { Renderer } from "../../Renderer";
+import type { IRenderer } from "../../IRenderer";
 import { makeRgba, rgbToThreeColor, SRGBToLinear, stringToRgba } from "../../color";
-import { LayerSettingsEntity } from "../SceneEntities";
+import { LayerSettingsEntity } from "../../settings";
 
 const tempRgba = makeRgba();
 const tempColor = new THREE.Color();
@@ -23,33 +22,25 @@ const INVALID_POINT_ERROR_ID = "INVALID_POINT";
 
 type TriangleMesh = THREE.Mesh<DynamicBufferGeometry, THREE.MeshStandardMaterial>;
 export class RenderableTriangles extends RenderablePrimitive {
-  private _triangleMeshes: TriangleMesh[] = [];
-  public constructor(renderer: Renderer) {
-    super("", renderer, {
-      receiveTime: -1n,
-      messageTime: -1n,
-      frameId: "",
-      pose: emptyPose(),
-      settings: { visible: true, color: undefined, selectedIdVariable: undefined },
-      settingsPath: [],
-      entity: undefined,
-    });
+  #triangleMeshes: TriangleMesh[] = [];
+  public constructor(renderer: IRenderer) {
+    super("", renderer);
   }
 
-  private _ensureCapacity(triCount: number) {
-    while (triCount > this._triangleMeshes.length) {
-      this._triangleMeshes.push(makeTriangleMesh());
+  #ensureCapacity(triCount: number) {
+    while (triCount > this.#triangleMeshes.length) {
+      this.#triangleMeshes.push(makeTriangleMesh());
     }
   }
-  private _updateTriangleMeshes(tris: TriangleListPrimitive[]) {
-    this._ensureCapacity(tris.length);
+  #updateTriangleMeshes(tris: TriangleListPrimitive[]) {
+    this.#ensureCapacity(tris.length);
     // removes all children so that meshes that are still in the _triangleMesh array
     // but don't have a new corresponding primitive  won't be rendered
     this.clear();
 
     let triMeshIdx = 0;
     for (const primitive of tris) {
-      const mesh = this._triangleMeshes[triMeshIdx];
+      const mesh = this.#triangleMeshes[triMeshIdx];
       if (!mesh) {
         continue;
       }
@@ -207,12 +198,12 @@ export class RenderableTriangles extends RenderablePrimitive {
   }
 
   public override dispose(): void {
-    for (const mesh of this._triangleMeshes) {
+    for (const mesh of this.#triangleMeshes) {
       mesh.geometry.dispose();
       mesh.material.dispose();
     }
     this.clear();
-    this._triangleMeshes.length = 0;
+    this.#triangleMeshes.length = 0;
     this.clearErrors();
   }
 
@@ -226,7 +217,7 @@ export class RenderableTriangles extends RenderablePrimitive {
     if (entity) {
       const lifetimeNs = toNanoSec(entity.lifetime);
       this.userData.expiresAt = lifetimeNs === 0n ? undefined : receiveTime + lifetimeNs;
-      this._updateTriangleMeshes(entity.triangles);
+      this.#updateTriangleMeshes(entity.triangles);
     }
   }
 

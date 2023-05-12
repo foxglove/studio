@@ -22,8 +22,8 @@ import { SettingsTreeAction } from "@foxglove/studio";
 
 import { TopicEntities } from "./TopicEntities";
 import { PrimitivePool } from "./primitives/PrimitivePool";
+import type { IRenderer } from "../IRenderer";
 import { SELECTED_ID_VARIABLE } from "../Renderable";
-import { Renderer } from "../Renderer";
 import { PartialMessage, PartialMessageEvent, SceneExtension } from "../SceneExtension";
 import { SettingsTreeEntry, SettingsTreeNodeWithActionHandler } from "../SettingsManager";
 import { SCENE_UPDATE_DATATYPES } from "../foxglove";
@@ -35,28 +35,25 @@ import {
   normalizeVector3,
   normalizeByteArray,
 } from "../normalizeMessages";
-import { BaseSettings } from "../settings";
+import { LayerSettingsEntity } from "../settings";
 import { topicIsConvertibleToSchema } from "../topicIsConvertibleToSchema";
 import { makePose } from "../transforms";
 
-export type LayerSettingsEntity = BaseSettings & {
-  color: string | undefined;
-  selectedIdVariable: string | undefined;
-};
-
-const DEFAULT_SETTINGS: LayerSettingsEntity = {
+const SCENE_ENTITIES_DEFAULT_SETTINGS: LayerSettingsEntity = {
+  showOutlines: true,
   visible: false,
   color: undefined,
   selectedIdVariable: undefined,
 };
 
 export class FoxgloveSceneEntities extends SceneExtension<TopicEntities> {
-  private primitivePool = new PrimitivePool(this.renderer);
+  #primitivePool = new PrimitivePool(this.renderer);
 
-  public constructor(renderer: Renderer) {
+  public constructor(renderer: IRenderer) {
     super("foxglove.SceneEntities", renderer);
-
-    renderer.addSchemaSubscriptions(SCENE_UPDATE_DATATYPES, this.handleSceneUpdate);
+  }
+  public override addSubscriptionsToRenderer(): void {
+    this.renderer.addSchemaSubscriptions(SCENE_UPDATE_DATATYPES, this.#handleSceneUpdate);
   }
 
   public override settingsNodes(): SettingsTreeEntry[] {
@@ -74,6 +71,11 @@ export class FoxgloveSceneEntities extends SceneExtension<TopicEntities> {
         order: topic.name.toLocaleLowerCase(),
         fields: {
           color: { label: "Color", input: "rgba", value: config.color },
+          showOutlines: {
+            label: "Show outlines",
+            input: "boolean",
+            value: config.showOutlines ?? SCENE_ENTITIES_DEFAULT_SETTINGS.showOutlines,
+          },
           selectedIdVariable: {
             label: "Selection Variable",
             input: "string",
@@ -82,7 +84,7 @@ export class FoxgloveSceneEntities extends SceneExtension<TopicEntities> {
             placeholder: SELECTED_ID_VARIABLE,
           },
         },
-        visible: config.visible ?? DEFAULT_SETTINGS.visible,
+        visible: config.visible ?? SCENE_ENTITIES_DEFAULT_SETTINGS.visible,
         handler: this.handleSettingsAction,
       };
 
@@ -127,26 +129,26 @@ export class FoxgloveSceneEntities extends SceneExtension<TopicEntities> {
       const settings = this.renderer.config.topics[topicName] as
         | Partial<LayerSettingsEntity>
         | undefined;
-      renderable.userData.settings = { ...DEFAULT_SETTINGS, ...settings };
+      renderable.userData.settings = { ...SCENE_ENTITIES_DEFAULT_SETTINGS, ...settings };
       renderable.updateSettings();
     }
   };
 
-  private handleSceneUpdate = (messageEvent: PartialMessageEvent<SceneUpdate>): void => {
+  #handleSceneUpdate = (messageEvent: PartialMessageEvent<SceneUpdate>): void => {
     const topic = messageEvent.topic;
     const sceneUpdates = messageEvent.message;
 
     for (const deletionMsg of sceneUpdates.deletions ?? []) {
       if (deletionMsg) {
         const deletion = normalizeSceneEntityDeletion(deletionMsg);
-        this._getTopicEntities(topic).deleteEntities(deletion);
+        this.#getTopicEntities(topic).deleteEntities(deletion);
       }
     }
 
     for (const entityMsg of sceneUpdates.entities ?? []) {
       if (entityMsg) {
         const entity = normalizeSceneEntity(entityMsg);
-        this._getTopicEntities(topic).addOrUpdateEntity(
+        this.#getTopicEntities(topic).addOrUpdateEntity(
           entity,
           toNanoSec(messageEvent.receiveTime),
         );
@@ -154,21 +156,21 @@ export class FoxgloveSceneEntities extends SceneExtension<TopicEntities> {
     }
   };
 
-  private _getTopicEntities(topic: string): TopicEntities {
+  #getTopicEntities(topic: string): TopicEntities {
     let topicEntities = this.renderables.get(topic);
     if (!topicEntities) {
       const userSettings = this.renderer.config.topics[topic] as
         | Partial<LayerSettingsEntity>
         | undefined;
 
-      topicEntities = new TopicEntities(topic, this.primitivePool, this.renderer, {
+      topicEntities = new TopicEntities(topic, this.#primitivePool, this.renderer, {
         receiveTime: -1n,
         messageTime: -1n,
         frameId: "",
         pose: makePose(),
         settingsPath: ["topics", topic],
         topic,
-        settings: { ...DEFAULT_SETTINGS, ...userSettings },
+        settings: { ...SCENE_ENTITIES_DEFAULT_SETTINGS, ...userSettings },
       });
       this.renderables.set(topic, topicEntities);
       this.add(topicEntities);
@@ -178,7 +180,7 @@ export class FoxgloveSceneEntities extends SceneExtension<TopicEntities> {
 
   public override dispose(): void {
     super.dispose();
-    this.primitivePool.dispose();
+    this.#primitivePool.dispose();
   }
 }
 

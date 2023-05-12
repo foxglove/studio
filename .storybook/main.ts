@@ -1,19 +1,23 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
+
+/* eslint-disable filenames/match-exported */
+
+import { StorybookConfig } from "@storybook/react-webpack5";
 import path from "path";
 import { Configuration } from "webpack";
 
 import { makeConfig } from "@foxglove/studio-base/webpack";
 
-module.exports = {
-  stories: ["../**/*.stories.@(ts|tsx)"],
+const storybookConfig: StorybookConfig = {
+  // Workaround for https://github.com/storybookjs/storybook/issues/19446
+  stories: ["../packages/**/!(node_modules)**/*.stories.tsx"],
   addons: ["@storybook/addon-essentials", "@storybook/addon-actions"],
-
-  core: {
-    builder: "webpack5",
+  framework: {
+    name: "@storybook/react-webpack5",
+    options: {},
   },
-
   // Carefully merge our main webpack config with the Storybook default config.
   // For the most part, our webpack config has already been designed to handle
   // all the imports and edge cases we need to support. However, at least some of
@@ -23,17 +27,22 @@ module.exports = {
     const studioWebpackConfig = makeConfig(
       undefined,
       { mode: config.mode },
-      { allowUnusedVariables: true },
+      {
+        allowUnusedVariables: true,
+        version: "0.0.0-storybook",
+        // We are only setting the configFile from Storybook as it is required to properly resolve
+        // some assumptions made while traversing the dependency tree in Chromatic.
+        tsconfigPath: `${path.resolve(__dirname)}/tsconfig.json`,
+      },
     );
-
     return {
       ...config,
       // context is required for ForkTsCheckerWebpackPlugin to find .storybook/tsconfig.json
-      context: path.resolve(__dirname),
       optimization: {
         ...config.optimization,
         minimize: false, // disabling minification improves build performance
       },
+
       resolve: {
         ...studioWebpackConfig.resolve,
         alias: {
@@ -48,3 +57,5 @@ module.exports = {
     };
   },
 };
+
+module.exports = storybookConfig;

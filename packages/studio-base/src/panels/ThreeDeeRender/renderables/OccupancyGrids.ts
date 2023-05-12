@@ -8,8 +8,8 @@ import { toNanoSec } from "@foxglove/rostime";
 import { SettingsTreeAction, SettingsTreeFields } from "@foxglove/studio";
 import type { RosValue } from "@foxglove/studio-base/players/types";
 
+import type { IRenderer } from "../IRenderer";
 import { BaseUserData, Renderable } from "../Renderable";
-import { Renderer } from "../Renderer";
 import { PartialMessage, PartialMessageEvent, SceneExtension } from "../SceneExtension";
 import { SettingsTreeEntry } from "../SettingsManager";
 import { rgbaToCssString, SRGBToLinear, stringToRgba } from "../color";
@@ -82,10 +82,12 @@ export class OccupancyGridRenderable extends Renderable<OccupancyGridUserData> {
 }
 
 export class OccupancyGrids extends SceneExtension<OccupancyGridRenderable> {
-  public constructor(renderer: Renderer) {
+  public constructor(renderer: IRenderer) {
     super("foxglove.OccupancyGrids", renderer);
+  }
 
-    renderer.addSchemaSubscriptions(OCCUPANCY_GRID_DATATYPES, this.handleOccupancyGrid);
+  public override addSubscriptionsToRenderer(): void {
+    this.renderer.addSchemaSubscriptions(OCCUPANCY_GRID_DATATYPES, this.#handleOccupancyGrid);
   }
 
   public override settingsNodes(): SettingsTreeEntry[] {
@@ -190,7 +192,7 @@ export class OccupancyGrids extends SceneExtension<OccupancyGridRenderable> {
         renderable.userData.material.needsUpdate = true;
       }
 
-      this._updateOccupancyGridRenderable(
+      this.#updateOccupancyGridRenderable(
         renderable,
         renderable.userData.occupancyGrid,
         renderable.userData.receiveTime,
@@ -198,7 +200,7 @@ export class OccupancyGrids extends SceneExtension<OccupancyGridRenderable> {
     }
   };
 
-  private handleOccupancyGrid = (messageEvent: PartialMessageEvent<OccupancyGrid>): void => {
+  #handleOccupancyGrid = (messageEvent: PartialMessageEvent<OccupancyGrid>): void => {
     const topic = messageEvent.topic;
     const occupancyGrid = normalizeOccupancyGrid(messageEvent.message);
     const receiveTime = toNanoSec(messageEvent.receiveTime);
@@ -241,10 +243,10 @@ export class OccupancyGrids extends SceneExtension<OccupancyGridRenderable> {
       this.renderables.set(topic, renderable);
     }
 
-    this._updateOccupancyGridRenderable(renderable, occupancyGrid, receiveTime);
+    this.#updateOccupancyGridRenderable(renderable, occupancyGrid, receiveTime);
   };
 
-  private _updateOccupancyGridRenderable(
+  #updateOccupancyGridRenderable(
     renderable: OccupancyGridRenderable,
     occupancyGrid: OccupancyGrid,
     receiveTime: bigint,
@@ -288,7 +290,7 @@ function createGeometry(): THREE.PlaneGeometry {
   return geometry;
 }
 function invalidOccupancyGridError(
-  renderer: Renderer,
+  renderer: IRenderer,
   renderable: OccupancyGridRenderable,
   message: string,
 ): void {
@@ -481,7 +483,17 @@ let costmapPalette: [number, number, number, number][] | undefined;
 let mapPalette: [number, number, number, number][] | undefined;
 let rawPalette: [number, number, number, number][] | undefined;
 
-function paletteColorCached(output: ColorRGBA, value: number, color_mode: ColorModes) {
+/**
+ * Maps the value to a color using the given palette that is cached after initial use.
+ * @param output - RGBA color output of the given value using the palette in the colormode
+ * @param value - Int8 or Uint8 value to map to a color
+ * @param paletteColorMode - "costmap", "map", or "raw" these are the predefined palette colormodes. Their palette will be used to determine the output color
+ */
+function paletteColorCached(
+  output: ColorRGBA,
+  value: number,
+  paletteColorMode: "costmap" | "map" | "raw",
+) {
   const unsignedValue = value >= 0 ? value : value + 256;
   if (unsignedValue < 0 || unsignedValue > 255) {
     output.r = 0;
@@ -491,23 +503,31 @@ function paletteColorCached(output: ColorRGBA, value: number, color_mode: ColorM
   }
 
   let palette: [number, number, number, number][] | undefined;
-  if (color_mode === "costmap") {
-    if (!costmapPalette) {
-      costmapPalette = createCostmapPalette();
-    }
-    palette = costmapPalette;
-  } else if (color_mode === "map") {
-    if (!mapPalette) {
-      mapPalette = createMapPalette();
-    }
-    palette = mapPalette;
-  } else if (color_mode === "raw") {
-    if (!rawPalette) {
-      rawPalette = createRawPalette();
-    }
-    palette = rawPalette;
-  } else {
-    throw new Error(`Unsupported color mode ${color_mode}`);
+  switch (paletteColorMode) {
+    case "costmap":
+      if (!costmapPalette) {
+        costmapPalette = createCostmapPalette();
+      }
+      palette = costmapPalette;
+      break;
+    case "map":
+      if (!mapPalette) {
+        mapPalette = createMapPalette();
+      }
+      palette = mapPalette;
+      break;
+    case "raw":
+      if (!rawPalette) {
+        rawPalette = createRawPalette();
+      }
+      palette = rawPalette;
+      break;
+    default:
+      // Default to raw palette if unknown colormode, the user will have an error already in the settings
+      if (!rawPalette) {
+        rawPalette = createRawPalette();
+      }
+      palette = rawPalette;
   }
 
   const colorRaw = palette[Math.trunc(unsignedValue)]!;

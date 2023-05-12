@@ -4,45 +4,42 @@
 
 import * as THREE from "three";
 
+import { EDGE_LINE_SEGMENTS_NAME } from "@foxglove/studio-base/panels/ThreeDeeRender/ModelCache";
+
 import { RenderableMarker } from "./RenderableMarker";
 import { makeStandardMaterial } from "./materials";
-import type { Renderer } from "../../Renderer";
+import type { IRenderer } from "../../IRenderer";
 import { rgbToThreeColor } from "../../color";
 import { disposeMeshesRecursive } from "../../dispose";
 import { Marker } from "../../ros";
 import { removeLights, replaceMaterials } from "../models";
 
-export type GltfMesh = THREE.Mesh<
-  THREE.BufferGeometry,
-  THREE.MeshStandardMaterial | THREE.MeshStandardMaterial[]
->;
-
 const MESH_FETCH_FAILED = "MESH_FETCH_FAILED";
 
 export class RenderableMeshResource extends RenderableMarker {
-  private mesh: THREE.Group | THREE.Scene | undefined;
-  private material: THREE.MeshStandardMaterial;
+  #mesh: THREE.Group | THREE.Scene | undefined;
+  #material: THREE.MeshStandardMaterial;
 
   /** Track updates to avoid race conditions when asynchronously loading models */
-  private updateId = 0;
+  #updateId = 0;
 
   public constructor(
     topic: string,
     marker: Marker,
     receiveTime: bigint | undefined,
-    renderer: Renderer,
+    renderer: IRenderer,
   ) {
     super(topic, marker, receiveTime, renderer);
 
-    this.material = makeStandardMaterial(marker.color);
+    this.#material = makeStandardMaterial(marker.color);
     this.update(marker, receiveTime, true);
   }
 
   public override dispose(): void {
-    if (this.mesh) {
-      disposeMeshesRecursive(this.mesh);
+    if (this.#mesh) {
+      disposeMeshesRecursive(this.#mesh);
     }
-    this.material.dispose();
+    this.#material.dispose();
   }
 
   public override update(
@@ -56,37 +53,38 @@ export class RenderableMeshResource extends RenderableMarker {
     const marker = this.userData.marker;
 
     const transparent = marker.color.a < 1;
-    if (transparent !== this.material.transparent) {
-      this.material.transparent = transparent;
-      this.material.depthWrite = !transparent;
-      this.material.needsUpdate = true;
+    if (transparent !== this.#material.transparent) {
+      this.#material.transparent = transparent;
+      this.#material.depthWrite = !transparent;
+      this.#material.needsUpdate = true;
     }
 
-    rgbToThreeColor(this.material.color, marker.color);
-    this.material.opacity = marker.color.a;
+    rgbToThreeColor(this.#material.color, marker.color);
+    this.#material.opacity = marker.color.a;
 
     if (forceLoad === true || marker.mesh_resource !== prevMarker.mesh_resource) {
-      const curUpdateId = ++this.updateId;
+      const curUpdateId = ++this.#updateId;
 
       const opts = { useEmbeddedMaterials: marker.mesh_use_embedded_materials };
       const errors = this.renderer.settings.errors;
-      if (this.mesh) {
-        this.remove(this.mesh);
-        disposeMeshesRecursive(this.mesh);
-        this.mesh = undefined;
+      if (this.#mesh) {
+        this.remove(this.#mesh);
+        disposeMeshesRecursive(this.#mesh);
+        this.#mesh = undefined;
       }
-      this._loadModel(marker.mesh_resource, opts)
+      this.#loadModel(marker.mesh_resource, opts)
         .then((mesh) => {
           if (!mesh) {
             return;
           }
-          if (this.updateId !== curUpdateId) {
+          if (this.#updateId !== curUpdateId) {
             // another update has started
             disposeMeshesRecursive(mesh);
             return;
           }
-          this.mesh = mesh;
+          this.#mesh = mesh;
           this.add(mesh);
+          this.#updateOutlineVisibility();
 
           // Remove any mesh fetch error message since loading was successful
           this.renderer.settings.errors.remove(this.userData.settingsPath, MESH_FETCH_FAILED);
@@ -101,11 +99,26 @@ export class RenderableMeshResource extends RenderableMarker {
           );
         });
     }
+    this.#updateOutlineVisibility();
 
     this.scale.set(marker.scale.x, marker.scale.y, marker.scale.z);
   }
 
-  private async _loadModel(
+  #updateOutlineVisibility(): void {
+    const showOutlines = this.getSettings()?.showOutlines ?? true;
+    this.traverse((lineSegments) => {
+      // Want to avoid picking up the LineSegments from the model itself
+      // only update line segments that we've added with the special name
+      if (
+        lineSegments instanceof THREE.LineSegments &&
+        lineSegments.name === EDGE_LINE_SEGMENTS_NAME
+      ) {
+        lineSegments.visible = showOutlines;
+      }
+    });
+  }
+
+  async #loadModel(
     url: string,
     opts: { useEmbeddedMaterials: boolean },
   ): Promise<THREE.Group | THREE.Scene | undefined> {
@@ -131,7 +144,7 @@ export class RenderableMeshResource extends RenderableMarker {
     const mesh = cachedModel.clone(true);
     removeLights(mesh);
     if (!opts.useEmbeddedMaterials) {
-      replaceMaterials(mesh, this.material);
+      replaceMaterials(mesh, this.#material);
     }
 
     return mesh;

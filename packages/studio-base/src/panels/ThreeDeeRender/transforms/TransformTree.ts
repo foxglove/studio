@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { CoordinateFrame, MAX_DURATION } from "./CoordinateFrame";
+import { CoordinateFrame, MAX_DURATION, FallbackFrameId, AnyFrameId } from "./CoordinateFrame";
 import { Transform } from "./Transform";
 import { Pose } from "./geometry";
 import { Duration, Time } from "./time";
@@ -15,21 +15,32 @@ export enum AddTransformResult {
   CYCLE_DETECTED,
 }
 
+// Coordinate frames named in [REP-105](https://www.ros.org/reps/rep-0105.html)
+const DEFAULT_FRAME_IDS = ["base_link", "odom", "map", "earth"];
+
 /**
  * TransformTree is a collection of coordinate frames with convenience methods
  * for getting and creating frames and adding transforms between frames.
  */
 export class TransformTree {
-  private _frames = new Map<string, CoordinateFrame>();
-  private _maxStorageTime: Duration;
-  private _maxCapacityPerFrame: number;
+  #frames = new Map<string, CoordinateFrame>();
+  #maxStorageTime: Duration;
+  #maxCapacityPerFrame: number;
+  public defaultRootFrame: CoordinateFrame<FallbackFrameId>;
 
   public constructor(
     maxStorageTime = MAX_DURATION,
     maxCapacityPerFrame = DEFAULT_MAX_CAPACITY_PER_FRAME,
   ) {
-    this._maxStorageTime = maxStorageTime;
-    this._maxCapacityPerFrame = maxCapacityPerFrame;
+    this.#maxStorageTime = maxStorageTime;
+    this.#maxCapacityPerFrame = maxCapacityPerFrame;
+    this.defaultRootFrame = new CoordinateFrame(
+      CoordinateFrame.FALLBACK_FRAME_ID,
+      undefined,
+      this.#maxStorageTime,
+      this.#maxCapacityPerFrame,
+    );
+    this.defaultRootFrame.addTransform(0n, Transform.Identity());
   }
 
   public addTransform(
@@ -43,7 +54,7 @@ export class TransformTree {
     const frame = this.getOrCreateFrame(frameId);
     const curParentFrame = frame.parent();
     if (curParentFrame == undefined || curParentFrame.id !== parentFrameId) {
-      cycleDetected = this._checkParentForCycle(frameId, parentFrameId);
+      cycleDetected = this.#checkParentForCycle(frameId, parentFrameId);
       // This frame was previously unparented but now we know its parent, or we
       // are reparenting this frame
       if (!cycleDetected) {
@@ -75,14 +86,14 @@ export class TransformTree {
       return;
     }
     child.removeTransformAt(stamp);
-    this._removeEmptyAncestors(child);
+    this.#removeEmptyAncestors(child);
   }
 
   /**
    * Walk up the tree starting from `candidate` and prune frames with no history entries and no
    * children.
    */
-  private _removeEmptyAncestors(candidate: CoordinateFrame): void {
+  #removeEmptyAncestors(candidate: CoordinateFrame): void {
     if (candidate.transformsSize() > 0) {
       // don't want to delete this frame, it is not empty
       return;
@@ -91,10 +102,10 @@ export class TransformTree {
     // Build a list of children for each frame in the tree, used to check whether nodes are leaf
     // nodes
     const childrenByParentId = new Map<string, Set<string>>();
-    for (const frame of this._frames.values()) {
+    for (const frame of this.#frames.values()) {
       childrenByParentId.set(frame.id, new Set());
     }
-    for (const frame of this._frames.values()) {
+    for (const frame of this.#frames.values()) {
       const parent = frame.parent();
       if (parent === candidate) {
         // can't delete this frame or its ancestors, it still has children
@@ -125,7 +136,7 @@ export class TransformTree {
         // can't delete this frame or its ancestors, it still has children
         return;
       }
-      this._frames.delete(current.id);
+      this.#frames.delete(current.id);
       childrenByParentId.delete(current.id);
       const parentId = current.parent()?.id;
       if (parentId) {
@@ -135,42 +146,48 @@ export class TransformTree {
   }
 
   public clear(): void {
-    this._frames.clear();
+    this.#frames.clear();
   }
 
   public clearAfter(time: Time): void {
-    for (const frame of this._frames.values()) {
+    for (const frame of this.#frames.values()) {
       frame.removeTransformsAfter(time);
     }
   }
 
-  public hasFrame(id: string): boolean {
-    return this._frames.has(id);
+  public hasFrame(id: AnyFrameId): boolean {
+    if (id === CoordinateFrame.FALLBACK_FRAME_ID) {
+      return true;
+    }
+    return this.#frames.has(id);
   }
 
-  public frame(id: string): CoordinateFrame | undefined {
-    return this._frames.get(id);
+  public frame<ID extends AnyFrameId>(id: ID): CoordinateFrame<ID> | undefined {
+    if (id === CoordinateFrame.FALLBACK_FRAME_ID) {
+      return this.defaultRootFrame as CoordinateFrame<ID>;
+    }
+    return this.#frames.get(id) as CoordinateFrame<ID>;
   }
 
   public getOrCreateFrame(id: string): CoordinateFrame {
-    let frame = this._frames.get(id);
+    let frame = this.#frames.get(id);
     if (!frame) {
-      frame = new CoordinateFrame(id, undefined, this._maxStorageTime, this._maxCapacityPerFrame);
-      this._frames.set(id, frame);
+      frame = new CoordinateFrame(id, undefined, this.#maxStorageTime, this.#maxCapacityPerFrame);
+      this.#frames.set(id, frame);
     }
     return frame;
   }
 
   public frames(): ReadonlyMap<string, CoordinateFrame> {
-    return this._frames;
+    return this.#frames;
   }
 
   public apply(
     output: Pose,
     input: Readonly<Pose>,
-    frameId: string,
-    rootFrameId: string | undefined,
-    srcFrameId: string,
+    frameId: AnyFrameId,
+    rootFrameId: AnyFrameId | undefined,
+    srcFrameId: AnyFrameId,
     dstTime: Time,
     srcTime: Time,
     maxDelta?: Duration,
@@ -188,7 +205,7 @@ export class TransformTree {
   public frameList(): { label: string; value: string }[] {
     type FrameEntry = { id: string; children: FrameEntry[] };
 
-    const frames = Array.from(this._frames.values());
+    const frames = Array.from(this.#frames.values());
     const frameMap = new Map<string, FrameEntry>(
       frames.map((frame) => [frame.id, { id: frame.id, children: [] }]),
     );
@@ -231,7 +248,36 @@ export class TransformTree {
 
     return output;
   }
-  private _checkParentForCycle(frameId: string, parentFrameId: string): boolean {
+
+  /** Get heuristically most valid follow frame Id */
+  public getDefaultFollowFrameId(): string | undefined {
+    const allFrames = this.frames();
+    if (allFrames.size === 0) {
+      return undefined;
+    }
+
+    // Prefer frames from [REP-105](https://www.ros.org/reps/rep-0105.html)
+    for (const frameId of DEFAULT_FRAME_IDS) {
+      const frame = this.frame(frameId);
+      if (frame) {
+        return frame.id;
+      }
+    }
+
+    // Choose the root frame with the most children
+    const rootsToCounts = new Map<string, number>();
+    for (const frame of allFrames.values()) {
+      const root = frame.root();
+      const rootId = root.id;
+
+      rootsToCounts.set(rootId, (rootsToCounts.get(rootId) ?? 0) + 1);
+    }
+    const rootsArray = Array.from(rootsToCounts.entries());
+    const rootId = rootsArray.sort((a, b) => b[1] - a[1])[0]?.[0];
+    return rootId;
+  }
+
+  #checkParentForCycle(frameId: string, parentFrameId: string): boolean {
     if (frameId === parentFrameId) {
       return true;
     }
@@ -247,10 +293,8 @@ export class TransformTree {
   }
 
   public static Clone(tree: TransformTree): TransformTree {
-    // eslint-disable-next-line no-underscore-dangle
-    const newTree = new TransformTree(tree._maxStorageTime, tree._maxCapacityPerFrame);
-    // eslint-disable-next-line no-underscore-dangle
-    newTree._frames = tree._frames;
+    const newTree = new TransformTree(tree.#maxStorageTime, tree.#maxCapacityPerFrame);
+    newTree.#frames = tree.#frames;
     return newTree;
   }
 }

@@ -2,13 +2,15 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Link, Typography } from "@mui/material";
+import { Divider, Link, Typography } from "@mui/material";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation, Trans } from "react-i18next";
 import { useUnmount } from "react-use";
 
 import { SettingsTree } from "@foxglove/studio";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import { useConfigById } from "@foxglove/studio-base/PanelAPI";
+import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import { ActionMenu } from "@foxglove/studio-base/components/PanelSettings/ActionMenu";
 import SettingsTreeEditor from "@foxglove/studio-base/components/SettingsTreeEditor";
 import ShareJsonModal from "@foxglove/studio-base/components/ShareJsonModal";
@@ -25,7 +27,7 @@ import {
   PanelStateStore,
   usePanelStateStore,
 } from "@foxglove/studio-base/context/PanelStateContext";
-import { useWorkspaceActions } from "@foxglove/studio-base/context/WorkspaceContext";
+import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/useWorkspaceActions";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import { PanelConfig } from "@foxglove/studio-base/types/panels";
 import { TAB_PANEL_TYPE } from "@foxglove/studio-base/util/globalConstants";
@@ -45,6 +47,23 @@ const EMPTY_SETTINGS_TREE: SettingsTree = Object.freeze({
   nodes: {},
 });
 
+const EmptyWrapper = ({ children }: { children: React.ReactNode }) => {
+  const { t } = useTranslation("panelSettings");
+  const [enableNewTopNav = false] = useAppConfigurationValue<boolean>(AppSetting.ENABLE_NEW_TOPNAV);
+
+  if (enableNewTopNav) {
+    return <EmptyState>{children}</EmptyState>;
+  }
+
+  return (
+    <SidebarContent title={t("panelSettings")}>
+      <Typography variant="body2" color="text.secondary">
+        {children}
+      </Typography>
+    </SidebarContent>
+  );
+};
+
 export default function PanelSettings({
   disableToolbar = false,
   selectedPanelIdsForTests,
@@ -52,6 +71,7 @@ export default function PanelSettings({
   disableToolbar?: boolean;
   selectedPanelIdsForTests?: readonly string[];
 }>): JSX.Element {
+  const { t } = useTranslation("panelSettings");
   const selectedLayoutId = useCurrentLayoutSelector(selectedLayoutIdSelector);
   const singlePanelId = useCurrentLayoutSelector(singlePanelIdSelector);
   const {
@@ -112,8 +132,7 @@ export default function PanelSettings({
           });
           incrementSequenceNumber(selectedPanelId);
         }}
-        title="Import/export settings"
-        noun="panel settings"
+        title={t("importOrExportSettings")}
       />
     );
   }, [
@@ -122,6 +141,7 @@ export default function PanelSettings({
     showShareModal,
     savePanelConfigs,
     incrementSequenceNumber,
+    t,
   ]);
 
   const [config] = useConfigById(selectedPanelId);
@@ -141,45 +161,36 @@ export default function PanelSettings({
 
   if (selectedLayoutId == undefined) {
     return (
-      <SidebarContent disableToolbar={disableToolbar} title="Panel settings">
-        <Typography color="text.secondary">
-          <Link onClick={openLayoutBrowser}>Select a layout</Link> to get started!
-        </Typography>
-      </SidebarContent>
+      <EmptyWrapper>
+        <Trans
+          t={t}
+          i18nKey="noLayoutSelected"
+          components={{
+            selectLayoutLink: <Link variant="inherit" onClick={openLayoutBrowser} />,
+          }}
+        />
+      </EmptyWrapper>
     );
   }
 
   if (selectedPanelId == undefined) {
-    return (
-      <SidebarContent disableToolbar={disableToolbar} title="Panel settings">
-        <Typography color="text.secondary">Select a panel to edit its settings.</Typography>
-      </SidebarContent>
-    );
-  }
-
-  if (!panelInfo) {
-    throw new Error(
-      `Attempt to render settings but no panel component could be found for panel id ${selectedPanelId}`,
-    );
+    return <EmptyWrapper>{t("selectAPanelToEditItsSettings")}</EmptyWrapper>;
   }
 
   if (!config) {
-    return (
-      <SidebarContent disableToolbar={disableToolbar} title="Panel settings">
-        <Typography color="text.secondary">Loading panel settings...</Typography>
-      </SidebarContent>
-    );
+    return <EmptyWrapper>{t("loadingPanelSettings")}</EmptyWrapper>;
   }
 
   const isSettingsTree = settingsTree != undefined;
 
-  const showTitleField = panelInfo.hasCustomToolbar !== true;
+  const showTitleField = panelInfo != undefined && panelInfo.hasCustomToolbar !== true;
+  const title = panelInfo?.title ?? t("unknown");
 
   return (
     <SidebarContent
       disablePadding={enableNewTopNav || isSettingsTree}
       disableToolbar={disableToolbar}
-      title={`${panelInfo.title} panel settings`}
+      title={t("currentSettingsPanelName", { title })}
       trailingItems={[
         <ActionMenu
           key={1}
@@ -193,9 +204,24 @@ export default function PanelSettings({
       <Stack gap={2} justifyContent="flex-start" flex="auto">
         <Stack flex="auto">
           {settingsTree && enableNewTopNav && (
-            <Stack padding={0.75}>
-              <Typography variant="subtitle2">{`${panelInfo.title} panel`}</Typography>
-            </Stack>
+            <>
+              <Stack
+                paddingLeft={0.75}
+                direction="row"
+                alignItems="center"
+                justifyContent="space-between"
+              >
+                <Typography variant="subtitle2">{t("panelName", { title })}</Typography>
+                <ActionMenu
+                  key={1}
+                  fontSize="small"
+                  allowShare={panelType !== TAB_PANEL_TYPE}
+                  onReset={resetToDefaults}
+                  onShare={() => setShowShareModal(true)}
+                />
+              </Stack>
+              <Divider />
+            </>
           )}
           {settingsTree || showTitleField ? (
             <SettingsTreeEditor
@@ -210,7 +236,7 @@ export default function PanelSettings({
               paddingX={enableNewTopNav ? 1 : 0}
             >
               <Typography variant="body2" color="text.secondary" align="center">
-                {`The ${panelInfo.title} panel does not have any settings`}
+                {t("panelDoesNotHaveSettings")}
               </Typography>
             </Stack>
           )}

@@ -5,13 +5,17 @@
 import { createContext, useContext } from "react";
 
 interface IAppContext {
-  syncAdapters?: readonly JSX.Element[];
+  appBarLayoutButton?: JSX.Element;
   createEvent?: (args: {
     deviceId: string;
     timestamp: string;
     durationNanos: string;
     metadata: Record<string, string>;
   }) => Promise<void>;
+  sidebarItems?: readonly [[string, { iconName: string; title: string }]];
+  syncAdapters?: readonly JSX.Element[];
+  workspaceExtensions?: readonly JSX.Element[];
+  layoutEmptyState?: JSX.Element;
 }
 
 const AppContext = createContext<IAppContext>({});

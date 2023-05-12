@@ -15,6 +15,7 @@ import { ChartDataset } from "chart.js";
 
 import { Time } from "@foxglove/rostime";
 import { MessagePathDataItem } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
+import type { ChartDatum } from "@foxglove/studio-base/components/TimeBasedChart/types";
 import { TimestampMethod } from "@foxglove/studio-base/util/time";
 
 export type BasePlotPath = {
@@ -28,14 +29,18 @@ export type PlotPath = BasePlotPath & {
   timestampMethod: TimestampMethod;
 };
 
-export type Datum = {
-  x: number;
-  y: number;
+// X-axis values:
+export type PlotXAxisVal =
+  | "timestamp" // Message playback time. Preloaded.
+  | "index" // Message-path value index. One "current" message at playback time.
+  | "custom" // Message path data. Preloaded.
+  | "currentCustom"; // Message path data. One "current" message at playback time.
+
+// In addition to the base datum, we also add receiveTime and optionally header stamp to our datums
+// These are used in the csv export.
+export type Datum = ChartDatum & {
   receiveTime: Time;
   headerStamp?: Time;
-  path: string;
-  value: number | bigint | boolean | string;
-  constantName?: string;
 };
 
 export type DataSet = ChartDataset<"scatter", Datum[]>;
@@ -46,9 +51,7 @@ export type PlotDataItem = {
   headerStamp?: Time;
 };
 
-export type PlotDataByPath = {
-  [path: string]: PlotDataItem[][];
-};
+export type PlotDataByPath = Record<string, PlotDataItem[][]>;
 
 // A "reference line" plot path is a numeric value. It creates a horizontal line on the plot at the specified value.
 export function isReferenceLinePlotPathType(path: BasePlotPath): boolean {

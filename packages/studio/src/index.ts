@@ -65,7 +65,7 @@ export type Subscription = {
   topic: string;
 
   /**
-   * If a topic as additional schema names, specifying a schema name will convert messages on that
+   * If a topic has additional schema names, specifying a schema name will convert messages on that
    * topic to the convertTo schema using a registered message converter. MessageEvents for the
    * subscription will contain the converted message and an originalMessageEvent field with the
    * original message event.
@@ -309,11 +309,19 @@ export type PanelExtensionContext = {
    * array will unsubscribe from all topics.
    *
    * Calling subscribe with an empty array of topics is analagous to unsubscribeAll.
+   *
+   * @deprecated Use `subscribe` with an array of Subscription objects instead.
    */
   subscribe(topics: string[]): void;
 
   /**
    * Subscribe to an array of topics with additional options for each subscription.
+   *
+   * Subscribe will update the current subscriptions to the new list of Subscriptions and
+   * unsubscribe from any previously subscribed topics no longer in the Subscription list. Passing
+   * an empty array will unsubscribe from all topics.
+   *
+   * Calling subscribe with an empty array is analagous to unsubscribeAll.
    */
   subscribe(subscriptions: Subscription[]): void;
 
@@ -497,7 +505,13 @@ export type SettingsTreeFieldValue =
       hideClearButton?: boolean;
     }
   | { input: "gradient"; value?: [string, string] }
-  | { input: "messagepath"; value?: string; validTypes?: string[] }
+  | {
+      input: "messagepath";
+      value?: string;
+      validTypes?: string[];
+      /** True if the input should allow math modifiers like @abs. */
+      supportsMathModifiers?: boolean;
+    }
   | {
       input: "number";
       value?: number;

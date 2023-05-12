@@ -27,6 +27,7 @@ import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
 
 import { NewSidebar, NewSidebarItem } from "./NewSidebar";
 import { TabSpacer } from "./TabSpacer";
+import "react-mosaic-component/react-mosaic-component.css";
 
 function Noop(): ReactNull {
   return ReactNull;
@@ -200,7 +201,7 @@ export default function Sidebars<
     enableNewTopNav && selectedRightKey != undefined && rightItems.has(selectedRightKey);
 
   useEffect(() => {
-    const leftTargetWidth = enableNewTopNav ? 280 : 384;
+    const leftTargetWidth = enableNewTopNav ? 320 : 384;
     const rightTargetWidth = 320;
     const defaultLeftPercentage = 100 * (leftTargetWidth / window.innerWidth);
     const defaultRightPercentage = 100 * (1 - rightTargetWidth / window.innerWidth);

@@ -35,11 +35,13 @@ import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent"
 import Stack from "@foxglove/studio-base/components/Stack";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 import {
+  LayoutID,
   LayoutState,
   useCurrentLayoutActions,
   useCurrentLayoutSelector,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { LayoutData } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
+import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
 import { useLayoutManager } from "@foxglove/studio-base/context/LayoutManagerContext";
 import LayoutStorageDebuggingContext from "@foxglove/studio-base/context/LayoutStorageDebuggingContext";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
@@ -48,7 +50,7 @@ import { useConfirm } from "@foxglove/studio-base/hooks/useConfirm";
 import { usePrompt } from "@foxglove/studio-base/hooks/usePrompt";
 import { defaultPlaybackConfig } from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
-import { Layout, LayoutID, layoutIsShared } from "@foxglove/studio-base/services/ILayoutStorage";
+import { Layout, layoutIsShared } from "@foxglove/studio-base/services/ILayoutStorage";
 import { downloadTextFile } from "@foxglove/studio-base/util/download";
 import showOpenFilePicker from "@foxglove/studio-base/util/showOpenFilePicker";
 
@@ -83,13 +85,12 @@ const useStyles = makeStyles()((theme) => ({
 export default function LayoutBrowser({
   menuClose,
   currentDateForStorybook,
-  supportsSignIn,
 }: React.PropsWithChildren<{
   menuClose?: () => void;
   currentDateForStorybook?: Date;
-  supportsSignIn?: boolean;
 }>): JSX.Element {
   const { classes } = useStyles();
+  const { signIn } = useCurrentUser();
   const isMounted = useMountedState();
   const { enqueueSnackbar } = useSnackbar();
   const layoutManager = useLayoutManager();
@@ -102,6 +103,7 @@ export default function LayoutBrowser({
   const { setSelectedLayoutId } = useCurrentLayoutActions();
 
   const [state, dispatch] = useLayoutBrowserReducer({
+    lastSelectedId: currentLayoutId,
     busy: layoutManager.isBusy,
     error: layoutManager.error,
     online: layoutManager.isOnline,
@@ -539,7 +541,7 @@ export default function LayoutBrowser({
     AppSetting.HIDE_SIGN_IN_PROMPT,
   );
   const showSignInPrompt =
-    supportsSignIn === true && !layoutManager.supportsSharing && !hideSignInPrompt;
+    signIn != undefined && !layoutManager.supportsSharing && !hideSignInPrompt;
 
   const pendingMultiAction = state.multiAction?.ids != undefined;
 

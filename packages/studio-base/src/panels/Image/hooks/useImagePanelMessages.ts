@@ -8,35 +8,20 @@ import { createStore, useStore } from "zustand";
 
 import { AVLTree } from "@foxglove/avl";
 import { useShallowMemo } from "@foxglove/hooks";
-import { Time, compare as compareTime } from "@foxglove/rostime";
-import { MessageEvent, RenderState } from "@foxglove/studio";
+import { compare as compareTime } from "@foxglove/rostime";
+import { MessageEvent } from "@foxglove/studio";
 import { CameraInfo } from "@foxglove/studio-base/types/Messages";
 
 import { normalizeCameraInfo } from "./normalizeCameraInfo";
 import { synchronizedAddMessages } from "./synchronizedAddMessages";
 import { normalizeAnnotations } from "../lib/normalizeAnnotations";
 import { normalizeImageMessage } from "../lib/normalizeMessage";
-import { Annotation, NormalizedImageMessage } from "../types";
-
-type UseImagePanelMessagesParams = {
-  imageTopic: string;
-  cameraInfoTopic: string | undefined;
-  annotationTopics: string[];
-  synchronize: boolean;
-};
-
-export type ImagePanelState = UseImagePanelMessagesParams & {
-  image?: NormalizedImageMessage;
-  cameraInfo?: CameraInfo;
-  annotationsByTopic: ReadonlyMap<string, Annotation[]>;
-  tree: AVLTree<Time, SynchronizationItem>;
-
-  actions: {
-    setCurrentFrame(currentFrame: NonNullable<RenderState["currentFrame"]>): void;
-    clear(): void;
-    setParams(newParams: UseImagePanelMessagesParams): void;
-  };
-};
+import {
+  Annotation,
+  ImagePanelState,
+  NormalizedImageMessage,
+  UseImagePanelMessagesParams,
+} from "../types";
 
 type PublicState = {
   image: NormalizedImageMessage | undefined;
@@ -51,32 +36,6 @@ const selectPublicState = (state: ImagePanelState): PublicState => ({
   cameraInfo: state.cameraInfo,
   annotations: ([] as Annotation[]).concat(...state.annotationsByTopic.values()),
 });
-
-export type SynchronizationItem = {
-  image?: NormalizedImageMessage;
-  annotationsByTopic: Map<string, Annotation[]>;
-};
-
-export const ANNOTATION_DATATYPES = [
-  // Single marker
-  "visualization_msgs/ImageMarker",
-  "visualization_msgs/msg/ImageMarker",
-  "ros.visualization_msgs.ImageMarker",
-  // Marker arrays
-  "foxglove_msgs/ImageMarkerArray",
-  "foxglove_msgs/msg/ImageMarkerArray",
-  "studio_msgs/ImageMarkerArray",
-  "studio_msgs/msg/ImageMarkerArray",
-  "visualization_msgs/ImageMarkerArray",
-  "visualization_msgs/msg/ImageMarkerArray",
-  "ros.visualization_msgs.ImageMarkerArray",
-  // backwards compat with webviz
-  "webviz_msgs/ImageMarkerArray",
-  // foxglove
-  "foxglove_msgs/ImageAnnotations",
-  "foxglove_msgs/msg/ImageAnnotations",
-  "foxglove.ImageAnnotations",
-] as const;
 
 function addMessages(
   state: ImagePanelState,

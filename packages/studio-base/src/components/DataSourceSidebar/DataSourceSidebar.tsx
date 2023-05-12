@@ -12,6 +12,7 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { useState, useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { makeStyles } from "tss-react/mui";
 
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
@@ -22,18 +23,19 @@ import {
 } from "@foxglove/studio-base/components/MessagePipeline";
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
 import Stack from "@foxglove/studio-base/components/Stack";
+import WssErrorModal from "@foxglove/studio-base/components/WssErrorModal";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
 import { EventsStore, useEvents } from "@foxglove/studio-base/context/EventsContext";
+import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/useWorkspaceActions";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
 
-import { ProblemsList } from "./ProblemsList";
 import { TopicList } from "./TopicList";
 import { DataSourceInfoView } from "../DataSourceInfoView";
+import { ProblemsList } from "../ProblemsList";
 
 type Props = {
   disableToolbar?: boolean;
-  onSelectDataSourceAction: () => void;
 };
 
 const useStyles = makeStyles()({
@@ -79,13 +81,15 @@ const selectEventsSupported = (store: EventsStore) => store.eventsSupported;
 type DataSourceSidebarTab = "topics" | "events" | "problems";
 
 export default function DataSourceSidebar(props: Props): JSX.Element {
-  const { disableToolbar = false, onSelectDataSourceAction } = props;
+  const { disableToolbar = false } = props;
   const playerPresence = useMessagePipeline(selectPlayerPresence);
   const playerProblems = useMessagePipeline(selectPlayerProblems) ?? [];
   const { currentUser } = useCurrentUser();
   const selectedEventId = useEvents(selectSelectedEventId);
   const [activeTab, setActiveTab] = useState<DataSourceSidebarTab>("topics");
   const { classes } = useStyles();
+  const { t } = useTranslation("dataSourceInfo");
+  const { dialogActions } = useWorkspaceActions();
 
   const [enableNewTopNav = false] = useAppConfigurationValue<boolean>(AppSetting.ENABLE_NEW_TOPNAV);
 
@@ -112,7 +116,7 @@ export default function DataSourceSidebar(props: Props): JSX.Element {
       disablePadding
       disableToolbar={disableToolbar}
       overflow="auto"
-      title="Data source"
+      title={t("dataSource")}
       trailingItems={[
         isLoading && (
           <Stack key="loading" alignItems="center" justifyContent="center" padding={1}>
@@ -123,7 +127,7 @@ export default function DataSourceSidebar(props: Props): JSX.Element {
           key="add-connection"
           color="primary"
           title="New connection"
-          onClick={onSelectDataSourceAction}
+          onClick={() => dialogActions.dataSource.open("start")}
         >
           <AddIcon />
         </IconButton>,
@@ -175,13 +179,14 @@ export default function DataSourceSidebar(props: Props): JSX.Element {
               )}
               {activeTab === "problems" && (
                 <div className={classes.tabContent}>
-                  <ProblemsList problems={playerProblems} />
+                  <ProblemsList />
                 </div>
               )}
             </Stack>
           </>
         )}
       </Stack>
+      <WssErrorModal playerProblems={playerProblems} />
     </SidebarContent>
   );
 }

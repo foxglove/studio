@@ -2,64 +2,60 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
-import ErrorIcon from "@mui/icons-material/Error";
-import { Button, ButtonBase, CircularProgress, Divider, Tooltip, Typography } from "@mui/material";
-import { useState } from "react";
+import { ErrorCircle20Filled } from "@fluentui/react-icons";
+import { ButtonBase, CircularProgress, IconButton } from "@mui/material";
+import { useTranslation } from "react-i18next";
+import tc from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 
-import { APP_BAR_PRIMARY_COLOR } from "@foxglove/studio-base/components/AppBar/constants";
-import { DataSourceInfoView } from "@foxglove/studio-base/components/DataSourceInfoView";
-import { ProblemsList } from "@foxglove/studio-base/components/DataSourceSidebar/ProblemsList";
+import {
+  APP_BAR_PRIMARY_COLOR,
+  APP_BAR_FOREGROUND_COLOR,
+} from "@foxglove/studio-base/components/AppBar/constants";
 import {
   MessagePipelineContext,
   useMessagePipeline,
 } from "@foxglove/studio-base/components/MessagePipeline";
 import Stack from "@foxglove/studio-base/components/Stack";
 import TextMiddleTruncate from "@foxglove/studio-base/components/TextMiddleTruncate";
+import WssErrorModal from "@foxglove/studio-base/components/WssErrorModal";
+import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/useWorkspaceActions";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
 
-const useStyles = makeStyles()((theme) => ({
-  root: {
-    display: "grid",
-    gridTemplateAreas: `"adornment sourceInfo arrow"`,
-    gap: theme.spacing(0.75),
-    gridAutoColumns: "19px 1fr 19px",
-    paddingRight: theme.spacing(1),
-    paddingLeft: theme.spacing(1),
-    font: "inherit",
-    overflow: "hidden",
-    maxWidth: "100%",
+const ICON_SIZE = 18;
 
-    ":hover": { opacity: 0.8 },
-  },
-  sourceInfo: {
-    gridArea: "sourceInfo",
+const useStyles = makeStyles<void, "adornmentError" | "openIcon">()((theme, _params, classes) => ({
+  sourceName: {
+    font: "inherit",
+    fontSize: theme.typography.body2.fontSize,
     display: "flex",
     alignItems: "center",
-    gap: theme.spacing(0.25),
+    gap: theme.spacing(0.5),
+    padding: theme.spacing(1.5),
+    paddingInlineEnd: theme.spacing(0.75),
     whiteSpace: "nowrap",
-    overflow: "hidden",
+    minWidth: 0,
+
+    "&button:not(:hover)": {
+      color: tc(APP_BAR_FOREGROUND_COLOR).setAlpha(0.8).toString(),
+
+      [`.${classes.openIcon}`]: {
+        visibility: "hidden",
+      },
+    },
   },
   adornment: {
-    gridArea: "adornment",
     display: "flex",
+    flex: "none",
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
     color: APP_BAR_PRIMARY_COLOR,
-    width: 19,
-    height: 19,
-  },
-  arrow: {
-    gridArea: "arrow",
+    width: ICON_SIZE,
+    height: ICON_SIZE,
   },
   adornmentError: {
     color: theme.palette.error.main,
-  },
-  divider: {
-    borderColor: "currentColor",
-    opacity: 0.4,
   },
   spinner: {
     position: "absolute",
@@ -69,11 +65,25 @@ const useStyles = makeStyles()((theme) => ({
     bottom: 0,
     margin: "auto",
   },
-  tooltip: {
-    padding: 0,
+  textTruncate: {
+    maxWidth: "30vw",
+    overflow: "hidden",
   },
-  playerName: {
-    minWidth: 0,
+  openIcon: {
+    opacity: 0.6,
+    flex: "none",
+  },
+  iconButton: {
+    padding: 0,
+
+    "svg:not(.MuiSvgIcon-root)": {
+      fontSize: "1rem",
+    },
+  },
+  errorIconButton: {
+    position: "relative",
+    zIndex: 1,
+    fontSize: ICON_SIZE - 2,
   },
 }));
 
@@ -81,15 +91,15 @@ const selectPlayerName = ({ playerState }: MessagePipelineContext) => playerStat
 const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => playerState.presence;
 const selectPlayerProblems = ({ playerState }: MessagePipelineContext) => playerState.problems;
 
-export function DataSource({
-  onSelectDataSourceAction,
-}: {
-  onSelectDataSourceAction: () => void;
-}): JSX.Element {
+export function DataSource(): JSX.Element {
+  const { t } = useTranslation("appBar");
   const { classes, cx } = useStyles();
+
   const playerName = useMessagePipeline(selectPlayerName);
   const playerPresence = useMessagePipeline(selectPlayerPresence);
   const playerProblems = useMessagePipeline(selectPlayerProblems) ?? [];
+  const { dialogActions, sidebarActions } = useWorkspaceActions();
+
   const reconnecting = playerPresence === PlayerPresence.RECONNECTING;
   const initializing = playerPresence === PlayerPresence.INITIALIZING;
   const error =
@@ -100,68 +110,48 @@ export function DataSource({
   const playerDisplayName =
     initializing && playerName == undefined ? "Initializing..." : playerName;
 
-  const [problemModal, setProblemModal] = useState<JSX.Element | undefined>(undefined);
+  const openDataSourceDialog = () => dialogActions.dataSource.open("start");
 
   if (playerPresence === PlayerPresence.NOT_PRESENT) {
     return (
-      <Button size="small" color="inherit" variant="outlined" onClick={onSelectDataSourceAction}>
-        <Typography noWrap variant="inherit" component="span">
-          Open data source…
-        </Typography>
-      </Button>
+      <ButtonBase className={classes.sourceName} color="inherit" onClick={openDataSourceDialog}>
+        {t("noDataSource")}
+      </ButtonBase>
     );
   }
 
   return (
     <>
-      {problemModal}
-      <Tooltip
-        arrow={false}
-        disableHoverListener={initializing}
-        disableFocusListener={initializing}
-        classes={{ tooltip: classes.tooltip }}
-        placement="bottom"
-        title={
-          <>
-            <Stack padding={1}>
-              <Stack gap={1} padding={1}>
-                <DataSourceInfoView />
-              </Stack>
-            </Stack>
-            {error && (
-              <>
-                <Divider className={classes.divider} />
-                <Stack paddingY={0.5}>
-                  <ProblemsList problems={playerProblems} setProblemModal={setProblemModal} />
-                </Stack>
-              </>
-            )}
-          </>
-        }
-      >
-        <ButtonBase color="inherit" className={classes.root} onClick={onSelectDataSourceAction}>
-          <div className={cx(classes.adornment, { [classes.adornmentError]: error })}>
-            {loading && (
-              <CircularProgress
-                size={19}
-                color="inherit"
-                className={classes.spinner}
-                variant="indeterminate"
-              />
-            )}
-            {error && <ErrorIcon color="error" fontSize={loading ? "small" : "medium"} />}
+      <WssErrorModal playerProblems={playerProblems} />
+      <Stack direction="row" alignItems="center">
+        <div className={classes.sourceName}>
+          <div className={classes.textTruncate}>
+            <TextMiddleTruncate text={playerDisplayName ?? "<unknown>"} />
           </div>
-          <div className={classes.sourceInfo}>
-            <Typography noWrap variant="inherit" component="span">
-              <TextMiddleTruncate
-                className={classes.playerName}
-                text={playerDisplayName ?? "<unknown>"}
-              />
-            </Typography>
-          </div>
-          <ArrowDropDownIcon className={classes.arrow} />
-        </ButtonBase>
-      </Tooltip>
+        </div>
+        <div className={cx(classes.adornment, { [classes.adornmentError]: error })}>
+          {loading && (
+            <CircularProgress
+              size={ICON_SIZE}
+              color="inherit"
+              className={classes.spinner}
+              variant="indeterminate"
+            />
+          )}
+          {error && (
+            <IconButton
+              color="inherit"
+              className={cx(classes.iconButton, classes.errorIconButton)}
+              onClick={() => {
+                sidebarActions.left.setOpen(true);
+                sidebarActions.left.selectItem("problems");
+              }}
+            >
+              <ErrorCircle20Filled />
+            </IconButton>
+          )}
+        </div>
+      </Stack>
     </>
   );
 }

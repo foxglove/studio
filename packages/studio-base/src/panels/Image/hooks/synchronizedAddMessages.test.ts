@@ -7,7 +7,7 @@ import { Time, compare as compareTime } from "@foxglove/rostime";
 import { CompressedImage, ImageAnnotations } from "@foxglove/schemas";
 
 import { synchronizedAddMessages } from "./synchronizedAddMessages";
-import { SynchronizationItem, ImagePanelState } from "./useImagePanelMessages";
+import { SynchronizationItem, ImagePanelState } from "../types";
 
 function emptyState(): Parameters<typeof synchronizedAddMessages>[0] {
   return {
@@ -40,6 +40,7 @@ function generateAnnotations(stamp: Time): ImageAnnotations {
       },
     ],
     points: [],
+    texts: [],
   };
 }
 
@@ -194,6 +195,7 @@ describe("synchronizedAddMessages", () => {
                 stamp: { nsec: 0, sec: 2 },
                 thickness: 1,
                 type: "circle",
+                messagePath: ["circles", 0],
               },
             ],
           }),
@@ -255,6 +257,7 @@ describe("synchronizedAddMessages", () => {
                 stamp: { sec: 1, nsec: 0 },
                 thickness: 1,
                 type: "circle",
+                messagePath: ["circles", 0],
               },
             ],
           }),
@@ -297,6 +300,7 @@ describe("synchronizedAddMessages", () => {
                 stamp: { nsec: 0, sec: 2 },
                 thickness: 1,
                 type: "circle",
+                messagePath: ["circles", 0],
               },
             ],
           }),

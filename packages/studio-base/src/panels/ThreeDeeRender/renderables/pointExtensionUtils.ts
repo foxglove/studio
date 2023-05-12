@@ -7,8 +7,8 @@ import * as THREE from "three";
 import { PackedElementField, PointCloud } from "@foxglove/schemas";
 import { SettingsTreeNode, Topic } from "@foxglove/studio";
 import { DynamicBufferGeometry } from "@foxglove/studio-base/panels/ThreeDeeRender/DynamicBufferGeometry";
+import { IRenderer } from "@foxglove/studio-base/panels/ThreeDeeRender/IRenderer";
 import { BaseUserData, Renderable } from "@foxglove/studio-base/panels/ThreeDeeRender/Renderable";
-import { Renderer } from "@foxglove/studio-base/panels/ThreeDeeRender/Renderer";
 import { rgbaToCssString } from "@foxglove/studio-base/panels/ThreeDeeRender/color";
 import { isSupportedField } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/pointClouds/fieldReaders";
 import {
@@ -98,6 +98,7 @@ export function pointSettingsNode(
       placeholder: "2",
       precision: 2,
       value: pointSize,
+      min: 0,
     },
     pointShape: {
       label: "Point shape",
@@ -358,8 +359,8 @@ type ThreeObject = THREE.Points<DynamicBufferGeometry> | THREE.LineSegments<Dyna
 type HistoryEntry = { receiveTime: bigint; messageTime: bigint; object3d: ThreeObject };
 export class RenderObjectHistory<ParentRenderable extends Renderable<RenderObjectHistoryUserData>> {
   public history: HistoryEntry[];
-  private renderable: ParentRenderable;
-  private renderer: Renderer;
+  #renderable: ParentRenderable;
+  #renderer: IRenderer;
 
   public constructor({
     initial,
@@ -367,12 +368,12 @@ export class RenderObjectHistory<ParentRenderable extends Renderable<RenderObjec
     parentRenderable,
   }: {
     initial: HistoryEntry;
-    renderer: Renderer;
+    renderer: IRenderer;
     parentRenderable: ParentRenderable;
   }) {
     this.history = [initial];
-    this.renderer = renderer;
-    this.renderable = parentRenderable;
+    this.#renderer = renderer;
+    this.#renderable = parentRenderable;
   }
 
   public addHistoryEntry(entry: HistoryEntry): void {
@@ -388,12 +389,12 @@ export class RenderObjectHistory<ParentRenderable extends Renderable<RenderObjec
   public updateHistoryFromCurrentTime(currentTime: bigint): void {
     // Remove expired entries from the history of points when decayTime is enabled
     const pointsHistory = this.history;
-    const decayTime = this.renderable.userData.settings.decayTime;
+    const decayTime = this.#renderable.userData.settings.decayTime;
     const expireTime =
       decayTime > 0 ? currentTime - BigInt(Math.round(decayTime * 1e9)) : MAX_DURATION;
     while (pointsHistory.length > 1 && pointsHistory[0]!.receiveTime < expireTime) {
       const entry = this.history.shift()!;
-      this.renderable.remove(entry.object3d);
+      this.#renderable.remove(entry.object3d);
       entry.object3d.geometry.dispose();
     }
   }
@@ -403,10 +404,10 @@ export class RenderObjectHistory<ParentRenderable extends Renderable<RenderObjec
     let hadTfError = false;
     for (const entry of this.history) {
       const srcTime = entry.messageTime;
-      const frameId = this.renderable.userData.frameId;
+      const frameId = this.#renderable.userData.frameId;
       const updated = updatePose(
         entry.object3d,
-        this.renderer.transformTree,
+        this.#renderer.transformTree,
         renderFrameId,
         fixedFrameId,
         frameId,
@@ -415,8 +416,8 @@ export class RenderObjectHistory<ParentRenderable extends Renderable<RenderObjec
       );
       if (!updated && !hadTfError) {
         const message = missingTransformMessage(renderFrameId, fixedFrameId, frameId);
-        this.renderer.settings.errors.add(
-          this.renderable.userData.settingsPath,
+        this.#renderer.settings.errors.add(
+          this.#renderable.userData.settingsPath,
           MISSING_TRANSFORM,
           message,
         );
@@ -433,7 +434,7 @@ export class RenderObjectHistory<ParentRenderable extends Renderable<RenderObjec
     // removes all but the last element of the array, which would be the current object used in rendering
     for (const entry of this.history.splice(0, this.history.length - 1)) {
       entry.object3d.geometry.dispose();
-      this.renderable.remove(entry.object3d);
+      this.#renderable.remove(entry.object3d);
     }
   }
 

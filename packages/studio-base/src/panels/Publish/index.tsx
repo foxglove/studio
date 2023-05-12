@@ -12,9 +12,10 @@
 //   You may not use this file except in compliance with the License.
 
 import { Button, Typography, styled as muiStyled, OutlinedInput } from "@mui/material";
-import produce from "immer";
+import { produce } from "immer";
 import { set } from "lodash";
 import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useDebounce } from "use-debounce";
 
 import { useRethrow } from "@foxglove/hooks";
 import { SettingsTreeAction, SettingsTreeNodes } from "@foxglove/studio";
@@ -137,9 +138,11 @@ function Publish(props: Props) {
     saveConfig,
   } = props;
 
+  const [debouncedTopicName] = useDebounce(topicName, 500);
+
   const publish = usePublisher({
     name: "Publish",
-    topic: topicName,
+    topic: debouncedTopicName,
     schemaName: datatype,
     datatypes,
   });
@@ -199,15 +202,19 @@ function Publish(props: Props) {
 
   // when a known topic is selected, also fill in its datatype
   const onSelectTopic = useCallback(
-    (name: string, topic: Topic, autocomplete: IAutocomplete) => {
-      saveConfig({ topicName: name, datatype: topic.schemaName });
+    (newValue: string | Topic, autocomplete: IAutocomplete) => {
+      if (typeof newValue === "string") {
+        saveConfig({ topicName: newValue });
+      } else {
+        saveConfig({ topicName: newValue.name, datatype: newValue.schemaName });
+      }
       autocomplete.blur();
     },
     [saveConfig],
   );
 
   const onSelectDatatype = useCallback(
-    (newDatatype: string, _value: unknown, autocomplete: IAutocomplete) => {
+    (newDatatype: string, autocomplete: IAutocomplete) => {
       saveConfig({ datatype: newDatatype });
       autocomplete.blur();
     },
@@ -232,7 +239,7 @@ function Publish(props: Props) {
       {advancedView && (
         <Stack flex="auto" padding={2} gap={1} paddingBottom={0}>
           <div>
-            <Stack alignItems="baseline" gap={1} padding={0.5} direction="row" flexShrink={0}>
+            <Stack alignItems="center" gap={1} padding={0.5} direction="row" flexShrink={0}>
               <Typography color="text.secondary" variant="body2" component="label">
                 Topic:
               </Typography>
@@ -247,16 +254,16 @@ function Publish(props: Props) {
                 getItemValue={getTopicName}
               />
             </Stack>
-            <Stack alignItems="baseline" gap={1} padding={0.5} direction="row" flexShrink={0}>
+            <Stack alignItems="center" gap={1} padding={0.5} direction="row" flexShrink={0}>
               <Typography color="text.secondary" variant="body2" component="label">
                 Datatype:
               </Typography>
               <Autocomplete
-                clearOnFocus
                 placeholder="Choose a datatype"
                 items={datatypeNames}
                 onSelect={onSelectDatatype}
                 selectedItem={datatype}
+                selectOnFocus
               />
             </Stack>
           </div>
