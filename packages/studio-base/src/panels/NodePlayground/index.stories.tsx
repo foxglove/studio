@@ -207,6 +207,7 @@ export const EditorShowsNewCodeWhenUserNodesChange: StoryObj = {
       </ExpectedResult>
     </PanelSetup>
   ),
+
   name: "Editor shows new code when userNodes change",
 };
 
@@ -239,6 +240,7 @@ export const EditorGotoDefinition: StoryObj = {
       />
     </PanelSetup>
   ),
+
   name: "editor goto definition",
 };
 
@@ -276,6 +278,7 @@ export const GoBackFromGotoDefinition: StoryObj = {
       />
     </PanelSetup>
   ),
+
   name: "go back from goto definition",
 };
 
@@ -631,5 +634,6 @@ export const BottomBarClearedLogs: StoryObj = {
       <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
     </PanelSetup>
   ),
+
   name: "BottomBar - cleared logs",
 };
