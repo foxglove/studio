@@ -114,7 +114,6 @@ const utilsSourceCode = `
 
 export default {
   title: "panels/NodePlayground",
-
   parameters: {
     chromatic: {
       delay: 2500,
@@ -130,7 +129,6 @@ export const WelcomeScreen: StoryObj = {
       </PanelSetup>
     );
   },
-
   name: "welcome screen",
 };
 
@@ -146,7 +144,6 @@ export const RawUserUtils: StoryObj = {
       </div>
     );
   },
-
   name: "rawUserUtils",
 };
 
@@ -168,7 +165,6 @@ export const UtilsUsageInNode: StoryObj = {
       <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
     </PanelSetup>
   ),
-
   name: "utils usage in node",
 };
 
@@ -204,9 +200,9 @@ export const EditorShowsNewCodeWhenUserNodesChange: StoryObj = {
   ),
 
   name: "Editor shows new code when userNodes change",
-  parameters: { colorScheme: "light" },
   play: async () => {
-    fireEvent.click(await screen.findByTestId("node-explorer"));
+    const buttons = await screen.findAllByTestId("node-explorer");
+    buttons.forEach((button) => fireEvent.click(button));
   },
 };
 
@@ -239,7 +235,6 @@ export const EditorGotoDefinition: StoryObj = {
       />
     </PanelSetup>
   ),
-
   name: "editor goto definition",
 };
 
@@ -272,11 +267,10 @@ export const GoBackFromGotoDefinition: StoryObj = {
       />
     </PanelSetup>
   ),
-
   name: "go back from goto definition",
-  parameters: { colorScheme: "light" },
   play: async () => {
-    fireEvent.click(await screen.findByTestId("go-back"));
+    const buttons = await screen.findAllByTestId("go-back");
+    buttons.forEach((button) => fireEvent.click(button));
   },
 };
 
@@ -288,9 +282,9 @@ export const SidebarOpenNodeExplorer: StoryObj = {
   ),
   name: "sidebar open - node explorer",
   play: async () => {
-    fireEvent.click(await screen.findByTestId("node-explorer"));
+    const buttons = await screen.findAllByTestId("node-explorer");
+    buttons.forEach((button) => fireEvent.click(button));
   },
-  parameters: { colorScheme: "light" },
 };
 
 export const SidebarOpenNodeExplorerSelectedNode: StoryObj = {
@@ -301,9 +295,9 @@ export const SidebarOpenNodeExplorerSelectedNode: StoryObj = {
   ),
   name: "sidebar open - node explorer - selected node",
   play: async () => {
-    fireEvent.click(await screen.findByTestId("node-explorer"));
+    const buttons = await screen.findAllByTestId("node-explorer");
+    buttons.forEach((button) => fireEvent.click(button));
   },
-  parameters: { colorScheme: "light" },
 };
 
 export const SidebarOpenUtilsExplorerSelectedUtility: StoryObj = {
@@ -314,9 +308,9 @@ export const SidebarOpenUtilsExplorerSelectedUtility: StoryObj = {
   ),
   name: "sidebar open - utils explorer - selected utility",
   play: async () => {
-    fireEvent.click(await screen.findByTestId("utils-explorer"));
+    const buttons = await screen.findAllByTestId("utils-explorer");
+    buttons.forEach((button) => fireEvent.click(button));
   },
-  parameters: { colorScheme: "light" },
 };
 
 export const SidebarOpenTemplatesExplorer: StoryObj = {
@@ -326,9 +320,9 @@ export const SidebarOpenTemplatesExplorer: StoryObj = {
     </PanelSetup>
   ),
   name: "sidebar open - templates explorer",
-  parameters: { colorScheme: "light" },
   play: async () => {
-    fireEvent.click(await screen.findByTestId("templates-explorer"));
+    const buttons = await screen.findAllByTestId("templates-explorer");
+    buttons.forEach((button) => fireEvent.click(button));
   },
 };
 
@@ -347,7 +341,6 @@ export const EditorLoadingState: StoryObj = {
       </PanelSetup>
     );
   },
-
   name: "editor loading state",
 };
 
@@ -363,7 +356,6 @@ export const BottomBarNoErrorsOrLogsClosed: StoryObj = {
       <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
     </PanelSetup>
   ),
-  parameters: { colorScheme: "light" },
   name: "BottomBar - no errors or logs - closed",
 };
 
@@ -379,11 +371,10 @@ export const BottomBarNoErrorsOpen: StoryObj = {
       <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
     </PanelSetup>
   ),
-
   name: "BottomBar - no errors - open",
-  parameters: { colorScheme: "light" },
   play: async () => {
-    fireEvent.click(await screen.findByTestId("np-errors"));
+    const buttons = await screen.findAllByTestId("np-errors");
+    buttons.forEach((button) => fireEvent.click(button));
   },
 };
 
@@ -399,11 +390,10 @@ export const BottomBarNoLogsOpen: StoryObj = {
       <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
     </PanelSetup>
   ),
-
   name: "BottomBar - no logs - open",
-  parameters: { colorScheme: "light" },
   play: async () => {
-    fireEvent.click(await screen.findByTestId("np-logs"));
+    const buttons = await screen.findAllByTestId("np-logs");
+    buttons.forEach((button) => fireEvent.click(button));
   },
 };
 
@@ -452,7 +442,6 @@ export const BottomBarErrorsClosed: StoryObj = {
       <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
     </PanelSetup>
   ),
-
   name: "BottomBar - errors - closed",
 };
 
@@ -477,11 +466,10 @@ export const BottomBarErrorsOpen: StoryObj = {
       <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
     </PanelSetup>
   ),
-
   name: "BottomBar - errors - open",
-  parameters: { colorScheme: "light" },
   play: async () => {
-    fireEvent.click(await screen.findByTestId("np-errors"));
+    const buttons = await screen.findAllByTestId("np-errors");
+    buttons.forEach((button) => fireEvent.click(button));
   },
 };
 
@@ -498,7 +486,6 @@ export const BottomBarLogsClosed: StoryObj = {
       <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
     </PanelSetup>
   ),
-  parameters: { colorScheme: "light" },
   name: "BottomBar - logs - closed",
 };
 
@@ -517,9 +504,9 @@ export const BottomBarLogsOpen: StoryObj = {
   ),
 
   name: "BottomBar - logs - open",
-  parameters: { colorScheme: "light" },
   play: async () => {
-    fireEvent.click(await screen.findByTestId("np-logs"));
+    const buttons = await screen.findAllByTestId("np-logs");
+    buttons.forEach((button) => fireEvent.click(button));
   },
 };
 
@@ -537,9 +524,11 @@ export const BottomBarClearedLogs: StoryObj = {
     </PanelSetup>
   ),
   name: "BottomBar - cleared logs",
-  parameters: { colorScheme: "light" },
   play: async () => {
-    fireEvent.click(await screen.findByTestId("np-logs"));
-    fireEvent.click(await screen.findByTestId("np-logs-clear"));
+    const buttons = await screen.findAllByTestId("np-errors");
+    const clearButtons = await screen.findAllByTestId("np-logs-clear");
+
+    buttons.forEach((button) => fireEvent.click(button));
+    clearButtons.forEach((button) => fireEvent.click(button));
   },
 };
