@@ -11,16 +11,21 @@ const DEFAULT_CAMERA_STATE = {
   far: 1000,
 };
 
+const MIN_USER_ZOOM = 0.5;
+const MAX_USER_ZOOM = 50;
+export const DEFAULT_ZOOM_MODE = "fit";
+
 export class ImageModeCamera extends THREE.PerspectiveCamera {
   #model?: PinholeCameraModel;
-  #cameraState = DEFAULT_CAMERA_STATE;
+  readonly #cameraState = DEFAULT_CAMERA_STATE;
+  #zoomMode: "fit" | "fill" | "custom" = DEFAULT_ZOOM_MODE;
 
-  /** x/y zoom factors derived from image and window aspect ratios */
-  #aspectZoom = new THREE.Vector2();
-  #canvasSize = new THREE.Vector2();
+  /** x/y zoom factors derived from image and window aspect ratios and zoom mode */
+  readonly #aspectZoom = new THREE.Vector2();
+  readonly #canvasSize = new THREE.Vector2();
 
   /** Amount the user has panned, measured in screen pixels */
-  #panOffset = new THREE.Vector2(0, 0);
+  readonly #panOffset = new THREE.Vector2(0, 0);
   /** Amount the user has zoomed with the scroll wheel */
   #userZoom = 1;
 
@@ -44,8 +49,13 @@ export class ImageModeCamera extends THREE.PerspectiveCamera {
     this.#updateProjection();
   }
 
+  public setZoomMode(mode: "fit" | "fill" | "custom"): void {
+    this.#zoomMode = mode;
+    this.#updateProjection();
+  }
+
   public updateZoomFromWheel(ratio: number, cursorCoords: THREE.Vector2): void {
-    const newZoom = THREE.MathUtils.clamp(this.#userZoom * ratio, 0.5, 50);
+    const newZoom = THREE.MathUtils.clamp(this.#userZoom * ratio, MIN_USER_ZOOM, MAX_USER_ZOOM);
     const finalRatio = newZoom / this.#userZoom;
     const halfWidth = this.#canvasSize.width / 2;
     const halfHeight = this.#canvasSize.height / 2;
@@ -77,7 +87,7 @@ export class ImageModeCamera extends THREE.PerspectiveCamera {
    */
   #getProjection(): THREE.Matrix4 | undefined {
     const model = this.#model;
-    if (!model?.P) {
+    if (!model) {
       return;
     }
 
@@ -132,7 +142,7 @@ export class ImageModeCamera extends THREE.PerspectiveCamera {
    */
   #updateAspectScaledZoom(): void {
     const model = this.#model;
-    if (!model?.P) {
+    if (!model) {
       return;
     }
     // Adapted from https://github.com/ros2/rviz/blob/ee44ccde8a7049073fd1901dd36c1fb69110f726/rviz_default_plugins/src/rviz_default_plugins/displays/camera/camera_display.cpp#L568
@@ -145,7 +155,9 @@ export class ImageModeCamera extends THREE.PerspectiveCamera {
     const rendererAspect = this.#canvasSize.width / this.#canvasSize.height;
     const imageAspect = imgWidth / fx / (imgHeight / fy);
     // preserve the aspect ratio
-    if (imageAspect > rendererAspect) {
+    const shrinkY =
+      this.#zoomMode === "fit" ? imageAspect > rendererAspect : imageAspect < rendererAspect;
+    if (shrinkY) {
       this.#aspectZoom.y = (this.#aspectZoom.y / imageAspect) * rendererAspect;
     } else {
       this.#aspectZoom.x = (this.#aspectZoom.x / rendererAspect) * imageAspect;

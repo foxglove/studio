@@ -27,7 +27,7 @@ import {
 } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/projections";
 import { makePose } from "@foxglove/studio-base/panels/ThreeDeeRender/transforms";
 
-import { ImageModeCamera } from "./ImageModeCamera";
+import { DEFAULT_ZOOM_MODE, ImageModeCamera } from "./ImageModeCamera";
 import { ImageAnnotations } from "./annotations/ImageAnnotations";
 import type { IRenderer } from "../../IRenderer";
 import { PartialMessageEvent, SceneExtension } from "../../SceneExtension";
@@ -130,6 +130,7 @@ export class ImageMode
      */
     this.#camera.quaternion.setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI);
     this.#camera.setCanvasSize(canvasSize.width, canvasSize.height);
+    this.#camera.setZoomMode(renderer.config.imageMode.zoomMode ?? "fit");
 
     renderer.settings.errors.on("update", this.#handleErrorChange);
     renderer.settings.errors.on("clear", this.#handleErrorChange);
@@ -268,6 +269,9 @@ export class ImageMode
         draft.imageMode.calibrationTopic = matchingCalibrationTopic.name;
       }
     });
+    if (matchingCalibrationTopic) {
+      this.#setHasCalibrationTopic(true);
+    }
   };
 
   /** Choose a calibration topic that best matches the given `imageTopic`. */
@@ -375,6 +379,15 @@ export class ImageMode
       options: calibrationTopics,
       error: calibrationTopicError,
     };
+    fields.zoomMode = {
+      label: "Zoom mode",
+      input: "toggle",
+      value: config.imageMode.zoomMode ?? DEFAULT_ZOOM_MODE,
+      options: [
+        { label: "Fit", value: "fit" },
+        { label: "Fill", value: "fill" },
+      ],
+    };
     // fields.TODO_transformMarkers = {
     //   readonly: true,
     //   input: "boolean",
@@ -480,7 +493,13 @@ export class ImageMode
           this.renderer.updateConfig((draft) => {
             draft.imageMode.calibrationTopic = calibrationTopic.name;
           });
+          this.#setHasCalibrationTopic(true);
         }
+      }
+
+      if (config.zoomMode !== prevImageModeConfig.zoomMode) {
+        this.#camera.setZoomMode(config.zoomMode ?? DEFAULT_ZOOM_MODE);
+        this.resetViewModifications();
       }
 
       this.#updateViewAndRenderables();
@@ -677,10 +696,7 @@ export class ImageMode
     return cameraInfoFrameId ?? imageFrameId;
   }
 
-  #getImageModeSettings(): {
-    readonly calibrationTopic?: string;
-    readonly imageTopic?: string;
-  } {
+  #getImageModeSettings() {
     return this.renderer.config.imageMode;
   }
 

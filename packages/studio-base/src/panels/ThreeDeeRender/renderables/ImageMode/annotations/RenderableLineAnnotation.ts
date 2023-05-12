@@ -10,10 +10,12 @@ import { LineSegmentsGeometry } from "three/examples/jsm/lines/LineSegmentsGeome
 
 import { PinholeCameraModel } from "@foxglove/den/image";
 import { Color } from "@foxglove/schemas";
+import { getAnnotationAtPath } from "@foxglove/studio-base/panels/Image/lib/normalizeAnnotations";
 import {
   PointsAnnotation as NormalizedPointsAnnotation,
   CircleAnnotation as NormalizedCircleAnnotation,
 } from "@foxglove/studio-base/panels/Image/types";
+import { RosObject, RosValue } from "@foxglove/studio-base/players/types";
 
 import { BaseUserData, Renderable } from "../../../Renderable";
 import { SRGBToLinear } from "../../../color";
@@ -77,20 +79,23 @@ export class RenderableLineAnnotation extends Renderable<BaseUserData, /*TRender
   #canvasHeight = 0;
   #scaleNeedsUpdate = false;
 
+  #originalMessage?: RosObject;
+
   #annotation?: NormalizedPointsAnnotation & { style: LineStyle };
   #annotationNeedsUpdate = false;
 
   #cameraModel?: PinholeCameraModel;
   #cameraModelNeedsUpdate = false;
 
-  public constructor() {
-    super("foxglove.ImageAnnotations.Line", undefined, {
+  public constructor(topicName: string) {
+    super(topicName, undefined, {
       receiveTime: 0n,
       messageTime: 0n,
       frameId: "",
       pose: { position: { x: 0, y: 0, z: 0 }, orientation: { x: 0, y: 0, z: 0, w: 0 } },
       settingsPath: [],
       settings: { visible: true },
+      topic: topicName,
     });
 
     this.#geometry = new LineSegmentsGeometry();
@@ -116,6 +121,16 @@ export class RenderableLineAnnotation extends Renderable<BaseUserData, /*TRender
     super.dispose();
   }
 
+  public override details(): Record<string, RosValue> {
+    if (this.#originalMessage && this.#annotation) {
+      return {
+        annotation: getAnnotationAtPath(this.#originalMessage, this.#annotation.messagePath),
+        originalMessage: this.#originalMessage,
+      };
+    }
+    return {};
+  }
+
   public setScale(
     scale: number,
     canvasWidth: number,
@@ -136,13 +151,20 @@ export class RenderableLineAnnotation extends Renderable<BaseUserData, /*TRender
     this.#cameraModel = cameraModel;
   }
 
-  public setAnnotation(annotation: NormalizedPointsAnnotation & { style: LineStyle }): void {
+  public setAnnotation(
+    annotation: NormalizedPointsAnnotation & { style: LineStyle },
+    originalMessage: RosObject | undefined,
+  ): void {
     this.#annotationNeedsUpdate ||= this.#annotation !== annotation;
+    this.#originalMessage = originalMessage;
     this.#annotation = annotation;
   }
 
-  public setAnnotationFromCircle(annotation: NormalizedCircleAnnotation): void {
-    this.setAnnotation(makePointsAnnotationFromCircle(annotation));
+  public setAnnotationFromCircle(
+    annotation: NormalizedCircleAnnotation,
+    originalMessage: RosObject | undefined,
+  ): void {
+    this.setAnnotation(makePointsAnnotationFromCircle(annotation), originalMessage);
   }
 
   public update(): void {
@@ -224,31 +246,27 @@ export class RenderableLineAnnotation extends Renderable<BaseUserData, /*TRender
         // and where outline_colors matches the length of points. Fall back to marker.outline_color
         // as needed
         const point = points[i]!;
-        if (this.#cameraModel.projectPixelTo3dPlane(tempVec3, point)) {
-          positions[i * 3 + 0] = tempVec3.x;
-          positions[i * 3 + 1] = tempVec3.y;
-          positions[i * 3 + 2] = tempVec3.z;
-          if (useVertexColors) {
-            const color = hasExactColors
-              ? outlineColors[i >>> 1]!
-              : outlineColors[i] ?? outlineColor ?? FALLBACK_COLOR;
-            colors[i * 4 + 0] = SRGBToLinear(color.r) * 255;
-            colors[i * 4 + 1] = SRGBToLinear(color.g) * 255;
-            colors[i * 4 + 2] = SRGBToLinear(color.b) * 255;
-            colors[i * 4 + 3] = color.a * 255;
-            if (color.a < 1) {
-              hasTransparency = true;
-            }
+        this.#cameraModel.projectPixelTo3dPlane(tempVec3, point);
+
+        positions[i * 3 + 0] = tempVec3.x;
+        positions[i * 3 + 1] = tempVec3.y;
+        positions[i * 3 + 2] = tempVec3.z;
+        if (useVertexColors) {
+          const color = hasExactColors
+            ? outlineColors[i >>> 1]!
+            : outlineColors[i] ?? outlineColor ?? FALLBACK_COLOR;
+          colors[i * 4 + 0] = SRGBToLinear(color.r) * 255;
+          colors[i * 4 + 1] = SRGBToLinear(color.g) * 255;
+          colors[i * 4 + 2] = SRGBToLinear(color.b) * 255;
+          colors[i * 4 + 3] = color.a * 255;
+          if (color.a < 1) {
+            hasTransparency = true;
           }
-          if (i === 0) {
-            shape?.moveTo(tempVec3.x, tempVec3.y);
-          } else {
-            shape?.lineTo(tempVec3.x, tempVec3.y);
-          }
+        }
+        if (i === 0) {
+          shape?.moveTo(tempVec3.x, tempVec3.y);
         } else {
-          positions[i * 3 + 0] = NaN;
-          positions[i * 3 + 1] = NaN;
-          positions[i * 3 + 2] = NaN;
+          shape?.lineTo(tempVec3.x, tempVec3.y);
         }
       }
 
@@ -267,12 +285,18 @@ export class RenderableLineAnnotation extends Renderable<BaseUserData, /*TRender
       }
 
       if (shapeFillColor) {
-        this.#fillGeometry ??= new THREE.ShapeGeometry(shape);
+        if (this.#fillGeometry) {
+          this.#fillGeometry.dispose();
+          this.#fillGeometry = undefined;
+        }
+        this.#fillGeometry = new THREE.ShapeGeometry(shape);
         this.#fillMaterial ??= new THREE.MeshBasicMaterial({ side: THREE.DoubleSide });
         if (!this.#fill) {
           this.#fill = new THREE.Mesh(this.#fillGeometry, this.#fillMaterial);
           this.#fill.renderOrder = RenderOrder.FILL;
           this.add(this.#fill);
+        } else {
+          this.#fill.geometry = this.#fillGeometry;
         }
         this.#fill.position.set(0, 0, 1);
         this.#fillMaterial.color
@@ -308,11 +332,12 @@ export class RenderableLineAnnotation extends Renderable<BaseUserData, /*TRender
       this.#geometry.setPositions(positions);
 
       switch (style) {
+        // These should represent the number of lines, not the number of points
         case "polygon":
-          this.#geometry.instanceCount = pointsLength + 1;
+          this.#geometry.instanceCount = pointsLength;
           break;
         case "line_strip":
-          this.#geometry.instanceCount = pointsLength;
+          this.#geometry.instanceCount = pointsLength - 1;
           break;
         case "line_list":
           this.#geometry.instanceCount = pointsLength >>> 1;
@@ -356,5 +381,6 @@ function makePointsAnnotationFromCircle(
     outlineColor: circle.outlineColor,
     thickness: circle.thickness,
     fillColor: circle.fillColor,
+    messagePath: circle.messagePath,
   };
 }
