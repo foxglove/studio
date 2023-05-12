@@ -122,28 +122,24 @@ export default {
 };
 
 export const WelcomeScreen: StoryObj = {
-  render: () => {
-    return (
-      <PanelSetup fixture={fixture}>
-        <NodePlayground />
-      </PanelSetup>
-    );
-  },
+  render: () => (
+    <PanelSetup fixture={fixture}>
+      <NodePlayground />
+    </PanelSetup>
+  ),
   name: "welcome screen",
 };
 
 export const RawUserUtils: StoryObj = {
-  render: () => {
-    return (
-      <div style={{ margin: 12 }}>
-        <p style={{ color: "lightgreen" }}>
-          This should be original TypeScript source code. This is a story rather than a unit test
-          because it’s effectively a test of our webpack config.
-        </p>
-        <pre>{rawUserUtils[0]?.sourceCode}</pre>;
-      </div>
-    );
-  },
+  render: () => (
+    <div style={{ margin: 12 }}>
+      <p style={{ color: "lightgreen" }}>
+        This should be original TypeScript source code. This is a story rather than a unit test
+        because it’s effectively a test of our webpack config.
+      </p>
+      <pre>{rawUserUtils[0]?.sourceCode}</pre>;
+    </div>
+  ),
   name: "rawUserUtils",
 };
 
@@ -326,21 +322,20 @@ export const SidebarOpenTemplatesExplorer: StoryObj = {
   },
 };
 
+const NeverLoad = () => {
+  throw new Promise(() => {
+    // no-op
+  });
+};
+
 export const EditorLoadingState: StoryObj = {
-  render: () => {
-    const NeverLoad = () => {
-      throw new Promise(() => {
-        // no-op
-      });
-    };
-    return (
-      <PanelSetup fixture={{ ...fixture, userNodes }}>
-        <NodePlayground
-          overrideConfig={{ selectedNodeId: "nodeId1", editorForStorybook: <NeverLoad /> }}
-        />
-      </PanelSetup>
-    );
-  },
+  render: () => (
+    <PanelSetup fixture={{ ...fixture, userNodes }}>
+      <NodePlayground
+        overrideConfig={{ selectedNodeId: "nodeId1", editorForStorybook: <NeverLoad /> }}
+      />
+    </PanelSetup>
+  ),
   name: "editor loading state",
 };
 
