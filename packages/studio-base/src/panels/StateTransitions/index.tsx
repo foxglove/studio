@@ -211,26 +211,9 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
     };
   }, [paths.length]);
 
-  // If we have have messages in blocks for this path, we ignore streamed
-  // messages and only display the messages from blocks.
-  //
-  // Creating the datasets for chartjs is time consuming process with a large
-  // number of data and multiple paths being visualized. In most situations (?),
-  // the data should be coming from the blocks, which means no chartjs datasets
-  // is generated from itemsByPath. That said, the datasets creation below has
-  // fallback logic to generate datasets from itemsByPath if the path is not
-  // found in the data retrieved from the blocks, which is not used for most
-  // situations (?). Since itemsByPath can change every frame due to more data
-  // being fed from the player, this can cause every frame to regenerate the
-  // datasets for chartjs, despite the fact that it is not being used.
-  //
-  // This is a poor optimization that ensures the memo function is not called if
-  // itemsByPath is not used and decodedBlocks has not changed. This
-  // optimization is not great, because if there is a single path that uses
-  // itemsByPath, it will cause the blocks datasets to be regenerated as well.
-  // More granular caching would be better, but React makes it difficult to
-  // write this code in a straight-forward manner and this change is good enough
-  // for now.
+  // If our blocks data covers all paths in the chart then ignore the data in itemsByPath
+  // since it's not needed to render the chart and would just cause unnecessary re-renders
+  // if included in the dataset.
   const newItemsByPath = useMemo(() => {
     const newItemsNotInBlocks = pickBy(
       itemsByPath,
