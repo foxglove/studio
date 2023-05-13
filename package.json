@@ -79,7 +79,7 @@
     "@octokit/rest": "19.0.7",
     "@storybook/addon-actions": "7.0.10",
     "@storybook/addon-essentials": "7.0.10",
-    "@storybook/react": "7.0.10",
+    "@storybook/react": "7.0.11",
     "@storybook/react-webpack5": "7.0.10",
     "@types/babel__core": "^7.20.0",
     "@types/babel__preset-env": "^7.9.2",
