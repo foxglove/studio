@@ -226,8 +226,12 @@ class LinePrimitiveRenderable extends THREE.Object3D {
 
       if (singleColor == undefined) {
         assert(this.#geometry, "Line Group geometry must exist");
-        if (this.#colorBuffer == undefined || this.#colorBuffer.length < pointsLength * 2 * 4) {
-          this.#colorBuffer = new Float32Array(pointsLength * 4);
+        const newPointsColorBufferLength = pointsLength * 4;
+        if (
+          this.#colorBuffer == undefined ||
+          this.#colorBuffer.length < newPointsColorBufferLength
+        ) {
+          this.#colorBuffer = new Float32Array(newPointsColorBufferLength);
         }
         this.#material.vertexColors = true;
         this.#material.opacity = 1;
