@@ -105,6 +105,8 @@ class LinePrimitiveRenderable extends THREE.Object3D {
   #colorChanged: boolean = true;
   #color: string | undefined;
 
+  #lineType: LineType | undefined;
+
   public constructor(primitive: LinePrimitive, canvasSize: THREE.Vector2) {
     super();
 
@@ -161,16 +163,20 @@ class LinePrimitiveRenderable extends THREE.Object3D {
     if (this.#primitiveChanged) {
       const geometryNeedsRecreated =
         this.#geometry == undefined ||
+        this.#lineType !== this.#primitive.type ||
         !this.#positionBuffer ||
         this.#positionBuffer.length < pointsLength;
       if (geometryNeedsRecreated) {
         if (this.#geometry != undefined) {
           this.#geometry.dispose();
+          this.#positionBuffer = undefined;
+          this.#colorBuffer = undefined;
         }
         if (this.#line != undefined) {
           this.#line.removeFromParent();
         }
 
+        this.#lineType = this.#primitive.type;
         switch (this.#primitive.type) {
           case LineType.LINE_STRIP:
           case LineType.LINE_LOOP: {
@@ -183,7 +189,6 @@ class LinePrimitiveRenderable extends THREE.Object3D {
           case LineType.LINE_LIST: {
             this.#geometry = new LineSegmentsGeometry();
             this.#positionBuffer = new Float32Array(pointsLength * 3);
-            this.#colorBuffer = new Float32Array(pointsLength * 2 * 4);
             this.#line = new LineSegments2(this.#geometry, this.#material);
             break;
           }
@@ -221,7 +226,9 @@ class LinePrimitiveRenderable extends THREE.Object3D {
 
       if (singleColor == undefined) {
         assert(this.#geometry, "Line Group geometry must exist");
-        assert(this.#colorBuffer);
+        if (this.#colorBuffer == undefined || this.#colorBuffer.length < pointsLength * 2 * 4) {
+          this.#colorBuffer = new Float32Array(pointsLength * 2 * 4);
+        }
         this.#material.vertexColors = true;
         this.#material.opacity = 1;
         this.#material.uniforms.opacity!.value = 1;
