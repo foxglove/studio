@@ -397,7 +397,11 @@ function MapPanel(props: MapPanelProps): JSX.Element {
       return;
     }
 
-    const map = new LeafMap(mapContainerRef.current);
+    // Disable zoom animation because it causes GeoJSON markers to fly around the panel
+    // when we rebuild layers on bounds change.
+    const map = new LeafMap(mapContainerRef.current, {
+      zoomAnimation: false,
+    });
 
     // Remove default prefix from the attribution control
     map.attributionControl.setPrefix(false);
@@ -474,15 +478,13 @@ function MapPanel(props: MapPanelProps): JSX.Element {
     (feature: GeoJSONFeature, message: MessageEvent<unknown>, layer: Layer) => {
       const featureName = feature.properties?.name;
       if (typeof featureName === "string" && featureName.length > 0) {
-        layer.bindTooltip(featureName);
+        layer.bindTooltip(featureName, { permanent: true, direction: "bottom" });
       }
       layer.on("mouseover", () => {
         onHover(message);
-        layer.openTooltip();
       });
       layer.on("mouseout", () => {
         onHover(undefined);
-        layer.closeTooltip();
       });
       layer.on("click", () => {
         onClick(message);
@@ -493,14 +495,24 @@ function MapPanel(props: MapPanelProps): JSX.Element {
 
   const addGeoJsonMessage = useCallback(
     (message: GeoJsonMessage, group: FeatureGroup) => {
+      const layersToAdd: Parameters<typeof addGeoFeatureEventHandlers>[] = [];
       const parsed = JSON.parse(message.message.geojson) as Parameters<typeof geoJSON>[0];
       geoJSON(parsed, {
-        onEachFeature: (feature: GeoJSONFeature, layer) =>
-          addGeoFeatureEventHandlers(feature, message, layer),
+        onEachFeature: (feature, layer) => {
+          layersToAdd.push([feature, message, layer]);
+        },
         style: config.topicColors[message.topic]
           ? { color: config.topicColors[message.topic] }
           : {},
       }).addTo(group);
+
+      // Wait and add all layers after the group itself is added because there's a bug in
+      // leaflet that causes them not to appear if they're added immediately after the
+      // GeoJSON feature is created.
+      // https://github.com/Leaflet/Leaflet/issues/8591
+      layersToAdd.forEach((lay) => {
+        addGeoFeatureEventHandlers(...lay);
+      });
     },
     [addGeoFeatureEventHandlers, config.topicColors],
   );
