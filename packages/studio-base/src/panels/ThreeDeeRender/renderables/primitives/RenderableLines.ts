@@ -129,6 +129,7 @@ class LineGroup extends THREE.Group {
       uniforms: {
         objectId: { value: [NaN, NaN, NaN, NaN] },
         linewidth: { value: primitive.thickness },
+        resolution: { value: canvasSize },
         dashOffset: { value: 0 },
         dashScale: { value: 1 },
         dashSize: { value: 1 },
