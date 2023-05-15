@@ -226,7 +226,15 @@ class LinePrimitiveRenderable extends THREE.Object3D {
 
       if (singleColor == undefined) {
         assert(this.#geometry, "Line Group geometry must exist");
-        const newPointsColorBufferLength = pointsLength * 4;
+        const useIndices = this.#primitive.indices.length > 0;
+
+        let newPointsColorBufferLength = useIndices
+          ? this.#primitive.indices.length * 4
+          : this.#primitive.colors.length * 4;
+        if (isLoop) {
+          newPointsColorBufferLength += 4;
+        }
+
         if (
           this.#colorBuffer == undefined ||
           this.#colorBuffer.length < newPointsColorBufferLength
@@ -236,7 +244,9 @@ class LinePrimitiveRenderable extends THREE.Object3D {
         this.#material.vertexColors = true;
         this.#material.opacity = 1;
         this.#material.uniforms.opacity!.value = 1;
-        const colors = getColors(this.#colorBuffer, this.#primitive);
+        const colors = useIndices
+          ? serializeColorValuesWithIndices(this.#colorBuffer, this.#primitive)
+          : serializeColorValues(this.#colorBuffer, this.#primitive);
         const instanceColorBuffer = new THREE.InstancedInterleavedBuffer(
           colors,
           isSegments ? 8 : 4,
@@ -325,44 +335,57 @@ function getPositions(positionsOut: Float32Array, primitive: LinePrimitive): Flo
   return positionsOut;
 }
 
-/**
- * Converts RGBA colors specified in `primitive.colors` (and possibly `primitive.indices`) into
- * vertices for LineGeometry or LineSegmentsGeometry.
- */
-function getColors(colorsOut: Float32Array, primitive: LinePrimitive): Float32Array {
-  const isLoop = primitive.type === LineType.LINE_LOOP;
-  const indices = primitive.indices;
-  if (indices.length > 0) {
-    if (primitive.colors.length > 0) {
-      let i = 0;
-      for (const idx of indices) {
-        const { r, g, b, a } = primitive.colors[idx]!;
-        colorsOut[i++] = SRGBToLinear(r);
-        colorsOut[i++] = SRGBToLinear(g);
-        colorsOut[i++] = SRGBToLinear(b);
-        colorsOut[i++] = a;
-      }
-    } else {
-      throw new Error("invariant: expected not to be using vertex colors");
-    }
-  } else {
-    if (primitive.colors.length > 0) {
-      let i = 0;
-      for (const { r, g, b, a } of primitive.colors) {
-        colorsOut[i++] = SRGBToLinear(r);
-        colorsOut[i++] = SRGBToLinear(g);
-        colorsOut[i++] = SRGBToLinear(b);
-        colorsOut[i++] = a;
-      }
-    } else {
-      throw new Error("invariant: expected not to be using vertex colors");
-    }
+function serializeColorValues(colorsOut: Float32Array, primitive: LinePrimitive): Float32Array {
+  assert(
+    colorsOut.length > primitive.colors.length * 4,
+    "Colorbuffer must have a length larger than the number of indices * 4",
+  );
+  assert(primitive.colors.length > 0, "invariant: expected not to be using vertex colors");
+  let i = 0;
+  for (const { r, g, b, a } of primitive.colors) {
+    colorsOut[i++] = SRGBToLinear(r);
+    colorsOut[i++] = SRGBToLinear(g);
+    colorsOut[i++] = SRGBToLinear(b);
+    colorsOut[i++] = a;
   }
+  const isLoop = primitive.type === LineType.LINE_LOOP;
   if (isLoop && colorsOut.length > 4) {
-    colorsOut[colorsOut.length - 4] = colorsOut[0]!;
-    colorsOut[colorsOut.length - 3] = colorsOut[1]!;
-    colorsOut[colorsOut.length - 2] = colorsOut[2]!;
-    colorsOut[colorsOut.length - 1] = colorsOut[3]!;
+    assert(colorsOut.length > i + 4, "Colorbuffer does not have enough space for loop");
+    colorsOut[i++] = colorsOut[0]!;
+    colorsOut[i++] = colorsOut[1]!;
+    colorsOut[i++] = colorsOut[2]!;
+    colorsOut[i++] = colorsOut[3]!;
+  }
+  return colorsOut;
+}
+
+function serializeColorValuesWithIndices(
+  colorsOut: Float32Array,
+  primitive: LinePrimitive,
+): Float32Array {
+  const indices = primitive.indices;
+  assert(indices.length > 0, "Indices must have length");
+  assert(
+    colorsOut.length > indices.length * 4,
+    "Colorbuffer must have a length larger than the number of indices * 4",
+  );
+  assert(primitive.colors.length > 0, "Invariant: expected not to be using vertex colors");
+
+  let i = 0;
+  for (const idx of indices) {
+    const { r, g, b, a } = primitive.colors[idx]!;
+    colorsOut[i++] = SRGBToLinear(r);
+    colorsOut[i++] = SRGBToLinear(g);
+    colorsOut[i++] = SRGBToLinear(b);
+    colorsOut[i++] = a;
+  }
+  const isLoop = primitive.type === LineType.LINE_LOOP;
+  if (isLoop && colorsOut.length > 4) {
+    assert(colorsOut.length > i + 4, "Colorbuffer does not have enough space for loop");
+    colorsOut[i++] = colorsOut[0]!;
+    colorsOut[i++] = colorsOut[1]!;
+    colorsOut[i++] = colorsOut[2]!;
+    colorsOut[i++] = colorsOut[3]!;
   }
   return colorsOut;
 }
