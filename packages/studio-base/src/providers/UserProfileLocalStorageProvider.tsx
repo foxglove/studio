@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { merge } from "lodash";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { useShallowMemo } from "@foxglove/hooks";
 import {
@@ -20,10 +20,16 @@ const LOCAL_STORAGE_KEY = "studio.profile-data";
 export default function UserProfileLocalStorageProvider({
   children,
 }: React.PropsWithChildren<unknown>): JSX.Element {
+  // Track profile version and reset getUserProfile callback so
+  // clients are notified of changes.
+  const [profileVersion, setProfileVersion] = useState(0);
+
   const getUserProfile = useCallback(async (): Promise<UserProfile> => {
+    // Force a dependency on profileVersion here so a new callback is generated.
+    void profileVersion;
     const item = localStorage.getItem(LOCAL_STORAGE_KEY);
     return item != undefined ? (JSON.parse(item) as UserProfile) : DEFAULT_PROFILE;
-  }, []);
+  }, [profileVersion]);
 
   const setUserProfile = useCallback(
     async (value: UserProfile | ((prev: UserProfile) => UserProfile)) => {
@@ -31,6 +37,7 @@ export default function UserProfileLocalStorageProvider({
       const prev = item != undefined ? (JSON.parse(item) as UserProfile) : DEFAULT_PROFILE;
       const newProfile = typeof value === "function" ? value(prev) : merge(prev, value);
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newProfile) ?? "");
+      setProfileVersion((old) => old + 1);
     },
     [],
   );
