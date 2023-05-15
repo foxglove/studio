@@ -42,7 +42,6 @@ export class RenderableLines extends RenderablePrimitive {
       }
       lineGroup.setPrimitive(primitive);
       lineGroup.setSettings(this.userData.settings);
-      lineGroup.setCanvasSize(this.renderer.input.canvasSize);
 
       lineGroup.update();
 
@@ -99,9 +98,6 @@ class LineGroup extends THREE.Group {
   #transparent: boolean = true;
   #line: LineSegments2 | Line2 | undefined;
 
-  #canvasSizeChanged: boolean = true;
-  #canvasSize: THREE.Vector2;
-
   #primitiveChanged: boolean = true;
   #primitive?: LinePrimitive;
 
@@ -112,7 +108,6 @@ class LineGroup extends THREE.Group {
   public constructor(primitive: LinePrimitive, canvasSize: THREE.Vector2) {
     super();
 
-    this.#canvasSize = canvasSize;
     this.#material = new LineMaterial({
       worldUnits: !primitive.scale_invariant,
       linewidth: primitive.thickness,
@@ -134,7 +129,6 @@ class LineGroup extends THREE.Group {
       uniforms: {
         objectId: { value: [NaN, NaN, NaN, NaN] },
         linewidth: { value: primitive.thickness },
-        resolution: { value: canvasSize },
         dashOffset: { value: 0 },
         dashScale: { value: 1 },
         dashSize: { value: 1 },
@@ -145,19 +139,13 @@ class LineGroup extends THREE.Group {
   }
 
   public setSettings(settings: LayerSettingsEntity): void {
-    this.#colorChanged = this.#color !== settings.color;
+    this.#colorChanged ||= this.#color !== settings.color;
     this.#color = settings.color;
   }
 
   public setPrimitive(primitive: LinePrimitive): void {
-    this.#primitiveChanged = this.#primitive !== primitive;
+    this.#primitiveChanged ||= this.#primitive !== primitive;
     this.#primitive = primitive;
-  }
-
-  public setCanvasSize(canvasSize: THREE.Vector2): void {
-    this.#canvasSizeChanged =
-      this.#canvasSize.x !== canvasSize.x || this.#canvasSize.y !== canvasSize.y;
-    this.#canvasSize = canvasSize;
   }
 
   public update(): void {
@@ -207,6 +195,10 @@ class LineGroup extends THREE.Group {
       assert(this.#positionBuffer, "Position buffer must be initialized");
       assert(this.#geometry, "Geometry must be initialized");
 
+      // Set an explicit instance count, because three.js ignores attribute offsets when
+      // automatically computing the instance count (and results differ across browsers because they
+      // depend on the key iteration order, since three.js derives the count from the first
+      // instanced interleaved attribute it sees).
       this.#geometry.instanceCount = getLineInstanceCount({
         pointsLength,
         isSegments,
@@ -214,6 +206,8 @@ class LineGroup extends THREE.Group {
       });
 
       getPositions(this.#positionBuffer, this.#primitive);
+      // setPosition requires the position array to be >= 6 length or else it will error
+      // we skip primitives with empty points before calling this function
       this.#geometry.setPositions(this.#positionBuffer);
     }
 
@@ -253,11 +247,10 @@ class LineGroup extends THREE.Group {
       }
     }
 
-    if (this.#canvasSizeChanged || this.#colorChanged || this.#primitiveChanged) {
+    if (this.#colorChanged || this.#primitiveChanged) {
       this.#updateMaterial();
     }
     this.#primitiveChanged = false;
-    this.#canvasSizeChanged = false;
     this.#colorChanged = false;
   }
 
@@ -266,13 +259,11 @@ class LineGroup extends THREE.Group {
       return;
     }
     this.#material.linewidth = this.#primitive.thickness;
-    this.#material.resolution.copy(this.#canvasSize);
     this.#material.transparent = this.#transparent;
 
     this.#material.needsUpdate = true;
 
     this.#pickingMaterial.uniforms.linewidth!.value = this.#primitive.thickness;
-    this.#pickingMaterial.uniforms.resolution!.value = this.#canvasSize;
     const scaleInvariantDisabled = this.#pickingMaterial.defines.WORLD_UNITS === "";
     if (scaleInvariantDisabled && this.#primitive.scale_invariant) {
       this.#pickingMaterial.defines.WORLD_UNITS = "";
@@ -284,7 +275,7 @@ class LineGroup extends THREE.Group {
   }
 
   public dispose(): void {
-    this.remove(this.#line!);
+    this.#line?.removeFromParent();
     this.#geometry?.dispose();
     this.#material.dispose();
     this.#pickingMaterial.dispose();
@@ -373,5 +364,11 @@ function getLineInstanceCount({
   isLoop: boolean;
   isSegments: boolean;
 }) {
-  return isSegments ? pointsLength >>> 1 : isLoop ? pointsLength : Math.max(pointsLength - 1, 0);
+  if (isSegments) {
+    return pointsLength >>> 1;
+  }
+  if (isLoop) {
+    return pointsLength;
+  }
+  return Math.max(pointsLength - 1, 0);
 }
