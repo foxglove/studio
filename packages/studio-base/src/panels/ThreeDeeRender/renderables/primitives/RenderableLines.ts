@@ -21,7 +21,7 @@ import { LayerSettingsEntity } from "../../settings";
 const tempRgba = makeRgba();
 
 export class RenderableLines extends RenderablePrimitive {
-  #lines: LineGroup[] = [];
+  #lines: LinePrimitiveRenderable[] = [];
   public constructor(renderer: IRenderer) {
     super("", renderer);
   }
@@ -35,28 +35,28 @@ export class RenderableLines extends RenderablePrimitive {
       if (primitive.points.length === 0) {
         continue;
       }
-      let lineGroup = this.#lines[idx];
-      if (lineGroup == undefined) {
-        lineGroup = new LineGroup(primitive, this.renderer.input.canvasSize);
-        this.#lines.push(lineGroup);
+      let lineRenderable = this.#lines[idx];
+      if (lineRenderable == undefined) {
+        lineRenderable = new LinePrimitiveRenderable(primitive, this.renderer.input.canvasSize);
+        this.#lines.push(lineRenderable);
       }
-      lineGroup.setPrimitive(primitive);
-      lineGroup.setSettings(this.userData.settings);
+      lineRenderable.setPrimitive(primitive);
+      lineRenderable.setSettings(this.userData.settings);
 
-      lineGroup.update();
+      lineRenderable.update();
 
-      lineGroup.position.set(
+      lineRenderable.position.set(
         primitive.pose.position.x,
         primitive.pose.position.y,
         primitive.pose.position.z,
       );
-      lineGroup.quaternion.set(
+      lineRenderable.quaternion.set(
         primitive.pose.orientation.x,
         primitive.pose.orientation.y,
         primitive.pose.orientation.z,
         primitive.pose.orientation.w,
       );
-      this.add(lineGroup);
+      this.add(lineRenderable);
     }
   }
 
@@ -88,7 +88,7 @@ export class RenderableLines extends RenderablePrimitive {
   }
 }
 
-class LineGroup extends THREE.Group {
+class LinePrimitiveRenderable extends THREE.Object3D {
   #geometry: LineSegmentsGeometry | LineGeometry | undefined;
   #positionBuffer: Float32Array | undefined;
   #colorBuffer: Float32Array | undefined;
