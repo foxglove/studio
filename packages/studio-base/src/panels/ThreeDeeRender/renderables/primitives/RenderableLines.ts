@@ -159,13 +159,21 @@ class LinePrimitiveRenderable extends THREE.Object3D {
     this.visible = true;
     const isLoop = this.#primitive.type === LineType.LINE_LOOP;
     const isSegments = this.#primitive.type === LineType.LINE_LIST;
+    const useIndices = this.#primitive.indices.length > 0;
+    const indicesLength = isLoop
+      ? this.#primitive.indices.length + 1
+      : this.#primitive.indices.length;
     const pointsLength = isLoop ? this.#primitive.points.length + 1 : this.#primitive.points.length;
+
+    const numPointsForRendering = useIndices ? indicesLength : pointsLength;
+    const necessaryPositionBufferSize = numPointsForRendering * 3;
+
     if (this.#primitiveChanged) {
       const geometryNeedsRecreated =
         this.#geometry == undefined ||
         this.#lineType !== this.#primitive.type ||
         !this.#positionBuffer ||
-        this.#positionBuffer.length < pointsLength;
+        this.#positionBuffer.length < necessaryPositionBufferSize;
       if (geometryNeedsRecreated) {
         if (this.#geometry != undefined) {
           this.#geometry.dispose();
@@ -182,13 +190,13 @@ class LinePrimitiveRenderable extends THREE.Object3D {
           case LineType.LINE_LOOP: {
             const lineGeometry = new LineGeometry(); // separate variable to work around typescript refinement
             this.#geometry = lineGeometry;
-            this.#positionBuffer = new Float32Array(pointsLength * 3);
+            this.#positionBuffer = new Float32Array(necessaryPositionBufferSize);
             this.#line = new Line2(lineGeometry, this.#material);
             break;
           }
           case LineType.LINE_LIST: {
             this.#geometry = new LineSegmentsGeometry();
-            this.#positionBuffer = new Float32Array(pointsLength * 3);
+            this.#positionBuffer = new Float32Array(necessaryPositionBufferSize);
             this.#line = new LineSegments2(this.#geometry, this.#material);
             break;
           }
@@ -205,16 +213,20 @@ class LinePrimitiveRenderable extends THREE.Object3D {
       // automatically computing the instance count (and results differ across browsers because they
       // depend on the key iteration order, since three.js derives the count from the first
       // instanced interleaved attribute it sees).
-      this.#geometry.instanceCount = getLineInstanceCount({
-        pointsLength,
-        isSegments,
-        isLoop,
-      });
+      // this represent the number of _lines_ to render
+      this.#geometry.instanceCount = isSegments
+        ? numPointsForRendering >>> 1
+        : isLoop
+        ? numPointsForRendering
+        : Math.max(numPointsForRendering - 1, 0);
 
-      getPositions(this.#positionBuffer, this.#primitive);
+      const positions = useIndices
+        ? serializePositionValuesWithIndices(this.#positionBuffer, this.#primitive)
+        : serializePositionValues(this.#positionBuffer, this.#primitive);
+
       // setPosition requires the position array to be >= 6 length or else it will error
       // we skip primitives with empty points before calling this function
-      this.#geometry.setPositions(this.#positionBuffer);
+      this.#geometry.setPositions(positions);
     }
 
     if (this.#colorChanged || this.#primitiveChanged) {
@@ -226,20 +238,11 @@ class LinePrimitiveRenderable extends THREE.Object3D {
 
       if (singleColor == undefined) {
         assert(this.#geometry, "Line Group geometry must exist");
-        const useIndices = this.#primitive.indices.length > 0;
 
-        let newPointsColorBufferLength = useIndices
-          ? this.#primitive.indices.length * 4
-          : this.#primitive.colors.length * 4;
-        if (isLoop) {
-          newPointsColorBufferLength += 4;
-        }
+        const necessaryColorBufferSize = numPointsForRendering * 4;
 
-        if (
-          this.#colorBuffer == undefined ||
-          this.#colorBuffer.length < newPointsColorBufferLength
-        ) {
-          this.#colorBuffer = new Float32Array(newPointsColorBufferLength);
+        if (this.#colorBuffer == undefined || this.#colorBuffer.length < necessaryColorBufferSize) {
+          this.#colorBuffer = new Float32Array(necessaryColorBufferSize);
         }
         this.#material.vertexColors = true;
         this.#material.opacity = 1;
@@ -304,41 +307,57 @@ class LinePrimitiveRenderable extends THREE.Object3D {
   }
 }
 
-/**
- * Converts (x,y,z) values specified in `primitive.points` (and possibly `primitive.indices`) into
- * vertices for LineGeometry or LineSegmentsGeometry.
- */
-function getPositions(positionsOut: Float32Array, primitive: LinePrimitive): Float32Array {
+function serializePositionValues(
+  positionsOut: Float32Array,
+  primitive: LinePrimitive,
+): Float32Array {
+  let i = 0;
+  assert(
+    positionsOut.length >= primitive.points.length * 3,
+    `positionsOut must have a length (${positionsOut.length})  >= to primitive.points.length (${primitive.points.length}) * 3`,
+  );
+  for (const { x, y, z } of primitive.points) {
+    positionsOut[i++] = x;
+    positionsOut[i++] = y;
+    positionsOut[i++] = z;
+  }
+
   const isLoop = primitive.type === LineType.LINE_LOOP;
-  const indices = primitive.indices;
-  if (indices.length > 0) {
-    let i = 0;
-    for (const idx of indices) {
-      const { x, y, z } = primitive.points[idx]!;
-      positionsOut[i++] = x;
-      positionsOut[i++] = y;
-      positionsOut[i++] = z;
-    }
-  } else {
-    let i = 0;
-    for (const { x, y, z } of primitive.points) {
-      positionsOut[i++] = x;
-      positionsOut[i++] = y;
-      positionsOut[i++] = z;
-    }
-  }
   if (isLoop && positionsOut.length > 3) {
-    positionsOut[positionsOut.length - 3] = positionsOut[0]!;
-    positionsOut[positionsOut.length - 2] = positionsOut[1]!;
-    positionsOut[positionsOut.length - 1] = positionsOut[2]!;
+    loopArrayAtIndex(positionsOut, i, 3);
   }
+  return positionsOut;
+}
+
+function serializePositionValuesWithIndices(
+  positionsOut: Float32Array,
+  primitive: LinePrimitive,
+): Float32Array {
+  const indices = primitive.indices;
+  assert(
+    positionsOut.length >= primitive.indices.length * 3,
+    `positionsOut must have a length (${positionsOut.length})  >= to primitive.indices.length (${primitive.indices.length}) * 3`,
+  );
+  let i = 0;
+  for (const idx of indices) {
+    const { x, y, z } = primitive.points[idx]!;
+    positionsOut[i++] = x;
+    positionsOut[i++] = y;
+    positionsOut[i++] = z;
+  }
+
+  const isLoop = primitive.type === LineType.LINE_LOOP;
+  if (isLoop && positionsOut.length > 3) {
+    loopArrayAtIndex(positionsOut, i, 3);
+  }
+
   return positionsOut;
 }
 
 function serializeColorValues(colorsOut: Float32Array, primitive: LinePrimitive): Float32Array {
   assert(
-    colorsOut.length > primitive.colors.length * 4,
-    "Colorbuffer must have a length larger than the number of indices * 4",
+    colorsOut.length >= primitive.colors.length * 4,
+    `colorsOut buffer must have a length (${colorsOut.length}) >= to the primitive.colors.length (${primitive.colors.length}) * 4`,
   );
   assert(primitive.colors.length > 0, "invariant: expected not to be using vertex colors");
   let i = 0;
@@ -348,13 +367,10 @@ function serializeColorValues(colorsOut: Float32Array, primitive: LinePrimitive)
     colorsOut[i++] = SRGBToLinear(b);
     colorsOut[i++] = a;
   }
+
   const isLoop = primitive.type === LineType.LINE_LOOP;
   if (isLoop && colorsOut.length > 4) {
-    assert(colorsOut.length > i + 4, "Colorbuffer does not have enough space for loop");
-    colorsOut[i++] = colorsOut[0]!;
-    colorsOut[i++] = colorsOut[1]!;
-    colorsOut[i++] = colorsOut[2]!;
-    colorsOut[i++] = colorsOut[3]!;
+    loopArrayAtIndex(colorsOut, i, 4);
   }
   return colorsOut;
 }
@@ -366,8 +382,8 @@ function serializeColorValuesWithIndices(
   const indices = primitive.indices;
   assert(indices.length > 0, "Indices must have length");
   assert(
-    colorsOut.length > indices.length * 4,
-    "Colorbuffer must have a length larger than the number of indices * 4",
+    colorsOut.length >= indices.length * 4,
+    `colorsOut buffer must have a length (${colorsOut.length}) >= to primitive.indices.length (${primitive.indices.length}) * 4`,
   );
   assert(primitive.colors.length > 0, "Invariant: expected not to be using vertex colors");
 
@@ -381,29 +397,21 @@ function serializeColorValuesWithIndices(
   }
   const isLoop = primitive.type === LineType.LINE_LOOP;
   if (isLoop && colorsOut.length > 4) {
-    assert(colorsOut.length > i + 4, "Colorbuffer does not have enough space for loop");
-    colorsOut[i++] = colorsOut[0]!;
-    colorsOut[i++] = colorsOut[1]!;
-    colorsOut[i++] = colorsOut[2]!;
-    colorsOut[i++] = colorsOut[3]!;
+    loopArrayAtIndex(colorsOut, i, 4);
   }
   return colorsOut;
 }
 
-function getLineInstanceCount({
-  pointsLength,
-  isLoop,
-  isSegments,
-}: {
-  pointsLength: number;
-  isLoop: boolean;
-  isSegments: boolean;
-}) {
-  if (isSegments) {
-    return pointsLength >>> 1;
+/** Add numItems elements from the beginning of the array onto the end at the specified index (in place)*/
+function loopArrayAtIndex(arrayOut: Float32Array, index: number, numItems: number): Float32Array {
+  assert(
+    arrayOut.length >= numItems + index,
+    `arrayOut buffer (length: ${arrayOut.length})does not have enough space (required: ${
+      numItems + index
+    }) for loop `,
+  );
+  for (let i = 0; i < numItems; i++) {
+    arrayOut[index + i] = arrayOut[i]!;
   }
-  if (isLoop) {
-    return pointsLength;
-  }
-  return Math.max(pointsLength - 1, 0);
+  return arrayOut;
 }
