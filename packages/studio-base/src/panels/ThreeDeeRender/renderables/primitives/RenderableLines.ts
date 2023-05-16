@@ -160,13 +160,11 @@ class LinePrimitiveRenderable extends THREE.Object3D {
     const isLoop = this.#primitive.type === LineType.LINE_LOOP;
     const isSegments = this.#primitive.type === LineType.LINE_LIST;
     const useIndices = this.#primitive.indices.length > 0;
-    const indicesLength = isLoop
-      ? this.#primitive.indices.length + 1
-      : this.#primitive.indices.length;
-    const pointsLength = isLoop ? this.#primitive.points.length + 1 : this.#primitive.points.length;
 
-    const numPointsForRendering = useIndices ? indicesLength : pointsLength;
-    const necessaryPositionBufferSize = numPointsForRendering * 3;
+    const numVertices =
+      (useIndices ? this.#primitive.indices.length : this.#primitive.points.length) +
+      (isLoop ? 1 : 0);
+    const necessaryPositionBufferSize = numVertices * 3;
 
     if (this.#primitiveChanged) {
       const geometryNeedsRecreated =
@@ -215,18 +213,20 @@ class LinePrimitiveRenderable extends THREE.Object3D {
       // instanced interleaved attribute it sees).
       // this represent the number of _lines_ to render
       this.#geometry.instanceCount = isSegments
-        ? numPointsForRendering >>> 1
+        ? numVertices >>> 1
         : isLoop
-        ? numPointsForRendering
-        : Math.max(numPointsForRendering - 1, 0);
+        ? numVertices
+        : Math.max(numVertices - 1, 0);
 
-      const positions = useIndices
-        ? serializePositionValuesWithIndices(this.#positionBuffer, this.#primitive)
-        : serializePositionValues(this.#positionBuffer, this.#primitive);
+      if (useIndices) {
+        serializePositionsWithIndices(this.#positionBuffer, this.#primitive);
+      } else {
+        serializePositions(this.#positionBuffer, this.#primitive);
+      }
 
       // setPosition requires the position array to be >= 6 length or else it will error
       // we skip primitives with empty points before calling this function
-      this.#geometry.setPositions(positions);
+      this.#geometry.setPositions(this.#positionBuffer);
     }
 
     if (this.#colorChanged || this.#primitiveChanged) {
@@ -239,7 +239,7 @@ class LinePrimitiveRenderable extends THREE.Object3D {
       if (singleColor == undefined) {
         assert(this.#geometry, "Line Group geometry must exist");
 
-        const necessaryColorBufferSize = numPointsForRendering * 4;
+        const necessaryColorBufferSize = numVertices * 4;
 
         if (this.#colorBuffer == undefined || this.#colorBuffer.length < necessaryColorBufferSize) {
           this.#colorBuffer = new Float32Array(necessaryColorBufferSize);
@@ -247,11 +247,13 @@ class LinePrimitiveRenderable extends THREE.Object3D {
         this.#material.vertexColors = true;
         this.#material.opacity = 1;
         this.#material.uniforms.opacity!.value = 1;
-        const colors = useIndices
-          ? serializeColorValuesWithIndices(this.#colorBuffer, this.#primitive)
-          : serializeColorValues(this.#colorBuffer, this.#primitive);
+        if (useIndices) {
+          serializeColorsWithIndices(this.#colorBuffer, this.#primitive);
+        } else {
+          serializeColors(this.#colorBuffer, this.#primitive);
+        }
         const instanceColorBuffer = new THREE.InstancedInterleavedBuffer(
-          colors,
+          this.#colorBuffer,
           isSegments ? 8 : 4,
           1,
         );
@@ -270,11 +272,10 @@ class LinePrimitiveRenderable extends THREE.Object3D {
         // material.opacity = singleColor.a; // does not work for some reason
         this.#material.uniforms.opacity!.value = singleColor.a;
       }
-    }
 
-    if (this.#colorChanged || this.#primitiveChanged) {
       this.#updateMaterial();
     }
+
     this.#primitiveChanged = false;
     this.#colorChanged = false;
   }
@@ -307,10 +308,7 @@ class LinePrimitiveRenderable extends THREE.Object3D {
   }
 }
 
-function serializePositionValues(
-  positionsOut: Float32Array,
-  primitive: LinePrimitive,
-): Float32Array {
+function serializePositions(positionsOut: Float32Array, primitive: LinePrimitive): void {
   let i = 0;
   assert(
     positionsOut.length >= primitive.points.length * 3,
@@ -324,15 +322,11 @@ function serializePositionValues(
 
   const isLoop = primitive.type === LineType.LINE_LOOP;
   if (isLoop && positionsOut.length > 3) {
-    loopArrayAtIndex(positionsOut, i, 3);
+    positionsOut.copyWithin(i, 0, 3);
   }
-  return positionsOut;
 }
 
-function serializePositionValuesWithIndices(
-  positionsOut: Float32Array,
-  primitive: LinePrimitive,
-): Float32Array {
+function serializePositionsWithIndices(positionsOut: Float32Array, primitive: LinePrimitive): void {
   const indices = primitive.indices;
   assert(
     positionsOut.length >= primitive.indices.length * 3,
@@ -348,13 +342,11 @@ function serializePositionValuesWithIndices(
 
   const isLoop = primitive.type === LineType.LINE_LOOP;
   if (isLoop && positionsOut.length > 3) {
-    loopArrayAtIndex(positionsOut, i, 3);
+    positionsOut.copyWithin(i, 0, 3);
   }
-
-  return positionsOut;
 }
 
-function serializeColorValues(colorsOut: Float32Array, primitive: LinePrimitive): Float32Array {
+function serializeColors(colorsOut: Float32Array, primitive: LinePrimitive): void {
   assert(
     colorsOut.length >= primitive.colors.length * 4,
     `colorsOut buffer must have a length (${colorsOut.length}) >= to the primitive.colors.length (${primitive.colors.length}) * 4`,
@@ -370,15 +362,11 @@ function serializeColorValues(colorsOut: Float32Array, primitive: LinePrimitive)
 
   const isLoop = primitive.type === LineType.LINE_LOOP;
   if (isLoop && colorsOut.length > 4) {
-    loopArrayAtIndex(colorsOut, i, 4);
+    colorsOut.copyWithin(i, 0, 4);
   }
-  return colorsOut;
 }
 
-function serializeColorValuesWithIndices(
-  colorsOut: Float32Array,
-  primitive: LinePrimitive,
-): Float32Array {
+function serializeColorsWithIndices(colorsOut: Float32Array, primitive: LinePrimitive): void {
   const indices = primitive.indices;
   assert(indices.length > 0, "Indices must have length");
   assert(
@@ -397,21 +385,6 @@ function serializeColorValuesWithIndices(
   }
   const isLoop = primitive.type === LineType.LINE_LOOP;
   if (isLoop && colorsOut.length > 4) {
-    loopArrayAtIndex(colorsOut, i, 4);
+    colorsOut.copyWithin(i, 0, 4);
   }
-  return colorsOut;
-}
-
-/** Add numItems elements from the beginning of the array onto the end at the specified index (in place)*/
-function loopArrayAtIndex(arrayOut: Float32Array, index: number, numItems: number): Float32Array {
-  assert(
-    arrayOut.length >= numItems + index,
-    `arrayOut buffer (length: ${arrayOut.length})does not have enough space (required: ${
-      numItems + index
-    }) for loop `,
-  );
-  for (let i = 0; i < numItems; i++) {
-    arrayOut[index + i] = arrayOut[i]!;
-  }
-  return arrayOut;
 }
