@@ -3,8 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { StoryObj } from "@storybook/react";
-import { screen } from "@storybook/testing-library";
-import { fireEvent } from "@storybook/testing-library";
+import { fireEvent, screen } from "@storybook/testing-library";
 
 import {
   ShareJsonModal,
