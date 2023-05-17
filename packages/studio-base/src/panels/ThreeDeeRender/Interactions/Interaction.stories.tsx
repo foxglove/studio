@@ -241,6 +241,7 @@ export default {
   title: "panels/ThreeDeeRender/Interactions/Interaction",
   parameters: {
     chromatic: { viewport: { width: 1001, height: 1101 } },
+    colorScheme: "both-column",
   },
   excludeStories: ["POINT_CLOUD_MESSAGE", "POINT_CLOUD_WITH_ADDITIONAL_FIELDS"],
 };
