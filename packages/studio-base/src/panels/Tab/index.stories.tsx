@@ -393,7 +393,7 @@ export const PreventDraggingSelectedParentTabIntoChildTabPanel: StoryObj = {
   name: "prevent dragging selected parent tab into child tab panel",
   play: async () => {
     await tick();
-    const tabs = await screen.findAllByTestId("toolbar-tab");
+    const tabs = document.querySelectorAll("[draggable=true]");
     fireEvent.dragStart(tabs[0]!);
     fireEvent.dragOver(tabs[2]!);
   },
