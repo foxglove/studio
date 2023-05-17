@@ -11,17 +11,17 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { styled as muiStyled } from "@mui/material";
 import fuzzySort from "fuzzysort";
+import { withStyles } from "tss-react/mui";
 
-const STextHighlight = muiStyled("span")(
-  ({ theme }) => `
-  .TextHighlight-highlight {
-    color: ${theme.palette.primary.main};
-    font-weight: bold;
-  }
-`,
-);
+const STextHighlight = withStyles("span", (theme) => ({
+  root: {
+    ".TextHighlight-highlight": {
+      color: theme.palette.primary.main,
+      fontWeight: "bold",
+    },
+  },
+}));
 
 type Props = {
   targetStr: string;
