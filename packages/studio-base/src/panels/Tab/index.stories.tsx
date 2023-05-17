@@ -12,7 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { StoryObj, StoryFn } from "@storybook/react";
-import { fireEvent, screen, within } from "@storybook/testing-library";
+import { fireEvent, within } from "@storybook/testing-library";
 
 import Panel from "@foxglove/studio-base/components/Panel";
 import PanelLayout from "@foxglove/studio-base/components/PanelLayout";
@@ -28,7 +28,6 @@ import LayoutManager from "@foxglove/studio-base/services/LayoutManager/LayoutMa
 import MockLayoutStorage from "@foxglove/studio-base/services/MockLayoutStorage";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 import { ExpectedResult } from "@foxglove/studio-base/stories/storyHelpers";
-import tick from "@foxglove/studio-base/util/tick";
 
 import Tab from "./index";
 
@@ -147,9 +146,10 @@ export const PickingAPanelFromThePanelListCreatesANewTabIfThereAreNone: StoryObj
     </PanelSetup>
   ),
   name: "picking a panel from the panel list creates a new tab if there are none",
-  play: async () => {
-    await tick();
-    const panel = await screen.findAllByTestId("panel-menu-item Some Panel");
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    const panel = await canvas.findAllByTestId("panel-menu-item Some Panel");
     fireEvent.click(panel[0]!);
   },
 };
@@ -169,9 +169,10 @@ export const PickingAPanelFromThePanelListUpdatesTheTabsLayout: StoryObj = {
     </PanelSetup>
   ),
   name: "picking a panel from the panel list updates the tab's layout",
-  play: async () => {
-    await tick();
-    const panel = await screen.findAllByTestId("panel-menu-item Some Panel");
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    const panel = await canvas.findAllByTestId("panel-menu-item Some Panel");
     fireEvent.click(panel[0]!);
   },
 };
@@ -191,10 +192,10 @@ export const DraggingAPanelFromThePanelListUpdatesTheTabsLayout: StoryObj = {
     </PanelSetup>
   ),
   name: "dragging a panel from the panel list updates the tab's layout",
-  play: async () => {
-    await tick();
-    const imageItem = await screen.findAllByTestId("panel-menu-item Some Panel");
-    const panel = await screen.findAllByTestId("empty-drop-target");
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const imageItem = await canvas.findAllByTestId("panel-menu-item Some Panel");
+    const panel = await canvas.findAllByTestId("empty-drop-target");
 
     dragAndDrop(imageItem[0]!, panel[0]!);
   },
@@ -218,10 +219,10 @@ export const DraggingAPanelFromThePanelListCreatesANewTabIfThereAreNone: StoryOb
     </PanelSetup>
   ),
   name: "dragging a panel from the panel list creates a new tab if there are none",
-  play: async () => {
-    await tick();
-    const imageItem = await screen.findAllByTestId("panel-menu-item Some Panel");
-    const panel = await screen.findAllByTestId("empty-drop-target");
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const imageItem = await canvas.findAllByTestId("panel-menu-item Some Panel");
+    const panel = await canvas.findAllByTestId("empty-drop-target");
 
     dragAndDrop(imageItem[0]!, panel[0]!);
   },
@@ -285,8 +286,9 @@ export const AddTab: StoryObj = {
     </PanelSetup>
   ),
   name: "add tab",
-  play: async () => {
-    fireEvent.click(await screen.findByTestId("add-tab"));
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    fireEvent.click(await canvas.findByTestId("add-tab"));
   },
 };
 
@@ -306,8 +308,9 @@ export const RemoveTab: StoryObj = {
     </PanelSetup>
   ),
   name: "remove tab",
-  play: async () => {
-    fireEvent.click(await screen.findByTestId("tab-icon"));
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    fireEvent.click(await canvas.findByTestId("tab-icon"));
   },
 };
 
@@ -328,9 +331,9 @@ export const ReorderTabsWithinTabPanelByDroppingOnTab: StoryObj = {
     </PanelSetup>
   ),
   name: "reorder tabs within Tab panel by dropping on tab",
-  play: async () => {
-    await tick();
-    const tabs = await screen.findAllByTestId("toolbar-tab");
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const tabs = await canvas.findAllByTestId("toolbar-tab");
 
     // Drag and drop the first tab onto the third tab
     dragAndDrop(tabs[0]!, tabs[2]!);
@@ -362,9 +365,9 @@ export const MoveTabToDifferentTabPanel: StoryObj = {
     </PanelSetup>
   ),
   name: "move tab to different Tab panel",
-  play: async () => {
-    await tick();
-    const tabs = await screen.findAllByTestId("toolbar-tab");
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const tabs = await canvas.findAllByTestId("toolbar-tab");
     dragAndDrop(tabs[0]!, tabs[2]!);
   },
 };
@@ -391,9 +394,10 @@ export const PreventDraggingSelectedParentTabIntoChildTabPanel: StoryObj = {
     </PanelSetup>
   ),
   name: "prevent dragging selected parent tab into child tab panel",
-  play: async () => {
-    await tick();
-    const tabs = document.querySelectorAll("[draggable=true]");
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    const tabs = await canvas.findAllByTestId("toolbar-tab");
     fireEvent.dragStart(tabs[0]!);
     fireEvent.dragOver(tabs[2]!);
   },
@@ -410,9 +414,10 @@ export const DraggingAndDroppingANestedTabPanelDoesNotRemoveAnyTabs: StoryObj = 
     </PanelSetup>
   ),
   name: "dragging and dropping a nested tab panel does not remove any tabs",
-  play: async () => {
-    const tabLeft = await screen.findByTestId("panel-mouseenter-container Tab!Left");
-    const tabRightInner = await screen.findByTestId("panel-mouseenter-container Tab!RightInner");
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const tabLeft = await canvas.findByTestId("panel-mouseenter-container Tab!Left");
+    const tabRightInner = await canvas.findByTestId("panel-mouseenter-container Tab!RightInner");
 
     fireEvent.click(await within(tabLeft).findByTestId("add-tab"));
     const dragHandle = await within(tabRightInner).findAllByTestId("panel-menu");
@@ -435,9 +440,10 @@ export const SupportsDraggingBetweenTabsAnywhereInTheLayout: StoryObj = {
     );
   },
   name: "supports dragging between tabs anywhere in the layout",
-  play: async () => {
-    const sample1 = await screen.findByTestId("panel-mouseenter-container Sample1");
-    const targetTab = await screen.findByTestId("panel-mouseenter-container Tab!b");
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const sample1 = await canvas.findByTestId("panel-mouseenter-container Sample1");
+    const targetTab = await canvas.findByTestId("panel-mouseenter-container Tab!b");
 
     const dragHandle = await within(sample1).findAllByTestId("panel-menu");
     const target = targetTab.querySelector(".drop-target.left");
