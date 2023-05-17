@@ -394,12 +394,16 @@ export const PreventDraggingSelectedParentTabIntoChildTabPanel: StoryObj = {
     const canvas = within(canvasElement);
     const tabs = await canvas.findAllByTestId("toolbar-tab");
 
+    fireEvent.dragStart(tabs[0]!);
+
     try {
-      fireEvent.dragStart(tabs[0]!);
       fireEvent.dragOver(tabs[2]!);
     } catch (error) {
-      // supress the error to prevent Storybooks from failing
-      return;
+      if (error.message === "ignoredException") {
+        // supress this error specifically as it is the expected behavior
+        return;
+      }
+      throw error;
     }
   },
 };
