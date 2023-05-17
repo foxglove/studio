@@ -116,6 +116,22 @@ export const mainConfig =
       <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png" />
       <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png" />
       <title>Foxglove Studio</title>
+      <style type="text/css" id="loading-styles">
+        body {
+          margin: 0;
+        }
+        #root {
+          height: 100vh;
+          background-color: #15151a;
+          color: #e1e1e4;
+        }
+        @media (prefers-color-scheme: light) {
+          #root {
+            background-color: #f4f4f5;
+            color: #393939;
+          }
+        }
+      </style>
     </head>
     <script>
       global = globalThis;
