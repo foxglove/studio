@@ -21,7 +21,7 @@ import {
   MosaicWindow,
   MosaicWithoutDragDropContext,
 } from "react-mosaic-component";
-import { withStyles } from "tss-react/mui";
+import { makeStyles } from "tss-react/mui";
 
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import { EmptyPanelLayout } from "@foxglove/studio-base/components/EmptyPanelLayout";
@@ -60,8 +60,8 @@ type Props = {
 // place the dropped item as a sibling of the Tab), as well as the "root drop targets" inside the
 // nested mosaic (that would place the dropped item as a direct child of the Tab). Makes it easier
 // to drop panels into a tab layout.
-const HideTopLevelDropTargets = withStyles("div", {
-  root: {
+const useStyles = makeStyles()({
+  hideTopLevelDropTargets: {
     margin: 0,
 
     ".mosaic-root + .drop-target-container": {
@@ -77,6 +77,7 @@ const HideTopLevelDropTargets = withStyles("div", {
 // drop target. This allows a panel to know which mosaic it was dropped in regardless of nesting
 // level.
 function TabMosaicWrapper({ tabId, children }: PropsWithChildren<{ tabId?: string }>) {
+  const { classes, cx } = useStyles();
   const [, drop] = useDrop<unknown, MosaicDropResult, never>({
     accept: MosaicDragType.WINDOW,
     drop: (_item, monitor) => {
@@ -90,9 +91,9 @@ function TabMosaicWrapper({ tabId, children }: PropsWithChildren<{ tabId?: strin
     },
   });
   return (
-    <HideTopLevelDropTargets className="mosaic-tile" ref={drop}>
+    <div className={cx(classes.hideTopLevelDropTargets, "mosaic-tile")} ref={drop}>
       {children}
-    </HideTopLevelDropTargets>
+    </div>
   );
 }
 
