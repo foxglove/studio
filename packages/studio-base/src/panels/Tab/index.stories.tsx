@@ -402,6 +402,7 @@ export const PreventDraggingSelectedParentTabIntoChildTabPanel: StoryObj = {
       fireEvent.dragStart(tabs[0]!);
       fireEvent.dragOver(tabs[2]!);
     } catch (error) {
+      // supress the error to prevent Storybooks from failing
       return;
     }
   },
