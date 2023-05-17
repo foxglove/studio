@@ -31,25 +31,21 @@ import { ExpectedResult } from "@foxglove/studio-base/stories/storyHelpers";
 
 import Tab from "./index";
 
-const SamplePanel1 = () => {
-  return (
-    <div>
-      <PanelToolbar />
-      <div>Sample Panel 1</div>
-    </div>
-  );
-};
+const SamplePanel1 = () => (
+  <div>
+    <PanelToolbar />
+    <div>Sample Panel 1</div>
+  </div>
+);
 SamplePanel1.panelType = "Sample1";
 SamplePanel1.defaultConfig = {};
 
-const SamplePanel2 = () => {
-  return (
-    <div>
-      <PanelToolbar />
-      <div>Sample Panel 2</div>
-    </div>
-  );
-};
+const SamplePanel2 = () => (
+  <div>
+    <PanelToolbar />
+    <div>Sample Panel 2</div>
+  </div>
+);
 SamplePanel2.panelType = "Sample2";
 SamplePanel2.defaultConfig = {};
 
@@ -433,17 +429,15 @@ export const DraggingAndDroppingANestedTabPanelDoesNotRemoveAnyTabs: StoryObj = 
 };
 
 export const SupportsDraggingBetweenTabsAnywhereInTheLayout: StoryObj = {
-  render: () => {
-    return (
-      <PanelSetup
-        panelCatalog={new MockPanelCatalog()}
-        fixture={nestedTabLayoutFixture2}
-        style={{ width: "100%" }}
-      >
-        <PanelLayout />
-      </PanelSetup>
-    );
-  },
+  render: () => (
+    <PanelSetup
+      panelCatalog={new MockPanelCatalog()}
+      fixture={nestedTabLayoutFixture2}
+      style={{ width: "100%" }}
+    >
+      <PanelLayout />
+    </PanelSetup>
+  ),
   name: "supports dragging between tabs anywhere in the layout",
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
