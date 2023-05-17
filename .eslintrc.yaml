@@ -179,7 +179,6 @@ overrides:
       - "packages/studio-base/src/components/LayoutBrowser/LayoutRow.tsx"
       - "packages/studio-base/src/components/PanelLayout.tsx"
       - "packages/studio-base/src/components/ShareJsonModal.tsx"
-      - "packages/studio-base/src/components/TextHighlight.tsx"
       - "packages/studio-base/src/panels/Image/components/Toolbar.tsx"
       - "packages/studio-base/src/panels/Image/components/ZoomMenu.tsx"
       - "packages/studio-base/src/panels/Publish/index.tsx"
