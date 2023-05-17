@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { CircularProgress, Link, styled as muiStyled, Typography } from "@mui/material";
+import { CircularProgress, Link, Typography } from "@mui/material";
 import React, { PropsWithChildren, Suspense, useCallback, useMemo } from "react";
 import { useDrop } from "react-dnd";
 import {
@@ -21,6 +21,7 @@ import {
   MosaicWindow,
   MosaicWithoutDragDropContext,
 } from "react-mosaic-component";
+import { withStyles } from "tss-react/mui";
 
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import { EmptyPanelLayout } from "@foxglove/studio-base/components/EmptyPanelLayout";
@@ -59,16 +60,18 @@ type Props = {
 // place the dropped item as a sibling of the Tab), as well as the "root drop targets" inside the
 // nested mosaic (that would place the dropped item as a direct child of the Tab). Makes it easier
 // to drop panels into a tab layout.
-const HideTopLevelDropTargets = muiStyled("div")`
-  margin: 0;
+const HideTopLevelDropTargets = withStyles("div", {
+  root: {
+    margin: 0,
 
-  .mosaic-root + .drop-target-container {
-    display: none !important;
-  }
-  & > .mosaic-window > .drop-target-container {
-    display: none !important;
-  }
-`;
+    ".mosaic-root + .drop-target-container": {
+      display: "none !important",
+    },
+    "& > .mosaic-window > .drop-target-container": {
+      display: "none !important",
+    },
+  },
+});
 
 // This wrapper makes the tabId available in the drop result when something is dropped into a nested
 // drop target. This allows a panel to know which mosaic it was dropped in regardless of nesting
