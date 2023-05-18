@@ -113,11 +113,6 @@ const fixture: Fixture = {
 export default {
   title: "panels/StateTransitions",
   component: StateTransitions,
-  parameters: {
-    chromatic: {
-      delay: 800,
-    },
-  },
 };
 
 export const ColorPalette: StoryObj = {
