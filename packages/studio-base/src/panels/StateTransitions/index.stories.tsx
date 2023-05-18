@@ -12,7 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { StoryObj } from "@storybook/react";
-import { fireEvent, within } from "@storybook/testing-library";
+import { userEvent, within } from "@storybook/testing-library";
 
 import Stack from "@foxglove/studio-base/components/Stack";
 import { BlockCache } from "@foxglove/studio-base/players/types";
@@ -174,7 +174,7 @@ export const MultiplePaths: StoryObj = {
 
 export const MultiplePathsWithHover: StoryObj = {
   render: () => (
-    <PanelSetup fixture={fixture} style={{ width: 370 }}>
+    <PanelSetup fixture={fixture}>
       <StateTransitions
         overrideConfig={{
           paths: new Array(5).fill({
@@ -188,11 +188,9 @@ export const MultiplePathsWithHover: StoryObj = {
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const containers = await canvas.findAllByTestId("panel-mouseenter-container");
+    const [button] = await canvas.findAllByTestId("edit-topic-button");
 
-    containers.forEach((container) => {
-      fireEvent.mouseEnter(container);
-    });
+    userEvent.hover(button!);
   },
 };
 
