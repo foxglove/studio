@@ -12,8 +12,9 @@
 //   You may not use this file except in compliance with the License.
 
 import { StoryObj } from "@storybook/react";
-import TestUtils from "react-dom/test-utils";
+import { fireEvent, within } from "@storybook/testing-library";
 
+import Stack from "@foxglove/studio-base/components/Stack";
 import { BlockCache } from "@foxglove/studio-base/players/types";
 import PanelSetup, { Fixture } from "@foxglove/studio-base/stories/PanelSetup";
 import { expandedLineColors } from "@foxglove/studio-base/util/plotColors";
@@ -121,11 +122,11 @@ export default {
 
 export const ColorPalette: StoryObj = {
   render: () => (
-    <div style={{ width: "100%", padding: "1rem" }}>
+    <Stack padding={2} fullWidth>
       {expandedLineColors.map((color) => (
         <div key={color} style={{ backgroundColor: color, height: "1rem" }} />
       ))}
-    </div>
+    </Stack>
   ),
 };
 
@@ -173,16 +174,7 @@ export const MultiplePaths: StoryObj = {
 
 export const MultiplePathsWithHover: StoryObj = {
   render: () => (
-    <PanelSetup
-      fixture={fixture}
-      onMount={() => {
-        const mouseEnterContainer = document.querySelectorAll(
-          "[data-testid~=panel-mouseenter-container",
-        )[0]!;
-        TestUtils.Simulate.mouseEnter(mouseEnterContainer);
-      }}
-      style={{ width: 370 }}
-    >
+    <PanelSetup fixture={fixture} style={{ width: 370 }}>
       <StateTransitions
         overrideConfig={{
           paths: new Array(5).fill({
@@ -194,6 +186,14 @@ export const MultiplePathsWithHover: StoryObj = {
       />
     </PanelSetup>
   ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const containers = await canvas.findAllByTestId("panel-mouseenter-container");
+
+    containers.forEach((container) => {
+      fireEvent.mouseEnter(container);
+    });
+  },
 };
 
 export const LongPath: StoryObj = {
