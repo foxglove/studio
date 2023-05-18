@@ -12,7 +12,6 @@
 //   You may not use this file except in compliance with the License.
 
 import { StoryObj } from "@storybook/react";
-import { userEvent, within } from "@storybook/testing-library";
 
 import Stack from "@foxglove/studio-base/components/Stack";
 import { BlockCache } from "@foxglove/studio-base/players/types";
@@ -170,28 +169,6 @@ export const MultiplePaths: StoryObj = {
       />
     </PanelSetup>
   ),
-};
-
-export const MultiplePathsWithHover: StoryObj = {
-  render: () => (
-    <PanelSetup fixture={fixture}>
-      <StateTransitions
-        overrideConfig={{
-          paths: new Array(5).fill({
-            value: "/some/topic/with/state.state",
-            timestampMethod: "receiveTime",
-          }),
-          isSynced: true,
-        }}
-      />
-    </PanelSetup>
-  ),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const [button] = await canvas.findAllByTestId("edit-topic-button");
-
-    userEvent.hover(button!);
-  },
 };
 
 export const LongPath: StoryObj = {
