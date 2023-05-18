@@ -19,6 +19,7 @@ export class ImageModeCamera extends THREE.PerspectiveCamera {
   #model?: PinholeCameraModel;
   readonly #cameraState = DEFAULT_CAMERA_STATE;
   #zoomMode: "fit" | "fill" | "custom" = DEFAULT_ZOOM_MODE;
+  #rotation: 0 | 90 | 180 | 270 = 0;
 
   /** x/y zoom factors derived from image and window aspect ratios and zoom mode */
   readonly #aspectZoom = new THREE.Vector2();
@@ -54,6 +55,15 @@ export class ImageModeCamera extends THREE.PerspectiveCamera {
     this.#updateProjection();
   }
 
+  public setRotation(rotation: 0 | 90 | 180 | 270): void {
+    this.#rotation = rotation;
+
+    // By default the camera is facing down the -y axis with -z up,
+    // where the image is on the +y axis with +z up.
+    // To correct this we rotate the camera 180 degrees around the x axis.
+    this.quaternion.setFromEuler(new THREE.Euler(Math.PI, 0, THREE.MathUtils.degToRad(rotation)));
+  }
+
   public updateZoomFromWheel(ratio: number, cursorCoords: THREE.Vector2): void {
     const newZoom = THREE.MathUtils.clamp(this.#userZoom * ratio, MIN_USER_ZOOM, MAX_USER_ZOOM);
     const finalRatio = newZoom / this.#userZoom;
@@ -69,7 +79,7 @@ export class ImageModeCamera extends THREE.PerspectiveCamera {
   }
 
   #updateProjection(): void {
-    this.#updateAspectScaledZoom();
+    this.#updateAspectZoom();
 
     const projection = this.#getProjection();
 
@@ -91,6 +101,8 @@ export class ImageModeCamera extends THREE.PerspectiveCamera {
       return;
     }
 
+    const { width, height } = model;
+
     // Adapted from https://github.com/ros2/rviz/blob/ee44ccde8a7049073fd1901dd36c1fb69110f726/rviz_default_plugins/src/rviz_default_plugins/displays/camera/camera_display.cpp#L615
     // focal lengths
     const fx = model.P[0];
@@ -98,15 +110,54 @@ export class ImageModeCamera extends THREE.PerspectiveCamera {
     // (cx, cy) image center in pixel coordinates
     // for panning we can take offsets from this in pixel coordinates
     const scale = this.getEffectiveScale();
-    const cx = model.P[2] + this.#panOffset.x / scale;
-    const cy = model.P[6] + this.#panOffset.y / scale;
-    const { width, height } = model;
+    let panX, panY;
+    switch (this.#rotation) {
+      case 0:
+        panX = this.#panOffset.x;
+        panY = this.#panOffset.y;
+        break;
+      case 90:
+        panX = this.#panOffset.y;
+        panY = -this.#panOffset.x;
+        break;
+      case 180:
+        panX = -this.#panOffset.x;
+        panY = -this.#panOffset.y;
+        break;
+      case 270:
+        panX = -this.#panOffset.y;
+        panY = this.#panOffset.x;
+        break;
+    }
+    const cx = model.P[2] + panX / scale;
+    const cy = model.P[6] + panY / scale;
+    // switch (this.#rotation) {
+    //   case 0:
+    //     break;
+    //   case 90:
+    //     // [cx, cy] = [((height - cy) * width) / height, ((width - cx) * height) / width];
+    //     cx *= 0.0;
+    //     cy *= 0.0;
+    //     // cx = model.P[2];
+    //     // cx = width * (1 - model.P[6] / height);
+    //     break;
+    //   case 180:
+    //     [cx, cy] = [width - cx, height - cy];
+    //     break;
+    //   case 270:
+    //     [cx, cy] = [(cy * width) / height, ((width - cx) * height) / width];
+    //     break;
+    // }
 
     const zoom = this.#aspectZoom;
     const zoomX = zoom.x;
     const zoomY = zoom.y;
     const near = this.#cameraState.near;
     const far = this.#cameraState.far;
+
+    // if (this.#rotation === 90 || this.#rotation === 270) {
+    //   [zoomX, zoomY] = [zoomY, zoomX];
+    // }
 
     // prettier-ignore
     const matrix = new THREE.Matrix4()
@@ -116,6 +167,68 @@ export class ImageModeCamera extends THREE.PerspectiveCamera {
           0, 0, -(far+near)/(far-near), -2.0*far*near/(far-near),
           0, 0, -1.0, 0,
         );
+
+    switch (this.#rotation) {
+      case 0: {
+        const xoff = ((1 / zoomX - 1) * width) / 2;
+        const yoff = ((1 / zoomY - 1) * height) / 2;
+        const left = (-(cx + xoff) / fx) * near;
+        const right = ((width - cx + xoff) / fx) * near;
+        const top = ((cy + yoff) / fy) * near;
+        const bottom = (-(height - cy + yoff) / fy) * near;
+        matrix.makePerspective(left, right, top, bottom, near, far);
+        break;
+      }
+      case 90: {
+        const xoff = ((1 / zoomX - 1) * width) / 2;
+        const yoff = ((1 / zoomY - 1) * height) / 2;
+        const top = ((cx + xoff) / fx) * near;
+        const bottom = (-(width - cx + xoff) / fx) * near;
+        const right = ((cy + yoff) / fy) * near;
+        const left = (-(height - cy + yoff) / fy) * near;
+        matrix.makePerspective(left, right, top, bottom, near, far);
+        break;
+      }
+      case 180: {
+        const xoff = ((1 / zoomX - 1) * width) / 2;
+        const yoff = ((1 / zoomY - 1) * height) / 2;
+        const right = ((cx + xoff) / fx) * near;
+        const left = (-(width - cx + xoff) / fx) * near;
+        const bottom = (-(cy + yoff) / fy) * near;
+        const top = ((height - cy + yoff) / fy) * near;
+        matrix.makePerspective(left, right, top, bottom, near, far);
+        break;
+      }
+      case 270: {
+        const xoff = ((1 / zoomX - 1) * width) / 2;
+        const yoff = ((1 / zoomY - 1) * height) / 2;
+        const bottom = (-(cx + xoff) / fx) * near;
+        const top = ((width - cx + xoff) / fx) * near;
+        const left = (-(cy + yoff) / fy) * near;
+        const right = ((height - cy + yoff) / fy) * near;
+        matrix.makePerspective(left, right, top, bottom, near, far);
+        break;
+      }
+    }
+
+    // if (this.#rotation === 90) {
+    //   // prettier-ignore
+    //   // (-(height-cy),cx) => (-1,1)
+    //   // (cy, -(width-cx)) => (1,-1)
+    //   // matrix.set(
+    //   //   2.0*fx/width * zoomX, 0, 2.0*(0.5 - cx/width) * zoomX, 0,
+    //   //   0, 2.0*fy/height * zoomY, 2.0*(cy/height-0.5) * zoomY, 0,
+    //   //   0, 0, -(far+near)/(far-near), -2.0*far*near/(far-near),
+    //   //   0, 0, -1.0, 0,
+    //   // );
+    //   // const left = -(height - cy);
+    //   // const right = cy;
+    //   // const top = cx;
+    //   // const bottom = -(width - cx);
+    //   // matrix.makePerspective(left, right, top, bottom, near, far);
+
+    // } else {
+    // }
 
     return matrix;
   }
@@ -131,16 +244,23 @@ export class ImageModeCamera extends THREE.PerspectiveCamera {
     if (!this.#model) {
       return 1;
     }
+    const { width: canvasWidth, height: canvasHeight } = this.#canvasSize;
+    if (this.#rotation === 90 || this.#rotation === 270) {
+      // const width = canvasWidth;
+      // canvasWidth = canvasHeight;
+      // canvasHeight = width;
+    }
+
     return Math.min(
-      (this.#canvasSize.width / this.#model.width) * this.#aspectZoom.x,
-      (this.#canvasSize.height / this.#model.height) * this.#aspectZoom.y,
+      (canvasWidth / this.#model.width) * this.#aspectZoom.x,
+      (canvasHeight / this.#model.height) * this.#aspectZoom.y,
     );
   }
 
   /**
    * Uses the camera model to compute the zoom factors to preserve the aspect ratio of the image.
    */
-  #updateAspectScaledZoom(): void {
+  #updateAspectZoom(): void {
     const model = this.#model;
     if (!model) {
       return;
@@ -152,15 +272,48 @@ export class ImageModeCamera extends THREE.PerspectiveCamera {
 
     const fx = model.P[0]!;
     const fy = model.P[5]!;
-    const rendererAspect = this.#canvasSize.width / this.#canvasSize.height;
+    let rendererAspect = this.#canvasSize.width / this.#canvasSize.height;
     const imageAspect = imgWidth / fx / (imgHeight / fy);
-    // preserve the aspect ratio
-    const shrinkY =
-      this.#zoomMode === "fit" ? imageAspect > rendererAspect : imageAspect < rendererAspect;
-    if (shrinkY) {
-      this.#aspectZoom.y = (this.#aspectZoom.y / imageAspect) * rendererAspect;
+
+    if (this.#rotation === 90 || this.#rotation === 270) {
+      rendererAspect = 1 / rendererAspect;
+      let adjustY = imageAspect > rendererAspect;
+      if (this.#zoomMode === "fill") {
+        adjustY = !adjustY;
+      }
+      if (adjustY) {
+        this.#aspectZoom.y = (this.#aspectZoom.y / imageAspect) * rendererAspect;
+      } else {
+        this.#aspectZoom.x = (this.#aspectZoom.x / rendererAspect) * imageAspect;
+      }
     } else {
-      this.#aspectZoom.x = (this.#aspectZoom.x / rendererAspect) * imageAspect;
+      let adjustY = imageAspect > rendererAspect;
+      if (this.#zoomMode === "fill") {
+        adjustY = !adjustY;
+      }
+      if (adjustY) {
+        this.#aspectZoom.y = (this.#aspectZoom.y / imageAspect) * rendererAspect;
+      } else {
+        this.#aspectZoom.x = (this.#aspectZoom.x / rendererAspect) * imageAspect;
+      }
     }
+
+    // if (this.#rotation === 90 || this.#rotation === 270) {
+    //   rendererAspect = 1 / rendererAspect;
+    // }
+    // const imageAspect = imgWidth / fx / (imgHeight / fy);
+    // // preserve the aspect ratio
+    // let adjustY = imageAspect > rendererAspect;
+    // if (this.#zoomMode === "fill") {
+    //   adjustY = !adjustY;
+    // }
+    // if (adjustY) {
+    //   this.#aspectZoom.y = (this.#aspectZoom.y / imageAspect) * rendererAspect;
+    // } else {
+    //   this.#aspectZoom.x = (this.#aspectZoom.x / rendererAspect) * imageAspect;
+    // }
+    // if (this.#rotation === 90 || this.#rotation === 270) {
+    //   this.#aspectZoom.set(this.#aspectZoom.y, this.#aspectZoom.x);
+    // }
   }
 }
