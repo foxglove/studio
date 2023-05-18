@@ -12,9 +12,9 @@
 //   You may not use this file except in compliance with the License.
 
 import fuzzySort from "fuzzysort";
-import { withStyles } from "tss-react/mui";
+import { makeStyles } from "tss-react/mui";
 
-const STextHighlight = withStyles("span", (theme) => ({
+const useStyles = makeStyles()((theme) => ({
   root: {
     ".TextHighlight-highlight": {
       color: theme.palette.primary.main,
@@ -29,23 +29,24 @@ type Props = {
 };
 
 export default function TextHighlight({ targetStr = "", searchText = "" }: Props): JSX.Element {
+  const { classes } = useStyles();
+
   if (searchText.length === 0) {
     return <>{targetStr}</>;
   }
 
   const match = fuzzySort.single(searchText, targetStr);
-
   const result = match
     ? fuzzySort.highlight(match, "<span class='TextHighlight-highlight'>", "</span>")
     : undefined;
 
   return (
-    <STextHighlight>
+    <span className={classes.root}>
       {result != undefined && result.length > 0 ? (
         <span dangerouslySetInnerHTML={{ __html: result }} />
       ) : (
         targetStr
       )}
-    </STextHighlight>
+    </span>
   );
 }
