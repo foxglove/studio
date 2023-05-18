@@ -39,6 +39,11 @@ const heavyFixture: Fixture = {
   globalVariables: { global_var_1: 42, global_var_2: 10 },
 };
 
+const clickInput: StoryObj["play"] = async ({ canvasElement }) => {
+  const canvas = within(canvasElement);
+  userEvent.click(await canvas.findByTestId("autocomplete-textfield"));
+};
+
 function MessagePathInputStory(props: {
   path: string;
   prioritizedDatatype?: string;
@@ -74,19 +79,13 @@ type MsgPathInputStoryObj = StoryObj<typeof MessagePathInputStory>;
 export const PathWithHeaderFields: MsgPathInputStoryObj = {
   render: MessagePathInputStory,
   args: { path: "/some_topic/state.header.stamp.sec" },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    userEvent.click(await canvas.findByTestId("autocomplete-textfield"));
-  },
+  play: clickInput,
 };
 
 export const AutocompleteTopics: MsgPathInputStoryObj = {
   render: MessagePathInputStory,
   args: { path: "/" },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    userEvent.click(await canvas.findByTestId("autocomplete-textfield"));
-  },
+  play: clickInput,
 };
 
 export const AutocompleteScalarFromTopicAndEmptyPath: MsgPathInputStoryObj = {
@@ -134,10 +133,7 @@ export const AutocompleteMessagePath: MsgPathInputStoryObj = {
   render: MessagePathInputStory,
   args: { path: "/some_topic/location.po" },
   name: "Autocomplete messagePath",
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    userEvent.click(await canvas.findByTestId("autocomplete-textfield"));
-  },
+  play: clickInput,
 };
 
 export const AutocompleteMessagePathLight: MsgPathInputStoryObj = {
@@ -145,68 +141,47 @@ export const AutocompleteMessagePathLight: MsgPathInputStoryObj = {
   args: { path: "/some_topic/location.po" },
   name: "Autocomplete messagePath light",
   parameters: { colorScheme: "light" },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    userEvent.click(await canvas.findByTestId("autocomplete-textfield"));
-  },
+  play: clickInput,
 };
 
 export const AutocompleteFilter: MsgPathInputStoryObj = {
   render: MessagePathInputStory,
   args: { path: "/some_topic/state.items[:]{}" },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    userEvent.click(await canvas.findByTestId("autocomplete-textfield"));
-  },
+  play: clickInput,
 };
 
 export const AutocompleteTopLevelFilter: MsgPathInputStoryObj = {
   render: MessagePathInputStory,
   args: { path: "/some_topic/state{}" },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    userEvent.click(await canvas.findByTestId("autocomplete-textfield"));
-  },
+  play: clickInput,
 };
 
 export const AutocompleteForGlobalVariablesVariables: MsgPathInputStoryObj = {
   render: MessagePathInputStory,
   args: { path: "/some_topic/state{foo_id==0}.items[:]{id==$}" },
   name: "Autocomplete for globalVariables variables",
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    userEvent.click(await canvas.findByTestId("autocomplete-textfield"));
-  },
+  play: clickInput,
 };
 
 export const PathWithValidGlobalVariablesVariable: MsgPathInputStoryObj = {
   render: MessagePathInputStory,
   args: { path: "/some_topic/state.items[:]{id==$global_var_2}" },
   name: "Path with valid globalVariables variable",
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    userEvent.click(await canvas.findByTestId("autocomplete-textfield"));
-  },
+  play: clickInput,
 };
 
 export const PathWithInvalidGlobalVariablesVariable: MsgPathInputStoryObj = {
   render: MessagePathInputStory,
   args: { path: "/some_topic/state.items[:]{id==$global_var_3}" },
   name: "Path with invalid globalVariables variable",
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    userEvent.click(await canvas.findByTestId("autocomplete-textfield"));
-  },
+  play: clickInput,
 };
 
 export const PathWithIncorrectlyPrefixedGlobalVariablesVariable: MsgPathInputStoryObj = {
   render: MessagePathInputStory,
   args: { path: "/some_topic/state.items[:]{id==global_var_2}" },
   name: "Path with incorrectly prefixed globalVariables variable",
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    userEvent.click(await canvas.findByTestId("autocomplete-textfield"));
-  },
+  play: clickInput,
 };
 
 export const AutocompleteForPathWithGlobalVariablesVariableInSliceSingleIdx: MsgPathInputStoryObj =
@@ -214,30 +189,21 @@ export const AutocompleteForPathWithGlobalVariablesVariableInSliceSingleIdx: Msg
     render: MessagePathInputStory,
     args: { path: "/some_topic/state.items[$]" },
     name: "Autocomplete for path with globalVariables variable in slice (single idx)",
-    play: async ({ canvasElement }) => {
-      const canvas = within(canvasElement);
-      userEvent.click(await canvas.findByTestId("autocomplete-textfield"));
-    },
+    play: clickInput,
   };
 
 export const AutocompleteForPathWithGlobalVariablesVariableInSliceStartIdx: MsgPathInputStoryObj = {
   render: MessagePathInputStory,
   args: { path: "/some_topic/state.items[$:]" },
   name: "Autocomplete for path with globalVariables variable in slice (start idx)",
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    userEvent.click(await canvas.findByTestId("autocomplete-textfield"));
-  },
+  play: clickInput,
 };
 
 export const AutocompleteForPathWithGlobalVariablesVariableInSliceEndIdx: MsgPathInputStoryObj = {
   render: MessagePathInputStory,
   args: { path: "/some_topic/state.items[:$]" },
   name: "Autocomplete for path with globalVariables variable in slice (end idx)",
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    userEvent.click(await canvas.findByTestId("autocomplete-textfield"));
-  },
+  play: clickInput,
 };
 
 export const AutocompleteForPathWithGlobalVariablesVariablesInSliceStartAndEndIdx: MsgPathInputStoryObj =
@@ -245,53 +211,35 @@ export const AutocompleteForPathWithGlobalVariablesVariablesInSliceStartAndEndId
     render: MessagePathInputStory,
     args: { path: "/some_topic/state.items[$global_var_2:$]" },
     name: "Autocomplete for path with globalVariables variables in slice (start and end idx)",
-    play: async ({ canvasElement }) => {
-      const canvas = within(canvasElement);
-      userEvent.click(await canvas.findByTestId("autocomplete-textfield"));
-    },
+    play: clickInput,
   };
 
 export const PathWithInvalidMathModifier: MsgPathInputStoryObj = {
   render: MessagePathInputStory,
   args: { path: "/some_topic/location.pose.x.@negative" },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    userEvent.click(await canvas.findByTestId("autocomplete-textfield"));
-  },
+  play: clickInput,
 };
 
 export const AutocompleteWhenPrioritizedDatatypeIsAvailable: MsgPathInputStoryObj = {
   render: MessagePathInputStory,
   args: { path: "/", prioritizedDatatype: "msgs/State" },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    userEvent.click(await canvas.findByTestId("autocomplete-textfield"));
-  },
+  play: clickInput,
 };
 
 export const AutocompleteForPathWithExistingFilter: MsgPathInputStoryObj = {
   render: MessagePathInputStory,
   args: { path: "/some_topic/state.items[:]{id==1}." },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    userEvent.click(await canvas.findByTestId("autocomplete-textfield"));
-  },
+  play: clickInput,
 };
 
 export const AutocompleteForPathWithExistingFilterUsingAGlobalVariable: MsgPathInputStoryObj = {
   render: MessagePathInputStory,
   args: { path: "/some_topic/state.items[:]{id==$global_var_2}." },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    userEvent.click(await canvas.findByTestId("autocomplete-textfield"));
-  },
+  play: clickInput,
 };
 
 export const PerformanceTesting: MsgPathInputStoryObj = {
   render: MessagePathInputStory,
   args: { path: ".", heavy: true },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    userEvent.click(await canvas.findByTestId("autocomplete-textfield"));
-  },
+  play: clickInput,
 };
