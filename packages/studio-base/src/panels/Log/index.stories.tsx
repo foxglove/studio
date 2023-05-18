@@ -189,7 +189,7 @@ export const TopicToRender: StoryObj = {
         }}
         onMount={() => {
           TestUtils.Simulate.mouseEnter(
-            document.querySelectorAll("[data-testid~=panel-mouseenter-container]")[0]!,
+            document.querySelectorAll("[data-testid=panel-mouseenter-container]")[0]!,
           );
           setTimeout(() => {
             TestUtils.Simulate.click(document.querySelectorAll("[data-testid=topic-set]")[0]!);
