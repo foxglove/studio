@@ -311,6 +311,7 @@ const ImageModeFoxgloveImage = ({
             calibrationTopic: imageType === "raw" ? "/cam2/info" : "/cam1/info",
             imageTopic: imageType === "raw" ? "/cam2/raw" : "/cam1/png",
             zoomMode,
+            rotation,
           },
           cameraState: {
             distance: 1.5,
@@ -323,7 +324,6 @@ const ImageModeFoxgloveImage = ({
             far: 5000,
             target: [0, 0, 0],
             targetOrientation: [0, 0, 0, 1],
-            rotation,
           },
         }}
       />
