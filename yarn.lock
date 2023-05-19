@@ -2547,7 +2547,7 @@ __metadata:
     "@types/foxglove__roslibjs": "workspace:*"
     "@types/gl-matrix": 3.2.0
     "@types/hammerjs": 2.0.41
-    "@types/leaflet": 1.8.0
+    "@types/leaflet": 1.9.3
     "@types/memoize-weak": "workspace:*"
     "@types/moment-duration-format": 2.2.3
     "@types/nearley": 2.11.2
@@ -2601,7 +2601,7 @@ __metadata:
     jest-diff: 29.5.0
     jszip: 3.10.1
     just-diff: 6.0.2
-    leaflet: 1.8.0
+    leaflet: 1.9.4
     lodash: 4.17.21
     mathjs: 11.8.0
     memoize-weak: 1.0.2
@@ -2657,7 +2657,7 @@ __metadata:
     use-immer: 0.9.0
     use-pan-and-zoom: 0.6.5
     uuid: 9.0.0
-    webpack: 5.82.1
+    webpack: 5.83.1
     zustand: 4.3.8
   languageName: unknown
   linkType: soft
@@ -2687,7 +2687,7 @@ __metadata:
     async-mutex: 0.4.0
     builder-util: "*"
     clean-webpack-plugin: 4.0.0
-    electron: 24.3.0
+    electron: 24.3.1
     electron-builder: 24.4.0
     electron-devtools-installer: 3.2.0
     electron-squirrel-startup: 1.0.0
@@ -2708,7 +2708,7 @@ __metadata:
     tinycolor2: 1.6.0
     tss-react: 4.8.3
     utif: 3.1.0
-    webpack: 5.82.1
+    webpack: 5.83.1
     webpack-dev-server: 4.15.0
   languageName: unknown
   linkType: soft
@@ -2732,7 +2732,7 @@ __metadata:
     react-dom: 17.0.2
     react-i18next: 12.2.2
     tss-react: 4.8.3
-    webpack: 5.82.1
+    webpack: 5.83.1
     webpack-dev-server: 4.15.0
   languageName: unknown
   linkType: soft
@@ -5754,12 +5754,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/leaflet@npm:1.8.0":
-  version: 1.8.0
-  resolution: "@types/leaflet@npm:1.8.0"
+"@types/leaflet@npm:1.9.3":
+  version: 1.9.3
+  resolution: "@types/leaflet@npm:1.9.3"
   dependencies:
     "@types/geojson": "*"
-  checksum: a0190d48dfd49c7526a38c94490d9acdcb09de8b0338ebae8b33374b24f474330be82733007ab1c39008a61c4712b743ccf230909f203f0f35c9986b3a583ab6
+  checksum: d12042edc3a043d074b4fd3b4c4800f479dfb01db3980d8c1151edbc70b23ca9e84ab7da72ce0d1c36c040f89ba1421bd36d9d9796ec3704a0d3c942985a87ae
   languageName: node
   linkType: hard
 
@@ -7738,7 +7738,7 @@ __metadata:
     mathjs: 11.8.0
     react: 17.0.2
     react-dom: 17.0.2
-    webpack: 5.82.1
+    webpack: 5.83.1
     webpack-dev-server: 4.15.0
   languageName: unknown
   linkType: soft
@@ -9613,9 +9613,9 @@ __metadata:
     "@foxglove/log": "workspace:*"
     "@foxglove/studio-base": "workspace:*"
     "@foxglove/studio-desktop": "workspace:*"
-    electron: 24.3.0
+    electron: 24.3.1
     playwright: 1.33.0
-    webpack: 5.82.1
+    webpack: 5.83.1
   languageName: unknown
   linkType: soft
 
@@ -10106,16 +10106,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"electron@npm:24.3.0":
-  version: 24.3.0
-  resolution: "electron@npm:24.3.0"
+"electron@npm:24.3.1":
+  version: 24.3.1
+  resolution: "electron@npm:24.3.1"
   dependencies:
     "@electron/get": ^2.0.0
     "@types/node": ^18.11.18
     extract-zip: ^2.0.1
   bin:
     electron: cli.js
-  checksum: 8377882a5246cfc5e4d11acf9bc800f95e3269710d3e3dce5ea81578ee5c36156fc111ddf932d02ab876111586712d2efea726775746bf3da3d8e5d02f6ee685
+  checksum: 502f822c9f9de381dcb0668436813f3552159b86dfd0563d8cda923bc7d26949f25231a5a008ea4564a0ec4bd70da6d01f95e343ba422a6b3614e93bb219ffd0
   languageName: node
   linkType: hard
 
@@ -11635,7 +11635,7 @@ __metadata:
     babel-plugin-transform-import-meta: 2.2.0
     cross-env: 7.0.3
     depcheck: 1.4.3
-    electron: 24.3.0
+    electron: 24.3.1
     electron-builder: 24.4.0
     eslint: 8.40.0
     eslint-config-prettier: 8.8.0
@@ -11659,9 +11659,9 @@ __metadata:
     storybook: 7.0.12
     ts-node: 10.9.1
     ts-prune: 0.10.3
-    tslib: 2.5.0
+    tslib: 2.5.2
     typescript: 5.0.4
-    webpack: 5.82.1
+    webpack: 5.83.1
     webpack-cli: 5.1.1
     webpack-dev-server: 4.15.0
     webpack-hot-middleware: 2.25.3
@@ -14389,10 +14389,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"leaflet@npm:1.8.0":
-  version: 1.8.0
-  resolution: "leaflet@npm:1.8.0"
-  checksum: 4a27895d4253844f2f13f94cbc52a2030b10833cdf553085d931b834745236a8d2a38844a01eb968cc109eb43268bfadb97aad85b51deffb17b6ccd106542e00
+"leaflet@npm:1.9.4":
+  version: 1.9.4
+  resolution: "leaflet@npm:1.9.4"
+  checksum: bfc79f17a247b37b92d84b3c78702501603392d6589fde606de4a825d11f1609d90225388834f2e0709dac327e52dcd4b4b9cc9fd3d590060c5b1e53b84fa6c6
   languageName: node
   linkType: hard
 
@@ -20231,10 +20231,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tslib@npm:2.5.0, tslib@npm:^2, tslib@npm:^2.0.0, tslib@npm:^2.0.1, tslib@npm:^2.0.3, tslib@npm:^2.1.0, tslib@npm:^2.4.0, tslib@npm:^2.5.0":
-  version: 2.5.0
-  resolution: "tslib@npm:2.5.0"
-  checksum: ae3ed5f9ce29932d049908ebfdf21b3a003a85653a9a140d614da6b767a93ef94f460e52c3d787f0e4f383546981713f165037dc2274df212ea9f8a4541004e1
+"tslib@npm:2.5.2, tslib@npm:^2, tslib@npm:^2.0.0, tslib@npm:^2.0.1, tslib@npm:^2.0.3, tslib@npm:^2.1.0, tslib@npm:^2.4.0, tslib@npm:^2.5.0":
+  version: 2.5.2
+  resolution: "tslib@npm:2.5.2"
+  checksum: 4d3c1e238b94127ed0e88aa0380db3c2ddae581dc0f4bae5a982345e9f50ee5eda90835b8bfba99b02df10a5734470be197158c36f9129ac49fdc14a6a9da222
   languageName: node
   linkType: hard
 
@@ -21110,7 +21110,7 @@ __metadata:
     "@types/serve-handler": ^6
     playwright: 1.33.0
     serve-handler: 6.1.5
-    webpack: 5.82.1
+    webpack: 5.83.1
     webpack-dev-server: 4.15.0
   languageName: unknown
   linkType: soft
@@ -21282,9 +21282,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"webpack@npm:5, webpack@npm:5.82.1":
-  version: 5.82.1
-  resolution: "webpack@npm:5.82.1"
+"webpack@npm:5, webpack@npm:5.83.1":
+  version: 5.83.1
+  resolution: "webpack@npm:5.83.1"
   dependencies:
     "@types/eslint-scope": ^3.7.3
     "@types/estree": ^1.0.0
@@ -21315,7 +21315,7 @@ __metadata:
       optional: true
   bin:
     webpack: bin/webpack.js
-  checksum: 747ee7ebd238c15249c2652060e3c6ca6d62cc66dcf7e4e2824ecd4875b7ea5e01fce8f4179080a3e84dfdb3c8d0992700444c7c5a05ef47b38c0623d3ac76de
+  checksum: 219d5ef50380bc0fd3702ed17feddf13819d8173b78f7a5b857dc74ac177e63d1f79c050792754411cc088bbc02e0971b989efddadbb8e393cf27d64c0ad9ff8
   languageName: node
   linkType: hard
 
