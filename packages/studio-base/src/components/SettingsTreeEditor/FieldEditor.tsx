@@ -197,10 +197,10 @@ function FieldInput({
         >
           {field.options.map((opt) => (
             <ToggleButton
-              key={(typeof opt === "object" ? opt.value : opt) ?? UNDEFINED_SENTINEL_VALUE}
-              value={(typeof opt === "object" ? opt.value : opt) ?? UNDEFINED_SENTINEL_VALUE}
+              key={(typeof opt === "string" ? opt : opt.value) ?? UNDEFINED_SENTINEL_VALUE}
+              value={(typeof opt === "string" ? opt : opt.value) ?? UNDEFINED_SENTINEL_VALUE}
             >
-              {typeof opt === "object" ? opt.label : opt}
+              {typeof opt === "string" ? opt : opt.label}
             </ToggleButton>
           ))}
         </ToggleButtonGroup>
