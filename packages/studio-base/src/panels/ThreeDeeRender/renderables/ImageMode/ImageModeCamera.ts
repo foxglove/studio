@@ -56,12 +56,25 @@ export class ImageModeCamera extends THREE.PerspectiveCamera {
   }
 
   public setRotation(rotation: 0 | 90 | 180 | 270): void {
-    this.#rotation = rotation;
+    // guard against invalid rotation values
+    switch (rotation) {
+      case 0:
+      case 90:
+      case 180:
+      case 270:
+        this.#rotation = rotation;
+        break;
+      default:
+        this.#rotation = 0;
+        break;
+    }
 
     // By default the camera is facing down the -y axis with -z up,
     // where the image is on the +y axis with +z up.
     // To correct this we rotate the camera 180 degrees around the x axis.
     this.quaternion.setFromEuler(new THREE.Euler(Math.PI, 0, THREE.MathUtils.degToRad(rotation)));
+
+    this.resetModifications();
   }
 
   public updateZoomFromWheel(ratio: number, cursorCoords: THREE.Vector2): void {
@@ -113,19 +126,19 @@ export class ImageModeCamera extends THREE.PerspectiveCamera {
     let panX, panY;
     switch (this.#rotation) {
       case 0:
-        panX = this.#panOffset.x;
+        panX = this.#panOffset.x * (fx / fy);
         panY = this.#panOffset.y;
         break;
       case 90:
-        panX = this.#panOffset.y;
+        panX = this.#panOffset.y * (fx / fy);
         panY = -this.#panOffset.x;
         break;
       case 180:
-        panX = -this.#panOffset.x;
+        panX = -this.#panOffset.x * (fx / fy);
         panY = -this.#panOffset.y;
         break;
       case 270:
-        panX = -this.#panOffset.y;
+        panX = -this.#panOffset.y * (fx / fy);
         panY = this.#panOffset.x;
         break;
     }
@@ -244,11 +257,11 @@ export class ImageModeCamera extends THREE.PerspectiveCamera {
     if (!this.#model) {
       return 1;
     }
-    const { width: canvasWidth, height: canvasHeight } = this.#canvasSize;
+    let { width: canvasWidth, height: canvasHeight } = this.#canvasSize;
     if (this.#rotation === 90 || this.#rotation === 270) {
-      // const width = canvasWidth;
-      // canvasWidth = canvasHeight;
-      // canvasHeight = width;
+      const width = canvasWidth;
+      canvasWidth = canvasHeight;
+      canvasHeight = width;
     }
 
     return Math.min(
