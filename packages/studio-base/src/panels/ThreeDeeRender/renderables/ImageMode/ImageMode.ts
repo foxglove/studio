@@ -804,9 +804,12 @@ export class ImageMode
   };
 
   public getLatestImage():
-    | { event: PartialMessageEvent<AnyImage>; normalized: AnyImage }
+    | { event: PartialMessageEvent<AnyImage>; normalized: AnyImage; rotation: 0 | 90 | 180 | 270 }
     | undefined {
-    return this.#latestImage;
+    if (!this.#latestImage) {
+      return undefined;
+    }
+    return { ...this.#latestImage, rotation: this.renderer.config.imageMode.rotation ?? 0 };
   }
 }
 

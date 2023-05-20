@@ -365,7 +365,7 @@ export const DownloadRawImage: StoryObj<React.ComponentProps<typeof ImageModeFox
         </Stack>
         <Stack style={{ width: "50%" }} zeroMinWidth>
           <div>{filename == undefined ? "Not downloaded" : `Downloaded image: ${filename}`}</div>
-          <img src={src} style={{ imageRendering: "pixelated" }} />
+          <img src={src} style={{ imageRendering: "pixelated", border: "1px solid red" }} />
         </Stack>
       </Stack>
     );
@@ -380,6 +380,21 @@ export const DownloadRawImage: StoryObj<React.ComponentProps<typeof ImageModeFox
 export const DownloadPngImage: StoryObj<React.ComponentProps<typeof ImageModeFoxgloveImage>> = {
   ...DownloadRawImage,
   args: { imageType: "png" },
+};
+
+export const DownloadPngImage90: StoryObj<React.ComponentProps<typeof ImageModeFoxgloveImage>> = {
+  ...DownloadRawImage,
+  args: { imageType: "png", rotation: 90 },
+};
+
+export const DownloadPngImage180: StoryObj<React.ComponentProps<typeof ImageModeFoxgloveImage>> = {
+  ...DownloadRawImage,
+  args: { imageType: "png", rotation: 180 },
+};
+
+export const DownloadPngImage270: StoryObj<React.ComponentProps<typeof ImageModeFoxgloveImage>> = {
+  ...DownloadRawImage,
+  args: { imageType: "png", rotation: 270 },
 };
 
 export const ImageModeResizeHandled: StoryObj<React.ComponentProps<typeof ImageModeFoxgloveImage>> =

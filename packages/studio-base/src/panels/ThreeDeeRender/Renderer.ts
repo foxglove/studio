@@ -820,7 +820,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
   }
 
   public getCurrentImage():
-    | { event: PartialMessageEvent<AnyImage>; normalized: AnyImage }
+    | { event: PartialMessageEvent<AnyImage>; normalized: AnyImage;rotation: 0 | 90 | 180 | 270 }
     | undefined {
     return this.#imageModeExtension?.getLatestImage();
   }

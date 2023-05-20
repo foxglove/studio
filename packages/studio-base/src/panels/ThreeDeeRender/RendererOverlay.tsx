@@ -309,35 +309,50 @@ export function RendererOverlay(props: {
         bitmap = await createImageBitmap(imageData);
       }
 
-      const { width, height } = bitmap;
+      const width =
+        currentImage.rotation === 90 || currentImage.rotation === 270
+          ? bitmap.height
+          : bitmap.width;
+      const height =
+        currentImage.rotation === 90 || currentImage.rotation === 270
+          ? bitmap.width
+          : bitmap.height;
 
-      // context: https://stackoverflow.com/questions/37135417/download-canvas-as-png-in-fabric-js-giving-network-error
+      // re-render the image onto a new canvas to download the original image
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        throw new Error("Unable to create rendering context for image download");
+      }
+
+      // Draw the image in the selected orientation so it aligns with the canvas viewport
+      ctx.translate(width / 2, height / 2);
+      ctx.rotate((currentImage.rotation / 180) * Math.PI);
+      ctx.translate(-bitmap.width / 2, -bitmap.height / 2);
+      ctx.drawImage(bitmap, 0, 0);
+
       // read the canvas data as an image (png)
-      await new Promise<void>((resolve) => {
-        // re-render the image onto a new canvas to download the original image
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("bitmaprenderer");
-        if (!ctx) {
-          throw new Error("Unable to create rendering context for image download");
-        }
-        ctx.transferFromImageBitmap(bitmap);
-        canvas.toBlob((blob) => {
-          if (!blob) {
-            throw new Error(`Failed to create an image from ${width}x${height} canvas`);
-          }
-          // name the image the same name as the topic
-          // note: the / characters in the file name will be replaced with _ by the browser
-          // remove any leading / so the image name doesn't start with _
-          const topicName = currentImage.event.topic.replace(/^\/+/, "");
-          const fileName = `${topicName}-${stamp.sec}-${stamp.nsec}`;
-          if (onDownloadImage) {
-            onDownloadImage(blob, fileName);
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob((result) => {
+          if (result) {
+            resolve(result);
           } else {
-            downloadFiles([{ blob, fileName }]);
+            reject(`Failed to create an image from ${width}x${height} canvas`);
           }
-          resolve();
         }, "image/png");
       });
+      // name the image the same name as the topic
+      // note: the / characters in the file name will be replaced with _ by the browser
+      // remove any leading / so the image name doesn't start with _
+      const topicName = currentImage.event.topic.replace(/^\/+/, "");
+      const fileName = `${topicName}-${stamp.sec}-${stamp.nsec}`;
+      if (onDownloadImage) {
+        onDownloadImage(blob, fileName);
+      } else {
+        downloadFiles([{ blob, fileName }]);
+      }
     } catch (error) {
       log.error(error);
       enqueueSnackbar((error as Error).toString(), { variant: "error" });
@@ -358,7 +373,7 @@ export function RendererOverlay(props: {
 
   return (
     <>
-      <PanelContextMenu getItems={getContextMenuItems} />
+      {props.interfaceMode === "image" && <PanelContextMenu getItems={getContextMenuItems} />}
       <div
         style={{
           position: "absolute",

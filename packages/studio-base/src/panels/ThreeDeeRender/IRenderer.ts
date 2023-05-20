@@ -307,7 +307,9 @@ export interface IRenderer extends EventEmitter<RendererEvents> {
   resetView(): void;
 
   /** Return the currently displayed image (image mode only). */
-  getCurrentImage(): { event: PartialMessageEvent<AnyImage>; normalized: AnyImage } | undefined;
+  getCurrentImage():
+    | { event: PartialMessageEvent<AnyImage>; normalized: AnyImage; rotation: 0 | 90 | 180 | 270 }
+    | undefined;
 
   setSelectedRenderable(selection: PickedRenderable | undefined): void;
 

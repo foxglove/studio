@@ -51,29 +51,40 @@ export function PanelContextMenu(props: PanelContextMenuProps): JSX.Element {
 
   const [items, setItems] = useState<DeepReadonly<PanelContextMenuItem[]>>([]);
 
-  const listener = useCallback(
-    (event: MouseEvent) => {
-      event.preventDefault();
-      event.stopPropagation();
-      setPosition({ x: event.clientX, y: event.clientY });
-      setItems(getItems());
-    },
-    [getItems],
-  );
-
   useEffect(() => {
-    const element = rootRef.current;
-    if (!element) {
+    const parent = rootRef.current?.closest<HTMLElement>(`.${PANEL_ROOT_CLASS_NAME}`);
+    if (!parent) {
       return;
     }
 
-    const parent: HTMLElement | ReactNull = element.closest(`.${PANEL_ROOT_CLASS_NAME}`);
-    parent?.addEventListener("contextmenu", listener);
-
-    return () => {
-      parent?.removeEventListener("contextmenu", listener);
+    // Trigger the menu when the right mouse button is released, but not if the mouse moved in
+    // between press & release
+    let rightClickState: "none" | "down" | "canceled" = "none";
+    const handleMouseUp = (event: MouseEvent) => {
+      if (event.button === 2 && rightClickState === "down") {
+        setPosition({ x: event.clientX, y: event.clientY });
+        setItems(getItems());
+        rightClickState = "none";
+      }
     };
-  }, [listener]);
+    const handleMouseMove = (_event: MouseEvent) => {
+      rightClickState = "canceled";
+    };
+    const handleMouseDown = (event: MouseEvent) => {
+      if (event.button === 2) {
+        rightClickState = "down";
+      }
+    };
+
+    parent.addEventListener("mousedown", handleMouseDown);
+    parent.addEventListener("mousemove", handleMouseMove);
+    parent.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      parent.removeEventListener("mousedown", handleMouseDown);
+      parent.removeEventListener("mousemove", handleMouseMove);
+      parent.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [getItems]);
 
   return (
     <div ref={rootRef} onContextMenu={(event) => event.preventDefault()}>
