@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { StoryObj } from "@storybook/react";
-import { fireEvent } from "@storybook/testing-library";
+import { userEvent } from "@storybook/testing-library";
 import { useCallback } from "react";
 import { v4 as uuid } from "uuid";
 
@@ -69,9 +69,9 @@ export const Default: StoryObj = {
   },
 
   play: () => {
-    Array.from(document.getElementsByClassName(DUMMY_CLASS)).forEach((el) => {
+    for (const el of document.getElementsByClassName(DUMMY_CLASS)) {
       const rect = el.getBoundingClientRect();
-      fireEvent.contextMenu(el, { clientX: rect.x + 100, clientY: rect.y + 100 });
-    });
+      userEvent.click(el, { clientX: rect.x + 100, clientY: rect.y + 100, button: 2 });
+    }
   },
 };

@@ -75,14 +75,19 @@ export function PanelContextMenu(props: PanelContextMenuProps): JSX.Element {
         rightClickState = "down";
       }
     };
+    const handleContextMenu = (event: MouseEvent) => {
+      event.preventDefault();
+    };
 
     parent.addEventListener("mousedown", handleMouseDown);
     parent.addEventListener("mousemove", handleMouseMove);
     parent.addEventListener("mouseup", handleMouseUp);
+    parent.addEventListener("contextmenu", handleContextMenu);
     return () => {
       parent.removeEventListener("mousedown", handleMouseDown);
       parent.removeEventListener("mousemove", handleMouseMove);
       parent.removeEventListener("mouseup", handleMouseUp);
+      parent.removeEventListener("contextmenu", handleContextMenu);
     };
   }, [getItems]);
 

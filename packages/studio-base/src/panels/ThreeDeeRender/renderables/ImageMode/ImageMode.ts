@@ -14,7 +14,10 @@ import {
   IMAGE_RENDERABLE_DEFAULT_SETTINGS,
   ImageRenderable,
 } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/Images/ImageRenderable";
-import { AnyImage } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/Images/ImageTypes";
+import {
+  AnyImage,
+  DownloadImageInfo,
+} from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/Images/ImageTypes";
 import {
   normalizeCompressedImage,
   normalizeRawImage,
@@ -100,7 +103,7 @@ export class ImageMode
   #hasModifiedView = false;
 
   // Will need to change when synchronization is implemented (FG-2686)
-  #latestImage: { event: PartialMessageEvent<AnyImage>; normalized: AnyImage } | undefined;
+  #latestImage: { topic: string; image: AnyImage } | undefined;
 
   // eslint-disable-next-line @foxglove/no-boolean-parameters
   #setHasCalibrationTopic: (hasCalibrationTopic: boolean) => void;
@@ -555,7 +558,7 @@ export class ImageMode
 
     const renderable = this.#getImageRenderable(topic, receiveTime, image, frameId);
 
-    this.#latestImage = { event: messageEvent, normalized: image };
+    this.#latestImage = { topic: messageEvent.topic, image };
 
     if (this.#cameraModel) {
       renderable.userData.cameraInfo = this.#cameraModel.info;
@@ -803,9 +806,7 @@ export class ImageMode
     this.updateSettingsTree();
   };
 
-  public getLatestImage():
-    | { event: PartialMessageEvent<AnyImage>; normalized: AnyImage; rotation: 0 | 90 | 180 | 270 }
-    | undefined {
+  public getLatestImage(): DownloadImageInfo | undefined {
     if (!this.#latestImage) {
       return undefined;
     }

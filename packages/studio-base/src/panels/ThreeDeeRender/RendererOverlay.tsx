@@ -297,7 +297,7 @@ export function RendererOverlay(props: {
       return;
     }
 
-    const image = currentImage.normalized;
+    const { topic, image, rotation } = currentImage;
     const stamp = "header" in image ? image.header.stamp : image.timestamp;
     let bitmap: ImageBitmap;
     try {
@@ -309,14 +309,8 @@ export function RendererOverlay(props: {
         bitmap = await createImageBitmap(imageData);
       }
 
-      const width =
-        currentImage.rotation === 90 || currentImage.rotation === 270
-          ? bitmap.height
-          : bitmap.width;
-      const height =
-        currentImage.rotation === 90 || currentImage.rotation === 270
-          ? bitmap.width
-          : bitmap.height;
+      const width = rotation === 90 || rotation === 270 ? bitmap.height : bitmap.width;
+      const height = rotation === 90 || rotation === 270 ? bitmap.width : bitmap.height;
 
       // re-render the image onto a new canvas to download the original image
       const canvas = document.createElement("canvas");
@@ -329,7 +323,7 @@ export function RendererOverlay(props: {
 
       // Draw the image in the selected orientation so it aligns with the canvas viewport
       ctx.translate(width / 2, height / 2);
-      ctx.rotate((currentImage.rotation / 180) * Math.PI);
+      ctx.rotate((rotation / 180) * Math.PI);
       ctx.translate(-bitmap.width / 2, -bitmap.height / 2);
       ctx.drawImage(bitmap, 0, 0);
 
@@ -346,7 +340,7 @@ export function RendererOverlay(props: {
       // name the image the same name as the topic
       // note: the / characters in the file name will be replaced with _ by the browser
       // remove any leading / so the image name doesn't start with _
-      const topicName = currentImage.event.topic.replace(/^\/+/, "");
+      const topicName = topic.replace(/^\/+/, "");
       const fileName = `${topicName}-${stamp.sec}-${stamp.nsec}`;
       if (onDownloadImage) {
         onDownloadImage(blob, fileName);
