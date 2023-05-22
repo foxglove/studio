@@ -52,7 +52,10 @@ function makeInitialState(): BuilderRenderStateInput {
     globalVariables: {},
     hoverValue: undefined,
     sharedPanelState: {},
-    sortedTopics: [{ name: "test", schemaName: "schema" }],
+    sortedTopics: [
+      { name: "test", schemaName: "schema" },
+      { name: "test2", schemaName: "schema2" },
+    ],
     subscriptions: [{ topic: "test" }, { topic: "test", convertTo: "otherSchema", preload: true }],
     messageConverters: [
       {
@@ -766,69 +769,33 @@ describe("renderState", () => {
     const initialState = makeInitialState();
     const state1 = buildRenderState(initialState);
 
-    const expectedState1 = {
-      topics: [
-        {
-          name: "test",
-          schemaName: "schema",
-          datatype: "schema",
-          convertibleTo: ["otherSchema", "anotherSchema"],
-        },
+    expect(state1).toMatchObject({
+      currentFrame: [
+        { topic: "test", schemaName: "schema" },
+        { topic: "test", schemaName: "otherSchema" },
       ],
+      allFrames: [
+        { topic: "test", schemaName: "schema" },
+        { topic: "test", schemaName: "otherSchema" },
+      ],
+    });
+
+    // emit another state with different messages but same converters
+    buildRenderState({
+      ...initialState,
       currentFrame: [
         {
-          topic: "test",
-          schemaName: "schema",
+          topic: "test2",
+          schemaName: "schema2",
           message: { from: "currentFrame" },
           receiveTime: { sec: 0, nsec: 0 },
           sizeInBytes: 1,
         },
-        {
-          topic: "test",
-          schemaName: "otherSchema",
-          message: 1,
-          receiveTime: { sec: 0, nsec: 0 },
-          sizeInBytes: 1,
-          originalMessageEvent: {
-            topic: "test",
-            schemaName: "schema",
-            message: { from: "currentFrame" },
-            receiveTime: { sec: 0, nsec: 0 },
-            sizeInBytes: 1,
-          },
-        },
       ],
-      allFrames: [
-        {
-          message: { from: "allFrames" },
-          receiveTime: { nsec: 0, sec: 1 },
-          schemaName: "schema",
-          sizeInBytes: 1,
-          topic: "test",
-        },
-        {
-          message: 1,
-          originalMessageEvent: {
-            message: { from: "allFrames" },
-            receiveTime: { nsec: 0, sec: 1 },
-            schemaName: "schema",
-            sizeInBytes: 1,
-            topic: "test",
-          },
-          receiveTime: { nsec: 0, sec: 1 },
-          schemaName: "otherSchema",
-          sizeInBytes: 1,
-          topic: "test",
-        },
-      ],
-    };
+    });
 
-    expect(state1).toEqual(expectedState1);
-
-    // snapshot first state current frame
-    const state1CurrentFrame = state1?.currentFrame;
-
-    const state2 = buildRenderState({
+    // and a third state with no new messages but an added converter
+    const state3 = buildRenderState({
       ...initialState,
       currentFrame: undefined,
       subscriptions: [
@@ -837,42 +804,12 @@ describe("renderState", () => {
       ],
     });
 
-    expect(state2?.currentFrame).not.toEqual(state1CurrentFrame);
-
-    expect(state2).toEqual({
-      topics: expectedState1.topics,
-      currentFrame: [
-        {
-          topic: "test",
-          schemaName: "anotherSchema",
-          message: 2,
-          receiveTime: { sec: 0, nsec: 0 },
-          sizeInBytes: 1,
-          originalMessageEvent: {
-            topic: "test",
-            schemaName: "schema",
-            message: { from: "currentFrame" },
-            receiveTime: { sec: 0, nsec: 0 },
-            sizeInBytes: 1,
-          },
-        },
-      ],
+    expect(state3).toMatchObject({
+      currentFrame: [{ topic: "test", schemaName: "anotherSchema" }],
       allFrames: [
-        ...expectedState1.allFrames,
-        {
-          message: 2,
-          originalMessageEvent: {
-            message: { from: "allFrames" },
-            receiveTime: { nsec: 0, sec: 1 },
-            schemaName: "schema",
-            sizeInBytes: 1,
-            topic: "test",
-          },
-          receiveTime: { nsec: 0, sec: 1 },
-          schemaName: "anotherSchema",
-          sizeInBytes: 1,
-          topic: "test",
-        },
+        { topic: "test", schemaName: "schema" },
+        { topic: "test", schemaName: "otherSchema" },
+        { topic: "test", schemaName: "anotherSchema" },
       ],
     });
   });
@@ -889,6 +826,11 @@ describe("renderState", () => {
           schemaName: "schema",
           datatype: "schema",
           convertibleTo: ["otherSchema", "anotherSchema"],
+        },
+        {
+          name: "test2",
+          schemaName: "schema2",
+          datatype: "schema2",
         },
       ],
       currentFrame: expect.any(Array),

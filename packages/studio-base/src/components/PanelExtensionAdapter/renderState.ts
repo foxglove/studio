@@ -71,6 +71,7 @@ function initRenderStateBuilder(): BuildRenderStateFn {
   let prevSharedPanelState: BuilderRenderStateInput["sharedPanelState"];
   let prevCurrentFrame: RenderState["currentFrame"];
   let prevCollatedConversions: undefined | TopicSchemaConversions;
+  const lastMessageByTopic: Map<string, MessageEvent> = new Map();
 
   // Pull these memoized versions into the closure so they are scoped to the lifetime of
   // the panel.
@@ -114,6 +115,10 @@ function initRenderStateBuilder(): BuildRenderStateFn {
       topicSchemaConverters,
       prevCollatedConversions?.topicSchemaConverters,
     );
+
+    if (prevSeekTime !== activeData?.lastSeekTime) {
+      lastMessageByTopic.clear();
+    }
 
     if (watchedFields.has("didSeek")) {
       const didSeek = prevSeekTime !== activeData?.lastSeekTime;
@@ -195,14 +200,15 @@ function initRenderStateBuilder(): BuildRenderStateFn {
             postProcessedFrame.push(messageEvent);
           }
           convertMessage(messageEvent, topicSchemaConverters, postProcessedFrame);
+          lastMessageByTopic.set(messageEvent.topic, messageEvent);
         }
         renderState.currentFrame = postProcessedFrame;
         shouldRender = true;
       } else if (conversionsChanged) {
         // If we don't have a new frame but our conversions have changed, run
-        // only the new conversions on our most recent available frame.
+        // only the new conversions on our most recent message on each topic.
         const postProcessedFrame: MessageEvent<unknown>[] = [];
-        for (const messageEvent of currentFrame ?? prevCurrentFrame ?? []) {
+        for (const messageEvent of lastMessageByTopic.values()) {
           convertMessage(messageEvent, newConverters, postProcessedFrame);
         }
         renderState.currentFrame = postProcessedFrame;
