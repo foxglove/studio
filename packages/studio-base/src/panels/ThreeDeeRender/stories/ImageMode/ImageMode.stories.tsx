@@ -375,7 +375,7 @@ export const DownloadRawImage: StoryObj<React.ComponentProps<typeof ImageModeFox
     const canvas = document.querySelector("canvas")!;
     const inspectObjects = screen.getByRole("button", { name: /inspect objects/i });
     userEvent.click(inspectObjects);
-    await delay(30);
+    await delay(1000);
     const rect = canvas.getBoundingClientRect();
     userEvent.click(canvas, { clientX: rect.width / 2, clientY: rect.height / 2 });
     await delay(30);
