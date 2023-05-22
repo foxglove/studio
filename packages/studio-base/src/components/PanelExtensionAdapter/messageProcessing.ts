@@ -49,7 +49,7 @@ export function convertMessage(
 }
 
 /**
- * Returns a new map consisting of all items in a not present in b.
+ * Returns a new map consisting of all items in `a` not present in `b`.
  */
 export function mapDifference<K, V>(a: Map<K, V[]>, b: undefined | Map<K, V[]>): Map<K, V[]> {
   const result = new Map<K, V[]>();
