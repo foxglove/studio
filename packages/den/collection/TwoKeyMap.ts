@@ -7,6 +7,7 @@
  */
 export class TwoKeyMap<K1, K2, V> {
   #map = new Map<K1, Map<K2, V>>();
+  #size = 0;
 
   public get(key1: K1, key2: K2): V | undefined {
     return this.#map.get(key1)?.get(key2);
@@ -17,12 +18,14 @@ export class TwoKeyMap<K1, K2, V> {
     if (map2 == undefined) {
       map2 = new Map<K2, V>();
       this.#map.set(key1, map2);
+      this.#size++;
     }
     map2.set(key2, value);
   }
 
   /** Deletes upper level map with corresponding key */
   public deleteMap(key1: K1): void {
+    this.#size -= this.#map.get(key1)?.size ?? 0;
     this.#map.delete(key1);
   }
 
@@ -32,6 +35,7 @@ export class TwoKeyMap<K1, K2, V> {
       map2.delete(key2);
       if (map2.size === 0) {
         this.#map.delete(key1);
+        this.#size--;
       }
     }
   }
@@ -44,13 +48,10 @@ export class TwoKeyMap<K1, K2, V> {
     this.#map.clear();
   }
 
-  /** Returns the number of secondary maps ie: the number of maps that contain values*/
-  public size(): number {
-    let size = 0;
-    for (const map2 of this.#map.values()) {
-      size += map2.size;
-    }
-    return size;
+  /** Number of key1, key2 pairs currently in the map */
+  // eslint-disable-next-line no-restricted-syntax
+  public get size(): number {
+    return this.#size;
   }
 
   /**

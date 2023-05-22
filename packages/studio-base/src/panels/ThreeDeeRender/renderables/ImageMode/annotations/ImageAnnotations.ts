@@ -24,7 +24,7 @@ import { IMAGE_ANNOTATIONS_DATATYPES } from "../../../foxglove";
 import { IMAGE_MARKER_ARRAY_DATATYPES, IMAGE_MARKER_DATATYPES } from "../../../ros";
 import { topicIsConvertibleToSchema } from "../../../topicIsConvertibleToSchema";
 import { sortPrefixMatchesToFront } from "../../Images/topicPrefixMatching";
-import { MessageHandlerState, MessageHandler } from "../MessageHandler";
+import { MessageHandler, MessageRenderState } from "../MessageHandler";
 
 type TopicName = string & { __brand: "TopicName" };
 type SchemaName = string & { __brand: "SchemaName" };
@@ -43,7 +43,7 @@ interface ImageAnnotationsContext {
     handler: (messageEvent: MessageEvent<T>) => void,
   ): void;
   labelPool: LabelPool;
-  messageState: MessageHandler;
+  messageHandler: MessageHandler;
 }
 
 const ALL_SUPPORTED_SCHEMAS = new Set([
@@ -91,13 +91,13 @@ export class ImageAnnotations extends THREE.Object3D {
     this.#canvasWidth = context.initialCanvasWidth;
     this.#canvasHeight = context.initialCanvasHeight;
     this.#pixelRatio = context.initialPixelRatio;
-    context.messageState.addListener(this.#updateFromMessageState);
+    context.messageHandler.addListener(this.#updateFromMessageState);
   }
 
   public addSubscriptions(): void {
     this.#context.addSchemaSubscriptions(
       ALL_SUPPORTED_SCHEMAS,
-      this.#context.messageState.handleAnnotations,
+      this.#context.messageHandler.handleAnnotations,
     );
   }
 
@@ -142,10 +142,10 @@ export class ImageAnnotations extends THREE.Object3D {
     }
   }
 
-  #updateFromMessageState = (newState: Partial<MessageHandlerState>) => {
+  #updateFromMessageState = (newState: MessageRenderState) => {
     if (newState.annotationsByTopicSchema != undefined) {
-      for (const { messageEvent, annotations } of newState.annotationsByTopicSchema.values()) {
-        this.#handleMessage(messageEvent, annotations);
+      for (const { originalMessage, annotations } of newState.annotationsByTopicSchema.values()) {
+        this.#handleMessage(originalMessage, annotations);
       }
     }
   };
@@ -215,9 +215,9 @@ export class ImageAnnotations extends THREE.Object3D {
         draft.annotations.push(subscription);
       }
     });
-    this.#context.messageState.setConfig({
-      annotationSubscriptions: this.#context.config().annotations ?? [],
-    });
+    this.#context.messageHandler.setConfig({
+      annotations: this.#context.config().annotations,
+    } as Readonly<Partial<ImageModeConfig>>);
     const renderable = this.#renderablesByTopicAndSchemaName.get(
       topic.name as TopicName,
       (convertTo ?? topic.schemaName) as SchemaName,

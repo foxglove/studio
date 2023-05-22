@@ -2,6 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { Immutable } from "immer";
+
 import { AVLTree } from "@foxglove/avl";
 import { TwoKeyMap } from "@foxglove/den/collection";
 import {
@@ -16,8 +18,11 @@ import { ImageAnnotations as FoxgloveImageAnnotations } from "@foxglove/schemas"
 import { MessageEvent } from "@foxglove/studio";
 import { normalizeAnnotations } from "@foxglove/studio-base/panels/Image/lib/normalizeAnnotations";
 import { Annotation } from "@foxglove/studio-base/panels/Image/types";
-import { ImageAnnotationSubscription } from "@foxglove/studio-base/panels/ThreeDeeRender/IRenderer";
-import { AnyImage } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/Images/ImageTypes";
+import { ImageModeConfig } from "@foxglove/studio-base/panels/ThreeDeeRender/IRenderer";
+import {
+  AnyImage,
+  getTimestampFromImage,
+} from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/Images/ImageTypes";
 import {
   normalizeCompressedImage,
   normalizeRawImage,
@@ -33,65 +38,60 @@ import {
 import { PartialMessageEvent } from "../../SceneExtension";
 import { CompressedImage as RosCompressedImage, Image as RosImage, CameraInfo } from "../../ros";
 
-type MessageEventAnnotationsPair = {
+type NormalizedAnnotations = {
   // required for setting the original message on the renderable
-  messageEvent: MessageEvent<RosImageMarkerArray | RosImageMarker | FoxgloveImageAnnotations>;
+  originalMessage: MessageEvent<RosImageMarkerArray | RosImageMarker | FoxgloveImageAnnotations>;
   annotations: Annotation[];
 };
 
 type SynchronizationItem = {
-  image?: PartialMessageEvent<AnyImage>;
-  annotationsByTopicSchema: TwoKeyMap<string, string, MessageEventAnnotationsPair>;
+  image?: Readonly<MessageEvent<AnyImage>>;
+  annotationsByTopicSchema: TwoKeyMap<string, string, NormalizedAnnotations>;
 };
 
-type ImageModeConfig = {
-  imageTopic: string | undefined;
-  calibrationTopic: string | undefined;
-  annotationSubscriptions: readonly ImageAnnotationSubscription[];
-  synchronize: boolean;
-};
+type Config = Pick<
+  ImageModeConfig,
+  "synchronize" | "annotations" | "calibrationTopic" | "imageTopic"
+>;
 
-export type MessageHandlerState = {
-  image?: PartialMessageEvent<AnyImage>;
+type MessageHandlerState = {
+  image?: MessageEvent<AnyImage>;
   cameraInfo?: CameraInfo;
-  annotationsByTopicSchema: TwoKeyMap<string, string, MessageEventAnnotationsPair>;
+  annotationsByTopicSchema: TwoKeyMap<string, string, NormalizedAnnotations>;
 };
+
+export type MessageRenderState = Readonly<Partial<MessageHandlerState>>;
+
+type RenderStateListener = (
+  newState: MessageRenderState,
+  oldState: MessageRenderState | undefined,
+) => void;
 
 export class MessageHandler {
-  #config: ImageModeConfig;
-  #oldState: Partial<MessageHandlerState> | undefined;
+  // settings that should reflect image mode config
+  #config: Immutable<Config>;
+  // last state passed to listeners
+  #oldRenderState: MessageRenderState | undefined;
+  // internal state of last received messages
   #state: MessageHandlerState;
-  #tree: AVLTree<Time, SynchronizationItem>;
-  #listeners: ((
-    newState: Partial<MessageHandlerState>,
-    oldState: Partial<MessageHandlerState> | undefined,
-  ) => void)[] = [];
+  // sorted tree that holds state for synchronized messages. Used to find most recent synchronized set of image and annotations.
+  readonly #tree: AVLTree<Time, SynchronizationItem>;
+  // listener functions that are called when the state changes.
+  #listeners: RenderStateListener[] = [];
 
-  public constructor(config: ImageModeConfig) {
-    this.#config = {
-      ...config,
-    };
+  public constructor(config: Immutable<Config>) {
+    this.#config = config;
     this.#state = {
       annotationsByTopicSchema: new TwoKeyMap(),
     };
     this.#tree = new AVLTree<Time, SynchronizationItem>(compareTime);
   }
-  public addListener(
-    listener: (
-      newState: Partial<MessageHandlerState>,
-      oldState: Partial<MessageHandlerState> | undefined,
-    ) => void,
-  ): void {
+  public addListener(listener: RenderStateListener): void {
     this.#listeners.push(listener);
   }
 
-  public removeListener(
-    listener: (
-      newState: Partial<MessageHandlerState>,
-      oldState: Partial<MessageHandlerState> | undefined,
-    ) => void,
-  ): void {
-    this.#listeners.filter((fn) => fn !== listener);
+  public removeListener(listener: RenderStateListener): void {
+    this.#listeners = this.#listeners.filter((fn) => fn !== listener);
   }
 
   public handleRosRawImage = (messageEvent: PartialMessageEvent<RosImage>): void => {
@@ -113,13 +113,13 @@ export class MessageHandler {
   };
 
   #handleImage(message: PartialMessageEvent<AnyImage>, image: AnyImage) {
-    const normalizedImageMessage = {
+    const normalizedImageMessage: MessageEvent<AnyImage> = {
       ...message,
       message: image,
     };
-    this.#state.image = normalizedImageMessage;
 
-    if (!this.#config.synchronize) {
+    if (this.#config.synchronize !== true) {
+      this.#state.image = normalizedImageMessage;
       this.#emitState();
       return;
     }
@@ -152,39 +152,46 @@ export class MessageHandler {
     }
 
     const { topic, schemaName } = messageEvent;
-    if (this.#config.synchronize) {
-      const groups = new Map<bigint, Annotation[]>();
+    if (this.#config.synchronize !== true) {
+      this.#state.annotationsByTopicSchema.set(topic, schemaName, {
+        originalMessage: messageEvent,
+        annotations,
+      });
+      this.#emitState();
+      return;
+    }
+    const groups = new Map<bigint, Annotation[]>();
 
-      for (const annotation of annotations) {
-        const key = toNanoSec(annotation.stamp);
-        const arr = groups.get(key);
-        if (arr) {
-          arr.push(annotation);
-        } else {
-          groups.set(key, [annotation]);
-        }
+    for (const annotation of annotations) {
+      const key = toNanoSec(annotation.stamp);
+      const arr = groups.get(key);
+      if (arr) {
+        arr.push(annotation);
+        continue;
       }
+      groups.set(key, [annotation]);
+    }
 
-      for (const [stampNsec, group] of groups) {
-        const stamp = fromNanoSec(stampNsec);
-        let item = this.#tree.get(stamp);
-        if (!item) {
-          item = {
-            image: undefined,
-            annotationsByTopicSchema: new TwoKeyMap(),
-          };
-          this.#tree.set(stamp, item);
-        }
-        item.annotationsByTopicSchema.set(topic, schemaName, { messageEvent, annotations: group });
+    for (const [stampNsec, group] of groups) {
+      const stamp = fromNanoSec(stampNsec);
+      let item = this.#tree.get(stamp);
+      if (!item) {
+        item = {
+          image: undefined,
+          annotationsByTopicSchema: new TwoKeyMap(),
+        };
+        this.#tree.set(stamp, item);
       }
-    } else {
-      this.#state.annotationsByTopicSchema.set(topic, schemaName, { messageEvent, annotations });
+      item.annotationsByTopicSchema.set(topic, schemaName, {
+        originalMessage: messageEvent,
+        annotations: group,
+      });
     }
 
     this.#emitState();
   };
 
-  public setConfig(newConfig: Partial<ImageModeConfig>): void {
+  public setConfig(newConfig: Immutable<Partial<ImageModeConfig>>): void {
     let changed = false;
 
     if (newConfig.synchronize != undefined && newConfig.synchronize !== this.#config.synchronize) {
@@ -202,11 +209,12 @@ export class MessageHandler {
     }
 
     if (
-      newConfig.annotationSubscriptions != undefined &&
-      this.#config.annotationSubscriptions !== newConfig.annotationSubscriptions
+      newConfig.annotations != undefined &&
+      this.#config.annotations &&
+      this.#config.annotations !== newConfig.annotations
     ) {
-      for (const { topic, schemaName } of this.#config.annotationSubscriptions) {
-        const newSubsHasOldSub = newConfig.annotationSubscriptions.find(
+      for (const { topic, schemaName } of this.#config.annotations) {
+        const newSubsHasOldSub = newConfig.annotations.find(
           ({ topic: newTopic, schemaName: newSchemaName }) =>
             topic === newTopic && schemaName === newSchemaName,
         );
@@ -217,10 +225,7 @@ export class MessageHandler {
       }
     }
 
-    this.#config = {
-      ...this.#config,
-      ...newConfig,
-    };
+    this.#config = newConfig;
 
     if (changed) {
       this.#emitState();
@@ -232,17 +237,17 @@ export class MessageHandler {
       annotationsByTopicSchema: new TwoKeyMap(),
     };
     this.#tree.clear();
-    this.#oldState = undefined;
+    this.#oldRenderState = undefined;
   }
 
   #emitState() {
-    const state = this.#getState();
-    this.#listeners.forEach((fn) => fn(state, this.#oldState));
-    this.#oldState = { ...state };
+    const state = this.#getRenderState();
+    this.#listeners.forEach((fn) => fn(state, this.#oldRenderState));
+    this.#oldRenderState = state;
   }
 
-  #getState(): Partial<MessageHandlerState> {
-    if (this.#config.synchronize) {
+  #getRenderState(): Partial<MessageHandlerState> {
+    if (this.#config.synchronize === true) {
       const validEntry = findSynchronizedSetAndRemoveOlderItems(
         this.#tree,
         this.#numVisibleAnnotations(),
@@ -258,19 +263,20 @@ export class MessageHandler {
         cameraInfo: this.#state.cameraInfo,
       };
     }
-    return {
-      cameraInfo: this.#state.cameraInfo,
-      image: this.#state.image,
-      annotationsByTopicSchema: this.#state.annotationsByTopicSchema,
-    };
+    return this.#state;
   }
 
   #numVisibleAnnotations(): number {
-    return this.#config.annotationSubscriptions.filter(({ settings }) => settings.visible).length;
+    return this.#config.annotations?.filter(({ settings }) => settings.visible).length ?? 0;
   }
 }
 
-/** Find the newest entry where we have everything synchronized */
+/**
+ * Find the newest entry where we have everything synchronized and remove all older entries from tree.
+ * @param tree - AVL tree that stores a [image?, annotations?] in sorted order by timestamp.
+ * @param numActiveAnnotationSubscriptions - Number of active annotation subscriptions, used to find the newest full synchronized set
+ * @returns - the newest synchronized item with all active annotations and image, or undefined if none found
+ */
 function findSynchronizedSetAndRemoveOlderItems(
   tree: AVLTree<Time, SynchronizationItem>,
   numActiveAnnotationSubscriptions: number,
@@ -281,7 +287,7 @@ function findSynchronizedSetAndRemoveOlderItems(
     // If we have an image and all the messages for annotation topics then we have a synchronized set.
     if (
       messageState.image &&
-      messageState.annotationsByTopicSchema.size() === numActiveAnnotationSubscriptions
+      messageState.annotationsByTopicSchema.size === numActiveAnnotationSubscriptions
     ) {
       validEntry = entry;
     }
@@ -297,12 +303,4 @@ function findSynchronizedSetAndRemoveOlderItems(
   }
 
   return validEntry;
-}
-
-function getTimestampFromImage(image: AnyImage) {
-  if ("header" in image) {
-    return image.header.stamp;
-  } else {
-    return image.timestamp;
-  }
 }

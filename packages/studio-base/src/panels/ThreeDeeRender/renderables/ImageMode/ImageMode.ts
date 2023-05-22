@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { Immutable } from "immer";
 import * as THREE from "three";
 
 import { filterMap } from "@foxglove/den/collection";
@@ -13,7 +14,10 @@ import {
   IMAGE_RENDERABLE_DEFAULT_SETTINGS,
   ImageRenderable,
 } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/Images/ImageRenderable";
-import { AnyImage } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/Images/ImageTypes";
+import {
+  AnyImage,
+  getFrameIdFromImage,
+} from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/Images/ImageTypes";
 import {
   cameraInfosEqual,
   normalizeCameraInfo,
@@ -21,7 +25,7 @@ import {
 import { makePose } from "@foxglove/studio-base/panels/ThreeDeeRender/transforms";
 
 import { DEFAULT_ZOOM_MODE, ImageModeCamera } from "./ImageModeCamera";
-import { MessageHandler, MessageHandlerState } from "./MessageHandler";
+import { MessageHandler, MessageRenderState } from "./MessageHandler";
 import { ImageAnnotations } from "./annotations/ImageAnnotations";
 import type { IRenderer, ImageModeConfig } from "../../IRenderer";
 import { PartialMessageEvent, SceneExtension } from "../../SceneExtension";
@@ -71,16 +75,12 @@ const ALL_SUPPORTED_CALIBRATION_SCHEMAS = new Set([
   ...CAMERA_CALIBRATION_DATATYPES,
 ]);
 
-type ConfigWithDefaults = ImageModeConfig & {
-  synchronize: boolean;
-  zoomMode: NonNullable<ImageModeConfig["zoomMode"]>;
-};
-
 const DEFAULT_CONFIG = {
   synchronize: true,
-  zoomMode: DEFAULT_ZOOM_MODE,
+  zoomMode: DEFAULT_ZOOM_MODE as "fit" | "fill",
 };
 
+type ConfigWithDefaults = ImageModeConfig & typeof DEFAULT_CONFIG;
 export class ImageMode
   extends SceneExtension<ImageRenderable, ImageModeEvent>
   implements ICameraHandler
@@ -93,7 +93,7 @@ export class ImageMode
       }
     | undefined;
 
-  #annotations: ImageAnnotations;
+  readonly #annotations: ImageAnnotations;
 
   #imageRenderable: ImageRenderable | undefined;
 
@@ -137,12 +137,7 @@ export class ImageMode
     this.#camera.setZoomMode(renderer.config.imageMode.zoomMode ?? "fit");
 
     const config = this.#getImageModeSettings();
-    this.#messageHandler = new MessageHandler({
-      calibrationTopic: config.calibrationTopic,
-      imageTopic: config.imageTopic,
-      synchronize: config.synchronize,
-      annotationSubscriptions: config.annotations ?? [],
-    });
+    this.#messageHandler = new MessageHandler(config);
     this.#messageHandler.addListener(this.#updateFromMessageState);
 
     renderer.settings.errors.on("update", this.#handleErrorChange);
@@ -154,7 +149,7 @@ export class ImageMode
       initialCanvasHeight: canvasSize.height,
       initialPixelRatio: renderer.getPixelRatio(),
       topics: () => renderer.topics ?? [],
-      config: () => renderer.config.imageMode,
+      config: () => this.#getImageModeSettings(),
       updateConfig: (updateHandler) => {
         renderer.updateConfig((draft) => updateHandler(draft.imageMode));
       },
@@ -165,7 +160,7 @@ export class ImageMode
         renderer.addSchemaSubscriptions(schemaNames, handler);
       },
       labelPool: renderer.labelPool,
-      messageState: this.#messageHandler,
+      messageHandler: this.#messageHandler,
     });
     this.add(this.#annotations);
 
@@ -412,7 +407,7 @@ export class ImageMode
     // };
     fields.synchronize = {
       input: "boolean",
-      label: "Sync timestamps",
+      label: "Sync annotations",
       value: synchronize,
     };
     // fields.TODO_smooth = {
@@ -516,11 +511,7 @@ export class ImageMode
       if (config.synchronize !== prevImageModeConfig.synchronize) {
         this.removeAllRenderables();
       }
-      this.#messageHandler.setConfig({
-        synchronize: config.synchronize,
-        imageTopic: config.imageTopic,
-        calibrationTopic: config.calibrationTopic,
-      });
+      this.#messageHandler.setConfig(config);
 
       this.#updateViewAndRenderables();
     } else {
@@ -540,11 +531,11 @@ export class ImageMode
   };
 
   #updateFromMessageState = (
-    newState: Partial<MessageHandlerState>,
-    oldState: Partial<MessageHandlerState> | undefined,
+    newState: MessageRenderState,
+    oldState: MessageRenderState | undefined,
   ): void => {
     if (newState.image != undefined && newState.image !== oldState?.image) {
-      this.#handleImageChange(newState.image, newState.image.message as AnyImage);
+      this.#handleImageChange(newState.image, newState.image.message);
     }
     if (newState.cameraInfo != undefined && newState.cameraInfo !== oldState?.cameraInfo) {
       this.#handleCameraInfoChange(newState.cameraInfo);
@@ -709,7 +700,7 @@ export class ImageMode
     return cameraInfoFrameId ?? imageFrameId;
   }
 
-  #getImageModeSettings(): Readonly<ConfigWithDefaults> {
+  #getImageModeSettings(): Immutable<ConfigWithDefaults> {
     return {
       ...DEFAULT_CONFIG,
       ...(this.renderer.config.imageMode as ImageModeConfig),
@@ -814,14 +805,6 @@ export class ImageMode
   #handleErrorChange = (): void => {
     this.updateSettingsTree();
   };
-}
-
-function getFrameIdFromImage(image: AnyImage) {
-  if ("header" in image) {
-    return image.header.frame_id;
-  } else {
-    return image.frame_id;
-  }
 }
 
 const createFallbackCameraInfoForImage = (options: {
