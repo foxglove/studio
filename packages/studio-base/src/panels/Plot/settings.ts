@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { TFunction } from "i18next";
-import produce from "immer";
+import { produce } from "immer";
 import { isEqual, isNumber, set } from "lodash";
 import memoizeWeak from "memoize-weak";
 import { useCallback, useEffect } from "react";
@@ -37,6 +37,7 @@ const makeSeriesNode = memoizeWeak(
           input: "messagepath",
           value: path.value,
           validTypes: plotableRosTypes,
+          supportsMathModifiers: true,
         },
         label: {
           input: "string",

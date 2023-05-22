@@ -22,7 +22,7 @@ export const datatypes: RosDatatypes = new Map(
 );
 
 // ts-prune-ignore-next
-export const messages = Object.freeze<MessageEvent<unknown>[]>([
+export const messages = Object.freeze<MessageEvent[]>([
   {
     topic: "/some/topic",
     receiveTime: { sec: 100, nsec: 0 },
@@ -85,7 +85,6 @@ export const MessagePathInputStoryFixture: Fixture = {
       "msgs/Log": {
         definitions: [
           { name: "id", type: "int32", isArray: false },
-          { name: "myJson", type: "json", isArray: false },
           { name: "severity", type: "float32", isArray: false },
         ],
       },

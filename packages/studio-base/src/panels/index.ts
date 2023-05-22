@@ -34,7 +34,6 @@ export const getBuiltin: (t: TFunction<"panels">) => PanelInfo[] = (t) => [
     description: t("3DPanelDescription"),
     thumbnail: threeDeeRenderThumbnail,
     module: async () => ({ default: (await import("./ThreeDeeRender")).ThreeDeePanel }),
-    settingsOnboardingTooltip: t("3DPanelSettingsOnboardingTooltip"),
   },
   {
     title: t("ROSDiagnosticsDetail"),
@@ -51,6 +50,13 @@ export const getBuiltin: (t: TFunction<"panels">) => PanelInfo[] = (t) => [
     thumbnail: diagnosticSummaryThumbnail,
     module: async () => await import("./diagnostics/DiagnosticSummary"),
     hasCustomToolbar: true,
+  },
+  {
+    title: t("newImage"),
+    type: "Image",
+    description: t("imageDescription"),
+    thumbnail: imageViewThumbnail,
+    module: async () => ({ default: (await import("./ThreeDeeRender")).ImagePanel }),
   },
   {
     title: t("image"),
@@ -185,9 +191,3 @@ export const getDebug: (t: TFunction<"panels">) => PanelInfo[] = (t) => [
     module: async () => await import("./PlaybackPerformance"),
   },
 ];
-
-export const getNewImage: (t: TFunction<"panels">) => PanelInfo = (t) => ({
-  title: t("newImage"),
-  type: "Image",
-  module: async () => ({ default: (await import("./ThreeDeeRender")).ImagePanel }),
-});

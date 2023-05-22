@@ -15,10 +15,16 @@ const Wrapper = (Story: StoryFn): JSX.Element => {
   return (
     <WorkspaceContextProvider
       initialState={{
-        dataSourceDialog: {
-          activeDataSource: undefined,
-          item: "connection",
-          open: true,
+        dialogs: {
+          dataSource: {
+            activeDataSource: undefined,
+            item: "connection",
+            open: true,
+          },
+          preferences: {
+            initialTab: undefined,
+            open: false,
+          },
         },
       }}
     >
@@ -91,6 +97,12 @@ export const LightChinese: StoryObj = {
   ...Light,
   name: "Default Chinese",
   parameters: { forceLanguage: "zh", colorScheme: "light" },
+};
+
+export const LightJapanese: StoryObj = {
+  ...Light,
+  name: "Default Japanese",
+  parameters: { forceLanguage: "ja", colorScheme: "light" },
 };
 
 export const Dark: StoryObj = {

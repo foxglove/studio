@@ -2,6 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+export type { Immutable } from "immer";
+
 // Valid types for parameter data (such as rosparams)
 export type ParameterValue =
   | undefined
@@ -84,7 +86,7 @@ export type Subscription = {
 /**
  * A message event frames message data with the topic and receive time
  */
-export type MessageEvent<T> = Readonly<{
+export type MessageEvent<T = unknown> = Readonly<{
   /** The topic name this message was received on, i.e. "/some/topic" */
   topic: string;
   /**
@@ -120,7 +122,7 @@ export type MessageEvent<T> = Readonly<{
    * contains the converted message and the originalMessageEvent field contains the original
    * un-converted message event.
    */
-  originalMessageEvent?: MessageEvent<unknown>;
+  originalMessageEvent?: MessageEvent;
 }>;
 
 export interface LayoutActions {
@@ -159,7 +161,7 @@ export interface RenderState {
   /**
    * The latest messages for the current render frame. These are new messages since the last render frame.
    */
-  currentFrame?: readonly MessageEvent<unknown>[];
+  currentFrame?: readonly MessageEvent[];
 
   /**
    * True if the data source performed a seek. This indicates that some data may have been skipped
@@ -171,7 +173,7 @@ export interface RenderState {
   /**
    * All available messages. Best-effort list of all available messages.
    */
-  allFrames?: readonly MessageEvent<unknown>[];
+  allFrames?: readonly MessageEvent[];
 
   /**
    * Map of current parameter values. Parameters are key/value pairs associated with the data
@@ -309,11 +311,19 @@ export type PanelExtensionContext = {
    * array will unsubscribe from all topics.
    *
    * Calling subscribe with an empty array of topics is analagous to unsubscribeAll.
+   *
+   * @deprecated Use `subscribe` with an array of Subscription objects instead.
    */
   subscribe(topics: string[]): void;
 
   /**
    * Subscribe to an array of topics with additional options for each subscription.
+   *
+   * Subscribe will update the current subscriptions to the new list of Subscriptions and
+   * unsubscribe from any previously subscribed topics no longer in the Subscription list. Passing
+   * an empty array will unsubscribe from all topics.
+   *
+   * Calling subscribe with an empty array is analagous to unsubscribeAll.
    */
   subscribe(subscriptions: Subscription[]): void;
 
@@ -497,7 +507,13 @@ export type SettingsTreeFieldValue =
       hideClearButton?: boolean;
     }
   | { input: "gradient"; value?: [string, string] }
-  | { input: "messagepath"; value?: string; validTypes?: string[] }
+  | {
+      input: "messagepath";
+      value?: string;
+      validTypes?: string[];
+      /** True if the input should allow math modifiers like @abs. */
+      supportsMathModifiers?: boolean;
+    }
   | {
       input: "number";
       value?: number;

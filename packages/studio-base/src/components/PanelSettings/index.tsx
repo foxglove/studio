@@ -2,17 +2,18 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Link, Typography } from "@mui/material";
+import { Divider, Typography } from "@mui/material";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useTranslation, Trans } from "react-i18next";
+import { useTranslation } from "react-i18next";
 import { useUnmount } from "react-use";
 
 import { SettingsTree } from "@foxglove/studio";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import { useConfigById } from "@foxglove/studio-base/PanelAPI";
+import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import { ActionMenu } from "@foxglove/studio-base/components/PanelSettings/ActionMenu";
 import SettingsTreeEditor from "@foxglove/studio-base/components/SettingsTreeEditor";
-import ShareJsonModal from "@foxglove/studio-base/components/ShareJsonModal";
+import { ShareJsonModal } from "@foxglove/studio-base/components/ShareJsonModal";
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
 import Stack from "@foxglove/studio-base/components/Stack";
 import {
@@ -26,13 +27,10 @@ import {
   PanelStateStore,
   usePanelStateStore,
 } from "@foxglove/studio-base/context/PanelStateContext";
-import { useWorkspaceActions } from "@foxglove/studio-base/context/WorkspaceContext";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import { PanelConfig } from "@foxglove/studio-base/types/panels";
 import { TAB_PANEL_TYPE } from "@foxglove/studio-base/util/globalConstants";
 import { getPanelTypeFromId } from "@foxglove/studio-base/util/layout";
-
-const selectedLayoutIdSelector = (state: LayoutState) => state.selectedLayout?.id;
 
 const singlePanelIdSelector = (state: LayoutState) =>
   typeof state.selectedLayout?.data?.layout === "string"
@@ -46,6 +44,23 @@ const EMPTY_SETTINGS_TREE: SettingsTree = Object.freeze({
   nodes: {},
 });
 
+const EmptyWrapper = ({ children }: { children: React.ReactNode }) => {
+  const { t } = useTranslation("panelSettings");
+  const [enableNewTopNav = false] = useAppConfigurationValue<boolean>(AppSetting.ENABLE_NEW_TOPNAV);
+
+  if (enableNewTopNav) {
+    return <EmptyState>{children}</EmptyState>;
+  }
+
+  return (
+    <SidebarContent title={t("panelSettings")}>
+      <Typography variant="body2" color="text.secondary">
+        {children}
+      </Typography>
+    </SidebarContent>
+  );
+};
+
 export default function PanelSettings({
   disableToolbar = false,
   selectedPanelIdsForTests,
@@ -54,7 +69,6 @@ export default function PanelSettings({
   selectedPanelIdsForTests?: readonly string[];
 }>): JSX.Element {
   const { t } = useTranslation("panelSettings");
-  const selectedLayoutId = useCurrentLayoutSelector(selectedLayoutIdSelector);
   const singlePanelId = useCurrentLayoutSelector(singlePanelIdSelector);
   const {
     selectedPanelIds: originalSelectedPanelIds,
@@ -72,7 +86,6 @@ export default function PanelSettings({
     }
   }, [selectAllPanels, selectedPanelIds, singlePanelId]);
 
-  const { openLayoutBrowser } = useWorkspaceActions();
   const selectedPanelId = useMemo(
     () => (selectedPanelIds.length === 1 ? selectedPanelIds[0] : undefined),
     [selectedPanelIds],
@@ -141,36 +154,12 @@ export default function PanelSettings({
     }
   }, [incrementSequenceNumber, savePanelConfigs, selectedPanelId]);
 
-  if (selectedLayoutId == undefined) {
-    return (
-      <SidebarContent disableToolbar={disableToolbar} title={t("panelSettings")}>
-        <Typography color="text.secondary">
-          <Trans
-            t={t}
-            i18nKey="noLayoutSelected"
-            components={{
-              selectLayoutLink: <Link onClick={openLayoutBrowser} />,
-            }}
-          />
-        </Typography>
-      </SidebarContent>
-    );
-  }
-
   if (selectedPanelId == undefined) {
-    return (
-      <SidebarContent disableToolbar={disableToolbar} title={t("panelSettings")}>
-        <Typography color="text.secondary">{t("selectAPanelToEditItsSettings")}</Typography>
-      </SidebarContent>
-    );
+    return <EmptyWrapper>{t("selectAPanelToEditItsSettings")}</EmptyWrapper>;
   }
 
   if (!config) {
-    return (
-      <SidebarContent disableToolbar={disableToolbar} title={t("panelSettings")}>
-        <Typography color="text.secondary">{t("loadingPanelSettings")}</Typography>
-      </SidebarContent>
-    );
+    return <EmptyWrapper>{t("loadingPanelSettings")}</EmptyWrapper>;
   }
 
   const isSettingsTree = settingsTree != undefined;
@@ -196,9 +185,24 @@ export default function PanelSettings({
       <Stack gap={2} justifyContent="flex-start" flex="auto">
         <Stack flex="auto">
           {settingsTree && enableNewTopNav && (
-            <Stack padding={0.75}>
-              <Typography variant="subtitle2">{t("panelName", { title })}</Typography>
-            </Stack>
+            <>
+              <Stack
+                paddingLeft={0.75}
+                direction="row"
+                alignItems="center"
+                justifyContent="space-between"
+              >
+                <Typography variant="subtitle2">{t("panelName", { title })}</Typography>
+                <ActionMenu
+                  key={1}
+                  fontSize="small"
+                  allowShare={panelType !== TAB_PANEL_TYPE}
+                  onReset={resetToDefaults}
+                  onShare={() => setShowShareModal(true)}
+                />
+              </Stack>
+              <Divider />
+            </>
           )}
           {settingsTree || showTitleField ? (
             <SettingsTreeEditor

@@ -6,13 +6,17 @@ import { createContext, useContext } from "react";
 
 interface IAppContext {
   appBarLayoutButton?: JSX.Element;
-  syncAdapters?: readonly JSX.Element[];
   createEvent?: (args: {
     deviceId: string;
     timestamp: string;
     durationNanos: string;
     metadata: Record<string, string>;
   }) => Promise<void>;
+  sidebarItems?: readonly [[string, { iconName: string; title: string }]];
+  syncAdapters?: readonly JSX.Element[];
+  workspaceExtensions?: readonly JSX.Element[];
+  layoutEmptyState?: JSX.Element;
+  layoutBrowser?: () => JSX.Element;
 }
 
 const AppContext = createContext<IAppContext>({});

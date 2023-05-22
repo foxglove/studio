@@ -114,7 +114,7 @@ function getTitleBarOverlayOptions(): TitleBarOverlayOptions {
   return {};
 }
 
-function newStudioWindow(deepLinks: string[] = []): BrowserWindow {
+function newStudioWindow(deepLinks: string[] = [], reloadMainWindow: () => void): BrowserWindow {
   const { crashReportingEnabled, telemetryEnabled } = getTelemetrySettings();
   const enableNewTopNav = getAppSetting<boolean>(AppSetting.ENABLE_NEW_TOPNAV) ?? false;
 
@@ -234,6 +234,10 @@ function newStudioWindow(deepLinks: string[] = []): BrowserWindow {
         break;
       case "closeWindow":
         browserWindow.close();
+        break;
+      case "reloadMainWindow":
+        log.info("reloading main window");
+        reloadMainWindow();
         break;
       default:
         break;
@@ -448,26 +452,116 @@ class StudioWindow {
   // track windows by the web-contents id
   // The web contents id is most broadly available across IPC events and app handlers
   // BrowserWindow.id is not as available
-  private static windowsByContentId = new Map<number, StudioWindow>();
+  static #windowsByContentId = new Map<number, StudioWindow>();
+  readonly #deepLinks: string[];
+  readonly #inputSources = new Set<string>();
 
-  private _window: BrowserWindow;
-  private _menu: Menu;
-
-  private _inputSources = new Set<string>();
+  #browserWindow: BrowserWindow;
+  #menu: Menu;
 
   public constructor(deepLinks: string[] = []) {
-    const browserWindow = newStudioWindow(deepLinks);
-    this._window = browserWindow;
-    this._menu = buildMenu(browserWindow);
+    this.#deepLinks = deepLinks;
+
+    const [newWindow, newMenu] = this.#buildBrowserWindow();
+    this.#browserWindow = newWindow;
+    this.#menu = newMenu;
+  }
+
+  public load(): void {
+    // load after setting windowsById so any ipc handlers with id lookup work
+    log.info(`window.loadURL(${rendererPath})`);
+    this.#browserWindow
+      .loadURL(rendererPath)
+      .then(() => {
+        log.info("window URL loaded");
+      })
+      .catch((err) => {
+        log.error("loadURL error", err);
+      });
+  }
+
+  public addInputSource(name: string): void {
+    // A "Foxglove Data Platform" connection is triggered by opening a URL from console
+    // Not currently a connection that can be started from inside Foxglove Studio
+    const unsupportedInputSourceNames = ["Foxglove Data Platform"];
+    if (unsupportedInputSourceNames.includes(name)) {
+      return;
+    }
+
+    this.#inputSources.add(name);
+
+    const fileMenu = this.#menu.getMenuItemById("fileMenu");
+    if (!fileMenu) {
+      return;
+    }
+
+    const existingItem = fileMenu.submenu?.getMenuItemById(name);
+    // If the item already exists, we can silently return
+    // The existing click handler will support the new item since they have the same name
+    if (existingItem) {
+      existingItem.visible = true;
+      return;
+    }
+
+    // build new file menu
+    this.#rebuildFileMenu(fileMenu);
+
+    this.#browserWindow.setMenu(this.#menu);
+  }
+
+  public removeInputSource(name: string): void {
+    this.#inputSources.delete(name);
+
+    const fileMenu = this.#menu.getMenuItemById("fileMenu");
+    if (!fileMenu) {
+      return;
+    }
+
+    this.#rebuildFileMenu(fileMenu);
+    this.#browserWindow.setMenu(this.#menu);
+  }
+
+  public getBrowserWindow(): BrowserWindow {
+    return this.#browserWindow;
+  }
+
+  public getMenu(): Menu {
+    return this.#menu;
+  }
+
+  public static fromWebContentsId(id: number): StudioWindow | undefined {
+    return StudioWindow.#windowsByContentId.get(id);
+  }
+
+  #reloadMainWindow(): void {
+    const windowWasMaximized = this.#browserWindow.isMaximized();
+    this.#browserWindow.close();
+    this.#browserWindow.destroy();
+
+    const [newWindow, newMenu] = this.#buildBrowserWindow();
+    this.#browserWindow = newWindow;
+    this.#menu = newMenu;
+    this.load();
+
+    if (windowWasMaximized) {
+      this.#browserWindow.maximize();
+    }
+  }
+
+  #buildBrowserWindow(): [BrowserWindow, Menu] {
+    const browserWindow = newStudioWindow(this.#deepLinks, () => {
+      this.#reloadMainWindow();
+    });
+    const newMenu = buildMenu(browserWindow);
 
     const id = browserWindow.webContents.id;
 
     log.info(`New Foxglove Studio window ${id}`);
-    StudioWindow.windowsByContentId.set(id, this);
+    StudioWindow.#windowsByContentId.set(id, this);
 
     // when a window closes and it is the current application menu, clear the input sources
     browserWindow.once("close", () => {
-      if (Menu.getApplicationMenu() === this._menu) {
+      if (Menu.getApplicationMenu() === this.#menu) {
         const existingMenu = Menu.getApplicationMenu();
         const fileMenu = existingMenu?.getMenuItemById("fileMenu");
         // https://github.com/electron/electron/issues/8598
@@ -492,78 +586,14 @@ class StudioWindow {
       }
     });
     browserWindow.once("closed", () => {
-      StudioWindow.windowsByContentId.delete(id);
+      StudioWindow.#windowsByContentId.delete(id);
     });
+
+    return [browserWindow, newMenu];
   }
 
-  public load(): void {
-    // load after setting windowsById so any ipc handlers with id lookup work
-    log.info(`window.loadURL(${rendererPath})`);
-    this._window
-      .loadURL(rendererPath)
-      .then(() => {
-        log.info("window URL loaded");
-      })
-      .catch((err) => {
-        log.error("loadURL error", err);
-      });
-  }
-
-  public addInputSource(name: string): void {
-    // A "Foxglove Data Platform" connection is triggered by opening a URL from console
-    // Not currently a connection that can be started from inside Foxglove Studio
-    const unsupportedInputSourceNames = ["Foxglove Data Platform"];
-    if (unsupportedInputSourceNames.includes(name)) {
-      return;
-    }
-
-    this._inputSources.add(name);
-
-    const fileMenu = this._menu.getMenuItemById("fileMenu");
-    if (!fileMenu) {
-      return;
-    }
-
-    const existingItem = fileMenu.submenu?.getMenuItemById(name);
-    // If the item already exists, we can silently return
-    // The existing click handler will support the new item since they have the same name
-    if (existingItem) {
-      existingItem.visible = true;
-      return;
-    }
-
-    // build new file menu
-    this.rebuildFileMenu(fileMenu);
-
-    this._window.setMenu(this._menu);
-  }
-
-  public removeInputSource(name: string): void {
-    this._inputSources.delete(name);
-
-    const fileMenu = this._menu.getMenuItemById("fileMenu");
-    if (!fileMenu) {
-      return;
-    }
-
-    this.rebuildFileMenu(fileMenu);
-    this._window.setMenu(this._menu);
-  }
-
-  public getBrowserWindow(): BrowserWindow {
-    return this._window;
-  }
-
-  public getMenu(): Menu {
-    return this._menu;
-  }
-
-  public static fromWebContentsId(id: number): StudioWindow | undefined {
-    return StudioWindow.windowsByContentId.get(id);
-  }
-
-  private rebuildFileMenu(fileMenu: MenuItem): void {
-    const browserWindow = this._window;
+  #rebuildFileMenu(fileMenu: MenuItem): void {
+    const browserWindow = this.#browserWindow;
 
     // https://github.com/electron/electron/issues/8598
     (fileMenu.submenu as ClearableMenu).clear();
@@ -607,7 +637,7 @@ class StudioWindow {
     fileMenu.submenu?.append(
       new MenuItem({
         label: "Open Connection",
-        submenu: Array.from(this._inputSources).map((name) => ({
+        submenu: Array.from(this.#inputSources).map((name) => ({
           // Electron menus require a preceding & to escape the & char
           label: name.replace(/&/g, "&&"),
           click: async () => {

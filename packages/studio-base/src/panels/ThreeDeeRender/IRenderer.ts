@@ -3,15 +3,21 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import EventEmitter from "eventemitter3";
-import { Immutable } from "immer";
 import * as THREE from "three";
 
-import { MessageEvent, ParameterValue, SettingsIcon, Topic, VariableValue } from "@foxglove/studio";
+import {
+  Immutable,
+  MessageEvent,
+  ParameterValue,
+  SettingsIcon,
+  Topic,
+  VariableValue,
+} from "@foxglove/studio";
 import { ICameraHandler } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/ICameraHandler";
 import { LabelPool } from "@foxglove/three-text";
 
 import { Input } from "./Input";
-import { ModelCache, MeshUpAxis } from "./ModelCache";
+import { MeshUpAxis, ModelCache } from "./ModelCache";
 import { PickedRenderable } from "./Picker";
 import { SceneExtension } from "./SceneExtension";
 import { SettingsManager } from "./SettingsManager";
@@ -45,11 +51,14 @@ export type RendererEvents = {
     variables: ReadonlyMap<string, VariableValue> | undefined,
     renderer: IRenderer,
   ) => void;
+  /** Fired when the structure of the transform tree changes ie: new frame added/removed or frame assigned new parent */
   transformTreeUpdated: (renderer: IRenderer) => void;
   settingsTreeChange: (renderer: IRenderer) => void;
   configChange: (renderer: IRenderer) => void;
   schemaHandlersChanged: (renderer: IRenderer) => void;
   topicHandlersChanged: (renderer: IRenderer) => void;
+  topicsChanged: (renderer: IRenderer) => void;
+  resetViewChanged: (renderer: IRenderer) => void;
 };
 
 export type FollowMode = "follow-pose" | "follow-position" | "follow-none";
@@ -71,6 +80,12 @@ export type ImageModeConfig = {
   calibrationTopic?: string;
   /** Annotation topic settings, analogous to {@link RendererConfig.topics} */
   annotations?: ImageAnnotationSubscription[];
+  /** Zoom mode */
+  zoomMode?: "fit" | "fill";
+  /** Rotation */
+  rotation?: 0 | 90 | 180 | 270;
+  flipHorizontal?: boolean;
+  flipVertical?: boolean;
 };
 
 export type RendererConfig = {
@@ -205,9 +220,12 @@ export interface IRenderer extends EventEmitter<RendererEvents> {
   transformTree: TransformTree;
   coordinateFrameList: SelectEntry[];
   currentTime: bigint;
+  /** Coordinate frame that transforms are applied through to the follow frame. Should be unchanging. */
   fixedFrameId: string | undefined;
-  renderFrameId: string | undefined;
-  followFrameId: string | undefined;
+  /**
+   * The frameId that we _want_ to follow and render in if it exists.
+   */
+  readonly followFrameId: string | undefined;
 
   labelPool: LabelPool;
   markerPool: MarkerPool;
@@ -249,7 +267,7 @@ export interface IRenderer extends EventEmitter<RendererEvents> {
    * @param allFrames - array of all preloaded messages
    * @returns {boolean} - whether the allFramesCursor has been updated and new messages were read in
    */
-  handleAllFramesMessages(allFrames?: readonly MessageEvent<unknown>[]): boolean;
+  handleAllFramesMessages(allFrames?: readonly MessageEvent[]): boolean;
 
   updateConfig(updateHandler: (draft: RendererConfig) => void): void;
 
@@ -290,9 +308,17 @@ export interface IRenderer extends EventEmitter<RendererEvents> {
 
   getCameraState(): CameraState | undefined;
 
+  /** Whether the view has been modified and a reset button should be shown (image mode only). */
+  canResetView(): boolean;
+  /** Reset any manual view modifications (image mode only). */
+  resetView(): void;
+
   setSelectedRenderable(selection: PickedRenderable | undefined): void;
 
-  addMessageEvent(messageEvent: Readonly<MessageEvent<unknown>>): void;
+  addMessageEvent(messageEvent: Readonly<MessageEvent>): void;
+
+  /**  Set desired render/display frame, will render using fallback if id is undefined or frame does not exist */
+  setFollowFrameId(frameId: string | undefined): void;
 
   /** Match the behavior of `tf::Transformer` by stripping leading slashes from
    * frame_ids. This preserves compatibility with earlier versions of ROS while

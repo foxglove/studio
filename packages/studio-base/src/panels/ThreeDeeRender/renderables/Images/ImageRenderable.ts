@@ -5,31 +5,17 @@
 import * as THREE from "three";
 import { assert } from "ts-essentials";
 
-import {
-  PinholeCameraModel,
-  decodeBGR8,
-  decodeBGRA8,
-  decodeBayerBGGR8,
-  decodeBayerGBRG8,
-  decodeBayerGRBG8,
-  decodeBayerRGGB8,
-  decodeFloat1c,
-  decodeMono16,
-  decodeMono8,
-  decodeRGB8,
-  decodeRGBA8,
-  decodeYUV,
-  decodeYUYV,
-} from "@foxglove/den/image";
+import { PinholeCameraModel } from "@foxglove/den/image";
 import { toNanoSec } from "@foxglove/rostime";
-import { RawImage } from "@foxglove/schemas";
+import { IRenderer } from "@foxglove/studio-base/panels/ThreeDeeRender/IRenderer";
 import { BaseUserData, Renderable } from "@foxglove/studio-base/panels/ThreeDeeRender/Renderable";
 import { stringToRgba } from "@foxglove/studio-base/panels/ThreeDeeRender/color";
 import { projectPixel } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/projections";
 import { RosValue } from "@foxglove/studio-base/players/types";
 
 import { AnyImage } from "./ImageTypes";
-import { Image as RosImage, CameraInfo } from "../../ros";
+import { decodeCompressedImageToBitmap, decodeRawImage } from "./decodeImage";
+import { CameraInfo } from "../../ros";
 
 export interface ImageRenderableSettings {
   visible: boolean;
@@ -39,6 +25,8 @@ export interface ImageRenderableSettings {
   planarProjectionFactor: number;
   color: string;
 }
+
+export const CREATE_BITMAP_ERR_KEY = "CreateBitmap";
 
 const DEFAULT_DISTANCE = 1;
 const DEFAULT_PLANAR_PROJECTION_FACTOR = 0;
@@ -56,14 +44,14 @@ export type ImageUserData = BaseUserData & {
   cameraInfo: CameraInfo | undefined;
   cameraModel: PinholeCameraModel | undefined;
   image: AnyImage | undefined;
+  rotation: 0 | 90 | 180 | 270;
+  flipHorizontal: boolean;
+  flipVertical: boolean;
   texture: THREE.Texture | undefined;
   material: THREE.MeshBasicMaterial | undefined;
   geometry: THREE.PlaneGeometry | undefined;
   mesh: THREE.Mesh | undefined;
 };
-
-const CREATE_BITMAP_ERR = "CreateBitmap";
-const DEFAULT_IMAGE_WIDTH = 512;
 
 export class ImageRenderable extends Renderable<ImageUserData> {
   // Make sure that everything is build the first time we render
@@ -77,6 +65,14 @@ export class ImageRenderable extends Renderable<ImageUserData> {
   #materialNeedsUpdate = true;
 
   #renderBehindScene: boolean = false;
+
+  #bitmap?: ImageBitmap;
+
+  #isUpdating = false;
+
+  public constructor(topicName: string, renderer: IRenderer, userData: ImageUserData) {
+    super(topicName, renderer, userData);
+  }
 
   public override dispose(): void {
     this.userData.texture?.dispose();
@@ -96,7 +92,8 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     const rawFrameId =
       this.userData.cameraInfo?.header.frame_id ??
       ("header" in image ? image.header.frame_id : image.frame_id);
-    this.userData.frameId = this.renderer.normalizeFrameId(rawFrameId);
+    this.userData.frameId =
+      typeof rawFrameId === "string" ? this.renderer.normalizeFrameId(rawFrameId) : rawFrameId;
     this.userData.messageTime = toNanoSec("header" in image ? image.header.stamp : image.timestamp);
   }
 
@@ -107,12 +104,13 @@ export class ImageRenderable extends Renderable<ImageUserData> {
   public setRenderBehindScene(): void {
     this.#renderBehindScene = true;
     this.#materialNeedsUpdate = true;
+    this.#meshNeedsUpdate = true;
   }
 
   // Renderable should only need to care about the model
   public setCameraModel = (cameraModel: PinholeCameraModel): void => {
+    this.#geometryNeedsUpdate ||= this.userData.cameraModel !== cameraModel;
     this.userData.cameraModel = cameraModel;
-    this.#geometryNeedsUpdate = true;
   };
 
   public setSettings(newSettings: ImageRenderableSettings): void {
@@ -143,35 +141,64 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     this.#textureNeedsUpdate = true;
   }
 
+  /** Set the rotation (used only for downloading) */
+  public setRotation(rotation: 0 | 90 | 180 | 270): void {
+    this.userData.rotation = rotation;
+  }
+
+  /** Set the horizontal flip (used only for downloading) */
+  // eslint-disable-next-line @foxglove/no-boolean-parameters
+  public setFlipHorizontal(flipHorizontal: boolean): void {
+    this.userData.flipHorizontal = flipHorizontal;
+  }
+
+  /** Set the vertical flip (used only for downloading) */
+  // eslint-disable-next-line @foxglove/no-boolean-parameters
+  public setFlipVertical(flipVertical: boolean): void {
+    this.userData.flipVertical = flipVertical;
+  }
+
+  public setBitmap(bitmap: ImageBitmap): void {
+    this.#bitmap = bitmap;
+    this.#textureNeedsUpdate = true;
+  }
+
   public update(): void {
+    if (this.#isUpdating) {
+      return;
+    }
+    this.#isUpdating = true;
+    // fallback camera info needs image width and height
+    if (this.#textureNeedsUpdate && this.userData.image) {
+      this.#updateTexture();
+      this.#textureNeedsUpdate = false;
+    }
     // We need a valid camera model and image to render
     if (!this.userData.cameraModel || !this.userData.image) {
+      this.#isUpdating = false;
       return;
     }
 
     this.updateHeaderInfo();
 
     if (this.#geometryNeedsUpdate) {
-      this.rebuildGeometry();
+      this.#rebuildGeometry();
       this.#geometryNeedsUpdate = false;
     }
 
-    if (this.#textureNeedsUpdate) {
-      this.updateTexture();
-      this.#textureNeedsUpdate = false;
-    }
     if (this.#materialNeedsUpdate) {
-      this.updateMaterial();
+      this.#updateMaterial();
       this.#materialNeedsUpdate = false;
     }
 
     if (this.#meshNeedsUpdate && this.userData.texture) {
-      this.updateMesh();
+      this.#updateMesh();
       this.#meshNeedsUpdate = false;
     }
+    this.#isUpdating = false;
   }
 
-  private rebuildGeometry() {
+  #rebuildGeometry() {
     assert(this.userData.cameraModel, "Camera model must be set before geometry can be updated");
     // Dispose of the current geometry if the settings have changed
     this.userData.geometry?.dispose();
@@ -181,31 +208,25 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     this.#meshNeedsUpdate = true;
   }
 
-  private updateTexture(): void {
+  #updateTexture(): void {
     assert(this.userData.image, "Image must be set before texture can be updated or created");
     const image = this.userData.image;
     // Create or update the bitmap texture
     if ("format" in image) {
-      const bitmapData = new Blob([image.data], { type: `image/${image.format}` });
-      self
-        .createImageBitmap(bitmapData, { resizeWidth: DEFAULT_IMAGE_WIDTH })
-        .then((bitmap) => {
-          if (this.userData.texture == undefined) {
-            this.userData.texture = createCanvasTexture(bitmap);
-          } else {
-            this.userData.texture.image.close();
-            this.userData.texture.image = bitmap;
-            this.userData.texture.needsUpdate = true;
-          }
+      const bitmap = this.#bitmap;
+      if (!bitmap) {
+        return;
+      }
 
-          this.removeTopicError(CREATE_BITMAP_ERR);
-          this.#materialNeedsUpdate = true;
-          this.update();
-          this.renderer.queueAnimationFrame();
-        })
-        .catch((err) => {
-          this.addTopicError(CREATE_BITMAP_ERR, `createBitmap failed: ${err.message}`);
-        });
+      const texture = this.userData.texture as THREE.CanvasTexture | undefined;
+      if (texture == undefined || !bitmapDimensionsEqual(bitmap, texture.image as ImageBitmap)) {
+        texture?.image.close();
+        texture?.dispose();
+        this.userData.texture = createCanvasTexture(bitmap);
+      } else {
+        texture.image = bitmap;
+        texture.needsUpdate = true;
+      }
     } else {
       const { width, height } = image;
       const prevTexture = this.userData.texture as THREE.DataTexture | undefined;
@@ -219,21 +240,15 @@ export class ImageRenderable extends Renderable<ImageUserData> {
       }
 
       const texture = this.userData.texture as THREE.DataTexture;
-      rawImageToDataTexture(image, {}, texture);
+      decodeRawImage(image, {}, texture.image.data);
       texture.needsUpdate = true;
     }
     this.#materialNeedsUpdate = true;
   }
 
-  private addTopicError(key: string, errorMessage: string) {
-    this.renderer.settings.errors.add(this.userData.settingsPath, key, errorMessage);
-  }
-  private removeTopicError(key: string) {
-    this.renderer.settings.errors.remove(this.userData.settingsPath, key);
-  }
-  private updateMaterial(): void {
+  #updateMaterial(): void {
     if (!this.userData.material) {
-      this.initMaterial();
+      this.#initMaterial();
       this.#meshNeedsUpdate = true;
     }
     const material = this.userData.material!;
@@ -254,16 +269,14 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     if (this.#renderBehindScene) {
       material.depthWrite = false;
       material.depthTest = false;
-      this.renderOrder = -1 * Number.MAX_SAFE_INTEGER;
     } else {
       material.depthTest = true;
-      this.renderOrder = 0;
     }
 
     material.needsUpdate = true;
   }
 
-  private initMaterial(): void {
+  #initMaterial(): void {
     stringToRgba(tempColor, this.userData.settings.color);
     const transparent = tempColor.a < 1;
     const color = new THREE.Color(tempColor.r, tempColor.g, tempColor.b);
@@ -277,7 +290,7 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     });
   }
 
-  private updateMesh(): void {
+  #updateMesh(): void {
     assert(this.userData.geometry, "Geometry must be set before mesh can be updated or created");
     assert(this.userData.material, "Material must be set before mesh can be updated or created");
     if (!this.userData.mesh) {
@@ -287,13 +300,70 @@ export class ImageRenderable extends Renderable<ImageUserData> {
       this.userData.mesh.geometry = this.userData.geometry;
       this.userData.mesh.material = this.userData.material;
     }
+
+    if (this.#renderBehindScene) {
+      this.userData.mesh.renderOrder = -1 * Number.MAX_SAFE_INTEGER;
+    } else {
+      this.userData.mesh.renderOrder = 0;
+    }
+  }
+
+  public override getDownloader():
+    | (() => Promise<{ blob: Blob; fileName: string } | undefined>)
+    | undefined {
+    // re-render the image onto a new canvas to download the original image
+    return async () => {
+      const { topic, image, rotation, flipHorizontal, flipVertical } = this.userData;
+      if (!image) {
+        return;
+      }
+      const stamp = "header" in image ? image.header.stamp : image.timestamp;
+      let bitmap: ImageBitmap;
+      if ("format" in image) {
+        bitmap = await decodeCompressedImageToBitmap(image);
+      } else {
+        const imageData = new ImageData(image.width, image.height);
+        decodeRawImage(image, {}, imageData.data);
+        bitmap = await createImageBitmap(imageData);
+      }
+
+      const width = rotation === 90 || rotation === 270 ? bitmap.height : bitmap.width;
+      const height = rotation === 90 || rotation === 270 ? bitmap.width : bitmap.height;
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        throw new Error("Unable to create rendering context for image download");
+      }
+
+      // Draw the image in the selected orientation so it aligns with the canvas viewport
+      ctx.translate(width / 2, height / 2);
+      ctx.scale(flipHorizontal ? -1 : 1, flipVertical ? -1 : 1);
+      ctx.rotate((rotation / 180) * Math.PI);
+      ctx.translate(-bitmap.width / 2, -bitmap.height / 2);
+      ctx.drawImage(bitmap, 0, 0);
+
+      // read the canvas data as an image (png)
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob((result) => {
+          if (result) {
+            resolve(result);
+          } else {
+            reject(`Failed to create an image from ${width}x${height} canvas`);
+          }
+        }, "image/png");
+      });
+      // name the image the same name as the topic
+      // note: the / characters in the file name will be replaced with _ by the browser
+      // remove any leading / so the image name doesn't start with _
+      const topicName = topic.replace(/^\/+/, "");
+      const fileName = `${topicName}-${stamp.sec}-${stamp.nsec}`;
+      return { blob, fileName };
+    };
   }
 }
-
-type RawImageOptions = {
-  minValue?: number;
-  maxValue?: number;
-};
 
 let tempColor = { r: 0, g: 0, b: 0, a: 0 };
 
@@ -387,63 +457,5 @@ function createGeometry(
   return geometry;
 }
 
-function rawImageToDataTexture(
-  image: RosImage | RawImage,
-  options: RawImageOptions,
-  output: THREE.DataTexture,
-): void {
-  const { encoding, width, height } = image;
-  const is_bigendian = "is_bigendian" in image ? image.is_bigendian : false;
-  const rawData = image.data as Uint8Array;
-  switch (encoding) {
-    case "yuv422":
-      decodeYUV(image.data as Int8Array, width, height, output.image.data);
-      break;
-    // same thing as yuv422, but a distinct decoding from yuv422 and yuyv
-    case "uyuv":
-      decodeYUV(image.data as Int8Array, width, height, output.image.data);
-      break;
-    // change name in the future
-    case "yuyv":
-      decodeYUYV(image.data as Int8Array, width, height, output.image.data);
-      break;
-    case "rgb8":
-      decodeRGB8(rawData, width, height, output.image.data);
-      break;
-    case "rgba8":
-      decodeRGBA8(rawData, width, height, output.image.data);
-      break;
-    case "bgra8":
-      decodeBGRA8(rawData, width, height, output.image.data);
-      break;
-    case "bgr8":
-    case "8UC3":
-      decodeBGR8(rawData, width, height, output.image.data);
-      break;
-    case "32FC1":
-      decodeFloat1c(rawData, width, height, is_bigendian, output.image.data);
-      break;
-    case "bayer_rggb8":
-      decodeBayerRGGB8(rawData, width, height, output.image.data);
-      break;
-    case "bayer_bggr8":
-      decodeBayerBGGR8(rawData, width, height, output.image.data);
-      break;
-    case "bayer_gbrg8":
-      decodeBayerGBRG8(rawData, width, height, output.image.data);
-      break;
-    case "bayer_grbg8":
-      decodeBayerGRBG8(rawData, width, height, output.image.data);
-      break;
-    case "mono8":
-    case "8UC1":
-      decodeMono8(rawData, width, height, output.image.data);
-      break;
-    case "mono16":
-    case "16UC1":
-      decodeMono16(rawData, width, height, is_bigendian, output.image.data, options);
-      break;
-    default:
-      throw new Error(`Unsupported encoding ${encoding}`);
-  }
-}
+const bitmapDimensionsEqual = (a?: ImageBitmap, b?: ImageBitmap) =>
+  a?.width === b?.width && a?.height === b?.height;

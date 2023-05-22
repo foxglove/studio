@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { CircularProgress, Link, styled as muiStyled, Typography } from "@mui/material";
+import { CircularProgress, Link, Typography } from "@mui/material";
 import React, { PropsWithChildren, Suspense, useCallback, useMemo } from "react";
 import { useDrop } from "react-dnd";
 import {
@@ -21,10 +21,12 @@ import {
   MosaicWindow,
   MosaicWithoutDragDropContext,
 } from "react-mosaic-component";
+import { makeStyles } from "tss-react/mui";
 
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import { EmptyPanelLayout } from "@foxglove/studio-base/components/EmptyPanelLayout";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
+import { useAppContext } from "@foxglove/studio-base/context/AppContext";
 import {
   LayoutState,
   useCurrentLayoutActions,
@@ -35,7 +37,7 @@ import { LayoutData } from "@foxglove/studio-base/context/CurrentLayoutContext/a
 import { useExtensionCatalog } from "@foxglove/studio-base/context/ExtensionCatalogContext";
 import { useLayoutManager } from "@foxglove/studio-base/context/LayoutManagerContext";
 import { usePanelCatalog } from "@foxglove/studio-base/context/PanelCatalogContext";
-import { useWorkspaceActions } from "@foxglove/studio-base/context/WorkspaceContext";
+import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/useWorkspaceActions";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
 import { defaultPlaybackConfig } from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
 import { MosaicDropResult, PanelConfig } from "@foxglove/studio-base/types/panels";
@@ -58,21 +60,24 @@ type Props = {
 // place the dropped item as a sibling of the Tab), as well as the "root drop targets" inside the
 // nested mosaic (that would place the dropped item as a direct child of the Tab). Makes it easier
 // to drop panels into a tab layout.
-const HideTopLevelDropTargets = muiStyled("div")`
-  margin: 0;
+const useStyles = makeStyles()({
+  hideTopLevelDropTargets: {
+    margin: 0,
 
-  .mosaic-root + .drop-target-container {
-    display: none !important;
-  }
-  & > .mosaic-window > .drop-target-container {
-    display: none !important;
-  }
-`;
+    ".mosaic-root + .drop-target-container": {
+      display: "none !important",
+    },
+    "& > .mosaic-window > .drop-target-container": {
+      display: "none !important",
+    },
+  },
+});
 
 // This wrapper makes the tabId available in the drop result when something is dropped into a nested
 // drop target. This allows a panel to know which mosaic it was dropped in regardless of nesting
 // level.
 function TabMosaicWrapper({ tabId, children }: PropsWithChildren<{ tabId?: string }>) {
+  const { classes, cx } = useStyles();
   const [, drop] = useDrop<unknown, MosaicDropResult, never>({
     accept: MosaicDragType.WINDOW,
     drop: (_item, monitor) => {
@@ -86,9 +91,9 @@ function TabMosaicWrapper({ tabId, children }: PropsWithChildren<{ tabId?: strin
     },
   });
   return (
-    <HideTopLevelDropTargets className="mosaic-tile" ref={drop}>
+    <div className={cx(classes.hideTopLevelDropTargets, "mosaic-tile")} ref={drop}>
       {children}
-    </HideTopLevelDropTargets>
+    </div>
   );
 }
 
@@ -201,6 +206,7 @@ const selectedLayoutExistsSelector = (state: LayoutState) =>
 const selectedLayoutMosaicSelector = (state: LayoutState) => state.selectedLayout?.data?.layout;
 
 export default function PanelLayout(): JSX.Element {
+  const { layoutEmptyState } = useAppContext();
   const { changePanelLayout, setSelectedLayoutId } = useCurrentLayoutActions();
   const { openLayoutBrowser } = useWorkspaceActions();
   const layoutManager = useLayoutManager();
@@ -259,6 +265,10 @@ export default function PanelLayout(): JSX.Element {
 
   if (layoutLoading === true) {
     return <LoadingState />;
+  }
+
+  if (layoutEmptyState) {
+    return layoutEmptyState;
   }
 
   return (

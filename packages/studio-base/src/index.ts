@@ -21,7 +21,8 @@ export type {
 } from "./context/AppConfigurationContext";
 export { AppContext } from "./context/AppContext";
 export type { IAppContext } from "./context/AppContext";
-export type { Layout, LayoutID, ISO8601Timestamp, ILayoutStorage } from "./services/ILayoutStorage";
+export type { LayoutID } from "./context/CurrentLayoutContext";
+export type { Layout, ISO8601Timestamp, ILayoutStorage } from "./services/ILayoutStorage";
 export { migrateLayout } from "./services/migrateLayout";
 export type { INativeAppMenu, NativeAppMenuEvent } from "./context/NativeAppMenuContext";
 export { default as NativeWindowContext } from "./context/NativeWindowContext";
@@ -39,8 +40,6 @@ export { default as FoxgloveWebSocketDataSourceFactory } from "./dataSources/Fox
 export { default as Ros1LocalBagDataSourceFactory } from "./dataSources/Ros1LocalBagDataSourceFactory";
 export { default as Ros1SocketDataSourceFactory } from "./dataSources/Ros1SocketDataSourceFactory";
 export { default as Ros2LocalBagDataSourceFactory } from "./dataSources/Ros2LocalBagDataSourceFactory";
-export { default as Ros2SocketDataSourceFactory } from "./dataSources/Ros2SocketDataSourceFactory";
-export { default as Ros2UnavailableDataSourceFactory } from "./dataSources/Ros2UnavailableDataSourceFactory";
 export { default as RosbridgeDataSourceFactory } from "./dataSources/RosbridgeDataSourceFactory";
 export { default as UlogLocalDataSourceFactory } from "./dataSources/UlogLocalDataSourceFactory";
 export { default as RemoteDataSourceFactory } from "./dataSources/RemoteDataSourceFactory";

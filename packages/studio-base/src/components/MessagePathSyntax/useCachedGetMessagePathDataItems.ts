@@ -46,7 +46,7 @@ export type MessagePathDataItem = {
 // reference, as long as topics/datatypes/global variables haven't changed in the meantime.
 export function useCachedGetMessagePathDataItems(
   paths: readonly string[],
-): (path: string, message: MessageEvent<unknown>) => MessagePathDataItem[] | undefined {
+): (path: string, message: MessageEvent) => MessagePathDataItem[] | undefined {
   const { topics: providerTopics, datatypes } = PanelAPI.useDataSourceInfo();
   const { globalVariables } = useGlobalVariables();
   const memoizedPaths = useShallowMemo(paths);
@@ -129,7 +129,7 @@ export function useCachedGetMessagePathDataItems(
   const cachesByPath = useRef<{
     [key: string]: {
       filledInPath: RosPath;
-      weakMap: WeakMap<MessageEvent<unknown>, MessagePathDataItem[] | undefined>;
+      weakMap: WeakMap<MessageEvent, MessagePathDataItem[] | undefined>;
     };
   }>({});
   if (useChangeDetector([relevantTopics, relevantDatatypes], { initiallyTrue: true })) {
@@ -148,7 +148,7 @@ export function useCachedGetMessagePathDataItems(
   }
 
   return useCallback(
-    (path: string, message: MessageEvent<unknown>): MessagePathDataItem[] | undefined => {
+    (path: string, message: MessageEvent): MessagePathDataItem[] | undefined => {
       if (!memoizedPaths.includes(path)) {
         throw new Error(`path (${path}) was not in the list of cached paths`);
       }
@@ -217,7 +217,7 @@ export function fillInGlobalVariablesInPath(
 // Get a new item that has `queriedData` set to the values and paths as queried by `rosPath`.
 // Exported just for tests.
 export function getMessagePathDataItems(
-  message: MessageEvent<unknown>,
+  message: MessageEvent,
   filledInPath: RosPath,
   providerTopics: readonly Topic[],
   datatypes: RosDatatypes,
@@ -257,8 +257,6 @@ export function getMessagePathDataItems(
     }
     const pathItem = filledInPath.messagePath[pathIndex];
     const nextPathItem = filledInPath.messagePath[pathIndex + 1];
-    const structureIsJson =
-      structureItem.structureType === "primitive" && structureItem.primitiveType === "json";
     if (!pathItem) {
       // If we're at the end of the `messagePath`, we're done! Just store the point.
       let constantName: string | undefined;
@@ -272,21 +270,12 @@ export function getMessagePathDataItems(
     } else if (pathItem.type === "name" && structureItem.structureType === "message") {
       // If the `pathItem` is a name, we're traversing down using that name.
       const next = structureItem.nextByName[pathItem.name];
-      const nextStructIsJson = next?.structureType === "primitive" && next.primitiveType === "json";
-
-      const actualNext: MessagePathStructureItem =
-        !nextStructIsJson && next
-          ? next
-          : { structureType: "primitive", primitiveType: "json", datatype: "" };
-      traverse(value[pathItem.name], pathIndex + 1, `${path}.${pathItem.repr}`, actualNext);
-    } else if (
-      pathItem.type === "slice" &&
-      (structureItem.structureType === "array" || structureIsJson)
-    ) {
+      traverse(value[pathItem.name], pathIndex + 1, `${path}.${pathItem.repr}`, next);
+    } else if (pathItem.type === "slice" && structureItem.structureType === "array") {
       const { start, end } = pathItem;
       if (typeof start === "object" || typeof end === "object") {
         throw new Error(
-          "getMessagePathDataItems  only works on paths where global variables have been filled in",
+          "getMessagePathDataItems only works on paths where global variables have been filled in",
         );
       }
       const startIdx: number = start;
@@ -329,26 +318,12 @@ export function getMessagePathDataItems(
           // (otherwise they wouldn't have chosen a negative slice).
           newPath = `${path}[${i}]`;
         }
-        traverse(
-          arrayElement,
-          pathIndex + 1,
-          newPath,
-          !structureIsJson && structureItem.structureType === "array"
-            ? structureItem.next
-            : structureItem, // Structure is already JSON.
-        );
+        traverse(arrayElement, pathIndex + 1, newPath, structureItem.next);
       }
     } else if (pathItem.type === "filter") {
       if (filterMatches(pathItem, value)) {
         traverse(value, pathIndex + 1, `${path}{${pathItem.repr}}`, structureItem);
       }
-    } else if (structureIsJson && pathItem.type === "name") {
-      // Use getField just in case.
-      traverse(value[pathItem.name], pathIndex + 1, `${path}.${pathItem.repr}`, {
-        structureType: "primitive",
-        primitiveType: "json",
-        datatype: "",
-      });
     } else {
       console.warn(
         `Unknown pathItem.type ${pathItem.type} for structureType: ${structureItem.structureType}`,
@@ -367,7 +342,7 @@ export function getMessagePathDataItems(
 }
 
 export type MessageAndData = {
-  messageEvent: MessageEvent<unknown>;
+  messageEvent: MessageEvent;
   queriedData: MessagePathDataItem[];
 };
 
@@ -377,9 +352,7 @@ export type MessageDataItemsByPath = {
 
 export function useDecodeMessagePathsForMessagesByTopic(
   paths: readonly string[],
-): (messagesByTopic: {
-  [topicName: string]: readonly MessageEvent<unknown>[];
-}) => MessageDataItemsByPath {
+): (messagesByTopic: { [topicName: string]: readonly MessageEvent[] }) => MessageDataItemsByPath {
   const memoizedPaths = useShallowMemo(paths);
   const cachedGetMessagePathDataItems = useCachedGetMessagePathDataItems(memoizedPaths);
   // Note: Let callers define their own memoization scheme for messagesByTopic. For regular playback

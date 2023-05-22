@@ -358,9 +358,9 @@ type RenderObjectHistoryUserData = BaseUserData & {
 type ThreeObject = THREE.Points<DynamicBufferGeometry> | THREE.LineSegments<DynamicBufferGeometry>;
 type HistoryEntry = { receiveTime: bigint; messageTime: bigint; object3d: ThreeObject };
 export class RenderObjectHistory<ParentRenderable extends Renderable<RenderObjectHistoryUserData>> {
-  public history: HistoryEntry[];
-  private renderable: ParentRenderable;
-  private renderer: IRenderer;
+  #history: HistoryEntry[];
+  #renderable: ParentRenderable;
+  #renderer: IRenderer;
 
   public constructor({
     initial,
@@ -371,30 +371,30 @@ export class RenderObjectHistory<ParentRenderable extends Renderable<RenderObjec
     renderer: IRenderer;
     parentRenderable: ParentRenderable;
   }) {
-    this.history = [initial];
-    this.renderer = renderer;
-    this.renderable = parentRenderable;
+    this.#history = [initial];
+    this.#renderer = renderer;
+    this.#renderable = parentRenderable;
   }
 
   public addHistoryEntry(entry: HistoryEntry): void {
-    this.history.push(entry);
+    this.#history.push(entry);
   }
 
   public updateMaterial(material: THREE.Material): void {
-    for (const entry of this.history) {
+    for (const entry of this.#history) {
       entry.object3d.material = material;
     }
   }
 
   public updateHistoryFromCurrentTime(currentTime: bigint): void {
     // Remove expired entries from the history of points when decayTime is enabled
-    const pointsHistory = this.history;
-    const decayTime = this.renderable.userData.settings.decayTime;
+    const pointsHistory = this.#history;
+    const decayTime = this.#renderable.userData.settings.decayTime;
     const expireTime =
       decayTime > 0 ? currentTime - BigInt(Math.round(decayTime * 1e9)) : MAX_DURATION;
     while (pointsHistory.length > 1 && pointsHistory[0]!.receiveTime < expireTime) {
-      const entry = this.history.shift()!;
-      this.renderable.remove(entry.object3d);
+      const entry = this.#history.shift()!;
+      this.#renderable.remove(entry.object3d);
       entry.object3d.geometry.dispose();
     }
   }
@@ -402,12 +402,12 @@ export class RenderObjectHistory<ParentRenderable extends Renderable<RenderObjec
   public updatePoses(currentTime: bigint, renderFrameId: string, fixedFrameId: string): void {
     // Update the pose on each entry
     let hadTfError = false;
-    for (const entry of this.history) {
+    for (const entry of this.#history) {
       const srcTime = entry.messageTime;
-      const frameId = this.renderable.userData.frameId;
+      const frameId = this.#renderable.userData.frameId;
       const updated = updatePose(
         entry.object3d,
-        this.renderer.transformTree,
+        this.#renderer.transformTree,
         renderFrameId,
         fixedFrameId,
         frameId,
@@ -416,8 +416,8 @@ export class RenderObjectHistory<ParentRenderable extends Renderable<RenderObjec
       );
       if (!updated && !hadTfError) {
         const message = missingTransformMessage(renderFrameId, fixedFrameId, frameId);
-        this.renderer.settings.errors.add(
-          this.renderable.userData.settingsPath,
+        this.#renderer.settings.errors.add(
+          this.#renderable.userData.settingsPath,
           MISSING_TRANSFORM,
           message,
         );
@@ -426,22 +426,25 @@ export class RenderObjectHistory<ParentRenderable extends Renderable<RenderObjec
     }
   }
 
-  public latest(): { receiveTime: bigint; messageTime: bigint; object3d: ThreeObject } | undefined {
-    return this.history[this.history.length - 1];
+  public latest(): { receiveTime: bigint; messageTime: bigint; object3d: ThreeObject } {
+    if (this.#history.length === 0) {
+      throw new Error("RenderObjectHistory is empty");
+    }
+    return this.#history[this.#history.length - 1]!;
   }
 
+  /** Removes all but the last renderable, which would be the current object used in rendering. */
   public clearHistory(): void {
-    // removes all but the last element of the array, which would be the current object used in rendering
-    for (const entry of this.history.splice(0, this.history.length - 1)) {
+    for (const entry of this.#history.splice(0, this.#history.length - 1)) {
       entry.object3d.geometry.dispose();
-      this.renderable.remove(entry.object3d);
+      this.#renderable.remove(entry.object3d);
     }
   }
 
   public dispose(): void {
-    for (const entry of this.history) {
+    for (const entry of this.#history) {
       entry.object3d.geometry.dispose();
     }
-    this.history.length = 0;
+    this.#history.length = 0;
   }
 }

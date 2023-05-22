@@ -15,20 +15,20 @@ type Sample = {
 type RecordFrameTimesFn = (frameTimes: Sample[]) => void;
 
 class BenchmarkStats {
-  private static instance: BenchmarkStats | undefined;
+  static #instance: BenchmarkStats | undefined;
 
-  private frameTimesMs: Sample[] = [];
+  #frameTimesMs: Sample[] = [];
 
   private constructor() {}
 
   public recordFrameTime(durationMs: number): void {
-    this.frameTimesMs.push({
+    this.#frameTimesMs.push({
       stamp: Date.now() / 1_000,
       value: durationMs,
     });
 
-    if (this.frameTimesMs.length >= 100) {
-      const values = this.frameTimesMs.map((sample) => sample.value);
+    if (this.#frameTimesMs.length >= 100) {
+      const values = this.#frameTimesMs.map((sample) => sample.value);
       const totalFrameMs = values.reduce((a, b) => a + b, 0);
       const avgFrameMs = totalFrameMs / values.length;
 
@@ -42,16 +42,16 @@ class BenchmarkStats {
       );
 
       const record = (window as { recordFrameTimes?: RecordFrameTimesFn }).recordFrameTimes;
-      record?.(this.frameTimesMs);
+      record?.(this.#frameTimesMs);
 
-      this.frameTimesMs.length = 0;
+      this.#frameTimesMs.length = 0;
     }
   }
 
   /** Return an instance of BenchmarkStats */
   public static Instance(): BenchmarkStats {
-    BenchmarkStats.instance = BenchmarkStats.instance ?? new BenchmarkStats();
-    return BenchmarkStats.instance;
+    BenchmarkStats.#instance = BenchmarkStats.#instance ?? new BenchmarkStats();
+    return BenchmarkStats.#instance;
   }
 }
 

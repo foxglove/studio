@@ -18,7 +18,7 @@ import {
   useCurrentUserType,
 } from "@foxglove/studio-base/context/CurrentUserContext";
 import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
-import { useWorkspaceActions } from "@foxglove/studio-base/context/WorkspaceContext";
+import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/useWorkspaceActions";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 
 const useStyles = makeStyles()((theme) => ({
@@ -416,7 +416,7 @@ function SidebarItems(props: {
             {item.text}
           </Typography>
           {item.actions != undefined && (
-            <Stack direction="row" alignItems="center" gap={1} paddingTop={1.5}>
+            <Stack direction="row" flexWrap="wrap" alignItems="center" gap={1} paddingTop={1.5}>
               {item.actions}
             </Stack>
           )}
@@ -431,7 +431,7 @@ export default function Start(): JSX.Element {
   const { classes } = useStyles();
   const analytics = useAnalytics();
   const { t } = useTranslation("openDialog");
-  const { dataSourceDialogActions } = useWorkspaceActions();
+  const { dialogActions } = useWorkspaceActions();
 
   const startItems = useMemo(() => {
     return [
@@ -445,7 +445,7 @@ export default function Start(): JSX.Element {
           </SvgIcon>
         ),
         onClick: () => {
-          dataSourceDialogActions.open("file");
+          dialogActions.dataSource.open("file");
           void analytics.logEvent(AppEvent.DIALOG_SELECT_VIEW, { type: "local" });
         },
       },
@@ -474,12 +474,12 @@ export default function Start(): JSX.Element {
           </SvgIcon>
         ),
         onClick: () => {
-          dataSourceDialogActions.open("connection");
+          dialogActions.dataSource.open("connection");
           void analytics.logEvent(AppEvent.DIALOG_SELECT_VIEW, { type: "live" });
         },
       },
     ];
-  }, [analytics, dataSourceDialogActions, t]);
+  }, [analytics, dialogActions.dataSource, t]);
 
   return (
     <Stack className={classes.grid}>
@@ -531,7 +531,7 @@ export default function Start(): JSX.Element {
       </Stack>
       <div className={classes.spacer} />
       <Stack gap={4} className={classes.sidebar}>
-        <SidebarItems onSelectView={dataSourceDialogActions.open} />
+        <SidebarItems onSelectView={dialogActions.dataSource.open} />
       </Stack>
     </Stack>
   );

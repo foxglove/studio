@@ -63,8 +63,11 @@ export class PolygonRenderable extends Renderable<PolygonUserData> {
 export class Polygons extends SceneExtension<PolygonRenderable> {
   public constructor(renderer: IRenderer) {
     super("foxglove.Polygons", renderer);
+  }
 
-    renderer.addSchemaSubscriptions(POLYGON_STAMPED_DATATYPES, this.handlePolygon);
+  public override addSubscriptionsToRenderer(): void {
+    const renderer = this.renderer;
+    renderer.addSchemaSubscriptions(POLYGON_STAMPED_DATATYPES, this.#handlePolygon);
   }
 
   public override settingsNodes(): SettingsTreeEntry[] {
@@ -113,7 +116,7 @@ export class Polygons extends SceneExtension<PolygonRenderable> {
         | Partial<LayerSettingsPolygon>
         | undefined;
       renderable.userData.settings = { ...DEFAULT_SETTINGS, ...settings };
-      this._updatePolygonRenderable(
+      this.#updatePolygonRenderable(
         renderable,
         renderable.userData.polygonStamped,
         renderable.userData.receiveTime,
@@ -121,7 +124,7 @@ export class Polygons extends SceneExtension<PolygonRenderable> {
     }
   };
 
-  private handlePolygon = (messageEvent: PartialMessageEvent<PolygonStamped>): void => {
+  #handlePolygon = (messageEvent: PartialMessageEvent<PolygonStamped>): void => {
     const topic = messageEvent.topic;
     const polygonStamped = normalizePolygonStamped(messageEvent.message);
     const receiveTime = toNanoSec(messageEvent.receiveTime);
@@ -150,10 +153,10 @@ export class Polygons extends SceneExtension<PolygonRenderable> {
       this.renderables.set(topic, renderable);
     }
 
-    this._updatePolygonRenderable(renderable, polygonStamped, receiveTime);
+    this.#updatePolygonRenderable(renderable, polygonStamped, receiveTime);
   };
 
-  private _updatePolygonRenderable(
+  #updatePolygonRenderable(
     renderable: PolygonRenderable,
     polygonStamped: PolygonStamped,
     receiveTime: bigint,
