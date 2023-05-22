@@ -17442,7 +17442,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-dnd@npm:16.0.1, react-dnd@npm:^16.0.1":
+"react-dnd@npm:16.0.1":
   version: 16.0.1
   resolution: "react-dnd@npm:16.0.1"
   dependencies:
@@ -17464,6 +17464,31 @@ __metadata:
     "@types/react":
       optional: true
   checksum: e8da2186aaafcd5bb41c090a995c963a7c3c73c20991667a2cfc0c800d7f7f73913414b2e61c437cdb6221bb2151bd5174088b8b42c17056a896fc4d1da5729f
+  languageName: node
+  linkType: hard
+
+"react-dnd@patch:react-dnd@npm:16.0.1#./patches/react-dnd.patch::locator=foxglove-studio%40workspace%3A.":
+  version: 16.0.1
+  resolution: "react-dnd@patch:react-dnd@npm%3A16.0.1#./patches/react-dnd.patch::version=16.0.1&hash=7ebec9&locator=foxglove-studio%40workspace%3A."
+  dependencies:
+    "@react-dnd/invariant": ^4.0.1
+    "@react-dnd/shallowequal": ^4.0.1
+    dnd-core: ^16.0.1
+    fast-deep-equal: ^3.1.3
+    hoist-non-react-statics: ^3.3.2
+  peerDependencies:
+    "@types/hoist-non-react-statics": ">= 3.3.1"
+    "@types/node": ">= 12"
+    "@types/react": ">= 16"
+    react: ">= 16.14"
+  peerDependenciesMeta:
+    "@types/hoist-non-react-statics":
+      optional: true
+    "@types/node":
+      optional: true
+    "@types/react":
+      optional: true
+  checksum: 86af5aefd56b6c88e3977d3580266152d53f959413297ae2800c9b9599aa7d372bff2873a88b8c72deb03859fe2dbe283098a73b0135220c94bd4959f56a90a1
   languageName: node
   linkType: hard
 
