@@ -350,6 +350,19 @@ export const ImageModeFoxglovePngImage: StoryObj<
   args: { imageType: "png" },
 };
 
+export const DownloadButton: StoryObj<React.ComponentProps<typeof ImageModeFoxgloveImage>> = {
+  render: ImageModeFoxgloveImage,
+  args: { imageType: "raw" },
+  play: async () => {
+    const canvas = document.querySelector("canvas")!;
+    const inspectObjects = screen.getByRole("button", { name: /inspect objects/i });
+    userEvent.click(inspectObjects);
+    await delay(1000);
+    const rect = canvas.getBoundingClientRect();
+    userEvent.click(canvas, { clientX: rect.width / 2, clientY: rect.height / 2 });
+  },
+};
+
 export const DownloadRawImage: StoryObj<React.ComponentProps<typeof ImageModeFoxgloveImage>> = {
   render: function Story(args) {
     const [src, setSrc] = useState<string | undefined>();
