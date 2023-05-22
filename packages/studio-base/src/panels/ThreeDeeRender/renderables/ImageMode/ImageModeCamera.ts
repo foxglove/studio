@@ -19,7 +19,7 @@ export class ImageModeCamera extends THREE.PerspectiveCamera {
   readonly #cameraState = DEFAULT_CAMERA_STATE;
   #rotation: 0 | 90 | 180 | 270 = 0;
 
-  /** x/y zoom factors derived from image and window aspect ratios and zoom mode */
+  /** x/y zoom factors derived from image and window aspect ratios */
   readonly #aspectZoom = new THREE.Vector2();
   readonly #canvasSize = new THREE.Vector2();
 
