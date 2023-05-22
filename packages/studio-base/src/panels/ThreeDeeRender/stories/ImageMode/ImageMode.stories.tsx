@@ -394,6 +394,24 @@ export const DownloadPngImage: StoryObj<React.ComponentProps<typeof ImageModeFox
   args: { imageType: "png" },
 };
 
+export const DownloadPngImageFlipH: StoryObj<React.ComponentProps<typeof ImageModeFoxgloveImage>> =
+  {
+    ...DownloadRawImage,
+    args: { imageType: "png", flipHorizontal: true },
+  };
+
+export const DownloadPngImageFlipV: StoryObj<React.ComponentProps<typeof ImageModeFoxgloveImage>> =
+  {
+    ...DownloadRawImage,
+    args: { imageType: "png", flipVertical: true },
+  };
+
+export const DownloadPngImageFlipHV: StoryObj<React.ComponentProps<typeof ImageModeFoxgloveImage>> =
+  {
+    ...DownloadRawImage,
+    args: { imageType: "png", flipHorizontal: true, flipVertical: true },
+  };
+
 export const DownloadPngImage90: StoryObj<React.ComponentProps<typeof ImageModeFoxgloveImage>> = {
   ...DownloadRawImage,
   args: { imageType: "png", rotation: 90 },
