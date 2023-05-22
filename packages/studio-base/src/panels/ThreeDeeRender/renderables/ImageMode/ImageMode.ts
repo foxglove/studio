@@ -417,7 +417,7 @@ export class ImageMode
     //   value: flipVertical,
     // };
     fields.rotation = {
-      input: "select",
+      input: "toggle",
       label: "Rotation",
       value: config.imageMode.rotation ?? 0,
       options: [
