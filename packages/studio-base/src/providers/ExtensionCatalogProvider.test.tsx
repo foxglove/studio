@@ -184,4 +184,39 @@ describe("ExtensionCatalogProvider", () => {
       },
     ]);
   });
+
+  it("should register a topic mapper", async () => {
+    const source = `
+        module.exports = {
+            activate: function(ctx) {
+                ctx.registerTopicMapper(() => {
+                    return new Map();
+                })
+            }
+        }
+    `;
+
+    const loadExtension = jest.fn().mockResolvedValue(source);
+    const mockPrivateLoader: ExtensionLoader = {
+      namespace: "org",
+      getExtensions: jest
+        .fn()
+        .mockResolvedValue([fakeExtension({ namespace: "org", name: "sample", version: "1" })]),
+      loadExtension,
+      installExtension: jest.fn(),
+      uninstallExtension: jest.fn(),
+    };
+
+    const { result, waitFor } = renderHook(() => useExtensionCatalog((state) => state), {
+      initialProps: {},
+      wrapper: ({ children }) => (
+        <ExtensionCatalogProvider loaders={[mockPrivateLoader]}>
+          {children}
+        </ExtensionCatalogProvider>
+      ),
+    });
+
+    await waitFor(() => expect(loadExtension).toHaveBeenCalledTimes(1));
+    expect(result.current.installedTopicMappers).toEqual([expect.any(Function)]);
+  });
 });

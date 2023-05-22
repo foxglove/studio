@@ -7,7 +7,12 @@ import ReactDOM from "react-dom";
 import { createStore, StoreApi } from "zustand";
 
 import Logger from "@foxglove/log";
-import { ExtensionContext, ExtensionModule, RegisterMessageConverterArgs } from "@foxglove/studio";
+import {
+  ExtensionContext,
+  ExtensionModule,
+  RegisterMessageConverterArgs,
+  RegisterTopicMapperArgs,
+} from "@foxglove/studio";
 import {
   ExtensionCatalog,
   ExtensionCatalogContext,
@@ -21,6 +26,7 @@ const log = Logger.getLogger(__filename);
 type ContributionPoints = {
   panels: Record<string, RegisteredPanel>;
   messageConverters: RegisterMessageConverterArgs<unknown>[];
+  topicMappers: RegisterTopicMapperArgs[];
 };
 
 function activateExtension(
@@ -32,6 +38,8 @@ function activateExtension(
   const panels: Record<string, RegisteredPanel> = {};
 
   const messageConverters: RegisterMessageConverterArgs<unknown>[] = [];
+
+  const topicMappers: RegisterTopicMapperArgs[] = [];
 
   log.debug(`Activating extension ${extension.qualifiedName}`);
 
@@ -50,7 +58,7 @@ function activateExtension(
   const ctx: ExtensionContext = {
     mode: extensionMode,
 
-    registerPanel(params) {
+    registerPanel: (params) => {
       log.debug(`Extension ${extension.qualifiedName} registering panel: ${params.name}`);
 
       const fullId = `${extension.qualifiedName}.${params.name}`;
@@ -66,11 +74,15 @@ function activateExtension(
       };
     },
 
-    registerMessageConverter<Src>(args: RegisterMessageConverterArgs<Src>) {
+    registerMessageConverter: <Src,>(args: RegisterMessageConverterArgs<Src>) => {
       log.debug(
         `Extension ${extension.qualifiedName} registering message converter from: ${args.fromSchemaName} to: ${args.toSchemaName}`,
       );
       messageConverters.push(args as RegisterMessageConverterArgs<unknown>);
+    },
+
+    registerTopicMapper: (args: RegisterTopicMapperArgs) => {
+      topicMappers.push(args);
     },
   };
 
@@ -90,6 +102,7 @@ function activateExtension(
   return {
     panels,
     messageConverters,
+    topicMappers,
   };
 }
 
@@ -119,7 +132,11 @@ export function createExtensionRegistryStore(
       }
 
       const extensionList: ExtensionInfo[] = [];
-      const allContributionPoints: ContributionPoints = { panels: {}, messageConverters: [] };
+      const allContributionPoints: ContributionPoints = {
+        panels: {},
+        messageConverters: [],
+        topicMappers: [],
+      };
       for (const loader of loaders) {
         try {
           for (const extension of await loader.getExtensions()) {
@@ -129,6 +146,7 @@ export function createExtensionRegistryStore(
               const contributionPoints = activateExtension(extension, unwrappedExtensionSource);
               Object.assign(allContributionPoints.panels, contributionPoints.panels);
               allContributionPoints.messageConverters.push(...contributionPoints.messageConverters);
+              allContributionPoints.topicMappers.push(...contributionPoints.topicMappers);
             } catch (err) {
               log.error("Error loading extension", err);
             }
@@ -142,6 +160,7 @@ export function createExtensionRegistryStore(
         installedExtensions: extensionList,
         installedPanels: allContributionPoints.panels,
         installedMessageConverters: allContributionPoints.messageConverters,
+        installedTopicMappers: allContributionPoints.topicMappers,
       });
     },
 
@@ -151,6 +170,8 @@ export function createExtensionRegistryStore(
     installedPanels: {},
 
     installedMessageConverters: mockMessageConverters ?? [],
+
+    installedTopicMappers: [],
 
     uninstallExtension: async (namespace: ExtensionNamespace, id: string) => {
       const namespacedLoader = loaders.find((loader) => loader.namespace === namespace);

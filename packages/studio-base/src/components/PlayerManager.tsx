@@ -12,7 +12,14 @@
 //   You may not use this file except in compliance with the License.
 
 import { useSnackbar } from "notistack";
-import { PropsWithChildren, useCallback, useLayoutEffect, useMemo, useState } from "react";
+import {
+  PropsWithChildren,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useState,
+} from "react";
 import { useLatest, useMountedState } from "react-use";
 
 import { useShallowMemo } from "@foxglove/hooks";
@@ -24,6 +31,10 @@ import {
   useCurrentLayoutActions,
   useCurrentLayoutSelector,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
+import {
+  ExtensionCatalog,
+  useExtensionCatalog,
+} from "@foxglove/studio-base/context/ExtensionCatalogContext";
 import { useLayoutManager } from "@foxglove/studio-base/context/LayoutManagerContext";
 import { useNativeWindow } from "@foxglove/studio-base/context/NativeWindowContext";
 import PlayerSelectionContext, {
@@ -36,6 +47,7 @@ import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables"
 import useIndexedDbRecents, { RecentRecord } from "@foxglove/studio-base/hooks/useIndexedDbRecents";
 import useWarnImmediateReRender from "@foxglove/studio-base/hooks/useWarnImmediateReRender";
 import AnalyticsMetricsCollector from "@foxglove/studio-base/players/AnalyticsMetricsCollector";
+import { TopicMappingPlayer } from "@foxglove/studio-base/players/TopicMappingPlayer/TopicMappingPlayer";
 import UserNodePlayer from "@foxglove/studio-base/players/UserNodePlayer";
 import { Player } from "@foxglove/studio-base/players/types";
 import { UserNodes } from "@foxglove/studio-base/types/panels";
@@ -53,6 +65,7 @@ const userNodesSelector = (state: LayoutState) =>
   state.selectedLayout?.data?.userNodes ?? EMPTY_USER_NODES;
 const globalVariablesSelector = (state: LayoutState) =>
   state.selectedLayout?.data?.globalVariables ?? EMPTY_GLOBAL_VARIABLES;
+const selectTopicMappers = (catalog: ExtensionCatalog) => catalog.installedTopicMappers;
 
 export default function PlayerManager(props: PropsWithChildren<PlayerManagerProps>): JSX.Element {
   const { children, playerSources } = props;
@@ -83,6 +96,9 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
   const userNodes = useCurrentLayoutSelector(userNodesSelector);
   const globalVariables = useCurrentLayoutSelector(globalVariablesSelector);
 
+  const topicMappers = useExtensionCatalog(selectTopicMappers);
+  const [initialTopicMappers] = useState(topicMappers);
+
   const { recents, addRecent } = useIndexedDbRecents();
 
   // We don't want to recreate the player when the these variables change, but we do want to
@@ -93,15 +109,34 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
   // the message pipeline
   const globalVariablesRef = useLatest(globalVariables);
 
-  const player = useMemo(() => {
+  // Initialize the topic mapping player with the mappers we have at first load. Any
+  // changes in mappers caused by dynamically loaded extensions have to be set separately
+  // because we can only construct the wrapping player once since the underlying player
+  // doesn't allow us set a new listener after the initial listener is set.
+  const topicMapper = useMemo(() => {
     if (!basePlayer) {
       return undefined;
     }
 
-    const userNodePlayer = new UserNodePlayer(basePlayer, userNodeActions);
+    return new TopicMappingPlayer(basePlayer, initialTopicMappers ?? []);
+  }, [basePlayer, initialTopicMappers]);
+
+  // Topic mappers can change if we hot load a new extension with new mappers.
+  useEffect(() => {
+    if (topicMappers !== initialTopicMappers) {
+      topicMapper?.setMappers(topicMappers ?? []);
+    }
+  }, [initialTopicMappers, topicMapper, topicMappers]);
+
+  const player = useMemo(() => {
+    if (!topicMapper) {
+      return undefined;
+    }
+
+    const userNodePlayer = new UserNodePlayer(topicMapper, userNodeActions);
     userNodePlayer.setGlobalVariables(globalVariablesRef.current);
     return userNodePlayer;
-  }, [basePlayer, globalVariablesRef, userNodeActions]);
+  }, [globalVariablesRef, topicMapper, userNodeActions]);
 
   useLayoutEffect(() => void player?.setUserNodes(userNodes), [player, userNodes]);
 
