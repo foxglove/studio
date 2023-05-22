@@ -61,7 +61,6 @@ import { FrameAxes } from "./renderables/FrameAxes";
 import { Grids } from "./renderables/Grids";
 import { ImageMode } from "./renderables/ImageMode/ImageMode";
 import { Images } from "./renderables/Images";
-import { DownloadImageInfo } from "./renderables/Images/ImageTypes";
 import { LaserScans } from "./renderables/LaserScans";
 import { Markers } from "./renderables/Markers";
 import { MeasurementTool } from "./renderables/MeasurementTool";
@@ -817,10 +816,6 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
   public resetView(): void {
     this.#imageModeExtension?.resetViewModifications();
     this.queueAnimationFrame();
-  }
-
-  public getCurrentImage(): DownloadImageInfo | undefined {
-    return this.#imageModeExtension?.getLatestImage();
   }
 
   public setSelectedRenderable(selection: PickedRenderable | undefined): void {

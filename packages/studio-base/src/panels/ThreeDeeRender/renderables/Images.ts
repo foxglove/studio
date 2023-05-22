@@ -438,6 +438,7 @@ export class Images extends SceneExtension<ImageRenderable> {
       cameraInfo: undefined,
       cameraModel: undefined,
       image,
+      rotation: 0,
       texture: undefined,
       material: undefined,
       geometry: undefined,

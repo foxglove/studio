@@ -3,8 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { StoryObj } from "@storybook/react";
-import { userEvent } from "@storybook/testing-library";
-import { useCallback } from "react";
+import { fireEvent } from "@storybook/testing-library";
 import { v4 as uuid } from "uuid";
 
 import Panel from "@foxglove/studio-base/components/Panel";
@@ -22,19 +21,16 @@ export default {
 const DUMMY_CLASS = uuid();
 
 function DummyPanel(): JSX.Element {
-  const getItems = useCallback(
-    (): PanelContextMenuItem[] => [
-      { type: "item", label: "Download Image", onclick: () => undefined },
-      { type: "item", label: "Flip Horizontal", onclick: () => undefined },
-      { type: "item", label: "Flip Vertical", onclick: () => undefined },
-    ],
-    [],
-  );
+  const items: PanelContextMenuItem[] = [
+    { type: "item", label: "Download Image", onclick: () => undefined },
+    { type: "item", label: "Flip Horizontal", onclick: () => undefined },
+    { type: "item", label: "Flip Vertical", onclick: () => undefined },
+  ];
 
   return (
     <>
       <PanelToolbar />
-      <PanelContextMenu getItems={getItems} />
+      <PanelContextMenu itemsForClickPosition={() => items} />
       <div
         className={DUMMY_CLASS}
         style={{
@@ -69,9 +65,9 @@ export const Default: StoryObj = {
   },
 
   play: () => {
-    for (const el of document.getElementsByClassName(DUMMY_CLASS)) {
+    Array.from(document.getElementsByClassName(DUMMY_CLASS)).forEach((el) => {
       const rect = el.getBoundingClientRect();
-      userEvent.click(el, { clientX: rect.x + 100, clientY: rect.y + 100, button: 2 });
-    }
+      fireEvent.contextMenu(el, { clientX: rect.x + 100, clientY: rect.y + 100 });
+    });
   },
 };
