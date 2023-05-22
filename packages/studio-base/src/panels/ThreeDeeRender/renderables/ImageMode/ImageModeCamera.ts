@@ -13,12 +13,10 @@ const DEFAULT_CAMERA_STATE = {
 
 const MIN_USER_ZOOM = 0.5;
 const MAX_USER_ZOOM = 50;
-export const DEFAULT_ZOOM_MODE = "fit";
 
 export class ImageModeCamera extends THREE.PerspectiveCamera {
   #model?: PinholeCameraModel;
   readonly #cameraState = DEFAULT_CAMERA_STATE;
-  #zoomMode: "fit" | "fill" | "custom" = DEFAULT_ZOOM_MODE;
   #rotation: 0 | 90 | 180 | 270 = 0;
 
   /** x/y zoom factors derived from image and window aspect ratios and zoom mode */
@@ -47,11 +45,6 @@ export class ImageModeCamera extends THREE.PerspectiveCamera {
   public resetModifications(): void {
     this.#panOffset.set(0, 0);
     this.#userZoom = 1;
-    this.#updateProjection();
-  }
-
-  public setZoomMode(mode: "fit" | "fill" | "custom"): void {
-    this.#zoomMode = mode;
     this.#updateProjection();
   }
 
@@ -230,11 +223,7 @@ export class ImageModeCamera extends THREE.PerspectiveCamera {
       rendererAspect = 1 / rendererAspect;
     }
 
-    let adjustY = imageAspect > rendererAspect;
-    if (this.#zoomMode === "fill") {
-      adjustY = !adjustY;
-    }
-    if (adjustY) {
+    if (imageAspect > rendererAspect) {
       this.#aspectZoom.y = (this.#aspectZoom.y / imageAspect) * rendererAspect;
     } else {
       this.#aspectZoom.x = (this.#aspectZoom.x / rendererAspect) * imageAspect;
