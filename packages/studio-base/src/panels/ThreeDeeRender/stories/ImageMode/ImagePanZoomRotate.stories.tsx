@@ -118,7 +118,7 @@ const BaseStory = ({ rotation, flipHorizontal, flipVertical }: BaseStoryProps): 
   return (
     // Use a fixed-size container to make the canvas size/position consistent for mouse interactions
     <div style={{ width: 800, height: 600, flex: "0 0 auto" }}>
-      <PanelSetup fixture={fixture} includeSettings={true}>
+      <PanelSetup fixture={fixture} includeSettings={true} settingsWidth={338}>
         <ImagePanel
           overrideConfig={{
             ...ImagePanel.defaultConfig,
