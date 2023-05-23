@@ -191,6 +191,12 @@ export const PanZoom: StoryObj<
     fireEvent.mouseUp(canvas, { clientX: cx + args.panX, clientY: cy + args.panY });
 
     fireEvent.wheel(canvas, { clientX: cx + args.panX, clientY: cy + args.panY, deltaY: 100 });
+
+    // pan again after zooming to ensure the zoom scale is accounted for
+    fireEvent.mouseDown(canvas, { clientX: cx + args.panX, clientY: cy + args.panY });
+    setMarkerPos(cx + args.panX * 0.3, cy + args.panY * 0.3);
+    fireEvent.mouseMove(canvas, { clientX: cx + args.panX * 0.3, clientY: cy + args.panY * 0.3 });
+    fireEvent.mouseUp(canvas, { clientX: cx + args.panX * 0.3, clientY: cy + args.panY * 0.3 });
   },
 };
 
