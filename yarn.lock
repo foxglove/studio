@@ -3139,6 +3139,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@jest/types@npm:^27.5.1":
+  version: 27.5.1
+  resolution: "@jest/types@npm:27.5.1"
+  dependencies:
+    "@types/istanbul-lib-coverage": ^2.0.0
+    "@types/istanbul-reports": ^3.0.0
+    "@types/node": "*"
+    "@types/yargs": ^16.0.0
+    chalk: ^4.0.0
+  checksum: d1f43cc946d87543ddd79d49547aab2399481d34025d5c5f2025d3d99c573e1d9832fa83cef25e9d9b07a8583500229d15bbb07b8e233d127d911d133e2f14b1
+  languageName: node
+  linkType: hard
+
 "@jest/types@npm:^29.5.0":
   version: 29.5.0
   resolution: "@jest/types@npm:29.5.0"
@@ -4122,6 +4135,35 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@storybook/addon-interactions@npm:7.0.13":
+  version: 7.0.13
+  resolution: "@storybook/addon-interactions@npm:7.0.13"
+  dependencies:
+    "@storybook/client-logger": 7.0.13
+    "@storybook/components": 7.0.13
+    "@storybook/core-common": 7.0.13
+    "@storybook/core-events": 7.0.13
+    "@storybook/global": ^5.0.0
+    "@storybook/instrumenter": 7.0.13
+    "@storybook/manager-api": 7.0.13
+    "@storybook/preview-api": 7.0.13
+    "@storybook/theming": 7.0.13
+    "@storybook/types": 7.0.13
+    jest-mock: ^27.0.6
+    polished: ^4.2.2
+    ts-dedent: ^2.2.0
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0 || ^18.0.0
+    react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0
+  peerDependenciesMeta:
+    react:
+      optional: true
+    react-dom:
+      optional: true
+  checksum: f698196bbdab7ac921e9eede8b7deb502e47b6ade697b91053746b7fb7403c5a856729ade968db96154e2deacc7b4c0ff37ce51723c60cf3e3ce79044caf42f3
+  languageName: node
+  linkType: hard
+
 "@storybook/addon-measure@npm:7.0.13":
   version: 7.0.13
   resolution: "@storybook/addon-measure@npm:7.0.13"
@@ -4718,6 +4760,19 @@ __metadata:
   version: 5.0.0
   resolution: "@storybook/global@npm:5.0.0"
   checksum: ede0ad35ec411fe31c61150dbd118fef344d1d0e72bf5d3502368e35cf68126f6b7ae4a0ab5e2ffe2f0baa3b4286f03ad069ba3e098e1725449ef08b7e154ba8
+  languageName: node
+  linkType: hard
+
+"@storybook/instrumenter@npm:7.0.13":
+  version: 7.0.13
+  resolution: "@storybook/instrumenter@npm:7.0.13"
+  dependencies:
+    "@storybook/channels": 7.0.13
+    "@storybook/client-logger": 7.0.13
+    "@storybook/core-events": 7.0.13
+    "@storybook/global": ^5.0.0
+    "@storybook/preview-api": 7.0.13
+  checksum: 77eecc7b373e81d805ab17c9feeb8a4968723a0e7b0e953934235828cba4c37a19f8ca6ece8715769aa060601337a956bcea9cb44c7ee1cb26ea5d26a7e3e71f
   languageName: node
   linkType: hard
 
@@ -6323,6 +6378,15 @@ __metadata:
   version: 20.2.1
   resolution: "@types/yargs-parser@npm:20.2.1"
   checksum: 1d039e64494a7a61ddd278349a3dc60b19f99ff0517425696e796f794e4252452b9d62178e69755ad03f439f9dc0c8c3d7b3a1201b3a24e134bac1a09fa11eaa
+  languageName: node
+  linkType: hard
+
+"@types/yargs@npm:^16.0.0":
+  version: 16.0.5
+  resolution: "@types/yargs@npm:16.0.5"
+  dependencies:
+    "@types/yargs-parser": "*"
+  checksum: 22697f7cc8aa32dcc10981a87f035e183303a58351c537c81fb450270d5c494b1d918186210e445b0eb2e4a8b34a8bda2a595f346bdb1c9ed2b63d193cb00430
   languageName: node
   linkType: hard
 
@@ -11682,6 +11746,7 @@ __metadata:
     "@octokit/rest": 19.0.8
     "@storybook/addon-actions": 7.0.13
     "@storybook/addon-essentials": 7.0.13
+    "@storybook/addon-interactions": 7.0.13
     "@storybook/react": 7.0.13
     "@storybook/react-webpack5": 7.0.13
     "@types/babel__core": ^7.20.0
@@ -13898,6 +13963,16 @@ __metadata:
     slash: ^3.0.0
     stack-utils: ^2.0.3
   checksum: daddece6bbf846eb6a2ab9be9f2446e54085bef4e5cecd13d2a538fa9c01cb89d38e564c6b74fd8e12d37ed9eface8a362240ae9f21d68b214590631e7a0d8bf
+  languageName: node
+  linkType: hard
+
+"jest-mock@npm:^27.0.6":
+  version: 27.5.1
+  resolution: "jest-mock@npm:27.5.1"
+  dependencies:
+    "@jest/types": ^27.5.1
+    "@types/node": "*"
+  checksum: f5b5904bb1741b4a1687a5f492535b7b1758dc26534c72a5423305f8711292e96a601dec966df81bb313269fb52d47227e29f9c2e08324d79529172f67311be0
   languageName: node
   linkType: hard
 
