@@ -73,7 +73,7 @@ export class MessageHandler {
   // last state passed to listeners
   #oldRenderState: MessageRenderState | undefined;
   // internal state of last received messages
-  #state: MessageHandlerState;
+  #lastReceivedMessages: MessageHandlerState;
   // sorted tree that holds state for synchronized messages. Used to find most recent synchronized set of image and annotations.
   readonly #tree: AVLTree<Time, SynchronizationItem>;
   // listener functions that are called when the state changes.
@@ -81,7 +81,7 @@ export class MessageHandler {
 
   public constructor(config: Immutable<Config>) {
     this.#config = config;
-    this.#state = {
+    this.#lastReceivedMessages = {
       annotationsByTopicSchema: new TwoKeyMap(),
     };
     this.#tree = new AVLTree<Time, SynchronizationItem>(compareTime);
@@ -119,7 +119,7 @@ export class MessageHandler {
     };
 
     if (this.#config.synchronize !== true) {
-      this.#state.image = normalizedImageMessage;
+      this.#lastReceivedMessages.image = normalizedImageMessage;
       this.#emitState();
       return;
     }
@@ -138,7 +138,7 @@ export class MessageHandler {
 
   public handleCameraInfo = (message: PartialMessageEvent<CameraInfo>): void => {
     const cameraInfo = normalizeCameraInfo(message.message);
-    this.#state.cameraInfo = cameraInfo;
+    this.#lastReceivedMessages.cameraInfo = cameraInfo;
     this.#emitState();
   };
 
@@ -153,7 +153,7 @@ export class MessageHandler {
 
     const { topic, schemaName } = messageEvent;
     if (this.#config.synchronize !== true) {
-      this.#state.annotationsByTopicSchema.set(topic, schemaName, {
+      this.#lastReceivedMessages.annotationsByTopicSchema.set(topic, schemaName, {
         originalMessage: messageEvent,
         annotations,
       });
@@ -203,7 +203,7 @@ export class MessageHandler {
       for (const item of this.#tree.values()) {
         item.image = undefined;
       }
-      this.#state.image = undefined;
+      this.#lastReceivedMessages.image = undefined;
       changed = true;
     }
 
@@ -211,7 +211,7 @@ export class MessageHandler {
       "calibrationTopic" in newConfig &&
       this.#config.calibrationTopic !== newConfig.calibrationTopic
     ) {
-      this.#state.cameraInfo = undefined;
+      this.#lastReceivedMessages.cameraInfo = undefined;
       changed = true;
     }
 
@@ -227,9 +227,12 @@ export class MessageHandler {
           settings.visible && newVisibleAnnotationsMap.set(topic, schemaName, settings.visible),
       );
 
-      for (const [topic, schemaName] of this.#state.annotationsByTopicSchema.keys()) {
+      for (const [
+        topic,
+        schemaName,
+      ] of this.#lastReceivedMessages.annotationsByTopicSchema.keys()) {
         if (newVisibleAnnotationsMap.get(topic, schemaName) == undefined) {
-          this.#state.annotationsByTopicSchema.delete(topic, schemaName);
+          this.#lastReceivedMessages.annotationsByTopicSchema.delete(topic, schemaName);
           changed = true;
         }
       }
@@ -254,7 +257,7 @@ export class MessageHandler {
   }
 
   public clear(): void {
-    this.#state = {
+    this.#lastReceivedMessages = {
       annotationsByTopicSchema: new TwoKeyMap(),
     };
     this.#tree.clear();
@@ -277,20 +280,20 @@ export class MessageHandler {
       );
       if (validEntry) {
         return {
-          cameraInfo: this.#state.cameraInfo,
+          cameraInfo: this.#lastReceivedMessages.cameraInfo,
           image: validEntry[1].image,
           annotationsByTopicSchema: validEntry[1].annotationsByTopicSchema,
         };
       }
       return {
-        cameraInfo: this.#state.cameraInfo,
+        cameraInfo: this.#lastReceivedMessages.cameraInfo,
       };
     }
-    return this.#state;
+    return this.#lastReceivedMessages;
   }
 
   #visibleAnnotationsMap(): TwoKeyMap<string, string, boolean> {
-    const map = new TwoKeyMap<string, string, boolean>();
+    const map = new TwoKeyMap<string, string, true>();
 
     this.#config.annotations?.forEach(
       ({ topic, schemaName, settings }) =>
@@ -303,7 +306,7 @@ export class MessageHandler {
 /**
  * Find the newest entry where we have everything synchronized and remove all older entries from tree.
  * @param tree - AVL tree that stores a [image?, annotations?] in sorted order by timestamp.
- * @param annotationVisibilityMap - Map of topic and schemaName to visibility. used to make sure we have all requisite annotations synchronized
+ * @param visibleAnnotationsMap - visible topic schema pairs mapped to true boolean values
  * @returns - the newest synchronized item with all active annotations and image, or undefined if none found
  */
 export function findSynchronizedSetAndRemoveOlderItems(
