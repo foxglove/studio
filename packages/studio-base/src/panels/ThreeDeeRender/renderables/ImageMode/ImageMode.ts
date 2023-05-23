@@ -99,7 +99,7 @@ export class ImageMode
 
   #imageRenderable: ImageRenderable | undefined;
 
-  #messageHandler: MessageHandler;
+  readonly #messageHandler: MessageHandler;
 
   #dragStartPanOffset = new THREE.Vector2();
   #dragStartMouseCoords = new THREE.Vector2();
