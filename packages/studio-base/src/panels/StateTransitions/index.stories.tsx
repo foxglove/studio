@@ -12,7 +12,6 @@
 //   You may not use this file except in compliance with the License.
 
 import { StoryObj } from "@storybook/react";
-import { userEvent, within } from "@storybook/testing-library";
 import { useCallback } from "react";
 
 import Stack from "@foxglove/studio-base/components/Stack";
@@ -197,21 +196,6 @@ export const MultiplePaths: StoryObj = {
     await parameters.storyReady;
   },
   parameters: { useReadySignal: true },
-};
-
-export const MultiplePathsWithHover: StoryObj = {
-  ...MultiplePaths,
-  play: async ({ parameters, canvasElement }) => {
-    const canvas = within(canvasElement);
-    const [button] = await canvas.findAllByTestId("edit-topic-button");
-
-    userEvent.hover(button!);
-    await parameters.storyReady;
-  },
-  parameters: {
-    useReadySignal: true,
-    colorScheme: "dark",
-  },
 };
 
 export const LongPath: StoryObj = {
