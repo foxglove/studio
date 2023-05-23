@@ -18,15 +18,11 @@ export class TwoKeyMap<K1, K2, V> {
     if (map2 == undefined) {
       map2 = new Map<K2, V>();
       this.#map.set(key1, map2);
+    }
+    if (!map2.has(key2)) {
       this.#size++;
     }
     map2.set(key2, value);
-  }
-
-  /** Deletes upper level map with corresponding key */
-  public deleteMap(key1: K1): void {
-    this.#size -= this.#map.get(key1)?.size ?? 0;
-    this.#map.delete(key1);
   }
 
   public delete(key1: K1, key2: K2): void {
@@ -35,16 +31,18 @@ export class TwoKeyMap<K1, K2, V> {
       map2.delete(key2);
       if (map2.size === 0) {
         this.#map.delete(key1);
-        this.#size--;
       }
+      this.#size--;
     }
   }
 
   public deleteAll(key1: K1): void {
+    this.#size -= this.#map.get(key1)?.size ?? 0;
     this.#map.delete(key1);
   }
 
   public clear(): void {
+    this.#size = 0;
     this.#map.clear();
   }
 
@@ -71,6 +69,16 @@ export class TwoKeyMap<K1, K2, V> {
     for (const [key1, map2] of this.#map.entries()) {
       for (const [key2, v] of map2.entries()) {
         yield [[key1, key2], v];
+      }
+    }
+  }
+  /**
+   * Iterates over all [key1, key2], value pairs. This may not be in the original insertion order.
+   */
+  public *keys(): Iterable<[K1, K2]> {
+    for (const [key1, map2] of this.#map.entries()) {
+      for (const key2 of map2.keys()) {
+        yield [key1, key2];
       }
     }
   }

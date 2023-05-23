@@ -195,15 +195,22 @@ export class MessageHandler {
     let changed = false;
 
     if (newConfig.synchronize != undefined && newConfig.synchronize !== this.#config.synchronize) {
+      this.#tree.clear();
       changed = true;
     }
 
-    if (this.#config.imageTopic !== newConfig.imageTopic) {
+    if ("imageTopic" in newConfig && this.#config.imageTopic !== newConfig.imageTopic) {
+      for (const item of this.#tree.values()) {
+        item.image = undefined;
+      }
       this.#state.image = undefined;
       changed = true;
     }
 
-    if (this.#config.calibrationTopic !== newConfig.calibrationTopic) {
+    if (
+      "calibrationTopic" in newConfig &&
+      this.#config.calibrationTopic !== newConfig.calibrationTopic
+    ) {
       this.#state.cameraInfo = undefined;
       changed = true;
     }
@@ -213,19 +220,33 @@ export class MessageHandler {
       this.#config.annotations &&
       this.#config.annotations !== newConfig.annotations
     ) {
-      for (const { topic, schemaName } of this.#config.annotations) {
-        const newSubsHasOldSub = newConfig.annotations.find(
-          ({ topic: newTopic, schemaName: newSchemaName }) =>
-            topic === newTopic && schemaName === newSchemaName,
-        );
-        if (!newSubsHasOldSub) {
+      const newVisibleAnnotationsMap = new TwoKeyMap<string, string, boolean>();
+
+      newConfig.annotations.forEach(
+        ({ topic, schemaName, settings }) =>
+          settings.visible && newVisibleAnnotationsMap.set(topic, schemaName, settings.visible),
+      );
+
+      for (const [topic, schemaName] of this.#state.annotationsByTopicSchema.keys()) {
+        if (newVisibleAnnotationsMap.get(topic, schemaName) == undefined) {
           this.#state.annotationsByTopicSchema.delete(topic, schemaName);
           changed = true;
         }
       }
+      for (const syncEntry of this.#tree.values()) {
+        for (const [topic, schemaName] of syncEntry.annotationsByTopicSchema.keys()) {
+          if (newVisibleAnnotationsMap.get(topic, schemaName) == undefined) {
+            syncEntry.annotationsByTopicSchema.delete(topic, schemaName);
+            changed = true;
+          }
+        }
+      }
     }
 
-    this.#config = newConfig;
+    this.#config = {
+      ...this.#config,
+      ...newConfig,
+    };
 
     if (changed) {
       this.#emitState();
@@ -238,19 +259,21 @@ export class MessageHandler {
     };
     this.#tree.clear();
     this.#oldRenderState = undefined;
+    this.#emitState();
   }
 
   #emitState() {
-    const state = this.#getRenderState();
+    const state = this.getRenderState();
     this.#listeners.forEach((fn) => fn(state, this.#oldRenderState));
     this.#oldRenderState = state;
   }
 
-  #getRenderState(): Partial<MessageHandlerState> {
+  /** Do not use. only public for testing */
+  public getRenderState(): Partial<MessageHandlerState> {
     if (this.#config.synchronize === true) {
       const validEntry = findSynchronizedSetAndRemoveOlderItems(
         this.#tree,
-        this.#numVisibleAnnotations(),
+        this.#visibleAnnotationsMap(),
       );
       if (validEntry) {
         return {
@@ -266,29 +289,38 @@ export class MessageHandler {
     return this.#state;
   }
 
-  #numVisibleAnnotations(): number {
-    return this.#config.annotations?.filter(({ settings }) => settings.visible).length ?? 0;
+  #visibleAnnotationsMap(): TwoKeyMap<string, string, boolean> {
+    const map = new TwoKeyMap<string, string, boolean>();
+
+    this.#config.annotations?.forEach(
+      ({ topic, schemaName, settings }) =>
+        settings.visible && map.set(topic, schemaName, settings.visible),
+    );
+    return map;
   }
 }
 
 /**
  * Find the newest entry where we have everything synchronized and remove all older entries from tree.
  * @param tree - AVL tree that stores a [image?, annotations?] in sorted order by timestamp.
- * @param numActiveAnnotationSubscriptions - Number of active annotation subscriptions, used to find the newest full synchronized set
+ * @param annotationVisibilityMap - Map of topic and schemaName to visibility. used to make sure we have all requisite annotations synchronized
  * @returns - the newest synchronized item with all active annotations and image, or undefined if none found
  */
-function findSynchronizedSetAndRemoveOlderItems(
+export function findSynchronizedSetAndRemoveOlderItems(
   tree: AVLTree<Time, SynchronizationItem>,
-  numActiveAnnotationSubscriptions: number,
+  visibleAnnotationsMap: TwoKeyMap<string, string, boolean>,
 ): [Time, SynchronizationItem] | undefined {
   let validEntry: [Time, SynchronizationItem] | undefined = undefined;
   for (const entry of tree.entries()) {
     const messageState = entry[1];
+    const hasOnlyVisibleAnnotations =
+      visibleAnnotationsMap.size === messageState.annotationsByTopicSchema.size &&
+      Array.from(visibleAnnotationsMap.keys()).every(
+        ([topic, schemaName]) =>
+          messageState.annotationsByTopicSchema.get(topic, schemaName) != undefined,
+      );
     // If we have an image and all the messages for annotation topics then we have a synchronized set.
-    if (
-      messageState.image &&
-      messageState.annotationsByTopicSchema.size === numActiveAnnotationSubscriptions
-    ) {
+    if (messageState.image && hasOnlyVisibleAnnotations) {
       validEntry = entry;
     }
   }
