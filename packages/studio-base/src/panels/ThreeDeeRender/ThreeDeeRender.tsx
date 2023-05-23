@@ -96,8 +96,10 @@ function useRendererProperty<K extends keyof IRenderer>(
 export function ThreeDeeRender(props: {
   context: PanelExtensionContext;
   interfaceMode: InterfaceMode;
+  /** Override default downloading behavior, used for Storybook */
+  onDownload?: (blob: Blob, fileName: string) => void;
 }): JSX.Element {
-  const { context, interfaceMode } = props;
+  const { context, interfaceMode, onDownload } = props;
   const { initialState, saveState } = context;
 
   // Load and save the persisted panel configuration
@@ -161,14 +163,12 @@ export function ThreeDeeRender(props: {
   const [parameters, setParameters] = useState<ReadonlyMap<string, ParameterValue> | undefined>();
   const [variables, setVariables] = useState<ReadonlyMap<string, VariableValue> | undefined>();
   const [currentFrameMessages, setCurrentFrameMessages] = useState<
-    ReadonlyArray<MessageEvent<unknown>> | undefined
+    ReadonlyArray<MessageEvent> | undefined
   >();
   const [currentTime, setCurrentTime] = useState<Time | undefined>();
   const [didSeek, setDidSeek] = useState<boolean>(false);
   const [sharedPanelState, setSharedPanelState] = useState<undefined | Shared3DPanelState>();
-  const [allFrames, setAllFrames] = useState<readonly MessageEvent<unknown>[] | undefined>(
-    undefined,
-  );
+  const [allFrames, setAllFrames] = useState<readonly MessageEvent[] | undefined>(undefined);
 
   const renderRef = useRef({ needsRender: false });
   const [renderDone, setRenderDone] = useState<(() => void) | undefined>();
@@ -767,6 +767,7 @@ export function ThreeDeeRender(props: {
               renderer?.publishClickTool.start();
             }}
             timezone={timezone}
+            onDownload={onDownload}
           />
         </RendererContext.Provider>
       </div>
@@ -774,9 +775,7 @@ export function ThreeDeeRender(props: {
   );
 }
 
-function deepParseMessageEvents(
-  messageEvents: ReadonlyArray<MessageEvent<unknown>> | undefined,
-): void {
+function deepParseMessageEvents(messageEvents: ReadonlyArray<MessageEvent> | undefined): void {
   if (!messageEvents) {
     return;
   }

@@ -24,7 +24,7 @@ import {
 } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/projections";
 import { makePose } from "@foxglove/studio-base/panels/ThreeDeeRender/transforms";
 
-import { DEFAULT_ZOOM_MODE, ImageModeCamera } from "./ImageModeCamera";
+import { ImageModeCamera } from "./ImageModeCamera";
 import { MessageHandler, MessageRenderState } from "./MessageHandler";
 import { ImageAnnotations } from "./annotations/ImageAnnotations";
 import type { IRenderer, ImageModeConfig } from "../../IRenderer";
@@ -43,7 +43,7 @@ import {
 } from "../../ros";
 import { topicIsConvertibleToSchema } from "../../topicIsConvertibleToSchema";
 import { ICameraHandler } from "../ICameraHandler";
-import { decodeCompressedImageToBitmap } from "../Images/decodeCompressedImageToBitmap";
+import { decodeCompressedImageToBitmap } from "../Images/decodeImage";
 import { getTopicMatchPrefix, sortPrefixMatchesToFront } from "../Images/topicPrefixMatching";
 
 const IMAGE_TOPIC_PATH = ["imageMode", "imageTopic"];
@@ -76,8 +76,10 @@ const ALL_SUPPORTED_CALIBRATION_SCHEMAS = new Set([
 ]);
 
 const DEFAULT_CONFIG = {
-  synchronize: true,
-  zoomMode: DEFAULT_ZOOM_MODE as "fit" | "fill",
+  synchronize: false,
+  flipHorizontal: false,
+  flipVertical: false,
+  rotation: 0 as 0 | 90 | 180 | 270,
 };
 
 type ConfigWithDefaults = ImageModeConfig & typeof DEFAULT_CONFIG;
@@ -127,16 +129,13 @@ export class ImageMode
 
     this.#camera = new ImageModeCamera();
 
-    /**
-     * By default the camera is facing down the -y axis with -z up,
-     * where the image is on the +y axis with +z up.
-     * To correct this we rotate the camera 180 degrees around the x axis.
-     */
-    this.#camera.quaternion.setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI);
-    this.#camera.setCanvasSize(canvasSize.width, canvasSize.height);
-    this.#camera.setZoomMode(renderer.config.imageMode.zoomMode ?? "fit");
-
     const config = this.#getImageModeSettings();
+
+    this.#camera.setCanvasSize(canvasSize.width, canvasSize.height);
+    this.#camera.setRotation(config.rotation);
+    this.#camera.setFlipHorizontal(config.flipHorizontal);
+    this.#camera.setFlipVertical(config.flipVertical);
+
     this.#messageHandler = new MessageHandler(config);
     this.#messageHandler.addListener(this.#updateFromMessageState);
 
@@ -300,7 +299,8 @@ export class ImageMode
   public override settingsNodes(): SettingsTreeEntry[] {
     const handler = this.handleSettingsAction;
 
-    const { imageTopic, calibrationTopic, synchronize, zoomMode } = this.#getImageModeSettings();
+    const { imageTopic, calibrationTopic, synchronize, flipHorizontal, flipVertical, rotation } =
+      this.#getImageModeSettings();
 
     const imageTopics = filterMap(this.renderer.topics ?? [], (topic) => {
       if (!topicIsConvertibleToSchema(topic, ALL_SUPPORTED_IMAGE_SCHEMAS)) {
@@ -366,9 +366,6 @@ export class ImageMode
     // Not yet implemented
     // const transformMarkers: boolean = false;
     // const smooth: boolean = false;
-    // const flipHorizontal: boolean = false;
-    // const flipVertical: boolean = false;
-    // const rotation = 0;
     // const minValue: number | undefined = undefined;
     // const maxValue: number | undefined = undefined;
 
@@ -386,15 +383,6 @@ export class ImageMode
       value: calibrationTopic,
       options: calibrationTopics,
       error: calibrationTopicError,
-    };
-    fields.zoomMode = {
-      label: "Zoom mode",
-      input: "toggle",
-      value: zoomMode,
-      options: [
-        { label: "Fit", value: "fit" },
-        { label: "Fill", value: "fill" },
-      ],
     };
     // fields.TODO_transformMarkers = {
     //   readonly: true,
@@ -416,30 +404,27 @@ export class ImageMode
     //   label: "🚧 Bilinear smoothing",
     //   value: smooth,
     // };
-    // fields.TODO_flipHorizontal = {
-    //   readonly: true,
-    //   input: "boolean",
-    //   label: "🚧 Flip horizontal",
-    //   value: flipHorizontal,
-    // };
-    // fields.TODO_flipVertical = {
-    //   readonly: true,
-    //   input: "boolean",
-    //   label: "🚧 Flip vertical",
-    //   value: flipVertical,
-    // };
-    // fields.TODO_rotation = {
-    //   readonly: true,
-    //   input: "select",
-    //   label: "🚧 Rotation",
-    //   value: rotation,
-    //   options: [
-    //     { label: "0°", value: 0 },
-    //     { label: "90°", value: 90 },
-    //     { label: "180°", value: 180 },
-    //     { label: "270°", value: 270 },
-    //   ],
-    // };
+    fields.flipHorizontal = {
+      input: "boolean",
+      label: "Flip horizontal",
+      value: flipHorizontal,
+    };
+    fields.flipVertical = {
+      input: "boolean",
+      label: "Flip vertical",
+      value: flipVertical,
+    };
+    fields.rotation = {
+      input: "toggle",
+      label: "Rotation",
+      value: rotation,
+      options: [
+        { label: "0°", value: 0 },
+        { label: "90°", value: 90 },
+        { label: "180°", value: 180 },
+        { label: "270°", value: 270 },
+      ],
+    };
     // fields.TODO_minValue = {
     //   readonly: true,
     //   input: "number",
@@ -504,9 +489,19 @@ export class ImageMode
         }
       }
 
-      if (config.zoomMode !== prevImageModeConfig.zoomMode) {
-        this.#camera.setZoomMode(config.zoomMode);
-        this.resetViewModifications();
+      if (config.rotation !== prevImageModeConfig.rotation) {
+        this.#imageRenderable?.setRotation(config.rotation);
+        this.#camera.setRotation(config.rotation);
+      }
+
+      if (config.flipHorizontal !== prevImageModeConfig.flipHorizontal) {
+        this.#imageRenderable?.setFlipHorizontal(config.flipHorizontal);
+        this.#camera.setFlipHorizontal(config.flipHorizontal);
+      }
+
+      if (config.flipVertical !== prevImageModeConfig.flipVertical) {
+        this.#imageRenderable?.setFlipVertical(config.flipVertical);
+        this.#camera.setFlipVertical(config.flipVertical);
       }
       if (config.synchronize !== prevImageModeConfig.synchronize) {
         this.removeAllRenderables();
@@ -645,6 +640,7 @@ export class ImageMode
     // we don't have settings for images yet
     const userSettings = { ...IMAGE_RENDERABLE_DEFAULT_SETTINGS };
 
+    const config = this.#getImageModeSettings();
     renderable = new ImageRenderable(topicName, this.renderer, {
       receiveTime,
       messageTime: image ? toNanoSec("header" in image ? image.header.stamp : image.timestamp) : 0n,
@@ -656,6 +652,9 @@ export class ImageMode
       cameraInfo: undefined,
       cameraModel: undefined,
       image,
+      rotation: config.rotation,
+      flipHorizontal: config.flipHorizontal,
+      flipVertical: config.flipVertical,
       texture: undefined,
       material: undefined,
       geometry: undefined,

@@ -9,9 +9,9 @@
   "devDependencies": {
     "@fluentui/react-icons": "2.0.201",
     "@foxglove/log": "workspace:*",
-    "@mui/material": "5.13.0",
+    "@mui/material": "5.13.2",
     "@pmmmwh/react-refresh-webpack-plugin": "0.5.10",
-    "@storybook/react": "7.0.12",
+    "@storybook/react": "7.0.13",
     "@types/copy-webpack-plugin": "10.1.0",
     "clean-webpack-plugin": "4.0.0",
     "copy-webpack-plugin": "11.0.0",
@@ -21,7 +21,7 @@
     "react-dom": "17.0.2",
     "react-i18next": "12.2.2",
     "tss-react": "4.8.3",
-    "webpack": "5.82.1",
+    "webpack": "5.83.1",
     "webpack-dev-server": "4.15.0"
   }
 }
