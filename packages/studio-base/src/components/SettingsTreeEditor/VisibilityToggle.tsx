@@ -3,7 +3,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Checkbox, CheckboxProps, SvgIcon, IconButtonProps } from "@mui/material";
-import { ChangeEvent } from "react";
 import { makeStyles } from "tss-react/mui";
 
 const useStyles = makeStyles()((theme) => ({
@@ -26,8 +25,7 @@ export function VisibilityToggle(
   const { className, onChange, ...rest } = props;
   const { classes, cx } = useStyles();
 
-  // eslint-disable-next-line @foxglove/no-boolean-parameters
-  const handleChange = (event: ChangeEvent<HTMLInputElement>, checked: boolean) => {
+  const handleChange: CheckboxProps["onChange"] = (event, checked) => {
     onChange?.(event, checked);
     event.currentTarget.blur();
   };
