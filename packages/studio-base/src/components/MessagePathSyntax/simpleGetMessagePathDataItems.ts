@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { MessageEvent } from "@foxglove/studio-base/players/types";
-import { isTypedArray } from "@foxglove/studio-base/types/TypedArray";
+import { isTypedArray } from "@foxglove/studio-base/types/isTypedArray";
 
 import { RosPath } from "./constants";
 import { filterMatches } from "./filterMatches";

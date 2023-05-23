@@ -14,7 +14,8 @@ type TypedArray =
   | Float32Array
   | Float64Array
   | BigInt64Array
-  | BigUint64Array;
+  | BigUint64Array
+  | Uint8ClampedArray;
 
 export function isTypedArray(value: unknown): value is TypedArray {
   return lodashIsTypedArray(value);
