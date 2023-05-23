@@ -103,6 +103,14 @@ const fixture: Fixture = {
   },
 };
 
+function makeMockMessages(topic: any) {
+  return fixture.frame!["/rosout"]!.map((msg: any) => ({
+    ...msg,
+    topic,
+    message: { ...msg.message, name: `${topic}${msg.message.name}` },
+  }));
+}
+
 function makeLongFixture(): Fixture {
   const levels = [1, 2, 4, 8, 16];
 
@@ -229,6 +237,28 @@ export const WithSettings: StoryObj = {
   render: () => (
     <PanelSetup fixture={fixture} includeSettings>
       <Log />
+    </PanelSetup>
+  ),
+};
+
+export const TopicToRenderWithSettings: StoryObj = {
+  render: () => (
+    <PanelSetup
+      fixture={{
+        topics: [
+          { name: "/rosout", schemaName: "rosgraph_msgs/Log" },
+          { name: "/foo/rosout", schemaName: "rosgraph_msgs/Log" },
+          { name: "/studio_source_2/rosout", schemaName: "rosgraph_msgs/Log" },
+        ],
+        frame: {
+          "/rosout": makeMockMessages("/rosout"),
+          "/foo/rosout": makeMockMessages("/foo/rosout"),
+          "/studio_source_2/rosout": makeMockMessages("/studio_source_2/rosout"),
+        },
+      }}
+      includeSettings
+    >
+      <Log overrideConfig={{ topicToRender: "/foo/rosout", searchTerms: [], minLogLevel: 1 }} />
     </PanelSetup>
   ),
 };
