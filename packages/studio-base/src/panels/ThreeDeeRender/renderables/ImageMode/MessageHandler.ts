@@ -13,8 +13,11 @@ import {
   compare as compareTime,
   isLessThan,
 } from "@foxglove/rostime";
-import { CompressedImage, RawImage } from "@foxglove/schemas";
-import { ImageAnnotations as FoxgloveImageAnnotations } from "@foxglove/schemas";
+import {
+  CompressedImage,
+  RawImage,
+  ImageAnnotations as FoxgloveImageAnnotations,
+} from "@foxglove/schemas";
 import { MessageEvent } from "@foxglove/studio";
 import { normalizeAnnotations } from "@foxglove/studio-base/panels/Image/lib/normalizeAnnotations";
 import { Annotation } from "@foxglove/studio-base/panels/Image/types";
