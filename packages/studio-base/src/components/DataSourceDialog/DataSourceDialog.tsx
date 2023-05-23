@@ -17,11 +17,11 @@ import {
   useWorkspaceStore,
 } from "@foxglove/studio-base/context/Workspace/WorkspaceContext";
 import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/useWorkspaceActions";
+import { useOpenFile } from "@foxglove/studio-base/hooks/useOpenFile";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 
 import Connection from "./Connection";
 import Start from "./Start";
-import { useOpenFile } from "./useOpenFile";
 
 const DataSourceDialogItems = ["start", "file", "demo", "remote", "connection"] as const;
 export type DataSourceDialogItem = (typeof DataSourceDialogItems)[number];
