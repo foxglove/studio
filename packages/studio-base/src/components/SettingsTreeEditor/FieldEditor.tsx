@@ -16,10 +16,10 @@ import {
   TextField,
   ListProps,
 } from "@mui/material";
-import { DeepReadonly } from "ts-essentials";
 import { makeStyles } from "tss-react/mui";
 import { v4 as uuid } from "uuid";
 
+import { Immutable } from "@foxglove/studio";
 import { SettingsTreeAction, SettingsTreeField } from "@foxglove/studio";
 import MessagePathInput from "@foxglove/studio-base/components/MessagePathSyntax/MessagePathInput";
 import Stack from "@foxglove/studio-base/components/Stack";
@@ -119,7 +119,7 @@ function FieldInput({
   path,
 }: {
   actionHandler: (action: SettingsTreeAction) => void;
-  field: DeepReadonly<SettingsTreeField>;
+  field: Immutable<SettingsTreeField>;
   path: readonly string[];
 }): JSX.Element {
   const { classes, cx } = useStyles();
@@ -409,7 +409,7 @@ function FieldInput({
   }
 }
 
-function FieldLabel({ field }: { field: DeepReadonly<SettingsTreeField> }): JSX.Element {
+function FieldLabel({ field }: { field: Immutable<SettingsTreeField> }): JSX.Element {
   const { classes } = useStyles();
 
   if (field.input === "vec2") {
@@ -493,7 +493,7 @@ function FieldEditorComponent({
   path,
 }: {
   actionHandler: (action: SettingsTreeAction) => void;
-  field: DeepReadonly<SettingsTreeField>;
+  field: Immutable<SettingsTreeField>;
   path: readonly string[];
 }): JSX.Element {
   const indent = Math.min(path.length, 4);

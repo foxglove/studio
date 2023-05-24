@@ -3,13 +3,13 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { createContext } from "react";
-import { DeepReadonly } from "ts-essentials";
 import { useStore, StoreApi } from "zustand";
 
+import { Immutable } from "@foxglove/studio";
 import { RenderState, SettingsTree } from "@foxglove/studio";
 import useGuaranteedContext from "@foxglove/studio-base/hooks/useGuaranteedContext";
 
-export type ImmutableSettingsTree = DeepReadonly<SettingsTree>;
+export type ImmutableSettingsTree = Immutable<SettingsTree>;
 
 export type SharedPanelState = RenderState["sharedPanelState"];
 

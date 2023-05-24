@@ -8,9 +8,9 @@ import { IconButton, TextField } from "@mui/material";
 import memoizeWeak from "memoize-weak";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { DeepReadonly } from "ts-essentials";
 import { makeStyles } from "tss-react/mui";
 
+import { Immutable } from "@foxglove/studio";
 import { SettingsTree, SettingsTreeAction, SettingsTreeField } from "@foxglove/studio";
 import { useConfigById } from "@foxglove/studio-base/PanelAPI";
 import { FieldEditor } from "@foxglove/studio-base/components/SettingsTreeEditor/FieldEditor";
@@ -52,7 +52,7 @@ const makeStablePath = memoizeWeak((key: string) => [key]);
 export default function SettingsTreeEditor({
   settings,
 }: {
-  settings: DeepReadonly<SettingsTree>;
+  settings: Immutable<SettingsTree>;
 }): JSX.Element {
   const { classes } = useStyles();
   const { actionHandler, focusedPath } = settings;

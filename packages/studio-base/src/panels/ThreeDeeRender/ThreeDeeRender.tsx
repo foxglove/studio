@@ -2,16 +2,16 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Immutable } from "immer";
 import { cloneDeep, isEqual, merge } from "lodash";
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import { useLatest } from "react-use";
-import { DeepPartial } from "ts-essentials";
+import { DeepPartial, DeepReadonly } from "ts-essentials";
 import { useDebouncedCallback } from "use-debounce";
 
 import Logger from "@foxglove/log";
 import { Time, toNanoSec } from "@foxglove/rostime";
+import { Immutable } from "@foxglove/studio";
 import {
   LayoutActions,
   MessageEvent,
@@ -160,8 +160,10 @@ export function ThreeDeeRender(props: {
   const [colorScheme, setColorScheme] = useState<"dark" | "light" | undefined>();
   const [timezone, setTimezone] = useState<string | undefined>();
   const [topics, setTopics] = useState<ReadonlyArray<Topic> | undefined>();
-  const [parameters, setParameters] = useState<ReadonlyMap<string, ParameterValue> | undefined>();
-  const [variables, setVariables] = useState<ReadonlyMap<string, VariableValue> | undefined>();
+  const [parameters, setParameters] = useState<
+    Immutable<Map<string, ParameterValue>> | undefined
+  >();
+  const [variables, setVariables] = useState<Immutable<Map<string, VariableValue>> | undefined>();
   const [currentFrameMessages, setCurrentFrameMessages] = useState<
     ReadonlyArray<MessageEvent> | undefined
   >();
@@ -313,7 +315,7 @@ export function ThreeDeeRender(props: {
 
   // Establish a connection to the message pipeline with context.watch and context.onRender
   useLayoutEffect(() => {
-    context.onRender = (renderState: RenderState, done) => {
+    context.onRender = (renderState: Immutable<RenderState>, done) => {
       ReactDOM.unstable_batchedUpdates(() => {
         if (renderState.currentTime) {
           setCurrentTime(renderState.currentTime);
