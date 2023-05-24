@@ -700,10 +700,13 @@ export class ImageMode
   }
 
   #getImageModeSettings(): Immutable<ConfigWithDefaults> {
-    return {
-      ...DEFAULT_CONFIG,
-      ...(this.renderer.config.imageMode as ImageModeConfig),
-    };
+    const config = { ...this.renderer.config.imageMode };
+    config.synchronize = config.synchronize ?? DEFAULT_CONFIG.synchronize;
+    config.rotation = config.rotation ?? DEFAULT_CONFIG.rotation;
+    config.flipHorizontal = config.flipHorizontal ?? DEFAULT_CONFIG.flipHorizontal;
+    config.flipVertical = config.flipVertical ?? DEFAULT_CONFIG.flipVertical;
+
+    return config as ConfigWithDefaults;
   }
 
   /**
