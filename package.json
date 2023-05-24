@@ -81,7 +81,7 @@
     "@storybook/addon-essentials": "7.0.13",
     "@storybook/addon-interactions": "7.0.13",
     "@storybook/react": "7.0.13",
-    "@storybook/react-webpack5": "7.0.13",
+    "@storybook/react-webpack5": "7.0.15",
     "@types/babel__core": "^7.20.0",
     "@types/babel__preset-env": "^7.9.2",
     "@types/case-sensitive-paths-webpack-plugin": "2.1.6",
