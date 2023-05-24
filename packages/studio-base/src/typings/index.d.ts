@@ -7,6 +7,5 @@
 import "./extensions";
 import "./react";
 import "./overrides";
-import "../../../@types/web/ind";
 import "./webpack-defines";
 import "./i18next";
