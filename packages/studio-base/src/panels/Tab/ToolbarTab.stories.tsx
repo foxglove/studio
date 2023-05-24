@@ -12,7 +12,6 @@
 //   You may not use this file except in compliance with the License.
 
 import { StoryObj } from "@storybook/react";
-import { userEvent } from "@storybook/testing-library";
 import { noop } from "lodash";
 import React, { ReactNode } from "react";
 
@@ -119,6 +118,6 @@ export const Editing: StoryObj = {
 
   name: "editing",
   play: () => {
-    userEvent.click(document.querySelectorAll("input")[0]!);
+    document.querySelectorAll("input")[0]!.click();
   },
 };

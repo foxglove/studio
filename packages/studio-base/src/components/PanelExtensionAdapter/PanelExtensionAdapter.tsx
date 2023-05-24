@@ -7,8 +7,7 @@ import { CSSProperties, useEffect, useLayoutEffect, useMemo, useRef, useState } 
 import { useLatest } from "react-use";
 import { v4 as uuid } from "uuid";
 
-import { useValueChangedDebugLog } from "@foxglove/hooks";
-import { useSynchronousMountedState } from "@foxglove/hooks";
+import { useValueChangedDebugLog, useSynchronousMountedState } from "@foxglove/hooks";
 import Logger from "@foxglove/log";
 import { fromSec, toSec } from "@foxglove/rostime";
 import {

@@ -15,8 +15,7 @@ import { useSnackbar } from "notistack";
 import { PropsWithChildren, useCallback, useLayoutEffect, useMemo, useState } from "react";
 import { useLatest, useMountedState } from "react-use";
 
-import { useShallowMemo } from "@foxglove/hooks";
-import { useWarnImmediateReRender } from "@foxglove/hooks";
+import { useShallowMemo, useWarnImmediateReRender } from "@foxglove/hooks";
 import Logger from "@foxglove/log";
 import { MessagePipelineProvider } from "@foxglove/studio-base/components/MessagePipeline";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";

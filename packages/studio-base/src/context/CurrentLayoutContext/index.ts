@@ -5,9 +5,11 @@
 import { createContext, useCallback, useLayoutEffect, useReducer, useRef, useState } from "react";
 import { getLeaves } from "react-mosaic-component";
 
-import { useShallowMemo } from "@foxglove/hooks";
-import { selectWithUnstableIdentityWarning } from "@foxglove/hooks";
-import { useGuaranteedContext } from "@foxglove/hooks";
+import {
+  useShallowMemo,
+  selectWithUnstableIdentityWarning,
+  useGuaranteedContext,
+} from "@foxglove/hooks";
 import Logger from "@foxglove/log";
 import { VariableValue } from "@foxglove/studio";
 import useShouldNotChangeOften from "@foxglove/studio-base/hooks/useShouldNotChangeOften";
