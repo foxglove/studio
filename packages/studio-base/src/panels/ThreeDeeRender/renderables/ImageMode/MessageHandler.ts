@@ -70,18 +70,32 @@ type RenderStateListener = (
   oldState: MessageRenderState | undefined,
 ) => void;
 
+/**
+ * Processes and normalizes incoming messages and manages state of
+ * messages to be rendered given the ImageMode config. A large part of this responsibility
+ * is managing state in synchronized mode and ensuring that the a synchronized set of image and
+ * annotations are handed off to the SceneExtension for rendering.
+ */
 export class MessageHandler {
-  // settings that should reflect image mode config
+  /** settings that should reflect image mode config */
   #config: Immutable<Config>;
-  // last state passed to listeners
+
+  /** last state passed to listeners */
   #oldRenderState: MessageRenderState | undefined;
-  // internal state of last received messages
+
+  /** internal state of last received messages */
   #lastReceivedMessages: MessageHandlerState;
-  // sorted tree that holds state for synchronized messages. Used to find most recent synchronized set of image and annotations.
+
+  /** sorted tree that holds state for synchronized messages. Used to find most recent synchronized set of image and annotations. */
   readonly #tree: AVLTree<Time, SynchronizationItem>;
-  // listener functions that are called when the state changes.
+
+  /** listener functions that are called when the state changes. */
   #listeners: RenderStateListener[] = [];
 
+  /**
+   *
+   * @param config - subset of ImageMode settings required for message handling
+   */
   public constructor(config: Immutable<Config>) {
     this.#config = config;
     this.#lastReceivedMessages = {
@@ -89,10 +103,15 @@ export class MessageHandler {
     };
     this.#tree = new AVLTree<Time, SynchronizationItem>(compareTime);
   }
+  /**
+   *  Add listener that will trigger every time the state changes
+   *  The listener will be called with the new state and the previous state.
+   */
   public addListener(listener: RenderStateListener): void {
     this.#listeners.push(listener);
   }
 
+  /** Remove listener from being called on state update */
   public removeListener(listener: RenderStateListener): void {
     this.#listeners = this.#listeners.filter((fn) => fn !== listener);
   }
@@ -275,7 +294,7 @@ export class MessageHandler {
   }
 
   /** Do not use. only public for testing */
-  public getRenderState(): Partial<MessageHandlerState> {
+  public getRenderState(): Readonly<Partial<MessageHandlerState>> {
     if (this.#config.synchronize === true) {
       const validEntry = findSynchronizedSetAndRemoveOlderItems(
         this.#tree,
@@ -292,7 +311,8 @@ export class MessageHandler {
         cameraInfo: this.#lastReceivedMessages.cameraInfo,
       };
     }
-    return this.#lastReceivedMessages;
+
+    return { ...this.#lastReceivedMessages };
   }
 
   #visibleAnnotationsMap(): TwoKeyMap<string, string, boolean> {
