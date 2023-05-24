@@ -6,7 +6,7 @@ import { createContext } from "react";
 import { StoreApi, useStore } from "zustand";
 
 import { ExtensionPanelRegistration, RegisterMessageConverterArgs } from "@foxglove/studio";
-import useGuaranteedContext from "@foxglove/studio-base/hooks/useGuaranteedContext";
+import { useGuaranteedContext } from "@foxglove/hooks";
 import { ExtensionInfo, ExtensionNamespace } from "@foxglove/studio-base/types/Extensions";
 
 export type RegisteredPanel = {

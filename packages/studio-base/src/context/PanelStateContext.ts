@@ -6,8 +6,8 @@ import { createContext } from "react";
 import { DeepReadonly } from "ts-essentials";
 import { useStore, StoreApi } from "zustand";
 
+import { useGuaranteedContext } from "@foxglove/hooks";
 import { RenderState, SettingsTree } from "@foxglove/studio";
-import useGuaranteedContext from "@foxglove/studio-base/hooks/useGuaranteedContext";
 
 export type ImmutableSettingsTree = DeepReadonly<SettingsTree>;
 

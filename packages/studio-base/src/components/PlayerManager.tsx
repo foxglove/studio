@@ -16,6 +16,7 @@ import { PropsWithChildren, useCallback, useLayoutEffect, useMemo, useState } fr
 import { useLatest, useMountedState } from "react-use";
 
 import { useShallowMemo } from "@foxglove/hooks";
+import { useWarnImmediateReRender } from "@foxglove/hooks";
 import Logger from "@foxglove/log";
 import { MessagePipelineProvider } from "@foxglove/studio-base/components/MessagePipeline";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
@@ -34,7 +35,6 @@ import PlayerSelectionContext, {
 import { useUserNodeState } from "@foxglove/studio-base/context/UserNodeStateContext";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import useIndexedDbRecents, { RecentRecord } from "@foxglove/studio-base/hooks/useIndexedDbRecents";
-import useWarnImmediateReRender from "@foxglove/studio-base/hooks/useWarnImmediateReRender";
 import AnalyticsMetricsCollector from "@foxglove/studio-base/players/AnalyticsMetricsCollector";
 import UserNodePlayer from "@foxglove/studio-base/players/UserNodePlayer";
 import { Player } from "@foxglove/studio-base/players/types";

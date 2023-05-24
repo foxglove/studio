@@ -2302,6 +2302,7 @@ __metadata:
   dependencies:
     "@foxglove/log": "workspace:*"
     "@testing-library/react-hooks": 8.0.1
+    "@types/foxglove__web": "workspace:*"
     shallowequal: 1.1.0
     typescript: 5.0.4
   peerDependencies:
@@ -2545,6 +2546,7 @@ __metadata:
     "@types/base16": ^1.0.2
     "@types/cytoscape": ^3.19.9
     "@types/foxglove__roslibjs": "workspace:*"
+    "@types/foxglove__web": "workspace:*"
     "@types/gl-matrix": 3.2.0
     "@types/hammerjs": 2.0.41
     "@types/leaflet": 1.9.3
@@ -5574,6 +5576,12 @@ __metadata:
 "@types/foxglove__roslibjs@workspace:*, @types/foxglove__roslibjs@workspace:packages/@types/foxglove__roslibjs":
   version: 0.0.0-use.local
   resolution: "@types/foxglove__roslibjs@workspace:packages/@types/foxglove__roslibjs"
+  languageName: unknown
+  linkType: soft
+
+"@types/foxglove__web@workspace:*, @types/foxglove__web@workspace:packages/@types/foxglove__web":
+  version: 0.0.0-use.local
+  resolution: "@types/foxglove__web@workspace:packages/@types/foxglove__web"
   languageName: unknown
   linkType: soft
 

@@ -15,7 +15,7 @@ import {
   useCurrentLayoutSelector,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { EventsStore, useEvents } from "@foxglove/studio-base/context/EventsContext";
-import useDeepMemo from "@foxglove/studio-base/hooks/useDeepMemo";
+import { useDeepMemo } from "@foxglove/hooks";
 import { PlayerCapabilities } from "@foxglove/studio-base/players/types";
 import { AppURLState, updateAppURLState } from "@foxglove/studio-base/util/appURLState";
 

@@ -12,11 +12,11 @@
 //   You may not use this file except in compliance with the License.
 
 import { StoryObj } from "@storybook/react";
+import { userEvent } from "@storybook/testing-library";
 import { noop } from "lodash";
 import React, { ReactNode } from "react";
 
 import { ToolbarTab } from "@foxglove/studio-base/panels/Tab/ToolbarTab";
-import tick from "@foxglove/studio-base/util/tick";
 
 const baseProps = {
   hidden: false,
@@ -112,17 +112,13 @@ export const Dragging: StoryObj = {
 
 export const Editing: StoryObj = {
   render: () => (
-    <Container
-      ref={async (el) => {
-        await tick();
-        if (el) {
-          el.querySelectorAll("input")[0]?.click();
-        }
-      }}
-    >
+    <Container>
       <ToolbarTab {...{ ...baseProps, isActive: true }} />
     </Container>
   ),
 
   name: "editing",
+  play: () => {
+    userEvent.click(document.querySelectorAll("input")[0]!);
+  },
 };

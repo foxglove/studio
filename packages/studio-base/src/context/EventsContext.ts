@@ -7,8 +7,8 @@ import { AsyncState } from "react-use/lib/useAsyncFn";
 import { DeepReadonly } from "ts-essentials";
 import { StoreApi, useStore } from "zustand";
 
+import { useGuaranteedContext } from "@foxglove/hooks";
 import { Time } from "@foxglove/rostime";
-import useGuaranteedContext from "@foxglove/studio-base/hooks/useGuaranteedContext";
 
 /**
  * DataSourceEvent representings a single event within a data source.

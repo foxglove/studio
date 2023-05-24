@@ -14,10 +14,10 @@ import {
 } from "react";
 import { StoreApi, useStore } from "zustand";
 
+import { useGuaranteedContext } from "@foxglove/hooks";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
-import useGuaranteedContext from "@foxglove/studio-base/hooks/useGuaranteedContext";
 import {
   Player,
   PlayerProblem,

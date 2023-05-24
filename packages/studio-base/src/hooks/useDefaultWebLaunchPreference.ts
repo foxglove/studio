@@ -9,7 +9,7 @@ import {
   MessagePipelineContext,
   useMessagePipeline,
 } from "@foxglove/studio-base/components/MessagePipeline";
-import { useSessionStorageValue } from "@foxglove/studio-base/hooks/useSessionStorageValue";
+import { useSessionStorageValue } from "@foxglove/hooks";
 import { LaunchPreferenceValue } from "@foxglove/studio-base/types/LaunchPreferenceValue";
 import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
 

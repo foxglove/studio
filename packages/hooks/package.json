@@ -21,6 +21,7 @@
   },
   "devDependencies": {
     "@testing-library/react-hooks": "8.0.1",
+    "@types/foxglove__web": "workspace:*",
     "typescript": "5.0.4"
   },
   "dependencies": {
