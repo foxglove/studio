@@ -11,9 +11,11 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { Immutable } from "immer";
 import { omit } from "lodash";
 import { useEffect, useRef, useState } from "react";
 import shallowequal from "shallowequal";
+import { Writable } from "ts-essentials";
 import { createStore } from "zustand";
 
 import { Time, isLessThan } from "@foxglove/rostime";
@@ -30,6 +32,8 @@ import {
   Topic,
   PlayerURLState,
   TopicStats,
+  PlayerCapabilities,
+  PlayerState,
 } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 
@@ -155,7 +159,8 @@ function getPublicState(
     startPlayback: props.startPlayback,
     playUntil: noop,
     pausePlayback: props.pausePlayback,
-    setPlaybackSpeed: noop,
+    setPlaybackSpeed:
+      props.capabilities?.includes(PlayerCapabilities.setSpeed) === true ? noop : undefined,
     seekPlayback: props.seekPlayback,
 
     pauseFrame: props.pauseFrame ?? (() => noop),
@@ -189,7 +194,7 @@ export default function MockMessagePipelineProvider(
             const publicState = getPublicState(state, action.mockProps, state.dispatch);
             const newState = reducer(state, {
               type: "update-player-state",
-              playerState: publicState.playerState,
+              playerState: publicState.playerState as Writable<PlayerState>,
             });
             return {
               ...newState,
@@ -213,7 +218,7 @@ export default function MockMessagePipelineProvider(
             const messages = newState.public.playerState.activeData?.messages;
             if (action.type === "update-subscriber" && messages && messages.length !== 0) {
               let changed = false;
-              const messageEventsBySubscriberId = new Map<string, MessageEvent[]>();
+              const messageEventsBySubscriberId = new Map<string, Immutable<MessageEvent[]>>();
               for (const [id, subs] of newState.subscriptionsById) {
                 const existingMsgs = newState.public.messageEventsBySubscriberId.get(id);
                 const newMsgs = messages.filter(
@@ -229,7 +234,10 @@ export default function MockMessagePipelineProvider(
               }
 
               if (changed) {
-                newState.public.messageEventsBySubscriberId = messageEventsBySubscriberId;
+                newState.public = {
+                  ...newState.public,
+                  messageEventsBySubscriberId,
+                };
               }
               return { ...newState, dispatch: state.dispatch };
             }
@@ -248,7 +256,7 @@ export default function MockMessagePipelineProvider(
         subscriberIdsByTopic: new Map(),
         newTopicsBySubscriberId: new Map(),
         lastMessageEventByTopic: new Map(),
-        lastCapabilities: initialPublicState.playerState.capabilities,
+        lastCapabilities: [...initialPublicState.playerState.capabilities],
         public: {
           ...initialPublicState,
           messageEventsBySubscriberId: new Map(),
