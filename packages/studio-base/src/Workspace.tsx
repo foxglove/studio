@@ -80,7 +80,7 @@ import useAddPanel from "@foxglove/studio-base/hooks/useAddPanel";
 import { useDefaultWebLaunchPreference } from "@foxglove/studio-base/hooks/useDefaultWebLaunchPreference";
 import useElectronFilesToOpen from "@foxglove/studio-base/hooks/useElectronFilesToOpen";
 import { useInitialDeepLinkState } from "@foxglove/studio-base/hooks/useInitialDeepLinkState";
-import { useWorkspaceNativeAppMenuEvents } from "@foxglove/studio-base/hooks/useWorkspaceNativeAppMenuEvents";
+import useNativeAppMenuEvent from "@foxglove/studio-base/hooks/useNativeAppMenuEvent";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
 import { PanelStateContextProvider } from "@foxglove/studio-base/providers/PanelStateContextProvider";
 import WorkspaceContextProvider from "@foxglove/studio-base/providers/WorkspaceContextProvider";
@@ -266,7 +266,69 @@ function WorkspaceContent(props: WorkspaceContentProps): JSX.Element {
     }
   }, []);
 
-  useWorkspaceNativeAppMenuEvents();
+  useNativeAppMenuEvent(
+    "open-layouts",
+    useCallback(() => {
+      sidebarActions.legacy.selectItem("layouts");
+    }, [sidebarActions.legacy]),
+  );
+
+  useNativeAppMenuEvent(
+    "open-add-panel",
+    useCallback(() => {
+      sidebarActions.legacy.selectItem("add-panel");
+    }, [sidebarActions.legacy]),
+  );
+
+  useNativeAppMenuEvent(
+    "open-panel-settings",
+    useCallback(() => {
+      sidebarActions.legacy.selectItem("panel-settings");
+    }, [sidebarActions.legacy]),
+  );
+
+  useNativeAppMenuEvent(
+    "open-variables",
+    useCallback(() => {
+      sidebarActions.legacy.selectItem("variables");
+    }, [sidebarActions.legacy]),
+  );
+
+  useNativeAppMenuEvent(
+    "open-extensions",
+    useCallback(() => {
+      sidebarActions.legacy.selectItem("extensions");
+    }, [sidebarActions.legacy]),
+  );
+
+  useNativeAppMenuEvent(
+    "open-account",
+    useCallback(() => {
+      sidebarActions.legacy.selectItem("account");
+    }, [sidebarActions.legacy]),
+  );
+
+  useNativeAppMenuEvent(
+    "open-app-settings",
+    useCallback(() => {
+      dialogActions.preferences.open();
+    }, [dialogActions.preferences]),
+  );
+
+  useNativeAppMenuEvent(
+    "open-file",
+    useCallback(async () => await dialogActions.openFile.open(), [dialogActions.openFile]),
+  );
+
+  useNativeAppMenuEvent(
+    "open-remote-file",
+    useCallback(() => dialogActions.dataSource.open("remote"), [dialogActions.dataSource]),
+  );
+
+  useNativeAppMenuEvent(
+    "open-sample-data",
+    useCallback(() => dialogActions.dataSource.open("demo"), [dialogActions.dataSource]),
+  );
 
   const nativeAppMenu = useNativeAppMenu();
 
