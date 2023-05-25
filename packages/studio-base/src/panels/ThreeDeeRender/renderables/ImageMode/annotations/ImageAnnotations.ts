@@ -8,8 +8,7 @@ import * as THREE from "three";
 import { TwoKeyMap } from "@foxglove/den/collection";
 import { PinholeCameraModel } from "@foxglove/den/image";
 import { ImageAnnotations as FoxgloveImageAnnotations } from "@foxglove/schemas";
-import { Immutable } from "@foxglove/studio";
-import { MessageEvent, SettingsTreeAction, Topic } from "@foxglove/studio";
+import { Immutable, MessageEvent, SettingsTreeAction, Topic } from "@foxglove/studio";
 import { normalizeAnnotations } from "@foxglove/studio-base/panels/Image/lib/normalizeAnnotations";
 import {
   ImageMarker as RosImageMarker,

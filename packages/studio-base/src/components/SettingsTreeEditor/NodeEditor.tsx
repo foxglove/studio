@@ -27,8 +27,12 @@ import { makeStyles } from "tss-react/mui";
 import { useImmer } from "use-immer";
 
 import { filterMap } from "@foxglove/den/collection";
-import { Immutable } from "@foxglove/studio";
-import { SettingsTreeAction, SettingsTreeNode, SettingsTreeNodeActionItem } from "@foxglove/studio";
+import {
+  Immutable,
+  SettingsTreeAction,
+  SettingsTreeNode,
+  SettingsTreeNodeActionItem,
+} from "@foxglove/studio";
 import { HighlightedText } from "@foxglove/studio-base/components/HighlightedText";
 import Stack from "@foxglove/studio-base/components/Stack";
 

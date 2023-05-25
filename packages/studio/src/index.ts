@@ -88,7 +88,7 @@ export type Subscription = {
 /**
  * A message event frames message data with the topic and receive time
  */
-export type MessageEvent<T = unknown> = Readonly<{
+export type MessageEvent<T = unknown> = {
   /** The topic name this message was received on, i.e. "/some/topic" */
   topic: string;
   /**
@@ -103,14 +103,14 @@ export type MessageEvent<T = unknown> = Readonly<{
    * relative to another event such as system boot time or simulation start
    * time depending on the context.
    */
-  receiveTime: Readonly<Time>;
+  receiveTime: Time;
   /**
    * The time in nanoseconds this message was originally published. This is
    * only available for some data sources. The timestamp is often nanoseconds
    * since the UNIX epoch, but may be relative to another event such as system
    * boot time or simulation start time depending on the context.
    */
-  publishTime?: Readonly<Time>;
+  publishTime?: Time;
   /** The deserialized message as a JavaScript object. */
   message: T;
   /**
@@ -125,7 +125,7 @@ export type MessageEvent<T = unknown> = Readonly<{
    * un-converted message event.
    */
   originalMessageEvent?: MessageEvent;
-}>;
+};
 
 export interface LayoutActions {
   /** Open a new panel or update an existing panel in the layout.  */

@@ -4,8 +4,7 @@
 
 import { sortBy } from "lodash";
 
-import { Immutable } from "@foxglove/studio";
-import { SettingsTreeNode, SettingsTreeNodes } from "@foxglove/studio";
+import { Immutable, SettingsTreeNode, SettingsTreeNodes } from "@foxglove/studio";
 
 /**
  * Filters and sorts roots to prepare them for rendering.

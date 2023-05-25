@@ -5,9 +5,9 @@
 import { pick, uniq } from "lodash";
 import { PropsWithChildren, useCallback, useEffect, useMemo, useState } from "react";
 import { createSelector, createSelectorCreator, defaultMemoize } from "reselect";
-import { Immutable } from "@foxglove/studio";
 import { StoreApi, createStore } from "zustand";
 
+import { Immutable } from "@foxglove/studio";
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import {
   LayoutState,

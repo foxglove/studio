@@ -6,13 +6,13 @@ import { cloneDeep, isEqual, merge } from "lodash";
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import { useLatest } from "react-use";
-import { DeepPartial, DeepReadonly } from "ts-essentials";
+import { DeepPartial } from "ts-essentials";
 import { useDebouncedCallback } from "use-debounce";
 
 import Logger from "@foxglove/log";
 import { Time, toNanoSec } from "@foxglove/rostime";
-import { Immutable } from "@foxglove/studio";
 import {
+  Immutable,
   LayoutActions,
   MessageEvent,
   PanelExtensionContext,
@@ -28,12 +28,12 @@ import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
 
 import type {
-  RendererConfig,
-  RendererSubscription,
   FollowMode,
-  RendererEvents,
   IRenderer,
   ImageModeConfig,
+  RendererConfig,
+  RendererEvents,
+  RendererSubscription,
 } from "./IRenderer";
 import type { PickedRenderable } from "./Picker";
 import { SELECTED_ID_VARIABLE } from "./Renderable";
@@ -42,11 +42,11 @@ import { RendererContext, useRendererEvent } from "./RendererContext";
 import { RendererOverlay } from "./RendererOverlay";
 import { CameraState, DEFAULT_CAMERA_STATE } from "./camera";
 import {
+  PublishRos1Datatypes,
+  PublishRos2Datatypes,
   makePointMessage,
   makePoseEstimateMessage,
   makePoseMessage,
-  PublishRos1Datatypes,
-  PublishRos2Datatypes,
 } from "./publish";
 import type { LayerSettingsTransform } from "./renderables/FrameAxes";
 import { PublishClickEvent } from "./renderables/PublishClickTool";

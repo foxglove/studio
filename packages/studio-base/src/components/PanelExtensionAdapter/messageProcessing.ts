@@ -4,8 +4,12 @@
 
 import { difference } from "lodash";
 
-import { Immutable } from "@foxglove/studio";
-import { MessageEvent, RegisterMessageConverterArgs, Subscription } from "@foxglove/studio";
+import {
+  Immutable,
+  MessageEvent,
+  RegisterMessageConverterArgs,
+  Subscription,
+} from "@foxglove/studio";
 import { Topic as PlayerTopic } from "@foxglove/studio-base/players/types";
 
 // Branded string to ensure that users go through the `converterKey` function to compute a lookup key

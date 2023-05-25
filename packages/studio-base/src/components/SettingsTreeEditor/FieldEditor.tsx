@@ -6,25 +6,24 @@ import ClearIcon from "@mui/icons-material/Clear";
 import ErrorIcon from "@mui/icons-material/Error";
 import {
   Autocomplete,
-  ToggleButton,
-  ToggleButtonGroup,
-  Typography,
   List,
+  ListProps,
   MenuItem,
   Select,
-  Tooltip,
   TextField,
-  ListProps,
+  ToggleButton,
+  ToggleButtonGroup,
+  Tooltip,
+  Typography,
 } from "@mui/material";
 import { makeStyles } from "tss-react/mui";
 import { v4 as uuid } from "uuid";
 
-import { Immutable } from "@foxglove/studio";
-import { SettingsTreeAction, SettingsTreeField } from "@foxglove/studio";
+import { Immutable, SettingsTreeAction, SettingsTreeField } from "@foxglove/studio";
 import MessagePathInput from "@foxglove/studio-base/components/MessagePathSyntax/MessagePathInput";
 import Stack from "@foxglove/studio-base/components/Stack";
 
-import { ColorPickerInput, ColorGradientInput, NumberInput, Vec3Input, Vec2Input } from "./inputs";
+import { ColorGradientInput, ColorPickerInput, NumberInput, Vec2Input, Vec3Input } from "./inputs";
 
 /** Used to allow both undefined and empty string in select inputs. */
 const UNDEFINED_SENTINEL_VALUE = uuid();

@@ -3,12 +3,13 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import memoizeWeak from "memoize-weak";
+import { Writable } from "ts-essentials";
 
 import { filterMap } from "@foxglove/den/collection";
 import { compare, toSec } from "@foxglove/rostime";
-import { Immutable } from "@foxglove/studio";
 import {
   AppSettingValue,
+  Immutable,
   MessageEvent,
   ParameterValue,
   RegisterMessageConverterArgs,
@@ -79,7 +80,7 @@ function initRenderStateBuilder(): BuildRenderStateFn {
   const memoMapDifference = memoizeWeak(mapDifference);
   const memoCollateTopicSchemaConversions = memoizeWeak(collateTopicSchemaConversions);
 
-  const prevRenderState: Immutable<RenderState> = {};
+  const prevRenderState: Writable<Immutable<RenderState>> = {};
 
   return function buildRenderState(input: BuilderRenderStateInput) {
     const {
@@ -103,7 +104,7 @@ function initRenderStateBuilder(): BuildRenderStateFn {
     const activeData = playerState?.activeData;
 
     // The render state starts with the previous render state and changes are applied as detected
-    const renderState = { ...prevRenderState };
+    const renderState = prevRenderState;
 
     const collatedConversions = memoCollateTopicSchemaConversions(
       subscriptions,
