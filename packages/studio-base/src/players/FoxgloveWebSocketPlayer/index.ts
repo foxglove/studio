@@ -618,10 +618,18 @@ export default class FoxgloveWebSocketPlayer implements Player {
           : new JsonMessageWriter();
 
         // Add type definitions for service response and request
+        let datatypesNeedsUpdate = false;
         for (const [name, types] of [...parsedRequest.datatypes, ...parsedResponse.datatypes]) {
+          if (this.#datatypes.has(name)) {
+            // Assumption: Schemas do not change.
+            continue;
+          }
+          datatypesNeedsUpdate = true;
           this.#datatypes.set(name, types);
         }
-        this.#datatypes = new Map(this.#datatypes); // Signal that datatypes changed.
+        if (datatypesNeedsUpdate) {
+          this.#datatypes = new Map(this.#datatypes); // Signal that datatypes changed.
+        }
 
         const resolvedService: ResolvedService = {
           service,
@@ -705,12 +713,23 @@ export default class FoxgloveWebSocketPlayer implements Player {
     this.#topics = topics;
 
     // Update the _datatypes map;
+    let datatypesNeedsUpdate = false;
     for (const { parsedChannel } of this.#channelsById.values()) {
       for (const [name, types] of parsedChannel.datatypes) {
+        if (this.#datatypes.has(name)) {
+          // Assumption: Schemas do not change.
+          continue;
+        }
+
+        datatypesNeedsUpdate = true;
         this.#datatypes.set(name, types);
       }
     }
-    this.#datatypes = new Map(this.#datatypes); // Signal that datatypes changed.
+
+    if (datatypesNeedsUpdate) {
+      this.#datatypes = new Map(this.#datatypes); // Signal that datatypes changed.
+    }
+
     this.#emitState();
   }
 
