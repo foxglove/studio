@@ -17,7 +17,6 @@ import {
   useWorkspaceStore,
 } from "@foxglove/studio-base/context/Workspace/WorkspaceContext";
 import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/useWorkspaceActions";
-import { useOpenFile } from "@foxglove/studio-base/hooks/useOpenFile";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 
 import Connection from "./Connection";
@@ -53,8 +52,6 @@ export function DataSourceDialog(props: DataSourceDialogProps): JSX.Element {
 
   const isMounted = useMountedState();
 
-  const openFile = useOpenFile(availableSources);
-
   const firstSampleSource = useMemo(() => {
     return availableSources.find((source) => source.type === "sample");
   }, [availableSources]);
@@ -68,7 +65,8 @@ export function DataSourceDialog(props: DataSourceDialogProps): JSX.Element {
 
   useLayoutEffect(() => {
     if (activeView === "file") {
-      openFile()
+      dialogActions.openFile
+        .open()
         .catch((err) => {
           console.error(err);
         })
@@ -81,7 +79,7 @@ export function DataSourceDialog(props: DataSourceDialogProps): JSX.Element {
     } else if (activeView === "demo" && firstSampleSource) {
       selectSource(firstSampleSource.id);
     }
-  }, [activeView, dialogActions.dataSource, firstSampleSource, isMounted, openFile, selectSource]);
+  }, [activeView, dialogActions, firstSampleSource, isMounted, selectSource]);
 
   const backdrop = useMemo(() => {
     const now = new Date();

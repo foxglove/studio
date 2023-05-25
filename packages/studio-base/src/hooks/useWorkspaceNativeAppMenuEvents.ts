@@ -4,20 +4,14 @@
 
 import { useCallback } from "react";
 
-import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/useWorkspaceActions";
 import useNativeAppMenuEvent from "@foxglove/studio-base/hooks/useNativeAppMenuEvent";
-import { useOpenFile } from "@foxglove/studio-base/hooks/useOpenFile";
 
 /**
  * Bundles setup of all native app menu events used in the workspace.
  */
 export function useWorkspaceNativeAppMenuEvents(): void {
   const { dialogActions, sidebarActions } = useWorkspaceActions();
-
-  const { availableSources } = usePlayerSelection();
-
-  const openLocalFile = useOpenFile(availableSources);
 
   useNativeAppMenuEvent(
     "open-layouts",
@@ -70,7 +64,7 @@ export function useWorkspaceNativeAppMenuEvents(): void {
 
   useNativeAppMenuEvent(
     "open-file",
-    useCallback(async () => await openLocalFile(), [openLocalFile]),
+    useCallback(async () => await dialogActions.openFile.open(), [dialogActions.openFile]),
   );
 
   useNativeAppMenuEvent(

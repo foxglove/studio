@@ -17,10 +17,9 @@ import {
   useWorkspaceStore,
 } from "@foxglove/studio-base/context/Workspace/WorkspaceContext";
 import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/useWorkspaceActions";
-import { useOpenFile } from "@foxglove/studio-base/hooks/useOpenFile";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 
-import { NestedMenuItem, MenuItem } from "./NestedMenuItem";
+import { MenuItem, NestedMenuItem } from "./NestedMenuItem";
 
 type AppMenuProps = {
   handleClose: () => void;
@@ -52,10 +51,6 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
 
   const currentUserType = useCurrentUserType();
   const analytics = useAnalytics();
-
-  const { availableSources } = usePlayerSelection();
-
-  const openLocalFile = useOpenFile(availableSources);
 
   const { recentSources, selectRecent } = usePlayerSelection();
   const {
@@ -96,7 +91,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
         onClick: () => {
           handleAnalytics("open-file");
           handleNestedMenuClose();
-          openLocalFile().catch(console.error);
+          dialogActions.openFile.open().catch(console.error);
         },
       },
       {
@@ -129,10 +124,9 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
     return items;
   }, [
     classes.truncate,
-    dialogActions.dataSource,
+    dialogActions,
     handleAnalytics,
     handleNestedMenuClose,
-    openLocalFile,
     recentSources,
     selectRecent,
     t,
