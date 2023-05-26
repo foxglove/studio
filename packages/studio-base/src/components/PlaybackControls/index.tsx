@@ -178,6 +178,11 @@ export default function PlaybackControls(props: {
 
   const disableControls = presence === PlayerPresence.ERROR;
 
+  const infoButtonStyle = useMemo(
+    () => (presence === PlayerPresence.PRESENT ? {} : { opacity: "50%" }),
+    [presence],
+  );
+
   return (
     <>
       <RepeatAdapter play={play} seek={seek} repeatEnabled={repeat} />
@@ -206,7 +211,7 @@ export default function PlaybackControls(props: {
               >
                 <HoverableIconButton
                   className={classes.dataSourceInfoButton}
-                  disabled={presence !== PlayerPresence.PRESENT}
+                  style={infoButtonStyle}
                   size="small"
                   icon={<Info24Regular />}
                 />
