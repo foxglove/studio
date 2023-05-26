@@ -356,7 +356,7 @@ export function RendererOverlay(props: {
       log.error(error);
       enqueueSnackbar((error as Error).toString(), { variant: "error" });
     }
-  }, [renderer, onDownloadImage, enqueueSnackbar]);
+  }, [renderer, onDownloadImage, enqueueSnackbar, analytics]);
 
   const getContextMenuItems = useCallback(
     (): PanelContextMenuItem[] => [
