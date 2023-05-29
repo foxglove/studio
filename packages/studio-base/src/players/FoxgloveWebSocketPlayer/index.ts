@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import * as base64 from "@protobufjs/base64";
-import { isEqual, uniqWith } from "lodash";
+import { isEqual, isMatch, uniqWith } from "lodash";
 import { v4 as uuidv4 } from "uuid";
 
 import { debouncePromise } from "@foxglove/den/async";
@@ -73,6 +73,7 @@ type ResolvedService = {
   parsedResponse: ParsedChannel;
   requestMessageWriter: MessageWriter;
 };
+type MessageDefinitionMap = Map<string, MessageDefinition>;
 
 export default class FoxgloveWebSocketPlayer implements Player {
   readonly #sourceId: string;
@@ -295,12 +296,12 @@ export default class FoxgloveWebSocketPlayer implements Player {
           ? CommonRosTypes.ros2galactic
           : CommonRosTypes.ros2humble;
 
+        const dataTypes: MessageDefinitionMap = new Map();
         for (const dataType in rosDataTypes) {
           const msgDef = (rosDataTypes as Record<string, MessageDefinition>)[dataType]!;
-          this.#datatypes.set(dataType, msgDef);
-          this.#datatypes.set(dataTypeToFullName(dataType), msgDef);
+          dataTypes.set(dataType, msgDef);
         }
-        this.#datatypes = new Map(this.#datatypes); // Signal that datatypes changed.
+        this.#updateDataTypes(dataTypes);
       }
 
       if (event.capabilities.includes(ServerCapability.clientPublish)) {
@@ -618,18 +619,8 @@ export default class FoxgloveWebSocketPlayer implements Player {
           : new JsonMessageWriter();
 
         // Add type definitions for service response and request
-        let datatypesNeedsUpdate = false;
-        for (const [name, types] of [...parsedRequest.datatypes, ...parsedResponse.datatypes]) {
-          if (this.#datatypes.has(name)) {
-            // Assumption: Schemas do not change.
-            continue;
-          }
-          datatypesNeedsUpdate = true;
-          this.#datatypes.set(name, types);
-        }
-        if (datatypesNeedsUpdate) {
-          this.#datatypes = new Map(this.#datatypes); // Signal that datatypes changed.
-        }
+        this.#updateDataTypes(parsedRequest.datatypes);
+        this.#updateDataTypes(parsedResponse.datatypes);
 
         const resolvedService: ResolvedService = {
           service,
@@ -713,21 +704,8 @@ export default class FoxgloveWebSocketPlayer implements Player {
     this.#topics = topics;
 
     // Update the _datatypes map;
-    let datatypesNeedsUpdate = false;
     for (const { parsedChannel } of this.#channelsById.values()) {
-      for (const [name, types] of parsedChannel.datatypes) {
-        if (this.#datatypes.has(name)) {
-          // Assumption: Schemas do not change.
-          continue;
-        }
-
-        datatypesNeedsUpdate = true;
-        this.#datatypes.set(name, types);
-      }
-    }
-
-    if (datatypesNeedsUpdate) {
-      this.#datatypes = new Map(this.#datatypes); // Signal that datatypes changed.
+      this.#updateDataTypes(parsedChannel.datatypes);
     }
 
     this.#emitState();
@@ -1133,6 +1111,36 @@ export default class FoxgloveWebSocketPlayer implements Player {
     this.#hasReceivedMessage = false;
     this.#problems.clear();
     this.#parameters.clear();
+  }
+
+  #updateDataTypes(datatypes: MessageDefinitionMap): void {
+    let updatedDatatypes: RosDatatypes | undefined = undefined;
+    const maybeRos = ["ros1", "ros2"].includes(this.#profile ?? "");
+    for (const [name, types] of datatypes) {
+      const knownTypes = this.#datatypes.get(name);
+      if (knownTypes && !isMatch(types, knownTypes)) {
+        this.#problems.addProblem(`schema-changed-${name}`, {
+          message: `Definition of schema '${name}' has changed during the server's runtime`,
+          severity: "error",
+        });
+      } else {
+        if (updatedDatatypes == undefined) {
+          updatedDatatypes = new Map(this.#datatypes);
+        }
+        updatedDatatypes.set(name, types);
+
+        const fullTypeName = dataTypeToFullName(name);
+        if (maybeRos && fullTypeName !== name) {
+          updatedDatatypes.set(fullTypeName, {
+            ...types,
+            name: types.name ? dataTypeToFullName(types.name) : undefined,
+          });
+        }
+      }
+    }
+    if (updatedDatatypes != undefined) {
+      this.#datatypes = updatedDatatypes; // Signal that datatypes changed.
+    }
   }
 }
 
