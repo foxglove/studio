@@ -8,8 +8,14 @@ import ReactDOM from "react-dom";
 import { useCrash } from "@foxglove/hooks";
 import { PanelExtensionContext } from "@foxglove/studio";
 import { CaptureErrorBoundary } from "@foxglove/studio-base/components/CaptureErrorBoundary";
+import {
+  ForwardContextProviders,
+  ForwardedContexts,
+  useForwardContext,
+} from "@foxglove/studio-base/components/ForwardContextProviders";
 import Panel from "@foxglove/studio-base/components/Panel";
 import { PanelExtensionAdapter } from "@foxglove/studio-base/components/PanelExtensionAdapter";
+import AnalyticsContext from "@foxglove/studio-base/context/AnalyticsContext";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 
 import { ThreeDeeRender } from "./ThreeDeeRender";
@@ -17,6 +23,7 @@ import { InterfaceMode } from "./types";
 
 function initPanel(
   crash: ReturnType<typeof useCrash>,
+  forwardedContexts: ForwardedContexts,
   interfaceMode: InterfaceMode,
   onDownloadImage: ((blob: Blob, fileName: string) => void) | undefined,
   context: PanelExtensionContext,
@@ -24,11 +31,13 @@ function initPanel(
   ReactDOM.render(
     <StrictMode>
       <CaptureErrorBoundary onError={crash}>
-        <ThreeDeeRender
-          context={context}
-          interfaceMode={interfaceMode}
-          onDownloadImage={onDownloadImage}
-        />
+        <ForwardContextProviders contexts={forwardedContexts}>
+          <ThreeDeeRender
+            context={context}
+            interfaceMode={interfaceMode}
+            onDownloadImage={onDownloadImage}
+          />
+        </ForwardContextProviders>
       </CaptureErrorBoundary>
     </StrictMode>,
     context.panelElement,
@@ -46,9 +55,12 @@ type Props = {
 
 function ThreeDeeRenderAdapter(interfaceMode: InterfaceMode, props: Props) {
   const crash = useCrash();
+
+  const forwardedAnalytics = useForwardContext(AnalyticsContext);
+  const forwardedContexts = useMemo(() => new Map([forwardedAnalytics]), [forwardedAnalytics]);
   const boundInitPanel = useMemo(
-    () => initPanel.bind(undefined, crash, interfaceMode, props.onDownloadImage),
-    [crash, interfaceMode, props.onDownloadImage],
+    () => initPanel.bind(undefined, crash, forwardedContexts, interfaceMode, props.onDownloadImage),
+    [crash, forwardedContexts, interfaceMode, props.onDownloadImage],
   );
 
   return (

@@ -41,6 +41,9 @@ function getContextValues(contexts: ForwardedContexts): ForwardedContextValues {
  * Forwards React context values between separate React trees. This is used for exposing Studio
  * internal contexts (such as analytics) to internal extension panels, which are in their own React
  * trees and otherwise can't access context values from the rest of Studio.
+ *
+ * This component should be rendered in the destination tree, with the `contexts` prop constructed
+ * from `useForwardContext()` hooks rendered in the source tree.
  */
 export function ForwardContextProviders({
   /** Contexts to forward. A Map that should be built with entries from `useForwardContext()`. */
