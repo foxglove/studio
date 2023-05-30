@@ -14,10 +14,11 @@ import {
 } from "react";
 import { StoreApi, useStore } from "zustand";
 
+import { useGuaranteedContext } from "@foxglove/hooks";
+import { Immutable } from "@foxglove/studio";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
-import useGuaranteedContext from "@foxglove/studio-base/hooks/useGuaranteedContext";
 import {
   Player,
   PlayerProblem,
@@ -98,7 +99,7 @@ export function MessagePipelineProvider({
   //
   // The delay of 0ms is intentional as we only want to give one timeout cycle to batch updates
   const debouncedPlayerSetSubscriptions = useMemo(() => {
-    return debounce((subs: SubscribePayload[]) => {
+    return debounce((subs: Immutable<SubscribePayload[]>) => {
       player?.setSubscriptions(subs);
     });
   }, [player]);

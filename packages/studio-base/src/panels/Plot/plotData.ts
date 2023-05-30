@@ -2,12 +2,12 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Immutable as Im } from "immer";
 import { assignWith, last, isEmpty } from "lodash";
 import memoizeWeak from "memoize-weak";
 
 import { filterMap } from "@foxglove/den/collection";
 import { Time, isLessThan, isGreaterThan, compare as compareTimes } from "@foxglove/rostime";
+import { Immutable as Im } from "@foxglove/studio";
 import { MessageBlock } from "@foxglove/studio-base/PanelAPI/useBlocksByTopic";
 import { MessageDataItemsByPath } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
 import { PlotDataByPath, PlotDataItem } from "@foxglove/studio-base/panels/Plot/internalTypes";
@@ -106,6 +106,7 @@ export function getBlockItemsByPath(
     // this can easily result in many millions of points.
     if (count >= 1_000_000) {
       // if we have memory stats we can let the user have more points as long as memory is not under pressure
+      // foxglove-depcheck-used: @types/foxglove__web
       if (performance.memory) {
         const pct = performance.memory.usedJSHeapSize / performance.memory.jsHeapSizeLimit;
         if (isNaN(pct) || pct > 0.6) {
