@@ -5,7 +5,7 @@
 import { useContext, useLayoutEffect, useState } from "react";
 import { StoreApi, createStore, useStore } from "zustand";
 
-import { useShallowMemo } from "@foxglove/hooks";
+import { useMustNotChange, useShallowMemo } from "@foxglove/hooks";
 import MultiProvider from "@foxglove/studio-base/components/MultiProvider";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -13,6 +13,10 @@ export type ForwardedContexts = ReadonlyMap<React.Context<any>, StoreApi<{ value
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ForwardedContextValues = ReadonlyMap<React.Context<any>, unknown>;
 
+/**
+ * Returns a Map entry for forwarding the given context's value, which can be passed to
+ * `ForwardContextProviders`.
+ */
 export function useForwardContext<T>(
   context: React.Context<T>,
 ): readonly [React.Context<T>, StoreApi<{ value: T }>] {
@@ -33,10 +37,17 @@ function getContextValues(contexts: ForwardedContexts): ForwardedContextValues {
   );
 }
 
+/**
+ * Forwards React context values between separate React trees. This is used for exposing Studio
+ * internal contexts (such as analytics) to internal extension panels, which are in their own React
+ * trees and otherwise can't access context values from the rest of Studio.
+ */
 export function ForwardContextProviders({
+  /** Contexts to forward. A Map that should be built with entries from `useForwardContext()`. */
   contexts,
   children,
 }: React.PropsWithChildren<{ contexts: ForwardedContexts }>): JSX.Element {
+  useMustNotChange(contexts);
   const [store] = useState(() =>
     createStore<ForwardedContextValues>((set) => {
       for (const contextStore of contexts.values()) {
