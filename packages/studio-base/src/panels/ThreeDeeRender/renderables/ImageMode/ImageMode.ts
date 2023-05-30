@@ -16,6 +16,7 @@ import {
 } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/Images/ImageRenderable";
 import {
   AnyImage,
+  DownloadImageInfo,
   getFrameIdFromImage,
 } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/Images/ImageTypes";
 import {
@@ -104,6 +105,9 @@ export class ImageMode
   #dragStartPanOffset = new THREE.Vector2();
   #dragStartMouseCoords = new THREE.Vector2();
   #hasModifiedView = false;
+
+  // Will need to change when synchronization is implemented (FG-2686)
+  #latestImage: { topic: string; image: AnyImage } | undefined;
 
   // eslint-disable-next-line @foxglove/no-boolean-parameters
   #setHasCalibrationTopic: (hasCalibrationTopic: boolean) => void;
@@ -250,6 +254,7 @@ export class ImageMode
     this.#imageRenderable?.removeFromParent();
     this.#imageRenderable = undefined;
     this.#messageHandler.clear();
+    this.#latestImage = undefined;
     this.#clearCameraModel();
     super.removeAllRenderables();
   }
@@ -552,6 +557,8 @@ export class ImageMode
 
     const renderable = this.#getImageRenderable(topic, receiveTime, image, frameId);
 
+    this.#latestImage = { topic: messageEvent.topic, image };
+
     if (this.#cameraModel) {
       renderable.userData.cameraInfo = this.#cameraModel.info;
       renderable.setCameraModel(this.#cameraModel.model);
@@ -807,6 +814,19 @@ export class ImageMode
   #handleErrorChange = (): void => {
     this.updateSettingsTree();
   };
+
+  public getLatestImage(): DownloadImageInfo | undefined {
+    if (!this.#latestImage) {
+      return undefined;
+    }
+    const settings = this.#getImageModeSettings();
+    return {
+      ...this.#latestImage,
+      rotation: settings.rotation,
+      flipHorizontal: settings.flipHorizontal,
+      flipVertical: settings.flipVertical,
+    };
+  }
 }
 
 const createFallbackCameraInfoForImage = (options: {

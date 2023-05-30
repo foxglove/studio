@@ -35,3 +35,11 @@ export function getTimestampFromImage(image: AnyImage): Time {
     return image.timestamp;
   }
 }
+/** Data needed to download an image */
+export type DownloadImageInfo = {
+  topic: string;
+  image: AnyImage;
+  rotation: 0 | 90 | 180 | 270;
+  flipHorizontal: boolean;
+  flipVertical: boolean;
+};
