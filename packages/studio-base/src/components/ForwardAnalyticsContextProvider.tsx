@@ -39,14 +39,14 @@ export function ForwardAnalyticsContextProvider({
 }: React.PropsWithChildren<{ forwardedAnalytics: ForwardedAnalytics }>): JSX.Element {
   useMustNotChange(forwardedAnalytics);
   const [store] = useState(() =>
-    createStore<IAnalytics>(() => forwardedAnalytics.getState().value),
+    createStore(() => ({ value: forwardedAnalytics.getState().value })),
   );
   useEffect(() => {
     const unsubscribe = forwardedAnalytics.subscribe(() =>
-      store.setState(forwardedAnalytics.getState().value),
+      store.setState({ value: forwardedAnalytics.getState().value }),
     );
     return unsubscribe;
   }, [forwardedAnalytics, store]);
-  const value = useStore(store);
+  const { value } = useStore(store);
   return <AnalyticsContext.Provider value={value}>{children}</AnalyticsContext.Provider>;
 }
