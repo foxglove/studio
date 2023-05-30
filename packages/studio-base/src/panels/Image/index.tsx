@@ -9,13 +9,12 @@ import { useCrash } from "@foxglove/hooks";
 import { PanelExtensionContext } from "@foxglove/studio";
 import { CaptureErrorBoundary } from "@foxglove/studio-base/components/CaptureErrorBoundary";
 import {
-  ForwardContextProviders,
-  ForwardedContexts,
-  useForwardContext,
-} from "@foxglove/studio-base/components/ForwardContextProviders";
+  ForwardAnalyticsContextProvider,
+  ForwardedAnalytics,
+  useForwardedAnalytics,
+} from "@foxglove/studio-base/components/ForwardAnalyticsContextProvider";
 import Panel from "@foxglove/studio-base/components/Panel";
 import { PanelExtensionAdapter } from "@foxglove/studio-base/components/PanelExtensionAdapter";
-import AnalyticsContext from "@foxglove/studio-base/context/AnalyticsContext";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 
 import { defaultConfig, ImageView } from "./ImageView";
@@ -23,15 +22,15 @@ import { Config } from "./types";
 
 function initPanel(
   crash: ReturnType<typeof useCrash>,
-  forwardedContexts: ForwardedContexts,
+  forwardedAnalytics: ForwardedAnalytics,
   context: PanelExtensionContext,
 ) {
   ReactDOM.render(
     <StrictMode>
       <CaptureErrorBoundary onError={crash}>
-        <ForwardContextProviders contexts={forwardedContexts}>
+        <ForwardAnalyticsContextProvider forwardedAnalytics={forwardedAnalytics}>
           <ImageView context={context} />
-        </ForwardContextProviders>
+        </ForwardAnalyticsContextProvider>
       </CaptureErrorBoundary>
     </StrictMode>,
     context.panelElement,
@@ -48,11 +47,10 @@ type Props = {
 
 function ImagePanelAdapter(props: Props) {
   const crash = useCrash();
-  const forwardedAnalytics = useForwardContext(AnalyticsContext);
-  const forwardedContexts = useMemo(() => new Map([forwardedAnalytics]), [forwardedAnalytics]);
+  const forwardedAnalytics = useForwardedAnalytics();
   const boundInitPanel = useMemo(
-    () => initPanel.bind(undefined, crash, forwardedContexts),
-    [crash, forwardedContexts],
+    () => initPanel.bind(undefined, crash, forwardedAnalytics),
+    [crash, forwardedAnalytics],
   );
 
   return (

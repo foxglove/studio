@@ -9,13 +9,12 @@ import { useCrash } from "@foxglove/hooks";
 import { PanelExtensionContext } from "@foxglove/studio";
 import { CaptureErrorBoundary } from "@foxglove/studio-base/components/CaptureErrorBoundary";
 import {
-  ForwardContextProviders,
-  ForwardedContexts,
-  useForwardContext,
-} from "@foxglove/studio-base/components/ForwardContextProviders";
+  ForwardAnalyticsContextProvider,
+  ForwardedAnalytics,
+  useForwardedAnalytics,
+} from "@foxglove/studio-base/components/ForwardAnalyticsContextProvider";
 import Panel from "@foxglove/studio-base/components/Panel";
 import { PanelExtensionAdapter } from "@foxglove/studio-base/components/PanelExtensionAdapter";
-import AnalyticsContext from "@foxglove/studio-base/context/AnalyticsContext";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 
 import { ThreeDeeRender } from "./ThreeDeeRender";
@@ -23,7 +22,7 @@ import { InterfaceMode } from "./types";
 
 function initPanel(
   crash: ReturnType<typeof useCrash>,
-  forwardedContexts: ForwardedContexts,
+  forwardedAnalytics: ForwardedAnalytics,
   interfaceMode: InterfaceMode,
   onDownloadImage: ((blob: Blob, fileName: string) => void) | undefined,
   context: PanelExtensionContext,
@@ -31,13 +30,13 @@ function initPanel(
   ReactDOM.render(
     <StrictMode>
       <CaptureErrorBoundary onError={crash}>
-        <ForwardContextProviders contexts={forwardedContexts}>
+        <ForwardAnalyticsContextProvider forwardedAnalytics={forwardedAnalytics}>
           <ThreeDeeRender
             context={context}
             interfaceMode={interfaceMode}
             onDownloadImage={onDownloadImage}
           />
-        </ForwardContextProviders>
+        </ForwardAnalyticsContextProvider>
       </CaptureErrorBoundary>
     </StrictMode>,
     context.panelElement,
@@ -56,11 +55,11 @@ type Props = {
 function ThreeDeeRenderAdapter(interfaceMode: InterfaceMode, props: Props) {
   const crash = useCrash();
 
-  const forwardedAnalytics = useForwardContext(AnalyticsContext);
-  const forwardedContexts = useMemo(() => new Map([forwardedAnalytics]), [forwardedAnalytics]);
+  const forwardedAnalytics = useForwardedAnalytics();
   const boundInitPanel = useMemo(
-    () => initPanel.bind(undefined, crash, forwardedContexts, interfaceMode, props.onDownloadImage),
-    [crash, forwardedContexts, interfaceMode, props.onDownloadImage],
+    () =>
+      initPanel.bind(undefined, crash, forwardedAnalytics, interfaceMode, props.onDownloadImage),
+    [crash, forwardedAnalytics, interfaceMode, props.onDownloadImage],
   );
 
   return (
