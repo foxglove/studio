@@ -12,8 +12,8 @@ import IAnalytics from "@foxglove/studio-base/services/IAnalytics";
 export type ForwardedAnalytics = StoreApi<{ value: IAnalytics }>;
 
 /**
- * Returns a Map entry for forwarding the given context's value, which can be passed to
- * `ForwardContextProviders`.
+ * Returns a store for forwarding the given context's value, which can be passed to
+ * `ForwardAnalyticsContextProvider`.
  */
 export function useForwardedAnalytics(): ForwardedAnalytics {
   const value = useContext(AnalyticsContext);
@@ -25,12 +25,12 @@ export function useForwardedAnalytics(): ForwardedAnalytics {
 }
 
 /**
- * Forwards React context values between separate React trees. This is used for exposing Studio
- * internal contexts (such as analytics) to internal extension panels, which are in their own React
- * trees and otherwise can't access context values from the rest of Studio.
+ * Forwards React context values for analytics between separate React trees. This is used for
+ * exposing the Studio internal analytics context to internal extension panels, which are in their
+ * own React trees and otherwise can't access context values from the rest of Studio.
  *
- * This component should be rendered in the destination tree, with the `contexts` prop constructed
- * from `useForwardContext()` hooks rendered in the source tree.
+ * This component should be rendered in the destination tree, with the `forwardedAnalytics` prop
+ * constructed from the `useForwardedAnalytics()` hook rendered in the source tree.
  */
 export function ForwardAnalyticsContextProvider({
   /** Context to forward. Should be the return value from useForwardedAnalytics in the outer tree. */
