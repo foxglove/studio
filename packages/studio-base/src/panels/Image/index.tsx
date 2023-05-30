@@ -11,7 +11,7 @@ import { CaptureErrorBoundary } from "@foxglove/studio-base/components/CaptureEr
 import {
   ForwardAnalyticsContextProvider,
   ForwardedAnalytics,
-  useForwardedAnalytics,
+  useForwardAnalytics,
 } from "@foxglove/studio-base/components/ForwardAnalyticsContextProvider";
 import Panel from "@foxglove/studio-base/components/Panel";
 import { PanelExtensionAdapter } from "@foxglove/studio-base/components/PanelExtensionAdapter";
@@ -47,7 +47,7 @@ type Props = {
 
 function ImagePanelAdapter(props: Props) {
   const crash = useCrash();
-  const forwardedAnalytics = useForwardedAnalytics();
+  const forwardedAnalytics = useForwardAnalytics();
   const boundInitPanel = useMemo(
     () => initPanel.bind(undefined, crash, forwardedAnalytics),
     [crash, forwardedAnalytics],
