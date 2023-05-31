@@ -6,7 +6,8 @@ import { StrictMode, useEffect } from "react";
 import ReactDOM from "react-dom";
 
 import Logger from "@foxglove/log";
-import { IDataSourceFactory } from "@foxglove/studio-base";
+import type { IDataSourceFactory } from "@foxglove/studio-base";
+import CssBaseline from "@foxglove/studio-base/components/CssBaseline";
 
 import VersionBanner from "./VersionBanner";
 
@@ -23,12 +24,26 @@ function LogAfterRender(props: React.PropsWithChildren<unknown>): JSX.Element {
   return <>{props.children}</>;
 }
 
-type MainParams = {
+export type MainParams = {
   dataSources?: IDataSourceFactory[];
   extraProviders?: JSX.Element[];
 };
 
-export async function main(params: MainParams = {}): Promise<void> {
+/**
+ * Safari < 16.4 doesn't support `static{}` blocks in classes. TypeScript sometimes uses these when
+ * emitting code for decorators.
+ */
+function supportsClassStaticInitialization() {
+  try {
+    // eslint-disable-next-line no-eval
+    eval("class X { static { } }");
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
+
+export async function main(getParams: () => Promise<MainParams> = async () => ({})): Promise<void> {
   log.debug("initializing");
 
   window.onerror = (...args) => {
@@ -44,7 +59,10 @@ export async function main(params: MainParams = {}): Promise<void> {
   const chromeVersion = chromeMatch ? parseInt(chromeMatch[1] ?? "", 10) : 0;
   const isChrome = chromeVersion !== 0;
 
-  const canRenderApp = typeof BigInt64Array === "function" && typeof BigUint64Array === "function";
+  const canRenderApp =
+    typeof BigInt64Array === "function" &&
+    typeof BigUint64Array === "function" &&
+    supportsClassStaticInitialization();
   const banner = (
     <VersionBanner
       isChrome={isChrome}
@@ -56,7 +74,9 @@ export async function main(params: MainParams = {}): Promise<void> {
   if (!canRenderApp) {
     ReactDOM.render(
       <StrictMode>
-        <LogAfterRender>{banner}</LogAfterRender>
+        <LogAfterRender>
+          <CssBaseline>{banner}</CssBaseline>
+        </LogAfterRender>
       </StrictMode>,
       rootEl,
     );
@@ -73,6 +93,7 @@ export async function main(params: MainParams = {}): Promise<void> {
   await initI18n();
 
   const { Root } = await import("./Root");
+  const params = await getParams();
 
   ReactDOM.render(
     <StrictMode>
