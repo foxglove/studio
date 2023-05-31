@@ -14,7 +14,7 @@ import { projectPixel } from "@foxglove/studio-base/panels/ThreeDeeRender/render
 import { RosValue } from "@foxglove/studio-base/players/types";
 
 import { AnyImage } from "./ImageTypes";
-import { decodeRawImage } from "./decodeImage";
+import { RawImageOptions, decodeRawImage } from "./decodeImage";
 import { CameraInfo } from "../../ros";
 
 export interface ImageRenderableSettings {
@@ -24,6 +24,8 @@ export interface ImageRenderableSettings {
   distance: number;
   planarProjectionFactor: number;
   color: string;
+  minValue?: number;
+  maxValue?: number;
 }
 
 export const CREATE_BITMAP_ERR_KEY = "CreateBitmap";
@@ -133,6 +135,14 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     if (newSettings.color !== prevSettings.color) {
       this.#materialNeedsUpdate = true;
     }
+
+    if (
+      prevSettings.minValue !== newSettings.minValue ||
+      prevSettings.maxValue !== newSettings.maxValue
+    ) {
+      this.#textureNeedsUpdate = true;
+    }
+
     this.userData.settings = newSettings;
   }
 
@@ -240,10 +250,17 @@ export class ImageRenderable extends Renderable<ImageUserData> {
       }
 
       const texture = this.userData.texture as THREE.DataTexture;
-      decodeRawImage(image, {}, texture.image.data);
+      decodeRawImage(image, this.#getRawImageOptions(), texture.image.data);
       texture.needsUpdate = true;
     }
     this.#materialNeedsUpdate = true;
+  }
+
+  #getRawImageOptions(): RawImageOptions {
+    return {
+      minValue: this.userData.settings.minValue,
+      maxValue: this.userData.settings.maxValue,
+    };
   }
 
   #updateMaterial(): void {
