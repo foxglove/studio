@@ -574,22 +574,22 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
   #addTransformSubscriptions(): void {
     const config = this.config;
     // Internal handlers for TF messages to update the transform tree
-    this.addSchemaSubscriptions(FRAME_TRANSFORM_DATATYPES, {
+    this.#addSchemaSubscriptions(FRAME_TRANSFORM_DATATYPES, {
       handler: this.#handleFrameTransform,
       shouldSubscribe: () => true,
       preload: config.scene.transforms?.enablePreloading ?? true,
     });
-    this.addSchemaSubscriptions(FRAME_TRANSFORMS_DATATYPES, {
+    this.#addSchemaSubscriptions(FRAME_TRANSFORMS_DATATYPES, {
       handler: this.#handleFrameTransforms,
       shouldSubscribe: () => true,
       preload: config.scene.transforms?.enablePreloading ?? true,
     });
-    this.addSchemaSubscriptions(TF_DATATYPES, {
+    this.#addSchemaSubscriptions(TF_DATATYPES, {
       handler: this.#handleTFMessage,
       shouldSubscribe: () => true,
       preload: config.scene.transforms?.enablePreloading ?? true,
     });
-    this.addSchemaSubscriptions(TRANSFORM_STAMPED_DATATYPES, {
+    this.#addSchemaSubscriptions(TRANSFORM_STAMPED_DATATYPES, {
       handler: this.#handleTransformStamped,
       shouldSubscribe: () => true,
       preload: config.scene.transforms?.enablePreloading ?? true,
@@ -602,7 +602,17 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
       ? Array.from(this.sceneExtensions.values()).filter(filterFn)
       : this.sceneExtensions.values();
     for (const extension of filteredExtensions) {
-      extension.addSubscriptionsToRenderer();
+      const subscriptions = extension.getSubscriptions();
+      for (const subscription of subscriptions) {
+        switch (subscription.type) {
+          case "schema":
+            this.#addSchemaSubscriptions(subscription.schemaNames, subscription.subscription);
+            break;
+          case "topic":
+            this.#addTopicSubscription(subscription.topicName, subscription.subscription);
+            break;
+        }
+      }
     }
   }
 
@@ -614,7 +624,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     this.emit("schemaHandlersChanged", this);
   }
 
-  public addSchemaSubscriptions<T>(
+  #addSchemaSubscriptions<T>(
     schemaNames: Iterable<string>,
     subscription: RendererSubscription<T> | MessageHandler<T>,
   ): void {
@@ -635,7 +645,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     this.emit("schemaHandlersChanged", this);
   }
 
-  public addTopicSubscription<T>(
+  #addTopicSubscription<T>(
     topic: string,
     subscription: RendererSubscription<T> | MessageHandler<T>,
   ): void {

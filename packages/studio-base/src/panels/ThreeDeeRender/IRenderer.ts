@@ -171,6 +171,23 @@ export type RendererSubscription<T = unknown> = {
   handler: MessageHandler<T>;
 };
 
+export type AnyRendererSubscription = Immutable<
+  | {
+      type: "schema";
+      schemaNames: Set<string>;
+      // any is used here to allow storing heterogeneous arrays of subscriptions
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      subscription: RendererSubscription<any> | MessageHandler<any>;
+    }
+  | {
+      type: "topic";
+      topicName: string;
+      // any is used here to allow storing heterogeneous arrays of subscriptions
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      subscription: RendererSubscription<any> | MessageHandler<any>;
+    }
+>;
+
 export class InstancedLineMaterial extends THREE.LineBasicMaterial {
   public constructor(...args: ConstructorParameters<typeof THREE.LineBasicMaterial>) {
     super(...args);
@@ -270,16 +287,6 @@ export interface IRenderer extends EventEmitter<RendererEvents> {
   handleAllFramesMessages(allFrames?: readonly MessageEvent[]): boolean;
 
   updateConfig(updateHandler: (draft: RendererConfig) => void): void;
-
-  addSchemaSubscriptions<T>(
-    schemaNames: Iterable<string>,
-    subscription: RendererSubscription<T> | MessageHandler<T>,
-  ): void;
-
-  addTopicSubscription<T>(
-    topic: string,
-    subscription: RendererSubscription<T> | MessageHandler<T>,
-  ): void;
 
   addCustomLayerAction(options: {
     layerId: string;
