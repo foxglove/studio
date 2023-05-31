@@ -466,7 +466,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     },
   ): void {
     if (clearTransforms === true) {
-      this.transformTree.clear();
+      this.#clearTransformTree();
     }
     if (resetAllFramesCursor === true) {
       this.#resetAllFramesCursor();
@@ -608,13 +608,15 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
       shouldSubscribe: () => true,
       preload: preloadTransforms,
     });
+    this.off("resetAllFramesCursor", this.#clearTransformTree);
     if (preloadTransforms) {
-      this.off("resetAllFramesCursor");
-      this.on("resetAllFramesCursor", () => {
-        this.transformTree.clear();
-      });
+      this.on("resetAllFramesCursor", this.#clearTransformTree);
     }
   }
+
+  #clearTransformTree = () => {
+    this.transformTree.clear();
+  };
 
   // Call on scene extensions to add subscriptions to the renderer
   #addSubscriptionsFromSceneExtensions(filterFn?: (extension: SceneExtension) => boolean): void {
