@@ -22,7 +22,6 @@ import {
   SettingsTreeNodes,
   Subscription,
   Topic,
-  VariableValue,
 } from "@foxglove/studio";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
@@ -163,7 +162,6 @@ export function ThreeDeeRender(props: {
   const [parameters, setParameters] = useState<
     Immutable<Map<string, ParameterValue>> | undefined
   >();
-  const [variables, setVariables] = useState<Immutable<Map<string, VariableValue>> | undefined>();
   const [currentFrameMessages, setCurrentFrameMessages] = useState<
     ReadonlyArray<MessageEvent> | undefined
   >();
@@ -346,9 +344,6 @@ export function ThreeDeeRender(props: {
         // Watch for any changes in the map of observed parameters
         setParameters(renderState.parameters);
 
-        // Watch for any changes in the map of global variables
-        setVariables(renderState.variables);
-
         // currentFrame has messages on subscribed topics since the last render call
         deepParseMessageEvents(renderState.currentFrame);
         setCurrentFrameMessages(renderState.currentFrame);
@@ -366,7 +361,6 @@ export function ThreeDeeRender(props: {
     context.watch("didSeek");
     context.watch("parameters");
     context.watch("sharedPanelState");
-    context.watch("variables");
     context.watch("topics");
     context.watch("appSettings");
     context.subscribeAppSettings([AppSetting.TIMEZONE]);
@@ -457,13 +451,6 @@ export function ThreeDeeRender(props: {
       renderer.setParameters(parameters);
     }
   }, [parameters, renderer]);
-
-  // Keep the renderer variables up to date
-  useEffect(() => {
-    if (renderer && variables) {
-      renderer.setVariables(variables);
-    }
-  }, [variables, renderer]);
 
   // Keep the renderer currentTime up to date and handle seeking
   useEffect(() => {
