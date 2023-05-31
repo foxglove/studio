@@ -87,6 +87,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
   );
 
   // FILE
+
   const fileItems = useMemo(() => {
     const items: MenuItem[] = [
       {
@@ -148,6 +149,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
   ]);
 
   // VIEW
+
   const viewItems = useMemo<MenuItem[]>(
     () => [
       {
@@ -182,6 +184,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
   );
 
   // HELP
+
   const onAboutClick = useCallback(() => {
     dialogActions.preferences.open("about");
     handleAnalytics("about");

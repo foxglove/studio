@@ -35,10 +35,13 @@ export default {
     ),
   ],
   play: async ({ canvasElement, args }) => {
+    if (args.id == undefined) {
+      return;
+    }
     const canvas = within(canvasElement);
-    userEvent.hover(canvas.getByTestId(args.id));
+    userEvent.hover(await canvas.findByTestId(args.id));
   },
-} as Meta<{ id: string }>;
+} as Meta<{ id?: string }>;
 
 // Connection
 const playerSelection: PlayerSelection = {
@@ -56,7 +59,7 @@ const playerSelection: PlayerSelection = {
   availableSources: [],
 };
 
-type AppMenuStory = StoryObj<{ id: string }>;
+type AppMenuStory = StoryObj<{ id?: string }>;
 
 export const Default: AppMenuStory = {};
 
