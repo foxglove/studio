@@ -177,14 +177,14 @@ export type AnyRendererSubscription = Immutable<
       schemaNames: Set<string>;
       // any is used here to allow storing heterogeneous arrays of subscriptions
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      subscription: RendererSubscription<any> | MessageHandler<any>;
+      subscription: RendererSubscription<any>;
     }
   | {
       type: "topic";
       topicName: string;
       // any is used here to allow storing heterogeneous arrays of subscriptions
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      subscription: RendererSubscription<any> | MessageHandler<any>;
+      subscription: RendererSubscription<any>;
     }
 >;
 

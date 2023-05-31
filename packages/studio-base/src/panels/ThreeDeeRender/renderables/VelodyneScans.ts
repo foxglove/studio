@@ -136,7 +136,7 @@ export class VelodyneScans extends SceneExtension<PointCloudRenderable> {
       {
         type: "schema",
         schemaNames: VELODYNE_SCAN_DATATYPES,
-        subscription: this.#handleVelodyneScan,
+        subscription: { handler: this.#handleVelodyneScan },
       },
     ];
   }

@@ -90,12 +90,12 @@ export class Cameras extends SceneExtension<CameraInfoRenderable> {
       {
         type: "schema",
         schemaNames: ROS_CAMERA_INFO_DATATYPES,
-        subscription: this.#handleCameraInfo,
+        subscription: { handler: this.#handleCameraInfo },
       },
       {
         type: "schema",
         schemaNames: CAMERA_CALIBRATION_DATATYPES,
-        subscription: this.#handleCameraInfo,
+        subscription: { handler: this.#handleCameraInfo },
       },
     ];
   }

@@ -280,12 +280,12 @@ export class LaserScans extends SceneExtension<LaserScanRenderable> {
       {
         type: "schema",
         schemaNames: ROS_LASERSCAN_DATATYPES,
-        subscription: this.#handleLaserScan,
+        subscription: { handler: this.#handleLaserScan },
       },
       {
         type: "schema",
         schemaNames: FOXGLOVE_LASERSCAN_DATATYPES,
-        subscription: this.#handleLaserScan,
+        subscription: { handler: this.#handleLaserScan },
       },
     ];
   }

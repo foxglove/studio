@@ -396,7 +396,7 @@ export class FoxgloveGrid extends SceneExtension<FoxgloveGridRenderable> {
       {
         type: "schema",
         schemaNames: GRID_DATATYPES,
-        subscription: this.#handleFoxgloveGrid,
+        subscription: { handler: this.#handleFoxgloveGrid },
       },
     ];
   }

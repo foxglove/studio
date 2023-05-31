@@ -32,7 +32,6 @@ import { LabelMaterial, LabelPool } from "@foxglove/three-text";
 import {
   IRenderer,
   InstancedLineMaterial,
-  MessageHandler,
   RendererConfig,
   RendererEvents,
   RendererSubscription,
@@ -626,41 +625,26 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
 
   #addSchemaSubscriptions<T>(
     schemaNames: Iterable<string>,
-    subscription: RendererSubscription<T> | MessageHandler<T>,
+    subscription: RendererSubscription<T>,
   ): void {
-    const genericSubscription =
-      subscription instanceof Function
-        ? { handler: subscription as MessageHandler<unknown> }
-        : (subscription as RendererSubscription);
     for (const schemaName of schemaNames) {
       let handlers = this.schemaHandlers.get(schemaName);
       if (!handlers) {
         handlers = [];
         this.schemaHandlers.set(schemaName, handlers);
       }
-      if (!handlers.includes(genericSubscription)) {
-        handlers.push(genericSubscription);
-      }
+      handlers.push(subscription as RendererSubscription);
     }
     this.emit("schemaHandlersChanged", this);
   }
 
-  #addTopicSubscription<T>(
-    topic: string,
-    subscription: RendererSubscription<T> | MessageHandler<T>,
-  ): void {
-    const genericSubscription =
-      subscription instanceof Function
-        ? { handler: subscription as MessageHandler<unknown> }
-        : (subscription as RendererSubscription);
+  #addTopicSubscription<T>(topic: string, subscription: RendererSubscription<T>): void {
     let handlers = this.topicHandlers.get(topic);
     if (!handlers) {
       handlers = [];
       this.topicHandlers.set(topic, handlers);
     }
-    if (!handlers.includes(genericSubscription)) {
-      handlers.push(genericSubscription);
-    }
+    handlers.push(subscription as RendererSubscription);
     this.emit("topicHandlersChanged", this);
   }
 

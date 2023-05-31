@@ -57,7 +57,7 @@ export class FoxgloveSceneEntities extends SceneExtension<TopicEntities> {
       {
         type: "schema",
         schemaNames: SCENE_UPDATE_DATATYPES,
-        subscription: this.#handleSceneUpdate,
+        subscription: { handler: this.#handleSceneUpdate },
       },
     ];
   }

@@ -42,12 +42,12 @@ export class Markers extends SceneExtension<TopicMarkers> {
       {
         type: "schema",
         schemaNames: MARKER_ARRAY_DATATYPES,
-        subscription: this.#handleMarkerArray,
+        subscription: { handler: this.#handleMarkerArray },
       },
       {
         type: "schema",
         schemaNames: MARKER_DATATYPES,
-        subscription: this.#handleMarker,
+        subscription: { handler: this.#handleMarker },
       },
     ];
   }

@@ -110,17 +110,17 @@ export class Poses extends SceneExtension<PoseRenderable> {
       {
         type: "schema",
         schemaNames: POSE_STAMPED_DATATYPES,
-        subscription: this.#handlePoseStamped,
+        subscription: { handler: this.#handlePoseStamped },
       },
       {
         type: "schema",
         schemaNames: POSE_IN_FRAME_DATATYPES,
-        subscription: this.#handlePoseInFrame,
+        subscription: { handler: this.#handlePoseInFrame },
       },
       {
         type: "schema",
         schemaNames: POSE_WITH_COVARIANCE_STAMPED_DATATYPES,
-        subscription: this.#handlePoseWithCovariance,
+        subscription: { handler: this.#handlePoseWithCovariance },
       },
     ];
   }

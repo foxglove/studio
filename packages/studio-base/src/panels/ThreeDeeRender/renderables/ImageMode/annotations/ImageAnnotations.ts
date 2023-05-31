@@ -98,7 +98,7 @@ export class ImageAnnotations extends THREE.Object3D {
       {
         type: "schema",
         schemaNames: ALL_SUPPORTED_SCHEMAS,
-        subscription: this.#context.messageHandler.handleAnnotations,
+        subscription: { handler: this.#context.messageHandler.handleAnnotations },
       },
     ];
   }

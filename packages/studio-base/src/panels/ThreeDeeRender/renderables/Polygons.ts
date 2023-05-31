@@ -70,7 +70,7 @@ export class Polygons extends SceneExtension<PolygonRenderable> {
       {
         type: "schema",
         schemaNames: POLYGON_STAMPED_DATATYPES,
-        subscription: this.#handlePolygon,
+        subscription: { handler: this.#handlePolygon },
       },
     ];
   }

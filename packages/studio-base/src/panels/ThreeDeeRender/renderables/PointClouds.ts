@@ -641,12 +641,12 @@ export class PointClouds extends SceneExtension<PointCloudRenderable> {
       {
         type: "schema",
         schemaNames: ROS_POINTCLOUD_DATATYPES,
-        subscription: this.#handleRosPointCloud,
+        subscription: { handler: this.#handleRosPointCloud },
       },
       {
         type: "schema",
         schemaNames: FOXGLOVE_POINTCLOUD_DATATYPES,
-        subscription: this.#handleFoxglovePointCloud,
+        subscription: { handler: this.#handleFoxglovePointCloud },
       },
     ];
   }
