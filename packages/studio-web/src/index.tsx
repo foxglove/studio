@@ -35,8 +35,8 @@ export type MainParams = {
  */
 function supportsClassStaticInitialization() {
   try {
-    // eslint-disable-next-line no-eval
-    eval("class X { static { } }");
+    // eslint-disable-next-line no-new-func
+    new Function("class X { static { } }");
     return true;
   } catch (err) {
     return false;
