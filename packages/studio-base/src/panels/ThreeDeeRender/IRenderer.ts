@@ -153,9 +153,6 @@ export type RendererConfig = {
   imageMode: ImageModeConfig;
 };
 
-/** Callback for handling a message received on a topic */
-export type MessageHandler<T = unknown> = (messageEvent: MessageEvent<T>) => void;
-
 export type RendererSubscription<T = unknown> = {
   /** Preload the full history of topic messages as a best effort */
   preload?: boolean;
@@ -168,7 +165,7 @@ export type RendererSubscription<T = unknown> = {
    */
   shouldSubscribe?: (topic: string) => boolean;
   /** Callback that will be fired for each matching incoming message */
-  handler: MessageHandler<T>;
+  handler: (messageEvent: MessageEvent<T>) => void;
 };
 
 export type AnyRendererSubscription = Immutable<
