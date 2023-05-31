@@ -702,4 +702,36 @@ describe("Renderer.handleAllFramesMessages behavior", () => {
     // will read from the beginning of the array again  because cursor was reset
     expect(addMessageEventMock).toHaveBeenCalledTimes(numMessagesBeforeTime - 1);
   });
+  it.failing(
+    "(does not) reset the cursor if number of messages added **and** removed before cursor are equal in a single update",
+    () => {
+      const renderer = new Renderer(canvas, defaultRendererConfig, "3d");
+
+      const msgs = [];
+      let i = 2;
+      for (i; i < 10; i++) {
+        msgs.push(createTFMessageEvent("a", "b", BigInt(i), [BigInt(i)]));
+      }
+      const addMessageEventMock = jest.spyOn(renderer, "addMessageEvent");
+      renderer.setCurrentTime(5n);
+      renderer.handleAllFramesMessages(msgs);
+      const numMessagesBeforeTime = msgs.filter(
+        (msg) => toNanoSec(msg.message.transforms[0]!.header.stamp) <= 5n,
+      ).length;
+      expect(addMessageEventMock).toHaveBeenCalledTimes(numMessagesBeforeTime);
+
+      addMessageEventMock.mockClear();
+
+      // remove message at beginning of array, before cursor
+      msgs.shift();
+
+      // add message to beginning of array, before cursor
+      msgs.unshift(createTFMessageEvent("a", "b", 1n, [1n]));
+
+      const newMessagesHandled = renderer.handleAllFramesMessages(msgs);
+      expect(newMessagesHandled).toBeTruthy();
+      // will read from the beginning of the array again  because cursor was reset
+      expect(addMessageEventMock).toHaveBeenCalledTimes(numMessagesBeforeTime - 1);
+    },
+  );
 });
