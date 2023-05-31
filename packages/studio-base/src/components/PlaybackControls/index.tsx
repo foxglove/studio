@@ -24,7 +24,7 @@ import {
   ArrowRepeatAll20Regular,
   ArrowRepeatAllOff20Regular,
 } from "@fluentui/react-icons";
-import { Tooltip } from "@mui/material";
+import { Tooltip, useTheme } from "@mui/material";
 import { useCallback, useMemo, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 
@@ -98,6 +98,8 @@ export default function PlaybackControls(props: {
   const [createEventDialogOpen, setCreateEventDialogOpen] = useState(false);
   const { currentUser } = useCurrentUser();
   const eventsSupported = useEvents(selectEventsSupported);
+
+  const theme = useTheme();
 
   const {
     playbackControlActions: { setRepeat },
@@ -179,8 +181,11 @@ export default function PlaybackControls(props: {
   const disableControls = presence === PlayerPresence.ERROR;
 
   const infoButtonStyle = useMemo(
-    () => (presence === PlayerPresence.PRESENT ? {} : { opacity: "50%" }),
-    [presence],
+    () =>
+      presence === PlayerPresence.PRESENT
+        ? { opacity: 1 }
+        : { opacity: theme.palette.action.disabledOpacity },
+    [presence, theme.palette.action.disabledOpacity],
   );
 
   return (
