@@ -82,6 +82,7 @@ const DEFAULT_CONFIG = {
   flipHorizontal: false,
   flipVertical: false,
   rotation: 0 as 0 | 90 | 180 | 270,
+  opacity: 0.0,
 };
 
 type ConfigWithDefaults = ImageModeConfig & typeof DEFAULT_CONFIG;
@@ -523,7 +524,7 @@ export class ImageMode
       if (config.opacity !== prevImageModeConfig.opacity) {
         this.#imageRenderable?.setSettings({
           ...this.#imageRenderable.userData.settings,
-          opacity: config.opacity,
+          foregroundOpacity: config.opacity,
         });
       }
       if (
@@ -677,7 +678,7 @@ export class ImageMode
       ...IMAGE_RENDERABLE_DEFAULT_SETTINGS,
       minValue: config.minValue,
       maxValue: config.maxValue,
-      opacity: config.opacity,
+      foregroundOpacity: config.opacity,
     };
     renderable = new ImageRenderable(topicName, this.renderer, {
       receiveTime,
@@ -736,12 +737,15 @@ export class ImageMode
 
   #getImageModeSettings(): Immutable<ConfigWithDefaults> {
     const config = { ...this.renderer.config.imageMode };
-    config.synchronize ??= DEFAULT_CONFIG.synchronize;
-    config.rotation ??= DEFAULT_CONFIG.rotation;
-    config.flipHorizontal ??= DEFAULT_CONFIG.flipHorizontal;
-    config.flipVertical ??= DEFAULT_CONFIG.flipVertical;
 
-    return config as ConfigWithDefaults;
+    return {
+      ...config,
+      synchronize: config.synchronize ?? DEFAULT_CONFIG.synchronize,
+      rotation: config.rotation ?? DEFAULT_CONFIG.rotation,
+      flipHorizontal: config.flipHorizontal ?? DEFAULT_CONFIG.flipHorizontal,
+      flipVertical: config.flipVertical ?? DEFAULT_CONFIG.flipVertical,
+      opacity: config.opacity ?? DEFAULT_CONFIG.opacity,
+    };
   }
 
   /**

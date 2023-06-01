@@ -26,7 +26,8 @@ export interface ImageRenderableSettings {
   color: string;
   minValue?: number;
   maxValue?: number;
-  opacity?: number;
+  /** Opacity of foreground image, not used when `renderBehindScene` set to true */
+  foregroundOpacity: number;
 }
 
 export const CREATE_BITMAP_ERR_KEY = "CreateBitmap";
@@ -40,6 +41,7 @@ export const IMAGE_RENDERABLE_DEFAULT_SETTINGS: ImageRenderableSettings = {
   distance: DEFAULT_DISTANCE,
   planarProjectionFactor: DEFAULT_PLANAR_PROJECTION_FACTOR,
   color: "#ffffff",
+  foregroundOpacity: 0.0,
 };
 export type ImageUserData = BaseUserData & {
   topic: string;
@@ -144,7 +146,7 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     ) {
       this.#textureNeedsUpdate = true;
     }
-    if (prevSettings.opacity !== newSettings.opacity) {
+    if (prevSettings.foregroundOpacity !== newSettings.foregroundOpacity) {
       this.#materialNeedsUpdate = true;
     }
 
@@ -280,8 +282,8 @@ export class ImageRenderable extends Renderable<ImageUserData> {
       if (texture) {
         foregroundMaterial.map = texture;
       }
-      const foregroundTransparent = this.userData.settings.opacity !== 1;
-      foregroundMaterial.opacity = this.userData.settings.opacity ?? 0.5;
+      const foregroundTransparent = this.userData.settings.foregroundOpacity !== 1;
+      foregroundMaterial.opacity = this.userData.settings.foregroundOpacity;
       foregroundMaterial.transparent = foregroundTransparent;
       foregroundMaterial.depthWrite = !foregroundTransparent;
       material.depthWrite = false;
@@ -312,7 +314,7 @@ export class ImageRenderable extends Renderable<ImageUserData> {
       name: `${this.userData.topic}:ForegroundMaterial`,
       color,
       side: THREE.DoubleSide,
-      opacity: this.userData.settings.opacity ?? 0.5,
+      opacity: this.userData.settings.foregroundOpacity,
       transparent,
       depthWrite: !transparent,
     });
