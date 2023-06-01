@@ -6,8 +6,7 @@ import { ReOrderDotsVertical16Filled } from "@fluentui/react-icons";
 import { Fade, ListItem, ListItemButton, ListItemText, Tooltip, Typography } from "@mui/material";
 import { useCallback, useEffect, useRef } from "react";
 import { useDrag } from "react-dnd";
-import { MosaicDragType } from "react-mosaic-component";
-import { MosaicPath } from "react-mosaic-component";
+import { MosaicDragType, MosaicPath } from "react-mosaic-component";
 import { MosaicDropTargetPosition } from "react-mosaic-component/lib/internalTypes";
 import { makeStyles } from "tss-react/mui";
 
@@ -35,7 +34,7 @@ const useStyles = makeStyles<void, "dragIcon">()((theme, _params, classes) => {
   };
 });
 
-type DropDescription = {
+export type DropDescription = {
   type: string;
   config?: PanelConfig;
   relatedConfigs?: SavedProps;

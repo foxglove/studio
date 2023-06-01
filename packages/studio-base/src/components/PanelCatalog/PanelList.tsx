@@ -11,8 +11,8 @@ import {
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { PanelInfo } from "@foxglove/studio-base/context/PanelCatalogContext";
 
-import { PanelListItem } from "./PanelListItem";
-import { DropDescription, PanelSelection } from "./types";
+import { PanelListItem, DropDescription } from "./PanelListItem";
+import { PanelSelection } from "./types";
 
 type Props = {
   filteredPanels: PanelInfo[];
