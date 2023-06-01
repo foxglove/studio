@@ -10,6 +10,7 @@ import type { IDataSourceFactory } from "@foxglove/studio-base";
 import CssBaseline from "@foxglove/studio-base/components/CssBaseline";
 
 import VersionBanner from "./VersionBanner";
+import { canRenderApp } from "./canRenderApp";
 
 const log = Logger.getLogger(__filename);
 
@@ -29,20 +30,6 @@ export type MainParams = {
   extraProviders?: JSX.Element[];
 };
 
-/**
- * Safari < 16.4 doesn't support `static{}` blocks in classes. TypeScript sometimes uses these when
- * emitting code for decorators.
- */
-function supportsClassStaticInitialization() {
-  try {
-    // eslint-disable-next-line no-new-func
-    new Function("class X { static { } }");
-    return true;
-  } catch (err) {
-    return false;
-  }
-}
-
 export async function main(getParams: () => Promise<MainParams> = async () => ({})): Promise<void> {
   log.debug("initializing");
 
@@ -59,19 +46,12 @@ export async function main(getParams: () => Promise<MainParams> = async () => ({
   const chromeVersion = chromeMatch ? parseInt(chromeMatch[1] ?? "", 10) : 0;
   const isChrome = chromeVersion !== 0;
 
-  const canRenderApp =
-    typeof BigInt64Array === "function" &&
-    typeof BigUint64Array === "function" &&
-    supportsClassStaticInitialization();
+  const canRender = canRenderApp();
   const banner = (
-    <VersionBanner
-      isChrome={isChrome}
-      currentVersion={chromeVersion}
-      isDismissable={canRenderApp}
-    />
+    <VersionBanner isChrome={isChrome} currentVersion={chromeVersion} isDismissable={canRender} />
   );
 
-  if (!canRenderApp) {
+  if (!canRender) {
     ReactDOM.render(
       <StrictMode>
         <LogAfterRender>
