@@ -4,30 +4,15 @@
 
 import { List } from "@mui/material";
 import { useCallback, useMemo } from "react";
-import { MosaicPath } from "react-mosaic-component";
 
 import {
   useCurrentLayoutActions,
   usePanelMosaicId,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { PanelInfo } from "@foxglove/studio-base/context/PanelCatalogContext";
-import {
-  PanelConfig,
-  MosaicDropTargetPosition,
-  SavedProps,
-} from "@foxglove/studio-base/types/panels";
 
-import { PanelSelection } from "./PanelCatalog";
 import { PanelListItem } from "./PanelListItem";
-
-type DropDescription = {
-  type: string;
-  config?: PanelConfig;
-  relatedConfigs?: SavedProps;
-  position?: MosaicDropTargetPosition;
-  path?: MosaicPath;
-  tabId?: string;
-};
+import { DropDescription, PanelSelection } from "./types";
 
 type Props = {
   filteredPanels: PanelInfo[];

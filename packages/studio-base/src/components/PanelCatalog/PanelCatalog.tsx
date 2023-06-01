@@ -6,8 +6,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import SearchIcon from "@mui/icons-material/Search";
 import { IconButton, TextField } from "@mui/material";
 import fuzzySort from "fuzzysort";
-import { countBy } from "lodash";
-import { isEmpty } from "lodash";
+import { countBy, isEmpty } from "lodash";
 import { forwardRef, useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { makeStyles } from "tss-react/mui";
@@ -15,11 +14,11 @@ import { makeStyles } from "tss-react/mui";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import Stack from "@foxglove/studio-base/components/Stack";
 import { PanelInfo, usePanelCatalog } from "@foxglove/studio-base/context/PanelCatalogContext";
-import { PanelConfig } from "@foxglove/studio-base/types/panels";
 import { mightActuallyBePartial } from "@foxglove/studio-base/util/mightActuallyBePartial";
 
 import { PanelGrid } from "./PanelGrid";
 import { PanelList } from "./PanelList";
+import { PanelSelection } from "./types";
 
 const useStyles = makeStyles()((theme) => {
   const { spacing, palette } = theme;
@@ -45,12 +44,6 @@ const useStyles = makeStyles()((theme) => {
     },
   };
 });
-
-export type PanelSelection = {
-  type: string;
-  config?: PanelConfig;
-  relatedConfigs?: { [panelId: string]: PanelConfig };
-};
 
 type Props = {
   onPanelSelect: (arg0: PanelSelection) => void;

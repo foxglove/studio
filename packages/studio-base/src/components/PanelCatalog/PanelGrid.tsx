@@ -11,9 +11,9 @@ import { useCallback } from "react";
 import { makeStyles } from "tss-react/mui";
 
 import { PanelInfo } from "@foxglove/studio-base/context/PanelCatalogContext";
-import { PanelConfig } from "@foxglove/studio-base/types/panels";
 
 import { PanelGridCard } from "./PanelGridCard";
+import { PanelSelection } from "./types";
 
 const useStyles = makeStyles()((theme) => ({
   grid: {
@@ -22,12 +22,6 @@ const useStyles = makeStyles()((theme) => ({
     gap: theme.spacing(2),
   },
 }));
-
-export type PanelSelection = {
-  type: string;
-  config?: PanelConfig;
-  relatedConfigs?: { [panelId: string]: PanelConfig };
-};
 
 type Props = {
   filteredPanels: PanelInfo[];
