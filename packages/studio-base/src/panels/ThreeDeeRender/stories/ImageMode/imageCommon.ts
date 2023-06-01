@@ -83,6 +83,7 @@ export function makeRawImageAndCalibration(args: MakeImageArgs): {
   return { calibrationMessage, cameraMessage };
 }
 
+// ts-prune-ignore-next
 export async function makeCompressedImageAndCalibration(args: MakeImageArgs): Promise<{
   calibrationMessage: MessageEvent<Partial<CameraCalibration>>;
   cameraMessage: MessageEvent<Partial<CompressedImage>>;
