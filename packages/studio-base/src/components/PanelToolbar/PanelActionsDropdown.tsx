@@ -25,7 +25,6 @@ import { MouseEvent, useCallback, useContext, useMemo, useRef, useState } from "
 import { MosaicContext, MosaicNode, MosaicWindowContext } from "react-mosaic-component";
 import { makeStyles } from "tss-react/mui";
 
-import { AddPanelMenu } from "@foxglove/studio-base/components/AppBar/AddPanelMenu";
 import PanelContext from "@foxglove/studio-base/components/PanelContext";
 import ChangePanelMenu from "@foxglove/studio-base/components/PanelToolbar/ChangePanelMenu";
 import ToolbarIconButton from "@foxglove/studio-base/components/PanelToolbar/ToolbarIconButton";
