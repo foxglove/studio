@@ -117,6 +117,9 @@ function getTitleBarOverlayOptions(): TitleBarOverlayOptions {
 function newStudioWindow(deepLinks: string[] = [], reloadMainWindow: () => void): BrowserWindow {
   const { crashReportingEnabled, telemetryEnabled } = getTelemetrySettings();
   const enableNewTopNav = getAppSetting<boolean>(AppSetting.ENABLE_NEW_TOPNAV) ?? false;
+  const colorScheme = getAppSetting<string>(AppSetting.COLOR_SCHEME) ?? "system";
+  const isDark =
+    colorScheme === "dark" || (colorScheme === "system" && nativeTheme.shouldUseDarkColors);
 
   const preloadPath = path.join(app.getAppPath(), "main", "preload.js");
 
@@ -124,6 +127,7 @@ function newStudioWindow(deepLinks: string[] = [], reloadMainWindow: () => void)
     Math.floor((APP_BAR_HEIGHT - /*button size*/ 12) / 2) - /*for good measure*/ 1;
 
   const windowOptions: BrowserWindowConstructorOptions = {
+    backgroundColor: isDark ? "#15151a" : "#f4f4f5",
     height: 800,
     width: 1200,
     minWidth: 350,
