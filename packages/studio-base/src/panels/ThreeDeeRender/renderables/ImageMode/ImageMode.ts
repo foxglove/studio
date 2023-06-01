@@ -694,8 +694,6 @@ export class ImageMode
       material: undefined,
       geometry: undefined,
       mesh: undefined,
-      foregroundMaterial: undefined,
-      foregroundMesh: undefined,
     });
 
     this.add(renderable);

@@ -49,10 +49,8 @@ export type ImageUserData = BaseUserData & {
   image: AnyImage | undefined;
   texture: THREE.Texture | undefined;
   material: THREE.MeshBasicMaterial | undefined;
-  foregroundMaterial: THREE.MeshBasicMaterial | undefined;
   geometry: THREE.PlaneGeometry | undefined;
   mesh: THREE.Mesh | undefined;
-  foregroundMesh: THREE.Mesh | undefined;
 };
 
 export class ImageRenderable extends Renderable<ImageUserData> {
@@ -72,6 +70,9 @@ export class ImageRenderable extends Renderable<ImageUserData> {
 
   #isUpdating = false;
 
+  #foregroundMaterial: THREE.MeshBasicMaterial | undefined;
+  #foregroundMesh: THREE.Mesh | undefined;
+
   public constructor(topicName: string, renderer: IRenderer, userData: ImageUserData) {
     super(topicName, renderer, userData);
   }
@@ -80,7 +81,7 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     this.userData.texture?.dispose();
     this.userData.material?.dispose();
     this.userData.geometry?.dispose();
-    this.userData.foregroundMaterial?.dispose();
+    this.#foregroundMaterial?.dispose();
     super.dispose();
   }
 
@@ -272,10 +273,10 @@ export class ImageRenderable extends Renderable<ImageUserData> {
 
     if (this.#renderBehindScene) {
       assert(
-        this.userData.foregroundMaterial,
+        this.#foregroundMaterial,
         "ForegroundMaterial must be set before mesh can be updated or created",
       );
-      const { foregroundMaterial } = this.userData;
+      const foregroundMaterial = this.#foregroundMaterial;
       if (texture) {
         foregroundMaterial.map = texture;
       }
@@ -307,7 +308,7 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     if (!this.#renderBehindScene) {
       return;
     }
-    this.userData.foregroundMaterial = new THREE.MeshBasicMaterial({
+    this.#foregroundMaterial = new THREE.MeshBasicMaterial({
       name: `${this.userData.topic}:ForegroundMaterial`,
       color,
       side: THREE.DoubleSide,
@@ -330,19 +331,17 @@ export class ImageRenderable extends Renderable<ImageUserData> {
 
     if (this.#renderBehindScene) {
       assert(
-        this.userData.foregroundMaterial,
+        this.#foregroundMaterial,
         "ForegroundMaterial must be set before mesh can be updated or created",
       );
 
-      if (!this.userData.foregroundMesh) {
-        this.userData.foregroundMesh = new THREE.Mesh(
-          this.userData.geometry,
-          this.userData.foregroundMaterial,
-        );
-        this.add(this.userData.foregroundMesh);
+      if (!this.#foregroundMesh) {
+        this.#foregroundMesh = new THREE.Mesh(this.userData.geometry, this.#foregroundMaterial);
+        this.#foregroundMesh.userData.pickable = false;
+        this.add(this.#foregroundMesh);
       } else {
-        this.userData.foregroundMesh.geometry = this.userData.geometry;
-        this.userData.foregroundMesh.material = this.userData.foregroundMaterial;
+        this.#foregroundMesh.geometry = this.userData.geometry;
+        this.#foregroundMesh.material = this.#foregroundMaterial;
       }
       // this.userData.foregroundMesh.renderOrder = -1;
       this.userData.mesh.renderOrder = -1 * Number.MAX_SAFE_INTEGER;
