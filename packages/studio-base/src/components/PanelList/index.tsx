@@ -67,7 +67,7 @@ const useStyles = makeStyles<void, "dragIcon">()((theme, _params, classes) => {
       flex: "auto",
     },
     listItemButton: {
-      height: 32, // hard coded here because the parent element of this changes based on context
+      height: theme.spacing(4), // hard coded here because the parent element of this changes based on context
       cursor: "grab",
 
       [`&:not(:hover) .${classes.dragIcon}`]: {
