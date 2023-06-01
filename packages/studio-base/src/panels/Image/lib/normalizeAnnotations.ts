@@ -234,7 +234,7 @@ function normalizeAnnotations(maybeLazyMessage: unknown, datatype: string): Anno
       return normalizeRosImageMarkerArray(message as ImageMarkerArray);
     // backwards compat with webviz
     case "webviz_msgs/ImageMarkerArray":
-      return [];
+      break;
     // foxglove
     case "foxglove_msgs/ImageAnnotations":
     case "foxglove_msgs/msg/ImageAnnotations":
