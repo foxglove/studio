@@ -40,6 +40,10 @@ export class SettingsManager extends EventEmitter<SettingsManagerEvents> {
   }
 
   public setNodesForKey(key: string, nodes: SettingsTreeEntry[]): void {
+    nodes.forEach((entry) =>
+      this.#globalSettingsEntryValidators.forEach((validator) => validator(entry, this.errors)),
+    );
+
     this.#root = produce(this.#root, (draft) => {
       // Delete all previous nodes for this key
       const prevNodes = this.#nodesByKey.get(key);
@@ -48,11 +52,6 @@ export class SettingsManager extends EventEmitter<SettingsManagerEvents> {
           removeNodeAtPath(draft, path);
         }
       }
-
-      nodes.forEach((entry) =>
-        this.#globalSettingsEntryValidators.forEach((validator) => validator(entry, this.errors)),
-      );
-
       // Add the new nodes
       for (const { path, node } of nodes) {
         node.error ??= this.errors.errors.errorAtPath(path);

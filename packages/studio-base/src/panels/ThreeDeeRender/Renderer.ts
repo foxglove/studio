@@ -668,12 +668,18 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     this.#addSubscriptionsFromSceneExtensions(
       (extension) => extension === this.#imageModeExtension,
     );
-    this.settings.addGlobalSettingsEntryValidator(this.#imageOnlyModeTopicSettingsValidator);
+    this.settings.errors.add(
+      ["topics"],
+      "IMAGE_ONLY_TOPIC",
+      "3D topics cannot be rendered while image calibration is not defined.",
+    );
+    // this.settings.addGlobalSettingsEntryValidator(this.#imageOnlyModeTopicSettingsValidator);
   };
 
   #disableImageOnlySubscriptionMode = (): void => {
     // .clear() will clean up remaining errors on topics
-    this.settings.removeGlobalSettingsEntryValidator(this.#imageOnlyModeTopicSettingsValidator);
+    // this.settings.removeGlobalSettingsEntryValidator(this.#imageOnlyModeTopicSettingsValidator);
+    this.settings.errors.remove(["topics"], "IMAGE_ONLY_TOPIC");
     this.clear({ clearTransforms: true, resetAllFramesCursor: true });
     this.#clearSubscriptions();
     this.#addSubscriptionsFromSceneExtensions();
