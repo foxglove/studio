@@ -26,6 +26,7 @@ import {
 import { PanelConfig } from "@foxglove/studio-base/types/panels";
 
 const useStyles = makeStyles()((theme) => {
+  const { spacing, palette } = theme;
   return {
     fullHeight: {
       height: "100%",
@@ -33,7 +34,7 @@ const useStyles = makeStyles()((theme) => {
     grid: {
       display: "grid !important",
       gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
-      gap: theme.spacing(2),
+      gap: spacing(2),
     },
     toolbar: {
       position: "sticky",
@@ -42,9 +43,9 @@ const useStyles = makeStyles()((theme) => {
       display: "flex",
       justifyContent: "stretch",
       padding: theme.spacing(2),
-      backgroundImage: `linear-gradient(to top, transparent, ${
-        theme.palette.background.paper
-      } ${theme.spacing(1.5)}) !important`,
+      backgroundImage: `linear-gradient(to top, transparent, ${palette.background.paper} ${spacing(
+        1.5,
+      )}) !important`,
     },
   };
 });
@@ -58,14 +59,6 @@ export type PanelSelection = {
 type Props = {
   onPanelSelect: (arg0: PanelSelection) => void;
 };
-
-function blurActiveElement() {
-  // Clear focus from the panel menu button so that spacebar doesn't trigger
-  // more panel additions.
-  if (document.activeElement instanceof HTMLElement) {
-    document.activeElement.blur();
-  }
-}
 
 export const PanelGrid = forwardRef<HTMLDivElement, Props>(function PanelGrid(props: Props, ref) {
   const { onPanelSelect } = props;
@@ -158,7 +151,6 @@ export const PanelGrid = forwardRef<HTMLDivElement, Props>(function PanelGrid(pr
           searchQuery={searchQuery}
           onClick={() => {
             onPanelSelect({ type, config, relatedConfigs });
-            blurActiveElement();
           }}
         />
       );

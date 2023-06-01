@@ -31,7 +31,6 @@ import {
 
 const useStyles = makeStyles()((theme) => {
   const { spacing, palette } = theme;
-
   return {
     fullHeight: {
       height: "100%",
