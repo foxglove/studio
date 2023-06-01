@@ -2,8 +2,9 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { ErrorCircle20Filled } from "@fluentui/react-icons";
-import { CircularProgress, IconButton } from "@mui/material";
+import { ChevronRight12Regular, ErrorCircle20Filled } from "@fluentui/react-icons";
+import { CircularProgress, IconButton, Typography } from "@mui/material";
+import { MutableRefObject, memo, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { makeStyles } from "tss-react/mui";
 
@@ -13,9 +14,14 @@ import {
 } from "@foxglove/studio-base/components/MessagePipeline";
 import Stack from "@foxglove/studio-base/components/Stack";
 import TextMiddleTruncate from "@foxglove/studio-base/components/TextMiddleTruncate";
+import Timestamp from "@foxglove/studio-base/components/Timestamp";
 import WssErrorModal from "@foxglove/studio-base/components/WssErrorModal";
 import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/useWorkspaceActions";
+import { useAppTimeFormat } from "@foxglove/studio-base/hooks";
+import { subtractTimes } from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/typescript/userUtils/time";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
+import { formatDuration } from "@foxglove/studio-base/util/formatTime";
+import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 const ICON_SIZE = 18;
 
@@ -58,30 +64,78 @@ const useStyles = makeStyles<void, "adornmentError">()((theme, _params, _classes
   },
   iconButton: {
     padding: 0,
+    position: "relative",
+    zIndex: 1,
+    fontSize: ICON_SIZE - 2,
 
     "svg:not(.MuiSvgIcon-root)": {
       fontSize: "1rem",
     },
   },
-  errorIconButton: {
-    position: "relative",
-    zIndex: 1,
-    fontSize: ICON_SIZE - 2,
-  },
 }));
+
+const selectPlay = (ctx: MessagePipelineContext) => ctx.startPlayback;
+const selectPause = (ctx: MessagePipelineContext) => ctx.pausePlayback;
+const selectSeek = (ctx: MessagePipelineContext) => ctx.seekPlayback;
 
 const selectPlayerName = ({ playerState }: MessagePipelineContext) => playerState.name;
 const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => playerState.presence;
 const selectPlayerProblems = ({ playerState }: MessagePipelineContext) => playerState.problems;
 
+const selectStartTime = ({ playerState }: MessagePipelineContext) =>
+  playerState.activeData?.startTime;
+const selectEndTime = ({ playerState }: MessagePipelineContext) => playerState.activeData?.endTime;
+
+type LiveDurationProps = {
+  durationRef: MutableRefObject<ReactNull | HTMLDivElement>;
+};
+
+const LiveDuration = memo<LiveDurationProps>(function LiveTimestamp({
+  durationRef,
+}: LiveDurationProps) {
+  return (
+    <Typography
+      variant="inherit"
+      title="Duration"
+      ref={durationRef}
+      style={{
+        fontFeatureSettings: `${fonts.SANS_SERIF_FEATURE_SETTINGS}, "zero"`,
+      }}
+    />
+  );
+});
+
 export function DataSource(): JSX.Element {
   const { t } = useTranslation("appBar");
   const { classes, cx } = useStyles();
+  const durationRef = useRef<HTMLDivElement>(ReactNull);
+
+  const startTime = useMessagePipeline(selectStartTime);
+  const endTime = useMessagePipeline(selectEndTime);
+
+  const play = useMessagePipeline(selectPlay);
+  const pause = useMessagePipeline(selectPause);
+  const seek = useMessagePipeline(selectSeek);
+
+  const isConnection = !(play && pause && seek);
 
   const playerName = useMessagePipeline(selectPlayerName);
   const playerPresence = useMessagePipeline(selectPlayerPresence);
   const playerProblems = useMessagePipeline(selectPlayerProblems) ?? [];
+
   const { sidebarActions } = useWorkspaceActions();
+  const { formatDate, formatTime } = useAppTimeFormat();
+
+  // We bypass react and update the DOM elements directly for better performance here.
+  useEffect(() => {
+    if (durationRef.current) {
+      const duration = endTime && startTime ? subtractTimes(endTime, startTime) : undefined;
+      if (duration) {
+        const durationStr = formatDuration(duration);
+        durationRef.current.innerText = durationStr;
+      }
+    }
+  }, [endTime, formatTime, startTime, playerPresence, formatDate]);
 
   const reconnecting = playerPresence === PlayerPresence.RECONNECTING;
   const initializing = playerPresence === PlayerPresence.INITIALIZING;
@@ -105,6 +159,14 @@ export function DataSource(): JSX.Element {
           <div className={classes.textTruncate}>
             <TextMiddleTruncate text={playerDisplayName ?? `<${t("unknown")}>`} />
           </div>
+          {!error && isConnection && startTime && (
+            <>
+              <ChevronRight12Regular />
+              <Timestamp title="Live since" horizontal time={startTime} />
+              <ChevronRight12Regular />
+              <LiveDuration durationRef={durationRef} />
+            </>
+          )}
         </div>
         <div className={cx(classes.adornment, { [classes.adornmentError]: error })}>
           {loading && (
@@ -118,7 +180,7 @@ export function DataSource(): JSX.Element {
           {error && (
             <IconButton
               color="inherit"
-              className={cx(classes.iconButton, classes.errorIconButton)}
+              className={classes.iconButton}
               onClick={() => {
                 sidebarActions.left.setOpen(true);
                 sidebarActions.left.selectItem("problems");
