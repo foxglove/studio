@@ -12,13 +12,13 @@
 //   You may not use this file except in compliance with the License.
 
 import { useTheme } from "@mui/material";
-import { StoryFn, StoryObj } from "@storybook/react";
+import { Meta, StoryFn, StoryObj } from "@storybook/react";
 import { userEvent } from "@storybook/testing-library";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
 import Panel from "@foxglove/studio-base/components/Panel";
-import PanelList from "@foxglove/studio-base/components/PanelList";
+import { PanelList } from "@foxglove/studio-base/components/PanelList/PanelList";
 import PanelCatalogContext, {
   PanelCatalog,
   PanelInfo,
@@ -63,22 +63,11 @@ class MockPanelCatalog implements PanelCatalog {
   }
 }
 
-const PanelListStory: StoryObj<{
-  mode?: "grid" | "list";
-  inputValue?: string;
-  events?: string[];
-}> = {
-  render: ({ mode }) => <PanelList mode={mode} onPanelSelect={() => {}} />,
-  play: async ({ args }) => {
-    if (args.inputValue) {
-      userEvent.keyboard(args.inputValue);
-    }
-    args.events?.forEach((keypress) => userEvent.keyboard(keypress));
-  },
-};
+type Args = { inputValue?: string; events?: string[] };
 
 export default {
   title: "components/PanelList",
+  component: () => <PanelList onPanelSelect={() => {}} />,
   parameters: { colorScheme: "dark" },
   decorators: [
     (Wrapped: StoryFn): JSX.Element => {
@@ -98,97 +87,71 @@ export default {
       );
     },
   ],
-};
+  play: async ({ args }) => {
+    if (args.inputValue) {
+      userEvent.keyboard(args.inputValue);
+    }
+    args.events?.forEach((keypress) => userEvent.keyboard(keypress));
+  },
+} as Meta<Args>;
 
-export const List: StoryObj = {
-  ...PanelListStory,
-  name: "Panel list",
-};
+type Story = StoryObj<Args>;
 
-export const PanelGrid: StoryObj = {
-  ...PanelListStory,
-  args: { mode: "grid" },
-};
+export const Default: Story = {};
 
-export const FilteredPanelList: StoryObj = {
-  ...PanelListStory,
+export const Filtered: Story = {
   args: { inputValue: "AAA" },
 };
 
-export const FilteredPanelGrid: StoryObj = {
-  ...PanelListStory,
-  args: { mode: "grid", inputValue: "AAA" },
-};
-
-export const FilteredPanelGridWithDescription: StoryObj = {
-  ...PanelListStory,
-  args: { mode: "grid", inputValue: "description" },
-};
-
-export const FilteredPanelListLight: StoryObj = {
-  ...PanelListStory,
+export const FilteredLight: Story = {
   args: { inputValue: "AAA" },
   parameters: { colorScheme: "light" },
 };
 
-export const NavigatingArrows: StoryObj = {
-  ...PanelListStory,
+export const NavigatingArrows: Story = {
   args: { events: ["[ArrowDown]", "[ArrowDown]", "[ArrowUp]"] },
   name: "Navigating panel list with arrow keys",
 };
 
-export const NavigatingArrowsWrap: StoryObj = {
-  ...PanelListStory,
+export const NavigatingArrowsWrap: Story = {
   args: { events: ["[ArrowUp]"] },
   name: "Navigating up from top of panel list will scroll to highlighted last item",
 };
 
-export const NoResultsFirst: StoryObj = {
-  ...PanelListStory,
+export const NoResultsFirst: Story = {
   args: { inputValue: "regular" },
   name: "Filtered panel list without results in 1st category",
 };
 
-export const NoResultsLast: StoryObj = {
-  ...PanelListStory,
+export const NoResultsLast: Story = {
   args: { inputValue: "preconfigured" },
   name: "Filtered panel list without results in last category",
 };
 
-export const NoResultsAnyList: StoryObj = {
-  ...PanelListStory,
+export const NoResults: Story = {
   args: { inputValue: "WWW" },
   name: "Filtered panel list without results in any category",
 };
 
-export const NoResultsAnyGrid: StoryObj = {
-  ...PanelListStory,
-  args: { mode: "grid", inputValue: "WWW" },
-  name: "Filtered panel grid without results in any category",
-};
-
-export const CaseInsensitiveFilter: StoryObj = {
-  ...PanelListStory,
+export const CaseInsensitiveFilter: Story = {
   args: { inputValue: "pA" },
   name: "Case-insensitive filtering and highlight submenu",
 };
 
-export const PanelListChinese: StoryObj = {
-  ...PanelListStory,
+export const PanelListChinese: Story = {
   parameters: { forceLanguage: "zh" },
 };
 
-export const PanelListJapanese: StoryObj = {
-  ...PanelListStory,
+export const PanelListJapanese: Story = {
   parameters: { forceLanguage: "ja" },
 };
 
-export const NoResultsChinese: StoryObj = {
-  ...NoResultsAnyGrid,
+export const NoResultsChinese: Story = {
+  ...NoResults,
   parameters: { forceLanguage: "zh" },
 };
 
-export const NoResultsJapanese: StoryObj = {
-  ...NoResultsAnyGrid,
+export const NoResultsJapanese: Story = {
+  ...NoResults,
   parameters: { forceLanguage: "ja" },
 };

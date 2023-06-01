@@ -8,7 +8,7 @@ import { MosaicContext, MosaicNode, MosaicWindowContext } from "react-mosaic-com
 import { makeStyles } from "tss-react/mui";
 
 import PanelContext from "@foxglove/studio-base/components/PanelContext";
-import PanelList, { PanelSelection } from "@foxglove/studio-base/components/PanelList";
+import { PanelList, PanelSelection } from "@foxglove/studio-base/components/PanelList";
 import { useCurrentLayoutActions } from "@foxglove/studio-base/context/CurrentLayoutContext";
 
 const useStyles = makeStyles()((theme) => ({

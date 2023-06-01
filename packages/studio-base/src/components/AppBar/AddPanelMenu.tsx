@@ -5,7 +5,7 @@
 import { Menu, PaperProps, PopoverPosition, PopoverReference } from "@mui/material";
 import { makeStyles } from "tss-react/mui";
 
-import PanelList from "@foxglove/studio-base/components/PanelList";
+import { PanelList } from "@foxglove/studio-base/components/PanelList";
 import useAddPanel from "@foxglove/studio-base/hooks/useAddPanel";
 
 const useStyles = makeStyles()({
