@@ -235,9 +235,15 @@ export class ImageRenderable extends Renderable<ImageUserData> {
         decodeRawImage(image, this.#getRawImageOptions(), texture.image.data);
         texture.needsUpdate = true;
         this.renderer.settings.errors.remove(IMAGE_TOPIC_PATH, CREATE_BITMAP_ERR_KEY);
+        this.renderer.settings.errors.removeFromTopic(this.userData.topic, CREATE_BITMAP_ERR_KEY);
       } catch (error) {
         this.renderer.settings.errors.add(
           IMAGE_TOPIC_PATH,
+          CREATE_BITMAP_ERR_KEY,
+          `Error decoding raw image: ${error.message}`,
+        );
+        this.renderer.settings.errors.addToTopic(
+          this.userData.topic,
           CREATE_BITMAP_ERR_KEY,
           `Error decoding raw image: ${error.message}`,
         );
