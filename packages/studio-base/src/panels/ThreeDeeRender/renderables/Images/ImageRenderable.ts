@@ -29,6 +29,7 @@ export interface ImageRenderableSettings {
 }
 
 export const CREATE_BITMAP_ERR_KEY = "CreateBitmap";
+const IMAGE_TOPIC_PATH = ["imageMode", "imageTopic"];
 
 const DEFAULT_DISTANCE = 1;
 const DEFAULT_PLANAR_PROJECTION_FACTOR = 0;
@@ -230,8 +231,17 @@ export class ImageRenderable extends Renderable<ImageUserData> {
       }
 
       const texture = this.userData.texture as THREE.DataTexture;
-      decodeRawImage(image, this.#getRawImageOptions(), texture.image.data);
-      texture.needsUpdate = true;
+      try {
+        decodeRawImage(image, this.#getRawImageOptions(), texture.image.data);
+        texture.needsUpdate = true;
+        this.renderer.settings.errors.remove(IMAGE_TOPIC_PATH, CREATE_BITMAP_ERR_KEY);
+      } catch (error) {
+        this.renderer.settings.errors.add(
+          IMAGE_TOPIC_PATH,
+          CREATE_BITMAP_ERR_KEY,
+          `Error decoding raw image: ${error.message}`,
+        );
+      }
     }
     this.#materialNeedsUpdate = true;
   }
