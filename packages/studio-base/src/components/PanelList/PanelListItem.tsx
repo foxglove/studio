@@ -152,7 +152,7 @@ export function PanelListItem({
         </Stack>
       }
     >
-      <ListItem disablePadding>
+      <ListItem dense disablePadding>
         <ListItemButton
           selected={highlighted}
           className={classes.listItemButton}
@@ -160,7 +160,7 @@ export function PanelListItem({
           ref={mergedRef}
           onClick={onClickWithStopPropagation}
         >
-          <ListItemText disableTypography>
+          <ListItemText>
             <span data-testid={`panel-menu-item ${panel.title}`}>
               <TextHighlight targetStr={targetString} searchText={searchQuery} />
             </span>
