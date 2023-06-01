@@ -77,10 +77,6 @@ const useStyles = makeStyles<void, "adornmentError">()((theme, _params, _classes
   },
 }));
 
-const selectPlay = (ctx: MessagePipelineContext) => ctx.startPlayback;
-const selectPause = (ctx: MessagePipelineContext) => ctx.pausePlayback;
-const selectSeek = (ctx: MessagePipelineContext) => ctx.seekPlayback;
-
 const selectPlayerName = ({ playerState }: MessagePipelineContext) => playerState.name;
 const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => playerState.presence;
 const selectPlayerProblems = ({ playerState }: MessagePipelineContext) => playerState.problems;
@@ -116,11 +112,7 @@ export function DataSource(): JSX.Element {
   const startTime = useMessagePipeline(selectStartTime);
   const endTime = useMessagePipeline(selectEndTime);
 
-  const play = useMessagePipeline(selectPlay);
-  const pause = useMessagePipeline(selectPause);
-  const seek = useMessagePipeline(selectSeek);
-
-  const isConnection = !(play && pause && seek);
+  const isConnection = endTime == undefined;
 
   const playerName = useMessagePipeline(selectPlayerName);
   const playerPresence = useMessagePipeline(selectPlayerPresence);
