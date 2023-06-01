@@ -46,9 +46,6 @@ export type ImageUserData = BaseUserData & {
   cameraInfo: CameraInfo | undefined;
   cameraModel: PinholeCameraModel | undefined;
   image: AnyImage | undefined;
-  rotation: 0 | 90 | 180 | 270;
-  flipHorizontal: boolean;
-  flipVertical: boolean;
   texture: THREE.Texture | undefined;
   material: THREE.MeshBasicMaterial | undefined;
   geometry: THREE.PlaneGeometry | undefined;
@@ -149,23 +146,6 @@ export class ImageRenderable extends Renderable<ImageUserData> {
   public setImage(image: AnyImage): void {
     this.userData.image = image;
     this.#textureNeedsUpdate = true;
-  }
-
-  /** Set the rotation (used only for downloading) */
-  public setRotation(rotation: 0 | 90 | 180 | 270): void {
-    this.userData.rotation = rotation;
-  }
-
-  /** Set the horizontal flip (used only for downloading) */
-  // eslint-disable-next-line @foxglove/no-boolean-parameters
-  public setFlipHorizontal(flipHorizontal: boolean): void {
-    this.userData.flipHorizontal = flipHorizontal;
-  }
-
-  /** Set the vertical flip (used only for downloading) */
-  // eslint-disable-next-line @foxglove/no-boolean-parameters
-  public setFlipVertical(flipVertical: boolean): void {
-    this.userData.flipVertical = flipVertical;
   }
 
   public setBitmap(bitmap: ImageBitmap): void {

@@ -501,15 +501,12 @@ export class ImageMode
       }
 
       if (config.rotation !== prevImageModeConfig.rotation) {
-        this.#imageRenderable?.setRotation(config.rotation);
         this.#camera.setRotation(config.rotation);
       }
       if (config.flipHorizontal !== prevImageModeConfig.flipHorizontal) {
-        this.#imageRenderable?.setFlipHorizontal(config.flipHorizontal);
         this.#camera.setFlipHorizontal(config.flipHorizontal);
       }
       if (config.flipVertical !== prevImageModeConfig.flipVertical) {
-        this.#imageRenderable?.setFlipVertical(config.flipVertical);
         this.#camera.setFlipVertical(config.flipVertical);
       }
       if (
@@ -675,9 +672,6 @@ export class ImageMode
       cameraInfo: undefined,
       cameraModel: undefined,
       image,
-      rotation: config.rotation,
-      flipHorizontal: config.flipHorizontal,
-      flipVertical: config.flipVertical,
       texture: undefined,
       material: undefined,
       geometry: undefined,
