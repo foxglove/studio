@@ -31,6 +31,7 @@ import {
 
 const useStyles = makeStyles()((theme) => {
   const { spacing, palette } = theme;
+
   return {
     fullHeight: {
       height: "100%",
@@ -42,6 +43,11 @@ const useStyles = makeStyles()((theme) => {
       display: "flex",
       padding: spacing(1.5),
       justifyContent: "stretch",
+      backgroundImage: `linear-gradient(to top, transparent, ${palette.background.paper} ${spacing(
+        1.5,
+      )}) !important`,
+    },
+    toolbarMenu: {
       backgroundImage: `linear-gradient(to top, transparent, ${palette.background.menu} ${spacing(
         1.5,
       )}) !important`,
@@ -73,16 +79,17 @@ export type PanelSelection = {
 };
 
 type Props = {
+  isMenu?: boolean;
   onPanelSelect: (arg0: PanelSelection) => void;
   onDragStart?: () => void;
   selectedPanelType?: string;
 };
 
 export const PanelList = forwardRef<HTMLDivElement, Props>(function PanelList(props: Props, ref) {
-  const { onDragStart, onPanelSelect, selectedPanelType } = props;
+  const { isMenu = false, onDragStart, onPanelSelect, selectedPanelType } = props;
   const [searchQuery, setSearchQuery] = useState("");
   const [highlightedPanelIdx, setHighlightedPanelIdx] = useState<number | undefined>();
-  const { classes } = useStyles();
+  const { classes, cx } = useStyles();
   const { t } = useTranslation("addPanel");
 
   const { dropPanel } = useCurrentLayoutActions();
@@ -250,7 +257,7 @@ export const PanelList = forwardRef<HTMLDivElement, Props>(function PanelList(pr
 
   return (
     <div className={classes.fullHeight} ref={ref}>
-      <div className={classes.toolbar}>
+      <div className={cx(classes.toolbar, { [classes.toolbarMenu]: isMenu })}>
         <TextField
           fullWidth
           placeholder={t("searchPanels")}

@@ -13,6 +13,7 @@ import { useCurrentLayoutActions } from "@foxglove/studio-base/context/CurrentLa
 
 const useStyles = makeStyles()((theme) => ({
   paper: {
+    backgroundColor: theme.palette.background.menu,
     maxHeight: `calc(100vh - ${theme.spacing(12)})`,
     overflow: "auto",
 
@@ -91,6 +92,7 @@ export default function ChangePanelMenu({
           <Paper elevation={8} className={classes.paper}>
             <ClickAwayListener onClickAway={onClose}>
               <PanelList
+                isMenu
                 selectedPanelType={panelContext?.type}
                 onPanelSelect={handleSwap(panelContext?.id)}
               />

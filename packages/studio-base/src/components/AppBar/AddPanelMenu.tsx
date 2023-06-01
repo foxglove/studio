@@ -58,6 +58,7 @@ export function AddPanelMenu(props: AddPanelProps): JSX.Element {
       }
     >
       <PanelList
+        isMenu
         // Close when a drag starts so the modal menu doesn't block the drop targets
         onDragStart={handleClose}
         onPanelSelect={(selection) => {
