@@ -91,12 +91,8 @@ export default {
     },
   ],
   play: async ({ args }) => {
-    if (args.inputValue) {
-      userEvent.keyboard(args.inputValue);
-    }
-    if (args.events) {
-      args.events.forEach((keypress) => userEvent.keyboard(keypress));
-    }
+    userEvent.keyboard(args.inputValue!);
+    args.events?.map((keypress) => userEvent.keyboard(keypress));
   },
 } as Meta<Args>;
 
