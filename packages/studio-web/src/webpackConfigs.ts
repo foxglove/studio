@@ -11,6 +11,7 @@ import { Configuration, WebpackPluginInstance } from "webpack";
 import type { Configuration as WebpackDevServerConfiguration } from "webpack-dev-server";
 
 import type { WebpackArgv } from "@foxglove/studio-base/WebpackArgv";
+import * as palette from "@foxglove/studio-base/src/theme/palette";
 import { makeConfig } from "@foxglove/studio-base/webpack";
 
 export interface WebpackConfiguration extends Configuration {
@@ -122,13 +123,13 @@ export const mainConfig =
         }
         #root {
           height: 100vh;
-          background-color: #15151a;
-          color: #e1e1e4;
+          background-color: ${palette.dark.background?.default}};
+          color: ${palette.dark.text?.primary};
         }
         @media (prefers-color-scheme: light) {
           #root {
-            background-color: #f4f4f5;
-            color: #393939;
+            background-color: ${palette.light.background?.default};
+            color: ${palette.light.text?.primary};
           }
         }
       </style>
