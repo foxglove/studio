@@ -47,7 +47,7 @@ export default function Timestamp(props: Props): JSX.Element {
     <Stack
       title={title}
       gap={horizontal ? 0 : 1}
-      flexWrap="wrap"
+      flexWrap={horizontal ? "nowrap" : "wrap"}
       direction={horizontal ? "row" : "column"}
       alignItems={horizontal ? "center" : "flex-start"}
       justifyContent={horizontal ? "flex-start" : "center"}
