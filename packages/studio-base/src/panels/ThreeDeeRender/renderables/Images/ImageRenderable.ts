@@ -26,6 +26,7 @@ export interface ImageRenderableSettings {
   color: string;
   minValue?: number;
   maxValue?: number;
+  opacity?: number;
 }
 
 export const CREATE_BITMAP_ERR_KEY = "CreateBitmap";
@@ -48,8 +49,10 @@ export type ImageUserData = BaseUserData & {
   image: AnyImage | undefined;
   texture: THREE.Texture | undefined;
   material: THREE.MeshBasicMaterial | undefined;
+  foregroundMaterial: THREE.MeshBasicMaterial | undefined;
   geometry: THREE.PlaneGeometry | undefined;
   mesh: THREE.Mesh | undefined;
+  foregroundMesh: THREE.Mesh | undefined;
 };
 
 export class ImageRenderable extends Renderable<ImageUserData> {
@@ -77,6 +80,7 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     this.userData.texture?.dispose();
     this.userData.material?.dispose();
     this.userData.geometry?.dispose();
+    this.userData.foregroundMaterial?.dispose();
     super.dispose();
   }
 
@@ -138,6 +142,9 @@ export class ImageRenderable extends Renderable<ImageUserData> {
       prevSettings.maxValue !== newSettings.maxValue
     ) {
       this.#textureNeedsUpdate = true;
+    }
+    if (prevSettings.opacity !== newSettings.opacity) {
+      this.#materialNeedsUpdate = true;
     }
 
     this.userData.settings = newSettings;
@@ -264,6 +271,18 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     material.depthWrite = !transparent;
 
     if (this.#renderBehindScene) {
+      assert(
+        this.userData.foregroundMaterial,
+        "ForegroundMaterial must be set before mesh can be updated or created",
+      );
+      const { foregroundMaterial } = this.userData;
+      if (texture) {
+        foregroundMaterial.map = texture;
+      }
+      const foregroundTransparent = this.userData.settings.opacity !== 1;
+      foregroundMaterial.opacity = this.userData.settings.opacity ?? 0.5;
+      foregroundMaterial.transparent = foregroundTransparent;
+      foregroundMaterial.depthWrite = !foregroundTransparent;
       material.depthWrite = false;
       material.depthTest = false;
     } else {
@@ -285,6 +304,17 @@ export class ImageRenderable extends Renderable<ImageUserData> {
       transparent,
       depthWrite: !transparent,
     });
+    if (!this.#renderBehindScene) {
+      return;
+    }
+    this.userData.foregroundMaterial = new THREE.MeshBasicMaterial({
+      name: `${this.userData.topic}:ForegroundMaterial`,
+      color,
+      side: THREE.DoubleSide,
+      opacity: this.userData.settings.opacity ?? 0.5,
+      transparent,
+      depthWrite: !transparent,
+    });
   }
 
   #updateMesh(): void {
@@ -299,6 +329,22 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     }
 
     if (this.#renderBehindScene) {
+      assert(
+        this.userData.foregroundMaterial,
+        "ForegroundMaterial must be set before mesh can be updated or created",
+      );
+
+      if (!this.userData.foregroundMesh) {
+        this.userData.foregroundMesh = new THREE.Mesh(
+          this.userData.geometry,
+          this.userData.foregroundMaterial,
+        );
+        this.add(this.userData.foregroundMesh);
+      } else {
+        this.userData.foregroundMesh.geometry = this.userData.geometry;
+        this.userData.foregroundMesh.material = this.userData.foregroundMaterial;
+      }
+      // this.userData.foregroundMesh.renderOrder = -1;
       this.userData.mesh.renderOrder = -1 * Number.MAX_SAFE_INTEGER;
     } else {
       this.userData.mesh.renderOrder = 0;
