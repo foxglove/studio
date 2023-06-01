@@ -13,8 +13,7 @@ import { makeStyles } from "tss-react/mui";
 import Stack from "@foxglove/studio-base/components/Stack";
 import TextHighlight from "@foxglove/studio-base/components/TextHighlight";
 import { PanelInfo } from "@foxglove/studio-base/context/PanelCatalogContext";
-import { MosaicDropResult } from "@foxglove/studio-base/types/panels";
-import { PanelConfig, SavedProps } from "@foxglove/studio-base/types/panels";
+import { MosaicDropResult, PanelConfig, SavedProps } from "@foxglove/studio-base/types/panels";
 
 const useStyles = makeStyles<void, "dragIcon">()((theme, _params, classes) => {
   return {
