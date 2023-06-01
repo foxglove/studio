@@ -7,14 +7,15 @@ import { Fade, ListItem, ListItemButton, ListItemText, Tooltip, Typography } fro
 import { useCallback, useEffect, useRef } from "react";
 import { useDrag } from "react-dnd";
 import { MosaicDragType } from "react-mosaic-component";
+import { MosaicPath } from "react-mosaic-component";
+import { MosaicDropTargetPosition } from "react-mosaic-component/lib/internalTypes";
 import { makeStyles } from "tss-react/mui";
 
 import Stack from "@foxglove/studio-base/components/Stack";
 import TextHighlight from "@foxglove/studio-base/components/TextHighlight";
 import { PanelInfo } from "@foxglove/studio-base/context/PanelCatalogContext";
 import { MosaicDropResult } from "@foxglove/studio-base/types/panels";
-
-import { DropDescription } from "./types";
+import { PanelConfig, SavedProps } from "@foxglove/studio-base/types/panels";
 
 const useStyles = makeStyles<void, "dragIcon">()((theme, _params, classes) => {
   return {
@@ -33,6 +34,15 @@ const useStyles = makeStyles<void, "dragIcon">()((theme, _params, classes) => {
     },
   };
 });
+
+type DropDescription = {
+  type: string;
+  config?: PanelConfig;
+  relatedConfigs?: SavedProps;
+  position?: MosaicDropTargetPosition;
+  path?: MosaicPath;
+  tabId?: string;
+};
 
 type Props = {
   panel: PanelInfo;
