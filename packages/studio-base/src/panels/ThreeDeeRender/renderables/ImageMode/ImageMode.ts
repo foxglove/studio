@@ -45,7 +45,7 @@ import {
 } from "../../ros";
 import { topicIsConvertibleToSchema } from "../../topicIsConvertibleToSchema";
 import { ICameraHandler } from "../ICameraHandler";
-import { decodeCompressedImageToBitmap } from "../Images/decodeImage";
+import { BitmapCache } from "../Images/BitmapCache";
 import { getTopicMatchPrefix, sortPrefixMatchesToFront } from "../Images/topicPrefixMatching";
 
 const IMAGE_TOPIC_PATH = ["imageMode", "imageTopic"];
@@ -112,6 +112,9 @@ export class ImageMode
 
   // eslint-disable-next-line @foxglove/no-boolean-parameters
   #setHasCalibrationTopic: (hasCalibrationTopic: boolean) => void;
+
+  /** Cache of decoded bitmaps to avoid flickering when toggling topics */
+  #bitmapCache = new BitmapCache();
 
   /**
    * @param canvasSize Canvas size in CSS pixels
@@ -589,8 +592,9 @@ export class ImageMode
     }
 
     const resizeBitmapWidth = !this.#fallbackCameraModelActive() ? DEFAULT_IMAGE_WIDTH : undefined;
-    decodeCompressedImageToBitmap(image, resizeBitmapWidth)
-      .then((maybeBitmap) => {
+    this.#bitmapCache
+      .getBitmap(messageEvent, image, resizeBitmapWidth)
+      .then((bitmap) => {
         const prevRenderable = renderable;
         const currentRenderable = this.#imageRenderable;
         // prevent setting and updating disposed renderables
@@ -598,9 +602,9 @@ export class ImageMode
           return;
         }
         this.renderer.settings.errors.removeFromTopic(topic, CREATE_BITMAP_ERR_KEY);
-        renderable.setBitmap(maybeBitmap);
+        renderable.setBitmap(bitmap);
         if (this.#fallbackCameraModelActive()) {
-          this.#updateFallbackCameraModel(maybeBitmap, getFrameIdFromImage(image));
+          this.#updateFallbackCameraModel(bitmap, getFrameIdFromImage(image));
         }
 
         renderable.update();

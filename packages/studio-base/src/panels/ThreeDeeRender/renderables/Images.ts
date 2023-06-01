@@ -11,13 +11,13 @@ import { toNanoSec } from "@foxglove/rostime";
 import { CameraCalibration, CompressedImage, RawImage } from "@foxglove/schemas";
 import { SettingsTreeAction, SettingsTreeFields } from "@foxglove/studio";
 
+import { BitmapCache } from "./Images/BitmapCache";
 import {
   CREATE_BITMAP_ERR_KEY,
   IMAGE_RENDERABLE_DEFAULT_SETTINGS,
   ImageRenderable,
 } from "./Images/ImageRenderable";
 import { ALL_CAMERA_INFO_SCHEMAS, AnyImage } from "./Images/ImageTypes";
-import { decodeCompressedImageToBitmap } from "./Images/decodeImage";
 import {
   normalizeCompressedImage,
   normalizeRawImage,
@@ -77,6 +77,9 @@ export class Images extends SceneExtension<ImageRenderable> {
    * This stores the last camera info message on each topic so it can be applied when rendering the image
    */
   #cameraInfoByTopic = new Map<string, CameraInfo>();
+
+  /** Cache of decoded bitmaps to avoid flickering when toggling topics */
+  #bitmapCache = new BitmapCache();
 
   public constructor(renderer: IRenderer) {
     super("foxglove.Images", renderer);
@@ -285,17 +288,16 @@ export class Images extends SceneExtension<ImageRenderable> {
     const isCompressedImage = "format" in image;
 
     if (isCompressedImage) {
-      decodeCompressedImageToBitmap(image, DEFAULT_BITMAP_WIDTH)
-        .then((maybeBitmap) => {
+      this.#bitmapCache
+        .getBitmap(messageEvent, image, DEFAULT_BITMAP_WIDTH)
+        .then((bitmap) => {
           const prevRenderable = renderable;
           const currentRenderable = this.renderables.get(imageTopic);
           if (currentRenderable !== prevRenderable) {
             return;
           }
           this.renderer.settings.errors.removeFromTopic(imageTopic, CREATE_BITMAP_ERR_KEY);
-          if (maybeBitmap instanceof ImageBitmap) {
-            renderable.setBitmap(maybeBitmap);
-          }
+          renderable.setBitmap(bitmap);
           renderable.update();
           this.renderer.queueAnimationFrame();
         })
