@@ -123,13 +123,13 @@ export const mainConfig =
         }
         #root {
           height: 100vh;
-          background-color: ${palette.dark.background?.default}};
-          color: ${palette.dark.text?.primary};
+          background-color: ${palette.light.background?.default};
+          color: ${palette.light.text?.primary};
         }
-        @media (prefers-color-scheme: light) {
+        @media (prefers-color-scheme: dark) {
           #root {
-            background-color: ${palette.light.background?.default};
-            color: ${palette.light.text?.primary};
+            background-color: ${palette.dark.background?.default}};
+            color: ${palette.dark.text?.primary};
           }
         }
       </style>
