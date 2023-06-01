@@ -65,7 +65,7 @@ class MockPanelCatalog implements PanelCatalog {
 
 type Args = {
   inputValue?: string;
-  events: string[];
+  events?: string[];
 };
 
 export default {
@@ -95,7 +95,9 @@ export default {
     if (args.inputValue) {
       userEvent.keyboard(args.inputValue);
     }
-    args.events.forEach((keypress) => userEvent.keyboard(keypress));
+    if (args.events) {
+      args.events.forEach((keypress) => userEvent.keyboard(keypress));
+    }
   },
 } as Meta<Args>;
 
