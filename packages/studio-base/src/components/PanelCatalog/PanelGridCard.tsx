@@ -25,13 +25,14 @@ const useStyles = makeStyles()((theme) => {
   };
 });
 
-type PanelGridCardProps = {
+type Props = {
   panel: PanelInfo;
   searchQuery: string;
   onClick: () => void;
 };
 
-export function PanelGridCard({ searchQuery, panel, onClick }: PanelGridCardProps): JSX.Element {
+export function PanelGridCard(props: Props): JSX.Element {
+  const { searchQuery, panel, onClick } = props;
   const { classes } = useStyles();
 
   const targetString = panel.extensionNamespace

@@ -45,16 +45,8 @@ const useStyles = makeStyles()((theme) => {
   };
 });
 
-type Props = {
-  onPanelSelect: (arg0: PanelSelection) => void;
-  onDragStart?: () => void;
-  selectedPanelType?: string;
-  mode?: "grid" | "list";
-  isMenu?: boolean;
-};
-
 // sanity checks to help panel authors debug issues
-export function verifyPanels(panels: readonly PanelInfo[]): void {
+function verifyPanels(panels: readonly PanelInfo[]): void {
   const panelTypes: Map<string, PanelInfo> = new Map();
   for (const panel of panels) {
     const { title, type, config } = mightActuallyBePartial(panel);
@@ -75,6 +67,14 @@ export function verifyPanels(panels: readonly PanelInfo[]): void {
     panelTypes.set(type, panel);
   }
 }
+
+type Props = {
+  onPanelSelect: (arg0: PanelSelection) => void;
+  onDragStart?: () => void;
+  selectedPanelType?: string;
+  mode?: "grid" | "list";
+  isMenu?: boolean;
+};
 
 export const PanelCatalog = forwardRef<HTMLDivElement, Props>(function PanelCatalog(
   props: Props,
