@@ -2,50 +2,46 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-// This Source Code Form is subject to the terms of the Mozilla Public
-// License, v2.0. If a copy of the MPL was not distributed with this
-// fil
-
 import CloseIcon from "@mui/icons-material/Close";
 import SearchIcon from "@mui/icons-material/Search";
-import { Container, IconButton, TextField } from "@mui/material";
+import { IconButton, TextField } from "@mui/material";
 import fuzzySort from "fuzzysort";
 import { countBy } from "lodash";
+import { isEmpty } from "lodash";
 import { forwardRef, useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { makeStyles } from "tss-react/mui";
 
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
-import { PanelGridCard } from "@foxglove/studio-base/components/PanelGrid/PanelGridCard";
 import Stack from "@foxglove/studio-base/components/Stack";
-import {
-  PanelInfo,
-  usePanelCatalog,
-  verifyPanels,
-} from "@foxglove/studio-base/context/PanelCatalogContext";
+import { PanelInfo, usePanelCatalog } from "@foxglove/studio-base/context/PanelCatalogContext";
 import { PanelConfig } from "@foxglove/studio-base/types/panels";
+import { mightActuallyBePartial } from "@foxglove/studio-base/util/mightActuallyBePartial";
+
+import { PanelGrid } from "./PanelGrid";
+import { PanelList } from "./PanelList";
 
 const useStyles = makeStyles()((theme) => {
   const { spacing, palette } = theme;
   return {
-    fullHeight: {
-      height: "100%",
-    },
-    grid: {
-      display: "grid !important",
-      gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
-      gap: spacing(2),
-    },
     toolbar: {
       position: "sticky",
       top: -0.5, // yep that's a half pixel to avoid a gap between the appbar and panel top
       zIndex: 100,
       display: "flex",
       justifyContent: "stretch",
-      padding: theme.spacing(2),
+      padding: theme.spacing(1.5),
       backgroundImage: `linear-gradient(to top, transparent, ${palette.background.paper} ${spacing(
         1.5,
       )}) !important`,
+    },
+    toolbarMenu: {
+      backgroundImage: `linear-gradient(to top, transparent, ${palette.background.menu} ${spacing(
+        1.5,
+      )}) !important`,
+    },
+    toolbarGrid: {
+      padding: theme.spacing(2),
     },
   };
 });
@@ -58,17 +54,53 @@ export type PanelSelection = {
 
 type Props = {
   onPanelSelect: (arg0: PanelSelection) => void;
+  onDragStart?: () => void;
+  selectedPanelType?: string;
+  mode?: "grid" | "list";
+  isMenu?: boolean;
 };
 
-export const PanelGrid = forwardRef<HTMLDivElement, Props>(function PanelGrid(props: Props, ref) {
-  const { onPanelSelect } = props;
-  const [searchQuery, setSearchQuery] = useState("");
-  const { classes } = useStyles();
+// sanity checks to help panel authors debug issues
+export function verifyPanels(panels: readonly PanelInfo[]): void {
+  const panelTypes: Map<string, PanelInfo> = new Map();
+  for (const panel of panels) {
+    const { title, type, config } = mightActuallyBePartial(panel);
+    const dispName = title ?? type ?? "<unnamed>";
+    if (type == undefined || type.length === 0) {
+      throw new Error(`Panel component ${title} must declare a unique \`static panelType\``);
+    }
+    const existingPanel = mightActuallyBePartial(panelTypes.get(type));
+    if (existingPanel) {
+      const bothHaveEmptyConfigs = isEmpty(existingPanel.config) && isEmpty(config);
+      if (bothHaveEmptyConfigs) {
+        const otherDisplayName = existingPanel.title ?? existingPanel.type ?? "<unnamed>";
+        throw new Error(
+          `Two components have the same panelType ('${type}') and no preset configs: ${otherDisplayName} and ${dispName}`,
+        );
+      }
+    }
+    panelTypes.set(type, panel);
+  }
+}
+
+export const PanelCatalog = forwardRef<HTMLDivElement, Props>(function PanelCatalog(
+  props: Props,
+  ref,
+) {
+  const { isMenu = false, onDragStart, onPanelSelect, selectedPanelType, mode = "list" } = props;
+  const { classes, cx } = useStyles();
   const { t } = useTranslation("addPanel");
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [highlightedPanelIdx, setHighlightedPanelIdx] = useState<number | undefined>();
 
   const handleSearchChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const query = event.target.value;
     setSearchQuery(query);
+
+    // When there is a search query, automatically highlight the first (0th) item.
+    // When the user erases the query, remove the highlight.
+    setHighlightedPanelIdx(query ? 0 : undefined);
   }, []);
 
   const panelCatalog = usePanelCatalog();
@@ -132,35 +164,61 @@ export const PanelGrid = forwardRef<HTMLDivElement, Props>(function PanelGrid(pr
     [filteredPreconfiguredPanels, filteredRegularPanels],
   );
 
+  const highlightedPanel = useMemo(() => {
+    return highlightedPanelIdx != undefined ? allFilteredPanels[highlightedPanelIdx] : undefined;
+  }, [allFilteredPanels, highlightedPanelIdx]);
+
   const noResults = allFilteredPanels.length === 0;
 
-  const onKeyDown = useCallback((e: React.KeyboardEvent) => {
-    // Prevent key down events from triggering the parent menu, if any.
-    if (e.key !== "Escape") {
-      e.stopPropagation();
-    }
-  }, []);
+  const onKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      // Prevent key down events from triggering the parent menu, if any.
+      if (e.key !== "Escape") {
+        e.stopPropagation();
+      }
 
-  const displayPanelListItem = useCallback(
-    (panelInfo: PanelInfo) => {
-      const { title, type, config, relatedConfigs } = panelInfo;
-      return (
-        <PanelGridCard
-          key={`${type}-${title}`}
-          panel={panelInfo}
-          searchQuery={searchQuery}
-          onClick={() => {
-            onPanelSelect({ type, config, relatedConfigs });
-          }}
-        />
-      );
+      if (mode === "grid") {
+        return;
+      }
+
+      if (e.key === "ArrowDown") {
+        setHighlightedPanelIdx((existing) => {
+          if (existing == undefined) {
+            return 0;
+          }
+          return (existing + 1) % allFilteredPanels.length;
+        });
+      } else if (e.key === "ArrowUp") {
+        setHighlightedPanelIdx((existing) => {
+          // nothing to highlight if there are no entries
+          if (allFilteredPanels.length <= 0) {
+            return undefined;
+          }
+
+          if (existing == undefined) {
+            return allFilteredPanels.length - 1;
+          }
+          return (existing - 1 + allFilteredPanels.length) % allFilteredPanels.length;
+        });
+      } else if (e.key === "Enter" && highlightedPanel) {
+        onPanelSelect({
+          type: highlightedPanel.type,
+          config: highlightedPanel.config,
+          relatedConfigs: highlightedPanel.relatedConfigs,
+        });
+      }
     },
-    [onPanelSelect, searchQuery],
+    [allFilteredPanels.length, highlightedPanel, mode, onPanelSelect],
   );
 
   return (
-    <div className={classes.fullHeight} ref={ref}>
-      <div className={classes.toolbar}>
+    <Stack fullHeight ref={ref}>
+      <div
+        className={cx(classes.toolbar, {
+          [classes.toolbarMenu]: isMenu,
+          [classes.toolbarGrid]: mode === "grid",
+        })}
+      >
         <TextField
           fullWidth
           placeholder={t("searchPanels")}
@@ -179,14 +237,27 @@ export const PanelGrid = forwardRef<HTMLDivElement, Props>(function PanelGrid(pr
           }}
         />
       </div>
-      <Container className={classes.grid} maxWidth={false}>
-        {allFilteredPanels.map(displayPanelListItem)}
-      </Container>
+      {mode === "grid" ? (
+        <PanelGrid
+          searchQuery={searchQuery}
+          filteredPanels={allFilteredPanels}
+          onPanelSelect={onPanelSelect}
+        />
+      ) : (
+        <PanelList
+          searchQuery={searchQuery}
+          filteredPanels={allFilteredPanels}
+          selectedPanelType={selectedPanelType}
+          highlightedPanelIdx={highlightedPanelIdx}
+          onDragStart={onDragStart}
+          onPanelSelect={onPanelSelect}
+        />
+      )}
       {noResults && (
         <Stack padding={2}>
           <EmptyState>{t("noPanelsMatchSearchCriteria")}</EmptyState>
         </Stack>
       )}
-    </div>
+    </Stack>
   );
 });

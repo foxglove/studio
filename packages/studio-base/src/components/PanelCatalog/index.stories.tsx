@@ -1,15 +1,6 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
-//
-// This file incorporates work covered by the following copyright and
-// permission notice:
-//
-//   Copyright 2018-2021 Cruise LLC
-//
-//   This source code is licensed under the Apache License, Version 2.0,
-//   found at http://www.apache.org/licenses/LICENSE-2.0
-//   You may not use this file except in compliance with the License.
 
 import { useTheme } from "@mui/material";
 import { Meta, StoryFn, StoryObj } from "@storybook/react";
@@ -18,7 +9,7 @@ import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
 import Panel from "@foxglove/studio-base/components/Panel";
-import { PanelList } from "@foxglove/studio-base/components/PanelList/PanelList";
+import { PanelCatalog as PanelCatalogComponent } from "@foxglove/studio-base/components/PanelCatalog";
 import PanelCatalogContext, {
   PanelCatalog,
   PanelInfo,
@@ -64,13 +55,14 @@ class MockPanelCatalog implements PanelCatalog {
 }
 
 type Args = {
+  mode?: "grid" | "list";
   inputValue?: string;
   events?: string[];
 };
 
 export default {
   title: "components/PanelList",
-  component: () => <PanelList onPanelSelect={() => {}} />,
+  component: ({ mode }) => <PanelCatalogComponent mode={mode} onPanelSelect={() => {}} />,
   parameters: { colorScheme: "dark" },
   decorators: [
     (Wrapped: StoryFn): JSX.Element => {
@@ -98,13 +90,27 @@ export default {
 
 type Story = StoryObj<Args>;
 
-export const Default: Story = {};
+export const List: Story = {
+  name: "Panel list",
+};
 
-export const Filtered: Story = {
+export const PanelGrid: Story = {
+  args: { mode: "grid" },
+};
+
+export const FilteredPanelList: Story = {
   args: { inputValue: "AAA" },
 };
 
-export const FilteredLight: Story = {
+export const FilteredPanelGrid: Story = {
+  args: { mode: "grid", inputValue: "AAA" },
+};
+
+export const FilteredPanelGridWithDescription: Story = {
+  args: { mode: "grid", inputValue: "description" },
+};
+
+export const FilteredPanelListLight: Story = {
   args: { inputValue: "AAA" },
   parameters: { colorScheme: "light" },
 };
@@ -129,9 +135,14 @@ export const NoResultsLast: Story = {
   name: "Filtered panel list without results in last category",
 };
 
-export const NoResults: Story = {
+export const NoResultsAnyList: Story = {
   args: { inputValue: "WWW" },
   name: "Filtered panel list without results in any category",
+};
+
+export const NoResultsAnyGrid: Story = {
+  args: { mode: "grid", inputValue: "WWW" },
+  name: "Filtered panel grid without results in any category",
 };
 
 export const CaseInsensitiveFilter: Story = {
@@ -148,11 +159,11 @@ export const PanelListJapanese: Story = {
 };
 
 export const NoResultsChinese: Story = {
-  ...NoResults,
+  ...NoResultsAnyGrid,
   parameters: { forceLanguage: "zh" },
 };
 
 export const NoResultsJapanese: Story = {
-  ...NoResults,
+  ...NoResultsAnyGrid,
   parameters: { forceLanguage: "ja" },
 };

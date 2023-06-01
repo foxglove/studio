@@ -5,7 +5,7 @@
 import { Menu, PaperProps, PopoverPosition, PopoverReference } from "@mui/material";
 import { makeStyles } from "tss-react/mui";
 
-import { PanelList } from "@foxglove/studio-base/components/PanelList";
+import { PanelCatalog } from "@foxglove/studio-base/components/PanelCatalog";
 import useAddPanel from "@foxglove/studio-base/hooks/useAddPanel";
 
 const useStyles = makeStyles()((theme) => ({
@@ -58,7 +58,7 @@ export function AddPanelMenu(props: AddPanelProps): JSX.Element {
         } as Partial<PaperProps & { "data-tourid"?: string }>
       }
     >
-      <PanelList
+      <PanelCatalog
         isMenu
         // Close when a drag starts so the modal menu doesn't block the drop targets
         onDragStart={handleClose}
