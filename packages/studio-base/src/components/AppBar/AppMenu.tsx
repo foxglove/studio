@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import {
+  Chip,
   Menu,
   MenuItem as MuiMenuItem,
   PaperProps,
@@ -36,7 +37,7 @@ type AppMenuProps = {
   open: boolean;
 };
 
-const useStyles = makeStyles()({
+const useStyles = makeStyles<void, "chip">()((theme, _params, classes) => ({
   menuList: {
     minWidth: 180,
     maxWidth: 220,
@@ -44,7 +45,21 @@ const useStyles = makeStyles()({
   truncate: {
     alignSelf: "center !important",
   },
-});
+  exploreSampleData: {
+    justifyContent: "space-between",
+    gap: theme.spacing(3),
+    paddingRight: theme.spacing(1),
+
+    [`:not(:hover, :focus) .${classes.chip}`]: {
+      backgroundColor: "transparent",
+      color: theme.palette.mode === "light" ? theme.palette.primary.main : undefined,
+    },
+  },
+  chip: {
+    height: 23,
+    border: `1px solid ${theme.palette.primary.main}`,
+  },
+}));
 
 const selectWorkspace = (store: WorkspaceContextStore) => store;
 
@@ -266,6 +281,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
           {t("help")}
         </NestedMenuItem>
         <MuiMenuItem
+          className={classes.exploreSampleData}
           id="app-menu-demo"
           onPointerEnter={() => handleItemPointerEnter("app-menu-demo")}
           onClick={() => {
@@ -275,6 +291,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
           }}
         >
           {t("exploreSampleData")}
+          <Chip className={classes.chip} label="Try it" color="primary" size="small" />
         </MuiMenuItem>
       </Menu>
     </>
