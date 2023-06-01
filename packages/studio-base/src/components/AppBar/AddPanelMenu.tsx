@@ -8,11 +8,12 @@ import { makeStyles } from "tss-react/mui";
 import { PanelList } from "@foxglove/studio-base/components/PanelList";
 import useAddPanel from "@foxglove/studio-base/hooks/useAddPanel";
 
-const useStyles = makeStyles()({
+const useStyles = makeStyles()((theme) => ({
   menuList: {
     minWidth: 270,
+    paddingBottom: theme.spacing(1),
   },
-});
+}));
 
 type AddPanelProps = {
   anchorEl?: HTMLElement;
