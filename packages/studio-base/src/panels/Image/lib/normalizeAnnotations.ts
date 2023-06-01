@@ -58,9 +58,7 @@ function foxglovePointTypeToStyle(
   return undefined;
 }
 
-function normalizeFoxgloveImageAnnotations(
-  message: Partial<ImageAnnotations>,
-): Annotation[] | undefined {
+function normalizeFoxgloveImageAnnotations(message: Partial<ImageAnnotations>): Annotation[] {
   const annotations: Annotation[] = [];
 
   const circles = message.circles ?? [];
@@ -115,7 +113,7 @@ function normalizeFoxgloveImageAnnotations(
     });
   }
 
-  return annotations.length === 0 ? undefined : annotations;
+  return annotations;
 }
 
 function normalizeTimestamp(stamp: Time | bigint): Time {
