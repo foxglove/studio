@@ -91,7 +91,7 @@ export type ImageModeConfig = {
   minValue?: number;
   /** Maximum (white) value for single-channel images */
   maxValue?: number;
-  opacity?: number;
+  foregroundOpacity?: number;
 };
 
 export type RendererConfig = {

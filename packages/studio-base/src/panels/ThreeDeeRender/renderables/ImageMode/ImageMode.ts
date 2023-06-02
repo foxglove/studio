@@ -81,7 +81,7 @@ const DEFAULT_CONFIG = {
   flipHorizontal: false,
   flipVertical: false,
   rotation: 0 as 0 | 90 | 180 | 270,
-  opacity: 0.0,
+  foregroundOpacity: 0.0,
 };
 
 type ConfigWithDefaults = ImageModeConfig & typeof DEFAULT_CONFIG;
@@ -330,7 +330,7 @@ export class ImageMode
       rotation,
       minValue,
       maxValue,
-      opacity,
+      foregroundOpacity,
     } = this.#getImageModeSettings();
 
     const imageTopics = filterMap(this.renderer.topics ?? [], (topic) => {
@@ -451,7 +451,7 @@ export class ImageMode
       precision: 0,
       value: maxValue,
     };
-    fields.opacity = {
+    fields.foregroundOpacity = {
       input: "number",
       label: "Foreground opacity",
       placeholder: "0.50",
@@ -459,7 +459,7 @@ export class ImageMode
       precision: 3,
       min: 0,
       max: 1,
-      value: opacity,
+      value: foregroundOpacity,
     };
     return [
       {
@@ -520,10 +520,10 @@ export class ImageMode
       if (config.flipVertical !== prevImageModeConfig.flipVertical) {
         this.#camera.setFlipVertical(config.flipVertical);
       }
-      if (config.opacity !== prevImageModeConfig.opacity) {
+      if (config.foregroundOpacity !== prevImageModeConfig.foregroundOpacity) {
         this.#imageRenderable?.setSettings({
           ...this.#imageRenderable.userData.settings,
-          foregroundOpacity: config.opacity,
+          foregroundOpacity: config.foregroundOpacity,
         });
       }
       if (
@@ -676,7 +676,7 @@ export class ImageMode
       ...IMAGE_RENDERABLE_DEFAULT_SETTINGS,
       minValue: config.minValue,
       maxValue: config.maxValue,
-      foregroundOpacity: config.opacity,
+      foregroundOpacity: config.foregroundOpacity,
     };
     renderable = new ImageRenderable(topicName, this.renderer, {
       receiveTime,
@@ -697,7 +697,7 @@ export class ImageMode
 
     this.add(renderable);
     this.#imageRenderable = renderable;
-    renderable.setRenderBehindScene();
+    renderable.setRenderFrontAndBehind();
     renderable.visible = true;
     return renderable;
   }
@@ -742,7 +742,7 @@ export class ImageMode
       rotation: config.rotation ?? DEFAULT_CONFIG.rotation,
       flipHorizontal: config.flipHorizontal ?? DEFAULT_CONFIG.flipHorizontal,
       flipVertical: config.flipVertical ?? DEFAULT_CONFIG.flipVertical,
-      opacity: config.opacity ?? DEFAULT_CONFIG.opacity,
+      foregroundOpacity: config.foregroundOpacity ?? DEFAULT_CONFIG.foregroundOpacity,
     };
   }
 
