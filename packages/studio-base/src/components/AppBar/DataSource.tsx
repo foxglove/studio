@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { ChevronRight12Regular, ErrorCircle20Filled } from "@fluentui/react-icons";
+import { ErrorCircle20Filled } from "@fluentui/react-icons";
 import { CircularProgress, IconButton, Typography } from "@mui/material";
 import { MutableRefObject, memo, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
@@ -26,9 +26,6 @@ import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 const ICON_SIZE = 18;
 
 const useStyles = makeStyles<void, "adornmentError">()((theme, _params, _classes) => ({
-  chevron: {
-    flex: "none",
-  },
   sourceName: {
     font: "inherit",
     fontSize: theme.typography.body2.fontSize,
@@ -77,6 +74,10 @@ const useStyles = makeStyles<void, "adornmentError">()((theme, _params, _classes
   },
 }));
 
+const selectPause = (ctx: MessagePipelineContext) => ctx.pausePlayback;
+const selectPlay = (ctx: MessagePipelineContext) => ctx.startPlayback;
+const selectSeek = (ctx: MessagePipelineContext) => ctx.seekPlayback;
+
 const selectPlayerName = ({ playerState }: MessagePipelineContext) => playerState.name;
 const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => playerState.presence;
 const selectPlayerProblems = ({ playerState }: MessagePipelineContext) => playerState.problems;
@@ -109,10 +110,14 @@ export function DataSource(): JSX.Element {
   const { classes, cx } = useStyles();
   const durationRef = useRef<HTMLDivElement>(ReactNull);
 
+  const play = useMessagePipeline(selectPlay);
+  const pause = useMessagePipeline(selectPause);
+  const seek = useMessagePipeline(selectSeek);
+
   const startTime = useMessagePipeline(selectStartTime);
   const endTime = useMessagePipeline(selectEndTime);
 
-  const isConnection = endTime == undefined;
+  const isConnection = !(play && pause && seek);
 
   const playerName = useMessagePipeline(selectPlayerName);
   const playerPresence = useMessagePipeline(selectPlayerPresence);
@@ -156,14 +161,14 @@ export function DataSource(): JSX.Element {
           </div>
           {!error && isConnection && startTime && (
             <>
-              <ChevronRight12Regular className={classes.chevron} />
+              <span>&nbsp;/&nbsp;</span>
               <Timestamp
                 disableDate={timeFormat === "SEC"}
                 title="Live since"
                 horizontal
                 time={startTime}
               />
-              <ChevronRight12Regular className={classes.chevron} />
+              <span>&nbsp;/&nbsp;</span>
               <LiveDuration durationRef={durationRef} />
             </>
           )}
