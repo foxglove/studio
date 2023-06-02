@@ -126,6 +126,11 @@ export const SignInStatesJapanese: Story = {
   parameters: { forceLanguage: "ja" },
 };
 
+const problems: MockMessagePipelineProps["problems"] = [
+  { severity: "error", message: "example error" },
+  { severity: "warn", message: "example warn" },
+];
+
 export const PlayerStates: Story = {
   decorators: [
     (Story: StoryFn): JSX.Element => {
@@ -143,41 +148,32 @@ export const PlayerStates: Story = {
         {
           name: "https://exampleurl:2002",
           presence: PlayerPresence.ERROR,
-          problems: [
-            { severity: "error", message: "example error" },
-            { severity: "warn", message: "example warn" },
-          ],
+          problems,
         },
         {
           label: "INITIALIZING + problems",
           name: "https://exampleurl:2002",
           presence: PlayerPresence.INITIALIZING,
-          problems: [
-            { severity: "error", message: "example error" },
-            { severity: "warn", message: "example warn" },
-          ],
+          problems,
         },
         {
           label: "INITIALIZING + no name",
           name: undefined,
           presence: PlayerPresence.INITIALIZING,
-          problems: [
-            { severity: "error", message: "example error" },
-            { severity: "warn", message: "example warn" },
-          ],
+          problems,
         },
       ];
 
       return (
         <>
-          {playerStates.map(({ presence, problems, name, label }) => (
+          {playerStates.map((props) => (
             <MockMessagePipelineProvider
-              key={presence}
-              name={name}
-              presence={presence}
-              problems={problems}
+              key={props.presence}
+              name={props.name}
+              presence={props.presence}
+              problems={props.problems}
             >
-              <div style={{ padding: 8 }}>{label ?? presence}</div>
+              <div style={{ padding: 8 }}>{props.label ?? props.presence}</div>
               <div>
                 <Story />
               </div>
@@ -237,23 +233,21 @@ export const DataSources: Story = {
         {
           label: "with problems",
           name: "https://longexampleurlwith_error-and-portnumber:3030",
-          problems: [
-            { severity: "error", message: "example error" },
-            { severity: "warn", message: "example warn" },
-          ],
+          problems,
         },
       ];
 
       return (
         <>
-          {playerStates.map(({ label, name, urlState }) => (
+          {playerStates.map((props) => (
             <MockMessagePipelineProvider
-              key={urlState?.sourceId}
-              name={name}
+              key={props.urlState?.sourceId}
+              name={props.name}
               presence={PlayerPresence.PRESENT}
-              urlState={urlState}
+              urlState={props.urlState}
+              problems={props.problems}
             >
-              <div style={{ padding: 8 }}>{label ?? urlState?.sourceId}</div>
+              <div style={{ padding: 8 }}>{props.label ?? props.urlState?.sourceId}</div>
               <div>
                 <Story />
               </div>
