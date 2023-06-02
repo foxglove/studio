@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { StoryObj } from "@storybook/react";
-import { screen, userEvent } from "@storybook/testing-library";
+import { screen, userEvent, waitFor } from "@storybook/testing-library";
 import * as THREE from "three";
 import { STLExporter } from "three/examples/jsm/exporters/STLExporter";
 import { TeapotGeometry } from "three/examples/jsm/geometries/TeapotGeometry";
@@ -38,7 +38,8 @@ const ImageWith3D = ({
     { name: "camera/calibration", schemaName: "foxglove.CameraCalibration" },
     { name: "camera/img", schemaName: "foxglove.RawImage" },
     { name: "tf", schemaName: "geometry_msgs/TransformStamped" },
-    { name: "sceneUpdate", schemaName: "foxglove.SceneUpdate" },
+    { name: "sceneUpdate1", schemaName: "foxglove.SceneUpdate" },
+    { name: "sceneUpdate2", schemaName: "foxglove.SceneUpdate" },
   ];
 
   const tfCam: MessageEvent<TransformStamped> = {
@@ -232,11 +233,14 @@ const ImageWith3D = ({
     calibrationTopic: "camera/calibration",
   });
 
-  const sceneUpdateMessage = makeSceneUpdate({
-    topic: "sceneUpdate",
+  const sceneUpdate1Message = makeSceneUpdate({
+    topic: "sceneUpdate1",
     frameId: "scene",
   });
-
+  const sceneUpdate2Message = makeSceneUpdate({
+    topic: "sceneUpdate2",
+    frameId: "scene",
+  });
   const fixture: Fixture = {
     topics,
     frame: {
@@ -244,7 +248,8 @@ const ImageWith3D = ({
       calibration: [calibrationMessage],
       camera: [cameraMessage],
       tf: [tfCam, tfScene],
-      sceneUpdate: [sceneUpdateMessage],
+      sceneUpdate1: [sceneUpdate1Message],
+      sceneUpdate2: [sceneUpdate2Message],
     },
     capabilities: [],
     activeData: {
@@ -253,7 +258,7 @@ const ImageWith3D = ({
   };
   /**
    * Include settings checks:
-   *  - Image Only Mode On: calibration topic should have an error next to it and there should only be 1 transform (created because frame does not exist)
+   *  - Image Only Mode On: visible 3D topics should have an error next to it and there should only be 1 transform (created because frame does not exist)
    *  - Image Only Mode Off: calibration topic should not have an error next to it and there should be 3 transforms
    */
   return (
@@ -280,7 +285,10 @@ const ImageWith3D = ({
             ],
           },
           topics: {
-            sceneUpdate: {
+            sceneUpdate1: {
+              visible: false,
+            },
+            sceneUpdate2: {
               visible: true,
             },
           },
@@ -298,6 +306,16 @@ export const ImageOnlyModeOff: StoryObj<React.ComponentProps<typeof ImageWith3D>
 export const ImageOnlyModeOn: StoryObj<React.ComponentProps<typeof ImageWith3D>> = {
   render: ImageWith3D,
   args: { initialImageTopic: "camera/img", initialCalibrationTopic: undefined },
+  play: async () => {
+    const errorIcon = await waitFor(async () => {
+      const icons = await screen.findAllByTestId("ErrorIcon");
+      if (icons.length !== 1) {
+        throw new Error("Expected 1 error icon");
+      }
+      return icons[0];
+    });
+    userEvent.hover(errorIcon!);
+  },
 };
 
 export const ImageOnlyModeOffWithAutoSelectedTopics: StoryObj<
