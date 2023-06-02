@@ -60,7 +60,6 @@ const IMAGE_TOPIC_DIFFERENT_FRAME = "IMAGE_TOPIC_DIFFERENT_FRAME";
 const CAMERA_MODEL = "CameraModel";
 
 const DEFAULT_FOCAL_LENGTH = 500;
-const DEFAULT_IMAGE_WIDTH = 512;
 
 type ImageModeEvent = { type: "hasModifiedViewChanged" };
 
@@ -81,6 +80,7 @@ const DEFAULT_CONFIG = {
   flipHorizontal: false,
   flipVertical: false,
   rotation: 0 as 0 | 90 | 180 | 270,
+  foregroundOpacity: 0.0,
 };
 
 type ConfigWithDefaults = ImageModeConfig & typeof DEFAULT_CONFIG;
@@ -329,6 +329,7 @@ export class ImageMode
       rotation,
       minValue,
       maxValue,
+      foregroundOpacity,
     } = this.#getImageModeSettings();
 
     const imageTopics = filterMap(this.renderer.topics ?? [], (topic) => {
@@ -437,6 +438,16 @@ export class ImageMode
       precision: 0,
       value: maxValue,
     };
+    fields.foregroundOpacity = {
+      input: "number",
+      label: "Foreground opacity",
+      placeholder: "0.50",
+      step: 0.05,
+      precision: 3,
+      min: 0,
+      max: 1,
+      value: foregroundOpacity,
+    };
     return [
       {
         path: ["imageMode"],
@@ -495,6 +506,12 @@ export class ImageMode
       }
       if (config.flipVertical !== prevImageModeConfig.flipVertical) {
         this.#camera.setFlipVertical(config.flipVertical);
+      }
+      if (config.foregroundOpacity !== prevImageModeConfig.foregroundOpacity) {
+        this.#imageRenderable?.setSettings({
+          ...this.#imageRenderable.userData.settings,
+          foregroundOpacity: config.foregroundOpacity,
+        });
       }
       if (
         config.minValue !== prevImageModeConfig.minValue ||
@@ -575,8 +592,7 @@ export class ImageMode
       return;
     }
 
-    const resizeBitmapWidth = !this.#fallbackCameraModelActive() ? DEFAULT_IMAGE_WIDTH : undefined;
-    decodeCompressedImageToBitmap(image, resizeBitmapWidth)
+    decodeCompressedImageToBitmap(image)
       .then((maybeBitmap) => {
         const prevRenderable = renderable;
         const currentRenderable = this.#imageRenderable;
@@ -584,7 +600,7 @@ export class ImageMode
         if (currentRenderable !== prevRenderable) {
           return;
         }
-        this.renderer.settings.errors.removeFromTopic(topic, CREATE_BITMAP_ERR_KEY);
+        this.renderer.settings.errors.remove(IMAGE_TOPIC_PATH, CREATE_BITMAP_ERR_KEY);
         renderable.setBitmap(maybeBitmap);
         if (this.#fallbackCameraModelActive()) {
           this.#updateFallbackCameraModel(maybeBitmap, getFrameIdFromImage(image));
@@ -599,8 +615,8 @@ export class ImageMode
         if (currentRenderable !== prevRenderable) {
           return;
         }
-        this.renderer.settings.errors.addToTopic(
-          topic,
+        this.renderer.settings.errors.add(
+          IMAGE_TOPIC_PATH,
           CREATE_BITMAP_ERR_KEY,
           `Error creating bitmap: ${err.message}`,
         );
@@ -647,6 +663,7 @@ export class ImageMode
       ...IMAGE_RENDERABLE_DEFAULT_SETTINGS,
       minValue: config.minValue,
       maxValue: config.maxValue,
+      foregroundOpacity: config.foregroundOpacity,
     };
     renderable = new ImageRenderable(topicName, this.renderer, {
       receiveTime,
@@ -667,7 +684,7 @@ export class ImageMode
 
     this.add(renderable);
     this.#imageRenderable = renderable;
-    renderable.setRenderBehindScene();
+    renderable.setRenderFrontAndBehind();
     renderable.visible = true;
     return renderable;
   }
@@ -705,12 +722,15 @@ export class ImageMode
 
   #getImageModeSettings(): Immutable<ConfigWithDefaults> {
     const config = { ...this.renderer.config.imageMode };
-    config.synchronize ??= DEFAULT_CONFIG.synchronize;
-    config.rotation ??= DEFAULT_CONFIG.rotation;
-    config.flipHorizontal ??= DEFAULT_CONFIG.flipHorizontal;
-    config.flipVertical ??= DEFAULT_CONFIG.flipVertical;
 
-    return config as ConfigWithDefaults;
+    return {
+      ...config,
+      synchronize: config.synchronize ?? DEFAULT_CONFIG.synchronize,
+      rotation: config.rotation ?? DEFAULT_CONFIG.rotation,
+      flipHorizontal: config.flipHorizontal ?? DEFAULT_CONFIG.flipHorizontal,
+      flipVertical: config.flipVertical ?? DEFAULT_CONFIG.flipVertical,
+      foregroundOpacity: config.foregroundOpacity ?? DEFAULT_CONFIG.foregroundOpacity,
+    };
   }
 
   /**
