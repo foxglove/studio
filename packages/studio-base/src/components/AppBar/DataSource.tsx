@@ -74,13 +74,10 @@ const useStyles = makeStyles<void, "adornmentError">()((theme, _params, _classes
   },
 }));
 
-const selectPause = (ctx: MessagePipelineContext) => ctx.pausePlayback;
-const selectPlay = (ctx: MessagePipelineContext) => ctx.startPlayback;
-const selectSeek = (ctx: MessagePipelineContext) => ctx.seekPlayback;
-
-const selectPlayerName = ({ playerState }: MessagePipelineContext) => playerState.name;
-const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => playerState.presence;
-const selectPlayerProblems = ({ playerState }: MessagePipelineContext) => playerState.problems;
+const selectPlayerSourceId = (ctx: MessagePipelineContext) => ctx.playerState.urlState?.sourceId;
+const selectPlayerName = (ctx: MessagePipelineContext) => ctx.playerState.name;
+const selectPlayerPresence = (ctx: MessagePipelineContext) => ctx.playerState.presence;
+const selectPlayerProblems = (ctx: MessagePipelineContext) => ctx.playerState.problems;
 
 const selectStartTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.startTime;
 const selectEndTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.endTime;
@@ -109,18 +106,20 @@ export function DataSource(): JSX.Element {
   const { classes, cx } = useStyles();
   const durationRef = useRef<HTMLDivElement>(ReactNull);
 
-  const play = useMessagePipeline(selectPlay);
-  const pause = useMessagePipeline(selectPause);
-  const seek = useMessagePipeline(selectSeek);
-
   const startTime = useMessagePipeline(selectStartTime);
   const endTime = useMessagePipeline(selectEndTime);
 
-  const isConnection = !(play && pause && seek);
-
+  const playerSourceId = useMessagePipeline(selectPlayerSourceId);
   const playerName = useMessagePipeline(selectPlayerName);
   const playerPresence = useMessagePipeline(selectPlayerPresence);
   const playerProblems = useMessagePipeline(selectPlayerProblems) ?? [];
+
+  const isLiveConnection =
+    playerSourceId != undefined
+      ? playerSourceId.endsWith("socket") ||
+        playerSourceId.endsWith("lidar") ||
+        playerSourceId.endsWith("device")
+      : false;
 
   const { sidebarActions } = useWorkspaceActions();
   const { timeFormat } = useAppTimeFormat();
@@ -156,7 +155,7 @@ export function DataSource(): JSX.Element {
           <div className={classes.textTruncate}>
             <TextMiddleTruncate text={playerDisplayName ?? `<${t("unknown")}>`} />
           </div>
-          {!error && isConnection && startTime && (
+          {!error && isLiveConnection && startTime && (
             <>
               <span>&nbsp;/&nbsp;</span>
               <Timestamp
