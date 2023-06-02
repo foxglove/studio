@@ -371,10 +371,7 @@ export class Images extends SceneExtension<ImageRenderable> {
       this.#recomputeCameraModel(renderable, cameraInfo);
     }
 
-    // Compressed images handle their own update after loading the bitmap
-    if (!isCompressedImage) {
-      renderable.update();
-    }
+    renderable.update();
   };
 
   #handleCameraInfo = (
