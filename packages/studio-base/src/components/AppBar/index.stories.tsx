@@ -142,10 +142,6 @@ export const PlayerStates: Story = {
         })),
         {
           name: "https://exampleurl:2002",
-          presence: PlayerPresence.PRESENT,
-        },
-        {
-          name: "https://exampleurl:2002",
           presence: PlayerPresence.ERROR,
           problems: [
             { severity: "error", message: "example error" },
