@@ -103,7 +103,7 @@ export class SettingsManager extends EventEmitter<SettingsManagerEvents> {
     }
   };
 
-  /** used to hold functions that check incoming nodes for errors and update error state based on them */
+  /** Add Validator function that can run over nodes `set` on the tree and update error state accordingly */
   public addNodeValidator = (nodeValidator: NodeValidator): void => {
     this.#globalSettingsEntryValidators.push(nodeValidator);
   };
