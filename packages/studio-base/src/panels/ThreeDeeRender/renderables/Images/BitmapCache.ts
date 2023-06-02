@@ -15,9 +15,11 @@ export class BitmapCache {
   >();
 
   /**
-   * Get the cached bitmap for the given MessageEvent if it exists, or if not, decode it asynchronously.
+   * Get the cached bitmap for the given MessageEvent if it exists, or if not, decode it
+   * asynchronously. Cache is keyed on topic and receiveTime.
    *
-   * @param thenFn Called when the bitmap is available. If the bitmap was already cached, this will be called synchronously.
+   * @param thenFn Called when the bitmap is available. If the bitmap was already cached, this will
+   * be called synchronously.
    * @param catchFn Called with any errors encountered during decoding
    */
   public getBitmap(
