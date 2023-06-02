@@ -28,10 +28,7 @@ export default {
     prefsDialogOpen: false,
     setPrefsDialogOpen: action("setPrefsDialogOpen"),
   },
-  parameters: {
-    colorScheme: "both-column",
-  },
-  excludeStories: ["Wrapper"],
+  parameters: { colorScheme: "both-column" },
 } as Meta<typeof AppBar>;
 
 type Story = StoryObj<typeof AppBar>;
