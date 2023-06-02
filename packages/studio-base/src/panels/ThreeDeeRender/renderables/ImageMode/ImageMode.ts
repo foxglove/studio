@@ -590,9 +590,11 @@ export class ImageMode
       return;
     }
 
-    this.#bitmapCache
-      .getBitmap(messageEvent, image)
-      .then((bitmap) => {
+    this.#bitmapCache.getBitmap(
+      messageEvent,
+      image,
+      undefined,
+      (bitmap) => {
         const prevRenderable = renderable;
         const currentRenderable = this.#imageRenderable;
         // prevent setting and updating disposed renderables
@@ -607,8 +609,8 @@ export class ImageMode
 
         renderable.update();
         this.renderer.queueAnimationFrame();
-      })
-      .catch((err) => {
+      },
+      (err) => {
         const prevRenderable = renderable;
         const currentRenderable = this.#imageRenderable;
         if (currentRenderable !== prevRenderable) {
@@ -619,7 +621,8 @@ export class ImageMode
           CREATE_BITMAP_ERR_KEY,
           `Error creating bitmap: ${err.message}`,
         );
-      });
+      },
+    );
   };
 
   #updateFallbackCameraModel = (

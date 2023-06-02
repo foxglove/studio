@@ -11,23 +11,44 @@ import { decodeCompressedImageToBitmap } from "./decodeImage";
 export class BitmapCache {
   #latestBitmapsByTopic = new Map<
     string,
-    { messageEvent: PartialMessageEvent<AnyImage>; bitmap: Promise<ImageBitmap> }
+    { messageEvent: PartialMessageEvent<AnyImage>; bitmap: ImageBitmap | Promise<ImageBitmap> }
   >();
 
-  public async getBitmap(
+  /**
+   * Get the cached bitmap for the given MessageEvent if it exists, or if not, decode it asynchronously.
+   *
+   * @param thenFn Called when the bitmap is available. If the bitmap was already cached, this will be called synchronously.
+   * @param catchFn Called with any errors encountered during decoding
+   */
+  public getBitmap(
     messageEvent: PartialMessageEvent<AnyImage>,
     image: CompressedImageTypes,
-    resizeWidth?: number,
-  ): Promise<ImageBitmap> {
+    resizeWidth: number | undefined,
+    thenFn: (bitmap: ImageBitmap) => void,
+    catchFn: (error: Error) => void,
+  ): void {
     const cachedBitmap = this.#latestBitmapsByTopic.get(messageEvent.topic);
     if (cachedBitmap && areEqual(cachedBitmap.messageEvent.receiveTime, messageEvent.receiveTime)) {
-      return await cachedBitmap.bitmap;
+      if (cachedBitmap.bitmap instanceof Promise) {
+        cachedBitmap.bitmap.then(thenFn).catch(catchFn);
+      } else {
+        thenFn(cachedBitmap.bitmap);
+      }
+      return;
     }
     const newBitmap = {
       messageEvent,
       bitmap: decodeCompressedImageToBitmap(image, resizeWidth),
     };
     this.#latestBitmapsByTopic.set(messageEvent.topic, newBitmap);
-    return await newBitmap.bitmap;
+    newBitmap.bitmap
+      .then((bitmap) => {
+        thenFn(bitmap);
+        // Update the cache with the resolved bitmap so we can call thenFn synchronously in the future
+        if (this.#latestBitmapsByTopic.get(messageEvent.topic)?.messageEvent === messageEvent) {
+          this.#latestBitmapsByTopic.set(messageEvent.topic, { messageEvent, bitmap });
+        }
+      })
+      .catch(catchFn);
   }
 }

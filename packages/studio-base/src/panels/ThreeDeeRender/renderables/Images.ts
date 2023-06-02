@@ -288,9 +288,11 @@ export class Images extends SceneExtension<ImageRenderable> {
     const isCompressedImage = "format" in image;
 
     if (isCompressedImage) {
-      this.#bitmapCache
-        .getBitmap(messageEvent, image, DEFAULT_BITMAP_WIDTH)
-        .then((bitmap) => {
+      this.#bitmapCache.getBitmap(
+        messageEvent,
+        image,
+        DEFAULT_BITMAP_WIDTH,
+        (bitmap) => {
           const prevRenderable = renderable;
           const currentRenderable = this.renderables.get(imageTopic);
           if (currentRenderable !== prevRenderable) {
@@ -300,8 +302,8 @@ export class Images extends SceneExtension<ImageRenderable> {
           renderable.setBitmap(bitmap);
           renderable.update();
           this.renderer.queueAnimationFrame();
-        })
-        .catch((err) => {
+        },
+        (err) => {
           const prevRenderable = renderable;
           const currentRenderable = this.renderables.get(imageTopic);
           if (currentRenderable !== prevRenderable) {
@@ -312,7 +314,8 @@ export class Images extends SceneExtension<ImageRenderable> {
             CREATE_BITMAP_ERR_KEY,
             `Error creating bitmap: ${err.message}`,
           );
-        });
+        },
+      );
     }
 
     renderable.userData.receiveTime = receiveTime;
