@@ -82,9 +82,8 @@ const selectPlayerName = ({ playerState }: MessagePipelineContext) => playerStat
 const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => playerState.presence;
 const selectPlayerProblems = ({ playerState }: MessagePipelineContext) => playerState.problems;
 
-const selectStartTime = ({ playerState }: MessagePipelineContext) =>
-  playerState.activeData?.startTime;
-const selectEndTime = ({ playerState }: MessagePipelineContext) => playerState.activeData?.endTime;
+const selectStartTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.startTime;
+const selectEndTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.endTime;
 
 type LiveDurationProps = {
   durationRef: MutableRefObject<ReactNull | HTMLDivElement>;
@@ -128,14 +127,12 @@ export function DataSource(): JSX.Element {
 
   // We bypass react and update the DOM elements directly for better performance here.
   useEffect(() => {
-    if (durationRef.current) {
-      const duration = endTime && startTime ? subtractTimes(endTime, startTime) : undefined;
-      if (duration) {
-        const durationStr = formatDuration(duration);
-        durationRef.current.innerText = durationStr;
-      }
+    if (durationRef.current && endTime && startTime) {
+      const duration = subtractTimes(endTime, startTime);
+      const durationStr = formatDuration(duration);
+      durationRef.current.innerText = durationStr;
     }
-  }, [endTime, startTime, playerPresence]);
+  }, [endTime, startTime]);
 
   const reconnecting = playerPresence === PlayerPresence.RECONNECTING;
   const initializing = playerPresence === PlayerPresence.INITIALIZING;
