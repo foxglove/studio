@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { StoryObj } from "@storybook/react";
-import { screen, userEvent, waitFor } from "@storybook/testing-library";
+import { screen, userEvent } from "@storybook/testing-library";
 import * as THREE from "three";
 import { STLExporter } from "three/examples/jsm/exporters/STLExporter";
 import { TeapotGeometry } from "three/examples/jsm/geometries/TeapotGeometry";
@@ -307,14 +307,11 @@ export const ImageOnlyModeOn: StoryObj<React.ComponentProps<typeof ImageWith3D>>
   render: ImageWith3D,
   args: { initialImageTopic: "camera/img", initialCalibrationTopic: undefined },
   play: async () => {
-    const errorIcon = await waitFor(async () => {
-      const icons = await screen.findAllByTestId("ErrorIcon");
-      if (icons.length !== 1) {
-        throw new Error("Expected 1 error icon");
-      }
-      return icons[0];
-    });
-    userEvent.hover(errorIcon!);
+    const icons = await screen.findAllByTestId("ErrorIcon");
+    if (icons.length !== 1) {
+      throw new Error("Expected 1 error icon");
+    }
+    userEvent.hover(icons[0]!);
   },
 };
 

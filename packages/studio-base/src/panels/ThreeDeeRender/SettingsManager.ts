@@ -19,7 +19,7 @@ export type SettingsManagerEvents = {
   update: () => void;
 };
 
-type GlobalSettingsEntryValidator = (entry: SettingsTreeEntry, errorState: LayerErrors) => void;
+type NodeValidator = (entry: SettingsTreeEntry, errorState: LayerErrors) => void;
 
 export class SettingsManager extends EventEmitter<SettingsManagerEvents> {
   public errors = new LayerErrors();
@@ -27,8 +27,7 @@ export class SettingsManager extends EventEmitter<SettingsManagerEvents> {
   #nodesByKey = new Map<string, SettingsTreeEntry[]>();
   #root: SettingsTreeNodeWithActionHandler = { children: {} };
 
-  /** used to hold functions that check incoming nodes for errors and update error state based on them */
-  #globalSettingsEntryValidators: GlobalSettingsEntryValidator[] = [];
+  #globalSettingsEntryValidators: NodeValidator[] = [];
 
   public constructor(baseTree: SettingsTreeNodes) {
     super();
@@ -104,13 +103,12 @@ export class SettingsManager extends EventEmitter<SettingsManagerEvents> {
     }
   };
 
-  public addGlobalSettingsEntryValidator = (nodeValidator: GlobalSettingsEntryValidator): void => {
+  /** used to hold functions that check incoming nodes for errors and update error state based on them */
+  public addNodeValidator = (nodeValidator: NodeValidator): void => {
     this.#globalSettingsEntryValidators.push(nodeValidator);
   };
 
-  public removeGlobalSettingsEntryValidator = (
-    nodeValidator: GlobalSettingsEntryValidator,
-  ): void => {
+  public removeNodeValidator = (nodeValidator: NodeValidator): void => {
     this.#globalSettingsEntryValidators = this.#globalSettingsEntryValidators.filter(
       (v) => v !== nodeValidator,
     );

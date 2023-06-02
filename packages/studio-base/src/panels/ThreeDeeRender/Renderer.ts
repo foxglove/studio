@@ -668,12 +668,12 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     this.#addSubscriptionsFromSceneExtensions(
       (extension) => extension === this.#imageModeExtension,
     );
-    this.settings.addGlobalSettingsEntryValidator(this.#imageOnlyModeTopicSettingsValidator);
+    this.settings.addNodeValidator(this.#imageOnlyModeTopicSettingsValidator);
   };
 
   #disableImageOnlySubscriptionMode = (): void => {
     // .clear() will clean up remaining errors on topics
-    this.settings.removeGlobalSettingsEntryValidator(this.#imageOnlyModeTopicSettingsValidator);
+    this.settings.removeNodeValidator(this.#imageOnlyModeTopicSettingsValidator);
     this.clear({ clearTransforms: true, resetAllFramesCursor: true });
     this.#clearSubscriptions();
     this.#addSubscriptionsFromSceneExtensions();
@@ -688,7 +688,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
         errors.addToTopic(
           path[1]!,
           "IMAGE_ONLY_TOPIC",
-          "3D topics cannot be rendered while image calibration is not defined.",
+          "A selected camera calibration is required to display 3D topics",
         );
       } else {
         errors.removeFromTopic(path[1]!, "IMAGE_ONLY_TOPIC");
