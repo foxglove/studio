@@ -87,40 +87,6 @@ type StoryArgs = {
   overrideConfig?: TabPanelConfig;
 };
 
-const WithPanelSetup: Decorator<StoryArgs> = (Wrapped, ctx) => {
-  const theme = useTheme();
-  const {
-    args: { disableMockCatalog = false, showPanelList = false, fixture: fixtureArg, ...storyArgs },
-  } = ctx;
-  const panelCatalog = !disableMockCatalog ? new MockPanelCatalog() : undefined;
-
-  return (
-    <PanelSetup panelCatalog={panelCatalog} fixture={fixtureArg}>
-      <Wrapped {...storyArgs} />
-      {showPanelList && (
-        <div
-          style={{
-            backgroundColor: theme.palette.background.paper,
-            borderInlineStart: `1px solid ${theme.palette.divider}`,
-          }}
-        >
-          <PanelCatalogComponent onPanelSelect={() => {}} />
-        </div>
-      )}
-    </PanelSetup>
-  );
-};
-
-const withLayoutManager: Decorator<StoryArgs> = (Wrapped) => (
-  <LayoutStorageContext.Provider
-    value={new MockLayoutStorage(LayoutManager.LOCAL_STORAGE_NAMESPACE, [])}
-  >
-    <LayoutManagerProvider>
-      <Wrapped />
-    </LayoutManagerProvider>
-  </LayoutStorageContext.Provider>
-);
-
 export default {
   title: "panels/Tab",
   parameters: {
@@ -129,7 +95,42 @@ export default {
     },
     colorScheme: "dark",
   },
-  decorators: [WithPanelSetup, withLayoutManager],
+  decorators: [
+    (Wrapped, ctx) => {
+      const theme = useTheme();
+      const {
+        args: {
+          disableMockCatalog = false,
+          showPanelList = false,
+          fixture: fixtureArg,
+          ...storyArgs
+        },
+      } = ctx;
+      const panelCatalog = !disableMockCatalog ? new MockPanelCatalog() : undefined;
+
+      return (
+        <LayoutStorageContext.Provider
+          value={new MockLayoutStorage(LayoutManager.LOCAL_STORAGE_NAMESPACE, [])}
+        >
+          <LayoutManagerProvider>
+            <PanelSetup panelCatalog={panelCatalog} fixture={fixtureArg}>
+              <Wrapped {...storyArgs} />
+              {showPanelList && (
+                <div
+                  style={{
+                    backgroundColor: theme.palette.background.paper,
+                    borderInlineStart: `1px solid ${theme.palette.divider}`,
+                  }}
+                >
+                  <PanelCatalogComponent onPanelSelect={() => {}} />
+                </div>
+              )}
+            </PanelSetup>
+          </LayoutManagerProvider>
+        </LayoutStorageContext.Provider>
+      );
+    },
+  ],
 } as Meta<StoryArgs>;
 
 type Story = StoryObj<StoryArgs>;
