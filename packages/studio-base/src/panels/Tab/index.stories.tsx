@@ -15,6 +15,7 @@ import { StoryObj, StoryFn } from "@storybook/react";
 import { fireEvent, within } from "@storybook/testing-library";
 
 import Panel from "@foxglove/studio-base/components/Panel";
+import { PanelCatalog as PanelCatalogComponent } from "@foxglove/studio-base/components/PanelCatalog";
 import PanelLayout from "@foxglove/studio-base/components/PanelLayout";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import LayoutStorageContext from "@foxglove/studio-base/context/LayoutStorageContext";
@@ -185,6 +186,7 @@ export const DraggingAPanelFromThePanelListUpdatesTheTabsLayout: StoryObj = {
       }}
     >
       <PanelLayout />
+      <PanelCatalogComponent onPanelSelect={() => {}} />
     </PanelSetup>
   ),
   name: "dragging a panel from the panel list updates the tab's layout",
@@ -212,6 +214,7 @@ export const DraggingAPanelFromThePanelListCreatesANewTabIfThereAreNone: StoryOb
       }}
     >
       <PanelLayout />
+      <PanelCatalogComponent onPanelSelect={() => {}} />
     </PanelSetup>
   ),
   name: "dragging a panel from the panel list creates a new tab if there are none",
