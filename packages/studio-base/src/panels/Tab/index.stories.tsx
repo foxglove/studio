@@ -97,7 +97,6 @@ export default {
   },
   decorators: [
     (Wrapped, ctx) => {
-      const theme = useTheme();
       const {
         args: {
           disableMockCatalog = false,
@@ -106,12 +105,12 @@ export default {
           ...storyArgs
         },
       } = ctx;
+      const storage = new MockLayoutStorage(LayoutManager.LOCAL_STORAGE_NAMESPACE, []);
       const panelCatalog = !disableMockCatalog ? new MockPanelCatalog() : undefined;
+      const theme = useTheme();
 
       return (
-        <LayoutStorageContext.Provider
-          value={new MockLayoutStorage(LayoutManager.LOCAL_STORAGE_NAMESPACE, [])}
-        >
+        <LayoutStorageContext.Provider value={storage}>
           <LayoutManagerProvider>
             <PanelSetup panelCatalog={panelCatalog} fixture={fixtureArg}>
               <Wrapped {...storyArgs} />
