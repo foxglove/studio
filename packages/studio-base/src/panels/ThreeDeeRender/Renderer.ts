@@ -688,7 +688,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
         errors.addToTopic(
           path[1]!,
           "IMAGE_ONLY_TOPIC",
-          "A selected camera calibration is required to display 3D topics",
+          "Camera calibration information is required to display 3D topics",
         );
       } else {
         errors.removeFromTopic(path[1]!, "IMAGE_ONLY_TOPIC");
