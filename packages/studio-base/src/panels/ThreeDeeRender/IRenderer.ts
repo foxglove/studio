@@ -25,6 +25,7 @@ import { SharedGeometry } from "./SharedGeometry";
 import { CameraState } from "./camera";
 import { DetailLevel } from "./lod";
 import { LayerSettingsTransform } from "./renderables/FrameAxes";
+import { DownloadImageInfo } from "./renderables/Images/ImageTypes";
 import { MeasurementTool } from "./renderables/MeasurementTool";
 import { PublishClickTool, PublishClickType } from "./renderables/PublishClickTool";
 import { MarkerPool } from "./renderables/markers/MarkerPool";
@@ -47,10 +48,6 @@ export type RendererEvents = {
     parameters: ReadonlyMap<string, ParameterValue> | undefined,
     renderer: IRenderer,
   ) => void;
-  variablesChange: (
-    variables: ReadonlyMap<string, VariableValue> | undefined,
-    renderer: IRenderer,
-  ) => void;
   /** Fired when the structure of the transform tree changes ie: new frame added/removed or frame assigned new parent */
   transformTreeUpdated: (renderer: IRenderer) => void;
   settingsTreeChange: (renderer: IRenderer) => void;
@@ -59,17 +56,13 @@ export type RendererEvents = {
   topicHandlersChanged: (renderer: IRenderer) => void;
   topicsChanged: (renderer: IRenderer) => void;
   resetViewChanged: (renderer: IRenderer) => void;
+  resetAllFramesCursor: (renderer: IRenderer) => void;
 };
 
 export type FollowMode = "follow-pose" | "follow-position" | "follow-none";
 
 export type ImageAnnotationSettings = {
   visible: boolean;
-};
-export type ImageAnnotationSubscription = {
-  topic: string;
-  schemaName: string;
-  settings: ImageAnnotationSettings;
 };
 
 /** Settings pertaining to Image mode */
@@ -78,12 +71,17 @@ export type ImageModeConfig = {
   imageTopic?: string;
   /** Topic containing CameraCalibration or CameraInfo */
   calibrationTopic?: string;
-  /** Annotation topic settings, analogous to {@link RendererConfig.topics} */
-  annotations?: ImageAnnotationSubscription[];
+  /** Annotation topicName -> settings, analogous to {@link RendererConfig.topics} */
+  annotations?: Record<string, Partial<ImageAnnotationSettings> | undefined>;
+  synchronize?: boolean;
   /** Rotation */
   rotation?: 0 | 90 | 180 | 270;
   flipHorizontal?: boolean;
   flipVertical?: boolean;
+  /** Minimum (black) value for single-channel images */
+  minValue?: number;
+  /** Maximum (white) value for single-channel images */
+  maxValue?: number;
 };
 
 export type RendererConfig = {
@@ -151,9 +149,6 @@ export type RendererConfig = {
   imageMode: ImageModeConfig;
 };
 
-/** Callback for handling a message received on a topic */
-export type MessageHandler<T = unknown> = (messageEvent: MessageEvent<T>) => void;
-
 export type RendererSubscription<T = unknown> = {
   /** Preload the full history of topic messages as a best effort */
   preload?: boolean;
@@ -166,8 +161,25 @@ export type RendererSubscription<T = unknown> = {
    */
   shouldSubscribe?: (topic: string) => boolean;
   /** Callback that will be fired for each matching incoming message */
-  handler: MessageHandler<T>;
+  handler: (messageEvent: MessageEvent<T>) => void;
 };
+
+export type AnyRendererSubscription = Immutable<
+  | {
+      type: "schema";
+      schemaNames: Set<string>;
+      // any is used here to allow storing heterogeneous arrays of subscriptions
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      subscription: RendererSubscription<any>;
+    }
+  | {
+      type: "topic";
+      topicName: string;
+      // any is used here to allow storing heterogeneous arrays of subscriptions
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      subscription: RendererSubscription<any>;
+    }
+>;
 
 export class InstancedLineMaterial extends THREE.LineBasicMaterial {
   public constructor(...args: ConstructorParameters<typeof THREE.LineBasicMaterial>) {
@@ -269,16 +281,6 @@ export interface IRenderer extends EventEmitter<RendererEvents> {
 
   updateConfig(updateHandler: (draft: RendererConfig) => void): void;
 
-  addSchemaSubscriptions<T>(
-    schemaNames: Iterable<string>,
-    subscription: RendererSubscription<T> | MessageHandler<T>,
-  ): void;
-
-  addTopicSubscription<T>(
-    topic: string,
-    subscription: RendererSubscription<T> | MessageHandler<T>,
-  ): void;
-
   addCustomLayerAction(options: {
     layerId: string;
     label: string;
@@ -298,8 +300,6 @@ export interface IRenderer extends EventEmitter<RendererEvents> {
 
   setParameters(parameters: Immutable<Map<string, ParameterValue>> | undefined): void;
 
-  setVariables(variables: Immutable<Map<string, VariableValue>>): void;
-
   updateCustomLayersCount(): void;
 
   setCameraState(cameraState: CameraState): void;
@@ -310,6 +310,9 @@ export interface IRenderer extends EventEmitter<RendererEvents> {
   canResetView(): boolean;
   /** Reset any manual view modifications (image mode only). */
   resetView(): void;
+
+  /** Return the currently displayed image (image mode only). */
+  getCurrentImage(): DownloadImageInfo | undefined;
 
   setSelectedRenderable(selection: PickedRenderable | undefined): void;
 

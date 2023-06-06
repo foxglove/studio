@@ -2,9 +2,9 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import type { DeepReadonly as Immutable } from "ts-essentials";
+import type { Immutable } from "./immutable";
 
-export type { DeepReadonly as Immutable } from "ts-essentials";
+export type { Immutable } from "./immutable";
 
 // Valid types for parameter data (such as rosparams)
 export type ParameterValue =
@@ -321,9 +321,12 @@ export type PanelExtensionContext = {
   setPreviewTime: (time: number | undefined) => void;
 
   /**
-   * Seek playback to the given time. Behaves as if the user had clicked the playback bar to seek.
+   * Seek playback to the given time. Behaves as if the user had clicked the playback bar
+   * to seek.
+   *
+   * Clients can pass a number or alternatively a Time object for greater precision.
    */
-  seekPlayback?: (time: number) => void;
+  seekPlayback?: (time: number | Time) => void;
 
   /**
    * Subscribe to an array of topic names.
@@ -442,8 +445,22 @@ export type ExtensionPanelRegistration = {
 export type RegisterMessageConverterArgs<Src> = {
   fromSchemaName: string;
   toSchemaName: string;
-  converter: (msg: Src) => unknown;
+  converter: (msg: Src, event: Immutable<MessageEvent<Src>>) => unknown;
 };
+
+type BaseTopic = { name: string; schemaName?: string };
+type TopicAlias = { name: string; sourceTopicName: string };
+
+/**
+ * An AliasFunction takes a list of data source topics and variables and outputs
+ * a list of aliased topics.
+ */
+export type TopicAliasFunction = (
+  args: Immutable<{
+    topics: BaseTopic[];
+    globalVariables: Readonly<Record<string, VariableValue>>;
+  }>,
+) => TopicAlias[];
 
 export interface ExtensionContext {
   /** The current _mode_ of the application. */
@@ -452,6 +469,13 @@ export interface ExtensionContext {
   registerPanel(params: ExtensionPanelRegistration): void;
 
   registerMessageConverter<Src>(args: RegisterMessageConverterArgs<Src>): void;
+
+  /**
+   * Registers a new alias function with the extension context. The function will be
+   * called every time there is a new set of topics and variables and returns an array of
+   * topic aliases.
+   */
+  registerTopicAliases(aliasFunction: TopicAliasFunction): void;
 }
 
 export interface ExtensionActivate {
@@ -509,7 +533,16 @@ export type SettingsIcon =
  * in the settings editor.
  */
 export type SettingsTreeFieldValue =
-  | { input: "autocomplete"; value?: string; items: string[] }
+  | {
+      input: "autocomplete";
+      value?: string;
+      items: string[];
+
+      /**
+       * Optional placeholder text displayed in the field input when value is undefined
+       */
+      placeholder?: string;
+    }
   | { input: "boolean"; value?: boolean }
   | {
       input: "rgb";

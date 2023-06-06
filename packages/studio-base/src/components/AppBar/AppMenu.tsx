@@ -19,7 +19,7 @@ import {
 import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/useWorkspaceActions";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 
-import { NestedMenuItem, MenuItem } from "./NestedMenuItem";
+import { MenuItem, NestedMenuItem } from "./NestedMenuItem";
 
 type AppMenuProps = {
   handleClose: () => void;
@@ -86,12 +86,22 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
     const items: MenuItem[] = [
       {
         type: "item",
+        label: t("open"),
+        key: "open",
+        onClick: () => {
+          dialogActions.dataSource.open("start");
+          handleAnalytics("open-data-source-dialog");
+          handleNestedMenuClose();
+        },
+      },
+      {
+        type: "item",
         label: t("openLocalFile"),
         key: "open-file",
         onClick: () => {
-          dialogActions.dataSource.open("file");
           handleAnalytics("open-file");
           handleNestedMenuClose();
+          dialogActions.openFile.open().catch(console.error);
         },
       },
       {
@@ -124,7 +134,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
     return items;
   }, [
     classes.truncate,
-    dialogActions.dataSource,
+    dialogActions,
     handleAnalytics,
     handleNestedMenuClose,
     recentSources,
@@ -187,6 +197,12 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
     handleNestedMenuClose();
   }, [handleAnalytics, handleNestedMenuClose]);
 
+  const onDemoClick = useCallback(() => {
+    dialogActions.dataSource.open("demo");
+    handleAnalytics("demo");
+    handleNestedMenuClose();
+  }, [dialogActions.dataSource, handleAnalytics, handleNestedMenuClose]);
+
   const helpItems = useMemo<MenuItem[]>(
     () => [
       { type: "item", key: "about", label: t("about"), onClick: onAboutClick },
@@ -199,8 +215,10 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
         onClick: onSlackClick,
         external: true,
       },
+      { type: "divider" },
+      { type: "item", key: "demo", label: t("exploreSampleData"), onClick: onDemoClick },
     ],
-    [onAboutClick, onDocsClick, onSlackClick, t],
+    [onAboutClick, onDemoClick, onDocsClick, onSlackClick, t],
   );
 
   return (

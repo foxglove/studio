@@ -23,6 +23,7 @@ import {
   Topic,
   VariableValue,
 } from "@foxglove/studio";
+import { LayerErrors } from "@foxglove/studio-base/panels/ThreeDeeRender/LayerErrors";
 import { FoxgloveGrid } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/FoxgloveGrid";
 import { ICameraHandler } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/ICameraHandler";
 import { dark, light } from "@foxglove/studio-base/theme/palette";
@@ -32,13 +33,11 @@ import { LabelMaterial, LabelPool } from "@foxglove/three-text";
 import {
   IRenderer,
   InstancedLineMaterial,
-  MessageHandler,
   RendererConfig,
   RendererEvents,
   RendererSubscription,
 } from "./IRenderer";
 import { Input } from "./Input";
-import { LineMaterial } from "./LineMaterial";
 import { DEFAULT_MESH_UP_AXIS, ModelCache } from "./ModelCache";
 import { PickedRenderable, Picker } from "./Picker";
 import type { Renderable } from "./Renderable";
@@ -62,6 +61,7 @@ import { FrameAxes } from "./renderables/FrameAxes";
 import { Grids } from "./renderables/Grids";
 import { ImageMode } from "./renderables/ImageMode/ImageMode";
 import { Images } from "./renderables/Images";
+import { DownloadImageInfo } from "./renderables/Images/ImageTypes";
 import { LaserScans } from "./renderables/LaserScans";
 import { Markers } from "./renderables/Markers";
 import { MeasurementTool } from "./renderables/MeasurementTool";
@@ -92,24 +92,6 @@ import { AddTransformResult, CoordinateFrame, Transform, TransformTree } from ".
 import { InterfaceMode } from "./types";
 
 const log = Logger.getLogger(__filename);
-
-/** Legacy Image panel settings that occur at the root level */
-export type LegacyImageConfig = {
-  cameraTopic: string;
-  enabledMarkerTopics: string[];
-  synchronize: boolean;
-  flipHorizontal: boolean;
-  flipVertical: boolean;
-  maxValue: number;
-  minValue: number;
-  mode: "fit" | "fill" | "other";
-  pan: { x: number; y: number };
-  rotation: number;
-  smooth: boolean;
-  transformMarkers: boolean;
-  zoom: number;
-  zoomPercentage: number;
-};
 
 /** Menu item entry and callback for the "Custom Layers" menu */
 export type CustomLayerAction = {
@@ -465,7 +447,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     },
   ): void {
     if (clearTransforms === true) {
-      this.transformTree.clear();
+      this.#clearTransformTree();
     }
     if (resetAllFramesCursor === true) {
       this.#resetAllFramesCursor();
@@ -481,49 +463,61 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
   #allFramesCursor: {
     // index represents where the last read message is in allFrames
     index: number;
+    lastReadMessage: MessageEvent<unknown> | undefined;
     cursorTimeReached?: Time;
   } = {
     index: -1,
+    lastReadMessage: undefined,
     cursorTimeReached: undefined,
   };
 
   #resetAllFramesCursor() {
     this.#allFramesCursor = {
       index: -1,
+      lastReadMessage: undefined,
       cursorTimeReached: undefined,
     };
+    this.emit("resetAllFramesCursor", this);
   }
 
   /**
    * Iterates through allFrames and handles messages with a receiveTime <= currentTime
-   * @param allFrames - array of all preloaded messages
+   * @param allFrames - sorted array of all preloaded messages
    * @returns {boolean} - whether the allFramesCursor has been updated and new messages were read in
    */
   public handleAllFramesMessages(allFrames?: readonly MessageEvent[]): boolean {
-    const currentTime = fromNanoSec(this.currentTime);
-    const allFramesCursor = this.#allFramesCursor;
-    // index always indicates last read-in message
-    let cursor = allFramesCursor.index;
-    let cursorTimeReached = allFramesCursor.cursorTimeReached;
-
     if (!allFrames || allFrames.length === 0) {
-      // when tf preloading is disabled
-      if (cursor > -1) {
-        this.#resetAllFramesCursor();
-      }
       return false;
     }
+
+    const currentTime = fromNanoSec(this.currentTime);
 
     /**
      * Assumptions about allFrames needed by allFramesCursor:
      *  - always sorted by receiveTime
-     *  - preloaded topics/schemas are only ever all removed or all added at once, otherwise it is not stable and would need to be reset
      *  - allFrame chunks are only ever loaded from beginning to end and does not have any eviction
      */
+
+    const messageAtCursor = allFrames[this.#allFramesCursor.index];
+
+    // reset cursor if lastReadMessage no longer is the same as the message at the cursor
+    // This means that messages were added or removed from the array and need to be re-read
+    if (
+      this.#allFramesCursor.lastReadMessage != undefined &&
+      messageAtCursor != undefined &&
+      this.#allFramesCursor.lastReadMessage !== messageAtCursor
+    ) {
+      this.#resetAllFramesCursor();
+    }
+
+    let cursor = this.#allFramesCursor.index;
+    let cursorTimeReached = this.#allFramesCursor.cursorTimeReached;
+    let lastReadMessage = this.#allFramesCursor.lastReadMessage;
 
     // cursor should never be over allFramesLength, if it some how is, it means the cursor was at the end of `allFrames` prior to eviction and eviction shortened allframes
     // in this case we should set the cursor to the end of allFrames
     cursor = Math.min(cursor, allFrames.length - 1);
+
     let message;
 
     let hasAddedMessageEvents = false;
@@ -543,6 +537,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
       }
 
       this.addMessageEvent(message);
+      lastReadMessage = message;
       if (cursor === allFrames.length - 1) {
         cursorTimeReached = message.receiveTime;
       }
@@ -553,7 +548,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
       return false;
     }
 
-    this.#allFramesCursor = { index: cursor, cursorTimeReached };
+    this.#allFramesCursor = { index: cursor, cursorTimeReached, lastReadMessage };
     return true;
   }
 
@@ -572,28 +567,37 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
 
   #addTransformSubscriptions(): void {
     const config = this.config;
+    const preloadTransforms = config.scene.transforms?.enablePreloading ?? true;
     // Internal handlers for TF messages to update the transform tree
-    this.addSchemaSubscriptions(FRAME_TRANSFORM_DATATYPES, {
+    this.#addSchemaSubscriptions(FRAME_TRANSFORM_DATATYPES, {
       handler: this.#handleFrameTransform,
       shouldSubscribe: () => true,
-      preload: config.scene.transforms?.enablePreloading ?? true,
+      preload: preloadTransforms,
     });
-    this.addSchemaSubscriptions(FRAME_TRANSFORMS_DATATYPES, {
+    this.#addSchemaSubscriptions(FRAME_TRANSFORMS_DATATYPES, {
       handler: this.#handleFrameTransforms,
       shouldSubscribe: () => true,
-      preload: config.scene.transforms?.enablePreloading ?? true,
+      preload: preloadTransforms,
     });
-    this.addSchemaSubscriptions(TF_DATATYPES, {
+    this.#addSchemaSubscriptions(TF_DATATYPES, {
       handler: this.#handleTFMessage,
       shouldSubscribe: () => true,
-      preload: config.scene.transforms?.enablePreloading ?? true,
+      preload: preloadTransforms,
     });
-    this.addSchemaSubscriptions(TRANSFORM_STAMPED_DATATYPES, {
+    this.#addSchemaSubscriptions(TRANSFORM_STAMPED_DATATYPES, {
       handler: this.#handleTransformStamped,
       shouldSubscribe: () => true,
-      preload: config.scene.transforms?.enablePreloading ?? true,
+      preload: preloadTransforms,
     });
+    this.off("resetAllFramesCursor", this.#clearTransformTree);
+    if (preloadTransforms) {
+      this.on("resetAllFramesCursor", this.#clearTransformTree);
+    }
   }
+
+  #clearTransformTree = () => {
+    this.transformTree.clear();
+  };
 
   // Call on scene extensions to add subscriptions to the renderer
   #addSubscriptionsFromSceneExtensions(filterFn?: (extension: SceneExtension) => boolean): void {
@@ -601,7 +605,17 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
       ? Array.from(this.sceneExtensions.values()).filter(filterFn)
       : this.sceneExtensions.values();
     for (const extension of filteredExtensions) {
-      extension.addSubscriptionsToRenderer();
+      const subscriptions = extension.getSubscriptions();
+      for (const subscription of subscriptions) {
+        switch (subscription.type) {
+          case "schema":
+            this.#addSchemaSubscriptions(subscription.schemaNames, subscription.subscription);
+            break;
+          case "topic":
+            this.#addTopicSubscription(subscription.topicName, subscription.subscription);
+            break;
+        }
+      }
     }
   }
 
@@ -613,43 +627,28 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     this.emit("schemaHandlersChanged", this);
   }
 
-  public addSchemaSubscriptions<T>(
+  #addSchemaSubscriptions<T>(
     schemaNames: Iterable<string>,
-    subscription: RendererSubscription<T> | MessageHandler<T>,
+    subscription: RendererSubscription<T>,
   ): void {
-    const genericSubscription =
-      subscription instanceof Function
-        ? { handler: subscription as MessageHandler<unknown> }
-        : (subscription as RendererSubscription);
     for (const schemaName of schemaNames) {
       let handlers = this.schemaHandlers.get(schemaName);
       if (!handlers) {
         handlers = [];
         this.schemaHandlers.set(schemaName, handlers);
       }
-      if (!handlers.includes(genericSubscription)) {
-        handlers.push(genericSubscription);
-      }
+      handlers.push(subscription as RendererSubscription);
     }
     this.emit("schemaHandlersChanged", this);
   }
 
-  public addTopicSubscription<T>(
-    topic: string,
-    subscription: RendererSubscription<T> | MessageHandler<T>,
-  ): void {
-    const genericSubscription =
-      subscription instanceof Function
-        ? { handler: subscription as MessageHandler<unknown> }
-        : (subscription as RendererSubscription);
+  #addTopicSubscription<T>(topic: string, subscription: RendererSubscription<T>): void {
     let handlers = this.topicHandlers.get(topic);
     if (!handlers) {
       handlers = [];
       this.topicHandlers.set(topic, handlers);
     }
-    if (!handlers.includes(genericSubscription)) {
-      handlers.push(genericSubscription);
-    }
+    handlers.push(subscription as RendererSubscription);
     this.emit("topicHandlersChanged", this);
   }
 
@@ -668,13 +667,32 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     this.#addSubscriptionsFromSceneExtensions(
       (extension) => extension === this.#imageModeExtension,
     );
+    this.settings.addNodeValidator(this.#imageOnlyModeTopicSettingsValidator);
   };
 
   #disableImageOnlySubscriptionMode = (): void => {
+    // .clear() will clean up remaining errors on topics
+    this.settings.removeNodeValidator(this.#imageOnlyModeTopicSettingsValidator);
     this.clear({ clearTransforms: true, resetAllFramesCursor: true });
     this.#clearSubscriptions();
     this.#addSubscriptionsFromSceneExtensions();
     this.#addTransformSubscriptions();
+  };
+
+  /** Adds errors to visible topic nodes when calibration is undefined */
+  #imageOnlyModeTopicSettingsValidator = (entry: SettingsTreeEntry, errors: LayerErrors) => {
+    const { path, node } = entry;
+    if (path[0] === "topics") {
+      if (node.visible === true) {
+        errors.addToTopic(
+          path[1]!,
+          "IMAGE_ONLY_TOPIC",
+          "Camera calibration information is required to display 3D topics",
+        );
+      } else {
+        errors.removeFromTopic(path[1]!, "IMAGE_ONLY_TOPIC");
+      }
+    }
   };
 
   public addCustomLayerAction(options: {
@@ -694,7 +712,17 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
       icon: options.icon,
     };
     this.#customLayerActions.set(options.layerId, { action, handler });
+    this.#updateTopicsAndCustomLayerSettingsNodes();
+  }
 
+  #updateTopicsAndCustomLayerSettingsNodes(): void {
+    this.settings.setNodesForKey(RENDERER_ID, [
+      this.#getTopicsSettingsEntry(),
+      this.#getCustomLayersSettingsEntry(),
+    ]);
+  }
+
+  #getTopicsSettingsEntry(): SettingsTreeEntry {
     // "Topics" settings tree node
     const topics: SettingsTreeEntry = {
       path: ["topics"],
@@ -710,8 +738,10 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
         handler: this.#handleTopicsAction,
       },
     };
+    return topics;
+  }
 
-    // "Custom Layers" settings tree node
+  #getCustomLayersSettingsEntry(): SettingsTreeEntry {
     const layerCount = Object.keys(this.config.layers).length;
     const customLayers: SettingsTreeEntry = {
       path: ["layers"],
@@ -722,9 +752,9 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
         handler: this.#handleCustomLayersAction,
       },
     };
-
-    this.settings.setNodesForKey(RENDERER_ID, [topics, customLayers]);
+    return customLayers;
   }
+
   /** Enable or disable object selection mode */
   // eslint-disable-next-line @foxglove/no-boolean-parameters
   public setPickingEnabled(enabled: boolean): void {
@@ -788,14 +818,6 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     }
   }
 
-  public setVariables(variables: ReadonlyMap<string, VariableValue>): void {
-    const changed = this.variables !== variables;
-    this.variables = variables;
-    if (changed) {
-      this.emit("variablesChange", variables, this);
-    }
-  }
-
   public updateCustomLayersCount(): void {
     const layerCount = Object.keys(this.config.layers).length;
     const label = `Custom Layers${layerCount > 0 ? ` (${layerCount})` : ""}`;
@@ -817,6 +839,10 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
   public resetView(): void {
     this.#imageModeExtension?.resetViewModifications();
     this.queueAnimationFrame();
+  }
+
+  public getCurrentImage(): DownloadImageInfo | undefined {
+    return this.#imageModeExtension?.getLatestImage();
   }
 
   public setSelectedRenderable(selection: PickedRenderable | undefined): void {
@@ -1286,14 +1312,12 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     this.#scene.traverse((object) => {
       if ((object as Partial<THREE.Mesh>).material) {
         const mesh = object as THREE.Mesh;
-        const material = mesh.material as Partial<LineMaterial>;
+        const material = mesh.material as Partial<THREE.ShaderMaterial>;
 
         // Update render resolution uniforms
-        if (material.resolution) {
-          material.resolution.copy(resolution);
-        }
         if (material.uniforms?.resolution) {
-          material.uniforms.resolution.value = resolution;
+          material.uniforms.resolution.value.copy(resolution);
+          material.uniformsNeedUpdate = true;
         }
       }
     });

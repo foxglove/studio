@@ -6,6 +6,8 @@ import { TypeOptions } from "i18next";
 
 export const appBar: Partial<TypeOptions["resources"]["appBar"]> = {
   about: "关于",
+  exploreSampleData: "探索样本数据",
+  open: "打开……",
   openConnection: "打开连接……",
   noDataSource: undefined,
   openLocalFile: "打开本地文件……",
@@ -19,4 +21,6 @@ export const appBar: Partial<TypeOptions["resources"]["appBar"]> = {
   file: "文件",
   view: "查看",
   help: "帮助",
+  signIn: "登录",
+  unknown: "未知",
 };

@@ -13,15 +13,25 @@ import {
   Paper,
   useTheme,
 } from "@mui/material";
+import { useSnackbar } from "notistack";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLongPress } from "react-use";
 import { makeStyles } from "tss-react/mui";
 
+import Logger from "@foxglove/log";
 import { LayoutActions } from "@foxglove/studio";
+import {
+  PanelContextMenu,
+  PanelContextMenuItem,
+} from "@foxglove/studio-base/components/PanelContextMenu";
 import PublishGoalIcon from "@foxglove/studio-base/components/PublishGoalIcon";
 import PublishPointIcon from "@foxglove/studio-base/components/PublishPointIcon";
 import PublishPoseEstimateIcon from "@foxglove/studio-base/components/PublishPoseEstimateIcon";
+import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
+import { usePanelMousePresence } from "@foxglove/studio-base/hooks/usePanelMousePresence";
+import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
+import { downloadFiles } from "@foxglove/studio-base/util/download";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import { InteractionContextMenu, Interactions, SelectionObject, TabType } from "./Interactions";
@@ -30,8 +40,11 @@ import { Renderable } from "./Renderable";
 import { useRenderer, useRendererEvent } from "./RendererContext";
 import { Stats } from "./Stats";
 import { MouseEventObject } from "./camera";
+import { decodeCompressedImageToBitmap, decodeRawImage } from "./renderables/Images/decodeImage";
 import { PublishClickType } from "./renderables/PublishClickTool";
 import { InterfaceMode } from "./types";
+
+const log = Logger.getLogger(__filename);
 
 const PublishClickIcons: Record<PublishClickType, React.ReactNode> = {
   pose: <PublishGoalIcon fontSize="inherit" />,
@@ -88,8 +101,10 @@ export function RendererOverlay(props: {
   onClickPublish: () => void;
   timezone: string | undefined;
   /** Override default downloading behavior, used for Storybook */
-  onDownload?: (blob: Blob, fileName: string) => void;
+  onDownloadImage?: (blob: Blob, fileName: string) => void;
 }): JSX.Element {
+  const analytics = useAnalytics();
+  const { enqueueSnackbar } = useSnackbar();
   const { t } = useTranslation("threeDee");
   const { classes } = useStyles();
   const [clickedPosition, setClickedPosition] = useState<{ clientX: number; clientY: number }>({
@@ -166,7 +181,6 @@ export function RendererOverlay(props: {
               interactionData: {
                 topic: selectedRenderable.renderable.topic,
                 highlighted: true,
-                downloader: selectedRenderable.renderable.getDownloader(),
                 originalMessage: selectedRenderable.renderable.details(),
                 instanceDetails:
                   selectedRenderable.instanceIndex != undefined
@@ -233,6 +247,7 @@ export function RendererOverlay(props: {
         transformOrigin={{ vertical: "top", horizontal: "right" }}
         open={publishMenuExpanded}
         onClose={() => setPublishMenuExpanded(false)}
+        MenuListProps={{ dense: true }}
       >
         <MenuItem
           selected={props.publishClickType === "pose_estimate"}
@@ -242,7 +257,7 @@ export function RendererOverlay(props: {
           }}
         >
           <ListItemIcon>{PublishClickIcons.pose_estimate}</ListItemIcon>
-          <ListItemText>Publish pose estimate</ListItemText>
+          <ListItemText disableTypography>Publish pose estimate</ListItemText>
         </MenuItem>
         <MenuItem
           selected={props.publishClickType === "pose"}
@@ -252,7 +267,7 @@ export function RendererOverlay(props: {
           }}
         >
           <ListItemIcon>{PublishClickIcons.pose}</ListItemIcon>
-          <ListItemText>Publish pose</ListItemText>
+          <ListItemText disableTypography>Publish pose</ListItemText>
         </MenuItem>
         <MenuItem
           selected={props.publishClickType === "point"}
@@ -262,7 +277,7 @@ export function RendererOverlay(props: {
           }}
         >
           <ListItemIcon>{PublishClickIcons.point}</ListItemIcon>
-          <ListItemText>Publish point</ListItemText>
+          <ListItemText disableTypography>Publish point</ListItemText>
         </MenuItem>
       </Menu>
     </>
@@ -280,11 +295,92 @@ export function RendererOverlay(props: {
     </Button>
   );
 
-  const { onDownload } = props;
+  const { onDownloadImage } = props;
+  const doDownloadImage = useCallback(async () => {
+    const currentImage = renderer?.getCurrentImage();
+    if (!currentImage) {
+      return;
+    }
+
+    const { topic, image, rotation, flipHorizontal, flipVertical, minValue, maxValue } =
+      currentImage;
+    const stamp = "header" in image ? image.header.stamp : image.timestamp;
+    let bitmap: ImageBitmap;
+    try {
+      if ("format" in image) {
+        bitmap = await decodeCompressedImageToBitmap(image);
+      } else {
+        const imageData = new ImageData(image.width, image.height);
+        decodeRawImage(image, { minValue, maxValue }, imageData.data);
+        bitmap = await createImageBitmap(imageData);
+      }
+
+      const width = rotation === 90 || rotation === 270 ? bitmap.height : bitmap.width;
+      const height = rotation === 90 || rotation === 270 ? bitmap.width : bitmap.height;
+
+      // re-render the image onto a new canvas to download the original image
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        throw new Error("Unable to create rendering context for image download");
+      }
+
+      // Draw the image in the selected orientation so it aligns with the canvas viewport
+      ctx.translate(width / 2, height / 2);
+      ctx.scale(flipHorizontal ? -1 : 1, flipVertical ? -1 : 1);
+      ctx.rotate((rotation / 180) * Math.PI);
+      ctx.translate(-bitmap.width / 2, -bitmap.height / 2);
+      ctx.drawImage(bitmap, 0, 0);
+
+      // read the canvas data as an image (png)
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob((result) => {
+          if (result) {
+            resolve(result);
+          } else {
+            reject(`Failed to create an image from ${width}x${height} canvas`);
+          }
+        }, "image/png");
+      });
+      // name the image the same name as the topic
+      // note: the / characters in the file name will be replaced with _ by the browser
+      // remove any leading / so the image name doesn't start with _
+      const topicName = topic.replace(/^\/+/, "");
+      const fileName = `${topicName}-${stamp.sec}-${stamp.nsec}`;
+      void analytics.logEvent(AppEvent.IMAGE_DOWNLOAD);
+      if (onDownloadImage) {
+        onDownloadImage(blob, fileName);
+      } else {
+        downloadFiles([{ blob, fileName }]);
+      }
+    } catch (error) {
+      log.error(error);
+      enqueueSnackbar((error as Error).toString(), { variant: "error" });
+    }
+  }, [renderer, onDownloadImage, enqueueSnackbar, analytics]);
+
+  const getContextMenuItems = useCallback(
+    (): PanelContextMenuItem[] => [
+      {
+        type: "item",
+        label: "Download image",
+        onclick: doDownloadImage,
+        disabled: renderer?.getCurrentImage() == undefined,
+      },
+    ],
+    [doDownloadImage, renderer],
+  );
+
+  const mousePresenceRef = useRef<HTMLDivElement>(ReactNull);
+  const mousePresent = usePanelMousePresence(mousePresenceRef);
 
   return (
     <>
+      {props.interfaceMode === "image" && <PanelContextMenu getItems={getContextMenuItems} />}
       <div
+        ref={mousePresenceRef}
         style={{
           position: "absolute",
           top: "10px",
@@ -296,14 +392,18 @@ export function RendererOverlay(props: {
           pointerEvents: "none",
         }}
       >
-        <Interactions
-          onDownload={onDownload}
-          addPanel={props.addPanel}
-          selectedObject={selectedObject}
-          interactionsTabType={interactionsTabType}
-          setInteractionsTabType={setInteractionsTabType}
-          timezone={props.timezone}
-        />
+        {
+          // Only show on hover for image panel
+          (props.interfaceMode === "3d" || mousePresent) && (
+            <Interactions
+              addPanel={props.addPanel}
+              selectedObject={selectedObject}
+              interactionsTabType={interactionsTabType}
+              setInteractionsTabType={setInteractionsTabType}
+              timezone={props.timezone}
+            />
+          )
+        }
         {props.interfaceMode === "3d" && (
           <Paper square={false} elevation={4} style={{ display: "flex", flexDirection: "column" }}>
             <IconButton

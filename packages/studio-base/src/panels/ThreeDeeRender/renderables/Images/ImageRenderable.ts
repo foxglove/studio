@@ -14,7 +14,7 @@ import { projectPixel } from "@foxglove/studio-base/panels/ThreeDeeRender/render
 import { RosValue } from "@foxglove/studio-base/players/types";
 
 import { AnyImage } from "./ImageTypes";
-import { decodeCompressedImageToBitmap, decodeRawImage } from "./decodeImage";
+import { RawImageOptions, decodeRawImage } from "./decodeImage";
 import { CameraInfo } from "../../ros";
 
 export interface ImageRenderableSettings {
@@ -24,9 +24,12 @@ export interface ImageRenderableSettings {
   distance: number;
   planarProjectionFactor: number;
   color: string;
+  minValue?: number;
+  maxValue?: number;
 }
 
 export const CREATE_BITMAP_ERR_KEY = "CreateBitmap";
+const IMAGE_TOPIC_PATH = ["imageMode", "imageTopic"];
 
 const DEFAULT_DISTANCE = 1;
 const DEFAULT_PLANAR_PROJECTION_FACTOR = 0;
@@ -44,9 +47,6 @@ export type ImageUserData = BaseUserData & {
   cameraInfo: CameraInfo | undefined;
   cameraModel: PinholeCameraModel | undefined;
   image: AnyImage | undefined;
-  rotation: 0 | 90 | 180 | 270;
-  flipHorizontal: boolean;
-  flipVertical: boolean;
   texture: THREE.Texture | undefined;
   material: THREE.MeshBasicMaterial | undefined;
   geometry: THREE.PlaneGeometry | undefined;
@@ -133,29 +133,20 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     if (newSettings.color !== prevSettings.color) {
       this.#materialNeedsUpdate = true;
     }
+
+    if (
+      prevSettings.minValue !== newSettings.minValue ||
+      prevSettings.maxValue !== newSettings.maxValue
+    ) {
+      this.#textureNeedsUpdate = true;
+    }
+
     this.userData.settings = newSettings;
   }
 
   public setImage(image: AnyImage): void {
     this.userData.image = image;
     this.#textureNeedsUpdate = true;
-  }
-
-  /** Set the rotation (used only for downloading) */
-  public setRotation(rotation: 0 | 90 | 180 | 270): void {
-    this.userData.rotation = rotation;
-  }
-
-  /** Set the horizontal flip (used only for downloading) */
-  // eslint-disable-next-line @foxglove/no-boolean-parameters
-  public setFlipHorizontal(flipHorizontal: boolean): void {
-    this.userData.flipHorizontal = flipHorizontal;
-  }
-
-  /** Set the vertical flip (used only for downloading) */
-  // eslint-disable-next-line @foxglove/no-boolean-parameters
-  public setFlipVertical(flipVertical: boolean): void {
-    this.userData.flipVertical = flipVertical;
   }
 
   public setBitmap(bitmap: ImageBitmap): void {
@@ -218,32 +209,64 @@ export class ImageRenderable extends Renderable<ImageUserData> {
         return;
       }
 
-      const texture = this.userData.texture as THREE.CanvasTexture | undefined;
-      if (texture == undefined || !bitmapDimensionsEqual(bitmap, texture.image as ImageBitmap)) {
-        texture?.image.close();
-        texture?.dispose();
+      const canvasTexture = this.userData.texture;
+      if (
+        canvasTexture == undefined ||
+        // instanceof check allows us to switch from a raw image (DataTexture) to a compressed image (CanvasTexture)
+        !(canvasTexture instanceof THREE.CanvasTexture) ||
+        !bitmapDimensionsEqual(bitmap, canvasTexture.image as ImageBitmap | undefined)
+      ) {
+        if (canvasTexture?.image instanceof ImageBitmap) {
+          canvasTexture.image.close();
+        }
+        canvasTexture?.dispose();
         this.userData.texture = createCanvasTexture(bitmap);
       } else {
-        texture.image = bitmap;
-        texture.needsUpdate = true;
+        canvasTexture.image = bitmap;
+        canvasTexture.needsUpdate = true;
       }
     } else {
       const { width, height } = image;
-      const prevTexture = this.userData.texture as THREE.DataTexture | undefined;
+      let dataTexture = this.userData.texture;
       if (
-        prevTexture == undefined ||
-        prevTexture.image.width !== width ||
-        prevTexture.image.height !== height
+        dataTexture == undefined ||
+        // instanceof check allows us to switch from a compressed image (CanvasTexture) to a raw image (DataTexture)
+        !(dataTexture instanceof THREE.DataTexture) ||
+        dataTexture.image.width !== width ||
+        dataTexture.image.height !== height
       ) {
-        prevTexture?.dispose();
-        this.userData.texture = createDataTexture(width, height);
+        dataTexture?.dispose();
+        dataTexture = createDataTexture(width, height);
+        this.userData.texture = dataTexture;
       }
+      assert(dataTexture instanceof THREE.DataTexture); // https://github.com/microsoft/TypeScript/issues/54594
 
-      const texture = this.userData.texture as THREE.DataTexture;
-      decodeRawImage(image, {}, texture.image.data);
-      texture.needsUpdate = true;
+      try {
+        decodeRawImage(image, this.#getRawImageOptions(), dataTexture.image.data);
+        dataTexture.needsUpdate = true;
+        this.renderer.settings.errors.remove(IMAGE_TOPIC_PATH, CREATE_BITMAP_ERR_KEY);
+        this.renderer.settings.errors.removeFromTopic(this.userData.topic, CREATE_BITMAP_ERR_KEY);
+      } catch (error) {
+        this.renderer.settings.errors.add(
+          IMAGE_TOPIC_PATH,
+          CREATE_BITMAP_ERR_KEY,
+          `Error decoding raw image: ${error.message}`,
+        );
+        this.renderer.settings.errors.addToTopic(
+          this.userData.topic,
+          CREATE_BITMAP_ERR_KEY,
+          `Error decoding raw image: ${error.message}`,
+        );
+      }
     }
     this.#materialNeedsUpdate = true;
+  }
+
+  #getRawImageOptions(): RawImageOptions {
+    return {
+      minValue: this.userData.settings.minValue,
+      maxValue: this.userData.settings.maxValue,
+    };
   }
 
   #updateMaterial(): void {
@@ -301,67 +324,12 @@ export class ImageRenderable extends Renderable<ImageUserData> {
       this.userData.mesh.material = this.userData.material;
     }
 
-    if (this.#renderBehindScene) {
-      this.userData.mesh.renderOrder = -1 * Number.MAX_SAFE_INTEGER;
-    } else {
+    if (!this.#renderBehindScene) {
       this.userData.mesh.renderOrder = 0;
+      return;
     }
-  }
 
-  public override getDownloader():
-    | (() => Promise<{ blob: Blob; fileName: string } | undefined>)
-    | undefined {
-    // re-render the image onto a new canvas to download the original image
-    return async () => {
-      const { topic, image, rotation, flipHorizontal, flipVertical } = this.userData;
-      if (!image) {
-        return;
-      }
-      const stamp = "header" in image ? image.header.stamp : image.timestamp;
-      let bitmap: ImageBitmap;
-      if ("format" in image) {
-        bitmap = await decodeCompressedImageToBitmap(image);
-      } else {
-        const imageData = new ImageData(image.width, image.height);
-        decodeRawImage(image, {}, imageData.data);
-        bitmap = await createImageBitmap(imageData);
-      }
-
-      const width = rotation === 90 || rotation === 270 ? bitmap.height : bitmap.width;
-      const height = rotation === 90 || rotation === 270 ? bitmap.width : bitmap.height;
-
-      const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) {
-        throw new Error("Unable to create rendering context for image download");
-      }
-
-      // Draw the image in the selected orientation so it aligns with the canvas viewport
-      ctx.translate(width / 2, height / 2);
-      ctx.scale(flipHorizontal ? -1 : 1, flipVertical ? -1 : 1);
-      ctx.rotate((rotation / 180) * Math.PI);
-      ctx.translate(-bitmap.width / 2, -bitmap.height / 2);
-      ctx.drawImage(bitmap, 0, 0);
-
-      // read the canvas data as an image (png)
-      const blob = await new Promise<Blob>((resolve, reject) => {
-        canvas.toBlob((result) => {
-          if (result) {
-            resolve(result);
-          } else {
-            reject(`Failed to create an image from ${width}x${height} canvas`);
-          }
-        }, "image/png");
-      });
-      // name the image the same name as the topic
-      // note: the / characters in the file name will be replaced with _ by the browser
-      // remove any leading / so the image name doesn't start with _
-      const topicName = topic.replace(/^\/+/, "");
-      const fileName = `${topicName}-${stamp.sec}-${stamp.nsec}`;
-      return { blob, fileName };
-    };
+    this.userData.mesh.renderOrder = -1 * Number.MAX_SAFE_INTEGER;
   }
 }
 

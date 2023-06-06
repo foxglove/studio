@@ -11,6 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 import { StoryObj } from "@storybook/react";
+import { isEqual } from "lodash";
 import cloneDeep from "lodash/cloneDeep";
 import { useState, useCallback, useRef, useEffect } from "react";
 import TestUtils from "react-dom/test-utils";
@@ -106,8 +107,10 @@ export const SimpleLight: StoryObj = { ...Simple, parameters: { colorScheme: "li
 
 export const CanZoomAndUpdate: StoryObj = {
   render: function Story() {
-    const [chartProps, setChartProps] = useState(cloneDeep(commonProps));
+    const [chartProps, setChartProps] = useState(structuredClone(commonProps));
     const callCountRef = useRef(0);
+
+    const readySignal = useReadySignal();
 
     const doScroll = useCallback(async () => {
       const canvasEl = document.querySelector("canvas");
@@ -142,6 +145,13 @@ export const CanZoomAndUpdate: StoryObj = {
       };
     }, [doScroll]);
 
+    // Fire ready signal after chart props are updated.
+    useEffect(() => {
+      if (!isEqual(chartProps, commonProps)) {
+        readySignal();
+      }
+    }, [chartProps, readySignal]);
+
     return (
       <div style={{ width: 800, height: 800, background: "black" }}>
         <MockMessagePipelineProvider pauseFrame={pauseFrame}>
@@ -151,11 +161,11 @@ export const CanZoomAndUpdate: StoryObj = {
     );
   },
 
-  parameters: {
-    chromatic: {
-      delay: 500,
-    },
+  play: async (ctx) => {
+    await ctx.parameters.storyReady;
   },
+
+  parameters: { useReadySignal: true },
 };
 
 export const CleansUpTooltipOnUnmount: StoryObj = {
@@ -173,7 +183,7 @@ export const CleansUpTooltipOnUnmount: StoryObj = {
           clientX: 70 + left,
           clientY: 296 + top,
         });
-        await delay(100);
+        await delay(500);
         tooltip = document.querySelector("[data-testid=TimeBasedChartTooltipContent]") ?? undefined;
       }
       if (tooltip == undefined) {
@@ -223,6 +233,14 @@ export const CallPauseOnInitialMount: StoryObj = {
       };
     }, []);
 
+    const readySignal = useReadySignal();
+
+    useEffect(() => {
+      if (unpauseFrameCount === 3) {
+        readySignal();
+      }
+    }, [readySignal, unpauseFrameCount]);
+
     return (
       <div style={{ width: "100%", height: "100%", background: "black" }}>
         <div style={{ fontSize: 20, padding: 6 }}>
@@ -234,6 +252,12 @@ export const CallPauseOnInitialMount: StoryObj = {
       </div>
     );
   },
+
+  play: async (ctx) => {
+    await ctx.parameters.storyReady;
+  },
+
+  parameters: { useReadySignal: true },
 };
 
 export const ResumeFrameOnUnmount: StoryObj = {

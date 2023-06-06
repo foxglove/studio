@@ -197,6 +197,13 @@ export type PlayerStateActiveData = {
   // A map of parameter names to parameter values, used to describe remote parameters such as
   // rosparams.
   parameters?: Map<string, ParameterValue>;
+
+  /** Set to true when `messages` has been recomputed without seek, backfill or playback.
+   * For example: when global variables changes, user-scripts needs to be rerun to recompute
+   * messages. This variable would be set to true to indicate that `messages` may have changed
+   * without a seek or backfill occurring.
+   */
+  messagesRecomputed?: boolean;
 };
 
 // Represents a ROS topic, though the actual data does not need to come from a ROS system.
@@ -207,6 +214,8 @@ export type Topic = {
   name: string;
   // Name of the datatype (see `type PlayerStateActiveData` for details).
   schemaName: string | undefined;
+  // Name of the topic before topic aliasing, if any.
+  aliasedFromName?: string;
 };
 
 export type TopicWithSchemaName = Topic & { schemaName: string };

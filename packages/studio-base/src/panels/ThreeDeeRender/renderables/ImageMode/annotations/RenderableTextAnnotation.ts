@@ -3,11 +3,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { PinholeCameraModel } from "@foxglove/den/image";
-import { getAnnotationAtPath } from "@foxglove/studio-base/panels/Image/lib/normalizeAnnotations";
-import { TextAnnotation as NormalizedTextAnnotation } from "@foxglove/studio-base/panels/Image/types";
 import { RosObject, RosValue } from "@foxglove/studio-base/players/types";
 import { Label, LabelPool } from "@foxglove/three-text";
 
+import { ANNOTATION_RENDER_ORDER } from "./annotationRenderOrder";
+import { getAnnotationAtPath } from "./normalizeAnnotations";
+import { TextAnnotation as NormalizedTextAnnotation } from "./types";
 import { BaseUserData, Renderable } from "../../../Renderable";
 import { SRGBToLinear, getLuminance } from "../../../color";
 
@@ -42,6 +43,7 @@ export class RenderableTextAnnotation extends Renderable<BaseUserData, /*TRender
 
     this.#labelPool = labelPool;
     this.#label = labelPool.acquire();
+    this.#label.mesh.renderOrder = ANNOTATION_RENDER_ORDER.TEXT;
     this.#label.setAnchorPoint(0, 0);
     this.#label.setBillboard(true);
     this.#label.setSizeAttenuation(false);
@@ -50,6 +52,8 @@ export class RenderableTextAnnotation extends Renderable<BaseUserData, /*TRender
   }
 
   public override dispose(): void {
+    // reset render order back for label pool
+    this.#label.mesh.renderOrder = 0;
     this.#labelPool.release(this.#label);
     super.dispose();
   }
@@ -110,7 +114,8 @@ export class RenderableTextAnnotation extends Renderable<BaseUserData, /*TRender
         SRGBToLinear(textColor.g),
         SRGBToLinear(textColor.b),
       );
-      this.#label.setOpacity(textColor.a);
+      // Need to keep it transparent so that other transparent objects aren't rendered over it
+      this.#label.setOpacity(Math.min(textColor.a, 0.999));
 
       if (backgroundColor) {
         this.#label.setBackgroundColor(

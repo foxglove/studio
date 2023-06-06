@@ -15,7 +15,6 @@ import { useCallback } from "react";
 import { makeStyles } from "tss-react/mui";
 
 import Logger from "@foxglove/log";
-import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import { AppSettingsTab } from "@foxglove/studio-base/components/AppSettingsDialog/AppSettingsDialog";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 import {
@@ -23,7 +22,6 @@ import {
   useCurrentUserType,
 } from "@foxglove/studio-base/context/CurrentUserContext";
 import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/useWorkspaceActions";
-import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import { useConfirm } from "@foxglove/studio-base/hooks/useConfirm";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 
@@ -54,7 +52,6 @@ export function UserMenu({
 }: UserMenuProps): JSX.Element {
   const { classes } = useStyles();
   const { currentUser, signIn, signOut } = useCurrentUser();
-  const [_, setEnableNewTopNav] = useAppConfigurationValue<boolean>(AppSetting.ENABLE_NEW_TOPNAV);
   const currentUserType = useCurrentUserType();
   const analytics = useAnalytics();
   const { enqueueSnackbar } = useSnackbar();
@@ -83,7 +80,7 @@ export function UserMenu({
   }, [beginSignOut, confirm]);
 
   const onSignInClick = useCallback(() => {
-    void analytics.logEvent(AppEvent.DIALOG_CLICK_CTA, {
+    void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
       user: currentUserType,
       cta: "sign-in",
     });
@@ -118,16 +115,12 @@ export function UserMenu({
   }, [analytics, currentUserType]);
 
   const onSlackClick = useCallback(() => {
-    void analytics.logEvent(AppEvent.DIALOG_CLICK_CTA, {
+    void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
       user: currentUserType,
       cta: "join-slack",
     });
     window.open("https://foxglove.dev/slack", "_blank");
   }, [analytics, currentUserType]);
-
-  const revertToOldUI = useCallback(async () => {
-    await setEnableNewTopNav(false);
-  }, [setEnableNewTopNav]);
 
   return (
     <>
@@ -151,8 +144,6 @@ export function UserMenu({
         <MenuItem onClick={() => onSettingsClick()}>Settings</MenuItem>
         <MenuItem onClick={() => onSettingsClick("extensions")}>Extensions</MenuItem>
         {currentUser && <MenuItem onClick={onProfileClick}>User profile</MenuItem>}
-        <Divider variant="middle" />
-        <MenuItem onClick={revertToOldUI}>Revert to old UI</MenuItem>
         <Divider variant="middle" />
         <MenuItem onClick={onDocsClick}>Documentation</MenuItem>
         <MenuItem onClick={onSlackClick}>Join Slack community</MenuItem>

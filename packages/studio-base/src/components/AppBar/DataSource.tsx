@@ -7,7 +7,6 @@ import { CircularProgress, IconButton } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { makeStyles } from "tss-react/mui";
 
-import { APP_BAR_PRIMARY_COLOR } from "@foxglove/studio-base/components/AppBar/constants";
 import {
   MessagePipelineContext,
   useMessagePipeline,
@@ -17,6 +16,8 @@ import TextMiddleTruncate from "@foxglove/studio-base/components/TextMiddleTrunc
 import WssErrorModal from "@foxglove/studio-base/components/WssErrorModal";
 import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/useWorkspaceActions";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
+
+import { EndTimestamp } from "./EndTimestamp";
 
 const ICON_SIZE = 18;
 
@@ -38,7 +39,7 @@ const useStyles = makeStyles<void, "adornmentError">()((theme, _params, _classes
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
-    color: APP_BAR_PRIMARY_COLOR,
+    color: theme.palette.appBar.primary,
     width: ICON_SIZE,
     height: ICON_SIZE,
   },
@@ -59,21 +60,20 @@ const useStyles = makeStyles<void, "adornmentError">()((theme, _params, _classes
   },
   iconButton: {
     padding: 0,
+    position: "relative",
+    zIndex: 1,
+    fontSize: ICON_SIZE - 2,
 
     "svg:not(.MuiSvgIcon-root)": {
       fontSize: "1rem",
     },
   },
-  errorIconButton: {
-    position: "relative",
-    zIndex: 1,
-    fontSize: ICON_SIZE - 2,
-  },
 }));
 
-const selectPlayerName = ({ playerState }: MessagePipelineContext) => playerState.name;
-const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => playerState.presence;
-const selectPlayerProblems = ({ playerState }: MessagePipelineContext) => playerState.problems;
+const selectPlayerName = (ctx: MessagePipelineContext) => ctx.playerState.name;
+const selectPlayerPresence = (ctx: MessagePipelineContext) => ctx.playerState.presence;
+const selectPlayerProblems = (ctx: MessagePipelineContext) => ctx.playerState.problems;
+const selectSeek = (ctx: MessagePipelineContext) => ctx.seekPlayback;
 
 export function DataSource(): JSX.Element {
   const { t } = useTranslation("appBar");
@@ -82,7 +82,12 @@ export function DataSource(): JSX.Element {
   const playerName = useMessagePipeline(selectPlayerName);
   const playerPresence = useMessagePipeline(selectPlayerPresence);
   const playerProblems = useMessagePipeline(selectPlayerProblems) ?? [];
+  const seek = useMessagePipeline(selectSeek);
+
   const { sidebarActions } = useWorkspaceActions();
+
+  // A crude but correct proxy (for our current architecture) for whether a connection is live
+  const isLiveConnection = seek == undefined;
 
   const reconnecting = playerPresence === PlayerPresence.RECONNECTING;
   const initializing = playerPresence === PlayerPresence.INITIALIZING;
@@ -104,8 +109,14 @@ export function DataSource(): JSX.Element {
       <Stack direction="row" alignItems="center">
         <div className={classes.sourceName}>
           <div className={classes.textTruncate}>
-            <TextMiddleTruncate text={playerDisplayName ?? "<unknown>"} />
+            <TextMiddleTruncate text={playerDisplayName ?? `<${t("unknown")}>`} />
           </div>
+          {isLiveConnection && (
+            <>
+              <span>/</span>
+              <EndTimestamp />
+            </>
+          )}
         </div>
         <div className={cx(classes.adornment, { [classes.adornmentError]: error })}>
           {loading && (
@@ -119,7 +130,7 @@ export function DataSource(): JSX.Element {
           {error && (
             <IconButton
               color="inherit"
-              className={cx(classes.iconButton, classes.errorIconButton)}
+              className={classes.iconButton}
               onClick={() => {
                 sidebarActions.left.setOpen(true);
                 sidebarActions.left.selectItem("problems");

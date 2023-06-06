@@ -22,7 +22,6 @@ import {
   SettingsTreeNodes,
   Subscription,
   Topic,
-  VariableValue,
 } from "@foxglove/studio";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
@@ -30,14 +29,13 @@ import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
 import type {
   FollowMode,
   IRenderer,
-  ImageModeConfig,
   RendererConfig,
   RendererEvents,
   RendererSubscription,
 } from "./IRenderer";
 import type { PickedRenderable } from "./Picker";
 import { SELECTED_ID_VARIABLE } from "./Renderable";
-import { LegacyImageConfig, Renderer } from "./Renderer";
+import { Renderer } from "./Renderer";
 import { RendererContext, useRendererEvent } from "./RendererContext";
 import { RendererOverlay } from "./RendererOverlay";
 import { CameraState, DEFAULT_CAMERA_STATE } from "./camera";
@@ -97,9 +95,9 @@ export function ThreeDeeRender(props: {
   context: PanelExtensionContext;
   interfaceMode: InterfaceMode;
   /** Override default downloading behavior, used for Storybook */
-  onDownload?: (blob: Blob, fileName: string) => void;
+  onDownloadImage?: (blob: Blob, fileName: string) => void;
 }): JSX.Element {
-  const { context, interfaceMode, onDownload } = props;
+  const { context, interfaceMode, onDownloadImage } = props;
   const { initialState, saveState } = context;
 
   // Load and save the persisted panel configuration
@@ -118,16 +116,6 @@ export function ThreeDeeRender(props: {
       Partial<LayerSettingsTransform>
     >;
 
-    // Merge in config from the legacy Image panel
-    const legacyImageConfig = partialConfig as DeepPartial<LegacyImageConfig> | undefined;
-    const imageMode: ImageModeConfig = {
-      imageTopic: legacyImageConfig?.cameraTopic,
-      ...partialConfig?.imageMode,
-      annotations: partialConfig?.imageMode?.annotations as
-        | ImageModeConfig["annotations"]
-        | undefined,
-    };
-
     return {
       cameraState,
       followMode: partialConfig?.followMode ?? "follow-pose",
@@ -137,7 +125,7 @@ export function ThreeDeeRender(props: {
       topics: partialConfig?.topics ?? {},
       layers: partialConfig?.layers ?? {},
       publish,
-      imageMode,
+      imageMode: partialConfig?.imageMode ?? {},
     };
   });
   const configRef = useLatest(config);
@@ -163,7 +151,6 @@ export function ThreeDeeRender(props: {
   const [parameters, setParameters] = useState<
     Immutable<Map<string, ParameterValue>> | undefined
   >();
-  const [variables, setVariables] = useState<Immutable<Map<string, VariableValue>> | undefined>();
   const [currentFrameMessages, setCurrentFrameMessages] = useState<
     ReadonlyArray<MessageEvent> | undefined
   >();
@@ -346,9 +333,6 @@ export function ThreeDeeRender(props: {
         // Watch for any changes in the map of observed parameters
         setParameters(renderState.parameters);
 
-        // Watch for any changes in the map of global variables
-        setVariables(renderState.variables);
-
         // currentFrame has messages on subscribed topics since the last render call
         deepParseMessageEvents(renderState.currentFrame);
         setCurrentFrameMessages(renderState.currentFrame);
@@ -366,7 +350,6 @@ export function ThreeDeeRender(props: {
     context.watch("didSeek");
     context.watch("parameters");
     context.watch("sharedPanelState");
-    context.watch("variables");
     context.watch("topics");
     context.watch("appSettings");
     context.subscribeAppSettings([AppSetting.TIMEZONE]);
@@ -391,14 +374,7 @@ export function ThreeDeeRender(props: {
       if (shouldSubscribe == undefined) {
         if (config.topics[topic.name]?.visible === true) {
           shouldSubscribe = true;
-        } else if (
-          config.imageMode.annotations?.some(
-            (sub) =>
-              sub.topic === topic.name &&
-              sub.schemaName === (convertTo ?? topic.schemaName) &&
-              sub.settings.visible,
-          ) === true
-        ) {
+        } else if (config.imageMode.annotations?.[topic.name]?.visible === true) {
           shouldSubscribe = true;
         } else {
           shouldSubscribe = false;
@@ -457,13 +433,6 @@ export function ThreeDeeRender(props: {
       renderer.setParameters(parameters);
     }
   }, [parameters, renderer]);
-
-  // Keep the renderer variables up to date
-  useEffect(() => {
-    if (renderer && variables) {
-      renderer.setVariables(variables);
-    }
-  }, [variables, renderer]);
 
   // Keep the renderer currentTime up to date and handle seeking
   useEffect(() => {
@@ -769,7 +738,7 @@ export function ThreeDeeRender(props: {
               renderer?.publishClickTool.start();
             }}
             timezone={timezone}
-            onDownload={onDownload}
+            onDownloadImage={onDownloadImage}
           />
         </RendererContext.Provider>
       </div>

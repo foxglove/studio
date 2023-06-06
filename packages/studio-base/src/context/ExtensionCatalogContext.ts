@@ -5,8 +5,13 @@
 import { createContext } from "react";
 import { StoreApi, useStore } from "zustand";
 
-import { ExtensionPanelRegistration, RegisterMessageConverterArgs } from "@foxglove/studio";
-import useGuaranteedContext from "@foxglove/studio-base/hooks/useGuaranteedContext";
+import { useGuaranteedContext } from "@foxglove/hooks";
+import {
+  ExtensionPanelRegistration,
+  Immutable,
+  RegisterMessageConverterArgs,
+} from "@foxglove/studio";
+import { TopicAliasFunctions } from "@foxglove/studio-base/players/TopicAliasingPlayer/aliasing";
 import { ExtensionInfo, ExtensionNamespace } from "@foxglove/studio-base/types/Extensions";
 
 export type RegisteredPanel = {
@@ -15,7 +20,7 @@ export type RegisteredPanel = {
   registration: ExtensionPanelRegistration;
 };
 
-export type ExtensionCatalog = {
+export type ExtensionCatalog = Immutable<{
   downloadExtension: (url: string) => Promise<Uint8Array>;
   installExtension: (
     namespace: ExtensionNamespace,
@@ -26,8 +31,9 @@ export type ExtensionCatalog = {
 
   installedExtensions: undefined | ExtensionInfo[];
   installedPanels: undefined | Record<string, RegisteredPanel>;
-  installedMessageConverters: undefined | readonly RegisterMessageConverterArgs<unknown>[];
-};
+  installedMessageConverters: undefined | RegisterMessageConverterArgs<unknown>[];
+  installedTopicAliasFunctions: undefined | TopicAliasFunctions;
+}>;
 
 export const ExtensionCatalogContext = createContext<undefined | StoreApi<ExtensionCatalog>>(
   undefined,

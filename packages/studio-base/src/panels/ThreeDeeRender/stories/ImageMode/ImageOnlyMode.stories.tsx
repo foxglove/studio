@@ -4,14 +4,12 @@
 
 import { StoryObj } from "@storybook/react";
 import { screen, userEvent } from "@storybook/testing-library";
-import * as THREE from "three";
-import { STLExporter } from "three/examples/jsm/exporters/STLExporter";
-import { TeapotGeometry } from "three/examples/jsm/geometries/TeapotGeometry";
 import tinycolor from "tinycolor2";
 
 import { ImageAnnotations, LineType, PointsAnnotationType, SceneUpdate } from "@foxglove/schemas";
 import { MessageEvent } from "@foxglove/studio";
-import { makeImageAndCalibration } from "@foxglove/studio-base/panels/ThreeDeeRender/stories/ImageMode/imageCommon";
+import { ImageModeConfig } from "@foxglove/studio-base/panels/ThreeDeeRender/IRenderer";
+import { makeRawImageAndCalibration } from "@foxglove/studio-base/panels/ThreeDeeRender/stories/ImageMode/imageCommon";
 import { xyzrpyToPose } from "@foxglove/studio-base/panels/ThreeDeeRender/transforms";
 import { Topic } from "@foxglove/studio-base/players/types";
 import PanelSetup, { Fixture } from "@foxglove/studio-base/stories/PanelSetup";
@@ -26,19 +24,14 @@ export default {
   parameters: { colorScheme: "light" },
 };
 
-const ImageWith3D = ({
-  initialCalibrationTopic,
-  initialImageTopic,
-}: {
-  initialImageTopic: string | undefined;
-  initialCalibrationTopic: string | undefined;
-}): JSX.Element => {
+const ImageWith3D = (initialConfig: ImageModeConfig): JSX.Element => {
   const topics: Topic[] = [
     { name: "annotations", schemaName: "foxglove.ImageAnnotations" },
     { name: "camera/calibration", schemaName: "foxglove.CameraCalibration" },
     { name: "camera/img", schemaName: "foxglove.RawImage" },
     { name: "tf", schemaName: "geometry_msgs/TransformStamped" },
-    { name: "sceneUpdate", schemaName: "foxglove.SceneUpdate" },
+    { name: "sceneUpdate1", schemaName: "foxglove.SceneUpdate" },
+    { name: "sceneUpdate2", schemaName: "foxglove.SceneUpdate" },
   ];
 
   const tfCam: MessageEvent<TransformStamped> = {
@@ -224,7 +217,7 @@ const ImageWith3D = ({
   const width = 60;
   const height = 45;
 
-  const { calibrationMessage, cameraMessage } = makeImageAndCalibration({
+  const { calibrationMessage, cameraMessage } = makeRawImageAndCalibration({
     width,
     height,
     frameId: "cam",
@@ -232,11 +225,14 @@ const ImageWith3D = ({
     calibrationTopic: "camera/calibration",
   });
 
-  const sceneUpdateMessage = makeSceneUpdate({
-    topic: "sceneUpdate",
+  const sceneUpdate1Message = makeSceneUpdate({
+    topic: "sceneUpdate1",
     frameId: "scene",
   });
-
+  const sceneUpdate2Message = makeSceneUpdate({
+    topic: "sceneUpdate2",
+    frameId: "scene",
+  });
   const fixture: Fixture = {
     topics,
     frame: {
@@ -244,7 +240,8 @@ const ImageWith3D = ({
       calibration: [calibrationMessage],
       camera: [cameraMessage],
       tf: [tfCam, tfScene],
-      sceneUpdate: [sceneUpdateMessage],
+      sceneUpdate1: [sceneUpdate1Message],
+      sceneUpdate2: [sceneUpdate2Message],
     },
     capabilities: [],
     activeData: {
@@ -253,7 +250,7 @@ const ImageWith3D = ({
   };
   /**
    * Include settings checks:
-   *  - Image Only Mode On: calibration topic should have an error next to it and there should only be 1 transform (created because frame does not exist)
+   *  - Image Only Mode On: visible 3D topics should have an error next to it and there should only be 1 transform (created because frame does not exist)
    *  - Image Only Mode Off: calibration topic should not have an error next to it and there should be 3 transforms
    */
   return (
@@ -269,18 +266,14 @@ const ImageWith3D = ({
             },
           },
           imageMode: {
-            calibrationTopic: initialCalibrationTopic,
-            imageTopic: initialImageTopic,
-            annotations: [
-              {
-                topic: "annotations",
-                schemaName: "foxglove.ImageAnnotations",
-                settings: { visible: true },
-              },
-            ],
+            ...initialConfig,
+            annotations: { annotations: { visible: true } },
           },
           topics: {
-            sceneUpdate: {
+            sceneUpdate1: {
+              visible: false,
+            },
+            sceneUpdate2: {
               visible: true,
             },
           },
@@ -292,26 +285,33 @@ const ImageWith3D = ({
 
 export const ImageOnlyModeOff: StoryObj<React.ComponentProps<typeof ImageWith3D>> = {
   render: ImageWith3D,
-  args: { initialImageTopic: "camera/img", initialCalibrationTopic: "camera/calibration" },
+  args: { imageTopic: "camera/img", calibrationTopic: "camera/calibration" },
 };
 
 export const ImageOnlyModeOn: StoryObj<React.ComponentProps<typeof ImageWith3D>> = {
   render: ImageWith3D,
-  args: { initialImageTopic: "camera/img", initialCalibrationTopic: undefined },
+  args: { imageTopic: "camera/img", calibrationTopic: undefined },
+  play: async () => {
+    const icons = await screen.findAllByTestId("ErrorIcon");
+    if (icons.length !== 1) {
+      throw new Error("Expected 1 error icon");
+    }
+    userEvent.hover(icons[0]!);
+  },
 };
 
 export const ImageOnlyModeOffWithAutoSelectedTopics: StoryObj<
   React.ComponentProps<typeof ImageWith3D>
 > = {
   render: ImageWith3D,
-  args: { initialImageTopic: undefined, initialCalibrationTopic: undefined },
+  args: { imageTopic: undefined, calibrationTopic: undefined },
 };
 
 export const ImageOnlyModeOffWithAutoSelectedCalibration: StoryObj<
   React.ComponentProps<typeof ImageWith3D>
 > = {
   render: ImageWith3D,
-  args: { initialImageTopic: "abc", initialCalibrationTopic: undefined },
+  args: { imageTopic: "abc", calibrationTopic: undefined },
   play: async () => {
     userEvent.click(await screen.findByText("abc", { selector: ".MuiSelect-select" }));
     userEvent.click(await screen.findByText("camera/img"));
@@ -325,9 +325,6 @@ function makeSceneUpdate({
   topic: string;
   frameId: string;
 }): MessageEvent<SceneUpdate> {
-  const teapotMesh = new THREE.Mesh(new TeapotGeometry(1));
-  const teapotSTL = new STLExporter().parse(teapotMesh);
-
   /** Reorder points for testing `indices` */
   function rearrange<T>(arr: T[]): T[] {
     for (let i = 0; i + 1 < arr.length; i += 2) {
@@ -497,27 +494,7 @@ function makeSceneUpdate({
               billboard: false,
             },
           ],
-
-          models: [
-            {
-              pose: xyzrpyToPose([0, 3, 0], [0, 0, 0]),
-              scale: { x: 0.3, y: 0.2, z: 0.2 },
-              color: makeColor("#59e860", 0.8),
-              override_color: false,
-              url: "",
-              media_type: "model/stl",
-              data: new TextEncoder().encode(teapotSTL),
-            },
-            {
-              pose: xyzrpyToPose([1, 3, 0], [0, 0, 30]),
-              scale: { x: 0.3, y: 0.2, z: 0.2 },
-              color: makeColor("#59e860", 0.8),
-              override_color: true,
-              url: encodeURI(`data:model/stl;utf8,${teapotSTL}`),
-              media_type: "",
-              data: new Uint8Array(),
-            },
-          ],
+          models: [],
         },
       ],
     },

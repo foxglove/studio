@@ -4,16 +4,16 @@
 
 import { Draft, produce } from "immer";
 import { union } from "lodash";
-import { Dispatch, SetStateAction, useCallback, useMemo, useState } from "react";
+import { Dispatch, SetStateAction, useCallback, useMemo } from "react";
 
-import { AppSetting } from "@foxglove/studio-base/AppSetting";
+import { useGuaranteedContext } from "@foxglove/hooks";
 import { AppSettingsTab } from "@foxglove/studio-base/components/AppSettingsDialog/AppSettingsDialog";
 import { DataSourceDialogItem } from "@foxglove/studio-base/components/DataSourceDialog";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
-import { IDataSourceFactory } from "@foxglove/studio-base/context/PlayerSelectionContext";
-import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
-import useGuaranteedContext from "@foxglove/studio-base/hooks/useGuaranteedContext";
-import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
+import {
+  IDataSourceFactory,
+  usePlayerSelection,
+} from "@foxglove/studio-base/context/PlayerSelectionContext";
 
 import {
   WorkspaceContext,
@@ -24,12 +24,16 @@ import {
   RightSidebarItemKey,
   RightSidebarItemKeys,
 } from "./WorkspaceContext";
+import { useOpenFile } from "./useOpenFile";
 
 export type WorkspaceActions = {
   dialogActions: {
     dataSource: {
       close: () => void;
       open: (item: DataSourceDialogItem, dataSource?: IDataSourceFactory) => void;
+    };
+    openFile: {
+      open: () => Promise<void>;
     };
     preferences: {
       close: () => void;
@@ -84,11 +88,9 @@ export function useWorkspaceActions(): WorkspaceActions {
   const { signIn } = useCurrentUser();
   const supportsAccountSettings = signIn != undefined;
 
-  const [currentEnableNewTopNav = false] = useAppConfigurationValue<boolean>(
-    AppSetting.ENABLE_NEW_TOPNAV,
-  );
-  const [initialEnableNewTopNav] = useState(currentEnableNewTopNav);
-  const enableNewTopNav = isDesktopApp() ? initialEnableNewTopNav : currentEnableNewTopNav;
+  const { availableSources } = usePlayerSelection();
+
+  const openFile = useOpenFile(availableSources);
 
   const set = useCallback(
     (setter: (draft: Draft<WorkspaceContextStore>) => void) => {
@@ -122,6 +124,10 @@ export function useWorkspaceActions(): WorkspaceActions {
               draft.dialogs.dataSource.open = true;
             });
           },
+        },
+
+        openFile: {
+          open: openFile,
         },
 
         preferences: {
@@ -158,14 +164,10 @@ export function useWorkspaceActions(): WorkspaceActions {
         }),
 
       openPanelSettings: () =>
-        enableNewTopNav
-          ? set((draft) => {
-              draft.sidebars.left.item = "panel-settings";
-              draft.sidebars.left.open = true;
-            })
-          : set((draft) => {
-              draft.sidebars.legacy.item = "panel-settings";
-            }),
+        set((draft) => {
+          draft.sidebars.left.item = "panel-settings";
+          draft.sidebars.left.open = true;
+        }),
 
       openLayoutBrowser: () =>
         set((draft) => {
@@ -257,5 +259,5 @@ export function useWorkspaceActions(): WorkspaceActions {
         },
       },
     };
-  }, [enableNewTopNav, set, supportsAccountSettings]);
+  }, [openFile, set, supportsAccountSettings]);
 }

@@ -11,12 +11,12 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import ClearIcon from "@mui/icons-material/Clear";
+import CancelIcon from "@mui/icons-material/Cancel";
 import {
-  alpha,
-  Autocomplete as MuiAutocomplete,
   MenuItem,
+  Autocomplete as MuiAutocomplete,
   TextField,
+  alpha,
   useTheme,
 } from "@mui/material";
 import { Fzf, FzfResultItem } from "fzf";
@@ -30,6 +30,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useResizeDetector } from "react-resize-detector";
 import { makeStyles } from "tss-react/mui";
 
 import { ReactWindowListboxAdapter } from "@foxglove/studio-base/components/ReactWindowListboxAdapter";
@@ -76,9 +77,22 @@ const useStyles = makeStyles()((theme) => {
       ".MuiInputBase-root.MuiInputBase-sizeSmall": {
         backgroundColor: "transparent",
         paddingInline: 0,
+
         "&:focus-within": {
           backgroundColor: inputBackgroundColor,
         },
+        "&:hover, &:focus-within": {
+          paddingRight: theme.spacing(2.5),
+        },
+      },
+    },
+    clearIndicator: {
+      marginRight: theme.spacing(-0.25),
+      opacity: theme.palette.action.disabledOpacity,
+
+      ":hover": {
+        background: "transparent",
+        opacity: 1,
       },
     },
     inputError: {
@@ -269,6 +283,17 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
     [onSelectCallback, blur, focus, setSelectionRange],
   );
 
+  // Blur the input on resize to prevent misalignment of the input field and the
+  // autocomplete listbox. Debounce to prevent resize observer loop limit errors.
+  useResizeDetector<HTMLInputElement>({
+    handleHeight: false,
+    onResize: () => inputRef.current?.blur(),
+    refreshMode: "debounce",
+    refreshRate: 0,
+    skipOnMount: true,
+    targetRef: inputRef,
+  });
+
   // Don't filter out options here because we assume that the parent
   // component has already filtered them. This allows completing fragments.
   const filterOptions = useCallback((options: FzfResultItem<T>[]) => options, []);
@@ -276,10 +301,13 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
   return (
     <MuiAutocomplete
       className={classes.root}
-      clearIcon={<ClearIcon fontSize="small" />}
+      clearIcon={<CancelIcon fontSize="small" />}
       componentsProps={{
-        clearIndicator: { size: "small" },
         paper: { elevation: 8 },
+        clearIndicator: {
+          size: "small",
+          className: classes.clearIndicator,
+        },
       }}
       disableCloseOnSelect
       disabled={disabled}

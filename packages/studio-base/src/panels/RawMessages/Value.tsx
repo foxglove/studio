@@ -31,10 +31,8 @@ const StyledIconButton = withStyles(HoverableIconButton, (theme) => ({
   root: {
     "&.MuiIconButton-root": {
       fontSize: theme.typography.pxToRem(16),
+      opacity: 0.6,
       padding: 0,
-
-      "&:hover": { backgroundColor: "transparent" },
-      "&:not(:hover)": { opacity: 0.6 },
     },
   },
 }));
@@ -196,27 +194,42 @@ function Value(props: ValueProps): JSX.Element {
     };
   }, []);
 
+  // The Tooltip and StyledIconButton components seem to be expensive to render so we
+  // track our hover state and render them conditionally only when this component is
+  // hovered.
+  const [pointerOver, setPointerOver] = useState(false);
+
   return (
-    <Stack inline flexWrap="wrap" direction="row" alignItems="center" gap={0.25}>
+    <Stack
+      inline
+      flexWrap="wrap"
+      direction="row"
+      alignItems="center"
+      gap={0.25}
+      onPointerEnter={() => setPointerOver(true)}
+      onPointerLeave={() => setPointerOver(false)}
+    >
       <HighlightedValue itemLabel={itemLabel} />
       {arrLabel}
-      {availableActions.map((action) => (
-        <Tooltip key={action.key} arrow title={action.tooltip} placement="top">
-          <StyledIconButton
-            size="small"
-            activeColor={action.activeColor}
-            onClick={action.onClick}
-            color="inherit"
-            icon={action.icon}
-          />
-        </Tooltip>
-      ))}
-      <span className={cx(classes.placeholderActionContainer)}>
-        {placeholderActionsForSpacing.map((action) => (
+      {pointerOver &&
+        availableActions.map((action) => (
           <Tooltip key={action.key} arrow title={action.tooltip} placement="top">
-            <StyledIconButton size="small" color="inherit" icon={action.icon} />
+            <StyledIconButton
+              size="small"
+              activeColor={action.activeColor}
+              onClick={action.onClick}
+              color="inherit"
+              icon={action.icon}
+            />
           </Tooltip>
         ))}
+      <span className={cx(classes.placeholderActionContainer)}>
+        {pointerOver &&
+          placeholderActionsForSpacing.map((action) => (
+            <Tooltip key={action.key} arrow title={action.tooltip} placement="top">
+              <StyledIconButton size="small" color="inherit" icon={action.icon} />
+            </Tooltip>
+          ))}
       </span>
     </Stack>
   );
