@@ -12,7 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { useTheme } from "@mui/material";
-import { StoryObj, Decorator, Meta } from "@storybook/react";
+import { StoryObj, Meta } from "@storybook/react";
 import { fireEvent, within } from "@storybook/testing-library";
 
 import Panel from "@foxglove/studio-base/components/Panel";
