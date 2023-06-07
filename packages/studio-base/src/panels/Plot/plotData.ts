@@ -116,12 +116,6 @@ export function getBlockItemsByPath(
     }
 
     for (const [path, messagePathItems] of Object.entries(messagePathItemsForBlock)) {
-      for (const items of messagePathItems) {
-        for (const item of items) {
-          count += item.queriedData.length;
-        }
-      }
-
       const existingItems = ret[path] ?? [];
       // getMessagePathItemsForBlock returns an array of exactly one range of items.
       const [pathItems] = messagePathItems;
@@ -140,12 +134,14 @@ export function getBlockItemsByPath(
           existingItems.push(pathItems.slice());
         }
       }
+      count += pathItems?.length ?? 0;
       ret[path] = existingItems;
       lastBlockIndexForPath[path] = i;
     }
 
     i += 1;
   }
+
   return ret;
 }
 
