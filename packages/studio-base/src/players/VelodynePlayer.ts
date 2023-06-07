@@ -8,7 +8,7 @@ import { debouncePromise } from "@foxglove/den/async";
 import { Sockets, UdpRemoteInfo, UdpSocketRenderer } from "@foxglove/electron-socket/renderer";
 import Logger from "@foxglove/log";
 import { Time, fromMillis, add as addTimes, toDate, fromDate, fromMicros } from "@foxglove/rostime";
-import { Asset, AssetInfo, ParameterValue } from "@foxglove/studio";
+import { Asset, ParameterValue } from "@foxglove/studio";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import {
   AdvertiseOptions,
@@ -304,10 +304,6 @@ export default class VelodynePlayer implements Player {
 
   public async callService(): Promise<unknown> {
     throw new Error("Service calls are not supported for VelodynePlayer");
-  }
-
-  public async listAssets(): Promise<AssetInfo[]> {
-    throw new Error("Listing assets is not supported for VelodynePlayer");
   }
 
   public async fetchAsset(name: string): Promise<Asset> {

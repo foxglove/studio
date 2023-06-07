@@ -19,7 +19,7 @@ import { Writable } from "ts-essentials";
 import { createStore } from "zustand";
 
 import { Time, isLessThan } from "@foxglove/rostime";
-import { Asset, AssetInfo, ParameterValue } from "@foxglove/studio";
+import { Asset, ParameterValue } from "@foxglove/studio";
 import {
   AdvertiseOptions,
   MessageEvent,
@@ -57,7 +57,6 @@ export type MockMessagePipelineProps = {
   setPublishers?: (arg0: string, arg1: AdvertiseOptions[]) => void;
   setSubscriptions?: (arg0: string, arg1: SubscribePayload[]) => void;
   setParameter?: (key: string, value: ParameterValue) => void;
-  listAssets?: () => Promise<AssetInfo[]>;
   fetchAsset?: (name: string) => Promise<Asset>;
   noActiveData?: boolean;
   activeData?: Partial<PlayerStateActiveData>;
@@ -158,7 +157,6 @@ function getPublicState(
     setParameter: props.setParameter ?? noop,
     publish: props.publish ?? noop,
     callService: props.callService ?? (async () => {}),
-    listAssets: props.listAssets ?? (async () => []),
     fetchAsset:
       props.fetchAsset ??
       (async () => {

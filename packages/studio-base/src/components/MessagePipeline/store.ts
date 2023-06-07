@@ -117,13 +117,6 @@ export function createMessagePipelineStore({
         }
         return await player.callService(service, request);
       },
-      async listAssets() {
-        const player = get().player;
-        if (!player) {
-          throw new Error("listAssets called when player is not present");
-        }
-        return await player.listAssets();
-      },
       async fetchAsset(name) {
         const player = get().player;
         if (!player) {

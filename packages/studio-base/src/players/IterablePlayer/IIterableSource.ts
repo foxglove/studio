@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Time } from "@foxglove/rostime";
-import { Asset, AssetInfo, MessageEvent } from "@foxglove/studio";
+import { Asset, MessageEvent } from "@foxglove/studio";
 import { PlayerProblem, Topic, TopicStats } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 
@@ -174,14 +174,6 @@ export interface IIterableSource {
    * individual "next" calls per message.
    */
   getMessageCursor?: (args: MessageIteratorArgs & { abort?: AbortSignal }) => IMessageCursor;
-
-  /**
-   * An optional method to list available assets from a data source.
-   *
-   * Sources such as MCAP files that support embedded assets, or remote sources that support
-   * downloading assets can implement this method to provide a list of available assets.
-   */
-  listAssets?: () => Promise<AssetInfo[]>;
 
   /**
    * An optional method to support custom asset loading from data sources. The name is considered

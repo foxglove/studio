@@ -5,7 +5,7 @@
 import { filterMap } from "@foxglove/den/collection";
 import Log from "@foxglove/log";
 import { toRFC3339String } from "@foxglove/rostime";
-import { Asset, AssetInfo, MessageEvent } from "@foxglove/studio";
+import { Asset, MessageEvent } from "@foxglove/studio";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { BlockLoader } from "@foxglove/studio-base/players/IterablePlayer/BlockLoader";
 import { IIterableSource } from "@foxglove/studio-base/players/IterablePlayer/IIterableSource";
@@ -62,9 +62,6 @@ class BenchmarkPlayer implements Player {
     throw new Error("Method not implemented.");
   }
   public async callService(_service: string, _request: unknown): Promise<unknown> {
-    throw new Error("Method not implemented.");
-  }
-  public async listAssets(): Promise<AssetInfo[]> {
     throw new Error("Method not implemented.");
   }
   public async fetchAsset(_name: string): Promise<Asset> {

@@ -5,7 +5,7 @@
 import Log from "@foxglove/log";
 import * as rostime from "@foxglove/rostime";
 import { Time } from "@foxglove/rostime";
-import { Asset, AssetInfo, MessageEvent } from "@foxglove/studio";
+import { Asset, MessageEvent } from "@foxglove/studio";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import {
   AdvertiseOptions,
@@ -167,9 +167,6 @@ class PointcloudPlayer implements Player {
     throw new Error("Method not implemented.");
   }
   public async callService(_service: string, _request: unknown): Promise<unknown> {
-    throw new Error("Method not implemented.");
-  }
-  public async listAssets(): Promise<AssetInfo[]> {
     throw new Error("Method not implemented.");
   }
   public async fetchAsset(_name: string): Promise<Asset> {

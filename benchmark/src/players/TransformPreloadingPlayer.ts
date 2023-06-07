@@ -5,7 +5,7 @@
 import Log from "@foxglove/log";
 import { Time, compare } from "@foxglove/rostime";
 import { FrameTransform, Vector3 } from "@foxglove/schemas";
-import { Asset, AssetInfo, MessageEvent } from "@foxglove/studio";
+import { Asset, MessageEvent } from "@foxglove/studio";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { normalizeFrameTransform } from "@foxglove/studio-base/panels/ThreeDeeRender/normalizeMessages";
 import {
@@ -109,9 +109,6 @@ class TransformPreloadingPlayer implements Player {
     throw new Error("Method not implemented.");
   }
   public async callService(_service: string, _request: unknown): Promise<unknown> {
-    throw new Error("Method not implemented.");
-  }
-  public async listAssets(): Promise<AssetInfo[]> {
     throw new Error("Method not implemented.");
   }
   public async fetchAsset(_name: string): Promise<Asset> {

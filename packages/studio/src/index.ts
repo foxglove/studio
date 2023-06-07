@@ -395,12 +395,6 @@ export type PanelExtensionContext = {
   callService?(service: string, request: unknown): Promise<unknown>;
 
   /**
-   * List available assets that can be retrieved from the current data source.
-   * @returns A promise that resolves to an array of asset information.
-   */
-  listAssets?(): Promise<AssetInfo[]>;
-
-  /**
    * Fetch an asset from the current data source. This method throws an exception
    * if the asset is not available or fails to be retrieved.
    */

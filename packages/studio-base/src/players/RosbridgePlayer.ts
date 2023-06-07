@@ -22,7 +22,7 @@ import { parse as parseMessageDefinition } from "@foxglove/rosmsg";
 import { LazyMessageReader } from "@foxglove/rosmsg-serialization";
 import { MessageReader as ROS2MessageReader } from "@foxglove/rosmsg2-serialization";
 import { Time, fromMillis, toSec } from "@foxglove/rostime";
-import { Asset, AssetInfo, ParameterValue } from "@foxglove/studio";
+import { Asset, ParameterValue } from "@foxglove/studio";
 import PlayerProblemManager from "@foxglove/studio-base/players/PlayerProblemManager";
 import {
   AdvertiseOptions,
@@ -642,10 +642,6 @@ export default class RosbridgePlayer implements Player {
         (error: Error) => reject(error),
       );
     });
-  }
-
-  public async listAssets(): Promise<AssetInfo[]> {
-    throw new Error("Listing assets is not supported for RosbridgePlayer");
   }
 
   public async fetchAsset(name: string): Promise<Asset> {

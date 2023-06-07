@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Asset, AssetInfo, ParameterValue } from "@foxglove/studio";
+import { Asset, ParameterValue } from "@foxglove/studio";
 import {
   PlayerCapabilities,
   PlayerStateActiveData,
@@ -72,9 +72,6 @@ export default class FakePlayer implements Player {
   };
   public callService = async (): Promise<void> => {
     // no-op
-  };
-  public listAssets = async (): Promise<AssetInfo[]> => {
-    return [];
   };
   public fetchAsset = async (): Promise<Asset> => {
     throw new Error("not implemented");

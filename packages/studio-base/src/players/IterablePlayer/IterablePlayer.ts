@@ -19,7 +19,7 @@ import {
   toString,
   toRFC3339String,
 } from "@foxglove/rostime";
-import { Asset, AssetInfo, MessageEvent, ParameterValue } from "@foxglove/studio";
+import { Asset, MessageEvent, ParameterValue } from "@foxglove/studio";
 import NoopMetricsCollector from "@foxglove/studio-base/players/NoopMetricsCollector";
 import PlayerProblemManager from "@foxglove/studio-base/players/PlayerProblemManager";
 import {
@@ -183,7 +183,7 @@ export class IterablePlayer implements Player {
     this.#enablePreload = enablePreload ?? true;
     this.#sourceId = sourceId;
 
-    if (this.#iterableSource.listAssets && this.#iterableSource.fetchAsset) {
+    if (this.#iterableSource.fetchAsset) {
       this.#capabilities.push(PlayerCapabilities.assets);
     }
 
@@ -335,13 +335,6 @@ export class IterablePlayer implements Player {
 
   public async callService(): Promise<unknown> {
     throw new Error("Service calls are not supported by this data source");
-  }
-
-  public async listAssets(): Promise<AssetInfo[]> {
-    if (!this.#iterableSource.listAssets) {
-      throw new Error("listAssets is not supported by this data source");
-    }
-    return await this.#iterableSource.listAssets();
   }
 
   public async fetchAsset(name: string): Promise<Asset> {

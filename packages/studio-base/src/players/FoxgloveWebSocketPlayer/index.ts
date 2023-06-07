@@ -14,7 +14,7 @@ import CommonRosTypes from "@foxglove/rosmsg-msgs-common";
 import { MessageWriter as Ros1MessageWriter } from "@foxglove/rosmsg-serialization";
 import { MessageWriter as Ros2MessageWriter } from "@foxglove/rosmsg2-serialization";
 import { fromMillis, fromNanoSec, isGreaterThan, isLessThan, Time } from "@foxglove/rostime";
-import { Asset, AssetInfo, ParameterValue } from "@foxglove/studio";
+import { Asset, ParameterValue } from "@foxglove/studio";
 import PlayerProblemManager from "@foxglove/studio-base/players/PlayerProblemManager";
 import {
   AdvertiseOptions,
@@ -985,10 +985,6 @@ export default class FoxgloveWebSocketPlayer implements Player {
         }
       });
     });
-  }
-
-  public async listAssets(): Promise<AssetInfo[]> {
-    throw new Error("Listing assets is not supported for FoxgloveWebSocketPlayer");
   }
 
   public async fetchAsset(name: string): Promise<Asset> {

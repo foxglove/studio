@@ -11,7 +11,7 @@ import Logger from "@foxglove/log";
 import { MessageDefinition } from "@foxglove/message-definition";
 import { RosNode, TcpSocket } from "@foxglove/ros1";
 import { Time, fromMillis, isGreaterThan, toSec } from "@foxglove/rostime";
-import { Asset, AssetInfo, ParameterValue } from "@foxglove/studio";
+import { Asset, ParameterValue } from "@foxglove/studio";
 import OsContextSingleton from "@foxglove/studio-base/OsContextSingleton";
 import PlayerProblemManager from "@foxglove/studio-base/players/PlayerProblemManager";
 import {
@@ -577,10 +577,6 @@ export default class Ros1Player implements Player {
 
   public async callService(): Promise<unknown> {
     throw new Error("Service calls are not supported by this data source");
-  }
-
-  public async listAssets(): Promise<AssetInfo[]> {
-    throw new Error("Listing assets is not supported for Ros1Player");
   }
 
   public async fetchAsset(name: string): Promise<Asset> {
