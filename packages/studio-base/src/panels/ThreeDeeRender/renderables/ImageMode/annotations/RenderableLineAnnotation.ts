@@ -361,6 +361,8 @@ export class RenderableLineAnnotation extends Renderable<BaseUserData, /*TRender
         this.#linePrepassMaterial.vertexColors = true;
         this.#lineMaterial.vertexColors = true;
         this.#lineMaterial.color.setRGB(1, 1, 1); // any non-white color will tint the vertex colors
+        this.#geometry.getAttribute("instanceColorStart").needsUpdate = true;
+        this.#geometry.getAttribute("instanceColorEnd").needsUpdate = true;
       } else {
         const color = outlineColor ?? FALLBACK_COLOR;
         this.#linePrepassMaterial.vertexColors = false;
