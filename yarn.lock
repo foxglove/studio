@@ -2609,15 +2609,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@fluentui/react-icons@npm:2.0.202":
-  version: 2.0.202
-  resolution: "@fluentui/react-icons@npm:2.0.202"
+"@fluentui/react-icons@npm:2.0.203":
+  version: 2.0.203
+  resolution: "@fluentui/react-icons@npm:2.0.203"
   dependencies:
     "@griffel/react": ^1.0.0
     tslib: ^2.1.0
   peerDependencies:
     react: ">=16.8.0 <19.0.0"
-  checksum: 7fa37bec444d22b29a474db0a743becfbb3fdddbe161df5d8d2271adf426e25deb1887be054305ea4d25adb65cfa922c1a1ffb45024f770e1f72ca80db338a23
+  checksum: d777ab70472c4ebe11b5671cacf6ec4d44f396665d13ff99ba8f77a642ebbbe0e549b54f9900e6294c81ef404031f9e37aa20c5d52d763fdd04f98f6add62d91
   languageName: node
   linkType: hard
 
@@ -2756,7 +2756,7 @@ __metadata:
     "@mcap/core": 1.2.1
     "@protobufjs/base64": 1.1.2
     "@types/protobufjs": "workspace:*"
-    flatbuffers: 23.5.9
+    flatbuffers: 23.5.26
     flatbuffers_reflection: 0.0.6
     protobufjs: "patch:protobufjs@7.2.3#../../patches/protobufjs.patch"
     typescript: 5.1.3
@@ -2916,7 +2916,7 @@ __metadata:
     "@emotion/cache": 11.11.0
     "@emotion/react": 11.11.0
     "@emotion/styled": 11.11.0
-    "@fluentui/react-icons": 2.0.202
+    "@fluentui/react-icons": 2.0.203
     "@foxglove/avl": 1.0.0
     "@foxglove/chartjs-plugin-zoom": 2.0.4
     "@foxglove/comlink-transfer-handlers": "workspace:*"
@@ -2949,7 +2949,7 @@ __metadata:
     "@mcap/core": 1.2.1
     "@mui/icons-material": 5.11.16
     "@mui/material": 5.13.3
-    "@popperjs/core": 2.11.7
+    "@popperjs/core": 2.11.8
     "@protobufjs/base64": 1.1.2
     "@storybook/addon-actions": 7.0.18
     "@storybook/react": 7.0.18
@@ -3066,14 +3066,14 @@ __metadata:
     ts-essentials: 9.3.2
     ts-key-enum: 2.0.12
     ts-loader: 9.4.3
-    tss-react: 4.8.5
+    tss-react: 4.8.6
     typescript: 5.1.3
     url-search-params: 1.1.0
     use-debounce: 9.0.4
     use-immer: 0.9.0
     use-pan-and-zoom: 0.6.5
     uuid: 9.0.0
-    webpack: 5.85.0
+    webpack: 5.85.1
     zustand: 4.3.8
   languageName: unknown
   linkType: soft
@@ -3122,9 +3122,9 @@ __metadata:
     react-refresh-typescript: 2.0.9
     react-use: 17.4.0
     tinycolor2: 1.6.0
-    tss-react: 4.8.5
+    tss-react: 4.8.6
     utif: 3.1.0
-    webpack: 5.85.0
+    webpack: 5.85.1
     webpack-dev-server: 4.15.0
   languageName: unknown
   linkType: soft
@@ -3133,7 +3133,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@foxglove/studio-web@workspace:packages/studio-web"
   dependencies:
-    "@fluentui/react-icons": 2.0.202
+    "@fluentui/react-icons": 2.0.203
     "@foxglove/log": "workspace:*"
     "@foxglove/studio-base": "workspace:*"
     "@mui/material": 5.13.3
@@ -3147,8 +3147,8 @@ __metadata:
     react: 17.0.2
     react-dom: 17.0.2
     react-i18next: 12.3.1
-    tss-react: 4.8.5
-    webpack: 5.85.0
+    tss-react: 4.8.6
+    webpack: 5.85.1
     webpack-dev-server: 4.15.0
   languageName: unknown
   linkType: soft
@@ -3157,7 +3157,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@foxglove/studio@workspace:packages/studio"
   dependencies:
-    ts-essentials: 9.3.2
     typescript: 5.1.3
   languageName: unknown
   linkType: soft
@@ -4223,10 +4222,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@popperjs/core@npm:2.11.7, @popperjs/core@npm:^2.11.7":
-  version: 2.11.7
-  resolution: "@popperjs/core@npm:2.11.7"
-  checksum: 5b6553747899683452a1d28898c1b39173a4efd780e74360bfcda8eb42f1c5e819602769c81a10920fc68c881d07fb40429604517d499567eac079cfa6470f19
+"@popperjs/core@npm:2.11.8, @popperjs/core@npm:^2.11.7":
+  version: 2.11.8
+  resolution: "@popperjs/core@npm:2.11.8"
+  checksum: e5c69fdebf52a4012f6a1f14817ca8e9599cb1be73dd1387e1785e2ed5e5f0862ff817f420a87c7fc532add1f88a12e25aeb010ffcbdc98eace3d55ce2139cf0
   languageName: node
   linkType: hard
 
@@ -8220,7 +8219,7 @@ __metadata:
     mathjs: 11.8.0
     react: 17.0.2
     react-dom: 17.0.2
-    webpack: 5.85.0
+    webpack: 5.85.1
     webpack-dev-server: 4.15.0
   languageName: unknown
   linkType: soft
@@ -10098,7 +10097,7 @@ __metadata:
     "@foxglove/studio-desktop": "workspace:*"
     electron: 25.0.0
     playwright: 1.34.3
-    webpack: 5.85.0
+    webpack: 5.85.1
   languageName: unknown
   linkType: soft
 
@@ -11955,10 +11954,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"flatbuffers@npm:23.5.9":
-  version: 23.5.9
-  resolution: "flatbuffers@npm:23.5.9"
-  checksum: b7d657d617ad8935bc444012c42fad97bc4ffcce8d353aaeec090a751e74993632e5751fc98c86a410aeb898f902c46c6fafe2c233919c024631e987faa23d64
+"flatbuffers@npm:23.5.26":
+  version: 23.5.26
+  resolution: "flatbuffers@npm:23.5.26"
+  checksum: 2528e549118d02fca9775cc9c17cf445741bb58b0a9575eb07bba823394a79dccb3bf97c48561720aa61d3dc9f42759129df0e05eb94c12f809cfb6126eaedd1
   languageName: node
   linkType: hard
 
@@ -12155,9 +12154,9 @@ __metadata:
     storybook: 7.0.18
     ts-node: 10.9.1
     ts-prune: 0.10.3
-    tslib: 2.5.2
+    tslib: 2.5.3
     typescript: 5.1.3
-    webpack: 5.85.0
+    webpack: 5.85.1
     webpack-cli: 5.1.1
     webpack-dev-server: 4.15.0
     webpack-hot-middleware: 2.25.3
@@ -20796,10 +20795,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tslib@npm:2.5.2, tslib@npm:^2, tslib@npm:^2.0.0, tslib@npm:^2.0.1, tslib@npm:^2.0.3, tslib@npm:^2.1.0, tslib@npm:^2.4.0, tslib@npm:^2.5.0":
-  version: 2.5.2
-  resolution: "tslib@npm:2.5.2"
-  checksum: 4d3c1e238b94127ed0e88aa0380db3c2ddae581dc0f4bae5a982345e9f50ee5eda90835b8bfba99b02df10a5734470be197158c36f9129ac49fdc14a6a9da222
+"tslib@npm:2.5.3, tslib@npm:^2, tslib@npm:^2.0.0, tslib@npm:^2.0.1, tslib@npm:^2.0.3, tslib@npm:^2.1.0, tslib@npm:^2.4.0, tslib@npm:^2.5.0":
+  version: 2.5.3
+  resolution: "tslib@npm:2.5.3"
+  checksum: 88902b309afaf83259131c1e13da1dceb0ad1682a213143a1346a649143924d78cf3760c448b84d796938fd76127183894f8d85cbb3bf9c4fddbfcc140c0003c
   languageName: node
   linkType: hard
 
@@ -20810,9 +20809,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tss-react@npm:4.8.5":
-  version: 4.8.5
-  resolution: "tss-react@npm:4.8.5"
+"tss-react@npm:4.8.6":
+  version: 4.8.6
+  resolution: "tss-react@npm:4.8.6"
   dependencies:
     "@emotion/cache": "*"
     "@emotion/serialize": "*"
@@ -20824,7 +20823,7 @@ __metadata:
   peerDependenciesMeta:
     "@emotion/server":
       optional: true
-  checksum: c62fcfe04ecd788983b4fa3681bc8bdf39d4b039e49d646fc934637f70c7610d891809cf2b1564758339177b81ee0b0b2124fc51e37c812a512a5672ff153dac
+  checksum: 5b760dda2166bae0bb7946df25ff0ee2fca76128740cd3e6ad69c02c149b3ede0e0553e0e169c8cc70748056d39d18c70b9ccb80cc2c313b0ef57e2761b9c948
   languageName: node
   linkType: hard
 
@@ -21675,7 +21674,7 @@ __metadata:
     "@types/serve-handler": ^6
     playwright: 1.34.3
     serve-handler: 6.1.5
-    webpack: 5.85.0
+    webpack: 5.85.1
     webpack-dev-server: 4.15.0
   languageName: unknown
   linkType: soft
@@ -21847,9 +21846,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"webpack@npm:5, webpack@npm:5.85.0":
-  version: 5.85.0
-  resolution: "webpack@npm:5.85.0"
+"webpack@npm:5, webpack@npm:5.85.1":
+  version: 5.85.1
+  resolution: "webpack@npm:5.85.1"
   dependencies:
     "@types/eslint-scope": ^3.7.3
     "@types/estree": ^1.0.0
@@ -21880,7 +21879,7 @@ __metadata:
       optional: true
   bin:
     webpack: bin/webpack.js
-  checksum: b013be9fbc7f6810d1f229f570c70710ddbc7290f817411acffe4214b2b6c783a041ab1f2005d9e1109f4ab21c136f0f8d8c067a5fb64f20a82dcbc1ee0d3f42
+  checksum: 6fa659ef5e53211e6eeaed1987ac415ddd219584414b2d5ca0d528f0c7dd49be5363a9840e1def33efe1b3305ef3ad3c91f803bd87e41d2771b125340caa4df7
   languageName: node
   linkType: hard
 
