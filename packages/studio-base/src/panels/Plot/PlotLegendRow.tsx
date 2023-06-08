@@ -165,6 +165,7 @@ export function PlotLegendRow({
           style={{ color: getLineColor(path.color, index) }}
           icon={<Square24Regular />}
           checkedIcon={<Square24Filled />}
+          onClick={(event) => event.stopPropagation()}
           onChange={(event) => {
             event.stopPropagation();
 
