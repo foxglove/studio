@@ -8,6 +8,7 @@
 // - jfaust https://github.com/jfaust
 
 import * as THREE from "three";
+import { LineMaterial } from "three/examples/jsm/lines/LineMaterial";
 import { assert } from "ts-essentials";
 
 import type { Renderable } from "./Renderable";
@@ -17,6 +18,7 @@ type Camera = THREE.PerspectiveCamera | THREE.OrthographicCamera;
 // The width and height of the output viewport. This could be 1 to sample a
 // single pixel, but GL_POINTS with a >1 point size would be clipped
 const PIXEL_WIDTH = 31;
+const tempResolution = new THREE.Vector2(0, 0);
 
 const WHITE_COLOR = new THREE.Color(0xffffff);
 
@@ -287,11 +289,28 @@ export class Picker {
     }
 
     const sprite = material.type === "SpriteMaterial" ? 1 : 0;
+
+    const pickResolution = tempResolution.set(
+      this.#pickingTarget.width,
+      this.#pickingTarget.height,
+    );
     const sizeAttenuation =
       (material as Partial<THREE.PointsMaterial>).sizeAttenuation === true ? 1 : 0;
     const pickingMaterial = renderItem.object.userData.pickingMaterial as
       | THREE.ShaderMaterial
+      | LineMaterial
       | undefined;
+    // line thickness scales on resolution. for smaller picking targets we need to make sure
+    // it is scaled, so that it can be picked correctly
+    if (pickingMaterial?.type === "LineMaterial") {
+      (pickingMaterial as LineMaterial).resolution = pickResolution;
+      // else here because LineMaterial is instance of shader material
+    } else if (
+      pickingMaterial instanceof THREE.ShaderMaterial &&
+      pickingMaterial.uniforms.resolution
+    ) {
+      pickingMaterial.uniforms.resolution.value.copy(pickResolution);
+    }
     const renderMaterial = pickingMaterial ?? this.#renderMaterial(sprite, sizeAttenuation);
     if (sprite === 1) {
       renderMaterial.uniforms.rotation = { value: (material as THREE.SpriteMaterial).rotation };

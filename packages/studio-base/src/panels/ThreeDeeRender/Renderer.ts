@@ -1320,14 +1320,16 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
           material.resolution.copy(resolution);
         }
         if (material.uniforms?.resolution) {
-          material.uniforms.resolution.value = resolution;
+          material.uniforms.resolution.value.copy(resolution);
         }
         const pickingMaterial = mesh.userData.pickingMaterial;
-        if (pickingMaterial?.resolution != undefined) {
-          pickingMaterial.resolution.copy(resolution);
-        }
-        if (pickingMaterial?.uniforms?.resolution != undefined) {
-          pickingMaterial.uniforms.resolution.value = resolution;
+        if (pickingMaterial?.resolution != undefined && pickingMaterial.type === "LineMaterial") {
+          pickingMaterial.resolution = resolution;
+        } else if (
+          pickingMaterial instanceof THREE.ShaderMaterial &&
+          pickingMaterial.uniforms.resolution != undefined
+        ) {
+          pickingMaterial.uniforms.resolution.value.copy(resolution);
         }
       }
     });

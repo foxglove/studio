@@ -84,7 +84,7 @@ export function makeLinePrepassMaterial(marker: Marker, options: LineOptions): L
     transparent,
     depthWrite: !transparent,
     linewidth: lineWidth,
-    resolution: options.resolution,
+    resolution: options.resolution.clone(),
 
     stencilWrite: true,
     stencilRef: 1,
@@ -103,7 +103,7 @@ export function makeLineMaterial(marker: Marker, options: LineOptions): LineMate
     linewidth: lineWidth,
     transparent,
     depthWrite: !transparent,
-    resolution: options.resolution,
+    resolution: options.resolution.clone(),
 
     stencilWrite: true,
     stencilRef: 0,
@@ -131,7 +131,7 @@ export function makeLinePickingMaterial(
     uniforms: {
       objectId: { value: [NaN, NaN, NaN, NaN] },
       linewidth: { value: lineWidth },
-      resolution: { value: options.resolution },
+      resolution: { value: options.resolution.clone() },
       dashOffset: { value: 0 },
       dashScale: { value: 1 },
       dashSize: { value: 1 },

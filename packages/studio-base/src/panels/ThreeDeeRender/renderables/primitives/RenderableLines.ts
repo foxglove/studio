@@ -115,7 +115,7 @@ class LinePrimitiveRenderable extends THREE.Object3D {
       linewidth: primitive.thickness,
       transparent: this.#transparent,
       depthWrite: !this.#transparent,
-      resolution: canvasSize,
+      resolution: canvasSize.clone(),
     });
     this.#material.lineWidth = primitive.thickness; // Fix for THREE.js type annotations
 
@@ -223,6 +223,7 @@ class LinePrimitiveRenderable extends THREE.Object3D {
 
       if (singleColor == undefined) {
         assert(this.#geometry, "Line Group geometry must exist");
+        this.#material.color.setRGB(1, 1, 1);
 
         const necessaryColorBufferSize = numVertices * 4;
 
@@ -269,12 +270,12 @@ class LinePrimitiveRenderable extends THREE.Object3D {
     if (this.#primitive == undefined) {
       return;
     }
-    this.#material.linewidth = this.#primitive.thickness;
+    this.#material.lineWidth = this.#primitive.thickness;
     this.#material.transparent = this.#transparent;
     this.#material.worldUnits = !this.#primitive.scale_invariant;
     this.#material.needsUpdate = true;
 
-    this.#pickingMaterial.linewidth = this.#primitive.thickness;
+    this.#pickingMaterial.lineWidth = this.#primitive.thickness;
     this.#pickingMaterial.worldUnits = !this.#primitive.scale_invariant;
     this.#pickingMaterial.uniformsNeedUpdate = true;
     this.#pickingMaterial.needsUpdate = true;

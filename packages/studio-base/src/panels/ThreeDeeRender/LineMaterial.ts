@@ -515,6 +515,7 @@ export class LineMaterial extends ShaderMaterial {
   }
 
   public set lineWidth(value) {
+    this.linewidth = value;
     this.uniforms.linewidth!.value = value;
   }
 
