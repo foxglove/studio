@@ -273,8 +273,12 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
 
   // Blur the input on resize to prevent misalignment of the input field and the
   // autocomplete listbox. Debounce to prevent resize observer loop limit errors.
-  const blurInputCallback = useDebouncedCallback(() => {
-    inputRef.current?.blur();
+  const initialInputWidth = useRef<undefined | number>();
+  const blurInputCallback = useDebouncedCallback(({ width }) => {
+    if (initialInputWidth.current != undefined && initialInputWidth.current !== width) {
+      inputRef.current?.blur();
+    }
+    initialInputWidth.current = width;
   }, 0);
 
   useResizeObserver<HTMLInputElement>({ ref: inputRef, onResize: blurInputCallback });
