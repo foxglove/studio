@@ -13,10 +13,10 @@
 
 import ClearIcon from "@mui/icons-material/Clear";
 import {
-  alpha,
-  Autocomplete as MuiAutocomplete,
   MenuItem,
+  Autocomplete as MuiAutocomplete,
   TextField,
+  alpha,
   useTheme,
 } from "@mui/material";
 import { Fzf, FzfResultItem } from "fzf";
@@ -31,6 +31,8 @@ import {
   useState,
 } from "react";
 import { makeStyles } from "tss-react/mui";
+import { useDebouncedCallback } from "use-debounce";
+import useResizeObserver from "use-resize-observer";
 
 import { ReactWindowListboxAdapter } from "@foxglove/studio-base/components/ReactWindowListboxAdapter";
 
@@ -268,6 +270,14 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
     },
     [onSelectCallback, blur, focus, setSelectionRange],
   );
+
+  // Blur the input on resize to prevent misalignment of the input field and the
+  // autocomplete listbox. Debounce to prevent resize observer loop limit errors.
+  const blurInputCallback = useDebouncedCallback(() => {
+    inputRef.current?.blur();
+  }, 0);
+
+  useResizeObserver<HTMLInputElement>({ ref: inputRef, onResize: blurInputCallback });
 
   // Don't filter out options here because we assume that the parent
   // component has already filtered them. This allows completing fragments.

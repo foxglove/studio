@@ -3072,6 +3072,7 @@ __metadata:
     use-debounce: 9.0.4
     use-immer: 0.9.0
     use-pan-and-zoom: 0.6.5
+    use-resize-observer: 9.1.0
     uuid: 9.0.0
     webpack: 5.85.1
     zustand: 4.3.8
@@ -21396,7 +21397,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"use-resize-observer@npm:^9.1.0":
+"use-resize-observer@npm:9.1.0, use-resize-observer@npm:^9.1.0":
   version: 9.1.0
   resolution: "use-resize-observer@npm:9.1.0"
   dependencies:
