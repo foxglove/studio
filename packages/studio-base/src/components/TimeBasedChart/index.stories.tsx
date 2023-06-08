@@ -234,6 +234,12 @@ export const CallPauseOnInitialMount: StoryObj = {
       </div>
     );
   },
+
+  parameters: {
+    chromatic: {
+      delay: 500,
+    },
+  },
 };
 
 export const ResumeFrameOnUnmount: StoryObj = {
