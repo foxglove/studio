@@ -30,9 +30,8 @@ import {
   useRef,
   useState,
 } from "react";
+import { useResizeDetector } from "react-resize-detector";
 import { makeStyles } from "tss-react/mui";
-import { useDebouncedCallback } from "use-debounce";
-import useResizeObserver from "use-resize-observer";
 
 import { ReactWindowListboxAdapter } from "@foxglove/studio-base/components/ReactWindowListboxAdapter";
 
@@ -273,15 +272,14 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
 
   // Blur the input on resize to prevent misalignment of the input field and the
   // autocomplete listbox. Debounce to prevent resize observer loop limit errors.
-  const initialInputWidth = useRef<undefined | number>();
-  const blurInputCallback = useDebouncedCallback(({ width }) => {
-    if (initialInputWidth.current != undefined && initialInputWidth.current !== width) {
-      inputRef.current?.blur();
-    }
-    initialInputWidth.current = width;
-  }, 0);
-
-  useResizeObserver<HTMLInputElement>({ ref: inputRef, onResize: blurInputCallback });
+  useResizeDetector<HTMLInputElement>({
+    handleHeight: false,
+    onResize: () => inputRef.current?.blur(),
+    refreshMode: "debounce",
+    refreshRate: 0,
+    skipOnMount: true,
+    targetRef: inputRef,
+  });
 
   // Don't filter out options here because we assume that the parent
   // component has already filtered them. This allows completing fragments.
