@@ -304,7 +304,7 @@ export type PanelExtensionContext = {
   /**
    * Seek playback to the given time. Behaves as if the user had clicked the playback bar to seek.
    */
-  seekPlayback?: (time: number) => void;
+  seekPlayback?: (time: number | Time) => void;
 
   /**
    * Subscribe to an array of topic names.
