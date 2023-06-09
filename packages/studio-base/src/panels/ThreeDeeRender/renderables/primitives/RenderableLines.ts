@@ -11,7 +11,7 @@ import { assert } from "ts-essentials";
 
 import { toNanoSec } from "@foxglove/rostime";
 import { LinePrimitive, LineType, SceneEntity } from "@foxglove/schemas";
-import { LineMaterial } from "@foxglove/studio-base/panels/ThreeDeeRender/LineMaterial";
+import { LineMaterialWithAlphaVertex } from "@foxglove/studio-base/panels/ThreeDeeRender/LineMaterialWithAlphaVertex";
 
 import { RenderablePrimitive } from "./RenderablePrimitive";
 import type { IRenderer } from "../../IRenderer";
@@ -93,7 +93,7 @@ class LinePrimitiveRenderable extends THREE.Object3D {
   #positionBuffer: Float32Array | undefined;
   #colorBuffer: Float32Array | undefined;
 
-  #material: LineMaterial;
+  #material: LineMaterialWithAlphaVertex;
   #pickingMaterial: PickingMaterial;
   #transparent: boolean = true;
   #line: LineSegments2 | Line2 | undefined;
@@ -110,18 +110,18 @@ class LinePrimitiveRenderable extends THREE.Object3D {
   public constructor(primitive: LinePrimitive, canvasSize: THREE.Vector2) {
     super();
 
-    this.#material = new LineMaterial({
+    this.#material = new LineMaterialWithAlphaVertex({
       worldUnits: !primitive.scale_invariant,
       linewidth: primitive.thickness,
       transparent: this.#transparent,
       depthWrite: !this.#transparent,
       resolution: canvasSize.clone(),
     });
-    this.#material.lineWidth = primitive.thickness; // Fix for THREE.js type annotations
+    this.#material.linewidth = primitive.thickness; // Fix for THREE.js type annotations
 
     this.#pickingMaterial = new PickingMaterial();
     this.#pickingMaterial.resolution.set(canvasSize.x, canvasSize.y);
-    this.#pickingMaterial.lineWidth = primitive.thickness;
+    this.#pickingMaterial.linewidth = primitive.thickness;
     this.#pickingMaterial.worldUnits = !primitive.scale_invariant;
     this.#pickingMaterial.needsUpdate = true;
   }
@@ -370,7 +370,7 @@ function serializeColorsWithIndices(colorsOut: Float32Array, primitive: LinePrim
   }
 }
 
-class PickingMaterial extends LineMaterial {
+class PickingMaterial extends LineMaterialWithAlphaVertex {
   public constructor() {
     super({
       worldUnits: false,

@@ -8,7 +8,6 @@
 // - jfaust https://github.com/jfaust
 
 import * as THREE from "three";
-import { LineMaterial } from "three/examples/jsm/lines/LineMaterial";
 import { assert } from "ts-essentials";
 
 import type { Renderable } from "./Renderable";
@@ -298,17 +297,9 @@ export class Picker {
       (material as Partial<THREE.PointsMaterial>).sizeAttenuation === true ? 1 : 0;
     const pickingMaterial = renderItem.object.userData.pickingMaterial as
       | THREE.ShaderMaterial
-      | LineMaterial
       | undefined;
-    // line thickness scales on resolution. for smaller picking targets we need to make sure
-    // it is scaled, so that it can be picked correctly
-    if (pickingMaterial?.type === "LineMaterial") {
-      (pickingMaterial as LineMaterial).resolution = pickResolution;
-      // else here because LineMaterial is instance of shader material
-    } else if (
-      pickingMaterial instanceof THREE.ShaderMaterial &&
-      pickingMaterial.uniforms.resolution
-    ) {
+    // scale picking material to picking target size
+    if (pickingMaterial?.uniforms.resolution != undefined) {
       pickingMaterial.uniforms.resolution.value.copy(pickResolution);
     }
     const renderMaterial = pickingMaterial ?? this.#renderMaterial(sprite, sizeAttenuation);
@@ -317,6 +308,7 @@ export class Picker {
       renderMaterial.uniforms.center = { value: (object as THREE.Sprite).center };
     }
     setObjectId(renderMaterial, objId);
+    renderMaterial.uniformsNeedUpdate = true;
     this.#gl.renderBufferDirect(
       this.#camera,
       NullScene,
@@ -431,7 +423,6 @@ function setObjectId(material: THREE.ShaderMaterial, objectId: number): void {
     ((objectId >> 8) & 255) / 255,
     (objectId & 255) / 255,
   ];
-  material.uniformsNeedUpdate = true;
 }
 
 // Used for debug colors, this remaps objectIds to pseudo-random 32-bit integers

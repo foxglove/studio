@@ -471,7 +471,7 @@ export interface LineMaterialParameters extends MaterialParameters {
   worldUnits?: boolean | undefined;
 }
 
-export class LineMaterial extends ShaderMaterial {
+export class LineMaterialWithAlphaVertex extends ShaderMaterial {
   public readonly isLineMaterial = true;
 
   public constructor(parameters: LineMaterialParameters) {

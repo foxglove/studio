@@ -38,7 +38,6 @@ import {
   RendererSubscription,
 } from "./IRenderer";
 import { Input } from "./Input";
-import { LineMaterial } from "./LineMaterial";
 import { DEFAULT_MESH_UP_AXIS, ModelCache } from "./ModelCache";
 import { PickedRenderable, Picker } from "./Picker";
 import type { Renderable } from "./Renderable";
@@ -1313,23 +1312,12 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     this.#scene.traverse((object) => {
       if ((object as Partial<THREE.Mesh>).material) {
         const mesh = object as THREE.Mesh;
-        const material = mesh.material as Partial<LineMaterial>;
+        const material = mesh.material as Partial<THREE.ShaderMaterial>;
 
         // Update render resolution uniforms
-        if (material.resolution) {
-          material.resolution.copy(resolution);
-        }
         if (material.uniforms?.resolution) {
           material.uniforms.resolution.value.copy(resolution);
-        }
-        const pickingMaterial = mesh.userData.pickingMaterial;
-        if (pickingMaterial?.resolution != undefined && pickingMaterial.type === "LineMaterial") {
-          pickingMaterial.resolution = resolution;
-        } else if (
-          pickingMaterial instanceof THREE.ShaderMaterial &&
-          pickingMaterial.uniforms.resolution != undefined
-        ) {
-          pickingMaterial.uniforms.resolution.value.copy(resolution);
+          material.uniformsNeedUpdate = true;
         }
       }
     });

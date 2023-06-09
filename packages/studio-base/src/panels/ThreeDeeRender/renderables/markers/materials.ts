@@ -4,7 +4,7 @@
 
 import * as THREE from "three";
 
-import { LineMaterial } from "../../LineMaterial";
+import { LineMaterialWithAlphaVertex } from "../../LineMaterialWithAlphaVertex";
 import { ColorRGBA, Marker, MarkerType } from "../../ros";
 
 export type LineOptions = {
@@ -75,10 +75,13 @@ export function makeStandardInstancedMaterial(marker: Marker): THREE.MeshStandar
   });
 }
 
-export function makeLinePrepassMaterial(marker: Marker, options: LineOptions): LineMaterial {
+export function makeLinePrepassMaterial(
+  marker: Marker,
+  options: LineOptions,
+): LineMaterialWithAlphaVertex {
   const lineWidth = marker.scale.x;
   const transparent = markerHasTransparency(marker);
-  const material = new LineMaterial({
+  const material = new LineMaterialWithAlphaVertex({
     worldUnits: options.worldUnits ?? true,
     colorWrite: false,
     transparent,
@@ -90,14 +93,17 @@ export function makeLinePrepassMaterial(marker: Marker, options: LineOptions): L
     stencilRef: 1,
     stencilZPass: THREE.ReplaceStencilOp,
   });
-  material.lineWidth = lineWidth; // Fix for THREE.js type annotations
+  material.linewidth = lineWidth; // Fix for THREE.js type annotations
   return material;
 }
 
-export function makeLineMaterial(marker: Marker, options: LineOptions): LineMaterial {
+export function makeLineMaterial(
+  marker: Marker,
+  options: LineOptions,
+): LineMaterialWithAlphaVertex {
   const lineWidth = marker.scale.x;
   const transparent = markerHasTransparency(marker);
-  const material = new LineMaterial({
+  const material = new LineMaterialWithAlphaVertex({
     worldUnits: options.worldUnits ?? true,
     vertexColors: true,
     linewidth: lineWidth,
