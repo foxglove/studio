@@ -102,6 +102,8 @@ export class ImageMode
 
   #imageRenderable: ImageRenderable | undefined;
   #removeImageTimeout: ReturnType<typeof setTimeout> | undefined;
+  #receivedImageSequenceNumber = 0;
+  #displayedImageSequenceNumber = 0;
 
   readonly #messageHandler: MessageHandler;
 
@@ -608,6 +610,7 @@ export class ImageMode
       return;
     }
 
+    const seq = ++this.#receivedImageSequenceNumber;
     decodeCompressedImageToBitmap(image)
       .then((maybeBitmap) => {
         const prevRenderable = renderable;
@@ -616,6 +619,11 @@ export class ImageMode
         if (currentRenderable !== prevRenderable) {
           return;
         }
+        // prevent displaying an image older than the one currently displayed
+        if (this.#displayedImageSequenceNumber > seq) {
+          return;
+        }
+        this.#displayedImageSequenceNumber = seq;
         this.renderer.settings.errors.remove(IMAGE_TOPIC_PATH, CREATE_BITMAP_ERR_KEY);
         renderable.setBitmap(maybeBitmap);
         if (this.#fallbackCameraModelActive()) {
