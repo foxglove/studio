@@ -45,7 +45,7 @@ import {
 } from "../../ros";
 import { topicIsConvertibleToSchema } from "../../topicIsConvertibleToSchema";
 import { ICameraHandler } from "../ICameraHandler";
-import { BitmapCache } from "../Images/BitmapCache";
+import { decodeCompressedImageToBitmap } from "../Images/decodeImage";
 import { getTopicMatchPrefix, sortPrefixMatchesToFront } from "../Images/topicPrefixMatching";
 
 const IMAGE_TOPIC_PATH = ["imageMode", "imageTopic"];
@@ -111,9 +111,6 @@ export class ImageMode
 
   // eslint-disable-next-line @foxglove/no-boolean-parameters
   #setHasCalibrationTopic: (hasCalibrationTopic: boolean) => void;
-
-  /** Cache of decoded bitmaps to avoid flickering when toggling topics */
-  #bitmapCache = new BitmapCache();
 
   /**
    * @param canvasSize Canvas size in CSS pixels
@@ -595,11 +592,8 @@ export class ImageMode
       return;
     }
 
-    this.#bitmapCache.getBitmap(
-      messageEvent,
-      image,
-      undefined,
-      (bitmap) => {
+    decodeCompressedImageToBitmap(image)
+      .then((maybeBitmap) => {
         const prevRenderable = renderable;
         const currentRenderable = this.#imageRenderable;
         // prevent setting and updating disposed renderables
@@ -607,15 +601,15 @@ export class ImageMode
           return;
         }
         this.renderer.settings.errors.remove(IMAGE_TOPIC_PATH, CREATE_BITMAP_ERR_KEY);
-        renderable.setBitmap(bitmap);
+        renderable.setBitmap(maybeBitmap);
         if (this.#fallbackCameraModelActive()) {
-          this.#updateFallbackCameraModel(bitmap, getFrameIdFromImage(image));
+          this.#updateFallbackCameraModel(maybeBitmap, getFrameIdFromImage(image));
         }
 
         renderable.update();
         this.renderer.queueAnimationFrame();
-      },
-      (err) => {
+      })
+      .catch((err) => {
         const prevRenderable = renderable;
         const currentRenderable = this.#imageRenderable;
         if (currentRenderable !== prevRenderable) {
@@ -626,8 +620,7 @@ export class ImageMode
           CREATE_BITMAP_ERR_KEY,
           `Error creating bitmap: ${err.message}`,
         );
-      },
-    );
+      });
   };
 
   #updateFallbackCameraModel = (
