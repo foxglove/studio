@@ -93,7 +93,7 @@ export function makeLinePrepassMaterial(
     stencilRef: 1,
     stencilZPass: THREE.ReplaceStencilOp,
   });
-  material.linewidth = lineWidth; // Fix for THREE.js type annotations
+  material.lineWidth = lineWidth;
   return material;
 }
 
@@ -117,7 +117,7 @@ export function makeLineMaterial(
     stencilFail: THREE.ReplaceStencilOp,
     stencilZPass: THREE.ReplaceStencilOp,
   });
-  material.lineWidth = lineWidth; // Fix for THREE.js type annotations
+  material.lineWidth = lineWidth;
   return material;
 }
 
