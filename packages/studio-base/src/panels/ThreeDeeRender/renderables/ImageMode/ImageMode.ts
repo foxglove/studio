@@ -61,6 +61,8 @@ const CAMERA_MODEL = "CameraModel";
 
 const DEFAULT_FOCAL_LENGTH = 500;
 
+const REMOVE_IMAGE_TIMEOUT_MS = 50;
+
 type ImageModeEvent = { type: "hasModifiedViewChanged" };
 
 const ALL_SUPPORTED_IMAGE_SCHEMAS = new Set([
@@ -99,6 +101,7 @@ export class ImageMode
   readonly #annotations: ImageAnnotations;
 
   #imageRenderable: ImageRenderable | undefined;
+  #removeImageTimeout: ReturnType<typeof setTimeout> | undefined;
 
   readonly #messageHandler: MessageHandler;
 
@@ -265,13 +268,21 @@ export class ImageMode
   }
 
   public override removeAllRenderables(): void {
+    // To avoid flickering while seeking or changing subscriptions, we avoid clearing the
+    // ImageRenderable for a short timeout. When a new image message arrives, we cancel the timeout,
+    // so the old image will continue displaying until the new one has been decoded.
+    if (this.#removeImageTimeout == undefined) {
+      this.#removeImageTimeout = setTimeout(() => {
+        this.#removeImageTimeout = undefined;
+        this.#imageRenderable?.dispose();
+        this.#imageRenderable?.removeFromParent();
+        this.#imageRenderable = undefined;
+        this.#clearCameraModel();
+      }, REMOVE_IMAGE_TIMEOUT_MS);
+    }
     this.#annotations.removeAllRenderables();
-    this.#imageRenderable?.dispose();
-    this.#imageRenderable?.removeFromParent();
-    this.#imageRenderable = undefined;
     this.#messageHandler.clear();
     this.#latestImage = undefined;
-    this.#clearCameraModel();
     super.removeAllRenderables();
   }
 
@@ -570,6 +581,11 @@ export class ImageMode
     const receiveTime = toNanoSec(messageEvent.receiveTime);
     const frameId = "header" in image ? image.header.frame_id : image.frame_id;
 
+    if (this.#removeImageTimeout != undefined) {
+      clearTimeout(this.#removeImageTimeout);
+      this.#removeImageTimeout = undefined;
+    }
+
     const renderable = this.#getImageRenderable(topic, receiveTime, image, frameId);
 
     this.#latestImage = { topic: messageEvent.topic, image };
@@ -592,8 +608,6 @@ export class ImageMode
       return;
     }
 
-    console.log("ImageMode pause", messageEvent.receiveTime);
-    const resumeRendering = this.renderer.pauseRendering();
     decodeCompressedImageToBitmap(image)
       .then((maybeBitmap) => {
         const prevRenderable = renderable;
@@ -622,10 +636,6 @@ export class ImageMode
           CREATE_BITMAP_ERR_KEY,
           `Error creating bitmap: ${err.message}`,
         );
-      })
-      .finally(() => {
-        console.log("ImageMode resume               ", messageEvent.receiveTime);
-        resumeRendering();
       });
   };
 

@@ -122,8 +122,6 @@ const FOLLOW_FRAME_NOT_FOUND = "FOLLOW_FRAME_NOT_FOUND";
 // "Custom Layers"
 const RENDERER_ID = "foxglove.Renderer";
 
-const PAUSE_RENDER_TIMEOUT_MS = 100;
-
 const tempColor = new THREE.Color();
 const tempVec2 = new THREE.Vector2();
 
@@ -1013,32 +1011,6 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
 
   // Callback handlers
 
-  #pauseRenderCount = 0;
-  #renderedWhilePaused = false;
-  public pauseRendering(): () => void {
-    this.#pauseRenderCount++;
-    let resumed = false;
-
-    let timeoutID: ReturnType<typeof setTimeout> | undefined;
-    const resume = () => {
-      if (resumed) {
-        return;
-      }
-      resumed = true;
-      if (timeoutID != undefined) {
-        clearTimeout(timeoutID);
-      }
-      this.#pauseRenderCount--;
-      if (this.#pauseRenderCount === 0 && this.#renderedWhilePaused) {
-        this.animationFrame();
-      }
-    };
-
-    timeoutID = setTimeout(resume, PAUSE_RENDER_TIMEOUT_MS);
-
-    return resume;
-  }
-
   public animationFrame = (): void => {
     this.#animationFrame = undefined;
     this.#frameHandler(this.currentTime);
@@ -1056,12 +1028,6 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
   }
 
   #frameHandler = (currentTime: bigint): void => {
-    if (this.#pauseRenderCount > 0) {
-      this.#renderedWhilePaused = true;
-      return;
-    }
-    this.#renderedWhilePaused = false;
-
     this.currentTime = currentTime;
     this.#updateFrameErrors();
     this.#updateFixedFrameId();
