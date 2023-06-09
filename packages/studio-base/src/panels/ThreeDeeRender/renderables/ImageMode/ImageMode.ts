@@ -592,6 +592,8 @@ export class ImageMode
       return;
     }
 
+    console.log("ImageMode pause", messageEvent.receiveTime);
+    const resumeRendering = this.renderer.pauseRendering();
     decodeCompressedImageToBitmap(image)
       .then((maybeBitmap) => {
         const prevRenderable = renderable;
@@ -620,6 +622,10 @@ export class ImageMode
           CREATE_BITMAP_ERR_KEY,
           `Error creating bitmap: ${err.message}`,
         );
+      })
+      .finally(() => {
+        console.log("ImageMode resume               ", messageEvent.receiveTime);
+        resumeRendering();
       });
   };
 

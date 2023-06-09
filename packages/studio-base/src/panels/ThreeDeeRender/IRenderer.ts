@@ -352,4 +352,12 @@ export interface IRenderer extends EventEmitter<RendererEvents> {
   // Callback handlers
   animationFrame: () => void;
   queueAnimationFrame: () => void;
+
+  /**
+   * Temporarily suspend further renders to the canvas. Used by scene extensions to avoid flickering
+   * while assets (e.g. images) load asynchronously.
+   * @returns A function to resume rendering. If the function is not called after a certain timeout,
+   * the renderer may choose to proceed rendering anyway.
+   */
+  pauseRendering(): () => void;
 }
