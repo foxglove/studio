@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Alert, Link } from "@mui/material";
-import { StrictMode, useCallback, useContext, useMemo, useState } from "react";
+import { StrictMode, useCallback, useContext, useMemo } from "react";
 import ReactDOM from "react-dom";
 import { useLatest } from "react-use";
 
@@ -63,7 +63,7 @@ function ImagePanelAdapter(props: Props) {
     [crash, forwardedAnalytics],
   );
 
-  const closedBanner = props.config.closedDeprecationBanner !== true;
+  const closedBanner = props.config.closedDeprecationBanner === true;
   const onCloseBanner = useCallback(() => {
     saveConfig({ closedDeprecationBanner: true });
   }, [saveConfig]);
@@ -76,7 +76,7 @@ function ImagePanelAdapter(props: Props) {
       The Image (Legacy) panel is now deprecated.{" "}
       <Link
         color="inherit"
-        onClick={() => {
+        onClick={(event) => {
           const { sortedTopics } = getMessagePipelineContext();
           const prefix = getTopicMatchPrefix(latestConfig.current.cameraTopic);
           const calibrationSchemas = new Set([
@@ -93,6 +93,7 @@ function ImagePanelAdapter(props: Props) {
                     topic.name.startsWith(prefix),
                 )?.name;
 
+          event.stopPropagation(); // prevent click from re-selecting old panel after it's replaced
           panelContext?.replacePanel("Image", {
             imageMode: {
               imageTopic: latestConfig.current.cameraTopic,
@@ -101,6 +102,8 @@ function ImagePanelAdapter(props: Props) {
               rotation: latestConfig.current.rotation,
               flipHorizontal: latestConfig.current.flipHorizontal,
               flipVertical: latestConfig.current.flipVertical,
+              minValue: latestConfig.current.minValue,
+              maxValue: latestConfig.current.maxValue,
               annotations: Object.fromEntries(
                 filterMap(latestConfig.current.enabledMarkerTopics, (topicName) => {
                   const topic = sortedTopics.find((t) => t.name === topicName);
@@ -112,7 +115,6 @@ function ImagePanelAdapter(props: Props) {
               ),
             },
           });
-          onCloseBanner(true);
         }}
       >
         Upgrade to the new Image panel
