@@ -2,9 +2,9 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import type { DeepReadonly as Immutable } from "ts-essentials";
+import type { Immutable } from "./immutable";
 
-export type { DeepReadonly as Immutable } from "ts-essentials";
+export type { Immutable } from "./immutable";
 
 // Valid types for parameter data (such as rosparams)
 export type ParameterValue =
@@ -302,9 +302,12 @@ export type PanelExtensionContext = {
   setPreviewTime: (time: number | undefined) => void;
 
   /**
-   * Seek playback to the given time. Behaves as if the user had clicked the playback bar to seek.
+   * Seek playback to the given time. Behaves as if the user had clicked the playback bar
+   * to seek.
+   *
+   * Clients can pass a number or alternatively a Time object for greater precision.
    */
-  seekPlayback?: (time: number) => void;
+  seekPlayback?: (time: number | Time) => void;
 
   /**
    * Subscribe to an array of topic names.

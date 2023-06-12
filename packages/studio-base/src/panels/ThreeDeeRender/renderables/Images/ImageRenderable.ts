@@ -14,7 +14,7 @@ import { projectPixel } from "@foxglove/studio-base/panels/ThreeDeeRender/render
 import { RosValue } from "@foxglove/studio-base/players/types";
 
 import { AnyImage } from "./ImageTypes";
-import { decodeRawImage } from "./decodeImage";
+import { RawImageOptions, decodeRawImage } from "./decodeImage";
 import { CameraInfo } from "../../ros";
 
 export interface ImageRenderableSettings {
@@ -24,9 +24,14 @@ export interface ImageRenderableSettings {
   distance: number;
   planarProjectionFactor: number;
   color: string;
+  minValue?: number;
+  maxValue?: number;
+  /** Opacity of foreground image, not used when `renderBehindScene` set to true */
+  foregroundOpacity: number;
 }
 
 export const CREATE_BITMAP_ERR_KEY = "CreateBitmap";
+const IMAGE_TOPIC_PATH = ["imageMode", "imageTopic"];
 
 const DEFAULT_DISTANCE = 1;
 const DEFAULT_PLANAR_PROJECTION_FACTOR = 0;
@@ -37,6 +42,7 @@ export const IMAGE_RENDERABLE_DEFAULT_SETTINGS: ImageRenderableSettings = {
   distance: DEFAULT_DISTANCE,
   planarProjectionFactor: DEFAULT_PLANAR_PROJECTION_FACTOR,
   color: "#ffffff",
+  foregroundOpacity: 0.0,
 };
 export type ImageUserData = BaseUserData & {
   topic: string;
@@ -44,9 +50,6 @@ export type ImageUserData = BaseUserData & {
   cameraInfo: CameraInfo | undefined;
   cameraModel: PinholeCameraModel | undefined;
   image: AnyImage | undefined;
-  rotation: 0 | 90 | 180 | 270;
-  flipHorizontal: boolean;
-  flipVertical: boolean;
   texture: THREE.Texture | undefined;
   material: THREE.MeshBasicMaterial | undefined;
   geometry: THREE.PlaneGeometry | undefined;
@@ -64,11 +67,14 @@ export class ImageRenderable extends Renderable<ImageUserData> {
   // set when material or texture changes
   #materialNeedsUpdate = true;
 
-  #renderBehindScene: boolean = false;
+  #renderFrontAndBehind: boolean = false;
 
   #bitmap?: ImageBitmap;
 
   #isUpdating = false;
+
+  #foregroundMaterial: THREE.MeshBasicMaterial | undefined;
+  #foregroundMesh: THREE.Mesh | undefined;
 
   public constructor(topicName: string, renderer: IRenderer, userData: ImageUserData) {
     super(topicName, renderer, userData);
@@ -78,6 +84,7 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     this.userData.texture?.dispose();
     this.userData.material?.dispose();
     this.userData.geometry?.dispose();
+    this.#foregroundMaterial?.dispose();
     super.dispose();
   }
 
@@ -101,8 +108,8 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     return { image: this.userData.image, camera_info: this.userData.cameraInfo };
   }
 
-  public setRenderBehindScene(): void {
-    this.#renderBehindScene = true;
+  public setRenderFrontAndBehind(): void {
+    this.#renderFrontAndBehind = true;
     this.#materialNeedsUpdate = true;
     this.#meshNeedsUpdate = true;
   }
@@ -133,29 +140,23 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     if (newSettings.color !== prevSettings.color) {
       this.#materialNeedsUpdate = true;
     }
+
+    if (
+      prevSettings.minValue !== newSettings.minValue ||
+      prevSettings.maxValue !== newSettings.maxValue
+    ) {
+      this.#textureNeedsUpdate = true;
+    }
+    if (prevSettings.foregroundOpacity !== newSettings.foregroundOpacity) {
+      this.#materialNeedsUpdate = true;
+    }
+
     this.userData.settings = newSettings;
   }
 
   public setImage(image: AnyImage): void {
     this.userData.image = image;
     this.#textureNeedsUpdate = true;
-  }
-
-  /** Set the rotation (used only for downloading) */
-  public setRotation(rotation: 0 | 90 | 180 | 270): void {
-    this.userData.rotation = rotation;
-  }
-
-  /** Set the horizontal flip (used only for downloading) */
-  // eslint-disable-next-line @foxglove/no-boolean-parameters
-  public setFlipHorizontal(flipHorizontal: boolean): void {
-    this.userData.flipHorizontal = flipHorizontal;
-  }
-
-  /** Set the vertical flip (used only for downloading) */
-  // eslint-disable-next-line @foxglove/no-boolean-parameters
-  public setFlipVertical(flipVertical: boolean): void {
-    this.userData.flipVertical = flipVertical;
   }
 
   public setBitmap(bitmap: ImageBitmap): void {
@@ -218,32 +219,64 @@ export class ImageRenderable extends Renderable<ImageUserData> {
         return;
       }
 
-      const texture = this.userData.texture as THREE.CanvasTexture | undefined;
-      if (texture == undefined || !bitmapDimensionsEqual(bitmap, texture.image as ImageBitmap)) {
-        texture?.image.close();
-        texture?.dispose();
+      const canvasTexture = this.userData.texture;
+      if (
+        canvasTexture == undefined ||
+        // instanceof check allows us to switch from a raw image (DataTexture) to a compressed image (CanvasTexture)
+        !(canvasTexture instanceof THREE.CanvasTexture) ||
+        !bitmapDimensionsEqual(bitmap, canvasTexture.image as ImageBitmap | undefined)
+      ) {
+        if (canvasTexture?.image instanceof ImageBitmap) {
+          canvasTexture.image.close();
+        }
+        canvasTexture?.dispose();
         this.userData.texture = createCanvasTexture(bitmap);
       } else {
-        texture.image = bitmap;
-        texture.needsUpdate = true;
+        canvasTexture.image = bitmap;
+        canvasTexture.needsUpdate = true;
       }
     } else {
       const { width, height } = image;
-      const prevTexture = this.userData.texture as THREE.DataTexture | undefined;
+      let dataTexture = this.userData.texture;
       if (
-        prevTexture == undefined ||
-        prevTexture.image.width !== width ||
-        prevTexture.image.height !== height
+        dataTexture == undefined ||
+        // instanceof check allows us to switch from a compressed image (CanvasTexture) to a raw image (DataTexture)
+        !(dataTexture instanceof THREE.DataTexture) ||
+        dataTexture.image.width !== width ||
+        dataTexture.image.height !== height
       ) {
-        prevTexture?.dispose();
-        this.userData.texture = createDataTexture(width, height);
+        dataTexture?.dispose();
+        dataTexture = createDataTexture(width, height);
+        this.userData.texture = dataTexture;
       }
+      assert(dataTexture instanceof THREE.DataTexture); // https://github.com/microsoft/TypeScript/issues/54594
 
-      const texture = this.userData.texture as THREE.DataTexture;
-      decodeRawImage(image, {}, texture.image.data);
-      texture.needsUpdate = true;
+      try {
+        decodeRawImage(image, this.#getRawImageOptions(), dataTexture.image.data);
+        dataTexture.needsUpdate = true;
+        this.renderer.settings.errors.remove(IMAGE_TOPIC_PATH, CREATE_BITMAP_ERR_KEY);
+        this.renderer.settings.errors.removeFromTopic(this.userData.topic, CREATE_BITMAP_ERR_KEY);
+      } catch (error) {
+        this.renderer.settings.errors.add(
+          IMAGE_TOPIC_PATH,
+          CREATE_BITMAP_ERR_KEY,
+          `Error decoding raw image: ${error.message}`,
+        );
+        this.renderer.settings.errors.addToTopic(
+          this.userData.topic,
+          CREATE_BITMAP_ERR_KEY,
+          `Error decoding raw image: ${error.message}`,
+        );
+      }
     }
     this.#materialNeedsUpdate = true;
+  }
+
+  #getRawImageOptions(): RawImageOptions {
+    return {
+      minValue: this.userData.settings.minValue,
+      maxValue: this.userData.settings.maxValue,
+    };
   }
 
   #updateMaterial(): void {
@@ -266,7 +299,19 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     material.transparent = transparent;
     material.depthWrite = !transparent;
 
-    if (this.#renderBehindScene) {
+    if (this.#renderFrontAndBehind) {
+      assert(
+        this.#foregroundMaterial,
+        "ForegroundMaterial must be set before mesh can be updated or created",
+      );
+      const foregroundMaterial = this.#foregroundMaterial;
+      if (texture) {
+        foregroundMaterial.map = texture;
+      }
+      const foregroundTransparent = this.userData.settings.foregroundOpacity !== 1;
+      foregroundMaterial.opacity = this.userData.settings.foregroundOpacity;
+      foregroundMaterial.transparent = foregroundTransparent;
+      foregroundMaterial.depthWrite = !foregroundTransparent;
       material.depthWrite = false;
       material.depthTest = false;
     } else {
@@ -288,6 +333,17 @@ export class ImageRenderable extends Renderable<ImageUserData> {
       transparent,
       depthWrite: !transparent,
     });
+    if (!this.#renderFrontAndBehind) {
+      return;
+    }
+    this.#foregroundMaterial = new THREE.MeshBasicMaterial({
+      name: `${this.userData.topic}:ForegroundMaterial`,
+      color,
+      side: THREE.DoubleSide,
+      opacity: this.userData.settings.foregroundOpacity,
+      transparent,
+      depthWrite: !transparent,
+    });
   }
 
   #updateMesh(): void {
@@ -301,11 +357,25 @@ export class ImageRenderable extends Renderable<ImageUserData> {
       this.userData.mesh.material = this.userData.material;
     }
 
-    if (this.#renderBehindScene) {
-      this.userData.mesh.renderOrder = -1 * Number.MAX_SAFE_INTEGER;
-    } else {
+    if (!this.#renderFrontAndBehind) {
       this.userData.mesh.renderOrder = 0;
+      return;
     }
+
+    assert(
+      this.#foregroundMaterial,
+      "ForegroundMaterial must be set before mesh can be updated or created",
+    );
+
+    if (!this.#foregroundMesh) {
+      this.#foregroundMesh = new THREE.Mesh(this.userData.geometry, this.#foregroundMaterial);
+      this.#foregroundMesh.userData.pickable = false;
+      this.add(this.#foregroundMesh);
+    } else {
+      this.#foregroundMesh.geometry = this.userData.geometry;
+      this.#foregroundMesh.material = this.#foregroundMaterial;
+    }
+    this.userData.mesh.renderOrder = -1 * Number.MAX_SAFE_INTEGER;
   }
 }
 

@@ -14,13 +14,13 @@
     "@foxglove/studio-base": "workspace:*",
     "@mcap/core": "1.2.1",
     "@pmmmwh/react-refresh-webpack-plugin": "0.5.10",
-    "@storybook/react": "7.0.15",
+    "@storybook/react": "7.0.18",
     "@types/electron-devtools-installer": "2.2.2",
     "@types/plist": "^3.0.2",
     "@types/pngjs": "^6.0.1",
     "@types/tinycolor2": "1.4.3",
     "@types/utif": "^3.0.1",
-    "@xmldom/xmldom": "0.8.7",
+    "@xmldom/xmldom": "0.8.8",
     "app-builder-lib": "*",
     "async-mutex": "0.4.0",
     "builder-util": "*",
@@ -44,9 +44,9 @@
     "react-refresh-typescript": "2.0.9",
     "react-use": "17.4.0",
     "tinycolor2": "1.6.0",
-    "tss-react": "4.8.5",
+    "tss-react": "4.8.6",
     "utif": "3.1.0",
-    "webpack": "5.84.1",
+    "webpack": "5.85.1",
     "webpack-dev-server": "4.15.0"
   }
 }

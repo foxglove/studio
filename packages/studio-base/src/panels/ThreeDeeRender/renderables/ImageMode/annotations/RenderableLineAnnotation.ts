@@ -15,6 +15,10 @@ import {
   PointsAnnotation as NormalizedPointsAnnotation,
   CircleAnnotation as NormalizedCircleAnnotation,
 } from "@foxglove/studio-base/panels/Image/types";
+import {
+  ANNOTATION_RENDER_ORDER,
+  annotationRenderOrderMaterialProps,
+} from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/ImageMode/annotations/annotationRenderOrder";
 import { RosObject, RosValue } from "@foxglove/studio-base/players/types";
 
 import { BaseUserData, Renderable } from "../../../Renderable";
@@ -28,8 +32,7 @@ class PickingMaterial extends LineMaterial {
       worldUnits: false,
       vertexColors: false,
       linewidth: 0,
-      transparent: false,
-      depthWrite: true,
+      ...annotationRenderOrderMaterialProps,
     });
     this.uniforms.objectId = { value: [NaN, NaN, NaN, NaN] };
   }
@@ -48,11 +51,6 @@ class PickingMaterial extends LineMaterial {
 /** subset of {@link NormalizedPointsAnnotation.style} */
 type LineStyle = "polygon" | "line_strip" | "line_list";
 
-enum RenderOrder {
-  FILL = 1,
-  LINE = 2,
-}
-
 const FALLBACK_COLOR: Color = { r: 0, g: 0, b: 0, a: 0 };
 
 /**
@@ -60,9 +58,11 @@ const FALLBACK_COLOR: Color = { r: 0, g: 0, b: 0, a: 0 };
  */
 export class RenderableLineAnnotation extends Renderable<BaseUserData, /*TRenderer=*/ undefined> {
   #geometry?: LineSegmentsGeometry;
-  #line: LineSegments2;
-  #linePickingMaterial: PickingMaterial;
-  #lineMaterial: LineMaterial;
+  readonly #linePrepass: LineSegments2;
+  readonly #linePrepassMaterial: LineMaterial;
+  readonly #line: LineSegments2;
+  readonly #lineMaterial: LineMaterial;
+  readonly #linePickingMaterial: PickingMaterial;
   /** Style that was last used for configuring geometry */
   #style?: LineStyle;
   /** Number of points that was last used for configuring geometry */
@@ -99,21 +99,46 @@ export class RenderableLineAnnotation extends Renderable<BaseUserData, /*TRender
     });
 
     this.#geometry = new LineSegmentsGeometry();
+
+    // We alleviate corner artifacts using a two-pass render for lines. The
+    // first pass writes to depth only, followed by a color pass with stencil
+    // operations. The source for this technique is:
+    // <https://github.com/mrdoob/three.js/issues/23680#issuecomment-1063294691>
+    // <https://gkjohnson.github.io/threejs-sandbox/fat-line-opacity/webgl_lines_fat.html>
+    this.#linePrepassMaterial = new LineMaterial({
+      worldUnits: false,
+      colorWrite: false,
+      vertexColors: true,
+      linewidth: 0,
+      stencilWrite: true,
+      stencilRef: 1,
+      stencilZPass: THREE.ReplaceStencilOp,
+      ...annotationRenderOrderMaterialProps,
+    });
     this.#lineMaterial = new LineMaterial({
       worldUnits: false,
       vertexColors: true,
       linewidth: 0,
-      transparent: false,
-      depthWrite: true,
+      stencilWrite: true,
+      stencilRef: 0,
+      stencilFunc: THREE.NotEqualStencilFunc,
+      stencilFail: THREE.ReplaceStencilOp,
+      stencilZPass: THREE.ReplaceStencilOp,
+      ...annotationRenderOrderMaterialProps,
     });
+    this.#linePrepass = new LineSegments2(this.#geometry, this.#linePrepassMaterial);
+    this.#linePrepass.renderOrder = ANNOTATION_RENDER_ORDER.LINE_PREPASS;
+    this.#linePrepass.userData.picking = false;
+    this.add(this.#linePrepass);
     this.#line = new LineSegments2(this.#geometry, this.#lineMaterial);
-    this.#line.renderOrder = RenderOrder.LINE;
+    this.#line.renderOrder = ANNOTATION_RENDER_ORDER.LINE;
     this.#line.userData.pickingMaterial = this.#linePickingMaterial = new PickingMaterial();
     this.add(this.#line);
   }
 
   public override dispose(): void {
     this.#geometry?.dispose();
+    this.#linePrepassMaterial.dispose();
     this.#lineMaterial.dispose();
     this.#linePickingMaterial.dispose();
     this.#fillGeometry?.dispose();
@@ -190,6 +215,9 @@ export class RenderableLineAnnotation extends Renderable<BaseUserData, /*TRender
       this.#lineMaterial.resolution.set(this.#canvasWidth, this.#canvasHeight);
       this.#lineMaterial.linewidth = thickness * this.#scale;
       this.#lineMaterial.needsUpdate = true;
+      this.#linePrepassMaterial.resolution.set(this.#canvasWidth, this.#canvasHeight);
+      this.#linePrepassMaterial.linewidth = thickness * this.#scale;
+      this.#linePrepassMaterial.needsUpdate = true;
       this.#linePickingMaterial.resolution.set(this.#canvasWidth, this.#canvasHeight);
       this.#linePickingMaterial.linewidth = thickness * this.#scale;
       this.#linePickingMaterial.needsUpdate = true;
@@ -220,12 +248,29 @@ export class RenderableLineAnnotation extends Renderable<BaseUserData, /*TRender
             // color buffer is unused (we don't use vertex colors)
             this.#geometry = new LineGeometry();
             break;
-          case "line_list":
+          case "line_list": {
             this.#positionBuffer = new Float32Array(pointsLength * 3);
             this.#colorBuffer = new Uint8Array(pointsLength * 8);
             this.#geometry = new LineSegmentsGeometry();
+
+            // [rgba, rgba]
+            const instanceColorBuffer = new THREE.InstancedInterleavedBuffer(
+              this.#colorBuffer,
+              8,
+              1,
+            );
+            this.#geometry.setAttribute(
+              "instanceColorStart",
+              new THREE.InterleavedBufferAttribute(instanceColorBuffer, 4, 0, true),
+            );
+            this.#geometry.setAttribute(
+              "instanceColorEnd",
+              new THREE.InterleavedBufferAttribute(instanceColorBuffer, 4, 4, true),
+            );
             break;
+          }
         }
+        this.#linePrepass.geometry = this.#geometry;
         this.#line.geometry = this.#geometry;
       }
 
@@ -240,7 +285,6 @@ export class RenderableLineAnnotation extends Renderable<BaseUserData, /*TRender
 
       const positions = this.#positionBuffer;
       const colors = this.#colorBuffer;
-      let hasTransparency = false;
       for (let i = 0; i < pointsLength; i++) {
         // Support the case where outline_colors is half the length of points, one color per line,
         // and where outline_colors matches the length of points. Fall back to marker.outline_color
@@ -259,9 +303,6 @@ export class RenderableLineAnnotation extends Renderable<BaseUserData, /*TRender
           colors[i * 4 + 1] = SRGBToLinear(color.g) * 255;
           colors[i * 4 + 2] = SRGBToLinear(color.b) * 255;
           colors[i * 4 + 3] = color.a * 255;
-          if (color.a < 1) {
-            hasTransparency = true;
-          }
         }
         if (i === 0) {
           shape?.moveTo(tempVec3.x, tempVec3.y);
@@ -290,10 +331,13 @@ export class RenderableLineAnnotation extends Renderable<BaseUserData, /*TRender
           this.#fillGeometry = undefined;
         }
         this.#fillGeometry = new THREE.ShapeGeometry(shape);
-        this.#fillMaterial ??= new THREE.MeshBasicMaterial({ side: THREE.DoubleSide });
+        this.#fillMaterial ??= new THREE.MeshBasicMaterial({
+          side: THREE.DoubleSide,
+          ...annotationRenderOrderMaterialProps,
+        });
         if (!this.#fill) {
           this.#fill = new THREE.Mesh(this.#fillGeometry, this.#fillMaterial);
-          this.#fill.renderOrder = RenderOrder.FILL;
+          this.#fill.renderOrder = ANNOTATION_RENDER_ORDER.FILL;
           this.add(this.#fill);
         } else {
           this.#fill.geometry = this.#fillGeometry;
@@ -303,9 +347,6 @@ export class RenderableLineAnnotation extends Renderable<BaseUserData, /*TRender
           .setRGB(shapeFillColor.r, shapeFillColor.g, shapeFillColor.b)
           .convertSRGBToLinear();
         this.#fillMaterial.opacity = shapeFillColor.a;
-        const fillHasTransparency = shapeFillColor.a < 1;
-        this.#fillMaterial.transparent = fillHasTransparency;
-        this.#fillMaterial.depthWrite = !fillHasTransparency;
         this.#fillMaterial.needsUpdate = true;
       } else {
         this.#fillGeometry?.dispose();
@@ -317,16 +358,18 @@ export class RenderableLineAnnotation extends Renderable<BaseUserData, /*TRender
       }
 
       if (useVertexColors) {
+        this.#linePrepassMaterial.vertexColors = true;
         this.#lineMaterial.vertexColors = true;
+        this.#lineMaterial.color.setRGB(1, 1, 1); // any non-white color will tint the vertex colors
+        this.#geometry.getAttribute("instanceColorStart").needsUpdate = true;
+        this.#geometry.getAttribute("instanceColorEnd").needsUpdate = true;
       } else {
         const color = outlineColor ?? FALLBACK_COLOR;
+        this.#linePrepassMaterial.vertexColors = false;
         this.#lineMaterial.vertexColors = false;
         this.#lineMaterial.color.setRGB(color.r, color.g, color.b).convertSRGBToLinear();
         this.#lineMaterial.opacity = color.a;
-        hasTransparency = color.a < 1;
       }
-      this.#lineMaterial.transparent = hasTransparency;
-      this.#lineMaterial.depthWrite = !hasTransparency;
       this.#lineMaterial.needsUpdate = true;
 
       this.#geometry.setPositions(positions);
@@ -343,17 +386,6 @@ export class RenderableLineAnnotation extends Renderable<BaseUserData, /*TRender
           this.#geometry.instanceCount = pointsLength >>> 1;
           break;
       }
-
-      // [rgba, rgba]
-      const instanceColorBuffer = new THREE.InstancedInterleavedBuffer(colors, 8, 1);
-      this.#geometry.setAttribute(
-        "instanceColorStart",
-        new THREE.InterleavedBufferAttribute(instanceColorBuffer, 4, 0, true),
-      );
-      this.#geometry.setAttribute(
-        "instanceColorEnd",
-        new THREE.InterleavedBufferAttribute(instanceColorBuffer, 4, 4, true),
-      );
     }
   }
 }

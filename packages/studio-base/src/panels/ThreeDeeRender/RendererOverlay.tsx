@@ -29,6 +29,7 @@ import PublishGoalIcon from "@foxglove/studio-base/components/PublishGoalIcon";
 import PublishPointIcon from "@foxglove/studio-base/components/PublishPointIcon";
 import PublishPoseEstimateIcon from "@foxglove/studio-base/components/PublishPoseEstimateIcon";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
+import { usePanelMousePresence } from "@foxglove/studio-base/hooks/usePanelMousePresence";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 import { downloadFiles } from "@foxglove/studio-base/util/download";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
@@ -246,6 +247,7 @@ export function RendererOverlay(props: {
         transformOrigin={{ vertical: "top", horizontal: "right" }}
         open={publishMenuExpanded}
         onClose={() => setPublishMenuExpanded(false)}
+        MenuListProps={{ dense: true }}
       >
         <MenuItem
           selected={props.publishClickType === "pose_estimate"}
@@ -255,7 +257,7 @@ export function RendererOverlay(props: {
           }}
         >
           <ListItemIcon>{PublishClickIcons.pose_estimate}</ListItemIcon>
-          <ListItemText>Publish pose estimate</ListItemText>
+          <ListItemText disableTypography>Publish pose estimate</ListItemText>
         </MenuItem>
         <MenuItem
           selected={props.publishClickType === "pose"}
@@ -265,7 +267,7 @@ export function RendererOverlay(props: {
           }}
         >
           <ListItemIcon>{PublishClickIcons.pose}</ListItemIcon>
-          <ListItemText>Publish pose</ListItemText>
+          <ListItemText disableTypography>Publish pose</ListItemText>
         </MenuItem>
         <MenuItem
           selected={props.publishClickType === "point"}
@@ -275,7 +277,7 @@ export function RendererOverlay(props: {
           }}
         >
           <ListItemIcon>{PublishClickIcons.point}</ListItemIcon>
-          <ListItemText>Publish point</ListItemText>
+          <ListItemText disableTypography>Publish point</ListItemText>
         </MenuItem>
       </Menu>
     </>
@@ -300,7 +302,8 @@ export function RendererOverlay(props: {
       return;
     }
 
-    const { topic, image, rotation, flipHorizontal, flipVertical } = currentImage;
+    const { topic, image, rotation, flipHorizontal, flipVertical, minValue, maxValue } =
+      currentImage;
     const stamp = "header" in image ? image.header.stamp : image.timestamp;
     let bitmap: ImageBitmap;
     try {
@@ -308,7 +311,7 @@ export function RendererOverlay(props: {
         bitmap = await decodeCompressedImageToBitmap(image);
       } else {
         const imageData = new ImageData(image.width, image.height);
-        decodeRawImage(image, {}, imageData.data);
+        decodeRawImage(image, { minValue, maxValue }, imageData.data);
         bitmap = await createImageBitmap(imageData);
       }
 
@@ -370,10 +373,14 @@ export function RendererOverlay(props: {
     [doDownloadImage, renderer],
   );
 
+  const mousePresenceRef = useRef<HTMLDivElement>(ReactNull);
+  const mousePresent = usePanelMousePresence(mousePresenceRef);
+
   return (
     <>
       {props.interfaceMode === "image" && <PanelContextMenu getItems={getContextMenuItems} />}
       <div
+        ref={mousePresenceRef}
         style={{
           position: "absolute",
           top: "10px",
@@ -385,13 +392,18 @@ export function RendererOverlay(props: {
           pointerEvents: "none",
         }}
       >
-        <Interactions
-          addPanel={props.addPanel}
-          selectedObject={selectedObject}
-          interactionsTabType={interactionsTabType}
-          setInteractionsTabType={setInteractionsTabType}
-          timezone={props.timezone}
-        />
+        {
+          // Only show on hover for image panel
+          (props.interfaceMode === "3d" || mousePresent) && (
+            <Interactions
+              addPanel={props.addPanel}
+              selectedObject={selectedObject}
+              interactionsTabType={interactionsTabType}
+              setInteractionsTabType={setInteractionsTabType}
+              timezone={props.timezone}
+            />
+          )
+        }
         {props.interfaceMode === "3d" && (
           <Paper square={false} elevation={4} style={{ display: "flex", flexDirection: "column" }}>
             <IconButton

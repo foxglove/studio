@@ -18,6 +18,7 @@ import {
   RenderState,
   SettingsTree,
   Subscription,
+  Time,
   VariableValue,
 } from "@foxglove/studio";
 import {
@@ -318,11 +319,12 @@ function PanelExtensionAdapter(
       layout,
 
       seekPlayback: seekPlayback
-        ? (stamp: number) => {
+        ? (stamp: number | Time) => {
             if (!isMounted()) {
               return;
             }
-            seekPlayback(fromSec(stamp));
+            const seekTarget = typeof stamp === "object" ? stamp : fromSec(stamp);
+            seekPlayback(seekTarget);
           }
         : undefined,
 

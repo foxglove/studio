@@ -39,8 +39,8 @@ import {
   useMessagePipelineGetter,
 } from "@foxglove/studio-base/components/MessagePipeline";
 import MultiProvider from "@foxglove/studio-base/components/MultiProvider";
+import { PanelCatalog } from "@foxglove/studio-base/components/PanelCatalog";
 import PanelLayout from "@foxglove/studio-base/components/PanelLayout";
-import PanelList from "@foxglove/studio-base/components/PanelList";
 import PanelSettings from "@foxglove/studio-base/components/PanelSettings";
 import PlaybackControls from "@foxglove/studio-base/components/PlaybackControls";
 import { ProblemsList } from "@foxglove/studio-base/components/ProblemsList";
@@ -151,7 +151,7 @@ function AddPanel() {
           />
         </Typography>
       ) : (
-        <PanelList onPanelSelect={addPanel} />
+        <PanelCatalog mode="list" onPanelSelect={addPanel} />
       )}
     </SidebarContent>
   );
@@ -317,7 +317,7 @@ function WorkspaceContent(props: WorkspaceContentProps): JSX.Element {
 
   useNativeAppMenuEvent(
     "open-file",
-    useCallback(() => dialogActions.dataSource.open("file"), [dialogActions.dataSource]),
+    useCallback(async () => await dialogActions.openFile.open(), [dialogActions.openFile]),
   );
 
   useNativeAppMenuEvent(

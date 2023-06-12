@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Alert, Link } from "@mui/material";
-import { StrictMode, useContext, useMemo, useState } from "react";
+import { StrictMode, useCallback, useContext, useMemo, useState } from "react";
 import ReactDOM from "react-dom";
 import { useLatest } from "react-use";
 
@@ -11,6 +11,11 @@ import { filterMap } from "@foxglove/den/collection";
 import { useCrash } from "@foxglove/hooks";
 import { PanelExtensionContext } from "@foxglove/studio";
 import { CaptureErrorBoundary } from "@foxglove/studio-base/components/CaptureErrorBoundary";
+import {
+  ForwardAnalyticsContextProvider,
+  ForwardedAnalytics,
+  useForwardAnalytics,
+} from "@foxglove/studio-base/components/ForwardAnalyticsContextProvider";
 import { useMessagePipelineGetter } from "@foxglove/studio-base/components/MessagePipeline";
 import Panel from "@foxglove/studio-base/components/Panel";
 import PanelContext from "@foxglove/studio-base/components/PanelContext";
@@ -24,11 +29,17 @@ import { SaveConfig } from "@foxglove/studio-base/types/panels";
 import { defaultConfig, ImageView } from "./ImageView";
 import { Config } from "./types";
 
-function initPanel(crash: ReturnType<typeof useCrash>, context: PanelExtensionContext) {
+function initPanel(
+  crash: ReturnType<typeof useCrash>,
+  forwardedAnalytics: ForwardedAnalytics,
+  context: PanelExtensionContext,
+) {
   ReactDOM.render(
     <StrictMode>
       <CaptureErrorBoundary onError={crash}>
-        <ImageView context={context} />
+        <ForwardAnalyticsContextProvider forwardedAnalytics={forwardedAnalytics}>
+          <ImageView context={context} />
+        </ForwardAnalyticsContextProvider>
       </CaptureErrorBoundary>
     </StrictMode>,
     context.panelElement,
@@ -44,16 +55,24 @@ type Props = {
 };
 
 function ImagePanelAdapter(props: Props) {
+  const { saveConfig } = props;
   const crash = useCrash();
-  const boundInitPanel = useMemo(() => initPanel.bind(undefined, crash), [crash]);
+  const forwardedAnalytics = useForwardAnalytics();
+  const boundInitPanel = useMemo(
+    () => initPanel.bind(undefined, crash, forwardedAnalytics),
+    [crash, forwardedAnalytics],
+  );
 
-  const [closedBanner, setClosedBanner] = useState(false);
+  const closedBanner = props.config.closedDeprecationBanner !== true;
+  const onCloseBanner = useCallback(() => {
+    saveConfig({ closedDeprecationBanner: true });
+  }, [saveConfig]);
   const panelContext = useContext(PanelContext);
   const latestConfig = useLatest(props.config);
   const getMessagePipelineContext = useMessagePipelineGetter();
 
   const deprecationBanner = closedBanner ? undefined : (
-    <Alert severity="info" color="warning" onClose={() => setClosedBanner(true)}>
+    <Alert severity="info" color="warning" onClose={onCloseBanner}>
       The Image (Legacy) panel is now deprecated.{" "}
       <Link
         color="inherit"
@@ -82,20 +101,18 @@ function ImagePanelAdapter(props: Props) {
               rotation: latestConfig.current.rotation,
               flipHorizontal: latestConfig.current.flipHorizontal,
               flipVertical: latestConfig.current.flipVertical,
-              annotations: filterMap(latestConfig.current.enabledMarkerTopics, (topicName) => {
-                const topic = sortedTopics.find((t) => t.name === topicName);
-                if (topic?.schemaName != undefined) {
-                  return {
-                    topic: topicName,
-                    schemaName: topic.schemaName,
-                    settings: { visible: true },
-                  };
-                }
-                return undefined;
-              }),
+              annotations: Object.fromEntries(
+                filterMap(latestConfig.current.enabledMarkerTopics, (topicName) => {
+                  const topic = sortedTopics.find((t) => t.name === topicName);
+                  if (topic?.schemaName != undefined) {
+                    return [topicName, { visible: true }];
+                  }
+                  return undefined;
+                }),
+              ),
             },
           });
-          setClosedBanner(true);
+          onCloseBanner(true);
         }}
       >
         Upgrade to the new Image panel

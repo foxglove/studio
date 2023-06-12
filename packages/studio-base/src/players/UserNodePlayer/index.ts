@@ -212,7 +212,7 @@ export default class UserNodePlayer implements Player {
     (datatypes: RosDatatypes, nodeDatatypes: readonly RosDatatypes[]): RosDatatypes => {
       return nodeDatatypes.reduce(
         (allDatatypes, userNodeDatatypes) => new Map([...allDatatypes, ...userNodeDatatypes]),
-        new Map([...datatypes, ...basicDatatypes]),
+        new Map([...basicDatatypes, ...datatypes]),
       );
     },
   );
@@ -919,6 +919,8 @@ export default class UserNodePlayer implements Player {
           this.#lastMessageByInputTopic.set(message.topic, message);
         }
 
+        const messagesRecomputed = messagesForRecompute.length > 0;
+
         const messagesToBeParsed =
           messagesForRecompute.length > 0 ? messages.concat(messagesForRecompute) : messages;
         const { parsedMessages } = await this.#getMessages(
@@ -952,6 +954,7 @@ export default class UserNodePlayer implements Player {
             messages: parsedMessages,
             topics: this.#getTopics(topics, this.#memoizedNodeTopics),
             datatypes: allDatatypes,
+            messagesRecomputed,
           },
         };
       });
