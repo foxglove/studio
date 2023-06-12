@@ -614,19 +614,19 @@ export default class UserNodePlayer implements Player {
       return { registration, terminate };
     };
 
-    const processMessage = buildMessageProcessor();
-    const processBlockMessage = buildMessageProcessor();
+    const messageProcessor = buildMessageProcessor();
+    const blockProcessor = buildMessageProcessor();
 
     const result: NodeRegistration = {
       nodeId,
       nodeData,
       inputs: inputTopics,
       output: { name: outputTopic, schemaName: outputDatatype },
-      processMessage: processMessage.registration,
-      processBlockMessage: processBlockMessage.registration,
+      processMessage: messageProcessor.registration,
+      processBlockMessage: blockProcessor.registration,
       terminate: () => {
-        processMessage.terminate();
-        processBlockMessage.terminate();
+        messageProcessor.terminate();
+        blockProcessor.terminate();
       },
     };
     state.nodeRegistrationCache.push({ nodeId, userNode, result });
