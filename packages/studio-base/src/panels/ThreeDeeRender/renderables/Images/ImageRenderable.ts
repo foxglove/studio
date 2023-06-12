@@ -222,6 +222,7 @@ export class ImageRenderable extends Renderable<ImageUserData> {
       const canvasTexture = this.userData.texture;
       if (
         canvasTexture == undefined ||
+        // instanceof check allows us to switch from a raw image (DataTexture) to a compressed image (CanvasTexture)
         !(canvasTexture instanceof THREE.CanvasTexture) ||
         !bitmapDimensionsEqual(bitmap, canvasTexture.image as ImageBitmap | undefined)
       ) {
@@ -239,6 +240,7 @@ export class ImageRenderable extends Renderable<ImageUserData> {
       let dataTexture = this.userData.texture;
       if (
         dataTexture == undefined ||
+        // instanceof check allows us to switch from a compressed image (CanvasTexture) to a raw image (DataTexture)
         !(dataTexture instanceof THREE.DataTexture) ||
         dataTexture.image.width !== width ||
         dataTexture.image.height !== height
