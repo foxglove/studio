@@ -7,7 +7,7 @@ import { McapIndexedReader, McapTypes } from "@mcap/core";
 import Logger from "@foxglove/log";
 import { ParsedChannel, parseChannel } from "@foxglove/mcap-support";
 import { Time, fromNanoSec, toNanoSec, compare } from "@foxglove/rostime";
-import { Asset, MessageEvent } from "@foxglove/studio";
+import { MessageEvent } from "@foxglove/studio";
 import {
   GetBackfillMessagesArgs,
   IIterableSource,
@@ -206,19 +206,5 @@ export class McapIndexedIterableSource implements IIterableSource {
     }
     messages.sort((a, b) => compare(a.receiveTime, b.receiveTime));
     return messages;
-  }
-
-  public async fetchAsset(name: string): Promise<Asset> {
-    const attachments = this.#reader.readAttachments({ name });
-    for await (const attachment of attachments) {
-      return {
-        name: attachment.name,
-        mediaType: attachment.mediaType,
-        sizeInBytes: attachment.data.byteLength,
-        lastModified: fromNanoSec(attachment.createTime),
-        data: attachment.data,
-      };
-    }
-    throw new Error(`Could not find asset in MCAP with name: ${name}`);
   }
 }

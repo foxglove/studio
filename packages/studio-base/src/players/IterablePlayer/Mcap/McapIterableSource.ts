@@ -6,6 +6,7 @@ import { McapIndexedReader, McapTypes } from "@mcap/core";
 
 import Log from "@foxglove/log";
 import { loadDecompressHandlers } from "@foxglove/mcap-support";
+import { Asset } from "@foxglove/studio";
 import { MessageEvent } from "@foxglove/studio-base/players/types";
 
 import { FileReadable } from "./FileReadable";
@@ -113,5 +114,16 @@ export class McapIterableSource implements IIterableSource {
     }
 
     return await this.#sourceImpl.getBackfillMessages(args);
+  }
+
+  public async fetchAsset(name: string): Promise<Asset> {
+    if (this.#sourceImpl == undefined) {
+      throw new Error(`Source is not initialized`);
+    }
+    if (this.#sourceImpl.fetchAsset == undefined) {
+      throw new Error(`Source does not support asset fetching`);
+    }
+
+    return await this.#sourceImpl.fetchAsset(name);
   }
 }
