@@ -632,6 +632,7 @@ describe("UserNodePlayer", () => {
     it("produces blocks for full subscriptions", async () => {
       const fakePlayer = new FakePlayer();
       const userNodePlayer = new UserNodePlayer(fakePlayer, defaultUserNodeActions);
+      const spy = jest.spyOn(UserNodePlayer, "CreateNodeRuntimeWorker");
 
       const [done] = setListenerHelper(userNodePlayer);
 
@@ -692,6 +693,10 @@ describe("UserNodePlayer", () => {
           ],
         },
       });
+
+      // CreateNodeRuntimeWorker should have been called once for the message processing
+      // node and once for the block processing node.
+      expect(spy).toHaveBeenCalledTimes(2);
     });
 
     it("does not duplicate output messages in blocks after multiple readings", async () => {
