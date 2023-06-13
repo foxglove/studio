@@ -44,7 +44,7 @@ const advancedJSON = `{\n  "data": ""\n}`;
 
 const baseConfig: Config = {
   topicName: "/sample_topic",
-  schemaName: "std_msgs/String",
+  datatype: "std_msgs/String",
   buttonText: "Publish",
   buttonTooltip: "",
   buttonColor: "",

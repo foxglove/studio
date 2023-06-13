@@ -278,7 +278,7 @@ export default Panel(
   Object.assign(React.memo(Publish), {
     panelType: "Publish",
     defaultConfig: {
-      schemaName: "",
+      datatype: "",
       topicName: "",
       buttonText: "Publish",
       buttonTooltip: "",
