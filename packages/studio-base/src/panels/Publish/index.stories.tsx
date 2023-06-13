@@ -35,7 +35,7 @@ const getFixture = ({ allowPublish }: { allowPublish: boolean }) => {
 const advancedJSON = `{\n  "data": ""\n}`;
 const publishConfig = (config: Partial<(typeof Publish)["defaultConfig"]>) => ({
   topicName: "/sample_topic",
-  datatype: "std_msgs/String",
+  schemaName: "std_msgs/String",
   buttonText: "Publish",
   buttonTooltip: "",
   buttonColor: "",
