@@ -43,23 +43,3 @@ export type TextAnnotation = {
 };
 
 export type Annotation = CircleAnnotation | PointsAnnotation | TextAnnotation;
-
-export type RawImageMessage = {
-  type: "raw";
-  stamp: { sec: number; nsec: number };
-  width: number;
-  height: number;
-  is_bigendian: boolean;
-  encoding: string;
-  step: number;
-  data: Uint8Array;
-};
-
-export type CompressedImageMessage = {
-  type: "compressed";
-  stamp: { sec: number; nsec: number };
-  format: string;
-  data: Uint8Array;
-};
-
-export type NormalizedImageMessage = RawImageMessage | CompressedImageMessage;
