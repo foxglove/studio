@@ -37,9 +37,10 @@ const nodeId = "nodeId";
 const nodeUserCode = `
   export const inputs = ["/np_input"];
   export const output = "${DEFAULT_STUDIO_NODE_PREFIX}1";
+  const stamp = Math.random(); // stamp used to distinguish different instances of a script.
   let lastStamp, lastReceiveTime;
-  export default (message: { message: { payload: string } }): { custom_np_field: string, value: string } => {
-    return { custom_np_field: "abc", value: message.message.payload };
+  export default (message: { message: { payload: string } }): { custom_np_field: string, value: string, stamp: number } => {
+    return { custom_np_field: "abc", value: message.message.payload, stamp  };
   };
 `;
 
@@ -366,8 +367,27 @@ describe("UserNodePlayer", () => {
             `${DEFAULT_STUDIO_NODE_PREFIX}1`,
             {
               definitions: [
-                { name: "custom_np_field", type: "string", isArray: false, isComplex: false },
-                { name: "value", type: "string", isArray: false, isComplex: false },
+                {
+                  name: "custom_np_field",
+                  type: "string",
+                  isArray: false,
+                  isComplex: false,
+                  arrayLength: undefined,
+                },
+                {
+                  name: "value",
+                  type: "string",
+                  isArray: false,
+                  isComplex: false,
+                  arrayLength: undefined,
+                },
+                {
+                  name: "stamp",
+                  type: "float64",
+                  isArray: false,
+                  isComplex: false,
+                  arrayLength: undefined,
+                },
               ],
             },
           ],
@@ -622,7 +642,7 @@ describe("UserNodePlayer", () => {
         {
           topic: `${DEFAULT_STUDIO_NODE_PREFIX}1`,
           receiveTime: upstreamFirst.receiveTime,
-          message: { custom_np_field: "abc", value: "bar" },
+          message: { custom_np_field: "abc", value: "bar", stamp: expect.any(Number) },
           schemaName: "/studio_script/1",
           sizeInBytes: 0,
         },
@@ -662,7 +682,18 @@ describe("UserNodePlayer", () => {
         },
       });
 
-      const { progress } = (await done)!;
+      const { messages, progress } = (await done)!;
+
+      expect(messages).toEqual([
+        upstreamFirst,
+        {
+          topic: `${DEFAULT_STUDIO_NODE_PREFIX}1`,
+          receiveTime: upstreamFirst.receiveTime,
+          message: { custom_np_field: "abc", value: "bar", stamp: expect.any(Number) },
+          schemaName: "/studio_script/1",
+          sizeInBytes: 0,
+        },
+      ]);
 
       expect(progress).toEqual({
         fullyLoadedFractionRanges: [{ start: 0, end: 1 }],
@@ -682,6 +713,7 @@ describe("UserNodePlayer", () => {
                     message: {
                       custom_np_field: "abc",
                       value: "bar",
+                      stamp: expect.any(Number),
                     },
                     schemaName: "/studio_script/1",
                     sizeInBytes: 0,
@@ -695,8 +727,18 @@ describe("UserNodePlayer", () => {
       });
 
       // CreateNodeRuntimeWorker should have been called once for the message processing
-      // node and once for the block processing node.
+      // worker and once for the block processing worker,
       expect(spy).toHaveBeenCalledTimes(2);
+
+      // The block and message workers should have different stamps.
+      const messageWorkerStamp = (messages[1] as MessageEvent<{ stamp: number }>).message.stamp;
+      const blockWorkerStamp = (
+        progress?.messageCache?.blocks[0]?.messagesByTopic[
+          `${DEFAULT_STUDIO_NODE_PREFIX}1`
+        ]?.[0] as MessageEvent<{ stamp: number }>
+      ).message.stamp;
+
+      expect(messageWorkerStamp).not.toEqual(blockWorkerStamp);
     });
 
     it("does not duplicate output messages in blocks after multiple readings", async () => {
@@ -771,6 +813,7 @@ describe("UserNodePlayer", () => {
                     message: {
                       custom_np_field: "abc",
                       value: "bar",
+                      stamp: expect.any(Number),
                     },
                     schemaName: "/studio_script/1",
                     sizeInBytes: 0,
@@ -792,6 +835,7 @@ describe("UserNodePlayer", () => {
                     message: {
                       custom_np_field: "abc",
                       value: "bar",
+                      stamp: expect.any(Number),
                     },
                     schemaName: "/studio_script/1",
                     sizeInBytes: 0,
@@ -1147,14 +1191,14 @@ describe("UserNodePlayer", () => {
         {
           topic: `${DEFAULT_STUDIO_NODE_PREFIX}1`,
           receiveTime: upstreamFirst.receiveTime,
-          message: { custom_np_field: "abc", value: "bar" },
+          message: { custom_np_field: "abc", value: "bar", stamp: expect.any(Number) },
           schemaName: "/studio_script/1",
           sizeInBytes: 0,
         },
         {
           topic: `${DEFAULT_STUDIO_NODE_PREFIX}2`,
           receiveTime: upstreamFirst.receiveTime,
-          message: { custom_np_field: "abc", value: "bar" },
+          message: { custom_np_field: "abc", value: "bar", stamp: expect.any(Number) },
           schemaName: "/studio_script/2",
           sizeInBytes: 0,
         },
