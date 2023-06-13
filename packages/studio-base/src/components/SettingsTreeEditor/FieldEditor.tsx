@@ -6,9 +6,9 @@ import ClearIcon from "@mui/icons-material/Clear";
 import ErrorIcon from "@mui/icons-material/Error";
 import {
   Autocomplete,
-  List,
-  ListProps,
   MenuItem,
+  MenuList,
+  MenuListProps,
   Select,
   TextField,
   ToggleButton,
@@ -37,6 +37,11 @@ const useStyles = makeStyles<void, "error">()((theme, _params, classes) => {
     : "rgba(0, 0, 0, 0.06)";
 
   return {
+    autocomplete: {
+      ".MuiInputBase-root.MuiInputBase-sizeSmall": {
+        paddingInline: 0,
+      },
+    },
     error: {},
     fieldLabel: {
       color: theme.palette.text.secondary,
@@ -127,13 +132,14 @@ function FieldInput({
     case "autocomplete":
       return (
         <Autocomplete
+          className={classes.autocomplete}
           size="small"
           freeSolo={true}
           value={field.value}
           disabled={field.disabled}
           readOnly={field.readonly}
-          ListboxComponent={List}
-          ListboxProps={{ dense: true } as Partial<ListProps>}
+          ListboxComponent={MenuList}
+          ListboxProps={{ dense: true } as Partial<MenuListProps>}
           renderOption={(props, option, { selected }) => (
             <MenuItem selected={selected} {...props}>
               {option}
@@ -141,7 +147,9 @@ function FieldInput({
           )}
           componentsProps={{ clearIndicator: { size: "small" } }}
           clearIcon={<ClearIcon fontSize="small" />}
-          renderInput={(params) => <TextField {...params} variant="filled" size="small" />}
+          renderInput={(params) => (
+            <TextField {...params} variant="filled" size="small" placeholder={field.placeholder} />
+          )}
           onInputChange={(_event, value) =>
             actionHandler({ action: "update", payload: { path, input: "autocomplete", value } })
           }

@@ -11,7 +11,15 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Button, Typography, OutlinedInput, inputBaseClasses } from "@mui/material";
+import {
+  Button,
+  Typography,
+  OutlinedInput,
+  inputBaseClasses,
+  TextField,
+  FormHelperText,
+  FormLabel,
+} from "@mui/material";
 import { produce } from "immer";
 import { set } from "lodash";
 import { useCallback, useEffect, useMemo, useRef } from "react";
@@ -21,12 +29,11 @@ import { useDebounce } from "use-debounce";
 import { useRethrow } from "@foxglove/hooks";
 import { SettingsTreeAction, SettingsTreeNodes } from "@foxglove/studio";
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
-import Autocomplete, { IAutocomplete } from "@foxglove/studio-base/components/Autocomplete";
 import Panel from "@foxglove/studio-base/components/Panel";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import Stack from "@foxglove/studio-base/components/Stack";
 import usePublisher from "@foxglove/studio-base/hooks/usePublisher";
-import { PlayerCapabilities, Topic } from "@foxglove/studio-base/players/types";
+import { PlayerCapabilities } from "@foxglove/studio-base/players/types";
 import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelStateContextProvider";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
@@ -35,7 +42,7 @@ import buildSampleMessage from "./buildSampleMessage";
 
 type Config = Partial<{
   topicName: string;
-  datatype: string;
+  schemaName: string;
   buttonText: string;
   buttonTooltip: string;
   buttonColor: string;
@@ -48,11 +55,24 @@ type Props = {
   saveConfig: SaveConfig<Config>;
 };
 
-function buildSettingsTree(config: Config): SettingsTreeNodes {
+function buildSettingsTree(config: Config, schemaNames: string[]): SettingsTreeNodes {
   return {
     general: {
       fields: {
+        topicName: { label: "Topic", input: "messagepath", value: config.topicName },
+        schemaName: {
+          label: "Message schema",
+          input: "autocomplete",
+          placeholder: "Choose a message schema",
+          items: schemaNames,
+          value: config.schemaName,
+        },
         advancedView: { label: "Editing mode", input: "boolean", value: config.advancedView },
+      },
+    },
+    styles: {
+      label: "Styling",
+      fields: {
         buttonText: { label: "Button title", input: "string", value: config.buttonText },
         buttonTooltip: { label: "Button tooltip", input: "string", value: config.buttonTooltip },
         buttonColor: { label: "Button color", input: "rgb", value: config.buttonColor },
@@ -78,29 +98,27 @@ const useStyles = makeStyles<{ buttonColor?: string }>()((theme, { buttonColor }
       },
     },
     textarea: {
-      width: "100%",
       height: "100%",
-      textAlign: "left",
-      backgroundColor: theme.palette.background.paper,
-      overflow: "hidden",
-      padding: theme.spacing(1, 0.5),
 
-      [`.${inputBaseClasses.input}`]: {
-        height: "100% !important",
-        font: "inherit",
-        lineHeight: 1.4,
-        fontFamily: fonts.MONOSPACE,
-        fontSize: "100%",
-        overflow: "auto !important",
-        resize: "none",
+      [`.${inputBaseClasses.root}`]: {
+        width: "100%",
+        height: "100%",
+        textAlign: "left",
+        backgroundColor: theme.palette.background.paper,
+        overflow: "hidden",
+        padding: theme.spacing(1, 0.5),
+
+        [`.${inputBaseClasses.input}`]: {
+          height: "100% !important",
+          lineHeight: 1.4,
+          fontFamily: fonts.MONOSPACE,
+          overflow: "auto !important",
+          resize: "none",
+        },
       },
     },
   };
 });
-
-function getTopicName(topic: Topic): string {
-  return topic.name;
-}
 
 function parseInput(value: string): { error?: string; parsedObject?: unknown } {
   let parsedObject;
@@ -123,11 +141,11 @@ function parseInput(value: string): { error?: string; parsedObject?: unknown } {
 }
 
 function Publish(props: Props) {
-  const { topics, datatypes, capabilities } = useDataSourceInfo();
+  const { datatypes, capabilities } = useDataSourceInfo();
   const {
     config: {
       topicName = "",
-      datatype = "",
+      schemaName = "",
       buttonText = "Publish",
       buttonTooltip = "",
       buttonColor = "#00A871",
@@ -142,11 +160,11 @@ function Publish(props: Props) {
   const publish = usePublisher({
     name: "Publish",
     topic: debouncedTopicName,
-    schemaName: datatype,
+    schemaName,
     datatypes,
   });
 
-  const datatypeNames = useMemo(() => Array.from(datatypes.keys()).sort(), [datatypes]);
+  const schemaNames = useMemo(() => Array.from(datatypes.keys()).sort(), [datatypes]);
   const { error, parsedObject } = useMemo(() => parseInput(value), [value]);
   const updatePanelSettingsTree = usePanelSettingsTreeUpdate();
 
@@ -156,19 +174,19 @@ function Publish(props: Props) {
   const prevDatatype = useRef<string | undefined>();
   useEffect(() => {
     if (
-      datatype.length > 0 &&
+      schemaName.length > 0 &&
       prevDatatype.current != undefined &&
-      datatype !== prevDatatype.current &&
-      datatypes.get(datatype) != undefined
+      schemaName !== prevDatatype.current &&
+      datatypes.get(schemaName) != undefined
     ) {
-      const sampleMessage = buildSampleMessage(datatypes, datatype);
+      const sampleMessage = buildSampleMessage(datatypes, schemaName);
       if (sampleMessage != undefined) {
         const stringifiedSampleMessage = JSON.stringify(sampleMessage, undefined, 2);
         saveConfig({ value: stringifiedSampleMessage });
       }
     }
-    prevDatatype.current = datatype;
-  }, [saveConfig, datatype, datatypes]);
+    prevDatatype.current = schemaName;
+  }, [saveConfig, schemaName, datatypes]);
 
   const actionHandler = useCallback(
     (action: SettingsTreeAction) => {
@@ -188,37 +206,9 @@ function Publish(props: Props) {
   useEffect(() => {
     updatePanelSettingsTree({
       actionHandler,
-      nodes: buildSettingsTree(props.config),
+      nodes: buildSettingsTree(props.config, schemaNames),
     });
-  }, [actionHandler, props.config, updatePanelSettingsTree]);
-
-  const onChangeTopic = useCallback(
-    (_event: unknown, name: string) => {
-      saveConfig({ topicName: name });
-    },
-    [saveConfig],
-  );
-
-  // when a known topic is selected, also fill in its datatype
-  const onSelectTopic = useCallback(
-    (newValue: string | Topic, autocomplete: IAutocomplete) => {
-      if (typeof newValue === "string") {
-        saveConfig({ topicName: newValue });
-      } else {
-        saveConfig({ topicName: newValue.name, datatype: newValue.schemaName });
-      }
-      autocomplete.blur();
-    },
-    [saveConfig],
-  );
-
-  const onSelectDatatype = useCallback(
-    (newDatatype: string, autocomplete: IAutocomplete) => {
-      saveConfig({ datatype: newDatatype });
-      autocomplete.blur();
-    },
-    [saveConfig],
-  );
+  }, [actionHandler, props.config, schemaNames, updatePanelSettingsTree]);
 
   const onPublishClicked = useRethrow(
     useCallback(() => {
@@ -235,72 +225,50 @@ function Publish(props: Props) {
   return (
     <Stack fullHeight>
       <PanelToolbar />
-      {advancedView && (
-        <Stack flex="auto" padding={2} gap={1} paddingBottom={0}>
-          <div>
-            <Stack alignItems="center" gap={1} padding={0.5} direction="row" flexShrink={0}>
-              <Typography color="text.secondary" variant="body2" component="label">
-                Topic:
-              </Typography>
-              <Autocomplete
-                placeholder="Choose a topic"
-                items={[...topics]}
-                hasError={false}
-                onChange={onChangeTopic}
-                onSelect={onSelectTopic}
-                selectedItem={{ name: topicName, schemaName: "" }}
-                getItemText={getTopicName}
-                getItemValue={getTopicName}
-              />
-            </Stack>
-            <Stack alignItems="center" gap={1} padding={0.5} direction="row" flexShrink={0}>
-              <Typography color="text.secondary" variant="body2" component="label">
-                Datatype:
-              </Typography>
-              <Autocomplete
-                placeholder="Choose a datatype"
-                items={datatypeNames}
-                onSelect={onSelectDatatype}
-                selectedItem={datatype}
-                selectOnFocus
-              />
-            </Stack>
-          </div>
-          <Stack flex="auto">
-            <OutlinedInput
+      <Stack flex="auto" gap={1} padding={1.5} position="relative">
+        <Typography variant="subtitle2">
+          {topicName === "" || schemaName === ""
+            ? "Configure a topic and message schema in the panel settings"
+            : `Publishing to ${topicName} (${schemaName})`}
+        </Typography>
+        {advancedView && (
+          <Stack flexGrow="1">
+            <TextField
+              variant="outlined"
               className={classes.textarea}
               multiline
+              size="small"
               placeholder="Enter message content as JSON"
               value={value}
               onChange={(event) => saveConfig({ value: event.target.value })}
+              error={error != undefined}
             />
           </Stack>
-        </Stack>
-      )}
-      <Stack
-        direction="row"
-        flex="0 0 auto"
-        alignItems="flex-start"
-        justifyContent={advancedView ? "flex-end" : "center"}
-        padding={2}
-      >
-        {error && (
-          <Stack flex="auto" padding={0.5} justifyContent="center">
-            <Typography variant="body2" color="error.main">
-              {error}
-            </Typography>
-          </Stack>
         )}
-        <Button
-          className={classes.button}
-          variant="contained"
-          size="large"
-          title={canPublish ? buttonTooltip : "Connect to ROS to publish data"}
-          disabled={!canPublish || parsedObject == undefined}
-          onClick={onPublishClicked}
-        >
-          {buttonText}
-        </Button>
+        <Stack direction="row" flexGrow={0} gap={1} justifyContent="flex-end" alignItems="center">
+          {error && (
+            <FormHelperText
+              error={!!error}
+              style={{
+                flex: "auto",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {error}
+            </FormHelperText>
+          )}
+          <Button
+            className={classes.button}
+            variant="contained"
+            title={canPublish ? buttonTooltip : "Connect to ROS to publish data"}
+            disabled={!canPublish || parsedObject == undefined}
+            onClick={onPublishClicked}
+          >
+            {buttonText}
+          </Button>
+        </Stack>
       </Stack>
     </Stack>
   );
@@ -310,8 +278,8 @@ export default Panel(
   Object.assign(React.memo(Publish), {
     panelType: "Publish",
     defaultConfig: {
+      schemaName: "",
       topicName: "",
-      datatype: "",
       buttonText: "Publish",
       buttonTooltip: "",
       buttonColor: "#00A871",
