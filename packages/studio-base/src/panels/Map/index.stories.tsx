@@ -32,7 +32,15 @@ const OFFSET_MESSAGE = tap(cloneDeep(EMPTY_MESSAGE), (message) => {
   message.longitude += 0.1;
 });
 
-function makeGeoJsonMessage(center: { lat: number; lon: number }) {
+function makeGeoJsonMessage({
+  center,
+  key,
+  polyStyle = {},
+}: {
+  center: { lat: number; lon: number };
+  key: string;
+  polyStyle?: Record<string, unknown>;
+}) {
   return {
     type: "FeatureCollection",
     features: [
@@ -46,12 +54,19 @@ function makeGeoJsonMessage(center: { lat: number; lon: number }) {
             [0.1 + center.lon, 0.1 + center.lat],
           ],
         },
+        properties: {
+          name: `Named Line ${key}`,
+          style: {
+            color: "#ff0000",
+            dashArray: "4 4",
+            lineCap: "butt",
+            opacity: "1",
+            weight: 4,
+          },
+        },
       },
       {
         type: "Feature",
-        properties: {
-          name: "Named Polygon",
-        },
         geometry: {
           type: "Polygon",
           coordinates: [
@@ -62,11 +77,15 @@ function makeGeoJsonMessage(center: { lat: number; lon: number }) {
             ],
           ],
         },
+        properties: {
+          name: `Named Polygon ${key}`,
+          style: polyStyle,
+        },
       },
       {
         type: "Feature",
         properties: {
-          name: "Named Point",
+          name: `Named Point ${key}`,
           "marker-color": "#7f7e7e",
           "marker-size": "medium",
           "marker-symbol": "1",
@@ -426,7 +445,10 @@ export const GeoJSON: StoryObj = {
             schemaName: "foxglove.GeoJSON",
             message: {
               geojson: JSON.stringify(
-                makeGeoJsonMessage({ lat: GeoCenter.lat - 0.2, lon: GeoCenter.lon - 0.2 }),
+                makeGeoJsonMessage({
+                  center: { lat: GeoCenter.lat - 0.2, lon: GeoCenter.lon - 0.2 },
+                  key: "/geo",
+                }),
               ),
             },
             sizeInBytes: 10,
@@ -439,7 +461,16 @@ export const GeoJSON: StoryObj = {
             schemaName: "foxglove.GeoJSON",
             message: {
               geojson: JSON.stringify(
-                makeGeoJsonMessage({ lat: GeoCenter.lat - 0.1, lon: GeoCenter.lon - 0.1 }),
+                makeGeoJsonMessage({
+                  center: { lat: GeoCenter.lat - 0.1, lon: GeoCenter.lon - 0.1 },
+                  key: "/geo2",
+                  polyStyle: {
+                    color: "#ff00ff",
+                    fillColor: "#ffff00",
+                    opacity: "0.8",
+                    weight: 4,
+                  },
+                }),
               ),
             },
             sizeInBytes: 10,
@@ -461,7 +492,10 @@ export const GeoJSON: StoryObj = {
               schemaName: "foxglove.GeoJSON",
               message: {
                 geojson: JSON.stringify(
-                  makeGeoJsonMessage({ lat: GeoCenter.lat + 0.2, lon: GeoCenter.lon + 0.1 }),
+                  makeGeoJsonMessage({
+                    center: { lat: GeoCenter.lat + 0.2, lon: GeoCenter.lon + 0.1 },
+                    key: "/geo",
+                  }),
                 ),
               },
               sizeInBytes: 10,
@@ -475,7 +509,7 @@ export const GeoJSON: StoryObj = {
       <PanelSetup fixture={fixture} includeSettings>
         <MapPanel
           overrideConfig={{
-            topicColors: { "/geo": "#00ffaa", "/geo2": "#aa00ff" },
+            topicColors: { "/geo": "#00ffaa" },
             center: GeoCenter,
           }}
         />
