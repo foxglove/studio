@@ -469,7 +469,7 @@ export default class UserNodePlayer implements Player {
               });
 
               // trigger listener updates
-              void this.#emitState();
+              void this.#queueEmitState();
             };
 
             const port: MessagePort = worker.port;
@@ -481,7 +481,7 @@ export default class UserNodePlayer implements Player {
                 message: `User script runtime error: ${String(event.data)}`,
               });
 
-              void this.#emitState();
+              void this.#queueEmitState();
             };
             port.start();
             rpc = new Rpc(port);
@@ -494,7 +494,7 @@ export default class UserNodePlayer implements Player {
                 message: `User script runtime error: ${msg}`,
               });
 
-              void this.#emitState();
+              void this.#queueEmitState();
             });
           }
 
@@ -648,7 +648,7 @@ export default class UserNodePlayer implements Player {
           message: `User Script error: ${event.message}`,
         });
 
-        void this.#emitState();
+        void this.#queueEmitState();
       };
 
       const port: MessagePort = worker.port;
@@ -660,7 +660,7 @@ export default class UserNodePlayer implements Player {
           message: `User Script error: ${String(event.data)}`,
         });
 
-        void this.#emitState();
+        void this.#queueEmitState();
       };
       port.start();
       const rpc = new Rpc(port);
@@ -673,7 +673,7 @@ export default class UserNodePlayer implements Player {
           message: `User Script error: ${msg}`,
         });
 
-        void this.#emitState();
+        void this.#queueEmitState();
       });
 
       this.#nodeTransformRpc = rpc;
@@ -840,7 +840,7 @@ export default class UserNodePlayer implements Player {
           topics: newTopics,
         },
       };
-      void this.#emitState();
+      await this.#queueEmitState();
     }
   }
 
@@ -879,7 +879,7 @@ export default class UserNodePlayer implements Player {
       const { activeData } = playerState;
       if (!activeData) {
         this.#playerState = playerState;
-        await this.#emitState();
+        await this.#queueEmitState();
         return;
       }
 
@@ -1020,11 +1020,11 @@ export default class UserNodePlayer implements Player {
 
       this.#playerState = playerState;
     } finally {
-      await this.#emitState();
+      await this.#queueEmitState();
     }
   }
 
-  async #emitState() {
+  async #queueEmitState() {
     // Wrap in mutex in case the emitState triggered by changed node registrations happens
     // to run at the same time as an emitstate triggered by the underlying player.
     await this.#emitLock.runExclusive(async () => {
