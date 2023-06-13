@@ -234,7 +234,7 @@ function Publish(props: Props) {
                 placeholder="Enter message content as JSON"
                 value={value}
                 onChange={(event) => saveConfig({ value: event.target.value })}
-                error={error != undefined}
+                error={error?.length !== 0}
               />
             </Stack>
           </>

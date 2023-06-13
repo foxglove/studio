@@ -53,9 +53,10 @@ const baseConfig: Config = {
 };
 
 type StoryArgs = {
-  overrideConfig: Config;
   allowPublish: boolean;
+  includeSettings: boolean;
   isEmpty: boolean;
+  overrideConfig: Config;
 };
 
 export default {
@@ -64,17 +65,32 @@ export default {
   args: {
     allowPublish: true,
     isEmpty: false,
+    includeSettings: false,
   },
   decorators: [
-    (Story, { args: { allowPublish, isEmpty, ...args } }) => (
-      <PanelSetup fixture={isEmpty ? emptyFixture : getFixture({ allowPublish })}>
-        <Story {...{ args }} />
-      </PanelSetup>
-    ),
+    (Story, ctx) => {
+      const {
+        args: { allowPublish, includeSettings, isEmpty, ...args },
+      } = ctx;
+      return (
+        <PanelSetup
+          includeSettings={includeSettings}
+          fixture={isEmpty ? emptyFixture : getFixture({ allowPublish })}
+        >
+          <Story {...{ args }} />
+        </PanelSetup>
+      );
+    },
   ],
 } as Meta<StoryArgs>;
 
 type Story = StoryObj<StoryArgs>;
+
+export const Default: Story = {};
+
+export const DefaultWithSettings: Story = {
+  args: { includeSettings: true },
+};
 
 export const ExampleCanPublishAdvanced: Story = {
   args: { overrideConfig: { ...baseConfig, advancedView: true } },
