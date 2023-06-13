@@ -34,7 +34,7 @@ import buildSampleMessage from "./buildSampleMessage";
 
 export type Config = Partial<{
   topicName: string;
-  schemaName: string;
+  datatype: string;
   buttonText: string;
   buttonTooltip: string;
   buttonColor: string;
@@ -52,12 +52,12 @@ function buildSettingsTree(config: Config, schemaNames: string[]): SettingsTreeN
     general: {
       fields: {
         topicName: { label: "Topic", input: "messagepath", value: config.topicName },
-        schemaName: {
+        datatype: {
           label: "Message schema",
           input: "autocomplete",
           placeholder: "Choose a message schema",
           items: schemaNames,
-          value: config.schemaName,
+          value: config.datatype,
         },
         advancedView: { label: "Editing mode", input: "boolean", value: config.advancedView },
       },
@@ -137,7 +137,7 @@ function Publish(props: Props) {
   const {
     config: {
       topicName = "",
-      schemaName = "",
+      datatype = "",
       buttonText = "Publish",
       buttonTooltip = "",
       buttonColor = "#00A871",
@@ -152,7 +152,7 @@ function Publish(props: Props) {
   const publish = usePublisher({
     name: "Publish",
     topic: debouncedTopicName,
-    schemaName,
+    schemaName: datatype,
     datatypes,
   });
 
@@ -166,19 +166,19 @@ function Publish(props: Props) {
   const prevDatatype = useRef<string | undefined>();
   useEffect(() => {
     if (
-      schemaName.length > 0 &&
+      datatype.length > 0 &&
       prevDatatype.current != undefined &&
-      schemaName !== prevDatatype.current &&
-      datatypes.get(schemaName) != undefined
+      datatype !== prevDatatype.current &&
+      datatypes.get(datatype) != undefined
     ) {
-      const sampleMessage = buildSampleMessage(datatypes, schemaName);
+      const sampleMessage = buildSampleMessage(datatypes, datatype);
       if (sampleMessage != undefined) {
         const stringifiedSampleMessage = JSON.stringify(sampleMessage, undefined, 2);
         saveConfig({ value: stringifiedSampleMessage });
       }
     }
-    prevDatatype.current = schemaName;
-  }, [saveConfig, schemaName, datatypes]);
+    prevDatatype.current = datatype;
+  }, [saveConfig, datatype, datatypes]);
 
   const actionHandler = useCallback(
     (action: SettingsTreeAction) => {
@@ -221,9 +221,9 @@ function Publish(props: Props) {
         {advancedView && (
           <>
             <Typography variant="subtitle2">
-              {topicName === "" || schemaName === ""
+              {topicName === "" || datatype === ""
                 ? "Configure a topic and message schema in the panel settings"
-                : `Publishing to ${topicName} (${schemaName})`}
+                : `Publishing to ${topicName} (${datatype})`}
             </Typography>
             <Stack flexGrow="1">
               <TextField
