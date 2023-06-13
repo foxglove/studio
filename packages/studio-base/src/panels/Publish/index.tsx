@@ -32,7 +32,7 @@ import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import buildSampleMessage from "./buildSampleMessage";
 
-type Config = Partial<{
+export type Config = Partial<{
   topicName: string;
   schemaName: string;
   buttonText: string;
@@ -218,26 +218,34 @@ function Publish(props: Props) {
     <Stack fullHeight>
       <PanelToolbar />
       <Stack flex="auto" gap={1} padding={1.5} position="relative">
-        <Typography variant="subtitle2">
-          {topicName === "" || schemaName === ""
-            ? "Configure a topic and message schema in the panel settings"
-            : `Publishing to ${topicName} (${schemaName})`}
-        </Typography>
         {advancedView && (
-          <Stack flexGrow="1">
-            <TextField
-              variant="outlined"
-              className={classes.textarea}
-              multiline
-              size="small"
-              placeholder="Enter message content as JSON"
-              value={value}
-              onChange={(event) => saveConfig({ value: event.target.value })}
-              error={error != undefined}
-            />
-          </Stack>
+          <>
+            <Typography variant="subtitle2">
+              {topicName === "" || schemaName === ""
+                ? "Configure a topic and message schema in the panel settings"
+                : `Publishing to ${topicName} (${schemaName})`}
+            </Typography>
+            <Stack flexGrow="1">
+              <TextField
+                variant="outlined"
+                className={classes.textarea}
+                multiline
+                size="small"
+                placeholder="Enter message content as JSON"
+                value={value}
+                onChange={(event) => saveConfig({ value: event.target.value })}
+                error={error != undefined}
+              />
+            </Stack>
+          </>
         )}
-        <Stack direction="row" flexGrow={0} gap={1} justifyContent="flex-end" alignItems="center">
+        <Stack
+          direction="row"
+          flexGrow={0}
+          gap={1}
+          justifyContent={advancedView ? "flex-end" : "center"}
+          alignItems="center"
+        >
           {error && (
             <FormHelperText
               error={!!error}

@@ -10,14 +10,15 @@
 //   This source code is licensed under the Apache License, Version 2.0,
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
+
 import { action } from "@storybook/addon-actions";
-import { StoryObj } from "@storybook/react";
+import { Meta, StoryObj } from "@storybook/react";
 
-import Publish from "@foxglove/studio-base/panels/Publish";
+import Publish, { Config } from "@foxglove/studio-base/panels/Publish";
 import { PlayerCapabilities } from "@foxglove/studio-base/players/types";
-import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
+import PanelSetup, { Fixture } from "@foxglove/studio-base/stories/PanelSetup";
 
-const getFixture = ({ allowPublish }: { allowPublish: boolean }) => {
+const getFixture = ({ allowPublish }: { allowPublish: boolean }): Fixture => {
   return {
     topics: [],
     datatypes: new Map(
@@ -32,142 +33,104 @@ const getFixture = ({ allowPublish }: { allowPublish: boolean }) => {
   };
 };
 
+const emptyFixture: Fixture = {
+  topics: [],
+  datatypes: new Map(),
+  frame: {},
+  capabilities: [],
+};
+
 const advancedJSON = `{\n  "data": ""\n}`;
-const publishConfig = (config: Partial<(typeof Publish)["defaultConfig"]>) => ({
+
+const baseConfig: Config = {
   topicName: "/sample_topic",
   schemaName: "std_msgs/String",
   buttonText: "Publish",
   buttonTooltip: "",
   buttonColor: "",
   advancedView: true,
-  value: "",
-  ...config,
-});
+  value: advancedJSON,
+};
+
+type StoryArgs = {
+  overrideConfig: Config;
+  allowPublish: boolean;
+  isEmpty: boolean;
+};
 
 export default {
   title: "panels/Publish",
-};
-
-export const ExampleCanPublishAdvanced: StoryObj = {
-  render: () => {
-    const allowPublish = true;
-    return (
-      <PanelSetup fixture={getFixture({ allowPublish })}>
-        <Publish overrideConfig={publishConfig({ advancedView: true, value: advancedJSON })} />
-      </PanelSetup>
-    );
+  component: Publish,
+  args: {
+    allowPublish: true,
+    isEmpty: false,
   },
+  decorators: [
+    (Story, { args: { allowPublish, isEmpty, ...args } }) => (
+      <PanelSetup fixture={isEmpty ? emptyFixture : getFixture({ allowPublish })}>
+        <Story {...{ args }} />
+      </PanelSetup>
+    ),
+  ],
+} as Meta<StoryArgs>;
 
+type Story = StoryObj<StoryArgs>;
+
+export const ExampleCanPublishAdvanced: Story = {
+  args: { overrideConfig: { ...baseConfig, advancedView: true } },
   name: "example can publish, advanced",
 };
 
-export const CustomButtonColor: StoryObj = {
-  render: () => {
-    const allowPublish = true;
-    return (
-      <PanelSetup fixture={getFixture({ allowPublish })}>
-        <Publish
-          overrideConfig={publishConfig({
-            advancedView: true,
-            value: advancedJSON,
-            buttonColor: "#ffbf49",
-          })}
-        />
-      </PanelSetup>
-    );
+export const CustomButtonColor: Story = {
+  args: {
+    overrideConfig: {
+      ...baseConfig,
+      advancedView: true,
+      value: advancedJSON,
+      buttonColor: "#ffbf49",
+    },
   },
-
   name: "custom button color",
 };
 
-export const ExampleCantPublishAdvanced: StoryObj = {
-  render: () => {
-    const allowPublish = false;
-    return (
-      <PanelSetup fixture={getFixture({ allowPublish })}>
-        <Publish overrideConfig={publishConfig({ advancedView: true, value: advancedJSON })} />
-      </PanelSetup>
-    );
+export const ExampleCantPublishAdvanced: Story = {
+  args: {
+    allowPublish: false,
+    overrideConfig: { ...baseConfig, advancedView: true },
   },
-
   name: "example can't publish, advanced",
 };
 
-export const ExampleCantPublishNotAdvanced: StoryObj = {
-  render: () => {
-    const allowPublish = false;
-    return (
-      <PanelSetup fixture={getFixture({ allowPublish })}>
-        <Publish overrideConfig={publishConfig({ advancedView: false, value: advancedJSON })} />
-      </PanelSetup>
-    );
+export const ExampleCantPublishNotAdvanced: Story = {
+  args: {
+    allowPublish: false,
+    overrideConfig: { ...baseConfig, advancedView: false },
   },
-
   name: "example can't publish, not advanced",
 };
 
-export const ExampleWithDatatypeThatNoLongerExists: StoryObj = {
-  render: () => {
-    return (
-      <PanelSetup fixture={{ topics: [], datatypes: new Map(), frame: {}, capabilities: [] }}>
-        <Publish overrideConfig={publishConfig({ advancedView: true, value: advancedJSON })} />
-      </PanelSetup>
-    );
+export const ExampleWithDatatypeThatNoLongerExists: Story = {
+  args: {
+    isEmpty: true,
+    overrideConfig: { ...baseConfig, advancedView: true },
   },
-
   name: "Example with datatype that no longer exists",
 };
 
-export const ExampleWithValidPresetJson: StoryObj = {
-  render: () => {
-    const fixture = {
-      topics: [],
-      datatypes: new Map(
-        Object.entries({
-          "std_msgs/String": { definitions: [{ name: "data", type: "string" }] },
-        }),
-      ),
-      frame: {},
-      capabilities: [PlayerCapabilities.advertise],
-      setPublishers: action("setPublishers"),
-      publish: action("publish"),
-    };
+const validJSON = `{\n  "a": 1,\n  "b": 2,\n  "c": 3\n}`;
 
-    const validJSON = `{\n  "a": 1,\n  "b": 2,\n  "c": 3\n}`;
-
-    return (
-      <PanelSetup fixture={fixture}>
-        <Publish overrideConfig={publishConfig({ advancedView: true, value: validJSON })} />
-      </PanelSetup>
-    );
+export const ExampleWithValidPresetJson: Story = {
+  args: {
+    overrideConfig: { ...baseConfig, advancedView: true, value: validJSON },
   },
-
   name: "example with valid preset JSON",
 };
 
-export const ExampleWithInvalidPresetJson: StoryObj = {
-  render: () => {
-    const fixture = {
-      topics: [],
-      datatypes: new Map(
-        Object.entries({
-          "std_msgs/String": { definitions: [{ name: "data", type: "string" }] },
-        }),
-      ),
-      frame: {},
-      capabilities: [PlayerCapabilities.advertise],
-      setPublishers: action("setPublishers"),
-      publish: action("publish"),
-    };
+const invalidJSON = `{\n  "a": 1,\n  'b: 2,\n  "c": 3\n}`;
 
-    const invalid = `{\n  "a": 1,\n  'b: 2,\n  "c": 3\n}`;
-
-    return (
-      <PanelSetup fixture={fixture}>
-        <Publish overrideConfig={publishConfig({ advancedView: true, value: invalid })} />
-      </PanelSetup>
-    );
+export const ExampleWithInvalidPresetJson: Story = {
+  args: {
+    overrideConfig: { ...baseConfig, advancedView: true, value: invalidJSON },
   },
-
   name: "example with invalid preset JSON",
 };
