@@ -52,7 +52,7 @@ export const getBuiltin: (t: TFunction<"panels">) => PanelInfo[] = (t) => [
     hasCustomToolbar: true,
   },
   {
-    title: t("newImage"),
+    title: t("image"),
     type: "Image",
     description: t("imageDescription"),
     thumbnail: imageViewThumbnail,
