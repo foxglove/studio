@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import memoizeWeak from "memoize-weak";
+// import memoizeWeak from "memoize-weak";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 
@@ -34,27 +34,28 @@ export type MessageBlock = Immutable<{
 // Memoization probably won't speed up the filtering appreciably, but preserves return identity.
 // That said, MessageBlock identity will change when the set of topics changes, so consumers should
 // prefer to use the identity of topic-block message arrays where possible.
-const filterBlockByTopics = memoizeWeak(
-  (block: Immutable<PlayerMessageBlock> | undefined, topics: readonly string[]): MessageBlock => {
-    if (!block) {
-      // For our purposes, a missing MemoryCacheBlock just means "no topics have been cached for
-      // this block". This is semantically different to an empty array per topic, but not different
-      // to a MemoryCacheBlock with no per-topic arrays.
-      return {};
+const filterBlockByTopics = (
+  block: Immutable<PlayerMessageBlock> | undefined,
+  topics: readonly string[],
+): MessageBlock => {
+  if (!block) {
+    // For our purposes, a missing MemoryCacheBlock just means "no topics have been cached for
+    // this block". This is semantically different to an empty array per topic, but not different
+    // to a MemoryCacheBlock with no per-topic arrays.
+    return {};
+  }
+  const ret: Record<string, readonly MessageEvent[]> = {};
+  for (const topic of topics) {
+    // Don't include an empty array when the data has not been cached for this topic for this
+    // block. The missing entry means "we don't know the message for this topic in this block", as
+    // opposed to "we know there are no messages for this topic in this block".
+    const blockMessages = block.messagesByTopic[topic];
+    if (blockMessages) {
+      ret[topic] = blockMessages;
     }
-    const ret: Record<string, readonly MessageEvent[]> = {};
-    for (const topic of topics) {
-      // Don't include an empty array when the data has not been cached for this topic for this
-      // block. The missing entry means "we don't know the message for this topic in this block", as
-      // opposed to "we know there are no messages for this topic in this block".
-      const blockMessages = block.messagesByTopic[topic];
-      if (blockMessages) {
-        ret[topic] = blockMessages;
-      }
-    }
-    return ret;
-  },
-);
+  }
+  return ret;
+};
 
 const useSubscribeToTopicsForBlocks = (topics: readonly string[]) => {
   const [id] = useState(() => uuidv4());

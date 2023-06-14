@@ -1105,6 +1105,7 @@ export default class UserNodePlayer implements Player {
   }
 
   public close = (): void => {
+    console.log("PLAYER CLOSE");
     void this.#protectedState.runExclusive(async (state) => {
       for (const nodeRegistration of state.nodeRegistrations) {
         nodeRegistration.terminate();

@@ -171,6 +171,8 @@ export class BlockLoader {
         await this.#activeChangeCondvar.wait();
       }
     }
+
+    log.debug("Stopped loading process");
   }
 
   async #load(args: { progress: LoadArgs["progress"] }): Promise<void> {

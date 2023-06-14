@@ -197,6 +197,36 @@ const selectWorkspaceRightSidebarSize = (store: WorkspaceContextStore) => store.
 
 type WorkspaceContentProps = WorkspaceProps & { showSignInForm: boolean };
 
+function Foobar() {
+  const play = useMessagePipeline(selectPlay);
+  const playUntil = useMessagePipeline(selectPlayUntil);
+  const pause = useMessagePipeline(selectPause);
+  const seek = useMessagePipeline(selectSeek);
+  const isPlaying = useMessagePipeline(selectIsPlaying);
+  const getMessagePipeline = useMessagePipelineGetter();
+  const getTimeInfo = useCallback(
+    () => getMessagePipeline().playerState.activeData ?? {},
+    [getMessagePipeline],
+  );
+
+  if (!play || !pause || !seek) {
+    return <></>;
+  }
+
+  return (
+    <div style={{ flexShrink: 0 }}>
+      <PlaybackControls
+        play={play}
+        pause={pause}
+        seek={seek}
+        playUntil={playUntil}
+        isPlaying={isPlaying}
+        getTimeInfo={getTimeInfo}
+      />
+    </div>
+  );
+}
+
 function WorkspaceContent(props: WorkspaceContentProps): JSX.Element {
   const { classes } = useStyles();
   const containerRef = useRef<HTMLDivElement>(ReactNull);
@@ -616,17 +646,6 @@ function WorkspaceContent(props: WorkspaceContentProps): JSX.Element {
     };
   }, [sidebarActions.left, sidebarActions.legacy, sidebarActions.right, sidebarItem]);
 
-  const play = useMessagePipeline(selectPlay);
-  const playUntil = useMessagePipeline(selectPlayUntil);
-  const pause = useMessagePipeline(selectPause);
-  const seek = useMessagePipeline(selectSeek);
-  const isPlaying = useMessagePipeline(selectIsPlaying);
-  const getMessagePipeline = useMessagePipelineGetter();
-  const getTimeInfo = useCallback(
-    () => getMessagePipeline().playerState.activeData ?? {},
-    [getMessagePipeline],
-  );
-
   return (
     <MultiProvider
       providers={[
@@ -676,18 +695,9 @@ function WorkspaceContent(props: WorkspaceContentProps): JSX.Element {
             </Stack>
           </RemountOnValueChange>
         </Sidebars>
-        {play && pause && seek && (
-          <div style={{ flexShrink: 0 }}>
-            <PlaybackControls
-              play={play}
-              pause={pause}
-              seek={seek}
-              playUntil={playUntil}
-              isPlaying={isPlaying}
-              getTimeInfo={getTimeInfo}
-            />
-          </div>
-        )}
+        <RemountOnValueChange value={playerId}>
+          <Foobar />
+        </RemountOnValueChange>
       </div>
       {!props.showSignInForm && workspaceExtensions}
       <WorkspaceDialogs />

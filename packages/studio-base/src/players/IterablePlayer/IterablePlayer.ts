@@ -333,6 +333,7 @@ export class IterablePlayer implements Player {
   }
 
   public close(): void {
+    console.log("SET STATE CLOSE");
     this.#setState("close");
   }
 
@@ -1027,6 +1028,7 @@ export class IterablePlayer implements Player {
   }
 
   async #stateClose() {
+    console.log("STATE CLOSE");
     this.#isPlaying = false;
     this.#metricsCollector.close();
     await this.#blockLoader?.stopLoading();
@@ -1034,8 +1036,14 @@ export class IterablePlayer implements Player {
     await this.#bufferedSource.stopProducer();
     await this.#bufferedSource.terminate();
     await this.#playbackIterator?.return?.();
-    this.#playbackIterator = undefined;
     await this.#iterableSource.terminate?.();
+
+    this.#blockLoader = undefined;
+    this.#playbackIterator = undefined;
+
+    console.log("DONE CLOSE");
+
+    // fixme - before setting the next player we need to wait for the old one to close
   }
 
   async #startBlockLoading() {

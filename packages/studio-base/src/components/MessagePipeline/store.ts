@@ -329,6 +329,8 @@ export function reducer(
       };
     }
 
+    // fixme - I want to throw away everything and make a new store
+    // I don't want anything to do with prevState
     case "set-player":
       if (action.player === prevState.player) {
         return prevState;

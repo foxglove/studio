@@ -89,6 +89,9 @@ export function MessagePipelineProvider({
   );
   useEffect(() => {
     store.getState().dispatch({ type: "set-player", player });
+
+    //setStore(() => createMessagePipelineStore({ promisesToWaitForRef, initialPlayer: player }));
+
     player?.setPublishers(store.getState().allPublishers);
   }, [player, store]);
 
