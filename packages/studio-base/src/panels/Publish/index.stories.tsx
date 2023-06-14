@@ -94,6 +94,16 @@ export const DefaultWithSettings: Story = {
   args: { includeSettings: true },
 };
 
+export const DefaultWithSettingsAndTopicSet: Story = {
+  args: {
+    includeSettings: true,
+    overrideConfig: {
+      topicName: "/sample_topic",
+      advancedView: true,
+    },
+  },
+};
+
 export const ExampleCanPublishAdvanced: Story = {
   args: { overrideConfig: { ...baseConfig, advancedView: true } },
   name: "example can publish, advanced",
