@@ -25,6 +25,7 @@ import Panel from "@foxglove/studio-base/components/Panel";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import Stack from "@foxglove/studio-base/components/Stack";
 import usePublisher from "@foxglove/studio-base/hooks/usePublisher";
+import { Topic } from "@foxglove/studio-base/players/types";
 import { PlayerCapabilities } from "@foxglove/studio-base/players/types";
 import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelStateContextProvider";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
@@ -32,7 +33,7 @@ import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import buildSampleMessage from "./buildSampleMessage";
 
-export type Config = Partial<{
+export type Config = {
   topicName: string;
   datatype: string;
   buttonText: string;
@@ -40,24 +41,36 @@ export type Config = Partial<{
   buttonColor: string;
   advancedView: boolean;
   value: string;
-}>;
+};
 
 type Props = {
   config: Config;
   saveConfig: SaveConfig<Config>;
 };
 
-function buildSettingsTree(config: Config, schemaNames: string[]): SettingsTreeNodes {
+function buildSettingsTree(
+  config: Config,
+  schemaNames: string[],
+  topics: readonly Topic[],
+): SettingsTreeNodes {
   return {
     general: {
       fields: {
-        topicName: { label: "Topic", input: "messagepath", value: config.topicName },
+        topicName: {
+          label: "Topic",
+          input: "autocomplete",
+          placeholder: "Choose a topic…",
+          value: config.topicName,
+          items: topics.map((t) => t.name),
+        },
         datatype: {
           label: "Message schema",
           input: "autocomplete",
-          placeholder: "Choose a message schema",
+          placeholder: "Choose a message schema…",
           items: schemaNames,
-          value: config.datatype,
+          value: config.datatype
+            ? config.datatype
+            : topics.find((t) => t.name === config.topicName)?.schemaName,
         },
         advancedView: { label: "Editing mode", input: "boolean", value: config.advancedView },
       },
@@ -133,7 +146,7 @@ function parseInput(value: string): { error?: string; parsedObject?: unknown } {
 }
 
 function Publish(props: Props) {
-  const { datatypes, capabilities } = useDataSourceInfo();
+  const { topics, datatypes, capabilities } = useDataSourceInfo();
   const {
     config: {
       topicName = "",
@@ -198,9 +211,9 @@ function Publish(props: Props) {
   useEffect(() => {
     updatePanelSettingsTree({
       actionHandler,
-      nodes: buildSettingsTree(props.config, schemaNames),
+      nodes: buildSettingsTree(props.config, schemaNames, topics),
     });
-  }, [actionHandler, props.config, schemaNames, updatePanelSettingsTree]);
+  }, [actionHandler, props.config, schemaNames, topics, updatePanelSettingsTree]);
 
   const onPublishClicked = useRethrow(
     useCallback(() => {
