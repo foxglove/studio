@@ -12,7 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { Button, inputBaseClasses, TextField, Typography } from "@mui/material";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useMemo } from "react";
 import { makeStyles } from "tss-react/mui";
 import { useDebounce } from "use-debounce";
 
@@ -27,7 +27,6 @@ import { PlayerCapabilities } from "@foxglove/studio-base/players/types";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
-import buildSampleMessage from "./buildSampleMessage";
 import { usePublishPanelSettings } from "./settings";
 import { PublishConfig } from "./types";
 
@@ -90,7 +89,7 @@ function parseInput(value: string): { error?: string; parsedObject?: unknown } {
       parsedObject = parsedAny;
     }
   } catch (e) {
-    error = value.length !== 0 ? e.message : "";
+    error = value.length !== 0 ? e.message : "Enter valid message content as JSON";
   }
   return { error, parsedObject };
 }
@@ -111,26 +110,6 @@ function Publish(props: Props) {
   const schemaNames = useMemo(() => Array.from(datatypes.keys()).sort(), [datatypes]);
   const { error, parsedObject } = useMemo(() => parseInput(config.value ?? ""), [config.value]);
 
-  // when the selected datatype changes, replace the textarea contents with a sample message of the correct shape
-  // Make sure not to build a sample message on first load, though -- we don't want to overwrite
-  // the user's message just because prevDatatype hasn't been initialized.
-  const prevDatatype = useRef<string | undefined>();
-  useEffect(() => {
-    if (
-      config.datatype != undefined &&
-      prevDatatype.current != undefined &&
-      config.datatype !== prevDatatype.current &&
-      datatypes.get(config.datatype) != undefined
-    ) {
-      const sampleMessage = buildSampleMessage(datatypes, config.datatype);
-      if (sampleMessage != undefined) {
-        const stringifiedSampleMessage = JSON.stringify(sampleMessage, undefined, 2);
-        saveConfig({ value: stringifiedSampleMessage });
-      }
-    }
-    prevDatatype.current = config.datatype;
-  }, [saveConfig, config.datatype, datatypes]);
-
   usePublishPanelSettings(config, saveConfig, schemaNames, topics, datatypes);
 
   const onPublishClicked = useRethrow(
@@ -145,8 +124,13 @@ function Publish(props: Props) {
 
   const canPublish = capabilities.includes(PlayerCapabilities.advertise) && config.value !== "";
 
-  if (config.topicName == undefined) {
-    return <EmptyState>Configure a topic and message schema in the panel settings</EmptyState>;
+  if (config.topicName == undefined || config.topicName === "") {
+    return (
+      <Stack fullHeight>
+        <PanelToolbar />
+        <EmptyState>Configure a topic and message schema in the panel settings</EmptyState>
+      </Stack>
+    );
   }
 
   return (
@@ -209,7 +193,7 @@ export default Panel(
       buttonTooltip: "",
       buttonColor: "#00A871",
       advancedView: true,
-      value: "",
+      value: "{}",
     },
   }),
 );

@@ -9,7 +9,10 @@ import { useCallback, useEffect } from "react";
 import { Immutable, SettingsTreeAction, SettingsTreeNodes } from "@foxglove/studio";
 import buildSampleMessage from "@foxglove/studio-base/panels/Publish/buildSampleMessage";
 import { Topic } from "@foxglove/studio-base/players/types";
-import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelStateContextProvider";
+import {
+  useDefaultPanelTitle,
+  usePanelSettingsTreeUpdate,
+} from "@foxglove/studio-base/providers/PanelStateContextProvider";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 
@@ -51,6 +54,17 @@ export function buildSettingsTree(
   };
 }
 
+const getSampleMessage = (
+  datatypes: Immutable<RosDatatypes>,
+  datatype?: string,
+): string | undefined => {
+  if (datatype == undefined) {
+    return undefined;
+  }
+  const sampleMessage = buildSampleMessage(datatypes, datatype);
+  return sampleMessage != undefined ? JSON.stringify(sampleMessage, undefined, 2) : "{}";
+};
+
 export function usePublishPanelSettings(
   config: PublishConfig,
   saveConfig: SaveConfig<PublishConfig>,
@@ -59,6 +73,7 @@ export function usePublishPanelSettings(
   datatypes: Immutable<RosDatatypes>,
 ): void {
   const updatePanelSettingsTree = usePanelSettingsTreeUpdate();
+  const [, setDefaultPanelTitle] = useDefaultPanelTitle();
 
   const actionHandler = useCallback(
     (action: SettingsTreeAction) => {
@@ -67,32 +82,37 @@ export function usePublishPanelSettings(
 
         saveConfig(
           produce<PublishConfig>((draft) => {
-            if (input === "autocomplete" && isEqual(path, ["general", "topicName"])) {
-              const topicSchemaName = topics.find((t) => t.name === value)?.schemaName;
+            if (input === "autocomplete") {
+              if (isEqual(path, ["general", "topicName"])) {
+                const topicSchemaName = topics.find((t) => t.name === value)?.schemaName;
+                const sampleMessage = getSampleMessage(datatypes, topicSchemaName);
+                setDefaultPanelTitle(value ? `Publish ${value}` : "Publish");
 
-              draft.topicName = value;
-              if (draft.datatype == undefined || draft.datatype === "") {
-                draft.datatype = topicSchemaName;
-              }
-            } else if (input === "autocomplete" && isEqual(path, ["general", "datatype"])) {
-              draft.datatype = value;
+                draft.topicName = value;
 
-              if (config.datatype != undefined) {
-                const sampleMessage = buildSampleMessage(datatypes, config.datatype);
-
-                if (sampleMessage != undefined) {
-                  const stringifiedSampleMessage = JSON.stringify(sampleMessage, undefined, 2);
-                  draft.value = stringifiedSampleMessage;
+                if (topicSchemaName != undefined) {
+                  draft.datatype = topicSchemaName;
                 }
+                if (sampleMessage) {
+                  draft.value = sampleMessage;
+                }
+              } else if (isEqual(path, ["general", "datatype"])) {
+                const sampleMessage = getSampleMessage(datatypes, value);
+
+                draft.datatype = value;
+
+                if (sampleMessage) {
+                  draft.value = sampleMessage;
+                }
+              } else {
+                set(draft, path.slice(1), value);
               }
-            } else {
-              set(draft, path.slice(1), value);
             }
           }),
         );
       }
     },
-    [config, datatypes, saveConfig, topics],
+    [datatypes, saveConfig, setDefaultPanelTitle, topics],
   );
 
   useEffect(() => {
