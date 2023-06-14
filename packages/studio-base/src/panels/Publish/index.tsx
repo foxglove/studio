@@ -68,9 +68,7 @@ function buildSettingsTree(
           input: "autocomplete",
           placeholder: "Choose a message schema…",
           items: schemaNames,
-          value: config.datatype
-            ? config.datatype
-            : topics.find((t) => t.name === config.topicName)?.schemaName,
+          value: config.datatype,
         },
         advancedView: { label: "Editing mode", input: "boolean", value: config.advancedView },
       },
