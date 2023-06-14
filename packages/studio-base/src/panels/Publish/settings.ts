@@ -6,7 +6,7 @@ import { produce } from "immer";
 import { isEqual, set } from "lodash";
 import { useCallback, useEffect } from "react";
 
-import { SettingsTreeAction, SettingsTreeNodes } from "@foxglove/studio";
+import { Immutable, SettingsTreeAction, SettingsTreeNodes } from "@foxglove/studio";
 import buildSampleMessage from "@foxglove/studio-base/panels/Publish/buildSampleMessage";
 import { Topic } from "@foxglove/studio-base/players/types";
 import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelStateContextProvider";
@@ -56,7 +56,7 @@ export function usePublishPanelSettings(
   saveConfig: SaveConfig<PublishConfig>,
   schemaNames: string[],
   topics: readonly Topic[],
-  datatypes: RosDatatypes,
+  datatypes: Immutable<RosDatatypes>,
 ): void {
   const updatePanelSettingsTree = usePanelSettingsTreeUpdate();
 
@@ -71,7 +71,7 @@ export function usePublishPanelSettings(
               const topicSchemaName = topics.find((t) => t.name === value)?.schemaName;
 
               draft.topicName = value;
-              if (draft.datatype == undefined) {
+              if (draft.datatype == undefined || draft.datatype === "") {
                 draft.datatype = topicSchemaName;
               }
             } else if (input === "autocomplete" && isEqual(path, ["general", "datatype"])) {
