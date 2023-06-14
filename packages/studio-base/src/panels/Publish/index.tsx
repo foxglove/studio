@@ -11,78 +11,30 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Button, Typography, inputBaseClasses, TextField, FormHelperText } from "@mui/material";
-import { produce } from "immer";
-import { set } from "lodash";
+import { Button, inputBaseClasses, TextField, Typography } from "@mui/material";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { makeStyles } from "tss-react/mui";
 import { useDebounce } from "use-debounce";
 
 import { useRethrow } from "@foxglove/hooks";
-import { SettingsTreeAction, SettingsTreeNodes } from "@foxglove/studio";
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
+import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import Panel from "@foxglove/studio-base/components/Panel";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import Stack from "@foxglove/studio-base/components/Stack";
 import usePublisher from "@foxglove/studio-base/hooks/usePublisher";
-import { Topic } from "@foxglove/studio-base/players/types";
 import { PlayerCapabilities } from "@foxglove/studio-base/players/types";
-import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelStateContextProvider";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import buildSampleMessage from "./buildSampleMessage";
-
-export type Config = {
-  topicName: string;
-  datatype: string;
-  buttonText: string;
-  buttonTooltip: string;
-  buttonColor: string;
-  advancedView: boolean;
-  value: string;
-};
+import { usePublishPanelSettings } from "./settings";
+import { PublishConfig } from "./types";
 
 type Props = {
-  config: Config;
-  saveConfig: SaveConfig<Config>;
+  config: PublishConfig;
+  saveConfig: SaveConfig<PublishConfig>;
 };
-
-function buildSettingsTree(
-  config: Config,
-  schemaNames: string[],
-  topics: readonly Topic[],
-): SettingsTreeNodes {
-  return {
-    general: {
-      fields: {
-        topicName: {
-          label: "Topic",
-          input: "autocomplete",
-          placeholder: "Choose a topic…",
-          value: config.topicName,
-          items: topics.map((t) => t.name),
-        },
-        datatype: {
-          label: "Message schema",
-          input: "autocomplete",
-          placeholder: "Choose a message schema…",
-          items: schemaNames,
-          value: config.datatype,
-        },
-        advancedView: { label: "Editing mode", input: "boolean", value: config.advancedView },
-      },
-    },
-    styles: {
-      label: "Styling",
-      fields: {
-        buttonText: { label: "Button title", input: "string", value: config.buttonText },
-        buttonTooltip: { label: "Button tooltip", input: "string", value: config.buttonTooltip },
-        buttonColor: { label: "Button color", input: "rgb", value: config.buttonColor },
-      },
-    },
-  };
-}
 
 const useStyles = makeStyles<{ buttonColor?: string }>()((theme, { buttonColor }) => {
   const augmentedButtonColor = buttonColor
@@ -144,32 +96,20 @@ function parseInput(value: string): { error?: string; parsedObject?: unknown } {
 }
 
 function Publish(props: Props) {
+  const { saveConfig, config } = props;
   const { topics, datatypes, capabilities } = useDataSourceInfo();
-  const {
-    config: {
-      topicName = "",
-      datatype = "",
-      buttonText = "Publish",
-      buttonTooltip = "",
-      buttonColor = "#00A871",
-      advancedView = true,
-      value = "",
-    },
-    saveConfig,
-  } = props;
-  const { classes } = useStyles({ buttonColor });
-  const [debouncedTopicName] = useDebounce(topicName, 500);
+  const { classes } = useStyles({ buttonColor: config.buttonColor });
+  const [debouncedTopicName] = useDebounce(config.topicName ?? "", 500);
 
   const publish = usePublisher({
     name: "Publish",
     topic: debouncedTopicName,
-    schemaName: datatype,
+    schemaName: config.datatype ?? "",
     datatypes,
   });
 
   const schemaNames = useMemo(() => Array.from(datatypes.keys()).sort(), [datatypes]);
-  const { error, parsedObject } = useMemo(() => parseInput(value), [value]);
-  const updatePanelSettingsTree = usePanelSettingsTreeUpdate();
+  const { error, parsedObject } = useMemo(() => parseInput(config.value ?? ""), [config.value]);
 
   // when the selected datatype changes, replace the textarea contents with a sample message of the correct shape
   // Make sure not to build a sample message on first load, though -- we don't want to overwrite
@@ -177,107 +117,81 @@ function Publish(props: Props) {
   const prevDatatype = useRef<string | undefined>();
   useEffect(() => {
     if (
-      datatype.length > 0 &&
+      config.datatype != undefined &&
       prevDatatype.current != undefined &&
-      datatype !== prevDatatype.current &&
-      datatypes.get(datatype) != undefined
+      config.datatype !== prevDatatype.current &&
+      datatypes.get(config.datatype) != undefined
     ) {
-      const sampleMessage = buildSampleMessage(datatypes, datatype);
+      const sampleMessage = buildSampleMessage(datatypes, config.datatype);
       if (sampleMessage != undefined) {
         const stringifiedSampleMessage = JSON.stringify(sampleMessage, undefined, 2);
         saveConfig({ value: stringifiedSampleMessage });
       }
     }
-    prevDatatype.current = datatype;
-  }, [saveConfig, datatype, datatypes]);
+    prevDatatype.current = config.datatype;
+  }, [saveConfig, config.datatype, datatypes]);
 
-  const actionHandler = useCallback(
-    (action: SettingsTreeAction) => {
-      if (action.action !== "update") {
-        return;
-      }
-
-      saveConfig(
-        produce((draft) => {
-          set(draft, action.payload.path.slice(1), action.payload.value);
-        }),
-      );
-    },
-    [saveConfig],
-  );
-
-  useEffect(() => {
-    updatePanelSettingsTree({
-      actionHandler,
-      nodes: buildSettingsTree(props.config, schemaNames, topics),
-    });
-  }, [actionHandler, props.config, schemaNames, topics, updatePanelSettingsTree]);
+  usePublishPanelSettings(config, saveConfig, schemaNames, topics, datatypes);
 
   const onPublishClicked = useRethrow(
     useCallback(() => {
-      if (topicName.length !== 0 && parsedObject != undefined) {
+      if (config.topicName != undefined && parsedObject != undefined) {
         publish(parsedObject as Record<string, unknown>);
       } else {
         throw new Error(`called _publish() when input was invalid`);
       }
-    }, [publish, parsedObject, topicName]),
+    }, [publish, parsedObject, config.topicName]),
   );
 
-  const canPublish = capabilities.includes(PlayerCapabilities.advertise);
+  const canPublish = capabilities.includes(PlayerCapabilities.advertise) && config.value !== "";
+
+  if (config.topicName == undefined) {
+    return <EmptyState>Configure a topic and message schema in the panel settings</EmptyState>;
+  }
 
   return (
     <Stack fullHeight>
       <PanelToolbar />
       <Stack flex="auto" gap={1} padding={1.5} position="relative">
-        {advancedView && (
-          <>
-            <Typography variant="subtitle2">
-              {topicName === "" || datatype === ""
-                ? "Configure a topic and message schema in the panel settings"
-                : `Publishing to ${topicName} (${datatype})`}
-            </Typography>
-            <Stack flexGrow="1">
-              <TextField
-                variant="outlined"
-                className={classes.textarea}
-                multiline
-                size="small"
-                placeholder="Enter message content as JSON"
-                value={value}
-                onChange={(event) => saveConfig({ value: event.target.value })}
-                error={error?.length !== 0}
-              />
-            </Stack>
-          </>
+        {config.advancedView && (
+          <Stack flexGrow="1">
+            <TextField
+              variant="outlined"
+              className={classes.textarea}
+              multiline
+              size="small"
+              placeholder="Enter message content as JSON"
+              value={config.value}
+              onChange={(event) => saveConfig({ value: event.target.value })}
+              error={error != undefined}
+            />
+          </Stack>
         )}
         <Stack
-          direction="row"
-          flexGrow={0}
-          gap={1}
-          justifyContent={advancedView ? "flex-end" : "center"}
+          direction={config.advancedView ? "row" : "column"}
+          justifyContent={config.advancedView ? "flex-end" : "center"}
           alignItems="center"
+          overflow="hidden"
+          flexGrow={0}
+          gap={1.5}
         >
-          {error && (
-            <FormHelperText
-              error={!!error}
-              style={{
-                flex: "auto",
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-              }}
-            >
-              {error}
-            </FormHelperText>
+          {(error != undefined || !canPublish) && (
+            <Typography variant="caption" noWrap color={error != undefined ? "error" : undefined}>
+              {error ?? "Connect to a data source that supports publishing"}
+            </Typography>
           )}
           <Button
             className={classes.button}
             variant="contained"
-            title={canPublish ? buttonTooltip : "Connect to ROS to publish data"}
+            title={
+              canPublish
+                ? config.buttonTooltip
+                : "Connect to a data source that supports publishing"
+            }
             disabled={!canPublish || parsedObject == undefined}
             onClick={onPublishClicked}
           >
-            {buttonText}
+            {config.buttonText}
           </Button>
         </Stack>
       </Stack>

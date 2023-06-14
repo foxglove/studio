@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import ClearIcon from "@mui/icons-material/Clear";
+import CancelIcon from "@mui/icons-material/Cancel";
 import ErrorIcon from "@mui/icons-material/Error";
 import {
   Autocomplete,
@@ -40,6 +40,7 @@ const useStyles = makeStyles<void, "error">()((theme, _params, classes) => {
     autocomplete: {
       ".MuiInputBase-root.MuiInputBase-sizeSmall": {
         paddingInline: 0,
+        paddingBlock: theme.spacing(0.3125),
       },
     },
     error: {},
@@ -146,7 +147,7 @@ function FieldInput({
             </MenuItem>
           )}
           componentsProps={{ clearIndicator: { size: "small" } }}
-          clearIcon={<ClearIcon fontSize="small" />}
+          clearIcon={<CancelIcon fontSize="small" />}
           renderInput={(params) => (
             <TextField {...params} variant="filled" size="small" placeholder={field.placeholder} />
           )}
