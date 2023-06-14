@@ -14,9 +14,11 @@
 import { action } from "@storybook/addon-actions";
 import { Meta, StoryObj } from "@storybook/react";
 
-import Publish, { Config } from "@foxglove/studio-base/panels/Publish";
 import { PlayerCapabilities } from "@foxglove/studio-base/players/types";
 import PanelSetup, { Fixture } from "@foxglove/studio-base/stories/PanelSetup";
+
+import Publish from "./index";
+import { PublishConfig } from "./types";
 
 const getFixture = ({ allowPublish }: { allowPublish: boolean }): Fixture => {
   return {
@@ -42,7 +44,7 @@ const emptyFixture: Fixture = {
 
 const advancedJSON = `{\n  "data": ""\n}`;
 
-const baseConfig: Config = {
+const baseConfig: PublishConfig = {
   topicName: "/sample_topic",
   datatype: "std_msgs/String",
   buttonText: "Publish",
@@ -56,7 +58,7 @@ type StoryArgs = {
   allowPublish: boolean;
   includeSettings: boolean;
   isEmpty: boolean;
-  overrideConfig: Config;
+  overrideConfig: PublishConfig;
 };
 
 export default {
