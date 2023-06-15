@@ -99,9 +99,8 @@ const getTitleCase = (baseString: string): string =>
 type ClearableMenu = Menu & { clear: () => void };
 
 function getWindowBackgroundColor(): string | undefined {
-  return nativeTheme.shouldUseDarkColors
-    ? palette.dark.background?.default
-    : palette.light.background?.default;
+  const theme = palette[nativeTheme.shouldUseDarkColors ? "dark" : "light"];
+  return theme.background?.default;
 }
 
 function getTitleBarOverlayOptions(): TitleBarOverlayOptions {
