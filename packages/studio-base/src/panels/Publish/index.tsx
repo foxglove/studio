@@ -11,17 +11,16 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Button, inputBaseClasses, TextField, Typography } from "@mui/material";
-import { useCallback, useMemo } from "react";
+import { Button, inputBaseClasses, TextField, Tooltip, Typography } from "@mui/material";
+import { useMemo } from "react";
 import { makeStyles } from "tss-react/mui";
 import { useDebounce } from "use-debounce";
 
-import { useRethrow } from "@foxglove/hooks";
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
-import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import Panel from "@foxglove/studio-base/components/Panel";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import Stack from "@foxglove/studio-base/components/Stack";
+import useCallbackWithToast from "@foxglove/studio-base/hooks/useCallbackWithToast";
 import usePublisher from "@foxglove/studio-base/hooks/usePublisher";
 import { PlayerCapabilities } from "@foxglove/studio-base/players/types";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
@@ -103,35 +102,38 @@ function Publish(props: Props) {
   const publish = usePublisher({
     name: "Publish",
     topic: debouncedTopicName,
-    schemaName: config.datatype ?? "",
+    schemaName: config.datatype,
     datatypes,
   });
 
-  const schemaNames = useMemo(() => Array.from(datatypes.keys()).sort(), [datatypes]);
   const { error, parsedObject } = useMemo(() => parseInput(config.value ?? ""), [config.value]);
 
-  usePublishPanelSettings(config, saveConfig, schemaNames, topics, datatypes);
+  usePublishPanelSettings(config, saveConfig, topics, datatypes);
 
-  const onPublishClicked = useRethrow(
-    useCallback(() => {
-      if (config.topicName != undefined && parsedObject != undefined) {
-        publish(parsedObject as Record<string, unknown>);
-      } else {
-        throw new Error(`called _publish() when input was invalid`);
-      }
-    }, [publish, parsedObject, config.topicName]),
-  );
+  const onPublishClicked = useCallbackWithToast(() => {
+    if (config.topicName != undefined && parsedObject != undefined) {
+      publish(parsedObject as Record<string, unknown>);
+    } else {
+      throw new Error(`called _publish() when input was invalid`);
+    }
+  }, [config.topicName, parsedObject, publish]);
 
-  const canPublish = capabilities.includes(PlayerCapabilities.advertise) && config.value !== "";
+  const canPublish =
+    capabilities.includes(PlayerCapabilities.advertise) &&
+    config.value !== "" &&
+    config.topicName !== "" &&
+    config.datatype !== "" &&
+    parsedObject != undefined;
 
-  if (config.topicName == undefined || config.topicName === "") {
-    return (
-      <Stack fullHeight>
-        <PanelToolbar />
-        <EmptyState>Configure a topic and message schema in the panel settings</EmptyState>
-      </Stack>
-    );
-  }
+  const statusMessage = useMemo(() => {
+    if (!capabilities.includes(PlayerCapabilities.advertise)) {
+      return "Connect to a data source that supports publishing";
+    }
+    if (config.topicName == undefined || config.topicName === "") {
+      return "Configure a topic and message schema in the panel settings";
+    }
+    return undefined;
+  }, [capabilities, config.topicName]);
 
   return (
     <Stack fullHeight>
@@ -152,31 +154,30 @@ function Publish(props: Props) {
           </Stack>
         )}
         <Stack
-          direction={config.advancedView ? "row" : "column"}
+          direction={config.advancedView ? "row" : "column-reverse"}
           justifyContent={config.advancedView ? "flex-end" : "center"}
           alignItems="center"
           overflow="hidden"
           flexGrow={0}
           gap={1.5}
         >
-          {(error != undefined || !canPublish) && (
-            <Typography variant="caption" noWrap color={error != undefined ? "error" : undefined}>
-              {error ?? "Connect to a data source that supports publishing"}
+          {(error || statusMessage) && (
+            <Typography variant="caption" noWrap color={error ? "error" : undefined}>
+              {error ?? statusMessage}
             </Typography>
           )}
-          <Button
-            className={classes.button}
-            variant="contained"
-            title={
-              canPublish
-                ? config.buttonTooltip
-                : "Connect to a data source that supports publishing"
-            }
-            disabled={!canPublish || parsedObject == undefined}
-            onClick={onPublishClicked}
-          >
-            {config.buttonText}
-          </Button>
+          <Tooltip title={config.buttonTooltip}>
+            <span>
+              <Button
+                className={classes.button}
+                variant="contained"
+                disabled={!canPublish}
+                onClick={onPublishClicked}
+              >
+                {config.buttonText}
+              </Button>
+            </span>
+          </Tooltip>
         </Stack>
       </Stack>
     </Stack>
@@ -187,8 +188,6 @@ export default Panel(
   Object.assign(React.memo(Publish), {
     panelType: "Publish",
     defaultConfig: {
-      datatype: "",
-      topicName: "",
       buttonText: "Publish",
       buttonTooltip: "",
       buttonColor: "#00A871",

@@ -22,11 +22,9 @@ import { PublishConfig } from "./types";
 
 const getFixture = ({ allowPublish }: { allowPublish: boolean }): Fixture => {
   return {
-    topics: [],
+    topics: [{ name: "/sample_topic", schemaName: "std_msgs/String" }],
     datatypes: new Map(
-      Object.entries({
-        "std_msgs/String": { definitions: [{ name: "data", type: "string" }] },
-      }),
+      Object.entries({ "std_msgs/String": { definitions: [{ name: "data", type: "string" }] } }),
     ),
     frame: {},
     capabilities: allowPublish ? [PlayerCapabilities.advertise] : [],
@@ -65,9 +63,12 @@ export default {
   title: "panels/Publish",
   component: Publish,
   args: {
-    allowPublish: true,
+    allowPublish: false,
     isEmpty: false,
     includeSettings: false,
+  },
+  parameters: {
+    colorScheme: "both-column",
   },
   decorators: [
     (Story, ctx) => {
@@ -90,13 +91,13 @@ type Story = StoryObj<StoryArgs>;
 
 export const Default: Story = {};
 
-export const DefaultWithSettings: Story = {
-  args: { includeSettings: true },
+export const DefaultCanPublish: Story = {
+  args: { allowPublish: true },
 };
 
-export const DefaultWithSettingsAndTopicSet: Story = {
+export const DefaultWithTopicSet: Story = {
   args: {
-    includeSettings: true,
+    allowPublish: true,
     overrideConfig: {
       topicName: "/sample_topic",
       advancedView: true,
@@ -105,12 +106,19 @@ export const DefaultWithSettingsAndTopicSet: Story = {
 };
 
 export const ExampleCanPublishAdvanced: Story = {
-  args: { overrideConfig: { ...baseConfig, advancedView: true } },
+  args: {
+    allowPublish: true,
+    overrideConfig: {
+      ...baseConfig,
+      advancedView: true,
+    },
+  },
   name: "example can publish, advanced",
 };
 
 export const CustomButtonColor: Story = {
   args: {
+    allowPublish: true,
     overrideConfig: {
       ...baseConfig,
       advancedView: true,
@@ -123,8 +131,11 @@ export const CustomButtonColor: Story = {
 
 export const ExampleCantPublishAdvanced: Story = {
   args: {
-    allowPublish: false,
-    overrideConfig: { ...baseConfig, advancedView: true },
+    allowPublish: true,
+    overrideConfig: {
+      ...baseConfig,
+      advancedView: true,
+    },
   },
   name: "example can't publish, advanced",
 };
@@ -132,15 +143,22 @@ export const ExampleCantPublishAdvanced: Story = {
 export const ExampleCantPublishNotAdvanced: Story = {
   args: {
     allowPublish: false,
-    overrideConfig: { ...baseConfig, advancedView: false },
+    overrideConfig: {
+      ...baseConfig,
+      advancedView: false,
+    },
   },
   name: "example can't publish, not advanced",
 };
 
 export const ExampleWithDatatypeThatNoLongerExists: Story = {
   args: {
+    allowPublish: true,
     isEmpty: true,
-    overrideConfig: { ...baseConfig, advancedView: true },
+    overrideConfig: {
+      ...baseConfig,
+      advancedView: true,
+    },
   },
   name: "Example with datatype that no longer exists",
 };
@@ -149,7 +167,12 @@ const validJSON = `{\n  "a": 1,\n  "b": 2,\n  "c": 3\n}`;
 
 export const ExampleWithValidPresetJson: Story = {
   args: {
-    overrideConfig: { ...baseConfig, advancedView: true, value: validJSON },
+    allowPublish: true,
+    overrideConfig: {
+      ...baseConfig,
+      advancedView: true,
+      value: validJSON,
+    },
   },
   name: "example with valid preset JSON",
 };
@@ -158,7 +181,12 @@ const invalidJSON = `{\n  "a": 1,\n  'b: 2,\n  "c": 3\n}`;
 
 export const ExampleWithInvalidPresetJson: Story = {
   args: {
-    overrideConfig: { ...baseConfig, advancedView: true, value: invalidJSON },
+    allowPublish: true,
+    overrideConfig: {
+      ...baseConfig,
+      advancedView: true,
+      value: invalidJSON,
+    },
   },
   name: "example with invalid preset JSON",
 };

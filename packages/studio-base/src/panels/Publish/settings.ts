@@ -4,7 +4,7 @@
 
 import { produce } from "immer";
 import { isEqual, set } from "lodash";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 
 import { Immutable, SettingsTreeAction, SettingsTreeNodes } from "@foxglove/studio";
 import buildSampleMessage from "@foxglove/studio-base/panels/Publish/buildSampleMessage";
@@ -23,6 +23,8 @@ export function buildSettingsTree(
   schemaNames: string[],
   topics: readonly Topic[],
 ): SettingsTreeNodes {
+  const datatypeError = config.datatype === "" ? "Message schema cannot be empty" : undefined;
+
   return {
     general: {
       fields: {
@@ -36,6 +38,7 @@ export function buildSettingsTree(
         datatype: {
           label: "Message schema",
           input: "autocomplete",
+          error: datatypeError,
           placeholder: "Choose a message schema…",
           items: schemaNames,
           value: config.datatype,
@@ -68,49 +71,50 @@ const getSampleMessage = (
 export function usePublishPanelSettings(
   config: PublishConfig,
   saveConfig: SaveConfig<PublishConfig>,
-  schemaNames: string[],
   topics: readonly Topic[],
   datatypes: Immutable<RosDatatypes>,
 ): void {
   const updatePanelSettingsTree = usePanelSettingsTreeUpdate();
   const [, setDefaultPanelTitle] = useDefaultPanelTitle();
+  const schemaNames = useMemo(() => Array.from(datatypes.keys()).sort(), [datatypes]);
 
   const actionHandler = useCallback(
     (action: SettingsTreeAction) => {
-      if (action.action === "update") {
-        const { path, value, input } = action.payload;
-
-        saveConfig(
-          produce<PublishConfig>((draft) => {
-            if (input === "autocomplete") {
-              if (isEqual(path, ["general", "topicName"])) {
-                const topicSchemaName = topics.find((t) => t.name === value)?.schemaName;
-                const sampleMessage = getSampleMessage(datatypes, topicSchemaName);
-                setDefaultPanelTitle(value ? `Publish ${value}` : "Publish");
-
-                draft.topicName = value;
-
-                if (topicSchemaName != undefined) {
-                  draft.datatype = topicSchemaName;
-                }
-                if (sampleMessage) {
-                  draft.value = sampleMessage;
-                }
-              } else if (isEqual(path, ["general", "datatype"])) {
-                const sampleMessage = getSampleMessage(datatypes, value);
-
-                draft.datatype = value;
-
-                if (sampleMessage) {
-                  draft.value = sampleMessage;
-                }
-              }
-            } else {
-              set(draft, path.slice(1), value);
-            }
-          }),
-        );
+      if (action.action !== "update") {
+        return;
       }
+      const { path, value, input } = action.payload;
+
+      saveConfig(
+        produce<PublishConfig>((draft) => {
+          if (input === "autocomplete") {
+            if (isEqual(path, ["general", "topicName"])) {
+              const topicSchemaName = topics.find((t) => t.name === value)?.schemaName;
+              const sampleMessage = getSampleMessage(datatypes, topicSchemaName);
+              setDefaultPanelTitle(value ? `Publish ${value}` : "Publish");
+
+              draft.topicName = value;
+
+              if (topicSchemaName != undefined) {
+                draft.datatype = topicSchemaName;
+              }
+              if (sampleMessage) {
+                draft.value = sampleMessage;
+              }
+            } else if (isEqual(path, ["general", "datatype"])) {
+              const sampleMessage = getSampleMessage(datatypes, value);
+
+              draft.datatype = value;
+
+              if (sampleMessage) {
+                draft.value = sampleMessage;
+              }
+            }
+          } else {
+            set(draft, path.slice(1), value);
+          }
+        }),
+      );
     },
     [datatypes, saveConfig, setDefaultPanelTitle, topics],
   );
