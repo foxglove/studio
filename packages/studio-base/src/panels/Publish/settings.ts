@@ -104,9 +104,9 @@ export function usePublishPanelSettings(
                 if (sampleMessage) {
                   draft.value = sampleMessage;
                 }
-              } else {
-                set(draft, path.slice(1), value);
               }
+            } else {
+              set(draft, path.slice(1), value);
             }
           }),
         );
