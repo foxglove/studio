@@ -18,6 +18,7 @@ import {
   RenderState,
   SettingsTree,
   Subscription,
+  Time,
   VariableValue,
 } from "@foxglove/studio";
 import {
@@ -97,7 +98,9 @@ type RenderFn = NonNullable<PanelExtensionContext["onRender"]>;
  *
  * The adapter creates a PanelExtensionContext and invokes initPanel using the context.
  */
-function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
+function PanelExtensionAdapter(
+  props: React.PropsWithChildren<PanelExtensionAdapterProps>,
+): JSX.Element {
   const { initPanel, config, saveConfig, highestSupportedConfigVersion } = props;
 
   // Unlike the react data flow, the config is only provided to the panel once on setup.
@@ -316,11 +319,12 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
       layout,
 
       seekPlayback: seekPlayback
-        ? (stamp: number) => {
+        ? (stamp: number | Time) => {
             if (!isMounted()) {
               return;
             }
-            seekPlayback(fromSec(stamp));
+            const seekTarget = typeof stamp === "object" ? stamp : fromSec(stamp);
+            seekPlayback(seekTarget);
           }
         : undefined,
 
@@ -606,6 +610,7 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
     >
       <PanelToolbar />
       {configTooNew && <PanelConfigVersionError />}
+      {props.children}
       <div style={{ flex: 1, overflow: "hidden" }} ref={panelContainerRef} />
     </div>
   );
