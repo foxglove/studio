@@ -98,14 +98,19 @@ const getTitleCase = (baseString: string): string =>
 
 type ClearableMenu = Menu & { clear: () => void };
 
-function getTitleBarOverlayOptions({ isDark }: { isDark: boolean }): TitleBarOverlayOptions {
-  const theme = palette[isDark ? "dark" : "light"];
+function getWindowBackgroundColor(): string | undefined {
+  return nativeTheme.shouldUseDarkColors
+    ? palette.dark.background?.default
+    : palette.light.background?.default;
+}
 
+function getTitleBarOverlayOptions(): TitleBarOverlayOptions {
+  const theme = palette[nativeTheme.shouldUseDarkColors ? "dark" : "light"];
   if (isWindows) {
     return {
       height: APP_BAR_HEIGHT,
       color: theme.appBar.main,
-      symbolColor: theme.common?.white,
+      symbolColor: theme.appBar.text,
     };
   }
   return {};
@@ -114,20 +119,13 @@ function getTitleBarOverlayOptions({ isDark }: { isDark: boolean }): TitleBarOve
 function newStudioWindow(deepLinks: string[] = [], reloadMainWindow: () => void): BrowserWindow {
   const { crashReportingEnabled, telemetryEnabled } = getTelemetrySettings();
   const enableNewTopNav = getAppSetting<boolean>(AppSetting.ENABLE_NEW_TOPNAV) ?? false;
-  const colorScheme = getAppSetting<string>(AppSetting.COLOR_SCHEME) ?? "system";
-  const isDark =
-    colorScheme === "dark" || (colorScheme === "system" && nativeTheme.shouldUseDarkColors);
-  const backgroundColor = isDark
-    ? palette.dark.background?.default
-    : palette.light.background?.default;
-
   const preloadPath = path.join(app.getAppPath(), "main", "preload.js");
 
   const macTrafficLightInset =
     Math.floor((APP_BAR_HEIGHT - /*button size*/ 12) / 2) - /*for good measure*/ 1;
 
   const windowOptions: BrowserWindowConstructorOptions = {
-    backgroundColor,
+    backgroundColor: getWindowBackgroundColor(),
     height: 800,
     width: 1200,
     minWidth: 350,
@@ -138,7 +136,7 @@ function newStudioWindow(deepLinks: string[] = [], reloadMainWindow: () => void)
     titleBarStyle: enableNewTopNav ? "hidden" : "default",
     trafficLightPosition:
       isMac && enableNewTopNav ? { x: macTrafficLightInset, y: macTrafficLightInset } : undefined,
-    titleBarOverlay: getTitleBarOverlayOptions({ isDark }),
+    titleBarOverlay: getTitleBarOverlayOptions(),
     webPreferences: {
       contextIsolation: true,
       sandbox: false, // Allow preload script to access Node builtins
@@ -167,7 +165,11 @@ function newStudioWindow(deepLinks: string[] = [], reloadMainWindow: () => void)
   nativeTheme.on("updated", () => {
     if (isWindows) {
       // Although the TS types say this function is always available, it is undefined on non-Windows platforms
-      browserWindow.setTitleBarOverlay(getTitleBarOverlayOptions({ isDark }));
+      browserWindow.setTitleBarOverlay(getTitleBarOverlayOptions());
+    }
+    const bgColor = getWindowBackgroundColor();
+    if (bgColor != undefined) {
+      browserWindow.setBackgroundColor(bgColor);
     }
   });
 

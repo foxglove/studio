@@ -11,6 +11,7 @@ declare module "@mui/material/styles" {
     appBar: {
       main: CSSProperties["color"];
       primary: CSSProperties["color"];
+      text: CSSProperties["color"];
     };
   }
   interface PaletteOptions {
@@ -18,6 +19,7 @@ declare module "@mui/material/styles" {
     appBar: {
       main: CSSProperties["color"];
       primary: CSSProperties["color"];
+      text: CSSProperties["color"];
     };
   }
   interface TypeBackground {
@@ -32,6 +34,7 @@ export const dark: PaletteOptions = {
   appBar: {
     main: "#35363A",
     primary: "#9480ed",
+    text: "#ffffff",
   },
   primary: { main: "#9480ed" },
   secondary: { main: "#b1b1b1" },
@@ -74,6 +77,7 @@ export const light: PaletteOptions = {
   appBar: {
     main: "#27272b",
     primary: "#9480ed",
+    text: "#ffffff",
   },
   primary: { main: "#6f3be8" },
   secondary: { main: "#808080" },
