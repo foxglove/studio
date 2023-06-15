@@ -43,12 +43,12 @@ export function buildSettingsTree(
         advancedView: { label: "Editing mode", input: "boolean", value: config.advancedView },
       },
     },
-    styles: {
-      label: "Styling",
+    button: {
+      label: "Button",
       fields: {
-        buttonText: { label: "Button title", input: "string", value: config.buttonText },
-        buttonTooltip: { label: "Button tooltip", input: "string", value: config.buttonTooltip },
-        buttonColor: { label: "Button color", input: "rgb", value: config.buttonColor },
+        buttonText: { label: "Title", input: "string", value: config.buttonText },
+        buttonTooltip: { label: "Tooltip", input: "string", value: config.buttonTooltip },
+        buttonColor: { label: "Color", input: "rgb", value: config.buttonColor },
       },
     },
   };
