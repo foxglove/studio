@@ -191,7 +191,7 @@ export function parseFlatbufferSchema(
     }
   }
   const parser = new Parser(rawSchema);
-  const toObject = parser.toObjectLambda(typeIndex);
+  const toObject = parser.toObjectLambda(typeIndex, /*readDefaults=*/ true);
   const deserialize = (buffer: ArrayBufferView) => {
     const byteBuffer = new ByteBuffer(
       new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength),
