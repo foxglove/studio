@@ -43,6 +43,15 @@ const useStyles = makeStyles<void, "error">()((theme, _params, classes) => {
         paddingBlock: theme.spacing(0.3125),
       },
     },
+    clearIndicator: {
+      marginRight: theme.spacing(-0.25),
+      opacity: theme.palette.action.disabledOpacity,
+
+      ":hover": {
+        background: "transparent",
+        opacity: 1,
+      },
+    },
     error: {},
     fieldLabel: {
       color: theme.palette.text.secondary,
@@ -146,7 +155,12 @@ function FieldInput({
               {option}
             </MenuItem>
           )}
-          componentsProps={{ clearIndicator: { size: "small" } }}
+          componentsProps={{
+            clearIndicator: {
+              size: "small",
+              className: classes.clearIndicator,
+            },
+          }}
           clearIcon={<CancelIcon fontSize="small" />}
           renderInput={(params) => (
             <TextField {...params} variant="filled" size="small" placeholder={field.placeholder} />
