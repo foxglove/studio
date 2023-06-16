@@ -23,7 +23,15 @@ export function buildSettingsTree(
   schemaNames: string[],
   topics: readonly Topic[],
 ): SettingsTreeNodes {
-  const datatypeError = config.datatype === "" ? "Message schema cannot be empty" : undefined;
+  const datatypeError = () => {
+    if (config.datatype === "") {
+      return "Message schema cannot be empty";
+    }
+    if (config.datatype != undefined && !schemaNames.includes(config.datatype)) {
+      return "Schema name not found";
+    }
+    return undefined;
+  };
 
   return {
     general: {
@@ -38,7 +46,7 @@ export function buildSettingsTree(
         datatype: {
           label: "Message schema",
           input: "autocomplete",
-          error: datatypeError,
+          error: datatypeError(),
           placeholder: "Choose a message schema…",
           items: schemaNames,
           value: config.datatype,

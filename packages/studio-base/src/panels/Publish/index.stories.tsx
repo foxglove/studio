@@ -38,7 +38,7 @@ const emptyFixture: Fixture = {
   topics: [],
   datatypes: new Map(),
   frame: {},
-  capabilities: [],
+  capabilities: [PlayerCapabilities.advertise],
 };
 
 const advancedJSON = `{\n  "data": ""\n}`;
