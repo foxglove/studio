@@ -39,7 +39,7 @@ export function buildSettingsTree(
         topicName: {
           label: "Topic",
           input: "autocomplete",
-          placeholder: "Choose a topic…",
+          placeholder: "/some_topic",
           value: config.topicName,
           items: topics.map((t) => t.name),
         },
@@ -47,7 +47,7 @@ export function buildSettingsTree(
           label: "Message schema",
           input: "autocomplete",
           error: datatypeError(),
-          placeholder: "Choose a message schema…",
+          placeholder: "std_msgs/Type",
           items: schemaNames,
           value: config.datatype,
         },
