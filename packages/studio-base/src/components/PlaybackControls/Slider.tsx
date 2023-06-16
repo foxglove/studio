@@ -101,11 +101,17 @@ export default function Slider(props: Props): JSX.Element {
 
   const onPointerMove = useCallback(
     (ev: React.PointerEvent | PointerEvent): void => {
-      const val = getValueAtMouse(ev);
+      if (mouseDownRef.current && ev.currentTarget !== window) {
+        // onPointerMove is used on the <div/> for hovering, and on the window for dragging. While
+        // dragging we only want to pay attention to the window events (otherwise we'd be handling
+        // each event twice).
+        return;
+      }
       if (disabled) {
         return;
       }
 
+      const val = getValueAtMouse(ev);
       if (elRef.current) {
         onHoverOver?.(val);
       }
@@ -135,8 +141,10 @@ export default function Slider(props: Props): JSX.Element {
   useEffect(() => {
     if (mouseDown) {
       window.addEventListener("pointerup", onPointerUp);
+      window.addEventListener("pointermove", onPointerMove);
       return () => {
         window.removeEventListener("pointerup", onPointerUp);
+        window.removeEventListener("pointermove", onPointerMove);
       };
     }
     return undefined;
