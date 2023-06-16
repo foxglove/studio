@@ -12,7 +12,11 @@ type Props = {
   fraction: number | undefined;
   disabled?: boolean;
   onChange: (value: number) => void;
-  onHoverOver?: (value: number) => void;
+  /**
+   * @param value Hovered `fraction` value
+   * @param position Current hovered position in client coordinates
+   */
+  onHoverOver?: (value: number, position: { clientX: number; clientY: number }) => void;
   onHoverOut?: () => void;
   renderSlider?: (value?: number) => ReactNode;
 };
@@ -113,7 +117,8 @@ export default function Slider(props: Props): JSX.Element {
 
       const val = getValueAtMouse(ev);
       if (elRef.current) {
-        onHoverOver?.(val);
+        const elRect = elRef.current.getBoundingClientRect();
+        onHoverOver?.(val, { clientX: ev.clientX, clientY: elRect.y + elRect.height / 2 });
       }
       if (!mouseDownRef.current) {
         return;

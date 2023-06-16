@@ -2,9 +2,9 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Fade, Tooltip } from "@mui/material";
+import { Fade, PopperProps, Tooltip } from "@mui/material";
 import type { Instance } from "@popperjs/core";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLatest } from "react-use";
 import { makeStyles } from "tss-react/mui";
 import { v4 as uuidv4 } from "uuid";
@@ -70,7 +70,6 @@ export default function Scrubber(props: Props): JSX.Element {
   const { classes, cx } = useStyles();
 
   const [hoverComponentId] = useState<string>(() => uuidv4());
-  const hoverElRef = useRef<HTMLDivElement>(ReactNull);
 
   const startTime = useMessagePipeline(selectStartTime);
   const currentTime = useMessagePipeline(selectCurrentTime);
@@ -80,7 +79,10 @@ export default function Scrubber(props: Props): JSX.Element {
 
   const setHoverValue = useSetHoverValue();
 
-  const [hoverStamp, setHoverStamp] = useState<Time | undefined>();
+  const [hoverInfo, setHoverInfo] = useState<
+    { stamp: Time; position: { clientX: number; clientY: number } } | undefined
+  >();
+  const latestHoverInfo = useLatest(hoverInfo);
 
   const latestStartTime = useLatest(startTime);
   const latestEndTime = useLatest(endTime);
@@ -101,13 +103,13 @@ export default function Scrubber(props: Props): JSX.Element {
   );
 
   const onHoverOver = useCallback(
-    (fraction: number) => {
-      if (!latestStartTime.current || !latestEndTime.current || hoverElRef.current == undefined) {
+    (fraction: number, position: { clientX: number; clientY: number }) => {
+      if (!latestStartTime.current || !latestEndTime.current) {
         return;
       }
       const duration = toSec(subtractTimes(latestEndTime.current, latestStartTime.current));
       const timeFromStart = fromSec(fraction * duration);
-      setHoverStamp(addTimes(latestStartTime.current, timeFromStart));
+      setHoverInfo({ stamp: addTimes(latestStartTime.current, timeFromStart), position });
       setHoverValue({
         componentId: hoverComponentId,
         type: "PLAYBACK_SECONDS",
@@ -121,6 +123,7 @@ export default function Scrubber(props: Props): JSX.Element {
 
   const onHoverOut = useCallback(() => {
     clearHoverValue(hoverComponentId);
+    setHoverInfo(undefined);
   }, [clearHoverValue, hoverComponentId]);
 
   // Clean up the hover value when we are unmounted -- important for storybook.
@@ -147,57 +150,60 @@ export default function Scrubber(props: Props): JSX.Element {
 
   const popperRef = React.useRef<Instance>(ReactNull);
 
-  const positionRef = React.useRef({ x: 0, y: 0 });
+  const isHovered = hoverInfo != undefined;
+  const popperProps: Partial<PopperProps> = useMemo(
+    () => ({
+      open: isHovered, // Keep the tooltip visible while dragging even when the mouse is outside the playback bar
+      popperRef,
+      modifiers: [
+        {
+          name: "computeStyles",
+          options: {
+            gpuAcceleration: false, // Fixes hairline seam on arrow in chrome.
+          },
+        },
+        {
+          name: "offset",
+          options: {
+            // Offset popper to hug the track better.
+            offset: [0, 4],
+          },
+        },
+      ],
+      anchorEl: {
+        getBoundingClientRect: () => {
+          return new DOMRect(
+            latestHoverInfo.current?.position.clientX ?? 0,
+            latestHoverInfo.current?.position.clientY ?? 0,
+            0,
+            0,
+          );
+        },
+      },
+    }),
+    [isHovered, latestHoverInfo],
+  );
 
-  const handlePointerMove = (event: React.PointerEvent) => {
-    positionRef.current = { x: event.clientX, y: event.clientY };
-
+  useEffect(() => {
     if (popperRef.current != undefined) {
       void popperRef.current.update();
     }
-  };
+  }, [hoverInfo]);
 
   return (
     <Tooltip
-      title={hoverStamp != undefined ? <PlaybackControlsTooltipContent stamp={hoverStamp} /> : ""}
+      title={
+        hoverInfo != undefined ? <PlaybackControlsTooltipContent stamp={hoverInfo.stamp} /> : ""
+      }
       placement="top"
       disableInteractive
       TransitionComponent={Fade}
       TransitionProps={{ timeout: 0 }}
-      PopperProps={{
-        popperRef,
-        modifiers: [
-          {
-            name: "computeStyles",
-            options: {
-              gpuAcceleration: false, // Fixes hairline seam on arrow in chrome.
-            },
-          },
-          {
-            name: "offset",
-            options: {
-              // Offset popper to hug the track better.
-              offset: [0, -12],
-            },
-          },
-        ],
-        anchorEl: {
-          getBoundingClientRect: () => {
-            return new DOMRect(
-              positionRef.current.x,
-              hoverElRef.current?.getBoundingClientRect().y ?? 0,
-              0,
-              0,
-            );
-          },
-        },
-      }}
+      PopperProps={popperProps}
     >
       <Stack
-        ref={hoverElRef}
         direction="row"
         flexGrow={1}
-        onPointerMove={handlePointerMove}
         alignItems="center"
         position="relative"
         style={{ height: 32 }}
