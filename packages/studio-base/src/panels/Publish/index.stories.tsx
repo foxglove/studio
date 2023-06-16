@@ -13,6 +13,7 @@
 
 import { action } from "@storybook/addon-actions";
 import { Meta, StoryObj } from "@storybook/react";
+import { userEvent, within } from "@storybook/testing-library";
 
 import { PlayerCapabilities } from "@foxglove/studio-base/players/types";
 import PanelSetup, { Fixture } from "@foxglove/studio-base/stories/PanelSetup";
@@ -45,9 +46,6 @@ const advancedJSON = `{\n  "data": ""\n}`;
 const baseConfig: PublishConfig = {
   topicName: "/sample_topic",
   datatype: "std_msgs/String",
-  buttonText: "Publish",
-  buttonTooltip: "",
-  buttonColor: "",
   advancedView: true,
   value: advancedJSON,
 };
@@ -64,8 +62,8 @@ export default {
   component: Publish,
   args: {
     allowPublish: false,
+    includeSettings: true,
     isEmpty: false,
-    includeSettings: false,
   },
   parameters: {
     colorScheme: "both-column",
@@ -91,67 +89,74 @@ type Story = StoryObj<StoryArgs>;
 
 export const Default: Story = {};
 
-export const DefaultCanPublish: Story = {
+export const PublishEnabled: Story = {
   args: { allowPublish: true },
 };
 
-export const DefaultWithTopicSet: Story = {
+export const PublishEnabledWithTopicAndSchema: Story = {
   args: {
     allowPublish: true,
-    overrideConfig: {
-      topicName: "/sample_topic",
-      advancedView: true,
-    },
+    overrideConfig: { ...baseConfig },
   },
+  name: "Publish Enabled with topic and schema",
 };
 
-export const ExampleCanPublishAdvanced: Story = {
+export const PublishEnabledWithCustomButtonSettings: Story = {
   args: {
     allowPublish: true,
     overrideConfig: {
       ...baseConfig,
-      advancedView: true,
-    },
-  },
-  name: "example can publish, advanced",
-};
-
-export const CustomButtonColor: Story = {
-  args: {
-    allowPublish: true,
-    overrideConfig: {
-      ...baseConfig,
-      advancedView: true,
-      value: advancedJSON,
       buttonColor: "#ffbf49",
+      buttonTooltip: "I am a button tooltip",
+      buttonText: "Send message",
     },
   },
-  name: "custom button color",
-};
+  name: "Publish Enabled with custom button settings",
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const buttons = await canvas.findAllByText("Send message");
 
-export const ExampleCantPublishAdvanced: Story = {
-  args: {
-    allowPublish: true,
-    overrideConfig: {
-      ...baseConfig,
-      advancedView: true,
-    },
+    buttons.forEach((button) => userEvent.hover(button));
   },
-  name: "example can't publish, advanced",
 };
 
-export const ExampleCantPublishNotAdvanced: Story = {
+export const PublishDisabledWithTopicAndSchema: Story = {
   args: {
     allowPublish: false,
     overrideConfig: {
       ...baseConfig,
-      advancedView: false,
     },
   },
-  name: "example can't publish, not advanced",
+  name: "Publish Disabled with topic and schema",
 };
 
-export const ExampleWithDatatypeThatNoLongerExists: Story = {
+const validJSON = `{\n  "a": 1,\n  "b": 2,\n  "c": 3\n}`;
+
+export const WithValidJSON: Story = {
+  args: {
+    allowPublish: true,
+    overrideConfig: {
+      ...baseConfig,
+      value: validJSON,
+    },
+  },
+  name: "Publish Enabled with valid JSON",
+};
+
+const invalidJSON = `{\n  "a": 1,\n  'b: 2,\n  "c": 3\n}`;
+
+export const WithInvalidJSON: Story = {
+  args: {
+    allowPublish: true,
+    overrideConfig: {
+      ...baseConfig,
+      value: invalidJSON,
+    },
+  },
+  name: "Publish Enabled with invalid JSON",
+};
+
+export const WithSchemaThatNoLongerExists: Story = {
   args: {
     allowPublish: true,
     isEmpty: true,
@@ -160,33 +165,59 @@ export const ExampleWithDatatypeThatNoLongerExists: Story = {
       advancedView: true,
     },
   },
-  name: "Example with datatype that no longer exists",
+  name: "Publish Enabled with schema that no longer exists",
 };
 
-const validJSON = `{\n  "a": 1,\n  "b": 2,\n  "c": 3\n}`;
+export const DefaultEditingModeOff: Story = {
+  args: { overrideConfig: { advancedView: false } },
+  name: "Default (editing mode off)",
+};
 
-export const ExampleWithValidPresetJson: Story = {
+export const PublishEnabledEditingOff: Story = {
+  args: {
+    allowPublish: true,
+    overrideConfig: { advancedView: false },
+  },
+  name: "Publish Enabled (editing mode off)",
+};
+
+export const PublishEnabledWithTopicAndSchemaEditingOff: Story = {
   args: {
     allowPublish: true,
     overrideConfig: {
       ...baseConfig,
-      advancedView: true,
-      value: validJSON,
+      advancedView: false,
     },
   },
-  name: "example with valid preset JSON",
+  name: "Publish Enabled with topic and schema (editing mode off)",
 };
 
-const invalidJSON = `{\n  "a": 1,\n  'b: 2,\n  "c": 3\n}`;
-
-export const ExampleWithInvalidPresetJson: Story = {
+export const PublishEnabledWithCustomButtonSettingsEditingOff: Story = {
   args: {
     allowPublish: true,
     overrideConfig: {
       ...baseConfig,
-      advancedView: true,
-      value: invalidJSON,
+      buttonColor: "#ffbf49",
+      buttonText: "Send message",
+      buttonTooltip: "I am a button tooltip",
+      advancedView: false,
     },
   },
-  name: "example with invalid preset JSON",
+  name: "Publish Enabled with custom button settings (editing mode off)",
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const buttons = await canvas.findAllByText("Send message");
+
+    buttons.forEach((button) => userEvent.hover(button));
+  },
+};
+
+export const PublishDisabledEditingModeOff: Story = {
+  args: {
+    overrideConfig: {
+      ...baseConfig,
+      advancedView: false,
+    },
+  },
+  name: "Publish Disabled (editing mode off)",
 };

@@ -118,22 +118,23 @@ function Publish(props: Props) {
     }
   }, [config.topicName, parsedObject, publish]);
 
-  const canPublish =
+  const canPublish = Boolean(
     capabilities.includes(PlayerCapabilities.advertise) &&
-    config.value !== "" &&
-    config.topicName !== "" &&
-    config.datatype !== "" &&
-    parsedObject != undefined;
+      config.value &&
+      config.topicName &&
+      config.datatype &&
+      parsedObject != undefined,
+  );
 
   const statusMessage = useMemo(() => {
     if (!capabilities.includes(PlayerCapabilities.advertise)) {
       return "Connect to a data source that supports publishing";
     }
-    if (config.topicName == undefined || config.topicName === "") {
+    if (!config.topicName || !config.datatype) {
       return "Configure a topic and message schema in the panel settings";
     }
     return undefined;
-  }, [capabilities, config.topicName]);
+  }, [capabilities, config.datatype, config.topicName]);
 
   return (
     <Stack fullHeight>
@@ -166,7 +167,10 @@ function Publish(props: Props) {
               {error ?? statusMessage}
             </Typography>
           )}
-          <Tooltip title={config.buttonTooltip}>
+          <Tooltip
+            placement={config.advancedView ? "left" : undefined}
+            title={config.buttonTooltip}
+          >
             <span>
               <Button
                 className={classes.button}
@@ -190,7 +194,6 @@ export default Panel(
     defaultConfig: {
       buttonText: "Publish",
       buttonTooltip: "",
-      buttonColor: "#00A871",
       advancedView: true,
       value: "{}",
     },
