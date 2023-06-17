@@ -449,7 +449,6 @@ export default class UserNodePlayer implements Player {
       // These are lazily created in the first message we process and cleared on
       // terminate.
       let terminateCondvar: undefined | Condvar;
-      let terminateSignal: undefined | Promise<void>;
 
       const registration = async (msgEvent: MessageEvent, globalVariables: GlobalVariables) => {
         // Register the node within a web worker to be executed.
@@ -524,7 +523,6 @@ export default class UserNodePlayer implements Player {
         // processing that is in-flight.
         if (!terminateCondvar) {
           terminateCondvar = new Condvar();
-          terminateSignal = terminateCondvar.wait();
         }
 
         // To send the message over RPC we invoke maybePlainObject which calls toJSON on the message
@@ -540,7 +538,7 @@ export default class UserNodePlayer implements Player {
             },
             globalVariables,
           }),
-          terminateSignal,
+          terminateCondvar.wait(),
         ]);
 
         if (!result) {
@@ -549,6 +547,9 @@ export default class UserNodePlayer implements Player {
             severity: "warn",
           });
           return;
+        } else {
+          // Let terminateCondvar.wait() above resolve to avoid memory leaking in Promise.race()
+          terminateCondvar.notifyOne();
         }
 
         const allDiagnostics = result.userNodeDiagnostics;
@@ -603,7 +604,6 @@ export default class UserNodePlayer implements Player {
         // re-initialize when the next message is processed.
         terminateCondvar?.notifyAll();
         terminateCondvar = undefined;
-        terminateSignal = undefined;
 
         if (rpc) {
           this.#unusedNodeRuntimeWorkers.push(rpc);
