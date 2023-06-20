@@ -3,12 +3,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { ErrorCircle20Filled } from "@fluentui/react-icons";
-import { CircularProgress, IconButton, Typography } from "@mui/material";
-import { useMemo } from "react";
+import { CircularProgress, IconButton } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { makeStyles } from "tss-react/mui";
 
-import { AppSetting } from "@foxglove/studio-base/AppSetting";
+import { EndTimestamp } from "@foxglove/studio-base/components/AppBar/EndTimestamp";
 import {
   MessagePipelineContext,
   useMessagePipeline,
@@ -17,11 +16,7 @@ import Stack from "@foxglove/studio-base/components/Stack";
 import TextMiddleTruncate from "@foxglove/studio-base/components/TextMiddleTruncate";
 import WssErrorModal from "@foxglove/studio-base/components/WssErrorModal";
 import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/useWorkspaceActions";
-import { useAppConfigurationValue, useAppTimeFormat } from "@foxglove/studio-base/hooks";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
-import { format } from "@foxglove/studio-base/util/formatTime";
-import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
-import { formatTimeRaw, isAbsoluteTime } from "@foxglove/studio-base/util/time";
 
 const ICON_SIZE = 18;
 
@@ -78,42 +73,6 @@ const selectPlayerSourceId = (ctx: MessagePipelineContext) => ctx.playerState.ur
 const selectPlayerName = (ctx: MessagePipelineContext) => ctx.playerState.name;
 const selectPlayerPresence = (ctx: MessagePipelineContext) => ctx.playerState.presence;
 const selectPlayerProblems = (ctx: MessagePipelineContext) => ctx.playerState.problems;
-
-const selectEndTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.endTime;
-
-const EndTimestamp = (): JSX.Element | ReactNull => {
-  const endTime = useMessagePipeline(selectEndTime);
-  const [timezone] = useAppConfigurationValue<string>(AppSetting.TIMEZONE);
-  const { timeFormat } = useAppTimeFormat();
-
-  const timeString = useMemo(() => {
-    if (endTime == undefined) {
-      return "";
-    }
-    const timeOfDayString = format(endTime, timezone);
-    const timeRawString = formatTimeRaw(endTime);
-
-    return timeFormat === "SEC" || !isAbsoluteTime(endTime) ? timeRawString : timeOfDayString;
-  }, [endTime, timeFormat, timezone]);
-
-  if (endTime == undefined) {
-    return ReactNull;
-  }
-  return (
-    <>
-      <span>/</span>
-      <Typography
-        variant="inherit"
-        title="Duration"
-        style={{
-          fontFeatureSettings: `${fonts.SANS_SERIF_FEATURE_SETTINGS}, "zero"`,
-        }}
-      >
-        {timeString}
-      </Typography>
-    </>
-  );
-};
 
 export function DataSource(): JSX.Element {
   const { t } = useTranslation("appBar");
