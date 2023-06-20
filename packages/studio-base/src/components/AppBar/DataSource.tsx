@@ -7,7 +7,6 @@ import { CircularProgress, IconButton } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { makeStyles } from "tss-react/mui";
 
-import { EndTimestamp } from "@foxglove/studio-base/components/AppBar/EndTimestamp";
 import {
   MessagePipelineContext,
   useMessagePipeline,
@@ -17,6 +16,8 @@ import TextMiddleTruncate from "@foxglove/studio-base/components/TextMiddleTrunc
 import WssErrorModal from "@foxglove/studio-base/components/WssErrorModal";
 import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/useWorkspaceActions";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
+
+import { Timestamp } from "./Timestamp";
 
 const ICON_SIZE = 18;
 
@@ -73,6 +74,7 @@ const selectPlayerSourceId = (ctx: MessagePipelineContext) => ctx.playerState.ur
 const selectPlayerName = (ctx: MessagePipelineContext) => ctx.playerState.name;
 const selectPlayerPresence = (ctx: MessagePipelineContext) => ctx.playerState.presence;
 const selectPlayerProblems = (ctx: MessagePipelineContext) => ctx.playerState.problems;
+const selectEndTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.endTime;
 
 export function DataSource(): JSX.Element {
   const { t } = useTranslation("appBar");
@@ -82,6 +84,8 @@ export function DataSource(): JSX.Element {
   const playerName = useMessagePipeline(selectPlayerName);
   const playerPresence = useMessagePipeline(selectPlayerPresence);
   const playerProblems = useMessagePipeline(selectPlayerProblems) ?? [];
+
+  const endTime = useMessagePipeline(selectEndTime);
 
   const isLiveConnection =
     playerSourceId != undefined
@@ -114,7 +118,7 @@ export function DataSource(): JSX.Element {
           <div className={classes.textTruncate}>
             <TextMiddleTruncate text={playerDisplayName ?? `<${t("unknown")}>`} />
           </div>
-          {isLiveConnection && <EndTimestamp />}
+          {isLiveConnection && <Timestamp time={endTime} />}
         </div>
         <div className={cx(classes.adornment, { [classes.adornmentError]: error })}>
           {loading && (
