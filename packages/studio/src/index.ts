@@ -417,6 +417,15 @@ export type RegisterMessageConverterArgs<Src> = {
   converter: (msg: Src, event: Immutable<MessageEvent<Src>>) => unknown;
 };
 
+type BaseTopic = { name: string; schemaName?: string };
+
+export type TopicMapper = (
+  args: Immutable<{
+    topics: BaseTopic[];
+    globalVariables: Readonly<Record<string, VariableValue>>;
+  }>,
+) => ReadonlyMap<string, string>;
+
 export interface ExtensionContext {
   /** The current _mode_ of the application. */
   readonly mode: "production" | "development" | "test";
@@ -424,6 +433,13 @@ export interface ExtensionContext {
   registerPanel(params: ExtensionPanelRegistration): void;
 
   registerMessageConverter<Src>(args: RegisterMessageConverterArgs<Src>): void;
+
+  /**
+   * Registers a new topic mapper with the extension context. The mapper will be called
+   * every time there is a new set of topics and variables and returns a map that is used
+   * to rename topics.
+   */
+  registerTopicMapper(mapper: TopicMapper): void;
 }
 
 export interface ExtensionActivate {
