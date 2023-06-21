@@ -18,6 +18,13 @@ import { SaveConfig } from "@foxglove/studio-base/types/panels";
 
 import { PublishConfig } from "./types";
 
+export const defaultConfig: PublishConfig = {
+  buttonText: "Publish",
+  buttonTooltip: "",
+  advancedView: true,
+  value: "{}",
+};
+
 export function buildSettingsTree(
   config: PublishConfig,
   schemaNames: string[],

@@ -26,7 +26,7 @@ import { PlayerCapabilities } from "@foxglove/studio-base/players/types";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
-import { usePublishPanelSettings } from "./settings";
+import { defaultConfig, usePublishPanelSettings } from "./settings";
 import { PublishConfig } from "./types";
 
 type Props = {
@@ -191,11 +191,6 @@ function Publish(props: Props) {
 export default Panel(
   Object.assign(React.memo(Publish), {
     panelType: "Publish",
-    defaultConfig: {
-      buttonText: "Publish",
-      buttonTooltip: "",
-      advancedView: true,
-      value: "{}",
-    },
+    defaultConfig,
   }),
 );
