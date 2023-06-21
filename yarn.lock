@@ -2959,6 +2959,7 @@ __metadata:
     "@popperjs/core": 2.11.8
     "@protobufjs/base64": 1.1.2
     "@storybook/addon-actions": 7.0.20
+    "@storybook/jest": 0.1.0
     "@storybook/react": 7.0.20
     "@storybook/testing-library": 0.1.0
     "@svgr/webpack": 8.0.1
@@ -12179,7 +12180,6 @@ __metadata:
     "@storybook/addon-actions": 7.0.20
     "@storybook/addon-essentials": 7.0.20
     "@storybook/addon-interactions": 7.0.20
-    "@storybook/jest": 0.1.0
     "@storybook/react": 7.0.20
     "@storybook/react-webpack5": 7.0.20
     "@types/babel__core": ^7.20.1
