@@ -74,7 +74,6 @@ const selectPlayerSourceId = (ctx: MessagePipelineContext) => ctx.playerState.ur
 const selectPlayerName = (ctx: MessagePipelineContext) => ctx.playerState.name;
 const selectPlayerPresence = (ctx: MessagePipelineContext) => ctx.playerState.presence;
 const selectPlayerProblems = (ctx: MessagePipelineContext) => ctx.playerState.problems;
-const selectEndTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.endTime;
 
 export function DataSource(): JSX.Element {
   const { t } = useTranslation("appBar");
@@ -84,8 +83,6 @@ export function DataSource(): JSX.Element {
   const playerName = useMessagePipeline(selectPlayerName);
   const playerPresence = useMessagePipeline(selectPlayerPresence);
   const playerProblems = useMessagePipeline(selectPlayerProblems) ?? [];
-
-  const endTime = useMessagePipeline(selectEndTime);
 
   const isLiveConnection =
     playerSourceId != undefined
@@ -118,7 +115,7 @@ export function DataSource(): JSX.Element {
           <div className={classes.textTruncate}>
             <TextMiddleTruncate text={playerDisplayName ?? `<${t("unknown")}>`} />
           </div>
-          {isLiveConnection && <Timestamp time={endTime} />}
+          {isLiveConnection && <Timestamp />}
         </div>
         <div className={cx(classes.adornment, { [classes.adornmentError]: error })}>
           {loading && (

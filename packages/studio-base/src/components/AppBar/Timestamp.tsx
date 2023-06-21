@@ -4,33 +4,39 @@
 
 import { useEffect, useRef } from "react";
 
-import { Time } from "@foxglove/rostime";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
+import {
+  MessagePipelineContext,
+  useMessagePipeline,
+} from "@foxglove/studio-base/components/MessagePipeline";
 import { useAppConfigurationValue, useAppTimeFormat } from "@foxglove/studio-base/hooks";
 import { format } from "@foxglove/studio-base/util/formatTime";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 import { formatTimeRaw, isAbsoluteTime } from "@foxglove/studio-base/util/time";
 
-export function Timestamp(props: { time?: Time }): JSX.Element | ReactNull {
-  const { time } = props;
+const selectEndTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.endTime;
+
+export function Timestamp(): JSX.Element | ReactNull {
+  const endTime = useMessagePipeline(selectEndTime);
   const [timezone] = useAppConfigurationValue<string>(AppSetting.TIMEZONE);
   const { timeFormat } = useAppTimeFormat();
 
   const timeRef = useRef<HTMLDivElement>(ReactNull);
 
   useEffect(() => {
-    if (timeRef.current) {
-      if (time) {
-        const timeOfDayString = format(time, timezone);
-        const timeRawString = formatTimeRaw(time);
-
-        timeRef.current.innerText =
-          timeFormat === "SEC" || !isAbsoluteTime(time) ? timeRawString : timeOfDayString;
-      } else {
-        timeRef.current.innerText = "";
-      }
+    if (!timeRef.current) {
+      return;
     }
-  }, [time, timeFormat, timezone]);
+    if (endTime == undefined) {
+      timeRef.current.innerText = "";
+      return;
+    }
+    const timeOfDayString = format(endTime, timezone);
+    const timeRawString = formatTimeRaw(endTime);
+
+    timeRef.current.innerText =
+      timeFormat === "SEC" || !isAbsoluteTime(endTime) ? timeRawString : timeOfDayString;
+  }, [endTime, timeFormat, timezone]);
 
   return (
     <div
