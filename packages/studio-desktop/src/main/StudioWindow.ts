@@ -218,6 +218,11 @@ function buildMenu(browserWindow: BrowserWindow): Menu {
         { role: "about" },
         checkForUpdatesItem,
         { type: "separator" },
+        {
+          label: "Settings…",
+          accelerator: "CommandOrControl+,",
+          click: () => sendNativeAppMenuEvent("open-help-general", browserWindow),
+        },
         { role: "services" },
         { type: "separator" },
 
