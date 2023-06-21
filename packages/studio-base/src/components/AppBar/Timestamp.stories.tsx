@@ -32,7 +32,7 @@ export default {
   decorators: [
     (Story: StoryFn, ctx): JSX.Element => {
       const {
-        args: { timeFormat, timezone, ...args },
+        args: { timeFormat, timezone, time, ...args },
       } = ctx;
       const [value] = useState(() =>
         makeMockAppConfiguration([
@@ -43,7 +43,7 @@ export default {
 
       return (
         <AppConfigurationContext.Provider value={value}>
-          <MockMessagePipelineProvider presence={PlayerPresence.PRESENT}>
+          <MockMessagePipelineProvider endTime={time} presence={PlayerPresence.PRESENT}>
             <div style={{ padding: 16 }}>
               <Story {...args} />
             </div>
