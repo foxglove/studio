@@ -115,7 +115,12 @@ export function DataSource(): JSX.Element {
           <div className={classes.textTruncate}>
             <TextMiddleTruncate text={playerDisplayName ?? `<${t("unknown")}>`} />
           </div>
-          {isLiveConnection && <Timestamp />}
+          {isLiveConnection && (
+            <>
+              <span>|</span>
+              <Timestamp />
+            </>
+          )}
         </div>
         <div className={cx(classes.adornment, { [classes.adornmentError]: error })}>
           {loading && (
