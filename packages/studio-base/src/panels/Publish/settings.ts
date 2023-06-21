@@ -40,7 +40,7 @@ export function buildSettingsTree(
           label: "Topic",
           input: "autocomplete",
           placeholder: "/some_topic",
-          value: config.topicName,
+          value: config.topicName ?? "",
           items: topics.map((t) => t.name),
         },
         datatype: {
@@ -49,9 +49,13 @@ export function buildSettingsTree(
           error: datatypeError(),
           placeholder: "std_msgs/Type",
           items: schemaNames,
-          value: config.datatype,
+          value: config.datatype ?? "",
         },
-        advancedView: { label: "Editing mode", input: "boolean", value: config.advancedView },
+        advancedView: {
+          label: "Editing mode",
+          input: "boolean",
+          value: config.advancedView,
+        },
       },
     },
     button: {
@@ -103,7 +107,7 @@ export function usePublishPanelSettings(
 
               draft.topicName = value;
 
-              if (topicSchemaName != undefined) {
+              if (topicSchemaName) {
                 draft.datatype = topicSchemaName;
               }
               if (sampleMessage) {

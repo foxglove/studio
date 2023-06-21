@@ -1,17 +1,9 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
-//
-// This file incorporates work covered by the following copyright and
-// permission notice:
-//
-//   Copyright 2019-2021 Cruise LLC
-//
-//   This source code is licensed under the Apache License, Version 2.0,
-//   found at http://www.apache.org/licenses/LICENSE-2.0
-//   You may not use this file except in compliance with the License.
 
 import { action } from "@storybook/addon-actions";
+import { expect } from "@storybook/jest";
 import { Meta, StoryObj } from "@storybook/react";
 import { userEvent, within } from "@storybook/testing-library";
 
@@ -91,6 +83,29 @@ export const Default: Story = {};
 
 export const PublishEnabled: Story = {
   args: { allowPublish: true },
+};
+
+export const WhenSelectingATopicSchemaIsSuggested: Story = {
+  args: { allowPublish: true },
+  name: "When selecting a topic schema is suggested",
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    const topicInput = await canvas.findByPlaceholderText("/some_topic");
+    const schemaInput = await canvas.findByPlaceholderText("std_msgs/Type");
+    const valueTextarea = await canvas.findByPlaceholderText("Enter message content as JSON");
+
+    await step("Select a topic", () => {
+      userEvent.type(topicInput, "/sample_");
+      userEvent.keyboard("[ArrowDown]");
+      userEvent.keyboard("[Enter]");
+    });
+
+    expect(topicInput).toHaveValue("/sample_topic");
+    expect(valueTextarea).toHaveValue(advancedJSON);
+    expect(schemaInput).toHaveValue("std_msgs/String");
+  },
+  parameters: { colorScheme: "light" },
 };
 
 export const PublishEnabledWithTopicAndSchema: Story = {
