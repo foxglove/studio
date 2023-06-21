@@ -7,7 +7,7 @@ import { useState } from "react";
 
 import { Time } from "@foxglove/rostime";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
-import { Timestamp } from "@foxglove/studio-base/components/AppBar/Timestamp";
+import { EndTimestamp } from "@foxglove/studio-base/components/AppBar/EndTimestamp";
 import MockMessagePipelineProvider from "@foxglove/studio-base/components/MessagePipeline/MockMessagePipelineProvider";
 import AppConfigurationContext from "@foxglove/studio-base/context/AppConfigurationContext";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
@@ -23,8 +23,8 @@ const ABSOLUTE_TIME = { sec: 1643800942, nsec: 222222222 };
 const RELATIVE_TIME = { sec: 630720000, nsec: 597648236 };
 
 export default {
-  title: "components/AppBar/Timestamp",
-  component: Timestamp,
+  title: "components/AppBar/EndTimestamp",
+  component: EndTimestamp,
   args: {
     timezone: "UTC",
     time: ABSOLUTE_TIME,

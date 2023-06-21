@@ -16,13 +16,14 @@ import { formatTimeRaw, isAbsoluteTime } from "@foxglove/studio-base/util/time";
 
 const selectEndTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.endTime;
 
-export function Timestamp(): JSX.Element | ReactNull {
+export function EndTimestamp(): JSX.Element | ReactNull {
   const endTime = useMessagePipeline(selectEndTime);
   const [timezone] = useAppConfigurationValue<string>(AppSetting.TIMEZONE);
   const { timeFormat } = useAppTimeFormat();
 
   const timeRef = useRef<HTMLDivElement>(ReactNull);
 
+  // We bypass react and update the DOM elements directly for better performance here.
   useEffect(() => {
     if (!timeRef.current) {
       return;

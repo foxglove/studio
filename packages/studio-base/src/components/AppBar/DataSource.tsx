@@ -17,7 +17,7 @@ import WssErrorModal from "@foxglove/studio-base/components/WssErrorModal";
 import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/useWorkspaceActions";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
 
-import { Timestamp } from "./Timestamp";
+import { EndTimestamp } from "./EndTimestamp";
 
 const ICON_SIZE = 18;
 
@@ -118,7 +118,7 @@ export function DataSource(): JSX.Element {
           {isLiveConnection && (
             <>
               <span>/</span>
-              <Timestamp />
+              <EndTimestamp />
             </>
           )}
         </div>
