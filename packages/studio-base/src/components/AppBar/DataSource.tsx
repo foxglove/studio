@@ -117,7 +117,7 @@ export function DataSource(): JSX.Element {
           </div>
           {isLiveConnection && (
             <>
-              <span>|</span>
+              <span>/</span>
               <Timestamp />
             </>
           )}
