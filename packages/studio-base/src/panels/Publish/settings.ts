@@ -25,56 +25,54 @@ export const defaultConfig: PublishConfig = {
   value: "{}",
 };
 
-export function buildSettingsTree(
+function datatypeError(schemaNames: string[], datatype?: string) {
+  if (datatype === "") {
+    return "Message schema cannot be empty";
+  }
+  if (datatype != undefined && !schemaNames.includes(datatype)) {
+    return "Schema name not found";
+  }
+  return undefined;
+}
+
+export const buildSettingsTree = (
   config: PublishConfig,
   schemaNames: string[],
   topics: readonly Topic[],
-): SettingsTreeNodes {
-  const datatypeError = () => {
-    if (config.datatype === "") {
-      return "Message schema cannot be empty";
-    }
-    if (config.datatype != undefined && !schemaNames.includes(config.datatype)) {
-      return "Schema name not found";
-    }
-    return undefined;
-  };
-
-  return {
-    general: {
-      fields: {
-        topicName: {
-          label: "Topic",
-          input: "autocomplete",
-          placeholder: "/some_topic",
-          value: config.topicName ?? "",
-          items: topics.map((t) => t.name),
-        },
-        datatype: {
-          label: "Message schema",
-          input: "autocomplete",
-          error: datatypeError(),
-          placeholder: "std_msgs/Type",
-          items: schemaNames,
-          value: config.datatype ?? "",
-        },
-        advancedView: {
-          label: "Editing mode",
-          input: "boolean",
-          value: config.advancedView,
-        },
+): SettingsTreeNodes => ({
+  general: {
+    fields: {
+      topicName: {
+        label: "Topic",
+        input: "autocomplete",
+        placeholder: "/some_topic",
+        value: config.topicName ?? "",
+        items: topics.map((t) => t.name),
+      },
+      datatype: {
+        label: "Message schema",
+        input: "autocomplete",
+        error: datatypeError(schemaNames, config.datatype),
+        placeholder: "std_msgs/Type",
+        items: schemaNames,
+        value: config.datatype ?? "",
+      },
+      advancedView: {
+        label: "Editing mode",
+        input: "boolean",
+        value: config.advancedView,
       },
     },
-    button: {
-      label: "Button",
-      fields: {
-        buttonText: { label: "Title", input: "string", value: config.buttonText },
-        buttonTooltip: { label: "Tooltip", input: "string", value: config.buttonTooltip },
-        buttonColor: { label: "Color", input: "rgb", value: config.buttonColor },
-      },
+  },
+  button: {
+    label: "Button",
+    fields: {
+      buttonText: { label: "Title", input: "string", value: config.buttonText },
+      buttonTooltip: { label: "Tooltip", input: "string", value: config.buttonTooltip },
+      buttonColor: { label: "Color", input: "rgb", value: config.buttonColor },
     },
-  };
-}
+  },
+});
 
 const getSampleMessage = (
   datatypes: Immutable<RosDatatypes>,
