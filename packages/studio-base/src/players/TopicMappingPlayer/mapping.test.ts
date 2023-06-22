@@ -102,7 +102,16 @@ describe("mapPlayerState", () => {
       ],
     });
     const inputs: MappingInputs = {
-      mappers: [{ extensionId: "any", mapper: () => new Map([["/topic_1", "/renamed_topic_1"]]) }],
+      mappers: [
+        {
+          extensionId: "any",
+          mapper: () =>
+            new Map([
+              ["/absent_topic", "/renamed_absent_topic"],
+              ["/topic_1", "/renamed_topic_1"],
+            ]),
+        },
+      ],
       topics,
       variables: {},
     };
@@ -185,7 +194,16 @@ describe("mapPlayerState", () => {
     ];
     const state = mockPlayerState(undefined, { topics });
     const inputs: MappingInputs = {
-      mappers: [{ extensionId: "any", mapper: () => new Map([["/topic_1", "/renamed_topic_1"]]) }],
+      mappers: [
+        {
+          extensionId: "any",
+          mapper: () =>
+            new Map([
+              ["/absent_topic", "/renamed_absent_topic"],
+              ["/topic_1", "/renamed_topic_1"],
+            ]),
+        },
+      ],
       topics,
       variables: {},
     };
