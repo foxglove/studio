@@ -83,7 +83,7 @@ export function UserMenu({
   }, [beginSignOut, confirm]);
 
   const onSignInClick = useCallback(() => {
-    void analytics.logEvent(AppEvent.DIALOG_CLICK_CTA, {
+    void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
       user: currentUserType,
       cta: "sign-in",
     });
@@ -118,7 +118,7 @@ export function UserMenu({
   }, [analytics, currentUserType]);
 
   const onSlackClick = useCallback(() => {
-    void analytics.logEvent(AppEvent.DIALOG_CLICK_CTA, {
+    void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
       user: currentUserType,
       cta: "join-slack",
     });
