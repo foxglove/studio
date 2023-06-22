@@ -91,12 +91,13 @@ export const WhenSelectingATopicSchemaIsSuggested: Story = {
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
 
-    const topicInput = await canvas.findByPlaceholderText("/some_topic");
-    const schemaInput = await canvas.findByPlaceholderText("std_msgs/Type");
+    const inputs = await canvas.findAllByRole("combobox");
+    const topicInput = inputs[0];
+    const schemaInput = inputs[1];
     const valueTextarea = await canvas.findByPlaceholderText("Enter message content as JSON");
 
     await step("Select a topic", () => {
-      userEvent.type(topicInput, "/sample_");
+      userEvent.type(topicInput!, "/sample_");
       userEvent.keyboard("[ArrowDown]");
       userEvent.keyboard("[Enter]");
     });

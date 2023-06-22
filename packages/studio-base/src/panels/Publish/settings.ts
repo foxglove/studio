@@ -26,11 +26,18 @@ export const defaultConfig: PublishConfig = {
 };
 
 function datatypeError(schemaNames: string[], datatype?: string) {
-  if (datatype === "") {
+  if (datatype === "" || datatype == undefined) {
     return "Message schema cannot be empty";
   }
-  if (datatype != undefined && !schemaNames.includes(datatype)) {
+  if (!schemaNames.includes(datatype)) {
     return "Schema name not found";
+  }
+  return undefined;
+}
+
+function topicError(topicName?: string) {
+  if (topicName === "" || topicName == undefined) {
+    return "Topic cannot be empty";
   }
   return undefined;
 }
@@ -45,7 +52,7 @@ export const buildSettingsTree = (
       topicName: {
         label: "Topic",
         input: "autocomplete",
-        placeholder: "/some_topic",
+        error: topicError(config.topicName),
         value: config.topicName ?? "",
         items: topics.map((t) => t.name),
       },
@@ -53,7 +60,6 @@ export const buildSettingsTree = (
         label: "Message schema",
         input: "autocomplete",
         error: datatypeError(schemaNames, config.datatype),
-        placeholder: "std_msgs/Type",
         items: schemaNames,
         value: config.datatype ?? "",
       },
