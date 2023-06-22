@@ -3,15 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { debounce } from "lodash";
-import {
-  createContext,
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { createContext, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { StoreApi, useStore } from "zustand";
 
 import { useGuaranteedContext } from "@foxglove/hooks";
@@ -84,16 +76,13 @@ export function MessagePipelineProvider({
   globalVariables,
 }: ProviderProps): React.ReactElement {
   const promisesToWaitForRef = useRef<FramePromise[]>([]);
-  const [store] = useState(() =>
-    createMessagePipelineStore({ promisesToWaitForRef, initialPlayer: player }),
-  );
-  useEffect(() => {
-    store.getState().dispatch({ type: "set-player", player });
 
-    //setStore(() => createMessagePipelineStore({ promisesToWaitForRef, initialPlayer: player }));
-
-    player?.setPublishers(store.getState().allPublishers);
-  }, [player, store]);
+  // fixme - seems one item to note is that allPublishers will be cleared when player is cleared?
+  const store = useMemo(() => {
+    const newStore = createMessagePipelineStore({ promisesToWaitForRef, initialPlayer: player });
+    player?.setPublishers(newStore.getState().allPublishers);
+    return newStore;
+  }, [player]);
 
   const subscriptions = useStore(store, selectSubscriptions);
 

@@ -197,6 +197,10 @@ const selectWorkspaceRightSidebarSize = (store: WorkspaceContextStore) => store.
 
 type WorkspaceContentProps = WorkspaceProps & { showSignInForm: boolean };
 
+// The remount of Foobar is required because something with the seek binding (from message pipeline store?)
+// is being held
+// i.e. onSeek is being held by some memoized props (Scrubber) - but inclear why cause its not memoized
+// even with the store changing this is held? why?! the whole instance should be changed by then
 function Foobar() {
   const play = useMessagePipeline(selectPlay);
   const playUntil = useMessagePipeline(selectPlayUntil);
