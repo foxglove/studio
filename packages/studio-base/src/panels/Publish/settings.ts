@@ -26,7 +26,7 @@ export const defaultConfig: PublishConfig = {
 };
 
 function datatypeError(schemaNames: string[], datatype?: string) {
-  if (datatype === "" || datatype == undefined) {
+  if (!datatype) {
     return "Message schema cannot be empty";
   }
   if (!schemaNames.includes(datatype)) {
@@ -36,7 +36,7 @@ function datatypeError(schemaNames: string[], datatype?: string) {
 }
 
 function topicError(topicName?: string) {
-  if (topicName === "" || topicName == undefined) {
+  if (!topicName) {
     return "Topic cannot be empty";
   }
   return undefined;
