@@ -421,8 +421,8 @@ const GeoCenter = { lat: 0.25, lon: 0.25 };
 export const GeoJSON: StoryObj = {
   render: function Story() {
     const topics: Topic[] = [
-      { name: "/geo", schemaName: "foxglove.GeoJSON" },
-      { name: "/geo2", schemaName: "foxglove.GeoJSON" },
+      { name: "/geojson_with_update", schemaName: "foxglove.GeoJSON" },
+      { name: "/geojson", schemaName: "foxglove.GeoJSON" },
       { name: "/gps", schemaName: "sensor_msgs/NavSatFix" },
     ];
 
@@ -438,9 +438,9 @@ export const GeoJSON: StoryObj = {
             sizeInBytes: 10,
           },
         ],
-        "/geo": [
+        "/geojson_with_update": [
           {
-            topic: "/geo",
+            topic: "/geojson_with_update",
             receiveTime: { sec: 123, nsec: 0 },
             schemaName: "foxglove.GeoJSON",
             message: {
@@ -454,9 +454,9 @@ export const GeoJSON: StoryObj = {
             sizeInBytes: 10,
           },
         ],
-        "/geo2": [
+        "/geojson": [
           {
-            topic: "/geo2",
+            topic: "/geojson",
             receiveTime: { sec: 123, nsec: 0 },
             schemaName: "foxglove.GeoJSON",
             message: {
@@ -485,9 +485,9 @@ export const GeoJSON: StoryObj = {
       setFixture({
         topics,
         frame: {
-          "/geo": [
+          "/geojson_with_update": [
             {
-              topic: "/geo",
+              topic: "/geojson_with_update",
               receiveTime: { sec: 130, nsec: 0 },
               schemaName: "foxglove.GeoJSON",
               message: {
@@ -509,7 +509,7 @@ export const GeoJSON: StoryObj = {
       <PanelSetup fixture={fixture} includeSettings>
         <MapPanel
           overrideConfig={{
-            topicColors: { "/geo": "#00ffaa" },
+            topicColors: { "/geojson_with_update": "#00ffaa" },
             center: GeoCenter,
           }}
         />
