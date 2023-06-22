@@ -31,7 +31,7 @@ import { EventsOverlay } from "./EventsOverlay";
 import PlaybackBarHoverTicks from "./PlaybackBarHoverTicks";
 import { PlaybackControlsTooltipContent } from "./PlaybackControlsTooltipContent";
 import { ProgressPlot } from "./ProgressPlot";
-import Slider from "./Slider";
+import Slider, { HoverOverEvent } from "./Slider";
 
 const useStyles = makeStyles()((theme) => ({
   marker: {
@@ -79,9 +79,12 @@ export default function Scrubber(props: Props): JSX.Element {
 
   const setHoverValue = useSetHoverValue();
 
-  const [hoverInfo, setHoverInfo] = useState<
-    { stamp: Time; position: { clientX: number; clientY: number } } | undefined
-  >();
+  type HoverInfo = {
+    stamp: Time;
+    clientX: number;
+    clientY: number;
+  };
+  const [hoverInfo, setHoverInfo] = useState<HoverInfo | undefined>();
   const latestHoverInfo = useLatest(hoverInfo);
 
   const latestStartTime = useLatest(startTime);
@@ -103,13 +106,13 @@ export default function Scrubber(props: Props): JSX.Element {
   );
 
   const onHoverOver = useCallback(
-    (fraction: number, position: { clientX: number; clientY: number }) => {
+    ({ fraction, clientX, clientY }: HoverOverEvent) => {
       if (!latestStartTime.current || !latestEndTime.current) {
         return;
       }
       const duration = toSec(subtractTimes(latestEndTime.current, latestStartTime.current));
       const timeFromStart = fromSec(fraction * duration);
-      setHoverInfo({ stamp: addTimes(latestStartTime.current, timeFromStart), position });
+      setHoverInfo({ stamp: addTimes(latestStartTime.current, timeFromStart), clientX, clientY });
       setHoverValue({
         componentId: hoverComponentId,
         type: "PLAYBACK_SECONDS",
@@ -173,8 +176,8 @@ export default function Scrubber(props: Props): JSX.Element {
       anchorEl: {
         getBoundingClientRect: () => {
           return new DOMRect(
-            latestHoverInfo.current?.position.clientX ?? 0,
-            latestHoverInfo.current?.position.clientY ?? 0,
+            latestHoverInfo.current?.clientX ?? 0,
+            latestHoverInfo.current?.clientY ?? 0,
             0,
             0,
           );

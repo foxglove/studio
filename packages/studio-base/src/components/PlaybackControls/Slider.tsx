@@ -8,15 +8,20 @@ import { makeStyles } from "tss-react/mui";
 
 import { scaleValue } from "@foxglove/den/math";
 
+export type HoverOverEvent = {
+  /** Hovered `fraction` value */
+  fraction: number;
+  /** Current hovered X position in client coordinates */
+  clientX: number;
+  /** Current hovered Y position in client coordinates */
+  clientY: number;
+};
+
 type Props = {
   fraction: number | undefined;
   disabled?: boolean;
   onChange: (value: number) => void;
-  /**
-   * @param value Hovered `fraction` value
-   * @param position Current hovered position in client coordinates
-   */
-  onHoverOver?: (value: number, position: { clientX: number; clientY: number }) => void;
+  onHoverOver?: (event: HoverOverEvent) => void;
   onHoverOut?: () => void;
   renderSlider?: (value?: number) => ReactNode;
 };
@@ -118,7 +123,11 @@ export default function Slider(props: Props): JSX.Element {
       const val = getValueAtMouse(ev);
       if (elRef.current) {
         const elRect = elRef.current.getBoundingClientRect();
-        onHoverOver?.(val, { clientX: ev.clientX, clientY: elRect.y + elRect.height / 2 });
+        onHoverOver?.({
+          fraction: val,
+          clientX: ev.clientX,
+          clientY: elRect.y + elRect.height / 2,
+        });
       }
       if (!mouseDownRef.current) {
         return;
