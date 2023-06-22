@@ -70,28 +70,24 @@ const useStyles = makeStyles<void, "adornmentError">()((theme, _params, _classes
   },
 }));
 
-const selectPlayerSourceId = (ctx: MessagePipelineContext) => ctx.playerState.urlState?.sourceId;
 const selectPlayerName = (ctx: MessagePipelineContext) => ctx.playerState.name;
 const selectPlayerPresence = (ctx: MessagePipelineContext) => ctx.playerState.presence;
 const selectPlayerProblems = (ctx: MessagePipelineContext) => ctx.playerState.problems;
+const selectSeek = (ctx: MessagePipelineContext) => ctx.seekPlayback;
 
 export function DataSource(): JSX.Element {
   const { t } = useTranslation("appBar");
   const { classes, cx } = useStyles();
 
-  const playerSourceId = useMessagePipeline(selectPlayerSourceId);
   const playerName = useMessagePipeline(selectPlayerName);
   const playerPresence = useMessagePipeline(selectPlayerPresence);
   const playerProblems = useMessagePipeline(selectPlayerProblems) ?? [];
-
-  const isLiveConnection =
-    playerSourceId != undefined
-      ? playerSourceId.endsWith("socket") ||
-        playerSourceId.endsWith("lidar") ||
-        playerSourceId.endsWith("device")
-      : false;
+  const seek = useMessagePipeline(selectSeek);
 
   const { sidebarActions } = useWorkspaceActions();
+
+  // A crude but correct proxy (for our current architecture) for whether a connection is live
+  const isLiveConnection = seek == undefined;
 
   const reconnecting = playerPresence === PlayerPresence.RECONNECTING;
   const initializing = playerPresence === PlayerPresence.INITIALIZING;
