@@ -183,9 +183,7 @@ type MessagePathInputBaseProps = {
   prioritizedDatatype?: string;
 };
 
-export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
-  props: MessagePathInputBaseProps,
-) {
+export default function MessagePathInput(props: MessagePathInputBaseProps): JSX.Element {
   const { globalVariables, setGlobalVariables } = useGlobalVariables();
   const { datatypes, topics } = PanelAPI.useDataSourceInfo();
 
@@ -498,4 +496,4 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
       />
     </Stack>
   );
-});
+}

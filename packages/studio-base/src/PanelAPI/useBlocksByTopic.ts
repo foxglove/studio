@@ -11,7 +11,6 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-// import memoizeWeak from "memoize-weak";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 
@@ -30,6 +29,8 @@ import {
 export type MessageBlock = Immutable<{
   [topicName: string]: MessageEvent[];
 }>;
+
+const selectBlocks = (ctx: MessagePipelineContext) => ctx.playerState.progress.messageCache?.blocks;
 
 // Memoization probably won't speed up the filtering appreciably, but preserves return identity.
 // That said, MessageBlock identity will change when the set of topics changes, so consumers should
@@ -95,9 +96,8 @@ export function useBlocksByTopic(topics: readonly string[]): readonly MessageBlo
 
   useSubscribeToTopicsForBlocks(requestedTopics);
 
-  const allBlocks = useMessagePipeline<Immutable<(PlayerMessageBlock | undefined)[] | undefined>>(
-    useCallback((ctx) => ctx.playerState.progress.messageCache?.blocks, []),
-  );
+  const allBlocks =
+    useMessagePipeline<Immutable<(PlayerMessageBlock | undefined)[] | undefined>>(selectBlocks);
 
   const blocks = useMemo(() => {
     if (!allBlocks) {

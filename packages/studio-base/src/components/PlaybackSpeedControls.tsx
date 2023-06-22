@@ -8,7 +8,10 @@ import { Button, ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/materia
 import { useCallback, useEffect, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 
-import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
+import {
+  MessagePipelineContext,
+  useMessagePipeline,
+} from "@foxglove/studio-base/components/MessagePipeline";
 import {
   LayoutState,
   useCurrentLayoutActions,
@@ -33,15 +36,16 @@ const useStyles = makeStyles()((theme) => ({
   },
 }));
 
+const selectSpeed = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.speed;
+const selectSetPlaybackSpeed = (ctx: MessagePipelineContext) => ctx.setPlaybackSpeed;
+
 export default function PlaybackSpeedControls(): JSX.Element {
   const { classes } = useStyles();
   const [anchorEl, setAnchorEl] = useState<undefined | HTMLElement>(undefined);
   const open = Boolean(anchorEl);
   const configSpeed = useCurrentLayoutSelector(configSpeedSelector);
-  const speed = useMessagePipeline(
-    useCallback(({ playerState }) => playerState.activeData?.speed, []),
-  );
-  const setPlaybackSpeed = useMessagePipeline(useCallback((state) => state.setPlaybackSpeed, []));
+  const speed = useMessagePipeline(selectSpeed);
+  const setPlaybackSpeed = useMessagePipeline(selectSetPlaybackSpeed);
   const { setPlaybackConfig } = useCurrentLayoutActions();
   const setSpeed = useCallback(
     (newSpeed: number) => {

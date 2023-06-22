@@ -197,40 +197,6 @@ const selectWorkspaceRightSidebarSize = (store: WorkspaceContextStore) => store.
 
 type WorkspaceContentProps = WorkspaceProps & { showSignInForm: boolean };
 
-// The remount of Foobar is required because something with the seek binding (from message pipeline store?)
-// is being held
-// i.e. onSeek is being held by some memoized props (Scrubber) - but inclear why cause its not memoized
-// even with the store changing this is held? why?! the whole instance should be changed by then
-function Foobar() {
-  const play = useMessagePipeline(selectPlay);
-  const playUntil = useMessagePipeline(selectPlayUntil);
-  const pause = useMessagePipeline(selectPause);
-  const seek = useMessagePipeline(selectSeek);
-  const isPlaying = useMessagePipeline(selectIsPlaying);
-  const getMessagePipeline = useMessagePipelineGetter();
-  const getTimeInfo = useCallback(
-    () => getMessagePipeline().playerState.activeData ?? {},
-    [getMessagePipeline],
-  );
-
-  if (!play || !pause || !seek) {
-    return <></>;
-  }
-
-  return (
-    <div style={{ flexShrink: 0 }}>
-      <PlaybackControls
-        play={play}
-        pause={pause}
-        seek={seek}
-        playUntil={playUntil}
-        isPlaying={isPlaying}
-        getTimeInfo={getTimeInfo}
-      />
-    </div>
-  );
-}
-
 function WorkspaceContent(props: WorkspaceContentProps): JSX.Element {
   const { classes } = useStyles();
   const containerRef = useRef<HTMLDivElement>(ReactNull);
@@ -650,6 +616,17 @@ function WorkspaceContent(props: WorkspaceContentProps): JSX.Element {
     };
   }, [sidebarActions.left, sidebarActions.legacy, sidebarActions.right, sidebarItem]);
 
+  const play = useMessagePipeline(selectPlay);
+  const playUntil = useMessagePipeline(selectPlayUntil);
+  const pause = useMessagePipeline(selectPause);
+  const seek = useMessagePipeline(selectSeek);
+  const isPlaying = useMessagePipeline(selectIsPlaying);
+  const getMessagePipeline = useMessagePipelineGetter();
+  const getTimeInfo = useCallback(
+    () => getMessagePipeline().playerState.activeData ?? {},
+    [getMessagePipeline],
+  );
+
   return (
     <MultiProvider
       providers={[
@@ -699,9 +676,18 @@ function WorkspaceContent(props: WorkspaceContentProps): JSX.Element {
             </Stack>
           </RemountOnValueChange>
         </Sidebars>
-        <RemountOnValueChange value={playerId}>
-          <Foobar />
-        </RemountOnValueChange>
+        <div style={{ flexShrink: 0 }}>
+          {play && pause && seek && (
+            <PlaybackControls
+              play={play}
+              pause={pause}
+              seek={seek}
+              playUntil={playUntil}
+              isPlaying={isPlaying}
+              getTimeInfo={getTimeInfo}
+            />
+          )}
+        </div>
       </div>
       {!props.showSignInForm && workspaceExtensions}
       <WorkspaceDialogs />

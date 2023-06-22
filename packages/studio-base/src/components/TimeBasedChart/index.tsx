@@ -35,7 +35,10 @@ import Logger from "@foxglove/log";
 import ChartComponent from "@foxglove/studio-base/components/Chart/index";
 import { RpcElement, RpcScales } from "@foxglove/studio-base/components/Chart/types";
 import KeyListener from "@foxglove/studio-base/components/KeyListener";
-import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
+import {
+  MessagePipelineContext,
+  useMessagePipeline,
+} from "@foxglove/studio-base/components/MessagePipeline";
 import Stack from "@foxglove/studio-base/components/Stack";
 import {
   TimelineInteractionStateStore,
@@ -116,6 +119,8 @@ export type Props = {
   defaultView?: ChartDefaultView;
 };
 
+const selectPauseFrame = (ctx: MessagePipelineContext) => ctx.pauseFrame;
+
 // Create a chart with any y-axis but with an x-axis that shows time since the
 // start of the bag, and which is kept in sync with other instances of this
 // component. Uses chart.js internally, with a zoom/pan plugin, and with our
@@ -147,9 +152,7 @@ export default function TimeBasedChart(props: Props): JSX.Element {
 
   const [hasUserPannedOrZoomed, setHasUserPannedOrZoomed] = useState<boolean>(false);
 
-  const pauseFrame = useMessagePipeline(
-    useCallback((messagePipeline) => messagePipeline.pauseFrame, []),
-  );
+  const pauseFrame = useMessagePipeline(selectPauseFrame);
 
   const resumeFrame = useRef<() => void | undefined>();
   const requestedResumeFrame = useRef<() => void | undefined>();
