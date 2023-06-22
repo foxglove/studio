@@ -335,7 +335,13 @@ export const SinglePointNoFix: StoryObj = {
 
 export const SinglePointDiagonalCovariance: StoryObj = {
   render: function Story() {
-    return <MapPanel />;
+    return (
+      <MapPanel
+        overrideConfig={{
+          zoomLevel: 12,
+        }}
+      />
+    );
   },
 
   decorators: [Wrapper],
@@ -377,7 +383,13 @@ export const SinglePointDiagonalCovariance: StoryObj = {
 
 export const SinglePointFullCovariance: StoryObj = {
   render: function Story() {
-    return <MapPanel />;
+    return (
+      <MapPanel
+        overrideConfig={{
+          zoomLevel: 21,
+        }}
+      />
+    );
   },
 
   decorators: [Wrapper],
@@ -405,7 +417,7 @@ export const SinglePointFullCovariance: StoryObj = {
                   status: NavSatFixStatus.STATUS_GBAS_FIX,
                   service: NavSatFixService.SERVICE_GPS,
                 },
-                position_covariance: [1, 2, 3, 2, 5000000, 6, 3, 6, 1000000000],
+                position_covariance: [5, -4, 0, -4, 6, 0, 0, 0, 1],
                 position_covariance_type: NavSatFixPositionCovarianceType.COVARIANCE_TYPE_KNOWN,
               },
             },
