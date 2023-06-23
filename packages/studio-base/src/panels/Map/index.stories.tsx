@@ -339,6 +339,8 @@ export const SinglePointDiagonalCovariance: StoryObj = {
       <MapPanel
         overrideConfig={{
           zoomLevel: 12,
+          // increase contrast over water tile for diff threshold
+          topicColors: { "/gps": "#ff00ff" },
         }}
       />
     );
@@ -387,6 +389,8 @@ export const SinglePointFullCovariance: StoryObj = {
       <MapPanel
         overrideConfig={{
           zoomLevel: 21,
+          // increase contrast over water tile for diff threshold
+          topicColors: { "/gps": "#ff00ff" },
         }}
       />
     );
