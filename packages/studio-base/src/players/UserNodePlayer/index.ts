@@ -55,6 +55,7 @@ import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import { UserNode, UserNodes } from "@foxglove/studio-base/types/panels";
 import Rpc from "@foxglove/studio-base/util/Rpc";
 import { basicDatatypes } from "@foxglove/studio-base/util/basicDatatypes";
+import safePromiseRace from "@foxglove/studio-base/util/safePromiseRace";
 
 const log = Log.getLogger(__filename);
 
@@ -530,7 +531,7 @@ export default class UserNodePlayer implements Player {
         // To send the message over RPC we invoke maybePlainObject which calls toJSON on the message
         // and builds a plain js object of the entire message. This is expensive so a future enhancement
         // would be to send the underlying message array and build a lazy message reader
-        const result = await Promise.race([
+        const result = await safePromiseRace([
           rpc.send<ProcessMessageOutput>("processMessage", {
             message: {
               topic: msgEvent.topic,
@@ -540,7 +541,7 @@ export default class UserNodePlayer implements Player {
             },
             globalVariables,
           }),
-          terminateSignal,
+          terminateSignal ?? Promise.resolve(undefined),
         ]);
 
         if (!result) {
