@@ -3,15 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { debounce } from "lodash";
-import {
-  createContext,
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { createContext, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { StoreApi, useStore } from "zustand";
 
 import { useGuaranteedContext } from "@foxglove/hooks";
@@ -84,13 +76,10 @@ export function MessagePipelineProvider({
   globalVariables,
 }: ProviderProps): React.ReactElement {
   const promisesToWaitForRef = useRef<FramePromise[]>([]);
-  const [store] = useState(() =>
-    createMessagePipelineStore({ promisesToWaitForRef, initialPlayer: player }),
-  );
-  useEffect(() => {
-    store.getState().dispatch({ type: "set-player", player });
-    player?.setPublishers(store.getState().allPublishers);
-  }, [player, store]);
+
+  const store = useMemo(() => {
+    return createMessagePipelineStore({ promisesToWaitForRef, initialPlayer: player });
+  }, [player]);
 
   const subscriptions = useStore(store, selectSubscriptions);
 
