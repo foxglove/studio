@@ -419,6 +419,10 @@ export type RegisterMessageConverterArgs<Src> = {
 
 type BaseTopic = { name: string; schemaName?: string };
 
+/**
+ * A TopicMapper is a function that takes a list of data source topics and a set of
+ * variables as input and ouputs a map of data source topic -> mapped topic.
+ */
 export type TopicMapper = (
   args: Immutable<{
     topics: BaseTopic[];
