@@ -185,12 +185,12 @@ describe("ExtensionCatalogProvider", () => {
     ]);
   });
 
-  it("should register a topic mapper", async () => {
+  it("should register topic aliases", async () => {
     const source = `
         module.exports = {
             activate: function(ctx) {
-                ctx.registerTopicMapper(() => {
-                    return new Map();
+                ctx.registerTopicAliases(() => {
+                    return [];
                 })
             }
         }
@@ -217,8 +217,8 @@ describe("ExtensionCatalogProvider", () => {
     });
 
     await waitFor(() => expect(loadExtension).toHaveBeenCalledTimes(1));
-    expect(result.current.installedTopicMappers).toEqual([
-      { extensionId: "id", mapper: expect.any(Function) },
+    expect(result.current.installedTopicAliasFunctions).toEqual([
+      { extensionId: "id", aliasFunction: expect.any(Function) },
     ]);
   });
 });

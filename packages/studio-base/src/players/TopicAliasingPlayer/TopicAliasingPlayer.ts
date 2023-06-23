@@ -13,39 +13,44 @@ import {
   SubscribePayload,
 } from "@foxglove/studio-base/players/types";
 
-import { MappingInputs, TopicMappers, mapPlayerState, mapSubscriptions } from "./mapping";
+import {
+  AlisingInputs,
+  TopicAliasFunctions,
+  aliasPlayerState,
+  aliasSubscriptions,
+} from "./aliasing";
 
 /**
- * This is a player that wraps an underlying player and applies a mapping to all topic
- * names in data emitted from the player. It is inserted into the player chain before
- * UserNodePlayer so that UserNodePlayer can use the mapped topics.
+ * This is a player that wraps an underlying player and applies aliases to all topic names
+ * in data emitted from the player. It is inserted into the player chain before
+ * UserNodePlayer so that UserNodePlayer can use the aliased topics.
  *
- * Mappings that map input topics to other input topics or that request conflicting
- * mappings from multiple input topics to the same output topic are disallowed and flagged
+ * Aliases that alias input topics to other input topics or that request conflicting
+ * aliases from multiple input topics to the same output topic are disallowed and flagged
  * as player problems
  */
-export class TopicMappingPlayer implements Player {
+export class TopicAliasingPlayer implements Player {
   readonly #player: Player;
 
-  #inputs: Immutable<MappingInputs>;
+  #inputs: Immutable<AlisingInputs>;
   #pendingSubscriptions: undefined | SubscribePayload[];
   #subscriptions: SubscribePayload[] = [];
 
-  // True if no mappers are active and we can pass calls directly through to the
+  // True if no aliases are active and we can pass calls directly through to the
   // underlying player.
-  #skipMapping: boolean;
+  #skipAliasing: boolean;
 
   #listener?: (state: PlayerState) => Promise<void>;
 
   public constructor(
     player: Player,
-    mappers: Immutable<TopicMappers>,
+    aliasFunctions: Immutable<TopicAliasFunctions>,
     variables: Immutable<GlobalVariables>,
   ) {
     this.#player = player;
-    this.#skipMapping = mappers.length === 0;
+    this.#skipAliasing = aliasFunctions.length === 0;
     this.#inputs = {
-      mappers,
+      aliasFunctions,
       topics: undefined,
       variables,
     };
@@ -57,9 +62,9 @@ export class TopicMappingPlayer implements Player {
     this.#player.setListener(async (state) => await this.#onPlayerState(state));
   }
 
-  public setMappers(mappers: Immutable<TopicMappers>): void {
-    this.#inputs = { ...this.#inputs, mappers };
-    this.#skipMapping = mappers.length === 0;
+  public setAliasFunctions(aliasFunctions: Immutable<TopicAliasFunctions>): void {
+    this.#inputs = { ...this.#inputs, aliasFunctions };
+    this.#skipAliasing = aliasFunctions.length === 0;
   }
 
   public close(): void {
@@ -69,15 +74,15 @@ export class TopicMappingPlayer implements Player {
   public setSubscriptions(subscriptions: SubscribePayload[]): void {
     this.#subscriptions = subscriptions;
 
-    if (this.#skipMapping) {
+    if (this.#skipAliasing) {
       this.#player.setSubscriptions(subscriptions);
     } else {
-      // If we have mappers but haven't recieved a topic list from an active state from
+      // If we have aliases but haven't recieved a topic list from an active state from
       // the wrapped player yet we have to delay setSubscriptions until we have the topic
-      // list to set up the mappings.
+      // list to set up the aliases.
       if (this.#inputs.topics != undefined) {
-        const mappedSubscriptions = mapSubscriptions(this.#inputs, subscriptions);
-        this.#player.setSubscriptions(mappedSubscriptions);
+        const aliasedSubscriptions = aliasSubscriptions(this.#inputs, subscriptions);
+        this.#player.setSubscriptions(aliasedSubscriptions);
         this.#pendingSubscriptions = undefined;
       } else {
         this.#pendingSubscriptions = subscriptions;
@@ -127,7 +132,7 @@ export class TopicMappingPlayer implements Player {
   }
 
   async #onPlayerState(playerState: PlayerState) {
-    if (this.#skipMapping) {
+    if (this.#skipAliasing) {
       await this.#listener?.(playerState);
       return;
     }
@@ -136,7 +141,7 @@ export class TopicMappingPlayer implements Player {
       this.#inputs = { ...this.#inputs, topics: playerState.activeData?.topics };
     }
 
-    const newState = mapPlayerState(this.#inputs, this.#subscriptions, playerState);
+    const newState = aliasPlayerState(this.#inputs, this.#subscriptions, playerState);
     await this.#listener?.(newState);
 
     if (this.#pendingSubscriptions && this.#inputs.topics) {

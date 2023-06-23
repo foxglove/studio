@@ -77,9 +77,9 @@ function TopicRow({ topic }: { topic: Topic }): JSX.Element {
           iconSize="small"
           getText={() => topic.name}
         />
-        {topic.mappedFromName && (
+        {topic.aliasedFromName && (
           <Typography variant="subtitle2" fontSize="0.5rem">
-            from {topic.mappedFromName}
+            from {topic.aliasedFromName}
           </Typography>
         )}
       </td>

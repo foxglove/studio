@@ -46,7 +46,7 @@ import { useUserNodeState } from "@foxglove/studio-base/context/UserNodeStateCon
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import useIndexedDbRecents, { RecentRecord } from "@foxglove/studio-base/hooks/useIndexedDbRecents";
 import AnalyticsMetricsCollector from "@foxglove/studio-base/players/AnalyticsMetricsCollector";
-import { TopicMappingPlayer } from "@foxglove/studio-base/players/TopicMappingPlayer/TopicMappingPlayer";
+import { TopicAliasingPlayer } from "@foxglove/studio-base/players/TopicAliasingPlayer/TopicAliasingPlayer";
 import UserNodePlayer from "@foxglove/studio-base/players/UserNodePlayer";
 import { Player } from "@foxglove/studio-base/players/types";
 import { UserNodes } from "@foxglove/studio-base/types/panels";
@@ -64,7 +64,8 @@ const userNodesSelector = (state: LayoutState) =>
   state.selectedLayout?.data?.userNodes ?? EMPTY_USER_NODES;
 const globalVariablesSelector = (state: LayoutState) =>
   state.selectedLayout?.data?.globalVariables ?? EMPTY_GLOBAL_VARIABLES;
-const selectTopicMappers = (catalog: ExtensionCatalog) => catalog.installedTopicMappers;
+const selectTopicAliasFunctions = (catalog: ExtensionCatalog) =>
+  catalog.installedTopicAliasFunctions;
 
 export default function PlayerManager(props: PropsWithChildren<PlayerManagerProps>): JSX.Element {
   const { children, playerSources } = props;
@@ -95,7 +96,7 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
   const userNodes = useCurrentLayoutSelector(userNodesSelector);
   const globalVariables = useCurrentLayoutSelector(globalVariablesSelector);
 
-  const topicMappers = useExtensionCatalog(selectTopicMappers);
+  const topicAliasFunctions = useExtensionCatalog(selectTopicAliasFunctions);
 
   const { recents, addRecent } = useIndexedDbRecents();
 
@@ -107,44 +108,48 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
   // the message pipeline
   const globalVariablesRef = useLatest(globalVariables);
 
-  // Initialize the topic mapping player with the mappers and global variables we have at
-  // first load. Any changes in mappers caused by dynamically loaded extensions or new
-  // variables have to be set separately because we can only construct the wrapping player
-  // once since the underlying player doesn't allow us set a new listener after the
-  // initial listener is set.
-  const [initialTopicMappers] = useState(topicMappers);
+  // Initialize the topic aliasing player with the alias functions and global variables we
+  // have at first load. Any changes in alias functions caused by dynamically loaded
+  // extensions or new variables have to be set separately because we can only construct
+  // the wrapping player once since the underlying player doesn't allow us set a new
+  // listener after the initial listener is set.
+  const [initialTopicAliasFunctions] = useState(topicAliasFunctions);
   const [initialGlobalVariables] = useState(globalVariables);
-  const topicMapper = useMemo(() => {
+  const topicAliasPlayer = useMemo(() => {
     if (!basePlayer) {
       return undefined;
     }
 
-    return new TopicMappingPlayer(basePlayer, initialTopicMappers ?? [], initialGlobalVariables);
-  }, [basePlayer, initialGlobalVariables, initialTopicMappers]);
+    return new TopicAliasingPlayer(
+      basePlayer,
+      initialTopicAliasFunctions ?? [],
+      initialGlobalVariables,
+    );
+  }, [basePlayer, initialGlobalVariables, initialTopicAliasFunctions]);
 
-  // Topic mappers can change if we hot load a new extension with new mappers.
+  // Topic aliases can change if we hot load a new extension with new alias functions.
   useEffect(() => {
-    if (topicMappers !== initialTopicMappers) {
-      topicMapper?.setMappers(topicMappers ?? []);
+    if (topicAliasFunctions !== initialTopicAliasFunctions) {
+      topicAliasPlayer?.setAliasFunctions(topicAliasFunctions ?? []);
     }
-  }, [initialTopicMappers, topicMapper, topicMappers]);
+  }, [initialTopicAliasFunctions, topicAliasPlayer, topicAliasFunctions]);
 
-  // Topic mapper needs updated global variables.
+  // Topic alias player needs updated global variables.
   useEffect(() => {
     if (globalVariables !== initialGlobalVariables) {
-      topicMapper?.setGlobalVariables(globalVariables);
+      topicAliasPlayer?.setGlobalVariables(globalVariables);
     }
-  }, [globalVariables, initialGlobalVariables, topicMapper]);
+  }, [globalVariables, initialGlobalVariables, topicAliasPlayer]);
 
   const player = useMemo(() => {
-    if (!topicMapper) {
+    if (!topicAliasPlayer) {
       return undefined;
     }
 
-    const userNodePlayer = new UserNodePlayer(topicMapper, userNodeActions);
+    const userNodePlayer = new UserNodePlayer(topicAliasPlayer, userNodeActions);
     userNodePlayer.setGlobalVariables(globalVariablesRef.current);
     return userNodePlayer;
-  }, [globalVariablesRef, topicMapper, userNodeActions]);
+  }, [globalVariablesRef, topicAliasPlayer, userNodeActions]);
 
   useLayoutEffect(() => void player?.setUserNodes(userNodes), [player, userNodes]);
 

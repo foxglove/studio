@@ -3,19 +3,22 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import FakePlayer from "@foxglove/studio-base/components/MessagePipeline/FakePlayer";
-import { TopicMappingPlayer } from "@foxglove/studio-base/players/TopicMappingPlayer/TopicMappingPlayer";
-import { TopicMappers } from "@foxglove/studio-base/players/TopicMappingPlayer/mapping";
+import { TopicAliasingPlayer } from "@foxglove/studio-base/players/TopicAliasingPlayer/TopicAliasingPlayer";
+import { TopicAliasFunctions } from "@foxglove/studio-base/players/TopicAliasingPlayer/aliasing";
 import { PlayerProblem, PlayerState, Topic } from "@foxglove/studio-base/players/types";
 
 import { mockMessage, mockPlayerState } from "./mocks";
 
-describe("TopicMappingPlayer", () => {
+describe("TopicAliasingPlayer", () => {
   it("maps subscriptions", async () => {
     const fakePlayer = new FakePlayer();
-    const mappers: TopicMappers = [
-      { extensionId: "anh", mapper: () => new Map([["/original_topic_1", "/renamed_topic_1"]]) },
+    const mappers: TopicAliasFunctions = [
+      {
+        extensionId: "anh",
+        aliasFunction: () => [{ sourceTopicName: "/original_topic_1", name: "/renamed_topic_1" }],
+      },
     ];
-    const player = new TopicMappingPlayer(fakePlayer, mappers, {});
+    const player = new TopicAliasingPlayer(fakePlayer, mappers, {});
     player.setListener(async () => {});
     player.setSubscriptions([{ topic: "/renamed_topic_1" }, { topic: "/topic_2" }]);
     await fakePlayer.emit(
@@ -31,19 +34,22 @@ describe("TopicMappingPlayer", () => {
 
   it("maps messages", async () => {
     const fakePlayer = new FakePlayer();
-    const mappers: TopicMappers = [
-      { extensionId: "any", mapper: () => new Map([["original_topic_1", "renamed_topic_1"]]) },
+    const mappers: TopicAliasFunctions = [
+      {
+        extensionId: "any",
+        aliasFunction: () => [{ sourceTopicName: "/original_topic_1", name: "/renamed_topic_1" }],
+      },
     ];
-    const player = new TopicMappingPlayer(fakePlayer, mappers, {});
+    const player = new TopicAliasingPlayer(fakePlayer, mappers, {});
     const listener = jest.fn();
     player.setListener(listener);
     await fakePlayer.emit(
       mockPlayerState(undefined, {
         messages: [
-          mockMessage("message", { topic: "original_topic_1" }),
-          mockMessage("message", { topic: "topic_2" }),
+          mockMessage("message", { topic: "/original_topic_1" }),
+          mockMessage("message", { topic: "/topic_2" }),
         ],
-        topics: [{ name: "original_topic_1", schemaName: "any.schema" }],
+        topics: [{ name: "/original_topic_1", schemaName: "any.schema" }],
       }),
     );
 
@@ -51,15 +57,15 @@ describe("TopicMappingPlayer", () => {
       expect.objectContaining({
         activeData: expect.objectContaining({
           messages: [
-            mockMessage("message", { topic: "original_topic_1" }),
-            mockMessage("message", { topic: "renamed_topic_1" }),
-            mockMessage("message", { topic: "topic_2" }),
+            mockMessage("message", { topic: "/original_topic_1" }),
+            mockMessage("message", { topic: "/renamed_topic_1" }),
+            mockMessage("message", { topic: "/topic_2" }),
           ],
           topics: [
-            { name: "original_topic_1", schemaName: "any.schema" },
+            { name: "/original_topic_1", schemaName: "any.schema" },
             {
-              name: "renamed_topic_1",
-              mappedFromName: "original_topic_1",
+              name: "/renamed_topic_1",
+              aliasedFromName: "/original_topic_1",
               schemaName: "any.schema",
             },
           ],
@@ -70,18 +76,20 @@ describe("TopicMappingPlayer", () => {
 
   it("marks disallowed mappings as player problems", async () => {
     const fakePlayer = new FakePlayer();
-    const mappers: TopicMappers = [
+    const mappers: TopicAliasFunctions = [
       {
         extensionId: "ext1",
-        mapper: () =>
-          new Map([
-            ["original_topic_1", "renamed_topic_1"],
-            ["original_topic_2", "original_topic_1"],
-          ]),
+        aliasFunction: () => [
+          { sourceTopicName: "/original_topic_1", name: "/renamed_topic_1" },
+          { sourceTopicName: "/original_topic_2", name: "/original_topic_1" },
+        ],
       },
-      { extensionId: "ext2", mapper: () => new Map([["original_topic_2", "renamed_topic_1"]]) },
+      {
+        extensionId: "ext2",
+        aliasFunction: () => [{ sourceTopicName: "/original_topic_2", name: "/renamed_topic_1" }],
+      },
     ];
-    const player = new TopicMappingPlayer(fakePlayer, mappers, {});
+    const player = new TopicAliasingPlayer(fakePlayer, mappers, {});
     let problems: undefined | PlayerProblem[] = [];
     const listener = async (state: PlayerState) => {
       problems = state.problems;
@@ -89,23 +97,23 @@ describe("TopicMappingPlayer", () => {
     player.setListener(listener);
     await fakePlayer.emit(
       mockPlayerState(undefined, {
-        messages: [mockMessage("message", { topic: "original_topic_1" })],
+        messages: [mockMessage("message", { topic: "/original_topic_1" })],
         topics: [
-          { name: "original_topic_1", schemaName: "schema1" },
-          { name: "original_topic_2", schemaName: "schema2" },
+          { name: "/original_topic_1", schemaName: "schema1" },
+          { name: "/original_topic_2", schemaName: "schema2" },
         ],
       }),
     );
 
     expect(problems).toEqual([
       {
-        message: "Disallowed topic mapping",
-        tip: "Extension ext1 mapped topic original_topic_2 is already present in the data source.",
+        message: "Disallowed topic alias",
+        tip: "Extension ext1 aliased topic /original_topic_1 is already present in the data source.",
         severity: "error",
       },
       {
-        message: "Disallowed topic mapping",
-        tip: "Extension ext2 requested duplicate mapping from topic original_topic_2 to topic renamed_topic_1.",
+        message: "Disallowed topic alias",
+        tip: "Extension ext2 requested duplicate alias from topic /original_topic_2 to topic /renamed_topic_1.",
         severity: "error",
       },
     ]);
@@ -113,11 +121,14 @@ describe("TopicMappingPlayer", () => {
 
   it("maps blocks", async () => {
     const fakePlayer = new FakePlayer();
-    const mappers: TopicMappers = [
-      { extensionId: "any", mapper: () => new Map([["/topic_1", "/renamed_topic_1"]]) },
+    const mappers: TopicAliasFunctions = [
+      {
+        extensionId: "any",
+        aliasFunction: () => [{ sourceTopicName: "/topic_1", name: "/renamed_topic_1" }],
+      },
     ];
 
-    const player = new TopicMappingPlayer(fakePlayer, mappers, {});
+    const player = new TopicAliasingPlayer(fakePlayer, mappers, {});
     const listener = jest.fn();
     player.setListener(listener);
 

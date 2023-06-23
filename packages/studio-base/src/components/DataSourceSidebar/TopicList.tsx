@@ -93,7 +93,7 @@ const useStyles = makeStyles()((theme) => ({
       border: "none",
     },
   },
-  mappedTopicName: {
+  aliasedTopicName: {
     color: theme.palette.primary.main,
     display: "block",
     textAlign: "start",
@@ -144,9 +144,9 @@ function TopicListItem({
         primary={
           <>
             <HighlightChars str={topic.name} indices={positions} />
-            {topic.mappedFromName && (
-              <Typography variant="caption" className={classes.mappedTopicName}>
-                from {topic.mappedFromName}
+            {topic.aliasedFromName && (
+              <Typography variant="caption" className={classes.aliasedTopicName}>
+                from {topic.aliasedFromName}
               </Typography>
             )}
           </>

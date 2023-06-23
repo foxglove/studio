@@ -5,7 +5,7 @@
 import { groupBy, transform, uniq } from "lodash";
 import memoizeWeak from "memoize-weak";
 
-import { Immutable as Im, MessageEvent, TopicMapper } from "@foxglove/studio";
+import { TopicAliasFunction, Immutable as Im, MessageEvent } from "@foxglove/studio";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import {
   MessageBlock,
@@ -17,20 +17,20 @@ import {
   TopicStats,
 } from "@foxglove/studio-base/players/types";
 
-type TopicMapping = Map<string, string[]>;
+type TopicAliasMap = Map<string, string[]>;
 type MessageBlocks = readonly (undefined | MessageBlock)[];
-const EmptyMapping: Im<TopicMapping> = new Map();
+const EmptyAliasMap: Im<TopicAliasMap> = new Map();
 
-export type TopicMappers = Array<{ extensionId: string; mapper: TopicMapper }>;
+export type TopicAliasFunctions = Array<{ extensionId: string; aliasFunction: TopicAliasFunction }>;
 
-export type MappingInputs = {
-  mappers: TopicMappers;
+export type AlisingInputs = {
+  aliasFunctions: TopicAliasFunctions;
   topics: undefined | Topic[];
   variables: GlobalVariables;
 };
 
-function mapBlocks(blocks: MessageBlocks, mapping: Im<TopicMapping>): MessageBlocks {
-  if (mapping === EmptyMapping) {
+function aliasBlocks(blocks: MessageBlocks, mapping: Im<TopicAliasMap>): MessageBlocks {
+  if (mapping === EmptyAliasMap) {
     return blocks;
   }
 
@@ -61,8 +61,11 @@ function mapBlocks(blocks: MessageBlocks, mapping: Im<TopicMapping>): MessageBlo
   });
 }
 
-function mapMessages(messages: Im<MessageEvent[]>, mapping: Im<TopicMapping>): Im<MessageEvent[]> {
-  if (mapping === EmptyMapping) {
+function aliasMessages(
+  messages: Im<MessageEvent[]>,
+  mapping: Im<TopicAliasMap>,
+): Im<MessageEvent[]> {
+  if (mapping === EmptyAliasMap) {
     return messages;
   }
 
@@ -81,11 +84,11 @@ function mapMessages(messages: Im<MessageEvent[]>, mapping: Im<TopicMapping>): I
   return mappedMessages;
 }
 
-function mapPublishedTopics(
+function aliasPublishedTopics(
   topics: Map<string, Set<string>>,
-  mapping: Im<TopicMapping>,
+  mapping: Im<TopicAliasMap>,
 ): Map<string, Set<string>> {
-  if (mapping === EmptyMapping) {
+  if (mapping === EmptyAliasMap) {
     return topics;
   }
 
@@ -97,12 +100,12 @@ function mapPublishedTopics(
   return mappedTopics;
 }
 
-function mapSubscribedTopics(
+function aliasSubscribedTopics(
   topics: Map<string, Set<string>>,
-  mapping: Im<TopicMapping>,
+  mapping: Im<TopicAliasMap>,
   subcriptions: Im<SubscribePayload[]>,
 ): Map<string, Set<string>> {
-  if (mapping === EmptyMapping) {
+  if (mapping === EmptyAliasMap) {
     return topics;
   }
 
@@ -126,22 +129,22 @@ function mapSubscribedTopics(
   return mappedTopics;
 }
 
-function mapProgress(progress: Progress, mapping: Im<TopicMapping>): Progress {
-  if (mapping === EmptyMapping || progress.messageCache == undefined) {
+function aliasProgress(progress: Progress, mapping: Im<TopicAliasMap>): Progress {
+  if (mapping === EmptyAliasMap || progress.messageCache == undefined) {
     return progress;
   }
   const newProgress: Progress = {
     ...progress,
     messageCache: {
       ...progress.messageCache,
-      blocks: memos.mapBlocks(progress.messageCache.blocks, mapping),
+      blocks: memos.aliasBlocks(progress.messageCache.blocks, mapping),
     },
   };
   return newProgress;
 }
 
-function mapTopics(topics: Topic[], mapping: Im<TopicMapping>): Topic[] {
-  if (mapping === EmptyMapping) {
+function aliasTopics(topics: Topic[], mapping: Im<TopicAliasMap>): Topic[] {
+  if (mapping === EmptyAliasMap) {
     return topics;
   }
 
@@ -153,7 +156,7 @@ function mapTopics(topics: Topic[], mapping: Im<TopicMapping>): Topic[] {
         ...mappings.map((name) => ({
           ...topic,
           name,
-          mappedFromName: topic.name,
+          aliasedFromName: topic.name,
         })),
       ];
     } else {
@@ -162,11 +165,11 @@ function mapTopics(topics: Topic[], mapping: Im<TopicMapping>): Topic[] {
   });
 }
 
-function mapTopicStats(
+function aliasTopicStats(
   stats: Map<string, TopicStats>,
-  mapping: Im<TopicMapping>,
+  mapping: Im<TopicAliasMap>,
 ): Map<string, TopicStats> {
-  if (mapping === EmptyMapping) {
+  if (mapping === EmptyAliasMap) {
     return stats;
   }
 
@@ -187,13 +190,13 @@ function mapTopicStats(
 
 // Inverts a mapping, used to reverse map incoming subscriptions to subscriptions we pass
 // through to the wrapped player.
-function invertMapping(mapping: Im<TopicMapping>): Im<TopicMapping> {
-  if (mapping === EmptyMapping) {
-    return EmptyMapping;
+function invertAliasMap(aliasMap: Im<TopicAliasMap>): Im<TopicAliasMap> {
+  if (aliasMap === EmptyAliasMap) {
+    return EmptyAliasMap;
   }
 
-  const inverted: TopicMapping = new Map();
-  for (const [key, values] of mapping.entries()) {
+  const inverted: TopicAliasMap = new Map();
+  for (const [key, values] of aliasMap.entries()) {
     for (const value of values) {
       const newValues = inverted.get(value) ?? [];
       newValues.push(key);
@@ -203,87 +206,87 @@ function invertMapping(mapping: Im<TopicMapping>): Im<TopicMapping> {
   return inverted;
 }
 
-// Merges multiple mappings into a single unified mapping. Note that a single topic name
-// can map to more than one renamed topic if multiple extensions provide a mapping for it.
-// Also returns any problems caused by disallowed mappings.
-function mergeMappings(
-  maps: Im<{ extensionId: string; map: Map<string, string> }[]>,
-  inputs: Im<MappingInputs>,
+// Merges multiple aliases into a single unified alias map. Note that a single topic name
+// can alias to more than one renamed topic if multiple extensions provide an alias for it.
+// Also returns any problems caused by disallowed aliases.
+function mergeAliases(
+  maps: Im<{ extensionId: string; aliases: ReturnType<TopicAliasFunction> }[]>,
+  inputs: Im<AlisingInputs>,
 ): {
-  mapping: TopicMapping;
+  aliasMap: TopicAliasMap;
   problems: undefined | PlayerProblem[];
 } {
   const inverseMapping = new Map<string, string>();
   const problems: PlayerProblem[] = [];
-  const merged: TopicMapping = new Map();
+  const merged: TopicAliasMap = new Map();
   const topics = inputs.topics ?? [];
-  for (const { extensionId, map } of maps) {
-    for (const [key, value] of map.entries()) {
-      const existingMapping = inverseMapping.get(value);
-      if (topics.some((topic) => topic.name === value)) {
+  for (const { extensionId, aliases } of maps) {
+    for (const { name, sourceTopicName } of aliases) {
+      const existingMapping = inverseMapping.get(name);
+      if (topics.some((topic) => topic.name === name)) {
         problems.push({
           severity: "error",
-          message: `Disallowed topic mapping`,
-          tip: `Extension ${extensionId} mapped topic ${key} is already present in the data source.`,
+          message: `Disallowed topic alias`,
+          tip: `Extension ${extensionId} aliased topic ${name} is already present in the data source.`,
         });
-      } else if (existingMapping != undefined && existingMapping !== key) {
+      } else if (existingMapping != undefined && existingMapping !== sourceTopicName) {
         problems.push({
           severity: "error",
-          message: `Disallowed topic mapping`,
-          tip: `Extension ${extensionId} requested duplicate mapping from topic ${key} to topic ${value}.`,
+          message: `Disallowed topic alias`,
+          tip: `Extension ${extensionId} requested duplicate alias from topic ${sourceTopicName} to topic ${name}.`,
         });
       } else {
-        inverseMapping.set(value, key);
-        const mergedValues = uniq(merged.get(key) ?? []).concat(value);
-        merged.set(key, mergedValues);
+        inverseMapping.set(name, sourceTopicName);
+        const mergedValues = uniq(merged.get(sourceTopicName) ?? []).concat(name);
+        merged.set(sourceTopicName, mergedValues);
       }
     }
   }
-  return { mapping: merged, problems: problems.length > 0 ? problems : undefined };
+  return { aliasMap: merged, problems: problems.length > 0 ? problems : undefined };
 }
 
 // Applies our topic mappers to the input topics to generate an active set of name =>
 // renamed topic mappings.
-function buildMapping(inputs: Im<MappingInputs>): {
-  mapping: Im<TopicMapping>;
+function buildAliases(inputs: Im<AlisingInputs>): {
+  aliasMap: Im<TopicAliasMap>;
   problems: undefined | PlayerProblem[];
 } {
-  const mappings = inputs.mappers.map((mapper) => ({
+  const mappings = inputs.aliasFunctions.map((mapper) => ({
     extensionId: mapper.extensionId,
-    map: mapper.mapper({
+    aliases: mapper.aliasFunction({
       topics: inputs.topics ?? [],
       globalVariables: inputs.variables,
     }),
   }));
-  const anyMappings = mappings.some((map) => [...map.map.entries()].length > 0);
+  const anyMappings = mappings.some((map) => [...map.aliases].length > 0);
   return anyMappings
-    ? mergeMappings(mappings, inputs)
-    : { mapping: EmptyMapping, problems: undefined };
+    ? mergeAliases(mappings, inputs)
+    : { aliasMap: EmptyAliasMap, problems: undefined };
 }
 
 // Memoize our mapping functions to avoid redundant work and also to preserve downstream
 // referential transparency for React components.
 const memos = {
-  buildMapping: memoizeWeak(buildMapping),
-  mapBlocks: memoizeWeak(mapBlocks),
-  mapMessages: memoizeWeak(mapMessages),
-  mapProgress: memoizeWeak(mapProgress),
-  mapPublishedTopics: memoizeWeak(mapPublishedTopics),
-  mapSubscribedTopics: memoizeWeak(mapSubscribedTopics),
-  mapTopics: memoizeWeak(mapTopics),
-  mapTopicStats: memoizeWeak(mapTopicStats),
+  buildAliases: memoizeWeak(buildAliases),
+  aliasBlocks: memoizeWeak(aliasBlocks),
+  aliasMessages: memoizeWeak(aliasMessages),
+  aliasProgress: memoizeWeak(aliasProgress),
+  aliasPublishedTopics: memoizeWeak(aliasPublishedTopics),
+  aliasSubscribedTopics: memoizeWeak(aliasSubscribedTopics),
+  aliasTopics: memoizeWeak(aliasTopics),
+  aliasTopicStats: memoizeWeak(aliasTopicStats),
 };
 
 /**
- * Maps a player state to a new player state with all topic name mappings applied.
+ * Aliases topics in a player state to a new player state with all topic name aliases
+ * applied.
  *
- * @param inputs the mapping inputs to the mapping function
- * @param playerState the player state containing topics to map
- * @returns a mapped player state with all mapped topic names replaced with their mapped
- * value.
+ * @param inputs the inputs to the alias function
+ * @param playerState the player state containing topics to alias
+ * @returns a player state with all aliased topic names replaced with their aliased value.
  */
-export function mapPlayerState(
-  inputs: Im<MappingInputs>,
+export function aliasPlayerState(
+  inputs: Im<AlisingInputs>,
   subscriptions: Im<SubscribePayload[]>,
   playerState: PlayerState,
 ): PlayerState {
@@ -292,30 +295,30 @@ export function mapPlayerState(
     activeData: playerState.activeData ? { ...playerState.activeData } : undefined,
   };
 
-  const { mapping, problems } = memos.buildMapping(inputs);
+  const { aliasMap: mapping, problems } = memos.buildAliases(inputs);
 
   if (newState.activeData) {
-    newState.activeData.topics = memos.mapTopics(newState.activeData.topics, mapping);
-    newState.activeData.messages = memos.mapMessages(newState.activeData.messages, mapping);
+    newState.activeData.topics = memos.aliasTopics(newState.activeData.topics, mapping);
+    newState.activeData.messages = memos.aliasMessages(newState.activeData.messages, mapping);
     if (newState.activeData.publishedTopics) {
-      newState.activeData.publishedTopics = memos.mapPublishedTopics(
+      newState.activeData.publishedTopics = memos.aliasPublishedTopics(
         newState.activeData.publishedTopics,
         mapping,
       );
     }
     if (newState.activeData.subscribedTopics) {
-      newState.activeData.subscribedTopics = memos.mapSubscribedTopics(
+      newState.activeData.subscribedTopics = memos.aliasSubscribedTopics(
         newState.activeData.subscribedTopics,
         mapping,
         subscriptions,
       );
     }
 
-    newState.activeData.topicStats = memos.mapTopicStats(newState.activeData.topicStats, mapping);
+    newState.activeData.topicStats = memos.aliasTopicStats(newState.activeData.topicStats, mapping);
   }
 
   if (newState.progress.messageCache) {
-    newState.progress = memos.mapProgress(newState.progress, mapping);
+    newState.progress = memos.aliasProgress(newState.progress, mapping);
   }
 
   if (problems != undefined) {
@@ -326,21 +329,21 @@ export function mapPlayerState(
 }
 
 /**
- * Maps an array of subscriptions to a new array with all topic mappings applied.
+ * Maps an array of subscriptions to a new array with all topic aliases applied.
  *
  * @param inputs the inputs to the mapping function
  * @param subscriptions the subscription payloads to map
  * @returns a new array of subscription payloads with mapped topic names
  */
-export const mapSubscriptions = memoizeWeak(
-  (inputs: Im<MappingInputs>, subcriptions: SubscribePayload[]): SubscribePayload[] => {
-    const { mapping } = memos.buildMapping(inputs);
+export const aliasSubscriptions = memoizeWeak(
+  (inputs: Im<AlisingInputs>, subcriptions: SubscribePayload[]): SubscribePayload[] => {
+    const { aliasMap: mapping } = memos.buildAliases(inputs);
 
-    if (mapping === EmptyMapping) {
+    if (mapping === EmptyAliasMap) {
       return subcriptions;
     }
 
-    const inverseMapping = invertMapping(mapping);
+    const inverseMapping = invertAliasMap(mapping);
 
     return subcriptions.flatMap((sub) => {
       const mappings = inverseMapping.get(sub.topic);

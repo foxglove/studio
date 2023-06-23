@@ -11,7 +11,7 @@ import {
   Immutable,
   RegisterMessageConverterArgs,
 } from "@foxglove/studio";
-import { TopicMappers } from "@foxglove/studio-base/players/TopicMappingPlayer/mapping";
+import { TopicAliasFunctions } from "@foxglove/studio-base/players/TopicAliasingPlayer/aliasing";
 import { ExtensionInfo, ExtensionNamespace } from "@foxglove/studio-base/types/Extensions";
 
 export type RegisteredPanel = {
@@ -32,7 +32,7 @@ export type ExtensionCatalog = Immutable<{
   installedExtensions: undefined | ExtensionInfo[];
   installedPanels: undefined | Record<string, RegisteredPanel>;
   installedMessageConverters: undefined | RegisterMessageConverterArgs<unknown>[];
-  installedTopicMappers: undefined | TopicMappers;
+  installedTopicAliasFunctions: undefined | TopicAliasFunctions;
 }>;
 
 export const ExtensionCatalogContext = createContext<undefined | StoreApi<ExtensionCatalog>>(

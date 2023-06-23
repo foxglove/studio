@@ -2,11 +2,11 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { TopicMapper } from "@foxglove/studio";
+import { TopicAliasFunction } from "@foxglove/studio";
 import {
-  MappingInputs,
-  mapPlayerState,
-} from "@foxglove/studio-base/players/TopicMappingPlayer/mapping";
+  AlisingInputs,
+  aliasPlayerState,
+} from "@foxglove/studio-base/players/TopicAliasingPlayer/aliasing";
 import { Topic } from "@foxglove/studio-base/players/types";
 
 import { mockPlayerState } from "./mocks";
@@ -55,12 +55,17 @@ describe("mapPlayerState", () => {
         topics,
       },
     );
-    const inputs: MappingInputs = {
-      mappers: [{ extensionId: "any", mapper: () => new Map([["/topic_1", "/renamed_topic_1"]]) }],
+    const inputs: AlisingInputs = {
+      aliasFunctions: [
+        {
+          extensionId: "any",
+          aliasFunction: () => [{ sourceTopicName: "/topic_1", name: "/renamed_topic_1" }],
+        },
+      ],
       topics,
       variables: {},
     };
-    const mapped = mapPlayerState(inputs, [], state);
+    const mapped = aliasPlayerState(inputs, [], state);
     expect(mapped.progress).toMatchObject({
       messageCache: {
         blocks: [
@@ -101,21 +106,20 @@ describe("mapPlayerState", () => {
         },
       ],
     });
-    const inputs: MappingInputs = {
-      mappers: [
+    const inputs: AlisingInputs = {
+      aliasFunctions: [
         {
           extensionId: "any",
-          mapper: () =>
-            new Map([
-              ["/absent_topic", "/renamed_absent_topic"],
-              ["/topic_1", "/renamed_topic_1"],
-            ]),
+          aliasFunction: () => [
+            { sourceTopicName: "/absent_topic", name: "/renamed_absent_topic" },
+            { sourceTopicName: "/topic_1", name: "/renamed_topic_1" },
+          ],
         },
       ],
       topics,
       variables: {},
     };
-    const mapped = mapPlayerState(inputs, [], state);
+    const mapped = aliasPlayerState(inputs, [], state);
     expect(mapped.activeData?.messages).toEqual([
       expect.objectContaining({ topic: "/topic_1" }),
       expect.objectContaining({ topic: "/renamed_topic_1" }),
@@ -135,12 +139,17 @@ describe("mapPlayerState", () => {
         ["2", new Set(["/topic_2"])],
       ]),
     });
-    const inputs: MappingInputs = {
-      mappers: [{ extensionId: "any", mapper: () => new Map([["/topic_1", "/renamed_topic_1"]]) }],
+    const inputs: AlisingInputs = {
+      aliasFunctions: [
+        {
+          extensionId: "any",
+          aliasFunction: () => [{ sourceTopicName: "/topic_1", name: "/renamed_topic_1" }],
+        },
+      ],
       topics,
       variables: {},
     };
-    const mapped = mapPlayerState(inputs, [], state);
+    const mapped = aliasPlayerState(inputs, [], state);
     expect(mapped.activeData?.publishedTopics).toEqual(
       new Map([
         ["1", new Set(["/topic_1", "/topic_2", "/renamed_topic_1"])],
@@ -162,22 +171,21 @@ describe("mapPlayerState", () => {
         ["3", new Set(["/topic_1", "/topic_2"])],
       ]),
     });
-    const inputs: MappingInputs = {
-      mappers: [
+    const inputs: AlisingInputs = {
+      aliasFunctions: [
         {
           extensionId: "any",
-          mapper: () =>
-            new Map([
-              ["/topic_1", "/renamed_topic_1"],
-              ["/topic_3", "/renamed_topic_3"],
-            ]),
+          aliasFunction: () => [
+            { sourceTopicName: "/topic_1", name: "/renamed_topic_1" },
+            { sourceTopicName: "/topic_3", name: "/renamed_topic_3" },
+          ],
         },
       ],
       topics,
       variables: {},
     };
     const subscriptions = [{ topic: "/topic_1" }, { topic: "/renamed_topic_1" }];
-    const mapped = mapPlayerState(inputs, subscriptions, state);
+    const mapped = aliasPlayerState(inputs, subscriptions, state);
     expect(mapped.activeData?.subscribedTopics).toEqual(
       new Map([
         ["1", new Set(["/topic_1", "/renamed_topic_1"])],
@@ -193,24 +201,23 @@ describe("mapPlayerState", () => {
       { name: "/topic_2", schemaName: "whatever" },
     ];
     const state = mockPlayerState(undefined, { topics });
-    const inputs: MappingInputs = {
-      mappers: [
+    const inputs: AlisingInputs = {
+      aliasFunctions: [
         {
           extensionId: "any",
-          mapper: () =>
-            new Map([
-              ["/absent_topic", "/renamed_absent_topic"],
-              ["/topic_1", "/renamed_topic_1"],
-            ]),
+          aliasFunction: () => [
+            { sourceTopicName: "/absent_topic", name: "/renamed_absent_topic" },
+            { sourceTopicName: "/topic_1", name: "/renamed_topic_1" },
+          ],
         },
       ],
       topics,
       variables: {},
     };
-    const mapped = mapPlayerState(inputs, [], state);
+    const mapped = aliasPlayerState(inputs, [], state);
     expect(mapped.activeData?.topics).toEqual([
       { name: "/topic_1", schemaName: "whatever" },
-      { name: "/renamed_topic_1", schemaName: "whatever", mappedFromName: "/topic_1" },
+      { name: "/renamed_topic_1", schemaName: "whatever", aliasedFromName: "/topic_1" },
       { name: "/topic_2", schemaName: "whatever" },
     ]);
   });
@@ -221,21 +228,22 @@ describe("mapPlayerState", () => {
       { name: "/topic_2", schemaName: "whatever" },
     ];
     const state = mockPlayerState(undefined, { topics });
-    const inputs: MappingInputs = {
-      mappers: [
+    const inputs: AlisingInputs = {
+      aliasFunctions: [
         {
           extensionId: "any",
-          mapper: (args: Parameters<TopicMapper>[0]) =>
-            new Map([["/topic_1", `/renamed_topic_${args.globalVariables["foo"]}`]]),
+          aliasFunction: (args: Parameters<TopicAliasFunction>[0]) => [
+            { sourceTopicName: "/topic_1", name: `/renamed_topic_${args.globalVariables["foo"]}` },
+          ],
         },
       ],
       topics,
       variables: { foo: "bar" },
     };
-    const mapped = mapPlayerState(inputs, [], state);
+    const mapped = aliasPlayerState(inputs, [], state);
     expect(mapped.activeData?.topics).toEqual([
       { name: "/topic_1", schemaName: "whatever" },
-      { name: "/renamed_topic_bar", schemaName: "whatever", mappedFromName: "/topic_1" },
+      { name: "/renamed_topic_bar", schemaName: "whatever", aliasedFromName: "/topic_1" },
       { name: "/topic_2", schemaName: "whatever" },
     ]);
   });

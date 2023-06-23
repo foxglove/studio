@@ -11,14 +11,14 @@ import {
   ExtensionContext,
   ExtensionModule,
   RegisterMessageConverterArgs,
-  TopicMapper,
+  TopicAliasFunction,
 } from "@foxglove/studio";
 import {
   ExtensionCatalog,
   ExtensionCatalogContext,
   RegisteredPanel,
 } from "@foxglove/studio-base/context/ExtensionCatalogContext";
-import { TopicMappers } from "@foxglove/studio-base/players/TopicMappingPlayer/mapping";
+import { TopicAliasFunctions } from "@foxglove/studio-base/players/TopicAliasingPlayer/aliasing";
 import { ExtensionLoader } from "@foxglove/studio-base/services/ExtensionLoader";
 import { ExtensionInfo, ExtensionNamespace } from "@foxglove/studio-base/types/Extensions";
 
@@ -27,7 +27,7 @@ const log = Logger.getLogger(__filename);
 type ContributionPoints = {
   panels: Record<string, RegisteredPanel>;
   messageConverters: RegisterMessageConverterArgs<unknown>[];
-  topicMappers: TopicMappers;
+  topicAliasFunctions: TopicAliasFunctions;
 };
 
 function activateExtension(
@@ -40,7 +40,7 @@ function activateExtension(
 
   const messageConverters: RegisterMessageConverterArgs<unknown>[] = [];
 
-  const topicMappers: ContributionPoints["topicMappers"] = [];
+  const topicAliasFunctions: ContributionPoints["topicAliasFunctions"] = [];
 
   log.debug(`Activating extension ${extension.qualifiedName}`);
 
@@ -82,8 +82,8 @@ function activateExtension(
       messageConverters.push(args as RegisterMessageConverterArgs<unknown>);
     },
 
-    registerTopicMapper: (mapper: TopicMapper) => {
-      topicMappers.push({ mapper, extensionId: extension.id });
+    registerTopicAliases: (aliasFunction: TopicAliasFunction) => {
+      topicAliasFunctions.push({ aliasFunction, extensionId: extension.id });
     },
   };
 
@@ -103,7 +103,7 @@ function activateExtension(
   return {
     panels,
     messageConverters,
-    topicMappers,
+    topicAliasFunctions,
   };
 }
 
@@ -136,7 +136,7 @@ export function createExtensionRegistryStore(
       const allContributionPoints: ContributionPoints = {
         panels: {},
         messageConverters: [],
-        topicMappers: [],
+        topicAliasFunctions: [],
       };
       for (const loader of loaders) {
         try {
@@ -147,7 +147,9 @@ export function createExtensionRegistryStore(
               const contributionPoints = activateExtension(extension, unwrappedExtensionSource);
               Object.assign(allContributionPoints.panels, contributionPoints.panels);
               allContributionPoints.messageConverters.push(...contributionPoints.messageConverters);
-              allContributionPoints.topicMappers.push(...contributionPoints.topicMappers);
+              allContributionPoints.topicAliasFunctions.push(
+                ...contributionPoints.topicAliasFunctions,
+              );
             } catch (err) {
               log.error("Error loading extension", err);
             }
@@ -161,7 +163,7 @@ export function createExtensionRegistryStore(
         installedExtensions: extensionList,
         installedPanels: allContributionPoints.panels,
         installedMessageConverters: allContributionPoints.messageConverters,
-        installedTopicMappers: allContributionPoints.topicMappers,
+        installedTopicAliasFunctions: allContributionPoints.topicAliasFunctions,
       });
     },
 
@@ -172,7 +174,7 @@ export function createExtensionRegistryStore(
 
     installedMessageConverters: mockMessageConverters ?? [],
 
-    installedTopicMappers: [],
+    installedTopicAliasFunctions: [],
 
     uninstallExtension: async (namespace: ExtensionNamespace, id: string) => {
       const namespacedLoader = loaders.find((loader) => loader.namespace === namespace);

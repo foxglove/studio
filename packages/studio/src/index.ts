@@ -418,17 +418,18 @@ export type RegisterMessageConverterArgs<Src> = {
 };
 
 type BaseTopic = { name: string; schemaName?: string };
+type TopicAlias = { name: string; sourceTopicName: string };
 
 /**
- * A TopicMapper is a function that takes a list of data source topics and a set of
- * variables as input and ouputs a map of data source topic -> mapped topic.
+ * An AliasFunction takes a list of data source topics and variables and outputs
+ * a list of aliased topics.
  */
-export type TopicMapper = (
+export type TopicAliasFunction = (
   args: Immutable<{
     topics: BaseTopic[];
     globalVariables: Readonly<Record<string, VariableValue>>;
   }>,
-) => ReadonlyMap<string, string>;
+) => TopicAlias[];
 
 export interface ExtensionContext {
   /** The current _mode_ of the application. */
@@ -439,11 +440,11 @@ export interface ExtensionContext {
   registerMessageConverter<Src>(args: RegisterMessageConverterArgs<Src>): void;
 
   /**
-   * Registers a new topic mapper with the extension context. The mapper will be called
-   * every time there is a new set of topics and variables and returns a map that is used
-   * to rename topics.
+   * Registers a new alias function with the extension context. The function will be
+   * called every time there is a new set of topics and variables and returns an array of
+   * topic aliases.
    */
-  registerTopicMapper(mapper: TopicMapper): void;
+  registerTopicAliases(aliasFunction: TopicAliasFunction): void;
 }
 
 export interface ExtensionActivate {
