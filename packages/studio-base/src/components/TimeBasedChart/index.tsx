@@ -207,30 +207,32 @@ export default function TimeBasedChart(props: Props): JSX.Element {
   // calculates the minX/maxX for all our datasets
   // we do this on the unfiltered datasets because we need the bounds to properly filter adjacent points
   const datasetBounds = useMemo(() => {
-    let xMin: number | undefined;
-    let xMax: number | undefined;
-    let yMin: number | undefined;
-    let yMax: number | undefined;
+    return { x: { min: undefined, max: undefined }, y: { min: undefined, max: undefined } };
+    // let xMin: number | undefined;
+    // let xMax: number | undefined;
+    // let yMin: number | undefined;
+    // let yMax: number | undefined;
 
-    for (const dataset of datasets) {
-      for (const item of dataset.data) {
-        if (item == undefined) {
-          continue;
-        }
-        if (!isNaN(item.x)) {
-          xMin = Math.min(xMin ?? item.x, item.x);
-          xMax = Math.max(xMax ?? item.x, item.x);
-        }
+    // for (const dataset of datasets) {
+    //   for (const item of dataset.data) {
+    //     if (item == undefined) {
+    //       continue;
+    //     }
+    //     if (!isNaN(item.x)) {
+    //       xMin = Math.min(xMin ?? item.x, item.x);
+    //       xMax = Math.max(xMax ?? item.x, item.x);
+    //     }
 
-        if (!isNaN(item.x)) {
-          yMin = Math.min(yMin ?? item.y, item.y);
-          yMax = Math.max(yMax ?? item.y, item.y);
-        }
-      }
-    }
+    //     if (!isNaN(item.x)) {
+    //       yMin = Math.min(yMin ?? item.y, item.y);
+    //       yMax = Math.max(yMax ?? item.y, item.y);
+    //     }
+    //   }
+    // }
 
-    return { x: { min: xMin, max: xMax }, y: { min: yMin, max: yMax } };
-  }, [datasets]);
+    // return { x: { min: xMin, max: xMax }, y: { min: yMin, max: yMax } };
+    // }, [datasets]);
+  }, []);
 
   const onResetZoom = () => {
     setHasUserPannedOrZoomed(false);

@@ -2,7 +2,6 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { filterMap } from "@foxglove/den/collection";
 import { isTime, subtract, Time, toSec } from "@foxglove/rostime";
 import { Immutable } from "@foxglove/studio";
 import { format } from "@foxglove/studio-base/util/formatTime";
@@ -19,7 +18,7 @@ import {
   PlotPath,
   PlotXAxisVal,
 } from "./internalTypes";
-import { applyToDatum, derivative, MathFunction, mathFunctions } from "./transformPlotRange";
+import { applyToDatum, MathFunction, mathFunctions } from "./transformPlotRange";
 
 const isCustomScale = (xAxisVal: PlotXAxisVal): boolean =>
   xAxisVal === "custom" || xAxisVal === "currentCustom";
@@ -28,7 +27,7 @@ function getXForPoint(
   xAxisVal: PlotXAxisVal,
   timestamp: number,
   innerIdx: number,
-  xAxisRanges: Immutable<PlotDataItem[][]> | undefined,
+  xAxisRanges: Immutable<PlotDataItem[]> | undefined,
   xItem: undefined | Immutable<PlotDataItem>,
   xAxisPath: BasePlotPath | undefined,
 ): number | bigint {
@@ -54,7 +53,7 @@ function getDatumsForMessagePathItem(
   timestampMethod: TimestampMethod,
   xAxisVal: PlotXAxisVal,
   xAxisPath?: BasePlotPath,
-  xAxisRanges?: Immutable<PlotDataItem[][]>,
+  xAxisRanges?: Immutable<PlotDataItem[]>,
 ): { data: Datum[]; hasMismatchedData: boolean } {
   const timestamp = timestampMethod === "headerStamp" ? yItem.headerStamp : yItem.receiveTime;
   if (!timestamp) {
@@ -115,11 +114,11 @@ function getDatasetsFromMessagePlotPath({
   invertedTheme = false,
 }: {
   path: PlotPath;
-  yAxisRanges: Immutable<PlotDataItem[][]>;
+  yAxisRanges: Immutable<PlotDataItem[]>;
   index: number;
   startTime: Time;
   xAxisVal: PlotXAxisVal;
-  xAxisRanges: Immutable<PlotDataItem[][]> | undefined;
+  xAxisRanges: Immutable<PlotDataItem[]> | undefined;
   xAxisPath?: BasePlotPath;
   invertedTheme?: boolean;
 }): {
@@ -130,8 +129,7 @@ function getDatasetsFromMessagePlotPath({
   let hasMismatchedData =
     isCustomScale(xAxisVal) &&
     xAxisRanges != undefined &&
-    (yAxisRanges.length !== xAxisRanges.length ||
-      xAxisRanges.every((range, rangeIndex) => range.length !== yAxisRanges[rangeIndex]?.length));
+    yAxisRanges.length !== xAxisRanges.length;
 
   const plotData: Datum[] = [];
 
@@ -145,44 +143,31 @@ function getDatasetsFromMessagePlotPath({
     }
   }
 
-  for (const [rangeIdx, range] of yAxisRanges.entries()) {
-    const xRange = xAxisRanges?.[rangeIdx];
-    let rangeData: Datum[] = [];
-    for (const [outerIdx, item] of range.entries()) {
-      const xItem = xRange?.[outerIdx];
-      const { data: datums, hasMismatchedData: itemHasMistmatchedData } =
-        getDatumsForMessagePathItem(
-          item,
-          xItem,
-          startTime,
-          path.timestampMethod,
-          xAxisVal,
-          xAxisPath,
-          xAxisRanges,
-        );
+  const rangeData: Datum[] = [];
+  for (const [rangeIdx, item] of yAxisRanges.entries()) {
+    const xItem = xAxisRanges?.[rangeIdx];
+    const { data: datums, hasMismatchedData: itemHasMistmatchedData } = getDatumsForMessagePathItem(
+      item,
+      xItem,
+      startTime,
+      path.timestampMethod,
+      xAxisVal,
+      xAxisPath,
+      xAxisRanges,
+    );
 
-      for (const datum of datums) {
-        if (maybeMathFn) {
-          rangeData.push(applyToDatum(datum, maybeMathFn));
-        } else {
-          rangeData.push(datum);
-        }
-      }
-
-      hasMismatchedData = hasMismatchedData || itemHasMistmatchedData;
-      // If we have added more than one point for this message, make it a scatter plot.
-      if (item.queriedData.length > 1 && xAxisVal !== "index") {
-        showLine = false;
+    for (const datum of datums) {
+      if (maybeMathFn) {
+        rangeData.push(applyToDatum(datum, maybeMathFn));
+      } else {
+        rangeData.push(datum);
       }
     }
 
-    if (path.value.endsWith(".@derivative")) {
-      if (showLine) {
-        rangeData = derivative(rangeData);
-      } else {
-        // If we have a scatter plot, we can't take the derivative, so instead show nothing
-        rangeData = [];
-      }
+    hasMismatchedData = hasMismatchedData || itemHasMistmatchedData;
+    // If we have added more than one point for this message, make it a scatter plot.
+    if (item.queriedData.length > 1 && xAxisVal !== "index") {
+      showLine = false;
     }
 
     // Messages are provided in receive time order but header stamps might be out of order
@@ -198,17 +183,27 @@ function getDatasetsFromMessagePlotPath({
 
     // NaN points are not displayed, and result in a break in the line.
     // We add NaN points before each range (avoid adding before the very first range)
-    if (rangeIdx > 0) {
-      plotData.push({
-        x: NaN,
-        y: NaN,
-        receiveTime: { sec: 0, nsec: 0 },
-        value: "",
-      });
-    }
-    for (const datum of rangeData) {
-      plotData.push(datum);
-    }
+    // if (rangeIdx > 0) {
+    //   plotData.push({
+    //     x: NaN,
+    //     y: NaN,
+    //     receiveTime: { sec: 0, nsec: 0 },
+    //     value: "",
+    //   });
+    // }
+  }
+
+  // if (path.value.endsWith(".@derivative")) {
+  //   if (showLine) {
+  //     rangeData = derivative(rangeData);
+  //   } else {
+  //     // If we have a scatter plot, we can't take the derivative, so instead show nothing
+  //     rangeData = [];
+  //   }
+  // }
+
+  for (const datum of rangeData) {
+    plotData.push(datum);
   }
 
   const borderColor = getLineColor(path.color, index);
@@ -230,17 +225,17 @@ function getDatasetsFromMessagePlotPath({
   };
 }
 
-type Args = {
+type GetDatasetArgs = Immutable<{
   paths: PlotPath[];
-  itemsByPath: Immutable<PlotDataByPath>;
+  itemsByPath: PlotDataByPath;
   startTime: Time;
   xAxisVal: PlotXAxisVal;
   xAxisPath?: BasePlotPath;
   invertedTheme?: boolean;
-};
+}>;
 
-type ReturnVal = {
-  datasets: DataSet[];
+export type DataSets = {
+  datasets: Record<string, DataSet>;
   pathsWithMismatchedDataLengths: string[];
 };
 
@@ -251,13 +246,14 @@ export function getDatasets({
   xAxisVal,
   xAxisPath,
   invertedTheme,
-}: Args): ReturnVal {
+}: GetDatasetArgs): DataSets {
   const pathsWithMismatchedDataLengths: string[] = [];
-  const datasets = filterMap(paths, (path: PlotPath, index: number) => {
+  const datasets: Record<string, DataSet> = {};
+  for (const [index, path] of paths.entries()) {
     const yRanges = itemsByPath[path.value] ?? [];
     const xRanges = xAxisPath && itemsByPath[xAxisPath.value];
     if (!path.enabled) {
-      return undefined;
+      continue;
     } else if (!isReferenceLinePlotPathType(path)) {
       const res = getDatasetsFromMessagePlotPath({
         path,
@@ -273,10 +269,10 @@ export function getDatasets({
       if (res.hasMismatchedData) {
         pathsWithMismatchedDataLengths.push(path.value);
       }
-      return res.dataset;
+      datasets[path.value] = res.dataset;
     }
-    return undefined;
-  });
+    continue;
+  }
 
   return {
     datasets,

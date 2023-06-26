@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { useTheme } from "@mui/material";
+// import { useTheme } from "@mui/material";
 import { compact, isNumber, uniq } from "lodash";
 import { ComponentProps, useCallback, useEffect, useMemo, useState } from "react";
 
@@ -37,7 +37,7 @@ import PanelToolbar, {
 } from "@foxglove/studio-base/components/PanelToolbar";
 import Stack from "@foxglove/studio-base/components/Stack";
 import { ChartDefaultView } from "@foxglove/studio-base/components/TimeBasedChart";
-import { usePlotPanelMessageData } from "@foxglove/studio-base/panels/Plot/usePlotPanelMessageData";
+import { usePlotPanelDatasets } from "@foxglove/studio-base/panels/Plot/usePlotPanelDatasets";
 import { OnClickArg as OnChartClickArgs } from "@foxglove/studio-base/src/components/Chart";
 import { OpenSiblingPanel, PanelConfig, SaveConfig } from "@foxglove/studio-base/types/panels";
 import { PANEL_TITLE_CONFIG_KEY } from "@foxglove/studio-base/util/layout";
@@ -45,7 +45,7 @@ import { PANEL_TITLE_CONFIG_KEY } from "@foxglove/studio-base/util/layout";
 import PlotChart from "./PlotChart";
 import { PlotLegend } from "./PlotLegend";
 import { downloadCSV } from "./csv";
-import { getDatasets } from "./datasets";
+// import { getDatasets } from "./datasets";
 import { usePlotPanelSettings } from "./settings";
 import { PlotConfig } from "./types";
 
@@ -74,7 +74,7 @@ type Props = {
   saveConfig: SaveConfig<PlotConfig>;
 };
 
-const ZERO_TIME = { sec: 0, nsec: 0 };
+// const ZERO_TIME = { sec: 0, nsec: 0 };
 
 function selectStartTime(ctx: MessagePipelineContext) {
   return ctx.playerState.activeData?.startTime;
@@ -121,7 +121,7 @@ function Plot(props: Props) {
     }
   }, [customTitle, legacyTitle, saveConfig]);
 
-  const theme = useTheme();
+  // const theme = useTheme();
 
   useEffect(() => {
     if (yAxisPaths.length === 0) {
@@ -179,24 +179,28 @@ function Plot(props: Props) {
     return yAxisPaths.map(({ value }) => value).concat(compact([xAxisPath?.value]));
   }, [xAxisPath?.value, yAxisPaths]);
 
-  const combinedPlotData = usePlotPanelMessageData({
+  const { datasets, pathsWithMismatchedDataLengths } = usePlotPanelDatasets({
     allPaths,
     followingView,
     showSingleCurrentMessage,
+    startTime,
+    xAxisVal,
+    xAxisPath,
+    yAxisPaths,
   });
 
   // Keep disabled paths when passing into getDatasets, because we still want
   // easy access to the history when turning the disabled paths back on.
-  const { datasets, pathsWithMismatchedDataLengths } = useMemo(() => {
-    return getDatasets({
-      paths: yAxisPaths,
-      itemsByPath: combinedPlotData,
-      startTime: startTime ?? ZERO_TIME,
-      xAxisVal,
-      xAxisPath,
-      invertedTheme: theme.palette.mode === "dark",
-    });
-  }, [yAxisPaths, combinedPlotData, startTime, xAxisVal, xAxisPath, theme.palette.mode]);
+  // const { datasets, pathsWithMismatchedDataLengths } = useMemo(() => {
+  //   return getDatasets({
+  //     paths: yAxisPaths,
+  //     itemsByPath: combinedPlotData,
+  //     startTime: startTime ?? ZERO_TIME,
+  //     xAxisVal,
+  //     xAxisPath,
+  //     invertedTheme: theme.palette.mode === "dark",
+  //   });
+  // }, [yAxisPaths, combinedPlotData, startTime, xAxisVal, xAxisPath, theme.palette.mode]);
 
   const messagePipeline = useMessagePipelineGetter();
   const onClick = useCallback<NonNullable<ComponentProps<typeof PlotChart>["onClick"]>>(

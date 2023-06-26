@@ -85,8 +85,8 @@ export function downsampleTimeseries(
       continue;
     }
 
-    const x = Math.round(datum.x * pixelPerXValue);
-    const y = Math.round(datum.y * pixelPerYValue);
+    const x = Math.trunc(datum.x * pixelPerXValue);
+    const y = Math.trunc(datum.y * pixelPerYValue);
 
     // interval has ended, we determine whether to write additional points for min/max/last
     if (intFirst?.xPixel !== x) {
@@ -108,13 +108,17 @@ export function downsampleTimeseries(
       // always add the first datum of an new interval
       downsampled.push(datum);
 
-      intFirst = intLast = { xPixel: x, yPixel: y, datum };
+      intFirst = { xPixel: x, yPixel: y, datum };
+      intLast = { xPixel: x, yPixel: y, datum };
       intMin = { xPixel: x, yPixel: y, datum };
       intMax = { xPixel: x, yPixel: y, datum };
       continue;
     }
 
-    intLast = { xPixel: x, yPixel: y, datum };
+    intLast ??= { xPixel: x, yPixel: y, datum };
+    intLast.xPixel = x;
+    intLast.yPixel = y;
+    intLast.datum = datum;
 
     if (intMin && y < intMin.yPixel) {
       intMin.yPixel = y;
