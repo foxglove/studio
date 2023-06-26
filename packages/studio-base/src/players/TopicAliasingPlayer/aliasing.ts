@@ -23,7 +23,7 @@ const EmptyAliasMap: Im<TopicAliasMap> = new Map();
 
 export type TopicAliasFunctions = Array<{ extensionId: string; aliasFunction: TopicAliasFunction }>;
 
-export type AlisingInputs = {
+export type AliasingInputs = {
   aliasFunctions: TopicAliasFunctions;
   topics: undefined | Topic[];
   variables: GlobalVariables;
