@@ -4,7 +4,7 @@
 
 import { TopicAliasFunction } from "@foxglove/studio";
 import {
-  AlisingInputs,
+  AliasingInputs,
   aliasPlayerState,
 } from "@foxglove/studio-base/players/TopicAliasingPlayer/aliasing";
 import { Topic } from "@foxglove/studio-base/players/types";
@@ -55,7 +55,7 @@ describe("mapPlayerState", () => {
         topics,
       },
     );
-    const inputs: AlisingInputs = {
+    const inputs: AliasingInputs = {
       aliasFunctions: [
         {
           extensionId: "any",
@@ -106,7 +106,7 @@ describe("mapPlayerState", () => {
         },
       ],
     });
-    const inputs: AlisingInputs = {
+    const inputs: AliasingInputs = {
       aliasFunctions: [
         {
           extensionId: "any",
@@ -139,7 +139,7 @@ describe("mapPlayerState", () => {
         ["2", new Set(["/topic_2"])],
       ]),
     });
-    const inputs: AlisingInputs = {
+    const inputs: AliasingInputs = {
       aliasFunctions: [
         {
           extensionId: "any",
@@ -171,7 +171,7 @@ describe("mapPlayerState", () => {
         ["3", new Set(["/topic_1", "/topic_2"])],
       ]),
     });
-    const inputs: AlisingInputs = {
+    const inputs: AliasingInputs = {
       aliasFunctions: [
         {
           extensionId: "any",
@@ -201,7 +201,7 @@ describe("mapPlayerState", () => {
       { name: "/topic_2", schemaName: "whatever" },
     ];
     const state = mockPlayerState(undefined, { topics });
-    const inputs: AlisingInputs = {
+    const inputs: AliasingInputs = {
       aliasFunctions: [
         {
           extensionId: "any",
@@ -228,7 +228,7 @@ describe("mapPlayerState", () => {
       { name: "/topic_2", schemaName: "whatever" },
     ];
     const state = mockPlayerState(undefined, { topics });
-    const inputs: AlisingInputs = {
+    const inputs: AliasingInputs = {
       aliasFunctions: [
         {
           extensionId: "any",

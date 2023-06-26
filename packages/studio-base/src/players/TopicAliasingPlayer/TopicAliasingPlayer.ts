@@ -14,7 +14,7 @@ import {
 } from "@foxglove/studio-base/players/types";
 
 import {
-  AlisingInputs,
+  AliasingInputs,
   TopicAliasFunctions,
   aliasPlayerState,
   aliasSubscriptions,
@@ -32,7 +32,7 @@ import {
 export class TopicAliasingPlayer implements Player {
   readonly #player: Player;
 
-  #inputs: Immutable<AlisingInputs>;
+  #inputs: Immutable<AliasingInputs>;
   #pendingSubscriptions: undefined | SubscribePayload[];
   #subscriptions: SubscribePayload[] = [];
 

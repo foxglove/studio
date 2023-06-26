@@ -211,7 +211,7 @@ function invertAliasMap(aliasMap: Im<TopicAliasMap>): Im<TopicAliasMap> {
 // Also returns any problems caused by disallowed aliases.
 function mergeAliases(
   maps: Im<{ extensionId: string; aliases: ReturnType<TopicAliasFunction> }[]>,
-  inputs: Im<AlisingInputs>,
+  inputs: Im<AliasingInputs>,
 ): {
   aliasMap: TopicAliasMap;
   problems: undefined | PlayerProblem[];
@@ -247,7 +247,7 @@ function mergeAliases(
 
 // Applies our topic mappers to the input topics to generate an active set of name =>
 // renamed topic mappings.
-function buildAliases(inputs: Im<AlisingInputs>): {
+function buildAliases(inputs: Im<AliasingInputs>): {
   aliasMap: Im<TopicAliasMap>;
   problems: undefined | PlayerProblem[];
 } {
@@ -286,7 +286,7 @@ const memos = {
  * @returns a player state with all aliased topic names replaced with their aliased value.
  */
 export function aliasPlayerState(
-  inputs: Im<AlisingInputs>,
+  inputs: Im<AliasingInputs>,
   subscriptions: Im<SubscribePayload[]>,
   playerState: PlayerState,
 ): PlayerState {
@@ -336,7 +336,7 @@ export function aliasPlayerState(
  * @returns a new array of subscription payloads with mapped topic names
  */
 export const aliasSubscriptions = memoizeWeak(
-  (inputs: Im<AlisingInputs>, subcriptions: SubscribePayload[]): SubscribePayload[] => {
+  (inputs: Im<AliasingInputs>, subcriptions: SubscribePayload[]): SubscribePayload[] => {
     const { aliasMap: mapping } = memos.buildAliases(inputs);
 
     if (mapping === EmptyAliasMap) {
