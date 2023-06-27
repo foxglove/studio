@@ -21,7 +21,7 @@ type StoryArgs = {
   disablePortal?: boolean;
   open: boolean;
   showConsoleLink?: boolean;
-  id?: string;
+  testId?: string;
 };
 
 export default {
@@ -39,7 +39,10 @@ export default {
   decorators: [
     (Story, ctx): JSX.Element => {
       const {
-        args: { id: _selectedId, ...args },
+        args: {
+          testId: _, // remove testId from args as it's only used in the play function
+          ...args
+        },
       } = ctx;
       return (
         <WorkspaceContextProvider>
@@ -51,11 +54,11 @@ export default {
     },
   ],
   play: async ({ canvasElement, args }) => {
-    if (!args.id) {
+    if (!args.testId) {
       return;
     }
     const canvas = within(canvasElement);
-    await userEvent.hover(await canvas.findByTestId(args.id));
+    await userEvent.hover(await canvas.findByTestId(args.testId));
   },
 } as Meta<StoryArgs>;
 
