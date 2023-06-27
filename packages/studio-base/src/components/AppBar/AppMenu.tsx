@@ -98,7 +98,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
 
   const onConsoleClick = useCallback(() => {
     handleAnalytics("console");
-    window.open("https://console.foxglove.dev/recordings/list", "_blank");
+    window.open(`${process.env.FOXGLOVE_CONSOLE_URL}/recordings/list`, "_blank");
     handleNestedMenuClose();
   }, [handleAnalytics, handleNestedMenuClose]);
 
