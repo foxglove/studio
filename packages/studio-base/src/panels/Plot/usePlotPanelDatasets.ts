@@ -3,10 +3,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { useTheme } from "@mui/material";
-import { assignWith, groupBy, intersection, isEmpty, pick, transform, union } from "lodash";
+import { groupBy, intersection, isEmpty, union, zipWith } from "lodash";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLatest } from "react-use";
 
+import { filterMap } from "@foxglove/den/collection";
 import { useShallowMemo } from "@foxglove/hooks";
 import { isLessThan, subtract } from "@foxglove/rostime";
 import { Immutable, Subscription, Time } from "@foxglove/studio";
@@ -41,11 +42,11 @@ import { useFlattenedBlocks } from "./useFlattenedBlocks";
 
 const ZERO_TIME = { sec: 0, nsec: 0 };
 
-const EmptyDatasets: Immutable<DataSets> = Object.freeze({
-  datasets: {},
+const EmptyDatasets: DataSets = {
+  datasets: [],
   bounds: makeInitialBounds(),
   pathsWithMismatchedDataLengths: [],
-});
+};
 
 type Params = Immutable<{
   allPaths: string[];
@@ -72,27 +73,21 @@ type State = DataSets & {
   xAxisPath: undefined | BasePlotPath;
 };
 
-function applyDerivativeToDatasets(
-  pathsWithDerivatives: ReadonlySet<string>,
-  datasets: Record<string, DataSet>,
-): Record<string, DataSet> {
-  if (pathsWithDerivatives.size === 0) {
-    return datasets;
-  }
+function applyDerivativeToDatasets(datasets: DataSets["datasets"]): DataSets["datasets"] {
+  return datasets.map((dataset) => {
+    if (dataset == undefined) {
+      return undefined;
+    }
 
-  const datasetsWithDerivatives = transform(
-    datasets,
-    (acc, dataset, path) => {
-      if (pathsWithDerivatives.has(path)) {
-        acc[path] = { ...dataset, data: derivative(dataset.data) };
-      } else {
-        acc[path] = dataset;
-      }
-    },
-    {} as Record<string, DataSet>,
-  );
-
-  return datasetsWithDerivatives;
+    if (dataset.path.endsWith(".@derivative")) {
+      return {
+        path: dataset.path,
+        dataset: { ...dataset.dataset, data: derivative(dataset.dataset.data) },
+      };
+    } else {
+      return dataset;
+    }
+  });
 }
 
 function makeInitialState(): State {
@@ -101,13 +96,15 @@ function makeInitialState(): State {
     allPaths: [],
     bounds: makeInitialBounds(),
     cursor: 0,
-    datasets: {},
+    datasets: [],
     subscriptions: [],
     pathsWithMismatchedDataLengths: [],
     xAxisVal: "timestamp",
     xAxisPath: undefined,
   };
 }
+
+const EmptyAllFrames: MessageEvent[] = [];
 
 /**
  * Collates and combines datasets from alLFrames and currentFrame messages.
@@ -148,7 +145,9 @@ export function usePlotPanelDatasets(params: Params): {
 
   const blocks = useMessagePipeline(selectBlocks);
 
-  const allFrames = useFlattenedBlocks({ blocks, topics: subscribeTopics });
+  const allFramesFromBlocks = useFlattenedBlocks({ blocks, topics: subscribeTopics });
+
+  const allFrames = showSingleCurrentMessage ? EmptyAllFrames : allFramesFromBlocks;
 
   const decodeMessagePathsForMessagesByTopic = useDecodeMessagePathsForMessagesByTopic(allPaths);
 
@@ -182,8 +181,8 @@ export function usePlotPanelDatasets(params: Params): {
             })
           : EmptyDatasets;
 
-      const mergedDatasets: State["datasets"] = assignWith(
-        { ...newState.datasets }, // spread because assignWith mutates
+      const mergedDatasets: State["datasets"] = zipWith(
+        newState.datasets,
         newDatasets.datasets,
         mergeDatasets,
       );
@@ -213,7 +212,7 @@ export function usePlotPanelDatasets(params: Params): {
     (previous?: DataSets): DataSets => {
       if (previous) {
         return {
-          datasets: pick(previous.datasets, allPaths),
+          datasets: previous.datasets.filter((ds) => ds && allPaths.includes(ds.path)),
           bounds: previous.bounds,
           pathsWithMismatchedDataLengths: intersection(
             previous.pathsWithMismatchedDataLengths,
@@ -222,7 +221,7 @@ export function usePlotPanelDatasets(params: Params): {
         };
       } else {
         return {
-          datasets: {},
+          datasets: [],
           bounds: makeInitialBounds(),
           pathsWithMismatchedDataLengths: [],
         };
@@ -245,9 +244,9 @@ export function usePlotPanelDatasets(params: Params): {
           continue;
         }
 
-        for (const path of paths) {
+        for (const [pathIndex, path] of paths.entries()) {
           // Skip datasets we're getting from allFrames.
-          if ((latestAllFramesDatasets.current[path]?.data.length ?? 0) > 0) {
+          if ((latestAllFramesDatasets.current[pathIndex]?.dataset.data.length ?? 0) > 0) {
             continue;
           }
 
@@ -301,7 +300,7 @@ export function usePlotPanelDatasets(params: Params): {
 
       const mergedDatasets: DataSets = {
         bounds: mergeBounds(accumulated.bounds, newDatasets.bounds),
-        datasets: assignWith({ ...accumulated.datasets }, newDatasets.datasets, mergeDatasets),
+        datasets: zipWith(accumulated.datasets, newDatasets.datasets, mergeDatasets),
         pathsWithMismatchedDataLengths: union(
           accumulated.pathsWithMismatchedDataLengths,
           newDatasets.pathsWithMismatchedDataLengths,
@@ -331,30 +330,22 @@ export function usePlotPanelDatasets(params: Params): {
     addMessages,
   });
 
-  const pathsWithDerivatives = useMemo(
-    () => new Set(allPaths.filter((path) => path.endsWith(".@derivative"))),
-    [allPaths],
-  );
-
   const combinedDatasets = useMemo(() => {
-    const stateWithDerivatives = applyDerivativeToDatasets(pathsWithDerivatives, state.datasets);
-    const currentFrameWithDerivatives = applyDerivativeToDatasets(
-      pathsWithDerivatives,
-      currentFrameDatasets.datasets,
-    );
+    const stateWithDerivatives = applyDerivativeToDatasets(state.datasets);
+    const currentFrameWithDerivatives = applyDerivativeToDatasets(currentFrameDatasets.datasets);
     const allDatasets = Object.values(stateWithDerivatives).concat(
       Object.values(currentFrameWithDerivatives),
     );
     const bounds = mergeBounds(state.bounds, currentFrameDatasets.bounds);
     return {
       bounds,
-      datasets: allDatasets,
+      datasets: filterMap(allDatasets, (ds) => (ds ? ds.dataset : undefined)),
       pathsWithMismatchedDataLengths: union(
         state.pathsWithMismatchedDataLengths,
         currentFrameDatasets.pathsWithMismatchedDataLengths,
       ),
     };
-  }, [currentFrameDatasets, pathsWithDerivatives, state]);
+  }, [currentFrameDatasets, state]);
 
   return combinedDatasets;
 }

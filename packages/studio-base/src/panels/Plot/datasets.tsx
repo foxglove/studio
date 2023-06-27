@@ -215,9 +215,11 @@ type GetDatasetArgs = Immutable<{
   invertedTheme?: boolean;
 }>;
 
+type DatasetWithPath = { path: string; dataset: DataSet };
+
 export type DataSets = {
   bounds: Bounds;
-  datasets: Record<string, DataSet>;
+  datasets: Array<undefined | DatasetWithPath>;
   pathsWithMismatchedDataLengths: string[];
 };
 
@@ -231,12 +233,12 @@ export function getDatasets({
 }: GetDatasetArgs): DataSets {
   const bounds: Bounds = makeInitialBounds();
   const pathsWithMismatchedDataLengths: string[] = [];
-  const datasets: Record<string, DataSet> = {};
+  const datasets: DataSets["datasets"] = [];
   for (const [index, path] of paths.entries()) {
     const yRanges = itemsByPath[path.value] ?? [];
     const xRanges = xAxisPath && itemsByPath[xAxisPath.value];
     if (!path.enabled) {
-      continue;
+      datasets.push(undefined);
     } else if (!isReferenceLinePlotPathType(path)) {
       const res = getDatasetsFromMessagePlotPath({
         path,
@@ -262,14 +264,14 @@ export function getDatasets({
           bounds.y.max = Math.max(bounds.y.max, datum.y);
         }
       }
-      datasets[path.value] = res.dataset;
+      datasets.push({ path: path.value, dataset: res.dataset });
     }
     continue;
   }
 
   return {
-    datasets,
     bounds,
+    datasets,
     pathsWithMismatchedDataLengths,
   };
 }
@@ -277,7 +279,10 @@ export function getDatasets({
 /**
  * Merges two datasets into a single dataset containing all points from both.
  */
-export function mergeDatasets(a: undefined | DataSet, b: undefined | DataSet): undefined | DataSet {
+export function mergeDatasets(
+  a: undefined | DatasetWithPath,
+  b: undefined | DatasetWithPath,
+): undefined | DatasetWithPath {
   if (a == undefined) {
     return b;
   }
@@ -285,8 +290,11 @@ export function mergeDatasets(a: undefined | DataSet, b: undefined | DataSet): u
     return a;
   }
   return {
-    ...a,
-    data: a.data.concat(b.data),
-    showLine: a.showLine === true && b.showLine === true,
+    path: a.path,
+    dataset: {
+      ...a.dataset,
+      data: a.dataset.data.concat(b.dataset.data),
+      showLine: a.dataset.showLine === true && b.dataset.showLine === true,
+    },
   };
 }
