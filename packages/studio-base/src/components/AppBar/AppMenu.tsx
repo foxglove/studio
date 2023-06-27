@@ -271,7 +271,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
             onClick={onConsoleClick}
             id="app-menu-console"
           >
-            Browse Data Platform
+            Browse data
           </MuiMenuItem>
         )}
         {showConsoleLink && <Divider variant="middle" />}
