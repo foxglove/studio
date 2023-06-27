@@ -4,7 +4,7 @@
 
 import { isTime, subtract, Time, toSec } from "@foxglove/rostime";
 import { Immutable } from "@foxglove/studio";
-import { Bounds } from "@foxglove/studio-base/types/Bounds";
+import { Bounds, makeInitialBounds } from "@foxglove/studio-base/types/Bounds";
 import { format } from "@foxglove/studio-base/util/formatTime";
 import { darkColor, getLineColor, lightColor } from "@foxglove/studio-base/util/plotColors";
 import { formatTimeRaw, TimestampMethod } from "@foxglove/studio-base/util/time";
@@ -229,10 +229,7 @@ export function getDatasets({
   xAxisPath,
   invertedTheme,
 }: GetDatasetArgs): DataSets {
-  const bounds: Bounds = {
-    x: { min: Number.MAX_SAFE_INTEGER, max: Number.MIN_SAFE_INTEGER },
-    y: { min: Number.MAX_SAFE_INTEGER, max: Number.MIN_SAFE_INTEGER },
-  };
+  const bounds: Bounds = makeInitialBounds();
   const pathsWithMismatchedDataLengths: string[] = [];
   const datasets: Record<string, DataSet> = {};
   for (const [index, path] of paths.entries()) {

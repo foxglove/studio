@@ -193,19 +193,6 @@ function Plot(props: Props) {
     yAxisPaths,
   });
 
-  // Keep disabled paths when passing into getDatasets, because we still want
-  // easy access to the history when turning the disabled paths back on.
-  // const { datasets, pathsWithMismatchedDataLengths } = useMemo(() => {
-  //   return getDatasets({
-  //     paths: yAxisPaths,
-  //     itemsByPath: combinedPlotData,
-  //     startTime: startTime ?? ZERO_TIME,
-  //     xAxisVal,
-  //     xAxisPath,
-  //     invertedTheme: theme.palette.mode === "dark",
-  //   });
-  // }, [yAxisPaths, combinedPlotData, startTime, xAxisVal, xAxisPath, theme.palette.mode]);
-
   const messagePipeline = useMessagePipelineGetter();
   const onClick = useCallback<NonNullable<ComponentProps<typeof PlotChart>["onClick"]>>(
     ({ x: seekSeconds }: OnChartClickArgs) => {

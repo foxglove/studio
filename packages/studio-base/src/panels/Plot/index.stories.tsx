@@ -19,7 +19,7 @@ import { makeStyles } from "tss-react/mui";
 
 import { fromSec } from "@foxglove/rostime";
 import Plot, { PlotConfig } from "@foxglove/studio-base/panels/Plot";
-import { BlockCache, MessageEvent } from "@foxglove/studio-base/players/types";
+import { BlockCache, MessageBlock, MessageEvent } from "@foxglove/studio-base/players/types";
 import PanelSetup, { Fixture, triggerWheel } from "@foxglove/studio-base/stories/PanelSetup";
 import { useReadySignal } from "@foxglove/studio-base/stories/ReadySignalContext";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
@@ -210,8 +210,10 @@ const datatypes: RosDatatypes = new Map(
   }),
 );
 
-const getPreloadedMessage = (seconds: number) => ({
+const getPreloadedMessage = (seconds: number): MessageEvent => ({
   topic: "/preloaded_topic",
+  schemaName: "any",
+  sizeInBytes: 1,
   receiveTime: fromSec(seconds),
   message: {
     data: Math.pow(seconds, 2),
@@ -219,8 +221,9 @@ const getPreloadedMessage = (seconds: number) => ({
   },
 });
 
-const emptyBlock = {
+const emptyBlock: MessageBlock = {
   messagesByTopic: {},
+  needTopics: new Set<string>(),
   sizeInBytes: 0,
 };
 
@@ -228,6 +231,7 @@ const messageCache: BlockCache = {
   blocks: [
     ...[0.6, 0.7, 0.8, 0.9, 1.0].map((seconds) => ({
       sizeInBytes: 0,
+      needTopics: new Set<string>(),
       messagesByTopic: { "/preloaded_topic": [getPreloadedMessage(seconds)] },
     })),
     emptyBlock, // 1.1
@@ -236,6 +240,7 @@ const messageCache: BlockCache = {
     emptyBlock, // 1.4
     ...[1.5, 1.6, 1.7, 1.8, 1.9].map((seconds) => ({
       sizeInBytes: 0,
+      needTopics: new Set<string>(),
       messagesByTopic: { "/preloaded_topic": [getPreloadedMessage(seconds)] },
     })),
   ],
