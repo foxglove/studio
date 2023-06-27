@@ -207,8 +207,9 @@ export default function TimeBasedChart(props: Props): JSX.Element {
   // some callbacks don't need to re-create when the current scales change, so we keep a ref
   const currentScalesRef = useRef<RpcScales | undefined>(undefined);
 
-  // calculates the minX/maxX for all our datasets
-  // we do this on the unfiltered datasets because we need the bounds to properly filter adjacent points
+  // Calculates the minX/maxX for all our datasets. We do this on the unfiltered datasets
+  // because we need the bounds to properly filter adjacent points. Defers to precomputed
+  // dataBounds, if available.
   const datasetBounds = useMemo(() => {
     if (dataBounds) {
       return dataBounds;

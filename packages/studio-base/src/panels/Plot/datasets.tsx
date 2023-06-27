@@ -147,7 +147,7 @@ function getDatasetsFromMessagePlotPath({
   const rangeData: Datum[] = [];
   for (const [rangeIdx, item] of yAxisRanges.entries()) {
     const xItem = xAxisRanges?.[rangeIdx];
-    const { data: datums, hasMismatchedData: itemHasMistmatchedData } = getDatumsForMessagePathItem(
+    const { data: datums, hasMismatchedData: itemHasMismatchedData } = getDatumsForMessagePathItem(
       item,
       xItem,
       startTime,
@@ -165,7 +165,7 @@ function getDatasetsFromMessagePlotPath({
       }
     }
 
-    hasMismatchedData = hasMismatchedData || itemHasMistmatchedData;
+    hasMismatchedData = hasMismatchedData || itemHasMismatchedData;
     // If we have added more than one point for this message, make it a scatter plot.
     if (item.queriedData.length > 1 && xAxisVal !== "index") {
       showLine = false;
@@ -266,7 +266,6 @@ export function getDatasets({
       }
       datasets.push({ path: path.value, dataset: res.dataset });
     }
-    continue;
   }
 
   return {

@@ -11,7 +11,6 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-// import { useTheme } from "@mui/material";
 import { compact, isNumber, uniq } from "lodash";
 import { ComponentProps, useCallback, useEffect, useMemo, useState } from "react";
 
@@ -45,7 +44,6 @@ import { PANEL_TITLE_CONFIG_KEY } from "@foxglove/studio-base/util/layout";
 import PlotChart from "./PlotChart";
 import { PlotLegend } from "./PlotLegend";
 import { downloadCSV } from "./csv";
-// import { getDatasets } from "./datasets";
 import { usePlotPanelSettings } from "./settings";
 import { PlotConfig } from "./types";
 
@@ -73,8 +71,6 @@ type Props = {
   config: PlotConfig;
   saveConfig: SaveConfig<PlotConfig>;
 };
-
-// const ZERO_TIME = { sec: 0, nsec: 0 };
 
 function selectStartTime(ctx: MessagePipelineContext) {
   return ctx.playerState.activeData?.startTime;
@@ -120,8 +116,6 @@ function Plot(props: Props) {
       } as Partial<PlotConfig>);
     }
   }, [customTitle, legacyTitle, saveConfig]);
-
-  // const theme = useTheme();
 
   useEffect(() => {
     if (yAxisPaths.length === 0) {

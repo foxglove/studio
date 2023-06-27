@@ -33,7 +33,7 @@ import {
 } from "@foxglove/studio-base/panels/Plot/internalTypes";
 import * as PlotData from "@foxglove/studio-base/panels/Plot/plotData";
 import { derivative } from "@foxglove/studio-base/panels/Plot/transformPlotRange";
-import { MessageEvent } from "@foxglove/studio-base/players/types";
+import { MessageBlock, MessageEvent } from "@foxglove/studio-base/players/types";
 import { Bounds, makeInitialBounds, mergeBounds } from "@foxglove/studio-base/types/Bounds";
 import { getTimestampForMessage } from "@foxglove/studio-base/util/time";
 
@@ -104,7 +104,7 @@ function makeInitialState(): State {
   };
 }
 
-const EmptyAllFrames: MessageEvent[] = [];
+const EmptyBlocks: MessageBlock[] = [];
 
 /**
  * Collates and combines datasets from alLFrames and currentFrame messages.
@@ -145,9 +145,10 @@ export function usePlotPanelDatasets(params: Params): {
 
   const blocks = useMessagePipeline(selectBlocks);
 
-  const allFramesFromBlocks = useFlattenedBlocks({ blocks, topics: subscribeTopics });
-
-  const allFrames = showSingleCurrentMessage ? EmptyAllFrames : allFramesFromBlocks;
+  const allFrames = useFlattenedBlocks({
+    blocks: showSingleCurrentMessage ? EmptyBlocks : blocks,
+    topics: subscribeTopics,
+  });
 
   const decodeMessagePathsForMessagesByTopic = useDecodeMessagePathsForMessagesByTopic(allPaths);
 
