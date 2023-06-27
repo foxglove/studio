@@ -947,33 +947,21 @@ export class IterablePlayer implements Player {
     const abort = (this.#abort = new AbortController());
     const aborted = new Promise((resolve) => abort.signal.addEventListener("abort", resolve));
 
-    // While idle, the buffered source might still be loading so we check it for range changes
-    // and queue and emit if there are changes.
-    //
-    // 100 ms second updates from the buffered source.
-    // The loadedRanges() call is memoized so this is cheap and will not queue state emit if
-    // there are no changes to the ranges.
-    const interval = setInterval(() => {
-      const newRanges = this.#bufferedSource.loadedRanges();
-      // Ranges are unchanged, so we don't need to update progress
-      if (newRanges === this.#progress.fullyLoadedFractionRanges) {
-        return;
-      }
-
-      // Ranges changed so update progress and queue an emit
+    const rangeChangeHandler = () => {
       this.#progress = {
         fullyLoadedFractionRanges: this.#bufferedSource.loadedRanges(),
         messageCache: this.#progress.messageCache,
       };
       this.#queueEmitState();
-    }, 100);
+    };
+
+    // While idle, the buffered source might still be loading and we still want to update downstream
+    // with the new ranges we've buffered. This event will update progress and queue state emits
+    this.#bufferedSource.on("rangeChange", rangeChangeHandler);
 
     this.#queueEmitState();
-    try {
-      await aborted;
-    } finally {
-      clearInterval(interval);
-    }
+    await aborted;
+    this.#bufferedSource.off("rangeChange", rangeChangeHandler);
   }
 
   async #statePlay() {
