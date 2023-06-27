@@ -51,8 +51,11 @@ export default {
     },
   ],
   play: async ({ canvasElement, args }) => {
+    if (!args.id) {
+      return;
+    }
     const canvas = within(canvasElement);
-    await userEvent.hover(await canvas.findByTestId(args.id!));
+    await userEvent.hover(await canvas.findByTestId(args.id));
   },
 } as Meta<StoryArgs>;
 
