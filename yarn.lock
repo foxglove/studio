@@ -8683,31 +8683,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"builder-util@npm:*, builder-util@npm:24.4.0":
-  version: 24.4.0
-  resolution: "builder-util@npm:24.4.0"
-  dependencies:
-    7zip-bin: ~5.1.1
-    "@types/debug": ^4.1.6
-    app-builder-bin: 4.0.0
-    bluebird-lst: ^1.0.9
-    builder-util-runtime: 9.2.1
-    chalk: ^4.1.2
-    cross-spawn: ^7.0.3
-    debug: ^4.3.4
-    fs-extra: ^10.1.0
-    http-proxy-agent: ^5.0.0
-    https-proxy-agent: ^5.0.1
-    is-ci: ^3.0.0
-    js-yaml: ^4.1.0
-    source-map-support: ^0.5.19
-    stat-mode: ^1.0.0
-    temp-file: ^3.4.0
-  checksum: 46d9fb10f3919464c724040ae20aae8c5d5b885c995d6f84989a8713ee648cf05c2780035fd891c0b1999c7990b018bf42f561b1beb1d8527ba9d63be1bea13e
-  languageName: node
-  linkType: hard
-
-"builder-util@npm:24.5.0":
+"builder-util@npm:*, builder-util@npm:24.5.0":
   version: 24.5.0
   resolution: "builder-util@npm:24.5.0"
   dependencies:
@@ -8728,6 +8704,30 @@ __metadata:
     stat-mode: ^1.0.0
     temp-file: ^3.4.0
   checksum: 8f3b27bccf4b81ce983576e9aacd06045c6f8a7c3d5e6704d45a96b0e91e4c3a36718760612e28e0de62e46e406e59c7030a472a40739e061c84294167e96859
+  languageName: node
+  linkType: hard
+
+"builder-util@npm:24.4.0":
+  version: 24.4.0
+  resolution: "builder-util@npm:24.4.0"
+  dependencies:
+    7zip-bin: ~5.1.1
+    "@types/debug": ^4.1.6
+    app-builder-bin: 4.0.0
+    bluebird-lst: ^1.0.9
+    builder-util-runtime: 9.2.1
+    chalk: ^4.1.2
+    cross-spawn: ^7.0.3
+    debug: ^4.3.4
+    fs-extra: ^10.1.0
+    http-proxy-agent: ^5.0.0
+    https-proxy-agent: ^5.0.1
+    is-ci: ^3.0.0
+    js-yaml: ^4.1.0
+    source-map-support: ^0.5.19
+    stat-mode: ^1.0.0
+    temp-file: ^3.4.0
+  checksum: 46d9fb10f3919464c724040ae20aae8c5d5b885c995d6f84989a8713ee648cf05c2780035fd891c0b1999c7990b018bf42f561b1beb1d8527ba9d63be1bea13e
   languageName: node
   linkType: hard
 
