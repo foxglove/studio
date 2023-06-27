@@ -30,7 +30,8 @@ type Options = {
 };
 
 interface EventTypes {
-  rangeChange: () => void;
+  /** Dispatched when the loaded ranges have changed. Use `loadedRanges()` to get the new ranges. */
+  loadedRangesChange: () => void;
 }
 
 /**
@@ -75,7 +76,7 @@ class BufferedIterableSource extends EventEmitter<EventTypes> implements IIterab
     this.#source = new CachingIterableSource(source);
 
     // pass-through the range change event
-    this.#source.on("rangeChange", () => this.emit("rangeChange"));
+    this.#source.on("loadedRangesChange", () => this.emit("loadedRangesChange"));
   }
 
   public async initialize(): Promise<Initalization> {
@@ -179,7 +180,7 @@ class BufferedIterableSource extends EventEmitter<EventTypes> implements IIterab
 
   public async terminate(): Promise<void> {
     this.#cache.clear();
-    this.#source.removeAllListeners("rangeChange");
+    this.#source.removeAllListeners("loadedRangesChange");
     await this.#source.terminate();
   }
 

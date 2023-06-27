@@ -957,11 +957,11 @@ export class IterablePlayer implements Player {
 
     // While idle, the buffered source might still be loading and we still want to update downstream
     // with the new ranges we've buffered. This event will update progress and queue state emits
-    this.#bufferedSource.on("rangeChange", rangeChangeHandler);
+    this.#bufferedSource.on("loadedRangesChange", rangeChangeHandler);
 
     this.#queueEmitState();
     await aborted;
-    this.#bufferedSource.off("rangeChange", rangeChangeHandler);
+    this.#bufferedSource.off("loadedRangesChange", rangeChangeHandler);
   }
 
   async #statePlay() {

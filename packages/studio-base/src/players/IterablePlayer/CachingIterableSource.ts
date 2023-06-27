@@ -54,7 +54,8 @@ type Options = {
 };
 
 interface EventTypes {
-  rangeChange: () => void;
+  /** Dispatched when the loaded ranges have changed. Use `loadedRanges()` to get the new ranges. */
+  loadedRangesChange: () => void;
 }
 
 /**
@@ -457,13 +458,13 @@ class CachingIterableSource extends EventEmitter<EventTypes> implements IIterabl
     const rangeNs = Number(toNanoSec(subtract(this.#initResult.end, this.#initResult.start)));
     if (rangeNs === 0) {
       this.#loadedRangesCache = [{ start: 0, end: 1 }];
-      this.emit("rangeChange");
+      this.emit("loadedRangesChange");
       return;
     }
 
     if (this.#cache.length === 0) {
       this.#loadedRangesCache = [{ start: 0, end: 0 }];
-      this.emit("rangeChange");
+      this.emit("loadedRangesChange");
       return;
     }
 
@@ -497,7 +498,7 @@ class CachingIterableSource extends EventEmitter<EventTypes> implements IIterabl
     }
 
     this.#loadedRangesCache = ranges;
-    this.emit("rangeChange");
+    this.emit("loadedRangesChange");
   }
 
   // Purge the oldest cache block if adding sizeInBytes to the cache would exceed the maxTotalSizeBytes
