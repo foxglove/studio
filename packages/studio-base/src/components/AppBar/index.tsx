@@ -375,15 +375,13 @@ export function AppBar(props: AppBarProps): JSX.Element {
                   data-testid="user-button"
                 >
                   <Avatar className={classes.avatar} variant="rounded">
-                    {currentUser?.avatarImageUrl ? (
-                      <img
-                        src={currentUser.avatarImageUrl}
-                        referrerPolicy="same-origin"
-                        className={classes.userIconImage}
-                      />
-                    ) : (
+                    <object
+                      data={currentUser?.avatarImageUrl ?? ""}
+                      className={classes.userIconImage}
+                      type="image"
+                    >
                       <PersonIcon />
-                    )}
+                    </object>
                   </Avatar>
                 </IconButton>
               </Tooltip>
