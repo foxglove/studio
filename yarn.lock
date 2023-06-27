@@ -2067,7 +2067,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@electron/rebuild@npm:^3.2.13":
+"@electron/rebuild@npm:3.2.13, @electron/rebuild@npm:^3.2.13":
   version: 3.2.13
   resolution: "@electron/rebuild@npm:3.2.13"
   dependencies:
@@ -7653,7 +7653,44 @@ __metadata:
   languageName: node
   linkType: hard
 
-"app-builder-lib@npm:*, app-builder-lib@npm:24.4.0":
+"app-builder-lib@npm:*":
+  version: 24.5.1
+  resolution: "app-builder-lib@npm:24.5.1"
+  dependencies:
+    7zip-bin: ~5.1.1
+    "@develar/schema-utils": ~2.6.5
+    "@electron/notarize": ^1.2.3
+    "@electron/osx-sign": ^1.0.4
+    "@electron/rebuild": 3.2.13
+    "@electron/universal": 1.3.4
+    "@malept/flatpak-bundler": ^0.4.0
+    "@types/fs-extra": 9.0.13
+    async-exit-hook: ^2.0.1
+    bluebird-lst: ^1.0.9
+    builder-util: 24.5.0
+    builder-util-runtime: 9.2.1
+    chromium-pickle-js: ^0.2.0
+    debug: ^4.3.4
+    ejs: ^3.1.8
+    electron-publish: 24.5.0
+    form-data: ^4.0.0
+    fs-extra: ^10.1.0
+    hosted-git-info: ^4.1.0
+    is-ci: ^3.0.0
+    isbinaryfile: ^5.0.0
+    js-yaml: ^4.1.0
+    lazy-val: ^1.0.5
+    minimatch: ^5.1.1
+    read-config-file: 6.3.2
+    sanitize-filename: ^1.6.3
+    semver: ^7.3.8
+    tar: ^6.1.12
+    temp-file: ^3.4.0
+  checksum: 3b2dbc7a86fd1c5f310a15355e6b406d247cd506efd83c49b0f3755a67be2670e9d90c0b5a3893796d2cd4dd6b93b226a5217cea2f00edb695576138b42d24fd
+  languageName: node
+  linkType: hard
+
+"app-builder-lib@npm:24.4.0":
   version: 24.4.0
   resolution: "app-builder-lib@npm:24.4.0"
   dependencies:
@@ -8667,6 +8704,30 @@ __metadata:
     stat-mode: ^1.0.0
     temp-file: ^3.4.0
   checksum: 46d9fb10f3919464c724040ae20aae8c5d5b885c995d6f84989a8713ee648cf05c2780035fd891c0b1999c7990b018bf42f561b1beb1d8527ba9d63be1bea13e
+  languageName: node
+  linkType: hard
+
+"builder-util@npm:24.5.0":
+  version: 24.5.0
+  resolution: "builder-util@npm:24.5.0"
+  dependencies:
+    7zip-bin: ~5.1.1
+    "@types/debug": ^4.1.6
+    app-builder-bin: 4.0.0
+    bluebird-lst: ^1.0.9
+    builder-util-runtime: 9.2.1
+    chalk: ^4.1.2
+    cross-spawn: ^7.0.3
+    debug: ^4.3.4
+    fs-extra: ^10.1.0
+    http-proxy-agent: ^5.0.0
+    https-proxy-agent: ^5.0.1
+    is-ci: ^3.0.0
+    js-yaml: ^4.1.0
+    source-map-support: ^0.5.19
+    stat-mode: ^1.0.0
+    temp-file: ^3.4.0
+  checksum: 8f3b27bccf4b81ce983576e9aacd06045c6f8a7c3d5e6704d45a96b0e91e4c3a36718760612e28e0de62e46e406e59c7030a472a40739e061c84294167e96859
   languageName: node
   linkType: hard
 
@@ -10613,6 +10674,21 @@ __metadata:
     lazy-val: ^1.0.5
     mime: ^2.5.2
   checksum: 835b630757257e4f3603bd735a10f404a346dde377debb4fa2ac1574fb796c4d907a73c691d1f9415a1e36f25b393f4c3cc4c5076d257f46410d78c80fdbc6e6
+  languageName: node
+  linkType: hard
+
+"electron-publish@npm:24.5.0":
+  version: 24.5.0
+  resolution: "electron-publish@npm:24.5.0"
+  dependencies:
+    "@types/fs-extra": ^9.0.11
+    builder-util: 24.5.0
+    builder-util-runtime: 9.2.1
+    chalk: ^4.1.2
+    fs-extra: ^10.1.0
+    lazy-val: ^1.0.5
+    mime: ^2.5.2
+  checksum: 7f31b5f2fc959a42747afb286e8dd9c4f7a1de387ef0836ee78e7fd81aaf121e1b1d55c8810924ba82eb1e4fc31da68d519240539bf7105b009973d366efa3b5
   languageName: node
   linkType: hard
 
