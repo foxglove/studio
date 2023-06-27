@@ -179,7 +179,11 @@ function Plot(props: Props) {
     return yAxisPaths.map(({ value }) => value).concat(compact([xAxisPath?.value]));
   }, [xAxisPath?.value, yAxisPaths]);
 
-  const { datasets, pathsWithMismatchedDataLengths } = usePlotPanelDatasets({
+  const {
+    bounds: datasetBounds,
+    datasets,
+    pathsWithMismatchedDataLengths,
+  } = usePlotPanelDatasets({
     allPaths,
     followingView,
     showSingleCurrentMessage,
@@ -278,6 +282,7 @@ function Plot(props: Props) {
             showXAxisLabels={showXAxisLabels}
             showYAxisLabels={showYAxisLabels}
             datasets={datasets}
+            datasetBounds={datasetBounds}
             xAxisVal={xAxisVal}
             currentTime={currentTimeSinceStart}
             onClick={onClick}

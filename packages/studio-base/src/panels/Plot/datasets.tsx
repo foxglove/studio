@@ -4,6 +4,7 @@
 
 import { isTime, subtract, Time, toSec } from "@foxglove/rostime";
 import { Immutable } from "@foxglove/studio";
+import { Bounds } from "@foxglove/studio-base/types/Bounds";
 import { format } from "@foxglove/studio-base/util/formatTime";
 import { darkColor, getLineColor, lightColor } from "@foxglove/studio-base/util/plotColors";
 import { formatTimeRaw, TimestampMethod } from "@foxglove/studio-base/util/time";
@@ -180,27 +181,7 @@ function getDatasetsFromMessagePlotPath({
     if (path.timestampMethod === "headerStamp") {
       rangeData.sort((a, b) => a.x - b.x);
     }
-
-    // NaN points are not displayed, and result in a break in the line.
-    // We add NaN points before each range (avoid adding before the very first range)
-    // if (rangeIdx > 0) {
-    //   plotData.push({
-    //     x: NaN,
-    //     y: NaN,
-    //     receiveTime: { sec: 0, nsec: 0 },
-    //     value: "",
-    //   });
-    // }
   }
-
-  // if (path.value.endsWith(".@derivative")) {
-  //   if (showLine) {
-  //     rangeData = derivative(rangeData);
-  //   } else {
-  //     // If we have a scatter plot, we can't take the derivative, so instead show nothing
-  //     rangeData = [];
-  //   }
-  // }
 
   for (const datum of rangeData) {
     plotData.push(datum);
@@ -235,6 +216,7 @@ type GetDatasetArgs = Immutable<{
 }>;
 
 export type DataSets = {
+  bounds: Bounds;
   datasets: Record<string, DataSet>;
   pathsWithMismatchedDataLengths: string[];
 };
@@ -247,6 +229,10 @@ export function getDatasets({
   xAxisPath,
   invertedTheme,
 }: GetDatasetArgs): DataSets {
+  const bounds: Bounds = {
+    x: { min: Number.MAX_SAFE_INTEGER, max: Number.MIN_SAFE_INTEGER },
+    y: { min: Number.MAX_SAFE_INTEGER, max: Number.MIN_SAFE_INTEGER },
+  };
   const pathsWithMismatchedDataLengths: string[] = [];
   const datasets: Record<string, DataSet> = {};
   for (const [index, path] of paths.entries()) {
@@ -269,6 +255,16 @@ export function getDatasets({
       if (res.hasMismatchedData) {
         pathsWithMismatchedDataLengths.push(path.value);
       }
+      for (const datum of res.dataset.data) {
+        if (isFinite(datum.x)) {
+          bounds.x.min = Math.min(bounds.x.min, datum.x);
+          bounds.x.max = Math.max(bounds.x.max, datum.x);
+        }
+        if (isFinite(datum.y)) {
+          bounds.y.min = Math.min(bounds.y.min, datum.y);
+          bounds.y.max = Math.max(bounds.y.max, datum.y);
+        }
+      }
       datasets[path.value] = res.dataset;
     }
     continue;
@@ -276,6 +272,24 @@ export function getDatasets({
 
   return {
     datasets,
+    bounds,
     pathsWithMismatchedDataLengths,
+  };
+}
+
+/**
+ * Merges two datasets into a single dataset containing all points from both.
+ */
+export function mergeDatasets(a: undefined | DataSet, b: undefined | DataSet): undefined | DataSet {
+  if (a == undefined) {
+    return b;
+  }
+  if (b == undefined) {
+    return a;
+  }
+  return {
+    ...a,
+    data: a.data.concat(b.data),
+    showLine: a.showLine === true && b.showLine === true,
   };
 }

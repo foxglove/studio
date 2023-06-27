@@ -43,6 +43,7 @@ import {
   useSetHoverValue,
   useTimelineInteractionState,
 } from "@foxglove/studio-base/context/TimelineInteractionStateContext";
+import { Bounds } from "@foxglove/studio-base/types/Bounds";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import { Downsampler } from "./Downsampler";
@@ -97,6 +98,7 @@ export type Props = {
   height: number;
   zoom: boolean;
   data: ChartComponentProps["data"];
+  dataBounds?: Bounds;
   tooltips?: Map<string, TimeBasedChartTooltipData>;
   xAxes?: ScaleOptions<"linear">;
   yAxes: ScaleOptions<"linear">;
@@ -123,18 +125,19 @@ export type Props = {
 export default function TimeBasedChart(props: Props): JSX.Element {
   const requestID = useRef<number>(0);
   const {
+    currentTime,
+    data,
+    dataBounds,
     datasetId,
+    defaultView,
+    height,
+    isSynced = false,
+    showXAxisLabels,
     type,
     width,
-    height,
-    data,
-    isSynced = false,
-    yAxes,
     xAxes,
-    defaultView,
-    currentTime,
     xAxisIsPlaybackTime,
-    showXAxisLabels,
+    yAxes,
   } = props;
 
   const { labels, datasets } = data;
@@ -207,32 +210,34 @@ export default function TimeBasedChart(props: Props): JSX.Element {
   // calculates the minX/maxX for all our datasets
   // we do this on the unfiltered datasets because we need the bounds to properly filter adjacent points
   const datasetBounds = useMemo(() => {
-    return { x: { min: undefined, max: undefined }, y: { min: undefined, max: undefined } };
-    // let xMin: number | undefined;
-    // let xMax: number | undefined;
-    // let yMin: number | undefined;
-    // let yMax: number | undefined;
+    if (dataBounds) {
+      return dataBounds;
+    }
 
-    // for (const dataset of datasets) {
-    //   for (const item of dataset.data) {
-    //     if (item == undefined) {
-    //       continue;
-    //     }
-    //     if (!isNaN(item.x)) {
-    //       xMin = Math.min(xMin ?? item.x, item.x);
-    //       xMax = Math.max(xMax ?? item.x, item.x);
-    //     }
+    let xMin: number | undefined;
+    let xMax: number | undefined;
+    let yMin: number | undefined;
+    let yMax: number | undefined;
 
-    //     if (!isNaN(item.x)) {
-    //       yMin = Math.min(yMin ?? item.y, item.y);
-    //       yMax = Math.max(yMax ?? item.y, item.y);
-    //     }
-    //   }
-    // }
+    for (const dataset of datasets) {
+      for (const item of dataset.data) {
+        if (item == undefined) {
+          continue;
+        }
+        if (!isNaN(item.x)) {
+          xMin = Math.min(xMin ?? item.x, item.x);
+          xMax = Math.max(xMax ?? item.x, item.x);
+        }
 
-    // return { x: { min: xMin, max: xMax }, y: { min: yMin, max: yMax } };
-    // }, [datasets]);
-  }, []);
+        if (!isNaN(item.x)) {
+          yMin = Math.min(yMin ?? item.y, item.y);
+          yMax = Math.max(yMax ?? item.y, item.y);
+        }
+      }
+    }
+
+    return { x: { min: xMin, max: xMax }, y: { min: yMin, max: yMax } };
+  }, [dataBounds, datasets]);
 
   const onResetZoom = () => {
     setHasUserPannedOrZoomed(false);

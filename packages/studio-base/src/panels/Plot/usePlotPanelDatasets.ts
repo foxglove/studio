@@ -33,12 +33,19 @@ import {
 import * as PlotData from "@foxglove/studio-base/panels/Plot/plotData";
 import { derivative } from "@foxglove/studio-base/panels/Plot/transformPlotRange";
 import { MessageEvent } from "@foxglove/studio-base/players/types";
+import { Bounds, makeInitialBounds, mergeBounds } from "@foxglove/studio-base/types/Bounds";
 import { getTimestampForMessage } from "@foxglove/studio-base/util/time";
 
-import { DataSets, getDatasets } from "./datasets";
+import { DataSets, getDatasets, mergeDatasets } from "./datasets";
 import { useFlattenedBlocks } from "./useFlattenedBlocks";
 
 const ZERO_TIME = { sec: 0, nsec: 0 };
+
+const EmptyDatasets: Immutable<DataSets> = Object.freeze({
+  datasets: {},
+  bounds: makeInitialBounds(),
+  pathsWithMismatchedDataLengths: [],
+});
 
 type Params = Immutable<{
   allPaths: string[];
@@ -55,31 +62,11 @@ const selectBlocks = (ctx: MessagePipelineContext) =>
 
 const selectSetSubscriotions = (ctx: MessagePipelineContext) => ctx.setSubscriptions;
 
-const EmptyDatasets: DataSets = {
-  datasets: {},
-  pathsWithMismatchedDataLengths: [],
-};
-
-function mergeDatasets(a: undefined | DataSet, b: undefined | DataSet): undefined | DataSet {
-  if (a == undefined) {
-    return b;
-  }
-  if (b == undefined) {
-    return a;
-  }
-  return {
-    ...a,
-    data: a.data.concat(b.data),
-    showLine: a.showLine === true && b.showLine === true,
-  };
-}
-
-type State = {
+type State = DataSets & {
   allFrames: Immutable<MessageEvent[]>;
   allPaths: readonly string[];
+  bounds: Bounds;
   cursor: number;
-  datasets: Record<string, DataSet>;
-  pathsWithMismatchedDataLengths: string[];
   subscriptions: Subscription[];
   xAxisVal: PlotXAxisVal;
   xAxisPath: undefined | BasePlotPath;
@@ -112,6 +99,7 @@ function makeInitialState(): State {
   return {
     allFrames: [],
     allPaths: [],
+    bounds: makeInitialBounds(),
     cursor: 0,
     datasets: {},
     subscriptions: [],
@@ -125,6 +113,7 @@ function makeInitialState(): State {
  * Collates and combines datasets from alLFrames and currentFrame messages.
  */
 export function usePlotPanelDatasets(params: Params): {
+  bounds: Bounds;
   datasets: DataSet[];
   pathsWithMismatchedDataLengths: string[];
 } {
@@ -202,6 +191,7 @@ export function usePlotPanelDatasets(params: Params): {
       return {
         allFrames,
         allPaths,
+        bounds: mergeBounds(newState.bounds, newDatasets.bounds),
         cursor: allFrames.length,
         datasets: mergedDatasets,
         pathsWithMismatchedDataLengths: union(
@@ -224,13 +214,18 @@ export function usePlotPanelDatasets(params: Params): {
       if (previous) {
         return {
           datasets: pick(previous.datasets, allPaths),
+          bounds: previous.bounds,
           pathsWithMismatchedDataLengths: intersection(
             previous.pathsWithMismatchedDataLengths,
             allPaths,
           ),
         };
       } else {
-        return { datasets: {}, pathsWithMismatchedDataLengths: [] };
+        return {
+          datasets: {},
+          bounds: makeInitialBounds(),
+          pathsWithMismatchedDataLengths: [],
+        };
       }
     },
     [allPaths],
@@ -305,6 +300,7 @@ export function usePlotPanelDatasets(params: Params): {
       });
 
       const mergedDatasets: DataSets = {
+        bounds: mergeBounds(accumulated.bounds, newDatasets.bounds),
         datasets: assignWith({ ...accumulated.datasets }, newDatasets.datasets, mergeDatasets),
         pathsWithMismatchedDataLengths: union(
           accumulated.pathsWithMismatchedDataLengths,
@@ -346,10 +342,13 @@ export function usePlotPanelDatasets(params: Params): {
       pathsWithDerivatives,
       currentFrameDatasets.datasets,
     );
+    const allDatasets = Object.values(stateWithDerivatives).concat(
+      Object.values(currentFrameWithDerivatives),
+    );
+    const bounds = mergeBounds(state.bounds, currentFrameDatasets.bounds);
     return {
-      datasets: Object.values(stateWithDerivatives).concat(
-        Object.values(currentFrameWithDerivatives),
-      ),
+      bounds,
+      datasets: allDatasets,
       pathsWithMismatchedDataLengths: union(
         state.pathsWithMismatchedDataLengths,
         currentFrameDatasets.pathsWithMismatchedDataLengths,
