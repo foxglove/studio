@@ -331,6 +331,8 @@ export function usePlotPanelDatasets(params: Params): {
     addMessages,
   });
 
+  // Combine allFrames & currentFrames datasets, optionally applying the @derivative
+  // modifier, which can only be calculated on a complete dataset, not point by point.
   const combinedDatasets = useMemo(() => {
     const stateWithDerivatives = applyDerivativeToDatasets(state.datasets);
     const currentFrameWithDerivatives = applyDerivativeToDatasets(currentFrameDatasets.datasets);

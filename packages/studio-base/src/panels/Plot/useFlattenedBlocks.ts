@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { findLastIndex } from "lodash";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { forEachSortedArrays } from "@foxglove/den/collection";
 import { compare } from "@foxglove/rostime";
@@ -66,6 +66,23 @@ export function useFlattenedBlocks(
     topics: [],
   });
 
+  const memoryAvailable = useMemo(() => {
+    if (state.allFrames.length >= 1_000_000) {
+      // If we have memory stats we can let the user have more points as long as memory is
+      // not under pressure.
+      // foxglove-depcheck-used: @types/foxglove__web
+      if (performance.memory) {
+        const pct = performance.memory.usedJSHeapSize / performance.memory.jsHeapSizeLimit;
+        if (isNaN(pct) || pct > 0.6) {
+          return false;
+        }
+      } else {
+        return false;
+      }
+    }
+    return true;
+  }, [state.allFrames.length]);
+
   if (blocks !== state.blocks) {
     // setState directly here instead of a useEffect to avoid an extra render.
     setState((oldState) => {
@@ -79,7 +96,7 @@ export function useFlattenedBlocks(
         topics,
       };
       const lastReadyBlock = findLastIndex(blocks, (block) => block?.needTopics?.size === 0);
-      if (newState.cursor <= lastReadyBlock) {
+      if (newState.cursor <= lastReadyBlock && memoryAvailable) {
         const newFrames = flattenBlocks(topics, blocks.slice(newState.cursor, lastReadyBlock + 1));
         return {
           allFrames: newState.allFrames.concat(newFrames),
