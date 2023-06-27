@@ -70,14 +70,14 @@ export function getAccuracy(
         }
 
         // Ellipse `tilt` is defined as number of degrees from the negative x axis
-        const theta = unit(atan2(eigenvector[1], eigenvector[0]), "rad").toNumber("deg");
+        const theta = (atan2(eigenvector[1], eigenvector[0]) * 180) / Math.PI;
         const tilt = -1 * theta;
 
         const primaryRadius = Math.sqrt(eigenvalues[1]);
         const secondaryRadius = Math.sqrt(eigenvalues[0]);
 
         if (isNaN(tilt) || isNaN(primaryRadius) || isNaN(secondaryRadius)) {
-          throw new Error("Unable to calculate accuracy");
+          return undefined;
         }
 
         return {
