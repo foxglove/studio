@@ -97,7 +97,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
   );
 
   const onConsoleClick = useCallback(() => {
-    handleAnalytics("Browse data");
+    handleAnalytics("console");
     window.open("https://console.foxglove.dev/recordings/list", "_blank");
     handleNestedMenuClose();
   }, [handleAnalytics, handleNestedMenuClose]);
@@ -271,7 +271,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
             onClick={onConsoleClick}
             id="app-menu-console"
           >
-            Browse data
+            Browse Data Platform
           </MuiMenuItem>
         )}
         {showConsoleLink && <Divider variant="middle" />}
