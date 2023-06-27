@@ -37,21 +37,13 @@ export default {
     },
   },
   decorators: [
-    (Story, ctx): JSX.Element => {
-      const {
-        args: {
-          testId: _, // remove testId from args as it's only used in the play function
-          ...args
-        },
-      } = ctx;
-      return (
-        <WorkspaceContextProvider>
-          <PlayerSelectionContext.Provider value={playerSelection}>
-            <Story {...args} />
-          </PlayerSelectionContext.Provider>
-        </WorkspaceContextProvider>
-      );
-    },
+    (Story, { args: { testId: _, ...args } }): JSX.Element => (
+      <WorkspaceContextProvider>
+        <PlayerSelectionContext.Provider value={playerSelection}>
+          <Story {...args} />
+        </PlayerSelectionContext.Provider>
+      </WorkspaceContextProvider>
+    ),
   ],
   play: async ({ canvasElement, args }) => {
     if (!args.testId) {
