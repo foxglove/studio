@@ -2,7 +2,14 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Menu, PaperProps, PopoverPosition, PopoverReference } from "@mui/material";
+import {
+  Divider,
+  Menu,
+  MenuItem as MuiMenuItem,
+  PaperProps,
+  PopoverPosition,
+  PopoverReference,
+} from "@mui/material";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { makeStyles } from "tss-react/mui";
@@ -28,6 +35,7 @@ type AppMenuProps = {
   anchorPosition?: PopoverPosition;
   disablePortal?: boolean;
   open: boolean;
+  showConsoleLink?: boolean;
 };
 
 const useStyles = makeStyles()({
@@ -43,7 +51,15 @@ const useStyles = makeStyles()({
 const selectWorkspace = (store: WorkspaceContextStore) => store;
 
 export function AppMenu(props: AppMenuProps): JSX.Element {
-  const { open, handleClose, anchorEl, anchorReference, anchorPosition, disablePortal } = props;
+  const {
+    open,
+    handleClose,
+    anchorEl,
+    anchorReference,
+    anchorPosition,
+    disablePortal,
+    showConsoleLink = false,
+  } = props;
   const { classes } = useStyles();
   const { t } = useTranslation("appBar");
 
@@ -79,6 +95,12 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
     },
     [analytics, currentUserType],
   );
+
+  const onConsoleClick = useCallback(() => {
+    handleAnalytics("Browse data");
+    window.open("https://console.foxglove.dev/recordings/list", "_blank");
+    handleNestedMenuClose();
+  }, [handleAnalytics, handleNestedMenuClose]);
 
   // FILE
 
@@ -243,6 +265,16 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
           } as Partial<PaperProps & { "data-tourid"?: string }>
         }
       >
+        {showConsoleLink && (
+          <MuiMenuItem
+            onPointerEnter={() => setNestedMenu(undefined)}
+            onClick={onConsoleClick}
+            id="app-menu-console"
+          >
+            Browse data
+          </MuiMenuItem>
+        )}
+        {showConsoleLink && <Divider variant="middle" />}
         <NestedMenuItem
           onPointerEnter={handleItemPointerEnter}
           items={fileItems}

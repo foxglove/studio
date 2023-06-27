@@ -278,6 +278,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
                 open={appMenuOpen}
                 anchorEl={appMenuEl}
                 handleClose={() => setAppMenuEl(undefined)}
+                showConsoleLink={currentUser && appBarLayoutButton != undefined}
               />
               <AppBarIconButton
                 className={cx({ "Mui-selected": panelMenuOpen })}
