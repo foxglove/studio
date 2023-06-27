@@ -378,7 +378,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
                     <object
                       data={currentUser?.avatarImageUrl ?? ""}
                       className={classes.userIconImage}
-                      type="image"
+                      type="image/png"
                     >
                       <PersonIcon />
                     </object>
