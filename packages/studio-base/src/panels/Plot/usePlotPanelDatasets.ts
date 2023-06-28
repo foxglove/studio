@@ -72,13 +72,17 @@ type State = DataSets & {
   xAxisPath: undefined | BasePlotPath;
 };
 
+/**
+ * Applies the @derivative modifier to the dataset. This has to be done on the complete
+ * dataset, not calculated incrementally.
+ */
 function applyDerivativeToDatasets(datasets: DataSets["datasets"]): DataSets["datasets"] {
   return datasets.map((dataset) => {
     if (dataset == undefined) {
       return undefined;
     }
 
-    if (dataset.path.endsWith(".@derivative")) {
+    if (dataset.path.value.endsWith(".@derivative")) {
       return {
         path: dataset.path,
         dataset: { ...dataset.dataset, data: derivative(dataset.dataset.data) },
@@ -86,6 +90,35 @@ function applyDerivativeToDatasets(datasets: DataSets["datasets"]): DataSets["da
     } else {
       return dataset;
     }
+  });
+}
+
+/**
+ * Sorts datsets by header stamp, which at this point in the processing chain is the x value of each point.
+ * This has to be done on the complete dataset, not point by point.
+ *
+ * Messages are provided in receive time order but header stamps might be out of order
+ * This would create zig-zag lines connecting the wrong points. Sorting the header stamp values (x)
+ * results in the datums being in the correct order for connected lines.
+ *
+ * An example is when messages at the same receive time have different header stamps. The receive
+ * time ordering is undefined (could be different for different data sources), but the header stamps
+ * still need sorting so the plot renders correctly.
+ */
+function sortDatasetsByHeaderStamp(datasets: DataSets["datasets"]): DataSets["datasets"] {
+  return datasets.map((dataset) => {
+    if (dataset == undefined) {
+      return undefined;
+    }
+
+    if (dataset.path.timestampMethod !== "headerStamp") {
+      return dataset;
+    }
+
+    return {
+      path: dataset.path,
+      dataset: { ...dataset.dataset, data: dataset.dataset.data.sort((a, b) => a.x - b.x) },
+    };
   });
 }
 
@@ -223,7 +256,7 @@ export function usePlotPanelDatasets(params: Params): {
     (previous?: DataSets): DataSets => {
       if (previous) {
         return {
-          datasets: previous.datasets.filter((ds) => ds && allPaths.includes(ds.path)),
+          datasets: previous.datasets.filter((ds) => ds && allPaths.includes(ds.path.value)),
           bounds: previous.bounds,
           pathsWithMismatchedDataLengths: intersection(
             previous.pathsWithMismatchedDataLengths,
@@ -342,12 +375,17 @@ export function usePlotPanelDatasets(params: Params): {
   });
 
   // Combine allFrames & currentFrames datasets, optionally applying the @derivative
-  // modifier, which can only be calculated on a complete dataset, not point by point.
+  // modifier and sorting by header stamp, which can only be calculated on a complete
+  // dataset, not point by point.
   const combinedDatasets = useMemo(() => {
     const stateWithDerivatives = applyDerivativeToDatasets(state.datasets);
+    const sortedStateWithDerivatives = sortDatasetsByHeaderStamp(stateWithDerivatives);
     const currentFrameWithDerivatives = applyDerivativeToDatasets(currentFrameDatasets.datasets);
-    const allDatasets = Object.values(stateWithDerivatives).concat(
-      Object.values(currentFrameWithDerivatives),
+    const sortedCurrentFrameWithDerivatives = sortDatasetsByHeaderStamp(
+      currentFrameWithDerivatives,
+    );
+    const allDatasets = Object.values(sortedStateWithDerivatives).concat(
+      Object.values(sortedCurrentFrameWithDerivatives),
     );
     const bounds = mergeBounds(state.bounds, currentFrameDatasets.bounds);
     return {
@@ -358,7 +396,14 @@ export function usePlotPanelDatasets(params: Params): {
         currentFrameDatasets.pathsWithMismatchedDataLengths,
       ),
     };
-  }, [currentFrameDatasets, state]);
+  }, [
+    currentFrameDatasets.bounds,
+    currentFrameDatasets.datasets,
+    currentFrameDatasets.pathsWithMismatchedDataLengths,
+    state.bounds,
+    state.datasets,
+    state.pathsWithMismatchedDataLengths,
+  ]);
 
   return combinedDatasets;
 }

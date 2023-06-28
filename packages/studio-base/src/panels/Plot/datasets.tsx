@@ -170,17 +170,6 @@ function getDatasetsFromMessagePlotPath({
     if (item.queriedData.length > 1 && xAxisVal !== "index") {
       showLine = false;
     }
-
-    // Messages are provided in receive time order but header stamps might be out of order
-    // This would create zig-zag lines connecting the wrong points. Sorting the header stamp values (x)
-    // results in the datums being in the correct order for connected lines.
-    //
-    // An example is when messages at the same receive time have different header stamps. The receive
-    // time ordering is undefined (could be different for different data sources), but the header stamps
-    // still need sorting so the plot renders correctly.
-    if (path.timestampMethod === "headerStamp") {
-      rangeData.sort((a, b) => a.x - b.x);
-    }
   }
 
   for (const datum of rangeData) {
@@ -215,7 +204,7 @@ type GetDatasetArgs = Immutable<{
   invertedTheme?: boolean;
 }>;
 
-type DatasetWithPath = { path: string; dataset: DataSet };
+type DatasetWithPath = { path: PlotPath; dataset: DataSet };
 
 export type DataSets = {
   bounds: Bounds;
@@ -264,7 +253,7 @@ export function getDatasets({
           bounds.y.max = Math.max(bounds.y.max, datum.y);
         }
       }
-      datasets.push({ path: path.value, dataset: res.dataset });
+      datasets.push({ path, dataset: res.dataset });
     }
   }
 
