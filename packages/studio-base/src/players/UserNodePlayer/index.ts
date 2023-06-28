@@ -377,9 +377,9 @@ export default class UserNodePlayer implements Player {
     this.#globalVariablesChanged = true;
   }
 
-  // Called when userNode state is updated.
+  // Called when userNode state is updated (i.e. scripts are saved)
   public async setUserNodes(userNodes: UserNodes): Promise<void> {
-    await this.#protectedState.runExclusive(async (state) => {
+    const newPlayerState = await this.#protectedState.runExclusive(async (state) => {
       for (const nodeId of Object.keys(userNodes)) {
         const prevNode = state.userNodes[nodeId];
         const newNode = userNodes[nodeId];
@@ -397,7 +397,29 @@ export default class UserNodePlayer implements Player {
       // This code causes us to reset workers twice because the seeking resets the workers too
       await this.#resetWorkersUnlocked(state);
       this.#setSubscriptionsUnlocked(this.#subscriptions, state);
+
+      const playerState = this.#playerState;
+      const lastActive = state.lastPlayerStateActiveData;
+      // If we have previous player state and are paused, then we re-emit the last active data so
+      // any panels that want our output topic get the updated message.
+      //
+      // Note: Until we learn otherwise, we assume that if a player is playing, it will emit new
+      // player state that will output new messages so we don't emit here while playing.
+      if (playerState && lastActive?.isPlaying === false) {
+        return {
+          ...playerState,
+          activeData: {
+            ...lastActive,
+          },
+        };
+      }
+
+      return undefined;
     });
+
+    if (newPlayerState) {
+      await this.#onPlayerState(newPlayerState);
+    }
   }
 
   // Defines the inputs/outputs and worker interface of a user node.
@@ -916,9 +938,7 @@ export default class UserNodePlayer implements Player {
         // remove topics that already have messages in state, because we won't need to take their last message to process
         // this also removes possible duplicate messages to be parsed
         for (const message of messages) {
-          if (inputTopicsForRecompute.has(message.topic)) {
-            inputTopicsForRecompute.delete(message.topic);
-          }
+          inputTopicsForRecompute.delete(message.topic);
         }
 
         const messagesForRecompute: MessageEvent[] = [];
