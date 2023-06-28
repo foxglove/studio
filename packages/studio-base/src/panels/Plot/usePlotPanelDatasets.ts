@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { useTheme } from "@mui/material";
-import { groupBy, intersection, isEmpty, union, zipWith } from "lodash";
+import { cloneDeep, groupBy, intersection, isEmpty, union, zipWith } from "lodash";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLatest } from "react-use";
 
@@ -157,7 +157,10 @@ export function usePlotPanelDatasets(params: Params): {
   }, [setSubscriptions, subscriptions]);
 
   const resetDatasets =
-    allPaths !== state.allPaths || xAxisVal !== state.xAxisVal || xAxisPath !== state.xAxisPath;
+    allPaths !== state.allPaths ||
+    xAxisVal !== state.xAxisVal ||
+    xAxisPath !== state.xAxisPath ||
+    allFrames.length < state.allFrames.length; // reset if we're reloading blocks
 
   if (allFrames !== state.allFrames || resetDatasets) {
     // use setState directly instead of useEffect to skip an extra render.
@@ -180,7 +183,7 @@ export function usePlotPanelDatasets(params: Params): {
               xAxisPath,
               invertedTheme: theme.palette.mode === "dark",
             })
-          : EmptyDatasets;
+          : cloneDeep(EmptyDatasets);
 
       const mergedDatasets: State["datasets"] = zipWith(
         newState.datasets,
