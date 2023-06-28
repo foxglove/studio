@@ -16,7 +16,7 @@ async function promiseTimeout<T>(
   ms = 30000,
   reason = "unknown reason",
 ): Promise<T> {
-  // We avoid using Promise.race here since it is succeptible to memory leaks for unresolved promises
+  // We avoid using Promise.race here since it is susceptible to memory leaks for unresolved promises
   // https://github.com/nodejs/node/issues/17469
   //
   // With Promise.race you might be tempted to race the input promise against a promise that resolve
