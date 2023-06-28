@@ -16,18 +16,20 @@ async function promiseTimeout<T>(
   ms = 30000,
   reason = "unknown reason",
 ): Promise<T> {
-  let id: ReturnType<typeof setTimeout> | undefined;
-  return await Promise.race([
-    promise.then((result) => {
-      if (id != undefined) {
-        clearTimeout(id);
-      }
-      return result;
-    }),
-    new Promise<T>((_resolve, reject) => {
-      id = setTimeout(() => reject(new Error(`Promise timed out after ${ms}ms: ${reason} `)), ms);
-    }),
-  ]);
+  // We avoid using Promise.race here since it is succeptible to memory leaks for unresolved promises
+  // https://github.com/nodejs/node/issues/17469
+  //
+  // With Promise.race you might be tempted to race the input promise against a promise that resolve
+  // after a timeout. However, if you clear the timeout when the input promise resolves, you'll be
+  // left with a promise that never resolves passed as a contender to `Promise.race`.
+  return await new Promise<T>((resolve, reject) => {
+    const id = setTimeout(() => {
+      reject(new Error(`Promise timed out after ${ms}ms: ${reason} `));
+    }, ms);
+    promise.then(resolve, reject).finally(() => {
+      clearTimeout(id);
+    });
+  });
 }
 
 export default promiseTimeout;
