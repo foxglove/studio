@@ -256,7 +256,6 @@ export type MessageBlock = {
   readonly messagesByTopic: {
     readonly [topic: string]: MessageEvent[];
   };
-  readonly needTopics?: ReadonlySet<string>;
   readonly sizeInBytes: number;
 };
 

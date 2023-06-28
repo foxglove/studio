@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { useTheme } from "@mui/material";
-import { cloneDeep, groupBy, intersection, isEmpty, union, zipWith } from "lodash";
+import { groupBy, intersection, isEmpty, transform, union, zipWith } from "lodash";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLatest } from "react-use";
 
@@ -33,14 +33,16 @@ import {
 } from "@foxglove/studio-base/panels/Plot/internalTypes";
 import * as PlotData from "@foxglove/studio-base/panels/Plot/plotData";
 import { derivative } from "@foxglove/studio-base/panels/Plot/transformPlotRange";
-import { MessageBlock, MessageEvent } from "@foxglove/studio-base/players/types";
+import { MessageEvent } from "@foxglove/studio-base/players/types";
 import { Bounds, makeInitialBounds, mergeBounds } from "@foxglove/studio-base/types/Bounds";
 import { getTimestampForMessage } from "@foxglove/studio-base/util/time";
 
 import { DataSets, getDatasets, mergeDatasets } from "./datasets";
-import { useFlattenedBlocks } from "./useFlattenedBlocks";
+import { useFlattenedBlocksByTopic } from "./useFlattenedBlocksByTopic";
 
 const ZERO_TIME = { sec: 0, nsec: 0 };
+
+const EmptyAllFrames: Record<string, MessageEvent[]> = {};
 
 const EmptyDatasets: DataSets = {
   datasets: [],
@@ -58,16 +60,13 @@ type Params = Immutable<{
   yAxisPaths: PlotPath[];
 }>;
 
-const selectBlocks = (ctx: MessagePipelineContext) =>
-  ctx.playerState.progress.messageCache?.blocks ?? [];
-
 const selectSetSubscriotions = (ctx: MessagePipelineContext) => ctx.setSubscriptions;
 
 type State = DataSets & {
-  allFrames: Immutable<MessageEvent[]>;
+  allFrames: Record<string, Immutable<MessageEvent[]>>;
   allPaths: readonly string[];
   bounds: Bounds;
-  cursor: number;
+  cursors: Record<string, number>;
   subscriptions: Subscription[];
   xAxisVal: PlotXAxisVal;
   xAxisPath: undefined | BasePlotPath;
@@ -92,10 +91,10 @@ function applyDerivativeToDatasets(datasets: DataSets["datasets"]): DataSets["da
 
 function makeInitialState(): State {
   return {
-    allFrames: [],
+    allFrames: {},
     allPaths: [],
     bounds: makeInitialBounds(),
-    cursor: 0,
+    cursors: {},
     datasets: [],
     subscriptions: [],
     pathsWithMismatchedDataLengths: [],
@@ -103,8 +102,6 @@ function makeInitialState(): State {
     xAxisPath: undefined,
   };
 }
-
-const EmptyBlocks: MessageBlock[] = [];
 
 /**
  * Collates and combines datasets from alLFrames and currentFrame messages.
@@ -143,12 +140,9 @@ export function usePlotPanelDatasets(params: Params): {
 
   const [state, setState] = useState(makeInitialState);
 
-  const blocks = useMessagePipeline(selectBlocks);
+  const allFramesFromBlocks = useFlattenedBlocksByTopic(subscribeTopics);
 
-  const allFrames = useFlattenedBlocks({
-    blocks: showSingleCurrentMessage ? EmptyBlocks : blocks,
-    topics: subscribeTopics,
-  });
+  const allFrames = showSingleCurrentMessage ? EmptyAllFrames : allFramesFromBlocks;
 
   const decodeMessagePathsForMessagesByTopic = useDecodeMessagePathsForMessagesByTopic(allPaths);
 
@@ -157,33 +151,46 @@ export function usePlotPanelDatasets(params: Params): {
   }, [setSubscriptions, subscriptions]);
 
   const resetDatasets =
-    allPaths !== state.allPaths ||
-    xAxisVal !== state.xAxisVal ||
-    xAxisPath !== state.xAxisPath ||
-    allFrames.length < state.allFrames.length; // reset if we're reloading blocks
+    allPaths !== state.allPaths || xAxisVal !== state.xAxisVal || xAxisPath !== state.xAxisPath;
 
   if (allFrames !== state.allFrames || resetDatasets) {
     // use setState directly instead of useEffect to skip an extra render.
     setState((oldState) => {
       const newState = resetDatasets ? makeInitialState() : oldState;
-      const newFrames = allFrames.slice(newState.cursor);
-      const newFramesByTopic = groupBy(newFrames, (msg) => msg.topic);
+
+      const newFramesByTopic = transform(
+        allFrames,
+        (acc, messages, topic) => {
+          acc[topic] = messages.slice(newState.cursors[topic] ?? 0);
+        },
+        {} as State["allFrames"],
+      );
+
+      const newCursors = transform(
+        allFrames,
+        (acc, messages, topic) => {
+          acc[topic] = messages.length;
+        },
+        {} as State["cursors"],
+      );
+
       const newBlockItems = PlotData.getBlockItemsByPath(
         decodeMessagePathsForMessagesByTopic,
         newFramesByTopic,
       );
 
-      const newDatasets =
-        newFrames.length > 0
-          ? getDatasets({
-              paths: yAxisPaths,
-              itemsByPath: newBlockItems,
-              startTime: startTime ?? ZERO_TIME,
-              xAxisVal,
-              xAxisPath,
-              invertedTheme: theme.palette.mode === "dark",
-            })
-          : cloneDeep(EmptyDatasets);
+      const anyNewFrames = Object.values(newFramesByTopic).some((msgs) => msgs.length > 0);
+
+      const newDatasets = anyNewFrames
+        ? getDatasets({
+            paths: yAxisPaths,
+            itemsByPath: newBlockItems,
+            startTime: startTime ?? ZERO_TIME,
+            xAxisVal,
+            xAxisPath,
+            invertedTheme: theme.palette.mode === "dark",
+          })
+        : EmptyDatasets;
 
       const mergedDatasets: State["datasets"] = zipWith(
         newState.datasets,
@@ -195,7 +202,7 @@ export function usePlotPanelDatasets(params: Params): {
         allFrames,
         allPaths,
         bounds: mergeBounds(newState.bounds, newDatasets.bounds),
-        cursor: allFrames.length,
+        cursors: newCursors,
         datasets: mergedDatasets,
         pathsWithMismatchedDataLengths: union(
           newState.pathsWithMismatchedDataLengths,

@@ -12,17 +12,13 @@
 //   You may not use this file except in compliance with the License.
 
 import memoizeWeak from "memoize-weak";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { v4 as uuidv4 } from "uuid";
+import { useCallback, useMemo } from "react";
 
 import { useShallowMemo } from "@foxglove/hooks";
 import { Immutable } from "@foxglove/studio";
+import { useSubscribeToTopicsForBlocks } from "@foxglove/studio-base/PanelAPI/useSubscribeToTopicsForBlocks";
+import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
 import {
-  useMessagePipeline,
-  MessagePipelineContext,
-} from "@foxglove/studio-base/components/MessagePipeline";
-import {
-  SubscribePayload,
   MessageEvent,
   MessageBlock as PlayerMessageBlock,
 } from "@foxglove/studio-base/players/types";
@@ -55,28 +51,6 @@ const filterBlockByTopics = memoizeWeak(
     return ret;
   },
 );
-
-const useSubscribeToTopicsForBlocks = (topics: readonly string[]) => {
-  const [id] = useState(() => uuidv4());
-
-  const setSubscriptions = useMessagePipeline(
-    useCallback(
-      ({ setSubscriptions: pipelineSetSubscriptions }: MessagePipelineContext) =>
-        pipelineSetSubscriptions,
-      [],
-    ),
-  );
-  const subscriptions: SubscribePayload[] = useMemo(() => {
-    return topics.map((topic) => ({ topic, preloadType: "full" }));
-  }, [topics]);
-  useEffect(() => setSubscriptions(id, subscriptions), [id, setSubscriptions, subscriptions]);
-
-  useEffect(() => {
-    return () => {
-      setSubscriptions(id, []);
-    };
-  }, [id, setSubscriptions]);
-};
 
 // A note: for the moment,
 //  - not all players provide blocks, and

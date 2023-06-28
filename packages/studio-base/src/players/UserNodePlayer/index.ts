@@ -360,7 +360,6 @@ export default class UserNodePlayer implements Player {
       // behavior.
       outputBlocks.push({
         messagesByTopic,
-        needTopics: block.needTopics,
         sizeInBytes: block.sizeInBytes,
       });
     }

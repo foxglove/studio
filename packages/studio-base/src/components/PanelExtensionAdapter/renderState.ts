@@ -5,7 +5,7 @@
 import memoizeWeak from "memoize-weak";
 import { Writable } from "ts-essentials";
 
-import { filterMap, forEachSortedArrays } from "@foxglove/den/collection";
+import { filterMap } from "@foxglove/den/collection";
 import { compare, toSec } from "@foxglove/rostime";
 import {
   AppSettingValue,
@@ -31,6 +31,7 @@ import { HoverValue } from "@foxglove/studio-base/types/hoverValue";
 import {
   collateTopicSchemaConversions,
   convertMessage,
+  forEachSortedArrays,
   mapDifference,
   TopicSchemaConversions,
 } from "./messageProcessing";
