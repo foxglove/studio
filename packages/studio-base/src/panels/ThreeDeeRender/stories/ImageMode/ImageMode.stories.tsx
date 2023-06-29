@@ -437,8 +437,9 @@ export const DownloadRawImage: StoryObj<React.ComponentProps<typeof ImageModeFox
   },
   args: { imageType: "raw" },
   play: async () => {
-    userEvent.click(document.querySelector("canvas")!, { button: 2 });
-    userEvent.click(await screen.findByText("Download image"));
+    const { click } = userEvent.setup();
+    await click(document.querySelector("canvas")!, { button: 2 });
+    await click(await screen.findByText("Download image"));
   },
 };
 
@@ -533,12 +534,14 @@ export const ImageModePick: StoryObj<React.ComponentProps<typeof ImageModeFoxglo
   args: { imageType: "raw" },
 
   play: async () => {
-    userEvent.hover(await screen.findByTestId(/panel-mouseenter-container/));
+    const { click, hover } = userEvent.setup();
+
+    await hover(await screen.findByTestId(/panel-mouseenter-container/));
     const canvas = document.querySelector("canvas")!;
     const inspectObjects = screen.getByRole("button", { name: /inspect objects/i });
-    userEvent.click(inspectObjects);
+    await click(inspectObjects);
     await delay(30);
-    userEvent.click(canvas, { clientX: 500, clientY: 500 });
+    await click(canvas, { clientX: 500, clientY: 500 });
     await delay(30);
   },
 };
@@ -638,7 +641,7 @@ export const ImageModeInvalidCameraCalibration: StoryObj = {
   render: () => <InvalidPinholeCamera />,
   play: async () => {
     const errorIcon = await screen.findByTestId("ErrorIcon");
-    userEvent.hover(errorIcon);
+    await userEvent.hover(errorIcon);
   },
 };
 
@@ -678,7 +681,7 @@ export const UnsupportedEncodingError: StoryObj = {
   },
   play: async () => {
     const errorIcon = await screen.findAllByTestId("ErrorIcon");
-    userEvent.hover(errorIcon[0]!);
+    await userEvent.hover(errorIcon[0]!);
   },
 };
 
@@ -721,7 +724,7 @@ export const DecompressionError: StoryObj = {
       }
       return icons[0];
     });
-    userEvent.hover(errorIcon!);
+    await userEvent.hover(errorIcon!);
   },
 };
 

@@ -34,7 +34,7 @@ const clickInput: StoryObj["play"] = async ({ canvasElement }: { canvasElement: 
   const canvas = within(canvasElement);
   const input = await canvas.findByTestId("autocomplete-textfield");
 
-  userEvent.click(input);
+  await userEvent.click(input);
 };
 
 export const FilteringToO: StoryObj = {
@@ -86,7 +86,7 @@ export const UncontrolledValue: StoryObj = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const input = await canvas.findByTestId("autocomplete-textfield");
-    userEvent.type(input, "h");
+    await userEvent.type(input, "h");
   },
 };
 

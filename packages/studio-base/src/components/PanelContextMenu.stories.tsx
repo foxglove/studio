@@ -68,10 +68,10 @@ export const Default: StoryObj = {
     );
   },
 
-  play: () => {
+  play: async () => {
     for (const el of document.getElementsByClassName(DUMMY_CLASS)) {
       const rect = el.getBoundingClientRect();
-      userEvent.click(el, { clientX: rect.x + 100, clientY: rect.y + 100, button: 2 });
+      await userEvent.click(el, { clientX: rect.x + 100, clientY: rect.y + 100, button: 2 });
     }
   },
 };
