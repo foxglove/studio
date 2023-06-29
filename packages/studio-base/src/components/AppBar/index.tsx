@@ -145,6 +145,8 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }, 
       avatar: {
         color: theme.palette.common.white,
         backgroundColor: tc(theme.palette.appBar.main).lighten().toString(),
+        height: theme.spacing(3.5),
+        width: theme.spacing(3.5),
       },
       iconButton: {
         padding: theme.spacing(1),
