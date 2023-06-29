@@ -154,10 +154,6 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }, 
         backgroundColor: tc(theme.palette.appBar.main).lighten().toString(),
         height: theme.spacing(3.5),
         width: theme.spacing(3.5),
-
-        [`.${svgIconClasses.root}`]: {
-          fontSize: "1rem",
-        },
       },
       iconButton: {
         padding: theme.spacing(1),
