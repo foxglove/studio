@@ -151,10 +151,8 @@ export class ImageRenderable extends Renderable<ImageUserData> {
       prevSettings.minValue !== newSettings.minValue ||
       prevSettings.maxValue !== newSettings.maxValue
     ) {
-      this.#rawImageOptions = {
-        minValue: this.userData.settings.minValue,
-        maxValue: this.userData.settings.maxValue,
-      };
+      this.#rawImageOptions.minValue = newSettings.minValue;
+      this.#rawImageOptions.maxValue = newSettings.maxValue;
       // Decode the current image again, which takes into account the new options
       const image = this.userData.image;
       if (image) {
