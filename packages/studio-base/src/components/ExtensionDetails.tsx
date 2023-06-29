@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import { IconButton, Button, Link, Tab, Tabs, Typography, Divider } from "@mui/material";
+import { Button, Link, Tab, Tabs, Typography, Divider } from "@mui/material";
 import { useSnackbar } from "notistack";
 import { useCallback, useState } from "react";
 import { useAsync, useMountedState } from "react-use";
@@ -27,7 +27,15 @@ type Props = {
   onClose: () => void;
 };
 
-const useStyles = makeStyles()({ button: { minWidth: 100 } });
+const useStyles = makeStyles()((theme) => ({
+  backButton: {
+    marginLeft: theme.spacing(-1.5),
+    marginBottom: theme.spacing(1),
+  },
+  installButton: {
+    minWidth: 100,
+  },
+}));
 
 export function ExtensionDetails({ extension, onClose, installed }: Props): React.ReactElement {
   const { classes } = useStyles();
@@ -99,12 +107,19 @@ export function ExtensionDetails({ extension, onClose, installed }: Props): Reac
 
   return (
     <Stack fullHeight flex="auto" gap={1}>
-      <Stack direction="row" alignItems="center" gap={1}>
-        <IconButton key="back-arrow" onClick={onClose} size="small" edge="start">
-          <ChevronLeftIcon />
-        </IconButton>
-        {extension.name}
-      </Stack>
+      <div>
+        <Button
+          className={classes.backButton}
+          onClick={onClose}
+          size="small"
+          startIcon={<ChevronLeftIcon />}
+        >
+          Back
+        </Button>
+        <Typography variant="h3" fontWeight={500}>
+          {extension.name}
+        </Typography>
+      </div>
 
       <Stack gap={1} alignItems="flex-start">
         <Stack gap={0.5} paddingBottom={1}>
@@ -135,7 +150,7 @@ export function ExtensionDetails({ extension, onClose, installed }: Props): Reac
         </Stack>
         {isInstalled && canUninstall ? (
           <Button
-            className={classes.button}
+            className={classes.installButton}
             size="small"
             key="uninstall"
             color="inherit"
@@ -147,7 +162,7 @@ export function ExtensionDetails({ extension, onClose, installed }: Props): Reac
         ) : (
           canInstall && (
             <Button
-              className={classes.button}
+              className={classes.installButton}
               size="small"
               key="install"
               color="inherit"
