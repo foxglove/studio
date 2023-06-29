@@ -10,7 +10,7 @@ import {
   PanelRight24Regular,
   SlideAdd24Regular,
 } from "@fluentui/react-icons";
-import { Button, IconButton, Tooltip, AppBar as MuiAppBar } from "@mui/material";
+import { Avatar, Button, IconButton, Tooltip, AppBar as MuiAppBar } from "@mui/material";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import tc from "tinycolor2";
@@ -24,7 +24,6 @@ import {
   CustomWindowControls,
   CustomWindowControlsProps,
 } from "@foxglove/studio-base/components/AppBar/CustomWindowControls";
-import { UserAvatar } from "@foxglove/studio-base/components/AppBar/UserAvatar";
 import { FoxgloveLogo } from "@foxglove/studio-base/components/FoxgloveLogo";
 import { MemoryUseIndicator } from "@foxglove/studio-base/components/MemoryUseIndicator";
 import Stack from "@foxglove/studio-base/components/Stack";
@@ -368,9 +367,10 @@ export function AppBar(props: AppBarProps): JSX.Element {
                   onClick={(event) => setUserAnchorEl(event.currentTarget)}
                   data-testid="user-button"
                 >
-                  <UserAvatar
+                  <Avatar
+                    src={currentUser?.avatarImageUrl ?? undefined}
                     className={classes.avatar}
-                    img={currentUser?.avatarImageUrl ?? undefined}
+                    variant="rounded"
                   />
                 </IconButton>
               </Tooltip>
