@@ -10,14 +10,7 @@ import {
   PanelRight24Regular,
   SlideAdd24Regular,
 } from "@fluentui/react-icons";
-import {
-  Avatar,
-  Button,
-  IconButton,
-  Tooltip,
-  AppBar as MuiAppBar,
-  svgIconClasses,
-} from "@mui/material";
+import { Avatar, Button, IconButton, Tooltip, AppBar as MuiAppBar } from "@mui/material";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import tc from "tinycolor2";
