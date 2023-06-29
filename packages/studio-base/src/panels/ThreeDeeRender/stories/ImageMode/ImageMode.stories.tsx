@@ -537,9 +537,14 @@ export const ImageModePick: StoryObj<React.ComponentProps<typeof ImageModeFoxglo
     const canvas = document.querySelector("canvas")!;
     const inspectObjects = screen.getByRole("button", { name: /inspect objects/i });
     userEvent.click(inspectObjects);
-    await delay(30);
-    userEvent.click(canvas, { clientX: 500, clientY: 500 });
-    await delay(30);
+
+    await waitFor(
+      async () => {
+        userEvent.click(canvas, { clientX: 500, clientY: 500 });
+        await screen.findByText("frame_id: sensor", undefined, { timeout: 10 });
+      },
+      { timeout: 1000 },
+    );
   },
 };
 
@@ -677,8 +682,14 @@ export const UnsupportedEncodingError: StoryObj = {
     );
   },
   play: async () => {
-    const errorIcon = await screen.findAllByTestId("ErrorIcon");
-    userEvent.hover(errorIcon[0]!);
+    const errorIcon = await waitFor(async () => {
+      const icons = await screen.findAllByTestId("ErrorIcon");
+      if (icons.length !== 2) {
+        throw new Error("Expected 2 error icons");
+      }
+      return icons[0];
+    });
+    userEvent.hover(errorIcon!);
   },
 };
 

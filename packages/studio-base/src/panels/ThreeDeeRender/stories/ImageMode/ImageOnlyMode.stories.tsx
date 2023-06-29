@@ -292,11 +292,8 @@ export const ImageOnlyModeOn: StoryObj<React.ComponentProps<typeof ImageWith3D>>
   render: ImageWith3D,
   args: { imageTopic: "camera/img", calibrationTopic: undefined },
   play: async () => {
-    const icons = await screen.findAllByTestId("ErrorIcon");
-    if (icons.length !== 1) {
-      throw new Error("Expected 1 error icon");
-    }
-    userEvent.hover(icons[0]!);
+    const icon = await screen.findByTestId("ErrorIcon");
+    userEvent.hover(icon);
   },
 };
 
