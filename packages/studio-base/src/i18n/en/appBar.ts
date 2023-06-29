@@ -4,6 +4,7 @@
 
 export const appBar = {
   about: "About",
+  browseData: "Browse data",
   exploreSampleData: "Explore sample data",
   open: "Open…",
   openLocalFile: "Open local file…",
