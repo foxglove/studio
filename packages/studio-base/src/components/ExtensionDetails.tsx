@@ -103,6 +103,7 @@ export function ExtensionDetails({ extension, onClose, installed }: Props): Reac
         <IconButton key="back-arrow" onClick={onClose} size="small" edge="start">
           <ChevronLeftIcon />
         </IconButton>
+        {extension.name}
       </Stack>
 
       <Stack gap={1} alignItems="flex-start">
