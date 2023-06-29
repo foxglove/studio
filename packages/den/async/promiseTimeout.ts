@@ -4,10 +4,7 @@
 
 /** Error for promise timeouts from `promiseTimeout()` */
 class PromiseTimeoutError extends Error {
-  public constructor(message: string) {
-    super(message);
-    this.name = "PromiseTimeoutError";
-  }
+  public override name = "PromiseTimeoutError";
 }
 
 /**
@@ -15,6 +12,9 @@ class PromiseTimeoutError extends Error {
  *
  * If the promise takes longer than the specified timeout duration (in milliseconds), it will be
  * rejected with a timeout error.
+ *
+ * Note: Make sure the input promise resolves, rejects, or otherwise go out of scope. A long-lived
+ * promise that never resolves holds onto its resolution callbacks.
  *
  * @param promise The promise to execute
  * @param ms The timeout duration in milliseconds.
