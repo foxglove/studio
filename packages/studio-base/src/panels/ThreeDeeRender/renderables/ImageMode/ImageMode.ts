@@ -99,8 +99,6 @@ export class ImageMode
 
   #imageRenderable: ImageRenderable | undefined;
   #removeImageTimeout: ReturnType<typeof setTimeout> | undefined;
-  #receivedImageSequenceNumber = 0;
-  #displayedImageSequenceNumber = 0;
 
   readonly #messageHandler: MessageHandler;
 
