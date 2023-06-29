@@ -35,14 +35,11 @@ export type RawImageOptions = {
   maxValue?: number;
 };
 
-let counter = 0;
 export function decodeRawImage(
   image: RosImage | RawImage,
   options: RawImageOptions,
   output: Uint8ClampedArray,
 ): void {
-  const label = `decodeRawImage ${counter++}`;
-  console.time(label);
   const { encoding, width, height } = image;
   const is_bigendian = "is_bigendian" in image ? image.is_bigendian : false;
   const rawData = image.data as Uint8Array;
@@ -93,5 +90,4 @@ export function decodeRawImage(
     default:
       throw new Error(`Unsupported encoding ${encoding}`);
   }
-  console.timeEnd(label);
 }

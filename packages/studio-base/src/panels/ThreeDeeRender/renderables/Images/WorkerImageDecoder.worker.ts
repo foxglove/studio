@@ -4,10 +4,10 @@
 
 import * as Comlink from "comlink";
 
-import { RawImage } from "@foxglove/schemas";
+import type { RawImage } from "@foxglove/schemas";
 
 import { decodeRawImage, RawImageOptions } from "./decodeImage";
-import { Image as RosImage } from "../../ros";
+import type { Image as RosImage } from "../../ros";
 
 function decode(image: RosImage | RawImage, options: RawImageOptions): ImageData {
   const result = new ImageData(image.width, image.height);

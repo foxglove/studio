@@ -123,7 +123,6 @@ export class ImageRenderable extends Renderable<ImageUserData> {
   // Renderable should only need to care about the model
   public setCameraModel = (cameraModel: PinholeCameraModel): void => {
     this.#geometryNeedsUpdate ||= this.userData.cameraModel !== cameraModel;
-    console.log("imagerenderable setCameraModel", cameraModel, this.#geometryNeedsUpdate);
     this.userData.cameraModel = cameraModel;
   };
 
@@ -173,7 +172,6 @@ export class ImageRenderable extends Renderable<ImageUserData> {
   ): void {
     this.userData.image = image;
 
-    console.log("setImage start");
     const seq = ++this.#receivedImageSequenceNumber;
     const decodePromise =
       "format" in image
@@ -181,13 +179,6 @@ export class ImageRenderable extends Renderable<ImageUserData> {
         : (this.#decoder ??= new WorkerImageDecoder()).decode(image, this.#rawImageOptions);
     decodePromise
       .then((result) => {
-        console.log("setImage done", {
-          seq,
-          result,
-          receivedImageSequenceNumber: this.#receivedImageSequenceNumber,
-          displayedImageSequenceNumber: this.#displayedImageSequenceNumber,
-          disposed: this.#disposed,
-        });
         if (this.#disposed) {
           return;
         }
@@ -223,21 +214,17 @@ export class ImageRenderable extends Renderable<ImageUserData> {
   }
 
   public update(): void {
-    console.log("imagerenderable update()");
     if (this.#isUpdating) {
-      console.log("update() bail");
       return;
     }
     this.#isUpdating = true;
     // fallback camera info needs image width and height
     if (this.#textureNeedsUpdate && this.userData.image) {
-      console.log("update() going to update texture");
       this.#updateTexture();
       this.#textureNeedsUpdate = false;
     }
     // We need a valid camera model and image to render
     if (!this.userData.cameraModel || !this.userData.image) {
-      console.log("update() bail no model");
       this.#isUpdating = false;
       return;
     }
@@ -245,19 +232,16 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     this.updateHeaderInfo();
 
     if (this.#geometryNeedsUpdate) {
-      console.log("update() geometry needs update");
       this.#rebuildGeometry();
       this.#geometryNeedsUpdate = false;
     }
 
     if (this.#materialNeedsUpdate) {
-      console.log("update() material needs update");
       this.#updateMaterial();
       this.#materialNeedsUpdate = false;
     }
 
     if (this.#meshNeedsUpdate && this.userData.texture) {
-      console.log("update() mesh needs update");
       this.#updateMesh();
       this.#meshNeedsUpdate = false;
     }
@@ -279,7 +263,6 @@ export class ImageRenderable extends Renderable<ImageUserData> {
       this.#decodedImage,
       "Decoded image must be set before texture can be updated or created",
     );
-    console.log("#updateTexture");
     const decodedImage = this.#decodedImage;
     // Create or update the bitmap texture
     if (decodedImage instanceof ImageBitmap) {
@@ -320,7 +303,6 @@ export class ImageRenderable extends Renderable<ImageUserData> {
   }
 
   #updateMaterial(): void {
-    console.log("#updateMaterial");
     if (!this.userData.material) {
       this.#initMaterial();
       this.#meshNeedsUpdate = true;
@@ -365,7 +347,6 @@ export class ImageRenderable extends Renderable<ImageUserData> {
   }
 
   #updateMesh(): void {
-    console.log("#updateMesh");
     assert(this.userData.geometry, "Geometry must be set before mesh can be updated or created");
     assert(this.userData.material, "Material must be set before mesh can be updated or created");
     if (!this.userData.mesh) {
@@ -404,7 +385,7 @@ function createCanvasTexture(bitmap: ImageBitmap): THREE.CanvasTexture {
 }
 
 function createDataTexture(imageData: ImageData): THREE.DataTexture {
-  return new THREE.DataTexture(
+  const dataTexture = new THREE.DataTexture(
     imageData.data,
     imageData.width,
     imageData.height,
@@ -418,6 +399,8 @@ function createDataTexture(imageData: ImageData): THREE.DataTexture {
     1,
     THREE.sRGBEncoding,
   );
+  dataTexture.needsUpdate = true; // ensure initial image data is displayed
+  return dataTexture;
 }
 
 function createGeometry(

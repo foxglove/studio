@@ -581,7 +581,6 @@ export class ImageMode
     renderable.userData.receiveTime = receiveTime;
     renderable.setImage(image, /*resizeWidth=*/ undefined, (size) => {
       if (this.#fallbackCameraModelActive()) {
-        console.log("updating fallback camera model");
         this.#updateFallbackCameraModel(size, getFrameIdFromImage(image));
       }
     });
@@ -599,7 +598,8 @@ export class ImageMode
   };
 
   #fallbackCameraModelActive = (): boolean => {
-    return this.#getImageModeSettings().calibrationTopic == undefined;
+    // Don't use #getImageModeSettings here for performance reasons
+    return this.renderer.config.imageMode.calibrationTopic == undefined;
   };
 
   #clearCameraModel = (): void => {
