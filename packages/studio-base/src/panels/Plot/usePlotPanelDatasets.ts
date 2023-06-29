@@ -4,7 +4,7 @@
 
 import { useTheme } from "@mui/material";
 import { groupBy, intersection, isEmpty, transform, union, zipWith } from "lodash";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useLatest } from "react-use";
 
 import { filterMap } from "@foxglove/den/collection";
@@ -19,10 +19,6 @@ import {
   useCachedGetMessagePathDataItems,
   useDecodeMessagePathsForMessagesByTopic,
 } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
-import {
-  MessagePipelineContext,
-  useMessagePipeline,
-} from "@foxglove/studio-base/components/MessagePipeline";
 import { ChartDefaultView } from "@foxglove/studio-base/components/TimeBasedChart";
 import {
   BasePlotPath,
@@ -59,8 +55,6 @@ type Params = Immutable<{
   xAxisPath?: BasePlotPath;
   yAxisPaths: PlotPath[];
 }>;
-
-const selectSetSubscriotions = (ctx: MessagePipelineContext) => ctx.setSubscriptions;
 
 type State = DataSets & {
   allFrames: Record<string, Immutable<MessageEvent[]>>;
@@ -154,8 +148,6 @@ export function usePlotPanelDatasets(params: Params): {
     yAxisPaths,
   } = params;
 
-  const setSubscriptions = useMessagePipeline(selectSetSubscriotions);
-
   const theme = useTheme();
 
   // When iterating message events, we need a reverse lookup from topic to the
@@ -178,10 +170,6 @@ export function usePlotPanelDatasets(params: Params): {
   const allFrames = showSingleCurrentMessage ? EmptyAllFrames : allFramesFromBlocks;
 
   const decodeMessagePathsForMessagesByTopic = useDecodeMessagePathsForMessagesByTopic(allPaths);
-
-  useEffect(() => {
-    setSubscriptions("plot", subscriptions);
-  }, [setSubscriptions, subscriptions]);
 
   const resetDatasets =
     allPaths !== state.allPaths || xAxisVal !== state.xAxisVal || xAxisPath !== state.xAxisPath;
