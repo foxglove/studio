@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { sumBy } from "lodash";
+import { sumBy, transform } from "lodash";
 import { useCallback, useMemo, useState } from "react";
 
 import { Immutable } from "@foxglove/studio";
@@ -10,6 +10,20 @@ import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipe
 import { MessageBlock, MessageEvent } from "@foxglove/studio-base/players/types";
 
 const EmptyBlocks: MessageBlock[] = [];
+
+type State = {
+  cursors: Record<string, number>;
+  messages: Record<string, MessageEvent[]>;
+  previousBlocks: Immutable<Array<undefined | MessageBlock>>;
+};
+
+function makeInitialState(): State {
+  return {
+    cursors: {},
+    messages: {},
+    previousBlocks: [],
+  };
+}
 
 /**
  * Flattens incoming blocks into per-topic allFrames arrays.
@@ -24,21 +38,11 @@ const EmptyBlocks: MessageBlock[] = [];
 export function useFlattenedBlocksByTopic(
   topics: readonly string[],
 ): Immutable<Record<string, MessageEvent[]>> {
+  const [state, setState] = useState<State>(makeInitialState);
+
   const blocks = useMessagePipeline(
     useCallback((ctx) => ctx.playerState.progress.messageCache?.blocks ?? EmptyBlocks, []),
   );
-
-  type State = {
-    cursors: Record<string, number>;
-    messages: Record<string, MessageEvent[]>;
-    previousBlocks: Immutable<Array<undefined | MessageBlock>>;
-  };
-
-  const [state, setState] = useState<State>({
-    cursors: {},
-    messages: {},
-    previousBlocks: [],
-  });
 
   const memoryAvailable = useMemo(() => {
     const messageCount = sumBy(Object.values(state.messages), (msgs) => msgs.length);
@@ -58,26 +62,22 @@ export function useFlattenedBlocksByTopic(
     return true;
   }, [state.messages]);
 
-  if (blocks !== state.previousBlocks && memoryAvailable) {
+  // Reset cursors and buffers if the first block has changed.
+  const shouldResetState = blocks[0]?.messagesByTopic !== state.previousBlocks[0]?.messagesByTopic;
+
+  if (shouldResetState || (blocks !== state.previousBlocks && memoryAvailable)) {
     // setState directly here instead of a useEffect to avoid an extra render.
     setState((oldState) => {
-      const newState: State = {
-        cursors: {},
-        messages: {},
-        previousBlocks: blocks,
-      };
-
-      // rebuild message buffers and cursors from last state
-      for (const topic of topics) {
-        if (blocks[0]?.messagesByTopic === oldState.previousBlocks[0]?.messagesByTopic) {
-          // reset cursor and message buffer
-          newState.cursors[topic] = oldState.cursors[topic] ?? -1;
-          newState.messages[topic] = oldState.messages[topic] ?? [];
-        } else {
-          newState.messages[topic] = [];
-          newState.cursors[topic] = -1;
-        }
-      }
+      // Rebuild message buffers and cursors from last state, resetting if we are
+      // rebuilding from scratch.
+      const newState = transform(
+        topics,
+        (acc, topic) => {
+          acc.cursors[topic] = shouldResetState ? -1 : oldState.cursors[topic] ?? -1;
+          acc.messages[topic] = shouldResetState ? [] : oldState.messages[topic] ?? [];
+        },
+        { ...makeInitialState(), previousBlocks: blocks },
+      );
 
       // append new messages to accumulating per-topic buffers and update cursors
       for (const [idx, block] of blocks.entries()) {
