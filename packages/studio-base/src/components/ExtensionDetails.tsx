@@ -10,7 +10,6 @@ import { useAsync, useMountedState } from "react-use";
 import { makeStyles } from "tss-react/mui";
 
 import { Immutable } from "@foxglove/studio";
-import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
 import Stack from "@foxglove/studio-base/components/Stack";
 import TextContent from "@foxglove/studio-base/components/TextContent";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
@@ -99,14 +98,13 @@ export function ExtensionDetails({ extension, onClose, installed }: Props): Reac
   }, [analytics, extension.id, extension.namespace, isMounted, uninstallExtension]);
 
   return (
-    <SidebarContent
-      title={extension.name}
-      leadingItems={[
+    <Stack fullHeight flex="auto" gap={1}>
+      <Stack direction="row" alignItems="center" gap={1}>
         <IconButton key="back-arrow" onClick={onClose} size="small" edge="start">
           <ChevronLeftIcon />
-        </IconButton>,
-      ]}
-    >
+        </IconButton>
+      </Stack>
+
       <Stack gap={1} alignItems="flex-start">
         <Stack gap={0.5} paddingBottom={1}>
           <Stack direction="row" gap={1} alignItems="baseline">
@@ -177,6 +175,6 @@ export function ExtensionDetails({ extension, onClose, installed }: Props): Reac
         {activeTab === 0 && <TextContent>{readmeContent}</TextContent>}
         {activeTab === 1 && <TextContent>{changelogContent}</TextContent>}
       </Stack>
-    </SidebarContent>
+    </Stack>
   );
 }
