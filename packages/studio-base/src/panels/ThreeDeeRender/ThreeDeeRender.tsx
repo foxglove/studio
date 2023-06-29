@@ -486,6 +486,7 @@ export function ThreeDeeRender(props: {
     }
 
     for (const message of currentFrameMessages) {
+      console.log(`addMessageEvent`, message.topic, message.receiveTime);
       renderer.addMessageEvent(message);
     }
 
