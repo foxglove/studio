@@ -10,7 +10,14 @@ import {
   PanelRight24Regular,
   SlideAdd24Regular,
 } from "@fluentui/react-icons";
-import { Avatar, Button, IconButton, Tooltip, AppBar as MuiAppBar } from "@mui/material";
+import {
+  Avatar,
+  Button,
+  IconButton,
+  Tooltip,
+  AppBar as MuiAppBar,
+  svgIconClasses,
+} from "@mui/material";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import tc from "tinycolor2";
@@ -147,6 +154,10 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }, 
         backgroundColor: tc(theme.palette.appBar.main).lighten().toString(),
         height: theme.spacing(3.5),
         width: theme.spacing(3.5),
+
+        [`.${svgIconClasses.root}`]: {
+          fontSize: "1rem",
+        },
       },
       iconButton: {
         padding: theme.spacing(1),
