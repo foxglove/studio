@@ -218,20 +218,17 @@ export class ImageRenderable extends Renderable<ImageUserData> {
       return;
     }
     this.#isUpdating = true;
-    // fallback camera info needs image width and height
-    if (this.#textureNeedsUpdate && this.userData.image) {
+
+    if (this.#textureNeedsUpdate && this.#decodedImage) {
       this.#updateTexture();
       this.#textureNeedsUpdate = false;
     }
-    // We need a valid camera model and image to render
-    if (!this.userData.cameraModel || !this.userData.image) {
-      this.#isUpdating = false;
-      return;
+
+    if (this.userData.image) {
+      this.updateHeaderInfo();
     }
 
-    this.updateHeaderInfo();
-
-    if (this.#geometryNeedsUpdate) {
+    if (this.#geometryNeedsUpdate && this.userData.cameraModel) {
       this.#rebuildGeometry();
       this.#geometryNeedsUpdate = false;
     }
@@ -241,7 +238,12 @@ export class ImageRenderable extends Renderable<ImageUserData> {
       this.#materialNeedsUpdate = false;
     }
 
-    if (this.#meshNeedsUpdate && this.userData.texture) {
+    if (
+      this.#meshNeedsUpdate &&
+      this.userData.texture &&
+      this.userData.geometry &&
+      this.userData.material
+    ) {
       this.#updateMesh();
       this.#meshNeedsUpdate = false;
     }
