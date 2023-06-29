@@ -10,8 +10,7 @@ import {
   PanelRight24Regular,
   SlideAdd24Regular,
 } from "@fluentui/react-icons";
-import PersonIcon from "@mui/icons-material/Person";
-import { Avatar, Button, IconButton, Tooltip, AppBar as MuiAppBar } from "@mui/material";
+import { Button, IconButton, Tooltip, AppBar as MuiAppBar } from "@mui/material";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import tc from "tinycolor2";
@@ -25,6 +24,7 @@ import {
   CustomWindowControls,
   CustomWindowControlsProps,
 } from "@foxglove/studio-base/components/AppBar/CustomWindowControls";
+import { UserAvatar } from "@foxglove/studio-base/components/AppBar/UserAvatar";
 import { FoxgloveLogo } from "@foxglove/studio-base/components/FoxgloveLogo";
 import { MemoryUseIndicator } from "@foxglove/studio-base/components/MemoryUseIndicator";
 import Stack from "@foxglove/studio-base/components/Stack";
@@ -146,8 +146,6 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }, 
       avatar: {
         color: theme.palette.common.white,
         backgroundColor: tc(theme.palette.appBar.main).lighten().toString(),
-        height: theme.spacing(3.5),
-        width: theme.spacing(3.5),
       },
       iconButton: {
         padding: theme.spacing(1),
@@ -167,10 +165,6 @@ const useStyles = makeStyles<{ leftInset?: number; debugDragRegion?: boolean }, 
             backgroundColor: tc(theme.palette.appBar.main).setAlpha(0.3).toString(),
           },
         },
-      },
-      userIconImage: {
-        objectFit: "cover",
-        width: "100%",
       },
       button: {
         marginInline: theme.spacing(1),
@@ -374,15 +368,10 @@ export function AppBar(props: AppBarProps): JSX.Element {
                   onClick={(event) => setUserAnchorEl(event.currentTarget)}
                   data-testid="user-button"
                 >
-                  <Avatar className={classes.avatar} variant="rounded">
-                    <object
-                      data={currentUser?.avatarImageUrl ?? ""}
-                      className={classes.userIconImage}
-                      type="image/png"
-                    >
-                      <PersonIcon />
-                    </object>
-                  </Avatar>
+                  <UserAvatar
+                    className={classes.avatar}
+                    img={currentUser?.avatarImageUrl ?? undefined}
+                  />
                 </IconButton>
               </Tooltip>
               {showCustomWindowControls && (
