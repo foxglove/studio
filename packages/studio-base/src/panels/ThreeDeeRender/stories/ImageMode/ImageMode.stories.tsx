@@ -437,8 +437,8 @@ export const DownloadRawImage: StoryObj<React.ComponentProps<typeof ImageModeFox
   },
   args: { imageType: "raw" },
   play: async () => {
-    const { click } = userEvent.setup();
-    await click(document.querySelector("canvas")!, { button: 2 });
+    const { click, pointer } = userEvent.setup();
+    await pointer({ target: document.querySelector("canvas")!, keys: "[MouseRight]" });
     await click(await screen.findByText("Download image"));
   },
 };
@@ -534,14 +534,17 @@ export const ImageModePick: StoryObj<React.ComponentProps<typeof ImageModeFoxglo
   args: { imageType: "raw" },
 
   play: async () => {
-    const { click, hover } = userEvent.setup();
+    const { click, hover, pointer } = userEvent.setup();
 
     await hover(await screen.findByTestId(/panel-mouseenter-container/));
-    const canvas = document.querySelector("canvas")!;
     const inspectObjects = screen.getByRole("button", { name: /inspect objects/i });
     await click(inspectObjects);
     await delay(30);
-    await click(canvas, { clientX: 500, clientY: 500 });
+    await pointer({
+      keys: "[MouseLeft]",
+      target: document.querySelector("canvas")!,
+      coords: { clientX: 500, clientY: 500 },
+    });
     await delay(30);
   },
 };
