@@ -196,27 +196,39 @@ function Value(props: ValueProps): JSX.Element {
     };
   }, []);
 
+  const [pointerOver, setPointerOver] = useState(false);
+
   return (
-    <Stack inline flexWrap="wrap" direction="row" alignItems="center" gap={0.25}>
+    <Stack
+      inline
+      flexWrap="wrap"
+      direction="row"
+      alignItems="center"
+      gap={0.25}
+      onPointerEnter={() => setPointerOver(true)}
+      onPointerLeave={() => setPointerOver(false)}
+    >
       <HighlightedValue itemLabel={itemLabel} />
       {arrLabel}
-      {availableActions.map((action) => (
-        <Tooltip key={action.key} arrow title={action.tooltip} placement="top">
-          <StyledIconButton
-            size="small"
-            activeColor={action.activeColor}
-            onClick={action.onClick}
-            color="inherit"
-            icon={action.icon}
-          />
-        </Tooltip>
-      ))}
-      <span className={cx(classes.placeholderActionContainer)}>
-        {placeholderActionsForSpacing.map((action) => (
+      {pointerOver &&
+        availableActions.map((action) => (
           <Tooltip key={action.key} arrow title={action.tooltip} placement="top">
-            <StyledIconButton size="small" color="inherit" icon={action.icon} />
+            <StyledIconButton
+              size="small"
+              activeColor={action.activeColor}
+              onClick={action.onClick}
+              color="inherit"
+              icon={action.icon}
+            />
           </Tooltip>
         ))}
+      <span className={cx(classes.placeholderActionContainer)}>
+        {pointerOver &&
+          placeholderActionsForSpacing.map((action) => (
+            <Tooltip key={action.key} arrow title={action.tooltip} placement="top">
+              <StyledIconButton size="small" color="inherit" icon={action.icon} />
+            </Tooltip>
+          ))}
       </span>
     </Stack>
   );
