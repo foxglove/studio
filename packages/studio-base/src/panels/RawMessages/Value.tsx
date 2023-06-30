@@ -196,6 +196,9 @@ function Value(props: ValueProps): JSX.Element {
     };
   }, []);
 
+  // The Tooltip and StyledIconButton components seem to be expensive to render so we
+  // track our hover state and render them conditionally only when this component is
+  // hovered.
   const [pointerOver, setPointerOver] = useState(false);
 
   return (
