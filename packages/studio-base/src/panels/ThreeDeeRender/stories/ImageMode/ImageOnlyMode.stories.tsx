@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { StoryObj } from "@storybook/react";
-import { userEvent, within } from "@storybook/testing-library";
+import { screen, userEvent, within } from "@storybook/testing-library";
 import tinycolor from "tinycolor2";
 
 import { ImageAnnotations, LineType, PointsAnnotationType, SceneUpdate } from "@foxglove/schemas";
@@ -313,11 +313,10 @@ export const ImageOnlyModeOffWithAutoSelectedCalibration: StoryObj<
 > = {
   render: ImageWith3D,
   args: { imageTopic: "abc", calibrationTopic: undefined },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async () => {
     const { click } = userEvent.setup();
-    await click(await canvas.findByText("abc", { selector: ".MuiSelect-select" }));
-    await click(await canvas.findByText("camera/img"));
+    await click(await screen.findByText("abc", { selector: ".MuiSelect-select" }));
+    await click(await screen.findByText("camera/img"));
   },
 };
 
