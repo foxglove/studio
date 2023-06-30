@@ -12,7 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { StoryFn, StoryObj } from "@storybook/react";
-import { userEvent, within } from "@storybook/testing-library";
+import { screen, userEvent } from "@storybook/testing-library";
 import { range } from "lodash";
 
 import Autocomplete from "@foxglove/studio-base/components/Autocomplete";
@@ -30,9 +30,8 @@ export default {
   ],
 };
 
-const clickInput: StoryObj["play"] = async ({ canvasElement }: { canvasElement: HTMLElement }) => {
-  const canvas = within(canvasElement);
-  const input = await canvas.findByTestId("autocomplete-textfield");
+const clickInput: StoryObj["play"] = async () => {
+  const input = await screen.findByTestId("autocomplete-textfield");
 
   await userEvent.click(input);
 };
@@ -83,9 +82,8 @@ export const UncontrolledValue: StoryObj = {
       onSelect={() => {}}
     />
   ),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const input = await canvas.findByTestId("autocomplete-textfield");
+  play: async () => {
+    const input = await screen.findByTestId("autocomplete-textfield");
     await userEvent.type(input, "h");
   },
 };
