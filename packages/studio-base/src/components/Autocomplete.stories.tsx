@@ -36,15 +36,6 @@ export default {
 
 type Story = StoryObj<typeof Autocomplete>;
 
-const filterInput: Story["play"] = async ({ canvasElement, args }) => {
-  const canvas = within(canvasElement);
-  const input = await canvas.findByTestId("autocomplete-textfield");
-
-  if (args.filterText) {
-    await userEvent.type(input, args.filterText);
-  }
-};
-
 const clickInput: Story["play"] = async ({ canvasElement }: { canvasElement: HTMLElement }) => {
   const canvas = within(canvasElement);
   const input = await canvas.findByTestId("autocomplete-textfield");
@@ -57,9 +48,10 @@ export const FilteringToO: Story = {
     items: ["one", "two", "three"],
     hasError: true,
     filterText: "o",
+    value: "o",
   },
   name: "filtering to 'o'",
-  play: filterInput,
+  play: clickInput,
 };
 
 export const FilteringToOLight: Story = {
@@ -77,9 +69,10 @@ export const WithNonStringItemsAndLeadingWhitespace: Story = {
     ],
     getItemText: ({ text }: any) => text,
     filterText: "o",
+    value: "o",
   },
   name: "with non-string items and leading whitespace",
-  play: filterInput,
+  play: clickInput,
 };
 
 export const UncontrolledValue: Story = {
@@ -87,8 +80,9 @@ export const UncontrolledValue: Story = {
     items: [{ value: "one" }, { value: "two" }, { value: "three" }],
     getItemText: ({ value }: any) => `item: ${value.toUpperCase()}`,
     filterText: "h",
+    value: "h",
   },
-  play: filterInput,
+  play: clickInput,
 };
 
 export const UncontrolledValueLight: Story = {
