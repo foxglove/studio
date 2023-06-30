@@ -2,8 +2,6 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import memoizeWeak from "memoize-weak";
-
 import { MessageEvent } from "@foxglove/studio";
 import { MessageDataItemsByPath } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
 import { PlotDataByPath } from "@foxglove/studio-base/panels/Plot/internalTypes";
@@ -28,16 +26,14 @@ const getByPath = (itemsByPath: MessageDataItemsByPath): PlotDataByPath => {
   return ret;
 };
 
-const getMessagePathItems = memoizeWeak(
-  (
-    decodeMessagePathsForMessagesByTopic: (
-      Record: Record<string, readonly MessageEvent[]>,
-    ) => MessageDataItemsByPath,
-    messages: Record<string, readonly MessageEvent[]>,
-  ): PlotDataByPath => {
-    return Object.freeze(getByPath(decodeMessagePathsForMessagesByTopic(messages)));
-  },
-);
+function getMessagePathItems(
+  decodeMessagePathsForMessagesByTopic: (
+    Record: Record<string, readonly MessageEvent[]>,
+  ) => MessageDataItemsByPath,
+  messages: Record<string, readonly MessageEvent[]>,
+): PlotDataByPath {
+  return Object.freeze(getByPath(decodeMessagePathsForMessagesByTopic(messages)));
+}
 
 /**
  * Fetch all the plot data we want for our current subscribed topics from blocks.

@@ -85,6 +85,8 @@ export function downsampleTimeseries(
       continue;
     }
 
+    // Benchmarking shows, at least as of the time of this writing, that Math.trunc is
+    // *much* faster than Math.round on this data.
     const x = Math.trunc(datum.x * pixelPerXValue);
     const y = Math.trunc(datum.y * pixelPerYValue);
 

@@ -5,7 +5,7 @@
 import { Immutable } from "@foxglove/studio";
 
 /**
- * Describes a bounded rectangle in 2d space.
+ * Describes the limits of a rectangular area in 2d space.
  */
 export type Bounds = {
   x: { min: number; max: number };
@@ -23,9 +23,9 @@ export function makeInitialBounds(): Bounds {
 }
 
 /**
- * Merges two bounds into the smallest area that encompasses them both.
+ * Finds the union of two rectangular bounds.
  */
-export function mergeBounds(a: Immutable<Bounds>, b: Immutable<Bounds>): Bounds {
+export function unionBounds(a: Immutable<Bounds>, b: Immutable<Bounds>): Bounds {
   return {
     x: { min: Math.min(a.x.min, b.x.min), max: Math.max(a.x.max, b.x.max) },
     y: { min: Math.min(a.y.min, b.y.min), max: Math.max(a.y.max, b.y.max) },

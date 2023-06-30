@@ -3,10 +3,13 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { sumBy, transform } from "lodash";
-import { useCallback, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import { Immutable } from "@foxglove/studio";
-import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
+import {
+  MessagePipelineContext,
+  useMessagePipeline,
+} from "@foxglove/studio-base/components/MessagePipeline";
 import { MessageBlock, MessageEvent } from "@foxglove/studio-base/players/types";
 
 const EmptyBlocks: MessageBlock[] = [];
@@ -25,6 +28,9 @@ function makeInitialState(): State {
   };
 }
 
+const selectBlocks = (ctx: MessagePipelineContext) =>
+  ctx.playerState.progress.messageCache?.blocks ?? EmptyBlocks;
+
 /**
  * Flattens incoming blocks into per-topic allFrames arrays.
  *
@@ -40,9 +46,7 @@ export function useFlattenedBlocksByTopic(
 ): Immutable<Record<string, MessageEvent[]>> {
   const [state, setState] = useState<State>(makeInitialState);
 
-  const blocks = useMessagePipeline(
-    useCallback((ctx) => ctx.playerState.progress.messageCache?.blocks ?? EmptyBlocks, []),
-  );
+  const blocks = useMessagePipeline(selectBlocks);
 
   const memoryAvailable = useMemo(() => {
     const messageCount = sumBy(Object.values(state.messages), (msgs) => msgs.length);

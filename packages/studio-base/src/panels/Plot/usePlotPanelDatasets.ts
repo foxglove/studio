@@ -30,7 +30,7 @@ import {
 import * as PlotData from "@foxglove/studio-base/panels/Plot/plotData";
 import { derivative } from "@foxglove/studio-base/panels/Plot/transformPlotRange";
 import { MessageEvent } from "@foxglove/studio-base/players/types";
-import { Bounds, makeInitialBounds, mergeBounds } from "@foxglove/studio-base/types/Bounds";
+import { Bounds, makeInitialBounds, unionBounds } from "@foxglove/studio-base/types/Bounds";
 import { getTimestampForMessage } from "@foxglove/studio-base/util/time";
 
 import { DataSets, getDatasets, mergeDatasets } from "./datasets";
@@ -222,7 +222,7 @@ export function usePlotPanelDatasets(params: Params): {
       return {
         allFrames,
         allPaths,
-        bounds: mergeBounds(newState.bounds, newDatasets.bounds),
+        bounds: unionBounds(newState.bounds, newDatasets.bounds),
         cursors: newCursors,
         datasets: mergedDatasets,
         pathsWithMismatchedDataLengths: union(
@@ -331,7 +331,7 @@ export function usePlotPanelDatasets(params: Params): {
       });
 
       const mergedDatasets: DataSets = {
-        bounds: mergeBounds(accumulated.bounds, newDatasets.bounds),
+        bounds: unionBounds(accumulated.bounds, newDatasets.bounds),
         datasets: zipWith(accumulated.datasets, newDatasets.datasets, mergeDatasets),
         pathsWithMismatchedDataLengths: union(
           accumulated.pathsWithMismatchedDataLengths,
@@ -375,7 +375,7 @@ export function usePlotPanelDatasets(params: Params): {
     const allDatasets = Object.values(sortedStateWithDerivatives).concat(
       Object.values(sortedCurrentFrameWithDerivatives),
     );
-    const bounds = mergeBounds(state.bounds, currentFrameDatasets.bounds);
+    const bounds = unionBounds(state.bounds, currentFrameDatasets.bounds);
     return {
       bounds,
       datasets: filterMap(allDatasets, (ds) => (ds ? ds.dataset : undefined)),
