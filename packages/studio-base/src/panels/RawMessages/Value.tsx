@@ -32,9 +32,6 @@ const StyledIconButton = withStyles(HoverableIconButton, (theme) => ({
     "&.MuiIconButton-root": {
       fontSize: theme.typography.pxToRem(16),
       padding: 0,
-
-      "&:hover": { backgroundColor: "transparent" },
-      "&:not(:hover)": { opacity: 0.6 },
     },
   },
 }));
