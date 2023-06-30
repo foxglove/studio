@@ -84,7 +84,9 @@ export default {
   ],
   play: async ({ args }) => {
     const { keyboard } = userEvent.setup();
-    await keyboard(args.inputValue!);
+    if (args.inputValue) {
+      await keyboard(args.inputValue);
+    }
     args.events?.map(async (keypress) => await keyboard(keypress));
   },
 } as Meta<Args>;
