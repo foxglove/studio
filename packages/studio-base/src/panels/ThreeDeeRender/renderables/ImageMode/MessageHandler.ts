@@ -2,8 +2,6 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Immutable } from "immer";
-
 import { AVLTree } from "@foxglove/avl";
 import {
   Time,
@@ -17,9 +15,7 @@ import {
   RawImage,
   ImageAnnotations as FoxgloveImageAnnotations,
 } from "@foxglove/schemas";
-import { MessageEvent } from "@foxglove/studio";
-import { normalizeAnnotations } from "@foxglove/studio-base/panels/Image/lib/normalizeAnnotations";
-import { Annotation } from "@foxglove/studio-base/panels/Image/types";
+import { Immutable, MessageEvent } from "@foxglove/studio";
 import { ImageModeConfig } from "@foxglove/studio-base/panels/ThreeDeeRender/IRenderer";
 import {
   AnyImage,
@@ -37,6 +33,8 @@ import {
   ImageMarkerArray as RosImageMarkerArray,
 } from "@foxglove/studio-base/types/Messages";
 
+import { normalizeAnnotations } from "./annotations/normalizeAnnotations";
+import { Annotation } from "./annotations/types";
 import { PartialMessageEvent } from "../../SceneExtension";
 import { CompressedImage as RosCompressedImage, Image as RosImage, CameraInfo } from "../../ros";
 
