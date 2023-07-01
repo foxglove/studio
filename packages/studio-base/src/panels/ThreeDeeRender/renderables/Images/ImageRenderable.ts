@@ -188,11 +188,11 @@ export class ImageRenderable extends Renderable<ImageUserData> {
         this.#decodedImage = result;
         this.#textureNeedsUpdate = true;
         this.update();
-        this.renderer.queueAnimationFrame();
 
+        onDecoded?.(result);
         this.renderer.settings.errors.remove(IMAGE_TOPIC_PATH, CREATE_BITMAP_ERR_KEY);
         this.renderer.settings.errors.removeFromTopic(this.userData.topic, CREATE_BITMAP_ERR_KEY);
-        onDecoded?.(result);
+        this.renderer.queueAnimationFrame();
       })
       .catch((err) => {
         if (this.#disposed) {
