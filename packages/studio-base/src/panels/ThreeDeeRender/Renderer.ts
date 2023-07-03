@@ -13,6 +13,7 @@ import Logger from "@foxglove/log";
 import { Time, fromNanoSec, isLessThan, toNanoSec } from "@foxglove/rostime";
 import type { FrameTransform, FrameTransforms, SceneUpdate } from "@foxglove/schemas";
 import {
+  FetchAssetFn,
   Immutable,
   MessageEvent,
   ParameterValue,
@@ -210,11 +211,13 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
   #animationFrame?: number;
   #cameraSyncError: undefined | string;
   #devicePixelRatioMediaQuery?: MediaQueryList;
+  #fetchAsset: FetchAssetFn;
 
   public constructor(
     canvas: HTMLCanvasElement,
     config: Immutable<RendererConfig>,
     interfaceMode: InterfaceMode,
+    fetchAsset: FetchAssetFn,
   ) {
     super();
     // NOTE: Global side effect
@@ -223,6 +226,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     this.interfaceMode = interfaceMode;
     this.#canvas = canvas;
     this.config = config;
+    this.#fetchAsset = fetchAsset;
 
     this.settings = new SettingsManager(baseSettingsTree(this.interfaceMode));
     this.settings.on("update", () => this.emit("settingsTreeChange", this));
@@ -261,6 +265,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
       ignoreColladaUpAxis: config.scene.ignoreColladaUpAxis ?? false,
       meshUpAxis: config.scene.meshUpAxis ?? DEFAULT_MESH_UP_AXIS,
       edgeMaterial: this.outlineMaterial,
+      fetchAsset,
     });
 
     this.#scene = new THREE.Scene();
@@ -1025,6 +1030,10 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     this.followFrameId = frameId;
     log.debug(`Setting followFrameId to ${frameId}`);
   }
+
+  public fetchAsset: FetchAssetFn = async (uri, options) => {
+    return await this.#fetchAsset(uri, options);
+  };
 
   #frameHandler = (currentTime: bigint): void => {
     this.currentTime = currentTime;

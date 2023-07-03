@@ -18,6 +18,7 @@ import {
   SubscribePayload,
 } from "@foxglove/studio-base/players/types";
 import { assertNever } from "@foxglove/studio-base/util/assertNever";
+import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
 
 import { FramePromise } from "./pauseFrameForPromise";
 import { MessagePipelineContext } from "./types";
@@ -117,12 +118,29 @@ export function createMessagePipelineStore({
         }
         return await player.callService(service, request);
       },
-      async fetchAsset(name) {
+      async fetchAsset(uri, options) {
+        const { protocol } = new URL(uri);
         const player = get().player;
-        if (!player) {
-          throw new Error("fetchAsset called when player is not present");
+
+        if (player && protocol === "package:") {
+          try {
+            return await player.fetchAsset(uri);
+          } catch (err) {
+            // Bail out if this is not a desktop app. For the desktop app, package:// is registered
+            // as a supported schema for builtin _fetch_ calls. Hence we fallback to a normal
+            // _fetch_ call if the asset couldn't be loaded through the player.
+            if (!isDesktopApp()) {
+              throw err;
+            }
+          }
         }
-        return await player.fetchAsset(name);
+
+        const response = await fetch(uri, options);
+        return {
+          name: uri,
+          data: new Uint8Array(await response.arrayBuffer()),
+          mediaType: response.headers.get("content-type") ?? undefined,
+        };
       },
       startPlayback: undefined,
       playUntil: undefined,

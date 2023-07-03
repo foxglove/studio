@@ -6,7 +6,7 @@
 import { setupJestCanvasMock } from "jest-canvas-mock";
 
 import { fromNanoSec, toNanoSec } from "@foxglove/rostime";
-import { MessageEvent } from "@foxglove/studio";
+import { FetchAssetFn, MessageEvent } from "@foxglove/studio";
 import { Renderer } from "@foxglove/studio-base/panels/ThreeDeeRender/Renderer";
 import { DEFAULT_CAMERA_STATE } from "@foxglove/studio-base/panels/ThreeDeeRender/camera";
 import { CameraStateSettings } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/CameraStateSettings";
@@ -109,6 +109,15 @@ function createTFMessageEvent(
   };
 }
 
+const fetchAsset: FetchAssetFn = async (uri, options) => {
+  const response = await fetch(uri, options);
+  return {
+    name: uri,
+    data: new Uint8Array(await response.arrayBuffer()),
+    mediaType: response.headers.get("content-type") ?? undefined,
+  };
+};
+
 describe("3D Renderer", () => {
   let canvas = document.createElement("canvas");
   let parent = document.createElement("div");
@@ -124,7 +133,7 @@ describe("3D Renderer", () => {
   });
 
   it("constructs a renderer without error", () => {
-    expect(() => new Renderer(canvas, defaultRendererConfig, "3d")).not.toThrow();
+    expect(() => new Renderer(canvas, defaultRendererConfig, "3d", fetchAsset)).not.toThrow();
   });
   it("does not set a unfollow pose snapshot  when in follow-pose mode", () => {
     const renderer = new Renderer(
@@ -136,6 +145,7 @@ describe("3D Renderer", () => {
         scene: { transforms: { enablePreloading: false } },
       },
       "3d",
+      fetchAsset,
     );
     const cameraState = renderer.sceneExtensions.get(
       "foxglove.CameraStateSettings",
@@ -161,7 +171,7 @@ describe("3D Renderer", () => {
       followTf: "display",
       scene: { transforms: { enablePreloading: false } },
     };
-    const renderer = new Renderer(canvas, config, "3d");
+    const renderer = new Renderer(canvas, config, "3d", fetchAsset);
     const cameraState = renderer.sceneExtensions.get(
       "foxglove.CameraStateSettings",
     ) as CameraStateSettings;
@@ -194,7 +204,7 @@ describe("3D Renderer", () => {
       followTf: "display",
       scene: { transforms: { enablePreloading: false } },
     };
-    const renderer = new Renderer(canvas, config, "3d");
+    const renderer = new Renderer(canvas, config, "3d", fetchAsset);
     const cameraState = renderer.sceneExtensions.get(
       "foxglove.CameraStateSettings",
     ) as CameraStateSettings;
@@ -226,7 +236,7 @@ describe("3D Renderer", () => {
       followTf: "display",
       scene: { transforms: { enablePreloading: false } },
     };
-    const renderer = new Renderer(canvas, config, "3d");
+    const renderer = new Renderer(canvas, config, "3d", fetchAsset);
     const cameraState = renderer.sceneExtensions.get(
       "foxglove.CameraStateSettings",
     ) as CameraStateSettings;
@@ -265,6 +275,7 @@ describe("3D Renderer", () => {
         scene: { transforms: { enablePreloading: false } },
       },
       "3d",
+      fetchAsset,
     );
     const cameraState = renderer.sceneExtensions.get(
       "foxglove.CameraStateSettings",
@@ -310,6 +321,7 @@ describe("3D Renderer", () => {
         scene: { transforms: { enablePreloading: false } },
       },
       "3d",
+      fetchAsset,
     );
     let currentFrame = [];
 
@@ -369,6 +381,7 @@ describe("3D Renderer", () => {
         scene: { transforms: { enablePreloading: false } },
       },
       "3d",
+      fetchAsset,
     );
     let currentFrame = [];
 
@@ -430,6 +443,7 @@ describe("3D Renderer", () => {
         scene: { transforms: { enablePreloading: true } },
       },
       "3d",
+      fetchAsset,
     );
     const allFrames = [
       createTFMessageEvent("root", "before4", 5n, [1n]),
@@ -478,6 +492,7 @@ describe("3D Renderer", () => {
         scene: { transforms: { enablePreloading: true } },
       },
       "3d",
+      fetchAsset,
     );
     const allFrames = [
       createTFMessageEvent("root", "before4", 5n, [1n]),
@@ -535,10 +550,10 @@ describe("Renderer.handleAllFramesMessages behavior", () => {
   });
 
   it("constructs a renderer without error", () => {
-    expect(() => new Renderer(canvas, defaultRendererConfig, "3d")).not.toThrow();
+    expect(() => new Renderer(canvas, defaultRendererConfig, "3d", fetchAsset)).not.toThrow();
   });
   it("does not add in allFramesMessages if no messages are before currentTime", () => {
-    const renderer = new Renderer(canvas, defaultRendererConfig, "3d");
+    const renderer = new Renderer(canvas, defaultRendererConfig, "3d", fetchAsset);
 
     const msgs = [];
     for (let i = 0; i < 10; i++) {
@@ -551,7 +566,7 @@ describe("Renderer.handleAllFramesMessages behavior", () => {
     expect(addMessageEventMock).not.toHaveBeenCalled();
   });
   it("adds messages with receiveTime up to currentTime", () => {
-    const renderer = new Renderer(canvas, defaultRendererConfig, "3d");
+    const renderer = new Renderer(canvas, defaultRendererConfig, "3d", fetchAsset);
 
     const msgs = [];
     for (let i = 0; i < 10; i++) {
@@ -565,7 +580,7 @@ describe("Renderer.handleAllFramesMessages behavior", () => {
     expect(addMessageEventMock).toHaveBeenCalledTimes(5);
   });
   it("adds later messages after currentTime is updated", () => {
-    const renderer = new Renderer(canvas, defaultRendererConfig, "3d");
+    const renderer = new Renderer(canvas, defaultRendererConfig, "3d", fetchAsset);
 
     const msgs = [];
     for (let i = 0; i < 10; i++) {
@@ -581,7 +596,7 @@ describe("Renderer.handleAllFramesMessages behavior", () => {
     expect(addMessageEventMock).toHaveBeenCalledTimes(6);
   });
   it("reads all messages when last message receiveTime is before currentTime", () => {
-    const renderer = new Renderer(canvas, defaultRendererConfig, "3d");
+    const renderer = new Renderer(canvas, defaultRendererConfig, "3d", fetchAsset);
 
     const msgs = [];
     for (let i = 0; i < 10; i++) {
@@ -594,7 +609,7 @@ describe("Renderer.handleAllFramesMessages behavior", () => {
     expect(addMessageEventMock).toHaveBeenCalledTimes(10);
   });
   it("reads reads new messages when allFrames array is added to", () => {
-    const renderer = new Renderer(canvas, defaultRendererConfig, "3d");
+    const renderer = new Renderer(canvas, defaultRendererConfig, "3d", fetchAsset);
 
     const msgs = [];
     let i = 0;
@@ -614,7 +629,7 @@ describe("Renderer.handleAllFramesMessages behavior", () => {
     expect(addMessageEventMock).toHaveBeenCalledTimes(12);
   });
   it("doesn't read messages when currentTime is updated but no more receiveTimes are past it", () => {
-    const renderer = new Renderer(canvas, defaultRendererConfig, "3d");
+    const renderer = new Renderer(canvas, defaultRendererConfig, "3d", fetchAsset);
 
     const msgs = [];
     let i = 0;
@@ -632,7 +647,7 @@ describe("Renderer.handleAllFramesMessages behavior", () => {
     expect(addMessageEventMock).toHaveBeenCalledTimes(10);
   });
   it("adds all messages again after cursor is cleared", () => {
-    const renderer = new Renderer(canvas, defaultRendererConfig, "3d");
+    const renderer = new Renderer(canvas, defaultRendererConfig, "3d", fetchAsset);
 
     const msgs = [];
     let i = 0;
@@ -651,7 +666,7 @@ describe("Renderer.handleAllFramesMessages behavior", () => {
     expect(addMessageEventMock).toHaveBeenCalledTimes(20);
   });
   it("resets cursor if messages were added before the cursor index", () => {
-    const renderer = new Renderer(canvas, defaultRendererConfig, "3d");
+    const renderer = new Renderer(canvas, defaultRendererConfig, "3d", fetchAsset);
 
     const msgs = [];
     let i = 2;
@@ -677,7 +692,7 @@ describe("Renderer.handleAllFramesMessages behavior", () => {
     expect(addMessageEventMock).toHaveBeenCalledTimes(numMessagesBeforeTime + 1);
   });
   it("resets cursor if messages were removed before the cursor index", () => {
-    const renderer = new Renderer(canvas, defaultRendererConfig, "3d");
+    const renderer = new Renderer(canvas, defaultRendererConfig, "3d", fetchAsset);
 
     const msgs = [];
     let i = 2;
@@ -705,7 +720,7 @@ describe("Renderer.handleAllFramesMessages behavior", () => {
   it.failing(
     "(does not) reset the cursor if number of messages added **and** removed before cursor are equal in a single update",
     () => {
-      const renderer = new Renderer(canvas, defaultRendererConfig, "3d");
+      const renderer = new Renderer(canvas, defaultRendererConfig, "3d", fetchAsset);
 
       const msgs = [];
       let i = 2;

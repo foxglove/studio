@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Time } from "@foxglove/rostime";
-import { Immutable, ParameterValue } from "@foxglove/studio";
+import { Asset, Immutable, ParameterValue } from "@foxglove/studio";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import {
   AdvertiseOptions,
@@ -129,6 +129,10 @@ export class TopicAliasingPlayer implements Player {
   public setGlobalVariables(globalVariables: GlobalVariables): void {
     this.#player.setGlobalVariables(globalVariables);
     this.#inputs = { ...this.#inputs, variables: globalVariables };
+  }
+
+  public async fetchAsset(uri: string): Promise<Asset> {
+    return await this.#player.fetchAsset(uri);
   }
 
   async #onPlayerState(playerState: PlayerState) {

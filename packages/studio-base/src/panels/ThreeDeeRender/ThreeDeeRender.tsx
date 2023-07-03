@@ -98,7 +98,7 @@ export function ThreeDeeRender(props: {
   onDownloadImage?: (blob: Blob, fileName: string) => void;
 }): JSX.Element {
   const { context, interfaceMode, onDownloadImage } = props;
-  const { initialState, saveState } = context;
+  const { initialState, saveState, fetchAsset } = context;
 
   // Load and save the persisted panel configuration
   const [config, setConfig] = useState<Immutable<RendererConfig>>(() => {
@@ -136,14 +136,16 @@ export function ThreeDeeRender(props: {
   const [renderer, setRenderer] = useState<IRenderer | undefined>(undefined);
   const rendererRef = useRef<IRenderer | undefined>(undefined);
   useEffect(() => {
-    const newRenderer = canvas ? new Renderer(canvas, configRef.current, interfaceMode) : undefined;
+    const newRenderer = canvas
+      ? new Renderer(canvas, configRef.current, interfaceMode, fetchAsset)
+      : undefined;
     setRenderer(newRenderer);
     rendererRef.current = newRenderer;
     return () => {
       rendererRef.current?.dispose();
       rendererRef.current = undefined;
     };
-  }, [canvas, configRef, config.scene.transforms?.enablePreloading, interfaceMode]);
+  }, [canvas, configRef, config.scene.transforms?.enablePreloading, interfaceMode, fetchAsset]);
 
   const [colorScheme, setColorScheme] = useState<"dark" | "light" | undefined>();
   const [timezone, setTimezone] = useState<string | undefined>();

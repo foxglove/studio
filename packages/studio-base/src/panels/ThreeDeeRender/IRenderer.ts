@@ -6,6 +6,7 @@ import EventEmitter from "eventemitter3";
 import * as THREE from "three";
 
 import {
+  FetchAssetFn,
   Immutable,
   MessageEvent,
   ParameterValue,
@@ -346,4 +347,7 @@ export interface IRenderer extends EventEmitter<RendererEvents> {
   // Callback handlers
   animationFrame: () => void;
   queueAnimationFrame: () => void;
+
+  // Function to fetch an asset from Studio's asset management layer.
+  fetchAsset: FetchAssetFn;
 }

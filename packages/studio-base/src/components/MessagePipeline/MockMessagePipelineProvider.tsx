@@ -19,7 +19,7 @@ import { Writable } from "ts-essentials";
 import { createStore } from "zustand";
 
 import { Time, isLessThan } from "@foxglove/rostime";
-import { Asset, ParameterValue } from "@foxglove/studio";
+import { FetchAssetFn, ParameterValue } from "@foxglove/studio";
 import {
   AdvertiseOptions,
   MessageEvent,
@@ -57,7 +57,7 @@ export type MockMessagePipelineProps = {
   setPublishers?: (arg0: string, arg1: AdvertiseOptions[]) => void;
   setSubscriptions?: (arg0: string, arg1: SubscribePayload[]) => void;
   setParameter?: (key: string, value: ParameterValue) => void;
-  fetchAsset?: (name: string) => Promise<Asset>;
+  fetchAsset?: FetchAssetFn;
   noActiveData?: boolean;
   activeData?: Partial<PlayerStateActiveData>;
   capabilities?: string[];

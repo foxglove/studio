@@ -150,6 +150,7 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
   #framesByInstanceId = new Map<string, string[]>();
   #transformsByInstanceId = new Map<string, TransformData[]>();
   #jointStates = new Map<string, JointPosition>();
+  #textDecoder = new TextDecoder();
 
   public constructor(renderer: IRenderer) {
     super("foxglove.Urdfs", renderer);
@@ -512,13 +513,12 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
 
     log.debug(`Fetching URDF from ${url}`);
     renderable.userData.fetching = { url, control: new AbortController() };
-    fetch(url, { signal: renderable.userData.fetching.control.signal })
-      // eslint-disable-next-line @typescript-eslint/promise-function-async
-      .then((res) => res.text())
+    this.renderer
+      .fetchAsset(url, { signal: renderable.userData.fetching.control.signal })
       .then((urdf) => {
-        log.debug(`Fetched ${urdf.length} byte URDF from ${url}`);
+        log.debug(`Fetched ${urdf.data.length} byte URDF from ${url}`);
         this.renderer.settings.errors.remove(["layers", instanceId], FETCH_URDF_ERR);
-        this.#loadUrdf(instanceId, urdf);
+        this.#loadUrdf(instanceId, this.#textDecoder.decode(urdf.data));
       })
       .catch((unknown) => {
         const err = unknown as Error;

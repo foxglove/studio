@@ -128,23 +128,21 @@ export type MessageEvent<T = unknown> = {
 };
 
 /**
- * Information about an asset that can be loaded by the data source.
+ * An asset loaded from Studio's asset management layer.
  */
-export type AssetInfo = {
+export type Asset = {
   /** A unique identifier for this asset. */
   name: string;
-  /** Asset size in bytes. */
-  sizeInBytes: number;
-  /** The type of asset. */
-  mediaType: string;
-  /** Last modified time of the asset. */
-  lastModified: Time;
+  /** Binary asset data. */
+  data: Uint8Array;
+
+  mediaType?: string;
 };
 
 /**
- * An asset loaded from the data source.
+ * Function to fetch an asset from Studio's asset management layer.
  */
-export type Asset = AssetInfo & { data: Uint8Array };
+export type FetchAssetFn = (uri: string, options?: { signal: AbortSignal }) => Promise<Asset>;
 
 export interface LayoutActions {
   /** Open a new panel or update an existing panel in the layout.  */
@@ -395,10 +393,13 @@ export type PanelExtensionContext = {
   callService?(service: string, request: unknown): Promise<unknown>;
 
   /**
-   * Fetch an asset from the current data source. This method throws an exception
-   * if the asset is not available or fails to be retrieved.
+   * Fetch an asset from Studio's asset management layer.
+   *
+   * The asset management layer will determine how to fetch the asset. I.E. http(s) uris will use http requests
+   * while other schemes may fall back to the data source.
+   *
    */
-  fetchAsset?: (name: string) => Promise<Asset>;
+  fetchAsset: FetchAssetFn;
 
   /**
    * Process render events for the panel. Each render event receives a render state and a done callback.
