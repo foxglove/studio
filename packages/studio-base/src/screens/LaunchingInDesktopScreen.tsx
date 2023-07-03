@@ -48,6 +48,9 @@ export function LaunchingInDesktopScreen(): ReactElement {
           case "ds.url":
             desktopURL.searchParams.set("url", v);
             break;
+          case "ds.orgSlug":
+            desktopURL.searchParams.set("orgSlug", v);
+            break;
           case "time":
             desktopURL.searchParams.set("seekTo", v);
             break;

@@ -4,6 +4,7 @@
 
 import { ErrorCircle20Filled } from "@fluentui/react-icons";
 import { CircularProgress, IconButton } from "@mui/material";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { makeStyles } from "tss-react/mui";
 
@@ -14,8 +15,11 @@ import {
 import Stack from "@foxglove/studio-base/components/Stack";
 import TextMiddleTruncate from "@foxglove/studio-base/components/TextMiddleTruncate";
 import WssErrorModal from "@foxglove/studio-base/components/WssErrorModal";
+import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
 import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/useWorkspaceActions";
+import { useConfirm } from "@foxglove/studio-base/hooks/useConfirm";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
+import { OrgSwitchRequiredError } from "@foxglove/studio-base/types/OrgSwitchRequiredError";
 
 import { EndTimestamp } from "./EndTimestamp";
 
@@ -84,6 +88,9 @@ export function DataSource(): JSX.Element {
   const playerProblems = useMessagePipeline(selectPlayerProblems) ?? [];
   const seek = useMessagePipeline(selectSeek);
 
+  const [confirm, confirmModal] = useConfirm();
+  const { signOut } = useCurrentUser();
+
   const { sidebarActions } = useWorkspaceActions();
 
   // A crude but correct proxy (for our current architecture) for whether a connection is live
@@ -94,10 +101,24 @@ export function DataSource(): JSX.Element {
   const error =
     playerPresence === PlayerPresence.ERROR ||
     playerProblems.some((problem) => problem.severity === "error");
+
   const loading = reconnecting || initializing;
 
   const playerDisplayName =
     initializing && playerName == undefined ? "Initializing..." : playerName;
+
+  const orgSwitchProblem = playerProblems.find(
+    (problem) => problem.error?.name === OrgSwitchRequiredError.name,
+  );
+  useEffect(() => {
+    if (orgSwitchProblem != undefined) {
+      void confirm({ title: orgSwitchProblem.message, ok: "Sign out" }).then((response) => {
+        if (response === "ok") {
+          void signOut?.();
+        }
+      });
+    }
+  }, [confirm, orgSwitchProblem, signOut]);
 
   if (playerPresence === PlayerPresence.NOT_PRESENT) {
     return <div className={classes.sourceName}>{t("noDataSource")}</div>;
@@ -106,6 +127,7 @@ export function DataSource(): JSX.Element {
   return (
     <>
       <WssErrorModal playerProblems={playerProblems} />
+      {confirmModal}
       <Stack direction="row" alignItems="center">
         <div className={classes.sourceName}>
           <div className={classes.textTruncate}>
