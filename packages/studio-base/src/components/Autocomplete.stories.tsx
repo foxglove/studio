@@ -127,6 +127,7 @@ export const SortWhenFilteringFalse: StoryObj = {
       items={[{ value: "bab" }, { value: "bb" }, { value: "a2" }, { value: "a1" }]}
       getItemText={({ value }) => `item: ${value.toUpperCase()}`}
       value="b"
+      filterText="b"
       onSelect={() => {}}
       sortWhenFiltering={false}
     />
