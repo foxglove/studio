@@ -12,7 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { Meta, StoryFn, StoryObj } from "@storybook/react";
-import { fireEvent, userEvent, within } from "@storybook/testing-library";
+import { fireEvent, within } from "@storybook/testing-library";
 import { range } from "lodash";
 
 import Autocomplete from "@foxglove/studio-base/components/Autocomplete";
