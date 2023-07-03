@@ -99,6 +99,12 @@ const useStyles = makeStyles<void, "tableData" | "tableHeader">()((theme, _param
       backgroundColor: "transparent",
     },
   },
+  textContent: {
+    maxWidth: "75vw",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+  },
 }));
 
 const columnHelper = createColumnHelper<CellValue>();
@@ -156,18 +162,9 @@ function getColumnsFromObject(val: CellValue, accessorPath: string, iconButtonCl
 }
 
 function TextCellContent(props: { value: string }): JSX.Element {
-  return (
-    <div
-      style={{
-        maxWidth: "75vw",
-        overflow: "hidden",
-        textOverflow: "ellipsis",
-        whiteSpace: "nowrap",
-      }}
-    >
-      {`${props.value}`}
-    </div>
-  );
+  const { classes } = useStyles();
+
+  return <div className={classes.textContent}>{props.value}</div>;
 }
 
 export default function Table({
