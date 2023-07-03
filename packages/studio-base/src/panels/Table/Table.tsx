@@ -159,10 +159,10 @@ function TextCellContent(props: { value: string }): JSX.Element {
   return (
     <div
       style={{
-        display: "-webkit-box",
+        maxWidth: "75vw",
         overflow: "hidden",
-        WebkitLineClamp: 1,
-        WebkitBoxOrient: "vertical",
+        textOverflow: "ellipsis",
+        whiteSpace: "nowrap",
       }}
     >
       {`${props.value}`}
