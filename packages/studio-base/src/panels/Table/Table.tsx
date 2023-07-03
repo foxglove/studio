@@ -66,12 +66,10 @@ const useStyles = makeStyles<void, "tableData" | "tableHeader">()((theme, _param
     },
   },
   tableData: {
-    padding: `${theme.spacing(0.5)} !important`,
-    whiteSpace: "nowrap",
-    textOverflow: "ellipsis",
-    verticalAlign: "top",
     border: `1px solid ${theme.palette.divider}`,
     lineHeight: "1.3em",
+    padding: `${theme.spacing(0.5)} !important`,
+    verticalAlign: "top",
   },
   tableHeader: {
     color: theme.palette.text.primary,
@@ -128,8 +126,8 @@ function getColumnsFromObject(val: CellValue, accessorPath: string, iconButtonCl
           );
         }
 
-        // In case the value is null.
-        return `${value}`;
+        // Interpolate in case the value is null.
+        return <TextCellContent value={`${value}`} />;
       },
     });
   });
@@ -155,6 +153,21 @@ function getColumnsFromObject(val: CellValue, accessorPath: string, iconButtonCl
   }
 
   return columns;
+}
+
+function TextCellContent(props: { value: string }): JSX.Element {
+  return (
+    <div
+      style={{
+        display: "-webkit-box",
+        overflow: "hidden",
+        WebkitLineClamp: 1,
+        WebkitBoxOrient: "vertical",
+      }}
+    >
+      {`${props.value}`}
+    </div>
+  );
 }
 
 export default function Table({
