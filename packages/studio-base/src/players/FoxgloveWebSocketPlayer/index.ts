@@ -45,6 +45,8 @@ import {
   ServiceCallResponse,
   Parameter,
   StatusLevel,
+  FetchAssetStatus,
+  FetchAssetResponse,
 } from "@foxglove/ws-protocol";
 
 import { JsonMessageWriter } from "./JsonMessageWriter";
@@ -132,6 +134,9 @@ export default class FoxgloveWebSocketPlayer implements Player {
   #subscribedTopics?: Map<string, Set<string>>;
   #advertisedServices?: Map<string, Set<string>>;
   #nextServiceCallId = 0;
+  #nextAssetRequestId = 0;
+  #fetchAssetRequests = new Map<number, (response: FetchAssetResponse) => void>();
+  #fetchedAssets = new Map<string, Asset>();
 
   public constructor({
     url,
@@ -345,6 +350,10 @@ export default class FoxgloveWebSocketPlayer implements Player {
 
       if (event.capabilities.includes(ServerCapability.connectionGraph)) {
         this.#client?.subscribeConnectionGraph();
+      }
+
+      if (event.capabilities.includes(ServerCapability.assets)) {
+        this.#playerCapabilities = this.#playerCapabilities.concat(PlayerCapabilities.assets);
       }
 
       this.#emitState();
@@ -684,6 +693,17 @@ export default class FoxgloveWebSocketPlayer implements Player {
 
       this.#emitState();
     });
+
+    this.#client.on("fetchAssetResponse", (response) => {
+      const responseCallback = this.#fetchAssetRequests.get(response.requestId);
+      if (!responseCallback) {
+        throw Error(
+          `Received a response for a fetch asset request for which no callback was registered`,
+        );
+      }
+      responseCallback(response);
+      this.#serviceResponseCbs.delete(response.requestId);
+    });
   };
 
   #updateTopicsAndDatatypes() {
@@ -988,7 +1008,40 @@ export default class FoxgloveWebSocketPlayer implements Player {
   }
 
   public async fetchAsset(name: string): Promise<Asset> {
-    throw new Error(`Fetching assets (${name}) is not supported for FoxgloveWebSocketPlayer`);
+    if (!this.#client) {
+      throw new Error(
+        `Attempted to fetch assset ${name} without a valid Foxglove WebSocket connection.`,
+      );
+    } else if (!this.#serverCapabilities.includes(ServerCapability.assets)) {
+      throw new Error(`Fetching assets (${name}) is not supported for FoxgloveWebSocketPlayer`);
+    }
+
+    return await new Promise<Asset>((resolve, reject) => {
+      const fetchedAsset = this.#fetchedAssets.get(name);
+      if (fetchedAsset) {
+        resolve(fetchedAsset);
+        return;
+      }
+
+      const assetRequestId = ++this.#nextAssetRequestId;
+      this.#fetchAssetRequests.set(assetRequestId, (response) => {
+        if (response.status === FetchAssetStatus.SUCCESS) {
+          const newAsset: Asset = {
+            name,
+            data: new Uint8Array(
+              response.data.buffer,
+              response.data.byteOffset,
+              response.data.byteLength,
+            ),
+          };
+          this.#fetchedAssets.set(name, newAsset);
+          resolve(newAsset);
+        } else {
+          reject(`Failed to fetch asset: ${response.error}`);
+        }
+      });
+      this.#client?.fetchAsset(name, assetRequestId);
+    });
   }
 
   public setGlobalVariables(): void {}
@@ -1115,6 +1168,8 @@ export default class FoxgloveWebSocketPlayer implements Player {
     this.#hasReceivedMessage = false;
     this.#problems.clear();
     this.#parameters.clear();
+    this.#fetchedAssets.clear();
+    this.#fetchAssetRequests.clear();
   }
 
   #updateDataTypes(datatypes: MessageDefinitionMap): void {
