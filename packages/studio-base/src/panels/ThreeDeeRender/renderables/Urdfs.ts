@@ -12,7 +12,6 @@ import Logger from "@foxglove/log";
 import { toNanoSec } from "@foxglove/rostime";
 import { SettingsTreeAction, SettingsTreeChildren, SettingsTreeFields } from "@foxglove/studio";
 import { eulerToQuaternion } from "@foxglove/studio-base/util/geometry";
-import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
 
 import { RenderableCube } from "./markers/RenderableCube";
 import { RenderableCylinder } from "./markers/RenderableCylinder";
@@ -126,10 +125,6 @@ type JointPosition = {
   position: number;
 };
 
-// One day we can think about using feature detection. Until that day comes we acknowledge the
-// realities of only having two platforms: web and desktop.
-const supportsPackageUrl = isDesktopApp();
-
 export class UrdfRenderable extends Renderable<UrdfUserData> {
   public override dispose(): void {
     this.removeChildren();
@@ -241,10 +236,9 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     for (const [instanceId, layerConfig] of Object.entries(this.renderer.config.layers)) {
       if (layerConfig?.layerId === LAYER_ID) {
         const config = layerConfig as Partial<LayerSettingsCustomUrdf>;
-        const placeholder = supportsPackageUrl ? "package://" : undefined;
-        const help = supportsPackageUrl
-          ? "package:// URL or http(s) URL pointing to a Unified Robot Description Format (URDF) XML file"
-          : "http(s) URL pointing to a Unified Robot Description Format (URDF) XML file";
+        const placeholder = "package://";
+        const help =
+          "package:// URL or http(s) URL pointing to a Unified Robot Description Format (URDF) XML file";
 
         const fields: SettingsTreeFields = {
           url: { label: "URL", input: "string", placeholder, help, value: config.url ?? "" },
@@ -592,7 +586,7 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
 
     // Parse the URDF
     const loadedRenderable = renderable;
-    parseUrdf(urdf)
+    parseUrdf(urdf, this.#getFileFetch())
       .then((parsed) => {
         this.#loadRobot(loadedRenderable, parsed);
         // the frame from the settings update is called before the robot is loaded
@@ -666,14 +660,27 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
       this.renderer.addTransform(parent, child, 0n, translation, rotation, settingsPath);
     }
   }
+
+  #getFileFetch(): (url: string) => Promise<string> {
+    return async (url: string) => {
+      try {
+        log.debug(`fetch(${url}) requested`);
+        const asset = await this.renderer.fetchAsset(url);
+        return this.#textDecoder.decode(asset.data);
+      } catch (err) {
+        throw new Error(`Failed to fetch "${url}": ${err}`);
+      }
+    };
+  }
 }
 
-async function parseUrdf(text: string): Promise<ParsedUrdf> {
-  const fileFetcher = getFileFetch();
-
+async function parseUrdf(
+  text: string,
+  getFileContents: (url: string) => Promise<string>,
+): Promise<ParsedUrdf> {
   try {
     log.debug(`Parsing ${text.length} byte URDF`);
-    const robot = await parseRobot(text, fileFetcher);
+    const robot = await parseRobot(text, getFileContents);
 
     const frames = Array.from(robot.links.values(), (link) => link.name);
     const transforms = Array.from(robot.joints.values(), (joint) => {
@@ -693,18 +700,6 @@ async function parseUrdf(text: string): Promise<ParsedUrdf> {
   } catch (err) {
     throw new Error(`Failed to parse ${text.length} byte URDF: ${err}`);
   }
-}
-
-function getFileFetch(): (url: string) => Promise<string> {
-  return async (url: string) => {
-    try {
-      log.debug(`fetch(${url}) requested`);
-      const res = await fetch(url);
-      return await res.text();
-    } catch (err) {
-      throw new Error(`Failed to fetch "${url}": ${err}`);
-    }
-  };
 }
 
 function createRenderable(
@@ -818,14 +813,12 @@ function createMeshMarker(
   };
 }
 
-const VALID_PROTOCOLS = ["https:", "http:", "file:", "data:"];
+const VALID_PROTOCOLS = ["https:", "http:", "file:", "data:", "package:"];
 
 function isValidUrl(str: string): boolean {
   try {
     const url = new URL(str);
-    return (
-      (supportsPackageUrl && url.protocol === "package:") || VALID_PROTOCOLS.includes(url.protocol)
-    );
+    return VALID_PROTOCOLS.includes(url.protocol);
   } catch (_) {
     return false;
   }
