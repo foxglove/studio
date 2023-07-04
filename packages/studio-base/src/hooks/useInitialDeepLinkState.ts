@@ -131,6 +131,7 @@ let useInitialDeepLinkStateMounted = false;
  */
 export function useInitialDeepLinkState(deepLinks: readonly string[]): {
   currentUserRequired: boolean;
+  userSwitchRequired: boolean;
 } {
   useEffect(() => {
     if (useInitialDeepLinkStateMounted) {
@@ -150,21 +151,32 @@ export function useInitialDeepLinkState(deepLinks: readonly string[]): {
 
   // Maybe this should be abstracted somewhere but that would require a
   // more intimate interface with this hook and the player selection logic.
-  const currentUserRequiredParam = useMemo(() => {
-    let currentUserRequired = false;
+  const currentUserRequired = useMemo(() => {
+    let userRequired = false;
     const ds = targetUrlState?.ds;
     const foundSource =
       ds == undefined
         ? undefined
         : availableSources.find((source) => source.id === ds || source.legacyIds?.includes(ds));
     if (foundSource) {
-      currentUserRequired = foundSource.currentUserRequired ?? false;
+      userRequired = foundSource.currentUserRequired ?? false;
     }
 
-    return { currentUserRequired };
+    return userRequired;
   }, [targetUrlState?.ds, availableSources]);
-  useSyncSourceFromUrl(targetUrlState, currentUserRequiredParam);
-  useSyncLayoutFromUrl(targetUrlState, currentUserRequiredParam);
+
+  useSyncSourceFromUrl(targetUrlState, { currentUserRequired });
+  useSyncLayoutFromUrl(targetUrlState, { currentUserRequired });
   useSyncTimeFromUrl(targetUrlState);
-  return currentUserRequiredParam;
+
+  const { currentUser } = useCurrentUser();
+  const userSwitchRequired = useMemo(
+    () =>
+      targetUrlState?.orgSlug != undefined &&
+      currentUser?.org.slug != undefined &&
+      currentUser.org.slug !== targetUrlState.orgSlug,
+    [targetUrlState?.orgSlug, currentUser?.org.slug],
+  );
+
+  return { currentUserRequired, userSwitchRequired };
 }
