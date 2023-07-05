@@ -59,7 +59,8 @@ export default function Metadata({
 }: Props): JSX.Element {
   const { classes } = useStyles();
 
-  // Access these by ref so that CopyButton memoization works.
+  // Access these by ref so that our callbacks aren't invalidated and CopyButton
+  // memoization is stable.
   const latestData = useLatest(data);
   const latestDiffData = useLatest(diffData);
 
