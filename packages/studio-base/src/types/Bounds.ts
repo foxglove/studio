@@ -13,9 +13,10 @@ export type Bounds = {
 };
 
 /**
- * Creates initial bounds with values set to extremes to simplify merging bounds.
+ * Creates inverted bounds with values set to extremes to simplify calculating the union
+ * with a series of other bounds.
  */
-export function makeInitialBounds(): Bounds {
+export function makeInvertedBounds(): Bounds {
   return {
     x: { min: Number.MAX_SAFE_INTEGER, max: Number.MIN_SAFE_INTEGER },
     y: { min: Number.MAX_SAFE_INTEGER, max: Number.MIN_SAFE_INTEGER },

@@ -30,7 +30,7 @@ import {
 import * as PlotData from "@foxglove/studio-base/panels/Plot/plotData";
 import { derivative } from "@foxglove/studio-base/panels/Plot/transformPlotRange";
 import { MessageEvent } from "@foxglove/studio-base/players/types";
-import { Bounds, makeInitialBounds, unionBounds } from "@foxglove/studio-base/types/Bounds";
+import { Bounds, makeInvertedBounds, unionBounds } from "@foxglove/studio-base/types/Bounds";
 import { getTimestampForMessage } from "@foxglove/studio-base/util/time";
 
 import { DataSets, getDatasets, mergeDatasets } from "./datasets";
@@ -42,7 +42,7 @@ const EmptyAllFrames: Record<string, MessageEvent[]> = {};
 
 const EmptyDatasets: DataSets = {
   datasets: [],
-  bounds: makeInitialBounds(),
+  bounds: makeInvertedBounds(),
   pathsWithMismatchedDataLengths: [],
 };
 
@@ -120,7 +120,7 @@ function makeInitialState(): State {
   return {
     allFrames: {},
     allPaths: [],
-    bounds: makeInitialBounds(),
+    bounds: makeInvertedBounds(),
     cursors: {},
     datasets: [],
     subscriptions: [],
@@ -254,7 +254,7 @@ export function usePlotPanelDatasets(params: Params): {
       } else {
         return {
           datasets: [],
-          bounds: makeInitialBounds(),
+          bounds: makeInvertedBounds(),
           pathsWithMismatchedDataLengths: [],
         };
       }
