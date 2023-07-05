@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { StoryObj } from "@storybook/react";
-import { screen, userEvent } from "@storybook/testing-library";
+import { screen, userEvent, within } from "@storybook/testing-library";
 import tinycolor from "tinycolor2";
 
 import { ImageAnnotations, LineType, PointsAnnotationType, SceneUpdate } from "@foxglove/schemas";
@@ -291,9 +291,10 @@ export const ImageOnlyModeOff: StoryObj<React.ComponentProps<typeof ImageWith3D>
 export const ImageOnlyModeOn: StoryObj<React.ComponentProps<typeof ImageWith3D>> = {
   render: ImageWith3D,
   args: { imageTopic: "camera/img", calibrationTopic: undefined },
-  play: async () => {
-    const icon = await screen.findByTestId("ErrorIcon");
-    userEvent.hover(icon);
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const icon = await canvas.findByTestId("ErrorIcon");
+    await userEvent.hover(icon);
   },
 };
 
@@ -310,8 +311,9 @@ export const ImageOnlyModeOffWithAutoSelectedCalibration: StoryObj<
   render: ImageWith3D,
   args: { imageTopic: "abc", calibrationTopic: undefined },
   play: async () => {
-    userEvent.click(await screen.findByText("abc", { selector: ".MuiSelect-select" }));
-    userEvent.click(await screen.findByText("camera/img"));
+    const { click } = userEvent.setup();
+    await click(await screen.findByText("abc", { selector: ".MuiSelect-select" }));
+    await click(await screen.findByText("camera/img"));
   },
 };
 
