@@ -14,7 +14,8 @@ import CommonRosTypes from "@foxglove/rosmsg-msgs-common";
 import { MessageWriter as Ros1MessageWriter } from "@foxglove/rosmsg-serialization";
 import { MessageWriter as Ros2MessageWriter } from "@foxglove/rosmsg2-serialization";
 import { fromMillis, fromNanoSec, isGreaterThan, isLessThan, Time } from "@foxglove/rostime";
-import { Asset, ParameterValue } from "@foxglove/studio";
+import { ParameterValue } from "@foxglove/studio";
+import { Asset } from "@foxglove/studio-base/components/PanelExtensionAdapter";
 import PlayerProblemManager from "@foxglove/studio-base/players/PlayerProblemManager";
 import {
   AdvertiseOptions,

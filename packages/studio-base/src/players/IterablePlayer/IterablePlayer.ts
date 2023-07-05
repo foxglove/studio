@@ -19,7 +19,8 @@ import {
   toString,
   toRFC3339String,
 } from "@foxglove/rostime";
-import { Asset, MessageEvent, ParameterValue } from "@foxglove/studio";
+import { MessageEvent, ParameterValue } from "@foxglove/studio";
+import { Asset } from "@foxglove/studio-base/components/PanelExtensionAdapter";
 import NoopMetricsCollector from "@foxglove/studio-base/players/NoopMetricsCollector";
 import PlayerProblemManager from "@foxglove/studio-base/players/PlayerProblemManager";
 import {

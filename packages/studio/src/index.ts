@@ -127,23 +127,6 @@ export type MessageEvent<T = unknown> = {
   originalMessageEvent?: MessageEvent;
 };
 
-/**
- * An asset loaded from Studio's asset management layer.
- */
-export type Asset = {
-  /** A unique identifier for this asset. */
-  name: string;
-  /** Binary asset data. */
-  data: Uint8Array;
-
-  mediaType?: string;
-};
-
-/**
- * Function to fetch an asset from Studio's asset management layer.
- */
-export type FetchAssetFn = (uri: string, options?: { signal: AbortSignal }) => Promise<Asset>;
-
 export interface LayoutActions {
   /** Open a new panel or update an existing panel in the layout.  */
   addPanel(params: {
@@ -391,15 +374,6 @@ export type PanelExtensionContext = {
    * @returns A promise that resolves when the result is available or rejected with an error
    */
   callService?(service: string, request: unknown): Promise<unknown>;
-
-  /**
-   * Fetch an asset from Studio's asset management layer.
-   *
-   * The asset management layer will determine how to fetch the asset. I.E. http(s) uris will use http requests
-   * while other schemes may fall back to the data source.
-   *
-   */
-  fetchAsset: FetchAssetFn;
 
   /**
    * Process render events for the panel. Each render event receives a render state and a done callback.

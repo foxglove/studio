@@ -5,7 +5,8 @@
 import * as Comlink from "comlink";
 
 import { abortSignalTransferHandler } from "@foxglove/comlink-transfer-handlers";
-import { Asset, MessageEvent } from "@foxglove/studio";
+import { MessageEvent } from "@foxglove/studio";
+import { Asset } from "@foxglove/studio-base/components/PanelExtensionAdapter";
 
 import type {
   GetBackfillMessagesArgs,

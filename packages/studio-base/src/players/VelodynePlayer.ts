@@ -8,7 +8,8 @@ import { debouncePromise } from "@foxglove/den/async";
 import { Sockets, UdpRemoteInfo, UdpSocketRenderer } from "@foxglove/electron-socket/renderer";
 import Logger from "@foxglove/log";
 import { Time, fromMillis, add as addTimes, toDate, fromDate, fromMicros } from "@foxglove/rostime";
-import { Asset, ParameterValue } from "@foxglove/studio";
+import { ParameterValue } from "@foxglove/studio";
+import { Asset } from "@foxglove/studio-base/components/PanelExtensionAdapter";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import {
   AdvertiseOptions,

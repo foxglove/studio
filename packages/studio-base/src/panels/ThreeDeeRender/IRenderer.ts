@@ -6,7 +6,6 @@ import EventEmitter from "eventemitter3";
 import * as THREE from "three";
 
 import {
-  FetchAssetFn,
   Immutable,
   MessageEvent,
   ParameterValue,
@@ -14,6 +13,7 @@ import {
   Topic,
   VariableValue,
 } from "@foxglove/studio";
+import { BuiltinPanelExtensionContext } from "@foxglove/studio-base/components/PanelExtensionAdapter";
 import { ICameraHandler } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/ICameraHandler";
 import { LabelPool } from "@foxglove/three-text";
 
@@ -349,5 +349,5 @@ export interface IRenderer extends EventEmitter<RendererEvents> {
   queueAnimationFrame: () => void;
 
   // Function to fetch an asset from Studio's asset management layer.
-  fetchAsset: FetchAssetFn;
+  fetchAsset: BuiltinPanelExtensionContext["unstable_fetchAsset"];
 }

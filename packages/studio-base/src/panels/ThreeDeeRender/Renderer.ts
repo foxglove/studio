@@ -13,7 +13,6 @@ import Logger from "@foxglove/log";
 import { Time, fromNanoSec, isLessThan, toNanoSec } from "@foxglove/rostime";
 import type { FrameTransform, FrameTransforms, SceneUpdate } from "@foxglove/schemas";
 import {
-  FetchAssetFn,
   Immutable,
   MessageEvent,
   ParameterValue,
@@ -24,6 +23,10 @@ import {
   Topic,
   VariableValue,
 } from "@foxglove/studio";
+import {
+  Asset,
+  BuiltinPanelExtensionContext,
+} from "@foxglove/studio-base/components/PanelExtensionAdapter";
 import { LayerErrors } from "@foxglove/studio-base/panels/ThreeDeeRender/LayerErrors";
 import { FoxgloveGrid } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/FoxgloveGrid";
 import { ICameraHandler } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/ICameraHandler";
@@ -211,13 +214,13 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
   #animationFrame?: number;
   #cameraSyncError: undefined | string;
   #devicePixelRatioMediaQuery?: MediaQueryList;
-  #fetchAsset: FetchAssetFn;
+  #fetchAsset: BuiltinPanelExtensionContext["unstable_fetchAsset"];
 
   public constructor(
     canvas: HTMLCanvasElement,
     config: Immutable<RendererConfig>,
     interfaceMode: InterfaceMode,
-    fetchAsset: FetchAssetFn,
+    fetchAsset: BuiltinPanelExtensionContext["unstable_fetchAsset"],
   ) {
     super();
     // NOTE: Global side effect
@@ -1031,9 +1034,9 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     log.debug(`Setting followFrameId to ${frameId}`);
   }
 
-  public fetchAsset: FetchAssetFn = async (uri, options) => {
+  public async fetchAsset(uri: string, options?: { signal: AbortSignal }): Promise<Asset> {
     return await this.#fetchAsset(uri, options);
-  };
+  }
 
   #frameHandler = (currentTime: bigint): void => {
     this.currentTime = currentTime;

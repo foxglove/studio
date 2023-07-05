@@ -3,7 +3,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Time } from "@foxglove/rostime";
-import { FetchAssetFn, Immutable, MessageEvent, ParameterValue } from "@foxglove/studio";
+import { Immutable, MessageEvent, ParameterValue } from "@foxglove/studio";
+import { BuiltinPanelExtensionContext } from "@foxglove/studio-base/components/PanelExtensionAdapter";
 import {
   AdvertiseOptions,
   PlayerState,
@@ -25,7 +26,7 @@ export type MessagePipelineContext = Immutable<{
   setParameter: (key: string, value: ParameterValue) => void;
   publish: (request: PublishPayload) => void;
   callService: (service: string, request: unknown) => Promise<unknown>;
-  fetchAsset: FetchAssetFn;
+  fetchAsset: BuiltinPanelExtensionContext["unstable_fetchAsset"];
   startPlayback?: () => void;
   pausePlayback?: () => void;
   playUntil?: (time: Time) => void;

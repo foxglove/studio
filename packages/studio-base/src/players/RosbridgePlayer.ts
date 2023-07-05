@@ -22,7 +22,8 @@ import { parse as parseMessageDefinition } from "@foxglove/rosmsg";
 import { LazyMessageReader } from "@foxglove/rosmsg-serialization";
 import { MessageReader as ROS2MessageReader } from "@foxglove/rosmsg2-serialization";
 import { Time, fromMillis, toSec } from "@foxglove/rostime";
-import { Asset, ParameterValue } from "@foxglove/studio";
+import { ParameterValue } from "@foxglove/studio";
+import { Asset } from "@foxglove/studio-base/components/PanelExtensionAdapter";
 import PlayerProblemManager from "@foxglove/studio-base/players/PlayerProblemManager";
 import {
   AdvertiseOptions,

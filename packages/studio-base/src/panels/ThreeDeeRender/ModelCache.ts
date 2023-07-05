@@ -13,7 +13,7 @@ import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader";
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader";
 
 import Logger from "@foxglove/log";
-import { FetchAssetFn } from "@foxglove/studio";
+import { BuiltinPanelExtensionContext } from "@foxglove/studio-base/components/PanelExtensionAdapter";
 
 const log = Logger.getLogger(__filename);
 
@@ -24,7 +24,7 @@ export type ModelCacheOptions = {
   edgeMaterial: THREE.Material;
   ignoreColladaUpAxis: boolean;
   meshUpAxis: MeshUpAxis;
-  fetchAsset: FetchAssetFn;
+  fetchAsset: BuiltinPanelExtensionContext["unstable_fetchAsset"];
 };
 
 type LoadModelOptions = {
@@ -47,7 +47,7 @@ export class ModelCache {
   #textDecoder = new TextDecoder();
   #models = new Map<string, Promise<LoadedModel | undefined>>();
   #edgeMaterial: THREE.Material;
-  #fetchAsset: FetchAssetFn;
+  #fetchAsset: BuiltinPanelExtensionContext["unstable_fetchAsset"];
 
   #dracoLoader?: DRACOLoader;
 

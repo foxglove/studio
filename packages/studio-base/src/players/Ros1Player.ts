@@ -11,8 +11,9 @@ import Logger from "@foxglove/log";
 import { MessageDefinition } from "@foxglove/message-definition";
 import { RosNode, TcpSocket } from "@foxglove/ros1";
 import { Time, fromMillis, isGreaterThan, toSec } from "@foxglove/rostime";
-import { Asset, ParameterValue } from "@foxglove/studio";
+import { ParameterValue } from "@foxglove/studio";
 import OsContextSingleton from "@foxglove/studio-base/OsContextSingleton";
+import { Asset } from "@foxglove/studio-base/components/PanelExtensionAdapter";
 import PlayerProblemManager from "@foxglove/studio-base/players/PlayerProblemManager";
 import {
   AdvertiseOptions,

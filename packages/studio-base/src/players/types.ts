@@ -13,8 +13,9 @@
 
 import { MessageDefinition } from "@foxglove/message-definition";
 import { Time } from "@foxglove/rostime";
-import type { Asset, MessageEvent, ParameterValue } from "@foxglove/studio";
+import type { MessageEvent, ParameterValue } from "@foxglove/studio";
 import { Immutable } from "@foxglove/studio";
+import { Asset } from "@foxglove/studio-base/components/PanelExtensionAdapter";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import { Range } from "@foxglove/studio-base/util/ranges";

@@ -15,7 +15,6 @@ import {
   Immutable,
   LayoutActions,
   MessageEvent,
-  PanelExtensionContext,
   ParameterValue,
   RenderState,
   SettingsTreeAction,
@@ -24,6 +23,7 @@ import {
   Topic,
 } from "@foxglove/studio";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
+import { BuiltinPanelExtensionContext } from "@foxglove/studio-base/components/PanelExtensionAdapter";
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
 
 import type {
@@ -92,13 +92,13 @@ function useRendererProperty<K extends keyof IRenderer>(
  * A panel that renders a 3D scene. This is a thin wrapper around a `Renderer` instance.
  */
 export function ThreeDeeRender(props: {
-  context: PanelExtensionContext;
+  context: BuiltinPanelExtensionContext;
   interfaceMode: InterfaceMode;
   /** Override default downloading behavior, used for Storybook */
   onDownloadImage?: (blob: Blob, fileName: string) => void;
 }): JSX.Element {
   const { context, interfaceMode, onDownloadImage } = props;
-  const { initialState, saveState, fetchAsset } = context;
+  const { initialState, saveState, unstable_fetchAsset: fetchAsset } = context;
 
   // Load and save the persisted panel configuration
   const [config, setConfig] = useState<Immutable<RendererConfig>>(() => {

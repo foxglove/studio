@@ -3,7 +3,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Time } from "@foxglove/rostime";
-import { Asset, Immutable, ParameterValue } from "@foxglove/studio";
+import { Immutable, ParameterValue } from "@foxglove/studio";
+import { Asset } from "@foxglove/studio-base/components/PanelExtensionAdapter";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import {
   AdvertiseOptions,

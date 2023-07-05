@@ -54,6 +54,7 @@ import { assertNever } from "@foxglove/studio-base/util/assertNever";
 
 import { PanelConfigVersionError } from "./PanelConfigVersionError";
 import { initRenderStateBuilder } from "./renderState";
+import { BuiltinPanelExtensionContext } from "./types";
 
 const log = Logger.getLogger(__filename);
 
@@ -72,7 +73,9 @@ function isVersionedPanelConfig(config: unknown): config is VersionedPanelConfig
 
 type PanelExtensionAdapterProps = {
   /** function that initializes the panel extension */
-  initPanel: ExtensionPanelRegistration["initPanel"];
+  initPanel:
+    | ExtensionPanelRegistration["initPanel"]
+    | ((context: BuiltinPanelExtensionContext) => void);
   /**
    * If defined, the highest supported version of config the panel supports.
    * Used to prevent older implementations of a panel from trying to access
@@ -285,7 +288,7 @@ function PanelExtensionAdapter(
 
   const updatePanelSettingsTree = usePanelSettingsTreeUpdate();
 
-  type PartialPanelExtensionContext = Omit<PanelExtensionContext, "panelElement">;
+  type PartialPanelExtensionContext = Omit<BuiltinPanelExtensionContext, "panelElement">;
   const partialExtensionContext = useMemo<PartialPanelExtensionContext>(() => {
     const layout: PanelExtensionContext["layout"] = {
       addPanel({ position, type, updateIfExists, getState }) {
@@ -470,7 +473,7 @@ function PanelExtensionAdapter(
           }
         : undefined,
 
-      fetchAsset: async (uri, options) => {
+      unstable_fetchAsset: async (uri, options) => {
         if (!isMounted()) {
           throw new Error("Asset fetch after panel was unmounted");
         }
