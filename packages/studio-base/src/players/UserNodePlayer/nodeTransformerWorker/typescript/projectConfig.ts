@@ -18,20 +18,9 @@ import {
 } from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/typescript/ros";
 import { DEFAULT_STUDIO_NODE_PREFIX } from "@foxglove/studio-base/util/globalConstants";
 
+import { FoxgloveSchemaDeclarations } from "./foxgloveSchemaDeclarations";
 import { lib_filename, lib_dts } from "./lib";
-
-export type NodeProjectFile = {
-  fileName: string;
-  filePath: string;
-  sourceCode: string;
-};
-
-export type NodeProjectConfig = {
-  defaultLibFileName: string;
-  declarations: NodeProjectFile[];
-  utilityFiles: NodeProjectFile[];
-  rosLib: NodeProjectFile;
-};
+import { NodeProjectConfig, NodeProjectFile } from "./types";
 
 const utilityFiles: NodeProjectFile[] = rawUserUtils.map((utility) => ({
   ...utility,
@@ -39,12 +28,14 @@ const utilityFiles: NodeProjectFile[] = rawUserUtils.map((utility) => ({
 }));
 
 export function getNodeProjectConfig(): NodeProjectConfig {
-  const declarations = [];
+  const declarations: NodeProjectConfig["declarations"] = [];
   declarations.push({
     fileName: lib_filename,
     filePath: lib_filename,
     sourceCode: lib_dts,
   });
+
+  declarations.push(...FoxgloveSchemaDeclarations);
 
   return {
     defaultLibFileName: lib_filename,

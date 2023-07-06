@@ -91,6 +91,21 @@ const logs: UserNodeLog[] = [
   },
 ];
 
+const sourceCodeWithSchemas = `
+  import { Input } from "ros";
+  import { Color } from "FoxgloveSchemas";
+
+  export const inputs = ["/my_topic"];
+  export const output = "${DEFAULT_STUDIO_NODE_PREFIX}/1";
+
+  const publisher = (message: Input<"/my_topic">): { color: Color } => {
+    const color: Color = { r: 1, g: 1, b: 1, a: 1 };
+    return { color };
+  };
+
+  export default publisher;
+`;
+
 const sourceCodeWithUtils = `
   import { Input } from "ros";
   import { norm } from "./pointClouds";
@@ -143,6 +158,30 @@ export const RawUserUtils: StoryObj = {
     </div>
   ),
   name: "rawUserUtils",
+};
+
+export const SchemaUsageInNode: StoryObj = {
+  render: () => (
+    <PanelSetup
+      fixture={{
+        ...fixture,
+        userNodes: {
+          nodeId1: {
+            name: "/studio_script/script",
+            sourceCode: sourceCodeWithSchemas,
+          },
+        },
+        userNodeDiagnostics: { nodeId1: [] },
+        userNodeLogs: { nodeId1: [] },
+      }}
+    >
+      <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
+    </PanelSetup>
+  ),
+  name: "schema usage in node",
+  parameters: {
+    colorScheme: "light",
+  },
 };
 
 export const UtilsUsageInNode: StoryObj = {
