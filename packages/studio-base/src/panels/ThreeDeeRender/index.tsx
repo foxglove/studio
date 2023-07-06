@@ -82,7 +82,6 @@ export const ImagePanel = Panel<Record<string, unknown>, Props>(
   }),
 );
 
-
 export default Panel(
   Object.assign(ThreeDeeRenderAdapter.bind(undefined, "3d"), {
     panelType: "3D",
