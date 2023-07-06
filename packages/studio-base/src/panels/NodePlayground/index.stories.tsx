@@ -93,14 +93,15 @@ const logs: UserNodeLog[] = [
 
 const sourceCodeWithSchemas = `
   import { Input } from "ros";
-  import { Color } from "FoxgloveSchemas";
+  import { Color, Vector2 } from "@foxglove/schemas";
 
   export const inputs = ["/my_topic"];
   export const output = "${DEFAULT_STUDIO_NODE_PREFIX}/1";
 
-  const publisher = (message: Input<"/my_topic">): { color: Color } => {
+  const publisher = (message: Input<"/my_topic">): { color: Color, vector: Vector2 } => {
     const color: Color = { r: 1, g: 1, b: 1, a: 1 };
-    return { color };
+    const vector: Vector2 = { x: 1, y: 1};
+    return { color, vector };
   };
 
   export default publisher;

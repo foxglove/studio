@@ -52,8 +52,8 @@ import { NodeProjectConfig } from "@foxglove/studio-base/players/UserNodePlayer/
 
 function declaration(sourceCode: string, name: string) {
   return {
-    fileName: `FoxgloveSchemas/${name}.d.ts`,
-    filePath: `FoxgloveSchemas/${name}.d.ts`,
+    fileName: `@foxglove/schemas/${name}.d.ts`,
+    filePath: `@foxglove/schemas/${name}.d.ts`,
     sourceCode,
   };
 }
