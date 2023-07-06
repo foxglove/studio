@@ -437,8 +437,9 @@ export const DownloadRawImage: StoryObj<React.ComponentProps<typeof ImageModeFox
   },
   args: { imageType: "raw" },
   play: async () => {
-    userEvent.click(document.querySelector("canvas")!, { button: 2 });
-    userEvent.click(await screen.findByText("Download image"));
+    const { click, pointer } = userEvent.setup();
+    await pointer({ target: document.querySelector("canvas")!, keys: "[MouseRight]" });
+    await click(await screen.findByText("Download image"));
   },
 };
 
@@ -533,13 +534,23 @@ export const ImageModePick: StoryObj<React.ComponentProps<typeof ImageModeFoxglo
   args: { imageType: "raw" },
 
   play: async () => {
-    userEvent.hover(await screen.findByTestId(/panel-mouseenter-container/));
-    const canvas = document.querySelector("canvas")!;
+    const { click, hover, pointer } = userEvent.setup();
+
+    await hover(await screen.findByTestId(/panel-mouseenter-container/));
     const inspectObjects = screen.getByRole("button", { name: /inspect objects/i });
-    userEvent.click(inspectObjects);
-    await delay(30);
-    userEvent.click(canvas, { clientX: 500, clientY: 500 });
-    await delay(30);
+    await click(inspectObjects);
+
+    await waitFor(
+      async () => {
+        await pointer({
+          keys: "[MouseLeft]",
+          target: document.querySelector("canvas")!,
+          coords: { clientX: 500, clientY: 500 },
+        });
+        await screen.findByText("frame_id: sensor", undefined, { timeout: 10 });
+      },
+      { timeout: 1000 },
+    );
   },
 };
 
@@ -638,7 +649,7 @@ export const ImageModeInvalidCameraCalibration: StoryObj = {
   render: () => <InvalidPinholeCamera />,
   play: async () => {
     const errorIcon = await screen.findByTestId("ErrorIcon");
-    userEvent.hover(errorIcon);
+    await userEvent.hover(errorIcon);
   },
 };
 
@@ -677,8 +688,14 @@ export const UnsupportedEncodingError: StoryObj = {
     );
   },
   play: async () => {
-    const errorIcon = await screen.findAllByTestId("ErrorIcon");
-    userEvent.hover(errorIcon[0]!);
+    const errorIcon = await waitFor(async () => {
+      const icons = await screen.findAllByTestId("ErrorIcon");
+      if (icons.length !== 2) {
+        throw new Error("Expected 2 error icons");
+      }
+      return icons[0];
+    });
+    await userEvent.hover(errorIcon!);
   },
 };
 
@@ -721,7 +738,7 @@ export const DecompressionError: StoryObj = {
       }
       return icons[0];
     });
-    userEvent.hover(errorIcon!);
+    await userEvent.hover(errorIcon!);
   },
 };
 
