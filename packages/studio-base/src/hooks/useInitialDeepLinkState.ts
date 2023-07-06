@@ -170,13 +170,10 @@ export function useInitialDeepLinkState(deepLinks: readonly string[]): {
   useSyncTimeFromUrl(targetUrlState);
 
   const { currentUser } = useCurrentUser();
-  const userSwitchRequired = useMemo(
-    () =>
-      targetUrlState?.orgSlug != undefined &&
-      currentUser?.org.slug != undefined &&
-      currentUser.org.slug !== targetUrlState.orgSlug,
-    [targetUrlState?.orgSlug, currentUser?.org.slug],
-  );
+  const userSwitchRequired =
+    targetUrlState?.orgSlug != undefined &&
+    currentUser?.org.slug != undefined &&
+    currentUser.org.slug !== targetUrlState.orgSlug;
 
   return { currentUserRequired, userSwitchRequired };
 }
