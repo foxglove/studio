@@ -6,7 +6,7 @@ import { McapIndexedReader, McapTypes } from "@mcap/core";
 
 import Log from "@foxglove/log";
 import { loadDecompressHandlers } from "@foxglove/mcap-support";
-import { Asset } from "@foxglove/studio";
+import { Asset } from "@foxglove/studio-base/components/PanelExtensionAdapter";
 import { MessageEvent } from "@foxglove/studio-base/players/types";
 
 import { FileReadable } from "./FileReadable";

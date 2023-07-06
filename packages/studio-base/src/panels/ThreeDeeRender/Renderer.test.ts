@@ -6,7 +6,8 @@
 import { setupJestCanvasMock } from "jest-canvas-mock";
 
 import { fromNanoSec, toNanoSec } from "@foxglove/rostime";
-import { FetchAssetFn, MessageEvent } from "@foxglove/studio";
+import { MessageEvent } from "@foxglove/studio";
+import { Asset } from "@foxglove/studio-base/components/PanelExtensionAdapter";
 import { Renderer } from "@foxglove/studio-base/panels/ThreeDeeRender/Renderer";
 import { DEFAULT_CAMERA_STATE } from "@foxglove/studio-base/panels/ThreeDeeRender/camera";
 import { CameraStateSettings } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/CameraStateSettings";
@@ -109,7 +110,7 @@ function createTFMessageEvent(
   };
 }
 
-const fetchAsset: FetchAssetFn = async (uri, options) => {
+const fetchAsset = async (uri: string, options?: { signal: AbortSignal }): Promise<Asset> => {
   const response = await fetch(uri, options);
   return {
     name: uri,

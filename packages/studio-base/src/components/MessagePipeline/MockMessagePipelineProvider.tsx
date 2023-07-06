@@ -19,7 +19,8 @@ import { Writable } from "ts-essentials";
 import { createStore } from "zustand";
 
 import { Time, isLessThan } from "@foxglove/rostime";
-import { FetchAssetFn, ParameterValue } from "@foxglove/studio";
+import { ParameterValue } from "@foxglove/studio";
+import { BuiltinPanelExtensionContext } from "@foxglove/studio-base/components/PanelExtensionAdapter";
 import {
   AdvertiseOptions,
   MessageEvent,
@@ -57,7 +58,7 @@ export type MockMessagePipelineProps = {
   setPublishers?: (arg0: string, arg1: AdvertiseOptions[]) => void;
   setSubscriptions?: (arg0: string, arg1: SubscribePayload[]) => void;
   setParameter?: (key: string, value: ParameterValue) => void;
-  fetchAsset?: FetchAssetFn;
+  fetchAsset?: BuiltinPanelExtensionContext["unstable_fetchAsset"];
   noActiveData?: boolean;
   activeData?: Partial<PlayerStateActiveData>;
   capabilities?: string[];
