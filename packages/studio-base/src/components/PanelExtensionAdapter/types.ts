@@ -12,7 +12,7 @@ export type Asset = {
   name: string;
   /** Binary asset data. */
   data: Uint8Array;
-
+  /** The type of the asset. */
   mediaType?: string;
 };
 

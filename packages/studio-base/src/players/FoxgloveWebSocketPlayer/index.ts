@@ -48,6 +48,7 @@ import {
   StatusLevel,
   FetchAssetStatus,
   FetchAssetResponse,
+  BinaryOpcode,
 } from "@foxglove/ws-protocol";
 
 import { JsonMessageWriter } from "./JsonMessageWriter";
@@ -1170,6 +1171,14 @@ export default class FoxgloveWebSocketPlayer implements Player {
     this.#problems.clear();
     this.#parameters.clear();
     this.#fetchedAssets.clear();
+    for (const [requestId, callback] of this.#fetchAssetRequests) {
+      callback({
+        op: BinaryOpcode.FETCH_ASSET_RESPONSE,
+        status: FetchAssetStatus.ERROR,
+        requestId,
+        error: "WebSocket connection reset",
+      });
+    }
     this.#fetchAssetRequests.clear();
   }
 
