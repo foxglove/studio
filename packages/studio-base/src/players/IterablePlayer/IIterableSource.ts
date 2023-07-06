@@ -4,7 +4,6 @@
 
 import { Time } from "@foxglove/rostime";
 import { MessageEvent } from "@foxglove/studio";
-import { Asset } from "@foxglove/studio-base/components/PanelExtensionAdapter";
 import { PlayerProblem, Topic, TopicStats } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 
@@ -175,16 +174,6 @@ export interface IIterableSource {
    * individual "next" calls per message.
    */
   getMessageCursor?: (args: MessageIteratorArgs & { abort?: AbortSignal }) => IMessageCursor;
-
-  /**
-   * An optional method to support custom asset loading from data sources. The name is considered
-   * a unique identifier for the asset. If a data source has multiple assets with the same name,
-   * it must consistently return the same asset for the same name.
-   *
-   * Sources such as MCAP files that support embedded assets, or remote sources that support
-   * downloading assets can implement this method to provide custom asset loading.
-   */
-  fetchAsset?: (name: string) => Promise<Asset>;
 
   /**
    * Optional method a data source can implement to cleanup resources. The player will call this

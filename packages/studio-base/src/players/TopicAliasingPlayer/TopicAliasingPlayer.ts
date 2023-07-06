@@ -132,8 +132,11 @@ export class TopicAliasingPlayer implements Player {
     this.#inputs = { ...this.#inputs, variables: globalVariables };
   }
 
-  public async fetchAsset(uri: string): Promise<Asset> {
-    return await this.#player.fetchAsset(uri);
+  public async fetchAsset(name: string): Promise<Asset> {
+    if (this.#player.fetchAsset) {
+      return await this.#player.fetchAsset(name);
+    }
+    throw Error("Player does not support fetching assets");
   }
 
   async #onPlayerState(playerState: PlayerState) {

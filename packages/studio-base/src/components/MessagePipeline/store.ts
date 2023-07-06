@@ -122,7 +122,7 @@ export function createMessagePipelineStore({
         const { protocol } = new URL(uri);
         const player = get().player;
 
-        if (player && protocol === "package:") {
+        if (player?.fetchAsset && protocol === "package:") {
           try {
             return await player.fetchAsset(uri);
           } catch (err) {

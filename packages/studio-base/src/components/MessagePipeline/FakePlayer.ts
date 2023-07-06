@@ -12,7 +12,6 @@
 //   You may not use this file except in compliance with the License.
 
 import { ParameterValue } from "@foxglove/studio";
-import { Asset } from "@foxglove/studio-base/components/PanelExtensionAdapter";
 import {
   PlayerCapabilities,
   PlayerStateActiveData,
@@ -73,9 +72,6 @@ export default class FakePlayer implements Player {
   };
   public callService = async (): Promise<void> => {
     // no-op
-  };
-  public fetchAsset = async (): Promise<Asset> => {
-    throw new Error("not implemented");
   };
   public setPublishers = (pubs: AdvertiseOptions[]): void => {
     this.publishers = pubs;

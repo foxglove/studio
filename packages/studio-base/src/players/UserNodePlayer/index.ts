@@ -1102,7 +1102,10 @@ export default class UserNodePlayer implements Player {
   }
 
   public async fetchAsset(name: string): Promise<Asset> {
-    return await this.#player.fetchAsset(name);
+    if (this.#player.fetchAsset) {
+      return await this.#player.fetchAsset(name);
+    }
+    throw Error("Player does not support fetching assets");
   }
 
   public startPlayback(): void {

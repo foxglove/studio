@@ -6,7 +6,6 @@ import * as Comlink from "comlink";
 
 import { abortSignalTransferHandler } from "@foxglove/comlink-transfer-handlers";
 import { MessageEvent } from "@foxglove/studio";
-import { Asset } from "@foxglove/studio-base/components/PanelExtensionAdapter";
 
 import type {
   GetBackfillMessagesArgs,
@@ -54,14 +53,6 @@ export class WorkerIterableSourceWorker implements IIterableSource {
     const iter = this._source.messageIterator(args);
     const cursor = new IteratorCursor(iter, abort);
     return Comlink.proxy(cursor);
-  }
-
-  public async fetchAsset(name: string): Promise<Asset> {
-    const res = await this._source.fetchAsset?.(name);
-    if (res == undefined) {
-      throw new Error(`Cannot fetch asset: "${name}"`);
-    }
-    return res;
   }
 }
 

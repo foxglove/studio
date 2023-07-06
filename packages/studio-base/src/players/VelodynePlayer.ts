@@ -9,7 +9,6 @@ import { Sockets, UdpRemoteInfo, UdpSocketRenderer } from "@foxglove/electron-so
 import Logger from "@foxglove/log";
 import { Time, fromMillis, add as addTimes, toDate, fromDate, fromMicros } from "@foxglove/rostime";
 import { ParameterValue } from "@foxglove/studio";
-import { Asset } from "@foxglove/studio-base/components/PanelExtensionAdapter";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import {
   AdvertiseOptions,
@@ -305,10 +304,6 @@ export default class VelodynePlayer implements Player {
 
   public async callService(): Promise<unknown> {
     throw new Error("Service calls are not supported for VelodynePlayer");
-  }
-
-  public async fetchAsset(name: string): Promise<Asset> {
-    throw new Error(`Fetching assets (${name}) is not supported for VelodynePlayer`);
   }
 
   public setGlobalVariables(_globalVariables: GlobalVariables): void {

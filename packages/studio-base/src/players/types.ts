@@ -57,7 +57,7 @@ export interface Player {
   // this will make a service call to the named service with the request payload.
   callService(service: string, request: unknown): Promise<unknown>;
   // Asset fetching. Available if `capabilities` contains PlayerCapabilities.assets.
-  fetchAsset(name: string): Promise<Asset>;
+  fetchAsset?(name: string): Promise<Asset>;
   // Basic playback controls. Available if `capabilities` contains PlayerCapabilities.playbackControl.
   startPlayback?(): void;
   pausePlayback?(): void;

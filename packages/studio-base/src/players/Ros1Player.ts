@@ -13,7 +13,6 @@ import { RosNode, TcpSocket } from "@foxglove/ros1";
 import { Time, fromMillis, isGreaterThan, toSec } from "@foxglove/rostime";
 import { ParameterValue } from "@foxglove/studio";
 import OsContextSingleton from "@foxglove/studio-base/OsContextSingleton";
-import { Asset } from "@foxglove/studio-base/components/PanelExtensionAdapter";
 import PlayerProblemManager from "@foxglove/studio-base/players/PlayerProblemManager";
 import {
   AdvertiseOptions,
@@ -578,10 +577,6 @@ export default class Ros1Player implements Player {
 
   public async callService(): Promise<unknown> {
     throw new Error("Service calls are not supported by this data source");
-  }
-
-  public async fetchAsset(name: string): Promise<Asset> {
-    throw new Error(`Fetching assets (${name}) is not supported for Ros1Player`);
   }
 
   // Bunch of unsupported stuff. Just don't do anything for these.

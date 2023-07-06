@@ -23,7 +23,6 @@ import { LazyMessageReader } from "@foxglove/rosmsg-serialization";
 import { MessageReader as ROS2MessageReader } from "@foxglove/rosmsg2-serialization";
 import { Time, fromMillis, toSec } from "@foxglove/rostime";
 import { ParameterValue } from "@foxglove/studio";
-import { Asset } from "@foxglove/studio-base/components/PanelExtensionAdapter";
 import PlayerProblemManager from "@foxglove/studio-base/players/PlayerProblemManager";
 import {
   AdvertiseOptions,
@@ -643,10 +642,6 @@ export default class RosbridgePlayer implements Player {
         (error: Error) => reject(error),
       );
     });
-  }
-
-  public async fetchAsset(name: string): Promise<Asset> {
-    throw new Error(`Fetching assets (${name}) is not supported for RosbridgePlayer`);
   }
 
   // Bunch of unsupported stuff. Just don't do anything for these.
