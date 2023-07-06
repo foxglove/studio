@@ -132,10 +132,7 @@ describe("Initial deep link state", () => {
       },
     });
     const { result, rerender } = renderHook(
-      () =>
-        useInitialDeepLinkState([
-          "https://studio.foxglove.dev/?ds=foo-with-user&ds.bar=baz&layoutId=12345",
-        ]),
+      () => useInitialDeepLinkState(["https://studio.foxglove.dev/?ds=foo-with-user&ds.bar=baz"]),
       { wrapper },
     );
 

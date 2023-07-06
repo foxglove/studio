@@ -26,7 +26,7 @@ const log = Log.getLogger(__filename);
 
 const KEY = "studio.layout";
 
-export function CurrentLayoutSyncAdapter(): JSX.Element {
+export function CurrentLayoutLocalStorageSyncAdapter(): JSX.Element {
   const { selectedSource } = usePlayerSelection();
 
   const { setCurrentLayoutState } = useCurrentLayoutActions();

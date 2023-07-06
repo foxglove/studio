@@ -27,6 +27,6 @@ const LAYOUTS: Record<string, LayoutData> = {
   pointCloudRawMessage: makeLayoutData(PointcloudRawMessageAnd3d),
   pointCloudMultipleThreeDee: makeLayoutData(PointcloudMultipleThreeDee),
   transformPreloading: makeLayoutData(TransformPreloading),
-} as const;
+};
 
 export { LAYOUTS };

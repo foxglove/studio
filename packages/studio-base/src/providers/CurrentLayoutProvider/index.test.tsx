@@ -63,7 +63,7 @@ describe("CurrentLayoutProvider", () => {
       },
     });
 
-    getByText("Incompatible layout version");
+    expect(getByText("Incompatible layout version")).toBeDefined();
 
     expect(all.length).toBe(1);
     expect(all).toEqual([{ selectedLayout: undefined }]);
