@@ -6,7 +6,8 @@ import Log from "@foxglove/log";
 import * as rostime from "@foxglove/rostime";
 import { Time } from "@foxglove/rostime";
 import { FrameTransform } from "@foxglove/schemas";
-import { Asset, MessageEvent } from "@foxglove/studio";
+import { MessageEvent } from "@foxglove/studio";
+import { Asset } from "@foxglove/studio-base/components/PanelExtensionAdapter";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import {
   AdvertiseOptions,
@@ -74,7 +75,7 @@ class TransformPlayer implements Player {
   public async callService(_service: string, _request: unknown): Promise<unknown> {
     throw new Error("Method not implemented.");
   }
-  public async fetchAsset(_name: string): Promise<Asset> {
+  public async fetchAsset(_uri: string): Promise<Asset> {
     throw new Error("Method not implemented.");
   }
   public setGlobalVariables(_globalVariables: GlobalVariables): void {
