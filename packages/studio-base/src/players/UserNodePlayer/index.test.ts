@@ -467,6 +467,7 @@ describe("UserNodePlayer", () => {
         },
       });
 
+      // Pretend the player emits again (playing) but not our user script input messages
       await fakePlayer.emit({
         activeData: {
           ...basicPlayerState,
@@ -479,13 +480,22 @@ describe("UserNodePlayer", () => {
 
       const { messages: newMessages }: any = await nextDone;
 
-      expect(
-        newMessages.find(
-          (message: MessageEvent) =>
-            (message.message as { custom_np_field?: string }).custom_np_field ===
-            "COMPLETELY_DIFFERENT",
-        ),
-      ).toBeTruthy();
+      // We should still receive updated output messages even though there were no new input messages
+      expect(newMessages).toEqual([
+        {
+          message: {
+            custom_np_field: "COMPLETELY_DIFFERENT",
+            value: "bar",
+          },
+          receiveTime: {
+            nsec: 1,
+            sec: 0,
+          },
+          schemaName: "/studio_script/1",
+          sizeInBytes: 0,
+          topic: "/studio_script/1",
+        },
+      ]);
     });
 
     it("outputs updated messages on when user script is changed and player is paused", async () => {
