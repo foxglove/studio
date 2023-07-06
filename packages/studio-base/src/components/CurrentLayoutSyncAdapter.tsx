@@ -2,89 +2,80 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { enqueueSnackbar } from "notistack";
-import { useEffect, useState } from "react";
-import { useAsync, useMountedState } from "react-use";
+import assert from "assert";
+import { useEffect } from "react";
 import { useDebounce } from "use-debounce";
 
-import Logger from "@foxglove/log";
-import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
+import Log from "@foxglove/log";
 import {
   LayoutID,
   LayoutState,
+  useCurrentLayoutActions,
   useCurrentLayoutSelector,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
-import { useLayoutManager } from "@foxglove/studio-base/context/LayoutManagerContext";
-import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
+import { LayoutData } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
+import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
+import { defaultLayout } from "@foxglove/studio-base/providers/CurrentLayoutProvider/defaultLayout";
+import { migratePanelsState } from "@foxglove/studio-base/services/migrateLayout";
 
-type UpdatedLayout = NonNullable<LayoutState["selectedLayout"]>;
+function selectLayoutData(state: LayoutState) {
+  return state.selectedLayout?.data;
+}
 
-const log = Logger.getLogger(__filename);
+const log = Log.getLogger(__filename);
 
-const EMPTY_UNSAVED_LAYOUTS: Record<LayoutID, UpdatedLayout> = {};
-const SAVE_INTERVAL_MS = 1000;
+const KEY = "studio.layout";
 
-const selectCurrentLayout = (state: LayoutState) => state.selectedLayout;
+export function CurrentLayoutSyncAdapter(): JSX.Element {
+  const { selectedSource } = usePlayerSelection();
 
-/**
- * Observes changes in the current layout and asynchronously pushes them to the
- * layout manager.
- */
-export function CurrentLayoutSyncAdapter(): ReactNull {
-  const selectedLayout = useCurrentLayoutSelector(selectCurrentLayout);
-
-  const layoutManager = useLayoutManager();
-
-  const [unsavedLayouts, setUnsavedLayouts] = useState(EMPTY_UNSAVED_LAYOUTS);
-
-  const isMounted = useMountedState();
-
-  const analytics = useAnalytics();
+  const { setCurrentLayoutState } = useCurrentLayoutActions();
+  const currentLayoutData = useCurrentLayoutSelector(selectLayoutData);
 
   useEffect(() => {
-    if (selectedLayout?.edited === true) {
-      setUnsavedLayouts((old) => ({
-        ...old,
-        [selectedLayout.id]: selectedLayout,
-      }));
+    if (selectedSource?.sampleLayout) {
+      setCurrentLayoutState({
+        selectedLayout: {
+          id: "default" as LayoutID,
+          data: selectedSource.sampleLayout,
+        },
+      });
     }
-  }, [selectedLayout]);
+  }, [selectedSource, setCurrentLayoutState]);
 
-  const [debouncedUnsavedLayouts, debouncedUnsavedLayoutActions] = useDebounce(
-    unsavedLayouts,
-    SAVE_INTERVAL_MS,
-  );
+  const [debouncedLayoutData] = useDebounce(currentLayoutData, 250, { maxWait: 500 });
 
-  // Flush and clear pending updates on unmount.
   useEffect(() => {
-    return () => {
-      debouncedUnsavedLayoutActions.flush();
-      debouncedUnsavedLayoutActions.cancel();
-    };
-  }, [debouncedUnsavedLayoutActions]);
-
-  // Write all pending layout updates to the layout manager. Under the hood this
-  // uses useEffect so it happens after DOM updates are complete.
-  useAsync(async () => {
-    const unsavedLayoutsSnapshot = { ...debouncedUnsavedLayouts };
-    setUnsavedLayouts(EMPTY_UNSAVED_LAYOUTS);
-
-    for (const params of Object.values(unsavedLayoutsSnapshot)) {
-      try {
-        await layoutManager.updateLayout(params);
-      } catch (error) {
-        log.error(error);
-        if (isMounted()) {
-          enqueueSnackbar(`Your changes could not be saved. ${error.toString()}`, {
-            variant: "error",
-            key: "CurrentLayoutProvider.throttledSave",
-          });
-        }
-      }
+    if (!debouncedLayoutData) {
+      return;
     }
 
-    void analytics.logEvent(AppEvent.LAYOUT_UPDATE);
-  }, [analytics, debouncedUnsavedLayouts, isMounted, layoutManager]);
+    const serializedLayoutData = JSON.stringify(debouncedLayoutData);
+    assert(serializedLayoutData);
+    localStorage.setItem(KEY, serializedLayoutData);
+  }, [debouncedLayoutData]);
 
-  return ReactNull;
+  useEffect(() => {
+    log.debug(`Reading layout from local storage: ${KEY}`);
+
+    const serializedLayoutData = localStorage.getItem(KEY);
+
+    if (serializedLayoutData) {
+      log.debug("Restoring layout from local storage");
+    } else {
+      log.debug("No layout found in local storage. Using default layout.");
+    }
+
+    const layoutData = migratePanelsState(
+      serializedLayoutData ? (JSON.parse(serializedLayoutData) as LayoutData) : defaultLayout,
+    );
+    setCurrentLayoutState({
+      selectedLayout: {
+        id: "default" as LayoutID,
+        data: layoutData,
+      },
+    });
+  }, [setCurrentLayoutState]);
+
+  return <></>;
 }
