@@ -1039,7 +1039,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
           this.#fetchedAssets.set(uri, newAsset);
           resolve(newAsset);
         } else {
-          reject(`Failed to fetch asset: ${response.error}`);
+          reject(new Error(`Failed to fetch asset: ${response.error}`));
         }
       });
       this.#client?.fetchAsset(uri, assetRequestId);
