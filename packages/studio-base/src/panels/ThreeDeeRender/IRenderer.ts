@@ -348,6 +348,6 @@ export interface IRenderer extends EventEmitter<RendererEvents> {
   animationFrame: () => void;
   queueAnimationFrame: () => void;
 
-  // Function to fetch an asset from Studio's asset management layer.
+  // Function to fetch an asset from Studio's asset manager.
   fetchAsset: BuiltinPanelExtensionContext["unstable_fetchAsset"];
 }

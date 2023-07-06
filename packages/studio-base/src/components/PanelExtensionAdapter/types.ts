@@ -5,14 +5,14 @@
 import { PanelExtensionContext } from "@foxglove/studio";
 
 /**
- * An asset loaded from Studio's asset management layer.
+ * An asset loaded from Studio's asset manager.
  */
 export type Asset = {
-  /** A unique identifier for this asset. */
-  name: string;
+  /** Asset URI, corresponds to the URI with which the asset was retrieved. */
+  uri: string;
   /** Binary asset data. */
   data: Uint8Array;
-  /** The type of the asset. */
+  /** Asset type. */
   mediaType?: string;
 };
 
@@ -24,11 +24,15 @@ export type Asset = {
  */
 export type BuiltinPanelExtensionContext = {
   /**
-   * Fetch an asset from Studio's asset management layer.
+   * Fetch an asset from Studio's asset manager.
    *
-   * The asset management layer will determine how to fetch the asset. I.E. http(s) uris will use http requests
+   * The asset manager will determine how to fetch the asset. I.E. http(s) uris will use http requests
    * while other schemes may fall back to the data source.
    *
+   * @param uri URI identifying the asset
+   * @param options Optional abort signal that allows to abort fetching of the asset. Note that this
+   * might not be supported by all fetching methods.
+   * @returns
    */
   unstable_fetchAsset: (uri: string, options?: { signal: AbortSignal }) => Promise<Asset>;
 } & PanelExtensionContext;

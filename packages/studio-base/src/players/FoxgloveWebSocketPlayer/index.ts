@@ -1009,17 +1009,17 @@ export default class FoxgloveWebSocketPlayer implements Player {
     });
   }
 
-  public async fetchAsset(name: string): Promise<Asset> {
+  public async fetchAsset(uri: string): Promise<Asset> {
     if (!this.#client) {
       throw new Error(
-        `Attempted to fetch assset ${name} without a valid Foxglove WebSocket connection.`,
+        `Attempted to fetch assset ${uri} without a valid Foxglove WebSocket connection.`,
       );
     } else if (!this.#serverCapabilities.includes(ServerCapability.assets)) {
-      throw new Error(`Fetching assets (${name}) is not supported for FoxgloveWebSocketPlayer`);
+      throw new Error(`Fetching assets (${uri}) is not supported for FoxgloveWebSocketPlayer`);
     }
 
     return await new Promise<Asset>((resolve, reject) => {
-      const fetchedAsset = this.#fetchedAssets.get(name);
+      const fetchedAsset = this.#fetchedAssets.get(uri);
       if (fetchedAsset) {
         resolve(fetchedAsset);
         return;
@@ -1029,20 +1029,20 @@ export default class FoxgloveWebSocketPlayer implements Player {
       this.#fetchAssetRequests.set(assetRequestId, (response) => {
         if (response.status === FetchAssetStatus.SUCCESS) {
           const newAsset: Asset = {
-            name,
+            uri,
             data: new Uint8Array(
               response.data.buffer,
               response.data.byteOffset,
               response.data.byteLength,
             ),
           };
-          this.#fetchedAssets.set(name, newAsset);
+          this.#fetchedAssets.set(uri, newAsset);
           resolve(newAsset);
         } else {
           reject(`Failed to fetch asset: ${response.error}`);
         }
       });
-      this.#client?.fetchAsset(name, assetRequestId);
+      this.#client?.fetchAsset(uri, assetRequestId);
     });
   }
 

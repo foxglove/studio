@@ -137,7 +137,7 @@ export function createMessagePipelineStore({
 
         const response = await fetch(uri, options);
         return {
-          name: uri,
+          uri,
           data: new Uint8Array(await response.arrayBuffer()),
           mediaType: response.headers.get("content-type") ?? undefined,
         };

@@ -1101,9 +1101,9 @@ export default class UserNodePlayer implements Player {
     return await this.#player.callService(service, request);
   }
 
-  public async fetchAsset(name: string): Promise<Asset> {
+  public async fetchAsset(uri: string): Promise<Asset> {
     if (this.#player.fetchAsset) {
-      return await this.#player.fetchAsset(name);
+      return await this.#player.fetchAsset(uri);
     }
     throw Error("Player does not support fetching assets");
   }

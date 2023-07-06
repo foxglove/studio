@@ -113,7 +113,7 @@ function createTFMessageEvent(
 const fetchAsset = async (uri: string, options?: { signal: AbortSignal }): Promise<Asset> => {
   const response = await fetch(uri, options);
   return {
-    name: uri,
+    uri,
     data: new Uint8Array(await response.arrayBuffer()),
     mediaType: response.headers.get("content-type") ?? undefined,
   };
