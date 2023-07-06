@@ -22,7 +22,11 @@ export function SignInFormModal({ userSwitchRequired }: SignInFormModalProps): J
     if (!userSwitchRequired) {
       return;
     }
-    void confirm({ title: "You need to switch users", ok: "Sign out" }).then((response) => {
+    void confirm({
+      title:
+        "Your data source belongs to a different Foxglove organization. Do you want to sign out?",
+      ok: "Sign out",
+    }).then((response) => {
       if (response === "ok") {
         void signOut?.();
       }
