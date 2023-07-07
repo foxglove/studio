@@ -13,13 +13,13 @@
 
 import rawUserUtils from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/typescript/rawUserUtils";
 import {
-  ros_lib_filename,
   ros_lib_dts,
+  ros_lib_filename,
 } from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/typescript/ros";
 import { DEFAULT_STUDIO_NODE_PREFIX } from "@foxglove/studio-base/util/globalConstants";
 
-import { FoxgloveSchemaDeclarations } from "./foxgloveSchemaDeclarations";
-import { lib_filename, lib_dts } from "./lib";
+import { generateFoxgloveSchemaDeclarations } from "./foxgloveSchemaDeclarations";
+import { lib_dts, lib_filename } from "./lib";
 import { UserScriptProjectConfig, UserScriptProjectFile } from "./types";
 
 const utilityFiles: UserScriptProjectFile[] = rawUserUtils.map((utility) => ({
@@ -35,7 +35,7 @@ export function getUserScriptProjectConfig(): UserScriptProjectConfig {
     sourceCode: lib_dts,
   });
 
-  declarations.push(...FoxgloveSchemaDeclarations);
+  declarations.push(...generateFoxgloveSchemaDeclarations());
 
   return {
     defaultLibFileName: lib_filename,
