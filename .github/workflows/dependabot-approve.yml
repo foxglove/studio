@@ -1,3 +1,5 @@
+# Automatically approve PRs made by Dependabot to make them easier to merge.
+
 name: Dependabot
 
 on:
