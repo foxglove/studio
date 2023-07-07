@@ -90,7 +90,7 @@ export class ModelCache {
     if (buffer.byteLength < 4) {
       throw new Error(`${buffer.byteLength} bytes received`);
     }
-    const view = new DataView(buffer.buffer);
+    const view = new DataView(buffer.buffer, buffer.byteOffset, buffer.byteLength);
     const contentType = options.overrideMediaType ?? asset.mediaType ?? "";
 
     // Check if this is a glTF .glb or .gltf file
@@ -105,7 +105,7 @@ export class ModelCache {
 
     // Check if this is a STL file based on content-type or file extension
     if (STL_MIME_TYPES.includes(contentType) || /\.stl$/i.test(url)) {
-      return this.#loadSTL(url, buffer, this.options.meshUpAxis);
+      return this.#loadSTL(url, buffer.buffer.slice(buffer.byteOffset), this.options.meshUpAxis);
     }
 
     // Check if this is a COLLADA file based on content-type or file extension
