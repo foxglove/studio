@@ -20,15 +20,15 @@ import { DEFAULT_STUDIO_NODE_PREFIX } from "@foxglove/studio-base/util/globalCon
 
 import { FoxgloveSchemaDeclarations } from "./foxgloveSchemaDeclarations";
 import { lib_filename, lib_dts } from "./lib";
-import { NodeProjectConfig, NodeProjectFile } from "./types";
+import { UserScriptProjectConfig, UserScriptProjectFile } from "./types";
 
-const utilityFiles: NodeProjectFile[] = rawUserUtils.map((utility) => ({
+const utilityFiles: UserScriptProjectFile[] = rawUserUtils.map((utility) => ({
   ...utility,
   filePath: `${DEFAULT_STUDIO_NODE_PREFIX}${utility.fileName}`,
 }));
 
-export function getNodeProjectConfig(): NodeProjectConfig {
-  const declarations: NodeProjectConfig["declarations"] = [];
+export function getUserScriptProjectConfig(): UserScriptProjectConfig {
+  const declarations: UserScriptProjectConfig["declarations"] = [];
   declarations.push({
     fileName: lib_filename,
     filePath: lib_filename,

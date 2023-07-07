@@ -2,15 +2,22 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-export type NodeProjectFile = {
+/**
+ * Defines a predefined file & code we make available for imports in user scripts.
+ */
+export type UserScriptProjectFile = {
   fileName: string;
   filePath: string;
   sourceCode: string;
 };
 
-export type NodeProjectConfig = {
+/**
+ * Defines a project configuration for a user script, including types we make available
+ * for use in user script code.
+ */
+export type UserScriptProjectConfig = {
   defaultLibFileName: string;
-  declarations: NodeProjectFile[];
-  utilityFiles: NodeProjectFile[];
-  rosLib: NodeProjectFile;
+  declarations: UserScriptProjectFile[];
+  utilityFiles: UserScriptProjectFile[];
+  rosLib: UserScriptProjectFile;
 };

@@ -26,7 +26,7 @@ import { ModuleResolutionKind } from "typescript";
 
 import getPrettifiedCode from "@foxglove/studio-base/panels/NodePlayground/getPrettifiedCode";
 import { Script } from "@foxglove/studio-base/panels/NodePlayground/script";
-import { getNodeProjectConfig } from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/typescript/projectConfig";
+import { getUserScriptProjectConfig } from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/typescript/projectConfig";
 import inScreenshotTests from "@foxglove/studio-base/stories/inScreenshotTests";
 import { DEFAULT_STUDIO_NODE_PREFIX } from "@foxglove/studio-base/util/globalConstants";
 import { mightActuallyBePartial } from "@foxglove/studio-base/util/mightActuallyBePartial";
@@ -77,7 +77,7 @@ const gotoSelection = (editor: monacoApi.editor.IEditor, selection?: monacoApi.I
   }
 };
 
-const projectConfig = getNodeProjectConfig();
+const projectConfig = getUserScriptProjectConfig();
 const Editor = ({
   autoFormatOnSave,
   script,

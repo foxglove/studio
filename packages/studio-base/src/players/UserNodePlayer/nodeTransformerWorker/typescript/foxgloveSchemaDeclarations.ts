@@ -2,6 +2,9 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+// Declarations for @foxglove/schema types to support importing type definitions in user
+// scripts.
+
 import ArrowPrimitive from "@foxglove/schemas/schemas/typescript/ArrowPrimitive.d.ts?raw";
 import CameraCalibration from "@foxglove/schemas/schemas/typescript/CameraCalibration.d.ts?raw";
 import CircleAnnotation from "@foxglove/schemas/schemas/typescript/CircleAnnotation.d.ts?raw";
@@ -48,7 +51,8 @@ import TriangleListPrimitive from "@foxglove/schemas/schemas/typescript/Triangle
 import Vector2 from "@foxglove/schemas/schemas/typescript/Vector2.d.ts?raw";
 import Vector3 from "@foxglove/schemas/schemas/typescript/Vector3.d.ts?raw";
 import Index from "@foxglove/schemas/schemas/typescript/index.d.ts?raw";
-import { NodeProjectConfig } from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/typescript/types";
+
+import { UserScriptProjectConfig } from "./types";
 
 function declaration(sourceCode: string, name: string) {
   return {
@@ -58,7 +62,7 @@ function declaration(sourceCode: string, name: string) {
   };
 }
 
-export const FoxgloveSchemaDeclarations: NodeProjectConfig["declarations"] = [
+export const FoxgloveSchemaDeclarations: UserScriptProjectConfig["declarations"] = [
   declaration(ArrowPrimitive, "ArrowPrimitive"),
   declaration(CameraCalibration, "CameraCalibration"),
   declaration(CircleAnnotation, "CircleAnnotation"),
