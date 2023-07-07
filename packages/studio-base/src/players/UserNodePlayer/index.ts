@@ -136,7 +136,6 @@ export default class UserNodePlayer implements Player {
   // keep track of last message on all topics to recompute output topic messages when user nodes change
   #lastMessageByInputTopic = new Map<string, MessageEvent>();
   #userNodeIdsNeedUpdate = new Set<string>();
-  #globalVariablesChanged = false;
 
   #protectedState = new MutexLocked<ProtectedState>({
     userNodes: {},
@@ -345,7 +344,6 @@ export default class UserNodePlayer implements Player {
 
   public setGlobalVariables(globalVariables: GlobalVariables): void {
     this.#globalVariables = globalVariables;
-    this.#globalVariablesChanged = true;
   }
 
   // Called when userNode state is updated (i.e. scripts are saved)
@@ -900,15 +898,6 @@ export default class UserNodePlayer implements Player {
 
           for (const topic of inputTopics) {
             inputTopicsForRecompute.add(topic);
-          }
-        }
-
-        // if the globalVariables have changed recompute all last messages for the current frame
-        // there's no way to know which nodes are affected by the globalVariables change to make this more specific
-        if (this.#globalVariablesChanged) {
-          this.#globalVariablesChanged = false;
-          for (const inputTopic of this.#lastMessageByInputTopic.keys()) {
-            inputTopicsForRecompute.add(inputTopic);
           }
         }
 
