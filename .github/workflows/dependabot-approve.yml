@@ -9,19 +9,12 @@ jobs:
     runs-on: ubuntu-latest
     if: github.actor == 'dependabot[bot]'
     steps:
-      - uses: actions/github-script@v6
-        name: Approve PR
+      - uses: octokit/request-action@v2.x
+        env:
+          GITHUB_TOKEN: ${{ secrets.FOXGLOVEBOT_GITHUB_TOKEN }}
         with:
-          github-token: ${{ secrets.FOXGLOVEBOT_GITHUB_TOKEN }}
-          script: |
-            const { owner, repo } = context.repo;
-            const pull_number = context.issue.number;
-
-            console.log("Creating review for:", { owner, repo, pull_number });
-
-            await github.rest.pulls.createReview({
-              owner,
-              repo,
-              pull_number,
-              event: "APPROVE",
-            });
+          route: POST /repos/{owner}/{repo}/pulls/{pull_number}/reviews
+          owner: ${{ github.event.pull_request.organization }}
+          repo: ${{ github.event.pull_request.repository }}
+          pull_number: ${{ github.event.pull_request.number }}
+          event: "APPROVE"
