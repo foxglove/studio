@@ -921,8 +921,6 @@ export default class UserNodePlayer implements Player {
           this.#lastMessageByInputTopic.set(message.topic, message);
         }
 
-        const messagesRecomputed = messagesForRecompute.length > 0;
-
         // These are new messages generated from input messages
         const computed = await this.#getMessages(
           messages,
@@ -969,7 +967,6 @@ export default class UserNodePlayer implements Player {
             messages: currentFrameMessages,
             topics: this.#getTopics(topics, this.#memoizedNodeTopics),
             datatypes: allDatatypes,
-            messagesRecomputed,
           },
         };
       });
