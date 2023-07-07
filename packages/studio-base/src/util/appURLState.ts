@@ -11,7 +11,7 @@ export type AppURLState = {
   ds?: string;
   dsParams?: Record<string, string>;
   layoutId?: LayoutID;
-  orgSlug?: string;
+  org?: string;
   time?: Time;
 };
 
@@ -33,11 +33,11 @@ export function updateAppURLState(url: URL, urlState: AppURLState): URL {
     }
   }
 
-  if ("orgSlug" in urlState) {
-    if (urlState.orgSlug) {
-      newURL.searchParams.set("orgSlug", urlState.orgSlug);
+  if ("org" in urlState) {
+    if (urlState.org) {
+      newURL.searchParams.set("org", urlState.org);
     } else {
-      newURL.searchParams.delete("orgSlug");
+      newURL.searchParams.delete("org");
     }
   }
 
@@ -84,7 +84,7 @@ export function updateAppURLState(url: URL, urlState: AppURLState): URL {
 export function parseAppURLState(url: URL): AppURLState | undefined {
   const ds = url.searchParams.get("ds") ?? undefined;
   const layoutId = url.searchParams.get("layoutId");
-  const orgSlug = url.searchParams.get("orgSlug");
+  const org = url.searchParams.get("org");
   const timeString = url.searchParams.get("time");
   const time = timeString == undefined ? undefined : fromRFC3339String(timeString);
   const dsParams: Record<string, string> = {};
@@ -98,7 +98,7 @@ export function parseAppURLState(url: URL): AppURLState | undefined {
   const state: AppURLState = omitBy(
     {
       layoutId: layoutId ? (layoutId as LayoutID) : undefined,
-      orgSlug,
+      org,
       time,
       ds,
       dsParams: isEmpty(dsParams) ? undefined : dsParams,

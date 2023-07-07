@@ -141,9 +141,9 @@ export function useInitialDeepLinkState(deepLinks: readonly string[]): {
 
   const { currentUser } = useCurrentUser();
   const userSwitchRequired =
-    targetUrlState?.orgSlug != undefined &&
+    targetUrlState?.org != undefined &&
     currentUser?.org.slug != undefined &&
-    currentUser.org.slug !== targetUrlState.orgSlug;
+    currentUser.org.slug !== targetUrlState.org;
 
   return { currentUserRequired, userSwitchRequired };
 }

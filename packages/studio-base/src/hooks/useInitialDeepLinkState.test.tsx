@@ -178,7 +178,7 @@ describe("Initial deep link state", () => {
     const correctOrgSlug = "my-org";
 
     const { result, rerender } = renderHook(
-      () => useInitialDeepLinkState(["https://studio.foxglove.dev/?orgSlug=" + correctOrgSlug]),
+      () => useInitialDeepLinkState(["https://studio.foxglove.dev/?org=" + correctOrgSlug]),
       { wrapper },
     );
 
