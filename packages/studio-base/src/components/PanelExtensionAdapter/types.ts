@@ -17,7 +17,7 @@ export type Asset = {
 };
 
 /**
- * PrivateExtensionContext adds additional built-in only functionality to the PanelExtensionContext.
+ * BuiltinPanelExtensionContext adds additional built-in only functionality to the PanelExtensionContext.
  *
  * These are unstable internal interfaces still in development and not yet available to 3rd party
  * extensions.
