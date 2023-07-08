@@ -71,6 +71,7 @@ export type LayerSettingsCustomUrdf = CustomLayerSettings & {
   layerId: "foxglove.Urdf";
   url: string;
   framePrefix: string;
+  displayMode: "auto" | "visual" | "collision";
 };
 
 const DEFAULT_SETTINGS: LayerSettingsUrdf = {
@@ -87,6 +88,7 @@ const DEFAULT_CUSTOM_SETTINGS: LayerSettingsCustomUrdf = {
   layerId: LAYER_ID,
   url: "",
   framePrefix: "",
+  displayMode: "auto",
 };
 
 const tempVec3a = new THREE.Vector3();
@@ -249,6 +251,25 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
             input: "string",
             help: "Prefix to apply to all frame names (also often called tfPrefix)",
             value: config.framePrefix ?? "",
+          },
+          displayMode: {
+            label: "Display mode",
+            input: "select",
+            value: config.displayMode,
+            options: [
+              {
+                label: "Auto",
+                value: "auto",
+              },
+              {
+                label: "Visual",
+                value: "visual",
+              },
+              {
+                label: "Collision",
+                value: "collision",
+              },
+            ],
           },
         };
 
@@ -654,7 +675,9 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
 
   #loadRobot(renderable: UrdfRenderable, { robot, frames, transforms }: ParsedUrdf): void {
     const renderer = this.renderer;
-    const instanceId = renderable.userData.settings.instanceId;
+    const settings = renderable.userData.settings;
+    const instanceId = settings.instanceId;
+    const displayMode = (settings as Partial<LayerSettingsCustomUrdf>).displayMode ?? "auto";
 
     this.#loadFrames(instanceId, frames);
     this.#loadTransforms(instanceId, transforms);
@@ -675,13 +698,17 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     // Create a renderable for each link
     for (const link of robot.links.values()) {
       const frameId = link.name;
+      const renderVisual = displayMode !== "collision";
+      const renderCollision =
+        displayMode === "collision" || (displayMode === "auto" && link.visuals.length === 0);
 
-      for (let i = 0; i < link.visuals.length; i++) {
-        createChild(frameId, i, link.visuals[i]!);
+      if (renderVisual) {
+        for (let i = 0; i < link.visuals.length; i++) {
+          createChild(frameId, i, link.visuals[i]!);
+        }
       }
 
-      if (link.visuals.length === 0 && link.colliders.length > 0) {
-        // If there are no visuals, but there are colliders, render those instead
+      if (renderCollision) {
         for (let i = 0; i < link.colliders.length; i++) {
           createChild(frameId, i, link.colliders[i]!);
         }
