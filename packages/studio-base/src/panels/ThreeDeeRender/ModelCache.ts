@@ -107,7 +107,13 @@ export class ModelCache {
     if (STL_MIME_TYPES.includes(contentType) || /\.stl$/i.test(url)) {
       // Create a copy of the array buffer to respect the `byteOffset` value as the
       //  underlying three.js STLLoader only accepts an ArrayBuffer instance.
-      return this.#loadSTL(url, buffer.buffer.slice(buffer.byteOffset), this.options.meshUpAxis);
+      // Create a copy of the array buffer to respect the `byteOffset` and `byteLength` value as
+      // the underlying three.js STLLoader only accepts an ArrayBuffer instance.
+      return this.#loadSTL(
+        url,
+        buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength),
+        this.options.meshUpAxis,
+      );
     }
 
     // Check if this is a COLLADA file based on content-type or file extension
