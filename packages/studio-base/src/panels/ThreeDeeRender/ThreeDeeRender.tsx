@@ -137,7 +137,7 @@ export function ThreeDeeRender(props: {
   const rendererRef = useRef<IRenderer | undefined>(undefined);
   useEffect(() => {
     const newRenderer = canvas
-      ? new Renderer(canvas, configRef.current, interfaceMode, fetchAsset)
+      ? new Renderer({ canvas, config: configRef.current, interfaceMode, fetchAsset })
       : undefined;
     setRenderer(newRenderer);
     rendererRef.current = newRenderer;
