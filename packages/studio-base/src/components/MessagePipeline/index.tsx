@@ -77,6 +77,13 @@ export function MessagePipelineProvider({
 }: ProviderProps): React.ReactElement {
   const promisesToWaitForRef = useRef<FramePromise[]>([]);
 
+  // We make a new store when the player changes. This throws away any state from the previous store
+  // and re-creates the pipeline functions and references. We make a new store to avoid holding onto
+  // any state from the previous store.
+  //
+  // Note: This throws away any publishers, subscribers, etc that panels may have registered. We
+  // are ok with this behavior because the <Workspace> re-mounts all panels when a player changes.
+  // The re-mounted panels will re-initialize and setup new publishers and subscribers.
   const store = useMemo(() => {
     return createMessagePipelineStore({ promisesToWaitForRef, initialPlayer: player });
   }, [player]);
