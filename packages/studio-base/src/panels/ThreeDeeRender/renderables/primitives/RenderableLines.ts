@@ -88,7 +88,7 @@ export class RenderableLines extends RenderablePrimitive {
   }
 }
 
-const MIN_PICKING_WIDTH_PX = 5;
+const MIN_PICKING_LINE_WIDTH_PX = 5;
 
 class LinePrimitiveRenderable extends THREE.Object3D {
   #geometry: LineSegmentsGeometry | LineGeometry | undefined;
@@ -126,7 +126,7 @@ class LinePrimitiveRenderable extends THREE.Object3D {
     this.#pickingMaterial.worldUnits = !primitive.scale_invariant;
     // make sure thin, scale_invariant lines are still pickable
     this.#pickingMaterial.lineWidth = primitive.scale_invariant
-      ? Math.max(primitive.thickness, MIN_PICKING_WIDTH_PX)
+      ? Math.max(primitive.thickness, MIN_PICKING_LINE_WIDTH_PX)
       : primitive.thickness;
     this.#pickingMaterial.needsUpdate = true;
   }
@@ -283,7 +283,7 @@ class LinePrimitiveRenderable extends THREE.Object3D {
     this.#pickingMaterial.worldUnits = !this.#primitive.scale_invariant;
     // make sure thin, scale invariant lines are still pickable
     this.#pickingMaterial.lineWidth = this.#primitive.scale_invariant
-      ? Math.max(this.#primitive.thickness, MIN_PICKING_WIDTH_PX)
+      ? Math.max(this.#primitive.thickness, MIN_PICKING_LINE_WIDTH_PX)
       : this.#primitive.thickness;
     this.#pickingMaterial.uniformsNeedUpdate = true;
     this.#pickingMaterial.needsUpdate = true;
