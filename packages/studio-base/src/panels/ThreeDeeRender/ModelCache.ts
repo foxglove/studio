@@ -105,6 +105,8 @@ export class ModelCache {
 
     // Check if this is a STL file based on content-type or file extension
     if (STL_MIME_TYPES.includes(contentType) || /\.stl$/i.test(url)) {
+      // Create a copy of the array buffer to respect the `byteOffset` value as the
+      //  underlying three.js STLLoader only accepts an ArrayBuffer instance.
       return this.#loadSTL(url, buffer.buffer.slice(buffer.byteOffset), this.options.meshUpAxis);
     }
 
