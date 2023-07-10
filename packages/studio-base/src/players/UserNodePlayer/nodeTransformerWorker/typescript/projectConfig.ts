@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { exportTypescriptSchemata } from "@foxglove/schemas/internal";
+import { exportTypeScriptSchemas } from "@foxglove/schemas/internal";
 import rawUserUtils from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/typescript/rawUserUtils";
 import {
   ros_lib_dts,
@@ -23,8 +23,8 @@ import { lib_dts, lib_filename } from "./lib";
 import { UserScriptProjectConfig, UserScriptProjectFile } from "./types";
 
 function generateFoxgloveSchemaDeclarations(): UserScriptProjectConfig["declarations"] {
-  const schemata = exportTypescriptSchemata();
-  return Object.entries(schemata).map(([name, sourceCode]) => ({
+  const schemas = exportTypeScriptSchemas();
+  return [...schemas.entries()].map(([name, sourceCode]) => ({
     fileName: `@foxglove/schemas/${name}.d.ts`,
     filePath: `@foxglove/schemas/${name}.d.ts`,
     sourceCode,
