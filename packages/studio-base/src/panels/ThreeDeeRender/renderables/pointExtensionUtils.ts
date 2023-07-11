@@ -364,8 +364,6 @@ export function createInstancePickingMaterial<T extends LayerSettingsPointExtens
 type RenderObjectHistoryUserData = BaseUserData & {
   topic: string;
   settings: LayerSettingsPointExtension;
-  material: THREE.Material;
-  pickingMaterial: THREE.Material;
 };
 
 type DisposableObject = THREE.Object3D & { dispose(): void };

@@ -49,9 +49,6 @@ type LaserScanHistoryUserData = BaseUserData & {
   topic: string;
   laserScan: NormalizedLaserScan;
   originalMessage: Record<string, RosValue> | undefined;
-  material: LaserScanMaterial;
-  pickingMaterial: LaserScanMaterial;
-  instancePickingMaterial: LaserScanInstancePickingMaterial;
 };
 
 const LASERSCAN_FIELDS = ["range", "intensity"];
@@ -82,6 +79,23 @@ type LaserScanUserData = BaseUserData & {
 };
 
 class LaserScanRenderable extends PointsRenderable<LaserScanUserData> {
+  // Since these materials have uniforms based on message data, each renderable needs its own
+  // instance of the materials. Three.js internally caches WebGL programs to avoid compiling the
+  // shaders more than once.
+  #material: LaserScanMaterial;
+  #pickingMaterial: LaserScanMaterial;
+  #instancePickingMaterial: LaserScanInstancePickingMaterial;
+
+  public constructor(name: string, userData: LaserScanUserData, geometry: DynamicBufferGeometry) {
+    const material = new LaserScanMaterial();
+    const pickingMaterial = new LaserScanMaterial({ picking: true });
+    const instancePickingMaterial = new LaserScanInstancePickingMaterial();
+    super(name, userData, geometry, material, pickingMaterial, instancePickingMaterial);
+    this.#material = material;
+    this.#pickingMaterial = pickingMaterial;
+    this.#instancePickingMaterial = instancePickingMaterial;
+  }
+
   public override details(): Record<string, RosValue> {
     return this.userData.originalMessage ?? {};
   }
@@ -96,6 +110,25 @@ class LaserScanRenderable extends PointsRenderable<LaserScanUserData> {
         ? this.userData.laserScan.intensities[instanceId]
         : undefined;
     return { range, intensity };
+  }
+
+  public updateUniforms(settings: LayerSettingsLaserScan, laserScan: NormalizedLaserScan): void {
+    this.#material.updateUniforms(settings, laserScan);
+    this.#pickingMaterial.updateUniforms(settings, laserScan);
+    this.#instancePickingMaterial.updateUniforms(settings, laserScan);
+  }
+
+  public setPixelRatio(pixelRatio: number): void {
+    this.#material.setPixelRatio(pixelRatio);
+    this.#pickingMaterial.setPixelRatio(pixelRatio);
+    this.#instancePickingMaterial.setPixelRatio(pixelRatio);
+  }
+
+  public override dispose(): void {
+    super.dispose();
+    this.#material.dispose();
+    this.#pickingMaterial.dispose();
+    this.#instancePickingMaterial.dispose();
   }
 }
 
@@ -126,9 +159,6 @@ class LaserScanHistoryRenderable extends Renderable<LaserScanHistoryUserData> {
         originalMessage: userData.originalMessage,
       },
       geometry,
-      userData.material,
-      userData.pickingMaterial,
-      userData.instancePickingMaterial,
     );
 
     this.#pointsHistory = new RenderObjectHistory({
@@ -144,9 +174,6 @@ class LaserScanHistoryRenderable extends Renderable<LaserScanHistoryUserData> {
   }
   public override dispose(): void {
     this.userData.originalMessage = undefined;
-    this.userData.material.dispose();
-    this.userData.pickingMaterial.dispose();
-    this.userData.instancePickingMaterial.dispose();
     this.#pointsHistory.dispose();
     super.dispose();
   }
@@ -180,9 +207,6 @@ class LaserScanHistoryRenderable extends Renderable<LaserScanHistoryUserData> {
       return;
     }
 
-    const laserScanMaterial = this.userData.material;
-    const pickingMaterial = this.userData.pickingMaterial;
-
     const topic = this.userData.topic;
     const pointsHistory = this.#pointsHistory;
     const isDecay = settings.decayTime > 0;
@@ -203,9 +227,6 @@ class LaserScanHistoryRenderable extends Renderable<LaserScanHistoryUserData> {
           originalMessage,
         },
         geometry,
-        laserScanMaterial,
-        pickingMaterial,
-        this.userData.instancePickingMaterial,
       );
       pointsHistory.addHistoryEntry({ receiveTime, messageTime, renderable: points });
       this.add(points);
@@ -225,8 +246,7 @@ class LaserScanHistoryRenderable extends Renderable<LaserScanHistoryUserData> {
     rangeAttribute.set(ranges);
 
     // Update material uniforms
-    laserScanMaterial.update(settings, laserScan);
-    pickingMaterial.update(settings, laserScan);
+    latestEntry.renderable.updateUniforms(settings, laserScan);
 
     // Determine min/max color values (if needed) and max range
     let minColorValue = settings.minValue ?? Number.POSITIVE_INFINITY;
@@ -279,13 +299,6 @@ class LaserScanHistoryRenderable extends Renderable<LaserScanHistoryUserData> {
     colorAttribute.needsUpdate = true;
   }
 
-  public updateUniforms(): void {
-    const pixelRatio = this.renderer.getPixelRatio();
-    this.userData.material.setPixelRatio(pixelRatio);
-    this.userData.pickingMaterial.setPixelRatio(pixelRatio);
-    this.userData.instancePickingMaterial.setPixelRatio(pixelRatio);
-  }
-
   public invalidateLastEntry() {
     const lastEntry = this.#pointsHistory.latest();
     lastEntry.renderable.geometry.resize(0);
@@ -294,7 +307,10 @@ class LaserScanHistoryRenderable extends Renderable<LaserScanHistoryUserData> {
   public startFrame(currentTime: bigint, renderFrameId: string, fixedFrameId: string): void {
     this.#pointsHistory.updateHistoryFromCurrentTime(currentTime);
     this.#pointsHistory.updatePoses(currentTime, renderFrameId, fixedFrameId);
-    this.updateUniforms();
+    const pixelRatio = this.renderer.getPixelRatio();
+    this.#pointsHistory.forEach((entry) => {
+      entry.renderable.setPixelRatio(pixelRatio);
+    });
   }
 }
 
@@ -359,7 +375,6 @@ export class LaserScans extends SceneExtension<LaserScanHistoryRenderable> {
         continue;
       }
       renderable.startFrame(currentTime, renderFrameId, fixedFrameId);
-      renderable.updateUniforms();
     }
   }
 
@@ -421,14 +436,6 @@ export class LaserScans extends SceneExtension<LaserScanHistoryRenderable> {
         });
       }
 
-      const material = new LaserScanMaterial();
-      const pickingMaterial = new LaserScanMaterial({ picking: true });
-      const instancePickingMaterial = new LaserScanInstancePickingMaterial();
-
-      material.update(settings, laserScan);
-      pickingMaterial.update(settings, laserScan);
-      instancePickingMaterial.update(settings, laserScan);
-
       const messageTime = toNanoSec(laserScan.timestamp);
       renderable = new LaserScanHistoryRenderable(topic, this.renderer, {
         receiveTime,
@@ -440,9 +447,6 @@ export class LaserScans extends SceneExtension<LaserScanHistoryRenderable> {
         topic,
         laserScan,
         originalMessage: messageEvent.message as RosObject,
-        material,
-        pickingMaterial,
-        instancePickingMaterial,
       });
 
       this.add(renderable);
@@ -531,7 +535,7 @@ export class LaserScanMaterial extends THREE.RawShaderMaterial {
     }
   }
 
-  public update(settings: LayerSettingsLaserScan, laserScan: NormalizedLaserScan): void {
+  public updateUniforms(settings: LayerSettingsLaserScan, laserScan: NormalizedLaserScan): void {
     this.uniforms.isCircle!.value = settings.pointShape === "circle";
     this.uniforms.pointSize!.value = settings.pointSize;
     this.uniforms.angleMin!.value = laserScan.start_angle;
@@ -619,7 +623,7 @@ class LaserScanInstancePickingMaterial extends THREE.RawShaderMaterial {
     };
   }
 
-  public update(settings: LayerSettingsLaserScan, laserScan: NormalizedLaserScan): void {
+  public updateUniforms(settings: LayerSettingsLaserScan, laserScan: NormalizedLaserScan): void {
     this.uniforms.isCircle!.value = settings.pointShape === "circle";
     this.uniforms.pointSize!.value = settings.pointSize;
     this.uniforms.angleMin!.value = laserScan.start_angle;
