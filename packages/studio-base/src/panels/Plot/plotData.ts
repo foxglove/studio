@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { assignWith, isEmpty } from "lodash";
+import { isEmpty } from "lodash";
 import memoizeWeak from "memoize-weak";
 
 import { Time } from "@foxglove/rostime";
@@ -13,23 +13,24 @@ import { Range } from "@foxglove/studio-base/util/ranges";
 
 import {
   BasePlotPath,
-  DataSet,
+  DatasetsByPath,
   Datum,
   PlotDataByPath,
   PlotPath,
   PlotXAxisVal,
   isReferenceLinePlotPathType,
 } from "./internalTypes";
+import * as maps from "./maps";
 
 export type PlotData = {
   bounds: Bounds;
-  datasetsByPath: Record<string, DataSet>;
+  datasetsByPath: DatasetsByPath;
   pathsWithMismatchedDataLengths: string[];
 };
 
 export const EmptyPlotData: Im<PlotData> = Object.freeze({
   bounds: makeInvertedBounds(),
-  datasetsByPath: {},
+  datasetsByPath: new Map(),
   pathsWithMismatchedDataLengths: [],
 });
 
@@ -44,13 +45,13 @@ function findXRanges(data: Im<PlotData>): {
   const byPath: Record<string, Range> = {};
   let start = Number.MAX_SAFE_INTEGER;
   let end = Number.MIN_SAFE_INTEGER;
-  for (const [path, items] of Object.entries(data.datasetsByPath)) {
-    const thisPath = (byPath[path] = {
+  for (const [path, dataset] of data.datasetsByPath) {
+    const thisPath = (byPath[path.value] = {
       start: Number.MAX_SAFE_INTEGER,
       end: Number.MIN_SAFE_INTEGER,
     });
-    thisPath.start = Math.min(thisPath.start, items.data.at(0)?.x ?? Number.MAX_SAFE_INTEGER);
-    thisPath.end = Math.max(thisPath.end, items.data.at(-1)?.x ?? Number.MIN_SAFE_INTEGER);
+    thisPath.start = Math.min(thisPath.start, dataset.data.at(0)?.x ?? Number.MAX_SAFE_INTEGER);
+    thisPath.end = Math.max(thisPath.end, dataset.data.at(-1)?.x ?? Number.MIN_SAFE_INTEGER);
     start = Math.min(start, thisPath.start);
     end = Math.max(end, thisPath.end);
   }
@@ -74,20 +75,12 @@ export function appendPlotData(a: Im<PlotData>, b: Im<PlotData>): Im<PlotData> {
   return {
     ...a,
     bounds: unionBounds(a.bounds, b.bounds),
-    datasetsByPath: assignWith(
-      {},
-      a.datasetsByPath,
-      b.datasetsByPath,
-      (objValue: undefined | DataSet, srcValue: undefined | DataSet) => {
-        if (objValue == undefined) {
-          return srcValue;
-        }
-        return {
-          ...objValue,
-          data: objValue.data.concat(srcValue?.data ?? []),
-        };
-      },
-    ),
+    datasetsByPath: maps.merge(a.datasetsByPath, b.datasetsByPath, (aVal, bVal) => {
+      return {
+        ...aVal,
+        data: aVal.data.concat(bVal.data),
+      };
+    }),
   };
 }
 
@@ -108,27 +101,19 @@ function mergePlotData(a: Im<PlotData>, b: Im<PlotData>): Im<PlotData> {
   return {
     ...a,
     bounds: unionBounds(a.bounds, b.bounds),
-    datasetsByPath: assignWith(
-      {},
-      a.datasetsByPath,
-      b.datasetsByPath,
-      (objValue: undefined | DataSet, srcValue: undefined | DataSet) => {
-        if (objValue == undefined) {
-          return srcValue;
-        }
-        const lastTime = objValue.data.at(-1)?.x ?? Number.MIN_SAFE_INTEGER;
-        const newValues = srcValue?.data.filter((datum) => datum.x > lastTime) ?? [];
-        if (newValues.length > 0) {
-          return {
-            ...objValue,
-            // Insert NaN/NaN datum to cause a break in the line.
-            data: objValue.data.concat({ x: NaN, y: NaN } as Datum, newValues),
-          };
-        } else {
-          return objValue;
-        }
-      },
-    ),
+    datasetsByPath: maps.merge(a.datasetsByPath, b.datasetsByPath, (aVal, bVal) => {
+      const lastTime = aVal.data.at(-1)?.x ?? Number.MIN_SAFE_INTEGER;
+      const newValues = bVal.data.filter((datum) => datum.x > lastTime);
+      if (newValues.length > 0) {
+        return {
+          ...aVal,
+          // Insert NaN/NaN datum to cause a break in the line.
+          data: aVal.data.concat({ x: NaN, y: NaN } as Datum, newValues),
+        };
+      } else {
+        return aVal;
+      }
+    }),
   };
 }
 
@@ -144,9 +129,8 @@ function compare(a: Im<PlotData>, b: Im<PlotData>): number {
 }
 
 /**
- * Reduce multiple DatasetWithPath objects into a single PlotDataByPath object,
- * concatenating messages for each path after trimming messages that overlap
- * between items.
+ * Reduce multiple PlotData objects into a single PlotData object, concatenating messages
+ * for each path after trimming messages that overlap between items.
  */
 export function reducePlotData(data: Im<PlotData[]>): Im<PlotData> {
   const sorted = data.slice().sort(compare);
@@ -174,7 +158,7 @@ export function buildPlotData(
   const { paths, itemsByPath, startTime, xAxisVal, xAxisPath, invertedTheme } = args;
   const bounds: Bounds = makeInvertedBounds();
   const pathsWithMismatchedDataLengths: string[] = [];
-  const datasets: PlotData["datasetsByPath"] = {};
+  const datasets: DatasetsByPath = new Map();
   for (const [index, path] of paths.entries()) {
     const yRanges = itemsByPath[path.value] ?? [];
     const xRanges = xAxisPath && itemsByPath[xAxisPath.value];
@@ -205,7 +189,7 @@ export function buildPlotData(
           bounds.y.max = Math.max(bounds.y.max, datum.y);
         }
       }
-      datasets[path.value] = res.dataset;
+      datasets.set(path, res.dataset);
     }
   }
 

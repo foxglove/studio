@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { sumBy } from "lodash";
+import { sumBy, transform } from "lodash";
 import { useEffect, useMemo, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 
@@ -21,6 +21,14 @@ type State = {
   previousBlocks: Immutable<Array<undefined | MessageBlock>>;
 };
 
+function makeInitialState(): State {
+  return {
+    cursors: {},
+    messages: {},
+    previousBlocks: [],
+  };
+}
+
 const selectBlocks = (ctx: MessagePipelineContext) =>
   ctx.playerState.progress.messageCache?.blocks ?? EmptyBlocks;
 
@@ -38,11 +46,7 @@ const selectSetSubscriptions = (ctx: MessagePipelineContext) => ctx.setSubscript
 export function useAllFramesByTopic(
   topics: readonly string[],
 ): Immutable<Record<string, MessageEvent[]>> {
-  const [state, setState] = useState<State>(() => ({
-    cursors: {},
-    messages: {},
-    previousBlocks: [],
-  }));
+  const [state, setState] = useState(makeInitialState);
 
   const [subscriberId] = useState(() => uuidv4());
 
@@ -94,23 +98,14 @@ export function useAllFramesByTopic(
       // Rebuild message buffers and cursors from last state, resetting if we are
       // rebuilding from scratch, making sure there is an entry in messages for all
       // requested topics even if we don't find messages for each topic in loaded blocks.
-      const newState: State = {
-        cursors: topics.reduce(
-          (acc, topic) => ({
-            ...acc,
-            [topic]: shouldResetState ? -1 : oldState.cursors[topic] ?? -1,
-          }),
-          {},
-        ),
-        messages: topics.reduce(
-          (acc, topic) => ({
-            ...acc,
-            [topic]: shouldResetState ? [] : oldState.messages[topic] ?? [],
-          }),
-          {},
-        ),
-        previousBlocks: blocks,
-      };
+      const newState = transform(
+        topics,
+        (acc, topic) => {
+          acc.cursors[topic] = shouldResetState ? -1 : oldState.cursors[topic] ?? -1;
+          acc.messages[topic] = shouldResetState ? [] : oldState.messages[topic] ?? [];
+        },
+        { ...makeInitialState(), previousBlocks: blocks },
+      );
 
       // append new messages to accumulating per-topic buffers and update cursors
       for (const [idx, block] of blocks.entries()) {

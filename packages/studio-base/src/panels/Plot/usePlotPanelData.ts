@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { useTheme } from "@mui/material";
-import { groupBy, intersection, isEmpty, mapValues, pick } from "lodash";
+import { groupBy, intersection, isEmpty, mapValues } from "lodash";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLatest } from "react-use";
 
@@ -27,6 +27,7 @@ import { getTimestampForMessage } from "@foxglove/studio-base/util/time";
 
 import { calculateDatasetBounds } from "./datasets";
 import { BasePlotPath, DataSet, PlotDataByPath, PlotPath, PlotXAxisVal } from "./internalTypes";
+import * as maps from "./maps";
 import { getBlockItemsByPath } from "./messageProcessing";
 import { EmptyPlotData, PlotData, appendPlotData, buildPlotData, reducePlotData } from "./plotData";
 import { useAllFramesByTopic } from "./useAllFramesByTopic";
@@ -64,8 +65,8 @@ type State = Immutable<{
 function applyDerivativeToPlotData(data: Immutable<PlotData>): Immutable<PlotData> {
   return {
     ...data,
-    datasetsByPath: mapValues(data.datasetsByPath, (dataset, path) => {
-      if (path.endsWith(".@derivative")) {
+    datasetsByPath: maps.mapValues(data.datasetsByPath, (dataset, path) => {
+      if (path.value.endsWith(".@derivative")) {
         return {
           ...dataset,
           data: derivative(dataset.data),
@@ -89,24 +90,16 @@ function applyDerivativeToPlotData(data: Immutable<PlotData>): Immutable<PlotDat
  * time ordering is undefined (could be different for different data sources), but the header stamps
  * still need sorting so the plot renders correctly.
  */
-function sortPlotDataByHeaderStamp(
-  paths: Immutable<PlotPath[]>,
-  data: Immutable<PlotData>,
-): Immutable<PlotData> {
-  const processedDatasets = filterMap(paths, (path) => {
-    const dataset = data.datasetsByPath[path.value];
-    if (dataset == undefined) {
-      return undefined;
-    }
-
+function sortPlotDataByHeaderStamp(data: Immutable<PlotData>): Immutable<PlotData> {
+  const processedDatasets = maps.mapValues(data.datasetsByPath, (dataset, path) => {
     if (path.timestampMethod !== "headerStamp") {
-      return [path.value, dataset];
+      return dataset;
     }
 
-    return [path.value, { ...dataset, data: dataset.data.slice().sort((a, b) => a.x - b.x) }];
+    return { ...dataset, data: dataset.data.slice().sort((a, b) => a.x - b.x) };
   });
 
-  return { ...data, datasetsByPath: Object.fromEntries(processedDatasets) };
+  return { ...data, datasetsByPath: processedDatasets };
 }
 
 function makeInitialState(): State {
@@ -221,12 +214,12 @@ export function usePlotPanelData(params: Params): Immutable<{
       // Discard datasets no longer in current y paths and recompute bounds and mismatched
       // paths so we don't hang onto data we no longer need.
       const newYPathValues = yAxisPaths.map((path) => path.value);
-      const retainedDataSets = pick(previous.data.datasetsByPath, newYPathValues);
+      const retainedDataSets = maps.pick(previous.data.datasetsByPath, yAxisPaths);
       const newMismatchedPaths = intersection(
         previous.data.pathsWithMismatchedDataLengths,
         newYPathValues,
       );
-      const newBounds = filterMap(Object.values(retainedDataSets), calculateDatasetBounds).reduce(
+      const newBounds = filterMap([...retainedDataSets.values()], calculateDatasetBounds).reduce(
         unionBounds,
         makeInvertedBounds(),
       );
@@ -368,8 +361,8 @@ export function usePlotPanelData(params: Params): Immutable<{
   // time.
   const trimmedCurrentFrameData = useMemo(() => {
     return filterMap(Object.values(accumulatedPathIntervals), (dataset) => {
-      const trimmedDatasets = mapValues(dataset.datasetsByPath, (ds, path) => {
-        const topic = parseRosPath(path)?.topicName;
+      const trimmedDatasets = maps.mapValues(dataset.datasetsByPath, (ds, path) => {
+        const topic = parseRosPath(path.value)?.topicName;
         const end = topic ? allFrames[topic]?.at(-1)?.receiveTime : undefined;
         if (end) {
           return {
@@ -381,7 +374,7 @@ export function usePlotPanelData(params: Params): Immutable<{
         }
       });
 
-      if (Object.values(trimmedDatasets).some((ds) => ds.data.length > 0)) {
+      if ([...trimmedDatasets.values()].some((ds) => ds.data.length > 0)) {
         return { ...dataset, datasetsByPath: trimmedDatasets };
       } else {
         return undefined;
@@ -395,11 +388,11 @@ export function usePlotPanelData(params: Params): Immutable<{
   const allData = useMemo(() => {
     const combinedPlotData = reducePlotData([state.data, ...trimmedCurrentFrameData]);
     const dataAfterDerivative = applyDerivativeToPlotData(combinedPlotData);
-    const sortedData = sortPlotDataByHeaderStamp(yAxisPaths, dataAfterDerivative);
+    const sortedData = sortPlotDataByHeaderStamp(dataAfterDerivative);
 
     return {
       bounds: sortedData.bounds,
-      datasets: filterMap(yAxisPaths, (path) => sortedData.datasetsByPath[path.value]),
+      datasets: filterMap(yAxisPaths, (path) => sortedData.datasetsByPath.get(path)),
       pathsWithMismatchedDataLengths: sortedData.pathsWithMismatchedDataLengths,
     };
   }, [state.data, trimmedCurrentFrameData, yAxisPaths]);
