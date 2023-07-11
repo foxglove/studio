@@ -240,7 +240,6 @@ export class PointsRenderable<TUserData extends BaseUserData = BaseUserData> ext
       instancePickingMaterial,
       pose: userData.pose,
     };
-    // this.userData.instancePickingMaterial = instancePickingMaterial;
     this.#points = points;
     this.add(points);
   }
