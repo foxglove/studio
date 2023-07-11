@@ -135,7 +135,7 @@ class LaserScanHistoryRenderable extends Renderable<LaserScanHistoryUserData> {
       initial: {
         messageTime: userData.receiveTime,
         receiveTime: userData.receiveTime,
-        object3d: points,
+        renderable: points,
       },
       parentRenderable: this,
       renderer,
@@ -207,18 +207,18 @@ class LaserScanHistoryRenderable extends Renderable<LaserScanHistoryUserData> {
         pickingMaterial,
         this.userData.instancePickingMaterial,
       );
-      pointsHistory.addHistoryEntry({ receiveTime, messageTime, object3d: points });
+      pointsHistory.addHistoryEntry({ receiveTime, messageTime, renderable: points });
       this.add(points);
     }
 
     const latestEntry = pointsHistory.latest();
     latestEntry.receiveTime = receiveTime;
     latestEntry.messageTime = messageTime;
-    latestEntry.object3d.userData.pose = laserScan.pose;
-    latestEntry.object3d.userData.laserScan = laserScan;
-    latestEntry.object3d.userData.originalMessage = originalMessage;
+    latestEntry.renderable.userData.pose = laserScan.pose;
+    latestEntry.renderable.userData.laserScan = laserScan;
+    latestEntry.renderable.userData.originalMessage = originalMessage;
 
-    const geometry = latestEntry.object3d.geometry;
+    const geometry = latestEntry.renderable.geometry;
     geometry.resize(ranges.length);
     const rangeAttribute = geometry.attributes.position!;
     const colorAttribute = geometry.attributes.color!;
@@ -250,12 +250,12 @@ class LaserScanHistoryRenderable extends Renderable<LaserScanHistoryUserData> {
       maxColorValue = settings.maxValue ?? maxColorValue;
 
       // Update the LaserScan bounding sphere
-      latestEntry.object3d.geometry.boundingSphere ??= new THREE.Sphere();
-      latestEntry.object3d.geometry.boundingSphere.set(VEC3_ZERO, maxRange);
-      latestEntry.object3d.frustumCulled = true;
+      latestEntry.renderable.geometry.boundingSphere ??= new THREE.Sphere();
+      latestEntry.renderable.geometry.boundingSphere.set(VEC3_ZERO, maxRange);
+      latestEntry.renderable.frustumCulled = true;
     } else {
-      latestEntry.object3d.geometry.boundingSphere = ReactNull;
-      latestEntry.object3d.frustumCulled = false;
+      latestEntry.renderable.geometry.boundingSphere = ReactNull;
+      latestEntry.renderable.frustumCulled = false;
     }
 
     // Build a method to convert raw color field values to RGBA
@@ -289,7 +289,7 @@ class LaserScanHistoryRenderable extends Renderable<LaserScanHistoryUserData> {
 
   public invalidateLastEntry() {
     const lastEntry = this.#pointsHistory.latest();
-    lastEntry.object3d.geometry.resize(0);
+    lastEntry.renderable.geometry.resize(0);
   }
 
   public startFrame(currentTime: bigint, renderFrameId: string, fixedFrameId: string): void {

@@ -373,7 +373,7 @@ type DisposableObject = THREE.Object3D & { dispose(): void };
 type HistoryEntry<TRenderable extends DisposableObject> = {
   receiveTime: bigint;
   messageTime: bigint;
-  object3d: TRenderable;
+  renderable: TRenderable;
 };
 
 /**
@@ -417,8 +417,8 @@ export class RenderObjectHistory<TRenderable extends DisposableObject> {
       decayTime > 0 ? currentTime - BigInt(Math.round(decayTime * 1e9)) : MAX_DURATION;
     while (pointsHistory.length > 1 && pointsHistory[0]!.receiveTime < expireTime) {
       const entry = this.#history.shift()!;
-      this.#parentRenderable.remove(entry.object3d);
-      entry.object3d.dispose();
+      this.#parentRenderable.remove(entry.renderable);
+      entry.renderable.dispose();
     }
   }
 
@@ -429,7 +429,7 @@ export class RenderObjectHistory<TRenderable extends DisposableObject> {
       const srcTime = entry.messageTime;
       const frameId = this.#parentRenderable.userData.frameId;
       const updated = updatePose(
-        entry.object3d,
+        entry.renderable,
         this.#renderer.transformTree,
         renderFrameId,
         fixedFrameId,
@@ -459,14 +459,14 @@ export class RenderObjectHistory<TRenderable extends DisposableObject> {
   /** Removes all but the last renderable, which would be the current object used in rendering. */
   public clearHistory(): void {
     for (const entry of this.#history.splice(0, this.#history.length - 1)) {
-      entry.object3d.dispose();
-      this.#parentRenderable.remove(entry.object3d);
+      entry.renderable.dispose();
+      this.#parentRenderable.remove(entry.renderable);
     }
   }
 
   public dispose(): void {
     for (const entry of this.#history) {
-      entry.object3d.dispose();
+      entry.renderable.dispose();
     }
     this.#history.length = 0;
   }

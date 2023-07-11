@@ -164,7 +164,7 @@ export class PointCloudHistoryRenderable extends Renderable<PointCloudHistoryUse
       initial: {
         messageTime: userData.receiveTime,
         receiveTime: userData.receiveTime,
-        object3d: points,
+        renderable: points,
       },
       parentRenderable: this,
       renderer,
@@ -193,7 +193,7 @@ export class PointCloudHistoryRenderable extends Renderable<PointCloudHistoryUse
       initial: {
         messageTime: userData.receiveTime,
         receiveTime: userData.receiveTime,
-        object3d: stixels,
+        renderable: stixels,
       },
       parentRenderable: this,
       renderer,
@@ -245,14 +245,14 @@ export class PointCloudHistoryRenderable extends Renderable<PointCloudHistoryUse
       material = pointCloudMaterial(settings);
       this.userData.material = material;
       pointsHistory.forEach((entry) => {
-        entry.object3d.updateMaterial(material);
+        entry.renderable.updateMaterial(material);
       });
 
       stixelMaterial.dispose();
       stixelMaterial = createStixelMaterial(settings);
       this.userData.stixelMaterial = stixelMaterial;
       stixelsHistory.forEach((entry) => {
-        entry.object3d.updateMaterial(stixelMaterial);
+        entry.renderable.updateMaterial(stixelMaterial);
       });
     } else {
       material.size = settings.pointSize;
@@ -297,7 +297,7 @@ export class PointCloudHistoryRenderable extends Renderable<PointCloudHistoryUse
         this.userData.pickingMaterial,
         this.userData.instancePickingMaterial,
       );
-      pointsHistory.addHistoryEntry({ receiveTime, messageTime, object3d: points });
+      pointsHistory.addHistoryEntry({ receiveTime, messageTime, renderable: points });
       this.add(points);
 
       if (settings.stixelsEnabled) {
@@ -316,7 +316,7 @@ export class PointCloudHistoryRenderable extends Renderable<PointCloudHistoryUse
           stixelGeometry,
           stixelMaterial,
         );
-        stixelsHistory.addHistoryEntry({ receiveTime, messageTime, object3d: stixels });
+        stixelsHistory.addHistoryEntry({ receiveTime, messageTime, renderable: stixels });
         this.add(stixels);
       }
     }
@@ -324,33 +324,33 @@ export class PointCloudHistoryRenderable extends Renderable<PointCloudHistoryUse
     const latestPointsEntry = pointsHistory.latest();
     latestPointsEntry.receiveTime = receiveTime;
     latestPointsEntry.messageTime = messageTime;
-    latestPointsEntry.object3d.userData.pose = getPose(pointCloud);
-    latestPointsEntry.object3d.userData.pointCloud = pointCloud;
-    latestPointsEntry.object3d.userData.originalMessage = originalMessage;
+    latestPointsEntry.renderable.userData.pose = getPose(pointCloud);
+    latestPointsEntry.renderable.userData.pointCloud = pointCloud;
+    latestPointsEntry.renderable.userData.originalMessage = originalMessage;
 
     const pointCount = Math.trunc(pointCloud.data.length / getStride(pointCloud));
-    const latestPoints = latestPointsEntry.object3d;
-    latestPointsEntry.object3d.geometry.resize(pointCount);
+    const latestPoints = latestPointsEntry.renderable;
+    latestPointsEntry.renderable.geometry.resize(pointCount);
     const positionAttribute = latestPoints.geometry.attributes.position!;
     const colorAttribute = latestPoints.geometry.attributes.color!;
 
     const latestStixelEntry = stixelsHistory.latest();
 
     if (!isDecay && prevIsDecay !== isDecay) {
-      latestPointsEntry.object3d.geometry.setUsage(THREE.DynamicDrawUsage);
-      latestStixelEntry.object3d.geometry.setUsage(THREE.DynamicDrawUsage);
+      latestPointsEntry.renderable.geometry.setUsage(THREE.DynamicDrawUsage);
+      latestStixelEntry.renderable.geometry.setUsage(THREE.DynamicDrawUsage);
     }
 
     latestStixelEntry.receiveTime = receiveTime;
     latestStixelEntry.messageTime = messageTime;
-    latestStixelEntry.object3d.userData.pose = latestPointsEntry.object3d.userData.pose;
+    latestStixelEntry.renderable.userData.pose = latestPointsEntry.renderable.userData.pose;
     if (settings.stixelsEnabled) {
-      latestStixelEntry.object3d.geometry.resize(pointCount * 2);
+      latestStixelEntry.renderable.geometry.resize(pointCount * 2);
     } else {
-      latestStixelEntry.object3d.geometry.resize(0);
+      latestStixelEntry.renderable.geometry.resize(0);
     }
-    const stixelPositionAttribute = latestStixelEntry.object3d.geometry.attributes.position!;
-    const stixelColorAttribute = latestStixelEntry.object3d.geometry.attributes.color!;
+    const stixelPositionAttribute = latestStixelEntry.renderable.geometry.attributes.position!;
+    const stixelColorAttribute = latestStixelEntry.renderable.geometry.attributes.color!;
     // Iterate the point cloud data to update position and color attributes
     this.#updatePointCloudBuffers(
       pointCloud,
@@ -376,7 +376,7 @@ export class PointCloudHistoryRenderable extends Renderable<PointCloudHistoryUse
   #invalidError(message: string): void {
     this.renderer.settings.errors.addToTopic(this.userData.topic, INVALID_POINTCLOUD, message);
     const lastEntry = this.#pointsHistory.latest();
-    lastEntry.object3d.geometry.resize(0);
+    lastEntry.renderable.geometry.resize(0);
   }
 
   #validatePointCloud(pointCloud: PointCloud | PointCloud2): boolean {
