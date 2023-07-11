@@ -7,7 +7,7 @@ import { NumericType, PointCloud as FoxglovePointCloud } from "@foxglove/schemas
 import { MessageEvent, SettingsTreeAction } from "@foxglove/studio";
 import {
   createStixelMaterial,
-  PointCloudRenderable,
+  PointCloudHistoryRenderable,
 } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/PointClouds";
 import type { RosObject } from "@foxglove/studio-base/players/types";
 import { VelodynePacket, VelodyneScan } from "@foxglove/studio-base/types/Messages";
@@ -123,7 +123,7 @@ class VelodyneCloudConverter {
   }
 }
 
-export class VelodyneScans extends SceneExtension<PointCloudRenderable> {
+export class VelodyneScans extends SceneExtension<PointCloudHistoryRenderable> {
   #pointCloudFieldsByTopic = new Map<string, string[]>();
   #velodyneCloudConverter = new VelodyneCloudConverter();
 
@@ -243,7 +243,7 @@ export class VelodyneScans extends SceneExtension<PointCloudRenderable> {
       const stixelMaterial = createStixelMaterial(settings);
 
       const messageTime = toNanoSec(pointCloud.timestamp);
-      renderable = new PointCloudRenderable(topic, this.renderer, {
+      renderable = new PointCloudHistoryRenderable(topic, this.renderer, {
         receiveTime,
         messageTime,
         frameId: this.renderer.normalizeFrameId(pointCloud.frame_id),

@@ -8,10 +8,10 @@ import { Time, toNanoSec } from "@foxglove/rostime";
 import { LaserScan as FoxgloveLaserScan } from "@foxglove/schemas";
 import { SettingsTreeAction } from "@foxglove/studio";
 import {
-  createPoints,
   DEFAULT_POINT_SETTINGS,
   LayerSettingsPointExtension,
   pointSettingsNode,
+  PointsRenderable,
   RenderObjectHistory,
 } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/pointExtensionUtils";
 import type { RosObject, RosValue } from "@foxglove/studio-base/players/types";
@@ -44,7 +44,7 @@ type NormalizedLaserScan = {
   intensities: Float32Array;
 };
 
-type LaserScanUserData = BaseUserData & {
+type LaserScanHistoryUserData = BaseUserData & {
   settings: LayerSettingsLaserScan;
   topic: string;
   laserScan: NormalizedLaserScan;
@@ -76,11 +76,34 @@ function createLaserScanGeometry(topic: string, usage: THREE.Usage): DynamicBuff
   return geometry;
 }
 
-class LaserScanRenderable extends Renderable<LaserScanUserData> {
-  public override pickableInstances = true;
+type LaserScanUserData = BaseUserData & {
+  laserScan: NormalizedLaserScan;
+  originalMessage: Record<string, RosValue> | undefined;
+};
+
+class LaserScanRenderable extends PointsRenderable<LaserScanUserData> {
+  public override details(): Record<string, RosValue> {
+    return this.userData.originalMessage ?? {};
+  }
+
+  public override instanceDetails(instanceId: number): Record<string, RosValue> | undefined {
+    const range =
+      instanceId >= 0 && instanceId < this.userData.laserScan.ranges.length
+        ? this.userData.laserScan.ranges[instanceId]
+        : undefined;
+    const intensity =
+      instanceId >= 0 && instanceId < this.userData.laserScan.intensities.length
+        ? this.userData.laserScan.intensities[instanceId]
+        : undefined;
+    return { range, intensity };
+  }
+}
+
+class LaserScanHistoryRenderable extends Renderable<LaserScanHistoryUserData> {
+  public override pickable = false; // Picking happens on child renderables
   #pointsHistory: RenderObjectHistory<LaserScanRenderable>;
 
-  public constructor(topic: string, renderer: IRenderer, userData: LaserScanUserData) {
+  public constructor(topic: string, renderer: IRenderer, userData: LaserScanHistoryUserData) {
     super(topic, renderer, userData);
 
     const isDecay = userData.settings.decayTime > 0;
@@ -89,9 +112,19 @@ class LaserScanRenderable extends Renderable<LaserScanUserData> {
       topic,
       isDecay ? THREE.DynamicDrawUsage : THREE.StaticDrawUsage,
     );
-    const points = createPoints(
+    const points = new LaserScanRenderable(
       topic,
-      userData.laserScan.pose,
+      {
+        receiveTime: -1n, // unused
+        messageTime: -1n, // unused
+        frameId: "", //unused
+        pose: userData.laserScan.pose,
+        settingsPath: [], //unused
+        settings: { visible: true }, //unused
+        topic,
+        laserScan: userData.laserScan,
+        originalMessage: userData.originalMessage,
+      },
       geometry,
       userData.material,
       userData.pickingMaterial,
@@ -116,22 +149,6 @@ class LaserScanRenderable extends Renderable<LaserScanUserData> {
     this.userData.instancePickingMaterial.dispose();
     this.#pointsHistory.dispose();
     super.dispose();
-  }
-
-  public override details(): Record<string, RosValue> {
-    return this.userData.originalMessage ?? {};
-  }
-
-  public override instanceDetails(instanceId: number): Record<string, RosValue> | undefined {
-    const range =
-      instanceId >= 0 && instanceId < this.userData.laserScan.ranges.length
-        ? this.userData.laserScan.ranges[instanceId]
-        : undefined;
-    const intensity =
-      instanceId >= 0 && instanceId < this.userData.laserScan.intensities.length
-        ? this.userData.laserScan.intensities[instanceId]
-        : undefined;
-    return { range, intensity };
   }
 
   public updateLaserScan(
@@ -172,13 +189,23 @@ class LaserScanRenderable extends Renderable<LaserScanUserData> {
     if (isDecay) {
       // Push a new (empty) entry to the history of points
       const geometry = createLaserScanGeometry(topic, THREE.StaticDrawUsage);
-      const points = createPoints(
+      const points = new LaserScanRenderable(
         topic,
-        laserScan.pose,
+        {
+          receiveTime: -1n, // unused
+          messageTime: -1n, // unused
+          frameId: "", //unused
+          pose: laserScan.pose,
+          settingsPath: [], //unused
+          settings: { visible: true }, //unused
+          topic,
+          laserScan,
+          originalMessage,
+        },
         geometry,
         laserScanMaterial,
         pickingMaterial,
-        undefined,
+        this.userData.instancePickingMaterial,
       );
       pointsHistory.addHistoryEntry({ receiveTime, messageTime, object3d: points });
       this.add(points);
@@ -188,6 +215,8 @@ class LaserScanRenderable extends Renderable<LaserScanUserData> {
     latestEntry.receiveTime = receiveTime;
     latestEntry.messageTime = messageTime;
     latestEntry.object3d.userData.pose = laserScan.pose;
+    latestEntry.object3d.userData.laserScan = laserScan;
+    latestEntry.object3d.userData.originalMessage = originalMessage;
 
     const geometry = latestEntry.object3d.geometry;
     geometry.resize(ranges.length);
@@ -270,7 +299,7 @@ class LaserScanRenderable extends Renderable<LaserScanUserData> {
   }
 }
 
-export class LaserScans extends SceneExtension<LaserScanRenderable> {
+export class LaserScans extends SceneExtension<LaserScanHistoryRenderable> {
   public constructor(renderer: IRenderer) {
     super("foxglove.LaserScans", renderer);
   }
@@ -401,7 +430,7 @@ export class LaserScans extends SceneExtension<LaserScanRenderable> {
       pickingMaterial.update(settings, laserScan);
 
       const messageTime = toNanoSec(laserScan.timestamp);
-      renderable = new LaserScanRenderable(topic, this.renderer, {
+      renderable = new LaserScanHistoryRenderable(topic, this.renderer, {
         receiveTime,
         messageTime,
         frameId: this.renderer.normalizeFrameId(laserScan.frame_id),
@@ -599,7 +628,7 @@ class LaserScanInstancePickingMaterial extends THREE.RawShaderMaterial {
 
 function invalidLaserScanError(
   renderer: IRenderer,
-  renderable: LaserScanRenderable,
+  renderable: LaserScanHistoryRenderable,
   message: string,
 ): void {
   renderer.settings.errors.addToTopic(renderable.userData.topic, INVALID_LASERSCAN, message);
