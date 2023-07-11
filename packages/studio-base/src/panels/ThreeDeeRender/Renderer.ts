@@ -1122,10 +1122,6 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
       selections.length < MAX_SELECTIONS
     ) {
       selections.push(curSelection);
-      // If debugPicking is on, we don't want to overwrite the hitmap by doing more iterations
-      if (this.debugPicking) {
-        break;
-      }
       curSelection.renderable.visible = false;
       this.gl.render(this.#scene, camera);
     }
@@ -1239,7 +1235,6 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
       { debug: this.debugPicking, disableSetViewOffset: this.interfaceMode === "image" },
     );
     if (objectId === -1) {
-      log.debug("Picking did not return an object");
       return undefined;
     }
 
@@ -1263,8 +1258,6 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
       return undefined;
     }
 
-    log.debug(`Picking pass returned ${renderable.id} (${renderable.name})`, renderable);
-
     let instanceIndex: number | undefined;
     if (renderable.pickableInstances) {
       instanceIndex = this.#picker.pickInstance(
@@ -1275,7 +1268,6 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
         { debug: this.debugPicking, disableSetViewOffset: this.interfaceMode === "image" },
       );
       instanceIndex = instanceIndex === -1 ? undefined : instanceIndex;
-      log.debug("Instance picking pass on", renderable, "returned", instanceIndex);
     }
 
     return { renderable, instanceIndex };
