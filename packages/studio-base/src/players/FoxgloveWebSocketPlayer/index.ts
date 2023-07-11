@@ -138,7 +138,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
   #nextServiceCallId = 0;
   #nextAssetRequestId = 0;
   #fetchAssetRequests = new Map<number, (response: FetchAssetResponse) => void>();
-  #fetchedAssets = new Map<string, Asset>();
+  #fetchedAssets = new Map<string, Promise<Asset>>();
 
   public constructor({
     url,
@@ -1018,7 +1018,12 @@ export default class FoxgloveWebSocketPlayer implements Player {
       throw new Error(`Fetching assets (${uri}) is not supported for FoxgloveWebSocketPlayer`);
     }
 
-    return await new Promise<Asset>((resolve, reject) => {
+    let promise = this.#fetchedAssets.get(uri);
+    if (promise) {
+      return await promise;
+    }
+
+    promise = new Promise<Asset>((resolve, reject) => {
       const fetchedAsset = this.#fetchedAssets.get(uri);
       if (fetchedAsset) {
         resolve(fetchedAsset);
@@ -1036,7 +1041,6 @@ export default class FoxgloveWebSocketPlayer implements Player {
               response.data.byteLength,
             ),
           };
-          this.#fetchedAssets.set(uri, newAsset);
           resolve(newAsset);
         } else {
           reject(new Error(`Failed to fetch asset: ${response.error}`));
@@ -1044,6 +1048,9 @@ export default class FoxgloveWebSocketPlayer implements Player {
       });
       this.#client?.fetchAsset(uri, assetRequestId);
     });
+
+    this.#fetchedAssets.set(uri, promise);
+    return await promise;
   }
 
   public setGlobalVariables(): void {}
