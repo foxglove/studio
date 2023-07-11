@@ -280,11 +280,10 @@ class LaserScanHistoryRenderable extends Renderable<LaserScanHistoryUserData> {
   }
 
   public updateUniforms(): void {
-    const material = this.userData.material as Partial<LaserScanMaterial>;
-    const pixelRatio = material.uniforms?.pixelRatio;
-    if (pixelRatio) {
-      pixelRatio.value = this.renderer.getPixelRatio();
-    }
+    const pixelRatio = this.renderer.getPixelRatio();
+    this.userData.material.setPixelRatio(pixelRatio);
+    this.userData.pickingMaterial.setPixelRatio(pixelRatio);
+    this.userData.instancePickingMaterial.setPixelRatio(pixelRatio);
   }
 
   public invalidateLastEntry() {
@@ -428,6 +427,7 @@ export class LaserScans extends SceneExtension<LaserScanHistoryRenderable> {
 
       material.update(settings, laserScan);
       pickingMaterial.update(settings, laserScan);
+      instancePickingMaterial.update(settings, laserScan);
 
       const messageTime = toNanoSec(laserScan.timestamp);
       renderable = new LaserScanHistoryRenderable(topic, this.renderer, {
@@ -548,6 +548,10 @@ export class LaserScanMaterial extends THREE.RawShaderMaterial {
       this.needsUpdate = true;
     }
   }
+
+  public setPixelRatio(pixelRatio: number): void {
+    this.uniforms.pixelRatio!.value = pixelRatio;
+  }
 }
 
 class LaserScanInstancePickingMaterial extends THREE.RawShaderMaterial {
@@ -567,7 +571,7 @@ class LaserScanInstancePickingMaterial extends THREE.RawShaderMaterial {
         uniform float angleMin, angleIncrement;
         uniform float rangeMin, rangeMax;
         in float position; // range, but must be named position in order for three.js to render anything
-        varying vec4 objectId;
+        out vec4 objectId;
         void main() {
           if (position < rangeMin || position > rangeMax) {
             gl_PointSize = 0.0;
@@ -592,7 +596,7 @@ class LaserScanInstancePickingMaterial extends THREE.RawShaderMaterial {
           precision mediump float;
         #endif
         uniform bool isCircle;
-        varying vec4 objectId;
+        in vec4 objectId;
         out vec4 outColor;
 
         void main() {
@@ -615,14 +619,19 @@ class LaserScanInstancePickingMaterial extends THREE.RawShaderMaterial {
     };
   }
 
-  public update(settings: LayerSettingsLaserScan, laserScan: RosLaserScan): void {
+  public update(settings: LayerSettingsLaserScan, laserScan: NormalizedLaserScan): void {
     this.uniforms.isCircle!.value = settings.pointShape === "circle";
     this.uniforms.pointSize!.value = settings.pointSize;
-    this.uniforms.angleMin!.value = laserScan.angle_min;
-    this.uniforms.angleIncrement!.value = laserScan.angle_increment;
+    this.uniforms.angleMin!.value = laserScan.start_angle;
+    this.uniforms.angleIncrement!.value =
+      (laserScan.end_angle - laserScan.start_angle) / (laserScan.ranges.length - 1);
     this.uniforms.rangeMin!.value = laserScan.range_min;
     this.uniforms.rangeMax!.value = laserScan.range_max;
     this.uniformsNeedUpdate = true;
+  }
+
+  public setPixelRatio(pixelRatio: number): void {
+    this.uniforms.pixelRatio!.value = pixelRatio;
   }
 }
 
