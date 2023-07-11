@@ -586,7 +586,7 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
 
     // Parse the URDF
     const loadedRenderable = renderable;
-    parseUrdf(urdf, this.#getFileFetch())
+    parseUrdf(urdf, async (uri) => await this.#getFileFetch(uri))
       .then((parsed) => {
         this.#loadRobot(loadedRenderable, parsed);
         // the frame from the settings update is called before the robot is loaded
@@ -661,16 +661,14 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     }
   }
 
-  #getFileFetch(): (url: string) => Promise<string> {
-    return async (url: string) => {
-      try {
-        log.debug(`fetch(${url}) requested`);
-        const asset = await this.renderer.fetchAsset(url);
-        return this.#textDecoder.decode(asset.data);
-      } catch (err) {
-        throw new Error(`Failed to fetch "${url}": ${err}`);
-      }
-    };
+  async #getFileFetch(url: string): Promise<string> {
+    try {
+      log.debug(`fetch(${url}) requested`);
+      const asset = await this.renderer.fetchAsset(url);
+      return this.#textDecoder.decode(asset.data);
+    } catch (err) {
+      throw new Error(`Failed to fetch "${url}": ${err}`);
+    }
   }
 }
 
