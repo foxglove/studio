@@ -124,19 +124,21 @@ describe("3D Renderer", () => {
   });
 
   it("constructs a renderer without error", () => {
-    expect(() => new Renderer(canvas, defaultRendererConfig, "3d")).not.toThrow();
+    expect(
+      () => new Renderer({ canvas, config: defaultRendererConfig, interfaceMode: "3d" }),
+    ).not.toThrow();
   });
   it("does not set a unfollow pose snapshot  when in follow-pose mode", () => {
-    const renderer = new Renderer(
+    const renderer = new Renderer({
       canvas,
-      {
+      config: {
         ...defaultRendererConfig,
         followMode: "follow-pose",
         followTf: "display",
         scene: { transforms: { enablePreloading: false } },
       },
-      "3d",
-    );
+      interfaceMode: "3d",
+    });
     const cameraState = renderer.sceneExtensions.get(
       "foxglove.CameraStateSettings",
     ) as CameraStateSettings;
@@ -161,7 +163,7 @@ describe("3D Renderer", () => {
       followTf: "display",
       scene: { transforms: { enablePreloading: false } },
     };
-    const renderer = new Renderer(canvas, config, "3d");
+    const renderer = new Renderer({ canvas, config, interfaceMode: "3d" });
     const cameraState = renderer.sceneExtensions.get(
       "foxglove.CameraStateSettings",
     ) as CameraStateSettings;
@@ -194,7 +196,7 @@ describe("3D Renderer", () => {
       followTf: "display",
       scene: { transforms: { enablePreloading: false } },
     };
-    const renderer = new Renderer(canvas, config, "3d");
+    const renderer = new Renderer({ canvas, config, interfaceMode: "3d" });
     const cameraState = renderer.sceneExtensions.get(
       "foxglove.CameraStateSettings",
     ) as CameraStateSettings;
@@ -226,7 +228,7 @@ describe("3D Renderer", () => {
       followTf: "display",
       scene: { transforms: { enablePreloading: false } },
     };
-    const renderer = new Renderer(canvas, config, "3d");
+    const renderer = new Renderer({ canvas, config, interfaceMode: "3d" });
     const cameraState = renderer.sceneExtensions.get(
       "foxglove.CameraStateSettings",
     ) as CameraStateSettings;
@@ -256,16 +258,16 @@ describe("3D Renderer", () => {
     });
   });
   it("in fixed follow mode: ensures that the unfollowPoseSnapshot updates when there is a new fixedFrame", () => {
-    const renderer = new Renderer(
+    const renderer = new Renderer({
       canvas,
-      {
+      config: {
         ...defaultRendererConfig,
         followMode: "follow-none",
         followTf: "display",
         scene: { transforms: { enablePreloading: false } },
       },
-      "3d",
-    );
+      interfaceMode: "3d",
+    });
     const cameraState = renderer.sceneExtensions.get(
       "foxglove.CameraStateSettings",
     ) as CameraStateSettings;
@@ -303,14 +305,14 @@ describe("3D Renderer", () => {
   it("tfPreloading off:  when seeking to before currentTime, clears transform tree", () => {
     // This test is meant accurately represent the flow of seek through the react component
 
-    const renderer = new Renderer(
+    const renderer = new Renderer({
       canvas,
-      {
+      config: {
         ...defaultRendererConfig,
         scene: { transforms: { enablePreloading: false } },
       },
-      "3d",
-    );
+      interfaceMode: "3d",
+    });
     let currentFrame = [];
 
     // initialize renderer with transforms
@@ -362,14 +364,14 @@ describe("3D Renderer", () => {
   it("tfPreloading off: when seeking to time after currentTime, does not clear transform tree", () => {
     // This test is meant accurately represent the flow of seek through the react component
 
-    const renderer = new Renderer(
+    const renderer = new Renderer({
       canvas,
-      {
+      config: {
         ...defaultRendererConfig,
         scene: { transforms: { enablePreloading: false } },
       },
-      "3d",
-    );
+      interfaceMode: "3d",
+    });
     let currentFrame = [];
 
     // initialize renderer with transforms
@@ -423,14 +425,14 @@ describe("3D Renderer", () => {
     expect(renderer.transformTree.frame("seekOn")).not.toBeUndefined();
   });
   it("tfPreloading on:  when seeking to before currentTime, clears transform tree and repopulates it up to receiveTime from allFrames", () => {
-    const renderer = new Renderer(
+    const renderer = new Renderer({
       canvas,
-      {
+      config: {
         ...defaultRendererConfig,
         scene: { transforms: { enablePreloading: true } },
       },
-      "3d",
-    );
+      interfaceMode: "3d",
+    });
     const allFrames = [
       createTFMessageEvent("root", "before4", 5n, [1n]),
       createTFMessageEvent("root", "before2", 6n, [4n]),
@@ -471,14 +473,14 @@ describe("3D Renderer", () => {
     expect(renderer.transformTree.frame("after4")).toBeUndefined();
   });
   it("tfPreloading on: does not clear transform tree when seeking to after", () => {
-    const renderer = new Renderer(
+    const renderer = new Renderer({
       canvas,
-      {
+      config: {
         ...defaultRendererConfig,
         scene: { transforms: { enablePreloading: true } },
       },
-      "3d",
-    );
+      interfaceMode: "3d",
+    });
     const allFrames = [
       createTFMessageEvent("root", "before4", 5n, [1n]),
       createTFMessageEvent("root", "before2", 6n, [4n]),
@@ -535,10 +537,12 @@ describe("Renderer.handleAllFramesMessages behavior", () => {
   });
 
   it("constructs a renderer without error", () => {
-    expect(() => new Renderer(canvas, defaultRendererConfig, "3d")).not.toThrow();
+    expect(
+      () => new Renderer({ canvas, config: defaultRendererConfig, interfaceMode: "3d" }),
+    ).not.toThrow();
   });
   it("does not add in allFramesMessages if no messages are before currentTime", () => {
-    const renderer = new Renderer(canvas, defaultRendererConfig, "3d");
+    const renderer = new Renderer({ canvas, config: defaultRendererConfig, interfaceMode: "3d" });
 
     const msgs = [];
     for (let i = 0; i < 10; i++) {
@@ -551,7 +555,7 @@ describe("Renderer.handleAllFramesMessages behavior", () => {
     expect(addMessageEventMock).not.toHaveBeenCalled();
   });
   it("adds messages with receiveTime up to currentTime", () => {
-    const renderer = new Renderer(canvas, defaultRendererConfig, "3d");
+    const renderer = new Renderer({ canvas, config: defaultRendererConfig, interfaceMode: "3d" });
 
     const msgs = [];
     for (let i = 0; i < 10; i++) {
@@ -565,7 +569,7 @@ describe("Renderer.handleAllFramesMessages behavior", () => {
     expect(addMessageEventMock).toHaveBeenCalledTimes(5);
   });
   it("adds later messages after currentTime is updated", () => {
-    const renderer = new Renderer(canvas, defaultRendererConfig, "3d");
+    const renderer = new Renderer({ canvas, config: defaultRendererConfig, interfaceMode: "3d" });
 
     const msgs = [];
     for (let i = 0; i < 10; i++) {
@@ -581,7 +585,7 @@ describe("Renderer.handleAllFramesMessages behavior", () => {
     expect(addMessageEventMock).toHaveBeenCalledTimes(6);
   });
   it("reads all messages when last message receiveTime is before currentTime", () => {
-    const renderer = new Renderer(canvas, defaultRendererConfig, "3d");
+    const renderer = new Renderer({ canvas, config: defaultRendererConfig, interfaceMode: "3d" });
 
     const msgs = [];
     for (let i = 0; i < 10; i++) {
@@ -594,7 +598,7 @@ describe("Renderer.handleAllFramesMessages behavior", () => {
     expect(addMessageEventMock).toHaveBeenCalledTimes(10);
   });
   it("reads reads new messages when allFrames array is added to", () => {
-    const renderer = new Renderer(canvas, defaultRendererConfig, "3d");
+    const renderer = new Renderer({ canvas, config: defaultRendererConfig, interfaceMode: "3d" });
 
     const msgs = [];
     let i = 0;
@@ -614,7 +618,7 @@ describe("Renderer.handleAllFramesMessages behavior", () => {
     expect(addMessageEventMock).toHaveBeenCalledTimes(12);
   });
   it("doesn't read messages when currentTime is updated but no more receiveTimes are past it", () => {
-    const renderer = new Renderer(canvas, defaultRendererConfig, "3d");
+    const renderer = new Renderer({ canvas, config: defaultRendererConfig, interfaceMode: "3d" });
 
     const msgs = [];
     let i = 0;
@@ -632,7 +636,7 @@ describe("Renderer.handleAllFramesMessages behavior", () => {
     expect(addMessageEventMock).toHaveBeenCalledTimes(10);
   });
   it("adds all messages again after cursor is cleared", () => {
-    const renderer = new Renderer(canvas, defaultRendererConfig, "3d");
+    const renderer = new Renderer({ canvas, config: defaultRendererConfig, interfaceMode: "3d" });
 
     const msgs = [];
     let i = 0;
@@ -651,7 +655,7 @@ describe("Renderer.handleAllFramesMessages behavior", () => {
     expect(addMessageEventMock).toHaveBeenCalledTimes(20);
   });
   it("resets cursor if messages were added before the cursor index", () => {
-    const renderer = new Renderer(canvas, defaultRendererConfig, "3d");
+    const renderer = new Renderer({ canvas, config: defaultRendererConfig, interfaceMode: "3d" });
 
     const msgs = [];
     let i = 2;
@@ -677,7 +681,7 @@ describe("Renderer.handleAllFramesMessages behavior", () => {
     expect(addMessageEventMock).toHaveBeenCalledTimes(numMessagesBeforeTime + 1);
   });
   it("resets cursor if messages were removed before the cursor index", () => {
-    const renderer = new Renderer(canvas, defaultRendererConfig, "3d");
+    const renderer = new Renderer({ canvas, config: defaultRendererConfig, interfaceMode: "3d" });
 
     const msgs = [];
     let i = 2;
@@ -705,7 +709,7 @@ describe("Renderer.handleAllFramesMessages behavior", () => {
   it.failing(
     "(does not) reset the cursor if number of messages added **and** removed before cursor are equal in a single update",
     () => {
-      const renderer = new Renderer(canvas, defaultRendererConfig, "3d");
+      const renderer = new Renderer({ canvas, config: defaultRendererConfig, interfaceMode: "3d" });
 
       const msgs = [];
       let i = 2;

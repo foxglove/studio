@@ -20,13 +20,16 @@ import { SaveConfig } from "@foxglove/studio-base/types/panels";
 import { ThreeDeeRender } from "./ThreeDeeRender";
 import { InterfaceMode } from "./types";
 
-function initPanel(
-  crash: ReturnType<typeof useCrash>,
-  forwardedAnalytics: ForwardedAnalytics,
-  interfaceMode: InterfaceMode,
-  onDownloadImage: ((blob: Blob, fileName: string) => void) | undefined,
-  context: PanelExtensionContext,
-) {
+type InitPanelArgs = {
+  crash: ReturnType<typeof useCrash>;
+  forwardedAnalytics: ForwardedAnalytics;
+  interfaceMode: InterfaceMode;
+  onDownloadImage: ((blob: Blob, fileName: string) => void) | undefined;
+  debugPicking?: boolean;
+};
+
+function initPanel(args: InitPanelArgs, context: PanelExtensionContext) {
+  const { crash, forwardedAnalytics, interfaceMode, onDownloadImage, debugPicking } = args;
   ReactDOM.render(
     <StrictMode>
       <CaptureErrorBoundary onError={crash}>
@@ -35,6 +38,7 @@ function initPanel(
             context={context}
             interfaceMode={interfaceMode}
             onDownloadImage={onDownloadImage}
+            debugPicking={debugPicking}
           />
         </ForwardAnalyticsContextProvider>
       </CaptureErrorBoundary>
@@ -50,6 +54,7 @@ type Props = {
   config: Record<string, unknown>;
   saveConfig: SaveConfig<Record<string, unknown>>;
   onDownloadImage?: (blob: Blob, fileName: string) => void;
+  debugPicking?: boolean;
 };
 
 function ThreeDeeRenderAdapter(interfaceMode: InterfaceMode, props: Props) {
@@ -58,8 +63,14 @@ function ThreeDeeRenderAdapter(interfaceMode: InterfaceMode, props: Props) {
   const forwardedAnalytics = useForwardAnalytics();
   const boundInitPanel = useMemo(
     () =>
-      initPanel.bind(undefined, crash, forwardedAnalytics, interfaceMode, props.onDownloadImage),
-    [crash, forwardedAnalytics, interfaceMode, props.onDownloadImage],
+      initPanel.bind(undefined, {
+        crash,
+        forwardedAnalytics,
+        interfaceMode,
+        onDownloadImage: props.onDownloadImage,
+        debugPicking: props.debugPicking,
+      }),
+    [crash, forwardedAnalytics, interfaceMode, props.onDownloadImage, props.debugPicking],
   );
 
   return (

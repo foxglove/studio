@@ -152,7 +152,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
   #canvas: HTMLCanvasElement;
   public readonly gl: THREE.WebGLRenderer;
   public maxLod = DetailLevel.High;
-  public debugPicking = false;
+  public debugPicking: boolean;
   public config: Immutable<RendererConfig>;
   public settings: SettingsManager;
   // [{ name, datatype }]
@@ -212,11 +212,13 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
   #cameraSyncError: undefined | string;
   #devicePixelRatioMediaQuery?: MediaQueryList;
 
-  public constructor(
-    canvas: HTMLCanvasElement,
-    config: Immutable<RendererConfig>,
-    interfaceMode: InterfaceMode,
-  ) {
+  public constructor(args: {
+    canvas: HTMLCanvasElement;
+    config: Immutable<RendererConfig>;
+    interfaceMode: InterfaceMode;
+    debugPicking?: boolean;
+  }) {
+    const { canvas, config, interfaceMode, debugPicking } = args;
     super();
     // NOTE: Global side effect
     THREE.Object3D.DEFAULT_UP = new THREE.Vector3(0, 0, 1);
@@ -224,6 +226,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     this.interfaceMode = interfaceMode;
     this.#canvas = canvas;
     this.config = config;
+    this.debugPicking = debugPicking ?? false;
 
     this.settings = new SettingsManager(baseSettingsTree(this.interfaceMode));
     this.settings.on("update", () => this.emit("settingsTreeChange", this));

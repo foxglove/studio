@@ -96,8 +96,10 @@ export function ThreeDeeRender(props: {
   interfaceMode: InterfaceMode;
   /** Override default downloading behavior, used for Storybook */
   onDownloadImage?: (blob: Blob, fileName: string) => void;
+  /** Enable hitmap debugging by default, used for picking stories */
+  debugPicking?: boolean;
 }): JSX.Element {
-  const { context, interfaceMode, onDownloadImage } = props;
+  const { context, interfaceMode, onDownloadImage, debugPicking } = props;
   const { initialState, saveState } = context;
 
   // Load and save the persisted panel configuration
@@ -136,14 +138,16 @@ export function ThreeDeeRender(props: {
   const [renderer, setRenderer] = useState<IRenderer | undefined>(undefined);
   const rendererRef = useRef<IRenderer | undefined>(undefined);
   useEffect(() => {
-    const newRenderer = canvas ? new Renderer(canvas, configRef.current, interfaceMode) : undefined;
+    const newRenderer = canvas
+      ? new Renderer({ canvas, config: configRef.current, interfaceMode, debugPicking })
+      : undefined;
     setRenderer(newRenderer);
     rendererRef.current = newRenderer;
     return () => {
       rendererRef.current?.dispose();
       rendererRef.current = undefined;
     };
-  }, [canvas, configRef, config.scene.transforms?.enablePreloading, interfaceMode]);
+  }, [canvas, configRef, config.scene.transforms?.enablePreloading, interfaceMode, debugPicking]);
 
   const [colorScheme, setColorScheme] = useState<"dark" | "light" | undefined>();
   const [timezone, setTimezone] = useState<string | undefined>();
