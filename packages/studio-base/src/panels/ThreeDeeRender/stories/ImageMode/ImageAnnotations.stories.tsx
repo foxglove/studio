@@ -13,6 +13,7 @@ import { ImageModeConfig } from "@foxglove/studio-base/panels/ThreeDeeRender/IRe
 import { makeRawImageAndCalibration } from "@foxglove/studio-base/panels/ThreeDeeRender/stories/ImageMode/imageCommon";
 import PanelSetup, { Fixture } from "@foxglove/studio-base/stories/PanelSetup";
 import { useReadySignal } from "@foxglove/studio-base/stories/ReadySignalContext";
+import delay from "@foxglove/studio-base/util/delay";
 
 import { ImagePanel } from "../../index";
 
@@ -278,6 +279,7 @@ export const AnnotationsPicking: StoryObj = {
     debugPicking: true,
   },
   async play() {
+    await delay(100);
     await userEvent.hover(await screen.findByTestId(/panel-mouseenter-container/));
     await userEvent.click(await screen.findByTestId("ExpandingToolbar-Inspect objects"));
     await userEvent.pointer({
