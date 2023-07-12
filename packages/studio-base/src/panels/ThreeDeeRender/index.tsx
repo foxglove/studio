@@ -6,7 +6,6 @@ import { StrictMode, useMemo } from "react";
 import ReactDOM from "react-dom";
 
 import { useCrash } from "@foxglove/hooks";
-import { PanelExtensionContext } from "@foxglove/studio";
 import { CaptureErrorBoundary } from "@foxglove/studio-base/components/CaptureErrorBoundary";
 import {
   ForwardAnalyticsContextProvider,
@@ -14,7 +13,10 @@ import {
   useForwardAnalytics,
 } from "@foxglove/studio-base/components/ForwardAnalyticsContextProvider";
 import Panel from "@foxglove/studio-base/components/Panel";
-import { PanelExtensionAdapter } from "@foxglove/studio-base/components/PanelExtensionAdapter";
+import {
+  BuiltinPanelExtensionContext,
+  PanelExtensionAdapter,
+} from "@foxglove/studio-base/components/PanelExtensionAdapter";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 
 import { ThreeDeeRender } from "./ThreeDeeRender";
@@ -28,7 +30,7 @@ type InitPanelArgs = {
   debugPicking?: boolean;
 };
 
-function initPanel(args: InitPanelArgs, context: PanelExtensionContext) {
+function initPanel(args: InitPanelArgs, context: BuiltinPanelExtensionContext) {
   const { crash, forwardedAnalytics, interfaceMode, onDownloadImage, debugPicking } = args;
   ReactDOM.render(
     <StrictMode>

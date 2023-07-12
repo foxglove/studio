@@ -23,6 +23,10 @@ import {
   Topic,
   VariableValue,
 } from "@foxglove/studio";
+import {
+  Asset,
+  BuiltinPanelExtensionContext,
+} from "@foxglove/studio-base/components/PanelExtensionAdapter";
 import { LayerErrors } from "@foxglove/studio-base/panels/ThreeDeeRender/LayerErrors";
 import { FoxgloveGrid } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/FoxgloveGrid";
 import { ICameraHandler } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/ICameraHandler";
@@ -211,22 +215,24 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
   #animationFrame?: number;
   #cameraSyncError: undefined | string;
   #devicePixelRatioMediaQuery?: MediaQueryList;
+  #fetchAsset: BuiltinPanelExtensionContext["unstable_fetchAsset"];
 
   public constructor(args: {
     canvas: HTMLCanvasElement;
     config: Immutable<RendererConfig>;
     interfaceMode: InterfaceMode;
+    fetchAsset: BuiltinPanelExtensionContext["unstable_fetchAsset"];
     debugPicking?: boolean;
   }) {
-    const { canvas, config, interfaceMode, debugPicking } = args;
     super();
     // NOTE: Global side effect
     THREE.Object3D.DEFAULT_UP = new THREE.Vector3(0, 0, 1);
 
-    this.interfaceMode = interfaceMode;
-    this.#canvas = canvas;
-    this.config = config;
-    this.debugPicking = debugPicking ?? false;
+    const interfaceMode = (this.interfaceMode = args.interfaceMode);
+    const canvas = (this.#canvas = args.canvas);
+    const config = (this.config = args.config);
+    this.#fetchAsset = args.fetchAsset;
+    this.debugPicking = args.debugPicking ?? false;
 
     this.settings = new SettingsManager(baseSettingsTree(this.interfaceMode));
     this.settings.on("update", () => this.emit("settingsTreeChange", this));
@@ -265,6 +271,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
       ignoreColladaUpAxis: config.scene.ignoreColladaUpAxis ?? false,
       meshUpAxis: config.scene.meshUpAxis ?? DEFAULT_MESH_UP_AXIS,
       edgeMaterial: this.outlineMaterial,
+      fetchAsset: this.#fetchAsset,
     });
 
     this.#scene = new THREE.Scene();
@@ -1031,6 +1038,10 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
       log.debug(`Setting followFrameId to ${frameId}`);
     }
     this.followFrameId = frameId;
+  }
+
+  public async fetchAsset(uri: string, options?: { signal: AbortSignal }): Promise<Asset> {
+    return await this.#fetchAsset(uri, options);
   }
 
   #frameHandler = (currentTime: bigint): void => {
