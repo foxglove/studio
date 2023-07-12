@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import ClearIcon from "@mui/icons-material/Clear";
+import CancelIcon from "@mui/icons-material/Cancel";
 import SearchIcon from "@mui/icons-material/Search";
 import { IconButton, TextField } from "@mui/material";
 import memoizeWeak from "memoize-weak";
@@ -137,7 +137,7 @@ export default function SettingsTreeEditor({
                   onClick={() => setFilterText("")}
                   edge="end"
                 >
-                  <ClearIcon fontSize="small" />
+                  <CancelIcon fontSize="small" />
                 </IconButton>
               ),
             }}
