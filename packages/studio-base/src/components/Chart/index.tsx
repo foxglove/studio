@@ -304,16 +304,21 @@ function Chart(props: Props): JSX.Element {
     }
 
     running.current = true;
+    // Prevent setState if component unmounted
+    let canceled = false;
     updateChart(newUpdate)
       .catch((err: Error) => {
-        if (isMounted()) {
+        if (!canceled) {
           setUpdateError(err);
         }
       })
       .finally(() => {
         running.current = false;
       });
-  }, [getNewUpdateMessage, isMounted, updateChart]);
+    return () => {
+      canceled = true;
+    };
+  }, [getNewUpdateMessage, updateChart]);
 
   useLayoutEffect(() => {
     const container = containerRef.current;
