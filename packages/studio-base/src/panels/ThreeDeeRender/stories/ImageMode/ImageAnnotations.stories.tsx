@@ -252,20 +252,22 @@ const AnnotationsStory = (
     },
   };
   return (
-    <PanelSetup fixture={fixture}>
-      <ImagePanel
-        debugPicking={debugPicking}
-        overrideConfig={{
-          ...ImagePanel.defaultConfig,
-          imageMode: {
-            calibrationTopic: "calibration",
-            imageTopic: "camera",
-            annotations: { annotations: { visible: true } },
-            ...imageModeConfigOverride,
-          },
-        }}
-      />
-    </PanelSetup>
+    <div style={{ width: 1200, height: 900, flexShrink: 0 }}>
+      <PanelSetup fixture={fixture}>
+        <ImagePanel
+          debugPicking={debugPicking}
+          overrideConfig={{
+            ...ImagePanel.defaultConfig,
+            imageMode: {
+              calibrationTopic: "calibration",
+              imageTopic: "camera",
+              annotations: { annotations: { visible: true } },
+              ...imageModeConfigOverride,
+            },
+          }}
+        />
+      </PanelSetup>
+    </div>
   );
 };
 
