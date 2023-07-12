@@ -467,7 +467,7 @@ export const Foxglove_PointCloud_TwoDimensions: StoryObj = {
   },
 };
 
-function PickingStory(): JSX.Element {
+function HistoryPickingStory(): JSX.Element {
   const topics: Topic[] = [{ name: "/pointcloud", schemaName: "foxglove.PointCloud" }];
   const point_stride = 12;
   function makePointCloudData(t: number) {
@@ -561,8 +561,8 @@ function PickingStory(): JSX.Element {
 }
 
 /** Click background to render overall hitmap */
-export const Foxglove_PointCloud_PickingHistory: StoryObj = {
-  render: PickingStory,
+export const Foxglove_PointCloud_HistoryPicking: StoryObj = {
+  render: HistoryPickingStory,
   async play() {
     await userEvent.click(await screen.findByTestId("ExpandingToolbar-Inspect objects"));
     await userEvent.pointer({
@@ -574,8 +574,8 @@ export const Foxglove_PointCloud_PickingHistory: StoryObj = {
 };
 
 /** Click first cloud */
-export const Foxglove_PointCloud_PickingHistoryInstances1: StoryObj = {
-  render: PickingStory,
+export const Foxglove_PointCloud_HistoryPickingInstances1: StoryObj = {
+  render: HistoryPickingStory,
   async play() {
     await userEvent.click(await screen.findByTestId("ExpandingToolbar-Inspect objects"));
     await userEvent.pointer({
@@ -587,8 +587,8 @@ export const Foxglove_PointCloud_PickingHistoryInstances1: StoryObj = {
 };
 
 /** Click second cloud */
-export const Foxglove_PointCloud_PickingHistoryInstances2: StoryObj = {
-  render: PickingStory,
+export const Foxglove_PointCloud_HistoryPickingInstances2: StoryObj = {
+  render: HistoryPickingStory,
   async play() {
     await userEvent.click(await screen.findByTestId("ExpandingToolbar-Inspect objects"));
     await userEvent.pointer({
