@@ -360,7 +360,7 @@ export const ComparisonWithPointCloudColors: StoryObj = {
   },
 };
 
-function HistoryPickingStory() {
+function HistoryPickingStory(): JSX.Element {
   const topics: Topic[] = [{ name: "/scan", schemaName: "foxglove.LaserScan" }];
 
   const laserScan1: MessageEvent<LaserScan> = {
