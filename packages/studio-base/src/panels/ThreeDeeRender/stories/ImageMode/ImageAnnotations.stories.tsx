@@ -281,7 +281,7 @@ export const AnnotationsPicking: StoryObj = {
     debugPicking: true,
   },
   async play() {
-    await delay(100);
+    await delay(1000);
     await userEvent.hover(await screen.findByTestId(/panel-mouseenter-container/));
     await userEvent.click(await screen.findByTestId("ExpandingToolbar-Inspect objects"));
     await userEvent.pointer({
