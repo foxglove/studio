@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { StoryObj } from "@storybook/react";
+import { screen, userEvent } from "@storybook/testing-library";
 import { cloneDeep } from "lodash";
 import { useEffect, useState } from "react";
 
@@ -23,7 +24,10 @@ export default {
   },
 };
 
-const AnnotationsStory = (imageModeConfigOverride: Partial<ImageModeConfig> = {}): JSX.Element => {
+const AnnotationsStory = (
+  args: { debugPicking?: boolean; imageModeConfigOverride?: Partial<ImageModeConfig> } = {},
+): JSX.Element => {
+  const { debugPicking, imageModeConfigOverride } = args;
   const width = 60;
   const height = 45;
   const { calibrationMessage, cameraMessage } = makeRawImageAndCalibration({
@@ -249,6 +253,7 @@ const AnnotationsStory = (imageModeConfigOverride: Partial<ImageModeConfig> = {}
   return (
     <PanelSetup fixture={fixture}>
       <ImagePanel
+        debugPicking={debugPicking}
         overrideConfig={{
           ...ImagePanel.defaultConfig,
           imageMode: {
@@ -267,9 +272,27 @@ export const Annotations: StoryObj = {
   render: AnnotationsStory,
 };
 
+export const AnnotationsPicking: StoryObj = {
+  render: AnnotationsStory,
+  args: {
+    debugPicking: true,
+  },
+  async play() {
+    await userEvent.hover(await screen.findByTestId(/panel-mouseenter-container/));
+    await userEvent.click(await screen.findByTestId("ExpandingToolbar-Inspect objects"));
+    await userEvent.pointer({
+      target: document.querySelector("canvas")!,
+      keys: "[MouseLeft]",
+      coords: { clientX: 0, clientY: 0 },
+    });
+  },
+};
+
 export const AnnotationsWithoutCalibration: StoryObj = {
   render: AnnotationsStory,
-  args: { calibrationTopic: undefined },
+  args: {
+    imageModeConfigOverride: { calibrationTopic: undefined },
+  },
 };
 
 export const MessageConverterSupport: StoryObj = {
