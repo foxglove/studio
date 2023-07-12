@@ -47,8 +47,8 @@ type NormalizedLaserScan = {
 type LaserScanHistoryUserData = BaseUserData & {
   settings: LayerSettingsLaserScan;
   topic: string;
-  laserScan: NormalizedLaserScan;
-  originalMessage: Record<string, RosValue> | undefined;
+  latestLaserScan: NormalizedLaserScan;
+  latestOriginalMessage: Record<string, RosValue> | undefined;
 };
 
 const LASERSCAN_FIELDS = ["range", "intensity"];
@@ -151,12 +151,12 @@ class LaserScanHistoryRenderable extends Renderable<LaserScanHistoryUserData> {
         receiveTime: -1n, // unused
         messageTime: -1n, // unused
         frameId: "", //unused
-        pose: userData.laserScan.pose,
+        pose: userData.latestLaserScan.pose,
         settingsPath: [], //unused
         settings: { visible: true }, //unused
         topic,
-        laserScan: userData.laserScan,
-        originalMessage: userData.originalMessage,
+        laserScan: userData.latestLaserScan,
+        originalMessage: userData.latestOriginalMessage,
       },
       geometry,
     );
@@ -173,7 +173,7 @@ class LaserScanHistoryRenderable extends Renderable<LaserScanHistoryUserData> {
     this.add(points);
   }
   public override dispose(): void {
-    this.userData.originalMessage = undefined;
+    this.userData.latestOriginalMessage = undefined;
     this.#pointsHistory.dispose();
     super.dispose();
   }
@@ -188,8 +188,8 @@ class LaserScanHistoryRenderable extends Renderable<LaserScanHistoryUserData> {
     this.userData.receiveTime = receiveTime;
     this.userData.messageTime = messageTime;
     this.userData.frameId = this.renderer.normalizeFrameId(laserScan.frame_id);
-    this.userData.laserScan = laserScan;
-    this.userData.originalMessage = originalMessage;
+    this.userData.latestLaserScan = laserScan;
+    this.userData.latestOriginalMessage = originalMessage;
 
     this.userData.settings = settings;
     const { colorField } = settings;
@@ -396,8 +396,8 @@ export class LaserScans extends SceneExtension<LaserScanHistoryRenderable> {
       const settings = { ...DEFAULT_SETTINGS, ...prevSettings };
 
       renderable.updateLaserScan(
-        renderable.userData.laserScan,
-        renderable.userData.originalMessage,
+        renderable.userData.latestLaserScan,
+        renderable.userData.latestOriginalMessage,
         settings,
         renderable.userData.receiveTime,
       );
@@ -445,8 +445,8 @@ export class LaserScans extends SceneExtension<LaserScanHistoryRenderable> {
         settingsPath: ["topics", topic],
         settings,
         topic,
-        laserScan,
-        originalMessage: messageEvent.message as RosObject,
+        latestLaserScan: laserScan,
+        latestOriginalMessage: messageEvent.message as RosObject,
       });
 
       this.add(renderable);

@@ -186,8 +186,8 @@ export class VelodyneScans extends SceneExtension<PointCloudHistoryRenderable> {
         | undefined;
       const settings = { ...DEFAULT_SETTINGS, ...prevSettings };
       renderable.updatePointCloud(
-        renderable.userData.pointCloud,
-        renderable.userData.originalMessage,
+        renderable.userData.latestPointCloud,
+        renderable.userData.latestOriginalMessage,
         settings,
         renderable.userData.receiveTime,
       );
@@ -251,8 +251,8 @@ export class VelodyneScans extends SceneExtension<PointCloudHistoryRenderable> {
         settingsPath: ["topics", topic],
         settings,
         topic,
-        pointCloud,
-        originalMessage: messageEvent.message as RosObject,
+        latestPointCloud: pointCloud,
+        latestOriginalMessage: messageEvent.message as RosObject,
         material,
         pickingMaterial,
         instancePickingMaterial,

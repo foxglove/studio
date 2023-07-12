@@ -68,8 +68,8 @@ const DEFAULT_SETTINGS = { ...DEFAULT_POINT_SETTINGS, stixelsEnabled: false };
 type PointCloudHistoryUserData = BaseUserData & {
   settings: LayerSettingsPointClouds;
   topic: string;
-  pointCloud: PointCloud | PointCloud2;
-  originalMessage: Record<string, RosValue> | undefined;
+  latestPointCloud: PointCloud | PointCloud2;
+  latestOriginalMessage: Record<string, RosValue> | undefined;
   material: THREE.PointsMaterial;
   pickingMaterial: THREE.ShaderMaterial;
   instancePickingMaterial: THREE.ShaderMaterial;
@@ -148,12 +148,12 @@ export class PointCloudHistoryRenderable extends Renderable<PointCloudHistoryUse
         receiveTime: -1n, // unused
         messageTime: -1n, // unused
         frameId: "", //unused
-        pose: getPose(userData.pointCloud),
+        pose: getPose(userData.latestPointCloud),
         settingsPath: [], //unused
         settings: { visible: true }, //unused
         topic,
-        pointCloud: userData.pointCloud,
-        originalMessage: userData.originalMessage,
+        pointCloud: userData.latestPointCloud,
+        originalMessage: userData.latestOriginalMessage,
       },
       geometry,
       userData.material,
@@ -181,7 +181,7 @@ export class PointCloudHistoryRenderable extends Renderable<PointCloudHistoryUse
         receiveTime: -1n, // unused
         messageTime: -1n, // unused
         frameId: "", //unused
-        pose: getPose(userData.pointCloud),
+        pose: getPose(userData.latestPointCloud),
         settingsPath: [], //unused
         settings: { visible: true }, //unused
         topic,
@@ -203,7 +203,7 @@ export class PointCloudHistoryRenderable extends Renderable<PointCloudHistoryUse
   }
 
   public override dispose(): void {
-    this.userData.originalMessage = undefined;
+    this.userData.latestOriginalMessage = undefined;
     this.userData.material.dispose();
     this.userData.pickingMaterial.dispose();
     this.userData.instancePickingMaterial.dispose();
@@ -224,8 +224,8 @@ export class PointCloudHistoryRenderable extends Renderable<PointCloudHistoryUse
     this.userData.receiveTime = receiveTime;
     this.userData.messageTime = messageTime;
     this.userData.frameId = this.renderer.normalizeFrameId(getFrameId(pointCloud));
-    this.userData.pointCloud = pointCloud;
-    this.userData.originalMessage = originalMessage;
+    this.userData.latestPointCloud = pointCloud;
+    this.userData.latestOriginalMessage = originalMessage;
 
     const prevSettings = this.userData.settings;
     const prevIsDecay = prevSettings.decayTime > 0;
@@ -771,8 +771,8 @@ export class PointClouds extends SceneExtension<PointCloudHistoryRenderable> {
         | undefined;
       const settings = { ...DEFAULT_SETTINGS, ...prevSettings };
       renderable.updatePointCloud(
-        renderable.userData.pointCloud,
-        renderable.userData.originalMessage,
+        renderable.userData.latestPointCloud,
+        renderable.userData.latestOriginalMessage,
         settings,
         renderable.userData.receiveTime,
       );
@@ -876,8 +876,8 @@ export class PointClouds extends SceneExtension<PointCloudHistoryRenderable> {
         settingsPath: ["topics", topic],
         settings,
         topic,
-        pointCloud,
-        originalMessage,
+        latestPointCloud: pointCloud,
+        latestOriginalMessage: originalMessage,
         material,
         pickingMaterial,
         instancePickingMaterial,
