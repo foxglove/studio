@@ -203,7 +203,7 @@ function PanelWrapper({
     <>
       {includeSettings && (
         <div style={{ overflow: "auto", width: settingsWidth }}>
-          <SettingsTreeEditor id="panel" settings={settings} />
+          <SettingsTreeEditor variant="panel" settings={settings} />
         </div>
       )}
       {children}
