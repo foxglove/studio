@@ -6,6 +6,8 @@ import { PopoverPosition, PopoverReference } from "@mui/material";
 import { Meta, StoryObj } from "@storybook/react";
 import { userEvent, within } from "@storybook/testing-library";
 
+import { AppBarMenuItem } from "@foxglove/studio-base/components/AppBar/types";
+import { AppContext } from "@foxglove/studio-base/context/AppContext";
 import PlayerSelectionContext, {
   PlayerSelection,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
@@ -15,12 +17,12 @@ import { AppMenu } from "./AppMenu";
 
 type StoryArgs = {
   handleClose: () => void;
+  appBarMenuItems?: AppBarMenuItem[];
   anchorEl?: HTMLElement;
   anchorReference?: PopoverReference;
   anchorPosition?: PopoverPosition;
   disablePortal?: boolean;
   open: boolean;
-  showConsoleLink?: boolean;
   testId?: string;
 };
 
@@ -38,11 +40,13 @@ export default {
   },
   decorators: [
     (Story, { args: { testId: _, ...args } }): JSX.Element => (
-      <WorkspaceContextProvider>
-        <PlayerSelectionContext.Provider value={playerSelection}>
-          <Story {...args} />
-        </PlayerSelectionContext.Provider>
-      </WorkspaceContextProvider>
+      <AppContext.Provider value={{ appBarMenuItems: args.appBarMenuItems }}>
+        <WorkspaceContextProvider>
+          <PlayerSelectionContext.Provider value={playerSelection}>
+            <Story {...args} />
+          </PlayerSelectionContext.Provider>
+        </WorkspaceContextProvider>
+      </AppContext.Provider>
     ),
   ],
   play: async ({ canvasElement, args }) => {
@@ -74,8 +78,15 @@ type Story = StoryObj<StoryArgs>;
 
 export const Default: Story = {};
 
-export const DefaultWithConsoleLink: Story = {
-  args: { showConsoleLink: true },
+export const WithAppContextMenuItens: Story = {
+  args: {
+    appBarMenuItems: [
+      { type: "item", key: "item1", label: "App Context Item 1" },
+      { type: "divider" },
+      { type: "item", key: "item2", label: "App Context Item 2" },
+      { type: "divider" },
+    ],
+  },
 };
 
 export const FileMenuDark: Story = {

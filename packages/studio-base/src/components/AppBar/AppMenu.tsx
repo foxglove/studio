@@ -15,8 +15,10 @@ import { useTranslation } from "react-i18next";
 import { makeStyles } from "tss-react/mui";
 import { shallow } from "zustand/shallow";
 
+import { AppBarMenuItem } from "@foxglove/studio-base/components/AppBar/types";
 import TextMiddleTruncate from "@foxglove/studio-base/components/TextMiddleTruncate";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
+import { useAppContext } from "@foxglove/studio-base/context/AppContext";
 import { useCurrentUserType } from "@foxglove/studio-base/context/CurrentUserContext";
 import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import {
@@ -26,7 +28,7 @@ import {
 import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/useWorkspaceActions";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 
-import { MenuItem, NestedMenuItem } from "./NestedMenuItem";
+import { NestedMenuItem } from "./NestedMenuItem";
 
 type AppMenuProps = {
   handleClose: () => void;
@@ -35,7 +37,6 @@ type AppMenuProps = {
   anchorPosition?: PopoverPosition;
   disablePortal?: boolean;
   open: boolean;
-  showConsoleLink?: boolean;
 };
 
 const useStyles = makeStyles()({
@@ -51,17 +52,11 @@ const useStyles = makeStyles()({
 const selectWorkspace = (store: WorkspaceContextStore) => store;
 
 export function AppMenu(props: AppMenuProps): JSX.Element {
-  const {
-    open,
-    handleClose,
-    anchorEl,
-    anchorReference,
-    anchorPosition,
-    disablePortal,
-    showConsoleLink = false,
-  } = props;
+  const { open, handleClose, anchorEl, anchorReference, anchorPosition, disablePortal } = props;
   const { classes } = useStyles();
   const { t } = useTranslation("appBar");
+
+  const { appBarMenuItems } = useAppContext();
 
   const [nestedMenu, setNestedMenu] = useState<string | undefined>();
 
@@ -96,16 +91,10 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
     [analytics, currentUserType],
   );
 
-  const onConsoleClick = useCallback(() => {
-    handleAnalytics("console");
-    window.open(`${process.env.FOXGLOVE_CONSOLE_URL}/recordings/list`, "_blank");
-    handleNestedMenuClose();
-  }, [handleAnalytics, handleNestedMenuClose]);
-
   // FILE
 
   const fileItems = useMemo(() => {
-    const items: MenuItem[] = [
+    const items: AppBarMenuItem[] = [
       {
         type: "item",
         label: t("open"),
@@ -156,7 +145,8 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
     return items;
   }, [
     classes.truncate,
-    dialogActions,
+    dialogActions.dataSource,
+    dialogActions.openFile,
     handleAnalytics,
     handleNestedMenuClose,
     recentSources,
@@ -166,7 +156,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
 
   // VIEW
 
-  const viewItems = useMemo<MenuItem[]>(
+  const viewItems = useMemo<AppBarMenuItem[]>(
     () => [
       {
         type: "item",
@@ -225,7 +215,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
     handleNestedMenuClose();
   }, [dialogActions.dataSource, handleAnalytics, handleNestedMenuClose]);
 
-  const helpItems = useMemo<MenuItem[]>(
+  const helpItems = useMemo<AppBarMenuItem[]>(
     () => [
       { type: "item", key: "about", label: t("about"), onClick: onAboutClick },
       { type: "divider" },
@@ -265,16 +255,19 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
           } as Partial<PaperProps & { "data-tourid"?: string }>
         }
       >
-        {showConsoleLink && (
-          <MuiMenuItem
-            onPointerEnter={() => setNestedMenu(undefined)}
-            onClick={onConsoleClick}
-            id="app-menu-console"
-          >
-            {t("browseData")}
-          </MuiMenuItem>
+        {(appBarMenuItems ?? []).map((item, idx) =>
+          item.type === "divider" ? (
+            <Divider key={`divider${idx}`} />
+          ) : (
+            <MuiMenuItem
+              key={item.key}
+              onClick={item.onClick}
+              onPointerEnter={() => setNestedMenu(undefined)}
+            >
+              {item.label}
+            </MuiMenuItem>
+          ),
         )}
-        {showConsoleLink && <Divider variant="middle" />}
         <NestedMenuItem
           onPointerEnter={handleItemPointerEnter}
           items={fileItems}
