@@ -693,6 +693,15 @@ describe("pipeline", () => {
         datatypes: numDataType,
       },
       {
+        description: "Enum as return type",
+        sourceCode: `
+          enum MyEnum { A = 1 };
+          export default (msg: any): MyEnum => {
+            return MyEnum.A;
+          };`,
+        datatypes: numDataType,
+      },
+      {
         description: "Imported type from 'ros' in return type",
         sourceCode: `
           import { Messages } from 'ros';
