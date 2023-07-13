@@ -10,7 +10,12 @@ import * as THREE from "three";
 import { UrdfGeometryMesh, UrdfRobot, UrdfVisual, parseRobot, UrdfJoint } from "@foxglove/den/urdf";
 import Logger from "@foxglove/log";
 import { toNanoSec } from "@foxglove/rostime";
-import { SettingsTreeAction, SettingsTreeChildren, SettingsTreeFields } from "@foxglove/studio";
+import {
+  SettingsTreeAction,
+  SettingsTreeChildren,
+  SettingsTreeField,
+  SettingsTreeFields,
+} from "@foxglove/studio";
 import { eulerToQuaternion } from "@foxglove/studio-base/util/geometry";
 
 import { RenderableCube } from "./markers/RenderableCube";
@@ -65,6 +70,7 @@ const RPY_LABEL: [string, string, string] = ["R", "P", "Y"];
 
 export type LayerSettingsUrdf = BaseSettings & {
   instanceId: string; // This will be set to the topic name
+  displayMode: "auto" | "visual" | "collision";
 };
 
 export type LayerSettingsCustomUrdf = CustomLayerSettings & {
@@ -78,6 +84,7 @@ const DEFAULT_SETTINGS: LayerSettingsUrdf = {
   visible: false,
   frameLocked: true,
   instanceId: "invalid",
+  displayMode: "auto",
 };
 
 const DEFAULT_CUSTOM_SETTINGS: LayerSettingsCustomUrdf = {
@@ -191,16 +198,39 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
 
   public override settingsNodes(): SettingsTreeEntry[] {
     const entries: SettingsTreeEntry[] = [];
+    const displayMode: SettingsTreeField = {
+      label: "Display mode",
+      input: "select",
+      value: "auto",
+      options: [
+        {
+          label: "Auto",
+          value: "auto",
+        },
+        {
+          label: "Visual",
+          value: "visual",
+        },
+        {
+          label: "Collision",
+          value: "collision",
+        },
+      ],
+    };
 
     // /robot_description topic entry
     const topic = this.renderer.topicsByName?.get(TOPIC_NAME);
     if (topic != undefined) {
       const config = (this.renderer.config.topics[TOPIC_NAME] ?? {}) as Partial<LayerSettingsUrdf>;
+      const fields: SettingsTreeFields = {
+        displayMode: { ...displayMode, value: config.displayMode ?? "auto" },
+      };
       entries.push({
         path: ["topics", TOPIC_NAME],
         node: {
           label: TOPIC_NAME,
           icon: "PrecisionManufacturing",
+          fields,
           visible: config.visible ?? DEFAULT_SETTINGS.visible,
           handler: this.#handleTopicSettingsAction,
           children: urdfChildren(
@@ -217,7 +247,9 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     if (parameter != undefined) {
       const config = (this.renderer.config.topics[PARAM_KEY] ?? {}) as Partial<LayerSettingsUrdf>;
 
-      const fields: SettingsTreeFields = {};
+      const fields: SettingsTreeFields = {
+        displayMode: { ...displayMode, value: config.displayMode ?? "auto" },
+      };
 
       entries.push({
         path: ["topics", PARAM_KEY],
@@ -252,25 +284,7 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
             help: "Prefix to apply to all frame names (also often called tfPrefix)",
             value: config.framePrefix ?? "",
           },
-          displayMode: {
-            label: "Display mode",
-            input: "select",
-            value: config.displayMode,
-            options: [
-              {
-                label: "Auto",
-                value: "auto",
-              },
-              {
-                label: "Visual",
-                value: "visual",
-              },
-              {
-                label: "Collision",
-                value: "collision",
-              },
-            ],
-          },
+          displayMode: { ...displayMode, value: config.displayMode ?? "auto" },
         };
 
         entries.push({
@@ -677,7 +691,7 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     const renderer = this.renderer;
     const settings = renderable.userData.settings;
     const instanceId = settings.instanceId;
-    const displayMode = (settings as Partial<LayerSettingsCustomUrdf>).displayMode ?? "auto";
+    const displayMode = settings.displayMode;
 
     this.#loadFrames(instanceId, frames);
     this.#loadTransforms(instanceId, transforms);
