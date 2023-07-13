@@ -301,7 +301,6 @@ export const constructDatatypes = (
     typeMap: TypeMap = {},
     innerDepth: number = 1,
   ): MessageDefinitionField => {
-    console.log("NODE", tsNode);
     if (innerDepth > MAX_DEPTH) {
       throw new Error(`Max AST traversal depth exceeded.`);
     }
@@ -464,6 +463,7 @@ export const constructDatatypes = (
           ts.SyntaxKind.InterfaceDeclaration,
           ts.SyntaxKind.ImportSpecifier,
           ts.SyntaxKind.ClassDeclaration,
+          ts.SyntaxKind.EnumDeclaration,
         ]);
 
         if (!nextNode) {
@@ -511,7 +511,14 @@ export const constructDatatypes = (
       case ts.SyntaxKind.ClassDeclaration: {
         throw new DatatypeExtractionError(classError);
       }
-
+      case ts.SyntaxKind.EnumDeclaration:
+        return {
+          name,
+          type: "uint32",
+          isArray,
+          isComplex,
+          arrayLength: undefined,
+        };
       case ts.SyntaxKind.UnionType: {
         throw new DatatypeExtractionError(unionsError);
       }

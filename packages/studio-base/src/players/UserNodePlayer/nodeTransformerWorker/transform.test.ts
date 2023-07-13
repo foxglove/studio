@@ -425,6 +425,22 @@ describe("pipeline", () => {
       }),
     );
 
+    const uint32DataType: RosDatatypes = new Map(
+      Object.entries({
+        [baseNodeData.name]: {
+          definitions: [
+            {
+              name: "val",
+              isArray: false,
+              isComplex: false,
+              arrayLength: undefined,
+              type: "uint32",
+            },
+          ],
+        },
+      }),
+    );
+
     const posDatatypes: RosDatatypes = new Map(
       Object.entries({
         [baseNodeData.name]: {
@@ -695,11 +711,11 @@ describe("pipeline", () => {
       {
         description: "Enum as return type",
         sourceCode: `
-          enum MyEnum { A = 1 };
+          enum MyEnum { A = 1, B = 2, C };
           export default (msg: any): { val: MyEnum } => {
             return { val: MyEnum.A };
           };`,
-        datatypes: numDataType,
+        datatypes: uint32DataType,
       },
       {
         description: "Imported type from 'ros' in return type",
