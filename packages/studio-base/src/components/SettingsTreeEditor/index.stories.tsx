@@ -858,10 +858,8 @@ export const Basics: StoryObj = {
 
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const buttons = await canvas.findAllByTestId("node-actions-menu-button");
-    buttons.forEach(async (button) => {
-      await userEvent.click(button);
-    });
+    const [button] = await canvas.findAllByTestId("node-actions-menu-button");
+    await userEvent.click(button!);
   },
 };
 
