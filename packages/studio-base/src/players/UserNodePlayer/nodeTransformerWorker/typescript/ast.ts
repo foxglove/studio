@@ -301,6 +301,7 @@ export const constructDatatypes = (
     typeMap: TypeMap = {},
     innerDepth: number = 1,
   ): MessageDefinitionField => {
+    console.log("NODE", tsNode);
     if (innerDepth > MAX_DEPTH) {
       throw new Error(`Max AST traversal depth exceeded.`);
     }

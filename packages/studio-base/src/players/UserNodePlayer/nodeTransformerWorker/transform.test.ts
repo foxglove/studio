@@ -696,8 +696,8 @@ describe("pipeline", () => {
         description: "Enum as return type",
         sourceCode: `
           enum MyEnum { A = 1 };
-          export default (msg: any): MyEnum => {
-            return MyEnum.A;
+          export default (msg: any): { val: MyEnum } => {
+            return { val: MyEnum.A };
           };`,
         datatypes: numDataType,
       },
