@@ -49,8 +49,10 @@ const useStyles = makeStyles()((theme) => ({
 const makeStablePath = memoizeWeak((key: string) => [key]);
 
 export default function SettingsTreeEditor({
+  variant,
   settings,
 }: {
+  variant: "panel" | "log";
   settings: Immutable<SettingsTree>;
 }): JSX.Element {
   const { classes } = useStyles();
@@ -115,14 +117,16 @@ export default function SettingsTreeEditor({
       {settings.enableFilter === true && (
         <header className={classes.appBar}>
           <TextField
-            id="settings-filter"
+            id={`${variant}-settings-filter`}
             variant="filled"
-            data-testid="settings-filter-field"
             onChange={(event) => setFilterText(event.target.value)}
             value={filterText}
             className={classes.textField}
             fullWidth
             placeholder={t("searchPanelSettings")}
+            inputProps={{
+              "data-testid": `${variant}-settings-filter-input`,
+            }}
             InputProps={{
               size: "small",
               startAdornment: (
