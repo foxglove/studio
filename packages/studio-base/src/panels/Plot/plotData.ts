@@ -22,6 +22,11 @@ import {
 } from "./internalTypes";
 import * as maps from "./maps";
 
+/**
+ * Plot data bundles datasets with precomputed bounds and paths with mismatched data
+ * paths. It's used to contain data from blocks and currentFrame segments and eventually
+ * is merged into a single object and passed to the chart components.
+ */
 export type PlotData = {
   bounds: Bounds;
   datasetsByPath: DatasetsByPath;

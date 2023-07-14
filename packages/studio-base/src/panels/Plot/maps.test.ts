@@ -56,7 +56,7 @@ describe("pick", () => {
       ["d", 4],
     ]);
 
-    const picked = maps.pick(input, ["b", "d"]);
+    const picked = maps.pick(input, ["b", "d", "z"]);
 
     expect(picked).toEqual(
       new Map([
