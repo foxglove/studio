@@ -138,7 +138,13 @@ function compare(a: Im<PlotData>, b: Im<PlotData>): number {
   return startCompare !== 0 ? startCompare : rangeA.end - rangeB.end;
 }
 
-function mapPathItem(messageAndData: MessageAndData) {
+/**
+ * Convert MessageAndData into a PlotDataItem.
+ *
+ * Note: this is a free function so we are not making it for every loop iteration
+ * in `getByPath` below.
+ */
+function messageAndDataToPathItem(messageAndData: MessageAndData) {
   const headerStamp = getTimestampForMessage(messageAndData.messageEvent.message);
   return {
     queriedData: messageAndData.queriedData,
@@ -154,7 +160,7 @@ function mapPathItem(messageAndData: MessageAndData) {
 export const getByPath = (itemsByPath: MessageDataItemsByPath): PlotDataByPath => {
   const ret: PlotDataByPath = {};
   for (const [path, items] of Object.entries(itemsByPath)) {
-    ret[path] = items.map(mapPathItem);
+    ret[path] = items.map(messageAndDataToPathItem);
   }
   return ret;
 };
