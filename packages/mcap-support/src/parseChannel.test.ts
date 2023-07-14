@@ -94,7 +94,7 @@ describe("parseChannel", () => {
   });
   it("works with omgidl xcdr2", () => {
     const channel = parseChannel({
-      messageEncoding: "xcdr2",
+      messageEncoding: "cdr",
       schema: {
         name: "foo_msgs::Bar",
         encoding: "omgidl",
