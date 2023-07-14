@@ -106,6 +106,9 @@ const URDF3 = `<?xml version="1.0"?>
       <geometry><sphere radius="0.2"/></geometry>
       <material name="base-sphere-material"/>
     </visual>
+    <collision>
+      <geometry><box size="0.4 0.4 0.4"/></geometry>
+    </collision>
   </link>
   <joint name="base_sphere_box_joint" type="fixed">
     <parent link="base_link"/>
@@ -117,6 +120,9 @@ const URDF3 = `<?xml version="1.0"?>
       <geometry><sphere radius="0.1"/></geometry>
       <material name="sphere-material"/>
     </visual>
+    <collision>
+      <geometry><box size="0.2 0.2 0.2"/></geometry>
+    </collision>
   </link>
 </robot>`;
 
@@ -215,6 +221,7 @@ export const Urdfs: StoryObj = {
                 layerId: "foxglove.Urdf",
                 url: `param://${urdfParamName}`,
                 framePrefix: `robot_2/`,
+                displayMode: "collision",
               },
             },
             cameraState: {
