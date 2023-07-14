@@ -15,7 +15,6 @@ import {
   Immutable,
   LayoutActions,
   MessageEvent,
-  PanelExtensionContext,
   ParameterValue,
   RenderState,
   SettingsTreeAction,
@@ -24,6 +23,7 @@ import {
   Topic,
 } from "@foxglove/studio";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
+import { BuiltinPanelExtensionContext } from "@foxglove/studio-base/components/PanelExtensionAdapter";
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
 
 import type {
@@ -92,13 +92,15 @@ function useRendererProperty<K extends keyof IRenderer>(
  * A panel that renders a 3D scene. This is a thin wrapper around a `Renderer` instance.
  */
 export function ThreeDeeRender(props: {
-  context: PanelExtensionContext;
+  context: BuiltinPanelExtensionContext;
   interfaceMode: InterfaceMode;
   /** Override default downloading behavior, used for Storybook */
   onDownloadImage?: (blob: Blob, fileName: string) => void;
+  /** Enable hitmap debugging by default, used for picking stories */
+  debugPicking?: boolean;
 }): JSX.Element {
-  const { context, interfaceMode, onDownloadImage } = props;
-  const { initialState, saveState } = context;
+  const { context, interfaceMode, onDownloadImage, debugPicking } = props;
+  const { initialState, saveState, unstable_fetchAsset: fetchAsset } = context;
 
   // Load and save the persisted panel configuration
   const [config, setConfig] = useState<Immutable<RendererConfig>>(() => {
@@ -136,14 +138,23 @@ export function ThreeDeeRender(props: {
   const [renderer, setRenderer] = useState<IRenderer | undefined>(undefined);
   const rendererRef = useRef<IRenderer | undefined>(undefined);
   useEffect(() => {
-    const newRenderer = canvas ? new Renderer(canvas, configRef.current, interfaceMode) : undefined;
+    const newRenderer = canvas
+      ? new Renderer({ canvas, config: configRef.current, interfaceMode, fetchAsset, debugPicking })
+      : undefined;
     setRenderer(newRenderer);
     rendererRef.current = newRenderer;
     return () => {
       rendererRef.current?.dispose();
       rendererRef.current = undefined;
     };
-  }, [canvas, configRef, config.scene.transforms?.enablePreloading, interfaceMode]);
+  }, [
+    canvas,
+    configRef,
+    config.scene.transforms?.enablePreloading,
+    interfaceMode,
+    fetchAsset,
+    debugPicking,
+  ]);
 
   const [colorScheme, setColorScheme] = useState<"dark" | "light" | undefined>();
   const [timezone, setTimezone] = useState<string | undefined>();

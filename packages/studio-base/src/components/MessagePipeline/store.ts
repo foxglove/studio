@@ -18,6 +18,7 @@ import {
   SubscribePayload,
 } from "@foxglove/studio-base/players/types";
 import { assertNever } from "@foxglove/studio-base/util/assertNever";
+import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
 
 import { FramePromise } from "./pauseFrameForPromise";
 import { MessagePipelineContext } from "./types";
@@ -68,7 +69,6 @@ type UpdatePlayerStateAction = {
 export type MessagePipelineStateAction =
   | UpdateSubscriberAction
   | UpdatePlayerStateAction
-  | { type: "set-player"; player: Player | undefined }
   | { type: "set-publishers"; id: string; payloads: AdvertiseOptions[] };
 
 export function createMessagePipelineStore({
@@ -112,10 +112,34 @@ export function createMessagePipelineStore({
       },
       async callService(service, request) {
         const player = get().player;
-        if (player) {
-          return await player.callService(service, request);
+        if (!player) {
+          throw new Error("callService called when player is not present");
         }
-        throw new Error("callService called when player is not present");
+        return await player.callService(service, request);
+      },
+      async fetchAsset(uri, options) {
+        const { protocol } = new URL(uri);
+        const player = get().player;
+
+        if (player?.fetchAsset && protocol === "package:") {
+          try {
+            return await player.fetchAsset(uri);
+          } catch (err) {
+            // Bail out if this is not a desktop app. For the desktop app, package:// is registered
+            // as a supported schema for builtin _fetch_ calls. Hence we fallback to a normal
+            // _fetch_ call if the asset couldn't be loaded through the player.
+            if (!isDesktopApp()) {
+              throw err;
+            }
+          }
+        }
+
+        const response = await fetch(uri, options);
+        return {
+          uri,
+          data: new Uint8Array(await response.arrayBuffer()),
+          mediaType: response.headers.get("content-type") ?? undefined,
+        };
       },
       startPlayback: undefined,
       playUntil: undefined,
@@ -328,28 +352,6 @@ export function reducer(
         allPublishers: flatten(Object.values(newPublishersById)),
       };
     }
-
-    case "set-player":
-      if (action.player === prevState.player) {
-        return prevState;
-      }
-      return {
-        ...prevState,
-        player: action.player,
-        lastCapabilities: [],
-        lastMessageEventByTopic: new Map(),
-        public: {
-          ...prevState.public,
-          sortedTopics: [],
-          datatypes: new Map(),
-          messageEventsBySubscriberId: new Map(),
-          startPlayback: undefined,
-          pausePlayback: undefined,
-          playUntil: undefined,
-          setPlaybackSpeed: undefined,
-          seekPlayback: undefined,
-        },
-      };
   }
 
   assertNever(

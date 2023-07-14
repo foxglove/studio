@@ -13,8 +13,9 @@
 
 import { StoryObj } from "@storybook/react";
 import { screen, userEvent } from "@storybook/testing-library";
+import { produce } from "immer";
 import { shuffle } from "lodash";
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 
 import { fromSec } from "@foxglove/rostime";
@@ -151,7 +152,7 @@ const otherStateMessages = [
       { id: 42, speed: 0.06 },
     ],
   },
-];
+] as const;
 
 const withEndTime = (testFixture: Fixture, endTime: any) => ({
   ...testFixture,
@@ -385,6 +386,30 @@ export const LineGraph: StoryObj = {
   },
 
   name: "line graph",
+
+  parameters: {
+    useReadySignal: true,
+  },
+};
+
+export const LineGraphWithValuesAndDisabledSeries: StoryObj = {
+  render: function Story() {
+    const readySignal = useReadySignal({ count: 3 });
+    const pauseFrame = useCallback(() => readySignal, [readySignal]);
+
+    const config = produce(exampleConfig, (draft) => {
+      draft.paths[1]!.enabled = false;
+      draft.showPlotValuesInLegend = true;
+    });
+
+    return <PlotWrapper pauseFrame={pauseFrame} config={config} />;
+  },
+
+  play: async (ctx) => {
+    await ctx.parameters.storyReady;
+  },
+
+  name: "line graph with values and disabled series",
 
   parameters: {
     useReadySignal: true,
@@ -1113,6 +1138,67 @@ export const IndexBasedXAxisForArray: StoryObj = {
   },
 
   name: "index-based x-axis for array",
+
+  parameters: {
+    useReadySignal: true,
+  },
+
+  play: async (ctx) => {
+    await ctx.parameters.storyReady;
+  },
+};
+
+export const IndexBasedXAxisForArrayWithUpdate: StoryObj = {
+  render: function Story() {
+    const readySignal = useReadySignal({ count: 3 });
+    const pauseFrame = useCallback(() => {
+      setOurFixture((oldValue) => {
+        return {
+          ...oldValue,
+          frame: {
+            "/some_topic/state": [
+              {
+                topic: "/some_topic/state",
+                receiveTime: { sec: 3, nsec: 0 },
+                message: {
+                  header: { stamp: { sec: 3, nsec: 0 } },
+                  items: [
+                    { id: 10, speed: 4 },
+                    { id: 42, speed: 2 },
+                  ],
+                },
+                schemaName: "msgs/State",
+                sizeInBytes: 0,
+              },
+            ],
+          },
+        };
+      });
+
+      return readySignal;
+    }, [readySignal]);
+    const [ourFixture, setOurFixture] = useState(structuredClone(fixture));
+
+    return (
+      <PlotWrapper
+        pauseFrame={pauseFrame}
+        fixture={ourFixture}
+        config={{
+          ...exampleConfig,
+          xAxisVal: "index",
+          paths: [
+            {
+              value: "/some_topic/state.items[:].speed",
+              enabled: true,
+              timestampMethod: "receiveTime",
+            },
+          ],
+        }}
+      />
+    );
+  },
+
+  name: "index-based x-axis for array with update",
 
   parameters: {
     useReadySignal: true,

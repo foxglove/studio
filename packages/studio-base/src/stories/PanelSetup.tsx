@@ -90,6 +90,7 @@ export type Fixture = {
   setPublishers?: (publisherId: string, advertisements: AdvertiseOptions[]) => void;
   setSubscriptions?: ComponentProps<typeof MockMessagePipelineProvider>["setSubscriptions"];
   setParameter?: (key: string, value: ParameterValue) => void;
+  fetchAsset?: ComponentProps<typeof MockMessagePipelineProvider>["fetchAsset"];
   messageConverters?: readonly RegisterMessageConverterArgs<unknown>[];
   panelState?: Partial<PanelStateStore>;
 };
@@ -202,13 +203,25 @@ function PanelWrapper({
     <>
       {includeSettings && (
         <div style={{ overflow: "auto", width: settingsWidth }}>
-          <SettingsTreeEditor settings={settings} />
+          <SettingsTreeEditor variant="panel" settings={settings} />
         </div>
       )}
       {children}
     </>
   );
 }
+
+const defaultFetchAsset: ComponentProps<typeof MockMessagePipelineProvider>["fetchAsset"] = async (
+  uri,
+  options,
+) => {
+  const response = await fetch(uri, options);
+  return {
+    uri,
+    data: new Uint8Array(await response.arrayBuffer()),
+    mediaType: response.headers.get("content-type") ?? undefined,
+  };
+};
 
 function UnconnectedPanelSetup(props: UnconnectedProps): JSX.Element | ReactNull {
   const { t } = useTranslation("panels");
@@ -289,6 +302,7 @@ function UnconnectedPanelSetup(props: UnconnectedProps): JSX.Element | ReactNull
     setPublishers,
     setSubscriptions,
     setParameter,
+    fetchAsset,
   } = props.fixture ?? {};
   let dTypes = datatypes;
   if (!dTypes) {
@@ -323,6 +337,7 @@ function UnconnectedPanelSetup(props: UnconnectedProps): JSX.Element | ReactNull
         setPublishers={setPublishers}
         setSubscriptions={setSubscriptions}
         setParameter={setParameter}
+        fetchAsset={fetchAsset ?? defaultFetchAsset}
       >
         <PanelCatalogContext.Provider value={mockPanelCatalog}>
           <AppConfigurationContext.Provider value={mockAppConfiguration}>

@@ -23,6 +23,10 @@ import {
   Topic,
   VariableValue,
 } from "@foxglove/studio";
+import {
+  Asset,
+  BuiltinPanelExtensionContext,
+} from "@foxglove/studio-base/components/PanelExtensionAdapter";
 import { LayerErrors } from "@foxglove/studio-base/panels/ThreeDeeRender/LayerErrors";
 import { FoxgloveGrid } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/FoxgloveGrid";
 import { ICameraHandler } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/ICameraHandler";
@@ -152,7 +156,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
   #canvas: HTMLCanvasElement;
   public readonly gl: THREE.WebGLRenderer;
   public maxLod = DetailLevel.High;
-  public debugPicking = false;
+  public debugPicking: boolean;
   public config: Immutable<RendererConfig>;
   public settings: SettingsManager;
   // [{ name, datatype }]
@@ -191,6 +195,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
   public ros = false;
 
   #picker: Picker;
+  #selectionBackdropScene: THREE.Scene;
   #selectionBackdrop: ScreenOverlay;
   #selectedRenderable: PickedRenderable | undefined;
   public colorScheme: "dark" | "light" = "light";
@@ -210,19 +215,24 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
   #animationFrame?: number;
   #cameraSyncError: undefined | string;
   #devicePixelRatioMediaQuery?: MediaQueryList;
+  #fetchAsset: BuiltinPanelExtensionContext["unstable_fetchAsset"];
 
-  public constructor(
-    canvas: HTMLCanvasElement,
-    config: Immutable<RendererConfig>,
-    interfaceMode: InterfaceMode,
-  ) {
+  public constructor(args: {
+    canvas: HTMLCanvasElement;
+    config: Immutable<RendererConfig>;
+    interfaceMode: InterfaceMode;
+    fetchAsset: BuiltinPanelExtensionContext["unstable_fetchAsset"];
+    debugPicking?: boolean;
+  }) {
     super();
     // NOTE: Global side effect
     THREE.Object3D.DEFAULT_UP = new THREE.Vector3(0, 0, 1);
 
-    this.interfaceMode = interfaceMode;
-    this.#canvas = canvas;
-    this.config = config;
+    const interfaceMode = (this.interfaceMode = args.interfaceMode);
+    const canvas = (this.#canvas = args.canvas);
+    const config = (this.config = args.config);
+    this.#fetchAsset = args.fetchAsset;
+    this.debugPicking = args.debugPicking ?? false;
 
     this.settings = new SettingsManager(baseSettingsTree(this.interfaceMode));
     this.settings.on("update", () => this.emit("settingsTreeChange", this));
@@ -261,6 +271,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
       ignoreColladaUpAxis: config.scene.ignoreColladaUpAxis ?? false,
       meshUpAxis: config.scene.meshUpAxis ?? DEFAULT_MESH_UP_AXIS,
       edgeMaterial: this.outlineMaterial,
+      fetchAsset: this.#fetchAsset,
     });
 
     this.#scene = new THREE.Scene();
@@ -289,8 +300,8 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     this.#picker = new Picker(this.gl, this.#scene);
 
     this.#selectionBackdrop = new ScreenOverlay(this);
-    this.#selectionBackdrop.visible = false;
-    this.#scene.add(this.#selectionBackdrop);
+    this.#selectionBackdropScene = new THREE.Scene();
+    this.#selectionBackdropScene.add(this.#selectionBackdrop);
 
     const samples = msaaSamples(this.gl.capabilities);
     const renderSize = this.gl.getDrawingBufferSize(tempVec2);
@@ -864,6 +875,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
       selectObject(selection.renderable);
       log.debug(
         `Selected ${selection.renderable.id} (${selection.renderable.name}) (instance=${selection.instanceIndex})`,
+        selection.renderable,
       );
     }
 
@@ -1028,6 +1040,10 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     this.followFrameId = frameId;
   }
 
+  public async fetchAsset(uri: string, options?: { signal: AbortSignal }): Promise<Asset> {
+    return await this.#fetchAsset(uri, options);
+  }
+
   #frameHandler = (currentTime: bigint): void => {
     this.currentTime = currentTime;
     this.#updateFrameErrors();
@@ -1039,7 +1055,6 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
 
     const camera = this.cameraHandler.getActiveCamera();
     camera.layers.set(LAYER_DEFAULT);
-    this.#selectionBackdrop.visible = this.#selectedRenderable != undefined;
 
     // use the FALLBACK_FRAME_ID if renderFrame is undefined and there are no options for transforms
     const renderFrameId =
@@ -1055,9 +1070,9 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     this.gl.render(this.#scene, camera);
 
     if (this.#selectedRenderable) {
+      this.gl.render(this.#selectionBackdropScene, camera);
       this.gl.clearDepth();
       camera.layers.set(LAYER_SELECTED);
-      this.#selectionBackdrop.visible = false;
       this.gl.render(this.#scene, camera);
     }
 
@@ -1121,6 +1136,10 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
       selections.length < MAX_SELECTIONS
     ) {
       selections.push(curSelection);
+      // If debugPicking is on, we don't want to overwrite the hitmap by doing more iterations
+      if (this.debugPicking) {
+        break;
+      }
       curSelection.renderable.visible = false;
       this.gl.render(this.#scene, camera);
     }
@@ -1234,6 +1253,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
       { debug: this.debugPicking, disableSetViewOffset: this.interfaceMode === "image" },
     );
     if (objectId === -1) {
+      log.debug("Picking did not return an object");
       return undefined;
     }
 
@@ -1257,6 +1277,8 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
       return undefined;
     }
 
+    log.debug(`Picking pass returned ${renderable.id} (${renderable.name})`, renderable);
+
     let instanceIndex: number | undefined;
     if (renderable.pickableInstances) {
       instanceIndex = this.#picker.pickInstance(
@@ -1267,6 +1289,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
         { debug: this.debugPicking, disableSetViewOffset: this.interfaceMode === "image" },
       );
       instanceIndex = instanceIndex === -1 ? undefined : instanceIndex;
+      log.debug("Instance picking pass on", renderable, "returned", instanceIndex);
     }
 
     return { renderable, instanceIndex };
