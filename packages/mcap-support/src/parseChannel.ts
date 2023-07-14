@@ -123,7 +123,7 @@ export function parseChannel(channel: Channel): ParsedChannel {
     };
   }
 
-  if (channel.messageEncoding === "cdr" || channel.messageEncoding === "xcdr2") {
+  if (channel.messageEncoding === "cdr") {
     if (
       channel.schema?.encoding !== "ros2msg" &&
       channel.schema?.encoding !== "ros2idl" &&
