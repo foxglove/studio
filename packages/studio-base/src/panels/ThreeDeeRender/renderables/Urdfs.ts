@@ -459,8 +459,10 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
       // ["layers", instanceId, field]
       this.saveSetting(path, action.payload.value);
       const [_layers, instanceId, field] = path as [string, string, string];
-      if (path[1] === PARAM_KEY) {
+      if (instanceId === PARAM_KEY) {
         this.#loadUrdf(instanceId, this.renderer.parameters?.get(PARAM_NAME) as string | undefined);
+      } else if (instanceId === TOPIC_NAME) {
+        this.#loadUrdf(instanceId, this.renderables.get(instanceId)?.userData.urdf);
       } else if (field === "framePrefix") {
         this.#debouncedLoadUrdf(instanceId, undefined);
       } else {
@@ -610,8 +612,13 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
 
   #loadUrdf(instanceId: string, urdf: string | undefined): void {
     let renderable = this.renderables.get(instanceId);
-    if (renderable && urdf != undefined && renderable.userData.urdf === urdf) {
-      const settings = this.#getCurrentSettings(instanceId);
+    const settings = this.#getCurrentSettings(instanceId);
+    if (
+      renderable &&
+      urdf != undefined &&
+      renderable.userData.urdf === urdf &&
+      renderable.userData.settings.displayMode === settings.displayMode
+    ) {
       renderable.userData.settings = settings;
       return;
     }
@@ -628,7 +635,6 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     const isTopicOrParam = instanceId === TOPIC_NAME || instanceId === PARAM_KEY;
     const frameId = this.renderer.fixedFrameId ?? ""; // Unused
     const settingsPath = isTopicOrParam ? ["topics", instanceId] : ["layers", instanceId];
-    const settings = this.#getCurrentSettings(instanceId);
     const url = (settings as Partial<LayerSettingsCustomUrdf>).url;
     const framePrefix = (settings as Partial<LayerSettingsCustomUrdf>).framePrefix;
 
