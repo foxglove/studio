@@ -79,10 +79,10 @@ Foxglove Studio will be accessible in your browser at [localhost:8080](http://lo
 
 ### Overriding the default layout
 
-Use the `FOXGLOVE_STUDIO_DEFAULT_LAYOUT` environment variable to set the default layout used when loading Studio from the Docker image. The variable's value must be valid JSON.
+[Bind-mount](https://docs.docker.com/storage/bind-mounts/) a layout JSON file at `/.foxglove-studio/default-layout.json` to set the default layout used when loading Studio from the Docker image.
 
 ```sh
-docker run --rm -p "8080:8080" -e FOXGLOVE_STUDIO_DEFAULT_LAYOUT=$(cat my_default_layout.json) ghcr.io/foxglove/studio:latest
+docker run --rm -p "8080:8080" -v /path/to/custom_layout.json:/.foxglove-studio/default-layout.json ghcr.io/foxglove/studio:latest
 ```
 
 ## Contributing
