@@ -2611,15 +2611,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@fluentui/react-icons@npm:2.0.206":
-  version: 2.0.206
-  resolution: "@fluentui/react-icons@npm:2.0.206"
+"@fluentui/react-icons@npm:2.0.207":
+  version: 2.0.207
+  resolution: "@fluentui/react-icons@npm:2.0.207"
   dependencies:
     "@griffel/react": ^1.0.0
     tslib: ^2.1.0
   peerDependencies:
     react: ">=16.8.0 <19.0.0"
-  checksum: 860adcad2a329150af855a3c08ec4ac1f5207c6666e5bc0f5a2de9925f0863574436b924a893055898c1c28751c35e05933a36a21cb070f88eba1b008a797e22
+  checksum: 3dbcf6cdfa294ddcf32a26c78afbc3aa8e337b7aa71cdbfda9a3f82902bde0b8eae89608a1a690963624c9f72c3c3f8e73bdc2e3480f415dfc53900e4a0143df
   languageName: node
   linkType: hard
 
@@ -2748,8 +2748,8 @@ __metadata:
   resolution: "@foxglove/mcap-support@workspace:packages/mcap-support"
   dependencies:
     "@foxglove/message-definition": 0.2.0
-    "@foxglove/omgidl-parser": 0.0.1
-    "@foxglove/omgidl-serialization": 0.0.2
+    "@foxglove/omgidl-parser": 0.1.0
+    "@foxglove/omgidl-serialization": 0.1.0
     "@foxglove/rosmsg": 4.2.2
     "@foxglove/rosmsg-serialization": 2.0.1
     "@foxglove/rosmsg2-serialization": 2.0.2
@@ -2784,22 +2784,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@foxglove/omgidl-parser@npm:0.0.1":
-  version: 0.0.1
-  resolution: "@foxglove/omgidl-parser@npm:0.0.1"
+"@foxglove/omgidl-parser@npm:0.1.0":
+  version: 0.1.0
+  resolution: "@foxglove/omgidl-parser@npm:0.1.0"
   dependencies:
     tslib: ^2
-  checksum: 2d1c768d612a22f8f61bc433ab4695e016a02fe4ac2a2f52fce4c0433b5dcacf02ade9c221fa0edaa042a0388267021a21d9c09f7f7f74b8db8d9f5d61492857
+  checksum: 0aba062c3870ac7bbaf804f8d9c11a7dca4024b9910f699739bba4ff4a0b32ec6f4f19ebdcbebdda22f46249aefd7442f184d0470d85901e404610549226ebd2
   languageName: node
   linkType: hard
 
-"@foxglove/omgidl-serialization@npm:0.0.2":
-  version: 0.0.2
-  resolution: "@foxglove/omgidl-serialization@npm:0.0.2"
+"@foxglove/omgidl-serialization@npm:0.1.0":
+  version: 0.1.0
+  resolution: "@foxglove/omgidl-serialization@npm:0.1.0"
   dependencies:
     "@foxglove/cdr": 2.1.0
     "@foxglove/message-definition": ^0.2.0
-  checksum: 13639f349a639b9175dd48e5d26cebf75880efada8760ec79ab94ac3cd776765e302fccebc73e01d2e8c47c26b1ed767b4a5e0d6cf804690e64e62c5206f4ef0
+  checksum: 7009a15d413669a7cceb6e7fc774cfdc1a187ca8cc6a6eba32f15b3fb9941881fe68e01f3cfb1a354b0911508317f40c53d9c70734516aa54e37393012649879
   languageName: node
   linkType: hard
 
@@ -2939,7 +2939,7 @@ __metadata:
     "@emotion/cache": 11.11.0
     "@emotion/react": 11.11.1
     "@emotion/styled": 11.11.0
-    "@fluentui/react-icons": 2.0.206
+    "@fluentui/react-icons": 2.0.207
     "@foxglove/avl": 1.0.0
     "@foxglove/chartjs-plugin-zoom": 2.0.4
     "@foxglove/comlink-transfer-handlers": "workspace:*"
@@ -3159,7 +3159,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@foxglove/studio-web@workspace:packages/studio-web"
   dependencies:
-    "@fluentui/react-icons": 2.0.206
+    "@fluentui/react-icons": 2.0.207
     "@foxglove/log": "workspace:*"
     "@foxglove/studio-base": "workspace:*"
     "@mui/material": 5.14.0
@@ -9955,7 +9955,7 @@ __metadata:
     "@foxglove/studio-base": "workspace:*"
     "@foxglove/studio-desktop": "workspace:*"
     electron: 25.3.0
-    playwright: 1.36.0
+    playwright: 1.36.1
     webpack: 5.88.1
   languageName: unknown
   linkType: soft
@@ -17021,23 +17021,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"playwright-core@npm:1.36.0":
-  version: 1.36.0
-  resolution: "playwright-core@npm:1.36.0"
+"playwright-core@npm:1.36.1":
+  version: 1.36.1
+  resolution: "playwright-core@npm:1.36.1"
   bin:
     playwright-core: cli.js
-  checksum: d6b5fed5ae95238dc36a1be3e2cfd250221810e6a2d20592c29d7044a2d1f96e8e6cfff83d937605b6e26d7c3058231d16784e17979fbb11208880829e406e85
+  checksum: bbde807294053b50f0dbbc81f0dacc43fe525830ce1526e6ca74012582dd1645eae2391719cfb020051abea90704057cfabcbfe45ca530b37becc491e9459790
   languageName: node
   linkType: hard
 
-"playwright@npm:1.36.0":
-  version: 1.36.0
-  resolution: "playwright@npm:1.36.0"
+"playwright@npm:1.36.1":
+  version: 1.36.1
+  resolution: "playwright@npm:1.36.1"
   dependencies:
-    playwright-core: 1.36.0
+    playwright-core: 1.36.1
   bin:
     playwright: cli.js
-  checksum: c49ed1666b28f8b9177f4682b51e0bc77a83d32265725bc29a8210c0fe83a92e1f1b7051e315a7299fa39c6e952eebe0fe80a22c174569636a27a5a737b3aef4
+  checksum: 21940ccd174eb03a52b13e26dc7e0e90db05298caeab1dd71d21e996b65d959b82aa133f3c9fafb99b5e0bd37265338802d3fbcee1b567e0f75212ddbde5ebae
   languageName: node
   linkType: hard
 
@@ -21283,7 +21283,7 @@ __metadata:
     "@foxglove/log": "workspace:*"
     "@foxglove/studio-web": "workspace:*"
     "@types/serve-handler": ^6
-    playwright: 1.36.0
+    playwright: 1.36.1
     serve-handler: 6.1.5
     webpack: 5.88.1
     webpack-dev-server: 4.15.1
