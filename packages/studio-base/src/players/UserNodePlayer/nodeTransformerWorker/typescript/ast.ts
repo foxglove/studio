@@ -250,6 +250,13 @@ export const findReturnType = (
   throw new DatatypeExtractionError(badTypeReturnError);
 };
 
+/**
+ * Create datatypes (and names) from an input node.
+ *
+ * This function attempts to detect well-known schema names and use those for the datatypes rather
+ * than creating fake names. This makes it possible to write scripts that output well-known datatypes
+ * for work with panels that expect well-known datatype names.
+ */
 export const constructDatatypes = (
   checker: ts.TypeChecker,
   node: ts.TypeLiteralNode | ts.InterfaceDeclaration,
@@ -276,18 +283,38 @@ export const constructDatatypes = (
     };
   }
 
+  const sourceFileName = node.getSourceFile().fileName;
+
   // In this case, we've detected that the return type comes from the generated types file.
   // We can look up the datatype name by finding it in the file. The name will be the property name
   // under which the type exists.
-  if (node.getSourceFile().fileName === "/studio_script/generatedTypes.ts") {
-    if (ts.isPropertySignature(node.parent) && ts.isStringLiteral(node.parent.name)) {
-      const datatype = node.parent.name.text;
-      return {
-        outputDatatype: datatype,
-        datatypes: sourceDatatypes,
-      };
-    }
-  }
+  // if (sourceFileName === "/studio_script/generatedTypes.ts") {
+  //   if (ts.isPropertySignature(node.parent) && ts.isStringLiteral(node.parent.name)) {
+  //     const datatype = node.parent.name.text;
+  //     return {
+  //       outputDatatype: datatype,
+  //       datatypes: sourceDatatypes,
+  //     };
+  //   }
+  // }
+
+  // Check if the source file comes from our @foxglove/schemas package
+  // If it does, we can use a well-known name for the datatype
+  // const schemasFileRegex = /^\/studio_script\/node_modules\/@foxglove\/schemas\/(\w+)\.d\.ts$/;
+
+  // const match = sourceFileName.match(schemasFileRegex);
+  // const schemaName = match?.[1];
+  // if (schemaName) {
+  //   // could use this if we check that the node is the type we expect
+  //   // this would be more robust
+  //   // text here is the name of the type
+  //   // fixme
+  //   // console.log(node.parent.name.text);
+  //   return {
+  //     outputDatatype: `foxglove.${schemaName}`,
+  //     datatypes: sourceDatatypes,
+  //   };
+  // }
 
   let datatypes: RosDatatypes = new Map();
 
@@ -511,6 +538,7 @@ export const constructDatatypes = (
       case ts.SyntaxKind.ClassDeclaration: {
         throw new DatatypeExtractionError(classError);
       }
+      case ts.SyntaxKind.IndexedAccessType:
       case ts.SyntaxKind.EnumDeclaration:
         return {
           name,
@@ -535,7 +563,7 @@ export const constructDatatypes = (
         if (symbol == undefined) {
           throw new DatatypeExtractionError({
             severity: DiagnosticSeverity.Error,
-            message: `Unsupported type for member '${name}'.`,
+            message: `Unsupported type for member '${name}${tsNode.kind}'.`,
             source: Sources.DatatypeExtraction,
             code: ErrorCodes.DatatypeExtraction.BAD_TYPE_RETURN,
           });

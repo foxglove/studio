@@ -22,13 +22,28 @@ import { DEFAULT_STUDIO_NODE_PREFIX } from "@foxglove/studio-base/util/globalCon
 import { lib_dts, lib_filename } from "./lib";
 import { UserScriptProjectConfig, UserScriptProjectFile } from "./types";
 
-function generateFoxgloveSchemaDeclarations(): UserScriptProjectConfig["declarations"] {
+export function generateFoxgloveSchemaDeclarations(): UserScriptProjectConfig["declarations"] {
   const schemas = exportTypeScriptSchemas();
-  return [...schemas.entries()].map(([name, sourceCode]) => ({
-    fileName: `@foxglove/schemas/${name}.d.ts`,
-    filePath: `@foxglove/schemas/${name}.d.ts`,
-    sourceCode,
-  }));
+  // return [...schemas.entries()].map(([name, sourceCode]) => ({
+  //   fileName: `@foxglove/schemas/${name}.d.ts`,
+  //   filePath: `@foxglove/schemas/${name}.d.ts`,
+  //   sourceCode,
+  // }));
+
+  const sourceCode = [...schemas.entries()]
+    .filter((s) => !s[0].startsWith("index"))
+    .map((s) => s[1])
+    .join("\n")
+    .replaceAll("export enum ", "export const enum ")
+    .replaceAll("import {", "//import {");
+
+  return [
+    {
+      fileName: "@foxglove/schemas.ts",
+      filePath: "@foxglove/schemas.ts",
+      sourceCode,
+    },
+  ];
 }
 
 const utilityFiles: UserScriptProjectFile[] = rawUserUtils.map((utility) => ({
