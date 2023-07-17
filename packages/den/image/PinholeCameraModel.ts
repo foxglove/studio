@@ -133,20 +133,21 @@ export class PinholeCameraModel {
   }
 
   /**
-   * Undoes camera distortion to map a given pixel coordinate from normalized raw image coordinates to normalized undistorted coordinates.
+   * Undoes camera distortion to map a given coordinate from normalized raw image coordinates to
+   * normalized undistorted coordinates.
    *
-   * @param out - The output rectified 2D normalized coordinate.
-   * @param point - The input distorted/unrectified 2D normalized coordinate.
+   * This method uses an iterative optimization algorithm to undo the distortion that was applied to
+   * the original image and yields an approximation of the undistorted point.
+   *
+   * @param out - The output vector to receive the undistorted 2D normalized coordinate.
+   * @param point - The input distorted 2D normalized coordinate.
    * @param iterations - The number of iterations to use in the iterative optimization.
-   * @returns The rectified pixel, a reference to `out`.
+   * @returns The undistorted pixel, a reference to `out`.
    */
   public undistortNormalized(out: Vector2, point: Readonly<Vector2>, iterations = 5): Vector2 {
     const { D } = this;
     const [k1, k2, p1, p2, k3, k4, k5, k6] = D;
 
-    // This method uses an iterative optimization algorithm to undo the distortion that was applied
-    // to the original image and yields an approximation of the rectified point.
-    //
     // The distortion model is non-linear, so we use fixed-point iteration to
     // incrementally iterate to an approximation of the solution. This approach
     // is described at <http://peterabeles.com/blog/?p=73>. The Jacobi method is
@@ -195,8 +196,8 @@ export class PinholeCameraModel {
    * Applies camera distortion parameters to map a given pixel coordinate from normalized
    * undistorted image coordinates to normalized raw coordinates.
    *
-   * @param out - The output distorted/unrectified 2D normalized coordinate
-   * @param point - The input rectified 2D normalized coordinate
+   * @param out - The output vector to receive the distorted 2D normalized coordinate
+   * @param point - The input undistorted 2D normalized coordinate
    * @returns The distorted pixel, a reference to `out`
    */
   public distortNormalized(out: Vector2, point: Readonly<Vector2>): Vector2 {
@@ -237,13 +238,13 @@ export class PinholeCameraModel {
   }
 
   /**
-   * Undoes camera distortion to map a given pixel coordinate from a raw image to a rectified image.
+   * Undoes camera distortion to map a given pixel coordinate from a raw image to an undistorted image.
    * Similar to OpenCV `undistortPoints()`.
    *
-   * @param out - The output rectified 2D pixel coordinate.
-   * @param point - The input distorted/unrectified 2D pixel to rectify.
+   * @param out - The output undistorted 2D pixel coordinate.
+   * @param point - The input distorted 2D pixel coordinate.
    * @param iterations - The number of iterations to use in the iterative optimization.
-   * @returns The rectified pixel, a reference to `out`.
+   * @returns The undistorted pixel, a reference to `out`.
    */
   public undistortPixel(out: Vector2, point: Readonly<Vector2>, iterations = 5): Vector2 {
     const { K, P } = this;
@@ -251,10 +252,10 @@ export class PinholeCameraModel {
     const fy = K[4];
     const cx = K[2];
     const cy = K[5];
-    const fxp = P[0];
-    const fyp = P[5];
-    const cxp = P[2];
-    const cyp = P[6];
+    const fpx = P[0];
+    const fpy = P[5];
+    const cpx = P[2];
+    const cpy = P[6];
 
     // Undo K to get normalized coordinates
     out.x = (point.x - cx) / fx;
@@ -264,17 +265,17 @@ export class PinholeCameraModel {
     this.undistortNormalized(out, out, iterations);
 
     // Apply K' to get pixel coordinates in the rectified image
-    out.x = out.x * fxp + cxp;
-    out.y = out.y * fyp + cyp;
+    out.x = out.x * fpx + cpx;
+    out.y = out.y * fpy + cpy;
     return out;
   }
 
   /**
-   * Applies camera distortion parameters to a given 2D pixel coordinate on a rectified image,
+   * Applies camera distortion parameters to a given 2D pixel coordinate on an undistorted image,
    * returning the corresponding pixel coordinate on the raw (distorted) image.
    *
-   * @param out - The output 2D pixel coordinate on the original (distorted/unrectified) image
-   * @param point - The input 2D pixel coordinate on a rectified image
+   * @param out - The output 2D pixel coordinate on the original (distorted) image
+   * @param point - The input 2D pixel coordinate on an undistorted image
    * @returns The distorted pixel, a reference to `out`
    */
   public distortPixel(out: Vector2, point: Readonly<Vector2>): Vector2 {
