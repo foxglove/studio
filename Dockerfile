@@ -16,10 +16,10 @@ COPY --from=build /src/web/.webpack ./
 EXPOSE 8080
 
 COPY <<EOF /entrypoint.sh
-touch /.foxglove-studio/default-layout.json
+touch /etc/foxglove/default-layout.json
 index_html=\$(cat index.html)
 replace_pattern='/*FOXGLOVE_STUDIO_DEFAULT_LAYOUT_PLACEHOLDER*/'
-replace_value=\$(cat /.foxglove-studio/default-layout.json)
+replace_value=\$(cat /etc/foxglove/default-layout.json)
 echo "\${index_html/"\$replace_pattern"/\$replace_value}" > index.html
 exec "\$@"
 EOF
