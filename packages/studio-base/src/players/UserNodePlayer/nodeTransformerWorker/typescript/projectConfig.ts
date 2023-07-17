@@ -24,26 +24,11 @@ import { UserScriptProjectConfig, UserScriptProjectFile } from "./types";
 
 export function generateFoxgloveSchemaDeclarations(): UserScriptProjectConfig["declarations"] {
   const schemas = exportTypeScriptSchemas();
-  // return [...schemas.entries()].map(([name, sourceCode]) => ({
-  //   fileName: `@foxglove/schemas/${name}.d.ts`,
-  //   filePath: `@foxglove/schemas/${name}.d.ts`,
-  //   sourceCode,
-  // }));
-
-  const sourceCode = [...schemas.entries()]
-    .filter((s) => !s[0].startsWith("index"))
-    .map((s) => s[1])
-    .join("\n")
-    .replaceAll("export enum ", "export const enum ")
-    .replaceAll("import {", "//import {");
-
-  return [
-    {
-      fileName: "@foxglove/schemas.ts",
-      filePath: "@foxglove/schemas.ts",
-      sourceCode,
-    },
-  ];
+  return [...schemas.entries()].map(([name, sourceCode]) => ({
+    fileName: `@foxglove/schemas/${name}.ts`,
+    filePath: `@foxglove/schemas/${name}.ts`,
+    sourceCode: sourceCode.replaceAll("export enum ", "export const enum "),
+  }));
 }
 
 const utilityFiles: UserScriptProjectFile[] = rawUserUtils.map((utility) => ({
