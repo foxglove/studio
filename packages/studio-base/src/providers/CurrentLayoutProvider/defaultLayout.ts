@@ -5,6 +5,9 @@
 import { LayoutData } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
 import { defaultPlaybackConfig } from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
 
+/**
+ * Overridden default layout that may have been provided when self-hosting via Docker
+ * */
 const staticDefaultLayout = (globalThis as { FOXGLOVE_STUDIO_DEFAULT_LAYOUT?: LayoutData })
   .FOXGLOVE_STUDIO_DEFAULT_LAYOUT;
 
