@@ -51,10 +51,6 @@ const useStyles = makeStyles()((theme) => ({
   listItem: {
     paddingRight: theme.spacing(1),
 
-    mark: {
-      color: theme.palette.info.main,
-      fontWeight: "bold",
-    },
     "&.MuiListItem-dense": {
       ".MuiListItemText-root": {
         marginTop: theme.spacing(0.5),

@@ -102,9 +102,10 @@ const useStyles = makeStyles()((theme) => {
       lineHeight: "calc(100% - 10px)",
       overflowWrap: "break-word",
       color: theme.palette.text.primary,
-      whiteSpace: "pre",
 
+      // re-establish the <mark /> styles because the autocomplete is in a Portal
       mark: {
+        backgroundColor: "transparent",
         color: theme.palette.info.main,
         fontWeight: 700,
       },

@@ -2,6 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { makeStyles } from "tss-react/mui";
+
 // Renders the given text with the characters at the given indices wrapped in a
 // <mark> component for Fzf results. The indices are the positions of the
 // matched characters in the original string.
@@ -15,8 +17,15 @@ type Props = {
   offset?: number;
 };
 
+const useStyles = makeStyles()({
+  root: {
+    whiteSpace: "pre",
+  },
+});
+
 export function HighlightChars(props: Props): JSX.Element {
   const { str, indices, offset = 0 } = props;
+  const { classes } = useStyles();
   const chars = str.split("");
 
   const nodes = chars.map((char, i) => {
@@ -26,5 +35,5 @@ export function HighlightChars(props: Props): JSX.Element {
     return char;
   });
 
-  return <>{nodes}</>;
+  return <span className={classes.root}>{nodes}</span>;
 }
