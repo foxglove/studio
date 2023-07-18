@@ -11,6 +11,8 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { sortBy } from "lodash";
+
 import { exportTypeScriptSchemas } from "@foxglove/schemas/internal";
 import rawUserUtils from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/typescript/rawUserUtils";
 import {
@@ -22,13 +24,22 @@ import { DEFAULT_STUDIO_NODE_PREFIX } from "@foxglove/studio-base/util/globalCon
 import { lib_dts, lib_filename } from "./lib";
 import { UserScriptProjectConfig, UserScriptProjectFile } from "./types";
 
-export function generateFoxgloveSchemaDeclarations(): UserScriptProjectConfig["declarations"] {
-  const schemas = exportTypeScriptSchemas();
-  return [...schemas.entries()].map(([name, sourceCode]) => ({
-    fileName: `@foxglove/schemas/${name}.ts`,
-    filePath: `@foxglove/schemas/${name}.ts`,
-    sourceCode: sourceCode.replaceAll("export enum ", "export const enum "),
-  }));
+/**
+ * Generates virtual ts files for each type exported by the @foxglobve/schemas package.
+ */
+export function generateFoxgloveSchemaDeclarations(): UserScriptProjectFile[] {
+  const schemas = sortBy([...exportTypeScriptSchemas().entries()], ([name]) => name);
+  const files = schemas.map(([name, sourceCode]) => {
+    return {
+      fileName: `@foxglove/schemas/${name}.ts`,
+      filePath: `@foxglove/schemas/${name}.ts`,
+      // Replace all enum declarations with const enum declarations so they can be imported
+      // as a pure type and don't require any runtime typescript enum support.
+      sourceCode: sourceCode.replaceAll(/export enum (\w+) {/g, "export const enum $1 {"),
+    };
+  });
+
+  return files;
 }
 
 const utilityFiles: UserScriptProjectFile[] = rawUserUtils.map((utility) => ({

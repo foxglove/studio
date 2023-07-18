@@ -17,6 +17,7 @@ import { useCallback, useEffect } from "react";
 
 import { useCurrentLayoutActions } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import NodePlayground from "@foxglove/studio-base/panels/NodePlayground";
+import { generateFoxgloveSchemaDeclarations } from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/typescript/projectConfig";
 import rawUserUtils from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/typescript/rawUserUtils";
 import { UserNodeLog } from "@foxglove/studio-base/players/UserNodePlayer/types";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
@@ -91,20 +92,33 @@ const logs: UserNodeLog[] = [
   },
 ];
 
+const generatedSchemas = generateFoxgloveSchemaDeclarations()
+  .filter(
+    (schema) =>
+      !schema.fileName.endsWith("index.ts") &&
+      !schema.fileName.endsWith("Time.ts") &&
+      !schema.fileName.endsWith("Duration.ts"),
+  )
+  .map((schema) => schema.fileName.split("/").at(-1)?.replaceAll(".ts", ""))
+  .join(", ");
+
 const sourceCodeWithSchemas = `
-  import { Input } from "ros";
-  import { Color, Vector2 } from "@foxglove/schemas";
+import { Input } from "ros";
+import { ${generatedSchemas} } from "@foxglove/schemas";
 
-  export const inputs = ["/my_topic"];
-  export const output = "${DEFAULT_STUDIO_NODE_PREFIX}/1";
+export const inputs = ["/my_topic"];
+export const output = "${DEFAULT_STUDIO_NODE_PREFIX}1";
 
-  const publisher = (message: Input<"/my_topic">): { color: Color, vector: Vector2 } => {
-    const color: Color = { r: 1, g: 1, b: 1, a: 1 };
-    const vector: Vector2 = { x: 1, y: 1};
-    return { color, vector };
+export default function script(event: Input<"/my_topic">): Log {
+  return {
+    timestamp: event.receiveTime,
+    level: LogLevel.ERROR,
+    message: "log message",
+    name: "mr log",
+    file: "log.log",
+    line: 1,
   };
-
-  export default publisher;
+}
 `;
 
 const sourceCodeWithUtils = `
@@ -169,7 +183,7 @@ export const SchemaUsageInNode: StoryObj = {
         userNodes: {
           nodeId1: {
             name: "/studio_script/script",
-            sourceCode: sourceCodeWithSchemas,
+            sourceCode: sourceCodeWithSchemas.trim(),
           },
         },
         userNodeDiagnostics: { nodeId1: [] },
