@@ -71,6 +71,7 @@ const RPY_LABEL: [string, string, string] = ["R", "P", "Y"];
 export type LayerSettingsUrdf = BaseSettings & {
   instanceId: string; // This will be set to the topic name
   displayMode: "auto" | "visual" | "collision";
+  label: string;
 };
 
 export type LayerSettingsCustomUrdf = CustomLayerSettings & {
@@ -85,6 +86,7 @@ const DEFAULT_SETTINGS: LayerSettingsUrdf = {
   frameLocked: true,
   instanceId: "invalid",
   displayMode: "auto",
+  label: "URDF",
 };
 
 const DEFAULT_CUSTOM_SETTINGS: LayerSettingsCustomUrdf = {
@@ -285,6 +287,7 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
             value: config.framePrefix ?? "",
           },
           displayMode: { ...displayMode, value: config.displayMode ?? "auto" },
+          label: { label: "Label", input: "string", value: config.label ?? "URDF" },
         };
 
         entries.push({
@@ -637,6 +640,15 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     const settingsPath = isTopicOrParam ? ["topics", instanceId] : ["layers", instanceId];
     const url = (settings as Partial<LayerSettingsCustomUrdf>).url;
     const framePrefix = (settings as Partial<LayerSettingsCustomUrdf>).framePrefix;
+    const label = (settings as Partial<LayerSettingsCustomUrdf>).label ?? "URDF";
+
+    if (label !== renderable?.userData.settings.label) {
+      // Label has changed, update the config
+      this.renderer.updateConfig((draft) => {
+        const config = draft.layers[instanceId];
+        draft.layers[instanceId] = { ...config, label };
+      });
+    }
 
     // Create a UrdfRenderable if it does not already exist
     if (!renderable) {
