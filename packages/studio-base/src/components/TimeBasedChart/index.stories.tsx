@@ -11,19 +11,22 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 import { StoryObj } from "@storybook/react";
-import { isEqual } from "lodash";
 import cloneDeep from "lodash/cloneDeep";
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import TestUtils from "react-dom/test-utils";
 import { useAsync } from "react-use";
 
 import MockMessagePipelineProvider from "@foxglove/studio-base/components/MessagePipeline/MockMessagePipelineProvider";
 import { triggerWheel } from "@foxglove/studio-base/stories/PanelSetup";
 import { useReadySignal } from "@foxglove/studio-base/stories/ReadySignalContext";
+import {
+  StoryReadyMarker,
+  waitForStoryReadyMarker,
+} from "@foxglove/studio-base/stories/StoryReadyMarker";
 import delay from "@foxglove/studio-base/util/delay";
 
-import TimeBasedChart from "./index";
 import type { Props } from "./index";
+import TimeBasedChart from "./index";
 
 const dataX = 0.000057603000000000004;
 const dataY = 5.544444561004639;
@@ -110,8 +113,6 @@ export const CanZoomAndUpdate: StoryObj = {
     const [chartProps, setChartProps] = useState(structuredClone(commonProps));
     const callCountRef = useRef(0);
 
-    const readySignal = useReadySignal();
-
     const doScroll = useCallback(async () => {
       const canvasEl = document.querySelector("canvas");
       if (!canvasEl) {
@@ -138,34 +139,25 @@ export const CanZoomAndUpdate: StoryObj = {
       return () => {
         // first render of the chart triggers scrolling
         if (callCountRef.current === 0) {
-          void doScroll();
+          doScroll().catch(console.error);
         }
-
         ++callCountRef.current;
       };
     }, [doScroll]);
-
-    // Fire ready signal after chart props are updated.
-    useEffect(() => {
-      if (!isEqual(chartProps, commonProps)) {
-        readySignal();
-      }
-    }, [chartProps, readySignal]);
 
     return (
       <div style={{ width: 800, height: 800, background: "black" }}>
         <MockMessagePipelineProvider pauseFrame={pauseFrame}>
           <TimeBasedChart {...chartProps} width={800} height={800} />
         </MockMessagePipelineProvider>
+        <StoryReadyMarker count={callCountRef.current} />
       </div>
     );
   },
 
-  play: async (ctx) => {
-    await ctx.parameters.storyReady;
+  play: async () => {
+    await waitForStoryReadyMarker(3);
   },
-
-  parameters: { useReadySignal: true },
 };
 
 export const CleansUpTooltipOnUnmount: StoryObj = {
