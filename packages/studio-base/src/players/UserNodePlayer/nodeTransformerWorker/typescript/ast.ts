@@ -299,7 +299,8 @@ export const constructDatatypes = (
   }
 
   // Check if the source file comes from our @foxglove/schemas package. If it does, we can
-  // use a well-known name for the datatype.
+  // use a well-known name for the datatype. We assume here that each schema is in a
+  // separate file with the same name as the schema type.
   const schemasFileRegex = /^\/studio_script\/node_modules\/@foxglove\/schemas\/(\w+)\.ts$/;
 
   const match = sourceFileName.match(schemasFileRegex);
