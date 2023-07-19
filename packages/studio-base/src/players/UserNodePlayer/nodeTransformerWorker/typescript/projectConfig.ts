@@ -25,7 +25,7 @@ import { lib_dts, lib_filename } from "./lib";
 import { UserScriptProjectConfig, UserScriptProjectFile } from "./types";
 
 /**
- * Generates virtual ts files for each type exported by the @foxglobve/schemas package.
+ * Generates virtual ts files for each type exported by the @foxglove/schemas package.
  */
 export function generateFoxgloveSchemaDeclarations(): UserScriptProjectFile[] {
   const schemas = sortBy([...exportTypeScriptSchemas().entries()], ([name]) => name);
