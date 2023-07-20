@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { difference, isEqual } from "lodash";
+import { difference, isEqual, pick, uniq } from "lodash";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { getNodeAtPath } from "react-mosaic-component";
 import shallowequal from "shallowequal";
@@ -73,6 +73,16 @@ export default function CurrentLayoutProvider({
       return;
     }
 
+    // Clear the sharedPanelState when explicitly setting the layout state
+    // fixme - actually a problem cause it seems setLayoutState is called by performAction()
+    // so my invariant of "setLayoutState" is only called when something external wants to override
+    // the state might not hold up
+    /*
+    setLayoutStateInternal({
+      ...newState,
+      sharedPanelState: {},
+    });
+    */
     setLayoutStateInternal(newState);
 
     // listeners rely on being able to getCurrentLayoutState() inside effects that may run before we re-render
@@ -124,7 +134,15 @@ export default function CurrentLayoutProvider({
         return;
       }
 
+      // Get all the panel types that exist in the new config
+      const panelTypesInUse = uniq(Object.keys(newData.configById).map(getPanelTypeFromId));
+
+      // fixme - why is this not setLayoutStateInternal?
+      // this breaks my invariant assumptions that setLayoutState is only invokved externally
+      // and should indicate a clearing of the layout
       setLayoutState({
+        // discared shared panel state for panel types that are no longer in the layout
+        sharedPanelState: pick(layoutStateRef.current.sharedPanelState, panelTypesInUse),
         selectedLayout: {
           id: layoutStateRef.current.selectedLayout.id,
           data: newData,
@@ -137,10 +155,31 @@ export default function CurrentLayoutProvider({
     [setLayoutState],
   );
 
+  const updateSharedPanelState = useCallback<ICurrentLayout["actions"]["updateSharedPanelState"]>(
+    (type, newSharedState) => {
+      if (
+        layoutStateRef.current.selectedLayout?.data == undefined ||
+        layoutStateRef.current.selectedLayout.loading === true
+      ) {
+        return;
+      }
+
+      // fixme - update to make a new state object and see what the performance is like if we call listeners
+      // fixme - my assumption that setLayoutState was only called externally is violated here
+      setLayoutState({
+        ...layoutStateRef.current,
+        sharedPanelState: { ...layoutStateRef.current.sharedPanelState, [type]: newSharedState },
+      });
+    },
+    [setLayoutState],
+  );
+
   const actions: ICurrentLayout["actions"] = useMemo(
     () => ({
       getCurrentLayoutState: () => layoutStateRef.current,
       setCurrentLayoutState: setLayoutState,
+
+      updateSharedPanelState,
 
       savePanelConfigs: (payload: SaveConfigsPayload) =>
         performAction({ type: "SAVE_PANEL_CONFIGS", payload }),
@@ -210,7 +249,7 @@ export default function CurrentLayoutProvider({
       startDrag: (payload: StartDragPayload) => performAction({ type: "START_DRAG", payload }),
       endDrag: (payload: EndDragPayload) => performAction({ type: "END_DRAG", payload }),
     }),
-    [analytics, performAction, setLayoutState, setSelectedPanelIds],
+    [analytics, performAction, setLayoutState, setSelectedPanelIds, updateSharedPanelState],
   );
 
   const value: ICurrentLayout = useShallowMemo({
