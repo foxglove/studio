@@ -463,16 +463,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/parser@npm:7.16.4":
-  version: 7.16.4
-  resolution: "@babel/parser@npm:7.16.4"
-  bin:
-    parser: ./bin/babel-parser.js
-  checksum: ce0a8f92f440f2a12bc932f070a7b60c5133bf8a63f461841f9e39af0194f573707959d606c6fad1a2fd496a45148553afd9b74d3b8dd36cdb7861598d1f3e36
-  languageName: node
-  linkType: hard
-
-"@babel/parser@npm:^7.1.0, @babel/parser@npm:^7.13.16, @babel/parser@npm:^7.14.7, @babel/parser@npm:^7.16.4, @babel/parser@npm:^7.20.7, @babel/parser@npm:^7.21.5, @babel/parser@npm:^7.21.8, @babel/parser@npm:^7.22.5, @babel/parser@npm:^7.22.7":
+"@babel/parser@npm:^7.1.0, @babel/parser@npm:^7.13.16, @babel/parser@npm:^7.14.7, @babel/parser@npm:^7.16.4, @babel/parser@npm:^7.20.0, @babel/parser@npm:^7.20.7, @babel/parser@npm:^7.21.5, @babel/parser@npm:^7.21.8, @babel/parser@npm:^7.22.5, @babel/parser@npm:^7.22.7":
   version: 7.22.7
   resolution: "@babel/parser@npm:7.22.7"
   bin:
@@ -9802,6 +9793,39 @@ __metadata:
   languageName: node
   linkType: hard
 
+"depcheck@patch:depcheck@npm:1.4.3#./patches/depcheck.patch::locator=foxglove-studio%40workspace%3A.":
+  version: 1.4.3
+  resolution: "depcheck@patch:depcheck@npm%3A1.4.3#./patches/depcheck.patch::version=1.4.3&hash=396644&locator=foxglove-studio%40workspace%3A."
+  dependencies:
+    "@babel/parser": 7.16.4
+    "@babel/traverse": ^7.12.5
+    "@vue/compiler-sfc": ^3.0.5
+    camelcase: ^6.2.0
+    cosmiconfig: ^7.0.0
+    debug: ^4.2.0
+    deps-regex: ^0.1.4
+    ignore: ^5.1.8
+    is-core-module: ^2.4.0
+    js-yaml: ^3.14.0
+    json5: ^2.1.3
+    lodash: ^4.17.20
+    minimatch: ^3.0.4
+    multimatch: ^5.0.0
+    please-upgrade-node: ^3.2.0
+    query-ast: ^1.0.3
+    readdirp: ^3.5.0
+    require-package-name: ^2.0.1
+    resolve: ^1.18.1
+    sass: ^1.29.0
+    scss-parser: ^1.0.4
+    semver: ^7.3.2
+    yargs: ^16.1.0
+  bin:
+    depcheck: bin/depcheck.js
+  checksum: f00786f3f5c984a72ab312add0025f082596d703c2cb522c9c969de15583dfb8a896d80d988d860498900e89e16aba6de6c445f65b236ed9272f82b5e782e860
+  languageName: node
+  linkType: hard
+
 "depd@npm:2.0.0, depd@npm:^2.0.0":
   version: 2.0.0
   resolution: "depd@npm:2.0.0"
@@ -11879,7 +11903,7 @@ __metadata:
     "@typescript-eslint/parser": 5.62.0
     babel-plugin-transform-import-meta: 2.2.0
     cross-env: 7.0.3
-    depcheck: 1.4.3
+    depcheck: "patch:depcheck@npm:1.4.3#./patches/depcheck.patch"
     electron: 25.3.0
     electron-builder: 24.6.1
     eslint: 8.45.0
