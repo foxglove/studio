@@ -5,15 +5,6 @@
 import { useMemo } from "react";
 import { makeStyles } from "tss-react/mui";
 
-/**
- * Renders the given text with the characters at the given indices wrapped in a
- * <mark> component for Fzf results. The indices are the positions of the
- * matched characters in the original string.
- *
- * Optionally, an offset can be provided to account for the fact that the search
- * string may be a substring of the original string.
- */
-
 type Props = {
   str: string;
   indices: Set<number>;
@@ -26,6 +17,14 @@ const useStyles = makeStyles()({
   },
 });
 
+/**
+ * Renders the given text with the characters at the given indices wrapped in a
+ * <mark> component for Fzf results. The indices are the positions of the
+ * matched characters in the original string.
+ *
+ * Optionally, an offset can be provided to account for the fact that the search
+ * string may be a substring of the original string.
+ */
 export function HighlightChars(props: Props): JSX.Element {
   const { str, indices, offset = 0 } = props;
   const { classes } = useStyles();
