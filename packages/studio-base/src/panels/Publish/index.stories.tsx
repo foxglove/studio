@@ -7,6 +7,7 @@ import { expect } from "@storybook/jest";
 import { Meta, StoryObj } from "@storybook/react";
 import { userEvent, within } from "@storybook/testing-library";
 
+import Publish from "@foxglove/studio-base/panels/Publish";
 import { PlayerCapabilities } from "@foxglove/studio-base/players/types";
 import PanelSetup, { Fixture } from "@foxglove/studio-base/stories/PanelSetup";
 
@@ -50,6 +51,7 @@ type StoryArgs = {
 
 export default {
   title: "panels/Publish",
+  component: Publish,
   args: {
     allowPublish: false,
     includeSettings: true,
@@ -73,7 +75,7 @@ export default {
       );
     },
   ],
-} satisfies Meta<StoryArgs>;
+} as Meta<StoryArgs>;
 
 type Story = StoryObj<StoryArgs>;
 
