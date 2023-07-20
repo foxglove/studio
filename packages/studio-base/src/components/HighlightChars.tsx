@@ -12,13 +12,11 @@ type Props = {
 };
 
 const useStyles = makeStyles()({
-  root: {
-    whiteSpace: "pre",
-  },
+  root: { whiteSpace: "pre" },
 });
 
 /**
- * Renders the given text with the characters at the given indices wrapped in a
+ * Renders the given text with the characters highlighted text wrapped in a
  * <mark> component for Fzf results. The indices are the positions of the
  * matched characters in the original string.
  *
@@ -28,16 +26,15 @@ const useStyles = makeStyles()({
 export function HighlightChars(props: Props): JSX.Element {
   const { str, indices, offset = 0 } = props;
   const { classes } = useStyles();
-  const chars = str.split("");
 
   const nodes = useMemo(() => {
-    chars.map((char, i) => {
+    return str.split("").map((char, i) => {
       if (indices.has(i + offset)) {
         return <mark key={i}>{char}</mark>;
       }
       return char;
     });
-  }, [chars, indices, offset]);
+  }, [indices, offset, str]);
 
   return <span className={classes.root}>{nodes}</span>;
 }
