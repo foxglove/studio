@@ -141,6 +141,18 @@ overrides:
     parserOptions:
       project: ./tsconfig.eslint.json
     rules:
+      "@typescript-eslint/consistent-type-definitions": off
+      "@typescript-eslint/consistent-indexed-object-style": off
+      "@typescript-eslint/consistent-generic-constructors": off
+      "@typescript-eslint/no-confusing-void-expression": off
+      "@typescript-eslint/dot-notation": off
+      "@typescript-eslint/prefer-for-of": off
+      "@typescript-eslint/no-dynamic-delete": off
+      "@typescript-eslint/array-type": off
+      "@typescript-eslint/no-invalid-void-type": off
+      "@typescript-eslint/no-unsafe-enum-comparison": off
+      "@typescript-eslint/unified-signatures": off
+
       "@typescript-eslint/ban-ts-comment":
         - error
         - ts-expect-error: allow-with-description
