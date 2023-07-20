@@ -14,6 +14,7 @@
 import { MessageEvent } from "@foxglove/studio-base/players/types";
 import { Fixture } from "@foxglove/studio-base/stories/PanelSetup";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
+
 export const datatypes: RosDatatypes = new Map(
   Object.entries({
     "some/datatype": { definitions: [{ name: "index", type: "int32" }] },
