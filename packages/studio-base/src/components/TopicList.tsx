@@ -218,7 +218,7 @@ export function TopicList(): JSX.Element {
           value={filterText}
           className={classes.textField}
           fullWidth
-          placeholder="Filter by topic or datatype…"
+          placeholder="Filter by topic or schema name…"
           InputProps={{
             size: "small",
             startAdornment: (
@@ -229,7 +229,7 @@ export function TopicList(): JSX.Element {
             endAdornment: filterText && (
               <IconButton
                 size="small"
-                title="Clear search"
+                title="Clear filter"
                 onClick={() => setFilterText("")}
                 edge="end"
               >
