@@ -29,15 +29,16 @@ const useStyles = makeStyles()({
 export function HighlightChars(props: Props): JSX.Element {
   const { str, indices, offset = 0 } = props;
   const { classes } = useStyles();
+  const chars = str.split("");
 
   const nodes = useMemo(() => {
-    str.split("").map((char, i) => {
+    chars.map((char, i) => {
       if (indices.has(i + offset)) {
         return <mark key={i}>{char}</mark>;
       }
       return char;
     });
-  }, [indices, offset, str]);
+  }, [chars, indices, offset]);
 
   return <span className={classes.root}>{nodes}</span>;
 }
