@@ -12,17 +12,23 @@ import tsUnusedExports from "ts-unused-exports";
 //
 // An export is considered unused if it is never imported in any source file.
 //
-// Note: use the "// ts-prune-ignore-next" comment above an export if you would like to mark it
+// Note: use the "// ts-unused-exports:disable-next-line" comment above an export if you would like to mark it
 // as used even though it appears unused. This might happen for exports which are injected via webpack.
 async function main(): Promise<void> {
-  const args = [
-    String.raw`--ignoreFiles=\.stories\.tsx?$`,
-    String.raw`--findCompletelyUnusedFiles`,
-  ];
-  const results = tsUnusedExports(
-    path.join(__dirname, "../packages/studio-base/tsconfig.json"),
-    args,
+  const results = tsUnusedExports(path.join(__dirname, "../packages/studio-base/tsconfig.json"), [
+    "--findCompletelyUnusedFiles",
+    "--ignoreLocallyUsed",
+  ]);
+  const ignorePathsRegex = new RegExp(
+    [
+      String.raw`\.stories\.tsx?$`,
+      String.raw`packages/studio-base/src/index\.ts`,
+      String.raw`packages/studio-base/src/panels/ThreeDeeRender/transforms/index\.ts`, // `export *` is not correctly analyzed <https://github.com/pzavolinsky/ts-unused-exports/issues/286>
+      String.raw`packages/studio-base/src/test/`,
+      String.raw`packages/studio-base/src/players/UserNodePlayer/nodeTransformerWorker/typescript/userUtils/`,
+    ].join("|"),
   );
+
   const repoRootPath = path.resolve(__dirname, "..");
   let hasUnusedExports = false;
   for (const [filePath, items] of Object.entries(results)) {
@@ -30,15 +36,19 @@ async function main(): Promise<void> {
       continue;
     }
     const pathFromRepoRoot = path.relative(repoRootPath, filePath);
+    if (ignorePathsRegex.test(pathFromRepoRoot)) {
+      continue;
+    }
     for (const item of items) {
-      const message = `Unused export ${item.exportName}`;
       // In reality, sometimes item.location is undefined
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (item.location == undefined) {
-        info(`::error file=${pathFromRepoRoot}::${message}`);
+        info(
+          `::error file=${pathFromRepoRoot}::Unused export ${item.exportName} in ${pathFromRepoRoot}`,
+        );
       } else {
         info(
-          `::error file=${pathFromRepoRoot},line=${item.location.line},col=${item.location.character}::${message}`,
+          `::error file=${pathFromRepoRoot},line=${item.location.line},col=${item.location.character}::Unused export ${item.exportName} in ${pathFromRepoRoot}:${item.location.line}:${item.location.character}`,
         );
       }
       hasUnusedExports = true;
@@ -47,37 +57,12 @@ async function main(): Promise<void> {
 
   for (const filePath of results.unusedFiles ?? []) {
     const pathFromRepoRoot = path.relative(repoRootPath, filePath);
-    info(`::error file=${pathFromRepoRoot}::Unused file`);
+    if (ignorePathsRegex.test(pathFromRepoRoot)) {
+      continue;
+    }
+    info(`::error file=${pathFromRepoRoot}::Unused file ${pathFromRepoRoot}`);
     hasUnusedExports = true;
   }
-
-  // const { stdout, status } = await execOutput(
-  //   "ts-prune",
-  //   [
-  //     "-p",
-  //     "packages/studio-base/tsconfig.json",
-  //     "--error",
-  //     "--ignore",
-  //     [
-  //       String.raw`used in module`,
-  //       String.raw`^packages/(hooks|den|mcap|mcap-support)/`,
-  //       String.raw`/studio/src/index\.ts`,
-  //       String.raw`/studio-base/src/index\.ts`,
-  //       String.raw`/studio-base/src/stories/`,
-  //       String.raw`/studio-base/src/test/`,
-  //       String.raw`/studio-base/src/i18n/`, // Doesn't work due to use of `export *` & `import *`
-  //       String.raw`/ThreeDeeRender/transforms/index\.ts`,
-  //       String.raw`/nodeTransformerWorker/typescript/userUtils`,
-  //       String.raw`\.stories\.ts`,
-  //       String.raw`/\.storybook/|/storySupport/`,
-  //     ].join("|"),
-
-  //     // --skip means don't consider exports used if they are only used in these files
-  //     "--skip",
-  //     String.raw`\.test\.ts|\.stories\.tsx`,
-  //   ],
-  //   { ignoreReturnCode: true },
-  // );
   process.exit(hasUnusedExports ? 1 : 0);
 }
 

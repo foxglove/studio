@@ -34,4 +34,3 @@ function useReadySignal({ count }: { count: number } = { count: 1 }): ReadySigna
 }
 
 export { useReadySignal };
-export default ReadySignalContext;

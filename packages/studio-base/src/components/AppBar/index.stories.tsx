@@ -29,7 +29,7 @@ export default {
     setPrefsDialogOpen: action("setPrefsDialogOpen"),
   },
   parameters: { colorScheme: "both-column" },
-} as Meta<typeof AppBar>;
+} satisfies Meta<typeof AppBar>;
 
 type Story = StoryObj<typeof AppBar>;
 

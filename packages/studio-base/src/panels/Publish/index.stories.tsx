@@ -75,7 +75,7 @@ export default {
       );
     },
   ],
-} as Meta<StoryArgs>;
+} satisfies Meta<StoryArgs>;
 
 type Story = StoryObj<StoryArgs>;
 
