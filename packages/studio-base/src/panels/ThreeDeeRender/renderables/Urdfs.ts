@@ -280,6 +280,7 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
 
         const fields: SettingsTreeFields = {
           url: { label: "URL", input: "string", placeholder, help, value: config.url ?? "" },
+          label: { label: "Label", input: "string", value: config.label ?? "URDF" },
           framePrefix: {
             label: "Frame prefix",
             input: "string",
@@ -287,7 +288,6 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
             value: config.framePrefix ?? "",
           },
           displayMode: { ...displayMode, value: config.displayMode ?? "auto" },
-          label: { label: "Label", input: "string", value: config.label ?? "URDF" },
         };
 
         entries.push({
@@ -646,7 +646,9 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
       // Label has changed, update the config
       this.renderer.updateConfig((draft) => {
         const config = draft.layers[instanceId];
-        draft.layers[instanceId] = { ...config, label };
+        if (config) {
+          config.label = label;
+        }
       });
     }
 
