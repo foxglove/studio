@@ -10,7 +10,6 @@ import { userEvent, within } from "@storybook/testing-library";
 import { PlayerCapabilities } from "@foxglove/studio-base/players/types";
 import PanelSetup, { Fixture } from "@foxglove/studio-base/stories/PanelSetup";
 
-import Publish from "./index";
 import { PublishConfig } from "./types";
 
 const getFixture = ({ allowPublish }: { allowPublish: boolean }): Fixture => {
@@ -51,7 +50,6 @@ type StoryArgs = {
 
 export default {
   title: "panels/Publish",
-  component: Publish,
   args: {
     allowPublish: false,
     includeSettings: true,
