@@ -14,6 +14,8 @@ import type { WebpackArgv } from "@foxglove/studio-base/WebpackArgv";
 import * as palette from "@foxglove/studio-base/src/theme/palette";
 import { makeConfig } from "@foxglove/studio-base/webpack";
 
+import { APP_MANIFEST_FILENAME, AppManifest } from "./AppManifest";
+
 export interface WebpackConfiguration extends Configuration {
   devServer?: WebpackDevServerConfiguration;
 }
@@ -143,6 +145,14 @@ export const mainConfig =
     </body>
   </html>
   `,
+        }),
+        // Output a manifest json file so the app can validate the latest available version and show the AppOutdatedBanner
+        new HtmlWebpackPlugin({
+          filename: APP_MANIFEST_FILENAME,
+          inject: false,
+          templateContent: JSON.stringify({
+            version: "1.2.3.4",
+          } as AppManifest),
         }),
       ],
     };

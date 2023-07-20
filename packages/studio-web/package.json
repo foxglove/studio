@@ -19,8 +19,10 @@
     "react": "17.0.2",
     "react-dom": "17.0.2",
     "react-i18next": "13.0.2",
+    "react-use": "17.4.0",
     "tss-react": "4.8.8",
     "webpack": "5.88.1",
-    "webpack-dev-server": "4.15.1"
+    "webpack-dev-server": "4.15.1",
+    "zustand": "4.3.9"
   }
 }

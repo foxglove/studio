@@ -2,6 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+/// <reference types="webpack/module" />
+
 import { StrictMode, useEffect } from "react";
 import ReactDOM from "react-dom";
 
@@ -9,6 +11,7 @@ import Logger from "@foxglove/log";
 import type { IDataSourceFactory } from "@foxglove/studio-base";
 import CssBaseline from "@foxglove/studio-base/components/CssBaseline";
 
+import { AppOutdatedBanner, useAppOutdatedState } from "./AppOutdatedBanner";
 import { CompatibilityBanner } from "./CompatibilityBanner";
 import { canRenderApp } from "./canRenderApp";
 
@@ -37,6 +40,18 @@ export async function main(getParams: () => Promise<MainParams> = async () => ({
     console.error(...args);
   };
 
+  // Detect when webpack chunks fail to load and show the AppOutdatedBanner
+  const originalChunkLoad = __webpack_chunk_load__;
+  __webpack_chunk_load__ = async (chunkId) => {
+    try {
+      return await originalChunkLoad(chunkId);
+    } catch (err) {
+      log.error("Failed to load chunk", chunkId, "- app may be outdated");
+      useAppOutdatedState.setState({ bannerShown: true });
+      throw err;
+    }
+  };
+
   const rootEl = document.getElementById("root");
   if (!rootEl) {
     throw new Error("missing #root element");
@@ -47,7 +62,7 @@ export async function main(getParams: () => Promise<MainParams> = async () => ({
   const isChrome = chromeVersion !== 0;
 
   const canRender = canRenderApp();
-  const banner = (
+  const compatibilityBanner = (
     <CompatibilityBanner
       isChrome={isChrome}
       currentVersion={chromeVersion}
@@ -59,7 +74,7 @@ export async function main(getParams: () => Promise<MainParams> = async () => ({
     ReactDOM.render(
       <StrictMode>
         <LogAfterRender>
-          <CssBaseline>{banner}</CssBaseline>
+          <CssBaseline>{compatibilityBanner}</CssBaseline>
         </LogAfterRender>
       </StrictMode>,
       rootEl,
@@ -82,7 +97,8 @@ export async function main(getParams: () => Promise<MainParams> = async () => ({
   ReactDOM.render(
     <StrictMode>
       <LogAfterRender>
-        {banner}
+        {compatibilityBanner}
+        <AppOutdatedBanner />
         <Root extraProviders={params.extraProviders} dataSources={params.dataSources} />
       </LogAfterRender>
     </StrictMode>,
