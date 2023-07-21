@@ -160,10 +160,9 @@ export function PlotLegend(props: Props): JSX.Element {
 
   const dragStart = useRef({ x: 0, y: 0, sidebarDimension: 0 });
 
-  const toggleLegend = useCallback(
-    () => saveConfig({ showLegend: !showLegend }),
-    [showLegend, saveConfig],
-  );
+  const toggleLegend = useCallback(() => {
+    saveConfig({ showLegend: !showLegend });
+  }, [showLegend, saveConfig]);
 
   const legendIcon = useMemo(() => {
     switch (legendDisplay) {
@@ -255,7 +254,9 @@ export function PlotLegend(props: Props): JSX.Element {
                   hasMismatchedDataLength={pathsWithMismatchedDataLengths.includes(path.value)}
                   index={index}
                   key={index}
-                  onClickPath={() => onClickPath(index)}
+                  onClickPath={() => {
+                    onClickPath(index);
+                  }}
                   path={path}
                   paths={paths}
                   savePaths={savePaths}

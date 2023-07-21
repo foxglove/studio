@@ -94,10 +94,14 @@ export function main(): void {
 
   const desktopBridge: Desktop = {
     addIpcEventListener(eventName: ForwardedWindowEvent, handler: () => void) {
-      ipcRenderer.on(eventName, () => handler());
+      ipcRenderer.on(eventName, () => {
+        handler();
+      });
     },
     removeIpcEventListener(eventName: ForwardedWindowEvent, handler: () => void) {
-      ipcRenderer.off(eventName, () => handler());
+      ipcRenderer.off(eventName, () => {
+        handler();
+      });
     },
     async setRepresentedFilename(path: string | undefined) {
       await ipcRenderer.invoke("setRepresentedFilename", path);
@@ -164,10 +168,14 @@ export function main(): void {
 
   const menuBridge: NativeMenuBridge = {
     addIpcEventListener(eventName: ForwardedMenuEvent, handler: () => void) {
-      ipcRenderer.on(eventName, () => handler());
+      ipcRenderer.on(eventName, () => {
+        handler();
+      });
     },
     removeIpcEventListener(eventName: ForwardedMenuEvent, handler: () => void) {
-      ipcRenderer.off(eventName, () => handler());
+      ipcRenderer.off(eventName, () => {
+        handler();
+      });
     },
     async menuAddInputSource(name: string, handler: () => void) {
       if (menuClickListeners.has(name)) {

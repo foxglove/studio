@@ -115,7 +115,9 @@ describe("IterablePlayer", () => {
       sourceId: "test",
     });
     const store = new PlayerStateStore(4);
-    player.setListener(async (state) => await store.add(state));
+    player.setListener(async (state) => {
+      await store.add(state);
+    });
     const playerStates = await store.done;
 
     const baseState: PlayerStateWithoutPlayerId = {
@@ -186,7 +188,9 @@ describe("IterablePlayer", () => {
     });
     const store = new PlayerStateStore(4);
     player.setSubscriptions([{ topic: "foo" }]);
-    player.setListener(async (state) => await store.add(state));
+    player.setListener(async (state) => {
+      await store.add(state);
+    });
 
     // Wait for initial setup
     await store.done;
@@ -287,7 +291,9 @@ describe("IterablePlayer", () => {
     });
     const store = new PlayerStateStore(4);
     player.setSubscriptions([{ topic: "foo" }]);
-    player.setListener(async (state) => await store.add(state));
+    player.setListener(async (state) => {
+      await store.add(state);
+    });
 
     // Wait for initial setup
     await store.done;
@@ -391,7 +397,9 @@ describe("IterablePlayer", () => {
       sourceId: "test",
     });
     const store = new PlayerStateStore(4);
-    player.setListener(async (state) => await store.add(state));
+    player.setListener(async (state) => {
+      await store.add(state);
+    });
     const playerStates = await store.done;
     expect(last(playerStates)!.problems).toEqual([
       {
@@ -412,7 +420,9 @@ describe("IterablePlayer", () => {
     });
     const store = new PlayerStateStore(4);
     player.setSubscriptions([{ topic: "foo" }]);
-    player.setListener(async (state) => await store.add(state));
+    player.setListener(async (state) => {
+      await store.add(state);
+    });
 
     // starts a seek backfill
     player.seekPlayback(fromSec(0.5));
@@ -471,7 +481,9 @@ describe("IterablePlayer", () => {
       sourceId: "test",
     });
     const store = new PlayerStateStore(4);
-    player.setListener(async (state) => await store.add(state));
+    player.setListener(async (state) => {
+      await store.add(state);
+    });
 
     await store.done;
 
@@ -517,7 +529,9 @@ describe("IterablePlayer", () => {
       sourceId: "test",
     });
     const store = new PlayerStateStore(4);
-    player.setListener(async (state) => await store.add(state));
+    player.setListener(async (state) => {
+      await store.add(state);
+    });
     await store.done;
 
     player.seekPlayback({ sec: 0, nsec: 0 });
@@ -548,7 +562,9 @@ describe("IterablePlayer", () => {
 
     {
       // if the playback iterator is undefined it will throw an invariant error
-      expect(() => player.startPlayback()).not.toThrow();
+      expect(() => {
+        player.startPlayback();
+      }).not.toThrow();
       await store.done;
     }
 
@@ -567,7 +583,9 @@ describe("IterablePlayer", () => {
 
     const store = new PlayerStateStore(4);
     player.setSubscriptions([{ topic: "foo" }]);
-    player.setListener(async (state) => await store.add(state));
+    player.setListener(async (state) => {
+      await store.add(state);
+    });
 
     // Wait for initial setup
     await store.done;

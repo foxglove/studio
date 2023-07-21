@@ -294,8 +294,12 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     this.#scene.add(this.#hemiLight);
 
     this.input = new Input(canvas, () => this.cameraHandler.getActiveCamera());
-    this.input.on("resize", (size) => this.#resizeHandler(size));
-    this.input.on("click", (cursorCoords) => this.#clickHandler(cursorCoords));
+    this.input.on("resize", (size) => {
+      this.#resizeHandler(size);
+    });
+    this.input.on("click", (cursorCoords) => {
+      this.#clickHandler(cursorCoords);
+    });
 
     this.#picker = new Picker(this.gl, this.#scene);
 
@@ -474,7 +478,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
   #allFramesCursor: {
     // index represents where the last read message is in allFrames
     index: number;
-    lastReadMessage: MessageEvent<unknown> | undefined;
+    lastReadMessage: MessageEvent | undefined;
     cursorTimeReached?: Time;
   } = {
     index: -1,

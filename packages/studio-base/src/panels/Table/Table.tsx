@@ -148,7 +148,9 @@ function getColumnsFromObject(val: CellValue, accessorPath: string, iconButtonCl
             className={iconButtonClasses}
             size="small"
             data-testid={`expand-row-${row.index}`}
-            onClick={() => row.toggleExpanded()}
+            onClick={() => {
+              row.toggleExpanded();
+            }}
           >
             {row.getIsExpanded() ? <MinusIcon fontSize="small" /> : <PlusIcon fontSize="small" />}
           </IconButton>
@@ -288,12 +290,19 @@ export default function Table({
             alignItems="center"
           >
             <IconButton
-              onClick={() => table.setPageIndex(0)}
+              onClick={() => {
+                table.setPageIndex(0);
+              }}
               disabled={!table.getCanPreviousPage()}
             >
               <KeyboardDoubleArrowLeftIcon fontSize="small" />
             </IconButton>
-            <IconButton onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
+            <IconButton
+              onClick={() => {
+                table.previousPage();
+              }}
+              disabled={!table.getCanPreviousPage()}
+            >
               <KeyboardArrowLeftIcon fontSize="small" />
             </IconButton>
             <Typography flex="auto" variant="inherit" align="center" noWrap>
@@ -302,11 +311,18 @@ export default function Table({
                 {table.getState().pagination.pageIndex + 1} of {table.getPageOptions().length}
               </strong>
             </Typography>
-            <IconButton onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
+            <IconButton
+              onClick={() => {
+                table.nextPage();
+              }}
+              disabled={!table.getCanNextPage()}
+            >
               <KeyboardArrowRightIcon fontSize="small" />
             </IconButton>
             <IconButton
-              onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+              onClick={() => {
+                table.setPageIndex(table.getPageCount() - 1);
+              }}
               disabled={!table.getCanNextPage()}
             >
               <KeyboardDoubleArrowRightIcon fontSize="small" />
@@ -314,7 +330,9 @@ export default function Table({
             <Select
               value={pageSize}
               size="small"
-              onChange={(e) => table.setPageSize(Number(e.target.value))}
+              onChange={(e) => {
+                table.setPageSize(Number(e.target.value));
+              }}
               MenuProps={{ MenuListProps: { dense: true } }}
             >
               {[10, 20, 30, 40, 50].map((size) => (

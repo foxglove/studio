@@ -212,11 +212,15 @@ describe("useCachedGetMessagePathDataItems", () => {
     expect(result.current.getItems("/topic.an_array[$foo]", message)).toBe(data0);
 
     // Changing an unrelated global variable should not invalidate the cache.
-    act(() => result.current.setGlobalVariables({ bar: 0 }));
+    act(() => {
+      result.current.setGlobalVariables({ bar: 0 });
+    });
     expect(result.current.getItems("/topic.an_array[$foo]", message)).toBe(data0);
 
     // Changing a relevant global variable.
-    act(() => result.current.setGlobalVariables({ foo: 1 }));
+    act(() => {
+      result.current.setGlobalVariables({ foo: 1 });
+    });
     expect(result.current.getItems("/topic.an_array[$foo]", message)).toEqual([
       { path: "/topic.an_array[1]", value: 10 },
     ]);

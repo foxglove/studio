@@ -124,13 +124,13 @@ const useStyles = makeStyles()((theme) => ({
 
 type SectionKey = "resources" | "products" | "contact" | "legal";
 
-export const aboutItems: Map<
+export const aboutItems = new Map<
   SectionKey,
   {
     subheader: string;
     links: { title: string; url?: string }[];
   }
-> = new Map([
+>([
   [
     "resources",
     {

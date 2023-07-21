@@ -114,15 +114,19 @@ function newStudioWindow(deepLinks: string[] = [], reloadMainWindow: () => void)
   });
 
   // Forward full screen events to the renderer
-  browserWindow.addListener("enter-full-screen", () =>
-    browserWindow.webContents.send("enter-full-screen"),
-  );
-  browserWindow.addListener("leave-full-screen", () =>
-    browserWindow.webContents.send("leave-full-screen"),
-  );
-  browserWindow.addListener("maximize", () => browserWindow.webContents.send("maximize"));
+  browserWindow.addListener("enter-full-screen", () => {
+    browserWindow.webContents.send("enter-full-screen");
+  });
+  browserWindow.addListener("leave-full-screen", () => {
+    browserWindow.webContents.send("leave-full-screen");
+  });
+  browserWindow.addListener("maximize", () => {
+    browserWindow.webContents.send("maximize");
+  });
 
-  browserWindow.addListener("unmaximize", () => browserWindow.webContents.send("unmaximize"));
+  browserWindow.addListener("unmaximize", () => {
+    browserWindow.webContents.send("unmaximize");
+  });
 
   browserWindow.webContents.once("dom-ready", () => {
     if (!isProduction) {
@@ -217,7 +221,9 @@ function buildMenu(browserWindow: BrowserWindow): Menu {
         {
           label: "Settings…",
           accelerator: "CommandOrControl+,",
-          click: () => sendNativeAppMenuEvent("open-help-general", browserWindow),
+          click: () => {
+            sendNativeAppMenuEvent("open-help-general", browserWindow);
+          },
         },
         { role: "services" },
         { type: "separator" },
@@ -326,15 +332,21 @@ function buildMenu(browserWindow: BrowserWindow): Menu {
     submenu: [
       {
         label: "About",
-        click: () => sendNativeAppMenuEvent("open-help-about", browserWindow),
+        click: () => {
+          sendNativeAppMenuEvent("open-help-about", browserWindow);
+        },
       },
       {
         label: "View our docs",
-        click: () => sendNativeAppMenuEvent("open-help-docs", browserWindow),
+        click: () => {
+          sendNativeAppMenuEvent("open-help-docs", browserWindow);
+        },
       },
       {
         label: "Join our Slack",
-        click: () => sendNativeAppMenuEvent("open-help-slack", browserWindow),
+        click: () => {
+          sendNativeAppMenuEvent("open-help-slack", browserWindow);
+        },
       },
       { type: "separator" },
       {

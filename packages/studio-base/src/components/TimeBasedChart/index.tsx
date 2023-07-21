@@ -259,15 +259,23 @@ export default function TimeBasedChart(props: Props): JSX.Element {
 
   const keyDownHandlers = React.useMemo(
     () => ({
-      v: () => setHasVerticalExclusiveZoom(true),
-      b: () => setHasBothAxesZoom(true),
+      v: () => {
+        setHasVerticalExclusiveZoom(true);
+      },
+      b: () => {
+        setHasBothAxesZoom(true);
+      },
     }),
     [setHasVerticalExclusiveZoom, setHasBothAxesZoom],
   );
   const keyUphandlers = React.useMemo(
     () => ({
-      v: () => setHasVerticalExclusiveZoom(false),
-      b: () => setHasBothAxesZoom(false),
+      v: () => {
+        setHasVerticalExclusiveZoom(false);
+      },
+      b: () => {
+        setHasBothAxesZoom(false);
+      },
     }),
     [setHasVerticalExclusiveZoom, setHasBothAxesZoom],
   );
@@ -284,7 +292,8 @@ export default function TimeBasedChart(props: Props): JSX.Element {
 
   const updateTooltip = useCallback((elements: RpcElement[]) => {
     if (elements.length === 0 || mouseYRef.current == undefined) {
-      return setActiveTooltip(undefined);
+      setActiveTooltip(undefined);
+      return;
     }
 
     const tooltipItems: { item: TimeBasedChartTooltipData; element: RpcElement }[] = [];
@@ -310,7 +319,8 @@ export default function TimeBasedChart(props: Props): JSX.Element {
     }
 
     if (tooltipItems.length === 0) {
-      return setActiveTooltip(undefined);
+      setActiveTooltip(undefined);
+      return;
     }
 
     const element = tooltipItems[0]!.element;
@@ -327,10 +337,9 @@ export default function TimeBasedChart(props: Props): JSX.Element {
 
   const setHoverValue = useSetHoverValue();
   const clearHoverValue = useClearHoverValue();
-  const clearGlobalHoverTime = useCallback(
-    () => clearHoverValue(componentId),
-    [clearHoverValue, componentId],
-  );
+  const clearGlobalHoverTime = useCallback(() => {
+    clearHoverValue(componentId);
+  }, [clearHoverValue, componentId]);
 
   const onMouseOut = useCallback(() => {
     setActiveTooltip(undefined);
@@ -697,7 +706,9 @@ export default function TimeBasedChart(props: Props): JSX.Element {
     [componentId, downsampler, isMounted, isSynced, queueDownsample, setGlobalBounds],
   );
 
-  useEffect(() => log.debug(`<TimeBasedChart> (datasetId=${datasetId})`), [datasetId]);
+  useEffect(() => {
+    log.debug(`<TimeBasedChart> (datasetId=${datasetId})`);
+  }, [datasetId]);
 
   const colorsByDatasetIndex = useMemo(() => {
     return Object.fromEntries(

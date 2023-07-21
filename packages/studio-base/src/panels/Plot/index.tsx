@@ -225,7 +225,9 @@ function Plot(props: Props) {
       {
         type: "item",
         label: "Download plot data as CSV",
-        onclick: () => downloadCSV(datasets, xAxisVal),
+        onclick: () => {
+          downloadCSV(datasets, xAxisVal);
+        },
       },
     ];
     return items;
@@ -251,7 +253,9 @@ function Plot(props: Props) {
             currentTime={currentTimeSinceStart}
             datasets={datasets}
             legendDisplay={legendDisplay}
-            onClickPath={(index: number) => setFocusedPath(["paths", String(index)])}
+            onClickPath={(index: number) => {
+              setFocusedPath(["paths", String(index)]);
+            }}
             paths={yAxisPaths}
             pathsWithMismatchedDataLengths={pathsWithMismatchedDataLengths}
             saveConfig={saveConfig}

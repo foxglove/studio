@@ -144,7 +144,9 @@ function PlaybackTimeMethodMenu({
           <MenuItem
             key={option.key}
             selected={timeFormat === option.key}
-            onClick={async () => await setTimeFormat(option.key as TimeDisplayMethod)}
+            onClick={async () => {
+              await setTimeFormat(option.key as TimeDisplayMethod);
+            }}
           >
             {timeFormat === option.key && (
               <ListItemIcon>
@@ -280,9 +282,13 @@ export default function PlaybackTimeDisplayMethod({
             onBlur={(e) => {
               onSubmit(e);
               setIsEditing(false);
-              timeOutID.current = setTimeout(() => setHasError(false), 600);
+              timeOutID.current = setTimeout(() => {
+                setHasError(false);
+              }, 600);
             }}
-            onChange={(event) => setInputText(event.target.value)}
+            onChange={(event) => {
+              setInputText(event.target.value);
+            }}
           />
         </form>
       ) : (

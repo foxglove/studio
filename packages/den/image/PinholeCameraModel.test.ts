@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { CameraInfo } from "./CameraInfo";
+import { CameraInfo, DistortionModel } from "./CameraInfo";
 import { PinholeCameraModel } from "./PinholeCameraModel";
 
 // Example real-world plumb_bob distortion parameters
@@ -75,7 +75,7 @@ function makeCameraInfo(
   width: number,
   height: number,
   fov: number,
-  distortionModel = "",
+  distortionModel: DistortionModel = "",
   D = [0, 0, 0, 0, 0, 0, 0, 0],
 ): CameraInfo {
   const cx = width / 2;

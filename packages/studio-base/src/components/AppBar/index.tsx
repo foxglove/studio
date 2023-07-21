@@ -277,7 +277,9 @@ export function AppBar(props: AppBarProps): JSX.Element {
               <AppMenu
                 open={appMenuOpen}
                 anchorEl={appMenuEl}
-                handleClose={() => setAppMenuEl(undefined)}
+                handleClose={() => {
+                  setAppMenuEl(undefined);
+                }}
               />
               <AppBarIconButton
                 className={cx({ "Mui-selected": panelMenuOpen })}
@@ -316,7 +318,9 @@ export function AppBar(props: AppBarProps): JSX.Element {
                     </>
                   }
                   aria-label={`${leftSidebarOpen ? "Hide" : "Show"} left sidebar`}
-                  onClick={() => sidebarActions.left.setOpen(!leftSidebarOpen)}
+                  onClick={() => {
+                    sidebarActions.left.setOpen(!leftSidebarOpen);
+                  }}
                   data-tourid="left-sidebar-button"
                 >
                   {leftSidebarOpen ? <PanelLeft24Filled /> : <PanelLeft24Regular />}
@@ -329,7 +333,9 @@ export function AppBar(props: AppBarProps): JSX.Element {
                     </>
                   }
                   aria-label={`${rightSidebarOpen ? "Hide" : "Show"} right sidebar`}
-                  onClick={() => sidebarActions.right.setOpen(!rightSidebarOpen)}
+                  onClick={() => {
+                    sidebarActions.right.setOpen(!rightSidebarOpen);
+                  }}
                   data-tourid="right-sidebar-button"
                 >
                   {rightSidebarOpen ? <PanelRight24Filled /> : <PanelRight24Regular />}
@@ -366,7 +372,9 @@ export function AppBar(props: AppBarProps): JSX.Element {
                   aria-controls={userMenuOpen ? "user-menu" : undefined}
                   aria-haspopup="true"
                   aria-expanded={userMenuOpen ? "true" : undefined}
-                  onClick={(event) => setUserAnchorEl(event.currentTarget)}
+                  onClick={(event) => {
+                    setUserAnchorEl(event.currentTarget);
+                  }}
                   data-testid="user-button"
                 >
                   <Avatar
@@ -392,12 +400,16 @@ export function AppBar(props: AppBarProps): JSX.Element {
       <AddPanelMenu
         anchorEl={panelAnchorEl}
         open={panelMenuOpen}
-        handleClose={() => setPanelAnchorEl(undefined)}
+        handleClose={() => {
+          setPanelAnchorEl(undefined);
+        }}
       />
       <UserMenu
         anchorEl={userAnchorEl}
         open={userMenuOpen}
-        handleClose={() => setUserAnchorEl(undefined)}
+        handleClose={() => {
+          setUserAnchorEl(undefined);
+        }}
       />
     </>
   );

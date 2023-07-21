@@ -280,7 +280,9 @@ export class MessageHandler {
 
   #emitState() {
     const state = this.getRenderState();
-    this.#listeners.forEach((fn) => fn(state, this.#oldRenderState));
+    this.#listeners.forEach((fn) => {
+      fn(state, this.#oldRenderState);
+    });
     this.#oldRenderState = state;
   }
 

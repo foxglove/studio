@@ -132,8 +132,8 @@ export class IterablePlayer implements Player {
   #profile: string | undefined;
   #metricsCollector: PlayerMetricsCollectorInterface;
   #subscriptions: SubscribePayload[] = [];
-  #allTopics: Set<string> = new Set();
-  #preloadTopics: Set<string> = new Set();
+  #allTopics = new Set<string>();
+  #preloadTopics = new Set<string>();
 
   #progress: Progress = {};
   #id: string = uuidv4();
@@ -205,7 +205,7 @@ export class IterablePlayer implements Player {
   }
 
   #startPlayImpl(opt?: { untilTime: Time }): void {
-    if (this.#isPlaying || this.#untilTime || !this.#start || !this.#end) {
+    if (this.#isPlaying || this.#untilTime != undefined || !this.#start || !this.#end) {
       return;
     }
 
@@ -723,7 +723,7 @@ export class IterablePlayer implements Player {
     }
 
     if (this.#hasError) {
-      return await this.#listener({
+      await this.#listener({
         name: this.#name,
         presence: PlayerPresence.ERROR,
         progress: {},
@@ -737,6 +737,7 @@ export class IterablePlayer implements Player {
           parameters: this.#urlParams,
         },
       });
+      return;
     }
 
     const messages = this.#messages;
@@ -775,7 +776,7 @@ export class IterablePlayer implements Player {
       },
     };
 
-    return await this.#listener(data);
+    await this.#listener(data);
   }
 
   /**
@@ -945,7 +946,9 @@ export class IterablePlayer implements Player {
     };
 
     const abort = (this.#abort = new AbortController());
-    const aborted = new Promise((resolve) => abort.signal.addEventListener("abort", resolve));
+    const aborted = new Promise((resolve) => {
+      abort.signal.addEventListener("abort", resolve);
+    });
 
     const rangeChangeHandler = () => {
       this.#progress = {

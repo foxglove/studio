@@ -54,7 +54,7 @@ export class BlockLoader {
   #start: Time;
   #end: Time;
   #blockDurationNanos: number;
-  #topics: Set<string> = new Set();
+  #topics = new Set<string>();
   #maxCacheSize: number = 0;
   #problemManager: PlayerProblemManager;
   #stopped: boolean = false;

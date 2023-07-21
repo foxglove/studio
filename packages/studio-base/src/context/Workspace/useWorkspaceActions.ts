@@ -131,10 +131,11 @@ export function useWorkspaceActions(): WorkspaceActions {
         },
 
         preferences: {
-          close: () =>
+          close: () => {
             set((draft) => {
               draft.dialogs.preferences = { open: false, initialTab: undefined };
-            }),
+            });
+          },
           open: (initialTab?: AppSettingsTab) => {
             set((draft) => {
               draft.dialogs.preferences = { open: true, initialTab };
@@ -157,22 +158,26 @@ export function useWorkspaceActions(): WorkspaceActions {
         },
       },
 
-      openAccountSettings: () =>
-        supportsAccountSettings &&
-        set((draft) => {
-          draft.sidebars.legacy.item = "account";
-        }),
+      openAccountSettings: () => {
+        if (supportsAccountSettings) {
+          set((draft) => {
+            draft.sidebars.legacy.item = "account";
+          });
+        }
+      },
 
-      openPanelSettings: () =>
+      openPanelSettings: () => {
         set((draft) => {
           draft.sidebars.left.item = "panel-settings";
           draft.sidebars.left.open = true;
-        }),
+        });
+      },
 
-      openLayoutBrowser: () =>
+      openLayoutBrowser: () => {
         set((draft) => {
           draft.sidebars.legacy.item = "layouts";
-        }),
+        });
+      },
 
       playbackControlActions: {
         setRepeat: (setter: SetStateAction<boolean>) => {
@@ -224,10 +229,11 @@ export function useWorkspaceActions(): WorkspaceActions {
             });
           },
 
-          setSize: (leftSidebarSize: undefined | number) =>
+          setSize: (leftSidebarSize: undefined | number) => {
             set((draft) => {
               draft.sidebars.left.size = leftSidebarSize;
-            }),
+            });
+          },
         },
         right: {
           selectItem: (selectedRightSidebarItem: undefined | RightSidebarItemKey) => {
@@ -252,10 +258,11 @@ export function useWorkspaceActions(): WorkspaceActions {
             });
           },
 
-          setSize: (rightSidebarSize: undefined | number) =>
+          setSize: (rightSidebarSize: undefined | number) => {
             set((draft) => {
               draft.sidebars.right.size = rightSidebarSize;
-            }),
+            });
+          },
         },
       },
     };

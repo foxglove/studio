@@ -47,7 +47,9 @@ export function PanelContextMenu(props: PanelContextMenuProps): JSX.Element {
 
   const [position, setPosition] = useState<undefined | { x: number; y: number }>();
 
-  const handleClose = useCallback(() => setPosition(undefined), []);
+  const handleClose = useCallback(() => {
+    setPosition(undefined);
+  }, []);
 
   const [items, setItems] = useState<Immutable<PanelContextMenuItem[]>>([]);
 
@@ -92,7 +94,12 @@ export function PanelContextMenu(props: PanelContextMenuProps): JSX.Element {
   }, [getItems]);
 
   return (
-    <div ref={rootRef} onContextMenu={(event) => event.preventDefault()}>
+    <div
+      ref={rootRef}
+      onContextMenu={(event) => {
+        event.preventDefault();
+      }}
+    >
       <Menu
         open={position != undefined}
         onClose={handleClose}

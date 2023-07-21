@@ -175,7 +175,9 @@ describe("Panel", () => {
     });
 
     expect(renderFn.mock.calls.length).toEqual(2);
-    act(() => actions.current.savePanelConfigs({ configs: [{ id: "someOtherId", config: {} }] }));
+    act(() => {
+      actions.current.savePanelConfigs({ configs: [{ id: "someOtherId", config: {} }] });
+    });
     expect(renderFn.mock.calls.length).toEqual(2);
   });
 });

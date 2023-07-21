@@ -53,7 +53,9 @@ describe("startup", () => {
 
     await browser.close();
     await new Promise<void>((resolve) => {
-      server.close(() => resolve());
+      server.close(() => {
+        resolve();
+      });
     });
   }, 15_000);
 });

@@ -448,7 +448,9 @@ function RawMessages(props: Props) {
                   <Checkbox
                     size="small"
                     defaultChecked
-                    onChange={() => saveConfig({ showFullMessageForDiff: !showFullMessageForDiff })}
+                    onChange={() => {
+                      saveConfig({ showFullMessageForDiff: !showFullMessageForDiff });
+                    }}
                   />
                 }
                 label="Show full msg"
