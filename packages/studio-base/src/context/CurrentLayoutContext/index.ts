@@ -11,8 +11,7 @@ import {
   useGuaranteedContext,
 } from "@foxglove/hooks";
 import Logger from "@foxglove/log";
-import { VariableValue } from "@foxglove/studio";
-import { RenderState } from "@foxglove/studio";
+import { VariableValue, RenderState } from "@foxglove/studio";
 import useShouldNotChangeOften from "@foxglove/studio-base/hooks/useShouldNotChangeOften";
 import toggleSelectedPanel from "@foxglove/studio-base/providers/CurrentLayoutProvider/toggleSelectedPanel";
 import { PanelConfig, PlaybackConfig, UserNodes } from "@foxglove/studio-base/types/panels";
