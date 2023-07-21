@@ -1,10 +1,10 @@
-# Automatically approve PRs made by Dependabot to make them easier to merge.
+# Automatically approve and merge PRs made by Dependabot
 
 name: Dependabot
 
 on:
   pull_request_target:
-    types: [opened]
+    types: [opened, reopened]
 
 jobs:
   approve:
@@ -19,3 +19,12 @@ jobs:
           owner_and_repo: ${{ github.repository }}
           pull_number: ${{ github.event.pull_request.number }}
           event: "APPROVE"
+
+      - uses: octokit/request-action@v2.x
+        env:
+          GITHUB_TOKEN: ${{ secrets.FOXGLOVEBOT_GITHUB_TOKEN }}
+        with:
+          route: POST /repos/{owner_and_repo}/issues/{pull_number}/comments
+          owner_and_repo: ${{ github.repository }}
+          pull_number: ${{ github.event.pull_request.number }}
+          body: "@dependabot squash and merge"
