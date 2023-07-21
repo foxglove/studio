@@ -14,6 +14,7 @@ import { VariableValue } from "@foxglove/studio";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 import CurrentLayoutContext, {
   ICurrentLayout,
+  LayoutID,
   LayoutState,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import {
@@ -23,6 +24,7 @@ import {
   CreateTabPanelPayload,
   DropPanelPayload,
   EndDragPayload,
+  LayoutData,
   MoveTabPayload,
   PanelsActions,
   SaveConfigsPayload,
@@ -73,16 +75,6 @@ export default function CurrentLayoutProvider({
       return;
     }
 
-    // Clear the sharedPanelState when explicitly setting the layout state
-    // fixme - actually a problem cause it seems setLayoutState is called by performAction()
-    // so my invariant of "setLayoutState" is only called when something external wants to override
-    // the state might not hold up
-    /*
-    setLayoutStateInternal({
-      ...newState,
-      sharedPanelState: {},
-    });
-    */
     setLayoutStateInternal(newState);
 
     // listeners rely on being able to getCurrentLayoutState() inside effects that may run before we re-render
@@ -137,9 +129,6 @@ export default function CurrentLayoutProvider({
       // Get all the panel types that exist in the new config
       const panelTypesInUse = uniq(Object.keys(newData.configById).map(getPanelTypeFromId));
 
-      // fixme - why is this not setLayoutStateInternal?
-      // this breaks my invariant assumptions that setLayoutState is only invokved externally
-      // and should indicate a clearing of the layout
       setLayoutState({
         // discared shared panel state for panel types that are no longer in the layout
         sharedPanelState: pick(layoutStateRef.current.sharedPanelState, panelTypesInUse),
@@ -155,6 +144,19 @@ export default function CurrentLayoutProvider({
     [setLayoutState],
   );
 
+  const setCurrentLayoutData = useCallback(
+    (newData: LayoutData) => {
+      setLayoutState({
+        sharedPanelState: {},
+        selectedLayout: {
+          id: "default" as LayoutID,
+          data: newData,
+        },
+      });
+    },
+    [setLayoutState],
+  );
+
   const updateSharedPanelState = useCallback<ICurrentLayout["actions"]["updateSharedPanelState"]>(
     (type, newSharedState) => {
       if (
@@ -164,8 +166,6 @@ export default function CurrentLayoutProvider({
         return;
       }
 
-      // fixme - update to make a new state object and see what the performance is like if we call listeners
-      // fixme - my assumption that setLayoutState was only called externally is violated here
       setLayoutState({
         ...layoutStateRef.current,
         sharedPanelState: { ...layoutStateRef.current.sharedPanelState, [type]: newSharedState },
@@ -177,7 +177,7 @@ export default function CurrentLayoutProvider({
   const actions: ICurrentLayout["actions"] = useMemo(
     () => ({
       getCurrentLayoutState: () => layoutStateRef.current,
-      setCurrentLayoutState: setLayoutState,
+      setCurrentLayoutData,
 
       updateSharedPanelState,
 
@@ -249,7 +249,7 @@ export default function CurrentLayoutProvider({
       startDrag: (payload: StartDragPayload) => performAction({ type: "START_DRAG", payload }),
       endDrag: (payload: EndDragPayload) => performAction({ type: "END_DRAG", payload }),
     }),
-    [analytics, performAction, setLayoutState, setSelectedPanelIds, updateSharedPanelState],
+    [analytics, performAction, setCurrentLayoutData, setSelectedPanelIds, updateSharedPanelState],
   );
 
   const value: ICurrentLayout = useShallowMemo({

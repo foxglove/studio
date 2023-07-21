@@ -82,7 +82,11 @@ export interface ICurrentLayout {
      * asynchronously and don't want to update every time the state changes.
      */
     getCurrentLayoutState: () => LayoutState;
-    setCurrentLayoutState: (newState: LayoutState) => void;
+
+    /**
+     * Override any current layout data. This will reset the layout state
+     */
+    setCurrentLayoutData: (newData: LayoutData) => void;
 
     /**
      * Update the transient state associated with a particular panel type.
