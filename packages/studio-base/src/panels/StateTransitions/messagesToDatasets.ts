@@ -51,7 +51,7 @@ export default function messagesToDatasets(args: Args): ChartDatasets {
     borderWidth: 10,
     data: [],
     label: pathIndex.toString(),
-    pointBackgroundColor: "black",
+    pointBackgroundColor: "rgba(0, 0, 0, 0.4)",
     pointBorderColor: "transparent",
     pointHoverRadius: 3,
     pointRadius: 1.25,
