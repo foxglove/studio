@@ -24,7 +24,7 @@ import {
   Typography,
   inputClasses,
 } from "@mui/material";
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 import { v4 as uuidv4 } from "uuid";
 
@@ -319,6 +319,24 @@ function NodePlayground(props: Props) {
     },
     [scriptBackStack],
   );
+
+  const askSaveOnLeave = useCallback(() => {
+    if (isNodeSaved) {
+      return;
+    }
+    const response = confirm("You have unsaved changes. Would you like to save before leaving?");
+    if (response) {
+      saveCurrentNode();
+    }
+  }, [isNodeSaved, saveCurrentNode]);
+
+  const cleanupRef = useRef(askSaveOnLeave);
+  cleanupRef.current = askSaveOnLeave;
+  useEffect(() => {
+    return () => {
+      cleanupRef.current();
+    };
+  }, []);
 
   return (
     <Stack fullHeight>
