@@ -201,7 +201,9 @@ export default class ChartJSManager {
 
     for (const ds of data?.datasets ?? []) {
       // Apply a line segment coloring function, if the label color is present in the data points.
-      // This has to happen here because functions can't be serialized to the chart worker.
+      // This has to happen here because functions can't be serialized to the chart worker. The
+      // state transition panel uses this to apply different colors to each segment of a single
+      // line.
       ds.segment = {
         borderColor: lineSegmentLabelColor,
       };
