@@ -324,17 +324,22 @@ function NodePlayground(props: Props) {
     if (isNodeSaved) {
       return;
     }
-    const response = confirm("You have unsaved changes. Would you like to save before leaving?");
+    const response = confirm(
+      `You have unsaved changes in your user script: ${currentScript.filePath}. Would you like to save?`,
+    );
     if (response) {
       saveCurrentNode();
     }
-  }, [isNodeSaved, saveCurrentNode]);
+  }, [isNodeSaved, saveCurrentNode, currentScript?.filePath]);
 
-  const cleanupRef = useRef(askSaveOnLeave);
-  cleanupRef.current = askSaveOnLeave;
+  // The cleanup function below should only run when this component unmounts.
+  // We're using a ref here so that the cleanup useEffect doesn't run whenever one of the callback
+  // dependencies changes, only when the component unmounts and with the most up-to-date callback.
+  const askSaveOnLeaveRef = useRef(askSaveOnLeave);
+  askSaveOnLeaveRef.current = askSaveOnLeave;
   useEffect(() => {
     return () => {
-      cleanupRef.current();
+      askSaveOnLeaveRef.current();
     };
   }, []);
 
