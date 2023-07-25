@@ -187,6 +187,44 @@ export const SinglePointWithMissingValues: StoryObj = {
   },
 };
 
+export const SinglePointWithInvalidData: StoryObj = {
+  render: function Story() {
+    return <MapPanel />;
+  },
+
+  decorators: [Wrapper],
+
+  parameters: {
+    chromatic: {
+      delay: 1000,
+    },
+    panelSetup: {
+      fixture: {
+        topics: [{ name: "/gps", schemaName: "sensor_msgs/NavSatFix" }],
+        frame: {
+          "/gps": [
+            {
+              topic: "/gps",
+              schemaName: "sensor_msgs/NavSatFix",
+              sizeInBytes: 0,
+              receiveTime: { sec: 123, nsec: 456 },
+              message: {
+                latitude: NaN,
+                longitude: NaN,
+                altitude: 0,
+                status: {
+                  status: NavSatFixStatus.STATUS_NO_FIX,
+                  service: NavSatFixService.SERVICE_GPS,
+                },
+              },
+            },
+          ],
+        },
+      } as Fixture,
+    },
+  },
+};
+
 export const SinglePointWithNoFix: StoryObj = {
   render: function Story() {
     return <MapPanel />;
