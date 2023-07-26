@@ -8,6 +8,7 @@ import shallowequal from "shallowequal";
 import { createStore, StoreApi } from "zustand";
 
 import { Condvar } from "@foxglove/den/async";
+import Logger from "@foxglove/log";
 import { MessageEvent } from "@foxglove/studio";
 import {
   AdvertiseOptions,
@@ -22,6 +23,8 @@ import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
 
 import { FramePromise } from "./pauseFrameForPromise";
 import { MessagePipelineContext } from "./types";
+
+const log = Logger.getLogger(__filename);
 
 export function defaultPlayerState(): PlayerState {
   return {
@@ -118,9 +121,20 @@ export function createMessagePipelineStore({
         return await player.callService(service, request);
       },
       async fetchAsset(uri, options) {
-        const { protocol } = new URL(uri);
-        const player = get().player;
+        let protocol: string | undefined = undefined;
+        try {
+          protocol = new URL(uri).protocol;
+        } catch (err) {
+          if (isDesktopApp()) {
+            // We only log the error here and continue with a normal _fetch_ call as the Desktop
+            // app may still be able to resolve the "URI" to a local file.
+            log.error("Invalid URI passed to fetchAsset", err);
+          } else {
+            throw new Error(`${uri} is not a valid URI`);
+          }
+        }
 
+        const player = get().player;
         if (player?.fetchAsset && protocol === "package:") {
           try {
             return await player.fetchAsset(uri);
@@ -135,6 +149,10 @@ export function createMessagePipelineStore({
         }
 
         const response = await fetch(uri, options);
+        if (!response.ok) {
+          const errMsg = response.statusText;
+          throw new Error(`Error ${response.status}${errMsg ? ` (${errMsg})` : ``}`);
+        }
         return {
           uri,
           data: new Uint8Array(await response.arrayBuffer()),
