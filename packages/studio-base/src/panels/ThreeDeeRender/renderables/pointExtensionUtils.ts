@@ -399,6 +399,11 @@ export class RenderObjectHistory<TRenderable extends DisposableObject> {
   }
 
   public addHistoryEntry(entry: HistoryEntry<TRenderable>): void {
+    // UI controls call addHistoryEntry repeatedly; ensure it doesn't add new
+    // entries if the content is the same
+    if (this.#history.slice(-1)[0]?.receiveTime === entry.receiveTime) {
+      return;
+    }
     this.#history.push(entry);
   }
 
