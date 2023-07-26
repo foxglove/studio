@@ -48,7 +48,6 @@ export type WorkspaceActions = {
 
   openAccountSettings: () => void;
   openPanelSettings: () => void;
-  openLayoutBrowser: () => void;
 
   playbackControlActions: {
     setRepeat: Dispatch<SetStateAction<boolean>>;
@@ -167,11 +166,6 @@ export function useWorkspaceActions(): WorkspaceActions {
         set((draft) => {
           draft.sidebars.left.item = "panel-settings";
           draft.sidebars.left.open = true;
-        }),
-
-      openLayoutBrowser: () =>
-        set((draft) => {
-          draft.sidebars.legacy.item = "layouts";
         }),
 
       playbackControlActions: {

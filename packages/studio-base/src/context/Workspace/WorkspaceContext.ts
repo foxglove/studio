@@ -18,7 +18,6 @@ const SidebarItemKeys = [
   "connection",
   "extensions",
   "help",
-  "layouts",
   "panel-settings",
   "studio-logs-settings",
   "variables",
