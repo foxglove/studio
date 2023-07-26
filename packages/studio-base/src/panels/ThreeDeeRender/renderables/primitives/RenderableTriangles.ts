@@ -120,6 +120,9 @@ export class RenderableTriangles extends RenderablePrimitive {
         geometry.computeBoundingSphere();
         geometry.attributes.position!.needsUpdate = true;
       }
+      if (colorChanged) {
+        geometry.attributes.color!.needsUpdate = true;
+      }
 
       // covers the case where a geometry went from being defined by a single color to vertex colors
       // but there was no difference in the vertex colors that already existed and the new ones
