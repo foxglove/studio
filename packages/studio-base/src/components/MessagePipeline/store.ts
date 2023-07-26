@@ -8,7 +8,6 @@ import shallowequal from "shallowequal";
 import { createStore, StoreApi } from "zustand";
 
 import { Condvar } from "@foxglove/den/async";
-import Logger from "@foxglove/log";
 import { MessageEvent } from "@foxglove/studio";
 import {
   AdvertiseOptions,
@@ -23,8 +22,6 @@ import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
 
 import { FramePromise } from "./pauseFrameForPromise";
 import { MessagePipelineContext } from "./types";
-
-const log = Logger.getLogger(__filename);
 
 export function defaultPlayerState(): PlayerState {
   return {
@@ -125,11 +122,9 @@ export function createMessagePipelineStore({
         try {
           protocol = new URL(uri).protocol;
         } catch (err) {
-          if (isDesktopApp()) {
-            // We only log the error here and continue with a normal _fetch_ call as the Desktop
-            // app may still be able to resolve the "URI" to a local file.
-            log.error("Invalid URI passed to fetchAsset", err);
-          } else {
+          // Bail out if this is not a desktop app. If this is a local file path, the Desktop app may
+          // still be able to resolve that to a local file with the _fetch_ call.
+          if (!isDesktopApp()) {
             throw new Error(`${uri} is not a valid URI`);
           }
         }
