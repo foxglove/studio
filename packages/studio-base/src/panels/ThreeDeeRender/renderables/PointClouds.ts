@@ -904,12 +904,7 @@ export class PointClouds extends SceneExtension<PointCloudHistoryRenderable> {
       this.renderables.set(topic, renderable);
     }
 
-    renderable.pushHistory(
-      pointCloud,
-      originalMessage,
-      renderable.userData.settings,
-      receiveTime,
-    );
+    renderable.pushHistory(pointCloud, originalMessage, renderable.userData.settings, receiveTime);
     renderable.updatePointCloud(
       pointCloud,
       originalMessage,
