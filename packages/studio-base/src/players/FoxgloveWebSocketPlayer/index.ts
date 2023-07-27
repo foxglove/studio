@@ -525,12 +525,14 @@ export default class FoxgloveWebSocketPlayer implements Player {
         });
 
         // Update the message count for this topic
-        let stats = this.#topicsStats.get(topic);
+        const topicStats = new Map(this.#topicsStats);
+        let stats = topicStats.get(topic);
         if (!stats) {
           stats = { numMessages: 0 };
-          this.#topicsStats.set(topic, stats);
+          topicStats.set(topic, stats);
         }
         stats.numMessages++;
+        this.#topicsStats = new Map(topicStats);
       } catch (error) {
         this.#problems.addProblem(`message:${chanInfo.channel.topic}`, {
           severity: "error",
@@ -719,12 +721,14 @@ export default class FoxgloveWebSocketPlayer implements Player {
 
     // Remove stats entries for removed topics
     const topicsSet = new Set<string>(topics.map((topic) => topic.name));
-    for (const topic of this.#topicsStats.keys()) {
+    const topicStats = new Map(this.#topicsStats);
+    for (const topic of topicStats.keys()) {
       if (!topicsSet.has(topic)) {
-        this.#topicsStats.delete(topic);
+        topicStats.delete(topic);
       }
     }
 
+    this.#topicsStats = new Map(topicStats);
     this.#topics = topics;
 
     // Update the _datatypes map;
@@ -786,8 +790,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
         speed: 1,
         lastSeekTime: this.#numTimeSeeks,
         topics: this.#topics,
-        // Always copy topic stats since message counts and timestamps are being updated
-        topicStats: new Map(this.#topicsStats),
+        topicStats: this.#topicsStats,
         datatypes: this.#datatypes,
         parameters: this.#parameters,
         publishedTopics: this.#publishedTopics,
@@ -833,6 +836,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
       }
     }
 
+    const topicStats = new Map(this.#topicsStats);
     for (const [topic, subId] of this.#resolvedSubscriptionsByTopic) {
       if (!newTopics.has(topic)) {
         this.#client.unsubscribe(subId);
@@ -841,7 +845,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
         this.#recentlyCanceledSubscriptions.add(subId);
 
         // Reset the message count for this topic
-        this.#topicsStats.delete(topic);
+        topicStats.delete(topic);
 
         setTimeout(
           () => this.#recentlyCanceledSubscriptions.delete(subId),
@@ -849,6 +853,8 @@ export default class FoxgloveWebSocketPlayer implements Player {
         );
       }
     }
+    this.#topicsStats = new Map(topicStats);
+
     for (const topic of this.#unresolvedSubscriptions) {
       if (!newTopics.has(topic)) {
         this.#unresolvedSubscriptions.delete(topic);
