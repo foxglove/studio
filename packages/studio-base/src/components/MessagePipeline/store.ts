@@ -118,18 +118,9 @@ export function createMessagePipelineStore({
         return await player.callService(service, request);
       },
       async fetchAsset(uri, options) {
-        let protocol: string | undefined = undefined;
-        try {
-          protocol = new URL(uri).protocol;
-        } catch (err) {
-          // Bail out if this is not a desktop app. If this is a local file path, the Desktop app may
-          // still be able to resolve that to a local file with the _fetch_ call.
-          if (!isDesktopApp()) {
-            throw new Error(`${uri} is not a valid URI`);
-          }
-        }
-
+        const { protocol } = new URL(uri);
         const player = get().player;
+
         if (player?.fetchAsset && protocol === "package:") {
           try {
             return await player.fetchAsset(uri);
