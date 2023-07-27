@@ -37,6 +37,7 @@ import PanelToolbar, {
 } from "@foxglove/studio-base/components/PanelToolbar";
 import Stack from "@foxglove/studio-base/components/Stack";
 import { ChartDefaultView } from "@foxglove/studio-base/components/TimeBasedChart";
+import { DataSet } from "@foxglove/studio-base/panels/Plot/internalTypes";
 import { usePlotPanelData } from "@foxglove/studio-base/panels/Plot/usePlotPanelData";
 import { OnClickArg as OnChartClickArgs } from "@foxglove/studio-base/src/components/Chart";
 import { OpenSiblingPanel, PanelConfig, SaveConfig } from "@foxglove/studio-base/types/panels";
@@ -52,6 +53,8 @@ export { plotableRosTypes } from "./types";
 export type { PlotConfig } from "./types";
 
 const defaultSidebarDimension = 240;
+
+const EmptyDatasets: DataSet[] = [];
 
 export function openSiblingPlotPanel(openSiblingPanel: OpenSiblingPanel, topicName: string): void {
   openSiblingPanel({
@@ -231,6 +234,8 @@ function Plot(props: Props) {
     return items;
   }, [datasets, xAxisVal]);
 
+  const onClickPath = useCallback((index: number) => setFocusedPath(["paths", String(index)]), []);
+
   return (
     <Stack
       flex="auto"
@@ -246,12 +251,13 @@ function Plot(props: Props) {
         fullWidth
         style={{ height: `calc(100% - ${PANEL_TOOLBAR_MIN_HEIGHT}px)` }}
       >
+        {/* Pass stable values here for properties when not showing values so that the legend memoization remains stable. */}
         {legendDisplay !== "none" && (
           <PlotLegend
-            currentTime={currentTimeSinceStart}
-            datasets={datasets}
+            currentTime={showPlotValuesInLegend ? currentTimeSinceStart : undefined}
+            datasets={showPlotValuesInLegend ? datasets : EmptyDatasets}
             legendDisplay={legendDisplay}
-            onClickPath={(index: number) => setFocusedPath(["paths", String(index)])}
+            onClickPath={onClickPath}
             paths={yAxisPaths}
             pathsWithMismatchedDataLengths={pathsWithMismatchedDataLengths}
             saveConfig={saveConfig}
