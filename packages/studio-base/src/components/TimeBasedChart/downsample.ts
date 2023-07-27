@@ -91,7 +91,7 @@ export function downsampleTimeseries(
     const y = Math.trunc(datum.y * pixelPerYValue);
 
     // interval has ended, we determine whether to write additional points for min/max/last. Always
-    // create a new interval when encountering a new label.
+    // create a new interval when encountering a new label to preserve the transition from one label to another
     if (
       intFirst?.xPixel !== x ||
       (intLast?.datum?.label != undefined && intLast.datum.label !== datum.label)
