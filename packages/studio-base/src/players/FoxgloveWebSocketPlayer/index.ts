@@ -1198,7 +1198,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
     const maybeRos = ["ros1", "ros2"].includes(this.#profile ?? "");
     for (const [name, types] of datatypes) {
       const knownTypes = this.#datatypes.get(name);
-      if (knownTypes && !isMsgDefEqual(types, knownTypes as MessageDefinition)) {
+      if (knownTypes && !isMsgDefEqual(types, knownTypes)) {
         this.#problems.addProblem(`schema-changed-${name}`, {
           message: `Definition of schema '${name}' has changed during the server's runtime`,
           severity: "error",
