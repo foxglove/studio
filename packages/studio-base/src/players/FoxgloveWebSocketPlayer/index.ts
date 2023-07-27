@@ -198,19 +198,20 @@ export default class FoxgloveWebSocketPlayer implements Player {
       this.#channelsByTopic.clear();
       this.#servicesByName.clear();
       this.#serviceResponseCbs.clear();
-      this.#parameters = new Map();
-      this.#profile = undefined;
-      this.#publishedTopics = undefined;
-      this.#subscribedTopics = undefined;
-      this.#advertisedServices = undefined;
       this.#publicationsByTopic.clear();
-      this.#datatypes = new Map();
-
       for (const topic of this.#resolvedSubscriptionsByTopic.keys()) {
         this.#unresolvedSubscriptions.add(topic);
       }
       this.#resolvedSubscriptionsById.clear();
       this.#resolvedSubscriptionsByTopic.clear();
+
+      // Re-assign members that are emitted as player state
+      this.#profile = undefined;
+      this.#publishedTopics = undefined;
+      this.#subscribedTopics = undefined;
+      this.#advertisedServices = undefined;
+      this.#datatypes = new Map();
+      this.#parameters = new Map();
     });
 
     this.#client.on("error", (err) => {
@@ -532,7 +533,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
           topicStats.set(topic, stats);
         }
         stats.numMessages++;
-        this.#topicsStats = new Map(topicStats);
+        this.#topicsStats = topicStats;
       } catch (error) {
         this.#problems.addProblem(`message:${chanInfo.channel.topic}`, {
           severity: "error",
@@ -577,7 +578,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
         // Update params
         const updatedParameters = new Map(this.#parameters);
         mappedParameters.forEach((param) => updatedParameters.set(param.name, param.value));
-        this.#parameters = new Map(updatedParameters);
+        this.#parameters = updatedParameters;
       }
 
       this.#emitState();
@@ -728,7 +729,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
       }
     }
 
-    this.#topicsStats = new Map(topicStats);
+    this.#topicsStats = topicStats;
     this.#topics = topics;
 
     // Update the _datatypes map;
@@ -853,7 +854,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
         );
       }
     }
-    this.#topicsStats = new Map(topicStats);
+    this.#topicsStats = topicStats;
 
     for (const topic of this.#unresolvedSubscriptions) {
       if (!newTopics.has(topic)) {
