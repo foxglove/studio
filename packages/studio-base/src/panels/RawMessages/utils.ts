@@ -17,6 +17,8 @@ import { ros1 } from "@foxglove/rosmsg-msgs-common";
 import { foxgloveMessageSchemas } from "@foxglove/schemas/internal";
 import { diffLabels, DiffObject } from "@foxglove/studio-base/panels/RawMessages/getDiff";
 
+import type { NodeExpansion } from "./types";
+
 export const DATA_ARRAY_PREVIEW_LIMIT = 20;
 const ROS1_COMMON_MSG_PACKAGES = new Set(Object.keys(ros1).map((key) => key.split("/")[0]!));
 ROS1_COMMON_MSG_PACKAGES.add("turtlesim");
@@ -30,10 +32,42 @@ function isTypedArray(obj: unknown) {
   );
 }
 
+function invert(value: "e" | "c"): "e" | "c" {
+  return value === "e" ? "c" : "e";
+}
+
+/*
+ * Calculate the new expansion state after toggling the node at `path`.
+ */
+export function toggleExpansion(
+  state: NodeExpansion,
+  leaves: Set<string>,
+  key: string,
+): NodeExpansion {
+  if (state === "all" || state === "none") {
+    const next = state === "all" ? "e" : "c";
+    const nextState: NodeExpansion = {};
+    for (const leaf of leaves) {
+      nextState[leaf] = leaf === key ? invert(next) : next;
+    }
+    return nextState;
+  }
+
+  const prev = state[key];
+  return {
+    ...state,
+    [key]: prev != undefined ? invert(prev) : "c",
+  };
+}
+
 /**
  * Recursively traverses all keypaths in obj, for use in JSON tree expansion.
  */
-export function generateDeepKeyPaths(obj: unknown, maxArrayLength: number): Set<string> {
+export function generateDeepKeyPaths(
+  obj: unknown,
+  maxArrayLength: number,
+  minDepth: number,
+): Set<string> {
   const keys = new Set<string>();
   const recurseMapKeys = (path: string[], nestedObj: unknown) => {
     if (nestedObj == undefined) {
@@ -52,7 +86,7 @@ export function generateDeepKeyPaths(obj: unknown, maxArrayLength: number): Set<
       return;
     }
 
-    if (path.length > 0) {
+    if (path.length > minDepth) {
       keys.add(path.join("~"));
     }
 
