@@ -88,11 +88,12 @@ export function useSetHoverValue(): TimelineInteractionStateStore["setHoverValue
 const undefinedSelector = () => undefined;
 
 /**
- * Encapsulates logic for selecting the current hover value depending
- * on which component registered the hover value.
+ * Encapsulates logic for selecting the current hover value depending on which component registered
+ * the hover value.
  *
  * @param componentId the component to scope updates to
- * @param disableUpdates if true then return undefined, for performance reasons
+ * @param disableUpdates if true then return undefined, for performance reasons so that clients can
+ * avoid using hooks conditionally but opt out of updates
  * @param isTimestampScale override componentId scoping for timestamp based charts
  */
 export function useHoverValue(args: {
