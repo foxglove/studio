@@ -198,7 +198,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
       this.#channelsByTopic.clear();
       this.#servicesByName.clear();
       this.#serviceResponseCbs.clear();
-      this.#parameters.clear();
+      this.#parameters = new Map();
       this.#profile = undefined;
       this.#publishedTopics = undefined;
       this.#subscribedTopics = undefined;
@@ -573,7 +573,9 @@ export default class FoxgloveWebSocketPlayer implements Player {
         this.#parameters = new Map(mappedParameters.map((param) => [param.name, param.value]));
       } else {
         // Update params
-        mappedParameters.forEach((param) => this.#parameters.set(param.name, param.value));
+        const updatedParameters = new Map(this.#parameters);
+        mappedParameters.forEach((param) => updatedParameters.set(param.name, param.value));
+        this.#parameters = new Map(updatedParameters);
       }
 
       this.#emitState();
@@ -787,7 +789,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
         // Always copy topic stats since message counts and timestamps are being updated
         topicStats: new Map(this.#topicsStats),
         datatypes: this.#datatypes,
-        parameters: new Map(this.#parameters),
+        parameters: this.#parameters,
         publishedTopics: this.#publishedTopics,
         subscribedTopics: this.#subscribedTopics,
         services: this.#advertisedServices,
@@ -1180,7 +1182,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
     this.#receivedBytes = 0;
     this.#hasReceivedMessage = false;
     this.#problems.clear();
-    this.#parameters.clear();
+    this.#parameters = new Map();
     this.#fetchedAssets.clear();
     for (const [requestId, callback] of this.#fetchAssetRequests) {
       callback({
