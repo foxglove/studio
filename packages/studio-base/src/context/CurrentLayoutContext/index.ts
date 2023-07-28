@@ -39,7 +39,6 @@ export type LayoutID = string & { __brand: "LayoutID" };
 
 export type SelectedLayout = {
   id: LayoutID;
-  loading?: boolean;
   data: LayoutData | undefined;
   name?: string;
   edited?: boolean;
