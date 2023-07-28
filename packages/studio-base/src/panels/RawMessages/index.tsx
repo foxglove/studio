@@ -155,7 +155,7 @@ function RawMessages(props: Props) {
   const nodes = useMemo(() => {
     if (baseItem) {
       const data = dataWithoutWrappingArray(baseItem.queriedData.map(({ value }) => value));
-      return generateDeepKeyPaths(maybeDeepParse(data), 5, 0);
+      return generateDeepKeyPaths(maybeDeepParse(data), 5);
     } else {
       return new Set<string>();
     }

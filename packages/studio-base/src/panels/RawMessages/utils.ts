@@ -69,11 +69,7 @@ export function toggleExpansion(
 /**
  * Recursively traverses all keypaths in obj, for use in JSON tree expansion.
  */
-export function generateDeepKeyPaths(
-  obj: unknown,
-  maxArrayLength: number,
-  minDepth: number,
-): Set<string> {
+export function generateDeepKeyPaths(obj: unknown, maxArrayLength: number): Set<string> {
   const keys = new Set<string>();
   const recurseMapKeys = (path: string[], nestedObj: unknown) => {
     if (nestedObj == undefined) {
@@ -92,7 +88,7 @@ export function generateDeepKeyPaths(
       return;
     }
 
-    if (path.length > minDepth) {
+    if (path.length > 0) {
       keys.add(path.join("~"));
     }
 
