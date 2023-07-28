@@ -144,7 +144,7 @@ export default function CurrentLayoutProvider({
   );
 
   const setCurrentLayout = useCallback(
-    (newLayout: SelectedLayout) => {
+    (newLayout: SelectedLayout | undefined) => {
       setLayoutState({
         sharedPanelState: {},
         selectedLayout: newLayout,
