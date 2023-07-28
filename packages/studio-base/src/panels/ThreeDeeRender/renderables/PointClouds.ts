@@ -340,10 +340,6 @@ export class PointCloudHistoryRenderable extends Renderable<PointCloudHistoryUse
     const material = this.userData.material;
     const stixelMaterial = this.userData.stixelMaterial;
     const topic = this.userData.topic;
-    const isDecay = settings.decayTime > 0;
-    if (!isDecay) {
-      return;
-    }
 
     // Push a new (empty) entry to the history of points
     const geometry = createGeometry(topic, THREE.StaticDrawUsage);
@@ -904,13 +900,13 @@ export class PointClouds extends SceneExtension<PointCloudHistoryRenderable> {
       this.renderables.set(topic, renderable);
     }
 
-    renderable.pushHistory(pointCloud, originalMessage, renderable.userData.settings, receiveTime);
-    renderable.updatePointCloud(
-      pointCloud,
-      originalMessage,
-      renderable.userData.settings,
-      receiveTime,
-    );
+    const { settings } = renderable.userData;
+
+    if (settings.decayTime > 0) {
+      renderable.pushHistory(pointCloud, originalMessage, settings, receiveTime);
+    }
+
+    renderable.updatePointCloud(pointCloud, originalMessage, settings, receiveTime);
   }
 }
 
