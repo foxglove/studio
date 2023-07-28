@@ -320,26 +320,22 @@ function NodePlayground(props: Props) {
     [scriptBackStack],
   );
 
-  const askSaveOnLeave = useCallback(() => {
+  const saveOnLeave = useCallback(() => {
     if (isNodeSaved) {
       return;
     }
-    const response = confirm(
-      `You have unsaved changes in your user script: ${currentScript.filePath}. Would you like to save?`,
-    );
-    if (response) {
-      saveCurrentNode();
-    }
-  }, [isNodeSaved, saveCurrentNode, currentScript?.filePath]);
+    // automatically save script on panel leave
+    saveCurrentNode();
+  }, [isNodeSaved, saveCurrentNode]);
 
   // The cleanup function below should only run when this component unmounts.
   // We're using a ref here so that the cleanup useEffect doesn't run whenever one of the callback
   // dependencies changes, only when the component unmounts and with the most up-to-date callback.
-  const askSaveOnLeaveRef = useRef(askSaveOnLeave);
-  askSaveOnLeaveRef.current = askSaveOnLeave;
+  const saveOnLeaveRef = useRef(saveOnLeave);
+  saveOnLeaveRef.current = saveOnLeave;
   useEffect(() => {
     return () => {
-      askSaveOnLeaveRef.current();
+      saveOnLeaveRef.current();
     };
   }, []);
 
