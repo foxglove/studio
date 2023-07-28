@@ -37,21 +37,21 @@ export type SharedPanelState = RenderState["sharedPanelState"];
 
 export type LayoutID = string & { __brand: "LayoutID" };
 
+export type SelectedLayout = {
+  id: LayoutID;
+  loading?: boolean;
+  data: LayoutData | undefined;
+  name?: string;
+  edited?: boolean;
+};
+
 export type LayoutState = Readonly<{
   /**
    * Transient state shared between panels, keyed by panel type.
    */
   sharedPanelState?: Record<PanelType, SharedPanelState>;
 
-  selectedLayout:
-    | {
-        id: LayoutID;
-        loading?: boolean;
-        data: LayoutData | undefined;
-        name?: string;
-        edited?: boolean;
-      }
-    | undefined;
+  selectedLayout: SelectedLayout | undefined;
 }>;
 
 /**
@@ -83,9 +83,9 @@ export interface ICurrentLayout {
     getCurrentLayoutState: () => LayoutState;
 
     /**
-     * Override any current layout data. This will reset the layout state
+     * Override any current layout. This will reset the layout state
      */
-    setCurrentLayoutData: (newData: LayoutData) => void;
+    setCurrentLayout: (newLayout: SelectedLayout) => void;
 
     /**
      * Update the transient state associated with a particular panel type.

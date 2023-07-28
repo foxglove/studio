@@ -14,8 +14,8 @@ import { VariableValue } from "@foxglove/studio";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 import CurrentLayoutContext, {
   ICurrentLayout,
-  LayoutID,
   LayoutState,
+  SelectedLayout,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import {
   AddPanelPayload,
@@ -24,7 +24,6 @@ import {
   CreateTabPanelPayload,
   DropPanelPayload,
   EndDragPayload,
-  LayoutData,
   MoveTabPayload,
   PanelsActions,
   SaveConfigsPayload,
@@ -144,14 +143,11 @@ export default function CurrentLayoutProvider({
     [setLayoutState],
   );
 
-  const setCurrentLayoutData = useCallback(
-    (newData: LayoutData) => {
+  const setCurrentLayout = useCallback(
+    (newLayout: SelectedLayout) => {
       setLayoutState({
         sharedPanelState: {},
-        selectedLayout: {
-          id: "default" as LayoutID,
-          data: newData,
-        },
+        selectedLayout: newLayout,
       });
     },
     [setLayoutState],
@@ -177,7 +173,7 @@ export default function CurrentLayoutProvider({
   const actions: ICurrentLayout["actions"] = useMemo(
     () => ({
       getCurrentLayoutState: () => layoutStateRef.current,
-      setCurrentLayoutData,
+      setCurrentLayout,
 
       updateSharedPanelState,
 
@@ -249,7 +245,7 @@ export default function CurrentLayoutProvider({
       startDrag: (payload: StartDragPayload) => performAction({ type: "START_DRAG", payload }),
       endDrag: (payload: EndDragPayload) => performAction({ type: "END_DRAG", payload }),
     }),
-    [analytics, performAction, setCurrentLayoutData, setSelectedPanelIds, updateSharedPanelState],
+    [analytics, performAction, setCurrentLayout, setSelectedPanelIds, updateSharedPanelState],
   );
 
   const value: ICurrentLayout = useShallowMemo({

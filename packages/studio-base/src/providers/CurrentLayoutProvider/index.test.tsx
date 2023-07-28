@@ -10,6 +10,7 @@ import { useEffect } from "react";
 
 import {
   CurrentLayoutActions,
+  LayoutID,
   LayoutState,
   useCurrentLayoutActions,
   useCurrentLayoutSelector,
@@ -31,13 +32,16 @@ describe("CurrentLayoutProvider", () => {
       }, [layoutState]);
 
       useEffect(() => {
-        actions.setCurrentLayoutData({
-          configById: { "Foo!bar": { setting: 1 } },
-          globalVariables: { var: "hello" },
-          layout: "Foo!bar",
-          playbackConfig: { speed: 0.1 },
-          userNodes: { node1: { name: "node", sourceCode: "node()" } },
-          version: MAX_SUPPORTED_LAYOUT_VERSION + 1,
+        actions.setCurrentLayout({
+          id: "foo" as LayoutID,
+          data: {
+            configById: { "Foo!bar": { setting: 1 } },
+            globalVariables: { var: "hello" },
+            layout: "Foo!bar",
+            playbackConfig: { speed: 0.1 },
+            userNodes: { node1: { name: "node", sourceCode: "node()" } },
+            version: MAX_SUPPORTED_LAYOUT_VERSION + 1,
+          },
         });
       }, [actions]);
 

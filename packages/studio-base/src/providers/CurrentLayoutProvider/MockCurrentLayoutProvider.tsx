@@ -9,6 +9,7 @@ import CurrentLayoutContext, {
   ICurrentLayout,
   LayoutID,
   LayoutState,
+  SelectedLayout,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import {
   PanelsActions,
@@ -63,13 +64,10 @@ export default function MockCurrentLayoutProvider({
     }
   }, []);
 
-  const setCurrentLayoutData = useCallback(
-    (newData: LayoutData) => {
+  const setCurrentLayout = useCallback(
+    (newLayout: SelectedLayout) => {
       setLayoutState({
-        selectedLayout: {
-          id: "default" as LayoutID,
-          data: newData,
-        },
+        selectedLayout: newLayout,
       });
     },
     [setLayoutState],
@@ -106,7 +104,7 @@ export default function MockCurrentLayoutProvider({
     () => ({
       getCurrentLayoutState: () => layoutStateRef.current,
 
-      setCurrentLayoutData,
+      setCurrentLayout,
       updateSharedPanelState,
 
       savePanelConfigs: (payload) => performAction({ type: "SAVE_PANEL_CONFIGS", payload }),
@@ -128,7 +126,7 @@ export default function MockCurrentLayoutProvider({
       startDrag: (payload) => performAction({ type: "START_DRAG", payload }),
       endDrag: (payload) => performAction({ type: "END_DRAG", payload }),
     }),
-    [performAction, setCurrentLayoutData, updateSharedPanelState],
+    [performAction, setCurrentLayout, updateSharedPanelState],
   );
 
   const value: ICurrentLayout = useShallowMemo({
