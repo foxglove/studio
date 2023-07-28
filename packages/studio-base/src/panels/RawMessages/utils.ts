@@ -18,6 +18,7 @@ import { foxgloveMessageSchemas } from "@foxglove/schemas/internal";
 import { diffLabels, DiffObject } from "@foxglove/studio-base/panels/RawMessages/getDiff";
 
 import type { NodeExpansion } from "./types";
+import { NodeState } from "./types";
 
 export const DATA_ARRAY_PREVIEW_LIMIT = 20;
 const ROS1_COMMON_MSG_PACKAGES = new Set(Object.keys(ros1).map((key) => key.split("/")[0]!));
@@ -32,8 +33,8 @@ function isTypedArray(obj: unknown) {
   );
 }
 
-function invert(value: "e" | "c"): "e" | "c" {
-  return value === "e" ? "c" : "e";
+function invert(value: NodeState): NodeState {
+  return value === NodeState.Expanded ? NodeState.Collapsed : NodeState.Expanded;
 }
 
 /*
@@ -41,22 +42,27 @@ function invert(value: "e" | "c"): "e" | "c" {
  */
 export function toggleExpansion(
   state: NodeExpansion,
-  leaves: Set<string>,
+  paths: Set<string>,
   key: string,
 ): NodeExpansion {
   if (state === "all" || state === "none") {
-    const next = state === "all" ? "e" : "c";
+    const next = state === "all" ? NodeState.Expanded : NodeState.Collapsed;
     const nextState: NodeExpansion = {};
-    for (const leaf of leaves) {
+    for (const leaf of paths) {
+      // Implicitly expand all descendants when toggling collapsed root node
+      if (next === NodeState.Collapsed && leaf.endsWith(key)) {
+        continue;
+      }
       nextState[leaf] = leaf === key ? invert(next) : next;
     }
     return nextState;
   }
 
   const prev = state[key];
+  const next = prev != undefined ? invert(prev) : NodeState.Collapsed;
   return {
     ...state,
-    [key]: prev != undefined ? invert(prev) : "c",
+    [key]: next,
   };
 }
 

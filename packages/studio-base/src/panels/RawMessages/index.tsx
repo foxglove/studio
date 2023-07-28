@@ -152,7 +152,7 @@ function RawMessages(props: Props) {
   const baseItem = inTimetickDiffMode ? prevTickObj : currTickObj;
   const diffItem = inTimetickDiffMode ? currTickObj : diffTopicObj;
 
-  const leaves = useMemo(() => {
+  const nodes = useMemo(() => {
     if (baseItem) {
       const data = dataWithoutWrappingArray(baseItem.queriedData.map(({ value }) => value));
       return generateDeepKeyPaths(maybeDeepParse(data), 5, 0);
@@ -200,9 +200,9 @@ function RawMessages(props: Props) {
 
   const onLabelClick = useCallback(
     (keypath: (string | number)[]) => {
-      setExpansion((old) => toggleExpansion(old ?? "all", leaves, keypath.join("~")));
+      setExpansion((old) => toggleExpansion(old ?? "all", nodes, keypath.join("~")));
     },
-    [leaves],
+    [nodes],
   );
 
   useEffect(() => {
@@ -357,7 +357,7 @@ function RawMessages(props: Props) {
         return true;
       }
 
-      return leaves.has(joinedPath);
+      return true;
     };
 
     if (topicPath.length === 0) {
@@ -598,7 +598,6 @@ function RawMessages(props: Props) {
       </Stack>
     );
   }, [
-    leaves,
     baseItem,
     classes.big,
     classes.topic,
