@@ -19,6 +19,7 @@ import {
   SettingsTreeFields,
 } from "@foxglove/studio";
 import { eulerToQuaternion } from "@foxglove/studio-base/util/geometry";
+import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
 
 import { RenderableCube } from "./markers/RenderableCube";
 import { RenderableCylinder } from "./markers/RenderableCylinder";
@@ -78,8 +79,9 @@ export type LayerSettingsUrdf = BaseSettings & {
 
 export type LayerSettingsCustomUrdf = CustomLayerSettings & {
   layerId: "foxglove.Urdf";
-  sourceType: "url" | "param" | "topic";
+  sourceType: "url" | "filePath" | "param" | "topic";
   url?: string;
+  filePath?: string;
   parameter?: string;
   topic?: string;
   framePrefix: string;
@@ -102,6 +104,7 @@ const DEFAULT_CUSTOM_SETTINGS: LayerSettingsCustomUrdf = {
   layerId: LAYER_ID,
   sourceType: "url",
   url: "",
+  filePath: "",
   parameter: "",
   topic: "",
   framePrefix: "",
@@ -119,6 +122,7 @@ export type UrdfUserData = BaseUserData & {
   settings: LayerSettingsUrdf | LayerSettingsCustomUrdf;
   fetching?: { url: string; control: AbortController };
   url: string | undefined;
+  filePath: string | undefined;
   urdf: string | undefined;
   sourceType: LayerSettingsCustomUrdf["sourceType"] | undefined;
   parameter: string | undefined;
@@ -306,6 +310,11 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
                 value: "url",
               },
               {
+                label: "File Path",
+                value: "filePath",
+                disabled: !isDesktopApp(),
+              },
+              {
                 label: "Parameter",
                 value: "param",
               },
@@ -323,6 +332,16 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
                   placeholder: "package://",
                   help: "package:// URL or http(s) URL pointing to a Unified Robot Description Format (URDF) XML file",
                   value: config.url ?? DEFAULT_CUSTOM_SETTINGS.url,
+                }
+              : undefined,
+          filePath:
+            config.sourceType === "filePath"
+              ? {
+                  label: "File Path",
+                  input: "string",
+                  help: "Absolute file path (desktop app only)",
+                  value: config.filePath ?? DEFAULT_CUSTOM_SETTINGS.filePath,
+                  disabled: !isDesktopApp(),
                 }
               : undefined,
           topic:
@@ -558,7 +577,7 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
       const renderable = this.renderables.get(instanceId);
       let urdf = renderable?.userData.urdf;
 
-      if (field === "url") {
+      if (field === "url" || field === "filePath") {
         this.#debouncedLoadUrdf({ instanceId, urdf: undefined });
       } else if (field === "parameter") {
         urdf = this.renderer.parameters?.get(action.payload.value as string) as string | undefined;
@@ -674,7 +693,11 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     this.renderer.settings.errors.remove(renderable.userData.settingsPath, VALID_SRC_ERR);
 
     // Check if this URL has already been fetched
-    if (renderable.userData.url === url) {
+    if (
+      (renderable.userData.sourceType === "url" && renderable.userData.url === url) ||
+      (renderable.userData.sourceType === "filePath" &&
+        `file://${renderable.userData.filePath}` === url)
+    ) {
       return;
     }
 
@@ -739,6 +762,7 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     const settingsPath = isTopicOrParam ? ["topics", instanceId] : ["layers", instanceId];
     const sourceType = (settings as Partial<LayerSettingsCustomUrdf>).sourceType;
     const url = (settings as Partial<LayerSettingsCustomUrdf>).url;
+    const filePath = (settings as Partial<LayerSettingsCustomUrdf>).filePath;
     const parameter = (settings as Partial<LayerSettingsCustomUrdf>).parameter;
     const topic = (settings as Partial<LayerSettingsCustomUrdf>).topic;
     const framePrefix = (settings as Partial<LayerSettingsCustomUrdf>).framePrefix;
@@ -760,6 +784,7 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
       renderable = new UrdfRenderable(instanceId, this.renderer, {
         urdf,
         url: urdf != undefined ? url : undefined,
+        filePath: urdf != undefined ? filePath : undefined,
         fetching: undefined,
         renderables: new Map(),
         receiveTime: 0n,
@@ -778,6 +803,8 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
 
     renderable.userData.urdf = urdf;
     renderable.userData.url = urdf != undefined && sourceType === "url" ? url : undefined;
+    renderable.userData.filePath =
+      urdf != undefined && sourceType === "filePath" ? filePath : undefined;
     renderable.userData.sourceType = sourceType;
     renderable.userData.topic = topic;
     renderable.userData.parameter = parameter;
@@ -788,10 +815,16 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
       renderable.removeChildren();
     }
 
-    if (sourceType === "url" && !urdf && url != undefined) {
-      // Fetch the URDF from the URL if we have one
-      this.#fetchUrdf(instanceId, url);
-      return;
+    if (!urdf) {
+      if (sourceType === "url" && url != undefined) {
+        // Fetch the URDF from the URL
+        this.#fetchUrdf(instanceId, url);
+        return;
+      } else if (sourceType === "filePath" && filePath != undefined) {
+        // Fetch the URDF from a local file
+        this.#fetchUrdf(instanceId, `file://${filePath}`);
+        return;
+      }
     }
 
     // At this point we have to have a URDF.
@@ -799,6 +832,8 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
       const path = renderable.userData.settingsPath;
       if (sourceType === "url") {
         this.renderer.settings.errors.add(path, VALID_SRC_ERR, `Invalid URDF URL: "${url}"`);
+      } else if (sourceType === "filePath") {
+        this.renderer.settings.errors.add(path, VALID_SRC_ERR, `Invalid File Path: "${filePath}"`);
       } else if (sourceType === "param") {
         this.renderer.settings.errors.add(path, VALID_SRC_ERR, `Invalid Parameter: "${parameter}"`);
       } else if (sourceType === "topic") {
