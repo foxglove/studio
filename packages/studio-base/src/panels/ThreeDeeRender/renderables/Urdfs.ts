@@ -8,6 +8,7 @@ import { debounce, maxBy } from "lodash";
 import * as THREE from "three";
 import { v4 as uuidv4 } from "uuid";
 
+import { filterMap } from "@foxglove/den/collection";
 import { UrdfGeometryMesh, UrdfRobot, UrdfVisual, parseRobot, UrdfJoint } from "@foxglove/den/urdf";
 import Logger from "@foxglove/log";
 import { toNanoSec } from "@foxglove/rostime";
@@ -78,9 +79,9 @@ export type LayerSettingsUrdf = BaseSettings & {
 export type LayerSettingsCustomUrdf = CustomLayerSettings & {
   layerId: "foxglove.Urdf";
   sourceType: "url" | "param" | "topic";
-  url: string;
-  parameter: string;
-  topic: string;
+  url?: string;
+  parameter?: string;
+  topic?: string;
   framePrefix: string;
   displayMode: "auto" | "visual" | "collision";
 };
@@ -244,7 +245,7 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     if (topic != undefined) {
       const config = (this.renderer.config.topics[TOPIC_NAME] ?? {}) as Partial<LayerSettingsUrdf>;
       const fields: SettingsTreeFields = {
-        displayMode: { ...displayMode, value: config.displayMode ?? "auto" },
+        displayMode: { ...displayMode, value: config.displayMode ?? DEFAULT_SETTINGS.displayMode },
       };
       entries.push({
         path: ["topics", TOPIC_NAME],
@@ -269,7 +270,7 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
       const config = (this.renderer.config.topics[PARAM_KEY] ?? {}) as Partial<LayerSettingsUrdf>;
 
       const fields: SettingsTreeFields = {
-        displayMode: { ...displayMode, value: config.displayMode ?? "auto" },
+        displayMode: { ...displayMode, value: config.displayMode ?? DEFAULT_SETTINGS.displayMode },
       };
 
       entries.push({
@@ -298,7 +299,7 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
           sourceType: {
             label: "Source",
             input: "select",
-            value: config.sourceType ?? "url",
+            value: config.sourceType ?? DEFAULT_CUSTOM_SETTINGS.sourceType,
             options: [
               {
                 label: "From URL",
@@ -321,7 +322,7 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
                   input: "string",
                   placeholder: "package://",
                   help: "package:// URL or http(s) URL pointing to a Unified Robot Description Format (URDF) XML file",
-                  value: config.url ?? "",
+                  value: config.url ?? DEFAULT_CUSTOM_SETTINGS.url,
                 }
               : undefined,
           topic:
@@ -329,10 +330,10 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
               ? {
                   label: "Topic",
                   input: "autocomplete",
-                  value: config.topic ?? "",
-                  items: Array.from(this.renderer.topics ?? [])
-                    .filter((t) => URDF_TOPIC_SCHEMAS.has(t.schemaName))
-                    .map((t) => t.name),
+                  value: config.topic ?? DEFAULT_CUSTOM_SETTINGS.topic,
+                  items: filterMap(this.renderer.topics ?? [], (_topic) =>
+                    URDF_TOPIC_SCHEMAS.has(_topic.schemaName) ? _topic.name : undefined,
+                  ),
                 }
               : undefined,
           parameter:
@@ -340,20 +341,27 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
               ? {
                   label: "Parameter",
                   input: "autocomplete",
-                  value: config.parameter ?? "",
-                  items: Array.from(this.renderer.parameters ?? [])
-                    .filter(([_paramName, value]) => typeof value === "string")
-                    .map(([paramName, _value]) => paramName),
+                  value: config.parameter ?? DEFAULT_CUSTOM_SETTINGS.parameter,
+                  items: filterMap(this.renderer.parameters ?? [], ([paramName, value]) =>
+                    typeof value === "string" ? paramName : undefined,
+                  ),
                 }
               : undefined,
-          label: { label: "Label", input: "string", value: config.label ?? "URDF" },
+          label: {
+            label: "Label",
+            input: "string",
+            value: config.label ?? DEFAULT_CUSTOM_SETTINGS.label,
+          },
           framePrefix: {
             label: "Frame prefix",
             input: "string",
             help: "Prefix to apply to all frame names (also often called tfPrefix)",
             value: config.framePrefix ?? "",
           },
-          displayMode: { ...displayMode, value: config.displayMode ?? "auto" },
+          displayMode: {
+            ...displayMode,
+            value: config.displayMode ?? DEFAULT_CUSTOM_SETTINGS.displayMode,
+          },
         };
 
         entries.push({
@@ -577,11 +585,12 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     }
 
     // Update custom layer URDFs that subscribe to this topic.
-    const topicCustomLayers = Array.from(this.renderables.entries()).filter(
-      ([_instanceId, renderable]) =>
-        renderable.userData.sourceType === "topic" && renderable.userData.topic === topic,
+    const subscribedInstanceIds = filterMap(this.renderables, ([instanceId, renderable]) =>
+      renderable.userData.sourceType === "topic" && renderable.userData.topic === topic
+        ? instanceId
+        : undefined,
     );
-    for (const [instanceId] of topicCustomLayers) {
+    for (const instanceId of subscribedInstanceIds) {
       this.#loadUrdf({ instanceId, urdf: robotDescription });
     }
   };
@@ -733,7 +742,8 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     const parameter = (settings as Partial<LayerSettingsCustomUrdf>).parameter;
     const topic = (settings as Partial<LayerSettingsCustomUrdf>).topic;
     const framePrefix = (settings as Partial<LayerSettingsCustomUrdf>).framePrefix;
-    const label = (settings as Partial<LayerSettingsCustomUrdf>).label ?? "URDF";
+    const label =
+      (settings as Partial<LayerSettingsCustomUrdf>).label ?? DEFAULT_CUSTOM_SETTINGS.label;
 
     if (label !== renderable?.userData.settings.label) {
       // Label has changed, update the config
