@@ -9,7 +9,12 @@ import { useLatest } from "react-use";
 
 import { filterMap } from "@foxglove/den/collection";
 import { useShallowMemo } from "@foxglove/hooks";
-import { isGreaterThan, isLessThan, isTimeInRangeInclusive, subtract } from "@foxglove/rostime";
+import {
+  isLessThan,
+  isTimeInRangeInclusive,
+  compare as compareTime,
+  subtract,
+} from "@foxglove/rostime";
 import { Immutable, Subscription, Time } from "@foxglove/studio";
 import { useMessageReducer } from "@foxglove/studio-base/PanelAPI";
 import parseRosPath, {
@@ -29,7 +34,13 @@ import { Bounds, makeInvertedBounds, unionBounds } from "@foxglove/studio-base/t
 import { getTimestampForMessage } from "@foxglove/studio-base/util/time";
 
 import { calculateDatasetBounds } from "./datasets";
-import { BasePlotPath, DataSet, PlotDataByPath, PlotPath, PlotXAxisVal } from "./internalTypes";
+import {
+  BasePlotPath,
+  DataSet,
+  PlotDataByPath,
+  PlotPath,
+  PlotXAxisVal,
+} from "./internalTypes";
 import * as maps from "./maps";
 import {
   EmptyPlotData,
@@ -123,6 +134,30 @@ function makeInitialState(): State {
     xAxisVal: "timestamp",
     xAxisPath: undefined,
   };
+}
+
+function findInsertion<T>(compare: (data: T) => number, list: readonly T[]): number | undefined {
+  if (list.length === 0) {
+    return 0;
+  }
+
+  const search = (i0: number, i1: number): number => {
+    const length = i1 - i0 + 1;
+    const mid = Math.trunc(length / 2) + i0;
+    const pivot = list[mid];
+    if (pivot == undefined) {
+      return 0;
+    }
+
+    const compared = compare(pivot);
+    if (length === 1) {
+      return compared <= 0 ? mid : mid + 1;
+    }
+
+    return compared > 0 ? search(mid, i1) : search(i0, mid - 1);
+  };
+
+  return search(0, list.length - 1);
 }
 
 /**
@@ -381,9 +416,13 @@ export function usePlotPanelData(params: Params): Immutable<{
         const topic = parseRosPath(path.value)?.topicName;
         const end = topic ? allFrames[topic]?.at(-1)?.receiveTime : undefined;
         if (end) {
+          const index = findInsertion<typeof ds.data[0]>(
+            (datum) => compareTime(end, datum.receiveTime),
+            ds.data,
+          );
           return {
             ...ds,
-            data: ds.data.filter((datum) => isGreaterThan(datum.receiveTime, end)),
+            data: ds.data.slice(index),
           };
         } else {
           return ds;
