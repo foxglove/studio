@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { difference } from "lodash";
+import { Opaque } from "type-fest";
 
 import {
   Immutable,
@@ -13,8 +14,7 @@ import {
 import { Topic as PlayerTopic } from "@foxglove/studio-base/players/types";
 
 // Branded string to ensure that users go through the `converterKey` function to compute a lookup key
-type Brand<K, T> = K & { __brand: T };
-type ConverterKey = Brand<string, "ConverterKey">;
+type ConverterKey = Opaque<string, "ConverterKey">;
 
 type MessageConverter = RegisterMessageConverterArgs<unknown>;
 

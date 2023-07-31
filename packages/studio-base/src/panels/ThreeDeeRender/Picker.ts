@@ -7,8 +7,8 @@
 // - bzztbomb https://github.com/bzztbomb
 // - jfaust https://github.com/jfaust
 
+import assert from "assert";
 import * as THREE from "three";
-import { assert } from "ts-essentials";
 
 import type { Renderable } from "./Renderable";
 

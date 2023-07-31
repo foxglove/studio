@@ -15,7 +15,7 @@ import { Immutable } from "immer";
 import { omit } from "lodash";
 import { useEffect, useRef, useState } from "react";
 import shallowequal from "shallowequal";
-import { Writable } from "ts-essentials";
+import { Writable } from "type-fest";
 import { createStore } from "zustand";
 
 import { Time, isLessThan } from "@foxglove/rostime";

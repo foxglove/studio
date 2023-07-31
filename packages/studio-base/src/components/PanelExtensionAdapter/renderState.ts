@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import memoizeWeak from "memoize-weak";
-import { Writable } from "ts-essentials";
+import { Writable } from "type-fest";
 
 import { filterMap } from "@foxglove/den/collection";
 import { compare, toSec } from "@foxglove/rostime";

@@ -4,7 +4,7 @@
 
 import { set, unset } from "lodash";
 import * as THREE from "three";
-import { DeepPartial } from "ts-essentials";
+import { PartialDeep } from "type-fest";
 
 import { MessageEvent, SettingsTreeAction } from "@foxglove/studio";
 

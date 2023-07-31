@@ -4,7 +4,7 @@
 
 import { set } from "lodash";
 import { useCallback, useEffect, useLayoutEffect, useState } from "react";
-import { DeepPartial } from "ts-essentials";
+import { PartialDeep } from "type-fest";
 
 import { ros1 } from "@foxglove/rosmsg-msgs-common";
 import {

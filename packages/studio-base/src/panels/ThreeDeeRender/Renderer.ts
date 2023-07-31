@@ -2,11 +2,12 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import assert from "assert";
 import EventEmitter from "eventemitter3";
 import i18next from "i18next";
 import { produce } from "immer";
 import * as THREE from "three";
-import { DeepPartial, assert } from "ts-essentials";
+import { PartialDeep } from "type-fest";
 import { v4 as uuidv4 } from "uuid";
 
 import Logger from "@foxglove/log";
@@ -890,10 +891,10 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
   public addMessageEvent(messageEvent: Readonly<MessageEvent>): void {
     const { message } = messageEvent;
 
-    const maybeHasHeader = message as DeepPartial<{ header: Header }>;
-    const maybeHasMarkers = message as DeepPartial<MarkerArray>;
-    const maybeHasEntities = message as DeepPartial<SceneUpdate>;
-    const maybeHasFrameId = message as DeepPartial<Header>;
+    const maybeHasHeader = message as PartialDeep<{ header: Header }>;
+    const maybeHasMarkers = message as PartialDeep<MarkerArray>;
+    const maybeHasEntities = message as PartialDeep<SceneUpdate>;
+    const maybeHasFrameId = message as PartialDeep<Header>;
 
     // Extract coordinate frame IDs from all incoming messages
     if (maybeHasHeader.header) {
@@ -1161,13 +1162,13 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     this.emit("renderablesClicked", selections, cursorCoords, this);
   };
 
-  #handleFrameTransform = ({ message }: MessageEvent<DeepPartial<FrameTransform>>): void => {
+  #handleFrameTransform = ({ message }: MessageEvent<PartialDeep<FrameTransform>>): void => {
     // foxglove.FrameTransform - Ingest this single transform into our TF tree
     const transform = normalizeFrameTransform(message);
     this.#addFrameTransform(transform);
   };
 
-  #handleFrameTransforms = ({ message }: MessageEvent<DeepPartial<FrameTransforms>>): void => {
+  #handleFrameTransforms = ({ message }: MessageEvent<PartialDeep<FrameTransforms>>): void => {
     // foxglove.FrameTransforms - Ingest the list of transforms into our TF tree
     const frameTransforms = normalizeFrameTransforms(message);
     for (const transform of frameTransforms.transforms) {
@@ -1175,7 +1176,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     }
   };
 
-  #handleTFMessage = ({ message }: MessageEvent<DeepPartial<TFMessage>>): void => {
+  #handleTFMessage = ({ message }: MessageEvent<PartialDeep<TFMessage>>): void => {
     // tf2_msgs/TFMessage - Ingest the list of transforms into our TF tree
     const tfMessage = normalizeTFMessage(message);
     for (const tf of tfMessage.transforms) {
@@ -1183,7 +1184,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     }
   };
 
-  #handleTransformStamped = ({ message }: MessageEvent<DeepPartial<TransformStamped>>): void => {
+  #handleTransformStamped = ({ message }: MessageEvent<PartialDeep<TransformStamped>>): void => {
     // geometry_msgs/TransformStamped - Ingest this single transform into our TF tree
     const tf = normalizeTransformStamped(message);
     this.#addTransformMessage(tf);

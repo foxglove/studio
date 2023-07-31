@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { StoryObj } from "@storybook/react";
-import { DeepWritable } from "ts-essentials";
+import { WritableDeep } from "type-fest";
 
 import { MessageEvent } from "@foxglove/studio";
 import { Topic } from "@foxglove/studio-base/players/types";
@@ -26,7 +26,7 @@ export const SphereListPointsTransform: StoryObj = {
       id: string,
       color: string,
       scale: number,
-    ): MessageEvent<DeepWritable<SphereListMarker>> {
+    ): MessageEvent<WritableDeep<SphereListMarker>> {
       return {
         topic: "/sphere",
         receiveTime: { sec: 10, nsec: 0 },

@@ -6,7 +6,7 @@ import { cloneDeep, isEqual, merge } from "lodash";
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import { useLatest } from "react-use";
-import { DeepPartial } from "ts-essentials";
+import { PartialDeep } from "type-fest";
 import { useDebouncedCallback } from "use-debounce";
 
 import Logger from "@foxglove/log";

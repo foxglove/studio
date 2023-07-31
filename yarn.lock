@@ -2761,10 +2761,10 @@ __metadata:
     text-metrics: 3.0.0
     three: "patch:three@0.149.0#../../patches/three.patch"
     tinycolor2: 1.6.0
-    ts-essentials: 9.3.2
     ts-key-enum: 2.0.12
     ts-loader: 9.4.4
     tss-react: 4.8.8
+    type-fest: 4.1.0
     typescript: 5.1.6
     url-search-params: 1.1.0
     use-debounce: 9.0.4
@@ -19856,15 +19856,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ts-essentials@npm:9.3.2":
-  version: 9.3.2
-  resolution: "ts-essentials@npm:9.3.2"
-  peerDependencies:
-    typescript: ">=4.1.0"
-  checksum: 88726b3f9bdc8f59f9a998bb925c989268d7e2f24d29ac13545e457d3ac8ee5472c78990eaa415b4c58244d55b989985a999345d6845055f5a58bb0f098c6f44
-  languageName: node
-  linkType: hard
-
 "ts-key-enum@npm:2.0.12":
   version: 2.0.12
   resolution: "ts-key-enum@npm:2.0.12"
@@ -20026,6 +20017,13 @@ __metadata:
   version: 4.0.8
   resolution: "type-detect@npm:4.0.8"
   checksum: 62b5628bff67c0eb0b66afa371bd73e230399a8d2ad30d852716efcc4656a7516904570cd8631a49a3ce57c10225adf5d0cbdcb47f6b0255fe6557c453925a15
+  languageName: node
+  linkType: hard
+
+"type-fest@npm:4.1.0":
+  version: 4.1.0
+  resolution: "type-fest@npm:4.1.0"
+  checksum: a9cfa9b70abaa96d7e80709aeb2197a372c2caa54d134afdb8ae955de9457aba04a71d17d68dccbb745c96f4c5bfd372da1222d8b44d70f4809074620016507c
   languageName: node
   linkType: hard
 

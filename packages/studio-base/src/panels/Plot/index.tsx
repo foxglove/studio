@@ -14,7 +14,7 @@
 import { compact, isNumber, uniq } from "lodash";
 import { ComponentProps, useCallback, useEffect, useMemo, useState } from "react";
 import { useLatest } from "react-use";
-import { DeepWritable } from "ts-essentials";
+import { WritableDeep } from "type-fest";
 
 import {
   Time,
@@ -87,11 +87,6 @@ function selectCurrentTime(ctx: MessagePipelineContext) {
 
 function selectEndTime(ctx: MessagePipelineContext) {
   return ctx.playerState.activeData?.endTime;
-}
-
-// Hack until we can make all the downstream chart types immutable.
-function castWritable<T>(t: T) {
-  return t as DeepWritable<T>;
 }
 
 function Plot(props: Props) {
@@ -274,7 +269,7 @@ function Plot(props: Props) {
           <PlotChart
             currentTime={currentTimeSinceStart}
             datasetBounds={datasetBounds}
-            datasets={castWritable(datasets)}
+            datasets={datasets as WritableDeep<typeof datasets>}
             defaultView={defaultView}
             isSynced={xAxisVal === "timestamp" && isSynced}
             maxYValue={parseFloat((maxYValue ?? "").toString())}

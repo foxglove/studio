@@ -8,11 +8,11 @@
 /// <reference types="chartjs-plugin-datalabels" />
 /// <reference types="@foxglove/chartjs-plugin-zoom" />
 
+import assert from "assert";
 import { ChartOptions } from "chart.js";
 import Hammer from "hammerjs";
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { useMountedState } from "react-use";
-import { assert } from "ts-essentials";
 import { v4 as uuidv4 } from "uuid";
 
 import { type ZoomPluginOptions } from "@foxglove/chartjs-plugin-zoom/types/options";

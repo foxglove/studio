@@ -4,6 +4,7 @@
 
 import { t } from "i18next";
 import * as THREE from "three";
+import { Opaque } from "type-fest";
 
 import { PinholeCameraModel } from "@foxglove/den/image";
 import { ImageAnnotations as FoxgloveImageAnnotations } from "@foxglove/schemas";
@@ -24,7 +25,7 @@ import { topicIsConvertibleToSchema } from "../../../topicIsConvertibleToSchema"
 import { sortPrefixMatchesToFront } from "../../Images/topicPrefixMatching";
 import { MessageHandler, MessageRenderState } from "../MessageHandler";
 
-type TopicName = string & { __brand: "TopicName" };
+type TopicName = Opaque<string, "TopicName">;
 
 interface ImageAnnotationsContext {
   initialScale: number;

@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { DeepPartial } from "ts-essentials";
+import { PartialDeep } from "type-fest";
 
 import { fromNanoSec } from "@foxglove/rostime";
 import {
@@ -25,7 +25,7 @@ function wrapInMessageEvent<T>(
   message?: T | Partial<T>,
 ): PartialMessageEvent<T> {
   return {
-    message: (message ?? {}) as DeepPartial<T>,
+    message: (message ?? {}) as PartialDeep<T>,
     topic,
     schemaName: schema,
     receiveTime: fromNanoSec(time),

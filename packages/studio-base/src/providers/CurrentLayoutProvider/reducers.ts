@@ -22,7 +22,7 @@ import {
   getLeaves,
   MosaicNode,
 } from "react-mosaic-component";
-import { MarkOptional } from "ts-essentials";
+import { SetOptional } from "type-fest";
 
 import { filterMap } from "@foxglove/den/collection";
 import {
@@ -229,7 +229,7 @@ const swapPanel = (
     relatedConfigs,
     root,
     path,
-  }: MarkOptional<SwapPanelPayload, "originalId">,
+  }: SetOptional<SwapPanelPayload, "originalId">,
 ): LayoutData => {
   const newId = getPanelIdForType(type);
   let newPanelsState = { ...panelsState };

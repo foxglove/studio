@@ -16,7 +16,7 @@
 
 import { renderHook, act } from "@testing-library/react-hooks";
 import { PropsWithChildren, useCallback, useState } from "react";
-import { DeepPartial } from "ts-essentials";
+import { PartialDeep } from "type-fest";
 
 import AppConfigurationContext from "@foxglove/studio-base/context/AppConfigurationContext";
 import {
@@ -269,7 +269,7 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
         }),
     );
     expect(all).toEqual([
-      expect.objectContaining<DeepPartial<(typeof all)[0]>>({
+      expect.objectContaining<PartialDeep<(typeof all)[0]>>({
         playerState: {
           activeData: undefined,
           capabilities: [],
@@ -278,10 +278,10 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
           progress: {},
         },
       }),
-      expect.objectContaining<DeepPartial<(typeof all)[0]>>({
+      expect.objectContaining<PartialDeep<(typeof all)[0]>>({
         sortedTopics: [{ name: "foo", schemaName: "Foo" }],
       }),
-      expect.objectContaining<DeepPartial<(typeof all)[0]>>({
+      expect.objectContaining<PartialDeep<(typeof all)[0]>>({
         sortedTopics: [
           { name: "bar", schemaName: "Bar" },
           { name: "foo", schemaName: "Foo" },

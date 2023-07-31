@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { useCallback } from "react";
-import { DeepPartial } from "ts-essentials";
+import { PartialDeep } from "type-fest";
 
 import {
   LayoutState,
@@ -23,7 +23,7 @@ export default function useConfigById<Config extends Record<string, unknown>>(
   const { getCurrentLayoutState, savePanelConfigs } = useCurrentLayoutActions();
 
   const configSelector = useCallback(
-    (state: DeepPartial<LayoutState>) => {
+    (state: PartialDeep<LayoutState>) => {
       if (panelId == undefined) {
         return undefined;
       }
