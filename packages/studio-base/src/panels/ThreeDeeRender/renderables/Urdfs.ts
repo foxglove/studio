@@ -310,7 +310,7 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
                 value: "url",
               },
               {
-                label: "File Path",
+                label: "File path",
                 value: "filePath",
                 disabled: !isDesktopApp(),
               },
@@ -337,7 +337,7 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
           filePath:
             config.sourceType === "filePath"
               ? {
-                  label: "File Path",
+                  label: "File path",
                   input: "string",
                   help: "Absolute file path (desktop app only)",
                   value: config.filePath ?? DEFAULT_CUSTOM_SETTINGS.filePath,
