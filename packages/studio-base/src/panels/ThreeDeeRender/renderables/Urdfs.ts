@@ -310,7 +310,7 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
                 value: "url",
               },
               {
-                label: "File path",
+                label: "File path (Desktop only)",
                 value: "filePath",
                 disabled: !isDesktopApp(),
               },
@@ -816,24 +816,20 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     }
 
     if (!urdf) {
-      if (sourceType === "url" && url != undefined) {
-        // Fetch the URDF from the URL
-        this.#fetchUrdf(instanceId, url);
-        return;
-      } else if (sourceType === "filePath" && filePath != undefined) {
-        // Fetch the URDF from a local file
-        this.#fetchUrdf(instanceId, `file://${filePath}`);
-        return;
-      }
-    }
-
-    // At this point we have to have a URDF.
-    if (!urdf) {
       const path = renderable.userData.settingsPath;
       if (sourceType === "url") {
-        this.renderer.settings.errors.add(path, VALID_SRC_ERR, `Invalid URDF URL: "${url}"`);
+        if (url != undefined) {
+          this.#fetchUrdf(instanceId, url);
+        } else {
+          this.renderer.settings.errors.add(path, VALID_SRC_ERR, `Invalid URDF URL: "${url}"`);
+        }
       } else if (sourceType === "filePath") {
-        this.renderer.settings.errors.add(path, VALID_SRC_ERR, `Invalid File Path: "${filePath}"`);
+        if (filePath != undefined) {
+          this.#fetchUrdf(instanceId, `file://${filePath}`);
+        } else {
+          const errMsg = `Invalid File Path: "${filePath}"`;
+          this.renderer.settings.errors.add(path, VALID_SRC_ERR, errMsg);
+        }
       } else if (sourceType === "param") {
         this.renderer.settings.errors.add(path, VALID_SRC_ERR, `Invalid Parameter: "${parameter}"`);
       } else if (sourceType === "topic") {
