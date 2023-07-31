@@ -49,10 +49,6 @@ export function extractTypeFromStudioEnumAnnotation(name: string): string | unde
 }
 
 // Returns a nested record of the form {datatype -> {field -> {value -> name}}}.
-//
-// We need memoizeWeak here because this function is called by multiple callers, each with their own
-// stable version of datatypes, so memoizing on a single datatypes via a memo that depends on a
-// single global stable value like createSelector won't work.
 export const enumValuesByDatatypeAndField = (
   datatypes: Immutable<RosDatatypes>,
 ): { [datatype: string]: { [field: string]: { [value: string]: string } } } => {
