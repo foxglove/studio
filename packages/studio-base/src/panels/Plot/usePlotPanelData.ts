@@ -31,7 +31,7 @@ import { Bounds, makeInvertedBounds, unionBounds } from "@foxglove/studio-base/t
 import { getTimestampForMessage } from "@foxglove/studio-base/util/time";
 
 import { calculateDatasetBounds } from "./datasets";
-import { BasePlotPath, DataSet, PlotDataItem, PlotPath, PlotXAxisVal } from "./internalTypes";
+import { BasePlotPath, DataSet, PlotDataByPath, PlotPath, PlotXAxisVal } from "./internalTypes";
 import * as maps from "./maps";
 import {
   EmptyPlotData,
@@ -486,7 +486,7 @@ export function usePlotPanelData(params: Params): Immutable<{
         const topic = parseRosPath(path.value)?.topicName;
         const end = topic ? allFramesToProcess[topic]?.at(-1)?.receiveTime : undefined;
         if (end) {
-          const index = findInsertion<typeof ds.data[0]>(
+          const index = findInsertion<(typeof ds.data)[0]>(
             (datum) => compareTime(end, datum.receiveTime),
             ds.data,
           );
