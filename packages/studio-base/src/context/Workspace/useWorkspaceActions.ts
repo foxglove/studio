@@ -13,7 +13,6 @@ import { DataSourceDialogItem } from "@foxglove/studio-base/components/DataSourc
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 import { useAppContext } from "@foxglove/studio-base/context/AppContext";
 import {
-  LayoutID,
   LayoutData,
   useCurrentLayoutActions,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
@@ -159,7 +158,7 @@ export function useWorkspaceActions(): WorkspaceActions {
       return;
     }
 
-    setCurrentLayout({ id: "default" as LayoutID, data });
+    setCurrentLayout({ data });
 
     void analytics.logEvent(AppEvent.LAYOUT_IMPORT);
   }, [analytics, appContext, isMounted, setCurrentLayout]);
