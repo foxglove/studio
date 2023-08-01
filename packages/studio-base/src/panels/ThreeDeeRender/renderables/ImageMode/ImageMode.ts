@@ -18,6 +18,7 @@ import {
   DownloadImageInfo,
   getFrameIdFromImage,
 } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/Images/ImageTypes";
+import { IMAGE_DEFAULT_COLOR_MODE_SETTINGS } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/Images/decodeImage";
 import {
   cameraInfosEqual,
   normalizeCameraInfo,
@@ -80,11 +81,7 @@ const DEFAULT_CONFIG = {
   flipHorizontal: false,
   flipVertical: false,
   rotation: 0 as 0 | 90 | 180 | 270,
-  colorMode: "gradient" as Exclude<ColorModeSettings["colorMode"], "rgba-fields" | "flat">,
-  gradient: ["#ffffff", "#000000"] as ColorModeSettings["gradient"],
-  colorMap: "rainbow" as ColorModeSettings["colorMap"],
-  explicitAlpha: 1,
-  flatColor: "#ffffff",
+  ...IMAGE_DEFAULT_COLOR_MODE_SETTINGS,
 };
 
 type ConfigWithDefaults = ImageModeConfig & typeof DEFAULT_CONFIG;
@@ -698,7 +695,7 @@ export class ImageMode
     const colorMode =
       config.colorMode === "rgba-fields"
         ? DEFAULT_CONFIG.colorMode
-        : ((config.colorMode ?? DEFAULT_CONFIG.colorMode) as typeof DEFAULT_CONFIG.colorMode);
+        : config.colorMode ?? DEFAULT_CONFIG.colorMode;
 
     return {
       ...config,
