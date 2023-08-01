@@ -239,7 +239,11 @@ function updatePlayerStateAction(
   const subsById = prevState.subscriptionsById;
   const subscriberIdsByTopic = prevState.subscriberIdsByTopic;
 
-  const lastMessageEventByTopic = prevState.lastMessageEventByTopic;
+  // Reset last received messages when player ID changed.
+  const lastMessageEventByTopic =
+    action.playerState.playerId === prevState.public.playerState.playerId
+      ? prevState.lastMessageEventByTopic
+      : new Map<string, MessageEvent>();
   const newTopicsBySubscriberId = new Map(prevState.newTopicsBySubscriberId);
 
   // Put messages into per-subscriber queues
@@ -334,6 +338,7 @@ function updatePlayerStateAction(
     renderDone: action.renderDone,
     public: newPublicState,
     lastCapabilities: capabilities,
+    lastMessageEventByTopic,
   };
 }
 
