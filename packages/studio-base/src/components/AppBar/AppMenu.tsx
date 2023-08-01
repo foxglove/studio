@@ -183,7 +183,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
       },
       {
         type: "item",
-        label: rightSidebarOpen ? t("importLayoutFromFile") : t("importLayoutFromFile"),
+        label: t("importLayoutFromFile"),
         key: "import-layout",
         onClick: () => {
           layoutActions.importFromFile();
@@ -192,7 +192,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
       },
       {
         type: "item",
-        label: rightSidebarOpen ? t("exportLayoutToFile") : t("exportLayoutToFile"),
+        label: t("exportLayoutToFile"),
         key: "export-layout",
         onClick: () => {
           layoutActions.exportToFile();
