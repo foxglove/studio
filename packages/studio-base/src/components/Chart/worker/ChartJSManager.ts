@@ -23,7 +23,9 @@ import { RpcElement, RpcScales } from "@foxglove/studio-base/components/Chart/ty
 import { maybeCast } from "@foxglove/studio-base/util/maybeCast";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
+import { TypedChartData } from "../types";
 import { lineSegmentLabelColor } from "./lineSegments";
+import { proxyTyped } from "./proxy";
 
 const log = Logger.getLogger(__filename);
 
@@ -187,12 +189,14 @@ export default class ChartJSManager {
     height,
     isBoundsReset,
     data,
+    typedData,
   }: {
     options?: ChartOptions;
     width?: number;
     height?: number;
     isBoundsReset: boolean;
     data?: ChartData<"scatter">;
+    typedData?: TypedChartData;
   }): RpcScales {
     const instance = this.#chartInstance;
     if (instance == undefined) {
@@ -259,6 +263,10 @@ export default class ChartJSManager {
 
     if (data != undefined) {
       instance.data = data;
+    }
+
+    if (typedData != undefined) {
+      instance.data = proxyTyped(typedData);
     }
 
     // While the chartjs API doesn't indicate update should be called after resize, in practice

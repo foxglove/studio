@@ -2,21 +2,17 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import * as R from "ramda";
+
 import { RpcScales } from "@foxglove/studio-base/components/Chart/types";
+import { iterateNormal } from "@foxglove/studio-base/components/Chart/datasets";
 
-import { downsampleScatter, downsampleTimeseries } from "./downsample";
-import { ChartDatasets } from "./types";
-
-type DatasetBounds = {
-  x: { min?: number; max?: number };
-  y: { min?: number; max?: number };
-};
+import { downsample } from "./downsample";
+import { ChartDatasets, View } from "./types";
 
 type UpdateParams = {
   datasets?: ChartDatasets;
-  width?: number;
-  height?: number;
-  datasetBounds?: DatasetBounds;
+  datasetBounds?: View;
   scales?: RpcScales;
 };
 
@@ -25,9 +21,7 @@ type UpdateParams = {
  */
 export class Downsampler {
   #datasets: ChartDatasets = [];
-  #width = 0;
-  #height = 0;
-  #datasetBounds?: DatasetBounds;
+  #datasetBounds?: View;
   #scales?: RpcScales;
 
   /**
@@ -35,8 +29,6 @@ export class Downsampler {
    */
   public update(opt: UpdateParams): void {
     this.#datasets = opt.datasets ?? this.#datasets;
-    this.#width = opt.width ?? this.#width;
-    this.#height = opt.height ?? this.#height;
     this.#datasetBounds = opt.datasetBounds ?? this.#datasetBounds;
     this.#scales = opt.scales ?? this.#scales;
   }
@@ -44,7 +36,10 @@ export class Downsampler {
   /**
    * Perform a downsample with the latest state
    */
-  public downsample(): ChartDatasets {
+  public downsample(): ChartDatasets | undefined {
+    const width = this.#datasetBounds?.width;
+    const height = this.#datasetBounds?.width;
+
     const currentScales = this.#scales;
     let bounds:
       | {
@@ -56,8 +51,8 @@ export class Downsampler {
       | undefined = undefined;
     if (currentScales?.x && currentScales.y) {
       bounds = {
-        width: this.#width,
-        height: this.#height,
+        width: width ?? 0,
+        height: height ?? 0,
         x: {
           min: currentScales.x.min,
           max: currentScales.x.max,
@@ -71,28 +66,30 @@ export class Downsampler {
 
     const dataBounds = this.#datasetBounds;
     if (!dataBounds) {
-      return [];
+      return undefined;
     }
+
+    const { bounds: providedBounds } = dataBounds;
 
     // if we don't have bounds (chart not initialized) but do have dataset bounds
     // then setup bounds as x/y min/max around the dataset values rather than the scales
     if (
       !bounds &&
-      dataBounds.x.min != undefined &&
-      dataBounds.x.max != undefined &&
-      dataBounds.y.min != undefined &&
-      dataBounds.y.max != undefined
+      providedBounds.x.min != undefined &&
+      providedBounds.x.max != undefined &&
+      providedBounds.y.min != undefined &&
+      providedBounds.y.max != undefined
     ) {
       bounds = {
-        width: this.#width,
-        height: this.#height,
+        width: width ?? 0,
+        height: height ?? 0,
         x: {
-          min: dataBounds.x.min,
-          max: dataBounds.x.max,
+          min: providedBounds.x.min,
+          max: providedBounds.x.max,
         },
         y: {
-          min: dataBounds.y.min,
-          max: dataBounds.y.max,
+          min: providedBounds.y.min,
+          max: providedBounds.y.max,
         },
       };
     }
@@ -101,27 +98,32 @@ export class Downsampler {
     // The other alternative is to return the full data set. This leads to rendering full fidelity data
     // which causes render pauses and blank charts for large data sets.
     if (!bounds) {
-      return [];
+      return undefined;
     }
+
+    const view: View = {
+      width: 0,
+      height: 0,
+      bounds,
+    };
 
     return this.#datasets.map((dataset) => {
       if (!bounds) {
         return dataset;
       }
 
-      const downsampled =
-        dataset.showLine !== true
-          ? downsampleScatter(dataset, bounds)
-          : downsampleTimeseries(dataset, bounds);
+      const downsampled = downsample(iterateNormal, dataset, view);
+      const resolved = R.map((i) => dataset.data[i], downsampled);
+
       // NaN item values create gaps in the line
-      const undefinedToNanData = downsampled.data.map((item) => {
+      const undefinedToNanData = resolved.map((item) => {
         if (item == undefined || isNaN(item.x) || isNaN(item.y)) {
           return { x: NaN, y: NaN, value: NaN };
         }
         return item;
       });
 
-      return { ...downsampled, data: undefinedToNanData };
+      return { ...dataset, data: undefinedToNanData };
     });
   }
 }
