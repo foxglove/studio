@@ -7,9 +7,9 @@ import * as THREE from "three";
 import { SettingsTreeFields, SettingsTreeNode, Topic } from "@foxglove/studio";
 import { BaseSettings } from "@foxglove/studio-base/panels/ThreeDeeRender/settings";
 
-import { rgbaGradient, rgbaToLinear, SRGBToLinear, stringToRgba } from "../../color";
-import { clamp } from "../../math";
-import type { ColorRGBA } from "../../ros";
+import { rgbaGradient, rgbaToLinear, SRGBToLinear, stringToRgba } from "../color";
+import { clamp } from "../math";
+import type { ColorRGBA } from "../ros";
 
 export type ColorConverter = (output: ColorRGBA, colorValue: number) => void;
 
@@ -230,9 +230,16 @@ export function baseColorModeSettingsNode<Settings extends ColorModeSettings & B
   {
     supportsPackedRgbModes,
     supportsRgbaFieldsMode,
-  }: { supportsPackedRgbModes: boolean; supportsRgbaFieldsMode: boolean },
+    hideFlatColor,
+    hideExplicitAlpha,
+  }: {
+    supportsPackedRgbModes: boolean;
+    supportsRgbaFieldsMode: boolean;
+    hideFlatColor?: boolean;
+    hideExplicitAlpha?: boolean;
+  },
 ): SettingsTreeNode & { fields: NonNullable<SettingsTreeNode["fields"]> } {
-  const colorMode = config.colorMode ?? "flat";
+  const colorMode = config.colorMode ?? (hideFlatColor === true ? "gradient" : "flat");
   const flatColor = config.flatColor ?? "#ffffff";
   const colorField = config.colorField ?? bestColorByField(msgFields, { supportsPackedRgbModes });
   const colorFieldOptions = msgFields.map((field) => ({ label: field, value: field }));
@@ -248,7 +255,6 @@ export function baseColorModeSettingsNode<Settings extends ColorModeSettings & B
     label: "Color mode",
     input: "select",
     options: [
-      { label: "Flat", value: "flat" },
       { label: "Color map", value: "colormap" },
       { label: "Gradient", value: "gradient" },
     ]
@@ -264,18 +270,21 @@ export function baseColorModeSettingsNode<Settings extends ColorModeSettings & B
         supportsRgbaFieldsMode && hasSeparateRgbaFields(msgFields)
           ? [{ label: "RGBA (separate fields)", value: "rgba-fields" }]
           : [],
-      ),
+      )
+      .concat(hideFlatColor !== true ? [{ label: "Flat", value: "flat" }] : []),
     value: colorMode,
   };
   if (colorMode === "flat") {
     fields.flatColor = { label: "Flat color", input: "rgba", value: flatColor };
   } else if (colorMode !== "rgba-fields") {
-    fields.colorField = {
-      label: "Color by",
-      input: "select",
-      options: colorFieldOptions,
-      value: colorField,
-    };
+    if (supportsPackedRgbModes) {
+      fields.colorField = {
+        label: "Color by",
+        input: "select",
+        options: colorFieldOptions,
+        value: colorField,
+      };
+    }
 
     switch (colorMode) {
       case "gradient":
@@ -300,7 +309,7 @@ export function baseColorModeSettingsNode<Settings extends ColorModeSettings & B
         break;
     }
 
-    if (colorMode === "colormap" || colorMode === "rgb") {
+    if (hideExplicitAlpha !== true && (colorMode === "colormap" || colorMode === "rgb")) {
       fields.explicitAlpha = {
         label: "Opacity",
         input: "number",

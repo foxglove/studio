@@ -10,7 +10,7 @@ import {
   CompressedImage as RosCompressedImage,
   CAMERA_INFO_DATATYPES,
 } from "../../ros";
-import { ColorModeSettings } from "../pointClouds/colors";
+import { ColorModeSettings } from "../colorMode";
 
 export const ALL_CAMERA_INFO_SCHEMAS = new Set([
   ...CAMERA_INFO_DATATYPES,

@@ -236,17 +236,11 @@ export function decodeMono16(
     let val = view.getUint16(i, !is_bigendian);
 
     if (converter) {
-      if (val === 0.0) {
-        output[outIdx++] = 0;
-        output[outIdx++] = 0;
-        output[outIdx++] = 0;
-      } else {
-        const { r, g, b } = converter(val);
+      const { r, g, b } = converter(val);
 
-        output[outIdx++] = r * 255;
-        output[outIdx++] = g * 255;
-        output[outIdx++] = b * 255;
-      }
+      output[outIdx++] = r * 255;
+      output[outIdx++] = g * 255;
+      output[outIdx++] = b * 255;
     } else {
       // 0 - 1.0
       val = (val - minValue) / (maxValue - minValue);

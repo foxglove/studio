@@ -27,7 +27,7 @@ import {
   FS_SRGB_TO_LINEAR,
   INTENSITY_FIELDS,
   RGBA_PACKED_FIELDS,
-} from "./pointClouds/colors";
+} from "./colorMode";
 import { POINTCLOUD_DATATYPES as FOXGLOVE_POINTCLOUD_DATATYPES } from "../foxglove";
 import { PointCloud2, POINTCLOUD_DATATYPES as ROS_POINTCLOUD_DATATYPES, PointField } from "../ros";
 

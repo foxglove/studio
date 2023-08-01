@@ -21,7 +21,7 @@ import { RawImage } from "@foxglove/schemas";
 
 import { CompressedImageTypes } from "./ImageTypes";
 import { Image as RosImage } from "../../ros";
-import { ColorModeSettings, getColorConverter } from "../pointClouds/colors";
+import { ColorModeSettings, getColorConverter } from "../colorMode";
 
 export async function decodeCompressedImageToBitmap(
   image: CompressedImageTypes,
@@ -30,6 +30,14 @@ export async function decodeCompressedImageToBitmap(
   const bitmapData = new Blob([image.data], { type: `image/${image.format}` });
   return await createImageBitmap(bitmapData, { resizeWidth });
 }
+
+export const IMAGE_DEFAULT_COLOR_MODE_SETTINGS: ColorModeSettings = {
+  colorMode: "gradient",
+  flatColor: "#ffffff",
+  gradient: ["#ffffff", "#000000"],
+  colorMap: "turbo",
+  explicitAlpha: 0,
+};
 
 export type RawImageOptions = ColorModeSettings;
 
@@ -42,6 +50,7 @@ function makeColorConverter(
   }
   const min = settings.minValue ?? 0;
   const max = settings.maxValue ?? defaultMaxValue;
+  const tempColor = { r: 0, g: 0, b: 0, a: 0 };
   const c = getColorConverter(
     settings as ColorModeSettings & {
       colorMode: typeof settings.colorMode;
@@ -50,9 +59,8 @@ function makeColorConverter(
     max,
   );
   return (value: number) => {
-    const output = { r: 0, g: 0, b: 0, a: 0 };
-    c(output, value);
-    return output;
+    c(tempColor, value);
+    return tempColor;
   };
 }
 
@@ -62,7 +70,7 @@ function makeColorConverter(
  */
 export function decodeRawImage(
   image: RosImage | RawImage,
-  options: RawImageOptions,
+  options: Partial<RawImageOptions>,
   output: Uint8ClampedArray,
 ): void {
   const { encoding, width, height } = image;
@@ -111,7 +119,14 @@ export function decodeRawImage(
       break;
     case "mono16":
     case "16UC1": {
-      const converter = makeColorConverter(options, 65536);
+      // combine options with defaults
+      const fullOptions = {
+        ...options,
+        ...IMAGE_DEFAULT_COLOR_MODE_SETTINGS,
+        colorMode: options.colorMode ?? IMAGE_DEFAULT_COLOR_MODE_SETTINGS.colorMode,
+        gradient: options.gradient ?? IMAGE_DEFAULT_COLOR_MODE_SETTINGS.gradient,
+      };
+      const converter = makeColorConverter(fullOptions, 65536);
       decodeMono16(rawData, width, height, is_bigendian, output, {
         minValue: options.minValue,
         maxValue: options.maxValue,

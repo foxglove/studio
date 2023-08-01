@@ -16,13 +16,13 @@ import { projectPixel } from "@foxglove/studio-base/panels/ThreeDeeRender/render
 import { RosValue } from "@foxglove/studio-base/players/types";
 
 import { AnyImage } from "./ImageTypes";
-import { RawImageOptions, decodeCompressedImageToBitmap } from "./decodeImage";
+import { decodeCompressedImageToBitmap } from "./decodeImage";
 import { CameraInfo } from "../../ros";
-import { ColorModeSettings } from "../pointClouds/colors";
+import { ColorModeSettings } from "../colorMode";
 
 const log = Logger.getLogger(__filename);
 
-export interface ImageRenderableSettings extends ColorModeSettings {
+export interface ImageRenderableSettings extends Partial<ColorModeSettings> {
   visible: boolean;
   frameLocked?: boolean;
   cameraInfoTopic: string | undefined;
@@ -31,7 +31,7 @@ export interface ImageRenderableSettings extends ColorModeSettings {
   color: string;
 }
 
-const CREATE_BITMAP_ERR_KEY = "CreateBitmap";
+const DECODE_IMAGE_ERR_KEY = "CreateBitmap";
 const IMAGE_TOPIC_PATH = ["imageMode", "imageTopic"];
 
 const DEFAULT_DISTANCE = 1;
@@ -43,12 +43,8 @@ export const IMAGE_RENDERABLE_DEFAULT_SETTINGS: ImageRenderableSettings = {
   distance: DEFAULT_DISTANCE,
   planarProjectionFactor: DEFAULT_PLANAR_PROJECTION_FACTOR,
   color: "#ffffff",
-  colorMode: "flat",
-  flatColor: "#ffffff",
-  gradient: ["#ffffff", "#000000"],
-  colorMap: "turbo",
-  explicitAlpha: 0,
 };
+
 export type ImageUserData = BaseUserData & {
   topic: string;
   settings: ImageRenderableSettings;
@@ -83,15 +79,11 @@ export class ImageRenderable extends Renderable<ImageUserData> {
   #decoder?: WorkerImageDecoder;
   #receivedImageSequenceNumber = 0;
   #displayedImageSequenceNumber = 0;
-  #rawImageOptions: RawImageOptions;
 
   #disposed = false;
 
   public constructor(topicName: string, renderer: IRenderer, userData: ImageUserData) {
     super(topicName, renderer, userData);
-    this.#rawImageOptions = {
-      ...userData.settings,
-    };
   }
 
   public override dispose(): void {
@@ -164,12 +156,13 @@ export class ImageRenderable extends Renderable<ImageUserData> {
       prevSettings.minValue !== newSettings.minValue ||
       prevSettings.maxValue !== newSettings.maxValue
     ) {
-      this.#rawImageOptions = { ...newSettings };
+      this.userData.settings = newSettings;
       // Decode the current image again, which takes into account the new options
       const image = this.userData.image;
       if (image) {
         this.setImage(image);
       }
+      return;
     }
 
     this.userData.settings = newSettings;
@@ -186,7 +179,7 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     const decodePromise =
       "format" in image
         ? decodeCompressedImageToBitmap(image, resizeWidth)
-        : (this.#decoder ??= new WorkerImageDecoder()).decode(image, this.#rawImageOptions);
+        : (this.#decoder ??= new WorkerImageDecoder()).decode(image, this.userData.settings);
     decodePromise
       .then((result) => {
         if (this.#disposed) {
@@ -202,8 +195,8 @@ export class ImageRenderable extends Renderable<ImageUserData> {
         this.update();
 
         onDecoded?.(result);
-        this.renderer.settings.errors.remove(IMAGE_TOPIC_PATH, CREATE_BITMAP_ERR_KEY);
-        this.renderer.settings.errors.removeFromTopic(this.userData.topic, CREATE_BITMAP_ERR_KEY);
+        this.renderer.settings.errors.remove(IMAGE_TOPIC_PATH, DECODE_IMAGE_ERR_KEY);
+        this.renderer.settings.errors.removeFromTopic(this.userData.topic, DECODE_IMAGE_ERR_KEY);
         this.renderer.queueAnimationFrame();
       })
       .catch((err) => {
@@ -213,13 +206,13 @@ export class ImageRenderable extends Renderable<ImageUserData> {
         }
         this.renderer.settings.errors.add(
           IMAGE_TOPIC_PATH,
-          CREATE_BITMAP_ERR_KEY,
-          `Error creating bitmap: ${err.message}`,
+          DECODE_IMAGE_ERR_KEY,
+          `Error decoding image: ${err.message}`,
         );
         this.renderer.settings.errors.addToTopic(
           this.userData.topic,
-          CREATE_BITMAP_ERR_KEY,
-          `Error creating bitmap: ${err.message}`,
+          DECODE_IMAGE_ERR_KEY,
+          `Error decoding image: ${err.message}`,
         );
       });
   }

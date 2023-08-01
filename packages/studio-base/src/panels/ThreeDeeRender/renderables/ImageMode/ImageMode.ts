@@ -44,7 +44,7 @@ import {
 import { topicIsConvertibleToSchema } from "../../topicIsConvertibleToSchema";
 import { ICameraHandler } from "../ICameraHandler";
 import { getTopicMatchPrefix, sortPrefixMatchesToFront } from "../Images/topicPrefixMatching";
-import { ColorModeSettings, baseColorModeSettingsNode } from "../pointClouds/colors";
+import { ColorModeSettings, baseColorModeSettingsNode } from "../colorMode";
 
 const IMAGE_TOPIC_PATH = ["imageMode", "imageTopic"];
 const CALIBRATION_TOPIC_PATH = ["imageMode", "calibrationTopic"];
@@ -80,7 +80,7 @@ const DEFAULT_CONFIG = {
   flipHorizontal: false,
   flipVertical: false,
   rotation: 0 as 0 | 90 | 180 | 270,
-  colorMode: "flat" as Exclude<ColorModeSettings["colorMode"], "rgba-fields">,
+  colorMode: "gradient" as Exclude<ColorModeSettings["colorMode"], "rgba-fields" | "flat">,
   gradient: ["#ffffff", "#000000"] as ColorModeSettings["gradient"],
   colorMap: "rainbow" as ColorModeSettings["colorMap"],
   explicitAlpha: 1,
@@ -444,17 +444,11 @@ export class ImageMode
       {
         supportsPackedRgbModes: false,
         supportsRgbaFieldsMode: false,
+        hideFlatColor: true,
+        hideExplicitAlpha: true,
       },
     );
 
-    // Single channel images do not have fields to pick from, so remove that
-    // form selection.
-    delete colorNode.fields.colorField;
-    // The flat option here just mean the normal greyscale, so remove the
-    // color picker.
-    delete colorNode.fields.flatColor;
-    // There is nothing behind the image, so alpha values don't matter.
-    delete colorNode.fields.explicitAlpha;
     Object.assign(fields, colorNode.fields);
 
     return [
@@ -628,16 +622,13 @@ export class ImageMode
     if (renderable) {
       return renderable;
     }
-
     const config = this.#getImageModeSettings();
+
     const userSettings: ImageRenderableSettings = {
       ...IMAGE_RENDERABLE_DEFAULT_SETTINGS,
       colorMode: config.colorMode,
-      flatColor: config.flatColor,
-      colorField: config.colorField,
       gradient: config.gradient as [string, string],
       colorMap: config.colorMap,
-      explicitAlpha: config.explicitAlpha,
       minValue: config.minValue,
       maxValue: config.maxValue,
       // planarProjectionFactor must be 1 to avoid imprecise projection due to small number of grid subdivisions
@@ -707,7 +698,7 @@ export class ImageMode
     const colorMode =
       config.colorMode === "rgba-fields"
         ? DEFAULT_CONFIG.colorMode
-        : (config.colorMode as typeof DEFAULT_CONFIG.colorMode);
+        : ((config.colorMode ?? DEFAULT_CONFIG.colorMode) as typeof DEFAULT_CONFIG.colorMode);
 
     return {
       ...config,

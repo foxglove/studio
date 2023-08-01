@@ -119,15 +119,6 @@ export function ThreeDeeRender(props: {
       Partial<LayerSettingsTransform>
     >;
 
-    const imageMode: ImageModeConfig = {
-      imageTopic: partialConfig?.imageMode?.imageTopic,
-      ...partialConfig?.imageMode,
-      annotations: partialConfig?.imageMode?.annotations as
-        | ImageModeConfig["annotations"]
-        | undefined,
-      gradient: undefined,
-    };
-
     return {
       cameraState,
       followMode: partialConfig?.followMode ?? "follow-pose",
@@ -137,7 +128,9 @@ export function ThreeDeeRender(props: {
       topics: partialConfig?.topics ?? {},
       layers: partialConfig?.layers ?? {},
       publish,
-      imageMode,
+      // deep partial on config, makes gradient tuple type [string | undefined, string | undefined]
+      // which is incompatible with `Partial<ColorModeSettings>`
+      imageMode: (partialConfig?.imageMode ?? {}) as Partial<ImageModeConfig>,
     };
   });
   const configRef = useLatest(config);

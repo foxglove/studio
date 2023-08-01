@@ -310,6 +310,7 @@ export function RendererOverlay(props: {
         bitmap = await decodeCompressedImageToBitmap(image);
       } else {
         const imageData = new ImageData(image.width, image.height);
+        // currentImage passed for color settings access
         decodeRawImage(image, currentImage, imageData.data);
         bitmap = await createImageBitmap(imageData);
       }

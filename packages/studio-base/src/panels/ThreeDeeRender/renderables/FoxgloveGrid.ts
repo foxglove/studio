@@ -18,7 +18,7 @@ import {
   FS_SRGB_TO_LINEAR,
   RGBA_PACKED_FIELDS,
   hasSeparateRgbaFields,
-} from "./pointClouds/colors";
+} from "./colorMode";
 import { FieldReader, getReader } from "./pointClouds/fieldReaders";
 import type { AnyRendererSubscription, IRenderer } from "../IRenderer";
 import { BaseUserData, Renderable } from "../Renderable";
