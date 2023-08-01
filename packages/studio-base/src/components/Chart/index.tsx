@@ -24,7 +24,7 @@ import Rpc, { createLinkedChannels } from "@foxglove/studio-base/util/Rpc";
 import WebWorkerManager from "@foxglove/studio-base/util/WebWorkerManager";
 import { mightActuallyBePartial } from "@foxglove/studio-base/util/mightActuallyBePartial";
 
-import { ChartData, RpcElement, RpcScales } from "./types";
+import { TypedChartData, ChartData, RpcElement, RpcScales } from "./types";
 
 const log = Logger.getLogger(__filename);
 
@@ -42,7 +42,8 @@ export type OnClickArg = {
 };
 
 type Props = {
-  data: ChartData;
+  data?: ChartData;
+  typedData?: TypedChartData;
   options: ChartOptions;
   isBoundsReset: boolean;
   type: "scatter";
@@ -110,8 +111,17 @@ function Chart(props: Props): JSX.Element {
   const panEnabled =
     (props.options.plugins?.zoom as ZoomPluginOptions | undefined)?.pan?.enabled ?? false;
 
-  const { type, data, isBoundsReset, options, width, height, onStartRender, onFinishRender } =
-    props;
+  const {
+    type,
+    data,
+    typedData,
+    isBoundsReset,
+    options,
+    width,
+    height,
+    onStartRender,
+    onFinishRender,
+  } = props;
 
   const sendWrapperRef = useRef<RpcSend | undefined>();
   const rpcSendRef = useRef<RpcSend | undefined>();
@@ -203,6 +213,9 @@ function Chart(props: Props): JSX.Element {
     if (prev.data !== data) {
       prev.data = out.data = data;
     }
+    if (prev.typedData !== typedData) {
+      prev.typedData = out.typedData = typedData;
+    }
     if (prev.options !== options) {
       prev.options = out.options = options;
     }
@@ -221,7 +234,7 @@ function Chart(props: Props): JSX.Element {
     }
 
     return out;
-  }, [data, height, options, isBoundsReset, width]);
+  }, [data, typedData, height, options, isBoundsReset, width]);
 
   // Update the chart with a new set of data
   const updateChart = useCallback(

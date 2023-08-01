@@ -14,9 +14,15 @@
 import { ChartDataset } from "chart.js";
 
 import { Time } from "@foxglove/rostime";
+import { Immutable } from "@foxglove/studio";
 import { MessagePathDataItem } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
 import type { ChartDatum } from "@foxglove/studio-base/components/TimeBasedChart/types";
+import type { TypedData as OriginalTypedData } from "@foxglove/studio-base/components/Chart/types";
+import { Topic, MessageEvent } from "@foxglove/studio-base/players/types";
+import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import { TimestampMethod } from "@foxglove/studio-base/util/time";
+
+export type Messages = Record<string, readonly MessageEvent[]>;
 
 export type BasePlotPath = {
   value: string;
@@ -46,9 +52,15 @@ export type Datum = ChartDatum & {
 
 export type DataSet = ChartDataset<"scatter", Datum[]>;
 
+export type TypedData = OriginalTypedData & {
+  receiveTime: Time[];
+  headerStamp?: Time[];
+};
+export type TypedDataSet = ChartDataset<"scatter", TypedData[]>;
+
 // Key datasets by the full PlotPath instead of just the string value because we need to
 // generate a new dataset if the plot path is ordered by headerStamp.
-export type DatasetsByPath = Map<PlotPath, DataSet>;
+export type DatasetsByPath = Map<PlotPath, TypedDataSet>;
 
 export type PlotDataItem = {
   queriedData: MessagePathDataItem[];
@@ -60,3 +72,16 @@ export type PlotDataItem = {
 export function isReferenceLinePlotPathType(path: BasePlotPath): boolean {
   return !isNaN(Number.parseFloat(path.value));
 }
+
+export type Metadata = Immutable<{
+  topics: Topic[];
+  datatypes: RosDatatypes;
+}>;
+
+export type PlotParams = {
+  startTime: Time;
+  paths: readonly PlotPath[];
+  invertedTheme?: boolean;
+  xAxisPath?: BasePlotPath;
+  xAxisVal: PlotXAxisVal;
+};

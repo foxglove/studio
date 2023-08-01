@@ -2,23 +2,34 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import * as R from "ramda";
+
 import { isTime, subtract, Time, toSec } from "@foxglove/rostime";
 import { Immutable } from "@foxglove/studio";
 import { Bounds, makeInvertedBounds } from "@foxglove/studio-base/types/Bounds";
 import { format } from "@foxglove/studio-base/util/formatTime";
 import { darkColor, getLineColor, lightColor } from "@foxglove/studio-base/util/plotColors";
 import { formatTimeRaw, TimestampMethod } from "@foxglove/studio-base/util/time";
+import {
+  iterateTyped,
+  findIndices,
+  getTypedLength,
+} from "@foxglove/studio-base/components/Chart/datasets";
 
 import {
   BasePlotPath,
   DataSet,
   Datum,
+  TypedDataSet,
+  TypedData,
   isReferenceLinePlotPathType,
   PlotDataItem,
   PlotPath,
   PlotXAxisVal,
 } from "./internalTypes";
 import { applyToDatum, MathFunction, mathFunctions } from "./transformPlotRange";
+
+const ZERO_TIME: Time = Object.freeze({ sec: 0, nsec: 0 });
 
 const isCustomScale = (xAxisVal: PlotXAxisVal): boolean =>
   xAxisVal === "custom" || xAxisVal === "currentCustom";
@@ -44,6 +55,45 @@ function getXForPoint(
     }
   }
   return xAxisVal === "timestamp" ? timestamp : innerIdx;
+}
+
+export function datumToTyped(data: Datum[]): TypedData {
+  const receiveTime: Time[] = [];
+  const headerStamp: Time[] = [];
+  const constantName: string[] = [];
+  const value: (string | number | bigint | boolean | undefined)[] = [];
+  const x = new Float32Array(data.length);
+  const y = new Float32Array(data.length);
+
+  for (let i = 0; i < data.length; i++) {
+    const datum = data[i];
+    if (datum == undefined) {
+      continue;
+    }
+    receiveTime.push(datum.receiveTime);
+    if (datum.headerStamp != undefined) {
+      headerStamp.push(datum.headerStamp);
+    }
+    if (datum.constantName != undefined) {
+      constantName.push(datum.constantName);
+    }
+    value.push(datum.value);
+    x[i] = datum.x;
+    y[i] = datum.y;
+  }
+
+  return {
+    receiveTime,
+    headerStamp: headerStamp.length > 0 ? headerStamp : undefined,
+    constantName: constantName.length > 0 ? constantName : undefined,
+    value,
+    x,
+    y,
+  };
+}
+
+export function concatTyped(a: TypedData[], b: TypedData[]): TypedData[] {
+  return a.concat(...b);
 }
 
 function getDatumsForMessagePathItem(
@@ -141,7 +191,7 @@ export function getDatasetsFromMessagePlotPath({
   xAxisPath?: BasePlotPath;
   invertedTheme?: boolean;
 }): {
-  dataset: DataSet;
+  dataset: TypedDataSet;
   hasMismatchedData: boolean;
 } {
   let showLine = path.showLine !== false;
@@ -195,7 +245,7 @@ export function getDatasetsFromMessagePlotPath({
   }
 
   const borderColor = getLineColor(path.color, index);
-  const dataset: DataSet = {
+  const dataset: TypedDataSet = {
     borderColor,
     label: path.label != undefined && path.label !== "" ? path.label : path.value,
     showLine,
@@ -205,10 +255,202 @@ export function getDatasetsFromMessagePlotPath({
     pointHoverRadius: 3,
     pointBackgroundColor: invertedTheme ? lightColor(borderColor) : darkColor(borderColor),
     pointBorderColor: "transparent",
-    data: plotData,
+    data: [datumToTyped(plotData)],
   };
   return {
     dataset,
     hasMismatchedData,
   };
+}
+
+export function typedToDatum(data: TypedData, index: number): Datum {
+  return {
+    x: data.x[index],
+    y: data.y[index],
+    value: data.value[index],
+    constantName: data.constantName?.[index],
+  } as Datum;
+}
+
+export function resolveTypedIndices(data: TypedData[], indices: number[]): TypedData[] | undefined {
+  if (data.length === 0 || indices.length === 0) {
+    return undefined;
+  }
+
+  const receiveTime: Time[] = [];
+  const headerStamp: Time[] = [];
+  const constantName: string[] = [];
+  const value: (string | number | bigint | boolean | undefined)[] = [];
+  const x = new Float32Array(indices.length);
+  const y = new Float32Array(indices.length);
+
+  for (let i = 0; i < indices.length; i++) {
+    const loc = findIndices(data, indices[i] ?? -1);
+    if (loc == undefined) {
+      return undefined;
+    }
+
+    const [sliceIndex, offset] = loc;
+    const slice = data[sliceIndex];
+    if (slice == undefined) {
+      return undefined;
+    }
+
+    receiveTime.push(slice.receiveTime[offset] ?? ZERO_TIME);
+    if (slice.headerStamp != undefined) {
+      headerStamp.push(slice.headerStamp[offset] ?? ZERO_TIME);
+    }
+    if (slice.constantName != undefined) {
+      constantName.push(slice.constantName[offset] ?? "");
+    }
+    value.push(slice.value[offset]);
+
+    const xVal = slice.x[offset];
+    const yVal = slice.y[offset];
+    if (xVal == undefined || yVal == undefined) {
+      return undefined;
+    }
+    x[i] = xVal;
+    y[i] = yVal;
+  }
+
+  return [
+    {
+      receiveTime,
+      headerStamp: headerStamp.length > 0 ? headerStamp : undefined,
+      constantName: constantName.length > 0 ? constantName : undefined,
+      value,
+      x,
+      y,
+    },
+  ];
+}
+
+function getSliceIndices(
+  length: number,
+  start: number,
+  end: number | undefined,
+): [start: number, end: number] {
+  start = R.clamp(0, start < 0 ? length + start : start, length);
+  end ??= length;
+  end = R.clamp(0, end < 0 ? length + end : end, length);
+  if (start > end) {
+    let i = start;
+    start = end;
+    end = i;
+  }
+
+  return [start, end];
+}
+
+function sliceSingle(slice: TypedData, start: number, end?: number): TypedData {
+  const [i0, i1] = getSliceIndices(slice.x.length, start, end);
+
+  const numElements = i1 - i0;
+
+  const receiveTime: Time[] = [];
+  const headerStamp: Time[] = [];
+  const constantName: string[] = [];
+  const value: (string | number | bigint | boolean | undefined)[] = [];
+  const x = new Float32Array(numElements);
+  const y = new Float32Array(numElements);
+
+  for (let i = i0; i < i1; i++) {
+    receiveTime.push(slice.receiveTime[i] ?? ZERO_TIME);
+    if (slice.headerStamp != undefined) {
+      headerStamp.push(slice.headerStamp[i] ?? ZERO_TIME);
+    }
+    if (slice.constantName != undefined) {
+      constantName.push(slice.constantName[i] ?? "");
+    }
+    value.push(slice.value[i]);
+
+    const xVal = slice.x[i];
+    const yVal = slice.y[i];
+    if (xVal == undefined || yVal == undefined) {
+      continue;
+    }
+    x[i] = xVal;
+    y[i] = yVal;
+  }
+
+  return {
+    receiveTime,
+    headerStamp: headerStamp.length > 0 ? headerStamp : undefined,
+    constantName: constantName.length > 0 ? constantName : undefined,
+    value,
+    x,
+    y,
+  };
+}
+
+export function sliceTyped(dataset: TypedData[], start: number, end?: number): TypedData[] {
+  const numElements = getTypedLength(dataset);
+  const [i0, i1] = getSliceIndices(numElements, start, end);
+
+  if (i0 === i1) {
+    return [];
+  }
+
+  const startLoc = findIndices(dataset, i0);
+  const endLoc = findIndices(dataset, i1) ?? findIndices(dataset, i1 - 1);
+  if (startLoc == undefined || endLoc == undefined) {
+    return [];
+  }
+
+  const [slice0, offset0] = startLoc;
+  const [slice1, offset1] = endLoc;
+
+  if (slice0 === slice1) {
+    const slice = dataset[slice0];
+    if (slice == undefined) {
+      return [];
+    }
+
+    return [sliceSingle(slice, offset0, offset1)];
+  }
+
+  const startSlice = dataset[slice0];
+  const endSlice = dataset[slice1];
+
+  if (startSlice == undefined || endSlice == undefined) {
+    return [];
+  }
+
+  const between = dataset.slice(slice0 + 1, slice1);
+
+  return [sliceSingle(startSlice, offset0), ...between, sliceSingle(endSlice, 0, offset1)];
+}
+
+function getXBounds(dataset: TypedData[]): [min: number, max: number] | undefined {
+  const min = dataset.at(0)?.x.at(0);
+  const max = dataset.at(-1)?.x.at(-1);
+  if (min == undefined || max == undefined) {
+    return undefined;
+  }
+
+  return [min, max];
+}
+
+export function mergeTyped(a: TypedData[], b: TypedData[]): TypedData[] {
+  const lastTime = getXBounds(a)?.[1] ?? Number.MIN_SAFE_INTEGER;
+
+  let startIndex = -1;
+  for (const datum of iterateTyped(b)) {
+    if (datum.x > lastTime) {
+      startIndex = datum.index;
+      break;
+    }
+  }
+
+  if (startIndex === -1) {
+    return a;
+  }
+
+  const newValues = sliceTyped(b, startIndex);
+  if (newValues.length === 0) {
+    return a;
+  }
+
+  return a.concat(datumToTyped([{ x: NaN, receiveTime: ZERO_TIME, y: NaN } as Datum]), newValues);
 }
