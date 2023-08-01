@@ -118,7 +118,7 @@ function TeleopPanel(props: TeleopPanelProps): JSX.Element {
 
   // resolve an initial config which may have some missing fields into a full config
   const [config, setConfig] = useState<Config>(() => {
-    const partialConfig = context.initialState as DeepPartial<Config>;
+    const partialConfig = context.initialState as PartialDeep<Config>;
 
     const {
       topic,

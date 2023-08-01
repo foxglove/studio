@@ -104,7 +104,7 @@ export function ThreeDeeRender(props: {
 
   // Load and save the persisted panel configuration
   const [config, setConfig] = useState<Immutable<RendererConfig>>(() => {
-    const partialConfig = initialState as DeepPartial<RendererConfig> | undefined;
+    const partialConfig = initialState as PartialDeep<RendererConfig> | undefined;
 
     // Initialize the camera from default settings overlaid with persisted settings
     const cameraState: CameraState = merge(

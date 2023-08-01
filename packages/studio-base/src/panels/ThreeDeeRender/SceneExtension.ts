@@ -16,9 +16,9 @@ import { missingTransformMessage, MISSING_TRANSFORM } from "./renderables/transf
 import { AnyFrameId } from "./transforms";
 import { updatePose } from "./updatePose";
 
-export type PartialMessage<T> = DeepPartial<T>;
+export type PartialMessage<T> = PartialDeep<T, { recurseIntoArrays: true }>;
 
-export type PartialMessageEvent<T> = MessageEvent<DeepPartial<T>>;
+export type PartialMessageEvent<T> = MessageEvent<PartialDeep<T, { recurseIntoArrays: true }>>;
 
 /**
  * SceneExtension is a base class for extending the 3D scene. It extends THREE.Object3D and is a

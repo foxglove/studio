@@ -892,8 +892,8 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     const { message } = messageEvent;
 
     const maybeHasHeader = message as PartialDeep<{ header: Header }>;
-    const maybeHasMarkers = message as PartialDeep<MarkerArray>;
-    const maybeHasEntities = message as PartialDeep<SceneUpdate>;
+    const maybeHasMarkers = message as PartialDeep<MarkerArray, { recurseIntoArrays: true }>;
+    const maybeHasEntities = message as PartialDeep<SceneUpdate, { recurseIntoArrays: true }>;
     const maybeHasFrameId = message as PartialDeep<Header>;
 
     // Extract coordinate frame IDs from all incoming messages
