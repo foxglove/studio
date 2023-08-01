@@ -33,13 +33,14 @@ export function isGeoJSONMessage(msgEvent: MessageEvent): msgEvent is GeoJsonMes
   return (
     datatype === "foxglove_msgs/GeoJSON" ||
     datatype === "foxglove_msgs/msg/GeoJSON" ||
+    datatype === "foxglove::GeoJSON" ||
     datatype === "foxglove.GeoJSON"
   );
 }
 
 /**
- * Verify that the message is either a GeoJSON message or a NavSatFix message with a
- * position fix and finite latitude and longitude so we can actually display it.
+ * Verify that the message is either a GeoJSON message or a NavSatFix message with
+ * finite latitude and longitude so we can actually display it.
  */
 export function isValidMapMessage(msgEvent: MessageEvent): msgEvent is MapPanelMessage {
   if (isGeoJSONMessage(msgEvent)) {
@@ -51,8 +52,7 @@ export function isValidMapMessage(msgEvent: MessageEvent): msgEvent is MapPanelM
     message.latitude != undefined &&
     isFinite(message.latitude) &&
     message.longitude != undefined &&
-    isFinite(message.longitude) &&
-    message.status?.status !== NavSatFixStatus.STATUS_NO_FIX
+    isFinite(message.longitude)
   );
 }
 
@@ -64,8 +64,10 @@ export function isSupportedSchema(schemaName: string): boolean {
     case "foxglove_msgs/LocationFix":
     case "foxglove_msgs/msg/LocationFix":
     case "foxglove.LocationFix":
+    case "foxglove::LocationFix":
     case "foxglove_msgs/GeoJSON":
     case "foxglove_msgs/msg/GeoJSON":
+    case "foxglove::GeoJSON":
     case "foxglove.GeoJSON":
       return true;
     default:

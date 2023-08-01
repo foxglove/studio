@@ -123,7 +123,7 @@ export class Picker {
     x: number,
     y: number,
     camera: THREE.OrthographicCamera | THREE.PerspectiveCamera,
-    renderable: Renderable,
+    renderable: THREE.Object3D,
     options: PickerOptions = {},
   ): number {
     this.#emptyScene.onAfterRender = this.#renderForPickingInstance.bind(this, renderable);
@@ -224,7 +224,7 @@ export class Picker {
 
   #pickInstanceDebugRender(
     camera: THREE.OrthographicCamera | THREE.PerspectiveCamera,
-    renderable: Renderable,
+    renderable: THREE.Object3D,
   ): void {
     this.#isDebugPass = true;
     this.#emptyScene.onAfterRender = this.#renderForPickingInstance.bind(this, renderable);
@@ -246,7 +246,7 @@ export class Picker {
     renderList.transparent.forEach(this.#renderItemForPicking);
   };
 
-  #renderForPickingInstance(renderable: Renderable) {
+  #renderForPickingInstance(renderable: THREE.Object3D) {
     // Note that no attempt is made to define a sensible sort order. Since the
     // instanced picking pass should only be rendering opaque pixels, the
     // worst that will happen is some overdraw
@@ -285,14 +285,13 @@ export class Picker {
       return;
     }
 
-    const sprite = material.type === "SpriteMaterial" ? 1 : 0;
+    const isSprite = material.type === "SpriteMaterial";
 
     const pickResolution = tempResolution.set(
       this.#pickingTarget.width,
       this.#pickingTarget.height,
     );
-    const sizeAttenuation =
-      (material as Partial<THREE.PointsMaterial>).sizeAttenuation === true ? 1 : 0;
+    const sizeAttenuation = (material as Partial<THREE.PointsMaterial>).sizeAttenuation === true;
     const pickingMaterial = renderItem.object.userData.pickingMaterial as
       | THREE.ShaderMaterial
       | undefined;
@@ -300,8 +299,15 @@ export class Picker {
     if (pickingMaterial?.uniforms.resolution != undefined) {
       pickingMaterial.uniforms.resolution.value.copy(pickResolution);
     }
-    const renderMaterial = pickingMaterial ?? this.#renderMaterial(sprite, sizeAttenuation);
-    if (sprite === 1) {
+    const renderMaterial =
+      pickingMaterial ??
+      this.#renderMaterial({
+        isSprite,
+        sizeAttenuation,
+        depthTest: material.depthTest,
+        depthWrite: material.depthWrite,
+      });
+    if (isSprite) {
       renderMaterial.uniforms.rotation = { value: (material as THREE.SpriteMaterial).rotation };
       renderMaterial.uniforms.center = { value: (object as THREE.Sprite).center };
     }
@@ -344,18 +350,33 @@ export class Picker {
     );
   };
 
-  #renderMaterial(sprite: 0 | 1, sizeAttenuation: 0 | 1): THREE.ShaderMaterial {
-    const index = (sprite << 0) | (sizeAttenuation << 1);
+  /** Create a unique picking material for each combination of parameters */
+  #renderMaterial({
+    isSprite,
+    sizeAttenuation,
+    depthTest,
+    depthWrite,
+  }: {
+    isSprite: boolean;
+    sizeAttenuation: boolean;
+    depthTest: boolean;
+    depthWrite: boolean;
+  }): THREE.ShaderMaterial {
+    const index =
+      ((isSprite ? 1 : 0) << 0) |
+      ((sizeAttenuation ? 1 : 0) << 1) |
+      ((depthTest ? 1 : 0) << 2) |
+      ((depthWrite ? 1 : 0) << 3);
     let renderMaterial = this.#materialCache.get(index);
     if (renderMaterial) {
       return renderMaterial;
     }
 
     let vertexShader = THREE.ShaderChunk.meshbasic_vert;
-    if (sprite === 1) {
+    if (isSprite) {
       vertexShader = THREE.ShaderChunk.sprite_vert!;
     }
-    if (sizeAttenuation === 1) {
+    if (sizeAttenuation) {
       vertexShader = "#define USE_SIZEATTENUATION\n\n" + vertexShader;
     }
     renderMaterial = new THREE.ShaderMaterial({
@@ -368,6 +389,8 @@ export class Picker {
         `,
       side: THREE.DoubleSide,
       uniforms: { objectId: { value: [NaN, NaN, NaN, NaN] } },
+      depthTest,
+      depthWrite,
     });
     this.#materialCache.set(index, renderMaterial);
     return renderMaterial;

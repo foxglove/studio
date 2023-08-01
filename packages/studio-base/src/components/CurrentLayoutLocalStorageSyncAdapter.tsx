@@ -8,7 +8,6 @@ import { useDebounce } from "use-debounce";
 
 import Log from "@foxglove/log";
 import {
-  LayoutID,
   LayoutState,
   useCurrentLayoutActions,
   useCurrentLayoutSelector,
@@ -29,19 +28,14 @@ const KEY = "studio.layout";
 export function CurrentLayoutLocalStorageSyncAdapter(): JSX.Element {
   const { selectedSource } = usePlayerSelection();
 
-  const { setCurrentLayoutState } = useCurrentLayoutActions();
+  const { setCurrentLayout } = useCurrentLayoutActions();
   const currentLayoutData = useCurrentLayoutSelector(selectLayoutData);
 
   useEffect(() => {
     if (selectedSource?.sampleLayout) {
-      setCurrentLayoutState({
-        selectedLayout: {
-          id: "default" as LayoutID,
-          data: selectedSource.sampleLayout,
-        },
-      });
+      setCurrentLayout({ data: selectedSource.sampleLayout });
     }
-  }, [selectedSource, setCurrentLayoutState]);
+  }, [selectedSource, setCurrentLayout]);
 
   const [debouncedLayoutData] = useDebounce(currentLayoutData, 250, { maxWait: 500 });
 
@@ -69,13 +63,8 @@ export function CurrentLayoutLocalStorageSyncAdapter(): JSX.Element {
     const layoutData = migratePanelsState(
       serializedLayoutData ? (JSON.parse(serializedLayoutData) as LayoutData) : defaultLayout,
     );
-    setCurrentLayoutState({
-      selectedLayout: {
-        id: "default" as LayoutID,
-        data: layoutData,
-      },
-    });
-  }, [setCurrentLayoutState]);
+    setCurrentLayout({ data: layoutData });
+  }, [setCurrentLayout]);
 
   return <></>;
 }

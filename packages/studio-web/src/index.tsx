@@ -9,7 +9,7 @@ import Logger from "@foxglove/log";
 import type { IDataSourceFactory } from "@foxglove/studio-base";
 import CssBaseline from "@foxglove/studio-base/components/CssBaseline";
 
-import VersionBanner from "./VersionBanner";
+import { CompatibilityBanner } from "./CompatibilityBanner";
 import { canRenderApp } from "./canRenderApp";
 
 const log = Logger.getLogger(__filename);
@@ -17,10 +17,8 @@ const log = Logger.getLogger(__filename);
 function LogAfterRender(props: React.PropsWithChildren<unknown>): JSX.Element {
   useEffect(() => {
     // Integration tests look for this console log to indicate the app has rendered once
-    const level = log.getLevel();
-    log.setLevel("debug");
-    log.debug("App rendered");
-    log.setLevel(level);
+    // We use console.debug to bypass our logging library which hides some log levels in prod builds
+    console.debug("App rendered");
   }, []);
   return <>{props.children}</>;
 }
@@ -48,7 +46,11 @@ export async function main(getParams: () => Promise<MainParams> = async () => ({
 
   const canRender = canRenderApp();
   const banner = (
-    <VersionBanner isChrome={isChrome} currentVersion={chromeVersion} isDismissable={canRender} />
+    <CompatibilityBanner
+      isChrome={isChrome}
+      currentVersion={chromeVersion}
+      isDismissable={canRender}
+    />
   );
 
   if (!canRender) {

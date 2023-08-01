@@ -10,12 +10,10 @@ import { useEffect } from "react";
 
 import {
   CurrentLayoutActions,
-  LayoutID,
   LayoutState,
   useCurrentLayoutActions,
   useCurrentLayoutSelector,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
-import { LayoutData } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
 import CurrentLayoutProvider, {
   MAX_SUPPORTED_LAYOUT_VERSION,
 } from "@foxglove/studio-base/providers/CurrentLayoutProvider";
@@ -33,19 +31,14 @@ describe("CurrentLayoutProvider", () => {
       }, [layoutState]);
 
       useEffect(() => {
-        const expectedState: LayoutData = {
-          configById: { "Foo!bar": { setting: 1 } },
-          globalVariables: { var: "hello" },
-          layout: "Foo!bar",
-          playbackConfig: { speed: 0.1 },
-          userNodes: { node1: { name: "node", sourceCode: "node()" } },
-          version: MAX_SUPPORTED_LAYOUT_VERSION + 1,
-        };
-
-        actions.setCurrentLayoutState({
-          selectedLayout: {
-            id: "example" as LayoutID,
-            data: expectedState,
+        actions.setCurrentLayout({
+          data: {
+            configById: { "Foo!bar": { setting: 1 } },
+            globalVariables: { var: "hello" },
+            layout: "Foo!bar",
+            playbackConfig: { speed: 0.1 },
+            userNodes: { node1: { name: "node", sourceCode: "node()" } },
+            version: MAX_SUPPORTED_LAYOUT_VERSION + 1,
           },
         });
       }, [actions]);

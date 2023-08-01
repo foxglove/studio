@@ -20,7 +20,7 @@ const DEFAULT_FONT_SIZE = 12;
 const DEFAULT_PADDING = 4;
 
 // Supported annotation schema names
-export const ANNOTATION_DATATYPES = [
+const ANNOTATION_DATATYPES = [
   // Single marker
   "visualization_msgs/ImageMarker",
   "visualization_msgs/msg/ImageMarker",
@@ -39,6 +39,7 @@ export const ANNOTATION_DATATYPES = [
   "foxglove_msgs/ImageAnnotations",
   "foxglove_msgs/msg/ImageAnnotations",
   "foxglove.ImageAnnotations",
+  "foxglove::ImageAnnotations",
 ] as const;
 
 function foxglovePointTypeToStyle(
@@ -238,6 +239,7 @@ function normalizeAnnotations(maybeLazyMessage: unknown, datatype: string): Anno
     // foxglove
     case "foxglove_msgs/ImageAnnotations":
     case "foxglove_msgs/msg/ImageAnnotations":
+    case "foxglove::ImageAnnotations":
     case "foxglove.ImageAnnotations": {
       return normalizeFoxgloveImageAnnotations(message as ImageAnnotations);
     }
