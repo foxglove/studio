@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { useTheme } from "@mui/material";
-import { groupBy, intersection, isEmpty, mapValues } from "lodash";
+import { groupBy, intersection, isEmpty } from "lodash";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLatest } from "react-use";
 
@@ -15,29 +15,34 @@ import { useMessageReducer } from "@foxglove/studio-base/PanelAPI";
 import parseRosPath, {
   getTopicsFromPaths,
 } from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
-import {
-  useCachedGetMessagePathDataItems,
-  useDecodeMessagePathsForMessagesByTopic,
-} from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
+import { useCachedGetMessagePathDataItems } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
 import { ChartDefaultView } from "@foxglove/studio-base/components/TimeBasedChart";
 import useGlobalVariables, {
   GlobalVariables,
 } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { derivative } from "@foxglove/studio-base/panels/Plot/transformPlotRange";
+import { useStableValidPathsForDatasourceTopics } from "@foxglove/studio-base/panels/Plot/useStableValidPathsForDatasourceTopics";
 import { MessageEvent } from "@foxglove/studio-base/players/types";
 import { Bounds, makeInvertedBounds, unionBounds } from "@foxglove/studio-base/types/Bounds";
 import { getTimestampForMessage } from "@foxglove/studio-base/util/time";
 
 import { calculateDatasetBounds } from "./datasets";
-import { BasePlotPath, DataSet, PlotDataByPath, PlotPath, PlotXAxisVal } from "./internalTypes";
+import {
+  BasePlotPath,
+  DataSet,
+  PlotDataByPath,
+  PlotDataItem,
+  PlotPath,
+  PlotXAxisVal,
+} from "./internalTypes";
 import * as maps from "./maps";
 import {
   EmptyPlotData,
   PlotData,
   appendPlotData,
   buildPlotData,
+  messageAndDataToPathItem,
   reducePlotData,
-  getByPath,
 } from "./plotData";
 import { useAllFramesByTopic } from "./useAllFramesByTopic";
 
@@ -62,6 +67,7 @@ type Params = Immutable<{
 type State = Immutable<{
   allFrames: Record<string, Immutable<MessageEvent[]>>;
   allPaths: readonly string[];
+  // These cursors are per-path pointers into the per-topic messages corresponding to the path.
   cursors: Record<string, number>;
   data: PlotData;
   globalVariables: GlobalVariables;
@@ -145,16 +151,23 @@ export function usePlotPanelData(params: Params): Immutable<{
     yAxisPaths,
   } = params;
 
+  // Filter allPaths down to paths that parse as a valid path and point to a topic that exists in
+  // our datasource to prevent a lot of wasted work while the user is inteeractively editing paths.
+  const validAllPaths = useStableValidPathsForDatasourceTopics(allPaths);
+  const validYAxisPaths = useShallowMemo(
+    yAxisPaths.filter((path) => validAllPaths.some((vp) => path.value === vp)),
+  );
+
+  const subscribeTopics = useMemo(() => getTopicsFromPaths(validAllPaths), [validAllPaths]);
+
   const theme = useTheme();
 
   // When iterating message events, we need a reverse lookup from topic to the
   // paths that requested the topic.
   const topicToPaths = useMemo(
-    () => groupBy(allPaths, (path) => parseRosPath(path)?.topicName),
-    [allPaths],
+    () => groupBy(validAllPaths, (path) => parseRosPath(path)?.topicName),
+    [validAllPaths],
   );
-
-  const subscribeTopics = useShallowMemo(getTopicsFromPaths(allPaths));
 
   const subscriptions: Subscription[] = useMemo(() => {
     return subscribeTopics.map((topic) => ({ topic, preload: true }));
@@ -166,37 +179,58 @@ export function usePlotPanelData(params: Params): Immutable<{
 
   const allFrames = showSingleCurrentMessage ? EmptyAllFrames : allFramesByTopic;
 
-  const decodeMessagePathsForMessagesByTopic = useDecodeMessagePathsForMessagesByTopic(allPaths);
+  const messageDataPathGetter = useCachedGetMessagePathDataItems(validAllPaths);
 
   const { globalVariables } = useGlobalVariables();
 
   // Resets all data when global variables change. This could be more fine grained and parse the
   // paths to only rebuild when variables change that are referenced in plot paths.
   const resetDatasets =
-    allPaths !== state.allPaths ||
     xAxisVal !== state.xAxisVal ||
     xAxisPath !== state.xAxisPath ||
     globalVariables !== state.globalVariables;
 
-  if (allFrames !== state.allFrames || resetDatasets) {
+  if (allFrames !== state.allFrames || validAllPaths !== state.allPaths || resetDatasets) {
     // use setState directly instead of useEffect to skip an extra render.
     setState((oldState) => {
       const newState = resetDatasets ? makeInitialState() : oldState;
 
-      const newFramesByTopic = mapValues(allFrames, (messages, topic) =>
-        messages.slice(newState.cursors[topic] ?? 0),
-      );
+      const newDataItems: Record<string, PlotDataItem[]> = {};
+      const newCursors: Record<string, number> = {};
+      let haveNewMessages = false;
+      for (const path of validAllPaths) {
+        newCursors[path] = newState.cursors[path] ?? 0;
 
-      const newCursors = mapValues(allFrames, (messages) => messages.length);
+        const topic = parseRosPath(path)?.topicName;
+        if (topic == undefined) {
+          continue;
+        }
 
-      const newBlockItems = getByPath(decodeMessagePathsForMessagesByTopic(newFramesByTopic));
+        const newMessages = allFramesByTopic[topic]?.slice(newCursors[path] ?? 0);
+        if (newMessages == undefined || newMessages.length === 0) {
+          continue;
+        }
 
-      const anyNewFrames = Object.values(newFramesByTopic).some((msgs) => msgs.length > 0);
+        newCursors[path] = (newCursors[path] ?? 0) + newMessages.length;
 
-      const newPlotData = anyNewFrames
+        const dataItems: PlotDataItem[] = filterMap(newMessages, (msg) => {
+          const queriedData = messageDataPathGetter(path, msg);
+
+          return queriedData && queriedData.length > 0
+            ? messageAndDataToPathItem({ queriedData, messageEvent: msg })
+            : undefined;
+        });
+
+        if (dataItems.length > 0) {
+          haveNewMessages = true;
+          newDataItems[path] = dataItems;
+        }
+      }
+
+      const newPlotData = haveNewMessages
         ? buildPlotData({
-            paths: yAxisPaths,
-            itemsByPath: newBlockItems,
+            paths: validYAxisPaths,
+            itemsByPath: newDataItems,
             startTime: startTime ?? ZERO_TIME,
             xAxisVal,
             xAxisPath,
@@ -206,7 +240,7 @@ export function usePlotPanelData(params: Params): Immutable<{
 
       return {
         allFrames,
-        allPaths,
+        allPaths: validAllPaths,
         cursors: newCursors,
         data: appendPlotData(newState.data, newPlotData),
         globalVariables,
@@ -217,7 +251,7 @@ export function usePlotPanelData(params: Params): Immutable<{
     });
   }
 
-  const cachedGetMessagePathDataItems = useCachedGetMessagePathDataItems(allPaths);
+  const cachedGetMessagePathDataItems = useCachedGetMessagePathDataItems(validAllPaths);
 
   const restore = useCallback(
     (previous?: TaggedPlotData): TaggedPlotData => {
@@ -231,8 +265,8 @@ export function usePlotPanelData(params: Params): Immutable<{
 
       // Discard datasets no longer in current y paths and recompute bounds and mismatched
       // paths so we don't hang onto data we no longer need.
-      const newYPathValues = yAxisPaths.map((path) => path.value);
-      const retainedDataSets = maps.pick(previous.data.datasetsByPath, yAxisPaths);
+      const newYPathValues = validYAxisPaths.map((path) => path.value);
+      const retainedDataSets = maps.pick(previous.data.datasetsByPath, validYAxisPaths);
       const newMismatchedPaths = intersection(
         previous.data.pathsWithMismatchedDataLengths,
         newYPathValues,
@@ -251,7 +285,7 @@ export function usePlotPanelData(params: Params): Immutable<{
         },
       };
     },
-    [showSingleCurrentMessage, yAxisPaths],
+    [showSingleCurrentMessage, validYAxisPaths],
   );
 
   // Access allFrames by reference to avoid invalidating the addMessages callback.
@@ -324,7 +358,7 @@ export function usePlotPanelData(params: Params): Immutable<{
       }
 
       const newPlotData = buildPlotData({
-        paths: yAxisPaths,
+        paths: validYAxisPaths,
         itemsByPath: newMessages,
         startTime: startTime ?? ZERO_TIME,
         xAxisVal,
@@ -349,7 +383,7 @@ export function usePlotPanelData(params: Params): Immutable<{
       topicToPaths,
       xAxisPath,
       xAxisVal,
-      yAxisPaths,
+      validYAxisPaths,
     ],
   );
 
@@ -422,13 +456,13 @@ export function usePlotPanelData(params: Params): Immutable<{
       //
       // Label is needed so that TimeBasedChart doesn't discard the empty dataset and mess
       // up the ordering.
-      datasets: yAxisPaths.map(
+      datasets: validYAxisPaths.map(
         (path) =>
           sortedData.datasetsByPath.get(path) ?? { label: path.label ?? path.value, data: [] },
       ),
       pathsWithMismatchedDataLengths: sortedData.pathsWithMismatchedDataLengths,
     };
-  }, [state.data, trimmedCurrentFrameData, yAxisPaths]);
+  }, [state.data, trimmedCurrentFrameData, validYAxisPaths]);
 
   return allData;
 }

@@ -7,10 +7,7 @@ import memoizeWeak from "memoize-weak";
 
 import { Time } from "@foxglove/rostime";
 import { Immutable as Im } from "@foxglove/studio";
-import {
-  MessageAndData,
-  MessageDataItemsByPath,
-} from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
+import { MessageAndData } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
 import { getDatasetsFromMessagePlotPath } from "@foxglove/studio-base/panels/Plot/datasets";
 import { Bounds, makeInvertedBounds, unionBounds } from "@foxglove/studio-base/types/Bounds";
 import { Range } from "@foxglove/studio-base/util/ranges";
@@ -21,6 +18,7 @@ import {
   DatasetsByPath,
   Datum,
   PlotDataByPath,
+  PlotDataItem,
   PlotPath,
   PlotXAxisVal,
   isReferenceLinePlotPathType,
@@ -144,7 +142,7 @@ function compare(a: Im<PlotData>, b: Im<PlotData>): number {
  * Note: this is a free function so we are not making it for every loop iteration
  * in `getByPath` below.
  */
-function messageAndDataToPathItem(messageAndData: MessageAndData) {
+export function messageAndDataToPathItem(messageAndData: MessageAndData): PlotDataItem {
   const headerStamp = getTimestampForMessage(messageAndData.messageEvent.message);
   return {
     queriedData: messageAndData.queriedData,
@@ -152,18 +150,6 @@ function messageAndDataToPathItem(messageAndData: MessageAndData) {
     headerStamp,
   };
 }
-
-/**
- * Fetch the data we need from each item in itemsByPath and discard the rest of
- * the message to save memory.
- */
-export const getByPath = (itemsByPath: MessageDataItemsByPath): PlotDataByPath => {
-  const ret: PlotDataByPath = {};
-  for (const [path, items] of Object.entries(itemsByPath)) {
-    ret[path] = items.map(messageAndDataToPathItem);
-  }
-  return ret;
-};
 
 /**
  * Reduce multiple PlotData objects into a single PlotData object, concatenating messages
