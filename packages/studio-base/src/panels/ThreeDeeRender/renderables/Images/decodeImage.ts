@@ -33,15 +33,16 @@ export async function decodeCompressedImageToBitmap(
   return await createImageBitmap(bitmapData, { resizeWidth });
 }
 
-export const IMAGE_DEFAULT_COLOR_MODE_SETTINGS: Required<Omit<ColorModeSettings, "colorField">> = {
+export const IMAGE_DEFAULT_COLOR_MODE_SETTINGS: Required<
+  Omit<ColorModeSettings, "colorField" | "minValue" | "maxValue">
+> = {
   colorMode: "gradient",
   flatColor: "#ffffff",
   gradient: ["#000000", "#ffffff"],
   colorMap: "turbo",
   explicitAlpha: 0,
-  minValue: 0,
-  maxValue: 65536,
 };
+const MIN_MAX_16_BIT = { minValue: 0, maxValue: 65535 };
 
 export type RawImageOptions = ColorModeSettings;
 
@@ -102,7 +103,7 @@ export function decodeRawImage(
     case "16UC1": {
       // combine options with defaults. lodash merge makes sure undefined values in options are replaced with defaults
       // whereas a normal spread would allow undefined values to overwrite defaults
-      const settings = merge({}, IMAGE_DEFAULT_COLOR_MODE_SETTINGS, options);
+      const settings = merge({}, IMAGE_DEFAULT_COLOR_MODE_SETTINGS, MIN_MAX_16_BIT, options);
       if (settings.colorMode === "rgba-fields" || settings.colorMode === "flat") {
         throw Error(`${settings.colorMode} color mode is not supported for mono16 images`);
       }
