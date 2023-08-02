@@ -100,7 +100,8 @@ export function decodeRawImage(
       break;
     case "mono16":
     case "16UC1": {
-      // combine options with defaults. lodash mergemakes sure undefined values in options are replaced with defaults
+      // combine options with defaults. lodash merge makes sure undefined values in options are replaced with defaults
+      // whereas a normal spread would allow undefined values to overwrite defaults
       const settings = merge({}, IMAGE_DEFAULT_COLOR_MODE_SETTINGS, options);
       if (settings.colorMode === "rgba-fields" || settings.colorMode === "flat") {
         throw Error(`${settings.colorMode} color mode is not supported for mono16 images`);

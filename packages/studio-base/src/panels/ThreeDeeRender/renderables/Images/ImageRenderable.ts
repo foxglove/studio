@@ -51,9 +51,6 @@ export type ImageUserData = BaseUserData & {
   cameraInfo: CameraInfo | undefined;
   cameraModel: PinholeCameraModel | undefined;
   image: AnyImage | undefined;
-  rotation: 0 | 90 | 180 | 270;
-  flipHorizontal: boolean;
-  flipVertical: boolean;
   texture: THREE.Texture | undefined;
   material: THREE.MeshBasicMaterial | undefined;
   geometry: THREE.PlaneGeometry | undefined;
