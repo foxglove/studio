@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { merge } from "lodash";
 import * as THREE from "three";
 
 import { filterMap } from "@foxglove/den/collection";
@@ -45,7 +46,7 @@ import {
 import { topicIsConvertibleToSchema } from "../../topicIsConvertibleToSchema";
 import { ICameraHandler } from "../ICameraHandler";
 import { getTopicMatchPrefix, sortPrefixMatchesToFront } from "../Images/topicPrefixMatching";
-import { ColorModeSettings, baseColorModeSettingsNode } from "../colorMode";
+import { ColorModeSettings, colorModeSettingsFields } from "../colorMode";
 
 const IMAGE_TOPIC_PATH = ["imageMode", "imageTopic"];
 const CALIBRATION_TOPIC_PATH = ["imageMode", "calibrationTopic"];
@@ -426,27 +427,21 @@ export class ImageMode
       ],
     };
 
-    const colorNode = baseColorModeSettingsNode(
-      [],
-      settings as ImageModeConfig,
-      {
-        name: "Name",
-        schemaName: "my.schema",
-        datatype: "datatype",
-      },
-      {
-        visible: true,
+    const colorModeFields = colorModeSettingsFields({
+      config: settings as ImageModeConfig,
+
+      defaults: {
         gradient: DEFAULT_CONFIG.gradient,
       },
-      {
+      modifiers: {
         supportsPackedRgbModes: false,
         supportsRgbaFieldsMode: false,
         hideFlatColor: true,
         hideExplicitAlpha: true,
       },
-    );
+    });
 
-    Object.assign(fields, colorNode.fields);
+    Object.assign(fields, colorModeFields);
 
     return [
       {
@@ -697,18 +692,9 @@ export class ImageMode
         ? DEFAULT_CONFIG.colorMode
         : config.colorMode ?? DEFAULT_CONFIG.colorMode;
 
-    return {
-      ...config,
-      synchronize: config.synchronize ?? DEFAULT_CONFIG.synchronize,
-      rotation: config.rotation ?? DEFAULT_CONFIG.rotation,
-      flipHorizontal: config.flipHorizontal ?? DEFAULT_CONFIG.flipHorizontal,
-      flipVertical: config.flipVertical ?? DEFAULT_CONFIG.flipVertical,
-      colorMode,
-      colorMap: config.colorMap ?? DEFAULT_CONFIG.colorMap,
-      gradient: config.gradient ?? DEFAULT_CONFIG.gradient,
-      explicitAlpha: config.explicitAlpha ?? DEFAULT_CONFIG.explicitAlpha,
-      flatColor: config.flatColor ?? DEFAULT_CONFIG.flatColor,
-    };
+    // Ensures that no required fields are left undefined
+    // rightmost values are applied last and have the most precedence
+    return merge({}, DEFAULT_CONFIG, { colorMode }, config);
   }
 
   /**

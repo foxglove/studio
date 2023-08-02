@@ -2,6 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { merge } from "lodash";
+
 import {
   decodeBGR8,
   decodeBGRA8,
@@ -31,38 +33,17 @@ export async function decodeCompressedImageToBitmap(
   return await createImageBitmap(bitmapData, { resizeWidth });
 }
 
-export const IMAGE_DEFAULT_COLOR_MODE_SETTINGS: ColorModeSettings = {
+export const IMAGE_DEFAULT_COLOR_MODE_SETTINGS: Required<Omit<ColorModeSettings, "colorField">> = {
   colorMode: "gradient",
   flatColor: "#ffffff",
-  gradient: ["#ffffff", "#000000"],
+  gradient: ["#000000", "#ffffff"],
   colorMap: "turbo",
   explicitAlpha: 0,
+  minValue: 0,
+  maxValue: 65536,
 };
 
 export type RawImageOptions = ColorModeSettings;
-
-function makeColorConverter(
-  settings: ColorModeSettings,
-  defaultMaxValue: number,
-): ((value: number) => { r: number; g: number; b: number; a: number }) | undefined {
-  if (settings.colorMode === "flat" || settings.colorMode === "rgba-fields") {
-    return undefined;
-  }
-  const min = settings.minValue ?? 0;
-  const max = settings.maxValue ?? defaultMaxValue;
-  const tempColor = { r: 0, g: 0, b: 0, a: 0 };
-  const c = getColorConverter(
-    settings as ColorModeSettings & {
-      colorMode: typeof settings.colorMode;
-    },
-    min,
-    max,
-  );
-  return (value: number) => {
-    c(tempColor, value);
-    return tempColor;
-  };
-}
 
 /**
  * See also:
@@ -119,18 +100,28 @@ export function decodeRawImage(
       break;
     case "mono16":
     case "16UC1": {
-      // combine options with defaults
-      const fullOptions = {
-        ...options,
-        ...IMAGE_DEFAULT_COLOR_MODE_SETTINGS,
-        colorMode: options.colorMode ?? IMAGE_DEFAULT_COLOR_MODE_SETTINGS.colorMode,
-        gradient: options.gradient ?? IMAGE_DEFAULT_COLOR_MODE_SETTINGS.gradient,
-      };
-      const converter = makeColorConverter(fullOptions, 65536);
+      // combine options with defaults. lodash mergemakes sure undefined values in options are replaced with defaults
+      const settings = merge({}, IMAGE_DEFAULT_COLOR_MODE_SETTINGS, options);
+      if (settings.colorMode === "rgba-fields" || settings.colorMode === "flat") {
+        throw Error(`${settings.colorMode} color mode is not supported for mono16 images`);
+      }
+      const min = settings.minValue;
+      const max = settings.maxValue;
+      const tempColor = { r: 0, g: 0, b: 0, a: 0 };
+      const converter = getColorConverter(
+        settings as ColorModeSettings & {
+          colorMode: typeof settings.colorMode;
+        },
+        min,
+        max,
+      );
       decodeMono16(rawData, width, height, is_bigendian, output, {
         minValue: options.minValue,
         maxValue: options.maxValue,
-        colorConverter: converter,
+        colorConverter: (value: number) => {
+          converter(tempColor, value);
+          return tempColor;
+        },
       });
       break;
     }
