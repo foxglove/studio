@@ -252,11 +252,13 @@ export default function MockMessagePipelineProvider(
           });
         }
       };
+      const reset = () => {};
       const initialPublicState = getPublicState(undefined, props, dispatch);
       return {
         mockProps: omit(props, "children"),
         player: undefined,
         dispatch,
+        reset,
         publishersById: {},
         allPublishers: [],
         subscriptionsById: new Map(),
