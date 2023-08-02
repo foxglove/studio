@@ -6,11 +6,13 @@ import { createSelector } from "reselect";
 
 import { filterMap } from "@foxglove/den/collection";
 import { useShallowMemo } from "@foxglove/hooks";
+import { Immutable } from "@foxglove/studio";
 import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
 import {
   MessagePipelineContext,
   useMessagePipeline,
 } from "@foxglove/studio-base/components/MessagePipeline";
+import { PlotPath } from "@foxglove/studio-base/panels/Plot/internalTypes";
 
 export const selectKeyedTopics = createSelector(
   (ctx: MessagePipelineContext) => ctx.sortedTopics,
@@ -18,18 +20,18 @@ export const selectKeyedTopics = createSelector(
 );
 
 /**
- * Returns a list of paths that parse as a valid path and reference a topic that exists in
- * datasource.
+ * Returns a referentially stable list of paths that parse as a valid path and reference a topic
+ * that exists in our datasource.
  */
 export function useStableValidPathsForDatasourceTopics(
-  paths: readonly string[],
-): readonly string[] {
+  paths: Immutable<PlotPath[]>,
+): Immutable<PlotPath[]> {
   const keyedTopics = useMessagePipeline(selectKeyedTopics);
 
   const stableValidPaths = useShallowMemo(
     filterMap(paths, (path) => {
-      const parsedTopic = parseRosPath(path)?.topicName;
-      const pathIsBareTopic = path === parsedTopic;
+      const parsedTopic = parseRosPath(path.value)?.topicName;
+      const pathIsBareTopic = path.value === parsedTopic;
       return !pathIsBareTopic && parsedTopic && keyedTopics.has(parsedTopic) ? path : undefined;
     }),
   );

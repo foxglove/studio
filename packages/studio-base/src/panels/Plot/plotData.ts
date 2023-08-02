@@ -14,10 +14,8 @@ import { Range } from "@foxglove/studio-base/util/ranges";
 import { getTimestampForMessage } from "@foxglove/studio-base/util/time";
 
 import {
-  BasePlotPath,
   DatasetsByPath,
   Datum,
-  PlotDataByPath,
   PlotDataItem,
   PlotPath,
   PlotXAxisVal,
@@ -171,10 +169,10 @@ export function reducePlotData(data: Im<PlotData[]>): Im<PlotData> {
 export function buildPlotData(
   args: Im<{
     invertedTheme?: boolean;
-    itemsByPath: PlotDataByPath;
+    itemsByPath: Map<PlotPath, PlotDataItem[]>;
     paths: PlotPath[];
     startTime: Time;
-    xAxisPath?: BasePlotPath;
+    xAxisPath?: PlotPath;
     xAxisVal: PlotXAxisVal;
   }>,
 ): PlotData {
@@ -183,8 +181,8 @@ export function buildPlotData(
   const pathsWithMismatchedDataLengths: string[] = [];
   const datasets: DatasetsByPath = new Map();
   for (const [index, path] of paths.entries()) {
-    const yRanges = itemsByPath[path.value] ?? [];
-    const xRanges = xAxisPath && itemsByPath[xAxisPath.value];
+    const yRanges = itemsByPath.get(path) ?? [];
+    const xRanges = xAxisPath && itemsByPath.get(xAxisPath);
     if (!path.enabled) {
       continue;
     } else if (!isReferenceLinePlotPathType(path)) {

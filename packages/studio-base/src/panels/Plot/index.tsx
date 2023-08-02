@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { compact, isNumber, uniq } from "lodash";
+import { isNumber, uniq } from "lodash";
 import { ComponentProps, useCallback, useEffect, useMemo, useState } from "react";
 import { useLatest } from "react-use";
 import { DeepWritable } from "ts-essentials";
@@ -182,16 +182,11 @@ function Plot(props: Props) {
     return followingView ?? fixedView ?? undefined;
   }, [fixedView, followingView]);
 
-  const allPaths = useMemo(() => {
-    return yAxisPaths.map(({ value }) => value).concat(compact([xAxisPath?.value]));
-  }, [xAxisPath?.value, yAxisPaths]);
-
   const {
     bounds: datasetBounds,
     datasets,
     pathsWithMismatchedDataLengths,
   } = usePlotPanelData({
-    allPaths,
     followingView,
     showSingleCurrentMessage,
     startTime,

@@ -24,7 +24,7 @@ jest.mock("@foxglove/studio-base/hooks/useGlobalVariables");
 const topics: Topic[] = [{ name: "topic", schemaName: "schema" }];
 const datatypes: RosDatatypes = new Map(
   Object.entries({
-    datatype: {
+    schema: {
       definitions: [{ name: "value", type: "uint32", isArray: false, isComplex: false }],
     },
   }),
@@ -139,6 +139,7 @@ describe("usePlotPanelData", () => {
           return (
             <MockCurrentLayoutProvider>
               <MockMessagePipelineProvider
+                datatypes={datatypes}
                 topics={topics}
                 activeData={activeData}
                 progress={progress}
