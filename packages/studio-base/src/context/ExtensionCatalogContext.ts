@@ -44,5 +44,5 @@ export function useExtensionCatalog<T>(
   equalityFn?: (a: T, b: T) => boolean,
 ): T {
   const context = useGuaranteedContext(ExtensionCatalogContext);
-  return useStore(context, selector, equalityFn);
+  return useStore(context, selector, equalityFn ?? Object.is);
 }

@@ -69,5 +69,5 @@ export function useWorkspaceStore<T>(
   equalityFn?: (a: T, b: T) => boolean,
 ): T {
   const context = useGuaranteedContext(WorkspaceContext);
-  return useStore(context, selector, equalityFn);
+  return useStore(context, selector, equalityFn ?? Object.is);
 }

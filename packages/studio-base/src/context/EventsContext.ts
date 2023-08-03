@@ -90,5 +90,5 @@ export function useEvents<T>(
   equalityFn?: (a: T, b: T) => boolean,
 ): T {
   const context = useGuaranteedContext(EventsContext);
-  return useStore(context, selector, equalityFn);
+  return useStore(context, selector, equalityFn ?? Object.is);
 }
