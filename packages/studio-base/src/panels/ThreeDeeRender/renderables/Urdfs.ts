@@ -174,6 +174,7 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
   #transformsByInstanceId = new Map<string, TransformData[]>();
   #jointStates = new Map<string, JointPosition>();
   #textDecoder = new TextDecoder();
+  #urdfsByTopic = new Map<string, string>();
 
   public constructor(renderer: IRenderer) {
     super("foxglove.Urdfs", renderer);
@@ -306,7 +307,7 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
             value: config.sourceType ?? DEFAULT_CUSTOM_SETTINGS.sourceType,
             options: [
               {
-                label: "From URL",
+                label: "URL",
                 value: "url",
               },
               {
@@ -375,6 +376,7 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
             label: "Frame prefix",
             input: "string",
             help: "Prefix to apply to all frame names (also often called tfPrefix)",
+            placeholder: "Frame prefix",
             value: config.framePrefix ?? "",
           },
           displayMode: {
@@ -524,7 +526,8 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
         });
 
         // Add the URDF renderable
-        this.#loadUrdf({ instanceId: newInstanceId, urdf: undefined });
+        const renderable = this.renderables.get(instanceId);
+        this.#loadUrdf({ instanceId: newInstanceId, urdf: renderable?.userData.urdf });
 
         // Update the settings tree
         this.updateSettingsTree();
@@ -581,11 +584,28 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
         this.#debouncedLoadUrdf({ instanceId, urdf: undefined });
       } else if (field === "parameter") {
         urdf = this.renderer.parameters?.get(action.payload.value as string) as string | undefined;
-        this.#debouncedLoadUrdf({ instanceId, urdf });
+        this.#debouncedLoadUrdf({ instanceId, urdf, forceReload: true });
       } else if (field === "framePrefix") {
         this.#debouncedLoadUrdf({ instanceId, urdf, forceReload: true });
-      } else if (field === "displayMode") {
+      } else if (field === "displayMode" || field === "visible") {
         this.#loadUrdf({ instanceId, urdf, forceReload: true });
+      } else if (field === "sourceType") {
+        const sourceType = action.payload.value as LayerSettingsCustomUrdf["sourceType"];
+        if (sourceType === "topic") {
+          urdf = renderable?.userData.topic
+            ? this.#urdfsByTopic.get(renderable.userData.topic)
+            : undefined;
+        } else if (sourceType === "param") {
+          urdf = renderable?.userData.parameter
+            ? (this.renderer.parameters?.get(renderable.userData.parameter) as string | undefined)
+            : undefined;
+        } else {
+          urdf = undefined;
+        }
+        this.#loadUrdf({ instanceId, urdf, forceReload: true });
+      } else if (field === "topic") {
+        urdf = this.#urdfsByTopic.get(action.payload.value as string);
+        this.#loadUrdf({ instanceId, urdf });
       } else {
         this.#loadUrdf({ instanceId, urdf });
       }
@@ -598,6 +618,7 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     if (typeof robotDescription !== "string") {
       return;
     }
+    this.#urdfsByTopic.set(topic, robotDescription);
 
     if (topic === TOPIC_NAME) {
       this.#loadUrdf({ instanceId: TOPIC_NAME, urdf: robotDescription });
@@ -743,7 +764,7 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     const forceReload = args.forceReload ?? false;
     let renderable = this.renderables.get(instanceId);
     const settings = this.#getCurrentSettings(instanceId);
-    if (renderable && urdf != undefined && !forceReload && renderable.userData.urdf === urdf) {
+    if (renderable && urdf && !forceReload && renderable.userData.urdf === urdf) {
       renderable.userData.settings = settings;
       return;
     }
@@ -817,6 +838,8 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
 
     if (!urdf) {
       const path = renderable.userData.settingsPath;
+      this.renderer.settings.errors.remove(path, PARSE_URDF_ERR);
+      this.renderer.settings.errors.remove(path, MISSING_TRANSFORM);
       if (sourceType === "url") {
         if (url != undefined) {
           this.#fetchUrdf(instanceId, url);
