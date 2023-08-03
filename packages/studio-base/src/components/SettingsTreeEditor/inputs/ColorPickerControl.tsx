@@ -44,8 +44,59 @@ type ColorPickerInputProps = {
   onEnterKey?: () => void;
 };
 
-const hexMatcher = /^#?([0-9A-F]{3,8})$/i;
+export function ColorPickerControl(props: ColorPickerInputProps): JSX.Element {
+  const { alphaType, onChange, value, onEnterKey } = props;
 
+  const { classes } = useStyles();
+
+  const {
+    swatchColor,
+    updatePrefixedColor,
+    editedValueIsInvalid,
+    editedValue,
+    updateEditedValue,
+    onInputBlur,
+  } = useColorPickerControl({
+    alphaType,
+    onChange,
+    value,
+  });
+
+  return (
+    <Stack className={classes.container} gap={1}>
+      {alphaType === "alpha" ? (
+        <HexAlphaColorPicker
+          className={classes.picker}
+          color={swatchColor}
+          onChange={updatePrefixedColor}
+        />
+      ) : (
+        <HexColorPicker
+          className={classes.picker}
+          color={swatchColor}
+          onChange={updatePrefixedColor}
+        />
+      )}
+      <TextField
+        size="small"
+        error={editedValueIsInvalid}
+        InputProps={{
+          onFocus: (event) => event.target.select(),
+          role: "input",
+          startAdornment: <TagIcon fontSize="small" />,
+          style: { fontFamily: fonts.MONOSPACE },
+        }}
+        placeholder={alphaType === "alpha" ? "RRGGBBAA" : "RRGGBB"}
+        value={editedValue}
+        onKeyDown={(event) => event.key === "Enter" && onEnterKey?.()}
+        onChange={(event) => updateEditedValue(event.target.value)}
+        onBlur={onInputBlur}
+      />
+    </Stack>
+  );
+}
+
+const hexMatcher = /^#?([0-9A-F]{3,8})$/i;
 function isValidHexColor(color: string, alphaType: "none" | "alpha") {
   const match = hexMatcher.exec(color);
   const length = match?.[1]?.length ?? 0;
@@ -55,10 +106,16 @@ function isValidHexColor(color: string, alphaType: "none" | "alpha") {
   return length === 3 || length === 6 || (alphaType === "alpha" && (length === 4 || length === 8));
 }
 
-export function ColorPickerControl(props: ColorPickerInputProps): JSX.Element {
-  const { alphaType, onChange, value, onEnterKey } = props;
-
-  const { classes } = useStyles();
+// Internal business logic hook for ColorPickerControl
+//
+// Exported for tests and we disable the eslint requirement to specify a return value because this
+// hook is considered "internal" and we are ok inferring the return type
+//
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+export function useColorPickerControl(
+  props: Pick<ColorPickerInputProps, "alphaType" | "value" | "onChange">,
+) {
+  const { alphaType, onChange, value } = props;
 
   const parsedValue = useMemo(() => (value ? tinycolor(value) : undefined), [value]);
   const hex = alphaType === "alpha" ? parsedValue?.toHex8() : parsedValue?.toHex();
@@ -91,41 +148,26 @@ export function ColorPickerControl(props: ColorPickerInputProps): JSX.Element {
 
       // if it is a valid color then we can emit the new value
       if (isValidHexColor(newValue, alphaType)) {
-        onChange(`#${newValue}`);
+        const parsed = tinycolor(newValue);
+        const settingValue = alphaType === "alpha" ? parsed.toHex8String() : parsed.toHexString();
+        onChange(settingValue);
       }
     },
     [alphaType, onChange],
   );
 
-  return (
-    <Stack className={classes.container} gap={1}>
-      {alphaType === "alpha" ? (
-        <HexAlphaColorPicker
-          className={classes.picker}
-          color={swatchColor}
-          onChange={updatePrefixedColor}
-        />
-      ) : (
-        <HexColorPicker
-          className={classes.picker}
-          color={swatchColor}
-          onChange={updatePrefixedColor}
-        />
-      )}
-      <TextField
-        size="small"
-        error={editedValueIsInvalid}
-        InputProps={{
-          onFocus: (event) => event.target.select(),
-          role: "input",
-          startAdornment: <TagIcon fontSize="small" />,
-          style: { fontFamily: fonts.MONOSPACE },
-        }}
-        placeholder={alphaType === "alpha" ? "RRGGBBAA" : "RRGGBB"}
-        value={editedValue}
-        onKeyDown={(event) => event.key === "Enter" && onEnterKey?.()}
-        onChange={(event) => updateEditedValue(event.target.value)}
-      />
-    </Stack>
-  );
+  // When the input blurs we update the edited value to the latest input value to show the user
+  // the expanded form that is the actual setting value.
+  const onInputBlur = useCallback(() => {
+    setEditedValue(hex ?? "");
+  }, [hex]);
+
+  return {
+    swatchColor,
+    updatePrefixedColor,
+    editedValueIsInvalid,
+    editedValue,
+    updateEditedValue,
+    onInputBlur,
+  };
 }
