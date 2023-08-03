@@ -61,7 +61,7 @@ import { Input, Message } from "./types";
 // Use \`Message\` to access types from the schemas defined in your data source:
 // type Twist = Message<"geometry_msgs/Twist">;
 //
-// Import from the @foxglove/schemas package to use standard schema types:
+// Import from the @foxglove/schemas package to use foxglove schema types:
 // import { Pose, LocationFix } from "@foxglove/schemas";
 //
 // Conventionally, it's common to make a _type alias_ for your script's output type
