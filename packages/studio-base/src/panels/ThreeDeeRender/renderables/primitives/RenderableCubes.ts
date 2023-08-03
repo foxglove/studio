@@ -49,7 +49,7 @@ export class RenderableCubes extends RenderablePrimitive {
     // Cube mesh
     this.#geometry = renderer.sharedGeometry
       .getGeometry(`${this.constructor.name}-cube`, createCubeGeometry)
-      .clone() ;
+      .clone();
 
     this.#maxInstances = 16;
     this.#mesh = new THREE.InstancedMesh(this.#geometry, this.#material, this.#maxInstances);

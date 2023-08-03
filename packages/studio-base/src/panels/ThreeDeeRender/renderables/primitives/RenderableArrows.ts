@@ -57,7 +57,7 @@ export class RenderableArrows extends RenderablePrimitive {
 
     this.#shaftGeometry = renderer.sharedGeometry
       .getGeometry(`${this.constructor.name}-shaft`, createShaftGeometry)
-      .clone() ;
+      .clone();
     this.#shaftGeometry.setAttribute("instanceOpacity", this.#instanceOpacity);
     this.#shaftMesh = new THREE.InstancedMesh(
       this.#shaftGeometry,
@@ -69,7 +69,7 @@ export class RenderableArrows extends RenderablePrimitive {
 
     this.#headGeometry = renderer.sharedGeometry
       .getGeometry(`${this.constructor.name}-head`, createHeadGeometry)
-      .clone() ;
+      .clone();
     this.#headGeometry.setAttribute("instanceOpacity", this.#instanceOpacity);
     this.#headMesh = new THREE.InstancedMesh(
       this.#headGeometry,
