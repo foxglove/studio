@@ -252,7 +252,9 @@ export default function MockMessagePipelineProvider(
           });
         }
       };
-      const reset = () => {};
+      const reset = () => {
+        throw new Error("not implemented");
+      };
       const initialPublicState = getPublicState(undefined, props, dispatch);
       return {
         mockProps: omit(props, "children"),
