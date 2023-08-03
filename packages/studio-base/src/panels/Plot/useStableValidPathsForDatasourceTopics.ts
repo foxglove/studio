@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { useMemo } from "react";
 import { createSelector } from "reselect";
 
 import { filterMap } from "@foxglove/den/collection";
@@ -14,7 +15,7 @@ import {
 } from "@foxglove/studio-base/components/MessagePipeline";
 import { PlotPath } from "@foxglove/studio-base/panels/Plot/internalTypes";
 
-export const selectKeyedTopics = createSelector(
+const selectKeyedTopics = createSelector(
   (ctx: MessagePipelineContext) => ctx.sortedTopics,
   (topics) => new Set(topics.map((topic) => topic.name)),
 );
@@ -28,13 +29,17 @@ export function useStableValidPathsForDatasourceTopics(
 ): Immutable<PlotPath[]> {
   const keyedTopics = useMessagePipeline(selectKeyedTopics);
 
-  const stableValidPaths = useShallowMemo(
-    filterMap(paths, (path) => {
-      const parsedTopic = parseRosPath(path.value)?.topicName;
-      const pathIsBareTopic = path.value === parsedTopic;
-      return !pathIsBareTopic && parsedTopic && keyedTopics.has(parsedTopic) ? path : undefined;
-    }),
+  const validPaths = useMemo(
+    () =>
+      filterMap(paths, (path) => {
+        const parsedTopic = parseRosPath(path.value)?.topicName;
+        const pathIsBareTopic = path.value === parsedTopic;
+        return !pathIsBareTopic && parsedTopic && keyedTopics.has(parsedTopic) ? path : undefined;
+      }),
+    [keyedTopics, paths],
   );
+
+  const stableValidPaths = useShallowMemo(validPaths);
 
   return stableValidPaths;
 }

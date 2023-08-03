@@ -58,7 +58,7 @@ export type { PlotConfig } from "./types";
 const defaultSidebarDimension = 240;
 
 const EmptyDataSets: Immutable<DataSet[]> = Object.freeze([]);
-const EmtpyDataSet: Immutable<DataSet> = Object.freeze({ data: [] });
+const EmtpyDataSet: Immutable<DataSet> = Object.freeze({ data: [], label: "" });
 
 export function openSiblingPlotPanel(openSiblingPanel: OpenSiblingPanel, topicName: string): void {
   openSiblingPanel({
