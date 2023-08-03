@@ -48,7 +48,7 @@ export class RenderableCylinders extends RenderablePrimitive {
 
     this.#geometry = renderer.sharedGeometry
       .getGeometry(`${this.constructor.name}-cylinder`, createGeometry)
-      .clone() as THREE.CylinderGeometry;
+      .clone() ;
     this.#maxInstances = 16;
     this.#mesh = new THREE.InstancedMesh(this.#geometry, this.#material, this.#maxInstances);
     this.#mesh.userData.pickingMaterial = this.#pickingMaterial;
