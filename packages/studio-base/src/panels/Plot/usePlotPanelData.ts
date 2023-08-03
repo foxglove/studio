@@ -200,12 +200,12 @@ export function usePlotPanelData(params: Params): Immutable<{
 
   if (allFrames !== state.allFrames || validAllPaths !== state.allPaths || resetDatasets) {
     // Derive a new state based on the old state & new message data. Note that we maintain a
-    // separate cursor into allFrames for each path. This is necessary because as new series are
-    // added we need to read all available messages even if the new series matches the path of an
-    // existing series.
+    // separate cursor into allFrames for each path. This is necessary because newly added series
+    // might have the same path as previous series but will need to process all messages not from
+    // the beginning instead of reusing the cursor from the previous series with the same path.
     //
-    // We try here to provide a minimal update for downstream referential integrity purposes.
-    // Paths that recieve no new messages should be represented unchanged in the new state.
+    // We try here to provide a minimal update for downstream referential integrity purposes. Paths
+    // that recieve no new messages should be represented unchanged in the new state.
     //
     // Uses setState directly instead of useEffect to skip an extra render.
     setState((oldState) => {

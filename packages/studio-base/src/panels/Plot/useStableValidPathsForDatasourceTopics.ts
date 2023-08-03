@@ -16,7 +16,9 @@ import {
 import { PlotPath } from "@foxglove/studio-base/panels/Plot/internalTypes";
 
 const selectKeyedTopics = createSelector(
-  (ctx: MessagePipelineContext) => ctx.sortedTopics,
+  (ctx: MessagePipelineContext) => {
+    return ctx.sortedTopics;
+  },
   (topics) => new Set(topics.map((topic) => topic.name)),
 );
 
