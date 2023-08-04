@@ -12,12 +12,7 @@ import MockMessagePipelineProvider, {
   MockMessagePipelineProps,
 } from "@foxglove/studio-base/components/MessagePipeline/MockMessagePipelineProvider";
 import useGlobalVariables from "@foxglove/studio-base/hooks/useGlobalVariables";
-import {
-  MessageEvent,
-  PlayerStateActiveData,
-  Progress,
-  Topic,
-} from "@foxglove/studio-base/players/types";
+import { PlayerStateActiveData, Progress, Topic } from "@foxglove/studio-base/players/types";
 import MockCurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider/MockCurrentLayoutProvider";
 import { mockMessage } from "@foxglove/studio-base/test/mocks/mockMessage";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
@@ -26,7 +21,10 @@ import { usePlotPanelData } from "./usePlotPanelData";
 
 jest.mock("@foxglove/studio-base/hooks/useGlobalVariables");
 
-const testTopics: Topic[] = [{ name: "topic", schemaName: "schema" }];
+const testTopics: Topic[] = [
+  { name: "topic_a", schemaName: "schema" },
+  { name: "topic_b", schemaName: "schema" },
+];
 const testDataTypes: RosDatatypes = new Map(
   Object.entries({
     schema: {
@@ -34,10 +32,6 @@ const testDataTypes: RosDatatypes = new Map(
     },
   }),
 );
-
-const fixtureMessages1: MessageEvent[] = [mockMessage({ value: 1 })];
-
-const fixtureMessages2: MessageEvent[] = [mockMessage({ value: 2 })];
 
 const fixtureActiveData: PlayerStateActiveData = {
   currentTime: { sec: 0, nsec: 0 },
@@ -60,7 +54,7 @@ const fixtureInitialProps: UsePlotPanelDataArgs = {
   showSingleCurrentMessage: false,
   startTime: { sec: 0, nsec: 0 },
   xAxisVal: "timestamp",
-  yAxisPaths: [{ value: "topic.value", enabled: true, timestampMethod: "receiveTime" }],
+  yAxisPaths: [{ value: "topic_a.value", enabled: true, timestampMethod: "receiveTime" }],
 } as const;
 
 const testProgress: DeepWritable<Progress> = {
@@ -69,7 +63,9 @@ const testProgress: DeepWritable<Progress> = {
     startTime: { sec: 0, nsec: 0 },
     blocks: [
       {
-        messagesByTopic: { topic: fixtureMessages1 },
+        messagesByTopic: {
+          topic_a: [mockMessage({ value: 1 }, { topic: "topic_a" })],
+        },
         sizeInBytes: 1,
       },
     ],
@@ -97,6 +93,77 @@ function Wrapper(props: WrapperProps) {
 }
 
 describe("usePlotPanelData", () => {
+  it("accumulates frames and preserves empty datasets", () => {
+    const initialProps = produce(wrapperInitialProps, (draft) => {
+      draft.plotPanelData.yAxisPaths.push({
+        value: "topic_b.value",
+        enabled: true,
+        timestampMethod: "receiveTime",
+      });
+    });
+
+    (useGlobalVariables as jest.Mock).mockReturnValue({ globalVariables: { var: 1 } });
+
+    const { result, rerender } = renderHook(
+      ({ plotPanelData }) => usePlotPanelData(plotPanelData),
+      { initialProps, wrapper: Wrapper },
+    );
+
+    rerender(
+      produce(initialProps, (draft) => {
+        draft.messagePipeline.activeData!.currentTime = { sec: 1, nsec: 0 };
+        draft.messagePipeline.activeData!.lastSeekTime = 1;
+        draft.messagePipeline.activeData!.messages = [
+          mockMessage({ value: 1 }, { topic: "topic_a" }),
+        ];
+      }),
+    );
+
+    expect(result.current).toEqual({
+      bounds: expect.any(Object),
+      datasets: [
+        expect.objectContaining({
+          data: [expect.objectContaining({ value: 1, x: 0, y: 1 })],
+          label: "topic_a.value",
+        }),
+        expect.objectContaining({
+          data: [],
+          label: "topic_b.value",
+        }),
+      ],
+      pathsWithMismatchedDataLengths: [],
+    });
+
+    rerender(
+      produce(initialProps, (draft) => {
+        draft.messagePipeline.activeData!.currentTime = { sec: 2, nsec: 0 };
+        draft.messagePipeline.activeData!.lastSeekTime = 2;
+        draft.messagePipeline.activeData!.messages = [
+          mockMessage({ value: 2 }, { topic: "topic_a", receiveTime: { sec: 1, nsec: 0 } }),
+        ];
+      }),
+    );
+
+    expect(result.current).toEqual({
+      bounds: expect.any(Object),
+      datasets: [
+        expect.objectContaining({
+          data: [
+            expect.objectContaining({ value: 1, x: 0, y: 1 }),
+            expect.objectContaining({ x: NaN, y: NaN }),
+            expect.objectContaining({ value: 2, x: 1, y: 2 }),
+          ],
+          label: "topic_a.value",
+        }),
+        expect.objectContaining({
+          data: [],
+          label: "topic_b.value",
+        }),
+      ],
+      pathsWithMismatchedDataLengths: [],
+    });
+  });
+
   it("doesn't accumulate frames when showing single messages", () => {
     const initialProps = produce(wrapperInitialProps, (draft) => {
       draft.plotPanelData.showSingleCurrentMessage = true;
@@ -113,7 +180,9 @@ describe("usePlotPanelData", () => {
       produce(initialProps, (draft) => {
         draft.messagePipeline.activeData!.currentTime = { sec: 1, nsec: 0 };
         draft.messagePipeline.activeData!.lastSeekTime = 1;
-        draft.messagePipeline.activeData!.messages = fixtureMessages1;
+        draft.messagePipeline.activeData!.messages = [
+          mockMessage({ value: 1 }, { topic: "topic_a" }),
+        ];
       }),
     );
 
@@ -122,7 +191,7 @@ describe("usePlotPanelData", () => {
       datasets: [
         expect.objectContaining({
           data: [expect.objectContaining({ value: 1, x: 0, y: 1 })],
-          label: "topic.value",
+          label: "topic_a.value",
         }),
       ],
       pathsWithMismatchedDataLengths: [],
@@ -132,7 +201,9 @@ describe("usePlotPanelData", () => {
       produce(initialProps, (draft) => {
         draft.messagePipeline.activeData!.currentTime = { sec: 2, nsec: 0 };
         draft.messagePipeline.activeData!.lastSeekTime = 2;
-        draft.messagePipeline.activeData!.messages = fixtureMessages2;
+        draft.messagePipeline.activeData!.messages = [
+          mockMessage({ value: 2 }, { topic: "topic_a", receiveTime: { sec: 1, nsec: 0 } }),
+        ];
       }),
     );
 
@@ -140,8 +211,8 @@ describe("usePlotPanelData", () => {
       bounds: expect.any(Object),
       datasets: [
         expect.objectContaining({
-          data: [expect.objectContaining({ value: 2, x: 0, y: 2 })],
-          label: "topic.value",
+          data: [expect.objectContaining({ value: 2, x: 1, y: 2 })],
+          label: "topic_a.value",
         }),
       ],
       pathsWithMismatchedDataLengths: [],
@@ -193,7 +264,7 @@ describe("usePlotPanelData", () => {
 
     const secondProps = produce(initialProps, (draft) => {
       draft.plotPanelData.yAxisPaths.push({
-        value: "topic.value",
+        value: "topic_a.value",
         enabled: true,
         timestampMethod: "receiveTime",
       });
