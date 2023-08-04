@@ -18,6 +18,7 @@ import {
   SettingsTreeField,
   SettingsTreeFields,
 } from "@foxglove/studio";
+import { makeRgba, stringToRgba } from "@foxglove/studio-base/panels/ThreeDeeRender/color";
 import { eulerToQuaternion } from "@foxglove/studio-base/util/geometry";
 import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
 
@@ -66,7 +67,8 @@ const PARSE_URDF_ERR = "ParseUrdf";
 
 const DEG2RAD = Math.PI / 180;
 const RAD2DEG = 180 / Math.PI;
-const DEFAULT_COLOR = { r: 1, g: 1, b: 1, a: 1 };
+const DEFAULT_COLOR_STR = "#ffffff";
+const DEFAULT_COLOR = stringToRgba(makeRgba(), DEFAULT_COLOR_STR);
 const VEC3_ONE = { x: 1, y: 1, z: 1 };
 const XYZ_LABEL: [string, string, string] = ["X", "Y", "Z"];
 const RPY_LABEL: [string, string, string] = ["R", "P", "Y"];
@@ -75,6 +77,7 @@ export type LayerSettingsUrdf = BaseSettings & {
   instanceId: string; // This will be set to the topic name
   displayMode: "auto" | "visual" | "collision";
   label: string;
+  color?: string;
 };
 
 export type LayerSettingsCustomUrdf = CustomLayerSettings & {
@@ -86,6 +89,7 @@ export type LayerSettingsCustomUrdf = CustomLayerSettings & {
   topic?: string;
   framePrefix: string;
   displayMode: "auto" | "visual" | "collision";
+  color?: string;
 };
 
 const DEFAULT_SETTINGS: LayerSettingsUrdf = {
@@ -94,6 +98,7 @@ const DEFAULT_SETTINGS: LayerSettingsUrdf = {
   instanceId: "invalid",
   displayMode: "auto",
   label: "URDF",
+  color: DEFAULT_COLOR_STR,
 };
 
 const DEFAULT_CUSTOM_SETTINGS: LayerSettingsCustomUrdf = {
@@ -109,6 +114,7 @@ const DEFAULT_CUSTOM_SETTINGS: LayerSettingsCustomUrdf = {
   topic: "",
   framePrefix: "",
   displayMode: "auto",
+  color: DEFAULT_COLOR_STR,
 };
 const URDF_TOPIC_SCHEMAS = new Set<string>(["std_msgs/String", "std_msgs/msg/String"]);
 
@@ -244,6 +250,12 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
         },
       ],
     };
+    const color: SettingsTreeField = {
+      label: "Color",
+      help: "Fallback color used in case a link does not specify any color itself",
+      input: "rgb",
+      value: DEFAULT_COLOR_STR,
+    };
 
     // /robot_description topic entry
     const topic = this.renderer.topicsByName?.get(TOPIC_NAME);
@@ -251,6 +263,10 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
       const config = (this.renderer.config.topics[TOPIC_NAME] ?? {}) as Partial<LayerSettingsUrdf>;
       const fields: SettingsTreeFields = {
         displayMode: { ...displayMode, value: config.displayMode ?? DEFAULT_SETTINGS.displayMode },
+        color: {
+          ...color,
+          value: config.color ?? DEFAULT_SETTINGS.color,
+        },
       };
       entries.push({
         path: ["topics", TOPIC_NAME],
@@ -276,6 +292,10 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
 
       const fields: SettingsTreeFields = {
         displayMode: { ...displayMode, value: config.displayMode ?? DEFAULT_SETTINGS.displayMode },
+        color: {
+          ...color,
+          value: config.color ?? DEFAULT_SETTINGS.color,
+        },
       };
 
       entries.push({
@@ -382,6 +402,10 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
           displayMode: {
             ...displayMode,
             value: config.displayMode ?? DEFAULT_CUSTOM_SETTINGS.displayMode,
+          },
+          color: {
+            ...color,
+            value: config.color ?? DEFAULT_SETTINGS.color,
           },
         };
 
@@ -587,7 +611,7 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
         this.#debouncedLoadUrdf({ instanceId, urdf, forceReload: true });
       } else if (field === "framePrefix") {
         this.#debouncedLoadUrdf({ instanceId, urdf, forceReload: true });
-      } else if (field === "displayMode" || field === "visible") {
+      } else if (field === "displayMode" || field === "visible" || field === "color") {
         this.#loadUrdf({ instanceId, urdf, forceReload: true });
       } else if (field === "sourceType") {
         const sourceType = action.payload.value as LayerSettingsCustomUrdf["sourceType"];
@@ -894,6 +918,8 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     const settings = renderable.userData.settings;
     const instanceId = settings.instanceId;
     const displayMode = settings.displayMode;
+    const color = settings.color;
+    const fallbackColor = color ? stringToRgba(makeRgba(), color) : undefined;
 
     this.#loadFrames(instanceId, frames);
     this.#loadTransforms(instanceId, transforms);
@@ -904,7 +930,15 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
 
     const createChild = (frameId: string, i: number, visual: UrdfVisual): void => {
       const baseUrl = renderable.userData.url;
-      const childRenderable = createRenderable(visual, robot, i, frameId, renderer, baseUrl);
+      const childRenderable = createRenderable(
+        visual,
+        robot,
+        i,
+        frameId,
+        renderer,
+        baseUrl,
+        fallbackColor,
+      );
       // Set the childRenderable settingsPath so errors route to the correct place
       childRenderable.userData.settingsPath = renderable.userData.settingsPath;
       renderable.userData.renderables.set(childRenderable.name, childRenderable);
@@ -1019,11 +1053,12 @@ function createRenderable(
   frameId: string,
   renderer: IRenderer,
   baseUrl: string | undefined,
+  fallbackColor: ColorRGBA | undefined,
 ): Renderable {
   const name = `${frameId}-${id}-${visual.geometry.geometryType}`;
   const orientation = eulerToQuaternion(visual.origin.rpy);
   const pose = { position: visual.origin.xyz, orientation };
-  const color = getColor(visual, robot);
+  const color = getColor(visual, robot, fallbackColor ?? DEFAULT_COLOR);
   const type = visual.geometry.geometryType;
   switch (type) {
     case "box": {
@@ -1045,9 +1080,8 @@ function createRenderable(
     }
     case "mesh": {
       const isCollada = visual.geometry.filename.toLowerCase().endsWith(".dae");
-      // Use embedded materials if the mesh is a Collada file or if no material is defined in the URDF
-      const embedded =
-        isCollada || !visual.material ? EmbeddedMaterialUsage.Use : EmbeddedMaterialUsage.Ignore;
+      // Use embedded materials if the mesh is a Collada file
+      const embedded = isCollada ? EmbeddedMaterialUsage.Use : EmbeddedMaterialUsage.Ignore;
       const marker = createMeshMarker(frameId, pose, embedded, visual.geometry, baseUrl, color);
       return new RenderableMeshResource(name, marker, undefined, renderer);
     }
@@ -1056,17 +1090,17 @@ function createRenderable(
   }
 }
 
-function getColor(visual: UrdfVisual, robot: UrdfRobot): ColorRGBA {
+function getColor(visual: UrdfVisual, robot: UrdfRobot, fallbackColor: ColorRGBA): ColorRGBA {
   if (!visual.material) {
-    return DEFAULT_COLOR;
+    return fallbackColor;
   }
   if (visual.material.color) {
     return visual.material.color;
   }
   if (visual.material.name) {
-    return robot.materials.get(visual.material.name)?.color ?? DEFAULT_COLOR;
+    return robot.materials.get(visual.material.name)?.color ?? fallbackColor;
   }
-  return DEFAULT_COLOR;
+  return fallbackColor;
 }
 
 function createMarker(
