@@ -23,10 +23,13 @@ import {
 const log = Log.getLogger(__filename);
 
 const DEFAULT_READ_AHEAD_DURATION = { sec: 10, nsec: 0 };
+const DEFAULT_MIN_READ_AHEAD_DURATION = { sec: 1, nsec: 0 };
 
 type Options = {
   // How far ahead to buffer
   readAheadDuration?: Time;
+  // The minimum duration to buffer before playback resumes
+  minReadAheadDuration?: Time;
 };
 
 interface EventTypes {
@@ -69,10 +72,14 @@ class BufferedIterableSource extends EventEmitter<EventTypes> implements IIterab
   // How far ahead of the read head we should try to keep buffering
   #readAheadDuration: Time;
 
+  // The minimum duration to buffer before playback resumes
+  #minReadAheadDuration : Time;
+
   public constructor(source: IIterableSource, opt?: Options) {
     super();
 
     this.#readAheadDuration = opt?.readAheadDuration ?? DEFAULT_READ_AHEAD_DURATION;
+    this.#minReadAheadDuration = opt?.minReadAheadDuration ?? DEFAULT_MIN_READ_AHEAD_DURATION;
     this.#source = new CachingIterableSource(source);
 
     // pass-through the range change event
@@ -149,6 +156,12 @@ class BufferedIterableSource extends EventEmitter<EventTypes> implements IIterab
         }
 
         this.#cache.enqueue(result);
+
+        // Make sure that we have buffered enough ahead before telling the consumer to try reading again.
+        const rangeEnd = addTime(this.#readHead, this.#minReadAheadDuration);
+        if (!this.#source.isRangeBuffered(this.#readHead, rangeEnd)) {
+          continue;
+        }
 
         // Indicate to the consumer that it can try reading again
         this.#readSignal.notifyAll();
