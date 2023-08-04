@@ -73,7 +73,7 @@ class BufferedIterableSource extends EventEmitter<EventTypes> implements IIterab
   #readAheadDuration: Time;
 
   // The minimum duration to buffer before playback resumes
-  #minReadAheadDuration : Time;
+  #minReadAheadDuration: Time;
 
   public constructor(source: IIterableSource, opt?: Options) {
     super();

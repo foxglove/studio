@@ -458,7 +458,7 @@ class CachingIterableSource extends EventEmitter<EventTypes> implements IIterabl
    * @param rangeEnd Range end time
    * @returns True if the entire range is buffered, false otherwise.
    */
-  public isRangeBuffered(rangeStart: Time, rangeEnd: Time) : boolean {
+  public isRangeBuffered(rangeStart: Time, rangeEnd: Time): boolean {
     if (compare(rangeStart, rangeEnd) > 0) {
       throw new Error(`Invariant: rangeStart > rangeEnd`);
     }
