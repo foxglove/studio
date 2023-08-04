@@ -82,6 +82,10 @@ class BufferedIterableSource extends EventEmitter<EventTypes> implements IIterab
     this.#minReadAheadDuration = opt?.minReadAheadDuration ?? DEFAULT_MIN_READ_AHEAD_DURATION;
     this.#source = new CachingIterableSource(source);
 
+    if (compare(this.#readAheadDuration, this.#minReadAheadDuration) < 0) {
+      throw new Error("Invariant: readAheadDuration < minReadAheadDuration");
+    }
+
     // pass-through the range change event
     this.#source.on("loadedRangesChange", () => this.emit("loadedRangesChange"));
   }
