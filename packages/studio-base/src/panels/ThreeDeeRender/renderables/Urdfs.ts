@@ -930,15 +930,15 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
 
     const createChild = (frameId: string, i: number, visual: UrdfVisual): void => {
       const baseUrl = renderable.userData.url;
-      const childRenderable = createRenderable(
+      const childRenderable = createRenderable({
         visual,
         robot,
-        i,
+        id: i,
         frameId,
         renderer,
         baseUrl,
         fallbackColor,
-      );
+      });
       // Set the childRenderable settingsPath so errors route to the correct place
       childRenderable.userData.settingsPath = renderable.userData.settingsPath;
       renderable.userData.renderables.set(childRenderable.name, childRenderable);
@@ -1046,15 +1046,16 @@ async function parseUrdf(
   }
 }
 
-function createRenderable(
-  visual: UrdfVisual,
-  robot: UrdfRobot,
-  id: number,
-  frameId: string,
-  renderer: IRenderer,
-  baseUrl: string | undefined,
-  fallbackColor: ColorRGBA | undefined,
-): Renderable {
+function createRenderable(args: {
+  visual: UrdfVisual;
+  robot: UrdfRobot;
+  id: number;
+  frameId: string;
+  renderer: IRenderer;
+  baseUrl?: string;
+  fallbackColor?: ColorRGBA;
+}): Renderable {
+  const { visual, robot, id, frameId, renderer, baseUrl, fallbackColor } = args;
   const name = `${frameId}-${id}-${visual.geometry.geometryType}`;
   const orientation = eulerToQuaternion(visual.origin.rpy);
   const pose = { position: visual.origin.xyz, orientation };
