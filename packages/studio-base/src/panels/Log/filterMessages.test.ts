@@ -13,7 +13,7 @@
 
 import { MessageEvent } from "@foxglove/studio-base/players/types";
 
-import filterMessages from "./filterMessages";
+import { filterMessages } from "./filterMessages";
 import { LogLevel, Ros1RosgraphMsgs$Log, Ros2RosgraphMsgs$Log } from "./types";
 
 describe("filter", () => {

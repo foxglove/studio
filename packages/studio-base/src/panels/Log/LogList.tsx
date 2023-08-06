@@ -20,10 +20,8 @@ import { AutoSizer } from "react-virtualized";
 import { VariableSizeList as List } from "react-window";
 import { makeStyles } from "tss-react/mui";
 
-import { useAppTimeFormat } from "@foxglove/studio-base/hooks";
-import { NormalizedLogMessage } from "@foxglove/studio-base/panels/Log/types";
-
 import LogMessage from "./LogMessage";
+import { NormalizedLogMessage } from "./types";
 
 const useStyles = makeStyles()((theme) => ({
   floatingButton: {
@@ -44,7 +42,11 @@ type ListItemData = {
 };
 
 function Row(props: { data: ListItemData; index: number; style: CSSProperties }): JSX.Element {
-  const { timeFormat, timeZone } = useAppTimeFormat();
+  // fixme
+  //const { timeFormat, timeZone } = useAppTimeFormat();
+  const timeFormat = "SEC";
+  const timeZone = "UTC";
+
   const ref = useRef<HTMLDivElement>(ReactNull);
 
   useEffect(() => {

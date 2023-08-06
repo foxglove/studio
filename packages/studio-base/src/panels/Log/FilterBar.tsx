@@ -16,6 +16,7 @@ import { MenuItem, Select, Typography } from "@mui/material";
 import { useCallback } from "react";
 import { makeStyles } from "tss-react/mui";
 
+import { Immutable } from "@foxglove/studio";
 import ToolbarIconButton from "@foxglove/studio-base/components/PanelToolbar/ToolbarIconButton";
 import Stack from "@foxglove/studio-base/components/Stack";
 import { FilterTagInput } from "@foxglove/studio-base/panels/Log/FilterTagInput";
@@ -23,7 +24,7 @@ import useLogStyles from "@foxglove/studio-base/panels/Log/useLogStyles";
 import clipboard from "@foxglove/studio-base/util/clipboard";
 
 import LevelToString from "./LevelToString";
-import { LogMessageEvent, LogLevel } from "./types";
+import { LogLevel, NormalizedLogMessage } from "./types";
 
 // Create the log level options nodes once since they don't change per render.
 const LOG_LEVEL_OPTIONS = [
@@ -46,21 +47,21 @@ const useStyles = makeStyles()((theme) => ({
   },
 }));
 
-type Filter = {
+export type Filter = {
   minLogLevel: number;
   searchTerms: string[];
 };
 
-export type FilterBarProps = {
+export type FilterBarProps = Immutable<{
   searchTerms: Set<string>;
   nodeNames: Set<string>;
   minLogLevel: number;
-  messages: readonly LogMessageEvent[];
+  messages: NormalizedLogMessage[];
 
   onFilterChange: (filter: Filter) => void;
-};
+}>;
 
-export default function FilterBar(props: FilterBarProps): JSX.Element {
+export function FilterBar(props: FilterBarProps): JSX.Element {
   const { classes: logStyles } = useLogStyles();
   const { classes, cx } = useStyles();
 

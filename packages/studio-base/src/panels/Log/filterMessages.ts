@@ -11,25 +11,25 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { getNormalizedMessage, getNormalizedLevel } from "./conversion";
-import { LogMessageEvent } from "./types";
+import { Immutable } from "@foxglove/studio";
 
-export default function filterMessages(
-  events: readonly LogMessageEvent[],
-  filter: { minLogLevel: number; searchTerms: string[] },
-): readonly LogMessageEvent[] {
+import { NormalizedLogMessage } from "./types";
+
+export function filterMessages(
+  messages: readonly NormalizedLogMessage[],
+  filter: Immutable<{ minLogLevel: number; searchTerms: string[] }>,
+): readonly NormalizedLogMessage[] {
   const { minLogLevel, searchTerms } = filter;
   const hasActiveFilters = minLogLevel > 1 || searchTerms.length > 0;
   // return all messages if we wouldn't filter anything
   if (!hasActiveFilters) {
-    return events;
+    return messages;
   }
 
   const searchTermsInLowerCase = searchTerms.map((term) => term.toLowerCase());
 
-  return events.filter((event) => {
-    const logMessage = event.message;
-    const effectiveLogLevel = getNormalizedLevel(event.schemaName, logMessage);
+  return messages.filter((message) => {
+    const effectiveLogLevel = message.level;
     if (effectiveLogLevel < minLogLevel) {
       return false;
     }
@@ -38,8 +38,8 @@ export default function filterMessages(
       return true;
     }
 
-    const lowerCaseName = logMessage.name?.toLowerCase() ?? "";
-    const lowerCaseMsg = getNormalizedMessage(logMessage).toLowerCase();
+    const lowerCaseName = message.name?.toLowerCase() ?? "";
+    const lowerCaseMsg = message.message.toLowerCase();
     return searchTermsInLowerCase.some(
       (term) => lowerCaseName.includes(term) || lowerCaseMsg.includes(term),
     );
