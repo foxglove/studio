@@ -108,7 +108,7 @@ export const UrdfDisplayMode: StoryObj = {
         framePrefix: "display_collision_colored/",
         displayMode: "collision",
         translation: { x: 4, y: 0, z: 0 },
-        color: "#eb34d8",
+        fallbackColor: "#eb34d8",
       },
     };
 

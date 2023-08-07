@@ -77,7 +77,7 @@ export type LayerSettingsUrdf = BaseSettings & {
   instanceId: string; // This will be set to the topic name
   displayMode: "auto" | "visual" | "collision";
   label: string;
-  color?: string;
+  fallbackColor?: string;
 };
 
 export type LayerSettingsCustomUrdf = CustomLayerSettings & {
@@ -89,7 +89,7 @@ export type LayerSettingsCustomUrdf = CustomLayerSettings & {
   topic?: string;
   framePrefix: string;
   displayMode: "auto" | "visual" | "collision";
-  color?: string;
+  fallbackColor?: string;
 };
 
 const DEFAULT_SETTINGS: LayerSettingsUrdf = {
@@ -98,7 +98,7 @@ const DEFAULT_SETTINGS: LayerSettingsUrdf = {
   instanceId: "invalid",
   displayMode: "auto",
   label: "URDF",
-  color: DEFAULT_COLOR_STR,
+  fallbackColor: DEFAULT_COLOR_STR,
 };
 
 const DEFAULT_CUSTOM_SETTINGS: LayerSettingsCustomUrdf = {
@@ -114,7 +114,7 @@ const DEFAULT_CUSTOM_SETTINGS: LayerSettingsCustomUrdf = {
   topic: "",
   framePrefix: "",
   displayMode: "auto",
-  color: DEFAULT_COLOR_STR,
+  fallbackColor: DEFAULT_COLOR_STR,
 };
 const URDF_TOPIC_SCHEMAS = new Set<string>(["std_msgs/String", "std_msgs/msg/String"]);
 
@@ -231,10 +231,9 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
 
   public override settingsNodes(): SettingsTreeEntry[] {
     const entries: SettingsTreeEntry[] = [];
-    const displayMode: SettingsTreeField = {
+    const baseDisplayMode: SettingsTreeField = {
       label: "Display mode",
       input: "select",
-      value: "auto",
       options: [
         {
           label: "Auto",
@@ -250,11 +249,10 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
         },
       ],
     };
-    const color: SettingsTreeField = {
+    const baseFallbackColor: SettingsTreeField = {
       label: "Color",
       help: "Fallback color used in case a link does not specify any color itself",
       input: "rgb",
-      value: DEFAULT_COLOR_STR,
     };
 
     // /robot_description topic entry
@@ -262,10 +260,13 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     if (topic != undefined) {
       const config = (this.renderer.config.topics[TOPIC_NAME] ?? {}) as Partial<LayerSettingsUrdf>;
       const fields: SettingsTreeFields = {
-        displayMode: { ...displayMode, value: config.displayMode ?? DEFAULT_SETTINGS.displayMode },
-        color: {
-          ...color,
-          value: config.color ?? DEFAULT_SETTINGS.color,
+        displayMode: {
+          ...baseDisplayMode,
+          value: config.displayMode ?? DEFAULT_SETTINGS.displayMode,
+        },
+        fallbackColor: {
+          ...baseFallbackColor,
+          value: config.fallbackColor ?? DEFAULT_SETTINGS.fallbackColor,
         },
       };
       entries.push({
@@ -291,10 +292,13 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
       const config = (this.renderer.config.topics[PARAM_KEY] ?? {}) as Partial<LayerSettingsUrdf>;
 
       const fields: SettingsTreeFields = {
-        displayMode: { ...displayMode, value: config.displayMode ?? DEFAULT_SETTINGS.displayMode },
-        color: {
-          ...color,
-          value: config.color ?? DEFAULT_SETTINGS.color,
+        displayMode: {
+          ...baseDisplayMode,
+          value: config.displayMode ?? DEFAULT_SETTINGS.displayMode,
+        },
+        fallbackColor: {
+          ...baseFallbackColor,
+          value: config.fallbackColor ?? DEFAULT_SETTINGS.fallbackColor,
         },
       };
 
@@ -400,12 +404,12 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
             value: config.framePrefix ?? "",
           },
           displayMode: {
-            ...displayMode,
+            ...baseDisplayMode,
             value: config.displayMode ?? DEFAULT_CUSTOM_SETTINGS.displayMode,
           },
-          color: {
-            ...color,
-            value: config.color ?? DEFAULT_SETTINGS.color,
+          fallbackColor: {
+            ...baseFallbackColor,
+            value: config.fallbackColor ?? DEFAULT_SETTINGS.fallbackColor,
           },
         };
 
@@ -611,7 +615,7 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
         this.#debouncedLoadUrdf({ instanceId, urdf, forceReload: true });
       } else if (field === "framePrefix") {
         this.#debouncedLoadUrdf({ instanceId, urdf, forceReload: true });
-      } else if (field === "displayMode" || field === "visible" || field === "color") {
+      } else if (field === "displayMode" || field === "visible" || field === "fallbackColor") {
         this.#loadUrdf({ instanceId, urdf, forceReload: true });
       } else if (field === "sourceType") {
         const sourceType = action.payload.value as LayerSettingsCustomUrdf["sourceType"];
@@ -918,8 +922,9 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     const settings = renderable.userData.settings;
     const instanceId = settings.instanceId;
     const displayMode = settings.displayMode;
-    const color = settings.color;
-    const fallbackColor = color ? stringToRgba(makeRgba(), color) : undefined;
+    const fallbackColor = settings.fallbackColor
+      ? stringToRgba(makeRgba(), settings.fallbackColor)
+      : undefined;
 
     this.#loadFrames(instanceId, frames);
     this.#loadTransforms(instanceId, transforms);
