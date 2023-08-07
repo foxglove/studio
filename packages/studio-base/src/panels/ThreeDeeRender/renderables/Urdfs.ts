@@ -231,7 +231,7 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
 
   public override settingsNodes(): SettingsTreeEntry[] {
     const entries: SettingsTreeEntry[] = [];
-    const baseDisplayMode: SettingsTreeField = {
+    const baseDisplayModeField: SettingsTreeField = {
       label: "Display mode",
       input: "select",
       options: [
@@ -249,7 +249,7 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
         },
       ],
     };
-    const baseFallbackColor: SettingsTreeField = {
+    const baseFallbackColorField: SettingsTreeField = {
       label: "Color",
       help: "Fallback color used in case a link does not specify any color itself",
       input: "rgb",
@@ -261,11 +261,11 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
       const config = (this.renderer.config.topics[TOPIC_NAME] ?? {}) as Partial<LayerSettingsUrdf>;
       const fields: SettingsTreeFields = {
         displayMode: {
-          ...baseDisplayMode,
+          ...baseDisplayModeField,
           value: config.displayMode ?? DEFAULT_SETTINGS.displayMode,
         },
         fallbackColor: {
-          ...baseFallbackColor,
+          ...baseFallbackColorField,
           value: config.fallbackColor ?? DEFAULT_SETTINGS.fallbackColor,
         },
       };
@@ -293,11 +293,11 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
 
       const fields: SettingsTreeFields = {
         displayMode: {
-          ...baseDisplayMode,
+          ...baseDisplayModeField,
           value: config.displayMode ?? DEFAULT_SETTINGS.displayMode,
         },
         fallbackColor: {
-          ...baseFallbackColor,
+          ...baseFallbackColorField,
           value: config.fallbackColor ?? DEFAULT_SETTINGS.fallbackColor,
         },
       };
@@ -404,11 +404,11 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
             value: config.framePrefix ?? "",
           },
           displayMode: {
-            ...baseDisplayMode,
+            ...baseDisplayModeField,
             value: config.displayMode ?? DEFAULT_CUSTOM_SETTINGS.displayMode,
           },
           fallbackColor: {
-            ...baseFallbackColor,
+            ...baseFallbackColorField,
             value: config.fallbackColor ?? DEFAULT_SETTINGS.fallbackColor,
           },
         };
