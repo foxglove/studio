@@ -162,8 +162,11 @@ class BufferedIterableSource extends EventEmitter<EventTypes> implements IIterab
         this.#cache.enqueue(result);
 
         // Make sure that we have buffered enough ahead before telling the consumer to try reading again.
-        const rangeEnd = addTime(this.#readHead, this.#minReadAheadDuration);
-        if (!this.#source.isRangeBuffered(this.#readHead, rangeEnd)) {
+        const minReadAheadUntil = addTime(this.#readHead, this.#minReadAheadDuration);
+        if (
+          result.lastMsgReceiveTime &&
+          compare(result.lastMsgReceiveTime, minReadAheadUntil) < 0
+        ) {
           continue;
         }
 

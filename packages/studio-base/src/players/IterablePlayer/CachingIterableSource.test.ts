@@ -87,6 +87,7 @@ describe("CachingIterableSource", () => {
               topic: "a",
               schemaName: "foo",
             },
+            lastMsgReceiveTime: { sec: 0, nsec: i * 1e8 },
           },
         });
       }
@@ -224,6 +225,7 @@ describe("CachingIterableSource", () => {
               topic: "a",
               schemaName: "foo",
             },
+            lastMsgReceiveTime: { sec: 5, nsec: 0 },
           },
         });
       }
@@ -274,6 +276,7 @@ describe("CachingIterableSource", () => {
               topic: "a",
               schemaName: "foo",
             },
+            lastMsgReceiveTime: { sec: 0, nsec: 0 },
           },
         });
       }
@@ -447,6 +450,7 @@ describe("CachingIterableSource", () => {
           sizeInBytes: 0,
           schemaName: "foo",
         },
+        lastMsgReceiveTime: { sec: 3, nsec: 0 },
       });
     }
 
@@ -788,6 +792,7 @@ describe("CachingIterableSource", () => {
               topic: "a",
               schemaName: "foo",
             },
+            lastMsgReceiveTime: { sec: Math.floor(i / 3), nsec: 0 },
           },
         });
       }

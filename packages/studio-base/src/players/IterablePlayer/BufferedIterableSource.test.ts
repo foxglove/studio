@@ -111,6 +111,7 @@ describe("BufferedIterableSource", () => {
             topic: "a",
             schemaName: "foo",
           },
+          lastMsgReceiveTime: { sec: i, nsec: 0 },
         },
       });
     }
@@ -172,6 +173,7 @@ describe("BufferedIterableSource", () => {
               topic: "a",
               schemaName: "foo",
             },
+            lastMsgReceiveTime: { sec: i, nsec: 0 },
           },
         });
       }
@@ -234,6 +236,7 @@ describe("BufferedIterableSource", () => {
             topic: "a",
             schemaName: "foo",
           },
+          lastMsgReceiveTime: { sec: i, nsec: 0 },
         },
       });
     }
@@ -365,6 +368,7 @@ describe("BufferedIterableSource", () => {
                 topic: "a",
                 schemaName: "foo",
               },
+              lastMsgReceiveTime: { sec: 1, nsec: 0 },
             },
           });
         }
@@ -463,13 +467,13 @@ describe("BufferedIterableSource", () => {
   it("should wait to buffer more messages until reading moves forward (with min. read ahead)", async () => {
     const source = new TestSource();
     const bufferedSource = new BufferedIterableSource(source, {
-      readAheadDuration: { sec: 1, nsec: 0 },
-      minReadAheadDuration: { sec: 1, nsec: 0 },
+      readAheadDuration: { sec: 3, nsec: 0 },
+      minReadAheadDuration: { sec: 2, nsec: 0 },
     });
 
     await bufferedSource.initialize();
 
-    let signal = waiter(1);
+    const signal = waiter(1);
 
     const debounceNotify = debounce(() => {
       signal.notify();
@@ -506,19 +510,18 @@ describe("BufferedIterableSource", () => {
       topics: ["a"],
     });
 
-    // Reading the first message buffers some data
+    // Reading the first message should buffer a minimum amount
     await messageIterator.next();
-
-    // Wait for the buffered iterable source to stop reading messages
-    await signal.wait();
-
     expect(bufferedSource.loadedRanges()).toEqual([{ start: 0, end: 0.2999999999 }]);
-
-    // Reading the second message buffers more data
-    signal = waiter(1);
+    // Reading the next message should not increase the buffer
     await messageIterator.next();
-    await signal.wait();
+    expect(bufferedSource.loadedRanges()).toEqual([{ start: 0, end: 0.2999999999 }]);
+    // Next message should increase the buffer again
+    await messageIterator.next();
     expect(bufferedSource.loadedRanges()).toEqual([{ start: 0, end: 0.3999999999 }]);
+    // Let the buffer read to the end
+    await signal.wait();
+    expect(bufferedSource.loadedRanges()).toEqual([{ start: 0, end: 0.5999999999 }]);
 
     // We should have called the messageIterator method only once
     expect(messageIteratorCount).toEqual(1);

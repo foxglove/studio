@@ -7,7 +7,7 @@ import { isEqual, sortedIndexBy } from "lodash";
 
 import { minIndexBy, sortedIndexByTuple } from "@foxglove/den/collection";
 import Log from "@foxglove/log";
-import { subtract, add, toNanoSec, compare, clampTime } from "@foxglove/rostime";
+import { subtract, add, toNanoSec, compare } from "@foxglove/rostime";
 import { Time, MessageEvent } from "@foxglove/studio";
 import { Range } from "@foxglove/studio-base/util/ranges";
 
@@ -111,7 +111,7 @@ class CachingIterableSource extends EventEmitter<EventTypes> implements IIterabl
 
   public async *messageIterator(
     args: MessageIteratorArgs,
-  ): AsyncIterableIterator<Readonly<IteratorResult>> {
+  ): AsyncIterableIterator<Readonly<IteratorResult & { lastMsgReceiveTime?: Time }>> {
     if (!this.#initResult) {
       throw new Error("Invariant: uninitialized");
     }
@@ -308,7 +308,9 @@ class CachingIterableSource extends EventEmitter<EventTypes> implements IIterabl
         // Store the latest message in pending results and flush to the block when time moves forward
         pendingIterResults.push([lastTime, iterResult]);
 
-        yield iterResult;
+        const lastMsgTime =
+          iterResult.type === "message-event" ? iterResult.msgEvent.receiveTime : undefined;
+        yield { ...iterResult, lastMsgReceiveTime: lastMsgTime };
       }
 
       // We've finished reading our source to the end, close out the block
@@ -449,50 +451,6 @@ class CachingIterableSource extends EventEmitter<EventTypes> implements IIterabl
     out.sort((a, b) => compare(a.receiveTime, b.receiveTime));
 
     return out;
-  }
-
-  /**
-   * Checks if the given time range is fully buffered.
-   *
-   * @param rangeStart Range start time
-   * @param rangeEnd Range end time
-   * @returns True if the entire range is buffered, false otherwise.
-   */
-  public isRangeBuffered(rangeStart: Time, rangeEnd: Time): boolean {
-    if (compare(rangeStart, rangeEnd) > 0) {
-      throw new Error(`Invariant: rangeStart > rangeEnd`);
-    }
-
-    let currTime = rangeStart;
-    const findIndexContainingPredicate = (item: CacheBlock) => {
-      return compare(item.start, currTime) <= 0 && compare(item.end, currTime) >= 0;
-    };
-
-    for (;;) {
-      // Find the block that contains the current time
-      const cacheBlockIndex = this.#cache.findIndex(findIndexContainingPredicate);
-      const block = this.#cache[cacheBlockIndex];
-
-      if (!block || block.items.length === 0) {
-        // No block found or block is empty -> Range is not buffered
-        return false;
-      }
-
-      if (compare(block.end, rangeEnd) >= 0) {
-        // Block contains our range end time -> Entire range is buffered
-        return true;
-      }
-
-      // This block does not contain our range end time. Increase the time to move on to the
-      // next potential block.
-      const newTime = clampTime(add(block.end, { sec: 0, nsec: 1 }), rangeStart, rangeEnd);
-      if (compare(newTime, currTime) <= 0) {
-        // Time is not moving forward, abort to avoid an infinite loop
-        return false;
-      }
-
-      currTime = newTime;
-    }
   }
 
   #recomputeLoadedRangeCache(): void {
