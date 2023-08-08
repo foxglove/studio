@@ -161,12 +161,14 @@ class BufferedIterableSource extends EventEmitter<EventTypes> implements IIterab
 
         this.#cache.enqueue(result);
 
+        // We tend to expect message revents (not problems) so optimistically grab the receive time
+        // and minReadAheadUntil
+        const receiveTime =
+          result.type === "message-event" ? result.msgEvent.receiveTime : undefined;
+
         // Make sure that we have buffered enough ahead before telling the consumer to try reading again.
         const minReadAheadUntil = addTime(this.#readHead, this.#minReadAheadDuration);
-        if (
-          result.lastMsgReceiveTime &&
-          compare(result.lastMsgReceiveTime, minReadAheadUntil) < 0
-        ) {
+        if (receiveTime && compare(receiveTime, minReadAheadUntil) < 0) {
           continue;
         }
 
@@ -174,10 +176,7 @@ class BufferedIterableSource extends EventEmitter<EventTypes> implements IIterab
         this.#readSignal.notifyAll();
 
         // Keep reading while the messages we receive are <= the readUntil time.
-        if (
-          result.type === "message-event" &&
-          compare(result.msgEvent.receiveTime, readUntil) <= 0
-        ) {
+        if (receiveTime && compare(receiveTime, readUntil) <= 0) {
           continue;
         }
 

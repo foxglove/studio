@@ -111,7 +111,7 @@ class CachingIterableSource extends EventEmitter<EventTypes> implements IIterabl
 
   public async *messageIterator(
     args: MessageIteratorArgs,
-  ): AsyncIterableIterator<Readonly<IteratorResult & { lastMsgReceiveTime?: Time }>> {
+  ): AsyncIterableIterator<Readonly<IteratorResult>> {
     if (!this.#initResult) {
       throw new Error("Invariant: uninitialized");
     }
@@ -308,9 +308,7 @@ class CachingIterableSource extends EventEmitter<EventTypes> implements IIterabl
         // Store the latest message in pending results and flush to the block when time moves forward
         pendingIterResults.push([lastTime, iterResult]);
 
-        const lastMsgTime =
-          iterResult.type === "message-event" ? iterResult.msgEvent.receiveTime : undefined;
-        yield { ...iterResult, lastMsgReceiveTime: lastMsgTime };
+        yield iterResult;
       }
 
       // We've finished reading our source to the end, close out the block

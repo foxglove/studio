@@ -111,7 +111,6 @@ describe("BufferedIterableSource", () => {
             topic: "a",
             schemaName: "foo",
           },
-          lastMsgReceiveTime: { sec: i, nsec: 0 },
         },
       });
     }
@@ -173,7 +172,6 @@ describe("BufferedIterableSource", () => {
               topic: "a",
               schemaName: "foo",
             },
-            lastMsgReceiveTime: { sec: i, nsec: 0 },
           },
         });
       }
@@ -236,7 +234,6 @@ describe("BufferedIterableSource", () => {
             topic: "a",
             schemaName: "foo",
           },
-          lastMsgReceiveTime: { sec: i, nsec: 0 },
         },
       });
     }
@@ -368,7 +365,6 @@ describe("BufferedIterableSource", () => {
                 topic: "a",
                 schemaName: "foo",
               },
-              lastMsgReceiveTime: { sec: 1, nsec: 0 },
             },
           });
         }
