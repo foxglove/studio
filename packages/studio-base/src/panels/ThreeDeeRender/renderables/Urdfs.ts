@@ -1064,7 +1064,7 @@ function createRenderable(args: {
   const name = `${frameId}-${id}-${visual.geometry.geometryType}`;
   const orientation = eulerToQuaternion(visual.origin.rpy);
   const pose = { position: visual.origin.xyz, orientation };
-  const color = getColor(visual, robot, fallbackColor ?? DEFAULT_COLOR);
+  const color = getColor(visual, robot) ?? fallbackColor ?? DEFAULT_COLOR;
   const type = visual.geometry.geometryType;
   switch (type) {
     case "box": {
@@ -1096,17 +1096,17 @@ function createRenderable(args: {
   }
 }
 
-function getColor(visual: UrdfVisual, robot: UrdfRobot, fallbackColor: ColorRGBA): ColorRGBA {
+function getColor(visual: UrdfVisual, robot: UrdfRobot): ColorRGBA | undefined {
   if (!visual.material) {
-    return fallbackColor;
+    return undefined;
   }
   if (visual.material.color) {
     return visual.material.color;
   }
   if (visual.material.name) {
-    return robot.materials.get(visual.material.name)?.color ?? fallbackColor;
+    return robot.materials.get(visual.material.name)?.color;
   }
-  return fallbackColor;
+  return undefined;
 }
 
 function createMarker(
