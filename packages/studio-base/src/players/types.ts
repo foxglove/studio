@@ -15,6 +15,7 @@ import { MessageDefinition } from "@foxglove/message-definition";
 import { Time } from "@foxglove/rostime";
 import type { MessageEvent, ParameterValue } from "@foxglove/studio";
 import { Immutable } from "@foxglove/studio";
+import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
 import { Asset } from "@foxglove/studio-base/components/PanelExtensionAdapter";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
@@ -27,9 +28,12 @@ export type { MessageEvent };
 export type MessageDefinitionsByTopic = {
   [topic: string]: string;
 };
+
 export type ParsedMessageDefinitionsByTopic = {
   [topic: string]: MessageDefinition[];
 };
+
+export type TopicSelection = Map<string, SubscribePayload>;
 
 // A `Player` is a class that manages playback state. It manages subscriptions,
 // current time, which topics and datatypes are available, and so on.
@@ -252,6 +256,7 @@ export type MessageBlock = {
   readonly messagesByTopic: {
     readonly [topic: string]: MessageEvent[];
   };
+  needTopics: TopicSelection;
   readonly sizeInBytes: number;
 };
 
@@ -275,11 +280,19 @@ export type SubscriptionPreloadType =
   | "partial"; // Fetch messages as needed.
 
 // Represents a subscription to a single topic, for use in `setSubscriptions`.
-export type SubscribePayload = {
-  // The topic name to subscribe to
-  topic: string;
-  preloadType?: SubscriptionPreloadType;
-};
+export type SubscribePayload =
+  | {
+      // The topic name to subscribe to
+      type: "whole";
+      topic: string;
+      preloadType?: SubscriptionPreloadType;
+    }
+  | {
+      type: "slice";
+      topic: string;
+      fields: string[];
+      preloadType?: SubscriptionPreloadType;
+    };
 
 // Represents a single topic publisher, for use in `setPublishers`.
 export type AdvertiseOptions = {
@@ -335,4 +348,27 @@ export interface PlayerMetricsCollectorInterface {
   recordPlaybackTime(time: Time, params: { stillLoadingData: boolean }): void;
   recordUncachedRangeRequest(): void;
   recordTimeToFirstMsgs(): void;
+}
+
+export function subscribePayloadFromRosPath(
+  path: string,
+  preloadType?: SubscriptionPreloadType,
+): undefined | SubscribePayload {
+  const parsedPath = parseRosPath(path);
+
+  if (!parsedPath) {
+    return undefined;
+  }
+
+  const messagePath = parsedPath.messagePath[0];
+  if (messagePath == undefined || messagePath.type !== "name") {
+    return { type: "whole", topic: parsedPath.topicName, preloadType };
+  }
+
+  return {
+    type: "slice",
+    topic: parsedPath.topicName,
+    preloadType,
+    fields: [messagePath.name],
+  };
 }

@@ -247,11 +247,11 @@ export class McapUnindexedIterableSource implements IIterableSource {
     const start = args.start ?? this.#start;
     const end = args.end ?? this.#end;
 
-    if (topics.length === 0 || !start || !end) {
+    if (topics.size === 0 || !start || !end) {
       return;
     }
 
-    const topicsSet = new Set(topics);
+    const topicsSet = new Map(topics);
     const resultMessages = [];
 
     for (const [channelId, msgEvents] of this.#msgEventsByChannel) {
@@ -284,7 +284,7 @@ export class McapUnindexedIterableSource implements IIterableSource {
     const msgEventsByTopic = new Map<string, MessageEvent>();
     for (const [_, msgEvents] of this.#msgEventsByChannel) {
       for (const msgEvent of msgEvents) {
-        if (compare(msgEvent.receiveTime, args.time) <= 0 && needTopics.includes(msgEvent.topic)) {
+        if (compare(msgEvent.receiveTime, args.time) <= 0 && needTopics.has(msgEvent.topic)) {
           msgEventsByTopic.set(msgEvent.topic, msgEvent);
         }
       }

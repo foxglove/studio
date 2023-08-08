@@ -14,12 +14,15 @@
 import { useCallback, useMemo } from "react";
 
 import { useMessageReducer } from "@foxglove/studio-base/PanelAPI";
-import { MessageEvent } from "@foxglove/studio-base/players/types";
-
-import parseRosPath from "./parseRosPath";
 import {
-  useCachedGetMessagePathDataItems,
+  MessageEvent,
+  SubscribePayload,
+  subscribePayloadFromRosPath,
+} from "@foxglove/studio-base/players/types";
+
+import {
   MessageAndData,
+  useCachedGetMessagePathDataItems,
 } from "./useCachedGetMessagePathDataItems";
 
 type Options = {
@@ -46,8 +49,13 @@ type ReducedValue = {
  */
 export function useMessageDataItem(path: string, options?: Options): ReducedValue["matches"] {
   const { historySize = 1 } = options ?? {};
-  const rosPath = useMemo(() => parseRosPath(path), [path]);
-  const topics = useMemo(() => (rosPath ? [rosPath.topicName] : []), [rosPath]);
+  const topics: SubscribePayload[] = useMemo(() => {
+    const payload = subscribePayloadFromRosPath(path);
+    if (payload) {
+      return [payload];
+    }
+    return [];
+  }, [path]);
 
   const cachedGetMessagePathDataItems = useCachedGetMessagePathDataItems([path]);
 

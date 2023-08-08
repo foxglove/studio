@@ -331,6 +331,7 @@ export default class UserNodePlayer implements Player {
       // behavior.
       outputBlocks.push({
         messagesByTopic,
+        needTopics: block.needTopics,
         sizeInBytes: block.sizeInBytes,
       });
     }
@@ -1059,6 +1060,7 @@ export default class UserNodePlayer implements Player {
       nodeSubscriptions[subscription.topic] = subscription;
       for (const inputTopic of inputs) {
         realTopicSubscriptions.push({
+          type: "whole",
           topic: inputTopic,
           preloadType: subscription.preloadType ?? "partial",
         });

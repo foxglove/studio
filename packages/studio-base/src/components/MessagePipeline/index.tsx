@@ -3,12 +3,14 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { debounce } from "lodash";
+import moize from "moize";
 import { createContext, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { StoreApi, useStore } from "zustand";
 
 import { useGuaranteedContext } from "@foxglove/hooks";
 import { Immutable } from "@foxglove/studio";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
+import { simplifySubscriptionsById } from "@foxglove/studio-base/components/MessagePipeline/subscriptions";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import {
@@ -19,7 +21,7 @@ import {
 } from "@foxglove/studio-base/players/types";
 
 import MessageOrderTracker from "./MessageOrderTracker";
-import { pauseFrameForPromises, FramePromise } from "./pauseFrameForPromise";
+import { FramePromise, pauseFrameForPromises } from "./pauseFrameForPromise";
 import {
   MessagePipelineInternalState,
   createMessagePipelineStore,
@@ -67,7 +69,8 @@ type ProviderProps = {
 };
 
 const selectRenderDone = (state: MessagePipelineInternalState) => state.renderDone;
-const selectSubscriptions = (state: MessagePipelineInternalState) => state.public.subscriptions;
+
+const selectSubscriptionsById = (ctx: MessagePipelineInternalState) => ctx.subscriptionsById;
 
 export function MessagePipelineProvider({
   children,
@@ -87,7 +90,20 @@ export function MessagePipelineProvider({
     return createMessagePipelineStore({ promisesToWaitForRef, initialPlayer: player });
   }, [player]);
 
-  const subscriptions = useStore(store, selectSubscriptions);
+  // Derive combined subscriptions from our various subscriptionsById. Use deep memoization to
+  // minimize the number of changed topic selections we send to the player.
+  const subscriptionsById = useStore(store, selectSubscriptionsById);
+
+  const deepEqualMemoizer = useMemo(() => {
+    // Rebuild memoizer when the player changes.
+    void player;
+    return moize((value) => value, { isDeepEqual: true, maxSize: Infinity });
+  }, [player]);
+
+  const subscriptions = useMemo(
+    () => simplifySubscriptionsById(subscriptionsById).map((sub) => deepEqualMemoizer(sub)),
+    [deepEqualMemoizer, subscriptionsById],
+  );
 
   // Debounce the subscription updates for players. This batches multiple subscribe calls
   // into one update for the player which avoids fetching data that will be immediately discarded.

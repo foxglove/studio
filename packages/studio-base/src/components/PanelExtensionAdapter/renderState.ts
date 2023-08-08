@@ -107,7 +107,7 @@ function initRenderStateBuilder(): BuildRenderStateFn {
     const renderState = prevRenderState;
 
     const collatedConversions = memoCollateTopicSchemaConversions(
-      subscriptions,
+      subscriptions as Subscription[],
       sortedTopics,
       messageConverters,
     );

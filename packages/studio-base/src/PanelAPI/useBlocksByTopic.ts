@@ -67,7 +67,7 @@ const useSubscribeToTopicsForBlocks = (topics: readonly string[]) => {
     ),
   );
   const subscriptions: SubscribePayload[] = useMemo(() => {
-    return topics.map((topic) => ({ topic, preloadType: "full" }));
+    return topics.map((topic) => ({ type: "whole", topic, preloadType: "full" }));
   }, [topics]);
   useEffect(() => setSubscriptions(id, subscriptions), [id, setSubscriptions, subscriptions]);
 

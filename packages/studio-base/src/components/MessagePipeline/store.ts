@@ -226,8 +226,6 @@ function updateSubscriberAction(
 
   const subscriberIdsByTopic = new Map<string, string[]>();
 
-  const subscriptions: SubscribePayload[] = [];
-
   // make a map of topics to subscriber ids
   for (const [id, subs] of newSubscriptionsById) {
     for (const subscription of subs) {
@@ -236,7 +234,6 @@ function updateSubscriberAction(
       const ids = subscriberIdsByTopic.get(topic) ?? [];
       ids.push(id);
       subscriberIdsByTopic.set(topic, ids);
-      subscriptions.push(subscription);
     }
   }
 
@@ -247,7 +244,6 @@ function updateSubscriberAction(
     newTopicsBySubscriberId,
     public: {
       ...prevState.public,
-      subscriptions,
     },
   };
 }
