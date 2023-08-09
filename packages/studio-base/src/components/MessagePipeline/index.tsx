@@ -5,6 +5,7 @@
 import { debounce } from "lodash";
 import moize from "moize";
 import { createContext, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import { createSelector } from "reselect";
 import { StoreApi, useStore } from "zustand";
 
 import { useGuaranteedContext } from "@foxglove/hooks";
@@ -70,7 +71,13 @@ type ProviderProps = {
 
 const selectRenderDone = (state: MessagePipelineInternalState) => state.renderDone;
 
-const selectSubscriptionsById = (ctx: MessagePipelineInternalState) => ctx.subscriptionsById;
+// Exported for tests
+export const selectSubscriptions = createSelector(
+  (ctx: MessagePipelineInternalState) => ctx.subscriptionsById,
+  (subscriptions) => {
+    return simplifySubscriptionsById(subscriptions);
+  },
+);
 
 export function MessagePipelineProvider({
   children,
@@ -92,7 +99,7 @@ export function MessagePipelineProvider({
 
   // Derive combined subscriptions from our various subscriptionsById. Use deep memoization to
   // minimize the number of changed topic selections we send to the player.
-  const subscriptionsById = useStore(store, selectSubscriptionsById);
+  const subscriptions = useStore(store, selectSubscriptions);
 
   const deepEqualMemoizer = useMemo(() => {
     // Rebuild memoizer when the player changes.
@@ -100,9 +107,9 @@ export function MessagePipelineProvider({
     return moize((value) => value, { isDeepEqual: true, maxSize: Infinity });
   }, [player]);
 
-  const subscriptions = useMemo(
-    () => simplifySubscriptionsById(subscriptionsById).map((sub) => deepEqualMemoizer(sub)),
-    [deepEqualMemoizer, subscriptionsById],
+  const memoizedSubscriptions = useMemo(
+    () => subscriptions.map((sub) => deepEqualMemoizer(sub)),
+    [deepEqualMemoizer, subscriptions],
   );
 
   // Debounce the subscription updates for players. This batches multiple subscribe calls
@@ -123,8 +130,8 @@ export function MessagePipelineProvider({
   }, [debouncedPlayerSetSubscriptions]);
 
   useEffect(
-    () => debouncedPlayerSetSubscriptions(subscriptions),
-    [debouncedPlayerSetSubscriptions, subscriptions],
+    () => debouncedPlayerSetSubscriptions(memoizedSubscriptions),
+    [debouncedPlayerSetSubscriptions, memoizedSubscriptions],
   );
 
   // Slow down the message pipeline framerate to the given FPS if it is set to less than 60

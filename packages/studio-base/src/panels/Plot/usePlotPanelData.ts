@@ -179,7 +179,7 @@ export function usePlotPanelData(params: Params): Immutable<{
       filterMap(validAllPaths, (path) => {
         const payload = subscribePayloadFromRosPath(path.value, "full");
         // If the path is ordered by header stamp we have to include the header in sliced fields.
-        if (path.timestampMethod === "headerStamp" && payload?.type === "slice") {
+        if (path.timestampMethod === "headerStamp" && payload?.fields != undefined) {
           payload.fields.push("header");
         }
         return payload;

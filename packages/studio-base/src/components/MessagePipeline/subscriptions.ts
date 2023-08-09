@@ -23,9 +23,9 @@ export function simplifySubscriptionsById(
       const target = sub.preloadType === "full" ? fullSubsByTopic : partialSubsByTopic;
       const existing = target.get(sub.topic);
       if (existing) {
-        if (existing.type === "whole") {
+        if (existing.fields == undefined) {
           // Nothing to do, already subscribed to the whole topic.
-        } else if (sub.type === "whole") {
+        } else if (sub.fields == undefined) {
           // Replace any slice subscription with a subscription to the whole topic.
           target.set(sub.topic, sub);
         } else {
@@ -38,7 +38,7 @@ export function simplifySubscriptionsById(
           }
         }
       } else {
-        if (sub.type === "whole") {
+        if (sub.fields == undefined) {
           // If no subscription for this topic exists, register a whole topic subscription.
           target.set(sub.topic, sub);
         } else {

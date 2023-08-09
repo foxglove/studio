@@ -131,7 +131,6 @@ function getPublicState(
               ...props.activeData,
             },
     },
-    subscriptions: [],
     sortedTopics:
       props.topics === prevState?.mockProps.topics
         ? prevState?.public.sortedTopics ?? []

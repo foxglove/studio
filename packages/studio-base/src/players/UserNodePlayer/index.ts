@@ -1060,7 +1060,6 @@ export default class UserNodePlayer implements Player {
       nodeSubscriptions[subscription.topic] = subscription;
       for (const inputTopic of inputs) {
         realTopicSubscriptions.push({
-          type: "whole",
           topic: inputTopic,
           preloadType: subscription.preloadType ?? "partial",
         });

@@ -87,7 +87,7 @@ export function useMessageReducer<T>(props: Params<T>): T {
   const subscriptions = useMemo<SubscribePayload[]>(() => {
     return requestedTopics.map((topic) => {
       if (typeof topic === "string") {
-        return { topic, preloadType, type: "whole" };
+        return { topic, preloadType };
       } else {
         return topic;
       }

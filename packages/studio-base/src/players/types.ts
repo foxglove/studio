@@ -256,7 +256,7 @@ export type MessageBlock = {
   readonly messagesByTopic: {
     readonly [topic: string]: MessageEvent[];
   };
-  needTopics: TopicSelection;
+  needTopics?: TopicSelection;
   readonly sizeInBytes: number;
 };
 
@@ -280,19 +280,11 @@ export type SubscriptionPreloadType =
   | "partial"; // Fetch messages as needed.
 
 // Represents a subscription to a single topic, for use in `setSubscriptions`.
-export type SubscribePayload =
-  | {
-      // The topic name to subscribe to
-      type: "whole";
-      topic: string;
-      preloadType?: SubscriptionPreloadType;
-    }
-  | {
-      type: "slice";
-      topic: string;
-      fields: string[];
-      preloadType?: SubscriptionPreloadType;
-    };
+export type SubscribePayload = {
+  fields?: string[];
+  preloadType?: SubscriptionPreloadType;
+  topic: string;
+};
 
 // Represents a single topic publisher, for use in `setPublishers`.
 export type AdvertiseOptions = {
@@ -362,11 +354,10 @@ export function subscribePayloadFromRosPath(
 
   const messagePath = parsedPath.messagePath[0];
   if (messagePath == undefined || messagePath.type !== "name") {
-    return { type: "whole", topic: parsedPath.topicName, preloadType };
+    return { topic: parsedPath.topicName, preloadType };
   }
 
   return {
-    type: "slice",
     topic: parsedPath.topicName,
     preloadType,
     fields: [messagePath.name],

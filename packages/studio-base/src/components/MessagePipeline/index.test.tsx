@@ -14,10 +14,11 @@
 
 /* eslint-disable jest/no-conditional-expect */
 
-import { renderHook, act } from "@testing-library/react-hooks";
+import { act, renderHook } from "@testing-library/react-hooks";
 import { PropsWithChildren, useCallback, useState } from "react";
 import { DeepPartial } from "ts-essentials";
 
+import { useGuaranteedContext } from "@foxglove/hooks";
 import AppConfigurationContext from "@foxglove/studio-base/context/AppConfigurationContext";
 import {
   EMPTY_GLOBAL_VARIABLES,
@@ -32,7 +33,13 @@ import {
 import delay from "@foxglove/studio-base/util/delay";
 import { makeMockAppConfiguration } from "@foxglove/studio-base/util/makeMockAppConfiguration";
 
-import { MessagePipelineProvider, useMessagePipeline, MessagePipelineContext } from ".";
+import {
+  ContextInternal,
+  MessagePipelineContext,
+  MessagePipelineProvider,
+  selectSubscriptions,
+  useMessagePipeline,
+} from ".";
 import FakePlayer from "./FakePlayer";
 import { MAX_PROMISE_TIMEOUT_TIME_MS } from "./pauseFrameForPromise";
 
@@ -54,10 +61,13 @@ function makeTestHook({
 }) {
   const all: MessagePipelineContext[] = [];
   function Hook() {
+    const internalCtx = useGuaranteedContext(ContextInternal);
+    const subscriptions = selectSubscriptions(internalCtx.getState());
     const value = useMessagePipeline(useCallback((ctx) => ctx, []));
     all.push(value);
-    return value;
+    return { value, subscriptions };
   }
+
   let currentPlayer = player;
   function Wrapper({ children }: PropsWithChildren<unknown>) {
     const [config] = useState(() => makeMockAppConfiguration());
@@ -72,6 +82,7 @@ function makeTestHook({
       </AppConfigurationContext.Provider>
     );
   }
+
   function setPlayer(newPlayer: Player) {
     currentPlayer = newPlayer;
   }
@@ -312,12 +323,12 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
     });
 
     act(() => {
-      result.current.setSubscriptions("test", [{ topic: "/studio/test" }]);
+      result.current.value.setSubscriptions("test", [{ topic: "/studio/test" }]);
     });
     expect(result.current.subscriptions).toEqual([{ topic: "/studio/test" }]);
 
     act(() => {
-      result.current.setSubscriptions("bar", [{ topic: "/studio/test2" }]);
+      result.current.value.setSubscriptions("bar", [{ topic: "/studio/test2" }]);
     });
     expect(result.current.subscriptions).toEqual([
       { topic: "/studio/test" },
@@ -367,14 +378,14 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
     );
 
     act(() => {
-      result.current.setSubscriptions("custom-id", [{ topic: "/input/foo" }]);
+      result.current.value.setSubscriptions("custom-id", [{ topic: "/input/foo" }]);
     });
     expect(result.current.subscriptions).toEqual([{ topic: "/input/foo" }]);
 
     // Emit empty player state to process new subscriptions
     await doubleAct(async () => await player.emit());
 
-    expect(result.current.messageEventsBySubscriberId.get("custom-id")).toEqual([
+    expect(result.current.value.messageEventsBySubscriberId.get("custom-id")).toEqual([
       {
         message: {
           foo: "bar",
@@ -423,14 +434,14 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
     );
 
     act(() => {
-      result.current.setSubscriptions("custom-id", [{ topic: "/input/foo" }]);
+      result.current.value.setSubscriptions("custom-id", [{ topic: "/input/foo" }]);
     });
     expect(result.current.subscriptions).toEqual([{ topic: "/input/foo" }]);
 
     // Emit empty player state to process new subscriptions
     await doubleAct(async () => await player.emit());
 
-    expect(result.current.messageEventsBySubscriberId.get("custom-id")).toEqual([
+    expect(result.current.value.messageEventsBySubscriberId.get("custom-id")).toEqual([
       {
         message: {
           foo: "bar",
@@ -451,10 +462,10 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
 
     // Unsubscribe and re-subscribe to trigger injection of old messages
     act(() => {
-      result.current.setSubscriptions("custom-id", []);
+      result.current.value.setSubscriptions("custom-id", []);
     });
     act(() => {
-      result.current.setSubscriptions("custom-id", [{ topic: "/input/foo" }]);
+      result.current.value.setSubscriptions("custom-id", [{ topic: "/input/foo" }]);
     });
     expect(result.current.subscriptions).toEqual([{ topic: "/input/foo" }]);
 
@@ -477,8 +488,8 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
         }),
     );
 
-    expect(result.current.playerState.playerId).toEqual("player2");
-    expect(result.current.messageEventsBySubscriberId.get("custom-id")).toBeUndefined();
+    expect(result.current.value.playerState.playerId).toEqual("player2");
+    expect(result.current.value.messageEventsBySubscriberId.get("custom-id")).toBeUndefined();
   });
 
   it("does not inject the last message when the player id changes", async () => {
@@ -513,14 +524,14 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
     );
 
     act(() => {
-      result.current.setSubscriptions("custom-id", [{ topic: "/input/foo" }]);
+      result.current.value.setSubscriptions("custom-id", [{ topic: "/input/foo" }]);
     });
     expect(result.current.subscriptions).toEqual([{ topic: "/input/foo" }]);
 
     // Emit empty player state to process new subscriptions
     await doubleAct(async () => await player.emit());
 
-    expect(result.current.messageEventsBySubscriberId.get("custom-id")).toEqual([
+    expect(result.current.value.messageEventsBySubscriberId.get("custom-id")).toEqual([
       {
         message: {
           foo: "bar",
@@ -538,10 +549,10 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
 
     // Unsubscribe and re-subscribe to trigger injection of old messages
     act(() => {
-      result.current.setSubscriptions("custom-id", []);
+      result.current.value.setSubscriptions("custom-id", []);
     });
     act(() => {
-      result.current.setSubscriptions("custom-id", [{ topic: "/input/foo" }]);
+      result.current.value.setSubscriptions("custom-id", [{ topic: "/input/foo" }]);
     });
     expect(result.current.subscriptions).toEqual([{ topic: "/input/foo" }]);
 
@@ -565,8 +576,8 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
         }),
     );
 
-    expect(result.current.playerState.playerId).toEqual("player2");
-    expect(result.current.messageEventsBySubscriberId.get("custom-id")).toBeUndefined();
+    expect(result.current.value.playerState.playerId).toEqual("player2");
+    expect(result.current.value.messageEventsBySubscriberId.get("custom-id")).toBeUndefined();
   });
 
   it("sets publishers", async () => {
@@ -575,14 +586,14 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
     const { result } = renderHook(Hook, { wrapper: Wrapper });
 
     act(() =>
-      result.current.setPublishers("test", [{ topic: "/studio/test", schemaName: "test" }]),
+      result.current.value.setPublishers("test", [{ topic: "/studio/test", schemaName: "test" }]),
     );
     expect(player.publishers).toEqual<typeof player.publishers>([
       { topic: "/studio/test", schemaName: "test" },
     ]);
 
     act(() =>
-      result.current.setPublishers("bar", [{ topic: "/studio/test2", schemaName: "test2" }]),
+      result.current.value.setPublishers("bar", [{ topic: "/studio/test2", schemaName: "test2" }]),
     );
     expect(player.publishers).toEqual<typeof player.publishers>([
       { topic: "/studio/test", schemaName: "test" },
@@ -640,26 +651,26 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
       wrapper: Wrapper,
     });
 
-    expect(result.current.startPlayback).toBeUndefined();
-    expect(result.current.pausePlayback).toBeUndefined();
-    expect(result.current.setPlaybackSpeed).toBeUndefined();
-    expect(result.current.seekPlayback).toBeUndefined();
+    expect(result.current.value.startPlayback).toBeUndefined();
+    expect(result.current.value.pausePlayback).toBeUndefined();
+    expect(result.current.value.setPlaybackSpeed).toBeUndefined();
+    expect(result.current.value.seekPlayback).toBeUndefined();
 
     player.setCapabilities([PlayerCapabilities.playbackControl]);
 
     await doubleAct(async () => await player.emit());
 
-    expect(result.current.startPlayback).not.toBeUndefined();
-    expect(result.current.pausePlayback).not.toBeUndefined();
-    expect(result.current.setPlaybackSpeed).toBeUndefined();
-    expect(result.current.seekPlayback).not.toBeUndefined();
+    expect(result.current.value.startPlayback).not.toBeUndefined();
+    expect(result.current.value.pausePlayback).not.toBeUndefined();
+    expect(result.current.value.setPlaybackSpeed).toBeUndefined();
+    expect(result.current.value.seekPlayback).not.toBeUndefined();
 
     expect(player.startPlayback).toHaveBeenCalledTimes(0);
     expect(player.pausePlayback).toHaveBeenCalledTimes(0);
     expect(player.seekPlayback).toHaveBeenCalledTimes(0);
-    result.current.startPlayback!();
-    result.current.pausePlayback!();
-    result.current.seekPlayback!({ sec: 1, nsec: 0 });
+    result.current.value.startPlayback!();
+    result.current.value.pausePlayback!();
+    result.current.value.seekPlayback!({ sec: 1, nsec: 0 });
     expect(player.startPlayback).toHaveBeenCalledTimes(1);
     expect(player.pausePlayback).toHaveBeenCalledTimes(1);
     expect(player.seekPlayback).toHaveBeenCalledWith({ sec: 1, nsec: 0 });
@@ -668,7 +679,7 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
 
     await doubleAct(async () => await player.emit());
     expect(player.setPlaybackSpeed).toHaveBeenCalledTimes(0);
-    result.current.setPlaybackSpeed!(0.5);
+    result.current.value.setPlaybackSpeed!(0.5);
     expect(player.setPlaybackSpeed).toHaveBeenCalledWith(0.5);
   });
 
@@ -688,11 +699,11 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
     expect(() => {
       const { Hook, Wrapper } = makeTestHook({});
       const { result } = renderHook(Hook, { wrapper: Wrapper });
-      expect(result.current.startPlayback).toBeUndefined();
-      expect(result.current.pausePlayback).toBeUndefined();
-      expect(result.current.setPlaybackSpeed).toBeUndefined();
-      expect(result.current.seekPlayback).toBeUndefined();
-      result.current.publish({ topic: "/foo", msg: {} });
+      expect(result.current.value.startPlayback).toBeUndefined();
+      expect(result.current.value.pausePlayback).toBeUndefined();
+      expect(result.current.value.setPlaybackSpeed).toBeUndefined();
+      expect(result.current.value.seekPlayback).toBeUndefined();
+      result.current.value.publish({ topic: "/foo", msg: {} });
     }).not.toThrow();
   });
 
@@ -718,8 +729,8 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
       const { Hook, Wrapper } = makeTestHook({ player });
       const { result } = renderHook(Hook, { wrapper: Wrapper });
       const resumeFunctions = [
-        result.current.pauseFrame(""),
-        result.current.pauseFrame(""),
+        result.current.value.pauseFrame(""),
+        result.current.value.pauseFrame(""),
       ] as const;
 
       // Trigger the next emit.
@@ -752,7 +763,7 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
       async function runSingleFrame({ shouldPause }: { shouldPause: boolean }) {
         let resumeFn;
         if (shouldPause) {
-          resumeFn = result.current.pauseFrame("");
+          resumeFn = result.current.value.pauseFrame("");
         }
 
         let hasFinishedFrame = false;
@@ -786,7 +797,7 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
       const { result } = renderHook(Hook, { wrapper: Wrapper });
 
       // Pause the current frame, but immediately resume it before we actually emit.
-      const resumeFn = result.current.pauseFrame("");
+      const resumeFn = result.current.value.pauseFrame("");
       resumeFn();
 
       // Then trigger the next emit.
@@ -808,7 +819,7 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
       const { Hook, Wrapper } = makeTestHook({ player });
       const { result } = renderHook(Hook, { wrapper: Wrapper });
       // Pause the current frame.
-      result.current.pauseFrame("");
+      result.current.value.pauseFrame("");
 
       // Then trigger the next emit.
       let hasFinishedFrame = false;
@@ -830,8 +841,8 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
       const { result } = renderHook(Hook, { wrapper: Wrapper });
 
       // Pause the current frame twice.
-      result.current.pauseFrame("");
-      result.current.pauseFrame("");
+      result.current.value.pauseFrame("");
+      result.current.value.pauseFrame("");
 
       // Then trigger the next emit.
       let hasFinishedFrame = false;
@@ -852,7 +863,7 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
       const { Hook, Wrapper, setPlayer } = makeTestHook({ player });
       const { result, rerender } = renderHook(Hook, { wrapper: Wrapper });
       // Pause the current frame.
-      const firstPlayerResumeFn = result.current.pauseFrame("");
+      const firstPlayerResumeFn = result.current.value.pauseFrame("");
 
       // Then trigger the next emit.
       act(() => void player.emit());
@@ -864,7 +875,7 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
       rerender();
       await delay(20);
 
-      const secondPlayerResumeFn = result.current.pauseFrame("");
+      const secondPlayerResumeFn = result.current.value.pauseFrame("");
       let secondPlayerHasFinishedFrame = false;
       await act(async () => {
         void newPlayer.emit().then(() => {

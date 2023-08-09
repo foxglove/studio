@@ -397,11 +397,10 @@ function PanelExtensionAdapter(
           if (typeof item === "string") {
             // For backwards compatability with the topic-string-array api `subscribe(["/topic"])`
             // results in a topic subscription with full preloading
-            return { type: "whole", topic: item, preloadType: "full" };
+            return { topic: item, preloadType: "full" };
           }
 
           return {
-            type: "whole",
             topic: item.topic,
             convertTo: item.convertTo,
             preloadType: item.preload === true ? "full" : "partial",

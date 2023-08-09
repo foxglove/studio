@@ -315,7 +315,7 @@ export class BlockLoader {
           // cache over capacity, try removing unused topics
           const removedSize = this.#removeUnusedBlockTopics();
           totalBlockSizeBytes -= removedSize;
-          if (totalBlockSizeBytes > this.#maxCacheSize * 100) {
+          if (totalBlockSizeBytes > this.#maxCacheSize) {
             this.#problemManager.addProblem("cache-full", {
               severity: "error",
               message: `Cache is full. Preloading for topics [${Array.from(topicsToFetch).join(

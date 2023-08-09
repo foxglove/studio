@@ -151,7 +151,7 @@ export class McapIndexedIterableSource implements IIterableSource {
       try {
         const msg = channelInfo.parsedChannel.deserialize(message.data) as Record<string, unknown>;
         const spec = args.topics.get(channelInfo.channel.topic);
-        const payload = spec?.type === "slice" ? pick(msg, spec.fields) : msg;
+        const payload = spec?.fields != undefined ? pick(msg, spec.fields) : msg;
         yield {
           type: "message-event",
           msgEvent: {

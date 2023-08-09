@@ -112,7 +112,7 @@ export function useAllFramesByTopic(
         }
 
         // Only include fully loaded blocks.
-        if (block.needTopics.size > 0) {
+        if (block.needTopics?.size !== 0) {
           break;
         }
 

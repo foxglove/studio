@@ -8,28 +8,25 @@ import { SubscribePayload } from "@foxglove/studio-base/players/types";
 describe("simplifySubscriptionsById", () => {
   it("combines subscriptions", () => {
     const subs: Map<string, SubscribePayload[]> = new Map([
-      ["0", [{ type: "whole", topic: "a", preloadType: "full" }]],
-      ["1", [{ type: "whole", topic: "a", preloadType: "partial" }]],
-      ["2", [{ type: "slice", topic: "a", preloadType: "partial", fields: ["one", "two"] }]],
+      ["0", [{ topic: "a", preloadType: "full" }]],
+      ["1", [{ topic: "a", preloadType: "partial" }]],
+      ["2", [{ topic: "a", preloadType: "partial", fields: ["one", "two"] }]],
 
-      ["3", [{ type: "slice", topic: "b", preloadType: "full", fields: ["one", "two"] }]],
-      ["4", [{ type: "slice", topic: "b", preloadType: "partial", fields: ["one"] }]],
-      [
-        "5",
-        [{ type: "slice", topic: "b", preloadType: "partial", fields: ["one", "two", "three"] }],
-      ],
-      ["6", [{ type: "slice", topic: "c", preloadType: "partial", fields: [] }]],
+      ["3", [{ topic: "b", preloadType: "full", fields: ["one", "two"] }]],
+      ["4", [{ topic: "b", preloadType: "partial", fields: ["one"] }]],
+      ["5", [{ topic: "b", preloadType: "partial", fields: ["one", "two", "three"] }]],
+      ["6", [{ topic: "c", preloadType: "partial", fields: [] }]],
     ]);
 
     const result = simplifySubscriptionsById(subs);
 
     expect(result).toEqual(
       expect.arrayContaining([
-        { type: "whole", topic: "a", preloadType: "full" },
-        { type: "whole", topic: "a", preloadType: "partial" },
+        { topic: "a", preloadType: "full" },
+        { topic: "a", preloadType: "partial" },
 
-        { type: "slice", topic: "b", preloadType: "full", fields: ["one", "two"] },
-        { type: "slice", topic: "b", preloadType: "partial", fields: ["one", "two", "three"] },
+        { topic: "b", preloadType: "full", fields: ["one", "two"] },
+        { topic: "b", preloadType: "partial", fields: ["one", "two", "three"] },
       ]),
     );
   });
