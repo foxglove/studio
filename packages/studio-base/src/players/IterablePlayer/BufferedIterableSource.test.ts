@@ -460,7 +460,7 @@ describe("BufferedIterableSource", () => {
     expect(messageIteratorCount).toEqual(1);
   });
 
-  it("should wait to buffer more messages until reading moves forward (with min. read ahead)", async () => {
+  it("should buffer minimum duration ahead before messages can be read", async () => {
     const source = new TestSource();
     const bufferedSource = new BufferedIterableSource(source, {
       readAheadDuration: { sec: 3, nsec: 0 },
