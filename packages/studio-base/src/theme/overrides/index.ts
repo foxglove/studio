@@ -8,9 +8,7 @@ import { Components, Theme } from "@mui/material";
 import * as components from "./components";
 
 export function overrides(theme: Theme): Components<Theme> {
-  return Object(components)
-    .entries()
-    .reduce((acc: Components, fn: (theme: Theme) => Components) => {
-      return { ...acc, ...fn(theme) };
-    }, {});
+  return Object.values(components).reduce((acc, fn) => {
+    return { ...acc, ...fn(theme) };
+  }, {});
 }
