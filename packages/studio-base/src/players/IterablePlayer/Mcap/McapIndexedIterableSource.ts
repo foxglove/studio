@@ -159,7 +159,10 @@ export class McapIndexedIterableSource implements IIterableSource {
             receiveTime: fromNanoSec(message.logTime),
             publishTime: fromNanoSec(message.publishTime),
             message: payload,
-            sizeInBytes: message.data.byteLength,
+            // Treat sliced messages as zero bytes. This is a rough approximation of course but the
+            // alternative is taking the performance hit of sizing the sliced fields for each
+            // message.
+            sizeInBytes: spec?.fields == undefined ? message.data.byteLength : 0,
             schemaName: channelInfo.schemaName ?? "",
           },
         };

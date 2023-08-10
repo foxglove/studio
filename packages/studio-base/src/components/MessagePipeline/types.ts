@@ -19,8 +19,9 @@ export type MessagePipelineContext = Immutable<{
   playerState: PlayerState;
   sortedTopics: Topic[];
   datatypes: RosDatatypes;
+  subscriptions: SubscribePayload[];
   messageEventsBySubscriberId: Map<string, MessageEvent[]>;
-  setSubscriptions: (id: string, subscriptionsForId: SubscribePayload[]) => void;
+  setSubscriptions: (id: string, subscriptionsForId: Immutable<SubscribePayload[]>) => void;
   setPublishers: (id: string, publishersForId: AdvertiseOptions[]) => void;
   setParameter: (key: string, value: ParameterValue) => void;
   publish: (request: PublishPayload) => void;

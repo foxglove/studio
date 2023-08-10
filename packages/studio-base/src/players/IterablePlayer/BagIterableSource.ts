@@ -248,12 +248,12 @@ export class BagIterableSource implements IIterableSource {
     time,
   }: GetBackfillMessagesArgs): Promise<MessageEvent[]> {
     const messages: MessageEvent[] = [];
-    for (const [topic, selection] of topics.entries()) {
+    for (const entry of topics.entries()) {
       // NOTE: An iterator is made for each topic to get the latest message on that topic.
       // An single iterator for all the topics could result in iterating through many
       // irrelevant messages to get to an older message on a topic.
       for await (const result of this.#messageIterator({
-        topics: new Map([[topic, selection]]),
+        topics: new Map([entry]),
         start: time,
         reverse: true,
       })) {

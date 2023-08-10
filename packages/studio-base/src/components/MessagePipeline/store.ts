@@ -8,7 +8,11 @@ import shallowequal from "shallowequal";
 import { createStore, StoreApi } from "zustand";
 
 import { Condvar } from "@foxglove/den/async";
-import { MessageEvent } from "@foxglove/studio";
+import { Immutable, MessageEvent } from "@foxglove/studio";
+import {
+  makeSubscriptionMemoizer,
+  simplifySubscriptionsById,
+} from "@foxglove/studio-base/components/MessagePipeline/subscriptions";
 import {
   AdvertiseOptions,
   Player,
@@ -44,8 +48,9 @@ export type MessagePipelineInternalState = {
 
   /** used to keep track of whether we need to update public.startPlayback/playUntil/etc. */
   lastCapabilities: string[];
-
-  subscriptionsById: Map<string, SubscribePayload[]>;
+  // Preserves reference equality of subscriptions to minimize player subscription churn.
+  subscriptionMemoizer: (sub: SubscribePayload) => SubscribePayload;
+  subscriptionsById: Map<string, Immutable<SubscribePayload[]>>;
   publishersById: { [key: string]: AdvertiseOptions[] };
   allPublishers: AdvertiseOptions[];
   subscriberIdsByTopic: Map<string, string[]>;
@@ -61,7 +66,7 @@ export type MessagePipelineInternalState = {
 type UpdateSubscriberAction = {
   type: "update-subscriber";
   id: string;
-  payloads: SubscribePayload[];
+  payloads: Immutable<SubscribePayload[]>;
 };
 type UpdatePlayerStateAction = {
   type: "update-player-state";
@@ -85,6 +90,7 @@ export function createMessagePipelineStore({
     player: initialPlayer,
     publishersById: {},
     allPublishers: [],
+    subscriptionMemoizer: makeSubscriptionMemoizer(),
     subscriptionsById: new Map(),
     subscriberIdsByTopic: new Map(),
     newTopicsBySubscriberId: new Map(),
@@ -100,6 +106,7 @@ export function createMessagePipelineStore({
         ...prev,
         publishersById: {},
         allPublishers: [],
+        subscriptionMemoizer: makeSubscriptionMemoizer(),
         subscriptionsById: new Map(),
         subscriberIdsByTopic: new Map(),
         newTopicsBySubscriberId: new Map(),
@@ -237,6 +244,8 @@ function updateSubscriberAction(
     }
   }
 
+  const subscriptions = simplifySubscriptionsById(newSubscriptionsById);
+
   return {
     ...prevState,
     subscriptionsById: newSubscriptionsById,
@@ -244,6 +253,7 @@ function updateSubscriberAction(
     newTopicsBySubscriberId,
     public: {
       ...prevState.public,
+      subscriptions,
     },
   };
 }

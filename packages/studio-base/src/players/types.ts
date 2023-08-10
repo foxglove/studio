@@ -342,6 +342,10 @@ export interface PlayerMetricsCollectorInterface {
   recordTimeToFirstMsgs(): void;
 }
 
+/**
+ * Builds a SubscribePayload from a ros path, requesting a specific field of the message if the
+ * message path resolves to a field name.
+ */
 export function subscribePayloadFromRosPath(
   path: string,
   preloadType?: SubscriptionPreloadType,

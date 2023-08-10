@@ -54,7 +54,7 @@ export function useAllFramesByTopic(
   const setSubscriptions = useMessagePipeline(selectSetSubscriptions);
 
   useEffect(() => {
-    setSubscriptions(subscriberId, subscriptions as SubscribePayload[]);
+    setSubscriptions(subscriberId, subscriptions);
 
     return () => {
       setSubscriptions(subscriberId, []);

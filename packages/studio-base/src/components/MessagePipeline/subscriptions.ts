@@ -3,8 +3,18 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { union } from "lodash";
+import moize from "moize";
 
+import { Immutable } from "@foxglove/studio";
 import { SubscribePayload } from "@foxglove/studio-base/players/types";
+
+/**
+ * Create a deep equal memoized identify function. Used for stabilizing the subscription payloads we
+ * send on to the player.
+ */
+export function makeSubscriptionMemoizer(): (val: SubscribePayload) => SubscribePayload {
+  return moize((val: SubscribePayload) => val, { isDeepEqual: true, maxSize: Infinity });
+}
 
 /**
  * Coalesces various topic subscriptions into a set of subscriptions to send on to the player.
@@ -14,10 +24,10 @@ import { SubscribePayload } from "@foxglove/studio-base/players/types";
  * requested slices.
  */
 export function simplifySubscriptionsById(
-  subcriptionsById: Map<string, SubscribePayload[]>,
-): SubscribePayload[] {
-  const fullSubsByTopic = new Map<string, SubscribePayload>();
-  const partialSubsByTopic = new Map<string, SubscribePayload>();
+  subcriptionsById: Immutable<Map<string, SubscribePayload[]>>,
+): Immutable<SubscribePayload>[] {
+  const fullSubsByTopic = new Map<string, Immutable<SubscribePayload>>();
+  const partialSubsByTopic = new Map<string, Immutable<SubscribePayload>>();
   for (const subs of subcriptionsById.values()) {
     for (const sub of subs) {
       const target = sub.preloadType === "full" ? fullSubsByTopic : partialSubsByTopic;

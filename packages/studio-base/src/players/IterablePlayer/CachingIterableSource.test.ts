@@ -615,10 +615,7 @@ describe("CachingIterableSource", () => {
 
     {
       const messageIterator = bufferedSource.messageIterator({
-        topics: new Map([
-          ["a", { topic: "a" }],
-          ["b", { topic: "b" }],
-        ]),
+        topics: mockTopicSelection("a", "b"),
       });
 
       // load all the messages into cache
@@ -637,10 +634,7 @@ describe("CachingIterableSource", () => {
     };
 
     const backfill = await bufferedSource.getBackfillMessages({
-      topics: new Map([
-        ["a", { topic: "a" }],
-        ["b", { topic: "b" }],
-      ]),
+      topics: mockTopicSelection("a", "b"),
       time: { sec: 2, nsec: 500 },
     });
     expect(backfill).toEqual([
@@ -742,10 +736,7 @@ describe("CachingIterableSource", () => {
 
     {
       const messageIterator = bufferedSource.messageIterator({
-        topics: new Map([
-          ["a", { topic: "a" }],
-          ["b", { topic: "b" }],
-        ]),
+        topics: mockTopicSelection("a", "b"),
       });
 
       await messageIterator.next();
@@ -887,10 +878,7 @@ describe("CachingIterableSource", () => {
 
     {
       const messageIterator = bufferedSource.messageIterator({
-        topics: new Map([
-          ["a", { topic: "a" }],
-          ["b", { topic: "b" }],
-        ]),
+        topics: mockTopicSelection("a", "b"),
       });
 
       // load all the messages into cache
@@ -909,10 +897,7 @@ describe("CachingIterableSource", () => {
     };
 
     const backfill = await bufferedSource.getBackfillMessages({
-      topics: new Map([
-        ["a", { topic: "a" }],
-        ["b", { topic: "b" }],
-      ]),
+      topics: mockTopicSelection("a", "b"),
       time: { sec: 2, nsec: 0 },
     });
 
