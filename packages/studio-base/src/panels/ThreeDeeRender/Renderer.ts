@@ -564,6 +564,20 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     return true;
   }
 
+  public handleCurrentFrameMessages(currentFrameMessages: readonly MessageEvent[]): void {
+    // Count number of messages per topic
+    const msgCountByTopic = currentFrameMessages.reduce((acc, message) => {
+      acc.set(message.topic, (acc.get(message.topic) ?? 0) + 1);
+      return acc;
+    }, new Map<string, number>());
+
+    for (const message of currentFrameMessages) {
+      const remainingMsgsOnSameTopic = msgCountByTopic.get(message.topic)! - 1;
+      this.addMessageEvent(message, remainingMsgsOnSameTopic);
+      msgCountByTopic.set(message.topic, remainingMsgsOnSameTopic);
+    }
+  }
+
   #addSceneExtension(extension: SceneExtension): void {
     if (this.sceneExtensions.has(extension.extensionId)) {
       throw new Error(`Attempted to add duplicate extensionId "${extension.extensionId}"`);
@@ -887,7 +901,10 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     }
   }
 
-  public addMessageEvent(messageEvent: Readonly<MessageEvent>): void {
+  public addMessageEvent(
+    messageEvent: Readonly<MessageEvent>,
+    remainingMessagesOnSameTopic?: number,
+  ): void {
     const { message } = messageEvent;
 
     const maybeHasHeader = message as DeepPartial<{ header: Header }>;
@@ -921,8 +938,16 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
       this.addCoordinateFrame(maybeHasFrameId.frame_id);
     }
 
-    handleMessage(messageEvent, this.topicHandlers.get(messageEvent.topic));
-    handleMessage(messageEvent, this.schemaHandlers.get(messageEvent.schemaName));
+    handleMessage(
+      messageEvent,
+      this.topicHandlers.get(messageEvent.topic),
+      remainingMessagesOnSameTopic,
+    );
+    handleMessage(
+      messageEvent,
+      this.schemaHandlers.get(messageEvent.schemaName),
+      remainingMessagesOnSameTopic,
+    );
   }
 
   /** Match the behavior of `tf::Transformer` by stripping leading slashes from
@@ -1357,10 +1382,17 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
 function handleMessage(
   messageEvent: Readonly<MessageEvent>,
   subscriptions: RendererSubscription[] | undefined,
+  remainingMessagesOnSameTopic: number | undefined,
 ): void {
   if (subscriptions) {
     for (const subscription of subscriptions) {
-      subscription.handler(messageEvent);
+      const skipMessage =
+        (remainingMessagesOnSameTopic ?? 0) > 0 &&
+        // This should be cached somehwere
+        (subscription.canSkipMessages?.(messageEvent.topic) ?? false);
+      if (!skipMessage) {
+        subscription.handler(messageEvent);
+      }
     }
   }
 }

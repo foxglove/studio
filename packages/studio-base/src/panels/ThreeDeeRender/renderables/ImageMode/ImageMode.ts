@@ -227,6 +227,7 @@ export class ImageMode
         subscription: {
           handler: this.#messageHandler.handleRosRawImage,
           shouldSubscribe: this.#imageShouldSubscribe,
+          canSkipMessages: () => !(this.renderer.config.imageMode.synchronize ?? false),
         },
       },
       {
@@ -235,6 +236,7 @@ export class ImageMode
         subscription: {
           handler: this.#messageHandler.handleRosCompressedImage,
           shouldSubscribe: this.#imageShouldSubscribe,
+          canSkipMessages: () => !(this.renderer.config.imageMode.synchronize ?? false),
         },
       },
       {
@@ -243,6 +245,7 @@ export class ImageMode
         subscription: {
           handler: this.#messageHandler.handleRawImage,
           shouldSubscribe: this.#imageShouldSubscribe,
+          canSkipMessages: () => !(this.renderer.config.imageMode.synchronize ?? false),
         },
       },
       {
@@ -251,6 +254,7 @@ export class ImageMode
         subscription: {
           handler: this.#messageHandler.handleCompressedImage,
           shouldSubscribe: this.#imageShouldSubscribe,
+          canSkipMessages: () => !(this.renderer.config.imageMode.synchronize ?? false),
         },
       },
     ];

@@ -502,10 +502,7 @@ export function ThreeDeeRender(props: {
       return;
     }
 
-    for (const message of currentFrameMessages) {
-      renderer.addMessageEvent(message);
-    }
-
+    renderer.handleCurrentFrameMessages(currentFrameMessages);
     renderRef.current.needsRender = true;
   }, [currentFrameMessages, renderer]);
 

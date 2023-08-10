@@ -162,6 +162,11 @@ export type RendererSubscription<T = unknown> = {
    * settings are changed.
    */
   shouldSubscribe?: (topic: string) => boolean;
+  /**
+   * Determines if this subscription can skip messages or if all messages have to be processed.
+   * Skipping messages may improve performance. By default, no messages are skipped.
+   */
+  canSkipMessages?: (topic: string) => boolean;
   /** Callback that will be fired for each matching incoming message */
   handler: (messageEvent: MessageEvent<T>) => void;
 };
@@ -281,6 +286,12 @@ export interface IRenderer extends EventEmitter<RendererEvents> {
    */
   handleAllFramesMessages(allFrames?: readonly MessageEvent[]): boolean;
 
+  /**
+   * Sends messages to the underlying subscribers.
+   * @param currentFrameMessages - sorted (by receive time) array of messages
+   */
+  handleCurrentFrameMessages(currentFrameMessages: readonly MessageEvent[]): void;
+
   updateConfig(updateHandler: (draft: RendererConfig) => void): void;
 
   addCustomLayerAction(options: {
@@ -318,7 +329,7 @@ export interface IRenderer extends EventEmitter<RendererEvents> {
 
   setSelectedRenderable(selection: PickedRenderable | undefined): void;
 
-  addMessageEvent(messageEvent: Readonly<MessageEvent>): void;
+  addMessageEvent(messageEvent: Readonly<MessageEvent>, remainingMsgsOnSameTopic?: number): void;
 
   /**  Set desired render/display frame, will render using fallback if id is undefined or frame does not exist */
   setFollowFrameId(frameId: string | undefined): void;
