@@ -6,7 +6,7 @@ import { Theme } from "@mui/material";
 
 import { OverrideComponentReturn } from "../types";
 
-export const radio = (_theme: Theme): OverrideComponentReturn<"MuiRadio"> => ({
+export const radiow = (_theme: Theme): OverrideComponentReturn<"MuiRadio"> => ({
   MuiRadio: {
     defaultProps: {
       disableRipple: true,
