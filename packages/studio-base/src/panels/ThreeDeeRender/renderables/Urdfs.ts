@@ -206,7 +206,7 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
       {
         type: "topic",
         topicName: TOPIC_NAME,
-        subscription: { handler: this.#handleRobotDescription },
+        subscription: { handler: this.#handleRobotDescription, canSkipMessages: () => true },
       },
 
       // Note that this subscription will never happen because it does not appear as a topic in the
@@ -215,7 +215,7 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
       {
         type: "schema",
         schemaNames: JOINTSTATE_DATATYPES,
-        subscription: { handler: this.#handleJointState },
+        subscription: { handler: this.#handleJointState, canSkipMessages: () => true },
       },
 
       {
@@ -224,6 +224,7 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
         subscription: {
           shouldSubscribe: this.#shouldSubscribe,
           handler: this.#handleRobotDescription,
+          canSkipMessages: () => true,
         },
       },
     ];

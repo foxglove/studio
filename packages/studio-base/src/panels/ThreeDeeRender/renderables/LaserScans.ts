@@ -324,12 +324,18 @@ export class LaserScans extends SceneExtension<LaserScanHistoryRenderable> {
       {
         type: "schema",
         schemaNames: ROS_LASERSCAN_DATATYPES,
-        subscription: { handler: this.#handleLaserScan },
+        subscription: {
+          handler: this.#handleLaserScan,
+          canSkipMessages: () => this.userData.settings.decayTime === 0,
+        },
       },
       {
         type: "schema",
         schemaNames: FOXGLOVE_LASERSCAN_DATATYPES,
-        subscription: { handler: this.#handleLaserScan },
+        subscription: {
+          handler: this.#handleLaserScan,
+          canSkipMessages: () => this.userData.settings.decayTime === 0,
+        },
       },
     ];
   }

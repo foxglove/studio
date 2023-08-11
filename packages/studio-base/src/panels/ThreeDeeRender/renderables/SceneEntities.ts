@@ -57,7 +57,10 @@ export class FoxgloveSceneEntities extends SceneExtension<TopicEntities> {
       {
         type: "schema",
         schemaNames: SCENE_UPDATE_DATATYPES,
-        subscription: { handler: this.#handleSceneUpdate },
+        subscription: {
+          handler: this.#handleSceneUpdate,
+          canSkipMessages: () => false, // Differential messages, we want to process all of them.
+        },
       },
     ];
   }

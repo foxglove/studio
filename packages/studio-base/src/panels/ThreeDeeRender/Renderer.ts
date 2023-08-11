@@ -599,21 +599,25 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
       handler: this.#handleFrameTransform,
       shouldSubscribe: () => true,
       preload: preloadTransforms,
+      canSkipMessages: () => false,
     });
     this.#addSchemaSubscriptions(FRAME_TRANSFORMS_DATATYPES, {
       handler: this.#handleFrameTransforms,
       shouldSubscribe: () => true,
       preload: preloadTransforms,
+      canSkipMessages: () => false,
     });
     this.#addSchemaSubscriptions(TF_DATATYPES, {
       handler: this.#handleTFMessage,
       shouldSubscribe: () => true,
       preload: preloadTransforms,
+      canSkipMessages: () => false,
     });
     this.#addSchemaSubscriptions(TRANSFORM_STAMPED_DATATYPES, {
       handler: this.#handleTransformStamped,
       shouldSubscribe: () => true,
       preload: preloadTransforms,
+      canSkipMessages: () => false,
     });
     this.off("resetAllFramesCursor", this.#clearTransformTree);
     if (preloadTransforms) {
@@ -1389,7 +1393,7 @@ function handleMessage(
       const skipMessage =
         (remainingMessagesOnSameTopic ?? 0) > 0 &&
         // This should be cached somehwere
-        (subscription.canSkipMessages?.(messageEvent.topic) ?? false);
+        subscription.canSkipMessages(messageEvent.topic);
       if (!skipMessage) {
         subscription.handler(messageEvent);
       }

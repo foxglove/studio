@@ -148,17 +148,17 @@ export class PoseArrays extends SceneExtension<PoseArrayRenderable> {
       {
         type: "schema",
         schemaNames: POSE_ARRAY_DATATYPES,
-        subscription: { handler: this.#handlePoseArray },
+        subscription: { handler: this.#handlePoseArray, canSkipMessages: () => true },
       },
       {
         type: "schema",
         schemaNames: POSES_IN_FRAME_DATATYPES,
-        subscription: { handler: this.#handlePosesInFrame },
+        subscription: { handler: this.#handlePosesInFrame, canSkipMessages: () => true },
       },
       {
         type: "schema",
         schemaNames: NAV_PATH_DATATYPES,
-        subscription: { handler: this.#handleNavPath },
+        subscription: { handler: this.#handleNavPath, canSkipMessages: () => true },
       },
     ];
   }

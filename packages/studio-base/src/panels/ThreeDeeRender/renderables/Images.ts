@@ -92,27 +92,28 @@ export class Images extends SceneExtension<ImageRenderable> {
         subscription: {
           handler: this.#handleCameraInfo,
           shouldSubscribe: this.#cameraInfoShouldSubscribe,
+          canSkipMessages: () => true,
         },
       },
       {
         type: "schema",
         schemaNames: ROS_IMAGE_DATATYPES,
-        subscription: { handler: this.#handleRosRawImage },
+        subscription: { handler: this.#handleRosRawImage, canSkipMessages: () => true },
       },
       {
         type: "schema",
         schemaNames: ROS_COMPRESSED_IMAGE_DATATYPES,
-        subscription: { handler: this.#handleRosCompressedImage },
+        subscription: { handler: this.#handleRosCompressedImage, canSkipMessages: () => true },
       },
       {
         type: "schema",
         schemaNames: RAW_IMAGE_DATATYPES,
-        subscription: { handler: this.#handleRawImage },
+        subscription: { handler: this.#handleRawImage, canSkipMessages: () => true },
       },
       {
         type: "schema",
         schemaNames: COMPRESSED_IMAGE_DATATYPES,
-        subscription: { handler: this.#handleCompressedImage },
+        subscription: { handler: this.#handleCompressedImage, canSkipMessages: () => true },
       },
     ];
   }

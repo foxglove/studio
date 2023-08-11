@@ -163,10 +163,11 @@ export type RendererSubscription<T = unknown> = {
    */
   shouldSubscribe?: (topic: string) => boolean;
   /**
-   * Determines if this subscription can skip processing messages prior to the last message in the current frame. 
-   * Skipping messages may improve performance. By default, all messages are processed.
+   * Determines if this subscription can skip processing messages prior to the
+   * last message in the current frame. Skipping messages may improve performance.
+   * By default, all messages are processed.
    */
-  canSkipMessages?: (topic: string) => boolean;
+  canSkipMessages: (topic: string) => boolean;
   /** Callback that will be fired for each matching incoming message */
   handler: (messageEvent: MessageEvent<T>) => void;
 };

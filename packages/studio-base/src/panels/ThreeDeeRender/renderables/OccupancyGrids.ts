@@ -91,7 +91,7 @@ export class OccupancyGrids extends SceneExtension<OccupancyGridRenderable> {
       {
         type: "schema",
         schemaNames: OCCUPANCY_GRID_DATATYPES,
-        subscription: { handler: this.#handleOccupancyGrid },
+        subscription: { handler: this.#handleOccupancyGrid, canSkipMessages: () => true },
       },
     ];
   }

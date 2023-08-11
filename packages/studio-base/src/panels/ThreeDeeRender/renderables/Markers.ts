@@ -38,16 +38,17 @@ export class Markers extends SceneExtension<TopicMarkers> {
     super("foxglove.Markers", renderer);
   }
   public override getSubscriptions(): readonly AnyRendererSubscription[] {
+    const canSkipMessages = () => false; // We want all marker messages as they are differential (ADD, MODIFY, DELETE, DELETEALL)
     return [
       {
         type: "schema",
         schemaNames: MARKER_ARRAY_DATATYPES,
-        subscription: { handler: this.#handleMarkerArray },
+        subscription: { handler: this.#handleMarkerArray, canSkipMessages },
       },
       {
         type: "schema",
         schemaNames: MARKER_DATATYPES,
-        subscription: { handler: this.#handleMarker },
+        subscription: { handler: this.#handleMarker, canSkipMessages },
       },
     ];
   }

@@ -219,6 +219,7 @@ export class ImageMode
         subscription: {
           handler: this.#messageHandler.handleCameraInfo,
           shouldSubscribe: this.#cameraInfoShouldSubscribe,
+          canSkipMessages: () => true,
         },
       },
       {
