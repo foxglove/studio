@@ -709,7 +709,7 @@ export class PointClouds extends SceneExtension<PointCloudHistoryRenderable> {
         schemaNames: ROS_POINTCLOUD_DATATYPES,
         subscription: {
           handler: this.#handleRosPointCloud,
-          canSkipMessages: () => this.userData.settings.decayTime === 0,
+          canSkipMessages: () => (this.userData.settings?.decayTime ?? 0) === 0,
         },
       },
       {
@@ -717,7 +717,7 @@ export class PointClouds extends SceneExtension<PointCloudHistoryRenderable> {
         schemaNames: FOXGLOVE_POINTCLOUD_DATATYPES,
         subscription: {
           handler: this.#handleFoxglovePointCloud,
-          canSkipMessages: () => this.userData.settings.decayTime === 0,
+          canSkipMessages: () => (this.userData.settings?.decayTime ?? 0) === 0,
         },
       },
     ];
