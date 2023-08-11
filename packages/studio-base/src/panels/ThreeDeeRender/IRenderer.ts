@@ -330,7 +330,10 @@ export interface IRenderer extends EventEmitter<RendererEvents> {
 
   setSelectedRenderable(selection: PickedRenderable | undefined): void;
 
-  addMessageEvent(messageEvent: Readonly<MessageEvent>, remainingMsgsOnSameTopic?: number): void;
+  addMessageEvent(
+    messageEvent: Readonly<MessageEvent>,
+    options?: { isLastMsgOnTopic: boolean },
+  ): void;
 
   /**  Set desired render/display frame, will render using fallback if id is undefined or frame does not exist */
   setFollowFrameId(frameId: string | undefined): void;

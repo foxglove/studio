@@ -573,7 +573,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
 
     for (const message of currentFrameMessages) {
       const remainingMsgsOnSameTopic = msgCountByTopic.get(message.topic)! - 1;
-      this.addMessageEvent(message, remainingMsgsOnSameTopic);
+      this.addMessageEvent(message, { isLastMsgOnTopic: remainingMsgsOnSameTopic === 0 });
       msgCountByTopic.set(message.topic, remainingMsgsOnSameTopic);
     }
   }
@@ -907,7 +907,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
 
   public addMessageEvent(
     messageEvent: Readonly<MessageEvent>,
-    remainingMessagesOnSameTopic?: number,
+    options?: { isLastMsgOnTopic: boolean },
   ): void {
     const { message } = messageEvent;
 
@@ -942,16 +942,8 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
       this.addCoordinateFrame(maybeHasFrameId.frame_id);
     }
 
-    handleMessage(
-      messageEvent,
-      this.topicHandlers.get(messageEvent.topic),
-      remainingMessagesOnSameTopic,
-    );
-    handleMessage(
-      messageEvent,
-      this.schemaHandlers.get(messageEvent.schemaName),
-      remainingMessagesOnSameTopic,
-    );
+    handleMessage(messageEvent, this.topicHandlers.get(messageEvent.topic), options);
+    handleMessage(messageEvent, this.schemaHandlers.get(messageEvent.schemaName), options);
   }
 
   /** Match the behavior of `tf::Transformer` by stripping leading slashes from
@@ -1386,12 +1378,12 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
 function handleMessage(
   messageEvent: Readonly<MessageEvent>,
   subscriptions: RendererSubscription[] | undefined,
-  remainingMessagesOnSameTopic: number | undefined,
+  options?: { isLastMsgOnTopic: boolean },
 ): void {
   if (subscriptions) {
     for (const subscription of subscriptions) {
       const skipMessage =
-        (remainingMessagesOnSameTopic ?? 0) > 0 &&
+        !(options?.isLastMsgOnTopic ?? true) &&
         // This should be cached somehwere
         subscription.canSkipMessages(messageEvent.topic);
       if (!skipMessage) {
