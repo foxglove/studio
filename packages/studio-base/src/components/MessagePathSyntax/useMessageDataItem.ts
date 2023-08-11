@@ -17,7 +17,7 @@ import { useMessageReducer } from "@foxglove/studio-base/PanelAPI";
 import {
   MessageEvent,
   SubscribePayload,
-  subscribePayloadFromRosPath,
+  subscribePayloadFromMessagePath,
 } from "@foxglove/studio-base/players/types";
 
 import {
@@ -50,7 +50,7 @@ type ReducedValue = {
 export function useMessageDataItem(path: string, options?: Options): ReducedValue["matches"] {
   const { historySize = 1 } = options ?? {};
   const topics: SubscribePayload[] = useMemo(() => {
-    const payload = subscribePayloadFromRosPath(path);
+    const payload = subscribePayloadFromMessagePath(path);
     if (payload) {
       return [payload];
     }

@@ -23,7 +23,7 @@ import { useStableValidPathsForDatasourceTopics } from "@foxglove/studio-base/pa
 import {
   MessageEvent,
   SubscribePayload,
-  subscribePayloadFromRosPath,
+  subscribePayloadFromMessagePath,
 } from "@foxglove/studio-base/players/types";
 import { Bounds, makeInvertedBounds, unionBounds } from "@foxglove/studio-base/types/Bounds";
 import { getTimestampForMessage } from "@foxglove/studio-base/util/time";
@@ -177,7 +177,7 @@ export function usePlotPanelData(params: Params): Immutable<{
   const subscriptions: SubscribePayload[] = useMemo(
     () =>
       filterMap(validAllPaths, (path) => {
-        const payload = subscribePayloadFromRosPath(path.value, "full");
+        const payload = subscribePayloadFromMessagePath(path.value, "full");
         // If the path is ordered by header stamp we have to include the header in sliced fields.
         if (path.timestampMethod === "headerStamp" && payload?.fields != undefined) {
           payload.fields.push("header");

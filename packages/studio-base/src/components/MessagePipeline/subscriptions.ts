@@ -5,6 +5,7 @@
 import { union } from "lodash";
 import moize from "moize";
 
+import { filterMap } from "@foxglove/den/collection";
 import { Immutable } from "@foxglove/studio";
 import { SubscribePayload } from "@foxglove/studio-base/players/types";
 
@@ -40,9 +41,10 @@ export function simplifySubscriptionsById(
           target.set(sub.topic, sub);
         } else {
           // Skip slice subscriptions with no non-empty fields selected.
-          const nonEmptyFields = sub.fields
-            .map((field) => field.trim())
-            .filter((field) => field.length > 0);
+          const nonEmptyFields = filterMap(sub.fields, (field) => {
+            const trimmed = field.trim();
+            return trimmed.length > 0 ? trimmed : undefined;
+          });
           if (nonEmptyFields.length > 0) {
             target.set(sub.topic, { ...sub, fields: union(existing.fields, nonEmptyFields) });
           }

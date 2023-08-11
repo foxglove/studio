@@ -279,10 +279,22 @@ export type SubscriptionPreloadType =
   | "full" // Fetch messages for the entire content range.
   | "partial"; // Fetch messages as needed.
 
-// Represents a subscription to a single topic, for use in `setSubscriptions`.
+/**
+ * Represents a subscription to a single topic, for use in `setSubscriptions`.
+ */
 export type SubscribePayload = {
+  /**
+   * If defined the source will return only these fields from messages. Otherwie entire messages
+   * will be returned.
+   */
   fields?: string[];
+  /**
+   * Defines the range of messages to subscribe to.
+   */
   preloadType?: SubscriptionPreloadType;
+  /**
+   * The name of the topic to subscribe to.
+   */
   topic: string;
 };
 
@@ -343,10 +355,10 @@ export interface PlayerMetricsCollectorInterface {
 }
 
 /**
- * Builds a SubscribePayload from a ros path, requesting a specific field of the message if the
+ * Builds a SubscribePayload from a message path, requesting a specific field of the message if the
  * message path resolves to a field name.
  */
-export function subscribePayloadFromRosPath(
+export function subscribePayloadFromMessagePath(
   path: string,
   preloadType?: SubscriptionPreloadType,
 ): undefined | SubscribePayload {
