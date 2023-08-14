@@ -296,7 +296,7 @@ export class IterablePlayer implements Player {
     );
     const preloadTopics = new Map(
       filterMap(this.#subscriptions, (sub) =>
-        sub.preloadType !== "partial" ? [sub.topic, sub] : undefined,
+        sub.preloadType === "full" ? [sub.topic, sub] : undefined,
       ),
     );
 

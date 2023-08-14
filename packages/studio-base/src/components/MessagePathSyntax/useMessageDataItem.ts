@@ -50,7 +50,7 @@ type ReducedValue = {
 export function useMessageDataItem(path: string, options?: Options): ReducedValue["matches"] {
   const { historySize = 1 } = options ?? {};
   const topics: SubscribePayload[] = useMemo(() => {
-    const payload = subscribePayloadFromMessagePath(path);
+    const payload = subscribePayloadFromMessagePath(path, "partial");
     if (payload) {
       return [payload];
     }
