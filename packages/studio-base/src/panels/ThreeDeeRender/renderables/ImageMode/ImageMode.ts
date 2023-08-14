@@ -212,6 +212,10 @@ export class ImageMode
   }
 
   public override getSubscriptions(): readonly AnyRendererSubscription[] {
+    const canSkipImgMessages = () =>
+      this.renderer.config.imageMode.synchronize != undefined &&
+      !this.renderer.config.imageMode.synchronize;
+
     const subscriptions: AnyRendererSubscription[] = [
       {
         type: "schema",
@@ -228,8 +232,7 @@ export class ImageMode
         subscription: {
           handler: this.#messageHandler.handleRosRawImage,
           shouldSubscribe: this.#imageShouldSubscribe,
-          canSkipMessages: () =>
-            !(this.renderer.config.imageMode.synchronize ?? DEFAULT_CONFIG.synchronize),
+          canSkipMessages: canSkipImgMessages,
         },
       },
       {
@@ -238,8 +241,7 @@ export class ImageMode
         subscription: {
           handler: this.#messageHandler.handleRosCompressedImage,
           shouldSubscribe: this.#imageShouldSubscribe,
-          canSkipMessages: () =>
-            !(this.renderer.config.imageMode.synchronize ?? DEFAULT_CONFIG.synchronize),
+          canSkipMessages: canSkipImgMessages,
         },
       },
       {
@@ -248,8 +250,7 @@ export class ImageMode
         subscription: {
           handler: this.#messageHandler.handleRawImage,
           shouldSubscribe: this.#imageShouldSubscribe,
-          canSkipMessages: () =>
-            !(this.renderer.config.imageMode.synchronize ?? DEFAULT_CONFIG.synchronize),
+          canSkipMessages: canSkipImgMessages,
         },
       },
       {
@@ -258,8 +259,7 @@ export class ImageMode
         subscription: {
           handler: this.#messageHandler.handleCompressedImage,
           shouldSubscribe: this.#imageShouldSubscribe,
-          canSkipMessages: () =>
-            !(this.renderer.config.imageMode.synchronize ?? DEFAULT_CONFIG.synchronize),
+          canSkipMessages: canSkipImgMessages,
         },
       },
     ];

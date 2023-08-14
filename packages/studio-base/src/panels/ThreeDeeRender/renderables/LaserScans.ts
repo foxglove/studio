@@ -327,7 +327,8 @@ export class LaserScans extends SceneExtension<LaserScanHistoryRenderable> {
         subscription: {
           handler: this.#handleLaserScan,
           canSkipMessages: () =>
-            (this.userData.settings?.decayTime ?? DEFAULT_SETTINGS.decayTime) === 0,
+            this.userData.settings?.decayTime != undefined &&
+            this.userData.settings.decayTime === 0,
         },
       },
       {
@@ -336,7 +337,8 @@ export class LaserScans extends SceneExtension<LaserScanHistoryRenderable> {
         subscription: {
           handler: this.#handleLaserScan,
           canSkipMessages: () =>
-            (this.userData.settings?.decayTime ?? DEFAULT_SETTINGS.decayTime) === 0,
+            this.userData.settings?.decayTime != undefined &&
+            this.userData.settings.decayTime === 0,
         },
       },
     ];

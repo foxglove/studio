@@ -710,7 +710,8 @@ export class PointClouds extends SceneExtension<PointCloudHistoryRenderable> {
         subscription: {
           handler: this.#handleRosPointCloud,
           canSkipMessages: () =>
-            (this.userData.settings?.decayTime ?? DEFAULT_SETTINGS.decayTime) === 0,
+            this.userData.settings?.decayTime != undefined &&
+            this.userData.settings.decayTime === 0,
         },
       },
       {
@@ -719,7 +720,8 @@ export class PointClouds extends SceneExtension<PointCloudHistoryRenderable> {
         subscription: {
           handler: this.#handleFoxglovePointCloud,
           canSkipMessages: () =>
-            (this.userData.settings?.decayTime ?? DEFAULT_SETTINGS.decayTime) === 0,
+            this.userData.settings?.decayTime != undefined &&
+            this.userData.settings.decayTime === 0,
         },
       },
     ];
