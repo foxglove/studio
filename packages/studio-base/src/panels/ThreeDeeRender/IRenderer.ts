@@ -332,7 +332,7 @@ export interface IRenderer extends EventEmitter<RendererEvents> {
 
   addMessageEvent(
     messageEvent: Readonly<MessageEvent>,
-    options?: { isLastMsgOnTopic: boolean },
+    options?: { isMostRecentMsgOnTopic: boolean },
   ): void;
 
   /**  Set desired render/display frame, will render using fallback if id is undefined or frame does not exist */

@@ -564,6 +564,13 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     return true;
   }
 
+  /**
+   * Iterates over all messages of the current frame and passes them further down, indicating
+   * whether it is the most recent message on its topic. This information is used further down the
+   * line to determine if messages are sent to subscription handlers or not.
+   *
+   * @param currentFrameMessages - Messages for the current frame.
+   */
   public handleCurrentFrameMessages(currentFrameMessages: readonly MessageEvent[]): void {
     // Count number of messages per topic
     const msgCountByTopic = currentFrameMessages.reduce((acc, message) => {
@@ -573,7 +580,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
 
     for (const message of currentFrameMessages) {
       const remainingMsgsOnSameTopic = msgCountByTopic.get(message.topic)! - 1;
-      this.addMessageEvent(message, { isLastMsgOnTopic: remainingMsgsOnSameTopic === 0 });
+      this.addMessageEvent(message, { isMostRecentMsgOnTopic: remainingMsgsOnSameTopic === 0 });
       msgCountByTopic.set(message.topic, remainingMsgsOnSameTopic);
     }
   }
@@ -905,9 +912,20 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     }
   }
 
+  /**
+   * Sends the message event to the corresponding topic & schema subscriptions and extracts the
+   * coordinate frame ID from it (if there is any). The message will not be send to a subscription
+   * if the message is not the last message on its topic for the current frame AND the subscription
+   * has declared that it can skip messages on the same topic except the most recent one.
+   *
+   * @param messageEvent - The message event to be processed.
+   * @param options - An optional object with configuration options.
+   * @param options.isMostRecentMsgOnTopic - Indicates whether this message is the most recent one
+   * on its topic for the current frame.
+   */
   public addMessageEvent(
     messageEvent: Readonly<MessageEvent>,
-    options?: { isLastMsgOnTopic: boolean },
+    options?: { isMostRecentMsgOnTopic: boolean },
   ): void {
     const { message } = messageEvent;
 
@@ -1375,15 +1393,26 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
   }
 }
 
+/**
+ * Iterates through given subscriptions and calls the message handler with the given message
+ * unless `options.isMostRecentMsgOnTopic` is false and the subscription has declared that it
+ * can skip messages on the same topic except the most recent one.
+ *
+ * @param messageEvent - The message event to be handled.
+ * @param subscriptions - Array of subscriptions.
+ * @param options - An optional object with configuration options.
+ * @param options.isMostRecentMsgOnTopic - Indicates whether this message is the most recent
+ * one on its topic.
+ */
 function handleMessage(
   messageEvent: Readonly<MessageEvent>,
   subscriptions: RendererSubscription[] | undefined,
-  options?: { isLastMsgOnTopic: boolean },
+  options?: { isMostRecentMsgOnTopic: boolean },
 ): void {
   if (subscriptions) {
     for (const subscription of subscriptions) {
       const skipMessage =
-        !(options?.isLastMsgOnTopic ?? true) &&
+        !(options?.isMostRecentMsgOnTopic ?? true) &&
         // This should be cached somehwere
         subscription.canSkipMessages(messageEvent.topic);
       if (!skipMessage) {

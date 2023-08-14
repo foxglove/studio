@@ -326,7 +326,8 @@ export class LaserScans extends SceneExtension<LaserScanHistoryRenderable> {
         schemaNames: ROS_LASERSCAN_DATATYPES,
         subscription: {
           handler: this.#handleLaserScan,
-          canSkipMessages: () => (this.userData.settings?.decayTime ?? 0) === 0,
+          canSkipMessages: () =>
+            (this.userData.settings?.decayTime ?? DEFAULT_SETTINGS.decayTime) === 0,
         },
       },
       {
@@ -334,7 +335,8 @@ export class LaserScans extends SceneExtension<LaserScanHistoryRenderable> {
         schemaNames: FOXGLOVE_LASERSCAN_DATATYPES,
         subscription: {
           handler: this.#handleLaserScan,
-          canSkipMessages: () => (this.userData.settings?.decayTime ?? 0) === 0,
+          canSkipMessages: () =>
+            (this.userData.settings?.decayTime ?? DEFAULT_SETTINGS.decayTime) === 0,
         },
       },
     ];

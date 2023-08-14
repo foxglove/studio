@@ -126,7 +126,7 @@ class VelodyneCloudConverter {
 export class VelodyneScans extends SceneExtension<PointCloudHistoryRenderable> {
   #pointCloudFieldsByTopic = new Map<string, string[]>();
   #velodyneCloudConverter = new VelodyneCloudConverter();
-  #isDecay: boolean = false;
+  #isDecay: boolean = DEFAULT_SETTINGS.decayTime > 0;
 
   public constructor(renderer: IRenderer) {
     super("foxglove.VelodyneScans", renderer);
