@@ -154,6 +154,9 @@ class CachingIterableSource extends EventEmitter<EventTypes> implements IIterabl
     };
 
     this.#currentReadHead = readHead;
+
+    // Compute evictable block candiates such that canReadMore() returns a correct result as the
+    // callee may stop iterating when canReadMore() returns false.
     this.#evictableBlockCandidates = this.#findEvictableBlockCandidates(this.#currentReadHead);
 
     for (;;) {
@@ -528,7 +531,7 @@ class CachingIterableSource extends EventEmitter<EventTypes> implements IIterabl
    * Update the current read head, such that the source can determine which blocks are evictable.
    * @param readHead current read head
    */
-  public updateCurrentReadHead(readHead: Time): void {
+  public setCurrentReadHead(readHead: Time): void {
     this.#currentReadHead = readHead;
   }
 
@@ -575,6 +578,8 @@ class CachingIterableSource extends EventEmitter<EventTypes> implements IIterabl
 
     if (readHeadIdx === -1) {
       // No block contains current read head, return the oldest cache block.
+      // This can only happen when seeked to a new time and no message has been read yet, as
+      // reading a new message that does not fit in any block will always create a new cache block.
       const oldestBlockIdx = minIndexBy(this.#cache, (a, b) => a.lastAccess - b.lastAccess);
       return [this.#cache[oldestBlockIdx]!.id];
     }

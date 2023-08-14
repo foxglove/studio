@@ -175,7 +175,7 @@ class BufferedIterableSource extends EventEmitter<EventTypes> implements IIterab
         // Indicate to the consumer that it can try reading again
         this.#readSignal.notifyAll();
 
-        this.#source.updateCurrentReadHead(this.#readHead);
+        this.#source.setCurrentReadHead(this.#readHead);
 
         // Keep reading while the messages we receive are <= the readUntil time and while
         // there is still space for reading new messages into the cache
