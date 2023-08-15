@@ -703,15 +703,21 @@ export class PointClouds extends SceneExtension<PointCloudHistoryRenderable> {
   }
 
   public override getSubscriptions(): readonly AnyRendererSubscription[] {
+    const canSkipMessages = (topicName: string): boolean => {
+      const prevSettings = this.renderer.config.topics[topicName] as
+        | Partial<LayerSettingsPointClouds>
+        | undefined;
+      const settings = { ...DEFAULT_SETTINGS, ...prevSettings };
+      return settings.decayTime === 0;
+    };
+
     return [
       {
         type: "schema",
         schemaNames: ROS_POINTCLOUD_DATATYPES,
         subscription: {
           handler: this.#handleRosPointCloud,
-          canSkipMessages: () =>
-            this.userData.settings?.decayTime != undefined &&
-            this.userData.settings.decayTime === 0,
+          canSkipMessages,
         },
       },
       {
@@ -719,9 +725,7 @@ export class PointClouds extends SceneExtension<PointCloudHistoryRenderable> {
         schemaNames: FOXGLOVE_POINTCLOUD_DATATYPES,
         subscription: {
           handler: this.#handleFoxglovePointCloud,
-          canSkipMessages: () =>
-            this.userData.settings?.decayTime != undefined &&
-            this.userData.settings.decayTime === 0,
+          canSkipMessages,
         },
       },
     ];

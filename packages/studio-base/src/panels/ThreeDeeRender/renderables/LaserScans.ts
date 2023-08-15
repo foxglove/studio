@@ -320,15 +320,21 @@ export class LaserScans extends SceneExtension<LaserScanHistoryRenderable> {
   }
 
   public override getSubscriptions(): readonly AnyRendererSubscription[] {
+    const canSkipMessages = (topicName: string): boolean => {
+      const prevSettings = this.renderer.config.topics[topicName] as
+        | Partial<LayerSettingsLaserScan>
+        | undefined;
+      const settings = { ...DEFAULT_SETTINGS, ...prevSettings };
+      return settings.decayTime === 0;
+    };
+
     return [
       {
         type: "schema",
         schemaNames: ROS_LASERSCAN_DATATYPES,
         subscription: {
           handler: this.#handleLaserScan,
-          canSkipMessages: () =>
-            this.userData.settings?.decayTime != undefined &&
-            this.userData.settings.decayTime === 0,
+          canSkipMessages,
         },
       },
       {
@@ -336,9 +342,7 @@ export class LaserScans extends SceneExtension<LaserScanHistoryRenderable> {
         schemaNames: FOXGLOVE_LASERSCAN_DATATYPES,
         subscription: {
           handler: this.#handleLaserScan,
-          canSkipMessages: () =>
-            this.userData.settings?.decayTime != undefined &&
-            this.userData.settings.decayTime === 0,
+          canSkipMessages,
         },
       },
     ];
