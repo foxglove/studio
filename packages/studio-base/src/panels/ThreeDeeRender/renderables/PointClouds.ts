@@ -704,10 +704,10 @@ export class PointClouds extends SceneExtension<PointCloudHistoryRenderable> {
 
   public override getSubscriptions(): readonly AnyRendererSubscription[] {
     const canSkipMessages = (topicName: string): boolean => {
-      const prevSettings = this.renderer.config.topics[topicName] as
+      const partialSettings = this.renderer.config.topics[topicName] as
         | Partial<LayerSettingsPointClouds>
         | undefined;
-      const settings = { ...DEFAULT_SETTINGS, ...prevSettings };
+      const settings = { ...DEFAULT_SETTINGS, ...partialSettings };
       return settings.decayTime === 0;
     };
 

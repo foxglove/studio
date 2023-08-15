@@ -321,10 +321,10 @@ export class LaserScans extends SceneExtension<LaserScanHistoryRenderable> {
 
   public override getSubscriptions(): readonly AnyRendererSubscription[] {
     const canSkipMessages = (topicName: string): boolean => {
-      const prevSettings = this.renderer.config.topics[topicName] as
+      const partialSettings = this.renderer.config.topics[topicName] as
         | Partial<LayerSettingsLaserScan>
         | undefined;
-      const settings = { ...DEFAULT_SETTINGS, ...prevSettings };
+      const settings = { ...DEFAULT_SETTINGS, ...partialSettings };
       return settings.decayTime === 0;
     };
 

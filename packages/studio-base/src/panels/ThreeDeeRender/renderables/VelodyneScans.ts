@@ -126,18 +126,25 @@ class VelodyneCloudConverter {
 export class VelodyneScans extends SceneExtension<PointCloudHistoryRenderable> {
   #pointCloudFieldsByTopic = new Map<string, string[]>();
   #velodyneCloudConverter = new VelodyneCloudConverter();
-  #isDecay: boolean = DEFAULT_SETTINGS.decayTime > 0;
 
   public constructor(renderer: IRenderer) {
     super("foxglove.VelodyneScans", renderer);
   }
 
   public override getSubscriptions(): readonly AnyRendererSubscription[] {
+    const canSkipMessages = (topicName: string): boolean => {
+      const partialSettings = this.renderer.config.topics[topicName] as
+        | Partial<LayerSettingsVelodyneScans>
+        | undefined;
+      const settings = { ...DEFAULT_SETTINGS, ...partialSettings };
+      return settings.decayTime === 0;
+    };
+
     return [
       {
         type: "schema",
         schemaNames: VELODYNE_SCAN_DATATYPES,
-        subscription: { handler: this.#handleVelodyneScan, canSkipMessages: () => !this.#isDecay },
+        subscription: { handler: this.#handleVelodyneScan, canSkipMessages },
       },
     ];
   }
@@ -192,7 +199,6 @@ export class VelodyneScans extends SceneExtension<PointCloudHistoryRenderable> {
         settings,
         renderable.userData.receiveTime,
       );
-      this.#isDecay = settings.decayTime > 0;
     }
   };
 
@@ -237,7 +243,6 @@ export class VelodyneScans extends SceneExtension<PointCloudHistoryRenderable> {
           updatedUserSettings.colorMap = settings.colorMap;
           draft.topics[topic] = updatedUserSettings;
         });
-        this.#isDecay = settings.decayTime > 0;
       }
 
       const material = pointCloudMaterial(settings);
