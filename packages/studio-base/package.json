@@ -58,7 +58,7 @@
     "@storybook/testing-library": "0.2.0",
     "@svgr/webpack": "8.1.0",
     "@tanstack/react-table": "8.9.3",
-    "@testing-library/react": "12.1.2",
+    "@testing-library/react": "14.0.0",
     "@testing-library/react-hooks": "8.0.1",
     "@types/base16": "^1.0.2",
     "@types/cytoscape": "^3.19.10",
