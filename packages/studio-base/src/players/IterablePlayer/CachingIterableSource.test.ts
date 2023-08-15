@@ -709,6 +709,50 @@ describe("CachingIterableSource", () => {
     }
   });
 
+  it("should report full cache as cache fills up", async () => {
+    const source = new TestSource();
+    const bufferedSource = new CachingIterableSource(source, {
+      maxBlockSize: 102,
+      maxTotalSize: 202,
+    });
+
+    await bufferedSource.initialize();
+
+    source.messageIterator = async function* messageIterator(
+      _args: MessageIteratorArgs,
+    ): AsyncIterableIterator<Readonly<IteratorResult>> {
+      for (let i = 0; i < 8; ++i) {
+        yield {
+          type: "message-event",
+          msgEvent: {
+            topic: "a",
+            receiveTime: { sec: i, nsec: 0 },
+            message: undefined,
+            sizeInBytes: 101,
+            schemaName: "foo",
+          },
+        };
+      }
+    };
+
+    {
+      const messageIterator = bufferedSource.messageIterator({
+        topics: ["a"],
+      });
+
+      // At the start the cache is empty and the source can read messages
+      expect(bufferedSource.canReadMore()).toBeTruthy();
+
+      // The cache size after reading the first message should still allow reading a new message
+      await messageIterator.next();
+      expect(bufferedSource.canReadMore()).toBeTruthy();
+
+      // Next message fills up the cache and the source can not read more messages
+      await messageIterator.next();
+      expect(bufferedSource.canReadMore()).toBeFalsy();
+    }
+  });
+
   it("should clear the cache when topics change", async () => {
     const source = new TestSource();
     const bufferedSource = new CachingIterableSource(source, {
