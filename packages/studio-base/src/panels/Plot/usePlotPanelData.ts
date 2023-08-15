@@ -221,7 +221,8 @@ export function usePlotPanelData(params: Params): Immutable<{
           continue;
         }
 
-        const newMessages = allFramesByTopic[topic]?.slice(newCursors.get(path) ?? 0);
+        const newMessages = allFrames[topic]?.slice(newCursors.get(path) ?? 0);
+
         if (newMessages == undefined || newMessages.length === 0) {
           continue;
         }
