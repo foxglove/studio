@@ -584,7 +584,7 @@ class CachingIterableSource extends EventEmitter<EventTypes> implements IIterabl
       return [this.#cache[oldestBlockIdx]!.id];
     }
 
-    // Blocks that are before the read head can be recycled.
+    // Blocks that are before the read head can be evicted.
     const blockIdsBeforeReadHead = mappedCache.splice(0, readHeadIdx).map((item) => item.id);
 
     // Iterate through remaining blocks until we find a gap in the block chain
