@@ -20,11 +20,8 @@ import useGlobalVariables, {
 } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { derivative } from "@foxglove/studio-base/panels/Plot/transformPlotRange";
 import { useStableValidPathsForDatasourceTopics } from "@foxglove/studio-base/panels/Plot/useStableValidPathsForDatasourceTopics";
-import {
-  MessageEvent,
-  SubscribePayload,
-  subscribePayloadFromMessagePath,
-} from "@foxglove/studio-base/players/types";
+import { subscribePayloadFromMessagePath } from "@foxglove/studio-base/players/subscribePayloadFromMessagePath";
+import { MessageEvent, SubscribePayload } from "@foxglove/studio-base/players/types";
 import { Bounds, makeInvertedBounds, unionBounds } from "@foxglove/studio-base/types/Bounds";
 import { getTimestampForMessage } from "@foxglove/studio-base/util/time";
 

@@ -251,14 +251,14 @@ export class McapUnindexedIterableSource implements IIterableSource {
       return;
     }
 
-    const topicsSet = new Map(topics);
+    const topicsMap = new Map(topics);
     const resultMessages = [];
 
     for (const [channelId, msgEvents] of this.#msgEventsByChannel) {
       for (const msgEvent of msgEvents) {
         if (
           isTimeInRangeInclusive(msgEvent.receiveTime, start, end) &&
-          topicsSet.has(msgEvent.topic)
+          topicsMap.has(msgEvent.topic)
         ) {
           resultMessages.push({
             type: "message-event" as const,

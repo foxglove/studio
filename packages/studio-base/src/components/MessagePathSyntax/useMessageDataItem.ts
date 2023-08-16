@@ -14,11 +14,8 @@
 import { useCallback, useMemo } from "react";
 
 import { useMessageReducer } from "@foxglove/studio-base/PanelAPI";
-import {
-  MessageEvent,
-  SubscribePayload,
-  subscribePayloadFromMessagePath,
-} from "@foxglove/studio-base/players/types";
+import { subscribePayloadFromMessagePath } from "@foxglove/studio-base/players/subscribePayloadFromMessagePath";
+import { MessageEvent, SubscribePayload } from "@foxglove/studio-base/players/types";
 
 import {
   MessageAndData,

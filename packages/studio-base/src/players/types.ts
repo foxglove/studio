@@ -15,7 +15,6 @@ import { MessageDefinition } from "@foxglove/message-definition";
 import { Time } from "@foxglove/rostime";
 import type { MessageEvent, ParameterValue } from "@foxglove/studio";
 import { Immutable } from "@foxglove/studio";
-import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
 import { Asset } from "@foxglove/studio-base/components/PanelExtensionAdapter";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
@@ -256,6 +255,10 @@ export type MessageBlock = {
   readonly messagesByTopic: {
     readonly [topic: string]: MessageEvent[];
   };
+  /**
+   * Indicates which topics are yet to be fully loaded for this block. Can be used to track the
+   * progress of block loading. For a fully loaded block this will be empty or undefined.
+   */
   needTopics?: TopicSelection;
   readonly sizeInBytes: number;
 };
@@ -284,7 +287,11 @@ export type SubscriptionPreloadType =
  */
 export type SubscribePayload = {
   /**
-   * If defined the source will return only these fields from messages. Otherwie entire messages
+   * The name of the topic to subscribe to.
+   */
+  topic: string;
+  /**
+   * If defined the source will return only these fields from messages. Otherwize entire messages
    * will be returned.
    */
   fields?: string[];
@@ -292,10 +299,6 @@ export type SubscribePayload = {
    * Defines the range of messages to subscribe to.
    */
   preloadType?: SubscriptionPreloadType;
-  /**
-   * The name of the topic to subscribe to.
-   */
-  topic: string;
 };
 
 // Represents a single topic publisher, for use in `setPublishers`.
@@ -352,30 +355,4 @@ export interface PlayerMetricsCollectorInterface {
   recordPlaybackTime(time: Time, params: { stillLoadingData: boolean }): void;
   recordUncachedRangeRequest(): void;
   recordTimeToFirstMsgs(): void;
-}
-
-/**
- * Builds a SubscribePayload from a message path, requesting a specific field of the message if the
- * message path resolves to a field name.
- */
-export function subscribePayloadFromMessagePath(
-  path: string,
-  preloadType?: SubscriptionPreloadType,
-): undefined | SubscribePayload {
-  const parsedPath = parseRosPath(path);
-
-  if (!parsedPath) {
-    return undefined;
-  }
-
-  const messagePath = parsedPath.messagePath[0];
-  if (messagePath == undefined || messagePath.type !== "name") {
-    return { topic: parsedPath.topicName, preloadType };
-  }
-
-  return {
-    topic: parsedPath.topicName,
-    preloadType,
-    fields: [messagePath.name],
-  };
 }
