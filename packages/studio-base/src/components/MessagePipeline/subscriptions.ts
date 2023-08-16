@@ -12,6 +12,8 @@ import { SubscribePayload } from "@foxglove/studio-base/players/types";
 /**
  * Create a deep equal memoized identify function. Used for stabilizing the subscription payloads we
  * send on to the player.
+ *
+ * Note that this has unlimited cache size so it should be managed by some containing scope.
  */
 export function makeSubscriptionMemoizer(): (val: SubscribePayload) => SubscribePayload {
   return moize((val: SubscribePayload) => val, { isDeepEqual: true, maxSize: Infinity });
