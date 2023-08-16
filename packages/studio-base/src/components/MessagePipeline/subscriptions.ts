@@ -20,47 +20,45 @@ export function makeSubscriptionMemoizer(): (val: SubscribePayload) => Subscribe
 }
 
 /**
- * Coalesces various topic subscriptions into a set of subscriptions to send on to the player.
+ * Merges individual topic subscriptions into a set of subscriptions to send on to the player.
  *
  * If any client requests a "whole" subscription to a topic then all fields will be fetched for that
  * topic. If various clients request different slices of a topic then we request the union of all
  * requested slices.
  */
-export function simplifySubscriptionsById(
-  subcriptionsById: Immutable<Map<string, SubscribePayload[]>>,
+export function mergeSubscriptions(
+  subscriptions: Immutable<SubscribePayload[]>,
 ): Immutable<SubscribePayload>[] {
   const fullSubsByTopic = new Map<string, Immutable<SubscribePayload>>();
   const partialSubsByTopic = new Map<string, Immutable<SubscribePayload>>();
-  for (const subs of subcriptionsById.values()) {
-    for (const sub of subs) {
-      const target = sub.preloadType === "full" ? fullSubsByTopic : partialSubsByTopic;
-      const existing = target.get(sub.topic);
-      if (existing) {
-        if (existing.fields == undefined) {
-          // Nothing to do, already subscribed to the whole topic.
-        } else if (sub.fields == undefined) {
-          // Replace any slice subscription with a subscription to the whole topic.
-          target.set(sub.topic, sub);
-        } else {
-          // Skip slice subscriptions with no non-empty fields selected.
-          const nonEmptyFields = filterMap(sub.fields, (field) => {
-            const trimmed = field.trim();
-            return trimmed.length > 0 ? trimmed : undefined;
-          });
-          if (nonEmptyFields.length > 0) {
-            target.set(sub.topic, { ...sub, fields: union(existing.fields, nonEmptyFields) });
-          }
-        }
+  for (const sub of subscriptions) {
+    const target = sub.preloadType === "full" ? fullSubsByTopic : partialSubsByTopic;
+    const existing = target.get(sub.topic);
+    if (existing) {
+      if (existing.fields == undefined) {
+        // Nothing to do, already subscribed to the whole topic.
+      } else if (sub.fields == undefined) {
+        // Replace any slice subscription with a subscription to the whole topic.
+        target.set(sub.topic, sub);
       } else {
-        if (sub.fields == undefined) {
-          // If no subscription for this topic exists, register a whole topic subscription.
+        // Skip slice subscriptions with no non-empty fields selected.
+        const nonEmptyFields = filterMap(sub.fields, (field) => {
+          const trimmed = field.trim();
+          return trimmed.length > 0 ? trimmed : undefined;
+        });
+        if (nonEmptyFields.length > 0) {
+          target.set(sub.topic, { ...sub, fields: union(existing.fields, nonEmptyFields) });
+        }
+      }
+    } else {
+      if (sub.fields == undefined) {
+        // If no subscription for this topic exists, register a whole topic subscription.
+        target.set(sub.topic, sub);
+      } else {
+        // Only register a slice sub if some fields are selected.
+        const hasNonEmptyField = sub.fields.some((field) => field.trim().length > 0);
+        if (hasNonEmptyField) {
           target.set(sub.topic, sub);
-        } else {
-          // Only register a slice sub if some fields are selected.
-          const hasNonEmptyField = sub.fields.some((field) => field.trim().length > 0);
-          if (hasNonEmptyField) {
-            target.set(sub.topic, sub);
-          }
         }
       }
     }

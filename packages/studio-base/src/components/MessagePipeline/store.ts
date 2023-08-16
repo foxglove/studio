@@ -11,7 +11,7 @@ import { Condvar } from "@foxglove/den/async";
 import { Immutable, MessageEvent } from "@foxglove/studio";
 import {
   makeSubscriptionMemoizer,
-  simplifySubscriptionsById,
+  mergeSubscriptions,
 } from "@foxglove/studio-base/components/MessagePipeline/subscriptions";
 import {
   AdvertiseOptions,
@@ -244,7 +244,7 @@ function updateSubscriberAction(
     }
   }
 
-  const subscriptions = simplifySubscriptionsById(newSubscriptionsById);
+  const subscriptions = mergeSubscriptions(Array.from(newSubscriptionsById.values()).flat());
 
   return {
     ...prevState,
