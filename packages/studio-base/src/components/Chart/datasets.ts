@@ -35,6 +35,9 @@ export function* iterateNormal(dataset: ObjectData): Generator<Point> {
   }
 }
 
+// These `any`s do not introduce anything unsafe; they are necessary for
+// specifying the type (which is ultimately type-checked at point of use.)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ExtractPoint<T extends { [key: string]: Array<any> | Float32Array }> = {
   [P in keyof T]-?: T[P] extends Float32Array ? number : NonNullable<T[P]>[0];
 } & {
@@ -50,10 +53,11 @@ export type ExtractPoint<T extends { [key: string]: Array<any> | Float32Array }>
 // value. This abstraction is necessary because the Plot panel extends
 // TypedData with more fields; we still want those to be available while
 // iterating.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function* iterateTyped<T extends { [key: string]: Array<any> | Float32Array }>(
   dataset: T[],
 ): Generator<ExtractPoint<T>> {
-  let point: ExtractPoint<T> = {
+  const point: ExtractPoint<T> = {
     index: 0,
     label: undefined,
   } as ExtractPoint<T>;

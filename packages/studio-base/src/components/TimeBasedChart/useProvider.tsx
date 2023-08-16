@@ -11,8 +11,8 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import * as React from "react";
 import { ChartDataset, ChartData } from "chart.js";
+import * as React from "react";
 
 import type { ObjectData, TypedData } from "@foxglove/studio-base/components/Chart/types";
 
@@ -91,7 +91,7 @@ export function getTypedBounds(data: Datasets<TypedData[]>): Bounds | undefined 
 export default function useProvider<T>(
   view: View,
   // Calculates the bounds of the given datasets.
-  getBounds: (data: Datasets<T>) => Bounds | undefined,
+  getDatasetBounds: (data: Datasets<T>) => Bounds | undefined,
   data: Data<T> | undefined,
   provider: Provider<T> | undefined,
 ): ProviderState<T> | undefined {
@@ -109,11 +109,11 @@ export default function useProvider<T>(
       return;
     }
     provider.setView(view);
-  }, [view]);
+  }, [provider, view]);
 
   return React.useMemo(() => {
     if (data != undefined) {
-      const bounds = getBounds(data.datasets);
+      const bounds = getDatasetBounds(data.datasets);
       if (bounds == undefined) {
         return undefined;
       }
@@ -125,5 +125,5 @@ export default function useProvider<T>(
     }
 
     return state;
-  }, [data, state]);
+  }, [data, state, getDatasetBounds]);
 }
