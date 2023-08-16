@@ -2,9 +2,9 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { iterateTyped } from "@foxglove/studio-base/components/Chart/datasets";
 import { downloadFiles } from "@foxglove/studio-base/util/download";
 import { formatTimeRaw } from "@foxglove/studio-base/util/time";
-import { iterateTyped } from "@foxglove/studio-base/components/Chart/datasets";
 
 import { TypedDataSet, Datum, PlotXAxisVal } from "./internalTypes";
 

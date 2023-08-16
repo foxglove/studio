@@ -20,16 +20,16 @@ import { Downsampler } from "./Downsampler";
 import { Provider, ProviderStateSetter, View, ChartDataset } from "./types";
 import { getBounds } from "./useProvider";
 
-export default function useDownsample(datasets: ChartDataset[]): {
+export default function useDownsampler(datasets: ChartDataset[]): {
   downsampler: Provider<ObjectData>;
   setScales: (scales: RpcScales) => void;
 } {
   const [view, setView] = React.useState<View | undefined>();
   const [setter, setSetter] = React.useState<ProviderStateSetter<ObjectData> | undefined>();
 
-  const register = React.useCallback((setter: ProviderStateSetter<ObjectData>) => {
+  const register = React.useCallback((newSetter: ProviderStateSetter<ObjectData>) => {
     // lol
-    setSetter(setter);
+    setSetter(newSetter);
   }, []);
 
   const downsampler = useMemo(() => new Downsampler(), []);
@@ -40,12 +40,12 @@ export default function useDownsample(datasets: ChartDataset[]): {
       return;
     }
 
-    const datasets = downsampler.downsample();
-    if (datasets == undefined) {
+    const downsampled = downsampler.downsample();
+    if (downsampled == undefined) {
       return;
     }
 
-    const bounds = getBounds(datasets);
+    const bounds = getBounds(downsampled);
     if (bounds == undefined) {
       return;
     }
@@ -53,7 +53,7 @@ export default function useDownsample(datasets: ChartDataset[]): {
     setter({
       bounds,
       data: {
-        datasets,
+        datasets: downsampled,
       },
     });
   }, [setter, downsampler]);

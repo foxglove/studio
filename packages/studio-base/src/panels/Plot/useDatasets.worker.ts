@@ -6,17 +6,27 @@ import * as Comlink from "comlink";
 import * as R from "ramda";
 
 import { Immutable } from "@foxglove/studio";
+import { iterateTyped } from "@foxglove/studio-base/components/Chart/datasets";
 import { RosPath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
+import { messagePathStructures } from "@foxglove/studio-base/components/MessagePathSyntax/messagePathsForDatatype";
 import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
+import { fillInGlobalVariablesInPath } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
+import { downsample } from "@foxglove/studio-base/components/TimeBasedChart/downsample";
+import { ProviderStateSetter, View } from "@foxglove/studio-base/components/TimeBasedChart/types";
+import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { Topic, MessageEvent } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
-import { ProviderStateSetter, View } from "@foxglove/studio-base/components/TimeBasedChart/types";
-import { downsample } from "@foxglove/studio-base/components/TimeBasedChart/downsample";
-import { iterateTyped } from "@foxglove/studio-base/components/Chart/datasets";
-import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
-import { fillInGlobalVariablesInPath } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
+import { enumValuesByDatatypeAndField } from "@foxglove/studio-base/util/enums";
 
-import { PlotParams, PlotDataByPath, Metadata, TypedData, Messages } from "./internalTypes";
+import { resolveTypedIndices } from "./datasets";
+import {
+  PlotParams,
+  PlotDataItem,
+  BasePlotPath,
+  MetadataEnums,
+  TypedData,
+  Messages,
+} from "./internalTypes";
 import {
   buildPlotData,
   getPaths,
@@ -30,8 +40,6 @@ import {
   applyDerivativeToPlotData,
   sortPlotDataByHeaderStamp,
 } from "./plotData";
-
-import { resolveTypedIndices } from "./datasets";
 
 type Setter = ProviderStateSetter<TypedData[]>;
 
@@ -62,9 +70,11 @@ let clients: Record<string, Client> = {};
 let globalVariables: GlobalVariables = {};
 let blocks: Messages = {};
 let current: Messages = {};
-let metadata: Metadata = {
+let metadata: MetadataEnums = {
   topics: [],
   datatypes: new Map(),
+  enumValues: {},
+  structures: {},
 };
 
 function initAccumulated(topics: readonly string[]): Accumulated {
@@ -118,29 +128,27 @@ function getParamTopics(params: PlotParams): readonly string[] {
   )(getParamPaths(params));
 }
 
-function buildPlot(params: PlotParams, messages: Messages): PlotData {
-  const { paths, invertedTheme, startTime, xAxisPath, xAxisVal } = params;
-
-  const itemsByPath: PlotDataByPath = {};
-  for (const path of getParamPaths(params)) {
-    const parsed = parseRosPath(path);
-    if (parsed == undefined) {
-      continue;
-    }
-
-    itemsByPath[path] = resolvePath(
-      metadata,
-      messages[parsed.topicName] ?? [],
-      fillInGlobalVariablesInPath(parsed, globalVariables),
-    );
+function getPathData(messages: Messages, path: BasePlotPath): PlotDataItem[] | undefined {
+  const parsed = parseRosPath(path.value);
+  if (parsed == undefined) {
+    return [];
   }
 
+  return resolvePath(
+    metadata,
+    messages[parsed.topicName] ?? [],
+    fillInGlobalVariablesInPath(parsed, globalVariables),
+  );
+}
+
+function buildPlot(params: PlotParams, messages: Messages): PlotData {
+  const { paths, invertedTheme, startTime, xAxisPath, xAxisVal } = params;
   return buildPlotData({
-    itemsByPath,
     invertedTheme,
-    paths,
+    paths: R.map((path) => [path, getPathData(messages, path)], paths),
     startTime,
     xAxisPath,
+    xAxisData: xAxisPath != undefined ? getPathData(messages, xAxisPath) : undefined,
     xAxisVal,
   });
 }
@@ -275,6 +283,8 @@ export function receiveMetadata(
   metadata = {
     topics,
     datatypes,
+    enumValues: enumValuesByDatatypeAndField(datatypes),
+    structures: messagePathStructures(datatypes),
   };
 }
 
@@ -318,7 +328,7 @@ export function receiveVariables(variables: GlobalVariables): void {
           return [];
         }
 
-        const filled = fillInGlobalVariablesInPath(original, globalVariables);
+        const filled = fillInGlobalVariablesInPath(original, variables);
         return !R.equals(original.messagePath, filled.messagePath) ? [filled] : [];
       }),
     )(getParamPaths(params));
@@ -334,7 +344,7 @@ export function receiveVariables(variables: GlobalVariables): void {
 // Check for any message data we no longer need.
 function evictCache() {
   const topics = R.pipe(
-    R.chain(({ topics }: Client) => topics),
+    R.chain(({ topics: clientTopics }: Client) => clientTopics),
     R.uniq,
   )(R.values(clients));
   blocks = R.pick(topics, blocks);

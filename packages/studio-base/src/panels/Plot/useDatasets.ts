@@ -7,14 +7,14 @@ import * as R from "ramda";
 import { useEffect, useMemo } from "react";
 import { v4 as uuidv4 } from "uuid";
 
-import { Immutable } from "@foxglove/studio";
 import { useShallowMemo, useDeepMemo } from "@foxglove/hooks";
+import { Immutable } from "@foxglove/studio";
 import { useMessageReducer, useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
 import { useBlocksByTopic } from "@foxglove/studio-base/PanelAPI/useBlocksByTopic";
 import { getTopicsFromPaths } from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
-import { MessageEvent } from "@foxglove/studio-base/players/types";
 import { TypedDataProvider } from "@foxglove/studio-base/components/TimeBasedChart/types";
 import useGlobalVariables from "@foxglove/studio-base/hooks/useGlobalVariables";
+import { MessageEvent } from "@foxglove/studio-base/players/types";
 
 import { PlotParams, Messages } from "./internalTypes";
 import { getPaths, PlotData } from "./plotData";
@@ -24,12 +24,12 @@ let worker: Worker | undefined;
 let service: Service | undefined;
 let numClients: number = 0;
 
-let pending: ((service: Service) => void)[] = [];
+const pending: ((service: Service) => void)[] = [];
 async function waitService(): Promise<Service> {
   if (service != undefined) {
     return service;
   }
-  return new Promise((resolve) => {
+  return await new Promise((resolve) => {
     pending.push(resolve);
   });
 }
@@ -202,9 +202,9 @@ export default function useDatasets(params: PlotParams): {
         void service?.updateView(id, view);
       },
       register: (setter) => {
-        (async () => {
+        void (async () => {
           const s = await waitService();
-          s.register(id, Comlink.proxy(setter), Comlink.proxy(setState));
+          void s.register(id, Comlink.proxy(setter), Comlink.proxy(setState));
         })();
       },
     }),
@@ -214,7 +214,7 @@ export default function useDatasets(params: PlotParams): {
   const getFullData = React.useMemo(
     () => async () => {
       const s = await waitService();
-      return s.getFullData(id);
+      return await s.getFullData(id);
     },
     [id],
   );

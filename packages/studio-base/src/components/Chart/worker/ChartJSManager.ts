@@ -23,9 +23,9 @@ import { RpcElement, RpcScales } from "@foxglove/studio-base/components/Chart/ty
 import { maybeCast } from "@foxglove/studio-base/util/maybeCast";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
-import { TypedChartData } from "../types";
 import { lineSegmentLabelColor } from "./lineSegments";
 import { proxyTyped } from "./proxy";
+import { TypedChartData } from "../types";
 
 const log = Logger.getLogger(__filename);
 
