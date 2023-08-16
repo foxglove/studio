@@ -6579,10 +6579,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:15.3.0":
-  version: 15.3.0
-  resolution: "@types/node@npm:15.3.0"
-  checksum: fb9d6c4e9be5cc7b972b97bbbe4e111f48be284ae173d6946bc336ffec8dd3bf024a3c2fb0f065e07ae499127b8ff2aa5ab098a37ca03be1b5856ba499d6f2a4
+"@types/node@npm:16.18.40":
+  version: 16.18.40
+  resolution: "@types/node@npm:16.18.40"
+  checksum: a683930491b4fd7cb2dc7684e32bbeedc4a83fb1949a7b15ea724fbfaa9988cec59091f169a3f1090cb91992caba8c1a7d50315b2c67c6e2579a3788bb09eec4
   languageName: node
   linkType: hard
 
