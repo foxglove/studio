@@ -27,7 +27,14 @@ export default class WorkerSocketAdapter implements IWebSocket {
       }
     };
 
-    this.#worker.onmessage = (event: MessageEvent<FromWorkerMessage>) => {
+    this.#worker.onmessage = (event: MessageEvent<FromWorkerMessage | ArrayBuffer>) => {
+      if (event.data instanceof ArrayBuffer) {
+        if (this.onmessage) {
+          this.onmessage(event);
+        }
+        return;
+      }
+
       switch (event.data.type) {
         case "open":
           if (this.onopen) {
@@ -49,7 +56,7 @@ export default class WorkerSocketAdapter implements IWebSocket {
             this.onerror(event.data);
           }
           break;
-        case "message":
+        case "textMessage":
           if (this.onmessage) {
             this.onmessage(event.data);
           }

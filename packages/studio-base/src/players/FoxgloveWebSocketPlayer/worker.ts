@@ -11,12 +11,17 @@ export type FromWorkerMessage =
   | { type: "open"; protocol: string }
   | { type: "close"; data: unknown }
   | { type: "error"; error: unknown }
-  | { type: "message"; data: unknown };
+  | { type: "textMessage"; data: unknown }
+  | ArrayBuffer;
 
 let ws: WebSocket | undefined = undefined;
 
 const send = (msg: FromWorkerMessage): void => {
-  self.postMessage(msg);
+  if (msg instanceof ArrayBuffer) {
+    self.postMessage(msg, [msg]);
+  } else {
+    self.postMessage(msg);
+  }
 };
 
 self.onmessage = (event: MessageEvent<ToWorkerMessage>) => {
@@ -43,7 +48,7 @@ self.onmessage = (event: MessageEvent<ToWorkerMessage>) => {
         };
         ws.onmessage = (wsEvent: MessageEvent) => {
           send({
-            type: "message",
+            type: "textMessage",
             data: wsEvent.data,
           });
         };
