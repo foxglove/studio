@@ -8,12 +8,12 @@ import * as R from "ramda";
 
 import { Time } from "@foxglove/rostime";
 import { Immutable as Im } from "@foxglove/studio";
+import { iterateTyped } from "@foxglove/studio-base/components/Chart/datasets";
 import { RosPath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
 import {
   MessageAndData,
   getMessagePathDataItems,
 } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
-import { messagePathStructures } from "@foxglove/studio-base/components/MessagePathSyntax/messagePathsForDatatype";
 import {
   getDatasetsFromMessagePlotPath,
   concatTyped,
@@ -23,9 +23,8 @@ import { MessageEvent, Topic } from "@foxglove/studio-base/players/types";
 import { Bounds, makeInvertedBounds, unionBounds } from "@foxglove/studio-base/types/Bounds";
 import { Range } from "@foxglove/studio-base/util/ranges";
 import { getTimestampForMessage } from "@foxglove/studio-base/util/time";
-import { iterateTyped } from "@foxglove/studio-base/components/Chart/datasets";
-import { enumValuesByDatatypeAndField } from "@foxglove/studio-base/util/enums";
 
+import { resolveTypedIndices } from "./datasets";
 import {
   DatasetsByPath,
   PlotDataItem,
@@ -33,13 +32,12 @@ import {
   PlotPath,
   PlotXAxisVal,
   isReferenceLinePlotPathType,
-  Metadata,
+  MetadataEnums,
   TypedData,
   TypedDataSet,
 } from "./internalTypes";
 import * as maps from "./maps";
 import { derivative } from "./transformPlotRange";
-import { resolveTypedIndices } from "./datasets";
 
 /**
  * Plot data bundles datasets with precomputed bounds and paths with mismatched data
@@ -83,11 +81,11 @@ function findXRanges(data: Im<PlotData>): {
       start: Number.MAX_SAFE_INTEGER,
       end: Number.MIN_SAFE_INTEGER,
     });
-    const { data } = dataset;
-    const first = data.at(0);
-    const last = data.at(-1);
+    const { data: subData } = dataset;
+    const first = subData.at(0);
+    const last = subData.at(-1);
     thisPath.start = Math.min(thisPath.start, first?.x[0] ?? Number.MAX_SAFE_INTEGER);
-    thisPath.end = Math.max(thisPath.end, last?.x[last?.x.length - 1] ?? Number.MIN_SAFE_INTEGER);
+    thisPath.end = Math.max(thisPath.end, last?.x[last.x.length - 1] ?? Number.MIN_SAFE_INTEGER);
     start = Math.min(start, thisPath.start);
     end = Math.max(end, thisPath.end);
   }
@@ -212,23 +210,24 @@ export function getPaths(paths: readonly PlotPath[], xAxisPath?: BasePlotPath): 
   );
 }
 
+type PathData = [PlotPath, PlotDataItem[] | undefined];
 export function buildPlotData(
   args: Im<{
     invertedTheme?: boolean;
-    itemsByPath: Map<PlotPath, PlotDataItem[]>;
-    paths: PlotPath[];
+    paths: PathData[];
     startTime: Time;
-    xAxisPath?: PlotPath;
+    xAxisPath?: BasePlotPath;
+    xAxisData: PlotDataItem[] | undefined;
     xAxisVal: PlotXAxisVal;
   }>,
 ): PlotData {
-  const { paths, itemsByPath, startTime, xAxisVal, xAxisPath, invertedTheme } = args;
+  const { paths, startTime, xAxisVal, xAxisPath, xAxisData, invertedTheme } = args;
   const bounds: Bounds = makeInvertedBounds();
   const pathsWithMismatchedDataLengths: string[] = [];
   const datasets: DatasetsByPath = new Map();
-  for (const [index, path] of paths.entries()) {
-    const yRanges = itemsByPath.get(path) ?? [];
-    const xRanges = xAxisPath && itemsByPath.get(xAxisPath);
+  for (const [index, [path, data]] of paths.entries()) {
+    const xRanges = xAxisData;
+    const yRanges = data ?? [];
     if (!path.enabled) {
       continue;
     } else if (!isReferenceLinePlotPathType(path)) {
@@ -248,9 +247,9 @@ export function buildPlotData(
       }
 
       const {
-        dataset: { data },
+        dataset: { data: subData },
       } = res;
-      for (const dataset of data) {
+      for (const dataset of subData) {
         for (let i = 0; i < dataset.x.length; i++) {
           const x = dataset.x[i];
           const y = dataset.y[i];
@@ -273,18 +272,17 @@ export function buildPlotData(
 
   return {
     bounds,
-    datasets: datasets,
+    datasets,
     pathsWithMismatchedDataLengths,
   };
 }
 
 export function resolvePath(
-  metadata: Metadata,
+  metadata: MetadataEnums,
   messages: readonly MessageEvent[],
   path: RosPath,
 ): PlotDataItem[] {
-  const structures = messagePathStructures(metadata.datatypes);
-  const enumValues = enumValuesByDatatypeAndField(metadata.datatypes);
+  const { structures, enumValues } = metadata;
   const topics = R.pipe(
     R.map((topic: Topic): [string, Topic] => [topic.name, topic]),
     R.fromPairs,

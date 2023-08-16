@@ -43,14 +43,14 @@ import { PANEL_TITLE_CONFIG_KEY } from "@foxglove/studio-base/util/layout";
 import PlotChart from "./PlotChart";
 import { PlotLegend } from "./PlotLegend";
 import { downloadCSV } from "./csv";
+import { TypedDataSet } from "./internalTypes";
+import { EmptyPlotData, EmptyData } from "./plotData";
 import { usePlotPanelSettings } from "./settings";
 import { PlotConfig } from "./types";
 import useDatasets from "./useDatasets";
-import { EmptyPlotData, EmptyData } from "./plotData";
 
 export { plotableRosTypes } from "./types";
 export type { PlotConfig } from "./types";
-import { TypedDataSet } from "./internalTypes";
 
 const defaultSidebarDimension = 240;
 
@@ -250,11 +250,11 @@ function Plot(props: Props) {
           if (data == undefined) {
             return;
           }
-          const datasets = [];
+          const csvDatasets = [];
           for (const dataset of data.datasets.values()) {
-            datasets.push(dataset);
+            csvDatasets.push(dataset);
           }
-          downloadCSV(datasets, xAxisVal);
+          downloadCSV(csvDatasets, xAxisVal);
         },
       },
     ];

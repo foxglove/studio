@@ -4,8 +4,8 @@
 
 import * as R from "ramda";
 
-import { RpcScales } from "@foxglove/studio-base/components/Chart/types";
 import { iterateNormal } from "@foxglove/studio-base/components/Chart/datasets";
+import { RpcScales } from "@foxglove/studio-base/components/Chart/types";
 
 import { downsample } from "./downsample";
 import { ChartDatasets, View } from "./types";
@@ -64,47 +64,15 @@ export class Downsampler {
       };
     }
 
-    const dataBounds = this.#datasetBounds;
-    if (!dataBounds) {
+    if (this.#datasetBounds == undefined) {
       return undefined;
     }
 
-    const { bounds: providedBounds } = dataBounds;
-
-    // if we don't have bounds (chart not initialized) but do have dataset bounds
-    // then setup bounds as x/y min/max around the dataset values rather than the scales
-    if (
-      !bounds &&
-      providedBounds.x.min != undefined &&
-      providedBounds.x.max != undefined &&
-      providedBounds.y.min != undefined &&
-      providedBounds.y.max != undefined
-    ) {
-      bounds = {
-        width: width ?? 0,
-        height: height ?? 0,
-        x: {
-          min: providedBounds.x.min,
-          max: providedBounds.x.max,
-        },
-        y: {
-          min: providedBounds.y.min,
-          max: providedBounds.y.max,
-        },
-      };
-    }
-
-    // If we don't have any bounds - we assume the component is still initializing and return no data
-    // The other alternative is to return the full data set. This leads to rendering full fidelity data
-    // which causes render pauses and blank charts for large data sets.
-    if (!bounds) {
-      return undefined;
-    }
-
+    const { bounds: dataBounds } = this.#datasetBounds;
     const view: View = {
       width: 0,
       height: 0,
-      bounds,
+      bounds: dataBounds,
     };
 
     return this.#datasets.map((dataset) => {

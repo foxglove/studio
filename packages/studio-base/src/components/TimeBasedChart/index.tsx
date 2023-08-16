@@ -11,11 +11,11 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import * as R from "ramda";
 import { Button, Fade, Tooltip, useTheme } from "@mui/material";
 import { ChartOptions, ScaleOptions } from "chart.js";
 import { AnnotationOptions } from "chartjs-plugin-annotation";
 import { isEqual } from "lodash";
+import * as R from "ramda";
 import React, {
   ComponentProps,
   MouseEvent,
@@ -29,8 +29,8 @@ import { useMountedState } from "react-use";
 import { makeStyles } from "tss-react/mui";
 import { v4 as uuidv4 } from "uuid";
 
-import { filterMap } from "@foxglove/den/collection";
 import type { ZoomOptions } from "@foxglove/chartjs-plugin-zoom/types/options";
+import { filterMap } from "@foxglove/den/collection";
 import Logger from "@foxglove/log";
 import ChartComponent from "@foxglove/studio-base/components/Chart/index";
 import { RpcElement, RpcScales } from "@foxglove/studio-base/components/Chart/types";
@@ -46,13 +46,13 @@ import {
 import { Bounds } from "@foxglove/studio-base/types/Bounds";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
-import useDownsample from "./useDownsampler";
 import HoverBar from "./HoverBar";
 import TimeBasedChartTooltipContent, {
   TimeBasedChartTooltipData,
 } from "./TimeBasedChartTooltipContent";
 import { VerticalBarWrapper } from "./VerticalBarWrapper";
 import { ChartDataProvider, TypedDataProvider } from "./types";
+import useDownsample from "./useDownsampler";
 import useProvider, { getBounds, getTypedBounds } from "./useProvider";
 
 const log = Logger.getLogger(__filename);
@@ -471,8 +471,8 @@ export default function TimeBasedChart(props: Props): JSX.Element {
       max = currentTime ?? 0;
       min = max - defaultView.width;
     } else {
-      min = bounds?.x.min;
-      max = bounds?.x.max;
+      min = bounds.x.min;
+      max = bounds.x.max;
     }
 
     // If the global bounds are from user interaction, we use that unconditionally.
@@ -491,8 +491,8 @@ export default function TimeBasedChart(props: Props): JSX.Element {
   }, [
     componentId,
     currentTime,
-    bounds?.x.max,
-    bounds?.x.min,
+    bounds.x.max,
+    bounds.x.min,
     defaultView,
     syncedGlobalBounds,
     hasUserPannedOrZoomed,
@@ -538,10 +538,10 @@ export default function TimeBasedChart(props: Props): JSX.Element {
     // chartjs doesn't like it when only one of min/max are specified for scales
     // so if either is specified then we specify both
     if (maxY == undefined && minY != undefined) {
-      maxY = bounds?.y.max;
+      maxY = bounds.y.max;
     }
     if (minY == undefined && maxY != undefined) {
-      minY = bounds?.y.min;
+      minY = bounds.y.min;
     }
 
     return {
@@ -554,7 +554,7 @@ export default function TimeBasedChart(props: Props): JSX.Element {
         ...yAxes.ticks,
       },
     } as ScaleOptions;
-  }, [bounds?.y, yAxes, theme.palette]);
+  }, [bounds.y, yAxes, theme.palette]);
 
   const options = useMemo<ChartOptions>(() => {
     return {

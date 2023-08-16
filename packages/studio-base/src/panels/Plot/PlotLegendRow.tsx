@@ -9,6 +9,7 @@ import { makeStyles } from "tss-react/mui";
 import { v4 as uuidv4 } from "uuid";
 
 import { Immutable } from "@foxglove/studio";
+import { iterateTyped } from "@foxglove/studio-base/components/Chart/datasets";
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import { useSelectedPanels } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { useHoverValue } from "@foxglove/studio-base/context/TimelineInteractionStateContext";
@@ -16,7 +17,6 @@ import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/use
 import { plotPathDisplayName } from "@foxglove/studio-base/panels/Plot/types";
 import { getLineColor } from "@foxglove/studio-base/util/plotColors";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
-import { iterateTyped } from "@foxglove/studio-base/components/Chart/datasets";
 
 import { PlotPath, TypedDataSet, TypedData } from "./internalTypes";
 
@@ -139,7 +139,7 @@ export function PlotLegendRow({
 
     let value;
     for (const pt of iterateTyped(correspondingData as TypedData[])) {
-      if (timeToCompare == undefined || pt == undefined || pt.x > timeToCompare) {
+      if (timeToCompare == undefined || pt.x > timeToCompare) {
         break;
       }
       value = pt.y;

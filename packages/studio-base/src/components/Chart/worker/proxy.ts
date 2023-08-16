@@ -11,12 +11,11 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { ChartData } from "chart.js";
 import * as R from "ramda";
 
-import { ChartData } from "chart.js";
+import { findIndices } from "../datasets";
 import { TypedChartData, TypedData } from "../types";
-
-import { findIndices } from '../datasets'
 
 type TypedDataSet = TypedChartData["datasets"][0];
 type NormalDataSet = ChartData<"scatter">["datasets"][0];
@@ -46,6 +45,7 @@ function proxyDataset(dataset: TypedDataSet): NormalDataSet {
 
         if (typeof prop !== "string") {
           // dangerous, but required for ChartJS to function properly
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           return target[prop as any];
         }
 
@@ -60,14 +60,14 @@ function proxyDataset(dataset: TypedDataSet): NormalDataSet {
         }
 
         const [sliceIndex, offset] = indices;
-        const dataset = data[sliceIndex];
-        if (dataset == undefined) {
+        const slice = data[sliceIndex];
+        if (slice == undefined) {
           return undefined;
         }
 
         const point: Record<string, unknown> = {};
-        for (const [key, value] of Object.entries(dataset)) {
-          point[key] = value?.[offset];
+        for (const [key, value] of Object.entries(slice)) {
+          point[key] = value[offset];
         }
 
         return point;

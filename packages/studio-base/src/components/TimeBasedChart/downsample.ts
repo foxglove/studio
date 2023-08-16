@@ -61,10 +61,6 @@ export function downsampleTimeseries<T>(
   let firstPastBounds: number | undefined = undefined;
 
   for (const datum of iterate(dataset)) {
-    if (!datum) {
-      continue;
-    }
-
     const { index, label } = datum;
 
     // track the first point before our bounds
@@ -147,7 +143,7 @@ export function downsampleTimeseries<T>(
     downsampled.push(intLast.index);
   }
 
-  if (firstPastBounds) {
+  if (firstPastBounds != undefined) {
     downsampled.push(firstPastBounds);
   }
 
@@ -171,10 +167,6 @@ export function downsampleScatter<T>(
   const sparse: boolean[] = [];
 
   for (const datum of iterate(dataset)) {
-    if (!datum) {
-      continue;
-    }
-
     // Out-of-bounds scatter points are ignored. We don't filter on y
     // because y values are needed to allow chart to auto scale to the correct
     // height.

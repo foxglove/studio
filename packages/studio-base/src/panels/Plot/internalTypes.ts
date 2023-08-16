@@ -15,9 +15,10 @@ import { ChartDataset } from "chart.js";
 
 import { Time } from "@foxglove/rostime";
 import { Immutable } from "@foxglove/studio";
+import type { TypedData as OriginalTypedData } from "@foxglove/studio-base/components/Chart/types";
+import { MessagePathStructureItemMessage } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
 import { MessagePathDataItem } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
 import type { ChartDatum } from "@foxglove/studio-base/components/TimeBasedChart/types";
-import type { TypedData as OriginalTypedData } from "@foxglove/studio-base/components/Chart/types";
 import { Topic, MessageEvent } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import { TimestampMethod } from "@foxglove/studio-base/util/time";
@@ -35,6 +36,7 @@ export type PlotPath = BasePlotPath & {
   timestampMethod: TimestampMethod;
   showLine?: boolean;
 };
+export type PlotDataByPath = Map<PlotPath, PlotDataItem[]>;
 
 // X-axis values:
 export type PlotXAxisVal =
@@ -77,6 +79,11 @@ export type Metadata = Immutable<{
   topics: Topic[];
   datatypes: RosDatatypes;
 }>;
+
+export type MetadataEnums = Metadata & {
+  enumValues: { [datatype: string]: { [field: string]: { [value: string]: string } } };
+  structures: Record<string, MessagePathStructureItemMessage>;
+};
 
 export type PlotParams = {
   startTime: Time;

@@ -6,15 +6,15 @@ import * as R from "ramda";
 
 import { isTime, subtract, Time, toSec } from "@foxglove/rostime";
 import { Immutable } from "@foxglove/studio";
-import { Bounds, makeInvertedBounds } from "@foxglove/studio-base/types/Bounds";
-import { format } from "@foxglove/studio-base/util/formatTime";
-import { darkColor, getLineColor, lightColor } from "@foxglove/studio-base/util/plotColors";
-import { formatTimeRaw, TimestampMethod } from "@foxglove/studio-base/util/time";
 import {
   iterateTyped,
   findIndices,
   getTypedLength,
 } from "@foxglove/studio-base/components/Chart/datasets";
+import { Bounds, makeInvertedBounds } from "@foxglove/studio-base/types/Bounds";
+import { format } from "@foxglove/studio-base/util/formatTime";
+import { darkColor, getLineColor, lightColor } from "@foxglove/studio-base/util/plotColors";
+import { formatTimeRaw, TimestampMethod } from "@foxglove/studio-base/util/time";
 
 import {
   BasePlotPath,
@@ -331,16 +331,16 @@ function getSliceIndices(
   start: number,
   end: number | undefined,
 ): [start: number, end: number] {
-  start = R.clamp(0, start < 0 ? length + start : start, length);
-  end ??= length;
-  end = R.clamp(0, end < 0 ? length + end : end, length);
-  if (start > end) {
-    let i = start;
-    start = end;
-    end = i;
+  let clampedStart = R.clamp(0, start < 0 ? length + start : start, length);
+  let clampedEnd = end ?? length;
+  clampedEnd = R.clamp(0, clampedEnd < 0 ? length + clampedEnd : clampedEnd, length);
+  if (clampedStart > clampedEnd) {
+    const i = clampedStart;
+    clampedStart = clampedEnd;
+    clampedEnd = i;
   }
 
-  return [start, end];
+  return [clampedStart, clampedEnd];
 }
 
 function sliceSingle(slice: TypedData, start: number, end?: number): TypedData {
