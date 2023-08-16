@@ -165,10 +165,8 @@ export default function ExtensionsSettings(): React.ReactElement {
       {marketplaceEntries.error && (
         <Alert severity="error">
           <Stack gap={1} alignItems="center" justifyContent="center" fullHeight>
-            <Typography align="center" variant="body2" color="text.secondary">
-              Failed to fetch the list of available marketplace extensions. Check your Internet
-              connection and try again.
-            </Typography>
+            <AlertTitle>Failed to fetch the list of available marketplace extensions,</AlertTitle>
+            Check your Internet connection and try again.
             <Button onClick={async () => await refreshMarketplaceEntries()}>
               Retry Fetching Extensions
             </Button>
