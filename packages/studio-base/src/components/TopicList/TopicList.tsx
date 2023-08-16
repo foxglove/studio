@@ -33,15 +33,15 @@ import { useResizeDetector } from "react-resize-detector";
 import { makeStyles } from "tss-react/mui";
 
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
-import { HighlightChars } from "@foxglove/studio-base/components/HighlightChars";
+// import { HighlightChars } from "@foxglove/studio-base/components/HighlightChars";
 import {
   MessagePipelineContext,
   useMessagePipeline,
 } from "@foxglove/studio-base/components/MessagePipeline";
 import Stack from "@foxglove/studio-base/components/Stack";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
-import { Topic } from "@foxglove/studio-base/src/players/types";
-import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
+// import { Topic } from "@foxglove/studio-base/src/players/types";
+// import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 // type TopicWithStats = Topic & Partial<TopicStats>;
 
@@ -83,11 +83,11 @@ const useStyles = makeStyles<void, "node" | "indentLines" | "dragHandle">()(
         border: "none",
       },
     },
-    aliasedTopicName: {
-      color: theme.palette.primary.main,
-      display: "block",
-      textAlign: "start",
-    },
+    // aliasedTopicName: {
+    //   color: theme.palette.primary.main,
+    //   display: "block",
+    //   textAlign: "start",
+    // },
     // startAdornment: {
     //   display: "flex",
     // },
@@ -186,74 +186,74 @@ const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => player
 const selectSortedTopics = ({ sortedTopics }: MessagePipelineContext) => sortedTopics;
 const selectDatatypes = ({ datatypes }: MessagePipelineContext) => datatypes;
 
-function TopicListItem({
-  topic,
-  positions,
-}: {
-  topic: Topic;
-  positions: Set<number>;
-}): JSX.Element {
-  const { classes } = useStyles();
-  return (
-    <ListItem
-      className={classes.listItem}
-      divider
-      key={topic.name}
-      secondaryAction={
-        <Stack style={{ textAlign: "right" }}>
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            data-topic={topic.name}
-            data-topic-stat="count"
-          >
-            &mdash;
-          </Typography>
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            data-topic={topic.name}
-            data-topic-stat="frequency"
-          >
-            &mdash;
-          </Typography>
-        </Stack>
-      }
-    >
-      <ListItemText
-        primary={
-          <>
-            <HighlightChars str={topic.name} indices={positions} />
-            {topic.aliasedFromName && (
-              <Typography variant="caption" className={classes.aliasedTopicName}>
-                from {topic.aliasedFromName}
-              </Typography>
-            )}
-          </>
-        }
-        primaryTypographyProps={{ noWrap: true, title: topic.name }}
-        secondary={
-          topic.schemaName == undefined ? (
-            "—"
-          ) : (
-            <HighlightChars
-              str={topic.schemaName}
-              indices={positions}
-              offset={topic.name.length + 1}
-            />
-          )
-        }
-        secondaryTypographyProps={{
-          variant: "caption",
-          fontFamily: fonts.MONOSPACE,
-          noWrap: true,
-          title: topic.schemaName,
-        }}
-        style={{ marginRight: "48px" }}
-      />
-    </ListItem>
-  );
-}
+// function TopicListItem({
+//   topic,
+//   positions,
+// }: {
+//   topic: Topic;
+//   positions: Set<number>;
+// }): JSX.Element {
+//   const { classes } = useStyles();
+//   return (
+//     <ListItem
+//       className={classes.listItem}
+//       divider
+//       key={topic.name}
+//       secondaryAction={
+//         <Stack style={{ textAlign: "right" }}>
+//           <Typography
+//             variant="caption"
+//             color="text.secondary"
+//             data-topic={topic.name}
+//             data-topic-stat="count"
+//           >
+//             &mdash;
+//           </Typography>
+//           <Typography
+//             variant="caption"
+//             color="text.secondary"
+//             data-topic={topic.name}
+//             data-topic-stat="frequency"
+//           >
+//             &mdash;
+//           </Typography>
+//         </Stack>
+//       }
+//     >
+//       <ListItemText
+//         primary={
+//           <>
+//             <HighlightChars str={topic.name} indices={positions} />
+//             {topic.aliasedFromName && (
+//               <Typography variant="caption" className={classes.aliasedTopicName}>
+//                 from {topic.aliasedFromName}
+//               </Typography>
+//             )}
+//           </>
+//         }
+//         primaryTypographyProps={{ noWrap: true, title: topic.name }}
+//         secondary={
+//           topic.schemaName == undefined ? (
+//             "—"
+//           ) : (
+//             <HighlightChars
+//               str={topic.schemaName}
+//               indices={positions}
+//               offset={topic.name.length + 1}
+//             />
+//           )
+//         }
+//         secondaryTypographyProps={{
+//           variant: "caption",
+//           fontFamily: fonts.MONOSPACE,
+//           noWrap: true,
+//           title: topic.schemaName,
+//         }}
+//         style={{ marginRight: "48px" }}
+//       />
+//     </ListItem>
+//   );
+// }
 
 type TreeData = {
   id: string;
@@ -271,11 +271,11 @@ type TreeData = {
 export function TopicList(): JSX.Element {
   const { classes, cx } = useStyles();
   const [filterText, setFilterText] = useState<string>("");
-  const [tree, setTree] = useState<TreeApi<TreeData> | null | undefined>(undefined);
+  const [tree, setTree] = useState<TreeApi<TreeData> | undefined>(undefined);
   const [active, setActive] = useState<TreeData | undefined>(undefined);
-  const [focused, setFocused] = useState<TreeData | undefined>(undefined);
-  const [count, setCount] = useState(0);
-  const [selectedCount, setSelectedCount] = useState(0);
+  const [_focused, setFocused] = useState<TreeData | undefined>(undefined);
+  const [_count, setCount] = useState(0);
+  const [_selectedCount, setSelectedCount] = useState(0);
 
   const { width, height, ref } = useResizeDetector<HTMLDivElement>({
     refreshRate: 0,
