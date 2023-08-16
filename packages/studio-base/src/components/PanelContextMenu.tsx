@@ -36,6 +36,11 @@ type PanelContextMenuProps = {
   getItems: () => Immutable<PanelContextMenuItem[]>;
 };
 
+function isContextEvent(event: MouseEvent): boolean {
+  const { button, ctrlKey } = event;
+  return button === 2 || (button === 0 && ctrlKey);
+}
+
 /**
  * This is a convenience component for attaching a context menu to a panel. It
  * must be a child of a Panel component to work.
@@ -61,7 +66,7 @@ function PanelContextMenuComponent(props: PanelContextMenuProps): JSX.Element {
     // between press & release
     let rightClickState: "none" | "down" | "canceled" = "none";
     const handleMouseUp = (event: MouseEvent) => {
-      if (event.button === 2 && rightClickState === "down") {
+      if (isContextEvent(event) && rightClickState === "down") {
         setPosition({ x: event.clientX, y: event.clientY });
         setItems(getItems());
         rightClickState = "none";
@@ -71,7 +76,7 @@ function PanelContextMenuComponent(props: PanelContextMenuProps): JSX.Element {
       rightClickState = "canceled";
     };
     const handleMouseDown = (event: MouseEvent) => {
-      if (event.button === 2) {
+      if (isContextEvent(event)) {
         rightClickState = "down";
       }
     };
