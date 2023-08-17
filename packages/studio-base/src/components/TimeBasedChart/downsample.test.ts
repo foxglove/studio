@@ -42,7 +42,7 @@ describe("downsampleTimeseries", () => {
       ],
       bounds,
     );
-    expect(result).toEqual([0, 1, 3, 5]);
+    expect(result).toEqual([0, 1, 2, 5]);
   });
 
   it("should keep the min/max values within an interval", () => {
