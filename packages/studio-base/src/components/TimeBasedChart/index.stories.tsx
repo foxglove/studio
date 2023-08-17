@@ -127,8 +127,8 @@ export const CanZoomAndUpdate: StoryObj = {
       await delay(100);
 
       setChartProps((draft) => {
-        draft.data.datasets[0]!.data[1] = {
-          ...draft.data.datasets[0]!.data[0]!,
+        draft.data!.datasets[0]!.data[1] = {
+          ...draft.data!.datasets[0]!.data[0]!,
           x: 20,
         };
       });

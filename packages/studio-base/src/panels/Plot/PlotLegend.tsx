@@ -24,7 +24,7 @@ import { PlotPath } from "@foxglove/studio-base/panels/Plot/internalTypes";
 import { PlotConfig } from "@foxglove/studio-base/panels/Plot/types";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 
-import { TypedDataSet } from './internalTypes'
+import { TypedDataSet } from "./internalTypes";
 
 const minLegendWidth = 25;
 const maxLegendWidth = 800;
