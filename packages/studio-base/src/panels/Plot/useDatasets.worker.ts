@@ -276,10 +276,7 @@ function unregister(id: string): void {
   clients = rest;
 }
 
-function receiveMetadata(
-  topics: readonly Topic[],
-  datatypes: Immutable<RosDatatypes>,
-): void {
+function receiveMetadata(topics: readonly Topic[], datatypes: Immutable<RosDatatypes>): void {
   metadata = {
     topics,
     datatypes,
