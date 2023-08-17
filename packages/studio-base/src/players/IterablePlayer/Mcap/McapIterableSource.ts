@@ -24,6 +24,10 @@ const log = Log.getLogger(__filename);
 
 type McapSource = { type: "file"; file: Blob } | { type: "url"; url: string };
 
+/**
+ * Create a McapIndexedReader if it will be possible to do an indexed read. If the file is not
+ * indexed or is empty, returns undefined.
+ */
 async function tryCreateIndexedReader(readable: McapTypes.IReadable) {
   const decompressHandlers = await loadDecompressHandlers();
   try {
