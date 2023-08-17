@@ -82,8 +82,8 @@ export function datumToTyped(data: Datum[]): TypedData {
 
   return {
     receiveTime,
-    headerStamp: headerStamp.length > 0 ? headerStamp : undefined,
-    constantName: constantName.length > 0 ? constantName : undefined,
+    ...(constantName.length > 0 ? { constantName } : {}),
+    ...(headerStamp.length > 0 ? { headerStamp } : {}),
     value,
     x,
     y,
@@ -287,8 +287,8 @@ export function resolveTypedIndices(data: TypedData[], indices: number[]): Typed
   return [
     {
       receiveTime,
-      headerStamp: headerStamp.length > 0 ? headerStamp : undefined,
-      constantName: constantName.length > 0 ? constantName : undefined,
+      ...(constantName.length > 0 ? { constantName } : {}),
+      ...(headerStamp.length > 0 ? { headerStamp } : {}),
       value,
       x,
       y,
