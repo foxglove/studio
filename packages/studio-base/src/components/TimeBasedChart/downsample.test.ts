@@ -26,14 +26,7 @@ describe("downsampleTimeseries", () => {
       ],
       bounds,
     );
-    expect(result).toEqual({
-      data: [
-        { x: 0, y: 0, value: 0 },
-        { x: 10, y: 0, value: 0 },
-        { x: 20, y: 0, value: 0 },
-        { x: 20, y: 20, value: 20 },
-      ],
-    });
+    expect(result).toEqual([0, 1, 2, 5]);
   });
 
   it("preserves distinctly labeled segments", () => {
@@ -49,14 +42,7 @@ describe("downsampleTimeseries", () => {
       ],
       bounds,
     );
-    expect(result).toEqual({
-      data: [
-        { x: 0, y: 0, value: 0, label: "1" },
-        { x: 10, y: 0, value: 0, label: "2" },
-        { x: 20, y: 0, value: 0 },
-        { x: 20, y: 20, value: 20 },
-      ],
-    });
+    expect(result).toEqual([0, 1, 3, 5]);
   });
 
   it("should keep the min/max values within an interval", () => {
@@ -70,14 +56,7 @@ describe("downsampleTimeseries", () => {
       ],
       bounds,
     );
-    expect(result).toEqual({
-      data: [
-        { x: 0, y: 0, value: 0 },
-        { x: 0, y: -20, value: -20 },
-        { x: 0, y: 100, value: 100 },
-        { x: 0, y: 4, value: 4 },
-      ],
-    });
+    expect(result).toEqual([0, 2, 1, 3]);
   });
 
   it("should keep entry/exit datum to an interval", () => {
@@ -92,15 +71,7 @@ describe("downsampleTimeseries", () => {
       ],
       bounds,
     );
-    expect(result).toEqual({
-      data: [
-        { x: 0, y: 0, value: 0 },
-        { x: 1, y: 0, value: 0 },
-        { x: 1, y: 100, value: 100 },
-        { x: 1, y: 4, value: 4 },
-        { x: 2, y: 5, value: 5 },
-      ],
-    });
+    expect(result).toEqual([0, 1, 2, 3, 4]);
   });
 });
 
@@ -122,12 +93,7 @@ describe("downsampleScatter", () => {
       ],
       bounds,
     );
-    expect(result).toEqual({
-      data: [
-        { x: 0, y: -1, value: -1 },
-        { x: 0, y: 200, value: 200 },
-      ],
-    });
+    expect(result).toEqual([1, 3]);
   });
 
   it("merges nearby points", () => {
@@ -141,11 +107,6 @@ describe("downsampleScatter", () => {
       ],
       bounds,
     );
-    expect(result).toEqual({
-      data: [
-        { x: 0, y: 0, value: 0 },
-        { x: 0, y: 0.8, value: 0.8 },
-      ],
-    });
+    expect(result).toEqual([0, 2]);
   });
 });
