@@ -219,7 +219,7 @@ export class McapUnindexedIterableSource implements IIterableSource {
     } else {
       problems.push({
         message: "This file is unindexed. Unindexed files may have degraded performance.",
-        tip: "See the mcap spec: https://mcap.dev/specification/index.html#summary-section",
+        tip: "See the MCAP spec: https://mcap.dev/specification/index.html#summary-section",
         severity: "warn",
       });
     }
