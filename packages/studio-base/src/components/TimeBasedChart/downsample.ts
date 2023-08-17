@@ -116,15 +116,19 @@ export function downsampleTimeseries<T>(
     intLast ??= { xPixel: x, yPixel: y, index, label };
     intLast.xPixel = x;
     intLast.yPixel = y;
+    intLast.index = index;
+    intLast.label = label;
 
     if (intMin && y < intMin.yPixel) {
       intMin.yPixel = y;
       intMin.index = index;
+      intMin.label = label;
     }
 
     if (intMax && y > intMax.yPixel) {
       intMax.yPixel = y;
       intMax.index = index;
+      intMax.label = label;
     }
   }
 
