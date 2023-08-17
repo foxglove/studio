@@ -11,14 +11,12 @@ import {
   findIndices,
   getTypedLength,
 } from "@foxglove/studio-base/components/Chart/datasets";
-import { Bounds, makeInvertedBounds } from "@foxglove/studio-base/types/Bounds";
 import { format } from "@foxglove/studio-base/util/formatTime";
 import { darkColor, getLineColor, lightColor } from "@foxglove/studio-base/util/plotColors";
 import { formatTimeRaw, TimestampMethod } from "@foxglove/studio-base/util/time";
 
 import {
   BasePlotPath,
-  DataSet,
   Datum,
   TypedDataSet,
   TypedData,
@@ -153,25 +151,6 @@ function getDatumsForMessagePathItem(
   return { data, hasMismatchedData };
 }
 
-/**
- * Calculates the bounds of a dataset by iterating through all data.
- */
-export function calculateDatasetBounds(dataset: Immutable<DataSet>): undefined | Bounds {
-  if (dataset.data.length === 0) {
-    return undefined;
-  }
-
-  const newBounds = makeInvertedBounds();
-  for (const datum of dataset.data) {
-    newBounds.x.min = Math.min(newBounds.x.min, datum.x);
-    newBounds.x.max = Math.max(newBounds.x.max, datum.x);
-    newBounds.y.min = Math.min(newBounds.y.min, datum.y);
-    newBounds.y.max = Math.max(newBounds.y.max, datum.y);
-  }
-
-  return newBounds;
-}
-
 export function getDatasetsFromMessagePlotPath({
   path,
   yAxisRanges,
@@ -261,15 +240,6 @@ export function getDatasetsFromMessagePlotPath({
     dataset,
     hasMismatchedData,
   };
-}
-
-export function typedToDatum(data: TypedData, index: number): Datum {
-  return {
-    x: data.x[index],
-    y: data.y[index],
-    value: data.value[index],
-    constantName: data.constantName?.[index],
-  } as Datum;
 }
 
 export function resolveTypedIndices(data: TypedData[], indices: number[]): TypedData[] | undefined {
