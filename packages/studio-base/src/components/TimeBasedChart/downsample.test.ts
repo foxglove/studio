@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { iterateNormal } from "@foxglove/studio-base/components/Chart/datasets";
+
 import { downsampleTimeseries, downsampleScatter } from "./downsample";
 
 describe("downsampleTimeseries", () => {
