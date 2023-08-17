@@ -271,12 +271,12 @@ function rebuild(id: string) {
   });
 }
 
-export function unregister(id: string): void {
+function unregister(id: string): void {
   const { [id]: _, ...rest } = clients;
   clients = rest;
 }
 
-export function receiveMetadata(
+function receiveMetadata(
   topics: readonly Topic[],
   datatypes: Immutable<RosDatatypes>,
 ): void {
@@ -310,7 +310,7 @@ function refreshClient(id: string) {
   client.queueRebuild();
 }
 
-export function receiveVariables(variables: GlobalVariables): void {
+function receiveVariables(variables: GlobalVariables): void {
   globalVariables = variables;
 
   for (const client of Object.values(clients)) {
@@ -351,7 +351,7 @@ function evictCache() {
   current = R.pick(topics, current);
 }
 
-export function addBlock(block: Messages): void {
+function addBlock(block: Messages): void {
   const topics = R.keys(block);
   blocks = R.mergeWith(R.concat, blocks, block);
 
@@ -372,11 +372,11 @@ export function addBlock(block: Messages): void {
   evictCache();
 }
 
-export function clearCurrent(): void {
+function clearCurrent(): void {
   current = {};
 }
 
-export function addCurrent(events: readonly MessageEvent[]): void {
+function addCurrent(events: readonly MessageEvent[]): void {
   for (const message of events) {
     const { topic } = message;
     current = {
@@ -401,7 +401,7 @@ export function addCurrent(events: readonly MessageEvent[]): void {
   evictCache();
 }
 
-export function updateParams(id: string, params: PlotParams): void {
+function updateParams(id: string, params: PlotParams): void {
   const client = clients[id];
   if (client == undefined) {
     return;
@@ -416,7 +416,7 @@ export function updateParams(id: string, params: PlotParams): void {
   evictCache();
 }
 
-export function updateView(id: string, view: View): void {
+function updateView(id: string, view: View): void {
   const client = clients[id];
   if (client == undefined) {
     return;
@@ -426,7 +426,7 @@ export function updateView(id: string, view: View): void {
   client.queueRebuild();
 }
 
-export function register(id: string, setProvided: Setter, setPanel: StateHandler): void {
+function register(id: string, setProvided: Setter, setPanel: StateHandler): void {
   mutateClient(id, {
     id,
     setProvided,
@@ -440,7 +440,7 @@ export function register(id: string, setProvided: Setter, setPanel: StateHandler
   });
 }
 
-export function getFullData(id: string): PlotData | undefined {
+function getFullData(id: string): PlotData | undefined {
   const client = clients[id];
   if (client == undefined) {
     return;

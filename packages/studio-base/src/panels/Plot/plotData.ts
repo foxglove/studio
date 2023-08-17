@@ -10,10 +10,7 @@ import { Time } from "@foxglove/rostime";
 import { Immutable as Im } from "@foxglove/studio";
 import { iterateTyped } from "@foxglove/studio-base/components/Chart/datasets";
 import { RosPath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
-import {
-  MessageAndData,
-  getMessagePathDataItems,
-} from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
+import { getMessagePathDataItems } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
 import {
   getDatasetsFromMessagePlotPath,
   concatTyped,
@@ -162,21 +159,6 @@ function compare(a: Im<PlotData>, b: Im<PlotData>): number {
   const rangeB = memoFindXRanges(b).all;
   const startCompare = rangeA.start - rangeB.start;
   return startCompare !== 0 ? startCompare : rangeA.end - rangeB.end;
-}
-
-/**
- * Convert MessageAndData into a PlotDataItem.
- *
- * Note: this is a free function so we are not making it for every loop iteration
- * in `getByPath` below.
- */
-export function messageAndDataToPathItem(messageAndData: MessageAndData): PlotDataItem {
-  const headerStamp = getTimestampForMessage(messageAndData.messageEvent.message);
-  return {
-    queriedData: messageAndData.queriedData,
-    receiveTime: messageAndData.messageEvent.receiveTime,
-    headerStamp,
-  };
 }
 
 /**
