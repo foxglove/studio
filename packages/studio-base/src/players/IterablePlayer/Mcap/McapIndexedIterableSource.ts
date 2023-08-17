@@ -3,8 +3,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { McapIndexedReader, McapTypes } from "@mcap/core";
-import { pick } from "lodash";
 
+import { pickFields } from "@foxglove/den/records";
 import Logger from "@foxglove/log";
 import { ParsedChannel, parseChannel } from "@foxglove/mcap-support";
 import { Time, fromNanoSec, toNanoSec, compare } from "@foxglove/rostime";
@@ -151,7 +151,7 @@ export class McapIndexedIterableSource implements IIterableSource {
       try {
         const msg = channelInfo.parsedChannel.deserialize(message.data) as Record<string, unknown>;
         const spec = args.topics.get(channelInfo.channel.topic);
-        const payload = spec?.fields != undefined ? pick(msg, spec.fields) : msg;
+        const payload = spec?.fields != undefined ? pickFields(msg, spec.fields) : msg;
         yield {
           type: "message-event",
           msgEvent: {

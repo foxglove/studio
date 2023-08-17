@@ -14,12 +14,10 @@ describe("simplifySubscriptionsById", () => {
 
     const result = mergeSubscriptions(subs);
 
-    expect(result).toEqual(
-      expect.arrayContaining([
-        { topic: "a", preloadType: "full" },
-        { topic: "a", preloadType: "partial" },
-      ]),
-    );
+    expect(result).toEqual([
+      { topic: "a", preloadType: "full" },
+      { topic: "a", preloadType: "partial" },
+    ]);
   });
 
   it("combines full and partial and sliced subscriptions", () => {
@@ -31,12 +29,10 @@ describe("simplifySubscriptionsById", () => {
 
     const result = mergeSubscriptions(subs);
 
-    expect(result).toEqual(
-      expect.arrayContaining([
-        { topic: "a", preloadType: "full" },
-        { topic: "a", preloadType: "partial" },
-      ]),
-    );
+    expect(result).toEqual([
+      { topic: "a", preloadType: "full" },
+      { topic: "a", preloadType: "partial" },
+    ]);
   });
 
   it("excludes empty slices", () => {
@@ -48,11 +44,9 @@ describe("simplifySubscriptionsById", () => {
 
     const result = mergeSubscriptions(subs);
 
-    expect(result).toEqual(
-      expect.arrayContaining([
-        { topic: "b", preloadType: "full", fields: ["one", "two"] },
-        { topic: "b", preloadType: "partial", fields: ["one", "two", "three"] },
-      ]),
-    );
+    expect(result).toEqual([
+      { topic: "b", preloadType: "full", fields: ["one", "two"] },
+      { topic: "b", preloadType: "partial", fields: ["one", "two", "three"] },
+    ]);
   });
 });

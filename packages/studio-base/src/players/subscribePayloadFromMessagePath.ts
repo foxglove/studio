@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { MessagePathPart } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
 import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
 
 import { SubscriptionPreloadType, SubscribePayload } from "./types";
@@ -20,14 +21,19 @@ export function subscribePayloadFromMessagePath(
     return undefined;
   }
 
-  const messagePath = parsedPath.messagePath[0];
-  if (messagePath == undefined || messagePath.type !== "name") {
+  type NamePart = MessagePathPart & { type: "name" };
+
+  const firstField = parsedPath.messagePath.find(
+    (element): element is NamePart => element.type === "name",
+  );
+
+  if (!firstField) {
     return { topic: parsedPath.topicName, preloadType };
   }
 
   return {
     topic: parsedPath.topicName,
     preloadType,
-    fields: [messagePath.name],
+    fields: [firstField.name],
   };
 }

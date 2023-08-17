@@ -14,4 +14,14 @@ describe("subscribePayloadFromMessagePath", () => {
     const result = subscribePayloadFromMessagePath("topic.field");
     expect(result).toEqual({ topic: "topic", fields: ["field"] });
   });
+
+  it("handles nested field paths", () => {
+    const result = subscribePayloadFromMessagePath("topic.field.subfield");
+    expect(result).toEqual({ topic: "topic", fields: ["field"] });
+  });
+
+  it("handles complex paths", () => {
+    const result = subscribePayloadFromMessagePath("topic{x==1}.field[:].subfield");
+    expect(result).toEqual({ topic: "topic", fields: ["field"] });
+  });
 });

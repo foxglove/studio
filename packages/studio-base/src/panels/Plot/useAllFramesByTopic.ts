@@ -111,7 +111,9 @@ export function useAllFramesByTopic(
           break;
         }
 
-        // Only include fully loaded blocks.
+        // Only include fully loaded blocks. This is necessary because existing blocks may contain
+        // messages on our topics but that have not been updated to contain the list of fields we're
+        // currently subscribed for.
         if (block.needTopics?.size !== 0) {
           break;
         }
