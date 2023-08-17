@@ -454,3 +454,29 @@ export function mergeTyped(a: TypedData[], b: TypedData[]): TypedData[] {
 
   return a.concat(datumToTyped([{ x: NaN, receiveTime: ZERO_TIME, y: NaN } as Datum]), newValues);
 }
+
+export function derivative(data: TypedData[]): TypedData[] {
+  const newDatums: Datum[] = [];
+
+  let prevX: number = 0;
+  let prevY: number = 0;
+  for (const datum of iterateTyped(data)) {
+    if (datum.index === 0) {
+      prevX = datum.x;
+      prevY = datum.y;
+      continue;
+    }
+
+    const secondsDifference = datum.x - prevX;
+    const value = (datum.y - prevY) / secondsDifference;
+    newDatums.push({
+      ...datum,
+      y: value,
+      value,
+    });
+    prevX = datum.x;
+    prevY = datum.y;
+  }
+
+  return [datumToTyped(newDatums)];
+}

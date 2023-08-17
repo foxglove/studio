@@ -11,38 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { iterateTyped } from "@foxglove/studio-base/components/Chart/datasets";
-
-import { datumToTyped } from "./datasets";
-import { TypedData, Datum } from "./internalTypes";
-
 export type MathFunction = (arg: number) => number;
-
-export function derivative(data: TypedData[]): TypedData[] {
-  const newDatums: Datum[] = [];
-
-  let prevX: number = 0;
-  let prevY: number = 0;
-  for (const datum of iterateTyped(data)) {
-    if (datum.index === 0) {
-      prevX = datum.x;
-      prevY = datum.y;
-      continue;
-    }
-
-    const secondsDifference = datum.x - prevX;
-    const value = (datum.y - prevY) / secondsDifference;
-    newDatums.push({
-      ...datum,
-      y: value,
-      value,
-    });
-    prevX = datum.x;
-    prevY = datum.y;
-  }
-
-  return [datumToTyped(newDatums)];
-}
 
 export const mathFunctions: { [fn: string]: MathFunction } = {
   abs: Math.abs,

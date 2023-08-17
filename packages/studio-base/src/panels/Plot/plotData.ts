@@ -24,7 +24,7 @@ import { Bounds, makeInvertedBounds, unionBounds } from "@foxglove/studio-base/t
 import { Range } from "@foxglove/studio-base/util/ranges";
 import { getTimestampForMessage } from "@foxglove/studio-base/util/time";
 
-import { resolveTypedIndices } from "./datasets";
+import { resolveTypedIndices, derivative } from "./datasets";
 import {
   DatasetsByPath,
   PlotDataItem,
@@ -37,7 +37,6 @@ import {
   TypedDataSet,
 } from "./internalTypes";
 import * as maps from "./maps";
-import { derivative } from "./transformPlotRange";
 
 /**
  * Plot data bundles datasets with precomputed bounds and paths with mismatched data
