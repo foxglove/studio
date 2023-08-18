@@ -371,6 +371,14 @@ function addBlock(block: Messages): void {
 
 function clearCurrent(): void {
   current = {};
+
+  for (const client of R.values(clients)) {
+    mutateClient(client.id, {
+      ...client,
+      current: initAccumulated(client.topics),
+    });
+    client.queueRebuild();
+  }
 }
 
 function addCurrent(events: readonly MessageEvent[]): void {
