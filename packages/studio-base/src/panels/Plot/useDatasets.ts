@@ -116,7 +116,7 @@ function useData(id: string, topics: readonly string[]) {
         }
 
         status[topic] = true;
-        messages[topic] = topicMessages;
+        messages[topic] = topicMessages as MessageEvent[];
       }
       blockStatus[index] = status;
 
