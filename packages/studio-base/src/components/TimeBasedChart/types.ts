@@ -41,7 +41,7 @@ export type ProviderStateSetter<T> = (state: ProviderState<T>) => void;
 
 export type Provider<T> = {
   setView: (view: View) => void;
-  register: (setter: ProviderStateSetter<T>) => void;
+  register: (setter: ProviderStateSetter<T>, addPartial: ProviderStateSetter<T>) => void;
 };
 
 export type ChartDataProvider = Provider<ObjectData>;

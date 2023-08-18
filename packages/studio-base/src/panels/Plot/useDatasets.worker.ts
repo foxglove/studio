@@ -58,6 +58,7 @@ type Client = {
   id: string;
   setPanel: StateHandler | undefined;
   setProvided: Setter | undefined;
+  addPartial: Setter | undefined;
   params: PlotParams | undefined;
   topics: readonly string[];
   view: View | undefined;
@@ -431,10 +432,16 @@ function updateView(id: string, view: View): void {
   client.queueRebuild();
 }
 
-function register(id: string, setProvided: Setter, setPanel: StateHandler): void {
+function register(
+  id: string,
+  setProvided: Setter,
+  setPanel: StateHandler,
+  addPartial: Setter,
+): void {
   mutateClient(id, {
     id,
     setProvided,
+    addPartial,
     setPanel,
     params: undefined,
     topics: [],

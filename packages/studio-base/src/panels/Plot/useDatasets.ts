@@ -201,10 +201,15 @@ export default function useDatasets(params: PlotParams): {
       setView: (view) => {
         void service?.updateView(id, view);
       },
-      register: (setter) => {
+      register: (setter, setPartial) => {
         void (async () => {
           const s = await waitService();
-          void s.register(id, Comlink.proxy(setter), Comlink.proxy(setState));
+          void s.register(
+            id,
+            Comlink.proxy(setter),
+            Comlink.proxy(setState),
+            Comlink.proxy(setPartial),
+          );
         })();
       },
     }),

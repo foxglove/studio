@@ -53,7 +53,7 @@ import TimeBasedChartTooltipContent, {
 import { VerticalBarWrapper } from "./VerticalBarWrapper";
 import { ChartDataProvider, TypedDataProvider } from "./types";
 import useDownsample from "./useDownsampler";
-import useProvider, { getBounds, getTypedBounds } from "./useProvider";
+import useProvider, { getBounds, getTypedBounds, mergeTyped, mergeNormal } from "./useProvider";
 
 const log = Logger.getLogger(__filename);
 
@@ -195,9 +195,9 @@ export default function TimeBasedChart(props: Props): JSX.Element {
     ),
   );
 
-  const provided = useProvider(view, getBounds, data, provider ?? downsampler);
+  const provided = useProvider(view, getBounds, mergeNormal, data, provider ?? downsampler);
 
-  const typedProvided = useProvider(view, getTypedBounds, typedData, typedProvider);
+  const typedProvided = useProvider(view, getTypedBounds, mergeTyped, typedData, typedProvider);
 
   React.useEffect(() => {
     setDatasetBounds((oldBounds) => {
