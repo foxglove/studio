@@ -13,7 +13,9 @@
 
 import { ChartDataset, ChartData } from "chart.js";
 import * as React from "react";
+import * as R from "ramda";
 
+import { iterateNormal, iterateTyped } from "@foxglove/studio-base/components/Chart/datasets";
 import type { ObjectData, TypedData } from "@foxglove/studio-base/components/Chart/types";
 
 import { Provider, ProviderState, Bounds, View } from "./types";
@@ -28,10 +30,7 @@ export function getBounds(data: Datasets<ObjectData>): Bounds | undefined {
   let yMax: number | undefined;
 
   for (const dataset of data) {
-    for (const item of dataset.data) {
-      if (item == undefined) {
-        continue;
-      }
+    for (const item of iterateNormal(dataset.data)) {
       if (!isNaN(item.x)) {
         xMin = Math.min(xMin ?? item.x, item.x);
         xMax = Math.max(xMax ?? item.x, item.x);
@@ -58,25 +57,17 @@ export function getTypedBounds(data: Datasets<TypedData[]>): Bounds | undefined 
   let yMax: number | undefined;
 
   for (const dataset of data) {
-    const { data: slices } = dataset;
-    for (const slice of slices) {
-      for (let i = 0; i < slice.x.length; i++) {
-        const x = slice.x[i];
-        const y = slice.y[i];
+    for (const item of iterateTyped(dataset.data)) {
+      const { x, y } = item;
 
-        if (x == undefined || y == undefined) {
-          continue;
-        }
+      if (!isNaN(x)) {
+        xMin = Math.min(xMin ?? x, x);
+        xMax = Math.max(xMax ?? x, x);
+      }
 
-        if (!isNaN(x)) {
-          xMin = Math.min(xMin ?? x, x);
-          xMax = Math.max(xMax ?? x, x);
-        }
-
-        if (!isNaN(y)) {
-          yMin = Math.min(yMin ?? y, y);
-          yMax = Math.max(yMax ?? y, y);
-        }
+      if (!isNaN(y)) {
+        yMin = Math.min(yMin ?? y, y);
+        yMax = Math.max(yMax ?? y, y);
       }
     }
   }
@@ -88,21 +79,88 @@ export function getTypedBounds(data: Datasets<TypedData[]>): Bounds | undefined 
   return { x: { min: xMin, max: xMax }, y: { min: yMin, max: yMax } };
 }
 
+function mergeBounds(a: Bounds, b: Bounds): Bounds {
+  return {
+    x: {
+      min: R.min(a.x.min, b.x.min),
+      max: R.max(a.x.max, b.x.max),
+    },
+    y: {
+      min: R.min(a.y.min, b.y.min),
+      max: R.max(a.y.max, b.y.max),
+    },
+  };
+}
+
+type State<T> = ProviderState<T>;
+type Dataset<T> = Datasets<T>[0];
+// Given a merging strategy, `makeMerge` returns a function that can be used to
+// merge `ProviderState`s.
+const makeMerge =
+  <T,>(mergeData: (dataA: T, dataB: T) => T) =>
+  (a: State<T>, b: State<T>): State<T> => {
+    return {
+      bounds: mergeBounds(a.bounds, b.bounds),
+      data: {
+        datasets: R.map(
+          ([aSet, bSet]: [Dataset<T>, Dataset<T>]): Dataset<T> => ({
+            data: mergeData(aSet.data, bSet.data),
+          }),
+          R.zip(a.data.datasets, b.data.datasets),
+        ),
+      },
+    };
+  };
+
+export const mergeNormal = makeMerge<ObjectData>((a: ObjectData, b: ObjectData) => [...a, ...b]);
+export const mergeTyped = makeMerge<TypedData[]>((a: TypedData[], b: TypedData[]) => [...a, ...b]);
+
+type DataState<T> = {
+  full: ProviderState<T> | undefined;
+  partial: ProviderState<T> | undefined;
+};
+
 export default function useProvider<T>(
   view: View,
   // Calculates the bounds of the given datasets.
   getDatasetBounds: (data: Datasets<T>) => Bounds | undefined,
+  mergeState: (a: ProviderState<T>, b: ProviderState<T>) => ProviderState<T>,
   data: Data<T> | undefined,
   provider: Provider<T> | undefined,
 ): ProviderState<T> | undefined {
-  const [state, setState] = React.useState<ProviderState<T> | undefined>();
+  const [state, setState] = React.useState<DataState<T> | undefined>();
+
+  const setFull = React.useCallback((newFull: ProviderState<T>) => {
+    setState({
+      full: newFull,
+      partial: undefined,
+    });
+  }, []);
+
+  const addPartial = React.useCallback((newPartial: ProviderState<T>) => {
+    setState((oldState) => {
+      if (oldState == undefined) {
+        return {
+          full: undefined,
+          partial: newPartial,
+        };
+      }
+
+      const { partial: oldPartial } = oldState;
+
+      return {
+        ...oldState,
+        partial: oldPartial != undefined ? mergeState(oldPartial, newPartial) : newPartial,
+      };
+    });
+  }, []);
 
   React.useEffect(() => {
     if (provider == undefined) {
       return;
     }
-    provider.register(setState);
-  }, [provider]);
+    provider.register(setFull, addPartial);
+  }, [provider, addPartial]);
 
   React.useEffect(() => {
     if (provider == undefined) {
@@ -112,18 +170,31 @@ export default function useProvider<T>(
   }, [provider, view]);
 
   return React.useMemo(() => {
-    if (data != undefined) {
-      const bounds = getDatasetBounds(data.datasets);
-      if (bounds == undefined) {
+    if (data == undefined) {
+      if (state == undefined) {
         return undefined;
       }
 
-      return {
-        bounds,
-        data,
-      };
+      const { full, partial } = state;
+      if (partial == undefined) {
+        return full;
+      }
+
+      if (full == undefined) {
+        return undefined;
+      }
+
+      return mergeState(full, partial);
     }
 
-    return state;
+    const bounds = getDatasetBounds(data.datasets);
+    if (bounds == undefined) {
+      return undefined;
+    }
+
+    return {
+      bounds,
+      data,
+    };
   }, [data, state, getDatasetBounds]);
 }
