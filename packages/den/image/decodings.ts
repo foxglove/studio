@@ -50,8 +50,9 @@ export function decodeUYVY(
 
   // populate 2 pixels at a time
   for (let row = 0; row < height; row++) {
+    const rowStart = row * step;
     for (let col = 0; col < width; col += 2) {
-      const off = row * step + col * 2;
+      const off = rowStart + col * 2;
       const u = uyvy[off]! - 128;
       const y1 = uyvy[off + 1]!;
       const v = uyvy[off + 2]! - 128;
@@ -76,8 +77,9 @@ export function decodeYUYV(
 
   // populate 2 pixels at a time
   for (let row = 0; row < height; row++) {
+    const rowStart = row * step;
     for (let col = 0; col < width; col += 2) {
-      const off = row * step + col * 2;
+      const off = rowStart + col * 2;
       const y1 = yuyv[off]!;
       const u = yuyv[off + 1]! - 128;
       const y2 = yuyv[off + 2]!;
@@ -101,8 +103,9 @@ export function decodeRGB8(
   let outIdx = 0;
 
   for (let row = 0; row < height; row++) {
+    const rowStart = row * step;
     for (let col = 0; col < width; col++) {
-      const inIdx = row * step + col * 3;
+      const inIdx = rowStart + col * 3;
       const r = rgb[inIdx]!;
       const g = rgb[inIdx + 1]!;
       const b = rgb[inIdx + 2]!;
@@ -128,8 +131,9 @@ export function decodeRGBA8(
   let outIdx = 0;
 
   for (let row = 0; row < height; row++) {
+    const rowStart = row * step;
     for (let col = 0; col < width; col++) {
-      const inIdx = row * step + col * 4;
+      const inIdx = rowStart + col * 4;
       const r = rgba[inIdx]!;
       const g = rgba[inIdx + 1]!;
       const b = rgba[inIdx + 2]!;
@@ -156,8 +160,9 @@ export function decodeBGRA8(
   let outIdx = 0;
 
   for (let row = 0; row < height; row++) {
+    const rowStart = row * step;
     for (let col = 0; col < width; col++) {
-      const inIdx = row * step + col * 4;
+      const inIdx = rowStart + col * 4;
       const b = rgba[inIdx]!;
       const g = rgba[inIdx + 1]!;
       const r = rgba[inIdx + 2]!;
@@ -184,8 +189,9 @@ export function decodeBGR8(
   let outIdx = 0;
 
   for (let row = 0; row < height; row++) {
+    const rowStart = row * step;
     for (let col = 0; col < width; col++) {
-      const inIdx = row * step + col * 3;
+      const inIdx = rowStart + col * 3;
       const b = bgr[inIdx]!;
       const g = bgr[inIdx + 1]!;
       const r = bgr[inIdx + 2]!;
@@ -214,8 +220,9 @@ export function decodeFloat1c(
 
   let outIdx = 0;
   for (let row = 0; row < height; row++) {
+    const rowStart = row * step;
     for (let col = 0; col < width; col++) {
-      const val = view.getFloat32(row * step + col * 4, !is_bigendian) * 255;
+      const val = view.getFloat32(rowStart + col * 4, !is_bigendian) * 255;
       output[outIdx++] = val;
       output[outIdx++] = val;
       output[outIdx++] = val;
@@ -237,8 +244,9 @@ export function decodeMono8(
   let outIdx = 0;
 
   for (let row = 0; row < height; row++) {
+    const rowStart = row * step;
     for (let col = 0; col < width; col++) {
-      const ch = mono8[row * step + col]!;
+      const ch = mono8[rowStart + col]!;
       output[outIdx++] = ch;
       output[outIdx++] = ch;
       output[outIdx++] = ch;
@@ -280,8 +288,9 @@ export function decodeMono16(
 
   let outIdx = 0;
   for (let row = 0; row < height; row++) {
+    const rowStart = row * step;
     for (let col = 0; col < width; col++) {
-      let val = view.getUint16(row * step + col * 2, !is_bigendian);
+      let val = view.getUint16(rowStart + col * 2, !is_bigendian);
 
       if (converter) {
         const { r, g, b } = converter(val);
