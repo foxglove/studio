@@ -23,7 +23,7 @@ import { Topic, MessageEvent } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import { TimestampMethod } from "@foxglove/studio-base/util/time";
 
-export type Messages = Record<string, readonly MessageEvent[]>;
+export type Messages = Record<string, MessageEvent[]>;
 
 export type BasePlotPath = {
   value: string;

@@ -21,6 +21,7 @@ import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables"
 import { Topic, MessageEvent } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import { enumValuesByDatatypeAndField } from "@foxglove/studio-base/util/enums";
+import { compare as compareTimes, subtract as subtractTimes, fromSec } from "@foxglove/rostime";
 
 import { resolveTypedIndices } from "./datasets";
 import {
@@ -404,10 +405,8 @@ function clearCurrent(): void {
 function addCurrent(events: readonly MessageEvent[]): void {
   for (const message of events) {
     const { topic } = message;
-    current = {
-      ...current,
-      [topic]: [...(current[topic] ?? []), message],
-    };
+    current[topic] ??= [];
+    current[topic]?.push(message);
   }
 
   for (const client of R.values(clients)) {
@@ -462,6 +461,40 @@ function updateView(id: string, view: View): void {
   mutateClient(id, { ...client, view });
   client.queueRebuild();
 }
+
+const CULL_THRESHOLD = fromSec(10);
+
+function compressClients(): void {
+  current = R.map((messages) => {
+    if (messages.length > 10000) {
+      return messages.slice(messages.length - 10000);
+    }
+
+    const start = messages.at(0)?.receiveTime;
+    const end = messages.at(-1)?.receiveTime;
+    if (end == undefined || start == undefined) {
+      return messages;
+    }
+
+    const cutoff = subtractTimes(end, CULL_THRESHOLD);
+    const index = R.findIndex(({ receiveTime }) => compareTimes(receiveTime, cutoff) > 0, messages);
+    return messages.slice(index);
+  }, current);
+  for (const client of R.values(clients)) {
+    const { params } = client;
+    if (params == undefined) {
+      continue;
+    }
+
+    const accumulated = accumulate(initAccumulated(client.topics), params, current);
+    mutateClient(client.id, {
+      ...client,
+      current: accumulated,
+    });
+    client.setProvided?.(getProvidedData(accumulated.data));
+  }
+}
+setInterval(compressClients, 2000);
 
 function register(
   id: string,
