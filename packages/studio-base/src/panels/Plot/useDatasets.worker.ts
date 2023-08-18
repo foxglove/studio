@@ -12,7 +12,11 @@ import { messagePathStructures } from "@foxglove/studio-base/components/MessageP
 import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
 import { fillInGlobalVariablesInPath } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
 import { downsample } from "@foxglove/studio-base/components/TimeBasedChart/downsample";
-import { ProviderStateSetter, View } from "@foxglove/studio-base/components/TimeBasedChart/types";
+import {
+  ProviderState,
+  ProviderStateSetter,
+  View,
+} from "@foxglove/studio-base/components/TimeBasedChart/types";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { Topic, MessageEvent } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
@@ -223,6 +227,21 @@ function getClientData(client: Client): PlotData | undefined {
   )([blockData, currentData]);
 }
 
+function getProvidedData(data: PlotData): ProviderState<TypedData[]> {
+  const { bounds } = data;
+  const datasets = [];
+  for (const dataset of data.datasets.values()) {
+    datasets.push(dataset);
+  }
+
+  return {
+    bounds,
+    data: {
+      datasets,
+    },
+  };
+}
+
 function rebuild(id: string) {
   const client = clients[id];
   if (client == undefined) {
@@ -392,16 +411,28 @@ function addCurrent(events: readonly MessageEvent[]): void {
   }
 
   for (const client of R.values(clients)) {
-    const { params } = client;
+    const { params, current: previous } = client;
     if (params == undefined) {
       continue;
     }
 
+    const { cursors: oldCursors, data: oldData } = previous;
+    const [newCursors, newMessages] = getNewMessages(oldCursors, current);
+
+    if (R.isEmpty(newMessages)) {
+      continue;
+    }
+
+    const newData = buildPlot(params, newMessages);
+    client.addPartial?.(getProvidedData(newData));
+
     mutateClient(client.id, {
       ...client,
-      current: accumulate(client.current, params, current),
+      current: {
+        cursors: newCursors,
+        data: appendPlotData(oldData, newData),
+      },
     });
-    client.queueRebuild();
   }
 
   evictCache();

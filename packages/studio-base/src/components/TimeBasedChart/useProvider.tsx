@@ -104,6 +104,7 @@ const makeMerge =
       data: {
         datasets: R.map(
           ([aSet, bSet]: [Dataset<T>, Dataset<T>]): Dataset<T> => ({
+            ...aSet,
             data: mergeData(aSet.data, bSet.data),
           }),
           R.zip(a.data.datasets, b.data.datasets),
@@ -113,7 +114,7 @@ const makeMerge =
   };
 
 export const mergeNormal = makeMerge<ObjectData>((a: ObjectData, b: ObjectData) => [...a, ...b]);
-export const mergeTyped = makeMerge<TypedData[]>((a: TypedData[], b: TypedData[]) => [...a, ...b]);
+export const mergeTyped = makeMerge<TypedData[]>((a: TypedData[], b: TypedData[]) => a.concat(b));
 
 type DataState<T> = {
   full: ProviderState<T> | undefined;
