@@ -21,7 +21,7 @@ import { StoryObj } from "@storybook/react";
 import Stack from "@foxglove/studio-base/components/Stack";
 
 export default {
-  title: "MUI Components",
+  title: "theme/overrides/Form Elements",
 };
 
 function FormElements(): JSX.Element {

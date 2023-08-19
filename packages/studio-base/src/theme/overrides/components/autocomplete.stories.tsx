@@ -2,10 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Autocomplete, TextField } from "@mui/material";
+import { Autocomplete as MuiAutocomplete, TextField } from "@mui/material";
 import { Meta, StoryObj } from "@storybook/react";
-
-import Stack from "@foxglove/studio-base/components/Stack";
 
 // Top 100 films as rated by IMDb users. http://www.imdb.com/chart/top
 const top100Films = [
@@ -136,19 +134,20 @@ const top100Films = [
 ];
 
 export default {
-  component: Autocomplete,
-  title: "theme/overrides/AutoComplete",
+  component: MuiAutocomplete,
+  title: "theme/overrides",
   args: {
     renderInput: (params) => <TextField {...params} />,
     options: top100Films,
+    open: true,
   },
   decorators: [
     (Story) => (
-      <Stack padding={2}>
+      <div style={{ padding: 16 }}>
         <Story />
-      </Stack>
+      </div>
     ),
   ],
-} as Meta<typeof Autocomplete>;
+} as Meta<typeof MuiAutocomplete>;
 
-export const Default: StoryObj = {};
+export const Autocomplete: StoryObj = {};
