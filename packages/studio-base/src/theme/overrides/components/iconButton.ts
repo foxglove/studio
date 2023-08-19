@@ -4,25 +4,19 @@
 
 import { Theme } from "@mui/material";
 
-import { iconHack } from "@foxglove/studio-base/theme/overrides/shared";
-
 import { OverrideComponentReturn } from "../types";
 
 export const iconButton = (theme: Theme): OverrideComponentReturn<"MuiIconButton"> => ({
   MuiIconButton: {
     defaultProps: {
       centerRipple: false,
-      disableRipple: true,
+      // disableRipple: true,
     },
     styleOverrides: {
       root: {
         borderRadius: theme.shape.borderRadius,
         transition: "none",
-        ...iconHack,
 
-        ".root-span": {
-          display: "flex",
-        },
         "&:hover": {
           backgroundColor: theme.palette.action.hover,
         },

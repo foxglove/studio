@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Theme } from "@mui/material";
+import { Theme, buttonClasses } from "@mui/material";
 
 import { OverrideComponentReturn } from "../types";
 
@@ -17,6 +17,28 @@ export const button = (theme: Theme): OverrideComponentReturn<"MuiButton"> => ({
       },
       containedInherit: {
         backgroundColor: theme.palette.action.focus,
+      },
+      sizeSmall: {
+        [`&.${buttonClasses.text}`]: {
+          fontSize: "0.625rem",
+        },
+        [`&.${buttonClasses.contained}`]: {
+          fontSize: "0.625rem",
+        },
+        [`&.${buttonClasses.outlined}`]: {
+          fontSize: "0.625rem",
+        },
+      },
+      sizeLarge: {
+        [`&.${buttonClasses.text}`]: {
+          fontSize: "0.875rem",
+        },
+        [`&.${buttonClasses.contained}`]: {
+          fontSize: "0.875rem",
+        },
+        [`&.${buttonClasses.outlined}`]: {
+          fontSize: "0.875rem",
+        },
       },
     },
   },

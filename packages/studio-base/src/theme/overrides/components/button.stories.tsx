@@ -21,9 +21,6 @@ const colors: ButtonProps["color"][] = [
 export default {
   component: MuiButton,
   title: "theme/overrides",
-  args: {
-    children: "Button",
-  },
   decorators: [
     (Story) => {
       return (
@@ -39,7 +36,7 @@ export default {
 } as Meta<typeof MuiButton>;
 
 export const Button: StoryObj = {
-  render: (args) => (
+  render: () => (
     <div
       style={{
         display: "grid",
@@ -64,7 +61,7 @@ export const Button: StoryObj = {
               </Typography>
             )}
             {sizes.map((size) => (
-              <MuiButton {...{ ...args, color, variant, size }} key={color}>
+              <MuiButton {...{ color, variant, size }} key={color}>
                 Button
               </MuiButton>
             ))}

@@ -11,7 +11,7 @@ import { OverrideComponentReturn } from "../types";
 export const tab = (theme: Theme): OverrideComponentReturn<"MuiTab"> => ({
   MuiTab: {
     styleOverrides: {
-      labelIcon: iconHack,
+      labelIcon: iconHack(theme),
       root: {
         opacity: 0.8,
 

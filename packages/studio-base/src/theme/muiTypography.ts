@@ -50,20 +50,32 @@ export function muiTypography({
 
   return {
     fontFamily: fonts.SANS_SERIF,
-    fontSize: 12,
+    // fontSize: 12,
     fontFeatureSettings,
-    body1: { ...baseFontStyles },
-    body2: { ...baseFontStyles },
+    body1: {
+      ...baseFontStyles,
+      fontSize: "0.875rem",
+    },
+    body2: {
+      ...baseFontStyles,
+      fontSize: "0.75rem",
+    },
     button: {
       ...baseFontStyles,
       textTransform: "none",
       fontWeight: 700,
       letterSpacing: "-0.025em",
+      fontSize: "0.75rem",
     },
     overline: {
       ...baseFontStyles,
       letterSpacing: "0.05em",
+      fontSize: "0.625rem",
       lineHeight: "1.5",
+    },
+    caption: {
+      ...baseFontStyles,
+      fontSize: "0.625rem",
     },
     h1: { ...headingFontStyles, fontSize: "2.488rem" },
     h2: { ...headingFontStyles, fontSize: "2.074rem" },
@@ -71,7 +83,7 @@ export function muiTypography({
     h4: { ...headingFontStyles, fontSize: "1.44rem" },
     h5: { ...headingFontStyles, fontSize: "1.2rem" },
     h6: { ...headingFontStyles, fontSize: "1rem" },
-    subtitle1: { ...subtitleFontStyles },
-    subtitle2: { ...subtitleFontStyles },
+    subtitle1: { ...subtitleFontStyles, fontSize: "0.875rem" },
+    subtitle2: { ...subtitleFontStyles, fontSize: "0.75rem" },
   };
 }
