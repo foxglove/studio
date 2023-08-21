@@ -2693,7 +2693,7 @@ __metadata:
     "@types/memoize-weak": "workspace:*"
     "@types/moment-duration-format": 2.2.3
     "@types/nearley": 2.11.2
-    "@types/prettier": 2.7.3
+    "@types/prettier": 3.0.0
     "@types/react": 17.0.53
     "@types/react-dom": 17.0.18
     "@types/react-hover-observer": "workspace:*"
@@ -2760,7 +2760,7 @@ __metadata:
     nearley-loader: 2.0.0
     notistack: 3.0.1
     path-browserify: 1.0.1
-    prettier: 2.8.8
+    prettier: 3.0.2
     react: 17.0.2
     react-colorful: 5.6.1
     react-dnd: 16.0.1
@@ -6625,10 +6625,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/prettier@npm:2.7.3":
-  version: 2.7.3
-  resolution: "@types/prettier@npm:2.7.3"
-  checksum: 705384209cea6d1433ff6c187c80dcc0b95d99d5c5ce21a46a9a58060c527973506822e428789d842761e0280d25e3359300f017fbe77b9755bc772ab3dc2f83
+"@types/prettier@npm:3.0.0":
+  version: 3.0.0
+  resolution: "@types/prettier@npm:3.0.0"
+  dependencies:
+    prettier: "*"
+  checksum: a2a512d304e5bcf78f38089dc88ad19215e6ab871d435a17aef3ce538a63b07c0e359c18db23989dc1ed9fff96d99eee1f680416080184df5c7e0e3bf767e165
   languageName: node
   linkType: hard
 
@@ -12320,7 +12322,7 @@ __metadata:
     jest: 29.6.3
     jest-environment-jsdom: 29.6.3
     license-checker: 25.0.1
-    prettier: 2.8.8
+    prettier: 3.0.2
     rimraf: 5.0.1
     semver: 7.5.4
     storybook: 7.3.1
@@ -17392,7 +17394,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier@npm:2.8.8, prettier@npm:^2.8.0":
+"prettier@npm:*, prettier@npm:3.0.2":
+  version: 3.0.2
+  resolution: "prettier@npm:3.0.2"
+  bin:
+    prettier: bin/prettier.cjs
+  checksum: 118b59ddb6c80abe2315ab6d0f4dd1b253be5cfdb20622fa5b65bb1573dcd362e6dd3dcf2711dd3ebfe64aecf7bdc75de8a69dc2422dcd35bdde7610586b677a
+  languageName: node
+  linkType: hard
+
+"prettier@npm:^2.8.0":
   version: 2.8.8
   resolution: "prettier@npm:2.8.8"
   bin:
