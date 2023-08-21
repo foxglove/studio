@@ -138,23 +138,26 @@ export default function useProvider<T>(
     });
   }, []);
 
-  const addPartial = React.useCallback((newPartial: ProviderState<T>) => {
-    setState((oldState) => {
-      if (oldState == undefined) {
+  const addPartial = React.useCallback(
+    (newPartial: ProviderState<T>) => {
+      setState((oldState) => {
+        if (oldState == undefined) {
+          return {
+            full: undefined,
+            partial: newPartial,
+          };
+        }
+
+        const { partial: oldPartial } = oldState;
+
         return {
-          full: undefined,
-          partial: newPartial,
+          ...oldState,
+          partial: oldPartial != undefined ? mergeState(oldPartial, newPartial) : newPartial,
         };
-      }
-
-      const { partial: oldPartial } = oldState;
-
-      return {
-        ...oldState,
-        partial: oldPartial != undefined ? mergeState(oldPartial, newPartial) : newPartial,
-      };
-    });
-  }, [mergeState]);
+      });
+    },
+    [mergeState],
+  );
 
   React.useEffect(() => {
     if (provider == undefined) {
