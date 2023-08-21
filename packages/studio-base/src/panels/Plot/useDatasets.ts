@@ -9,12 +9,16 @@ import { v4 as uuidv4 } from "uuid";
 
 import { useShallowMemo, useDeepMemo } from "@foxglove/hooks";
 import { Immutable } from "@foxglove/studio";
-import { useMessageReducer, useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
-import { useBlocksByTopic } from "@foxglove/studio-base/PanelAPI/useBlocksByTopic";
+import { useMessageReducer as useCurrent, useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
+import { useBlocksByTopic as useBlocks } from "@foxglove/studio-base/PanelAPI/useBlocksByTopic";
 import { getTopicsFromPaths } from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
 import { TypedDataProvider } from "@foxglove/studio-base/components/TimeBasedChart/types";
 import useGlobalVariables from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { MessageEvent } from "@foxglove/studio-base/players/types";
+import {
+  useMessagePipeline,
+  MessagePipelineContext,
+} from "@foxglove/studio-base/components/MessagePipeline";
 
 import { PlotParams, Messages } from "./internalTypes";
 import { getPaths, PlotData } from "./plotData";
@@ -33,6 +37,8 @@ async function waitService(): Promise<Service> {
     pending.push(resolve);
   });
 }
+
+const getIsLive = (ctx: MessagePipelineContext) => ctx.seekPlayback == undefined;
 
 // topic -> isSent
 type BlockStatus = Record<string, boolean>;
@@ -82,7 +88,15 @@ function useData(id: string, topics: readonly string[]) {
     };
   }, [id, topics]);
 
-  useMessageReducer<number>({
+  const isLive = useMessagePipeline<boolean>(getIsLive);
+  React.useEffect(() => {
+    void (async () => {
+      const s = await waitService();
+      await s.setLive(isLive);
+    })();
+  }, [isLive]);
+
+  useCurrent<number>({
     topics: subscribed,
     restore: React.useCallback((state: number | undefined): number => {
       if (state == undefined) {
@@ -95,11 +109,11 @@ function useData(id: string, topics: readonly string[]) {
         void service?.addCurrent(messages);
         return 1;
       },
-      [],
+      [isLive],
     ),
   });
 
-  const blocks = useBlocksByTopic(subscribed);
+  const blocks = useBlocks(subscribed);
   React.useEffect(() => {
     for (const [index, block] of blocks.entries()) {
       if (R.isEmpty(block)) {

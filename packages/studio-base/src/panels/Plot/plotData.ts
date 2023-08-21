@@ -3,12 +3,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { isEmpty } from "lodash";
-import memoizeWeak from "memoize-weak";
 import * as R from "ramda";
 
 import { Time } from "@foxglove/rostime";
 import { Immutable as Im } from "@foxglove/studio";
-import { iterateTyped } from "@foxglove/studio-base/components/Chart/datasets";
+import { iterateTyped, getTypedLength } from "@foxglove/studio-base/components/Chart/datasets";
 import { RosPath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
 import { getMessagePathDataItems } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
 import {
@@ -78,10 +77,16 @@ function findXRanges(data: Im<PlotData>): {
       end: Number.MIN_SAFE_INTEGER,
     });
     const { data: subData } = dataset;
-    const first = subData.at(0);
-    const last = subData.at(-1);
-    thisPath.start = Math.min(thisPath.start, first?.x[0] ?? Number.MAX_SAFE_INTEGER);
-    thisPath.end = Math.max(thisPath.end, last?.x[last.x.length - 1] ?? Number.MIN_SAFE_INTEGER);
+    const resolved = resolveTypedIndices(subData as TypedData[], [
+      0,
+      getTypedLength(subData as TypedData[]) - 1,
+    ])?.[0];
+
+    thisPath.start = Math.min(thisPath.start, resolved?.x[0] ?? Number.MAX_SAFE_INTEGER);
+    thisPath.end = Math.max(
+      thisPath.end,
+      resolved?.x[resolved.x.length - 1] ?? Number.MIN_SAFE_INTEGER,
+    );
     start = Math.min(start, thisPath.start);
     end = Math.max(end, thisPath.end);
   }
@@ -150,13 +155,11 @@ function mergePlotData(a: PlotData, b: PlotData): PlotData {
   };
 }
 
-const memoFindXRanges = memoizeWeak(findXRanges);
-
 // Sort by start time, then end time, so that folding from the left gives us the
 // right consolidated interval.
 function compare(a: Im<PlotData>, b: Im<PlotData>): number {
-  const rangeA = memoFindXRanges(a).all;
-  const rangeB = memoFindXRanges(b).all;
+  const rangeA = findXRanges(a).all;
+  const rangeB = findXRanges(b).all;
   const startCompare = rangeA.start - rangeB.start;
   return startCompare !== 0 ? startCompare : rangeA.end - rangeB.end;
 }
