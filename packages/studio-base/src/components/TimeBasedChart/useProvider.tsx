@@ -12,8 +12,8 @@
 //   You may not use this file except in compliance with the License.
 
 import { ChartDataset, ChartData } from "chart.js";
-import * as React from "react";
 import * as R from "ramda";
+import * as React from "react";
 
 import { iterateNormal, iterateTyped } from "@foxglove/studio-base/components/Chart/datasets";
 import type { ObjectData, TypedData } from "@foxglove/studio-base/components/Chart/types";
@@ -154,14 +154,14 @@ export default function useProvider<T>(
         partial: oldPartial != undefined ? mergeState(oldPartial, newPartial) : newPartial,
       };
     });
-  }, []);
+  }, [mergeState]);
 
   React.useEffect(() => {
     if (provider == undefined) {
       return;
     }
     provider.register(setFull, addPartial);
-  }, [provider, addPartial]);
+  }, [provider, addPartial, setFull]);
 
   React.useEffect(() => {
     if (provider == undefined) {
@@ -197,5 +197,5 @@ export default function useProvider<T>(
       bounds,
       data,
     };
-  }, [data, state, getDatasetBounds]);
+  }, [data, state, getDatasetBounds, mergeState]);
 }

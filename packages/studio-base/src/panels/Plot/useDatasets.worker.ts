@@ -5,6 +5,7 @@
 import * as Comlink from "comlink";
 import * as R from "ramda";
 
+import { compare as compareTimes, subtract as subtractTimes, fromSec } from "@foxglove/rostime";
 import { Immutable } from "@foxglove/studio";
 import { iterateTyped } from "@foxglove/studio-base/components/Chart/datasets";
 import { RosPath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
@@ -21,7 +22,6 @@ import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables"
 import { Topic, MessageEvent } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import { enumValuesByDatatypeAndField } from "@foxglove/studio-base/util/enums";
-import { compare as compareTimes, subtract as subtractTimes, fromSec } from "@foxglove/rostime";
 
 import { resolveTypedIndices } from "./datasets";
 import {
@@ -293,6 +293,7 @@ function rebuild(id: string) {
   });
 }
 
+// eslint-disable-next-line @foxglove/no-boolean-parameters
 function setLive(value: boolean): void {
   isLive = value;
 }
@@ -410,7 +411,9 @@ function clearCurrent(): void {
 function addCurrent(events: readonly MessageEvent[]): void {
   for (const message of events) {
     const { topic } = message;
-    current[topic] ??= [];
+    if (current[topic] == undefined) {
+      current[topic] = [];
+    }
     current[topic]?.push(message);
   }
 

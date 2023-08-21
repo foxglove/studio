@@ -12,13 +12,13 @@ import { Immutable } from "@foxglove/studio";
 import { useMessageReducer as useCurrent, useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
 import { useBlocksByTopic as useBlocks } from "@foxglove/studio-base/PanelAPI/useBlocksByTopic";
 import { getTopicsFromPaths } from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
-import { TypedDataProvider } from "@foxglove/studio-base/components/TimeBasedChart/types";
-import useGlobalVariables from "@foxglove/studio-base/hooks/useGlobalVariables";
-import { MessageEvent } from "@foxglove/studio-base/players/types";
 import {
   useMessagePipeline,
   MessagePipelineContext,
 } from "@foxglove/studio-base/components/MessagePipeline";
+import { TypedDataProvider } from "@foxglove/studio-base/components/TimeBasedChart/types";
+import useGlobalVariables from "@foxglove/studio-base/hooks/useGlobalVariables";
+import { MessageEvent } from "@foxglove/studio-base/players/types";
 
 import { PlotParams, Messages } from "./internalTypes";
 import { getPaths, PlotData } from "./plotData";
@@ -109,7 +109,7 @@ function useData(id: string, topics: readonly string[]) {
         void service?.addCurrent(messages);
         return 1;
       },
-      [isLive],
+      [],
     ),
   });
 
