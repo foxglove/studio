@@ -72,6 +72,7 @@ type Client = {
   queueRebuild: () => void;
 };
 
+let isLive: boolean = false;
 let clients: Record<string, Client> = {};
 let globalVariables: GlobalVariables = {};
 let blocks: Messages = {};
@@ -292,6 +293,10 @@ function rebuild(id: string) {
   });
 }
 
+function setLive(value: boolean): void {
+  isLive = value;
+}
+
 function unregister(id: string): void {
   const { [id]: _, ...rest } = clients;
   clients = rest;
@@ -409,6 +414,22 @@ function addCurrent(events: readonly MessageEvent[]): void {
     current[topic]?.push(message);
   }
 
+  if (!isLive) {
+    for (const client of R.values(clients)) {
+      const { params } = client;
+      if (params == undefined) {
+        continue;
+      }
+
+      mutateClient(client.id, {
+        ...client,
+        current: accumulate(client.current, params, current),
+      });
+      client.queueRebuild();
+    }
+    return;
+  }
+
   for (const client of R.values(clients)) {
     const { params, current: previous } = client;
     if (params == undefined) {
@@ -465,6 +486,10 @@ function updateView(id: string, view: View): void {
 const CULL_THRESHOLD = fromSec(10);
 
 function compressClients(): void {
+  if (!isLive) {
+    return;
+  }
+
   current = R.map((messages) => {
     if (messages.length > 10000) {
       return messages.slice(messages.length - 10000);
@@ -534,6 +559,7 @@ export const service = {
   receiveMetadata,
   receiveVariables,
   register,
+  setLive,
   unregister,
   updateParams,
   updateView,
