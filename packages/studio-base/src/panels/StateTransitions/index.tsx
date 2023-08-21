@@ -203,7 +203,15 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
   const decodeMessagePathsForMessagesByTopic = useDecodeMessagePathsForMessagesByTopic(pathStrings);
 
   const subscriptions: SubscribePayload[] = useMemo(
-    () => filterMap(pathStrings, (path) => subscribePayloadFromMessagePath(path, "full")),
+    () =>
+      filterMap(pathStrings, (path) => {
+        const payload = subscribePayloadFromMessagePath(path, "full");
+        // Include the header in case we are ordering by header stamp.
+        if (payload?.fields != undefined) {
+          payload.fields.push("header");
+        }
+        return payload;
+      }),
     [pathStrings],
   );
 
