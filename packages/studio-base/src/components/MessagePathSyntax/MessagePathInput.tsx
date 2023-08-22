@@ -163,6 +163,8 @@ function getExamplePrimitive(primitiveType: RosPrimitive) {
     case "int32":
     case "int64":
       return "0";
+    case "json":
+      return "";
   }
 }
 
