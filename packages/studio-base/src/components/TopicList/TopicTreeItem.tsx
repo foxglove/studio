@@ -49,12 +49,15 @@ export function TopicTreeItem(props: NodeRendererProps<TreeData>): JSX.Element {
     <div
       style={style}
       ref={connectDragSource}
-      className={cx(classes.node, node.state)}
+      className={cx(classes.node, {
+        ...node.state,
+        isTopLevel: node.level === 0,
+      })}
       onClick={() => node.isInternal && node.toggle()}
     >
       <span className={classes.icon}>{Icon}</span>
       {node.level === 0 ? (
-        <Stack className={classes.content}>
+        <Stack flex="auto" overflow="hidden">
           <Typography variant="body2" noWrap>
             {node.data.name}
             {node.data.aliasedFromName != undefined && (
@@ -63,12 +66,12 @@ export function TopicTreeItem(props: NodeRendererProps<TreeData>): JSX.Element {
               </Typography>
             )}
           </Typography>
-          <Typography variant="caption" color="text.secondary" noWrap>
+          <Typography variant="caption" color="text.secondary">
             {node.data.schemaName}
           </Typography>
         </Stack>
       ) : (
-        <Stack direction="row" gap={1} className={classes.content}>
+        <Stack flex="auto" direction="row" gap={2} overflow="hidden">
           <Typography variant="body2">{node.data.name}</Typography>
           <Typography variant="caption" color="text.secondary">
             {node.data.schemaName}
@@ -87,11 +90,7 @@ export function TopicTreeItem(props: NodeRendererProps<TreeData>): JSX.Element {
                 <div data-topic={node.data.name} data-topic-stat="frequency">
                   &mdash;
                 </div>
-                <Divider
-                  orientation="vertical"
-                  flexItem
-                  style={{ borderColor: "currentColor", marginBlock: -1 }}
-                />
+                <Divider orientation="vertical" flexItem style={{ borderColor: "currentColor" }} />
                 <div data-topic={node.data.name} data-topic-stat="count">
                   &mdash;
                 </div>

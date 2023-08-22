@@ -6,71 +6,72 @@
 
 import { makeStyles } from "tss-react/mui";
 
-export const useTreeStyles = makeStyles<void, "dragHandle" | "node">()((theme, _, classes) => ({
-  root: {},
-  aliasedTopicName: {
-    color: theme.palette.primary.main,
-    display: "block",
-    textAlign: "start",
-  },
-  icon: {
-    alignItems: "center",
-    justifyContent: "center",
-    display: "flex",
-    padding: theme.spacing(0.75),
-  },
-  row: {
-    whiteSpace: "nowrap",
-    cursor: "pointer",
+export const useTreeStyles = makeStyles<void, "dragHandle" | "node" | "stats">()(
+  (theme, _, classes) => ({
+    root: {
+      containerType: "inline-size",
+    },
+    aliasedTopicName: {
+      color: theme.palette.primary.main,
+      display: "block",
+      textAlign: "start",
+    },
+    icon: {
+      alignItems: "center",
+      justifyContent: "center",
+      display: "flex",
+      padding: theme.spacing(0.75),
+    },
+    row: {
+      boxSizing: "border-box",
+      whiteSpace: "nowrap",
+      cursor: "pointer",
+      borderBottom: `thin solid ${theme.palette.divider}`,
 
-    ":hover": {
-      [`& .${classes.node}`]: {
-        background: theme.palette.action.hover,
+      ":hover": {
+        [`& .${classes.node}`]: {
+          background: theme.palette.action.hover,
+        },
       },
-    },
-    [`:not(:hover) .${classes.node} .${classes.dragHandle}`]: {
-      visibility: "hidden",
-    },
-    ":focus": {
-      outline: "none",
-
-      [`.${classes.node}`]: {
-        background: theme.palette.action.focus,
-
-        "&.isSelected": {
-          background: theme.palette.action.selected,
+      [`:not(:hover) .${classes.node} .${classes.dragHandle}`]: {
+        visibility: "hidden",
+      },
+      ":focus": {
+        outline: "none",
+      },
+      [`@container (max-width: 375px)`]: {
+        [`.${classes.stats}`]: {
+          display: "none",
         },
       },
     },
-  },
-  content: {
-    display: "flex",
-    overflow: "hidden",
-    flex: "auto",
-  },
-  node: {
-    position: "relative",
-    display: "flex",
-    alignItems: "center",
-    height: "100%",
-    boxShadow: `inset 0 -1px 0 0 ${theme.palette.divider}`,
-    gap: theme.spacing(0.75),
-    paddingRight: theme.spacing(0.75),
+    node: {
+      position: "relative",
+      display: "flex",
+      alignItems: "center",
+      height: "100%",
+      gap: theme.spacing(0.75),
+      paddingRight: theme.spacing(0.75),
 
-    "&.willReceiveDrop": {
-      background: theme.palette.action.focus,
+      "&.willReceiveDrop": {
+        background: theme.palette.action.focus,
+      },
+      "&.isSelected": {
+        // background: theme.palette.action.selected,
+      },
+      "&:not(.isTopLevel)": {
+        backgroundColor:
+          theme.palette.mode === "dark" ? theme.palette.grey[500] : theme.palette.grey[50],
+      },
+      "&.isSelectedStart": {},
+      "&.isSelectedEnd": {},
+      "&.isSelectedStart.isSelectedEnd": {},
     },
-    "&.isSelected": {
-      background: theme.palette.action.selected,
+    dragHandle: {
+      opacity: 0.5,
     },
-    "&.isSelectedStart": {},
-    "&.isSelectedEnd": {},
-    "&.isSelectedStart.isSelectedEnd": {},
-  },
-  dragHandle: {
-    opacity: 0.5,
-  },
-  stats: {
-    display: "flex",
-  },
-}));
+    stats: {
+      display: "flex",
+    },
+  }),
+);
