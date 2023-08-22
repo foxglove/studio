@@ -37,6 +37,31 @@ import TableCell from "./TableCell";
 import { sanitizeAccessorPath } from "./sanitizeAccessorPath";
 import { CellValue } from "./types";
 
+type TypedArray =
+  | Int8Array
+  | Uint8Array
+  | Uint8ClampedArray
+  | Int16Array
+  | Uint16Array
+  | Int32Array
+  | Uint32Array
+  | Float32Array
+  | Float64Array;
+
+function isTypedArray(value: unknown): value is TypedArray {
+  return (
+    value instanceof Uint8Array ||
+    value instanceof Uint8ClampedArray ||
+    value instanceof Int8Array ||
+    value instanceof Uint16Array ||
+    value instanceof Int16Array ||
+    value instanceof Uint32Array ||
+    value instanceof Int32Array ||
+    value instanceof Float32Array ||
+    value instanceof Float64Array
+  );
+}
+
 const useStyles = makeStyles<void, "tableData" | "tableHeader">()((theme, _params, classes) => ({
   table: {
     border: "none",
@@ -111,7 +136,7 @@ const columnHelper = createColumnHelper<CellValue>();
 
 function getColumnsFromObject(val: CellValue, accessorPath: string, iconButtonClasses: string) {
   const obj = val.toJSON?.() ?? val;
-  if (ArrayBuffer.isView(obj) && !(obj instanceof DataView)) {
+  if (isTypedArray(obj)) {
     return [
       columnHelper.display({
         id: "typedArray",
@@ -119,7 +144,7 @@ function getColumnsFromObject(val: CellValue, accessorPath: string, iconButtonCl
         enableSorting: false,
         enableColumnFilter: false,
         cell: ({ row }) => {
-          return <span>{`${(obj as Uint8Array)[row.index]}`}</span>;
+          return <span>{`${obj[row.index]}`}</span>;
         },
       }),
     ];
@@ -208,8 +233,7 @@ export default function Table({
   }, [accessorPath, classes.iconButton, value]);
 
   const data = React.useMemo(() => {
-    const isTypedArray = ArrayBuffer.isView(value) && !(value instanceof DataView);
-    return Array.isArray(value) ? value : isTypedArray ? Array.from(value as Uint8Array) : [value];
+    return Array.isArray(value) ? value : isTypedArray(value) ? Array.from(value) : [value];
   }, [value]);
 
   const [expanded, setExpanded] = React.useState<ExpandedState>({});
