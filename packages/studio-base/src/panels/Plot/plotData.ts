@@ -282,7 +282,7 @@ export function resolvePath(
       {
         queriedData: items,
         receiveTime: message.receiveTime,
-        headerStamp: getTimestampForMessage(message),
+        headerStamp: getTimestampForMessage(message.message),
       },
     ];
   }, messages);
