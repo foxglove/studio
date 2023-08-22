@@ -111,6 +111,19 @@ const columnHelper = createColumnHelper<CellValue>();
 
 function getColumnsFromObject(val: CellValue, accessorPath: string, iconButtonClasses: string) {
   const obj = val.toJSON?.() ?? val;
+  if (ArrayBuffer.isView(obj) && !(obj instanceof DataView)) {
+    return [
+      columnHelper.display({
+        id: "typedArray",
+        header: "",
+        enableSorting: false,
+        enableColumnFilter: false,
+        cell: ({ row }) => {
+          return <span>{`${(obj as Uint8Array)[row.index]}`}</span>;
+        },
+      }),
+    ];
+  }
   const columns = Object.keys(obj).map((accessor) => {
     const id = accessorPath.length !== 0 ? `${accessorPath}.${accessor}` : accessor;
     return columnHelper.accessor(accessor, {
@@ -194,7 +207,10 @@ export default function Table({
     return getColumnsFromObject(maybeMessage as CellValue, accessorPath, classes.iconButton);
   }, [accessorPath, classes.iconButton, value]);
 
-  const data = React.useMemo(() => (Array.isArray(value) ? value : [value]), [value]);
+  const data = React.useMemo(() => {
+    const isTypedArray = ArrayBuffer.isView(value) && !(value instanceof DataView);
+    return Array.isArray(value) ? value : isTypedArray ? Array.from(value as Uint8Array) : [value];
+  }, [value]);
 
   const [expanded, setExpanded] = React.useState<ExpandedState>({});
 
