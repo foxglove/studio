@@ -301,7 +301,7 @@ export function UnconnectedPlaybackTimeDisplay({
           variant="filled"
           size="small"
           defaultValue={
-            appTimeFormat.timeFormat === "SEC" ? "0000000000.000000000" : "00:00:00.000"
+            appTimeFormat.timeFormat === "SEC" ? "0000000000.000000000" : "0000-00-00 00:00:00.000"
           }
           InputProps={{
             endAdornment: (
