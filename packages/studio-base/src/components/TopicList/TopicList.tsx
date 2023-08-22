@@ -4,7 +4,16 @@
 
 import ClearIcon from "@mui/icons-material/Clear";
 import SearchIcon from "@mui/icons-material/Search";
-import { IconButton, List, ListItem, ListItemText, Skeleton, TextField } from "@mui/material";
+import {
+  IconButton,
+  List,
+  ListItem,
+  ListItemText,
+  Skeleton,
+  TextField,
+  listItemClasses,
+  listItemTextClasses,
+} from "@mui/material";
 import { uniqueId } from "lodash";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Tree, TreeApi } from "react-arborist";
@@ -39,19 +48,9 @@ const useStyles = makeStyles()((theme) => ({
   listItem: {
     paddingRight: theme.spacing(1),
 
-    "&.MuiListItem-dense": {
-      ".MuiListItemText-root": {
-        marginTop: theme.spacing(0.5),
-        marginBottom: theme.spacing(0.5),
-      },
-    },
-    ".MuiListItemSecondaryAction-root": {
-      marginRight: theme.spacing(-1),
-    },
-  },
-  textField: {
-    ".MuiOutlinedInput-notchedOutline": {
-      border: "none",
+    [`&.${listItemClasses.dense} .${listItemTextClasses.root}`]: {
+      marginTop: theme.spacing(0.5),
+      marginBottom: theme.spacing(0.5),
     },
   },
 }));
@@ -151,7 +150,7 @@ export function TopicList(): JSX.Element {
         <header className={classes.appBar}>
           <TextField
             disabled
-            className={classes.textField}
+            variant="filled"
             fullWidth
             placeholder="Waiting for data..."
             InputProps={{
@@ -184,7 +183,6 @@ export function TopicList(): JSX.Element {
           disabled={playerPresence !== PlayerPresence.PRESENT}
           onChange={(event) => setFilterText(event.target.value)}
           value={filterText}
-          className={classes.textField}
           fullWidth
           placeholder="Filter by topic or schema name…"
           InputProps={{

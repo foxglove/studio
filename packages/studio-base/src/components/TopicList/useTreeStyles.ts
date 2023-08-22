@@ -54,6 +54,8 @@ export const useTreeStyles = makeStyles<void, "dragHandle" | "node">()((theme, _
     alignItems: "center",
     height: "100%",
     boxShadow: `inset 0 -1px 0 0 ${theme.palette.divider}`,
+    gap: theme.spacing(0.75),
+    paddingRight: theme.spacing(0.75),
 
     "&.willReceiveDrop": {
       background: theme.palette.action.focus,
@@ -67,7 +69,6 @@ export const useTreeStyles = makeStyles<void, "dragHandle" | "node">()((theme, _
   },
   dragHandle: {
     opacity: 0.5,
-    marginInline: theme.spacing(0.75),
   },
   stats: {
     display: "flex",

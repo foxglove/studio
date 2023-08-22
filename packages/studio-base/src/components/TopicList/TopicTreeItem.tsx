@@ -55,7 +55,7 @@ export function TopicTreeItem(props: NodeRendererProps<TreeData>): JSX.Element {
       <span className={classes.icon}>{Icon}</span>
       {node.level === 0 ? (
         <Stack className={classes.content}>
-          <Typography variant="body2">
+          <Typography variant="body2" noWrap>
             {node.data.name}
             {node.data.aliasedFromName != undefined && (
               <Typography variant="caption" className={classes.aliasedTopicName}>
@@ -63,7 +63,7 @@ export function TopicTreeItem(props: NodeRendererProps<TreeData>): JSX.Element {
               </Typography>
             )}
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" color="text.secondary" noWrap>
             {node.data.schemaName}
           </Typography>
         </Stack>
