@@ -19,7 +19,7 @@ import {
 } from "@foxglove/studio-base/components/TopicList";
 import { useTreeStyles } from "@foxglove/studio-base/components/TopicList/useTreeStyles";
 
-import { TreeData } from "./TopicList";
+import { TreeData } from "./types";
 
 export function TopicTreeItem(props: NodeRendererProps<TreeData>): JSX.Element {
   const { node, style } = props;

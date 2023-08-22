@@ -27,6 +27,7 @@ import { useTreeStyles } from "@foxglove/studio-base/components/TopicList/useTre
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
 
 import { TopicTreeItem } from "./TopicTreeItem";
+import { TreeData } from "./types";
 
 const useStyles = makeStyles()((theme) => ({
   appBar: {
@@ -59,18 +60,6 @@ const useStyles = makeStyles()((theme) => ({
 const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => playerState.presence;
 const selectSortedTopics = ({ sortedTopics }: MessagePipelineContext) => sortedTopics;
 const selectDatatypes = ({ datatypes }: MessagePipelineContext) => datatypes;
-
-export type TreeData = {
-  id: string;
-  name: string;
-  aliasedFromName?: string;
-  schemaName?: string;
-  isComplex?: boolean;
-  isArray?: boolean;
-  isConstant?: boolean;
-  children?: TreeData[];
-  messagePath: string;
-};
 
 // const MemoTopicListItem = React.memo(TopicListItem);
 
