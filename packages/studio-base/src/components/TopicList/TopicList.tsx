@@ -398,7 +398,7 @@ export function TopicList(): JSX.Element {
             height={height}
             width={width}
             initialData={topicTree}
-            ref={(t) => setTree(t)}
+            ref={(t) => setTree(t ?? undefined)}
             openByDefault={false}
             searchTerm={filterText}
             selection={active?.name}
@@ -406,6 +406,7 @@ export function TopicList(): JSX.Element {
             rowClassName={classes.row}
             padding={0}
             rowHeight={44}
+            variableRowHeight={(node) => (node.level === 0 ? 44 : 24)}
             indent={INDENT_STEP}
             overscanCount={8}
             disableDrop
