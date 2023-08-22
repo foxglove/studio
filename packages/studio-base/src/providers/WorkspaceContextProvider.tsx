@@ -16,7 +16,6 @@ import { migrateV0WorkspaceState } from "@foxglove/studio-base/context/Workspace
 /**
  * Creates the default initial state for the workspace store.
  */
-// ts-unused-exports:disable-next-line
 export function makeWorkspaceContextInitialState(): WorkspaceContextStore {
   return {
     dialogs: {
