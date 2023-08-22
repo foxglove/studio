@@ -223,6 +223,8 @@ export class IterablePlayer implements Player {
     // finish and it will see that we should be playing
     if (this.#state === "idle" && (!this.#nextState || this.#nextState === "idle")) {
       this.#setState("play");
+    } else {
+      this.#queueEmitState(); // update isPlaying state to UI
     }
   }
 
@@ -238,6 +240,8 @@ export class IterablePlayer implements Player {
     this.#lastRangeMillis = undefined;
     if (this.#state === "play") {
       this.#setState("idle");
+    } else {
+      this.#queueEmitState(); // update isPlaying state to UI
     }
   }
 
