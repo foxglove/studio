@@ -14,8 +14,6 @@ import {
 import { CSSProperties } from "react";
 import tinycolor from "tinycolor2";
 
-import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
-
 type MuiLabComponents = {
   MuiFocusVisible?: {
     styleOverrides?: {
