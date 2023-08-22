@@ -250,26 +250,20 @@ export const PerformanceTesting: MsgPathInputStoryObj = {
   play: clickInput,
 };
 
-export const AutocompleteForMessageWithJsonField: StoryObj = {
-  render: function Story() {
-    return <MessagePathInputStory path="/some_logs_topic." />;
-  },
-
-  name: "autocomplete for message with json field",
+export const AutocompleteForMessageWithJsonField: MsgPathInputStoryObj = {
+  render: MessagePathInputStory,
+  args: { path: "/some_logs_topic." },
+  play: clickInput,
 };
 
-export const PathForFieldInsideJsonObject: StoryObj = {
-  render: function Story() {
-    return <MessagePathInputStory path="/some_logs_topic.myJson" />;
-  },
-
+export const PathForFieldInsideJsonObject: MsgPathInputStoryObj = {
+  render: MessagePathInputStory,
+  args: { path: "/some_logs_topic.myJson" },
   name: "path for field inside json object",
 };
 
-export const PathForMultipleLevelsOfNestedFieldsInsideJsonObject: StoryObj = {
-  render: function Story() {
-    return <MessagePathInputStory path="/some_logs_topic.myJson.a.b.c" />;
-  },
-
+export const PathForMultipleLevelsOfNestedFieldsInsideJsonObject: MsgPathInputStoryObj = {
+  render: MessagePathInputStory,
+  args: { path: "/some_logs_topic.myJson.a.b.c" },
   name: "path for multiple levels of nested fields inside json object",
 };
