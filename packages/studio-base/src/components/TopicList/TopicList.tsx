@@ -12,8 +12,8 @@ import { useResizeDetector } from "react-resize-detector";
 import { makeStyles } from "tss-react/mui";
 
 import { filterMap } from "@foxglove/den/collection";
+import { DirectTopicStatsUpdater } from "@foxglove/studio-base/components/DirectTopicStatsUpdater";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
-// import { HighlightChars } from "@foxglove/studio-base/components/HighlightChars";
 import {
   quoteFieldNameIfNeeded,
   quoteTopicNameIfNeeded,
@@ -34,7 +34,6 @@ const useStyles = makeStyles()((theme) => ({
     top: 0,
     zIndex: theme.zIndex.appBar,
     padding: theme.spacing(0.5),
-    position: "sticky",
     backgroundColor: theme.palette.background.paper,
   },
   listItem: {
@@ -252,7 +251,7 @@ export function TopicList(): JSX.Element {
           {playerPresence === PlayerPresence.RECONNECTING && "Waiting for connection"}
         </EmptyState>
       )}
-      {/* <DirectTopicStatsUpdater interval={6} /> */}
+      <DirectTopicStatsUpdater interval={6} />
     </Stack>
   );
 }

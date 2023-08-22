@@ -15,7 +15,7 @@ import BorderAllIcon from "@mui/icons-material/BorderAll";
 import DeleteForeverOutlinedIcon from "@mui/icons-material/DeleteForeverOutlined";
 import LibraryAddOutlinedIcon from "@mui/icons-material/LibraryAddOutlined";
 import TabIcon from "@mui/icons-material/Tab";
-import { Button, useTheme } from "@mui/material";
+import { Button, Fade, useTheme } from "@mui/material";
 import { last } from "lodash";
 import React, {
   ComponentType,
@@ -136,7 +136,8 @@ const useStyles = makeStyles()((theme) => ({
   messagePathDropOverlay: {
     position: "absolute",
     inset: 0,
-    backgroundColor: "#ff000066",
+    zIndex: theme.zIndex.modal,
+    backgroundColor: theme.palette.action.hover,
   },
 }));
 
@@ -647,7 +648,9 @@ export default function Panel<
                     </Stack>
                   </div>
                 )}
-                {isDraggingMessagePath && <div className={classes.messagePathDropOverlay}></div>}
+                <Fade in={isDraggingMessagePath}>
+                  <div className={classes.messagePathDropOverlay} />
+                </Fade>
                 {type !== TAB_PANEL_TYPE && quickActionsKeyPressed && !fullscreen && (
                   <div
                     className={classes.actionsOverlay}

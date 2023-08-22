@@ -32,8 +32,9 @@ export const useTreeStyles = makeStyles<void, "dragHandle" | "node">()((theme, _
       visibility: "hidden",
     },
     ":focus": {
+      outline: "none",
+
       [`.${classes.node}`]: {
-        outline: "none",
         background: theme.palette.action.focus,
 
         "&.isSelected": {
@@ -66,6 +67,9 @@ export const useTreeStyles = makeStyles<void, "dragHandle" | "node">()((theme, _
   },
   dragHandle: {
     opacity: 0.5,
-    marginRight: theme.spacing(0.5),
+    marginInline: theme.spacing(0.75),
+  },
+  stats: {
+    display: "flex",
   },
 }));

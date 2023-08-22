@@ -14,6 +14,8 @@ import {
 import { CSSProperties } from "react";
 import tinycolor from "tinycolor2";
 
+import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
+
 type MuiLabComponents = {
   MuiFocusVisible?: {
     styleOverrides?: {
@@ -189,6 +191,26 @@ export default function muiComponents(theme: Theme): Theme["components"] & MuiLa
       styleOverrides: {
         root: {
           ...iconHack,
+        },
+      },
+    },
+    MuiChip: {
+      styleOverrides: {
+        sizeMedium: {
+          height: 20,
+        },
+        sizeSmall: {
+          height: 16,
+        },
+        label: {
+          paddingInline: theme.spacing(1),
+        },
+        labelSmall: {
+          fontSize: theme.typography.caption.fontSize,
+          paddingInline: theme.spacing(0.75),
+        },
+        labelMedium: {
+          fontSize: theme.typography.body2.fontSize,
         },
       },
     },

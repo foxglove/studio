@@ -7,7 +7,7 @@ import {
   ChevronRight12Regular,
   ReOrderDotsVertical16Regular,
 } from "@fluentui/react-icons";
-import { Typography } from "@mui/material";
+import { Chip, Divider, Typography } from "@mui/material";
 import { useMemo } from "react";
 import { NodeRendererProps } from "react-arborist";
 import { useDrag } from "react-dnd";
@@ -45,13 +45,15 @@ export function TopicTreeItem(props: NodeRendererProps<TreeData>): JSX.Element {
     options: { dropEffect: "copy" },
   });
 
-  if (node.level === 0) {
-    return (
-      <div
-        className={cx(classes.node, { ...node.state })}
-        onClick={() => node.isInternal && node.toggle()}
-      >
-        <span className={classes.icon}>{Icon}</span>
+  return (
+    <div
+      style={style}
+      ref={connectDragSource}
+      className={cx(classes.node, node.state)}
+      onClick={() => node.isInternal && node.toggle()}
+    >
+      <span className={classes.icon}>{Icon}</span>
+      {node.level === 0 ? (
         <Stack className={classes.content}>
           <Typography variant="body2">
             {node.data.name}
@@ -63,49 +65,42 @@ export function TopicTreeItem(props: NodeRendererProps<TreeData>): JSX.Element {
           </Typography>
           <Typography variant="caption" color="text.secondary">
             {node.data.schemaName}
+          </Typography>
+        </Stack>
+      ) : (
+        <Stack direction="row" gap={1} className={classes.content}>
+          <Typography variant="body2">{node.data.name}</Typography>
+          <Typography variant="caption" color="text.secondary">
+            {node.data.schemaName}
             {node.data.isArray === true && "[]"}
           </Typography>
         </Stack>
-      </div>
-    );
-  }
-
-  return (
-    <div
-      style={style}
-      ref={connectDragSource}
-      className={cx(classes.node, { topLevel: node.level === 0, ...node.state })}
-      onClick={() => node.isInternal && node.toggle()}
-    >
-      <span className={classes.icon}>{Icon}</span>
-      <Stack direction="row" gap={1} className={classes.content}>
-        <Typography variant="body2">{node.data.name}</Typography>
-        <Typography variant="caption" color="text.secondary">
-          {node.data.schemaName}
-          {node.data.isArray === true && "[]"}
-        </Typography>
-      </Stack>
-      {/* {node.level === 0 && (
-        <Stack style={{ textAlign: "right" }}>
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            data-topic={data.name}
-            data-topic-stat="count"
-          >
-            &mdash;
-          </Typography>
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            data-topic={data.name}
-            data-topic-stat="frequency"
-          >
-            &mdash;
-          </Typography>
-        </Stack>
-      )} */}
-      {node.isLeaf && <ReOrderDotsVertical16Regular className={classes.dragHandle} />}
+      )}
+      {node.level === 0 && (
+        <div className={classes.stats}>
+          <Chip
+            color="secondary"
+            variant="outlined"
+            size="small"
+            label={
+              <Stack direction="row" alignItems="center" gap={0.75}>
+                <div data-topic={node.data.name} data-topic-stat="frequency">
+                  &mdash;
+                </div>
+                <Divider
+                  orientation="vertical"
+                  flexItem
+                  style={{ borderColor: "currentColor", marginBlock: -1 }}
+                />
+                <div data-topic={node.data.name} data-topic-stat="count">
+                  &mdash;
+                </div>
+              </Stack>
+            }
+          />
+        </div>
+      )}
+      <ReOrderDotsVertical16Regular className={classes.dragHandle} />
     </div>
   );
 }
