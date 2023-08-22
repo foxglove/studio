@@ -2762,7 +2762,7 @@ __metadata:
     path-browserify: 1.0.1
     prettier: 2.8.8
     react: 17.0.2
-    react-arborist: 3.2.0
+    react-arborist: "github:foxglove/react-arborist#workspace=react-arborist&commit=a3990160076f3b03049a9651cb84ba76a1e83bd8"
     react-colorful: 5.6.1
     react-dnd: 16.0.1
     react-dnd-html5-backend: 16.0.1
@@ -17829,9 +17829,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-arborist@npm:3.2.0":
+"react-arborist@github:foxglove/react-arborist#workspace=react-arborist&commit=a3990160076f3b03049a9651cb84ba76a1e83bd8":
   version: 3.2.0
-  resolution: "react-arborist@npm:3.2.0"
+  resolution: "react-arborist@https://github.com/foxglove/react-arborist.git#workspace=react-arborist&commit=a3990160076f3b03049a9651cb84ba76a1e83bd8"
   dependencies:
     react-dnd: ^14.0.3
     react-dnd-html5-backend: ^14.0.1
@@ -17841,7 +17841,7 @@ __metadata:
   peerDependencies:
     react: ">= 16.14"
     react-dom: ">= 16.14"
-  checksum: 452e8793520b4d69ad897b7bf2584a6ec763f182d6a4e942229e283fe000d579724a3c5c125504a59b66ef68ff898cef41575ccfca5e18a564c1f9e223ef62ca
+  checksum: 7737f81a3bd4de08926f4e34679f7ba0ae2e51def980ef82a329a251272231c910c19b8aa599ab27f58891a35b7cda56710a640eb9a9a1ca358cabe368043dfb
   languageName: node
   linkType: hard
 

@@ -409,6 +409,7 @@ export function TopicList(): JSX.Element {
             variableRowHeight={(node) => (node.level === 0 ? 44 : 24)}
             indent={INDENT_STEP}
             overscanCount={8}
+            disableDrag
             disableDrop
             disableEdit
             onSelect={(selected) => setSelectedCount(selected.length)}

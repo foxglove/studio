@@ -140,7 +140,7 @@
     "path-browserify": "1.0.1",
     "prettier": "2.8.8",
     "react": "17.0.2",
-    "react-arborist": "github:foxglove/react-arborist#workspace=react-arborist&commit=92b1111da35eaad3761d543925c477d0cbe6f5de",
+    "react-arborist": "github:foxglove/react-arborist#workspace=react-arborist&commit=a3990160076f3b03049a9651cb84ba76a1e83bd8",
     "react-colorful": "5.6.1",
     "react-dnd": "16.0.1",
     "react-dnd-html5-backend": "16.0.1",
