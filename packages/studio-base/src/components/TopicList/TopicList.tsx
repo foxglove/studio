@@ -29,16 +29,26 @@ import {
   useState,
 } from "react";
 import { NodeRendererProps, Tree, TreeApi } from "react-arborist";
+import { useDrag } from "react-dnd";
 import { useResizeDetector } from "react-resize-detector";
 import { makeStyles } from "tss-react/mui";
 
+import { filterMap } from "@foxglove/den/collection";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
 // import { HighlightChars } from "@foxglove/studio-base/components/HighlightChars";
+import {
+  quoteFieldNameIfNeeded,
+  quoteTopicNameIfNeeded,
+} from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
 import {
   MessagePipelineContext,
   useMessagePipeline,
 } from "@foxglove/studio-base/components/MessagePipeline";
 import Stack from "@foxglove/studio-base/components/Stack";
+import {
+  MESSAGE_PATH_DRAG_TYPE,
+  MessagePathDragObject,
+} from "@foxglove/studio-base/components/TopicList";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
 // import { Topic } from "@foxglove/studio-base/src/players/types";
 // import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
@@ -264,6 +274,7 @@ type TreeData = {
   isArray?: boolean;
   isConstant?: boolean;
   children?: TreeData[];
+  messagePath: string;
 };
 
 // const MemoTopicListItem = React.memo(TopicListItem);
@@ -291,30 +302,53 @@ export function TopicList(): JSX.Element {
   const datatypes = useMessagePipeline(selectDatatypes);
 
   const generateChildren = useCallback(
-    (schemaName: string): TreeData[] | undefined =>
-      datatypes
-        .get(schemaName)
-        ?.definitions.filter((d) => d.isConstant !== true)
-        .map((def) => ({
-          id: uniqueId(`${schemaName}-${def.name}-`),
-          name: def.name,
-          schemaName: def.type,
-          isComplex: def.isComplex,
-          isConstant: def.isConstant,
-          isArray: def.isArray,
-          children: def.isComplex === true ? generateChildren(def.type) : undefined,
-        })),
+    (
+      schemaName: string,
+      parentMessagePath: string,
+      // eslint-disable-next-line @foxglove/no-boolean-parameters
+      parentIsArray: boolean,
+    ): TreeData[] | undefined => {
+      const definition = datatypes.get(schemaName);
+      if (!definition) {
+        return undefined;
+      }
+      return filterMap(definition.definitions, (field): TreeData | undefined => {
+        if (field.isConstant === true) {
+          return undefined;
+        }
+        const messagePath = `${parentMessagePath}${
+          parentIsArray ? "[:]" : ""
+        }.${quoteFieldNameIfNeeded(field.name)}`;
+        return {
+          id: uniqueId(`${schemaName}-${field.name}-`),
+          name: field.name,
+          schemaName: field.type,
+          isComplex: field.isComplex,
+          isConstant: field.isConstant,
+          isArray: field.isArray,
+          messagePath,
+          children:
+            field.isComplex === true
+              ? generateChildren(field.type, messagePath, field.isArray ?? false)
+              : undefined,
+        };
+      });
+    },
     [datatypes],
   );
 
   const topicTree: TreeData[] = useMemo(() => {
-    const items = topics.map((topic) => ({
-      id: uniqueId("topic-"),
-      name: topic.name,
-      schemaName: topic.schemaName,
-      aliasedFromName: topic.aliasedFromName,
-      children: generateChildren(topic.schemaName ?? ""),
-    }));
+    const items = topics.map((topic) => {
+      const messagePath = quoteTopicNameIfNeeded(topic.name);
+      return {
+        id: uniqueId("topic-"),
+        name: topic.name,
+        schemaName: topic.schemaName,
+        aliasedFromName: topic.aliasedFromName,
+        children: generateChildren(topic.schemaName ?? "", messagePath, false),
+        messagePath,
+      };
+    });
 
     return items;
   }, [generateChildren, topics]);
@@ -412,7 +446,7 @@ export function TopicList(): JSX.Element {
             variableRowHeight={(node) => (node.level === 0 ? 44 : 24)}
             indent={INDENT_STEP}
             overscanCount={8}
-            disableDrag
+            disableDrag // we implement our own drag & drop on certain nodes only
             disableDrop
             disableEdit
             onSelect={(selected) => setSelectedCount(selected.length)}
@@ -448,7 +482,7 @@ export function TopicList(): JSX.Element {
   );
 }
 
-function Node({ node, style, dragHandle }: NodeRendererProps<TreeData>) {
+function Node({ node, style }: NodeRendererProps<TreeData>) {
   const { cx, classes } = useStyles();
   const indentSize = Number.parseFloat(`${style.paddingLeft ?? 0}`);
 
@@ -464,10 +498,20 @@ function Node({ node, style, dragHandle }: NodeRendererProps<TreeData>) {
     <SvgIcon />
   );
 
+  const dragItem: MessagePathDragObject = useMemo(
+    () => ({ path: node.data.messagePath }),
+    [node.data],
+  );
+  const [, connectDragSource] = useDrag({
+    type: MESSAGE_PATH_DRAG_TYPE,
+    item: dragItem,
+    options: { dropEffect: "copy" },
+  });
+
   return (
     <div
       style={style}
-      ref={dragHandle}
+      ref={connectDragSource}
       className={cx(classes.node, node.state, { topLevel: isTopLevel })}
       // className={clsx(styles.node, node.state)}
       onClick={() => node.isInternal && node.toggle()}

@@ -28,6 +28,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { useDrop } from "react-dnd";
 import {
   getNodeAtPath,
   getOtherBranch,
@@ -42,6 +43,7 @@ import { useMountedState } from "react-use";
 import { makeStyles } from "tss-react/mui";
 
 import { useShallowMemo } from "@foxglove/hooks";
+import { MessagePathDropConfig } from "@foxglove/studio";
 import { useConfigById } from "@foxglove/studio-base/PanelAPI";
 import KeyListener from "@foxglove/studio-base/components/KeyListener";
 import { MosaicPathContext } from "@foxglove/studio-base/components/MosaicPathContext";
@@ -49,6 +51,10 @@ import PanelContext from "@foxglove/studio-base/components/PanelContext";
 import PanelErrorBoundary from "@foxglove/studio-base/components/PanelErrorBoundary";
 import { PanelRoot, PANEL_ROOT_CLASS_NAME } from "@foxglove/studio-base/components/PanelRoot";
 import Stack from "@foxglove/studio-base/components/Stack";
+import {
+  MESSAGE_PATH_DRAG_TYPE,
+  MessagePathDragObject,
+} from "@foxglove/studio-base/components/TopicList";
 import {
   useCurrentLayoutActions,
   useSelectedPanels,
@@ -126,6 +132,11 @@ const useStyles = makeStyles()((theme) => ({
     ".MuiButton-startIcon": {
       margin: 0,
     },
+  },
+  messagePathDropOverlay: {
+    position: "absolute",
+    inset: 0,
+    backgroundColor: "#ff000066",
   },
 }));
 
@@ -462,6 +473,31 @@ export default function Panel<
       [parentPanelContext],
     );
 
+    const [messagePathDropConfig, setMessagePathDropConfig] = useState<
+      MessagePathDropConfig | undefined
+    >();
+
+    const [{ isOver: isDraggingMessagePath }, connectMessagePathDropTarget] = useDrop({
+      accept: MESSAGE_PATH_DRAG_TYPE,
+      canDrop(item: MessagePathDragObject, _monitor) {
+        if (!messagePathDropConfig) {
+          return false;
+        }
+        if (messagePathDropConfig.canDrop(item.path)) {
+          return true;
+        }
+        return false;
+      },
+      collect(monitor) {
+        return {
+          isOver: monitor.isOver({ shallow: true }) && monitor.canDrop(),
+        };
+      },
+      drop(item, _monitor) {
+        messagePathDropConfig?.handleDrop(item.path);
+      },
+    });
+
     // We use two separate sets of key handlers because the panel context and exitFullScreen
     // change often and invalidate our key handlers during user interactions.
     const { keyUpHandlers, keyDownHandlers } = useMemo(
@@ -555,6 +591,7 @@ export default function Panel<
             tabId,
             // disallow dragging the root panel in a layout
             connectToolbarDragHandle: isTopLevelPanel ? undefined : connectToolbarDragHandle,
+            setMessagePathDropConfig,
           }}
         >
           <KeyListener global keyUpHandlers={keyUpHandlers} keyDownHandlers={keyDownHandlers} />
@@ -583,6 +620,7 @@ export default function Panel<
                     connectOverlayDragPreview(el);
                     connectToolbarDragPreview(el);
                   }
+                  connectMessagePathDropTarget(el);
                 }}
               >
                 {isSelected && !fullscreen && numSelectedPanelsIfSelected > 1 && (
@@ -609,6 +647,7 @@ export default function Panel<
                     </Stack>
                   </div>
                 )}
+                {isDraggingMessagePath && <div className={classes.messagePathDropOverlay}></div>}
                 {type !== TAB_PANEL_TYPE && quickActionsKeyPressed && !fullscreen && (
                   <div
                     className={classes.actionsOverlay}

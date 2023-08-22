@@ -238,6 +238,12 @@ export type RenderState = {
   appSettings?: Map<string, AppSettingValue>;
 };
 
+export type DraggedMessagePath = string;
+export type MessagePathDropConfig = {
+  canDrop: (path: DraggedMessagePath) => boolean;
+  handleDrop: (path: DraggedMessagePath) => void;
+};
+
 export type PanelExtensionContext = {
   /**
    * The root element for the panel. Add your panel elements as children under this element.

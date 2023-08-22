@@ -110,6 +110,18 @@ function RawMessages(props: Props) {
   const { topicPath, diffMethod, diffTopicPath, diffEnabled, showFullMessageForDiff } = config;
   const { topics, datatypes } = useDataSourceInfo();
   const updatePanelSettingsTree = usePanelSettingsTreeUpdate();
+  const { setMessagePathDropConfig } = usePanelContext();
+
+  useEffect(() => {
+    setMessagePathDropConfig({
+      canDrop(_path) {
+        return true;
+      },
+      handleDrop(path) {
+        saveConfig({ topicPath: path });
+      },
+    });
+  }, [setMessagePathDropConfig, saveConfig]);
 
   const defaultGetItemString = useGetItemStringWithTimezone();
   const getItemString = useMemo(
