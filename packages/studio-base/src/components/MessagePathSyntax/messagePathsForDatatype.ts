@@ -12,7 +12,6 @@
 //   You may not use this file except in compliance with the License.
 
 import * as _ from "lodash-es";
-import memoizeWeak from "memoize-weak";
 
 import { Immutable } from "@foxglove/studio";
 import { MessagePathFilter } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
@@ -240,72 +239,66 @@ export type StructureTraversalResult = {
 //
 // We return the `msgPathPart` that was invalid to determine what sort
 // of autocomplete we should show.
-//
-// We use memoizeWeak because it works with multiple arguments (lodash's memoize
-// does not) and does not hold onto objects as strongly (it uses WeakMap).
-export const traverseStructure = memoizeWeak(
-  (
-    initialStructureItem: MessagePathStructureItem | undefined,
-    messagePath: MessagePathPart[],
-  ): StructureTraversalResult => {
-    let structureItem = initialStructureItem;
+export const traverseStructure = (
+  initialStructureItem: MessagePathStructureItem | undefined,
+  messagePath: MessagePathPart[],
+): StructureTraversalResult => {
+  let structureItem = initialStructureItem;
+  if (!structureItem) {
+    return { valid: false, msgPathPart: undefined, structureItem: undefined };
+  }
+  for (const msgPathPart of messagePath) {
     if (!structureItem) {
-      return { valid: false, msgPathPart: undefined, structureItem: undefined };
+      return { valid: false, msgPathPart, structureItem };
     }
-    for (const msgPathPart of messagePath) {
-      if (!structureItem) {
+    if ("primitiveType" in structureItem && structureItem.primitiveType === "json") {
+      // No need to continue validating if we're dealing with JSON. We
+      // essentially treat all nested values as valid.
+      continue;
+    } else if (msgPathPart.type === "name") {
+      if (structureItem.structureType !== "message") {
         return { valid: false, msgPathPart, structureItem };
       }
-      if ("primitiveType" in structureItem && structureItem.primitiveType === "json") {
-        // No need to continue validating if we're dealing with JSON. We
-        // essentially treat all nested values as valid.
-        continue;
-      } else if (msgPathPart.type === "name") {
-        if (structureItem.structureType !== "message") {
-          return { valid: false, msgPathPart, structureItem };
-        }
-        const next: MessagePathStructureItem | undefined =
-          structureItem.nextByName[msgPathPart.name];
-        const nextStructureIsJson: boolean =
-          next != undefined && next.structureType === "primitive" && next.primitiveType === "json";
-        structureItem = !nextStructureIsJson
-          ? next
-          : {
-              structureType: "primitive",
-              primitiveType: "json",
-              datatype: next ? next.datatype : "",
-            };
-      } else if (msgPathPart.type === "slice") {
-        if (structureItem.structureType !== "array") {
-          return { valid: false, msgPathPart, structureItem };
-        }
-        structureItem = structureItem.next;
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-      } else if (msgPathPart.type === "filter") {
-        if (
-          structureItem.structureType !== "message" ||
-          msgPathPart.path.length === 0 ||
-          msgPathPart.value == undefined
-        ) {
-          return { valid: false, msgPathPart, structureItem };
-        }
-        let currentItem: MessagePathStructureItem | undefined = structureItem;
-        for (const name of msgPathPart.path) {
-          if (currentItem.structureType !== "message") {
-            return { valid: false, msgPathPart, structureItem };
-          }
-          currentItem = currentItem.nextByName[name];
-          if (currentItem == undefined) {
-            return { valid: false, msgPathPart, structureItem };
-          }
-        }
-      } else {
-        assertNever(
-          msgPathPart,
-          `Invalid msgPathPart.type: ${(msgPathPart as MessagePathPart).type}`,
-        );
+      const next: MessagePathStructureItem | undefined = structureItem.nextByName[msgPathPart.name];
+      const nextStructureIsJson: boolean =
+        next != undefined && next.structureType === "primitive" && next.primitiveType === "json";
+      structureItem = !nextStructureIsJson
+        ? next
+        : {
+            structureType: "primitive",
+            primitiveType: "json",
+            datatype: next ? next.datatype : "",
+          };
+    } else if (msgPathPart.type === "slice") {
+      if (structureItem.structureType !== "array") {
+        return { valid: false, msgPathPart, structureItem };
       }
+      structureItem = structureItem.next;
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    } else if (msgPathPart.type === "filter") {
+      if (
+        structureItem.structureType !== "message" ||
+        msgPathPart.path.length === 0 ||
+        msgPathPart.value == undefined
+      ) {
+        return { valid: false, msgPathPart, structureItem };
+      }
+      let currentItem: MessagePathStructureItem | undefined = structureItem;
+      for (const name of msgPathPart.path) {
+        if (currentItem.structureType !== "message") {
+          return { valid: false, msgPathPart, structureItem };
+        }
+        currentItem = currentItem.nextByName[name];
+        if (currentItem == undefined) {
+          return { valid: false, msgPathPart, structureItem };
+        }
+      }
+    } else {
+      assertNever(
+        msgPathPart,
+        `Invalid msgPathPart.type: ${(msgPathPart as MessagePathPart).type}`,
+      );
     }
-    return { valid: true, msgPathPart: undefined, structureItem };
-  },
-);
+  }
+  return { valid: true, msgPathPart: undefined, structureItem };
+};
