@@ -4,7 +4,7 @@
 
 export type CallServiceConfig = {
   serviceName?: string;
-  datatype?: string;
+  requestSchemaName?: string;
   requestPayload?: string;
   layout?: "vertical" | "horizontal";
   buttonText?: string;

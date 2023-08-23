@@ -77,16 +77,16 @@ function parseInput(value: string): { error?: string; parsedObject?: unknown } {
   try {
     const parsedAny: unknown = JSON.parse(value);
     if (Array.isArray(parsedAny)) {
-      error = "Message content must be an object, not an array";
+      error = "Request content must be an object, not an array";
     } else if (parsedAny == null /* eslint-disable-line no-restricted-syntax */) {
-      error = "Message content must be an object, not null";
+      error = "Request content must be an object, not null";
     } else if (typeof parsedAny !== "object") {
-      error = `Message content must be an object, not ‘${typeof parsedAny}’`;
+      error = `Request content must be an object, not ‘${typeof parsedAny}’`;
     } else {
       parsedObject = parsedAny;
     }
   } catch (e) {
-    error = value.length !== 0 ? e.message : "Enter valid message content as JSON";
+    error = value.length !== 0 ? e.message : "Enter valid request content as JSON";
   }
   return { error, parsedObject };
 }

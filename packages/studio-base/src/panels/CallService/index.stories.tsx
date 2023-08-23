@@ -46,7 +46,7 @@ const advancedJSON = `{\n  "data": true\n}`;
 
 const baseConfig: CallServiceConfig = {
   serviceName: "/set_bool",
-  datatype: "std_srvs/SetBool_Request",
+  requestSchemaName: "std_srvs/SetBool_Request",
   requestPayload: advancedJSON,
 };
 
@@ -114,7 +114,7 @@ export const CallServiceEnabledWithTopicAndSchema: Story = {
 };
 
 export const WhenSelectingADatatypeRequestMessageIsSuggested: Story = {
-  args: { allowCallService: true, overrideConfig: { ...baseConfig, datatype: undefined } },
+  args: { allowCallService: true, overrideConfig: { ...baseConfig, requestSchemaName: undefined } },
   name: "When selecting a datatype request message is suggested",
   play: async ({ canvasElement, step }) => {
     const { keyboard, type } = userEvent.setup();

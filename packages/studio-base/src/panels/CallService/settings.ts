@@ -7,10 +7,10 @@ import { isEqual, set } from "lodash";
 import { useCallback, useEffect, useMemo } from "react";
 
 import { Immutable, SettingsTreeAction, SettingsTreeNodes } from "@foxglove/studio";
-import buildSampleMessage from "@foxglove/studio-base/panels/Publish/buildSampleMessage";
 import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelStateContextProvider";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
+import buildSampleMessage from "@foxglove/studio-base/util/buildSampleMessage";
 
 import { CallServiceConfig } from "./types";
 
@@ -34,7 +34,7 @@ const buildSettingsTree = (
   general: {
     fields: {
       serviceName: {
-        label: "Service",
+        label: "Service name",
         input: "string",
         error: serviceError(config.serviceName),
         value: config.serviceName ?? "",
@@ -44,14 +44,14 @@ const buildSettingsTree = (
         input: "autocomplete",
         help: "Optional request schema, used to pre-populate the request",
         items: schemaNames,
-        value: config.datatype ?? "",
+        value: config.requestSchemaName ?? "",
       },
       layout: {
         label: "Layout",
         input: "toggle",
         options: [
-          { label: "vertical", value: "vertical" },
-          { label: "horizontal", value: "horizontal" },
+          { label: "Vertical", value: "vertical" },
+          { label: "Horizontal", value: "horizontal" },
         ],
         value: config.layout ?? defaultConfig.layout,
       },
@@ -99,7 +99,7 @@ export function useCallServicePanelSettings(
             if (isEqual(path, ["general", "datatype"])) {
               const sampleMessage = getSampleMessage(datatypes, value);
 
-              draft.datatype = value;
+              draft.requestSchemaName = value;
 
               if (sampleMessage) {
                 draft.requestPayload = sampleMessage;

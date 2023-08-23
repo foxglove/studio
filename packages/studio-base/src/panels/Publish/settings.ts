@@ -7,11 +7,11 @@ import { isEqual, set } from "lodash";
 import { useCallback, useEffect, useMemo } from "react";
 
 import { Immutable, SettingsTreeAction, SettingsTreeNodes } from "@foxglove/studio";
-import buildSampleMessage from "@foxglove/studio-base/panels/Publish/buildSampleMessage";
 import { Topic } from "@foxglove/studio-base/players/types";
 import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelStateContextProvider";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
+import buildSampleMessage from "@foxglove/studio-base/util/buildSampleMessage";
 
 import { PublishConfig } from "./types";
 
