@@ -10,7 +10,7 @@ import { v4 as uuidv4 } from "uuid";
 import { useShallowMemo, useDeepMemo } from "@foxglove/hooks";
 import { Immutable } from "@foxglove/studio";
 import { useMessageReducer as useCurrent, useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
-import { useBlocksByTopic as useBlocks } from "@foxglove/studio-base/PanelAPI/useBlocksByTopic";
+import { useBlocksSubscriptions as useBlocks } from "@foxglove/studio-base/PanelAPI/useBlocksSubscriptions";
 import { getTopicsFromPaths } from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
 import {
   useMessagePipeline,
@@ -113,7 +113,7 @@ function useData(id: string, topics: readonly string[]) {
     ),
   });
 
-  const blocks = useBlocks(subscribed);
+  const blocks = useBlocks(R.map((v) => ({ topic: v, preloadType: "full" }), subscribed));
   React.useEffect(() => {
     for (const [index, block] of blocks.entries()) {
       if (R.isEmpty(block)) {
