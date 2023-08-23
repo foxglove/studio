@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import * as Comlink from "comlink";
-import { intersection, isEmpty, isEqual, mapValues, pick, uniq } from "lodash";
+import { intersection, isEmpty, isEqual, mapValues, mergeWith, pick, uniq } from "lodash";
 
 import { filterMap } from "@foxglove/den/collection";
 import { compare as compareTimes, subtract as subtractTimes, fromSec } from "@foxglove/rostime";
@@ -351,12 +351,12 @@ function evictCache() {
 function addBlock(block: Messages): void {
   const topics = Object.keys(block);
 
-  const newBlocks = { ...blocks };
-  for (const [topic, messages] of Object.entries(block)) {
-    const existing = newBlocks[topic];
-    newBlocks[topic] = existing?.concat(messages) ?? messages;
-  }
-  blocks = newBlocks;
+  blocks = mergeWith(
+    { ...blocks },
+    block,
+    (existingMessages: MessageEvent[] | undefined, newMessages: MessageEvent[]) =>
+      existingMessages?.concat(newMessages) ?? newMessages,
+  );
 
   for (const client of Object.values(clients)) {
     const { params } = client;
