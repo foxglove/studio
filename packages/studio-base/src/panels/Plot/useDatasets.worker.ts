@@ -449,6 +449,17 @@ function addCurrent(events: readonly MessageEvent[]): void {
     const { cursors: oldCursors, data: oldData } = previous;
     const [newCursors, newMessages] = getNewMessages(oldCursors, current);
 
+    if (isSingleMessage(params)) {
+      sendPlotData(
+        client,
+        buildPlot(
+          params,
+          R.map((messages) => messages.slice(-1), current),
+        ),
+      );
+      continue;
+    }
+
     if (R.isEmpty(newMessages)) {
       continue;
     }
