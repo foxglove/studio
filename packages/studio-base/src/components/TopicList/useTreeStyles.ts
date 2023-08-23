@@ -25,19 +25,24 @@ export const useTreeStyles = makeStyles<void, "dragHandle" | "node" | "stats">()
       boxSizing: "border-box",
       whiteSpace: "nowrap",
       cursor: "pointer",
-      backgroundColor: theme.palette.background.paper,
 
-      ":hover": {},
       [`:not(:hover) .${classes.node} .${classes.dragHandle}`]: {
         visibility: "hidden",
       },
       ":focus": {
         outline: "none",
+
+        [`& .${classes.node}`]: {
+          outline: `1px solid ${theme.palette.primary.main}`,
+          outlineOffset: -1,
+
+          [`.${classes.dragHandle}`]: {
+            visibility: "visible",
+          },
+        },
       },
       [`@container (max-width: 375px)`]: {
-        [`.${classes.stats}`]: {
-          display: "none",
-        },
+        [`.${classes.stats}`]: { display: "none" },
       },
     },
     /* eslint-enable tss-unused-classes/unused-classes */
@@ -48,13 +53,14 @@ export const useTreeStyles = makeStyles<void, "dragHandle" | "node" | "stats">()
       height: "100%",
       gap: theme.spacing(0.75),
       paddingRight: theme.spacing(0.75),
-      boxShadow: `0 -1px 0 ${theme.palette.action.selected}`,
+      backgroundColor: theme.palette.background.paper,
+      borderTop: `1px solid ${theme.palette.action.selected}`,
 
       "&.willReceiveDrop": {
         background: theme.palette.action.focus,
       },
       "&:not(.isTopLevel)": {
-        boxShadow: `0 -1px 0 ${theme.palette.background.paper}`,
+        borderTop: `1px solid ${theme.palette.background.paper}`,
         backgroundColor: theme.palette.action.hover,
       },
       "&.isSelected": {},

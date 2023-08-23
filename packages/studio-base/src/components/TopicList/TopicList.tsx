@@ -187,11 +187,6 @@ export function TopicList(): JSX.Element {
           placeholder="Filter by topic or schema name…"
           InputProps={{
             size: "small",
-            onKeyDown: (event) => {
-              if (event.key === "ArrowUp" || event.key === "ArrowDown") {
-                event.stopPropagation();
-              }
-            },
             endAdornment: filterText && (
               <IconButton
                 size="small"
@@ -208,7 +203,18 @@ export function TopicList(): JSX.Element {
 
       {topics.length > 0 ? (
         <Stack flex="auto">
-          <Stack ref={ref} fullHeight fullWidth flex={1} style={{ minHeight: 0, minWidth: 0 }}>
+          <Stack
+            onKeyDown={(event) => {
+              if (event.key === "ArrowRight" || event.key === "ArrowLeft" || event.key === " ") {
+                event.stopPropagation();
+              }
+            }}
+            ref={ref}
+            fullHeight
+            fullWidth
+            flex={1}
+            style={{ minHeight: 0, minWidth: 0 }}
+          >
             <Tree
               height={height}
               width={width}
