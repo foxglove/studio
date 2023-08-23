@@ -74,6 +74,7 @@ class PlayerStateStore {
   public async add(state: PlayerState): Promise<void> {
     const { playerId: _playerId, ...rest } = state;
     this.#playerStates.push(rest);
+    console.log("playerStates", this.#playerStates);
     if (this.#playerStates.length === this.#expected) {
       this.#resolve(this.#playerStates);
     }
@@ -353,6 +354,131 @@ describe("IterablePlayer", () => {
     // 1. a state update completing the second seek
     // 1. a state update for moving to idle
     expect(playerStates).toEqual([bufferingState, baseState, baseState]);
+
+    player.close();
+  });
+
+  it("when seek-backfill state is active, active data should still be emitted when startPlayback is called", async () => {
+    const source = new TestSource();
+    const player = new IterablePlayer({
+      source,
+      enablePreload: false,
+      sourceId: "test",
+    });
+    const store = new PlayerStateStore(4);
+    player.setSubscriptions([{ topic: "foo" }]);
+    player.setListener(async (state) => await store.add(state));
+
+    // Wait for initial setup
+    await store.done;
+
+    // Reset store to get state from the seeks
+    store.reset(2);
+
+    let resolveBackfill: (value?: unknown) => void = () => {};
+    const backfillPromise = new Promise((resolve) => {
+      resolveBackfill = resolve;
+    });
+    // replace the message iterator with our own implementation
+    // This implementation performs a seekPlayback during backfill.
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    const originalMethod = source.getBackfillMessages;
+    source.getBackfillMessages = async function () {
+      source.getBackfillMessages = originalMethod;
+      await backfillPromise;
+      return [];
+    };
+
+    // starts a seek backfill does not emit unless it takes too long or it finishes
+    player.seekPlayback({ sec: 1, nsec: 0 });
+
+    // emits state
+    player.startPlayback();
+    // emits state when backfill is finished
+    resolveBackfill();
+
+    const getIsPlaying = (state: PlayerStateWithoutPlayerId) => state.activeData?.isPlaying;
+
+    const playerStates = await store.done;
+    // isPlaying true both before and after backfill has been resolved
+    expect(playerStates.map(getIsPlaying)).toEqual([true, true]);
+
+    player.close();
+  });
+
+  it("when seek-backfill state is active, active data should still be emitted when pausePlayback is called", async () => {
+    const source = new TestSource();
+    const player = new IterablePlayer({
+      source,
+      enablePreload: false,
+      sourceId: "test",
+    });
+    const store = new PlayerStateStore(4);
+    player.setSubscriptions([{ topic: "foo" }]);
+    player.setListener(async (state) => await store.add(state));
+
+    // Wait for initial setup
+    await store.done;
+    // Reset store to get state from the seeks
+
+    const origMsgIterator = source.messageIterator.bind(source);
+    source.messageIterator = async function* messageIterator(
+      _args: MessageIteratorArgs,
+    ): AsyncIterableIterator<Readonly<IteratorResult>> {
+      source.messageIterator = origMsgIterator;
+
+      yield {
+        type: "message-event",
+        msgEvent: {
+          topic: "foo",
+          receiveTime: { sec: 0, nsec: 99000001 },
+          message: undefined,
+          sizeInBytes: 0,
+          schemaName: "foo",
+        },
+        connectionId: undefined,
+      };
+    };
+
+    let resolveBackfill: (value?: unknown) => void = () => {};
+    const backfillPromise = new Promise((resolve) => {
+      resolveBackfill = resolve;
+    });
+    // replace the message iterator with our own implementation
+    // This implementation performs a seekPlayback during backfill.
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    const originalMethod = source.getBackfillMessages;
+    source.getBackfillMessages = async function () {
+      source.getBackfillMessages = originalMethod;
+      await backfillPromise;
+      return [
+        {
+          topic: "foo",
+          receiveTime: { sec: 0, nsec: 1 },
+          message: undefined,
+          sizeInBytes: 0,
+          schemaName: "foo",
+        },
+      ];
+    };
+    store.reset(1);
+    // emit state
+    player.startPlayback();
+    await store.done;
+
+    store.reset(2);
+
+    // starts a seek backfill does not emit unless it takes too long or it finishes
+    player.seekPlayback({ sec: 1, nsec: 0 });
+
+    // emits state
+    player.pausePlayback();
+    // emits state when backfill is finished
+    resolveBackfill();
+
+    const getIsPlaying = (state: PlayerStateWithoutPlayerId) => state.activeData?.isPlaying;
+    const playerStates = await store.done;
+    expect(playerStates.map(getIsPlaying)).toEqual([false, false]);
 
     player.close();
   });
