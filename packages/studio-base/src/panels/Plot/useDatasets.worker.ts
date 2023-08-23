@@ -135,6 +135,11 @@ function getParamTopics(params: PlotParams): readonly string[] {
   )(getParamPaths(params));
 }
 
+function isSingleMessage(params: PlotParams): boolean {
+  const { xAxisVal } = params;
+  return xAxisVal === "currentCustom" || xAxisVal === "index";
+}
+
 function getPathData(messages: Messages, path: BasePlotPath): PlotDataItem[] | undefined {
   const parsed = parseRosPath(path.value);
   if (parsed == undefined) {
@@ -244,6 +249,11 @@ function getProvidedData(data: PlotData): ProviderState<TypedData[]> {
   };
 }
 
+function sendPlotData(client: Client, data: PlotData) {
+  client.setPanel?.(data);
+  client.setProvided?.(getProvidedData(data));
+}
+
 function rebuild(id: string) {
   const client = clients[id];
   if (client == undefined) {
@@ -273,22 +283,8 @@ function rebuild(id: string) {
     };
   }, newData.datasets);
 
-  const { bounds } = newData;
-  const datasets = [];
-  for (const dataset of downsampled.values()) {
-    datasets.push(dataset);
-  }
-
-  client.setProvided?.({
-    bounds,
-    data: {
-      datasets,
-    },
-  });
-
-  client.setPanel?.({
+  sendPlotData(client, {
     ...newData,
-    bounds,
     datasets: downsampled,
   });
 }
@@ -382,7 +378,7 @@ function addBlock(block: Messages): void {
   for (const client of R.values(clients)) {
     const { params } = client;
     const relevantTopics = R.intersection(topics, client.topics);
-    if (params == undefined || relevantTopics.length === 0) {
+    if (params == undefined || isSingleMessage(params) || relevantTopics.length === 0) {
       continue;
     }
 
@@ -421,6 +417,17 @@ function addCurrent(events: readonly MessageEvent[]): void {
     for (const client of R.values(clients)) {
       const { params } = client;
       if (params == undefined) {
+        continue;
+      }
+
+      if (isSingleMessage(params)) {
+        sendPlotData(
+          client,
+          buildPlot(
+            params,
+            R.map((messages) => messages.slice(-1), current),
+          ),
+        );
         continue;
       }
 
@@ -546,10 +553,10 @@ function register(
   });
 
   if (params == undefined) {
-    return
+    return;
   }
 
-  updateParams(id, params)
+  updateParams(id, params);
 }
 
 function getFullData(id: string): PlotData | undefined {
