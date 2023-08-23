@@ -581,7 +581,12 @@ class CachingIterableSource extends EventEmitter<EventTypes> implements IIterabl
       // This can only happen when seeked to a new time and no message has been read yet, as
       // reading a new message that does not fit in any block will always create a new cache block.
       const oldestBlockIdx = minIndexBy(this.#cache, (a, b) => a.lastAccess - b.lastAccess);
-      return [this.#cache[oldestBlockIdx]!.id];
+      const oldestBlock = this.#cache[oldestBlockIdx];
+      if (!oldestBlock) {
+        // This should never happen as the cache is not empty and the index is valid.
+        throw new Error("Failed to retrieve oldest block from cache");
+      }
+      return [oldestBlock.id];
     }
 
     // Blocks that are before the read head can be evicted.
