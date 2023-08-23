@@ -2,12 +2,11 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-/* eslint-disable tss-unused-classes/unused-classes */
-
 import { makeStyles } from "tss-react/mui";
 
 export const useTreeStyles = makeStyles<void, "dragHandle" | "node" | "stats">()(
   (theme, _, classes) => ({
+    /* eslint-disable tss-unused-classes/unused-classes */
     root: {
       containerType: "inline-size",
     },
@@ -26,13 +25,9 @@ export const useTreeStyles = makeStyles<void, "dragHandle" | "node" | "stats">()
       boxSizing: "border-box",
       whiteSpace: "nowrap",
       cursor: "pointer",
-      borderBottom: `thin solid ${theme.palette.divider}`,
+      backgroundColor: theme.palette.background.paper,
 
-      ":hover": {
-        [`& .${classes.node}`]: {
-          background: theme.palette.action.hover,
-        },
-      },
+      ":hover": {},
       [`:not(:hover) .${classes.node} .${classes.dragHandle}`]: {
         visibility: "hidden",
       },
@@ -45,6 +40,7 @@ export const useTreeStyles = makeStyles<void, "dragHandle" | "node" | "stats">()
         },
       },
     },
+    /* eslint-enable tss-unused-classes/unused-classes */
     node: {
       position: "relative",
       display: "flex",
@@ -52,17 +48,16 @@ export const useTreeStyles = makeStyles<void, "dragHandle" | "node" | "stats">()
       height: "100%",
       gap: theme.spacing(0.75),
       paddingRight: theme.spacing(0.75),
+      boxShadow: `0 -1px 0 ${theme.palette.action.selected}`,
 
       "&.willReceiveDrop": {
         background: theme.palette.action.focus,
       },
-      "&.isSelected": {
-        // background: theme.palette.action.selected,
-      },
       "&:not(.isTopLevel)": {
-        backgroundColor:
-          theme.palette.mode === "dark" ? theme.palette.grey[500] : theme.palette.grey[50],
+        boxShadow: `0 -1px 0 ${theme.palette.background.paper}`,
+        backgroundColor: theme.palette.action.hover,
       },
+      "&.isSelected": {},
       "&.isSelectedStart": {},
       "&.isSelectedEnd": {},
       "&.isSelectedStart.isSelectedEnd": {},

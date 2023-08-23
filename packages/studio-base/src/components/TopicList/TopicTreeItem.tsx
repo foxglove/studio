@@ -31,7 +31,9 @@ export function TopicTreeItem(props: NodeRendererProps<TreeData>): JSX.Element {
     ) : (
       <ChevronRight12Regular />
     )
-  ) : undefined;
+  ) : (
+    <div style={{ width: 16, height: 16 }} />
+  );
 
   const dragItem: MessagePathDragObject = useMemo(
     () => ({ path: node.data.messagePath }),
