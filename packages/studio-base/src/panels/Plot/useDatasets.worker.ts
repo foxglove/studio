@@ -508,6 +508,7 @@ function compressClients(): void {
     const index = R.findIndex(({ receiveTime }) => compareTimes(receiveTime, cutoff) > 0, messages);
     return messages.slice(index);
   }, current);
+
   for (const client of R.values(clients)) {
     const { params } = client;
     if (params == undefined) {
@@ -529,19 +530,26 @@ function register(
   setProvided: Setter,
   setPanel: StateHandler,
   addPartial: Setter,
+  params: PlotParams | undefined,
 ): void {
   mutateClient(id, {
     id,
     setProvided,
     addPartial,
     setPanel,
-    params: undefined,
+    params,
     topics: [],
     view: undefined,
     blocks: initAccumulated([]),
     current: initAccumulated([]),
     queueRebuild: makeRebuilder(id),
   });
+
+  if (params == undefined) {
+    return
+  }
+
+  updateParams(id, params)
 }
 
 function getFullData(id: string): PlotData | undefined {
