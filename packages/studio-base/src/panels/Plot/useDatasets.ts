@@ -206,7 +206,10 @@ export default function useDatasets(params: PlotParams): {
 
   useData(id, topics);
 
+  // We also need to send along params on register to avoid a race condition
+  const paramsRef = React.useRef<PlotParams>();
   useEffect(() => {
+    paramsRef.current = stableParams;
     void service?.updateParams(id, stableParams);
   }, [id, stableParams]);
 
@@ -223,6 +226,7 @@ export default function useDatasets(params: PlotParams): {
             Comlink.proxy(setter),
             Comlink.proxy(setState),
             Comlink.proxy(setPartial),
+            paramsRef.current,
           );
         })();
       },
