@@ -187,7 +187,6 @@ export function TopicList(): JSX.Element {
           placeholder="Filter by topic or schema name…"
           InputProps={{
             size: "small",
-            startAdornment: <SearchIcon fontSize="small" />,
             onKeyDown: (event) => {
               if (event.key === "ArrowUp" || event.key === "ArrowDown") {
                 event.stopPropagation();
@@ -228,6 +227,7 @@ export function TopicList(): JSX.Element {
               disableDrag // we implement our own drag & drop on certain nodes only
               disableDrop
               disableEdit
+              disableMultiSelection
               onSelect={(selected) => setSelectedCount(selected.length)}
               onActivate={(node) => setActive(node.data)}
               onFocus={(node) => setFocused(node.data)}

@@ -31,9 +31,7 @@ export function TopicTreeItem(props: NodeRendererProps<TreeData>): JSX.Element {
     ) : (
       <ChevronRight12Regular />
     )
-  ) : (
-    <div style={{ width: 12 }} />
-  );
+  ) : undefined;
 
   const dragItem: MessagePathDragObject = useMemo(
     () => ({ path: node.data.messagePath }),
@@ -47,13 +45,13 @@ export function TopicTreeItem(props: NodeRendererProps<TreeData>): JSX.Element {
 
   return (
     <div
-      style={style}
+      onClick={() => node.isInternal && node.toggle()}
       ref={connectDragSource}
+      style={node.level > 0 ? style : undefined}
       className={cx(classes.node, {
         ...node.state,
         isTopLevel: node.level === 0,
       })}
-      onClick={() => node.isInternal && node.toggle()}
     >
       <span className={classes.icon}>{Icon}</span>
       {node.level === 0 ? (

@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { Paper } from "@mui/material";
 import { Meta, StoryObj } from "@storybook/react";
 import { userEvent, within } from "@storybook/testing-library";
 
@@ -9,41 +10,40 @@ import MockMessagePipelineProvider from "@foxglove/studio-base/components/Messag
 import { PlayerCapabilities, TopicStats } from "@foxglove/studio-base/players/types";
 
 import { TopicList } from "./TopicList";
-
-const topics = [
-  { name: "/topic_1", schemaName: "std_msgs/String" },
-  { name: "/topic_2", schemaName: "std_msgs/String" },
-];
+import { datatypes, topics } from "./mocks";
 
 const topicStats = new Map<string, TopicStats>([
-  [
-    "/topic_1",
-    {
-      numMessages: 1234,
-      firstMessageTime: { sec: 1, nsec: 0 },
-      lastMessageTime: { sec: 2, nsec: 0 },
-    },
-  ],
-  [
-    "/topic_2",
-    {
-      numMessages: 3456,
-      firstMessageTime: { sec: 1, nsec: 0 },
-      lastMessageTime: { sec: 2, nsec: 0 },
-    },
-  ],
+  // [
+  //   "/topic_1",
+  //   {
+  //     numMessages: 1234,
+  //     firstMessageTime: { sec: 1, nsec: 0 },
+  //     lastMessageTime: { sec: 2, nsec: 0 },
+  //   },
+  // ],
+  // [
+  //   "/topic_2",
+  //   {
+  //     numMessages: 3456,
+  //     firstMessageTime: { sec: 1, nsec: 0 },
+  //     lastMessageTime: { sec: 2, nsec: 0 },
+  //   },
+  // ],
 ]);
 
 export default {
   title: "components/TopicList",
   args: {
+    datatypes,
     capabilities: [PlayerCapabilities.playbackControl],
     topics,
     topicStats,
   },
   render: (args) => (
     <MockMessagePipelineProvider {...args}>
-      <TopicList />
+      <Paper square style={{ height: "100%" }}>
+        <TopicList />
+      </Paper>
     </MockMessagePipelineProvider>
   ),
 } as Meta<typeof MockMessagePipelineProvider>;
@@ -58,7 +58,7 @@ export const FilterByTopicName: Story = {
     const filterInputs = await canvas.findAllByPlaceholderText("Filter by topic or schema name…");
 
     for (const input of filterInputs) {
-      await userEvent.type(input, "/topic_1");
+      await userEvent.type(input, "CAM_BACK/camera_info");
     }
   },
 };
@@ -69,7 +69,7 @@ export const FilterBySchemaName: Story = {
     const filterInputs = await canvas.findAllByPlaceholderText("Filter by topic or schema name…");
 
     for (const input of filterInputs) {
-      await userEvent.type(input, "std_msgs/String");
+      await userEvent.type(input, "diagnostic_msgs/");
     }
   },
 };
