@@ -737,7 +737,7 @@ describe("CachingIterableSource", () => {
 
     {
       const messageIterator = bufferedSource.messageIterator({
-        topics: ["a"],
+        topics: mockTopicSelection("a"),
       });
 
       // At the start the cache is empty and the source can read messages
