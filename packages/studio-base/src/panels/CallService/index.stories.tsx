@@ -11,7 +11,7 @@ import { PlayerCapabilities } from "@foxglove/studio-base/players/types";
 import PanelSetup, { Fixture } from "@foxglove/studio-base/stories/PanelSetup";
 import delay from "@foxglove/studio-base/util/delay";
 
-import { CallServiceConfig } from "./types";
+import { Config } from "./types";
 
 const getFixture = ({ allowCallService }: { allowCallService: boolean }): Fixture => {
   const callService = async (service: string, _request: unknown) => {
@@ -38,15 +38,14 @@ const emptyFixture: Fixture = {
   topics: [],
   datatypes: new Map(),
   frame: {},
-  capabilities: [PlayerCapabilities.advertise],
+  capabilities: [],
 };
 
 const successJSON = JSON.stringify({ success: true }, undefined, 2);
 const advancedJSON = `{\n  "data": true\n}`;
 
-const baseConfig: CallServiceConfig = {
+const baseConfig: Config = {
   serviceName: "/set_bool",
-  requestSchemaName: "std_srvs/SetBool_Request",
   requestPayload: advancedJSON,
 };
 
@@ -54,7 +53,7 @@ type StoryArgs = {
   allowCallService: boolean;
   includeSettings: boolean;
   isEmpty: boolean;
-  overrideConfig: CallServiceConfig;
+  overrideConfig: Config;
 };
 
 export default {
@@ -97,12 +96,12 @@ export const CallServiceEnabled: Story = {
   args: { allowCallService: true },
 };
 
-export const CallServiceEnabledWithTopicAndSchema: Story = {
+export const CallServiceEnabledServiceName: Story = {
   args: {
     allowCallService: true,
     overrideConfig: { ...baseConfig },
   },
-  name: "CallService Enabled with topic and schema",
+  name: "CallService Enabled with service name",
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const responseTextareas = await canvas.findAllByPlaceholderText("Response");
@@ -111,29 +110,6 @@ export const CallServiceEnabledWithTopicAndSchema: Story = {
     await delay(500);
     responseTextareas.forEach((textarea) => expect(textarea).toHaveValue(successJSON));
   },
-};
-
-export const WhenSelectingADatatypeRequestMessageIsSuggested: Story = {
-  args: { allowCallService: true, overrideConfig: { ...baseConfig, requestSchemaName: undefined } },
-  name: "When selecting a datatype request message is suggested",
-  play: async ({ canvasElement, step }) => {
-    const { keyboard, type } = userEvent.setup();
-    const canvas = within(canvasElement);
-
-    const inputs = await canvas.findAllByRole("combobox");
-    const schemaInput = inputs[0];
-    const requestTextarea = await canvas.findByPlaceholderText("Enter service request as JSON");
-
-    await step("Select a datatype", async () => {
-      await type(schemaInput!, "std_srvs/SetBool");
-      await keyboard("[ArrowDown]");
-      await keyboard("[Enter]");
-    });
-
-    expect(requestTextarea).toHaveValue(advancedJSON);
-    expect(schemaInput).toHaveValue("std_srvs/SetBool_Request");
-  },
-  parameters: { colorScheme: "light" },
 };
 
 export const CallServiceEnabledWithCustomButtonSettings: Story = {
