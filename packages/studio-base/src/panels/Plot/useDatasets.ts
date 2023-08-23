@@ -93,7 +93,8 @@ function getPayloadsFromPaths(paths: readonly string[]): SubscribePayload[] {
       return [
         {
           topic: path.topicName,
-          fields: [field.name],
+          // Always pull the header field for header stamps
+          fields: [field.name, "header"],
         },
       ];
     }),
