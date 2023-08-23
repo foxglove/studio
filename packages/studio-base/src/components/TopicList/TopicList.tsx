@@ -205,7 +205,11 @@ export function TopicList(): JSX.Element {
         <Stack flex="auto">
           <Stack
             onKeyDown={(event) => {
-              if (event.key === "ArrowRight" || event.key === "ArrowLeft" || event.key === " ") {
+              if (
+                event.code === "ArrowRight" ||
+                event.code === "ArrowLeft" ||
+                event.code === "Space"
+              ) {
                 event.stopPropagation();
               }
             }}
