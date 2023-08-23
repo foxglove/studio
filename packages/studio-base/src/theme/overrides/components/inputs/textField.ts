@@ -4,13 +4,13 @@
 
 import { Theme } from "@mui/material";
 
-import { OverrideComponentReturn } from "../types";
+import { OverrideComponentReturn } from "../../types";
 
-export const formLabel = (theme: Theme): OverrideComponentReturn<"MuiFormLabel"> => ({
-  MuiFormLabel: {
-    styleOverrides: {
-      root: {
-        marginBottom: theme.spacing(0.5),
+export const textField = (_theme: Theme): OverrideComponentReturn<"MuiTextField"> => ({
+  MuiTextField: {
+    defaultProps: {
+      InputLabelProps: {
+        variant: "standard",
       },
     },
   },

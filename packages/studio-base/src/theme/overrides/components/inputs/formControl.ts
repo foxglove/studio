@@ -4,14 +4,12 @@
 
 import { Theme } from "@mui/material";
 
-import { OverrideComponentReturn } from "../types";
+import { OverrideComponentReturn } from "../../types";
 
-export const inputLabel = (_theme: Theme): OverrideComponentReturn<"MuiInputLabel"> => ({
-  MuiInputLabel: {
+export const formControl = (_theme: Theme): OverrideComponentReturn<"MuiFormControl"> => ({
+  MuiFormControl: {
     defaultProps: {
-      shrink: true,
       variant: "standard",
-      sx: { position: "relative" },
     },
   },
 });

@@ -4,17 +4,21 @@
 
 import { Theme } from "@mui/material";
 
-import { OverrideComponentReturn } from "../types";
+import { OverrideComponentReturn } from "@foxglove/studio-base/theme/overrides/types";
 
-export const input = (theme: Theme): OverrideComponentReturn<"MuiInput"> => ({
-  MuiInput: {
+export const outlinedInput = (theme: Theme): OverrideComponentReturn<"MuiOutlinedInput"> => ({
+  MuiOutlinedInput: {
     styleOverrides: {
       input: {
+        boxSizing: "content-box",
         padding: theme.spacing(1, 1.25),
       },
       inputSizeSmall: {
         padding: theme.spacing(0.75, 1),
       },
+    },
+    defaultProps: {
+      notched: false,
     },
   },
 });
