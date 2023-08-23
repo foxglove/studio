@@ -3,8 +3,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { isEmpty } from "lodash";
-import * as R from "ramda";
 
+import { filterMap } from "@foxglove/den/collection";
 import { Time } from "@foxglove/rostime";
 import { Immutable as Im } from "@foxglove/studio";
 import { iterateTyped, getTypedLength } from "@foxglove/studio-base/components/Chart/datasets";
@@ -15,7 +15,7 @@ import {
   concatTyped,
   mergeTyped,
 } from "@foxglove/studio-base/panels/Plot/datasets";
-import { MessageEvent, Topic } from "@foxglove/studio-base/players/types";
+import { MessageEvent } from "@foxglove/studio-base/players/types";
 import { Bounds, makeInvertedBounds, unionBounds } from "@foxglove/studio-base/types/Bounds";
 import { Range } from "@foxglove/studio-base/util/ranges";
 import { getTimestampForMessage } from "@foxglove/studio-base/util/time";
@@ -182,16 +182,7 @@ export function reducePlotData(data: PlotData[]): PlotData {
 }
 
 export function getPaths(paths: readonly PlotPath[], xAxisPath?: BasePlotPath): string[] {
-  return R.chain(
-    (path: BasePlotPath | undefined): string[] => {
-      if (path == undefined) {
-        return [];
-      }
-
-      return [path.value];
-    },
-    [xAxisPath, ...paths],
-  );
+  return filterMap([xAxisPath, ...paths], (path) => path?.value);
 }
 
 type PathData = [PlotPath, PlotDataItem[] | undefined];
@@ -267,25 +258,20 @@ export function resolvePath(
   path: RosPath,
 ): PlotDataItem[] {
   const { structures, enumValues } = metadata;
-  const topics = R.pipe(
-    R.map((topic: Topic): [string, Topic] => [topic.name, topic]),
-    R.fromPairs,
-  )(metadata.topics);
+  const topics = Object.fromEntries(metadata.topics.map((topic) => [topic.name, topic]));
 
-  return R.chain((message: MessageEvent): PlotDataItem[] => {
+  return filterMap(messages, (message) => {
     const items = getMessagePathDataItems(message, path, topics, structures, enumValues);
     if (items == undefined) {
-      return [];
+      return undefined;
     }
 
-    return [
-      {
-        queriedData: items,
-        receiveTime: message.receiveTime,
-        headerStamp: getTimestampForMessage(message.message),
-      },
-    ];
-  }, messages);
+    return {
+      queriedData: items,
+      receiveTime: message.receiveTime,
+      headerStamp: getTimestampForMessage(message.message),
+    };
+  });
 }
 
 const createPlotMapping =
@@ -336,7 +322,7 @@ export const sortPlotDataByHeaderStamp = createPlotMapping((dataset: TypedDataSe
 
   const resolved = resolveTypedIndices(
     dataset.data,
-    R.map(([index]) => index, indices),
+    indices.map(([index]) => index),
   );
 
   if (resolved == undefined) {

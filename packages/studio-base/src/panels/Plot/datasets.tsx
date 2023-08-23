@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import * as R from "ramda";
+import { clamp } from "lodash";
 
 import { isTime, subtract, Time, toSec } from "@foxglove/rostime";
 import { Immutable } from "@foxglove/studio";
@@ -301,9 +301,9 @@ function getSliceIndices(
   start: number,
   end: number | undefined,
 ): [start: number, end: number] {
-  let clampedStart = R.clamp(0, start < 0 ? length + start : start, length);
+  let clampedStart = clamp(length, 0, start < 0 ? length + start : start);
   let clampedEnd = end ?? length;
-  clampedEnd = R.clamp(0, clampedEnd < 0 ? length + clampedEnd : clampedEnd, length);
+  clampedEnd = clamp(length, 0, clampedEnd < 0 ? length + clampedEnd : clampedEnd);
   if (clampedStart > clampedEnd) {
     const i = clampedStart;
     clampedStart = clampedEnd;

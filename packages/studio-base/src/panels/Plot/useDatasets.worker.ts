@@ -3,12 +3,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import * as Comlink from "comlink";
-import * as R from "ramda";
+import { intersection, isEmpty, isEqual, mapValues, pick, uniq } from "lodash";
 
+import { filterMap } from "@foxglove/den/collection";
 import { compare as compareTimes, subtract as subtractTimes, fromSec } from "@foxglove/rostime";
 import { Immutable } from "@foxglove/studio";
 import { iterateTyped } from "@foxglove/studio-base/components/Chart/datasets";
-import { RosPath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
 import { messagePathStructures } from "@foxglove/studio-base/components/MessagePathSyntax/messagePathsForDatatype";
 import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
 import { fillInGlobalVariablesInPath } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
@@ -52,11 +52,6 @@ type Cursors = Record<string, number>;
 type Accumulated = {
   cursors: Cursors;
   data: PlotData;
-};
-
-type ParsedPath = {
-  parsed: RosPath;
-  value: string;
 };
 
 type Client = {
@@ -116,23 +111,9 @@ function getParamPaths(params: PlotParams): readonly string[] {
 }
 
 function getParamTopics(params: PlotParams): readonly string[] {
-  return R.pipe(
-    R.chain((path: string): ParsedPath[] => {
-      const parsed = parseRosPath(path);
-      if (parsed == undefined) {
-        return [];
-      }
-
-      return [
-        {
-          parsed,
-          value: path,
-        },
-      ];
-    }),
-    R.map((v: ParsedPath) => v.parsed.topicName),
-    R.uniq,
-  )(getParamPaths(params));
+  const paths = getParamPaths(params);
+  const topicNames = filterMap(paths, (path) => parseRosPath(path)?.topicName);
+  return uniq(topicNames);
 }
 
 function isSingleMessage(params: PlotParams): boolean {
@@ -157,7 +138,7 @@ function buildPlot(params: PlotParams, messages: Messages): PlotData {
   const { paths, invertedTheme, startTime, xAxisPath, xAxisVal } = params;
   return buildPlotData({
     invertedTheme,
-    paths: R.map((path) => [path, getPathData(messages, path)], paths),
+    paths: paths.map((path) => [path, getPathData(messages, path)]),
     startTime,
     xAxisPath,
     xAxisData: xAxisPath != undefined ? getPathData(messages, xAxisPath) : undefined,
@@ -169,7 +150,7 @@ function accumulate(previous: Accumulated, params: PlotParams, messages: Message
   const { cursors: oldCursors, data: oldData } = previous;
   const [newCursors, newMessages] = getNewMessages(oldCursors, messages);
 
-  if (R.isEmpty(newMessages)) {
+  if (isEmpty(newMessages)) {
     return previous;
   }
 
@@ -227,11 +208,9 @@ function getClientData(client: Client): PlotData | undefined {
     return undefined;
   }
 
-  return R.pipe(
-    reducePlotData,
-    applyDerivativeToPlotData,
-    sortPlotDataByHeaderStamp,
-  )([blockData, currentData]);
+  return sortPlotDataByHeaderStamp(
+    applyDerivativeToPlotData(reducePlotData([blockData, currentData])),
+  );
 }
 
 function getProvidedData(data: PlotData): ProviderState<TypedData[]> {
@@ -341,17 +320,18 @@ function receiveVariables(variables: GlobalVariables): void {
 
     // We only want to rebuild clients whose paths actually change when global
     // variables do
-    const changedPaths = R.pipe(
-      R.chain((path: string) => {
-        const original = parseRosPath(path);
-        if (original == undefined) {
-          return [];
-        }
+    const changedPaths = filterMap(getParamPaths(params), (path: string) => {
+      const original = parseRosPath(path);
+      if (original == undefined) {
+        return undefined;
+      }
 
-        const filled = fillInGlobalVariablesInPath(original, variables);
-        return !R.equals(original.messagePath, filled.messagePath) ? [filled] : [];
-      }),
-    )(getParamPaths(params));
+      const filled = fillInGlobalVariablesInPath(original, variables);
+      if (isEqual(original.messagePath, filled.messagePath)) {
+        return undefined;
+      }
+      return filled;
+    });
 
     if (changedPaths.length === 0) {
       continue;
@@ -363,21 +343,24 @@ function receiveVariables(variables: GlobalVariables): void {
 
 // Check for any message data we no longer need.
 function evictCache() {
-  const topics = R.pipe(
-    R.chain(({ topics: clientTopics }: Client) => clientTopics),
-    R.uniq,
-  )(R.values(clients));
-  blocks = R.pick(topics, blocks);
-  current = R.pick(topics, current);
+  const topics = uniq(Object.values(clients).flatMap((client) => client.topics));
+  blocks = pick(blocks, topics);
+  current = pick(current, topics);
 }
 
 function addBlock(block: Messages): void {
-  const topics = R.keys(block);
-  blocks = R.mergeWith(R.concat, blocks, block);
+  const topics = Object.keys(block);
 
-  for (const client of R.values(clients)) {
+  const newBlocks = { ...blocks };
+  for (const [topic, messages] of Object.entries(block)) {
+    const existing = newBlocks[topic];
+    newBlocks[topic] = existing?.concat(messages) ?? messages;
+  }
+  blocks = newBlocks;
+
+  for (const client of Object.values(clients)) {
     const { params } = client;
-    const relevantTopics = R.intersection(topics, client.topics);
+    const relevantTopics = intersection(topics, client.topics);
     if (params == undefined || isSingleMessage(params) || relevantTopics.length === 0) {
       continue;
     }
@@ -395,7 +378,7 @@ function addBlock(block: Messages): void {
 function clearCurrent(): void {
   current = {};
 
-  for (const client of R.values(clients)) {
+  for (const client of Object.values(clients)) {
     mutateClient(client.id, {
       ...client,
       current: initAccumulated(client.topics),
@@ -414,7 +397,7 @@ function addCurrent(events: readonly MessageEvent[]): void {
   }
 
   if (!isLive) {
-    for (const client of R.values(clients)) {
+    for (const client of Object.values(clients)) {
       const { params } = client;
       if (params == undefined) {
         continue;
@@ -425,7 +408,7 @@ function addCurrent(events: readonly MessageEvent[]): void {
           client,
           buildPlot(
             params,
-            R.map((messages) => messages.slice(-1), current),
+            mapValues(current, (messages) => messages.slice(-1)),
           ),
         );
         continue;
@@ -440,7 +423,7 @@ function addCurrent(events: readonly MessageEvent[]): void {
     return;
   }
 
-  for (const client of R.values(clients)) {
+  for (const client of Object.values(clients)) {
     const { params, current: previous } = client;
     if (params == undefined) {
       continue;
@@ -454,13 +437,13 @@ function addCurrent(events: readonly MessageEvent[]): void {
         client,
         buildPlot(
           params,
-          R.map((messages) => messages.slice(-1), current),
+          mapValues(current, (messages) => messages.slice(-1)),
         ),
       );
       continue;
     }
 
-    if (R.isEmpty(newMessages)) {
+    if (isEmpty(newMessages)) {
       continue;
     }
 
@@ -511,7 +494,7 @@ function compressClients(): void {
     return;
   }
 
-  current = R.map((messages) => {
+  current = mapValues(current, (messages) => {
     if (messages.length > 10000) {
       return messages.slice(messages.length - 10000);
     }
@@ -523,11 +506,11 @@ function compressClients(): void {
     }
 
     const cutoff = subtractTimes(end, CULL_THRESHOLD);
-    const index = R.findIndex(({ receiveTime }) => compareTimes(receiveTime, cutoff) > 0, messages);
+    const index = messages.findIndex(({ receiveTime }) => compareTimes(receiveTime, cutoff) > 0);
     return messages.slice(index);
-  }, current);
+  });
 
-  for (const client of R.values(clients)) {
+  for (const client of Object.values(clients)) {
     const { params } = client;
     if (params == undefined) {
       continue;

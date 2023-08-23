@@ -2,18 +2,17 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import * as R from "ramda";
-
 import { TypedData, ObjectData } from "./types";
 
 export type Point = { index: number; x: number; y: number; label: string | undefined };
 
 // Get the length of a typed dataset.
 export function getTypedLength(data: TypedData[]): number {
-  return R.pipe(
-    R.map((v: TypedData) => v.x.length),
-    R.sum,
-  )(data);
+  let length = 0;
+  for (const typedData of data) {
+    length += typedData.x.length;
+  }
+  return length;
 }
 
 export function* iterateNormal(dataset: ObjectData): Generator<Point> {
@@ -70,14 +69,14 @@ export function* iterateTyped<T extends { [key: string]: Array<any> | Float32Arr
     }
 
     // Find a property for which we can check the length
-    const first = R.head(R.values(slice));
+    const first = Object.values(slice)[0];
     if (first == undefined) {
       continue;
     }
 
     for (let j = 0; j < first.length; j++) {
-      for (const key of R.keys(slice)) {
-        point[key] = slice[key]?.[j];
+      for (const key of Object.keys(slice)) {
+        point[key as keyof T] = slice[key]?.[j];
       }
 
       point.index = index;

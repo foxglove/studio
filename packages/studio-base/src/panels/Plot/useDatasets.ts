@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import * as Comlink from "comlink";
-import * as R from "ramda";
+import { isEmpty, omit, pick, uniq } from "lodash";
 import { useEffect, useMemo } from "react";
 import { v4 as uuidv4 } from "uuid";
 
@@ -53,19 +53,16 @@ let clients: Record<string, Client> = {};
 // Calculate the list of unique topics that _all_ of the plots need and
 // nominate one panel to subscribe to the topics on behalf of the rest.
 function chooseClient() {
-  if (R.isEmpty(clients)) {
+  if (isEmpty(clients)) {
     return;
   }
 
-  const clientList = R.values(clients);
-  const topics = R.pipe(
-    R.chain((client: Client) => client.topics),
-    R.uniq,
-  )(clientList);
-  R.head(clientList)?.setter(topics);
+  const clientList = Object.values(clients);
+  const topics = uniq(clientList.flatMap((client) => client.topics));
+  clientList[0]?.setter(topics);
 
   // Also clear the status of any topics we're no longer using
-  blockStatus = R.map((block) => R.pick(topics, block), blockStatus);
+  blockStatus = blockStatus.map((block) => pick(block, topics));
 }
 
 // Subscribe to "current" messages (those near the seek head) and forward new
@@ -82,8 +79,7 @@ function useData(id: string, topics: readonly string[]) {
     };
     chooseClient();
     return () => {
-      const { [id]: _, ...rest } = clients;
-      clients = rest;
+      clients = omit(clients, id);
       chooseClient();
     };
   }, [id, topics]);
@@ -116,7 +112,7 @@ function useData(id: string, topics: readonly string[]) {
   const blocks = useBlocks(R.map((v) => ({ topic: v, preloadType: "full" }), subscribed));
   React.useEffect(() => {
     for (const [index, block] of blocks.entries()) {
-      if (R.isEmpty(block)) {
+      if (isEmpty(block)) {
         break;
       }
 
@@ -134,7 +130,7 @@ function useData(id: string, topics: readonly string[]) {
       }
       blockStatus[index] = status;
 
-      if (!R.isEmpty(messages)) {
+      if (!isEmpty(messages)) {
         void service?.addBlock(messages);
       }
     }

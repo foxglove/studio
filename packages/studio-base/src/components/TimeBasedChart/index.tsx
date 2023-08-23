@@ -15,7 +15,6 @@ import { Button, Fade, Tooltip, useTheme } from "@mui/material";
 import { ChartOptions, ScaleOptions } from "chart.js";
 import { AnnotationOptions } from "chartjs-plugin-annotation";
 import { isEqual } from "lodash";
-import * as R from "ramda";
 import React, {
   ComponentProps,
   MouseEvent,
@@ -201,11 +200,11 @@ export default function TimeBasedChart(props: Props): JSX.Element {
 
   React.useEffect(() => {
     setDatasetBounds((oldBounds) => {
-      if (provided != undefined && R.equals(oldBounds, provided.bounds)) {
+      if (provided != undefined && isEqual(oldBounds, provided.bounds)) {
         return provided.bounds;
       }
 
-      if (typedProvided != undefined && R.equals(oldBounds, typedProvided.bounds)) {
+      if (typedProvided != undefined && isEqual(oldBounds, typedProvided.bounds)) {
         return typedProvided.bounds;
       }
 
