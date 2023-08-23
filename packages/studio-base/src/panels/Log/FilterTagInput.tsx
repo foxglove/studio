@@ -48,7 +48,6 @@ export function FilterTagInput({
       ChipProps={{
         className: classes.chip,
         variant: "filled",
-        size: "small",
       }}
       renderInput={(params) => (
         <TextField {...params} size="small" className={classes.input} placeholder="Search filter" />

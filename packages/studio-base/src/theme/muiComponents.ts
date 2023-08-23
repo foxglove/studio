@@ -210,6 +210,9 @@ export default function muiComponents(theme: Theme): Theme["components"] & MuiLa
         labelMedium: {
           fontSize: theme.typography.body2.fontSize,
         },
+        deleteIcon: {
+          marginRight: theme.spacing(0.25),
+        },
       },
     },
     MuiFormLabel: {
