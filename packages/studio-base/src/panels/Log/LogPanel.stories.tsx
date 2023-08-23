@@ -17,7 +17,7 @@ import { range } from "lodash";
 
 import PanelSetup, { Fixture } from "@foxglove/studio-base/stories/PanelSetup";
 
-import { LogPanel } from "./LogPanel";
+import LogPanel from "./index";
 
 const fixture: Fixture = {
   topics: [{ name: "/rosout", schemaName: "rosgraph_msgs/Log" }],
@@ -215,13 +215,13 @@ const foxgloveLogFixture: Fixture = {
 
 export default {
   title: "panels/Log",
-  component: Log,
+  component: LogPanel,
 };
 
 export const Simple: StoryObj = {
   render: () => (
     <PanelSetup fixture={fixture}>
-      <Log />
+      <LogPanel />
     </PanelSetup>
   ),
 };
@@ -229,7 +229,7 @@ export const Simple: StoryObj = {
 export const Scrolled: StoryObj = {
   render: () => (
     <PanelSetup fixture={makeLongFixture()}>
-      <Log />
+      <LogPanel />
     </PanelSetup>
   ),
 };
@@ -237,7 +237,7 @@ export const Scrolled: StoryObj = {
 export const WithSettings: StoryObj = {
   render: () => (
     <PanelSetup fixture={fixture} includeSettings>
-      <Log />
+      <LogPanel />
     </PanelSetup>
   ),
 };
@@ -259,7 +259,9 @@ export const TopicToRenderWithSettings: StoryObj = {
       }}
       includeSettings
     >
-      <Log overrideConfig={{ topicToRender: "/foo/rosout", searchTerms: [], minLogLevel: 1 }} />
+      <LogPanel
+        overrideConfig={{ topicToRender: "/foo/rosout", searchTerms: [], minLogLevel: 1 }}
+      />
     </PanelSetup>
   ),
 };
@@ -267,7 +269,7 @@ export const TopicToRenderWithSettings: StoryObj = {
 export const FilteredTerms: StoryObj = {
   render: () => (
     <PanelSetup fixture={fixture}>
-      <Log
+      <LogPanel
         overrideConfig={{
           searchTerms: ["multiple", "/some_topic"],
           minLogLevel: 1,
@@ -282,7 +284,7 @@ export const FilteredTerms: StoryObj = {
 export const CaseInsensitiveFilter: StoryObj = {
   render: () => (
     <PanelSetup fixture={fixture}>
-      <Log
+      <LogPanel
         overrideConfig={{
           searchTerms: ["could", "Ipsum"],
           minLogLevel: 1,
@@ -297,7 +299,7 @@ export const CaseInsensitiveFilter: StoryObj = {
 export const AutoCompleteItems: StoryObj = {
   render: () => (
     <PanelSetup fixture={fixture}>
-      <Log
+      <LogPanel
         overrideConfig={{
           searchTerms: ["could", "Ipsum"],
           minLogLevel: 1,
@@ -316,7 +318,7 @@ export const AutoCompleteItems: StoryObj = {
 export const FoxgloveLog: StoryObj = {
   render: () => (
     <PanelSetup fixture={foxgloveLogFixture}>
-      <Log />
+      <LogPanel />
     </PanelSetup>
   ),
 };

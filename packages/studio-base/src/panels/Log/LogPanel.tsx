@@ -210,6 +210,9 @@ function LogPanel(props: Props): JSX.Element {
   return (
     <ThemeProvider isDark={isDarkTheme}>
       <Stack fullHeight>
+        <Stack fullHeight flexGrow={1}>
+          <LogList items={filteredMessages} />
+        </Stack>
         <FilterBar
           searchTerms={searchTermsSet}
           minLogLevel={minLogLevel}
@@ -217,9 +220,6 @@ function LogPanel(props: Props): JSX.Element {
           messages={filteredMessages}
           onFilterChange={setFilter}
         />
-        <Stack fullHeight flexGrow={1}>
-          <LogList items={filteredMessages} />
-        </Stack>
       </Stack>
     </ThemeProvider>
   );

@@ -104,6 +104,7 @@ export default function muiComponents(theme: Theme): Theme["components"] & MuiLa
       },
       styleOverrides: {
         root: {
+          borderRadius: theme.shape.borderRadius,
           boxShadow: theme.shadows[2],
         },
         colorInherit: {

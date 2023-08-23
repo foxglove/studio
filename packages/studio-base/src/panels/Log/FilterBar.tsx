@@ -11,17 +11,14 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import CopyAllIcon from "@mui/icons-material/CopyAll";
-import { MenuItem, Select, Typography } from "@mui/material";
+import { MenuItem, Paper, Select } from "@mui/material";
 import { useCallback } from "react";
 import { makeStyles } from "tss-react/mui";
 
 import { Immutable } from "@foxglove/studio";
-import ToolbarIconButton from "@foxglove/studio-base/components/PanelToolbar/ToolbarIconButton";
-import Stack from "@foxglove/studio-base/components/Stack";
+import CopyButton from "@foxglove/studio-base/components/CopyButton";
 import { FilterTagInput } from "@foxglove/studio-base/panels/Log/FilterTagInput";
 import useLogStyles from "@foxglove/studio-base/panels/Log/useLogStyles";
-import clipboard from "@foxglove/studio-base/util/clipboard";
 
 import LevelToString from "./LevelToString";
 import { LogLevel, NormalizedLogMessage } from "./types";
@@ -37,13 +34,16 @@ const LOG_LEVEL_OPTIONS = [
 
 const useStyles = makeStyles()((theme) => ({
   root: {
-    marginRight: theme.spacing(-1),
+    display: "flex",
+    padding: theme.spacing(0.75),
+    gap: theme.spacing(0.5),
+    alignItems: "flex-end",
   },
-  levelSelect: {
-    ".MuiSelect-select.MuiInputBase-inputSizeSmall": {
-      paddingBottom: `${theme.spacing(0.375)} !important`,
-      paddingTop: `${theme.spacing(0.375)} !important`,
-    },
+  button: {
+    flex: "none",
+  },
+  select: {
+    minWidth: 100,
   },
 }));
 
@@ -83,7 +83,7 @@ export function FilterBar(props: FilterBarProps): JSX.Element {
     const className = logLevelToClass(option.key);
     return (
       <MenuItem key={index} value={option.key} className={className}>
-        <Typography variant="body2">{option.text}</Typography>
+        {option.text}
       </MenuItem>
     );
   });
@@ -98,9 +98,9 @@ export function FilterBar(props: FilterBarProps): JSX.Element {
   );
 
   return (
-    <Stack className={classes.root} flex="auto" direction="row" gap={0.5} alignItems="center">
+    <Paper square className={classes.root}>
       <Select
-        className={classes.levelSelect}
+        className={classes.select}
         value={props.minLogLevel}
         size="small"
         renderValue={renderLogLevelValue}
@@ -123,16 +123,11 @@ export function FilterBar(props: FilterBarProps): JSX.Element {
           });
         }}
       />
-      <Stack direction="row" alignItems="center" gap={0.5}>
-        <ToolbarIconButton
-          onClick={() => {
-            void clipboard.copy(JSON.stringify(props.messages, undefined, 2) ?? "");
-          }}
-          title="Copy log to clipboard"
-        >
-          <CopyAllIcon />
-        </ToolbarIconButton>
-      </Stack>
-    </Stack>
+      <CopyButton
+        size="small"
+        getText={() => JSON.stringify(props.messages, undefined, 2) ?? ""}
+        className={classes.button}
+      />
+    </Paper>
   );
 }

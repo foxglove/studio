@@ -17,7 +17,7 @@ type Props = {
   saveConfig: SaveConfig<unknown>;
 };
 
-function MapPanelAdapter(props: Props) {
+function LogPanelAdapter(props: Props) {
   const crash = useCrash();
   const boundInitPanel = useMemo(() => initPanel.bind(undefined, crash), [crash]);
 
@@ -31,7 +31,7 @@ function MapPanelAdapter(props: Props) {
   );
 }
 
-MapPanelAdapter.panelType = "RosOut";
-MapPanelAdapter.defaultConfig = { searchTerms: [], minLogLevel: 1 } satisfies Config;
+LogPanelAdapter.panelType = "RosOut";
+LogPanelAdapter.defaultConfig = { searchTerms: [], minLogLevel: 1 } satisfies Config;
 
-export default Panel(MapPanelAdapter);
+export default Panel(LogPanelAdapter);

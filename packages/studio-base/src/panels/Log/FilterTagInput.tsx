@@ -2,24 +2,32 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { TextField } from "@mui/material";
-import Autocomplete from "@mui/material/Autocomplete";
+import {
+  Autocomplete,
+  MenuItem,
+  MenuList,
+  MenuListProps,
+  TextField,
+  autocompleteClasses,
+  inputBaseClasses,
+} from "@mui/material";
 import { makeStyles } from "tss-react/mui";
 
 const useStyles = makeStyles()((theme) => ({
   input: {
-    ".MuiInputBase-root.MuiInputBase-sizeSmall .MuiAutocomplete-input.MuiInputBase-inputSizeSmall":
-      {
-        paddingBottom: theme.spacing(0.425),
-        paddingTop: theme.spacing(0.425),
-      },
-    ".MuiInputBase-root.MuiInputBase-sizeSmall": {
-      padding: theme.spacing(0.125),
-      gap: theme.spacing(0.25),
+    gap: theme.spacing(0.25),
+    flexWrap: "wrap",
+
+    [`&.${inputBaseClasses.root}.${autocompleteClasses.input}`]: {
+      width: "auto",
+    },
+    [`&.${inputBaseClasses.root}.${inputBaseClasses.sizeSmall}`]: {
+      paddingBlock: theme.spacing(0.275),
+      paddingLeft: theme.spacing(0.25),
     },
   },
   chip: {
-    "&.MuiAutocomplete-tag": {
+    [`&.${autocompleteClasses.tag}`]: {
       margin: 0,
     },
   },
@@ -50,8 +58,19 @@ export function FilterTagInput({
         variant: "filled",
         size: "small",
       }}
+      ListboxComponent={MenuList}
+      ListboxProps={{ dense: true } as MenuListProps}
+      renderOption={(props, option) => <MenuItem {...props}>{option}</MenuItem>}
       renderInput={(params) => (
-        <TextField {...params} size="small" className={classes.input} placeholder="Search filter" />
+        <TextField
+          {...params}
+          size="small"
+          InputProps={{
+            ...params.InputProps,
+            className: classes.input,
+          }}
+          placeholder="Search filter"
+        />
       )}
     />
   );
