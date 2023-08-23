@@ -230,7 +230,7 @@ export default function Table({
 
   const [{ pageIndex, pageSize }, setPagination] = React.useState<PaginationState>({
     pageIndex: 0,
-    pageSize: 30,
+    pageSize: 10,
   });
 
   const pagination = React.useMemo(
