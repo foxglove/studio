@@ -20,11 +20,11 @@ import KeyboardDoubleArrowRightIcon from "@mui/icons-material/KeyboardDoubleArro
 import { Container, IconButton, MenuItem, Select, Typography } from "@mui/material";
 import {
   ExpandedState,
+  PaginationState,
   createColumnHelper,
   flexRender,
   getCoreRowModel,
   getExpandedRowModel,
-  getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
@@ -138,14 +138,10 @@ function getColumnsFromObject(val: CellValue, accessorPath: string, iconButtonCl
   const obj = val.toJSON?.() ?? val;
   if (isTypedArray(obj)) {
     return [
-      columnHelper.display({
+      columnHelper.accessor((row) => row, {
         id: "typedArray",
         header: "",
-        enableSorting: false,
-        enableColumnFilter: false,
-        cell: ({ row }) => {
-          return <span>{`${obj[row.index]}`}</span>;
-        },
+        cell: (info) => info.getValue(),
       }),
     ];
   }
@@ -232,6 +228,19 @@ export default function Table({
     return getColumnsFromObject(maybeMessage as CellValue, accessorPath, classes.iconButton);
   }, [accessorPath, classes.iconButton, value]);
 
+  const [{ pageIndex, pageSize }, setPagination] = React.useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 30,
+  });
+
+  const pagination = React.useMemo(
+    () => ({
+      pageIndex,
+      pageSize,
+    }),
+    [pageIndex, pageSize],
+  );
+
   const data = React.useMemo(() => {
     return Array.isArray(value) ? value : isTypedArray(value) ? Array.from(value) : [value];
   }, [value]);
@@ -241,15 +250,18 @@ export default function Table({
   const table = useReactTable({
     autoResetExpanded: false,
     columns,
-    data,
+    data: data.slice(pageIndex * pageSize, (pageIndex + 1) * pageSize),
     getCoreRowModel: getCoreRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
-    getPaginationRowModel: isNested ? getPaginationRowModel() : undefined,
     getSortedRowModel: getSortedRowModel(),
-    initialState: { pagination: { pageSize: 30 } },
+    initialState: { pagination },
     onExpandedChange: setExpanded,
+    manualPagination: true,
+    pageCount: Math.ceil(data.length / pagination.pageSize),
+    onPaginationChange: setPagination,
     state: {
       expanded,
+      pagination,
     },
   });
 
@@ -265,10 +277,6 @@ export default function Table({
       </EmptyState>
     );
   }
-
-  const {
-    pagination: { pageIndex, pageSize },
-  } = table.getState();
 
   return (
     <>
@@ -299,22 +307,19 @@ export default function Table({
           })}
         </thead>
         <tbody>
-          {table
-            .getRowModel()
-            .rows.slice(pageIndex * pageSize, (pageIndex + 1) * pageSize)
-            .map((row) => {
-              return (
-                <tr className={classes.tableRow} key={row.index}>
-                  {row.getVisibleCells().map((cell, i) => {
-                    return (
-                      <td className={classes.tableData} key={i}>
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </td>
-                    );
-                  })}
-                </tr>
-              );
-            })}
+          {table.getRowModel().rows.map((row) => {
+            return (
+              <tr className={classes.tableRow} key={row.id}>
+                {row.getVisibleCells().map((cell) => {
+                  return (
+                    <td className={classes.tableData} key={cell.id}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  );
+                })}
+              </tr>
+            );
+          })}
         </tbody>
       </table>
       {!isNested && (
