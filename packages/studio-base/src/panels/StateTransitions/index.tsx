@@ -204,15 +204,15 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
 
   const subscriptions: SubscribePayload[] = useMemo(
     () =>
-      filterMap(pathStrings, (path) => {
-        const payload = subscribePayloadFromMessagePath(path, "full");
+      filterMap(paths, (path) => {
+        const payload = subscribePayloadFromMessagePath(path.value, "full");
         // Include the header in case we are ordering by header stamp.
-        if (payload?.fields != undefined) {
+        if (path.timestampMethod === "headerStamp" && payload?.fields != undefined) {
           payload.fields.push("header");
         }
         return payload;
       }),
-    [pathStrings],
+    [paths],
   );
 
   const blocks = PanelAPI.useBlocksSubscriptions(subscriptions);
