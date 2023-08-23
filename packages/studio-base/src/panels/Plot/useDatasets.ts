@@ -109,7 +109,7 @@ function useData(id: string, topics: readonly string[]) {
     ),
   });
 
-  const blocks = useBlocks(R.map((v) => ({ topic: v, preloadType: "full" }), subscribed));
+  const blocks = useBlocks(subscribed.map((topic) => ({ topic, preloadType: "full" })));
   React.useEffect(() => {
     for (const [index, block] of blocks.entries()) {
       if (isEmpty(block)) {
