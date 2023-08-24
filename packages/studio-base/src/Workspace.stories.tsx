@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { StoryObj } from "@storybook/react";
-import { fireEvent, screen, userEvent } from "@storybook/testing-library";
+import { fireEvent, screen } from "@storybook/testing-library";
 import { useEffect, useState } from "react";
 
 import { DraggedMessagePath } from "@foxglove/studio";
@@ -63,7 +63,7 @@ class MockPanelCatalog implements PanelCatalog {
               const [droppedPath, setDroppedPath] = useState<DraggedMessagePath | undefined>();
               useEffect(() => {
                 setMessagePathDropConfig({
-                  getDropStatus(path) {
+                  getDropStatus(_path) {
                     return { canDrop: true, message: "Example drop message" };
                   },
                   handleDrop(path) {
