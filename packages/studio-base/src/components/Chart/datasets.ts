@@ -16,7 +16,10 @@ export function getTypedLength(data: TypedData[]): number {
   )(data);
 }
 
-export function* iterateNormal(dataset: ObjectData): Generator<Point> {
+/**
+ * iterateObjects iterates over ObjectData, yielding a `Point` for each entry.
+ */
+export function* iterateObjects(dataset: ObjectData): Generator<Point> {
   let index = 0;
   for (const datum of dataset) {
     if (datum == undefined) {
@@ -35,8 +38,27 @@ export function* iterateNormal(dataset: ObjectData): Generator<Point> {
   }
 }
 
-// These `any`s do not introduce anything unsafe; they are necessary for
-// specifying the type (which is ultimately type-checked at point of use.)
+// eslint-disable @typescript-eslint/no-explicit-any
+/**
+ * ExtractPoint maps an object type with array properties to one with the
+ * arrays replaced by their element type. For example:
+ * type Foo = {
+ *   foo: Float32Array;
+ *   bar: number[];
+ *   baz: string[];
+ * }
+ * would be mapped to:
+ * ExtractPoint<Foo> == {
+ *   foo: number;
+ *   bar: number;
+ *   baz: string;
+ * }
+ * It is used to go from `TypedData`'s various incarnations to what a single
+ * point would look like as a `Datum`.
+ *
+ * These `any`s do not introduce anything unsafe; they are necessary for
+ * specifying the type (which is ultimately type-checked at point of use.)
+ */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ExtractPoint<T extends { [key: string]: Array<any> | Float32Array }> = {
   [P in keyof T]-?: T[P] extends Float32Array ? number : NonNullable<T[P]>[0];
@@ -47,12 +69,11 @@ export type ExtractPoint<T extends { [key: string]: Array<any> | Float32Array }>
   label: string | undefined;
 };
 
-// Iterate over a typed dataset one point at a time. iterateTyped yields
-// objects that look like Datums: every property on T (which must consist of a
-// dictionary of arrays) is mapped to a corresponding property on the yielded
-// value. This abstraction is necessary because the Plot panel extends
-// TypedData with more fields; we still want those to be available while
-// iterating.
+/**
+ *   Iterate over a typed dataset one point at a time. This abstraction is
+ *   necessary because the Plot panel extends TypedData with more fields; we
+ *   still want those to be available while iterating.
+ */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function* iterateTyped<T extends { [key: string]: Array<any> | Float32Array }>(
   dataset: T[],

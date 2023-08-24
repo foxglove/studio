@@ -4,15 +4,15 @@
 
 import * as R from "ramda";
 
-import { iterateNormal } from "@foxglove/studio-base/components/Chart/datasets";
+import { iterateObjects } from "@foxglove/studio-base/components/Chart/datasets";
 import { RpcScales } from "@foxglove/studio-base/components/Chart/types";
 
 import { downsample } from "./downsample";
-import { ChartDatasets, View } from "./types";
+import { ChartDatasets, PlotViewport } from "./types";
 
 type UpdateParams = {
   datasets?: ChartDatasets;
-  datasetBounds?: View;
+  datasetBounds?: PlotViewport;
   scales?: RpcScales;
 };
 
@@ -21,7 +21,7 @@ type UpdateParams = {
  */
 export class Downsampler {
   #datasets: ChartDatasets = [];
-  #datasetBounds?: View;
+  #datasetBounds?: PlotViewport;
   #scales?: RpcScales;
 
   /**
@@ -69,7 +69,7 @@ export class Downsampler {
     }
 
     const { bounds: dataBounds } = this.#datasetBounds;
-    const view: View = {
+    const view: PlotViewport = {
       width: 0,
       height: 0,
       bounds: dataBounds,
@@ -80,7 +80,7 @@ export class Downsampler {
         return dataset;
       }
 
-      const downsampled = downsample(iterateNormal, dataset, view);
+      const downsampled = downsample(iterateObjects, dataset, view);
       const resolved = R.map((i) => dataset.data[i], downsampled);
 
       // NaN item values create gaps in the line

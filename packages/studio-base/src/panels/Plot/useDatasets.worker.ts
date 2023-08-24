@@ -16,7 +16,7 @@ import { downsample } from "@foxglove/studio-base/components/TimeBasedChart/down
 import {
   ProviderState,
   ProviderStateSetter,
-  View,
+  PlotViewport,
 } from "@foxglove/studio-base/components/TimeBasedChart/types";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { Topic, MessageEvent } from "@foxglove/studio-base/players/types";
@@ -66,7 +66,7 @@ type Client = {
   addPartial: Setter | undefined;
   params: PlotParams | undefined;
   topics: readonly string[];
-  view: View | undefined;
+  view: PlotViewport | undefined;
   blocks: Accumulated;
   current: Accumulated;
   queueRebuild: () => void;
@@ -494,7 +494,7 @@ function updateParams(id: string, params: PlotParams): void {
   evictCache();
 }
 
-function updateView(id: string, view: View): void {
+function updateView(id: string, view: PlotViewport): void {
   const client = clients[id];
   if (client == undefined) {
     return;

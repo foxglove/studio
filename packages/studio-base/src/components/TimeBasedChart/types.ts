@@ -24,14 +24,21 @@ export type Bounds = {
   y: { min: number; max: number };
 };
 
-export type View = {
-  width: number;
-  height: number;
+/**
+ * PlotViewport represents the visible region of a plot in terms of its axes
+ * and its dimensions on the screen.
+ */
+export type PlotViewport = {
+  // the dimensions of the plot in screen space
+  width: number; // px
+  height: number; // px
+  // and its axes
   bounds: Bounds;
 };
 
 export type ProviderState<T> = {
   data: AbstractChartData<"scatter", T>;
+  // the bounds of the data contained in the `data` field
   bounds: Bounds;
 };
 export type ChartProviderState = ProviderState<ObjectData>;
@@ -39,12 +46,17 @@ export type TypedProviderState = ProviderState<TypedData[]>;
 
 export type ProviderStateSetter<T> = (state: ProviderState<T>) => void;
 
-export type Provider<T> = {
-  setView: (view: View) => void;
+/**
+ * PlotDataProvider gives the user of a TimeBasedChart more granular control
+ * over the data the plot displays, including giving it access to the current
+ * viewport.
+ */
+export type PlotDataProvider<T> = {
+  setView: (view: PlotViewport) => void;
   register: (setter: ProviderStateSetter<T>, addPartial: ProviderStateSetter<T>) => void;
 };
 
-export type ChartDataProvider = Provider<ObjectData>;
-export type TypedDataProvider = Provider<TypedData[]>;
+export type ObjectDataProvider = PlotDataProvider<ObjectData>;
+export type TypedDataProvider = PlotDataProvider<TypedData[]>;
 
 export type { ChartData };
