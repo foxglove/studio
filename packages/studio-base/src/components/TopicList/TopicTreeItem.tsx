@@ -7,7 +7,7 @@ import {
   ChevronRight12Regular,
   ReOrderDotsVertical16Regular,
 } from "@fluentui/react-icons";
-import { Chip, Divider, Typography } from "@mui/material";
+import { Typography } from "@mui/material";
 import { useMemo } from "react";
 import { NodeRendererProps } from "react-arborist";
 import { useDrag } from "react-dnd";
@@ -17,13 +17,13 @@ import {
   MESSAGE_PATH_DRAG_TYPE,
   MessagePathDragObject,
 } from "@foxglove/studio-base/components/TopicList";
+import { StatsChip } from "@foxglove/studio-base/components/TopicList/StatsChip";
 import { useTreeStyles } from "@foxglove/studio-base/components/TopicList/useTreeStyles";
 
 import { TreeData } from "./types";
 
-export function TopicTreeItem(props: NodeRendererProps<TreeData>): JSX.Element {
-  const { node, style } = props;
-  const { cx, classes } = useTreeStyles();
+export function TopicTreeItem({ node }: NodeRendererProps<TreeData>): JSX.Element {
+  const { cx, classes, theme } = useTreeStyles();
 
   const Icon = node.isInternal ? (
     node.isOpen ? (
@@ -49,7 +49,9 @@ export function TopicTreeItem(props: NodeRendererProps<TreeData>): JSX.Element {
     <div
       onClick={() => node.isInternal && node.toggle()}
       ref={connectDragSource}
-      style={node.level > 0 ? style : undefined}
+      style={{
+        paddingLeft: node.level > 1 ? theme.spacing(node.level - 1 * 1) : undefined,
+      }}
       className={cx(classes.node, {
         ...node.state,
         isTopLevel: node.level === 0,
@@ -79,26 +81,7 @@ export function TopicTreeItem(props: NodeRendererProps<TreeData>): JSX.Element {
           </Typography>
         </Stack>
       )}
-      {node.level === 0 && (
-        <div className={classes.stats}>
-          <Chip
-            color="secondary"
-            variant="outlined"
-            size="small"
-            label={
-              <Stack direction="row" alignItems="center" gap={0.75}>
-                <div data-topic={node.data.name} data-topic-stat="frequency">
-                  &mdash;
-                </div>
-                <Divider orientation="vertical" flexItem style={{ borderColor: "currentColor" }} />
-                <div data-topic={node.data.name} data-topic-stat="count">
-                  &mdash;
-                </div>
-              </Stack>
-            }
-          />
-        </div>
-      )}
+      {node.level === 0 && <StatsChip topicName={node.data.name} />}
       <ReOrderDotsVertical16Regular className={classes.dragHandle} />
     </div>
   );

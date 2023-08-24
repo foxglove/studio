@@ -232,12 +232,11 @@ export function TopicList(): JSX.Element {
               padding={0}
               rowHeight={28}
               variableRowHeight={(node) => (node.level === 0 ? 50 : 28)}
-              indent={12}
+              indent={8}
               overscanCount={8}
               disableDrag // we implement our own drag & drop on certain nodes only
               disableDrop
               disableEdit
-              disableMultiSelection
               onSelect={(selected) => setSelectedCount(selected.length)}
               onActivate={(node) => setActive(node.data)}
               onFocus={(node) => setFocused(node.data)}

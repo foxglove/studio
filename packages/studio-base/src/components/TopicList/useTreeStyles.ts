@@ -4,75 +4,70 @@
 
 import { makeStyles } from "tss-react/mui";
 
-export const useTreeStyles = makeStyles<void, "dragHandle" | "node" | "stats">()(
-  (theme, _, classes) => ({
-    /* eslint-disable tss-unused-classes/unused-classes */
-    root: {
-      containerType: "inline-size",
-    },
-    aliasedTopicName: {
-      color: theme.palette.primary.main,
-      display: "block",
-      textAlign: "start",
-    },
-    icon: {
-      alignItems: "center",
-      justifyContent: "center",
-      display: "flex",
-      padding: theme.spacing(0.75),
-    },
-    row: {
-      boxSizing: "border-box",
-      whiteSpace: "nowrap",
-      cursor: "pointer",
+type TreeClasses = "dragHandle" | "node";
 
-      [`:not(:hover) .${classes.node} .${classes.dragHandle}`]: {
-        visibility: "hidden",
-      },
-      ":focus": {
-        outline: "none",
+export const useTreeStyles = makeStyles<void, TreeClasses>()((theme, _, classes) => ({
+  /* eslint-disable tss-unused-classes/unused-classes */
+  root: {
+    containerType: "inline-size",
+  },
+  aliasedTopicName: {
+    color: theme.palette.primary.main,
+    display: "block",
+    textAlign: "start",
+  },
+  icon: {
+    alignItems: "center",
+    justifyContent: "center",
+    display: "flex",
+    padding: theme.spacing(0.75),
+  },
+  row: {
+    whiteSpace: "nowrap",
+    cursor: "pointer",
 
-        [`& .${classes.node}`]: {
-          outline: `1px solid ${theme.palette.primary.main}`,
-          outlineOffset: -1,
+    [`:not(:hover) .${classes.node} .${classes.dragHandle}`]: {
+      visibility: "hidden",
+    },
+    ":focus": {
+      outline: "none",
 
-          [`.${classes.dragHandle}`]: {
-            visibility: "visible",
-          },
+      [`& .${classes.node}`]: {
+        outline: `1px solid ${theme.palette.primary.main}`,
+        outlineOffset: -1,
+
+        [`.${classes.dragHandle}`]: {
+          visibility: "visible",
         },
       },
-      [`@container (max-width: 375px)`]: {
-        [`.${classes.stats}`]: { display: "none" },
-      },
     },
-    /* eslint-enable tss-unused-classes/unused-classes */
-    node: {
-      position: "relative",
-      display: "flex",
-      alignItems: "center",
-      height: "100%",
-      gap: theme.spacing(0.75),
-      paddingRight: theme.spacing(0.75),
-      backgroundColor: theme.palette.background.paper,
-      borderTop: `1px solid ${theme.palette.action.selected}`,
+  },
+  /* eslint-enable tss-unused-classes/unused-classes */
+  node: {
+    position: "relative",
+    display: "flex",
+    alignItems: "center",
+    height: "100%",
+    gap: theme.spacing(0.75),
+    paddingRight: theme.spacing(0.75),
+    backgroundColor: theme.palette.background.paper,
+    borderTop: `1px solid ${theme.palette.action.selected}`,
 
-      "&.willReceiveDrop": {
-        background: theme.palette.action.focus,
-      },
-      "&:not(.isTopLevel)": {
-        borderTop: `1px solid ${theme.palette.background.paper}`,
-        backgroundColor: theme.palette.action.hover,
-      },
-      "&.isSelected": {},
-      "&.isSelectedStart": {},
-      "&.isSelectedEnd": {},
-      "&.isSelectedStart.isSelectedEnd": {},
+    "&.willReceiveDrop": {
+      background: theme.palette.action.focus,
     },
-    dragHandle: {
-      opacity: 0.5,
+    "&:not(.isTopLevel)": {
+      borderTop: `1px solid ${theme.palette.background.paper}`,
+      backgroundColor: theme.palette.action.hover,
     },
-    stats: {
-      display: "flex",
+    "&.isSelected": {
+      backgroundColor: theme.palette.action.selected,
     },
-  }),
-);
+    "&.isSelectedStart": {},
+    "&.isSelectedEnd": {},
+    "&.isSelectedStart.isSelectedEnd": {},
+  },
+  dragHandle: {
+    opacity: 0.5,
+  },
+}));
