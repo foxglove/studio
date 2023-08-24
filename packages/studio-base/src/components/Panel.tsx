@@ -59,6 +59,7 @@ import {
   WorkspaceStoreSelectors,
 } from "@foxglove/studio-base/context/Workspace/WorkspaceContext";
 import usePanelDrag from "@foxglove/studio-base/hooks/usePanelDrag";
+import { useMessagePathDrop } from "@foxglove/studio-base/services/messagePathDragging";
 import { TabPanelConfig } from "@foxglove/studio-base/types/layouts";
 import { OpenSiblingPanel, PanelConfig, SaveConfig } from "@foxglove/studio-base/types/panels";
 import { TAB_PANEL_TYPE } from "@foxglove/studio-base/util/globalConstants";
@@ -126,6 +127,27 @@ const useStyles = makeStyles()((theme) => ({
     ".MuiButton-startIcon": {
       margin: 0,
     },
+  },
+  messagePathDropOverlay: {
+    position: "absolute",
+    inset: 0,
+    overflow: "hidden",
+    padding: theme.spacing(2),
+    zIndex: theme.zIndex.modal,
+    backgroundColor: theme.palette.action.hover,
+    backdropFilter: "blur(4px)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  messagePathDropOverlayText: {
+    textAlign: "center",
+    fontSize: theme.typography.subtitle1.fontSize,
+    color: theme.palette.secondary.contrastText,
+    overflowWrap: "anywhere",
+    padding: theme.spacing(1),
+    backgroundColor: theme.palette.secondary.light,
+    borderRadius: theme.shape.borderRadius * 2,
   },
 }));
 
@@ -462,6 +484,13 @@ export default function Panel<
       [parentPanelContext],
     );
 
+    const {
+      connectDropTarget: connectMessagePathDropTarget,
+      isOver: showDropOverlay,
+      message: dropMessage,
+      setMessagePathDropConfig,
+    } = useMessagePathDrop();
+
     // We use two separate sets of key handlers because the panel context and exitFullScreen
     // change often and invalidate our key handlers during user interactions.
     const { keyUpHandlers, keyDownHandlers } = useMemo(
@@ -555,6 +584,7 @@ export default function Panel<
             tabId,
             // disallow dragging the root panel in a layout
             connectToolbarDragHandle: isTopLevelPanel ? undefined : connectToolbarDragHandle,
+            setMessagePathDropConfig,
           }}
         >
           <KeyListener global keyUpHandlers={keyUpHandlers} keyDownHandlers={keyDownHandlers} />
@@ -583,6 +613,7 @@ export default function Panel<
                     connectOverlayDragPreview(el);
                     connectToolbarDragPreview(el);
                   }
+                  connectMessagePathDropTarget(el);
                 }}
               >
                 {isSelected && !fullscreen && numSelectedPanelsIfSelected > 1 && (
@@ -607,6 +638,11 @@ export default function Panel<
                         Create {numSelectedPanelsIfSelected} tabs
                       </Button>
                     </Stack>
+                  </div>
+                )}
+                {showDropOverlay && (
+                  <div className={classes.messagePathDropOverlay}>
+                    <div className={classes.messagePathDropOverlayText}>{dropMessage}</div>
                   </div>
                 )}
                 {type !== TAB_PANEL_TYPE && quickActionsKeyPressed && !fullscreen && (

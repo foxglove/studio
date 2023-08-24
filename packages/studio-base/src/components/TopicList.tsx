@@ -26,6 +26,7 @@ import {
 } from "@foxglove/studio-base/components/MessagePipeline";
 import Stack from "@foxglove/studio-base/components/Stack";
 import { PlayerPresence, TopicStats } from "@foxglove/studio-base/players/types";
+import { useMessagePathDrag } from "@foxglove/studio-base/services/messagePathDragging";
 import { Topic } from "@foxglove/studio-base/src/players/types";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
@@ -86,6 +87,11 @@ function TopicListItem({
   topic: Topic;
   positions: Set<number>;
 }): JSX.Element {
+  const { connectDragSource, cursor } = useMessagePathDrag({
+    path: topic.name,
+    rootSchemaName: topic.schemaName,
+  });
+
   const { classes } = useStyles();
   return (
     <ListItem
@@ -112,6 +118,8 @@ function TopicListItem({
           </Typography>
         </Stack>
       }
+      ref={connectDragSource}
+      style={{ cursor }}
     >
       <ListItemText
         primary={
