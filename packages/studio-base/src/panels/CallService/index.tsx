@@ -10,7 +10,6 @@ import { PanelExtensionContext } from "@foxglove/studio";
 import { CaptureErrorBoundary } from "@foxglove/studio-base/components/CaptureErrorBoundary";
 import Panel from "@foxglove/studio-base/components/Panel";
 import { PanelExtensionAdapter } from "@foxglove/studio-base/components/PanelExtensionAdapter";
-import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 
 import { CallService } from "./CallService";
@@ -20,9 +19,7 @@ function initPanel(crash: ReturnType<typeof useCrash>, context: PanelExtensionCo
   ReactDOM.render(
     <StrictMode>
       <CaptureErrorBoundary onError={crash}>
-        <ThemeProvider isDark>
-          <CallService context={context} />
-        </ThemeProvider>
+        <CallService context={context} />
       </CaptureErrorBoundary>
     </StrictMode>,
     context.panelElement,

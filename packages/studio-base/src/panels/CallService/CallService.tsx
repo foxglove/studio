@@ -10,6 +10,7 @@ import Log from "@foxglove/log";
 import { PanelExtensionContext, SettingsTreeAction } from "@foxglove/studio";
 import Stack from "@foxglove/studio-base/components/Stack";
 import { Config } from "@foxglove/studio-base/panels/CallService/types";
+import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import { defaultConfig, settingsActionReducer, useSettingsTree } from "./settings";
@@ -48,7 +49,6 @@ const useStyles = makeStyles<{ buttonColor?: string }>()((theme, { buttonColor }
         width: "100%",
         height: "100%",
         textAlign: "left",
-        backgroundColor: theme.palette.background.paper,
         overflow: "hidden",
         padding: theme.spacing(1, 0.5),
 
@@ -88,6 +88,7 @@ export function CallService({ context }: Props): JSX.Element {
   // panel extensions must notify when they've completed rendering
   // onRender will setRenderDone to a done callback which we can invoke after we've rendered
   const [renderDone, setRenderDone] = useState<() => void>(() => () => {});
+  const [colorScheme, setColorScheme] = useState<"dark" | "light" | undefined>();
   const [state, setState] = useState<State | undefined>();
   const [config, setConfig] = useState<Config>(() => ({
     ...defaultConfig,
@@ -103,8 +104,11 @@ export function CallService({ context }: Props): JSX.Element {
   }, [config, context]);
 
   useEffect(() => {
-    context.onRender = (_renderState, done) => {
+    context.watch("colorScheme");
+
+    context.onRender = (renderState, done) => {
       setRenderDone(() => done);
+      setColorScheme(renderState.colorScheme);
     };
 
     return () => {
@@ -174,74 +178,72 @@ export function CallService({ context }: Props): JSX.Element {
   }, [renderDone]);
 
   return (
-    <Stack fullHeight>
-      <Stack
-        flex="auto"
-        gap={1}
-        padding={1.5}
-        position="relative"
-        direction={config.layout === "horizontal" ? "row" : "column"}
-      >
-        <Stack flexGrow="1">
-          <Typography variant="caption" noWrap>
-            Request
-          </Typography>
-          <TextField
-            variant="outlined"
-            className={classes.textarea}
-            multiline
-            size="small"
-            placeholder="Enter service request as JSON"
-            value={config.requestPayload}
-            onChange={(event) => setConfig({ ...config, requestPayload: event.target.value })}
-            error={requestParseError != undefined}
-          />
-          {requestParseError && (
-            <Typography variant="caption" noWrap color={requestParseError ? "error" : undefined}>
-              {requestParseError}
+    <ThemeProvider isDark={colorScheme === "dark"}>
+      <Stack flex="auto" gap={1} padding={1.5} position="relative" fullHeight>
+        <Stack gap={1} flexGrow="1" direction={config.layout === "horizontal" ? "row" : "column"}>
+          <Stack flexGrow="1">
+            <Typography variant="caption" noWrap>
+              Request
+            </Typography>
+            <TextField
+              variant="outlined"
+              className={classes.textarea}
+              multiline
+              size="small"
+              placeholder="Enter service request as JSON"
+              value={config.requestPayload}
+              onChange={(event) => setConfig({ ...config, requestPayload: event.target.value })}
+              error={requestParseError != undefined}
+            />
+            {requestParseError && (
+              <Typography variant="caption" noWrap color={requestParseError ? "error" : undefined}>
+                {requestParseError}
+              </Typography>
+            )}
+          </Stack>
+          <Stack flexGrow="1">
+            <Typography variant="caption" noWrap>
+              Response
+            </Typography>
+            <TextField
+              variant="outlined"
+              className={classes.textarea}
+              multiline
+              size="small"
+              placeholder="Response"
+              value={state?.value}
+              error={state?.status === "error"}
+            />
+          </Stack>
+        </Stack>
+        <Stack
+          direction="row"
+          justifyContent="flex-end"
+          alignItems="center"
+          overflow="hidden"
+          flexGrow={0}
+          gap={1.5}
+        >
+          {statusMessage && (
+            <Typography variant="caption" noWrap>
+              {statusMessage}
             </Typography>
           )}
-        </Stack>
-        <Stack flexGrow="1">
-          <Typography variant="caption" noWrap>
-            Response
-          </Typography>
-          <TextField
-            variant="outlined"
-            className={classes.textarea}
-            multiline
-            size="small"
-            placeholder="Response"
-            value={state?.value}
-            error={state?.status === "error"}
-          />
+          <Tooltip title={config.buttonTooltip}>
+            <span>
+              <Button
+                className={classes.button}
+                variant="contained"
+                disabled={!canCallService}
+                onClick={callServiceClicked}
+                data-testid="call-service-button"
+              >
+                {config.buttonText ? config.buttonText : `Call service ${config.serviceName ?? ""}`}
+              </Button>
+            </span>
+          </Tooltip>
         </Stack>
       </Stack>
-      <Stack
-        direction="column-reverse"
-        justifyContent="center"
-        alignItems="center"
-        overflow="hidden"
-        paddingBottom={1.5}
-      >
-        <Tooltip title={config.buttonTooltip}>
-          <span>
-            <Button
-              className={classes.button}
-              variant="contained"
-              disabled={!canCallService}
-              onClick={callServiceClicked}
-            >
-              {config.buttonText}
-            </Button>
-          </span>
-        </Tooltip>
-        {statusMessage && (
-          <Typography variant="caption" noWrap>
-            {statusMessage}
-          </Typography>
-        )}
-      </Stack>
-    </Stack>
+    </ThemeProvider>
   );
 }

@@ -14,7 +14,6 @@ import { Config } from "./types";
 export const defaultConfig: Config = {
   requestPayload: "{}",
   layout: "vertical",
-  buttonText: "Call service",
 };
 
 function serviceError(serviceName?: string) {
@@ -58,7 +57,12 @@ export function useSettingsTree(config: Config): SettingsTreeNodes {
       button: {
         label: "Button",
         fields: {
-          buttonText: { label: "Title", input: "string", value: config.buttonText },
+          buttonText: {
+            label: "Title",
+            input: "string",
+            value: config.buttonText,
+            placeholder: `Call service ${config.serviceName ?? ""}`,
+          },
           buttonTooltip: { label: "Tooltip", input: "string", value: config.buttonTooltip },
           buttonColor: { label: "Color", input: "rgb", value: config.buttonColor },
         },
