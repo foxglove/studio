@@ -6,7 +6,7 @@ import type { ChartDataset } from "chart.js";
 
 import { Point } from "@foxglove/studio-base/components/Chart/datasets";
 
-import type { View } from "./types";
+import type { PlotViewport } from "./types";
 
 type Dataset<T> = ChartDataset<"scatter", T>;
 
@@ -35,7 +35,7 @@ type Dataset<T> = ChartDataset<"scatter", T>;
 export function downsampleTimeseries<T>(
   iterate: (dataset: T) => Generator<Point>,
   dataset: T,
-  view: View,
+  view: PlotViewport,
 ): number[] {
   const { bounds, width, height } = view;
 
@@ -157,7 +157,7 @@ export function downsampleTimeseries<T>(
 export function downsampleScatter<T>(
   iterate: (dataset: T) => Generator<Point>,
   dataset: T,
-  view: View,
+  view: PlotViewport,
 ): number[] {
   const { bounds, width, height } = view;
 
@@ -193,10 +193,14 @@ export function downsampleScatter<T>(
   return downsampled;
 }
 
+/**
+ * Given a dataset and a viewport, `downsample` chooses a list of
+ * representative points that, when plotted, resemble the full dataset.
+ */
 export function downsample<T>(
   iterate: (dataset: T) => Generator<Point>,
   dataset: Dataset<T>,
-  view: View,
+  view: PlotViewport,
 ): number[] {
   return dataset.showLine !== true
     ? downsampleScatter(iterate, dataset.data, view)

@@ -89,7 +89,7 @@ function useData(id: string, topics: readonly string[]) {
   }, [id, topics]);
 
   const isLive = useMessagePipeline<boolean>(getIsLive);
-  React.useEffect(() => {
+  useEffect(() => {
     void (async () => {
       const s = await waitService();
       await s.setLive(isLive);
@@ -114,7 +114,7 @@ function useData(id: string, topics: readonly string[]) {
   });
 
   const blocks = useBlocks(R.map((v) => ({ topic: v, preloadType: "full" }), subscribed));
-  React.useEffect(() => {
+  useEffect(() => {
     for (const [index, block] of blocks.entries()) {
       if (R.isEmpty(block)) {
         break;
@@ -154,6 +154,10 @@ function useMetadata() {
   }, [globalVariables]);
 }
 
+/**
+ * useDatasets uses a Web Worker to collect, aggregate, and downsample plot
+ * data for use by a TimeBasedChart.
+ */
 export default function useDatasets(params: PlotParams): {
   data: Immutable<PlotData> | undefined;
   provider: TypedDataProvider;
@@ -196,7 +200,6 @@ export default function useDatasets(params: PlotParams): {
 
   useMetadata();
 
-  // Allow the worker direct access to `setState`.
   const [state, setState] = React.useState<Immutable<PlotData> | undefined>();
   useEffect(() => {
     return () => {

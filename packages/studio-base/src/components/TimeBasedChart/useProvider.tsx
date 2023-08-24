@@ -13,12 +13,12 @@
 
 import { ChartDataset, ChartData } from "chart.js";
 import * as R from "ramda";
-import * as React from "react";
+import { useEffect, useMemo, useCallback } from "react";
 
-import { iterateNormal, iterateTyped } from "@foxglove/studio-base/components/Chart/datasets";
+import { iterateObjects, iterateTyped } from "@foxglove/studio-base/components/Chart/datasets";
 import type { ObjectData, TypedData } from "@foxglove/studio-base/components/Chart/types";
 
-import { Provider, ProviderState, Bounds, View } from "./types";
+import { PlotDataProvider, ProviderState, Bounds, PlotViewport } from "./types";
 
 type Datasets<T> = ChartDataset<"scatter", T>[];
 type Data<T> = ChartData<"scatter", T>;
@@ -30,7 +30,7 @@ export function getBounds(data: Datasets<ObjectData>): Bounds | undefined {
   let yMax: number | undefined;
 
   for (const dataset of data) {
-    for (const item of iterateNormal(dataset.data)) {
+    for (const item of iterateObjects(dataset.data)) {
       if (!isNaN(item.x)) {
         xMin = Math.min(xMin ?? item.x, item.x);
         xMax = Math.max(xMax ?? item.x, item.x);
@@ -122,12 +122,12 @@ type DataState<T> = {
 };
 
 export default function useProvider<T>(
-  view: View,
+  view: PlotViewport,
   // Calculates the bounds of the given datasets.
   getDatasetBounds: (data: Datasets<T>) => Bounds | undefined,
   mergeState: (a: ProviderState<T>, b: ProviderState<T>) => ProviderState<T>,
   data: Data<T> | undefined,
-  provider: Provider<T> | undefined,
+  provider: PlotDataProvider<T> | undefined,
 ): ProviderState<T> | undefined {
   const [state, setState] = React.useState<DataState<T> | undefined>();
 
@@ -138,7 +138,7 @@ export default function useProvider<T>(
     });
   }, []);
 
-  const addPartial = React.useCallback(
+  const addPartial = useCallback(
     (newPartial: ProviderState<T>) => {
       setState((oldState) => {
         if (oldState == undefined) {
@@ -159,21 +159,21 @@ export default function useProvider<T>(
     [mergeState],
   );
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (provider == undefined) {
       return;
     }
     provider.register(setFull, addPartial);
   }, [provider, addPartial, setFull]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (provider == undefined) {
       return;
     }
     provider.setView(view);
   }, [provider, view]);
 
-  return React.useMemo(() => {
+  return useMemo(() => {
     if (data == undefined) {
       if (state == undefined) {
         return undefined;

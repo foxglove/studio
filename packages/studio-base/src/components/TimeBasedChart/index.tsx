@@ -51,7 +51,7 @@ import TimeBasedChartTooltipContent, {
   TimeBasedChartTooltipData,
 } from "./TimeBasedChartTooltipContent";
 import { VerticalBarWrapper } from "./VerticalBarWrapper";
-import { ChartDataProvider, TypedDataProvider } from "./types";
+import { ObjectDataProvider, TypedDataProvider } from "./types";
 import useDownsample from "./useDownsampler";
 import useProvider, { getBounds, getTypedBounds, mergeTyped, mergeNormal } from "./useProvider";
 
@@ -100,7 +100,7 @@ export type Props = {
   height: number;
   zoom: boolean;
   data?: ChartComponentProps["data"];
-  provider?: ChartDataProvider;
+  provider?: ObjectDataProvider;
   typedData?: ChartComponentProps["typedData"];
   typedProvider?: TypedDataProvider;
   dataBounds?: Bounds;

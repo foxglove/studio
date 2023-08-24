@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { iterateNormal } from "@foxglove/studio-base/components/Chart/datasets";
+import { iterateObjects } from "@foxglove/studio-base/components/Chart/datasets";
 
 import { downsampleTimeseries, downsampleScatter } from "./downsample";
 
@@ -15,7 +15,7 @@ describe("downsampleTimeseries", () => {
 
   it("merges nearby points", () => {
     const result = downsampleTimeseries(
-      iterateNormal,
+      iterateObjects,
       [
         { x: 0, y: 0, value: 0 },
         { x: 10, y: 0, value: 0 },
@@ -31,7 +31,7 @@ describe("downsampleTimeseries", () => {
 
   it("preserves distinctly labeled segments", () => {
     const result = downsampleTimeseries(
-      iterateNormal,
+      iterateObjects,
       [
         { x: 0, y: 0, value: 0, label: "1" },
         { x: 10, y: 0, value: 0, label: "2" },
@@ -47,7 +47,7 @@ describe("downsampleTimeseries", () => {
 
   it("should keep the min/max values within an interval", () => {
     const result = downsampleTimeseries(
-      iterateNormal,
+      iterateObjects,
       [
         { x: 0, y: 0, value: 0 },
         { x: 0, y: 100, value: 100 },
@@ -61,7 +61,7 @@ describe("downsampleTimeseries", () => {
 
   it("should keep entry/exit datum to an interval", () => {
     const result = downsampleTimeseries(
-      iterateNormal,
+      iterateObjects,
       [
         { x: 0, y: 0, value: 0 },
         { x: 1, y: 0, value: 0 },
@@ -84,7 +84,7 @@ describe("downsampleScatter", () => {
 
   it("ignores out of bounds points", () => {
     const result = downsampleScatter(
-      iterateNormal,
+      iterateObjects,
       [
         { x: -1, y: 0, value: 0 },
         { x: 0, y: -1, value: -1 },
@@ -98,7 +98,7 @@ describe("downsampleScatter", () => {
 
   it("merges nearby points", () => {
     const result = downsampleScatter(
-      iterateNormal,
+      iterateObjects,
       [
         { x: 0, y: 0, value: 0 },
         { x: 0, y: 0.4, value: 0.4 },
