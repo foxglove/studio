@@ -15,7 +15,7 @@ import {
   concatTyped,
   mergeTyped,
 } from "@foxglove/studio-base/panels/Plot/datasets";
-import { MessageEvent, Topic } from "@foxglove/studio-base/players/types";
+import { MessageEvent } from "@foxglove/studio-base/players/types";
 import { Bounds, makeInvertedBounds, unionBounds } from "@foxglove/studio-base/types/Bounds";
 import { Range } from "@foxglove/studio-base/util/ranges";
 import { getTimestampForMessage } from "@foxglove/studio-base/util/time";
@@ -267,10 +267,7 @@ export function resolvePath(
   path: RosPath,
 ): PlotDataItem[] {
   const { structures, enumValues } = metadata;
-  const topics = R.pipe(
-    R.map((topic: Topic): [string, Topic] => [topic.name, topic]),
-    R.fromPairs,
-  )(metadata.topics);
+  const topics = R.indexBy((topic) => topic.name, metadata.topics);
 
   return R.chain((message: MessageEvent): PlotDataItem[] => {
     const items = getMessagePathDataItems(message, path, topics, structures, enumValues);
