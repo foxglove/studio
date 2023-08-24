@@ -77,7 +77,7 @@ export default {
           includeSettings={includeSettings}
           fixture={isEmpty ? emptyFixture : getFixture({ allowCallService })}
         >
-          <Story {...{ args }} />
+          <Story args={args} />
         </PanelSetup>
       );
     },

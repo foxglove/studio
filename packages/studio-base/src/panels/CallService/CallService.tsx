@@ -71,7 +71,7 @@ function parseInput(value: string): { error?: string; parsedObject?: unknown } {
     const parsedAny: unknown = JSON.parse(value);
     if (Array.isArray(parsedAny)) {
       error = "Request content must be an object, not an array";
-    } else if (parsedAny == null /* eslint-disable-line no-restricted-syntax */) {
+    } else if (parsedAny == undefined) {
       error = "Request content must be an object, not null";
     } else if (typeof parsedAny !== "object") {
       error = `Request content must be an object, not ‘${typeof parsedAny}’`;
@@ -98,7 +98,7 @@ export function CallService({ context }: Props): JSX.Element {
   useEffect(() => {
     context.saveState(config);
     context.setDefaultPanelTitle(
-      config.serviceName === "" ? undefined : `Call service ${config.serviceName}`,
+      config.serviceName ? `Call service ${config.serviceName}` : undefined,
     );
   }, [config, context]);
 
