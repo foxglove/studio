@@ -423,32 +423,6 @@ class StudioWindow {
     log.info(`New Foxglove Studio window ${id}`);
     StudioWindow.#windowsByContentId.set(id, this);
 
-    // when a window closes and it is the current application menu, clear the input sources
-    browserWindow.once("close", () => {
-      if (Menu.getApplicationMenu() === this.#menu) {
-        const existingMenu = Menu.getApplicationMenu();
-        const fileMenu = existingMenu?.getMenuItemById("fileMenu");
-        // https://github.com/electron/electron/issues/8598
-        (fileMenu?.submenu as undefined | ClearableMenu)?.clear();
-        fileMenu?.submenu?.append(
-          new MenuItem({
-            label: "New Window",
-            click: () => {
-              new StudioWindow().load();
-            },
-          }),
-        );
-
-        fileMenu?.submenu?.append(
-          new MenuItem({
-            type: "separator",
-          }),
-        );
-
-        fileMenu?.submenu?.append(new MenuItem(closeMenuItem));
-        Menu.setApplicationMenu(existingMenu);
-      }
-    });
     browserWindow.once("closed", () => {
       StudioWindow.#windowsByContentId.delete(id);
     });
