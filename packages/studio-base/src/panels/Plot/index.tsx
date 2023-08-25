@@ -246,6 +246,7 @@ function Plot(props: Props) {
         type: "item",
         label: "Download plot data as CSV",
         onclick: async () => {
+          // Because the full dataset is never in the rendering thread, we have to request it from the worker.
           const data = await getFullData();
           if (data == undefined) {
             return;
