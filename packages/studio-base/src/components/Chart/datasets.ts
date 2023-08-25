@@ -38,7 +38,6 @@ export function* iterateObjects(dataset: ObjectData): Generator<Point> {
   }
 }
 
-// eslint-disable @typescript-eslint/no-explicit-any
 /**
  * ExtractPoint maps an object type with array properties to one with the
  * arrays replaced by their element type. For example:
@@ -108,8 +107,10 @@ export function* iterateTyped<T extends { [key: string]: Array<any> | Float32Arr
   }
 }
 
-// Given a dataset and an index inside of that dataset, return the index of the
-// slice and offset inside of that slice.
+/**
+ * Given a dataset and an index inside of that dataset, return the index of the
+ * slice and offset inside of that slice.
+ */
 export function findIndices(
   dataset: TypedData[],
   index: number,
