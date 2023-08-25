@@ -19,6 +19,7 @@ import { MessageEvent } from "@foxglove/studio-base/players/types";
 import { Bounds, makeInvertedBounds, unionBounds } from "@foxglove/studio-base/types/Bounds";
 import { Range } from "@foxglove/studio-base/util/ranges";
 import { getTimestampForMessage } from "@foxglove/studio-base/util/time";
+import { getTypedBounds } from "@foxglove/studio-base/components/TimeBasedChart/useProvider";
 
 import { resolveTypedIndices, derivative } from "./datasets";
 import {
@@ -230,26 +231,16 @@ export function buildPlotData(
         pathsWithMismatchedDataLengths.push(path.value);
       }
 
-      const {
-        dataset: { data: subData },
-      } = res;
-      for (const dataset of subData) {
-        for (let i = 0; i < dataset.x.length; i++) {
-          const x = dataset.x[i];
-          const y = dataset.y[i];
-          if (x == undefined || y == undefined) {
-            continue;
-          }
-          if (isFinite(x)) {
-            bounds.x.min = Math.min(bounds.x.min, x);
-            bounds.x.max = Math.max(bounds.x.max, x);
-          }
-          if (isFinite(y)) {
-            bounds.y.min = Math.min(bounds.y.min, y);
-            bounds.y.max = Math.max(bounds.y.max, y);
-          }
-        }
+      const pathBounds = getTypedBounds([res.dataset]);
+      if (pathBounds == undefined) {
+        continue;
       }
+
+      bounds.x.min = Math.min(bounds.x.min, pathBounds.x.min);
+      bounds.x.max = Math.max(bounds.x.max, pathBounds.x.max);
+      bounds.y.min = Math.min(bounds.y.min, pathBounds.y.min);
+      bounds.y.max = Math.max(bounds.y.max, pathBounds.y.max);
+
       datasets.set(path, res.dataset);
     }
   }
