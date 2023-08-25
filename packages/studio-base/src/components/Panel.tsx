@@ -485,6 +485,7 @@ export default function Panel<
     );
 
     const {
+      isDragging: _isDraggingMessagePath,
       connectDropTarget: connectMessagePathDropTarget,
       isOver: showDropOverlay,
       message: dropMessage,

@@ -88,6 +88,8 @@ export function useMessagePathDrag({ path, rootSchemaName }: MessagePathDragPara
  * `useMessagePathDrag()`.
  */
 export function useMessagePathDrop(): {
+  /** True if the target supports dragging (a config is set) and a drag has started */
+  isDragging: boolean;
   isOver: boolean;
   message: string | undefined;
   connectDropTarget: ConnectDropTarget;
@@ -97,7 +99,7 @@ export function useMessagePathDrop(): {
     MessagePathDropConfig | undefined
   >();
 
-  const [{ isOver, message }, connectDropTarget] = useDrop({
+  const [{ isDragging, isOver, message }, connectDropTarget] = useDrop({
     accept: MESSAGE_PATH_DRAG_TYPE,
     canDrop(item: MessagePathDragObject, _monitor) {
       if (!messagePathDropConfig) {
@@ -112,7 +114,10 @@ export function useMessagePathDrop(): {
       const item = monitor.getItem<MessagePathDragObject | undefined>();
       const targetId = monitor.getHandlerId();
       if (!item || !messagePathDropConfig || targetId == undefined) {
-        return { isOver: false };
+        return {
+          isDragging: item != undefined && messagePathDropConfig != undefined,
+          isOver: false,
+        };
       }
       const monitorIsOver = monitor.isOver({ shallow: true });
       const dropStatus = messagePathDropConfig.getDropStatus(item);
@@ -130,6 +135,7 @@ export function useMessagePathDrop(): {
       }
 
       return {
+        isDragging: true,
         isOver: monitorIsOver && monitor.canDrop(),
         message:
           dropStatus.message ??
@@ -141,5 +147,5 @@ export function useMessagePathDrop(): {
     },
   });
 
-  return { isOver, message, connectDropTarget, setMessagePathDropConfig };
+  return { isDragging, isOver, message, connectDropTarget, setMessagePathDropConfig };
 }
