@@ -16,6 +16,7 @@ import {
 } from "@mui/material";
 import { Fzf, FzfResultItem } from "fzf";
 import { useMemo, useState } from "react";
+import tc from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 
 import { DirectTopicStatsUpdater } from "@foxglove/studio-base/components/DirectTopicStatsUpdater";
@@ -56,6 +57,14 @@ const useStyles = makeStyles<void, "dragHandle">()((theme, _params, classes) => 
     containerType: "inline-size",
     paddingRight: 0,
 
+    "&.isDragging:active": {
+      backgroundColor: tc(theme.palette.primary.main)
+        .setAlpha(theme.palette.action.hoverOpacity)
+        .toRgbString(),
+      outline: `1px solid ${theme.palette.primary.main}`,
+      outlineOffset: -1,
+      borderRadius: theme.shape.borderRadius,
+    },
     [`:not(:hover) .${classes.dragHandle}`]: {
       visibility: "hidden",
     },
@@ -88,8 +97,8 @@ function TopicListItem({
   topic: Topic;
   positions: Set<number>;
 }): JSX.Element {
-  const { classes } = useStyles();
-  const { connectDragSource, cursor } = useMessagePathDrag({
+  const { classes, cx } = useStyles();
+  const { connectDragSource, cursor, isDragging } = useMessagePathDrag({
     path: topic.name,
     rootSchemaName: topic.schemaName,
   });
@@ -98,7 +107,7 @@ function TopicListItem({
     <ListItem
       key={topic.name}
       divider
-      className={classes.listItem}
+      className={cx(classes.listItem, { isDragging })}
       ref={connectDragSource}
       style={{ cursor }}
     >

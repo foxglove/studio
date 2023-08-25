@@ -45,6 +45,7 @@ type MessagePathDragParams = {
 export function useMessagePathDrag({ path, rootSchemaName }: MessagePathDragParams): {
   connectDragSource: ConnectDragSource;
   cursor?: CSSProperties["cursor"];
+  isDragging: boolean;
 } {
   const [dropStatus, setDropStatus] = useState<MessagePathDropStatus | undefined>();
   const overDropTargets = useRef(new Set<string | symbol>());
@@ -80,7 +81,7 @@ export function useMessagePathDrag({ path, rootSchemaName }: MessagePathDragPara
     }
   }
 
-  return { connectDragSource, cursor };
+  return { connectDragSource, cursor, isDragging };
 }
 
 /**
