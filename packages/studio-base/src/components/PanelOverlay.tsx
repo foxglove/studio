@@ -62,22 +62,26 @@ const useStyles = makeStyles<void, "buttonGroup" | "tabCount">()((theme, _params
       },
     },
     buttonGroup: {
-      minWidth: 120,
       marginTop: PANEL_TOOLBAR_MIN_HEIGHT,
-      backgroundColor: theme.palette.background.menu,
       borderRadius: theme.shape.borderRadius * 4,
 
       [`.${buttonClasses.root}`]: {
         borderRadius: theme.shape.borderRadius * 4,
         display: "flex",
+        flexDirection: "column",
         justifyContent: "flex-start",
         flex: "0 0 50%",
         minWidth: "50%",
         whiteSpace: "nowrap",
         textAlign: "left",
       },
+      [`.${buttonGroupClasses.grouped}:not(:last-of-type)`]: {
+        borderRightWidth: 2,
+        borderRightColor: theme.palette.background.default,
+      },
       [`.${buttonClasses.startIcon}`]: {
         position: "relative",
+        margin: 0,
 
         svg: {
           height: "1em",
@@ -150,7 +154,7 @@ export function PanelOverlay(props: Props): JSX.Element | ReactNull {
     selectedPanelCount,
     splitPanel,
   } = props;
-  const { classes, cx, theme } = useStyles();
+  const { classes, cx } = useStyles();
 
   if (isDragging) {
     if (!isValidTarget) {
@@ -171,7 +175,7 @@ export function PanelOverlay(props: Props): JSX.Element | ReactNull {
   if (isSelected && !isFullscreen && selectedPanelCount > 1) {
     return (
       <StyledBackdrop className={cx(classes.actionOverlay, classes.highlightAll)}>
-        <ButtonGroup orientation="vertical" className={classes.buttonGroup} variant="contained">
+        <ButtonGroup className={classes.buttonGroup} variant="contained">
           <Button startIcon={<TabDesktop20Regular />} onClick={groupPanels}>
             Group in tab
           </Button>
@@ -195,10 +199,8 @@ export function PanelOverlay(props: Props): JSX.Element | ReactNull {
     return (
       <StyledBackdrop className={cx(classes.actionOverlay, classes.highlightActive)}>
         <ButtonGroup
-          orientation="vertical"
           className={classes.buttonGroup}
           variant="contained"
-          color="inherit"
           ref={(el) => {
             quickActionsOverlayRef.current = el;
             // disallow dragging the root panel in a layout
@@ -211,15 +213,13 @@ export function PanelOverlay(props: Props): JSX.Element | ReactNull {
             Split panel
           </Button>
           <Button
-            startIcon={<Delete20Regular primaryFill={theme.palette.error.main} />}
+            startIcon={<Delete20Regular />}
             onClick={(event) => {
               event.stopPropagation();
               removePanel();
             }}
           >
-            <Typography variant="inherit" color="error">
-              Remove
-            </Typography>
+            Remove panel
           </Button>
         </ButtonGroup>
       </StyledBackdrop>
