@@ -121,7 +121,7 @@ export const Basic: StoryObj<{ initialLayoutState: Partial<LayoutData> }> = {
     ];
     return (
       <MultiProvider providers={providers}>
-        <Workspace />
+        <Workspace disablePersistenceForStorybook />
       </MultiProvider>
     );
   },

@@ -85,6 +85,8 @@ type WorkspaceProps = CustomWindowControlsProps & {
   deepLinks?: string[];
   appBarLeftInset?: number;
   onAppBarDoubleClick?: () => void;
+  // eslint-disable-next-line react/no-unused-prop-types
+  disablePersistenceForStorybook?: boolean;
 };
 
 const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => playerState.presence;
@@ -522,6 +524,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     <WorkspaceContextProvider
       initialState={initialState}
       workspaceStoreCreator={workspaceStoreCreator}
+      disablePersistenceForStorybook={props.disablePersistenceForStorybook}
     >
       <WorkspaceContent {...props} />
     </WorkspaceContextProvider>
