@@ -58,6 +58,11 @@ type MessageHandlerState = {
   image?: MessageEvent<AnyImage>;
   cameraInfo?: CameraInfo;
   annotationsByTopic: Map<string, NormalizedAnnotations>;
+
+  /** Topics that were present in a potential synchronized set */
+  presentAnnotationTopics?: string[];
+  /** Topics that were missing so that a synchronized set could not be found */
+  missingAnnotationTopics?: string[];
 };
 
 export type MessageRenderState = Readonly<Partial<MessageHandlerState>>;
@@ -287,19 +292,18 @@ export class MessageHandler {
   /** Do not use. only public for testing */
   public getRenderState(): Readonly<Partial<MessageHandlerState>> {
     if (this.#config.synchronize === true) {
-      const validEntry = findSynchronizedSetAndRemoveOlderItems(
-        this.#tree,
-        this.#visibleAnnotations(),
-      );
-      if (validEntry) {
+      const result = findSynchronizedSetAndRemoveOlderItems(this.#tree, this.#visibleAnnotations());
+      if (result.found) {
         return {
           cameraInfo: this.#lastReceivedMessages.cameraInfo,
-          image: validEntry[1].image,
-          annotationsByTopic: validEntry[1].annotationsByTopic,
+          image: result.messages.image,
+          annotationsByTopic: result.messages.annotationsByTopic,
         };
       }
       return {
         cameraInfo: this.#lastReceivedMessages.cameraInfo,
+        presentAnnotationTopics: result.presentAnnotationTopics,
+        missingAnnotationTopics: result.missingAnnotationTopics,
       };
     }
 
@@ -317,26 +321,54 @@ export class MessageHandler {
   }
 }
 
+type SynchronizationResult =
+  | {
+      found: true;
+      /** Synchronized set of messages found with matching timestamps */
+      messages: SynchronizationItem;
+    }
+  | {
+      found: false;
+      /**
+       * Annotations that were present at the matching timestamp.
+       */
+      presentAnnotationTopics: string[] | undefined;
+      /**
+       * Annotations that were missing and caused there to be no synchronized set, or undefined if no
+       * images were received at all.
+       */
+      missingAnnotationTopics: string[] | undefined;
+    };
+
 /**
  * Find the newest entry where we have everything synchronized and remove all older entries from tree.
  * @param tree - AVL tree that stores a [image?, annotations?] in sorted order by timestamp.
  * @param visibleAnnotations - visible annotation topics
- * @returns - the newest synchronized item with all active annotations and image, or undefined if none found
+ * @returns - the newest synchronized item with all active annotations and image, or set of missing annotations if synchronization failed
  */
 function findSynchronizedSetAndRemoveOlderItems(
   tree: AVLTree<Time, SynchronizationItem>,
   visibleAnnotations: Set<string>,
-): [Time, SynchronizationItem] | undefined {
+): SynchronizationResult {
   let validEntry: [Time, SynchronizationItem] | undefined = undefined;
+  let presentAnnotationTopics: string[] | undefined;
+  let missingAnnotationTopics: string[] | undefined;
   for (const entry of tree.entries()) {
     const messageState = entry[1];
-    const hasOnlyVisibleAnnotations =
-      visibleAnnotations.size === messageState.annotationsByTopic.size &&
-      Array.from(visibleAnnotations.keys()).every(
-        (topic) => messageState.annotationsByTopic.get(topic) != undefined,
-      );
+    if (!messageState.image) {
+      continue;
+    }
+    presentAnnotationTopics = [];
+    missingAnnotationTopics = [];
+    for (const topic of visibleAnnotations) {
+      if (messageState.annotationsByTopic.get(topic) != undefined) {
+        presentAnnotationTopics.push(topic);
+      } else {
+        missingAnnotationTopics.push(topic);
+      }
+    }
     // If we have an image and all the messages for annotation topics then we have a synchronized set.
-    if (messageState.image && hasOnlyVisibleAnnotations) {
+    if (missingAnnotationTopics.length === 0) {
       validEntry = entry;
     }
   }
@@ -348,7 +380,8 @@ function findSynchronizedSetAndRemoveOlderItems(
       tree.shift();
       minKey = tree.minKey();
     }
+    return { found: true, messages: validEntry[1] };
   }
 
-  return validEntry;
+  return { found: false, missingAnnotationTopics, presentAnnotationTopics };
 }
