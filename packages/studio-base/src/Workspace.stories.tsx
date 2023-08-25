@@ -162,8 +162,8 @@ export const DragTopicStart: typeof Basic = {
   play: async () => {
     fireEvent.click(await screen.findByText("Topics"));
 
-    const row = await screen.findByText("test.Foo");
-    fireEvent.dragStart(row);
+    const handle = await screen.findByTestId("TopicListDragHandle");
+    fireEvent.dragStart(handle);
   },
 };
 
@@ -172,8 +172,8 @@ export const DragTopicOver: typeof Basic = {
   play: async () => {
     fireEvent.click(await screen.findByText("Topics"));
 
-    const row = await screen.findByText("test.Foo");
-    fireEvent.dragStart(row);
+    const handle = await screen.findByTestId("TopicListDragHandle");
+    fireEvent.dragStart(handle);
     const dest = await screen.findByText("Drop here!");
     fireEvent.dragOver(dest);
   },
@@ -184,8 +184,8 @@ export const DragTopicDrop: typeof Basic = {
   play: async () => {
     fireEvent.click(await screen.findByText("Topics"));
 
-    const row = await screen.findByText("test.Foo");
-    fireEvent.dragStart(row);
+    const handle = await screen.findByTestId("TopicListDragHandle");
+    fireEvent.dragStart(handle);
     const dest = await screen.findByText("Drop here!");
     fireEvent.dragOver(dest);
     fireEvent.drop(dest);

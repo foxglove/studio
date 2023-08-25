@@ -143,7 +143,12 @@ function TopicListItem({
       />
       <Stack direction="row" alignItems="center" fullHeight gap={0.5} paddingX={0.5}>
         <StatsChip topicName={topic.name} />
-        <div className={classes.dragHandle} ref={connectDragSource} style={{ cursor }}>
+        <div
+          className={classes.dragHandle}
+          data-testid="TopicListDragHandle"
+          ref={connectDragSource}
+          style={{ cursor }}
+        >
           <ReOrderDotsVertical16Regular />
         </div>
       </Stack>
