@@ -76,10 +76,6 @@ const useStyles = makeStyles<void, "buttonGroup" | "tabCount">()((theme, _params
         whiteSpace: "nowrap",
         textAlign: "left",
       },
-      [`.${buttonGroupClasses.grouped}:not(:last-of-type)`]: {
-        borderRightWidth: 2,
-        borderRightColor: theme.palette.background.default,
-      },
       [`.${buttonClasses.startIcon}`]: {
         position: "relative",
 
