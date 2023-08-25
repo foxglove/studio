@@ -88,12 +88,12 @@ function TopicListItem({
   topic: Topic;
   positions: Set<number>;
 }): JSX.Element {
+  const { classes } = useStyles();
   const { connectDragSource, cursor } = useMessagePathDrag({
     path: topic.name,
     rootSchemaName: topic.schemaName,
   });
 
-  const { classes } = useStyles();
   return (
     <ListItem
       key={topic.name}

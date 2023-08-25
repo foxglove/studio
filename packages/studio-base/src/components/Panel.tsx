@@ -47,6 +47,7 @@ import KeyListener from "@foxglove/studio-base/components/KeyListener";
 import { MosaicPathContext } from "@foxglove/studio-base/components/MosaicPathContext";
 import PanelContext from "@foxglove/studio-base/components/PanelContext";
 import PanelErrorBoundary from "@foxglove/studio-base/components/PanelErrorBoundary";
+import { PanelOverlay } from "@foxglove/studio-base/components/PanelOverlay";
 import { PanelRoot, PANEL_ROOT_CLASS_NAME } from "@foxglove/studio-base/components/PanelRoot";
 import Stack from "@foxglove/studio-base/components/Stack";
 import {
@@ -127,27 +128,6 @@ const useStyles = makeStyles()((theme) => ({
     ".MuiButton-startIcon": {
       margin: 0,
     },
-  },
-  messagePathDropOverlay: {
-    position: "absolute",
-    inset: 0,
-    overflow: "hidden",
-    padding: theme.spacing(2),
-    zIndex: theme.zIndex.modal,
-    backgroundColor: theme.palette.action.hover,
-    backdropFilter: "blur(4px)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  messagePathDropOverlayText: {
-    textAlign: "center",
-    fontSize: theme.typography.subtitle1.fontSize,
-    color: theme.palette.secondary.contrastText,
-    overflowWrap: "anywhere",
-    padding: theme.spacing(1),
-    backgroundColor: theme.palette.secondary.light,
-    borderRadius: theme.shape.borderRadius * 2,
   },
 }));
 
@@ -485,9 +465,10 @@ export default function Panel<
     );
 
     const {
-      isDragging: _isDraggingMessagePath,
+      isDragging,
+      isOver,
+      isValidTarget,
       connectDropTarget: connectMessagePathDropTarget,
-      isOver: showDropOverlay,
       message: dropMessage,
       setMessagePathDropConfig,
     } = useMessagePathDrop();
@@ -641,11 +622,12 @@ export default function Panel<
                     </Stack>
                   </div>
                 )}
-                {showDropOverlay && (
-                  <div className={classes.messagePathDropOverlay}>
-                    <div className={classes.messagePathDropOverlayText}>{dropMessage}</div>
-                  </div>
-                )}
+                <PanelOverlay
+                  isDragging={isDragging}
+                  isValidTarget={isValidTarget}
+                  isOver={isOver}
+                  message={dropMessage}
+                />
                 {type !== TAB_PANEL_TYPE && quickActionsKeyPressed && !fullscreen && (
                   <div
                     className={classes.actionsOverlay}
