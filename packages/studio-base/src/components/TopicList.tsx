@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { ReOrderDotsVertical16Regular } from "@fluentui/react-icons";
 import ClearIcon from "@mui/icons-material/Clear";
 import SearchIcon from "@mui/icons-material/Search";
 import {
@@ -25,6 +26,7 @@ import {
   useMessagePipeline,
 } from "@foxglove/studio-base/components/MessagePipeline";
 import Stack from "@foxglove/studio-base/components/Stack";
+import { StatsChip } from "@foxglove/studio-base/components/StatsChip";
 import { PlayerPresence, TopicStats } from "@foxglove/studio-base/players/types";
 import { useMessagePathDrag } from "@foxglove/studio-base/services/messagePathDragging";
 import { Topic } from "@foxglove/studio-base/src/players/types";
@@ -41,7 +43,7 @@ const topicToFzfResult = (item: TopicWithStats) =>
     end: 0,
   } as FzfResultItem<TopicWithStats>);
 
-const useStyles = makeStyles()((theme) => ({
+const useStyles = makeStyles<void, "dragHandle">()((theme, _params, classes) => ({
   appBar: {
     top: 0,
     zIndex: theme.zIndex.appBar,
@@ -50,22 +52,17 @@ const useStyles = makeStyles()((theme) => ({
     backgroundColor: theme.palette.background.paper,
   },
   listItem: {
-    paddingRight: theme.spacing(1),
+    backgroundColor: theme.palette.background.paper,
+    containerType: "inline-size",
+    paddingRight: 0,
 
-    "&.MuiListItem-dense": {
-      ".MuiListItemText-root": {
-        marginTop: theme.spacing(0.5),
-        marginBottom: theme.spacing(0.5),
-      },
-    },
-    ".MuiListItemSecondaryAction-root": {
-      marginRight: theme.spacing(-1),
+    [`:not(:hover) .${classes.dragHandle}`]: {
+      visibility: "hidden",
     },
   },
-  textField: {
-    ".MuiOutlinedInput-notchedOutline": {
-      border: "none",
-    },
+  listItemText: {
+    marginTop: theme.spacing(0.5),
+    marginBottom: theme.spacing(0.5),
   },
   aliasedTopicName: {
     color: theme.palette.primary.main,
@@ -74,6 +71,10 @@ const useStyles = makeStyles()((theme) => ({
   },
   startAdornment: {
     display: "flex",
+  },
+  dragHandle: {
+    opacity: 0.6,
+    cursor: "grab",
   },
 }));
 
@@ -95,33 +96,14 @@ function TopicListItem({
   const { classes } = useStyles();
   return (
     <ListItem
-      className={classes.listItem}
-      divider
       key={topic.name}
-      secondaryAction={
-        <Stack style={{ textAlign: "right" }}>
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            data-topic={topic.name}
-            data-topic-stat="count"
-          >
-            &mdash;
-          </Typography>
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            data-topic={topic.name}
-            data-topic-stat="frequency"
-          >
-            &mdash;
-          </Typography>
-        </Stack>
-      }
+      divider
+      className={classes.listItem}
       ref={connectDragSource}
       style={{ cursor }}
     >
       <ListItemText
+        className={classes.listItemText}
         primary={
           <>
             <HighlightChars str={topic.name} indices={positions} />
@@ -150,8 +132,11 @@ function TopicListItem({
           noWrap: true,
           title: topic.schemaName,
         }}
-        style={{ marginRight: "48px" }}
       />
+      <Stack direction="row" alignItems="center" fullHeight gap={0.5} paddingX={0.5}>
+        <StatsChip topicName={topic.name} />
+        <ReOrderDotsVertical16Regular className={classes.dragHandle} />
+      </Stack>
     </ListItem>
   );
 }
@@ -191,7 +176,7 @@ export function TopicList(): JSX.Element {
         <header className={classes.appBar}>
           <TextField
             disabled
-            className={classes.textField}
+            variant="filled"
             fullWidth
             placeholder="Waiting for data..."
             InputProps={{
@@ -204,6 +189,7 @@ export function TopicList(): JSX.Element {
           {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map((i) => (
             <ListItem className={cx(classes.listItem, "loading")} divider key={i}>
               <ListItemText
+                className={classes.listItemText}
                 primary={<Skeleton animation={false} width="20%" />}
                 secondary={<Skeleton animation="wave" width="55%" />}
                 secondaryTypographyProps={{ variant: "caption" }}
@@ -224,7 +210,6 @@ export function TopicList(): JSX.Element {
           disabled={playerPresence !== PlayerPresence.PRESENT}
           onChange={(event) => setFilterText(event.target.value)}
           value={filterText}
-          className={classes.textField}
           fullWidth
           placeholder="Filter by topic or schema name…"
           InputProps={{
@@ -250,9 +235,9 @@ export function TopicList(): JSX.Element {
 
       {filteredTopics.length > 0 ? (
         <List key="topics" dense disablePadding>
-          {filteredTopics.map(({ item: topic, positions }) => {
-            return <MemoTopicListItem key={topic.name} topic={topic} positions={positions} />;
-          })}
+          {filteredTopics.map(({ item: topic, positions }) => (
+            <MemoTopicListItem key={topic.name} topic={topic} positions={positions} />
+          ))}
         </List>
       ) : (
         <EmptyState>
