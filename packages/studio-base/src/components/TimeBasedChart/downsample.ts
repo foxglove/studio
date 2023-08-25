@@ -32,11 +32,7 @@ type Dataset<T> = ChartDataset<"scatter", T>;
  * dataset, and the interval connects to the next interval with the same slope line as the original
  * data. The min/max entries preserve spikes within the data.
  */
-export function downsampleTimeseries<T>(
-  iterate: (dataset: T) => Generator<Point>,
-  dataset: T,
-  view: PlotViewport,
-): number[] {
+export function downsampleTimeseries(points: Iterable<Point>, view: PlotViewport): number[] {
   const { bounds, width, height } = view;
 
   const pixelPerXValue = width / (bounds.x.max - bounds.x.min);
@@ -60,7 +56,7 @@ export function downsampleTimeseries<T>(
 
   let firstPastBounds: number | undefined = undefined;
 
-  for (const datum of iterate(dataset)) {
+  for (const datum of points) {
     const { index, label } = datum;
 
     // track the first point before our bounds
@@ -154,11 +150,7 @@ export function downsampleTimeseries<T>(
   return downsampled;
 }
 
-export function downsampleScatter<T>(
-  iterate: (dataset: T) => Generator<Point>,
-  dataset: T,
-  view: PlotViewport,
-): number[] {
+export function downsampleScatter(points: Iterable<Point>, view: PlotViewport): number[] {
   const { bounds, width, height } = view;
 
   const pixelPerXValue = width / (bounds.x.max - bounds.x.min);
@@ -170,7 +162,7 @@ export function downsampleScatter<T>(
   // downsampling tracks a sparse array of x/y locations
   const sparse: boolean[] = [];
 
-  for (const datum of iterate(dataset)) {
+  for (const datum of points) {
     // Out-of-bounds scatter points are ignored. We don't filter on y
     // because y values are needed to allow chart to auto scale to the correct
     // height.
@@ -198,11 +190,11 @@ export function downsampleScatter<T>(
  * representative points that, when plotted, resemble the full dataset.
  */
 export function downsample<T>(
-  iterate: (dataset: T) => Generator<Point>,
   dataset: Dataset<T>,
+  points: Iterable<Point>,
   view: PlotViewport,
 ): number[] {
   return dataset.showLine !== true
-    ? downsampleScatter(iterate, dataset.data, view)
-    : downsampleTimeseries(iterate, dataset.data, view);
+    ? downsampleScatter(points, view)
+    : downsampleTimeseries(points, view);
 }
