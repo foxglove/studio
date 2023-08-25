@@ -271,7 +271,7 @@ function rebuild(id: string) {
   }
 
   const downsampled = mapDatasets((dataset) => {
-    const indices = downsample(iterateTyped, dataset, view);
+    const indices = downsample(dataset, iterateTyped(dataset.data), view);
     const resolved = resolveTypedIndices(dataset.data, indices);
     if (resolved == undefined) {
       return dataset;

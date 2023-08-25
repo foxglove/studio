@@ -80,7 +80,7 @@ export class Downsampler {
         return dataset;
       }
 
-      const downsampled = downsample(iterateObjects, dataset, view);
+      const downsampled = downsample(dataset, iterateObjects(dataset.data), view);
       const resolved = R.map((i) => dataset.data[i], downsampled);
 
       // NaN item values create gaps in the line
