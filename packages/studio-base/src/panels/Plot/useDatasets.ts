@@ -11,7 +11,7 @@ import { useShallowMemo, useDeepMemo } from "@foxglove/hooks";
 import { Immutable } from "@foxglove/studio";
 import { useMessageReducer as useCurrent, useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
 import { useBlocksSubscriptions as useBlocks } from "@foxglove/studio-base/PanelAPI/useBlocksSubscriptions";
-import { getTopicsFromPaths } from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
+import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
 import {
   useMessagePipeline,
   MessagePipelineContext,
@@ -154,6 +154,19 @@ function useMetadata() {
   }, [globalVariables]);
 }
 
+function getTopicsFromPaths(paths: readonly string[]): string[] {
+  return R.pipe(
+    R.chain((v: string): string[] => {
+      const parsed = parseRosPath(v);
+      if (parsed == undefined) {
+        return [];
+      }
+
+      return [parsed.topicName];
+    }),
+    R.uniq,
+  )(paths);
+}
 /**
  * useDatasets uses a Web Worker to collect, aggregate, and downsample plot
  * data for use by a TimeBasedChart.
