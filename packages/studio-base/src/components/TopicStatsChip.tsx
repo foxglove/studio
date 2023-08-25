@@ -39,7 +39,7 @@ const useStyles = makeStyles()((theme) => ({
   },
 }));
 
-export function StatsChip({ topicName }: { topicName: string }): JSX.Element {
+export function TopicStatsChip({ topicName }: { topicName: string }): JSX.Element {
   const { classes } = useStyles();
   return (
     <Paper variant="outlined" className={classes.root}>
