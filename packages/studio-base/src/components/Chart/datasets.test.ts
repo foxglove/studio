@@ -6,37 +6,41 @@ import { findIndices } from "./datasets";
 
 describe("findIndices", () => {
   it("ignores empty slices", () => {
-    expect(findIndices(
-      [
-        {
-          x: new Float32Array(),
-          y: new Float32Array(),
-          value: [],
-        },
-        {
-          x: new Float32Array(1),
-          y: new Float32Array(1),
-          value: ["foo"],
-        },
-      ],
-      0,
-    )).toEqual([1, 0]);
+    expect(
+      findIndices(
+        [
+          {
+            x: new Float32Array(),
+            y: new Float32Array(),
+            value: [],
+          },
+          {
+            x: new Float32Array(1),
+            y: new Float32Array(1),
+            value: ["foo"],
+          },
+        ],
+        0,
+      ),
+    ).toEqual([1, 0]);
   });
   it("calculates index correctly", () => {
-    expect(findIndices(
-      [
-        {
-          x: new Float32Array(3),
-          y: new Float32Array(3),
-          value: [1, 2, 3],
-        },
-        {
-          x: new Float32Array(1),
-          y: new Float32Array(1),
-          value: [4],
-        },
-      ],
-      3,
-    )).toEqual([1, 0]);
+    expect(
+      findIndices(
+        [
+          {
+            x: new Float32Array(3),
+            y: new Float32Array(3),
+            value: [1, 2, 3],
+          },
+          {
+            x: new Float32Array(1),
+            y: new Float32Array(1),
+            value: [4],
+          },
+        ],
+        3,
+      ),
+    ).toEqual([1, 0]);
   });
 });
