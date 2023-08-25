@@ -44,10 +44,10 @@ import { makeStyles } from "tss-react/mui";
 import { useShallowMemo } from "@foxglove/hooks";
 import { useConfigById } from "@foxglove/studio-base/PanelAPI";
 import KeyListener from "@foxglove/studio-base/components/KeyListener";
+import { MessagePathDragOverlay } from "@foxglove/studio-base/components/MessagePathDragOverlay";
 import { MosaicPathContext } from "@foxglove/studio-base/components/MosaicPathContext";
 import PanelContext from "@foxglove/studio-base/components/PanelContext";
 import PanelErrorBoundary from "@foxglove/studio-base/components/PanelErrorBoundary";
-import { PanelOverlay } from "@foxglove/studio-base/components/PanelOverlay";
 import { PanelRoot, PANEL_ROOT_CLASS_NAME } from "@foxglove/studio-base/components/PanelRoot";
 import Stack from "@foxglove/studio-base/components/Stack";
 import {
@@ -468,8 +468,8 @@ export default function Panel<
       isDragging,
       isOver,
       isValidTarget,
-      connectDropTarget: connectMessagePathDropTarget,
-      message: dropMessage,
+      connectMessagePathDropTarget,
+      dropMessage,
       setMessagePathDropConfig,
     } = useMessagePathDrop();
 
@@ -622,12 +622,14 @@ export default function Panel<
                     </Stack>
                   </div>
                 )}
-                <PanelOverlay
-                  isDragging={isDragging}
-                  isValidTarget={isValidTarget}
-                  isOver={isOver}
-                  message={dropMessage}
-                />
+                {type !== TAB_PANEL_TYPE && (
+                  <MessagePathDragOverlay
+                    isDragging={isDragging}
+                    isValidTarget={isValidTarget}
+                    isOver={isOver}
+                    message={dropMessage}
+                  />
+                )}
                 {type !== TAB_PANEL_TYPE && quickActionsKeyPressed && !fullscreen && (
                   <div
                     className={classes.actionsOverlay}

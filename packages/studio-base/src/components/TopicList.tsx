@@ -98,7 +98,7 @@ function TopicListItem({
   positions: Set<number>;
 }): JSX.Element {
   const { classes, cx } = useStyles();
-  const { connectDragSource, cursor, isDragging } = useMessagePathDrag({
+  const { connectDragSource, connectDragPreview, cursor, isDragging } = useMessagePathDrag({
     path: topic.name,
     rootSchemaName: topic.schemaName,
   });
@@ -108,8 +108,7 @@ function TopicListItem({
       key={topic.name}
       divider
       className={cx(classes.listItem, { isDragging })}
-      ref={connectDragSource}
-      style={{ cursor }}
+      ref={connectDragPreview}
     >
       <ListItemText
         className={classes.listItemText}
@@ -144,7 +143,9 @@ function TopicListItem({
       />
       <Stack direction="row" alignItems="center" fullHeight gap={0.5} paddingX={0.5}>
         <StatsChip topicName={topic.name} />
-        <ReOrderDotsVertical16Regular className={classes.dragHandle} />
+        <div className={classes.dragHandle} ref={connectDragSource} style={{ cursor }}>
+          <ReOrderDotsVertical16Regular />
+        </div>
       </Stack>
     </ListItem>
   );

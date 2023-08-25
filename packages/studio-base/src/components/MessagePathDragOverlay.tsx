@@ -38,7 +38,7 @@ const useStyles = makeStyles()((theme) => ({
   },
 }));
 
-export function PanelOverlay(prop: Props): JSX.Element | ReactNull {
+export function MessagePathDragOverlay(prop: Props): JSX.Element | ReactNull {
   const { isDragging, isOver, isValidTarget, message } = prop;
   const { classes, cx } = useStyles();
 
