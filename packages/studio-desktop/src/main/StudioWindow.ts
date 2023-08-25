@@ -417,6 +417,7 @@ class StudioWindow {
       this.#reloadMainWindow();
     });
     const newMenu = buildMenu(browserWindow);
+    this.#rebuildFileMenu(newMenu.getMenuItemById("fileMenu")!);
     const id = browserWindow.webContents.id;
 
     log.info(`New Foxglove Studio window ${id}`);
