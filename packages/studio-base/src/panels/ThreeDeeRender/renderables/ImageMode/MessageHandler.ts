@@ -2,6 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { partition } from "lodash";
+
 import { AVLTree } from "@foxglove/avl";
 import {
   Time,
@@ -358,15 +360,11 @@ function findSynchronizedSetAndRemoveOlderItems(
     if (!messageState.image) {
       continue;
     }
-    presentAnnotationTopics = [];
-    missingAnnotationTopics = [];
-    for (const topic of visibleAnnotations) {
-      if (messageState.annotationsByTopic.get(topic) != undefined) {
-        presentAnnotationTopics.push(topic);
-      } else {
-        missingAnnotationTopics.push(topic);
-      }
-    }
+    [presentAnnotationTopics, missingAnnotationTopics] = partition(
+      Array.from(visibleAnnotations),
+      (topic) => messageState.annotationsByTopic.has(topic),
+    );
+
     // If we have an image and all the messages for annotation topics then we have a synchronized set.
     if (missingAnnotationTopics.length === 0) {
       validEntry = entry;
