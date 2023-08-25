@@ -356,7 +356,6 @@ class StudioWindow {
   // BrowserWindow.id is not as available
   static #windowsByContentId = new Map<number, StudioWindow>();
   readonly #deepLinks: string[];
-  readonly #inputSources = new Set<string>();
 
   #browserWindow: BrowserWindow;
   #menu: Menu;
@@ -380,47 +379,6 @@ class StudioWindow {
       .catch((err) => {
         log.error("loadURL error", err);
       });
-  }
-
-  public addInputSource(name: string): void {
-    // A "Foxglove Data Platform" connection is triggered by opening a URL from console
-    // Not currently a connection that can be started from inside Foxglove Studio
-    const unsupportedInputSourceNames = ["Foxglove Data Platform"];
-    if (unsupportedInputSourceNames.includes(name)) {
-      return;
-    }
-
-    this.#inputSources.add(name);
-
-    const fileMenu = this.#menu.getMenuItemById("fileMenu");
-    if (!fileMenu) {
-      return;
-    }
-
-    const existingItem = fileMenu.submenu?.getMenuItemById(name);
-    // If the item already exists, we can silently return
-    // The existing click handler will support the new item since they have the same name
-    if (existingItem) {
-      existingItem.visible = true;
-      return;
-    }
-
-    // build new file menu
-    this.#rebuildFileMenu(fileMenu);
-
-    this.#browserWindow.setMenu(this.#menu);
-  }
-
-  public removeInputSource(name: string): void {
-    this.#inputSources.delete(name);
-
-    const fileMenu = this.#menu.getMenuItemById("fileMenu");
-    if (!fileMenu) {
-      return;
-    }
-
-    this.#rebuildFileMenu(fileMenu);
-    this.#browserWindow.setMenu(this.#menu);
   }
 
   public getBrowserWindow(): BrowserWindow {
