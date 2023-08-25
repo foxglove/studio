@@ -111,6 +111,10 @@ export function useMessagePathDrop(): {
       return false;
     },
     collect(monitor) {
+      // don't run the code below when dragging other types of items (i.e. panels)
+      if (monitor.getItemType() !== MESSAGE_PATH_DRAG_TYPE) {
+        return { isDragging: false, isOver: false };
+      }
       const item = monitor.getItem<MessagePathDragObject | undefined>();
       const targetId = monitor.getHandlerId();
       if (!item || !messagePathDropConfig || targetId == undefined) {
