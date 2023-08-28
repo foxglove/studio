@@ -545,24 +545,25 @@ export default function Panel<
                   connectMessagePathDropTarget(el);
                 }}
               >
-                <PanelOverlay
-                  connectOverlayDragSource={connectOverlayDragSource}
-                  dropMessage={dropMessage}
-                  isDragging={isDragging}
-                  isFullscreen={fullscreen}
-                  isNotTabPanel={type !== TAB_PANEL_TYPE}
-                  isOver={isOver}
-                  isSelected={isSelected}
-                  isTopLevelPanel={isTopLevelPanel}
-                  isValidTarget={isValidTarget}
-                  quickActionsKeyPressed={quickActionsKeyPressed}
-                  quickActionsOverlayRef={quickActionsOverlayRef}
-                  createTabs={createTabs}
-                  groupPanels={groupPanels}
-                  removePanel={removePanel}
-                  selectedPanelCount={numSelectedPanelsIfSelected}
-                  splitPanel={splitPanel}
-                />
+                {!fullscreen && (
+                  <PanelOverlay
+                    connectOverlayDragSource={connectOverlayDragSource}
+                    dropMessage={dropMessage}
+                    isDragging={isDragging}
+                    isNotTabPanel={type !== TAB_PANEL_TYPE}
+                    isOver={isOver}
+                    isSelected={isSelected}
+                    isTopLevelPanel={isTopLevelPanel}
+                    isValidTarget={isValidTarget}
+                    quickActionsKeyPressed={quickActionsKeyPressed}
+                    quickActionsOverlayRef={quickActionsOverlayRef}
+                    createTabs={createTabs}
+                    groupPanels={groupPanels}
+                    removePanel={removePanel}
+                    selectedPanelCount={numSelectedPanelsIfSelected}
+                    splitPanel={splitPanel}
+                  />
+                )}
                 <PanelErrorBoundary onRemovePanel={removePanel} onResetPanel={resetPanel}>
                   <React.StrictMode>{child}</React.StrictMode>
                 </PanelErrorBoundary>

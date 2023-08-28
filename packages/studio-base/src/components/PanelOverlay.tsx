@@ -8,7 +8,7 @@ import {
   Delete20Regular,
   TableSimple20Regular,
 } from "@fluentui/react-icons";
-import { Backdrop, BackdropProps, Button, Chip, buttonClasses } from "@mui/material";
+import { Backdrop, BackdropProps, Button, Chip, Paper, buttonClasses } from "@mui/material";
 import tc from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 
@@ -61,20 +61,19 @@ const useStyles = makeStyles<void, "buttonGroup" | "tabCount">()((theme, _params
         flexDirection: "row",
       },
     },
+    buttonPaper: {
+      borderRadius: theme.shape.borderRadius * 4,
+      flex: "0 0 50%",
+      minWidth: "50%",
+    },
     button: {
-      backgroundColor: theme.palette.background.paper,
       borderRadius: theme.shape.borderRadius * 4,
       display: "flex",
       flexDirection: "column",
       justifyContent: "center",
-      flex: "0 0 50%",
-      minWidth: "50%",
       whiteSpace: "nowrap",
       textAlign: "left",
 
-      ":hover": {
-        backgroundColor: theme.palette.background.paper,
-      },
       [`.${buttonClasses.startIcon}`]: {
         position: "relative",
         margin: 0,
@@ -101,7 +100,7 @@ const useStyles = makeStyles<void, "buttonGroup" | "tabCount">()((theme, _params
       display: "flex",
       inset: 0,
       textAlign: "center",
-      letterSpacing: "-0.125em",
+      letterSpacing: "-1px",
       // Totally random numbers here to get the text to fit inside the icon
       paddingTop: 1,
       paddingLeft: 5,
@@ -122,7 +121,6 @@ function StyledBackdrop(props: Omit<BackdropProps, "open">): JSX.Element {
 type Props = {
   dropMessage?: string;
   isDragging: boolean;
-  isFullscreen: boolean;
   isNotTabPanel: boolean;
   isOver: boolean;
   isSelected: boolean;
@@ -143,7 +141,6 @@ export function PanelOverlay(props: Props): JSX.Element | ReactNull {
     connectOverlayDragSource,
     dropMessage,
     isDragging,
-    isFullscreen,
     isNotTabPanel,
     isOver,
     isSelected,
@@ -175,37 +172,45 @@ export function PanelOverlay(props: Props): JSX.Element | ReactNull {
     }
   }
 
-  if (isSelected && !isFullscreen && selectedPanelCount > 1) {
+  if (isSelected && selectedPanelCount > 1) {
     return (
       <StyledBackdrop className={cx(classes.actionOverlay, classes.highlightAll)}>
         <div className={classes.buttonGroup}>
-          <Button
-            variant="outlined"
-            className={classes.button}
-            onClick={groupPanels}
-            startIcon={<TabDesktop20Regular />}
-          >
-            Group in tab
-          </Button>
-          <Button
-            variant="outlined"
-            className={classes.button}
-            onClick={createTabs}
-            startIcon={
-              <>
-                <span className={classes.tabCount}>{selectedPanelCount}</span>
-                <TabDesktopMultiple20Regular />
-              </>
-            }
-          >
-            Create tabs
-          </Button>
+          <Paper elevation={0} className={classes.buttonPaper}>
+            <Button
+              fullWidth
+              variant="outlined"
+              className={classes.button}
+              onClick={groupPanels}
+              startIcon={<TabDesktop20Regular />}
+            >
+              Group in tab
+            </Button>
+          </Paper>
+          <Paper elevation={0} className={classes.buttonPaper}>
+            <Button
+              fullWidth
+              variant="outlined"
+              className={classes.button}
+              onClick={createTabs}
+              startIcon={
+                <>
+                  <span className={classes.tabCount}>
+                    {selectedPanelCount <= 99 ? selectedPanelCount : ""}
+                  </span>
+                  <TabDesktopMultiple20Regular />
+                </>
+              }
+            >
+              Create tabs
+            </Button>
+          </Paper>
         </div>
       </StyledBackdrop>
     );
   }
 
-  if (isNotTabPanel && quickActionsKeyPressed && !isFullscreen) {
+  if (isNotTabPanel && quickActionsKeyPressed) {
     return (
       <StyledBackdrop className={cx(classes.actionOverlay, classes.highlightActive)}>
         <div
@@ -218,26 +223,32 @@ export function PanelOverlay(props: Props): JSX.Element | ReactNull {
             }
           }}
         >
-          <Button
-            variant="outlined"
-            className={classes.button}
-            startIcon={<TableSimple20Regular />}
-            onClick={splitPanel}
-          >
-            Split panel
-          </Button>
-          <Button
-            variant="outlined"
-            color="error"
-            className={classes.button}
-            startIcon={<Delete20Regular />}
-            onClick={(event) => {
-              event.stopPropagation();
-              removePanel();
-            }}
-          >
-            Remove panel
-          </Button>
+          <Paper elevation={0} className={classes.buttonPaper}>
+            <Button
+              fullWidth
+              variant="outlined"
+              className={classes.button}
+              startIcon={<TableSimple20Regular />}
+              onClick={splitPanel}
+            >
+              Split panel
+            </Button>
+          </Paper>
+          <Paper elevation={0} className={classes.buttonPaper}>
+            <Button
+              fullWidth
+              variant="outlined"
+              color="error"
+              className={classes.button}
+              startIcon={<Delete20Regular />}
+              onClick={(event) => {
+                event.stopPropagation();
+                removePanel();
+              }}
+            >
+              Remove panel
+            </Button>
+          </Paper>
         </div>
       </StyledBackdrop>
     );
