@@ -8,15 +8,7 @@ import {
   Delete20Regular,
   TableSimple20Regular,
 } from "@fluentui/react-icons";
-import {
-  Backdrop,
-  BackdropProps,
-  Button,
-  ButtonGroup,
-  Chip,
-  buttonClasses,
-  buttonGroupClasses,
-} from "@mui/material";
+import { Backdrop, BackdropProps, Button, Chip, buttonClasses } from "@mui/material";
 import tc from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 
@@ -36,6 +28,7 @@ const useStyles = makeStyles<void, "buttonGroup" | "tabCount">()((theme, _params
       position: "absolute",
       zIndex: theme.zIndex.modal - 1,
       padding: theme.spacing(2),
+      container: "backdrop / size",
     },
     invalidTarget: {
       backgroundColor: hoverPaper,
@@ -61,22 +54,28 @@ const useStyles = makeStyles<void, "buttonGroup" | "tabCount">()((theme, _params
       },
     },
     buttonGroup: {
-      marginTop: PANEL_TOOLBAR_MIN_HEIGHT,
-      borderRadius: theme.shape.borderRadius * 4,
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "center",
+      gap: theme.spacing(1),
 
-      [`.${buttonClasses.root}`]: {
-        borderRadius: theme.shape.borderRadius * 4,
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "flex-start",
-        flex: "0 0 50%",
-        minWidth: "50%",
-        whiteSpace: "nowrap",
-        textAlign: "left",
+      "@container backdrop (min-width: 360px)": {
+        flexDirection: "row",
       },
-      [`.${buttonGroupClasses.grouped}:not(:last-of-type)`]: {
-        borderRightWidth: 2,
-        borderRightColor: theme.palette.background.default,
+    },
+    button: {
+      backgroundColor: theme.palette.background.paper,
+      borderRadius: theme.shape.borderRadius * 4,
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "center",
+      flex: "0 0 50%",
+      minWidth: "50%",
+      whiteSpace: "nowrap",
+      textAlign: "left",
+
+      ":hover": {
+        backgroundColor: theme.palette.background.paper,
       },
       [`.${buttonClasses.startIcon}`]: {
         position: "relative",
@@ -85,10 +84,15 @@ const useStyles = makeStyles<void, "buttonGroup" | "tabCount">()((theme, _params
         svg: {
           height: "1em",
           width: "1em",
-          fontSize: 24,
+          fontSize: 32,
         },
         [`.${classes.tabCount}`]: {
-          fontSize: 8,
+          fontSize: theme.typography.subtitle2.fontSize,
+          fontWeight: 600,
+        },
+        "@container backdrop (max-height: 120px)": {
+          marginTop: PANEL_TOOLBAR_MIN_HEIGHT,
+          display: "none",
         },
       },
     },
@@ -98,10 +102,12 @@ const useStyles = makeStyles<void, "buttonGroup" | "tabCount">()((theme, _params
       position: "absolute",
       display: "flex",
       inset: 0,
-      paddingLeft: "6px",
-      paddingRight: "11px",
       textAlign: "center",
       letterSpacing: "-0.125em",
+      // Totally random numbers here to get the text to fit inside the icon
+      paddingTop: 1,
+      paddingLeft: 5,
+      paddingRight: 11,
     },
     chip: {
       boxShadow: theme.shadows[2],
@@ -162,7 +168,7 @@ export function PanelOverlay(props: Props): JSX.Element | ReactNull {
 
     if (isOver) {
       return (
-        <StyledBackdrop className={cx(classes.backdrop, classes.validTarget)}>
+        <StyledBackdrop className={classes.validTarget}>
           {dropMessage && (
             <Chip size="small" color="primary" label={dropMessage} className={classes.chip} />
           )}
@@ -174,22 +180,29 @@ export function PanelOverlay(props: Props): JSX.Element | ReactNull {
   if (isSelected && !isFullscreen && selectedPanelCount > 1) {
     return (
       <StyledBackdrop className={cx(classes.actionOverlay, classes.highlightAll)}>
-        <ButtonGroup className={classes.buttonGroup} variant="contained">
-          <Button startIcon={<TabDesktop20Regular />} onClick={groupPanels}>
+        <div className={classes.buttonGroup}>
+          <Button
+            variant="outlined"
+            className={classes.button}
+            onClick={groupPanels}
+            startIcon={<TabDesktop20Regular />}
+          >
             Group in tab
           </Button>
           <Button
+            variant="outlined"
+            className={classes.button}
+            onClick={createTabs}
             startIcon={
               <>
                 <span className={classes.tabCount}>{selectedPanelCount}</span>
                 <TabDesktopMultiple20Regular />
               </>
             }
-            onClick={createTabs}
           >
-            Create {selectedPanelCount} tabs
+            Create tabs
           </Button>
-        </ButtonGroup>
+        </div>
       </StyledBackdrop>
     );
   }
@@ -197,9 +210,8 @@ export function PanelOverlay(props: Props): JSX.Element | ReactNull {
   if (isNotTabPanel && quickActionsKeyPressed && !isFullscreen) {
     return (
       <StyledBackdrop className={cx(classes.actionOverlay, classes.highlightActive)}>
-        <ButtonGroup
+        <div
           className={classes.buttonGroup}
-          variant="contained"
           ref={(el) => {
             quickActionsOverlayRef.current = el;
             // disallow dragging the root panel in a layout
@@ -208,10 +220,18 @@ export function PanelOverlay(props: Props): JSX.Element | ReactNull {
             }
           }}
         >
-          <Button startIcon={<TableSimple20Regular />} onClick={splitPanel}>
+          <Button
+            variant="outlined"
+            className={classes.button}
+            startIcon={<TableSimple20Regular />}
+            onClick={splitPanel}
+          >
             Split panel
           </Button>
           <Button
+            variant="outlined"
+            color="error"
+            className={classes.button}
             startIcon={<Delete20Regular />}
             onClick={(event) => {
               event.stopPropagation();
@@ -220,7 +240,7 @@ export function PanelOverlay(props: Props): JSX.Element | ReactNull {
           >
             Remove panel
           </Button>
-        </ButtonGroup>
+        </div>
       </StyledBackdrop>
     );
   }
