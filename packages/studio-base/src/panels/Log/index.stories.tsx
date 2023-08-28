@@ -293,29 +293,29 @@ export const CaseInsensitiveFilter: StoryObj = {
   name: `case insensitive message filtering: "could", "Ipsum"`,
 };
 
-export const AutoCompleteItems: StoryObj = {
-  render: () => (
-    <PanelSetup fixture={fixture}>
-      <Log
-        overrideConfig={{
-          searchTerms: ["could", "Ipsum"],
-          minLogLevel: 1,
-          topicToRender: "/rosout",
-        }}
-      />
-    </PanelSetup>
-  ),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const input = (await canvas.findAllByPlaceholderText("Search filter"))[0]!;
-    await userEvent.click(input);
-  },
-};
-
 export const FoxgloveLog: StoryObj = {
   render: () => (
     <PanelSetup fixture={foxgloveLogFixture}>
       <Log />
+    </PanelSetup>
+  ),
+};
+
+export const FilterByName: StoryObj = {
+  render: () => (
+    <PanelSetup fixture={fixture} includeSettings>
+      <Log
+        overrideConfig={{
+          searchTerms: [],
+          minLogLevel: 1,
+          topicToRender: "/rosout",
+          nameFilter: {
+            "/some_topic": { visible: false },
+            "/some_node": { visible: false },
+            "/other_node": { visible: true },
+          },
+        }}
+      />
     </PanelSetup>
   ),
 };

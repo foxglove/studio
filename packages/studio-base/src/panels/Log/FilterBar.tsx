@@ -53,7 +53,6 @@ type Filter = {
 
 export type FilterBarProps = {
   searchTerms: Set<string>;
-  nodeNames: Set<string>;
   minLogLevel: number;
   messages: readonly LogMessageEvent[];
 
@@ -115,7 +114,7 @@ export default function FilterBar(props: FilterBarProps): JSX.Element {
       </Select>
       <FilterTagInput
         items={[...props.searchTerms]}
-        suggestions={[...props.nodeNames]}
+        suggestions={[]}
         onChange={(items: string[]) => {
           props.onFilterChange({
             minLogLevel: props.minLogLevel,
