@@ -35,8 +35,6 @@ const useStyles = makeStyles<void, "buttonGroup" | "tabCount">()((theme, _params
     },
     validTarget: {
       alignItems: "flex-end",
-      borderRadius: theme.shape.borderRadius,
-      border: `2px solid ${theme.palette.primary.main}`,
       backgroundColor: hoverPrimary,
     },
     actionOverlay: {

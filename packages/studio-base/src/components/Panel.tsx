@@ -533,7 +533,7 @@ export default function Panel<
                 hasFullscreenDescendant={hasFullscreenDescendant}
                 fullscreenState={fullscreenState}
                 sourceRect={fullscreenSourceRect}
-                selected={isSelected}
+                selected={isSelected || (isDragging && isValidTarget && isOver)}
                 data-testid={cx("panel-mouseenter-container", childId)}
                 ref={(el) => {
                   panelRootRef.current = el;
